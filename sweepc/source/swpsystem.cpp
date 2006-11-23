@@ -51,6 +51,7 @@ int System::SetM0(const real m0)
 {
     if ((m_ensemble.Count() > 0) && (m0 > 0.0)) {
         m_smpvol = (real)m_ensemble.Count() / m0;
+        m_ensemble.ResetScaling();
         return 0;
     } else {
         // The ensemble contains no particles, so assume this
@@ -62,7 +63,8 @@ int System::SetM0(const real m0)
 int System::SetMaxM0(const real m0)
 {
     if ((m_ensemble.Capacity() > 0) && (m0 > 0.0)) {
-        m_smpvol = (real)m_ensemble.Capacity() / m0;
+        m_smpvol = m_ensemble.Scaling() * (real)m_ensemble.Capacity() / m0;
+        m_ensemble.ResetScaling();
         return 0;
     } else {
         // The ensemble has not yet been initialised, hence guess
