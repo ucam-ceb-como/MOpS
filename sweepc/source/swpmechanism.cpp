@@ -223,6 +223,7 @@ int Mechanism::LPDA(const real t, System &sys)
     
     // Now remove any invalid particles.
     sys.Ensemble().RemoveInvalids();
+    sys.Ensemble().Update();
 
     // Start particle doubling again.  This will also double the ensemble
     // if any particles have been removed.
