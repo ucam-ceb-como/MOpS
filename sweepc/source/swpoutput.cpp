@@ -64,6 +64,8 @@ void SweepOutput::CompileStatistics(const System &sys, const Mechanism &mech, ve
         for (istat=stats.begin()+NSTATS; istat!=stats.end(); istat++) {
             *istat /= vol;
         }
+
+        stats[9] = vol;
     }
 }
 

@@ -25,7 +25,7 @@ namespace Sweep
 class SweepOutput
 {
 protected:
-    static const int NSTATS = 9;
+    static const int NSTATS = 10;
     static const int NPSL   = 4;
     static const real CONFA;
 protected:
@@ -133,6 +133,7 @@ inline void SweepOutput::GetColumnNames(const Sweep::Mechanism &mech, std::vecto
     names[6] = "Average Volume (cm3)";
     names[7] = "Average Surface Area (cm2)";
     names[8] = "Average Diameter (nm)";
+    names[9] = "Sample Volume (cm-3)";
     // Component names.
     for (i=NSTATS,j=0; j<mech.ComponentCount(); i++,j++) {
         names[i] = mech.GetComponent(j).Name();
