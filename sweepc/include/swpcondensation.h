@@ -1,0 +1,94 @@
+/*
+  Author(s):      Matthew Celnik (msc37)
+  Project:        sweep (population balance solver)
+
+  File purpose:
+    Defines a condensation reaction.
+*/
+
+#ifndef SWEEP_CONDENSATION_H
+#define SWEEP_CONDENSATION_H
+
+#include "swpprocess.h"
+#include "swpparticlechanger.h"
+
+namespace Sweep
+{
+class Condensation : public Process, public ParticleChanger
+{
+protected:
+    const static real COND_MAJ; // See def'n below class.
+public:
+    static const unsigned int TERM_COUNT = 3;
+protected:
+    real m_a; // Rate constant.
+    real m_kfm1, m_kfm2, m_kfm3; // Free-mol term parameters.
+public:
+    Condensation(void);
+    ~Condensation(void);
+    /* Initialises the condensation reaction. */
+    virtual void Initialise(const map<unsigned int, int> &reac, // Gas-phase reactants.
+                            const map<unsigned int, int> &prod, // Gas-phase products.
+                            const real a,                       // Rate constant.
+                            const real m,                       // Mass of condensating species (g).
+                            const real d,                       // Diameter of condensating species (cm).
+                            const vector<real> &comp,           // Component counts of new particle.
+                            const vector<real> &values,         // Other values for new particle.
+                            vector<Component*> &components);    // Reference to component vector used to define process.
+    /* Clears memory associated with the reaction. */
+    virtual void Destroy(void);
+public: // Rate calculation.
+    /* Returns the rate of the process for the given system. */
+    virtual real Rate(const real t, const System &sys) const;
+    /* Calculates the process rate given the chemical conditions. */
+    virtual real Rate(const real t, const vector<real> &chem, const real T, 
+                      const real P, const vector<real> &sums, const System &sys) const;
+    /* Returns the rate of the process for the given particle in
+       the system. Process must be linear in particle number. */
+    virtual real Rate(const real t,             // Current time (s).
+                      const System &sys,        // System for which to get rate.
+                      const DefaultParticle &sp // Index of particle for which to calculate rate.
+                     ) const;
+    virtual real Rate(const real t,             // Current time (s).
+                      const vector<real> &chem,
+                      const real T, 
+                      const real P,
+                      const vector<real> &sums,
+                      const System &sys,        // System for which to get rate.
+                      const DefaultParticle &sp // Index of particle for which to calculate rate.
+                     ) const;
+    real MajorantRate(const real t, const System &sys, const DefaultParticle &sp) const;
+    real MajorantRate(const real t, const vector<real> &chem, const real T, const real P, 
+                      const vector<real> &sums, const System &sys, const DefaultParticle &sp) const;
+public: // Rate term calculation.
+    /* Returns the number of rate terms for this process. */
+    inline unsigned int TermCount(void) const {return TERM_COUNT;};
+    /* Calculates the rate terms give an iterator to a real vector.  The 
+       iterator is advanced to the postition after the last term for this
+       process. */
+    void RateTerms(const real t, const System &sys, vector<real>::iterator &iterm) const;
+    void RateTerms(const real t, const vector<real> &chem, const real T, 
+                   const real P, const vector<real> &sums, const System &sys, 
+                   vector<real>::iterator &iterm) const;
+public: // Doing the process.
+    /* Performs the process on the given system.  The responsible rate term is given
+       by index.  Returns 0 on success, otherwise negative. */
+    virtual int Perform(const real t, System &sys, const unsigned int iterm) const;
+    /* Performs the process on a given particle in the system.  Particle
+       is given by index.  The process is performed n times. */
+    virtual int Perform(const real t,         // Current time (s).
+                        System &sys,          // System for which to perform process. 
+                        DefaultParticle &sp,  // Index of particle for which to perform process.
+                        const unsigned int n  // Number of times to perform the process.
+                       ) const;
+public: // Property gets.
+    inline real A() const {return m_a;};
+    inline void SetA(const real a) {m_a = a * NA;};
+public: // Property sets.
+    /* Sets the coagulation kernel constants given incepting species
+       masses and diameters. */
+    void SetCondensingSpecies(const real m, const real d);
+};
+};
+
+#endif
