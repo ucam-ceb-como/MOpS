@@ -184,11 +184,13 @@ int Condensation::Perform(const real t, System &sys, const unsigned int iterm) c
 
     if (i >= 0) {
         DefaultParticle *sp = sys.Ensemble().GetParticle(i);
-        real majr = MajorantRate(t, sys, *sp);
-
-        // Update particle with deferred processes.
+        real majr = 0.0;
         if (m_mech->AnyDeferred()) {
+            majr = MajorantRate(t, sys, *sp);
+            // Update particle with deferred processes.
             m_mech->UpdateParticle(*sp, sys, t);
+        } else {
+            majr = Rate(t, sys, *sp);
         }
 
         // Check that the particle is still valid.
@@ -197,8 +199,8 @@ int Condensation::Perform(const real t, System &sys, const unsigned int iterm) c
 
             if (!Ficticious(majr, truer)) {
                 // Adjust particle.
-                sp->Adjust(m_comp, m_values);
-                sp->SetTime(t);
+                AdjustParticle(*sp, t, 1);
+                sys.Ensemble().Update(i);
 
                 // Apply changes to gas-phase chemistry.
                 map<unsigned int,int>::const_iterator j;
