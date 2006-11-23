@@ -190,8 +190,8 @@ int SurfaceReaction::Perform(const Sweep::real t, Sweep::System &sys, const unsi
 
             if (!Ficticious(majr, truer)) {
                 // Adjust particle.
-                sp->Adjust(m_comp, m_values);
-                sp->SetTime(t);
+                AdjustParticle(*sp, t, 1);
+                sys.Ensemble().Update(i);
 
                 // Apply changes to gas-phase chemistry.
                 map<unsigned int,int>::const_iterator j;
