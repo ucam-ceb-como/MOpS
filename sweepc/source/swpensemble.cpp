@@ -258,6 +258,7 @@ void Ensemble::Clear()
     vector<NODE>::iterator i;
     for(i=m_tree.begin(); i!=m_tree.end(); i++) (*i).Clear();
     m_ndble = 0;
+    m_dbleactive = false;
 }
 
 int Ensemble::SelectParticle(void) const
@@ -312,6 +313,12 @@ real Ensemble::Scaling() const
     return m_scale * pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
 }
 
+void Ensemble::ResetScaling()
+{
+    m_ncont = 0;
+    m_ndble = 0;
+}
+
 void Ensemble::GetSums(std::vector<real> &sums) const
 {
     sums.assign(m_tree[0].LeftSum.begin(), m_tree[0].LeftSum.end());
@@ -327,6 +334,42 @@ real Ensemble::GetSum(unsigned int i) const
         return m_tree[0].LeftSum[i] + m_tree[0].RightSum[i];
     } else {
         return 0.0;
+    }
+}
+
+
+void Ensemble::Update(const unsigned int i)
+{
+    // Get tree index of this particle.
+    unsigned int j = TreeIndex(i);
+
+    if (IsLeftBranch(i)) {
+        m_particles[i]->GetProperties(m_tree[j].LeftSum);
+    } else {
+        m_particles[i]->GetProperties(m_tree[j].RightSum);
+    }
+    AscendingRecalc(j);
+}
+
+void Ensemble::Update()
+{
+    bool odd = true;
+    iterator i;
+    unsigned int j = TreeIndex(0);
+    for (i=begin(); i!=end(); i++) {
+        if (odd) {
+            (*i)->GetProperties(m_tree[j].LeftSum);
+        } else {
+            (*i)->GetProperties(m_tree[j].RightSum);
+            AscendingRecalc(j);
+            j++;
+        }
+        odd = !odd;
+    }
+
+    // Need to do one last recalc if there are an odd number of particles.
+    if (!odd) {
+        AscendingRecalc(j);
     }
 }
 
