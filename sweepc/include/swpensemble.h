@@ -98,6 +98,8 @@ public:
 public:
     /* Returns the scaling factor due to particle operations. */
     real Scaling() const;
+    /* Resets the scaling parameters. */
+    void ResetScaling();
     /* Stops doubling algorithm. */
     inline void FreezeDoubling() {m_dbleon = false;};
     /* Restarts doubling if it was off, and checks if the ensemble should be doubled. */
@@ -107,6 +109,11 @@ public:
     void GetSums(vector<real> &sums) const;
     /* Returns the sum of one particle property with the given index from the binary tree. */
     real GetSum(unsigned int i) const;
+public:
+    /* Updates the ensemble tree from the given particle index. */
+    void Update(const unsigned int i);
+    /* Updates the ensemble tree completely. */
+    void Update(void);
 protected:
     /* Returns the index of the lowest binary tree node under which
        the given particle (by index) lies. */
