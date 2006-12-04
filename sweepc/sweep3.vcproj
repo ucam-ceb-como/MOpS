@@ -42,7 +42,7 @@
 				Optimization="0"
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="../camxml/include;include"
+				AdditionalIncludeDirectories="include/camxml;include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -130,7 +130,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="include;../camxml/include"
+				AdditionalIncludeDirectories="include;include/camxml"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="0"
 				FloatingPointModel="0"
@@ -300,15 +300,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\ranlib.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\rng.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\rnglib.h"
 				>
 			</File>
 			<File
@@ -401,14 +393,6 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-		</Filter>
-		<Filter
-			Name="Header Files (camxml)"
-			>
-			<File
-				RelativePath="..\camxml\include\camxml.h"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>
