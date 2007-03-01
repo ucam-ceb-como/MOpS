@@ -21,10 +21,10 @@ int main(int argc, _TCHAR* argv[])
     clock_t ct1, ct2;
 
     // Variables for the solver and the solver object.
-    int i=0, n=100, r=0, nruns=10;
-    Sweep::real t = 0.0, dt = 0.0002;
+    int i=0, n=200, r=0, nruns=10;
+    Sweep::real t = 0.0, dt = 0.00025;
     Sweep::Solver solver;
-    char outfile[] = "sweep3-coag.dat";
+    char outfile[] = "sweep3-all.dat";
 
     // File and console output.
     Sweep::SweepOutput output;
@@ -51,13 +51,13 @@ int main(int argc, _TCHAR* argv[])
     mech.AddCoagulation();
 
     // Initialise ensemble to correct size.
-    flame.Ensemble().Initialise(65536, DefaultParticle::NCACHE+mech.ComponentCount()+mech.ValueCount());
+    flame.Ensemble().Initialise(2048, DefaultParticle::NCACHE+mech.ComponentCount()+mech.ValueCount());
 
     // Run the simulation.
     for (r=1; r<=nruns; r++) {
         ct1 = clock();
         printf("Run number: %d\n", r);
-        flame.Reset(6.5336e11);
+        flame.Reset(3.5e11);
         t = 0.0;
 
         output.Open(outfile, r);
