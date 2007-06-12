@@ -16,26 +16,34 @@ using namespace std;
 
 namespace Sprog
 {
-struct SRI_PARAMS
-{
-    real A, B, C, D, E;
-};
-
 class SRIReaction : public FallOffReaction
 {
-protected:
-    SRI_PARAMS m_params;
 public:
+    // A structure to maintain SRI fall-off parameters.
+    struct SRI_PARAMS
+    {
+        real A, B, C, D, E;
+    };
+
+    // Constructors.
     SRIReaction(void);  // Default constructor.
-    ~SRIReaction(void); // Default destructor.
     SRIReaction(const SRIReaction &rxn); // Copy constructor.
-public:
+
+    // Destructor.
+    ~SRIReaction(void);
+
+    // Operator overloads.
     SRIReaction &operator=(const SRIReaction &rxn);
-public:
-    /* Returns the SRI parameters. */
-    const SRI_PARAMS &FallOffParams(void) const;
-    /* Sets the SRI parameters. */
-    void SetFallOffParams(const SRI_PARAMS &params);
+
+    // SRI parameters.
+    const SRI_PARAMS &FallOffParams(void) const;     // Returns the SRI parameters.
+    void SetFallOffParams(const SRI_PARAMS &params); // Sets the SRI parameters.
+
+    // Cloning.
+    SRIReaction* Clone(void) const; // Returns a pointer to a copy of the SRI reaction.
+
+protected:    
+    SRI_PARAMS m_params; // SRI parameters.
 };
 };
 

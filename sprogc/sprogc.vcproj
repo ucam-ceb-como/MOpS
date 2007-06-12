@@ -163,6 +163,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\gpc_stoich.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\gpc_third_body_reaction.cpp"
 				>
 			</File>
@@ -201,7 +205,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\gpc_rate_params.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\gpc_reaction.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\gpc_reaction_inl.h"
 				>
 			</File>
 			<File
@@ -218,6 +230,10 @@
 			</File>
 			<File
 				RelativePath=".\include\gpc_sri_reaction.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\gpc_stoich.h"
 				>
 			</File>
 			<File

@@ -16,6 +16,7 @@ ElComp::ElComp(void)
 // Copy constructor.
 ElComp::ElComp(const ElComp &el)
 {
+    m_element = NULL;
     *this = el;
 }
 

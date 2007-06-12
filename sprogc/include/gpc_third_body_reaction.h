@@ -9,35 +9,39 @@
 #ifndef GPC_THIRD_BODY_REACTION_H
 #define GPC_THIRD_BODY_REACTION_H
 
-#include <vector>
 #include "gpc_params.h"
 #include "gpc_species.h"
 #include "gpc_reaction.h"
-
-using namespace std;
+#include "gpc_stoich.h"
+#include <vector>
 
 namespace Sprog
 {
 class ThirdBodyReaction : public Reaction
 {
-protected:
-    vector<FSTOICH> m_thirdbodies; // Reaction third bodies and their coefficients.
 public:
+    // Constructors.
     ThirdBodyReaction(void);  // Default constructor.
-    ~ThirdBodyReaction(void); // Default destructor.
     ThirdBodyReaction(const ThirdBodyReaction &rxn); // Copy constructor.
-public:
-    ThirdBodyReaction &operator=(const ThirdBodyReaction &rxn);
-public:
-    /* Returns the vector of third-body coefficients. */
-    const vector<FSTOICH> &ThirdBodies(void) const;
-    /* Adds a third body to the reaction. */
-    void AddThirdBody(const FSTOICH &tb);
-    /* Adds a third body to the reaction (real). */
-    void AddThirdBody(const Species *sp, real coeff);
-    /* Removes a third body, given by name, from the reaction. */
-    void RemoveThirdBody(const string &name);
 
+    // Destructor.
+    virtual ~ThirdBodyReaction(void);
+
+    // Operator overloads.
+    ThirdBodyReaction &operator=(const ThirdBodyReaction &rxn);
+
+    // Third bodies.
+    const std::vector<Stoichf> &ThirdBodies(void) const;     // Returns the vector of third-body coefficients.
+    void AddThirdBody(const Stoichf &tb);                    // Adds a third body to the reaction.
+    void AddThirdBody(const IndexedSpecies &sp, real coeff); // Adds a third body to the reaction (real).
+    void RemoveThirdBody(const std::string &name);           // Removes a third body, given by name, from 
+                                                             // the reaction.
+
+    // Cloning.
+    virtual ThirdBodyReaction* Clone(void) const; // Returns a pointer to a copy of the third-body reaction.
+
+protected:
+    std::vector<Stoichf> m_thirdbodies; // Reaction third bodies and their coefficients.
 };
 };
 

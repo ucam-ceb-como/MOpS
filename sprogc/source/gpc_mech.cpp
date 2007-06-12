@@ -3,5 +3,13 @@
 using namespace Sprog;
 using namespace std;
 
-/* Constructors and destructors. */
+// CONSTRUCTORS AND DESTRUCTORS.
+
+// Default constructor.
+Mechanism::Mechanism()
+{
+}
+
+
+
 

@@ -1,3 +1,6 @@
+#include "gpc_params.h"
+#include "gpc_stoich.h"
+#include "gpc_rate_params.h"
 #include "gpc_reaction.h"
 
 using namespace Sprog;
@@ -20,6 +23,12 @@ Reaction::Reaction(void)
 // Copy constructor.
 Reaction::Reaction(const Sprog::Reaction &rxn)
 {
+    // Nullify pointer members.
+    m_arrr = NULL;
+    m_lt = NULL;
+    m_revlt = NULL;
+
+    // Use assignment operator to copy.
     *this = rxn;
 }
 
@@ -69,47 +78,32 @@ Reaction &Reaction::operator=(const Sprog::Reaction &rxn)
 }
 
 
-// REACTION NAME/DESRIPTION.
-
-const string &Reaction::Name() const {return m_name;}
-void Reaction::SetName(const std::string &name) {m_name = name;}
-
-
-// REVERSIBLE REACTION?.
-
-bool Reaction::IsReversible() const {return m_reversible;}
-void Reaction::SetReversible(const bool isrev) {m_reversible=isrev;}
-
-
 // REACTANTS.
 
-const std::vector<STOICH> &Reaction::Reactants() const {return m_reac;}
-const std::vector<FSTOICH> &Reaction::FReactants() const {return m_freac;}
-
 // Adds an integer stoichiometry reactant to the reaction.
-void Reaction::AddReactant(const Sprog::STOICH &reac)
+void Reaction::AddReactant(const Sprog::Stoich &reac)
 {
     // We must check if the reactant is already defined in this reaction.  Need to
     // check both integer and real reactants.
 
     // Integer reactants.
-    vector<STOICH>::iterator i;
+    vector<Stoich>::iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); i++) {
-        if ((*i).Species.Pointer == reac.Species.Pointer) {
+        if ((*i).Species() == reac.Species()) {
             // We have found this species in the reactants already.  Append
             // the new contribution.
-            (*i).Stoich += reac.Stoich;
+            (*i).IncMu(reac.Mu());
             return;
         }
     }
 
     // Real reactants.
-    vector<FSTOICH>::iterator j;
+    vector<Stoichf>::iterator j;
     for (j=m_freac.begin(); j!=m_freac.end(); j++) {
-        if ((*j).Species.Pointer == reac.Species.Pointer) {
+        if ((*j).Species()== reac.Species()) {
             // We have found this species in the reactants already.  Append
             // the new contribution.
-            (*j).Stoich += (real)reac.Stoich;
+            (*j).IncMu((real)reac.Mu());
             return;
         }
     }
@@ -121,31 +115,31 @@ void Reaction::AddReactant(const Sprog::STOICH &reac)
 
 
 // Adds a real stoichiometry reactant to the reaction.
-void Reaction::AddReactant(const Sprog::FSTOICH &reac)
+void Reaction::AddReactant(const Sprog::Stoichf &reac)
 {
     // We must check if the reactant is already defined in this reaction.  Need to
     // check both integer and real reactants.
 
     // Integer reactants.
-    vector<STOICH>::iterator i;
+    vector<Stoich>::iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); i++) {
-        if ((*i).Species.Pointer == reac.Species.Pointer) {
+        if ((*i).Species() == reac.Species()) {
             // We have found this species in the reactants already.  It is currently
             // in the integer stoichiometry, and we now want it in the real stoichiometry.
-            FSTOICH freac(reac);
-            freac.Stoich += (real)(*i).Stoich;
+            Stoichf freac(reac);
+            freac.IncMu((real)(*i).Mu());
             m_freac.push_back(freac);
             return;
         }
     }
 
     // Real reactants.
-    vector<FSTOICH>::iterator j;
+    vector<Stoichf>::iterator j;
     for (j=m_freac.begin(); j!=m_freac.end(); j++) {
-        if ((*j).Species.Pointer == reac.Species.Pointer) {
+        if ((*j).Species() == reac.Species()) {
             // We have found this species in the reactants already.  Append
             // the new contribution.
-            (*j).Stoich += reac.Stoich;
+            (*j).IncMu(reac.Mu());
             return;
         }
     }
@@ -155,13 +149,178 @@ void Reaction::AddReactant(const Sprog::FSTOICH &reac)
     m_freac.push_back(reac);
 }
 
+// Removes the reactant species with the given name from the reaction.  If the
+// species is not a reactant then does nothing.
+void Reaction::RemoveReactant(const std::string &name)
+{
+    // Search the integer stoichiometry reactants.
+    vector<Stoich>::iterator i;
+    for (i=m_reac.begin(); i!=m_reac.end(); i++) {
+        if (name.compare((*i).Species()->Name())==0) {
+            // We have found the species in the integer stoich vector.
+            m_reac.erase(i);
+            return;
+        }
+    }
+
+    // Now search the real stoichiometry reactants.
+    vector<Stoichf>::iterator j;
+    for (j=m_freac.begin(); j!=m_freac.end(); j++) {
+        if (name.compare((*j).Species()->Name())==0) {
+            // We have found the species in the real stoich vector.
+            m_freac.erase(j);
+            return;
+        }
+    }
+}
+
+
+// PRODUCTS.
+
+// Adds an integer stoichiometry product to the reaction.
+void Reaction::AddProduct(const Sprog::Stoich &prod)
+{
+    // We must check if the product is already defined in this reaction.  Need to
+    // check both integer and real products.
+
+    // Integer products.
+    vector<Stoich>::iterator i;
+    for (i=m_prod.begin(); i!=m_prod.end(); i++) {
+        if ((*i).Species() == prod.Species()) {
+            // We have found this species in the products already.  Append
+            // the new contribution.
+            (*i).IncMu(prod.Mu());
+            return;
+        }
+    }
+
+    // Real products.
+    vector<Stoichf>::iterator j;
+    for (j=m_fprod.begin(); j!=m_fprod.end(); j++) {
+        if ((*j).Species() == prod.Species()) {
+            // We have found this species in the products already.  Append
+            // the new contribution.
+            (*j).IncMu((real)prod.Mu());
+            return;
+        }
+    }
+
+    // If we have got here then the product is not defined for this reaction, so
+    // we must add it.
+    m_prod.push_back(prod);
+}
+
+
+// Adds a real stoichiometry product to the reaction.
+void Reaction::AddProduct(const Sprog::Stoichf &prod)
+{
+    // We must check if the product is already defined in this reaction.  Need to
+    // check both integer and real products.
+
+    // Integer products.
+    vector<Stoich>::iterator i;
+    for (i=m_prod.begin(); i!=m_prod.end(); i++) {
+        if ((*i).Species() == prod.Species()) {
+            // We have found this species in the products already.  It is currently
+            // in the integer stoichiometry, and we now want it in the real stoichiometry.
+            Stoichf fprod(prod);
+            fprod.IncMu((real)(*i).Mu());
+            m_fprod.push_back(fprod);
+            return;
+        }
+    }
+
+    // Real reactants.
+    vector<Stoichf>::iterator j;
+    for (j=m_fprod.begin(); j!=m_fprod.end(); j++) {
+        if ((*j).Species() == prod.Species()) {
+            // We have found this species in the products already.  Append
+            // the new contribution.
+            (*j).IncMu(prod.Mu());
+            return;
+        }
+    }
+
+    // If we have got here then the product is not defined for this reaction, so
+    // we must add it.
+    m_fprod.push_back(prod);
+}
+
+// Removes the product species with the given name from the reaction.  If the
+// species is not a product then does nothing.
+void Reaction::RemoveProduct(const std::string &name)
+{
+    // Search the integer stoichiometry products.
+    vector<Stoich>::iterator i;
+    for (i=m_prod.begin(); i!=m_prod.end(); i++) {
+        if (name.compare((*i).Species()->Name())==0) {
+            // We have found the species in the integer stoich vector.
+            m_prod.erase(i);
+            return;
+        }
+    }
+
+    // Now search the real stoichiometry products.
+    vector<Stoichf>::iterator j;
+    for (j=m_fprod.begin(); j!=m_fprod.end(); j++) {
+        if (name.compare((*j).Species()->Name())==0) {
+            // We have found the species in the real stoich vector.
+            m_fprod.erase(j);
+            return;
+        }
+    }
+}
+
 
 // ARRHENIUS COEFFICIENTS.
 
-// Returns the explicit reverse Arrhenius parameters.
-const ARRHENIUS &Reaction::RevArrhenius(void) const
+// Sets the forward Arrhenius parameters.
+void Reaction::SetArrhenius(const ARRHENIUS &arr)
 {
-    return *m_arrr;
+    m_arrf = arr;
+}
+
+
+// Sets the explicit reverse Arrhenius parameters.
+void Reaction::SetRevArrhenius(const Sprog::ARRHENIUS &arr)
+{
+    if (m_arrr == NULL) {
+        m_arrr = new ARRHENIUS(arr);
+    } else {
+        *m_arrr = arr;
+    }
+}
+
+
+// LANDAU TELLER COEFFICIENTS.
+
+// Sets the forward Landau Teller rate parameters.
+void Reaction::SetLTCoeffs(const Sprog::LTCOEFFS &lt)
+{
+    if (m_lt == NULL) {
+        m_lt = new LTCOEFFS(lt);
+    } else {
+        *m_lt = lt;
+    }
+}
+
+// Sets the reverse Landau Teller rate parameters.
+void Reaction::SetRevLTCoeffs(const Sprog::LTCOEFFS &lt)
+{
+    if (m_revlt == NULL) {
+        m_revlt = new LTCOEFFS(lt);
+    } else {
+        *m_revlt = lt;
+    }
+}
+
+
+// CLONING.
+
+// Returns a pointer to a copy of the reaction.
+Reaction *Reaction::Clone(void) const
+{
+    return new Reaction(*this);
 }
 
 

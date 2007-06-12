@@ -12,43 +12,49 @@
 
 #include "gpc_params.h"
 #include "gpc_species.h"
+#include "gpc_rate_params.h"
 #include "gpc_reaction.h"
 #include "gpc_third_body_reaction.h"
-
-using namespace std;
 
 namespace Sprog
 {
 class FallOffReaction : public ThirdBodyReaction
 {
+public:
+    // Constructors.
+    FallOffReaction(void); // Default constructor.
+    FallOffReaction(const FallOffReaction &rxn); // Copy constructor.
+
+    // Destructor.
+    virtual ~FallOffReaction(void);
+
+    // Operator overloads.
+    FallOffReaction &operator=(const FallOffReaction &rxn);
+
+    // Low pressure limit.
+    const ARRHENIUS &LowPressureLimit(void) const;   // Returns the low pressure limit Arrhenius coefficients.   
+    void SetLowPressureLimit(const ARRHENIUS &lowp); // Sets the low pressure limit Arrhenius coefficients.
+
+    // Fall-off third body.   
+    const Species *const FallOffThirdBody(void) const;  // Returns a pointer to the species used as a 
+                                                        // third body for fall-off calculations.
+    void SetFallOffThirdBody(const IndexedSpecies &sp); // Sets the species used as a third body for 
+                                                        // fall-off calculations.
+
+    // Cloning.
+    virtual FallOffReaction* Clone(void) const; // Returns a pointer to a copy of the fall-off reaction.
 protected:
+    // Fall-off data.
     ARRHENIUS m_lowplimit;        // Low pressure limit Arrhenius coefficients.
     IndexedSpecies m_fothirdbody; // Third body for fall-off.
-public:
-    FallOffReaction(void);  // Default constructor.
-    ~FallOffReaction(void); // Default destructor.
-    FallOffReaction(const FallOffReaction &rxn); // Copy constructor.
-public:
-    FallOffReaction &operator=(const FallOffReaction &rxn);
-public:
-    /* Returns the low pressure limit Arrhenius coefficients. */
-    const ARRHENIUS &LowPressureLimit(void) const;
-    /* Sets the low pressure limit Arrhenius coefficients. */
-    void SetLowPressureLimit(const ARRHENIUS &lowp);
-public:
-    /* Returns a pointer to the species used as a third body for fall-off calculations. */
-    const Species *const FallOffThirdBody(void) const;
-    /* Sets the species used as a third body for fall-off calculations. */
-    void SetFallOffThirdBody(const IndexedSpecies);
-protected:
-    /* Calculation of the rate constant of fall-off reactions requires a factor F.  This
-       factor is different for different forms of fall-off reactions, for this simple
-       form the value is unity (1.0). */
+
+    // Calculation of the rate constant of fall-off reactions requires a factor F.  This
+    // factor is different for different forms of fall-off reactions, for this simple
+    // form the value is unity (1.0).
     virtual real F(real T, real logpr);
 };
 
-/* Inline function definitions. */
-
+// Inline function definitions.
 inline real FallOffReaction::F(real T, real logpr) {return 1.0;};
 
 };
