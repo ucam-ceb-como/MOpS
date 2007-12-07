@@ -1,6 +1,7 @@
 #include "gpc_troe_reaction.h"
 
 using namespace Sprog;
+using namespace Sprog::Kinetics;
 using namespace std;
 
 // THE TroeReaction CLASS.
@@ -13,7 +14,7 @@ TroeReaction::TroeReaction()
 }
 
 // Copy constructor.
-TroeReaction::TroeReaction(const Sprog::TroeReaction &rxn)
+TroeReaction::TroeReaction(const Sprog::Kinetics::TroeReaction &rxn)
 {
     *this = rxn;
 }
@@ -26,7 +27,7 @@ TroeReaction::~TroeReaction()
 
 // OPERATOR OVERLOADING.
 
-TroeReaction &TroeReaction::operator=(const Sprog::TroeReaction &rxn)
+Kinetics::TroeReaction &TroeReaction::operator=(const Sprog::Kinetics::TroeReaction &rxn)
 {
     // Check for self assignment.
     if (this != &rxn) {
@@ -49,7 +50,7 @@ const TroeReaction::TroeParams &TroeReaction::FallOffParams() const
 }
 
 // Sets the Troe fall-off parameters.
-void TroeReaction::SetFallOffParams(const Sprog::TroeReaction::TroeParams &params)
+void TroeReaction::SetFallOffParams(const Sprog::Kinetics::TroeReaction::TroeParams &params)
 {
     m_params = params;
 }
@@ -76,7 +77,7 @@ TroeReaction::TroeParams::TroeParams()
 }
 
 // Copy constructor.
-TroeReaction::TroeParams::TroeParams(const Sprog::TroeReaction::TroeParams &troe)
+TroeReaction::TroeParams::TroeParams(const Sprog::Kinetics::TroeReaction::TroeParams &troe)
 {
     Alpha = troe.Alpha;
     Ts = troe.Ts;
@@ -101,7 +102,7 @@ TroeReaction::TroeParams::~TroeParams()
 // OPERATOR OVERLOADING.
 
 // Assignment operator.
-TroeReaction::TroeParams &TroeReaction::TroeParams::operator=(const Sprog::TroeReaction::TroeParams &troe)
+Sprog::Kinetics::TroeReaction::TroeParams &TroeReaction::TroeParams::operator=(const Sprog::Kinetics::TroeReaction::TroeParams &troe)
 {
     // Check for self assignment!
     if (this != &troe) {

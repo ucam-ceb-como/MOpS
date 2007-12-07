@@ -18,6 +18,8 @@
 
 namespace Sprog
 {
+namespace Kinetics
+{
 class FallOffReaction : public ThirdBodyReaction
 {
 public:
@@ -36,17 +38,19 @@ public:
     void SetLowPressureLimit(const ARRHENIUS &lowp); // Sets the low pressure limit Arrhenius coefficients.
 
     // Fall-off third body.   
-    const Species *const FallOffThirdBody(void) const;  // Returns a pointer to the species used as a 
+    const Sprog::Species &FallOffThirdBody(void) const; // Returns a pointer to the species used as a 
                                                         // third body for fall-off calculations.
-    void SetFallOffThirdBody(const IndexedSpecies &sp); // Sets the species used as a third body for 
-                                                        // fall-off calculations.
+    void SetFallOffThirdBody(unsigned int sp); // Sets the species used as a third body for 
+                                               // fall-off calculations.
+    void SetFallOffThirdBody(const std::string &name); // Sets the species used as a third body for 
+                                                       // fall-off calculations given the species name.
 
     // Cloning.
     virtual FallOffReaction* Clone(void) const; // Returns a pointer to a copy of the fall-off reaction.
 protected:
     // Fall-off data.
-    ARRHENIUS m_lowplimit;        // Low pressure limit Arrhenius coefficients.
-    IndexedSpecies m_fothirdbody; // Third body for fall-off.
+    ARRHENIUS m_lowplimit;   // Low pressure limit Arrhenius coefficients.
+    int m_fothirdbody;       // Third body for fall-off.
 
     // Calculation of the rate constant of fall-off reactions requires a factor F.  This
     // factor is different for different forms of fall-off reactions, for this simple
@@ -56,7 +60,7 @@ protected:
 
 // Inline function definitions.
 inline real FallOffReaction::F(real T, real logpr) {return 1.0;};
-
+};
 };
 
 #endif

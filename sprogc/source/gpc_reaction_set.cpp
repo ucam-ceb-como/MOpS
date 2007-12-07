@@ -4,6 +4,7 @@
 #include "gpc_reaction.h"
 
 using namespace Sprog;
+using namespace Sprog::Kinetics;
 using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
@@ -15,9 +16,15 @@ ReactionSet::ReactionSet()
 
 // Copy constructor.
 
-ReactionSet::ReactionSet(const Sprog::ReactionSet &rxn)
+ReactionSet::ReactionSet(const Sprog::Kinetics::ReactionSet &rxn)
 {
     *this = rxn;
+}
+
+// Destructor.
+ReactionSet::~ReactionSet()
+{
+    releaseMemory();
 }
 
 
@@ -175,7 +182,7 @@ const RxnPtrVector &ReactionSet::Reactions() const
 }
 
 // Adds a reaction to the set.
-void ReactionSet::AddReaction(const Sprog::Reaction &rxn)
+Reaction *const ReactionSet::AddReaction(const Sprog::Kinetics::Reaction &rxn)
 {
     // Clone the reaction and add it to the vector.
     Reaction *pr = rxn.Clone();
@@ -195,10 +202,12 @@ void ReactionSet::AddReaction(const Sprog::Reaction &rxn)
     if (rxn.RevLTCoeffs() != NULL) {
         m_revlt_rxns.insert(RxnMap::value_type(m_rxns.size(), pr));
     }
+
+    return pr;
 }
 
 // Adds a third-body reaction to the set.
-void ReactionSet::AddReaction(const Sprog::ThirdBodyReaction &rxn)
+Reaction *const ReactionSet::AddReaction(const Sprog::Kinetics::ThirdBodyReaction &rxn)
 {
     // Clone the reaction and add it to the vector.
     ThirdBodyReaction *pr = rxn.Clone();
@@ -206,10 +215,12 @@ void ReactionSet::AddReaction(const Sprog::ThirdBodyReaction &rxn)
 
     // Add reaction to third-body reaction map.
     m_tb_rxns.insert(ThirdBodyRxnMap::value_type(m_rxns.size(), pr));
+
+    return pr;
 }
 
 // Adds a fall-off reaction to the set.
-void ReactionSet::AddReaction(const Sprog::FallOffReaction &rxn)
+Reaction *const ReactionSet::AddReaction(const Sprog::Kinetics::FallOffReaction &rxn)
 {
     // Clone the reaction and add it to the vector.
     FallOffReaction *pr = rxn.Clone();
@@ -217,6 +228,17 @@ void ReactionSet::AddReaction(const Sprog::FallOffReaction &rxn)
 
     // Add reaction to third-body reaction map.
     m_fo_rxns.insert(FallOffRxnMap::value_type(m_rxns.size(), pr));
+
+    return pr;
+}
+
+
+// TIDYING UP.
+
+// Clears all reactions from the set.
+void ReactionSet::Clear()
+{
+    releaseMemory();
 }
 
 

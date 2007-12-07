@@ -2,8 +2,13 @@
 #include "gpc_stoich.h"
 #include "gpc_rate_params.h"
 #include "gpc_reaction.h"
+#include "gpc_mech.h"
+#include <exception>
+#include <stdexcept>
+#include <string>
 
 using namespace Sprog;
+using namespace Sprog::Kinetics;
 using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
@@ -18,15 +23,17 @@ Reaction::Reaction(void)
     m_arrr = NULL;
     m_lt = NULL;
     m_revlt = NULL;
+    m_species = NULL;
 }
 
 // Copy constructor.
-Reaction::Reaction(const Sprog::Reaction &rxn)
+Reaction::Reaction(const Sprog::Kinetics::Reaction &rxn)
 {
     // Nullify pointer members.
     m_arrr = NULL;
     m_lt = NULL;
     m_revlt = NULL;
+    m_species = NULL;
 
     // Use assignment operator to copy.
     *this = rxn;
@@ -43,7 +50,7 @@ Reaction::~Reaction(void)
 // OPERATOR OVERLOADING.
 
 // Assignment operator.
-Reaction &Reaction::operator=(const Sprog::Reaction &rxn)
+Reaction &Reaction::operator=(const Sprog::Kinetics::Reaction &rxn)
 {
     // Check for self assignment!
     if (this != &rxn) {
@@ -72,6 +79,9 @@ Reaction &Reaction::operator=(const Sprog::Reaction &rxn)
         // Copy Landau Teller parameters (forward and reverse).
         if (rxn.m_lt != NULL) m_lt = new LTCOEFFS(*rxn.m_lt);
         if (rxn.m_revlt != NULL) m_revlt = new LTCOEFFS(*rxn.m_revlt);
+
+        // Copy pointer to species vector.
+        m_species = rxn.m_species;
     }
 
     return *this;
@@ -89,7 +99,7 @@ void Reaction::AddReactant(const Sprog::Stoich &reac)
     // Integer reactants.
     vector<Stoich>::iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); i++) {
-        if ((*i).Species() == reac.Species()) {
+        if ((*i).Index() == reac.Index()) {
             // We have found this species in the reactants already.  Append
             // the new contribution.
             (*i).IncMu(reac.Mu());
@@ -100,7 +110,7 @@ void Reaction::AddReactant(const Sprog::Stoich &reac)
     // Real reactants.
     vector<Stoichf>::iterator j;
     for (j=m_freac.begin(); j!=m_freac.end(); j++) {
-        if ((*j).Species()== reac.Species()) {
+        if ((*j).Index()== reac.Index()) {
             // We have found this species in the reactants already.  Append
             // the new contribution.
             (*j).IncMu((real)reac.Mu());
@@ -123,7 +133,7 @@ void Reaction::AddReactant(const Sprog::Stoichf &reac)
     // Integer reactants.
     vector<Stoich>::iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); i++) {
-        if ((*i).Species() == reac.Species()) {
+        if ((*i).Index() == reac.Index()) {
             // We have found this species in the reactants already.  It is currently
             // in the integer stoichiometry, and we now want it in the real stoichiometry.
             Stoichf freac(reac);
@@ -136,7 +146,7 @@ void Reaction::AddReactant(const Sprog::Stoichf &reac)
     // Real reactants.
     vector<Stoichf>::iterator j;
     for (j=m_freac.begin(); j!=m_freac.end(); j++) {
-        if ((*j).Species() == reac.Species()) {
+        if ((*j).Index() == reac.Index()) {
             // We have found this species in the reactants already.  Append
             // the new contribution.
             (*j).IncMu(reac.Mu());
@@ -149,27 +159,80 @@ void Reaction::AddReactant(const Sprog::Stoichf &reac)
     m_freac.push_back(reac);
 }
 
+// Adds an integer reactant to the reaction given the species name.
+void Reaction::AddReactant(const std::string &name, unsigned int stoich)
+{
+    if (m_species != NULL) {
+        // Find the species in the list by name.
+        unsigned int i;
+        for (i=0; i<m_species->size(); i++) {
+            if (name.compare((*m_species)[i]->Name()) == 0) {
+                // Found species in the list, now add it as a reactant.
+                AddReactant(Stoich(i, stoich));
+                return;
+            }
+        }
+        
+        // We have got here because the species name was not found
+        // in the species list.
+        throw out_of_range(string(name).append(" was not found in species list (Reaction::AddReactant)."));
+    } else {
+        // Species vector has not been assigned.
+        throw exception("Trying to add reactant before assigning species vector (Reaction::AddReactant).");
+    }
+}
+
+// Adds a real reactant to the reaction given the species name.
+void Reaction::AddReactant(const std::string &name, real stoich)
+{
+    if (m_species != NULL) {
+        // Find the species in the list by name.
+        unsigned int i;
+        for (i=0; i<m_species->size(); i++) {
+            if (name.compare((*m_species)[i]->Name()) == 0) {
+                // Found species in the list, now add it as a reactant.
+                AddReactant(Stoichf(i, stoich));
+                return;
+            }
+        }
+        
+        // We have got here because the species name was not found
+        // in the species list.
+        throw out_of_range(string(name).append(" was not found in species list (Reaction::AddReactant)."));
+    } else {
+        // Species vector has not been assigned.
+        throw exception("Trying to add reactant before assigning species vector (Reaction::AddReactant).");
+    }
+}
+
 // Removes the reactant species with the given name from the reaction.  If the
 // species is not a reactant then does nothing.
 void Reaction::RemoveReactant(const std::string &name)
 {
-    // Search the integer stoichiometry reactants.
-    vector<Stoich>::iterator i;
-    for (i=m_reac.begin(); i!=m_reac.end(); i++) {
-        if (name.compare((*i).Species()->Name())==0) {
-            // We have found the species in the integer stoich vector.
-            m_reac.erase(i);
-            return;
-        }
-    }
+    // Search through the list of species to find that with
+    // the given name.
+    unsigned int i;
+    for (i=0; i<m_species->size(); i++) {
+        if (*(*m_species)[i] == name) {
+            // Found the species:  Loop though integer stoichiometry
+            // reactant to find that with this index.
+            vector<Stoich>::iterator j;
+            for (j=m_reac.begin(); j!=m_reac.end(); j++) {
+                if ((*j).Index() == i) {
+                    // We have found the species in the list.
+                    m_reac.erase(j);
+                }
+            }        
 
-    // Now search the real stoichiometry reactants.
-    vector<Stoichf>::iterator j;
-    for (j=m_freac.begin(); j!=m_freac.end(); j++) {
-        if (name.compare((*j).Species()->Name())==0) {
-            // We have found the species in the real stoich vector.
-            m_freac.erase(j);
-            return;
+            // Now search the real stoichiometry reactants.
+            vector<Stoichf>::iterator k;
+            for (k=m_freac.begin(); k!=m_freac.end(); k++) {
+                if ((*k).Index() == i) {
+                    // We have found the species in the real stoich vector.
+                    m_freac.erase(k);
+                    return;
+                }
+            }
         }
     }
 }
@@ -186,7 +249,7 @@ void Reaction::AddProduct(const Sprog::Stoich &prod)
     // Integer products.
     vector<Stoich>::iterator i;
     for (i=m_prod.begin(); i!=m_prod.end(); i++) {
-        if ((*i).Species() == prod.Species()) {
+        if ((*i).Index() == prod.Index()) {
             // We have found this species in the products already.  Append
             // the new contribution.
             (*i).IncMu(prod.Mu());
@@ -197,7 +260,7 @@ void Reaction::AddProduct(const Sprog::Stoich &prod)
     // Real products.
     vector<Stoichf>::iterator j;
     for (j=m_fprod.begin(); j!=m_fprod.end(); j++) {
-        if ((*j).Species() == prod.Species()) {
+        if ((*j).Index() == prod.Index()) {
             // We have found this species in the products already.  Append
             // the new contribution.
             (*j).IncMu((real)prod.Mu());
@@ -220,7 +283,7 @@ void Reaction::AddProduct(const Sprog::Stoichf &prod)
     // Integer products.
     vector<Stoich>::iterator i;
     for (i=m_prod.begin(); i!=m_prod.end(); i++) {
-        if ((*i).Species() == prod.Species()) {
+        if ((*i).Index() == prod.Index()) {
             // We have found this species in the products already.  It is currently
             // in the integer stoichiometry, and we now want it in the real stoichiometry.
             Stoichf fprod(prod);
@@ -233,7 +296,7 @@ void Reaction::AddProduct(const Sprog::Stoichf &prod)
     // Real reactants.
     vector<Stoichf>::iterator j;
     for (j=m_fprod.begin(); j!=m_fprod.end(); j++) {
-        if ((*j).Species() == prod.Species()) {
+        if ((*j).Index() == prod.Index()) {
             // We have found this species in the products already.  Append
             // the new contribution.
             (*j).IncMu(prod.Mu());
@@ -246,27 +309,80 @@ void Reaction::AddProduct(const Sprog::Stoichf &prod)
     m_fprod.push_back(prod);
 }
 
+// Adds an integer product to the reaction given the species name.
+void Reaction::AddProduct(const std::string &name, unsigned int stoich)
+{
+    if (m_species != NULL) {
+        // Find the species in the list by name.
+        unsigned int i;
+        for (i=0; i<m_species->size(); i++) {
+            if (name.compare((*m_species)[i]->Name()) == 0) {
+                // Found species in the list, now add it as a product.
+                AddProduct(Stoich(i, stoich));
+                return;
+            }
+        }
+        
+        // We have got here because the species name was not found
+        // in the species list.
+        throw out_of_range(string(name).append(" was not found in species list (Reaction::AddProduct)."));
+    } else {
+        // Species vector has not been assigned.
+        throw exception("Trying to add reactant before assigning species vector (Reaction::AddProduct).");
+    }
+}
+
+// Adds a real product to the reaction given the species name.
+void Reaction::AddProduct(const std::string &name, real stoich)
+{
+    if (m_species != NULL) {
+        // Find the species in the list by name.
+        unsigned int i;
+        for (i=0; i<m_species->size(); i++) {
+            if (name.compare((*m_species)[i]->Name()) == 0) {
+                // Found species in the list, now add it as a product.
+                AddProduct(Stoichf(i, stoich));
+                return;
+            }
+        }
+        
+        // We have got here because the species name was not found
+        // in the species list.
+        throw out_of_range(string(name).append(" was not found in species list (Reaction::AddProduct)."));
+    } else {
+        // Species vector has not been assigned.
+        throw exception("Trying to add reactant before assigning species vector (Reaction::AddProduct).");
+    }
+}
+
 // Removes the product species with the given name from the reaction.  If the
 // species is not a product then does nothing.
 void Reaction::RemoveProduct(const std::string &name)
 {
-    // Search the integer stoichiometry products.
-    vector<Stoich>::iterator i;
-    for (i=m_prod.begin(); i!=m_prod.end(); i++) {
-        if (name.compare((*i).Species()->Name())==0) {
-            // We have found the species in the integer stoich vector.
-            m_prod.erase(i);
-            return;
-        }
-    }
+    // Search through the list of species to find that with
+    // the given name.
+    unsigned int i;
+    for (i=0; i<m_species->size(); i++) {
+        if (*(*m_species)[i] == name) {
+            // Found the species:  Loop though integer stoichiometry
+            // product to find that with this index.
+            vector<Stoich>::iterator j;
+            for (j=m_prod.begin(); j!=m_prod.end(); j++) {
+                if ((*j).Index() == i) {
+                    // We have found the species in the list.
+                    m_prod.erase(j);
+                }
+            }        
 
-    // Now search the real stoichiometry products.
-    vector<Stoichf>::iterator j;
-    for (j=m_fprod.begin(); j!=m_fprod.end(); j++) {
-        if (name.compare((*j).Species()->Name())==0) {
-            // We have found the species in the real stoich vector.
-            m_fprod.erase(j);
-            return;
+            // Now search the real stoichiometry products.
+            vector<Stoichf>::iterator k;
+            for (k=m_fprod.begin(); k!=m_fprod.end(); k++) {
+                if ((*k).Index() == i) {
+                    // We have found the species in the real stoich vector.
+                    m_fprod.erase(k);
+                    return;
+                }
+            }
         }
     }
 }
@@ -282,7 +398,7 @@ void Reaction::SetArrhenius(const ARRHENIUS &arr)
 
 
 // Sets the explicit reverse Arrhenius parameters.
-void Reaction::SetRevArrhenius(const Sprog::ARRHENIUS &arr)
+void Reaction::SetRevArrhenius(const Sprog::Kinetics::ARRHENIUS &arr)
 {
     if (m_arrr == NULL) {
         m_arrr = new ARRHENIUS(arr);
@@ -295,7 +411,7 @@ void Reaction::SetRevArrhenius(const Sprog::ARRHENIUS &arr)
 // LANDAU TELLER COEFFICIENTS.
 
 // Sets the forward Landau Teller rate parameters.
-void Reaction::SetLTCoeffs(const Sprog::LTCOEFFS &lt)
+void Reaction::SetLTCoeffs(const Sprog::Kinetics::LTCOEFFS &lt)
 {
     if (m_lt == NULL) {
         m_lt = new LTCOEFFS(lt);
@@ -305,13 +421,43 @@ void Reaction::SetLTCoeffs(const Sprog::LTCOEFFS &lt)
 }
 
 // Sets the reverse Landau Teller rate parameters.
-void Reaction::SetRevLTCoeffs(const Sprog::LTCOEFFS &lt)
+void Reaction::SetRevLTCoeffs(const Sprog::Kinetics::LTCOEFFS &lt)
 {
     if (m_revlt == NULL) {
         m_revlt = new LTCOEFFS(lt);
     } else {
         *m_revlt = lt;
     }
+}
+
+
+// SPECIES VECTOR.
+
+// Returns a pointer to the vector of species used to define the reaction.
+const SpeciesPtrVector *const Reaction::Species(void) const
+{
+    return m_species;
+}
+
+// Sets the vector of species used to define the reaction.
+void Reaction::SetSpecies(const SpeciesPtrVector *const sp)
+{
+    m_species = sp;
+}
+
+
+// PARENT MECHANISM.
+
+// Returns a pointer to the parent mechanism.
+Mechanism *const Reaction::Mechanism() const
+{
+    return m_mech;
+}
+
+// Sets the parent mechanism.
+void Reaction::SetMechanism(Sprog::Mechanism *const mech)
+{
+    m_mech = mech;
 }
 
 

@@ -15,8 +15,6 @@ class Species; // Forward declaration of Species class.
 //  SPECIES NAME.
 
 inline const std::string &Species::Name() const {return m_name;};
-inline void Species::SetName(const std::string &name) {m_name=name;};
-
 
 // SPECIES COMPOSITION.
 
@@ -26,7 +24,6 @@ inline const ElCompVector &Species::Composition() const {return m_elcomp;};
 // SPECIES MOLECULAR WEIGHT.
 
 inline const real Species::MolWt() const {return m_molwt;};
-inline void Species::SetMolWt(const real molwt) {m_molwt=molwt;};
 
 
 // THERMODYNAMIC FITTING PARAMETERS.

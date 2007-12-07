@@ -36,7 +36,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="0"
 				AdditionalIncludeDirectories="include"
+				RuntimeLibrary="1"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -147,6 +150,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\gpc_mech_io.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\gpc_reaction.cpp"
 				>
 			</File>
@@ -181,6 +188,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\include\gpc.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\gpc_el_comp.h"
 				>
 			</File>
@@ -193,11 +204,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\gpc_element_lib.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\gpc_fall_off_reaction.h"
 				>
 			</File>
 			<File
 				RelativePath=".\include\gpc_mech.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\gpc_mech_io.h"
 				>
 			</File>
 			<File
@@ -237,6 +256,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\gpc_thermo.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\gpc_thermo_params.h"
 				>
 			</File>
@@ -250,6 +273,10 @@
 			</File>
 			<File
 				RelativePath=".\include\gpc_unit_systems.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\morestrings.h"
 				>
 			</File>
 		</Filter>

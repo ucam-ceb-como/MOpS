@@ -25,17 +25,17 @@ namespace Sprog
         // Constructors.
         Stoichiometry(void); // Default constructor.
         Stoichiometry(const Stoichiometry<T> &s); // Copy constructor.
+        Stoichiometry(unsigned int isp, const stoich_val &mu); // Initialising constructor.
 
         // Destructor.
         ~Stoichiometry(void);
 
         // Operator overloads.
-        Stoichiometry<stoich_val> &operator=(const Stoichiometry<stoich_val> &s);
+        Stoichiometry<T> &operator=(const Stoichiometry<T> &s);
 
         // Species data.
         int Index(void) const; // Returns index of species.
-        const Sprog::Species *const Species(void) const; // Returns const pointer to species object.
-        void SetSpecies(const IndexedSpecies &sp); // Sets the species associated with this stoichiometry.
+        void SetSpecies(const unsigned int &sp); // Sets the species associated with this stoichiometry.
 
         // Stoichiometry value.
         const stoich_val &Mu(void) const; // Returns the stoichiometry value.
@@ -43,7 +43,7 @@ namespace Sprog
         void IncMu(const stoich_val &mu); // Increments the stoichiometry value.
     private:
         // Data.
-        IndexedSpecies m_species;
+        int m_species;
         stoich_val m_stoich;
     };
 

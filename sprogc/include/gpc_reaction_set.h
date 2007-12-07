@@ -19,6 +19,8 @@
 
 namespace Sprog
 {
+namespace Kinetics
+{
 class ReactionSet
 {
 public:
@@ -44,10 +46,13 @@ public:
     unsigned int Count(void) const; // Returns the number of reactions in the set.
 
     // Reactions.
-    const RxnPtrVector &Reactions(void) const;      // Returns the list of reactions.
-    void AddReaction(const Reaction &rxn);          // Adds a reaction to the set.
-    void AddReaction(const ThirdBodyReaction &rxn); // Adds a third body reaction to the set.
-    void AddReaction(const FallOffReaction &rxn);   // Adds a fall-off reaction to the set.
+    const RxnPtrVector &Reactions(void) const;                 // Returns the list of reactions.
+    Reaction *const AddReaction(const Reaction &rxn);          // Adds a reaction to the set.
+    Reaction *const AddReaction(const ThirdBodyReaction &rxn); // Adds a third body reaction to the set.
+    Reaction *const AddReaction(const FallOffReaction &rxn);   // Adds a fall-off reaction to the set.
+
+    // Tidying up.
+    void Clear(void); // Clears all reactions from the set.
 
 protected:
     // Reaction set data.
@@ -60,6 +65,7 @@ protected:
 
     // Memory management.
     virtual void releaseMemory(void); // Clears all memory used by the set.
+};
 };
 };
 

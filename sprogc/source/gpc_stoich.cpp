@@ -8,6 +8,7 @@ using namespace Sprog;
 template<class T>
 Stoichiometry<T>::Stoichiometry(void)
 {
+    m_species = -1;
 }
 
 // Copy constructor.
@@ -16,6 +17,14 @@ Stoichiometry<T>::Stoichiometry(const Sprog::Stoichiometry<T> &s)
 {
     m_species = s.m_species;
     m_stoich = s.m_stoich;
+}
+
+// Initialising constructor.
+template<class T>
+Stoichiometry<T>::Stoichiometry(unsigned int isp, const typename Stoichiometry<T>::stoich_val &mu)
+{
+    m_species = isp;
+    m_stoich = mu;
 }
 
 // Destructor.
@@ -47,19 +56,12 @@ Stoichiometry<T> &Stoichiometry<T>::operator=(const Sprog::Stoichiometry<T> &s)
 template<class T>
 int Stoichiometry<T>::Index() const
 {
-    return m_species.Index;
-}
-
-// Returns a const pointer to the associated species.
-template<class T>
-const Sprog::Species *const Stoichiometry<T>::Species() const
-{
-    return m_species.Species;
+    return m_species;
 }
 
 // Sets the associated species.
 template<class T>
-void Stoichiometry<T>::SetSpecies(const Sprog::IndexedSpecies &sp)
+void Stoichiometry<T>::SetSpecies(const unsigned int &sp)
 {
     m_species = sp;
 }
@@ -86,3 +88,7 @@ void Stoichiometry<T>::IncMu(const T &mu)
 {
     m_stoich += mu;
 }
+
+
+template class Stoichiometry<int>;
+template class Stoichiometry<real>;

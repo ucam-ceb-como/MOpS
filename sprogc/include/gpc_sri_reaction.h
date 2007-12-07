@@ -16,6 +16,8 @@ using namespace std;
 
 namespace Sprog
 {
+namespace Kinetics
+{
 class SRIReaction : public FallOffReaction
 {
 public:
@@ -44,6 +46,7 @@ public:
 
 protected:    
     SRI_PARAMS m_params; // SRI parameters.
+};
 };
 };
 

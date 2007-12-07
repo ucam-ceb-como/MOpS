@@ -1,6 +1,7 @@
 #include "gpc_sri_reaction.h"
 
 using namespace Sprog;
+using namespace Sprog::Kinetics;
 using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
@@ -11,7 +12,7 @@ SRIReaction::SRIReaction()
 }
 
 // Copy constructor.
-SRIReaction::SRIReaction(const Sprog::SRIReaction &rxn)
+SRIReaction::SRIReaction(const Sprog::Kinetics::SRIReaction &rxn)
 {
     *this = rxn;
 }
@@ -25,7 +26,7 @@ SRIReaction::~SRIReaction()
 // OPERATOR OVERLOADING.
 
 // Assignment operator.
-SRIReaction &SRIReaction::operator=(const Sprog::SRIReaction &rxn)
+Kinetics::SRIReaction &SRIReaction::operator=(const Sprog::Kinetics::SRIReaction &rxn)
 {
     // Check for self assignment!
     if (this != &rxn) {
@@ -42,13 +43,13 @@ SRIReaction &SRIReaction::operator=(const Sprog::SRIReaction &rxn)
 // SRI PARAMETERS.
 
 // Returns the SRI parameters.
-const SRIReaction::SRI_PARAMS &SRIReaction::FallOffParams() const
+const Kinetics::SRIReaction::SRI_PARAMS &SRIReaction::FallOffParams() const
 {
     return m_params;
 }
 
 // Sets the SRI fall-off parameters.
-void SRIReaction::SetFallOffParams(const Sprog::SRIReaction::SRI_PARAMS &params)
+void SRIReaction::SetFallOffParams(const Sprog::Kinetics::SRIReaction::SRI_PARAMS &params)
 {
     m_params = params;
 }
@@ -57,7 +58,7 @@ void SRIReaction::SetFallOffParams(const Sprog::SRIReaction::SRI_PARAMS &params)
 // CLONING.
 
 // Returns a pointer to a copy of the SRI reaction.
-SRIReaction* SRIReaction::Clone(void) const
+Kinetics::SRIReaction* SRIReaction::Clone(void) const
 {
     return new SRIReaction(*this);
 }

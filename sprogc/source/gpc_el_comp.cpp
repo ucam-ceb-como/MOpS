@@ -9,21 +9,27 @@ using namespace std;
 // Default constructor.
 ElComp::ElComp(void) 
 {
-    m_element = NULL;
+    m_index = -1;
     m_count = 0;
 }
 
 // Copy constructor.
 ElComp::ElComp(const ElComp &el)
 {
-    m_element = NULL;
+    m_index = -1;
     *this = el;
+}
+
+// Initialising constructor.
+ElComp::ElComp(unsigned int i, unsigned int n)
+{
+    m_index = i;
+    m_count = n;
 }
 
 // Destructor.
 ElComp::~ElComp(void)
 {
-    m_element = NULL;
 }
 
 
@@ -33,7 +39,7 @@ ElComp::~ElComp(void)
 ElComp &ElComp::operator=(const Sprog::ElComp &el)
 {
     if (this!=&el) {
-        m_element = el.m_element;
+        m_index = el.m_index;
         m_count = el.m_count;
     }
     return *this;
@@ -77,7 +83,7 @@ const ElComp ElComp::operator-(const unsigned int n)
 // the same element.
 bool ElComp::operator==(const ElComp &el) const
 {
-    return (m_element == el.m_element);
+    return (m_index == el.m_index);
 }
 
 // Inequality operator:  Returns false if both ElComp objects point to
@@ -88,18 +94,18 @@ bool ElComp::operator!=(const ElComp &el) const
 }
 
 
-// ELEMENT POINTER.
+// ELEMENT INDEX.
 
-// Returns a pointer to the element referred to by this ElComp object.
-const Sprog::Element *const ElComp::Element(void) const
+// Returns a index to the element referred to by this ElComp object.
+int ElComp::Index(void) const
 {
-    return m_element;
+    return m_index;
 }
 
-// Sets the pointer to the element referred to by this ElComp object.
-void Sprog::ElComp::SetElement(const Sprog::Element *const el)
+// Sets the index to the element referred to by this ElComp object.
+void Sprog::ElComp::SetIndex(unsigned int el)
 {
-    m_element = el;
+    m_index = el;
 }
 
 

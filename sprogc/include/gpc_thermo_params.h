@@ -16,6 +16,8 @@
 
 namespace Sprog
 {
+namespace Thermo
+{
     // Maximum lengths of thermo parameter arrays (S_PARAM_COUNT).
     const unsigned int CP_PARAM_COUNT = 5;
     const unsigned int H_PARAM_COUNT  = 6;
@@ -29,5 +31,5 @@ namespace Sprog
 
     typedef std::map<real, THERMO_PARAMS> ThermoMap;
 };
-
+};
 #endif

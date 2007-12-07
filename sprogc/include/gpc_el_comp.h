@@ -21,6 +21,7 @@ public:
     // Constructors.
     ElComp(void); // Default constructor.
     ElComp(const ElComp &el); // Copy constructor.
+    ElComp(unsigned int i, unsigned int n); // Initialising constructor.
 
     // Destructor.
     virtual ~ElComp(void);
@@ -35,16 +36,16 @@ public:
     bool operator!=(const ElComp &el) const;
 
     // Related element object.
-    const Sprog::Element *const Element(void) const; // Returns a pointer to the related element.
-    void SetElement(const Sprog::Element *const el); // Sets the related element object.
+    int Index(void) const; // Returns a pointer to the related element.
+    void SetIndex(unsigned int el); // Sets the related element object.
 
     // Number of the element in this composition.
     unsigned int Count(void) const; // Returns number of the element in this composition.
     void SetCount(unsigned int n);  // Sets the element count in this composition.
 private:
     // Data.
-    const Sprog::Element *m_element; // Pointer to related element.
-    unsigned int m_count;            // Element count in this composition.
+    int m_index;          // Index of element.
+    unsigned int m_count; // Element count in this composition.
 };
 
 // A typedef for a STL vector of ElComp objects.

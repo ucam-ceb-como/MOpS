@@ -16,6 +16,8 @@
 
 namespace Sprog
 {
+class Mechanism; // Forward declaration of mechanism class.
+
 class Element
 {
 public:
@@ -41,15 +43,31 @@ public:
     // Element molecular weight.
     const real MolWt() const;        // Returns molecular weight of the element.
     void SetMolWt(const real molwt); // Sets the molecular weight of the element.
+    bool SetMolWtFromLibrary();      // Searches for the element in the library of known elements.
+
+    // Parent mechanism.
+    Sprog::Mechanism *const Mechanism(void);         // Returns pointer to parent mechanism.
+    void SetMechanism(Sprog::Mechanism *const mech); // Sets the parent mechanism.
+
+    // Cloning.
+    virtual Element *const Clone(void) const; // Returns a pointer to a copy of the Element object.
 
 protected:
     // Element data.
-    std::string m_name; // Element name/symbol.
-    real m_molwt;       // Molecular weight (kg/mol).
+    std::string m_name;       // Element name/symbol.
+    real m_molwt;             // Molecular weight (kg/mol).
+    Sprog::Mechanism *m_mech; // Parent mechanism.
+
+    // Library.
+    const static unsigned int m_nlib = 5;
+    const static Element m_lib[m_nlib];
 };
 
 // Inline function definitions.
 #include "gpc_element_inl.h"
+
+// Element library.
+#include "gpc_element_lib.h"
 
 // A typedef for a STL vector of elements.
 typedef std::vector<Element> ElementVector;

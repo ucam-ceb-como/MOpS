@@ -14,6 +14,8 @@
 
 namespace Sprog
 {
+namespace Kinetics
+{
 class TroeReaction : public FallOffReaction
 {
 public:
@@ -54,5 +56,5 @@ protected:
     TroeParams m_params; // TROE form parameters.
 };
 };
-
+};
 #endif

@@ -19,6 +19,10 @@
 
 namespace Sprog
 {
+class Mechanism; // Forward declaration of mechanism.
+
+namespace Kinetics
+{
 class Reaction
 {
 public:
@@ -47,6 +51,9 @@ public:
                                                         // reactant coefficients.
     void AddReactant(const Stoich &reac);  // Adds an integer reactant to the reaction.  
     void AddReactant(const Stoichf &reac); // Adds a real reactant to the reaction.
+    void AddReactant(const std::string &name, unsigned int stoich); // Adds an integer reactant given
+                                                                    // the species name.
+    void AddReactant(const std::string &name, real stoich); // Adds a real reactant given the species name.
     void RemoveReactant(const std::string &name); // Removes a reactant, given by name, from 
                                                   // the reaction (integer or real).
 
@@ -57,6 +64,9 @@ public:
                                                        // product coefficients.
     void AddProduct(const Stoich &prod);  // Adds an integer product to the reaction.   
     void AddProduct(const Stoichf &prod); // Adds a real product to the reaction.
+    void AddProduct(const std::string &name, unsigned int stoich); // Adds an integer product given
+                                                                   // the species name.
+    void AddProduct(const std::string &name, real stoich); // Adds a real product given the species name.
     void RemoveProduct(const std::string &name); // Removes a product, given by name, from the 
                                                  // reaction (integer or real).
 
@@ -76,6 +86,15 @@ public:
     const LTCOEFFS *const RevLTCoeffs(void) const; // Returns a pointer to the reverse Landau Teller coefficients.   
     void SetRevLTCoeffs(const LTCOEFFS &lt);       // Sets the reverse Landau Teller coefficients.
 
+    // Species vector.
+    const SpeciesPtrVector *const Species(void) const; // Returns pointer to the vector of species used to 
+                                                       // define reaction.
+    void SetSpecies(const SpeciesPtrVector *const sp); // Sets the species vector.
+
+    // Parent mechanism.
+    Sprog::Mechanism *const Mechanism(void) const;   // Returns a pointer to the parent mechanism.
+    void SetMechanism(Sprog::Mechanism *const mech); // Sets the parent mechanism.
+
     // Cloning.
     virtual Reaction *Clone(void) const; // Returns a pointer to a clone of the reaction.
 
@@ -89,6 +108,9 @@ protected:
     ARRHENIUS m_arrf, *m_arrr;             // Forward and reverse Arrhenius parameters.
     LTCOEFFS *m_lt, *m_revlt;              // Landau-Teller forward and reverse coefficients.
    
+    const SpeciesPtrVector *m_species; // Vector of species used to define the reaction.
+    Sprog::Mechanism *m_mech;          // Parent mechanism.
+
     // Memory management.
     virtual void releaseMemory(void); // Releases all memory used by the reaction object.
 };
@@ -96,33 +118,9 @@ protected:
 // Inline function definitions.
 #include "gpc_reaction_inl.h"
 
-
 // A typedef for a STL vector of reactions.
 typedef std::vector<Reaction> RxnVector;
 typedef std::vector<Reaction*> RxnPtrVector;
-
-
-// A data structure used for internal data referencing and calculations.  A pointer
-// to a Reaction object is maintained with an index for this reaction, which will 
-// normally refer to its location in a vector or array.
-struct IndexedRxn
-{
-public:
-    // Data.
-    Reaction *Pointer;
-    unsigned int Index;
-
-    // Constructors.
-    IndexedRxn(void); // Default constructor.
-    IndexedRxn(const IndexedRxn &rxn); // Copy constructor.
-
-    // Destructor.
-    ~IndexedRxn(void);
-
-    // Operator overloads.
-    IndexedRxn &operator=(const IndexedRxn &rxn);
-    bool operator==(const IndexedRxn &rxn) const;
-    bool operator!=(const IndexedRxn &rxn) const;
 };
 };
 

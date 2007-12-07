@@ -13,7 +13,6 @@ namespace Sprog
 {
     // Common typedefs.  
     typedef double real;  // typedef for real numbers in Sprog, so they can be easily changed.
-    typedef unsigned int index;  // typedef for indexing things.
 
     // Mathematical constants.
     const real PI = 3.1415926535897932384626433832795;
