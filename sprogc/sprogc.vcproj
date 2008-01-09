@@ -142,7 +142,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\source\gpc_fall_off_reaction.cpp"
+				RelativePath=".\include\gpc_element_lib.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\gpc_gasphase.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\gpc_idealgas.cpp"
 				>
 			</File>
 			<File
@@ -151,6 +159,10 @@
 			</File>
 			<File
 				RelativePath=".\source\gpc_mech_io.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\gpc_mixture.cpp"
 				>
 			</File>
 			<File
@@ -166,19 +178,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\source\gpc_sri_reaction.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\source\gpc_stoich.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\gpc_third_body_reaction.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\gpc_troe_reaction.cpp"
+				RelativePath=".\source\gpc_thermo.cpp"
 				>
 			</File>
 		</Filter>
@@ -204,11 +208,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\gpc_element_lib.h"
+				RelativePath=".\include\gpc_gasphase.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\gpc_fall_off_reaction.h"
+				RelativePath=".\include\gpc_idealgas.h"
 				>
 			</File>
 			<File
@@ -217,6 +221,10 @@
 			</File>
 			<File
 				RelativePath=".\include\gpc_mech_io.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\gpc_mixture.h"
 				>
 			</File>
 			<File
@@ -248,10 +256,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\gpc_sri_reaction.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\gpc_stoich.h"
 				>
 			</File>
@@ -261,14 +265,6 @@
 			</File>
 			<File
 				RelativePath=".\include\gpc_thermo_params.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\gpc_third_body_reaction.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\gpc_troe_reaction.h"
 				>
 			</File>
 			<File

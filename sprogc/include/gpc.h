@@ -11,16 +11,15 @@
 #include "gpc_rate_params.h"
 
 #include "gpc_element.h"
-
 #include "gpc_species.h"
-
 #include "gpc_reaction.h"
-#include "gpc_third_body_reaction.h"
-#include "gpc_fall_off_reaction.h"
-#include "gpc_troe_reaction.h"
-#include "gpc_sri_reaction.h"
 
 #include "gpc_mech.h"
+
+#include "gpc_thermo.h"
+#include "gpc_mixture.h"
+#include "gpc_gasphase.h"
+#include "gpc_idealgas.h"
 
 #include "gpc_mech_io.h"
 

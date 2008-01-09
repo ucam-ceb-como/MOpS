@@ -66,9 +66,6 @@ protected:
 // Inline function definitions.
 #include "gpc_element_inl.h"
 
-// Element library.
-#include "gpc_element_lib.h"
-
 // A typedef for a STL vector of elements.
 typedef std::vector<Element> ElementVector;
 typedef std::vector<Element*> ElementPtrVector;

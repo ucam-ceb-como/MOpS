@@ -20,9 +20,10 @@ namespace Sprog
     const real TWO_THIRDS = 6.6666667e-01;
 
     // Physical constants.
-    const real NA   = 6.022e23;  // Avogadro's number.
-    const real R    = 8.3145e0;  // Gas constant SI (J/molK).
-    const real RCAL = 1.9872e-3; // Gas constant CGS (kcal/molK).
+    const real NA   = 6.0221367e23;  // Avogadro's number.
+    const real R    = 8.31451e0;     // Gas constant SI (J/molK).
+    const real R_CGS = 8.31451e7;    // Gas constant CGS (ergs/molK).
+    const real RCAL = 1.9872e-3;     // Gas constant Calories (kcal/molK).
 };
 
 #endif

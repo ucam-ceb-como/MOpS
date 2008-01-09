@@ -40,6 +40,14 @@ inline const std::vector<Stoich> &Reaction::Products() const {return m_prod;};
 inline const std::vector<Stoichf> &Reaction::FProducts() const {return m_fprod;};
 
 
+// STOICHIOMETRY.
+
+inline real Reaction::TotalStoich() const {return m_dstoich;};
+inline real Reaction::ReactantStoich() const {return m_dreac;};
+inline real Reaction::ProductStoich() const {return m_dprod;};
+
+
+
 // ARRHENIUS COEFFICIENTS.
 
 inline const ARRHENIUS &Reaction::Arrhenius() const {return m_arrf;};
@@ -55,5 +63,10 @@ inline const ARRHENIUS *const Reaction::RevArrhenius(void) const {return m_arrr;
 
 inline const LTCOEFFS *const Reaction::LTCoeffs() const {return m_lt;};
 inline const LTCOEFFS *const Reaction::RevLTCoeffs() const {return m_revlt;};
+
+
+// THIRD BODIES.
+inline bool Reaction::UseThirdBody() const {return m_usetb;};
+inline void Reaction::SetUseThirdBody(bool usetb) {m_usetb = usetb;};
 
 #endif

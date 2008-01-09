@@ -3,7 +3,10 @@
   Project:        sprog (gas-phase chemical kinetics).
 
   File purpose:
-    This files contains the definition of a chemical mechanism.
+    This files contains the definition of a chemical mechanism.  A chemical mechanism consists
+    of 3 parts:  definition of chemical elements, definition of chemical species and a set of
+    reactions which define the systems kinetics.  By combining these items into a single
+    class the code can be made more efficient.
 */
 
 #ifndef GPC_MECH_H
@@ -23,7 +26,7 @@ namespace Sprog
 class Mechanism
 {
 public:
-    // Structure for species/reaction stoichiometry cross-referencing.
+    // Typedefs and structure for species/reaction stoichiometry cross-referencing.
     typedef std::map<unsigned int, real> RxnStoichMap;
     typedef std::pair<unsigned int, real> RxnStoichPair;
     struct StoichXRef
@@ -43,9 +46,12 @@ public:
     // Operator overloads.
     Mechanism &operator=(const Mechanism &mech);
 
+    // Empties the mechanism of all elements, species and reactions.
+    void Clear();
+
     // Units.
-    UnitSystem Units(void); // Returns the current unit system.
-    void SetUnits(UnitSystem u); // Converts the mechanism to a new units system.
+    UnitSystem Units(void) const; // Returns the current unit system.
+    void SetUnits(UnitSystem u);  // Converts the mechanism to a new units system.
 
     // Chemical elements.
     const ElementPtrVector &Elements(void) const; // Returns the vector of elements.
@@ -71,6 +77,15 @@ public:
     Kinetics::Reaction *const AddReaction(void);        // Adds an empty reaction to the mechanism.
     Kinetics::Reaction *const AddReaction(const Kinetics::Reaction *const rxn); // Copies a reaction into the mechanism.
 
+    // Species-reactions stoichiometry cross reference.
+    void BuildStoichXRef();   // Builds the species-reaction stoichiometry cross-reference table.
+    bool IsStoichXRefValid(); // Returns true if the stoich xref map is valid, otherwise false.
+    const RxnStoichMap &GetStoichXRef( // Returns the stoichiometry for all reactions which
+                                       // involve the species with the given index.  Throws error
+                                       // if index is invalid.
+        unsigned int isp // Index of species for which to return cross reference.
+        ) const;
+
 protected:
     // Mechanism data.
     UnitSystem m_units;             // The system of units used by this mechanism.
@@ -78,13 +93,12 @@ protected:
     SpeciesPtrVector m_species;     // Vector of chemical species defined by mechanism.
     Kinetics::ReactionSet m_rxns;   // Set of reactions defined by mechanism.
     StoichXRefVector m_stoich_xref; // Reaction stoichiometry cross-referenced for each species.
+    bool m_stoich_xref_valid;       // Flag which tells whether or not the stoich xref map is valid.
 
     // Copying routines.
     void copyInElements(const ElementPtrVector &els); // Copies elements from given array into this mechanism.
     void copyInSpecies(const SpeciesPtrVector &els);  // Copies species from given array into this mechanism.
 
-    // Builds the species-reaction stoichiometry cross-reference table.
-    void buildStoichCrossRef(void);
 
     // Memory management.
     void releaseMemory(void); // Clears memory used by the mechanism object.

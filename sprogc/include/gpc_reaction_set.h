@@ -12,22 +12,21 @@
 
 #include "gpc_params.h"
 #include "gpc_reaction.h"
-#include "gpc_third_body_reaction.h"
-#include "gpc_fall_off_reaction.h"
+#include "gpc_gasphase.h"
 #include <vector>
 #include <map>
 
 namespace Sprog
 {
+class Mechanism; // Forward declare Mechanism class.
+
 namespace Kinetics
 {
 class ReactionSet
 {
 public:
-    // In the following maps the key is the index in the vector of all reactions.
+    // In the following map the key is the index in the vector of all reactions.
     typedef std::map<unsigned int,const Reaction*> RxnMap;
-    typedef std::map<unsigned int,const ThirdBodyReaction*> ThirdBodyRxnMap;
-    typedef std::map<unsigned int,const FallOffReaction*> FallOffRxnMap;
 
     // Constructors.
     ReactionSet(void); // Default constructor.
@@ -46,25 +45,49 @@ public:
     unsigned int Count(void) const; // Returns the number of reactions in the set.
 
     // Reactions.
-    const RxnPtrVector &Reactions(void) const;                 // Returns the list of reactions.
-    Reaction *const AddReaction(const Reaction &rxn);          // Adds a reaction to the set.
-    Reaction *const AddReaction(const ThirdBodyReaction &rxn); // Adds a third body reaction to the set.
-    Reaction *const AddReaction(const FallOffReaction &rxn);   // Adds a fall-off reaction to the set.
+    const RxnPtrVector &Reactions(void) const;        // Returns the list of reactions.
+    Reaction *const AddReaction(const Reaction &rxn); // Adds a reaction to the set.
 
     // Tidying up.
     void Clear(void); // Clears all reactions from the set.
 
+    // Rate calculation (functions to avoid repetition of calculations).
+    void GetMolarProdRates( // Calculates the molar production rates of all species.
+        const Sprog::Thermo::GasPhase &mix, // The mixture for which the prod. rates are being calculated.
+        const std::vector<real> &rop,       // Rate of Progress of each reaction.
+        std::vector<real> &wdot             // Return vector for molar prod. rates.
+        ) const;
+    void GetRatesOfProgress( // Calculates the rate of progress of each reaction.
+        const Sprog::Thermo::GasPhase &mix, // The mixture for which to calculate the rates.
+        const std::vector<real> &kforward,  // Forward rate constants of all reactions.
+        const std::vector<real> &kreverse,  // Reverse rate constants of all reactions.
+        std::vector<real> & rop             // Return vector for rates of progress.
+        ) const;
+    void GetRateConstants( // Calculates the forward and reverse rate constants of all reactions.
+        const Sprog::Thermo::GasPhase &mix, // The mixture for which to calculate the rate constants.
+        const std::vector<real> &Gs,        // Dimensionless Gibbs free energy of each species (1/mol).
+        std::vector<real> &kforward,        // Return vector for forward rate constants.
+        std::vector<real> &kreverse         // Return vector for reverse rate constants.
+        ) const;
+
+    // Parent mechanism.
+    const Mechanism const* Mechanism() const;       // Returns a pointer to the parent mechanism.
+    void SetMechanism(const Mechanism const* mech); // Sets the parent mechanism.
 protected:
     // Reaction set data.
-    RxnPtrVector m_rxns;       // Vector of all reactions in the set.
-    RxnMap m_rev_rxns;         // Map of reactions which have explicit reverse Arrhenius parameters.
-    ThirdBodyRxnMap m_tb_rxns; // Map of third body reactions.
-    FallOffRxnMap m_fo_rxns;   // Map of fall-off reactions.
-    RxnMap m_lt_rxns;          // Map of reactions with Landau Teller parameters.
-    RxnMap m_revlt_rxns;       // Map of reactions with reverse Landau Teller parameters.
+    RxnPtrVector m_rxns; // Vector of all reactions in the set.
+    RxnMap m_rev_rxns;   // Map of reactions which have explicit reverse Arrhenius parameters.
+    RxnMap m_tb_rxns;    // Map of third body reactions.
+    RxnMap m_fo_rxns;    // Map of fall-off reactions.
+    RxnMap m_lt_rxns;    // Map of reactions with Landau Teller parameters.
+    RxnMap m_revlt_rxns; // Map of reactions with reverse Landau Teller parameters.
 
     // Memory management.
     virtual void releaseMemory(void); // Clears all memory used by the set.
+
+private:
+    // Pointer to mechanism to which this ReactionSet belongs.
+    const Mechanism *m_mech;
 };
 };
 };

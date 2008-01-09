@@ -1,6 +1,7 @@
 #include "gpc_mech.h"
 #include "gpc_unit_systems.h"
 #include <string>
+#include <math.h>
 
 using namespace Sprog;
 using namespace std;
@@ -63,6 +64,99 @@ Mechanism &Mechanism::operator=(const Sprog::Mechanism &mech)
         }
     }
     return *this;
+}
+
+
+// Clears the mechanism of all elements, species and reactions.
+void Mechanism::Clear()
+{
+    releaseMemory();
+}
+
+
+// UNITS.
+
+// Returns the current system of units of this mechanism.
+UnitSystem Mechanism::Units() const
+{
+    return m_units;
+}
+
+// Sets the system of units used by this mechanism by converting all element, species and 
+// reaction properties.
+void Mechanism::SetUnits(Sprog::UnitSystem u)
+{
+    Kinetics::ARRHENIUS arr;
+
+    // Is new system SI?
+    if (u == SI) {
+        // Is current system CGS?
+        if (m_units = CGS) {
+            // Convert elements' mol. weights.
+            ElementPtrVector::iterator iel;
+            for (iel=m_elements.begin(); iel!=m_elements.end(); iel++) {
+                // Convert from g/mol to kg/mol.
+                (*iel)->SetMolWt((*iel)->MolWt()*1.0e-3);
+            }
+
+            // Scale species' mol. weights.
+            SpeciesPtrVector::iterator isp;
+            for (isp=m_species.begin(); isp!=m_species.end(); isp++) {
+                // Recalculate mol. weight.
+                (*isp)->CalcMolWt();
+            }
+
+            // Scale reaction coefficients.
+            int irxn;
+            for (irxn=0; irxn<m_rxns.Count(); irxn++) {
+                // Convert volumes from cm3 to m3, and convert energies from ergs/mol to
+                // J/mol.
+
+                // Forward rate coefficients.
+                arr = m_rxns[irxn]->Arrhenius();
+                arr.A *= pow(1.0e-6, m_rxns[irxn]->ReactantStoich()-1.0);
+                arr.E *= 1.0e-7;
+                m_rxns[irxn]->SetArrhenius(arr);
+
+                // Reverse rate coefficients.
+                if (m_rxns[irxn]->RevArrhenius() != NULL) {
+                    arr = *(m_rxns[irxn]->RevArrhenius());
+                    arr.A *= pow(1.0e-6, m_rxns[irxn]->ProductStoich()-1.0);
+                    arr.E *= 1.0e-7;
+                    m_rxns[irxn]->SetRevArrhenius(arr);
+                }
+
+                // Fall-off parameters.
+                if (m_rxns[irxn]->FallOffType() != Kinetics::None) {
+                    // Low-pressure limit.
+                    arr = m_rxns[irxn]->LowPressureLimit();
+                    arr.A *= pow(1.0e-6, m_rxns[irxn]->ReactantStoich()-1.0);
+                    arr.E *= 1.0e-7;
+                    m_rxns[irxn]->SetLowPressureLimit(arr);
+                } else {
+                    // Third-body concentrations also need scaling.
+                    if (m_rxns[irxn]->ThirdBodies().size() > 0) {
+                        // Forward rate coefficients.
+                        arr = m_rxns[irxn]->Arrhenius();
+                        arr.A *= 1.0e-6;
+                        m_rxns[irxn]->SetArrhenius(arr);
+
+                        // Reverse rate coefficients.
+                        if (m_rxns[irxn]->RevArrhenius() != NULL) {
+                            arr = *(m_rxns[irxn]->RevArrhenius());
+                            arr.A *= 1.0e-6;
+                            m_rxns[irxn]->SetRevArrhenius(arr);
+                        }
+                    }
+                }
+            }
+
+            m_units = SI;
+        }
+    } else if (u == CGS) {
+        //throw invalid_argument("Cannot currently convert mechanism to CGS units.  Consult your programmer.");
+        m_units = CGS;
+    }
 }
 
 
@@ -277,6 +371,108 @@ Sprog::Kinetics::Reaction *const Mechanism::AddReaction(const Sprog::Kinetics::R
     prxn->SetSpecies(&m_species);
     prxn->SetMechanism(this);
     return prxn;
+}
+
+
+// STOICHIOMETRY CROSS REFERENCE.
+
+// Builds the species-reaction stoichiometry cross-reference table.
+void Mechanism::BuildStoichXRef()
+{
+    int i, j, k;
+    RxnStoichMap::iterator ij;
+    real mu;
+
+    // Clear current table.
+    m_stoich_xref.clear();
+    
+    // Set up empty table.
+    for (i=0; i<m_species.size(); i++) {
+        m_stoich_xref.push_back(StoichXRef());
+        m_stoich_xref[i].Species = i;
+    }
+
+    // Loop over all reactions.
+    for (j=0; j<m_rxns.Count(); j++) {
+        // Sum up integer reactant stoich.
+        for (k=0; k<m_rxns[j]->ReactantCount(); k++) {
+            // Get the species index and the stoichiometry.
+            i  = m_rxns[j]->Reactant(k).Index();
+            mu = (real)m_rxns[j]->Reactant(k).Mu();
+
+            // Add up the contribution of this reaction to this species.
+            ij = m_stoich_xref[i].RxnStoich.find(j);
+            if (ij != NULL) {
+                (*ij).second -= mu;
+            } else {
+                m_stoich_xref[i].RxnStoich.insert(RxnStoichPair(j,-mu));
+            }
+        }
+
+        // Sum up integer product stoich.
+        for (k=0; k<m_rxns[j]->ProductCount(); k++) {
+            // Get the species index and the stoichiometry.
+            i  = m_rxns[j]->Product(k).Index();
+            mu = (real)m_rxns[j]->Product(k).Mu();
+
+            // Add up the contribution of this reaction to this species.
+            ij = m_stoich_xref[i].RxnStoich.find(j);
+            if (ij != NULL) {
+                (*ij).second += mu;
+            } else {
+                m_stoich_xref[i].RxnStoich.insert(RxnStoichPair(j,mu));
+            }
+        }
+
+        // Sum up real reactant stoich.
+        for (k=0; k<m_rxns[j]->FReactantCount(); k++) {
+            // Get the species index and the stoichiometry.
+            i  = m_rxns[j]->FReactant(k).Index();
+            mu = m_rxns[j]->FReactant(k).Mu();
+
+            // Add up the contribution of this reaction to this species.
+            ij = m_stoich_xref[i].RxnStoich.find(j);
+            if (ij != NULL) {
+                (*ij).second -= mu;
+            } else {
+                m_stoich_xref[i].RxnStoich.insert(RxnStoichPair(j,-mu));
+            }
+        }
+
+        // Sum up real product stoich.
+        for (k=0; k<m_rxns[j]->FProductCount(); k++) {
+            // Get the species index and the stoichiometry.
+            i  = m_rxns[j]->FProduct(k).Index();
+            mu = m_rxns[j]->FProduct(k).Mu();
+
+            // Add up the contribution of this reaction to this species.
+            ij = m_stoich_xref[i].RxnStoich.find(j);
+            if (ij != NULL) {
+                (*ij).second += mu;
+            } else {
+                m_stoich_xref[i].RxnStoich.insert(RxnStoichPair(j,mu));
+            }
+        }
+    }
+}
+
+// Returns true if the stoichiometry xref map is valid, otherwise false.
+bool Mechanism::IsStoichXRefValid()
+{
+    return m_stoich_xref_valid;
+}
+
+// Returns the stoichiometry for all reactions which
+// involve the species with the given index.  Throws error if index is
+// invalid.
+const Mechanism::RxnStoichMap &Mechanism::GetStoichXRef(unsigned int isp) const
+{
+    if (isp < m_species.size()) {
+        return m_stoich_xref[isp].RxnStoich;
+    } else {
+        // Species index is invalid.
+        throw invalid_argument("Invalid species index given when finded RxnStoichMap in Mechanism class.");
+    }
 }
 
 

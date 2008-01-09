@@ -12,7 +12,11 @@
 
 namespace Sprog
 {
+    // Enumeration of different systems of units.
     enum UnitSystem {SI,CGS};
+
+    // Enumeration of different concentration units.
+    enum ConcUnits {MolarConcs, MoleFracs, MassFracs};
 };
 
 #endif

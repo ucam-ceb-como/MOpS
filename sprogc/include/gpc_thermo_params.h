@@ -19,9 +19,10 @@ namespace Sprog
 namespace Thermo
 {
     // Maximum lengths of thermo parameter arrays (S_PARAM_COUNT).
-    const unsigned int CP_PARAM_COUNT = 5;
-    const unsigned int H_PARAM_COUNT  = 6;
-    const unsigned int S_PARAM_COUNT  = 7;
+    const unsigned int CP_PARAM_COUNT    = 5;
+    const unsigned int H_PARAM_COUNT     = 6;
+    const unsigned int S_PARAM_COUNT     = 7;
+    const unsigned int MAX_THERMO_PARAMS = 10;
 
     struct THERMO_PARAMS
     {

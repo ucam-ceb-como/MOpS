@@ -8,8 +8,10 @@
 
 #include "gpc.h"
 #include <iostream>
+#include <stdexcept>
 
 using namespace Sprog;
+using namespace std;
 
 /*
 int test_element(void);
