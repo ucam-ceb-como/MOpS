@@ -28,7 +28,7 @@ public:
     /* Reads the given xml file into the given mechanism object. */
     static int ReadMechanism(const string &filename, Mechanism &mech);
 private:
-    /* Reads a version 1 sweep mechanism.  This is also the default is no
+    /* Reads a version 1 sweep mechanism.  This is also the default if no
        version is specified. */
     static int readVersion1(CamXML::Document &xml, Mechanism &mech);
 };

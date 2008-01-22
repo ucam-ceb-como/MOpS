@@ -6,6 +6,14 @@
     Definition of a surface reaction which includes terms for active sites.  The
     active sites concentration is provided by a function pointer, which must be
     provided before the process is used.
+
+    This class inherits from the SurfaceReaction class, which defines particle 
+    surface processes without an active site term.
+
+    The original purpose of this process was to define the surface reactions on
+    soot particles given by the ABF model.  These reactions involve reaction at
+    active sites on the particle surface, the proportion of which is given by an
+    empirical correlation.
 */
 
 #ifndef SWEEP_ACTIVESITESRXN_H
@@ -31,16 +39,17 @@ public:
                                       const real P, const vector<real> &sums);
 protected:
     ActiveSitesFnPtr m_psitesfn;
-public:
+public: // Default contructor and destructor.
     ActiveSitesReaction(void);
     ~ActiveSitesReaction(void);
+public:
     /* Initialises the inception reaction. */
     void Initialise(const map<unsigned int, int> &reac, // Gas-phase reactants.
                     const map<unsigned int, int> &prod, // Gas-phase products.
                     const real a, const real n,         // Arrhenius rate parameters.
                     const real e,                       // ''.
-                    const vector<real> &comp,           // Component counts of new particle.
-                    const vector<real> &values,         // Other values for new particle.
+                    const vector<real> &comp,           // Changes to component counts due to reaction.
+                    const vector<real> &values,         // Changes to other values due to reaction.
                     const unsigned int pid,             // Index of particle property.
                     vector<Component*> &components,     // Reference to component vector used to define process.
                     ActiveSitesFnPtr pfn);              // Pointer to the active sites function.
@@ -54,6 +63,9 @@ public:
     /* Returns the rate of the process for the given particle in
        the system. Process must be linear in particle number. */
     real Rate(const real t, const System &sys, const DefaultParticle &sp) const;
+    /* Returns the rate of the process for the given particle in
+       the system given the precalculated chemical conditions. Process
+       must be linear in particle number. */
     real Rate(const real t, const vector<real> &chem, const real T, 
               const real P, const vector<real> &sums, const System &sys, 
               const DefaultParticle &sp) const;

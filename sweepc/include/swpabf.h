@@ -3,7 +3,12 @@
   Project:        sweep (population balance solver)
 
   File purpose:
-    Builds the ABF mechanism.
+    This class defines the ABF Hydrogen Abstraction - C2H2 Addtion (HACA) model
+    for soot particles as discussed by Appel et al. (2000).  This model includes
+    routines for calculating the fraction of radical sites on soot particle surfaces
+    using the steady-state assumption and a routine for for returning the number of
+    active sites using the alpha correlation given by Appel et al. (2000).  These
+    routines are only valid for the surface growth model described in that paper.
 */
 
 #ifndef SWEEP_ABFMECH_H
@@ -21,7 +26,7 @@ namespace ABF
 {
 class ABFMech
 {
-private:
+public:
     static int A4, C2H2, O2, OH, CO, H, H2, H2O, Alpha;
 public:
     /* Initialises the HACA mechanism by saving the indices of
@@ -46,6 +51,8 @@ public:
     {
         real r1f, r1b, r2f, r2b, r3f, r4f, r5f, rdenom, RT;
         RT = RCAL * T;
+
+        // Calculate the forward and back reaction rates.
         r1f = 4.2e+13 * exp(-13.0/RT)				 * chem[H];
         r1b = 3.9e+12 * exp(-11.0/RT)				 * chem[H2];
         r2f = 1.0e+10 * exp(-1.43/RT) * pow(T,0.734) * chem[OH];
@@ -69,6 +76,9 @@ public:
                           const real P, const vector<real> &sums)
     {
         if (Alpha >= 0) {
+            // 2.3e15 is the surface site concentration given by Frenklach.  This
+            // must be scaled be the fraction of those sites which are active (alpha)
+            // and the fraction of those sites which are radicalised (hydrogen abstracted).
             return 2.3e15 * chem[Alpha] * RadicalSiteFraction(t, chem, T, P);
         } else {
             return 0.0;

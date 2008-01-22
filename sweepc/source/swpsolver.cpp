@@ -19,6 +19,8 @@ void Solver::Initialise(void)
 {
     // Seed the random number generator.
     srnd(123);
+
+    // Set default values for solver object member variables.
     m_maxdt = 0.0;
     m_splitratio = 1.0e9;
 };
@@ -29,6 +31,7 @@ int Solver::Run(real *t, const real tstop, System &sys, Mechanism &mech)
     real tsplit, dtg, dt;
     vector<real> rates;
 
+    // Ensure the process counters contain sufficient entries to track all rate terms.
     m_processcounter.resize(mech.TermCount(), 0);
     m_ficticiouscounter.resize(mech.TermCount(), 0);
 
@@ -80,6 +83,10 @@ int Solver::Run(real *t, const real tstop, System &sys, Mechanism &mech)
 
 real Solver::TimeStep(const real t, System &sys, Mechanism &mech, const vector<real> &rates)
 {
+    /* The purpose of this routine is to perform a single stochastic jump process.  This
+       involves summing the total rate of all processes, generating a waiting time,
+       selecting a process and performing that process. */
+
     int i, j;
     real dt;
     real jrate = mech.JumpRate(rates);
@@ -120,6 +127,9 @@ real Solver::TimeStep(const real t, System &sys, Mechanism &mech, const vector<r
 
 int Solver::ChooseProcess(const vector<real> &rates, const unsigned int n)
 {
+    /* This routine implements a DIV algorithm to select a process from a 
+       descrete list of processes when each process's rate is given. */
+
     // Add together all process rates.
     vector<real>::const_iterator i;
     real sum = 0.0;

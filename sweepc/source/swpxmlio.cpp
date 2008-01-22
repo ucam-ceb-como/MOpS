@@ -58,7 +58,10 @@ int XMLIO::readVersion1(CamXML::Document &xml, Sweep::Mechanism &mech)
     real num=0.0;
     ACTSURFMODEL acmodel = Const;
 
-    // Read defined models.
+
+
+    /* Read defined models. */
+
     root->GetChildren("model", items);
     for (i=items.begin(); i!=items.end(); i++) {
         str = (*i)->GetAttributeValue("id");
@@ -78,7 +81,10 @@ int XMLIO::readVersion1(CamXML::Document &xml, Sweep::Mechanism &mech)
         }
     }
 
-    // Read components.
+
+
+    /* Read components. */
+
     Component *comp;
     root->GetChildren("component", items);
     for (i=items.begin(); i!=items.end(); i++) {
@@ -132,7 +138,10 @@ int XMLIO::readVersion1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.AddComponent(*comp);
     }
 
-    // Read tracker variable names.
+
+
+    /* Read tracker variable names. */
+
     root->GetChildren("track", items);
     for (i=items.begin(); i!=items.end(); i++) {
         str = (*i)->GetAttributeValue("id");
@@ -144,7 +153,10 @@ int XMLIO::readVersion1(CamXML::Document &xml, Sweep::Mechanism &mech)
         }
     }
 
-    // Read inception processes.
+
+
+    /* Read inception processes. */
+
     Inception *icn = NULL;
     real m[2], d[2];
     root->GetChildren("inception", items);
@@ -269,19 +281,33 @@ int XMLIO::readVersion1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.AddInception(icn);
     }
 
-    // Read surface processes.
-    SurfaceReaction *surf = NULL;
+
+
+    /* Read reactions. */
+
+    SurfaceReaction *surf    = NULL;
     ActiveSitesReaction *act = NULL;
-    Condensation *cond = NULL;
-    Process *rxn = NULL;
-    ParticleChanger *pc = NULL;
+    Condensation *cond       = NULL;
+    Process *rxn             = NULL;
+    ParticleChanger *pc      = NULL;
     RXNTYPE rxntype;
 
     root->GetChildren("reaction", items);
     for (i=items.begin(); i!=items.end(); i++) {
-        // Create correct type of surface reaction.
+        // Get the type of reaction.
         str = (*i)->GetAttributeValue("type");
+
+        // The type of reaction defined in the XML dictates what type of
+        // process class to use.  We now go through the options:
+
         if (str.compare("surface")==0) {
+            // This is either a bog-standard surface reaction or an active
+            // sites reaction.  In version 1 mechanisms active sites reactions
+            // can be defined merely be using an "as" particle term.  This
+            // will be made stricter in subsequent versions.
+
+            // To decide which class to use we must check the particle term.  Note
+            // the particle term isn't saved here, but will be read later on.
             el = (*i)->GetFirstChild("particleterm");
             if (el!=NULL) {
                 if (el->GetAttributeValue("id").compare("as")==0) {
@@ -308,12 +334,19 @@ int XMLIO::readVersion1(CamXML::Document &xml, Sweep::Mechanism &mech)
                 // error.
                 throw exception("Reaction found with no ""particleterm"" attribute.");
             }
+
         } else if (str.compare("condensation")==0) {
             // This is a condensation reaction.
             cond = new Condensation();
             rxn = cond;
             pc = cond;
             rxntype = Cond;
+
+        } else if (str.compare("haca")==0) {
+            // This is a HACA based active sites reaction, therefore we
+            // must create an active sites class instance and assign it 
+            // the ABF HACA active sites function.
+
         } else {
             // Unrecognised reaction type.
             throw exception(string("Unrecognised reaction type: ").append(str).c_str());
@@ -521,5 +554,39 @@ int XMLIO::readVersion1(CamXML::Document &xml, Sweep::Mechanism &mech)
             mech.AddProcess(cond);
         }
     }
+
+
+
+    /* Read and load prerequisite hardcoded models. */
+
+    root->GetChildren("prerequisite", items);
+
+    for (i=items.begin(); i!=items.end(); i++) {
+        // Read the prerequisite type.
+        str = (*i)->GetAttributeValue("type");
+
+        if (str.compare("particlemodel")==0) {
+            // This is a prerequisite particle model.  Therefore we need
+            // to read to model ID and tell the mechanism that it is
+            // required.
+            str = (*i)->GetAttributeValue("id");
+            if (str.compare("haca")==0) {
+                // This mechanism requires the ABF HACA active sites model.
+                mech.AddReqdModel(Mechanism::HACA);
+            } else if (str.compare("pah")==0) {
+                // This mechanism requires the hardcoded PAH site model.
+                mech.AddReqdModel(Mechanism::PAH);
+            } else if (str.compare("cnt")==0) {
+                // This mechanism requires the hardcoded simple CNT model.
+                mech.AddReqdModel(Mechanism::CNT);
+            }
+        }
+    }
+
+    // Initialise the required models.
+    mech.InitReqdModels();
+
+
+
     return 0;
 }

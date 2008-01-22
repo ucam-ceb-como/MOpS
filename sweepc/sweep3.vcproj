@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="sweep3"
 	ProjectGUID="{CEBB16F5-AB0E-45DC-BE4F-380EC38F3112}"
 	RootNamespace="sweep3"
 	Keyword="Win32Proj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -75,6 +76,8 @@
 				SubSystem="1"
 				OptimizeReferences="0"
 				EnableCOMDATFolding="0"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -94,9 +97,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -160,6 +160,8 @@
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 				Profile="false"
 			/>
@@ -182,9 +184,6 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -198,193 +197,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\source\gpcspecieslist.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\source\main.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpabf.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpactivesitesreaction.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpcoagulation.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpcomponent.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpcondensation.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpensemble.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swphomogas.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpinception.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpmechanism.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpoutput.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpparticle1d.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpparticlechanger.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swppremixflame.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpprocess.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpsolver.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpsurfacereaction.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpsvparticle.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpsystem.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpxmlio.cpp"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
-			<File
-				RelativePath=".\include\gpcspecieslist.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\morestrings.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\mt19937ar.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\rng.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\sweep.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpabf.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpactivesitesreaction.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpcoagulation.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpcomponent.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpcondensation.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpensemble.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swphomogas.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpinception.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpmechanism.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpoutput.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpparams.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpparticle1d.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpparticlechanger.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swppremixflame.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpprocess.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpsolver.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpsurfacereaction.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpsvparticle.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpsystem.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpxmlio.h"
 				>
 			</File>
 		</Filter>

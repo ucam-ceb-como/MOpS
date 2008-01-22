@@ -2,6 +2,7 @@
 
 using namespace Sweep::ABF;
 
+// Initial values for ABF HACA model parameters.
 int ABFMech::A4    = -1;
 int ABFMech::C2H2  = -1;
 int ABFMech::O2    = -1;

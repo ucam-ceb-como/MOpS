@@ -8,7 +8,10 @@ const Sweep::real Condensation::COND_MAJ = 2.0;
 
 Condensation::Condensation(void)
 {
+    // Clear the current data from the condensation.
     Destroy();
+
+    // Assume the condensation is simulated as a deferred process (LPDA).
     m_defer = true;
 }
 
@@ -21,7 +24,10 @@ void Condensation::Initialise(const map<unsigned int, int> &reac,const map<unsig
                               const real a, const real m, const real d, const vector<real> &comp,           
                               const vector<real> &values, vector<Component*> &components)
 {
+    // Destroy the current data in the condensation.
     Destroy();
+
+    // Set up the condensation variables.
     m_reac.insert(reac.begin(),reac.end());
     m_prod.insert(reac.begin(),reac.end());
     m_a = a * NA;
@@ -33,6 +39,8 @@ void Condensation::Initialise(const map<unsigned int, int> &reac,const map<unsig
 
 void Condensation::Destroy()
 {
+    // Clears all memory and resets all variables associated with
+    // the condensation.
     m_reac.clear();
     m_prod.clear();
     m_a = NA;
@@ -46,15 +54,19 @@ void Condensation::Destroy()
 
 real Condensation::Rate(const real t, const System &sys) const
 {
+    // Get required system conditions for rate calculation.
     vector<real> chem; real T, P;
     sys.GetConditions(t, chem, T, P);
     vector<real> sums; sys.ConstEnsemble().GetSums(sums);
+
+    // Calculate the rate.
     return Rate(t, chem, T, P, sums, sys);
 }
 
 real Condensation::Rate(const real t, const vector<real> &chem, const real T, 
                         const real P, const vector<real> &sums, const System &sys) const
 {
+    // Calculate temperature terms.
     real sqrtT = sqrt(T);
     real cterm = m_a * sqrtT;
 
@@ -68,6 +80,9 @@ real Condensation::Rate(const real t, const vector<real> &chem, const real T,
     cterm *= (m_kfm1 * sys.ParticleCount()) + (m_kfm2 * sums[DefaultParticle::iD]) +
              (m_kfm3 * sums[DefaultParticle::iD2]);
 
+    // If the mechanism contains any deferred processes then we must use the
+    // majorant form of the rate, in order to account for any changes to
+    // particles during deferred process updates.
     if (m_mech->AnyDeferred()) {
         return cterm * COND_MAJ;
     } else {
@@ -77,6 +92,7 @@ real Condensation::Rate(const real t, const vector<real> &chem, const real T,
 
 real Condensation::Rate(const real t, const System &sys, const DefaultParticle &sp) const
 {
+    // Calculate temperature terms.
     real sqrtT = sqrt(sys.GetTemperature(t));
     real cterm = m_a * sqrtT, trm[3];
 
@@ -99,6 +115,7 @@ real Condensation::Rate(const real t, const vector<real> &chem, const real T,
                         const real P, const vector<real> &sums, const System &sys, 
                         const DefaultParticle &sp) const
 {
+    // Calculate temperature terms.
     real sqrtT = sqrt(sys.GetTemperature(t));
     real cterm = m_a * sqrtT;
 
@@ -117,17 +134,22 @@ real Condensation::Rate(const real t, const vector<real> &chem, const real T,
 Sweep::real Condensation::MajorantRate(const real t, const System &sys, 
                                        const DefaultParticle &sp) const
 {
+    // Return the single particle rate multiplied by the 
+    // condensation majorant factor.
     return Rate(t,sys,sp) * COND_MAJ;
 }
 
 real Condensation::MajorantRate(const real t, const vector<real> &chem, const real T, const real P,
                                 const vector<real> &sums, const System &sys, const DefaultParticle &sp) const
 {
+    // Return the single particle rate multiplied by the 
+    // condensation majorant factor.
     return Rate(t, chem, T, P, sums, sys, sp) * COND_MAJ;
 }
 
 void Condensation::RateTerms(const real t, const System &sys, vector<real>::iterator &iterm) const
 {
+    // Calculate temperature terms.
     real sqrtT = sqrt(sys.GetTemperature(t));
     real cterm = m_a * sqrtT;
 
@@ -137,6 +159,9 @@ void Condensation::RateTerms(const real t, const System &sys, vector<real>::iter
         cterm *= pow(sys.GetSpeciesConc((*i).first,t), (real)i->second);
     }
 
+    // If the mechanism contains any deferred processes then we must use the
+    // majorant form of the rate, in order to account for any changes to
+    // particles during deferred process updates.
     if (m_mech->AnyDeferred()) cterm *= COND_MAJ;
 
     // Free molecular terms.
@@ -150,6 +175,7 @@ void Condensation::RateTerms(const Sweep::real t, const std::vector<real> &chem,
                              const vector<real> &sums, 
                              const Sweep::System &sys, vector<real>::iterator &iterm) const
 {
+    // Calculate temperature terms.
     real sqrtT = sqrt(T);
     real cterm = m_a * sqrtT;
 
@@ -159,6 +185,9 @@ void Condensation::RateTerms(const Sweep::real t, const std::vector<real> &chem,
         cterm *= pow(chem[i->first], (real)i->second);
     }
 
+    // If the mechanism contains any deferred processes then we must use the
+    // majorant form of the rate, in order to account for any changes to
+    // particles during deferred process updates.
     if (m_mech->AnyDeferred()) cterm *= COND_MAJ;
 
     // Free molecular terms.
@@ -182,7 +211,10 @@ int Condensation::Perform(const real t, System &sys, const unsigned int iterm) c
             i = sys.Ensemble().SelectParticle();
     }
 
+    // Check for a valid particle (i>=0).
     if (i >= 0) {
+        // Get the particle, then update it with deferred events (if there
+        // are any).
         DefaultParticle *sp = sys.Ensemble().GetParticle(i);
         real majr = 0.0;
         if (m_mech->AnyDeferred()) {
@@ -195,8 +227,11 @@ int Condensation::Perform(const real t, System &sys, const unsigned int iterm) c
 
         // Check that the particle is still valid.
         if (sp->IsValid()) {
+            // Get the true process rate (after updates).
             real truer = Rate(t, sys, *sp);
 
+            // Check that the event is not ficticious by comparing the
+            // majorant rate with the true rate.
             if (!Ficticious(majr, truer)) {
                 // Adjust particle.
                 AdjustParticle(*sp, t, 1);
@@ -238,6 +273,8 @@ int Condensation::Perform(const real t, System &sys, DefaultParticle &sp,
 
 void Condensation::SetCondensingSpecies(const real m, const real d)
 {
+    // Calculate the free-mol terms for condensation.  This must be done
+    // before the condensation process is used.
     m_kfm3 = CFM / sqrt(m);
     m_kfm2 = d * m_kfm3 * 2.0;
     m_kfm1 = d * m_kfm2 / 2.0;

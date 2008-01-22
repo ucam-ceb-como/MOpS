@@ -28,9 +28,10 @@ protected:
     real m_a;                   // Rate constant.
     real m_kfm, m_ksf1, m_ksf2; // Free-mol and slip-flow kernel parameters.
 
-public:
+public: // Default constructor and destructor.
     Inception(void);
     ~Inception(void);
+public:
     /* Initialises the inception reaction. */
     void Initialise(const map<unsigned int, int> &reac, // Gas-phase reactants.
                     const map<unsigned int, int> &prod, // Gas-phase products.
@@ -52,9 +53,9 @@ public: // Rate calculation.
     real Rate(const vector<real> &chem, const real sqrtT, const real T_mu, 
               const real T_P, const real vol) const;
 public: // Single particle rates (invalid for inceptions, so return invalid negative value).
-    /* Returns the rate of the process for the given particle in
-       the system. Process must be linear in particle number. */
+    /* Invalid for inception - DO NOT USE. */
     inline real Rate(const real t, const System &sys, const DefaultParticle &sp) const {return -1.0;};
+    /* Invalid for inception - DO NOT USE. */
     inline real Rate(const real t, const vector<real> &chem, const real T, const real P, 
                      const vector<real> &sums, const System &sys, const DefaultParticle &sp) const {
         return -1.0;
@@ -66,6 +67,9 @@ public: // Rate term calculation.
        iterator is advanced to the postition after the last term for this
        process. */
     void RateTerms(const real t, const System &sys, vector<real>::iterator &iterm) const;
+    /* Calculates the rate terms give an iterator to a real vector.  The 
+       iterator is advanced to the postition after the last term for this
+       process.  Chemical conditions are precalculated and passed as arguments. */
     void RateTerms(const real t, const vector<real> &chem, const real T, 
                    const real P, const vector<real> &sums, const System &sys,
                    vector<real>::iterator &iterm) const;
@@ -77,8 +81,10 @@ public:
     inline int Perform(const real t, System &sys, DefaultParticle &sp, 
                        const unsigned int n) const {return -1;};
 public: // Property gets.
+    /* Returns the pre-exp rate constant. */
     inline real A() const {return m_a;};
 public: // Property sets.
+    /* Inceptions cannot be deffered, so this routine dos nothing.  DO NOT USE. */
     inline void SetDeferred(const bool defer) {m_defer=false;}
     /* Sets the rate constant. */
     inline void SetA(const real a) {m_a=0.5*a;};

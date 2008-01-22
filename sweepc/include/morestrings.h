@@ -3,8 +3,7 @@
   Project:        none
 
   File purpose:
-    Some additional subroutines for STL strings that aren't
-    provided.
+    Some additional subroutines for STL strings that aren't provided.
 */
 
 #ifndef MORE_STRINGS_H
@@ -21,12 +20,21 @@ using namespace std;
    characters. */
 inline void split(string &str, vector<string> &subs, string &delims)
 {
+    // Clear the vector of substrings.
     subs.clear();
+
+    // Locate the first substring in the string. Iterator i1 now
+    // points to the first character of the substring and i2 points to the
+    // delimiter after the substring.
     string::size_type i1 = str.find_first_not_of(delims, 0);
     string::size_type i2 = str.find_first_of(delims, i1);
 
+    // Loop over the whole string.
     while((i1!=string::npos) || (i2!=string::npos)) {
+        // Add the substring to the list.
         subs.push_back(str.substr(i1,i2-i1));
+
+        // Locate the next substring.
         i1 = str.find_first_not_of(delims, i2);
         i2 = str.find_first_of(delims, i1);
     }
@@ -36,6 +44,8 @@ inline void split(string &str, vector<string> &subs, string &delims)
    < 0 is not found. */
 inline int findinlist(string &str, vector<string> &list)
 {
+    // Very straightforward, just loop over the list and locate
+    // the first element that matches the given string.
     int i;
     for (i=0; i<(int)list.size(); i++) {
         if (str.compare(list[i]) == 0) return i;
@@ -43,7 +53,7 @@ inline int findinlist(string &str, vector<string> &list)
     return -1;
 }
 
-// Converts a number less than 10 into a single character.
+/* Converts a number less than 10 into a single character. */
 inline char &cchar(unsigned int i, char &c)
 {
     if (i<10) {
@@ -94,9 +104,12 @@ inline char &cchar(unsigned int i, char &c)
 //    return str;
 //}
 
+/* Converts any type into a string representation. */
 template<class T> string cstr(T &t)
 {
+    // This routine takes advantage of the STL ostringstream class.
     ostringstream ss;
+
     if ((ss << t).fail()) {
         return "X";
     } else {

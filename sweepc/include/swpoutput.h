@@ -3,7 +3,14 @@
   Project:        sweep (population balance solver)
 
   File purpose:
-    Output routines for Sweep.
+    Output routines for Sweep.  This class exists as a way of providing
+    standard output from sweep, whatever context it is used in.  It controls
+    all file operations.
+
+    To increase run speed, sweep output is in binary format while solving.  The
+    binary output can then be postprocess to CSV.
+
+    This class also provides functionality for writing columns to the console.
 */
 
 #ifndef SWEEP_OUTPUT_H
@@ -25,16 +32,17 @@ namespace Sweep
 class SweepOutput
 {
 protected:
-    static const int NSTATS = 10;
-    static const int NPSL   = 4;
-    static const real CONFA;
+    static const int NSTATS = 10; // Number of variables (columns) written to stats file.
+    static const int NPSL   = 4;  // Number of variables output per particle to the PSL files.
+    static const real CONFA;      // Confidence interval parameter to given 99.9% intervals (defined elsewhere).
 protected:
-    ofstream m_file;
-    string m_filename;
-public:
+    ofstream m_file;   // Output file stream.
+    string m_filename; // Output file name.
+public: // Default constructor and destructor.
     SweepOutput(void);
     ~SweepOutput(void);
 public:
+    /* Checks whether or not the file is open. */
     inline bool IsOpen(void) const {return m_file.is_open();};
 public:
     /* Compiles useful bulk and per-particle statistics about an ensemble. */
@@ -51,7 +59,7 @@ public:
     /* Writes current system to the output file. Returns 0 on success,
        otherwise negative. */
     int Write(const real t, const System &sys, const Mechanism &mech);
-    /* Post processes a series of file containing a number of runs and
+    /* Post processes a series of files containing a number of runs and
        writes the averages and errors to a CSV file. */
     int PostProcess(const string &filename, const unsigned int i1, const unsigned int i2, 
                     const unsigned int npoints, const Mechanism &mech) const;
@@ -91,17 +99,24 @@ public:
 protected:
     /* Returns the file name with the number appended in a standard way. */
     static string BuildFilename(const string &basename, const unsigned int i);
+    /* Returns a PSL file name with the number appended in a standard way. */
     static string BuildPSLFilename(const string &basename, const unsigned int i);
 };
 
 inline string SweepOutput::BuildFilename(const string &basename, const unsigned int i)
 {
     string name;
+
+    // Get the name before the file extension (.XXX bit).
     string::size_type iext = basename.find_last_of(".",basename.length());
     name = basename.substr(0, iext);
+
+    // Append the file number in brackets.
     name.append("(");
     name.append(cstr<const unsigned int>(i));
     name.append(")");
+
+    // Append the file extension and return the file name.
     name.append(basename.substr(iext, basename.length()-iext));
     return name;
 }
@@ -109,17 +124,24 @@ inline string SweepOutput::BuildFilename(const string &basename, const unsigned 
 inline string SweepOutput::BuildPSLFilename(const string &basename, const unsigned int i)
 {
     string name;
+
+    // Get the name before the file extension (.XXX bit).
     string::size_type iext = basename.find_last_of(".",basename.length());
     name = basename.substr(0, iext);
+
+    // Append the file number in brackets with the PSL identifier.
     name.append("-psl(");
     name.append(cstr<const unsigned int>(i));
     name.append(")");
+    
+    // Append the file extension and return the file name.
     name.append(basename.substr(iext, basename.length()-iext));
     return name;
 }
 
 inline void SweepOutput::GetColumnNames(const Sweep::Mechanism &mech, std::vector<string> &names)
 {
+    // Size the output vector to the correct size.
     names.resize(NSTATS+mech.ComponentCount()+mech.ValueCount());
     unsigned int i, j;
 
@@ -146,6 +168,7 @@ inline void SweepOutput::GetColumnNames(const Sweep::Mechanism &mech, std::vecto
 
 inline void SweepOutput::GetPSLColumnNames(const Sweep::Mechanism &mech, std::vector<string> &names)
 {
+    // Size the output vector correctly.
     names.resize(NPSL+mech.ComponentCount()+mech.ValueCount());
     unsigned int i, j;
 

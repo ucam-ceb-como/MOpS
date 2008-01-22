@@ -15,6 +15,7 @@ SweepOutput::SweepOutput(void)
 
 SweepOutput::~SweepOutput(void)
 {
+    // Close the file if it is still open.
     if (m_file.is_open()) m_file.close();
 }
 
@@ -28,6 +29,7 @@ void SweepOutput::CompileStatistics(const System &sys, const Mechanism &mech, ve
     stats[0] = sys.ParticleCount();
 
     if (stats[0] > 0) {
+        // stats[1] will be the number density once volume scaling has occured.
         stats[1] = stats[0];
 
         // Loop over all particles and compile stats.
@@ -35,26 +37,30 @@ void SweepOutput::CompileStatistics(const System &sys, const Mechanism &mech, ve
         vector<real>::const_iterator j;
         unsigned int k;
         for (i=sys.ConstEnsemble().begin(); i!=sys.ConstEnsemble().end(); i++) {
+            // Stats.
             stats[2] += (*i)->Mass();
             stats[3] += (*i)->Volume();
             stats[4] += (*i)->SurfaceArea();
             stats[8] += (*i)->CollisionDiameter() * 1.0e7;
 
+            // Component values.
             for (j=(*i)->Composition().begin(),k=NSTATS; j!=(*i)->Composition().end(); j++,k++) {
                 stats[k] += *j;
             }
+
+            // Value values.
             for (j=(*i)->Values().begin(); j!=(*i)->Values().end(); j++,k++) {
                 stats[k] += *j;
             }
         }
 
-        // Particle averages.
+        // Calculate stats which are particle averages.
         stats[5]  = stats[2] / stats[0];
         stats[6]  = stats[3] / stats[0];
         stats[7]  = stats[4] / stats[0];
         stats[8] /= stats[0];
 
-        // Bulk properties.
+        // Calculate stats which are bulk properties (per unit volume).
         real vol = sys.SampleVolume();
         stats[1] /= vol;
         stats[2] /= vol;
@@ -65,6 +71,7 @@ void SweepOutput::CompileStatistics(const System &sys, const Mechanism &mech, ve
             *istat /= vol;
         }
 
+        // The sample volume (scaling).
         stats[9] = vol;
     }
 }
@@ -108,8 +115,8 @@ int SweepOutput::Open(const std::string &filename, const unsigned int n)
     // Save file name with appended number.
     m_filename = BuildFilename(filename, n);
 
+    // Open the file.
     m_file.open(m_filename.c_str(), ios_base::binary);
-
     if (m_file.good()) {
         return 0;
     } else {
@@ -119,6 +126,7 @@ int SweepOutput::Open(const std::string &filename, const unsigned int n)
 
 void SweepOutput::Close()
 {
+    // Close the file and wipe the file name.
     if (m_file.is_open()) m_file.close();
     m_filename = "";
 }
@@ -146,6 +154,8 @@ int SweepOutput::PostProcess(const std::string &filename, const unsigned int i1,
                              const unsigned int i2, const unsigned int npoints,
                              const Sweep::Mechanism &mech) const
 {
+    // This function takes the binary file outputs from a sweep run and post-processes
+    // them to give a CSV file with averages and confidence intervals.
     string fname;
     ifstream fin;
     unsigned int i, nstat=NSTATS+mech.ComponentCount()+mech.ValueCount();
@@ -166,7 +176,7 @@ int SweepOutput::PostProcess(const std::string &filename, const unsigned int i1,
 
     // Loop through all output files.
     for (i=i1; i<=i2; i++) {
-        // Open file for reading.
+        // Open file i for reading.
         fname = BuildFilename(filename, i);
         fin.open(fname.c_str(), ios_base::binary);
         if (!fin.good()) return -1;
@@ -178,7 +188,7 @@ int SweepOutput::PostProcess(const std::string &filename, const unsigned int i1,
         {
             // Read time.
             fin.read((char*)&val, sizeof val);
-            *itavg += val; *iterr += (val*val);
+            *itavg += val; *iterr += (val*val); // Sums and sums of squares.
 
             // Read stats.
             for (iavg=isavg->begin(),ierr=iserr->begin(); 
@@ -186,7 +196,7 @@ int SweepOutput::PostProcess(const std::string &filename, const unsigned int i1,
                  iavg++,ierr++)
             {
                 fin.read((char*)&val, sizeof val);
-                *iavg += val; *ierr += (val*val);
+                *iavg += val; *ierr += (val*val); // Sums and sums of squares.
             }
         }
 
@@ -194,7 +204,7 @@ int SweepOutput::PostProcess(const std::string &filename, const unsigned int i1,
         fin.close();
     }
 
-    // Open output file.
+    // Open output CSV file.
     fname = filename.substr(0, filename.find_first_of("."));
     ofstream fout((fname+=".csv").c_str());
 
@@ -207,7 +217,7 @@ int SweepOutput::PostProcess(const std::string &filename, const unsigned int i1,
     }
     fout << '\n';
 
-    // Now calculate averages and statistical errors and write output file.
+    // Now calculate averages and statistical errors, then write output file.
     real nruns = (real)(i2-i1+1);
     for (isavg=savg.begin(),iserr=serr.begin(),itavg=tavg.begin(),iterr=terr.begin(); 
          (isavg!=savg.end()) && (iserr!=serr.end()); 
@@ -232,6 +242,8 @@ int SweepOutput::PostProcess(const std::string &filename, const unsigned int i1,
         // End-of-line.
         fout << '\n';
     }
+
+    // Close the output, and we're done!
     fout.close();
     return 0;
 }

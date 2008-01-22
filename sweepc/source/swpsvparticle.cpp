@@ -107,8 +107,7 @@ void SVParticle::CalcCache(void)
     }
 
     // Surface area is now tracked, but if it is found to be zero then
-    // set it the that of a spherical particle.  In this was the particle
-    // is correctly initialised on creation.
+    // set it the that of a spherical particle.
     if (m_cache[iS]==0.0) m_cache[iS] = PI * pow(6.0 * m_cache[iV] / PI, TWO_THIRDS);
 
     // Collision diameter is calculated differently from the

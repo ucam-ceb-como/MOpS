@@ -3,7 +3,8 @@
   Project:        sweep (population balance solver)
 
   File purpose:
-    Definition of the coagulation process.
+    Definition of the coagulation process.  This coagulation process uses a transition
+    kernel (REF).  It calculates the rates for the free molecular and slip-flow regimes.
 */
 
 #ifndef SWEEP_COAGULATION_H
@@ -28,7 +29,7 @@ public:
     const enum Type {SlipFlow1,SlipFlow2,SlipFlow3,SlipFlow4,FreeMol1,FreeMol2};
     /* Different types of kernel majorant types. */
     const enum MajorantType {None, FreeMol, SlipFlow};
-public:
+public: // Default construtor and destructor.
     Coagulation(void);
     ~Coagulation(void);
 public: // Rate calculation.
@@ -41,9 +42,10 @@ public: // Rate calculation.
        calculate rate passed as arguments. */
     real Rate(const vector<real> &sums, const real n, const real sqrtT, const real T_mu, 
               const real T_P, const real vol) const;
-public: // Single particle rates.
+public: // Single particle rates - must be inherited, even if they are meaningless.
     /*  Single particle rates are invalid for coagulation, so return negative. */
     inline real Rate(const real t, const System &sys, const DefaultParticle &sp) const {return -1.0;};
+    /*  Single particle rates are invalid for coagulation, so return negative. */
     inline real Rate(const real t, const vector<real> &chem, const real T, 
                      const real P, const vector<real> &sums, const System &sys, 
                      const DefaultParticle &sp) const {return -1.0;};
@@ -54,11 +56,15 @@ public: // Rate term calculation.
        iterator is advanced to the postition after the last term for this
        process. */
     void RateTerms(const real t, const System &sys, vector<real>::iterator &iterm) const;
+    /* Calculates the rate terms give an iterator to a real vector.  The 
+       iterator is advanced to the postition after the last term for this
+       process.  The chemical conditions are precalculated to speed up the
+       program. */
     void RateTerms(const real t, const vector<real> &chem, const real T, 
                    const real P, const vector<real> &sums, const System &sys, 
                    vector<real>::iterator &iterm) const;
    /* More efficient rate routine for coagulation only.  All parameters required to
-       calculate rate passed as arguments. */
+       calculate rate terms passed as arguments. */
     void RateTerms(const vector<real> &sums, const real n, const real sqrtT, const real T_mu, 
                    const real T_P, const real vol, vector<real>::iterator &iterm) const;
 public:

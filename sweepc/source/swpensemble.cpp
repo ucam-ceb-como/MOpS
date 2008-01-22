@@ -4,8 +4,12 @@
 
 using namespace Sweep;
 
+// CONSTRUCTORS AND DESTRUCTORS.
+
+// Default constructor.
 Ensemble::Ensemble(void)
 {
+    // On creation set all variables to default values.
     m_levels = 0;
     m_capacity = 0;
     m_halfcap = 0;
@@ -19,13 +23,44 @@ Ensemble::Ensemble(void)
     m_dbleslack  = 0;
 }
 
+// Initialising constructor.
 Ensemble::Ensemble(const unsigned int count, const unsigned int nprop)
 {
+    // Call initialisation routine.
     Initialise(count, nprop);
 }
 
+// Copy contructor.
+Ensemble::Ensemble(const Sweep::Ensemble &ens)
+{
+    // Easy to copy things.
+    m_levels = ens.m_levels;
+    m_capacity = ens.m_capacity;
+    m_halfcap = ens.m_halfcap;
+    m_ncont = ens.m_ncont;
+    m_scale = ens.m_scale;
+    m_contfactor = ens.m_contfactor;
+    m_ndble = ens.m_ndble;
+    m_dbleactive = ens.m_dbleactive;
+    m_dblecutoff = ens.m_dblecutoff;
+    m_dblelimit  = ens.m_dblelimit;
+    m_dbleslack  = ens.m_dbleslack;
+    m_dbleon = ens.m_dbleon;
+
+    // Particle vector.
+    const_iterator ip;
+    for (ip=ens.begin(); ip!=ens.end(); ip++) {
+        m_particles.push_back(*(*ip));
+    }
+
+    // Binary tree.
+    m_tree = ens.m_tree;
+}
+
+// Destructor.
 Ensemble::~Ensemble(void)
 {
+    // Clear the ensemble.
     Destroy();
 }
 
@@ -34,7 +69,8 @@ void Ensemble::Initialise(const unsigned int capacity, const unsigned int nprop)
     // Clear current ensemble.
     Destroy();
     
-    // Calculate nearest power of 2 capacity.
+    // Calculate nearest power of 2 capacity.  Ensemble capacity must be a powe
+    // of 2.  This constraint is due to the binary tree.
     real rl = log((real)capacity) / log(2.0);
     m_levels = (int)(rl + 0.5);
     m_capacity = (int)pow(2.0, (int)m_levels);
@@ -101,6 +137,7 @@ void Ensemble::Destroy(void)
 
 DefaultParticle *Ensemble::GetParticle(const unsigned int i) const
 {
+    // Check that the index in within range, then return the particle.
     if (i < (unsigned int)m_particles.size()) {
         return m_particles[i];
     } else {
@@ -110,9 +147,12 @@ DefaultParticle *Ensemble::GetParticle(const unsigned int i) const
 
 int Ensemble::AddParticle(DefaultParticle &sp)
 {
+    // Check for doubling activation.
     m_dbleactive = m_dbleactive || ((unsigned int)m_particles.size() >= m_dblecutoff-1);
-    int i=-1;
 
+    // Check ensemble for space, if there is not enough space then need
+    // to generate some by contracting the ensemble.
+    int i=-1;
     if ((int)m_particles.size() < m_capacity) {
         // There is space in the tree for a new particle.
         i = -1;
@@ -132,7 +172,8 @@ int Ensemble::AddParticle(DefaultParticle &sp)
         ReplaceParticle(i,sp);
     }
 
-    // Now we must recalculate the tree.
+    // Now we must recalculate the tree by inserting the particle properties
+    // into the bottom row and calculating up.
     int j = TreeIndex(i);
     if (IsLeftBranch(i)) {
          m_particles[i]->GetProperties(m_tree[j].LeftSum);
@@ -146,6 +187,7 @@ int Ensemble::AddParticle(DefaultParticle &sp)
 
 void Ensemble::RemoveParticle(const unsigned int i)
 {
+    // Check that particle index is valid.
     if (i<(unsigned int)m_particles.size()-1) {
         // First delete particle from memory, then
         // overwrite it with the last particle, which
@@ -189,29 +231,39 @@ void Ensemble::RemoveParticle(const unsigned int i)
         }
         AscendingRecalc(k);
     }
+
+    // Particle removal might reduce the particle count sufficiently to require
+    // particle doubling.
     Double();
 }
 
 void Ensemble::RemoveInvalids(void)
 {
+    // This function loops forward through the list finding invalid
+    // particles and backwards finding valid particles.  Once an invalid
+    // and a valid particle are found they are swapped.  This results in
+    // all the invalid particles being collected at the end of the vector,
+    // from where they can be deleted.
+
     iterator i=begin(), k=end()-1;
-    unsigned int ix=0, tx=0;
+    unsigned int ix=0, tx=0, n=0;
     bool found;
 
-    while (i!=k) {
+    while (i<k) {
         found = false;
 
-        // Keep replacing particle with one from the end of
-        // the array until we find one that is valid.
-        while ((i!=k) && (!(*i)->IsValid())) {
-            found = true;
-            delete *i;
-            *i = *k;
-            k--;
-        }
+        // Locate next invalid particle in list.
+        while ((i!=k) && (*i)->IsValid()) {i++; ix++;}
 
-        if (found && (i!=k)) {
-            // Now *i is a valid particle so recalculate the tree.
+        // Locate next valid particle from end of list.
+        while ((k!=i) && (!(*k)->IsValid())) k--;
+
+        if (i<k) {            
+            delete *i; // Delete invalid particle from memory.
+            *i = *k;   // Put valid particle at index i.
+            n++;       // Increment number of invalid particles.
+
+            // Update binary tree.
             tx = TreeIndex(ix);
             if (IsLeftBranch(ix)) {
                 (*i)->GetProperties(m_tree[tx].LeftSum);
@@ -219,15 +271,22 @@ void Ensemble::RemoveInvalids(void)
                 (*i)->GetProperties(m_tree[tx].RightSum);
             }
             AscendingRecalc(tx);
+        } else {
+            // All invalid particles have been deleted.
+            break;
         }
-
-        // Next particle.
-        i++; ix++;
     }
+
+    // Erase duplicate pointers at end of vector.
+    if (n>0) m_particles.erase(end()-n, end());
+
+    // If we removed too many invalid particles then we'll have to double.
+    Double();
 }
 
 void Ensemble::ReplaceParticle(const unsigned int i, DefaultParticle &sp)
 {
+    // Check index is within range.
     if (i<(int)m_particles.size()) {
         // First delete current particle, then
         // set pointer to new particle.
@@ -253,23 +312,31 @@ void Ensemble::Clear()
     }
     m_particles.clear();
 
-    m_ncont = 0;
+    m_ncont = 0; // No contractions any more.
 
+    // Clear the binary tree.
     vector<NODE>::iterator i;
     for(i=m_tree.begin(); i!=m_tree.end(); i++) (*i).Clear();
+
+    // Reset doubling.
     m_ndble = 0;
     m_dbleactive = false;
 }
 
 int Ensemble::SelectParticle(void) const
 {
+    // Uniformly select a particle index.
     return irnd(0, (int)m_particles.size()-1);
 }
 
 int Ensemble::SelectParticle(const int wtid) const
 {
+    // This routine uses the binary tree to select a particle weighted
+    // by a given particle property (by index).
+
     int isp=-1;
 
+    // Check that the weight id is within range.
     if ((wtid>=0) && (wtid<(int)m_tree[0].LeftSum.size())) {
         // Weight ID is valid, so choose using binary tree.
 
@@ -300,6 +367,7 @@ int Ensemble::SelectParticle(const int wtid) const
         isp = SelectParticle();
     }
 
+    // One final check that the inex we've chosen is valid.
     if (isp >= (int)m_particles.size()) {
         // Chosen an non-existent particle.
         return -1;
@@ -310,6 +378,7 @@ int Ensemble::SelectParticle(const int wtid) const
 
 real Ensemble::Scaling() const
 {
+    // The scaling factor includes the contraction term and the doubling term.
     return m_scale * pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
 }
 
@@ -321,6 +390,7 @@ void Ensemble::ResetScaling()
 
 void Ensemble::GetSums(std::vector<real> &sums) const
 {
+    // The particle sums are the sum of the top node's left and right branches.
     sums.assign(m_tree[0].LeftSum.begin(), m_tree[0].LeftSum.end());
     vector<real>::iterator i;
     vector<real>::const_iterator j;
@@ -330,6 +400,7 @@ void Ensemble::GetSums(std::vector<real> &sums) const
 
 real Ensemble::GetSum(unsigned int i) const
 {
+    // The particle sums are the sum of the top node's left and right branches.
     if (i<(unsigned int)m_tree[0].LeftSum.size()) {
         return m_tree[0].LeftSum[i] + m_tree[0].RightSum[i];
     } else {
@@ -343,6 +414,7 @@ void Ensemble::Update(const unsigned int i)
     // Get tree index of this particle.
     unsigned int j = TreeIndex(i);
 
+    // Update binary tree at this index.
     if (IsLeftBranch(i)) {
         m_particles[i]->GetProperties(m_tree[j].LeftSum);
     } else {
@@ -353,6 +425,8 @@ void Ensemble::Update(const unsigned int i)
 
 void Ensemble::Update()
 {
+    // This flavour updates the whole binary tree.
+
     bool odd = true;
     iterator i;
     unsigned int j = TreeIndex(0);
@@ -377,12 +451,16 @@ void Ensemble::Update()
 
 void Ensemble::AscendingRecalc(const unsigned int i)
 {
+    // This function starts at the bottom of the binary tree and works
+    // upwards recalculating the sums of all particle properties under
+    // the nodes.
+
     vector<real>::iterator j, k, l;
     if ((i>=0) && (i<(int)m_tree.size())) {
         // Get the node at the bottom of the branch.
         NODE *n = &m_tree[i];
 
-        // Climb up the until the root node, summing up the properties.
+        // Climb up the tree until the root node, summing up the properties.
         while (n->Parent != NULL) {
             n = n->Parent;
             for(j=n->LeftSum.begin(),k=n->Left->LeftSum.begin(),l=n->Left->RightSum.begin(); 
@@ -399,6 +477,12 @@ void Ensemble::AscendingRecalc(const unsigned int i)
 
 void Ensemble::Double()
 {
+    // The doubling algorithm is activated if the number of particles
+    // in the ensemble falls below half capacity.  It copies the whole particle
+    // list and changes the scaling factor to keep it consistent.  Once the
+    // ensemble is back above half full, the routine updates the binary tree.
+
+    // Check that doubling is on and the activation condition has been met.
     if (m_dbleon && m_dbleactive) {
         DefaultParticle* sp;
         bool left;
@@ -407,6 +491,7 @@ void Ensemble::Double()
         vector<NODE>::iterator inode;
         vector<real>::iterator iterp, iterl, iterr;
 
+        // Continue while there are too few particles in the ensemble.
         while (n<=m_dblelimit) {
             left = IsLeftBranch(n);
 
@@ -456,7 +541,12 @@ Ensemble::NODE::NODE(void)
 
 Ensemble::NODE &Ensemble::NODE::operator=(const Ensemble::NODE &n)
 {
+    // This is the assignment (=) operator for binary tree nodes.
+
+    // this pointer is LHS, n is RHS.  Do nothing if self-assignment.
     if (this == &n) return *this;
+
+    // Copy R node to L node and return.
     LeftSum = n.LeftSum;
     RightSum = n.RightSum;
     return *this;
@@ -464,6 +554,9 @@ Ensemble::NODE &Ensemble::NODE::operator=(const Ensemble::NODE &n)
 
 Ensemble::NODE &Ensemble::NODE::operator +=(const Ensemble::NODE &n)
 {
+    // Definition of += operator for binary tree nodes. this pointer is LHS, 
+    // n is RHS.
+
     LeftSum.resize(max(LeftSum.size(),n.LeftSum.size()), 0.0);
     RightSum.resize(max(RightSum.size(),n.RightSum.size()), 0.0);
     vector<real>::iterator i;
@@ -475,6 +568,8 @@ Ensemble::NODE &Ensemble::NODE::operator +=(const Ensemble::NODE &n)
 
 const Ensemble::NODE Ensemble::NODE::operator+(const Ensemble::NODE &n) const
 {
+    // Definition of addition (+) operator for binary tree nodes.
+
     NODE lhs = *this;
     lhs += n;
     return lhs;
@@ -482,12 +577,14 @@ const Ensemble::NODE Ensemble::NODE::operator+(const Ensemble::NODE &n) const
 
 void Ensemble::NODE::Clear()
 {
+    // Delete node contents.
     LeftSum.assign(LeftSum.size(), 0.0);
     RightSum.assign(RightSum.size(), 0.0);
 }
 
 void Ensemble::NODE::SetSize(const unsigned int size)
 {
+    // Resize left and right branches of node.
     LeftSum.resize(size,0.0);
     RightSum.resize(size,0.0);
 }

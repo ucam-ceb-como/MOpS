@@ -35,23 +35,12 @@ public:
     /* Sets the value change for value i. */
     void SetValueChange(const unsigned int i, const real value);
 public:
+    /* Returns reference to the components used to define this changer. */
     inline vector<Component*> &GetComponents(void) const {return *m_components;}
-    inline real GetCompChange(const unsigned int i) const
-    {
-        if (i < (unsigned int)m_comp.size()) {
-            return m_comp[i];
-        } else {
-            return 0.0;
-        }
-    }
-    inline real GetValueChange(const unsigned int i) const
-    {
-        if (i < (unsigned int)m_values.size()) {
-            return m_values[i];
-        } else {
-            return 0.0;
-        }
-    }
+    /* Returns the defined change in component i. */
+    inline real GetCompChange(const unsigned int i) const;
+    /* Returns the defined change in value i. */
+    inline real GetValueChange(const unsigned int i) const;
 public:
     /* Changes the particle composition and values by the amounts stored in
        the changer. The changes are applied n times. */
@@ -60,6 +49,24 @@ public:
        the changer. */
     void SetParticle(DefaultParticle &sp, const real t) const;
 };
+
+inline real ParticleChanger::GetCompChange(const unsigned int i) const
+{
+    if (i < (unsigned int)m_comp.size()) {
+        return m_comp[i];
+    } else {
+        return 0.0;
+    }
+}
+
+inline real ParticleChanger::GetValueChange(const unsigned int i) const
+{
+    if (i < (unsigned int)m_values.size()) {
+        return m_values[i];
+    } else {
+        return 0.0;
+    }
+}
 
 inline void ParticleChanger::AdjustParticle(DefaultParticle &sp, const Sweep::real t, 
                                             const unsigned int n) const
@@ -76,7 +83,6 @@ inline void ParticleChanger::SetParticle(Sweep::DefaultParticle &sp, const Sweep
     sp.SetValues(m_values);
     sp.CalcCache();
 }
-
 };
 
 #endif

@@ -9,6 +9,8 @@ using namespace Sweep;
 
 Inception::Inception(void)
 {
+    // give default values.  Note the incepting species have
+    // not been defined so the rate kernels are zero.
     m_a = 0.5;
     m_kfm = 0.0;
     m_ksf1 = 0.0;
@@ -18,6 +20,7 @@ Inception::Inception(void)
 
 Inception::~Inception(void)
 {
+    // Clear memory associated with inception.
     m_comp.clear();
     m_values.clear();
     m_components = NULL;
@@ -28,7 +31,7 @@ void Inception::Initialise(const std::map<unsigned int,int> &reac, const std::ma
                            const Sweep::real d2, const std::vector<Sweep::real> &comp, const std::vector<Sweep::real> &values, 
                            std::vector<Component*> &components)
 {
-
+    // Fill the inception with all the variables required to define it.
     m_reac.clear();
     m_reac.insert(reac.begin(), reac.end());
     m_prod.clear();
@@ -42,23 +45,30 @@ void Inception::Initialise(const std::map<unsigned int,int> &reac, const std::ma
 
 Sweep::real Inception::Rate(const Sweep::real t, const System &sys) const 
 {
+    // Get the current chemical conditions.
     vector<real> chem;
     real T, P;
     sys.GetConditions(t, chem, T, P);
+
+    // Calculate the inception rate.
     return Rate(chem, sqrt(T), T/Viscosity(T), T/P, sys.SampleVolume());
 }
 
 real Inception::Rate(const real t, const vector<real> &chem, const real T, 
                      const real P, const vector<real> &sums, const System &sys) const
 {
+    // Chemical conditions have been precalculated, so just calculate the rate.
     return Rate(chem, sqrt(T), T/Viscosity(T), T/P, sys.SampleVolume());
 }
 
 void Inception::RateTerms(const real t, const System &sys, vector<real>::iterator &iterm) const
 {
+    // Get the current chemical conditions.
     vector<real> chem;
     real T, P;
     sys.GetConditions(t, chem, T, P);
+
+    // Calculate the single rate term and advance iterator.
     *iterm = Rate(chem, sqrt(T), T/Viscosity(T), T/P, sys.SampleVolume());
     iterm++;
 }
@@ -67,13 +77,17 @@ void Inception::RateTerms(const real t, const vector<real> &chem, const real T,
                           const real P, const vector<real> &sums, const System &sys, 
                           vector<real>::iterator &iterm) const
 {
+    // Chemical conditions have been precalculated, so just calculate rate term and
+    // advance iterator.
     *iterm = Rate(chem, sqrt(T), T/Viscosity(T), T/P, sys.SampleVolume());
     iterm++;
 }
 
 int Inception::Perform(const Sweep::real t, System &sys, const unsigned int iterm) const 
 {
-    // Create a new particle.
+    // This routine performs the inception on the given chemical system..
+
+    // Create a new particle of the type specified by the mechanism.
     DefaultParticle *sp;
     switch (m_mech->GetParticleModel())
     {
@@ -84,15 +98,16 @@ int Inception::Perform(const Sweep::real t, System &sys, const unsigned int iter
             sp = new SVParticle();
             break;
     }
-        
+    
+    // Initialise the new particle.
     sp->Initialise(*m_components, (int)m_values.size());
     sp->SetCreateTime(t);
     SetParticle(*sp, t);
 
-    // Add particle to ensemble.
+    // Add particle to system's ensemble.
     sys.Ensemble().AddParticle(*sp);
 
-    // Update gas-phase chemistry.
+    // Update gas-phase chemistry of system.
     map<unsigned int,int>::const_iterator i;
     real vol = sys.SampleVolume();
     for (i=m_reac.begin(); i!=m_reac.end(); i++)
@@ -107,6 +122,8 @@ int Inception::Perform(const Sweep::real t, System &sys, const unsigned int iter
 
 void Inception::SetInceptingSpecies(real m1, real m2, real d1, real d2)
 {
+    // This routine sets the free-mol and slip flow kernel parameters given
+    // the mass and diameter of the incepting species.
     real invd1=1.0/d1, invd2=1.0/d2;
     m_kfm = CFM * sqrt((1.0/m1) + (1.0/m2)) * pow(d1+d2, 2.0);
     m_ksf1 = CSF * (d1+d2);

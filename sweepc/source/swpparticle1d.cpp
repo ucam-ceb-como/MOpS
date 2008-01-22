@@ -45,7 +45,11 @@ void DefaultParticle::GetProperties(std::vector<real> &p) const
 {
     vector<real>::iterator i;
     vector<real>::const_iterator j;
+
+    // Resize output vector to correct size.
     p.resize(NCACHE+(int)m_comp.size()+(int)m_values.size());
+
+    // Loop over all cached properties and copy to output vector.
     i = p.begin();
     for (j=m_cache.begin(); j!=m_cache.end(); i++, j++) {*i = *j;}
     for (j=m_comp.begin(); j!=m_comp.end(); i++, j++) {*i = *j;}
@@ -54,6 +58,9 @@ void DefaultParticle::GetProperties(std::vector<real> &p) const
 
 bool DefaultParticle::IsValid(void) const
 {
+    // Particle is considered valid if it has no negative
+    // components.
+
     vector<real>::const_iterator i;
     for (i=m_comp.begin(); i!=m_comp.end(); i++) {
         if (*i < 0.0) return false;
@@ -63,6 +70,8 @@ bool DefaultParticle::IsValid(void) const
 
 DefaultParticle &DefaultParticle::CreateCopy()
 {
+    // Create a copy of the particle.
+
     DefaultParticle *sp = new DefaultParticle(*m_components, (int)m_values.size());
     sp->SetComposition(m_comp);
     sp->SetValues(m_values);
@@ -93,6 +102,8 @@ void DefaultParticle::SetComposition(const std::vector<real> &comp)
 
 void DefaultParticle::Adjust(const vector<real> &dcomp, const vector<real> &dvalues)
 {
+    // Adjusts a particle given a change in composition and values.
+
     vector<real>::iterator i;
     vector<real>::const_iterator j;
 
@@ -115,6 +126,8 @@ void DefaultParticle::Adjust(const vector<real> &dcomp, const vector<real> &dval
 
 void DefaultParticle::Adjust(const vector<real> &dcomp, const vector<real> &dvalues, const unsigned int n)
 {
+    // Adjusts a particle n times given a change in composition and values.
+
     vector<real>::iterator i;
     vector<real>::const_iterator j;
 
@@ -165,6 +178,8 @@ void DefaultParticle::SetTime(const real t)
 
 DefaultParticle &DefaultParticle::operator=(const Sweep::DefaultParticle &sp)
 {
+    // Definition of assignment (=) operator for particles.
+
     if (this == &sp) return *this;
     SetTime(sp.Time());
     m_createt = sp.CreateTime();
@@ -176,6 +191,8 @@ DefaultParticle &DefaultParticle::operator=(const Sweep::DefaultParticle &sp)
 
 DefaultParticle &DefaultParticle::operator +=(const Sweep::DefaultParticle &sp)
 {
+    // Definition of += operator for particles.  This operator is used to define 
+    // coagulation.
     return Coagulate(sp);
 }
 
@@ -217,11 +234,15 @@ void DefaultParticle::CalcCache(void)
     real m;
     vector<Component*>::iterator ic;
     vector<real>::iterator j = m_comp.begin();
+
+    // Loop over composition and calculate mass and volume.
     for (ic=m_components->begin(); ic!=m_components->end(); ic++, j++) {
         m = (*ic)->MolWt() * (*j) / NA;
         m_cache[iM] += m;
         m_cache[iV] += m / (*ic)->Density();
     }
+
+    // Calculate other cached properties.
     m_cache[iD]       = pow(6.0 * m_cache[iV] / PI, ONE_THIRD);
     m_cache[iD2]      = m_cache[iD] * m_cache[iD];
     m_cache[iS]       = PI * m_cache[iD2];

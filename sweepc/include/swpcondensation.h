@@ -3,7 +3,15 @@
   Project:        sweep (population balance solver)
 
   File purpose:
-    Defines a condensation reaction.
+    Defines a condensation reaction.  Condensation reactions are treated
+    differently from surface reactions as they are modelled as free molecular
+    collisions.  The assumptions made in this model are:
+
+    1.  The colliding species is much smaller than the recipient particle.
+
+    Before the condensation process can be used it must be provided the mass and
+    diameter of the condensing species in order to calculate the rate terms.  The
+    SetCondensingSpecies() function is used for this.
 */
 
 #ifndef SWEEP_CONDENSATION_H
@@ -17,15 +25,16 @@ namespace Sweep
 class Condensation : public Process, public ParticleChanger
 {
 protected:
-    const static real COND_MAJ; // See def'n below class.
+    const static real COND_MAJ; // See def'n in cpp file.
 public:
     static const unsigned int TERM_COUNT = 3;
 protected:
     real m_a; // Rate constant.
     real m_kfm1, m_kfm2, m_kfm3; // Free-mol term parameters.
-public:
+public: // Default constructor and destructor.
     Condensation(void);
     ~Condensation(void);
+public:
     /* Initialises the condensation reaction. */
     virtual void Initialise(const map<unsigned int, int> &reac, // Gas-phase reactants.
                             const map<unsigned int, int> &prod, // Gas-phase products.
@@ -49,6 +58,9 @@ public: // Rate calculation.
                       const System &sys,        // System for which to get rate.
                       const DefaultParticle &sp // Index of particle for which to calculate rate.
                      ) const;
+    /* Returns the rate of the process for the given particle in
+       the system with precalculated chemical conditions. Process
+       must be linear in particle number. */
     virtual real Rate(const real t,             // Current time (s).
                       const vector<real> &chem,
                       const real T, 
@@ -67,6 +79,9 @@ public: // Rate term calculation.
        iterator is advanced to the postition after the last term for this
        process. */
     void RateTerms(const real t, const System &sys, vector<real>::iterator &iterm) const;
+    /* Calculates the rate terms give an iterator to a real vector.  The 
+       iterator is advanced to the postition after the last term for this
+       process. Chemical conditions are precalculated. */
     void RateTerms(const real t, const vector<real> &chem, const real T, 
                    const real P, const vector<real> &sums, const System &sys, 
                    vector<real>::iterator &iterm) const;
@@ -81,12 +96,14 @@ public: // Doing the process.
                         DefaultParticle &sp,  // Index of particle for which to perform process.
                         const unsigned int n  // Number of times to perform the process.
                        ) const;
-public: // Property gets.
-    inline real A() const {return m_a;};
+public: // Property gets/sets.
+    /* Returns the pre-exp rate constant. */
+    inline real A() const {return m_a / NA;};
+    /* Sets the pre-exp rate constant. */
     inline void SetA(const real a) {m_a = a * NA;};
 public: // Property sets.
-    /* Sets the coagulation kernel constants given incepting species
-       masses and diameters. */
+    /* Sets the coagulation kernel constants given incepting species'
+       mass and diameter. */
     void SetCondensingSpecies(const real m, const real d);
 };
 };

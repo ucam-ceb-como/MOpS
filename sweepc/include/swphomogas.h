@@ -3,8 +3,17 @@
   Project:        sweep (population balance solver)
 
   File purpose:
-    A homogeneous gas system with a coupling between the
-    gas and the particles.
+    A homogeneous gas system with coupling between the gas and the particles.  This
+    system only stores one point of chemical data; without spacial resolution.  Its
+    original purpose was for use with mops.  mops is a code which couples gas-phase
+    chemistry solved using an ODE solver with a particle population balance using
+    sweep.
+
+    In order for the LPDA algorithm to have some idea of previous chemical conditions,
+    an initial point of chemistry is stored.  Values between this initial condition and
+    the current condition are linearly interpolated.  This works best if the differnce
+    between the conditions is kept small, which requires that the ensemble is updated to
+    the current time quite often with the LPDA algorithm.
 */
 
 #ifndef SWEEP_HOMOGAS_H
@@ -20,14 +29,14 @@ class HomoGas : public System
 {
 protected:
     vector<real> m_initchem; // Initial gas-phase species concentrations.
-    real m_initT, m_initP; //
-    real m_inittime; // Time for which the initial conditions are valid.
-    vector<real> m_chem; // Gas-phase species concentrations.
-    real m_t, m_p; // Gas-phase temperature and pressure.
-public:
+    real m_initT, m_initP;   // Initial gas-phase temperature and pressure.
+    real m_inittime;         // Time for which the initial conditions are valid.
+    vector<real> m_chem;     // Gas-phase species concentrations.
+    real m_t, m_p;           // Gas-phase temperature and pressure.
+public: // Default constructor and destructor.
     HomoGas(void);
     ~HomoGas(void);
-public: // Definition of pure virtuals.
+public: // Definition of pure virtuals - these function must be defined.
     inline real GetTemperature(const real t) const {return m_t;};
     inline real GetPressure(const real t) const {return m_p;};
     inline real GetSpeciesConc(const unsigned int i, const real t) const {

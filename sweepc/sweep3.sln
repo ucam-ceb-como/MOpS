@@ -1,7 +1,10 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual C++ Express 2005
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sweep3", "sweep3.vcproj", "{CEBB16F5-AB0E-45DC-BE4F-380EC38F3112}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23} = {B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sweeplib", "sweeplib.vcproj", "{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}"
 EndProject

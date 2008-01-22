@@ -2,6 +2,8 @@
 #include "swpcoagulation.h"
 #include "swpensemble.h"
 #include "rng.h"
+#include "swpabf.h"
+#include "swppahmodel.h"
 
 using namespace Sweep;
 
@@ -44,7 +46,7 @@ Sweep::Mechanism::~Mechanism(void)
 int Sweep::Mechanism::GetRates(std::vector<real> &rates, const real t, 
                                const System &sys) const
 {
-    // Ensure vector is the correct length.
+    // Ensure rates vector is the correct length.
     rates.resize(m_termcount);
     vector<real>::iterator iterm = rates.begin();
 
@@ -53,7 +55,6 @@ int Sweep::Mechanism::GetRates(std::vector<real> &rates, const real t,
     real T=0.0, P=0.0;
     sys.GetConditions(t, chem, T, P);
     sys.ConstEnsemble().GetSums(sums);
-
 
     // Get rates of inception processes.
     vector<Inception*>::const_iterator ii;
@@ -73,6 +74,9 @@ int Sweep::Mechanism::GetRates(std::vector<real> &rates, const real t,
 int Mechanism::GetStochasticRates(std::vector<real> &rates, const real t, 
                                   const System &sys) const
 {
+    // This routine only calculates the rates of those processes which ar
+    // not deferred.
+
     // Ensure vector is the correct length.
     rates.resize(m_termcount);
     vector<real>::iterator iterm = rates.begin();
@@ -106,6 +110,9 @@ int Mechanism::GetStochasticRates(std::vector<real> &rates, const real t,
 
 real Mechanism::JumpRate(const std::vector<real> &rates) const
 {
+    // This function returns the combined rate for all non-deferred
+    // processes.
+
     vector<Process*>::const_iterator i;
     vector<real>::const_iterator j=rates.begin();
     unsigned int k;
@@ -140,18 +147,26 @@ SpeciesList &Mechanism::GetSpeciesList(void) const
 
 int Mechanism::AddInception(Inception *icn)
 {
+    // Add the inception to the mechanism.
     m_inceptions.push_back(icn);
-    icn->SetMechanism(*const_cast<Mechanism*>(this));
     m_termcount += icn->TermCount();
+
+    // Set the inception to belong to this mechanism.
+    icn->SetMechanism(*const_cast<Mechanism*>(this));
     return 0;
 }
 
 int Mechanism::AddProcess(Process *p)
 {
+    // Add the process to the mechanism.
     m_processes.push_back(p);
-    m_anydeferred = m_anydeferred || p->IsDeferred();
-    p->SetMechanism(*const_cast<Mechanism*>(this));
     m_termcount += p->TermCount();
+
+    // Check for any deferred.
+    m_anydeferred = m_anydeferred || p->IsDeferred();
+
+    // Set the process to belong to this mechanism.
+    p->SetMechanism(*const_cast<Mechanism*>(this));
     return 0;
 }
 
@@ -162,11 +177,15 @@ int Sweep::Mechanism::AddCoagulation()
 
 void Mechanism::CheckDeferred(void)
 {
+    // Loop though all processes checking if any are deferred.
     m_anydeferred = false;
     vector<Process*>::iterator i;
     for (i=m_processes.begin(); i!=m_processes.end(); i++) {
-        if ((*i)->IsDeferred()) m_anydeferred = true;
-        return;
+        if ((*i)->IsDeferred()) {
+            // Set anydeferred flag is true.
+            m_anydeferred = true;
+            return;
+        }
     }
 }
 
@@ -185,6 +204,7 @@ int Mechanism::DoProcess(const unsigned int i, const real t, System &sys) const
         for(ip=m_processes.begin(); ip!=m_processes.end(); ip++) {
             j += (*ip)->TermCount();
             if ((unsigned)j>=i) {
+                // Do the process.
                 return (*ip)->Perform(t, sys, i+(*ip)->TermCount()-j-1);
             }
         }
@@ -221,12 +241,12 @@ int Mechanism::LPDA(const real t, System &sys)
         }
     }
     
-    // Now remove any invalid particles.
+    // Now remove any invalid particles and update the ensemble.
     sys.Ensemble().RemoveInvalids();
     sys.Ensemble().Update();
 
     // Start particle doubling again.  This will also double the ensemble
-    // if any particles have been removed.
+    // if too many particles have been removed.
     sys.Ensemble().UnfreezeDoubling();
 
     return 0;
@@ -243,6 +263,7 @@ int Mechanism::UpdateParticle(DefaultParticle &sp, System &sys, const real t)
     sys.GetConditions(t, chem, T, P);
     sys.Ensemble().GetSums(sums);
 
+    // Update the particle.
     return UpdateParticle(sp, sys, t, chem, T, P, sums);
 }
 
@@ -250,6 +271,9 @@ int Mechanism::UpdateParticle(DefaultParticle &sp, System &sys, const real t,
                               const vector<real> &chem, const real T, const real P, 
                               const vector<real> &sums)
 {
+    // This function updates a single particle with deferred processes.  It is 
+    // very important for LPDA.
+
     // If there are no deferred processes then stop right now.
     if (!m_anydeferred) return 0;
 
@@ -267,9 +291,15 @@ int Mechanism::UpdateParticle(DefaultParticle &sp, System &sys, const real t,
         // which are deferred.
         for (i=m_processes.begin(); i!=m_processes.end(); i++) {
             if ((*i)->IsDeferred()) {
+                // Get the process rate.
                 rate = (*i)->Rate(t, chem, T, P, sums, sys, sp) * dt;
+
+                // Use a Poission deviate to calculate number of times to perform
+                // the process.
                 num  = ignpoi(rate);
+
                 if (num > 0) {
+                    // Do the process to the particle.
                     err = (*i)->Perform(t, sys, sp, num);
                     if (err != 0) {
                         return err;
@@ -279,6 +309,7 @@ int Mechanism::UpdateParticle(DefaultParticle &sp, System &sys, const real t,
         }
     }
 
+    // Check that the particle is still valid, only calculate cache if it is.
     if (sp.IsValid()) {
         sp.CalcCache();
         return 0;
@@ -289,6 +320,8 @@ int Mechanism::UpdateParticle(DefaultParticle &sp, System &sys, const real t,
 
 Component const &Sweep::Mechanism::GetComponent(const unsigned int i) const
 {
+    // Check for valid index before returning component.  If index is invalid,
+    // then just return the first component.
     if (i<(int)m_components.size()) {
         return *m_components[i];
     } else {
@@ -298,6 +331,8 @@ Component const &Sweep::Mechanism::GetComponent(const unsigned int i) const
 
 int Sweep::Mechanism::GetComponentIndex(const std::string &name) const
 {
+    // Loop over all components checking the names.  When found the
+    // desired component stop the loop.
     vector<Component*>::const_iterator i;
     unsigned int k;
     for (i=m_components.begin(),k=0; i!=m_components.end(); i++,k++) {
@@ -305,6 +340,8 @@ int Sweep::Mechanism::GetComponentIndex(const std::string &name) const
             return k;
         }
     }
+
+    // If the component name was not found then return an invalid index.
     return -1;
 }
 
@@ -327,6 +364,8 @@ void Sweep::Mechanism::SetComponents(const std::vector<Component*> &comps)
 
 int Sweep::Mechanism::GetValueIndex(const std::string &name) const
 {
+    // Loop over all value names checking the names.  When found the
+    // desired value stop the loop.
     vector<string>::const_iterator i;
     unsigned int k;
     for (i=m_valuenames.begin(),k=0; i!=m_valuenames.end(); i++,k++) {
@@ -334,5 +373,29 @@ int Sweep::Mechanism::GetValueIndex(const std::string &name) const
             return k;
         }
     }
+
+    // If the value name was not found then return an invalid index.
     return -1;
+}
+
+int Mechanism::InitReqdModels()
+{
+    set<Model>::const_iterator i;
+
+    // Loop over all required models for the mechanism and initialise
+    // them all.
+    for (i=m_reqmodels.begin(); i!=m_reqmodels.end(); i++) {
+        switch (*i) {
+            case HACA :
+                // Initialise the ABF HACA active sites model.
+                ABF::ABFMech::InitHACA(*m_species);
+            case PAH :
+                // Initialise the PAH sites model.
+                PAHModel::Initialise(*this);
+//          case CNT :
+                // Initialise the simple CNT model.  This isn't coded yet!
+        }
+    }
+
+    return 0;
 }

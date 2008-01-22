@@ -5,6 +5,9 @@
   File purpose:
     Definition of a default particle used by sweep.  Particles
     are assumed spherical and are only described by their volume.
+
+    This class serves as the base class for all other stochastic particle types
+    defined in sweep.
 */
 
 #ifndef SWEEP_DEFAULTPARTICLE_H
@@ -36,7 +39,7 @@ public:
     static const int iMOM1    = 10;
 protected:
     vector<real> m_comp;              // Particle composition.
-    vector<real> m_values;            // other particle properties.
+    vector<real> m_values;            // Other particle properties.
     real m_createt;                   // Time at which particle was created.
     vector<Component*> *m_components; // Components used to define particle.
     vector<real> m_cache;             // Precalculated cache of particle properties.
@@ -46,7 +49,8 @@ public: // Constructors and destructors.
     DefaultParticle(void);
     DefaultParticle(vector<Component*> &components, const unsigned int nvals);
     ~DefaultParticle(void);
-    void Initialise(vector<Component*> &components, const unsigned int nvals);
+    /* Initialises the particle with the given components. */
+    virtual void Initialise(vector<Component*> &components, const unsigned int nvals);
 public: // Override routines from BaseParticle.
     void GetProperties(vector<real> &p) const;
     bool IsValid() const;
@@ -79,33 +83,34 @@ public: // Particle actions and interactions.
     virtual const DefaultParticle operator+(const DefaultParticle &sp) const;
     virtual DefaultParticle &Coagulate(const DefaultParticle &sp);
 public: // Physical properties required by Sweep processes.
-    real Mass() const; // Particle mass (g).
-    real Volume() const; // Particle volume (cm3).
-    real SurfaceArea() const; // Particle surface area (cm2).
-    real SphereSurface() const; // Equivalent sphere surface area (cm2).
-    real CollisionDiameter() const; // Collision diameter (cm).
-    real SphereDiameter() const; // Equivalent sphere diameter (cm).
-    real CollDiamSquared() const; // Collision diameter squared (cm2).
-    real ActiveSurfaceArea() const; // Active surface area (cm2).
-    real InvCollDiam() const; // Inverse collision diameter (cm-1).
-    real InvCollDiamSquared() const; // Inverse squared collision diameter (cm-2).
-    real InvSqrtMass() const; // Inverse of square root of mass (g-1/2).
+    real Mass() const;                    // Particle mass (g).
+    real Volume() const;                  // Particle volume (cm3).
+    real SurfaceArea() const;             // Particle surface area (cm2).
+    real SphereSurface() const;           // Equivalent sphere surface area (cm2).
+    real CollisionDiameter() const;       // Collision diameter (cm).
+    real SphereDiameter() const;          // Equivalent sphere diameter (cm).
+    real CollDiamSquared() const;         // Collision diameter squared (cm2).
+    real ActiveSurfaceArea() const;       // Active surface area (cm2).
+    real InvCollDiam() const;             // Inverse collision diameter (cm-1).
+    real InvCollDiamSquared() const;      // Inverse squared collision diameter (cm-2).
+    real InvSqrtMass() const;             // Inverse of square root of mass (g-1/2).
     real CollDiamSqrdInvSqrtMass() const; // Collision diameter squared times the inverse square root of mass.
 public: // Physical properties calculated from property vector (from Ensemble).
-    static real Mass(const vector<real> &p); // Particle mass (g).
-    static real Volume(const vector<real> &p); // Particle volume (cm3).
-    static real SurfaceArea(const vector<real> &p); // Particle surface area (cm2).
-    static real SphereSurface(const vector<real> &p); // Equivalent sphere surface area (cm2).
-    static real CollisionDiameter(const vector<real> &p); // Collision diameter (cm).
-    static real SphereDiameter(const vector<real> &p); // Equivalent sphere diameter (cm).
-    static real CollDiamSquared(const vector<real> &p); // Collision diameter squared (cm2).
-    static real ActiveSurfaceArea(const vector<real> &p); // Active surface area (cm2).
-    static real InvCollDiam(const vector<real> &p); // Inverse collision diameter (cm-1).
-    static real InvCollDiamSquared(const vector<real> &p); // Inverse squared collision diameter (cm-2).
-    static real InvSqrtMass(const vector<real> &p); // Inverse of square root of mass (g-1/2).
+    static real Mass(const vector<real> &p);                    // Particle mass (g).
+    static real Volume(const vector<real> &p);                  // Particle volume (cm3).
+    static real SurfaceArea(const vector<real> &p);             // Particle surface area (cm2).
+    static real SphereSurface(const vector<real> &p);           // Equivalent sphere surface area (cm2).
+    static real CollisionDiameter(const vector<real> &p);       // Collision diameter (cm).
+    static real SphereDiameter(const vector<real> &p);          // Equivalent sphere diameter (cm).
+    static real CollDiamSquared(const vector<real> &p);         // Collision diameter squared (cm2).
+    static real ActiveSurfaceArea(const vector<real> &p);       // Active surface area (cm2).
+    static real InvCollDiam(const vector<real> &p);             // Inverse collision diameter (cm-1).
+    static real InvCollDiamSquared(const vector<real> &p);      // Inverse squared collision diameter (cm-2).
+    static real InvSqrtMass(const vector<real> &p);             // Inverse of square root of mass (g-1/2).
     static real CollDiamSqrdInvSqrtMass(const vector<real> &p); // Collision diameter squared times the inverse square root of mass.
 public:
-    virtual void CalcCache(void); // Calculates the cache of particle properties.
+    /* Calculates the cache of particle properties. */
+    virtual void CalcCache(void);
 };
 
 /* Physical properties of the particle required by Sweep processes. */
