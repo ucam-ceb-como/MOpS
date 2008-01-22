@@ -9,10 +9,17 @@
 #ifndef GPC_PARAMS_H
 #define GPC_PARAMS_H
 
+#include <vector>
+
 namespace Sprog
 {
-    // Common typedefs.  
-    typedef double real;  // typedef for real numbers in Sprog, so they can be easily changed.
+    // COMMON TYPEDEFS.
+
+    // Real numbers in Sprog, so they can be easily changed.
+    typedef double real;
+
+    // Real number STL vector.
+    typedef std::vector<real> fvector; 
 
     // Mathematical constants.
     const real PI = 3.1415926535897932384626433832795;

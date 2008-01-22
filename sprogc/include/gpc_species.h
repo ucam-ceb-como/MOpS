@@ -55,8 +55,8 @@ public:
                                                          // element (given by object).
 
     // Species molecular weight.
-    const real MolWt(void) const; // Returns the species molecular weight.
-    real CalcMolWt(void);         // Recalculates the molecular weight of the species using the elements.
+    real MolWt(void) const; // Returns the species molecular weight.
+    real CalcMolWt(void);   // Recalculates the molecular weight of the species using the elements.
 
     // Elements.
     const ElementPtrVector *const Elements(void); // Returns the vector of elements used to define species.

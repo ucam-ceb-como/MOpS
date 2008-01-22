@@ -35,8 +35,8 @@ public:
     virtual Mixture* Clone() const;
 
     // Get/Set temperature.
-    real T(void) const; // Returns temperature.
-    void SetT(real T);  // Set the temperature.
+    real Temperature(void) const; // Returns temperature.
+    void SetTemperature(real T);  // Set the temperature.
 
     // Get/Set species concentrations/fractions.
     const std::vector<real> & MoleFractions() const;       // Returns the mole fractions of all species.
@@ -45,7 +45,12 @@ public:
     real MoleFraction(unsigned int i) const; // Returns the mole fraction of species i.
     real MolarConc(unsigned int i) const;    // Returns the molar concentration of species i.
     real MassFraction(unsigned int i) const; // Returns the mass fraction of species i.
-    void SetFracs(const std::vector<real> &fracs);         // Sets the mole fractions of all species.
+    void SetFracs(const std::vector<real> &fracs); // Sets the mole fractions of all species.
+    // Sets the mole fractions of all species from an array of values.
+    void SetFracs(
+        const real fracs[], // The array of mole fractions.
+        int n               // The length of the array.
+        );
     void SetConcs(const std::vector<real> &concs);         // Sets the molar concentrations of all species.
     void SetMassFracs(const std::vector<real> &fracs);     // Sets the mass fractions of all species.
 
@@ -59,11 +64,17 @@ public:
     const SpeciesPtrVector *const Species() const; // Returns the species for which this mixture is defined.
     void SetSpecies(const SpeciesPtrVector *const sp); // Sets the species for which this mixture is defined.
 
+    // Returns a pointer to the raw data (mole fractions, temperature
+    // and density)  This function is provided in order to allow
+    // numerical operations to be performed on the mixture, for example
+    // integration of ODEs.
+    real *const RawData();
 protected:
-    // Mixture properties.
-    std::vector<real> m_frac; // Species mole fractions.
-    real m_T;    // Mixture temperature.
-    real m_dens; // Mixture density.
+    // The data vector contains, in order, the species mole fractions,
+    // the mixture temperature and the mixture density.
+    std::vector<real> m_data;
+    real *m_pT;    // Pointer to mixture temperature.
+    real *m_pdens; // Pointer to mixture density.
 
     // Mixture context.
     const SpeciesPtrVector *m_species; // Vector of species for which this mixture is defined.

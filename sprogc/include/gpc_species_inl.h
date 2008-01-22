@@ -23,7 +23,7 @@ inline const ElCompVector &Species::Composition() const {return m_elcomp;};
 
 // SPECIES MOLECULAR WEIGHT.
 
-inline const real Species::MolWt() const {return m_molwt;};
+inline real Species::MolWt() const {return m_molwt;};
 
 
 // THERMODYNAMIC FITTING PARAMETERS.

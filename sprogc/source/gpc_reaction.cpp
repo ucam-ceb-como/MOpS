@@ -124,7 +124,7 @@ void Reaction::AddReactant(const Sprog::Stoich &reac)
     // check both integer and real reactants.
 
     // Add the new contribution to the total stoichiometry sums.
-    m_dstoich += (real)reac.Mu();
+    m_dstoich -= (real)reac.Mu();
     m_dreac += (real)reac.Mu();
 
     // Integer reactants.
@@ -161,7 +161,7 @@ void Reaction::AddReactant(const Sprog::Stoichf &reac)
     // check both integer and real reactants.
 
     // Add the new contribution to the total stoichiometry sums.
-    m_dstoich += (real)reac.Mu();
+    m_dstoich -= (real)reac.Mu();
     m_dreac += (real)reac.Mu();
 
     // Integer reactants.
@@ -254,7 +254,7 @@ void Reaction::RemoveReactant(const std::string &name)
             for (j=m_reac.begin(); j!=m_reac.end(); j++) {
                 if ((*j).Index() == i) {
                     // Remove contribution from the total stoichiometry sums.
-                    m_dstoich -= (real)((*j).Mu());
+                    m_dstoich += (real)((*j).Mu());
                     m_dreac -= (real)((*j).Mu());
 
                     // We have found the species in the list.
@@ -267,7 +267,7 @@ void Reaction::RemoveReactant(const std::string &name)
             for (k=m_freac.begin(); k!=m_freac.end(); k++) {
                 if ((*k).Index() == i) {
                     // Remove contribution from the total stoichiometry sums.
-                    m_dstoich -= (*j).Mu();
+                    m_dstoich += (*j).Mu();
                     m_dreac -= (*j).Mu();
 
                     // We have found the species in the real stoich vector.
@@ -300,13 +300,13 @@ const Stoichf Reaction::FReactant(unsigned int k) const
 }
 
 // Returns the number of integer reactants.
-const int Reaction::ReactantCount() const
+int Reaction::ReactantCount() const
 {
     return m_reac.size();
 }
 
 // Returns the number of real reactants.
-const int Reaction::FReactantCount() const
+int Reaction::FReactantCount() const
 {
     return m_freac.size();
 }
@@ -498,13 +498,13 @@ const Stoichf Reaction::FProduct(unsigned int k) const
 }
 
 // Returns the number of integer products.
-const int Reaction::ProductCount() const
+int Reaction::ProductCount() const
 {
     return m_prod.size();
 }
 
 // Returns the number of real products.
-const int Reaction::FProductCount() const
+int Reaction::FProductCount() const
 {
     return m_fprod.size();
 }

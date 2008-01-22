@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="sprogc"
 	ProjectGUID="{4F627552-B6A3-4A4C-8F65-1E72722A8309}"
+	RootNamespace="sprogc"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -15,7 +17,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(ProjectDir)lib"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			>
@@ -37,9 +39,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include"
+				AdditionalIncludeDirectories="include;..\comostrings\include"
 				RuntimeLibrary="1"
-				DebugInformationFormat="3"
+				DisableLanguageExtensions="true"
+				DebugInformationFormat="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -52,7 +55,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)\lib\$(ProjectName)_d.lib"
+				AdditionalDependencies="..\comostrings\lib\comostrings_d.lib"
+				OutputFile="$(ProjectDir)\lib\sprog_d.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -72,7 +76,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(ProjectDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			>
@@ -93,7 +97,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="include"
+				AdditionalIncludeDirectories="..\comostrings\include;include"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -106,7 +110,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)\lib\$(ProjectName).lib"
+				OutputFile="$(ProjectDir)\lib\sprog.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -269,10 +273,6 @@
 			</File>
 			<File
 				RelativePath=".\include\gpc_unit_systems.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\morestrings.h"
 				>
 			</File>
 		</Filter>

@@ -10,6 +10,6 @@
 #define GPC_ELEMENT_INL_H
 
 inline const std::string Element::Name(void) const {return m_name;};
-inline const real Element::MolWt(void) const {return m_molwt;};
+inline real Element::MolWt(void) const {return m_molwt;};
 
 #endif

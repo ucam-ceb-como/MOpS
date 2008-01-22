@@ -41,7 +41,7 @@ public:
     void SetName(const std::string &name); // Sets the name of the element.
 
     // Element molecular weight.
-    const real MolWt() const;        // Returns molecular weight of the element.
+    real MolWt() const;              // Returns molecular weight of the element.
     void SetMolWt(const real molwt); // Sets the molecular weight of the element.
     bool SetMolWtFromLibrary();      // Searches for the element in the library of known elements.
 

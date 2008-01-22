@@ -27,37 +27,215 @@ public:
     virtual ~IdealGas(void); // Default destructor.
 
 
-    // Required function overrides for GasPhase:
+    // EQUATION OF STATE (overrides from GasPhase).
 
-    // Equation of State related functions.
-    real Pressure(void) const; // Returns pressure in current units.
+    // Returns pressure in current units.
+    real Pressure(void) const;
 
-    // Thermodynamic property calculation.
-    void CalcHs(std::vector<real> &Hs) const;   // Calculates enthalpies of all species.
-    void CalcSs(std::vector<real> &Ss) const;   // Calculates entropies of all species.
-    void CalcCps(std::vector<real> &Cps) const; // Calculates molar heat capacity at const. P of all species.
-    void CalcCvs(std::vector<real> &Cvs) const; // Calculates molar heat capacity at const. V of all species.
-    void CalcUs(std::vector<real> &Us) const;   // Calculates molar internal energies of each species.
-    void CalcGs(std::vector<real> &Gs) const;   // Calculates molar Gibbs free energies of each species.
+    // Sets the pressure of the gas phase.
+    void SetPressure(real p);
 
-    void CalcHs_RT(std::vector<real> &Hs) const;  // Calculates enthalpies of all species / RT.
-    void CalcSs_R(std::vector<real> &Ss) const;   // Calculates entropies of all species / R.
-    void CalcCps_R(std::vector<real> &Cps) const; // Calculates molar heat capacity at const. P of all species / RT.
-    void CalcCvs_R(std::vector<real> &Cvs) const; // Calculates molar heat capacity at const. V of all species / RT.
-    void CalcUs_RT(std::vector<real> &Us) const;  // Calculates molar internal energies of each species / RT.
-    void CalcGs_RT(std::vector<real> &Gs) const;  // Calculates molar Gibbs free energies of each species / RT.
 
-    // Bulk thermodynamic property calculations.
-    real BulkH(void) const;  // Calculates the bulk enthalpy in current units.
-    real BulkS(void) const;  // Calculates the bulk entropy in current units.
-    real BulkCp(void) const; // Calculates the mean molar heat capacity at const. P.
-    real BulkCv(void) const; // Calculates the mean molar heat capacity at const. V.
+    // THERMODYNAMIC PROPERTIES (overrides from GasPhase::ThermoInterface):
+
+    // INTERNAL ENERGY.
+
+    // Calculates molar internal energies of each species.
+    void CalcUs(
+        real T,    // Temperature (K).
+        fvector &U // Return vector for the internal energies.
+        ) const;
+
+    // Calculates dimensionless molar internal energies of each species.
+    void CalcUs_RT(
+        real T,    // Temperature (K).
+        fvector &U // Return vector for the internal energies.
+        ) const;
+
+    // Calculates the bulk internal energy given the temperature and the 
+    // species mole fractions.  Also returns the species energies.
+    real CalcBulkU(
+        real T,              // Temperature (K).
+        const real *const x, // Species mole fractions array.
+        unsigned int n,      // Number of values in x.
+        fvector &U           // Output vector for species internal energies.
+        ) const;
+
+
+    // ENTHALPY.
+
+    // Calculates enthalpies of all species using the 
+    // given temperature.
+    void CalcHs(
+        real T,    // Temperature (K).
+        fvector &H // Return vector for the enthalpies
+        ) const;
+
+    // Calculates dimensionless enthalpies of all species using the 
+    // given temperature.
+    void CalcHs_RT(
+        real T,    // Temperature (K).
+        fvector &H // Return vector for the enthalpies
+        ) const;
+
+    // Calculates the bulk enthalpy given the temperature and the 
+    // species mole fractions.  Also returns the species enthalpies.
+    real CalcBulkH(
+        real T,              // Temperature (K).
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x.
+        fvector &H           // Output vector for species enthalpies.
+        ) const;
+
+
+    // ENTROPY.
+
+    // Calculates entropies of all species using the given
+    // temperature.
+    void CalcSs(
+        real T,     // Temperature (K).
+        fvector &S  // Return vector for the entropies.
+        ) const;
+
+    // Calculates dimensionless entropies of all species using the given
+    // temperature.
+    void CalcSs_R(
+        real T,     // Temperature (K).
+        fvector &S  // Return vector for the entropies.
+        ) const;
+
+    // Calculates the bulk entropy given the temperature and the 
+    // species mole fractions.  Also returns the species entropies.
+    real CalcBulkS(
+        real T,              // Temperature (K).
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x.
+        fvector &S           // Output vector for species entropies.
+        ) const;
+
+
+    // GIBBS FREE ENERGY.
+
+    // Calculates molar Gibbs free energies of each species
+    // at the given temperature.
+    void CalcGs(
+        real T,     // Temperature (K).
+        fvector &G  // Return vector for the Gibbs free energies.
+        ) const;
+
+    // Calculates dimensionless molar Gibbs free energies of each species
+    // at the given temperature.
+    void CalcGs_RT(
+        real T,     // Temperature (K).
+        fvector &G  // Return vector for the Gibbs free energies.
+        ) const;
+
+    // Calculates the species' Gibbs free energies given the temperature and
+    // the species' enthalpies and entropies.
+    void CalcGs(
+        real T,           // Temperature (K).
+        const fvector &H, // Species enthalpies.
+        const fvector &S, // Species entropies.
+        fvector &G        // Return vector for the Gibbs free energies.
+        ) const;
+
+    // Calculates the bulk Gibbs free energy given the temperature and the 
+    // species mole fractions.  Also returns the species Gibbs free energies.
+    real CalcBulkG(
+        real T,              // Temperature (K).
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x.
+        fvector &G           // Output vector for species Gibbs free energies.
+        ) const;
+
+
+    // CONSTANT PRESSURE HEAT CAPACITY.
+
+    // Calculates molar heat capacity at const. P of all species
+    // using the given temperature.
+    void CalcCps(
+        real T,      // Temperature (K).
+        fvector &Cp  // Returns vector for the heat capacities.
+        ) const;
+
+    // Calculates dimensionless molar heat capacity at const. P of 
+    // all species using the given temperature.
+    void CalcCps_R(
+        real T,      // Temperature (K).
+        fvector &Cp  // Returns vector for the heat capacities.
+        ) const;
+
+    // Calculates the bulk constant pressure heat capacity given 
+    // the temperature and the species mole fractions.  Also 
+    // returns the species heat capacities.
+    real CalcBulkCp(
+        real T,              // Temperature (K).
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x.
+        fvector &Cp          // Output vector for species heat capacities.
+        ) const;
+
+
+    // CONSTANT VOLUME HEAT CAPACITY.
+
+    // Calculates molar heat capacity at const. V of all species
+    // using the given temperature.
+    void CalcCvs(
+        real T,      // Temperature (K).
+        fvector &Cv  // Returns vector for the heat capacities.
+        ) const;
+
+    // Calculates dimensionless molar heat capacity at const. V 
+    // of all species using the given temperature.
+    void CalcCvs_R(
+        real T,      // Temperature (K).
+        fvector &Cv  // Returns vector for the heat capacities.
+        ) const;
+
+    // Calculates the bulk constant volume heat capacity given 
+    // the temperature and the species mole fractions.  Also 
+    // returns the species heat capacities.
+    real CalcBulkCv(
+        real T,              // Temperature (K).
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x.
+        fvector &Cv          // Output vector for species heat capacities.
+        ) const;
+
+
+    // MULTIPLE PROPERTIES.
+
+    // Calculates the species' enthalpies, entropies and constant pressure
+    // heat capacities using the given temperature.  This function can be 
+    // more efficient than calculating the properties individually.
+    void CalcCpHSs(
+        real T,      // Temperature (K)
+        fvector &Cp, // Output vector for constant pressure heat capacities.
+        fvector &H,  // Output vector for enthalpies.
+        fvector &S   // Output vector for entropies.
+        ) const;
+
+    // Calculates the species' enthalpies (H/RT), entropies (S/R) and constant pressure
+    // heat capacities (Cp/R) all in dimensionless units using the given 
+    // temperature.  This function can be more efficient than calculating 
+    // the properties individually.
+    void CalcCpHSs_RT(
+        real T,      // Temperature (K)
+        fvector &Cp, // Output vector for constant pressure heat capacities (Cp/R).
+        fvector &H,  // Output vector for enthalpies (H/RT).
+        fvector &S   // Output vector for entropies (S/R).
+        ) const;
 
 private:
     // Calculates a polynomial fit of any thermo property given the
     // temperature terms.  The polynomial coefficients are found per
     // species.
-    void sumTerms(real *t, int n, std::vector<real> &Xs) const;
+    void sumTerms(
+        real T,     // Temperature (K).
+        real *t,    // Temperature terms in polynomial.
+        int n,      // Number of terms in polynomial.
+        fvector &Xs // Output vector for all species.
+        ) const;
 };
 };
 };

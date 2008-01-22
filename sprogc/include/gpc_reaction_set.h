@@ -51,28 +51,65 @@ public:
     // Tidying up.
     void Clear(void); // Clears all reactions from the set.
 
-    // Rate calculation (functions to avoid repetition of calculations).
-    void GetMolarProdRates( // Calculates the molar production rates of all species.
-        const Sprog::Thermo::GasPhase &mix, // The mixture for which the prod. rates are being calculated.
-        const std::vector<real> &rop,       // Rate of Progress of each reaction.
-        std::vector<real> &wdot             // Return vector for molar prod. rates.
-        ) const;
-    void GetRatesOfProgress( // Calculates the rate of progress of each reaction.
-        const Sprog::Thermo::GasPhase &mix, // The mixture for which to calculate the rates.
-        const std::vector<real> &kforward,  // Forward rate constants of all reactions.
-        const std::vector<real> &kreverse,  // Reverse rate constants of all reactions.
-        std::vector<real> & rop             // Return vector for rates of progress.
-        ) const;
-    void GetRateConstants( // Calculates the forward and reverse rate constants of all reactions.
-        const Sprog::Thermo::GasPhase &mix, // The mixture for which to calculate the rate constants.
-        const std::vector<real> &Gs,        // Dimensionless Gibbs free energy of each species (1/mol).
-        std::vector<real> &kforward,        // Return vector for forward rate constants.
-        std::vector<real> &kreverse         // Return vector for reverse rate constants.
+
+    // SPECIES MOLAR PRODUCTION RATES.
+
+    // Calculates the molar production rates of all species.
+    void GetMolarProdRates(
+        const fvector &rop, // Rate of Progress of each reaction.
+        fvector &wdot       // Return vector for molar prod. rates.
         ) const;
 
+
+    // REACTION RATES OF PROGRESS.
+
+    // Calculates the rate of progress of each reaction.
+    void GetRatesOfProgress(
+        const Sprog::Thermo::GasPhase &mix, // The mixture for which to calculate the rates.
+        const fvector &kforward,  // Forward rate constants of all reactions.
+        const fvector &kreverse,  // Reverse rate constants of all reactions.
+        fvector & rop             // Return vector for rates of progress.
+        ) const;
+
+    // Calculates the rate of progress of each reaction.
+    void GetRatesOfProgress(
+        real density,            // Mixture molar density.
+        const real *const x,     // Species mole fractions.
+        unsigned int n,          // Number of values in x array.
+        const fvector &kforward, // Forward rate constants of all reactions.
+        const fvector &kreverse, // Reverse rate constants of all reactions.
+        fvector &rop             // Return vector for rates of progress.
+        ) const;
+
+
+    // RATE CONSTANTS.
+
+    // Calculates the forward and reverse rate constants 
+    // of all reactions given a mixture object.
+    void GetRateConstants(
+        const Sprog::Thermo::GasPhase &mix, // The mixture for which to calculate the rate constants.
+        const fvector &Gs, // Dimensionless Gibbs free energy of each species (1/mol).
+        fvector &kforward, // Return vector for forward rate constants.
+        fvector &kreverse  // Return vector for reverse rate constants.
+        ) const;
+
+    // Calculates the forward and reverse rate constants 
+    // of all reactions given mixture temperature, density
+    // and species mole fractions.
+    void GetRateConstants( 
+        real T,              // The mixture temperature.
+        real density,        // Mixture molar density.
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x array.
+        const fvector &Gs,   // Dimensionless Gibbs free energy of each species (1/mol).
+        fvector &kforward,   // Return vector for forward rate constants.
+        fvector &kreverse    // Return vector for reverse rate constants.
+        ) const;
+
+
     // Parent mechanism.
-    const Mechanism const* Mechanism() const;       // Returns a pointer to the parent mechanism.
-    void SetMechanism(const Mechanism const* mech); // Sets the parent mechanism.
+    const Sprog::Mechanism *const Mechanism() const;       // Returns a pointer to the parent mechanism.
+    void SetMechanism(const Sprog::Mechanism *const mech); // Sets the parent mechanism.
 protected:
     // Reaction set data.
     RxnPtrVector m_rxns; // Vector of all reactions in the set.
@@ -87,7 +124,7 @@ protected:
 
 private:
     // Pointer to mechanism to which this ReactionSet belongs.
-    const Mechanism *m_mech;
+    const Sprog::Mechanism *m_mech;
 };
 };
 };

@@ -58,41 +58,41 @@ private:
     // Parses a file stream of a CHEMKIN input file.
     static void parseCK(std::ifstream &fin,     // File stream.
                         Sprog::Mechanism &mech, // Mechanism into which to read file.
-                        CK_STATUS &stat);       // Status & parsing information.
+                        CK_STATUS &status);     // Status & parsing information.
 
     // Parse the element data in a CHEMKIN input file.
     static void parseCK_Elements(std::ifstream &fin,     // File stream.
                                  Sprog::Mechanism &mech, // Mechanism to receive element information.
-                                 CK_STATUS &stat);       // Status and parsing information.
+                                 CK_STATUS &status);       // Status and parsing information.
 
     // Parse the species data in a CHEMKIN input file (elements must already have been read).
     static void parseCK_Species(std::ifstream &fin,     // File stream.
                                 Sprog::Mechanism &mech, // Mechanism to receive species information.
-                                CK_STATUS &stat);       // Status and parsing information.
+                                CK_STATUS &status);     // Status and parsing information.
 
     // Parse the thermo data from a CHEMKIN input file (elements and species must already have
     // been read).
     static void parseCK_Thermo(std::ifstream &fin,     // File stream.
                                Sprog::Mechanism &mech, // Mechanism to receive thermo data.
-                               CK_STATUS &stat);       // Status and parsing information.
+                               CK_STATUS &status);     // Status and parsing information.
 
     // Parse the thermo data from a separate file (given by filename).  Elements and species
     // must already have been read.
     static void parseCK_Thermo(std::string &filename,  // File name.
                                Sprog::Mechanism &mech, // Mechanism to receive thermo data.
-                               CK_STATUS &stat);       // Status and parsing information.
+                               CK_STATUS &status);     // Status and parsing information.
 
     // Parse the reaction data from a CHEMKIN input file.
     static void parseCK_Reactions(std::ifstream &fin,     // File stream.
                                   Sprog::Mechanism &mech, // Mechanism to receive reaction data.
-                                  CK_STATUS &stat);       // Status and parsing information.
+                                  CK_STATUS &status);     // Status and parsing information.
 
     // Parse a single reaction object from a CHEMKIN formatted string.  Returns pointer to
     // new reaction if successful.
     static Sprog::Kinetics::Reaction *const parseCK_Reaction(
         const std::string &rxndef, // String containing the reaction definition.
         Sprog::Mechanism &mech,    // Mechanism into which the reaction will be inserted (for species definitions).
-        CK_STATUS &stat);          // Status and parsing information.
+        CK_STATUS &status);        // Status and parsing information.
 
     // Reads strings of reactant/product species within a reaction string and separates
     // the species from the stoichiometry.  Also checks for third-bodies and fall-off
@@ -113,7 +113,7 @@ private:
         Sprog::Kinetics::Reaction *last_rxn,    // Reaction object into which to read auxilliary information.
         const Sprog::Mechanism &mech,           // Mechanism for which the reaction is defined.
         const Sprog::Kinetics::ARRHENIUS scale, // Scaling parameters for Arrhenius cofficients to convert to correct units.
-        CK_STATUS &stat);                       // Status and parsing information.
+        CK_STATUS &status);                     // Status and parsing information.
 
     // Parse the units data from the REACTION line in a chemkin formatted mechanism file.
     static void parseCK_Units(const std::string &rxndef,          // String containing the REACTION statement.

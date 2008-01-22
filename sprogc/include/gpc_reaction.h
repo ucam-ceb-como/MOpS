@@ -58,8 +58,8 @@ public:
                                                   // the reaction (integer or real).
     const Stoich Reactant(unsigned int k) const;   // Returns the stoichiometry of the kth integer reactant.
     const Stoichf FReactant(unsigned int k) const; // Returns the stoichiometry of the kth real reactant.
-    const int ReactantCount() const;  // Returns the number of integer reactants.
-    const int FReactantCount() const; // Returns the number of real reactants.
+    int ReactantCount() const;  // Returns the number of integer reactants.
+    int FReactantCount() const; // Returns the number of real reactants.
 
     // Products.
     const std::vector<Stoich> &Products(void) const; // Returns the vector of integer stoichiometric 
@@ -75,8 +75,8 @@ public:
                                                  // reaction (integer or real).
     const Stoich Product(unsigned int k) const;    // Returns the stoichiometry of the kth integer product.
     const Stoichf FProduct(unsigned int k) const;  // Returns the stoichiometry of the kth real product.
-    const int ProductCount() const;   // Returns the number of integer products.
-    const int FProductCount() const;  // Returns the number of real product.
+    int ProductCount() const;   // Returns the number of integer products.
+    int FProductCount() const;  // Returns the number of real product.
 
     real TotalStoich() const; // Returns the total stoichiometry of the reaction.
     real ReactantStoich() const; // Returns the reactant stoichiometry of the reaction.

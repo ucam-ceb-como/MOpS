@@ -179,27 +179,27 @@ Reaction *const ReactionSet::AddReaction(const Sprog::Kinetics::Reaction &rxn)
 
     // Check for reverse parameters.
     if (rxn.RevArrhenius() != NULL) {
-        m_rev_rxns.insert(RxnMap::value_type(m_rxns.size(), pr));
+        m_rev_rxns.insert(RxnMap::value_type(m_rxns.size()-1, pr));
     }
 
     // Check for forward LT parameters.
     if (rxn.LTCoeffs() != NULL) {
-        m_lt_rxns.insert(RxnMap::value_type(m_rxns.size(), pr));
+        m_lt_rxns.insert(RxnMap::value_type(m_rxns.size()-1, pr));
     }
 
     // Check for reverse LT parameters.
     if (rxn.RevLTCoeffs() != NULL) {
-        m_revlt_rxns.insert(RxnMap::value_type(m_rxns.size(), pr));
+        m_revlt_rxns.insert(RxnMap::value_type(m_rxns.size()-1, pr));
     }
 
     // Check for third-bodies.
     if (rxn.ThirdBodies().size() > 0) {
-        m_tb_rxns.insert(RxnMap::value_type(m_rxns.size(), pr));
+        m_tb_rxns.insert(RxnMap::value_type(m_rxns.size()-1, pr));
     }
 
     // Check for fall-off parameters.
     if (rxn.FallOffType() != None) {
-        m_fo_rxns.insert(RxnMap::value_type(m_rxns.size(), pr));
+        m_fo_rxns.insert(RxnMap::value_type(m_rxns.size()-1, pr));
     }
 
     return pr;
@@ -215,13 +215,12 @@ void ReactionSet::Clear()
 }
 
 
-// REACTIONS RATES.
+// MOLAR PRODUCTION RATES RATES.
 
 // Calculates the molar production rates of all species given the rate
 // of progress of each reaction.
-void ReactionSet::GetMolarProdRates(const Sprog::Thermo::GasPhase &mix, 
-                                    const std::vector<real> &rop, 
-                                    std::vector<real> &wdot) const
+void ReactionSet::GetMolarProdRates(const fvector &rop,
+                                    fvector &wdot) const 
 {
     int k;
     const Mechanism::RxnStoichMap *mu;
@@ -247,11 +246,16 @@ void ReactionSet::GetMolarProdRates(const Sprog::Thermo::GasPhase &mix,
     }
 }
 
-// Calculates the rate of progress of each reaction.
-void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &mix, 
-                                     const std::vector<real> &kforward, 
-                                     const std::vector<real> &kreverse, 
-                                     std::vector<real> &rop) const
+// REACTION RATES OF PROGRESS.
+
+// Calculates the rate of progress of each reaction given the
+// precalculated rate constants.
+void ReactionSet::GetRatesOfProgress(real density,
+                                     const real *const x,
+                                     unsigned int n,
+                                     const fvector &kforward,
+                                     const fvector &kreverse,
+                                     fvector &rop) const
 {
     int i, j, k;
     real *rev = new real[m_rxns.size()];
@@ -261,16 +265,17 @@ void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &mix,
 
     // Loop over all reactions.
     for (i=0; i<m_rxns.size(); i++) {
-        // Use rop to store forward rates of production, and rev to store reverse rates.
-        rop[i] = kforward[i] * mix.Density() * m_rxns[i]->ReactantStoich();
-        rev[i] = kreverse[i] * mix.Density() * m_rxns[i]->ProductStoich();
+        // Use rop to store forward rates of production, 
+        // and rev to store reverse rates.
+        rop[i] = kforward[i];
+        rev[i] = kreverse[i];
 
         // Integer reactants.
         for (k=0; k<m_rxns[i]->ReactantCount(); k++) {
             // As the stoichiometry is integer, it is more computationally efficient
             // to multiply the values together than to use the pow() function.
             for (j=0; j<m_rxns[i]->Reactant(k).Mu(); j++) {
-                rop[i] *= mix.MoleFraction(m_rxns[i]->Reactant(k).Index());
+                rop[i] *= density * x[m_rxns[i]->Reactant(k).Index()];
             }
         }
 
@@ -279,14 +284,14 @@ void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &mix,
             // As the stoichiometry is integer, it is more computationally efficient
             // to multiply the values together than to use the pow() function.
             for (j=0; j<m_rxns[i]->Product(k).Mu(); j++) {
-                rev[i] *= mix.MoleFraction(m_rxns[i]->Product(k).Index());
+                rev[i] *= density * x[m_rxns[i]->Product(k).Index()];
             }
         }
 
         // Real reactants.
         for (k=0; k<m_rxns[i]->FReactantCount(); k++) {
             // Now the stoichiometry is non-integer, we must use the pow() function.
-            rop[i] *= pow(mix.MoleFraction(m_rxns[i]->FReactant(k).Index()), 
+            rop[i] *= pow(density * x[m_rxns[i]->FReactant(k).Index()], 
                           m_rxns[i]->FReactant(k).Mu()); 
 
         }
@@ -294,7 +299,7 @@ void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &mix,
         // Real products.
         for (k=0; k<m_rxns[i]->FProductCount(); k++) {
             // Now the stoichiometry is non-integer, we must use the pow() function.
-            rev[i] *= pow(mix.MoleFraction(m_rxns[i]->FProduct(k).Index()), 
+            rev[i] *= pow(density * x[m_rxns[i]->FProduct(k).Index()], 
                           m_rxns[i]->FProduct(k).Mu()); 
 
         }
@@ -306,11 +311,30 @@ void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &mix,
     delete [] rev;
 }
 
-// Calculates the forward and reverse rate constants of all reactions.
-void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix, 
-                                   const std::vector<real> &Gs,
-                                   std::vector<real> &kforward, 
-                                   std::vector<real> &kreverse) const
+// Returns the rates of progress of all reactions given the mixture
+// object.
+void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &mix, 
+                                     const fvector &kforward, 
+                                     const fvector &kreverse, 
+                                     fvector &rop) const
+{
+    GetRatesOfProgress(mix.Density(), &(mix.MoleFractions()[0]), 
+                       m_mech->Species().size(),
+                       kforward, kreverse, rop);
+}
+
+
+// RATE CONSTANTS.
+
+// Calculates the forward and reverse rate constants of all reactions
+// given the mixture temperature, density and species mole fractions.
+void ReactionSet::GetRateConstants(real T,
+                                   real density,
+                                   const real *const x,
+                                   unsigned int n,
+                                   const fvector &Gs,
+                                   fvector &kforward,
+                                   fvector &kreverse) const 
 {
     real lnT, invRT, Patm_RT, T_1_3, T_2_3, lowk, pr, logpr;
     RxnPtrVector::const_iterator i;
@@ -327,19 +351,19 @@ void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
     kreverse.resize(m_rxns.size());
 
     // Precalculate some temperature parameters.
-    lnT = log(mix.T());
+    lnT = log(T);
     switch (m_mech->Units()) {
         case SI :
-            invRT = 1.0 / (R * mix.T());
+            invRT = 1.0 / (R * T);
             Patm_RT = 101325.0 * invRT;
             break;
         case CGS :
-            invRT = 1.0 / (R_CGS * mix.T());
+            invRT = 1.0 / (R_CGS * T);
             Patm_RT = 1013250.0 * invRT;
             break;
     }
     if (m_lt_rxns.size() > 0) {
-        T_1_3 = 1.0 / pow(mix.T(), ONE_THIRD);
+        T_1_3 = 1.0 / pow(T, ONE_THIRD);
         T_2_3 = T_1_3 * T_1_3;
     }
 
@@ -390,7 +414,7 @@ void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
             // Calculate the reverse rate constant.
             kreverse[j]  = exp(min(kreverse[j], log(1.0e250)));
             kreverse[j] *= pow(Patm_RT, (*i)->TotalStoich());
-            kreverse[j] /= max(kreverse[j], 1.0e-250);
+            kreverse[j]  = kforward[j] / max(kreverse[j], 1.0e-250);
         }
     }
 
@@ -409,9 +433,9 @@ void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
             tbconcs[j] = 0.0;
             for (k=0; k<(*i)->ThirdBodyCount(); k++) {
                 tbconcs[j] += ((*i)->ThirdBody(k).Mu() - 1.0) * 
-                              mix.MoleFraction((*i)->ThirdBody(k).Index());
+                              x[(*i)->ThirdBody(k).Index()];
             }
-            tbconcs[j] = mix.Density() * (1.0 + tbconcs[j]);
+            tbconcs[j] = density * (1.0 + tbconcs[j]);
         } else {
             // This reaction has no third body requirement.
             tbconcs[j] = 1.0;
@@ -431,7 +455,7 @@ void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
         // Calculate reduced pressure.
         if (rxn->FallOffParams().ThirdBody >= 0) {
             // A particular species is to be used as the third body.
-            pr = lowk * mix.MolarConc(rxn->FallOffParams().ThirdBody) / kforward[j];
+            pr = lowk * density * x[rxn->FallOffParams().ThirdBody] / kforward[j];
         } else {
             // Use all species as third bodies.
             pr = lowk * tbconcs[j] / kforward[j];
@@ -443,22 +467,22 @@ void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
         pr    = pr / (1.0 + pr);
         switch (rxn->FallOffType()) {
             case Troe3: // 3-parameter Troe form.
-                pr *= rxn->FTROE3(mix.T(), logpr);
+                pr *= rxn->FTROE3(T, logpr);
                 kforward[j] *= pr;
                 kreverse[j] *= pr;
                 break;
             case Troe4: // 4-parameter Troe form.
-                pr *= rxn->FTROE4(mix.T(), logpr);
+                pr *= rxn->FTROE4(T, logpr);
                 kforward[j] *= pr;
                 kreverse[j] *= pr;
                 break;
             case SRI: // SRI form.
-                pr *= rxn->FSRI(mix.T(), logpr);
+                pr *= rxn->FSRI(T, logpr);
                 kforward[j] *= pr;
                 kreverse[j] *= pr;
                 break;
             case Custom: // A custom function is defined to calculate the fall-off form.
-                rxn->FallOffFn()(*rxn, lowk, tbconcs[j], mix.T(), kforward[j], kreverse[j]);
+                rxn->FallOffFn()(*rxn, lowk, tbconcs[j], T, kforward[j], kreverse[j]);
                 break;
         }
     }
@@ -474,17 +498,28 @@ void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
     delete [] tbconcs;
 }
 
+// Calculates the forward and reverse rate constants 
+// of all reactions given a mixture object.
+void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix, 
+                                   const std::vector<real> &Gs,
+                                   std::vector<real> &kforward, 
+                                   std::vector<real> &kreverse) const
+{
+    GetRateConstants(mix.Temperature(), mix.Density(), &(mix.MoleFractions()[0]), 
+                     m_mech->Species().size(), Gs, kforward, kreverse);
+}
+
 
 // PARENT MECHANISM.
 
 // Returns a pointer to the parent mechanism.
-const Mechanism const* Mechanism() const
+const Sprog::Mechanism *const ReactionSet::Mechanism() const
 {
     return m_mech;
 }
 
 // Sets the parent mechanism.
-void SetMechanism(const Mechanism const* mech)
+void ReactionSet::SetMechanism(const Sprog::Mechanism *const mech)
 {
     m_mech = mech;
 }

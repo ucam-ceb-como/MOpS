@@ -1,4 +1,4 @@
-#include "morestrings.h"
+#include "comostrings.h"
 #include "gpc_mech_io.h"
 #include "gpc_mech.h"
 
@@ -11,6 +11,7 @@
 using namespace Sprog::IO;
 using namespace std;
 using namespace Sprog::Kinetics;
+using namespace Strings;
 
 Mechanism_IO::Mechanism_IO(void)
 {
@@ -21,21 +22,23 @@ Mechanism_IO::~Mechanism_IO(void)
 }
 
 // Reads a mechanism from a CHEMKIN input file.
-void Mechanism_IO::ReadChemkin(const std::string &filename, Sprog::Mechanism &mech, const std::string &thermofile)
+void Mechanism_IO::ReadChemkin(const std::string &filename, 
+                               Sprog::Mechanism &mech, 
+                               const std::string &thermofile)
 {
     // Open file for reading.
     ifstream fin; //(filename.c_str(), ios::in);
     fin.open(filename.c_str(), ios::in);
 
     if (fin.good()) {
-        CK_STATUS stat;
-        stat.Status = FindKey;
-        stat.ReadElements = false;
-        stat.ReadSpecies = false;
-        stat.ReadReactions = false;
-        stat.ReadThermo = false;
-        stat.ThermoFile = thermofile;
-        stat.Scale = ARRHENIUS(1.0, 1.0, 1.0);
+        CK_STATUS status;
+        status.Status = FindKey;
+        status.ReadElements = false;
+        status.ReadSpecies = false;
+        status.ReadReactions = false;
+        status.ReadThermo = false;
+        status.ThermoFile = thermofile;
+        status.Scale = ARRHENIUS(1.0, 1.0, 1.0);
 
         // Clear current mechanism.
         mech.Clear();
@@ -44,7 +47,7 @@ void Mechanism_IO::ReadChemkin(const std::string &filename, Sprog::Mechanism &me
         mech.SetUnits(CGS);
 
         try {
-            parseCK(fin, mech, stat);
+            parseCK(fin, mech, status);
         } catch (exception &e) {
             fin.close();
             throw e;
@@ -62,7 +65,9 @@ void Mechanism_IO::ReadChemkin(const std::string &filename, Sprog::Mechanism &me
 // CHEMKIN PARSING ROUTINES.
 
 // Loads a mechanism from a CHEMKIN formatted file stream.
-void Mechanism_IO::parseCK(std::ifstream &fin, Sprog::Mechanism &mech, Sprog::IO::Mechanism_IO::CK_STATUS &stat)
+void Mechanism_IO::parseCK(std::ifstream &fin, 
+                           Sprog::Mechanism &mech, 
+                           Sprog::IO::Mechanism_IO::CK_STATUS &status)
 {
     char c;
     string line;
@@ -92,7 +97,7 @@ void Mechanism_IO::parseCK(std::ifstream &fin, Sprog::Mechanism &mech, Sprog::IO
                 if (isp == 0) isp = (std::streamoff)i;
             } else if (line.substr(0,4).compare("REAC")==0) {
                 // This is the start of the reactions.
-                parseCK_Units(line, stat.Scale);
+                parseCK_Units(line, status.Scale);
                 if (irxn == 0) irxn = (std::streamoff)i;
             } else if (line.substr(0,4).compare("THER")==0) {
                 // This is the start of the thermo data.
@@ -100,7 +105,7 @@ void Mechanism_IO::parseCK(std::ifstream &fin, Sprog::Mechanism &mech, Sprog::IO
             }
             line.clear();
 
-            if ((iel!=0) && (isp!=0) && (irxn!=0) && ((ithrm!=0) || (stat.ThermoFile!=""))) {
+            if ((iel!=0) && (isp!=0) && (irxn!=0) && ((ithrm!=0) || (status.ThermoFile!=""))) {
                 break;
             }
         } else {
@@ -111,32 +116,34 @@ void Mechanism_IO::parseCK(std::ifstream &fin, Sprog::Mechanism &mech, Sprog::IO
 
     // Read the elements.
     fin.seekg(iel);
-    parseCK_Elements(fin, mech, stat);
-    stat.ReadElements = true;
+    parseCK_Elements(fin, mech, status);
+    status.ReadElements = true;
 
     // Read the species.
     fin.seekg(isp);
-    parseCK_Species(fin, mech, stat);
-    stat.ReadSpecies = true;
+    parseCK_Species(fin, mech, status);
+    status.ReadSpecies = true;
 
     // Read the thermo data.
-    if (stat.ThermoFile == "") {
+    if (status.ThermoFile == "") {
         // Read thermo data from this file.
         fin.seekg(ithrm);
-        parseCK_Thermo(fin, mech, stat);
+        parseCK_Thermo(fin, mech, status);
     } else {
         // Read thermo data from thermo file.
-        parseCK_Thermo(stat.ThermoFile, mech, stat);
+        parseCK_Thermo(status.ThermoFile, mech, status);
     }
-    stat.ReadThermo = true;
+    status.ReadThermo = true;
 
     // Read the reactions.
     fin.seekg(irxn);
-    parseCK_Reactions(fin, mech, stat);
+    parseCK_Reactions(fin, mech, status);
+    mech.BuildStoichXRef();
+    mech.SetUnits(SI);
 }
 
 void Mechanism_IO::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech, 
-                                    Sprog::IO::Mechanism_IO::CK_STATUS &stat)
+                                    Sprog::IO::Mechanism_IO::CK_STATUS &status)
 {
     char c;
     string tag;
@@ -144,19 +151,19 @@ void Mechanism_IO::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech,
 
     Element * last_el;
 
-    stat.Status = BeginParseEl;
+    status.Status = BeginParseEl;
 
-    while((stat.Status!=End) && (stat.Status!=Fail) && (fin.good())) {
+    while((status.Status!=End) && (status.Status!=Fail) && (fin.good())) {
         // Get the next character from the input file.
         fin.get(c);
 
-        switch(stat.Status) {
+        switch(status.Status) {
             case BeginParseEl:
                 // Here we are looking for the start of an element name.
                 if (isLetter(c)) {
                     // This is the start of an element name.
                     tag = c;
-                    stat.Status = ParseEl;
+                    status.Status = ParseEl;
 
                     // Clear the last read element.
                     last_el = NULL;
@@ -165,20 +172,20 @@ void Mechanism_IO::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech,
                     // the input file.  If the last element is valid, then we must read
                     // the mol. wt. from the file.
                     if (last_el != NULL) {
-                        stat.Status = ParseElWt;
+                        status.Status = ParseElWt;
                         tag = "";
                     } else {
                         // Oh dear.  There is an element mol. wt. definition without an
                         // element.  This is an error.
-                        stat.Status = Fail;
+                        status.Status = Fail;
                         throw range_error("Invalid / character in element definition.");
                     }
                 } else if (c == '!') {
                     // This is a comment.
-                    stat.Status = ParseElComment;
+                    status.Status = ParseElComment;
                 } else if (!isWhiteSpace(c)) {
                     // This must be an invalid character.
-                    stat.Status = Fail;
+                    status.Status = Fail;
                     throw range_error("Invalid character in element definition.");
                 }
                 break;
@@ -191,13 +198,13 @@ void Mechanism_IO::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech,
                     // We have read to the end of the element name.  We need to check
                     // that this element name is not actually a keyword.
                     if (convertToCaps(tag.substr(0,4)) == "ELEM") {
-                        stat.Status = BeginParseEl;
+                        status.Status = BeginParseEl;
                     } else if (convertToCaps(tag.substr(0,4)) == "SPEC") {
-                        stat.Status = End;
+                        status.Status = End;
                     } else if (convertToCaps(tag.substr(0,4)) == "REAC") {
-                        stat.Status = End;
+                        status.Status = End;
                     } else if (convertToCaps(tag.substr(0,4)) == "END") {
-                        stat.Status = End;
+                        status.Status = End;
                     } else {
                         // This is an element name, so add a new
                         // element to the mechanism and set its name.
@@ -207,7 +214,7 @@ void Mechanism_IO::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech,
                         // know elements.
                         last_el->SetMolWtFromLibrary();
                         // Start searching for the next element.
-                        stat.Status = BeginParseEl;
+                        status.Status = BeginParseEl;
                     }
                     tag = "";
                 } else if (c == '/') {
@@ -216,7 +223,7 @@ void Mechanism_IO::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech,
                     last_el = mech.AddElement();
                     last_el->SetName(tag);
                     // We must now read Mol. Wt from file.
-                    stat.Status = ParseElWt;
+                    status.Status = ParseElWt;
                     tag = "";
                 }
                 break;
@@ -231,7 +238,7 @@ void Mechanism_IO::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech,
                         last_el->SetMolWt(val);
                     } else {
                         // The mol. wt. is invalid.
-                        stat.Status = Fail;
+                        status.Status = Fail;
                         throw range_error(string("An invalid mol. wt. was found for element ").append(last_el->Name()));
                     }
                 } else {
@@ -243,41 +250,43 @@ void Mechanism_IO::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech,
                 // We are reading a comment in the element list.  A comment is only
                 // terminated by a line ending.
                 if ((c == '\n') || (c == '\r')) {
-                    stat.Status = BeginParseEl;
+                    status.Status = BeginParseEl;
                 }
         }
     }
 }
 
-void Mechanism_IO::parseCK_Species(std::ifstream &fin, Sprog::Mechanism &mech, Sprog::IO::Mechanism_IO::CK_STATUS &stat)
+void Mechanism_IO::parseCK_Species(std::ifstream &fin, 
+                                   Sprog::Mechanism &mech, 
+                                   Sprog::IO::Mechanism_IO::CK_STATUS &status)
 {
     char c;
     string tag;
 
     Species * last_sp;
 
-    stat.Status = BeginParseSp;
+    status.Status = BeginParseSp;
 
-    while((stat.Status!=End) && (stat.Status!=Fail) && (fin.good())) {
+    while((status.Status!=End) && (status.Status!=Fail) && (fin.good())) {
         // Get the next character from the input file.
         fin.get(c);
 
-        switch(stat.Status) {
+        switch(status.Status) {
             case BeginParseSp:
                 // We are searching for the beginning of a species name.
                 if (isLetter(c)) {
                     // This is the start of a species name.
                     tag = c;
-                    stat.Status = ParseSp;
+                    status.Status = ParseSp;
 
                     // Clear the last read species.
                     last_sp = NULL;
                 } else if (c == '!') {
                     // This is a comment.
-                    stat.Status = ParseSpComment;
+                    status.Status = ParseSpComment;
                 } else if (!isWhiteSpace(c)) {
                     // This must be an invalid character.
-                    stat.Status = Fail;
+                    status.Status = Fail;
                     throw range_error("Invalid character in species definition.");
                 }
                 break;
@@ -293,21 +302,21 @@ void Mechanism_IO::parseCK_Species(std::ifstream &fin, Sprog::Mechanism &mech, S
                     if (convertToCaps(tag.substr(0,4)) == "ELEM") {
                         // This is an error. The elements must be defined before
                         // the species.
-                        stat.Status = Fail;
+                        status.Status = Fail;
                         throw range_error("Element definition after species definitions.");
                     } else if (convertToCaps(tag.substr(0,4)) == "SPEC") {
-                        stat.Status = BeginParseSp;
+                        status.Status = BeginParseSp;
                     } else if (convertToCaps(tag.substr(0,4)) == "REAC") {
-                        stat.Status = End;
+                        status.Status = End;
                     } else if (convertToCaps(tag.substr(0,4)) == "END") {
-                        stat.Status = End;
+                        status.Status = End;
                     } else {
                         // This is a species name, so add a new
                         // species to the mechanism and set its name.
                         last_sp = mech.AddSpecies();
                         last_sp->SetName(tag);
                         // Begin searching for the next species name.
-                        stat.Status = BeginParseSp;
+                        status.Status = BeginParseSp;
                     }
                 }
                 break;
@@ -315,7 +324,7 @@ void Mechanism_IO::parseCK_Species(std::ifstream &fin, Sprog::Mechanism &mech, S
                 // We are reading a comment in the species list.  A comment is only
                 // terminated by a line ending.
                 if ((c == '\n') || (c == '\r')) {
-                    stat.Status = BeginParseSp;
+                    status.Status = BeginParseSp;
                 }
         }
     }
@@ -324,7 +333,7 @@ void Mechanism_IO::parseCK_Species(std::ifstream &fin, Sprog::Mechanism &mech, S
 // Reads CHEMKIN formatted thermo data for all species in the given mechanism from
 // the supplied file stream.
 void Mechanism_IO::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech, 
-                                  Sprog::IO::Mechanism_IO::CK_STATUS &stat)
+                                  Sprog::IO::Mechanism_IO::CK_STATUS &status)
 {
     int i, isp;
     char c, line[200];
@@ -338,7 +347,7 @@ void Mechanism_IO::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech,
 
     Species * sp;
 
-    stat.Status = ParseTherm;
+    status.Status = ParseTherm;
     tag.resize(200,' ');
 
     // The first line holds the temperature ranges for 2 sets of coefficients.
@@ -349,7 +358,7 @@ void Mechanism_IO::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech,
     trange[1] = atof(tag.substr(10,10).c_str());
     trange[2] = atof(tag.substr(20,10).c_str());
 
-    while((stat.Status!=End) && (stat.Status!=Fail) && (fin.good())) {
+    while((status.Status!=End) && (status.Status!=Fail) && (fin.good())) {
         // Get species name line.
         fin.getline(&line[0], 200);
         tag.clear();
@@ -445,7 +454,7 @@ void Mechanism_IO::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech,
                 fin.getline(&line[0], 200);
             }
         } else {
-            stat.Status = End;
+            status.Status = End;
         }
     }
 }
@@ -453,7 +462,7 @@ void Mechanism_IO::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech,
 // Reads CHEMKIN formatted thermo data for all species in the given mechanism from
 // the file specified by the file name.
 void Mechanism_IO::parseCK_Thermo(std::string &filename, Sprog::Mechanism &mech, 
-                                  Sprog::IO::Mechanism_IO::CK_STATUS &stat)
+                                  Sprog::IO::Mechanism_IO::CK_STATUS &status)
 {
     // Open file for reading.
     ifstream fin; //(filename.c_str(), ios::in);
@@ -462,7 +471,7 @@ void Mechanism_IO::parseCK_Thermo(std::string &filename, Sprog::Mechanism &mech,
     if (fin.good()) {
         try {
             char c[80]; fin.getline(&c[0],80); // Discard first line.
-            parseCK_Thermo(fin, mech, stat);
+            parseCK_Thermo(fin, mech, status);
         } catch (exception &e) {
             fin.close();
             throw e;
@@ -478,7 +487,7 @@ void Mechanism_IO::parseCK_Thermo(std::string &filename, Sprog::Mechanism &mech,
 
 // Reads all the chemical reactions from the CHEMKIN formatted file stream.
 void Mechanism_IO::parseCK_Reactions(std::ifstream &fin, Sprog::Mechanism &mech, 
-                                     Sprog::IO::Mechanism_IO::CK_STATUS &stat)
+                                     Sprog::IO::Mechanism_IO::CK_STATUS &status)
 {
     char c;
     string tag, rxndef;
@@ -486,23 +495,23 @@ void Mechanism_IO::parseCK_Reactions(std::ifstream &fin, Sprog::Mechanism &mech,
 
     Kinetics::Reaction * last_rxn = NULL;
 
-    stat.Status = ParseRxn;
+    status.Status = ParseRxn;
     tag.clear();
     rxndef.clear();
 
-    while((stat.Status!=End) && (stat.Status!=Fail) && (fin.good())) {
+    while((status.Status!=End) && (status.Status!=Fail) && (fin.good())) {
         // Get the next character from the input file.
         fin.get(c);
 
-        switch(stat.Status) {
+        switch(status.Status) {
             case BeginParseRxn:
                 // Clear white space at the beginning of the line.
                 if (c=='!') {
-                    stat.Status = BeginParseRxnComment;
+                    status.Status = BeginParseRxnComment;
                     rxndef = "";
                 } else if (!isWhiteSpace(c)) {
                     rxndef = c;
-                    stat.Status = ParseRxn;
+                    status.Status = ParseRxn;
                 }
                 break;
             case ParseRxn:
@@ -515,12 +524,12 @@ void Mechanism_IO::parseCK_Reactions(std::ifstream &fin, Sprog::Mechanism &mech,
                     if (rxndef.substr(0,3).compare("END")==0) {                    
                         // Before parsing the string we should check that it doesn't
                         // hold auxilliary info for the previous reaction.
-                        if (!parseCK_RxnAux(rxndef, last_rxn, mech, stat.Scale, stat)) {
+                        if (!parseCK_RxnAux(rxndef, last_rxn, mech, status.Scale, status)) {
                             // No aux info.  First add the last reaction to the
                             // mechanism.
                             if (last_rxn != NULL) mech.AddReaction(last_rxn);
                         }
-                        stat.Status = End;
+                        status.Status = End;
                         break;
                     }
 
@@ -529,29 +538,29 @@ void Mechanism_IO::parseCK_Reactions(std::ifstream &fin, Sprog::Mechanism &mech,
                     if (!fcont) {
                         // Before parsing the string we should check that it doesn't
                         // hold auxilliary info for the previous reaction.
-                        if (!parseCK_RxnAux(rxndef, last_rxn, mech, stat.Scale, stat)) {
+                        if (!parseCK_RxnAux(rxndef, last_rxn, mech, status.Scale, status)) {
                             // No aux info.  First add the last reaction to the
                             // mechanism.
                             if (last_rxn != NULL) mech.AddReaction(last_rxn);
 
                             // No aux info, so parse the reaction definition.
-                            if (rxndef.length() > 0) last_rxn = parseCK_Reaction(rxndef, mech, stat);
+                            if (rxndef.length() > 0) last_rxn = parseCK_Reaction(rxndef, mech, status);
                         }
 
                         rxndef = "";
                     }
-                    stat.Status = BeginParseRxnComment;
+                    status.Status = BeginParseRxnComment;
                 } else if ((c=='\n') || (c=='\r')) {
                     // Break if this is the end of the reaction definitions.
                     if (rxndef.substr(0,3).compare("END")==0) {                    
                         // Before parsing the string we should check that it doesn't
                         // hold auxilliary info for the previous reaction.
-                        if (!parseCK_RxnAux(rxndef, last_rxn, mech, stat.Scale, stat)) {
+                        if (!parseCK_RxnAux(rxndef, last_rxn, mech, status.Scale, status)) {
                             // No aux info.  First add the last reaction to the
                             // mechanism.
                             if (last_rxn != NULL) mech.AddReaction(last_rxn);
                         }
-                        stat.Status = End;
+                        status.Status = End;
                         break;
                     }
 
@@ -561,7 +570,7 @@ void Mechanism_IO::parseCK_Reactions(std::ifstream &fin, Sprog::Mechanism &mech,
                     if (!fcont) {
                         // Before parsing the string we should check that it doesn't
                         // hold auxilliary info for the previous reaction.
-                        if (!parseCK_RxnAux(rxndef, last_rxn, mech, stat.Scale, stat)) {
+                        if (!parseCK_RxnAux(rxndef, last_rxn, mech, status.Scale, status)) {
                             // No aux info.  First add the last reaction to the
                             // mechanism.
                             if (last_rxn != NULL) {
@@ -571,26 +580,26 @@ void Mechanism_IO::parseCK_Reactions(std::ifstream &fin, Sprog::Mechanism &mech,
                             }
 
                             // No aux info, so parse the reaction definition.
-                            if (rxndef.length() > 0) last_rxn = parseCK_Reaction(rxndef, mech, stat);
+                            if (rxndef.length() > 0) last_rxn = parseCK_Reaction(rxndef, mech, status);
                         }
-                        stat.Status = BeginParseRxn;
+                        status.Status = BeginParseRxn;
                     }
                 } else {
-                    rxndef.append(&c);
+                    rxndef.append(&c, 1);
                 }
                 break;
             case ParseRxnComment:
                 // We are reading a comment in the reaction list.  A comment is only
                 // terminated by a line ending.
                 if ((c == '\n') || (c == '\r')) {
-                    stat.Status = ParseRxn;
+                    status.Status = ParseRxn;
                 }
                 break;
             case BeginParseRxnComment:
                 // We are reading a comment in the reaction list.  A comment is only
                 // terminated by a line ending.
                 if ((c == '\n') || (c == '\r')) {
-                    stat.Status = BeginParseRxn;
+                    status.Status = BeginParseRxn;
                 }
                 break;
         }
@@ -600,7 +609,7 @@ void Mechanism_IO::parseCK_Reactions(std::ifstream &fin, Sprog::Mechanism &mech,
 // Parses a string and builds a Reaction object from the data therein.
 Sprog::Kinetics::Reaction *const Mechanism_IO::parseCK_Reaction(const std::string &rxndef, 
                                                                 Sprog::Mechanism &mech, 
-                                                                Sprog::IO::Mechanism_IO::CK_STATUS &stat)
+                                                                Sprog::IO::Mechanism_IO::CK_STATUS &status)
 {
     // The reaction string contains four pieces of information:  the reaction formula, A, n & E.
     Kinetics::Reaction * rxn = NULL;
@@ -688,9 +697,9 @@ Sprog::Kinetics::Reaction *const Mechanism_IO::parseCK_Reaction(const std::strin
     // Now we have got the reactants and the products, we must now parse the Arrhenius coefficients.
     // This is quite simple as they must be space delimited.
     split(rxndef.substr(ilast_prod), arrstr, " ");
-    arr.A = atof(arrstr[0].c_str());
+    arr.A = atof(arrstr[0].c_str()) * status.Scale.A;
     arr.n = atof(arrstr[1].c_str());
-    arr.E = atof(arrstr[2].c_str());
+    arr.E = atof(arrstr[2].c_str()) * status.Scale.E;
     
     // Now all the information about the reaction has been acquired so we need to 
     // initialise the reaction object.
@@ -839,7 +848,7 @@ bool Sprog::IO::Mechanism_IO::parseCK_RxnAux(const std::string &rxndef,
                                              Sprog::Kinetics::Reaction *last_rxn, 
                                              const Sprog::Mechanism &mech,
                                              Sprog::Kinetics::ARRHENIUS scale,
-                                             Sprog::IO::Mechanism_IO::CK_STATUS &stat)
+                                             Sprog::IO::Mechanism_IO::CK_STATUS &status)
 {
     string str, key, vals;
     vector<string> params;
@@ -865,7 +874,7 @@ bool Sprog::IO::Mechanism_IO::parseCK_RxnAux(const std::string &rxndef,
             // Check for unterminated set of parameters.
             if (k == rxndef.npos) {
                 // An unterminated set of parameters.  This is an error.
-                stat.Status = Fail;
+                status.Status = Fail;
                 throw invalid_argument("Unterminated set of parameters in auxilliary data.");
             }
 
@@ -886,9 +895,9 @@ bool Sprog::IO::Mechanism_IO::parseCK_RxnAux(const std::string &rxndef,
         if (key.compare("LOW") == 0) {
             // Low-pressure limit for fall-off reaction (3 parameters).
             if (params.size() > 2) {
-                last_rxn->SetLowPressureLimit(Kinetics::ARRHENIUS(atof(params[0].c_str()) * scale.A,
-                                                                  atof(params[1].c_str()) * scale.n,
-                                                                  atof(params[2].c_str()) * scale.E));
+                last_rxn->SetLowPressureLimit(ARRHENIUS(atof(params[0].c_str()) * scale.A,
+                                                        atof(params[1].c_str()) * scale.n,
+                                                        atof(params[2].c_str()) * scale.E));
             } else {
                 // Insufficient parameters.
                 throw invalid_argument("Insufficient parameters for LOW keyword in auxilliary data.");
@@ -1024,6 +1033,11 @@ void Sprog::IO::Mechanism_IO::parseCK_Units(const std::string &rxndef, Sprog::Ki
     // Split the string into parts.
     vector<string> parts;
     split(rxndef, parts, " ");
+
+    // Default scaling.
+    scale.A = 1.0;
+    scale.n = 1.0;
+    scale.E = 4.184e7; // Convert cal/mol -> J/mol.
 
     // The first part will be the REACTION keyword, so we ignore that.
     vector<string>::iterator i;

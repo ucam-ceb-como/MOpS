@@ -12,12 +12,13 @@ using namespace std;
 Mechanism::Mechanism()
 {
     m_units = SI;
+    m_stoich_xref_valid = false;
+    m_rxns.SetMechanism(this);
 }
 
 // Copy constructor.
 Mechanism::Mechanism(const Sprog::Mechanism &mech)
 {
-    m_units = SI;
     *this = mech;
 }
 
@@ -48,6 +49,7 @@ Mechanism &Mechanism::operator=(const Sprog::Mechanism &mech)
         // Copy reaction set and stoich cross-referencing.
         m_rxns = mech.m_rxns;
         m_stoich_xref.assign(mech.m_stoich_xref.begin(), mech.m_stoich_xref.end());
+        m_stoich_xref_valid = mech.m_stoich_xref_valid;
 
         // Inform species of new elements vector and mechanism.
         SpeciesPtrVector::iterator sp;
@@ -130,12 +132,14 @@ void Mechanism::SetUnits(Sprog::UnitSystem u)
                 if (m_rxns[irxn]->FallOffType() != Kinetics::None) {
                     // Low-pressure limit.
                     arr = m_rxns[irxn]->LowPressureLimit();
-                    arr.A *= pow(1.0e-6, m_rxns[irxn]->ReactantStoich()-1.0);
+                    // Note there is no -1 term here because there is also
+                    // a third-body concentration.
+                    arr.A *= pow(1.0e-6, m_rxns[irxn]->ReactantStoich());
                     arr.E *= 1.0e-7;
                     m_rxns[irxn]->SetLowPressureLimit(arr);
                 } else {
                     // Third-body concentrations also need scaling.
-                    if (m_rxns[irxn]->ThirdBodies().size() > 0) {
+                    if (m_rxns[irxn]->UseThirdBody()) {
                         // Forward rate coefficients.
                         arr = m_rxns[irxn]->Arrhenius();
                         arr.A *= 1.0e-6;
@@ -402,7 +406,7 @@ void Mechanism::BuildStoichXRef()
 
             // Add up the contribution of this reaction to this species.
             ij = m_stoich_xref[i].RxnStoich.find(j);
-            if (ij != NULL) {
+            if (ij != m_stoich_xref[i].RxnStoich.end()) {
                 (*ij).second -= mu;
             } else {
                 m_stoich_xref[i].RxnStoich.insert(RxnStoichPair(j,-mu));
@@ -417,7 +421,7 @@ void Mechanism::BuildStoichXRef()
 
             // Add up the contribution of this reaction to this species.
             ij = m_stoich_xref[i].RxnStoich.find(j);
-            if (ij != NULL) {
+            if (ij != m_stoich_xref[i].RxnStoich.end()) {
                 (*ij).second += mu;
             } else {
                 m_stoich_xref[i].RxnStoich.insert(RxnStoichPair(j,mu));
@@ -432,7 +436,7 @@ void Mechanism::BuildStoichXRef()
 
             // Add up the contribution of this reaction to this species.
             ij = m_stoich_xref[i].RxnStoich.find(j);
-            if (ij != NULL) {
+            if (ij != m_stoich_xref[i].RxnStoich.end()) {
                 (*ij).second -= mu;
             } else {
                 m_stoich_xref[i].RxnStoich.insert(RxnStoichPair(j,-mu));
@@ -447,13 +451,15 @@ void Mechanism::BuildStoichXRef()
 
             // Add up the contribution of this reaction to this species.
             ij = m_stoich_xref[i].RxnStoich.find(j);
-            if (ij != NULL) {
+            if (ij != m_stoich_xref[i].RxnStoich.end()) {
                 (*ij).second += mu;
             } else {
                 m_stoich_xref[i].RxnStoich.insert(RxnStoichPair(j,mu));
             }
         }
     }
+
+    m_stoich_xref_valid = true;
 }
 
 // Returns true if the stoichiometry xref map is valid, otherwise false.
