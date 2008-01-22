@@ -22,10 +22,10 @@ int Document::Load(const std::string &filename)
     ifstream fin(filename.c_str(), ios::in);
 
     if (fin.good()) {
-        STATUS stat = Outside;
+        STATUS st = Outside;
 
         try {
-            m_root = parseElement(fin, stat);
+            m_root = parseElement(fin, st);
         } catch (exception &e) {
             fin.close();
             throw e;
@@ -39,7 +39,7 @@ int Document::Load(const std::string &filename)
     }
 }
 
-Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
+Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
 {
     string::size_type pos=0;
     char c;
@@ -47,40 +47,40 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
     Element *el = NULL;
     bool iscomment=false;
 
-    while((stat!=End) && (stat!=Fail) && (fin.good())) {
+    while((st!=End) && (st!=Fail) && (fin.good())) {
         fin.get(c);
 
-        switch (stat) {
+        switch (st) {
             case Outside:
                 if (c=='<') {
                     // We are now beginning to read a tag.
-                    stat = Begin;
+                    st = Begin;
                 }
                 break;
             case Begin:
                 if (c=='!') {
                     // This begins a comment (maybe).
-                    stat = ReadComment1;
+                    st = ReadComment1;
                 } else if (c=='/') {
                     // This is a closing tag.
-                    stat = ReadEndTag1;
+                    st = ReadEndTag1;
                 } else if (c=='?') {
-                    stat = ReadDocInfo;
+                    st = ReadDocInfo;
                 } else if (isLetter(c)) {
                     // Reading element tag name.
                     el = new Element();
-                    stat = ReadTag;
+                    st = ReadTag;
                     tag = c;
                 } else {
                     // Something has gone wrong.
-                    stat = Fail;
+                    st = Fail;
                     if (el!=NULL) delete el;
                     throw range_error("Invalid first character in opening tag.");
                 }
                 break;
             case ReadDocInfo:
                 if (c=='?') {
-                    stat = CloseDocInfo;
+                    st = CloseDocInfo;
                 }
                 break;
 
@@ -93,17 +93,17 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
                     tag.append(&c,1);
                 } else if (c=='/') {
                     // Empty element, now closing.
-                    stat = CloseEmptyElement;
+                    st = CloseEmptyElement;
                 } else if (c=='>') {
                     // Now read element data, and perhaps sub-elements.
-                    stat = ReadData;
+                    st = ReadData;
                     data.clear();
                 } else if (isWhiteSpace(c)) {
                     // End of tag, now read attributes.
-                    stat = ReadAttr;
+                    st = ReadAttr;
                 } else {
                     // Invalid tag name character.
-                    stat = Fail;
+                    st = Fail;
                     if (el!=NULL) delete el;
                     throw range_error("Invalid character in opening tag name.");
                 }
@@ -115,10 +115,10 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
             case ReadEndTag1:
                 if (isLetter(c)) {
                     // Valid tag name first character.
-                    stat = ReadEndTag;
+                    st = ReadEndTag;
                 } else {
                     // Invalid tag name character.
-                    stat = Fail;
+                    st = Fail;
                     if (el!=NULL) delete el;
                     throw range_error("Invalid first character in closing tag.");
                 }
@@ -128,13 +128,13 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
                 if (isLetterOrNum(c) || (c=='-') || (c=='_') || (c==':')) {
                 } else if (c=='>') {
                     // That's the end!
-                    stat = End;
+                    st = End;
                 } else if (isWhiteSpace(c)) {
                     // Now waiting for end.
-                    stat = CloseElement;
+                    st = CloseElement;
                 } else {
                     // Invalid tag name character.
-                    stat = Fail;
+                    st = Fail;
                     if (el!=NULL) delete el;
                     throw range_error("Invalid character in closing tag name.");
                 }
@@ -150,7 +150,7 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
                     fin.get(c);
                     if (c=='/') {
                         // Closing current element.
-                        stat = ReadEndTag1;
+                        st = ReadEndTag1;
                     } else {
                         // Parsing a child element.
                         fin.unget();
@@ -161,7 +161,7 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
                             if ((child!=NULL) && (childstat != Fail)) {
                                 el->AddChild(child);
                             } else if (childstat!=EndComment) {
-                                stat = Fail;
+                                st = Fail;
                                 if (el!=NULL) delete el;
                                 if (child!=NULL) delete child;
                                 throw exception(string("Failed to read child of element: ").append(tag).c_str());
@@ -182,10 +182,10 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
             case ReadAttr:
                 if (c=='>') {
                     // Finished reading opening tag, now read data.
-                    stat = ReadData;
+                    st = ReadData;
                 } else if (c=='/') {
                     // Closing an empty element.
-                    stat = CloseEmptyElement;
+                    st = CloseEmptyElement;
                 } else if (isLetter(c)) {
                     // Valid start character of attribute name.
                     fin.unget();
@@ -197,7 +197,7 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
                             el->SetAttribute(attr->GetName(), attr->GetValue());
                             delete attr;
                         } else {
-                            stat = Fail;
+                            st = Fail;
                             if (el!=NULL) delete el;
                             throw exception(string("Failed to read attribute of element: ").append(tag).c_str());
                         }
@@ -209,7 +209,7 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
                     // White space is ok between attributes.
                 } else {
                     // Invalid attribute character!
-                    stat = Fail;
+                    st = Fail;
                     if (el!=NULL) delete el;
                     throw range_error(string("Invalid first character of attribute name of element: ").append(tag));
                 }
@@ -221,15 +221,15 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
             case CloseElement:
                 if (c=='>') {
                     // This is the end.
-                    stat = End;
+                    st = End;
                 }
                 break;
             case CloseEmptyElement:
                 // Expecting ">" immediately.
                 if (c=='>') {
-                    stat = End;
+                    st = End;
                 } else {
-                    stat = Fail;
+                    st = Fail;
                     if (el!=NULL) delete el;
                     throw range_error(string("Expected '>' not found when closing empty element: ").append(tag));
                 }
@@ -239,9 +239,9 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
                 if (c=='>') {
                     // That was just the document info, now try
                     // to read an element.
-                    stat = Outside;
+                    st = Outside;
                 } else {
-                    stat = Fail;
+                    st = Fail;
                     if (el!=NULL) delete el;
                     throw range_error(string("Expected '>' not found when closing doc info."));
                 }
@@ -252,9 +252,9 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
             case ReadComment1:
                 // Expect a "-" next.
                 if (c=='-') {
-                    stat = ReadComment2;
+                    st = ReadComment2;
                 } else {
-                    stat = Fail;
+                    st = Fail;
                     if (el!=NULL) delete el;
                     throw range_error("Expected first '-' not found when opening a comment.");
                 }
@@ -262,12 +262,12 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
             case ReadComment2:
                 // Expect second "-" next.
                 if (c=='-') {
-                    stat = ReadComment;
+                    st = ReadComment;
                     data.clear();
                     iscomment = true;
                     delete el;
                 } else {
-                    stat = Fail;
+                    st = Fail;
                     if (el!=NULL) delete el;
                     throw range_error("Expected second '-' not found when opening a comment.");
                 }
@@ -278,7 +278,7 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
                         // Check that next character is ">", otherwise
                         // this is an error.
                         if (fin.peek()!='>') {
-                            stat = Fail;
+                            st = Fail;
                             if (el!=NULL) delete el;
                             throw range_error("Expected '>' not found when closing a comment.");
                         }
@@ -287,7 +287,7 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
                 } else if (c=='>') {
                     if ((data.length()>1) && (data.substr(data.length()-2,2)=="--")) {
                         data.erase(data.length()-2,2);
-                        stat = End;
+                        st = End;
                     } else {
                         data.append(&c);
                     }
@@ -298,40 +298,40 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &stat)
         }
     }
 
-    if (stat==Fail) {
+    if (st==Fail) {
         if (el!=NULL) delete el;
         throw exception("Unhandled error occured.");
-    } else if ((stat==End) && !iscomment) {
+    } else if ((st==End) && !iscomment) {
         el->SetTag(tag);
         el->SetData(data);
-    } else if ((stat==End) && iscomment) {
+    } else if ((st==End) && iscomment) {
         if (el!=NULL) delete el;
         el = NULL;
-        stat = EndComment;
+        st = EndComment;
     }
     return el;
 }
 
-Attribute *const Document::parseAttr(std::ifstream &fin, CamXML::Document::STATUS &stat)
+Attribute *const Document::parseAttr(std::ifstream &fin, CamXML::Document::STATUS &st)
 {
     Attribute *a=NULL;
     string name="", data="";
     bool waitQuote=true;
     char c;
 
-    while((stat!=End) && (stat!=Fail) && (fin.good())) {
+    while((st!=End) && (st!=Fail) && (fin.good())) {
         fin.get(c);
-        switch (stat) {
+        switch (st) {
             case Begin:
                 if (isLetter(c)) {
-                    stat = ReadAttr;
+                    st = ReadAttr;
                     a = new Attribute();
                     name.append(&c,1);
                 }
                 break;
             case ReadAttr:
                 if (c=='=') {
-                    stat = ReadData;
+                    st = ReadData;
                     waitQuote = true;
                 } else {
                     name.append(&c,1);
@@ -343,12 +343,12 @@ Attribute *const Document::parseAttr(std::ifstream &fin, CamXML::Document::STATU
                         waitQuote = false;
                     } else {
                         // Quote mark missing after equals sign.
-                        stat = Fail;
+                        st = Fail;
                     }
                 } else {
                     if (c=='"') {
                         // We have read all the data for this attribute.
-                        stat = End;
+                        st = End;
                     } else {
                         data.append(&c,1);
                     }
@@ -357,7 +357,7 @@ Attribute *const Document::parseAttr(std::ifstream &fin, CamXML::Document::STATU
         }
     }
 
-    if ((stat!=Fail)) {
+    if ((st!=Fail)) {
         a->SetName(name);
         a->SetValue(data);
     } else {

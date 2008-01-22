@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="camxml"
 	ProjectGUID="{24E329F1-8809-494A-8E6C-EDDB045CE9D7}"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -15,7 +16,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)lib"
+			OutputDirectory="$(ProjectDir)lib"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			>
@@ -39,7 +40,8 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="include"
 				RuntimeLibrary="1"
-				DebugInformationFormat="3"
+				DisableLanguageExtensions="true"
+				DebugInformationFormat="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -53,7 +55,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				LinkLibraryDependencies="true"
-				OutputFile="$(OutDir)\$(ProjectName)_D.lib"
+				OutputFile="$(OutDir)\$(ProjectName)_d.lib"
 				IgnoreAllDefaultLibraries="false"
 			/>
 			<Tool
@@ -74,7 +76,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)lib"
+			OutputDirectory="$(ProjectDir)lib"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			>
@@ -96,7 +98,9 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				DebugInformationFormat="3"
+				AdditionalIncludeDirectories="include"
+				DisableLanguageExtensions="true"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

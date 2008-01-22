@@ -40,8 +40,8 @@ public:
     /* Returns the root element of this document. */
     inline Element *const Root(void) {return m_root;};
 private:
-    Element *const parseElement(std::ifstream &fin, STATUS &stat);
-    Attribute *const parseAttr(std::ifstream &fin, STATUS &stat);
+    Element *const parseElement(std::ifstream &fin, STATUS &st);
+    Attribute *const parseAttr(std::ifstream &fin, STATUS &st);
     bool isWhiteSpace(const char c);
     bool isLetter(const char c);
     bool isLetterOrNum(const char c);
