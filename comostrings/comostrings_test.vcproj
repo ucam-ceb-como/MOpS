@@ -39,6 +39,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="include"
+				RuntimeLibrary="1"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -147,6 +148,7 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{667E4098-08F2-4C66-8B80-29643A05639B}"
+			RelativePathToProject=".\comostrings.vcproj"
 		/>
 	</References>
 	<Files>
