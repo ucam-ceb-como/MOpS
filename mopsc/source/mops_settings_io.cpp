@@ -31,7 +31,7 @@ Settings_IO::~Settings_IO(void)
 Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename, 
                                  Mops::Reactor *reac, 
                                  std::vector<TimeInterval> &times,
-                                 Settings &settings,
+                                 Solver &solver,
                                  const Mechanism &mech)
 {
     CamXML::Document doc;
@@ -60,7 +60,7 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
             str = attr->GetValue();
             if (str.compare("batch") == 0) {
                 // This is a batch (const. P) reactor.
-                reac = new Reactor();
+                reac = new Reactor(mech);
             } else if (str.compare("psr") == 0) {
                 // This is a perfectly-stirred reactor.
                 throw invalid_argument("PSR not currently implemented");
@@ -69,7 +69,7 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
                 throw invalid_argument("Shocktube not currently implemented");
             } else {
                 // Default reactor is a batch reactor.
-                reac = new Reactor();
+                reac = new Reactor(mech);
             }
         }
 
@@ -91,17 +91,13 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
             reac->SetEnergyEquation(Reactor::Adiabatic);
         }
 
-        // Assign the mechanism to the reactor.
-        reac->SetMechanism(&mech);
-
 
         // REACTOR INITIAL CONDITIONS.
 
         // Create a new Mixture object.
-        Mixture *mix = new Mixture();
-        mix->SetSpecies(&mech.Species());
+        Mixture *mix = new Mixture(mech.Species());
 
-        vector<real> molefracs(reac->Mechanism()->Species().size(), 0.0);
+        fvector molefracs(reac->Mechanism()->Species().size(), 0.0);
 
         // Fill the mixture object.
         root->GetChildren("init", nodes);
@@ -133,7 +129,7 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
 
         // Assign the species mole fraction vector to the reactor mixture.
         mix->SetFracs(molefracs);
-        reac->Fill(mix);
+        reac->Fill(*mix);
 
 
         // GLOBAL SETTINGS.
@@ -141,13 +137,13 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
         // Read the relative error tolerance.
         node = root->GetFirstChild("rtol");
         if (node != NULL) {
-            settings.SetRTOL(atof(node->Data().c_str()));
+            solver.SetRTOL(atof(node->Data().c_str()));
         }
 
         // Read the absolute error tolerance.
         node = root->GetFirstChild("atol");
         if (node != NULL) {
-            settings.SetATOL(atof(node->Data().c_str()));
+            solver.SetATOL(atof(node->Data().c_str()));
         }
 
 
@@ -199,7 +195,7 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
             // Check the console interval.
             attr = node->GetAttribute("interval");
             if (attr != NULL) {
-                settings.SetConsoleInterval(atof(attr->GetValue().c_str()));
+                solver.SetConsoleInterval(atof(attr->GetValue().c_str()));
             }
 
             // Read the column variables.
@@ -207,7 +203,7 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
             vector<string> cvars;
             Strings::split(str, cvars, " ");
             for (int j=0; j<cvars.size(); j++) {
-                settings.AddConsoleVariable(cvars[j]);
+                solver.AddConsoleVariable(cvars[j]);
             }
         }
 
@@ -217,7 +213,7 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
         // Read the output file name.
         node = root->GetFirstChild("output");
         if (node != NULL) {
-            settings.SetOutputFile(node->Data());
+            solver.SetOutputFile(node->Data());
         }
     }
 

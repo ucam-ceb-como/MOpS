@@ -13,7 +13,7 @@
 
 #include "mops_params.h"
 #include "mops_reactor.h"
-#include "mops_settings.h"
+#include "mops_solver.h"
 #include "mops_timeinterval.h"
 #include "camxml.h"
 #include <vector>
@@ -42,7 +42,7 @@ public:
         const std::string &filename,      // Input file name.
         Reactor *reac,                    // The reactor to be simulated.
         std::vector<TimeInterval> &times, // Vector of output time intervals.
-        Settings &settings,               // General settings incl. output settings.
+        Solver &solver,                   // General settings incl. output settings.
         const Mechanism &mech             // Mechanism used to define reactor.
         );
 };

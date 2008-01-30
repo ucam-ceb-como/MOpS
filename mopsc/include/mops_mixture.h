@@ -16,6 +16,7 @@
 
 #include "mops_params.h"
 #include "sprog.h"
+#include <iostream>
 
 namespace Mops
 {
@@ -23,12 +24,26 @@ class Mixture : public Sprog::Thermo::IdealGas
 {
 public:
     // Constructors.
-    Mixture(void); // Default constructor.
-    
+    Mixture(const Sprog::SpeciesPtrVector &sp); // Default constructor.
+    Mixture(                              // Stream-reading constructor.
+        std::istream &in,                 //   - Input stream.
+        const Sprog::SpeciesPtrVector &sp //   - Species which define the mixture.
+        );
+
     // Destructors.
     ~Mixture(void); // Defaul destructors.
 
-    void Normalise();
+
+    // READ/WRITE/COPY.
+
+    // Creates a clone of the mixture object.
+    Mixture *const Clone() const;
+
+protected:
+    // As in Sprog, it is meaningless to define a mixture without knowledge
+    // of the constitent species, therefore the default constructor is 
+    // declared as protected.
+    Mixture(void);
 };
 };
 

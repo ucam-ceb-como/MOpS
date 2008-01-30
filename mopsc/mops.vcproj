@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\camxml\include;..\sprogc\include;include;..\comostrings\include"
+				AdditionalIncludeDirectories="..\cvode\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				DebugInformationFormat="1"
@@ -55,7 +55,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\sprogc\lib\sprog_d.lib ..\comostrings\lib\comostrings_d.lib ..\camxml\lib\camxml_d.lib"
+				AdditionalDependencies="..\sprogc\lib\sprog_d.lib ..\comostrings\lib\comostrings_d.lib ..\camxml\lib\camxml_d.lib ..\cvode\lib\cvode_d.lib"
 				OutputFile="$(OutDir)\mops_d.exe"
 				GenerateDebugInformation="true"
 				RandomizedBaseAddress="1"
@@ -85,7 +85,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(ProjectDir)$(ConfigurationName)"
+			OutputDirectory="$(ProjectDir)bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			>
@@ -106,7 +106,9 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\comostrings\include;..\sprogc\include;include"
+				Optimization="2"
+				AdditionalIncludeDirectories="..\cvode\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
+				DisableLanguageExtensions="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -119,7 +121,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\sprogc\lib\sprog.lib ..\comostrings\lib\comostrings.lib"
+				AdditionalDependencies="..\sprogc\lib\sprog.lib ..\comostrings\lib\comostrings.lib ..\camxml\lib\camxml.lib ..\cvode\lib\cvode.lib"
 				OutputFile="bin\$(ProjectName).exe"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -172,11 +174,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\source\mops_reactor_io.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\mops_settings.cpp"
+				RelativePath=".\source\mops_reactor_factory.cpp"
 				>
 			</File>
 			<File
@@ -184,141 +182,13 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\mops_solver.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\mops_timeinterval.cpp"
 				>
 			</File>
-			<Filter
-				Name="cvode"
-				>
-				<File
-					RelativePath=".\source\cvode\cvode.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_band.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_band_impl.h"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_bandpre.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_bandpre_impl.h"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_bbdpre.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_bbdpre_impl.h"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_dense.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_dense_impl.h"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_diag.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_diag_impl.h"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_impl.h"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_io.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_spbcgs.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_spgmr.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_spils.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_spils_impl.h"
-					>
-				</File>
-				<File
-					RelativePath=".\source\cvode\cvode_sptfqmr.c"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="sundials"
-				>
-				<File
-					RelativePath=".\source\sundials\sundials_band.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\sundials\sundials_dense.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\sundials\sundials_iterative.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\sundials\sundials_math.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\sundials\sundials_nvector.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\sundials\sundials_smalldense.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\sundials\sundials_spbcgs.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\sundials\sundials_spgmr.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\sundials\sundials_sptfqmr.c"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="nvec_ser"
-				>
-				<File
-					RelativePath=".\source\nvec_ser\fnvector_serial.c"
-					>
-				</File>
-				<File
-					RelativePath=".\source\nvec_ser\fnvector_serial.h"
-					>
-				</File>
-				<File
-					RelativePath=".\source\nvec_ser\nvector_serial.c"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -346,11 +216,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\mops_reactor_io.h"
+				RelativePath=".\include\mops_reactor_factory.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\mops_settings.h"
+				RelativePath=".\include\mops_reactor_type.h"
 				>
 			</File>
 			<File
@@ -358,113 +228,13 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\mops_solver.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\mops_timeinterval.h"
 				>
 			</File>
-			<Filter
-				Name="cvode"
-				>
-				<File
-					RelativePath=".\include\cvode\cvode.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\cvode\cvode_band.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\cvode\cvode_bandpre.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\cvode\cvode_bbdpre.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\cvode\cvode_dense.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\cvode\cvode_diag.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\cvode\cvode_spbcgs.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\cvode\cvode_spgmr.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\cvode\cvode_spils.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\cvode\cvode_sptfqmr.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="sundials"
-				>
-				<File
-					RelativePath=".\include\sundials\sundials_band.h"
-					>
-				</File>
-				<File
-					RelativePath=".\sundials_config.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\sundials\sundials_dense.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\sundials\sundials_fnvector.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\sundials\sundials_iterative.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\sundials\sundials_math.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\sundials\sundials_nvector.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\sundials\sundials_smalldense.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\sundials\sundials_spbcgs.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\sundials\sundials_spgmr.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\sundials\sundials_sptfqmr.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\sundials\sundials_types.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="nvector"
-				>
-				<File
-					RelativePath=".\include\nvector\nvector_serial.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"

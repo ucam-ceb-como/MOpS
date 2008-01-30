@@ -2,26 +2,35 @@
 
 using namespace Mops;
 
+// CONSTRUCTORS AND DESTRUCTORS.
+
+// Default constructor (protected).
 Mixture::Mixture(void)
 {
 }
 
+// Default constructor (public, requires species list).
+Mixture::Mixture(const Sprog::SpeciesPtrVector &sp)
+: Sprog::Thermo::IdealGas(sp)
+{
+}
+
+// Stream-reading constructor.
+Mixture::Mixture(std::istream &in, const Sprog::SpeciesPtrVector &sp)
+: Sprog::Thermo::IdealGas(in, sp)
+{
+}
+
+// Default destructor.
 Mixture::~Mixture(void)
 {
 }
 
-void Mixture::Normalise()
+
+// READ/WRITE/COPY.
+
+// Creates a clone of the mixture.
+Mixture *const Mixture::Clone() const
 {
-    real xtot = 0.0;
-
-    for (int i=0; i<m_species->size(); i++) {
-        if (m_data[i] < 0.0) m_data[i] = 0.0;
-        xtot += m_data[i];
-    }
-
-    if (xtot != 1.0) {
-        for (int i=0; i<m_species->size(); i++) {
-            m_data[i] /= xtot;
-        }
-    }
+    return new Mixture(*this);
 }

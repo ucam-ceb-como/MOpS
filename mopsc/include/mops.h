@@ -14,7 +14,7 @@
 #include "mops_mixture.h"
 #include "mops_mechanism.h"
 #include "mops_reactor.h"
-#include "mops_settings.h"
+#include "mops_solver.h"
 #include "mops_settings_io.h"
 #include "mops_timeinterval.h"
 

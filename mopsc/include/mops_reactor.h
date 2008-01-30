@@ -15,9 +15,12 @@
 #include "mops_params.h"
 #include "mops_mixture.h"
 #include "mops_mechanism.h"
+#include "mops_reactor_type.h"
 
 // CVODE includes.
 #include "nvector\nvector_serial.h"
+
+#include <istream>
 
 namespace Mops
 {
@@ -25,7 +28,12 @@ class Reactor
 {
 public:
     // Constructors.
-    Reactor(void); // Default constructor.
+    Reactor(const Mechanism &mech); // Default constructor.
+    Reactor(const Reactor &copy);   // Copy constructor.
+    Reactor(                        // Stream-reading constructor.
+        std::istream &in,           //   - Input stream.
+        const Mechanism &mech       //   - Mechanism which defines the reactor.
+        );
 
     // Destructor.
     virtual ~Reactor(void); // Default destructor.
@@ -54,9 +62,9 @@ public:
 
     // Fills the reactor with the given mixture.
     void Fill(
-        Mops::Mixture *const mix, // The mixture with which to fill the reactor.
-        bool clearfirst = false   // Set to true if the reactor should clear current
-                                  // mixture from memory first.
+        Mops::Mixture &mix,     // The mixture with which to fill the reactor.
+        bool clearfirst = false // Set to true if the reactor should clear current
+                                // mixture from memory first.
         );
 
 
@@ -66,7 +74,7 @@ public:
     const Mops::Mechanism *const Mechanism() const;
 
     // Returns the current mechanism.
-    void SetMechanism(const Mops::Mechanism *const mech);
+    void SetMechanism(const Mops::Mechanism &mech);
 
 
     // ENERGY MODEL.
@@ -77,7 +85,50 @@ public:
     // Sets the energy model.
     void SetEnergyEquation(EnergyModel model);
 
+
+    // ERROR TOLERANCES.
+
+    // Returns the absolute error tolerance used for ODE
+    // calculations.
+    real ATOL() const;
+
+    // Sets the absolute error tolerance used for ODE
+    // calculations.
+    void SetATOL(real atol);
+
+    // Returns the relative error tolerance used for ODE
+    // calculations.
+    real RTOL() const;
+
+    // Sets the relative error tolerance used for ODE
+    // calculations.
+    void SetRTOL(real rtol);
+
+
+    // READ/WRITE/COPY FUNCTIONS.
+
+    // Creates a copy of the reactor object.
+    virtual Reactor* Clone() const;
+
+    // Writes the reactor to a binary data stream.
+    virtual void Serialize(std::ostream &out) const;
+
+    // Reads the reactor data from a binary data stream.
+    virtual void Deserialize(
+        std::istream &in,           // Input stream.
+        const Mops::Mechanism &mech // Mechanism which defines reactor.
+        );
+
+    // Identifies the reactor type for serialisation.
+    virtual Serial_ReactorType SerialType() const;
+
 protected:
+    // Reactors should not be defined without knowledge of a Mechanism
+    // object.  Therefore the default constructor is declared as protected.
+    Reactor(void);
+
+    // GOVERNING EQUATIONS.
+
     // Definition of RHS function for constant temperature energy model.
     virtual void RHS_ConstT(
         real t,              // Flow time.
@@ -109,7 +160,8 @@ private:
     int m_iDens;          // Index of density in solution vectors.
     real *m_deriv;        // Array to hold current solution derivatives.
 
-    // VERY IMPORTANT!
+
+    // VERY IMPORTANT FOR CVODE INTEGRATION!
 
     // The right-hand side evaluator.  This function calculates the RHS of
     // the reactor differential equations.  CVODE uses a void* pointer to
@@ -122,6 +174,15 @@ private:
         N_Vector ydot, // Derivatives to return.
         void* reactor  // A Reactor object (to be cast).
         );
+
+
+    // INITIALISATION AND DESTRUCTION.
+    
+    // Initialises the reactor to the default state.
+    void init(void);
+
+    // Releases all memory used by the reactor object.
+    void releaseMemory(void);
 };
 };
 
