@@ -75,6 +75,26 @@ template<class T> std::string Strings::cstr(T &t)
     }
 }
 
+double Strings::cdble(const std::string &str)
+{
+    // First remove all the white space from the string.
+    std::string nospace = removeWhiteSpace(str);
+
+    // Now convert to a double.
+    return atof(nospace.c_str());
+}
+
+std::string Strings::removeWhiteSpace(const std::string &str)
+{
+    std::string nospace = "";
+    for (unsigned int i=0; i<str.length(); i++) {
+        if (!isWhiteSpace(str[i])) {
+            nospace.append(str.substr(i,1));
+        }
+    }
+    return nospace;
+}
+
 bool Strings::isWhiteSpace(const char c)
 {
     return (c==' ') || (c=='\n') || (c=='\t') || (c=='\r');

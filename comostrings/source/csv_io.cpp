@@ -19,7 +19,7 @@ CSV_IO::CSV_IO(void)
 CSV_IO::CSV_IO(const std::string &name, bool del)
 {
     // Open the file.
-    Open(name);
+    Open(name, del);
 }
 
 // Default destructor.

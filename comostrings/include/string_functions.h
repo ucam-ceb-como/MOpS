@@ -41,6 +41,12 @@ namespace Strings
     // Converts any type into a string representation.
     template<class T> std::string cstr(T &t);
 
+    // Converts a string into a double if possible.
+    double cdble(const std::string &str);
+
+    // Removes all the white space characters from the string.
+    std::string removeWhiteSpace(const std::string &str);
+
     // Returns true if a character is a whitespace character.
     bool isWhiteSpace(const char c);
 
