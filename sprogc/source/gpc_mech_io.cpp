@@ -13,18 +13,10 @@ using namespace std;
 using namespace Sprog::Kinetics;
 using namespace Strings;
 
-Mechanism_IO::Mechanism_IO(void)
-{
-}
-
-Mechanism_IO::~Mechanism_IO(void)
-{
-}
-
 // Reads a mechanism from a CHEMKIN input file.
-void Mechanism_IO::ReadChemkin(const std::string &filename, 
-                               Sprog::Mechanism &mech, 
-                               const std::string &thermofile)
+void MechanismParser::ReadChemkin(const std::string &filename, 
+                                  Sprog::Mechanism &mech, 
+                                  const std::string &thermofile)
 {
     // Open file for reading.
     ifstream fin; //(filename.c_str(), ios::in);
@@ -65,9 +57,9 @@ void Mechanism_IO::ReadChemkin(const std::string &filename,
 // CHEMKIN PARSING ROUTINES.
 
 // Loads a mechanism from a CHEMKIN formatted file stream.
-void Mechanism_IO::parseCK(std::ifstream &fin, 
+void MechanismParser::parseCK(std::ifstream &fin, 
                            Sprog::Mechanism &mech, 
-                           Sprog::IO::Mechanism_IO::CK_STATUS &status)
+                           Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     char c;
     string line;
@@ -142,8 +134,8 @@ void Mechanism_IO::parseCK(std::ifstream &fin,
     mech.SetUnits(SI);
 }
 
-void Mechanism_IO::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech, 
-                                    Sprog::IO::Mechanism_IO::CK_STATUS &status)
+void MechanismParser::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech, 
+                                    Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     char c;
     string tag;
@@ -232,7 +224,7 @@ void Mechanism_IO::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech,
                 if (c == '/') {
                     // This is the end of the mol. wt. definition.  Attempt to convert it
                     // to a number.
-                    val = atof(tag.c_str());
+                    val = cdble(tag);
                     if (val > 0.0) {
                         // Set the mol. wt. of the last read element.
                         last_el->SetMolWt(val);
@@ -256,9 +248,9 @@ void Mechanism_IO::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech,
     }
 }
 
-void Mechanism_IO::parseCK_Species(std::ifstream &fin, 
+void MechanismParser::parseCK_Species(std::ifstream &fin, 
                                    Sprog::Mechanism &mech, 
-                                   Sprog::IO::Mechanism_IO::CK_STATUS &status)
+                                   Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     char c;
     string tag;
@@ -332,8 +324,8 @@ void Mechanism_IO::parseCK_Species(std::ifstream &fin,
 
 // Reads CHEMKIN formatted thermo data for all species in the given mechanism from
 // the supplied file stream.
-void Mechanism_IO::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech, 
-                                  Sprog::IO::Mechanism_IO::CK_STATUS &status)
+void MechanismParser::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech, 
+                                  Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     int i, isp;
     char c, line[200];
@@ -354,9 +346,9 @@ void Mechanism_IO::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech,
     fin.getline(&line[0], 200);
     tag.clear();
     tag = line;
-    trange[0] = atof(tag.substr(0,10).c_str());
-    trange[1] = atof(tag.substr(10,10).c_str());
-    trange[2] = atof(tag.substr(20,10).c_str());
+    trange[0] = cdble(tag.substr(0,10));
+    trange[1] = cdble(tag.substr(10,10));
+    trange[2] = cdble(tag.substr(20,10));
 
     while((status.Status!=End) && (status.Status!=Fail) && (fin.good())) {
         // Get species name line.
@@ -384,44 +376,44 @@ void Mechanism_IO::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech,
                 els[1] = tag.substr(29, 2);
                 els[2] = tag.substr(34, 2);
                 els[3] = tag.substr(39, 2);
-                nels[0] = (int)atof(tag.substr(26,3).c_str());
-                nels[1] = (int)atof(tag.substr(31,3).c_str());
-                nels[2] = (int)atof(tag.substr(36,3).c_str());
-                nels[3] = (int)atof(tag.substr(41,3).c_str());
+                nels[0] = (int)cdble(tag.substr(26,3));
+                nels[1] = (int)cdble(tag.substr(31,3));
+                nels[2] = (int)cdble(tag.substr(36,3));
+                nels[3] = (int)cdble(tag.substr(41,3));
 
                 // Get the thermo temperature ranges from this (1st) line.
-                lowT = atof(tag.substr(45,10).c_str());
-                highT = atof(tag.substr(55,10).c_str());
-                commT = atof(tag.substr(65,10).c_str());
+                lowT = cdble(tag.substr(45,10));
+                highT = cdble(tag.substr(55,10));
+                commT = cdble(tag.substr(65,10));
                 if (commT == 0) commT = trange[1];
 
                 // Get 2nd line and read thermo coeffs.
                 fin.getline(&line[0], 200);
                 tag = line;
                 up.Count = 7;
-                up.Params[0] = atof(tag.substr(0,15).c_str());
-                up.Params[1] = atof(tag.substr(15,15).c_str());
-                up.Params[2] = atof(tag.substr(30,15).c_str());
-                up.Params[3] = atof(tag.substr(45,15).c_str());
-                up.Params[4] = atof(tag.substr(60,15).c_str());
+                up.Params[0] = cdble(tag.substr(0,15));
+                up.Params[1] = cdble(tag.substr(15,15));
+                up.Params[2] = cdble(tag.substr(30,15));
+                up.Params[3] = cdble(tag.substr(45,15));
+                up.Params[4] = cdble(tag.substr(60,15));
 
                 // Get 3rd line and read thermo coeffs.
                 fin.getline(&line[0], 200);
                 tag = line;
-                up.Params[5] = atof(tag.substr(0,15).c_str());
-                up.Params[6] = atof(tag.substr(15,15).c_str());
+                up.Params[5] = cdble(tag.substr(0,15));
+                up.Params[6] = cdble(tag.substr(15,15));
                 lp.Count = 7;
-                lp.Params[0] = atof(tag.substr(30,15).c_str());
-                lp.Params[1] = atof(tag.substr(45,15).c_str());
-                lp.Params[2] = atof(tag.substr(60,15).c_str());
+                lp.Params[0] = cdble(tag.substr(30,15));
+                lp.Params[1] = cdble(tag.substr(45,15));
+                lp.Params[2] = cdble(tag.substr(60,15));
 
                 // Get 4th line and read thermo coeffs.
                 fin.getline(&line[0], 200);
                 tag = line;
-                lp.Params[3] = atof(tag.substr(0,15).c_str());
-                lp.Params[4] = atof(tag.substr(15,15).c_str());
-                lp.Params[5] = atof(tag.substr(30,15).c_str());
-                lp.Params[6] = atof(tag.substr(45,15).c_str());
+                lp.Params[3] = cdble(tag.substr(0,15));
+                lp.Params[4] = cdble(tag.substr(15,15));
+                lp.Params[5] = cdble(tag.substr(30,15));
+                lp.Params[6] = cdble(tag.substr(45,15));
 
                 // Now save the data to the species:
                 
@@ -461,8 +453,8 @@ void Mechanism_IO::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech,
 
 // Reads CHEMKIN formatted thermo data for all species in the given mechanism from
 // the file specified by the file name.
-void Mechanism_IO::parseCK_Thermo(std::string &filename, Sprog::Mechanism &mech, 
-                                  Sprog::IO::Mechanism_IO::CK_STATUS &status)
+void MechanismParser::parseCK_Thermo(std::string &filename, Sprog::Mechanism &mech, 
+                                  Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     // Open file for reading.
     ifstream fin; //(filename.c_str(), ios::in);
@@ -486,8 +478,8 @@ void Mechanism_IO::parseCK_Thermo(std::string &filename, Sprog::Mechanism &mech,
 }
 
 // Reads all the chemical reactions from the CHEMKIN formatted file stream.
-void Mechanism_IO::parseCK_Reactions(std::ifstream &fin, Sprog::Mechanism &mech, 
-                                     Sprog::IO::Mechanism_IO::CK_STATUS &status)
+void MechanismParser::parseCK_Reactions(std::ifstream &fin, Sprog::Mechanism &mech, 
+                                     Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     char c;
     string tag, rxndef;
@@ -607,9 +599,9 @@ void Mechanism_IO::parseCK_Reactions(std::ifstream &fin, Sprog::Mechanism &mech,
 }
 
 // Parses a string and builds a Reaction object from the data therein.
-Sprog::Kinetics::Reaction *const Mechanism_IO::parseCK_Reaction(const std::string &rxndef, 
+Sprog::Kinetics::Reaction *const MechanismParser::parseCK_Reaction(const std::string &rxndef, 
                                                                 Sprog::Mechanism &mech, 
-                                                                Sprog::IO::Mechanism_IO::CK_STATUS &status)
+                                                                Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     // The reaction string contains four pieces of information:  the reaction formula, A, n & E.
     Kinetics::Reaction * rxn = NULL;
@@ -697,9 +689,9 @@ Sprog::Kinetics::Reaction *const Mechanism_IO::parseCK_Reaction(const std::strin
     // Now we have got the reactants and the products, we must now parse the Arrhenius coefficients.
     // This is quite simple as they must be space delimited.
     split(rxndef.substr(ilast_prod), arrstr, " ");
-    arr.A = atof(arrstr[0].c_str()) * status.Scale.A;
-    arr.n = atof(arrstr[1].c_str());
-    arr.E = atof(arrstr[2].c_str()) * status.Scale.E;
+    arr.A = cdble(arrstr[0]) * status.Scale.A;
+    arr.n = cdble(arrstr[1]);
+    arr.E = cdble(arrstr[2]) * status.Scale.E;
     
     // Now all the information about the reaction has been acquired so we need to 
     // initialise the reaction object.
@@ -737,7 +729,7 @@ Sprog::Kinetics::Reaction *const Mechanism_IO::parseCK_Reaction(const std::strin
 }
 
 // Parses a string of species names in a reaction, delimited by '+'s.
-void Sprog::IO::Mechanism_IO::parseCK_RxnSpStoich(const std::string &sp,
+void Sprog::IO::MechanismParser::parseCK_RxnSpStoich(const std::string &sp,
                                                   const Sprog::Mechanism &mech,
                                                   std::vector<Sprog::Stoich> &mui, 
                                                   std::vector<Sprog::Stoichf> &muf, 
@@ -827,7 +819,7 @@ void Sprog::IO::Mechanism_IO::parseCK_RxnSpStoich(const std::string &sp,
             
             if (i >= 0) {
                 // Before we save the species stoichiometry we need to check if it is integer or real.
-                intmu = atoi(mu.c_str()); floatmu = atof(mu.c_str());
+                intmu = atoi(mu.c_str()); floatmu = cdble(mu);
                 if (floatmu == (real)intmu) {
                     // This is integer stoichiometry.
                     mui.push_back(Stoich(i, intmu));
@@ -844,11 +836,11 @@ void Sprog::IO::Mechanism_IO::parseCK_RxnSpStoich(const std::string &sp,
 }
 
 // Parses auxilliary reaction information.
-bool Sprog::IO::Mechanism_IO::parseCK_RxnAux(const std::string &rxndef, 
+bool Sprog::IO::MechanismParser::parseCK_RxnAux(const std::string &rxndef, 
                                              Sprog::Kinetics::Reaction *last_rxn, 
                                              const Sprog::Mechanism &mech,
                                              Sprog::Kinetics::ARRHENIUS scale,
-                                             Sprog::IO::Mechanism_IO::CK_STATUS &status)
+                                             Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     string str, key, vals;
     vector<string> params;
@@ -895,9 +887,9 @@ bool Sprog::IO::Mechanism_IO::parseCK_RxnAux(const std::string &rxndef,
         if (key.compare("LOW") == 0) {
             // Low-pressure limit for fall-off reaction (3 parameters).
             if (params.size() > 2) {
-                last_rxn->SetLowPressureLimit(ARRHENIUS(atof(params[0].c_str()) * scale.A,
-                                                        atof(params[1].c_str()) * scale.n,
-                                                        atof(params[2].c_str()) * scale.E));
+                last_rxn->SetLowPressureLimit(ARRHENIUS(cdble(params[0]) * scale.A,
+                                                        cdble(params[1]) * scale.n,
+                                                        cdble(params[2]) * scale.E));
             } else {
                 // Insufficient parameters.
                 throw invalid_argument("Insufficient parameters for LOW keyword in auxilliary data.");
@@ -908,14 +900,14 @@ bool Sprog::IO::Mechanism_IO::parseCK_RxnAux(const std::string &rxndef,
         } else if (key.compare("TROE") == 0) {
             // TROE form pressure-dependent reaction (3 or 4 parameters).
             if (params.size() > 2) {
-                foparams[0] = atof(params[0].c_str());
-                foparams[1] = atof(params[1].c_str());
-                foparams[2] = atof(params[2].c_str());
+                foparams[0] = cdble(params[0]);
+                foparams[1] = cdble(params[1]);
+                foparams[2] = cdble(params[2]);
                 foparams[4] = 0.0;
 
                 if (params.size() > 3) {
                     // 4-parameter TROE form.
-                    foparams[3] = atof(params[3].c_str());
+                    foparams[3] = cdble(params[3]);
                     last_rxn->SetFallOffParams(Troe4, foparams);
                 } else {
                     // 3-parameter TROE form.
@@ -930,17 +922,17 @@ bool Sprog::IO::Mechanism_IO::parseCK_RxnAux(const std::string &rxndef,
             // SRI pressure-dependent reaction (3 or 5 parameters).
             if (params.size() > 4) {
                 // 5-parameter form.
-                foparams[0] = atof(params[0].c_str());
-                foparams[1] = atof(params[1].c_str());
-                foparams[2] = atof(params[2].c_str());
-                foparams[3] = atof(params[3].c_str());
-                foparams[4] = atof(params[4].c_str());
+                foparams[0] = cdble(params[0]);
+                foparams[1] = cdble(params[1]);
+                foparams[2] = cdble(params[2]);
+                foparams[3] = cdble(params[3]);
+                foparams[4] = cdble(params[4]);
                 last_rxn->SetFallOffParams(SRI, foparams);
             } else if (params.size() > 2) {
                 //3-parameter form.
-                foparams[0] = atof(params[0].c_str());
-                foparams[1] = atof(params[1].c_str());
-                foparams[2] = atof(params[2].c_str());
+                foparams[0] = cdble(params[0]);
+                foparams[1] = cdble(params[1]);
+                foparams[2] = cdble(params[2]);
                 foparams[3] = 1.0;
                 foparams[4] = 0.0;
                 last_rxn->SetFallOffParams(SRI, foparams);
@@ -954,9 +946,9 @@ bool Sprog::IO::Mechanism_IO::parseCK_RxnAux(const std::string &rxndef,
         } else if (key.compare("REV") == 0) {
             // Reverse rate Arrhenius parameters (3 required).
             if (params.size() > 2) {
-                last_rxn->SetRevArrhenius(ARRHENIUS(atof(params[0].c_str()) * scale.A,
-                                                    atof(params[1].c_str()) * scale.n,
-                                                    atof(params[2].c_str()) * scale.E));
+                last_rxn->SetRevArrhenius(ARRHENIUS(cdble(params[0]) * scale.A,
+                                                    cdble(params[1]) * scale.n,
+                                                    cdble(params[2]) * scale.E));
             } else {
                 // Insufficient parameters.
                 throw invalid_argument("Insufficient parameters for REV keyword in auxilliary data.");
@@ -964,7 +956,7 @@ bool Sprog::IO::Mechanism_IO::parseCK_RxnAux(const std::string &rxndef,
         } else if (key.compare("LT") == 0) {
             // Landau-Teller reaction parameters (2 required).
             if (params.size() > 1) {
-                last_rxn->SetLTCoeffs(LTCOEFFS(atof(params[0].c_str()), atof(params[1].c_str())));
+                last_rxn->SetLTCoeffs(LTCOEFFS(cdble(params[0]), cdble(params[1])));
             } else {
                 // Insufficient parameters.
                 throw invalid_argument("Insufficient parameters for LT keyword in auxilliary data.");
@@ -972,7 +964,7 @@ bool Sprog::IO::Mechanism_IO::parseCK_RxnAux(const std::string &rxndef,
         } else if (key.compare("RLT") == 0) {
             // Reverse Landau-Teller parameters (2 required).
              if (params.size() > 1) {
-                last_rxn->SetRevLTCoeffs(LTCOEFFS(atof(params[0].c_str()), atof(params[1].c_str())));
+                last_rxn->SetRevLTCoeffs(LTCOEFFS(cdble(params[0]), cdble(params[1])));
             } else {
                 // Insufficient parameters.
                 throw invalid_argument("Insufficient parameters for RLT keyword in auxilliary data.");
@@ -1008,7 +1000,7 @@ bool Sprog::IO::Mechanism_IO::parseCK_RxnAux(const std::string &rxndef,
             // Not a keyword at all, but a species name (hopefully!) for third-body efficiencies.
             sp = mech.FindSpecies(key);
             if ((sp >= 0) && (params.size() > 0)) {
-                val = atof(params[0].c_str());
+                val = cdble(params[0]);
                 last_rxn->AddThirdBody(sp, val);
             } else {
                 // Unrecognised species or missing efficiency.
@@ -1028,7 +1020,7 @@ bool Sprog::IO::Mechanism_IO::parseCK_RxnAux(const std::string &rxndef,
 }
 
 // Parses the units from the REACTION line of a CHEMKIN formatted file.
-void Sprog::IO::Mechanism_IO::parseCK_Units(const std::string &rxndef, Sprog::Kinetics::ARRHENIUS &scale)
+void Sprog::IO::MechanismParser::parseCK_Units(const std::string &rxndef, Sprog::Kinetics::ARRHENIUS &scale)
 {
     // Split the string into parts.
     vector<string> parts;

@@ -3,17 +3,13 @@
   Project:        sprog (gas-phase chemical kinetics).
 
   File purpose:
-    The Element library holds a list of known elements.  This file is included in the gpc_element.h
-    header.
+    The Element library holds a list of known elements.
 */
 
-#ifndef GPC_ELEMENT_LIB_H
-#define GPC_ELEMENT_LIB_H
+#ifndef GPC_ELEMENT_LIB_CPP
+#define GPC_ELEMENT_LIB_CPP
 
-#include "gpc_params.h"
 #include "gpc_element.h"
-#include <vector>
-#include <string>
 
 // ELEMENT LIBRARY.
 const Sprog::Element Sprog::Element::m_lib[Element::m_nlib] = {
@@ -24,4 +20,4 @@ const Sprog::Element Sprog::Element::m_lib[Element::m_nlib] = {
     Sprog::Element("AR",39.948)
 };
 
-#endif // GPC_ELEMENT_LIB_H
+#endif // GPC_ELEMENT_LIB_CPP

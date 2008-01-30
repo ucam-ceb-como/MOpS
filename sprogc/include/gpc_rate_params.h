@@ -25,8 +25,10 @@ namespace Kinetics
         real E; // Activation energy.
 
         // Constructors.
-        ARRHENIUS(void) {A=n=E=0.0;}; // Default constructor.
-        ARRHENIUS(real aA, real an, real aE) {A=aA; n=an; E=aE;}; // Initialising constructor.
+        ARRHENIUS(void) // Default constructor.
+        {A=n=E=0.0;}; 
+        ARRHENIUS(real aA, real an, real aE) // Initialising constructor.
+        {A=aA; n=an; E=aE;};
     };
 
     // Landau Teller reaction parameters.

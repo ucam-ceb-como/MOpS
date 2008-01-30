@@ -13,7 +13,7 @@ Mechanism::Mechanism()
 {
     m_units = SI;
     m_stoich_xref_valid = false;
-    m_rxns.SetMechanism(this);
+    m_rxns.SetMechanism(*this);
 }
 
 // Copy constructor.
@@ -54,15 +54,13 @@ Mechanism &Mechanism::operator=(const Sprog::Mechanism &mech)
         // Inform species of new elements vector and mechanism.
         SpeciesPtrVector::iterator sp;
         for (sp=m_species.begin(); sp!=m_species.end(); sp++) {
-            (*sp)->SetElements(&m_elements);
-            (*sp)->SetMechanism(this);
+            (*sp)->SetMechanism(*this);
         }
 
         // Inform reactions of new species vector and mechanism.
         unsigned int i;
         for (i=0; i<m_rxns.Count(); i++) {
-            m_rxns[i]->SetSpecies(&m_species);
-            m_rxns[i]->SetMechanism(this);
+            m_rxns[i]->SetMechanism(*this);
         }
     }
     return *this;
@@ -84,8 +82,8 @@ UnitSystem Mechanism::Units() const
     return m_units;
 }
 
-// Sets the system of units used by this mechanism by converting all element, species and 
-// reaction properties.
+// Sets the system of units used by this mechanism by converting all 
+// element, species and reaction properties.
 void Mechanism::SetUnits(Sprog::UnitSystem u)
 {
     Kinetics::ARRHENIUS arr;
@@ -158,7 +156,8 @@ void Mechanism::SetUnits(Sprog::UnitSystem u)
             m_units = SI;
         }
     } else if (u == CGS) {
-        //throw invalid_argument("Cannot currently convert mechanism to CGS units.  Consult your programmer.");
+//        throw invalid_argument("Cannot currently convert mechanism to "
+//                               "CGS units.  Consult your programmer.");
         m_units = CGS;
     }
 }
@@ -166,10 +165,26 @@ void Mechanism::SetUnits(Sprog::UnitSystem u)
 
 // CHEMICAL ELEMENTS.
 
+// Returns the number of chemical elements.
+unsigned int Mechanism::ElementCount() const
+{
+    return m_elements.size();
+}
+
 // Returns the vector of chemical elements.
 const ElementPtrVector &Mechanism::Elements() const
 {
     return m_elements;
+}
+
+// Returns a pointer to the ith element.  NULL if i invalid.
+const Sprog::Element *const Mechanism::Elements(unsigned int i) const
+{
+    if (i < m_elements.size()) {
+        return m_elements[i];
+    } else {
+        return NULL;
+    }
 }
 
 // Adds a default element to the mechanism and returns it.
@@ -197,14 +212,14 @@ Element *const Mechanism::AddElement(const Sprog::Element &el)
     m_elements.push_back(elnew);
 
     // Set up the element.
-    elnew->SetMechanism(this);
+    elnew->SetMechanism(*this);
 
     // Return the element.
     return elnew;
 }
 
 // Returns index of element in list.  Returns -1 if not found.
-int Mechanism::FindElement(const Sprog::Element &el)
+int Mechanism::FindElement(const Sprog::Element &el) const
 {
     // Loop over elements to find index.
     unsigned int i;
@@ -220,7 +235,7 @@ int Mechanism::FindElement(const Sprog::Element &el)
 }
 
 // Returns index of element in list.  Returns -1 if not found.
-int Mechanism::FindElement(const std::string &name)
+int Mechanism::FindElement(const std::string &name) const
 {
     // Loop over elements to find index.
     unsigned int i;
@@ -261,10 +276,37 @@ void Mechanism::CheckElementChanges(const Element &el)
 
 // SPECIES.
 
+// Returns the number of species in the mechanism.
+unsigned int Mechanism::SpeciesCount(void) const
+{
+    return m_species.size();
+}
+
 // Returns the vector of chemical species.
 const SpeciesPtrVector &Mechanism::Species() const
 {
     return m_species;
+}
+
+// Returns a pointer to the ith species.  Returns NULL if i is invalid.
+const Sprog::Species *const Mechanism::Species(unsigned int i) const
+{
+    if (i < m_species.size()) {
+        return m_species[i];
+    } else {
+        return NULL;
+    }
+}
+
+// Returns pointer to species with given name.  NULL if not found.
+const Sprog::Species *const Mechanism::Species(const std::string &name) const
+{
+    int i = FindSpecies(name);
+    if (i >= 0) {
+        return m_species[i];
+    } else {
+        return NULL;
+    }
 }
 
 // Adds an empty species to the mechansism and returns a reference to it.
@@ -293,8 +335,7 @@ Species *const Mechanism::AddSpecies(const Sprog::Species &sp)
     m_species.push_back(spnew);
 
     // Set up species.
-    spnew->SetElements(&m_elements);
-    spnew->SetMechanism(this);
+    spnew->SetMechanism(*this);
 
     // Return species reference.
     return spnew;
@@ -356,10 +397,22 @@ Sprog::Species *const Mechanism::GetSpecies(const std::string &name) const
 
 // REACTIONS.
 
+// Returns the number of reactions in the mechanism.
+unsigned int Mechanism::ReactionCount(void) const
+{
+    return m_rxns.Count();
+}
+
 // Returns the set of chemical reactions.
 const Sprog::Kinetics::ReactionSet &Mechanism::Reactions() const
 {
     return m_rxns;
+}
+
+// Returns a pointer to the ith reaction. Returns NULL if i is invalid.
+const Kinetics::Reaction *const Mechanism::Reactions(unsigned int i) const
+{
+    return m_rxns[i];
 }
 
 // Adds an empty reaction to the mechanism.
@@ -372,8 +425,7 @@ Sprog::Kinetics::Reaction *const Mechanism::AddReaction()
 Sprog::Kinetics::Reaction *const Mechanism::AddReaction(const Sprog::Kinetics::Reaction *const rxn)
 {
     Sprog::Kinetics::Reaction *prxn = m_rxns.AddReaction(*rxn);
-    prxn->SetSpecies(&m_species);
-    prxn->SetMechanism(this);
+    prxn->SetMechanism(*this);
     return prxn;
 }
 
@@ -471,13 +523,148 @@ bool Mechanism::IsStoichXRefValid()
 // Returns the stoichiometry for all reactions which
 // involve the species with the given index.  Throws error if index is
 // invalid.
-const Mechanism::RxnStoichMap &Mechanism::GetStoichXRef(unsigned int isp) const
+const Sprog::RxnStoichMap &Mechanism::GetStoichXRef(unsigned int isp) const
 {
     if (isp < m_species.size()) {
         return m_stoich_xref[isp].RxnStoich;
     } else {
         // Species index is invalid.
-        throw invalid_argument("Invalid species index given when finded RxnStoichMap in Mechanism class.");
+        throw invalid_argument("Invalid species index given when "
+                               "finded RxnStoichMap (Sprog, Mechanism::GetStoichXRef.");
+    }
+}
+
+
+// READ/WRITE/COPY FUNCTIONS.
+
+// Writes the mechanism to a binary data stream.
+void Mechanism::Serialize(std::ostream &out) const
+{
+    if (out.good()) {
+        // Write the serialize version to the stream.
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+        
+        // Write the units system to the stream.
+        unsigned int u = (unsigned int)m_units;
+        out.write((char*)&u, sizeof(u));
+
+        // Write the number of elements to the stream.
+        u = m_elements.size();
+        out.write((char*)&u, sizeof(u));
+
+        // Write the elements to the stream.
+        for (ElementPtrVector::const_iterator iel=m_elements.begin(); iel!=m_elements.end(); iel++) {
+            (*iel)->Serialize(out);
+        }
+
+        // Write the number of species to the stream.
+        u = m_species.size();
+        out.write((char*)&u, sizeof(u));
+
+        // Write the species to the stream.
+        for (SpeciesPtrVector::const_iterator isp=m_species.begin(); isp!=m_species.end(); isp++) {
+            (*isp)->Serialize(out);
+        }
+
+        // Write the reaction set to the stream.
+        m_rxns.Serialize(out);
+
+        // We don't need to write the stoich xref vector to the stream, as
+        // this can be rebuilt when the mechanism is deserialised.
+
+    } else {
+        throw invalid_argument("Output stream not ready (Sprog, Mechanism::Serialize).");
+    }
+}
+
+// Reads the mechanism data from a binary data stream.
+void Mechanism::Deserialize(std::istream &in)
+{
+    // Clear the current mechanism.  We do this before checking
+    // the stream condition to avoid confusion in the calling code.
+    // Even if the possible exception is handled incorrectly, the
+    // mechanism will still be empty.
+    releaseMemory();
+
+    if (in.good()) {
+        // Read the serialized mechanism version.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        unsigned int u = 0; // We'll need to to read unsigned ints.
+
+        switch (version) {
+            case 0:
+                // Read the units.
+                in.read(reinterpret_cast<char*>(&u), sizeof(u));
+                m_units = (UnitSystem)u;
+
+                // Read the number of elements and reserve memory.
+                in.read(reinterpret_cast<char*>(&u), sizeof(u));
+                m_elements.reserve(u);
+
+                // Read the elements.
+                try {
+                    for (unsigned int i=0; i<u; i++) {
+                        // Read the element from the stream using the
+                        // appropriate constructor.
+                        Element *el = new Element(in);
+                        el->SetMechanism(*this);
+
+                        // Add the element to the vector.
+                        m_elements.push_back(el);
+                    }
+                } catch (exception &e) {
+                    // Ensure the mechanism is cleared before throwing 
+                    // the exception to the next layer up.
+                    releaseMemory();
+                    throw e;
+                }
+
+                // Read the number of species and reserve memory.
+                in.read(reinterpret_cast<char*>(&u), sizeof(u));
+                m_species.reserve(u);
+
+                // Read the species.
+                try {
+                    for (unsigned int i=0; i<u; i++) {
+                        // Read the species from the stream using the
+                        // appropriate constructor.
+                        Sprog::Species *sp = new Sprog::Species(in);
+                        sp->SetMechanism(*this);
+
+                        // Add the species to the vector.
+                        m_species.push_back(sp);
+                    }
+                } catch (exception &e) {
+                    // Ensure the mechanism is cleared before throwing 
+                    // the exception to the next layer up.
+                    releaseMemory();
+                    throw e;
+                }
+
+                // Read the reaction set.
+                try {
+                    m_rxns.SetMechanism(*this);
+                    m_rxns.Deserialize(in);
+                } catch (exception &e) {
+                    // Ensure the mechanism is cleared before throwing 
+                    // the exception to the next layer up.
+                    releaseMemory();
+                    throw e;
+                }
+
+                // Rebuild the stoich xref.
+                BuildStoichXRef();
+
+                break;
+            default:
+                throw runtime_error("Mechanism serialized version number "
+                                    "is unsupported (Sprog, Mechanism::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready (Sprog, Mechanism::Deserialize).");
     }
 }
 

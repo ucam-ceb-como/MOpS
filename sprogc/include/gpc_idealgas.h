@@ -11,7 +11,8 @@
 
 #include "gpc_params.h"
 #include "gpc_gasphase.h"
-#include <vector>
+#include "gpc_species.h"
+#include <iostream>
 
 namespace Sprog
 {
@@ -21,10 +22,20 @@ class IdealGas : public GasPhase
 {
 public:
     // Constructors.
-    IdealGas(void); // Default constructor.
+    IdealGas(const SpeciesPtrVector &sp); // Default constructor (requires species list).
+    IdealGas(const IdealGas &copy);       // Copy constructor.
+    IdealGas(                      // Stream-reading constructor.
+        std::istream &in,          //  - Stream from which to read.
+        const SpeciesPtrVector &sp //  - Species list.
+        );     
 
     // Destructors.
     virtual ~IdealGas(void); // Default destructor.
+
+    // Operator overloads.
+    IdealGas &operator=(const Mixture &mix);  // Assignment operator (Mixture).
+    IdealGas &operator=(const GasPhase &gas); // Assignment operator (GasPhase).
+    IdealGas &operator=(const IdealGas &gas); // Assignment operator.
 
 
     // EQUATION OF STATE (overrides from GasPhase).
@@ -225,6 +236,29 @@ public:
         fvector &H,  // Output vector for enthalpies (H/RT).
         fvector &S   // Output vector for entropies (S/R).
         ) const;
+
+
+    // READ/WRITE/COPY FUNCTIONS.
+
+    // Creates a copy of the mixture object.
+    virtual IdealGas *const Clone() const;
+
+    /* NOT NEEDED UNTIL CLASS HAS SOME DATA MEMBERS!
+    // Writes the mixture to a binary data stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the mixture data from a binary data stream.
+    void Deserialize(std::istream &in);
+    */
+
+    // Identifies the mixture type for serialisation.
+    Serial_MixtureType SerialType() const;
+
+protected:
+    // Like in the GasPhase class it makes no sense to define an IdealGas
+    // without knowledge of the defining species, therefore the default
+    // constructor is declared protected.
+    IdealGas(void);
 
 private:
     // Calculates a polynomial fit of any thermo property given the

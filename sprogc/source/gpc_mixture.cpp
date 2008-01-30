@@ -8,16 +8,36 @@ using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor.
+// Default constructor (private).
 Mixture::Mixture(void)
 {
     m_data.clear();
-    m_pT = NULL;
-    m_pdens = NULL;
+    m_pT      = NULL;
+    m_pdens   = NULL;
     m_species = NULL;
 }
 
-// Default desstructor.
+// Default constructor (public, requires species list).
+Mixture::Mixture(const SpeciesPtrVector &sp)
+{
+    SetSpecies(sp);
+}
+
+// Copy constructor.
+Mixture::Mixture(const Mixture &copy)
+{
+    *this = copy;
+}
+
+
+// Stream-reading constructor.
+Mixture::Mixture(std::istream &in, const SpeciesPtrVector &sp)
+{
+    Deserialize(in);
+    SetSpecies(sp);
+}
+
+// Default destructor.
 Mixture::~Mixture(void)
 {
     m_data.clear();
@@ -33,18 +53,11 @@ Mixture &Mixture::operator=(const Mixture &mix)
     if (this != &mix) {
         m_data.assign(mix.m_data.begin(), mix.m_data.end());
         m_species = mix.m_species;
-        m_pT = &m_data.at(m_species->size()-2);
-        m_pdens = &m_data.at(m_species->size()-1);
+        m_pT      = &m_data.at(m_species->size()-2);
+        m_pdens   = &m_data.at(m_species->size()-1);
     }
 
     return *this;
-}
-
-// CLONING.
-
-Mixture* Mixture::Clone() const
-{
-    return new Mixture(*this);
 }
 
 
@@ -67,29 +80,30 @@ void Mixture::SetTemperature(Sprog::real T)
 // CONCENTRATIONS/FRACTIONS.
 
 // Returns the vector of mixture species mole fractions.
-const vector<real> &Mixture::MoleFractions() const
+const fvector &Mixture::MoleFractions() const
 {
     return m_data;
 }
 
 // Returns a vector of species concentrations.
-void Mixture::GetConcs(std::vector<real> &concs) const
+void Mixture::GetConcs(fvector &concs) const
 {
     // Resize output vector.
-    concs.reserve(m_species->size());
+    concs.resize(m_species->size());
 
     // Loop over all mole fractions and convert to concentrations.
-    vector<real>::const_iterator i;
-    for (i=m_data.begin(); i!=m_data.end()-2; i++) {
-        concs.push_back((*i) * (*m_pdens));
+    fvector::const_iterator i;
+    fvector::iterator j;
+    for (i=m_data.begin(),j=concs.begin(); i!=m_data.end()-2; i++,j++) {
+        (*j) = (*i) * (*m_pdens);
     }
 }
 
 // Returns a vector of species mass fractions.
-void Mixture::GetMassFractions(std::vector<real> &fracs) const
+void Mixture::GetMassFractions(fvector &fracs) const
 {
     // Clear output vector.
-    fracs.reserve(m_species->size());
+    fracs.resize(m_species->size());
 
     // Loop over all mole fractions and convert to mass fractions:
     //   y = x * wt / sum(x*wt)
@@ -97,7 +111,7 @@ void Mixture::GetMassFractions(std::vector<real> &fracs) const
     real val, tot = 0.0;
     for (i=0; i<m_species->size(); i++) {
         val = m_data[i] * (*m_species)[i]->MolWt();
-        fracs.push_back(val);
+        fracs[i] = val;
         tot += val;
     }
     tot = 1.0 / tot;
@@ -144,7 +158,7 @@ real Mixture::MassFraction(unsigned int i) const
 }
 
 // Sets the vector of species mole fractions.
-void Mixture::SetFracs(const std::vector<real> &fracs)
+void Mixture::SetFracs(const fvector &fracs)
 {
     int i;
     real tot =0.0;
@@ -187,7 +201,7 @@ void Mixture::SetFracs(const Sprog::real fracs[], int n)
 }
 
 // Sets the species mole fractions using the supplied molar concentrations.
-void Mixture::SetConcs(const std::vector<real> &concs)
+void Mixture::SetConcs(const fvector &concs)
 {
     // Check that the concentration vector is of sufficient length.
     if (concs.size() >= m_species->size()) {
@@ -209,7 +223,7 @@ void Mixture::SetConcs(const std::vector<real> &concs)
 }
 
 // Sets the species mole fractions using the supplied mass fractions.
-void Mixture::SetMassFracs(const std::vector<real> &fracs)
+void Mixture::SetMassFracs(const fvector &fracs)
 {
     // Check that the mass fraction vector is of sufficient length.
     if (fracs.size() >= m_species->size()) {
@@ -235,6 +249,25 @@ void Mixture::SetMassFracs(const std::vector<real> &fracs)
             m_data[i] *= tot;
         }
 
+    }
+}
+
+// Checks the vector of mole fractions for validity by settings all negative
+// values to zero, and by normalising the values so that they sum
+// to one.
+void Mixture::Normalise()
+{
+    real xtot = 0.0;
+
+    for (int i=0; i<m_species->size(); i++) {
+        if (m_data[i] < 0.0) m_data[i] = 0.0;
+        xtot += m_data[i];
+    }
+
+    if (xtot != 1.0) {
+        for (int i=0; i<m_species->size(); i++) {
+            m_data[i] /= xtot;
+        }
     }
 }
 
@@ -292,11 +325,11 @@ const SpeciesPtrVector *const Mixture::Species() const
 }
 
 // Sets the vector of species used to define the mixture.
-void Mixture::SetSpecies(const Sprog::SpeciesPtrVector *const sp)
+void Mixture::SetSpecies(const Sprog::SpeciesPtrVector &sp)
 {
-    m_species = sp;
+    m_species = &sp;
     m_data.resize(m_species->size()+2);
-    m_pT = &m_data.at(m_species->size());
+    m_pT    = &m_data.at(m_species->size());
     m_pdens = &m_data.at(m_species->size()+1);
 }
 
@@ -306,4 +339,82 @@ void Mixture::SetSpecies(const Sprog::SpeciesPtrVector *const sp)
 real *const Mixture::RawData()
 {
     return &(m_data[0]);
+}
+
+
+// READ/WRITE/COPY FUNCTIONS.
+
+// Creates a copy of the mixture object.
+Mixture *const Mixture::Clone() const
+{
+    return new Mixture(*this);
+}
+
+// Writes the mixture to a binary data stream.
+void Mixture::Serialize(std::ostream &out) const
+{
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Output the data vector size.
+        unsigned int sz = m_data.size();
+        out.write((char*)&sz, sizeof(sz));
+
+        // Output all elements in the data vector.
+        fvector::const_iterator i;
+        for (i=m_data.begin(); i!=m_data.end(); i++) {
+            out.write((char*)&(*i), sizeof(*i));
+        }
+    } else {
+        throw invalid_argument("Output stream not ready (Sprog, Mixture::Serialize).");
+    }
+}
+
+// Reads the mixture data from a binary data stream.
+void Mixture::Deserialize(std::istream &in)
+{
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        switch (version) {
+            case 0:
+                // Read the data vector size.
+                unsigned int sz;
+                in.read(reinterpret_cast<char*>(&sz), sizeof(sz));
+
+                // Fill the data vector.
+                real val;
+                m_data.reserve(sz);
+                for (unsigned int i=0; i<sz; i++) {
+                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                    m_data.push_back(val);
+                }
+
+                // The last two elements in the data vector are the temperature
+                // and the density respectively.
+                m_pT = &m_data[sz-2];
+                m_pdens = &m_data[sz-1];
+
+                // The mixture has no species associated it with right now.
+                m_species = NULL;
+                break;
+            default:
+                throw runtime_error("Mixture serialized version number "
+                                    "is invalid (Sprog, Mixture::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready (Sprog, Mixture::Deserialize).");
+    }
+}
+
+// Identifies the mixture type for serialisation.
+Serial_MixtureType Mixture::SerialType() const
+{
+    return Serial_Mixture;
 }

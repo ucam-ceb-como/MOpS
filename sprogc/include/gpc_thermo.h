@@ -323,6 +323,14 @@ public:
         fvector &H,  // Output vector for enthalpies (H/RT).
         fvector &S   // Output vector for entropies (S/R).
         ) const = 0;
+
+private:
+    // Temporary vector of reals for doing internal calculations.  We define this
+    // here in order to prevent continuous reallocation of the memory every time
+    // a function which requires it is called.  It is defined as mutable as the
+    // data it stores is not important to the ThermoInterface and this allows it
+    // to be manipulated in const member functions.
+    mutable fvector m_tmpvec;
 };
 };
 };

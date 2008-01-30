@@ -9,14 +9,63 @@ using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor.
+// Default constructor (private).
 IdealGas::IdealGas(void)
 {
+}
+
+// Default constructor (public, requires species vector).
+IdealGas::IdealGas(const SpeciesPtrVector &sp) : GasPhase(sp)
+{
+}
+
+// Copy constructor.
+IdealGas::IdealGas(const Sprog::Thermo::IdealGas &copy)
+{
+    *this = copy;
+}
+
+// Stream-reading constructor.
+IdealGas::IdealGas(std::istream &in, const SpeciesPtrVector &sp)
+{
+    Deserialize(in);
+    SetSpecies(sp);
 }
 
 // Default destructor.
 IdealGas::~IdealGas(void)
 {
+    // Nothing special to destruct here.
+}
+
+
+// OPERATOR OVERLOADS.
+
+// Assignment operator (Mixture).
+IdealGas &IdealGas::operator=(const Mixture &mix)
+{
+    if (this != &mix) {
+        Mixture::operator=(mix);
+    }
+    return *this;
+}
+
+// Assignment operator (GasPhase).
+IdealGas &IdealGas::operator=(const GasPhase &gas)
+{
+    if (this != &gas) {
+        GasPhase::operator=(gas);
+    }
+    return *this;
+}
+
+// Assignment operator.
+IdealGas &IdealGas::operator=(const IdealGas &gas)
+{
+    if (this != &gas) {
+        GasPhase::operator=(gas);
+    }
+    return *this;
 }
 
 
@@ -557,6 +606,33 @@ void IdealGas::CalcCpHSs_RT(real T,
 }
 
 
+// READ/WRITE/COPY FUNCTIONS.
+
+// Creates a copy of the mixture object.
+IdealGas *const IdealGas::Clone() const
+{
+    return new IdealGas(*this);
+}
+
+/*
+// Writes the mixture to a binary data stream.
+void IdealGas::Serialize(std::ostream &out) const
+{
+}
+
+// Reads the mixture data from a binary data stream.
+void IdealGas::Deserialize(std::istream &in)
+{
+}
+*/
+
+// Identifies the mixture type for serialisation.
+Serial_MixtureType IdealGas::SerialType() const
+{
+    return Serial_IdealGas;
+}
+
+
 // PRIVATE FUNCTIONS.
 
 // Calculates a polynomial fit of any thermo property given the
@@ -581,4 +657,6 @@ void IdealGas::sumTerms(real T, real *t, int n, std::vector<real> &Xs) const
         }
     }
 }
+
+
 

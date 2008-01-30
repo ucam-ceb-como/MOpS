@@ -18,25 +18,24 @@ using namespace std;
 Reaction::Reaction(void)
 {
     // Reaction data.
-    m_name = "";
+    m_name       = "";
     m_reversible = false;
-    m_dstoich = m_dreac = m_dprod = 0.0;
-    m_arrf.A = m_arrf.n = m_arrf.E = 0.0;
-    m_arrr = NULL;
-    m_lt = NULL;
-    m_revlt = NULL;
+    m_dstoich    = m_dreac = m_dprod = 0.0;
+    m_arrf.A     = m_arrf.n = m_arrf.E = 0.0;
+    m_arrr       = NULL;
+    m_lt         = NULL;
+    m_revlt      = NULL;
     
     // Third-bodies.
     m_usetb = false;
     m_thirdbodies.clear();
 
     // Fall-off data.
-    m_fotype = None;
+    m_fotype   = None;
     m_foparams = FALLOFF_PARAMS();
-    m_fofn = NULL;
+    m_fofn     = NULL;
 
     // Reaction context.
-    m_species = NULL;
     m_mech = NULL;
 }
 
@@ -44,14 +43,40 @@ Reaction::Reaction(void)
 Reaction::Reaction(const Sprog::Kinetics::Reaction &rxn)
 {
     // Nullify pointer members.
-    m_arrr = NULL;
-    m_lt = NULL;
-    m_revlt = NULL;
-    m_species = NULL;
-    m_mech = NULL;
+    m_arrr    = NULL;
+    m_lt      = NULL;
+    m_revlt   = NULL;
+    m_mech    = NULL;
 
     // Use assignment operator to copy.
     *this = rxn;
+}
+
+// Stream-reading constructor.
+Reaction::Reaction(std::istream &in)
+{
+    // Reaction data.
+    m_name       = "";
+    m_reversible = false;
+    m_dstoich    = m_dreac = m_dprod = 0.0;
+    m_arrf.A     = m_arrf.n = m_arrf.E = 0.0;
+    m_arrr       = NULL;
+    m_lt         = NULL;
+    m_revlt      = NULL;
+    
+    // Third-bodies.
+    m_usetb = false;
+    m_thirdbodies.clear();
+
+    // Fall-off data.
+    m_fotype   = None;
+    m_foparams = FALLOFF_PARAMS();
+    m_fofn     = NULL;
+
+    // Reaction context.
+    m_mech = NULL;
+
+    Deserialize(in);
 }
 
 // Destructor.
@@ -103,9 +128,6 @@ Reaction &Reaction::operator=(const Sprog::Kinetics::Reaction &rxn)
         m_fotype = rxn.m_fotype;
         m_foparams = rxn.m_foparams;
         m_fofn = rxn.m_fofn;
-
-        // Copy pointer to species vector.
-        m_species = rxn.m_species;
 
         // Copy pointer to mechanism.
         m_mech = rxn.m_mech;
@@ -196,11 +218,11 @@ void Reaction::AddReactant(const Sprog::Stoichf &reac)
 // Adds an integer reactant to the reaction given the species name.
 void Reaction::AddReactant(const std::string &name, unsigned int stoich)
 {
-    if (m_species != NULL) {
+    if (m_mech != NULL) {
         // Find the species in the list by name.
         unsigned int i;
-        for (i=0; i<m_species->size(); i++) {
-            if (name.compare((*m_species)[i]->Name()) == 0) {
+        for (i=0; i<m_mech->SpeciesCount(); i++) {
+            if (name.compare(m_mech->Species(i)->Name()) == 0) {
                 // Found species in the list, now add it as a reactant.
                 AddReactant(Stoich(i, stoich));
                 return;
@@ -209,21 +231,23 @@ void Reaction::AddReactant(const std::string &name, unsigned int stoich)
         
         // We have got here because the species name was not found
         // in the species list.
-        throw out_of_range(string(name).append(" was not found in species list (Reaction::AddReactant)."));
+        throw out_of_range(string(name).append(" was not found in species "
+                           "list (Sprog, Reaction::AddReactant)."));
     } else {
-        // Species vector has not been assigned.
-        throw exception("Trying to add reactant before assigning species vector (Reaction::AddReactant).");
+        // Parent mechanism has not been assigned.
+        throw logic_error("Trying to add reactant before assigning "
+                          "parent mechanism (Sprog, Reaction::AddReactant).");
     }
 }
 
 // Adds a real reactant to the reaction given the species name.
 void Reaction::AddReactant(const std::string &name, real stoich)
 {
-    if (m_species != NULL) {
+    if (m_mech != NULL) {
         // Find the species in the list by name.
         unsigned int i;
-        for (i=0; i<m_species->size(); i++) {
-            if (name.compare((*m_species)[i]->Name()) == 0) {
+        for (i=0; i<m_mech->SpeciesCount(); i++) {
+            if (name.compare(m_mech->Species(i)->Name()) == 0) {
                 // Found species in the list, now add it as a reactant.
                 AddReactant(Stoichf(i, stoich));
                 return;
@@ -232,10 +256,12 @@ void Reaction::AddReactant(const std::string &name, real stoich)
         
         // We have got here because the species name was not found
         // in the species list.
-        throw out_of_range(string(name).append(" was not found in species list (Reaction::AddReactant)."));
+        throw out_of_range(string(name).append(" was not found in species "
+                           "list (Sprog, Reaction::AddReactant)."));
     } else {
-        // Species vector has not been assigned.
-        throw exception("Trying to add reactant before assigning species vector (Reaction::AddReactant).");
+        // Parent mechanism has not been assigned.
+        throw logic_error("Trying to add reactant before assigning parent "
+                          "mechanism (Sprog, Reaction::AddReactant).");
     }
 }
 
@@ -243,11 +269,11 @@ void Reaction::AddReactant(const std::string &name, real stoich)
 // species is not a reactant then does nothing.
 void Reaction::RemoveReactant(const std::string &name)
 {
-    // Search through the list of species to find that with
-    // the given name.
-    unsigned int i;
-    for (i=0; i<m_species->size(); i++) {
-        if (*(*m_species)[i] == name) {
+    if (m_mech != NULL) {
+        // Search through the list of species to find that with
+        // the given name.
+        unsigned int i = m_mech->FindSpecies(name);
+        if (i >= 0) {
             // Found the species:  Loop though integer stoichiometry
             // reactant to find that with this index.
             vector<Stoich>::iterator j;
@@ -276,6 +302,10 @@ void Reaction::RemoveReactant(const std::string &name)
                 }
             }
         }
+    } else {
+        // Parent mechanism has not been assigned.
+        throw logic_error("Can't search for species before assigning parent "
+                          "mechanism (Sprog, Reaction::RemoveReactant).");
     }
 }
 
@@ -394,11 +424,11 @@ void Reaction::AddProduct(const Sprog::Stoichf &prod)
 // Adds an integer product to the reaction given the species name.
 void Reaction::AddProduct(const std::string &name, unsigned int stoich)
 {
-    if (m_species != NULL) {
+    if (m_mech != NULL) {
         // Find the species in the list by name.
         unsigned int i;
-        for (i=0; i<m_species->size(); i++) {
-            if (name.compare((*m_species)[i]->Name()) == 0) {
+        for (i=0; i<m_mech->SpeciesCount(); i++) {
+            if (name.compare(m_mech->Species(i)->Name()) == 0) {
                 // Found species in the list, now add it as a product.
                 AddProduct(Stoich(i, stoich));
                 return;
@@ -407,21 +437,23 @@ void Reaction::AddProduct(const std::string &name, unsigned int stoich)
         
         // We have got here because the species name was not found
         // in the species list.
-        throw out_of_range(string(name).append(" was not found in species list (Reaction::AddProduct)."));
+        throw out_of_range(string(name).append(" was not found in "
+                           "species list (Sprog, Reaction::AddProduct)."));
     } else {
-        // Species vector has not been assigned.
-        throw exception("Trying to add reactant before assigning species vector (Reaction::AddProduct).");
+        // Parent mechanism has not been assigned.
+        throw logic_error("Trying to add reactant before assigning "
+                          "parent mechanism (Sprog, Reaction::AddProduct).");
     }
 }
 
 // Adds a real product to the reaction given the species name.
 void Reaction::AddProduct(const std::string &name, real stoich)
 {
-    if (m_species != NULL) {
+    if (m_mech != NULL) {
         // Find the species in the list by name.
         unsigned int i;
-        for (i=0; i<m_species->size(); i++) {
-            if (name.compare((*m_species)[i]->Name()) == 0) {
+        for (i=0; i<m_mech->SpeciesCount(); i++) {
+            if (name.compare(m_mech->Species(i)->Name()) == 0) {
                 // Found species in the list, now add it as a product.
                 AddProduct(Stoichf(i, stoich));
                 return;
@@ -430,10 +462,12 @@ void Reaction::AddProduct(const std::string &name, real stoich)
         
         // We have got here because the species name was not found
         // in the species list.
-        throw out_of_range(string(name).append(" was not found in species list (Reaction::AddProduct)."));
+        throw out_of_range(string(name).append(" was not found in "
+                           "species list (Sprog, Reaction::AddProduct)."));
     } else {
-        // Species vector has not been assigned.
-        throw exception("Trying to add reactant before assigning species vector (Reaction::AddProduct).");
+        // Parent mechanism has not been assigned.
+        throw logic_error("Trying to add reactant before assigning "
+                          "parent mechanism (Sprog, Reaction::AddProduct).");
     }
 }
 
@@ -441,11 +475,11 @@ void Reaction::AddProduct(const std::string &name, real stoich)
 // species is not a product then does nothing.
 void Reaction::RemoveProduct(const std::string &name)
 {
-    // Search through the list of species to find that with
-    // the given name.
-    unsigned int i;
-    for (i=0; i<m_species->size(); i++) {
-        if (*(*m_species)[i] == name) {
+    if (m_mech != NULL) {
+        // Search through the list of species to find that with
+        // the given name.
+        unsigned int i = m_mech->FindSpecies(name);
+        if (i >= 0) {
             // Found the species:  Loop though integer stoichiometry
             // product to find that with this index.
             vector<Stoich>::iterator j;
@@ -474,7 +508,11 @@ void Reaction::RemoveProduct(const std::string &name)
                 }
             }
         }
-    }
+    } else {
+        // Parent mechanism has not been assigned.
+        throw logic_error("Can't search for species before assigning "
+                          "parent mechanism (Sprog, Reaction::RemoveProduct).");
+   }
 }
 
 // Returns the stoichiometry of the kth integer product.
@@ -598,15 +636,17 @@ void Reaction::AddThirdBody(const unsigned int sp, Sprog::real coeff)
 // Adds a third body to the reaction given the species name.
 void Reaction::AddThirdBody(const std::string &name, Sprog::real coeff)
 {
-    // Find the species in the vector with the given name.
-    unsigned int i;
-    for (i=0; i<m_species->size(); i++) {
-        if (*(*m_species)[i] == name) {
+    if (m_mech != NULL) {
+        // Find the species in the mechanism with the given name.
+        unsigned int i = m_mech->FindSpecies(name);
+        if (i >= 0) {
             // Found the species!
             m_usetb = true;
             m_thirdbodies.push_back(Stoichf(i, coeff));
-            return;
         }
+    } else {
+        throw logic_error("Can't add third body before assigning "
+                          "parent mechanism (Sprog, Reaction::AddThirdBody).");
     }
 }
 
@@ -614,11 +654,11 @@ void Reaction::AddThirdBody(const std::string &name, Sprog::real coeff)
 // body is not defined for this reaction then does nothing.
 void Reaction::RemoveThirdBody(const std::string &name)
 {
-    // Search through the list of species to find that with
-    // the given name.
-    unsigned int i;
-    for (i=0; i<m_species->size(); i++) {
-        if (*(*m_species)[i] == name) {
+    if (m_mech != NULL) {
+        // Search through the list of species to find that with
+        // the given name.
+        unsigned int i = m_mech->FindSpecies(name);
+        if (i >= 0) {
             // Found the species:  Loop though third bodies and find
             // that with this index.
             vector<Stoichf>::iterator j;
@@ -629,6 +669,9 @@ void Reaction::RemoveThirdBody(const std::string &name)
                 }
             }        
         }
+    } else {
+        throw logic_error("Can't find third body name before assigning "
+                          "parent mechanism (Sprog, Reaction::RemoveThirdBody).");
     }
 }
 
@@ -654,8 +697,8 @@ void Reaction::SetLowPressureLimit(const Sprog::Kinetics::ARRHENIUS &lowp)
 // Returns a pointer to the species used as a third body in the fall-off reaction.
 const Species *const Reaction::FallOffThirdBody() const
 {
-    if (m_foparams.ThirdBody >= 0) {
-        return (*m_species)[m_foparams.ThirdBody];
+    if ((m_mech != NULL) && (m_foparams.ThirdBody >= 0)) {
+        return m_mech->Species(m_foparams.ThirdBody);
     }
     return NULL;
 }
@@ -670,18 +713,21 @@ void Reaction::SetFallOffThirdBody(int sp)
 // given the species name.
 void Reaction::SetFallOffThirdBody(const std::string &name)
 {
-    // Locate the species by name in the vector.
-    unsigned int i;
-    for (i=0; i<m_species->size(); i++) {
-        if (*(*m_species)[i] == name) {
+    if (m_mech != NULL) {
+        // Locate the species by name in the vector.
+        unsigned int i = m_mech->FindSpecies(name);
+        if (i >= 0) {
             // Found the species!
             m_foparams.ThirdBody = i;
-            return;
+        } else {
+            // If the name is not a valid species then
+            // use all species as third body.
+            m_foparams.ThirdBody = -1;
         }
+    } else {
+        throw logic_error("Can't find set fall-off third body before assigning "
+                          "parent mechanism (Sprog, Reaction::SetFallOffThirdBody).");
     }
-
-    // If the name is not a valid species then use all species as third body.
-    m_foparams.ThirdBody = -1;
 }
 
 
@@ -761,6 +807,7 @@ FallOffFnPtr Reaction::FallOffFn() const
 }
 
 
+/*
 // SPECIES VECTOR.
 
 // Returns a pointer to the vector of species used to define the reaction.
@@ -774,29 +821,449 @@ void Reaction::SetSpecies(const SpeciesPtrVector *const sp)
 {
     m_species = sp;
 }
+*/
 
 
 // PARENT MECHANISM.
 
 // Returns a pointer to the parent mechanism.
-Mechanism *const Reaction::Mechanism() const
+const Mechanism *const Reaction::Mechanism() const
 {
     return m_mech;
 }
 
 // Sets the parent mechanism.
-void Reaction::SetMechanism(Sprog::Mechanism *const mech)
+void Reaction::SetMechanism(Sprog::Mechanism &mech)
 {
-    m_mech = mech;
+    m_mech = &mech;
 }
 
 
-// CLONING.
+// READ/WRITE/COPY FUNCTIONS.
 
-// Returns a pointer to a copy of the reaction.
+// Creates a copy of the reaction object.
 Reaction *Reaction::Clone(void) const
 {
     return new Reaction(*this);
+}
+
+// Writes the reaction to a binary data stream.
+void Reaction::Serialize(std::ostream &out) const
+{
+    if (out.good()) {
+        const unsigned int trueval  = 1;
+        const unsigned int falseval = 0;
+
+        // Write the serialisation version number to the stream.
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Write the length of the reaction name to the stream.
+        unsigned int n = m_name.length();
+        out.write((char*)&n, sizeof(n));
+
+        // Write the reaction name to the stream.
+        if (n > 0) {
+            out.write(m_name.c_str(), n);
+        }
+
+        // Write reaction reversibility.
+        if (m_reversible) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+        // Write integer reactant stoichiometry count.
+        n = m_reac.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write integer reactant stoichiometry.
+        for (unsigned int i=0; i<n; i++) {
+            // Write species index.
+            int ix = m_reac[i].Index();
+            out.write((char*)&ix, sizeof(ix));
+            
+            // Write mu.
+            int mu = m_reac[i].Mu();
+            out.write((char*)&mu, sizeof(mu));
+        }
+
+        // Write integer product stoichiometry count.
+        n = m_prod.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write integer product stoichiometry.
+        for (unsigned int i=0; i<n; i++) {
+            // Write species index.
+            int ix = m_prod[i].Index();
+            out.write((char*)&ix, sizeof(ix));
+            
+            // Write mu.
+            int mu = m_prod[i].Mu();
+            out.write((char*)&mu, sizeof(mu));
+        }
+
+        // Write real reactant stoichiometry count.
+        n = m_freac.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write real reactant stoichiometry.
+        for (unsigned int i=0; i<n; i++) {
+            // Write species index.
+            int ix = m_freac[i].Index();
+            out.write((char*)&ix, sizeof(ix));
+            
+            // Write mu.
+            double mu = m_freac[i].Mu();
+            out.write((char*)&mu, sizeof(mu));
+        }
+
+        // Write real product stoichiometry count.
+        n = m_fprod.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write real product stoichiometry.
+        for (unsigned int i=0; i<n; i++) {
+            // Write species index.
+            int ix = m_fprod[i].Index();
+            out.write((char*)&ix, sizeof(ix));
+            
+            // Write mu.
+            double mu = m_fprod[i].Mu();
+            out.write((char*)&mu, sizeof(mu));
+        }
+
+        // Write stoichiometry changes.
+        double mu = (double)m_dstoich;
+        out.write((char*)&mu, sizeof(mu));
+        mu = (double)m_dreac;
+        out.write((char*)&mu, sizeof(mu));
+        mu = (double)m_dprod;
+        out.write((char*)&mu, sizeof(mu));
+
+        // Write forward Arrhenius coefficients.
+        double A  = (double)m_arrf.A;
+        double nn = (double)m_arrf.n;
+        double E  = (double)m_arrf.E;
+        out.write((char*)&A, sizeof(A));
+        out.write((char*)&nn, sizeof(nn));
+        out.write((char*)&E, sizeof(E));
+
+        // Write reverse Arrhenius coefficients.
+        if (m_arrr != NULL) {
+            out.write((char*)&trueval, sizeof(trueval));
+            A = (double)m_arrr->A;
+            n = (double)m_arrr->n;
+            E = (double)m_arrr->E;
+            out.write((char*)&A, sizeof(A));
+            out.write((char*)&nn, sizeof(nn));
+            out.write((char*)&E, sizeof(E));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+        // Write forward LT parameters.
+        if (m_lt != NULL) {
+            out.write((char*)&trueval, sizeof(trueval));
+            A = (double)m_lt->B;
+            E = (double)m_lt->C;
+            out.write((char*)&A, sizeof(A));
+            out.write((char*)&E, sizeof(E));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+        // Write reverse LT parameters.
+        if (m_revlt != NULL) {
+            out.write((char*)&trueval, sizeof(trueval));
+            A = (double)m_revlt->B;
+            E = (double)m_revlt->C;
+            out.write((char*)&A, sizeof(A));
+            out.write((char*)&E, sizeof(E));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+        // Write third body flag.
+        if (m_usetb) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+        // Write third body count.
+        n = m_thirdbodies.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write third bodies.
+        for (unsigned int i=0; i<n; i++) {
+            // Write species index.
+            int ix = m_thirdbodies[i].Index();
+            out.write((char*)&ix, sizeof(ix));
+            
+            // Write mu.
+            double mu = m_thirdbodies[i].Mu();
+            out.write((char*)&mu, sizeof(mu));
+        }
+
+        // Write fall-off type.
+        n = (unsigned int)m_fotype;
+        out.write((char*)&n, sizeof(n));
+
+        // Write fall-off low pressure limit.
+        A  = (double)m_foparams.LowP_Limit.A;
+        nn = (double)m_foparams.LowP_Limit.n;
+        E  = (double)m_foparams.LowP_Limit.E;
+        out.write((char*)&A, sizeof(A));
+        out.write((char*)&nn, sizeof(nn));
+        out.write((char*)&E, sizeof(E));
+
+        // Write fall-off third body.
+        int ix = m_foparams.ThirdBody;
+        out.write((char*)&ix, sizeof(ix));
+
+        // Write fall-off parameter count.
+        n = FALLOFF_PARAMS::MAX_FALLOFF_PARAMS;
+        out.write((char*)&n, sizeof(n));
+
+        // Write fall-off parameters.
+        for (unsigned int i=0; i<n; i++) {
+            A = (double)m_foparams.Params[i];
+            out.write((char*)&A, sizeof(A));
+        }
+
+        // There is no way of outputting custom fall-off functions at the moment.
+        // This needs to corrected in the future.
+
+    } else {
+        throw invalid_argument("Output stream not ready (Sprog, Reaction::Serialize).");
+    }
+}
+
+// Reads the reaction data from a binary data stream.
+void Reaction::Deserialize(std::istream &in)
+{
+    // Clear the reaction of all current data.
+    releaseMemory();
+
+    if (in.good()) {
+        // Read the serialized species version number.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        unsigned int n = 0; // Need for reading name length.
+        char *name = NULL;
+        double A = 0.0, nn = 0.0, E = 0.0;
+        int itb = 0;
+
+        switch (version) {
+            case 0:
+                // Read the length of the reaction name.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                
+                // Read the reaction name.
+                if (n > 0) {
+                    name = new char[n];
+                    in.read(name, n);
+                    m_name.assign(name, n);
+                    delete [] name;
+                } else {
+                    m_name = "";
+                }
+
+                // Read reaction reversibility.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n==1) {
+                    m_reversible = true;
+                } else {
+                    m_reversible = false;
+                }
+
+                // Read integer reactant stoichiometry count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_reac.reserve(n);
+
+                // Read integer reactant stoichiometry.
+                for (unsigned int i=0; i<n; i++) {
+                    int ix = 0;
+                    int mu = 0;
+
+                    // Read species index.
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+                    
+                    // Read mu.
+                    in.read(reinterpret_cast<char*>(&mu), sizeof(mu));
+
+                    // Push a new Stoich object into the vector.
+                    m_reac.push_back(Stoich(ix, mu));
+                }
+
+                // Read integer product stoichiometry count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_prod.reserve(n);
+
+                // Read integer product stoichiometry.
+                for (unsigned int i=0; i<n; i++) {
+                    int ix = 0;
+                    int mu = 0;
+
+                    // Read species index.
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+                    
+                    // Read mu.
+                    in.read(reinterpret_cast<char*>(&mu), sizeof(mu));
+
+                    // Push a new Stoich object into the vector.
+                    m_prod.push_back(Stoich(ix, mu));
+                }
+
+                // Read real reactant stoichiometry count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_freac.reserve(n);
+
+                // Read real reactant stoichiometry.
+                for (unsigned int i=0; i<n; i++) {
+                    int ix = 0;
+                    double mu = 0;
+
+                    // Read species index.
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+                    
+                    // Read mu.
+                    in.read(reinterpret_cast<char*>(&mu), sizeof(mu));
+
+                    // Push a new Stoich object into the vector.
+                    m_freac.push_back(Stoichf(ix, (real)mu));
+                }
+
+                // Read real product stoichiometry count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_fprod.reserve(n);
+
+                // Read real product stoichiometry.
+                for (unsigned int i=0; i<n; i++) {
+                    int ix = 0;
+                    double mu = 0;
+
+                    // Read species index.
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+                    
+                    // Read mu.
+                    in.read(reinterpret_cast<char*>(&mu), sizeof(mu));
+
+                    // Push a new Stoich object into the vector.
+                    m_fprod.push_back(Stoichf(ix, (real)mu));
+                }
+
+                // Read stoichiometry changes.
+                in.read(reinterpret_cast<char*>(&A), sizeof(A));
+                m_dstoich = (real)A;
+                in.read(reinterpret_cast<char*>(&A), sizeof(A));
+                m_dreac = (real)A;
+                in.read(reinterpret_cast<char*>(&A), sizeof(A));
+                m_dprod = (real)A;
+
+                // Read forward Arrhenius coefficients.
+                in.read(reinterpret_cast<char*>(&A), sizeof(A));
+                in.read(reinterpret_cast<char*>(&nn), sizeof(nn));
+                in.read(reinterpret_cast<char*>(&E), sizeof(E));
+                m_arrf.A = (real)A;
+                m_arrf.n = (real)nn;
+                m_arrf.E = (real)E;
+
+                // Read reverse Arrhenius coefficients.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n == 1) {
+                    in.read(reinterpret_cast<char*>(&A), sizeof(A));
+                    in.read(reinterpret_cast<char*>(&nn), sizeof(nn));
+                    in.read(reinterpret_cast<char*>(&E), sizeof(E));
+                    m_arrr = new Kinetics::ARRHENIUS();
+                    m_arrr->A = (real)A;
+                    m_arrr->n = (real)nn;
+                    m_arrr->E = (real)E;
+                }
+
+                // Read forward LT parameters.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n == 1) {
+                    in.read(reinterpret_cast<char*>(&A), sizeof(A));
+                    in.read(reinterpret_cast<char*>(&E), sizeof(E));
+                    m_lt = new LTCOEFFS();
+                    m_lt->B = (real)A;
+                    m_lt->C = (real)E;
+                }
+
+                // Read reverse LT parameters.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n == 1) {
+                    in.read(reinterpret_cast<char*>(&A), sizeof(A));
+                    in.read(reinterpret_cast<char*>(&E), sizeof(E));
+                    m_revlt = new LTCOEFFS();
+                    m_revlt->B = (real)A;
+                    m_revlt->C = (real)E;
+                }
+
+                // Read third body flag.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n == 1) {
+                    m_usetb = true;
+                } else {
+                    m_usetb = false;
+                }
+
+                // Read third body count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_thirdbodies.reserve(n);
+
+                // Read third bodies.
+                for (unsigned int i=0; i<n; i++) {
+                    int ix = 0;
+                    double mu = 0.0;
+
+                    // Read species index.
+                   in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+                    
+                    // Read mu.
+                   in.read(reinterpret_cast<char*>(&mu), sizeof(mu));
+
+                   // Add third body to vector.
+                   m_thirdbodies.push_back(Stoichf(ix,mu));
+                }
+
+                // Read fall-off type.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_fotype = (FALLOFF_FORM)n;
+
+                // Read fall-off low pressure limit.
+                in.read(reinterpret_cast<char*>(&A), sizeof(A));
+                in.read(reinterpret_cast<char*>(&nn), sizeof(nn));
+                in.read(reinterpret_cast<char*>(&E), sizeof(E));
+                m_foparams.LowP_Limit.A = (real)A;
+                m_foparams.LowP_Limit.n = (real)nn;
+                m_foparams.LowP_Limit.E = (real)E;
+
+                // Read fall-off third body.
+                in.read(reinterpret_cast<char*>(&itb), sizeof(itb));
+                m_foparams.ThirdBody = itb;
+
+                // Read fall-off parameter count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read fall-off parameters.
+                for (unsigned int i=0; i<n; i++) {
+                    in.read(reinterpret_cast<char*>(&A), sizeof(A));
+                    m_foparams.Params[i] = (real)A;
+                }
+
+                break;
+            default:
+                throw runtime_error("Reaction serialized version number is "
+                                    "unsupported (Sprog, Reaction::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready (Sprog, Reaction::Deserialize).");
+    }
 }
 
 
@@ -805,8 +1272,23 @@ Reaction *Reaction::Clone(void) const
 void Reaction::releaseMemory(void)
 {
     m_name.clear();
+    m_reac.clear();
+    m_prod.clear();
+    m_freac.clear();
+    m_fprod.clear();
+    m_dstoich = m_dreac = m_dprod = 0.0;
+    m_arrf.A = m_arrf.n = m_arrf.E = 0.0;
     if (m_arrr != NULL) delete m_arrr;
+    m_arrr = NULL;
     if (m_lt != NULL) delete m_lt;
+    m_lt = NULL;
     if (m_revlt != NULL) delete m_revlt;
+    m_revlt = NULL;
+    m_usetb = false;
     m_thirdbodies.clear();
+    m_fotype = None;
+    m_foparams.LowP_Limit.A = m_foparams.LowP_Limit.n = m_foparams.LowP_Limit.E = 0.0;
+    m_foparams.ThirdBody = -1;
+    m_fofn = NULL;
+    m_mech = NULL;
 }

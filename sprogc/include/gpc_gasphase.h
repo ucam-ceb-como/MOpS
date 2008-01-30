@@ -24,7 +24,7 @@
 #include "gpc_params.h"
 #include "gpc_thermo.h"
 #include "gpc_mixture.h"
-#include <vector>
+#include "gpc_species.h"
 
 namespace Sprog
 {
@@ -34,10 +34,10 @@ class GasPhase : public ThermoInterface, public Mixture
 {
 public:
     // Constructors.
-    GasPhase(void); // Default constructor.
+    GasPhase(const SpeciesPtrVector &sp); // Default constructor.
 
     // Destructors.
-    ~GasPhase(void); // Default destructor.
+    virtual ~GasPhase(void); // Default destructor.
 
 
     // EQUATION OF STATE.
@@ -129,7 +129,12 @@ public:
     // Calculates the mean molar heat capacity at const. V.
     real BulkCv() const;
 
+
 protected:
+    // As in the Mixture class, the default constructor is protected to prevent
+    // mixtures being created with no knowledge of the defining species set.
+    GasPhase(void);
+
     /*
     // Flag to tell GasPhase class whether or not it should
     // store pre-calculated values or not.  This option may be

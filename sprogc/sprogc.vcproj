@@ -170,6 +170,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\gpc_mixture_factory.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\gpc_reaction.cpp"
 				>
 			</File>
@@ -229,6 +233,14 @@
 			</File>
 			<File
 				RelativePath=".\include\gpc_mixture.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\gpc_mixture_factory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\gpc_mixture_type.h"
 				>
 			</File>
 			<File

@@ -1,6 +1,7 @@
 #include "gpc_reaction_set.h"
 #include "gpc_reaction.h"
 #include "gpc_mech.h"
+#include "gpc_stoich.h"
 #include <math.h>
 
 using namespace Sprog;
@@ -12,13 +13,20 @@ using namespace std;
 // Default constructor.
 ReactionSet::ReactionSet()
 {
+    m_mech = NULL;
 }
 
 // Copy constructor.
-
 ReactionSet::ReactionSet(const Sprog::Kinetics::ReactionSet &rxn)
 {
+    m_mech = NULL;
     *this = rxn;
+}
+
+// Stream-reading constructor.
+ReactionSet::ReactionSet(std::istream &in)
+{
+    Deserialize(in);
 }
 
 // Destructor.
@@ -151,8 +159,15 @@ Reaction *const ReactionSet::operator[](unsigned int i)
     return m_rxns.at(i);
 }
 
+// Subscripting operator:  Provides a different way to access a particular
+// reaction by index in the list.
+const Reaction *const ReactionSet::operator[](unsigned int i) const
+{
+    return m_rxns.at(i);
+}
 
-// SET INFORMATION.
+
+// REACTIONS.
 
 // Returns the number of reactions in the set.
 unsigned int ReactionSet::Count(void) const
@@ -160,13 +175,20 @@ unsigned int ReactionSet::Count(void) const
     return m_rxns.size();
 }
 
-
-// REACTIONS.
-
 // Returns the vector of all reactions.
 const RxnPtrVector &ReactionSet::Reactions() const
 {
     return m_rxns;
+}
+
+// Returns a pointer to the ith reaction.  Returns NULL if i is invalid.
+const Reaction *const ReactionSet::Reactions(unsigned int i) const
+{
+    if (i < m_rxns.size()) {
+        return m_rxns[i];
+    } else {
+        return NULL;
+    }
 }
 
 // Adds a reaction to the set.
@@ -223,8 +245,8 @@ void ReactionSet::GetMolarProdRates(const fvector &rop,
                                     fvector &wdot) const 
 {
     int k;
-    const Mechanism::RxnStoichMap *mu;
-    Mechanism::RxnStoichMap::const_iterator i;
+    const RxnStoichMap *mu;
+    RxnStoichMap::const_iterator i;
 
     // Assign sufficient memory for output.
     wdot.resize(m_mech->Species().size());
@@ -519,9 +541,213 @@ const Sprog::Mechanism *const ReactionSet::Mechanism() const
 }
 
 // Sets the parent mechanism.
-void ReactionSet::SetMechanism(const Sprog::Mechanism *const mech)
+void ReactionSet::SetMechanism(Sprog::Mechanism &mech)
 {
-    m_mech = mech;
+    m_mech = &mech;
+
+    // Set mechanism on all reactions as well.
+    for (RxnPtrVector::iterator i=m_rxns.begin(); i!=m_rxns.end(); i++) {
+        (*i)->SetMechanism(mech);
+    }
+}
+
+
+// READ/WRITE/COPY FUNCTIONS.
+
+// Writes the reaction set to a binary data stream.
+void ReactionSet::Serialize(std::ostream &out) const
+{
+    if (out.good()) {
+        // Write the serialize version to the stream.
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+        
+        // Write the number of reactions to the stream.
+        unsigned int n = m_rxns.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write the Reaction objects to the stream.
+        for (RxnPtrVector::const_iterator i=m_rxns.begin(); i!=m_rxns.end(); i++) {
+            (*i)->Serialize(out);
+        }
+
+        // Write number of reactions with explicit reverse parameters.
+        n = m_rev_rxns.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write map of reactions with explicit reverse parameters.
+        for (RxnMap::const_iterator i=m_rev_rxns.begin(); i!=m_rev_rxns.end(); i++) {
+            // Write the reaction index in the main vector.  The pointer doesn't
+            // need to be written.
+            unsigned int ix = (*i).first;
+            out.write((char*)&ix, sizeof(ix));
+        }
+
+        // Write number of third body reactions.
+        n = m_tb_rxns.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write map of third body reactions.
+        for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); i++) {
+            // Write the reaction index in the main vector.  The pointer doesn't
+            // need to be written.
+            unsigned int ix = (*i).first;
+            out.write((char*)&ix, sizeof(ix));
+        }
+
+        // Write number of fall-off reactions.
+        n = m_fo_rxns.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write map of fall-off reactions.
+        for (RxnMap::const_iterator i=m_fo_rxns.begin(); i!=m_fo_rxns.end(); i++) {
+            // Write the reaction index in the main vector.  The pointer doesn't
+            // need to be written.
+            unsigned int ix = (*i).first;
+            out.write((char*)&ix, sizeof(ix));
+        }
+
+        // Write number of reactions with Landau Teller parameters.
+        n = m_lt_rxns.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write map of Landau Teller reactions.
+        for (RxnMap::const_iterator i=m_lt_rxns.begin(); i!=m_lt_rxns.end(); i++) {
+            // Write the reaction index in the main vector.  The pointer doesn't
+            // need to be written.
+            unsigned int ix = (*i).first;
+            out.write((char*)&ix, sizeof(ix));
+        }
+
+        // Write number of reactions with explicit reverse LT parameters.
+        n = m_revlt_rxns.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write map of reverse Landau Teller reactions.
+        for (RxnMap::const_iterator i=m_revlt_rxns.begin(); i!=m_revlt_rxns.end(); i++) {
+            // Write the reaction index in the main vector.  The pointer doesn't
+            // need to be written.
+            unsigned int ix = (*i).first;
+            out.write((char*)&ix, sizeof(ix));
+        }
+
+    } else {
+        throw invalid_argument("Output stream not ready (Sprog, ReactionSet::Serialize).");
+    }
+}
+
+// Reads the reaction set data from a binary data stream.
+void ReactionSet::Deserialize(std::istream &in)
+{
+    // Clear the current reaction et.  We do this before checking
+    // the stream condition to avoid confusion in the calling code.
+    // Even if the possible exception is handled incorrectly, the
+    // set will still be empty.
+    releaseMemory();
+
+    if (in.good()) {
+        // Read the serialized mechanism version.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        unsigned int n = 0;
+
+        switch (version) {
+            case 0:
+                // Read the number of reactions.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read the reactions.
+                try {
+                    for (unsigned int i=0; i<n; i++) {
+                        // Create a reaction object using the stream-reading
+                        // constructor.
+                        Kinetics::Reaction *rxn = NULL;
+                        rxn = new Kinetics::Reaction(in);
+                        rxn->SetMechanism(*m_mech);
+
+                        // Add the reaction to the vector.
+                        m_rxns.push_back(rxn);
+                    }
+                } catch (exception &e) {
+                    // Clear reaction set memory before throwing error to
+                    // higher level.
+                    releaseMemory();
+                    throw e;
+                }
+
+                // Read number of reactions with explicit reverse parameters.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read map of reactions with explicit reverse parameters.
+                for (unsigned int i=0; i<n; i++) {
+                    // Read reaction index from the stream.
+                    unsigned int ix = 0;
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+
+                    // Add the reaction to map.
+                    m_rev_rxns[ix] = m_rxns[ix];
+                }
+
+                // Write number of third body reactions.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Write map of third body reactions.
+                for (unsigned int i=0; i<n; i++) {
+                    // Read reaction index from the stream.
+                    unsigned int ix = 0;
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+
+                    // Add the reaction to map.
+                    m_tb_rxns[ix] = m_rxns[ix];
+                }
+
+                // Write number of fall-off reactions.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Write map of fall-off reactions.
+                for (unsigned int i=0; i<n; i++) {
+                    // Read reaction index from the stream.
+                    unsigned int ix = 0;
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+
+                    // Add the reaction to map.
+                    m_fo_rxns[ix] = m_rxns[ix];
+                }
+
+                // Write number of reactions with Landau Teller parameters.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Write map of Landau Teller reactions.
+                for (unsigned int i=0; i<n; i++) {
+                    // Read reaction index from the stream.
+                    unsigned int ix = 0;
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+
+                    // Add the reaction to map.
+                    m_lt_rxns[ix] = m_rxns[ix];
+                }
+
+                // Write number of reactions with explicit reverse LT parameters.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Write map of reverse Landau Teller reactions.
+                for (unsigned int i=0; i<n; i++) {
+                    // Read reaction index from the stream.
+                    unsigned int ix = 0;
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+
+                    // Add the reaction to map.
+                    m_revlt_rxns[ix] = m_rxns[ix];
+                }
+
+                break;
+            default:
+                throw runtime_error("Serialized version number is unsupported (Sprog, ReactionSet::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready (Sprog, ReactionSet::Deserialize).");
+    }
 }
 
 

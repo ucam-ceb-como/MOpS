@@ -34,8 +34,7 @@ real ThermoInterface::CalcBulkU(Sprog::real T,
                                 const Sprog::real *const x, 
                                 unsigned int n) const
 {
-    fvector U;
-    return CalcBulkU(T, x, n, U);
+    return CalcBulkU(T, x, n, m_tmpvec);
 }
 
 
@@ -57,8 +56,7 @@ real ThermoInterface::CalcBulkH(Sprog::real T,
                                 const Sprog::real *const x, 
                                 unsigned int n) const
 {
-    fvector H;
-    return CalcBulkH(T, x, n, H);
+    return CalcBulkH(T, x, n, m_tmpvec);
 }
 
 
@@ -80,8 +78,7 @@ real ThermoInterface::CalcBulkS(Sprog::real T,
                                 const Sprog::real *const x, 
                                 unsigned int n) const
 {
-    fvector S;
-    return CalcBulkS(T, x, n, S);
+    return CalcBulkS(T, x, n, m_tmpvec);
 }
 
 
@@ -103,8 +100,7 @@ real ThermoInterface::CalcBulkG(Sprog::real T,
                                 const Sprog::real *const x, 
                                 unsigned int n) const
 {
-    fvector G;
-    return CalcBulkG(T, x, n, G);
+    return CalcBulkG(T, x, n, m_tmpvec);
 }
 
 
@@ -126,8 +122,7 @@ real ThermoInterface::CalcBulkCp(Sprog::real T,
                                  const Sprog::real *const x, 
                                  unsigned int n) const
 {
-    fvector Cp;
-    return CalcBulkCp(T, x, n, Cp);
+    return CalcBulkCp(T, x, n, m_tmpvec);
 }
 
 
@@ -149,6 +144,5 @@ real ThermoInterface::CalcBulkCv(Sprog::real T,
                                  const Sprog::real *const x, 
                                  unsigned int n) const
 {
-    fvector Cv;
-    return CalcBulkCv(T, x, n, Cv);
+    return CalcBulkCv(T, x, n, m_tmpvec);
 }

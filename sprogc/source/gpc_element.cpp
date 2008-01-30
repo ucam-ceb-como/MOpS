@@ -1,6 +1,8 @@
 #include "gpc_element.h"
 #include "gpc_mech.h"
 #include <stdexcept>
+#include <iostream>
+#include <string>
 
 using namespace Sprog;
 using namespace std;
@@ -10,31 +12,35 @@ using namespace std;
 // Default constructor.
 Element::Element(void)
 {
-    m_name = "";
+    m_name  = "";
     m_molwt = 0.0;
-    m_mech = NULL;
+    m_mech  = NULL;
 }
 
 // Copy constructor.
 Element::Element(const Element &e)
 {
-    m_name = e.m_name;
-    m_molwt = e.m_molwt;
-    m_mech = e.m_mech;
+    *this = e;
+}
+
+// Stream-reading constructor.
+Element::Element(std::istream &in)
+{
+    Deserialize(in);
 }
 
 // Initialising constructor.
 Element::Element(const std::string &name, const Sprog::real molwt)
 {
-    m_name = name;
+    m_name  = name;
     m_molwt = molwt;
-    m_mech = NULL;
+    m_mech  = NULL;
 }
 
 // Destructor.
 Element::~Element(void)
 {
-    m_name.clear();
+    // There is nothing special to destruct here.
 }
 
 
@@ -44,9 +50,9 @@ Element::~Element(void)
 Element &Element::operator=(const Sprog::Element &el)
 {
     if (this != &el) {
-        m_name = el.m_name;
+        m_name  = el.m_name;
         m_molwt = el.m_molwt;
-        m_mech = el.m_mech;
+        m_mech  = el.m_mech;
     }
     return *this;
 }
@@ -74,7 +80,7 @@ bool Element::operator!=(const Sprog::Element &el) const
 
 // Inequality operator:  Compares an element to a string (name).  Returns
 // false of the element name matches the string.
-bool Element::operator !=(const std::string &name) const
+bool Element::operator!=(const std::string &name) const
 {
     return !(*this==name);
 }
@@ -82,7 +88,9 @@ bool Element::operator !=(const std::string &name) const
 
 // NAME.
 
-// Sets the element name.
+// Sets the element name.  Also checks the parent mechanism
+// to see if an element with that name already exists.  If one does
+// then this function throws an exception.
 void Element::SetName(const std::string &name) 
 {
     // If the element is part of a mechanism then we must check
@@ -92,11 +100,13 @@ void Element::SetName(const std::string &name)
         if (m_mech->FindElement(name) >= 0) {
             // Oh dear:  mechanism already contains an element with
             // this name.
-            throw invalid_argument("Cannot have two elements with the same name (Element::SetName).");
+            throw invalid_argument("Cannot have two elements with the "
+                                   "same name (Sprog, Element::SetName).");
         }
     }
 
-    // Element is not in a mech or name is not defined in mech.  Can set name here.
+    // Element is not in a mechanism or name is not defined 
+    // in mechanism.  Can set name here in either case.
     m_name = name;
 }
 
@@ -117,11 +127,13 @@ void Element::SetMolWt(const real molwt)
     } else {
         // Attempting to set zero or negative mol. wt.  This 
         // is unphysical.
-        throw out_of_range("Molecular weight must be positive and non-zero! (Element::SetMolWt)");
+        throw out_of_range("Molecular weight must be positive "
+                           "and non-zero! (Sprog, Element::SetMolWt).");
     }
 }
 
-// Sets the element molecular weight by search the list of known elements.
+// Sets the element molecular weight by search the
+// list of known elements.
 bool Element::SetMolWtFromLibrary()
 {
     int i;
@@ -140,25 +152,89 @@ bool Element::SetMolWtFromLibrary()
 
 // PARENT MECHANISM.
 
-// Returns a pointer to the parent mechanism.
-Sprog::Mechanism *const Element::Mechanism()
+const Sprog::Mechanism *const Element::Mechanism() const 
 {
     return m_mech;
 }
 
 // Sets the parent mechanism.
-void Element::SetMechanism(Sprog::Mechanism *const mech)
+void Element::SetMechanism(Sprog::Mechanism &mech)
 {
-    m_mech = mech;
+    m_mech = &mech;
 }
 
 
-// CLONING.
+// READ/WRITE FUNCTIONS.
 
-// Returns a pointer to a copy of the Element object.
-Element *const Element::Clone(void) const
+Element *const Element::Clone(void) const 
 {
     return new Element(*this);
 }
 
+// Writes the element to a binary data stream.
+void Element::Serialize(std::ostream &out) const
+{
+    if (out.good()) {
+        // Write the serialisation version number to the stream.
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
 
+        // Write the length of the element name to the stream.
+        unsigned int n = m_name.length();
+        out.write((char*)&n, sizeof(n));
+
+        // Write the element name to the stream.
+        out.write(m_name.c_str(), n);
+
+        // Write the molecular weight to the stream.
+        double wt = (double)m_molwt;
+        out.write((char*)&wt, sizeof(wt));
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sprog, Element::Serialize).");
+    }
+}
+
+// Reads the element data from a binary data stream.
+void Element::Deserialize(std::istream &in)
+{
+    // Clear the element of its current data.
+    m_name  = "";
+    m_molwt = 0.0;
+    m_mech  = NULL;
+
+    if (in.good()) {
+        // Read the serialized element version number.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        unsigned int n = 0; // Need for reading name length.
+        char *name = NULL;
+        double wt = 0.0;
+
+        switch (version) {
+            case 0:
+                // Read the length of the element name.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                
+                // Read the element name.
+                name = new char[n];
+                in.read(name, n);
+                m_name.assign(name, n);
+                delete [] name;
+
+                // Read the element mol. wt.
+                in.read(reinterpret_cast<char*>(&wt), sizeof(wt));
+                m_molwt = (real)wt;
+
+                break;
+            default:
+                throw runtime_error("Element serialized version "
+                                    "number is unsupported "
+                                    "(Sprog, Element::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sprog, Element::Deserialize).");
+    }
+}

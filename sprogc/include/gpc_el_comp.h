@@ -10,7 +10,6 @@
 #ifndef GPC_EL_COMP_H
 #define GPC_EL_COMP_H
 
-#include "gpc_element.h"
 #include <vector>
 
 namespace Sprog
@@ -19,12 +18,15 @@ class ElComp
 {
 public:
     // Constructors.
-    ElComp(void); // Default constructor.
+    ElComp(void);             // Default constructor.
     ElComp(const ElComp &el); // Copy constructor.
-    ElComp(unsigned int i, unsigned int n); // Initialising constructor.
+    ElComp(                   // Initialising constructor.
+        unsigned int i, 
+        unsigned int n
+        ); 
 
     // Destructor.
-    virtual ~ElComp(void);
+    ~ElComp(void);
 
     // Operators.
     ElComp &operator=(const ElComp &el);
@@ -35,21 +37,38 @@ public:
     bool operator==(const ElComp &el) const;
     bool operator!=(const ElComp &el) const;
 
-    // Related element object.
-    int Index(void) const; // Returns a pointer to the related element.
-    void SetIndex(unsigned int el); // Sets the related element object.
 
-    // Number of the element in this composition.
-    unsigned int Count(void) const; // Returns number of the element in this composition.
-    void SetCount(unsigned int n);  // Sets the element count in this composition.
+    // ELEMENT INDEX.
+    
+    // Returns the element index.  A negative number indicates an
+    // invalid index, which probably means that the ElComp has
+    // not been initialise properly.
+    int Index(void) const;
+
+    // Sets the related element index.  Note only positive values may
+    // be set, even though the Index() function can return negative
+    // values.  This ensures that invalid indices cannot be set.
+    void SetIndex(unsigned int el);
+
+
+    // ELEMENT COUNT.
+    
+    // Returns number of the element in this composition.
+    unsigned int Count(void) const;
+    
+    // Sets the element count in this composition.
+    void SetCount(unsigned int n);
+
 private:
-    // Data.
+    // Composition data.
     int m_index;          // Index of element.
     unsigned int m_count; // Element count in this composition.
 };
 
 // A typedef for a STL vector of ElComp objects.
 typedef std::vector<ElComp> ElCompVector;
+
+// A typedef for a STL vector of pointers to ElComp objects.
 typedef std::vector<ElComp*> ElCompPtrVector;
 };
 

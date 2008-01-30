@@ -16,6 +16,7 @@
 #include "gpc_rate_params.h"
 #include <vector>
 #include <string>
+#include <iostream>
 
 namespace Sprog
 {
@@ -27,124 +28,257 @@ class Reaction
 {
 public:
     // Constructors.
-    Reaction(void); // Default constructor.
+    Reaction(void);                // Default constructor.
     Reaction(const Reaction &rxn); // Copy constructor.
+    Reaction(std::istream &in);    // Stream-reading constructor.
 
     // Destructor.
-    virtual ~Reaction(void);
+    ~Reaction(void);
 
     // Operator overloads.
     Reaction &operator=(const Reaction &rxn);
 
-    // Reaction name.
-    const std::string &Name(void) const; // Returns the reaction name.
-    void SetName(const std::string &name); // Sets the reaction name.
+    // REACTION NAME.
 
-    // Reaction reversibility.
-    bool IsReversible(void) const;        // Returns true if the reaction is reversible.
-    void SetReversible(const bool isrev); // Sets the reaction to be reversible or not.
+    // Returns the reaction name.
+    const std::string &Name(void) const;
 
-    // Reactants.
-    const std::vector<Stoich> &Reactants(void) const;   // Returns the vector of integer stoichiometric
-                                                        // reactant coefficients.
-    const std::vector<Stoichf> &FReactants(void) const; // Returns the vector of real stoichiometric 
-                                                        // reactant coefficients.
-    void AddReactant(const Stoich &reac);  // Adds an integer reactant to the reaction.  
-    void AddReactant(const Stoichf &reac); // Adds a real reactant to the reaction.
-    void AddReactant(const std::string &name, unsigned int stoich); // Adds an integer reactant given
-                                                                    // the species name.
-    void AddReactant(const std::string &name, real stoich); // Adds a real reactant given the species name.
-    void RemoveReactant(const std::string &name); // Removes a reactant, given by name, from 
-                                                  // the reaction (integer or real).
-    const Stoich Reactant(unsigned int k) const;   // Returns the stoichiometry of the kth integer reactant.
-    const Stoichf FReactant(unsigned int k) const; // Returns the stoichiometry of the kth real reactant.
-    int ReactantCount() const;  // Returns the number of integer reactants.
-    int FReactantCount() const; // Returns the number of real reactants.
+    // Sets the reaction name.
+    void SetName(const std::string &name);
 
-    // Products.
-    const std::vector<Stoich> &Products(void) const; // Returns the vector of integer stoichiometric 
-                                                     // product coefficients.
-    const std::vector<Stoichf> &FProducts(void) const; // Returns the vector of real stoichiometric 
-                                                       // product coefficients.
-    void AddProduct(const Stoich &prod);  // Adds an integer product to the reaction.   
-    void AddProduct(const Stoichf &prod); // Adds a real product to the reaction.
-    void AddProduct(const std::string &name, unsigned int stoich); // Adds an integer product given
-                                                                   // the species name.
-    void AddProduct(const std::string &name, real stoich); // Adds a real product given the species name.
-    void RemoveProduct(const std::string &name); // Removes a product, given by name, from the 
-                                                 // reaction (integer or real).
-    const Stoich Product(unsigned int k) const;    // Returns the stoichiometry of the kth integer product.
-    const Stoichf FProduct(unsigned int k) const;  // Returns the stoichiometry of the kth real product.
-    int ProductCount() const;   // Returns the number of integer products.
-    int FProductCount() const;  // Returns the number of real product.
 
-    real TotalStoich() const; // Returns the total stoichiometry of the reaction.
-    real ReactantStoich() const; // Returns the reactant stoichiometry of the reaction.
-    real ProductStoich() const;  // Returns the product stoichiometry of the reaction.
+    // REVERSIBILITY.
 
-    // Forward Arrhenius coefficients.
-    const ARRHENIUS &Arrhenius(void) const;  // Returns the forward Arrhenius rate parameters.
-    void SetArrhenius(const ARRHENIUS &arr); // Sets the forward Arrhenius rate parameters.
+    // Returns true if the reaction is reversible.
+    bool IsReversible(void) const;
 
-    // Reverse Arrhenius coefficients.
-    const ARRHENIUS *const RevArrhenius(void) const; // Returns a pointer to the reverse Arrhenius parameters.
-    void SetRevArrhenius(const ARRHENIUS &arr);      // Sets the reverse Arrhenius parameters.
+    // Sets the reaction to be reversible or not.
+    void SetReversible(const bool isrev);
 
-    // Forward Landau Teller parameters.
-    const LTCOEFFS *const LTCoeffs(void) const; // Returns a pointer to the forward Landau Teller coefficients.   
-    void SetLTCoeffs(const LTCOEFFS &lt);       // Sets the forward Landau Teller coefficients.
 
-    // Reverse Landau Teller parameters.
-    const LTCOEFFS *const RevLTCoeffs(void) const; // Returns a pointer to the reverse Landau Teller coefficients.   
-    void SetRevLTCoeffs(const LTCOEFFS &lt);       // Sets the reverse Landau Teller coefficients.
+    // REACTANTS.
 
-    // Third bodies.
-    bool UseThirdBody() const;        // Returns true if this reaction uses third bodies.
-    void SetUseThirdBody(bool usetb); // Sets whether or not this reaction uses third bodies.
-    const std::vector<Stoichf> &ThirdBodies(void) const;    // Returns the vector of third-body coefficients.
-    Stoichf ThirdBody(unsigned int i) const;                // Returns the coefficient for the ith third body.
-    int ThirdBodyCount() const; // Returns the number of third body coefficients defined for this reaction.
-    void AddThirdBody(const Stoichf &tb);                   // Adds a third body to the reaction.
-    void AddThirdBody(unsigned int sp, real coeff);         // Adds a third body to the reaction.
-    void AddThirdBody(const std::string &name, real coeff); // Adds a third body given the species name.
-    void RemoveThirdBody(const std::string &name);          // Removes a third body, given by name, from 
-                                                            // the reaction.
+    // Returns the vector of integer stoichiometric reactant coefficients.
+    const std::vector<Stoich> &Reactants(void) const; 
 
-    // Low pressure limit.
-    const ARRHENIUS &LowPressureLimit(void) const;   // Returns the low pressure limit Arrhenius coefficients.   
-    void SetLowPressureLimit(const ARRHENIUS &lowp); // Sets the low pressure limit Arrhenius coefficients.
+    // Returns the vector of real stoichiometric reactant coefficients.
+    const std::vector<Stoichf> &FReactants(void) const;
 
-    // Fall-off third body.
-    const Sprog::Species *const FallOffThirdBody(void) const; //   Returns a pointer to the species used as a 
-                                                              // third body for fall-off calculations.
-    void SetFallOffThirdBody(int sp);                   //   Sets the species used as a third body for 
-                                                        // fall-off calculations.
-    void SetFallOffThirdBody(const std::string &name);  //   Sets the species used as a third body for 
-                                                        // fall-off calculations given the species name.
+    // Adds an integer reactant to the reaction.
+    void AddReactant(const Stoich &reac);
 
-    // Fall-off parameters.
-    FALLOFF_FORM FallOffType() const;                // Returns the fall-off type.
-    const FALLOFF_PARAMS &FallOffParams(void) const; // Returns the fall-off parameter type.
-    void SetFallOffParams(const FALLOFF_FORM form,   // Sets the fall-off type and parameters.
-                          const real params[FALLOFF_PARAMS::MAX_FALLOFF_PARAMS]);
+    // Adds a real reactant to the reaction.
+    void AddReactant(const Stoichf &reac);
 
-    // Fall-off functions.
-    real FTROE3(real T, real logpr) const; // 3-parameter Troe form.
-    real FTROE4(real T, real logpr) const; // 4-parameter Troe form.
-    real FSRI(real T, real logpr) const;   // SRI form.
-    FallOffFnPtr FallOffFn() const;        // Custom function.
+    // Adds an integer reactant given the species name.
+    void AddReactant(const std::string &name, unsigned int stoich);
 
+    // Adds a real reactant given the species name.
+    void AddReactant(const std::string &name, real stoich);
+
+    // Removes a reactant, given by name, from the reaction (integer or real).
+    void RemoveReactant(const std::string &name);
+
+    // Returns the stoichiometry of the kth integer reactant.
+    const Stoich Reactant(unsigned int k) const;
+
+    // Returns the stoichiometry of the kth real reactant.
+    const Stoichf FReactant(unsigned int k) const;
+
+    // Returns the number of integer reactants.
+    int ReactantCount() const;
+
+    // Returns the number of real reactants.
+    int FReactantCount() const;
+
+
+    // PRODUCTS.
+
+    // Returns the vector of integer stoichiometric product coefficients.
+    const std::vector<Stoich> &Products(void) const;
+
+    // Returns the vector of real stoichiometric product coefficients.
+    const std::vector<Stoichf> &FProducts(void) const;
+
+    // Adds an integer product to the reaction.
+    void AddProduct(const Stoich &prod);
+
+    // Adds a real product to the reaction.
+    void AddProduct(const Stoichf &prod);
+
+    // Adds an integer product given the species name.
+    void AddProduct(const std::string &name, unsigned int stoich);
+
+    // Adds a real product given the species name.
+    void AddProduct(const std::string &name, real stoich);
+
+    // Removes a product, given by name, from the reaction (integer or real).
+    void RemoveProduct(const std::string &name);
+
+    // Returns the stoichiometry of the kth integer product.
+    const Stoich Product(unsigned int k) const;
+
+    // Returns the stoichiometry of the kth real product.
+    const Stoichf FProduct(unsigned int k) const;
+
+    // Returns the number of integer products.
+    int ProductCount() const;
+
+    // Returns the number of real product.
+    int FProductCount() const;
+
+
+    // STOICHIOMETRY.
+
+    // Returns the total stoichiometry of the reaction.
+    real TotalStoich() const;
+
+    // Returns the reactant stoichiometry of the reaction.
+    real ReactantStoich() const;
+
+    // Returns the product stoichiometry of the reaction.
+    real ProductStoich() const;
+
+    // FORWARD ARRHENIUS COEFFICIENTS.
+
+    // Returns the forward Arrhenius rate parameters.
+    const ARRHENIUS &Arrhenius(void) const;
+
+    // Sets the forward Arrhenius rate parameters.
+    void SetArrhenius(const ARRHENIUS &arr);
+
+
+    // REVERSE ARRHENIUS COEFFICIENTS.
+
+    // Returns a pointer to the reverse Arrhenius parameters.
+    const ARRHENIUS *const RevArrhenius(void) const;
+
+    // Sets the reverse Arrhenius parameters.
+    void SetRevArrhenius(const ARRHENIUS &arr);
+
+
+    // FORWARD LANDAU-TELLER PARAMETERS.
+
+    // Returns a pointer to the forward Landau Teller coefficients.
+    const LTCOEFFS *const LTCoeffs(void) const;
+
+    // Sets the forward Landau Teller coefficients.
+    void SetLTCoeffs(const LTCOEFFS &lt);
+
+
+    // REVERSE LANDAU-TELLER PARAMETERS.
+
+    // Returns a pointer to the reverse Landau Teller coefficients.   
+    const LTCOEFFS *const RevLTCoeffs(void) const;
+
+    // Sets the reverse Landau Teller coefficients.
+    void SetRevLTCoeffs(const LTCOEFFS &lt);
+
+
+    // THIRD BODIES.
+
+    // Returns true if this reaction uses third bodies.
+    bool UseThirdBody() const;
+
+    // Sets whether or not this reaction uses third bodies.
+    void SetUseThirdBody(bool usetb);
+
+    // Returns the vector of third-body coefficients.
+    const std::vector<Stoichf> &ThirdBodies(void) const;
+
+    // Returns the coefficient for the ith third body.
+    Stoichf ThirdBody(unsigned int i) const;
+
+    // Returns the number of third body coefficients 
+    // defined for this reaction.
+    int ThirdBodyCount() const;
+
+    // Adds a third body to the reaction.
+    void AddThirdBody(const Stoichf &tb);
+
+    // Adds a third body to the reaction.
+    void AddThirdBody(unsigned int sp, real coeff);
+
+    // Adds a third body given the species name.
+    void AddThirdBody(const std::string &name, real coeff);
+
+    // Removes a third body, given by name, from the reaction.
+    void RemoveThirdBody(const std::string &name);
+
+
+    // LOW-PRESSURE LIMIT.
+
+    // Returns the low pressure limit Arrhenius coefficients.
+    const ARRHENIUS &LowPressureLimit(void) const;
+
+    // Sets the low pressure limit Arrhenius coefficients.
+    void SetLowPressureLimit(const ARRHENIUS &lowp);
+
+    
+    // FALL-OFF THIRD BODY.
+
+    // Returns a pointer to the species used as a third 
+    // body for fall-off calculations.
+    const Sprog::Species *const FallOffThirdBody(void) const;
+
+    // Sets the species used as a third body for fall-off calculations.
+    void SetFallOffThirdBody(int sp);              
+
+    // Sets the species used as a third body for fall-off calculations 
+    // given the species name.
+    void SetFallOffThirdBody(const std::string &name);
+
+
+    // FALL-OFF PARAMETERS.
+    
+    // Returns the fall-off type.
+    FALLOFF_FORM FallOffType() const;
+
+    // Returns the fall-off parameter type.
+    const FALLOFF_PARAMS &FallOffParams(void) const;
+
+    // Sets the fall-off type and parameters.
+    void SetFallOffParams(
+        const FALLOFF_FORM form,
+        const real params[FALLOFF_PARAMS::MAX_FALLOFF_PARAMS]
+        );
+
+
+    // FALL-OFF FUNCTIONS.
+
+    real FTROE3(real T, real logpr) const; // 3-parameter Troe fall-off form.
+    real FTROE4(real T, real logpr) const; // 4-parameter Troe fall-off form.
+    real FSRI(real T, real logpr) const;   // SRI fall-off form.
+    FallOffFnPtr FallOffFn() const;        // Custom fall-off function.
+
+
+    /* Removed as species can be defined by parent mechanism.
     // Species vector.
     const SpeciesPtrVector *const Species(void) const; // Returns pointer to the vector of species used to 
                                                        // define reaction.
     void SetSpecies(const SpeciesPtrVector *const sp); // Sets the species vector.
+    */
 
-    // Parent mechanism.
-    Sprog::Mechanism *const Mechanism(void) const;   // Returns a pointer to the parent mechanism.
-    void SetMechanism(Sprog::Mechanism *const mech); // Sets the parent mechanism.
 
-    // Cloning.
-    virtual Reaction *Clone(void) const; // Returns a pointer to a clone of the reaction.
+    // PARENT MECHANISM.
+
+    // Returns a pointer to the parent mechanism.
+    const Sprog::Mechanism *const Mechanism(void) const;
+
+    // Sets the parent mechanism.
+    void SetMechanism(Sprog::Mechanism &mech);
+
+
+    // READ/WRITE/COPY FUNCTIONS.
+
+    // Creates a copy of the species object.
+    Reaction *Clone(void) const;
+
+    // Writes the reaction to a binary data stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the reaction data from a binary data stream.
+    void Deserialize(std::istream &in);
 
 protected:
     // Reaction data.
@@ -166,11 +300,12 @@ protected:
     FallOffFnPtr m_fofn;       // Custom fall-off function, if required.
 
     // Useful data to put reaction in context.
-    const SpeciesPtrVector *m_species; // Vector of species used to define the reaction.
-    Sprog::Mechanism *m_mech;          // Parent mechanism.
+    Sprog::Mechanism *m_mech; // Parent mechanism.
 
-    // Memory management.
-    virtual void releaseMemory(void); // Releases all memory used by the reaction object.
+    // MEMORY MANAGEMENT.
+
+    // Releases all memory used by the reaction object.
+    void releaseMemory(void);
 };
 
 // Inline function definitions.
@@ -178,6 +313,7 @@ protected:
 
 // A typedef for a STL vector of reactions.
 typedef std::vector<Reaction> RxnVector;
+
 // A typedef fo a STL vector of pointers to reactions.
 typedef std::vector<Reaction*> RxnPtrVector;
 };

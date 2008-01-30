@@ -17,6 +17,7 @@
 #include "gpc_species.h"
 #include "gpc_reaction_set.h"
 #include "gpc_unit_systems.h"
+#include "gpc_stoich.h"
 #include <vector>
 #include <string>
 #include <map>
@@ -26,22 +27,13 @@ namespace Sprog
 class Mechanism
 {
 public:
-    // Typedefs and structure for species/reaction stoichiometry cross-referencing.
-    typedef std::map<unsigned int, real> RxnStoichMap;
-    typedef std::pair<unsigned int, real> RxnStoichPair;
-    struct StoichXRef
-    {
-        unsigned int Species;
-        RxnStoichMap RxnStoich;
-    };
-    typedef std::vector<StoichXRef> StoichXRefVector;
-
     // Constructors.
-    Mechanism(void); // Default constructor.
+    Mechanism(void);                  // Default constructor.
     Mechanism(const Mechanism &mech); // Copy constructor.
+    Mechanism(std::istream &in);      // Stream-reading constructor.
 
     // Destructors.
-    virtual ~Mechanism(void);
+    ~Mechanism(void);
 
     // Operator overloads.
     Mechanism &operator=(const Mechanism &mech);
@@ -49,42 +41,117 @@ public:
     // Empties the mechanism of all elements, species and reactions.
     void Clear();
 
-    // Units.
-    UnitSystem Units(void) const; // Returns the current unit system.
-    void SetUnits(UnitSystem u);  // Converts the mechanism to a new units system.
 
-    // Chemical elements.
-    const ElementPtrVector &Elements(void) const; // Returns the vector of elements.
-    Element *const AddElement(void);              // Adds a default element to the mechanism.
-    Element *const AddElement(const Element &el); // Copies the given element into the mechanism.
-    int FindElement(const std::string &name);  // Returns index of element.  Returns -1 if not found.
-    int FindElement(const Element &el);        // Returns index of element.  Returns -1 if not found.
+    // UNITS.
 
-    // Element updates.
-    void CheckElementChanges(const Element &el); // Updates mechanism with changes applied to an element.
+    // Returns the current unit system.
+    UnitSystem Units(void) const;
+    
+    // Converts the mechanism to a new units system.
+    void SetUnits(UnitSystem u);
 
-    // Species.
-    const SpeciesPtrVector &Species(void) const; // Returns the vector of species.
-    Sprog::Species *const AddSpecies(void);      // Adds an empty species to the mechanism.
-    Sprog::Species *const AddSpecies(const Sprog::Species &sp); // Copies given species into the mechanism.
-    int FindSpecies(const Sprog::Species &sp) const; // Returns index of species.  Returns -1 if not found.
-    int FindSpecies(const std::string &name) const;  // Returns index of species.  Returns -1 if not found.
-    Sprog::Species *const GetSpecies(const unsigned int i) const; // Returns pointer to species at index i.  NULL if not found.
-    Sprog::Species *const GetSpecies(const std::string &name) const;  // Returns pointer to species with given name.  NULL if not found.
 
-    // Reactions.
-    const Kinetics::ReactionSet &Reactions(void) const; // Returns the reaction set.
-    Kinetics::Reaction *const AddReaction(void);        // Adds an empty reaction to the mechanism.
-    Kinetics::Reaction *const AddReaction(const Kinetics::Reaction *const rxn); // Copies a reaction into the mechanism.
+    // CHEMICAL ELEMENTS.
 
-    // Species-reactions stoichiometry cross reference.
-    void BuildStoichXRef();   // Builds the species-reaction stoichiometry cross-reference table.
-    bool IsStoichXRefValid(); // Returns true if the stoich xref map is valid, otherwise false.
-    const RxnStoichMap &GetStoichXRef( // Returns the stoichiometry for all reactions which
-                                       // involve the species with the given index.  Throws error
-                                       // if index is invalid.
-        unsigned int isp // Index of species for which to return cross reference.
-        ) const;
+    // Returns the number of elements in the mechanism.
+    unsigned int ElementCount(void) const;
+
+    // Returns the vector of elements.
+    const ElementPtrVector &Elements(void) const;
+
+    // Returns a pointer to the ith element.  NULL if i invalid.
+    const Sprog::Element *const Elements(unsigned int i) const;
+
+    // Adds a default element to the mechanism.
+    Sprog::Element *const AddElement(void);
+
+    // Copies the given element into the mechanism.
+    Sprog::Element *const AddElement(const Sprog::Element &el);
+
+    // Returns index of element.  Returns -1 if not found.
+    int FindElement(const std::string &name) const;
+
+    // Returns index of element.  Returns -1 if not found.
+    int FindElement(const Sprog::Element &el) const;
+
+    // Updates mechanism with changes applied to an element.
+    void CheckElementChanges(const Sprog::Element &el);
+
+
+    // SPECIES.
+
+    // Returns the number of species in the mechanism.
+    unsigned int SpeciesCount(void) const;
+
+    // Returns the vector of species.
+    const SpeciesPtrVector &Species(void) const;
+
+    // Returns a pointer to the ith species.  Returns NULL if i is invalid.
+    const Sprog::Species *const Species(unsigned int i) const;
+
+    // Returns pointer to species with given name.  NULL if not found.
+    const Sprog::Species *const Species(const std::string &name) const;
+
+    // Adds an empty species to the mechanism.
+    Sprog::Species *const AddSpecies(void);
+
+    // Copies given species into the mechanism.
+    Sprog::Species *const AddSpecies(const Sprog::Species &sp);
+
+    // Returns index of species.  Returns -1 if not found.
+    int FindSpecies(const Sprog::Species &sp) const;
+    
+    // Returns index of species.  Returns -1 if not found.
+    int FindSpecies(const std::string &name) const;
+
+    // Returns pointer to species at index i.  NULL if not found.  This
+    // function returns a modifiable (non-const) species object.
+    Sprog::Species *const GetSpecies(const unsigned int i) const;
+
+    // Returns pointer to species with given name.  NULL if not found.  This
+    // function returns a modifiable (non-const) species object.
+    Sprog::Species *const GetSpecies(const std::string &name) const;
+
+
+    // REACTIONS.
+
+    // Returns the number of reactions in the mechanism.
+    unsigned int ReactionCount(void) const;
+
+    // Returns the reaction set.
+    const Kinetics::ReactionSet &Reactions(void) const;
+
+    // Returns a pointer to the ith reaction. Returns NULL if i is invalid.
+    const Kinetics::Reaction *const Reactions(unsigned int i) const;
+
+    // Adds an empty reaction to the mechanism.
+    Kinetics::Reaction *const AddReaction(void);
+
+    // Copies a reaction into the mechanism.
+    Kinetics::Reaction *const AddReaction(const Kinetics::Reaction *const rxn);
+
+
+    // SPECIES-REACTIONS STOICHIOMETRY CROSS-REFERENCE.
+
+    // Builds the species-reaction stoichiometry cross-reference table.
+    void BuildStoichXRef();
+
+    // Returns true if the stoich xref map is valid, otherwise false.
+    bool IsStoichXRefValid();
+
+    // Returns the stoichiometry for all reactions which
+    // involve the species with the given index.  Throws error
+    // if index is invalid.
+    const RxnStoichMap &GetStoichXRef(unsigned int isp) const;
+
+
+    // READ/WRITE/COPY FUNCTIONS.
+
+    // Writes the mechanism to a binary data stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the mechanism data from a binary data stream.
+    void Deserialize(std::istream &in);
 
 protected:
     // Mechanism data.
@@ -95,13 +162,20 @@ protected:
     StoichXRefVector m_stoich_xref; // Reaction stoichiometry cross-referenced for each species.
     bool m_stoich_xref_valid;       // Flag which tells whether or not the stoich xref map is valid.
 
-    // Copying routines.
-    void copyInElements(const ElementPtrVector &els); // Copies elements from given array into this mechanism.
-    void copyInSpecies(const SpeciesPtrVector &els);  // Copies species from given array into this mechanism.
+
+    // COPYING ROUTINES.
+
+    // Copies elements from given array into this mechanism.
+    void copyInElements(const ElementPtrVector &els);
+    
+    // Copies species from given array into this mechanism.
+    void copyInSpecies(const SpeciesPtrVector &els);
 
 
-    // Memory management.
-    void releaseMemory(void); // Clears memory used by the mechanism object.
+    // MEMORY MANAGEMENT.
+
+    // Clears memory used by the mechanism object.
+    void releaseMemory(void);
 };
 };
 

@@ -9,7 +9,7 @@ using namespace std;
 // Default constructor.
 ElComp::ElComp(void) 
 {
-    m_index = -1;
+    m_index = -1; // Invalid index for uninitialised ElComps.
     m_count = 0;
 }
 
@@ -17,7 +17,7 @@ ElComp::ElComp(void)
 ElComp::ElComp(const ElComp &el)
 {
     m_index = -1;
-    *this = el;
+    *this   = el; // Use operator=.
 }
 
 // Initialising constructor.
@@ -30,6 +30,7 @@ ElComp::ElComp(unsigned int i, unsigned int n)
 // Destructor.
 ElComp::~ElComp(void)
 {
+    // Nothing to destruct.
 }
 
 
@@ -83,7 +84,7 @@ const ElComp ElComp::operator-(const unsigned int n)
 // the same element.
 bool ElComp::operator==(const ElComp &el) const
 {
-    return (m_index == el.m_index);
+    return (m_index == el.m_index) && (m_index>=0);
 }
 
 // Inequality operator:  Returns false if both ElComp objects point to

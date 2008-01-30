@@ -10,10 +10,12 @@
 #ifndef GPC_SPECIES_H
 #define GPC_SPECIES_H
 
+#include "gpc_element.h"
 #include "gpc_el_comp.h"
 #include "gpc_thermo_params.h"
 #include <vector>
 #include <string>
+#include <iostream>
 
 namespace Sprog
 {
@@ -23,11 +25,12 @@ class Species
 {
 public:
     // Constructors.
-    Species(void);  // Default constructor.
+    Species(void);              // Default constructor.
     Species(const Species &sp); // Copy constructor.
+    Species(std::istream &in);  // Stream-reading constructor.
 
     // Default destructor.
-    virtual ~Species(void);
+    ~Species(void);
 
     // Operator overloads.
     Species &operator=(const Species &sp);
@@ -36,55 +39,115 @@ public:
     bool operator!=(const Species &sp) const;
     bool operator!=(const std::string &name) const;
 
-    // Species name.
-    const std::string &Name(void) const;  // Returns the species name.   
-    void SetName(const std::string &name); // Sets the species name.
 
-    // Species elemental composition.
-    const ElCompVector &Composition(void) const; // Returns the elemental composition of the species.
-    
-    void AddElement(const ElComp &elcomp);           // Adds an element to the species composition.
-    void AddElement(unsigned int i, unsigned int n); // Adds an element given the index and count.
-    void AddElement(const std::string &name, unsigned int n); // Adds an element given the name.
-    
-    bool ContainsElement(unsigned int i) const;          // Returns true if species contains the 
-                                                         // element (given by index).
-    bool ContainsElement(const std::string &name) const; // Returns true if species contains the 
-                                                         // element (given by name).
-    bool ContainsElement(const Element &el) const;       // Returns true if species contains the 
-                                                         // element (given by object).
+    // SPECIES NAME.
 
-    // Species molecular weight.
-    real MolWt(void) const; // Returns the species molecular weight.
-    real CalcMolWt(void);   // Recalculates the molecular weight of the species using the elements.
+    // Returns the species name.
+    const std::string &Name(void) const;
+
+    // Sets the species name.
+    void SetName(const std::string &name);
+
+
+    // ELEMENTAL COMPOSITION.
+    
+    // Returns the elemental composition of the species.
+    const ElCompVector &Composition(void) const;
+    
+    // Returns the number of elements required to define the species.
+    unsigned int ComponentCount(void) const;
+
+    // Returns the total number of atoms in the species.
+    unsigned int AtomCount(void) const;
+
+    // Returns the number of the given element in the species.
+    unsigned int AtomCount(unsigned int iel) const;
+
+    // Adds an element to the species composition using an ElComp object.
+    void AddElement(const ElComp &elcomp);
+
+    // Adds an element given the index and count.
+    void AddElement(unsigned int i, unsigned int n);
+
+    // Adds an element given the name.  Element found using parent mechanism.
+    void AddElement(const std::string &name, unsigned int n);
+    
+    // Returns true if species contains the element (given by index).
+    bool ContainsElement(unsigned int i) const;
+
+    // Returns true if species contains the element (given by name).
+    bool ContainsElement(const std::string &name) const;
+    
+    // Returns true if species contains the element (given by object).
+    bool ContainsElement(const Element &el) const;
+
+
+    // MOLECULAR WEIGHT.
+
+    // Returns the species molecular weight.
+    real MolWt(void) const;
+
+    // Recalculates the molecular weight of the 
+    // species using the elements in the parent mechanism.
+    real CalcMolWt(void);
+
 
     // Elements.
+    /* Removed as the elements can be defined using the parent mechanism.
     const ElementPtrVector *const Elements(void); // Returns the vector of elements used to define species.
     void SetElements(const ElementPtrVector *const els); // Sets the vector of elements.
+    */
 
-    // Thermodynamic fitting parameters.
-    unsigned int ThermoRangeCount(void) const;    // Returns the number of parameter ranges.
-    void SetThermoStartTemperature(const real T); // Sets the start temperature for the range.  
-    const Sprog::Thermo::THERMO_PARAMS &ThermoParams(const real T) const; // Returns the set of parameters valid for 
-                                                           // the given temperature.
-    void AddThermoParams(const real T, const Sprog::Thermo::THERMO_PARAMS &params); // Adds a set of parameters with the 
-                                                                     // given end point temperature.
-    void RemoveThermoParams(const real T); // Removes the parameters from the list valid for the given temperature.
 
-    // Parent mechanism.
-    Sprog::Mechanism *const Mechanism(void) const;   // Returns pointer to parent mechanism.
-    void SetMechanism(Sprog::Mechanism *const mech); // Sets the parent mechanism.
+    // THERMODYNAMIC FITTING PARAMETERS.
 
-    // Cloning.
-    virtual Species *const Clone(void) const; // Returns a pointer to a copy of the Species object.
+    // Returns the number of thermo parameter ranges.
+    unsigned int ThermoRangeCount(void) const;
+
+    // Sets the start temperature for the thermo parameter range.  
+    void SetThermoStartTemperature(const real T);
+
+    // Returns the set of thermo parameters valid for the given temperature.
+    const Sprog::Thermo::THERMO_PARAMS &ThermoParams(const real T) const;
+
+    // Adds a set of thermo parameters with the given end point temperature.
+    void AddThermoParams(
+        const real T, // Maximum temperature for which parameters are valid.
+        const Sprog::Thermo::THERMO_PARAMS &params // Thermo params to add.
+        );
+
+    // Removes the parameters from the list valid for the given temperature.
+    void RemoveThermoParams(const real T);
+
+
+    // PARENT MECHANISM.
+
+    // Returns pointer to parent mechanism.
+    const Sprog::Mechanism *const Mechanism(void) const;
+
+    // Sets the parent mechanism.
+    void SetMechanism(Sprog::Mechanism &mech);
+
+
+    // READ/WRITE/COPY FUNCTIONS.
+
+    // Creates a copy of the species object.
+    Species *const Clone(void) const;
+
+    // Writes the species to a binary data stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the species data from a binary data stream.
+    void Deserialize(std::istream &in);
 
 protected:
-    std::string m_name;        // Name/symbol.
-    ElCompVector m_elcomp;     // Elemental composition.
-    real m_molwt;              // Molecular weight (kg/mol).
+    // Species data.
+    std::string m_name;       // Name/symbol.
+    ElCompVector m_elcomp;    // Elemental composition.
+    real m_molwt;             // Molecular weight (kg/mol).
+    Sprog::Mechanism *m_mech; // Parent mechanism.
 
-    const ElementPtrVector *m_elements; // Elements used to define species.
-    Sprog::Mechanism *m_mech;           // Parent mechanism.
+    //const ElementPtrVector *m_elements; // Elements used to define species.
 
     // Thermo parameters for different temperature ranges.  The map key is the
     // end point temperature up to which the parameters are valid.
@@ -97,6 +160,8 @@ protected:
 
 // A typedef for a STL vector of species.
 typedef std::vector<Species> SpeciesVector;
+
+// A typedef for a STL vector of pointers to species.
 typedef std::vector<Species*> SpeciesPtrVector;
 };
 

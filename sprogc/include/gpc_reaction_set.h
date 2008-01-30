@@ -15,6 +15,7 @@
 #include "gpc_gasphase.h"
 #include <vector>
 #include <map>
+#include <iostream>
 
 namespace Sprog
 {
@@ -25,31 +26,41 @@ namespace Kinetics
 class ReactionSet
 {
 public:
-    // In the following map the key is the index in the vector of all reactions.
-    typedef std::map<unsigned int,const Reaction*> RxnMap;
-
     // Constructors.
-    ReactionSet(void); // Default constructor.
+    ReactionSet(void);                   // Default constructor.
     ReactionSet(const ReactionSet &rxn); // Copy constructor.
+    ReactionSet(std::istream &in);       // Stream-reading constructor.
 
     // Destructor.
-    virtual ~ReactionSet(void);
+    ~ReactionSet(void);
 
     // Operator overloads.
     ReactionSet &operator=(const ReactionSet &rxns);
     ReactionSet &operator+=(const ReactionSet &rxns);
     const ReactionSet operator+(const ReactionSet &rxns) const;
     Reaction *const operator[](unsigned int i);
+    const Reaction *const operator[](unsigned int i) const;
    
-    // Set information.
-    unsigned int Count(void) const; // Returns the number of reactions in the set.
 
-    // Reactions.
-    const RxnPtrVector &Reactions(void) const;        // Returns the list of reactions.
-    Reaction *const AddReaction(const Reaction &rxn); // Adds a reaction to the set.
+    // REACTIONS.
 
-    // Tidying up.
-    void Clear(void); // Clears all reactions from the set.
+    // Returns the number of reactions in the set.
+    unsigned int Count(void) const;
+
+    // Returns the list of reactions.
+    const RxnPtrVector &Reactions(void) const;
+
+    // Returns a pointer to the ith reaction.  Returns NULL if i is invalid.
+    const Reaction *const Reactions(unsigned int i) const;
+
+    // Adds a reaction to the set.
+    Reaction *const AddReaction(const Reaction &rxn);
+
+
+    // TIDYING UP.
+
+    // Clears all reactions from the set.
+    void Clear(void);
 
 
     // SPECIES MOLAR PRODUCTION RATES.
@@ -107,10 +118,27 @@ public:
         ) const;
 
 
-    // Parent mechanism.
-    const Sprog::Mechanism *const Mechanism() const;       // Returns a pointer to the parent mechanism.
-    void SetMechanism(const Sprog::Mechanism *const mech); // Sets the parent mechanism.
+    // PARENT MECHANISM.
+
+    // Returns a pointer to the parent mechanism.
+    const Sprog::Mechanism *const Mechanism() const;
+
+    // Sets the parent mechanism.
+    void SetMechanism(Sprog::Mechanism &mech);
+
+
+    // READ/WRITE/COPY FUNCTIONS.
+
+    // Writes the reaction set to a binary data stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the reaction set data from a binary data stream.
+    void Deserialize(std::istream &in);
+
 protected:
+    // In the following map the key is the index in the vector of all reactions.
+    typedef std::map<unsigned int,const Reaction*> RxnMap;
+
     // Reaction set data.
     RxnPtrVector m_rxns; // Vector of all reactions in the set.
     RxnMap m_rev_rxns;   // Map of reactions which have explicit reverse Arrhenius parameters.
@@ -119,12 +147,15 @@ protected:
     RxnMap m_lt_rxns;    // Map of reactions with Landau Teller parameters.
     RxnMap m_revlt_rxns; // Map of reactions with reverse Landau Teller parameters.
 
-    // Memory management.
-    virtual void releaseMemory(void); // Clears all memory used by the set.
+
+    // MEMORY MANAGEMENT.
+
+    // Clears all memory used by the set.
+    void releaseMemory(void);
 
 private:
     // Pointer to mechanism to which this ReactionSet belongs.
-    const Sprog::Mechanism *m_mech;
+    Sprog::Mechanism *m_mech;
 };
 };
 };

@@ -7,8 +7,8 @@
     files are supported.
 */
 
-#ifndef GPC_MECH_IO_H
-#define GPC_MECH_IO_H
+#ifndef GPC_MECH_PARSER_H
+#define GPC_MECH_PARSER_H
 
 #include <string>
 #include "gpc_mech.h"
@@ -17,15 +17,9 @@ namespace Sprog
 {
 namespace IO
 {
-class Mechanism_IO
+class MechanismParser
 {
 public:
-    // Constructors.
-    Mechanism_IO(void); // Default constructor.
-
-    // Destructors.
-    virtual ~Mechanism_IO(void); // Default destructor.
-
     // Reads a CHEMKIN input file.
     static void ReadChemkin(
         const std::string &filename,    // File name of the CHEMKIN input file.
@@ -33,7 +27,6 @@ public:
         const std::string &thermofile); // File name of thermo data file (optional).
 
 private:
-
     // CHEMKIN FILE RELATED THINGS.
 
     // Enumeration of status flags for reading CHEMKIN files.

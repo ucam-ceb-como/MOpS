@@ -7,6 +7,7 @@ using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
+// Default constructor (private).
 GasPhase::GasPhase(void)
 {
     /*
@@ -26,6 +27,12 @@ GasPhase::GasPhase(void)
     */
 }
 
+// Default constructor (public, requires species vector).
+GasPhase::GasPhase(const SpeciesPtrVector &sp) : Mixture(sp)
+{
+}
+
+// Default destructor.
 GasPhase::~GasPhase(void)
 {
 }
@@ -133,4 +140,3 @@ real GasPhase::BulkCv() const
 {
     return CalcBulkCv(*m_pT, &m_data[0], m_species->size());
 }
-

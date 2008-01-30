@@ -13,7 +13,9 @@
 #include "gpc_params.h"
 #include "gpc_species.h"
 #include "gpc_unit_systems.h"
+#include "gpc_mixture_type.h"
 #include <vector>
+#include <iostream>
 
 namespace Sprog
 {
@@ -22,62 +24,131 @@ namespace Thermo
 class Mixture
 {
 public:
-    // Constructors.
-    Mixture(void); // Default constructor.
-
+    // Constructors.  It makes no sense to have a mixture without knowledge
+    // of the species list, therefore the default constructor is protected.
+    Mixture(const SpeciesPtrVector &sp); // Default constructor (requires species list).
+    Mixture(const Mixture &copy);        // Copy constructor.
+    Mixture(                       // Stream-reading constructor.
+        std::istream &in,          //   - Stream from which to read.
+        const SpeciesPtrVector &sp //   - Species list.
+        );
+     
     // Destructors.
     virtual ~Mixture(void); // Default destructor.
 
     // Operator overloads.
     Mixture &operator=(const Mixture &mix); // Assignment operator.
 
-    // Creates a copy of the mixture object.
-    virtual Mixture* Clone() const;
+    // TEMPERATURE.
 
-    // Get/Set temperature.
-    real Temperature(void) const; // Returns temperature.
-    void SetTemperature(real T);  // Set the temperature.
+    // Returns temperature.
+    real Temperature(void) const;
 
-    // Get/Set species concentrations/fractions.
-    const std::vector<real> & MoleFractions() const;       // Returns the mole fractions of all species.
-    void GetConcs(std::vector<real> &concs) const;         // Returns the molar concentrations of all species in current units.
-    void GetMassFractions(std::vector<real> &fracs) const; // Returns the mass fractions of all species.
-    real MoleFraction(unsigned int i) const; // Returns the mole fraction of species i.
-    real MolarConc(unsigned int i) const;    // Returns the molar concentration of species i.
-    real MassFraction(unsigned int i) const; // Returns the mass fraction of species i.
-    void SetFracs(const std::vector<real> &fracs); // Sets the mole fractions of all species.
+    // Set the temperature.
+    void SetTemperature(real T);
+
+
+    // SPECIES CONCENTRATIONS/FRACTIONS.
+
+    // Returns the mole fractions of all species.
+    const fvector &MoleFractions() const;
+
+    // Returns the molar concentrations of all species in current units.
+    void GetConcs(fvector &concs) const;
+
+    // Returns the mass fractions of all species.
+    void GetMassFractions(fvector &fracs) const;
+
+    // Returns the mole fraction of species i.
+    real MoleFraction(unsigned int i) const;
+
+    // Returns the molar concentration of species i.
+    real MolarConc(unsigned int i) const;
+
+    // Returns the mass fraction of species i.
+    real MassFraction(unsigned int i) const;
+
+    // Sets the mole fractions of all species.
+    void SetFracs(const fvector &fracs);
+
     // Sets the mole fractions of all species from an array of values.
     void SetFracs(
         const real fracs[], // The array of mole fractions.
         int n               // The length of the array.
         );
-    void SetConcs(const std::vector<real> &concs);         // Sets the molar concentrations of all species.
-    void SetMassFracs(const std::vector<real> &fracs);     // Sets the mass fractions of all species.
 
-    // Get/Set density.
-    real Density(void) const;       // Returns molar density in current units.
-    real MassDensity(void) const;   // Returns mass density in current units.
-    void SetDensity(real dens);     // Sets the molar density.
-    void SetMassDensity(real dens); // Sets the mass density.
+    // Sets the molar concentrations of all species.
+    void SetConcs(const fvector &concs);
 
-    // Get/Set the species which define the mixture.
-    const SpeciesPtrVector *const Species() const; // Returns the species for which this mixture is defined.
-    void SetSpecies(const SpeciesPtrVector *const sp); // Sets the species for which this mixture is defined.
+    // Sets the mass fractions of all species.
+    void SetMassFracs(const fvector &fracs);
+
+    // Checks the vector of mole fractions for validity by settings all negative
+    // values to zero, and by normalising the values so that they sum
+    // to one.
+    void Normalise();
+
+
+    // MIXTURE DENSITY.
+
+    // Returns molar density in current units.
+    real Density(void) const;
+
+    // Returns mass density in current units.
+    real MassDensity(void) const;
+
+    // Sets the molar density.
+    void SetDensity(real dens);
+
+    // Sets the mass density.
+    void SetMassDensity(real dens);
+
+
+    // SPECIES WHICH DEFINE THE MIXTURE.
+
+    // Returns the species for which this mixture is defined.
+    const SpeciesPtrVector *const Species() const;
+
+    // Sets the species for which this mixture is defined.
+    void SetSpecies(const SpeciesPtrVector &sp);
+
+
+    // RAW DATA ACCESS.
 
     // Returns a pointer to the raw data (mole fractions, temperature
     // and density)  This function is provided in order to allow
     // numerical operations to be performed on the mixture, for example
     // integration of ODEs.
     real *const RawData();
+
+
+    // READ/WRITE/COPY FUNCTIONS.
+
+    // Creates a copy of the mixture object.
+    virtual Mixture *const Clone() const;
+
+    // Writes the mixture to a binary data stream.
+    virtual void Serialize(std::ostream &out) const;
+
+    // Reads the mixture data from a binary data stream.
+    virtual void Deserialize(std::istream &in);
+
+    // Identifies the mixture type for serialisation.
+    virtual Serial_MixtureType SerialType() const;
+
 protected:
+    // The default constructor is protected to prevent mixture objects being
+    // generated without knowledge of the defining species list.
+    Mixture(void);
+
     // The data vector contains, in order, the species mole fractions,
     // the mixture temperature and the mixture density.
-    std::vector<real> m_data;
+    fvector m_data;
     real *m_pT;    // Pointer to mixture temperature.
     real *m_pdens; // Pointer to mixture density.
 
-    // Mixture context.
-    const SpeciesPtrVector *m_species; // Vector of species for which this mixture is defined.
+    // Vector of species for which this mixture is defined.
+    const SpeciesPtrVector *m_species;
 };
 };
 };
