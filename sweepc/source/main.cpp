@@ -51,7 +51,7 @@ int main(int argc, _TCHAR* argv[])
     mech.AddCoagulation();
 
     // Initialise ensemble to correct size.
-    flame.Ensemble().Initialise(2048, DefaultParticle::NCACHE+mech.ComponentCount()+mech.ValueCount());
+    flame.Ensemble().Initialise(2048, Particle::NCACHE+mech.ComponentCount()+mech.ValueCount());
 
     // Run the simulation.
     for (r=1; r<=nruns; r++) {

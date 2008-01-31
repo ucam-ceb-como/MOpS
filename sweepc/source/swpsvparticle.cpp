@@ -13,15 +13,15 @@ SVParticle::~SVParticle(void)
 void SVParticle::Adjust(const vector<real> &dcomp, const vector<real> &dvalues)
 {
     // Save the volume.
-    real vold = m_cache[iV];
+    real vold = m_cache[m_cache.iV];
 
     // Adjust particle as if it were spherical.
-    DefaultParticle::Adjust(dcomp, dvalues);
+    Particle::Adjust(dcomp, dvalues);
 
     if (IsValid()) {
         // Calculate the change in volume and the surface area
         // if this particle were a sphere.
-        real dvol = m_cache[iV] - vold;
+        real dvol = m_cache[m_cache.iV] - vold;
         real ssph = SphereSurface();
 
         // Choose radius of gyration based on the direction of component
@@ -48,7 +48,7 @@ void SVParticle::Adjust(const vector<real> &dcomp, const vector<real> &dvalues, 
     real vold = m_cache[iV];
 
     // Adjust particle as if it were spherical.
-    DefaultParticle::Adjust(dcomp, dvalues, n);
+    Particle::Adjust(dcomp, dvalues, n);
 
     if (IsValid()) {
         // Calculate the change in volume and the surface area
@@ -76,16 +76,16 @@ void SVParticle::Adjust(const vector<real> &dcomp, const vector<real> &dvalues, 
 
 /* Particle actions and interactions. */
 
-DefaultParticle &SVParticle::Coagulate(const DefaultParticle &sp)
+Particle &SVParticle::Coagulate(const Particle &sp)
 {
     // Conserve surface area of particles.
     m_cache[iS] += sp.SurfaceArea();
 
     // Most of the coagulation process is the same as for
     // spherical particles. So call that routine.
-    DefaultParticle::Coagulate(sp);
+    Particle::Coagulate(sp);
 
-    // DefaultParticle::Coagulate recalculates the cache, so
+    // Particle::Coagulate recalculates the cache, so
     // just return this particle.
     return *this;
 }

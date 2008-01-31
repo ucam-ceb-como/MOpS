@@ -17,7 +17,7 @@
 
 namespace Sweep
 {
-class SVParticle : public Sweep::DefaultParticle
+class SVParticle : public Sweep::Particle
 {
 public:
     SVParticle(void);
@@ -28,7 +28,7 @@ public:
     /* Same as Adjust but applies it n times. */
     virtual void Adjust(const vector<real> &dcomp, const vector<real> &dvalues, const unsigned int n);
     /* Coagulates a particle with this one. */
-    virtual DefaultParticle &Coagulate(const DefaultParticle &sp);
+    virtual Particle &Coagulate(const Particle &sp);
     virtual void CalcCache(void); // Calculates the cache of particle properties.
 };
 };

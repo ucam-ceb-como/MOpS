@@ -13,6 +13,7 @@ Coagulation::Coagulation(void)
 
 Coagulation::~Coagulation(void)
 {
+	// Call the abstract base class destructor.
 }
 
 Sweep::real Coagulation::Rate(const Sweep::real t, const System &sys) const 
@@ -101,28 +102,28 @@ int Coagulation::Perform(const Sweep::real t, Sweep::System &sys, const unsigned
             maj = SlipFlow;
             break;
         case 1 :
-            rid1 = DefaultParticle::iD;
-            rid2 = DefaultParticle::iD_1;
+            rid1 = Particle::iD;
+            rid2 = Particle::iD_1;
             maj = SlipFlow;
             break;
         case 2 :
             rid1 = -1;
-            rid2 = DefaultParticle::iD_1;
+            rid2 = Particle::iD_1;
             maj = SlipFlow;
             break;
         case 3 :
-            rid1 = DefaultParticle::iD;
-            rid2 = DefaultParticle::iD_2;
+            rid1 = Particle::iD;
+            rid2 = Particle::iD_2;
             maj = SlipFlow;
             break;
         case 4 :
             rid1 = -1;
-            rid2 = DefaultParticle::iD2M_1_2;
+            rid2 = Particle::iD2M_1_2;
             maj = FreeMol;
             break;
         case 5 :
-            rid1 = DefaultParticle::iD2;
-            rid2 = DefaultParticle::iM_1_2;
+            rid1 = Particle::iD2;
+            rid2 = Particle::iM_1_2;
             maj = FreeMol;
             break;
         default :
@@ -138,7 +139,7 @@ int Coagulation::Perform(const Sweep::real t, Sweep::System &sys, const unsigned
 
     // Choose and get first particle, then update it.
     int ip1 = sys.Ensemble().SelectParticle(rid1);
-    DefaultParticle *sp1, *sp1old;
+    Particle *sp1, *sp1old;
     if (ip1 >= 0) {
         sp1 = sys.Ensemble().GetParticle(ip1);
 
@@ -164,7 +165,7 @@ int Coagulation::Perform(const Sweep::real t, Sweep::System &sys, const unsigned
     // Choose and get unique second particle, then update it.  Note, we are allowed to do
     // this even if the first particle was invalidated.
     int ip2 = ip1, guard=0;
-    DefaultParticle *sp2, *sp2old;
+    Particle *sp2, *sp2old;
     while ((ip2 == ip1) && (guard<1000)) {
         guard++;
         ip2 = sys.Ensemble().SelectParticle(rid2);
@@ -218,7 +219,7 @@ int Coagulation::Perform(const Sweep::real t, Sweep::System &sys, const unsigned
 
 /* Coagulation kernels. */
 
-Sweep::real Coagulation::CoagKernel(const Sweep::DefaultParticle *sp1, const Sweep::DefaultParticle *sp2, 
+Sweep::real Coagulation::CoagKernel(const Sweep::Particle *sp1, const Sweep::Particle *sp2, 
                              const Sweep::real T, const Sweep::real P, const Sweep::Coagulation::MajorantType maj) const
 {
     // This routine calculates the coagulation kernel for two particles.  The kernel
@@ -244,7 +245,7 @@ Sweep::real Coagulation::CoagKernel(const Sweep::DefaultParticle *sp1, const Swe
     return 0.0;
 }
 
-Sweep::real Coagulation::FreeMolKernel(const Sweep::DefaultParticle *sp1, const Sweep::DefaultParticle *sp2, 
+Sweep::real Coagulation::FreeMolKernel(const Sweep::Particle *sp1, const Sweep::Particle *sp2, 
                                 const Sweep::real T, const Sweep::real P, const bool maj) const
 {
     // This routine calculate the free molecular coagulation kernel for two particles.
@@ -262,7 +263,7 @@ Sweep::real Coagulation::FreeMolKernel(const Sweep::DefaultParticle *sp1, const 
     }
 }
 
-Sweep::real Coagulation::SlipFlowKernel(const Sweep::DefaultParticle *sp1, const Sweep::DefaultParticle *sp2, 
+Sweep::real Coagulation::SlipFlowKernel(const Sweep::Particle *sp1, const Sweep::Particle *sp2, 
                                  const Sweep::real T, const Sweep::real P, const bool maj) const
 {
     // For the slip-flow kernel the majorant and non-majorant forms are identical.

@@ -44,31 +44,13 @@ public:
 public:
     /* Changes the particle composition and values by the amounts stored in
        the changer. The changes are applied n times. */
-    void AdjustParticle(DefaultParticle &sp, const real t, const unsigned int n) const;
+    void AdjustParticle(Particle &sp, const real t, const unsigned int n) const;
     /* Sets the particle composition and values to be the amounts stored in
        the changer. */
-    void SetParticle(DefaultParticle &sp, const real t) const;
+    void SetParticle(Particle &sp, const real t) const;
 };
 
-inline real ParticleChanger::GetCompChange(const unsigned int i) const
-{
-    if (i < (unsigned int)m_comp.size()) {
-        return m_comp[i];
-    } else {
-        return 0.0;
-    }
-}
-
-inline real ParticleChanger::GetValueChange(const unsigned int i) const
-{
-    if (i < (unsigned int)m_values.size()) {
-        return m_values[i];
-    } else {
-        return 0.0;
-    }
-}
-
-inline void ParticleChanger::AdjustParticle(DefaultParticle &sp, const Sweep::real t, 
+inline void ParticleChanger::AdjustParticle(Particle &sp, const Sweep::real t, 
                                             const unsigned int n) const
 {
     sp.SetTime(t);
@@ -76,7 +58,7 @@ inline void ParticleChanger::AdjustParticle(DefaultParticle &sp, const Sweep::re
     sp.CalcCache();
 }
 
-inline void ParticleChanger::SetParticle(Sweep::DefaultParticle &sp, const Sweep::real t) const
+inline void ParticleChanger::SetParticle(Sweep::Particle &sp, const Sweep::real t) const
 {
     sp.SetTime(t);
     sp.SetComposition(m_comp);

@@ -16,6 +16,11 @@ Sweep::Mechanism::Mechanism(void)
     m_pmodel = SphericalParticle;
 }
 
+Sweep::Mechanism::Mechanism(const Sweep::Mechanism & mech)
+{
+	*this = mech;
+}
+
 Sweep::Mechanism::~Mechanism(void)
 {
     // Delete components.
@@ -252,7 +257,7 @@ int Mechanism::LPDA(const real t, System &sys)
     return 0;
 }
 
-int Mechanism::UpdateParticle(DefaultParticle &sp, System &sys, const real t)
+int Mechanism::UpdateParticle(Particle &sp, System &sys, const real t)
 {
     // If there are no deferred processes then stop right now.
     if (!m_anydeferred) return 0;
@@ -267,7 +272,7 @@ int Mechanism::UpdateParticle(DefaultParticle &sp, System &sys, const real t)
     return UpdateParticle(sp, sys, t, chem, T, P, sums);
 }
 
-int Mechanism::UpdateParticle(DefaultParticle &sp, System &sys, const real t,
+int Mechanism::UpdateParticle(Particle &sp, System &sys, const real t,
                               const vector<real> &chem, const real T, const real P, 
                               const vector<real> &sums)
 {

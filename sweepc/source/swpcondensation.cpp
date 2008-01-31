@@ -77,8 +77,8 @@ real Condensation::Rate(const real t, const vector<real> &chem, const real T,
     }
 
     // Free molecular terms.
-    cterm *= (m_kfm1 * sys.ParticleCount()) + (m_kfm2 * sums[DefaultParticle::iD]) +
-             (m_kfm3 * sums[DefaultParticle::iD2]);
+    cterm *= (m_kfm1 * sys.ParticleCount()) + (m_kfm2 * sums[Particle::iD]) +
+             (m_kfm3 * sums[Particle::iD2]);
 
     // If the mechanism contains any deferred processes then we must use the
     // majorant form of the rate, in order to account for any changes to
@@ -90,7 +90,7 @@ real Condensation::Rate(const real t, const vector<real> &chem, const real T,
     }
 }
 
-real Condensation::Rate(const real t, const System &sys, const DefaultParticle &sp) const
+real Condensation::Rate(const real t, const System &sys, const Particle &sp) const
 {
     // Calculate temperature terms.
     real sqrtT = sqrt(sys.GetTemperature(t));
@@ -113,7 +113,7 @@ real Condensation::Rate(const real t, const System &sys, const DefaultParticle &
 
 real Condensation::Rate(const real t, const vector<real> &chem, const real T, 
                         const real P, const vector<real> &sums, const System &sys, 
-                        const DefaultParticle &sp) const
+                        const Particle &sp) const
 {
     // Calculate temperature terms.
     real sqrtT = sqrt(sys.GetTemperature(t));
@@ -132,7 +132,7 @@ real Condensation::Rate(const real t, const vector<real> &chem, const real T,
 }
 
 Sweep::real Condensation::MajorantRate(const real t, const System &sys, 
-                                       const DefaultParticle &sp) const
+                                       const Particle &sp) const
 {
     // Return the single particle rate multiplied by the 
     // condensation majorant factor.
@@ -140,7 +140,7 @@ Sweep::real Condensation::MajorantRate(const real t, const System &sys,
 }
 
 real Condensation::MajorantRate(const real t, const vector<real> &chem, const real T, const real P,
-                                const vector<real> &sums, const System &sys, const DefaultParticle &sp) const
+                                const vector<real> &sums, const System &sys, const Particle &sp) const
 {
     // Return the single particle rate multiplied by the 
     // condensation majorant factor.
@@ -166,8 +166,8 @@ void Condensation::RateTerms(const real t, const System &sys, vector<real>::iter
 
     // Free molecular terms.
     *iterm++ = m_kfm1 * cterm * sys.ParticleCount();
-    *iterm++ = m_kfm2 * cterm * sys.ConstEnsemble().GetSum(DefaultParticle::iD);
-    *iterm++ = m_kfm3 * cterm * sys.ConstEnsemble().GetSum(DefaultParticle::iD2);
+    *iterm++ = m_kfm2 * cterm * sys.ConstEnsemble().GetSum(Particle::iD);
+    *iterm++ = m_kfm3 * cterm * sys.ConstEnsemble().GetSum(Particle::iD2);
 }
 
 void Condensation::RateTerms(const Sweep::real t, const std::vector<real> &chem, 
@@ -192,8 +192,8 @@ void Condensation::RateTerms(const Sweep::real t, const std::vector<real> &chem,
 
     // Free molecular terms.
     *iterm = m_kfm1 * cterm * sys.ParticleCount(); iterm++;
-    *iterm = m_kfm2 * cterm * sums[DefaultParticle::iD]; iterm++;
-    *iterm = m_kfm3 * cterm * sums[DefaultParticle::iD2]; iterm++;
+    *iterm = m_kfm2 * cterm * sums[Particle::iD]; iterm++;
+    *iterm = m_kfm3 * cterm * sums[Particle::iD2]; iterm++;
 }
 
 int Condensation::Perform(const real t, System &sys, const unsigned int iterm) const
@@ -204,18 +204,16 @@ int Condensation::Perform(const real t, System &sys, const unsigned int iterm) c
         case 0 :
             i = sys.Ensemble().SelectParticle();
         case 1 :
-            i = sys.Ensemble().SelectParticle(DefaultParticle::iD);
+            i = sys.Ensemble().SelectParticle(Particle::iD);
         case 2 :
-            i = sys.Ensemble().SelectParticle(DefaultParticle::iD2);
+            i = sys.Ensemble().SelectParticle(Particle::iD2);
         default :
             i = sys.Ensemble().SelectParticle();
     }
 
     // Check for a valid particle (i>=0).
     if (i >= 0) {
-        // Get the particle, then update it with deferred events (if there
-        // are any).
-        DefaultParticle *sp = sys.Ensemble().GetParticle(i);
+        Particle *sp = sys.Ensemble().GetParticle(i);
         real majr = 0.0;
         if (m_mech->AnyDeferred()) {
             majr = MajorantRate(t, sys, *sp);
@@ -256,7 +254,7 @@ int Condensation::Perform(const real t, System &sys, const unsigned int iterm) c
     return 0;
 }
 
-int Condensation::Perform(const real t, System &sys, DefaultParticle &sp,
+int Condensation::Perform(const real t, System &sys, Particle &sp,
                           const unsigned int n) const
 {
     // Adjust particle.

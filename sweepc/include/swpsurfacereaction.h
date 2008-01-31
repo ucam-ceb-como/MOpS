@@ -48,14 +48,14 @@ public:
                       const real P, const vector<real> &sums, const System &sys) const;
     /* Returns the rate of the process for the given particle in
        the system. Process must be linear in particle number. */
-    virtual real Rate(const real t, const System &sys, const DefaultParticle &sp) const;
+    virtual real Rate(const real t, const System &sys, const Particle &sp) const;
     virtual real Rate(const real t, const vector<real> &chem, const real T, 
                       const real P, const vector<real> &sums, const System &sys, 
-                      const DefaultParticle &sp) const;
-    real MajorantRate(const real t, const System &sys, const DefaultParticle &sp) const;
+                      const Particle &sp) const;
+    real MajorantRate(const real t, const System &sys, const Particle &sp) const;
     real MajorantRate(const real t, const vector<real> &chem, const real T, 
                       const real P, const vector<real> &sums, const System &sys, 
-                      const DefaultParticle &sp) const;
+                      const Particle &sp) const;
 public: // Rate term calculation.
     /* Returns the number of rate terms for this process. */
     inline unsigned int TermCount(void) const {return 1;};
@@ -72,7 +72,7 @@ public:
     int Perform(const real t, System &sys, const unsigned int iterm) const;
     /* Performs the process on a given particle in the system.  Particle
        is given by index.  The process is performed n times. */
-    int Perform(const real t, System &sys, DefaultParticle &sp, const unsigned int n) const;
+    int Perform(const real t, System &sys, Particle &sp, const unsigned int n) const;
 public: // Property gets.
     inline real A() const {return m_a;};
     inline real n() const {return m_n;};

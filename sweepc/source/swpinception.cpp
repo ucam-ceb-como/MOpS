@@ -88,11 +88,11 @@ int Inception::Perform(const Sweep::real t, System &sys, const unsigned int iter
     // This routine performs the inception on the given chemical system..
 
     // Create a new particle of the type specified by the mechanism.
-    DefaultParticle *sp;
+    Particle *sp;
     switch (m_mech->GetParticleModel())
     {
         case Mechanism::SphericalParticle:
-            sp = new DefaultParticle();
+            sp = new Particle();
             break;
         case Mechanism::SurfaceVolume:
             sp = new SVParticle();

@@ -512,20 +512,20 @@ int XMLIO::readVersion1(CamXML::Document &xml, Sweep::Mechanism &mech)
                 if ((str.compare("s")==0) || (str.compare("as")==0)) {
                     // This reaction depends on surface area.  Ignore power,
                     // they must have meant 1.
-                    surf->SetPropertyID(DefaultParticle::iS);
+                    surf->SetPropertyID(Particle::iS);
                 } else if (str.compare("d")==0) {
                     // This reaction depends on some power of the diameter.
                     switch (sint) {
                         case 1:
-                            surf->SetPropertyID(DefaultParticle::iD);
+                            surf->SetPropertyID(Particle::iD);
                             break;
                         case 2:
-                            surf->SetPropertyID(DefaultParticle::iD2);
+                            surf->SetPropertyID(Particle::iD2);
                             break;
                         case -1:
-                            surf->SetPropertyID(DefaultParticle::iD_1);
+                            surf->SetPropertyID(Particle::iD_1);
                         case -2:
-                            surf->SetPropertyID(DefaultParticle::iD_2);
+                            surf->SetPropertyID(Particle::iD_2);
                         case 0:
                             // Oh dear, can't have a zero power.
                             throw exception("""particleterm"" tag found with invalid or zero power attribute");

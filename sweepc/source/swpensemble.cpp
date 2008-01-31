@@ -85,15 +85,15 @@ void Ensemble::Initialise(const unsigned int capacity, const unsigned int nprop)
     m_tree[0].Parent = NULL;
     for (i=0,j=1; i<m_halfcap-1; i++,j=(2*i)+1) {
         m_tree[i].SetSize(nprop);
-        m_tree[i].Left = &m_tree.at(j);
-        m_tree[i].Left->Parent = &(m_tree[i]);
-        m_tree[i].Right = &m_tree.at(j+1);
-        m_tree[i].Right->Parent = &(m_tree[i]);
+        m_tree[i].m_left = &m_tree.at(j);
+        m_tree[i].m_left->Parent = &(m_tree[i]);
+        m_tree[i].m_right = &m_tree.at(j+1);
+        m_tree[i].m_right->Parent = &(m_tree[i]);
     }
     for (i=m_halfcap-1; i<m_capacity; i++) {
         m_tree[i].SetSize(nprop);
-        m_tree[i].Left = NULL;
-        m_tree[i].Right = NULL;
+        m_tree[i].m_left = NULL;
+        m_tree[i].m_right = NULL;
     }
 
     // Initialise scaling.
@@ -113,7 +113,7 @@ void Ensemble::Initialise(const unsigned int capacity, const unsigned int nprop)
 void Ensemble::Destroy(void)
 {
     // Delete particles from memory and delete vectors.
-    vector<DefaultParticle*>::iterator i;
+    vector<Particle*>::iterator i;
     for (i=m_particles.begin(); i!=m_particles.end(); i++) {
         delete (*i);
         (*i) = NULL;
@@ -135,7 +135,7 @@ void Ensemble::Destroy(void)
     m_dbleslack  = 0;
 }
 
-DefaultParticle *Ensemble::GetParticle(const unsigned int i) const
+Particle *Ensemble::GetParticle(const unsigned int i) const
 {
     // Check that the index in within range, then return the particle.
     if (i < (unsigned int)m_particles.size()) {
@@ -145,7 +145,7 @@ DefaultParticle *Ensemble::GetParticle(const unsigned int i) const
     }
 }
 
-int Ensemble::AddParticle(DefaultParticle &sp)
+int Ensemble::AddParticle(Particle &sp)
 {
     // Check for doubling activation.
     m_dbleactive = m_dbleactive || ((unsigned int)m_particles.size() >= m_dblecutoff-1);
@@ -176,9 +176,20 @@ int Ensemble::AddParticle(DefaultParticle &sp)
     // into the bottom row and calculating up.
     int j = TreeIndex(i);
     if (IsLeftBranch(i)) {
-         m_particles[i]->GetProperties(m_tree[j].LeftSum);
+		//m_tree[j].Resize(ncache  SORT THIS OUT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+         m_particles[i]->GetProperties(m_tree[j].m_leftsum);
     } else {
-        m_particles[i]->GetProperties(m_tree[j].RightSum);
+        m_particles[i]->GetProperties(m_tree[j].m_rightsum);
     }
     AscendingRecalc(j);
 
@@ -199,9 +210,9 @@ void Ensemble::RemoveParticle(const unsigned int i)
         // Recalculate the tree up from leaf.
         int k = TreeIndex(i);
         if (IsLeftBranch(i)) {
-            m_particles[i]->GetProperties(m_tree[k].LeftSum);
+            m_particles[i]->GetProperties(m_tree[k].m_leftsum);
         } else {
-            m_particles[i]->GetProperties(m_tree[k].RightSum);
+            m_particles[i]->GetProperties(m_tree[k].m_rightsum);
         }
         AscendingRecalc(k);
 
@@ -209,9 +220,9 @@ void Ensemble::RemoveParticle(const unsigned int i)
         unsigned int j = (unsigned int)m_particles.size();
         k = TreeIndex(j);
         if (IsLeftBranch(j)) {
-            m_tree[k].LeftSum.assign(m_tree[k].LeftSum.size(), 0.0);
+            m_tree[k].m_leftsum.Clear();
         } else {
-            m_tree[k].RightSum.assign(m_tree[k].RightSum.size(), 0.0);
+            m_tree[k].m_rightsum.Clear();
         }
         AscendingRecalc(k);
     } else if (i==(unsigned int)m_particles.size()-1) {
@@ -225,9 +236,9 @@ void Ensemble::RemoveParticle(const unsigned int i)
         // Recalculate tree up from last position (clear it first).
         int k = TreeIndex(i);
         if (IsLeftBranch(i)) {
-            m_tree[k].LeftSum.assign(m_tree[k].LeftSum.size(), 0.0);
+            m_tree[k].m_leftsum.Clear();
         } else {
-            m_tree[k].RightSum.assign(m_tree[k].RightSum.size(), 0.0);
+            m_tree[k].m_rightsum.Clear();
         }
         AscendingRecalc(k);
     }
@@ -266,9 +277,9 @@ void Ensemble::RemoveInvalids(void)
             // Update binary tree.
             tx = TreeIndex(ix);
             if (IsLeftBranch(ix)) {
-                (*i)->GetProperties(m_tree[tx].LeftSum);
+                (*i)->GetProperties(m_tree[tx].m_leftsum);
             } else {
-                (*i)->GetProperties(m_tree[tx].RightSum);
+                (*i)->GetProperties(m_tree[tx].m_rightsum);
             }
             AscendingRecalc(tx);
         } else {
@@ -284,7 +295,7 @@ void Ensemble::RemoveInvalids(void)
     Double();
 }
 
-void Ensemble::ReplaceParticle(const unsigned int i, DefaultParticle &sp)
+void Ensemble::ReplaceParticle(const unsigned int i, Particle &sp)
 {
     // Check index is within range.
     if (i<(int)m_particles.size()) {
@@ -296,9 +307,9 @@ void Ensemble::ReplaceParticle(const unsigned int i, DefaultParticle &sp)
         // Recalculate tree up from branch.
         int j = TreeIndex(i);
         if (IsLeftBranch(i)) {
-            m_particles[i]->GetProperties(m_tree[j].LeftSum);
+            m_particles[i]->GetProperties(m_tree[j].m_leftsum);
         } else {
-            m_particles[i]->GetProperties(m_tree[j].RightSum);
+            m_particles[i]->GetProperties(m_tree[j].m_rightsum);
         }
         AscendingRecalc(j);
     }
@@ -314,9 +325,8 @@ void Ensemble::Clear()
 
     m_ncont = 0; // No contractions any more.
 
-    // Clear the binary tree.
-    vector<NODE>::iterator i;
-    for(i=m_tree.begin(); i!=m_tree.end(); i++) (*i).Clear();
+    vector<TreeNode>::iterator i;
+    for(i=m_tree.begin(); i!=m_tree.end(); i++) (*i).ClearNode();
 
     // Reset doubling.
     m_ndble = 0;
@@ -336,28 +346,27 @@ int Ensemble::SelectParticle(const int wtid) const
 
     int isp=-1;
 
-    // Check that the weight id is within range.
-    if ((wtid>=0) && (wtid<(int)m_tree[0].LeftSum.size())) {
+    if ((wtid>=0) && (wtid<(int)m_tree[0].m_leftsum.Size())) {
         // Weight ID is valid, so choose using binary tree.
 
         // Calculate random number weighted by sum of desired property (wtid).
-        real r = rnd() * (m_tree[0].LeftSum[wtid] + m_tree[0].RightSum[wtid]);
+        real r = rnd() * (m_tree[0].m_leftsum[wtid] + m_tree[0].m_rightsum[wtid]);
 
         // Fall down the binary tree until reaching a base node.
-        const NODE *n = &m_tree[0];
+        const TreeNode *n = &m_tree[0];
         int j=0;
-        while(n->Left!=NULL) {
-            if (r <=n->LeftSum[wtid]) {
-                n = n->Left;
+        while(n->m_left!=NULL) {
+            if (r <=n->m_leftsum[wtid]) {
+                n = n->m_left;
                 j = (2*j) + 1;
             } else {
-                r -= n->LeftSum[wtid];
-                n = n->Right;
+                r -= n->m_leftsum[wtid];
+                n = n->m_right;
                 j = (2*j) + 2;
             }
         }
         // last level!
-        if (r <=n->LeftSum[wtid]) {
+        if (r <=n->m_leftsum[wtid]) {
             isp = (2*j) + 2 - m_capacity;
         } else {
             isp = (2*j) + 3 - m_capacity;
@@ -390,19 +399,17 @@ void Ensemble::ResetScaling()
 
 void Ensemble::GetSums(std::vector<real> &sums) const
 {
-    // The particle sums are the sum of the top node's left and right branches.
-    sums.assign(m_tree[0].LeftSum.begin(), m_tree[0].LeftSum.end());
-    vector<real>::iterator i;
-    vector<real>::const_iterator j;
-    for(i=sums.begin(),j=m_tree[0].RightSum.begin(); i!=sums.end(); i++,j++)
-        *i += *j;
+	sums.assign(m_tree[0].m_leftsum.GetCache().begin(), m_tree[0].m_leftsum.GetCache().end());
+	vector<real>::iterator i;
+	vector<real>::const_iterator j;
+	for(i=sums.begin(),j=m_tree[0].m_rightsum.GetCache().begin(); i!=sums.end(); i++,j++)
+		*i += *j;
 }
 
 real Ensemble::GetSum(unsigned int i) const
 {
-    // The particle sums are the sum of the top node's left and right branches.
-    if (i<(unsigned int)m_tree[0].LeftSum.size()) {
-        return m_tree[0].LeftSum[i] + m_tree[0].RightSum[i];
+    if (i<(unsigned int)m_tree[0].m_leftsum.Size()) {
+        return m_tree[0].m_leftsum[i] + m_tree[0].m_rightsum[i];
     } else {
         return 0.0;
     }
@@ -416,9 +423,9 @@ void Ensemble::Update(const unsigned int i)
 
     // Update binary tree at this index.
     if (IsLeftBranch(i)) {
-        m_particles[i]->GetProperties(m_tree[j].LeftSum);
+        m_particles[i]->GetProperties(m_tree[j].m_leftsum);
     } else {
-        m_particles[i]->GetProperties(m_tree[j].RightSum);
+        m_particles[i]->GetProperties(m_tree[j].m_rightsum);
     }
     AscendingRecalc(j);
 }
@@ -432,9 +439,9 @@ void Ensemble::Update()
     unsigned int j = TreeIndex(0);
     for (i=begin(); i!=end(); i++) {
         if (odd) {
-            (*i)->GetProperties(m_tree[j].LeftSum);
+            (*i)->GetProperties(m_tree[j].m_leftsum);
         } else {
-            (*i)->GetProperties(m_tree[j].RightSum);
+            (*i)->GetProperties(m_tree[j].m_rightsum);
             AscendingRecalc(j);
             j++;
         }
@@ -458,17 +465,17 @@ void Ensemble::AscendingRecalc(const unsigned int i)
     vector<real>::iterator j, k, l;
     if ((i>=0) && (i<(int)m_tree.size())) {
         // Get the node at the bottom of the branch.
-        NODE *n = &m_tree[i];
+        TreeNode *n = &m_tree[i];
 
         // Climb up the tree until the root node, summing up the properties.
         while (n->Parent != NULL) {
             n = n->Parent;
-            for(j=n->LeftSum.begin(),k=n->Left->LeftSum.begin(),l=n->Left->RightSum.begin(); 
-                j!=n->LeftSum.end(); j++,k++,l++) {
+            for(j=n->m_leftsum.GetCache().begin(),k=n->m_left->m_leftsum.GetCache().begin(),l=n->m_left->m_rightsum.GetCache().begin(); 
+                j!=n->m_leftsum.GetCache().end(); j++,k++,l++) {
                 *j = *k + *l;
             }
-            for(j=n->RightSum.begin(),k=n->Right->LeftSum.begin(),l=n->Right->RightSum.begin(); 
-                j!=n->RightSum.end(); j++,k++,l++) {
+            for(j=n->m_rightsum.GetCache().begin(),k=n->m_right->m_leftsum.GetCache().begin(),l=n->m_right->m_rightsum.GetCache().begin(); 
+                j!=n->m_rightsum.GetCache().end(); j++,k++,l++) {
                 *j = *k + *l;
             }
         }
@@ -484,11 +491,11 @@ void Ensemble::Double()
 
     // Check that doubling is on and the activation condition has been met.
     if (m_dbleon && m_dbleactive) {
-        DefaultParticle* sp;
+        Particle* sp;
         bool left;
         unsigned int isp, j, k;
         unsigned int n=(int)m_particles.size();
-        vector<NODE>::iterator inode;
+        vector<TreeNode>::iterator inode;
         vector<real>::iterator iterp, iterl, iterr;
 
         // Continue while there are too few particles in the ensemble.
@@ -503,24 +510,24 @@ void Ensemble::Double()
                 // Put properties into bottom of tree.
                 k = TreeIndex(j);
                 if (left) {
-                    sp->GetProperties(m_tree[k].LeftSum);
+                    sp->GetProperties(m_tree[k].m_leftsum);
                 } else {
-                    sp->GetProperties(m_tree[k].RightSum);
+                    sp->GetProperties(m_tree[k].m_rightsum);
                 }
             }
 
             // Update the tree from second last level up.
             for (inode=(m_tree.begin()+m_halfcap-2); inode!=m_tree.begin(); inode--) {
-                for(iterp=(*inode).LeftSum.begin(),
-                    iterl=(*inode).Left->LeftSum.begin(),
-                    iterr=(*inode).Left->RightSum.begin(); 
-                    iterp!=(*inode).LeftSum.end(); iterp++,iterl++,iterr++) {
+                for(iterp=(*inode).m_leftsum.GetCache().begin(),
+                    iterl=(*inode).m_left->m_leftsum.GetCache().begin(),
+                    iterr=(*inode).m_left->m_rightsum.GetCache().begin(); 
+                    iterp!=(*inode).m_leftsum.GetCache().end(); iterp++,iterl++,iterr++) {
                     *iterp = *iterl + *iterr;
                 }
-                for(iterp=(*inode).RightSum.begin(),
-                    iterl=(*inode).Right->LeftSum.begin(),
-                    iterr=(*inode).Right->RightSum.begin(); 
-                    iterp!=(*inode).RightSum.end(); iterp++,iterl++,iterr++) {
+                for(iterp=(*inode).m_rightsum.GetCache().begin(),
+                    iterl=(*inode).m_right->m_leftsum.GetCache().begin(),
+                    iterr=(*inode).m_right->m_rightsum.GetCache().begin(); 
+                    iterp!=(*inode).m_rightsum.GetCache().end(); iterp++,iterl++,iterr++) {
                     *iterp = *iterl + *iterr;
                 }
             }
@@ -530,61 +537,4 @@ void Ensemble::Double()
             n *= 2;
         }
     }
-}
-
-/* Binary tree functions. */
-
-Ensemble::NODE::NODE(void)
-{
-    Left = NULL; Right = NULL;
-}
-
-Ensemble::NODE &Ensemble::NODE::operator=(const Ensemble::NODE &n)
-{
-    // This is the assignment (=) operator for binary tree nodes.
-
-    // this pointer is LHS, n is RHS.  Do nothing if self-assignment.
-    if (this == &n) return *this;
-
-    // Copy R node to L node and return.
-    LeftSum = n.LeftSum;
-    RightSum = n.RightSum;
-    return *this;
-}
-
-Ensemble::NODE &Ensemble::NODE::operator +=(const Ensemble::NODE &n)
-{
-    // Definition of += operator for binary tree nodes. this pointer is LHS, 
-    // n is RHS.
-
-    LeftSum.resize(max(LeftSum.size(),n.LeftSum.size()), 0.0);
-    RightSum.resize(max(RightSum.size(),n.RightSum.size()), 0.0);
-    vector<real>::iterator i;
-    vector<real>::const_iterator j=n.LeftSum.begin();
-    for (i=LeftSum.begin(); i!=LeftSum.end(); i++,j++) *i = *i + *j;
-    for (i=RightSum.begin(),j = n.RightSum.begin(); i!=RightSum.end(); i++,j++) *i = *i + *j;
-    return *this;
-}
-
-const Ensemble::NODE Ensemble::NODE::operator+(const Ensemble::NODE &n) const
-{
-    // Definition of addition (+) operator for binary tree nodes.
-
-    NODE lhs = *this;
-    lhs += n;
-    return lhs;
-}
-
-void Ensemble::NODE::Clear()
-{
-    // Delete node contents.
-    LeftSum.assign(LeftSum.size(), 0.0);
-    RightSum.assign(RightSum.size(), 0.0);
-}
-
-void Ensemble::NODE::SetSize(const unsigned int size)
-{
-    // Resize left and right branches of node.
-    LeftSum.resize(size,0.0);
-    RightSum.resize(size,0.0);
 }

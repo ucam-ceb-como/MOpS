@@ -4,7 +4,7 @@
 
   File purpose:
     A specialised system for Sweep, which contains an ensemble
-    with particles of type DefaultParticle.
+    with particles of type Particle.
 */
 
 #ifndef SWEEP_SYSTEM_H

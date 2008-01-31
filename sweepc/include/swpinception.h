@@ -54,10 +54,10 @@ public: // Rate calculation.
               const real T_P, const real vol) const;
 public: // Single particle rates (invalid for inceptions, so return invalid negative value).
     /* Invalid for inception - DO NOT USE. */
-    inline real Rate(const real t, const System &sys, const DefaultParticle &sp) const {return -1.0;};
+    inline real Rate(const real t, const System &sys, const Particle &sp) const {return -1.0;};
     /* Invalid for inception - DO NOT USE. */
     inline real Rate(const real t, const vector<real> &chem, const real T, const real P, 
-                     const vector<real> &sums, const System &sys, const DefaultParticle &sp) const {
+                     const vector<real> &sums, const System &sys, const Particle &sp) const {
         return -1.0;
     };
 public: // Rate term calculation.
@@ -78,7 +78,7 @@ public:
        by index.  Returns 0 on success, otherwise negative. */
     int Perform(const real t, System &sys, const unsigned int iterm) const;
     /* Particle Perform() routine is invalid for an inception. */
-    inline int Perform(const real t, System &sys, DefaultParticle &sp, 
+    inline int Perform(const real t, System &sys, Particle &sp, 
                        const unsigned int n) const {return -1;};
 public: // Property gets.
     /* Returns the pre-exp rate constant. */

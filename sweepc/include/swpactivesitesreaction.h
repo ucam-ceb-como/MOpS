@@ -62,13 +62,13 @@ public:
               const real P, const vector<real> &sums, const System &sys) const;
     /* Returns the rate of the process for the given particle in
        the system. Process must be linear in particle number. */
-    real Rate(const real t, const System &sys, const DefaultParticle &sp) const;
+    real Rate(const real t, const System &sys, const Particle &sp) const;
     /* Returns the rate of the process for the given particle in
        the system given the precalculated chemical conditions. Process
        must be linear in particle number. */
     real Rate(const real t, const vector<real> &chem, const real T, 
               const real P, const vector<real> &sums, const System &sys, 
-              const DefaultParticle &sp) const;
+              const Particle &sp) const;
 };
 };
 

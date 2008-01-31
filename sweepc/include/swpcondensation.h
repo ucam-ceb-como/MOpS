@@ -56,7 +56,7 @@ public: // Rate calculation.
        the system. Process must be linear in particle number. */
     virtual real Rate(const real t,             // Current time (s).
                       const System &sys,        // System for which to get rate.
-                      const DefaultParticle &sp // Index of particle for which to calculate rate.
+                      const Particle &sp // Index of particle for which to calculate rate.
                      ) const;
     /* Returns the rate of the process for the given particle in
        the system with precalculated chemical conditions. Process
@@ -67,11 +67,11 @@ public: // Rate calculation.
                       const real P,
                       const vector<real> &sums,
                       const System &sys,        // System for which to get rate.
-                      const DefaultParticle &sp // Index of particle for which to calculate rate.
+                      const Particle &sp // Index of particle for which to calculate rate.
                      ) const;
-    real MajorantRate(const real t, const System &sys, const DefaultParticle &sp) const;
+    real MajorantRate(const real t, const System &sys, const Particle &sp) const;
     real MajorantRate(const real t, const vector<real> &chem, const real T, const real P, 
-                      const vector<real> &sums, const System &sys, const DefaultParticle &sp) const;
+                      const vector<real> &sums, const System &sys, const Particle &sp) const;
 public: // Rate term calculation.
     /* Returns the number of rate terms for this process. */
     inline unsigned int TermCount(void) const {return TERM_COUNT;};
@@ -93,7 +93,7 @@ public: // Doing the process.
        is given by index.  The process is performed n times. */
     virtual int Perform(const real t,         // Current time (s).
                         System &sys,          // System for which to perform process. 
-                        DefaultParticle &sp,  // Index of particle for which to perform process.
+                        Particle &sp,  // Index of particle for which to perform process.
                         const unsigned int n  // Number of times to perform the process.
                        ) const;
 public: // Property gets/sets.

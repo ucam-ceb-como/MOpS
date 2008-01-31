@@ -46,7 +46,7 @@ real ActiveSitesReaction::Rate(const real t, const vector<real> &chem, const rea
     return m_psitesfn(t, sys, chem, T, P, sums) * SurfaceReaction::Rate(t, chem, T, P, sums, sys);
 }
 
-Sweep::real ActiveSitesReaction::Rate(const real t, const Sweep::System &sys, const DefaultParticle &sp) const
+Sweep::real ActiveSitesReaction::Rate(const real t, const Sweep::System &sys, const Particle &sp) const
 {
     // Get conditions from the system.
     vector<real> chem, sums;
@@ -60,7 +60,7 @@ Sweep::real ActiveSitesReaction::Rate(const real t, const Sweep::System &sys, co
 
 Sweep::real ActiveSitesReaction::Rate(const real t, const vector<real> &chem, const real T, 
                                       const real P, const vector<real> &sums, const Sweep::System &sys, 
-                                      const DefaultParticle &sp) const
+                                      const Particle &sp) const
 {
     // Return the surface reaction rate multiplied by the actives sites concentration per
     // unit surface area.

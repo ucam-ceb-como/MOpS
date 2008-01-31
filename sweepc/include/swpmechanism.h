@@ -35,12 +35,98 @@ namespace Sweep
 class Mechanism
 {
 public:
-    // Enumeration of different particle types available to mechanisms.
-    enum ParticleModel {SphericalParticle, SurfaceVolume};
-    // enumeration of different models which can be loaded into sweep.
-    enum Model {HACA, CNT, PAH};
+	/* CONSTRUCTORS AND DESTRUCTOR. */
+	Mechanism(void);                      // Default Constructor.
+	Mechanism(const Mechanism & mech);    // Copy-Constructor.
+    ~Mechanism(void);                     // Destructor.
+
+
+    enum ParticleModel {SphericalParticle, SurfaceVolume};   // enumeration of particle model used.
+
+
+	/* OVERRIDES. */
+    int GetRates(vector<real> &rates, const real t, const System &sys) const;           // Get total rates.
+    int GetStochasticRates(vector<real> &rates, const real t, const System &sys) const; /* Get total rates of 
+																						non-deferred processes */
+    real JumpRate(const vector<real> &rates) const;  /* Calculates the combined rate of all stochastic processes (not
+                                                     deferred) given the individual process rates. */
+
+
+	/* SPECIESLIST FUNCTIONS */
+	void SetSpeciesList(SpeciesList &list);     // Set m_species point to the given SpeciesList.
+    SpeciesList &GetSpeciesList(void) const;    // Return reference to m_species.
+
+
+	/* PROCESS FUNCTIONS */
+    int AddInception(Inception *icn);                      // Adds an inception to the mechanism.
+    inline Inception &GetInception(const unsigned int i);  // Returns the inception with the given index.
+    int AddProcess(Process *p);                            // Adds a process to the mechanism.
+    Process &GetProcess(const unsigned int i);             // Returns the process with the given index.
+    int AddCoagulation();                                  // Adds a coagulation process to the mechanism.
+
+    // Returns the number of processes (including inceptions) in the mechanism.
+    inline unsigned int ProcessCount(void) const {                                
+        return (unsigned int)m_inceptions.size() + (unsigned int)m_processes.size();
+    };
+    inline unsigned int TermCount(void) const {return m_termcount;};  // Returns the number of terms of all processes.
+    inline bool AnyDeferred(void) const {return m_anydeferred;};      /* Returns true if the mechanism contains 
+																	  deferred (LPDA) processes otherwise false. */
+    void CheckDeferred(void);                                         // Checks all processes to see if any are deferred.
+
+
+
+	/* PERFORMING THE PROCESSES. */
+
+    // Performs the Process specified.
+	int DoProcess(const unsigned int i, // Index of process to perform.
+                  const real t,         // Current time (s).
+                  System &sys           // System to update (includes ensemble).
+                 ) const;
+
+    int LPDA(const real t, System &sys);  // Performs linear update algorithm on the given system up to given time.
+    /* Performs linear update algorithm on the given system up to given time,
+       with the current chemical conditions precalculated. */
+    int LPDA(const real t, const vector<real> &chem, const real T, const real P, 
+             const vector<real> &sums, System &sys);
+
+    /* Performs linear process updates on a particle in the given system. */
+    int UpdateParticle(Particle &sp, System &sys, const real t);
+    /* Performs linear process updates on a particle in the given system,
+       with the current chemical conditions precalculated. */
+    int UpdateParticle(Particle &sp, System &sys, const real t, 
+                       const vector<real> &chem, const real T, const real P, 
+                       const vector<real> &sums);
+
+	/* PROPERTY GET/SET FUNCTIONS*/
+    inline unsigned int ComponentCount(void) const {            // Return size of m_components.
+		return (unsigned int)m_components.size();
+	};
+    Component const &GetComponent(const unsigned int i) const;  /* returns m_components[i], but if i not valid index, 
+	                                                            then returns m_components[0] */
+    vector<Component*> &GetComponents() {return m_components;}; // returns m_components.
+    int GetComponentIndex(const string &name) const;            /* Returns the index of the component with the 
+																given name in the mechanism if found, otherwise 
+																return negative. */
+    unsigned int AddComponent(Component &comp);   // Adds a component to m_components - returns previous size of vector?
+    void SetComponent(const unsigned int i, Component &comp);  // Set m_components[i] to be the given component.
+    void SetComponents(const vector<Component*> &comps);       // Assign comps vector to m_components vector.
+
+
+	/* VALUE NAME GET AND SETS */
+    inline unsigned int ValueCount(void) const {return (unsigned int)m_valuenames.size();};  // Returns m_valuenames.size()
+    void AddValueName(const string &name);                       // Add the given string as a new element of m_valuenames
+    void SetValueName(const unsigned int i, const string &name); // Set ith element of m_valuenames with given string.
+    string GetValueName(const unsigned int i) const;             // Get m_valuenames[i].
+    
+    int GetValueIndex(const string &name) const;   /* Returns the index of the tracker value with the given name 
+												   on success, otherwise returns negative. */
+    inline ParticleModel GetParticleModel(void) const {return m_pmodel;};       // Return m_pmodel.
+    inline void SetParticleModel(const ParticleModel model) {m_pmodel=model;};  // Set particle model with given model.
+
 protected:
-    bool m_anydeferred;              // Are any of the mechanism's processes deferred?
+
+	/* PROTECTED VARIABLES. */
+    bool m_anydeferred;              // True if the mechanism contains deferred (LPDA) processes otherwise false. 
     vector<Inception*> m_inceptions; // Inception process list.
     vector<Process*> m_processes;    // Process list.
     vector<Coagulation*> m_coags;    // Coagulation process list.
@@ -50,99 +136,6 @@ protected:
     unsigned int m_termcount;        // the rate term count of all processes.
     vector<string> m_valuenames;     // Names of additional values stored per particle.
     ParticleModel m_pmodel;          // Particle model used by this mechanism.
-    set<Model> m_reqmodels;          // Models required by this mechanism.
-public:  // Default constructor and destructor.
-    Mechanism(void);
-    ~Mechanism(void);
-public:
-    /* Calculates the rates of all processes. */
-    int GetRates(vector<real> &rates, const real t, const System &sys) const;
-    /* Calculates the rates of all stochastic jump processes that are not deferred. */
-    int GetStochasticRates(vector<real> &rates, const real t, const System &sys) const;
-    /* Calculates the combined rate of all stochastic processes (not
-       deferred) given the individual process rates. */
-    real JumpRate(const vector<real> &rates) const;
-public:
-    /* Sets the list of species used by the mechanism to define processes. */
-    void SetSpeciesList(SpeciesList &list);
-    /* Returns reference to the species list used by the mechanism. */
-    SpeciesList &GetSpeciesList(void) const;
-public:
-    /* Adds an inception to the mechanism. */
-    int AddInception(Inception *icn);
-    /* Returns the inception with the given index. */
-    inline Inception &GetInception(const unsigned int i);
-    /* Adds a process to the mechanism. */
-    int AddProcess(Process *p);
-    /* Returns the process with the given index. */
-    Process &GetProcess(const unsigned int i);
-    /* Adds the coagulation process to the mechanism. */
-    int AddCoagulation();
-    /* Returns the number of processes (including inceptions) in the mechanism. */
-    inline unsigned int ProcessCount(void) const {
-        return (unsigned int)m_inceptions.size() + (unsigned int)m_processes.size();
-    };
-    /* Returns the number of terms of all processes. */
-    inline unsigned int TermCount(void) const {return m_termcount;};
-    /* Returns true if the mechanism contains deferred (LPDA) processes
-       otehrwise false. */
-    inline bool AnyDeferred(void) const {return m_anydeferred;};
-    /* Checks all processes to see if any are deferred. */
-    void CheckDeferred(void);
-public:
-    /* Peforms the process with the given index on the given particle
-       ensemble. */
-    int DoProcess(const unsigned int i, // Index of process to perform.
-                  const real t,         // Current time (s).
-                  System &sys           // System to update (includes ensemble).
-                 ) const;
-    /* Performs linear update algorithm on the given system up to
-       given time. */
-    int LPDA(const real t, System &sys);
-    /* Performs linear update algorithm on the given system up to given time,
-       with the current chemical conditions precalculated. */
-    int LPDA(const real t, const vector<real> &chem, const real T, const real P, 
-             const vector<real> &sums, System &sys);
-    /* Performs linear process updates on a particle in the given system. */
-    int UpdateParticle(DefaultParticle &sp, System &sys, const real t);
-    /* Performs linear process updates on a particle in the given system,
-       with the current chemical conditions precalculated. */
-    int UpdateParticle(DefaultParticle &sp, System &sys, const real t, 
-                       const vector<real> &chem, const real T, const real P, 
-                       const vector<real> &sums);
-public: // Property get/set;
-    /* Returns the number of particle components defined in the mechanism. */
-    inline unsigned int ComponentCount(void) const {return (unsigned int)m_components.size();};
-    /* Returns a reference to the particle component with the given index. */
-    Component const &GetComponent(const unsigned int i) const;
-    /* Returns a reference to the vector of all particle components defined in mechanism. */
-    vector<Component*> &GetComponents() {return m_components;};
-    /* Returns the index of the component with the given name in the mechanism
-       if found, otherwise return negative. */
-    int GetComponentIndex(const string &name) const;
-    /* Adds a particle component to the mechanism. */
-    unsigned int AddComponent(Component &comp);
-    /* Sets the particle component with the given index. */
-    void SetComponent(const unsigned int i, Component &comp);
-    /* Sets the vector of all components. */
-    void SetComponents(const vector<Component*> &comps);
-public: // Value name get and sets.
-    /* Returns the number of particle values defined in the mechanism. */
-    inline unsigned int ValueCount(void) const {return (unsigned int)m_valuenames.size();};
-    /* Adds a new value name to the mechanism. */
-    void AddValueName(const string &name);
-    /* Sets the value name at the given index. */
-    void SetValueName(const unsigned int i, const string &name);
-    /* Gets the value name at the given index. */
-    string GetValueName(const unsigned int i) const;
-    /* Returns the index of the tracker value with the given name on
-       success, otherwise returns negative. */
-    int GetValueIndex(const string &name) const;
-public:
-    /* Get the enum ID of the particle model currently used by the mechanism. */
-    inline ParticleModel GetParticleModel(void) const {return m_pmodel;};
-    /* Sets the ID of the particle model used by the mechanism. */
-    inline void SetParticleModel(const ParticleModel model) {m_pmodel=model;};
 public: // Routines to check which models are required by this mechanism.
     /* Adds a model to the list of required models. */
     void AddReqdModel(const Model m);
@@ -155,6 +148,7 @@ public: // Routines to check which models are required by this mechanism.
        negative on error. */
     int InitReqdModels(void);
 };
+
 
 inline Inception &Mechanism::GetInception(const unsigned int i) 
 {

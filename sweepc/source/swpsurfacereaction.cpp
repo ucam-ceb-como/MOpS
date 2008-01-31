@@ -101,7 +101,7 @@ real SurfaceReaction::Rate(const real t, const vector<real> &chem, const real T,
     }
 }
 
-Sweep::real SurfaceReaction::Rate(const real t, const System &sys, const DefaultParticle &sp) const
+Sweep::real SurfaceReaction::Rate(const real t, const System &sys, const Particle &sp) const
 {
     // Rate constant.
     real rate = m_a;
@@ -124,7 +124,7 @@ Sweep::real SurfaceReaction::Rate(const real t, const System &sys, const Default
 
 Sweep::real SurfaceReaction::Rate(const real t, const vector<real> &chem, const real T, 
                                   const real P, const vector<real> &sums, const System &sys, 
-                                  const DefaultParticle &sp) const
+                                  const Particle &sp) const
 {
     // Rate constant.
     real rate = m_a;
@@ -145,14 +145,14 @@ Sweep::real SurfaceReaction::Rate(const real t, const vector<real> &chem, const 
 }
 
 Sweep::real SurfaceReaction::MajorantRate(const real t, const System &sys, 
-                                          const DefaultParticle &sp) const
+                                          const Particle &sp) const
 {
     return Rate(t,sys,sp) * SURF_MAJ;
 }
 
 Sweep::real SurfaceReaction::MajorantRate(const real t, const vector<real> &chem, const real T, 
                                           const real P, const vector<real> &sums, const System &sys, 
-                                          const DefaultParticle &sp) const
+                                          const Particle &sp) const
 {
     return Rate(t,chem,T,P,sums,sys,sp) * SURF_MAJ;
 }
@@ -176,7 +176,7 @@ int SurfaceReaction::Perform(const Sweep::real t, Sweep::System &sys, const unsi
     int i = sys.Ensemble().SelectParticle(m_pid);
 
     if (i >= 0) {
-        DefaultParticle *sp = sys.Ensemble().GetParticle(i);
+        Particle *sp = sys.Ensemble().GetParticle(i);
         real majr = MajorantRate(t, sys, *sp);
 
         // Update particle with deferred processes.
@@ -214,7 +214,7 @@ int SurfaceReaction::Perform(const Sweep::real t, Sweep::System &sys, const unsi
 }
 
 int SurfaceReaction::Perform(const real t, System &sys, 
-                             DefaultParticle &sp, const unsigned int n) const
+                             Particle &sp, const unsigned int n) const
 {
     // Adjust particle.
     AdjustParticle(sp, t, n);
