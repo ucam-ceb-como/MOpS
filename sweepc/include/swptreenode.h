@@ -10,14 +10,14 @@
 #ifndef SWEEP_TREENODE_H
 #define SWEEP_TREENODE_H
 
-#include "swpparticlecache.h"
+//#include "swpparticlecache.h"
 
 namespace Sweep
 {
 struct TreeNode
 {
 	// MEMBER VARIABLES.
-	ParticleCache m_leftsum, m_rightsum;  // Sum of the left child leaves and the right child leaves respectively.
+	ParticleData m_leftsum, m_rightsum;  // Sum of the left child leaves and the right child leaves respectively.
 	TreeNode *m_left;      // Pointer to left child node.
 	TreeNode *m_right;     // Pointer to right child node.
 	TreeNode *m_parent;    // Pointer to parent node.
