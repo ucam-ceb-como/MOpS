@@ -367,13 +367,15 @@ const Thermo::THERMO_PARAMS &Species::ThermoParams(const Sprog::real T) const
             return i->second;
         } else {
             // T is to large!
-            throw out_of_range("Temperature above acceptable range "
-                               "(Sprog, Species::ThermoParams)");
+            return (m_thermoparams.end()--)->second; // Return last set.
+//            throw out_of_range("Temperature above acceptable range "
+//                               "(Sprog, Species::ThermoParams)");
         }
     } else {
         // The given temperature is lower than the thermo range start temperature.
-        throw out_of_range("Temperature under acceptable range "
-                           "(Sprog, Species::ThermoParams)");
+        return m_thermoparams.begin()->second; // Return first set.
+//        throw out_of_range("Temperature under acceptable range "
+//                           "(Sprog, Species::ThermoParams)");
     }
 }
 

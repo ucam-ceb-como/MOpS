@@ -241,18 +241,19 @@ void ReactionSet::Clear()
 
 // Calculates the molar production rates of all species given the rate
 // of progress of each reaction.
-void ReactionSet::GetMolarProdRates(const fvector &rop,
+real ReactionSet::GetMolarProdRates(const fvector &rop,
                                     fvector &wdot) const 
 {
     int k;
     const RxnStoichMap *mu;
     RxnStoichMap::const_iterator i;
+    real wtot = 0.0;
 
     // Assign sufficient memory for output.
-    wdot.resize(m_mech->Species().size());
+    wdot.resize(m_mech->SpeciesCount());
 
     // Loop over all species in mechanism.
-    for (k=0; k<m_mech->Species().size(); k++) {
+    for (k=0; k<m_mech->SpeciesCount(); k++) {
         // Reset prod. rate of this species to zero.
         wdot[k] = 0.0;
 
@@ -265,8 +266,34 @@ void ReactionSet::GetMolarProdRates(const fvector &rop,
         for (i=mu->begin(); i!= mu->end(); i++) {
             wdot[k] += (*i).second * rop[(*i).first];
         }
+
+        // Sum up total production rate.
+        wtot += wdot[k];
     }
+
+    return wtot;
 }
+
+// Calculates the molar production rates of all species.
+real ReactionSet::GetMolarProdRates(const Sprog::Thermo::GasPhase &gas,
+                                    fvector &wdot) const
+{
+    static fvector rop;
+    GetRatesOfProgress(gas, rop);
+    return GetMolarProdRates(rop, wdot);
+}
+
+// Calculates the molar production rates of all species.
+real ReactionSet::GetMolarProdRates(real T, real density, const real *const x, 
+                                    unsigned int n, 
+                                    const Sprog::Thermo::ThermoInterface &thermo, 
+                                    fvector &wdot) const
+{
+    static fvector rop;
+    GetRatesOfProgress(T, density, x, n, thermo, rop);
+    return GetMolarProdRates(rop, wdot);
+}
+
 
 // REACTION RATES OF PROGRESS.
 
@@ -343,6 +370,25 @@ void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &mix,
     GetRatesOfProgress(mix.Density(), &(mix.MoleFractions()[0]), 
                        m_mech->Species().size(),
                        kforward, kreverse, rop);
+}
+
+// Calculates the rate of progress of each reaction.
+void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &gas, fvector &rop) const
+{
+    static fvector kf, kr, Gs;
+    GetRateConstants(gas, kf, kr);
+    GetRatesOfProgress(gas, kf, kr, rop);
+}
+
+// Calculates the rate of progress of each reaction.
+void ReactionSet::GetRatesOfProgress(real T, real density, const real *const x, 
+                                     unsigned int n, 
+                                     const Sprog::Thermo::ThermoInterface &thermo, 
+                                     fvector &rop) const
+{
+    static fvector kf, kr;
+    GetRateConstants(T, density, x, n, thermo, kf, kr);
+    GetRatesOfProgress(density, x, n, kf, kr, rop);
 }
 
 
@@ -527,6 +573,33 @@ void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
                                    std::vector<real> &kforward, 
                                    std::vector<real> &kreverse) const
 {
+    GetRateConstants(mix.Temperature(), mix.Density(), &(mix.MoleFractions()[0]), 
+                     m_mech->Species().size(), Gs, kforward, kreverse);
+}
+
+// Calculates the forward and reverse rate constants of all reactions
+// given the mixture temperature, density and species mole fractions.
+void ReactionSet::GetRateConstants(real T,
+                                   real density,
+                                   const real *const x,
+                                   unsigned int n,
+                                   const Sprog::Thermo::ThermoInterface &thermo,
+                                   fvector &kforward,
+                                   fvector &kreverse) const 
+{
+    static fvector Gs;
+    thermo.CalcGs_RT(T, Gs);
+    GetRateConstants(T, density, x, n, Gs, kforward, kreverse);
+}
+
+// Calculates the forward and reverse rate constants 
+// of all reactions given a mixture object.
+void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix, 
+                                   std::vector<real> &kforward, 
+                                   std::vector<real> &kreverse) const
+{
+    static fvector Gs;
+    mix.Gs_RT(Gs);
     GetRateConstants(mix.Temperature(), mix.Density(), &(mix.MoleFractions()[0]), 
                      m_mech->Species().size(), Gs, kforward, kreverse);
 }

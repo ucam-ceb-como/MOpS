@@ -65,10 +65,29 @@ public:
 
     // SPECIES MOLAR PRODUCTION RATES.
 
-    // Calculates the molar production rates of all species.
-    void GetMolarProdRates(
+    // Calculates the molar production rates of all species.  Returns
+    // the total molar production rate.
+    real GetMolarProdRates(
         const fvector &rop, // Rate of Progress of each reaction.
         fvector &wdot       // Return vector for molar prod. rates.
+        ) const;
+
+    // Calculates the molar production rates of all species.  Returns
+    // the total molar production rate.
+    real GetMolarProdRates(
+        const Sprog::Thermo::GasPhase &gas, // The gas for which to calculate the rates.
+        fvector &wdot                       // Return vector for molar prod. rates.
+        ) const;
+
+    // Calculates the molar production rates of all species.  Returns
+    // the total molar production rate.
+    real GetMolarProdRates(
+        real T,              // The mixture temperature.
+        real density,        // Mixture molar density.
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x array.
+        const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
+        fvector &wdot        // Return vector for molar prod. rates.
         ) const;
 
 
@@ -76,7 +95,7 @@ public:
 
     // Calculates the rate of progress of each reaction.
     void GetRatesOfProgress(
-        const Sprog::Thermo::GasPhase &mix, // The mixture for which to calculate the rates.
+        const Sprog::Thermo::GasPhase &gas, // The gas for which to calculate the rates.
         const fvector &kforward,  // Forward rate constants of all reactions.
         const fvector &kreverse,  // Reverse rate constants of all reactions.
         fvector & rop             // Return vector for rates of progress.
@@ -90,6 +109,23 @@ public:
         const fvector &kforward, // Forward rate constants of all reactions.
         const fvector &kreverse, // Reverse rate constants of all reactions.
         fvector &rop             // Return vector for rates of progress.
+        ) const;
+
+
+    // Calculates the rate of progress of each reaction.
+    void GetRatesOfProgress(
+        const Sprog::Thermo::GasPhase &gas, // The gas for which to calculate the rates.
+        fvector & rop                       // Return vector for rates of progress.
+        ) const;
+
+    // Calculates the rate of progress of each reaction.
+    void GetRatesOfProgress(
+        real T,              // The mixture temperature.
+        real density,        // Mixture molar density.
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x array.
+        const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
+        fvector &rop         // Return vector for rates of progress.
         ) const;
 
 
@@ -113,6 +149,27 @@ public:
         const real *const x, // Species mole fractions.
         unsigned int n,      // Number of values in x array.
         const fvector &Gs,   // Dimensionless Gibbs free energy of each species (1/mol).
+        fvector &kforward,   // Return vector for forward rate constants.
+        fvector &kreverse    // Return vector for reverse rate constants.
+        ) const;
+
+    // Calculates the forward and reverse rate constants 
+    // of all reactions given a mixture object.
+    void GetRateConstants(
+        const Sprog::Thermo::GasPhase &mix, // The mixture for which to calculate the rate constants.
+        fvector &kforward, // Return vector for forward rate constants.
+        fvector &kreverse  // Return vector for reverse rate constants.
+        ) const;
+
+    // Calculates the forward and reverse rate constants 
+    // of all reactions given mixture temperature, density
+    // and species mole fractions.
+    void GetRateConstants( 
+        real T,              // The mixture temperature.
+        real density,        // Mixture molar density.
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x array.
+        const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
         fvector &kforward,   // Return vector for forward rate constants.
         fvector &kreverse    // Return vector for reverse rate constants.
         ) const;

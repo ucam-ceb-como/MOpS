@@ -176,7 +176,7 @@ void IdealGas::CalcHs_RT(real T, fvector &H) const
     t[0] = 1.0;
     n = Thermo::H_PARAM_COUNT;
     for (i=1; i<n-1; i++) {
-        t[i] = (real)i * t[i-1] * T / (real)(i-1);
+        t[i] = (real)i * t[i-1] * T / (real)(i+1);
     }
     t[n-1] = 1.0 / T;
 
@@ -286,13 +286,13 @@ real IdealGas::CalcBulkS(Sprog::real T,
 void IdealGas::CalcGs(real T, fvector &G) const
 {
     int i, n;
-    real t[Thermo::H_PARAM_COUNT];
+    real t[Thermo::S_PARAM_COUNT];
 
     // Ensure output array has sufficient length.
     G.resize(m_species->size());
 
     // Precalculate temperature terms.
-    n = Thermo::H_PARAM_COUNT;
+    n = Thermo::S_PARAM_COUNT;
     t[1] = - R * T;
     t[0] = t[1] * (log(T) - 1.0);
     t[S_PARAM_COUNT-1] = t[1];
@@ -649,7 +649,7 @@ void IdealGas::sumTerms(real T, real *t, int n, std::vector<real> &Xs) const
 
         // Get the thermo fitting parameters for this species
         // at this temperature.
-        a = &(*m_species)[i]->ThermoParams(*m_pT);
+        a = &(*m_species)[i]->ThermoParams(T);
 
         // Calculate the thermo property for this species.
         for (k=0; k<n; k++) {
