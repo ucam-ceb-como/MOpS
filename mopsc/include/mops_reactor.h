@@ -5,8 +5,8 @@
   File purpose:
     The Reactor class is the base class for all types of reactor
     which can be solved with mops.  The base reactor solves a
-    constant pressure batch reactor.  CVODE is used to do the
-    ODE calculations.
+    batch reactor.  The default reactor is constant pressure and
+    constant temperature. CVODE is used to do the ODE calculations.
 */
 
 #ifndef MOPS_REACTOR_H
@@ -86,6 +86,15 @@ public:
     void SetEnergyEquation(EnergyModel model);
 
 
+    // EQUATION-OF-STATE MODEL.
+
+    // Sets the reactor to solve using a constant pressure assumption.
+    void SetConstP(void);
+
+    // Sets the reactor solve using a constant volume assumption.
+    void SetConstV(void);
+
+
     // ERROR TOLERANCES.
 
     // Returns the absolute error tolerance used for ODE
@@ -123,9 +132,26 @@ public:
     virtual Serial_ReactorType SerialType() const;
 
 protected:
+    // Reactor variables.
+    real m_time;                   // The current reaction time.
+    Mops::Mixture *m_mix;          // The mixture contained in the reactor.
+    const Mops::Mechanism *m_mech; // The mechanism which defines 
+                                   // what happens in the reactor.
+    EnergyModel m_emodel;          // The energy model used to describe the reactor.
+    bool m_constv; // true=constant volume model, false=constant pressure model.
+
+    // ODE solution variables.
+    real m_rtol, m_atol;  // Relative and absolute tolerances.
+    unsigned int m_neq;   // Number of equations solved.
+    unsigned int m_nsp;   // Number of species in current mechanism.
+    int m_iT;             // Index of temperature in solution vectors.
+    int m_iDens;          // Index of density in solution vectors.
+    real *m_deriv;        // Array to hold current solution derivatives.
+
     // Reactors should not be defined without knowledge of a Mechanism
     // object.  Therefore the default constructor is declared as protected.
     Reactor(void);
+
 
     // GOVERNING EQUATIONS.
 
@@ -144,22 +170,9 @@ protected:
         );
 
 private:
-    // Reactor variables.
-    real m_time;                   // The current reaction time.
-    Mops::Mixture *m_mix;          // The mixture contained in the reactor.
-    const Mops::Mechanism *m_mech; // The mechanism which defines 
-                                   // what happens in the reactor.
-    EnergyModel m_emodel;          // The energy model used to describe the reactor.
-
     // CVODE variables.
     void *m_odewk;        // CVODE workspace.
-    real m_rtol, m_atol;  // Relative and absolute tolerances.
     N_Vector m_solvec;    // Internal solution array for CVODE interface.
-    int m_neq;            // Number of equations solved.
-    int m_iT;             // Index of temperature in solution vectors.
-    int m_iDens;          // Index of density in solution vectors.
-    real *m_deriv;        // Array to hold current solution derivatives.
-
 
     // VERY IMPORTANT FOR CVODE INTEGRATION!
 
@@ -184,6 +197,8 @@ private:
     // Releases all memory used by the reactor object.
     void releaseMemory(void);
 };
+
+typedef Reactor Batch;
 };
 
 #endif

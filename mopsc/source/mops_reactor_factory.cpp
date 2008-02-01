@@ -1,6 +1,8 @@
 #include "mops_reactor_factory.h"
 #include "mops_reactor.h"
 #include "mops_reactor_type.h"
+#include "mops_psr.h"
+
 #include <stdexcept>
 
 using namespace Mops;
@@ -8,13 +10,18 @@ using namespace std;
 
 // REACTOR CREATION.
 
-Reactor *const ReactorFactory::Create(Mops::Serial_ReactorType type, Mops::Mechanism &mech)
+Reactor *const ReactorFactory::Create(Mops::Serial_ReactorType type, 
+                                      const Mops::Mechanism &mech)
 {
     Reactor *r = NULL;
 
     switch(type) {
         case Serial_Reactor:
+        case Serial_Batch:
             r = new Reactor(mech);
+            break;
+        case Serial_PSR:
+            r = new PSR(mech);
             break;
         default:
             throw invalid_argument("Invalid reactor type "
@@ -24,7 +31,8 @@ Reactor *const ReactorFactory::Create(Mops::Serial_ReactorType type, Mops::Mecha
     return r;
 }
 
-Reactor *const ReactorFactory::Read(std::istream &in, Mops::Mechanism &mech)
+Reactor *const ReactorFactory::Read(std::istream &in,
+                                    const Mops::Mechanism &mech)
 {
     if (in.good()) {
         Reactor *r = NULL;
@@ -37,7 +45,11 @@ Reactor *const ReactorFactory::Read(std::istream &in, Mops::Mechanism &mech)
         // an exception if the type is invalid.
         switch ((Serial_ReactorType)type) {
             case Serial_Reactor:
+            case Serial_Batch:
                 r = new Reactor(in, mech);
+                break;
+            case Serial_PSR:
+                r = new PSR(in, mech);
                 break;
             default:
                 throw runtime_error("Invalid reactor type read from "

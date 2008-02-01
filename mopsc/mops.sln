@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "comostrings", "..\comostrin
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "camxml", "..\camxml\camxml.vcproj", "{24E329F1-8809-494A-8E6C-EDDB045CE9D7}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sweeplib", "..\sweepc\sweeplib.vcproj", "{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -31,6 +33,10 @@ Global
 		{24E329F1-8809-494A-8E6C-EDDB045CE9D7}.Debug|Win32.Build.0 = Debug|Win32
 		{24E329F1-8809-494A-8E6C-EDDB045CE9D7}.Release|Win32.ActiveCfg = Release|Win32
 		{24E329F1-8809-494A-8E6C-EDDB045CE9D7}.Release|Win32.Build.0 = Release|Win32
+		{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}.Debug|Win32.Build.0 = Debug|Win32
+		{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}.Release|Win32.ActiveCfg = Release|Win32
+		{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

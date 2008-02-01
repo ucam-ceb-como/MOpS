@@ -9,31 +9,79 @@
 
 #include "mops.h"
 #include "sprog.h"
-#include "console_io.h"
 #include <vector>
 
 using namespace Mops;
 using namespace std;
 
-int main(void)
+int main(int argc, char *argv[])
 {
-    Reactor *batch = NULL;
-    Mechanism mech;
-    Solver solver;
-    vector<TimeInterval> times;
+    // Command line arguments with default values.
+    string chemfile("chem.inp");
+    string thermfile("therm.dat");
+    string settfile("mops.inx");
+    string swpfile("sweep.xml");
+    bool fsolve       = true;  // Default is to solve ..
+    bool fpostprocess = false; // .. but not post-process.
+    bool foldfmt      = true;  // Settings file format, new format not yet implemented.
+
+    // Read command line arguments.
+    for (unsigned int i=1; i<argc; i++) {
+        if (strcmp(argv[i], "-c") == 0) {
+            // Chemical mechanism file (CK format).
+            chemfile = argv[++i];
+        } else if (strcmp(argv[i], "-t") == 0) {
+            // Thermodynamic properties file (CK format).
+            thermfile = argv[++i];
+        } else if (strcmp(argv[i], "-r") == 0) {
+            // Settings file (F90 mops format).
+            settfile = argv[++i];
+            foldfmt  = true;
+        } else if (strcmp(argv[i], "-s") == 0) {
+            // Sweep mechanism file.
+            swpfile = argv[++i];
+        } else if (strcmp(argv[i], "-p") == 0) {
+            // Post-processing switch.  Used to turn PP on.
+            fpostprocess = true;
+        } else if (strcmp(argv[i], "-po") == 0) {
+            // "Post-process only" switch.  Post-processes but doesn't solve.
+            // Use this if you have previously run a simulation and want
+            // human-readable CSV formatted files with the results.
+            fsolve       = false;
+            fpostprocess = true;
+        } else {
+            // Currently nothing else is implemented here.  However, in future
+            // the settings file name will not be set with the -r switch and
+            // shall be read in this section.
+        }
+    }
+
+    // Define all the objects required to run the simulation.
+    Solver *solver   = NULL; // The solver.
+    Reactor *reactor = NULL; // Reactor to solve.
+    Mechanism mech;          // Chemical and particle mechanism.
+    timevector times;        // A list of output times and step counts.
+
+    // Create the solver.
+    solver = new Solver();
 
     // Read the chemical mechanism.
-    Sprog::IO::MechanismParser::ReadChemkin("chem.inp", mech, "therm.dat");
+    Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile);
 
     // Read the settings file.
-    batch = Settings_IO::LoadFromXML_V1("mops.inx", batch, times, solver, mech);
+    if (foldfmt) {
+        reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, *solver, mech);
+    }
 
     // Solve reactor.
-    solver.SolveReactor(*batch, times);
+    if (fsolve) solver->SolveReactor(*reactor, times);
 
     // Post-process.
-    solver.PostProcess(solver.OutputFile());
+    if (fpostprocess) solver->PostProcess(solver->OutputFile());
 
     // Clear up memory.
-    delete batch;
+    delete solver;
+    delete reactor;
+
+    return 0;
 }

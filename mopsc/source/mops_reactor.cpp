@@ -24,7 +24,7 @@ Reactor::Reactor(void)
 Reactor::Reactor(const Mops::Mechanism &mech)
 {
     init();
-    m_mech = &mech;
+    SetMechanism(mech);
 }
 
 // Copy constructor.
@@ -37,6 +37,7 @@ Reactor::Reactor(const Mops::Reactor &copy)
     m_odewk   = CVodeCreate(CV_BDF, CV_NEWTON);
     m_rtol    = copy.m_rtol;
     m_atol    = copy.m_atol;
+    m_nsp     = copy.m_nsp;
     m_neq     = copy.m_neq;
     m_iT      = copy.m_iT;
     m_iDens   = copy.m_iDens;
@@ -141,16 +142,6 @@ void Reactor::Fill(Mops::Mixture &mix, bool clearfirst)
     // Ensure that the reactor and mixture are using the same
     // mechanism.
     m_mix->SetSpecies(m_mech->Species());
-
-    // The number of equations to solve is the number of chemical species
-    // plus the temperature and the density.
-    m_neq   = m_mech->SpeciesCount() + 2;
-    m_iT    = m_neq - 2; // Second to last element is temperature.
-    m_iDens = m_neq - 1; // Last element is density.
-
-    // Allocate the derivative array.
-    if (m_deriv != NULL) delete [] m_deriv;
-    m_deriv = new real[m_neq];
 }
 
 
@@ -165,7 +156,17 @@ const Mops::Mechanism *const Reactor::Mechanism() const
 // Sets the reactor mechanism.
 void Reactor::SetMechanism(const Mops::Mechanism &mech)
 {
-    m_mech = &mech;
+    m_mech  = &mech;
+
+    // Set up vector indices.
+    m_nsp   = m_mech->SpeciesCount();
+    m_neq   = m_nsp + 2;
+    m_iT    = m_nsp;
+    m_iDens = m_iT + 1;
+
+    // Allocate the derivative array.
+    if (m_deriv != NULL) delete [] m_deriv;
+    m_deriv = new real[m_neq];
 }
 
 
@@ -181,6 +182,21 @@ Reactor::EnergyModel Reactor::EnergyEquation() const
 void Reactor::SetEnergyEquation(Reactor::EnergyModel model)
 {
     m_emodel = model;
+}
+
+
+// EQUATION-OF-STATE MODEL.
+
+// Sets the reactor to solve using a constant pressure assumption.
+void Reactor::SetConstP(void)
+{
+    m_constv = false;
+}
+
+// Sets the reactor solve using a constant volume assumption.
+void Reactor::SetConstV(void)
+{
+    m_constv = true;
 }
 
 
@@ -242,6 +258,13 @@ void Reactor::Serialize(std::ostream &out) const
         unsigned int n = (unsigned int)m_emodel;
         out.write((char*)&n, sizeof(n));
 
+        // Output the EoS model.
+        if (m_constv) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
         // Output the error tolerances.
         val = (double)m_atol;
         out.write((char*)&val, sizeof(val));
@@ -249,6 +272,8 @@ void Reactor::Serialize(std::ostream &out) const
         out.write((char*)&val, sizeof(val));
 
         // Output equation count + special indices.
+        n = (unsigned int)m_nsp;
+        out.write((char*)&n, sizeof(n));
         n = (unsigned int)m_neq;
         out.write((char*)&n, sizeof(n));
         n = (unsigned int)m_iT;
@@ -305,6 +330,10 @@ void Reactor::Deserialize(std::istream &in, const Mops::Mechanism &mech)
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_emodel = (EnergyModel)n;
 
+                // Read the EoS model.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_constv = (n==1);
+
                 // Read the error tolerances.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_atol = (real)val;
@@ -312,9 +341,14 @@ void Reactor::Deserialize(std::istream &in, const Mops::Mechanism &mech)
                 m_rtol = (real)val;
 
                 // Read equation count + special indices.
+                in.read(reinterpret_cast<char*>(&m_nsp), sizeof(m_nsp));
                 in.read(reinterpret_cast<char*>(&m_neq), sizeof(m_neq));
                 in.read(reinterpret_cast<char*>(&m_iT), sizeof(m_iT));
                 in.read(reinterpret_cast<char*>(&m_iDens), sizeof(m_iDens));
+
+                // Store the mechanism and initialise CVODE.
+                SetMechanism(mech);
+                Initialise(m_time);
 
                 // Read derivatives array.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -325,9 +359,6 @@ void Reactor::Deserialize(std::istream &in, const Mops::Mechanism &mech)
                         m_deriv[i] = (real)val;
                     }
                 }
-
-                // Store the mechanism.
-                m_mech = &mech;
 
                 break;
             default:
@@ -399,62 +430,63 @@ int Reactor::rhsFn(double t,      // Independent variable.
 void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot)
 {
     int i;
-    vector<real> wdot, Gs, rop, kf, kr;
-    real wtot = 0.0, ydot0;
+    fvector wdot;
+    real wtot = 0.0;
 
-    m_mix->CalcGs_RT(y[m_iT], Gs);
-    m_mech->Reactions().GetRateConstants(y[m_iT], y[m_iDens], y, 
-                                         m_mech->Species().size(), Gs, kf, kr);
-    m_mech->Reactions().GetRatesOfProgress(y[m_iDens], y, m_mech->Species().size(), 
-                                           kf, kr, rop);
-    m_mech->Reactions().GetMolarProdRates(rop, wdot);
+    // Calculate molar production rates.
+    wtot = m_mech->Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y, 
+                                                 m_nsp, *m_mix, wdot);
 
     // Calculate mole fraction derivatives.
     for (i=0; i<m_neq-2; i++) {
-        wtot += wdot[i];
-    }
-    //ydot[0];
-    ydot0 = 0.0;
-    for (i=0; i<m_neq-2; i++) {
         ydot[i] = (wdot[i] - (y[i]*wtot)) / y[m_iDens];
-        //ydot[0] -= ydot[i];
-        if (i>0) ydot0 -= ydot[i];
     }
 
-    ydot[m_neq-2] = 0.0; // Temperature derivative.
-    ydot[m_neq-1] = 0.0; // Density derivative.
+    // Temperature derivative.
+    ydot[m_iT]    = 0.0;
+
+    // Density derivative.
+    if (m_constv) {
+        ydot[m_iDens] = wtot; // Constant volume.
+    } else {
+        ydot[m_iDens] = 0.0;  // Constant pressure.
+    }
 }
 
 // Definition of RHS form for adiabatic energy equation.
 void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot)
 {
     int i;
-    vector<real> wdot, Gs, rop, kf, kr;
-    real wtot = 0.0, ydot0;
+    fvector wdot, Cps, Hs;
+    real wtot = 0.0, Cp = 0.0;
 
-    m_mix->CalcGs_RT(y[m_iT], Gs);
-    m_mech->Reactions().GetRateConstants(y[m_iT], y[m_iDens], y, 
-                                         m_mech->Species().size(), Gs, kf, kr);
-    m_mech->Reactions().GetRatesOfProgress(y[m_iDens], y, m_mech->Species().size(), 
-                                           kf, kr, rop);
-    m_mech->Reactions().GetMolarProdRates(rop, wdot);
+    // Calculate mixture thermodynamic properties.
+    m_mix->CalcHs_RT(y[m_iT], Hs);
+    Cp = m_mix->CalcBulkCp(y[m_iT], y, m_nsp, Cps) / Sprog::R;
 
-    // Calculate mole fraction derivatives.
-    for (i=0; i<m_neq-2; i++) {
-        wtot += wdot[i];
-    }
-    //ydot[0];
-    ydot0 = 0.0;
-    for (i=0; i<m_neq-2; i++) {
+    // Calculate molar production rates.
+    wtot = m_mech->Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y, 
+                                                 m_nsp, *m_mix, wdot);
+
+
+    // Calculate mole fraction and temperature derivatives.
+    ydot[m_iT] = 0.0;
+    for (i=0; i<m_nsp; i++) {
         ydot[i] = (wdot[i] - (y[i]*wtot)) / y[m_iDens];
-        //ydot[0] -= ydot[i];
-        if (i>0) ydot0 -= ydot[i];
+        ydot[m_iT] += wdot[i] * Hs[i];
     }
 
-    // TODO:  Include adiabatic energy equation here.
+    // Complete temperature derivative.
+    ydot[m_iT] *= - y[m_iT] / (Cp * y[m_iDens]);
 
-    ydot[m_neq-2] = 0.0; // Temperature derivative.
-    ydot[m_neq-1] = 0.0; // Density derivative.
+    // Calculate density derivative.
+    if (m_constv) {
+        // Constant volume.
+        ydot[m_iDens] = wtot;
+    } else {
+        // Constant pressure (Use EoS to calculate).
+        ydot[m_iDens] = - y[m_iDens] * ydot[m_iT] / y[m_iT];
+    }
 }
 
 
@@ -471,8 +503,10 @@ void Reactor::init(void)
     m_atol    = 1.0e-8;
     m_rtol    = 6.0e-4;
     m_neq     = 0;
+    m_nsp     = 0;
     m_iT      = -1;
     m_iDens   = -1;
+    m_constv  = false;
 
     // Init CVODE.
     m_odewk = CVodeCreate(CV_BDF, CV_NEWTON);

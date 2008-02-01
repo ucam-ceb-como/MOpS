@@ -31,16 +31,16 @@ public:
 
     // Creates a new reactor object of the given type.
     static Reactor *const Create(
-        Serial_ReactorType type, // Type of reactor to create.
-        Mops::Mechanism &mech    // Mechanism which defines the reactor.
+        Serial_ReactorType type,    // Type of reactor to create.
+        const Mops::Mechanism &mech // Mechanism which defines the reactor.
         );
 
     // Reads a Reactor object from a binary stream.  The first thing
     // read from the stream is a ReactorType to define what type
     // of reactor to read from the stream.
     static Reactor *const Read(
-        std::istream &in,     // Input stream from which to read mixture.
-        Mops::Mechanism &mech // Mechanism which defines the reactor.
+        std::istream &in,           // Input stream from which to read mixture.
+        const Mops::Mechanism &mech // Mechanism which defines the reactor.
         );
 
 

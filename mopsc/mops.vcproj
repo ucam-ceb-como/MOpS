@@ -170,6 +170,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\mops_psr.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\mops_reactor.cpp"
 				>
 			</File>
@@ -209,6 +213,10 @@
 			</File>
 			<File
 				RelativePath=".\include\mops_params.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\mops_psr.h"
 				>
 			</File>
 			<File

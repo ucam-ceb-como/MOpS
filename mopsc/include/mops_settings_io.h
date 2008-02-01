@@ -32,7 +32,7 @@ public:
 
     // An enumeration of different possible reactor types that
     // may be specified in the settings file.
-    enum ReactorType {Batch, PSR, ShockTube};
+    // enum ReactorType {Batch, PSR, ShockTube};
 
     // SETTINGS FILE READING.
 

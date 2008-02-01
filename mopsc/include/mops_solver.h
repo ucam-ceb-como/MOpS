@@ -20,6 +20,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <time.h>
 
 namespace Mops
 {
@@ -135,6 +136,12 @@ private:
 
     // Default error tolerances for the ODE solver.
     real m_atol, m_rtol;
+
+
+    // COMPUTATION TIME.
+
+    clock_t m_cpu_start, m_cpu_mark;
+    double m_chemtime;
 
 
     // CONSOLE OUTPUT PARAMETERS.

@@ -3,6 +3,7 @@
 #include "csv_io.h"
 #include <vector>
 #include <string>
+#include <time.h>
 
 using namespace Mops;
 using namespace std;
@@ -12,7 +13,7 @@ using namespace std;
 // Default constructor.
 Solver::Solver(void)
 {
-    m_atol = 1.0e-8;
+    m_atol = 1.0e-3;
     m_rtol = 6.0e-4;
     m_console_interval = 1;
     m_console_vars.clear();
@@ -133,8 +134,12 @@ void Solver::SetOutputFile(const std::string &name)
 
 // Solves the given reactor for the given time intervals.
 void Solver::SolveReactor(Mops::Reactor &r, 
-                          const std::vector<TimeInterval> &times)
+                          const timevector &times)
 {
+    // Start the CPU timing clock.
+    m_cpu_start = clock();
+    m_chemtime  = 0.0;
+
     unsigned int icon;
     real dt, t2; // Stop time for each step.
 
@@ -158,7 +163,7 @@ void Solver::SolveReactor(Mops::Reactor &r,
     consoleOutput(r);
 
     // Loop over the time intervals.
-    vector<TimeInterval>::const_iterator iint;
+    timevector::const_iterator iint;
     for (iint=times.begin(); iint!=times.end(); iint++) {
         // Get the step size for this interval.
         dt = (*iint).StepSize();
@@ -166,8 +171,10 @@ void Solver::SolveReactor(Mops::Reactor &r,
         // Loop over the steps in this interval.
         unsigned int istep;
         for (istep=0; istep<(*iint).StepCount(); istep++) {
-            // Run the reactor solver for this step.
-            r.Solve((t2+=dt));
+            // Run the reactor solver for this step (timed).
+            m_cpu_mark = clock();
+                r.Solve((t2+=dt));
+            m_chemtime += (double)(clock() - m_cpu_mark) / CLOCKS_PER_SEC;
 
             // Generate file output.
             fileOutput(r);
@@ -193,6 +200,7 @@ void Solver::PostProcess(const std::string &filename) const
     timevector times;
     Reactor *r;
     fvector out;
+    vector<double> cpu(4);
 
     // Build input file name.
     string fname(filename); fname.append(".dat");
@@ -250,8 +258,19 @@ void Solver::PostProcess(const std::string &filename) const
     header.push_back("Pressure (Pa)");
     csv.Write(header);
 
+    // Open a CSV file for the computation time results.
+    CSV_IO csvcpu(string(filename).append("-ct.csv"), true);
+    vector<string> cpuheader;
+    cpuheader.push_back("Step");
+    cpuheader.push_back("Time (s)");
+    cpuheader.push_back("CPU Time (s)");
+    cpuheader.push_back("Chem CPU Time (s)");
+    csvcpu.Write(cpuheader);
+
     // Read initial reactor conditions.
     {
+        // REACTOR.
+
         // Read the reactor object (temporary).
         r = ReactorFactory::Read(fin, mech);
 
@@ -263,6 +282,16 @@ void Solver::PostProcess(const std::string &filename) const
 
         // Delete temporary reactor object.
         delete r;
+
+        // COMPUTATION TIMES.
+
+        // Read the computation times.
+        cpu[0] = out[0]; cpu[1] = out[1];
+        fin.read(reinterpret_cast<char*>(&cpu[2]), sizeof(cpu[2]));
+        fin.read(reinterpret_cast<char*>(&cpu[3]), sizeof(cpu[3]));
+
+        // Write CPU times to file.
+        csvcpu.Write(cpu);
     }
 
     // Loop over all time intervals.
@@ -270,6 +299,8 @@ void Solver::PostProcess(const std::string &filename) const
         // Loop over all time steps in this interval.
         unsigned int istep;
         for (istep=0; istep<(*iint).StepCount(); istep++) {
+            // REACTOR.
+
             // Read the reactor object (temporary).
             r = ReactorFactory::Read(fin, mech);
 
@@ -282,6 +313,16 @@ void Solver::PostProcess(const std::string &filename) const
 
             // Delete temporary reactor object.
             delete r;
+
+            // COMPUTATION TIMES.
+
+            // Read the computation times.
+            cpu[0] = out[0]; cpu[1] = out[1];
+            fin.read(reinterpret_cast<char*>(&cpu[2]), sizeof(cpu[2]));
+            fin.read(reinterpret_cast<char*>(&cpu[3]), sizeof(cpu[3]));
+            
+            // Write CPU times to file.
+            csvcpu.Write(cpu);
         }
     }
 
@@ -343,6 +384,11 @@ void Solver::fileOutput(const Mops::Reactor &r)
 {
     // Write the reactor to the output file.
     ReactorFactory::Write(r, m_file);
+
+    // Write CPU times to file.
+    double cputime = (double)(clock() - m_cpu_start) / CLOCKS_PER_SEC;
+    m_file.write((char*)&cputime, sizeof(cputime));
+    m_file.write((char*)&m_chemtime, sizeof(m_chemtime));
 }
 
 void Solver::endFileOutput()
