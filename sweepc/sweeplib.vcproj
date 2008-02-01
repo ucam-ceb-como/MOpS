@@ -258,6 +258,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\swp_ensemble.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\swpcomponent.h"
 				>
 			</File>
@@ -295,6 +299,10 @@
 			</File>
 			<File
 				RelativePath=".\include\swpsolver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swptreenode.h"
 				>
 			</File>
 			<File
