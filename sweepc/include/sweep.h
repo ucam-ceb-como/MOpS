@@ -10,33 +10,46 @@
 #ifndef SWEEP_H
 #define SWEEP_H
 
-#include "swpparams.h"
-#include "swpsolver.h"
-#include "swpmechanism.h"
-#include "swpensemble.h"
-#include "swpcomponent.h"
-#include "swpparticlechanger.h"
+// Parameters.
+#include "swp_params.h"
 
-/* Particle types. */
-#include "swpparticle1d.h"
+// Driver.
+#include "swp_solver.h"
 
-/* Classes which define different systems that can be solved using sweep. */
-#include "swpsystem.h"
-#include "swphomogas.h"
-#include "swppremixflame.h"
+// General particle implementation.
+#include "swp_component.h"
+#include "swp_tracker.h"
+#include "swp_particledata.h"
+#include "swp_particle.h"
+#include "swp_modeldata.h"
+#include "swp_model.h"
 
-/* Classes which define different particle processes. */
-#include "swpprocess.h"
-#include "swpinception.h"
-#include "swpcoagulation.h"
-#include "swpsurfacereaction.h"
-#include "swpactivesitesreaction.h"
-#include "swpcondensation.h"
+// Specific particle models.
+#include "swp_modeltype.h"
+#include "swp_coagmodeldata.h"
+#include "swp_coagmodel.h"
+#include "swp_pointcontactdata.h"
+#include "swp_pointcontactmodel.h"
+#include "swp_primary.h"
+#include "swp_pripartdata.h"
+#include "swp_pripartmodel.h"
+#include "swp_modelfactory.h"
 
-/* Input and output code. */
-#include "swpxmlio.h"
+// Particle system definition.
+#include "swp_treenode.h"
+#include "swp_ensemble.h"
+#include "swp_cell.h"
 
-/* Hardcoded particle and chemical models. */
-#include "swpabf.h"
+// Mechanism and process definitions.
+#include "swp_mechanism.h"
+#include "swp_process.h"
+#include "swp_inception.h"
+#include "swp_coagulation.h"
+#include "swp_particleprocess.h"
+#include "swp_surfacereaction.h"
+#include "swp_condensation.h"
+
+// Chemical models.
+//#include "swpabf.h"
 
 #endif
