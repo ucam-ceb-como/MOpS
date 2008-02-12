@@ -39,20 +39,6 @@ public:
         Mechanism &mech // Mechanism to use to solve system.
         );
 
-    // Performs stochastic stepping algorithm up to specified stop time using
-    // the given mechanism to define the stochastic processes.  Updates given
-    // system accordingly.  On error returns <0, otherwise returns 0.  In this
-    // flavour the gas-phase chemistry is interpolated from a vector of
-    // IdealGas objects rather than being taken from the given system object.
-    // However, the particles in the system object are updated accordingly.
-    int Run(
-        real &t,        // Simulation start time.  Will return the stop time.
-        real tstop,     // Stop time for simulation.
-        const GasProfile &gasphase, // Gas-phase profile.
-        Cell &sys,      // System to solve.
-        Mechanism &mech // Mechanism to use to solve system.
-        );
-
 protected:
     // Numerical parameters.
     real m_tstop;      // Simulation stop time.
@@ -89,17 +75,6 @@ protected:
     // Selects a process using a DIV algorithm and the process rates
     // as weights.
     int chooseProcess(const fvector &rates);
-
-
-    // HELPER FUNCTIONS.
-
-    // Uses linear interpolation to return the chemical conditions
-    // at a given time using a profile of Idealgas objects.
-    void linInterpGas(
-        real t,                      // Time.
-        const GasProfile &gasphase,  // Gas-phase profile.
-        Sprog::Thermo::IdealGas &gas // Output gas conditions.
-        ) const;
 };
 };
 
