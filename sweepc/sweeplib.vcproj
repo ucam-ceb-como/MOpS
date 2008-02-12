@@ -54,7 +54,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="..\comostrings\lib\comostrings_d.lib ..\camxml\lib\camxml_d.lib ..\sprogc\lib\sprog_d.lib"
+				AdditionalDependencies="..\sprogc\lib\sprog_d.lib ..\camxml\lib\camxml_d.lib"
 				OutputFile="$(ProjectDir)lib\sweep_d.lib"
 			/>
 			<Tool
@@ -140,94 +140,102 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\source\swpabf.cpp"
+				RelativePath=".\source\swp_cell.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\swpactivesitesreaction.cpp"
+				RelativePath=".\source\swp_component.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\swpcoagulation.cpp"
+				RelativePath=".\source\swp_ensemble.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\swpcomponent.cpp"
+				RelativePath=".\source\swp_mechanism.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\swpcondensation.cpp"
+				RelativePath=".\source\swp_modelfactory.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\swpensemble.cpp"
+				RelativePath=".\source\swp_particle.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\swphomogas.cpp"
+				RelativePath=".\source\swp_particledata.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\swpinception.cpp"
+				RelativePath=".\source\swp_solver.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\swpmechanism.cpp"
+				RelativePath=".\source\swp_tracker.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\swpoutput.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swppahmodel.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swppahreaction.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpparticlechanger.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swppremixflame.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpprocess.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpsolver.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpsurfacereaction.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpsystem.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swpxmlio.cpp"
+				RelativePath=".\source\swp_treenode.cpp"
 				>
 			</File>
 			<Filter
-				Name="Particle types"
+				Name="Models"
 				>
 				<File
-					RelativePath=".\source\swppahparticle.cpp"
+					RelativePath=".\source\swp_coagmodel.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\source\swpparticle1d.cpp"
+					RelativePath=".\source\swp_coagmodeldata.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\source\swpsvparticle.cpp"
+					RelativePath=".\source\swp_modeldata.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_pointcontactdata.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_pointcontactmodel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_primodeldata.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_pripartmodel.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Processes"
+				>
+				<File
+					RelativePath=".\source\swp_coagulation.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_condensation.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_inception.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_particleprocess.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_process.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_surfacereaction.cpp"
 					>
 				</File>
 			</Filter>
@@ -238,23 +246,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\include\mt19937ar.h"
+				RelativePath=".\include\swp_component.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\ranlib.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\rng.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\rnglib.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\sweep.h"
+				RelativePath=".\include\swp_component_inl.h"
 				>
 			</File>
 			<File
@@ -262,66 +258,62 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\swpcomponent.h"
+				RelativePath=".\include\swp_ensemble_inl.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\swpensemble.h"
+				RelativePath=".\include\swp_mechanism.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\swpensemble_inl.h"
+				RelativePath=".\include\swp_modelfactory.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\swpmechanism.h"
+				RelativePath=".\include\swp_params.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\swpoutput.h"
+				RelativePath=".\include\swp_particle.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\swppahreaction.h"
+				RelativePath=".\include\swp_particledata.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\swpparams.h"
+				RelativePath=".\include\swp_solver.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\swpparticlecache.h"
+				RelativePath=".\include\swp_system.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\swpparticlechanger.h"
+				RelativePath=".\include\swp_tracker.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\swpsolver.h"
+				RelativePath=".\include\swp_tracker_inl.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\swptreenode.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swpxmlio.h"
+				RelativePath=".\include\swp_treenode.h"
 				>
 			</File>
 			<Filter
-				Name="Particle types"
+				Name="Random Numbers"
 				>
 				<File
-					RelativePath=".\include\swppahparticle.h"
+					RelativePath=".\include\mt19937ar.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swpparticle1d.h"
+					RelativePath=".\include\ranlib.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swpsvparticle.h"
+					RelativePath=".\include\rng.h"
 					>
 				</File>
 			</Filter>
@@ -329,11 +321,43 @@
 				Name="Models"
 				>
 				<File
-					RelativePath=".\include\swpabf.h"
+					RelativePath=".\include\swp_coagmodel.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swppahmodel.h"
+					RelativePath=".\include\swp_coagmodeldata.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_model.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_modeldata.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_modeltype.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_pointcontactdata.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_pointcontactmodel.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_primary.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_pripartdata.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_pripartmodel.h"
 					>
 				</File>
 			</Filter>
@@ -341,43 +365,27 @@
 				Name="Processes"
 				>
 				<File
-					RelativePath=".\include\swpactivesitesreaction.h"
+					RelativePath=".\include\swp_coagulation.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swpcoagulation.h"
+					RelativePath=".\include\swp_condensation.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swpcondensation.h"
+					RelativePath=".\include\swp_inception.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swpinception.h"
+					RelativePath=".\include\swp_particleprocess.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swpprocess.h"
+					RelativePath=".\include\swp_process.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swpsurfacereaction.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Systems"
-				>
-				<File
-					RelativePath=".\include\swphomogas.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swppremixflame.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swpsystem.h"
+					RelativePath=".\include\swp_surfacereaction.h"
 					>
 				</File>
 			</Filter>

@@ -9,7 +9,7 @@
 #ifndef SWEEP_RNG_H
 #define SWEEP_RNG_H
 
-#include "swpparams.h"
+#include "swp_params.h"
 #include "mt19937ar.h"
 
 namespace Sweep
