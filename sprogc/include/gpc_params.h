@@ -21,16 +21,25 @@ namespace Sprog
     // Real number STL vector.
     typedef std::vector<real> fvector; 
 
-    // Mathematical constants.
+
+    // MATHEMATICAL CONSTANTS.
+
     const real PI = 3.1415926535897932384626433832795;
     const real ONE_THIRD  = 3.3333334e-01;
     const real TWO_THIRDS = 6.6666667e-01;
 
-    // Physical constants.
-    const real NA   = 6.0221367e23;  // Avogadro's number.
-    const real R    = 8.31451e0;     // Gas constant SI (J/molK).
-    const real R_CGS = 8.31451e7;    // Gas constant CGS (ergs/molK).
-    const real RCAL = 1.9872e-3;     // Gas constant Calories (kcal/molK).
+
+    // PHYSICAL CONSTANTS.
+
+    // Avogadro's number (source = NIST website, physics.nist.gov).
+    // Error = 3.0e16 /mol.
+    const real NA    = 6.02214179e23; // 1/mol.
+
+    // Gas constant (source = NIST website, physics.nist.gov).
+    // Error = 1.5e-5 J/mol/K.
+    const real R     = 8.314472e0; // J/mol/K   (SI).
+    const real R_CGS = 8.314472e7; // ergs/molK (CGS).
+    const real RCAL  = 1.9872e-3;  // kcal/molK (calories).
 };
 
 #endif

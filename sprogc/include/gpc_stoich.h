@@ -61,6 +61,14 @@ struct StoichXRef
     RxnStoichMap RxnStoich;
 };
 typedef std::vector<StoichXRef> StoichXRefVector;
+
+// Alternative method of defining stoichiometry.
+typedef std::map<unsigned int, int> StoichMap;
+typedef std::map<unsigned int, real> StoichMapf;
+/*
+typedef std::pair<unsigned int, int> Stoich;
+typedef std::pair<unsigned int, real> Stoichf;
+*/
 };
 
 #endif

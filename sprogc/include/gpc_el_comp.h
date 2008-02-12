@@ -11,6 +11,7 @@
 #define GPC_EL_COMP_H
 
 #include <vector>
+#include <map>
 
 namespace Sprog
 {
@@ -70,6 +71,13 @@ typedef std::vector<ElComp> ElCompVector;
 
 // A typedef for a STL vector of pointers to ElComp objects.
 typedef std::vector<ElComp*> ElCompPtrVector;
+
+
+// Alternative method of defining element composition.
+typedef std::map<unsigned int, unsigned int> ElementMap;
+/*
+typedef std::pair<unsigned int, unsigned int> ElComp;
+*/
 };
 
 #endif

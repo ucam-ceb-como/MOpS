@@ -368,7 +368,8 @@ void Mixture::Serialize(std::ostream &out) const
             out.write((char*)&(*i), sizeof(*i));
         }
     } else {
-        throw invalid_argument("Output stream not ready (Sprog, Mixture::Serialize).");
+        throw invalid_argument("Output stream not ready "
+                               "(Sprog, Mixture::Serialize).");
     }
 }
 
