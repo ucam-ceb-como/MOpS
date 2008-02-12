@@ -11,7 +11,7 @@
 #define SWEEP_PROCESS_H
 
 #include "swp_params.h"
-#include "swp_system.h"
+#include "swp_cell.h"
 #include "swp_particle.h"
 #include "swp_particledata.h"
 #include "rng.h"

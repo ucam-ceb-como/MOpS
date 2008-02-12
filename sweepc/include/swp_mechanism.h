@@ -20,7 +20,7 @@
 #define SWEEP_MECHANISM_H
 
 #include "swp_params.h"
-#include "swp_system.h"
+#include "swp_cell.h"
 #include "swp_process.h"
 #include "swp_particleprocess.h"
 #include "swp_inception.h"
