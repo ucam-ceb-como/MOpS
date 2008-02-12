@@ -1,4 +1,5 @@
 #include "swp_ensemble.h"
+#include "swp_mechanism.h"
 #include "rng.h"
 #include <cmath>
 #include <vector>
@@ -41,6 +42,12 @@ Ensemble::Ensemble(const Sweep::Ensemble &copy)
 {
     // Use assignment operator.
     *this = copy;
+}
+
+// Stream-reading constructor.
+Ensemble::Ensemble(std::istream &in, const Mechanism &mech)
+{
+    Deserialize(in, mech);
 }
 
 // Destructor.
@@ -601,5 +608,136 @@ void Ensemble::dble()
             m_ndble++;
             n *= 2;
         }
+    }
+}
+
+// READ/WRITE/COPY.
+
+// Writes the object to a binary stream.
+void Ensemble::Serialize(std::ostream &out) const
+{
+    const unsigned int trueval  = 1;
+    const unsigned int falseval = 0;
+
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Output ensemble capacity.
+        unsigned int n = (unsigned int)m_capacity;
+        out.write((char*)&n, sizeof(n));
+
+        // Output ensemble particle count.
+        n = (unsigned int)m_count;
+        out.write((char*)&n, sizeof(n));
+
+        // Output the particles.
+        for (unsigned int i=0; i!=m_count; ++i) {
+            m_particles[i]->Serialize(out);
+        }
+
+        // Output the scaling factor.
+        double val = (double)m_scale;
+        out.write((char*)&val, sizeof(val));
+
+        // Output number of contractions.
+        n = (unsigned int)m_ncont;
+        out.write((char*)&n, sizeof(n));
+
+        // Output number of doublings.
+        n = (unsigned int)m_ndble;
+        out.write((char*)&n, sizeof(n));
+        
+        // Output if doubling is active.
+        if (m_dbleactive) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+        // Output if doubling is turned on.
+        if (m_dbleon) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, Ensemble::Serialize).");
+    }
+}
+
+// Reads the object from a binary stream.
+void Ensemble::Deserialize(std::istream &in, const Mechanism &mech)
+{
+    Clear();
+
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        unsigned int n = 0;
+        double val     = 0.0;
+
+        switch (version) {
+            case 0:
+                // Read the ensemble capacity.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                Initialise(n);
+
+                // Read the particle count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_count = n;
+                
+                // Read the particles.
+                for (unsigned int i=0; i!=m_count; ++i) {
+                    Particle *p = new Particle(in, mech);
+                    p->SetEnsemble(*this);
+                    m_particles.push_back(p);
+                }
+
+                // Read the scaling factor.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_scale = (real)val;
+
+                // Read number of contractions.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_ncont = n;
+
+                // Read number of doublings.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_ndble = n;
+                
+                // Read if doubling is active.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n==1) {
+                    m_dbleactive = true;
+                } else {
+                    m_dbleactive = false;
+                }
+
+                // Read if doubling is turned on.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n==1) {
+                    m_dbleon = true;
+                } else {
+                    m_dbleon = false;
+                }
+
+                // Calculate binary tree.
+                Update();
+
+                break;
+            default:
+                throw runtime_error("Serialized version number is invalid "
+                                    "(Sweep, Ensemble::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, Ensemble::Deserialize).");
     }
 }

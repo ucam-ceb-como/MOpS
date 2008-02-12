@@ -11,6 +11,7 @@
 #define SWEEP_PRIMARY_H
 
 #include "swp_params.h"
+#include <iostream>
 
 namespace Sweep
 {
@@ -18,8 +19,9 @@ class Primary
 {
 public:
     // Constructors.
-    Primary(void);   // Default constructor.
+    Primary(void);                // Default constructor.
     Primary(const Primary &copy); // Copy constructor.
+    Primary(std::istream &in);    // Stream-reading constructor.
 
     // Destructors.
     ~Primary(void);
@@ -63,6 +65,12 @@ public:
 
     // Returns a copy of the model data.
     Primary *const Clone(void) const;
+
+    // Writes the object to a binary stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    void Deserialize(std::istream &in);
 
 private:
     real m_vol;  // Primary volume.

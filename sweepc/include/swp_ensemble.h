@@ -30,10 +30,15 @@
 #include "swp_params.h"
 #include "swp_particle.h"
 #include "swp_treenode.h"
+#include "swp_component.h"
+#include "swp_tracker.h"
 #include <cmath>
+#include <iostream>
 
 namespace Sweep
 {
+class Mechanism;
+
 class Ensemble
 {
 public:
@@ -51,9 +56,13 @@ public:
     // Constructors.
     Ensemble(void);         // Default constructor.
     Ensemble(               // Parameterised constructor.
-        unsigned int count  //  - Number of particles.
+        unsigned int count  //  - Capacity (max. number of particles).
         );  
     Ensemble(const Ensemble &copy); // Copy constructor.
+    Ensemble(                 // Stream-reading constructor.
+        std::istream &in,     //   - Input stream.
+        const Mechanism &mech //   - Mechanism used to define particles.
+        );
 
     // Destructor.
     ~Ensemble(void);
@@ -182,6 +191,17 @@ public:
     // Updates the ensemble tree completely.
     void Update(void);
 
+
+    // READ/WRITE/COPY.
+
+    // Writes the object to a binary stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    void Deserialize(
+        std::istream &in,     // Input stream.
+        const Mechanism &mech // Mechanism used to define particles.
+        );
 
 private: 
     // Vector of particles in the ensemble.

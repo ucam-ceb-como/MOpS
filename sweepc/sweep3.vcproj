@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(ProjectDir)bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="1"
@@ -41,18 +41,19 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				InlineFunctionExpansion="1"
-				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="include/camxml;include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
+				InlineFunctionExpansion="0"
+				FavorSizeOrSpeed="0"
+				AdditionalIncludeDirectories="..\comostrings\include;..\sprogc\include;include"
+				PreprocessorDefinitions="_DEBUG;_CONSOLE"
+				MinimalRebuild="false"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
 				FloatingPointExceptions="true"
+				DisableLanguageExtensions="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -65,18 +66,18 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="lib/camxml_D.lib "
-				OutputFile="bin\sweep3_d.exe"
+				AdditionalDependencies="lib\sweep_d.lib ..\comostrings\lib\comostrings_d.lib"
+				OutputFile="bin\sweep_flame_d.exe"
 				Version="1"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="lib"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
-				SubSystem="1"
+				SubSystem="0"
 				OptimizeReferences="0"
 				EnableCOMDATFolding="0"
-				RandomizedBaseAddress="1"
+				RandomizedBaseAddress="0"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
@@ -104,7 +105,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(ProjectDir)bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="1"
@@ -127,13 +128,15 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				InlineFunctionExpansion="2"
+				Optimization="2"
+				InlineFunctionExpansion="0"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="include;include/camxml"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="include"
+				PreprocessorDefinitions="NDEBUG;_CONSOLE"
 				RuntimeLibrary="0"
 				FloatingPointModel="0"
+				DisableLanguageExtensions="true"
 				UsePrecompiledHeader="0"
 				GenerateXMLDocumentationFiles="false"
 				WarningLevel="3"
@@ -151,8 +154,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="lib/camxml.lib"
-				OutputFile="bin/sweep3.exe"
+				AdditionalDependencies="lib\sweep.lib"
+				OutputFile="bin\sweep_flame.exe"
 				Version="1"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="lib"

@@ -19,11 +19,13 @@
 #include "swp_modeltype.h"
 #include "swp_modeldata.h"
 #include "swp_coagmodeldata.h"
+#include <iostream>
 
 namespace Sweep
 {
 class Ensemble;
 class TreeNode;
+class Mechanism;
 
 class ParticleData
 {
@@ -50,9 +52,13 @@ public:
         const TrackPtrVector &trackers
         ); 
     ParticleData(const ParticleData &copy);  // Copy constructor.
+    ParticleData(
+        std::istream &in,     // Input stream.
+        const Mechanism &mech // Mechanism which defines components and trackers.
+        );
 
     // Destructors.
-    ~ParticleData(void);
+    virtual ~ParticleData(void);
 
     // Operators.
     ParticleData &operator=(const ParticleData &rhs);
@@ -199,7 +205,16 @@ public:
     // READ/WRITE/COPY.
 
     // Creates a copy of the particle data object.
-    ParticleData *const Clone(void) const;
+    virtual ParticleData *const Clone(void) const;
+
+    // Writes the object to a binary stream.
+    virtual void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    virtual void Deserialize(
+        std::istream &in,
+        const Mechanism &mech
+        );
 
 protected:
     const CompPtrVector *m_components; // Components used to define properties.
@@ -226,6 +241,9 @@ protected:
     // ParticleData class cannot be created without knowledge of the
     // components and the values.
     ParticleData(void);
+
+    // Release all memory associated with the ParticleData object.
+    void releaseMem(void);
 };
 };
 

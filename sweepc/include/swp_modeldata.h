@@ -15,6 +15,7 @@
 #include "swp_model.h"
 #include <vector>
 #include <map>
+#include <iostream>
 
 namespace Sweep
 {
@@ -64,6 +65,12 @@ public:
     // Returns the model data type.  Used to identify different models
     // and for serialisation.
     virtual ModelType ID(void) const = 0;
+
+    // Writes the object to a binary stream.
+    virtual void Serialize(std::ostream &out) const = 0;
+
+    // Reads the object from a binary stream.
+    virtual void Deserialize(std::istream &in) = 0;
 
 protected:
     // Can't create a ModelData object independently of a

@@ -246,6 +246,14 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\include\sweep.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_cell.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\swp_component.h"
 				>
 			</File>
@@ -259,6 +267,10 @@
 			</File>
 			<File
 				RelativePath=".\include\swp_ensemble_inl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_flame_solver.h"
 				>
 			</File>
 			<File
@@ -283,10 +295,6 @@
 			</File>
 			<File
 				RelativePath=".\include\swp_solver.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swp_system.h"
 				>
 			</File>
 			<File

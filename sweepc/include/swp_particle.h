@@ -18,10 +18,12 @@
 #include "swp_tracker.h"
 #include "swp_particledata.h"
 #include <vector>
+#include <iostream>
 
 namespace Sweep
 {
 class Ensemble;
+class Mechanism;
 
 class Particle : public ParticleData
 {
@@ -32,6 +34,10 @@ public:
         const TrackPtrVector &trackers
         );  
     Particle(const Particle &copy); // Copy constructor.
+    Particle(                 // Stream-reading constructor.
+        std::istream &in,     //  - Input stream.
+        const Mechanism &mech //  - Mechanism which defines components and trackers.
+        );
 
 	// Destructor.
     ~Particle(void);

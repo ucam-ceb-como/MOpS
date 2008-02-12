@@ -1,6 +1,8 @@
 #include "swp_pointcontactdata.h"
+#include <stdexcept>
 
 using namespace Sweep;
+using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -21,6 +23,13 @@ PointContactData::PointContactData(const Sweep::PointContactData &copy)
 {
     // Use assignment operator.
     *this = copy;
+}
+
+// Stream-reading constructor.
+PointContactData::PointContactData(std::istream &in, ParticleData &parent)
+{
+    Deserialize(in);
+    SetParent(parent);
 }
 
 // Default destructor.
@@ -89,4 +98,64 @@ PointContactData *const PointContactData::Clone(void) const
 ModelType PointContactData::ID(void) const
 {
     return SVModel_ID;
+}
+
+// Writes the object to a binary stream.
+void PointContactData::Serialize(std::ostream &out) const
+{
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Output base class.
+        CoagModelData::Serialize(out);
+
+        // Output the sphere surface area.
+        double v = (double)m_sphsurf;
+        out.write((char*)&v, sizeof(v));
+
+        // Output the true surface area.
+        v = (double)m_surf;
+        out.write((char*)&v, sizeof(v));
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, PointContactData::Serialize).");
+    }
+}
+
+// Reads the object from a binary stream.
+void PointContactData::Deserialize(std::istream &in)
+{
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        double val = 0.0;
+
+        switch (version) {
+            case 0:
+                // Read base class.
+                CoagModelData::Deserialize(in);
+
+                // Read the sphere surface area.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_sphsurf = (real)val;
+
+                // Read the true surface area.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_surf = (real)val;
+
+                break;
+            default:
+                throw runtime_error("Serialized version number is invalid "
+                                    "(Sweep, PointContactData::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, PointContactData::Deserialize).");
+    }
 }

@@ -14,6 +14,7 @@
 #include "swp_params.h"
 #include "swp_modeldata.h"
 #include "swp_coagmodel.h"
+#include <iostream>
 
 namespace Sweep
 {
@@ -27,6 +28,10 @@ public:
     // Constructors.
     CoagModelData(ParticleData &parent);      // Default constructor.
     CoagModelData(const CoagModelData &copy); // Copy constructor.
+    CoagModelData(            // Stream-reading constructor.
+        std::istream &in,     //   - Input stream.
+        ParticleData &parent  //   - Parent ParticleData object.
+        );
 
     // Destructors.
     virtual ~CoagModelData(void);
@@ -71,10 +76,17 @@ public:
     // Returns the model data type. 
     virtual ModelType ID(void) const;
 
+    // Writes the object to a binary stream.
+    virtual void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    virtual void Deserialize(std::istream &in);
+
 protected:
     // Can't create a CoagModelData without knowledge
     // of the parent ParticleData.
     CoagModelData(void);
+
 private:
     // Coagulation model particle properties.
     real m_dcolsqr;      // Collision diameter squared.

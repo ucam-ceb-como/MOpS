@@ -2,6 +2,8 @@
 #include "swp_model.h"
 #include "swp_component.h"
 #include "swp_coagmodel.h"
+#include "swp_mechanism.h"
+#include "swp_modelfactory.h"
 #include <vector>
 #include <stdexcept>
 
@@ -42,6 +44,12 @@ ParticleData::ParticleData(const Sweep::ParticleData &copy)
 {
 	// Use assignment operator to define.
 	*this = copy;
+}
+
+// Stream-reading constructor.
+ParticleData::ParticleData(std::istream &in, const Mechanism &mech)
+{
+    Deserialize(in, mech);
 }
 
 // Default destructor.
@@ -342,4 +350,195 @@ real ParticleData::Property(PropertyID id) const
 ParticleData *const ParticleData::Clone(void) const
 {
     return new ParticleData(*this);
+}
+
+// Writes the object to a binary stream.
+void ParticleData::Serialize(std::ostream &out) const
+{
+    const unsigned int trueval  = 1;
+    const unsigned int falseval = 0;
+
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Write number of components.
+        unsigned int n = (unsigned int)m_comp.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write components.
+        double val = 0.0;
+        for (unsigned int i=0; i!=n; ++i) {
+            val = (double)m_comp[i];
+            out.write((char*)&val, sizeof(val));
+        }
+
+        // Write number of tracker values.
+        n = (unsigned int)m_values.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write values.
+        for (unsigned int i=0; i!=n; ++i) {
+            val = (double)m_values[i];
+            out.write((char*)&val, sizeof(val));
+        }
+
+        // Write create time.
+        val = (double)m_createt;
+        out.write((char*)&val, sizeof(val));
+
+        // Write last update time.
+        val = (double)m_time;
+        out.write((char*)&val, sizeof(val));
+
+        // Output coagulation model.
+        if (m_coag != NULL) {
+            out.write((char*)&trueval, sizeof(trueval));
+            ModelFactory::Write(*m_coag, out);
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+        // Write the number of additional model data objects.
+        n = (unsigned int)m_models.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write the models.
+        for (ModelMap::const_iterator i=m_models.begin(); i!=m_models.end(); ++i) {
+            ModelFactory::Write(*(*i).second, out);
+        }
+
+        // Write equivalent sphere diameter.
+        val = (double)m_diam;
+        out.write((char*)&val, sizeof(val));
+
+        // Write collision diameter.
+        val = (double)m_dcol;
+        out.write((char*)&val, sizeof(val));
+
+        // Write mobility diameter.
+        val = (double)m_dmob;
+        out.write((char*)&val, sizeof(val));
+
+        // Write surface area.
+        val = (double)m_surf;
+        out.write((char*)&val, sizeof(val));
+
+        // Write volume.
+        val = (double)m_vol;
+        out.write((char*)&val, sizeof(val));
+
+        // Write mass.
+        val = (double)m_mass;
+        out.write((char*)&val, sizeof(val));
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, ParticleData::Serialize).");
+    }
+}
+
+// Reads the object from a binary stream.
+void ParticleData::Deserialize(std::istream &in, const Mechanism &mech)
+{
+    releaseMem();
+
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        unsigned int n   = 0;
+        double       val = 0.0;
+
+        switch (version) {
+            case 0:
+                // Read number of components.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read components.
+                for (unsigned int i=0; i!=n; ++i) {
+                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                    m_comp.push_back((real)val);
+                }
+
+                // Read number of tracker values.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read values.
+                for (unsigned int i=0; i!=n; ++i) {
+                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                    m_values.push_back((real)val);
+                }
+
+                // Read create time.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_createt = (real)val;
+
+                // Read last update time.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_time = (real)val;
+
+                // Read coagulation model.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n==1) {
+                    m_coag = ModelFactory::ReadCoag(in, *this);
+                }
+
+                // Read the number of additional model data objects.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read the models.
+                for (unsigned int i=0; i!=n; ++i) {
+                    IModelData * model = ModelFactory::Read(in, *this);
+                    m_models[model->ID()] = model;
+                }
+
+                // Read equivalent sphere diameter.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_diam = (real)val;
+
+                // Read collision diameter.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_dcol = (real)val;
+
+                // Read mobility diameter.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_dmob = (real)val;
+
+                // Read surface area.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_surf = (real)val;
+
+                // Read volume.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_vol = (real)val;
+
+                // Read mass.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_mass = (real)val;
+
+                break;
+            default:
+                throw runtime_error("Serialized version number is invalid "
+                                    "(Sweep, ParticleData::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, ParticleData::Deserialize).");
+    }
+}
+
+// Release all memory associated with the ParticleData object.
+void ParticleData::releaseMem(void)
+{
+    m_comp.clear();
+    m_values.clear();
+    delete m_coag; m_coag = NULL;
+    for (ModelMap::iterator i=m_models.begin(); i!=m_models.end(); ++i) {
+        delete (*i).second;
+    }
+    m_models.clear();
 }

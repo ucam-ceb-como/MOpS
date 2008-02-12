@@ -14,6 +14,7 @@
 #include "swp_params.h"
 #include "swp_coagmodeldata.h"
 #include "swp_pointcontactmodel.h"
+#include <iostream>
 
 namespace Sweep
 {
@@ -25,6 +26,10 @@ public:
     // Constructors.
     PointContactData(ParticleData &parent); // Default constructor.
     PointContactData(const PointContactData &copy); // Copy constructor.
+    PointContactData(        // Stream-reading constructor.
+        std::istream &in,    //  - Input stream.
+        ParticleData &parent //  - Parent ParticleData object.
+        );
 
     // Destructors.
     ~PointContactData(void);
@@ -57,6 +62,12 @@ public:
 
     // Returns the model ID.
     ModelType ID(void) const;
+
+    // Writes the object to a binary stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    void Deserialize(std::istream &in);
 
 private:
     // Point contact model particle properties.

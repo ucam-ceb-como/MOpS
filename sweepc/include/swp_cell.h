@@ -20,6 +20,8 @@
 
 namespace Sweep
 {
+class Mechanism;
+
 class Cell : public Sprog::Thermo::IdealGas
 {
 public:
@@ -28,11 +30,12 @@ public:
     Cell(const Cell &copy);                  // Copy constructor.
     Cell(                                    // Stream-reading constructor.
         std::istream &in,                    //   - Stream from which to read.
-        const Sprog::SpeciesPtrVector &sp    //   - Definition of gas-phase species.
+        const Sprog::SpeciesPtrVector &sp,   //   - Definition of gas-phase species.
+        const Mechanism &mech                //   - Mechanism used to define particles.
         );
 
     // Destructor.
-    ~Cell(void);
+    virtual ~Cell(void);
 
     // Operators.
     Cell &operator=(const Cell &rhs);
@@ -77,6 +80,24 @@ public:
 
     void Reset(real m0);
 
+
+    // READ/WRITE/COPY.
+
+    // Writes the object to a binary stream.
+    virtual void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    virtual void Deserialize(
+        std::istream &in,     // Input stream.
+        const Mechanism &mech //   - Mechanism used to define particles.
+        );
+
+protected:
+    // Default constructor is protected as it makes no
+    // sense to define a mixture without knowledge of the
+    // definin species.  This trait is brought over from Sprog.
+    Cell(void);
+
 private:
     // Particle ensemble.
     Sweep::Ensemble m_ensemble;
@@ -84,11 +105,6 @@ private:
     // The volume in which the ensemble represents
     // the complete real system.
     real m_smpvol;
-
-    // Default constructor is protected as it makes no
-    // sense to define a mixture without knowledge of the
-    // definin species.  This trait is brought over from Sprog.
-    Cell(void);
 };
 };
 

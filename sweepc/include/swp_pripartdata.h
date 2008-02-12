@@ -20,12 +20,16 @@ namespace Sweep
 {
 class PriPartModelData : public IModelData
 {
-    friend PriPartModel;
+friend PriPartModel;
 
 public:
     // Constructors.
     PriPartModelData(ParticleData &parent);  // Default constructor.
     PriPartModelData(const PriPartModelData &copy); // Copy constructor.
+    PriPartModelData(        // Stream-reading constructor.
+        std::istream &in,    //  - Input stream.
+        ParticleData &parent //  - Parent ParticleData object.
+        );
 
     // Destructors.
     ~PriPartModelData(void);
@@ -59,6 +63,12 @@ public:
     // Returns the model data type.  Used to identify different models
     // and for serialisation.
     ModelType ID(void) const;
+
+    // Writes the object to a binary stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    void Deserialize(std::istream &in);
 
 protected:
     // Can't create a ModelData object independently of a

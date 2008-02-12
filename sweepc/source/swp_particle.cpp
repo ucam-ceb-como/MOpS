@@ -23,6 +23,12 @@ Particle::Particle(const Sweep::Particle &copy)
     *this = copy;
 }
 
+// Stream-reading constructor.
+Particle::Particle(std::istream &in, const Mechanism &mech)
+: ParticleData(in, mech)
+{
+}
+
 // Default destructor.
 Particle::~Particle()
 {

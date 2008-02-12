@@ -1,6 +1,8 @@
 #include "swp_cell.h"
+#include <stdexcept>
 
 using namespace Sweep;
+using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -20,6 +22,14 @@ Cell::Cell(const Sprog::SpeciesPtrVector &sp)
 Cell::Cell(const Cell &copy)
 {
     *this = copy;
+}
+
+// Stream-reading constructor.
+Cell::Cell(std::istream &in, const Sprog::SpeciesPtrVector &sp,
+           const Mechanism &mech)
+{
+    Deserialize(in, mech);
+    SetSpecies(sp);
 }
 
 // Default destructor.
@@ -153,4 +163,59 @@ void Cell::Reset(const real m0)
 {
     m_ensemble.Clear();
     SetMaxM0(m0);
+}
+
+
+// READ/WRITE/COPY.
+
+// Writes the object to a binary stream.
+void Cell::Serialize(std::ostream &out) const
+{
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Output the sample volume.
+        double v = (double)m_smpvol;
+        out.write((char*)&v, sizeof(v));
+
+        // Output the ensemble.
+        m_ensemble.Serialize(out);
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, Cell::Serialize).");
+    }
+}
+
+// Reads the object from a binary stream.
+void Cell::Deserialize(std::istream &in, const Mechanism &mech)
+{
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        double val = 0.0;
+
+        switch (version) {
+            case 0:
+                // Read the sample volume.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_smpvol = (real)val;
+
+                // Read the ensemble.
+                m_ensemble.Deserialize(in, mech);
+
+                break;
+            default:
+                throw runtime_error("Serialized version number is invalid "
+                                    "(Sweep, Cell::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, Cell::Deserialize).");
+    }
 }
