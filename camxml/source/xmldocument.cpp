@@ -2,7 +2,8 @@
 
 Document::Document(void)
 {
-    m_root = NULL;
+    //m_root = NULL;
+    m_root = new Element();
 }
 
 Document::~Document(void)
@@ -27,7 +28,11 @@ int Document::Load(const std::wstring &filename)
             wstring wstr;
             ComoUnicode::StreamToWString(fin, wstr);
             wistringstream wistr(wstr);
-            m_root = parseElement(wistr, st);
+            Element *const l_root = parseElement(wistr, st);
+            // Need to free previous m_root memory before reloading
+            if (l_root != NULL) {
+                SetRoot(*l_root);
+            }
         } catch (exception &e) {
             fin.close();
             throw e;

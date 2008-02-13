@@ -90,6 +90,10 @@ void Element::GetChildren(const std::wstring &tag, vector<Element *> &children) 
     }
 }
 
+Element *const Element::GetChild(const int index) const {
+    return m_children.at(index);
+}
+
 Element *const Element::GetFirstChild(const std::string &tag) const
 {
     return GetFirstChild(ComoUnicode::StringToWString(tag));

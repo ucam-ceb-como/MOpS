@@ -51,6 +51,7 @@ public:
     int Save(const std::wstring &filename);
     /* Returns the root element of this document. (wide string version) */
     inline Element *const Root(void) {return m_root;};
+    inline Element *const SetRoot(Element &root) {m_root->~Element(); m_root = &root; return m_root;};
 private:
     Element *const parseElement(std::wistringstream &fin, STATUS &st);
     Attribute *const parseAttr(std::wistringstream &fin, STATUS &st);

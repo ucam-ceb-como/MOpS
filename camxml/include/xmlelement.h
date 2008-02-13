@@ -72,6 +72,9 @@ public:
     /* Returns a vector of all child elements which have the
        given tag. */
     void GetChildren(const std::wstring &tag, std::vector<Element*> &children) const;
+    /* Returns the child of a specified index.
+       If no child is found then returns NULL. */
+    Element *const GetChild(const int index) const;
     /* Returns the first child under the current element with the given tag.
        If no child is found then returns NULL. */
     Element *const GetFirstChild(const std::string &tag) const;
