@@ -19,6 +19,7 @@
 			OutputDirectory="$(ProjectDir)lib"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -140,6 +141,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\source\stringf.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\unicodef.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\xmlattribute.cpp"
 				>
 			</File>
@@ -159,6 +168,14 @@
 			>
 			<File
 				RelativePath=".\include\camxml.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\stringf.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\unicodef.h"
 				>
 			</File>
 			<File

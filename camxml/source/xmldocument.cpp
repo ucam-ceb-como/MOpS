@@ -1,10 +1,4 @@
 #include "xmldocument.h"
-#include "xmlelement.h"
-#include <fstream>
-#include <string>
-
-using namespace CamXML;
-using namespace std;
 
 Document::Document(void)
 {
@@ -18,6 +12,11 @@ Document::~Document(void)
 
 int Document::Load(const std::string &filename)
 {
+    return Load(ComoUnicode::StringToWString(filename));
+}
+
+int Document::Load(const std::wstring &filename)
+{
     // Open file for reading.
     ifstream fin(filename.c_str(), ios::in);
 
@@ -25,7 +24,10 @@ int Document::Load(const std::string &filename)
         STATUS st = Outside;
 
         try {
-            m_root = parseElement(fin, st);
+            wstring wstr;
+            ComoUnicode::StreamToWString(fin, wstr);
+            wistringstream wistr(wstr);
+            m_root = parseElement(wistr, st);
         } catch (exception &e) {
             fin.close();
             throw e;
@@ -35,15 +37,21 @@ int Document::Load(const std::string &filename)
         return 0;
     } else {
         // Failed to open file.
-        throw invalid_argument(string("CamXML could not open file: ").append(filename));
+        throw invalid_argument(string("CamXML could not open file: ").append(ComoUnicode::WStringToString(filename)));
     }
 }
+int Document::Save(const std::string &filename)
+{
+    ComoUnicode::WriteUTF8(filename, m_root->GetXMLString());
+    return 0;
+}
 
-Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
+
+Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
 {
     string::size_type pos=0;
-    char c;
-    string tag, data, comment;
+    wchar_t c;
+    wstring tag, data, comment;
     Element *el = NULL;
     bool iscomment=false;
 
@@ -52,19 +60,19 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
 
         switch (st) {
             case Outside:
-                if (c=='<') {
+                if (c==L'<') {
                     // We are now beginning to read a tag.
                     st = Begin;
                 }
                 break;
             case Begin:
-                if (c=='!') {
+                if (c==L'!') {
                     // This begins a comment (maybe).
                     st = ReadComment1;
-                } else if (c=='/') {
+                } else if (c==L'/') {
                     // This is a closing tag.
                     st = ReadEndTag1;
-                } else if (c=='?') {
+                } else if (c==L'?') {
                     st = ReadDocInfo;
                 } else if (isLetter(c)) {
                     // Reading element tag name.
@@ -79,7 +87,7 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
                 }
                 break;
             case ReadDocInfo:
-                if (c=='?') {
+                if (c==L'?') {
                     st = CloseDocInfo;
                 }
                 break;
@@ -88,13 +96,13 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
             /* Reading tag name. */
 
             case ReadTag:
-                if (isLetterOrNum(c) || (c=='-') || (c=='_') || (c==':')) {
+                if (isLetterOrNum(c) || (c==L'-') || (c==L'_') || (c==L':')) {
                     // Valid tag name character.
                     tag.append(&c,1);
-                } else if (c=='/') {
+                } else if (c==L'/') {
                     // Empty element, now closing.
                     st = CloseEmptyElement;
-                } else if (c=='>') {
+                } else if (c==L'>') {
                     // Now read element data, and perhaps sub-elements.
                     st = ReadData;
                     data.clear();
@@ -125,8 +133,8 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
                 break;
 
             case ReadEndTag:
-                if (isLetterOrNum(c) || (c=='-') || (c=='_') || (c==':')) {
-                } else if (c=='>') {
+                if (isLetterOrNum(c) || (c==L'-') || (c==L'_') || (c==L':')) {
+                } else if (c==L'>') {
                     // That's the end!
                     st = End;
                 } else if (isWhiteSpace(c)) {
@@ -144,11 +152,11 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
             /* Reading element data and sub-elements. */
 
             case ReadData:
-                if (c=='<') {
+                if (c==L'<') {
                     // Either opening a sub-element or closing the
                     // current one.  Better check.
                     fin.get(c);
-                    if (c=='/') {
+                    if (c==L'/') {
                         // Closing current element.
                         st = ReadEndTag1;
                     } else {
@@ -159,12 +167,14 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
                         try {
                             Element *child = parseElement(fin, childstat);
                             if ((child!=NULL) && (childstat != Fail)) {
-                                el->AddChild(child);
+                                el->AddChild(*child, false);
                             } else if (childstat!=EndComment) {
                                 st = Fail;
                                 if (el!=NULL) delete el;
                                 if (child!=NULL) delete child;
-                                throw exception(string("Failed to read child of element: ").append(tag).c_str());
+                                string stag;
+                                ComoUnicode::WStringToString(stag, tag);
+                                throw exception(string("Failed to read child of element: ").append(stag).c_str());
                             }
                         } catch (exception &e) {
                             throw e;
@@ -180,10 +190,10 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
             /* Reading element attributes. */
 
             case ReadAttr:
-                if (c=='>') {
+                if (c==L'>') {
                     // Finished reading opening tag, now read data.
                     st = ReadData;
-                } else if (c=='/') {
+                } else if (c==L'/') {
                     // Closing an empty element.
                     st = CloseEmptyElement;
                 } else if (isLetter(c)) {
@@ -199,7 +209,9 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
                         } else {
                             st = Fail;
                             if (el!=NULL) delete el;
-                            throw exception(string("Failed to read attribute of element: ").append(tag).c_str());
+                            string stag;
+                            ComoUnicode::WStringToString(stag, tag);
+                            throw exception(string("Failed to read attribute of element: ").append(stag).c_str());
                         }
                     } catch (exception &e) {
                         throw e;
@@ -211,7 +223,9 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
                     // Invalid attribute character!
                     st = Fail;
                     if (el!=NULL) delete el;
-                    throw range_error(string("Invalid first character of attribute name of element: ").append(tag));
+                    string stag;
+                    ComoUnicode::WStringToString(stag, tag);
+                    throw range_error(string("Invalid first character of attribute name of element: ").append(stag).c_str());
                 }
                 break;
 
@@ -219,24 +233,26 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
             /* Closing the element. */
 
             case CloseElement:
-                if (c=='>') {
+                if (c==L'>') {
                     // This is the end.
                     st = End;
                 }
                 break;
             case CloseEmptyElement:
                 // Expecting ">" immediately.
-                if (c=='>') {
+                if (c==L'>') {
                     st = End;
                 } else {
                     st = Fail;
                     if (el!=NULL) delete el;
-                    throw range_error(string("Expected '>' not found when closing empty element: ").append(tag));
+                    string stag;
+                    ComoUnicode::WStringToString(stag, tag);
+                    throw range_error(string("Expected '>' not found when closing empty element: ").append(stag).c_str());
                 }
                 break;
             case CloseDocInfo:
                 // Expecting ">" immediately.
-                if (c=='>') {
+                if (c==L'>') {
                     // That was just the document info, now try
                     // to read an element.
                     st = Outside;
@@ -251,7 +267,7 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
 
             case ReadComment1:
                 // Expect a "-" next.
-                if (c=='-') {
+                if (c==L'-') {
                     st = ReadComment2;
                 } else {
                     st = Fail;
@@ -261,7 +277,7 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
                 break;
             case ReadComment2:
                 // Expect second "-" next.
-                if (c=='-') {
+                if (c==L'-') {
                     st = ReadComment;
                     data.clear();
                     iscomment = true;
@@ -273,7 +289,7 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
                 }
                 break;
             case ReadComment:
-                if (c=='-') {
+                if (c==L'-') {
                     if (data[data.length()-1]=='-') {
                         // Check that next character is ">", otherwise
                         // this is an error.
@@ -284,8 +300,8 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
                         }
                     }
                     data.append(&c,1);
-                } else if (c=='>') {
-                    if ((data.length()>1) && (data.substr(data.length()-2,2)=="--")) {
+                } else if (c==L'>') {
+                    if ((data.length()>1) && (data.substr(data.length()-2,2)==L"--")) {
                         data.erase(data.length()-2,2);
                         st = End;
                     } else {
@@ -312,12 +328,13 @@ Element *const Document::parseElement(std::ifstream &fin, STATUS &st)
     return el;
 }
 
-Attribute *const Document::parseAttr(std::ifstream &fin, CamXML::Document::STATUS &st)
+Attribute *const Document::parseAttr(std::wistringstream &fin, CamXML::Document::STATUS &st)
 {
     Attribute *a=NULL;
-    string name="", data="";
+    wstring name=L"", data=L"";
     bool waitQuote=true;
-    char c;
+    
+    wchar_t c;
 
     while((st!=End) && (st!=Fail) && (fin.good())) {
         fin.get(c);
@@ -330,7 +347,7 @@ Attribute *const Document::parseAttr(std::ifstream &fin, CamXML::Document::STATU
                 }
                 break;
             case ReadAttr:
-                if (c=='=') {
+                if (c==L'=') {
                     st = ReadData;
                     waitQuote = true;
                 } else {
@@ -339,14 +356,14 @@ Attribute *const Document::parseAttr(std::ifstream &fin, CamXML::Document::STATU
                 break;
             case ReadData:
                 if (waitQuote) {
-                    if (c=='"') {
+                    if (c==L'"') {
                         waitQuote = false;
                     } else {
                         // Quote mark missing after equals sign.
                         st = Fail;
                     }
                 } else {
-                    if (c=='"') {
+                    if (c==L'"') {
                         // We have read all the data for this attribute.
                         st = End;
                     } else {

@@ -9,10 +9,17 @@
 #ifndef CAMXML_DOCUMENT_H
 #define CAMXML_DOCUMENT_H
 
-#include "xmlelement.h"
+#include "unicodef.h"
 #include "xmlattribute.h"
+#include "xmlelement.h"
 #include <string>
 #include <fstream>
+#include <wchar.h>
+#include <sstream>
+#include <tchar.h>
+
+using namespace CamXML;
+using namespace std;
 
 namespace CamXML
 {
@@ -34,46 +41,51 @@ public:
     /* Loads a document from file, building the data structure
        in the process. Returns 0 on success, otherwise negative. */
     int Load(const std::string &filename);
+    /* Loads a document from file, building the data structure
+       in the process. Returns 0 on success, otherwise negative. */
+    int Load(const std::wstring &filename);
     /* Saves the XML data to file.  Overwrites whatever was previously
-       in the file.  Returns 0 on success, otherwise negative. */
+       in the file.  Returns 0 on success, otherwise negative.  (wide string version) */
     int Save(const std::string &filename);
     /* Returns the root element of this document. */
+    int Save(const std::wstring &filename);
+    /* Returns the root element of this document. (wide string version) */
     inline Element *const Root(void) {return m_root;};
 private:
-    Element *const parseElement(std::ifstream &fin, STATUS &st);
-    Attribute *const parseAttr(std::ifstream &fin, STATUS &st);
-    bool isWhiteSpace(const char c);
-    bool isLetter(const char c);
-    bool isLetterOrNum(const char c);
+    Element *const parseElement(std::wistringstream &fin, STATUS &st);
+    Attribute *const parseAttr(std::wistringstream &fin, STATUS &st);
+    bool isWhiteSpace(const wchar_t c);
+    bool isLetter(const wchar_t c);
+    bool isLetterOrNum(const wchar_t c);
 };
 
-inline bool Document::isWhiteSpace(const char c)
-{
-    return (c==' ') || (c=='\n') || (c=='\t') || (c=='\r');
-}
-
-inline bool Document::isLetter(const char c)
-{
-    return (c=='a') || (c=='b') || (c=='c') || (c=='d') || (c=='e') ||
-           (c=='f') || (c=='g') || (c=='h') || (c=='i') || (c=='j') ||
-           (c=='k') || (c=='l') || (c=='m') || (c=='n') || (c=='o') ||
-           (c=='p') || (c=='q') || (c=='r') || (c=='s') || (c=='t') ||
-           (c=='u') || (c=='v') || (c=='w') || (c=='x') || (c=='y') ||
-           (c=='z') ||
-           (c=='A') || (c=='B') || (c=='C') || (c=='D') || (c=='E') ||
-           (c=='F') || (c=='G') || (c=='H') || (c=='I') || (c=='J') ||
-           (c=='K') || (c=='L') || (c=='M') || (c=='N') || (c=='O') ||
-           (c=='P') || (c=='Q') || (c=='R') || (c=='S') || (c=='T') ||
-           (c=='U') || (c=='V') || (c=='W') || (c=='X') || (c=='Y') ||
-           (c=='Z');
-}
-
-inline bool Document::isLetterOrNum(const char c)
+inline bool Document::isLetterOrNum(const wchar_t c)
 {
     return isLetter(c) ||
-           (c=='0') || (c=='1') || (c=='2') || (c=='3') || (c=='4') ||
-           (c=='5') || (c=='6') || (c=='7') || (c=='8') || (c=='9');
+           (c==L'0') || (c==L'1') || (c==L'2') || (c==L'3') || (c==L'4') ||
+           (c==L'5') || (c==L'6') || (c==L'7') || (c==L'8') || (c==L'9');
 }
+inline bool Document::isWhiteSpace(const wchar_t c)
+{
+    return (c==L' ') || (c==L'\n') || (c==L'\r') || (c==L'\t');
+}
+
+inline bool Document::isLetter(const wchar_t c)
+{
+    return (c==L'a') || (c==L'b') || (c==L'c') || (c==L'd') || (c==L'e') ||
+           (c==L'f') || (c==L'g') || (c==L'h') || (c==L'i') || (c==L'j') ||
+           (c==L'k') || (c==L'l') || (c==L'm') || (c==L'n') || (c==L'o') ||
+           (c==L'p') || (c==L'q') || (c==L'r') || (c==L's') || (c==L't') ||
+           (c==L'u') || (c==L'v') || (c==L'w') || (c==L'x') || (c==L'y') ||
+           (c==L'z') ||
+           (c==L'A') || (c==L'B') || (c==L'C') || (c==L'D') || (c==L'E') ||
+           (c==L'F') || (c==L'G') || (c==L'H') || (c==L'I') || (c==L'J') ||
+           (c==L'K') || (c==L'L') || (c==L'M') || (c==L'N') || (c==L'O') ||
+           (c==L'P') || (c==L'Q') || (c==L'R') || (c==L'S') || (c==L'T') ||
+           (c==L'U') || (c==L'V') || (c==L'W') || (c==L'X') || (c==L'Y') ||
+           (c==L'Z');
+}
+
 
 };
 
