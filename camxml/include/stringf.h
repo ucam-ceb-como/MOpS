@@ -14,7 +14,7 @@
 #include <string>
 //#include <cassert>
 //#include <cstdlib>
-//#include <iostream>
+#include <sstream>
 //#include <iomanip>
 using namespace std;
 
@@ -28,6 +28,26 @@ namespace ComoString {
     // Return a wstring containing 4 x depth space bar charaters.
     // only use in xmlelement.cpp to construct nicely XML wstring.
     std::wstring insertSpace(const int depth);
+    // Convert string to integer
+    int string2int (const std::string &str);
+    // Convert integer to string
+    std::string int2string (int n);
+    /* In the future use this to modified string2int to return error if conversion fails
+    class BadConversion : public std::runtime_error {
+    public:
+       BadConversion(const std::string& s)
+         : std::runtime_error(s)
+         { }
+    };
+     
+    inline std::string stringify(double x)
+    {
+       std::ostringstream o;
+       if (!(o << x))
+         throw BadConversion("stringify(double)");
+       return o.str();
+    }*/
+
 }
 
 

@@ -37,4 +37,16 @@ namespace ComoString {
 	    }
         return space;
     }
+    int string2int (const std::string &str) {
+        std::stringstream ss(str);
+        int n;
+        ss >> n;
+        return n;
+    }
+
+    std::string int2string (int n) {
+        std::stringstream ss;
+        ss << n;
+        return ss.str();
+    }
 }
