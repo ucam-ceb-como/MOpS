@@ -14,6 +14,7 @@
 
 #include "swp_params.h"
 #include "swp_ensemble.h"
+#include "swp_ensemblestats.h"
 #include "sprog.h"
 #include <string>
 #include <iostream>
@@ -30,7 +31,6 @@ public:
     Cell(const Cell &copy);                  // Copy constructor.
     Cell(                                    // Stream-reading constructor.
         std::istream &in,                    //   - Stream from which to read.
-        const Sprog::SpeciesPtrVector &sp,   //   - Definition of gas-phase species.
         const Mechanism &mech                //   - Mechanism used to define particles.
         );
 
@@ -64,6 +64,9 @@ public:
 
     // Returns the number of particles in the ensemble.
     unsigned int ParticleCount(void) const;
+
+    // Returns particle statistics.
+    void GetVitalStats(EnsembleStats &stats) const;
 
 
     // SCALING ROUTINES INCL. SAMPLE VOLUME.
