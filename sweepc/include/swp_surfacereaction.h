@@ -22,6 +22,7 @@ public:
     // Constructors.
     SurfaceReaction(void); // Default constructor.
     SurfaceReaction(const SurfaceReaction &copy); // Copy constructor.
+    SurfaceReaction(std::istream &in); // Stream-reading constructor.
 
     // Destructor.
     virtual ~SurfaceReaction(void);
@@ -162,6 +163,22 @@ public:
         Particle &sp,  // Particle for which to perform process.
         unsigned int n // Number of times to perform the process.
         ) const;
+
+
+    // READ/WRITE/COPY.
+    
+    // Creates a copy of the particle process.
+    virtual SurfaceReaction *const Clone(void) const;
+
+    // Returns the process type.  Used to identify different
+    // processes and for serialisation.
+    virtual ProcessType ID(void) const;
+
+    // Writes the object to a binary stream.
+    virtual void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    virtual void Deserialize(std::istream &in);
 
 protected:
     // Surface reaction majorant parameter.  The true rate

@@ -1,7 +1,10 @@
 #include "swp_mechanism.h"
 #include "swp_modelfactory.h"
+#include "swp_processfactory.h"
+#include <stdexcept>
 
 using namespace Sweep;
+using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -21,36 +24,7 @@ Mechanism::Mechanism(const Mechanism &copy)
 // Default destructor.
 Mechanism::~Mechanism(void)
 {
-    // Delete components.
-    for (CompPtrVector::iterator i=m_components.begin(); 
-         i!=m_components.end(); ++i) {
-        delete *i;
-    }
-    m_components.clear();
-
-    // Delete trackers.
-    for (TrackPtrVector::iterator i=m_trackers.begin(); 
-         i!=m_trackers.end();++i) {
-        delete *i;
-    }
-    m_trackers.clear();
-
-    // Delete inceptions.
-    for (IcnPtrVector::iterator i=m_inceptions.begin(); 
-         i!=m_inceptions.end(); ++i) {
-        delete *i;
-    }
-    m_inceptions.clear();
-
-    // Delete processes.
-    for (PartProcPtrVector::iterator i=m_processes.begin(); 
-         i!=m_processes.end(); ++i) {
-        delete *i;
-    }
-    m_processes.clear();
-
-    // Delete coagulation process.
-    delete m_coag;
+    releaseMem();
 }
 
 
@@ -468,6 +442,48 @@ real Mechanism::CalcJumpRates(real t, const Cell &sys, fvector &rates) const
     return sum;
 }
 
+    // Get total rates of non-deferred processes.  Returns the sum
+    // of all rates.  Uses supplied gas-phase conditions rather than
+    // those in the given system.
+real Mechanism::CalcJumpRates(real t, const Sprog::Thermo::IdealGas &gas, 
+                              const Cell &sys, fvector &rates) const
+{
+    // This routine only calculates the rates of those processes which are
+    // not deferred.  The rate terms of deferred processes are returned
+    // as zero.
+
+    // Ensure vector is the correct length.
+    rates.resize(m_termcount);
+    fvector::iterator iterm = rates.begin();
+
+    real sum = 0.0;
+
+    // Get rates of inception processes.
+    IcnPtrVector::const_iterator ii;
+    for (ii=m_inceptions.begin(); ii!=m_inceptions.end(); ++ii) {
+        sum += (*ii)->RateTerms(t, gas, sys, iterm);
+    }
+
+    // Query other processes for their rates.
+    PartProcPtrVector::const_iterator i;
+    for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=rates.end()); ++i) {
+        if (!(*i)->IsDeferred()) {
+            // Calculate rate if not deferred.
+            sum += (*i)->RateTerms(t, gas, sys, iterm);
+        } else {
+            // If process is deferred, then set rate to zero.
+            for (unsigned int j=0; j!=(*i)->TermCount(); ++j) {*(iterm++)=0.0;}
+        }
+    }
+
+    // Get coagulation rate.
+    if (m_coag != NULL) {
+        sum += m_coag->RateTerms(t, gas, sys, iterm);
+    }
+
+    return sum;
+}
+
 
 // PERFORMING THE PROCESSES.
 
@@ -625,4 +641,231 @@ Particle *const Mechanism::CreateParticle(void) const
 
     // Returns particle.
     return p;
+}
+
+
+// READ/WRITE/COPY.
+
+// Creates a copy of the mechanism.
+Mechanism *const Mechanism::Clone(void) const
+{
+    return new Mechanism(*this);
+}
+
+// Writes the object to a binary stream.
+void Mechanism::Serialize(std::ostream &out) const
+{
+    const unsigned int trueval  = 1;
+    const unsigned int falseval = 0;
+
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Write if any processes are deferred.
+        if (m_anydeferred) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+        // Write number of components.
+        unsigned int n = (unsigned int)m_components.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write components.
+        for (CompPtrVector::const_iterator i=m_components.begin(); 
+             i!=m_components.end(); ++i) {
+            (*i)->Serialize(out);
+        }
+
+        // Write number of trackers.
+        n = (unsigned int)m_trackers.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write trackers.
+        for (TrackPtrVector::const_iterator i=m_trackers.begin(); 
+             i!=m_trackers.end(); ++i) {
+            (*i)->Serialize(out);
+        }
+
+        // Write number of inceptions.
+        n = (unsigned int)m_inceptions.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write inceptions.
+        for (IcnPtrVector::const_iterator i=m_inceptions.begin(); 
+             i!=m_inceptions.end(); ++i) {
+            ProcessFactory::Write(*(*i), out);
+        }
+
+        // Write number of particle processes.
+        n = (unsigned int)m_processes.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write particle processes.
+        for (PartProcPtrVector::const_iterator i=m_processes.begin(); 
+             i!=m_processes.end(); ++i) {
+            ProcessFactory::Write(*(*i), out);
+        }
+
+        // Write coagulation process.
+        if (m_coag != NULL) {
+            out.write((char*)&trueval, sizeof(trueval));
+            ProcessFactory::Write(*m_coag, out);
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+        // Write index of first coag process.
+        int m = (int)m_icoag;
+        out.write((char*)&m, sizeof(m));
+
+        // Write term count.
+        n = (unsigned int)m_termcount;
+        out.write((char*)&n, sizeof(n));
+
+        // Write model count.
+        n = (unsigned int)m_models.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write model set.
+        for (ModelTypeSet::const_iterator i=m_models.begin(); i!=m_models.end(); ++i) {
+            n = (unsigned int)(*i);
+            out.write((char*)&n, sizeof(n));
+        }
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, Mechanism::Serialize).");
+    }
+}
+
+// Reads the object from a binary stream.
+void Mechanism::Deserialize(std::istream &in)
+{
+    releaseMem();
+
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        int m = 0;
+        unsigned int n =0;
+
+        switch (version) {
+            case 0:
+                // Read if any processes are deferred.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_anydeferred = (n==1);
+
+                // Read number of components.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read components.
+                for (unsigned int i=0; i!=n; ++i) {
+                    m_components.push_back(new Component(in));
+                }
+
+                // Read number of trackers.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read trackers.
+                for (unsigned int i=0; i!=n; ++i) {
+                    m_trackers.push_back(new Tracker(in));
+                }
+
+                // Read number of inceptions.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read inceptions.
+                for (unsigned int i=0; i!=n; ++i) {
+                    Inception *icn = ProcessFactory::ReadInception(in);
+                    icn->SetMechanism(*this);
+                    m_inceptions.push_back(icn);
+                }
+
+                // Read number of particle processes.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read particle processes.
+                for (unsigned int i=0; i!=n; ++i) {
+                    ParticleProcess *p = ProcessFactory::ReadPartProcess(in);
+                    p->SetMechanism(*this);
+                    m_processes.push_back(p);
+                }
+
+                // Read coagulation process.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n == 1) {
+                    m_coag = ProcessFactory::ReadCoag(in);
+                }
+
+                // Read index of first coag process.
+                in.read(reinterpret_cast<char*>(&m), sizeof(m));
+                m_icoag = m;
+
+                // Read term count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_termcount = n;
+
+                // Read model count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read model set.
+                for (unsigned int i=0; i!=n; ++i) {
+                    in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                    m_models.insert((ModelType)n);
+                }
+
+                break;
+            default:
+                throw runtime_error("Serialized version number is invalid "
+                                    "(Sweep, Mechanism::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, Mechanism::Deserialize).");
+    }
+}
+
+
+// MEMORY MANAGEMENT.
+
+// Clears the current mechanism from memory.
+void Mechanism::releaseMem(void)
+{
+    // Delete components.
+    for (CompPtrVector::iterator i=m_components.begin(); 
+         i!=m_components.end(); ++i) {
+        delete *i;
+    }
+    m_components.clear();
+
+    // Delete trackers.
+    for (TrackPtrVector::iterator i=m_trackers.begin(); 
+         i!=m_trackers.end();++i) {
+        delete *i;
+    }
+    m_trackers.clear();
+
+    // Delete inceptions.
+    for (IcnPtrVector::iterator i=m_inceptions.begin(); 
+         i!=m_inceptions.end(); ++i) {
+        delete *i;
+    }
+    m_inceptions.clear();
+
+    // Delete processes.
+    for (PartProcPtrVector::iterator i=m_processes.begin(); 
+         i!=m_processes.end(); ++i) {
+        delete *i;
+    }
+    m_processes.clear();
+
+    // Delete coagulation process.
+    delete m_coag;
 }

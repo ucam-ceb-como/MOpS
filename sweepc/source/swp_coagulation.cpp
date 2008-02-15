@@ -1,8 +1,10 @@
 #include "swp_coagulation.h"
 #include "swp_mechanism.h"
 #include "swp_ensemble.h"
+#include <stdexcept>
 
 using namespace Sweep;
+using namespace std;
 
 // Free-molecular enhancement factor.
 const real Coagulation::m_efm = 2.2; // 2.2 is for soot.
@@ -18,6 +20,12 @@ Coagulation::Coagulation(void)
 Coagulation::Coagulation(const Coagulation &copy)
 {
     *this = copy;
+}
+
+// Stream-reading constructor.
+Coagulation::Coagulation(std::istream &in)
+{
+    Deserialize(in);
 }
 
 // Default destructor.
@@ -482,4 +490,60 @@ real Coagulation::SlipFlowKernel(const Particle &sp1, const Particle &sp2,
             (sp1.CoagModelCache()->InvCollDiam() + 
              sp2.CoagModelCache()->InvCollDiam())) * 
            CSF * T * (sp1.CollDiameter()+sp2.CollDiameter()) / ViscosityAir(T);
+}
+
+
+// READ/WRITE/COPY.
+
+// Creates a copy of the coagulation process.
+Coagulation *const Coagulation::Clone(void) const
+{
+    return new Coagulation(*this);
+}
+
+// Returns the process type.  Used to identify different
+// processes and for serialisation.
+ProcessType Coagulation::ID(void) const {return Coagulation_ID;}
+
+// Writes the object to a binary stream.
+void Coagulation::Serialize(std::ostream &out) const
+{
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Serialize base class.
+        Process::Serialize(out);
+
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, Coagulation::Serialize).");
+    }
+}
+
+// Reads the object from a binary stream.
+void Coagulation::Deserialize(std::istream &in)
+{
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        switch (version) {
+            case 0:
+                // Deserialize base class.
+                Process::Deserialize(in);
+
+                break;
+            default:
+                throw runtime_error("Serialized version number is invalid "
+                                    "(Sweep, Coagulation::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, Coagulation::Deserialize).");
+    }
 }

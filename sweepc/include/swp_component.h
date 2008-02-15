@@ -16,6 +16,7 @@
 #include "swp_params.h"
 #include <string>
 #include <vector>
+#include <iostream>
 
 namespace Sweep
 {
@@ -30,6 +31,7 @@ public:
         const std::string &name //   - Component name or symbol.
         );
     Component(const Component &copy); // Copy constructor.
+    Component(std::istream &in); // Stream-reading constructor.
 
     // Destructor.
     ~Component(void);
@@ -69,6 +71,12 @@ public:
 
     // Creates a copy of the component.
     Component *const Clone(void) const;
+
+    // Writes the object to a binary stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    void Deserialize(std::istream &in);
 
 private:
     real m_molwt;       // Component molecular weight (g/mol).

@@ -1,8 +1,10 @@
 #include "swp_inception.h"
 #include "swp_mechanism.h"
 #include <cmath>
+#include <stdexcept>
 
 using namespace Sweep;
+using namespace std;
 
 // Free-molecular enhancement factor.
 const real Inception::m_efm = 2.2; // 2.2 is for soot.
@@ -19,6 +21,12 @@ Inception::Inception(void)
 Inception::Inception(const Sweep::Inception &copy)
 {
     *this = copy;
+}
+
+// Stream-reading constructor.
+Inception::Inception(std::istream &in)
+{
+    Deserialize(in);
 }
 
 // Default destructor.
@@ -276,4 +284,128 @@ int Inception::Perform(real t, Cell &sys, unsigned int iterm) const
     adjustGas(sys);
 
     return 0;
+}
+
+
+// READ/WRITE/COPY.
+
+// Creates a copy of the inception.
+Inception *const Inception::Clone(void) const {return new Inception(*this);}
+
+// Returns the process type.  Used to identify different
+// processes and for serialisation.
+ProcessType Inception::ID(void) const {return Inception_ID;}
+
+// Writes the object to a binary stream.
+void Inception::Serialize(std::ostream &out) const
+{
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Serialize base class.
+        Process::Serialize(out);
+
+        // Write rate constant.
+        double v = (double)m_a;
+        out.write((char*)&v, sizeof(v));
+
+        // Write free-mol parameter.
+        v = (double)m_kfm;
+        out.write((char*)&v, sizeof(v));
+
+        // Write slip-flow parameters.
+        v = (double)m_ksf1;
+        out.write((char*)&v, sizeof(v));
+        v = (double)m_ksf2;
+        out.write((char*)&v, sizeof(v));
+
+        // Write new component count.
+        unsigned int n = (unsigned int)m_newcomp.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write component values.
+        for (fvector::const_iterator i=m_newcomp.begin(); i!=m_newcomp.end(); ++i) {
+            v = (double)*i;
+            out.write((char*)&v, sizeof(v));
+        }
+
+        // Write new tracker values count.
+        n = (unsigned int)m_newvals.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write tracker values.
+        for (fvector::const_iterator i=m_newvals.begin(); i!=m_newvals.end(); ++i) {
+            v = (double)*i;
+            out.write((char*)&v, sizeof(v));
+        }
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, Inception::Serialize).");
+    }
+}
+
+// Reads the object from a binary stream.
+void Inception::Deserialize(std::istream &in)
+{
+    m_newcomp.clear();
+    m_newvals.clear();
+
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        unsigned int n = 0;
+        double val = 0.0;
+
+        switch (version) {
+            case 0:
+                // Deserialize base class.
+                Process::Deserialize(in);
+
+                // Read rate constant.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_a = (real)val;
+
+                // Read free-mol parameter.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_kfm = (real)val;
+
+                // Read slip-flow parameters.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_ksf1 = (real)val;
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_ksf2 = (real)val;
+
+                // Read new component count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read component values.
+                for (unsigned int i=0; i!=n; ++i) {
+                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                    m_newcomp.push_back((real)val);
+                }
+
+                // Read new tracker values count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read tracker values.
+                for (unsigned int i=0; i!=n; ++i) {
+                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                    m_newvals.push_back((real)val);
+                }
+                
+                break;
+            default:
+                throw runtime_error("Serialized version number is invalid "
+                                    "(Sweep, Inception::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, Inception::Deserialize).");
+    }
 }

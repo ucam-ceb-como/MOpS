@@ -14,6 +14,7 @@
 #include "swp_process.h"
 #include "swp_cell.h"
 #include "swp_particle.h"
+#include "swp_processtype.h"
 #include "sprog.h"
 
 namespace Sweep
@@ -172,7 +173,17 @@ public:
     // READ/WRITE/COPY.
     
     // Creates a copy of the particle process.
-    virtual ParticleProcess *const Clone(void) const;
+    virtual ParticleProcess *const Clone(void) const = 0;
+
+    // Returns the process type.  Used to identify different
+    // processes and for serialisation.
+    virtual ProcessType ID(void) const = 0;
+
+    // Writes the object to a binary stream.
+    virtual void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    virtual void Deserialize(std::istream &in);
 
 protected:
     bool m_defer; // Is the process solved by LPDA?

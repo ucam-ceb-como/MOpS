@@ -267,6 +267,17 @@ public:
     // required by the mechanism.
     Particle *const CreateParticle(void) const;
 
+    // READ/WRITE/COPY.
+
+    // Creates a copy of the mechanism.
+    Mechanism *const Clone(void) const;
+
+    // Writes the object to a binary stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    void Deserialize(std::istream &in);
+
 private:
     // True if the mechanism contains deferred (LPDA)
     // processes, otherwise false. 

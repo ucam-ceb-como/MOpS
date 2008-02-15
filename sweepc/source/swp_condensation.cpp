@@ -1,8 +1,10 @@
 #include "swp_condensation.h"
 #include "swp_mechanism.h"
 #include <cmath>
+#include <stdexcept>
 
 using namespace Sweep;
+using namespace std;
 
 const unsigned int Condensation::TERM_COUNT = 3;
 const real Condensation::m_majfactor       = 2.0;
@@ -22,6 +24,12 @@ Condensation::Condensation(void)
 Condensation::Condensation(const Condensation &copy)
 {
     *this = copy;
+}
+
+// Stream-reading constructor.
+Condensation::Condensation(std::istream &in)
+{
+    Deserialize(in);
 }
 
 // Default destructor.
@@ -279,4 +287,84 @@ int Condensation::Perform(real t, Cell &sys, Particle &sp,
     unsigned int m = sp.Adjust(m_dcomp, m_dvals, n);
     adjustGas(sys, m);
     return 0;
+}
+
+// READ/WRITE/COPY.
+
+// Creates a copy of the particle process.
+Condensation *const Condensation::Clone(void) const
+{
+    return new Condensation(*this);
+}
+
+// Returns the process type.  Used to identify different
+// processes and for serialisation.
+ProcessType Condensation::ID(void) const {return Condensation_ID;}
+
+// Writes the object to a binary stream.
+void Condensation::Serialize(std::ostream &out) const
+{
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Serialize base class.
+        ParticleProcess::Serialize(out);
+
+        // Write rate constant.
+        double v = (double)m_a;
+        out.write((char*)&v, sizeof(v));
+
+        // Write free-mol parameters.
+        v = (double)m_kfm1;
+        out.write((char*)&v, sizeof(v));
+        v = (double)m_kfm2;
+        out.write((char*)&v, sizeof(v));
+        v = (double)m_kfm3;
+        out.write((char*)&v, sizeof(v));
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, Condensation::Serialize).");
+    }
+}
+
+// Reads the object from a binary stream.
+void Condensation::Deserialize(std::istream &in)
+{
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        double val = 0.0;
+
+        switch (version) {
+            case 0:
+                // Deserialize base class.
+                ParticleProcess::Deserialize(in);
+
+                // Read rate constant.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_a = (real)val;
+
+                // Read free-mol parameter.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_kfm1 = (real)val;
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_kfm2 = (real)val;
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_kfm3 = (real)val;
+
+                break;
+            default:
+                throw runtime_error("Serialized version number is invalid "
+                                    "(Sweep, Condensation::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, Condensation::Deserialize).");
+    }
 }

@@ -12,7 +12,9 @@
 
 #include "swp_params.h"
 #include "swp_process.h"
+#include "swp_processtype.h"
 #include <vector>
+#include <iostream>
 
 namespace Sweep
 {
@@ -25,6 +27,7 @@ public:
     // Constructors.
     Coagulation(void);                    // Default constructor.
     Coagulation(const Coagulation &copy); // Copy-constructor.
+    Coagulation(std::istream &in);        // Stream-reading constructor.
 
     // Destructor.
     ~Coagulation(void);
@@ -146,6 +149,16 @@ public:
 
     // Creates a copy of the coagulation process.
     virtual Coagulation *const Clone(void) const;
+
+    // Returns the process type.  Used to identify different
+    // processes and for serialisation.
+    virtual ProcessType ID(void) const;
+
+    // Writes the object to a binary stream.
+    virtual void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    virtual void Deserialize(std::istream &in);
 
 protected:
     // Free-molecular enhancement factor.  Currently hardcoded

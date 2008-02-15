@@ -12,6 +12,7 @@
 #include "swp_params.h"
 #include <vector>
 #include <string>
+#include <iostream>
 
 namespace Sweep
 {
@@ -22,6 +23,7 @@ public:
     Tracker(void);                    // Default constructor.
     Tracker(const Tracker &copy);     // Copy constructor.
     Tracker(const std::string &name); // Initialising constructor.
+    Tracker(std::istream &in);        // Stream-reading constructor.
 
     // Destructor.
     ~Tracker(void);
@@ -43,6 +45,12 @@ public:
 
     // Returns a copy of the tracker variable.
     Tracker *const Clone(void) const;
+
+    // Writes the object to a binary stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    void Deserialize(std::istream &in);
 
 private:
     std::string m_name;

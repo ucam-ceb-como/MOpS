@@ -1,5 +1,6 @@
 #include "swp_surfacereaction.h"
 #include "swp_mechanism.h"
+#include "swp_processtype.h"
 #include <cmath>
 
 using namespace Sweep;
@@ -20,6 +21,12 @@ SurfaceReaction::SurfaceReaction(void)
 SurfaceReaction::SurfaceReaction(const SurfaceReaction &copy)
 {
     *this = copy;
+}
+
+// Stream-reading constructor.
+SurfaceReaction::SurfaceReaction(std::istream &in)
+{
+    Deserialize(in);
 }
 
 // Default destructor.
@@ -250,4 +257,97 @@ int SurfaceReaction::Perform(real t, Cell &sys, Particle &sp,
     unsigned int m = sp.Adjust(m_dcomp, m_dvals, n);
     adjustGas(sys, m);
     return 0;
+}
+
+
+// READ/WRITE/COPY.
+
+// Creates a copy of the particle process.
+SurfaceReaction *const SurfaceReaction::Clone(void) const
+{
+    return new SurfaceReaction(*this);
+}
+
+// Returns the process type.  Used to identify different
+// processes and for serialisation.
+ProcessType SurfaceReaction::ID(void) const {return SurfaceReaction_ID;}
+
+// Writes the object to a binary stream.
+void SurfaceReaction::Serialize(std::ostream &out) const
+{
+    const unsigned int trueval  = 1;
+    const unsigned int falseval = 0;
+
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Serialize base class.
+        ParticleProcess::Serialize(out);
+
+        // Write arrhenius coefficients.
+        double A  = (double)m_arr.A;
+        double nn = (double)m_arr.n;
+        double E  = (double)m_arr.E;
+        out.write((char*)&A, sizeof(A));
+        out.write((char*)&nn, sizeof(nn));
+        out.write((char*)&E, sizeof(E));
+
+        // Write particle property ID.
+        unsigned int n = (unsigned int)m_pid;
+        out.write((char*)&n, sizeof(n));
+
+        // Write the model ID.
+        n = (unsigned int)m_modelid;
+        out.write((char*)&n, sizeof(n));
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, SurfaceReaction::Serialize).");
+    }
+}
+
+// Reads the object from a binary stream.
+void SurfaceReaction::Deserialize(std::istream &in)
+{
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        double A = 0.0, nn = 0.0, E = 0.0;
+        unsigned int n = 0;
+
+        switch (version) {
+            case 0:
+                // Deserialize base class.
+                ParticleProcess::Deserialize(in);
+
+                // Read arrhenius coefficients.
+                in.read(reinterpret_cast<char*>(&A), sizeof(A));
+                in.read(reinterpret_cast<char*>(&nn), sizeof(nn));
+                in.read(reinterpret_cast<char*>(&E), sizeof(E));
+                m_arr.A = (real)A;
+                m_arr.n = (real)nn;
+                m_arr.E = (real)E;
+
+                // Read particle property ID.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_pid = n;
+
+                // Read the model ID.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_modelid = (ModelType)n;
+
+                break;
+            default:
+                throw runtime_error("Serialized version number is invalid "
+                                    "(Sweep, SurfaceReaction::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, SurfaceReaction::Deserialize).");
+    }
 }

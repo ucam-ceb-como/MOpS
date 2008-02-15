@@ -193,6 +193,109 @@ bool Process::Ficticious(real majk, real truek)
 }
 
 
+// READ/WRITE/COPY.
+
+// Writes the object to a binary stream.
+void Process::Serialize(std::ostream &out) const
+{
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Write reactant count.
+        unsigned int n = (unsigned int)m_reac.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write reactant stoichiometry.
+        int m = 0;
+        for (Sprog::StoichMap::const_iterator i=m_reac.begin(); i!=m_reac.end(); ++i) {
+            // Write species ID.
+            n = (unsigned int)i->first;
+            out.write((char*)&n, sizeof(n));
+
+            // Write stoichiometry.
+            m = (int)i->second;
+            out.write((char*)&m, sizeof(m));
+        }
+
+        // Write product count.
+        n = (unsigned int)m_prod.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write product stoichiometry.
+        for (Sprog::StoichMap::const_iterator i=m_prod.begin(); i!=m_prod.end(); ++i) {
+            // Write species ID.
+            n = (unsigned int)i->first;
+            out.write((char*)&n, sizeof(n));
+
+            // Write stoichiometry.
+            m = (int)i->second;
+            out.write((char*)&m, sizeof(m));
+        }
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, Process::Serialize).");
+    }
+}
+
+// Reads the object from a binary stream.
+void Process::Deserialize(std::istream &in)
+{
+    m_mech = NULL;
+    m_prod.clear();
+    m_reac.clear();
+
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        int m = 0;
+        unsigned int n = 0, id = 0;
+
+        switch (version) {
+            case 0:
+                // Read reactant count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read reactant stoichiometry.
+                for (unsigned int i=0; i!=n; ++i) {
+                    // Read species ID.
+                    in.read(reinterpret_cast<char*>(&id), sizeof(id));
+                    // Read stoichiometry.
+                    in.read(reinterpret_cast<char*>(&m), sizeof(m));
+                    // Create reactant.
+                    m_reac[id] = m;
+                }
+
+                // Read product count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read product stoichiometry.
+                for (unsigned int i=0; i!=n; ++i) {
+                    // Read species ID.
+                    in.read(reinterpret_cast<char*>(&id), sizeof(id));
+                    // Read stoichiometry.
+                    in.read(reinterpret_cast<char*>(&m), sizeof(m));
+                    // Create product.
+                    m_prod[id] = m;
+                }
+
+                break;
+            default:
+                throw runtime_error("Serialized version number is invalid "
+                                    "(Sweep, Process::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, Process::Deserialize).");
+    }
+}
+
+
 // PROTECTED HELPER FUNCTIONS.
 
 // Adjusts the gas-phase composition using the reactants and

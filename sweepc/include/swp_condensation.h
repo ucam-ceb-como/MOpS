@@ -18,6 +18,8 @@
 #define SWEEP_CONDENSATION_H
 
 #include "swp_particleprocess.h"
+#include "swp_processtype.h"
+#include <iostream>
 
 namespace Sweep
 {
@@ -27,6 +29,7 @@ public:
     // Constructors.
     Condensation(void); // Default constructor.
     Condensation(const Condensation &copy); // Copy constructor.
+    Condensation(std::istream &in); // Stream-reading constructor.
 
     // Destructor.
     ~Condensation(void);
@@ -153,6 +156,22 @@ public:
         Particle &sp,  // Particle for which to perform process.
         unsigned int n // Number of times to perform the process.
         ) const;
+
+
+    // READ/WRITE/COPY.
+    
+    // Creates a copy of the particle process.
+    virtual Condensation *const Clone(void) const;
+
+    // Returns the process type.  Used to identify different
+    // processes and for serialisation.
+    virtual ProcessType ID(void) const;
+
+    // Writes the object to a binary stream.
+    virtual void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    virtual void Deserialize(std::istream &in);
 
 protected:
     // Number of terms in the condensation rate expression.

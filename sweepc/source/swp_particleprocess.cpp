@@ -1,7 +1,9 @@
 #include "swp_particleprocess.h"
 #include "swp_mechanism.h"
+#include <Stdexcept>
 
 using namespace Sweep;
+using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -68,4 +70,108 @@ real ParticleProcess::CalcRates(real t, const Cell &sys,
         sum += *i;
     }
     return sum;
+}
+
+
+// READ/WRITE/COPY.
+
+// Writes the object to a binary stream.
+void ParticleProcess::Serialize(std::ostream &out) const
+{
+    const unsigned int trueval  = 1;
+    const unsigned int falseval = 0;
+
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Serialize base class.
+        Process::Serialize(out);
+
+        // Write if the process is deferred.
+        if (m_defer) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+        // Write component count.
+        unsigned int n = (unsigned int)m_dcomp.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write component changes.
+        double v = 0.0;
+        for (fvector::const_iterator i=m_dcomp.begin(); i!=m_dcomp.end(); ++i) {
+            v = (double)*i;
+            out.write((char*)&v, sizeof(v));
+        }
+
+        // Write tracker values count.
+        n = (unsigned int)m_dvals.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write tracker changes.
+        for (fvector::const_iterator i=m_dvals.begin(); i!=m_dvals.end(); ++i) {
+            v = (double)*i;
+            out.write((char*)&v, sizeof(v));
+        }
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, ParticleProcess::Serialize).");
+    }
+}
+
+// Reads the object from a binary stream.
+void ParticleProcess::Deserialize(std::istream &in)
+{
+    m_dcomp.clear();
+    m_dvals.clear();
+
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        double val = 0.0;
+        unsigned int n = 0;
+
+        switch (version) {
+            case 0:
+                // Deserialize base class.
+                Process::Deserialize(in);
+
+                // Read if the process is deferred.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_defer = (n==1);
+
+                // Read component count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read component changes.
+                for (unsigned int i=0; i!=n; ++i) {
+                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                    m_dcomp.push_back(val);
+                }
+
+                // Read tracker values count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read tracker changes.
+                for (unsigned int i=0; i!=n; ++i) {
+                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                    m_dvals.push_back(val);
+                }
+
+                break;
+            default:
+                throw runtime_error("Serialized version number is invalid "
+                                    "(Sweep, ParticleProcess::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, ParticleProcess::Deserialize).");
+    }
 }

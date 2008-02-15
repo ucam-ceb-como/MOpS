@@ -14,6 +14,7 @@
 #include "swp_cell.h"
 #include "swp_particle.h"
 #include "swp_particledata.h"
+#include "swp_processtype.h"
 #include "rng.h"
 #include "sprog.h"
 #include <map>
@@ -161,6 +162,22 @@ public:
 	// Determines whether a rate is ficticious given 
     // the majorant and true values.
     static bool Ficticious(real majk, real truek);
+
+    
+    // READ/WRITE/COPY.
+
+    // Returns a copy of the process
+    virtual Process *const Clone(void) const = 0;
+
+    // Returns the process type.  Used to identify different
+    // processes and for serialisation.
+    virtual ProcessType ID(void) const = 0;
+
+    // Writes the object to a binary stream.
+    virtual void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    virtual void Deserialize(std::istream &in);
 
 protected:
     const Sweep::Mechanism *m_mech; // Pointer to the parent Mechanism.

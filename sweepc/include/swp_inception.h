@@ -14,6 +14,7 @@
 
 #include "swp_params.h"
 #include "swp_process.h"
+#include "swp_processtype.h"
 #include "swp_particle.h"
 #include "swp_cell.h"
 #include <vector>
@@ -29,6 +30,7 @@ public:
     // Constructors.
     Inception(void);                  // Default constructor.
     Inception(const Inception &copy); // Copy constructor.
+    Inception(std::istream &in);      // Stream-reading constructor.
 
     // Destructors.
     ~Inception(void);
@@ -158,6 +160,16 @@ public:
 
     // Creates a copy of the inception.
     Inception *const Clone(void) const;
+
+    // Returns the process type.  Used to identify different
+    // processes and for serialisation.
+    ProcessType ID(void) const;
+
+    // Writes the object to a binary stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the object from a binary stream.
+    void Deserialize(std::istream &in);
 
 protected:
     // Rate parameters.
