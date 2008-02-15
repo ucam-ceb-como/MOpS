@@ -30,7 +30,7 @@ void Strings::split(const std::string &str,
     }
 }
 
-int Strings::findinlist(std::string &str, std::vector<std::string> &list)
+int Strings::findinlist(std::string str, std::vector<std::string> &list)
 {
     // Very straightforward, just loop over the list and locate
     // the first element that matches the given string.
@@ -74,6 +74,11 @@ template<class T> std::string Strings::cstr(T &t)
         return ss.str();
     }
 }
+template std::string Strings::cstr<int>(int&);
+template std::string Strings::cstr<unsigned int>(unsigned int&);
+template std::string Strings::cstr<float>(float&);
+template std::string Strings::cstr<double>(double&);
+template std::string Strings::cstr<long double>(long double&);
 
 double Strings::cdble(const std::string &str)
 {

@@ -405,7 +405,7 @@ void Console_IO::printAutoDivider() const
             PrintDivider();
             m_divnum = m_divint-1;
         } else {
-            m_divnum--;
+            --m_divnum;
         }
     }
 }

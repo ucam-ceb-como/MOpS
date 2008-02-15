@@ -26,7 +26,7 @@ namespace Strings
     // Returns the index of a string in a vector of strings. Returns
     // < 0 if not found.
     int findinlist(
-        std::string &str,              // String to locate.
+        std::string str,               // String to locate.
         std::vector<std::string> &list // Vector of strings in which 
                                        // to locate target string.
         );
