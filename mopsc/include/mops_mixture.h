@@ -15,19 +15,21 @@
 #define MOPS_MIXTURE_H
 
 #include "mops_params.h"
+#include "mops_mechanism.h"
 #include "sprog.h"
+#include "sweep.h"
 #include <iostream>
 
 namespace Mops
 {
-class Mixture : public Sprog::Thermo::IdealGas
+class Mixture : public Sweep::Cell
 {
 public:
     // Constructors.
     Mixture(const Sprog::SpeciesPtrVector &sp); // Default constructor.
-    Mixture(                              // Stream-reading constructor.
-        std::istream &in,                 //   - Input stream.
-        const Sprog::SpeciesPtrVector &sp //   - Species which define the mixture.
+    Mixture(                  // Stream-reading constructor.
+        std::istream &in,     //   - Input stream.
+        const Mechanism &mech //   - Species which define the mixture.
         );
 
     // Destructors.

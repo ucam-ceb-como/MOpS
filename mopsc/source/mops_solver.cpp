@@ -351,7 +351,7 @@ void Solver::beginFileOutput(const Mops::Mechanism &mech,
     // Throw error if the output file failed to open.
     if (!fout.good()) {
         throw runtime_error("Failed to open file for simulation "
-                            "output (Mops, Solve::beginFileOutput).");
+                            "output (Mops, Solver::beginFileOutput).");
     }
 
     // Write the mechanism to the output file.
@@ -374,9 +374,9 @@ void Solver::beginFileOutput(const Mops::Mechanism &mech,
     m_file.open(fname.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
 
     // Throw error if the output file failed to open.
-    if (!fout.good()) {
+    if (!m_file.good()) {
         throw runtime_error("Failed to open file for simulation "
-                            "output (Mops, Solve::beginFileOutput).");
+                            "output (Mops, Solver::beginFileOutput).");
     }
 }
 
@@ -386,7 +386,7 @@ void Solver::fileOutput(const Mops::Reactor &r)
     ReactorFactory::Write(r, m_file);
 
     // Write CPU times to file.
-    double cputime = (double)(clock() - m_cpu_start) / CLOCKS_PER_SEC;
+    double cputime = (double)(clock() - m_cpu_start) / (double)CLOCKS_PER_SEC;
     m_file.write((char*)&cputime, sizeof(cputime));
     m_file.write((char*)&m_chemtime, sizeof(m_chemtime));
 }

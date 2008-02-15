@@ -12,7 +12,12 @@
 
 namespace Mops
 {
-    enum Serial_ReactorType {Serial_Reactor, Serial_Batch, Serial_PSR, Serial_ShockTube};
+    enum Serial_ReactorType {
+        Serial_Reactor, 
+        Serial_Batch, 
+        Serial_PSR, 
+        Serial_ShockTube
+    };
 };
 
 #endif

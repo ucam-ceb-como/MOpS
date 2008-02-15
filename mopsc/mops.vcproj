@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\cvode\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
+				AdditionalIncludeDirectories="..\sweepc\include;..\cvode\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				DebugInformationFormat="1"
@@ -55,7 +55,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\sprogc\lib\sprog_d.lib ..\comostrings\lib\comostrings_d.lib ..\camxml\lib\camxml_d.lib ..\cvode\lib\cvode_d.lib"
+				AdditionalDependencies="..\sweepc\lib\sweep_d.lib ..\sprogc\lib\sprog_d.lib ..\camxml\lib\camxml_d.lib ..\cvode\lib\cvode_d.lib ..\comostrings\lib\comostrings_d.lib"
 				OutputFile="$(OutDir)\mops_d.exe"
 				GenerateDebugInformation="true"
 				RandomizedBaseAddress="1"
@@ -107,7 +107,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="..\cvode\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
+				AdditionalIncludeDirectories="..\sweepc\include;..\cvode\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
 				DisableLanguageExtensions="true"
 			/>
 			<Tool
@@ -121,7 +121,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\sprogc\lib\sprog.lib ..\comostrings\lib\comostrings.lib ..\camxml\lib\camxml.lib ..\cvode\lib\cvode.lib"
+				AdditionalDependencies="..\sprogc\lib\sprog.lib ..\comostrings\lib\comostrings.lib ..\camxml\lib\camxml.lib ..\cvode\lib\cvode.lib ..\sweepc\lib\sweep.lib"
 				OutputFile="bin\$(ProjectName).exe"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -193,6 +193,10 @@
 				RelativePath=".\source\mops_timeinterval.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\source\swp_flamesolver.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -240,7 +244,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\mops_solvertype.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\mops_timeinterval.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_flamesolver.h"
 				>
 			</File>
 		</Filter>

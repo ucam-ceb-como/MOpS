@@ -106,6 +106,43 @@ public:
     virtual void PostProcess(const std::string &filename) const;
 
 protected:
+    // SOLVER SETTINGS.
+
+    // Default error tolerances for the ODE solver.
+    real m_atol, m_rtol;
+
+    // COMPUTATION TIME.
+
+    clock_t m_cpu_start, m_cpu_mark;
+    double m_chemtime;
+
+    // CONSOLE OUTPUT PARAMETERS.
+
+    // Interval of console output data (in terms of time steps).
+    unsigned int m_console_interval;
+    
+    // Console column variable names.
+    std::vector<std::string> m_console_vars;
+
+    // Console variable mask.
+    std::vector<unsigned int> m_console_mask;
+
+    // Set to true if the console is to print messages.
+    bool m_console_msgs; 
+
+    // Console output class.
+    Console_IO m_console;
+
+    // FILE OUTPUT PARAMETERS.
+
+    // Name of output file.
+    std::string m_output_filename;
+
+    // Output file stream.
+    std::fstream m_file;
+
+private:
+
     // CONSOLE OUTPUT.
 
     // Sets up console output using the given mechanism as a template.
@@ -130,45 +167,6 @@ protected:
 
     // Ends file output by closing all open files.
     void endFileOutput();
-
-private:
-    // SOLVER SETTINGS.
-
-    // Default error tolerances for the ODE solver.
-    real m_atol, m_rtol;
-
-
-    // COMPUTATION TIME.
-
-    clock_t m_cpu_start, m_cpu_mark;
-    double m_chemtime;
-
-
-    // CONSOLE OUTPUT PARAMETERS.
-    
-    // Interval of console output data (in terms of time steps).
-    unsigned int m_console_interval;
-    
-    // Console column variable names.
-    std::vector<std::string> m_console_vars;
-
-    // Console variable mask.
-    std::vector<unsigned int> m_console_mask;
-
-    // Set to true if the console is to print messages.
-    bool m_console_msgs; 
-
-    // Console output class.
-    Console_IO m_console;
-
-
-    // FILE OUTPUT PARAMETERS.
-
-    // Name of output file.
-    std::string m_output_filename;
-
-    // Output file stream.
-    std::fstream m_file;
 
 
     // POST-PROCESSING ROUTINES.

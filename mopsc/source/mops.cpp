@@ -21,12 +21,13 @@ int main(int argc, char *argv[])
     string thermfile("therm.dat");
     string settfile("mops.inx");
     string swpfile("sweep.xml");
-    bool fsolve       = true;  // Default is to solve ..
-    bool fpostprocess = false; // .. but not post-process.
-    bool foldfmt      = true;  // Settings file format, new format not yet implemented.
+    bool fsolve        = true;  // Default is to solve ..
+    bool fpostprocess  = false; // .. but not post-process.
+    bool foldfmt       = true;  // Settings file format, new format not yet implemented.
+    SolverType soltype = GPC;
 
     // Read command line arguments.
-    for (unsigned int i=1; i<argc; i++) {
+    for (unsigned int i=1; i!=argc; ++i) {
         if (strcmp(argv[i], "-c") == 0) {
             // Chemical mechanism file (CK format).
             chemfile = argv[++i];
@@ -49,6 +50,22 @@ int main(int argc, char *argv[])
             // human-readable CSV formatted files with the results.
             fsolve       = false;
             fpostprocess = true;
+
+        // The next statements select the type of solver to use.  The
+        // default is to solve gas-phase only, with no particle system.
+
+        } else if (strcmp(argv[i], "-strang") == 0) {
+            // Use Strang splitting to couple gas-phase and particle
+            // system.
+            soltype = Strang;
+        } else if (strcmp(argv[i], "-flamepp") == 0) {
+            // Post-process a flame gas-phase chemistry
+            // profile, just like sweep1.
+            soltype = FlamePP;
+//        } else if (strcmp(argv[i], "-momic") == 0) {
+//            // Use method-of-moments to solve particles (1D only!).
+//            soltype = MoMIC;
+
         } else {
             // Currently nothing else is implemented here.  However, in future
             // the settings file name will not be set with the -r switch and
@@ -63,14 +80,41 @@ int main(int argc, char *argv[])
     timevector times;        // A list of output times and step counts.
 
     // Create the solver.
-    solver = new Solver();
+    switch (soltype) {
+        case GPC:
+            solver = new Solver();
+            break;
+        case OpSplit:
+            // Not implemented yet.
+            return -1;
+        case Strang:
+            // Not implemented yet.
+            return -1;
+        case MoMIC:
+            // Not implemented yet.
+            return -1;
+        case FlamePP:
+            // Post-process a gas-phase profile.
+            solver = new Sweep::FlameSolver();
+            break;
+    }
 
-    // Read the chemical mechanism.
-    Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile);
+    // Read the chemical mechanism / profile.
+    if (soltype != FlamePP) {
+        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile);
+    } else {
+        dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(chemfile, mech);
+    }
 
     // Read the settings file.
     if (foldfmt) {
+        // Old file format.
         reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, *solver, mech);
+    } else {
+        // New format not yet implemented.
+        delete solver;
+        delete reactor;
+        return -1;
     }
 
     // Solve reactor.

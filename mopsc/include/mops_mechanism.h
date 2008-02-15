@@ -13,8 +13,9 @@
 #ifndef MOPS_MECHANISM_H
 #define MOPS_MECHANISM_H
 
-#include "sprog.h"
 #include "mops_params.h"
+#include "sprog.h"
+#include "sweep.h"
 
 namespace Mops
 {
@@ -26,6 +27,16 @@ public:
 
     // Destructors.
     ~Mechanism(void); // Default destructors.
+
+    // PARTICLE MECHANISM.
+
+    // Returns a reference (non-const) to the particle mechanism.
+    Sweep::Mechanism &ParticleMech(void);
+    const Sweep::Mechanism &ParticleMech(void) const;
+
+private:
+    // The particle mechanism.
+    Sweep::Mechanism m_pmech;
 };
 };
 

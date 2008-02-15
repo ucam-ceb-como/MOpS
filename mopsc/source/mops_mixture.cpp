@@ -11,13 +11,13 @@ Mixture::Mixture(void)
 
 // Default constructor (public, requires species list).
 Mixture::Mixture(const Sprog::SpeciesPtrVector &sp)
-: Sprog::Thermo::IdealGas(sp)
+: Sweep::Cell(sp)
 {
 }
 
 // Stream-reading constructor.
-Mixture::Mixture(std::istream &in, const Sprog::SpeciesPtrVector &sp)
-: Sprog::Thermo::IdealGas(in, sp)
+Mixture::Mixture(std::istream &in, const Mechanism &mech)
+: Sweep::Cell(in, mech.ParticleMech())
 {
 }
 

@@ -43,8 +43,11 @@ public:
 
     // REACTOR SOLUTION.
     
-    //Returns the current reaction time.
+    // Returns the current reaction time.
     real Time() const;
+
+    // Sets the current reaction time.
+    void SetTime(real t);
 
     // Initialises the reactor at the given time.
     virtual void Initialise(real time);
