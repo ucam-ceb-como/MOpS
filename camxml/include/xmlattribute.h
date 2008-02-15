@@ -4,6 +4,11 @@
 
   File purpose:
     Defines an XML attribute.
+
+  TODO:  Attribute to do list
+    - Move inline function definitions to xmlattribute_inl.h file.
+    - Ensure only one public, protected and private statement.
+    - Change /* comments to //.
 */
 
 #ifndef CAMXML_ATTRIBUTE_H
