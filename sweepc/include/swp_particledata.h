@@ -196,10 +196,10 @@ public:
     void SetSurfaceArea(real surf);
 
     // Sets the volume.
-    void Volume(real vol);
+    void SetVolume(real vol);
 
     // Sets the mass.
-    void Mass(real m);
+    void SetMass(real m);
 
 
     // READ/WRITE/COPY.

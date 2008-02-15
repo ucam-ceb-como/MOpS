@@ -10,6 +10,8 @@
 #define SWEEP_IMODEL_H
 
 #include "swp_params.h"
+#include <vector>
+#include <string>
 
 namespace Sweep
 {
@@ -19,6 +21,8 @@ class ParticleData;
 class IModel
 {
 public:
+    // PARTICLE UPDATES.
+
     // Updates the particle according to the rules of the model
     // given the changes to particle composition and values.
     virtual void UpdateParticle(
@@ -47,6 +51,7 @@ public:
     // Recalculates those model properties which are functions of
     // other particle properties.
     virtual void UpdateCache(ParticleData &data) const = 0;
+
 protected:
     // IModels should implement the Singleton idiom, therefore
     // the default constructor, copy constructor and assignment

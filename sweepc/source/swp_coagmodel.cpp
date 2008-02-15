@@ -17,6 +17,12 @@ CoagModel::CoagModel(const Sweep::CoagModel &copy)
     // Nothing to do here.
 }
 
+// Default destructor (protected).
+CoagModel::~CoagModel(void)
+{
+    // Nothing special to destruct.
+}
+
 // Assignment operator.
 CoagModel &CoagModel::operator=(const Sweep::CoagModel &rhs)
 {

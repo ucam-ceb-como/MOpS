@@ -34,7 +34,6 @@ public:
     // Operators.
     virtual IModelData &operator=(const IModelData &rhs);
     virtual IModelData &operator+=(const IModelData &rhs);
-    virtual const IModelData operator+(const IModelData &rhs) const;
 
 
     // PARENT ParticleData OBJECT.

@@ -2,6 +2,7 @@
 #include "swp_coagmodeldata.h"
 #include "swp_pointcontactdata.h"
 #include "swp_pripartdata.h"
+#include "swp_particlestats.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -34,11 +35,11 @@ IModelData *const ModelFactory::Read(std::istream &in,
     if (in.good()) {
         IModelData *model = NULL;
 
-        // Read the mixture type from the input stream.
+        // Read the model type from the input stream.
         unsigned int type;
         in.read((char*)&type, sizeof(type));
 
-        // Read a mixture of this particular type.  This will throw
+        // Read a model of this particular type.  This will throw
         // an exception if the type is invalid.
         switch ((ModelType)type) {
             case CoagModel_ID:
@@ -71,11 +72,11 @@ CoagModelData *const ModelFactory::ReadCoag(std::istream &in,
     if (in.good()) {
         CoagModelData *model = NULL;
 
-        // Read the mixture type from the input stream.
+        // Read the model type from the input stream.
         unsigned int type;
         in.read((char*)&type, sizeof(type));
 
-        // Read a mixture of this particular type.  This will throw
+        // Read a model of this particular type.  This will throw
         // an exception if the type is invalid.
         switch ((ModelType)type) {
             case CoagModel_ID:
@@ -96,6 +97,39 @@ CoagModelData *const ModelFactory::ReadCoag(std::istream &in,
     }
 }
 
+// Reads model stats from a binary stream.  The first item read
+// is the model ID which tells the ModelFactory what type
+// of model stats to read.
+IModelStats *const ModelFactory::ReadStats(std::istream &in)
+{
+    if (in.good()) {
+        IModelStats *stats = NULL;
+
+        // Read the model type from the input stream.
+        unsigned int type;
+        in.read((char*)&type, sizeof(type));
+
+        // Read a model of this particular type.  This will throw
+        // an exception if the type is invalid.
+        switch ((ModelType)type) {
+            case BasicModel_ID:
+                stats = new ParticleStats(in);
+                break;
+            case CoagModel_ID:
+            case SVModel_ID:
+            case PriPartModel_ID:
+            default:
+                throw runtime_error("Invalid model type read from "
+                                    "input stream (Sweep, ModelFactory::ReadStats).");
+        }
+
+        return stats;
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, ModelFactory::ReadStats).");
+    }
+}
+
 
 // STREAM OUTPUT.
 
@@ -103,14 +137,30 @@ CoagModelData *const ModelFactory::ReadCoag(std::istream &in,
 void ModelFactory::Write(const IModelData &model,  std::ostream &out)
 {
     if (out.good()) {
-        // Write the Mixture Serial signature type to the stream.
+        // Write the model Serial signature type to the stream.
         unsigned int type = (unsigned int)model.ID();
         out.write((char*)type, sizeof(type));
 
-        // Serialize the mixture object.
+        // Serialize the model object.
         model.Serialize(out);
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, ModelFactory::Write).");
+    }
+}
+
+// Writes a model stats object, along with its ID, to an output stream.
+void ModelFactory::WriteStats(const IModelStats &stats, std::ostream &out)
+{
+    if (out.good()) {
+        // Write the model Serial signature type to the stream.
+        unsigned int type = (unsigned int)stats.ID();
+        out.write((char*)type, sizeof(type));
+
+        // Serialize the model object.
+        stats.Serialize(out);
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, ModelFactory::WriteStats).");
     }
 }

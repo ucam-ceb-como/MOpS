@@ -64,10 +64,8 @@ const PriPartModelData PriPartModelData::operator+(const Sweep::PriPartModelData
 // PROPERTIES.
 
 // Returns the vector of primary particles.
-std::vector<Primary> &PriPartModelData::Primaries(void)
-{
-    return m_primaries;
-}
+std::vector<Primary> &PriPartModelData::Primaries(void) {return m_primaries;}
+const std::vector<Primary> &PriPartModelData::Primaries(void) const {return m_primaries;}
 
 // Returns the property with the given ID.
 real PriPartModelData::Property(unsigned int id) const

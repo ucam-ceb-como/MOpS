@@ -22,6 +22,9 @@ public:
     // The resultant particle is stored in the location of p1.
     void Perform(Particle &p1, Particle &p2) const;
 
+
+    // PARTICLE UPDATES.
+
     // Updates the particle according to the rules of the model
     // given the changes to particle composition and values.
     void UpdateParticle(
@@ -33,7 +36,7 @@ public:
     // Updates the particle according to the rules of the model
     // given the changes to particle composition and values.
     // Performs the update n times.
-    virtual void UpdateParticle(
+    void UpdateParticle(
         Particle &p,          // The particl which is being updated.
         const fvector &dcomp, // Changes to the composition.
         const fvector &dval,  // Changes to the tracker variables.
@@ -51,16 +54,24 @@ public:
     // other particle properties.
     void UpdateCache(ParticleData &p) const;
 
-    // Returns the one and only CoagModel object.
+
+    // SINGLETON IMPLEMENTATION.
+
+    // Returns the one and only PointContactModel object.
     static PointContactModel &Instance(void);
+
 protected:
-    // CoagModel class implements the Singleton idiom, therefore
+    // Class implements the Singleton idiom, therefore
     // the default constructor, copy constructor and assignment
     // operator have to be made inaccessible.
     PointContactModel(void);
     PointContactModel(const PointContactModel &copy);
     PointContactModel &operator=(const PointContactModel &rhs);
     ~PointContactModel(void);
+
+private:
+    // Number of stats in the point contact model.
+    static const unsigned int STAT_COUNT = 1;
 };
 };
 

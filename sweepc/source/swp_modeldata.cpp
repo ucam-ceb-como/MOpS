@@ -39,6 +39,11 @@ IModelData &IModelData::operator =(const Sweep::IModelData &rhs)
     return *this;
 }
 
+// Compound assignment.
+IModelData &IModelData::operator+=(const IModelData &rhs)
+{
+    return *this;
+}
 
 // PARENT.
 

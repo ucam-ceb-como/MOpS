@@ -1,8 +1,10 @@
 #include "swp_pointcontactmodel.h"
 #include "swp_pointcontactdata.h"
 #include "swp_particle.h"
+#include <string>
 
 using namespace Sweep;
+using namespace std;
 
 // SINGLETON IMPLEMENTATION.
 

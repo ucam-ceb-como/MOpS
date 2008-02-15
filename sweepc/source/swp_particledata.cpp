@@ -152,6 +152,19 @@ const ParticleData ParticleData::operator+(const Sweep::ParticleData &rhs) const
 }
 
 
+// CLEAR THE PARTICLE DATA.
+
+// Resets the particle data to its "empty" condition.
+void ParticleData::Clear(void)
+{
+    delete m_coag; m_coag = NULL;
+    for (ModelMap::iterator i=m_models.begin(); i!=m_models.end(); ++i) {
+        delete i->second;
+    }
+    m_models.clear();
+}
+
+
 // DEFINING COMPONENTS.
 
 // Returns the component vector.
@@ -227,6 +240,12 @@ real ParticleData::Values(unsigned int i) const
 	}
 }
 
+// Sets the values vector.
+void ParticleData::SetValues(const fvector &vals)
+{
+    m_values.assign(vals.begin(), vals.end());
+}
+
 
 // PARTICLE CREATE TIME.
 
@@ -235,6 +254,9 @@ real ParticleData::CreateTime() const
 {
 	return m_createt;
 }
+
+// Sets the particle create time.
+void ParticleData::SetCreateTime(real t) {m_createt = t;}
 
 
 // LAST UPDATE TIME.
@@ -245,14 +267,15 @@ real ParticleData::LastUpdateTime() const
     return m_time;
 }
 
+// Sets the last update time of the particle.
+void ParticleData::SetTime(real t) {m_time = t;}
+
 
 // COAGULATION MODEL CACHE.
 
 // Returns the coagulation model data.
-CoagModelData *const ParticleData::CoagModelCache()
-{
-    return m_coag;
-}
+CoagModelData *const ParticleData::CoagModelCache() {return m_coag;}
+const CoagModelData *const ParticleData::CoagModelCache() const {return m_coag;}
 
 // Sets the coagulation model data.  The ParticleData object
 // then takes control of the data for destruction purposes.
@@ -267,13 +290,25 @@ void ParticleData::SetCoagModelCache(Sweep::CoagModelData &data)
 // MODEL CACHE.
 
 // Returns the model data.
-ModelMap &ParticleData::ModelCache()
-{
-    return m_models;
-}
+ModelMap &ParticleData::ModelCache() {return m_models;}
 
 // Returns the data for the ith model.
 IModelData *const ParticleData::ModelCache(ModelType id)
+{
+    if (id == CoagModel_ID) {
+        return m_coag;
+    } else {
+        ModelMap::const_iterator i = m_models.find(id);
+        if (i != m_models.end()) {
+            return i->second;
+        } else {
+            return NULL;
+        }
+    }
+}
+
+// Returns the data for the ith model.
+const IModelData *const ParticleData::ModelCache(ModelType id) const
 {
     if (id == CoagModel_ID) {
         return m_coag;
@@ -342,6 +377,27 @@ real ParticleData::Property(PropertyID id) const
             return 0.0;
     }
 }
+
+
+// BASIC DERIVED PROPERTY OVERWRITES.
+
+// Sets the spherical particle diameter
+void ParticleData::SetSphDiameter(real diam) {m_diam = diam;}
+
+// Sets the collision diameter of the particle.
+void ParticleData::SetCollDiameter(real dcol) {m_dcol = dcol;}
+
+// Sets the mobility diameter.
+void ParticleData::MobDiameter(real dmob) {m_dmob = dmob;}
+
+// Sets the surface area, subject to minimum spherical area condition.
+void ParticleData::SetSurfaceArea(real surf) {m_surf = surf;}
+
+// Sets the volume.
+void ParticleData::SetVolume(real vol) {m_vol = vol;}
+
+// Sets the mass.
+void ParticleData::SetMass(real m) {m_mass = m;}
 
 
 // READ/WRITE/COPY.
@@ -530,6 +586,9 @@ void ParticleData::Deserialize(std::istream &in, const Mechanism &mech)
                                "(Sweep, ParticleData::Deserialize).");
     }
 }
+
+
+// MEMORY MANAGEMENT.
 
 // Release all memory associated with the ParticleData object.
 void ParticleData::releaseMem(void)

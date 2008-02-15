@@ -63,7 +63,7 @@ CoagModelData &CoagModelData::operator=(const Sweep::CoagModelData &rhs)
 // Compound assignment operator.
 CoagModelData &CoagModelData::operator+=(const Sweep::CoagModelData &rhs)
 {
-    IModelData::operator+=(rhs);
+//    IModelData::operator+=(rhs);
     m_dcolsqr      += rhs.m_dcolsqr;
     m_inv_dcol     += rhs.m_inv_dcol;
     m_inv_dcolsqr  += rhs.m_inv_dcolsqr;

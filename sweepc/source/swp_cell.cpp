@@ -1,4 +1,5 @@
 #include "swp_cell.h"
+#include "swp_mechanism.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -25,11 +26,10 @@ Cell::Cell(const Cell &copy)
 }
 
 // Stream-reading constructor.
-Cell::Cell(std::istream &in, const Sprog::SpeciesPtrVector &sp,
-           const Mechanism &mech)
+Cell::Cell(std::istream &in, const Mechanism &mech)
 {
     Deserialize(in, mech);
-    SetSpecies(sp);
+    SetSpecies(*mech.Species());
 }
 
 // Default destructor.
@@ -109,15 +109,19 @@ void Cell::AdjustConcs(const fvector &dc)
 // THE PARTICLE ENSEMBLE.
 
 // Returns the particle ensemble.
-Ensemble &Cell::Particles(void) 
-{
-    return m_ensemble;
-}
+Ensemble &Cell::Particles(void) {return m_ensemble;}
+const Ensemble &Cell::Particles(void) const {return m_ensemble;}
 
 // Returns the particle count.
 unsigned int Cell::ParticleCount(void) const 
 {
     return m_ensemble.Count();
+}
+
+// Returns particle statistics.
+void Cell::GetVitalStats(EnsembleStats &stats) const
+{
+    stats.Calculate(m_ensemble, 1.0/m_smpvol);
 }
 
 

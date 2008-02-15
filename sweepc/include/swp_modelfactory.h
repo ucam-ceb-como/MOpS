@@ -14,6 +14,7 @@
 #include "swp_params.h"
 #include "swp_modeltype.h"
 #include "swp_modeldata.h"
+#include "swp_modelstats.h"
 #include "swp_particledata.h"
 #include "swp_coagmodeldata.h"
 #include <iostream>
@@ -39,6 +40,11 @@ public:
         ParticleData &parent // Parent ParticleData object.
         );
 
+    // Reads model stats from a binary stream.  The first item read
+    // is the model ID which tells the ModelFactory what type
+    // of model stats to read.
+    static IModelStats *const ReadStats(std::istream &in);
+
     // Reads a coagulation model from a binary stream.  The first item read
     // is the model ID which tells the ModelFactory what type
     // of coagulation model to read.
@@ -54,6 +60,12 @@ public:
     static void Write(
         const IModelData &model, // Model to write.
         std::ostream &out        // Output stream.
+        );
+
+    // Writes a model stats object, along with its ID, to an output stream.
+    static void WriteStats(
+        const IModelStats &stats, // Stats to write.
+        std::ostream &out         // Output stream.
         );
 };
 };

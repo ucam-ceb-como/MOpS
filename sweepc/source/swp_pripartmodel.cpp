@@ -23,6 +23,11 @@ PriPartModel::PriPartModel(const Sweep::PriPartModel &copy)
     // Nothing to do here.
 }
 
+// Default destructor.
+PriPartModel::~PriPartModel(void)
+{
+}
+
 // Assignment operator.
 const PriPartModel &PriPartModel::operator=(const Sweep::PriPartModel &rhs)
 {
@@ -117,4 +122,15 @@ void PriPartModel::CoagParticles(Particle &p1, const Particle &p2) const
 void PriPartModel::UpdateCache(Sweep::ParticleData &p) const
 {
     PriPartModelData &cache = dynamic_cast<PriPartModelData&>(*p.ModelCache(PriPartModel_ID));
+}
+
+
+// PRIVATE IMPLEMENTATION.
+
+// Distributes mass over a vector of primaries.
+void PriPartModel::distMass(std::vector<Primary> &pri, 
+                            real dmass, 
+                            const Component *const comp)
+{
+    // TODO: Complete this function.
 }
