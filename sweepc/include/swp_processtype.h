@@ -18,7 +18,8 @@ namespace Sweep
         Inception_ID,       // Inception process.
         Coagulation_ID,     // Coagulation process.
         SurfaceReaction_ID, // Surface reaction.
-        Condensation_ID     // Condensation process.
+        Condensation_ID,    // Condensation process.
+        ActSiteRxn_ID       // Active-sites surface reaction.
     };
 };
 

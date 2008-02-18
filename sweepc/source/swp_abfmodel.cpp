@@ -1,0 +1,286 @@
+#include "swp_abfmodel.h"
+#include "swp_component.h"
+#include <map>
+
+using namespace Sweep;
+using namespace std;
+
+const real ABFModel::m_sitedens = 2.3e19; // sites/m2.
+
+// SINGLETON IMPLEMENTATION.
+
+// Default constructor.
+ABFModel::ABFModel()
+: A4(-1), C2H2(-1), O2(-1), OH(-1), CO(-1), 
+  H(-1), H2(-1), H2O(-1), m_aform(AlphaConst),
+  m_aconst(1.0), iC(-1)
+{
+}
+
+// Copy constructor.
+ABFModel::ABFModel(const Sweep::ABFModel &copy)
+{
+    *this = copy;
+}
+
+// Default destructor.
+ABFModel::~ABFModel()
+{
+}
+
+// Assignment operator.
+ABFModel &ABFModel::operator =(const Sweep::ABFModel &rhs)
+{
+    m_alpha_prof.clear();
+
+    if (this != &rhs) {
+        A4   = rhs.A4;
+        C2H2 = rhs.C2H2;
+        O2   = rhs.O2;
+        OH   = rhs.OH;
+        CO   = rhs.CO;
+        H    = rhs.H;
+        H2   = rhs.H2;
+        H2O  = rhs.H2O;
+        iC   = rhs.iC;
+        m_aform  = rhs.m_aform;
+        m_aconst = rhs.m_aconst;
+        for (map<real,real>::const_iterator i = rhs.m_alpha_prof.begin(); 
+             i!=rhs.m_alpha_prof.end(); ++i) {
+            m_alpha_prof[i->first] = i->second;
+        }
+    }
+    return *this;
+}
+
+// Returns the one and only instance of the ABF model.
+ABFModel &ABFModel::Instance()
+{
+    static ABFModel inst;
+    return inst;
+}
+
+// Returns the active-sites model type.
+ModelType ABFModel::ID(void) const {return ABFSites_ID;}
+
+
+// MODEL INITIALISATION.
+
+// Initialises the ABF model by saving the indices of
+// species required to calculate the steady-state.  Returns
+// <0 if model failed to initialise.
+int ABFModel::Initialise(const Mechanism &mech)
+{
+    // Invalidate all indices.
+    A4   = -1;
+    C2H2 = -1;
+    O2   = -1;
+    OH   = -1;
+    CO   = -1;
+    H    = -1;
+    H2   = -1;
+    H2O  = -1;
+    iC   = -1;
+
+    // Locate required species in mechanism.
+    Sprog::SpeciesPtrVector::const_iterator i;
+    unsigned int j = 0;
+    for (i=mech.Species()->begin(); i!=mech.Species()->end(); ++i, ++j) {
+        if ((*i)->Name().compare("A4")==0) {
+            A4 = j;
+        } else if  ((*i)->Name().compare("C2H2")==0) {
+            C2H2 = j;
+        } else if  ((*i)->Name().compare("O2")==0) {
+            O2 = j;
+        } else if  ((*i)->Name().compare("OH")==0) {
+            OH = j;
+        } else if  ((*i)->Name().compare("CO")==0) {
+            CO = j;
+        } else if  ((*i)->Name().compare("H")==0) {
+            H = j;
+        } else if  ((*i)->Name().compare("H2")==0) {
+            H2 = j;
+        } else if  ((*i)->Name().compare("H2O")==0) {
+            H2O = j;
+        }
+    }
+
+    // Locate carbon component in mechanism.
+    CompPtrVector::const_iterator k;
+    for (k=mech.Components().begin(), j=0; k!=mech.Components().end(); ++k, ++j) {
+        if ((*k)->Name().compare("C") == 0) {
+            iC = j;
+            break;
+        }
+    }
+
+    // Check that indices are valid.
+    if ((A4>=0) && (C2H2>=0) && (O2>=0) && (OH>=0) && 
+        (CO>=0) && (H>=0) && (H2>=0) && (H2O>=0) && (iC>=0)) {
+        return 0;
+    } else {
+        return -1;
+    }
+};
+
+// Adds the ABF surface reactions to a mechanism.
+void ABFModel::AddToMech(Mechanism &mech)
+{
+}
+
+
+// SITE DENSITY CALCULATION.
+
+// Calculates the active site density for the given gas-phase
+// and particle ensemble.
+real ABFModel::SiteDensity(real t, const Sprog::Thermo::IdealGas &gas, 
+                           const Ensemble &particles) const
+{
+    return m_sitedens * alpha(t, gas, particles) * radicalSiteFraction(gas);
+}
+
+// Calculates the active site density for the given gas-phase
+// and particle.
+real ABFModel::SiteDensity(real t, const Sprog::Thermo::IdealGas &gas, 
+                           const Particle &part) const
+{
+    return m_sitedens * alpha(t, gas, part) * radicalSiteFraction(gas);
+}
+
+// Returns the fraction of surface sites which are radicals.
+real ABFModel::radicalSiteFraction(const Sprog::Thermo::IdealGas &gas) const
+{
+    real r1f, r1b, r2f, r2b, r3f, r4f, r5f, rdenom;
+    real T  = gas.Temperature();
+    real RT = RCAL * T;
+
+    // Calculate the forward and back reaction rates.
+    r1f = 4.2e+13 * exp(-13.0/RT)				 * gas.MolarConc(H);
+    r1b = 3.9e+12 * exp(-11.0/RT)				 * gas.MolarConc(H2);
+    r2f = 1.0e+10 * exp(-1.43/RT) * pow(T,0.734) * gas.MolarConc(OH);
+    r2b = 3.68e+8 * exp(-17.1/RT) * pow(T,1.139) * gas.MolarConc(H2O);
+    r3f = 2.0e+13								 * gas.MolarConc(H);
+    r4f = 8.0e+07 * exp( -3.8/RT) * pow(T,1.56)  * gas.MolarConc(C2H2);
+    r5f = 2.2e+12 * exp( -7.5/RT)				 * gas.MolarConc(O2);
+    rdenom = r1b+r2b+r3f+r4f+r5f;
+
+    if (rdenom > 0.0) {
+        return (r1f+r2f) / rdenom;
+    } else {
+        return 0.0;
+    }
+};
+
+// Returns alpha for a particle ensemble.
+real ABFModel::alpha(real t, const Sprog::Thermo::IdealGas &gas, 
+                     const Ensemble &particles) const
+{
+    switch (m_aform) {
+        case AlphaCorrelation:
+            return alpha(gas.Temperature(), 
+                         particles.GetSums().Composition(iC) / 
+                         particles.Count());
+        case AlphaProfile:
+            return alpha(t);
+        case AlphaConst:
+        default:
+            return m_aconst;
+    }
+}
+
+// Returns alpha for a single particle.
+real ABFModel::alpha(real t, const Sprog::Thermo::IdealGas &gas, 
+                     const Particle &part) const
+{
+    switch (m_aform) {
+        case AlphaCorrelation:
+            return alpha(gas.Temperature(), part.Composition(iC));
+        case AlphaProfile:
+            return alpha(t);
+        case AlphaConst:
+        default:
+            return m_aconst;
+    }
+}
+
+// Returns alpha using correlation.
+real ABFModel::alpha(Sweep::real T, Sweep::real M1)
+{
+    if (M1 > 0.0) {
+        real a = 12.65 - (5.56e-3 * T);
+        real b = -1.38 + (6.8e-4 * T);
+        return max(0.0, tanh((a / log10(M1)) + b));
+    } else {
+        return 0.0;
+    }
+}
+
+// Returns alpha linearly interpolated from the profile.
+real ABFModel::alpha(real t) const
+{
+    // Get the time point after the required time.
+    map<real,real>::const_iterator j = m_alpha_prof.upper_bound(t);
+    
+    if (j == m_alpha_prof.begin()) {
+        // This time is before the beginning of the profile.  Return
+        // the first time point.
+        return j->second;
+    } else {       
+        // Get the time point before the required time.
+        map<real,real>::const_iterator i = j; --i;
+
+        // Get alpha at both points..
+        real a1 = i->second;
+        real a2 = j->second;
+        
+        // Calculate time interval between points i and j.
+        real dt_pro = j->first - i->first;
+
+        // Calculate time interval between point i and current time.
+        real dt = t - i->first;
+
+        // Now use linear interpolation to calculate alpha.
+        return (a2 - a1) * dt / dt_pro;
+    }
+}
+
+
+// ALPHA CORRELATION.
+
+// Loads a time profile for alpha into the model.  Also sets 
+// the model to use this profile for calculations.
+void ABFModel::SetAlphaProfile(const std::map<real,real> &alphas)
+{
+    m_alpha_prof.clear();
+    for (map<real,real>::const_iterator i = alphas.begin(); 
+         i!=alphas.end(); ++i) {
+        m_alpha_prof[i->first] = i->second;
+    }
+    m_aform = AlphaProfile;
+}
+
+// Tells the model to use the alpha profile for calculations.
+void ABFModel::UseAlphaProfile(void)
+{
+    m_aform = AlphaProfile;
+}
+
+// Tells the model to use a constant value for alpha, and
+// sets its value.
+void ABFModel::SetAlphaConstant(real alpha)
+{
+    m_aconst = alpha;
+    m_aform  = AlphaConst;
+}
+
+// Tells the model to use a constant value for alpha.
+void ABFModel::UseAlphaConstant(void)
+{
+    m_aform = AlphaConst;
+}
+
+// Tells the model to use the ABF correlation for alpha.
+void ABFModel::UseAlphaCorrelation(void)
+{
+    m_aform = AlphaCorrelation;
+}

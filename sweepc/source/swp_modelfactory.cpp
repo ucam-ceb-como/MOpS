@@ -3,6 +3,10 @@
 #include "swp_pointcontactdata.h"
 #include "swp_pripartdata.h"
 #include "swp_particlestats.h"
+#include "swp_coagmodel.h"
+#include "swp_pointcontactmodel.h"
+#include "swp_pripartmodel.h"
+#include "swp_abfmodel.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -162,5 +166,36 @@ void ModelFactory::WriteStats(const IModelStats &stats, std::ostream &out)
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, ModelFactory::WriteStats).");
+    }
+}
+
+
+// MODEL INSTANCE AQUISITION.
+
+// Returns the instance of the model with the given ID.
+IModel *const ModelFactory::GetModel(ModelType id)
+{
+    switch (id) {
+        case CoagModel_ID:
+            return &CoagModel::Instance();
+        case SVModel_ID:
+            return &PointContactModel::Instance();
+        case PriPartModel_ID:
+            return &PriPartModel::Instance();
+        default:
+            throw invalid_argument("Invalid model ID (Sweep, "
+                                   "ModelFactory::GetModel).");
+    }
+}
+
+// Returns the instance of the active-sites model with the given ID.
+ActiveSitesModel *const ModelFactory::GetActSitesModel(ModelType id)
+{
+    switch (id) {
+        case ABFSites_ID:
+            return &ABFModel::Instance();
+        default:
+            throw invalid_argument("Invalid model ID (Sweep, "
+                                   "ModelFactory::GetActSitesModel).");
     }
 }

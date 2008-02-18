@@ -187,6 +187,10 @@
 				Name="Models"
 				>
 				<File
+					RelativePath=".\source\swp_abfmodel.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_coagmodel.cpp"
 					>
 				</File>
@@ -230,6 +234,10 @@
 			<Filter
 				Name="Processes"
 				>
+				<File
+					RelativePath=".\source\swp_activesites_reaction.cpp"
+					>
+				</File>
 				<File
 					RelativePath=".\source\swp_coagulation.cpp"
 					>
@@ -353,6 +361,14 @@
 				Name="Models"
 				>
 				<File
+					RelativePath=".\include\swp_abfmodel.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_activesites_model.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\swp_coagmodel.h"
 					>
 				</File>
@@ -404,6 +420,10 @@
 			<Filter
 				Name="Processes"
 				>
+				<File
+					RelativePath=".\include\swp_activesites_reaction.h"
+					>
+				</File>
 				<File
 					RelativePath=".\include\swp_coagulation.h"
 					>

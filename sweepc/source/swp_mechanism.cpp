@@ -1,6 +1,7 @@
 #include "swp_mechanism.h"
 #include "swp_modelfactory.h"
 #include "swp_processfactory.h"
+#include "swp_abfmodel.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -367,6 +368,13 @@ bool Mechanism::ContainsModel(ModelType id) const
 void Mechanism::AddModel(ModelType id)
 {
     m_models.insert(id);
+
+    // Initialise the model as necessary.
+    switch(id) {
+        case ABFSites_ID:
+            ABFModel::Instance().Initialise(*this);
+            break;
+    }
 }
 
 

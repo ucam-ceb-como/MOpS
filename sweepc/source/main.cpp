@@ -1,90 +1,135 @@
 // main.cpp : Defines the entry point for the console application.
 //
 
-#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 #include <iostream>
 #include <stdio.h>
-#include <tchar.h>
 #include <exception>
 #include <time.h>
 #include "sweep.h"
-#include "swpabf.h"
-#include "swpoutput.h"
+#include "console_io.h"
 
 using namespace std;
 using namespace Sweep;
-using namespace Sweep::ABF;
 
-int main(int argc, _TCHAR* argv[])
+// GLOBAL VARIABLES.
+std::ofstream ofile; // Output file stream.
+Console_IO console;  // Console output class.
+
+
+// INPUT FUNCTION DECLARATIONS.
+
+// Reads the gas-phase chemistry profile from a TAB
+// separated ASCII file.
+void ReadProfile(
+    const std::string &file,         // File name.
+    Sweep::Solver::GasProfile &prof, // Profile chemical conditions.
+    Sprog::SpeciesPtrVector &species // Species definitions read from profile.
+    );
+
+
+// OUTPUT FUNCTION DECLARATIONS.
+
+// Sets up binary file output.
+void BeginFileOutput(
+    const std::string &file, // File name.
+    unsigned int run         // Run number.
+    );
+
+// Writes basic system information to the binary output file.
+void FileOutput(
+    Sweep::real t,                // Time (s).
+    const Sweep::Cell &sys,       // System to output.
+    const Sweep::Mechanism &mech, // Mechanism which defines the system.
+    );
+
+// Prints the console header row.
+void PrintConsoleHeader(const Sweep::Mechanism &mech);
+
+// Prints some system information to the console.
+void PrintToConsole(
+    Sweep::real t,                // Time (s).
+    const Sweep::Cell &sys,       // System to output.
+    const Sweep::Mechanism &mech, // Mechanism which defines the system.
+    );
+
+// Writes the entire particle system to file for the purpose
+// of generate particle size distributions.
+void WritePSL(
+    const std::string &file,      // Root file name for output.
+    Sweep::real t,                // Time (s).
+    const Sweep::Cell &sys,       // System to output.
+    const Sweep::Mechanism &mech, // Mechanism which defines the system.
+    );
+
+
+// MAIN FUNCTION.
+
+int main(int argc, char* argv[])
 {
     // Program timer.
     clock_t ct1, ct2;
 
     // Variables for the solver and the solver object.
     int i=0, n=200, r=0, nruns=10;
-    Sweep::real t = 0.0, dt = 0.00025;
-    Sweep::Solver solver;
-    char outfile[] = "sweep3-all.dat";
+    real t = 0.0, dt = 0.00025;
+    Solver solver;
+    string outfile = "sweep3-all.dat";
 
-    // File and console output.
-    Sweep::SweepOutput output;
-
-    // Create test case flame.
-    PremixFlame flame;
-//    flame.ReadProfile("chem-debug.dat");
-    flame.ReadProfile("chem-debug.dat");
+    // Read the flame chemistry profile.
+    Solver::GasProfile flame;
+    Sprog::SpeciesPtrVector species;
+    ReadProfile("chem-debug.dat", flame, species);
 
     // Create a mechanism.
-    Sweep::Mechanism mech;
-    mech.SetSpeciesList(flame.GetSpeciesList());
-    ABFMech::InitHACA(flame.GetSpeciesList());
+    Mechanism mech;
+    mech.SetSpecies(species);
 
     // Read mechanism from file.
     try {
-        Sweep::XMLIO::ReadMechanism("sweep.xml", mech);
+        MechanismParser::ReadXML("sweep.xml", mech);
     } catch (exception &e) {
-        // Failed to read mecanism.
-        output.PrintConsoleMsg(e.what());
+        // Failed to read mechanism.
         return -1;
     }
-    // Create coagulation process.
-    mech.AddCoagulation();
 
-    // Initialise ensemble to correct size.
-    flame.Ensemble().Initialise(2048, Particle::NCACHE+mech.ComponentCount()+mech.ValueCount());
-
+    // Create a particle system.   
+    Cell sys(species);
+    
     // Run the simulation.
     for (r=1; r<=nruns; r++) {
         ct1 = clock();
         printf("Run number: %d\n", r);
-        flame.Reset(3.5e11);
+        sys.Reset(3.5e11);
         t = 0.0;
 
-        output.Open(outfile, r);
-        output.PrintToConsole(t, flame, mech);
+        // Begin output to file and console.
+        BeginFileOutput(outfile, r);
+        PrinteConsoleHeader(mech);
+        PrintToConsole(t, sys, mech);
 
         for (i=1; i<=n; i++) {
             // Solve time step.
-            solver.Run(&t, (Sweep::real)i * dt, flame, mech);
+            solver.Run(t, t+dt, flame, sys, mech);
 
             // Provide some output.
-            output.Write(t, flame, mech);
-            output.PrintToConsole(t, flame, mech);
+            FileOutput(t, sys, mech);
+            PrintToConsole(t, sys, mech);
         }
 
-        output.WritePSL(t, flame, 1);
-        output.Close();
+        // Write the entire particle system to file.
+        WritePSL(outfile, t, sys, mech);
+
+        // Stop file output.
+        EndFileOutput();
+
         ct2 = clock();
-        std::cout << (double)(ct2-ct1) / CLOCKS_PER_SEC << " seconds for run." << endl;
+        cout << (real)(ct2-ct1) / (real)CLOCKS_PER_SEC << " seconds for run." << endl;
     }
 
-    for (i=0; i<(int)solver.m_processcounter.size(); i++) {
-        cout << solver.m_processcounter[i] << endl;
-    }
 
     // Post-process output.
-    output.PostProcess(outfile, 1, nruns, n, mech);
-    output.PostProcessPSL(outfile, 1, nruns, 1, mech);
+    PostProcess(outfile, nruns, mech);
+    PostProcessPSLs(outfile, nruns, mech);
 
 	return 0;
 }

@@ -17,6 +17,8 @@
 #include "swp_modelstats.h"
 #include "swp_particledata.h"
 #include "swp_coagmodeldata.h"
+#include "swp_model.h"
+#include "swp_activesites_model.h"
 #include <iostream>
 
 namespace Sweep
@@ -67,6 +69,15 @@ public:
         const IModelStats &stats, // Stats to write.
         std::ostream &out         // Output stream.
         );
+
+
+    // MODEL INSTANCE AQUISITION.
+
+    // Returns the instance of the model with the given ID.
+    static IModel *const GetModel(ModelType id);
+
+    // Returns the instance of the active-sites model with the given ID.
+    static ActiveSitesModel *const GetActSitesModel(ModelType id);
 };
 };
 

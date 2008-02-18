@@ -1,6 +1,7 @@
 #include "swp_processfactory.h"
 #include "swp_surfacereaction.h"
 #include "swp_condensation.h"
+#include "swp_activesites_reaction.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -20,6 +21,8 @@ Process *const ProcessFactory::Create(ProcessType id)
             return new SurfaceReaction();
         case Condensation_ID:
             return new Condensation();
+        case ActSiteRxn_ID:
+            return new ActSiteReaction();
         default:
             throw invalid_argument("Invalid process ID (Sweep, "
                                    "ProcessFactory::Create).");
@@ -56,6 +59,8 @@ Process *const ProcessFactory::Read(std::istream &in)
             case Condensation_ID:
                 proc = new Condensation(in);
                 break;
+            case ActSiteRxn_ID:
+                return new ActSiteReaction(in);
             default:
                 throw runtime_error("Invalid process type read from "
                                     "input stream (Sweep, ProcessFactory::Read).");
@@ -120,6 +125,8 @@ ParticleProcess *const ProcessFactory::ReadPartProcess(std::istream &in)
             case Condensation_ID:
                 proc = new Condensation(in);
                 break;
+            case ActSiteRxn_ID:
+                return new ActSiteReaction(in);
             default:
                 throw runtime_error("Invalid inception type read from "
                                     "input stream (Sweep, "
