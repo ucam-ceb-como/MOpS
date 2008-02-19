@@ -21,6 +21,10 @@ namespace Sprog
 {
 class Mechanism; // Forward declaration of mechanism.
 
+// A typedef for a STL vector of pointers to species.
+class Species;
+typedef std::vector<Species*> SpeciesPtrVector;
+
 class Species
 {
 public:
@@ -127,6 +131,16 @@ public:
 
     // Sets the parent mechanism.
     void SetMechanism(Sprog::Mechanism &mech);
+
+    
+    // SPECIES LOOKUP.
+
+    // Returns the index of a species with the given name in the list.
+    // Returns -1 if the species is not in the list.
+    static int Find(
+        const std::string &name,     // Name of species to find.
+        const SpeciesPtrVector &list // List to search.
+        );
 
 
     // READ/WRITE/COPY FUNCTIONS.

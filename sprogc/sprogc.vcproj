@@ -55,7 +55,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="..\comostrings\lib\comostrings_d.lib"
 				OutputFile="$(ProjectDir)\lib\sprog_d.lib"
 			/>
 			<Tool

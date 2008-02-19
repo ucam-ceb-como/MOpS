@@ -33,7 +33,7 @@ public:
     Mechanism(std::istream &in);      // Stream-reading constructor.
 
     // Destructors.
-    ~Mechanism(void);
+    virtual ~Mechanism(void);
 
     // Operator overloads.
     Mechanism &operator=(const Mechanism &mech);
@@ -148,10 +148,10 @@ public:
     // READ/WRITE/COPY FUNCTIONS.
 
     // Writes the mechanism to a binary data stream.
-    void Serialize(std::ostream &out) const;
+    virtual void Serialize(std::ostream &out) const;
 
     // Reads the mechanism data from a binary data stream.
-    void Deserialize(std::istream &in);
+    virtual void Deserialize(std::istream &in);
 
 protected:
     // Mechanism data.

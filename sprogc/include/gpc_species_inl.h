@@ -26,6 +26,22 @@ inline void Species::SetThermoStartTemperature(const real T) {m_T1 = T;};
 // PARENT MECHANISM.
 inline const Sprog::Mechanism *const Species::Mechanism(void) const {return m_mech;};
 
+// SPECIES LOOKUP.
+inline int Species::Find(const std::string &name, const SpeciesPtrVector &list)
+{
+    // Loop over species to find index.
+    unsigned int i;
+    for (i=0; i<list.size(); ++i) {
+        if (*list[i] == name) {
+            // Found species!
+            return i;
+        }
+    }
+
+    // We are here because the species wasn't found.
+    return -1;
+}
+
 // CLONING.
 inline Species *const Species::Clone(void) const {return new Species(*this);};
 
