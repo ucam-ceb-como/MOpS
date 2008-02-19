@@ -180,7 +180,7 @@ void ProcessFactory::Write(const Process &proc, std::ostream &out)
     if (out.good()) {
         // Write the process Serial signature type to the stream.
         unsigned int type = (unsigned int)proc.ID();
-        out.write((char*)type, sizeof(type));
+        out.write((char*)&type, sizeof(type));
 
         // Serialize the process object.
         proc.Serialize(out);

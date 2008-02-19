@@ -15,6 +15,7 @@
 
 // Driver.
 #include "swp_solver.h"
+#include "swp_mech_parser.h"
 
 // General particle implementation.
 #include "swp_component.h"
@@ -48,8 +49,10 @@
 #include "swp_particleprocess.h"
 #include "swp_surfacereaction.h"
 #include "swp_condensation.h"
+#include "swp_activesites_reaction.h"
 
 // Chemical models.
-//#include "swpabf.h"
+#include "swp_activesites_model.h"
+#include "swp_abfmodel.h"
 
 #endif

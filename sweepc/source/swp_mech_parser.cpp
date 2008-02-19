@@ -1,25 +1,21 @@
+#include "swp_mech_parser.h"
+#include "swp_component.h"
+#include "swp_tracker.h"
+#include "swp_inception.h"
+#include "swp_surfacereaction.h"
+#include "swp_activesites_reaction.h"
+#include "swp_condensation.h"
+#include "swp_abfmodel.h"
 #include "camxml.h"
-#include "swpxmlio.h"
-#include "swpcomponent.h"
-#include "swpinception.h"
-#include "swpsurfacereaction.h"
-#include "swpactivesitesreaction.h"
-#include "swpcondensation.h"
-#include "swpparams.h"
-#include "swpabf.h"
-#include <exception>
+#include "string_functions.h"
+#include <stdexcept>
+#include <string>
 
 using namespace Sweep;
+using namespace std;
+using namespace Strings;
 
-XMLIO::XMLIO(void)
-{
-}
-
-XMLIO::~XMLIO(void)
-{
-}
-
-int XMLIO::ReadMechanism(const std::string &filename, Sweep::Mechanism &mech)
+void MechParser::Read(const std::string &filename, Sweep::Mechanism &mech)
 {
     CamXML::Document xml;
 
@@ -35,69 +31,91 @@ int XMLIO::ReadMechanism(const std::string &filename, Sweep::Mechanism &mech)
     string version = xml.Root()->GetAttributeValue("version");
     if ((version.compare("1")==0) || (version=="")) {
         try {
-            return readVersion1(xml, mech);
+            return readV1(xml, mech);
         } catch (exception &e) {
             throw e;
         }
     } else {
         // Unknown version.
-        throw range_error("Unrecognised version attribute in XML file.");
+        throw runtime_error("Unrecognised version attribute in XML file "
+                            "(Sweep, MechParser::Read).");
     }
-    return 0;
 }
 
-int XMLIO::readVersion1(CamXML::Document &xml, Sweep::Mechanism &mech)
+void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 {
-    CamXML::Element *root = xml.Root();
-    vector<CamXML::Element*> items, subitems;
-    vector<CamXML::Element*>::iterator i, j;
-    string str;
-    CamXML::Element *el=NULL;
-    unsigned int uint=0;
-    int sint=0;
-    real num=0.0;
-    ACTSURFMODEL acmodel = Const;
+    vector<CamXML::Element*> items;
+    vector<CamXML::Element*>::iterator i;
 
+    // Read the particle components and the trackers.
+    readComponents(xml, mech);
+    readTrackers(xml, mech);
 
+    // Read the processes (inceptions, surface reactions and condensations).
+    readInceptions(xml, mech);
+    readSurfRxns(xml, mech);
+    readCondensations(xml, mech);
 
-    /* Read defined models. */
+    // READ DEFINED MODELS.
 
-    root->GetChildren("model", items);
-    for (i=items.begin(); i!=items.end(); i++) {
-        str = (*i)->GetAttributeValue("id");
-        if (str.compare("actsurf")==0) {
-            // Read active surface model type.
-            str = (*i)->GetAttributeValue("type");                
-            if (str.compare("const")==0) {
-                // Constant active surface.
-                acmodel = Const;
-            } else if (str.compare("abf")==0) {
-                // Active sites by ABF model.
-                acmodel = ABF;
-            } else if (str.compare("profile")==0) {
-                // Active sites given in chemistry profile.
-                acmodel = Profile;
+    xml.Root()->GetChildren("model", items);
+
+    for (i=items.begin(); i!=items.end(); ++i) {
+        // Check the model type.
+        string str = (*i)->GetAttributeValue("type");
+
+        if (str.compare("activesites")==0) {
+            // Read active sites model ID.
+            str = (*i)->GetAttributeValue("id");
+
+            if (str.compare("haca")==0) {
+                // Hydrogen-abstraction, Carbon-addition model.
+                mech.AddModel(ABFSites_ID);
+
+                // Read the form of alpha.
+                str = (*i)->GetAttributeValue("alpha");
+
+                if (str.compare("abf")==0) {
+                    // The ABF corrrelation for alpha should be used.
+                    ABFModel::Instance().UseAlphaCorrelation();
+                } else {
+                    // Hopefully a numeric value has been supplied, which
+                    // shall be used as a constant value for alpha.
+                    real alpha = cdble(str);
+                    ABFModel::Instance().SetAlphaConstant(alpha);
+                }
             }
+        } else {
+            // An invalid model type has been supplied.
+            throw runtime_error("Invalid model type (" + str + ") in XML file "
+                                "(Sweep, MechParser::readV1).");
         }
     }
+}
 
+// Reads components from a sweep mechanism XML file.
+void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
+{
+    vector<CamXML::Element*> items;
+    vector<CamXML::Element*>::iterator i;
+    CamXML::Element *el;
 
+    // Get all component specifications from the XML data.
+    xml.Root()->GetChildren("component", items);
 
-    /* Read components. */
+    // Loop over the components and add them to the mechanism.
+    for (i=items.begin(); i!=items.end(); ++i) {
+        Component *comp = new Component();
 
-    Component *comp;
-    root->GetChildren("component", items);
-    for (i=items.begin(); i!=items.end(); i++) {
-        comp = new Component();
-
-        // Get component id.
-        str = (*i)->GetAttributeValue("id");
+        // Get component ID.
+        string str = (*i)->GetAttributeValue("id");
         if (str != "") {
             comp->SetName(str);
         } else {
             // Component must have an id!
             delete comp;
-            throw exception("Component statement found with no ""id"" attribute.");
+            throw runtime_error("Component statement found with no ""id"" attribute "
+                                "(Sweep, MechParser::readComponents).");
         }
         
         // Get component density.
@@ -105,16 +123,18 @@ int XMLIO::readVersion1(CamXML::Document &xml, Sweep::Mechanism &mech)
         if (el!=NULL) {
             str = el->Data();
             if (str != "") {
-                comp->SetDensity(atof(str.c_str()));
+                comp->SetDensity(cdble(str));
             } else {
                 // Density contains no data.
                 delete comp;
-                throw exception("Component density contains no data.");
+                throw runtime_error("Component " + comp->Name() + " density "
+                                    "contains no data (Sweep, MechParser::readComponents).");
             }
         } else {
             // Component does not have density specified.
             delete comp;
-            throw exception("Density required for component specification.");
+            throw runtime_error("Density required for component " + comp->Name() + 
+                                " specification (Sweep, MechParser::readComponents).");
         }
 
         // Get component mol. wt.
@@ -122,234 +142,181 @@ int XMLIO::readVersion1(CamXML::Document &xml, Sweep::Mechanism &mech)
         if (el!=NULL) {
             str = el->Data();
             if (str != "") {
-                comp->SetMolWt(atof(str.c_str()));
+                comp->SetMolWt(cdble(str));
             } else {
                 // Mol. wt. contains no data.
                 delete comp;
-                throw exception("Component molecular weight contains no data.");
+                throw runtime_error("Component " + comp->Name() + " mol. wt. "
+                                    "contains no data (Sweep, MechParser::readComponents).");
             }
         } else {
             // Component does not have molecular weight specified.
             delete comp;
-            throw exception("Molecular weight required for component specification");
+            throw runtime_error("Mol. wt. required for component " + comp->Name() + 
+                                " specification (Sweep, MechParser::readComponents).");
         }
 
         // Add component to mechanism.
         mech.AddComponent(*comp);
     }
+}
 
+// Reads tracker variables from a sweep mechanism XML file.
+void MechParser::readTrackers(CamXML::Document &xml, Sweep::Mechanism &mech)
+{
+    vector<CamXML::Element*> items;
+    vector<CamXML::Element*>::iterator i;
 
+    // Get all component specifications from the XML data.
+    xml.Root()->GetChildren("track", items);
 
-    /* Read tracker variable names. */
+    for (i=items.begin(); i!=items.end(); ++i) {
+        Tracker *t = new Tracker();
 
-    root->GetChildren("track", items);
-    for (i=items.begin(); i!=items.end(); i++) {
-        str = (*i)->GetAttributeValue("id");
+        string str = (*i)->GetAttributeValue("id");
         if (str != "") {
-            mech.AddValueName(str);
+            t->SetName(str);
         } else {
             // Variable must have a name.
-            throw exception("Tracker variable must have an ""id"" attribute.");
+            throw runtime_error("Tracker variable must have an ""id"" attribute "
+                                "(Sweep, MechParser::readTrackers).");
         }
+
+        mech.AddTracker(*t);
     }
+}
 
+// Reads inception processes from a sweep mechanism XML file.
+void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
+{
+    vector<CamXML::Element*> items, subitems;
+    vector<CamXML::Element*>::iterator i, j;
+    CamXML::Element *el;
+    string str;
 
+    int id  = -1;
+    real dx = 0.0;
+    
+    // Get list of inceptions from XML data.
+    xml.Root()->GetChildren("inception", items);
 
-    /* Read inception processes. */
-
-    Inception *icn = NULL;
-    real m[2], d[2];
-    root->GetChildren("inception", items);
-    for (i=items.begin(); i!=items.end(); i++) {
+    for (i=items.begin(); i!=items.end(); ++i) {
         // Create new inception.
-        icn = new Inception();
+        Inception *icn = new Inception();
+        icn->SetMechanism(mech);
 
         // Read reactants.
-        (*i)->GetChildren("reactant", subitems);
-        for (j=subitems.begin(); j!=subitems.end(); j++) {
-            str = (*j)->GetAttributeValue("id");
-            sint = mech.GetSpeciesList().GetIndex(str);
-            if (sint < 0) {
-                // Reactant does not exist in list of species.
-                delete icn;
-                throw exception(str.append(": Reactant species not found in mechanism.").c_str());
-            } else {
-                uint = sint;
+        try {
+            // Get reactant stoichiometry.
+            readReactants(*(*i), *icn);
 
-                // Get reactant stoichiometry.
-                str = (*j)->GetAttributeValue("stoich");
-                sint = atoi(str.c_str());
-                if (sint==0) sint = 1;
-
-                // Get species mass and diameter, required to calculate
-                // inception rate.
-                str = (*j)->GetAttributeValue("m");
-                m[icn->ReactantCount()] = atof(str.c_str());
-                if (m[icn->ReactantCount()] == 0.0) {
-                    // Species can't have zero mass!
-                    delete icn;
-                    throw exception("Incepting species can't have zero mass");
-                }
-                str = (*j)->GetAttributeValue("d");
-                d[icn->ReactantCount()] = atof(str.c_str());
-                if (d[icn->ReactantCount()] == 0.0) {
-                    // Species can't have zero diameter!
-                    delete icn;
-                    throw exception("Incepting species can't have zero diameter.");
-                }
-
-                // Add reactant to inception.
-                icn->SetReactant(uint, sint);
-
-                if ((icn->ReactantCount()==1) && (sint==2)) {
-                    // Dimer inception.
-                    m[1] = m[0];
-                    d[1] = d[0];
-                    break;
-                } else if (icn->ReactantCount()==2) {
-                    // Only allowed 2 reactant molecules for inception.
-                    break;
-                }
-            }            
+            // Get reactant masses and diameters, and set inception
+            // parameters.
+            fvector mass, diam;
+            readReactantMDs(*(*i), mass, diam);
+            if (mass.size() > 1) {
+                icn->SetInceptingSpecies(mass[0], mass[1], diam[0], diam[1]);
+            } else if (mass.size() > 0) {
+                // Dimer inception.
+                icn->SetInceptingSpecies(mass[0], mass[0], diam[0], diam[0]);
+            }
+        } catch (exception &e) {
+            delete icn;
+            throw e;
         }
-        
-        // Finished reading reactants, need to validate and set reacting
-        // species' masses and diameters.
-        icn->SetInceptingSpecies(m[0], m[1], d[0], d[1]);
 
         // Read products.
-        (*i)->GetChildren("product", subitems);
-        for (j=subitems.begin(); j!=subitems.end(); j++) {
-            str = (*j)->GetAttributeValue("id");
-            sint = mech.GetSpeciesList().GetIndex(str);
-            if (sint < 0) {
-                // Product does not exist in list of species.
-                delete icn;
-                throw exception(str.append(": Product species does not exist in mechanism.").c_str());
-            } else {
-                uint = sint;
-
-                // Get product stoichiometry.
-                str = (*j)->GetAttributeValue("stoich");
-                sint = atoi(str.c_str());
-                if (sint==0) sint = 1;
-
-                // Add product to inception.
-                icn->SetProduct(uint, sint);
-            }            
+        try {
+            readProducts(*(*i), *icn);
+        } catch (exception &e) {
+            delete icn;
+            throw e;
         }
 
         // Read initial particle composition.
-        icn->SetComponents(mech.GetComponents());
         (*i)->GetChildren("component", subitems);
-        for (j=subitems.begin(); j!=subitems.end(); j++) {
+        for (j=subitems.begin(); j!=subitems.end(); ++j) {
+            // Get component ID.
             str = (*j)->GetAttributeValue("id");
-            sint = mech.GetComponentIndex(str);
-            if (sint >= 0) {
+            id = mech.ComponentIndex(str);
+
+            if (id >= 0) {
                 // Get component change.
                 str = (*j)->GetAttributeValue("dx");
-                num = atof(str.c_str());
+                dx = cdble(str);
                 // Set component change.
-                icn->SetCompChange(sint, num);
+                icn->SetParticleComp(id, dx);
             } else {
                 // Unknown component in mechanism.
                 delete icn;
-                throw exception(str.append(": Component not found in mechanism.").c_str());
+                throw runtime_error(str + ": Component not found in mechanism "
+                                    "(Sweep, MechParser::readInceptions).");
             }
         }
 
         // Read initial tracker variable values.
         (*i)->GetChildren("track", subitems);
         for (j=subitems.begin(); j!=subitems.end(); j++) {
+            // Get tracker ID.
             str = (*j)->GetAttributeValue("id");
-            sint = mech.GetValueIndex(str);
-            if (sint >= 0) {
-                // Get component change.
+            id = mech.GetTrackerIndex(str);
+
+            if (id >= 0) {
+                // Get tracker change.
                 str = (*j)->GetAttributeValue("dx");
-                num = atof(str.c_str());
-                // Set component change.
-                icn->SetValueChange(sint, num);
+                dx = cdble(str);
+                // Set tracker change.
+                icn->SetParticleTracker(id, dx);
             } else {
                 // Unknown tracker variable in mechanism.
                 delete icn;
-                throw exception(str.append(": Tracker variable not found in mechanism.").c_str());
+                throw runtime_error(str + ": Tracker variable not found in mechanism. "
+                                    "(Sweep, MechParser::readInceptions).");
             }
         }
 
         // Add inception to mechanism.  Once entered into mechanism, the mechanism
         // takes control of the inception object for memory management.
-        mech.AddInception(icn);
+        mech.AddInception(*icn);
     }
+}
 
+// Reads surface reactions from a sweep mechanism XML file.
+void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
+{
+    vector<CamXML::Element*> items, subitems;
+    vector<CamXML::Element*>::iterator i, j;
+    CamXML::Element *el;
+    string str;
 
+    // Get all surface reactions.
+    xml.Root()->GetChildren("reaction", items);
 
-    /* Read reactions. */
-
-    SurfaceReaction *surf    = NULL;
-    ActiveSitesReaction *act = NULL;
-    Condensation *cond       = NULL;
-    Process *rxn             = NULL;
-    ParticleChanger *pc      = NULL;
-    RXNTYPE rxntype;
-
-    root->GetChildren("reaction", items);
-    for (i=items.begin(); i!=items.end(); i++) {
+    for (i=items.begin(); i!=items.end(); ++i) {
         // Get the type of reaction.
         str = (*i)->GetAttributeValue("type");
+
+        SurfaceReaction *rxn = NULL;
 
         // The type of reaction defined in the XML dictates what type of
         // process class to use.  We now go through the options:
 
         if (str.compare("surface")==0) {
-            // This is either a bog-standard surface reaction or an active
-            // sites reaction.  In version 1 mechanisms active sites reactions
-            // can be defined merely be using an "as" particle term.  This
-            // will be made stricter in subsequent versions.
+            // This is a bog-standard surface reaction.
+            rxn = new SurfaceReaction();
+            rxn->SetMechanism(mech);
+        } else if (str.compare("abf")==0) {
+            // This is an ABF active-sites enabled reaction.
+            ActSiteReaction *asrxn = new ActSiteReaction();
+            asrxn->SetMechanism(mech);
+            rxn = asrxn;
 
-            // To decide which class to use we must check the particle term.  Note
-            // the particle term isn't saved here, but will be read later on.
-            el = (*i)->GetFirstChild("particleterm");
-            if (el!=NULL) {
-                if (el->GetAttributeValue("id").compare("as")==0) {
-                    // This is an active sites reaction.
-                    act = new ActiveSitesReaction();
-                    rxn = act;
-                    pc = act;
-                    surf = act;
-                    rxntype = ActiveSites;
-
-                    // Set active sites function.
-                    if (acmodel==ABF) {
-                        act->SetActiveSitesFn(Sweep::ABF::ABFMech::HACASites);
-                    }
-                } else {
-                    // This is a normal surface reaction.
-                    surf = new SurfaceReaction();
-                    rxn = surf;
-                    pc = surf;
-                    rxntype = Surf;
-                }
-            } else {
-                // Reaction contains no "particleterm" element.  This is an
-                // error.
-                throw exception("Reaction found with no ""particleterm"" attribute.");
-            }
-
-        } else if (str.compare("condensation")==0) {
-            // This is a condensation reaction.
-            cond = new Condensation();
-            rxn = cond;
-            pc = cond;
-            rxntype = Cond;
-
-        } else if (str.compare("haca")==0) {
-            // This is a HACA based active sites reaction, therefore we
-            // must create an active sites class instance and assign it 
-            // the ABF HACA active sites function.
-
+            // Must also set the reaction to use to ABF model.
+            asrxn->SetModel(ABFModel::Instance());
         } else {
             // Unrecognised reaction type.
-            throw exception(string("Unrecognised reaction type: ").append(str).c_str());
+            throw runtime_error("Unrecognised reaction type: " + str + 
+                                " (Sweep, MechParser::readSurfRxns).");
         }
 
         // Is reaction deferred.
@@ -361,232 +328,340 @@ int XMLIO::readVersion1(CamXML::Document &xml, Sweep::Mechanism &mech)
         }
 
         // Read reactants.
-        (*i)->GetChildren("reactant", subitems);
-        for (j=subitems.begin(); j!=subitems.end(); j++) {
-            str = (*j)->GetAttributeValue("id");
-            sint = mech.GetSpeciesList().GetIndex(str);
-            if (sint < 0) {
-                // Reactant does not exist in list of species.
-                if (rxntype==Surf) delete surf;
-                if (rxntype==ActiveSites) delete act;
-                if (rxntype==Cond) delete cond;
-                throw exception(str.append(": Reactant species not found in mechanism.").c_str());
-            } else {
-                uint = sint;
-
-                // Get reactant stoichiometry.
-                str = (*j)->GetAttributeValue("stoich");
-                sint = atoi(str.c_str());
-                if (sint==0) sint = 1;
-
-                // Add reactant to reaction.
-                rxn->SetReactant(uint, sint);
-
-                // If this is a condensation then we also need to get specie's
-                // mass and diameter to calculate collision kernel.
-                if (rxntype==Cond) {
-                    str = (*j)->GetAttributeValue("m");
-                    m[0] = atof(str.c_str());
-                    if (m[0] == 0.0) {
-                        // Species can't have zero mass!
-                        delete cond;
-                        throw exception("Condensing species can't have zero mass");
-                    }
-                    str = (*j)->GetAttributeValue("d");
-                    d[0] = atof(str.c_str());
-                    if (d[0] == 0.0) {
-                        // Species can't have zero diameter!
-                        delete cond;
-                        throw exception("Condensing species can't have zero diameter.");
-                    }
-
-                    // Condensation may only have one molecule reactant.
-                    if (cond->ReactantCount()==1) {break;}
-                }
-            }            
-        }
-        
-        // Finished reading reactants, need to validate and set reacting
-        // species' masses and diameters if condensation.
-        if (rxntype==Cond) {
-            cond->SetCondensingSpecies(m[0], d[0]);
+        try {
+            // Get reactant stoichiometry.
+            readReactants(*(*i), *rxn);
+        } catch (exception &e) {
+            delete rxn;
+            throw e;
         }
 
         // Read products.
-        (*i)->GetChildren("product", subitems);
-        for (j=subitems.begin(); j!=subitems.end(); j++) {
-            str = (*j)->GetAttributeValue("id");
-            sint = mech.GetSpeciesList().GetIndex(str);
-            if (sint < 0) {
-                // Product does not exist in list of species.
-                if (rxntype==Surf) delete surf;
-                if (rxntype==ActiveSites) delete act;
-                if (rxntype==Cond) delete cond;
-                throw exception(str.append(": Product species does not exist in mechanism.").c_str());
-            } else {
-                uint = sint;
-
-                // Get product stoichiometry.
-                str = (*j)->GetAttributeValue("stoich");
-                sint = atoi(str.c_str());
-                if (sint==0) sint = 1;
-
-                // Add product to reaction.
-                rxn->SetProduct(uint, sint);
-            }            
+        try {
+            readProducts(*(*i), *rxn);
+        } catch (exception &e) {
+            delete rxn;
+            throw e;
         }
 
         // Read particle composition change.
-        icn->SetComponents(mech.GetComponents());
-        (*i)->GetChildren("component", subitems);
-        for (j=subitems.begin(); j!=subitems.end(); j++) {
-            str = (*j)->GetAttributeValue("id");
-            sint = mech.GetComponentIndex(str);
-            if (sint >= 0) {
-                // Get component change.
-                str = (*j)->GetAttributeValue("dx");
-                num = atof(str.c_str());
-                // Set component change.
-                pc->SetCompChange(sint, num);
-            } else {
-                // Unknown component in mechanism.
-                if (rxntype==Surf) delete surf;
-                if (rxntype==ActiveSites) delete act;
-                if (rxntype==Cond) delete cond;
-                throw exception(str.append(": Component not found in mechanism.").c_str());
-            }
+        try {
+            readCompChanges(*(*i), *rxn);
+        } catch (exception &e) {
+            delete rxn;
+            throw e;
         }
 
         // Read tracker variable changes.
-        (*i)->GetChildren("track", subitems);
-        for (j=subitems.begin(); j!=subitems.end(); j++) {
-            str = (*j)->GetAttributeValue("id");
-            sint = mech.GetValueIndex(str);
-            if (sint >= 0) {
-                // Get variable change.
-                str = (*j)->GetAttributeValue("dx");
-                num = atof(str.c_str());
-                // Set variable change.
-                pc->SetValueChange(sint, num);
-            } else {
-                // Unknown tracker variable in mechanism.
-                if (rxntype==Surf) delete surf;
-                if (rxntype==ActiveSites) delete act;
-                if (rxntype==Cond) delete cond;
-                throw exception(str.append(": Tracker variable not found in mechanism.").c_str());
-            }
+        try {
+            readTrackChanges(*(*i), *rxn);
+        } catch (exception &e) {
+            delete rxn;
+            throw e;
         }
 
-        // If not a condensation process then also need to get Arrhenius parameters and
-        // particle dependency.
-        if (rxntype!=Cond) {
-            // Arrhenius parameters.
-            el = (*i)->GetFirstChild("A");
-            if (el!=NULL) {
-                num = atof(el->Data().c_str());
-            } else {
-                // Reaction must have constant.
-                throw exception("Surface reaction found with no rate constant defined.");
-            }
-            el = (*i)->GetFirstChild("n");
-            if (el!=NULL) {
-                m[0] = atof(el->Data().c_str());
-            } else {
-                // Default temperature power is 0.
-                m[0] = 0.0;
-            }
-            el = (*i)->GetFirstChild("E");
-            if (el!=NULL) {
-                m[1] = atof(el->Data().c_str()) * R / RCAL;
-            } else {
-                // Default activation energy is zero.
-                m[1] = 0.0;
-            }
-            surf->SetArrhenius(num, m[0], m[1]);
+        // Read Arrhenius rate parameters.
+        Sprog::Kinetics::ARRHENIUS arr;
+        el = (*i)->GetFirstChild("A");
+        if (el != NULL) {
+            arr.A = cdble(el->Data());
+        } else {
+            // Reaction must have constant.
+            throw runtime_error("Surface reaction found with no rate constant "
+                                "defined (Sweep, MechParser::readSufRxns).");
+        }
+        el = (*i)->GetFirstChild("n");
+        if (el!=NULL) {
+            arr.n = cdble(el->Data());
+        } else {
+            // Default temperature power is 0.
+            arr.n = 0.0;
+        }
+        el = (*i)->GetFirstChild("E");
+        if (el!=NULL) {
+            arr.E = cdble(el->Data()) * R / RCAL;
+        } else {
+            // Default activation energy is zero.
+            arr.E = 0.0;
+        }
+        rxn->SetArrhenius(arr);
  
-            // Particle dependency.
-            el = (*i)->GetFirstChild("particleterm");
-            if (el!=NULL) {
-                str = el->GetAttributeValue("id");
-                sint = atoi(el->GetAttributeValue("power").c_str());
-                if ((str.compare("s")==0) || (str.compare("as")==0)) {
-                    // This reaction depends on surface area.  Ignore power,
-                    // they must have meant 1.
-                    surf->SetPropertyID(Particle::iS);
-                } else if (str.compare("d")==0) {
-                    // This reaction depends on some power of the diameter.
-                    switch (sint) {
-                        case 1:
-                            surf->SetPropertyID(Particle::iD);
-                            break;
-                        case 2:
-                            surf->SetPropertyID(Particle::iD2);
-                            break;
-                        case -1:
-                            surf->SetPropertyID(Particle::iD_1);
-                        case -2:
-                            surf->SetPropertyID(Particle::iD_2);
-                        case 0:
-                            // Oh dear, can't have a zero power.
-                            throw exception("""particleterm"" tag found with invalid or zero power attribute");
-                    }
+        // Particle dependency.
+        el = (*i)->GetFirstChild("particleterm");
+        if (el!=NULL) {
+            // Get property ID.
+            str = el->GetAttributeValue("id");
+
+            // Get power.
+            int id = (int)cdble(el->GetAttributeValue("power"));
+
+            if ((str.compare("s")==0) || (str.compare("as")==0)) {
+                // This reaction depends on surface area.  Ignore power,
+                // they must have meant 1.
+                rxn->SetPropertyID(ParticleData::iS);
+            } else if (str.compare("d")==0) {
+                // This reaction depends on some power of the diameter.
+                switch (id) {
+                    case 1:
+                        rxn->SetPropertyID(ParticleData::iD);
+                        break;
+                    case 2:
+                        rxn->SetPropertyID(CoagModelData::iD2, CoagModel_ID);
+                        break;
+                    case -1:
+                        rxn->SetPropertyID(CoagModelData::iD_1, CoagModel_ID);
+                        break;
+                    case -2:
+                        rxn->SetPropertyID(CoagModelData::iD_2, CoagModel_ID);
+                        break;
+                    default:
+                        // Oh dear, can't have a zero power.
+                        throw runtime_error("""particleterm"" tag found with "
+                                            "invalid or zero power attribute "
+                                            "(Sweep, MechParser::readSurfRxns)");
                 }
-            } else {
-                throw exception("Surface process defined with ""particleterm"" element.");
             }
         } else {
-            // Read only rate constant for condensations.
-            el = (*i)->GetFirstChild("A");
-            if (el!=NULL) {
-                cond->SetA(atof(el->Data().c_str()));
-            } else {
-                // Reaction must have constant.
-                throw exception("Surface reaction found with no rate constant defined.");
-            }
+            throw runtime_error("Surface process defined with ""particleterm"" "
+                                "element (Sweep, MechParser::readSurfRxns).");
         }
 
-         // Add process to mechanism.
-        if (rxntype==Surf) {
-            mech.AddProcess(surf);
-        } else if (rxntype==ActiveSites) {
-            mech.AddProcess(act);
-        } else if (rxntype==Cond) {
-            mech.AddProcess(cond);
+        // Add process to mechanism.
+        mech.AddProcess(*rxn);
+    }
+}
+
+// Reads condensation processes from a sweep mechanism XML file.
+void MechParser::readCondensations(CamXML::Document &xml, Mechanism &mech)
+{
+    vector<CamXML::Element*> items, subitems;
+    vector<CamXML::Element*>::iterator i, j;
+    CamXML::Element *el;
+    string str;
+
+    // Get all surface reactions.
+    xml.Root()->GetChildren("condensation", items);
+
+    for (i=items.begin(); i!=items.end(); ++i) {
+        // Create a new condensation object.
+        Condensation *cond = new Condensation();
+        cond->SetMechanism(mech);
+
+        // Is condensation deferred.
+        str = (*i)->GetAttributeValue("defer");
+        if (str=="true") {
+            cond->SetDeferred(true);
+        } else {
+            cond->SetDeferred(false);
+        }
+
+        // Read reactants.
+        try {
+            // Get reactant stoichiometry.
+            readReactants(*(*i), *cond);
+
+            // Get reactant masses and diameters, and set inception
+            // parameters.
+            fvector mass, diam;
+            readReactantMDs(*(*i), mass, diam);
+            if (mass.size() > 0) {
+                cond->SetCondensingSpecies(mass[0], diam[0]);
+            }
+        } catch (exception &e) {
+            delete cond;
+            throw e;
+        }
+
+        // Read products.
+        try {
+            readProducts(*(*i), *cond);
+        } catch (exception &e) {
+            delete cond;
+            throw e;
+        }
+
+        // Read particle composition change.
+        try {
+            readCompChanges(*(*i), *cond);
+        } catch (exception &e) {
+            delete cond;
+            throw e;
+        }
+
+        // Read tracker variable changes.
+        try {
+            readTrackChanges(*(*i), *cond);
+        } catch (exception &e) {
+            delete cond;
+            throw e;
+        }
+
+        // Read Arrhenius rate parameters.
+        real A = 0.0;
+        el = (*i)->GetFirstChild("A");
+        if (el != NULL) {
+            A = cdble(el->Data());
+        } else {
+            A = 1.0;
+        }
+        cond->SetA(A);
+
+        // Add condensation to mechanism.
+        mech.AddProcess(*cond);
+    }
+}
+
+
+// Reads reactants into a process.
+void MechParser::readReactants(CamXML::Element &xml, Process &proc)
+{
+    vector<CamXML::Element*> items;
+    vector<CamXML::Element*>::iterator i;
+
+    // Get the reactant.
+    xml.GetChildren("reactant", items);
+
+    for (i=items.begin(); i!=items.end(); ++i) {
+        // Get the species ID.
+        string str = (*i)->GetAttributeValue("id");
+        int isp = Sprog::Species::Find(str, *proc.Mechanism()->Species());
+
+        if (isp < 0) {
+            // Reactant does not exist in list of species.
+            throw runtime_error(str + ": Reactant species not "
+                                "found in mechanism (Sweep, "
+                                "MechParser::readReactants).");
+        } else {
+            // Get reactant stoichiometry.
+            str = (*i)->GetAttributeValue("stoich");
+            int mu = (int)cdble(str);
+
+            // Add reactant to inception.
+            proc.AddReactant(isp, mu);
+        }            
+    }
+}
+
+// Reads products into a process.
+void MechParser::readProducts(CamXML::Element &xml, Process &proc)
+{
+    vector<CamXML::Element*> items;
+    vector<CamXML::Element*>::iterator i;
+
+    // Get the products.
+    xml.GetChildren("product", items);
+
+    for (i=items.begin(); i!=items.end(); ++i) {
+        // Get the species ID.
+        string str = (*i)->GetAttributeValue("id");
+        int isp = Sprog::Species::Find(str, *proc.Mechanism()->Species());
+
+        if (isp < 0) {
+            // Product does not exist in list of species.
+            throw runtime_error(str + ": Product species not "
+                                "found in mechanism (Sweep, "
+                                "MechParser::readProducts).");
+        } else {
+            // Get product stoichiometry.
+            str = (*i)->GetAttributeValue("stoich");
+            int mu = (int)cdble(str);
+
+            // Add product to inception.
+            proc.AddProduct(isp, mu);
+        }            
+    }
+}
+
+// Reads reactant masses and diameters.  This is required by inceptions
+// and condensation to calculate collision rates.
+void MechParser::readReactantMDs(CamXML::Element &xml, 
+                                 fvector &mass, fvector &diam)
+{
+    vector<CamXML::Element*> items;
+    vector<CamXML::Element*>::iterator i;
+    
+    // Get reactants.
+    xml.GetChildren("reactant", items);
+
+    // Clear output vectors.
+    mass.clear();
+    diam.clear();
+
+    for (i=items.begin(); i!=items.end(); ++i) {
+        // Get species mass
+        string str = (*i)->GetAttributeValue("m");
+        real m = cdble(str);
+        if (m > 0.0) {
+            mass.push_back(m);
+        } else {
+            // Species can't have zero mass!
+            throw runtime_error("Species can't have zero mass "
+                                "(Sweep, MechParser::readReactantMDs).");
+        }
+
+        // Get species diameter
+        str = (*i)->GetAttributeValue("d");
+        real d = cdble(str);
+        if (d > 0.0) {
+            diam.push_back(d);
+        } else {
+            // Species can't have zero diameter!
+            throw runtime_error("Species can't have zero diameter "
+                                "(Sweep, MechParser::readReactantMDs).");
+        }            
+    }
+}
+
+// Reads composition changes into a particle process.
+void MechParser::readCompChanges(CamXML::Element &xml, ParticleProcess &proc)
+{
+    vector<CamXML::Element*> items;
+    vector<CamXML::Element*>::iterator i;
+    
+    // Get list of component changes from XML.
+    xml.GetChildren("component", items);
+
+    for (i=items.begin(); i!=items.end(); ++i) {
+        // Get component ID.
+        string str = (*i)->GetAttributeValue("id");
+        int id = proc.Mechanism()->ComponentIndex(str);
+
+        if (id >= 0) {
+            // Get component change.
+            str = (*i)->GetAttributeValue("dx");
+            real dx = cdble(str);
+            // Set component change.
+            proc.SetCompChange(id, dx);
+        } else {
+            throw runtime_error(str + ": Component not found in mechanism "
+                                "Sweep, MechParser::readCompChanges).");
         }
     }
+}
 
+// Reads tracker variable changes into a particle process.
+void MechParser::readTrackChanges(CamXML::Element &xml, ParticleProcess &proc)
+{
+    vector<CamXML::Element*> items;
+    vector<CamXML::Element*>::iterator i;
+    
+    // Get list of component changes from XML.
+    xml.GetChildren("track", items);
 
+    for (i=items.begin(); i!=items.end(); ++i) {
+        // Get component ID.
+        string str = (*i)->GetAttributeValue("id");
+        int id = proc.Mechanism()->GetTrackerIndex(str);
 
-    /* Read and load prerequisite hardcoded models. */
-
-    root->GetChildren("prerequisite", items);
-
-    for (i=items.begin(); i!=items.end(); i++) {
-        // Read the prerequisite type.
-        str = (*i)->GetAttributeValue("type");
-
-        if (str.compare("particlemodel")==0) {
-            // This is a prerequisite particle model.  Therefore we need
-            // to read to model ID and tell the mechanism that it is
-            // required.
-            str = (*i)->GetAttributeValue("id");
-            if (str.compare("haca")==0) {
-                // This mechanism requires the ABF HACA active sites model.
-                mech.AddReqdModel(Mechanism::HACA);
-            } else if (str.compare("pah")==0) {
-                // This mechanism requires the hardcoded PAH site model.
-                mech.AddReqdModel(Mechanism::PAH);
-            } else if (str.compare("cnt")==0) {
-                // This mechanism requires the hardcoded simple CNT model.
-                mech.AddReqdModel(Mechanism::CNT);
-            }
+        if (id >= 0) {
+            // Get component change.
+            str = (*i)->GetAttributeValue("dx");
+            real dx = cdble(str);
+            // Set component change.
+            proc.SetTrackChange(id, dx);
+        } else {
+            throw runtime_error(str + ": Tracker variable not found in mechanism "
+                                "Sweep, MechParser::readTrackChanges).");
         }
     }
-
-    // Initialise the required models.
-    mech.InitReqdModels();
-
-
-
-    return 0;
 }

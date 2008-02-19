@@ -50,6 +50,10 @@ ParticleStats::ParticleStats()
 // Default constructor (public).
 ParticleStats::ParticleStats(const CompPtrVector &comp, const TrackPtrVector &track)
 {
+    for (unsigned int i=0; i!=STAT_COUNT; ++i) {
+        m_names.push_back(m_statnames[i]);
+    }
+
     m_ncomp  = comp.size();
     m_ntrack = track.size();
     m_stats.resize(STAT_COUNT+2*(m_ncomp+m_ntrack), 0.0);
@@ -166,7 +170,7 @@ void ParticleStats::Calculate(const Ensemble &e, real scale)
     // Get the particle count.
     m_stats[iNP] = (real)e.Count();
     m_stats[iM0] = m_stats[0];
-    real invNP = 1.0 / m_stats[0];
+    real invNP = (m_stats[iNP]>0) ? 1.0 / m_stats[iNP] : 0.0;
 
     // Scale the summed stats and calculate the averages.
     for (unsigned int i=1; i!=STAT_COUNT; ++i) {
@@ -334,11 +338,11 @@ void ParticleStats::Serialize(std::ostream &out) const
         // Output names.
         for (unsigned int i=0; i!=n; ++i) {
             // Write the length of the stat name to the stream.
-            n = m_names[i].length();
-            out.write((char*)&n, sizeof(n));
+            unsigned int m = m_names[i].length();
+            out.write((char*)&m, sizeof(m));
 
             // Write the stat name to the stream.
-            out.write(m_names[i].c_str(), n);
+            out.write(m_names[i].c_str(), m);
         }
     } else {
         throw invalid_argument("Output stream not ready "

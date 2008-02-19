@@ -762,7 +762,7 @@ void Mechanism::Deserialize(std::istream &in)
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
         int m = 0;
-        unsigned int n =0;
+        unsigned int n =0, id = 0;
 
         switch (version) {
             case 0:
@@ -825,8 +825,8 @@ void Mechanism::Deserialize(std::istream &in)
 
                 // Read model set.
                 for (unsigned int i=0; i!=n; ++i) {
-                    in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                    m_models.insert((ModelType)n);
+                    in.read(reinterpret_cast<char*>(&id), sizeof(id));
+                    m_models.insert((ModelType)id);
                 }
 
                 break;

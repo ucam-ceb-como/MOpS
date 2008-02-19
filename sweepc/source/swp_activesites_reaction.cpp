@@ -86,6 +86,21 @@ real ActSiteReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas,
 }
 
 
+// ACTIVE SITES MODEL.
+
+// Sets the active sites model.
+void ActSiteReaction::SetModel(ActiveSitesModel &model)
+{
+    m_asmodel = &model;
+}
+
+// Returns the active sites model.
+ActiveSitesModel *const ActSiteReaction::Model(void) const
+{
+    return m_asmodel;
+}
+
+
 // READ/WRITE/COPY.
 
 // Creates a copy of the particle process.

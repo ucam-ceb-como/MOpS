@@ -156,6 +156,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\swp_mech_parser.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\swp_mechanism.cpp"
 				>
 			</File>
@@ -188,6 +192,10 @@
 				>
 				<File
 					RelativePath=".\source\swp_abfmodel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_activesites_model.cpp"
 					>
 				</File>
 				<File
@@ -303,6 +311,10 @@
 			</File>
 			<File
 				RelativePath=".\include\swp_flame_solver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_mech_parser.h"
 				>
 			</File>
 			<File

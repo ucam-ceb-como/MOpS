@@ -83,7 +83,8 @@ const fvector &Inception::ParticleComp(void) const {return m_newcomp;}
 // Returns the amount of the ith component of the new particle.
 real Inception::ParticleComp(unsigned int i) const
 {
-    if (i < m_mech->ComponentCount()) {
+
+    if (i < m_newcomp.size()) {
         return m_newcomp[i];
     } else {
         return 0.0;
@@ -100,6 +101,11 @@ void Inception::SetParticleComp(const fvector &comp)
 void Inception::SetParticleComp(unsigned int i, real comp)
 {
     if (i < m_mech->ComponentCount()) {
+        // Ensure vector is sufficiently long.
+        if (m_newcomp.size() < m_mech->ComponentCount()) {
+            m_newcomp.resize(m_mech->ComponentCount(),0.0);
+        }
+        // Set value.
         m_newcomp[i] = comp;
     }
 }
@@ -114,7 +120,7 @@ const fvector &Inception::ParticleTrackers(void) const
 // new particle.
 real Inception::ParticleTrackers(unsigned int i) const
 {
-    if (i < m_mech->TrackerCount()) {
+    if (i < m_newvals.size()) {
         return m_newvals[i];
     } else {
         return 0.0;
@@ -132,6 +138,11 @@ void Inception::SetParticleTrackers(const fvector &track)
 void Inception::SetParticleTracker(unsigned int i, real track)
 {
     if (i < m_mech->TrackerCount()) {
+        // Ensure vector is sufficiently long.
+        if (m_newvals.size() < m_mech->TrackerCount()) {
+            m_newvals.resize(m_mech->TrackerCount(),0.0);
+        }
+        // Set value.
         m_newvals[i] = track;
     }
 }

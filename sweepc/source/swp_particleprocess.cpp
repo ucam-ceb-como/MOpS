@@ -55,6 +55,81 @@ void ParticleProcess::SetDeferred(bool defer)
 }
 
 
+// CHANGES TO PARTICLE ON PROCESS OCCURANCE.
+
+// Returns the composition vector of the new particle.
+const fvector &ParticleProcess::CompChange(void) const
+{
+    return m_dcomp;
+}
+
+// Returns the amount of the ith component of the new particle.
+real ParticleProcess::CompChange(unsigned int i) const
+{
+    if (i < m_dcomp.size()) {
+        return m_dcomp[i];
+    } else {
+        return 0.0;
+    }
+}
+
+// Sets the particle composition vector.
+void ParticleProcess::SetCompChange(const fvector &comp)
+{
+    m_dcomp.assign(comp.begin(), comp.end());
+}
+
+// Sets the amount of the ith component in the new particle.
+void ParticleProcess::SetCompChange(unsigned int i, real comp)
+{
+    if (i < m_mech->ComponentCount()) {
+        // Ensure vector is sufficiently long.
+        if (m_dcomp.size() < m_mech->ComponentCount()) {
+            m_dcomp.resize(m_mech->ComponentCount(),0.0);
+        }
+        // Set value.
+        m_dcomp[i] = comp;
+    }
+}
+
+// Returns the tracker variable vector of the new particle.
+const fvector &ParticleProcess::TrackChange(void) const
+{
+    return m_dvals;
+}
+
+// Returns the value of the ith tracker variable of the
+// new particle.
+real ParticleProcess::TrackChange(unsigned int i) const
+{
+    if (i < m_dvals.size()) {
+        return m_dvals[i];
+    } else {
+        return 0.0;
+    }   
+}
+
+// Sets the new particle tracker variable vector.
+void ParticleProcess::SetTrackChange(const fvector &track)
+{
+    m_dvals.assign(track.begin(), track.end());
+}
+
+// Sets the value of the ith tracker variable in the
+// new particle.
+void ParticleProcess::SetTrackChange(unsigned int i, real track)
+{
+    if (i < m_dvals.size()) {
+        // Ensure vector is sufficiently long.
+        if (m_dvals.size() < m_mech->TrackerCount()) {
+            m_dvals.resize(m_mech->TrackerCount(),0.0);
+        }
+        // Set value.
+        m_dvals[i] = track;
+    }
+}
+
+
 // RATE CALCULATION.
 
 // Calculates the rates of multiple particle processes.

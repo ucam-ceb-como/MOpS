@@ -71,8 +71,6 @@ public:
         ) const;
 
 
-
-
     // ACTIVE SITES MODEL.
 
     // Sets the active sites model.
