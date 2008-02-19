@@ -141,7 +141,12 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
                     int j = mech.FindSpecies(str);
                     
                     // Set the species mole fraction.
-                    molefracs[j] = cdble((*i)->Data());
+                    if (j >= 0) {
+                        molefracs[j] = cdble((*i)->Data());
+                    } else {
+                        throw runtime_error("Unknown species initial condition "
+                                            "(Mops, Settings_IO::LoadFromXML_V1).");
+                    }
                 }
             } else {
                 throw invalid_argument("Initial condition must have ID!");
@@ -215,6 +220,23 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
             solver.SetATOL(cdble(node->Data()));
         }
 
+        // Read the number of runs.
+        node = root->GetFirstChild("runs");
+        if (node != NULL) {
+            solver.SetRunCount((int)cdble(node->Data()));
+        }
+
+        // Read stochastic particle count.
+        node = root->GetFirstChild("pcount");
+        if (node != NULL) {
+            solver.SetMaxPartCount((int)cdble(node->Data()));
+        }
+
+        // Read max M0, for scaling.
+        node = root->GetFirstChild("maxm0");
+        if (node != NULL) {
+            solver.SetMaxM0(cdble(node->Data()));
+        }
 
         // TIME INTERVALS.
 

@@ -53,6 +53,27 @@ public:
     void SetRTOL(real rtol);
 
 
+    // SWEEP SETTINGS.
+
+    // Returns the number of runs to perform
+    unsigned int RunCount(void) const;
+
+    // Sets the number of runs to peform.
+    void SetRunCount(unsigned int n);
+
+    // Returns the max. stochastic particle count.
+    unsigned int MaxPartCount(void) const;
+
+    // Sets the max. stochastic particle count.
+    void SetMaxPartCount(unsigned int n);
+
+    // Returns the max. M0, for initial ensemble scaling.
+    real MaxM0(void) const;
+
+    // Sets max. M0.
+    void SetMaxM0(real m0);
+
+
     // CONSOLE OUTPUT.
 
     // Returns the console output interval (in # of steps).
@@ -97,19 +118,32 @@ public:
     // Run the solver for the given reactor and the 
     // given time intervals.
     virtual void SolveReactor(
-        Reactor &r,             // Reactor object to solve.
-        const timevector &times // Vector of time intervals.
+        Reactor &r,              // Reactor object to solve.
+        const timevector &times, // Vector of time intervals.
+        unsigned int nruns = 1   // Number of runs to perform.
         );
 
     // Post-processes binary output files with the given file name
     // into CSV files.
-    virtual void PostProcess(const std::string &filename) const;
+    virtual void PostProcess(
+        const std::string &filename, // Filename to post-process.
+        unsigned int nruns = 1       // Number of runs.
+        ) const;
 
 protected:
     // SOLVER SETTINGS.
 
     // Default error tolerances for the ODE solver.
     real m_atol, m_rtol;
+
+    // Number of runs to perform.
+    unsigned int m_nruns;
+
+    // Max. number of stochastic particles in sweep.
+    unsigned int m_pcount;
+
+    // Max. M0 value, for initial scaling of ensemble.
+    real m_maxm0;
 
     // COMPUTATION TIME.
 

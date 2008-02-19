@@ -50,6 +50,27 @@ void Solver::SetRTOL(real rtol)
 }
 
 
+// SWEEP SETTINGS.
+
+// Returns the number of runs to perform
+unsigned int Solver::RunCount(void) const {return m_nruns;}
+
+// Sets the number of runs to peform.
+void Solver::SetRunCount(unsigned int n) {m_nruns = n;}
+
+// Returns the max. stochastic particle count.
+unsigned int Solver::MaxPartCount(void) const {return m_pcount;}
+
+// Sets the max. stochastic particle count.
+void Solver::SetMaxPartCount(unsigned int n) {m_pcount = n;}
+
+// Returns the max. M0, for initial ensemble scaling.
+real Solver::MaxM0(void) const {return m_maxm0;}
+
+// Sets max. M0.
+void Solver::SetMaxM0(real m0) {m_maxm0 = m0;}
+
+
 // CONSOLE INTERVAL.
 
 unsigned int Solver::ConsoleInterval() const
@@ -134,7 +155,7 @@ void Solver::SetOutputFile(const std::string &name)
 
 // Solves the given reactor for the given time intervals.
 void Solver::SolveReactor(Mops::Reactor &r, 
-                          const timevector &times)
+                          const timevector &times, unsigned int nruns)
 {
     // Start the CPU timing clock.
     m_cpu_start = clock();
@@ -194,7 +215,7 @@ void Solver::SolveReactor(Mops::Reactor &r,
 
 // POST-PROCESSING.
 
-void Solver::PostProcess(const std::string &filename) const
+void Solver::PostProcess(const std::string &filename, unsigned int nruns) const
 {
     Mechanism mech;
     timevector times;

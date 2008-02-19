@@ -34,6 +34,15 @@ public:
     Sweep::Mechanism &ParticleMech(void);
     const Sweep::Mechanism &ParticleMech(void) const;
 
+
+    // READ/WRITE/COPY FUNCTIONS.
+
+    // Writes the mechanism to a binary data stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the mechanism data from a binary data stream.
+    void Deserialize(std::istream &in);
+
 private:
     // The particle mechanism.
     Sweep::Mechanism m_pmech;

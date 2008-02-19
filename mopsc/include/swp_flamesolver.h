@@ -95,7 +95,7 @@ private:
     // which stores all the information required to post-process the
     // simulation.
     void beginFileOutput(
-        const Sweep::Mechanism &mech, // Mechanism which defines the output.
+        const Mops::Mechanism &mech, // Mechanism which defines the output.
         const Mops::timevector &times // Vector of time intervals.
         );
 
@@ -113,7 +113,7 @@ private:
 
     void ppAux(
         const std::string &filename,
-        Mechanism &mech, 
+        Mops::Mechanism &mech, 
         Mops::timevector &times
         ) const;
 

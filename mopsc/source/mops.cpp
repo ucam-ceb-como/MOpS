@@ -9,6 +9,7 @@
 
 #include "mops.h"
 #include "sprog.h"
+#include "sweep.h"
 #include <vector>
 
 using namespace Mops;
@@ -105,6 +106,10 @@ int main(int argc, char *argv[])
     } else {
         dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(chemfile, mech);
     }
+    
+    // Read the particle mechanism.
+    mech.ParticleMech().SetSpecies(mech.Species());
+    Sweep::MechParser::Read(swpfile, mech.ParticleMech());
 
     // Read the settings file.
     if (foldfmt) {
@@ -118,7 +123,7 @@ int main(int argc, char *argv[])
     }
 
     // Solve reactor.
-    if (fsolve) solver->SolveReactor(*reactor, times);
+    if (fsolve) solver->SolveReactor(*reactor, times, solver->RunCount());
 
     // Post-process.
     if (fpostprocess) solver->PostProcess(solver->OutputFile());

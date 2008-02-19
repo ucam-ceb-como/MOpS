@@ -32,6 +32,8 @@ FlameSolver::~FlameSolver()
 // Reads a flame gas-phase profile from a TAB formatted file.
 void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 {
+    map<real,real> alpha_prof;
+
     // Clear the current gas-phase profile.
     m_gasprof.clear();
 
@@ -54,10 +56,11 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         split(line, subs, delim);
 
         // Get important column indices (time, temperature and pressure).
-        int tcol=-1, Tcol=-1, Pcol=-1;
+        int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1;
         tcol = findinlist(string("Time"), subs);
         Tcol = findinlist(string("T"), subs);
         Pcol = findinlist(string("P"), subs);
+        Acol = findinlist(string("Alpha"), subs);
 
         // Check that the file contains required columns.
         if (tcol < 0) {
@@ -81,7 +84,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         // their columns.
         map<unsigned int,int> spcols;
         for (unsigned int i=0; i!=subs.size(); ++i) {
-            if ((i!=tcol) && (i!=Tcol) && (i!=Pcol)) {
+            if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol)) {
                 Sprog::Species *sp = mech.AddSpecies();
                 sp->SetName(subs[i]);
                 spcols[i] = mech.FindSpecies(subs[i]);
@@ -94,6 +97,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             real t = 0.0;
             real T = 0.0;
             real P = 0.0;
+            real alpha = 0.0;
             Sprog::Thermo::IdealGas gas(mech.Species());
 
             // Split the line by columns.
@@ -111,6 +115,8 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
                 } else if (i==Pcol) {
                     // This is the pressure column.
                     P = cdble(subs[i]);
+                } else if (i==Acol) {
+                    alpha = cdble(subs[i]);
                 } else {
                     // This is a gas-phase species column.
                     map<unsigned int,int>::iterator isp = spcols.find(i);
@@ -129,8 +135,12 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gas.Normalise();
 
             // Add the profile point.
+            alpha_prof[t] = alpha;
             m_gasprof.insert(GasPoint(t, gas));
         }
+
+        // Set up ABF model to use alpha profile.
+        Sweep::ABFModel::Instance().SetAlphaProfile(alpha_prof);
 
         // Close the input file.
         fin.close();
@@ -235,16 +245,19 @@ void FlameSolver::SolveReactor(Mops::Reactor &r,
     r.Initialise(t1);
 
     // Set up file output.
-    beginFileOutput(r.Mechanism()->ParticleMech(), times);
+    beginFileOutput(*r.Mechanism(), times);
 
     // Set up the console output.
     icon = m_console_interval;
     setupConsole(r.Mechanism()->ParticleMech());
 
     for (unsigned int irun=0; irun!=nruns; ++irun) {
+        // Re-initialise the solution.
+        r.Mixture()->Reset(m_maxm0);
+
         // Begin file output for this run.
         beginRunFileOutput(irun);
-        printf("Run Number: %d", irun);
+        printf("Run Number: %d\n", irun);
 
         // Output initial conditions.
         fileOutput(t1, *r.Mixture());
@@ -288,10 +301,10 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
 {
     // Read auxilliary information about the simulation (mechanism
     // and time intervals).
-    Sweep::Mechanism mech;
+    Mops::Mechanism mech;
     Mops::timevector times;
     ppAux(filename, mech, times);
-
+    Sweep::Mechanism &pmech = mech.ParticleMech();
 
     // Calculate number of output points.
     unsigned int npoints = 1; // 1 for initial conditions.
@@ -302,7 +315,7 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
     // Declare stats outputs (averages and errors).
     fvector s;
     vector<fvector> as(npoints), es(npoints);
-    EnsembleStats stats(mech);
+    EnsembleStats stats(pmech);
 
     // Declare CPU time outputs (averages and errors).
     double cpu; 
@@ -335,6 +348,8 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
 
             // Calculate sums and sums of square (for average and
             // error calculation).
+            as[0].resize(s.size(), 0.0);
+            es[0].resize(s.size(), 0.0);
             for (unsigned int i=0; i!=s.size(); ++i) {
                 as[0][i] += s[i];
                 if (nruns>1) es[0][i] += s[i] * s[i];
@@ -348,7 +363,7 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
             // Calculate sums and sums of square (for average and
             // error calculation).
             acpu[0] += cpu;
-            ecpu[0] += cpu * cpu;
+            if (nruns>1) ecpu[0] += cpu * cpu;
         }
 
         // Loop over all time intervals.
@@ -365,6 +380,8 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
 
                 // Calculate sums and sums of square (for average and
                 // error calculation).
+                as[step].resize(s.size(), 0.0);
+                es[step].resize(s.size(), 0.0);
                 for (unsigned int i=0; i!=s.size(); ++i) {
                     as[step][i] += s[i];
                     if (nruns>1) es[step][i] += s[i] * s[i];
@@ -378,7 +395,7 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
                 // Calculate sums and sums of square (for average and
                 // error calculation).
                 acpu[step] += cpu;
-                ecpu[step] += cpu * cpu;
+                if (nruns>1) ecpu[step] += cpu * cpu;
             }
         }
 
@@ -420,6 +437,9 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
     header.push_back("Step");
     header.push_back("Time (s)");
     stats.Names(header, 2);
+    for (unsigned int i=header.size(); i!=2; --i) {
+        header.insert(header.begin()+i, "Err");
+    }
     csv.Write(header);
 
     // Open a CSV file for the computation time results.
@@ -428,6 +448,7 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
     cpuheader.push_back("Step");
     cpuheader.push_back("Time (s)");
     cpuheader.push_back("CPU Time (s)");
+    cpuheader.push_back("Err");
     csvcpu.Write(cpuheader);
 
     // Output initial conditions.
@@ -451,17 +472,20 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
     unsigned int step = 1;
     for (Mops::timevector::const_iterator iint=times.begin(); iint!=times.end(); ++iint) {
         // Loop over all time steps in this interval.
+        real t = iint->StartTime();
         for (unsigned int istep=0; istep<(*iint).StepCount(); ++istep, ++step) {
+            t += iint->StepSize();
+
             // Stats.
+            as[step].insert(as[step].begin(), t);
             as[step].insert(as[step].begin(), step);
-            as[step].insert(as[step].begin(), iint->EndTime());
             as[step].insert(as[step].end(), es[step].begin(), es[step].end());
             csv.Write(as[step]);
 
             // CPU times.
             vector<double> cpuout(4);
             cpuout[0] = 0.0;
-            cpuout[1] = iint->EndTime();
+            cpuout[1] = t;
             cpuout[2] = acpu[step];
             cpuout[3] = ecpu[step];
             csvcpu.Write(cpuout);
@@ -520,7 +544,7 @@ void FlameSolver::consoleOutput(real time, const Sweep::Cell &sys) const
 // Sets up the file output by outputting an auxilliary file
 // which stores all the information required to post-process the
 // simulation and by opening the output file.
-void FlameSolver::beginFileOutput(const Sweep::Mechanism &mech, 
+void FlameSolver::beginFileOutput(const Mops::Mechanism &mech, 
                                   const Mops::timevector &times)
 {
     // Build output file name.
@@ -552,7 +576,7 @@ void FlameSolver::beginFileOutput(const Sweep::Mechanism &mech,
 
     // Set up stats output.
     delete m_stats;
-    m_stats = new EnsembleStats(mech);
+    m_stats = new EnsembleStats(mech.ParticleMech());
 }
 
 // Sets up file output for a new run given the run number.
@@ -592,7 +616,7 @@ void FlameSolver::endFileOutput()
 
 // POST-PROCESSING ROUTINES.
 
-void FlameSolver::ppAux(const std::string &filename, Mechanism &mech, 
+void FlameSolver::ppAux(const std::string &filename, Mops::Mechanism &mech, 
                         Mops::timevector &times) const
 {
     // Build input file name.
