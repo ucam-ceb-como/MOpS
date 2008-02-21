@@ -53,8 +53,8 @@ Mixture &Mixture::operator=(const Mixture &mix)
     if (this != &mix) {
         m_data.assign(mix.m_data.begin(), mix.m_data.end());
         m_species = mix.m_species;
-        m_pT      = &m_data.at(m_species->size()-2);
-        m_pdens   = &m_data.at(m_species->size()-1);
+        m_pT      = &m_data.at(m_data.size()-2);
+        m_pdens   = &m_data.at(m_data.size()-1);
     }
 
     return *this;
