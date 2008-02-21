@@ -235,7 +235,7 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
         // Read max M0, for scaling.
         node = root->GetFirstChild("maxm0");
         if (node != NULL) {
-            solver.SetMaxM0(cdble(node->Data()));
+            solver.SetMaxM0(cdble(node->Data())*1.0e6); // Convert from #/cm3 to #/m3.
         }
 
         // TIME INTERVALS.

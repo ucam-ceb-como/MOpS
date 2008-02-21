@@ -175,6 +175,18 @@ protected:
     // Output file stream.
     std::fstream m_file;
 
+
+    // POST-PROCESSING ROUTINES.
+
+    // Reads auxilliary post-processing information using the
+    // given file name.  This information is the chemical mechanism
+    // and the output time intervals.
+    void readAux(
+        const std::string &filename,
+        Mops::Mechanism &mech, 
+        Mops::timevector &times
+        ) const;
+
 private:
 
     // CONSOLE OUTPUT.
@@ -205,6 +217,7 @@ private:
 
     // POST-PROCESSING ROUTINES.
 
+    // Builds a vector for CSV output from the given reactor object.
     void buildOutputVector(
         const Reactor &r, // Reactor object holding data to be output.
         fvector &out      // Vector to build.

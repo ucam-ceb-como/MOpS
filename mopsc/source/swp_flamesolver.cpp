@@ -131,7 +131,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             // TODO:  This will give the wrong component densities
             //        unless all species are specified!
             gas.SetTemperature(T);
-            gas.SetPressure(P);
+            gas.SetPressure(P*1.0e5);
             gas.Normalise();
 
             // Add the profile point.
@@ -140,6 +140,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         }
 
         // Set up ABF model to use alpha profile.
+        Sweep::ABFModel::Instance().Initialise(mech.ParticleMech());
         Sweep::ABFModel::Instance().SetAlphaProfile(alpha_prof);
 
         // Close the input file.
@@ -167,7 +168,7 @@ int FlameSolver::Run(real &t, real tstop, const GasProfile &gasphase,
     int err = 0;
     real tsplit, dtg, dt, jrate;
     fvector rates(mech.TermCount(), 0.0);
-    Sprog::Thermo::IdealGas gas(*mech.Species());
+//    Sprog::Thermo::IdealGas gas(*mech.Species());
 
     // Ensure the process counters contain sufficient 
     // entries to track all rate terms.
@@ -185,10 +186,10 @@ int FlameSolver::Run(real &t, real tstop, const GasProfile &gasphase,
         // Calculate LPDA splitting time step.
         if (mech.AnyDeferred() && (sys.ParticleCount() > 0)) {
             // Calculate the chemical conditions.
-            linInterpGas(t, gasphase, gas);
+            linInterpGas(t, gasphase, sys);
 
             // Get the process jump rates (and the total rate).
-            jrate = mech.CalcJumpRates(t, gas, sys, rates);
+            jrate = mech.CalcJumpRates(t, sys, sys, rates);
 
             // Calculate the splitting end time.
             tsplit = calcSplitTime(t, tstop, jrate, sys.ParticleCount(), dtg);
@@ -201,10 +202,10 @@ int FlameSolver::Run(real &t, real tstop, const GasProfile &gasphase,
         // Perform stochastic jump processes.
         while (t < tsplit) {
             // Calculate the chemical conditions.
-            linInterpGas(t, gasphase, gas);
+            linInterpGas(t, gasphase, sys);
 
             // Calculate jump rates.
-            jrate = mech.CalcJumpRates(t, gas, sys, rates);
+            jrate = mech.CalcJumpRates(t, sys, sys, rates);
 
             // Perform time step.
             dt = timeStep(t, sys, mech, rates, jrate);
@@ -218,6 +219,7 @@ int FlameSolver::Run(real &t, real tstop, const GasProfile &gasphase,
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
         if (mech.AnyDeferred()) {
+            linInterpGas(t, gasphase, sys);
             mech.LPDA(t, sys);
         }
     }
@@ -231,10 +233,6 @@ void FlameSolver::SolveReactor(Mops::Reactor &r,
                                const Mops::timevector &times,
                                unsigned int nruns)
 {
-    // Start the CPU timing clock.
-    m_cpu_start = clock();
-    m_chemtime  = 0.0;
-
     unsigned int icon;
     real t1;     // Current time.
     real dt, t2; // Stop time for each step.
@@ -243,6 +241,8 @@ void FlameSolver::SolveReactor(Mops::Reactor &r,
     t1 = times[0].StartTime();
     t2 = t1;
     r.Initialise(t1);
+    r.Mixture()->Particles().Initialise(m_pcount);
+    r.Mixture()->SetMaxM0(m_maxm0);
 
     // Set up file output.
     beginFileOutput(*r.Mechanism(), times);
@@ -252,12 +252,18 @@ void FlameSolver::SolveReactor(Mops::Reactor &r,
     setupConsole(r.Mechanism()->ParticleMech());
 
     for (unsigned int irun=0; irun!=nruns; ++irun) {
+        // Start the CPU timing clock.
+        m_cpu_start = clock();
+        m_chemtime  = 0.0;
+
         // Re-initialise the solution.
         r.Mixture()->Reset(m_maxm0);
+        t1 = times[0].StartTime();
+        t2 = t1;
 
         // Begin file output for this run.
         beginRunFileOutput(irun);
-        printf("Run Number: %d\n", irun);
+        printf("Run Number %d of %d.\n", irun+1, nruns);
 
         // Output initial conditions.
         fileOutput(t1, *r.Mixture());
@@ -303,7 +309,7 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
     // and time intervals).
     Mops::Mechanism mech;
     Mops::timevector times;
-    ppAux(filename, mech, times);
+    readAux(filename, mech, times);
     Sweep::Mechanism &pmech = mech.ParticleMech();
 
     // Calculate number of output points.
@@ -454,9 +460,11 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
     // Output initial conditions.
     {
         // Stats.
+        for (unsigned int i=as[0].size(); i!=0; --i) {
+            as[0].insert(as[0].begin()+i, *(es[0].begin()+i-1));
+        }
         as[0].insert(as[0].begin(), 0.0);
         as[0].insert(as[0].begin(), times[0].StartTime());
-        as[0].insert(as[0].end(), es[0].begin(), es[0].end());
         csv.Write(as[0]);
 
         // CPU times.
@@ -477,9 +485,11 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
             t += iint->StepSize();
 
             // Stats.
+            for (unsigned int i=as[step].size(); i!=0; --i) {
+                as[step].insert(as[step].begin()+i, *(es[step].begin()+i-1));
+            }
             as[step].insert(as[step].begin(), t);
             as[step].insert(as[step].begin(), step);
-            as[step].insert(as[step].end(), es[step].begin(), es[step].end());
             csv.Write(as[step]);
 
             // CPU times.
@@ -506,11 +516,11 @@ void FlameSolver::setupConsole(const Sweep::Mechanism &mech)
     // Build header. 
     vector<string> header;
     header.push_back("Time (s)");
+    header.push_back("#SP");
     header.push_back("M0");
     header.push_back("Fv");
     header.push_back("dcol (nm)");
-    header.push_back("S (cm2/cm3");
-    header.push_back("Mass (g/cm3)");
+    header.push_back("S (cm2/cm3)");
 
     // Print the first header.
     m_console.PrintDivider();
@@ -533,7 +543,6 @@ void FlameSolver::consoleOutput(real time, const Sweep::Cell &sys) const
     out.push_back(m_stats->BasicStats().Fv());
     out.push_back(m_stats->BasicStats().AvgCollDiam());
     out.push_back(m_stats->BasicStats().SurfaceArea());
-    out.push_back(m_stats->BasicStats().Mass());
 
     // Print data to console.
     m_console.PrintRow(out);
@@ -612,44 +621,6 @@ void FlameSolver::endFileOutput()
 {
     // Close the output file.
     m_file.close();
-}
-
-// POST-PROCESSING ROUTINES.
-
-void FlameSolver::ppAux(const std::string &filename, Mops::Mechanism &mech, 
-                        Mops::timevector &times) const
-{
-    // Build input file name.
-    string fname(filename); fname.append(".dat");
-
-    // Output the file which contains the simulation mechanism and
-    // time intervals.
-    fstream fin;
-    fin.open(fname.c_str(), ios_base::in | ios_base::binary);
-
-    // Throw error if the file failed to open.
-    if (!fin.good()) {
-        throw runtime_error("Failed to open file for simulation "
-                  "post-processing (Mops, Sweep::FlameSolver::ppAux).");
-    }
-
-    // Read the mechanism from the file.
-    mech.Deserialize(fin);
-
-    // Read the time intervals from the file.
-    times.clear();
-    unsigned int ntimes;
-    fin.read(reinterpret_cast<char*>(&ntimes), sizeof(ntimes));
-    for (unsigned int i=0; i<ntimes; i++) {
-        times.push_back(Mops::TimeInterval(fin));
-    }
-
-    // Close the simulation settings file.
-    fin.close();
-}
-
-void FlameSolver::buildOutputVector(const Sweep::Cell &sys, fvector &out) const
-{
 }
 
 

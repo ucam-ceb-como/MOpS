@@ -109,19 +109,6 @@ private:
     void endFileOutput();
 
 
-    // POST-PROCESSING ROUTINES.
-
-    void ppAux(
-        const std::string &filename,
-        Mops::Mechanism &mech, 
-        Mops::timevector &times
-        ) const;
-
-    void buildOutputVector(
-        const Sweep::Cell &sys, // Reactor object holding data to be output.
-        fvector &out            // Vector to build.
-        ) const;
-
     // HELPER FUNCTIONS.
 
     // Uses linear interpolation to return the chemical conditions

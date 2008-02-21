@@ -503,3 +503,36 @@ void Solver::buildOutputVector(const Mops::Reactor &r, fvector &out) const
     out[n+3] = r.Mixture()->Density() * 1.0e-6; // Convert to mol/cm3.
     out[n+4] = r.Mixture()->Pressure();
 }
+
+
+void Solver::readAux(const std::string &filename, Mops::Mechanism &mech, 
+                     Mops::timevector &times) const
+{
+    // Build input file name.
+    string fname(filename); fname.append(".dat");
+
+    // Output the file which contains the simulation mechanism and
+    // time intervals.
+    fstream fin;
+    fin.open(fname.c_str(), ios_base::in | ios_base::binary);
+
+    // Throw error if the file failed to open.
+    if (!fin.good()) {
+        throw runtime_error("Failed to open file for simulation "
+                  "post-processing (Mops, Solver::readAux).");
+    }
+
+    // Read the mechanism from the file.
+    mech.Deserialize(fin);
+
+    // Read the time intervals from the file.
+    times.clear();
+    unsigned int ntimes;
+    fin.read(reinterpret_cast<char*>(&ntimes), sizeof(ntimes));
+    for (unsigned int i=0; i<ntimes; i++) {
+        times.push_back(Mops::TimeInterval(fin));
+    }
+
+    // Close the simulation settings file.
+    fin.close();
+}

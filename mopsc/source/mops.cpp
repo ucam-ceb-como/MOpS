@@ -110,11 +110,13 @@ int main(int argc, char *argv[])
     // Read the particle mechanism.
     mech.ParticleMech().SetSpecies(mech.Species());
     Sweep::MechParser::Read(swpfile, mech.ParticleMech());
+    mech.ParticleMech().AddCoagulation();
 
     // Read the settings file.
     if (foldfmt) {
         // Old file format.
         reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, *solver, mech);
+        reactor->Initialise(0.0);
     } else {
         // New format not yet implemented.
         delete solver;
@@ -126,7 +128,7 @@ int main(int argc, char *argv[])
     if (fsolve) solver->SolveReactor(*reactor, times, solver->RunCount());
 
     // Post-process.
-    if (fpostprocess) solver->PostProcess(solver->OutputFile());
+    if (fpostprocess) solver->PostProcess(solver->OutputFile(), solver->RunCount());
 
     // Clear up memory.
     delete solver;

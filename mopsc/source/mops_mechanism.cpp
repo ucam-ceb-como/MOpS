@@ -7,6 +7,7 @@ using namespace Mops;
 // Default constructor.
 Mechanism::Mechanism(void)
 {
+    m_pmech.SetSpecies(m_species);
 }
 
 // Default destructor.
