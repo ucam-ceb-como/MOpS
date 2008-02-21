@@ -39,6 +39,9 @@ public:
     PointContactData &operator+=(const PointContactData &rhs);
     const PointContactData operator+(const PointContactData &rhs) const;
 
+    // Resets the model data to the default state.
+    void Clear();
+
 
     // COAGULATION MODEL PARTICLE PROPERTIES.
 

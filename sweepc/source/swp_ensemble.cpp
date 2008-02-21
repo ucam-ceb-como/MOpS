@@ -115,7 +115,7 @@ void Ensemble::Initialise(unsigned int capacity)
     m_count    = 0;
 
     // Reserve memory for ensemble.
-    m_particles.assign(capacity, NULL);
+    m_particles.resize(capacity, NULL);
     m_tree.resize(capacity);
     
     // Set all tree nodes to correct size and link up tree.
@@ -181,22 +181,27 @@ int Ensemble::Add(Particle &sp)
 
     if (i < 0) {
         // We are adding a new particle.
-        m_particles[i=m_count++] = &sp;
-    } else if (i < (int)m_capacity) {
+        i=m_count++;
+        m_particles[i] = &sp;
+        sp.SetEnsemble(*this);
+    } else if (i < m_capacity) {
         // Replace an existing particle (if i=m_capacity) then
         // we are removing the new particle, so just ignore it.
         ReplaceParticle(i, sp);
+        sp.SetEnsemble(*this);
     }
 
     // Now we must recalculate the tree by inserting the particle properties
     // into the bottom row and calculating up.
-    int j = treeIndex(i);
-    if (isLeftBranch(i)) {
-        m_tree[j].LeftData = *m_particles[i];
-    } else {
-        m_tree[j].RightData = *m_particles[i];
+    if (i < m_capacity) {
+        int j = treeIndex(i);
+        if (isLeftBranch(i)) {
+            m_tree[j].LeftData = *m_particles[i];
+        } else {
+            m_tree[j].RightData = *m_particles[i];
+        }
+        ascendingRecalc(j);
     }
-    ascendingRecalc(j);
 
     return i;
 }
@@ -211,9 +216,9 @@ void Ensemble::Remove(unsigned int i)
         // overwrite it with the last particle, which
         // is subsequently removed from the vector.
         delete m_particles[i];
+        --m_count;
         m_particles[i] = m_particles[m_count];
         m_particles[m_count] = NULL;
-        --m_count;
 
         // Recalculate the tree up from leaf.
         int k = treeIndex(i);
@@ -332,8 +337,9 @@ void Ensemble::Clear()
     // Delete particles from memory and delete vectors.
     for (int i=0; i<(int)m_particles.size(); i++) {
         delete m_particles[i];
+        m_particles[i] = NULL;
     }
-    m_particles.clear();
+    m_count = 0;
 
     m_ncont = 0; // No contractions any more.
 
@@ -406,6 +412,8 @@ int Ensemble::SelectParticle(ModelType model_id, unsigned int id) const
 {
     // This routine uses the binary tree to select a particle weighted
     // by a given particle property (by index).
+
+    if (model_id == BasicModel_ID) return SelectParticle((ParticleData::PropertyID)id);
 
     int isp=-1;
 
@@ -549,7 +557,7 @@ void Ensemble::ascendingRecalc(unsigned int i)
     // upwards recalculating the sums of all particle properties under
     // the nodes.
 
-    if (i<m_count) {
+    if (i<m_capacity) {
         // Get the node at the bottom of the branch.
         TreeNode *n = &m_tree[i];
 

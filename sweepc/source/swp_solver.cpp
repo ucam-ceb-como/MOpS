@@ -28,7 +28,7 @@ Solver::~Solver(void)
 // Performs stochastic stepping algorithm up to specified stop time using
 // the given mechanism to define the stochastic processes.  Updates given
 // system accordingly.  On error returns <0, otherwise returns 0.
-int Solver::Run(real &t, real tstop, Cell &sys, Mechanism &mech)
+int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech)
 {
     int err = 0;
     real tsplit, dtg, dt, jrate;

@@ -151,7 +151,7 @@ public:
 
     // Add a model to the particle definition.  This ParticleData object
     // then takes control of the model for destruction purposes.
-    void AddModel(IModelData *model);
+    void AddModel(IModelData &model);
 
     // Removes the ith model from the particle definition.
 //    void RemoveModel(unsigned int i);
@@ -244,6 +244,9 @@ protected:
 
     // Release all memory associated with the ParticleData object.
     void releaseMem(void);
+
+    // Initialisation routine.
+    void init(void);
 };
 };
 

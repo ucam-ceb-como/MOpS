@@ -397,9 +397,11 @@ real Mechanism::CalcRates(real t, const Cell &sys, fvector &rates) const
     }
 
     // Query other processes for their rates.
-    PartProcPtrVector::const_iterator i;
-    for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=rates.end()); ++i) {
-        sum += (*i)->RateTerms(t, sys, iterm);
+    if (sys.ParticleCount() > 0) {
+        PartProcPtrVector::const_iterator i;
+        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=rates.end()); ++i) {
+            sum += (*i)->RateTerms(t, sys, iterm);
+        }
     }
 
     // Get coagulation rate.
@@ -431,14 +433,16 @@ real Mechanism::CalcJumpRates(real t, const Cell &sys, fvector &rates) const
     }
 
     // Query other processes for their rates.
-    PartProcPtrVector::const_iterator i;
-    for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=rates.end()); ++i) {
-        if (!(*i)->IsDeferred()) {
-            // Calculate rate if not deferred.
-            sum += (*i)->RateTerms(t, sys, iterm);
-        } else {
-            // If process is deferred, then set rate to zero.
-            for (unsigned int j=0; j!=(*i)->TermCount(); ++j) {*(iterm++)=0.0;}
+    if (sys.ParticleCount() > 0) {
+        PartProcPtrVector::const_iterator i;
+        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=rates.end()); ++i) {
+            if (!(*i)->IsDeferred()) {
+                // Calculate rate if not deferred.
+                sum += (*i)->RateTerms(t, sys, iterm);
+            } else {
+                // If process is deferred, then set rate to zero.
+                for (unsigned int j=0; j!=(*i)->TermCount(); ++j) {*(iterm++)=0.0;}
+            }
         }
     }
 
@@ -462,25 +466,29 @@ real Mechanism::CalcJumpRates(real t, const Sprog::Thermo::IdealGas &gas,
 
     // Ensure vector is the correct length.
     rates.resize(m_termcount);
-    fvector::iterator iterm = rates.begin();
+    fvector::iterator iterm = rates.begin()+m_inceptions.size();
 
     real sum = 0.0;
 
     // Get rates of inception processes.
-    IcnPtrVector::const_iterator ii;
-    for (ii=m_inceptions.begin(); ii!=m_inceptions.end(); ++ii) {
-        sum += (*ii)->RateTerms(t, gas, sys, iterm);
-    }
+    sum += Inception::CalcRates(t, gas, sys, m_inceptions, rates, 0);
+
+    //IcnPtrVector::const_iterator ii;
+    //for (ii=m_inceptions.begin(); ii!=m_inceptions.end(); ++ii) {
+    //    sum += (*ii)->RateTerms(t, gas, sys, iterm);
+    //}
 
     // Query other processes for their rates.
-    PartProcPtrVector::const_iterator i;
-    for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=rates.end()); ++i) {
-        if (!(*i)->IsDeferred()) {
-            // Calculate rate if not deferred.
-            sum += (*i)->RateTerms(t, gas, sys, iterm);
-        } else {
-            // If process is deferred, then set rate to zero.
-            for (unsigned int j=0; j!=(*i)->TermCount(); ++j) {*(iterm++)=0.0;}
+    if (sys.ParticleCount() > 0) {
+        PartProcPtrVector::const_iterator i;
+        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=rates.end()); ++i) {
+            if (!(*i)->IsDeferred()) {
+                // Calculate rate if not deferred.
+                sum += (*i)->RateTerms(t, gas, sys, iterm);
+            } else {
+                // If process is deferred, then set rate to zero.
+                for (unsigned int j=0; j!=(*i)->TermCount(); ++j) {*(iterm++)=0.0;}
+            }
         }
     }
 
@@ -509,10 +517,12 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys) const
         // This is another process. 
         PartProcPtrVector::const_iterator ip;
         for(ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
-            j -= (*ip)->TermCount();
-            if (j < 0) {
+            if (j < (*ip)->TermCount()) {
                 // Do the process.
-                (*ip)->Perform(t, sys, -j-1);
+                (*ip)->Perform(t, sys, j);
+                return;
+            } else {
+                j -= (*ip)->TermCount();
             }
         }
 
@@ -644,7 +654,8 @@ Particle *const Mechanism::CreateParticle(void) const
 
     // Add particle models.
     for (ModelTypeSet::const_iterator id=m_models.begin(); id!=m_models.end(); ++id) {
-        p->AddModel(ModelFactory::CreateData(*id, *p));
+        IModelData *model = ModelFactory::CreateData(*id, *p);
+        if (model != NULL) p->AddModel(*model);
     }
 
     // Returns particle.

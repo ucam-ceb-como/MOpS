@@ -46,7 +46,7 @@ namespace Sweep
     const real CFMMAJ  = 1.4178;
 
     // Slip-flow coagulation kernel parameters.
-    const real CSF     = 9.2046667e-24; // = KB * 2/3 (erg/K).
+    const real CSF     = 9.2046667e-24; // = KB * 2/3 (J/K).
     const real CSF_CGS = 9.2046667e-17; // = KB * 2/3 (erg/K).
 
     // Returns the viscosity of air at 1 atm 
@@ -54,7 +54,7 @@ namespace Sweep
     inline real ViscosityAir(real T)
     {
         // Ref: Kazakov & Frenklach (1998), Combust. Flame 114, 484-501.
-        return 1.458e-5 * T * sqrt(T) / (T + 110.4);
+        return 1.458e-6 * T * sqrt(T) / (T + 110.4); // kg/m.s.
     };
 
     // Returns the mean free path in air assuming ideal gas

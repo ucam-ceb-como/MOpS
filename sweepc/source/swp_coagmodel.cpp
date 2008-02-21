@@ -39,7 +39,6 @@ CoagModel &CoagModel::Instance(void)
     return inst;
 }
 
-
 // PERFORMING COAGULATIONS.
 
 void CoagModel::Perform(Sweep::Particle &p1, Sweep::Particle &p2) const

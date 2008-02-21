@@ -24,6 +24,8 @@ IModelData *const ModelFactory::CreateData(ModelType id, ParticleData &parent)
             return new PointContactData(parent);
         case PriPartModel_ID:
             return new PriPartModelData(parent);
+        case ABFSites_ID:
+            return NULL;
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateData).");

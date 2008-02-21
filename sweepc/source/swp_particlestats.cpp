@@ -114,14 +114,14 @@ void ParticleStats::Calculate(const ParticleData &data)
 {
     m_stats[iNP]   = 1.0;
     m_stats[iM0]   = 1.0;
-    m_stats[iD]    = data.SphDiameter();
-    m_stats[iDcol] = data.CollDiameter();
-    m_stats[iDmob] = data.MobDiameter();
-    m_stats[iS]    = data.SurfaceArea();
+    m_stats[iD]    = data.SphDiameter() * 1.0e9;  // Convert from m to nm.
+    m_stats[iDcol] = data.CollDiameter() * 1.0e9; // Convert from m to nm.
+    m_stats[iDmob] = data.MobDiameter() * 1.0e9;  // Convert from m to nm.
+    m_stats[iS]    = data.SurfaceArea() * 1.0e4;  // Convert from m2 to cm2.
     m_stats[iS+1]  = m_stats[iS];
-    m_stats[iV]    = data.Volume();
+    m_stats[iV]    = data.Volume() * 1.0e6;       // Convert from m3 to cm3.
     m_stats[iV+1]  = m_stats[iV];
-    m_stats[iM]    = data.Mass();
+    m_stats[iM]    = data.Mass() * 1.0e3;         // Convert from kg to g.
     m_stats[iM+1]  = m_stats[iM+1];
 
     // Add component and tracker values to stats.
@@ -145,15 +145,15 @@ void ParticleStats::Calculate(const Ensemble &e, real scale)
     Ensemble::const_iterator ip;
     for (ip=e.begin(); ip!=e.end(); ++ip) {
         // Sum stats from this particle.
-        m_stats[iD]    += (*ip)->SphDiameter();
-        m_stats[iDcol] += (*ip)->CollDiameter();
-        m_stats[iDmob] += (*ip)->MobDiameter();
-        m_stats[iS]    += (*ip)->SurfaceArea();
-        m_stats[iS+1]  += m_stats[iS];
-        m_stats[iV]    += (*ip)->Volume();
-        m_stats[iV+1]  += m_stats[iV];
-        m_stats[iM]    += (*ip)->Mass();
-        m_stats[iM+1]  += m_stats[iM+1];
+        m_stats[iD]    += (*ip)->SphDiameter() * 1.0e9;  // Convert from m to nm.
+        m_stats[iDcol] += (*ip)->CollDiameter() * 1.0e9; // Convert from m to nm.
+        m_stats[iDmob] += (*ip)->MobDiameter() * 1.0e9;  // Convert from m to nm.
+        m_stats[iS]    += (*ip)->SurfaceArea() * 1.0e4;  // Convert from m2 to cm2.
+        m_stats[iS+1]  += (*ip)->SurfaceArea() * 1.0e4;  // Convert from m2 to cm2.
+        m_stats[iV]    += (*ip)->Volume() * 1.0e6;       // Convert from m3 to cm3.
+        m_stats[iV+1]  += (*ip)->Volume() * 1.0e6;       // Convert from m3 to cm3.
+        m_stats[iM]    += (*ip)->Mass() * 1.0e3;         // Convert from kg to g.
+        m_stats[iM+1]  += (*ip)->Mass() * 1.0e3;         // Convert from kg to g.
 
         // Sum component and tracker values.
         fvector::iterator i = m_stats.begin()+STAT_COUNT;
@@ -161,7 +161,7 @@ void ParticleStats::Calculate(const Ensemble &e, real scale)
             *i     += (*ip)->Composition(j);
             *(++i) += (*ip)->Composition(j);
         }
-        for (unsigned int j=0; j!=m_ncomp; ++j,++i) {
+        for (unsigned int j=0; j!=m_ntrack; ++j,++i) {
             *i     += (*ip)->Values(j);
             *(++i) += (*ip)->Values(j);
         }
@@ -175,7 +175,7 @@ void ParticleStats::Calculate(const Ensemble &e, real scale)
     // Scale the summed stats and calculate the averages.
     for (unsigned int i=1; i!=STAT_COUNT; ++i) {
         if (m_mask[i] == Sum) {
-            m_stats[i] *= scale;
+            m_stats[i] *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
         } else {
             m_stats[i] *= invNP;
         }
@@ -184,7 +184,7 @@ void ParticleStats::Calculate(const Ensemble &e, real scale)
     // Scale and calculate averages for components and tracker
     // variables.
     for (unsigned int i=STAT_COUNT; i!=Count(); ++i) {
-        m_stats[i]   *= scale;
+        m_stats[i]   *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
         m_stats[++i] *= invNP;
     }
 }

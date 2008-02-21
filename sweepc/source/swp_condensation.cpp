@@ -89,7 +89,7 @@ real Condensation::Rate(real t, const Cell &sys) const
 real Condensation::Rate(real t, const Sprog::Thermo::IdealGas &gas, const Cell &sys) const
 {
     // Calculate temperature terms.
-    real cterm = m_a * sqrt(gas.Temperature());
+    real cterm = m_a * sqrt(gas.Temperature()) * NA;
 
      // Chemical species concentration dependence.
     Sprog::StoichMap::const_iterator i;
@@ -131,7 +131,7 @@ real Condensation::Rate(real t, const Sprog::Thermo::IdealGas &gas,
                         const Cell &sys, const Particle &sp) const
 {
     // Calculate temperature terms.
-    real cterm = m_a * sqrt(gas.Temperature());
+    real cterm = m_a * sqrt(gas.Temperature()) * NA;
 //    real trm[3];
 
     // Chemical species concentration dependence.
@@ -196,7 +196,7 @@ real Condensation::RateTerms(real t, const Sprog::Thermo::IdealGas &gas,
                              const Cell &sys, fvector::iterator &iterm) const
 {
     // Calculate temperature terms.
-    real cterm = m_a * sqrt(gas.Temperature());
+    real cterm = m_a * sqrt(gas.Temperature()) * NA;
 
      // Chemical species concentration dependence.
     Sprog::StoichMap::const_iterator i;
@@ -260,7 +260,7 @@ int Condensation::Perform(const real t, Cell &sys, const unsigned int iterm) con
 
             // Check that the event is not ficticious by comparing the
             // majorant rate with the true rate.
-            if (!Ficticious(majr, truer)) {
+            if (!Ficticious(majr, truer) || !m_mech->AnyDeferred()) {
                 // Adjust particle.
                 sp->Adjust(m_dcomp, m_dvals);
                 sys.Particles().Update(i);

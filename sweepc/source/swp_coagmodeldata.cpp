@@ -79,6 +79,16 @@ const CoagModelData CoagModelData::operator +(const Sweep::CoagModelData &rhs) c
 }
 
 
+// Resets the model data to the default state.
+void CoagModelData::Clear()
+{
+    m_dcolsqr      = 0.0;
+    m_inv_dcol     = 0.0;
+    m_inv_dcolsqr  = 0.0;
+    m_inv_sqrtmass = 0.0;
+    m_d2_m_1_2     = 0.0;
+}
+
 // COAGULATION MODEL PARTICLE PROPERTIES.
 
 // Collision diameter squared (cm2).

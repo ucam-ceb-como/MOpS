@@ -1,19 +1,23 @@
 #include "swp_particle.h"
 #include "swp_model.h"
+#include <cmath>
 
 using namespace Sweep;
+using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (private).
 Particle::Particle(void)
+: m_ensemble(NULL)
 {
 }
 
 // Default constructor (public).
 Particle::Particle(const CompPtrVector &components, const TrackPtrVector &trackers)
-: ParticleData(components, trackers)
 {
+    this->ParticleData::ParticleData(components, trackers);
+    m_ensemble = NULL;
 }
 
 // Copy constructor.
@@ -70,12 +74,12 @@ void Particle::Adjust(const fvector &dcomp, const fvector &dvalues)
 	unsigned int i = 0;
 
 	// Add the components.
-	for (i=0; i!=m_comp.size(); ++i) {
+	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
 		m_comp[i] += dcomp[i];
 	}
 
 	// Add the tracker values.
-	for (i=0; i!=m_values.size(); ++i) {
+	for (i=0; i!=min(m_values.size(),dvalues.size()); ++i) {
 		m_values[i] += dvalues[i];
 	}
 
@@ -100,12 +104,12 @@ unsigned int Particle::Adjust(const fvector &dcomp,
 	unsigned int i = 0;
 
 	// Add the components.
-	for (i=0; i!=m_comp.size(); ++i) {
+	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
 		m_comp[i] += dcomp[i] * (real)n;
 	}
 
 	// Add the tracker values.
-	for (i=0; i!=m_values.size(); ++i) {
+	for (i=0; i!=min(m_values.size(),dvalues.size()); ++i) {
 		m_values[i] += dvalues[i] * (real)n;
 	}
 
@@ -165,7 +169,8 @@ void Particle::UpdateCache(void)
     for (unsigned int i=0; i!=m_components->size(); ++i) {
         m = (*m_components)[i]->MolWt() * m_comp[i] / NA;
         m_mass += m;
-        m_vol  += m / (*m_components)[i]->Density();
+        if ((*m_components)[i]->Density() > 0.0)
+            m_vol  += m / (*m_components)[i]->Density();
     }
     
     // Calculate other properties.

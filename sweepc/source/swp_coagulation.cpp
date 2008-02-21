@@ -209,7 +209,7 @@ real Coagulation::RateTerms(const ParticleData &data, real n, real sqrtT,
     // Some prerequisites.
     real n_1 = n - 1.0;
     real a   = CSF * T_mu;
-    real b   = a * MFP * 1.257;
+    real b   = a * MFP * 1.257 * 2.0;
     real c   = CFMMAJ * m_efm * CFM * sqrtT;
 
     // Summed particle properties required for coagulation rate.
@@ -316,7 +316,7 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
     real P = sys.Pressure();
 
     // Choose and get first particle, then update it.
-    Particle *sp1, *sp1old;
+    Particle *sp1=NULL, *sp1old=NULL;
     if (ip1 >= 0) {
         sp1 = sys.Particles().At(ip1);
 
@@ -374,7 +374,7 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
             break;
     }
 
-    Particle *sp2, *sp2old;
+    Particle *sp2=NULL, *sp2old=NULL;
     if ((ip2>=0) && (ip2!=ip1)) {
         sp2 = sys.Particles().At(ip2);
 
@@ -484,7 +484,7 @@ real Coagulation::SlipFlowKernel(const Particle &sp1, const Particle &sp2,
                                  real T, real P, bool maj) const
 {
     // For the slip-flow kernel the majorant and non-majorant forms are identical.
-    return ((1.257 * MeanFreePathAir(T,P) * 
+    return ((1.257 * 2.0 * MeanFreePathAir(T,P) * 
              (sp1.CoagModelCache()->InvCollDiamSquared() + 
               sp2.CoagModelCache()->InvCollDiamSquared())) +
             (sp1.CoagModelCache()->InvCollDiam() + 

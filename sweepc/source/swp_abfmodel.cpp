@@ -155,17 +155,18 @@ real ABFModel::radicalSiteFraction(const Sprog::Thermo::IdealGas &gas) const
     real RT = RCAL * T;
 
     // Calculate the forward and back reaction rates.
-    r1f = 4.2e+13 * exp(-13.0/RT)				 * gas.MolarConc(H);
-    r1b = 3.9e+12 * exp(-11.0/RT)				 * gas.MolarConc(H2);
-    r2f = 1.0e+10 * exp(-1.43/RT) * pow(T,0.734) * gas.MolarConc(OH);
-    r2b = 3.68e+8 * exp(-17.1/RT) * pow(T,1.139) * gas.MolarConc(H2O);
-    r3f = 2.0e+13								 * gas.MolarConc(H);
-    r4f = 8.0e+07 * exp( -3.8/RT) * pow(T,1.56)  * gas.MolarConc(C2H2);
-    r5f = 2.2e+12 * exp( -7.5/RT)				 * gas.MolarConc(O2);
+    r1f = 4.2e+07 * exp(-13.0/RT)				 * gas.MolarConc(H);
+    r1b = 3.9e+06 * exp(-11.0/RT)				 * gas.MolarConc(H2);
+    r2f = 1.0e+04 * exp(-1.43/RT) * pow(T,0.734) * gas.MolarConc(OH);
+    r2b = 3.68e+2 * exp(-17.1/RT) * pow(T,1.139) * gas.MolarConc(H2O);
+    r3f = 2.0e+07								 * gas.MolarConc(H);
+    r4f = 8.0e+01 * exp( -3.8/RT) * pow(T,1.56)  * gas.MolarConc(C2H2);
+    r5f = 2.1e+06 * exp( -7.47/RT)				 * gas.MolarConc(O2);
     rdenom = r1b+r2b+r3f+r4f+r5f;
 
     if (rdenom > 0.0) {
-        return (r1f+r2f) / rdenom;
+        real f = (r1f+r2f) / rdenom;
+        return f / (f + 1.0);
     } else {
         return 0.0;
     }
@@ -240,7 +241,7 @@ real ABFModel::alpha(real t) const
         real dt = t - i->first;
 
         // Now use linear interpolation to calculate alpha.
-        return (a2 - a1) * dt / dt_pro;
+        return a1 + ((a2 - a1) * dt / dt_pro);
     }
 }
 

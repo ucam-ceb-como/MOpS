@@ -36,7 +36,7 @@ public:
         real &t,        // Simulation start time.  Will return the stop time.
         real tstop,     // Stop time for simulation.
         Cell &sys,      // System to solve.
-        Mechanism &mech // Mechanism to use to solve system.
+        const Mechanism &mech // Mechanism to use to solve system.
         );
 
 protected:

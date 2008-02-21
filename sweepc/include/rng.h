@@ -31,7 +31,7 @@ namespace Sweep
     inline int irnd(int min, int max)
     {
         //return (RNGLIB::igrnd() & (max-min)) + min;
-        return (int)(rnd() * (real)(max-min)) + min;
+        return (int)((rnd() * (real)(max-min))+0.5) + min;
     };
 
     /* From Numerical Recipes 6.1. */

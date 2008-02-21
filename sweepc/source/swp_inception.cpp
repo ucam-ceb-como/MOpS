@@ -68,9 +68,9 @@ void Inception::SetInceptingSpecies(real m1, real m2, real d1, real d2)
     // This routine sets the free-mol and slip flow kernel parameters given
     // the mass and diameter of the incepting species.
     real invd1=1.0/d1, invd2=1.0/d2;
-    m_kfm  = m_efm * CFM * sqrt((1.0/m1) + (1.0/m2)) * pow(d1+d2, 2.0);
+    m_kfm  = m_efm * CFM * sqrt((1.0/m1) + (1.0/m2)) * (d1+d2) * (d1+d2);
     m_ksf1 = CSF * (d1+d2);
-    m_ksf2 = 1.257 * m_ksf1 * ((invd1*invd1) + (invd2*invd2));
+    m_ksf2 = 2.0 * 1.257 * m_ksf1 * ((invd1*invd1) + (invd2*invd2));
     m_ksf1 = m_ksf1 * (invd1+invd2);
 }
 
@@ -182,13 +182,14 @@ real Inception::Rate(const real t, const Sprog::Thermo::IdealGas &gas,
 // Calculates the rate of multiple inceptions given a
 // vector of inceptions and an iterator to a vector of
 // reals for output.
-real Inception::CalcRates(real t, const Cell &sys, 
+real Inception::CalcRates(real t, const Sprog::Thermo::IdealGas &gas,
+                          const Cell &sys, 
                           const IcnPtrVector &icns, 
                           fvector &rates, unsigned int start)
 {
     // Precalculate some values.
-    real T     = sys.Temperature();
-    real P     = sys.Pressure();
+    real T     = gas.Temperature();
+    real P     = gas.Pressure();
     real sqrtT = sqrt(T);
     real T_mu  = T / ViscosityAir(T);
     real MFP   = MeanFreePathAir(T,P);
@@ -198,7 +199,7 @@ real Inception::CalcRates(real t, const Cell &sys,
     fvector::iterator i = (rates.begin()+start);
     real sum = 0.0;
     for (p=icns.begin(); p!=icns.end(); ++p,++i) {
-        *i = (*p)->Rate(sys.MoleFractions(), sys.Density(), T, 
+        *i = (*p)->Rate(gas.MoleFractions(), gas.Density(), sqrtT, 
                         T_mu, MFP, vol);
         sum += *i;
     }
@@ -209,18 +210,19 @@ real Inception::CalcRates(real t, const Cell &sys,
 // parameters that would otherwise be calculated by the routine to be passed as
 // arguments.
 real Inception::Rate(const fvector &fracs, real density, real sqrtT, 
-                     real T_mu, real MVP, real vol) const
+                     real T_mu, real MFP, real vol) const
 {
     // Temperature and pressure dependence.
     real fm   = sqrtT * m_kfm;
-    real sf   = T_mu  * (m_ksf1 + (MVP*m_ksf2));
-    real rate = m_a   * (fm*sf) / (fm+sf) * vol;
+    real sf   = T_mu  * (m_ksf1 + (MFP*m_ksf2));
+    real rate = m_a   * ((fm*sf) / (fm+sf)) * vol;
 
     // Chemical species concentration dependence.
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
+        real conc = density * fracs[(*i).first];
         for (unsigned int j=0; j!=i->second; ++j) {
-            rate *= NA * density * fracs[(*i).first];
+            rate *= (NA * conc);
         }
     }
 

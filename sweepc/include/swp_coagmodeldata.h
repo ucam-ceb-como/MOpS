@@ -42,6 +42,9 @@ public:
     virtual const CoagModelData operator+(const CoagModelData &rhs) const;
 
 
+    // Resets the model data to the default state.
+    virtual void Clear();
+
     // COAGULATION MODEL PARTICLE PROPERTIES.
 
     // Collision diameter squared (cm2).
@@ -81,6 +84,7 @@ public:
 
     // Reads the object from a binary stream.
     virtual void Deserialize(std::istream &in);
+
 
 protected:
     // Can't create a CoagModelData without knowledge

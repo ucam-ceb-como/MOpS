@@ -67,6 +67,12 @@ const PointContactData PointContactData::operator +(const Sweep::PointContactDat
     return PointContactData(*this) += rhs;
 }
 
+// Resets the model data to the default state.
+void PointContactData::Clear()
+{
+    m_sphsurf = 0.0;
+    m_surf    = 0.0;
+}
 
 // COAGULATION MODEL PARTICLE PROPERTIES.
 

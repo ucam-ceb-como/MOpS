@@ -60,6 +60,12 @@ const PriPartModelData PriPartModelData::operator+(const Sweep::PriPartModelData
     return PriPartModelData(*this) += rhs;
 }
 
+// Resets the model data to the default state.
+void PriPartModelData::Clear()
+{
+    m_primaries.clear();
+}
+
 
 // PROPERTIES.
 

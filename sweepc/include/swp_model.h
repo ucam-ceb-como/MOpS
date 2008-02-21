@@ -51,7 +51,6 @@ public:
     // Recalculates those model properties which are functions of
     // other particle properties.
     virtual void UpdateCache(ParticleData &data) const = 0;
-
 protected:
     // IModels should implement the Singleton idiom, therefore
     // the default constructor, copy constructor and assignment

@@ -103,8 +103,9 @@ real SurfaceReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas,
     // Chemical species concentration dependence.
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
+        real conc = gas.MolarConc(i->first);
         for (unsigned int j=0; j<i->second; ++j) {
-            rate *= gas.MolarConc(i->first);
+            rate *= conc;
         }
     }
 
@@ -112,7 +113,7 @@ real SurfaceReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas,
     real T = gas.Temperature();
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
-    // Paticle dependence.
+    // Particle dependence.
     rate *= sys.Particles().GetSum(m_modelid, m_pid);
 
     if (m_mech->AnyDeferred()) {
@@ -144,8 +145,9 @@ real SurfaceReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas,
     // Chemical species concentration dependence.
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
+        real conc =  gas.MolarConc(i->first);
         for (unsigned int j=0; j<i->second; ++j) {
-            rate *= gas.MolarConc(i->first);
+            rate *= conc;
         }
     }
 

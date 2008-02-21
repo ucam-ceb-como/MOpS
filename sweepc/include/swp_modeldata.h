@@ -35,6 +35,9 @@ public:
     virtual IModelData &operator=(const IModelData &rhs);
     virtual IModelData &operator+=(const IModelData &rhs);
 
+    // Resets the model data to the default state.
+    virtual void Clear() = 0;
+
 
     // PARENT ParticleData OBJECT.
 

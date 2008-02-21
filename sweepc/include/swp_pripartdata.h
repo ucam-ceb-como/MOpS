@@ -39,6 +39,10 @@ public:
     PriPartModelData &operator+=(const PriPartModelData &rhs);
     const PriPartModelData operator+(const PriPartModelData &rhs) const;
 
+    // Resets the model data to the default state.
+    void Clear();
+
+
     // PROPERTIES.
 
     // Returns the vector of primary particles.

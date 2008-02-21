@@ -123,7 +123,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         if (el!=NULL) {
             str = el->Data();
             if (str != "") {
-                comp->SetDensity(cdble(str));
+                comp->SetDensity(cdble(str) * 1.0e3); // Convert from g/cm3 to kg/m3.
             } else {
                 // Density contains no data.
                 delete comp;
@@ -142,7 +142,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         if (el!=NULL) {
             str = el->Data();
             if (str != "") {
-                comp->SetMolWt(cdble(str));
+                comp->SetMolWt(cdble(str)*1.0e-3); // Convert from g/mol to kg/mol.
             } else {
                 // Mol. wt. contains no data.
                 delete comp;
@@ -365,10 +365,12 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
         el = (*i)->GetFirstChild("A");
         if (el != NULL) {
             arr.A = cdble(el->Data());
+            // Must scale rate constant from cm3 to m3.
+            arr.A *= (1.0e-6 * (real)rxn->ReactantCount());
         } else {
             // Reaction must have constant.
             throw runtime_error("Surface reaction found with no rate constant "
-                                "defined (Sweep, MechParser::readSufRxns).");
+                                "defined (Sweep, MechParser::readSurfRxns).");
         }
         el = (*i)->GetFirstChild("n");
         if (el!=NULL) {
@@ -592,7 +594,7 @@ void MechParser::readReactantMDs(CamXML::Element &xml,
         string str = (*i)->GetAttributeValue("m");
         real m = cdble(str);
         if (m > 0.0) {
-            mass.push_back(m);
+            mass.push_back(m*1.0e-3); // Convert from g to kg.
         } else {
             // Species can't have zero mass!
             throw runtime_error("Species can't have zero mass "
@@ -603,7 +605,7 @@ void MechParser::readReactantMDs(CamXML::Element &xml,
         str = (*i)->GetAttributeValue("d");
         real d = cdble(str);
         if (d > 0.0) {
-            diam.push_back(d);
+            diam.push_back(d*1.0e-2); // Convert from cm to m.
         } else {
             // Species can't have zero diameter!
             throw runtime_error("Species can't have zero diameter "

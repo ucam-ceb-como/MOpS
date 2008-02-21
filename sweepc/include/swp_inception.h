@@ -112,6 +112,7 @@ public:
     // reals for output.
     static real CalcRates(
         real t,                   // Time.
+        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
         const Cell &sys,          // System for which to calculate rates.
         const IcnPtrVector &icns, // Vector of inception processes.
         fvector &rates,           // Output rates vector.
