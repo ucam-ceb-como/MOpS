@@ -140,11 +140,12 @@ int Cell::SetM0(const real m0)
         m_smpvol = (real)m_ensemble.Count() / m0;
         m_ensemble.ResetScaling();
         return 0;
-    } else {
-        // The ensemble contains no particles, so assume this
-        // is the maximum M0.        
-        return SetMaxM0(m0);
-    }
+    }// else {
+    //    // The ensemble contains no particles, so assume this
+    //    // is the maximum M0.        
+    //    return SetMaxM0(m0);
+    //}
+    return 1;
 }
 
 // Sets the number density which the full 

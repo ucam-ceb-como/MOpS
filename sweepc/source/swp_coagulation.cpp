@@ -275,6 +275,10 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
     // are six possible rate terms to choose from; 4 slip-flow and 2
     // free molecular.
     
+    if (sys.ParticleCount() < 2) {
+        return 1;
+    }
+
     int ip1=-1, ip2=-1;
     MajorantType maj;
     TermType term = (TermType)iterm;
@@ -408,6 +412,7 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
             // remove second particle afterwards.
             *sp1 += *sp2;
             sp1->SetTime(t);
+            sys.Particles().Update(ip1);
             sys.Particles().Remove(ip2);
         } else {
             delete sp1old; delete sp2old;

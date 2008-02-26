@@ -208,7 +208,7 @@ real ABFModel::alpha(real t, const Sprog::Thermo::IdealGas &gas,
 real ABFModel::alpha(Sweep::real T, Sweep::real M1)
 {
     if (M1 > 0.0) {
-        real a = 12.65 - (5.56e-3 * T);
+        real a = 12.65 - (5.63e-3 * T);
         real b = -1.38 + (6.8e-4 * T);
         return max(0.0, tanh((a / log10(M1)) + b));
     } else {

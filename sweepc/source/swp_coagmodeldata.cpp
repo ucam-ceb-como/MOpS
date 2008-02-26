@@ -21,6 +21,11 @@ CoagModelData::CoagModelData(void)
 CoagModelData::CoagModelData(Sweep::ParticleData &parent)
 : IModelData(parent)
 {
+    m_dcolsqr      = 0.0;
+    m_inv_dcol     = 0.0;
+    m_inv_dcolsqr  = 0.0;
+    m_inv_sqrtmass = 0.0;
+    m_d2_m_1_2     = 0.0;
 }
 
 // Copy constructor.

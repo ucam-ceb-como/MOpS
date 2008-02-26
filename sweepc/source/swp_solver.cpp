@@ -34,11 +34,6 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech)
     real tsplit, dtg, dt, jrate;
     static fvector rates(mech.TermCount(), 0.0);
 
-    // Ensure the process counters contain sufficient 
-    // entries to track all rate terms.
-    m_processcounter.resize(mech.TermCount(), 0);
-    m_ficticiouscounter.resize(mech.TermCount(), 0);
-
     // Global maximum time step.
     dtg     = tstop - t;
     m_maxdt = dtg / 3.0;
@@ -64,7 +59,7 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech)
             jrate = mech.CalcJumpRates(t, sys, rates);
             dt = timeStep(t, sys, mech, rates, jrate);
             if (dt >= 0.0) {
-                t += dt;
+                t+=dt; t = min(t, tstop);
             } else {
                 return -1;
             }

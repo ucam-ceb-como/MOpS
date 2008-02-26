@@ -220,28 +220,37 @@ int SurfaceReaction::Perform(real t, Cell &sys, unsigned int iterm) const
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);
 
-        real majr = MajorantRate(t, sys, *sp);
 
         // Update particle with deferred processes.
         if (m_mech->AnyDeferred()) {
+            // Calculate majorant rate then update the particle.
+            real majr = MajorantRate(t, sys, *sp);
             m_mech->UpdateParticle(*sp, sys, t);
-        }
 
-        // Check that the particle is still valid.
-        if (sp->IsValid()) {
-            real truer = Rate(t, sys, *sp);
+            // Check that the particle is still valid.
+            if (sp->IsValid()) {
+                real truer = Rate(t, sys, *sp);
 
-            if (!Ficticious(majr, truer)) {
-                // Adjust particle.
-                sp->Adjust(m_dcomp, m_dvals);
-                sys.Particles().Update(i);
+                if (!Ficticious(majr, truer)) {
+                    // Adjust particle.
+                    sp->Adjust(m_dcomp, m_dvals);
+                    sys.Particles().Update(i);
 
-                // Apply changes to gas-phase chemistry.
-                adjustGas(sys);
+                    // Apply changes to gas-phase chemistry.
+                    adjustGas(sys);
+                }
+            } else {
+                // If not valid then remove the particle.
+                sys.Particles().Remove(i);
             }
         } else {
-            // If not valid then remove the particle.
-            sys.Particles().Remove(i);
+            // No particle update required, just perform the surface
+            // reaction.
+            sp->Adjust(m_dcomp, m_dvals);
+            sys.Particles().Update(i);
+
+            // Apply changes to gas-phase chemistry.
+            adjustGas(sys);
         }
     } else {
         // Failed to select a particle.

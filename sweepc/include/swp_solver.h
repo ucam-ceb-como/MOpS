@@ -45,10 +45,6 @@ protected:
     real m_maxdt;      // Maximum allowed time step size.
     real m_splitratio; // Parameter defining number of LPDA updates per particle events.
 
-    // Process counters.  These should be moved to
-    // the Mechanism class.
-    std::vector<unsigned int> m_processcounter, m_ficticiouscounter; 
-
     // TIME STEPPING ROUTINES.
 
     // Calculates the splitting end time after which all particles

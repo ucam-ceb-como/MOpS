@@ -76,6 +76,10 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
             i!=rhs.m_models.end(); ++i) {
             m_models.insert(*i);
         }
+
+        // Copy process counters.
+        m_proccount.assign(rhs.m_proccount.begin(), rhs.m_proccount.end());
+        m_fictcount.assign(rhs.m_fictcount.begin(), rhs.m_fictcount.end());
     }
     return *this;
 }
@@ -263,6 +267,8 @@ void Mechanism::AddInception(Inception &icn)
     // Add the inception to the mechanism.
     m_inceptions.push_back(&icn);
     m_termcount += icn.TermCount();
+    m_proccount.resize(m_termcount, 0.0);
+    m_fictcount.resize(m_termcount, 0.0);
 
     // Set the inception to belong to this mechanism.
     icn.SetMechanism(*this);
@@ -293,6 +299,8 @@ void Mechanism::AddProcess(ParticleProcess &p)
     // Add the process to the mechanism.
     m_processes.push_back(&p);
     m_termcount += p.TermCount();
+    m_proccount.resize(m_termcount, 0.0);
+    m_fictcount.resize(m_termcount, 0.0);
 
     // Check for any deferred.
     m_anydeferred = m_anydeferred || p.IsDeferred();
@@ -312,6 +320,8 @@ void Mechanism::AddCoagulation()
     m_coag = new Coagulation();
     m_coag->SetMechanism(*this);
     m_termcount += m_coag->TermCount();
+    m_proccount.resize(m_termcount, 0.0);
+    m_fictcount.resize(m_termcount, 0.0);
 }
 
 
@@ -513,13 +523,18 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys) const
     if (j < 0) {
         // This is an inception process.
         m_inceptions[i]->Perform(t, sys, 0);
+        m_proccount[i] += 1;
     } else {
         // This is another process. 
         PartProcPtrVector::const_iterator ip;
         for(ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
             if (j < (*ip)->TermCount()) {
                 // Do the process.
-                (*ip)->Perform(t, sys, j);
+                if ((*ip)->Perform(t, sys, j) == 0) {
+                    m_proccount[i] += 1;
+                } else {
+                    m_fictcount[i] += 1;
+                }
                 return;
             } else {
                 j -= (*ip)->TermCount();
@@ -529,7 +544,11 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys) const
         // We are here because the process was neither an inception
         // nor a single particle process.  It is therefore a 
         // coagulation process.
-        m_coag->Perform(t, sys, j);
+        if (m_coag->Perform(t, sys, j) == 0) {
+            m_proccount[i] += 1;
+        } else {
+            m_fictcount[i] += 1;
+        }
     }
 }
 

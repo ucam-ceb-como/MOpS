@@ -303,6 +303,9 @@ private:
     // must use.
     ModelTypeSet m_models;
 
+    // Process counters.
+    mutable std::vector<unsigned int> m_proccount, m_fictcount; 
+
     // Clears the current mechanism from memory.
     void releaseMem(void);
 };
