@@ -240,6 +240,13 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
 
         // TIME INTERVALS.
 
+        // Read splits per step.
+        unsigned int splits = 1;
+        node = root->GetFirstChild("splitsperstep");
+        if (node != NULL) {
+            splits = (unsigned int)cdble(node->Data());
+        }
+
         TimeInterval *ti;
 
         root->GetChildren("time", nodes);
@@ -251,6 +258,7 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
                 // and set the start time.
                 ti = new TimeInterval();
                 ti->SetStartTime(cdble((*i)->Data()));
+                ti->SetSplittingStepCount(splits);
             } else {
                 // This is not the start time.  Need to set the end time of
                 // the previous time interval before creating a new one.

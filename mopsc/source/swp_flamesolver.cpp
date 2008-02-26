@@ -170,11 +170,6 @@ int FlameSolver::Run(real &t, real tstop, const GasProfile &gasphase,
     fvector rates(mech.TermCount(), 0.0);
 //    Sprog::Thermo::IdealGas gas(*mech.Species());
 
-    // Ensure the process counters contain sufficient 
-    // entries to track all rate terms.
-    m_processcounter.resize(mech.TermCount(), 0);
-    m_ficticiouscounter.resize(mech.TermCount(), 0);
-
     // Global maximum time step.
     dtg     = tstop - t;
     m_maxdt = dtg / 3.0;

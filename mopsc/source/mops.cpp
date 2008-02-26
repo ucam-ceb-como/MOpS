@@ -90,7 +90,8 @@ int main(int argc, char *argv[])
             return -1;
         case Strang:
             // Not implemented yet.
-            return -1;
+            solver = new StrangSolver();
+            break;
         case MoMIC:
             // Not implemented yet.
             return -1;

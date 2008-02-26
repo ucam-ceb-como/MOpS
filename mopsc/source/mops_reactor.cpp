@@ -101,6 +101,15 @@ void Reactor::Initialise(real time)
     CVDense(m_odewk, m_neq);
 }
 
+// Reset the solver.  Need to do this if the the reactor
+// contents has been changed between calls to Solve().
+void Reactor::ResetSolver(void)
+{
+    CVodeReInit(m_odewk, &rhsFn, m_time, 
+                N_VMake_Serial(m_neq, m_mix->RawData()),
+                CV_SS, m_rtol, (void*)&m_atol);
+}
+
 // Solves the reactor up to the given time.
 void Reactor::Solve(real time)
 {

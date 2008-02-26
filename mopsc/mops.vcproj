@@ -42,7 +42,7 @@
 				AdditionalIncludeDirectories="..\sweepc\include;..\cvode\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
-				DebugInformationFormat="1"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -57,6 +57,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="..\sweepc\lib\sweep_d.lib ..\sprogc\lib\sprog_d.lib ..\camxml\lib\camxml_d.lib ..\cvode\lib\cvode_d.lib ..\comostrings\lib\comostrings_d.lib"
 				OutputFile="$(OutDir)\mops_d.exe"
+				GenerateManifest="true"
 				GenerateDebugInformation="true"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -107,6 +108,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
+				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="..\sweepc\include;..\cvode\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
 				DisableLanguageExtensions="true"
 			/>
@@ -123,6 +125,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="..\sprogc\lib\sprog.lib ..\comostrings\lib\comostrings.lib ..\camxml\lib\camxml.lib ..\cvode\lib\cvode.lib ..\sweepc\lib\sweep.lib"
 				OutputFile="bin\$(ProjectName).exe"
+				LinkTimeCodeGeneration="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 			/>
@@ -150,6 +153,24 @@
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{24E329F1-8809-494A-8E6C-EDDB045CE9D7}"
+			CopyLocal="false"
+			CopyLocalDependencies="false"
+			UseInBuild="false"
+			UseDependenciesInBuild="false"
+			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject="..\camxml\camxml.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}"
+			CopyLocal="false"
+			CopyLocalDependencies="false"
+			UseInBuild="false"
+			UseDependenciesInBuild="false"
+			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject="..\sweepc\sweeplib.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -187,6 +208,10 @@
 			</File>
 			<File
 				RelativePath=".\source\mops_solver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\mops_strang_solver.cpp"
 				>
 			</File>
 			<File
@@ -245,6 +270,10 @@
 			</File>
 			<File
 				RelativePath=".\include\mops_solvertype.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\mops_strang_solver.h"
 				>
 			</File>
 			<File

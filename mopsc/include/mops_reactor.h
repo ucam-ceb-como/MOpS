@@ -52,6 +52,10 @@ public:
     // Initialises the reactor at the given time.
     virtual void Initialise(real time);
 
+    // Reset the solver.  Need to do this if the the reactor
+    // contents has been changed between calls to Solve().
+    virtual void ResetSolver(void);
+
     // Solves the reactor equations up to the given time, assuming
     // that it is in future to the current time.
     virtual void Solve(real time);
