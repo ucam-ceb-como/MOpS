@@ -57,6 +57,28 @@ public:
         ) const = 0;
 
 
+    // PARTICLE SIZE LISTS.
+
+    // Returns the number of PSL output variables.
+    virtual unsigned int PSL_Count(void) const = 0;
+
+    // Returns a vector of PSL variable names.
+    virtual void PSL_Names(
+        std::vector<std::string> &names, // Vector in which to return names.
+        unsigned int start = 0 // Optional start index for the first name.
+        ) const = 0;
+
+    // Returns the particle size list (PSL) entry for particle i
+    // in the given ensemble.
+    virtual void PSL(
+        const Ensemble &ens,   // Ensemble from which to get properties.
+        unsigned int i,        // Index of particle in ensemble to get.
+        real time,             // The current time.
+        fvector &psl,          // Output vector.
+        unsigned int start = 0 // Optional start index for the first variable.
+        ) const = 0;
+
+
     // READ/WRITE/COPY.
 
     // Creates a copy of the object.

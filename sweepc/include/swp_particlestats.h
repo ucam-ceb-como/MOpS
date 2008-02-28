@@ -131,6 +131,28 @@ public:
     real AvgMass(void) const;
 
 
+    // PARTICLE SIZE LISTS.
+
+    // Returns the number of PSL output variables.
+    unsigned int PSL_Count(void) const;
+
+    // Returns a vector of PSL variable names.
+    void PSL_Names(
+        std::vector<std::string> &names, // Vector in which to return names.
+        unsigned int start = 0 // Optional start index for the first name.
+        ) const;
+
+    // Returns the particle size list (PSL) entry for particle i
+    // in the given ensemble.
+    void PSL(
+        const Ensemble &ens,   // Ensemble from which to get properties.
+        unsigned int i,        // Index of particle in ensemble to get.
+        real time,             // The current time.
+        fvector &psl,          // Output vector.
+        unsigned int start = 0 // Optional start index for the first variable.
+        ) const;
+
+
     // READ/WRITE/COPY.
 
     // Creates a copy of the object.
@@ -147,9 +169,13 @@ public:
     void Deserialize(std::istream &in);
 
 private:
+    // Stats count and indices.
     static const unsigned int STAT_COUNT = 11;
     enum StatIndices {iNP=0, iM0=1, iD=2, iDcol=3, 
                       iDmob=4, iS=5, iV=7, iM=9};
+
+    // PSL count and indices.
+    static const unsigned int PSL_COUNT = 7;
 
     // Component and tracker counts.
     unsigned int m_ncomp, m_ntrack;
@@ -163,6 +189,10 @@ private:
 
     // The stat mask.
     static const IModelStats::StatType m_mask[STAT_COUNT];
+
+    // The PSL names.
+    static const std::string m_const_pslnames[PSL_COUNT];
+    std::vector<std::string> m_pslnames;
 
     // Cannot instantiate this class without knowing how many 
     // components and tracker variables there are for

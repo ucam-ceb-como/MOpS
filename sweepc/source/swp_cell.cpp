@@ -29,7 +29,6 @@ Cell::Cell(const Cell &copy)
 Cell::Cell(std::istream &in, const Mechanism &mech)
 {
     Deserialize(in, mech);
-    SetSpecies(*mech.Species());
 }
 
 // Default destructor.
@@ -181,6 +180,9 @@ void Cell::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
+        // Output the base class.
+        Sprog::Thermo::IdealGas::Serialize(out);
+
         // Output the sample volume.
         double v = (double)m_smpvol;
         out.write((char*)&v, sizeof(v));
@@ -207,12 +209,18 @@ void Cell::Deserialize(std::istream &in, const Mechanism &mech)
 
         switch (version) {
             case 0:
+                // Read the base class.
+                Sprog::Thermo::IdealGas::Deserialize(in);
+
                 // Read the sample volume.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_smpvol = (real)val;
 
                 // Read the ensemble.
                 m_ensemble.Deserialize(in, mech);
+
+                // Set the species.
+                m_species = mech.Species();
 
                 break;
             default:

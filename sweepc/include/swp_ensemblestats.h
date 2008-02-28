@@ -75,6 +75,25 @@ public:
     const ParticleStats &BasicStats(void) const;
 
 
+    // PARTICLE SIZE LISTS.
+
+    // Returns the number of PSL output variables.
+    unsigned int PSL_Count(void) const;
+
+    // Returns a vector of PSL variable names.
+    void PSL_Names(std::vector<std::string> &names) const;
+
+    // Returns the particle size list (PSL) entry for particle i
+    // in the given ensemble.
+    void PSL(
+        const Ensemble &ens, // Ensemble from which to get properties.
+        unsigned int i,      // Index of particle in ensemble to get.
+        real time,           // Current time.
+        fvector &psl,        // Output vector.
+        real scale = 1.0     // Scaling factor to unit volume.
+        ) const;
+
+
     // READ/WRITE/COPY.
 
     // Writes the object to a binary stream.

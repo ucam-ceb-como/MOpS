@@ -81,6 +81,7 @@ public:
 
     // Returns a pointer to the particle at index i.
     Particle *const At(unsigned int i);
+    const Particle *const At(unsigned int i) const;
 
     // Adds the given particle to the ensemble.  Returns the new
     // particle's index in the ensemble.  The ensemble then takes

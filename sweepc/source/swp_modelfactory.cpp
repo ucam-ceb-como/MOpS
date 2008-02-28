@@ -145,7 +145,7 @@ void ModelFactory::Write(const IModelData &model,  std::ostream &out)
     if (out.good()) {
         // Write the model Serial signature type to the stream.
         unsigned int type = (unsigned int)model.ID();
-        out.write((char*)type, sizeof(type));
+        out.write((char*)&type, sizeof(type));
 
         // Serialize the model object.
         model.Serialize(out);

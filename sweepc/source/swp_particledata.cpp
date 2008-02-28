@@ -43,6 +43,7 @@ ParticleData::ParticleData(const Sweep::ParticleData &copy)
 // Stream-reading constructor.
 ParticleData::ParticleData(std::istream &in, const Mechanism &mech)
 {
+    init();
     Deserialize(in, mech);
 }
 
@@ -502,6 +503,8 @@ void ParticleData::Serialize(std::ostream &out) const
 void ParticleData::Deserialize(std::istream &in, const Mechanism &mech)
 {
     releaseMem();
+    m_components = &mech.Components();
+    m_trackers   = &mech.Trackers();
 
     if (in.good()) {
         // Read the output version.  Currently there is only one

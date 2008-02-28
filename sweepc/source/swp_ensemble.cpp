@@ -160,6 +160,17 @@ Particle *const Ensemble::At(unsigned int i)
     }
 }
 
+// Returns a pointer to the particle with the given index.
+const Particle *const Ensemble::At(unsigned int i) const
+{
+    // Check that the index in within range, then return the particle.
+    if (i < m_count) {
+        return m_particles[i];
+    } else {
+        return NULL;
+    }
+}
+
 // Adds the particle to the ensemble.  Takes control of particle
 // destruction.
 int Ensemble::Add(Particle &sp)
@@ -705,7 +716,7 @@ void Ensemble::Deserialize(std::istream &in, const Mechanism &mech)
                 for (unsigned int i=0; i!=m_count; ++i) {
                     Particle *p = new Particle(in, mech);
                     p->SetEnsemble(*this);
-                    m_particles.push_back(p);
+                    m_particles[i] = p;
                 }
 
                 // Read the scaling factor.

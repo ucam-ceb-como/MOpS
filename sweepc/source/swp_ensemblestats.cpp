@@ -135,6 +135,70 @@ const ParticleStats &EnsembleStats::BasicStats(void) const
 }
 
 
+// PARTICLE SIZE LISTS.
+
+// Returns the number of PSL output variables.
+unsigned int EnsembleStats::PSL_Count(void) const
+{
+    unsigned int n = m_basicstats->PSL_Count();
+    for (ModelStatsMap::const_iterator i=m_modelstats.begin(); 
+         i!=m_modelstats.end(); ++i) {
+        n += i->second->PSL_Count();
+    }
+    return n;
+}
+
+// Returns a vector of PSL variable names.
+void EnsembleStats::PSL_Names(std::vector<std::string> &names) const
+{
+    unsigned int start = 1;
+
+    // First PSL variable is the particle weight.
+    if (names.size() > 0) {
+        names[0] = "Weight";
+    } else {
+        names.push_back("Weight");
+    }
+
+    // Get basic stats.
+    m_basicstats->PSL_Names(names, start);
+
+    // Get stats from particle sub-models.
+    start += m_basicstats->Count();
+    for (ModelStatsMap::const_iterator i=m_modelstats.begin(); 
+         i!=m_modelstats.end(); ++i) {
+        i->second->PSL_Names(names, start);
+        start += i->second->Count();
+    }
+}
+
+// Returns the particle size list (PSL) entry for particle i
+// in the given ensemble.
+void EnsembleStats::PSL(const Ensemble &ens, unsigned int i, 
+                        real time, fvector &psl, real scale) const
+{
+    unsigned int start = 1;
+
+    // First PSL variable is the particle weight.
+    if (psl.size() > 0) {
+        psl[0] = scale*1.0e-6;
+    } else {
+        psl.push_back(scale*1.0e-6); // m-3 to cm-3.
+    }
+
+    // Get basic stats.
+    m_basicstats->PSL(ens, i, time, psl, start);
+
+    // Get stats from particle sub-models.
+    start += m_basicstats->Count();
+    for (ModelStatsMap::const_iterator j=m_modelstats.begin(); 
+         j!=m_modelstats.end(); ++j) {
+        j->second->PSL(ens, i, time, psl, start);
+        start += j->second->Count();
+    }
+}
+
+
 // READ/WRITE/COPY.
 
 // Writes the object to a binary stream.

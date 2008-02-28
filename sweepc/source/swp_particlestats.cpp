@@ -1,5 +1,6 @@
 #include "swp_particlestats.h"
 #include "swp_modeltype.h"
+#include "swp_particle.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -15,7 +16,7 @@ const std::string ParticleStats::m_statnames[ParticleStats::STAT_COUNT] = {
     std::string("Mobility Diameter (nm)"),
     std::string("Surface Area (cm2/cm3)"),
     std::string("Avg. Surface Area (cm2)"),
-    std::string("Fv (cm3)"),
+    std::string("Fv"),
     std::string("Avg. Volume (cm3)"),
     std::string("Mass (g/cm3)"),
     std::string("Avg. Mass (g)")
@@ -35,6 +36,16 @@ const IModelStats::StatType ParticleStats::m_mask[ParticleStats::STAT_COUNT] = {
     IModelStats::Avg   // Avg. mass.
 };
 
+const std::string ParticleStats::m_const_pslnames[ParticleStats::PSL_COUNT] = {
+    std::string("Equiv. Sphere Diameter (nm)"),
+    std::string("Collision Diameter (nm)"),
+    std::string("Mobility Diameter (nm)"),
+    std::string("Surface Area (cm2)"),
+    std::string("Volume (cm3)"),
+    std::string("Mass (g)"),
+    std::string("Age (s)")
+};
+
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -45,6 +56,10 @@ ParticleStats::ParticleStats()
     for (unsigned int i=0; i!=STAT_COUNT; ++i) {
         m_names.push_back(m_statnames[i]);
     }
+
+    for (unsigned int i=0; i!=PSL_COUNT; ++i) {
+        m_pslnames.push_back(m_const_pslnames[i]);
+    }
 }
 
 // Default constructor (public).
@@ -54,18 +69,24 @@ ParticleStats::ParticleStats(const CompPtrVector &comp, const TrackPtrVector &tr
         m_names.push_back(m_statnames[i]);
     }
 
+    for (unsigned int i=0; i!=PSL_COUNT; ++i) {
+        m_pslnames.push_back(m_const_pslnames[i]);
+    }
+
     m_ncomp  = comp.size();
     m_ntrack = track.size();
     m_stats.resize(STAT_COUNT+2*(m_ncomp+m_ntrack), 0.0);
     
-    // Add component and tracker names to m_names vector.
+    // Add component and tracker names to m_names and m_pslnames vectors.
     for (unsigned int i=0; i!=m_ncomp; ++i) {
         m_names.push_back(comp[i]->Name());
         m_names.push_back(string("Avg. ").append(comp[i]->Name()));
+        m_pslnames.push_back(comp[i]->Name());
     }
     for (unsigned int i=0; i!=m_ntrack; ++i) {
         m_names.push_back(track[i]->Name());
         m_names.push_back(string("Avg. ").append(track[i]->Name()));
+        m_pslnames.push_back(track[i]->Name());
     }
 }
 
@@ -290,6 +311,76 @@ real ParticleStats::Mass(void) const {return m_stats[iM];}
 
 // Returns the average mass.
 real ParticleStats::AvgMass(void) const {return m_stats[iM+1];}
+
+
+// PARTICLE SIZE LISTS.
+
+// Returns the number of PSL output variables.
+unsigned int ParticleStats::PSL_Count(void) const
+{
+    return PSL_COUNT + m_ncomp + m_ntrack;
+}
+
+// Returns a vector of PSL variable names.
+void ParticleStats::PSL_Names(std::vector<std::string> &names,
+                              unsigned int start) const
+{
+    // Get an iterator to the first point of insertion in the
+    // output names array.
+    std::vector<std::string>::iterator i;
+    if (start < names.size()) {
+        i = names.begin()+start;
+    } else {
+        i = names.end();
+    }
+
+    // Add stats to output array until the end of that array is
+    // reached or we have run out of names to add.
+    std::vector<std::string>::const_iterator j = m_pslnames.begin();
+    for (; (i!=names.end()) && (j!=m_pslnames.end()); ++i,++j) {
+        *i = *j;
+    }
+
+    // If we still have names to add, but the output array is full,
+    // then we need to add elements to the end of the array.
+    while(j!=m_pslnames.end()) {
+        names.push_back(*j);
+        ++j;
+    }
+}
+
+// Returns the particle size list (PSL) entry for particle i
+// in the given ensemble.
+void ParticleStats::PSL(const Ensemble &ens, unsigned int i, 
+                        real time, fvector &psl, unsigned int start) const
+{
+
+    // Resize vector if too small.
+    if (start+PSL_Count()-1 >= psl.size()) {
+        psl.resize(start+PSL_Count(), 0.0);
+    }
+
+    // Get an iterator to the first point of insertion in the
+    // output stats array.
+    fvector::iterator j = psl.begin()+start-1;
+
+    // Get the PSL stats.
+    *(++j) = ens.At(i)->SphDiameter() * 1.0e9;  // m to nm.
+    *(++j) = ens.At(i)->CollDiameter() * 1.0e9; // m to nm.
+    *(++j) = ens.At(i)->MobDiameter() * 1.0e9;  // m to nm.
+    *(++j) = ens.At(i)->SurfaceArea() * 1.0e4;  // m2 to cm2.
+    *(++j) = ens.At(i)->Volume() * 1.0e6;       // m3 to cm3.
+    *(++j) = ens.At(i)->Mass() * 1.0e3;         // kg to g.
+    *(++j) = time - ens.At(i)->CreateTime();    // Particle age.
+
+    // Get component and tracker stats.
+    for (unsigned int k=0; k!=m_ncomp; ++k) {
+        *(++j) = ens.At(i)->Composition(k);
+    }
+    for (unsigned int k=0; k!=m_ntrack; ++k) {
+        *(++j) = ens.At(i)->Values(k);
+    }
+}
 
 
 // READ/WRITE/COPY.
