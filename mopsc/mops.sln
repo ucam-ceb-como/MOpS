@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "camxml", "..\camxml\camxml.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sweeplib", "..\sweepc\sweeplib.vcproj", "{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fortran_ode", "..\fortran_ode\fortran_ode.vcproj", "{2EE3BABE-DBCF-4A19-ADB3-93E35F6154EC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -37,6 +39,10 @@ Global
 		{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}.Debug|Win32.Build.0 = Debug|Win32
 		{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}.Release|Win32.ActiveCfg = Release|Win32
 		{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}.Release|Win32.Build.0 = Release|Win32
+		{2EE3BABE-DBCF-4A19-ADB3-93E35F6154EC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2EE3BABE-DBCF-4A19-ADB3-93E35F6154EC}.Debug|Win32.Build.0 = Debug|Win32
+		{2EE3BABE-DBCF-4A19-ADB3-93E35F6154EC}.Release|Win32.ActiveCfg = Release|Win32
+		{2EE3BABE-DBCF-4A19-ADB3-93E35F6154EC}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

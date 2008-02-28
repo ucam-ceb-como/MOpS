@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\sweepc\include;..\cvode\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
+				AdditionalIncludeDirectories="..\fortran_ode\include;..\sweepc\include;..\cvode\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				DebugInformationFormat="3"
@@ -55,9 +55,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\sweepc\lib\sweep_d.lib ..\sprogc\lib\sprog_d.lib ..\camxml\lib\camxml_d.lib ..\cvode\lib\cvode_d.lib ..\comostrings\lib\comostrings_d.lib"
+				AdditionalDependencies="libcmtd.lib ..\sweepc\lib\sweep_d.lib ..\sprogc\lib\sprog_d.lib ..\camxml\lib\camxml_d.lib ..\cvode\lib\cvode_d.lib ..\comostrings\lib\comostrings_d.lib ..\fortran_ode\lib\odesolvers_v1_d.lib"
 				OutputFile="$(OutDir)\mops_d.exe"
 				GenerateManifest="true"
+				ForceSymbolReferences="__matherr"
 				GenerateDebugInformation="true"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -109,7 +110,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\sweepc\include;..\cvode\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
+				AdditionalIncludeDirectories="..\fortran_ode\include;..\sweepc\include;..\cvode\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
 				DisableLanguageExtensions="true"
 			/>
 			<Tool
@@ -123,8 +124,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\sprogc\lib\sprog.lib ..\comostrings\lib\comostrings.lib ..\camxml\lib\camxml.lib ..\cvode\lib\cvode.lib ..\sweepc\lib\sweep.lib"
+				AdditionalDependencies="libcmt.lib ..\sprogc\lib\sprog.lib ..\comostrings\lib\comostrings.lib ..\camxml\lib\camxml.lib ..\cvode\lib\cvode.lib ..\sweepc\lib\sweep.lib ..\fortran_ode\lib\odesolvers_v1.lib"
 				OutputFile="bin\$(ProjectName).exe"
+				ForceSymbolReferences="__matherr"
 				LinkTimeCodeGeneration="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"

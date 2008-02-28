@@ -6,11 +6,14 @@
 #include "cvode\cvode_dense.h"
 #include "nvector\nvector_serial.h"
 
+#include "fortran_interface.h"
+
 #include <vector>
 #include <math.h>
 
 using namespace Mops;
 using namespace std;
+using namespace Fortran::Radau;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -34,7 +37,7 @@ Reactor::Reactor(const Mops::Reactor &copy)
     m_mix     = copy.m_mix->Clone(); // Need to clone mixture!
     m_mech    = copy.m_mech;
     m_emodel  = copy.m_emodel;
-    m_odewk   = CVodeCreate(CV_BDF, CV_NEWTON);
+    m_odewk   = NULL; //CVodeCreate(CV_BDF, CV_NEWTON);
     m_rtol    = copy.m_rtol;
     m_atol    = copy.m_atol;
     m_nsp     = copy.m_nsp;
@@ -76,6 +79,26 @@ void Reactor::SetTime(real t)
 // Initialises the reactor to the given time.
 void Reactor::Initialise(real time)
 {
+    /*
+    m_rwk.clear();
+    m_rwk.resize(20 + (m_neq * ((4 * m_neq) + 12)), 0.0);
+
+    m_iwk.clear();
+    m_iwk.resize((3 * m_neq) + 20, 0);
+    m_iwk[0] = 1;
+    m_iwk[1] = 0;
+    m_iwk[2] = 0;
+    m_iwk[3] = 0;
+    m_iwk[4] = m_neq;
+    m_iwk[5] = 0;
+    m_iwk[6] = 0;
+    m_iwk[7] = 1;
+    */
+    
+    if (m_odewk != NULL) CVodeFree(&m_odewk);
+    m_odewk = CVodeCreate(CV_ADAMS, CV_NEWTON);
+    //N_VDestroy_Serial(m_solvec);
+
     m_time = time;
     
     // Fill solution and derivative vectors.
@@ -84,7 +107,7 @@ void Reactor::Initialise(real time)
     }
 
     // Allocate CVODE stuff.
-    CVodeMalloc(m_odewk, &rhsFn, time, 
+    CVodeMalloc(m_odewk, &rhsFn_CVODE, time, 
                 N_VMake_Serial(m_neq, m_mix->RawData()), 
                 CV_SS, m_rtol, (void*)&m_atol);
 
@@ -99,20 +122,50 @@ void Reactor::Initialise(real time)
 
     // Set CVDense as the linear system solver.
     CVDense(m_odewk, m_neq);
+    
 }
 
 // Reset the solver.  Need to do this if the the reactor
 // contents has been changed between calls to Solve().
 void Reactor::ResetSolver(void)
 {
-    CVodeReInit(m_odewk, &rhsFn, m_time, 
+    /*
+    m_rwk.assign(20 + (m_neq * ((4 * m_neq) + 12)), 0.0);
+    m_iwk.assign((3 * m_neq) + 20, 0);
+    m_iwk[0] = 1;
+    m_iwk[1] = 0;
+    m_iwk[2] = 0;
+    m_iwk[3] = 0;
+    m_iwk[4] = m_neq;
+    m_iwk[5] = 0;
+    m_iwk[6] = 0;
+    m_iwk[7] = 1;
+    */
+    
+    CVodeReInit(m_odewk, &rhsFn_CVODE, m_time, 
                 N_VMake_Serial(m_neq, m_mix->RawData()),
                 CV_SS, m_rtol, (void*)&m_atol);
+    
 }
 
 // Solves the reactor up to the given time.
 void Reactor::Solve(real time)
 {
+    /*
+    real h = 0.0;
+    int  err = 0;
+    int  neq = (int)m_neq;
+    int  nrwk = m_rwk.size();
+    int  miwk = m_iwk.size();
+    int  zero = 0;
+
+    RADAU5(&neq, rhsFn_RADAU5, &m_time, m_mix->RawData(), &time, &h, &m_rtol, &m_atol,
+           &zero, NULL, &zero, &neq, &neq, NULL, &zero, &neq, &zero, NULL, &zero, &m_rwk[0], &nrwk,
+           &m_iwk[0], &miwk, NULL, (int*)this, &err);
+
+    */
+
+    
     // Put the solution into an N_Vector data pointer.  This does not
     // involve copying the data.
     NV_DATA_S(m_solvec) = m_mix->RawData();
@@ -123,6 +176,7 @@ void Reactor::Solve(real time)
         CVode(m_odewk, time, m_solvec, &m_time, CV_NORMAL);
         m_mix->Normalise(); // This should not be required if CVODE solves correctly.
     }
+    
 
     // Calculate derivatives at end point.
     if (m_emodel == ConstT) {
@@ -178,6 +232,10 @@ void Reactor::SetMechanism(const Mops::Mechanism &mech)
     m_neq   = m_nsp + 2;
     m_iT    = m_nsp;
     m_iDens = m_iT + 1;
+
+    /*
+    m_solvec = N_VNewEmpty_Serial(m_neq);
+    */
 
     // Allocate the derivative array.
     if (m_deriv != NULL) delete [] m_deriv;
@@ -399,10 +457,10 @@ Serial_ReactorType Reactor::SerialType() const
 // allow the calling code to pass whatever information it wants to
 // the RHS function.  In this case the void* pointer should be cast
 // into a Reactor object.
-int Reactor::rhsFn(double t,      // Independent variable.
-                   N_Vector y,    // Solution array.
-                   N_Vector ydot, // Derivatives of y wrt t.
-                   void* reactor) // Pointer to reactor object.
+int Reactor::rhsFn_CVODE(double t,      // Independent variable.
+                         N_Vector y,    // Solution array.
+                         N_Vector ydot, // Derivatives of y wrt t.
+                         void* reactor) // Pointer to reactor object.
 {
     // Cast the Reactor object.
     Reactor *r = static_cast<Reactor*>(reactor);
@@ -441,11 +499,49 @@ int Reactor::rhsFn(double t,      // Independent variable.
     return 0;
 };
 
+void Reactor::rhsFn_RADAU5(int *N, Fortran::dreal *X, Fortran::dreal *Y,
+                           Fortran::dreal *F, Fortran::dreal *RPAR, int *IPAR)
+{
+    // Cast the Reactor object.
+    Reactor *r = reinterpret_cast<Reactor*>(IPAR);
+
+    /*
+    // Check values of y.
+    real ytot = 0.0;
+    for (int i=0; i<r->m_neq-2; i++) {
+        ytot += NV_DATA_S(y)[i];
+        if (NV_DATA_S(y)[i] < -r->m_atol) {
+            return 1;
+        }
+        if (NV_DATA_S(y)[i] > 1.0+r->m_atol) {
+            return 1;
+        }
+    }
+    /*
+    if (ytot > 1.0+r->m_atol) {
+        return 2;
+    }
+    if (NV_DATA_S(y)[r->m_neq-2] < -r->m_atol) {
+        return 3;
+    }
+    if (NV_DATA_S(y)[r->m_neq-1] < -r->m_atol) {
+        return 4;
+    }
+    */
+
+    // Get the RHS from the system model.
+    if (r->m_emodel == ConstT) {
+        r->RHS_ConstT(*X, Y, F);
+    } else {
+        r->RHS_Adiabatic(*X, Y, F);
+    }
+};
+
 // Definition of RHS form for constant temperature energy equation.
 void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot)
 {
     int i;
-    fvector wdot;
+    static fvector wdot;
     real wtot = 0.0;
 
     // Calculate molar production rates.
@@ -472,7 +568,7 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot)
 void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot)
 {
     int i;
-    fvector wdot, Cps, Hs;
+    static fvector wdot, Cps, Hs;
     real wtot = 0.0, Cp = 0.0;
 
     // Calculate mixture thermodynamic properties.
@@ -524,7 +620,7 @@ void Reactor::init(void)
     m_constv  = false;
 
     // Init CVODE.
-    m_odewk = CVodeCreate(CV_BDF, CV_NEWTON);
+    m_odewk = NULL; //CVodeCreate(CV_BDF, CV_NEWTON);
 }
 
 // Releases all object memory.
@@ -536,4 +632,5 @@ void Reactor::releaseMemory(void)
     m_deriv = NULL;
     if (m_odewk != NULL) CVodeFree(&m_odewk);
     m_odewk = NULL;
+    N_VDestroy_Serial(m_solvec);
 }

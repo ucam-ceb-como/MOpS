@@ -20,6 +20,8 @@
 // CVODE includes.
 #include "nvector\nvector_serial.h"
 
+#include "fortran_interface.h"
+
 #include <istream>
 
 namespace Mops
@@ -40,6 +42,9 @@ public:
 
     // Enumeration of energy models.
     enum EnergyModel {ConstT, Adiabatic};
+
+    // Enumeration of ODE solvers.
+    enum ODE_Solver {CVODE_Solver, RADAU5_Solver};
 
     // REACTOR SOLUTION.
     
@@ -181,6 +186,11 @@ private:
     void *m_odewk;        // CVODE workspace.
     N_Vector m_solvec;    // Internal solution array for CVODE interface.
 
+    // RADAU variables.
+    fvector m_rwk;          // Real workspace.
+    std::vector<int> m_iwk; // Integer workspace.
+
+
     // VERY IMPORTANT FOR CVODE INTEGRATION!
 
     // The right-hand side evaluator.  This function calculates the RHS of
@@ -188,13 +198,21 @@ private:
     // allow the calling code to pass whatever information it wants to
     // the RHS function.  In this case the void* pointer should be cast
     // into a Reactor object.
-    static int rhsFn(
+    static int rhsFn_CVODE(
         double t,      // Current flow time.
         N_Vector y,    // The current solution variables.
         N_Vector ydot, // Derivatives to return.
         void* reactor  // A Reactor object (to be cast).
         );
 
+    static void rhsFn_RADAU5(
+        int   *N,             // System dimension.
+        Fortran::dreal *X,    // Independent variable.
+        Fortran::dreal *Y,    // Current solution.
+        Fortran::dreal *F,    // Returns vector of dy/dx = F(x,y).
+        Fortran::dreal *RPAR, // Real parameters.
+        int *IPAR             // Integer parameters.
+        );
 
     // INITIALISATION AND DESTRUCTION.
     
