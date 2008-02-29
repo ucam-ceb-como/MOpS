@@ -7,8 +7,8 @@
     added to a particle to enable a given model.
 */
 
-#ifndef SWEEP_PRIPARTMODELDATA_H
-#define SWEEP_PRIPARTMODELDATA_H
+#ifndef SWEEP_PRIPARTDATA_H
+#define SWEEP_PRIPARTDATA_H
 
 #include "swp_primary.h"
 #include "swp_modeltype.h"
@@ -18,26 +18,26 @@
 
 namespace Sweep
 {
-class PriPartModelData : public IModelData
+class PriPartData : public IModelData
 {
 friend class PriPartModel;
 
 public:
     // Constructors.
-    PriPartModelData(ParticleData &parent);  // Default constructor.
-    PriPartModelData(const PriPartModelData &copy); // Copy constructor.
-    PriPartModelData(        // Stream-reading constructor.
+    PriPartData(ParticleData &parent);  // Default constructor.
+    PriPartData(const PriPartData &copy); // Copy constructor.
+    PriPartData(             // Stream-reading constructor.
         std::istream &in,    //  - Input stream.
         ParticleData &parent //  - Parent ParticleData object.
         );
 
     // Destructors.
-    ~PriPartModelData(void);
+    ~PriPartData(void);
 
     // Operators.
-    PriPartModelData &operator=(const PriPartModelData &rhs);
-    PriPartModelData &operator+=(const PriPartModelData &rhs);
-    const PriPartModelData operator+(const PriPartModelData &rhs) const;
+    PriPartData &operator=(const PriPartData &rhs);
+    PriPartData &operator+=(const PriPartData &rhs);
+    const PriPartData operator+(const PriPartData &rhs) const;
 
     // Resets the model data to the default state.
     void Clear();
@@ -62,7 +62,7 @@ public:
     // READ/WRITE/COPY.
 
     // Returns a copy of the model data.
-    PriPartModelData *const Clone(void) const;
+    PriPartData *const Clone(void) const;
 
     // Returns the model data type.  Used to identify different models
     // and for serialisation.
@@ -77,7 +77,7 @@ public:
 protected:
     // Can't create a ModelData object independently of a
     // parent ParticleData.
-    PriPartModelData(void);
+    PriPartData(void);
 
 private:
     std::vector<Primary> m_primaries;

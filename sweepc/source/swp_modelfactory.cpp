@@ -23,7 +23,7 @@ IModelData *const ModelFactory::CreateData(ModelType id, ParticleData &parent)
         case SVModel_ID:
             return new PointContactData(parent);
         case PriPartModel_ID:
-            return new PriPartModelData(parent);
+            return new PriPartData(parent);
         case ABFSites_ID:
             return NULL;
         default:
@@ -55,7 +55,7 @@ IModelData *const ModelFactory::Read(std::istream &in,
                 model = new PointContactData(in, parent);
                 break;
             case PriPartModel_ID:
-                model = new PriPartModelData(in, parent);
+                model = new PriPartData(in, parent);
                 break;
             default:
                 throw runtime_error("Invalid model type read from "

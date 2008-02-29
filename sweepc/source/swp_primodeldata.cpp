@@ -7,32 +7,32 @@ using namespace std;
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (private).
-PriPartModelData::PriPartModelData(void)
+PriPartData::PriPartData(void)
 {
 }
 
 // Default constructor (public).
-PriPartModelData::PriPartModelData(ParticleData &parent)
+PriPartData::PriPartData(ParticleData &parent)
 : IModelData(parent)
 {
 }
 
 // Copy constructor.
-PriPartModelData::PriPartModelData(const PriPartModelData &copy)
+PriPartData::PriPartData(const PriPartData &copy)
 {
     // Use assignment operator.
     *this = copy;
 }
 
 // Stream-reading constructor.
-PriPartModelData::PriPartModelData(std::istream &in, ParticleData &parent)
+PriPartData::PriPartData(std::istream &in, ParticleData &parent)
 {
     Deserialize(in);
     SetParent(parent);
 }
 
 // Default destructor.
-PriPartModelData::~PriPartModelData()
+PriPartData::~PriPartData()
 {
 }
 
@@ -40,7 +40,7 @@ PriPartModelData::~PriPartModelData()
 // OPERATOR OVERLOADING.
 
 // Assignment operator.
-PriPartModelData &PriPartModelData::operator=(const Sweep::PriPartModelData &rhs)
+PriPartData &PriPartData::operator=(const Sweep::PriPartData &rhs)
 {
     if (this != &rhs) {
         m_primaries.assign(rhs.m_primaries.begin(), rhs.m_primaries.end());
@@ -49,19 +49,19 @@ PriPartModelData &PriPartModelData::operator=(const Sweep::PriPartModelData &rhs
 }
 
 // Compound assignment.
-PriPartModelData &PriPartModelData::operator+=(const Sweep::PriPartModelData &rhs)
+PriPartData &PriPartData::operator+=(const Sweep::PriPartData &rhs)
 {
     return *this;
 }
 
 // Addition operator.
-const PriPartModelData PriPartModelData::operator+(const Sweep::PriPartModelData &rhs) const
+const PriPartData PriPartData::operator+(const Sweep::PriPartData &rhs) const
 {
-    return PriPartModelData(*this) += rhs;
+    return PriPartData(*this) += rhs;
 }
 
 // Resets the model data to the default state.
-void PriPartModelData::Clear()
+void PriPartData::Clear()
 {
     m_primaries.clear();
 }
@@ -70,11 +70,11 @@ void PriPartModelData::Clear()
 // PROPERTIES.
 
 // Returns the vector of primary particles.
-std::vector<Primary> &PriPartModelData::Primaries(void) {return m_primaries;}
-const std::vector<Primary> &PriPartModelData::Primaries(void) const {return m_primaries;}
+std::vector<Primary> &PriPartData::Primaries(void) {return m_primaries;}
+const std::vector<Primary> &PriPartData::Primaries(void) const {return m_primaries;}
 
 // Returns the property with the given ID.
-real PriPartModelData::Property(unsigned int id) const
+real PriPartData::Property(unsigned int id) const
 {
     return 0.0;
 }
@@ -83,7 +83,7 @@ real PriPartModelData::Property(unsigned int id) const
 // MODEL WHICH USES THIS DATA.
 
 // Returns the PriPartModel object which operator on this data.
-const PriPartModel &PriPartModelData::Model(void) const
+const PriPartModel &PriPartData::Model(void) const
 {
     return PriPartModel::Instance();
 }
@@ -92,17 +92,17 @@ const PriPartModel &PriPartModelData::Model(void) const
 // READ/WRITE/COPY.
 
 // Returns a copy of the model data.
-PriPartModelData *const PriPartModelData::Clone(void) const
+PriPartData *const PriPartData::Clone(void) const
 {
-    return new PriPartModelData(*this);
+    return new PriPartData(*this);
 }
 
 // Returns the model data type.  Used to identify different models
 // and for serialisation.
-ModelType PriPartModelData::ID(void) const {return PriPartModel_ID;}
+ModelType PriPartData::ID(void) const {return PriPartModel_ID;}
 
 // Writes the object to a binary stream.
-void PriPartModelData::Serialize(std::ostream &out) const
+void PriPartData::Serialize(std::ostream &out) const
 {
     if (out.good()) {
         // Output the version ID (=0 at the moment).
@@ -124,7 +124,7 @@ void PriPartModelData::Serialize(std::ostream &out) const
 }
 
 // Reads the object from a binary stream.
-void PriPartModelData::Deserialize(std::istream &in)
+void PriPartData::Deserialize(std::istream &in)
 {
     m_primaries.clear();
 

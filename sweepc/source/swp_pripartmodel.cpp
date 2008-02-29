@@ -61,7 +61,7 @@ void PriPartModel::UpdateParticle(Sweep::Particle &p,
 {
     // Currently only the first component is added to the primary
     // particles.
-    PriPartModelData &cache = dynamic_cast<PriPartModelData&>(*p.ModelCache(PriPartModel_ID));
+    PriPartData &cache = dynamic_cast<PriPartData&>(*p.ModelCache(PriPartModel_ID));
     vector<Primary> &pri = cache.Primaries();
 
     // Distribute the mass, weighted by surface area, starting with the
@@ -103,8 +103,8 @@ void PriPartModel::UpdateParticle(Sweep::Particle &p,
 void PriPartModel::CoagParticles(Particle &p1, const Particle &p2) const
 {
     // Add primary lists together.
-    vector<Primary> &pri1 = dynamic_cast<PriPartModelData&>(*(p1.ModelCache(PriPartModel_ID))).Primaries();
-    const vector<Primary> &pri2 = dynamic_cast<const PriPartModelData&>(*(p2.ModelCache(PriPartModel_ID))).Primaries();
+    vector<Primary> &pri1 = dynamic_cast<PriPartData&>(*(p1.ModelCache(PriPartModel_ID))).Primaries();
+    const vector<Primary> &pri2 = dynamic_cast<const PriPartData&>(*(p2.ModelCache(PriPartModel_ID))).Primaries();
     for (vector<Primary>::const_iterator i=pri2.begin(); i!=pri2.end(); ++i) {
         pri1.push_back(*i);
     }
