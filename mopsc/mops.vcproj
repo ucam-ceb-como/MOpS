@@ -56,10 +56,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libcmtd.lib ..\sweepc\lib\sweep_d.lib ..\sprogc\lib\sprog_d.lib ..\camxml\lib\camxml_d.lib ..\cvode\lib\cvode_d.lib ..\comostrings\lib\comostrings_d.lib ..\fortran_ode\lib\odesolvers_v1_d.lib"
+				AdditionalDependencies="..\sweepc\lib\sweep_d.lib ..\sprogc\lib\sprog_d.lib ..\camxml\lib\camxml_d.lib ..\cvode\lib\cvode_d.lib ..\comostrings\lib\comostrings_d.lib ..\fortran_ode\lib\odesolvers_v1_d.lib"
 				OutputFile="$(OutDir)\mops_d.exe"
 				GenerateManifest="true"
-				ForceSymbolReferences="__matherr"
 				GenerateDebugInformation="true"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -113,6 +112,7 @@
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="..\fortran_ode\include;..\sweepc\include;..\cvode\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
 				DisableLanguageExtensions="true"
+				WarningLevel="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -125,12 +125,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libcmt.lib ..\sprogc\lib\sprog.lib ..\comostrings\lib\comostrings.lib ..\camxml\lib\camxml.lib ..\cvode\lib\cvode.lib ..\sweepc\lib\sweep.lib ..\fortran_ode\lib\odesolvers_v1.lib"
+				AdditionalDependencies="..\sprogc\lib\sprog.lib ..\comostrings\lib\comostrings.lib ..\camxml\lib\camxml.lib ..\cvode\lib\cvode.lib ..\sweepc\lib\sweep.lib ..\fortran_ode\lib\odesolvers_v1.lib"
 				OutputFile="bin\$(ProjectName).exe"
-				ForceSymbolReferences="__matherr"
+				GenerateManifest="false"
+				EnableUAC="false"
 				LinkTimeCodeGeneration="1"
 				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
+				DataExecutionPrevention="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -173,6 +174,15 @@
 			UseDependenciesInBuild="false"
 			CopyLocalSatelliteAssemblies="false"
 			RelativePathToProject="..\sweepc\sweeplib.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{9F7C637F-9905-4EF1-85D6-176C71B71DCE}"
+			CopyLocal="false"
+			CopyLocalDependencies="false"
+			UseInBuild="false"
+			UseDependenciesInBuild="false"
+			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject="..\cvode\cvode.vcproj"
 		/>
 	</References>
 	<Files>

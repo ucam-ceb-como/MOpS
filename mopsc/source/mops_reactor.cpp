@@ -521,13 +521,13 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot)
 // Definition of RHS form for adiabatic energy equation.
 void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot)
 {
-    static fvector wdot, Cps, Hs;
+    static fvector wdot, Hs;
     real wtot = 0.0, Cp = 0.0;
 
     // Calculate mixture thermodynamic properties.
     m_mix->CalcHs_RT(y[m_iT], Hs);
-    Cp = m_mix->CalcBulkCp(y[m_iT], y, m_nsp, Cps) / Sprog::R;
-
+    Cp = m_mix->ThermoInterface::CalcBulkCp_R(y[m_iT], y, m_nsp);
+    
     // Calculate molar production rates.
     wtot = m_mech->Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y, 
                                                  m_nsp, *m_mix, wdot);

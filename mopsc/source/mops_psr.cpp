@@ -192,7 +192,7 @@ Serial_ReactorType PSR::SerialType() const
 // Definition of RHS form for constant temperature energy equation.
 void PSR::RHS_ConstT(real t, const real *const y,  real *ydot)
 {
-    fvector wdot;
+    static fvector wdot;
     real wtot = 0.0;
 
     // Calculate molar production rates.
@@ -223,13 +223,13 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot)
 // Definition of RHS form for adiabatic energy equation.
 void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot)
 {
-    fvector wdot, Hs, Cps;
+    static fvector wdot, Hs, Cps;
     real wtot = 0.0, Cp = 0.0, H = 0.0;
 
     // Calculate mixture thermodynamic properties.
     m_mix->CalcHs_RT(y[m_iT], Hs);
     H = m_mix->BulkH();
-    Cp = m_mix->CalcBulkCp(y[m_iT], y, m_nsp, Cps) / Sprog::R;
+    Cp = m_mix->CalcBulkCp_R(y[m_iT], y, m_nsp);
 
     // Calculate molar production rates of species (mol/m3s).
     wtot = m_mech->Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y, 
