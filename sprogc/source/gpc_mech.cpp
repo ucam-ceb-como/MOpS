@@ -2,6 +2,7 @@
 #include "gpc_unit_systems.h"
 #include <string>
 #include <math.h>
+#include <stdexcept>
 
 using namespace Sprog;
 using namespace std;
@@ -91,7 +92,7 @@ void Mechanism::SetUnits(Sprog::UnitSystem u)
     // Is new system SI?
     if (u == SI) {
         // Is current system CGS?
-        if (m_units = CGS) {
+        if (m_units == CGS) {
             // Convert elements' mol. weights.
             ElementPtrVector::iterator iel;
             for (iel=m_elements.begin(); iel!=m_elements.end(); iel++) {
@@ -107,8 +108,7 @@ void Mechanism::SetUnits(Sprog::UnitSystem u)
             }
 
             // Scale reaction coefficients.
-            int irxn;
-            for (irxn=0; irxn<m_rxns.Count(); irxn++) {
+            for (unsigned int irxn=0; irxn!=m_rxns.Count(); ++irxn) {
                 // Convert volumes from cm3 to m3, and convert energies from ergs/mol to
                 // J/mol.
 
@@ -435,7 +435,8 @@ Sprog::Kinetics::Reaction *const Mechanism::AddReaction(const Sprog::Kinetics::R
 // Builds the species-reaction stoichiometry cross-reference table.
 void Mechanism::BuildStoichXRef()
 {
-    int i, j, k;
+    unsigned int i, j;
+    int k;
     RxnStoichMap::iterator ij;
     real mu;
 
@@ -443,15 +444,15 @@ void Mechanism::BuildStoichXRef()
     m_stoich_xref.clear();
     
     // Set up empty table.
-    for (i=0; i<m_species.size(); i++) {
+    for (i=0; i!=m_species.size(); ++i) {
         m_stoich_xref.push_back(StoichXRef());
         m_stoich_xref[i].Species = i;
     }
 
     // Loop over all reactions.
-    for (j=0; j<m_rxns.Count(); j++) {
+    for (j=0; j!=m_rxns.Count(); ++j) {
         // Sum up integer reactant stoich.
-        for (k=0; k<m_rxns[j]->ReactantCount(); k++) {
+        for (k=0; k!=m_rxns[j]->ReactantCount(); ++k) {
             // Get the species index and the stoichiometry.
             i  = m_rxns[j]->Reactant(k).Index();
             mu = (real)m_rxns[j]->Reactant(k).Mu();
@@ -466,7 +467,7 @@ void Mechanism::BuildStoichXRef()
         }
 
         // Sum up integer product stoich.
-        for (k=0; k<m_rxns[j]->ProductCount(); k++) {
+        for (k=0; k!=m_rxns[j]->ProductCount(); ++k) {
             // Get the species index and the stoichiometry.
             i  = m_rxns[j]->Product(k).Index();
             mu = (real)m_rxns[j]->Product(k).Mu();
@@ -481,7 +482,7 @@ void Mechanism::BuildStoichXRef()
         }
 
         // Sum up real reactant stoich.
-        for (k=0; k<m_rxns[j]->FReactantCount(); k++) {
+        for (k=0; k!=m_rxns[j]->FReactantCount(); ++k) {
             // Get the species index and the stoichiometry.
             i  = m_rxns[j]->FReactant(k).Index();
             mu = m_rxns[j]->FReactant(k).Mu();
@@ -496,7 +497,7 @@ void Mechanism::BuildStoichXRef()
         }
 
         // Sum up real product stoich.
-        for (k=0; k<m_rxns[j]->FProductCount(); k++) {
+        for (k=0; k!=m_rxns[j]->FProductCount(); ++k) {
             // Get the species index and the stoichiometry.
             i  = m_rxns[j]->FProduct(k).Index();
             mu = m_rxns[j]->FProduct(k).Mu();
@@ -527,11 +528,10 @@ const Sprog::RxnStoichMap &Mechanism::GetStoichXRef(unsigned int isp) const
 {
     if (isp < m_species.size()) {
         return m_stoich_xref[isp].RxnStoich;
-    } else {
-        // Species index is invalid.
-        throw invalid_argument("Invalid species index given when "
-                               "finded RxnStoichMap (Sprog, Mechanism::GetStoichXRef.");
     }
+    // Species index is invalid.
+    throw invalid_argument("Invalid species index given when "
+                           "finded RxnStoichMap (Sprog, Mechanism::GetStoichXRef.");
 }
 
 

@@ -63,15 +63,11 @@ void MechanismParser::parseCK(std::ifstream &fin,
 {
     char c;
     string line;
-    real val;
     int i=0;
 
     // Positions in the file stream at the beginning of the elements, species
     // reactions and thermo data.
     streamoff iel=0, isp=0, irxn=0, ithrm=0;
-
-    Element * last_el;
-    Species * last_sp;
 
     // Locate in the file stream the starting point of the elements, species
     // reactions and thermo data.
@@ -137,11 +133,11 @@ void MechanismParser::parseCK(std::ifstream &fin,
 void MechanismParser::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech, 
                                     Sprog::IO::MechanismParser::CK_STATUS &status)
 {
-    char c;
+    char c = '\0';
     string tag;
-    real val;
+    real val = 0.0;
 
-    Element * last_el;
+    Element * last_el = NULL;
 
     status.Status = BeginParseEl;
 
@@ -244,6 +240,10 @@ void MechanismParser::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mec
                 if ((c == '\n') || (c == '\r')) {
                     status.Status = BeginParseEl;
                 }
+                break;
+            default:
+                throw runtime_error("Illegal parsing flag encountered "
+                                    "(Sprog, MechanismParser::parseCK_Elements).");
         }
     }
 }
@@ -318,6 +318,10 @@ void MechanismParser::parseCK_Species(std::ifstream &fin,
                 if ((c == '\n') || (c == '\r')) {
                     status.Status = BeginParseSp;
                 }
+                break;
+            default:
+                throw runtime_error("Illegal parsing flag encountered "
+                                    "(Sprog, MechanismParser::parseCK_Species).");
         }
     }
 }
@@ -327,7 +331,7 @@ void MechanismParser::parseCK_Species(std::ifstream &fin,
 void MechanismParser::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech, 
                                   Sprog::IO::MechanismParser::CK_STATUS &status)
 {
-    int i, isp;
+    int i;
     char c, line[200];
     string tag, spname;
 
@@ -429,8 +433,7 @@ void MechanismParser::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech,
                             }                    
                         }
                     } catch (std::invalid_argument &ia) {
-                        throw range_error(string("Invalid element defined for species ").append(spname));
-                        cout << spname;
+                        throw ia;
                     }
                 }
                 
@@ -454,7 +457,7 @@ void MechanismParser::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech,
 // Reads CHEMKIN formatted thermo data for all species in the given mechanism from
 // the file specified by the file name.
 void MechanismParser::parseCK_Thermo(std::string &filename, Sprog::Mechanism &mech, 
-                                  Sprog::IO::MechanismParser::CK_STATUS &status)
+                                     Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     // Open file for reading.
     ifstream fin; //(filename.c_str(), ios::in);
@@ -483,7 +486,7 @@ void MechanismParser::parseCK_Reactions(std::ifstream &fin, Sprog::Mechanism &me
 {
     char c;
     string tag, rxndef;
-    bool fcont = false, fdup = false;
+    bool fcont = false; //, fdup = false;
 
     Kinetics::Reaction * last_rxn = NULL;
 
@@ -594,6 +597,9 @@ void MechanismParser::parseCK_Reactions(std::ifstream &fin, Sprog::Mechanism &me
                     status.Status = BeginParseRxn;
                 }
                 break;
+            default:
+                throw runtime_error("Illegal parsing flag encountered "
+                                    "(Sprog, MechanismParser::parseCK_Reactions).");
         }
     }
 }
@@ -606,7 +612,9 @@ Sprog::Kinetics::Reaction *const MechanismParser::parseCK_Reaction(const std::st
     // The reaction string contains four pieces of information:  the reaction formula, A, n & E.
     Kinetics::Reaction * rxn = NULL;
 
-    int i, k, ilast_reac, ifirst_prod, ilast_prod, imu; // String & vector indices.
+    string::size_type i=0, k=0, ilast_reac=0; // String & vector indices.
+    string::size_type ifirst_prod=0, ilast_prod=0;
+    unsigned int imu=0;
     bool frev; // Reversible reaction?
     bool fsearch, fplus; // Flags for searching string.
     bool fisfo = false, fistb = false; // Fall-off and third-body reaction flags.
@@ -739,8 +747,8 @@ void Sprog::IO::MechanismParser::parseCK_RxnSpStoich(const std::string &sp,
     vector<string> species;
     vector<string>::iterator k;
     string str;
-    int i = 0, j = 0;
-    bool search = true, plus = true, fosym = false;
+    string::size_type i = 0, j = 0;
+    // bool search = true, plus = true, fosym = false;
 
     // Locate the first species delimiter.
     i = sp.find_first_not_of(" ");
@@ -798,7 +806,7 @@ void Sprog::IO::MechanismParser::parseCK_RxnSpStoich(const std::string &sp,
     for (k=species.begin(); k!=species.end(); k++) {
         // Separate stoichiometry from specie's name.
         i = (*k).find_first_not_of("0123456789.");
-        if (i != string.npos) {
+        if (i != sp.npos) {
             if (i > 0) 
                 mu = (*k).substr(0,i); 
             else 
@@ -844,7 +852,8 @@ bool Sprog::IO::MechanismParser::parseCK_RxnAux(const std::string &rxndef,
 {
     string str, key, vals;
     vector<string> params;
-    int i, j, k, sp;
+    string::size_type i, j, k;
+    int sp;
     real val, foparams[Kinetics::FALLOFF_PARAMS::MAX_FALLOFF_PARAMS];
     bool foundaux = false;
 

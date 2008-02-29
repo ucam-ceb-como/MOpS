@@ -2,7 +2,8 @@
 #include "gpc_reaction.h"
 #include "gpc_mech.h"
 #include "gpc_stoich.h"
-#include <math.h>
+#include <cmath>
+#include <stdexcept>
 
 using namespace Sprog;
 using namespace Sprog::Kinetics;
@@ -244,7 +245,7 @@ void ReactionSet::Clear()
 real ReactionSet::GetMolarProdRates(const fvector &rop,
                                     fvector &wdot) const 
 {
-    int k;
+    unsigned int k;
     const RxnStoichMap *mu;
     RxnStoichMap::const_iterator i;
     real wtot = 0.0;
@@ -253,7 +254,7 @@ real ReactionSet::GetMolarProdRates(const fvector &rop,
     wdot.resize(m_mech->SpeciesCount());
 
     // Loop over all species in mechanism.
-    for (k=0; k<m_mech->SpeciesCount(); k++) {
+    for (k=0; k!=m_mech->SpeciesCount(); ++k) {
         // Reset prod. rate of this species to zero.
         wdot[k] = 0.0;
 
@@ -306,58 +307,65 @@ void ReactionSet::GetRatesOfProgress(real density,
                                      const fvector &kreverse,
                                      fvector &rop) const
 {
-    int i, j, k;
-    real *rev = new real[m_rxns.size()];
+    unsigned int i;
+    int j, k;
+    real *rev = NULL;
 
     // Resize output vector to sufficient length.
-    rop.resize(m_rxns.size());
+    rop.resize(m_rxns.size(), 0.0);
 
-    // Loop over all reactions.
-    for (i=0; i<m_rxns.size(); i++) {
-        // Use rop to store forward rates of production, 
-        // and rev to store reverse rates.
-        rop[i] = kforward[i];
-        rev[i] = kreverse[i];
+    if (n >= m_mech->Species().size()) {
+        // Assign temp memory.
+        rev = new real[m_rxns.size()];
 
-        // Integer reactants.
-        for (k=0; k<m_rxns[i]->ReactantCount(); k++) {
-            // As the stoichiometry is integer, it is more computationally efficient
-            // to multiply the values together than to use the pow() function.
-            for (j=0; j<m_rxns[i]->Reactant(k).Mu(); j++) {
-                rop[i] *= density * x[m_rxns[i]->Reactant(k).Index()];
+        // Loop over all reactions.
+        for (i=0; i!=m_rxns.size(); ++i) {
+            // Use rop to store forward rates of production, 
+            // and rev to store reverse rates.
+            rop[i] = kforward[i];
+            rev[i] = kreverse[i];
+
+            // Integer reactants.
+            for (k=0; k!=m_rxns[i]->ReactantCount(); ++k) {
+                // As the stoichiometry is integer, it is more computationally efficient
+                // to multiply the values together than to use the pow() function.
+                for (j=0; j!=m_rxns[i]->Reactant(k).Mu(); ++j) {
+                    rop[i] *= density * x[m_rxns[i]->Reactant(k).Index()];
+                }
             }
-        }
 
-        // Integer products.
-        for (k=0; k<m_rxns[i]->ProductCount(); k++) {
-            // As the stoichiometry is integer, it is more computationally efficient
-            // to multiply the values together than to use the pow() function.
-            for (j=0; j<m_rxns[i]->Product(k).Mu(); j++) {
-                rev[i] *= density * x[m_rxns[i]->Product(k).Index()];
+            // Integer products.
+            for (k=0; k<m_rxns[i]->ProductCount(); k++) {
+                // As the stoichiometry is integer, it is more computationally efficient
+                // to multiply the values together than to use the pow() function.
+                for (j=0; j<m_rxns[i]->Product(k).Mu(); j++) {
+                    rev[i] *= density * x[m_rxns[i]->Product(k).Index()];
+                }
             }
+
+            // Real reactants.
+            for (k=0; k<m_rxns[i]->FReactantCount(); k++) {
+                // Now the stoichiometry is non-integer, we must use the pow() function.
+                rop[i] *= pow(density * x[m_rxns[i]->FReactant(k).Index()], 
+                              m_rxns[i]->FReactant(k).Mu()); 
+
+            }
+
+            // Real products.
+            for (k=0; k<m_rxns[i]->FProductCount(); k++) {
+                // Now the stoichiometry is non-integer, we must use the pow() function.
+                rev[i] *= pow(density * x[m_rxns[i]->FProduct(k).Index()], 
+                              m_rxns[i]->FProduct(k).Mu()); 
+
+            }
+
+            // Calculate the net rates of production.
+            rop[i] -= rev[i];
         }
 
-        // Real reactants.
-        for (k=0; k<m_rxns[i]->FReactantCount(); k++) {
-            // Now the stoichiometry is non-integer, we must use the pow() function.
-            rop[i] *= pow(density * x[m_rxns[i]->FReactant(k).Index()], 
-                          m_rxns[i]->FReactant(k).Mu()); 
-
-        }
-
-        // Real products.
-        for (k=0; k<m_rxns[i]->FProductCount(); k++) {
-            // Now the stoichiometry is non-integer, we must use the pow() function.
-            rev[i] *= pow(density * x[m_rxns[i]->FProduct(k).Index()], 
-                          m_rxns[i]->FProduct(k).Mu()); 
-
-        }
-
-        // Calculate the net rates of production.
-        rop[i] -= rev[i];
+        // Clear temp memory.
+        delete [] rev;
     }
-
-    delete [] rev;
 }
 
 // Returns the rates of progress of all reactions given the mixture
@@ -404,12 +412,18 @@ void ReactionSet::GetRateConstants(real T,
                                    fvector &kforward,
                                    fvector &kreverse) const 
 {
-    real lnT, invRT, Patm_RT, T_1_3, T_2_3, lowk, pr, logpr;
+    real lnT=0.0, invRT=0.0, Patm_RT=0.0, T_1_3=0.0, T_2_3=0.0;
+    real lowk=0.0, pr=0.0, logpr=0.0;
     RxnPtrVector::const_iterator i;
     RxnMap::const_iterator im;
     int j, k;
     real *tbconcs;
     const Reaction *rxn;
+
+    // Check that we have been given enough species concentrations.
+    if (n < m_mech->Species().size()) {
+        return;
+    }
 
     // Allocate temporary memory.
     tbconcs = new real[m_rxns.size()];
@@ -429,6 +443,10 @@ void ReactionSet::GetRateConstants(real T,
             invRT = 1.0 / (R_CGS * T);
             Patm_RT = 1013250.0 * invRT;
             break;
+        default:
+            // Something has gone wrong to end up here.
+            invRT = 0.0;
+            Patm_RT = 0.0;
     }
     if (m_lt_rxns.size() > 0) {
         T_1_3 = 1.0 / pow(T, ONE_THIRD);
@@ -551,6 +569,11 @@ void ReactionSet::GetRateConstants(real T,
                 break;
             case Custom: // A custom function is defined to calculate the fall-off form.
                 rxn->FallOffFn()(*rxn, lowk, tbconcs[j], T, kforward[j], kreverse[j]);
+                break;
+            case Lindemann:
+                // Need do nothing for Lindemann form.
+                break;
+            default:
                 break;
         }
     }

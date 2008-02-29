@@ -5,6 +5,7 @@
 #include "gpc_idealgas.h"
 #include <vector>
 #include <iostream>
+#include <stdexcept>
 
 using namespace Sprog;
 using namespace Sprog::Thermo;
@@ -57,6 +58,7 @@ Mixture *const MixtureFactory::Read(std::istream &s,
     } else {
         throw invalid_argument("Input stream not ready (Sprog, MixtureFactory::Read).");
     }
+    return NULL;
 }
 
 
@@ -107,6 +109,7 @@ GasPhase *const MixtureFactory::ReadGasPhase(std::istream &s,
         throw invalid_argument("Input stream not ready "
                                "(Sprog, MixtureFactory::ReadGasPhase).");
     }
+    return NULL;
 }
 
 

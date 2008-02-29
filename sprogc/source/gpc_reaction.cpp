@@ -272,7 +272,7 @@ void Reaction::RemoveReactant(const std::string &name)
     if (m_mech != NULL) {
         // Search through the list of species to find that with
         // the given name.
-        unsigned int i = m_mech->FindSpecies(name);
+        int i = m_mech->FindSpecies(name);
         if (i >= 0) {
             // Found the species:  Loop though integer stoichiometry
             // reactant to find that with this index.
@@ -478,7 +478,7 @@ void Reaction::RemoveProduct(const std::string &name)
     if (m_mech != NULL) {
         // Search through the list of species to find that with
         // the given name.
-        unsigned int i = m_mech->FindSpecies(name);
+        int i = m_mech->FindSpecies(name);
         if (i >= 0) {
             // Found the species:  Loop though integer stoichiometry
             // product to find that with this index.
@@ -657,7 +657,7 @@ void Reaction::RemoveThirdBody(const std::string &name)
     if (m_mech != NULL) {
         // Search through the list of species to find that with
         // the given name.
-        unsigned int i = m_mech->FindSpecies(name);
+        int i = m_mech->FindSpecies(name);
         if (i >= 0) {
             // Found the species:  Loop though third bodies and find
             // that with this index.
@@ -953,9 +953,9 @@ void Reaction::Serialize(std::ostream &out) const
         // Write reverse Arrhenius coefficients.
         if (m_arrr != NULL) {
             out.write((char*)&trueval, sizeof(trueval));
-            A = (double)m_arrr->A;
-            n = (double)m_arrr->n;
-            E = (double)m_arrr->E;
+            A  = (double)m_arrr->A;
+            nn = (double)m_arrr->n;
+            E  = (double)m_arrr->E;
             out.write((char*)&A, sizeof(A));
             out.write((char*)&nn, sizeof(nn));
             out.write((char*)&E, sizeof(E));

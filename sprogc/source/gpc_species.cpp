@@ -133,7 +133,7 @@ unsigned int Species::AtomCount(unsigned int iel) const
 {
     // Locate the ElComp with the given index.
     for (ElCompVector::const_iterator i=m_elcomp.begin(); i!=m_elcomp.end(); i++) {
-        if (i->Index() == iel) {
+        if (iel == (unsigned)i->Index()) {
             return i->Count();
         }
     }
@@ -146,7 +146,7 @@ unsigned int Species::AtomCount(unsigned int iel) const
 void Species::AddElement(const Sprog::ElComp &elcomp)
 {
     if (m_mech != NULL) {
-        if ((elcomp.Index() >= 0) && (elcomp.Index() < m_mech->ElementCount())) {
+        if ((elcomp.Index() >= 0) && ((unsigned)elcomp.Index() < m_mech->ElementCount())) {
             // Must check if this element is already defined for this
             // species.
             ElCompVector::iterator i;
@@ -187,7 +187,7 @@ void Species::AddElement(unsigned int i, unsigned int n)
             ElCompVector::iterator j;
             bool found = false;
             for (j=m_elcomp.begin(); j!=m_elcomp.end(); j++) {
-                if ((*j).Index() == i) {
+                if ((unsigned)(*j).Index() == i) {
                     // Found element:  Append value.
                     (*j) += n;
                     found = true;
@@ -258,7 +258,7 @@ bool Species::ContainsElement(unsigned int i) const
     // Loop over composition to find element.
     ElCompVector::const_iterator el;
     for (el=m_elcomp.begin(); el!=m_elcomp.end(); el++) {
-        if (el->Index() == i) {
+        if ((unsigned)el->Index() == i) {
             return true;
         }
     }

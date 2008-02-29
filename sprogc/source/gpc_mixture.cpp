@@ -1,6 +1,7 @@
 #include "gpc_params.h"
 #include "gpc_mixture.h"
 #include <vector>
+#include <stdexcept>
 
 using namespace Sprog;
 using namespace Sprog::Thermo;
@@ -107,15 +108,14 @@ void Mixture::GetMassFractions(fvector &fracs) const
 
     // Loop over all mole fractions and convert to mass fractions:
     //   y = x * wt / sum(x*wt)
-    int i;
     real val, tot = 0.0;
-    for (i=0; i<m_species->size(); i++) {
+    for (unsigned int i=0; i!=m_species->size(); ++i) {
         val = m_data[i] * (*m_species)[i]->MolWt();
         fracs[i] = val;
         tot += val;
     }
     tot = 1.0 / tot;
-    for (i=0; i<m_species->size(); i++) {
+    for (unsigned int i=0; i!=m_species->size(); ++i) {
         fracs[i] *= tot;
     }
 }
@@ -146,7 +146,7 @@ real Mixture::MassFraction(unsigned int i) const
     if (i < m_species->size()) {
         // Get total x * W.
         real tot = 0.0;
-        for (int j=0; j<m_species->size(); j++) {
+        for (unsigned int j=0; j!=m_species->size(); ++j) {
             tot += m_data[j] * (*m_species)[j]->MolWt();
         }
 
@@ -160,18 +160,17 @@ real Mixture::MassFraction(unsigned int i) const
 // Sets the vector of species mole fractions.
 void Mixture::SetFracs(const fvector &fracs)
 {
-    int i;
     real tot =0.0;
 
     // Set the mole fractions.
-    for (i=0; i<m_species->size(); i++) {
+    for (unsigned int i=0; i!=m_species->size(); ++i) {
         m_data[i] = fracs[i];
         tot += fracs[i];
     }
 
     // Ensure that the mole fractions are normalised.
     if (tot != 1.0) {
-        for (i=0; i<m_species->size(); i++) {
+        for (unsigned int i=0; i!=m_species->size(); ++i) {
             m_data[i] /= tot;
         }
     }
@@ -181,19 +180,18 @@ void Mixture::SetFracs(const fvector &fracs)
 void Mixture::SetFracs(const Sprog::real fracs[], int n)
 {
     // Check that the array of of sufficient length.
-    if (n >= m_species->size()) {
-        int i;
+    if ((unsigned)n >= m_species->size()) {
         real tot = 0.0;
 
         // Set the fractions.
-        for (i=0; i<m_species->size(); i++) {
+        for (unsigned int i=0; i!=m_species->size(); ++i) {
             m_data[i] = fracs[i];
             tot += fracs[i];
         }
 
         // Ensure that the mole fractions are normalised.
         if (tot != 1.0) {
-            for (i=0; i<m_species->size(); i++) {
+            for (unsigned int i=0; i!=m_species->size(); ++i) {
                 m_data[i] /= tot;
             }
         }
@@ -205,18 +203,16 @@ void Mixture::SetConcs(const fvector &concs)
 {
     // Check that the concentration vector is of sufficient length.
     if (concs.size() >= m_species->size()) {
-        int i;
-
         // Sum up the total concentration.
         *m_pdens = 0.0;
-        for (i=0; i<m_species->size(); i++) {
+        for (unsigned int i=0; i!=m_species->size(); ++i) {
             m_data[i] = concs[i];
             *m_pdens += concs[i];
         }
 
         // Convert values to mole fractions.
         real invdens = 1.0 / (*m_pdens);
-        for (i=0; i<m_species->size(); i++) {
+        for (unsigned int i=0; i!=m_species->size(); ++i) {
             m_data[i] *= invdens;
         }
     }
@@ -227,25 +223,24 @@ void Mixture::SetMassFracs(const fvector &fracs)
 {
     // Check that the mass fraction vector is of sufficient length.
     if (fracs.size() >= m_species->size()) {
-        int i;
         real val = 0.0, tot = 0.0, totfrac = 0.0;
 
         // Check that the fractions are normalised by summing up
         // the total fractions, and dividing the values by this
         // sum in the next step.
-        for (i=0; i<m_species->size(); i++) {
+        for (unsigned int i=0; i!=m_species->size(); ++i) {
             totfrac += fracs[i];
         }
 
         // Convert to mole fractions:
         //   x = y / (wt * sum(y/wt))
-        for (i=0; i<m_species->size(); i++) {
+        for (unsigned int i=0; i!=m_species->size(); ++i) {
             val = fracs[i] / (totfrac * (*m_species)[i]->MolWt());
             m_data[i] = val;
             tot += val;
         }
         tot = 1.0 / tot;
-        for (i=0; i<m_species->size(); i++) {
+        for (unsigned int i=0; i!=m_species->size(); ++i) {
             m_data[i] *= tot;
         }
 
@@ -259,13 +254,13 @@ void Mixture::Normalise()
 {
     real xtot = 0.0;
 
-    for (int i=0; i<m_species->size(); i++) {
+    for (unsigned int i=0; i!=m_species->size(); ++i) {
         if (m_data[i] < 0.0) m_data[i] = 0.0;
         xtot += m_data[i];
     }
 
     if (xtot != 1.0) {
-        for (int i=0; i<m_species->size(); i++) {
+        for (unsigned int i=0; i!=m_species->size(); ++i) {
             m_data[i] /= xtot;
         }
     }
@@ -283,12 +278,11 @@ real Mixture::Density() const
 // Returns the mixture mass density.
 real Mixture::MassDensity() const
 {
-    int i;
     real rho = 0.0;
 
     // Calcualate mass density:
     //   rho_mass = rho_mole * sum(x * wt)
-    for (i=0; i<m_species->size(); i++) {
+    for (unsigned int i=0; i!=m_species->size(); ++i) {
         rho += m_data[i] * (*m_species)[i]->MolWt();
     }
     rho *= (*m_pdens);
@@ -304,12 +298,11 @@ void Mixture::SetDensity(Sprog::real dens)
 // Sets the molar density using the supplied mass density.
 void Mixture::SetMassDensity(Sprog::real dens)
 {
-    int i;
     *m_pdens = 0.0;
     
     // Calcualate molar density:
     //   rho_mass = rho_mole * sum(x * wt)
-    for (i=0; i<m_species->size(); i++) {
+    for (unsigned int i=0; i!=m_species->size(); ++i) {
         *m_pdens += m_data[i] * (*m_species)[i]->MolWt();
     }
    *m_pdens = dens / (*m_pdens);

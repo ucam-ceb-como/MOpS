@@ -129,7 +129,7 @@ real IdealGas::CalcBulkU(Sprog::real T,
 
         // Calculate the bulk energy.
         real bulku = 0.0;
-        for (int i=0; i<m_species->size(); i++) {
+        for (unsigned int i=0; i!=m_species->size(); ++i) {
             bulku += U[i] * x[i];
         }
 
@@ -197,7 +197,7 @@ real IdealGas::CalcBulkH(Sprog::real T,
         
         // Sum to get bulk enthalpy.
         real bulkH = 0.0;
-        for(int i=0; i<m_species->size(); i++) {
+        for(unsigned int i=0; i!=m_species->size(); ++i) {
             bulkH += x[i] * H[i];
         }
 
@@ -269,7 +269,7 @@ real IdealGas::CalcBulkS(Sprog::real T,
         
         // Sum to get bulk entropy.
         real bulkS = 0.0;
-        for(int i=0; i<m_species->size(); i++) {
+        for(unsigned int i=0; i!=m_species->size(); ++i) {
             bulkS += x[i] * S[i];
         }
 
@@ -285,7 +285,7 @@ real IdealGas::CalcBulkS(Sprog::real T,
 // Calculates molar Gibbs free energies of each species.
 void IdealGas::CalcGs(real T, fvector &G) const
 {
-    int i, n;
+    unsigned int i, n;
     real t[Thermo::S_PARAM_COUNT];
 
     // Ensure output array has sufficient length.
@@ -297,7 +297,7 @@ void IdealGas::CalcGs(real T, fvector &G) const
     t[0] = t[1] * (log(T) - 1.0);
     t[S_PARAM_COUNT-1] = t[1];
     t[1] *= 0.5 * T;
-    for (i=2; i<Thermo::CP_PARAM_COUNT; i++) {
+    for (i=2; i!=Thermo::CP_PARAM_COUNT; ++i) {
         t[i] = (real)(i-1) * t[i-1] * T / (real)(i+1);
     }
     t[H_PARAM_COUNT-1] = T;
@@ -309,7 +309,7 @@ void IdealGas::CalcGs(real T, fvector &G) const
 // Calculates molar Gibbs free energies of each species.
 void IdealGas::CalcGs_RT(real T, fvector &G) const
 {
-    int i, n;
+    unsigned int i, n;
     real t[Thermo::S_PARAM_COUNT];
 
     // Ensure output array has sufficient length.
@@ -318,7 +318,7 @@ void IdealGas::CalcGs_RT(real T, fvector &G) const
     // Precalculate temperature terms.
     t[0] = 1.0 - log(T);
     t[1] = - 0.5 * T;
-    for (i=2; i<Thermo::CP_PARAM_COUNT; i++) {
+    for (i=2; i!=Thermo::CP_PARAM_COUNT; ++i) {
         t[i] = (real)(i-1) * t[i-1] * T / (real)(i+1);
     }
     t[H_PARAM_COUNT-1] = 1.0 / T;
@@ -336,7 +336,7 @@ void IdealGas::CalcGs(Sprog::real T,
                       const Sprog::fvector &S, 
                       Sprog::fvector &G) const
 {
-    for (int i=0; i<m_species->size(); i++) {
+    for (unsigned int i=0; i!=m_species->size(); ++i) {
         G[i] = H[i] - (T * S[i]);
     }
 }
@@ -355,7 +355,7 @@ real IdealGas::CalcBulkG(Sprog::real T,
 
         // Calculate bulk Gibbs free energy.
         real bulkG = 0.0;
-        for (int i=0; i<m_species->size(); i++) {
+        for (unsigned int i=0; i!=m_species->size(); ++i) {
             bulkG += G[i] * x[i];
         }
 
@@ -420,7 +420,7 @@ real IdealGas::CalcBulkCp(Sprog::real T,
         
         // Sum to get bulk heat capacity.
         real bulkCp = 0.0;
-        for(int i=0; i<m_species->size(); i++) {
+        for(unsigned int i=0; i!=m_species->size(); ++i) {
             bulkCp += x[i] * Cp[i];
         }
 
@@ -473,7 +473,7 @@ real IdealGas::CalcBulkCv(Sprog::real T,
         
         // Sum to get bulk heat capacity.
         real bulkCv = 0.0;
-        for(int i=0; i<m_species->size(); i++) {
+        for(unsigned int i=0; i!=m_species->size(); ++i) {
             bulkCv += x[i] * Cv[i];
         }
 
@@ -494,7 +494,7 @@ void IdealGas::CalcCpHSs(real T,
                          fvector &H,
                          fvector &S) const
 {
-    int i, k, nc, nh, ns;
+    unsigned int i, k, nc, nh, ns;
     real tc[CP_PARAM_COUNT], th[H_PARAM_COUNT], ts[S_PARAM_COUNT];
     const THERMO_PARAMS *a;
 
@@ -525,7 +525,7 @@ void IdealGas::CalcCpHSs(real T,
     ts[ns-1] = R;
 
     // Sum terms in polynomials.
-    for (i=0; i<m_species->size(); i++) {
+    for (i=0; i!=m_species->size(); ++i) {
         // Set sums to 0 initially.
         Cp[i] = H[i] = S[i] = 0.0;
 
@@ -554,7 +554,7 @@ void IdealGas::CalcCpHSs_RT(real T,
                             fvector &H,
                             fvector &S) const
 {
-    int i, k, nc, nh, ns;
+    unsigned int i, k, nc, nh, ns;
     real tc[CP_PARAM_COUNT], th[H_PARAM_COUNT], ts[S_PARAM_COUNT];
     const THERMO_PARAMS *a;
 
@@ -575,7 +575,7 @@ void IdealGas::CalcCpHSs_RT(real T,
     th[1] = T / 2.0;
     ts[1] = T;
 
-    for (i=2; i<nc; i++) {
+    for (i=2; i!=nc; ++i) {
         tc[i] = tc[i-1] * T;
         th[i] = th[i-1] * T * (real)i / (real)(i+1);
         ts[i] = ts[i-1] * T * (real)(i-1) / (real)i;
@@ -585,7 +585,7 @@ void IdealGas::CalcCpHSs_RT(real T,
     ts[ns-1] = 1.0;
 
     // Sum terms in polynomials.
-    for (i=0; i<m_species->size(); i++) {
+    for (i=0; i!=m_species->size(); ++i) {
         // Set sums to 0 initially.
         Cp[i] = H[i] = S[i] = 0.0;
         
@@ -640,10 +640,11 @@ Serial_MixtureType IdealGas::SerialType() const
 // species.
 void IdealGas::sumTerms(real T, real *t, int n, std::vector<real> &Xs) const
 {
-    int i, k;
+    unsigned int i;
+    int k;
     const THERMO_PARAMS *a;
 
-    for (i=0; i<min(m_species->size(),Xs.size()); i++) {
+    for (i=0; i!=min(m_species->size(),Xs.size()); ++i) {
         // Set sums to zero initially.
         Xs[i] = 0.0;
 
@@ -652,7 +653,7 @@ void IdealGas::sumTerms(real T, real *t, int n, std::vector<real> &Xs) const
         a = &(*m_species)[i]->ThermoParams(T);
 
         // Calculate the thermo property for this species.
-        for (k=0; k<n; k++) {
+        for (k=0; k!=n; ++k) {
             Xs[i] += a->Params[k] * t[k];
         }
     }

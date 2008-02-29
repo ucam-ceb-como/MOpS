@@ -136,8 +136,7 @@ void Element::SetMolWt(const real molwt)
 // list of known elements.
 bool Element::SetMolWtFromLibrary()
 {
-    int i;
-    for (i=0; i<m_nlib; i++) {
+    for (unsigned int i=0; i<m_nlib; i++) {
         if (m_name.compare(m_lib[i].Name()) == 0) {
             // We have found a matching element in the library.
             m_molwt = m_lib[i].MolWt();
