@@ -35,19 +35,14 @@ CSV_IO::~CSV_IO(void)
 // Opens a CSV file.
 int CSV_IO::Open(const std::string &name, bool del)
 {
-    // Select the file stream open flags depending on whether the
-    // current file contents should be deleted or not.
-    int flags;
+    // Attempt to open the file for input and output.
     if (del) {
         // Use ios_base::trunc to delete current file contents.
-        flags = ios_base::in | ios_base::out | ios_base::trunc;
+        m_file.open(name.c_str(), ios_base::in | ios_base::out | ios_base::trunc);
     } else {
         // Use ios_base::app to append to current file contents.
-        flags = ios_base::in | ios_base::out | ios_base::app;
+        m_file.open(name.c_str(), ios_base::in | ios_base::out | ios_base::app);
     }
-
-    // Attempt to open the file for input and output.
-    m_file.open(name.c_str(), flags);
 
     if (m_file.good()) {
         // Save the file name.
@@ -74,7 +69,6 @@ void CSV_IO::Close()
 // Reads a line into a vector of strings.
 void CSV_IO::Read(std::vector<std::string> &values)
 {
-    char c;
     string line;
 
     // Check that the file is open before reading.
@@ -217,12 +211,12 @@ void CSV_IO::writeLine(const std::vector<T> &values)
     // the values vector has some values to write.
     if (m_file.is_open() && m_file.good() && (values.size()>0)) {
         // Declare vector iterator and set it to beginning of values.
-        vector<T>::const_iterator i = values.begin();
+        typename vector<T>::const_iterator i = values.begin();
 
         // Output the comma-separated values.
-        m_file << *i++;
+        m_file << *(i++);
         while (i!=values.end()) {
-            m_file << ',' << *i++;
+            m_file << ',' << *(i++);
         }
     }
 }

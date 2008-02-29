@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <stdio.h>
 
 using namespace std;
 
@@ -22,8 +23,10 @@ Console_IO::Console_IO(void)
     m_divnum = 20;
     m_autodivide = false;
 
+#ifdef _WIN32
     // Ensure exponents only have two digits.
     _set_output_format(_TWO_DIGIT_EXPONENT);
+#endif
 }
 
 // Copy constructor.
@@ -86,14 +89,14 @@ void Console_IO::SetColumnFormat(unsigned int i, Console_IO::ColFormat format)
 // Sets the formats of all columns.
 void Console_IO::SetColumnFormats(const std::vector<ColFormat> &formats)
 {
-    for (int i=0; i<min(m_ncolumns, formats.size()); i++) {
+    for (unsigned int i=0; i<min(m_ncolumns, (unsigned int)formats.size()); ++i) {
         m_formats[i] = formats[i];
     }
 
     // If the formats vector does not conain sufficient values, then
     // set the remaining values to Scientific.
     if (m_ncolumns > formats.size()) {
-        for (int i=formats.size(); i<m_ncolumns; i++) {
+        for (unsigned int i=formats.size(); i<m_ncolumns; ++i) {
             m_formats[i] = Scientific;
         }
     }
@@ -107,9 +110,9 @@ void Console_IO::PrintRow(const std::vector<float> &data,
     printAutoDivider();
 
     // Determine the maximum number of values that can be output.
-    unsigned int i, n = min(m_ncolumns, data.size());
+    unsigned int i, n = min(m_ncolumns, (unsigned int)data.size());
     if (mask.size() > 0) {
-        n = min(n, mask.size());
+        n = min(n, (unsigned int)mask.size());
     }
 
     // Write the values.
@@ -181,9 +184,9 @@ void Console_IO::PrintRow(const std::vector<double> &data,
     printAutoDivider();
 
     // Determine the maximum number of values that can be output.
-    unsigned int i, n = min(m_ncolumns, data.size());
+    unsigned int i, n = min(m_ncolumns, (unsigned int)data.size());
     if (mask.size() > 0) {
-        n = min(n, mask.size());
+        n = min(n, (unsigned int)mask.size());
     }
 
     // Write the values.
@@ -255,9 +258,9 @@ void Console_IO::PrintRow(const std::vector<long double> &data,
     printAutoDivider();
 
     // Determine the maximum number of values that can be output.
-    unsigned int i, n = min(m_ncolumns, data.size());
+    unsigned int i, n = min(m_ncolumns, (unsigned int)data.size());
     if (mask.size() > 0) {
-        n = min(n, mask.size());
+        n = min(n, (unsigned int)mask.size());
     }
 
     // Write the values.
@@ -326,9 +329,9 @@ void Console_IO::PrintRow(const std::vector<std::string> &data,
                           const std::vector<unsigned int> &mask) const
 {
     // Determine the maximum number of values that can be output.
-    unsigned int i, n = min(m_ncolumns, data.size());
+    unsigned int i, n = min(m_ncolumns, (unsigned int)data.size());
     if (mask.size() > 0) {
-        n = min(n, mask.size());
+        n = min(n, (unsigned int)mask.size());
     }
 
     // Write the values.
