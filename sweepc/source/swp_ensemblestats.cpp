@@ -1,6 +1,7 @@
 #include "swp_ensemblestats.h"
 #include "swp_modelfactory.h"
 #include "swp_mechanism.h"
+#include <stdexcept>
 
 using namespace Sweep;
 using namespace std;

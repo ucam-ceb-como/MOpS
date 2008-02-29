@@ -47,7 +47,7 @@ protected:
     // ActiveSitesModels are singletons.
     ActiveSitesModel(void); // Default constructor.
     ActiveSitesModel(const ActiveSitesModel &copy); // Copy constructor.
-    ~ActiveSitesModel(void); // Destructor.
+    virtual ~ActiveSitesModel(void); // Destructor.
     ActiveSitesModel &operator=(const ActiveSitesModel &rhs); // Assignment.
 };
 };

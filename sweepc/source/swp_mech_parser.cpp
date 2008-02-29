@@ -191,7 +191,6 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
 {
     vector<CamXML::Element*> items, subitems;
     vector<CamXML::Element*>::iterator i, j;
-    CamXML::Element *el;
     string str;
 
     int id  = -1;

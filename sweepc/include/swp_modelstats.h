@@ -26,6 +26,9 @@ namespace Sweep
 class IModelStats
 {
 public:
+    // Virtual destructor.
+    virtual ~IModelStats() {};
+
     // Returns the number of stats for this model.
     virtual unsigned int Count(void) const = 0;
 

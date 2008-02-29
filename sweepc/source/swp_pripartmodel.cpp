@@ -20,7 +20,7 @@ PriPartModel::PriPartModel(void)
 // Copy constructor.
 PriPartModel::PriPartModel(const Sweep::PriPartModel &copy)
 {
-    // Nothing to do here.
+    *this = copy;
 }
 
 // Default destructor.
@@ -51,6 +51,14 @@ void PriPartModel::UpdateParticle(Sweep::Particle &p,
                                const Sweep::fvector &dcomp, 
                                const Sweep::fvector &dval) const
 {
+    UpdateParticle(p, dcomp, dval, 1);
+}
+
+void PriPartModel::UpdateParticle(Sweep::Particle &p, 
+                               const Sweep::fvector &dcomp, 
+                               const Sweep::fvector &dval, 
+                               unsigned int n) const
+{
     // Currently only the first component is added to the primary
     // particles.
     PriPartModelData &cache = dynamic_cast<PriPartModelData&>(*p.ModelCache(PriPartModel_ID));
@@ -58,7 +66,7 @@ void PriPartModel::UpdateParticle(Sweep::Particle &p,
 
     // Distribute the mass, weighted by surface area, starting with the
     // largest primary particle.
-    distMass(pri, dcomp[0], (*p.Components())[0]);
+    distMass(pri, dcomp[0]*(real)n, (*p.Components())[0]);
 
     // Get current primary surface area and calculate required change in
     // surface area.
@@ -89,15 +97,6 @@ void PriPartModel::UpdateParticle(Sweep::Particle &p,
     }
 }
 
-void PriPartModel::UpdateParticle(Sweep::Particle &p, 
-                               const Sweep::fvector &dcomp, 
-                               const Sweep::fvector &dval, 
-                               unsigned int n) const
-{
-    PriPartModelData &cache = dynamic_cast<PriPartModelData&>(*p.ModelCache(PriPartModel_ID));
-    cache.Primaries();
-}
-
 
 // PARTICLE-PARTICLE COAGULATION.
 
@@ -121,7 +120,7 @@ void PriPartModel::CoagParticles(Particle &p1, const Particle &p2) const
 // other particle properties.
 void PriPartModel::UpdateCache(Sweep::ParticleData &p) const
 {
-    PriPartModelData &cache = dynamic_cast<PriPartModelData&>(*p.ModelCache(PriPartModel_ID));
+//    PriPartModelData &cache = dynamic_cast<PriPartModelData&>(*p.ModelCache(PriPartModel_ID));
 }
 
 

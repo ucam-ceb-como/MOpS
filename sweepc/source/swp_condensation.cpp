@@ -94,8 +94,9 @@ real Condensation::Rate(real t, const Sprog::Thermo::IdealGas &gas, const Cell &
      // Chemical species concentration dependence.
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
-        for (unsigned int j=0; j<i->second; ++j) {
-            cterm *= gas.MolarConc(i->first);
+        real conc = gas.MolarConc(i->first);
+        for (int j=0; j<i->second; ++j) {
+            cterm *= conc;
         }
     }
 
@@ -137,8 +138,9 @@ real Condensation::Rate(real t, const Sprog::Thermo::IdealGas &gas,
     // Chemical species concentration dependence.
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
-        for (unsigned int j=0; j<i->second; ++j) {
-            cterm *= gas.MolarConc(i->first);
+        real conc = gas.MolarConc(i->first);
+        for (int j=0; j<i->second; ++j) {
+            cterm *= conc;
         }
     }
 
@@ -201,8 +203,9 @@ real Condensation::RateTerms(real t, const Sprog::Thermo::IdealGas &gas,
      // Chemical species concentration dependence.
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
-        for (unsigned int j=0; j<i->second; ++j) {
-            cterm *= gas.MolarConc(i->first);
+        real conc = gas.MolarConc(i->first);
+        for (int j=0; j<i->second; ++j) {
+            cterm *= conc;
         }
     }
 

@@ -103,7 +103,7 @@ real Solver::timeStep(real t, Cell &sys, const Mechanism &mech,
     // involves summing the total rate of all processes, generating a waiting time,
     // selecting a process and performing that process.
 
-    int i, j;
+    int i;
     real dt;
 
     // Calculate exponentially distributed time step size.

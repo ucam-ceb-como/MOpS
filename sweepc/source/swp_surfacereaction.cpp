@@ -2,6 +2,7 @@
 #include "swp_mechanism.h"
 #include "swp_processtype.h"
 #include <cmath>
+#include <stdexcept>
 
 using namespace Sweep;
 using namespace std;
@@ -104,7 +105,7 @@ real SurfaceReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas,
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
         real conc = gas.MolarConc(i->first);
-        for (unsigned int j=0; j<i->second; ++j) {
+        for (int j=0; j<i->second; ++j) {
             rate *= conc;
         }
     }
@@ -146,7 +147,7 @@ real SurfaceReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas,
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
         real conc =  gas.MolarConc(i->first);
-        for (unsigned int j=0; j<i->second; ++j) {
+        for (int j=0; j<i->second; ++j) {
             rate *= conc;
         }
     }
@@ -286,9 +287,6 @@ ProcessType SurfaceReaction::ID(void) const {return SurfaceReaction_ID;}
 // Writes the object to a binary stream.
 void SurfaceReaction::Serialize(std::ostream &out) const
 {
-    const unsigned int trueval  = 1;
-    const unsigned int falseval = 0;
-
     if (out.good()) {
         // Output the version ID (=0 at the moment).
         const unsigned int version = 0;

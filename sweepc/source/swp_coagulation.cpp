@@ -194,7 +194,7 @@ real Coagulation::RateTerms(real t, const Sprog::Thermo::IdealGas &gas,
                          MeanFreePathAir(T,P), sys.SampleVolume(), iterm);
     } else {
         // No coagulation as there are too few particles.
-        for(int i=0; i<TYPE_COUNT; i++) *(iterm++) = 0.0;
+        for(unsigned int i=0; i!=TYPE_COUNT; ++i) *(iterm++) = 0.0;
         return 0.0;
     }
 }

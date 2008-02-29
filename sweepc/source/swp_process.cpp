@@ -1,6 +1,7 @@
 #include "swp_process.h"
 #include "swp_mechanism.h"
 #include "rng.h"
+#include <stdexcept>
 
 using namespace Sweep;
 using namespace std;

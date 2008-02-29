@@ -20,7 +20,7 @@ namespace Sweep
 {
 class PointContactData : public CoagModelData
 {
-friend PointContactModel;
+friend class PointContactModel;
 
 public:
     // Constructors.

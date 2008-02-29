@@ -51,7 +51,7 @@ const std::string ParticleStats::m_const_pslnames[ParticleStats::PSL_COUNT] = {
 
 // Default constructor (private).
 ParticleStats::ParticleStats()
-: m_stats(STAT_COUNT,0.0), m_ncomp(0), m_ntrack(0)
+: m_ncomp(0), m_ntrack(0), m_stats(STAT_COUNT,0.0)
 {
     for (unsigned int i=0; i!=STAT_COUNT; ++i) {
         m_names.push_back(m_statnames[i]);

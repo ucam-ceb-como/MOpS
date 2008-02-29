@@ -3,6 +3,7 @@
 #include "rng.h"
 #include <cmath>
 #include <vector>
+#include <stdexcept>
 
 using namespace Sweep;
 using namespace std;
@@ -195,7 +196,7 @@ int Ensemble::Add(Particle &sp)
         i=m_count++;
         m_particles[i] = &sp;
         sp.SetEnsemble(*this);
-    } else if (i < m_capacity) {
+    } else if ((unsigned)i < m_capacity) {
         // Replace an existing particle (if i=m_capacity) then
         // we are removing the new particle, so just ignore it.
         ReplaceParticle(i, sp);
@@ -204,9 +205,9 @@ int Ensemble::Add(Particle &sp)
 
     // Now we must recalculate the tree by inserting the particle properties
     // into the bottom row and calculating up.
-    if (i < m_capacity) {
-        int j = treeIndex(i);
-        if (isLeftBranch(i)) {
+    if ((unsigned)i < m_capacity) {
+        int j = treeIndex((unsigned)i);
+        if (isLeftBranch((unsigned)i)) {
             m_tree[j].LeftData = *m_particles[i];
         } else {
             m_tree[j].RightData = *m_particles[i];
@@ -408,7 +409,7 @@ int Ensemble::SelectParticle(ParticleData::PropertyID id) const
     }
 
     // One final check that the index we've chosen is valid.
-    if (isp < m_count) {
+    if ((unsigned)isp < m_count) {
         return isp;
     } else {
         // Chosen an non-existent particle.
@@ -460,7 +461,7 @@ int Ensemble::SelectParticle(ModelType model_id, unsigned int id) const
     }
 
     // One final check that the index we've chosen is valid.
-    if (isp < m_count) {
+    if ((unsigned)isp < m_count) {
         return isp;
     } else {
         // Chosen an non-existent particle.

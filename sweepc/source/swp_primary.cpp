@@ -8,7 +8,7 @@ using namespace std;
 
 // Default constructor.
 Primary::Primary(void)
-: m_vol(0.0), m_mass(0.0), m_surf(0.0), m_diam(0.0)
+: m_vol(0.0), m_mass(0.0), m_diam(0.0), m_surf(0.0)
 {
 }
 

@@ -41,6 +41,7 @@
 				AdditionalIncludeDirectories="..\comostrings\include;..\sprogc\include;..\camxml\include;include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
+				WarningLevel="3"
 				DebugInformationFormat="1"
 			/>
 			<Tool
@@ -100,6 +101,7 @@
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="..\sprogc\include;..\comostrings\include;..\camxml\include;include"
 				DisableLanguageExtensions="true"
+				WarningLevel="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

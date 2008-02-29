@@ -1,6 +1,6 @@
 #include "swp_particleprocess.h"
 #include "swp_mechanism.h"
-#include <Stdexcept>
+#include <stdexcept>
 
 using namespace Sweep;
 using namespace std;

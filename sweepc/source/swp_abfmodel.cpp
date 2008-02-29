@@ -12,8 +12,8 @@ const real ABFModel::m_sitedens = 2.3e19; // sites/m2.
 // Default constructor.
 ABFModel::ABFModel()
 : A4(-1), C2H2(-1), O2(-1), OH(-1), CO(-1), 
-  H(-1), H2(-1), H2O(-1), m_aform(AlphaConst),
-  m_aconst(1.0), iC(-1)
+  H(-1), H2(-1), H2O(-1), iC(-1), m_aform(AlphaConst),
+  m_aconst(1.0)
 {
 }
 

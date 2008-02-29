@@ -38,7 +38,7 @@ public:
     // Coagulation rate types.  These define how the rate is 
     // calculated and how the particles are chosen.
     static const unsigned int TYPE_COUNT = 6;
-    const enum TermType {
+    enum TermType {
         SlipFlow1,
         SlipFlow2,
         SlipFlow3,

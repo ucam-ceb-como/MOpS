@@ -11,8 +11,8 @@ using namespace std;
 
 // Default constructor.
 Mechanism::Mechanism(void)
-: m_anydeferred(false), m_icoag(-1), m_termcount(0), 
-  m_coag(NULL), m_species(NULL)
+: m_anydeferred(false), m_species(NULL), 
+  m_coag(NULL), m_icoag(-1), m_termcount(0)
 {
 }
 
@@ -267,8 +267,8 @@ void Mechanism::AddInception(Inception &icn)
     // Add the inception to the mechanism.
     m_inceptions.push_back(&icn);
     m_termcount += icn.TermCount();
-    m_proccount.resize(m_termcount, 0.0);
-    m_fictcount.resize(m_termcount, 0.0);
+    m_proccount.resize(m_termcount, 0);
+    m_fictcount.resize(m_termcount, 0);
 
     // Set the inception to belong to this mechanism.
     icn.SetMechanism(*this);
@@ -299,8 +299,8 @@ void Mechanism::AddProcess(ParticleProcess &p)
     // Add the process to the mechanism.
     m_processes.push_back(&p);
     m_termcount += p.TermCount();
-    m_proccount.resize(m_termcount, 0.0);
-    m_fictcount.resize(m_termcount, 0.0);
+    m_proccount.resize(m_termcount, 0);
+    m_fictcount.resize(m_termcount, 0);
 
     // Check for any deferred.
     m_anydeferred = m_anydeferred || p.IsDeferred();
@@ -320,8 +320,8 @@ void Mechanism::AddCoagulation()
     m_coag = new Coagulation();
     m_coag->SetMechanism(*this);
     m_termcount += m_coag->TermCount();
-    m_proccount.resize(m_termcount, 0.0);
-    m_fictcount.resize(m_termcount, 0.0);
+    m_proccount.resize(m_termcount, 0);
+    m_fictcount.resize(m_termcount, 0);
 }
 
 
@@ -383,6 +383,8 @@ void Mechanism::AddModel(ModelType id)
     switch(id) {
         case ABFSites_ID:
             ABFModel::Instance().Initialise(*this);
+            break;
+        default:
             break;
     }
 }
@@ -528,7 +530,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys) const
         // This is another process. 
         PartProcPtrVector::const_iterator ip;
         for(ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
-            if (j < (*ip)->TermCount()) {
+            if ((unsigned)j < (*ip)->TermCount()) {
                 // Do the process.
                 if ((*ip)->Perform(t, sys, j) == 0) {
                     m_proccount[i] += 1;

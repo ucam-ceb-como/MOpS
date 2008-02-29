@@ -221,7 +221,7 @@ real Inception::Rate(const fvector &fracs, real density, real sqrtT,
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
         real conc = density * fracs[(*i).first];
-        for (unsigned int j=0; j!=i->second; ++j) {
+        for (int j=0; j!=i->second; ++j) {
             rate *= (NA * conc);
         }
     }

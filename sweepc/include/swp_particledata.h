@@ -29,8 +29,8 @@ class Mechanism;
 
 class ParticleData
 {
-friend Ensemble;
-friend TreeNode;
+friend class Ensemble;
+friend class TreeNode;
 
 public:
     // Enumeration of ParticleData properties which can be accessed using

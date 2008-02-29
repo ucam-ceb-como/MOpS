@@ -17,7 +17,7 @@ namespace Sweep
 {
 class TreeNode
 {
-friend Ensemble;
+friend class Ensemble;
 
 public:
 	// CONSTRUCTORS AND DESTRUCTOR.

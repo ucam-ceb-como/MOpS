@@ -15,8 +15,9 @@ Particle::Particle(void)
 
 // Default constructor (public).
 Particle::Particle(const CompPtrVector &components, const TrackPtrVector &trackers)
+: ParticleData(components, trackers)
 {
-    this->ParticleData::ParticleData(components, trackers);
+//    this->ParticleData::ParticleData(components, trackers);
     m_ensemble = NULL;
 }
 

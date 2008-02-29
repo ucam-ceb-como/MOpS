@@ -36,7 +36,7 @@ public:
     ~Inception(void);
 
     // Operators.
-    Inception &Inception::operator =(const Inception &rhs);
+    Inception &operator=(const Inception &rhs);
 
 
     // RATE CONSTANT.

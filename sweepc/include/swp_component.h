@@ -79,8 +79,8 @@ public:
     void Deserialize(std::istream &in);
 
 private:
-    real m_molwt;       // Component molecular weight (g/mol).
     real m_density;     // Component density (g/cm3).
+    real m_molwt;       // Component molecular weight (g/mol).
     std::string m_name; // Component symbol or name.
 };
 

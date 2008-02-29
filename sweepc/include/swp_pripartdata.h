@@ -20,7 +20,7 @@ namespace Sweep
 {
 class PriPartModelData : public IModelData
 {
-friend PriPartModel;
+friend class PriPartModel;
 
 public:
     // Constructors.
