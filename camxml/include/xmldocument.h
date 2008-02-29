@@ -52,6 +52,7 @@ public:
     /* Returns the root element of this document. (wide string version) */
     inline Element *const Root(void) {return m_root;};
     inline Element *const SetRoot(Element &root) {delete m_root; m_root = &root; return m_root;};
+    inline void Clear() { SetRoot(* new Element()); };
 private:
     Element *const parseElement(std::wistringstream &fin, STATUS &st);
     Attribute *const parseAttr(std::wistringstream &fin, STATUS &st);
