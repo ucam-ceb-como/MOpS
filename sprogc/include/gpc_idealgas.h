@@ -50,6 +50,8 @@ public:
     // THERMODYNAMIC PROPERTIES (overrides from GasPhase::ThermoInterface):
 
     // INTERNAL ENERGY.
+    using GasPhase::CalcBulkU;
+    using GasPhase::CalcBulkU_RT;
 
     // Calculates molar internal energies of each species.
     void CalcUs(
@@ -83,6 +85,8 @@ public:
 
 
     // ENTHALPY.
+    using GasPhase::CalcBulkH;
+    using GasPhase::CalcBulkH_RT;
 
     // Calculates enthalpies of all species using the 
     // given temperature.
@@ -118,6 +122,8 @@ public:
 
 
     // ENTROPY.
+    using GasPhase::CalcBulkS;
+    using GasPhase::CalcBulkS_R;
 
     // Calculates entropies of all species using the given
     // temperature.
@@ -154,6 +160,8 @@ public:
 
 
     // GIBBS FREE ENERGY.
+    using GasPhase::CalcBulkG;
+    using GasPhase::CalcBulkG_RT;
 
     // Calculates molar Gibbs free energies of each species
     // at the given temperature.
@@ -207,6 +215,8 @@ public:
 
 
     // CONSTANT PRESSURE HEAT CAPACITY.
+    using GasPhase::CalcBulkCp;
+    using GasPhase::CalcBulkCp_R;
 
     // Calculates molar heat capacity at const. P of all species
     // using the given temperature.
@@ -244,6 +254,8 @@ public:
 
 
     // CONSTANT VOLUME HEAT CAPACITY.
+    using GasPhase::CalcBulkCv;
+    using GasPhase::CalcBulkCv_R;
 
     // Calculates molar heat capacity at const. V of all species
     // using the given temperature.

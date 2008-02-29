@@ -27,6 +27,14 @@ namespace Sprog
 class Mechanism
 {
 public:
+    // Element iterators.
+    typedef ElementPtrVector::iterator el_iterator;
+    typedef ElementPtrVector::const_iterator const_el_iterator;
+
+    // Species iterators.
+    typedef SpeciesPtrVector::iterator sp_iterator;
+    typedef SpeciesPtrVector::const_iterator const_sp_iterator;
+
     // Constructors.
     Mechanism(void);                  // Default constructor.
     Mechanism(const Mechanism &mech); // Copy constructor.
@@ -62,6 +70,18 @@ public:
     // Returns a pointer to the ith element.  NULL if i invalid.
     const Sprog::Element *const Elements(unsigned int i) const;
 
+    // Returns iterator to first element.
+    el_iterator ElBegin();
+
+    // Returns const iterator to first element.
+    const_el_iterator ElBegin() const;
+
+        // Returns iterator to position after last element.
+    el_iterator ElEnd();
+
+    // Returns const iterator to position after last element.
+    const_el_iterator ElEnd() const;
+
     // Adds a default element to the mechanism.
     Sprog::Element *const AddElement(void);
 
@@ -91,6 +111,18 @@ public:
 
     // Returns pointer to species with given name.  NULL if not found.
     const Sprog::Species *const Species(const std::string &name) const;
+
+    // Returns iterator to first species.
+    sp_iterator SpBegin();
+
+    // Returns const iterator to first species.
+    const_sp_iterator SpBegin() const;
+
+        // Returns iterator to position after last species.
+    sp_iterator SpEnd();
+
+    // Returns const iterator to position after last species.
+    const_sp_iterator SpEnd() const;
 
     // Adds an empty species to the mechanism.
     Sprog::Species *const AddSpecies(void);

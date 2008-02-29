@@ -187,6 +187,18 @@ const Sprog::Element *const Mechanism::Elements(unsigned int i) const
     }
 }
 
+// Returns iterator to first element.
+Mechanism::el_iterator Mechanism::ElBegin() {return m_elements.begin();}
+
+// Returns const iterator to first element.
+Mechanism::const_el_iterator Mechanism::ElBegin() const {return m_elements.begin();}
+
+    // Returns iterator to position after last element.
+Mechanism::el_iterator Mechanism::ElEnd() {return m_elements.end();}
+
+// Returns const iterator to position after last element.
+Mechanism::const_el_iterator Mechanism::ElEnd() const {return m_elements.end();}
+
 // Adds a default element to the mechanism and returns it.
 Element *const Mechanism::AddElement()
 {
@@ -308,6 +320,18 @@ const Sprog::Species *const Mechanism::Species(const std::string &name) const
         return NULL;
     }
 }
+
+// Returns iterator to first element.
+Mechanism::sp_iterator Mechanism::SpBegin() {return m_species.begin();}
+
+// Returns const iterator to first element.
+Mechanism::const_sp_iterator Mechanism::SpBegin() const {return m_species.begin();}
+
+    // Returns iterator to position after last element.
+Mechanism::sp_iterator Mechanism::SpEnd() {return m_species.end();}
+
+// Returns const iterator to position after last element.
+Mechanism::const_sp_iterator Mechanism::SpEnd() const {return m_species.end();}
 
 // Adds an empty species to the mechansism and returns a reference to it.
 Species *const Mechanism::AddSpecies()

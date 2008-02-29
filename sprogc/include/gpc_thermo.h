@@ -20,6 +20,8 @@
     2.  Enthalpy (H).
     3.  Entropy (S).
     4.  Gibbs Free Energy (G).
+    5.  Const. P Heat Capacity (Cp).
+    6.  Const. V Heat Capacity (Cv).
 
     Functions are provided which calculate the individual species properties
     (partial properties) and bulk mixture properties (if the composition is
