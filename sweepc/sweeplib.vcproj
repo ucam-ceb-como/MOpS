@@ -340,10 +340,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\swp_flame_solver.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\swp_mech_parser.h"
 				>
 			</File>

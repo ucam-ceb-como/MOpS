@@ -286,31 +286,31 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
     // Select the first particle and note the majorant type.
     switch (term) {
         case SlipFlow1:
-            ip1 = sys.Particles().SelectParticle();
+            ip1 = sys.Particles().Select();
             maj = SlipFlow;
             break;
         case SlipFlow2:
-            ip1 = sys.Particles().SelectParticle(ParticleData::iD);
+            ip1 = sys.Particles().Select(ParticleData::iD);
             maj = SlipFlow;
             break;
         case SlipFlow3:
-            ip1 = sys.Particles().SelectParticle();
+            ip1 = sys.Particles().Select();
             maj = SlipFlow;
             break;
         case SlipFlow4:
-            ip1 = sys.Particles().SelectParticle(ParticleData::iD);
+            ip1 = sys.Particles().Select(ParticleData::iD);
             maj = SlipFlow;
             break;
         case FreeMol1:
-            ip1 = sys.Particles().SelectParticle();
+            ip1 = sys.Particles().Select();
             maj = FreeMol;
             break;
         case FreeMol2:
-            ip1 = sys.Particles().SelectParticle(CoagModel_ID, CoagModelData::iD2);
+            ip1 = sys.Particles().Select(CoagModel_ID, CoagModelData::iD2);
             maj = FreeMol;
             break;
         default :
-            ip1 = sys.Particles().SelectParticle();
+            ip1 = sys.Particles().Select();
             maj = SlipFlow;
             break;
     }
@@ -350,31 +350,31 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
     switch (term) {
         case SlipFlow1:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().SelectParticle();            
+                ip2 = sys.Particles().Select();            
             break;
         case SlipFlow2:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().SelectParticle(CoagModel_ID, CoagModelData::iD_1);
+                ip2 = sys.Particles().Select(CoagModel_ID, CoagModelData::iD_1);
             break;
         case SlipFlow3:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().SelectParticle(CoagModel_ID, CoagModelData::iD_1);
+                ip2 = sys.Particles().Select(CoagModel_ID, CoagModelData::iD_1);
             break;
         case SlipFlow4:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().SelectParticle(CoagModel_ID, CoagModelData::iD_2);
+                ip2 = sys.Particles().Select(CoagModel_ID, CoagModelData::iD_2);
             break;
         case FreeMol1:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().SelectParticle(CoagModel_ID, CoagModelData::iD2_M_1_2);
+                ip2 = sys.Particles().Select(CoagModel_ID, CoagModelData::iD2_M_1_2);
             break;
         case FreeMol2:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().SelectParticle(CoagModel_ID, CoagModelData::iM_1_2);
+                ip2 = sys.Particles().Select(CoagModel_ID, CoagModelData::iM_1_2);
             break;
         default :
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().SelectParticle();
+                ip2 = sys.Particles().Select();
             break;
     }
 

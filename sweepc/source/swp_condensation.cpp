@@ -234,14 +234,14 @@ int Condensation::Perform(const real t, Cell &sys, const unsigned int iterm) con
     int i = -1;
     switch(iterm) {
         case 1:
-            i = sys.Particles().SelectParticle(ParticleData::iDcol);
+            i = sys.Particles().Select(ParticleData::iDcol);
             break;
         case 2:
-            i = sys.Particles().SelectParticle(CoagModel_ID, CoagModelData::iD2);
+            i = sys.Particles().Select(CoagModel_ID, CoagModelData::iD2);
             break;
         case 0:
         default:
-            i = sys.Particles().SelectParticle();
+            i = sys.Particles().Select();
             break;
     }
 

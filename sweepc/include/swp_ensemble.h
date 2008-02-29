@@ -95,7 +95,7 @@ public:
     void RemoveInvalids(void);
 
     // Replaces the particle at the given index with the given particle.
-    void ReplaceParticle (
+    void Replace (
         unsigned int i, // Index of particle to replace.
         Particle &sp    // Particle to insert.
         );
@@ -123,19 +123,19 @@ public:
 
     // Select a particle uniformly from the ensemble and returns
     // its index. Returns negative on failure.
-    int SelectParticle(void) const;
+    int Select(void) const;
 
     // Randomly selects a particle, weighted by the given particle
     // property index.  The particle properties are those stored in
     // the ParticleData type. Returns particle index on success, otherwise
     // negative.
-    int SelectParticle(ParticleData::PropertyID id) const; 
+    int Select(ParticleData::PropertyID id) const; 
 
 
     // Selects particle according to the particle property
     // specified by the given model and the given property id
     // of the model.
-    int SelectParticle(
+    int Select(
         ModelType model_id, // ID of the model for which to get the property.
         unsigned int wtid   // Property ID within the model.
         ) const;

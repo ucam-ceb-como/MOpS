@@ -199,7 +199,7 @@ int Ensemble::Add(Particle &sp)
     } else if ((unsigned)i < m_capacity) {
         // Replace an existing particle (if i=m_capacity) then
         // we are removing the new particle, so just ignore it.
-        ReplaceParticle(i, sp);
+        Replace(i, sp);
         sp.SetEnsemble(*this);
     }
 
@@ -323,7 +323,7 @@ void Ensemble::RemoveInvalids(void)
 
 // Replaces the particle at the given index with the given particle,
 // as long as the index is valid.
-void Ensemble::ReplaceParticle(unsigned int i, Particle &sp)
+void Ensemble::Replace(unsigned int i, Particle &sp)
 {
     // Check index is within range.
     if (i<m_count) {
@@ -368,7 +368,7 @@ void Ensemble::Clear()
 
 // Returns the index of a uniformly selected particle
 // from the ensemble.
-int Ensemble::SelectParticle(void) const
+int Ensemble::Select(void) const
 {
     // Uniformly select a particle index.
     return irnd(0, m_count-1);
@@ -377,7 +377,7 @@ int Ensemble::SelectParticle(void) const
 // Returns the index of a particle selected using the property
 // weight given which refers to a basic property in the
 // ParticleData class.
-int Ensemble::SelectParticle(ParticleData::PropertyID id) const
+int Ensemble::Select(ParticleData::PropertyID id) const
 {
     // This routine uses the binary tree to select a particle weighted
     // by a given particle property (by index).
@@ -420,12 +420,12 @@ int Ensemble::SelectParticle(ParticleData::PropertyID id) const
 // Selects particle according to the particle property
 // specified by the given model and the given property id
 // of the model.
-int Ensemble::SelectParticle(ModelType model_id, unsigned int id) const
+int Ensemble::Select(ModelType model_id, unsigned int id) const
 {
     // This routine uses the binary tree to select a particle weighted
     // by a given particle property (by index).
 
-    if (model_id == BasicModel_ID) return SelectParticle((ParticleData::PropertyID)id);
+    if (model_id == BasicModel_ID) return Select((ParticleData::PropertyID)id);
 
     int isp=-1;
 

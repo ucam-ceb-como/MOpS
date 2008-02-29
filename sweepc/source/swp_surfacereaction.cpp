@@ -216,7 +216,7 @@ real SurfaceReaction::RateTerms(real t, const Sprog::Thermo::IdealGas &gas,
 // by index.  Returns 0 on success, otherwise negative.
 int SurfaceReaction::Perform(real t, Cell &sys, unsigned int iterm) const
 {
-    int i = sys.Particles().SelectParticle(m_modelid, m_pid);
+    int i = sys.Particles().Select(m_modelid, m_pid);
 
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);
