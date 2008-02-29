@@ -105,9 +105,9 @@ public:
     // Performs the process on the given system. Must return 0
     // on success, otherwise negative.
     int Perform(
-        real t,            // Time.
-        Cell &sys,         // System to update.
-        unsigned int iterm // The process term responsible for this event.
+        real t,                // Time.
+        Cell &sys,             // System to update.
+        unsigned int iterm = 0 // The process term responsible for this event.
         ) const;
 
 

@@ -150,9 +150,9 @@ public:
     // Performs the process on the given system.  The responsible rate term is given
     // by index.  Returns 0 on success, otherwise negative.
     virtual int Perform(
-        real t,            // Time.
-        Cell &sys,         // System to update.
-        unsigned int iterm // The process term responsible for this event.
+        real t,                // Time.
+        Cell &sys,             // System to update.
+        unsigned int iterm = 0 // The process term responsible for this event.
         ) const;
 
     // Performs the process on a given particle in the system.  Particle

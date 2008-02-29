@@ -114,7 +114,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="..\comostrings\lib\comostrings.lib ..\camxml\lib\camxml.lib ..\sprogc\lib\sprog.lib"
+				AdditionalDependencies="..\camxml\lib\camxml.lib ..\sprogc\lib\sprog.lib"
 				OutputFile="$(ProjectDir)lib\sweep.lib"
 			/>
 			<Tool
