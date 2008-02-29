@@ -42,6 +42,7 @@
 				AdditionalIncludeDirectories="include;..\comostrings\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
+				WarningLevel="3"
 				DebugInformationFormat="1"
 			/>
 			<Tool
@@ -55,6 +56,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="..\comostrings\lib\comostrings_d.lib"
 				OutputFile="$(ProjectDir)\lib\sprog_d.lib"
 			/>
 			<Tool
@@ -97,7 +99,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="..\comostrings\include;include"
-				WarningLevel="4"
+				DisableLanguageExtensions="true"
+				WarningLevel="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -110,6 +113,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="..\comostrings\lib\comostrings.lib"
 				OutputFile="$(ProjectDir)\lib\sprog.lib"
 			/>
 			<Tool
@@ -130,6 +134,15 @@
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{667E4098-08F2-4C66-8B80-29643A05639B}"
+			CopyLocal="false"
+			CopyLocalDependencies="false"
+			UseInBuild="false"
+			UseDependenciesInBuild="false"
+			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject="..\comostrings\comostrings.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter

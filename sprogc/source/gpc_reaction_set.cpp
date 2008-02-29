@@ -309,14 +309,14 @@ void ReactionSet::GetRatesOfProgress(real density,
 {
     unsigned int i;
     int j, k;
-    real *rev = NULL;
+    static fvector rev;
 
     // Resize output vector to sufficient length.
     rop.resize(m_rxns.size(), 0.0);
 
     if (n >= m_mech->Species().size()) {
         // Assign temp memory.
-        rev = new real[m_rxns.size()];
+        rev.resize(m_rxns.size(), 0.0);
 
         // Loop over all reactions.
         for (i=0; i!=m_rxns.size(); ++i) {
@@ -329,42 +329,39 @@ void ReactionSet::GetRatesOfProgress(real density,
             for (k=0; k!=m_rxns[i]->ReactantCount(); ++k) {
                 // As the stoichiometry is integer, it is more computationally efficient
                 // to multiply the values together than to use the pow() function.
-                for (j=0; j!=m_rxns[i]->Reactant(k).Mu(); ++j) {
-                    rop[i] *= density * x[m_rxns[i]->Reactant(k).Index()];
+                for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
+                    rop[i] *= density * x[m_rxns[i]->Reactants()[k].Index()];
                 }
             }
 
             // Integer products.
-            for (k=0; k<m_rxns[i]->ProductCount(); k++) {
+            for (k=0; k!=m_rxns[i]->ProductCount(); ++k) {
                 // As the stoichiometry is integer, it is more computationally efficient
                 // to multiply the values together than to use the pow() function.
-                for (j=0; j<m_rxns[i]->Product(k).Mu(); j++) {
-                    rev[i] *= density * x[m_rxns[i]->Product(k).Index()];
+                for (j=0; j!=m_rxns[i]->Products()[k].Mu(); ++j) {
+                    rev[i] *= density * x[m_rxns[i]->Products()[k].Index()];
                 }
             }
 
             // Real reactants.
-            for (k=0; k<m_rxns[i]->FReactantCount(); k++) {
+            for (k=0; k!=m_rxns[i]->FReactantCount(); ++k) {
                 // Now the stoichiometry is non-integer, we must use the pow() function.
-                rop[i] *= pow(density * x[m_rxns[i]->FReactant(k).Index()], 
-                              m_rxns[i]->FReactant(k).Mu()); 
+                rop[i] *= pow(density * x[m_rxns[i]->FReactants()[k].Index()], 
+                              m_rxns[i]->FReactants()[k].Mu()); 
 
             }
 
             // Real products.
-            for (k=0; k<m_rxns[i]->FProductCount(); k++) {
+            for (k=0; k!=m_rxns[i]->FProductCount(); ++k) {
                 // Now the stoichiometry is non-integer, we must use the pow() function.
-                rev[i] *= pow(density * x[m_rxns[i]->FProduct(k).Index()], 
-                              m_rxns[i]->FProduct(k).Mu()); 
+                rev[i] *= pow(density * x[m_rxns[i]->FProducts()[k].Index()], 
+                              m_rxns[i]->FProducts()[k].Mu()); 
 
             }
 
             // Calculate the net rates of production.
             rop[i] -= rev[i];
         }
-
-        // Clear temp memory.
-        delete [] rev;
     }
 }
 
@@ -417,7 +414,7 @@ void ReactionSet::GetRateConstants(real T,
     RxnPtrVector::const_iterator i;
     RxnMap::const_iterator im;
     int j, k;
-    real *tbconcs;
+    static fvector tbconcs;
     const Reaction *rxn;
 
     // Check that we have been given enough species concentrations.
@@ -426,11 +423,11 @@ void ReactionSet::GetRateConstants(real T,
     }
 
     // Allocate temporary memory.
-    tbconcs = new real[m_rxns.size()];
+    tbconcs.resize(m_rxns.size(), 0.0);
 
     // Resize output arrays to sufficient length.
-    kforward.resize(m_rxns.size());
-    kreverse.resize(m_rxns.size());
+    kforward.resize(m_rxns.size(), 0.0);
+    kreverse.resize(m_rxns.size(), 0.0);
 
     // Precalculate some temperature parameters.
     lnT = log(T);
@@ -454,21 +451,21 @@ void ReactionSet::GetRateConstants(real T,
     }
 
     // Calculate classic Arrhenius forward rate expression.
-    for (i=m_rxns.begin(),j=0; i!=m_rxns.end(); i++,j++) {
+    for (i=m_rxns.begin(),j=0; i!=m_rxns.end(); ++i,++j) {
         kforward[j] = (*i)->Arrhenius().A * 
                       exp(((*i)->Arrhenius().n * lnT) - 
                           ((*i)->Arrhenius().E * invRT));
     }
 
     // Landau-Teller rate expressions.
-    for (im=m_lt_rxns.begin(); im!=m_lt_rxns.end(); im++) {
+    for (im=m_lt_rxns.begin(); im!=m_lt_rxns.end(); ++im) {
         j = (*im).first;
         kforward[j] *= exp(((*im).second->LTCoeffs()->B / T_1_3) + 
                            ((*im).second->LTCoeffs()->C / T_2_3));
     }
 
     // Reverse rate constants.
-    for (i=m_rxns.begin(),j=0; i!=m_rxns.end(); i++,j++) {
+    for (i=m_rxns.begin(),j=0; i!=m_rxns.end(); ++i,++j) {
         if ((*i)->RevArrhenius() != NULL) {
             // This reaction has explicit reverse rate parameters.
             kreverse[j] = (*i)->RevArrhenius()->A * 
@@ -480,21 +477,21 @@ void ReactionSet::GetRateConstants(real T,
 
             // Calculate the Gibbs free energy change for reaction i and sum up
             // the stoichiometric coefficients.
-            for (k=0; k<(*i)->ReactantCount(); k++) {
+            for (k=0; k!=(*i)->ReactantCount(); ++k) {
                 // Integer Reactants.
-                kreverse[j] += (*i)->Reactant(k).Mu() * Gs[(*i)->Reactant(k).Index()];
+                kreverse[j] += (*i)->Reactants()[k].Mu() * Gs[(*i)->Reactants()[k].Index()];
             }
-            for (k=0; k<(*i)->ProductCount(); k++) {
+            for (k=0; k!=(*i)->ProductCount(); ++k) {
                 // Integer Products.
-                kreverse[j] -= (*i)->Product(k).Mu() * Gs[(*i)->Product(k).Index()];
+                kreverse[j] -= (*i)->Products()[k].Mu() * Gs[(*i)->Products()[k].Index()];
             }
-            for (k=0; k<(*i)->FReactantCount(); k++) {
+            for (k=0; k!=(*i)->FReactantCount(); ++k) {
                 // Real Reactants.
-                kreverse[j] += (*i)->FReactant(k).Mu() * Gs[(*i)->FReactant(k).Index()];
+                kreverse[j] += (*i)->FReactants()[k].Mu() * Gs[(*i)->FReactants()[k].Index()];
             }
-            for (k=0; k<(*i)->FProductCount(); k++) {
+            for (k=0; k!=(*i)->FProductCount(); ++k) {
                 // Real Products.
-                kreverse[j] -= (*i)->Product(k).Mu() * Gs[(*i)->Product(k).Index()];
+                kreverse[j] -= (*i)->Products()[k].Mu() * Gs[(*i)->Products()[k].Index()];
             }
 
             // Calculate the reverse rate constant.
@@ -505,14 +502,14 @@ void ReactionSet::GetRateConstants(real T,
     }
 
     // Explicit reverse Landau-Teller parameters.
-    for (im=m_revlt_rxns.begin(); im!= m_revlt_rxns.end(); im++) {
+    for (im=m_revlt_rxns.begin(); im!=m_revlt_rxns.end(); ++im) {
         j = (*im).first;
         kreverse[j] *= exp(((*im).second->RevLTCoeffs()->B / T_1_3) + 
                            ((*im).second->RevLTCoeffs()->C / T_2_3));
     }
 
     // Third body concentrations for each reaction.
-    for (i=m_rxns.begin(),j=0; i!=m_rxns.end(); i++,j++) {
+    for (i=m_rxns.begin(),j=0; i!=m_rxns.end(); ++i,++j) {
         if ((*i)->UseThirdBody()) {
             // Calculate enhanced third body concentration using the enhancement
             // factors defined for this reaction.
@@ -529,7 +526,7 @@ void ReactionSet::GetRateConstants(real T,
     }
 
     // Pressure dependent fall-off reactions.
-    for (im=m_fo_rxns.begin(); im!=m_fo_rxns.end(); im++) {
+    for (im=m_fo_rxns.begin(); im!=m_fo_rxns.end(); ++im) {
         j   = (*im).first;  // Reaction index of imth fall-off reaction.
         rxn = (*im).second;
 
@@ -545,8 +542,7 @@ void ReactionSet::GetRateConstants(real T,
         } else {
             // Use all species as third bodies.
             pr = lowk * tbconcs[j] / kforward[j];
-            tbconcs[j] = 1.0;
-        }
+            tbconcs[j] = 1.0;        }
 
         // Calculate rate constants based on equation form.
         logpr = log10(pr);
@@ -579,14 +575,11 @@ void ReactionSet::GetRateConstants(real T,
     }
 
     // Apply third-body concentrations to rate constants.
-    for (im=m_tb_rxns.begin(); im!=m_tb_rxns.end(); im++) {
+    for (im=m_tb_rxns.begin(); im!=m_tb_rxns.end(); ++im) {
         j = (*im).first;
         kforward[j] *= tbconcs[j];
         kreverse[j] *= tbconcs[j];
     }
-
-    // Deallocate temporary memory.
-    delete [] tbconcs;
 }
 
 // Calculates the forward and reverse rate constants 
