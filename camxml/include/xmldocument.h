@@ -16,7 +16,7 @@
 #include <fstream>
 #include <wchar.h>
 #include <sstream>
-#include <tchar.h>
+//#include <tchar.h>
 
 using namespace CamXML;
 using namespace std;

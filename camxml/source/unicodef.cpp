@@ -1,4 +1,5 @@
 #include "unicodef.h"
+#include <stdexcept>
 
 namespace ComoUnicode {
 
@@ -134,7 +135,6 @@ namespace ComoUnicode {
     }
 
     void utf8encode(std::string &dest, const std::wstring &src) {
-	    size_t i = 0;
 	    wchar_t *s = (wchar_t *) src.c_str();
 
 	    for (size_t i = 0; i < src.length(); i++)

@@ -1,4 +1,5 @@
 #include "xmldocument.h"
+#include <stdexcept>
 
 Document::Document(void)
 {
@@ -19,7 +20,7 @@ int Document::Load(const std::string &filename)
 int Document::Load(const std::wstring &filename)
 {
     // Open file for reading.
-    ifstream fin(filename.c_str(), ios::in);
+    ifstream fin(ComoUnicode::WStringToString(filename).c_str(), ios::in);
 
     if (fin.good()) {
         STATUS st = Outside;
@@ -44,6 +45,7 @@ int Document::Load(const std::wstring &filename)
         // Failed to open file.
         throw invalid_argument(string("CamXML could not open file: ").append(ComoUnicode::WStringToString(filename)));
     }
+    return -1;
 }
 int Document::Save(const std::string &filename)
 {
@@ -54,7 +56,6 @@ int Document::Save(const std::string &filename)
 
 Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
 {
-    string::size_type pos=0;
     wchar_t c;
     wstring tag, data, comment;
     Element *el = NULL;
@@ -179,9 +180,9 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                                 if (child!=NULL) delete child;
                                 string stag;
                                 ComoUnicode::WStringToString(stag, tag);
-                                throw exception(string("Failed to read child of element: ").append(stag).c_str());
+                                throw runtime_error("Failed to read child of element: " + stag);
                             }
-                        } catch (exception &e) {
+                        } catch (std::exception &e) {
                             throw e;
                         }
                     }
@@ -216,9 +217,9 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                             if (el!=NULL) delete el;
                             string stag;
                             ComoUnicode::WStringToString(stag, tag);
-                            throw exception(string("Failed to read attribute of element: ").append(stag).c_str());
+                            throw runtime_error("Failed to read attribute of element: " + stag);
                         }
-                    } catch (exception &e) {
+                    } catch (std::exception &e) {
                         throw e;
                     }
 
@@ -230,7 +231,7 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                     if (el!=NULL) delete el;
                     string stag;
                     ComoUnicode::WStringToString(stag, tag);
-                    throw range_error(string("Invalid first character of attribute name of element: ").append(stag).c_str());
+                    throw range_error("Invalid first character of attribute name of element: " + stag);
                 }
                 break;
 
@@ -316,12 +317,14 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                     data.append(&c,1);
                 }
                 break;
+            default:
+                throw runtime_error("Invalid status flag.");
         }
     }
 
     if (st==Fail) {
         if (el!=NULL) delete el;
-        throw exception("Unhandled error occured.");
+        throw runtime_error("Unhandled error occured.");
     } else if ((st==End) && !iscomment) {
         el->SetTag(tag);
         el->SetData(data);
@@ -376,6 +379,8 @@ Attribute *const Document::parseAttr(std::wistringstream &fin, CamXML::Document:
                     }
                 }
                 break;
+            default:
+                throw runtime_error("Illegal status flag.");
         }
     }
 
