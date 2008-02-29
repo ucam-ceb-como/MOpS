@@ -72,6 +72,15 @@ public:
         fvector &U           // Output vector for species internal energies.
         ) const;
 
+    // Calculates the dimensionless bulk internal energy given the
+    // temperature and the species mole fractions.  C array version.
+    real CalcBulkU_RT(
+        real T,              // Temperature (K).
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x.
+        fvector &U           // Output vector for species internal energies.
+        ) const;
+
 
     // ENTHALPY.
 
@@ -98,6 +107,15 @@ public:
         fvector &H           // Output vector for species enthalpies.
         ) const;
 
+    // Calculates the dimensionless bulk enthalpy given the temperature and the 
+    // species mole fractions.  Also returns the species enthalpies.
+    real CalcBulkH_RT(
+        real T,              // Temperature (K).
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x.
+        fvector &H           // Output vector for species enthalpies.
+        ) const;
+
 
     // ENTROPY.
 
@@ -118,6 +136,16 @@ public:
     // Calculates the bulk entropy given the temperature and the 
     // species mole fractions.  Also returns the species entropies.
     real CalcBulkS(
+        real T,              // Temperature (K).
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x.
+        fvector &S           // Output vector for species entropies.
+        ) const;
+
+    // Calculates the dimensionless bulk entropy given the temperature and the 
+    // species mole fractions.  Also returns the species entropies.
+    // C array version.
+    real CalcBulkS_R(
         real T,              // Temperature (K).
         const real *const x, // Species mole fractions.
         unsigned int n,      // Number of values in x.
@@ -159,6 +187,24 @@ public:
         fvector &G           // Output vector for species Gibbs free energies.
         ) const;
 
+    // Calculates the dimensionless species' Gibbs free energies given 
+    // the temperature and the species' enthalpies and entropies.
+    void CalcGs_RT(
+        real T,              // Temperature (K).
+        const fvector &H_RT, // Species enthalpies.
+        const fvector &S_R,  // Species entropies.
+        fvector &G_RT        // Return vector for the Gibbs free energies.
+        ) const;
+
+    // Calculates the dimensionless bulk Gibbs free energy given the temperature and the 
+    // species mole fractions.  Also returns the species Gibbs free energies.
+    real CalcBulkG_RT(
+        real T,              // Temperature (K).
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x.
+        fvector &G           // Output vector for species Gibbs free energies.
+        ) const;
+
 
     // CONSTANT PRESSURE HEAT CAPACITY.
 
@@ -186,6 +232,16 @@ public:
         fvector &Cp          // Output vector for species heat capacities.
         ) const;
 
+    // Calculates the dimensionless bulk constant pressure heat capacity given 
+    // the temperature and the species mole fractions.  Also 
+    // returns the species heat capacities.  C array version.
+    real CalcBulkCp_R(
+        real T,              // Temperature (K).
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x.
+        fvector &Cp_R        // Output vector for species heat capacities.
+        ) const;
+
 
     // CONSTANT VOLUME HEAT CAPACITY.
 
@@ -211,6 +267,16 @@ public:
         const real *const x, // Species mole fractions.
         unsigned int n,      // Number of values in x.
         fvector &Cv          // Output vector for species heat capacities.
+        ) const;
+
+    // Calculates the dimensionless bulk constant volume heat capacity given 
+    // the temperature and the species mole fractions.  Also 
+    // returns the species heat capacities.  C array version.
+    real CalcBulkCv_R(
+        real T,              // Temperature (K).
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x.
+        fvector &Cvs_R       // Output vector for species heat capacities.
         ) const;
 
 
