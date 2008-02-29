@@ -18,9 +18,9 @@
 #include "mops_reactor_type.h"
 
 // CVODE includes.
-#include "nvector\nvector_serial.h"
+#include "nvector/nvector_serial.h"
 
-#include "fortran_interface.h"
+//#include "fortran_interface.h"
 
 #include <istream>
 
@@ -83,10 +83,10 @@ public:
     // REACTOR MECHANISM.
 
     // Returns the current mechanism.
-    const Mops::Mechanism *const Mechanism() const;
+    const Mops::Mechanism *const Mech() const;
 
     // Returns the current mechanism.
-    void SetMechanism(const Mops::Mechanism &mech);
+    void SetMech(const Mops::Mechanism &mech);
 
 
     // ENERGY MODEL.
@@ -205,6 +205,7 @@ private:
         void* reactor  // A Reactor object (to be cast).
         );
 
+    /*
     static void rhsFn_RADAU5(
         int   *N,             // System dimension.
         Fortran::dreal *X,    // Independent variable.
@@ -213,6 +214,7 @@ private:
         Fortran::dreal *RPAR, // Real parameters.
         int *IPAR             // Integer parameters.
         );
+    */
 
     // INITIALISATION AND DESTRUCTION.
     

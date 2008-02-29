@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <time.h>
+#include <stdexcept>
 
 using namespace Mops;
 using namespace std;
@@ -108,8 +109,8 @@ void Solver::AddConsoleVariable(const std::string &var)
 
 void Solver::RemoveConsoleVariable(const std::string &var)
 {
-    vector<string>::const_iterator i;
-    for (i=m_console_vars.begin(); i!=m_console_vars.end(); i++) {
+    vector<string>::iterator i;
+    for (i=m_console_vars.begin(); i!=m_console_vars.end(); ++i) {
         if ((*i).compare(var) == 0) {
             m_console_vars.erase(i);
             return;
@@ -173,11 +174,11 @@ void Solver::SolveReactor(Mops::Reactor &r,
     r.SetRTOL(m_rtol);
 
     // Set up file output.
-    beginFileOutput(*r.Mechanism(), times);
+    beginFileOutput(*r.Mech(), times);
 
     // Set up the console output.
     icon = m_console_interval;
-    setupConsole(*r.Mechanism());
+    setupConsole(*r.Mech());
 
     // Output initial conditions.
     fileOutput(r);
@@ -489,14 +490,14 @@ void Solver::consoleOutput(const Mops::Reactor &r) const
 void Solver::buildOutputVector(const Mops::Reactor &r, fvector &out) const
 {
     fvector concs;
-    unsigned int n = r.Mechanism()->SpeciesCount();
+    unsigned int n = r.Mech()->SpeciesCount();
 
     // Get the data for output.
     r.Mixture()->GetConcs(concs);
     out.resize(n+5);
     out[0] = 0;
     out[1] = r.Time();
-    for (int isp=0; isp<n; isp++) {
+    for (unsigned int isp=0; isp!=n; ++isp) {
         out[isp+2] = concs[isp] * 1.0e-6; // Convert to mol/cm3.
     }
     out[n+2] = r.Mixture()->Temperature();

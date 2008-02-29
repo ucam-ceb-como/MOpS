@@ -2,18 +2,19 @@
 #include "mops_mixture.h"
 
 // CVODE includes.
-#include "cvode\cvode.h"
-#include "cvode\cvode_dense.h"
-#include "nvector\nvector_serial.h"
+#include "cvode/cvode.h"
+#include "cvode/cvode_dense.h"
+#include "nvector/nvector_serial.h"
 
-#include "fortran_interface.h"
+//#include "fortran_interface.h"
 
 #include <vector>
-#include <math.h>
+#include <cmath>
+#include <stdexcept>
 
 using namespace Mops;
 using namespace std;
-using namespace Fortran::Radau;
+//using namespace Fortran::Radau;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -27,7 +28,7 @@ Reactor::Reactor(void)
 Reactor::Reactor(const Mops::Mechanism &mech)
 {
     init();
-    SetMechanism(mech);
+    SetMech(mech);
 }
 
 // Copy constructor.
@@ -217,13 +218,13 @@ void Reactor::Fill(Mops::Mixture &mix, bool clearfirst)
 // REACTOR MECHANISM.
 
 // Returns the current mechanism.
-const Mops::Mechanism *const Reactor::Mechanism() const
+const Mops::Mechanism *const Reactor::Mech() const
 {
     return m_mech;
 }
 
 // Sets the reactor mechanism.
-void Reactor::SetMechanism(const Mops::Mechanism &mech)
+void Reactor::SetMech(const Mops::Mechanism &mech)
 {
     m_mech  = &mech;
 
@@ -420,7 +421,7 @@ void Reactor::Deserialize(std::istream &in, const Mops::Mechanism &mech)
                 in.read(reinterpret_cast<char*>(&m_iDens), sizeof(m_iDens));
 
                 // Store the mechanism and initialise CVODE.
-                SetMechanism(mech);
+                SetMech(mech);
                 Initialise(m_time);
 
                 // Read derivatives array.
@@ -465,30 +466,6 @@ int Reactor::rhsFn_CVODE(double t,      // Independent variable.
     // Cast the Reactor object.
     Reactor *r = static_cast<Reactor*>(reactor);
 
-    /*
-    // Check values of y.
-    real ytot = 0.0;
-    for (int i=0; i<r->m_neq-2; i++) {
-        ytot += NV_DATA_S(y)[i];
-        if (NV_DATA_S(y)[i] < -r->m_atol) {
-            return 1;
-        }
-        if (NV_DATA_S(y)[i] > 1.0+r->m_atol) {
-            return 1;
-        }
-    }
-    /*
-    if (ytot > 1.0+r->m_atol) {
-        return 2;
-    }
-    if (NV_DATA_S(y)[r->m_neq-2] < -r->m_atol) {
-        return 3;
-    }
-    if (NV_DATA_S(y)[r->m_neq-1] < -r->m_atol) {
-        return 4;
-    }
-    */
-
     // Get the RHS from the system model.
     if (r->m_emodel == ConstT) {
         r->RHS_ConstT(t, NV_DATA_S(y), NV_DATA_S(ydot));
@@ -499,35 +476,12 @@ int Reactor::rhsFn_CVODE(double t,      // Independent variable.
     return 0;
 };
 
+/*
 void Reactor::rhsFn_RADAU5(int *N, Fortran::dreal *X, Fortran::dreal *Y,
                            Fortran::dreal *F, Fortran::dreal *RPAR, int *IPAR)
 {
     // Cast the Reactor object.
     Reactor *r = reinterpret_cast<Reactor*>(IPAR);
-
-    /*
-    // Check values of y.
-    real ytot = 0.0;
-    for (int i=0; i<r->m_neq-2; i++) {
-        ytot += NV_DATA_S(y)[i];
-        if (NV_DATA_S(y)[i] < -r->m_atol) {
-            return 1;
-        }
-        if (NV_DATA_S(y)[i] > 1.0+r->m_atol) {
-            return 1;
-        }
-    }
-    /*
-    if (ytot > 1.0+r->m_atol) {
-        return 2;
-    }
-    if (NV_DATA_S(y)[r->m_neq-2] < -r->m_atol) {
-        return 3;
-    }
-    if (NV_DATA_S(y)[r->m_neq-1] < -r->m_atol) {
-        return 4;
-    }
-    */
 
     // Get the RHS from the system model.
     if (r->m_emodel == ConstT) {
@@ -536,11 +490,11 @@ void Reactor::rhsFn_RADAU5(int *N, Fortran::dreal *X, Fortran::dreal *Y,
         r->RHS_Adiabatic(*X, Y, F);
     }
 };
+*/
 
 // Definition of RHS form for constant temperature energy equation.
 void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot)
 {
-    int i;
     static fvector wdot;
     real wtot = 0.0;
 
@@ -549,7 +503,7 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot)
                                                  m_nsp, *m_mix, wdot);
 
     // Calculate mole fraction derivatives.
-    for (i=0; i<m_neq-2; i++) {
+    for (unsigned int i=0; i!=m_neq-2; ++i) {
         ydot[i] = (wdot[i] - (y[i]*wtot)) / y[m_iDens];
     }
 
@@ -567,7 +521,6 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot)
 // Definition of RHS form for adiabatic energy equation.
 void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot)
 {
-    int i;
     static fvector wdot, Cps, Hs;
     real wtot = 0.0, Cp = 0.0;
 
@@ -582,7 +535,7 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot)
 
     // Calculate mole fraction and temperature derivatives.
     ydot[m_iT] = 0.0;
-    for (i=0; i<m_nsp; i++) {
+    for (unsigned int i=0; i!=m_nsp; ++i) {
         ydot[i] = (wdot[i] - (y[i]*wtot)) / y[m_iDens];
         ydot[m_iT] += wdot[i] * Hs[i];
     }
@@ -611,8 +564,8 @@ void Reactor::init(void)
     m_mix     = NULL;
     m_mech    = NULL;
     m_deriv   = NULL;
-    m_atol    = 1.0e-8;
-    m_rtol    = 6.0e-4;
+    m_atol    = 1.0e-3;
+    m_rtol    = 1.0e-3;
     m_neq     = 0;
     m_nsp     = 0;
     m_iT      = -1;

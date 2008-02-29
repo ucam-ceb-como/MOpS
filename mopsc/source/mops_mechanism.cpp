@@ -1,4 +1,5 @@
 #include "mops_mechanism.h"
+#include <stdexcept>
 
 using namespace Mops;
 
@@ -52,8 +53,6 @@ void Mechanism::Deserialize(std::istream &in)
         // Read the serialized mechanism version.
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
-
-        unsigned int u = 0; // We'll need to to read unsigned ints.
 
         switch (version) {
             case 0:

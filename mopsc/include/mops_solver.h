@@ -31,7 +31,7 @@ public:
     Solver(void); // Default constructor.
 
     // Destructors.
-    ~Solver(void); // Default destructor.
+    virtual ~Solver(void); // Default destructor.
 
 
     // ERROR TOLERANCES FOR ODE SOLVER.

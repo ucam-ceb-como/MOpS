@@ -46,7 +46,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 
     // Variables read from file.
     vector<string> subs;
-    string delim = ",\t "; // Possible file delimiters (comma, tab and space).
+    string delim = ",\t \r"; // Possible file delimiters (comma, tab and space).
     string line;
 
     // Get the first line (should be the header defining the columns).
@@ -83,7 +83,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         // All other columns are chemical species.  Add them, and note
         // their columns.
         map<unsigned int,int> spcols;
-        for (unsigned int i=0; i!=subs.size(); ++i) {
+        for (int i=0; (unsigned)i!=subs.size(); ++i) {
             if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol)) {
                 Sprog::Species *sp = mech.AddSpecies();
                 sp->SetName(subs[i]);
@@ -105,7 +105,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 
             // Loop over all the elements in the line and save them
             // to the correct gas-phase variable.
-            for (unsigned int i=0; i!=subs.size(); ++i) {
+            for (int i=0; (unsigned)i!=subs.size(); ++i) {
                 if (i==tcol) {
                     // This is the Time column.
                     t = cdble(subs[i]);                    
@@ -240,11 +240,11 @@ void FlameSolver::SolveReactor(Mops::Reactor &r,
     r.Mixture()->SetMaxM0(m_maxm0);
 
     // Set up file output.
-    beginFileOutput(*r.Mechanism(), times);
+    beginFileOutput(*r.Mech(), times);
 
     // Set up the console output.
     icon = m_console_interval;
-    setupConsole(r.Mechanism()->ParticleMech());
+    setupConsole(r.Mech()->ParticleMech());
 
     for (unsigned int irun=0; irun!=nruns; ++irun) {
         // Start the CPU timing clock.
@@ -275,7 +275,7 @@ void FlameSolver::SolveReactor(Mops::Reactor &r,
                 // Run the reactor solver for this step (timed).
                 m_cpu_mark = clock();
                     Run(t1, t2+=dt, m_gasprof, *r.Mixture(), 
-                        r.Mechanism()->ParticleMech());
+                        r.Mech()->ParticleMech());
                     r.SetTime(t1);
                 m_chemtime += (double)(clock() - m_cpu_mark) / 
                               (double)CLOCKS_PER_SEC;

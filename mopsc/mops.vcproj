@@ -42,7 +42,8 @@
 				AdditionalIncludeDirectories="..\fortran_ode\include;..\sweepc\include;..\cvode\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
-				DebugInformationFormat="3"
+				WarningLevel="3"
+				DebugInformationFormat="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

@@ -10,17 +10,17 @@
 #ifndef MOPS_H
 #define MOPS_H
 
+#include "mops_reactor_type.h"
+#include "mops_reactor.h"
+#include "mops_psr.h"
+#include "mops_reactor_factory.h"
+
 #include "mops_params.h"
 #include "mops_mixture.h"
 #include "mops_mechanism.h"
 
 #include "mops_settings_io.h"
 #include "mops_timeinterval.h"
-
-#include "mops_reactor_type.h"
-#include "mops_reactor.h"
-#include "mops_psr.h"
-#include "mops_reactor_factory.h"
 
 #include "mops_solvertype.h"
 #include "mops_solver.h"

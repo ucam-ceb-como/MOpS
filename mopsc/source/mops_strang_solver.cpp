@@ -3,6 +3,7 @@
 #include "sweep.h"
 #include "string_functions.h"
 #include "csv_io.h"
+#include <stdexcept>
 
 using namespace Mops;
 using namespace std;
@@ -12,7 +13,7 @@ using namespace Strings;
 
 // Default constructor.
 StrangSolver::StrangSolver(void)
-: m_stats(NULL), m_swptime(0.0)
+: m_swptime(0.0), m_stats(NULL)
 {
 }
 
@@ -34,7 +35,7 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
     real dt, t2; // Stop time for each step.
 
     // Store the initial conditions.
-    Mixture initmix(r.Mechanism()->Species());
+    Mixture initmix(r.Mech()->Species());
     initmix.SetFracs(r.Mixture()->MoleFractions());
     initmix.SetTemperature(r.Mixture()->Temperature());
     initmix.SetDensity(r.Mixture()->Density());
@@ -47,17 +48,21 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
     r.Mixture()->SetMaxM0(m_maxm0);
 
     // Set up file output.
-    beginFileOutput(*r.Mechanism(), times);
+    beginFileOutput(*r.Mech(), times);
 
     // Set up the console output.
     icon = m_console_interval;
-    setupConsole(*r.Mechanism());
+    setupConsole(*r.Mech());
 
     for (unsigned int irun=0; irun!=nruns; ++irun) {
         // Start the CPU timing clock.
         m_cpu_start = clock();
         m_chemtime  = 0.0;
         m_swptime   = 0.0;
+
+        // Set the error tolerances in the reactor.
+        r.SetATOL(m_atol);
+        r.SetRTOL(m_rtol);
 
         // Initialise the reactor with the start time.
         t2 = times[0].StartTime();
@@ -67,10 +72,6 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
         r.Mixture()->Reset(m_maxm0);
         r.SetTime(t2);
         r.ResetSolver();
-
-        // Set the error tolerances in the reactor.
-        r.SetATOL(m_atol);
-        r.SetRTOL(m_rtol);
 
         // Begin file output for this run.
         beginRunFileOutput(irun);
@@ -141,7 +142,7 @@ void StrangSolver::multiStrangStep(Mops::real dt, unsigned int n, Mops::Reactor 
         // Solve one whole step of population balance (Sweep).
         m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
         r.Mixture()->SetM0(r.Mixture()->Density() * m0 / rho);
-        Run(ts1, ts2+=dt, *r.Mixture(), r.Mechanism()->ParticleMech());
+        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech());
     m_swptime += (double)(clock() - m_cpu_mark) / CLOCKS_PER_SEC;
     
     for (unsigned int i=1; i!=n; ++i) {
@@ -156,7 +157,7 @@ void StrangSolver::multiStrangStep(Mops::real dt, unsigned int n, Mops::Reactor 
             // Solve whole step of population balance (Sweep).
             m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
             r.Mixture()->SetM0(r.Mixture()->Density() * m0 / rho);
-            Run(ts1, ts2+=dt, *r.Mixture(), r.Mechanism()->ParticleMech());
+            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech());
         m_swptime += (double)(clock() - m_cpu_mark) / CLOCKS_PER_SEC;
         
     }
@@ -200,7 +201,7 @@ void StrangSolver::PostProcess(const std::string &filename, unsigned int nruns) 
     Sweep::EnsembleStats stats(pmech);
 
     // Declare CPU time outputs (averages and errors).
-    vector<vector<double>> acpu(npoints), ecpu(npoints);
+    vector<vector<double> > acpu(npoints), ecpu(npoints);
 
     // READ ALL RUNS.
 
@@ -569,7 +570,7 @@ void StrangSolver::consoleOutput(const Reactor &r) const
     out.push_back(r.Time());
 
     // Get output data from particles.
-    Sweep::EnsembleStats stats(r.Mechanism()->ParticleMech());
+    Sweep::EnsembleStats stats(r.Mech()->ParticleMech());
     r.Mixture()->GetVitalStats(stats);
     out.push_back(stats.BasicStats().PCount());
     out.push_back(stats.BasicStats().M0());
@@ -644,7 +645,7 @@ void StrangSolver::fileOutput(const Reactor &r)
 {
     // Write gas-phase conditions to file.
     m_file.write((char*)&r.Mixture()->RawData()[0], 
-                 sizeof(r.Mixture()->RawData()[0])*r.Mechanism()->SpeciesCount());
+                 sizeof(r.Mixture()->RawData()[0])*r.Mech()->SpeciesCount());
     real T = r.Mixture()->Temperature();
     m_file.write((char*)&T, sizeof(T));
     real D = r.Mixture()->Density();
@@ -744,6 +745,7 @@ Reactor *const StrangSolver::readSavePoint(unsigned int step,
         throw runtime_error("Failed to open file for save point "
                             "input (Mops, StrangSolver::readSavePoint).");
     }
+    return NULL;
 }
 
 // Processes the PSLs.

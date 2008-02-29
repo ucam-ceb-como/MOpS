@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     SolverType soltype = GPC;
 
     // Read command line arguments.
-    for (unsigned int i=1; i!=argc; ++i) {
+    for (int i=1; i!=argc; ++i) {
         if (strcmp(argv[i], "-c") == 0) {
             // Chemical mechanism file (CK format).
             chemfile = argv[++i];

@@ -10,7 +10,7 @@
 
 #include <vector>
 #include <string>
-#include <exception>
+#include <stdexcept>
 
 using namespace Mops;
 using namespace std;
@@ -247,7 +247,7 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
             splits = (unsigned int)cdble(node->Data());
         }
 
-        TimeInterval *ti;
+        TimeInterval *ti = NULL;
 
         root->GetChildren("time", nodes);
         for (i=nodes.begin(); i!=nodes.end(); i++) {
@@ -294,14 +294,14 @@ Reactor * Settings_IO::LoadFromXML_V1(const std::string &filename,
             // Check the console interval.
             attr = node->GetAttribute("interval");
             if (attr != NULL) {
-                solver.SetConsoleInterval(cdble(attr->GetValue()));
+                solver.SetConsoleInterval((unsigned int)cdble(attr->GetValue()));
             }
 
             // Read the column variables.
             str = node->Data();
             vector<string> cvars;
             Strings::split(str, cvars, " ");
-            for (int j=0; j<cvars.size(); j++) {
+            for (unsigned int j=0; j!=cvars.size(); ++j) {
                 solver.AddConsoleVariable(cvars[j]);
             }
         }

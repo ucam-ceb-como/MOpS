@@ -30,7 +30,7 @@ public:
     FlameSolver(void); // Default constructor.
 
     // Destructors.
-    ~FlameSolver(void); // Default destructor.
+    virtual ~FlameSolver(void); // Default destructor.
 
 
     // PROFILE INPUT.

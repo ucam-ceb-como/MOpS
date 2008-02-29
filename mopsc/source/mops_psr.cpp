@@ -2,7 +2,8 @@
 #include "mops_mixture.h"
 
 #include <vector>
-#include <math.h>
+#include <cmath>
+#include <stdexcept>
 
 using namespace Mops;
 using namespace std;
@@ -191,7 +192,6 @@ Serial_ReactorType PSR::SerialType() const
 // Definition of RHS form for constant temperature energy equation.
 void PSR::RHS_ConstT(real t, const real *const y,  real *ydot)
 {
-    int i;
     fvector wdot;
     real wtot = 0.0;
 
@@ -200,7 +200,7 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot)
                                                  m_nsp, *m_mix, wdot);
 
     // Calculate mole fraction derivatives.
-    for (i=0; i<m_nsp; i++) {
+    for (unsigned int i=0; i!=m_nsp; ++i) {
         ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) +
                   // Inflow/Outflow term:
                   (m_inflow->Density() * m_invrt * 
@@ -223,7 +223,6 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot)
 // Definition of RHS form for adiabatic energy equation.
 void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot)
 {
-    int i;
     fvector wdot, Hs, Cps;
     real wtot = 0.0, Cp = 0.0, H = 0.0;
 
@@ -238,7 +237,7 @@ void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot)
 
     // Calculate mole fraction and temperature derivatives.
     ydot[m_iT] = 0.0;
-    for (i=0; i<m_nsp; i++) {
+    for (unsigned int i=0; i!=m_nsp; ++i) {
         // Mole fraction derivative.
         ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) +
                   // Inflow/outflow term:
