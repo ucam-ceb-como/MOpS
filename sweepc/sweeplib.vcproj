@@ -261,7 +261,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\source\swp_primodeldata.cpp"
+					RelativePath=".\source\swp_pripartdata.cpp"
 					>
 				</File>
 				<File
