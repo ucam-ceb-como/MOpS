@@ -47,10 +47,19 @@ int Document::Load(const std::wstring &filename)
     }
     return -1;
 }
-int Document::Save(const std::string &filename)
+int Document::Save(const std::string &filename, bool XMLDeclaration)
 {
-    ComoUnicode::WriteUTF8(filename, m_root->GetXMLString());
+    if (XMLDeclaration) {
+        ComoUnicode::WriteUTF8(filename, L"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + m_root->GetXMLString());
+    } else {
+        ComoUnicode::WriteUTF8(filename, m_root->GetXMLString());
+    }
     return 0;
+}
+
+int Document::Save(const std::wstring &filename, bool XMLDeclaration)
+{
+    return Save(ComoUnicode::WStringToString(filename), XMLDeclaration);
 }
 
 

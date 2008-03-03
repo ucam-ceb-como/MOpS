@@ -46,9 +46,9 @@ public:
     int Load(const std::wstring &filename);
     /* Saves the XML data to file.  Overwrites whatever was previously
        in the file.  Returns 0 on success, otherwise negative.  (wide string version) */
-    int Save(const std::string &filename);
+    int Save(const std::string &filename, bool XMLDeclaration = true);
     /* Returns the root element of this document. */
-    int Save(const std::wstring &filename);
+    int Save(const std::wstring &filename, bool XMLDeclaration = true);
     /* Returns the root element of this document. (wide string version) */
     inline Element *const Root(void) {return m_root;};
     inline Element *const SetRoot(Element &root) {delete m_root; m_root = &root; return m_root;};
