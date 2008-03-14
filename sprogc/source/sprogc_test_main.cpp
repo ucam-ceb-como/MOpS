@@ -20,7 +20,7 @@ void main()
 
     // Load the test mechanism.
     try {
-        IO::Mechanism_IO::ReadChemkin("chem.inp", mech, "therm.dat");
+        IO::MechanismParser::ReadChemkin("chem.inp", mech, "therm.dat");
     } catch (exception &e) {
         cout << e.what();
         return;
