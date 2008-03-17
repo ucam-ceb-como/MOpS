@@ -68,20 +68,30 @@ ParticleData &ParticleData::operator=(const Sweep::ParticleData &rhs)
     m_trackers = rhs.m_trackers;
 
     // Copy unique properties.
-    m_comp.assign(rhs.m_comp.begin(), rhs.m_comp.end());
-    m_values.assign(rhs.m_values.begin(), rhs.m_values.end());
+    for (unsigned int i=0; i!=m_comp.size(); ++i)
+        m_comp[i] = rhs.m_comp[i];
+    for (unsigned int i=0; i!=m_values.size(); ++i)
+        m_values[i] = rhs.m_values[i];
+//    m_comp = rhs.m_comp;
+//    m_values = rhs.m_values;
+//    m_comp.assign(rhs.m_comp.begin(), rhs.m_comp.end());
+//    m_values.assign(rhs.m_values.begin(), rhs.m_values.end());
     m_createt = rhs.m_createt;
     m_time = rhs.m_time;
 
         // Copy the coagulation model data.
 //    *m_coag = *rhs.m_coag;
-    delete m_coag;
-    m_coag = rhs.m_coag->Clone();
-    m_coag->SetParent(*this);
+    if (m_coag->ID() != rhs.m_coag->ID()) {
+        delete m_coag;
+        m_coag = rhs.m_coag->Clone();
+        m_coag->SetParent(*this);
+    } else {
+        m_coag = rhs.m_coag;
+    }
 
     // Copy the data for other particle models.
-    m_models.clear();
     for (ModelMap::const_iterator i=rhs.m_models.begin(); i!=rhs.m_models.end(); ++i) {
+        delete m_models[i->first];
         m_models[i->first] = i->second->Clone();
     }
 

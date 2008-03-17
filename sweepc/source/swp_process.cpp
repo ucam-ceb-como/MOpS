@@ -1,3 +1,4 @@
+#include "swp_params.h"
 #include "swp_process.h"
 #include "swp_mechanism.h"
 #include "rng.h"
@@ -298,6 +299,23 @@ void Process::Deserialize(std::istream &in)
 
 
 // PROTECTED HELPER FUNCTIONS.
+
+// Calculates the gas-phase chemistry contribution to the rate
+// expression.
+real Process::chemRatePart(const fvector &fracs, real density) const
+{
+    real rate = 1.0;
+
+    Sprog::StoichMap::const_iterator i;
+    for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
+        real conc = density * fracs[i->first];
+        for (int j=0; j!=i->second; ++j) {
+            rate *= (NA * conc);
+        }
+    }
+
+    return rate;
+}
 
 // Adjusts the gas-phase composition using the reactants and
 // products defined for this process.

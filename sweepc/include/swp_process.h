@@ -184,6 +184,13 @@ protected:
     Sprog::StoichMap m_reac; // Reactant species stoichiometry.
     Sprog::StoichMap m_prod; // Product species stoichiometry.
 
+    // Calculates the gas-phase chemistry contribution to the rate
+    // expression.
+    real chemRatePart(
+        const fvector &fracs, // Species mole fractions in gas phase.
+        real density          // Gas phase molar density.
+        ) const;
+
     // Adjusts the gas-phase composition using the reactants and
     // products defined for this process.
     void adjustGas(

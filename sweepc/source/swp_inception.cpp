@@ -218,13 +218,7 @@ real Inception::Rate(const fvector &fracs, real density, real sqrtT,
     real rate = m_a   * ((fm*sf) / (fm+sf)) * vol;
 
     // Chemical species concentration dependence.
-    Sprog::StoichMap::const_iterator i;
-    for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
-        real conc = density * fracs[(*i).first];
-        for (int j=0; j!=i->second; ++j) {
-            rate *= (NA * conc);
-        }
-    }
+    rate *= chemRatePart(fracs, density);
 
     return rate;
 }

@@ -92,13 +92,7 @@ real Condensation::Rate(real t, const Sprog::Thermo::IdealGas &gas, const Cell &
     real cterm = m_a * sqrt(gas.Temperature()) * NA;
 
      // Chemical species concentration dependence.
-    Sprog::StoichMap::const_iterator i;
-    for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
-        real conc = gas.MolarConc(i->first);
-        for (int j=0; j<i->second; ++j) {
-            cterm *= conc;
-        }
-    }
+    cterm *= chemRatePart(gas.MoleFractions(), gas.Density());
 
     // Free molecular terms.
     cterm *= (m_kfm1 * sys.ParticleCount()) + 
@@ -136,13 +130,7 @@ real Condensation::Rate(real t, const Sprog::Thermo::IdealGas &gas,
 //    real trm[3];
 
     // Chemical species concentration dependence.
-    Sprog::StoichMap::const_iterator i;
-    for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
-        real conc = gas.MolarConc(i->first);
-        for (int j=0; j<i->second; ++j) {
-            cterm *= conc;
-        }
-    }
+    cterm *= chemRatePart(gas.MoleFractions(), gas.Density());
 
     // Free molecular terms.
 //    trm[0] = cterm * m_kfm1;
@@ -201,13 +189,7 @@ real Condensation::RateTerms(real t, const Sprog::Thermo::IdealGas &gas,
     real cterm = m_a * sqrt(gas.Temperature()) * NA;
 
      // Chemical species concentration dependence.
-    Sprog::StoichMap::const_iterator i;
-    for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
-        real conc = gas.MolarConc(i->first);
-        for (int j=0; j<i->second; ++j) {
-            cterm *= conc;
-        }
-    }
+    cterm *= chemRatePart(gas.MoleFractions(), gas.Density());
 
     // If the mechanism contains any deferred processes then we must use the
     // majorant form of the rate, in order to account for any changes to
