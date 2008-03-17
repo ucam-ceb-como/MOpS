@@ -95,7 +95,7 @@ protected:
     Sprog::Mechanism *m_mech; // Parent mechanism.
 
     // Library of known elements.
-    const static unsigned int m_nlib = 5;
+    const static unsigned int m_nlib = 74;
     const static Element m_lib[m_nlib];
 };
 
