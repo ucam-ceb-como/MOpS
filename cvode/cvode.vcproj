@@ -42,7 +42,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="include"
 				MinimalRebuild="false"
-				BasicRuntimeChecks="3"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
