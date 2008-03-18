@@ -17,6 +17,12 @@ namespace Sprog
 
     // Enumeration of different concentration units.
     enum ConcUnits {MolarConcs, MoleFracs, MassFracs};
+
+    // Enumeration of different temperature units.
+    enum TempUnits {Kelvin, Celcius, Fahrenheit};
+
+    // Enumeration of different pressure units.
+    enum PressureUnits {Pascal, Bar, Atm};
 };
 
 #endif
