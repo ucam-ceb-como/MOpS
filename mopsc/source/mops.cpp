@@ -71,6 +71,8 @@ int main(int argc, char *argv[])
             // Currently nothing else is implemented here.  However, in future
             // the settings file name will not be set with the -r switch and
             // shall be read in this section.
+            settfile = argv[i];
+            foldfmt  = false;
         }
     }
 
@@ -120,9 +122,11 @@ int main(int argc, char *argv[])
         reactor->Initialise(0.0);
     } else {
         // New format not yet implemented.
-        delete solver;
-        delete reactor;
-        return -1;
+        reactor = Settings_IO::LoadFromXML(settfile, reactor, times, *solver, mech);
+        reactor->Initialise(0.0);
+        //delete solver;
+        //delete reactor;
+        //return -1;
     }
 
     // Solve reactor.

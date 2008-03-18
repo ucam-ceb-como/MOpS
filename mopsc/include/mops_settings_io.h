@@ -38,13 +38,58 @@ public:
 
     // Loads an XML document into the class.  This operation needs
     // to be performed before settings can be acquired.
-    static Reactor * LoadFromXML_V1(
+    static Reactor *const LoadFromXML_V1(
         const std::string &filename,      // Input file name.
         Reactor *reac,                    // The reactor to be simulated.
         std::vector<TimeInterval> &times, // Vector of output time intervals.
         Solver &solver,                   // General settings incl. output settings.
         const Mechanism &mech             // Mechanism used to define reactor.
         );
+
+    // Read a new-format XMl file settings file.
+    static Reactor *const LoadFromXML(
+        const std::string &filename,      // Input file name.
+        Reactor *reac,                    // The reactor to be simulated.
+        std::vector<TimeInterval> &times, // Vector of output time intervals.
+        Solver &solver,                   // General settings incl. output settings.
+        const Mechanism &mech             // Mechanism used to define reactor.
+        );
+
+private:
+
+    // V2 SETTINGS FILE SECTIONS.
+
+    // Reads global simulation settings from the given XML node.
+    static void readGlobalSettings(
+        const CamXML::Element &node, // Root XML node containing simulation settings.
+        Solver &solver               // Solver object into which to read global settings.
+        );
+
+    // Reads the reactor initial settings from the given XML node.
+    static Reactor *const readReactor(
+        const CamXML::Element &node, // XML node containing reactor.
+        const Mechanism &mech        // Mechanism to define reactor mixture.
+        );
+
+    // Reads time intervals from given XML node.
+    static void readTimeIntervals(
+        const CamXML::Element &node,     // XML node containing time intervals.
+        std::vector<TimeInterval> &times // Vector of output time intervals.
+        );
+
+    // Reads simulation output parameters from given XML node.
+    static void readOutput(
+        const CamXML::Element &node, // XML node containing output parameters.
+        Solver &solver               // General settings incl. output settings.
+        );
+
+    // Returns the temperature in K by reading the value from the given
+    // XML node and checking the units.
+    static real readTemperature(const CamXML::Element &node);
+
+    // Returns the pressure in Pa by reading the value from the given
+    // XML node and checking the units.
+    static real readPressure(const CamXML::Element &node);
 };
 };
 
