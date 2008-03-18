@@ -41,6 +41,8 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="include"
 				RuntimeLibrary="1"
+				DisableLanguageExtensions="true"
+				WarningLevel="3"
 				DebugInformationFormat="1"
 			/>
 			<Tool
@@ -100,6 +102,7 @@
 				AdditionalIncludeDirectories="include"
 				DisableLanguageExtensions="true"
 				GenerateXMLDocumentationFiles="true"
+				WarningLevel="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
