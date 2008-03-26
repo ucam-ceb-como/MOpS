@@ -204,6 +204,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\mops_particle_solver.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\mops_psr.cpp"
 				>
 			</File>
@@ -255,6 +259,10 @@
 			</File>
 			<File
 				RelativePath=".\include\mops_params.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\mops_particle_solver.h"
 				>
 			</File>
 			<File
