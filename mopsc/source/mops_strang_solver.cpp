@@ -250,7 +250,7 @@ void StrangSolver::PostProcess(const std::string &filename,
     // CREATE CSV FILES.
 
     writeGasPhaseCSV(filename+"-chem.csv", mech, times, achem, echem);
-    writeParticleStatsCSV(filename+"-part.csv", mech, times, achem, echem);
+    writeParticleStatsCSV(filename+"-part.csv", mech, times, astat, estat);
     writeCT_CSV(filename+"-cpu.csv", times, acpu, ecpu);
 
     // POST-PROCESS PSLs.

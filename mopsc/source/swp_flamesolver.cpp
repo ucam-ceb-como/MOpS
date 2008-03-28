@@ -11,20 +11,16 @@ using namespace Sweep;
 using namespace std;
 using namespace Strings;
 
-const real FlameSolver::CONFA = 3.29;
-
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor.
 FlameSolver::FlameSolver()
-: m_stats(NULL)
 {
 }
 
 // Default destructor.
 FlameSolver::~FlameSolver()
 {
-    delete m_stats;
 }
 
 // PROFILE INPUT.
@@ -168,7 +164,6 @@ int FlameSolver::Run(real &t, real tstop, const GasProfile &gasphase,
     int err = 0;
     real tsplit, dtg, dt, jrate;
     fvector rates(mech.TermCount(), 0.0);
-//    Sprog::Thermo::IdealGas gas(*mech.Species());
 
     // Global maximum time step.
     dtg     = tstop - t;
@@ -240,11 +235,11 @@ void FlameSolver::SolveReactor(Mops::Reactor &r,
     r.Mixture()->SetMaxM0(m_maxm0);
 
     // Set up file output.
-    beginFileOutput(*r.Mech(), times);
+    writeAux(m_output_filename, *r.Mech(), times);
 
     // Set up the console output.
     icon = m_console_interval;
-    setupConsole(r.Mech()->ParticleMech());
+    setupConsole(*r.Mech());
 
     for (unsigned int irun=0; irun!=nruns; ++irun) {
         // Start the CPU timing clock.
@@ -255,44 +250,50 @@ void FlameSolver::SolveReactor(Mops::Reactor &r,
         r.Mixture()->Reset(m_maxm0);
         t1 = times[0].StartTime();
         t2 = t1;
+        r.SetTime(t1);
 
         // Begin file output for this run.
-        beginRunFileOutput(irun);
+        openOutputFile(irun);
         printf("Run Number %d of %d.\n", irun+1, nruns);
+        m_console.PrintDivider();
 
         // Output initial conditions.
-        fileOutput(t1, *r.Mixture());
-        consoleOutput(t1, *r.Mixture());
+        fileOutput(r);
+        consoleOutput(r);
 
         // Loop over the time intervals.
+        unsigned int global_step = 0;
         Mops::timevector::const_iterator iint;
         for (iint=times.begin(); iint!=times.end(); ++iint) {
             // Get the step size for this interval.
             dt = (*iint).StepSize();
 
             // Loop over the steps in this interval.
-            for (unsigned int istep=0; istep<(*iint).StepCount(); ++istep) {
+            for (unsigned int istep=0; istep<(*iint).StepCount(); 
+                 ++istep, ++global_step) {
                 // Run the reactor solver for this step (timed).
                 m_cpu_mark = clock();
                     Run(t1, t2+=dt, m_gasprof, *r.Mixture(), 
                         r.Mech()->ParticleMech());
                     r.SetTime(t1);
-                m_chemtime += (double)(clock() - m_cpu_mark) / 
-                              (double)CLOCKS_PER_SEC;
+                m_swp_ctime += calcDeltaCT(m_cpu_mark);
 
                 // Generate file output.
-                fileOutput(t1, *r.Mixture());
+                r.SetTime(t1);
+                fileOutput(r);
 
                 // Generate console output.
                 if (--icon == 0) {
-                    consoleOutput(t1, *r.Mixture());
+                    consoleOutput(r);
                     icon = m_console_interval;
                 }
             }
+
+            createSavePoint(r, global_step, irun);
         }
 
         // Close the output files.
-        endFileOutput();
+        closeOutputFile();
     }
 }
 
@@ -312,15 +313,12 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
     for(Mops::timevector::const_iterator i=times.begin(); i!=times.end(); ++i) {
         npoints += i->StepCount();
     }
-
     // Declare stats outputs (averages and errors).
-    fvector s;
-    vector<fvector> as(npoints), es(npoints);
+    vector<fvector> astat(npoints), estat(npoints);
     EnsembleStats stats(pmech);
 
     // Declare CPU time outputs (averages and errors).
-    double cpu; 
-    vector<double> acpu(npoints), ecpu(npoints);
+    vector<fvector> acpu(npoints), ecpu(npoints);
 
 
     // Now we must read the mixture conditions at all time points for
@@ -336,35 +334,15 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
         // Throw error if the output file failed to open.
         if (!fin.good()) {
             throw runtime_error("Failed to open file for post-processing "
-                      "(Mops, Sweep::FlameSolver::PostProcess).");
+                                "(Mops, Sweep::FlameSolver::PostProcess).");
         }
 
         // Read initial stats and computation times.
         {
-            // PARTICLE STATS.
-
             // Read the stats.
-            stats.Deserialize(fin);
-            stats.Get(s);
-
-            // Calculate sums and sums of square (for average and
-            // error calculation).
-            as[0].resize(s.size(), 0.0);
-            es[0].resize(s.size(), 0.0);
-            for (unsigned int i=0; i!=s.size(); ++i) {
-                as[0][i] += s[i];
-                if (nruns>1) es[0][i] += s[i] * s[i];
-            }
-
-            // COMPUTATION TIMES.
-
+            readParticleDataPoint(fin, pmech, astat[0], estat[0], nruns>1);
             // Read the computation time.
-            fin.read(reinterpret_cast<char*>(&cpu), sizeof(cpu));
-
-            // Calculate sums and sums of square (for average and
-            // error calculation).
-            acpu[0] += cpu;
-            if (nruns>1) ecpu[0] += cpu * cpu;
+            readCTDataPoint(fin, 3, acpu[0], ecpu[0], nruns>1);
         }
 
         // Loop over all time intervals.
@@ -373,30 +351,8 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
              iint!=times.end(); ++iint) {
             // Loop over all time steps in this interval.
             for (unsigned int istep=0; istep!=(*iint).StepCount(); ++istep, ++step) {
-                // PARTICLE STATS.
-
-                // Read the stats.
-                stats.Deserialize(fin);
-                stats.Get(s);
-
-                // Calculate sums and sums of square (for average and
-                // error calculation).
-                as[step].resize(s.size(), 0.0);
-                es[step].resize(s.size(), 0.0);
-                for (unsigned int i=0; i!=s.size(); ++i) {
-                    as[step][i] += s[i];
-                    if (nruns>1) es[step][i] += s[i] * s[i];
-                }
-
-                // COMPUTATION TIMES.
-
-                // Read the computation time.
-                fin.read(reinterpret_cast<char*>(&cpu), sizeof(cpu));
-
-                // Calculate sums and sums of square (for average and
-                // error calculation).
-                acpu[step] += cpu;
-                if (nruns>1) ecpu[step] += cpu * cpu;
+                readParticleDataPoint(fin, pmech, astat[step], estat[step], nruns>1);
+                readCTDataPoint(fin, 3, acpu[step], ecpu[step], nruns>1);
             }
         }
 
@@ -404,218 +360,20 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
         fin.close();
     }
     
-
     // CALCULATE AVERAGES AND CONFIDENCE INTERVALS.
 
-    real invruns = 1.0 / (real)nruns;
-    for (unsigned int step=0; step!=npoints; ++step) {
-        // Particle statistics.
-        for (unsigned int i=0; i!=s.size(); ++i) {
-            // Calculate average over all runs.
-            as[step][i] *= invruns;
-
-            if (nruns > 1) {
-                // Calculate standard deviation over all runs.
-                (es[step][i] *= invruns) -= (as[step][i] * as[step][i]);
-                // Calculate confidence interval.
-                es[step][i] = CONFA * sqrt(abs(es[step][i] * invruns));
-            }
-        }
-
-        // CPU time.
-        acpu[step] *= invruns;
-        if (nruns > 1) {
-            (ecpu[step] *= invruns) -= (acpu[step] * acpu[step]);
-            ecpu[step] = CONFA * sqrt(abs(ecpu[step] * invruns));
-        }
-    }
+    calcAvgConf(astat, estat, nruns);
+    calcAvgConf(acpu, ecpu, nruns);
 
     // OUTPUT TO CSV FILE.
     
-    // Now open a file for the CSV results and write header.
-    CSV_IO csv(string(filename).append(".csv"), true);
-    vector<string> header;
-    header.push_back("Step");
-    header.push_back("Time (s)");
-    stats.Names(header, 2);
-    for (unsigned int i=header.size(); i!=2; --i) {
-        header.insert(header.begin()+i, "Err");
-    }
-    csv.Write(header);
+    writeParticleStatsCSV(filename+"-part.csv", mech, times, astat, estat);
+    writeCT_CSV(filename+"-cpu.csv", times, acpu, ecpu);
 
-    // Open a CSV file for the computation time results.
-    CSV_IO csvcpu(string(filename).append("-ct.csv"), true);
-    vector<string> cpuheader;
-    cpuheader.push_back("Step");
-    cpuheader.push_back("Time (s)");
-    cpuheader.push_back("CPU Time (s)");
-    cpuheader.push_back("Err");
-    csvcpu.Write(cpuheader);
+    // POST-PROCESS PSLs.
 
-    // Output initial conditions.
-    {
-        // Stats.
-        for (unsigned int i=as[0].size(); i!=0; --i) {
-            as[0].insert(as[0].begin()+i, *(es[0].begin()+i-1));
-        }
-        as[0].insert(as[0].begin(), 0.0);
-        as[0].insert(as[0].begin(), times[0].StartTime());
-        csv.Write(as[0]);
-
-        // CPU times.
-        vector<double> cpuout(4);
-        cpuout[0] = 0.0;
-        cpuout[1] = times[0].StartTime();
-        cpuout[2] = acpu[0];
-        cpuout[3] = ecpu[0];
-        csvcpu.Write(cpuout);
-    }
-
-    // Loop over all points, performing output.
-    unsigned int step = 1;
-    for (Mops::timevector::const_iterator iint=times.begin(); iint!=times.end(); ++iint) {
-        // Loop over all time steps in this interval.
-        real t = iint->StartTime();
-        for (unsigned int istep=0; istep<(*iint).StepCount(); ++istep, ++step) {
-            t += iint->StepSize();
-
-            // Stats.
-            for (unsigned int i=as[step].size(); i!=0; --i) {
-                as[step].insert(as[step].begin()+i, *(es[step].begin()+i-1));
-            }
-            as[step].insert(as[step].begin(), t);
-            as[step].insert(as[step].begin(), step);
-            csv.Write(as[step]);
-
-            // CPU times.
-            vector<double> cpuout(4);
-            cpuout[0] = 0.0;
-            cpuout[1] = t;
-            cpuout[2] = acpu[step];
-            cpuout[3] = ecpu[step];
-            csvcpu.Write(cpuout);
-        }
-    }
-
-    // Close the CSV files.
-    csv.Close();
-    csvcpu.Close();
-}
-
-
-// CONSOLE OUTPUT.
-
-// Sets up console output using the given mechanism as a template.
-void FlameSolver::setupConsole(const Sweep::Mechanism &mech)
-{
-    // Build header. 
-    vector<string> header;
-    header.push_back("Time (s)");
-    header.push_back("#SP");
-    header.push_back("M0");
-    header.push_back("Fv");
-    header.push_back("dcol (nm)");
-    header.push_back("S (cm2/cm3)");
-
-    // Print the first header.
-    m_console.PrintDivider();
-    m_console.PrintRow(header);
-    m_console.PrintDivider();
-
-    // Set up the console output class.
-    m_console.SetAutoHeader(header);
-    m_console.EnableAutoDividers();
-}
-
-// Writes current reactor state to the console.
-void FlameSolver::consoleOutput(real time, const Sweep::Cell &sys) const
-{
-    // Get output data.
-    fvector out;
-    out.push_back(time);
-    out.push_back(m_stats->BasicStats().PCount());
-    out.push_back(m_stats->BasicStats().M0());
-    out.push_back(m_stats->BasicStats().Fv());
-    out.push_back(m_stats->BasicStats().AvgCollDiam());
-    out.push_back(m_stats->BasicStats().SurfaceArea());
-
-    // Print data to console.
-    m_console.PrintRow(out);
-}
-
-// FILE OUTPUT.
-
-// Sets up the file output by outputting an auxilliary file
-// which stores all the information required to post-process the
-// simulation and by opening the output file.
-void FlameSolver::beginFileOutput(const Mops::Mechanism &mech, 
-                                  const Mops::timevector &times)
-{
-    // Build output file name.
-    string fname(m_output_filename); fname.append(".dat");
-
-    // Output a file for post-processing information (mechanism and
-    // time intervals).
-    fstream fout;
-    fout.open(fname.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
-
-    // Throw error if the output file failed to open.
-    if (!fout.good()) {
-        throw runtime_error("Failed to open file for simulation "
-                            "output (Mops, Solver::beginFileOutput).");
-    }
-
-    // Write the mechanism to the output file.
-    mech.Serialize(fout);
-
-    // Write the time intervals to the output file.
-    unsigned int n = times.size();
-    fout.write((char*)&n, sizeof(n));
-    for (Mops::timevector::const_iterator i=times.begin(); i!=times.end(); i++) {
-        (*i).Serialize(fout);
-    }
-
-    // Close the post-processing info file.
-    fout.close();
-
-    // Set up stats output.
-    delete m_stats;
-    m_stats = new EnsembleStats(mech.ParticleMech());
-}
-
-// Sets up file output for a new run given the run number.
-void FlameSolver::beginRunFileOutput(unsigned int run)
-{
-    // Build the simulation output file name.
-    string fname = m_output_filename + "(" + cstr(run) + ").dat";
-
-    // Open the simulation output file.
-    m_file.open(fname.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
-
-    // Throw error if the output file failed to open.
-    if (!m_file.good()) {
-        throw runtime_error("Failed to open file for simulation "
-                            "output (Mops, Sweep::FlameSolver::beginRunFileOutput).");
-    }
-}
-
-// Writes the current system state to the output file.
-void FlameSolver::fileOutput(real time, const Sweep::Cell &sys)
-{
-    // Write particle stats to file.
-    sys.GetVitalStats(*m_stats);
-    m_stats->Serialize(m_file);
-
-    // Write CPU times to file.
-    double cputime = (double)(clock() - m_cpu_start) / (double)CLOCKS_PER_SEC;
-    m_file.write((char*)&cputime, sizeof(cputime));
-}
-
-// Ends file output by closing all open files.
-void FlameSolver::endFileOutput()
-{
-    // Close the output file.
-    m_file.close();
+    // Now post-process the PSLs.
+    postProcessPSLs(nruns, mech, times);
 }
 
 

@@ -12,13 +12,13 @@
 #ifndef SWEEP_FLAME_SOLVER_H
 #define SWEEP_FLAME_SOLVER_H
 
-#include "mops_solver.h"
+#include "mops_particle_solver.h"
 #include "sweep.h"
 #include <map>
 
 namespace Sweep
 {
-class FlameSolver : public Mops::Solver, public Sweep::Solver
+class FlameSolver : public Mops::ParticleSolver, public Sweep::Solver
 {
 public:
     // A map of Time/Gas-Phase pairs which describes a gas-phase
@@ -73,11 +73,12 @@ public:
         ) const;
 
 private:
+    /*
     static const real CONFA;
-
+*/
     // The gas-phase chemistry profile.
     GasProfile m_gasprof;
-
+/*
     // Stats output.
     EnsembleStats *m_stats;
 
@@ -88,7 +89,6 @@ private:
 
     // Writes current reactor state to the console.
     void consoleOutput(real time, const Sweep::Cell &sys) const;
-
     // FILE OUTPUT.
 
     // Sets up the file output by outputting an auxilliary file
@@ -107,7 +107,7 @@ private:
 
     // Ends file output by closing all open files.
     void endFileOutput();
-
+*/
 
     // HELPER FUNCTIONS.
 
