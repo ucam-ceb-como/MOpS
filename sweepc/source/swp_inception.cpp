@@ -223,6 +223,24 @@ real Inception::Rate(const fvector &fracs, real density, real sqrtT,
     return rate;
 }
 
+// Calculates the gas-phase chemistry contribution to the rate
+// expression.  This is overloaded as Avogadro's number must be
+// included in the terms for inception processes.
+real Inception::chemRatePart(const fvector &fracs, real density) const
+{
+    real rate = 1.0;
+
+    Sprog::StoichMap::const_iterator i;
+    for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
+        real conc = density * fracs[i->first];
+        for (int j=0; j!=i->second; ++j) {
+            rate *= (NA * conc);
+        }
+    }
+
+    return rate;
+}
+
 
 // RATE TERM CALCULATIONS.
 

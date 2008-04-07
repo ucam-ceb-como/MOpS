@@ -310,7 +310,7 @@ real Process::chemRatePart(const fvector &fracs, real density) const
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
         real conc = density * fracs[i->first];
         for (int j=0; j!=i->second; ++j) {
-            rate *= (NA * conc);
+            rate *= conc;
         }
     }
 

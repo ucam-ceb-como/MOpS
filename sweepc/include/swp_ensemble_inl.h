@@ -13,10 +13,22 @@
 
 // STL STYLE ITERATORS.
 
-inline Sweep::Ensemble::iterator Ensemble::begin() {return m_particles.begin();};
-inline Sweep::Ensemble::const_iterator Ensemble::begin() const {return m_particles.begin();};
-inline Sweep::Ensemble::iterator Ensemble::end() {return m_particles.begin()+m_count;};
-inline Sweep::Ensemble::const_iterator Ensemble::end() const {return m_particles.begin()+m_count;};
+inline Sweep::Ensemble::iterator Ensemble::begin() {
+    return m_particles.begin();
+};
+
+inline Sweep::Ensemble::const_iterator Ensemble::begin() const {
+    return m_particles.begin();
+};
+
+inline Sweep::Ensemble::iterator Ensemble::end() {
+    return m_particles.begin()+m_count;
+};
+
+inline Sweep::Ensemble::const_iterator Ensemble::end() const {
+    return m_particles.begin()+m_count;
+};
+
 
 // ENSEMBLE PROPERTIES.
 

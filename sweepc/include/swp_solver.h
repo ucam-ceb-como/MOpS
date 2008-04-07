@@ -21,8 +21,6 @@ namespace Sweep
 class Solver
 {
 public:
-    typedef std::map<real,Sprog::Thermo::IdealGas> GasProfile;
-
     // Constructors.
     Solver(void); // Default constructor.
 

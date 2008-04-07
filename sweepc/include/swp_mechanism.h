@@ -214,6 +214,14 @@ public:
         fvector &rates   // Return vector for process rates.
         ) const;
 
+    // Calculates the rates-of-change of the chemical species fractions, 
+    // gas-phase temperature and density due to particle processes.
+    void CalcGasChangeRates(
+        real t,          // Time at which to get rates.
+        const Cell &sys, // System cell for which to get rates.
+        fvector &rates   // Return vector for rates-of-change.
+        ) const;
+
 
 	// PERFORMING THE PROCESSES.
 

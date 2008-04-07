@@ -512,6 +512,78 @@ real Mechanism::CalcJumpRates(real t, const Sprog::Thermo::IdealGas &gas,
     return sum;
 }
 
+// Calculates the rates-of-change of the chemical species fractions, 
+// gas-phase temperature and density due to particle processes.
+void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) const
+{
+    // Resize vector to hold all species and set all rates to zero.
+    rates.resize(m_species->size()+2, 0.0);
+    for (fvector::iterator i=rates.begin(); i!=rates.end(); ++i) {
+        *i = 0.0;
+    }
+    fvector::iterator idrho = rates.begin() + (rates.size()-1);
+
+    // Precalculate parameters.
+    real invVolNA = 1.0 / (sys.SampleVolume() * NA);
+
+    // Inceptions and surface processes can affect the gas-phase chemistry
+    // at the moment.
+
+    // Loop over the contributions of all inception processes.
+    for (IcnPtrVector::const_iterator i=m_inceptions.begin(); 
+         i!=m_inceptions.end(); ++i) {
+
+        // Calculate the inception rate.
+        real rate = (*i)->Rate(t, sys);
+
+        // Loop over all reactants, subtracting their contributions.
+        for (Sprog::StoichMap::const_iterator j=(*i)->Reactants().begin(); 
+             j!=(*i)->Reactants().end(); ++j) {
+            real dc = rate * (real)j->second * invVolNA;
+            rates[j->first] -= dc;
+            *idrho -= dc;
+        }
+        
+        // Loop over all products, adding their contributions.
+        for (Sprog::StoichMap::const_iterator j=(*i)->Products().begin(); 
+             j!=(*i)->Products().end(); ++j) {
+            real dc = rate * (real)j->second * invVolNA;
+            rates[j->first] += dc;
+            *idrho += dc;
+        }
+    }
+
+    // Loop over the contributions of all other processes (except coagulation).
+    for (PartProcPtrVector::const_iterator i=m_processes.begin(); 
+         i!=m_processes.end(); ++i) {
+
+        // Calculate the process rate.
+        real rate = (*i)->Rate(t, sys);
+
+        // Loop over all reactants, subtracting their contributions.
+        for (Sprog::StoichMap::const_iterator j=(*i)->Reactants().begin(); 
+             j!=(*i)->Reactants().end(); ++j) {
+            real dc = rate * (real)j->second * invVolNA;
+            rates[j->first] -= dc;
+            *idrho -= dc;
+        }
+        
+        // Loop over all products, adding their contributions.
+        for (Sprog::StoichMap::const_iterator j=(*i)->Products().begin(); 
+             j!=(*i)->Products().end(); ++j) {
+            real dc = rate * (real)j->second * invVolNA;
+            rates[j->first] += dc;
+            *idrho += dc;
+        }
+    }
+
+    // Now convert to changes in mole fractions.
+    real invrho = 1.0 / sys.Density();
+    for (unsigned int k=0; k!=m_species->size(); ++k) {
+        rates[k] = (invrho * rates[k]) - (invrho * sys.MoleFraction(k) * (*idrho));
+    }
+}
+
 
 // PERFORMING THE PROCESSES.
 

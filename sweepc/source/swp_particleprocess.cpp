@@ -119,7 +119,7 @@ void ParticleProcess::SetTrackChange(const fvector &track)
 // new particle.
 void ParticleProcess::SetTrackChange(unsigned int i, real track)
 {
-    if (i < m_dvals.size()) {
+    if (i < m_mech->TrackerCount()) {
         // Ensure vector is sufficiently long.
         if (m_dvals.size() < m_mech->TrackerCount()) {
             m_dvals.resize(m_mech->TrackerCount(),0.0);

@@ -197,6 +197,14 @@ protected:
         real MFP,             // Gas mean free path.
         real vol              // Particle ensemble sample volume.
         ) const;
+
+    // Calculates the gas-phase chemistry contribution to the rate
+    // expression.  This is overloaded as Avogadro's number must be
+    // included in the terms for inception processes.
+    real chemRatePart(
+        const fvector &fracs, // Species mole fractions in gas phase.
+        real density          // Gas phase molar density.
+        ) const;
 };
 };
 

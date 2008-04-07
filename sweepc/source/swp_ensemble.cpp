@@ -87,8 +87,8 @@ Ensemble &Ensemble::operator =(const Sweep::Ensemble &rhs)
         m_dbleon     = rhs.m_dbleon;
 
         // Copy particle vector.
-        for (const_iterator ip=rhs.begin(); ip!=rhs.end(); ++ip) {
-            m_particles.push_back((*ip)->Clone());
+        for (unsigned int i=0; i!=rhs.Count(); ++i) {
+            m_particles[i] = rhs.m_particles[i]->Clone();
         }
 
         // Copy binary tree.
@@ -283,37 +283,48 @@ void Ensemble::RemoveInvalids(void)
     // all the invalid particles being collected at the end of the vector,
     // from where they can be deleted.
 
-    iterator i=begin(), k=end()-1;
+    unsigned int i=0, k=m_count-1;
     unsigned int ix=0, tx=0, n=0;
     bool found=false;
 
-    while (i<k) {
-        found = false;
+    if (m_particles[i] != NULL) {
+        while (i<k) {
+            found = false;
 
-        // Locate next invalid particle in list.
-        while ((i!=k) && (*i)->IsValid()) {i++; ix++;}
+            // Locate next invalid particle in list.
+            while ((i!=k) && m_particles[i]->IsValid()) {++i; ++ix;}
 
-        // Locate next valid particle from end of list.
-        while ((k!=i) && (!(*k)->IsValid())) k--;
-
-        if (i<k) {            
-            delete *i; // Delete invalid particle from memory.
-            *i = *k;   // Put valid particle at index i.
-            n++;       // Increment number of invalid particles.
-            *k = NULL; // Clear duplicate pointer.
-            --m_count; // Decrrement number of particles.
-
-            // Update binary tree.
-            tx = treeIndex(ix);
-            if (isLeftBranch(ix)) {
-                m_tree[tx].LeftData = *(*i);
-            } else {
-                m_tree[tx].RightData = *(*i);
+            // Locate next valid particle from end of list, remember
+            // to delete invalid particles at same time.
+            while ((k!=i) && (!m_particles[k]->IsValid())) {
+                delete m_particles[k];
+                m_particles[k] = NULL;
+                --m_count;
+                --k;
             }
-            ascendingRecalc(tx);
-        } else {
-            // All invalid particles have been deleted.
-            break;
+
+            if (i<k) {            
+                delete m_particles[i]; // Delete invalid particle from memory.
+                m_particles[i] = m_particles[k]; // Put valid particle at index i.
+                m_particles[k] = NULL;           // Clear duplicate pointer.
+                ++n;       // Increment number of invalid particles.
+                --m_count; // Decrement number of particles.
+
+                // Update binary tree.
+                tx = treeIndex(ix);
+                if (isLeftBranch(ix)) {
+                    m_tree[tx].LeftData = *m_particles[i];
+                } else {
+                    m_tree[tx].RightData = *m_particles[i];
+                }
+                ascendingRecalc(tx);
+
+                // Move on indices.
+                ++i; --k;
+            } else {
+                // All invalid particles have been deleted.
+                break;
+            }
         }
     }
 
@@ -522,16 +533,18 @@ real Ensemble::GetSum(ModelType model_id, unsigned int id) const
 // Updates the ensemble tree from the given particle index.
 void Ensemble::Update(unsigned int i)
 {
-    // Get tree index of this particle.
-    unsigned int j = treeIndex(i);
+    if (i < m_count) {
+        // Get tree index of this particle.
+        unsigned int j = treeIndex(i);
 
-    // Update binary tree at this index.
-    if (isLeftBranch(i)) {
-        m_tree[j].LeftData = *m_particles[i];
-    } else {
-        m_tree[j].RightData = *m_particles[i];
+        // Update binary tree at this index.
+        if (isLeftBranch(i)) {
+            m_tree[j].LeftData = *m_particles[i];
+        } else {
+            m_tree[j].RightData = *m_particles[i];
+        }
+        ascendingRecalc(j);
     }
-    ascendingRecalc(j);
 }
 
 // Updates the ensemble tree completely.
@@ -540,15 +553,24 @@ void Ensemble::Update()
     // This flavour updates the whole binary tree.
 
     bool odd = true;
-    iterator i;
     unsigned int j = treeIndex(0);
-    for (i=begin(); i!=end(); i++) {
+    for (unsigned int i=0; i!=m_count; ++i) {
         if (odd) {
-            m_tree[0].LeftData = *(*i);
+            m_tree[0].LeftData = *m_particles[i];
         } else {
-            m_tree[0].RightData = *(*i);
+            m_tree[0].RightData = *m_particles[i];
             ascendingRecalc(j);
-            j++;
+            ++j;
+        }
+        odd = !odd;
+    }
+    for (unsigned int i=m_count; i!=m_capacity; ++i) {
+        if (odd) {
+            m_tree[0].LeftData.Clear();
+        } else {
+            m_tree[0].RightData.Clear();
+            ascendingRecalc(j);
+            ++j;
         }
         odd = !odd;
     }
