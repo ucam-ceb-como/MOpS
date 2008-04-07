@@ -16,6 +16,7 @@
 #include "mops_mixture.h"
 #include "mops_mechanism.h"
 #include "mops_reactor_type.h"
+#include "mops_src_terms.h"
 
 // CVODE includes.
 #include "nvector/nvector_serial.h"
@@ -29,6 +30,9 @@ namespace Mops
 class Reactor
 {
 public:
+    // Function pointer typedef which defines the routine used
+    // to calculate external source terms in the ODE RHSs.
+
     // Constructors.
     Reactor(const Mechanism &mech); // Default constructor.
     Reactor(const Reactor &copy);   // Copy constructor.
@@ -40,11 +44,17 @@ public:
     // Destructor.
     virtual ~Reactor(void); // Default destructor.
 
+    // Operators.
+    virtual Reactor &operator=(const Reactor &rhs);
+
+
     // Enumeration of energy models.
     enum EnergyModel {ConstT, Adiabatic};
 
+    /*
     // Enumeration of ODE solvers.
     enum ODE_Solver {CVODE_Solver, RADAU5_Solver};
+    */
 
     // REACTOR SOLUTION.
     
@@ -54,6 +64,7 @@ public:
     // Sets the current reaction time.
     void SetTime(real t);
 
+    /*
     // Initialises the reactor at the given time.
     virtual void Initialise(real time);
 
@@ -64,7 +75,7 @@ public:
     // Solves the reactor equations up to the given time, assuming
     // that it is in future to the current time.
     virtual void Solve(real time);
-
+    */
 
     // REACTOR CONTENTS.
 
@@ -100,13 +111,19 @@ public:
 
     // EQUATION-OF-STATE MODEL.
 
+    // Returns true if the reactor is at constant pressure.
+    bool IsConstP(void) const;
+
     // Sets the reactor to solve using a constant pressure assumption.
     void SetConstP(void);
+
+    // Returns true if the reactor is at constant volume.
+    bool IsConstV(void) const;
 
     // Sets the reactor solve using a constant volume assumption.
     void SetConstV(void);
 
-
+    /*
     // ERROR TOLERANCES.
 
     // Returns the absolute error tolerance used for ODE
@@ -126,6 +143,24 @@ public:
     void SetRTOL(real rtol);
 
 
+    // EXTERNAL SOURCE TERMS.
+
+    // Returns the vector of external source terms.
+    SrcProfile &ExtSrcTerms(void);
+
+    // Returns the vector of external source terms (const version).
+    const SrcProfile &ExtSrcTerms(void) const;
+
+    // Sets the external source terms.
+    void SetExtSrcTerms(const SrcProfile &src);
+
+    // Returns the external source term function.
+    SrcTermFnPtr ExtSrcTermFn(void) const;
+
+    // Sets the source term function pointer.
+    void SetExtSrcTermFn(SrcTermFnPtr fn);
+    */
+
     // READ/WRITE/COPY FUNCTIONS.
 
     // Creates a copy of the reactor object.
@@ -143,29 +178,13 @@ public:
     // Identifies the reactor type for serialisation.
     virtual Serial_ReactorType SerialType() const;
 
-protected:
-    // Reactor variables.
-    real m_time;                   // The current reaction time.
-    Mops::Mixture *m_mix;          // The mixture contained in the reactor.
-    const Mops::Mechanism *m_mech; // The mechanism which defines 
-                                   // what happens in the reactor.
-    EnergyModel m_emodel;          // The energy model used to describe the reactor.
-    bool m_constv; // true=constant volume model, false=constant pressure model.
-
-    // ODE solution variables.
-    real m_rtol, m_atol;  // Relative and absolute tolerances.
-    unsigned int m_neq;   // Number of equations solved.
-    unsigned int m_nsp;   // Number of species in current mechanism.
-    int m_iT;             // Index of temperature in solution vectors.
-    int m_iDens;          // Index of density in solution vectors.
-    real *m_deriv;        // Array to hold current solution derivatives.
-
-    // Reactors should not be defined without knowledge of a Mechanism
-    // object.  Therefore the default constructor is declared as protected.
-    Reactor(void);
-
 
     // GOVERNING EQUATIONS.
+
+    // Returns the number of governing equations which describe
+    // the reactor.  Usually this will be SpeciesCount+2, for temperature
+    // and density.
+    virtual unsigned int ODE_Count() const;
 
     // Definition of RHS function for constant temperature energy model.
     virtual void RHS_ConstT(
@@ -181,7 +200,35 @@ protected:
         real *ydot           // Derivatives to return.
         );
 
+protected:
+    // Reactor variables.
+    real m_time;                   // The current reaction time.
+    Mops::Mixture *m_mix;          // The mixture contained in the reactor.
+    const Mops::Mechanism *m_mech; // The mechanism which defines 
+                                   // what happens in the reactor.
+    EnergyModel m_emodel;          // The energy model used to describe the reactor.
+    bool m_constv; // true=constant volume model, false=constant pressure model.
+
+    // Derived reactor properties.
+    unsigned int m_neq;     // Number of equations solved.
+    unsigned int m_nsp;     // Number of species in current mechanism.
+    int m_iT;               // Index of temperature in solution vectors.
+    int m_iDens;            // Index of density in solution vectors.
+    real *m_deriv;          // Array to hold current solution derivatives.
+
+    /*
+    // ODE solution variables.
+    real m_rtol, m_atol;    // Relative and absolute tolerances.
+    SrcProfile m_srcterms;  // Vector of externally defined source terms on  the RHS.
+    SrcTermFnPtr _srcTerms; // Source term function pointer.
+    */
+
+    // Reactors should not be defined without knowledge of a Mechanism
+    // object.  Therefore the default constructor is declared as protected.
+    Reactor(void);
+
 private:
+    /*
     // CVODE variables.
     void *m_odewk;        // CVODE workspace.
     N_Vector m_solvec;    // Internal solution array for CVODE interface.
@@ -189,10 +236,11 @@ private:
     // RADAU variables.
     fvector m_rwk;          // Real workspace.
     std::vector<int> m_iwk; // Integer workspace.
-
+    */
 
     // VERY IMPORTANT FOR CVODE INTEGRATION!
 
+    /*
     // The right-hand side evaluator.  This function calculates the RHS of
     // the reactor differential equations.  CVODE uses a void* pointer to
     // allow the calling code to pass whatever information it wants to
@@ -205,7 +253,6 @@ private:
         void* reactor  // A Reactor object (to be cast).
         );
 
-    /*
     static void rhsFn_RADAU5(
         int   *N,             // System dimension.
         Fortran::dreal *X,    // Independent variable.

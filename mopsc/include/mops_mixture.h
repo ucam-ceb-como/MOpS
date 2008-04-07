@@ -29,11 +29,14 @@ public:
     Mixture(const Sprog::SpeciesPtrVector &sp); // Default constructor.
     Mixture(                  // Stream-reading constructor.
         std::istream &in,     //   - Input stream.
-        const Mechanism &mech //   - Species which define the mixture.
+        const Mechanism &mech //   - Mechanism which define the mixture.
         );
 
     // Destructors.
     ~Mixture(void); // Defaul destructors.
+
+    // Operators.
+    Mixture &operator=(const Mixture &rhs);
 
 
     // READ/WRITE/COPY.
@@ -43,7 +46,7 @@ public:
 
 protected:
     // As in Sprog, it is meaningless to define a mixture without knowledge
-    // of the constitent species, therefore the default constructor is 
+    // of the constituent species, therefore the default constructor is 
     // declared as protected.
     Mixture(void);
 };

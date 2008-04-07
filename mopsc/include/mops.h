@@ -25,6 +25,8 @@
 #include "mops_solvertype.h"
 #include "mops_solver.h"
 #include "mops_strang_solver.h"
-#include "swp_flamesolver.h"
+#include "mops_predcor_solver.h"
 
+#include "swp_gas_profile.h"
+#include "swp_flamesolver.h"
 #endif

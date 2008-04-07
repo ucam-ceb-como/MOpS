@@ -15,13 +15,11 @@ using namespace Strings;
 
 // Default constructor.
 Solver::Solver(void)
+: m_atol(1.0e-3), m_rtol(6.0e-4), m_nruns(1), m_pcount(0), m_maxm0(0.0), 
+  m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_chemtime(0.0), 
+  m_console_interval(1),
+  m_console_msgs(true), m_output_filename("mops-out")
 {
-    m_atol = 1.0e-3;
-    m_rtol = 6.0e-4;
-    m_console_interval = 1;
-    m_console_vars.clear();
-    m_console_msgs = true;
-    m_output_filename = "mops-out";
 }
 
 // Default destructor.
@@ -40,6 +38,7 @@ real Solver::ATOL() const
 void Solver::SetATOL(real atol)
 {
     m_atol = atol;
+    m_ode.SetATOL(atol);
 }
 
 real Solver::RTOL() const
@@ -50,6 +49,7 @@ real Solver::RTOL() const
 void Solver::SetRTOL(real rtol)
 {
     m_rtol = rtol;
+    m_ode.SetRTOL(rtol);
 }
 
 
@@ -169,11 +169,12 @@ void Solver::SolveReactor(Mops::Reactor &r,
 
     // Initialise the reactor with the start time.
     t2 = times[0].StartTime();
-    r.Initialise(t2);
+    r.SetTime(t2);
 
-    // Set the error tolerances in the reactor.
-    r.SetATOL(m_atol);
-    r.SetRTOL(m_rtol);
+    // Set up the ODE solver.
+    m_ode.Initialise(r);
+    m_ode.SetATOL(m_atol);
+    m_ode.SetRTOL(m_rtol);
 
     // Set up file output.
     writeAux(m_output_filename, *r.Mech(), times);
@@ -198,7 +199,7 @@ void Solver::SolveReactor(Mops::Reactor &r,
         for (istep=0; istep<(*iint).StepCount(); ++istep) {
             // Run the reactor solver for this step (timed).
             m_cpu_mark = clock();
-                r.Solve((t2+=dt));
+                m_ode.Solve(r, (t2+=dt));
             m_chemtime += calcDeltaCT(m_cpu_mark);
 
             // Generate file output.

@@ -59,6 +59,10 @@ int main(int argc, char *argv[])
             // Use Strang splitting to couple gas-phase and particle
             // system.
             soltype = Strang;
+        } else if (strcmp(argv[i], "-predcor") == 0) {
+            // Use Split-Predictor---Split-Corrector algorithm to 
+            // couple gas-phase and particle system.
+            soltype = PredCor;
         } else if (strcmp(argv[i], "-flamepp") == 0) {
             // Post-process a flame gas-phase chemistry
             // profile, just like sweep1.
@@ -91,8 +95,10 @@ int main(int argc, char *argv[])
             // Not implemented yet.
             return -1;
         case Strang:
-            // Not implemented yet.
             solver = new StrangSolver();
+            break;
+        case PredCor:
+            solver = new PredCorSolver();
             break;
         case MoMIC:
             // Not implemented yet.
@@ -119,14 +125,9 @@ int main(int argc, char *argv[])
     if (foldfmt) {
         // Old file format.
         reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, *solver, mech);
-        reactor->Initialise(0.0);
     } else {
-        // New format not yet implemented.
+        // New format.
         reactor = Settings_IO::LoadFromXML(settfile, reactor, times, *solver, mech);
-        reactor->Initialise(0.0);
-        //delete solver;
-        //delete reactor;
-        //return -1;
     }
 
     // Solve reactor.

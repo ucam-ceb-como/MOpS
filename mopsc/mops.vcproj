@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\fortran_ode\include;..\sweepc\include;..\cvode\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
+				AdditionalIncludeDirectories="..\fortran_ode\include;..\sweepc\include;..\cvode\include;..\cvode\source;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
@@ -110,7 +110,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\fortran_ode\include;..\sweepc\include;..\cvode\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
+				AdditionalIncludeDirectories="..\fortran_ode\include;..\sweepc\include;..\cvode\include;..\cvode\source;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
 			/>
@@ -204,7 +204,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\mops_ode_solver.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\mops_particle_solver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\mops_predcor_solver.cpp"
 				>
 			</File>
 			<File
@@ -228,6 +236,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\mops_src_terms.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\mops_strang_solver.cpp"
 				>
 			</File>
@@ -237,6 +249,10 @@
 			</File>
 			<File
 				RelativePath=".\source\swp_flamesolver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\swp_gas_profile.cpp"
 				>
 			</File>
 		</Filter>
@@ -258,11 +274,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\mops_ode_solver.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\mops_params.h"
 				>
 			</File>
 			<File
 				RelativePath=".\include\mops_particle_solver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\mops_predcor_solver.h"
 				>
 			</File>
 			<File
@@ -294,6 +318,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\mops_src_terms.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\mops_strang_solver.h"
 				>
 			</File>
@@ -303,6 +331,10 @@
 			</File>
 			<File
 				RelativePath=".\include\swp_flamesolver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_gas_profile.h"
 				>
 			</File>
 		</Filter>

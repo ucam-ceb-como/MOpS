@@ -1,4 +1,5 @@
 #include "swp_flamesolver.h"
+#include "swp_gas_profile.h"
 #include "mops_timeinterval.h"
 #include "sweep.h"
 #include "string_functions.h"
@@ -94,7 +95,8 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             real T = 0.0;
             real P = 0.0;
             real alpha = 0.0;
-            Sprog::Thermo::IdealGas gas(mech.Species());
+            GasPoint gpoint(mech.Species());
+//            Sprog::Thermo::IdealGas gas(mech.Species());
 
             // Split the line by columns.
             split(line, subs, delim);
@@ -117,7 +119,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
                     // This is a gas-phase species column.
                     map<unsigned int,int>::iterator isp = spcols.find(i);
                     if (isp != spcols.end()) {
-                        gas.RawData()[isp->second] = cdble(subs[i]);
+                        gpoint.Gas.RawData()[isp->second] = cdble(subs[i]);
                     }
                 }
             }
@@ -126,13 +128,13 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             // normalising the mixture fractions.
             // TODO:  This will give the wrong component densities
             //        unless all species are specified!
-            gas.SetTemperature(T);
-            gas.SetPressure(P*1.0e5);
-            gas.Normalise();
+            gpoint.Gas.SetTemperature(T);
+            gpoint.Gas.SetPressure(P*1.0e5);
+            gpoint.Gas.Normalise();
 
             // Add the profile point.
             alpha_prof[t] = alpha;
-            m_gasprof.insert(GasPoint(t, gas));
+            m_gasprof.push_back(gpoint);
         }
 
         // Set up ABF model to use alpha profile.
@@ -141,6 +143,9 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 
         // Close the input file.
         fin.close();
+
+        // Sort the profile by time.
+        SortGasProfile(m_gasprof);
     } else {
         // There was no data in the file.
         fin.close();
@@ -230,9 +235,11 @@ void FlameSolver::SolveReactor(Mops::Reactor &r,
     // Initialise the reactor with the start time.
     t1 = times[0].StartTime();
     t2 = t1;
-    r.Initialise(t1);
     r.Mixture()->Particles().Initialise(m_pcount);
     r.Mixture()->SetMaxM0(m_maxm0);
+
+    // Initialise ODE solver.
+    m_ode.Initialise(r);
 
     // Set up file output.
     writeAux(m_output_filename, *r.Mech(), times);
@@ -384,37 +391,42 @@ void FlameSolver::linInterpGas(Sweep::real t,
                                Sprog::Thermo::IdealGas &gas) const
 {
     // Get the time point after the required time.
-    GasProfile::const_iterator j = gasphase.upper_bound(t);
+    GasProfile::const_iterator j = LocateGasPoint(gasphase, t); //gasphase.upper_bound(t);
     
     if (j == gasphase.begin()) {
         // This time is before the beginning of the profile.  Return
         // the first time point.
-        gas = j->second;
-    } else {       
+        gas = j->Gas;
+    } else if (j == gasphase.end()) {
+        // This time is after the profile.  Return the last time
+        // point
+        --j;
+        gas = j->Gas;
+    } else {
         // Get the time point before the required time.
         GasProfile::const_iterator i = j; --i;
 
         // Assign the conditions to this point.
-        gas = i->second;
+        gas = i->Gas;
         
         // Calculate time interval between points i and j.
-        real dt_pro = j->first - i->first;
+        real dt_pro = j->Time - i->Time;
 
         // Calculate time interval between point i and current time.
-        real dt = t - i->first;
+        real dt = t - i->Time;
 
         // Calculate the intermediate gas-phase mole fractions by linear
         // interpolation of the molar concentrations.
         real dens = 0.0;
         for (unsigned int k=0; k<gas.Species()->size(); ++k) {
-            real dc = (j->second.MolarConc(k) - i->second.MolarConc(k)) * dt / dt_pro;
+            real dc = (j->Gas.MolarConc(k) - i->Gas.MolarConc(k)) * dt / dt_pro;
             gas.RawData()[k] = gas.MolarConc(k) + dc;
             dens += gas.RawData()[k];
         }
         gas.Normalise();
 
         // Now use linear interpolation to calculate the temperature.
-        real dT = (j->second.Temperature() - i->second.Temperature()) * dt / dt_pro;
+        real dT = (j->Gas.Temperature() - i->Gas.Temperature()) * dt / dt_pro;
         gas.SetTemperature(gas.Temperature()+dT);
 
         // Now set the gas density, calculated using the values above.

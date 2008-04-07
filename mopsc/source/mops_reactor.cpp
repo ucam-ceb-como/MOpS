@@ -1,20 +1,12 @@
 #include "mops_reactor.h"
 #include "mops_mixture.h"
 
-// CVODE includes.
-#include "cvode/cvode.h"
-#include "cvode/cvode_dense.h"
-#include "nvector/nvector_serial.h"
-
-//#include "fortran_interface.h"
-
 #include <vector>
 #include <cmath>
 #include <stdexcept>
 
 using namespace Mops;
 using namespace std;
-//using namespace Fortran::Radau;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -34,18 +26,9 @@ Reactor::Reactor(const Mops::Mechanism &mech)
 // Copy constructor.
 Reactor::Reactor(const Mops::Reactor &copy)
 {
-    m_time    = copy.m_time;
-    m_mix     = copy.m_mix->Clone(); // Need to clone mixture!
-    m_mech    = copy.m_mech;
-    m_emodel  = copy.m_emodel;
-    m_odewk   = NULL; //CVodeCreate(CV_BDF, CV_NEWTON);
-    m_rtol    = copy.m_rtol;
-    m_atol    = copy.m_atol;
-    m_nsp     = copy.m_nsp;
-    m_neq     = copy.m_neq;
-    m_iT      = copy.m_iT;
-    m_iDens   = copy.m_iDens;
-    Initialise(m_time);
+    init();
+    // Use assignment operator.
+    *this = copy;
 }
 
 // Stream-reading constructor.
@@ -53,13 +36,37 @@ Reactor::Reactor(std::istream &in, const Mops::Mechanism &mech)
 {
     init();
     Deserialize(in, mech);
-    Initialise(m_time);
 }
 
 // Default destructor.
 Reactor::~Reactor(void)
 {
     releaseMemory();
+}
+
+
+// OPERATORS.
+
+// Assignment operator.
+Reactor &Reactor::operator=(const Mops::Reactor &rhs)
+{
+    if (this != &rhs) {
+        // Copy the reactor properties.
+        m_time    = rhs.m_time;
+        m_mix     = rhs.m_mix->Clone(); // Need to clone mixture!
+        m_emodel  = rhs.m_emodel;
+        m_nsp     = rhs.m_nsp;
+        m_neq     = rhs.m_neq;
+        m_iT      = rhs.m_iT;
+        m_iDens   = rhs.m_iDens;
+
+        // Initialise the reactor with the mechanism.
+        SetMech(*rhs.m_mech);
+
+        // Copy ODE workspace, incl. derivatives.
+        memcpy(m_deriv, rhs.m_deriv, sizeof(real)*m_neq);
+    }
+    return *this;
 }
 
 
@@ -76,26 +83,10 @@ void Reactor::SetTime(real t)
 {
     m_time = t;
 }
-
+/*
 // Initialises the reactor to the given time.
 void Reactor::Initialise(real time)
 {
-    /*
-    m_rwk.clear();
-    m_rwk.resize(20 + (m_neq * ((4 * m_neq) + 12)), 0.0);
-
-    m_iwk.clear();
-    m_iwk.resize((3 * m_neq) + 20, 0);
-    m_iwk[0] = 1;
-    m_iwk[1] = 0;
-    m_iwk[2] = 0;
-    m_iwk[3] = 0;
-    m_iwk[4] = m_neq;
-    m_iwk[5] = 0;
-    m_iwk[6] = 0;
-    m_iwk[7] = 1;
-    */
-    
     if (m_odewk != NULL) CVodeFree(&m_odewk);
     m_odewk = CVodeCreate(CV_ADAMS, CV_NEWTON);
     //N_VDestroy_Serial(m_solvec);
@@ -130,18 +121,6 @@ void Reactor::Initialise(real time)
 // contents has been changed between calls to Solve().
 void Reactor::ResetSolver(void)
 {
-    /*
-    m_rwk.assign(20 + (m_neq * ((4 * m_neq) + 12)), 0.0);
-    m_iwk.assign((3 * m_neq) + 20, 0);
-    m_iwk[0] = 1;
-    m_iwk[1] = 0;
-    m_iwk[2] = 0;
-    m_iwk[3] = 0;
-    m_iwk[4] = m_neq;
-    m_iwk[5] = 0;
-    m_iwk[6] = 0;
-    m_iwk[7] = 1;
-    */
     
     CVodeReInit(m_odewk, &rhsFn_CVODE, m_time, 
                 N_VMake_Serial(m_neq, m_mix->RawData()),
@@ -152,20 +131,6 @@ void Reactor::ResetSolver(void)
 // Solves the reactor up to the given time.
 void Reactor::Solve(real time)
 {
-    /*
-    real h = 0.0;
-    int  err = 0;
-    int  neq = (int)m_neq;
-    int  nrwk = m_rwk.size();
-    int  miwk = m_iwk.size();
-    int  zero = 0;
-
-    RADAU5(&neq, rhsFn_RADAU5, &m_time, m_mix->RawData(), &time, &h, &m_rtol, &m_atol,
-           &zero, NULL, &zero, &neq, &neq, NULL, &zero, &neq, &zero, NULL, &zero, &m_rwk[0], &nrwk,
-           &m_iwk[0], &miwk, NULL, (int*)this, &err);
-
-    */
-
     
     // Put the solution into an N_Vector data pointer.  This does not
     // involve copying the data.
@@ -186,6 +151,7 @@ void Reactor::Solve(real time)
         RHS_Adiabatic(time, m_mix->RawData(), m_deriv);
     }
 }
+*/
 
 
 // REACTOR CONTENTS.
@@ -234,10 +200,6 @@ void Reactor::SetMech(const Mops::Mechanism &mech)
     m_iT    = m_nsp;
     m_iDens = m_iT + 1;
 
-    /*
-    m_solvec = N_VNewEmpty_Serial(m_neq);
-    */
-
     // Allocate the derivative array.
     if (m_deriv != NULL) delete [] m_deriv;
     m_deriv = new real[m_neq];
@@ -261,39 +223,22 @@ void Reactor::SetEnergyEquation(Reactor::EnergyModel model)
 
 // EQUATION-OF-STATE MODEL.
 
+// Returns true if the reactor is at constant pressure.
+bool Reactor::IsConstP(void) const {return !m_constv;};
+
 // Sets the reactor to solve using a constant pressure assumption.
 void Reactor::SetConstP(void)
 {
     m_constv = false;
 }
 
+// Returns true if the reactor is at constant volume.
+bool Reactor::IsConstV(void) const {return m_constv;};
+
 // Sets the reactor solve using a constant volume assumption.
 void Reactor::SetConstV(void)
 {
     m_constv = true;
-}
-
-
-// ERROR TOLERANCES.
-
-real Reactor::ATOL() const
-{
-    return m_atol;
-}
-
-void Reactor::SetATOL(real atol)
-{
-    m_atol = atol;
-}
-
-real Reactor::RTOL() const
-{
-    return m_rtol;
-}
-
-void Reactor::SetRTOL(real rtol)
-{
-    m_rtol = rtol;
 }
 
 
@@ -338,12 +283,6 @@ void Reactor::Serialize(std::ostream &out) const
         } else {
             out.write((char*)&falseval, sizeof(falseval));
         }
-
-        // Output the error tolerances.
-        val = (double)m_atol;
-        out.write((char*)&val, sizeof(val));
-        val = (double)m_rtol;
-        out.write((char*)&val, sizeof(val));
 
         // Output equation count + special indices.
         n = (unsigned int)m_nsp;
@@ -408,21 +347,14 @@ void Reactor::Deserialize(std::istream &in, const Mops::Mechanism &mech)
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_constv = (n==1);
 
-                // Read the error tolerances.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_atol = (real)val;
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_rtol = (real)val;
-
                 // Read equation count + special indices.
                 in.read(reinterpret_cast<char*>(&m_nsp), sizeof(m_nsp));
                 in.read(reinterpret_cast<char*>(&m_neq), sizeof(m_neq));
                 in.read(reinterpret_cast<char*>(&m_iT), sizeof(m_iT));
                 in.read(reinterpret_cast<char*>(&m_iDens), sizeof(m_iDens));
 
-                // Store the mechanism and initialise CVODE.
+                // Store the mechanism.
                 SetMech(mech);
-                Initialise(m_time);
 
                 // Read derivatives array.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -453,6 +385,7 @@ Serial_ReactorType Reactor::SerialType() const
 
 // RHS FUNCTION AND GOVERNING EQUATIONS.
 
+/*
 // The right-hand side evaluator.  This function calculates the RHS of
 // the reactor differential equations.  CVODE uses a void* pointer to
 // allow the calling code to pass whatever information it wants to
@@ -476,7 +409,6 @@ int Reactor::rhsFn_CVODE(double t,      // Independent variable.
     return 0;
 };
 
-/*
 void Reactor::rhsFn_RADAU5(int *N, Fortran::dreal *X, Fortran::dreal *Y,
                            Fortran::dreal *F, Fortran::dreal *RPAR, int *IPAR)
 {
@@ -492,6 +424,14 @@ void Reactor::rhsFn_RADAU5(int *N, Fortran::dreal *X, Fortran::dreal *Y,
 };
 */
 
+// Returns the number of governing equations which describe
+// the reactor.  Usually this will be SpeciesCount+2, for temperature
+// and density.
+unsigned int Reactor::ODE_Count() const
+{
+    return m_neq;
+}
+
 // Definition of RHS form for constant temperature energy equation.
 void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot)
 {
@@ -504,11 +444,11 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot)
 
     // Calculate mole fraction derivatives.
     for (unsigned int i=0; i!=m_neq-2; ++i) {
-        ydot[i] = (wdot[i] - (y[i]*wtot)) / y[m_iDens];
+        ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]);
     }
 
     // Temperature derivative.
-    ydot[m_iT]    = 0.0;
+    ydot[m_iT] = 0.0;
 
     // Density derivative.
     if (m_constv) {
@@ -536,7 +476,7 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot)
     // Calculate mole fraction and temperature derivatives.
     ydot[m_iT] = 0.0;
     for (unsigned int i=0; i!=m_nsp; ++i) {
-        ydot[i] = (wdot[i] - (y[i]*wtot)) / y[m_iDens];
+        ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]);
         ydot[m_iT] += wdot[i] * Hs[i];
     }
 
@@ -549,7 +489,7 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot)
         ydot[m_iDens] = wtot;
     } else {
         // Constant pressure (Use EoS to calculate).
-        ydot[m_iDens] = - y[m_iDens] * ydot[m_iT] / y[m_iT];
+        ydot[m_iDens] = - (y[m_iDens] * ydot[m_iT] / y[m_iT]);
     }
 }
 
@@ -564,16 +504,11 @@ void Reactor::init(void)
     m_mix     = NULL;
     m_mech    = NULL;
     m_deriv   = NULL;
-    m_atol    = 1.0e-3;
-    m_rtol    = 1.0e-3;
     m_neq     = 0;
     m_nsp     = 0;
     m_iT      = -1;
     m_iDens   = -1;
     m_constv  = false;
-
-    // Init CVODE.
-    m_odewk = NULL; //CVodeCreate(CV_BDF, CV_NEWTON);
 }
 
 // Releases all object memory.
@@ -583,7 +518,4 @@ void Reactor::releaseMemory(void)
     m_mix = NULL;
     if (m_deriv != NULL) delete [] m_deriv;
     m_deriv = NULL;
-    if (m_odewk != NULL) CVodeFree(&m_odewk);
-    m_odewk = NULL;
-    N_VDestroy_Serial(m_solvec);
 }

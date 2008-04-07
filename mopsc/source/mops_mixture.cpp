@@ -27,6 +27,19 @@ Mixture::~Mixture(void)
 }
 
 
+// OPERATORS.
+
+// Assignment operator.
+Mixture &Mixture::operator =(const Mixture &rhs)
+{
+    if (this != &rhs) {
+        // Invoke operator of base class.
+        Sweep::Cell::operator =(rhs);
+    }
+    return *this;
+}
+
+
 // READ/WRITE/COPY.
 
 // Creates a clone of the mixture.

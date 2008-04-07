@@ -415,6 +415,12 @@ void Settings_IO::readGlobalSettings(const CamXML::Element &node,
     if (subnode != NULL) {
         solver.SetMaxPartCount((int)cdble(subnode->Data()));
     }
+
+    // Read predicted maximum M0 value.
+    subnode = node.GetFirstChild("maxm0");
+    if (subnode != NULL) {
+        solver.SetMaxM0(cdble(subnode->Data())*1.0e6); // Convert from #/cm3 to #/m3.
+    }
 }
 
 // Reads the reactor initial settings from the given XML node.

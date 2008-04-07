@@ -42,9 +42,11 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
     // Initialise the reactor with the start time.
     t1 = times[0].StartTime();
     t2 = t1;
-    r.Initialise(t1);
     r.Mixture()->Particles().Initialise(m_pcount);
     r.Mixture()->SetMaxM0(m_maxm0);
+
+    // Initialise the ODE solver.
+    m_ode.Initialise(r);
 
     // Set up file output.
     writeAux(m_output_filename, *r.Mech(), times);
@@ -59,10 +61,6 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
         m_chemtime  = 0.0;
         m_swp_ctime = 0.0;
 
-        // Set the error tolerances in the reactor.
-        r.SetATOL(m_atol);
-        r.SetRTOL(m_rtol);
-
         // Initialise the reactor with the start time.
         t2 = times[0].StartTime();
         r.Mixture()->SetFracs(initmix.MoleFractions());
@@ -70,7 +68,11 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
         r.Mixture()->SetDensity(initmix.Density());
         r.Mixture()->Reset(m_maxm0);
         r.SetTime(t2);
-        r.ResetSolver();
+
+        // Set up the ODE solver for this run.
+        m_ode.ResetSolver();
+        m_ode.SetATOL(m_atol);
+        m_ode.SetRTOL(m_rtol);
 
         // Begin file output for this run.
         openOutputFile(irun);
@@ -92,9 +94,7 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
             unsigned int istep;
             for (istep=0; istep!=(*iint).StepCount(); ++istep, ++global_step) {
                 // Run the reactor solver for this step (timed).
-                m_cpu_mark = clock();
-                    multiStrangStep(iint->SplitStepSize(), iint->SplittingStepCount(), r);
-                m_chemtime += (double)(clock() - m_cpu_mark) / CLOCKS_PER_SEC;
+                multiStrangStep(iint->SplitStepSize(), iint->SplittingStepCount(), r);
 
                 // Generate file output.
                 fileOutput(r);
@@ -134,7 +134,8 @@ void StrangSolver::multiStrangStep(Mops::real dt, unsigned int n, Mops::Reactor 
     m_cpu_mark = clock();
         // Solve first half-step of gas-phase chemistry.
         rho = r.Mixture()->Density();
-        r.Solve(t2+=h);
+        m_ode.Solve(r, t2+=h);
+        r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 
     m_cpu_mark = clock();
@@ -148,8 +149,9 @@ void StrangSolver::multiStrangStep(Mops::real dt, unsigned int n, Mops::Reactor 
         m_cpu_mark = clock();
             // Solve whole step of gas-phase chemistry.
             rho = r.Mixture()->Density();
-            r.ResetSolver();
-            r.Solve(t2+=dt);
+            m_ode.ResetSolver();
+            m_ode.Solve(r, t2+=dt);
+            r.SetTime(t2);
         m_chemtime += calcDeltaCT(m_cpu_mark);
 
         m_cpu_mark = clock();
@@ -163,8 +165,9 @@ void StrangSolver::multiStrangStep(Mops::real dt, unsigned int n, Mops::Reactor 
 
     m_cpu_mark = clock();
         // Solve last half-step of gas-phase chemistry.    
-        r.ResetSolver();
-        r.Solve(t2+=h);
+        m_ode.ResetSolver();
+        m_ode.Solve(r, t2+=h);
+        r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 }
 

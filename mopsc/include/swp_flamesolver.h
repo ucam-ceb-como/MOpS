@@ -13,6 +13,7 @@
 #define SWEEP_FLAME_SOLVER_H
 
 #include "mops_particle_solver.h"
+#include "swp_gas_profile.h"
 #include "sweep.h"
 #include <map>
 
@@ -21,10 +22,18 @@ namespace Sweep
 class FlameSolver : public Mops::ParticleSolver, public Sweep::Solver
 {
 public:
+/*
     // A map of Time/Gas-Phase pairs which describes a gas-phase
     // chemistry profile.
+    struct GasPoint {
+        real Time;
+        Sprog::Thermo::IdealGas Gas;
+        GasPoint(const Sprog::SpeciesPtrVector &species);
+    };
+    typedef std::vector<GasPoint> GasProfile;
     typedef std::map<real, Sprog::Thermo::IdealGas> GasProfile;
     typedef std::pair<real, Sprog::Thermo::IdealGas> GasPoint;
+*/
 
     // Constructors.
     FlameSolver(void); // Default constructor.

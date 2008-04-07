@@ -15,6 +15,7 @@ namespace Mops
         GPC,     // Gas-phase chemistry only, default.
         OpSplit, // Use simple operator splitting.
         Strang,  // Strang splitting.
+        PredCor, // Split-Predictor---Split-Corrector.
         FlamePP, // Post-process a gas-phase profile (like sweep1).
         MoMIC,   // Method-of-moments for 1D particles.
     };

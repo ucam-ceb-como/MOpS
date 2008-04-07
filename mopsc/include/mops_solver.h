@@ -16,6 +16,7 @@
 #include "mops_reactor.h"
 #include "mops_timeinterval.h"
 #include "mops_mechanism.h"
+#include "mops_ode_solver.h"
 #include "console_io.h"
 #include <vector>
 #include <string>
@@ -131,6 +132,11 @@ public:
         ) const;
 
 protected:
+    // ODE SOLVER.
+
+    ODE_Solver m_ode; // The ODE solver used by the mops solver.
+
+
     // SOLVER SETTINGS.
 
     // Default error tolerances for the ODE solver.
