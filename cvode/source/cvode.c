@@ -1603,6 +1603,12 @@ static booleantype CVAllocVectors(CVodeMem cv_mem, N_Vector tmpl, int tol)
     }
   }
 
+  /* Nullify remaining zn vectors - Matthew Celnik, 7th April 2008. */
+
+  for (j=qmax+1; j != L_MAX; ++j) {
+    zn[j] = NULL;
+  }
+
   /* Update solver workspace lengths  */
   lrw += (qmax + 5)*lrw1;
   liw += (qmax + 5)*liw1;
@@ -1621,10 +1627,15 @@ static booleantype CVAllocVectors(CVodeMem cv_mem, N_Vector tmpl, int tol)
     lrw += lrw1;
     liw += liw1;
     cv_mem->cv_VabstolMallocDone = TRUE;
+  } else {
+      Vabstol = NULL; // else block added by Matthew Celnik, 7th April 2008.
   }
 
   /* Store the value of qmax used here */
   cv_mem->cv_qmax_alloc = qmax;
+
+  /* Nullify y - added by Matthew Celnik, 7th April 2008. */
+  cv_mem->cv_y = NULL;
 
   return(TRUE);
 }
