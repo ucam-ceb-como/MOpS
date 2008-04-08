@@ -518,14 +518,14 @@ void PredCorSolver::AddSourceTerms(real *rhs, unsigned int n,
     if (j == src.begin()) {
         // This time is before the beginning of the profile, just
         // use the first point and assume constant.
-        for (unsigned int k=0; k!=min(n,j->Terms.size()); ++k) {
+        for (unsigned int k=0; k!=min(n,(unsigned int)j->Terms.size()); ++k) {
             rhs[k] += j->Terms[k];
         }
     } else if (j == src.end()) {
         // This time is after the end of the profile.  Just assume
         // constant in this range.
         --j;
-        for (unsigned int k=0; k!=min(n,j->Terms.size()); ++k) {
+        for (unsigned int k=0; k!=min(n,(unsigned int)j->Terms.size()); ++k) {
             rhs[k] += j->Terms[k];
         }
     } else {
@@ -533,7 +533,7 @@ void PredCorSolver::AddSourceTerms(real *rhs, unsigned int n,
         // source terms.
         SrcProfile::const_iterator i = j; --i; // Point before j;
         real tterm = (t - i->Time) / (j->Time - i->Time);
-        for (unsigned int k=0; k!=min(n,min(i->Terms.size(),j->Terms.size())); ++k) {
+        for (unsigned int k=0; k!=min(n,(unsigned int)min(i->Terms.size(),j->Terms.size())); ++k) {
             rhs[k] += i->Terms[k] + (tterm * (j->Terms[k] - i->Terms[k]));
         }
     }

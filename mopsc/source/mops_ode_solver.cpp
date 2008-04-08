@@ -2,10 +2,10 @@
 #include "mops_reactor.h"
 
 // CVODE includes.
-#include "cvode/cvode.h"
-#include "cvode/cvode_dense.h"
 #include "nvector/nvector_serial.h"
+#include "cvode/cvode.h"
 #include "cvode_impl.h"
+#include "cvode/cvode_dense.h"
 #include "cvode_dense_impl.h"
 
 #include <vector>
@@ -388,7 +388,7 @@ void ODE_Solver::init(void)
     m_soln     = NULL;
     m_deriv    = NULL;
     m_solvec   = NULL;
-    m_atol     = 1.0e-3;
+    m_atol     = 1.0e-6;
     m_rtol     = 1.0e-3;
     m_neq      = 0;
     m_srcterms = NULL;
@@ -403,7 +403,6 @@ void ODE_Solver::releaseMemory(void)
 {
     delete [] m_deriv;
     if (m_odewk != NULL) CVodeFree(&m_odewk);
-    if (m_solvec != NULL) N_VDestroy_Serial(m_solvec);
 
     // Set values to defaults.
     init();
@@ -474,7 +473,7 @@ void ODE_Solver::assignCVMem(const CVodeMemRec &copy)
             // NORDSIECK HISTORY ARRAY.
 
             // Copy Nordsieck array vectors.
-            for (unsigned int i=0; i!=mem.cv_qmax+1; ++i) {
+            for (int i=0; i!=mem.cv_qmax+1; ++i) {
                 memcpy(NV_DATA_S(mem.cv_zn[i]), NV_DATA_S(copy.cv_zn[i]), 
                        NV_LENGTH_S(copy.cv_zn[i])*sizeof(realtype));
             }
@@ -567,7 +566,7 @@ void ODE_Solver::assignCVMem(const CVodeMemRec &copy)
             // NORDSIECK HISTORY ARRAY.
 
             // Resize and re-assign Nordsieck array vectors.
-            for (unsigned int i=0; i!=mem.cv_qmax+1; ++i) {
+            for (int i=0; i!=mem.cv_qmax+1; ++i) {
                 N_VDestroy_Serial(mem.cv_zn[i]);
                 mem.cv_zn[i] = N_VClone_Serial(copy.cv_zn[i]);
             }

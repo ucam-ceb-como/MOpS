@@ -51,6 +51,8 @@ Reactor::~Reactor(void)
 Reactor &Reactor::operator=(const Mops::Reactor &rhs)
 {
     if (this != &rhs) {
+        releaseMemory();
+
         // Copy the reactor properties.
         m_time    = rhs.m_time;
         m_mix     = rhs.m_mix->Clone(); // Need to clone mixture!
