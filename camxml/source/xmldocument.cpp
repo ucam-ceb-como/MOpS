@@ -34,7 +34,7 @@ int Document::Load(const std::wstring &filename)
             if (l_root != NULL) {
                 SetRoot(*l_root);
             }
-        } catch (exception &e) {
+        } catch (std::exception &e) {
             fin.close();
             throw e;
         }
