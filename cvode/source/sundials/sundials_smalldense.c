@@ -69,13 +69,13 @@ long int denGETRF(realtype **a, long int m, long int n, long int *p)
   realtype temp, mult, a_kj;
 
   /* k-th elimination step number */
-  for (k=0; k < n; k++) {
+  for (k=0; k < n; ++k) {
 
     col_k  = a[k];
 
     /* find l = pivot row number */
     l=k;
-    for (i=k+1; i < m; i++)
+    for (i=k+1; i < m; ++i)
       if (ABS(col_k[i]) > ABS(col_k[l])) l=i;
     p[k] = l;
 
@@ -84,7 +84,7 @@ long int denGETRF(realtype **a, long int m, long int n, long int *p)
     
     /* swap a(k,1:n) and a(l,1:n) if necessary */    
     if ( l!= k ) {
-      for (i=0; i<n; i++) {
+      for (i=0; i<n; ++i) {
         temp = a[i][l];
         a[i][l] = a[i][k];
         a[i][k] = temp;
@@ -98,14 +98,14 @@ long int denGETRF(realtype **a, long int m, long int n, long int *p)
      * in a(i,k), i=k+1, ..., m-1.                      
      */
     mult = ONE/col_k[k];
-    for(i=k+1; i < m; i++) col_k[i] *= mult;
+    for(i=k+1; i < m; ++i) col_k[i] *= mult;
 
     /* row_i = row_i - [a(i,k)/a(k,k)] row_k, i=k+1, ..., m-1 */
     /* row k is the pivot row after swapping with row l.      */
     /* The computation is done one column at a time,          */
     /* column j=k+1, ..., n-1.                                */
 
-    for (j=k+1; j < n; j++) {
+    for (j=k+1; j < n; ++j) {
 
       col_j = a[j];
       a_kj = col_j[k];
@@ -114,7 +114,7 @@ long int denGETRF(realtype **a, long int m, long int n, long int *p)
       /* a_kj = a(k,j), col_k[i] = - a(i,k)/a(k,k) */
 
       if (a_kj != ZERO) {
-	for (i=k+1; i < m; i++)
+	for (i=k+1; i < m; ++i)
 	  col_j[i] -= a_kj * col_k[i];
       }
     }
