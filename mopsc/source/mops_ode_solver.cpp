@@ -121,6 +121,9 @@ void ODE_Solver::InitCVode(void)
 
     // Set CVDense as the linear system solver.
     CVDense(m_odewk, m_neq);
+
+    // Set the Jacobian function in CVODE.
+//    CVDenseSetJacFn(m_odewk, jacFn_CVODE, (void*)this);
 }
 
 // Reset the solver.  Need to do this if the the reactor
@@ -375,6 +378,26 @@ int ODE_Solver::rhsFn_CVODE(double t,      // Independent variable.
 
     return 0;
 };
+
+// The Jacobian matrix evaluator.  This function calculates the 
+// Jacobian matrix given the current state.  CVODE uses a void* pointer to
+// allow the calling code to pass whatever information it wants to
+// the function.  In this case the void* pointer should be cast
+// into an ODE_Solver object.
+int ODE_Solver::jacFn_CVODE(long int N, DenseMat J, double t, N_Vector y,
+                            N_Vector ydot, void* solver,
+                            N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+{
+    // Cast the Solver object.
+    ODE_Solver *s = static_cast<ODE_Solver*>(solver);
+    Reactor *r    = s->m_reactor;
+
+    // Get the Jacobian from the reactor model
+    r->Jacobian(t, NV_DATA_S(y), NV_DATA_S(ydot), J->data, 
+                ((CVodeMem)s->m_odewk)->cv_uround);
+
+    return 0;
+}
 
 
 // INITIALISATION AND MEMORY RELEASE.
@@ -752,7 +775,11 @@ void ODE_Solver::assignCVMem(const CVodeMemRec &copy)
             lmem.d_nstlj     = lcopy.d_nstlj;     // = nst at last Jacobian evaluation.
             lmem.d_nje       = lcopy.d_nje;       // Number of calls to jac.
             lmem.d_nfeD      = lcopy.d_nfeD;      // Number of calls to f due to difference quotient approximation of J.
-            lmem.d_J_data    = (void*)&mem;      // J_data is passed to jac.
+            if (lcopy.d_J_data != &copy) {
+                lmem.d_J_data    = lcopy.d_J_data; // J_data is passed to jac.
+            } else {
+                lmem.d_J_data    = (void*)&mem; // J_data is passed to jac.
+            }
             lmem.d_last_flag = lcopy.d_last_flag; // Last error return flag.
         } else {
             mem.cv_lfree(&mem);

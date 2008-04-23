@@ -55,6 +55,9 @@ int main(int argc, char *argv[])
         // The next statements select the type of solver to use.  The
         // default is to solve gas-phase only, with no particle system.
 
+        } else if (strcmp(argv[i], "-gpc") == 0) {
+            // Solver gas-phase chemistry only.
+            soltype = GPC;
         } else if (strcmp(argv[i], "-strang") == 0) {
             // Use Strang splitting to couple gas-phase and particle
             // system.
@@ -87,58 +90,115 @@ int main(int argc, char *argv[])
     timevector times;        // A list of output times and step counts.
 
     // Create the solver.
-    switch (soltype) {
-        case GPC:
-            solver = new Solver();
-            break;
-        case OpSplit:
-            // Not implemented yet.
-            return -1;
-        case Strang:
-            solver = new StrangSolver();
-            break;
-        case PredCor:
-            solver = new PredCorSolver();
-            break;
-        case MoMIC:
-            // Not implemented yet.
-            return -1;
-        case FlamePP:
-            // Post-process a gas-phase profile.
-            solver = new Sweep::FlameSolver();
-            break;
+    try {
+        switch (soltype) {
+            case OpSplit:
+                // Not implemented yet.
+                printf("Attempted to use simple splitting solver, which is not"
+                       " yet implemented (Mops, main).\n\n");
+                return -1;
+            case Strang:
+                solver = new StrangSolver();
+                break;
+            case PredCor:
+                solver = new PredCorSolver();
+                break;
+            case MoMIC:
+                // Not implemented yet.
+                printf("Attempted to use MoMIC solver, which is not"
+                       " yet implemented (Mops, main).\n\n");
+                return -1;
+            case FlamePP:
+                // Post-process a gas-phase profile.
+                solver = new Sweep::FlameSolver();
+                break;
+            case GPC:
+            default:
+                solver = new Solver();
+                break;
+        }
+    } catch (std::exception &e) {
+        printf("Mops: Failed to initialise solver.  Message:\n  ");
+        printf(e.what());
+        printf("\n\n");
+        return -1;
     }
 
     // Read the chemical mechanism / profile.
-    if (soltype != FlamePP) {
-        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile);
-    } else {
-        dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(chemfile, mech);
+    try {
+        if (soltype != FlamePP) {
+            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile);
+        } else {
+            dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(chemfile, mech);
+        }
+    } catch (std::exception &e) {
+        printf("Mops: Failed to read chemical mechanism/profile.  Message:\n  ");
+        printf(e.what());
+        printf("\n\n");
+        delete solver; // Must clear memory now.
+        return -1;
     }
-    
+
     // Read the particle mechanism.
-    mech.ParticleMech().SetSpecies(mech.Species());
-    Sweep::MechParser::Read(swpfile, mech.ParticleMech());
-    mech.ParticleMech().AddCoagulation();
+    try {
+        if (soltype != GPC) {
+            mech.ParticleMech().SetSpecies(mech.Species());
+            Sweep::MechParser::Read(swpfile, mech.ParticleMech());
+            mech.ParticleMech().AddCoagulation();
+        }
+    } catch (std::exception &e) {
+        printf("Mops: Failed to read particle mechanism.  Message:\n  ");
+        printf(e.what());
+        printf("\n\n");
+        delete solver; // Must clear memory now.
+        return -1;
+    }
 
     // Read the settings file.
-    if (foldfmt) {
-        // Old file format.
-        reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, *solver, mech);
-    } else {
-        // New format.
-        reactor = Settings_IO::LoadFromXML(settfile, reactor, times, *solver, mech);
+    try {
+        if (foldfmt) {
+            // Old file format.
+            reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, *solver, mech);
+        } else {
+            // New format.
+            reactor = Settings_IO::LoadFromXML(settfile, reactor, times, *solver, mech);
+        }
+    } catch (std::exception &e) {
+        printf("Mops: Failed to load settings file.  Message:\n  ");
+        printf(e.what());
+        printf("\n\n");
+        delete solver; // Must clear memory now.
+        return -1;
     }
 
     // Solve reactor.
-    if (fsolve) solver->SolveReactor(*reactor, times, solver->RunCount());
+    try {
+        if (fsolve) solver->SolveReactor(*reactor, times, solver->RunCount());
+    } catch (std::exception &e) {
+        printf("Mops: Failed to solve reactor.  Message:\n  ");
+        printf(e.what());
+        printf("\n\n");
+        delete solver; // Must clear memory now.
+        delete reactor;
+        return -1;
+    }
 
     // Post-process.
-    if (fpostprocess) solver->PostProcess(solver->OutputFile(), solver->RunCount());
+    try {
+        if (fpostprocess) solver->PostProcess(solver->OutputFile(), solver->RunCount());
+    } catch (std::exception &e) {
+        printf("Mops: Failed to post-process.  Message:\n  ");
+        printf(e.what());
+        printf("\n\n");
+        delete solver; // Must clear memory now.
+        delete reactor;
+        return -1;
+    }
 
     // Clear up memory.
     delete solver;
     delete reactor;
 
+    printf("Mops: Simulation completed successfully!\n");
     return 0;
 }

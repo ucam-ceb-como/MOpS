@@ -235,7 +235,7 @@ void FlameSolver::SolveReactor(Mops::Reactor &r,
     // Initialise the reactor with the start time.
     t1 = times[0].StartTime();
     t2 = t1;
-    r.Mixture()->Particles().Initialise(m_pcount);
+    r.Mixture()->Particles().Initialise(m_pcount, r.Mech()->ParticleMech());
     r.Mixture()->SetMaxM0(m_maxm0);
 
     // Initialise ODE solver.

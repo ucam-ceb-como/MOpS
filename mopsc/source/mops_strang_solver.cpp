@@ -42,7 +42,7 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
     // Initialise the reactor with the start time.
     t1 = times[0].StartTime();
     t2 = t1;
-    r.Mixture()->Particles().Initialise(m_pcount);
+    r.Mixture()->Particles().Initialise(m_pcount, r.Mech()->ParticleMech());
     r.Mixture()->SetMaxM0(m_maxm0);
 
     // Initialise the ODE solver.
@@ -70,7 +70,7 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
         r.SetTime(t2);
 
         // Set up the ODE solver for this run.
-        m_ode.ResetSolver();
+        m_ode.ResetSolver(r);
         m_ode.SetATOL(m_atol);
         m_ode.SetRTOL(m_rtol);
 

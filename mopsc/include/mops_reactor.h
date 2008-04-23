@@ -123,44 +123,6 @@ public:
     // Sets the reactor solve using a constant volume assumption.
     void SetConstV(void);
 
-    /*
-    // ERROR TOLERANCES.
-
-    // Returns the absolute error tolerance used for ODE
-    // calculations.
-    real ATOL() const;
-
-    // Sets the absolute error tolerance used for ODE
-    // calculations.
-    void SetATOL(real atol);
-
-    // Returns the relative error tolerance used for ODE
-    // calculations.
-    real RTOL() const;
-
-    // Sets the relative error tolerance used for ODE
-    // calculations.
-    void SetRTOL(real rtol);
-
-
-    // EXTERNAL SOURCE TERMS.
-
-    // Returns the vector of external source terms.
-    SrcProfile &ExtSrcTerms(void);
-
-    // Returns the vector of external source terms (const version).
-    const SrcProfile &ExtSrcTerms(void) const;
-
-    // Sets the external source terms.
-    void SetExtSrcTerms(const SrcProfile &src);
-
-    // Returns the external source term function.
-    SrcTermFnPtr ExtSrcTermFn(void) const;
-
-    // Sets the source term function pointer.
-    void SetExtSrcTermFn(SrcTermFnPtr fn);
-    */
-
     // READ/WRITE/COPY FUNCTIONS.
 
     // Creates a copy of the reactor object.
@@ -191,14 +153,24 @@ public:
         real t,              // Flow time.
         const real *const y, // Solution values.
         real *ydot           // Derivatives to return.
-        );
+        ) const;
 
     // Definition of RHS function for adiabatic energy model.
     virtual void RHS_Adiabatic(
         real t,              // Flow time.
         const real *const y, // Solution values.
         real *ydot           // Derivatives to return.
-        );
+        ) const;
+
+    // Definition of Jacobian evaluator function for constant
+    // temperature model.
+    virtual void Jacobian(
+        real t,                 // Flow time.
+        real *const y,          // Solution values.
+        const real *const ydot, // Derivatives (unperturbed).
+        real **J,               // Jacobian Matrix J[j][i] = dFi/dYj.
+        real uround             // Perturbation size parameter.
+        ) const;
 
 protected:
     // Reactor variables.

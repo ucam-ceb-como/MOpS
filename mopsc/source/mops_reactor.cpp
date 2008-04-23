@@ -387,45 +387,6 @@ Serial_ReactorType Reactor::SerialType() const
 
 // RHS FUNCTION AND GOVERNING EQUATIONS.
 
-/*
-// The right-hand side evaluator.  This function calculates the RHS of
-// the reactor differential equations.  CVODE uses a void* pointer to
-// allow the calling code to pass whatever information it wants to
-// the RHS function.  In this case the void* pointer should be cast
-// into a Reactor object.
-int Reactor::rhsFn_CVODE(double t,      // Independent variable.
-                         N_Vector y,    // Solution array.
-                         N_Vector ydot, // Derivatives of y wrt t.
-                         void* reactor) // Pointer to reactor object.
-{
-    // Cast the Reactor object.
-    Reactor *r = static_cast<Reactor*>(reactor);
-
-    // Get the RHS from the system model.
-    if (r->m_emodel == ConstT) {
-        r->RHS_ConstT(t, NV_DATA_S(y), NV_DATA_S(ydot));
-    } else {
-        r->RHS_Adiabatic(t, NV_DATA_S(y), NV_DATA_S(ydot));
-    }
-
-    return 0;
-};
-
-void Reactor::rhsFn_RADAU5(int *N, Fortran::dreal *X, Fortran::dreal *Y,
-                           Fortran::dreal *F, Fortran::dreal *RPAR, int *IPAR)
-{
-    // Cast the Reactor object.
-    Reactor *r = reinterpret_cast<Reactor*>(IPAR);
-
-    // Get the RHS from the system model.
-    if (r->m_emodel == ConstT) {
-        r->RHS_ConstT(*X, Y, F);
-    } else {
-        r->RHS_Adiabatic(*X, Y, F);
-    }
-};
-*/
-
 // Returns the number of governing equations which describe
 // the reactor.  Usually this will be SpeciesCount+2, for temperature
 // and density.
@@ -435,7 +396,7 @@ unsigned int Reactor::ODE_Count() const
 }
 
 // Definition of RHS form for constant temperature energy equation.
-void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot)
+void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
 {
     static fvector wdot;
     real wtot = 0.0;
@@ -461,7 +422,7 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot)
 }
 
 // Definition of RHS form for adiabatic energy equation.
-void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot)
+void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
 {
     static fvector wdot, Hs;
     real wtot = 0.0, Cp = 0.0;
@@ -493,6 +454,17 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot)
         // Constant pressure (Use EoS to calculate).
         ydot[m_iDens] = - (y[m_iDens] * ydot[m_iT] / y[m_iT]);
     }
+}
+
+// Definition of Jacobian evaluator function for constant
+// temperature model.
+void Reactor::Jacobian(real t, real *const y, 
+                       const real *const ydot, real **J,
+                       real uround) const
+{
+    m_mech->Reactions().CalcJacobian(y[m_iT], y[m_iDens], y, 
+                                     m_nsp, *m_mix, uround, J, 
+                                     m_constv, m_emodel==ConstT);
 }
 
 

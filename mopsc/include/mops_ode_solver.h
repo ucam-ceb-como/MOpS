@@ -17,6 +17,7 @@
 // CVODE includes.
 #include "nvector/nvector_serial.h"
 #include "cvode_impl.h" // For CVodeMem.
+#include "cvode_dense_impl.h" // For DenseMat.
 
 #include <istream>
 
@@ -141,12 +142,29 @@ private:
     // the reactor differential equations.  CVODE uses a void* pointer to
     // allow the calling code to pass whatever information it wants to
     // the RHS function.  In this case the void* pointer should be cast
-    // into a Reactor object.
+    // into an ODE_Solver object.
     static int rhsFn_CVODE(
         double t,      // Current flow time.
         N_Vector y,    // The current solution variables.
         N_Vector ydot, // Derivatives to return.
         void* solver   // An ODE_Solver object (to be cast).
+        );
+
+    // The Jacobian matrix evaluator.  This function calculates the 
+    // Jacobian matrix given the current state.  CVODE uses a void* pointer to
+    // allow the calling code to pass whatever information it wants to
+    // the function.  In this case the void* pointer should be cast
+    // into an ODE_Solver object.
+    static int jacFn_CVODE(
+        long int N,    // Problem size.
+        DenseMat J,    // Jacobian matrix.
+        double t,      // Time.
+        N_Vector y,    // Current solution variables.
+        N_Vector ydot, // Current value of the vector f(t,y), the RHS.
+        void* solver,  // An ODE_Solver object (to be cast).
+        N_Vector tmp1, // Temporary array available for calculations.
+        N_Vector tmp2, // Temporary array available for calculations.
+        N_Vector tmp3  // Temporary array available for calculations.
         );
 
 

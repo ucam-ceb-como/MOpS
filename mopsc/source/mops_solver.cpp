@@ -178,7 +178,7 @@ void Solver::SolveReactor(Mops::Reactor &r,
 
     // Set up file output.
     writeAux(m_output_filename, *r.Mech(), times);
-    openOutputFile(nruns);
+    openOutputFile(0);
 
     // Set up the console output.
     icon = m_console_interval;
@@ -200,6 +200,7 @@ void Solver::SolveReactor(Mops::Reactor &r,
             // Run the reactor solver for this step (timed).
             m_cpu_mark = clock();
                 m_ode.Solve(r, (t2+=dt));
+                r.SetTime(t2);
             m_chemtime += calcDeltaCT(m_cpu_mark);
 
             // Generate file output.
@@ -537,7 +538,7 @@ void Solver::readGasPhaseDataPoint(std::istream &in, const Mops::Mechanism &mech
 
         // Resize vectors.
         sum.resize(N+3, 0.0);
-        if (calcsqrs) sumsqr.resize(N+3, 0.0);
+        sumsqr.resize(N+3, 0.0);
 
         // Calculate sums and sums of square (for average and
         // error calculation).
@@ -576,7 +577,7 @@ void Solver::readCTDataPoint(std::istream &in, unsigned int N,
 
         // Resize output vectors.
         sum.resize(N, 0.0);
-        if (calcsqrs) sumsqr.resize(N, 0.0);
+        sumsqr.resize(N, 0.0);
 
         // Calculate sums and sums of square (for average and
         // error calculation).
