@@ -32,10 +32,10 @@ Ensemble::Ensemble(void)
 }
 
 // Initialising constructor.
-Ensemble::Ensemble(unsigned int count)
+Ensemble::Ensemble(unsigned int count, const Mechanism &mech)
 {
     // Call initialisation routine.
-    Initialise(count);
+    Initialise(count, mech);
 }
 
 // Copy contructor.
@@ -67,7 +67,10 @@ Ensemble &Ensemble::operator =(const Sweep::Ensemble &rhs)
     if (this != &rhs) {
         // Clear current particles.
         Clear();
-        Initialise(rhs.m_capacity);
+
+        // Resize data structures.
+        m_particles.resize(rhs.m_capacity, NULL);
+        m_tree.resize(rhs.m_capacity, rhs.m_tree[0]);
 
         // Capacity.
         m_levels   = rhs.m_levels;
@@ -91,9 +94,19 @@ Ensemble &Ensemble::operator =(const Sweep::Ensemble &rhs)
             m_particles[i] = rhs.m_particles[i]->Clone();
         }
 
-        // Copy binary tree.
-        m_tree = rhs.m_tree;
-        m_sums = rhs.m_sums;
+        // Set all tree nodes to correct size and link up tree.
+        unsigned int i, j;
+        m_tree[0].Parent = NULL;
+        for (i=0,j=1; i!=m_halfcap-1; ++i,j=(2*i)+1) {
+            m_tree[i].Left = &m_tree.at(j);
+            m_tree[i].Left->Parent = &(m_tree[i]);
+            m_tree[i].Right = &m_tree.at(j+1);
+            m_tree[i].Right->Parent = &(m_tree[i]);
+        }
+        for (i=m_halfcap-1; i!=m_capacity; ++i) {
+            m_tree[i].Left  = NULL;
+            m_tree[i].Right = NULL;
+        }
     }
     return *this;
 }
@@ -103,7 +116,7 @@ Ensemble &Ensemble::operator =(const Sweep::Ensemble &rhs)
 
 // Initialises the ensemble to the given size.  Any particles currently
 // in the ensemble will be destroyed.
-void Ensemble::Initialise(unsigned int capacity)
+void Ensemble::Initialise(unsigned int capacity, const Mechanism &mech)
 {
     Clear(); // Clear current ensemble.
     
@@ -117,7 +130,7 @@ void Ensemble::Initialise(unsigned int capacity)
 
     // Reserve memory for ensemble.
     m_particles.resize(capacity, NULL);
-    m_tree.resize(capacity);
+    m_tree.resize(capacity, TreeNode(mech.Components(), mech.Trackers()));
     
     // Set all tree nodes to correct size and link up tree.
     unsigned int i, j;
@@ -599,8 +612,8 @@ void Ensemble::ascendingRecalc(unsigned int i)
         // summing up the properties.
         while (n->Parent != NULL) {
             n = n->Parent;
-            n->LeftData = n->Left->LeftData + n->Left->RightData;
-            n->RightData = n->Right->LeftData + n->Right->RightData;
+            (n->LeftData  = n->Left->LeftData)  += n->Left->RightData;
+            (n->RightData = n->Right->LeftData) += n->Right->RightData;
         }
     }
 }
@@ -729,7 +742,7 @@ void Ensemble::Deserialize(std::istream &in, const Mechanism &mech)
             case 0:
                 // Read the ensemble capacity.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                Initialise(n);
+                Initialise(n, mech);
 
                 // Read the particle count.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));

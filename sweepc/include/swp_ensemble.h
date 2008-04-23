@@ -54,9 +54,10 @@ public:
     typedef PartPtrVector::const_iterator const_iterator;
 
     // Constructors.
-    Ensemble(void);         // Default constructor.
-    Ensemble(               // Parameterised constructor.
-        unsigned int count  //  - Capacity (max. number of particles).
+    Ensemble(void);           // Default constructor.
+    Ensemble(                 // Parameterised constructor.
+        unsigned int count,   //  - Capacity (max. number of particles).
+        const Mechanism &mech //  - Mechanism used to define particles.
         );  
     Ensemble(const Ensemble &copy); // Copy constructor.
     Ensemble(                 // Stream-reading constructor.
@@ -74,7 +75,10 @@ public:
     // INITIALISATION.
 
     // Initialises the ensemble with the given capacity.
-    void Initialise(unsigned int capacity);
+    void Initialise(
+        unsigned int capacity, // Max. number of particles.
+        const Mechanism &mech  // Mechanism which defines the particles.
+        );
 
 
     // PARTICLE ADDITION AND REMOVAL.

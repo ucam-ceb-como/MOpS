@@ -5,7 +5,7 @@ using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default Constructor.
+// Default Constructor (private).
 TreeNode::TreeNode(void)
 : Left(NULL), Right(NULL), Parent(NULL)
 {
@@ -16,6 +16,13 @@ TreeNode::TreeNode(const TreeNode & tn)
 {
     // Use assignment operator.
 	*this = tn;
+}
+
+// Initialising constructor.
+TreeNode::TreeNode(const CompPtrVector &comp, const TrackPtrVector &track)
+: LeftData(comp, track), RightData(comp, track),
+  Left(NULL), Right(NULL), Parent(NULL)
+{
 }
 
 // Destructor.

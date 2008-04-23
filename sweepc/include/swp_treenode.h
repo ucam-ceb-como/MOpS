@@ -21,8 +21,11 @@ friend class Ensemble;
 
 public:
 	// CONSTRUCTORS AND DESTRUCTOR.
-	TreeNode(void);                 // Default Constructor.
 	TreeNode(const TreeNode &copy); // Copy-constructor.
+    TreeNode(                       // Initialising constructor.
+        const CompPtrVector &comp,  //  - Components.
+        const TrackPtrVector &track //  - Tracker variables.
+        );
 	~TreeNode(void);                // Destructor.
 
 	// OPERATOR OVERLOADING.
@@ -42,6 +45,10 @@ private:
 	TreeNode *Left;         // Pointer to left child node.
 	TreeNode *Right;        // Pointer to right child node.
 	TreeNode *Parent;       // Pointer to parent node.
+
+    // Default Constructor is private to prevent uninitialised nodes
+    // being created.
+	TreeNode(void);
 };
 
 typedef std::vector<TreeNode> Tree;

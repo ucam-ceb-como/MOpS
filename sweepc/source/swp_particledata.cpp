@@ -63,18 +63,44 @@ ParticleData::~ParticleData()
 // Assignment operator.
 ParticleData &ParticleData::operator=(const Sweep::ParticleData &rhs)
 {
-    // Assign components and tracker variable definitions.
-    m_components = rhs.m_components;
-    m_trackers = rhs.m_trackers;
+    // Copy components.
+    if (m_components != rhs.m_components) {
+        m_components = rhs.m_components;
+        m_comp.assign(rhs.m_comp.begin(), rhs.m_comp.end());
+//        m_comp.resize(rhs.m_comp.size(), 0.0);
+//        memcpy(&m_comp[0], &rhs.m_comp[0], sizeof(real)*m_comp.size());
+    } else {
+        memcpy(&m_comp[0], &rhs.m_comp[0], sizeof(real)*m_comp.size());
+    }
 
-    // Copy unique properties (components and tracker variables.
-    m_comp.resize(rhs.m_comp.size());
-    for (unsigned int i=0; i!=m_comp.size(); ++i)
-        m_comp[i] = rhs.m_comp[i];
-    m_values.resize(rhs.m_values.size());
-    for (unsigned int i=0; i!=m_values.size(); ++i)
-        m_values[i] = rhs.m_values[i];
+    // Copy tracker variables.
+    if (m_trackers != rhs.m_trackers) {
+        m_trackers = rhs.m_trackers;
+        m_values.assign(rhs.m_values.begin(), rhs.m_values.end());
+//        m_values.resize(rhs.m_values.size(), 0.0);
+//        memcpy(&m_values[0], &rhs.m_values[0], sizeof(real)*m_values.size());
+    } else {
+        memcpy(&m_values[0], &rhs.m_values[0], sizeof(real)*m_values.size());
+    }
+
+    //// Assign components and tracker variable definitions.
+    //m_components = rhs.m_components;
+    //m_trackers   = rhs.m_trackers;
+
+    //// Copy unique properties (components and tracker variables).
+    //m_values.resize(rhs.m_values.size(), 0.0);
+
+    //for (unsigned int i=0; i!=m_comp.size(); ++i)
+    //    m_comp[i] = rhs.m_comp[i];
+    //for (unsigned int i=0; i!=m_values.size(); ++i)
+    //    m_values[i] = rhs.m_values[i];
+
+    //fvector::iterator i;
+    //fvector::const_iterator j;
+    //for (i=m_comp.begin(), j=rhs.m_comp.begin(); i!=m_comp.end(); ++i, ++j) *i = *j;
+    //for (i=m_values.begin(), j=rhs.m_values.begin(); i!=m_values.end(); ++i, ++j) *i = *j;
     
+
     // Copy times.
     m_createt = rhs.m_createt;
     m_time = rhs.m_time;
