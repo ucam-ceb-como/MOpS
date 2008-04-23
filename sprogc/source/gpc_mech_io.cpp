@@ -338,7 +338,7 @@ void MechanismParser::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech,
     real trange[3], lowT, highT, commT;
     Thermo::THERMO_PARAMS up; // Coeffs for upper T interval.
     Thermo::THERMO_PARAMS lp; // Coeffs for lower T interval.
-    string els[4];
+    vector<string> els(4);
     int nels[4];
 
     Species * sp;
@@ -348,6 +348,7 @@ void MechanismParser::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech,
 
     // The first line holds the temperature ranges for 2 sets of coefficients.
     fin.getline(&line[0], 200);
+    while (line[0]=='\0') fin.getline(&line[0], 200);
     tag.clear();
     tag = line;
     trange[0] = cdble(tag.substr(0,10));
@@ -360,96 +361,98 @@ void MechanismParser::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech,
         tag.clear();
         tag = line;
 
-        // Get species name from line.
-        c = line[0];
-        for(i=1; (i<18)&&(!isWhiteSpace(c)); i++) {
-            c = line[i];
-        }
-        spname = tag.substr(0,i-1);
-
-        if (spname.compare("END") != 0) {
-            // Find species in the mechanism.
-            sp = mech.GetSpecies(spname);
-
-            if (sp != NULL) {
-                // Species was found in the mechanism, so we need to
-                // read the thermo data.
-                
-                // Get elemental composition from this (1st) line.
-                els[0] = tag.substr(24, 2);
-                els[1] = tag.substr(29, 2);
-                els[2] = tag.substr(34, 2);
-                els[3] = tag.substr(39, 2);
-                nels[0] = (int)cdble(tag.substr(26,3));
-                nels[1] = (int)cdble(tag.substr(31,3));
-                nels[2] = (int)cdble(tag.substr(36,3));
-                nels[3] = (int)cdble(tag.substr(41,3));
-
-                // Get the thermo temperature ranges from this (1st) line.
-                lowT = cdble(tag.substr(45,10));
-                highT = cdble(tag.substr(55,10));
-                commT = cdble(tag.substr(65,10));
-                if (commT == 0) commT = trange[1];
-
-                // Get 2nd line and read thermo coeffs.
-                fin.getline(&line[0], 200);
-                tag = line;
-                up.Count = 7;
-                up.Params[0] = cdble(tag.substr(0,15));
-                up.Params[1] = cdble(tag.substr(15,15));
-                up.Params[2] = cdble(tag.substr(30,15));
-                up.Params[3] = cdble(tag.substr(45,15));
-                up.Params[4] = cdble(tag.substr(60,15));
-
-                // Get 3rd line and read thermo coeffs.
-                fin.getline(&line[0], 200);
-                tag = line;
-                up.Params[5] = cdble(tag.substr(0,15));
-                up.Params[6] = cdble(tag.substr(15,15));
-                lp.Count = 7;
-                lp.Params[0] = cdble(tag.substr(30,15));
-                lp.Params[1] = cdble(tag.substr(45,15));
-                lp.Params[2] = cdble(tag.substr(60,15));
-
-                // Get 4th line and read thermo coeffs.
-                fin.getline(&line[0], 200);
-                tag = line;
-                lp.Params[3] = cdble(tag.substr(0,15));
-                lp.Params[4] = cdble(tag.substr(15,15));
-                lp.Params[5] = cdble(tag.substr(30,15));
-                lp.Params[6] = cdble(tag.substr(45,15));
-
-                // Now save the data to the species:
-                
-                // Add the elemental composition to the species.
-                for (i=0; i<4; i++) {
-                    // Need to check the element name is valid.
-                    try {
-                        if (!isWhiteSpace(*els[i].substr(0,1).c_str())) {
-                            if (!isWhiteSpace(*els[i].substr(1,1).c_str())) {
-                                sp->AddElement(els[i], nels[i]);
-                            } else {
-                                sp->AddElement(els[i].substr(0,1), nels[i]);
-                            }                    
-                        }
-                    } catch (std::invalid_argument &ia) {
-                        throw ia;
-                    }
-                }
-                
-                // Add the thermo parameters.
-                sp->SetThermoStartTemperature(lowT);
-                sp->AddThermoParams(commT, lp);
-                sp->AddThermoParams(highT, up);
-            } else {
-                // Species was not found in the mechanism, so we need to
-                // skip lines to the next species.
-                fin.getline(&line[0], 200);
-                fin.getline(&line[0], 200);
-                fin.getline(&line[0], 200);
+        if ((tag != "") && (line[0] != '!')) {
+            // Get species name from line.
+            c = line[0];
+            for(i=1; (i<18)&&(!isWhiteSpace(c)); i++) {
+                c = line[i];
             }
-        } else {
-            status.Status = End;
+            spname = tag.substr(0,i-1);
+
+            if (spname.compare("END") != 0) {
+                // Find species in the mechanism.
+                sp = mech.GetSpecies(spname);
+
+                if (sp != NULL) {
+                    // Species was found in the mechanism, so we need to
+                    // read the thermo data.
+                    
+                    // Get elemental composition from this (1st) line.
+                    els[0] = tag.substr(24, 2);
+                    els[1] = tag.substr(29, 2);
+                    els[2] = tag.substr(34, 2);
+                    els[3] = tag.substr(39, 2);
+                    nels[0] = (int)cdble(tag.substr(26,3));
+                    nels[1] = (int)cdble(tag.substr(31,3));
+                    nels[2] = (int)cdble(tag.substr(36,3));
+                    nels[3] = (int)cdble(tag.substr(41,3));
+
+                    // Get the thermo temperature ranges from this (1st) line.
+                    lowT = cdble(tag.substr(45,10));
+                    highT = cdble(tag.substr(55,10));
+                    commT = cdble(tag.substr(65,10));
+                    if (commT == 0) commT = trange[1];
+
+                    // Get 2nd line and read thermo coeffs.
+                    fin.getline(&line[0], 200);
+                    tag = line;
+                    up.Count = 7;
+                    up.Params[0] = cdble(tag.substr(0,15));
+                    up.Params[1] = cdble(tag.substr(15,15));
+                    up.Params[2] = cdble(tag.substr(30,15));
+                    up.Params[3] = cdble(tag.substr(45,15));
+                    up.Params[4] = cdble(tag.substr(60,15));
+
+                    // Get 3rd line and read thermo coeffs.
+                    fin.getline(&line[0], 200);
+                    tag = line;
+                    up.Params[5] = cdble(tag.substr(0,15));
+                    up.Params[6] = cdble(tag.substr(15,15));
+                    lp.Count = 7;
+                    lp.Params[0] = cdble(tag.substr(30,15));
+                    lp.Params[1] = cdble(tag.substr(45,15));
+                    lp.Params[2] = cdble(tag.substr(60,15));
+
+                    // Get 4th line and read thermo coeffs.
+                    fin.getline(&line[0], 200);
+                    tag = line;
+                    lp.Params[3] = cdble(tag.substr(0,15));
+                    lp.Params[4] = cdble(tag.substr(15,15));
+                    lp.Params[5] = cdble(tag.substr(30,15));
+                    lp.Params[6] = cdble(tag.substr(45,15));
+
+                    // Now save the data to the species:
+                    
+                    // Add the elemental composition to the species.
+                    for (i=0; i<4; i++) {
+                        // Need to check the element name is valid.
+                        try {
+                            if (!isWhiteSpace(*els[i].substr(0,1).c_str())) {
+                                if (!isWhiteSpace(*els[i].substr(1,1).c_str())) {
+                                    sp->AddElement(els[i], nels[i]);
+                                } else {
+                                    sp->AddElement(els[i].substr(0,1), nels[i]);
+                                }                    
+                            }
+                        } catch (std::invalid_argument &ia) {
+                            throw ia;
+                        }
+                    }
+                    
+                    // Add the thermo parameters.
+                    sp->SetThermoStartTemperature(lowT);
+                    sp->AddThermoParams(commT, lp);
+                    sp->AddThermoParams(highT, up);
+                } else {
+                    // Species was not found in the mechanism, so we need to
+                    // skip lines to the next species.
+                    fin.getline(&line[0], 200);
+                    fin.getline(&line[0], 200);
+                    fin.getline(&line[0], 200);
+                }
+            } else {
+                status.Status = End;
+            }
         }
     }
 }
@@ -465,7 +468,7 @@ void MechanismParser::parseCK_Thermo(std::string &filename, Sprog::Mechanism &me
 
     if (fin.good()) {
         try {
-            char c[80]; fin.getline(&c[0],80); // Discard first line.
+            char c[81]; fin.getline(&c[0],80); // Discard first line.
             parseCK_Thermo(fin, mech, status);
         } catch (exception &e) {
             fin.close();

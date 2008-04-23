@@ -252,14 +252,6 @@ public:
     FallOffFnPtr FallOffFn() const;        // Custom fall-off function.
 
 
-    /* Removed as species can be defined by parent mechanism.
-    // Species vector.
-    const SpeciesPtrVector *const Species(void) const; // Returns pointer to the vector of species used to 
-                                                       // define reaction.
-    void SetSpecies(const SpeciesPtrVector *const sp); // Sets the species vector.
-    */
-
-
     // PARENT MECHANISM.
 
     // Returns a pointer to the parent mechanism.
@@ -267,6 +259,18 @@ public:
 
     // Sets the parent mechanism.
     void SetMechanism(Sprog::Mechanism &mech);
+
+
+    // RATE CALCULATION.
+
+    // Calculates the rate of progress of this reaction.
+    real RateOfProgress(
+        real density,        // Mixture molar density.
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x array.
+        real kforward,       // Forward rate constant.
+        real kreverse        // Reverse rate constant.
+        ) const;
 
 
     // READ/WRITE/COPY FUNCTIONS.

@@ -839,6 +839,63 @@ void Reaction::SetMechanism(Sprog::Mechanism &mech)
 }
 
 
+// RATE CALCULATION.
+
+// Calculates the rate of progress of this reaction.
+real Reaction::RateOfProgress(real density, const real *const x, 
+                              unsigned int n, real kforward, 
+                              real kreverse) const
+{
+    int j;
+    unsigned int k;
+    real rop, rev;
+
+    if (n >= m_mech->Species().size()) {
+        // Use rop to store forward rates of production, 
+        // and rev to store reverse rates.
+        rop = kforward;
+        rev = kreverse;
+
+        // Integer reactants.
+        for (k=0; k!=m_reac.size(); ++k) {
+            // As the stoichiometry is integer, it is more computationally efficient
+            // to multiply the values together than to use the pow() function.
+            for (j=0; j!=m_reac[k].Mu(); ++j) {
+                rop *= density * x[m_reac[k].Index()];
+            }
+        }
+
+        // Integer products.
+        for (k=0; k!=m_prod.size(); ++k) {
+            // As the stoichiometry is integer, it is more computationally efficient
+            // to multiply the values together than to use the pow() function.
+            for (j=0; j!=m_prod[k].Mu(); ++j) {
+                rev *= density * x[m_prod[k].Index()];
+            }
+        }
+
+        // Real reactants.
+        for (k=0; k!=m_freac.size(); ++k) {
+            // Now the stoichiometry is non-integer, we must use the pow() function.
+            rop *= pow(density * x[m_freac[k].Index()], m_freac[k].Mu()); 
+
+        }
+
+        // Real products.
+        for (k=0; k!=m_fprod.size(); ++k) {
+            // Now the stoichiometry is non-integer, we must use the pow() function.
+            rev *= pow(density * x[m_fprod[k].Index()], m_fprod[k].Mu()); 
+
+        }
+
+        // Calculate the net rate of production.
+        rop -= rev;
+    }
+
+    return rop;
+}
+
+
 // READ/WRITE/COPY FUNCTIONS.
 
 // Creates a copy of the reaction object.

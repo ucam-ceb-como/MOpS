@@ -175,6 +175,26 @@ public:
         ) const;
 
 
+    // JACOBIAN EVALUATION.
+
+    // Calculates the Jacobian matrix for a constant volume, adiabatic
+    // homogeneous mixture. J[j][i] is the Jacobian entry for variable
+    // i with respect to i: dFi/dYj.  It is assumed that the Jacobian
+    // matrix array J has already been allocated for NSP+2 variables
+    // (all species, temperature and density).
+    void CalcJacobian(
+        real T,           // The mixture temperature.
+        real density,     // Mixture molar density.
+        real *const x,    // Species mole fractions.
+        unsigned int n,   // Number of values in x array.
+        const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
+        real pfac,        // Perturbation factor for calculating J entries.
+        real **J,         // Jacobian matrix array.
+        bool constV=true, // Is system constant volume or constant pressure?
+        bool constT=false // Is system constant temperature or adiabatic?
+        ) const;
+
+
     // PARENT MECHANISM.
 
     // Returns a pointer to the parent mechanism.
@@ -203,6 +223,42 @@ protected:
     RxnMap m_fo_rxns;    // Map of fall-off reactions.
     RxnMap m_lt_rxns;    // Map of reactions with Landau Teller parameters.
     RxnMap m_revlt_rxns; // Map of reactions with reverse Landau Teller parameters.
+
+
+    // RATE CALCULATION.
+
+    // Calculates the concentration-independent portions
+    // of the rates constants.
+    void calcRateConstantsT(
+        real T,            // The mixture temperature.
+        const fvector &Gs, // Dimensionless Gibbs free energy of each species (1/mol).
+        fvector &kf,       // Return vector for forward rate constants.
+        fvector &kr        // Return vector for reverse rate constants.
+        ) const;
+
+    // Calculates third-body concentrations for all reactions.  These
+    // values will be multiplied by the rate constants, therefore if
+    // a reaction does not have third-bodies the tbconcs is set to 1.0.
+    void calcTB_Concs(
+        real density,        // Mixture molar density.
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x array.
+        fvector &tbconcs     // Return vector of third-body concentrations.
+        ) const;
+
+    // Calculates the pressure-dependent fall-off terms in the rate
+    // constant expressions.  This function multiplies the rate constants
+    // by the fall-off terms.  This function may also change the values in
+    // the tbconcs vector.
+    void calcFallOffTerms(
+        real T,              // The mixture temperature.
+        real density,        // Mixture molar density.
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x array.
+        fvector &tbconcs,    // Vector of third-body concentrations (alterable).
+        fvector &kf,         // Return vector for forward rate constants.
+        fvector &kr          // Return vector for reverse rate constants.
+        ) const;
 
 
     // MEMORY MANAGEMENT.
