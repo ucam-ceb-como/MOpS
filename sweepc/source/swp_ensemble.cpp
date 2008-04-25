@@ -566,24 +566,24 @@ void Ensemble::Update()
     // This flavour updates the whole binary tree.
 
     bool odd = true;
-    unsigned int j = treeIndex(0);
+    unsigned int j;
     for (unsigned int i=0; i!=m_count; ++i) {
+        j = treeIndex(i);
         if (odd) {
-            m_tree[0].LeftData = *m_particles[i];
+            m_tree[j].LeftData = *m_particles[i];
         } else {
-            m_tree[0].RightData = *m_particles[i];
+            m_tree[j].RightData = *m_particles[i];
             ascendingRecalc(j);
-            ++j;
         }
         odd = !odd;
     }
     for (unsigned int i=m_count; i!=m_capacity; ++i) {
+        j = treeIndex(i);
         if (odd) {
-            m_tree[0].LeftData.Clear();
+            m_tree[j].LeftData.Clear();
         } else {
-            m_tree[0].RightData.Clear();
+            m_tree[j].RightData.Clear();
             ascendingRecalc(j);
-            ++j;
         }
         odd = !odd;
     }

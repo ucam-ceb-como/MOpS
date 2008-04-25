@@ -713,7 +713,7 @@ void Mechanism::UpdateParticle(Particle &sp, const Sprog::Thermo::IdealGas &gas,
             // which are deferred.
             for (i=m_processes.begin(); i!=m_processes.end(); ++i) {
                 if ((*i)->IsDeferred()) {
-                    // Get the process rate times the time interval.
+                    // Get the process rate x the time interval.
                     rate = (*i)->Rate(t, gas, sys, sp) * dt;
 
                     // Use a Poission deviate to calculate number of 

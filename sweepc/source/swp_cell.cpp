@@ -9,13 +9,13 @@ using namespace std;
 
 // Default constructor (private).
 Cell::Cell(void)
-: m_smpvol(1.0)
+: m_smpvol(1.0), m_fixed_chem(false)
 {
 }
 
 // Default constructor (public).
 Cell::Cell(const Sprog::SpeciesPtrVector &sp)
-: Sprog::Thermo::IdealGas(sp)
+: Sprog::Thermo::IdealGas(sp), m_smpvol(1.0), m_fixed_chem(false)
 {
 }
 
@@ -44,12 +44,21 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
 {
     if (this != &rhs) {
         Sprog::Thermo::IdealGas::operator=(rhs);
-        m_ensemble = rhs.m_ensemble;
-        m_smpvol   = rhs.m_smpvol;
+        m_ensemble   = rhs.m_ensemble;
+        m_smpvol     = rhs.m_smpvol;
+        m_fixed_chem = rhs.m_fixed_chem;
     }
     return *this;
 }
 
+// Assignment operator - ideal gas.
+Cell &Cell::operator=(const Sprog::Thermo::IdealGas &rhs)
+{
+    if (this != &rhs) {
+        Sprog::Thermo::IdealGas::operator=(rhs);
+    }
+    return *this;
+}
 
 // THE GAS-PHASE INTERFACE.
 
@@ -68,39 +77,43 @@ void Cell::SetGasPhase(const Sprog::Thermo::IdealGas &gas)
 // Adjusts the concentration of the ith species.
 void Cell::AdjustConc(unsigned int i, real dc)
 {
-    unsigned int k;
+    if (!m_fixed_chem) {
+        unsigned int k;
 
-    // Precalculate DC / density.
-    real dc_rho = dc / *m_pdens;
+        // Precalculate DC / density.
+        real dc_rho = dc / *m_pdens;
 
-    // Calculate change to all mole fractions k < i.
-    for (k=0; k<i; ++k) {
-        m_data[k] -= dc_rho * m_data[k];
-    }
+        // Calculate change to all mole fractions k < i.
+        for (k=0; k<i; ++k) {
+            m_data[k] -= dc_rho * m_data[k];
+        }
 
-    // Calculate change for ith species.
-    m_data[i] += dc_rho * (1.0 - m_data[i]);
+        // Calculate change for ith species.
+        m_data[i] += dc_rho * (1.0 - m_data[i]);
 
-    // Calculate change for all mole fractions k > i.
-    for (k=i+1; k<m_species->size(); ++k) {
-        m_data[k] -= dc_rho * m_data[k];
+        // Calculate change for all mole fractions k > i.
+        for (k=i+1; k<m_species->size(); ++k) {
+            m_data[k] -= dc_rho * m_data[k];
+        }
     }
 }
 
 // Adjusts the concentration of all species.
 void Cell::AdjustConcs(const fvector &dc)
 {
-    // Calculate total change in density.
-    real drho = 0.0;
-    unsigned int k;
-    for (k=0; k!=m_species->size(); ++k) {
-        drho += dc[k];
-    }
+    if (!m_fixed_chem) {
+        // Calculate total change in density.
+        real drho = 0.0;
+        unsigned int k;
+        for (k=0; k!=m_species->size(); ++k) {
+            drho += dc[k];
+        }
 
-    // Calculate changes to the mole fractions.
-    real invrho = 1.0 / *m_pdens;
-    for (k=0; k!=m_species->size(); ++k) {
-        m_data[k] += (invrho * dc[k]) - (invrho * m_data[k] * drho);
+        // Calculate changes to the mole fractions.
+        real invrho = 1.0 / *m_pdens;
+        for (k=0; k!=m_species->size(); ++k) {
+            m_data[k] += (invrho * dc[k]) - (invrho * m_data[k] * drho);
+        }
     }
 }
 
@@ -170,6 +183,18 @@ void Cell::Reset(const real m0)
 }
 
 
+// FIXED/VARIABLE CHEMISTRY.
+
+// Returns whether or not the chemical conditions are fixed.
+bool Cell::FixedChem() const {return m_fixed_chem;}
+
+// Sets whether or not the chemical conditions are fixed.
+void Cell::SetFixedChem(bool fixed) {m_fixed_chem = fixed;}
+
+// Set the chemical conditions to be variable.
+void Cell::SetVariableChem(bool vari) {m_fixed_chem = !vari;}
+
+
 // READ/WRITE/COPY.
 
 // Writes the object to a binary stream.
@@ -186,6 +211,9 @@ void Cell::Serialize(std::ostream &out) const
         // Output the sample volume.
         double v = (double)m_smpvol;
         out.write((char*)&v, sizeof(v));
+
+        // Output if fixed chem.
+        out.write((char*)&m_fixed_chem, sizeof(m_fixed_chem));
 
         // Output the ensemble.
         m_ensemble.Serialize(out);
@@ -215,6 +243,9 @@ void Cell::Deserialize(std::istream &in, const Mechanism &mech)
                 // Read the sample volume.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_smpvol = (real)val;
+
+                // Read if fixed chem.
+                in.read(reinterpret_cast<char*>(&m_fixed_chem), sizeof(m_fixed_chem));
 
                 // Read the ensemble.
                 m_ensemble.Deserialize(in, mech);

@@ -69,7 +69,7 @@ ParticleData &ParticleData::operator=(const Sweep::ParticleData &rhs)
         m_comp.assign(rhs.m_comp.begin(), rhs.m_comp.end());
 //        m_comp.resize(rhs.m_comp.size(), 0.0);
 //        memcpy(&m_comp[0], &rhs.m_comp[0], sizeof(real)*m_comp.size());
-    } else {
+    } else if ((m_components != NULL) && (m_components->size() > 0)) {
         memcpy(&m_comp[0], &rhs.m_comp[0], sizeof(real)*m_comp.size());
     }
 
@@ -79,7 +79,7 @@ ParticleData &ParticleData::operator=(const Sweep::ParticleData &rhs)
         m_values.assign(rhs.m_values.begin(), rhs.m_values.end());
 //        m_values.resize(rhs.m_values.size(), 0.0);
 //        memcpy(&m_values[0], &rhs.m_values[0], sizeof(real)*m_values.size());
-    } else {
+    } else if ((m_trackers != NULL) && (m_trackers->size() > 0)){
         memcpy(&m_values[0], &rhs.m_values[0], sizeof(real)*m_values.size());
     }
 

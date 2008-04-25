@@ -39,7 +39,7 @@ public:
 
     // Operators.
     Cell &operator=(const Cell &rhs);
-
+    Cell &operator=(const Sprog::Thermo::IdealGas &rhs);
 
     // THE GAS-PHASE INTERFACE.
 
@@ -84,6 +84,18 @@ public:
     void Reset(real m0);
 
 
+    // FIXED/VARIABLE CHEMISTRY.
+
+    // Returns whether or not the chemical conditions are fixed.
+    bool FixedChem() const;
+
+    // Sets whether or not the chemical conditions are fixed.
+    void SetFixedChem(bool fixed = true);
+
+    // Set the chemical conditions to be variable.
+    void SetVariableChem(bool vari = true);
+
+
     // READ/WRITE/COPY.
 
     // Writes the object to a binary stream.
@@ -108,6 +120,11 @@ private:
     // The volume in which the ensemble represents
     // the complete real system.
     real m_smpvol;
+
+    // Flag determining whether or not the chemistry in this system is fixed.
+    // If the chemical conditions are fixed, then they cannot be altered by
+    // any particle processes.  Default is false.
+    bool m_fixed_chem;
 };
 };
 

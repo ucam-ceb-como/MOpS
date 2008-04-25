@@ -130,7 +130,7 @@ real Solver::timeStep(real t, Cell &sys, const Mechanism &mech,
 
     // Perform process.
     if (i >= 0) {
-        mech.DoProcess(i, t, sys);
+        mech.DoProcess(i, t+dt, sys);
 /*        if (j==0) {
             m_processcounter[i]++;
         } else if (j==1) {
