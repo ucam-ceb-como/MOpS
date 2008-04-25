@@ -83,7 +83,7 @@ bool GasPoint::IsAfterTime(const GasPoint &lhs, real t)
 // Sort a gas-profile in order of ascending time.
 void Sweep::SortGasProfile(Sweep::GasProfile &prof)
 {
-    std::sort(prof.begin(), prof.end(), GasPoint::IsAfterPoint);
+    std::sort(prof.begin(), prof.end(), GasPoint::IsBeforePoint);
 }
 
 // Returns the first GasPoint defined after the given time.  If the time

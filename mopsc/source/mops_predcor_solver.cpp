@@ -67,6 +67,7 @@ void PredCorSolver::SolveReactor(Mops::Reactor &r,
     // Set up the console output.
     icon = m_console_interval;
     setupConsole(*r.Mech());
+    consoleOutput(r);
 
     // Set up internal solver settings.
     m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->Species()));
@@ -246,7 +247,9 @@ void PredCorSolver::iteration(Reactor &r, real dt)
 // Terminates an iteration step.
 void PredCorSolver::endIteration()
 {
-    // Currently this function does nothing.
+    // Copy last profile point to the first point.
+    m_gas_prof[0].Time = (m_gas_prof.end()-1)->Time;
+    m_gas_prof[0].Gas  = (m_gas_prof.end()-1)->Gas;
 }
 
 // Generates a chemistry profile over the required time interval
@@ -282,7 +285,18 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
     // Calculate the enthalpy-based temperature change 
     // rate using the species change rates and an adiabatic
     // assumption.
-    src.Terms[r.Mech()->SpeciesCount()+1] += energySrcTerm(r, src.Terms);
+    if (r.EnergyEquation() == Reactor::ConstT) {
+        src.Terms[r.Mech()->SpeciesCount()] = 0.0;
+    } else {
+        src.Terms[r.Mech()->SpeciesCount()] += energySrcTerm(r, src.Terms);
+    }
+
+    // Calculate density change based on whether reactor is constant
+    // volume or constant pressure.
+    if (r.IsConstP()) {
+        // Constant pressure: zero density derivative.
+        src.Terms[r.Mech()->SpeciesCount()+1] = 0.0;
+    }
 }
 
 // Calculate the adiabatic temperature change rate due to the
@@ -366,7 +380,8 @@ void PredCorSolver::relaxSrcTerms(SrcPoint &src, const SrcPoint &init,
                                   real rcoeff)
 {
     for (unsigned int i=0; i!=src.Terms.size(); ++i) {
-        src.Terms[i] += rcoeff * (init.Terms[i] - src.Terms[i]);
+        src.Terms[i] = ((1.0-rcoeff)*src.Terms[i]) + (rcoeff*init.Terms[i]);
+//        src.Terms[i] += rcoeff * (init.Terms[i] - src.Terms[i]);
     }
 }
 

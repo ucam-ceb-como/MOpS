@@ -421,7 +421,7 @@ void Solver::setupConsole(const Mops::Mechanism &mech)
 void Solver::consoleOutput(const Mops::Reactor &r) const
 {
     // Get output data from gas-phase.
-    vector<real> out;
+    static vector<real> out;
     r.Mixture()->GetConcs(out);
     out.push_back(r.Mixture()->Temperature());
     out.push_back(r.Mixture()->Density());

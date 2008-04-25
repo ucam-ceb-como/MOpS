@@ -106,7 +106,8 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             for (int i=0; (unsigned)i!=subs.size(); ++i) {
                 if (i==tcol) {
                     // This is the Time column.
-                    t = cdble(subs[i]);                    
+                    t = cdble(subs[i]);
+                    gpoint.Time = t;
                 } else if (i==Tcol) {
                     // This is the temperature column.
                     T = cdble(subs[i]);
@@ -169,6 +170,15 @@ int FlameSolver::Run(real &t, real tstop, const GasProfile &gasphase,
     int err = 0;
     real tsplit, dtg, dt, jrate;
     fvector rates(mech.TermCount(), 0.0);
+    
+    // Save the initial chemical conditions in sys so that we
+    // can restore them at the end of the run.
+    Sprog::Thermo::IdealGas chem = sys;
+
+    // Store if chemical conditions are fixed at present, because we
+    // shall set them to be fixed during this run, to be restored afterwards.
+    bool fixedchem = sys.FixedChem();
+    sys.SetFixedChem();
 
     // Global maximum time step.
     dtg     = tstop - t;
@@ -205,7 +215,7 @@ int FlameSolver::Run(real &t, real tstop, const GasProfile &gasphase,
             // Perform time step.
             dt = timeStep(t, sys, mech, rates, jrate);
             if (dt >= 0.0) {
-                t += dt;
+                t += dt; t = min(t, tstop);
             } else {
                 return -1;
             }
@@ -218,6 +228,10 @@ int FlameSolver::Run(real &t, real tstop, const GasProfile &gasphase,
             mech.LPDA(t, sys);
         }
     }
+
+    // Restore initial chemical conditions to sys.
+    sys = chem;
+    sys.SetFixedChem(fixedchem);
 
     return err;
 }
@@ -235,6 +249,7 @@ void FlameSolver::SolveReactor(Mops::Reactor &r,
     // Initialise the reactor with the start time.
     t1 = times[0].StartTime();
     t2 = t1;
+    dynamic_cast<Sweep::Cell&>(*r.Mixture()) = m_gasprof[0].Gas;
     r.Mixture()->Particles().Initialise(m_pcount, r.Mech()->ParticleMech());
     r.Mixture()->SetMaxM0(m_maxm0);
 
@@ -320,6 +335,8 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
     for(Mops::timevector::const_iterator i=times.begin(); i!=times.end(); ++i) {
         npoints += i->StepCount();
     }
+    // Declare gas-phase output variables (temporary, not processed).
+    fvector achem, echem;
     // Declare stats outputs (averages and errors).
     vector<fvector> astat(npoints), estat(npoints);
     EnsembleStats stats(pmech);
@@ -346,6 +363,8 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
 
         // Read initial stats and computation times.
         {
+            // Read the gas-phase.
+            readGasPhaseDataPoint(fin, mech, achem, echem, nruns>1);
             // Read the stats.
             readParticleDataPoint(fin, pmech, astat[0], estat[0], nruns>1);
             // Read the computation time.
@@ -358,6 +377,7 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
              iint!=times.end(); ++iint) {
             // Loop over all time steps in this interval.
             for (unsigned int istep=0; istep!=(*iint).StepCount(); ++istep, ++step) {
+                readGasPhaseDataPoint(fin, mech, achem, echem, nruns>1);
                 readParticleDataPoint(fin, pmech, astat[step], estat[step], nruns>1);
                 readCTDataPoint(fin, 3, acpu[step], ecpu[step], nruns>1);
             }

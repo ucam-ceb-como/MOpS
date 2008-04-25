@@ -77,7 +77,7 @@ void ParticleSolver::readParticleDataPoint(std::istream &in,
 
         // Resize vectors.
         sum.resize(s.size(), 0.0);
-        if (calcsqrs) sumsqr.resize(s.size(), 0.0);
+        sumsqr.resize(s.size(), 0.0);
 
         // Calculate sums and sums of squares (for average and
         // error calculation).
