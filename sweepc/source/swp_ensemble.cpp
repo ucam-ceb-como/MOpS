@@ -68,44 +68,61 @@ Ensemble &Ensemble::operator =(const Sweep::Ensemble &rhs)
         // Clear current particles.
         Clear();
 
-        // Resize data structures.
-        m_particles.resize(rhs.m_capacity, NULL);
-        m_tree.resize(rhs.m_capacity, rhs.m_tree[0]);
+        if (rhs.m_capacity > 0) {
+            // Resize particle vector.
+            m_particles.resize(rhs.m_capacity, NULL);
 
-        // Capacity.
-        m_levels   = rhs.m_levels;
-        m_capacity = rhs.m_capacity;
-        m_halfcap  = rhs.m_halfcap;
-        m_count    = rhs.m_count;
-        // Scaling.
-        m_ncont      = rhs.m_ncont;
-        m_scale      = rhs.m_scale;
-        m_contfactor = rhs.m_contfactor;
-        // Doubling.
-        m_ndble      = rhs.m_ndble;
-        m_dbleactive = rhs.m_dbleactive;
-        m_dblecutoff = rhs.m_dblecutoff;
-        m_dblelimit  = rhs.m_dblelimit;
-        m_dbleslack  = rhs.m_dbleslack;
-        m_dbleon     = rhs.m_dbleon;
+            // Resize binary tree vector.
+            bool relink_tree = (m_capacity != rhs.m_capacity);
+            const CompPtrVector *comp = rhs.m_tree[0].LeftData.Components();
+            const TrackPtrVector *track = rhs.m_tree[0].LeftData.Trackers();
+            m_tree.resize(rhs.m_capacity-1, TreeNode(*comp, *track));
 
-        // Copy particle vector.
-        for (unsigned int i=0; i!=rhs.Count(); ++i) {
-            m_particles[i] = rhs.m_particles[i]->Clone();
-        }
+            // Capacity.
+            m_levels   = rhs.m_levels;
+            m_capacity = rhs.m_capacity;
+            m_halfcap  = rhs.m_halfcap;
+            m_count    = rhs.m_count;
+            // Scaling.
+            m_ncont      = rhs.m_ncont;
+            m_scale      = rhs.m_scale;
+            m_contfactor = rhs.m_contfactor;
+            // Doubling.
+            m_ndble      = rhs.m_ndble;
+            m_dbleactive = rhs.m_dbleactive;
+            m_dblecutoff = rhs.m_dblecutoff;
+            m_dblelimit  = rhs.m_dblelimit;
+            m_dbleslack  = rhs.m_dbleslack;
+            m_dbleon     = rhs.m_dbleon;
 
-        // Set all tree nodes to correct size and link up tree.
-        unsigned int i, j;
-        m_tree[0].Parent = NULL;
-        for (i=0,j=1; i!=m_halfcap-1; ++i,j=(2*i)+1) {
-            m_tree[i].Left = &m_tree.at(j);
-            m_tree[i].Left->Parent = &(m_tree[i]);
-            m_tree[i].Right = &m_tree.at(j+1);
-            m_tree[i].Right->Parent = &(m_tree[i]);
-        }
-        for (i=m_halfcap-1; i!=m_capacity; ++i) {
-            m_tree[i].Left  = NULL;
-            m_tree[i].Right = NULL;
+            // Copy particle vector.
+            for (unsigned int i=0; i!=rhs.Count(); ++i) {
+                m_particles[i] = rhs.m_particles[i]->Clone();
+            }
+
+            if (relink_tree) {
+                // Set all tree nodes to correct size and link up tree.
+                unsigned int i, j;
+                m_tree[0].Parent = NULL;
+                for (i=0,j=1; i!=m_halfcap-1; ++i) {
+                    j = (2*i) + 1;
+                    m_tree[i].Left          = &m_tree.at(j);
+                    m_tree[i].Left->Parent  = &(m_tree[i]);
+                    m_tree[i].Right         = &m_tree.at(j+1);
+                    m_tree[i].Right->Parent = &(m_tree[i]);
+                }
+                //  Nodes in last half of tree refer to particles, and
+                //  have no children.
+                for (i=m_halfcap-1; i!=m_capacity-1; ++i) {
+                    m_tree[i].Left  = NULL;
+                    m_tree[i].Right = NULL;
+                }
+            }
+
+            // Now copy data from rhs tree to this.
+            for (unsigned int i=0; i!=m_capacity-1; ++i) {
+                m_tree[i] = rhs.m_tree[i];
+            }
         }
     }
     return *this;
@@ -130,7 +147,7 @@ void Ensemble::Initialise(unsigned int capacity, const Mechanism &mech)
 
     // Reserve memory for ensemble.
     m_particles.resize(capacity, NULL);
-    m_tree.resize(capacity, TreeNode(mech.Components(), mech.Trackers()));
+    m_tree.resize(capacity-1, TreeNode(mech.Components(), mech.Trackers()));
     
     // Set all tree nodes to correct size and link up tree.
     unsigned int i, j;
@@ -141,7 +158,7 @@ void Ensemble::Initialise(unsigned int capacity, const Mechanism &mech)
         m_tree[i].Right = &m_tree.at(j+1);
         m_tree[i].Right->Parent = &(m_tree[i]);
     }
-    for (i=m_halfcap-1; i<m_capacity; i++) {
+    for (i=m_halfcap-1; i!=m_capacity-1; ++i) {
         m_tree[i].Left  = NULL;
         m_tree[i].Right = NULL;
     }
@@ -371,7 +388,7 @@ void Ensemble::Replace(unsigned int i, Particle &sp)
 void Ensemble::Clear()
 {
     // Delete particles from memory and delete vectors.
-    for (int i=0; i<(int)m_particles.size(); i++) {
+    for (int i=0; i!=(int)m_particles.size(); ++i) {
         delete m_particles[i];
         m_particles[i] = NULL;
     }
@@ -639,7 +656,7 @@ void Ensemble::dble()
             left = isLeftBranch(n);
 
             // Copy particles.
-            for (isp=0,j=n; isp!=n; isp++,j++,left=!left) {
+            for (isp=0,j=n; isp!=n; ++isp,++j,left=!left) {
                 // Create a copy of a particle and add it to the ensemble.
                 sp = m_particles[isp]->Clone();
                 m_particles[i=m_count++] = sp;
@@ -654,7 +671,7 @@ void Ensemble::dble()
             }
 
             // Update the tree from second last level up.
-            for (inode=(m_tree.begin()+m_halfcap-2); inode!=m_tree.begin(); inode--) {
+            for (inode=(m_tree.begin()+m_halfcap-2); inode!=m_tree.begin(); --inode) {
                 inode->LeftData = inode->Left->LeftData + inode->Left->RightData;
                 inode->RightData = inode->Right->LeftData + inode->Right->RightData;
             }
