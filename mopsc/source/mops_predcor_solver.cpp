@@ -13,7 +13,7 @@ using namespace Strings;
 
 // Default constructor.
 PredCorSolver::PredCorSolver(void)
-: m_rlx_coeff(0.9)
+: m_rlx_coeff(0.1)
 {
 }
 
@@ -119,7 +119,7 @@ void PredCorSolver::SolveReactor(Mops::Reactor &r,
                 iteration(r, iint->SplitStepSize());
                 fileOutput(r);
                 if (istep == iint->StepCount()-1) {
-                    createSavePoint(r, global_step, irun);
+                    createSavePoint(r, global_step+1, irun);
                 }
             }
             endIteration();

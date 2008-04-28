@@ -5,6 +5,8 @@
 #include "mops_psr.h"
 #include "mops_mixture.h"
 #include "mops_reactor_factory.h"
+#include "mops_predcor_solver.h"
+
 #include "camxml.h"
 #include "string_functions.h"
 
@@ -420,6 +422,13 @@ void Settings_IO::readGlobalSettings(const CamXML::Element &node,
     subnode = node.GetFirstChild("maxm0");
     if (subnode != NULL) {
         solver.SetMaxM0(cdble(subnode->Data())*1.0e6); // Convert from #/cm3 to #/m3.
+    }
+
+    // Read predictor-corrector relaxation parameter.
+    subnode = node.GetFirstChild("relax");
+    if (subnode != NULL) {
+        PredCorSolver* pcs = dynamic_cast<PredCorSolver*>(&solver);
+        if (pcs!=NULL) pcs->SetUnderRelaxCoeff(cdble(subnode->Data()));
     }
 }
 
