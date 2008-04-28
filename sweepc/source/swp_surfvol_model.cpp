@@ -1,5 +1,5 @@
-#include "swp_pointcontactmodel.h"
-#include "swp_pointcontactdata.h"
+#include "swp_surfvolmodel.h"
+#include "swp_surfvoldata.h"
 #include "swp_particle.h"
 #include <string>
 
@@ -9,33 +9,33 @@ using namespace std;
 // SINGLETON IMPLEMENTATION.
 
 // Default constructor.
-PointContactModel::PointContactModel()
+SurfVolModel::SurfVolModel()
 {
     // Do nothing.
 }
 
 // Copy constructor.
-PointContactModel::PointContactModel(const Sweep::PointContactModel &copy)
+SurfVolModel::SurfVolModel(const Sweep::SurfVolModel &copy)
 {
     // Do nothing.
 }
 
 // Assignment operator.
-PointContactModel &PointContactModel::operator =(const Sweep::PointContactModel &rhs)
+SurfVolModel &SurfVolModel::operator =(const Sweep::SurfVolModel &rhs)
 {
     return *this;
 }
 
 // Default destructor.
-PointContactModel::~PointContactModel()
+SurfVolModel::~SurfVolModel()
 {
     // Do nothing.
 }
 
 // Returns the one and only instance.
-PointContactModel &PointContactModel::Instance()
+SurfVolModel &SurfVolModel::Instance()
 {
-    static PointContactModel inst;
+    static SurfVolModel inst;
     return inst;
 }
 
@@ -44,7 +44,7 @@ PointContactModel &PointContactModel::Instance()
 
 // Performs a coagulation event on the two given particles.
 // The resultant particle is stored in the location of p1.
-void PointContactModel::Perform(Particle &p1, Particle &p2) const
+void SurfVolModel::Perform(Particle &p1, Particle &p2) const
 {
     p1 += p2;
 }
@@ -52,11 +52,11 @@ void PointContactModel::Perform(Particle &p1, Particle &p2) const
 
 // PARTICLE PROPERTY CALCULATION.
 
-void PointContactModel::UpdateParticle(Particle &p, 
-                                       const fvector &dcomp,
-                                       const fvector &dval) const
+void SurfVolModel::UpdateParticle(Particle &p, 
+                                  const fvector &dcomp,
+                                  const fvector &dval) const
 {
-    PointContactData *data = dynamic_cast<PointContactData*>(p.CoagModelCache());
+    SurfVolData *data = dynamic_cast<SurfVolData*>(p.CoagModelCache());
 
     // Calculate change in volume.
     real dvol = 0.0;
@@ -80,10 +80,10 @@ void PointContactModel::UpdateParticle(Particle &p,
     data->m_surf += 2.0 * dvol * rad;
 }
 
-void PointContactModel::UpdateParticle(Particle &p, const fvector &dcomp, 
-                                       const fvector &dval, unsigned int n) const
+void SurfVolModel::UpdateParticle(Particle &p, const fvector &dcomp, 
+                                  const fvector &dval, unsigned int n) const
 {
-    PointContactData *data = dynamic_cast<PointContactData*>(p.CoagModelCache());
+    SurfVolData *data = dynamic_cast<SurfVolData*>(p.CoagModelCache());
 
     // Calculate change in volume.
     real dvol = 0.0;
@@ -111,21 +111,21 @@ void PointContactModel::UpdateParticle(Particle &p, const fvector &dcomp,
 
 // Updates the first particle according to the model rules for
 // coagulation.  The first particle is the recipient of the second.
-void PointContactModel::CoagParticles(Particle &p1, const Particle &p2) const
+void SurfVolModel::CoagParticles(Particle &p1, const Particle &p2) const
 {
-    PointContactData *data = dynamic_cast<PointContactData*>(p1.CoagModelCache());
+    SurfVolData *data = dynamic_cast<SurfVolData*>(p1.CoagModelCache());
     data->m_surf = p1.SurfaceArea() + p2.SurfaceArea();
 }
 
 
 // PROPERTY CACHE UPDATE.
 
-void PointContactModel::UpdateCache(Sweep::ParticleData &p) const
+void SurfVolModel::UpdateCache(Sweep::ParticleData &p) const
 {
     // Calculate base class properties.
     CoagModel::UpdateCache(p);
 
-    PointContactData &cache = dynamic_cast<PointContactData&>(*p.CoagModelCache());
+    SurfVolData &cache = dynamic_cast<SurfVolData&>(*p.CoagModelCache());
 
     // Set correct surface area.
     cache.m_sphsurf = p.SurfaceArea();

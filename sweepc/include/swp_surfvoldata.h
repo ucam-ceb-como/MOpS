@@ -3,41 +3,41 @@
   Project:        sweep (population balance solver)
 
   File purpose:
-    The PointContactData class is a specialisation of the CoagModelData
+    The SurfVolData class is a specialisation of the CoagModelData
     class which holds additional data for the surface-volume particle
     model.
 */
 
-#ifndef SWEEP_POINTCONTACTDATA_H
-#define SWEEP_POINTCONTACTDATA_H
+#ifndef SWEEP_SURFVOL_DATA_H
+#define SWEEP_SURFVOL_DATA_H
 
 #include "swp_params.h"
 #include "swp_coagmodeldata.h"
-#include "swp_pointcontactmodel.h"
+#include "swp_surfvolmodel.h"
 #include <iostream>
 
 namespace Sweep
 {
-class PointContactData : public CoagModelData
+class SurfVolData : public CoagModelData
 {
-friend class PointContactModel;
+friend class SurfVolModel;
 
 public:
     // Constructors.
-    PointContactData(ParticleData &parent); // Default constructor.
-    PointContactData(const PointContactData &copy); // Copy constructor.
-    PointContactData(        // Stream-reading constructor.
+    SurfVolData(ParticleData &parent);    // Default constructor.
+    SurfVolData(const SurfVolData &copy); // Copy constructor.
+    SurfVolData(             // Stream-reading constructor.
         std::istream &in,    //  - Input stream.
         ParticleData &parent //  - Parent ParticleData object.
         );
 
     // Destructors.
-    ~PointContactData(void);
+    ~SurfVolData(void);
 
     // Operators.
-    PointContactData &operator=(const PointContactData &rhs);
-    PointContactData &operator+=(const PointContactData &rhs);
-    const PointContactData operator+(const PointContactData &rhs) const;
+    SurfVolData &operator=(const SurfVolData &rhs);
+    SurfVolData &operator+=(const SurfVolData &rhs);
+    const SurfVolData operator+(const SurfVolData &rhs) const;
 
     // Resets the model data to the default state.
     void Clear();
@@ -54,14 +54,14 @@ public:
 
     // MODEL WHICH USES THIS DATA.
 
-    // Returns the PointContactModel which operates on this data.
-    const PointContactModel &Model(void) const;
+    // Returns the SurfVolModel which operates on this data.
+    const SurfVolModel &Model(void) const;
 
 
     // READ/WRITE/COPY.
 
     // Returns a copy of the data.
-    PointContactData *const Clone(void) const;
+    SurfVolData *const Clone(void) const;
 
     // Returns the model ID.
     ModelType ID(void) const;
@@ -77,9 +77,9 @@ private:
     real m_sphsurf; // Equivalent sphere surface area.
     real m_surf;    // Actual surface area.
 
-    // Can't create a PointContactData without knowledge
+    // Can't create a SurfVolData without knowledge
     // of the parent ParticleData.
-    PointContactData(void);
+    SurfVolData(void);
 };
 };
 

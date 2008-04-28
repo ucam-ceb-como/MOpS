@@ -1,10 +1,10 @@
 #include "swp_modelfactory.h"
 #include "swp_coagmodeldata.h"
-#include "swp_pointcontactdata.h"
+#include "swp_surfvoldata.h"
 #include "swp_pripartdata.h"
 #include "swp_particlestats.h"
 #include "swp_coagmodel.h"
-#include "swp_pointcontactmodel.h"
+#include "swp_surfvolmodel.h"
 #include "swp_pripartmodel.h"
 #include "swp_abfmodel.h"
 #include <stdexcept>
@@ -21,7 +21,7 @@ IModelData *const ModelFactory::CreateData(ModelType id, ParticleData &parent)
         case CoagModel_ID:
             return new CoagModelData(parent);
         case SVModel_ID:
-            return new PointContactData(parent);
+            return new SurfVolData(parent);
         case PriPartModel_ID:
             return new PriPartData(parent);
         case ABFSites_ID:
@@ -52,7 +52,7 @@ IModelData *const ModelFactory::Read(std::istream &in,
                 model = new CoagModelData(in, parent);
                 break;
             case SVModel_ID:
-                model = new PointContactData(in, parent);
+                model = new SurfVolData(in, parent);
                 break;
             case PriPartModel_ID:
                 model = new PriPartData(in, parent);
@@ -89,7 +89,7 @@ CoagModelData *const ModelFactory::ReadCoag(std::istream &in,
                 model = new CoagModelData(in, parent);
                 break;
             case SVModel_ID:
-                model = new PointContactData(in, parent);
+                model = new SurfVolData(in, parent);
                 break;
             default:
                 throw runtime_error("Invalid model type read from "
@@ -181,7 +181,7 @@ IModel *const ModelFactory::GetModel(ModelType id)
         case CoagModel_ID:
             return &CoagModel::Instance();
         case SVModel_ID:
-            return &PointContactModel::Instance();
+            return &SurfVolModel::Instance();
         case PriPartModel_ID:
             return &PriPartModel::Instance();
         default:

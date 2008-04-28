@@ -3,19 +3,19 @@
   Project:        sweep (population balance solver)
 
   File purpose:
-    The PointContactModel class implements the surface-volume model
+    The SurfVolModel class implements the surface-volume model
     for coagulation and surface growth.
 */
 
-#ifndef SWEEP_POINTCONTACTMODEL_H
-#define SWEEP_POINTCONTACTMODEL_H
+#ifndef SWEEP_SURFVOL_MODEL_H
+#define SWEEP_SURFVOL_MODEL_H
 
 #include "swp_params.h"
 #include "swp_coagmodel.h"
 
 namespace Sweep
 {
-class PointContactModel : public CoagModel
+class SurfVolModel : public CoagModel
 {
 public:
     // Performs a coagulation event on the two given particles.
@@ -57,17 +57,17 @@ public:
 
     // SINGLETON IMPLEMENTATION.
 
-    // Returns the one and only PointContactModel object.
-    static PointContactModel &Instance(void);
+    // Returns the one and only SurfVolModel object.
+    static SurfVolModel &Instance(void);
 
 protected:
     // Class implements the Singleton idiom, therefore
     // the default constructor, copy constructor and assignment
     // operator have to be made inaccessible.
-    PointContactModel(void);
-    PointContactModel(const PointContactModel &copy);
-    PointContactModel &operator=(const PointContactModel &rhs);
-    ~PointContactModel(void);
+    SurfVolModel(void);
+    SurfVolModel(const SurfVolModel &copy);
+    SurfVolModel &operator=(const SurfVolModel &rhs);
+    ~SurfVolModel(void);
 
 private:
     // Number of stats in the point contact model.

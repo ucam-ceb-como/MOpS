@@ -1,4 +1,4 @@
-#include "swp_pointcontactdata.h"
+#include "swp_surfvoldata.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -7,33 +7,33 @@ using namespace std;
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (private).
-PointContactData::PointContactData(void)
+SurfVolData::SurfVolData(void)
 : m_sphsurf(0.0), m_surf(0.0)
 {
 }
 
 // Default constructor (public).
-PointContactData::PointContactData(Sweep::ParticleData &parent)
+SurfVolData::SurfVolData(Sweep::ParticleData &parent)
 : CoagModelData(parent), m_sphsurf(0.0), m_surf(0.0)
 {
 }
 
 // Copy constructor.
-PointContactData::PointContactData(const Sweep::PointContactData &copy)
+SurfVolData::SurfVolData(const Sweep::SurfVolData &copy)
 {
     // Use assignment operator.
     *this = copy;
 }
 
 // Stream-reading constructor.
-PointContactData::PointContactData(std::istream &in, ParticleData &parent)
+SurfVolData::SurfVolData(std::istream &in, ParticleData &parent)
 {
     Deserialize(in);
     SetParent(parent);
 }
 
 // Default destructor.
-PointContactData::~PointContactData()
+SurfVolData::~SurfVolData()
 {
     // Nothing special to destruct.
 }
@@ -42,7 +42,7 @@ PointContactData::~PointContactData()
 // OPERATOR OVERLOADING.
 
 // Assignment operator.
-PointContactData &PointContactData::operator=(const Sweep::PointContactData &rhs)
+SurfVolData &SurfVolData::operator=(const Sweep::SurfVolData &rhs)
 {
     if (this != &rhs) {
         CoagModelData::operator=(rhs);
@@ -53,7 +53,7 @@ PointContactData &PointContactData::operator=(const Sweep::PointContactData &rhs
 }
 
 // Compound assignment.
-PointContactData &PointContactData::operator +=(const Sweep::PointContactData &rhs)
+SurfVolData &SurfVolData::operator +=(const Sweep::SurfVolData &rhs)
 {
     CoagModelData::operator +=(rhs);
     m_sphsurf += rhs.m_sphsurf;
@@ -62,13 +62,13 @@ PointContactData &PointContactData::operator +=(const Sweep::PointContactData &r
 }
 
 // Addition operator.
-const PointContactData PointContactData::operator +(const Sweep::PointContactData &rhs) const
+const SurfVolData SurfVolData::operator +(const Sweep::SurfVolData &rhs) const
 {
-    return PointContactData(*this) += rhs;
+    return SurfVolData(*this) += rhs;
 }
 
 // Resets the model data to the default state.
-void PointContactData::Clear()
+void SurfVolData::Clear()
 {
     m_sphsurf = 0.0;
     m_surf    = 0.0;
@@ -77,37 +77,37 @@ void PointContactData::Clear()
 // COAGULATION MODEL PARTICLE PROPERTIES.
 
 // Returns the equivalent spherical surface area.
-real PointContactData::SphSurfaceArea(void) const {return m_sphsurf;}
+real SurfVolData::SphSurfaceArea(void) const {return m_sphsurf;}
 
 // Returns the actual surface area.
-real PointContactData::SurfaceArea(void) const {return m_surf;}
+real SurfVolData::SurfaceArea(void) const {return m_surf;}
 
 
 // MODEL WHICH USES THIS DATA.
 
-// Returns the PointContactModel which operates on this data.
-const PointContactModel &PointContactData::Model(void) const
+// Returns the SurfVolModel which operates on this data.
+const SurfVolModel &SurfVolData::Model(void) const
 {
-    return PointContactModel::Instance();
+    return SurfVolModel::Instance();
 }
 
 
 // READ/WRITE/COPY.
 
 // Returns a copy of the data.
-PointContactData *const PointContactData::Clone(void) const
+SurfVolData *const SurfVolData::Clone(void) const
 {
-    return new PointContactData(*this);
+    return new SurfVolData(*this);
 }
 
 // Returns the model ID.
-ModelType PointContactData::ID(void) const
+ModelType SurfVolData::ID(void) const
 {
     return SVModel_ID;
 }
 
 // Writes the object to a binary stream.
-void PointContactData::Serialize(std::ostream &out) const
+void SurfVolData::Serialize(std::ostream &out) const
 {
     if (out.good()) {
         // Output the version ID (=0 at the moment).
@@ -126,12 +126,12 @@ void PointContactData::Serialize(std::ostream &out) const
         out.write((char*)&v, sizeof(v));
     } else {
         throw invalid_argument("Output stream not ready "
-                               "(Sweep, PointContactData::Serialize).");
+                               "(Sweep, SurfVolData::Serialize).");
     }
 }
 
 // Reads the object from a binary stream.
-void PointContactData::Deserialize(std::istream &in)
+void SurfVolData::Deserialize(std::istream &in)
 {
     if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -158,10 +158,10 @@ void PointContactData::Deserialize(std::istream &in)
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, PointContactData::Deserialize).");
+                                    "(Sweep, SurfVolData::Deserialize).");
         }
     } else {
         throw invalid_argument("Input stream not ready "
-                               "(Sweep, PointContactData::Deserialize).");
+                               "(Sweep, SurfVolData::Deserialize).");
     }
 }
