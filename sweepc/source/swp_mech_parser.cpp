@@ -76,7 +76,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                 str = (*i)->GetAttributeValue("alpha");
 
                 if (str.compare("abf")==0) {
-                    // The ABF corrrelation for alpha should be used.
+                    // The ABF correlation for alpha should be used.
                     ABFModel::Instance().UseAlphaCorrelation();
                 } else {
                     // Hopefully a numeric value has been supplied, which
@@ -84,6 +84,14 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                     real alpha = cdble(str);
                     ABFModel::Instance().SetAlphaConstant(alpha);
                 }
+            }
+        } else if (str == "particle") {
+            // Read particle model ID.
+            str = (*i)->GetAttributeValue("id");
+
+            if (str == "surfvol") {
+                // Surface-volume model.
+                mech.AddModel(SVModel_ID);
             }
         } else {
             // An invalid model type has been supplied.

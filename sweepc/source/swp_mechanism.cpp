@@ -748,7 +748,13 @@ Particle *const Mechanism::CreateParticle(void) const
     // Add particle models.
     for (ModelTypeSet::const_iterator id=m_models.begin(); id!=m_models.end(); ++id) {
         IModelData *model = ModelFactory::CreateData(*id, *p);
-        if (model != NULL) p->AddModel(*model);
+        if (model != NULL) {
+            if (model->ID() == SVModel_ID) {
+                p->SetCoagModelCache((CoagModelData&)(*model));
+            } else {
+                p->AddModel(*model);
+            }
+        }
     }
 
     // Returns particle.

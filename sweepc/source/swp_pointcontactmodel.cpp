@@ -129,6 +129,7 @@ void PointContactModel::UpdateCache(Sweep::ParticleData &p) const
 
     // Set correct surface area.
     cache.m_sphsurf = p.SurfaceArea();
+    cache.m_surf    = max(cache.m_surf, cache.m_sphsurf);
     p.SetSurfaceArea(cache.m_surf);
 
     // Set correct collision diameter.

@@ -14,7 +14,7 @@ PointContactData::PointContactData(void)
 
 // Default constructor (public).
 PointContactData::PointContactData(Sweep::ParticleData &parent)
-: CoagModelData(parent)
+: CoagModelData(parent), m_sphsurf(0.0), m_surf(0.0)
 {
 }
 
