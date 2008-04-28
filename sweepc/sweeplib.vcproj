@@ -249,14 +249,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\source\swp_pointcontactdata.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_pointcontactmodel.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\source\swp_primary.cpp"
 					>
 				</File>
@@ -266,6 +258,14 @@
 				</File>
 				<File
 					RelativePath=".\source\swp_pripartmodel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_surfvol_data.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_surfvol_model.cpp"
 					>
 				</File>
 			</Filter>
@@ -435,14 +435,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_pointcontactdata.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_pointcontactmodel.h"
-					>
-				</File>
-				<File
 					RelativePath=".\include\swp_primary.h"
 					>
 				</File>
@@ -452,6 +444,14 @@
 				</File>
 				<File
 					RelativePath=".\include\swp_pripartmodel.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_surfvoldata.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_surfvolmodel.h"
 					>
 				</File>
 			</Filter>
