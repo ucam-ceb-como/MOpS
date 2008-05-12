@@ -120,7 +120,18 @@ void PriPartModel::CoagParticles(Particle &p1, const Particle &p2) const
 // other particle properties.
 void PriPartModel::UpdateCache(Sweep::ParticleData &p) const
 {
-//    PriPartModelData &cache = dynamic_cast<PriPartModelData&>(*p.ModelCache(PriPartModel_ID));
+    PriPartData *cache = dynamic_cast<PriPartData*>(p.ModelCache(PriPartModel_ID));
+
+    if (cache != NULL) {
+        if (cache->Count() == 0) {
+            // Add the first primary.
+            cache->Primaries().push_back(Primary());
+            cache->Primaries()[0].SetMass(p.Composition(0));
+        } else {
+            // Update the current primaries.
+            updatePrimaries(*cache, p.SurfaceArea(), *(*p.Components())[0]);
+        }
+    }
 }
 
 

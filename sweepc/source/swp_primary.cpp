@@ -8,7 +8,7 @@ using namespace std;
 
 // Default constructor.
 Primary::Primary(void)
-: m_vol(0.0), m_mass(0.0), m_diam(0.0), m_surf(0.0)
+: m_comp(0), m_vol(0.0), m_mass(0.0), m_diam(0.0), m_surf(0.0)
 {
 }
 
@@ -37,6 +37,7 @@ Primary::~Primary()
 Primary &Primary::operator=(const Primary &rhs)
 {
     if (this != &rhs) {
+        m_comp = rhs.m_comp;
         m_vol  = rhs.m_vol;
         m_mass = rhs.m_mass;
         m_diam = rhs.m_diam;
@@ -48,6 +49,7 @@ Primary &Primary::operator=(const Primary &rhs)
 // Compound assignment.
 Primary &Primary::operator+=(const Primary &rhs)
 {
+    m_comp += rhs.m_comp;
     m_vol  += rhs.m_vol;
     m_mass += rhs.m_mass;
     m_diam += rhs.m_diam;
@@ -64,40 +66,70 @@ const Primary Primary::operator+(const Primary &rhs) const
 // Comparision.
 bool Primary::operator==(const Primary &rhs) const
 {
-    return m_mass == rhs.m_mass;
+    return m_comp == rhs.m_comp;
 }
 
 // Inverse comparison.
 bool Primary::operator!=(const Primary &rhs) const
 {
-    return m_mass != rhs.m_mass;
+    return m_comp != rhs.m_comp;
 }
 
 // Less than.
 bool Primary::operator<(const Primary &rhs) const
 {
-    return m_mass < rhs.m_mass;
+    return m_comp < rhs.m_comp;
 }
 
 // Greater than
 bool Primary::operator>(const Primary &rhs) const
 {
-    return m_mass > rhs.m_mass;
+    return m_comp > rhs.m_comp;
 }
 
 // Less than or equal
 bool Primary::operator<=(const Primary &rhs) const
 {
-    return m_mass <= rhs.m_mass;
+    return m_comp <= rhs.m_comp;
 }
 
 // Greater than or equal
 bool Primary::operator>=(const Primary &rhs) const
 {
-    return m_mass >= rhs.m_mass;
+    return m_comp >= rhs.m_comp;
 }
 
-// PROPERTIES.
+
+// COMPOSITION.
+
+// Returns the composition of the primary (only one component).
+unsigned int Primary::Composition(void) const
+{
+    return m_comp;
+}
+
+// Sets the primary composition.
+void Primary::SetComposition(unsigned int comp)
+{
+    m_comp = comp;
+}
+
+// Changes the composition by the given amount.
+void Primary::ChangeComposition(int dc)
+{
+    if (dc < 0) {
+        if (-dc > m_comp) {
+            m_comp = 0;
+        } else {
+            m_comp += dc;
+        }
+    } else {
+        m_comp += dc;
+    }
+}
+
+
+// DERIVED PROPERTIES.
 
 // Returns the primary diameter.
 real Primary::Diameter(void) const {return m_diam;}
@@ -110,20 +142,6 @@ void Primary::SetVolume(real vol) {m_vol = vol;}
 
 // Returns the primary mass.
 real Primary::Mass(void) const {return m_mass;}
-
-// Sets the primary mass.
-void Primary::SetMass(real mass)
-{
-    m_mass = mass;
-    // TODO: Set primary derived properties here.
-}
-
-// Adds/removes some mass to/from the primary.
-void Primary::ChangeMass(real dm)
-{
-    m_mass += dm;
-    // TODO: Set primary derived properties here.
-}
 
 // Returns the primary surface area.
 real Primary::SurfaceArea(void) const {return m_surf;}
@@ -144,6 +162,10 @@ void Primary::Serialize(std::ostream &out) const
         // Output the version ID (=0 at the moment).
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
+
+        // Output the composition.
+        unsigned int n = (unsigned int)m_comp;
+        out.write((char*)&n, sizeof(n));
 
         // Output the volume
         double v = (double)m_vol;
@@ -176,10 +198,15 @@ void Primary::Deserialize(std::istream &in)
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
+        unsigned int n = 0;
         double val = 0.0;
 
         switch (version) {
             case 0:
+                // Read the composition.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_comp = (unsigned int)n;
+
                 // Read the volume.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_vol = (real)val;

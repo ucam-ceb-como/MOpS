@@ -92,6 +92,9 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             if (str == "surfvol") {
                 // Surface-volume model.
                 mech.AddModel(SVModel_ID);
+            } else if (str == "pripart") {
+                // Basic primary particle model.
+                mech.AddModel(PriPartModel_ID);
             }
         } else {
             // An invalid model type has been supplied.

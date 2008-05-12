@@ -8,12 +8,13 @@ using namespace std;
 
 // Default constructor (private).
 PriPartData::PriPartData(void)
+: m_icomp(0)
 {
 }
 
 // Default constructor (public).
 PriPartData::PriPartData(ParticleData &parent)
-: IModelData(parent)
+: IModelData(parent), m_icomp(0)
 {
 }
 
@@ -44,6 +45,7 @@ PriPartData &PriPartData::operator=(const Sweep::PriPartData &rhs)
 {
     if (this != &rhs) {
         m_primaries.assign(rhs.m_primaries.begin(), rhs.m_primaries.end());
+        m_icomp = rhs.m_icomp;
     }
     return *this;
 }
@@ -68,6 +70,12 @@ void PriPartData::Clear()
 
 
 // PROPERTIES.
+
+// Returns the number of primary particles.
+unsigned int PriPartData::Count(void) const
+{
+    return m_primaries.size();
+}
 
 // Returns the vector of primary particles.
 std::vector<Primary> &PriPartData::Primaries(void) {return m_primaries;}
@@ -117,9 +125,13 @@ void PriPartData::Serialize(std::ostream &out) const
         for (unsigned int i=0; i!=n; ++i) {
             m_primaries[i].Serialize(out);
         }
+
+        // Output component index.
+        n = m_icomp;
+        out.write((char*)&n, sizeof(n));
     } else {
         throw invalid_argument("Output stream not ready "
-                               "(Sweep, PriPartModelData::Serialize).");
+                               "(Sweep, PriPartData::Serialize).");
     }
 }
 
@@ -147,13 +159,17 @@ void PriPartData::Deserialize(std::istream &in)
                     m_primaries.push_back(Primary(in));
                 }
 
+                // Read the component index.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_icomp = n;
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, PriPartModelData::Deserialize).");
+                                    "(Sweep, PriPartData::Deserialize).");
         }
     } else {
         throw invalid_argument("Input stream not ready "
-                               "(Sweep, PriPartModelData::Deserialize).");
+                               "(Sweep, PriPartData::Deserialize).");
     }
 }

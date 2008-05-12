@@ -63,11 +63,20 @@ protected:
     virtual ~PriPartModel(void);
 
 private:
+    // Updates the primary particle list to match the target
+    // surface area by removing primaries and redistributing
+    // their mass.
+    static void updatePrimary(
+        std::vector<Primary> &pri, // Vector of primaries to adjust.
+        real surf,                 // Target surface area.
+        const Component &comp      // Component which defines mass.
+        );
+
     // Distributes mass over a vector of primaries.
     static void distMass(
         std::vector<Primary> &pri,  // Vector of primary particles to receive mass.
         real dmass,                 // Mass change.
-        const Component *const comp // Component which defines the mass.
+        const Component &comp       // Component which defines the mass.
         );
 };
 };

@@ -3,12 +3,12 @@
   Project:        sweep (population balance solver)
 
   File purpose:
-    The ModelData class defines the additional data which is
-    added to a particle to enable a given model.
+    The PriPartData class holds particle data for the simple primary-particle
+    model.
 */
 
-#ifndef SWEEP_PRIPARTDATA_H
-#define SWEEP_PRIPARTDATA_H
+#ifndef SWEEP_PRIPART_DATA_H
+#define SWEEP_PRIPART_DATA_H
 
 #include "swp_primary.h"
 #include "swp_modeltype.h"
@@ -45,6 +45,9 @@ public:
 
     // PROPERTIES.
 
+    // Returns the number of primary particles.
+    unsigned int Count(void) const;
+
     // Returns the vector of primary particles.
     std::vector<Primary> &Primaries(void);
     const std::vector<Primary> &Primaries(void) const;
@@ -80,7 +83,13 @@ protected:
     PriPartData(void);
 
 private:
+    // Vector of primary particles.
     std::vector<Primary> m_primaries;
+
+    // The index of the component in the parent ParticleData object which
+    // is used to define the mass and surface area of the primary particles.
+    // The default value is 0 (the first component).
+    unsigned int m_icomp;
 };
 
 };

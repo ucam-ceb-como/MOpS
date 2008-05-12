@@ -37,25 +37,28 @@ public:
     bool operator<=(const Primary &rhs) const;
     bool operator>=(const Primary &rhs) const;
 
-    // PROPERTIES.
+    // PRIMARY COMPOSITION.
 
-    // Returns the primary diameter.
-    real Diameter(void) const;
+    // Returns the composition of the primary (only one component).
+    unsigned int Composition(void) const;
+
+    // Sets the primary composition.
+    void SetComposition(unsigned int comp);
+
+    // Changes the composition by the given amount.
+    void ChangeComposition(int dc);
+
+
+    // DERIVED PROPERTIES.
 
     // Returns the primary volume.
     real Volume(void) const;
 
-    // Sets the primary volume.
-    void SetVolume(real vol);
-
     // Returns the primary mass.
     real Mass(void) const;
 
-    // Sets the primary mass.
-    void SetMass(real mass);
-
-    // Adds/removes some mass to/from the primary.
-    void ChangeMass(real dm);
+    // Returns the primary diameter.
+    real Diameter(void) const;
 
     // Returns the primary surface area.
     real SurfaceArea(void) const;
@@ -73,10 +76,12 @@ public:
     void Deserialize(std::istream &in);
 
 private:
+    // Primary composition (only one component).
+    unsigned int m_comp;
+
+    // Properties calculated from the composition.
     real m_vol;  // Primary volume.
     real m_mass; // Primary mass.
-
-    // Properties calculated from the volume.
     real m_diam; // Diameter.
     real m_surf; // Surface area.
 };
