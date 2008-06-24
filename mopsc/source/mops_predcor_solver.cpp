@@ -40,7 +40,7 @@ void PredCorSolver::SolveReactor(Mops::Reactor &r,
     m_swp_ctime = 0.0;
 
     // Store the initial conditions.
-    Mixture initmix(r.Mech()->Species());
+    Mixture initmix(r.Mech()->ParticleMech());
     initmix.SetFracs(r.Mixture()->MoleFractions());
     initmix.SetTemperature(r.Mixture()->Temperature());
     initmix.SetDensity(r.Mixture()->Density());

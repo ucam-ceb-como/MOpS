@@ -2,6 +2,7 @@
 #include "mops_reactor_factory.h"
 #include "csv_io.h"
 #include "string_functions.h"
+#include "sweep.h"
 #include <vector>
 #include <string>
 #include <time.h>
@@ -15,7 +16,7 @@ using namespace Strings;
 
 // Default constructor.
 ParticleSolver::ParticleSolver(void)
-: m_swp_ctime(0.0)
+: m_swp_ctime(0.0), m_ptrack_count(1)
 {
 }
 
@@ -36,6 +37,25 @@ void ParticleSolver::outputParticleStats(const Reactor &r) const
     stats.Serialize(m_file);
 }
 
+// Writes tracked particles to the binary output file.
+void ParticleSolver::outputPartTrack(const Reactor &r) const
+{
+    // Write the number of tracked particles.
+    unsigned int n = min(r.Mixture()->ParticleCount(), m_ptrack_count);
+    m_file.write((char*)&n, sizeof(n));
+    
+    // Output the current time.
+    double t = (double)r.Time();
+    m_file.write((char*)&t, sizeof(t));
+    
+    if (n > 0) {
+        // Serialize the particles.
+        for (unsigned int i=0; i!=n; ++i) {
+            r.Mixture()->Particles().At(i)->Serialize(m_file);
+        }
+    }
+}
+
 // Writes the current reactor state to the output file.  This overrides
 // the default routine in order to also output the particle stats.
 void ParticleSolver::fileOutput(const Reactor &r) const
@@ -51,6 +71,9 @@ void ParticleSolver::fileOutput(const Reactor &r) const
     m_file.write((char*)&cputime, sizeof(cputime));
     m_file.write((char*)&m_chemtime, sizeof(m_chemtime));
     m_file.write((char*)&m_swp_ctime, sizeof(m_swp_ctime));
+
+    // Do particle tracking output.
+    outputPartTrack(r);
 }
 
 
@@ -69,7 +92,7 @@ void ParticleSolver::readParticleDataPoint(std::istream &in,
     if (in.good()) {
         // Read the stats.
         Sweep::EnsembleStats stats(mech);
-        stats.Deserialize(in);
+        stats.Deserialize(in, mech);
 
         // Get the stats vector.
         fvector s;
@@ -84,6 +107,51 @@ void ParticleSolver::readParticleDataPoint(std::istream &in,
         for (unsigned int i=0; i!=s.size(); ++i) {
             sum[i] += s[i];
             if (calcsqrs) sumsqr[i] += (s[i] * s[i]);
+        }
+    }
+}
+
+// Reads the tracked particles from the binary file.  The particles are
+// processed so that only a vector of vectors is returned, which contains
+// the PSL data for each tracked particle at that point.
+void ParticleSolver::readPartTrackPoint(std::istream &in, 
+                                        const Sweep::Mechanism &mech,
+                                        std::vector<fvector> &pdata) const
+{
+    // Check for valid stream.
+    if (in.good()) {
+        vector<fvector>::iterator i;
+
+        // Read the number of tracked particles.
+        unsigned int n = 0;
+        in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+        // Read the output time.
+        double t = 0.0;
+        in.read(reinterpret_cast<char*>(&t), sizeof(t));
+
+        // Create a particle stats object.
+        Sweep::EnsembleStats stats(mech);
+
+        // Resize output vectors to hold particle data.  Also reset
+        // all entries to 0.0.
+        if (pdata.size() < m_ptrack_count) pdata.resize(m_ptrack_count);
+        for (i=pdata.begin(); i!=pdata.end(); ++i) {
+            fill(i->begin(), i->end(), 0.0);
+            i->resize(stats.PSL_Count(), 0.0);
+        }
+        
+        // Read the tracked particles and retrieve the PSL stats
+        // using the EnsembleStats class.
+        i = pdata.begin();
+        for (unsigned int j=0; j!=n; ++j) {
+            Sweep::Particle sp(in, mech);
+            stats.PSL(sp, (real)t, *(i++));
+        }
+        Sweep::Particle empty(t, mech);
+        for (unsigned int j=n; j!=m_ptrack_count; ++j)
+        {
+            stats.PSL(empty, (real)t, *(i++));
         }
     }
 }
@@ -128,6 +196,67 @@ void ParticleSolver::writeParticleStatsCSV(const std::string &filename,
 
     // Close the CSV files.
     csv.Close();
+}
+
+// Writes particle tracking for multiple particles to CSV files.
+void ParticleSolver::writePartTrackCSV(const std::string &filename,
+                                       const Mechanism &mech,
+                                       const timevector &times,
+                                       std::vector<std::vector<fvector> > &track)
+{
+    // The track vector<vector<fvector>> should be arranged thus:
+    // time-steps / particles / PSL variables.
+
+    // Create an EnsembleStats object to get the PSL variable
+    // names vector.
+    Sweep::EnsembleStats stats(mech.ParticleMech());
+
+    // Build the header row vector
+    vector<string> head;
+    head.push_back("Step");
+    head.push_back("Time (s)");
+    stats.PSL_Names(head, 2);
+
+    // Determine max. number of particles tracked.
+    unsigned int np = 0;
+    for (unsigned int i=0; i!=track.size(); ++i) {
+        np = max(np, track[i].size());
+    }
+
+    // Open sufficient CSV files for all tracked particles.  Also
+    // write the header row and the initial conditions.
+    vector<CSV_IO*> csv(track[0].size());
+    for (unsigned int i=0; i!=np; ++i) {
+        // Open the CSV file for particle i.
+        csv[i] = new CSV_IO(filename+"p"+cstr(i)+".csv", true);
+        // Write header row.
+        csv[i]->Write(head);
+        // Output particle initial conditions.        
+        track[0][i].insert(track[0][i].begin(), times[0].StartTime());
+        track[0][i].insert(track[0][i].begin(), 0.0);
+        csv[i]->Write(track[0][i]);
+    }
+
+    // Loop over all points, performing output.
+    unsigned int step = 1;
+    for (timevector::const_iterator iint=times.begin(); iint!=times.end(); ++iint) {
+        // Loop over all time steps in this interval.
+        real t = iint->StartTime();
+        for (unsigned int istep=0; istep!=(*iint).StepCount(); ++istep, ++step) {
+            t += iint->StepSize();
+            for (unsigned int i=0; i!=track[step].size(); ++i) {
+                track[step][i].insert(track[step][i].begin(), t);
+                track[step][i].insert(track[step][i].begin(), (real)step);
+                csv[i]->Write(track[step][i]);
+            }
+        }
+    }
+
+    // Close the CSV files.
+    for (unsigned int i=0; i!=track[0].size(); ++i) {
+        csv[i]->Close();
+        delete csv[i];
+    }
 }
 
 // Writes computation times profile to a CSV file.  This overrides
@@ -218,6 +347,22 @@ void ParticleSolver::postProcessPSLs(unsigned int nruns, const Mechanism &mech,
                               psl, 1.0/(r->Mixture()->SampleVolume()*nruns));
                     // Output particle PSL to CSV file.
                     out[i]->Write(psl);
+                }
+
+                // Draw particle images for tracked particles.
+                unsigned int n = min(m_ptrack_count,r->Mixture()->ParticleCount());
+                for (unsigned int j=0; j!=n; ++j) {
+                    Sweep::Particle *sp = r->Mixture()->Particles().At(j);
+                    if (sp != NULL) {
+                        real t = times[i].EndTime();
+                        string fname = m_output_filename + "-tem(" + cstr(t) + 
+                                       "s, " + cstr(i) + ").csv";
+                        Sweep::Imaging::ParticleImage img;
+                        ofstream file; file.open(fname.c_str());
+                        img.Construct(*sp);
+                        img.WritePOVRAY(file);
+                        file.close();
+                    }
                 }
 
                 delete r;

@@ -163,7 +163,7 @@ void PSR::Deserialize(std::istream &in, const Mops::Mechanism &mech)
                 // Read the inflow mixture.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n == 1) {
-                    m_inflow = new Mops::Mixture(in, mech);
+                    m_inflow = new Mops::Mixture(in, mech.ParticleMech());
                 }
 
                 // Recalculate enthalpy.

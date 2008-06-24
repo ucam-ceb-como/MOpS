@@ -9,6 +9,7 @@
 #include <string>
 
 using namespace Sweep;
+using namespace Sweep::ActSites;
 using namespace std;
 using namespace Strings;
 
@@ -139,8 +140,8 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         }
 
         // Set up ABF model to use alpha profile.
-        Sweep::ABFModel::Instance().Initialise(mech.ParticleMech());
-        Sweep::ABFModel::Instance().SetAlphaProfile(alpha_prof);
+        ABFModel::Instance().Initialise(mech.ParticleMech());
+        ABFModel::Instance().SetAlphaProfile(alpha_prof);
 
         // Close the input file.
         fin.close();

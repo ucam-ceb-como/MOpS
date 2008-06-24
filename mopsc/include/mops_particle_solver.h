@@ -38,11 +38,23 @@ protected:
     // Sweep computation time.
     double m_swp_ctime;
 
+    
+    // PARTICLE TRACKING.
+
+    // Number of particles for which to produce tracking output.  Tracked
+    // particles will have their PSL properties output at each time-step in
+    // a separate CSV file.  If a primary-particle model in implemented, then
+    // TEM-style images will also be generated.
+    unsigned int m_ptrack_count;
+
 
     // FILE OUTPUT.
 
     // Writes the particle stats to the binary output file.
     void outputParticleStats(const Reactor &r) const;
+
+    // Writes tracked particles to the binary output file.
+    void outputPartTrack(const Reactor &r) const;
 
     // Writes the current reactor state to the output file.  This overrides
     // the default routine in order to also output the particle stats.
@@ -63,6 +75,15 @@ protected:
         bool calcsqrs = false         // Set =true to also calculate sums of squares.
         );
 
+    // Reads the tracked particles from the binary file.  The particles are
+    // processed so that only a vector of vectors is returned, which contains
+    // the PSL data for each tracked particle at that point.
+    void readPartTrackPoint(
+        std::istream &in,             // Input stream.
+        const Sweep::Mechanism &mech, // Particle mechanism.
+        std::vector<fvector> &pdata   // Tracked particle output data for this point.
+        ) const;
+
     // Writes particle stats profile to a CSV file.
     static void writeParticleStatsCSV(
         const std::string &filename,     // Output file name (incl. extension).
@@ -70,6 +91,14 @@ protected:
         const timevector &times,         // Output time profile.
         std::vector<fvector> &avg,       // Vector of gas-phase time points.
         const std::vector<fvector> &err  // Vector of confidence intervals.
+        );
+
+    // Writes particle tracking for multiple particles to CSV files.
+    static void writePartTrackCSV(
+        const std::string &filename, // Output file name (excl. extension).
+        const Mechanism &mech,       // Mechanism defining particle ensemble.
+        const timevector &times,     // Output time profile.
+        std::vector<std::vector<fvector> > &track // Vector of tracking data of multiple particles at multiple time points.
         );
 
     // Writes computation times profile to a CSV file.  This overrides

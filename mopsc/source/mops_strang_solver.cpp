@@ -34,7 +34,7 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
     real dt, t2; // Stop time for each step.
 
     // Store the initial conditions.
-    Mixture initmix(r.Mech()->Species());
+    Mixture initmix(r.Mech()->ParticleMech());
     initmix.SetFracs(r.Mixture()->MoleFractions());
     initmix.SetTemperature(r.Mixture()->Temperature());
     initmix.SetDensity(r.Mixture()->Density());
@@ -206,6 +206,10 @@ void StrangSolver::PostProcess(const std::string &filename,
     // Declare CPU time outputs (averages and errors).
     vector<vector<double> > acpu(npoints), ecpu(npoints);
 
+    // Declare data structure for particle tracking data.
+    // Runs -> time steps -> particles -> coordinate.
+    vector<vector<vector<fvector> > > ptrack(nruns);
+
     // READ ALL RUNS.
 
     // Now we must read the reactor conditions and all time points
@@ -227,6 +231,8 @@ void StrangSolver::PostProcess(const std::string &filename,
         readGasPhaseDataPoint(fin, mech, achem[0], echem[0], nruns>1);
         readParticleDataPoint(fin, pmech, astat[0], estat[0], nruns>1);
         readCTDataPoint(fin, 3, acpu[0], ecpu[0], nruns>1);
+        ptrack[irun].resize(npoints); // Resize particle tracking vector.
+        readPartTrackPoint(fin, pmech, ptrack[irun][0]);
 
         // Loop over all time intervals.
         unsigned int step = 1;
@@ -237,6 +243,7 @@ void StrangSolver::PostProcess(const std::string &filename,
                 readGasPhaseDataPoint(fin, mech, achem[step], echem[step], nruns>1);
                 readParticleDataPoint(fin, pmech, astat[step], estat[step], nruns>1);
                 readCTDataPoint(fin, 3, acpu[step], ecpu[step], nruns>1);
+                readPartTrackPoint(fin, pmech, ptrack[irun][step]);
             }
         }
 
@@ -255,6 +262,9 @@ void StrangSolver::PostProcess(const std::string &filename,
     writeGasPhaseCSV(filename+"-chem.csv", mech, times, achem, echem);
     writeParticleStatsCSV(filename+"-part.csv", mech, times, astat, estat);
     writeCT_CSV(filename+"-cpu.csv", times, acpu, ecpu);
+    for(unsigned int irun=0; irun!=nruns; ++irun) {
+        writePartTrackCSV(filename+"("+cstr(irun)+")-track", mech, times, ptrack[irun]);
+    }
 
     // POST-PROCESS PSLs.
 

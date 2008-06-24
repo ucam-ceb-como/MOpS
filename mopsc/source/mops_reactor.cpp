@@ -338,7 +338,7 @@ void Reactor::Deserialize(std::istream &in, const Mops::Mechanism &mech)
                 // Read the mixture.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n == 1) {
-                    m_mix = new Mops::Mixture(in, mech);
+                    m_mix = new Mops::Mixture(in, mech.ParticleMech());
                 }
 
                 // Read the energy model.

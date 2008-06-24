@@ -200,5 +200,6 @@ int main(int argc, char *argv[])
     delete reactor;
 
     printf("Mops: Simulation completed successfully!\n");
+    printf("Mops: Thank you for choosing mops for your particle modelling!\n");
     return 0;
 }

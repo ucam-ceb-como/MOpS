@@ -26,10 +26,10 @@ class Mixture : public Sweep::Cell
 {
 public:
     // Constructors.
-    Mixture(const Sprog::SpeciesPtrVector &sp); // Default constructor.
-    Mixture(                  // Stream-reading constructor.
-        std::istream &in,     //   - Input stream.
-        const Mechanism &mech //   - Mechanism which define the mixture.
+    Mixture(const Sweep::ParticleModel &model); // Default constructor.
+    Mixture(                                    // Stream-reading constructor.
+        std::istream &in,                       //   - Input stream.
+        const Sweep::ParticleModel &model       //   - Mechanism which define the mixture.
         );
 
     // Destructors.

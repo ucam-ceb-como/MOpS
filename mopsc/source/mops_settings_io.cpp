@@ -118,7 +118,7 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
         // REACTOR INITIAL CONDITIONS.
 
         // Create a new Mixture object.
-        Mixture *mix = new Mixture(mech.Species());
+        Mixture *mix = new Mixture(mech.ParticleMech());
 
         fvector molefracs(mech.SpeciesCount(), 0.0);
 
@@ -164,7 +164,7 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
 
         if (reac->SerialType() == Serial_PSR) {
             // Create a new Mixture object for inflow.
-            Mixture *inf = new Mixture(mech.Species());
+            Mixture *inf = new Mixture(mech.ParticleMech());
             molefracs.assign(mech.SpeciesCount(), 0.0);
 
             // Fill the inflow Mixture object.
@@ -506,7 +506,7 @@ Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
     // REACTOR INITIAL CONDITIONS.
 
     // Create a new Mixture object.
-    Mixture *mix = new Mixture(mech.Species());
+    Mixture *mix = new Mixture(mech.ParticleMech());
 
     fvector molefracs(mech.SpeciesCount(), 0.0);
 
@@ -555,7 +555,7 @@ Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
 
         if (subnode != NULL) {
             // Create a new Mixture object for inflow.
-            Mixture *inf = new Mixture(mech.Species());
+            Mixture *inf = new Mixture(mech.ParticleMech());
             molefracs.assign(mech.SpeciesCount(), 0.0);
 
             // Get the temperature.

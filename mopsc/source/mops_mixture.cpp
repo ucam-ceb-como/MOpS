@@ -10,14 +10,14 @@ Mixture::Mixture(void)
 }
 
 // Default constructor (public, requires species list).
-Mixture::Mixture(const Sprog::SpeciesPtrVector &sp)
-: Sweep::Cell(sp)
+Mixture::Mixture(const Sweep::ParticleModel &model)
+: Sweep::Cell(model)
 {
 }
 
 // Stream-reading constructor.
-Mixture::Mixture(std::istream &in, const Mechanism &mech)
-: Sweep::Cell(in, mech.ParticleMech())
+Mixture::Mixture(std::istream &in, const Sweep::ParticleModel &model)
+: Sweep::Cell(in, model)
 {
 }
 
@@ -34,7 +34,7 @@ Mixture &Mixture::operator =(const Mixture &rhs)
 {
     if (this != &rhs) {
         // Invoke operator of base class.
-        Sweep::Cell::operator =(rhs);
+        Sweep::Cell::operator=(rhs);
     }
     return *this;
 }
