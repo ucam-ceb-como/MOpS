@@ -1,18 +1,18 @@
 #include "swp_mechanism.h"
-#include "swp_modelfactory.h"
-#include "swp_processfactory.h"
-#include "swp_abfmodel.h"
+#include "swp_model_factory.h"
+#include "swp_process_factory.h"
+#include "swp_abf_model.h"
 #include <stdexcept>
 
 using namespace Sweep;
+using namespace Sweep::Processes;
 using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor.
 Mechanism::Mechanism(void)
-: m_anydeferred(false), m_species(NULL), 
-  m_coag(NULL), m_icoag(-1), m_termcount(0)
+: m_anydeferred(false), m_coag(NULL), m_icoag(-1), m_termcount(0)
 {
 }
 
@@ -38,23 +38,13 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         // Clear current mechanism from memory.
         releaseMem();
 
+        // Copy base class.
+        ParticleModel::operator=(rhs);
+
         // Easily copied data.
         m_anydeferred = rhs.m_anydeferred;
-        m_species     = rhs.m_species;
         m_icoag       = rhs.m_icoag;
         m_termcount   = rhs.m_termcount;
-
-        // Copy components.
-        for (CompPtrVector::const_iterator i=rhs.m_components.begin();
-             i!=rhs.m_components.end(); ++i) {
-            m_components.push_back((*i)->Clone());
-        }
-
-        // Copy trackers.
-        for (TrackPtrVector::const_iterator i=rhs.m_trackers.begin();
-             i!=rhs.m_trackers.end(); ++i) {
-            m_trackers.push_back((*i)->Clone());
-        }
 
         // Copy inceptions.
         for (IcnPtrVector::const_iterator i=rhs.m_inceptions.begin();
@@ -71,12 +61,6 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         // Copy coagulation process.
         m_coag = rhs.m_coag->Clone();
 
-        // Copy particle model info.
-        for (ModelTypeSet::const_iterator i=rhs.m_models.begin();
-            i!=rhs.m_models.end(); ++i) {
-            m_models.insert(*i);
-        }
-
         // Copy process counters.
         m_proccount.assign(rhs.m_proccount.begin(), rhs.m_proccount.end());
         m_fictcount.assign(rhs.m_fictcount.begin(), rhs.m_fictcount.end());
@@ -85,161 +69,24 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 }
 
 
-// CHEMICAL SPECIES.
+// ACTIVE-SITES MODELS.
 
-// Returns the chemical species vector.
-const Sprog::SpeciesPtrVector *const Mechanism::Species(void) const
+// Returns the set of particle model ID used by this mechanism
+const ActSites::ActSitesTypeSet &Mechanism::ActSiteModels(void) const
 {
-    return m_species;
+    return m_actsites;
 }
 
-// Sets the chemical species vector.
-void Mechanism::SetSpecies(const Sprog::SpeciesPtrVector &sp)
+// Returns true if the mechanism include the given model.
+bool Mechanism::ContainsActSiteModel(ActSites::ActSitesType id) const
 {
-    m_species = &sp;
+    return m_actsites.find(id) != m_actsites.end();
 }
 
-
-// COMPONENT DEFINITIONS.
-
-// Returns the number of components in the mechanism.
-unsigned int Mechanism::ComponentCount(void) const
+// Adds an active-sites model to the mechanism.
+void Mechanism::AddActSitesModel(ActSites::ActSitesType id)
 {
-    return m_components.size();
-}
-
-// Returns the vector of particle components.
-const CompPtrVector &Mechanism::Components() const
-{
-    return m_components;
-}
-
-// Returns the component with the given index.
-const Component *const Mechanism::Components(unsigned int i) const
-{
-    if (i < m_components.size()) {
-        return m_components[i];
-    } else {
-        return NULL;
-    }
-}
-
-// Returns the index of the component with the 
-// given name in the mechanism if found, otherwise 
-// return negative.
-int Mechanism::ComponentIndex(const std::string &name) const
-{
-    for (unsigned int i=0; i!=m_components.size(); ++i) {
-        if (name.compare(m_components[i]->Name())==0) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-// Adds a component to the mechanism and returns the index
-// of the component.
-unsigned int Mechanism::AddComponent(Component &comp)
-{
-    m_components.push_back(&comp);
-    return m_components.size()-1;
-}
-
-// Overwrites the ith component with that given.  Previous
-// component is deleted from memory.
-void Mechanism::ReplaceComponent(unsigned int i, Component &comp)
-{
-    if (i < m_components.size()) {
-        delete m_components[i];
-        m_components[i] = &comp;
-    }
-}
-
-// Sets the particle components vector.
-void Mechanism::SetComponents(const CompPtrVector &comps)
-{
-    // Delete current components.
-    CompPtrVector::iterator i;
-    for (i=m_components.begin(); i!=m_components.end(); ++i) {
-        delete (*i);
-    }
-
-    // Resize component vector and copy components.
-    m_components.resize(comps.size());
-    CompPtrVector::const_iterator ic;
-    for (ic=comps.begin(); ic!=comps.end(); ++ic) {
-        m_components.push_back((*ic)->Clone());
-    }
-}
-
-
-// TRACKER VARIABLES.
-
-// Returns the number of tracker variables.
-unsigned int Mechanism::TrackerCount(void) const 
-{
-    return m_trackers.size();
-}
-
-// Returns the vector of tracker variables.
-const TrackPtrVector &Mechanism::Trackers(void) const
-{
-    return m_trackers;
-}
-
-// Returns the ith tracker variable.
-const Tracker *const Mechanism::Trackers(unsigned int i) const
-{
-    if (i < m_trackers.size()) {
-        return m_trackers[i];
-    } else {
-        return NULL;
-    }
-}
-
-// Returns the index of the tracker variable with the given name 
-// on success, otherwise returns negative.
-int Mechanism::GetTrackerIndex(const std::string &name) const
-{
-    for (unsigned int i=0; i!=m_trackers.size(); ++i) {
-        if (name.compare(m_trackers[i]->Name())==0) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-// Adds a tracker variable to the mechanism.
-void Mechanism::AddTracker(Tracker &track)
-{
-    m_trackers.push_back(&track);
-}
-
-// Replaces the tracker at the given index with the given tracker
-// object.
-void Mechanism::ReplaceTracker(unsigned int i, Tracker &track)
-{
-    if (i < m_trackers.size()) {
-        delete m_trackers[i];
-        m_trackers[i] = &track;
-    }
-}
-
-// Sets the vector of tracker variables.
-void Mechanism::SetTrackers(const TrackPtrVector &track)
-{
-    // Delete current trackers.
-    TrackPtrVector::iterator i;
-    for (i=m_trackers.begin(); i!=m_trackers.end(); ++i) {
-        delete (*i);
-    }
-
-    // Resize tracker vector and copy tracker variables.
-    m_trackers.resize(track.size());
-    TrackPtrVector::const_iterator ic;
-    for (ic=track.begin(); ic!=track.end(); ++i) {
-        m_trackers.push_back((*ic)->Clone());
-    }
+    m_actsites.insert(id);
 }
 
 
@@ -317,8 +164,7 @@ void Mechanism::AddCoagulation()
 {
     if (m_coag != NULL) m_termcount -= m_coag->TermCount();
     delete m_coag;
-    m_coag = new Coagulation();
-    m_coag->SetMechanism(*this);
+    m_coag = new Coagulation(*this);
     m_termcount += m_coag->TermCount();
     m_proccount.resize(m_termcount, 0);
     m_fictcount.resize(m_termcount, 0);
@@ -355,37 +201,6 @@ void Mechanism::CheckDeferred(void) const
             m_anydeferred = true;
             return;
         }
-    }
-}
-
-
-// PARTICLE MODELS.
-
-// Returns the set of particle model ID used by this mechanism
-const ModelTypeSet &Mechanism::Models(void) const
-{
-    return m_models;
-}
-
-// Returns true if the mechanism include the given model.
-bool Mechanism::ContainsModel(ModelType id) const
-{
-    return m_models.find(id) != m_models.end();
-}
-
-// Adds a model to the mechanism.  Any subsequent particles
-// created with this mechanism will use this model.
-void Mechanism::AddModel(ModelType id)
-{
-    m_models.insert(id);
-
-    // Initialise the model as necessary.
-    switch(id) {
-        case ABFSites_ID:
-            ABFModel::Instance().Initialise(*this);
-            break;
-        default:
-            break;
     }
 }
 
@@ -735,33 +550,6 @@ void Mechanism::UpdateParticle(Particle &sp, const Sprog::Thermo::IdealGas &gas,
 }
 
 
-// PARTICLE FUNCTIONS.
-
-// Creates a new particle and sets it up with all the models
-// required by the mechanism.
-Particle *const Mechanism::CreateParticle(void) const
-{
-    // Create new particle using this mechanism's components
-    // and tracker variables.
-    Particle *p = new Particle(m_components, m_trackers);
-
-    // Add particle models.
-    for (ModelTypeSet::const_iterator id=m_models.begin(); id!=m_models.end(); ++id) {
-        IModelData *model = ModelFactory::CreateData(*id, *p);
-        if (model != NULL) {
-            if (model->ID() == SVModel_ID) {
-                p->SetCoagModelCache((CoagModelData&)(*model));
-            } else {
-                p->AddModel(*model);
-            }
-        }
-    }
-
-    // Returns particle.
-    return p;
-}
-
-
 // READ/WRITE/COPY.
 
 // Creates a copy of the mechanism.
@@ -781,6 +569,9 @@ void Mechanism::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
+        // Write particle model base class.
+        ParticleModel::Serialize(out);
+
         // Write if any processes are deferred.
         if (m_anydeferred) {
             out.write((char*)&trueval, sizeof(trueval));
@@ -788,28 +579,8 @@ void Mechanism::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
-        // Write number of components.
-        unsigned int n = (unsigned int)m_components.size();
-        out.write((char*)&n, sizeof(n));
-
-        // Write components.
-        for (CompPtrVector::const_iterator i=m_components.begin(); 
-             i!=m_components.end(); ++i) {
-            (*i)->Serialize(out);
-        }
-
-        // Write number of trackers.
-        n = (unsigned int)m_trackers.size();
-        out.write((char*)&n, sizeof(n));
-
-        // Write trackers.
-        for (TrackPtrVector::const_iterator i=m_trackers.begin(); 
-             i!=m_trackers.end(); ++i) {
-            (*i)->Serialize(out);
-        }
-
         // Write number of inceptions.
-        n = (unsigned int)m_inceptions.size();
+        unsigned int n = (unsigned int)m_inceptions.size();
         out.write((char*)&n, sizeof(n));
 
         // Write inceptions.
@@ -843,16 +614,6 @@ void Mechanism::Serialize(std::ostream &out) const
         // Write term count.
         n = (unsigned int)m_termcount;
         out.write((char*)&n, sizeof(n));
-
-        // Write model count.
-        n = (unsigned int)m_models.size();
-        out.write((char*)&n, sizeof(n));
-
-        // Write model set.
-        for (ModelTypeSet::const_iterator i=m_models.begin(); i!=m_models.end(); ++i) {
-            n = (unsigned int)(*i);
-            out.write((char*)&n, sizeof(n));
-        }
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, Mechanism::Serialize).");
@@ -876,32 +637,19 @@ void Mechanism::Deserialize(std::istream &in)
 
         switch (version) {
             case 0:
+                // Read ParticleModel base class.
+                ParticleModel::Deserialize(in);
+
                 // Read if any processes are deferred.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_anydeferred = (n==1);
-
-                // Read number of components.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-
-                // Read components.
-                for (unsigned int i=0; i!=n; ++i) {
-                    m_components.push_back(new Component(in));
-                }
-
-                // Read number of trackers.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-
-                // Read trackers.
-                for (unsigned int i=0; i!=n; ++i) {
-                    m_trackers.push_back(new Tracker(in));
-                }
 
                 // Read number of inceptions.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
 
                 // Read inceptions.
                 for (unsigned int i=0; i!=n; ++i) {
-                    Inception *icn = ProcessFactory::ReadInception(in);
+                    Inception *icn = ProcessFactory::ReadInception(in, *this);
                     icn->SetMechanism(*this);
                     m_inceptions.push_back(icn);
                 }
@@ -911,7 +659,7 @@ void Mechanism::Deserialize(std::istream &in)
 
                 // Read particle processes.
                 for (unsigned int i=0; i!=n; ++i) {
-                    ParticleProcess *p = ProcessFactory::ReadPartProcess(in);
+                    ParticleProcess *p = ProcessFactory::ReadPartProcess(in, *this);
                     p->SetMechanism(*this);
                     m_processes.push_back(p);
                 }
@@ -919,7 +667,7 @@ void Mechanism::Deserialize(std::istream &in)
                 // Read coagulation process.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n == 1) {
-                    m_coag = ProcessFactory::ReadCoag(in);
+                    m_coag = ProcessFactory::ReadCoag(in, *this);
                 }
 
                 // Read index of first coag process.
@@ -929,15 +677,6 @@ void Mechanism::Deserialize(std::istream &in)
                 // Read term count.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_termcount = n;
-
-                // Read model count.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-
-                // Read model set.
-                for (unsigned int i=0; i!=n; ++i) {
-                    in.read(reinterpret_cast<char*>(&id), sizeof(id));
-                    m_models.insert((ModelType)id);
-                }
 
                 break;
             default:
@@ -956,19 +695,8 @@ void Mechanism::Deserialize(std::istream &in)
 // Clears the current mechanism from memory.
 void Mechanism::releaseMem(void)
 {
-    // Delete components.
-    for (CompPtrVector::iterator i=m_components.begin(); 
-         i!=m_components.end(); ++i) {
-        delete *i;
-    }
-    m_components.clear();
-
-    // Delete trackers.
-    for (TrackPtrVector::iterator i=m_trackers.begin(); 
-         i!=m_trackers.end();++i) {
-        delete *i;
-    }
-    m_trackers.clear();
+    // Clear base class.
+    ParticleModel::releaseMem();
 
     // Delete inceptions.
     for (IcnPtrVector::iterator i=m_inceptions.begin(); 
@@ -986,4 +714,10 @@ void Mechanism::releaseMem(void)
 
     // Delete coagulation process.
     delete m_coag;
+    m_icoag = -1;
+
+    m_anydeferred = false;
+    m_termcount = 0;
+    m_proccount.clear();
+    m_fictcount.clear();
 }

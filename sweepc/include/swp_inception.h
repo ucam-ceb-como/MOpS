@@ -14,12 +14,17 @@
 
 #include "swp_params.h"
 #include "swp_process.h"
-#include "swp_processtype.h"
+#include "swp_process_type.h"
 #include "swp_particle.h"
 #include "swp_cell.h"
 #include <vector>
 
 namespace Sweep
+{
+// Forward declare the Mechanism class.
+class Mechanism;
+
+namespace Processes
 {
 class Inception;
 typedef std::vector<Inception*> IcnPtrVector;
@@ -28,9 +33,12 @@ class Inception : public Process
 {
 public: 
     // Constructors.
-    Inception(void);                  // Default constructor.
-    Inception(const Inception &copy); // Copy constructor.
-    Inception(std::istream &in);      // Stream-reading constructor.
+    Inception(const Sweep::Mechanism &mech); // Initialising constructor.
+    Inception(const Inception &copy);        // Copy constructor.
+    Inception(                               // Stream-reading constructor.
+        std::istream &in,                    //  - Input stream.
+        const Sweep::Mechanism &mech         //  - Parent mechanism.
+        );
 
     // Destructors.
     ~Inception(void);
@@ -170,7 +178,10 @@ public:
     void Serialize(std::ostream &out) const;
 
     // Reads the object from a binary stream.
-    void Deserialize(std::istream &in);
+    void Deserialize(
+        std::istream &in,            // Input stream.
+        const Sweep::Mechanism &mech // Parent mechanism.
+        );
 
 protected:
     // Rate parameters.
@@ -185,6 +196,10 @@ protected:
     // Free-molecular enhancement factor.  Currently hardcoded
     // for soot particles (m_efm = 2.2).
     static const real m_efm;
+
+    // Default constructor is protected to prevent an inception being
+    // defined without knowledge of the parent mechanism.
+    Inception(void);
 
     // A faster rate calculation routine for Inception events only.  Requires all the
     // parameters that would otherwise be calculated by the routine to be passed as
@@ -205,6 +220,7 @@ protected:
         const fvector &fracs, // Species mole fractions in gas phase.
         real density          // Gas phase molar density.
         ) const;
+};
 };
 };
 

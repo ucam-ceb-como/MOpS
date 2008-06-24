@@ -19,8 +19,8 @@ TreeNode::TreeNode(const TreeNode & tn)
 }
 
 // Initialising constructor.
-TreeNode::TreeNode(const CompPtrVector &comp, const TrackPtrVector &track)
-: LeftData(comp, track), RightData(comp, track),
+TreeNode::TreeNode(const Sweep::ParticleModel &model)
+: LeftData(0.0, model), RightData(0.0, model),
   Left(NULL), Right(NULL), Parent(NULL)
 {
 }

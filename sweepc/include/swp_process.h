@@ -13,22 +13,31 @@
 #include "swp_params.h"
 #include "swp_cell.h"
 #include "swp_particle.h"
-#include "swp_particledata.h"
-#include "swp_processtype.h"
+#include "swp_particle_cache.h"
+#include "swp_process_type.h"
 #include "rng.h"
 #include "sprog.h"
 #include <map>
+#include <string>
+#include <iostream>
 
 namespace Sweep
 {
-class Mechanism; // Forward declare parent mechanism.
+// Forward declare parent mechanism.
+class Mechanism;
 
+namespace Processes
+{
 class Process
 {
 public:
 	/// Constructors.
-    Process(void);                // Default Constructor.
-	Process(const Process &copy); // Copy-constructor.
+    Process(const Sweep::Mechanism &mech); // Default Constructor.
+	Process(const Process &copy);          // Copy-constructor.
+    Process(                         // Stream-reading constructor.
+        std::istream &in,            //  - Input stream.
+        const Sweep::Mechanism &mech //  - Parent mechanism.
+        );
 
     // Destructor.
     virtual ~Process(void);
@@ -177,12 +186,19 @@ public:
     virtual void Serialize(std::ostream &out) const;
 
     // Reads the object from a binary stream.
-    virtual void Deserialize(std::istream &in);
+    virtual void Deserialize(
+        std::istream &in,            // Input stream.
+        const Sweep::Mechanism &mech // Parent mechanism.
+        );
 
 protected:
     const Sweep::Mechanism *m_mech; // Pointer to the parent Mechanism.
     Sprog::StoichMap m_reac; // Reactant species stoichiometry.
     Sprog::StoichMap m_prod; // Product species stoichiometry.
+
+    // Default constructor is protected so that processes cannot
+    // be defined without knowledge of the parent mechanism.
+    Process(void);
 
     // Calculates the gas-phase chemistry contribution to the rate
     // expression.
@@ -198,6 +214,7 @@ protected:
         unsigned int n // Number of times to apply process.
          = 1           //  - Default is one time.
          ) const;
+};
 };
 };
 

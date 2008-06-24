@@ -12,11 +12,17 @@
 
 #include "swp_params.h"
 #include "swp_process.h"
-#include "swp_processtype.h"
+#include "swp_process_type.h"
+#include "swp_particle_cache.h"
 #include <vector>
 #include <iostream>
 
 namespace Sweep
+{
+// Forward declare Mechanism class.
+class Mechanism;
+
+namespace Processes
 {
 class Coagulation;
 typedef std::vector<Coagulation*> CoagPtrVector;
@@ -25,9 +31,12 @@ class Coagulation : public Process
 {
 public:
     // Constructors.
-    Coagulation(void);                    // Default constructor.
-    Coagulation(const Coagulation &copy); // Copy-constructor.
-    Coagulation(std::istream &in);        // Stream-reading constructor.
+    Coagulation(const Sweep::Mechanism &mech); // Default constructor.
+    Coagulation(const Coagulation &copy);      // Copy-constructor.
+    Coagulation(                     // Stream-reading constructor.
+        std::istream &in,            //  - Input stream.
+        const Sweep::Mechanism &mech //  - Parent mechanism.
+        );        
 
     // Destructor.
     ~Coagulation(void);
@@ -158,18 +167,25 @@ public:
     virtual void Serialize(std::ostream &out) const;
 
     // Reads the object from a binary stream.
-    virtual void Deserialize(std::istream &in);
+    virtual void Deserialize(
+        std::istream &in,            // Input stream.
+        const Sweep::Mechanism &mech // Parent mechanism.
+        );
 
 protected:
     // Free-molecular enhancement factor.  Currently hardcoded
     // for soot particles (m_efm = 2.2).
     static const real m_efm;
 
+    // Default constructor is protected to prevent coagulations being
+    // defined without knowledge of the parent mechanism.
+    Coagulation(void);
+
     // More efficient rate routine for coagulation only.  
     // All parameters required to calculate rate passed 
     // as arguments.
     real Rate(
-        const ParticleData &data, // Particle model data.
+        const ParticleCache &data, // Particle model data.
         real n,     // Number of particles.
         real sqrtT, // Square root of the temperature.
         real T_mu,  // T / viscosity of air.
@@ -181,7 +197,7 @@ protected:
     // All parameters required to calculate rate terms
     // passed as arguments.
     real RateTerms(
-        const ParticleData &data, // Particle model data.
+        const ParticleCache &data, // Particle model data.
         real n,     // Number of particles.
         real sqrtT, // Square root of the temperature.
         real T_mu,  // T / viscosity of air.
@@ -189,6 +205,7 @@ protected:
         real vol,   // System sample volume.
         fvector::iterator &iterm // Iterator to first coagulation term.
         ) const;
+};
 };
 };
 

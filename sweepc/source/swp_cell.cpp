@@ -1,5 +1,5 @@
 #include "swp_cell.h"
-#include "swp_mechanism.h"
+#include "swp_particle_model.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -9,13 +9,14 @@ using namespace std;
 
 // Default constructor (private).
 Cell::Cell(void)
-: m_smpvol(1.0), m_fixed_chem(false)
+: m_model(NULL), m_smpvol(1.0), m_fixed_chem(false)
 {
 }
 
 // Default constructor (public).
-Cell::Cell(const Sprog::SpeciesPtrVector &sp)
-: Sprog::Thermo::IdealGas(sp), m_smpvol(1.0), m_fixed_chem(false)
+Cell::Cell(const Sweep::ParticleModel &model)
+: Sprog::Thermo::IdealGas(*model.Species()), m_ensemble(model), m_model(&model), 
+  m_smpvol(1.0), m_fixed_chem(false)
 {
 }
 
@@ -26,9 +27,9 @@ Cell::Cell(const Cell &copy)
 }
 
 // Stream-reading constructor.
-Cell::Cell(std::istream &in, const Mechanism &mech)
+Cell::Cell(std::istream &in, const Sweep::ParticleModel &model)
 {
-    Deserialize(in, mech);
+    Deserialize(in, model);
 }
 
 // Default destructor.
@@ -224,7 +225,7 @@ void Cell::Serialize(std::ostream &out) const
 }
 
 // Reads the object from a binary stream.
-void Cell::Deserialize(std::istream &in, const Mechanism &mech)
+void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
     if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -248,10 +249,10 @@ void Cell::Deserialize(std::istream &in, const Mechanism &mech)
                 in.read(reinterpret_cast<char*>(&m_fixed_chem), sizeof(m_fixed_chem));
 
                 // Read the ensemble.
-                m_ensemble.Deserialize(in, mech);
+                m_ensemble.Deserialize(in, model);
 
                 // Set the species.
-                m_species = mech.Species();
+                m_species = model.Species();
 
                 break;
             default:

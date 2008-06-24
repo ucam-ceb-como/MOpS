@@ -1,5 +1,7 @@
 #include "swp_ensemble.h"
-#include "swp_mechanism.h"
+#include "swp_particle_model.h"
+#include "swp_submodel_type.h"
+#include "swp_submodel.h"
 #include "rng.h"
 #include <cmath>
 #include <vector>
@@ -13,29 +15,21 @@ using namespace std;
 // Default constructor.
 Ensemble::Ensemble(void)
 {
-    // Capacity.
-    m_levels     = 0;
-    m_capacity   = 0;
-    m_halfcap    = 0;
-    m_count      = 0;
-    // Scaling.
-    m_scale      = 1.0;
-    m_contfactor = 0;
-    m_ncont      = 0;
-    // Doubling algorithm.
-    m_ndble      = 0;
-    m_dbleactive = false;
-    m_dblecutoff = 0;
-    m_dblelimit  = 0;
-    m_dbleslack  = 0;
-    m_dbleon     = true;
+    init();
+}
+
+// Initialising constructor (no particles).
+Ensemble::Ensemble(const Sweep::ParticleModel &model)
+{
+    init();
+    m_model = &model;
 }
 
 // Initialising constructor.
-Ensemble::Ensemble(unsigned int count, const Mechanism &mech)
+Ensemble::Ensemble(unsigned int count, const Sweep::ParticleModel &model)
 {
     // Call initialisation routine.
-    Initialise(count, mech);
+    Initialise(count, model);
 }
 
 // Copy contructor.
@@ -46,9 +40,9 @@ Ensemble::Ensemble(const Sweep::Ensemble &copy)
 }
 
 // Stream-reading constructor.
-Ensemble::Ensemble(std::istream &in, const Mechanism &mech)
+Ensemble::Ensemble(std::istream &in, const Sweep::ParticleModel &model)
 {
-    Deserialize(in, mech);
+    Deserialize(in, model);
 }
 
 // Destructor.
@@ -62,7 +56,7 @@ Ensemble::~Ensemble(void)
 // OPERATOR OVERLOADING.
 
 // Assignment operator.
-Ensemble &Ensemble::operator =(const Sweep::Ensemble &rhs)
+Ensemble &Ensemble::operator=(const Sweep::Ensemble &rhs)
 {
     if (this != &rhs) {
         // Clear current particles.
@@ -74,9 +68,8 @@ Ensemble &Ensemble::operator =(const Sweep::Ensemble &rhs)
 
             // Resize binary tree vector.
             bool relink_tree = (m_capacity != rhs.m_capacity);
-            const CompPtrVector *comp = rhs.m_tree[0].LeftData.Components();
-            const TrackPtrVector *track = rhs.m_tree[0].LeftData.Trackers();
-            m_tree.resize(rhs.m_capacity-1, TreeNode(*comp, *track));
+            m_model = rhs.m_model;
+            m_tree.resize(rhs.m_capacity-1, TreeNode(*m_model));
 
             // Capacity.
             m_levels   = rhs.m_levels;
@@ -133,10 +126,14 @@ Ensemble &Ensemble::operator =(const Sweep::Ensemble &rhs)
 
 // Initialises the ensemble to the given size.  Any particles currently
 // in the ensemble will be destroyed.
-void Ensemble::Initialise(unsigned int capacity, const Mechanism &mech)
+void Ensemble::Initialise(unsigned int capacity, const Sweep::ParticleModel &model)
 {
-    Clear(); // Clear current ensemble.
-    
+    // Clear current ensemble.
+    Clear();
+ 
+    // Store new particle model.
+    m_model = &model;
+
     // Calculate nearest power of 2 capacity.  Ensemble capacity must be a power
     // of 2.  This constraint is due to the binary tree implementation.
     real rl    = log((real)capacity) / log(2.0);
@@ -147,7 +144,7 @@ void Ensemble::Initialise(unsigned int capacity, const Mechanism &mech)
 
     // Reserve memory for ensemble.
     m_particles.resize(capacity, NULL);
-    m_tree.resize(capacity-1, TreeNode(mech.Components(), mech.Trackers()));
+    m_tree.resize(capacity-1, TreeNode(model));
     
     // Set all tree nodes to correct size and link up tree.
     unsigned int i, j;
@@ -175,6 +172,16 @@ void Ensemble::Initialise(unsigned int capacity, const Mechanism &mech)
     m_dblecutoff = 3 * m_capacity / 4;
     m_dblelimit  = m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
+}
+
+    
+// THE PARTICLE MODEL.
+
+// Returns a pointer to the particle model to which this
+// ensemble subscribes.
+const Sweep::ParticleModel *const Ensemble::ParticleModel(void) const
+{
+    return m_model;
 }
 
 
@@ -250,14 +257,14 @@ int Ensemble::Add(Particle &sp)
 
 // Removes the particle at the given index, if the index is
 // valid.
-void Ensemble::Remove(unsigned int i)
+void Ensemble::Remove(unsigned int i, bool fdel)
 {
     // Check that particle index is valid.
     if (i<m_count-1) {
         // First delete particle from memory, then
         // overwrite it with the last particle, which
         // is subsequently removed from the vector.
-        delete m_particles[i];
+        if (fdel) delete m_particles[i];
         --m_count;
         m_particles[i] = m_particles[m_count];
         m_particles[m_count] = NULL;
@@ -285,7 +292,7 @@ void Ensemble::Remove(unsigned int i)
         // need to swap it with another, just delete it.
 
         // Erase particle.
-        delete m_particles[i];
+        if (fdel) delete m_particles[i];
         m_particles[i] = NULL;
         --m_count;
 
@@ -418,7 +425,7 @@ int Ensemble::Select(void) const
 // Returns the index of a particle selected using the property
 // weight given which refers to a basic property in the
 // ParticleData class.
-int Ensemble::Select(ParticleData::PropertyID id) const
+int Ensemble::Select(ParticleCache::PropID id) const
 {
     // This routine uses the binary tree to select a particle weighted
     // by a given particle property (by index).
@@ -461,41 +468,36 @@ int Ensemble::Select(ParticleData::PropertyID id) const
 // Selects particle according to the particle property
 // specified by the given model and the given property id
 // of the model.
-int Ensemble::Select(ModelType model_id, unsigned int id) const
+int Ensemble::Select(SubModels::SubModelType model_id, unsigned int id) const
 {
     // This routine uses the binary tree to select a particle weighted
     // by a given particle property (by index).
 
-    if (model_id == BasicModel_ID) return Select((ParticleData::PropertyID)id);
+    if (model_id == SubModels::BasicModel_ID) return Select((ParticleCache::PropID)id);
 
     int isp=-1;
 
     // Calculate random number weighted by sum of desired property (wtid).
     real r = rnd();
 
-    if (model_id == BasicModel_ID) {
-        r *= (m_tree[0].LeftData.Property(static_cast<ParticleData::PropertyID>(id)) + 
-              m_tree[0].RightData.Property(static_cast<ParticleData::PropertyID>(id)));
-    } else {
-        r *= (m_tree[0].LeftData.ModelCache(model_id)->Property(id) + 
-              m_tree[0].RightData.ModelCache(model_id)->Property(id));
-    }
+    r *= (m_tree[0].LeftData.SubModel(model_id)->Property(id) + 
+          m_tree[0].RightData.SubModel(model_id)->Property(id));
 
     // Fall down the binary tree until reaching a base node.
     const TreeNode *n = &m_tree[0];
     int j=0;
     while(n->Left!=NULL) {
-        if (r <= n->LeftData.ModelCache(model_id)->Property(id)) {
+        if (r <= n->LeftData.SubModel(model_id)->Property(id)) {
             n = n->Left;
             j = (2*j) + 1;
         } else {
-            r -= n->LeftData.ModelCache(model_id)->Property(id);
+            r -= n->LeftData.SubModel(model_id)->Property(id);
             n = n->Right;
             j = (2*j) + 2;
         }
     }
     // Last level!
-    if (r <=n->LeftData.ModelCache(model_id)->Property(id)) {
+    if (r <=n->LeftData.SubModel(model_id)->Property(id)) {
         isp = (2*j) + 2 - m_capacity;
     } else {
         isp = (2*j) + 3 - m_capacity;
@@ -532,7 +534,7 @@ void Ensemble::ResetScaling()
 
 // Returns a ParticleData object which contains property
 // sums for all particles in the ensemble.
-const ParticleData &Ensemble::GetSums(void) const
+const ParticleCache &Ensemble::GetSums(void) const
 {
 	m_sums = m_tree[0].LeftData + m_tree[0].RightData;
     return m_sums;
@@ -540,20 +542,20 @@ const ParticleData &Ensemble::GetSums(void) const
 
 // Returns the sum of a property in the ParticleData class
 // over all particles.
-real Ensemble::GetSum(ParticleData::PropertyID id) const
+real Ensemble::GetSum(ParticleCache::PropID id) const
 {
     return m_tree[0].LeftData.Property(id) + m_tree[0].RightData.Property(id);
 }
 
 // Returns the sum of one particle property with the given index 
 // from the given model from the binary tree.
-real Ensemble::GetSum(ModelType model_id, unsigned int id) const
+real Ensemble::GetSum(SubModels::SubModelType model_id, unsigned int id) const
 {
-    if (model_id == BasicModel_ID) {
-        return GetSum(static_cast<ParticleData::PropertyID>(id));
+    if (model_id == SubModels::BasicModel_ID) {
+        return GetSum(static_cast<ParticleCache::PropID>(id));
     } else {
-        return m_tree[0].LeftData.ModelCache(model_id)->Property(id) + 
-               m_tree[0].RightData.ModelCache(model_id)->Property(id);
+        return m_tree[0].LeftData.SubModel(model_id)->Property(id) + 
+               m_tree[0].RightData.SubModel(model_id)->Property(id);
     }
 }
 
@@ -741,7 +743,7 @@ void Ensemble::Serialize(std::ostream &out) const
 }
 
 // Reads the object from a binary stream.
-void Ensemble::Deserialize(std::istream &in, const Mechanism &mech)
+void Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
     Clear();
 
@@ -759,7 +761,7 @@ void Ensemble::Deserialize(std::istream &in, const Mechanism &mech)
             case 0:
                 // Read the ensemble capacity.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                Initialise(n, mech);
+                Initialise(n, model);
 
                 // Read the particle count.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -767,7 +769,7 @@ void Ensemble::Deserialize(std::istream &in, const Mechanism &mech)
                 
                 // Read the particles.
                 for (unsigned int i=0; i!=m_count; ++i) {
-                    Particle *p = new Particle(in, mech);
+                    Particle *p = new Particle(in, model);
                     p->SetEnsemble(*this);
                     m_particles[i] = p;
                 }
@@ -812,4 +814,47 @@ void Ensemble::Deserialize(std::istream &in, const Mechanism &mech)
         throw invalid_argument("Input stream not ready "
                                "(Sweep, Ensemble::Deserialize).");
     }
+}
+
+
+// MEMORY MANAGEMENT.
+
+// Releases all memory resources used by the ensemble.
+void Ensemble::releaseMem(void)
+{
+    // Delete particles from memory and delete vectors.
+    for (int i=0; i!=(int)m_particles.size(); ++i) {
+        delete m_particles[i];
+        m_particles[i] = NULL;
+    }
+    m_particles.clear();
+    m_tree.clear();
+}
+
+// Sets the ensemble to its initial condition.  Used in constructors.
+void Ensemble::init(void)
+{
+    releaseMem();
+
+    // Set particle model.
+    m_model = NULL;
+
+    // Capacity.
+    m_levels     = 0;
+    m_capacity   = 0;
+    m_halfcap    = 0;
+    m_count      = 0;
+
+    // Scaling.
+    m_scale      = 1.0;
+    m_contfactor = 0;
+    m_ncont      = 0;
+
+    // Doubling algorithm.
+    m_ndble      = 0;
+    m_dbleactive = false;
+    m_dblecutoff = 0;
+    m_dblelimit  = 0;
+    m_dbleslack  = 0;
+    m_dbleon     = true;
 }

@@ -66,14 +66,14 @@ private:
 
     // Reads reactants into a process.
     static void readReactants(
-        CamXML::Element &xml, // CamXML element containing the process definition.
-        Process &proc         // Process into which to read the reactants.
+        CamXML::Element &xml,    // CamXML element containing the process definition.
+        Processes::Process &proc // Process into which to read the reactants.
         );
 
     // Reads products into a process.
     static void readProducts(
-        CamXML::Element &xml, // CamXML element containing the process definition.
-        Process &proc         // Process into which to read the products.
+        CamXML::Element &xml,    // CamXML element containing the process definition.
+        Processes::Process &proc // Process into which to read the products.
         );
 
     // Reads reactant masses and diameters.  This is required by inceptions
@@ -86,14 +86,14 @@ private:
 
     // Reads composition changes into a particle process.
     static void readCompChanges(
-        CamXML::Element &xml, // CamXML element containing the process definition.
-        ParticleProcess &proc       // Process into which to read the composition changes.
+        CamXML::Element &xml,            // CamXML element containing the process definition.
+        Processes::ParticleProcess &proc // Process into which to read the composition changes.
         );
 
     // Reads tracker variable changes into a particle process.
     static void readTrackChanges(
-        CamXML::Element &xml, // CamXML element containing the process definition.
-        ParticleProcess &proc       // Process into which to read the tracker changes.
+        CamXML::Element &xml,            // CamXML element containing the process definition.
+        Processes::ParticleProcess &proc // Process into which to read the composition changes.
         );
 };
 };

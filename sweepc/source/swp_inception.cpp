@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 using namespace Sweep;
+using namespace Sweep::Processes;
 using namespace std;
 
 // Free-molecular enhancement factor.
@@ -11,22 +12,29 @@ const real Inception::m_efm = 2.2; // 2.2 is for soot.
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor.
+// Default constructor (protected).
 Inception::Inception(void)
 : m_a(0.5), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0)
 {
 }
 
+// Initialising constructor.
+Inception::Inception(const Sweep::Mechanism &mech)
+: Process(mech), m_a(0.5), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0)
+{
+    
+}
+
 // Copy constructor.
-Inception::Inception(const Sweep::Inception &copy)
+Inception::Inception(const Inception &copy)
 {
     *this = copy;
 }
 
 // Stream-reading constructor.
-Inception::Inception(std::istream &in)
+Inception::Inception(std::istream &in, const Sweep::Mechanism &mech)
 {
-    Deserialize(in);
+    Deserialize(in, mech);
 }
 
 // Default destructor.
@@ -293,13 +301,11 @@ int Inception::Perform(real t, Cell &sys, unsigned int iterm) const
 
     // Create a new particle of the type specified
     // by the system ensemble.
-    Particle *sp = m_mech->CreateParticle();
+    Particle *sp = m_mech->CreateParticle(t);
     
     // Initialise the new particle.
-    sp->SetCreateTime(t);
-    sp->SetTime(t);
-    sp->SetComposition(m_newcomp);
-    sp->SetValues(m_newvals);
+    sp->Primary()->SetComposition(m_newcomp);
+    sp->Primary()->SetValues(m_newvals);
     sp->UpdateCache();
 
     // Add particle to system's ensemble.
@@ -372,7 +378,7 @@ void Inception::Serialize(std::ostream &out) const
 }
 
 // Reads the object from a binary stream.
-void Inception::Deserialize(std::istream &in)
+void Inception::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 {
     m_newcomp.clear();
     m_newvals.clear();
@@ -390,7 +396,7 @@ void Inception::Deserialize(std::istream &in)
         switch (version) {
             case 0:
                 // Deserialize base class.
-                Process::Deserialize(in);
+                Process::Deserialize(in, mech);
 
                 // Read rate constant.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));

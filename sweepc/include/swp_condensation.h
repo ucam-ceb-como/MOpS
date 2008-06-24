@@ -17,19 +17,27 @@
 #ifndef SWEEP_CONDENSATION_H
 #define SWEEP_CONDENSATION_H
 
-#include "swp_particleprocess.h"
-#include "swp_processtype.h"
+#include "swp_particle_process.h"
+#include "swp_process_type.h"
 #include <iostream>
 
 namespace Sweep
+{
+// Forward declare Mechanism class.
+class Mechanism;
+
+namespace Processes
 {
 class Condensation : public ParticleProcess
 {
 public: 
     // Constructors.
-    Condensation(void); // Default constructor.
-    Condensation(const Condensation &copy); // Copy constructor.
-    Condensation(std::istream &in); // Stream-reading constructor.
+    Condensation(const Sweep::Mechanism &mech); // Default constructor.
+    Condensation(const Condensation &copy);     // Copy constructor.
+    Condensation(                    // Stream-reading constructor.
+        std::istream &in,            //  - Input stream.
+        const Sweep::Mechanism &mech //  - Parent mechanism.
+        );
 
     // Destructor.
     ~Condensation(void);
@@ -171,7 +179,10 @@ public:
     virtual void Serialize(std::ostream &out) const;
 
     // Reads the object from a binary stream.
-    virtual void Deserialize(std::istream &in);
+    virtual void Deserialize(
+        std::istream &in,            // Input stream.
+        const Sweep::Mechanism &mech // Parent mechanism.
+        );
 
 protected:
     // Number of terms in the condensation rate expression.
@@ -187,6 +198,11 @@ protected:
 
     real m_a; // Rate constant.
     real m_kfm1, m_kfm2, m_kfm3; // Free-mol term parameters.
+
+    // Default constructor is protected to prevent condensations being
+    // defined without knowledge of the parent mechanism.
+    Condensation(void);
+};
 };
 };
 

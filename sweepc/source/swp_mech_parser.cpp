@@ -2,16 +2,17 @@
 #include "swp_component.h"
 #include "swp_tracker.h"
 #include "swp_inception.h"
-#include "swp_surfacereaction.h"
-#include "swp_activesites_reaction.h"
+#include "swp_surface_reaction.h"
+#include "swp_actsites_reaction.h"
 #include "swp_condensation.h"
-#include "swp_abfmodel.h"
+#include "swp_abf_model.h"
 #include "camxml.h"
 #include "string_functions.h"
 #include <stdexcept>
 #include <string>
 
 using namespace Sweep;
+using namespace Sweep::Processes;
 using namespace std;
 using namespace Strings;
 
@@ -70,19 +71,22 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 
             if (str.compare("haca")==0) {
                 // Hydrogen-abstraction, Carbon-addition model.
-                mech.AddModel(ABFSites_ID);
+                mech.AddActSitesModel(ActSites::ABFSites_ID);
+
+                // Initialise the HACA model.
+                ActSites::ABFModel::Instance().Initialise(mech);
 
                 // Read the form of alpha.
                 str = (*i)->GetAttributeValue("alpha");
 
                 if (str.compare("abf")==0) {
                     // The ABF correlation for alpha should be used.
-                    ABFModel::Instance().UseAlphaCorrelation();
+                    ActSites::ABFModel::Instance().UseAlphaCorrelation();
                 } else {
                     // Hopefully a numeric value has been supplied, which
                     // shall be used as a constant value for alpha.
                     real alpha = cdble(str);
-                    ABFModel::Instance().SetAlphaConstant(alpha);
+                    ActSites::ABFModel::Instance().SetAlphaConstant(alpha);
                 }
             }
         } else if (str == "particle") {
@@ -91,16 +95,41 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 
             if (str == "surfvol") {
                 // Surface-volume model.
-                mech.AddModel(SVModel_ID);
-            } else if (str == "pripart") {
+                mech.SetAggModel(AggModels::SurfVol_ID);
+            } else if (str == "pripartlist") {
                 // Basic primary particle model.
-                mech.AddModel(PriPartModel_ID);
+                mech.SetAggModel(AggModels::PriPartList_ID);
             }
         } else {
             // An invalid model type has been supplied.
             throw runtime_error("Invalid model type (" + str + ") in XML file "
                                 "(Sweep, MechParser::readV1).");
         }
+    }
+
+    // READ PARTICLE MODEL.
+
+    xml.Root()->GetChildren("particlemodel", items);
+    i = items.begin();
+
+    // Check if the sub-particle tree is active.
+    string str = (*i)->GetAttributeValue("subtree");
+    if (str == "true") {
+        mech.EnableSubPartTree();
+    } else {
+        mech.DisableSubPartTree();
+    }
+
+    // Check the aggregation model.
+    str = (*i)->Data();
+    if (str == "spherical") {
+        mech.SetAggModel(AggModels::Spherical_ID);
+    } else if (str == "surfvol") {
+        mech.SetAggModel(AggModels::SurfVol_ID);
+    } else if (str == "pripartlist") {
+        mech.SetAggModel(AggModels::PriPartList_ID);
+    } else {
+        mech.SetAggModel(AggModels::Spherical_ID);
     }
 }
 
@@ -212,7 +241,7 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
 
     for (i=items.begin(); i!=items.end(); ++i) {
         // Create new inception.
-        Inception *icn = new Inception();
+        Inception *icn = new Inception(mech);
         icn->SetMechanism(mech);
 
         // Read reactants.
@@ -313,16 +342,14 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
 
         if (str.compare("surface")==0) {
             // This is a bog-standard surface reaction.
-            rxn = new SurfaceReaction();
-            rxn->SetMechanism(mech);
+            rxn = new SurfaceReaction(mech);
         } else if (str.compare("abf")==0) {
             // This is an ABF active-sites enabled reaction.
-            ActSiteReaction *asrxn = new ActSiteReaction();
-            asrxn->SetMechanism(mech);
+            ActSiteReaction *asrxn = new ActSiteReaction(mech);
             rxn = asrxn;
 
             // Must also set the reaction to use to ABF model.
-            asrxn->SetModel(ABFModel::Instance());
+            asrxn->SetModel(ActSites::ABFModel::Instance());
         } else {
             // Unrecognised reaction type.
             throw runtime_error("Unrecognised reaction type: " + str + 
@@ -410,21 +437,21 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
             if ((str.compare("s")==0) || (str.compare("as")==0)) {
                 // This reaction depends on surface area.  Ignore power,
                 // they must have meant 1.
-                rxn->SetPropertyID(ParticleData::iS);
+                rxn->SetPropertyID(ParticleCache::iS);
             } else if (str.compare("d")==0) {
                 // This reaction depends on some power of the diameter.
                 switch (id) {
                     case 1:
-                        rxn->SetPropertyID(ParticleData::iD);
+                        rxn->SetPropertyID(ParticleCache::iD);
                         break;
                     case 2:
-                        rxn->SetPropertyID(CoagModelData::iD2, CoagModel_ID);
+                        rxn->SetPropertyID(ParticleCache::iD2);
                         break;
                     case -1:
-                        rxn->SetPropertyID(CoagModelData::iD_1, CoagModel_ID);
+                        rxn->SetPropertyID(ParticleCache::iD_1);
                         break;
                     case -2:
-                        rxn->SetPropertyID(CoagModelData::iD_2, CoagModel_ID);
+                        rxn->SetPropertyID(ParticleCache::iD_2);
                         break;
                     default:
                         // Oh dear, can't have a zero power.
@@ -456,8 +483,7 @@ void MechParser::readCondensations(CamXML::Document &xml, Mechanism &mech)
 
     for (i=items.begin(); i!=items.end(); ++i) {
         // Create a new condensation object.
-        Condensation *cond = new Condensation();
-        cond->SetMechanism(mech);
+        Condensation *cond = new Condensation(mech);
 
         // Is condensation deferred.
         str = (*i)->GetAttributeValue("defer");

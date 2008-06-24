@@ -182,7 +182,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\source\swp_ensemblestats.cpp"
+				RelativePath=".\source\swp_ensemble_stats.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\swp_imager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\swp_imgnode.cpp"
 				>
 			</File>
 			<File
@@ -194,19 +202,35 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\swp_model_factory.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\swp_particle.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\swp_particledata.cpp"
+				RelativePath=".\source\swp_particle_cache.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\swp_particlestats.cpp"
+				RelativePath=".\source\swp_particle_model.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\swp_particle_stats.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\swp_primary.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\source\swp_solver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\swp_subparticle.cpp"
 				>
 			</File>
 			<File
@@ -218,54 +242,14 @@
 				>
 			</File>
 			<Filter
-				Name="Models"
+				Name="Sub-models"
 				>
 				<File
-					RelativePath=".\source\swp_abfmodel.cpp"
+					RelativePath=".\source\swp_submodel.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\source\swp_activesites_model.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_coagmodel.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_coagmodeldata.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_model.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_modeldata.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_modelfactory.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_primary.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_pripartdata.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_pripartmodel.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_surfvol_data.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_surfvol_model.cpp"
+					RelativePath=".\source\swp_submodel_cache.cpp"
 					>
 				</File>
 			</Filter>
@@ -273,7 +257,7 @@
 				Name="Processes"
 				>
 				<File
-					RelativePath=".\source\swp_activesites_reaction.cpp"
+					RelativePath=".\source\swp_actsites_reaction.cpp"
 					>
 				</File>
 				<File
@@ -289,7 +273,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\source\swp_particleprocess.cpp"
+					RelativePath=".\source\swp_particle_process.cpp"
 					>
 				</File>
 				<File
@@ -297,11 +281,55 @@
 					>
 				</File>
 				<File
-					RelativePath=".\source\swp_processfactory.cpp"
+					RelativePath=".\source\swp_process_factory.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\source\swp_surfacereaction.cpp"
+					RelativePath=".\source\swp_surface_reaction.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Active-sites Models"
+				>
+				<File
+					RelativePath=".\source\swp_abf_model.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_actsites_model.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Aggregation Models"
+				>
+				<File
+					RelativePath=".\source\swp_aggmodel_cache.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_pripart_cache.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_pripart_primary.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_pripart_stats.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_surfvol_cache.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_surfvol_primary.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_surfvol_stats.cpp"
 					>
 				</File>
 			</Filter>
@@ -328,6 +356,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\swp_coords.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\swp_ensemble.h"
 				>
 			</File>
@@ -336,7 +368,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\swp_ensemblestats.h"
+				RelativePath=".\include\swp_ensemble_stats.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_imager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_imgnode.h"
 				>
 			</File>
 			<File
@@ -348,6 +388,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\swp_model_factory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_model_stats.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\swp_params.h"
 				>
 			</File>
@@ -356,15 +404,27 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\swp_particledata.h"
+				RelativePath=".\include\swp_particle_cache.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\swp_particlestats.h"
+				RelativePath=".\include\swp_particle_model.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_particle_stats.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_primary.h"
 				>
 			</File>
 			<File
 				RelativePath=".\include\swp_solver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_subparticle.h"
 				>
 			</File>
 			<File
@@ -387,81 +447,49 @@
 					>
 				</File>
 				<File
-					RelativePath=".\include\ranlib.h"
-					>
-				</File>
-				<File
 					RelativePath=".\include\rng.h"
 					>
 				</File>
 			</Filter>
 			<Filter
-				Name="Models"
+				Name="Aggregation Models"
 				>
 				<File
-					RelativePath=".\include\swp_abfmodel.h"
+					RelativePath=".\include\swp_aggmodel_cache.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_activesites_model.h"
+					RelativePath=".\include\swp_aggmodel_type.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_coagmodel.h"
+					RelativePath=".\include\swp_pripart_cache.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_coagmodeldata.h"
+					RelativePath=".\include\swp_pripart_primary.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_model.h"
+					RelativePath=".\include\swp_pripart_stats.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_modeldata.h"
+					RelativePath=".\include\swp_surfvol_cache.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_modelfactory.h"
+					RelativePath=".\include\swp_surfvol_primary.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_modelstats.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_modeltype.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_primary.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_pripartdata.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_pripartmodel.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_surfvoldata.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_surfvolmodel.h"
+					RelativePath=".\include\swp_surfvol_stats.h"
 					>
 				</File>
 			</Filter>
 			<Filter
 				Name="Processes"
 				>
-				<File
-					RelativePath=".\include\swp_activesites_reaction.h"
-					>
-				</File>
 				<File
 					RelativePath=".\include\swp_coagulation.h"
 					>
@@ -475,7 +503,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_particleprocess.h"
+					RelativePath=".\include\swp_particle_process.h"
 					>
 				</File>
 				<File
@@ -483,15 +511,51 @@
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_processfactory.h"
+					RelativePath=".\include\swp_process_factory.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_processtype.h"
+					RelativePath=".\include\swp_process_type.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_surfacereaction.h"
+					RelativePath=".\include\swp_surface_reaction.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Sub-models"
+				>
+				<File
+					RelativePath=".\include\swp_submodel.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_submodel_cache.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_submodel_type.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Active-sites Models"
+				>
+				<File
+					RelativePath=".\include\swp_abf_model.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_actsites_model.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_actsites_reaction.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_actsites_type.h"
 					>
 				</File>
 			</Filter>

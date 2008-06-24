@@ -13,8 +13,9 @@
 #define SWEEP_CELL_H
 
 #include "swp_params.h"
+#include "swp_particle_model.h"
 #include "swp_ensemble.h"
-#include "swp_ensemblestats.h"
+#include "swp_ensemble_stats.h"
 #include "sprog.h"
 #include <string>
 #include <iostream>
@@ -27,11 +28,11 @@ class Cell : public Sprog::Thermo::IdealGas
 {
 public:
     // Constructors.
-    Cell(const Sprog::SpeciesPtrVector &sp); // Default constructor.
+    Cell(const Sweep::ParticleModel &model); // Default constructor.
     Cell(const Cell &copy);                  // Copy constructor.
-    Cell(                                    // Stream-reading constructor.
-        std::istream &in,                    //   - Stream from which to read.
-        const Mechanism &mech                //   - Mechanism used to define particles.
+    Cell(                                 // Stream-reading constructor.
+        std::istream &in,                 //   - Stream from which to read.
+        const Sweep::ParticleModel &model //   - Model used to define particles.
         );
 
     // Destructor.
@@ -59,14 +60,21 @@ public:
     // THE PARTICLE ENSEMBLE.
 
     // Returns the particle ensemble.
-    Ensemble &Particles(void);
-    const Ensemble &Particles(void) const;
+    Sweep::Ensemble &Particles(void);
+    const Sweep::Ensemble &Particles(void) const;
 
     // Returns the number of particles in the ensemble.
     unsigned int ParticleCount(void) const;
 
     // Returns particle statistics.
     void GetVitalStats(EnsembleStats &stats) const;
+
+
+    // THE PARTICLE MODEL.
+
+    // Returns the particle model used to define particles in this
+    // cell.
+    const Sweep::ParticleModel *const ParticleModel(void) const;
 
 
     // SCALING ROUTINES INCL. SAMPLE VOLUME.
@@ -103,8 +111,8 @@ public:
 
     // Reads the object from a binary stream.
     virtual void Deserialize(
-        std::istream &in,     // Input stream.
-        const Mechanism &mech //   - Mechanism used to define particles.
+        std::istream &in,                 // Input stream.
+        const Sweep::ParticleModel &model // Model used to define particles.
         );
 
 protected:
@@ -116,6 +124,9 @@ protected:
 private:
     // Particle ensemble.
     Sweep::Ensemble m_ensemble;
+
+    // Particle model.
+    const Sweep::ParticleModel *m_model;
 
     // The volume in which the ensemble represents
     // the complete real system.

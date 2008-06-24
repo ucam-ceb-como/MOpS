@@ -1,9 +1,11 @@
 #include "swp_coagulation.h"
 #include "swp_mechanism.h"
 #include "swp_ensemble.h"
+#include "swp_particle_cache.h"
 #include <stdexcept>
 
 using namespace Sweep;
+using namespace Sweep::Processes;
 using namespace std;
 
 // Free-molecular enhancement factor.
@@ -12,7 +14,8 @@ const real Coagulation::m_efm = 2.2; // 2.2 is for soot.
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor.
-Coagulation::Coagulation(void)
+Coagulation::Coagulation(const Sweep::Mechanism &mech)
+: Process(mech)
 {
 }
 
@@ -23,9 +26,9 @@ Coagulation::Coagulation(const Coagulation &copy)
 }
 
 // Stream-reading constructor.
-Coagulation::Coagulation(std::istream &in)
+Coagulation::Coagulation(std::istream &in, const Sweep::Mechanism &mech)
 {
-    Deserialize(in);
+    Deserialize(in, mech);
 }
 
 // Default destructor.
@@ -38,7 +41,7 @@ Coagulation::~Coagulation(void)
 // OPERATOR OVERLOADS.
 
 // Assignment operator.
-Coagulation &Coagulation::operator=(const Sweep::Coagulation &rhs)
+Coagulation &Coagulation::operator=(const Coagulation &rhs)
 {
     if (this != &rhs) {
         Process::operator=(rhs);
@@ -97,7 +100,7 @@ real Coagulation::Rate(real t, const Sprog::Thermo::IdealGas &gas,
 // More efficient rate routine for coagulation only.  
 // All parameters required to calculate rate passed 
 // as arguments.
-real Coagulation::Rate(const ParticleData &data, real n, real sqrtT, 
+real Coagulation::Rate(const ParticleCache &data, real n, real sqrtT, 
                        real T_mu, real MFP, real vol) const
 {
     // Some prerequisites.
@@ -108,11 +111,11 @@ real Coagulation::Rate(const ParticleData &data, real n, real sqrtT,
 
     // Summed particle properties required for coagulation rate.
     real d       = data.CollDiameter();
-    real d2      = data.CoagModelCache()->CollDiamSquared();
-    real d_1     = data.CoagModelCache()->InvCollDiam();
-    real d_2     = data.CoagModelCache()->InvCollDiamSquared();
-    real d2m_1_2 = data.CoagModelCache()->CollDiamSqrdInvSqrtMass();
-    real m_1_2   = data.CoagModelCache()->InvSqrtMass();
+    real d2      = data.CollDiamSquared();
+    real d_1     = data.InvCollDiam();
+    real d_2     = data.InvCollDiamSquared();
+    real d2m_1_2 = data.CollDiamSqrdInvSqrtMass();
+    real m_1_2   = data.InvSqrtMass();
 
     // Get individual terms.
     real terms[TYPE_COUNT];
@@ -202,7 +205,7 @@ real Coagulation::RateTerms(real t, const Sprog::Thermo::IdealGas &gas,
 // More efficient rate routine for coagulation only.  
 // All parameters required to calculate rate terms
 // passed as arguments.
-real Coagulation::RateTerms(const ParticleData &data, real n, real sqrtT, 
+real Coagulation::RateTerms(const ParticleCache &data, real n, real sqrtT, 
                             real T_mu, real MFP, real vol,
                             fvector::iterator &iterm) const
 {
@@ -214,11 +217,11 @@ real Coagulation::RateTerms(const ParticleData &data, real n, real sqrtT,
 
     // Summed particle properties required for coagulation rate.
     real d       = data.CollDiameter();
-    real d2      = data.CoagModelCache()->CollDiamSquared();
-    real d_1     = data.CoagModelCache()->InvCollDiam();
-    real d_2     = data.CoagModelCache()->InvCollDiamSquared();
-    real d2m_1_2 = data.CoagModelCache()->CollDiamSqrdInvSqrtMass();
-    real m_1_2   = data.CoagModelCache()->InvSqrtMass();
+    real d2      = data.CollDiamSquared();
+    real d_1     = data.InvCollDiam();
+    real d_2     = data.InvCollDiamSquared();
+    real d2m_1_2 = data.CollDiamSqrdInvSqrtMass();
+    real m_1_2   = data.InvSqrtMass();
 
     fvector::iterator isf = iterm;
     fvector::iterator ifm = iterm+4;
@@ -290,7 +293,7 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
             maj = SlipFlow;
             break;
         case SlipFlow2:
-            ip1 = sys.Particles().Select(ParticleData::iD);
+            ip1 = sys.Particles().Select(ParticleCache::iD);
             maj = SlipFlow;
             break;
         case SlipFlow3:
@@ -298,7 +301,7 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
             maj = SlipFlow;
             break;
         case SlipFlow4:
-            ip1 = sys.Particles().Select(ParticleData::iD);
+            ip1 = sys.Particles().Select(ParticleCache::iD);
             maj = SlipFlow;
             break;
         case FreeMol1:
@@ -306,7 +309,7 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
             maj = FreeMol;
             break;
         case FreeMol2:
-            ip1 = sys.Particles().Select(CoagModel_ID, CoagModelData::iD2);
+            ip1 = sys.Particles().Select(ParticleCache::iD2);
             maj = FreeMol;
             break;
         default :
@@ -354,23 +357,23 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
             break;
         case SlipFlow2:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(CoagModel_ID, CoagModelData::iD_1);
+                ip2 = sys.Particles().Select(ParticleCache::iD_1);
             break;
         case SlipFlow3:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(CoagModel_ID, CoagModelData::iD_1);
+                ip2 = sys.Particles().Select(ParticleCache::iD_1);
             break;
         case SlipFlow4:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(CoagModel_ID, CoagModelData::iD_2);
+                ip2 = sys.Particles().Select(ParticleCache::iD_2);
             break;
         case FreeMol1:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(CoagModel_ID, CoagModelData::iD2_M_1_2);
+                ip2 = sys.Particles().Select(ParticleCache::iD2_M_1_2);
             break;
         case FreeMol2:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(CoagModel_ID, CoagModelData::iM_1_2);
+                ip2 = sys.Particles().Select(ParticleCache::iM_1_2);
             break;
         default :
             while ((ip2 == ip1) && (++guard<1000))
@@ -413,7 +416,7 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
             *sp1 += *sp2;
             sp1->SetTime(t);
             sys.Particles().Update(ip1);
-            sys.Particles().Remove(ip2);
+            sys.Particles().Remove(ip2, !m_mech->UseSubPartTree());
         } else {
             delete sp1old; delete sp2old;
             return 1; // Ficticious event.
@@ -469,10 +472,8 @@ real Coagulation::FreeMolKernel(const Particle &sp1, const Particle &sp2,
     if (maj) {
         // The majorant form is always >= the non-majorant form.
         return CFMMAJ * m_efm * CFM * sqrt(T) * 
-               (sp1.CoagModelCache()->InvSqrtMass() + 
-                sp2.CoagModelCache()->InvSqrtMass()) *
-               (sp1.CoagModelCache()->CollDiamSquared() + 
-                sp2.CoagModelCache()->CollDiamSquared());
+               (sp1.InvSqrtMass() + sp2.InvSqrtMass()) *
+               (sp1.CollDiamSquared() + sp2.CollDiamSquared());
     } else {
         real dterm = sp1.CollDiameter()+sp2.CollDiameter();
         return m_efm * CFM * 
@@ -490,10 +491,8 @@ real Coagulation::SlipFlowKernel(const Particle &sp1, const Particle &sp2,
 {
     // For the slip-flow kernel the majorant and non-majorant forms are identical.
     return ((1.257 * 2.0 * MeanFreePathAir(T,P) * 
-             (sp1.CoagModelCache()->InvCollDiamSquared() + 
-              sp2.CoagModelCache()->InvCollDiamSquared())) +
-            (sp1.CoagModelCache()->InvCollDiam() + 
-             sp2.CoagModelCache()->InvCollDiam())) * 
+             (sp1.InvCollDiamSquared() + sp2.InvCollDiamSquared())) +
+            (sp1.InvCollDiam() + sp2.InvCollDiam())) * 
            CSF * T * (sp1.CollDiameter()+sp2.CollDiameter()) / ViscosityAir(T);
 }
 
@@ -528,7 +527,7 @@ void Coagulation::Serialize(std::ostream &out) const
 }
 
 // Reads the object from a binary stream.
-void Coagulation::Deserialize(std::istream &in)
+void Coagulation::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 {
     if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -540,7 +539,7 @@ void Coagulation::Deserialize(std::istream &in)
         switch (version) {
             case 0:
                 // Deserialize base class.
-                Process::Deserialize(in);
+                Process::Deserialize(in, mech);
 
                 break;
             default:

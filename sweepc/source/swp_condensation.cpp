@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 using namespace Sweep;
+using namespace Sweep::Processes;
 using namespace std;
 
 const unsigned int Condensation::TERM_COUNT = 3;
@@ -12,9 +13,15 @@ const real Condensation::m_efm             = 2.2;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor.
+// Default constructor (protected).
 Condensation::Condensation(void)
 : m_a(1.0), m_kfm1(0.0), m_kfm2(0.0), m_kfm3(0.0)
+{
+}
+
+// Initialising constructor.
+Condensation::Condensation(const Sweep::Mechanism &mech)
+: ParticleProcess(mech), m_a(1.0), m_kfm1(0.0), m_kfm2(0.0), m_kfm3(0.0)
 {
     // Assume the condensation is simulated as a deferred process (LPDA).
     m_defer = true;
@@ -27,9 +34,9 @@ Condensation::Condensation(const Condensation &copy)
 }
 
 // Stream-reading constructor.
-Condensation::Condensation(std::istream &in)
+Condensation::Condensation(std::istream &in, const Sweep::Mechanism &mech)
 {
-    Deserialize(in);
+    Deserialize(in, mech);
 }
 
 // Default destructor.
@@ -96,8 +103,8 @@ real Condensation::Rate(real t, const Sprog::Thermo::IdealGas &gas, const Cell &
 
     // Free molecular terms.
     cterm *= (m_kfm1 * sys.ParticleCount()) + 
-             (m_kfm2 * sys.Particles().GetSum(ParticleData::iDcol)) +
-             (m_kfm3 * sys.Particles().GetSum(CoagModel_ID, CoagModelData::iD2));
+             (m_kfm2 * sys.Particles().GetSum(ParticleCache::iDcol)) +
+             (m_kfm3 * sys.Particles().GetSum(ParticleCache::iD2));
 
     // If the mechanism contains any deferred processes then we must use the
     // majorant form of the rate, in order to account for any changes to
@@ -138,7 +145,7 @@ real Condensation::Rate(real t, const Sprog::Thermo::IdealGas &gas,
 //    trm[2] = cterm * (m_kfm3 * sp.CoagModelCache->CollDiamSquared());
     cterm *= m_kfm1 + 
              (m_kfm2 * sp.CollDiameter()) +
-             (m_kfm3 * sp.CoagModelCache()->CollDiamSquared());
+             (m_kfm3 * sp.CollDiamSquared());
     return cterm; //trm[0] + trm[1] + trm[2];
 }
 
@@ -199,9 +206,9 @@ real Condensation::RateTerms(real t, const Sprog::Thermo::IdealGas &gas,
     // Free molecular terms.
     real sum = 0.0;
     sum += *(iterm++) = m_kfm1 * cterm * sys.ParticleCount();
-    sum += *(iterm++) = m_kfm2 * cterm * sys.Particles().GetSum(ParticleData::iDcol);
+    sum += *(iterm++) = m_kfm2 * cterm * sys.Particles().GetSum(ParticleCache::iDcol);
     sum += *(iterm++) = m_kfm3 * cterm * 
-                        sys.Particles().GetSum(CoagModel_ID, CoagModelData::iD2);
+                        sys.Particles().GetSum(ParticleCache::iD2);
     return sum;
 }
 
@@ -213,17 +220,21 @@ real Condensation::RateTerms(real t, const Sprog::Thermo::IdealGas &gas,
 int Condensation::Perform(const real t, Cell &sys, const unsigned int iterm) const
 {
     // Select particle based on which term was called.
-    int i = -1;
+    int i  = -1;
+    ParticleCache::PropID id = ParticleCache::iUniform;
     switch(iterm) {
         case 1:
-            i = sys.Particles().Select(ParticleData::iDcol);
+            id = ParticleCache::iDcol;
+            i  = sys.Particles().Select(id);
             break;
         case 2:
-            i = sys.Particles().Select(CoagModel_ID, CoagModelData::iD2);
+            id = ParticleCache::iD2;
+            i  = sys.Particles().Select(id);
             break;
         case 0:
         default:
-            i = sys.Particles().Select();
+            id = ParticleCache::iUniform;
+            i  = sys.Particles().Select();
             break;
     }
 
@@ -247,7 +258,8 @@ int Condensation::Perform(const real t, Cell &sys, const unsigned int iterm) con
             // majorant rate with the true rate.
             if (!Ficticious(majr, truer) || !m_mech->AnyDeferred()) {
                 // Adjust particle.
-                sp->Adjust(m_dcomp, m_dvals);
+                sp->Adjust(m_dcomp, m_dvals,SubModels::BasicModel_ID, 
+                           ParticleCache::iS, 1); // Use surface area to weight in first instance.
                 sys.Particles().Update(i);
 
                 // Apply changes to gas-phase chemistry.
@@ -269,7 +281,8 @@ int Condensation::Perform(const real t, Cell &sys, const unsigned int iterm) con
 int Condensation::Perform(real t, Cell &sys, Particle &sp,
                           unsigned int n) const
 {
-    unsigned int m = sp.Adjust(m_dcomp, m_dvals, n);
+    unsigned int m = sp.Adjust(m_dcomp, m_dvals, SubModels::BasicModel_ID, 
+                               ParticleCache::iS, n); // Use surface-area to weight.
     adjustGas(sys, m);
     return 0;
 }
@@ -315,7 +328,7 @@ void Condensation::Serialize(std::ostream &out) const
 }
 
 // Reads the object from a binary stream.
-void Condensation::Deserialize(std::istream &in)
+void Condensation::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 {
     if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -329,7 +342,7 @@ void Condensation::Deserialize(std::istream &in)
         switch (version) {
             case 0:
                 // Deserialize base class.
-                ParticleProcess::Deserialize(in);
+                ParticleProcess::Deserialize(in, mech);
 
                 // Read rate constant.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));

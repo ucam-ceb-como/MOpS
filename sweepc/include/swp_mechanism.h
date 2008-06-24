@@ -20,19 +20,21 @@
 #define SWEEP_MECHANISM_H
 
 #include "swp_params.h"
+#include "swp_particle_model.h"
 #include "swp_cell.h"
+#include "swp_actsites_type.h"
 #include "swp_process.h"
-#include "swp_particleprocess.h"
 #include "swp_inception.h"
+#include "swp_particle_process.h"
 #include "swp_coagulation.h"
-#include "swp_modeltype.h"
 #include "sprog.h"
 #include <vector>
 #include <string>
+#include <iostream>
 
 namespace Sweep
 {
-class Mechanism
+class Mechanism : public ParticleModel
 {
 public:
 	// Constructors.
@@ -46,97 +48,40 @@ public:
     Mechanism &operator=(const Mechanism &rhs);
 
 
-	// CHEMICAL SPECIES.
+    // ACTIVE-SITES MODELS.
 
-    // Returns the chemical species vector.
-    const Sprog::SpeciesPtrVector *const Species(void) const;
+    // Returns the set of particle model ID used by this mechanism
+    const ActSites::ActSitesTypeSet &ActSiteModels(void) const;
 
-    // Sets the chemical species vector.
-    void SetSpecies(const Sprog::SpeciesPtrVector &sp);
+    // Returns true if the mechanism include the given model.
+    bool ContainsActSiteModel(ActSites::ActSitesType id) const;
 
-
-	// COMPONENT DEFINITIONS.
-
-    // Returns the number of components in the mechanism.
-    unsigned int ComponentCount(void) const;
-
-    // Returns the vector of particle components.
-    const CompPtrVector &Components() const;
-
-    // Returns the component with the given index.
-    const Component *const Components(unsigned int i) const;
-
-    // Returns the index of the component with the 
-	// given name in the mechanism if found, otherwise 
-	// return negative.
-    int ComponentIndex(const std::string &name) const;
-
-    // Adds a component to the mechanism and returns the index
-    // of the component.
-    unsigned int AddComponent(Component &comp);
-
-    // Overwrites the ith component with that given.  Previous
-    // component is deleted from memory.
-    void ReplaceComponent(
-        unsigned int i, // Index of component to overwrite.
-        Component &comp // New component.
-        );
-
-    // Sets the particle components vector.
-    void SetComponents(const CompPtrVector &comps);
-
-
-	// TRACKER VARIABLES.
-
-    // Returns the number of tracker variables.
-    unsigned int TrackerCount(void) const;
-
-    // Returns the vector of tracker variables.
-    const TrackPtrVector &Trackers(void) const;
-
-    // Returns the ith tracker variable.
-    const Tracker *const Trackers(unsigned int i) const;
-
-    // Returns the index of the tracker variable with the given name 
-	// on success, otherwise returns negative.
-    int GetTrackerIndex(const std::string &name) const;
-
-    // Adds a tracker variable to the mechanism.
-    void AddTracker(Tracker &track);
-
-    // Replaces the tracker at the given index with the given tracker
-    // object.
-    void ReplaceTracker(
-        unsigned int i, // Index of tracker variable to overwrite.
-        Tracker &track  // New track variable.
-        );
-
-    // Sets the vector of tracker variables.
-    void SetTrackers(const TrackPtrVector &track);
+    // Adds an active-sites model to the mechanism.
+    void AddActSitesModel(ActSites::ActSitesType id);
 
 
 	// INCEPTIONS.
 
     // Returns the vector of inceptions.
-    const IcnPtrVector &Inceptions(void) const;
+    const Processes::IcnPtrVector &Inceptions(void) const;
 
     // Returns the inception with the given index.
-    const Inception *const Inceptions(unsigned int i) const;
+    const Processes::Inception *const Inceptions(unsigned int i) const;
 
     // Adds an inception to the mechanism.
-    void AddInception(Inception &icn);
+    void AddInception(Processes::Inception &icn);
 
 
     // PARTICLE PROCESSES.
 
     // Returns the vector of particle processes.
-    const PartProcPtrVector &Processes(void) const;
+    const Processes::PartProcPtrVector &Processes(void) const;
 
     // Returns the process with the given index.
-    const ParticleProcess *const Processes(unsigned int i) const;
+    const Processes::ParticleProcess *const Processes(unsigned int i) const;
 
     // Adds a process to the mechanism.
-    void AddProcess(ParticleProcess &p);
+    void AddProcess(Processes::ParticleProcess &p);
 
 
     // COAGULATIONS.
@@ -160,19 +105,6 @@ public:
 
     // Checks all processes to see if any are deferred.
     void CheckDeferred(void) const;
-
-
-    // PARTICLE MODELS.
-
-    // Returns the set of particle model ID used by this mechanism
-    const ModelTypeSet &Models(void) const;
-
-    // Returns true if the mechanism include the given model.
-    bool ContainsModel(ModelType id) const;
-
-    // Adds a model to the mechanism.  Any subsequent particles
-    // created with this mechanism will use this model.
-    void AddModel(ModelType id);
 
 
 	// RATE CALCULATION.
@@ -269,12 +201,6 @@ public:
         ) const;
 
 
-    // PARTICLE FUNCTIONS.
-    
-    // Creates a new particle and sets it up with all the models
-    // required by the mechanism.
-    Particle *const CreateParticle(void) const;
-
     // READ/WRITE/COPY.
 
     // Creates a copy of the mechanism.
@@ -291,30 +217,23 @@ private:
     // processes, otherwise false. 
     mutable bool m_anydeferred;
 
-    // The species used to define the processes and the particles.
-    const Sprog::SpeciesPtrVector *m_species;
-
-    // Particle component and tracker variable definitions.
-    CompPtrVector m_components; // The components used to build particles.
-    TrackPtrVector m_trackers;  // Tracker variables.
+    // Set of active-sites models which are implemented in this
+    // mechanism.
+    ActSites::ActSitesTypeSet m_actsites;
 
     // Processes in mechanism.
-    IcnPtrVector m_inceptions;     // Inception process list.
-    PartProcPtrVector m_processes; // Particle process list.
-    Coagulation *m_coag;           // Coagulation process.
+    Processes::IcnPtrVector m_inceptions;     // Inception process list.
+    Processes::PartProcPtrVector m_processes; // Particle process list.
+    Processes::Coagulation *m_coag;           // Coagulation process.
 
     // Auxilliary information about the processes.
     int m_icoag;              // Index of first coagulation process in mechanism.
     unsigned int m_termcount; // the rate term count of all processes.
 
-    // Set of models which all particles produced by this mechanism
-    // must use.
-    ModelTypeSet m_models;
-
     // Process counters.
     mutable std::vector<unsigned int> m_proccount, m_fictcount; 
 
-    // Clears the current mechanism from memory.
+    // Clears the mechanism from memory.
     void releaseMem(void);
 };
 };

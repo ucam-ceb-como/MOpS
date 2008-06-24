@@ -1,33 +1,61 @@
 #include "swp_primary.h"
+#include "swp_submodel_type.h"
+#include "swp_model_factory.h"
+#include "swp_particle_cache.h"
 #include <stdexcept>
 
 using namespace Sweep;
+using namespace Sweep::SubModels;
 using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor.
+// Default constructor (protected).
 Primary::Primary(void)
-: m_comp(0), m_vol(0.0), m_mass(0.0), m_diam(0.0), m_surf(0.0)
+: m_pmodel(NULL), m_createt(0.0), m_time(0.0), m_diam(0.0), m_dcol(0.0), 
+  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0)
 {
+}
+
+// Initialising constructor.
+Primary::Primary(real time, const Sweep::ParticleModel &model)
+{
+    init();
+    m_pmodel  = &model;
+    
+    // Set particle create and update times.
+    m_createt = time;
+    m_time    = time;
+
+    // Resize component and tracker vectors to match number of
+    // each in the particle model.
+    m_comp.resize(model.ComponentCount(), 0.0);
+    m_values.resize(model.TrackerCount(), 0.0);
+
+    // Now add all sub-models required by the particle model.
+    for (SubModelTypeSet::const_iterator i=model.SubModels().begin();
+         i!=model.SubModels().end(); ++i) {
+        m_submodels[*i] = ModelFactory::Create(*i, *this);
+    }
 }
 
 // Copy constructor.
 Primary::Primary(const Primary &copy) 
 {
+    init();
     *this = copy;
 }
 
 // Stream-reading constructor.
-Primary::Primary(std::istream &in)
+Primary::Primary(std::istream &in, const Sweep::ParticleModel &model)
 {
-    Deserialize(in);
+    Deserialize(in, model);
 }
 
 // Default destructor.
 Primary::~Primary()
 {
-    // Nothing special to destruct.
+    releaseMem();
 }
 
 
@@ -37,114 +65,378 @@ Primary::~Primary()
 Primary &Primary::operator=(const Primary &rhs)
 {
     if (this != &rhs) {
-        m_comp = rhs.m_comp;
+        // Check if the RHS uses the same particle model before copying
+        // components and tracker values.
+        if (rhs.m_pmodel == m_pmodel) {
+            // Copy composition.
+            memcpy(&m_comp[0], &rhs.m_comp[0], sizeof(real)*m_comp.size());        
+            // Copy tracker variables.
+            memcpy(&m_values[0], &rhs.m_values[0], sizeof(real)*m_values.size());
+        } else {
+            // Set the particle model.
+            m_pmodel = rhs.m_pmodel;
+            // Copy components.
+            m_comp.assign(rhs.m_comp.begin(), rhs.m_comp.end());
+            // Copy tracker variables.
+            m_values.assign(rhs.m_values.begin(), rhs.m_values.end());
+        }
+
+        // Copy primary time.
+        m_createt = rhs.m_createt;
+        m_time    = rhs.m_time;
+
+        // Delete sub-models not in RHS.
+        for (SubModelMap::const_iterator i=m_submodels.begin(); 
+             i!=m_submodels.end(); ++i) {
+            // Try to find model data in RHS primary.
+            SubModelMap::const_iterator k = rhs.m_submodels.find(i->first);
+            if (k == m_submodels.end()) {
+                // This RHS primary does not contain the model i, 
+                // need to delete it.
+                delete i->second;
+                m_submodels.erase(i->first);
+            }
+        }
+
+        // Copy sub-models from RHS.
+        for (SubModelMap::const_iterator i=rhs.m_submodels.begin(); 
+             i!=rhs.m_submodels.end(); ++i) {
+            // Try to find model data in this primary.
+            SubModelMap::const_iterator k = m_submodels.find(i->first);
+            if (k != m_submodels.end()) {
+                // This primary contains the model i.
+                *(k->second) = *(i->second);
+            } else {
+                // This primary does not contain the model i, 
+                // need to create it.
+                m_submodels[i->first] = i->second->Clone();
+            }
+        }
+
+        // Copy the derived properties.
+        m_diam = rhs.m_diam;
+        m_dcol = rhs.m_dcol;
+        m_dmob = rhs.m_dmob;
+        m_surf = rhs.m_surf;
         m_vol  = rhs.m_vol;
         m_mass = rhs.m_mass;
-        m_diam = rhs.m_diam;
-        m_surf = rhs.m_surf;
     }
     return *this;
 }
 
-// Compound assignment.
+// Compound assignment (coagulation).
 Primary &Primary::operator+=(const Primary &rhs)
 {
-    m_comp += rhs.m_comp;
-    m_vol  += rhs.m_vol;
-    m_mass += rhs.m_mass;
-    m_diam += rhs.m_diam;
-    m_surf += rhs.m_surf;
-    return *this;
-}
-
-// Addition.
-const Primary Primary::operator+(const Primary &rhs) const
-{
-    return Primary(*this) += rhs;
-}
-
-// Comparision.
-bool Primary::operator==(const Primary &rhs) const
-{
-    return m_comp == rhs.m_comp;
-}
-
-// Inverse comparison.
-bool Primary::operator!=(const Primary &rhs) const
-{
-    return m_comp != rhs.m_comp;
-}
-
-// Less than.
-bool Primary::operator<(const Primary &rhs) const
-{
-    return m_comp < rhs.m_comp;
-}
-
-// Greater than
-bool Primary::operator>(const Primary &rhs) const
-{
-    return m_comp > rhs.m_comp;
-}
-
-// Less than or equal
-bool Primary::operator<=(const Primary &rhs) const
-{
-    return m_comp <= rhs.m_comp;
-}
-
-// Greater than or equal
-bool Primary::operator>=(const Primary &rhs) const
-{
-    return m_comp >= rhs.m_comp;
+    return Primary::Coagulate(rhs);
 }
 
 
-// COMPOSITION.
+// DEFINING PARTICLE MODEL.
 
-// Returns the composition of the primary (only one component).
-unsigned int Primary::Composition(void) const
+// Returns the particle model used to create this primary.
+const Sweep::ParticleModel *const Primary::ParticleModel(void) const
 {
-    return m_comp;
+    return m_pmodel;
 }
 
-// Sets the primary composition.
-void Primary::SetComposition(unsigned int comp)
+
+// PARTICLE COMPOSITION.
+
+// Returns the composition vector.
+const fvector &Primary::Composition() const 
 {
-    m_comp = comp;
+	return m_comp;
 }
 
-// Changes the composition by the given amount.
-void Primary::ChangeComposition(int dc)
+// Returns the ith component value.  Returns 0.0 if i is invalid.
+real Primary::Composition(unsigned int i) const
 {
-    if (dc < 0) {
-        if (-dc > m_comp) {
-            m_comp = 0;
-        } else {
-            m_comp += dc;
-        }
+	if (i < m_comp.size()) {
+		return m_comp[i];
+	} else {
+		return 0.0;
+	}
+}
+
+// Sets the composition vector.
+void Primary::SetComposition(const Sweep::fvector &comp)
+{
+	m_comp.assign(comp.begin(), comp.end());
+}
+
+
+// TRACKER VARIABLE VALUES.
+
+// Returns the tracker value vector.
+const fvector &Primary::Values() const
+{
+	return m_values;
+}
+
+// Returns the ith tracker variable value.  Returns 0.0 if i is invalid.
+real Primary::Values(unsigned int i) const
+{
+	if (i < m_values.size()) {
+		return m_values[i];
+	} else {
+		return 0.0;
+	}
+}
+
+// Sets the values vector.
+void Primary::SetValues(const fvector &vals)
+{
+    m_values.assign(vals.begin(), vals.end());
+}
+
+
+// PRIMARY CREATE TIME.
+
+// Returns the primary create time.
+real Primary::CreateTime() const {return m_createt;}
+
+
+// LAST UPDATE TIME.
+
+// Returns the primary last update time.
+real Primary::LastUpdateTime() const {return m_time;}
+
+// Sets the last update time of the primary.
+void Primary::SetTime(real t) {m_time = t;}
+
+
+// SUB-MODEL CACHE.
+
+// Returns the model data.
+const SubModels::SubModelMap &Primary::SubModels(void) const
+{
+    return m_submodels;
+}
+
+// Returns the data for the idth model.  Returns NULL if id is invalid.
+const SubModels::SubModel *const Primary::SubModel(SubModels::SubModelType id) const
+{
+    SubModelMap::const_iterator i = m_submodels.find(id);
+    if (i != m_submodels.end()) {
+        return i->second;
     } else {
-        m_comp += dc;
+        return NULL;
+    }
+}
+
+// Add a model to the particle definition.  This Primary object
+// then takes control of the model for destruction purposes.  If the
+// Primary already contains a sub-model of this type, then it is
+// overwritten.
+void Primary::AddSubModel(SubModels::SubModel &model)
+{
+    // Delete model if it exists already.
+    SubModelMap::const_iterator i = m_submodels.find(model.ID());
+    if (i != m_submodels.end()) {
+        delete i->second;
+    }
+    // Add model (take control).
+    m_submodels[model.ID()] = &model;
+    model.SetParent(*this);
+}
+
+// Adds an empty sub-model of the given type.
+void Primary::AddSubModel(SubModels::SubModelType id)
+{
+    // Delete model if it exists already.
+    SubModelMap::const_iterator i = m_submodels.find(id);
+    if (i != m_submodels.end()) {
+        delete i->second;
+    }
+    // Add new model.
+    m_submodels[id] = ModelFactory::Create(id, *this);
+}
+
+
+// AGGREGATION MODEL.
+
+// Returns the aggregation model which this primary describes.
+AggModels::AggModelType Primary::AggID(void) const {return AggModels::Spherical_ID;}
+
+// Creates an aggregation data cache for this primary type.
+AggModels::AggModelCache *const Primary::CreateAggCache(ParticleCache &pcache) const
+{
+    return ModelFactory::CreateAggCache(AggModels::Spherical_ID, pcache);
+}
+
+
+// BASIC DERIVED PARTICLE PROPERTIES.
+
+// Calculates the derived properties from the unique properties.
+void Primary::UpdateCache(void)
+{
+    real m = 0.0;
+
+    // Loop over composition and calculate mass and volume.
+    m_mass = m_vol = 0.0;
+    for (unsigned int i=0; i!=m_pmodel->ComponentCount(); ++i) {
+        m = m_pmodel->Components(i)->MolWt() * m_comp[i] / NA;
+        m_mass += m;
+        if (m_pmodel->Components(i)->Density() > 0.0)
+            m_vol  += m / m_pmodel->Components(i)->Density();
+    }
+    
+    // Calculate other properties (of sphere).
+    m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
+    m_dcol = m_diam;
+    m_dmob = m_diam;
+    m_surf = PI * m_diam * m_diam;
+
+    // Allow models to update themselves.
+    for (SubModelMap::iterator i=m_submodels.begin(); i!=m_submodels.end(); ++i) {
+        i->second->UpdateCache();
+    }
+}
+
+// Returns the particle equivalent sphere diameter.
+real Primary::SphDiameter(void) const {return m_diam;}
+
+// Returns the collision diameter.
+real Primary::CollDiameter(void) const {return m_dcol;}
+
+// Rethrns the mobility diameter.
+real Primary::MobDiameter(void) const {return m_dmob;}
+
+// Returns the surface area.
+real Primary::SurfaceArea(void) const {return m_surf;}
+
+// Returns the volume.
+real Primary::Volume(void) const {return m_vol;}
+
+// Returns the mass.
+real Primary::Mass(void) const {return m_mass;}
+
+// Returns the property with the given ID.
+real Primary::Property(PropID id) const
+{
+    switch (id) {
+        case iCTime:  // Create time.
+            return m_createt;
+        case iLUTime: // Last update time.
+            return m_time;
+        case iD:      // Equivalent sphere diameter.
+            return m_diam;
+        case iDcol:   // Collision diameter.
+            return m_dcol;
+        case iDmob:   // Mobility diameter.
+            return m_dmob;
+        case iS:      // Surface area.
+            return m_surf;
+        case iV:      // Volume.
+            return m_vol;
+        case iM:      // Mass.
+            return m_mass;
+        default:
+            return 0.0;
     }
 }
 
 
-// DERIVED PROPERTIES.
+// BASIC DERIVED PROPERTY OVERWRITES.
 
-// Returns the primary diameter.
-real Primary::Diameter(void) const {return m_diam;}
+// Sets the spherical particle diameter
+void Primary::SetSphDiameter(real diam) {m_diam = diam;}
 
-// Returns the primary volume.
-real Primary::Volume(void) const {return m_vol;}
+// Sets the collision diameter of the particle.
+void Primary::SetCollDiameter(real dcol) {m_dcol = dcol;}
 
-// Sets the primary volume.
+// Sets the mobility diameter.
+void Primary::SetMobDiameter(real dmob) {m_dmob = dmob;}
+
+// Sets the surface area, subject to minimum spherical area condition.
+void Primary::SetSurfaceArea(real surf) {m_surf = surf;}
+
+// Sets the volume.
 void Primary::SetVolume(real vol) {m_vol = vol;}
 
-// Returns the primary mass.
-real Primary::Mass(void) const {return m_mass;}
+// Sets the mass.
+void Primary::SetMass(real m) {m_mass = m;}
 
-// Returns the primary surface area.
-real Primary::SurfaceArea(void) const {return m_surf;}
+
+// OPERATIONS.
+
+// Adjusts the primary with the given composition and 
+// tracker values changes n times.  If the particle cannot be adjust
+// n times, then this function returns the number of times
+// it was adjusted.
+unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, unsigned int n)
+{
+	unsigned int i = 0;
+
+	// Add the components.
+	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+		m_comp[i] += dcomp[i] * (real)n;
+	}
+
+	// Add the tracker values.
+	for (i=0; i!=min(m_values.size(),dvalues.size()); ++i) {
+		m_values[i] += dvalues[i] * (real)n;
+	}
+
+	// Now allow the sub-models to deal with the additions.
+    for (SubModelMap::iterator j=m_submodels.begin(); 
+         j!=m_submodels.end(); ++j) {
+        j->second->Update(dcomp, dvalues, n);
+	}
+
+    // Update property cache.
+    Primary::UpdateCache();
+
+    return n;
+}
+
+// Combines this primary with another.  This is also the
+// implementation of the + and += operators.
+Primary &Primary::Coagulate(const Primary &rhs)
+{
+    // Check if the RHS uses the same particle model.  If not, then
+    // just use the assignment operator because you can't add apples 
+    // and bananas!
+    if (rhs.m_pmodel == m_pmodel) {
+        // Add the components.
+        for (unsigned int i=0; i!=min(m_comp.size(),rhs.m_comp.size()); ++i) {
+            m_comp[i] += rhs.m_comp[i];
+        }
+
+        // Add the tracker values.
+        for (unsigned int i=0; i!=min(m_values.size(),rhs.m_values.size()); ++i) {
+            m_values[i] += rhs.m_values[i];
+        }
+
+        // Now allow the particle models to deal with the additions.
+        for (SubModelMap::iterator j=m_submodels.begin(); j!=m_submodels.end(); ++j) {
+            // Try to find the model in RHS.
+            SubModelMap::const_iterator k = rhs.m_submodels.find(j->first);
+            if (k != rhs.m_submodels.end()) {
+                j->second->Coagulate(*k->second);
+            }
+        }
+
+        // Now check for models which are in the RHS but not the LHS.
+        for (SubModelMap::const_iterator j=rhs.m_submodels.begin(); j!=rhs.m_submodels.end(); ++j) {
+            // Try to find model in this primary.
+            SubModelMap::const_iterator k = m_submodels.find(j->first);
+            if (k == m_submodels.end()) {
+                // Add model to this primary.
+                m_submodels[j->first] = j->second->Clone();
+            }
+        }
+
+        // Create time is the earliest time.
+        m_createt = min(m_createt, rhs.m_createt);
+        m_time    = min(m_time, rhs.m_time);
+    } else {
+        // Different particle models!
+        *this = rhs;
+    }
+    Primary::UpdateCache();
+    return *this;
+}
 
 
 // READ/WRITE/COPY.
@@ -155,6 +447,11 @@ Primary *const Primary::Clone(void) const
     return new Primary(*this);
 }
 
+// Returns this object's instance.  This may seem rather circular, but
+// it has an important purpose for getting the correct object type reference
+// from a base class reference/pointer.
+//const Primary &Primary::TypedRef() const {return *this;}
+
 // Writes the object to a binary stream.
 void Primary::Serialize(std::ostream &out) const
 {
@@ -163,25 +460,67 @@ void Primary::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
-        // Output the composition.
-        unsigned int n = (unsigned int)m_comp;
+        // Write number of components.
+        unsigned int n = (unsigned int)m_comp.size();
         out.write((char*)&n, sizeof(n));
 
-        // Output the volume
-        double v = (double)m_vol;
-        out.write((char*)&v, sizeof(v));
+        // Write components.
+        double val = 0.0;
+        for (unsigned int i=0; i!=n; ++i) {
+            val = (double)m_comp[i];
+            out.write((char*)&val, sizeof(val));
+        }
 
-        // Output the mass
-        v = (double)m_mass;
-        out.write((char*)&v, sizeof(v));
+        // Write number of tracker values.
+        n = (unsigned int)m_values.size();
+        out.write((char*)&n, sizeof(n));
 
-        // Output the diameter
-        v = (double)m_diam;
-        out.write((char*)&v, sizeof(v));
+        // Write values.
+        for (unsigned int i=0; i!=n; ++i) {
+            val = (double)m_values[i];
+            out.write((char*)&val, sizeof(val));
+        }
 
-        // Output the surface area
-        v = (double)m_surf;
-        out.write((char*)&v, sizeof(v));
+        // Write create time.
+        val = (double)m_createt;
+        out.write((char*)&val, sizeof(val));
+
+        // Write last update time.
+        val = (double)m_time;
+        out.write((char*)&val, sizeof(val));
+
+        // Write sub-model count.
+        n = (unsigned int)m_submodels.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Serialize sub-models.
+        for (SubModelMap::const_iterator i=m_submodels.begin(); i!=m_submodels.end(); ++i) {
+            ModelFactory::Write(*(i->second), out);
+        }
+
+        // Write equivalent sphere diameter.
+        val = (double)m_diam;
+        out.write((char*)&val, sizeof(val));
+
+        // Write collision diameter.
+        val = (double)m_dcol;
+        out.write((char*)&val, sizeof(val));
+
+        // Write mobility diameter.
+        val = (double)m_dmob;
+        out.write((char*)&val, sizeof(val));
+
+        // Write surface area.
+        val = (double)m_surf;
+        out.write((char*)&val, sizeof(val));
+
+        // Write volume.
+        val = (double)m_vol;
+        out.write((char*)&val, sizeof(val));
+
+        // Write mass.
+        val = (double)m_mass;
+        out.write((char*)&val, sizeof(val));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, Primary::Serialize).");
@@ -189,8 +528,11 @@ void Primary::Serialize(std::ostream &out) const
 }
 
 // Reads the object from a binary stream.
-void Primary::Deserialize(std::istream &in)
+void Primary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
+    releaseMem();
+    m_pmodel = &model;
+
     if (in.good()) {
         // Read the output version.  Currently there is only one
         // output version, so we don't do anything with this variable.
@@ -200,29 +542,69 @@ void Primary::Deserialize(std::istream &in)
 
         unsigned int n = 0;
         double val = 0.0;
+        SubModels::SubModel *smod = NULL;
 
         switch (version) {
             case 0:
-                // Read the composition.
+                // Read number of components.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                m_comp = (unsigned int)n;
 
-                // Read the volume.
+                // Read components.
+                for (unsigned int i=0; i!=n; ++i) {
+                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                    m_comp.push_back((real)val);
+                }
+
+                // Read number of tracker values.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read values.
+                for (unsigned int i=0; i!=n; ++i) {
+                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                    m_values.push_back((real)val);
+                }
+
+                // Read create time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_vol = (real)val;
+                m_createt = (real)val;
 
-                // Read the mass
+                // Read last update time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_mass = (real)val;
+                m_time = (real)val;
 
-                // Read the diameter
+                // Read sub-model count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read sub-models.
+                for (unsigned int i=0; i!=n; ++i) {
+                    smod = ModelFactory::Read(in, *this);
+                    m_submodels[smod->ID()] = smod;
+                }
+
+                // Read equivalent sphere diameter.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_diam = (real)val;
 
-                // Read the surface area.
+                // Read collision diameter.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_dcol = (real)val;
+
+                // Read mobility diameter.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_dmob = (real)val;
+
+                // Read surface area.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_surf = (real)val;
 
+                // Read volume.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_vol = (real)val;
+
+                // Read mass.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_mass = (real)val;
+    
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -233,3 +615,149 @@ void Primary::Deserialize(std::istream &in)
                                "(Sweep, Primary::Deserialize).");
     }
 }
+
+
+// DATA MANAGEMENT.
+
+// Release all memory associated with object.
+void Primary::releaseMem(void)
+{
+    m_comp.clear();
+    m_values.clear();
+    for (SubModelMap::iterator i=m_submodels.begin(); i!=m_submodels.end(); ++i) {
+        delete i->second;
+    }
+    m_submodels.clear();
+}
+
+// Initialisation routine.
+void Primary::init(void)
+{
+    m_pmodel = NULL;
+    m_createt = 0.0;
+    m_time = 0.0;
+    m_diam = 0.0; // Equivalent spherical diameter.
+    m_dcol = 0.0; // Collision diameter.
+    m_dmob = 0.0; // Mobility diameter.
+    m_surf = 0.0; // Surface area.
+    m_vol = 0.0;  // Volume.
+    m_mass = 0.0; // Mass.
+    releaseMem();
+}
+
+/*
+// READ/WRITE/COPY.
+
+// Copies this primary into another spherical
+// primary.  This implements the assignment operator for
+// the situation Primary = Primary.
+Primary &Primary::CopyTo(Primary &lhs) const
+{
+    if (this != &lhs) {
+        // Check if the RHS uses the same particle model before copying
+        // components and tracker values.
+        if (lhs.m_pmodel == m_pmodel) {
+            // Copy composition.
+            memcpy(&lhs.m_comp[0], &m_comp[0], sizeof(real)*m_comp.size());        
+            // Copy tracker variables.
+            memcpy(&lhs.m_values[0], &m_values[0], sizeof(real)*m_values.size());
+        } else {
+            // Set the particle model.
+            lhs.m_pmodel = m_pmodel;
+            // Copy components.
+            lhs.m_comp.assign(m_comp.begin(), m_comp.end());
+            // Copy tracker variables.
+            lhs.m_values.assign(m_values.begin(), m_values.end());
+        }
+
+        // Copy primary time.
+        lhs.m_createt = m_createt;
+        lhs.m_time    = m_time;
+
+        // Delete sub-models not in RHS.
+        for (SubModelMap::const_iterator i=lhs.m_submodels.begin(); 
+             i!=lhs.m_submodels.end(); ++i) {
+            // Try to find model data in RHS primary.
+            SubModelMap::const_iterator k = m_submodels.find(i->first);
+            if (k == lhs.m_submodels.end()) {
+                // This RHS primary does not contain the model i, 
+                // need to delete it.
+                delete i->second;
+                lhs.m_submodels.erase(i->first);
+            }
+        }
+
+        // Copy sub-models from RHS.
+        for (SubModelMap::const_iterator i=m_submodels.begin(); 
+             i!=m_submodels.end(); ++i) {
+            // Try to find model data in this primary.
+            SubModelMap::const_iterator k = lhs.m_submodels.find(i->first);
+            if (k != lhs.m_submodels.end()) {
+                // This primary contains the model i.
+                *(k->second) = *(i->second);
+            } else {
+                // This primary does not contain the model i, 
+                // need to create it.
+                lhs.m_submodels[i->first] = i->second->Clone();
+            }
+        }
+
+        // Copy the derived properties.
+        lhs.m_diam = m_diam;
+        lhs.m_dcol = m_dcol;
+        lhs.m_dmob = m_dmob;
+        lhs.m_surf = m_surf;
+        lhs.m_vol  = m_vol;
+        lhs.m_mass = m_mass;
+    }
+    return lhs;
+}
+
+// Copies this primary into another spherical
+// primary.  This implements the assignment operator for
+// the situation Primary = Primary.
+Primary &Primary::AddTo(Primary &lhs) const
+{
+    // Check if the LHS uses the same particle model.  If not, then
+    // just use the assignment operator because you can't add apples 
+    // and bananas!
+    if (lhs.m_pmodel == m_pmodel) {
+        // Add the components.
+        for (unsigned int i=0; i!=min(lhs.m_comp.size(),m_comp.size()); ++i) {
+            lhs.m_comp[i] += m_comp[i];
+        }
+
+        // Add the tracker values.
+        for (unsigned int i=0; i!=min(m_values.size(),lhs.m_values.size()); ++i) {
+            lhs.m_values[i] += m_values[i];
+        }
+
+        // Now allow the particle models to deal with the additions.
+        for (SubModelMap::iterator j=lhs.m_submodels.begin(); j!=lhs.m_submodels.end(); ++j) {
+            // Try to find the model in RHS.
+            SubModelMap::const_iterator k = m_submodels.find(j->first);
+            if (k != m_submodels.end()) {
+                j->second->Coagulate(*k->second);
+            }
+        }
+
+        // Now check for models which are in the RHS but not the LHS.
+        for (SubModelMap::const_iterator j=m_submodels.begin(); j!=m_submodels.end(); ++j) {
+            // Try to find model in this primary.
+            SubModelMap::const_iterator k = lhs.m_submodels.find(j->first);
+            if (k == lhs.m_submodels.end()) {
+                // Add model to this primary.
+                lhs.m_submodels[j->first] = j->second->Clone();
+            }
+        }
+
+        // Create time is the earliest time.
+        lhs.m_createt = min(m_createt, lhs.m_createt);
+        lhs.m_time    = min(m_time, lhs.m_time);
+    } else {
+        // Different particle models!
+        CopyTo(lhs);
+    }
+    return lhs;
+}
+*/

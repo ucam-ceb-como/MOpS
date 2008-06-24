@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 using namespace Sweep;
+using namespace Sweep::Processes;
 using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
@@ -15,8 +16,14 @@ Process::Process(void)
 {
 }
 
+// Initialising constructor.
+Process::Process(const Sweep::Mechanism &mech)
+: m_mech(&mech)
+{
+}
+
 // Copy constructor.
-Process::Process(const Sweep::Process &copy)
+Process::Process(const Process &copy)
 {
     *this = copy;
 }
@@ -30,7 +37,7 @@ Process::~Process(void)
 // OPERATOR OVERLOADS.
 
 // Assigment operator.
-Process &Process::operator=(const Sweep::Process &rhs)
+Process &Process::operator=(const Process &rhs)
 {
     if (this != &rhs) {
         m_mech = rhs.m_mech;
@@ -242,9 +249,9 @@ void Process::Serialize(std::ostream &out) const
 }
 
 // Reads the object from a binary stream.
-void Process::Deserialize(std::istream &in)
+void Process::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 {
-    m_mech = NULL;
+    m_mech = &mech;
     m_prod.clear();
     m_reac.clear();
 

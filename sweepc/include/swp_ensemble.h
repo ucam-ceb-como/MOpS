@@ -28,10 +28,10 @@
 #define SWEEP_ENSEMBLE_H
 
 #include "swp_params.h"
-#include "swp_particle.h"
 #include "swp_treenode.h"
-#include "swp_component.h"
-#include "swp_tracker.h"
+#include "swp_particle.h"
+#include "swp_particle_model.h"
+#include "swp_particle_cache.h"
 #include <cmath>
 #include <iostream>
 
@@ -54,15 +54,16 @@ public:
     typedef PartPtrVector::const_iterator const_iterator;
 
     // Constructors.
-    Ensemble(void);           // Default constructor.
-    Ensemble(                 // Parameterised constructor.
-        unsigned int count,   //  - Capacity (max. number of particles).
-        const Mechanism &mech //  - Mechanism used to define particles.
+    Ensemble(void); // Default constructor.
+    Ensemble(const Sweep::ParticleModel &model); // Initialising constructor (no particles).
+    Ensemble(                             // Initialising constructor (incl. particles).
+        unsigned int count,               //  - Capacity (max. number of particles).
+        const Sweep::ParticleModel &model //  - Mechanism used to define particles.
         );  
     Ensemble(const Ensemble &copy); // Copy constructor.
-    Ensemble(                 // Stream-reading constructor.
-        std::istream &in,     //   - Input stream.
-        const Mechanism &mech //   - Mechanism used to define particles.
+    Ensemble(                            // Stream-reading constructor.
+        std::istream &in,                //   - Input stream.
+        const Sweep::ParticleModel &mech //   - Mechanism used to define particles.
         );
 
     // Destructor.
@@ -76,9 +77,16 @@ public:
 
     // Initialises the ensemble with the given capacity.
     void Initialise(
-        unsigned int capacity, // Max. number of particles.
-        const Mechanism &mech  // Mechanism which defines the particles.
+        unsigned int capacity,             // Max. number of particles.
+        const Sweep::ParticleModel &model  // Model which defines the particles.
         );
+
+
+    // THE PARTICLE MODEL.
+
+    // Returns a pointer to the particle model to which this
+    // ensemble subscribes.
+    const Sweep::ParticleModel *const ParticleModel(void) const;
 
 
     // PARTICLE ADDITION AND REMOVAL.
@@ -93,7 +101,10 @@ public:
     int Add(Particle &sp);
 
     // Removes the particle at the given index from the ensemble.
-    void Remove(unsigned int i);
+    void Remove(
+        unsigned int i, // Index of particle to remove.
+        bool fdel=true  // Set true to delete particle from memory as well, otherwise false.
+        );
 
     // Removes invalid particles.
     void RemoveInvalids(void);
@@ -133,15 +144,15 @@ public:
     // property index.  The particle properties are those stored in
     // the ParticleData type. Returns particle index on success, otherwise
     // negative.
-    int Select(ParticleData::PropertyID id) const; 
+    int Select(ParticleCache::PropID id) const; 
 
 
     // Selects particle according to the particle property
     // specified by the given model and the given property id
     // of the model.
     int Select(
-        ModelType model_id, // ID of the model for which to get the property.
-        unsigned int wtid   // Property ID within the model.
+        SubModels::SubModelType model_id, // ID of the model for which to get the property.
+        unsigned int wtid                 // Property ID within the model.
         ) const;
 
     // ENSEMBLE CAPACITY AND PARTICLE COUNT.
@@ -172,19 +183,19 @@ public:
     // GET SUMS OF PROPERTIES.
 
     // Returns the sums of all properties in the binary tree.
-    const ParticleData &GetSums(void) const;
+    const ParticleCache &GetSums(void) const;
 
     // Returns the sum of one particle property with the given index 
     // from the binary tree.
     real GetSum(
-        ParticleData::PropertyID id // ID of the ParticleData property.
+        ParticleCache::PropID id // ID of the ParticleData property.
         ) const;
 
     // Returns the sum of one particle property with the given index 
     // from the given model from the binary tree.
     real GetSum(
-        ModelType model_id, // ID of model from which to get the property.
-        unsigned int id     // ID of the property within the model.
+        SubModels::SubModelType model_id, // ID of model from which to get the property.
+        unsigned int id                   // ID of the property within the model.
         ) const;
 
 
@@ -204,11 +215,14 @@ public:
 
     // Reads the object from a binary stream.
     void Deserialize(
-        std::istream &in,     // Input stream.
-        const Mechanism &mech // Mechanism used to define particles.
+        std::istream &in,                // Input stream.
+        const Sweep::ParticleModel &mech // Model used to define particles.
         );
 
-private: 
+private:
+    // Particle model used to define particles.
+    const Sweep::ParticleModel *m_model;
+
     // Vector of particles in the ensemble.
     PartPtrVector m_particles;
 
@@ -233,7 +247,17 @@ private:
 
     // TREE.
     std::vector<TreeNode> m_tree;   // The binary tree nodes.
-    mutable ParticleData m_sums;
+    mutable ParticleCache m_sums;
+
+
+    // MEMORY MANAGEMENT.
+
+    // Releases all memory resources used by the ensemble.
+    void releaseMem(void);
+
+    // Sets the ensemble to its initial condition.  Used in constructors.
+    void init(void);
+
 
     // TREENODE ASSOCIATED FUNCTIONS.
 

@@ -28,8 +28,8 @@ float genbet(float aa,float bb)
 **********************************************************************
 */
 {
-#define expmax 89.0
-#define infnty 1.0E38
+#define expmax 89.0f
+#define infnty 1.0e38
 static float olda = -1.0;
 static float oldb = -1.0;
 static float genbet,a,alpha,b,beta,delta,gamma,k1,k2,r,s,t,u1,u2,v,w,y,z;
@@ -45,7 +45,7 @@ S10:
     olda = aa;
     oldb = bb;
 S20:
-    if(!(min(aa,bb) > 1.0)) goto S100;
+    if(!(min(aa,bb) > 1.0f)) goto S100;
 /*
      Alborithm BB
      Initialize
@@ -54,8 +54,8 @@ S20:
     a = min(aa,bb);
     b = max(aa,bb);
     alpha = a+b;
-    beta = sqrt((alpha-2.0)/(2.0*a*b-alpha));
-    gamma = a+1.0/beta;
+    beta = sqrt((alpha-2.0f)/(2.0f*a*b-alpha));
+    gamma = a+1.0f/beta;
 S30:
 S40:
     u1 = ranf();
@@ -63,20 +63,20 @@ S40:
      Step 1
 */
     u2 = ranf();
-    v = beta*log(u1/(1.0-u1));
+    v = beta*log(u1/(1.0f-u1));
     if(!(v > expmax)) goto S50;
-    w = infnty;
+    w = (float)infnty;
     goto S60;
 S50:
     w = a*exp(v);
 S60:
     z = pow(u1,2.0f)*u2;
-    r = gamma*v-1.3862944;
+    r = gamma*v-1.3862944f;
     s = a+r-w;
 /*
      Step 2
 */
-    if(s+2.609438 >= 5.0*z) goto S70;
+    if(s+2.609438f >= 5.0f*z) goto S70;
 /*
      Step 3
 */
@@ -106,10 +106,10 @@ S100:
     a = max(aa,bb);
     b = min(aa,bb);
     alpha = a+b;
-    beta = 1.0/b;
-    delta = 1.0+a-b;
-    k1 = delta*(1.38889E-2+4.16667E-2*b)/(a*beta-0.777778);
-    k2 = 0.25+(0.5+0.25/delta)*b;
+    beta = 1.0f/b;
+    delta = 1.0f+a-b;
+    k1 = delta*(1.38889E-2f+4.16667E-2f*b)/(a*beta-0.777778f);
+    k2 = 0.25f+(0.5f+0.25f/delta)*b;
 S110:
 S120:
     u1 = ranf();
@@ -130,10 +130,10 @@ S130:
      Step 3
 */
     z = pow(u1,2.0f)*u2;
-    if(!(z <= 0.25)) goto S160;
-    v = beta*log(u1/(1.0-u1));
+    if(!(z <= 0.25f)) goto S160;
+    v = beta*log(u1/(1.0f-u1));
     if(!(v > expmax)) goto S140;
-    w = infnty;
+    w = (float)infnty;
     goto S150;
 S140:
     w = a*exp(v);
@@ -146,14 +146,14 @@ S170:
      Step 4
      Step 5
 */
-    v = beta*log(u1/(1.0-u1));
+    v = beta*log(u1/(1.0f-u1));
     if(!(v > expmax)) goto S180;
-    w = infnty;
+    w = (float)infnty;
     goto S190;
 S180:
     w = a*exp(v);
 S190:
-    if(alpha*(log(alpha/(b+w))+v)-1.3862944 < log(z)) goto S120;
+    if(alpha*(log(alpha/(b+w))+v)-1.3862944f < log(z)) goto S120;
 S200:
 /*
      Step 6
@@ -193,7 +193,7 @@ static float genchi;
     fprintf(stderr,"Value of DF: %16.6E\n",df);
     exit(1);
 S10:
-    genchi = 2.0*gengam(1.0,df/2.0);
+    genchi = 2.0f*gengam(1.0f,df/2.0f);
     return genchi;
 }
 float genexp(float av)
@@ -258,7 +258,7 @@ S10:
     fputs(" GENF - generated numbers would cause overflow",stderr);
     fprintf(stderr," Numerator %16.6E Denominator %16.6E\n",xnum,xden);
     fputs(" GENF returning 1.0E38",stderr);
-    genf = 1.0E38;
+    genf = 1.0E38f;
     goto S30;
 S20:
     genf = xnum/xden;
@@ -442,7 +442,7 @@ static float gennch;
     fprintf(stderr,"Value of DF: %16.6E Value of XNONC%16.6E\n",df,xnonc);
     exit(1);
 S10:
-    gennch = genchi(df-1.0)+pow(gennor(sqrt(xnonc),1.0),2.0f);
+    gennch = genchi(df-1.0f)+pow(gennor(sqrt(xnonc),1.0f),2.0f);
     return gennch;
 }
 float gennf(float dfn,float dfd,float xnonc)
@@ -490,7 +490,7 @@ S10:
     fputs(" GENNF - generated numbers would cause overflow",stderr);
     fprintf(stderr," Numerator %16.6E Denominator %16.6E\n",xnum,xden);
     fputs(" GENNF returning 1.0E38",stderr);
-    gennf = 1.0E38;
+    gennf = 1.0E38f;
     goto S30;
 S20:
     gennf = xnum/xden;
@@ -747,26 +747,26 @@ S10:
 *****SETUP, PERFORM ONLY WHEN PARAMETERS CHANGE
 */
     psave = pp;
-    p = min(psave,1.0-psave);
-    q = 1.0-p;
+    p = min(psave,1.0f-psave);
+    q = 1.0f-p;
 S20:
     xnp = n*p;
     nsave = n;
-    if(xnp < 30.0) goto S140;
+    if(xnp < 30.0f) goto S140;
     ffm = xnp+p;
-    m = ffm;
-    fm = m;
+    m = (long)ffm;
+    fm = (float)m;
     xnpq = xnp*q;
-    p1 = (long) (2.195*sqrt(xnpq)-4.6*q)+0.5;
-    xm = fm+0.5;
+    p1 = (long) (2.195f*sqrt(xnpq)-4.6f*q)+0.5f;
+    xm = fm+0.5f;
     xl = xm-p1;
     xr = xm+p1;
-    c = 0.134+20.5/(15.3+fm);
+    c = 0.134f+20.5f/(15.3f+fm);
     al = (ffm-xl)/(ffm-xl*p);
-    xll = al*(1.0+0.5*al);
+    xll = al*(1.0f+0.5f*al);
     al = (xr-ffm)/(xr*q);
-    xlr = al*(1.0+0.5*al);
-    p2 = p1*(1.0+c+c);
+    xlr = al*(1.0f+0.5f*al);
+    p2 = p1*(1.0f+c+c);
     p3 = p2+c/xll;
     p4 = p3+c/xlr;
 S30:
@@ -779,7 +779,7 @@ S30:
      TRIANGULAR REGION
 */
     if(u > p1) goto S40;
-    ix = xm-p1*v+u;
+    ix = (long)(xm-p1*v+u);
     goto S170;
 S40:
 /*
@@ -787,16 +787,16 @@ S40:
 */
     if(u > p2) goto S50;
     x = xl+(u-p1)/c;
-    v = v*c+1.0-ABS(xm-x)/p1;
-    if(v > 1.0 || v <= 0.0) goto S30;
-    ix = x;
+    v = v*c+1.0f-ABS(xm-x)/p1;
+    if(v > 1.0f || v <= 0.0f) goto S30;
+    ix = (long)x;
     goto S70;
 S50:
 /*
      LEFT TAIL
 */
     if(u > p3) goto S60;
-    ix = xl+log(v)/xll;
+    ix = (long)(xl+log(v)/xll);
     if(ix < 0) goto S30;
     v *= ((u-p2)*xll);
     goto S70;
@@ -804,7 +804,7 @@ S60:
 /*
      RIGHT TAIL
 */
-    ix = xr-log(v)/xlr;
+    ix = (long)(xr-log(v)/xlr);
     if(ix > n) goto S30;
     v *= ((u-p3)*xlr);
 S70:
@@ -837,8 +837,8 @@ S130:
 /*
      SQUEEZING USING UPPER AND LOWER BOUNDS ON ALOG(F(X))
 */
-    amaxp = k/xnpq*((k*(k/3.0+0.625)+0.1666666666666)/xnpq+0.5);
-    ynorm = -(k*k/(2.0*xnpq));
+    amaxp = k/xnpq*((k*(k/3.0f+0.625f)+0.1666666666666f)/xnpq+0.5f);
+    ynorm = -(k*k/(2.0f*xnpq));
     alv = log(v);
     if(alv < ynorm-amaxp) goto S170;
     if(alv > ynorm+amaxp) goto S30;
@@ -846,10 +846,10 @@ S130:
      STIRLING'S FORMULA TO MACHINE ACCURACY FOR
      THE FINAL ACCEPTANCE/REJECTION TEST
 */
-    x1 = ix+1.0;
-    f1 = fm+1.0;
-    z = n+1.0-fm;
-    w = n-ix+1.0;
+    x1 = ix+1.0f;
+    f1 = fm+1.0f;
+    z = n+1.0f-fm;
+    w = n-ix+1.0f;
     z2 = z*z;
     x2 = x1*x1;
     f2 = f1*f1;
@@ -982,43 +982,43 @@ long ignpoi(float mu)
 */
 {
 extern float fsign( float num, float sign );
-static float a0 = -0.5;
-static float a1 = 0.3333333;
-static float a2 = -0.2500068;
-static float a3 = 0.2000118;
-static float a4 = -0.1661269;
-static float a5 = 0.1421878;
-static float a6 = -0.1384794;
-static float a7 = 0.125006;
-static float muold = 0.0;
-static float muprev = 0.0;
+static float a0 = -0.5f;
+static float a1 = 0.3333333f;
+static float a2 = -0.2500068f;
+static float a3 = 0.2000118f;
+static float a4 = -0.1661269f;
+static float a5 = 0.1421878f;
+static float a6 = -0.1384794f;
+static float a7 = 0.125006f;
+static float muold = 0.0f;
+static float muprev = 0.0f;
 static float fact[10] = {
-    1.0,1.0,2.0,6.0,24.0,120.0,720.0,5040.0,40320.0,362880.0
+    1.0f,1.0f,2.0f,6.0f,24.0f,120.0f,720.0f,5040.0f,40320.0f,362880.0f
 };
 static long ignpoi,j,k,kflag,l,m;
 static float b1,b2,c,c0,c1,c2,c3,d,del,difmuk,e,fk,fx,fy,g,omega,p,p0,px,py,q,s,
     t,u,v,x,xx,pp[35];
 
     if(mu == muprev) goto S10;
-    if(mu < 10.0) goto S120;
+    if(mu < 10.0f) goto S120;
 /*
      C A S E  A. (RECALCULATION OF S,D,L IF MU HAS CHANGED)
 */
     muprev = mu;
     s = sqrt(mu);
-    d = 6.0*mu*mu;
+    d = 6.0f*mu*mu;
 /*
              THE POISSON PROBABILITIES PK EXCEED THE DISCRETE NORMAL
              PROBABILITIES FK WHENEVER K >= M(MU). L=IFIX(MU-1.1484)
              IS AN UPPER BOUND TO M(MU) FOR ALL MU >= 10 .
 */
-    l = (long) (mu-1.1484);
+    l = (long) (mu-1.1484f);
 S10:
 /*
      STEP N. NORMAL SAMPLE - SNORM(IR) FOR STANDARD NORMAL DEVIATE
 */
     g = mu+s*snorm();
-    if(g < 0.0) goto S20;
+    if(g < 0.0f) goto S20;
     ignpoi = (long) (g);
 /*
      STEP I. IMMEDIATE ACCEPTANCE IF IGNPOI IS LARGE ENOUGH
@@ -1042,16 +1042,16 @@ S20:
 */
     if(mu == muold) goto S30;
     muold = mu;
-    omega = 0.3989423/s;
-    b1 = 4.166667E-2/mu;
-    b2 = 0.3*b1*b1;
-    c3 = 0.1428571*b1*b2;
-    c2 = b2-15.0*c3;
-    c1 = b1-6.0*b2+45.0*c3;
-    c0 = 1.0-b1+3.0*b2-15.0*c3;
-    c = 0.1069/mu;
+    omega = 0.3989423f/s;
+    b1 = 4.166667E-2f/mu;
+    b2 = 0.3f*b1*b1;
+    c3 = 0.1428571f*b1*b2;
+    c2 = b2-15.0f*c3;
+    c1 = b1-6.0f*b2+45.0f*c3;
+    c0 = 1.0f-b1+3.0f*b2-15.0f*c3;
+    c = 0.1069f/mu;
 S30:
-    if(g < 0.0) goto S50;
+    if(g < 0.0f) goto S50;
 /*
              'SUBROUTINE' F IS CALLED (KFLAG=0 FOR CORRECT RETURN)
 */
@@ -1070,9 +1070,9 @@ S50:
 */
     e = sexpo();
     u = ranf();
-    u += (u-1.0);
-    t = 1.8+fsign(e,u);
-    if(t <= -0.6744) goto S50;
+    u += (u-1.0f);
+    t = 1.8f+fsign(e,u);
+    if(t <= -0.6744f) goto S50;
     ignpoi = (long) (mu+s*t);
     fk = (float)ignpoi;
     difmuk = mu-fk;
@@ -1102,20 +1102,20 @@ S80:
              A0-A7 FOR ACCURACY WHEN ADVISABLE
              .8333333E-1=1./12.  .3989423=(2*PI)**(-.5)
 */
-    del = 8.333333E-2/fk;
-    del -= (4.8*del*del*del);
+    del = 8.333333E-2f/fk;
+    del -= (4.8f*del*del*del);
     v = difmuk/fk;
     if(fabs(v) <= 0.25) goto S90;
-    px = fk*log(1.0+v)-difmuk-del;
+    px = fk*log(1.0f+v)-difmuk-del;
     goto S100;
 S90:
     px = fk*v*v*(((((((a7*v+a6)*v+a5)*v+a4)*v+a3)*v+a2)*v+a1)*v+a0)-del;
 S100:
-    py = 0.3989423/sqrt(fk);
+    py = 0.3989423f/sqrt(fk);
 S110:
-    x = (0.5-difmuk)/s;
+    x = (0.5f-difmuk)/s;
     xx = x*x;
-    fx = -0.5*xx;
+    fx = -0.5f*xx;
     fy = omega*(((c3*xx+c2)*xx+c1)*xx+c0);
     if(kflag <= 0) goto S40;
     goto S60;
@@ -1144,7 +1144,7 @@ S130:
 */
     if(l == 0) goto S150;
     j = 1;
-    if(u > 0.458) j = min(l,m);
+    if(u > 0.458f) j = min(l,m);
     for(k=j; k<=l; k++) {
         if(u <= *(pp+k-1)) goto S180;
     }
@@ -1412,7 +1412,7 @@ static float ranf;
      4.656613057E-10 is 1/M1  M1 is set in a data statement in IGNLGI
       and is currently 2147483563. If M1 changes, change this also.
 */
-    ranf = ignlgi()*4.656613057E-10;
+    ranf = ignlgi()*4.656613057E-10f;
     return ranf;
 }
 void setgmn(float *meanv,float *covm,long p,float *parm)
@@ -1451,7 +1451,7 @@ static long i,icount,info,j,D2,D3,D4,D5;
     fprintf(stderr,"Value of P: %12ld\n",p);
     exit(1);
 S10:
-    *parm = p;
+    *parm = (float)p;
 /*
      PUT P AND MEANV INTO PARM
 */
@@ -1510,7 +1510,7 @@ float sexpo(void)
 */
 {
 static float q[8] = {
-    0.6931472,0.9333737,0.9888778,0.9984959,0.9998293,0.9999833,0.9999986,1.0
+    0.6931472f,0.9333737f,0.9888778f,0.9984959f,0.9998293f,0.9999833f,0.9999986f,1.0f
 };
 static long i;
 static float sexpo,a,u,ustar,umin;
@@ -1593,28 +1593,28 @@ float sgamma(float a)
 */
 {
 extern float fsign( float num, float sign );
-static float q1 = 4.166669E-2;
-static float q2 = 2.083148E-2;
-static float q3 = 8.01191E-3;
-static float q4 = 1.44121E-3;
-static float q5 = -7.388E-5;
-static float q6 = 2.4511E-4;
-static float q7 = 2.424E-4;
-static float a1 = 0.3333333;
-static float a2 = -0.250003;
-static float a3 = 0.2000062;
-static float a4 = -0.1662921;
-static float a5 = 0.1423657;
-static float a6 = -0.1367177;
-static float a7 = 0.1233795;
-static float e1 = 1.0;
-static float e2 = 0.4999897;
-static float e3 = 0.166829;
-static float e4 = 4.07753E-2;
-static float e5 = 1.0293E-2;
-static float aa = 0.0;
-static float aaa = 0.0;
-static float sqrt32 = 5.656854;
+static float q1 = 4.166669E-2f;
+static float q2 = 2.083148E-2f;
+static float q3 = 8.01191E-3f;
+static float q4 = 1.44121E-3f;
+static float q5 = -7.388E-5f;
+static float q6 = 2.4511E-4f;
+static float q7 = 2.424E-4f;
+static float a1 = 0.3333333f;
+static float a2 = -0.250003f;
+static float a3 = 0.2000062f;
+static float a4 = -0.1662921f;
+static float a5 = 0.1423657f;
+static float a6 = -0.1367177f;
+static float a7 = 0.1233795f;
+static float e1 = 1.0f;
+static float e2 = 0.4999897f;
+static float e3 = 0.166829f;
+static float e4 = 4.07753E-2f;
+static float e5 = 1.0293E-2f;
+static float aa = 0.0f;
+static float aaa = 0.0f;
+static float sqrt32 = 5.656854f;
 static float sgamma,s2,s,d,t,x,u,r,q0,b,si,c,v,q,e,w,p;
     if(a == aa) goto S10;
     if(a < 1.0) goto S120;
@@ -1622,9 +1622,9 @@ static float sgamma,s2,s,d,t,x,u,r,q0,b,si,c,v,q,e,w,p;
      STEP  1:  RECALCULATIONS OF S2,S,D IF A HAS CHANGED
 */
     aa = a;
-    s2 = a-0.5;
+    s2 = a-0.5f;
     s = sqrt(s2);
-    d = sqrt32-12.0*s;
+    d = sqrt32-12.0f*s;
 S10:
 /*
      STEP  2:  T=STANDARD NORMAL DEVIATE,
@@ -1632,7 +1632,7 @@ S10:
                IMMEDIATE ACCEPTANCE (I)
 */
     t = snorm();
-    x = s+0.5*t;
+    x = s+0.5f*t;
     sgamma = x*x;
     if(t >= 0.0) return sgamma;
 /*
@@ -1645,7 +1645,7 @@ S10:
 */
     if(a == aaa) goto S40;
     aaa = a;
-    r = 1.0/ a;
+    r = 1.0f/ a;
     q0 = ((((((q7*r+q6)*r+q5)*r+q4)*r+q3)*r+q2)*r+q1)*r;
 /*
                APPROXIMATION DEPENDING ON SIZE OF PARAMETER A
@@ -1657,25 +1657,25 @@ S10:
 /*
                CASE 3:  A .GT. 13.022
 */
-    b = 1.77;
-    si = 0.75;
-    c = 0.1515/s;
+    b = 1.77f;
+    si = 0.75f;
+    c = 0.1515f/s;
     goto S40;
 S20:
 /*
                CASE 2:  3.686 .LT. A .LE. 13.022
 */
-    b = 1.654+7.6E-3*s2;
-    si = 1.68/s+0.275;
-    c = 6.2E-2/s+2.4E-2;
+    b = 1.654f+7.6E-3f*s2;
+    si = 1.68f/s+0.275f;
+    c = 6.2E-2f/s+2.4E-2f;
     goto S40;
 S30:
 /*
                CASE 1:  A .LE. 3.686
 */
-    b = 0.463+s+0.178*s2;
-    si = 1.235;
-    c = 0.195/s-7.9E-2+1.6E-1*s;
+    b = 0.463f+s+0.178f*s2;
+    si = 1.235f;
+    c = 0.195f/s-7.9E-2f+1.6E-1f*s;
 S40:
 /*
      STEP  5:  NO QUOTIENT TEST IF X NOT POSITIVE
@@ -1686,10 +1686,10 @@ S40:
 */
     v = t/(s+s);
     if(fabs(v) <= 0.25) goto S50;
-    q = q0-s*t+0.25*t*t+(s2+s2)*log(1.0+v);
+    q = q0-s*t+0.25f*t*t+(s2+s2)*log(1.0f+v);
     goto S60;
 S50:
-    q = q0+0.5*t*t*((((((a7*v+a6)*v+a5)*v+a4)*v+a3)*v+a2)*v+a1)*v;
+    q = q0+0.5f*t*t*((((((a7*v+a6)*v+a5)*v+a4)*v+a3)*v+a2)*v+a1)*v;
 S60:
 /*
      STEP  7:  QUOTIENT ACCEPTANCE (Q)
@@ -1703,7 +1703,7 @@ S70:
 */
     e = sexpo();
     u = ranf();
-    u += (u-1.0);
+    u += (u-1.0f);
     t = b+fsign(si*e,u);
 /*
      STEP  9:  REJECTION IF T .LT. TAU(1) = -.71874483771719
@@ -1714,17 +1714,17 @@ S70:
 */
     v = t/(s+s);
     if(fabs(v) <= 0.25) goto S80;
-    q = q0-s*t+0.25*t*t+(s2+s2)*log(1.0+v);
+    q = q0-s*t+0.25f*t*t+(s2+s2)*log(1.0f+v);
     goto S90;
 S80:
-    q = q0+0.5*t*t*((((((a7*v+a6)*v+a5)*v+a4)*v+a3)*v+a2)*v+a1)*v;
+    q = q0+0.5f*t*t*((((((a7*v+a6)*v+a5)*v+a4)*v+a3)*v+a2)*v+a1)*v;
 S90:
 /*
      STEP 11:  HAT ACCEPTANCE (H) (IF Q NOT POSITIVE GO TO STEP 8)
 */
     if(q <= 0.0) goto S70;
     if(q <= 0.5) goto S100;
-    w = exp(q)-1.0;
+    w = exp(q)-1.0f;
     goto S110;
 S100:
     w = ((((e5*q+e4)*q+e3)*q+e2)*q+e1)*q;
@@ -1732,8 +1732,8 @@ S110:
 /*
                IF T IS REJECTED, SAMPLE AGAIN AT STEP 8
 */
-    if(c*fabs(u) > w*exp(e-0.5*t*t)) goto S70;
-    x = s+0.5*t;
+    if(c*fabs(u) > w*exp(e-0.5f*t*t)) goto S70;
+    x = s+0.5f*t;
     sgamma = x*x;
     return sgamma;
 S120:
@@ -1741,7 +1741,7 @@ S120:
      ALTERNATE METHOD FOR PARAMETERS A BELOW 1  (.3678794=EXP(-1.))
 */
     aa = 0.0;
-    b = 1.0+0.3678794*a;
+    b = 1.0f+0.3678794f*a;
 S130:
     p = b*ranf();
     if(p >= 1.0) goto S140;
@@ -1783,31 +1783,31 @@ float snorm(void)
 */
 {
 static float a[32] = {
-    0.0,3.917609E-2,7.841241E-2,0.11777,0.1573107,0.1970991,0.2372021,0.2776904,
-    0.3186394,0.36013,0.4022501,0.4450965,0.4887764,0.5334097,0.5791322,
-    0.626099,0.6744898,0.7245144,0.7764218,0.8305109,0.8871466,0.9467818,
-    1.00999,1.077516,1.150349,1.229859,1.318011,1.417797,1.534121,1.67594,
-    1.862732,2.153875
+    0.0,3.917609E-2f,7.841241E-2f,0.11777f,0.1573107f,0.1970991f,0.2372021f,0.2776904f,
+    0.3186394f,0.36013f,0.4022501f,0.4450965f,0.4887764f,0.5334097f,0.5791322f,
+    0.626099f,0.6744898f,0.7245144f,0.7764218f,0.8305109f,0.8871466f,0.9467818f,
+    1.00999f,1.077516f,1.150349f,1.229859f,1.318011f,1.417797f,1.534121f,1.67594f,
+    1.862732f,2.153875f
 };
 static float d[31] = {
-    0.0,0.0,0.0,0.0,0.0,0.2636843,0.2425085,0.2255674,0.2116342,0.1999243,
-    0.1899108,0.1812252,0.1736014,0.1668419,0.1607967,0.1553497,0.1504094,
-    0.1459026,0.14177,0.1379632,0.1344418,0.1311722,0.128126,0.1252791,
-    0.1226109,0.1201036,0.1177417,0.1155119,0.1134023,0.1114027,0.1095039
+    0.0f,0.0f,0.0f,0.0f,0.0f,0.2636843f,0.2425085f,0.2255674f,0.2116342f,0.1999243f,
+    0.1899108f,0.1812252f,0.1736014f,0.1668419f,0.1607967f,0.1553497f,0.1504094f,
+    0.1459026f,0.14177f,0.1379632f,0.1344418f,0.1311722f,0.128126f,0.1252791f,
+    0.1226109f,0.1201036f,0.1177417f,0.1155119f,0.1134023f,0.1114027f,0.1095039f
 };
 static float t[31] = {
-    7.673828E-4,2.30687E-3,3.860618E-3,5.438454E-3,7.0507E-3,8.708396E-3,
-    1.042357E-2,1.220953E-2,1.408125E-2,1.605579E-2,1.81529E-2,2.039573E-2,
-    2.281177E-2,2.543407E-2,2.830296E-2,3.146822E-2,3.499233E-2,3.895483E-2,
-    4.345878E-2,4.864035E-2,5.468334E-2,6.184222E-2,7.047983E-2,8.113195E-2,
-    9.462444E-2,0.1123001,0.136498,0.1716886,0.2276241,0.330498,0.5847031
+    7.673828E-4f,2.30687E-3f,3.860618E-3f,5.438454E-3f,7.0507E-3f,8.708396E-3f,
+    1.042357E-2f,1.220953E-2f,1.408125E-2f,1.605579E-2f,1.81529E-2f,2.039573E-2f,
+    2.281177E-2f,2.543407E-2f,2.830296E-2f,3.146822E-2f,3.499233E-2f,3.895483E-2f,
+    4.345878E-2f,4.864035E-2f,5.468334E-2f,6.184222E-2f,7.047983E-2f,8.113195E-2f,
+    9.462444E-2f,0.1123001f,0.136498f,0.1716886f,0.2276241f,0.330498f,0.5847031f
 };
 static float h[31] = {
-    3.920617E-2,3.932705E-2,3.951E-2,3.975703E-2,4.007093E-2,4.045533E-2,
-    4.091481E-2,4.145507E-2,4.208311E-2,4.280748E-2,4.363863E-2,4.458932E-2,
-    4.567523E-2,4.691571E-2,4.833487E-2,4.996298E-2,5.183859E-2,5.401138E-2,
-    5.654656E-2,5.95313E-2,6.308489E-2,6.737503E-2,7.264544E-2,7.926471E-2,
-    8.781922E-2,9.930398E-2,0.11556,0.1404344,0.1836142,0.2790016,0.7010474
+    3.920617E-2f,3.932705E-2f,3.951E-2f,3.975703E-2f,4.007093E-2f,4.045533E-2f,
+    4.091481E-2f,4.145507E-2f,4.208311E-2f,4.280748E-2f,4.363863E-2f,4.458932E-2f,
+    4.567523E-2f,4.691571E-2f,4.833487E-2f,4.996298E-2f,5.183859E-2f,5.401138E-2f,
+    5.654656E-2f,5.95313E-2f,6.308489E-2f,6.737503E-2f,7.264544E-2f,7.926471E-2f,
+    8.781922E-2f,9.930398E-2f,0.11556f,0.1404344f,0.1836142f,0.2790016f,0.7010474f
 };
 static long i;
 static float snorm,u,s,ustar,aa,w,y,tt;
@@ -1815,7 +1815,7 @@ static float snorm,u,s,ustar,aa,w,y,tt;
     s = 0.0;
     if(u > 0.5) s = 1.0;
     u += (u-s);
-    u = 32.0*u;
+    u = 32.0f*u;
     i = (long) (u);
     if(i == 32) i = 31;
     if(i == 0) goto S100;
@@ -1841,7 +1841,7 @@ S60:
 */
     u = ranf();
     w = u*(*(a+i)-aa);
-    tt = (0.5*w+aa)*w;
+    tt = (0.5f*w+aa)*w;
     goto S80;
 S70:
     tt = u;
@@ -1868,7 +1868,7 @@ S120:
     u -= 1.0;
 S140:
     w = u**(d+i-1);
-    tt = (0.5*w+aa)*w;
+    tt = (0.5f*w+aa)*w;
     goto S160;
 S150:
     tt = u;
