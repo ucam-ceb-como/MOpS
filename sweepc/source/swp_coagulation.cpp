@@ -413,10 +413,17 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
         if (!Ficticious(majk, truek)) {
             // We can now coagulate the particles, remember to
             // remove second particle afterwards.
-            *sp1 += *sp2;
-            sp1->SetTime(t);
-            sys.Particles().Update(ip1);
-            sys.Particles().Remove(ip2, !m_mech->UseSubPartTree());
+            if (ip1 < ip2) {
+                *sp1 += *sp2;
+                sp1->SetTime(t);
+                sys.Particles().Update(ip1);
+                sys.Particles().Remove(ip2, !m_mech->UseSubPartTree());
+            } else {
+                *sp2 += *sp1;
+                sp2->SetTime(t);
+                sys.Particles().Update(ip2);
+                sys.Particles().Remove(ip1, !m_mech->UseSubPartTree());
+            }
         } else {
             delete sp1old; delete sp2old;
             return 1; // Ficticious event.
