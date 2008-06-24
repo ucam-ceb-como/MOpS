@@ -228,7 +228,7 @@ void ParticleSolver::writePartTrackCSV(const std::string &filename,
     vector<CSV_IO*> csv(track[0].size());
     for (unsigned int i=0; i!=np; ++i) {
         // Open the CSV file for particle i.
-        csv[i] = new CSV_IO(filename+"p"+cstr(i)+".csv", true);
+        csv[i] = new CSV_IO(filename+"-p"+cstr(i)+".csv", true);
         // Write header row.
         csv[i]->Write(head);
         // Output particle initial conditions.        
@@ -356,7 +356,7 @@ void ParticleSolver::postProcessPSLs(unsigned int nruns, const Mechanism &mech,
                     if (sp != NULL) {
                         real t = times[i].EndTime();
                         string fname = m_output_filename + "-tem(" + cstr(t) + 
-                                       "s, " + cstr(i) + ").csv";
+                                       "s, " + cstr(i) + ").pov";
                         Sweep::Imaging::ParticleImage img;
                         ofstream file; file.open(fname.c_str());
                         img.Construct(*sp);
