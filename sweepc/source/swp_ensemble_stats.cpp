@@ -173,11 +173,13 @@ unsigned int EnsembleStats::PSL_Count(void) const
 void EnsembleStats::PSL_Names(std::vector<std::string> &names, unsigned int start) const
 {
     // First PSL variable is the particle weight.
-    if (names.size() > 0) {
-        names[0] = "Weight";
+    if (names.size() > start) {
+        names[start] = "Weight";
     } else {
-        names.push_back("Weight");
+        names.resize(start+1);
+        names[start] = "Weight";
     }
+    ++start;
 
     // Get basic stats.
     m_basicstats->PSL_Names(names, start);

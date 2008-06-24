@@ -59,7 +59,7 @@ void ParticleImage::WritePOVRAY(std::ofstream &file)
 
         // Write ParticleDiameter argument to POV file.
         val  = m_root.Radius() * 2.0;
-        line = "#declare ParticleDiameter = " + cstr(val) + "\n";
+        line = "#declare ParticleDiameter = " + cstr(val) + ";\n";
         file.write(line.c_str(), line.length());
 
         // Write aggregate opening declaration.
@@ -82,13 +82,15 @@ void ParticleImage::WritePOVRAY(std::ofstream &file)
             file.write(line.c_str(), line.length());
         }
 
+        // Write blob translation.
+
         // Write closing brace for MyParticle declaration.
         line = "}\n";
         file.write(line.c_str(), line.length());
 
         // Write include command for tem_single.pov, which defines TEM style
         // for a single particle.
-        line = "#include ""particle.pov""\n";
+        line = "#include \"particle.pov\"\n";
         file.write(line.c_str(), line.length());
     } else {
         throw invalid_argument("Output stream not ready "
@@ -120,7 +122,7 @@ void ParticleImage::constructAgg_FM(const Particle &sp)
             case AggModels::Spherical_ID:
                 // Spherical particle model, just draw
                 // a single sphere.
-                m_root.Insert(sp.SphDiameter() * 0.5);
+                m_root.Insert(sp.SphDiameter() * 0.5e9); // Convert to nm.
                 return;
             case AggModels::SurfVol_ID:
                 // Surface-volume model, construct a tree
@@ -151,7 +153,7 @@ void ParticleImage::constructAgg_FM(const AggModels::PriPartPrimary &pri)
     // Create a vector of primary radii.
     fvector radii;
     for (unsigned int i=0; i!=n; ++i) {
-        radii.push_back(pri.PriDiameter(i)*0.5);
+        radii.push_back(pri.PriDiameter(i)*0.5e9); // Convert to nm.
     }
 
     // Randomly add the primaries to the image aggregate tree.
@@ -172,7 +174,7 @@ void ParticleImage::constructAgg_FM(const AggModels::PriPartPrimary &pri)
 // count are passed as arguments.
 void ParticleImage::uniformAgg_FM(unsigned int n, real d)
 {
-    real r = d * 0.5;
+    real r = d * 0.5e9; // Convert to nm.
 
     // Add n identical primaries to the image data structure.
     m_root.Clear();
