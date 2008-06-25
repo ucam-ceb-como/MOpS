@@ -220,7 +220,7 @@ void ParticleSolver::writePartTrackCSV(const std::string &filename,
     // Determine max. number of particles tracked.
     unsigned int np = 0;
     for (unsigned int i=0; i!=track.size(); ++i) {
-        np = max(np, track[i].size());
+        np = max(np, (unsigned int)track[i].size());
     }
 
     // Open sufficient CSV files for all tracked particles.  Also
