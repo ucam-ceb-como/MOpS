@@ -7,6 +7,7 @@
 #include "swp_surfvol_cache.h"
 #include "rng.h"
 #include <stdexcept>
+#include <vector>
 
 using namespace Sweep;
 using namespace Sweep::AggModels;
@@ -563,7 +564,7 @@ void PriPartPrimary::updatePrimaries(void)
     if (ds < 0.0) {
         while ((m_totprisurf > m_surf) && (m_primaries.size() > 1)) {
             // Store the mass of the smallest primary, then remove it.
-            vector<PriPart>::const_iterator i = (m_primaries.end()-1);
+            vector<PriPart>::iterator i = (m_primaries.end()-1);
             unsigned int m = i->Monomers; // Store monomer count.
             m_totprisurf -= i->Surface;   // Remove contribution to total surface area.
             m_primaries.erase(i);         // Erase the primary.

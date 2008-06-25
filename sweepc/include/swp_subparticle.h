@@ -28,7 +28,7 @@ public:
         real time,                        //   - Create time.
         const Sweep::ParticleModel &model //   - Defining particle model.
         );
-    SubParticle(Primary &pri);            // Initialising constructor (from primary particle).
+    SubParticle(Sweep::Primary &pri);     // Initialising constructor (from primary particle).
     SubParticle(const SubParticle &copy); // Copy constructor.
     SubParticle(                          // Stream-reading constructor.
         std::istream &in,                 //  - Input stream.
@@ -40,11 +40,11 @@ public:
 
     // Operators.
     SubParticle &operator=(const SubParticle &rhs);
-    SubParticle &operator=(const Primary &rhs);
+    SubParticle &operator=(const Sweep::Primary &rhs);
     SubParticle &operator+=(const SubParticle &rhs);
-    SubParticle &operator+=(const Primary &rhs);
+    SubParticle &operator+=(const Sweep::Primary &rhs);
     const SubParticle operator+(const SubParticle &rhs) const;
-    const SubParticle operator+(const Primary &rhs) const;
+    const SubParticle operator+(const Sweep::Primary &rhs) const;
 
 
     // PARENT SUB-PARTICLE.

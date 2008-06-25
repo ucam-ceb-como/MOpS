@@ -4,6 +4,7 @@
 #include "swp_model_factory.h"
 #include "rng.h"
 #include <cmath>
+#include <stdexcept>
 
 using namespace Sweep;
 using namespace std;

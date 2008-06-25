@@ -38,15 +38,17 @@ endif
 
 # Target objects.
 
-obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemblestats.o \
-    swp_mech_parser.o swp_mechanism.o swp_particle.o swp_particledata.o \
-    swp_particlestats.o swp_solver.o swp_tracker.o swp_treenode.o \
-    swp_abfmodel.o swp_activesites_model.o swp_coagmodel.o swp_coagmodeldata.o \
-    swp_model.o swp_modeldata.o swp_modelfactory.o swp_pointcontactdata.o \
-    swp_pointcontactmodel.o swp_primary.o swp_pripartdata.o \
-    swp_pripartmodel.o swp_activesites_reaction.o swp_coagulation.o \
-    swp_condensation.o swp_inception.o swp_particleprocess.o swp_process.o \
-    swp_processfactory.o swp_surfacereaction.o
+obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
+    swp_mech_parser.o swp_mechanism.o swp_subparticle.o swp_particle.o \
+    swp_particle_cache.o swp_particle_stats.o swp_solver.o swp_tracker.o \
+    swp_treenode.o swp_abf_model.o swp_actsites_model.o swp_aggmodel_cache.o \
+    swp_submodel.o swp_submodel_cache.o swp_model_factory.o \
+    swp_surfvol_cache.o swp_surfvol_primary.o swp_primary.o \
+    swp_pripart_cache.o swp_pripart_primary.o swp_actsites_reaction.o \
+    swp_coagulation.o swp_condensation.o swp_inception.o \
+    swp_particle_process.o swp_process.o swp_process_factory.o \
+    swp_surface_reaction.o swp_particle_model.o swp_imgnode.o \
+    swp_particle_image.o swp_surfvol_stats.o swp_pripart_stats.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -68,10 +70,13 @@ swp_component.o: $(src)/swp_component.cpp
 swp_tracker.o: $(src)/swp_tracker.cpp
 	$(cpp) $(flag) $(src)/swp_tracker.cpp
 
-swp_particledata.o: $(src)/swp_particledata.cpp swp_model.o swp_component.o
-	$(cpp) $(flag) $(src)/swp_particledata.cpp
+swp_particle_cache.o: $(src)/swp_particle_cache.cpp
+	$(cpp) $(flag) $(src)/swp_particle_cache.cpp
 
-swp_particle.o: $(src)/swp_particle.cpp swp_particledata.o swp_model.o
+swp_subparticle.o: $(src)/swp_subparticle.cpp
+	$(cpp) $(flag) $(src)/swp_subparticle.cpp
+
+swp_particle.o: $(src)/swp_particle.cpp
 	$(cpp) $(flag) $(src)/swp_particle.cpp
 
 # Particle system & ensemble.
@@ -87,70 +92,85 @@ swp_ensemble.o: $(src)/swp_ensemble.cpp
 
 # Statistics generation.
 
-swp_particlestats.o: $(src)/swp_particlestats.cpp swp_particle.o
-	$(cpp) $(flag) $(src)/swp_particlestats.cpp
+swp_particle_stats.o: $(src)/swp_particle_stats.cpp swp_particle.o
+	$(cpp) $(flag) $(src)/swp_particle_stats.cpp
 	
-swp_ensemblestats.o: $(src)/swp_ensemblestats.cpp swp_modelfactory.o \
-                     swp_mechanism.o
-	$(cpp) $(flag) $(src)/swp_ensemblestats.cpp
+swp_ensemble_stats.o: $(src)/swp_ensemble_stats.cpp swp_model_factory.o \
+                      swp_mechanism.o
+	$(cpp) $(flag) $(src)/swp_ensemble_stats.cpp
 
+swp_surfvol_stats.o: $(src)/swp_surfvol_stats.cpp
+	$(cpp) $(flag) $(src)/swp_surfvol_stats.cpp
+
+swp_pripart_stats.o: $(src)/swp_pripart_stats.cpp
+	$(cpp) $(flag) $(src)/swp_pripart_stats.cpp
+
+# Particle imaging.
+
+swp_imgnode.o: $(src)/swp_imgnode.cpp
+	$(cpp) $(flag) $(src)/swp_imgnode.cpp
+
+swp_particle_image.o: $(src)/swp_particle_image.cpp
+	$(cpp) $(flag) $(src)/swp_particle_image.cpp
+	
 # Mechanism.
 
+swp_particle_model.o: $(src)/swp_particle_model.cpp
+	$(cpp) $(flag) $(src)/swp_particle_model.cpp
+
 swp_mech_parser.o: $(src)/swp_mech_parser.cpp swp_component.o swp_tracker.o \
-                   swp_inception.o swp_surfacereaction.o \
-                   swp_activesites_reaction.o swp_condensation.o \
-                   swp_abfmodel.o $(camxml) $(comostrings)
+                   swp_inception.o swp_surface_reaction.o \
+                   swp_actsites_reaction.o swp_condensation.o \
+                   swp_abf_model.o $(camxml) $(comostrings)
 	$(cpp) $(flag) $(src)/swp_mech_parser.cpp
 
-swp_mechanism.o: $(src)/swp_mechanism.cpp swp_modelfactory.o \
-                 swp_processfactory.o swp_abfmodel.o
+swp_mechanism.o: $(src)/swp_mechanism.cpp swp_model_factory.o \
+                 swp_process_factory.o swp_abf_model.o
 	$(cpp) $(flag) $(src)/swp_mechanism.cpp
 
-# Particle models.
+# Active site models.
 
-swp_abfmodel.o: $(src)/swp_abfmodel.cpp swp_component.o
-	$(cpp) $(flag) $(src)/swp_abfmodel.cpp
+swp_abf_model.o: $(src)/swp_abf_model.cpp swp_component.o
+	$(cpp) $(flag) $(src)/swp_abf_model.cpp
 
-swp_activesites_model.o: $(src)/swp_activesites_model.cpp
-	$(cpp) $(flag) $(src)/swp_activesites_model.cpp
+swp_actsites_model.o: $(src)/swp_actsites_model.cpp
+	$(cpp) $(flag) $(src)/swp_actsites_model.cpp
 
-swp_coagmodel.o: $(src)/swp_coagmodel.cpp swp_particle.o
-	$(cpp) $(flag) $(src)/swp_coagmodel.cpp
-
-swp_coagmodeldata.o: $(src)/swp_coagmodeldata.cpp swp_coagmodel.o
-	$(cpp) $(flag) $(src)/swp_coagmodeldata.cpp
-
-swp_model.o: $(src)/swp_model.cpp
-	$(cpp) $(flag) $(src)/swp_model.cpp
-
-swp_modeldata.o: $(src)/swp_modeldata.cpp
-	$(cpp) $(flag) $(src)/swp_modeldata.cpp
-
-swp_modelfactory.o: $(src)/swp_modelfactory.cpp swp_coagmodeldata.o \
-                    swp_pointcontactdata.o swp_pripartdata.o swp_coagmodel.o \
-                    swp_particlestats.o swp_pointcontactmodel.o \
-                    swp_pripartmodel.o swp_abfmodel.o
-	$(cpp) $(flag) $(src)/swp_modelfactory.cpp
-
-swp_pointcontactdata.o: $(src)/swp_pointcontactdata.cpp
-	$(cpp) $(flag) $(src)/swp_pointcontactdata.cpp
-
-swp_pointcontactmodel.o: $(src)/swp_pointcontactmodel.cpp
-	$(cpp) $(flag) $(src)/swp_pointcontactmodel.cpp
+# Aggregation models.
 
 swp_primary.o: $(src)/swp_primary.cpp
 	$(cpp) $(flag) $(src)/swp_primary.cpp
 
-swp_pripartdata.o: $(src)/swp_pripartdata.cpp
-	$(cpp) $(flag) $(src)/swp_pripartdata.cpp
+swp_surfvol_primary.o: $(src)/swp_surfvol_primary.cpp
+	$(cpp) $(flag) $(src)/swp_surfvol_primary.cpp
 
-swp_pripartmodel.o: $(src)/swp_pripartmodel.cpp
-	$(cpp) $(flag) $(src)/swp_pripartmodel.cpp
+swp_pripart_primary.o: $(src)/swp_pripart_primary.cpp
+	$(cpp) $(flag) $(src)/swp_pripart_primary.cpp
+
+swp_aggmodel_cache.o: $(src)/swp_aggmodel_cache.cpp
+	$(cpp) $(flag) $(src)/swp_aggmodel_cache.cpp
+
+swp_surfvol_cache.o: $(src)/swp_surfvol_cache.cpp
+	$(cpp) $(flag) $(src)/swp_surfvol_cache.cpp
+
+swp_pripart_cache.o: $(src)/swp_pripart_cache.cpp
+	$(cpp) $(flag) $(src)/swp_pripart_cache.cpp
+
+# Particle sub-models.
+
+swp_submodel.o: $(src)/swp_submodel.cpp
+	$(cpp) $(flag) $(src)/swp_submodel.cpp
+
+swp_submodel_cache.o: $(src)/swp_submodel_cache.cpp
+	$(cpp) $(flag) $(src)/swp_submodel_cache.cpp
+
+swp_model_factory.o: $(src)/swp_model_factory.cpp
+	$(cpp) $(flag) $(src)/swp_model_factory.cpp
 
 # Processes.
 
-swp_activesites_reaction.o: $(src)/swp_activesites_reaction.cpp
-	$(cpp) $(flag) $(src)/swp_activesites_reaction.cpp
+swp_actsites_reaction.o: $(src)/swp_actsites_reaction.cpp
+	$(cpp) $(flag) $(src)/swp_actsites_reaction.cpp
 
 swp_coagulation.o: $(src)/swp_coagulation.cpp
 	$(cpp) $(flag) $(src)/swp_coagulation.cpp
@@ -161,17 +181,17 @@ swp_condensation.o: $(src)/swp_condensation.cpp
 swp_inception.o: $(src)/swp_inception.cpp
 	$(cpp) $(flag) $(src)/swp_inception.cpp
 
-swp_particleprocess.o: $(src)/swp_particleprocess.cpp
-	$(cpp) $(flag) $(src)/swp_particleprocess.cpp
+swp_particle_process.o: $(src)/swp_particle_process.cpp
+	$(cpp) $(flag) $(src)/swp_particle_process.cpp
 
 swp_process.o: $(src)/swp_process.cpp
 	$(cpp) $(flag) $(src)/swp_process.cpp
 
-swp_processfactory.o: $(src)/swp_processfactory.cpp
-	$(cpp) $(flag) $(src)/swp_processfactory.cpp
+swp_process_factory.o: $(src)/swp_process_factory.cpp
+	$(cpp) $(flag) $(src)/swp_process_factory.cpp
 
-swp_surfacereaction.o: $(src)/swp_surfacereaction.cpp
-	$(cpp) $(flag) $(src)/swp_surfacereaction.cpp
+swp_surface_reaction.o: $(src)/swp_surface_reaction.cpp
+	$(cpp) $(flag) $(src)/swp_surface_reaction.cpp
 
 # Solver.
 

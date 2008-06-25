@@ -3,7 +3,7 @@
 #include "string_functions.h"
 #include <fstream>
 #include <vector>
-
+#include <stdexcept>
 using namespace Sweep;
 using namespace Sweep::Imaging;
 using namespace std;
