@@ -428,7 +428,7 @@ void Solver::consoleOutput(const Mops::Reactor &r) const
     out.push_back(r.Time());
 
     // Get output data from particles.
-    Sweep::EnsembleStats stats(r.Mech()->ParticleMech());
+    Sweep::Stats::EnsembleStats stats(r.Mech()->ParticleMech());
     r.Mixture()->GetVitalStats(stats);
     out.push_back(stats.BasicStats().PCount());
     out.push_back(stats.BasicStats().M0());

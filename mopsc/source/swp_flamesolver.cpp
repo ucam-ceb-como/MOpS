@@ -340,7 +340,7 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
     fvector achem, echem;
     // Declare stats outputs (averages and errors).
     vector<fvector> astat(npoints), estat(npoints);
-    EnsembleStats stats(pmech);
+    Stats::EnsembleStats stats(pmech);
 
     // Declare CPU time outputs (averages and errors).
     vector<fvector> acpu(npoints), ecpu(npoints);

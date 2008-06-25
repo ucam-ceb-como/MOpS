@@ -201,7 +201,7 @@ void StrangSolver::PostProcess(const std::string &filename,
 
     // Declare particle stats outputs (averages and errors).
     vector<fvector> astat(npoints), estat(npoints);
-    Sweep::EnsembleStats stats(pmech);
+    Sweep::Stats::EnsembleStats stats(pmech);
 
     // Declare CPU time outputs (averages and errors).
     vector<vector<double> > acpu(npoints), ecpu(npoints);

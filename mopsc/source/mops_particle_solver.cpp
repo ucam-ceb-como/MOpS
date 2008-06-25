@@ -32,7 +32,7 @@ ParticleSolver::~ParticleSolver(void)
 void ParticleSolver::outputParticleStats(const Reactor &r) const
 {
     // Write particle stats to file.
-    static Sweep::EnsembleStats stats(r.Mech()->ParticleMech());
+    static Sweep::Stats::EnsembleStats stats(r.Mech()->ParticleMech());
     r.Mixture()->GetVitalStats(stats);
     stats.Serialize(m_file);
 }
@@ -91,7 +91,7 @@ void ParticleSolver::readParticleDataPoint(std::istream &in,
     // Check for valid stream.
     if (in.good()) {
         // Read the stats.
-        Sweep::EnsembleStats stats(mech);
+        Sweep::Stats::EnsembleStats stats(mech);
         stats.Deserialize(in, mech);
 
         // Get the stats vector.
@@ -131,7 +131,7 @@ void ParticleSolver::readPartTrackPoint(std::istream &in,
         in.read(reinterpret_cast<char*>(&t), sizeof(t));
 
         // Create a particle stats object.
-        Sweep::EnsembleStats stats(mech);
+        Sweep::Stats::EnsembleStats stats(mech);
 
         // Resize output vectors to hold particle data.  Also reset
         // all entries to 0.0.
@@ -166,7 +166,7 @@ void ParticleSolver::writeParticleStatsCSV(const std::string &filename,
     // Open file for the CSV results.
     CSV_IO csv(filename, true);
 
-    Sweep::EnsembleStats stats(mech.ParticleMech());
+    Sweep::Stats::EnsembleStats stats(mech.ParticleMech());
 
     // Write the header row to the particle stats CSV file.
     vector<string> head;
@@ -209,7 +209,7 @@ void ParticleSolver::writePartTrackCSV(const std::string &filename,
 
     // Create an EnsembleStats object to get the PSL variable
     // names vector.
-    Sweep::EnsembleStats stats(mech.ParticleMech());
+    Sweep::Stats::EnsembleStats stats(mech.ParticleMech());
 
     // Build the header row vector
     vector<string> head;
@@ -311,7 +311,7 @@ void ParticleSolver::postProcessPSLs(unsigned int nruns, const Mechanism &mech,
 {
     Reactor *r = NULL;
     unsigned int step = 0;
-    Sweep::EnsembleStats stats(mech.ParticleMech());
+    Sweep::Stats::EnsembleStats stats(mech.ParticleMech());
     fvector psl;
 
     // Build header row for CSV output files.
