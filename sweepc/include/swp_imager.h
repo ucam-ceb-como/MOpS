@@ -65,6 +65,12 @@ public:
     // Constructs the particle image from the given particle.
     void Construct(const Particle &sp);
 
+    // Constructs a random particle image.
+    void ConstructRandom(
+        real minrad,   // Minimum primary radius.
+        real maxrad,   // Maximum primary radius.
+        unsigned int n // Number of primaries to generate.
+        );
 
     // RENDERING FUNCTIONS.
 
@@ -111,9 +117,23 @@ private:
     // collision with a target sphere.  Returns true if the
     // spheres collide, otherwise false.
     static bool calcCollZ(
-        real sumrsqr,           // Sum of the target and bullet radii squared.
-        real dxsqr, real dysqr, // The X and Y plane displacements of the bullet squared.
-        real &dz                // The output z-axis displacement of the bullet (+ve).
+        const Coords::Vector &p1, // Positional vector of sphere 1.
+        real r1,                  // Radius of sphere 1.
+        const Coords::Vector &p2, // Positional vector of sphere 2.
+        real r2,                  // Radius of sphere 2.
+        real dx, real dy,         // Sphere 2 x and y displacements.
+        real &dz                  // The output z-axis displacement of the bullet (+ve).
+        );
+
+    // Calculates the minimum collision distance between
+    // a target and a bullet node by moving down the
+    // binary tree.  If the nodes collide then returns
+    // true, otherwise returns false.
+    static bool minCollZ(
+        const ImgNode &target, // Target node.
+        const ImgNode &bullet, // Bullet node.
+        real dx, real dy,      // Bullet x-y displacements.
+        real &dz               // Return minimum distance.
         );
 
     // OUTPUT FUNCTIONS.

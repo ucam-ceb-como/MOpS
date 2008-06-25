@@ -30,8 +30,8 @@ namespace Coords
         inline real &Y(void) {return A[1];}
         inline real &Z(void) {return A[2];}
         // Operators to return vector elements.
-        real &operator[](int i) {return A[0];}
-        const real &operator[](int i) const {return A[0];}
+        real &operator[](int i) {return A[i];}
+        const real &operator[](int i) const {return A[i];}
 
         // VECTOR TRANSLATION.
 
@@ -81,9 +81,9 @@ namespace Coords
         {
             // C = A X B.
             Vector C;
-            C[0] = (A[0][0]*B[0]) + (A[0][1]*B[0]) + (A[0][2]*B[0]);
-            C[1] = (A[1][0]*B[1]) + (A[1][1]*B[1]) + (A[1][2]*B[1]);
-            C[2] = (A[2][0]*B[2]) + (A[2][1]*B[2]) + (A[2][2]*B[2]);
+            C[0] = (A[0][0]*B[0]) + (A[0][1]*B[1]) + (A[0][2]*B[2]);
+            C[1] = (A[1][0]*B[0]) + (A[1][1]*B[1]) + (A[1][2]*B[2]);
+            C[2] = (A[2][0]*B[0]) + (A[2][1]*B[1]) + (A[2][2]*B[2]);
             return C;
         }
         

@@ -9,7 +9,7 @@ using namespace Sweep::Imaging;
 using namespace std;
 using namespace Strings;
 
-const real ParticleImage::m_necking = 1.15;
+const real ParticleImage::m_necking = 1.000;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -42,6 +42,27 @@ void ParticleImage::Construct(const Particle &sp)
     }
 }
 
+// Constructs a random particle image.
+void ParticleImage::ConstructRandom(real minrad, real maxrad, unsigned int n)
+{
+    // Clear the current image data structure.
+    m_root.Clear();
+
+    // Generate the random primaries.
+    for (unsigned int i=0; i!=n; ++i) {
+        real r = minrad + rnd()*(maxrad-minrad);
+        m_root.Insert(r);
+    }
+
+    // Calculate aggregate structure
+    switch(m_creg) {
+        case FreeMol:
+            // Free-molecular is the default regime.
+        default:
+            calc_FM(m_root);
+    }
+}
+
 
 // RENDERING FUNCTIONS.
 
@@ -67,7 +88,7 @@ void ParticleImage::WritePOVRAY(std::ofstream &file)
         file.write(line.c_str(), line.length());
 
         // Write threshold radius based on necking parameter.
-        val  = pow(1.0 - (1.0/(m_necking*m_necking)), 2.0);
+        val  = max(pow(1.0 - (1.0/(m_necking*m_necking)), 2.0), 1.0e-4);
         line = "  threshold " + cstr(val) + "\n";
         file.write(line.c_str(), line.length());
 
@@ -81,8 +102,6 @@ void ParticleImage::WritePOVRAY(std::ofstream &file)
                    ", " + cstr(coords[i][2]) + ">, " + cstr(val) + ", 1.0}\n";
             file.write(line.c_str(), line.length());
         }
-
-        // Write blob translation.
 
         // Write closing brace for MyParticle declaration.
         line = "}\n";
@@ -159,7 +178,7 @@ void ParticleImage::constructAgg_FM(const AggModels::PriPartPrimary &pri)
     // Randomly add the primaries to the image aggregate tree.
     m_root.Clear();
     while (radii.size() > 0) {
-        unsigned int j = irnd(0, radii.size())-1;
+        int j = irnd(0, radii.size()-1);
         m_root.Insert(radii[j]);
         radii.erase(radii.begin()+j);
     }
@@ -167,6 +186,7 @@ void ParticleImage::constructAgg_FM(const AggModels::PriPartPrimary &pri)
     // Use the free-molecular regime to calculate the
     // aggregate structure.
     calc_FM(m_root);
+    m_root.CentreCOM();
 }
 
 // Constructs a PNode sphere-tree aggregate with uniform 
@@ -226,8 +246,7 @@ void ParticleImage::calc_FM(ImgNode &node)
         // x-y displacement means that the aggregates cannot
         // collide in the z-direction.
         Coords::Vector D;
-        real dxsqr=0.0, dysqr=0.0;
-        real sumr=0.0, sumd=0.0;
+        real sumr=0.0;
         real dz1=0.0, dz2=0.0;
         bool hit = false;
         while (!hit) {
@@ -237,124 +256,36 @@ void ParticleImage::calc_FM(ImgNode &node)
             target = node.m_left;
             bullet = node.m_right;
             sumr = target->Radius() + bullet->Radius();
-            sumd = 2.0 * sumr;
 
             // Create a random displacement of the bullet node
-            // in the x-y plane.  The squares are stored for
-            // efficient computation.  The displacement is never
+            // in the x-y plane.  The displacement is never
             // greater than the sum of the radii, therefore they
             // should always touch.
-            D[0] = (rnd() * sumd) - 1.0; dxsqr = D[0]*D[0];
-            D[1] = (rnd() * sumd) - 1.0; dysqr = D[1]*D[1];
+            D[0] = ((2.0 * rnd()) - 1.0) * sumr;
+            D[1] = ((2.0 * rnd()) - 1.0) * sumr;
 
-            // Calculate the z-position for the collision of the
-            // target and bullet.  We do this in case both the
-            // target and bullet are leaf nodes, and hence the
-            // binary tree traversal won't happen.
-            hit = calcCollZ(sumr*sumr, dxsqr, dysqr, dz1);
-            if (!hit) continue; // Should never happen.
-            D[2] = target->m_cen_bsph[2] + dz1;
+            //// Calculate the z-position for the collision of the
+            //// target and bullet.  We do this in case both the
+            //// target and bullet are leaf nodes, and hence the
+            //// binary tree traversal won't happen.
+            //hit = calcCollZ(target->m_cen_mass, target->m_r,
+            //                bullet->m_cen_mass, bullet->m_r,
+            //                D[0], D[1], dz1);
+            //if (!hit) continue; // Should never happen.
+            //D[2] = target->m_cen_bsph[2] + dz1;
 
             // The next code determines the displacement along the z-axis
             // required for the target and bullet aggregates to touch.  This
             // requires falling down the tree progressively recalculating
             // the nearest nodes at each level, until the leaf nodes
             // are reached.
-
-            while (hit) {
-                // This next code calculates the minimum distance between the
-                // target's children and bullet's children, or the target or
-                // bullet if they have no children.  The two children with
-                // the smallest separation are chosen as the next target
-                // and bullet.
-                if (target->IsLeaf()) {
-                    if (bullet->IsLeaf()) {
-                        // Check distance between leaf and bullet.
-                        hit = calcCollZ(sumr*sumr, dxsqr, dysqr, dz1);
-                        if (hit) D[2] = target->m_cen_bsph[2] + dz1;
-                    } else {
-                        // Check distance to bullet->left.
-                        sumr = target->Radius() + bullet->m_left->Radius();
-                        hit = calcCollZ(sumr*sumr, dxsqr, dysqr, dz1);
-                        // Check distance to bullet->right.
-                        sumr = target->Radius() + bullet->m_right->Radius();
-                        hit = hit || calcCollZ(sumr*sumr, dxsqr, dysqr, dz2);
-                        // Determine outcome.
-                        if (hit) {
-                            // Calculate minimum distance between aggregates.
-                            D[2] = target->m_cen_bsph[2] + min(dz1, dz2);
-                            // Choose next bullet.
-                            if (dz1 <= dz2) {
-                                bullet = bullet->m_left;
-                            } else {
-                                bullet = bullet->m_right;
-                            }
-                        }
-                    }
-                } else {
-                    if (bullet->IsLeaf()) {
-                        // Check distance to target->left.
-                        sumr = target->m_left->Radius() + bullet->Radius();
-                        hit = calcCollZ(sumr*sumr, dxsqr, dysqr, dz1);
-                        // Check distance to bullet->right.
-                        sumr = target->m_right->Radius() + bullet->Radius();
-                        hit = hit||calcCollZ(sumr*sumr, dxsqr, dysqr, dz2);
-                        // Determine outcome.
-                        if (hit) {
-                            // Calculate minimum distance between aggregates
-                            // after choosing next target.
-                            if (dz1 <= dz2) {
-                                target = target->m_left;
-                                D[2] = target->m_cen_bsph[2] + dz1;
-                            } else {
-                                target = target->m_right;
-                                D[2] = target->m_cen_bsph[2] + dz2;
-                            }
-                        }
-                    } else {
-                        // Both the target and bullet have children.
-                        // Need to check collision of all of them.  This code
-                        // checks all combinations of child collisions
-                        // consecutively, if the calculation results in a smaller
-                        // separation then that is stored and the target/bullet
-                        // combination is stored.
-                        bool tleft=true, bleft=true;
-                        // Calculate target->left and bullet->left.
-                        sumr = target->m_left->Radius() + bullet->m_left->Radius();
-                        hit = calcCollZ(sumr*sumr, dxsqr, dysqr, dz1);
-                        // Calculate target->left and bullet->right.
-                        sumr = target->m_left->Radius() + bullet->m_right->Radius();
-                        hit = calcCollZ(sumr*sumr, dxsqr, dysqr, dz2);
-                        if (dz2<dz1) {bleft=false; dz1=dz2;}
-                        // Calculate target->right and bullet->left.
-                        sumr = target->m_right->Radius() + bullet->m_left->Radius();
-                        hit = calcCollZ(sumr*sumr, dxsqr, dysqr, dz2);
-                        if (dz2<dz1) {tleft=false; bleft=true; dz1=dz2;}
-                        // Calculate target->right and bullet->right.
-                        sumr = target->m_right->Radius() + bullet->m_right->Radius();
-                        hit = calcCollZ(sumr*sumr, dxsqr, dysqr, dz2);
-                        if (dz2<dz1) {tleft=false; bleft=false; dz1=dz2;}
-                        // Determine outcome.
-                        if (hit) {
-                            // Select next target and bullet.
-                            if (tleft) {
-                                target = target->m_left;
-                            } else {
-                                target = target->m_right;
-                            }
-                            if (bleft) {
-                                bullet = bullet->m_left;
-                            } else {
-                                bullet = bullet->m_right;
-                            }
-                            // Calculate new bullet z-position.
-                            D[2] = target->m_cen_bsph[2] + dz1;
-                        }
-                    }
-                }
-                if (target->IsLeaf() && bullet->IsLeaf()) break;
-            } // while both target and bullet not leaves.
-        } // While not hit.
+            // This next code calculates the minimum distance between the
+            // target's children and bullet's children, or the target or
+            // bullet if they have no children.  The two children with
+            // the smallest separation are chosen as the next target
+            // and bullet.
+            hit = minCollZ(*target, *bullet, D[0], D[1], D[2]);
+        }
 
         // We have a new location for the bullet (right node), so move it.
         node.m_right->Translate(D[0], D[1], D[2]);
@@ -363,22 +294,121 @@ void ParticleImage::calc_FM(ImgNode &node)
         node.CalcBoundSph();
         node.CalcCOM();
         node.CentreBoundSph();
-
     }
 }
 
-// Calculates the z-position of a bullet sphere for a +ve
-// collision with a target sphere.  Returns true if the
-// spheres collide, otherwise false.  A x-y displacement is
-// included in the position of the bullet.
-bool ParticleImage::calcCollZ(real sumrsqr, real dxsqr, real dysqr, real &dz)
+// Calculates the minimum collision distance between
+// a target and a bullet node by moving down the
+// binary tree.  If the nodes collide then returns
+// true, otherwise returns false.
+bool ParticleImage::minCollZ(const ImgNode &target, 
+                             const ImgNode &bullet, 
+                             real dx, real dy, real &dz)
 {
-    // Use Pythagoras theorem to calculate z-coord at which
-    // spheres touch.
-    dz = sumrsqr + dxsqr + dysqr; // Now contains dZ^2.
-    if (dz >= 0.0) {
+    bool hit=false, hit1=false;
+    real dz2=0.0, dz3=0.0, dz4=0.0;
+
+    if (target.IsLeaf()) {
+        // Target is a leaf
+        if (bullet.IsLeaf()) {
+            // Bullet is a leaf (both leaves).
+           return calcCollZ(target.BoundSphCentre(), target.Radius(),
+                            bullet.BoundSphCentre(), bullet.Radius(), 
+                            dx, dy, dz);
+        } else {
+            // Bullet is not a leaf, call sub-nodes.
+            // Calculate minimum dz for the target and the bullet left subnode.
+            hit1 = calcCollZ(target.BoundSphCentre(), target.Radius(),
+                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(), 
+                             dx, dy, dz);
+            if (hit1) hit = minCollZ(target, *bullet.m_left, dx, dy, dz);
+            // Calculate minimum dz for the target and the bullet right subnode.
+            hit1 = calcCollZ(target.BoundSphCentre(), target.Radius(),
+                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(), 
+                             dx, dy, dz2);
+            if (hit1) hit = minCollZ(target, *bullet.m_right, dx, dy, dz2) || hit;
+            // Return minimum dz.
+            dz = min(dz, dz2);
+            return hit;
+        }
+    } else {
+        // Target is not a leaf.
+        if (bullet.IsLeaf()) {
+            // Bullet is a leaf, call target sub-nodes..
+            // Calculate minimum dz for the target left subnode and the bullet.
+            hit1 = calcCollZ(target.m_left->BoundSphCentre(), target.m_left->Radius(),
+                             bullet.BoundSphCentre(), bullet.Radius(), 
+                             dx, dy, dz);
+            if (hit1) hit = minCollZ(*target.m_left, bullet, dx, dy, dz);
+            // Calculate minimum dz for the target right subnode and the bullet.
+            hit1 = calcCollZ(target.m_right->BoundSphCentre(), target.m_right->Radius(),
+                             bullet.BoundSphCentre(), bullet.Radius(), 
+                             dx, dy, dz2);
+            if (hit1) hit = minCollZ(*target.m_right, bullet, dx, dy, dz2) || hit;
+            // Return minimum dz.
+            dz = min(dz, dz2);
+            return hit;
+        } else {
+            // Bullet is not a leaf (neither is a leaf), check all left/right
+            // collision combinations.
+            // Target left and bullet left.
+            hit1 = calcCollZ(target.m_left->BoundSphCentre(), target.m_left->Radius(),
+                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(), 
+                             dx, dy, dz);
+            if (hit1) hit = minCollZ(*target.m_left, *bullet.m_left, dx, dy, dz);
+            // Target left and bullet right.
+            hit1 = calcCollZ(target.m_left->BoundSphCentre(), target.m_left->Radius(),
+                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(), 
+                             dx, dy, dz2);
+            if (hit1) hit = minCollZ(*target.m_left, *bullet.m_right, dx, dy, dz2) || hit;
+            // Target right and bullet left.
+            hit1 = calcCollZ(target.m_right->BoundSphCentre(), target.m_right->Radius(),
+                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(), 
+                             dx, dy, dz3);
+            if (hit1) hit = minCollZ(*target.m_right, *bullet.m_left, dx, dy, dz3) || hit;
+            // Target right and bullet right.
+            hit1 = calcCollZ(target.m_right->BoundSphCentre(), target.m_right->Radius(),
+                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(), 
+                             dx, dy, dz4);
+            if (hit1) hit = minCollZ(*target.m_right, *bullet.m_right, dx, dy, dz4) || hit;
+            // Returns minimum dz.
+            dz = min(min(dz, dz2), min(dz3, dz4));
+            return hit;
+        }
+    }
+}
+
+// Calculates the z-displacement of a bullet sphere for a +ve
+// collision with a target sphere.  Returns true if the
+// spheres collide, otherwise false.
+bool ParticleImage::calcCollZ(const Coords::Vector &p1, real r1, 
+                              const Coords::Vector &p2, real r2, 
+                              real dx, real dy, real &dz)
+{
+    // Calculate the square of the sum of the radii.
+    real sumrsqr = r1 + r2; sumrsqr *= sumrsqr;
+
+    // Calculate dx, dy and dz.  Remember to include
+    // argument contributions.
+    real xdev = p2[0] - p1[0] + dx;
+    real ydev = p2[1] - p1[1] + dy;
+    real zdev = p2[2] - p1[2];
+
+    // Calculate dx, dy and dz squared.
+    real dxsqr = xdev * xdev;
+    real dysqr = ydev * ydev;
+    real dzsqr = zdev * zdev;
+
+    // Calculate quadratic terms.
+    real b = 2.0 * zdev;
+    real c = dxsqr + dysqr + dzsqr - sumrsqr;
+
+    // Calculate determinant.
+    real det = (b*b) - (4.0*c);
+
+    if (det >= 0.0) {
         // Spheres intersect.
-        dz = sqrt(dz);
+        dz = - 0.5 * (b + sqrt(det));
         return true;
     } else {
         // Spheres do not intersect.

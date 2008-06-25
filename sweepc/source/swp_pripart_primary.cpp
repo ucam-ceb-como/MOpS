@@ -654,8 +654,14 @@ void PriPartPrimary::sortList(unsigned int i1, unsigned int i2)
         while (j < k) {
             // Find next element below pivot which is smaller, and next
             // element above pivot which is larger.
-            while(m_primaries[ip].Monomers <= m_primaries[j].Monomers) ++j;
-            while(m_primaries[ip].Monomers > m_primaries[k].Monomers) --k;
+            while(m_primaries[ip].Monomers <= m_primaries[j].Monomers) {
+                ++j;
+                if (j >= k) break;
+            }
+            while(m_primaries[ip].Monomers > m_primaries[k].Monomers) {
+                if (k == 0) break;
+                --k;
+            }
 
             // Swap j and k.
             if (j < k) {

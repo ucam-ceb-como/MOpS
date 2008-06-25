@@ -8,7 +8,8 @@ using namespace std;
 
 // Default constructor.
 ImgNode::ImgNode(void)
-: m_r(0.0), m_r2(0.0), m_r3(0.0), m_parent(NULL), m_left(NULL), m_right(NULL)
+: m_r(0.0), m_r2(0.0), m_r3(0.0), m_mindepth(0), m_parent(NULL), 
+  m_left(NULL), m_right(NULL)
 {
 }
 
@@ -69,10 +70,12 @@ void ImgNode::Insert(real radius)
             // of this node.
             m_left = new ImgNode();
             m_left->setRadius(m_r);
+            m_left->m_parent = this;
 
             // Add a new right node for the new primary.
             m_right = new ImgNode();
             m_right->setRadius(radius);
+            m_right->m_parent = this;
 
             // Mark this node as not calculated.
            setRadius(0.0);
@@ -92,7 +95,7 @@ void ImgNode::Insert(real radius)
             m_right->Insert(radius);
         }
         // Recalulate the minimum tree depth of this node.
-        m_mindepth = min(m_left->m_mindepth, m_right->m_mindepth);
+        m_mindepth = min(m_left->m_mindepth, m_right->m_mindepth)+1;
     }
 }
 
@@ -256,9 +259,9 @@ void ImgNode::CalcBoundSph(void)
         m_right->CalcBoundSph();
 
         // Calculate translation between left and right spheres.
-        real dx = m_left->m_cen_bsph[0] - m_right->m_cen_bsph[0];
-        real dy = m_left->m_cen_bsph[1] - m_right->m_cen_bsph[1];
-        real dz = m_left->m_cen_bsph[2] - m_right->m_cen_bsph[2];
+        real dx = m_right->m_cen_bsph[0] - m_left->m_cen_bsph[0];
+        real dy = m_right->m_cen_bsph[1] - m_left->m_cen_bsph[1];
+        real dz = m_right->m_cen_bsph[2] - m_left->m_cen_bsph[2];
 
         // Calculate bounding sphere centre.
         m_cen_bsph[0] = m_left->m_cen_bsph[0] + (0.5 * dx);
