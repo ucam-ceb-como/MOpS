@@ -23,6 +23,8 @@
 
 namespace Sweep
 {
+namespace Stats
+{
 class IModelStats
 {
 public:
@@ -118,6 +120,7 @@ protected:
 };
 
 typedef std::map<SubModels::SubModelType,IModelStats*> ModelStatsMap;
+};
 };
 
 #endif

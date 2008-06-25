@@ -67,7 +67,7 @@ public:
     unsigned int ParticleCount(void) const;
 
     // Returns particle statistics.
-    void GetVitalStats(EnsembleStats &stats) const;
+    void GetVitalStats(Stats::EnsembleStats &stats) const;
 
 
     // THE PARTICLE MODEL.

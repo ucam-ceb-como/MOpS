@@ -5,6 +5,7 @@
 
 using namespace Sweep;
 using namespace std;
+using namespace Sweep::Stats;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -22,7 +23,7 @@ EnsembleStats::EnsembleStats(const Sweep::ParticleModel &model)
 }
 
 // Copy constructor.
-EnsembleStats::EnsembleStats(const Sweep::EnsembleStats &copy)
+EnsembleStats::EnsembleStats(const EnsembleStats &copy)
 {
     *this = copy;
 }
@@ -37,7 +38,7 @@ EnsembleStats::~EnsembleStats()
 // OPERATOR OVERLOADS.
 
 // Assignment operator.
-EnsembleStats &EnsembleStats::operator=(const Sweep::EnsembleStats &rhs)
+EnsembleStats &EnsembleStats::operator=(const EnsembleStats &rhs)
 {
     if (this != &rhs) {
         releaseMem();

@@ -190,10 +190,10 @@ SubModels::SubModelCache *const ModelFactory::ReadCache(std::istream &in,
 // Reads model stats from a binary stream.  The first item read
 // is the model ID which tells the ModelFactory what type
 // of model stats to read.
-IModelStats *const ModelFactory::ReadStats(std::istream &in, const ParticleModel &model)
+Stats::IModelStats *const ModelFactory::ReadStats(std::istream &in, const ParticleModel &model)
 {
     if (in.good()) {
-        IModelStats *stats = NULL;
+        Stats::IModelStats *stats = NULL;
 
         // Read the model type from the input stream.
         unsigned int type;
@@ -203,7 +203,7 @@ IModelStats *const ModelFactory::ReadStats(std::istream &in, const ParticleModel
         // an exception if the type is invalid.
         switch ((SubModels::SubModelType)type) {
             case SubModels::BasicModel_ID:
-                stats = new ParticleStats(in, model);
+                stats = new Stats::ParticleStats(in, model);
                 break;
             default:
                 throw runtime_error("Invalid model type read from "
@@ -254,7 +254,7 @@ void ModelFactory::WriteCache(const SubModels::SubModelCache &cache,
 }
 
 // Writes a model stats object, along with its ID, to an output stream.
-void ModelFactory::WriteStats(const IModelStats &stats, std::ostream &out)
+void ModelFactory::WriteStats(const Stats::IModelStats &stats, std::ostream &out)
 {
     if (out.good()) {
         // Write the model Serial signature type to the stream.
@@ -291,8 +291,8 @@ AggModels::AggModelCache *const ModelFactory::CreateAggCache(AggModels::AggModel
 }
 
 // Creates a new aggregation model stats object of the given type.
-IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType id, 
-                                                const ParticleModel &model)
+Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType id, 
+                                                       const ParticleModel &model)
 {
     switch (id) {
         case AggModels::Spherical_ID:
@@ -351,11 +351,11 @@ AggModels::AggModelCache *const ModelFactory::ReadAggCache(std::istream &in,
 // Reads aggregation model stats from a binary stream.  The first 
 // item read is the model ID which tells the ModelFactory what type
 // of aggregation model stats to read.
-IModelStats *const ModelFactory::ReadAggStats(std::istream &in, 
-                                              const ParticleModel &model)
+Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in, 
+                                                     const ParticleModel &model)
 {
     if (in.good()) {
-        IModelStats *stats = NULL;
+        Stats::IModelStats *stats = NULL;
 
         // Read the model type from the input stream.
         unsigned int type;
@@ -403,7 +403,7 @@ void ModelFactory::WriteCache(const AggModels::AggModelCache &cache,
 
 // Writes an aggregation model stats object, along with 
 // its ID, to an output stream.
-void ModelFactory::WriteAggStats(const IModelStats &stats, std::ostream &out)
+void ModelFactory::WriteAggStats(const Stats::IModelStats &stats, std::ostream &out)
 {
     if (out.good()) {
         // Write the model Serial signature type to the stream.

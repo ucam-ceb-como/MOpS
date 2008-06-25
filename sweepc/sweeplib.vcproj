@@ -142,6 +142,7 @@
 			UseInBuild="false"
 			UseDependenciesInBuild="false"
 			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject="..\camxml\camxml.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{667E4098-08F2-4C66-8B80-29643A05639B}"
@@ -150,6 +151,7 @@
 			UseInBuild="false"
 			UseDependenciesInBuild="false"
 			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject="..\comostrings\comostrings.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{4F627552-B6A3-4A4C-8F65-1E72722A8309}"
@@ -158,6 +160,7 @@
 			UseInBuild="false"
 			UseDependenciesInBuild="false"
 			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject="..\sprogc\sprogc.vcproj"
 		/>
 	</References>
 	<Files>
@@ -176,14 +179,6 @@
 			</File>
 			<File
 				RelativePath=".\source\swp_ensemble.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swp_ensemble_stats.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swp_imgnode.cpp"
 				>
 			</File>
 			<File
@@ -207,15 +202,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\source\swp_particle_image.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\source\swp_particle_model.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swp_particle_stats.cpp"
 				>
 			</File>
 			<File
@@ -314,10 +301,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\source\swp_pripart_stats.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\source\swp_surfvol_cache.cpp"
 					>
 				</File>
@@ -325,8 +308,36 @@
 					RelativePath=".\source\swp_surfvol_primary.cpp"
 					>
 				</File>
+			</Filter>
+			<Filter
+				Name="Stats"
+				>
+				<File
+					RelativePath=".\source\swp_ensemble_stats.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_particle_stats.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_pripart_stats.cpp"
+					>
+				</File>
 				<File
 					RelativePath=".\source\swp_surfvol_stats.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Imaging"
+				>
+				<File
+					RelativePath=".\source\swp_imgnode.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_particle_image.cpp"
 					>
 				</File>
 			</Filter>
@@ -365,14 +376,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\swp_ensemble_stats.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swp_imgnode.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\swp_mech_parser.h"
 				>
 			</File>
@@ -382,10 +385,6 @@
 			</File>
 			<File
 				RelativePath=".\include\swp_model_factory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swp_model_stats.h"
 				>
 			</File>
 			<File
@@ -401,15 +400,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\swp_particle_image.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\swp_particle_model.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swp_particle_stats.h"
 				>
 			</File>
 			<File
@@ -468,19 +459,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_pripart_stats.h"
-					>
-				</File>
-				<File
 					RelativePath=".\include\swp_surfvol_cache.h"
 					>
 				</File>
 				<File
 					RelativePath=".\include\swp_surfvol_primary.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_surfvol_stats.h"
 					>
 				</File>
 			</Filter>
@@ -553,6 +536,42 @@
 				</File>
 				<File
 					RelativePath=".\include\swp_actsites_type.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Stats"
+				>
+				<File
+					RelativePath=".\include\swp_ensemble_stats.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_model_stats.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_particle_stats.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_pripart_stats.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_surfvol_stats.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Imaging"
+				>
+				<File
+					RelativePath=".\include\swp_imgnode.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_particle_image.h"
 					>
 				</File>
 			</Filter>

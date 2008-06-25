@@ -39,6 +39,8 @@
 
 namespace Sweep
 {
+namespace Stats
+{
 class ParticleStats : public IModelStats
 {
 public:
@@ -208,6 +210,7 @@ private:
     // components and tracker variables there are for
     // each particle.
     ParticleStats(void); // Default constructor.
+};
 };
 };
 

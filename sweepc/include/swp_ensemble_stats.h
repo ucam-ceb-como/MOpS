@@ -23,7 +23,8 @@
 namespace Sweep
 {
 class Mechanism;
-
+namespace Stats
+{
 class EnsembleStats
 {
 public:
@@ -133,6 +134,7 @@ private:
 
     // Clears all memory associated with the EnsembleStats object.
     void releaseMem(void);
+};
 };
 };
 

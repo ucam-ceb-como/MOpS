@@ -6,6 +6,7 @@
 
 using namespace Sweep;
 using namespace std;
+using namespace Sweep::Stats;
 
 // STATIC CONST MEMBER VARIABLES.
 
@@ -92,7 +93,7 @@ ParticleStats::ParticleStats(const Sweep::ParticleModel &model)
 }
 
 // Copy constructor.
-ParticleStats::ParticleStats(const Sweep::ParticleStats &copy)
+ParticleStats::ParticleStats(const ParticleStats &copy)
 {
     *this = copy;
 }
@@ -112,7 +113,7 @@ ParticleStats::~ParticleStats()
 
 // OPERATOR OVERLOADS.
 
-ParticleStats &ParticleStats::operator=(const Sweep::ParticleStats &rhs)
+ParticleStats &ParticleStats::operator=(const ParticleStats &rhs)
 {
     if (this != &rhs) {
         m_stats.assign(rhs.m_stats.begin(), rhs.m_stats.end());

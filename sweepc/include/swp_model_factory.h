@@ -74,7 +74,7 @@ public:
         );
 
     // Creates a new sub-model stats object of the given type.
-    static IModelStats *const CreateStats(
+    static Stats::IModelStats *const CreateStats(
         SubModels::SubModelType id, // Model ID.
         const ParticleModel &model  // Defining particle model.
         );
@@ -101,7 +101,7 @@ public:
     // Reads sub-model stats from a binary stream.  The first item read
     // is the model ID which tells the ModelFactory what type
     // of model stats to read.
-    static IModelStats *const ReadStats(
+    static Stats::IModelStats *const ReadStats(
         std::istream &in,          // Input stream.
         const ParticleModel &model // Defining particle model.
         );
@@ -123,8 +123,8 @@ public:
 
     // Writes a sub-model stats object, along with its ID, to an output stream.
     static void WriteStats(
-        const IModelStats &stats, // Stats to write.
-        std::ostream &out         // Output stream.
+        const Stats::IModelStats &stats, // Stats to write.
+        std::ostream &out                // Output stream.
         );
 
 
@@ -137,7 +137,7 @@ public:
         );
 
     // Creates a new aggregation model stats object of the given type.
-    static IModelStats *const CreateAggStats(
+    static Stats::IModelStats *const CreateAggStats(
         AggModels::AggModelType id, // Model ID.
         const ParticleModel &model  // Defining particle model.
         );
@@ -156,7 +156,7 @@ public:
     // Reads aggregation model stats from a binary stream.  The first 
     // item read is the model ID which tells the ModelFactory what type
     // of aggregation model stats to read.
-    static IModelStats *const ReadAggStats(
+    static Stats::IModelStats *const ReadAggStats(
         std::istream &in,          // Input stream.
         const ParticleModel &model // Defining particle model.
         );
@@ -173,8 +173,8 @@ public:
     // Writes an aggregation model stats object, along with 
     // its ID, to an output stream.
     static void WriteAggStats(
-        const IModelStats &stats, // Stats to write.
-        std::ostream &out         // Output stream.
+        const Stats::IModelStats &stats, // Stats to write.
+        std::ostream &out                // Output stream.
         );
 
 

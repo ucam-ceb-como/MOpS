@@ -1,4 +1,4 @@
-#include "swp_imager.h"
+#include "swp_particle_image.h"
 #include "rng.h"
 #include "string_functions.h"
 #include <fstream>

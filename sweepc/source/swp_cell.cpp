@@ -132,7 +132,7 @@ unsigned int Cell::ParticleCount(void) const
 }
 
 // Returns particle statistics.
-void Cell::GetVitalStats(EnsembleStats &stats) const
+void Cell::GetVitalStats(Stats::EnsembleStats &stats) const
 {
     stats.Calculate(m_ensemble, 1.0/SampleVolume());
 }

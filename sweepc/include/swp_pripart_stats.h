@@ -32,7 +32,7 @@ namespace Sweep
 {
 namespace Stats
 {
-class PriPartStats : public Sweep::IModelStats
+class PriPartStats : public IModelStats
 {
 public:
     // Constructors.

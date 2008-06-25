@@ -31,7 +31,7 @@ namespace Sweep
 {
 namespace Stats
 {
-class SurfVolStats : public Sweep::IModelStats
+class SurfVolStats : public IModelStats
 {
 public:
     // Constructors.
