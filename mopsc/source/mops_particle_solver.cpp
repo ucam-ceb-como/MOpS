@@ -16,7 +16,7 @@ using namespace Strings;
 
 // Default constructor.
 ParticleSolver::ParticleSolver(void)
-: m_swp_ctime(0.0), m_ptrack_count(1)
+: m_swp_ctime(0.0), m_ptrack_count(10)
 {
 }
 
@@ -356,10 +356,11 @@ void ParticleSolver::postProcessPSLs(unsigned int nruns, const Mechanism &mech,
                     if (sp != NULL) {
                         real t = times[i].EndTime();
                         string fname = m_output_filename + "-tem(" + cstr(t) + 
-                                       "s, " + cstr(i) + ").pov";
+                                       "s, " + cstr(j) + ").pov";
                         Sweep::Imaging::ParticleImage img;
-                        ofstream file; file.open(fname.c_str());
                         img.Construct(*sp);
+//                        img.ConstructRandom(1.0, 5.0, 10001);
+                        ofstream file; file.open(fname.c_str());
                         img.WritePOVRAY(file);
                         file.close();
                     }
