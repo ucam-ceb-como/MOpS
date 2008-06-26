@@ -164,8 +164,6 @@ void ParticleImage::constructAgg_FM(const Particle &sp)
 // pri-part list primary using free-molecular collision dynamics.
 void ParticleImage::constructAgg_FM(const AggModels::PriPartPrimary &pri)
 {
-    unsigned int i = 0;
-
     // Get number of primary particles.
     unsigned int n = pri.PriCount();
 
@@ -214,7 +212,6 @@ void ParticleImage::calc_FM(ImgNode &node)
 {
     ImgNode *target = node.m_left;
     ImgNode *bullet = node.m_right;
-    real sumrsqr = 0.0;
 
     if ((target != NULL) && (bullet != NULL)) {
         // Pass calculation down binary tree left & right branches.
@@ -247,7 +244,6 @@ void ParticleImage::calc_FM(ImgNode &node)
         // collide in the z-direction.
         Coords::Vector D;
         real sumr=0.0;
-        real dz1=0.0, dz2=0.0;
         bool hit = false;
         while (!hit) {
             // Need to reset target and bullet here, in case

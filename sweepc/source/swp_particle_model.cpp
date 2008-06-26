@@ -381,8 +381,7 @@ void ParticleModel::Deserialize(std::istream &in)
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-        int m = 0;
-        unsigned int n =0, id = 0;
+        unsigned int n=0, id=0;
 
         switch (version) {
             case 0:

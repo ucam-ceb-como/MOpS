@@ -584,8 +584,8 @@ void Ensemble::Update()
 {
     // This flavour updates the whole binary tree.
 
-    bool odd = true;
-    unsigned int j;
+    bool odd=true;
+    unsigned int j=0;
     for (unsigned int i=0; i!=m_count; ++i) {
         j = treeIndex(i);
         if (odd) {

@@ -314,8 +314,7 @@ void EnsembleStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
     // TODO:  Need some way to set to a valid state here.
     releaseMem();
 
-    const unsigned int trueval  = 1;
-    const unsigned int falseval = 0;
+    const unsigned int trueval = 1;
 
     if (in.good()) {
         // Read the output version.  Currently there is only one
