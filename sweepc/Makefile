@@ -48,7 +48,8 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_coagulation.o swp_condensation.o swp_inception.o \
     swp_particle_process.o swp_process.o swp_process_factory.o \
     swp_surface_reaction.o swp_particle_model.o swp_imgnode.o \
-    swp_particle_image.o swp_surfvol_stats.o swp_pripart_stats.o
+    swp_particle_image.o swp_surfvol_stats.o swp_pripart_stats.o \
+    swp_sintering_model.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -155,6 +156,11 @@ swp_surfvol_cache.o: $(src)/swp_surfvol_cache.cpp
 
 swp_pripart_cache.o: $(src)/swp_pripart_cache.cpp
 	$(cpp) $(flag) $(src)/swp_pripart_cache.cpp
+
+# Sintering model.
+
+swp_sintering_model.o: $(src)/swp_sintering_model.cpp
+	$(cpp) $(flag) $(src)/swp_sintering_model.cpp
 
 # Particle sub-models.
 
