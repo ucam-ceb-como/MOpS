@@ -846,9 +846,9 @@ real Reaction::RateOfProgress(real density, const real *const x,
                               unsigned int n, real kforward, 
                               real kreverse) const
 {
-    int j;
-    unsigned int k;
-    real rop, rev;
+    int j=0;
+    unsigned int k=0;
+    real rop=0.0, rev=0.0;
 
     if (n >= m_mech->Species().size()) {
         // Use rop to store forward rates of production, 

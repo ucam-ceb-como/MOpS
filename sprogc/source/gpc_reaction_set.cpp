@@ -703,11 +703,11 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
                                real pfac, real **J,
                                bool constV, bool constT) const
 {
-    static bool fallocated = false;
+    static bool fallocated=false;
     static fvector tbconcs, kfT, krT, kf, kr, Gs, rop0, 
                    rop1, wdot0, wdot1, Hs, xdot0, xdot1;
-    real wtot0, wtot1, //invrho = 1.0 / density, 
-         Tdot0, Tdot1, Cp, xsave, dx, invdx;
+    real wtot0=0.0, wtot1=0.0, //invrho=1.0 / density, 
+         Tdot0=0.0, Tdot1=0.0, Cp=0.0, xsave=0.0, dx=0.0, invdx=0.0;
 
     // SETUP WORKSPACE.
 
