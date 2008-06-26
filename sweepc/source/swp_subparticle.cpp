@@ -415,6 +415,18 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
     return *this;
 }
 
+// Sinters the sub-particle for the given time using the given
+// sintering model.
+void SubParticle::Sinter(real dt, const Cell &sys, 
+                         const Processes::SinteringModel &model)
+{
+    if (m_primary != NULL) {
+        m_primary->Sinter(dt, sys, model);
+    } else {
+        // TODO: Complete SubParticle::Sinter for sub-particle tree.
+    }
+}
+
 
 // PARTICLE UPDATE AND CHECKING.
 

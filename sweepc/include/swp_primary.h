@@ -32,12 +32,14 @@
 #include "swp_submodel_type.h"
 #include "swp_aggmodel_type.h"
 #include "swp_aggmodel_cache.h"
+#include "swp_sintering_model.h"
 #include <iostream>
 
 namespace Sweep
 {
 // Forward declare ParticleCache class.
 class ParticleCache;
+class Cell;
 
 class Primary
 {
@@ -219,19 +221,15 @@ public:
     // implementation of the + and += operators.
     virtual Primary &Coagulate(const Primary &rhs);
 
-/*
     // This routine sinters the Primary for the given length of
     // time using the provided sintering model.
     virtual void Sinter(
-        real dt,                    // Delta-t for sintering to occur.
-        const SinteringModel &model // Sintering model to use.
+        real dt, // Delta-t for sintering to occur.
+        const Cell &sys, // System which defines primary's environment.
+        const Processes::SinteringModel &model // Sintering model to use.
         );
-*/
 
     // READ/WRITE/COPY.
-
-    // Returns a correctly typed reference to the Primary object.
-//    virtual const Primary &TypedRef(void) const;
 
     // Returns a copy of the primary.
     virtual Primary *const Clone(void) const;
@@ -244,18 +242,6 @@ public:
         std::istream &in,                 // Input stream.
         const Sweep::ParticleModel &model // Defining particle model.
         );
-
-/*
-    // Copies this primary into another spherical
-    // primary.  This implements the assignment operator for
-    // the situation Primary = SurfVolPrimary.
-    virtual Primary &CopyTo(Primary &lhs) const;
-
-    // Adds this primary to another.  This implements coagulation.
-    virtual Primary &AddTo(Primary &lhs) const;
-
-    virtual AggModels::AggModelCache &CopyTo(AggModels::AggModelCache &lhs) const;
-*/
 
 protected:
     // Particle model used to define the Primary.

@@ -279,6 +279,20 @@ PriPartPrimary &PriPartPrimary::Coagulate(const Primary &rhs)
     return *this;
 }
 
+// This routine sinters the Primary for the given length of
+// time using the provided sintering model.
+void PriPartPrimary::Sinter(real dt,const Cell &sys, 
+                            const Processes::SinteringModel &model)
+{
+    // Use surface-volume model to adjust the primary m_surf
+    // property.
+    SurfVolPrimary::Sinter(dt, sys, model);
+
+    // Now update the primary particle list to match the new 
+    // surface area.
+    updatePrimaries();
+}
+
 
 // READ/WRITE/COPY.
 
@@ -428,12 +442,6 @@ real PriPartPrimary::calcAvgDiam()
     m_avgpridiam = sumd / (real)(m_primaries.size());
     return m_avgpridiam;
 }
-
-// Randomly creates the pripart-list to match the number of monomers
-// and as-good-as match the surface area.
-//void PriPartPrimary::createPriList(unsigned int n, real surf)
-//{
-//}
 
 // Distributes a number of monomers among the pri-particles, weighted
 // by their surface areas.

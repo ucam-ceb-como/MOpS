@@ -13,6 +13,7 @@
 #include "swp_params.h"
 #include "swp_primary.h"
 #include "swp_particle_model.h"
+#include "swp_sintering_model.h"
 #include "swp_aggmodel_type.h"
 #include "swp_surfvol_cache.h"
 #include <iostream>
@@ -89,14 +90,15 @@ public:
     // implementation of the + and += operators.
     virtual SurfVolPrimary &Coagulate(const Primary &rhs);
 
-    /*
+    
     // This routine sinters the Primary for the given length of
     // time using the provided sintering model.
     virtual void Sinter(
-        real dt,                    // Delta-t for sintering to occur.
-        const SinteringModel &model // Sintering model to use.
+        real dt, // Delta-t for sintering to occur.
+        const Cell &sys, // System which defines primary's environment.
+        const Processes::SinteringModel &model // Sintering model to use.
         );
-*/
+
 
     // READ/WRITE/COPY.
 

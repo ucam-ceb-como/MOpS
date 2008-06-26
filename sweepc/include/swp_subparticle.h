@@ -13,6 +13,7 @@
 #define SWEEP_SUBPARTICLE_H
 
 #include "swp_params.h"
+#include "swp_sintering_model.h"
 #include "swp_particle_model.h"
 #include "swp_particle_cache.h"
 #include "swp_primary.h"
@@ -20,6 +21,8 @@
 
 namespace Sweep
 {
+class Cell;
+
 class SubParticle : public ParticleCache
 {
 public:
@@ -122,14 +125,14 @@ public:
     // Combines this particle with another.
     virtual SubParticle &Coagulate(const SubParticle &sp);
 
-/*
     // Sinters the sub-particle for the given time using the given
     // sintering model.
     virtual void Sinter(
-        real dt,                    // Delta-t for sintering.
-        const SinteringModel &model // Sintering model to use.
+        real dt,         // Delta-t for sintering.
+        const Cell &sys, // System which defines particle's environment.
+        const Processes::SinteringModel &model // Sintering model to use.
         );
-*/
+
 
     // PARTICLE UPDATE AND CHECKING.
 

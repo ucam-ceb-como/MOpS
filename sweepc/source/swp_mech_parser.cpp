@@ -46,7 +46,7 @@ void MechParser::Read(const std::string &filename, Sweep::Mechanism &mech)
 void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 {
     vector<CamXML::Element*> items;
-    vector<CamXML::Element*>::iterator i;
+    vector<CamXML::Element*>::iterator i, j;
 
     // Read the particle components and the trackers.
     readComponents(xml, mech);
@@ -109,7 +109,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 
     // READ PARTICLE MODEL.
 
-    xml.Root()->GetChildren("particlemodel", items);
+    xml.Root()->GetChildren("particle", items);
     i = items.begin();
 
     // Check if the sub-particle tree is active.
@@ -121,7 +121,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     }
 
     // Check the aggregation model.
-    str = (*i)->Data();
+    str = (*i)->GetAttributeValue("model");
     if (str == "spherical") {
         mech.SetAggModel(AggModels::Spherical_ID);
     } else if (str == "surfvol") {
@@ -130,6 +130,40 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetAggModel(AggModels::PriPartList_ID);
     } else {
         mech.SetAggModel(AggModels::Spherical_ID);
+    }
+
+    // Get the sintering model.
+    (*i)->GetChildren("sintering", items);
+    if (items.size() > 0) {
+        i = items.begin();
+        
+        // Check if sintering model enabled.
+        str = (*i)->GetAttributeValue("enable");
+        if (str == "true") {
+            mech.SintModel().Enable();
+        } else {
+            mech.SintModel().Disable();
+        }
+
+        // Get sintering model type.
+        str = (*i)->GetAttributeValue("model");
+        if (str == "viscous_flow") {
+            mech.SintModel().SetType(SinteringModel::ViscousFlow);
+        } else {
+            // Grain-boundary diffusion is the default.
+            mech.SintModel().SetType(SinteringModel::GBD);
+        }
+
+        // Get pre-exponential factor.
+        str = (*i)->GetFirstChild("A")->Data();
+        mech.SintModel().SetA(cdble(str));
+
+        // Get characteristic temperature.
+        str = (*i)->GetFirstChild("E")->Data();
+        mech.SintModel().SetE(cdble(str));
+    } else {
+        // No sintering model defined.
+        mech.SintModel().Disable();
     }
 }
 

@@ -269,6 +269,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\source\swp_sintering_model.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_surface_reaction.cpp"
 					>
 				</File>
@@ -496,6 +500,10 @@
 				</File>
 				<File
 					RelativePath=".\include\swp_process_type.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_sintering_model.h"
 					>
 				</File>
 				<File

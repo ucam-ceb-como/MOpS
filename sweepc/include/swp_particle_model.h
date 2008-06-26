@@ -20,6 +20,7 @@
 #include "swp_tracker.h"
 #include "swp_submodel_type.h"
 #include "swp_aggmodel_type.h"
+#include "swp_sintering_model.h"
 #include "sprog.h"
 #include <vector>
 #include <string>
@@ -151,6 +152,12 @@ public:
     void SetAggModel(AggModels::AggModelType id);
 
 
+    // SINTERING MODEL.
+
+    // Returns the sintering model.
+    Processes::SinteringModel &SintModel(void) const;
+
+
     // PARTICLE FUNCTIONS.
     
     // Creates a new particle and sets it up with all the models
@@ -188,6 +195,10 @@ protected:
 
     // The ID of the aggregation model used to create particles.
     AggModels::AggModelType m_aggmodel;
+
+    // The sintering model.
+    mutable Processes::SinteringModel m_sint_model;
+
 
     // MEMORY MANAGEMENT.
 

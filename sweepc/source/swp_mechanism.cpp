@@ -541,6 +541,11 @@ void Mechanism::UpdateParticle(Particle &sp, const Sprog::Thermo::IdealGas &gas,
                     }
                 }
             }
+
+            // Perform sintering update.
+            if (m_sint_model.IsEnabled()) {
+                sp.Sinter(dt, sys, m_sint_model);
+            }
         }
 
         // Check that the particle is still valid, only calculate 

@@ -284,6 +284,12 @@ AggModels::AggModelType ParticleModel::AggModel(void) const {return m_aggmodel;}
 void ParticleModel::SetAggModel(AggModels::AggModelType id) {m_aggmodel = id;}
 
 
+// SINTERING MODEL.
+
+// Returns the sintering model.
+Processes::SinteringModel &ParticleModel::SintModel(void) const {return m_sint_model;}
+
+
 // PARTICLE FUNCTIONS.
 
 // Creates a new particle and sets it up with all the models

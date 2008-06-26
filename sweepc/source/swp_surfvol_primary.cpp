@@ -4,6 +4,7 @@
 #include "swp_aggmodel_type.h"
 #include "swp_model_factory.h"
 #include "swp_surfvol_cache.h"
+#include "rng.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -219,6 +220,50 @@ SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs)
     m_dmob = m_dcol;
 
     return *this;
+}
+
+// This routine sinters the Primary for the given length of
+// time using the provided sintering model.
+void SurfVolPrimary::Sinter(real dt, const Cell &sys,
+                            const Processes::SinteringModel &model)
+{
+    // Perform a first order integration method to sinter
+    // the primary for the given time.
+    
+    // Declare time step variables.
+    real t1=0.0, t2=0.0, tstop=dt;
+
+    // Define the maximum allowed change in surface
+    // area in one internal time step (10% spherical surface).
+    real dAmax = 0.1 * m_sphsurf;
+
+    // The scale parameter discretises the delta-S when using
+    // the Poisson distribution.  This allows a smoother change
+    // (smaller scale = higher precision).
+    real scale = 0.01;
+
+    // Perform integration loop.
+    while (t1 < tstop) {
+        // Calculate sintering rate.
+        real r = model.Rate(m_time+t1, sys, *this);
+        // Calculate next time-step end point so that the
+        // surface area changes by no more than dAmax.
+        t2 = min(t1+(dAmax/max(r,1.0e-300)), tstop); // 1.0e-300 catches DIV ZERO.
+        // Approximate sintering by a poisson process.  Calculate
+        // number of poisson events.
+        int n = ignpoi(r * (t2 - t1) / (scale*dAmax));
+        // Adjust the surface area.
+        if (n > 0) {
+            m_surf -= (real)n * scale * dAmax;
+            // Check that primary is not completely sintered.
+            if (m_surf <= m_sphsurf) {
+                m_surf = m_sphsurf;
+                break;
+            }
+        }
+        // Set t1 for next time step.
+        t1 = t2;
+    }
 }
 
 

@@ -2,6 +2,7 @@
 #include "swp_submodel_type.h"
 #include "swp_model_factory.h"
 #include "swp_particle_cache.h"
+#include "swp_cell.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -438,6 +439,15 @@ Primary &Primary::Coagulate(const Primary &rhs)
     return *this;
 }
 
+// This routine sinters the Primary for the given length of
+// time using the provided sintering model.
+void Primary::Sinter(real dt, const Cell &sys,
+                     const Processes::SinteringModel &model)
+{
+    // Spherical primaries don't sinter.
+    return;
+}
+
 
 // READ/WRITE/COPY.
 
@@ -446,11 +456,6 @@ Primary *const Primary::Clone(void) const
 {
     return new Primary(*this);
 }
-
-// Returns this object's instance.  This may seem rather circular, but
-// it has an important purpose for getting the correct object type reference
-// from a base class reference/pointer.
-//const Primary &Primary::TypedRef() const {return *this;}
 
 // Writes the object to a binary stream.
 void Primary::Serialize(std::ostream &out) const
@@ -644,120 +649,3 @@ void Primary::init(void)
     m_mass = 0.0; // Mass.
     releaseMem();
 }
-
-/*
-// READ/WRITE/COPY.
-
-// Copies this primary into another spherical
-// primary.  This implements the assignment operator for
-// the situation Primary = Primary.
-Primary &Primary::CopyTo(Primary &lhs) const
-{
-    if (this != &lhs) {
-        // Check if the RHS uses the same particle model before copying
-        // components and tracker values.
-        if (lhs.m_pmodel == m_pmodel) {
-            // Copy composition.
-            memcpy(&lhs.m_comp[0], &m_comp[0], sizeof(real)*m_comp.size());        
-            // Copy tracker variables.
-            memcpy(&lhs.m_values[0], &m_values[0], sizeof(real)*m_values.size());
-        } else {
-            // Set the particle model.
-            lhs.m_pmodel = m_pmodel;
-            // Copy components.
-            lhs.m_comp.assign(m_comp.begin(), m_comp.end());
-            // Copy tracker variables.
-            lhs.m_values.assign(m_values.begin(), m_values.end());
-        }
-
-        // Copy primary time.
-        lhs.m_createt = m_createt;
-        lhs.m_time    = m_time;
-
-        // Delete sub-models not in RHS.
-        for (SubModelMap::const_iterator i=lhs.m_submodels.begin(); 
-             i!=lhs.m_submodels.end(); ++i) {
-            // Try to find model data in RHS primary.
-            SubModelMap::const_iterator k = m_submodels.find(i->first);
-            if (k == lhs.m_submodels.end()) {
-                // This RHS primary does not contain the model i, 
-                // need to delete it.
-                delete i->second;
-                lhs.m_submodels.erase(i->first);
-            }
-        }
-
-        // Copy sub-models from RHS.
-        for (SubModelMap::const_iterator i=m_submodels.begin(); 
-             i!=m_submodels.end(); ++i) {
-            // Try to find model data in this primary.
-            SubModelMap::const_iterator k = lhs.m_submodels.find(i->first);
-            if (k != lhs.m_submodels.end()) {
-                // This primary contains the model i.
-                *(k->second) = *(i->second);
-            } else {
-                // This primary does not contain the model i, 
-                // need to create it.
-                lhs.m_submodels[i->first] = i->second->Clone();
-            }
-        }
-
-        // Copy the derived properties.
-        lhs.m_diam = m_diam;
-        lhs.m_dcol = m_dcol;
-        lhs.m_dmob = m_dmob;
-        lhs.m_surf = m_surf;
-        lhs.m_vol  = m_vol;
-        lhs.m_mass = m_mass;
-    }
-    return lhs;
-}
-
-// Copies this primary into another spherical
-// primary.  This implements the assignment operator for
-// the situation Primary = Primary.
-Primary &Primary::AddTo(Primary &lhs) const
-{
-    // Check if the LHS uses the same particle model.  If not, then
-    // just use the assignment operator because you can't add apples 
-    // and bananas!
-    if (lhs.m_pmodel == m_pmodel) {
-        // Add the components.
-        for (unsigned int i=0; i!=min(lhs.m_comp.size(),m_comp.size()); ++i) {
-            lhs.m_comp[i] += m_comp[i];
-        }
-
-        // Add the tracker values.
-        for (unsigned int i=0; i!=min(m_values.size(),lhs.m_values.size()); ++i) {
-            lhs.m_values[i] += m_values[i];
-        }
-
-        // Now allow the particle models to deal with the additions.
-        for (SubModelMap::iterator j=lhs.m_submodels.begin(); j!=lhs.m_submodels.end(); ++j) {
-            // Try to find the model in RHS.
-            SubModelMap::const_iterator k = m_submodels.find(j->first);
-            if (k != m_submodels.end()) {
-                j->second->Coagulate(*k->second);
-            }
-        }
-
-        // Now check for models which are in the RHS but not the LHS.
-        for (SubModelMap::const_iterator j=m_submodels.begin(); j!=m_submodels.end(); ++j) {
-            // Try to find model in this primary.
-            SubModelMap::const_iterator k = lhs.m_submodels.find(j->first);
-            if (k == lhs.m_submodels.end()) {
-                // Add model to this primary.
-                lhs.m_submodels[j->first] = j->second->Clone();
-            }
-        }
-
-        // Create time is the earliest time.
-        lhs.m_createt = min(m_createt, lhs.m_createt);
-        lhs.m_time    = min(m_time, lhs.m_time);
-    } else {
-        // Different particle models!
-        CopyTo(lhs);
-    }
-    return lhs;
-}
-*/
