@@ -155,13 +155,19 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         }
 
         // Get pre-exponential factor.
-        str = (*i)->GetFirstChild("A")->Data();
-        mech.SintModel().SetA(cdble(str));
+		CamXML::Element *el = (*i)->GetFirstChild("A");
+		if (el != NULL) {
+			str = el->Data();
+			mech.SintModel().SetA(cdble(str));
+		}
 
-        // Get characteristic temperature.
-        str = (*i)->GetFirstChild("E")->Data();
-        mech.SintModel().SetE(cdble(str));
-    } else {
+		// Get characteristic temperature.
+		el = (*i)->GetFirstChild("E");
+		if (el != NULL) {
+			str = el->Data();
+			mech.SintModel().SetE(cdble(str));
+		}
+	} else {
         // No sintering model defined.
         mech.SintModel().Disable();
     }
