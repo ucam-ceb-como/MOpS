@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     string swpfile("sweep.xml");
     bool fsolve        = true;  // Default is to solve ..
     bool fpostprocess  = false; // .. but not post-process.
-    bool foldfmt       = true;  // Settings file format, new format not yet implemented.
+    bool foldfmt       = false; // Settings file format, new format not yet implemented.
     SolverType soltype = GPC;
 
     // Read command line arguments.
