@@ -254,10 +254,14 @@ public:
 
     // PARENT MECHANISM.
 
-    // Returns a pointer to the parent mechanism.
+    // Returns a pointer to the parent mechanism.  The mechanism
+    // is stored in order for the reaction to be aware of the
+    // chemical species available.
     const Sprog::Mechanism *const Mechanism(void) const;
 
-    // Sets the parent mechanism.
+    // Sets the parent mechanism.  The mechanism
+    // is stored in order for the reaction to be aware of the
+    // chemical species available.
     void SetMechanism(Sprog::Mechanism &mech);
 
 
