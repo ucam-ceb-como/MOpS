@@ -229,6 +229,10 @@
 				Name="Sub-models"
 				>
 				<File
+					RelativePath=".\source\swp_arssc_model.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_submodel.cpp"
 					>
 				</File>
@@ -242,6 +246,10 @@
 				>
 				<File
 					RelativePath=".\source\swp_actsites_reaction.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_arssc_inception.cpp"
 					>
 				</File>
 				<File
@@ -368,10 +376,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\swp_coords.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\swp_ensemble.h"
 				>
 			</File>
@@ -475,6 +479,18 @@
 				Name="Processes"
 				>
 				<File
+					RelativePath=".\include\swp_actsites_reaction.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_arssc_inception.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_arssc_reaction.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\swp_coagulation.h"
 					>
 				</File>
@@ -515,6 +531,10 @@
 				Name="Sub-models"
 				>
 				<File
+					RelativePath=".\include\swp_arssc_model.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\swp_submodel.h"
 					>
 				</File>
@@ -536,10 +556,6 @@
 				</File>
 				<File
 					RelativePath=".\include\swp_actsites_model.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_actsites_reaction.h"
 					>
 				</File>
 				<File
@@ -580,6 +596,18 @@
 				</File>
 				<File
 					RelativePath=".\include\swp_particle_image.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Maths"
+				>
+				<File
+					RelativePath=".\include\swp_coords.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_maths_functional.h"
 					>
 				</File>
 			</Filter>

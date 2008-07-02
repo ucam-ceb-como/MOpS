@@ -109,6 +109,9 @@ public:
     // Sets the values vector.
     void SetValues(const fvector &vals);
 
+    // Sets the ith trackervalue.
+    void SetValue(unsigned int i, real val);
+
 
     // PRIMARY CREATE TIME.
 
@@ -133,6 +136,7 @@ public:
     const SubModels::SubModelMap &SubModels(void) const;
 
     // Returns the data for the idth model.  Returns NULL if id is invalid.
+    SubModels::SubModel *const SubModel(SubModels::SubModelType id);
     const SubModels::SubModel *const SubModel(SubModels::SubModelType id) const;
 
     // NOTE TO SELF:  Should following functions be available if 

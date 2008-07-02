@@ -3,6 +3,7 @@
 #include "swp_submodel.h"
 #include "swp_submodel_type.h"
 #include "swp_submodel_cache.h"
+#include "swp_arssc_model.h"
 #include "swp_aggmodel_type.h"
 #include "swp_aggmodel_cache.h"
 #include "swp_surfvol_cache.h"
@@ -104,6 +105,7 @@ SubModels::SubModel *const ModelFactory::Create(SubModels::SubModelType id,
 {
     switch (id) {
         case SubModels::ARSSC_Model_ID:
+            return new SubModels::ARSSC_Model(parent);
         case SubModels::CNT_Model_ID:
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
@@ -117,6 +119,7 @@ SubModels::SubModelCache *const ModelFactory::CreateCache(SubModels::SubModelTyp
 {
     switch (id) {
         case SubModels::ARSSC_Model_ID:
+//            return new SubModels::ARSSC_Cache(parent);
         case SubModels::CNT_Model_ID:
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
@@ -144,6 +147,8 @@ SubModels::SubModel *const ModelFactory::Read(std::istream &in,
         // an exception if the type is invalid.
         switch ((SubModels::SubModelType)type) {
             case SubModels::ARSSC_Model_ID:
+                model = new SubModels::ARSSC_Model(in, parent);
+                break;
             case SubModels::CNT_Model_ID:
             default:
                 throw runtime_error("Invalid model type read from "
@@ -174,6 +179,8 @@ SubModels::SubModelCache *const ModelFactory::ReadCache(std::istream &in,
         // an exception if the type is invalid.
         switch ((SubModels::SubModelType)type) {
             case SubModels::ARSSC_Model_ID:
+//                cache = new SubModels::ARSSC_Cache(in, parent);
+//                break;
             case SubModels::CNT_Model_ID:
             default:
                 throw runtime_error("Invalid model type read from "

@@ -65,11 +65,11 @@ public:
         const fvector &dcomp, // Changes to the composition.
         const fvector &dval,  // Changes to the tracker variables.
         unsigned int n=1      // Number of times to perform update.
-        ) const = 0;
+        ) = 0;
 
     // Updates the data according to the model rules for
     // coagulation.
-    virtual SubModel &Coagulate(const SubModel &rhs) const = 0;
+    virtual SubModel &Coagulate(const SubModel &rhs) = 0;
 
 
     // CACHE UPDATES.

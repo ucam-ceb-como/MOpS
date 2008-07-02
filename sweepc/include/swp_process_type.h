@@ -17,11 +17,15 @@ namespace Sweep
 namespace Processes
 {
     enum ProcessType {
-        Inception_ID,       // Inception process.
-        Coagulation_ID,     // Coagulation process.
-        SurfaceReaction_ID, // Surface reaction.
-        Condensation_ID,    // Condensation process.
-        ActSiteRxn_ID       // Active-sites surface reaction.
+        // Basic processes.
+        Inception_ID=0,       // Inception process.
+        Coagulation_ID=1,     // Coagulation process.
+        SurfaceReaction_ID=2, // Surface reaction.
+        Condensation_ID=3,    // Condensation process.
+        ActSiteRxn_ID=4,      // Active-sites surface reaction.
+
+        // ARSSC model processes.
+        ARSSC_Inception_ID=1000  // ARS-SC inception process.
     };
 };
 };

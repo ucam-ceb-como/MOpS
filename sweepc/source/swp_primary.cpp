@@ -190,6 +190,14 @@ void Primary::SetValues(const fvector &vals)
     m_values.assign(vals.begin(), vals.end());
 }
 
+// Sets the ith trackervalue.
+void Primary::SetValue(unsigned int i, real val)
+{
+	if (i < m_values.size()) {
+		m_values[i] = val;
+	}
+}
+
 
 // PRIMARY CREATE TIME.
 
@@ -212,6 +220,17 @@ void Primary::SetTime(real t) {m_time = t;}
 const SubModels::SubModelMap &Primary::SubModels(void) const
 {
     return m_submodels;
+}
+
+// Returns the data for the idth model.  Returns NULL if id is invalid.
+SubModels::SubModel *const Primary::SubModel(SubModels::SubModelType id)
+{
+    SubModelMap::const_iterator i = m_submodels.find(id);
+    if (i != m_submodels.end()) {
+        return i->second;
+    } else {
+        return NULL;
+    }
 }
 
 // Returns the data for the idth model.  Returns NULL if id is invalid.

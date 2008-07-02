@@ -1,6 +1,6 @@
 /*
   Author(s):      Matthew Celnik (msc37)
-  Project:        none
+  Project:        sweep
 
   File purpose:
     Header file to include in any program that uses sweep.  This file includes
@@ -31,6 +31,7 @@
 #include "swp_submodel_type.h"
 #include "swp_submodel_cache.h"
 #include "swp_submodel.h"
+#include "swp_arssc_model.h"
 
 // Aggregation models.
 #include "swp_aggmodel_type.h"
@@ -49,13 +50,17 @@
 #include "swp_mechanism.h"
 #include "swp_process_type.h"
 #include "swp_process.h"
+#include "swp_process_factory.h"
+// Inception processes.
 #include "swp_inception.h"
+#include "swp_arssc_inception.h"
+// Particle processes (reactions etc.)
 #include "swp_particle_process.h"
 #include "swp_surface_reaction.h"
 #include "swp_actsites_reaction.h"
 #include "swp_condensation.h"
+// Coagulation process.
 #include "swp_coagulation.h"
-#include "swp_process_factory.h"
 
 // Chemical models.
 #include "swp_actsites_type.h"
