@@ -6,10 +6,12 @@
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
-    The Solver class holds simulation settings for mops and solves reactors.
-    This basic solver only solves gas-phase chemistry equations, there is no
-    operator splitting to solve gas-phase chemistry coupled to the particle
-    population balance using sweep.
+    The Simulator class drives a single reactor simulation and
+    takes care of the post-processing.  It requires a Reactor
+    object and a Solver object as arguments.
+
+    This is the default simulator for mops.  Simulators for more
+    complex systems are under consideration.
 
   Licence:
     This file is part of "mops".
@@ -42,87 +44,49 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#ifndef MOPS_SOLVER_H
-#define MOPS_SOLVER_H
+#ifndef MOPS_SIMULATOR_H
+#define MOPS_SIMULATOR_H
 
 #include "mops_params.h"
 #include "mops_reactor.h"
 #include "mops_timeinterval.h"
+#include "mops_solver.h"
 #include "mops_mechanism.h"
-#include "mops_ode_solver.h"
 #include "console_io.h"
-#include <vector>
 #include <string>
-#include <fstream>
+#include <vector>
 #include <iostream>
+#include <fstream>
 #include <time.h>
 
 namespace Mops
 {
-class Solver
+class Simulator
 {
 public:
-    // A function pointer type definition for the solver 
-    // output routine.
-    typedef void (*OutFnPtr)(
-        unsigned int,   // Current internal step number since last Solve() call.
-        unsigned int,   // Iteration number for current step.
-        const Reactor&, // Reactor being solved.
-        const Solver&,  // Reference to current solver.
-        void*           // User data object.
-        );
-
     // Constructors.
-    Solver(void); // Default constructor.
+    Simulator(void); // Default constructor.
 
     // Destructors.
-    virtual ~Solver(void); // Default destructor.
+    ~Simulator(void); // Default destructor.
 
 
-    // SOLVER INITIALISATION AND RESET.
-
-    // Initialises the solver to solve the given reactor.
-    virtual void Initialise(const Reactor &r);
-
-    // Resets the solver to solve the given reactor.
-    virtual void Reset(const Reactor &r);
-
-
-    // ERROR TOLERANCES FOR ODE SOLVER.
-
-    // Returns the absolute error tolerance used for ODE
-    // calculations.
-    real ATOL() const;
-
-    // Sets the absolute error tolerance used for ODE
-    // calculations.
-    void SetATOL(real atol);
-
-    // Returns the relative error tolerance used for ODE
-    // calculations.
-    real RTOL() const;
-
-    // Sets the relative error tolerance used for ODE
-    // calculations.
-    void SetRTOL(real rtol);
-
-    
-    // UNDER-RELAXATION.
-
-    // Returns the under-relaxation coefficient.
-    real UnderRelaxCoeff(void) const;
-
-    // Sets the under-relaxation coefficient.
-    void SetUnderRelaxCoeff(real relax);
-
-/*
-    // SWEEP SETTINGS.
+    // SIMULATION SETTINGS.
 
     // Returns the number of runs to perform
     unsigned int RunCount(void) const;
 
-    // Sets the number of runs to peform.
+    // Sets the number of runs to perform.
     void SetRunCount(unsigned int n);
+
+    // Returns the number of iteration to perform per step.
+    unsigned int IterCount(void) const;
+
+    // Sets the number of iterations to perform per step.
+    void SetIterCount(unsigned int n);
+
+
+    // Particle counts should be properties of the Reactor class!
 
     // Returns the max. stochastic particle count.
     unsigned int MaxPartCount(void) const;
@@ -135,7 +99,6 @@ public:
 
     // Sets max. M0.
     void SetMaxM0(real m0);
-
 
     // CONSOLE OUTPUT.
 
@@ -174,78 +137,58 @@ public:
 
     // Sets the output file name.
     void SetOutputFile(const std::string &name);
-*/
+
+    // Set simulator to output every iteration.
+    void SetOutputEveryIter(bool fout);
+
 
     // SOLUTION AND POST-PROCESSING.
 
-    // Runs the solver for the given reactor, advancing it
-    // to the given stop time.  The numerical parameters given
-    // are the number of internal steps to take, and the number
-    // of internal iterations.  Default values of <=0 will use
-    // an adaptive method (NOT YET IMPLEMENTED).  Internal solver
-    // output is provided after each step/iteration by passing
-    // a function pointer.
-    virtual void Solve(
-            Reactor &r,   // The reactor to solve.
-            real tstop,   // The end time for the step.
-            int nsteps,   // Number of internal steps to take.
-            int niter,    // Number of internal iterations to take.
-            OutFnPtr out, // Output function pointer.
-            void *data    // Custom data object which will be passed as argument to out().
-        );
-
-/*
     // Run the solver for the given reactor and the 
     // given time intervals.
-    virtual void SolveReactor(
+    void RunSimulation(
         Reactor &r,              // Reactor object to solve.
         const timevector &times, // Vector of time intervals.
-        unsigned int nruns = 1   // Number of runs to perform.
+        Solver &s                // Solver to use for simulation.
         );
 
     // Post-processes binary output files with the given file name
     // into CSV files.
-    virtual void PostProcess(
-        const std::string &filename, // Filename to post-process.
-        unsigned int nruns = 1       // Number of runs.
-        ) const;
-*/
-
-    // Outputs internal computation time data to the given
-    // binary stream.
-    virtual void OutputCT(std::ostream &out) const;
-
-protected:
-    // ODE SOLVER.
-
-    ODE_Solver m_ode; // The ODE solver used by the mops solver.
+    void PostProcess(void);
 
 
-    // SOLVER SETTINGS.
+    // READ/WRITE/COPY FUNCTIONS.
 
-    // Default error tolerances for the ODE solver.
-    real m_atol, m_rtol;
+    // Writes the simulator to a binary data stream.
+    void Serialize(std::ostream &out) const;
 
-    // Under-relaxation coefficient.
-    real m_rlx_coeff;
+    // Reads the simulator data from a binary data stream.
+    void Deserialize(std::istream &in);
 
-/*
+private:
+    // SIMULATION SETTINGS.
+
     // Number of runs to perform.
     unsigned int m_nruns;
+
+    // Number of internal solver iterations to perform.
+    unsigned int m_niter;
+
+    // These should be properties of the Reactor class!
 
     // Max. number of stochastic particles in sweep.
     unsigned int m_pcount;
 
     // Max. M0 value, for initial scaling of ensemble.
     real m_maxm0;
-*/
+
 
     // COMPUTATION TIME.
 
     clock_t m_cpu_start, m_cpu_mark;
-    double m_tottime, m_chemtime;
+    double m_runtime;
 
-/*
+
     // CONSOLE OUTPUT PARAMETERS.
 
     // Interval of console output data (in terms of time steps).
@@ -272,11 +215,34 @@ protected:
     // Output file stream.
     mutable std::fstream m_file;
 
+    // Flag controlling iteration output.  If true then output
+    // is performed for every iteration at the end of a time step,
+    // otherwise output is only performed after all iterations have
+    // completed.
+    bool m_output_every_iter;
+
+    // Sub-step number at which output will occur.
+    unsigned int m_output_step;
+
+    // Sub-step iteration number at which output will occur, 
+    // unless m_output_every_iter==true, in which case all
+    // iterations are output.
+    unsigned int m_output_iter;
+
+
+    // PARTICLE TRACKING PARAMETERS.
+
+    // Number of particles for which to produce tracking output.  Tracked
+    // particles will have their PSL properties output at each time-step in
+    // a separate CSV file.  If a primary-particle model in implemented, then
+    // TEM-style images will also be generated.
+    unsigned int m_ptrack_count;
+
 
     // FILE OUTPUT.
 
     // Opens an output file for the given run number.
-    void openOutputFile(unsigned int run) const;
+    void openOutputFile() const;
 
     // Closes the output file.
     void closeOutputFile() const;
@@ -285,6 +251,11 @@ protected:
     // the binary output file.
     void outputGasPhase(const Reactor &r) const;
 
+    // Writes the particle stats to the binary output file.
+    void outputParticleStats(const Reactor &r) const;
+
+    // Writes tracked particles to the binary output file.
+    void outputPartTrack(const Reactor &r) const;
     
     // CONSOLE OUTPUT.
 
@@ -300,20 +271,20 @@ protected:
     // Writes the auxilliary post-processing information using
     // the given file name.  This information is the chemical mechanism
     // and the output time intervals.
-    static void writeAux(
-        const std::string &filename,  // Root filename.
+    void writeAux(
         const Mops::Mechanism &mech,  // Mechanism which defines the reactor.
         const Mops::timevector &times // Vector of time intervals.
-        );
+        ) const;
 
     // Reads auxilliary post-processing information using the
     // given file name.  This information is the chemical mechanism
     // and the output time intervals.
-    static void readAux(
-        const std::string &filename, // Root filename.
+    void readAux(
         Mops::Mechanism &mech,       // Mechanism which defined the reactor.
         Mops::timevector &times      // Vector of time intervals.
         );
+
+    // OUTPUT POINT READING.
 
     // Reads a gas-phase chemistry data point from the binary file.
     // To allow the averages and confidence intervals to be calculated
@@ -339,6 +310,35 @@ protected:
         bool calcsqrs = false // Set =true to also calculate sums of squares.
         );
 
+    // Reads a particle stats data point from the binary file.
+    // To allow the averages and confidence intervals to be calculated
+    // the data point is added to a vector of sums, and the squares are
+    // added to the vector sumsqr if necessary.
+    static void readParticleDataPoint(
+        std::istream &in,             // Input stream.
+        const Sweep::Mechanism &mech, // Chemical mechanism.
+        fvector &sum,                 // Sums of chemistry data.
+        fvector &sumsqr,              // Sums of the squares.
+        bool calcsqrs = false         // Set =true to also calculate sums of squares.
+        );
+
+    // Reads the tracked particles from the binary file.  The particles are
+    // processed so that only a vector of vectors is returned, which contains
+    // the PSL data for each tracked particle at that point.
+    void readPartTrackPoint(
+        std::istream &in,             // Input stream.
+        const Sweep::Mechanism &mech, // Particle mechanism.
+        std::vector<fvector> &pdata   // Tracked particle output data for this point.
+        ) const;
+
+    // OUTPUT VECTOR MANIPULATION.
+
+    // Multiplies all values in a vector by a scaling factor.
+    static void multVals(
+        fvector &vals, // The values to multiply by the scaling factor.
+        real scale     // The scaling factor (numner of runs).
+        );
+
     // Takes vectors of vectors of variable sums and sums of squares, which
     // are converted into the average values and the confidence intervals.
     static void calcAvgConf(
@@ -353,7 +353,7 @@ protected:
     // avg = (a1, a2, a3, ..., aN)
     // err = (e1, e2, e3, ..., eN)
     // AFTER:
-    // avg = (a1, e1, a2, e2, a3, e3, ..., aN, eN)
+    // avg = (N, t, a1, e1, a2, e2, a3, e3, ..., aN, eN)
     // The step number and time are insert at the beginning of the avg
     // vector.
     static void buildOutputVector(
@@ -362,6 +362,8 @@ protected:
         fvector &avg,      // Averages.
         const fvector &err // Confidence intervals (will be inserted into avg).
         );
+
+    // CSV FILE CREATION.
 
     // Writes gas-phase conditions profile to a CSV file.
     static void writeGasPhaseCSV(
@@ -373,15 +375,32 @@ protected:
         );
 
     // Writes computation times profile to a CSV file.
-    virtual void writeCT_CSV(
+    void writeCT_CSV(
         const std::string &filename,     // Output file name (incl. extension).
         const timevector &times,         // Output time profile.
         std::vector<fvector> &avg,       // Vector of computation-time time points.
         const std::vector<fvector> &err  // Vector of confidence intervals.
         ) const;
 
+    // Writes particle stats profile to a CSV file.
+    static void writeParticleStatsCSV(
+        const std::string &filename,     // Output file name (incl. extension).
+        const Mechanism &mech,           // Mechanism defining particle ensemble.
+        const timevector &times,         // Output time profile.
+        std::vector<fvector> &avg,       // Vector of gas-phase time points.
+        const std::vector<fvector> &err  // Vector of confidence intervals.
+        );
 
-    // SAVE POINTS.
+    // Writes particle tracking for multiple particles to CSV files.
+    static void writePartTrackCSV(
+        const std::string &filename, // Output file name (excl. extension).
+        const Mechanism &mech,       // Mechanism defining particle ensemble.
+        const timevector &times,     // Output time profile.
+        std::vector<std::vector<fvector> > &track // Vector of tracking data of multiple particles at multiple time points.
+        );
+
+
+    // SAVE POINTS AND PSL POST-PROCESSING.
 
     // Creates a simulation save point.  The save points can be
     // used to restart an interrupted simulation.
@@ -397,7 +416,13 @@ protected:
         unsigned int run,     // Run number.
         const Mechanism &mech // Mechanism used to define reactor.
         ) const;
-*/
+
+    // Processes the PSLs at each save point into single files.
+    void postProcessPSLs(
+        const Mechanism &mech,  // Mechanism use to solve system.
+        const timevector &times // Simulation output time intervals.
+        ) const;
+
 
     // COMPUTATION TIME CALCULATION.
 
@@ -405,13 +430,19 @@ protected:
     // current time.
     double calcDeltaCT(double markt) const;
 
-private:
-/*
+
     // FILE OUTPUT.
 
-    // Writes the current reactor state to the output file.
-    void fileOutput(const Reactor &r) const;
-*/
+    // Writes the current reactor state to the output file.  This is
+    // of the standard output function form for the Mops::Solver class.
+    // It is passed to the Solver classes Solve() function.
+    static void fileOutput(
+        unsigned int step,  // Internal solver sub-step number for this time-step.
+        unsigned int iter,  // Internal solver iteration number for this sub-step.
+        const Reactor &r,   // Reactor to output.
+        const Solver &s,    // Solver used for calculations.
+        void *sim           // Void pointer to cast to this simulator object.
+        );
 };
 };
 

@@ -64,8 +64,21 @@ public:
     ~StrangSolver(void); // Default destructor.
 
 
-    // SOLUTION AND POST-PROCESSING.
+    // SOLUTION.
 
+    // Solves the coupled reactor using a Strang splitting algorithm
+    // up to the stop time.  calls the output routine once at the
+    // end of the function.  niter is ignored.
+    virtual void Solve(
+            Reactor &r,   // The reactor to solve.
+            real tstop,   // The end time for the step.
+            int nsteps,   // Number of internal steps to take.
+            int niter,    // Number of internal iterations to take.
+            OutFnPtr out, // Output function pointer.
+            void *data    // Custom data object which will be passed as argument to out().
+        );
+
+    /*
     // Run the solver for the given reactor and the 
     // given time intervals.
     void SolveReactor(
@@ -80,6 +93,7 @@ public:
         const std::string &filename, // Filename to post-process.
         unsigned int nruns = 1       // Number of runs.
         ) const;
+*/
 
 private:
     // SIMULATION.

@@ -54,18 +54,115 @@ using namespace Strings;
 
 // Default constructor.
 PredCorSolver::PredCorSolver(void)
-: m_rlx_coeff(0.1)
+: Sweep::FlameSolver(), m_reac_copy(NULL), m_ncalls(0)
 {
 }
 
 // Default destructor.
 PredCorSolver::~PredCorSolver(void)
 {
+    delete m_reac_copy;
+}
+
+
+// SOLVER INITIALISATION AND RESET.
+
+// Initialises the solver to solve the given reactor.
+void PredCorSolver::Initialise(const Reactor &r)
+{
+    // Set up ODE solver.
+    FlameSolver::Initialise(r);
+    m_ode.SetExtSrcTermFn(AddSourceTerms);
+    m_ode_copy.Initialise(r);
+    m_ode_copy.SetExtSrcTermFn(AddSourceTerms);
+
+    // Reset number of Solve() calls.
+    m_ncalls = 0;
+
+    // Set up internal solver settings.
+    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->Species()));
+
+    // Set up source terms.
+    m_srcterms.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
+    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
+    m_ode.SetExtSrcTerms(m_srcterms);
+    m_ode_copy.SetExtSrcTerms(m_srcterms);
+
+    // Clone the reactor.
+    delete m_reac_copy;
+    m_reac_copy = r.Clone();
+}
+
+// Resets the solver to solve the given reactor.
+void PredCorSolver::Reset(const Reactor &r)
+{
+    // Set up ODE solver.
+    FlameSolver::Reset(r);
+    m_ode.SetExtSrcTermFn(AddSourceTerms);
+    m_ode_copy.ResetSolver(r);
+    m_ode_copy.SetExtSrcTermFn(AddSourceTerms);
+
+    // Reset number of Solve() calls.
+    m_ncalls = 0;
+
+    // Set up internal solver settings.
+    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->Species()));
+
+    // Set up source terms.
+    m_srcterms.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
+    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
+    m_ode.SetExtSrcTerms(m_srcterms);
+    m_ode_copy.SetExtSrcTerms(m_srcterms);
+
+    // Clone the reactor.
+    delete m_reac_copy;
+    m_reac_copy = r.Clone();
 }
 
 
 // SOLVING REACTORS.
 
+// Solves the coupled reactor using the predictor-corrector splitting
+// algorithm up to the stop time.  Calls the output function after
+// each iteration of the last internal step.
+void PredCorSolver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
+                          OutFnPtr out, void *data)
+{
+    unsigned int step=0, iter=0;
+
+    // Calculate step size.
+    real dt = (tstop - r.Time()) / (real)nsteps;
+
+    // Internal splits without file output.
+    for (step=0; step!=nsteps-1; ++step) {
+        // Start the iteration procedure.
+        beginIteration(r, step, dt);
+
+        // Iterate this step for the required number of runs.
+        for (iter=0; iter!=niter; ++iter) {
+            if (m_ncalls==0) m_ode.ResetSolver(*m_reac_copy);
+            iteration(r, dt);
+        }
+
+        // Wind up the iteration algorithm.
+        endIteration();
+    }
+
+    // Internal split with file output.
+    beginIteration(r, step, dt);
+    for (iter=0; iter!=niter; ++iter) {
+        if (m_ncalls==0) m_ode.ResetSolver(*m_reac_copy);
+        iteration(r, dt);
+        out(step+1, iter+1, r, *this, data);
+    }
+    endIteration();
+
+    // Increment the total call count (number of times
+    // the solver has been called).
+    ++m_ncalls;
+}
+
+/*
 // Solves the given reactor for the given time intervals.
 void PredCorSolver::SolveReactor(Mops::Reactor &r, 
                                  const timevector &times, 
@@ -139,7 +236,7 @@ void PredCorSolver::SolveReactor(Mops::Reactor &r,
         for (unsigned int istep=0; istep!=(*iint).StepCount(); ++istep, ++global_step) {
             // Internal splits without file output.
             for (unsigned int isplit=1; isplit!=iint->SplittingStepCount(); ++isplit) {
-                // Start the iteration proceedure.
+                // Start the iteration procedure.
                 beginIteration(r, global_step, iint->SplitStepSize());
 
                 // Iterate this step for the required number of runs.
@@ -182,6 +279,7 @@ void PredCorSolver::SolveReactor(Mops::Reactor &r,
     // Close the output files.
     closeOutputFile();
 }
+*/
 
 // Sets up the workspace to begin a new iteration.  This includes
 // generating an initial chemistry profile over the step.  As a first
@@ -212,8 +310,8 @@ void PredCorSolver::beginIteration(Reactor &r, unsigned int step, real dt)
     m_srcterms[0] = m_srcterms_copy[1];
 
     // Now extrapolate the source terms for the end of the step.
-    if (step == 0) {
-        // This is the first step.  Just use a constant source-term
+    if (m_ncalls == 0) {
+        // This is the first call.  Just use a constant source-term
         // extrapolation.
         m_srcterms[1] = m_srcterms[0];
         m_srcterms[1].Time = m_srcterms[0].Time + dt;
@@ -270,7 +368,7 @@ void PredCorSolver::iteration(Reactor &r, real dt)
         real ts2 = ts1+dt;
 
         // Run Sweep for this time step.
-        Run(ts1, ts2, m_gas_prof, *r.Mixture(), r.Mech()->ParticleMech());
+        Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech());
 
         // Scale M0 according to gas-phase expansion.
         real m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
@@ -439,7 +537,7 @@ void PredCorSolver::copySrcPoint(const SrcPoint &from, SrcPoint &to)
 
 
 // POST-PROCESSING.
-
+/*
 void PredCorSolver::PostProcess(const std::string &filename, 
                                unsigned int nruns) const
 {
@@ -484,7 +582,7 @@ void PredCorSolver::PostProcess(const std::string &filename,
     // Throw error if the output file failed to open.
     if (!fin.good()) {
         throw runtime_error("Failed to open file for post-processing "
-                            "(Mops, StrangSolver::PostProcess).");
+                            "(Mops, PredCorSolver::PostProcess).");
     }
 
     // READ INITIAL CONDITIONS.
@@ -547,8 +645,8 @@ void PredCorSolver::multVals(fvector &vals, real scale)
         (*i) *= scale;
     }
 }
-
-
+*/
+/*
 // UNDER-RELAXATION.
 
 // Returns the under-relaxation coefficient.
@@ -559,7 +657,7 @@ real PredCorSolver::UnderRelaxCoeff(void) const
 
 // Sets the under-relaxation coefficient.
 void PredCorSolver::SetUnderRelaxCoeff(real relax) {m_rlx_coeff = relax;}
-
+*/
 
 // SOURCE TERM CALCULATION (REQUIRED FOR REACTOR ODE SOLVER).
 

@@ -77,7 +77,7 @@ Settings_IO::~Settings_IO(void)
 Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename, 
                                            Mops::Reactor *reac, 
                                            std::vector<TimeInterval> &times,
-                                           Solver &solver,
+                                           Simulator &sim, Solver &solver,
                                            const Mechanism &mech)
 {
     CamXML::Document doc;
@@ -266,19 +266,19 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
         // Read the number of runs.
         node = root->GetFirstChild("runs");
         if (node != NULL) {
-            solver.SetRunCount((int)cdble(node->Data()));
+            sim.SetRunCount((int)cdble(node->Data()));
         }
 
         // Read stochastic particle count.
         node = root->GetFirstChild("pcount");
         if (node != NULL) {
-            solver.SetMaxPartCount((int)cdble(node->Data()));
+            sim.SetMaxPartCount((int)cdble(node->Data()));
         }
 
         // Read max M0, for scaling.
         node = root->GetFirstChild("maxm0");
         if (node != NULL) {
-            solver.SetMaxM0(cdble(node->Data())*1.0e6); // Convert from #/cm3 to #/m3.
+            sim.SetMaxM0(cdble(node->Data())*1.0e6); // Convert from #/cm3 to #/m3.
         }
 
         // TIME INTERVALS.
@@ -337,7 +337,7 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
             // Check the console interval.
             attr = node->GetAttribute("interval");
             if (attr != NULL) {
-                solver.SetConsoleInterval((unsigned int)cdble(attr->GetValue()));
+                sim.SetConsoleInterval((unsigned int)cdble(attr->GetValue()));
             }
 
             // Read the column variables.
@@ -345,7 +345,7 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
             vector<string> cvars;
             Strings::split(str, cvars, " ");
             for (unsigned int j=0; j!=cvars.size(); ++j) {
-                solver.AddConsoleVariable(cvars[j]);
+                sim.AddConsoleVariable(cvars[j]);
             }
         }
 
@@ -355,7 +355,7 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
         // Read the output file name.
         node = root->GetFirstChild("output");
         if (node != NULL) {
-            solver.SetOutputFile(node->Data());
+            sim.SetOutputFile(node->Data());
         }
     }
 
@@ -371,7 +371,7 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
 Reactor *const Settings_IO::LoadFromXML(const std::string &filename, 
                                         Mops::Reactor *reac, 
                                         std::vector<TimeInterval> &times,
-                                        Solver &solver,
+                                        Simulator &sim, Solver &solver,
                                         const Mechanism &mech)
 {
     CamXML::Document doc;
@@ -388,9 +388,17 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
         // Get the root element.
         root = doc.Root();
 
+        // Check the mops file version.
+        const CamXML::Attribute *attr = root->GetAttribute("version");
+
+        if ((attr!=NULL) && (attr->GetValue() != "2")) {
+            throw runtime_error("Settings file has wrong version number (expecting 2)"
+                                " (Mops::Settings_IO::LoadFromXML).");
+        }
+
         // GLOBAL SETTINGS.
 
-        readGlobalSettings(*root, solver);
+        readGlobalSettings(*root, sim, solver);
 
         // REACTOR.
 
@@ -416,7 +424,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 
         node = root->GetFirstChild("output");
         if (node != NULL) {
-            readOutput(*node, solver);
+            readOutput(*node, sim);
         } else {
             throw runtime_error("Settings file does not contain output"
                                 " information (Mops::Settings_IO::LoadFromXML).");
@@ -431,7 +439,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 
 // Reads global simulation settings from the given XML node.
 void Settings_IO::readGlobalSettings(const CamXML::Element &node, 
-                                            Solver &solver)
+                                     Simulator &sim, Solver &solver)
 {
     const CamXML::Element *subnode;
 
@@ -450,26 +458,31 @@ void Settings_IO::readGlobalSettings(const CamXML::Element &node,
     // Read the number of runs.
     subnode = node.GetFirstChild("runs");
     if (subnode != NULL) {
-        solver.SetRunCount((int)cdble(subnode->Data()));
+        sim.SetRunCount((int)cdble(subnode->Data()));
+    }
+
+    // Read the number of iterations.
+    subnode = node.GetFirstChild("iter");
+    if (subnode != NULL) {
+        sim.SetIterCount((int)cdble(subnode->Data()));
     }
 
     // Read stochastic particle count.
     subnode = node.GetFirstChild("pcount");
     if (subnode != NULL) {
-        solver.SetMaxPartCount((int)cdble(subnode->Data()));
+        sim.SetMaxPartCount((int)cdble(subnode->Data()));
     }
 
     // Read predicted maximum M0 value.
     subnode = node.GetFirstChild("maxm0");
     if (subnode != NULL) {
-        solver.SetMaxM0(cdble(subnode->Data())*1.0e6); // Convert from #/cm3 to #/m3.
+        sim.SetMaxM0(cdble(subnode->Data())*1.0e6); // Convert from #/cm3 to #/m3.
     }
 
     // Read predictor-corrector relaxation parameter.
     subnode = node.GetFirstChild("relax");
     if (subnode != NULL) {
-        PredCorSolver* pcs = dynamic_cast<PredCorSolver*>(&solver);
-        if (pcs!=NULL) pcs->SetUnderRelaxCoeff(cdble(subnode->Data()));
+        solver.SetUnderRelaxCoeff(cdble(subnode->Data()));
     }
 }
 
@@ -718,7 +731,7 @@ void Settings_IO::readTimeIntervals(const CamXML::Element &node,
 }
 
 // Reads simulation output parameters from given XML node.
-void Settings_IO::readOutput(const CamXML::Element &node, Solver &solver)
+void Settings_IO::readOutput(const CamXML::Element &node, Simulator &sim)
 {
     const CamXML::Element *subnode;
     vector<CamXML::Element*> nodes;
@@ -733,7 +746,7 @@ void Settings_IO::readOutput(const CamXML::Element &node, Solver &solver)
         // Check the console interval.
         attr = subnode->GetAttribute("interval");
         if (attr != NULL) {
-            solver.SetConsoleInterval((unsigned int)cdble(attr->GetValue()));
+            sim.SetConsoleInterval((unsigned int)cdble(attr->GetValue()));
         }
 
         // Read tabular console output parameters.
@@ -741,7 +754,7 @@ void Settings_IO::readOutput(const CamXML::Element &node, Solver &solver)
         if (subnode != NULL) {
             subnode->GetChildren("column", nodes);
             for (i=nodes.begin(); i!=nodes.end(); ++i) {
-                solver.AddConsoleVariable((*i)->Data());
+                sim.AddConsoleVariable((*i)->Data());
             }
         } else {
             throw runtime_error("No tabular data defined for console output "
@@ -758,7 +771,7 @@ void Settings_IO::readOutput(const CamXML::Element &node, Solver &solver)
     // Read the output file name.
     subnode = node.GetFirstChild("filename");
     if (subnode != NULL) {
-        solver.SetOutputFile(subnode->Data());
+        sim.SetOutputFile(subnode->Data());
     } else {
         throw runtime_error("No output file name defined "
                             "(Mops, Settings_IO::readOutput)");

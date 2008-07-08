@@ -232,6 +232,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\mops_simulator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\mops_solver.cpp"
 				>
 			</File>
@@ -307,6 +311,10 @@
 			</File>
 			<File
 				RelativePath=".\include\mops_settings_io.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\mops_simulator.h"
 				>
 			</File>
 			<File

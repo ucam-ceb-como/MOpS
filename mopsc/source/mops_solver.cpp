@@ -56,16 +56,38 @@ using namespace Strings;
 
 // Default constructor.
 Solver::Solver(void)
-: m_atol(1.0e-3), m_rtol(6.0e-4), m_nruns(1), m_pcount(0), m_maxm0(0.0), 
-  m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_chemtime(0.0), 
-  m_console_interval(1),
-  m_console_msgs(true), m_output_filename("mops-out")
+: m_atol(1.0e-3), m_rtol(6.0e-4), m_rlx_coeff(0.0), //, m_nruns(1), m_pcount(0), m_maxm0(0.0), 
+  m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_tottime(0.0),
+  m_chemtime(0.0)
+//  m_console_interval(1),
+//  m_console_msgs(true), m_output_filename("mops-out")
 {
 }
 
 // Default destructor.
 Solver::~Solver(void)
 {
+}
+
+
+// SOLVER INITIALISATION AND RESET.
+
+// Initialises the solver to solve the given reactor.
+void Solver::Initialise(const Reactor &r)
+{
+    // Set up the ODE solver.
+    m_ode.Initialise(r);
+    m_ode.SetATOL(m_atol);
+    m_ode.SetRTOL(m_rtol);
+}
+
+// Resets the solver to solve the given reactor.
+void Solver::Reset(const Reactor &r)
+{
+    // Reset the ODE solver.
+    m_ode.ResetSolver(r);
+    m_ode.SetATOL(m_atol);
+    m_ode.SetRTOL(m_rtol);
 }
 
 
@@ -94,6 +116,18 @@ void Solver::SetRTOL(real rtol)
 }
 
 
+// UNDER-RELAXATION.
+
+// Returns the under-relaxation coefficient.
+real Solver::UnderRelaxCoeff(void) const
+{
+    return m_rlx_coeff;
+}
+
+// Sets the under-relaxation coefficient.
+void Solver::SetUnderRelaxCoeff(real relax) {m_rlx_coeff = relax;}
+
+/*
 // SWEEP SETTINGS.
 
 // Returns the number of runs to perform
@@ -193,10 +227,33 @@ void Solver::SetOutputFile(const std::string &name)
 {
     m_output_filename = name;
 }
-
+*/
 
 // SOLVING REACTORS.
 
+// Runs the solver for the given reactor, advancing it
+// to the given stop time.  The numerical parameters given
+// are the number of internal steps to take, and the number
+// of internal iterations.  Default values of <=0 will use
+// an adaptive method (NOT YET IMPLEMENTED).  Internal solver
+// output is provided after each step/iteration by passing
+// a function pointer.
+void Solver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
+                   OutFnPtr out, void *data)
+{
+    // Mark the current time.
+    m_cpu_mark = clock();
+    // Solve reactor.
+    m_ode.Solve(r, tstop);
+    // Calculate CPU time.
+    double dt = calcDeltaCT(m_cpu_mark);
+    m_tottime += dt;
+    m_chemtime += dt;
+    // Perform output.
+    if (out) out(nsteps, niter, r, *this, data);
+}
+
+/*
 // Solves the given reactor for the given time intervals.
 void Solver::SolveReactor(Mops::Reactor &r, 
                           const timevector &times, unsigned int nruns)
@@ -333,8 +390,18 @@ void Solver::PostProcess(const std::string &filename,
     writeGasPhaseCSV(filename+"-chem.csv", mech, times, achem, echem);
     writeCT_CSV(filename+"-cpu.csv", times, acpu, ecpu);
 }
+*/
+
+// Outputs internal computation time data to the given
+// binary stream.
+void Mops::Solver::OutputCT(std::ostream &out) const
+{
+    out.write((char*)&m_tottime, sizeof(m_tottime));
+    out.write((char*)&m_chemtime, sizeof(m_chemtime));
+}
 
 
+/*
 // FILE OUTPUT (protected).
 
 // Opens an output file for the given run number.
@@ -844,7 +911,7 @@ Reactor *const Solver::readSavePoint(unsigned int step,
     }
     return NULL;
 }
-
+*/
 
 // COMPUTATION TIME CALCULATION.
 

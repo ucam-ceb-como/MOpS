@@ -42,6 +42,7 @@
 #include "swp_flamesolver.h"
 #include "swp_gas_profile.h"
 #include "mops_timeinterval.h"
+#include "mops_reactor.h"
 #include "sweep.h"
 #include "string_functions.h"
 #include "csv_io.h"
@@ -206,23 +207,25 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 // flavour the gas-phase chemistry is interpolated from a vector of
 // IdealGas objects rather than being taken from the given system object.
 // However, the particles in the system object are updated accordingly.
-int FlameSolver::Run(real &t, real tstop, const GasProfile &gasphase, 
-                     Cell &sys, const Mechanism &mech)
+void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter, 
+                        Mops::Solver::OutFnPtr out, void *data)
 {
     int err = 0;
     real tsplit, dtg, dt, jrate;
+    const Sweep::Mechanism &mech = r.Mech()->ParticleMech();
     fvector rates(mech.TermCount(), 0.0);
     
     // Save the initial chemical conditions in sys so that we
     // can restore them at the end of the run.
-    Sprog::Thermo::IdealGas chem = sys;
+    Sprog::Thermo::IdealGas chem = *r.Mixture();
 
     // Store if chemical conditions are fixed at present, because we
     // shall set them to be fixed during this run, to be restored afterwards.
-    bool fixedchem = sys.FixedChem();
-    sys.SetFixedChem();
+    bool fixedchem = r.Mixture()->FixedChem();
+    r.Mixture()->SetFixedChem();
 
     // Global maximum time step.
+    real t  = r.Time();
     dtg     = tstop - t;
     m_maxdt = dtg / 3.0;
     m_tstop = tstop;
@@ -231,15 +234,15 @@ int FlameSolver::Run(real &t, real tstop, const GasProfile &gasphase,
     while (t < tstop)
     {
         // Calculate LPDA splitting time step.
-        if (mech.AnyDeferred() && (sys.ParticleCount() > 0)) {
+        if (mech.AnyDeferred() && (r.Mixture()->ParticleCount() > 0)) {
             // Calculate the chemical conditions.
-            linInterpGas(t, gasphase, sys);
+            linInterpGas(t, m_gasprof, *r.Mixture());
 
             // Get the process jump rates (and the total rate).
-            jrate = mech.CalcJumpRates(t, sys, sys, rates);
+            jrate = mech.CalcJumpRates(t, *r.Mixture(), *r.Mixture(), rates);
 
             // Calculate the splitting end time.
-            tsplit = calcSplitTime(t, tstop, jrate, sys.ParticleCount(), dtg);
+            tsplit = calcSplitTime(t, tstop, jrate, r.Mixture()->ParticleCount(), dtg);
         } else {
             // There are no deferred processes, therefore there
             // is no need to perform LPDA splitting steps.
@@ -249,35 +252,36 @@ int FlameSolver::Run(real &t, real tstop, const GasProfile &gasphase,
         // Perform stochastic jump processes.
         while (t < tsplit) {
             // Calculate the chemical conditions.
-            linInterpGas(t, gasphase, sys);
+            linInterpGas(t, m_gasprof, *r.Mixture());
 
             // Calculate jump rates.
-            jrate = mech.CalcJumpRates(t, sys, sys, rates);
+            jrate = mech.CalcJumpRates(t, *r.Mixture(), *r.Mixture(), rates);
 
             // Perform time step.
-            dt = timeStep(t, sys, mech, rates, jrate);
+            dt = timeStep(t, *r.Mixture(), mech, rates, jrate);
             if (dt >= 0.0) {
                 t += dt; t = min(t, tstop);
             } else {
-                return -1;
+                return;
             }
         }
 
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
         if (mech.AnyDeferred()) {
-            linInterpGas(t, gasphase, sys);
-            mech.LPDA(t, sys);
+            linInterpGas(t, m_gasprof, *r.Mixture());
+            mech.LPDA(t, *r.Mixture());
         }
     }
 
     // Restore initial chemical conditions to sys.
-    sys = chem;
-    sys.SetFixedChem(fixedchem);
+    *static_cast<Cell*>(r.Mixture()) = chem;
+    r.Mixture()->SetFixedChem(fixedchem);
 
-    return err;
+    return;
 }
 
+/*
 // Run the solver for the given reactor and the 
 // given time intervals.
 void FlameSolver::SolveReactor(Mops::Reactor &r, 
@@ -444,7 +448,7 @@ void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) c
     // Now post-process the PSLs.
     postProcessPSLs(nruns, mech, times);
 }
-
+*/
 
 // HELPER ROUTINES.
 

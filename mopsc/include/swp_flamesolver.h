@@ -6,10 +6,8 @@
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
-    The Solver class holds simulation settings for mops and solves reactors.
-    This basic solver only solves gas-phase chemistry equations, there is no
-    operator splitting to solve gas-phase chemistry coupled to the particle
-    population balance using sweep.
+    This solver only solves the particle population balance by
+    using a constant profile gas-phase chemistry profile.
 
   Licence:
     This file is part of "mops".
@@ -91,14 +89,16 @@ public:
     // flavour the gas-phase chemistry is interpolated from a vector of
     // IdealGas objects rather than being taken from the given system object.
     // However, the particles in the system object are updated accordingly.
-    int Run(
-        real &t,        // Simulation start time.  Will return the stop time.
-        real tstop,     // Stop time for simulation.
-        const GasProfile &gasphase, // Gas-phase profile.
-        Cell &sys,      // System to solve.
-        const Mechanism &mech // Mechanism to use to solve system.
+    void Solve(
+        Mops::Reactor &r,           // The reactor to solve.
+        real tstop,                 // The end time for the step.
+        int nsteps,                 // Number of internal steps to take.
+        int niter,                  // Number of internal iterations to take.
+        Mops::Solver::OutFnPtr out, // Output function pointer.
+        void *data                  // Custom data object which will be passed as argument to out().
         );
 
+/*
     // Run the solver for the given reactor and the 
     // given time intervals.
     void SolveReactor(
@@ -113,6 +113,7 @@ public:
         const std::string &filename, // Output file name root (no extension).
         unsigned int nruns = 1       // Number of runs to post-process.
         ) const;
+*/
 
 private:
     /*

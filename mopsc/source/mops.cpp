@@ -121,6 +121,7 @@ int main(int argc, char *argv[])
     Reactor *reactor = NULL; // Reactor to solve.
     Mechanism mech;          // Chemical and particle mechanism.
     timevector times;        // A list of output times and step counts.
+    Simulator sim;           // The simulator.
 
     // Create the solver.
     try {
@@ -135,6 +136,7 @@ int main(int argc, char *argv[])
                 break;
             case PredCor:
                 solver = new PredCorSolver();
+                sim.SetOutputEveryIter(true);
                 break;
             case MoMIC:
                 // Not implemented yet.
@@ -191,10 +193,10 @@ int main(int argc, char *argv[])
     try {
         if (foldfmt) {
             // Old file format.
-            reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, *solver, mech);
+            reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, sim, *solver, mech);
         } else {
             // New format.
-            reactor = Settings_IO::LoadFromXML(settfile, reactor, times, *solver, mech);
+            reactor = Settings_IO::LoadFromXML(settfile, reactor, times, sim, *solver, mech);
         }
     } catch (std::exception &e) {
         printf("Mops: Failed to load settings file.  Message:\n  ");
@@ -206,7 +208,7 @@ int main(int argc, char *argv[])
 
     // Solve reactor.
     try {
-        if (fsolve) solver->SolveReactor(*reactor, times, solver->RunCount());
+        if (fsolve) sim.RunSimulation(*reactor, times, *solver);
     } catch (std::exception &e) {
         printf("Mops: Failed to solve reactor.  Message:\n  ");
         printf(e.what());
@@ -218,7 +220,7 @@ int main(int argc, char *argv[])
 
     // Post-process.
     try {
-        if (fpostprocess) solver->PostProcess(solver->OutputFile(), solver->RunCount());
+        if (fpostprocess) sim.PostProcess();
     } catch (std::exception &e) {
         printf("Mops: Failed to post-process.  Message:\n  ");
         printf(e.what());

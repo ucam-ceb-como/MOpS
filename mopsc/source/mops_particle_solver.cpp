@@ -57,7 +57,7 @@ using namespace Strings;
 
 // Default constructor.
 ParticleSolver::ParticleSolver(void)
-: m_swp_ctime(0.0), m_ptrack_count(10)
+: m_swp_ctime(0.0)
 {
 }
 
@@ -67,6 +67,15 @@ ParticleSolver::~ParticleSolver(void)
 }
 
 
+// Outputs internal computation time data to the given
+// binary stream.
+void Mops::ParticleSolver::OutputCT(std::ostream &out) const
+{
+    Solver::OutputCT(out);
+    out.write((char*)&m_swp_ctime, sizeof(m_swp_ctime));
+}
+
+/*
 // FILE OUTPUT.
 
 // Writes the particle stats to the binary output file.
@@ -422,3 +431,4 @@ void ParticleSolver::postProcessPSLs(unsigned int nruns, const Mechanism &mech,
         delete out[i];
     }
 }
+*/

@@ -70,8 +70,30 @@ public:
     ~PredCorSolver(void); // Default destructor.
 
 
-    // SOLUTION AND POST-PROCESSING.
+    // SOLVER INITIALISATION.
 
+    // Initialises the solver to solve the given reactor.
+    virtual void Initialise(const Reactor &r);
+
+    // Resets the solver to solve the given reactor.
+    virtual void Reset(const Reactor &r);
+
+
+    // SOLUTION.
+
+    // Solves the coupled reactor using the predictor-corrector splitting
+    // algorithm up to the stop time.  Calls the output function after
+    // each iteration of the last internal step.
+    virtual void Solve(
+            Reactor &r,   // The reactor to solve.
+            real tstop,   // The end time for the step.
+            int nsteps,   // Number of internal steps to take.
+            int niter,    // Number of internal iterations to take.
+            OutFnPtr out, // Output function pointer.
+            void *data    // Custom data object which will be passed as argument to out().
+        );
+
+    /*
     // Run the solver for the given reactor and the 
     // given time intervals.
     void SolveReactor(
@@ -86,7 +108,8 @@ public:
         const std::string &filename, // Filename to post-process.
         unsigned int nruns = 1       // Number of runs.
         ) const;
-
+*/
+/*
     // UNDER-RELAXATION.
 
     // Returns the under-relaxation coefficient.
@@ -94,6 +117,7 @@ public:
 
     // Sets the under-relaxation coefficient.
     void SetUnderRelaxCoeff(real relax);
+*/
 
     // SOURCE TERM CALCULATION (REQUIRED FOR REACTOR ODE SOLVER).
 
@@ -118,10 +142,14 @@ private:
     Reactor *m_reac_copy;
 
     // Under-relaxation coefficient.
-    real m_rlx_coeff;
+//    real m_rlx_coeff;
 
     // A copy of the ODE solver.
     ODE_Solver m_ode_copy;
+
+    // Total number of times Solve() has been called since last
+    // reset.
+    unsigned int m_ncalls;
 
 
     // SIMULATION.
@@ -192,7 +220,7 @@ private:
         SrcPoint &to          // The source point to overwrite.
         );
 
-
+/*
     // POST-PROCESSING.
 
     // Multiplies all values in a vector by a scaling factor.
@@ -200,6 +228,7 @@ private:
         fvector &vals, // The values to multiply by the scaling factor.
         real scale     // The scaling factor (numner of runs).
         );
+*/
 };
 };
 

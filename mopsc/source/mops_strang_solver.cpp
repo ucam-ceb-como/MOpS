@@ -65,6 +65,68 @@ StrangSolver::~StrangSolver(void)
 
 // SOLVING REACTORS.
 
+// Solves the coupled reactor using a Strang splitting algorithm
+// up to the stop time.  calls the output routine once at the
+// end of the function.  niter is ignored.
+void StrangSolver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
+                         OutFnPtr out, void *data)
+{
+    // Time counters.
+    real t2 = r.Time();
+    real dt = (tstop - t2) / (real)nsteps; // Step size.
+    real h  = dt * 0.5; // Half step size.
+
+    // Sweep time counters.
+    real ts1 = r.Time();
+    real ts2 = ts1;
+
+    // Variables required to ensure particle number density is correctly
+    // scaled with gas-phase expansion.
+    real rho = 0.0, m0 = 0.0;
+
+    m_cpu_mark = clock();
+        // Solve first half-step of gas-phase chemistry.
+        rho = r.Mixture()->Density();
+        m_ode.Solve(r, t2+=h);
+        r.SetTime(t2);
+    m_chemtime += calcDeltaCT(m_cpu_mark);
+
+    m_cpu_mark = clock();
+        // Solve one whole step of population balance (Sweep).
+        m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
+        r.Mixture()->SetM0(r.Mixture()->Density() * m0 / rho);
+        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech());
+    m_swp_ctime += calcDeltaCT(m_cpu_mark);
+    
+    for (unsigned int i=1; i!=nsteps; ++i) {
+        m_cpu_mark = clock();
+            // Solve whole step of gas-phase chemistry.
+            rho = r.Mixture()->Density();
+            m_ode.ResetSolver();
+            m_ode.Solve(r, t2+=dt);
+            r.SetTime(t2);
+        m_chemtime += calcDeltaCT(m_cpu_mark);
+
+        m_cpu_mark = clock();
+            // Solve whole step of population balance (Sweep).
+            m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
+            r.Mixture()->SetM0(r.Mixture()->Density() * m0 / rho);
+            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech());
+        m_swp_ctime += calcDeltaCT(m_cpu_mark);        
+    }
+
+    m_cpu_mark = clock();
+        // Solve last half-step of gas-phase chemistry.    
+        m_ode.ResetSolver();
+        m_ode.Solve(r, t2+=h);
+        r.SetTime(t2);
+    m_chemtime += calcDeltaCT(m_cpu_mark);
+
+    // Call the output function.
+    if (out) out(nsteps, niter, r, *this, data);
+}
+
+/*
 // Solves the given reactor for the given time intervals.
 void StrangSolver::SolveReactor(Mops::Reactor &r, 
                                 const timevector &times, 
@@ -154,7 +216,7 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
         closeOutputFile();
     }
 }
-
+*/
 
 // SOLUTION ROUTINES.
 
@@ -214,7 +276,7 @@ void StrangSolver::multiStrangStep(Mops::real dt, unsigned int n, Mops::Reactor 
 
 
 // POST-PROCESSING.
-
+/*
 void StrangSolver::PostProcess(const std::string &filename, 
                                unsigned int nruns) const
 {
@@ -312,3 +374,4 @@ void StrangSolver::PostProcess(const std::string &filename,
     // Now post-process the PSLs.
     postProcessPSLs(nruns, mech, times);
 }
+*/

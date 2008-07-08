@@ -65,13 +65,17 @@ public:
     // Destructors.
     virtual ~ParticleSolver(void); // Default destructor.
 
+    // Outputs internal computation time data to the given
+    // binary stream.
+    virtual void OutputCT(std::ostream &out) const;
+
 protected:
     // COMPUTATION TIME.
 
     // Sweep computation time.
     double m_swp_ctime;
 
-    
+/*    
     // PARTICLE TRACKING.
 
     // Number of particles for which to produce tracking output.  Tracked
@@ -92,8 +96,8 @@ protected:
     // Writes the current reactor state to the output file.  This overrides
     // the default routine in order to also output the particle stats.
     void fileOutput(const Reactor &r) const;
-
-
+*/
+/*
     // POST-PROCESSING ROUTINES.
 
     // Reads a particle stats data point from the binary file.
@@ -153,6 +157,7 @@ protected:
         const Mechanism &mech,  // Mechanism use to solve system.
         const timevector &times // Simulation output time intervals.
         ) const;
+*/
 };
 };
 

@@ -45,6 +45,7 @@
 #define MOPS_SETTINGS_IO_H
 
 #include "mops_params.h"
+#include "mops_simulator.h"
 #include "mops_reactor.h"
 #include "mops_solver.h"
 #include "mops_timeinterval.h"
@@ -75,7 +76,8 @@ public:
         const std::string &filename,      // Input file name.
         Reactor *reac,                    // The reactor to be simulated.
         std::vector<TimeInterval> &times, // Vector of output time intervals.
-        Solver &solver,                   // General settings incl. output settings.
+        Simulator &sim,                   // General settings incl. output settings. 
+        Solver &solver,                   // The reactor solver (to set numerical params).
         const Mechanism &mech             // Mechanism used to define reactor.
         );
 
@@ -84,7 +86,8 @@ public:
         const std::string &filename,      // Input file name.
         Reactor *reac,                    // The reactor to be simulated.
         std::vector<TimeInterval> &times, // Vector of output time intervals.
-        Solver &solver,                   // General settings incl. output settings.
+        Simulator &sim,                   // General settings incl. output settings. 
+        Solver &solver,                   // The reactor solver (to set numerical params).
         const Mechanism &mech             // Mechanism used to define reactor.
         );
 
@@ -95,7 +98,8 @@ private:
     // Reads global simulation settings from the given XML node.
     static void readGlobalSettings(
         const CamXML::Element &node, // Root XML node containing simulation settings.
-        Solver &solver               // Solver object into which to read global settings.
+        Simulator &sim,              // General settings incl. output settings. 
+        Solver &solver               // Solver object into which to read numerical parameters.
         );
 
     // Reads the reactor initial settings from the given XML node.
@@ -113,7 +117,7 @@ private:
     // Reads simulation output parameters from given XML node.
     static void readOutput(
         const CamXML::Element &node, // XML node containing output parameters.
-        Solver &solver               // General settings incl. output settings.
+        Simulator &sim               // General settings incl. output settings. 
         );
 
     // Returns the temperature in K by reading the value from the given
