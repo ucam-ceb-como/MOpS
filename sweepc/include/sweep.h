@@ -45,6 +45,8 @@
 
 // Parameters.
 #include "swp_params.h"
+#include "swp_maths_functional.h"
+#include "swp_coords.h"
 
 // Driver.
 #include "swp_solver.h"

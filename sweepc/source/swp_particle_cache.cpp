@@ -231,9 +231,13 @@ ParticleCache &ParticleCache::operator=(const Sweep::Primary &rhs)
         m_values.assign(rhs.Values().begin(), rhs.Values().end());
     } else {
         // Copy components.
-        memcpy(&m_comp[0], &rhs.Composition()[0], sizeof(real)*m_comp.size());
+        if (m_pmodel->ComponentCount() > 0) {
+            memcpy(&m_comp[0], &rhs.Composition()[0], sizeof(real)*m_comp.size());
+        }
         // Copy tracker variables.
-        memcpy(&m_values[0], &rhs.Values()[0], sizeof(real)*m_values.size());
+        if (m_pmodel->TrackerCount() > 0) {
+            memcpy(&m_values[0], &rhs.Values()[0], sizeof(real)*m_values.size());
+        }
     }
 
     // Copy times.

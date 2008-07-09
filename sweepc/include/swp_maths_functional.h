@@ -76,6 +76,8 @@ public:
     virtual void Deserialize(std::istream &in) = 0;
     // Returns the functional type ID.
     virtual FuncType Type(void) const = 0;
+    // Returns a clone of the functional.
+    virtual Functional *Clone(void) const = 0;
     // FACTORY METHODS.
     // Writes a linear functional to a binary stream and also writes
     // the functional type so that it can be successfully
@@ -101,11 +103,12 @@ public:
     ~Linear(void) {}
 
     // Operators.
-    Linear &operator=(const Linear &rhs) {
+    inline Linear &operator=(const Linear &rhs) {
         if (this != &rhs) {
             m_m = rhs.m_m;
             m_c = rhs.m_c;
         }
+        return *this;
     }
 
     // PARAMETERS.
@@ -158,6 +161,9 @@ public:
 
     // Returns the functional type ID.
     inline FuncType Type(void) const {return LinearFunc;}
+
+    // Returns a clone.
+    inline Linear *Clone(void) const {return new Linear(*this);}
 
 private:
     // Gradient and constant parameters.
