@@ -50,12 +50,8 @@
 #include "mops_mechanism.h"
 #include "mops_reactor_type.h"
 #include "mops_src_terms.h"
-
-// CVODE includes.
 #include "nvector/nvector_serial.h"
-
-//#include "fortran_interface.h"
-
+#include "sweep.h"
 #include <istream>
 
 namespace Mops
@@ -63,8 +59,24 @@ namespace Mops
 class Reactor
 {
 public:
-    // Function pointer typedef which defines the routine used
-    // to calculate external source terms in the ODE RHSs.
+    // Type definition of RHS functional form to return
+    // single derivative.
+    typedef real (*RHS1_FnPtr) (
+        real t,                 // Flow time.
+        const real *const y,    // Solution values.
+        const real *const ydot, // Derivatives to return.
+        const Reactor &r        // Calling reactor.
+        );
+
+    // Enumeration of energy models.  Note that an imposed
+    // temperature gradient can still be defined by an 
+    // external function for both of these cases.  This energy
+    // model merely dictates how the energy from reaction
+    // is treated (ignored or not).
+    enum EnergyModel {
+        ConstT,    // Constant temperature.
+        Adiabatic, // No heat transfer (full heating/cooling).
+    };
 
     // Constructors.
     Reactor(const Mechanism &mech); // Default constructor.
@@ -81,15 +93,7 @@ public:
     virtual Reactor &operator=(const Reactor &rhs);
 
 
-    // Enumeration of energy models.
-    enum EnergyModel {ConstT, Adiabatic};
-
-    /*
-    // Enumeration of ODE solvers.
-    enum ODE_Solver {CVODE_Solver, RADAU5_Solver};
-    */
-
-    // REACTOR SOLUTION.
+    // REACTOR TIME.
     
     // Returns the current reaction time.
     real Time() const;
@@ -97,18 +101,6 @@ public:
     // Sets the current reaction time.
     void SetTime(real t);
 
-    /*
-    // Initialises the reactor at the given time.
-    virtual void Initialise(real time);
-
-    // Reset the solver.  Need to do this if the the reactor
-    // contents has been changed between calls to Solve().
-    virtual void ResetSolver(void);
-
-    // Solves the reactor equations up to the given time, assuming
-    // that it is in future to the current time.
-    virtual void Solve(real time);
-    */
 
     // REACTOR CONTENTS.
 
@@ -155,6 +147,29 @@ public:
 
     // Sets the reactor solve using a constant volume assumption.
     void SetConstV(void);
+
+
+    // IMPOSED dT/dt PROFILE.
+
+    // Sets the function used to calculate the dT/dt in the
+    // RHS functions.
+    void SetTempFunc(RHS1_FnPtr fn);
+
+    // Tells the Reactor object to use its default dT/dt
+    // calculation function (from internal profile).
+    void UseDefaultTempFunc(void);
+
+    // Turns off the imposed dT/dt RHS function.
+    void DisableTempFunc(void);
+
+    // Adds a dT/dt functional to the internal profile.  This
+    // automatically tells the Reactor object to use its
+    // default dT/dt calculation function.
+    void Add_dTdt(
+        real t, // Time from which functional is valid.
+        const Sweep::Maths::Functional &fun // Functional.
+        );
+
 
     // READ/WRITE/COPY FUNCTIONS.
 
@@ -211,9 +226,20 @@ protected:
     Mops::Mixture *m_mix;          // The mixture contained in the reactor.
     const Mops::Mechanism *m_mech; // The mechanism which defines 
                                    // what happens in the reactor.
-    EnergyModel m_emodel;          // The energy model used to describe the reactor.
-    bool m_constv; // true=constant volume model, false=constant pressure model.
 
+    // Reactor model variables.
+    EnergyModel m_emodel; // The energy model used to describe the reactor.
+    bool m_constv;        // true=const. volume model, false=const. pressure model.
+
+    // Imposed temperature profile.
+    RHS1_FnPtr m_Tfunc; // External function for calculating dT/dt.
+    
+    // The default imposed temperature profile can be set in
+    // the Reactor class by defining a map of functional against
+    // time (from which functional is valid).  There is also a
+    // default function (see below) for using this profile.
+    std::map<real,Sweep::Maths::Functional*> m_dTdt_profile;
+    
     // Derived reactor properties.
     unsigned int m_neq;     // Number of equations solved.
     unsigned int m_nsp;     // Number of species in current mechanism.
@@ -221,53 +247,23 @@ protected:
     int m_iDens;            // Index of density in solution vectors.
     real *m_deriv;          // Array to hold current solution derivatives.
 
-    /*
-    // ODE solution variables.
-    real m_rtol, m_atol;    // Relative and absolute tolerances.
-    SrcProfile m_srcterms;  // Vector of externally defined source terms on  the RHS.
-    SrcTermFnPtr _srcTerms; // Source term function pointer.
-    */
 
     // Reactors should not be defined without knowledge of a Mechanism
     // object.  Therefore the default constructor is declared as protected.
     Reactor(void);
 
+
+    // IMPOSED dT/dt PROFILE.
+
+    // Definition of RHS function for adiabatic energy model.
+    static real _RHS_dTdt_profile(
+        real t,                 // Flow time.
+        const real *const y,    // Solution values.
+        const real *const ydot, // Derivatives to return.
+        const Reactor &r        // Calling reactor.
+        );
+
 private:
-    /*
-    // CVODE variables.
-    void *m_odewk;        // CVODE workspace.
-    N_Vector m_solvec;    // Internal solution array for CVODE interface.
-
-    // RADAU variables.
-    fvector m_rwk;          // Real workspace.
-    std::vector<int> m_iwk; // Integer workspace.
-    */
-
-    // VERY IMPORTANT FOR CVODE INTEGRATION!
-
-    /*
-    // The right-hand side evaluator.  This function calculates the RHS of
-    // the reactor differential equations.  CVODE uses a void* pointer to
-    // allow the calling code to pass whatever information it wants to
-    // the RHS function.  In this case the void* pointer should be cast
-    // into a Reactor object.
-    static int rhsFn_CVODE(
-        double t,      // Current flow time.
-        N_Vector y,    // The current solution variables.
-        N_Vector ydot, // Derivatives to return.
-        void* reactor  // A Reactor object (to be cast).
-        );
-
-    static void rhsFn_RADAU5(
-        int   *N,             // System dimension.
-        Fortran::dreal *X,    // Independent variable.
-        Fortran::dreal *Y,    // Current solution.
-        Fortran::dreal *F,    // Returns vector of dy/dx = F(x,y).
-        Fortran::dreal *RPAR, // Real parameters.
-        int *IPAR             // Integer parameters.
-        );
-    */
-
     // INITIALISATION AND DESTRUCTION.
     
     // Initialises the reactor to the default state.

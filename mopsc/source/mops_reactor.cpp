@@ -285,6 +285,52 @@ void Reactor::SetConstV(void)
 }
 
 
+// IMPOSED dT/dt PROFILE.
+
+// Sets the function used to calculate the dT/dt in the
+// RHS functions.
+void Reactor::SetTempFunc(RHS1_FnPtr fn) {m_Tfunc = fn;}
+
+// Tells the Reactor object to use its default dT/dt
+// calculation function (from internal profile).
+void Reactor::UseDefaultTempFunc(void) {m_Tfunc = &_RHS_dTdt_profile;}
+
+// Turns off the imposed dT/dt RHS function.
+void Reactor::DisableTempFunc(void) {m_Tfunc = NULL;}
+
+// Adds a dT/dt functional to the internal profile.  This
+// automatically tells the Reactor object to use its
+// default dT/dt calculation function.
+void Reactor::Add_dTdt(real t, const Sweep::Maths::Functional &fun)
+{
+    UseDefaultTempFunc();
+    m_dTdt_profile[t] = fun.Clone();
+}
+
+// Definition of RHS function for adiabatic energy model.
+real Reactor::_RHS_dTdt_profile(real t, const real *const y,
+                                const real *const ydot, 
+                                const Reactor &r)
+{
+    // Locate the first time point after t, or end() if
+    // the profile is not long enough.
+    map<real,Sweep::Maths::Functional*>::const_reverse_iterator i;
+    for (i=r.m_dTdt_profile.rbegin(); i!=r.m_dTdt_profile.rend(); ++i) {
+        if (i->first <= t) {
+            break;
+        }
+    }
+
+    // Evaluate the function to calculate dT/dt.
+    if (i != r.m_dTdt_profile.rend()) {
+        return i->second->Evaluate(t);
+    } else {
+        // t is before the start of the profile.    
+        return 0.0;
+    }
+}
+
+
 // READ/WRITE/COPY FUNCTIONS.
 
 // Creates a copy of the reactor object.
@@ -452,7 +498,13 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
     }
 
     // Temperature derivative.
-    ydot[m_iT] = 0.0;
+    if (m_Tfunc) {
+        // Add imposed temperature gradient, if defined.
+        ydot[m_iT] = m_Tfunc(t, y, ydot, *this);
+    } else {
+        // Constant temperature.
+        ydot[m_iT] = 0.0;
+    }
 
     // Density derivative.
     if (m_constv) {
@@ -487,6 +539,9 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
     // Complete temperature derivative.
     ydot[m_iT] *= - y[m_iT] / (Cp * y[m_iDens]);
 
+    // Add imposed temperature gradient, if defined.
+    if (m_Tfunc) ydot[m_iT] += m_Tfunc(t, y, ydot, *this);
+
     // Calculate density derivative.
     if (m_constv) {
         // Constant volume.
@@ -515,15 +570,20 @@ void Reactor::Jacobian(real t, real *const y,
 // by the constructors.
 void Reactor::init(void)
 {
+    // Reactor variables.
     m_time    = 0.0;
     m_mix     = NULL;
     m_mech    = NULL;
-    m_deriv   = NULL;
+    // Reactor model variables.
+    m_emodel  = ConstT;
+    m_constv  = false;
+    m_Tfunc   = NULL;
+    // Derived reactor properties.
     m_neq     = 0;
     m_nsp     = 0;
     m_iT      = -1;
     m_iDens   = -1;
-    m_constv  = false;
+    m_deriv   = NULL;
 }
 
 // Releases all object memory.

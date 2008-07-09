@@ -601,6 +601,18 @@ Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
     mix->SetFracs(molefracs);
     reac->Fill(*mix);
 
+    // TEMPERATURE GRADIENT PROFILE.
+
+    node.GetChildren("dTdt", nodes);
+    for (i=nodes.begin(); i!=nodes.end(); ++i) {
+        // Get the start time attribute.
+        attr = (*i)->GetAttribute("startt");
+        if (attr != NULL) {
+            Sweep::Maths::Linear fun;
+            fun.SetParam(1, cdble((*i)->Data()));
+            reac->Add_dTdt(cdble(attr->GetValue()), fun);
+        }
+    }
 
     // PSR SPECIFIC SETTINGS.
 
