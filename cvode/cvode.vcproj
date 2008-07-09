@@ -287,10 +287,6 @@
 				Name="nvector"
 				>
 				<File
-					RelativePath=".\include\nvector\nvector_parallel.h"
-					>
-				</File>
-				<File
 					RelativePath=".\include\nvector\nvector_serial.h"
 					>
 				</File>
