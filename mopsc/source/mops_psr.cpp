@@ -68,10 +68,8 @@ PSR::PSR(const Mops::Mechanism &mech)
 // Copy constructor.
 PSR::PSR(const Mops::PSR &copy)
 {
-    m_restime = copy.m_restime;
-    m_inflow  = copy.m_inflow->Clone();
-    m_infH    = copy.m_infH;
-    m_infHs.assign(copy.m_infHs.begin(), copy.m_infHs.end());
+    init();
+    *this = copy;
 }
 
 // Stream-reading constructor.
@@ -86,6 +84,29 @@ PSR::PSR(std::istream &in, const Mops::Mechanism &mech)
 PSR::~PSR(void)
 {
     releaseMemory();
+}
+
+// OPERATORS.
+
+Mops::PSR &Mops::PSR::operator=(const Mops::PSR &rhs)
+{
+    if (this != &rhs) {
+        // Copy base class.
+        Reactor::operator=(rhs);
+
+        // Residence time.
+        m_restime = rhs.m_restime;
+
+        // Inflow stream.
+        delete m_in;
+        m_in = NULL;
+        if (rhs.m_in) m_in = rhs.m_in->Clone();
+
+        // Precalculated terms.
+        m_infH = rhs.m_infH;
+        m_infHs.assign(rhs.m_infHs.begin(), rhs.m_infHs.end());
+    }
+    return *this;
 }
 
 
@@ -113,23 +134,22 @@ void PSR::SetResidenceTime(real t)
 // INFLOW CONDITIONS.
 
 // Returns the mixture which describes the inflow conditions.
-const Mops::Mixture *const PSR::Inflow(void) const
-{
-    return m_inflow;
-}
+const Mops::FlowStream *const PSR::Inflow(void) const {return m_in;}
 
 // Sets the mixture which describes the inflow conditions.
-void PSR::SetInflow(Mops::Mixture &inf)
+void PSR::SetInflow(Mops::FlowStream &inf)
 {
-    // Delete current inflow mixture.
-    if (m_inflow != NULL) delete m_inflow;
+    // Delete current inflow stream.
+    delete m_in;
 
-    m_inflow = &inf;
+    // Currently clone stream, as PSR retains ownership
+    // of the inflow.
+    m_in = inf.Clone();
 
     // Calculate inflow enthalpies to speed up
     // later calculations.
-    m_infH = m_inflow->BulkH() / (Sprog::R * m_inflow->Temperature());
-    m_inflow->Hs_RT(m_infHs);
+    m_infH = m_in->Mixture()->BulkH() / (Sprog::R * m_in->Mixture()->Temperature());
+    m_in->Mixture()->Hs_RT(m_infHs);
 }
 
 
@@ -159,10 +179,10 @@ void PSR::Serialize(std::ostream &out) const
         double val = (double)m_restime;
         out.write((char*)&val, sizeof(val));
 
-        // Output the inflow mixture.
-        if (m_inflow != NULL) {
+        // Output the inflow stream.
+        if (m_in != NULL) {
             out.write((char*)&trueval, sizeof(trueval));
-            m_inflow->Serialize(out);
+            m_in->Serialize(out);
         } else {
             out.write((char*)&falseval, sizeof(falseval));
         }
@@ -177,7 +197,6 @@ void PSR::Deserialize(std::istream &in, const Mops::Mechanism &mech)
 {
     // Clear current reactor data.
     releaseMemory();
-    init();
 
     if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -204,12 +223,12 @@ void PSR::Deserialize(std::istream &in, const Mops::Mechanism &mech)
                 // Read the inflow mixture.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n == 1) {
-                    m_inflow = new Mops::Mixture(in, mech.ParticleMech());
+                    m_in = new Mops::FlowStream(in, mech);
                 }
 
                 // Recalculate enthalpy.
-                m_infH = m_inflow->BulkH();
-                m_inflow->Hs(m_infHs);
+                m_infH = m_in->Mixture()->BulkH();
+                m_in->Mixture()->Hs(m_infHs);
                 
                 break;
             default:
@@ -231,7 +250,7 @@ Serial_ReactorType PSR::SerialType() const
 // GOVERNING EQUATIONS.
 
 // Definition of RHS form for constant temperature energy equation.
-void PSR::RHS_ConstT(real t, const real *const y,  real *ydot)
+void PSR::RHS_ConstT(real t, const real *const y,  real *ydot) const
 {
     static fvector wdot;
     real wtot = 0.0;
@@ -244,8 +263,8 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot)
     for (unsigned int i=0; i!=m_nsp; ++i) {
         ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) +
                   // Inflow/Outflow term:
-                  (m_inflow->Density() * m_invrt * 
-                   (m_inflow->MoleFraction(i) - y[i]));
+                  (m_in->Mixture()->Density() * m_invrt * 
+                   (m_in->Mixture()->MoleFraction(i) - y[i]));
     }
 
     // Temperature derivative.
@@ -254,7 +273,7 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot)
     // Density derivative.
     if (m_constv) {
         // Constant volume.
-        ydot[m_iDens] = wtot + (m_invrt * (m_inflow->Density() - y[m_iDens]));
+        ydot[m_iDens] = wtot + (m_invrt * (m_in->Mixture()->Density() - y[m_iDens]));
     } else {
         // Constant pressure.
         ydot[m_iDens] = 0.0;
@@ -262,7 +281,7 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot)
 }
 
 // Definition of RHS form for adiabatic energy equation.
-void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot)
+void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
 {
     static fvector wdot, Hs, Cps;
     real wtot = 0.0, Cp = 0.0, H = 0.0;
@@ -282,8 +301,8 @@ void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot)
         // Mole fraction derivative.
         ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) +
                   // Inflow/outflow term:
-                  (m_inflow->Density() * m_invrt * 
-                   (m_inflow->MoleFraction(i) - y[i]));
+                  (m_in->Mixture()->Density() * m_invrt * 
+                   (m_in->Mixture()->MoleFraction(i) - y[i]));
 
         // Temperature derivative.
         ydot[m_iT] += Hs[i] * wdot[i];
@@ -291,13 +310,13 @@ void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot)
 
     // Complete temperature derivative (including inflow/outflow term).
     ydot[m_iT] *= - y[m_iT] / (Cp * y[m_iDens]);
-    ydot[m_iT] += (m_inflow->Density() / (y[m_iDens] * Cp * m_restime)) * 
-                  ((H*y[m_iT]) - (m_infH * m_inflow->Temperature()));
+    ydot[m_iT] += (m_in->Mixture()->Density() / (y[m_iDens] * Cp * m_restime)) * 
+                  ((H*y[m_iT]) - (m_infH * m_in->Mixture()->Temperature()));
 
     // Calculate density derivative.
     if (m_constv) {
         // Constant volume.
-        ydot[m_iDens] = wtot + (m_invrt * (m_inflow->Density() - y[m_iDens]));
+        ydot[m_iDens] = wtot + (m_invrt * (m_in->Mixture()->Density() - y[m_iDens]));
     } else {
         // Constant pressure (use EoS to evaluate).
         ydot[m_iDens] = - y[m_iDens] * ydot[m_iT] / y[m_iT];
@@ -312,7 +331,8 @@ void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot)
 void PSR::init(void)
 {
     m_restime = 0.0;
-    m_inflow  = NULL;
+    m_in      = NULL;
+    m_out     = NULL;
     m_invrt   = 0.0;
     m_infH    = 0.0;
     m_infHs.clear();
@@ -321,6 +341,6 @@ void PSR::init(void)
 // Releases all object memory.
 void PSR::releaseMemory(void)
 {
-    if (m_inflow != NULL) delete m_inflow;
-    m_infHs.clear();
+    if (m_in != NULL) delete m_in;
+    init();
 }

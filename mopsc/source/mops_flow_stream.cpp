@@ -107,7 +107,7 @@ Mops::FlowStream &Mops::FlowStream::operator=(const Mops::FlowStream &rhs)
 
 // Returns a pointer to the mixture currently occupying
 // the reactor.
-const Mops::Mixture *const Mops::FlowStream::Mixture() const {return m_mix;}
+Mops::Mixture *const Mops::FlowStream::Mixture() const {return m_mix;}
 
 // Sets the flow stream mixture conditions, if they are
 // not dictated by the inflow.
@@ -232,7 +232,6 @@ void Mops::FlowStream::Deserialize(std::istream &in, const Mops::Mechanism &mech
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-        double val = 0.0;
         unsigned int n = 0;
         const unsigned int trueval  = 1;
 

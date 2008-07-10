@@ -45,6 +45,7 @@
 #include "mops_reactor.h"
 #include "mops_psr.h"
 #include "mops_mixture.h"
+#include "mops_flow_stream.h"
 #include "mops_reactor_factory.h"
 #include "mops_predcor_solver.h"
 
@@ -205,7 +206,7 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
 
         if (reac->SerialType() == Serial_PSR) {
             // Create a new Mixture object for inflow.
-            Mixture *inf = new Mixture(mech.ParticleMech());
+            FlowStream *inf = new FlowStream(mech);
             molefracs.assign(mech.SpeciesCount(), 0.0);
 
             // Fill the inflow Mixture object.
@@ -218,10 +219,10 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
 
                     if (str.compare("T")==0) {
                         // This is the initial temperature.
-                        inf->SetTemperature(cdble((*i)->Data()));
+                        inf->Mixture()->SetTemperature(cdble((*i)->Data()));
                     } else if (str.compare("P")==0) {
                         // This is the initial pressure (Remember to convert to Pa).
-                        inf->SetPressure(1.0e5 * cdble((*i)->Data()));
+                        inf->Mixture()->SetPressure(1.0e5 * cdble((*i)->Data()));
                     } else {
                         // This should be a species initial concentration.
 
@@ -238,7 +239,7 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
 
             // Assign the species mole fraction vector 
             // to the reactor inflow mixture.
-            inf->SetFracs(molefracs);
+            inf->Mixture()->SetFracs(molefracs);
             dynamic_cast<PSR*>(reac)->SetInflow(*inf);
 
             // Read the residence time.
@@ -621,16 +622,16 @@ Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
 
         if (subnode != NULL) {
             // Create a new Mixture object for inflow.
-            Mixture *inf = new Mixture(mech.ParticleMech());
+            FlowStream *inf = new FlowStream(mech);
             molefracs.assign(mech.SpeciesCount(), 0.0);
 
             // Get the temperature.
             subsubnode = subnode->GetFirstChild("temperature");
-            inf->SetTemperature(readTemperature(*subsubnode));
+            inf->Mixture()->SetTemperature(readTemperature(*subsubnode));
 
             // Get the pressure.
             subsubnode = subnode->GetFirstChild("pressure");
-            inf->SetPressure(readPressure(*subsubnode));
+            inf->Mixture()->SetPressure(readPressure(*subsubnode));
 
             // Fill the inflow Mixture object.
             subnode->GetChildren("component", nodes);
@@ -660,7 +661,7 @@ Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
 
             // Assign the species mole fraction vector 
             // to the reactor inflow mixture.
-            inf->SetFracs(molefracs);
+            inf->Mixture()->SetFracs(molefracs);
             dynamic_cast<PSR*>(reac)->SetInflow(*inf);
         } else {
             throw runtime_error("Inflow conditions must be defined for a PSR "

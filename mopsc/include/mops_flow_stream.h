@@ -79,7 +79,7 @@ public:
 
     // Returns a pointer to the mixture currently occupying
     // the reactor.
-    const Mops::Mixture *const Mixture() const;
+    Mops::Mixture *const Mixture() const;
 
     // Sets the flow stream mixture conditions, if they are
     // not dictated by the inflow.

@@ -48,6 +48,7 @@
 #include "mops_mechanism.h"
 #include "mops_reactor.h"
 #include "mops_reactor_type.h"
+#include "mops_flow_stream.h"
 
 #include <istream>
 
@@ -67,6 +68,9 @@ public:
     // Destructor.
     ~PSR(void); // Default destructor.
 
+    // Operators.
+    PSR &operator=(const PSR &rhs);
+
 
     // RESIDENCE TIME.
 
@@ -79,11 +83,11 @@ public:
 
     // INFLOW CONDITIONS.
 
-    // Returns the mixture which describes the inflow conditions.
-    const Mops::Mixture *const Inflow(void) const;
+    // Returns the flow-stream which describes the inflow conditions.
+    const Mops::FlowStream *const Inflow(void) const;
 
     // Sets the mixture which describes the inflow conditions.
-    void SetInflow(Mops::Mixture &inf);
+    void SetInflow(Mops::FlowStream &inf);
 
 
     // READ/WRITE/COPY FUNCTIONS.
@@ -116,19 +120,22 @@ protected:
         real t,              // Flow time.
         const real *const y, // Solution values.
         real *ydot           // Derivatives to return.
-        );
+        ) const;
 
     // Definition of RHS function for adiabatic energy model.
     virtual void RHS_Adiabatic(
         real t,              // Flow time.
         const real *const y, // Solution values.
         real *ydot           // Derivatives to return.
-        );
+        ) const;
 
 private:
     // PSR variables.
-    real m_restime;          // Residence time.
-    Mops::Mixture *m_inflow; // Inflow mixture.
+    real m_restime; // Residence time.
+
+    // PSR inflow and outflow.
+    Mops::FlowStream *m_in;  // Inflow stream.
+    Mops::FlowStream *m_out; // Outflow stream.
 
     // Precalculated values.
     real m_invrt;    // Inverse residence time.
