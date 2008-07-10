@@ -733,10 +733,10 @@ Sprog::Kinetics::Reaction *const MechanismParser::parseCK_Reaction(const std::st
     }
 
     // Get the reactant stoichiometry and set it in the reaction.
-    parseCK_RxnSpStoich(rxndef.substr(0,ilast_reac), mech, rmui, rmuf, fistb, fisfo, strtb);
+    parseCK_RxnSpStoich(rxndef.substr(0,ilast_reac+1), mech, rmui, rmuf, fistb, fisfo, strtb);
 
     // Get the product stoichiometry and set it in the reaction.
-    parseCK_RxnSpStoich(rxndef.substr(ifirst_prod,ilast_prod-ifirst_prod), 
+    parseCK_RxnSpStoich(rxndef.substr(ifirst_prod,ilast_prod-ifirst_prod+1), 
                         mech, pmui, pmuf, fistb, fisfo, strtb);
 
     // Now we have got the reactants and the products, we must now parse the Arrhenius coefficients.
