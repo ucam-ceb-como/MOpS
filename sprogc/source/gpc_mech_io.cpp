@@ -218,7 +218,7 @@ void MechanismParser::parseCK(std::ifstream &fin,
     mech.SetUnits(SI);
 }
 
-void MechanismParser::parseCK_Elements(std::istream&fin, Sprog::Mechanism &mech, 
+void MechanismParser::parseCK_Elements(std::istream &strin, Sprog::Mechanism &mech, 
                                     Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     char c = '\0';
@@ -229,9 +229,9 @@ void MechanismParser::parseCK_Elements(std::istream&fin, Sprog::Mechanism &mech,
 
     status.Status = BeginParseEl;
 
-    while((status.Status!=End) && (status.Status!=Fail) && (fin.good())) {
+    while((status.Status!=End) && (status.Status!=Fail) && (strin.good())) {
         // Get the next character from the input file.
-        fin.get(c);
+        strin.get(c);
 
         switch(status.Status) {
             case BeginParseEl:
@@ -336,7 +336,7 @@ void MechanismParser::parseCK_Elements(std::istream&fin, Sprog::Mechanism &mech,
     }
 }
 
-void MechanismParser::parseCK_Species(std::istream&fin, 
+void MechanismParser::parseCK_Species(std::istream &strin, 
                                    Sprog::Mechanism &mech, 
                                    Sprog::IO::MechanismParser::CK_STATUS &status)
 {
@@ -347,9 +347,9 @@ void MechanismParser::parseCK_Species(std::istream&fin,
 
     status.Status = BeginParseSp;
 
-    while((status.Status!=End) && (status.Status!=Fail) && (fin.good())) {
+    while((status.Status!=End) && (status.Status!=Fail) && (strin.good())) {
         // Get the next character from the input file.
-        fin.get(c);
+        strin.get(c);
 
         switch(status.Status) {
             case BeginParseSp:
@@ -416,7 +416,7 @@ void MechanismParser::parseCK_Species(std::istream&fin,
 
 // Reads CHEMKIN formatted thermo data for all species in the given mechanism from
 // the supplied file stream.
-void MechanismParser::parseCK_Thermo(std::istream&fin, Sprog::Mechanism &mech, 
+void MechanismParser::parseCK_Thermo(std::istream &strin, Sprog::Mechanism &mech, 
                                   Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     int i;
@@ -435,17 +435,17 @@ void MechanismParser::parseCK_Thermo(std::istream&fin, Sprog::Mechanism &mech,
     tag.resize(200,' ');
 
     // The first line holds the temperature ranges for 2 sets of coefficients.
-    fin.getline(&line[0], 200);
-    while (line[0]=='\0') fin.getline(&line[0], 200);
+    strin.getline(&line[0], 200);
+    while (line[0]=='\0') strin.getline(&line[0], 200);
     tag.clear();
     tag = line;
     trange[0] = cdble(tag.substr(0,10));
     trange[1] = cdble(tag.substr(10,10));
     trange[2] = cdble(tag.substr(20,10));
 
-    while((status.Status!=End) && (status.Status!=Fail) && (fin.good())) {
+    while((status.Status!=End) && (status.Status!=Fail) && (strin.good())) {
         // Get species name line.
-        fin.getline(&line[0], 200);
+        strin.getline(&line[0], 200);
         tag.clear();
         tag = line;
 
@@ -482,7 +482,7 @@ void MechanismParser::parseCK_Thermo(std::istream&fin, Sprog::Mechanism &mech,
                     if (commT == 0) commT = trange[1];
 
                     // Get 2nd line and read thermo coeffs.
-                    fin.getline(&line[0], 200);
+                    strin.getline(&line[0], 200);
                     tag = line;
                     up.Count = 7;
                     up.Params[0] = cdble(tag.substr(0,15));
@@ -492,7 +492,7 @@ void MechanismParser::parseCK_Thermo(std::istream&fin, Sprog::Mechanism &mech,
                     up.Params[4] = cdble(tag.substr(60,15));
 
                     // Get 3rd line and read thermo coeffs.
-                    fin.getline(&line[0], 200);
+                    strin.getline(&line[0], 200);
                     tag = line;
                     up.Params[5] = cdble(tag.substr(0,15));
                     up.Params[6] = cdble(tag.substr(15,15));
@@ -502,7 +502,7 @@ void MechanismParser::parseCK_Thermo(std::istream&fin, Sprog::Mechanism &mech,
                     lp.Params[2] = cdble(tag.substr(60,15));
 
                     // Get 4th line and read thermo coeffs.
-                    fin.getline(&line[0], 200);
+                    strin.getline(&line[0], 200);
                     tag = line;
                     lp.Params[3] = cdble(tag.substr(0,15));
                     lp.Params[4] = cdble(tag.substr(15,15));
@@ -534,9 +534,9 @@ void MechanismParser::parseCK_Thermo(std::istream&fin, Sprog::Mechanism &mech,
                 } else {
                     // Species was not found in the mechanism, so we need to
                     // skip lines to the next species.
-                    fin.getline(&line[0], 200);
-                    fin.getline(&line[0], 200);
-                    fin.getline(&line[0], 200);
+                    strin.getline(&line[0], 200);
+                    strin.getline(&line[0], 200);
+                    strin.getline(&line[0], 200);
                 }
             } else {
                 status.Status = End;
@@ -572,7 +572,7 @@ void MechanismParser::parseCK_Thermo(std::string &filename, Sprog::Mechanism &me
 }
 
 // Reads all the chemical reactions from the CHEMKIN formatted file stream.
-void MechanismParser::parseCK_Reactions(std::istream&fin, Sprog::Mechanism &mech, 
+void MechanismParser::parseCK_Reactions(std::istream &strin, Sprog::Mechanism &mech, 
                                      Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     char c;
@@ -585,9 +585,9 @@ void MechanismParser::parseCK_Reactions(std::istream&fin, Sprog::Mechanism &mech
     tag.clear();
     rxndef.clear();
 
-    while((status.Status!=End) && (status.Status!=Fail) && (fin.good())) {
+    while((status.Status!=End) && (status.Status!=Fail) && (strin.good())) {
         // Get the next character from the input file.
-        fin.get(c);
+        strin.get(c);
 
         switch(status.Status) {
             case BeginParseRxn:
