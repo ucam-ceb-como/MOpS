@@ -221,7 +221,19 @@ void ODE_Solver::Solve(Reactor &reac, real stop_time)
 
     // Solve over time step.
     while (m_time < stop_time) {
-        CVode(m_odewk, stop_time, m_solvec, &m_time, CV_NORMAL_TSTOP);
+        int CVode_error = CVode(m_odewk, stop_time, m_solvec, &m_time, CV_NORMAL_TSTOP);
+        // If no error then this line will quickly skip throwing exception which help to speed up checking
+        if (CVode_error != 0) {
+            switch (CVode_error) {
+                case -4 :
+                    throw invalid_argument("Convergence test failures occurred too many time or occurred with |h| = hmin (Mops, ODE_Solver::Solve).");
+                    break;
+                default :
+                    throw invalid_argument("CVode returns error, please find out the error code and add to report error (Mops, ODE_Solver::Solve).");
+            }
+            //throw invalid_argument(" (Mops, ODE_Solver::Solve).");
+        }
+
         reac.Mixture()->Normalise(); // This should not be required if CVODE solves correctly.
     }
     
