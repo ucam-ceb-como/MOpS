@@ -105,7 +105,7 @@ void MechanismParser::parseCK(std::ifstream &fin,
 {
     char c;
     string line;
-    int i=0;
+    //int i=0;
 
     // Positions in the file stream at the beginning of the elements, species
     // reactions and thermo data.
@@ -115,23 +115,23 @@ void MechanismParser::parseCK(std::ifstream &fin,
     // reactions and thermo data.
     while (fin.good()) {
         fin.get(c);
-        i++;
+        //i++;
         if ((c=='\n') || (c=='\r')) {
             // This is the end of a line.
             line = convertToCaps(line);
             if (line.substr(0,4).compare("ELEM")==0) {
                 // This is the start of the elements.
-                if (iel == 0) iel = (std::streamoff)i;
+                if (iel == 0) iel = fin.tellg();
             } else if (line.substr(0,4).compare("SPEC")==0) {
                 // This is the start of the species.
-                if (isp == 0) isp = (std::streamoff)i;
+                if (isp == 0) isp = fin.tellg();
             } else if (line.substr(0,4).compare("REAC")==0) {
                 // This is the start of the reactions.
                 parseCK_Units(line, status.Scale);
-                if (irxn == 0) irxn = (std::streamoff)i;
+                if (irxn == 0) irxn = fin.tellg();
             } else if (line.substr(0,4).compare("THER")==0) {
                 // This is the start of the thermo data.
-                if (ithrm == 0) ithrm = (std::streamoff)i;
+                if (ithrm == 0) ithrm = fin.tellg();
             }
             line.clear();
 
