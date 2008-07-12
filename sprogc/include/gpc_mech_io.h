@@ -87,18 +87,18 @@ private:
                         CK_STATUS &status);     // Status & parsing information.
 
     // Parse the element data in a CHEMKIN input file.
-    static void parseCK_Elements(std::ifstream &fin,     // File stream.
+    static void parseCK_Elements(std::istream&fin,     // File stream.
                                  Sprog::Mechanism &mech, // Mechanism to receive element information.
                                  CK_STATUS &status);       // Status and parsing information.
 
     // Parse the species data in a CHEMKIN input file (elements must already have been read).
-    static void parseCK_Species(std::ifstream &fin,     // File stream.
+    static void parseCK_Species(std::istream&fin,     // File stream.
                                 Sprog::Mechanism &mech, // Mechanism to receive species information.
                                 CK_STATUS &status);     // Status and parsing information.
 
     // Parse the thermo data from a CHEMKIN input file (elements and species must already have
     // been read).
-    static void parseCK_Thermo(std::ifstream &fin,     // File stream.
+    static void parseCK_Thermo(std::istream&fin,     // File stream.
                                Sprog::Mechanism &mech, // Mechanism to receive thermo data.
                                CK_STATUS &status);     // Status and parsing information.
 
@@ -109,7 +109,7 @@ private:
                                CK_STATUS &status);     // Status and parsing information.
 
     // Parse the reaction data from a CHEMKIN input file.
-    static void parseCK_Reactions(std::ifstream &fin,     // File stream.
+    static void parseCK_Reactions(std::istream&fin,     // File stream.
                                   Sprog::Mechanism &mech, // Mechanism to receive reaction data.
                                   CK_STATUS &status);     // Status and parsing information.
 

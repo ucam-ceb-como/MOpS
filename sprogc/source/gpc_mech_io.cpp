@@ -45,6 +45,7 @@
 #include "gpc_mech.h"
 
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <stdlib.h>
 #include <stdexcept>
@@ -105,60 +106,104 @@ void MechanismParser::parseCK(std::ifstream &fin,
 {
     char c;
     string line;
-    //int i=0;
 
-    // Positions in the file stream at the beginning of the elements, species
-    // reactions and thermo data.
-    streamoff iel=0, isp=0, irxn=0, ithrm=0;
-
-    // Locate in the file stream the starting point of the elements, species
-    // reactions and thermo data.
-    while (fin.good()) {
+    // Convert chemkin file stream to a string and store in chemkinstr
+    string chemkinstr;
+    do {
+        // get a charater to see if file is empty, this is a must.
+        // get function consider \r\n sequence as \n
         fin.get(c);
-        //i++;
-        if ((c=='\n') || (c=='\r')) {
-            // This is the end of a line.
-            line = convertToCaps(line);
-            if (line.substr(0,4).compare("ELEM")==0) {
-                // This is the start of the elements.
-                if (iel == 0) iel = fin.tellg();
-            } else if (line.substr(0,4).compare("SPEC")==0) {
-                // This is the start of the species.
-                if (isp == 0) isp = fin.tellg();
-            } else if (line.substr(0,4).compare("REAC")==0) {
-                // This is the start of the reactions.
-                parseCK_Units(line, status.Scale);
-                if (irxn == 0) irxn = fin.tellg();
-            } else if (line.substr(0,4).compare("THER")==0) {
-                // This is the start of the thermo data.
-                if (ithrm == 0) ithrm = fin.tellg();
-            }
-            line.clear();
-
-            if ((iel!=0) && (isp!=0) && (irxn!=0) && ((ithrm!=0) || (status.ThermoFile!=""))) {
-                break;
-            }
-        } else {
-            // Append character to line.
-            line.append(&c, 1);
+        if (fin.eof()) break;
+        // skiping comment until new line or return character is found
+        if  (c=='!') {
+            do {
+                fin.get(c);
+            } while (!fin.eof() && (c!='\r') && (c!='\n'));
+            if (fin.eof()) break;
         }
+        if (c=='\r') {
+            // replace return character by new line character, if some system doesn't read \r\n as \n
+            c = '\n';
+        } else if (c=='\t') {
+            // replace tab character by a space bar character
+            c = ' ';
+        }
+        chemkinstr.append(1,c);
+        //cout << c ;
+    } while (!fin.eof());
+    // Convert chemkin file string to an istringstream for passing as argument in the other parsers
+    istringstream strin(ios_base::in);
+    strin.str(chemkinstr);
+
+    // Locate in the string stream the starting point of the elements, species
+    // reactions and thermo data. This is hard coded. It is not the best but it does the job
+    // for this specific case.
+    int el_index = 0, sp_index = 0, rt_index = 0, tm_index = 0;
+    string chemkinCapstr = convertToCaps(chemkinstr);
+    el_index = chemkinCapstr.find("ELEMENT", 0);
+    sp_index = chemkinCapstr.find("SPECIES", 0);
+    rt_index = chemkinCapstr.find("REACION", 0);
+    tm_index = chemkinCapstr.find("THERMO", 0);
+    if (el_index == string::npos) {
+        el_index = chemkinCapstr.find("ELEM", 0);
+        if (el_index == string::npos) {
+            throw invalid_argument("ELEM or ELEMENT keyword not found in chemkin input file (Sprogc, MechanismParser::parseCK).");
+        } else {
+            el_index += 4;
+        }
+    } else {
+        el_index += 7;
+    }
+    if (sp_index == string::npos) {
+        sp_index = chemkinCapstr.find("SPEC", 0);
+        if (sp_index == string::npos) {
+            throw invalid_argument("SPEC or SPECIES keyword not found in chemkin input file (Sprogc, MechanismParser::parseCK).");
+        } else {
+            sp_index += 4;
+        }
+    } else {
+        sp_index += 7;
+    }
+    if (rt_index == string::npos) {
+        rt_index = chemkinCapstr.find("REAC", 0);
+        if (rt_index == string::npos) {
+            throw invalid_argument("REAC or REACTION keyword not found in chemkin input file (Sprogc, MechanismParser::parseCK).");
+        } else {
+            rt_index += 4;
+        }
+    } else {
+        rt_index += 7;
+    }
+    if (tm_index == string::npos) {
+        tm_index = chemkinCapstr.find("THER", 0);
+        if (tm_index == string::npos) {
+            // Thermo keywarod is not needed.
+            //throw invalid_argument("THER or THERMO keyword not found in chemkin input file (Sprogc, MechanismParser::parseCK).");
+        } else {
+            tm_index += 4;
+        }
+    } else {
+        tm_index += 6;
     }
 
     // Read the elements.
-    fin.seekg(iel);
-    parseCK_Elements(fin, mech, status);
+    strin.clear();
+    strin.seekg(el_index);
+    parseCK_Elements(strin, mech, status);
     status.ReadElements = true;
 
     // Read the species.
-    fin.seekg(isp);
-    parseCK_Species(fin, mech, status);
+    strin.clear();
+    strin.seekg(sp_index);
+    parseCK_Species(strin, mech, status);
     status.ReadSpecies = true;
 
     // Read the thermo data.
     if (status.ThermoFile == "") {
         // Read thermo data from this file.
-        fin.seekg(ithrm);
-        parseCK_Thermo(fin, mech, status);
+        strin.clear();
+        strin.seekg(tm_index);
+        parseCK_Thermo(strin, mech, status);
     } else {
         // Read thermo data from thermo file.
         parseCK_Thermo(status.ThermoFile, mech, status);
@@ -166,13 +211,14 @@ void MechanismParser::parseCK(std::ifstream &fin,
     status.ReadThermo = true;
 
     // Read the reactions.
-    fin.seekg(irxn);
-    parseCK_Reactions(fin, mech, status);
+    strin.clear();
+    strin.seekg(rt_index);
+    parseCK_Reactions(strin, mech, status);
     mech.BuildStoichXRef();
     mech.SetUnits(SI);
 }
 
-void MechanismParser::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mech, 
+void MechanismParser::parseCK_Elements(std::istream&fin, Sprog::Mechanism &mech, 
                                     Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     char c = '\0';
@@ -290,7 +336,7 @@ void MechanismParser::parseCK_Elements(std::ifstream &fin, Sprog::Mechanism &mec
     }
 }
 
-void MechanismParser::parseCK_Species(std::ifstream &fin, 
+void MechanismParser::parseCK_Species(std::istream&fin, 
                                    Sprog::Mechanism &mech, 
                                    Sprog::IO::MechanismParser::CK_STATUS &status)
 {
@@ -370,7 +416,7 @@ void MechanismParser::parseCK_Species(std::ifstream &fin,
 
 // Reads CHEMKIN formatted thermo data for all species in the given mechanism from
 // the supplied file stream.
-void MechanismParser::parseCK_Thermo(std::ifstream &fin, Sprog::Mechanism &mech, 
+void MechanismParser::parseCK_Thermo(std::istream&fin, Sprog::Mechanism &mech, 
                                   Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     int i;
@@ -526,7 +572,7 @@ void MechanismParser::parseCK_Thermo(std::string &filename, Sprog::Mechanism &me
 }
 
 // Reads all the chemical reactions from the CHEMKIN formatted file stream.
-void MechanismParser::parseCK_Reactions(std::ifstream &fin, Sprog::Mechanism &mech, 
+void MechanismParser::parseCK_Reactions(std::istream&fin, Sprog::Mechanism &mech, 
                                      Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     char c;
