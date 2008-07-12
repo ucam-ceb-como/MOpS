@@ -979,7 +979,7 @@ bool Sprog::IO::MechanismParser::parseCK_RxnAux(const std::string &rxndef,
             vals = "";
             params.clear();
 
-            if (key.compare("DUPLICATE")==0) foundaux = true;
+            if ((key.compare("DUPLICATE")==0) || (key.compare("DUP")==0)) foundaux = true;
             return foundaux;
         }
 
