@@ -223,7 +223,7 @@ void ODE_Solver::Solve(Reactor &reac, real stop_time)
     while (m_time < stop_time) {
         int CVode_error = CVode(m_odewk, stop_time, m_solvec, &m_time, CV_NORMAL_TSTOP);
         // If no error then this line will quickly skip throwing exception which help to speed up checking
-        if (CVode_error != 0) {
+        if (CVode_error < 0) {
             switch (CVode_error) {
                 case -4 :
                     throw invalid_argument("Convergence test failures occurred too many time or occurred with |h| = hmin (Mops, ODE_Solver::Solve).");
