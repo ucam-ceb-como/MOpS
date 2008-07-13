@@ -140,19 +140,19 @@ void MechanismParser::parseCK(std::ifstream &fin,
     // for this specific case.
     int el_index = 0, sp_index = 0, rt_index = 0, tm_index = 0;
     string chemkinCapstr = convertToCaps(chemkinstr);
-    el_index = chemkinCapstr.find("ELEMENT", 0);
+    el_index = chemkinCapstr.find("ELEMENTS", 0);
     sp_index = chemkinCapstr.find("SPECIES", 0);
-    rt_index = chemkinCapstr.find("REACION", 0);
+    rt_index = chemkinCapstr.find("REACIONS", 0);
     tm_index = chemkinCapstr.find("THERMO", 0);
     if (el_index == string::npos) {
         el_index = chemkinCapstr.find("ELEM", 0);
         if (el_index == string::npos) {
-            throw invalid_argument("ELEM or ELEMENT keyword not found in chemkin input file (Sprogc, MechanismParser::parseCK).");
+            throw invalid_argument("ELEM or ELEMENTS keyword not found in chemkin input file (Sprogc, MechanismParser::parseCK).");
         } else {
             el_index += 4;
         }
     } else {
-        el_index += 7;
+        el_index += 8;
     }
     if (sp_index == string::npos) {
         sp_index = chemkinCapstr.find("SPEC", 0);
@@ -167,12 +167,12 @@ void MechanismParser::parseCK(std::ifstream &fin,
     if (rt_index == string::npos) {
         rt_index = chemkinCapstr.find("REAC", 0);
         if (rt_index == string::npos) {
-            throw invalid_argument("REAC or REACTION keyword not found in chemkin input file (Sprogc, MechanismParser::parseCK).");
+            throw invalid_argument("REAC or REACTIONS keyword not found in chemkin input file (Sprogc, MechanismParser::parseCK).");
         } else {
             rt_index += 4;
         }
     } else {
-        rt_index += 7;
+        rt_index += 8;
     }
     if (tm_index == string::npos) {
         tm_index = chemkinCapstr.find("THER", 0);
