@@ -88,7 +88,7 @@ public:
         std::vector<TimeInterval> &times, // Vector of output time intervals.
         Simulator &sim,                   // General settings incl. output settings. 
         Solver &solver,                   // The reactor solver (to set numerical params).
-        const Mechanism &mech             // Mechanism used to define reactor.
+        Mechanism &mech                   // Mechanism used to define reactor.
         );
 
 private:

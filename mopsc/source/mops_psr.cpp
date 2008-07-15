@@ -261,10 +261,10 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot) const
 
     // Calculate mole fraction derivatives.
     for (unsigned int i=0; i!=m_nsp; ++i) {
-        ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) +
+        ydot[i] = ((wdot[i] - (y[i]*wtot)) +
                   // Inflow/Outflow term:
                   (m_in->Mixture()->Density() * m_invrt * 
-                   (m_in->Mixture()->MoleFraction(i) - y[i]));
+                   (m_in->Mixture()->MoleFraction(i) - y[i]))) / y[m_iDens];
     }
 
     // Temperature derivative.
@@ -299,10 +299,10 @@ void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
     ydot[m_iT] = 0.0;
     for (unsigned int i=0; i!=m_nsp; ++i) {
         // Mole fraction derivative.
-        ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) +
-                  // Inflow/outflow term:
+        ydot[i] = ((wdot[i] - (y[i]*wtot)) +
+                  // Inflow/Outflow term:
                   (m_in->Mixture()->Density() * m_invrt * 
-                   (m_in->Mixture()->MoleFraction(i) - y[i]));
+                   (m_in->Mixture()->MoleFraction(i) - y[i]))) / y[m_iDens];
 
         // Temperature derivative.
         ydot[m_iT] += Hs[i] * wdot[i];

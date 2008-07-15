@@ -373,7 +373,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
                                         Mops::Reactor *reac, 
                                         std::vector<TimeInterval> &times,
                                         Simulator &sim, Solver &solver,
-                                        const Mechanism &mech)
+                                        Mechanism &mech)
 {
     CamXML::Document doc;
     const CamXML::Element *root, *node;
@@ -409,6 +409,13 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
         } else {
             throw runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");
+        }
+
+        if (reac->SerialType() == Serial_PSR) {
+            // Enable death process in mechanism.
+            real tau = dynamic_cast<PSR*>(reac)->ResidenceTime();
+            mech.ParticleMech().EnableDeathProcess();
+            mech.ParticleMech().Death()->SetA(1.0/tau);
         }
 
         // TIME INTERVALS.
@@ -489,7 +496,7 @@ void Settings_IO::readGlobalSettings(const CamXML::Element &node,
 
 // Reads the reactor initial settings from the given XML node.
 Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
-                                               const Mechanism &mech)
+                                        const Mechanism &mech)
 {
     Reactor *reac = NULL;
     const CamXML::Element *subnode, *subsubnode;
@@ -671,7 +678,8 @@ Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
         // Read the residence time.
         subnode = node.GetFirstChild("residencetime");
         if (subnode != NULL) {
-            dynamic_cast<PSR*>(reac)->SetResidenceTime(cdble(subnode->Data()));
+            real tau = cdble(subnode->Data());
+            dynamic_cast<PSR*>(reac)->SetResidenceTime(tau);
         }
     }
 
