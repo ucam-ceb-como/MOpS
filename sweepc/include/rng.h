@@ -88,8 +88,8 @@ namespace Sweep
     // From Numerical Recipes, chapter 7.3.
     inline int ignpoi(real mu)
     {
-        static real oldmu=(-1.0), g;
-        real em=0.0, t=0.0, y=0.0, lnmu=0.0, sq=0.0;
+        static real oldmu=(-1.0), g, sq=0.0, lnmu=0.0;
+        real em=0.0, t=0.0, y=0.0;
 
         if (mu<12.0) {
             // Direct method.
