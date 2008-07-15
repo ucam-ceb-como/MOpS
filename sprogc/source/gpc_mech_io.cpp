@@ -105,53 +105,29 @@ void MechanismParser::parseCK(std::ifstream &fin,
                            Sprog::Mechanism &mech, 
                            Sprog::IO::MechanismParser::CK_STATUS &status)
 {
-    //char c;
-    //string line;
+    string cksubstr;
 
     // Convert chemkin file stream to a string and store in chemkinstr
     string chemkinstr = StringFunc::CK_is2str(fin);
-    // Convert chemkin file string to an istringstream for passing as argument in the other parsers
-    istringstream strin(ios_base::in);
 
     // Read the elements.
-    string ck_el_str = StringFunc::extract_CK_elements_str(chemkinstr);
-    if (ck_el_str.find(StringFunc::EL_KEYWORD) != std::string::npos) {
-        ck_el_str.erase(0,StringFunc::EL_KEYWORD.length());
-    } else {
-        ck_el_str.erase(0,StringFunc::EL_KEYWORD.substr(0,4).length());
-    }
-    strin.str(ck_el_str);
-    strin.clear();
-    strin.seekg(0);
-    parseCK_Elements(strin, mech, status);
+    cksubstr = StringFunc::extract_CK_elements_str(chemkinstr);
+    parseCK_Elements(cksubstr, mech, status);
     status.ReadElements = true;
 
     // Read the species.
-    string ck_sp_str = StringFunc::extract_CK_species_str(chemkinstr);
-    if (ck_sp_str.find(StringFunc::SP_KEYWORD) != std::string::npos) {
-        ck_sp_str.erase(0,StringFunc::SP_KEYWORD.length());
-    } else {
-        ck_sp_str.erase(0,StringFunc::SP_KEYWORD.substr(0,4).length());
-    }
-    strin.str(ck_sp_str);
-    strin.clear();
-    strin.seekg(0);
-    parseCK_Species(strin, mech, status);
+    cksubstr = StringFunc::extract_CK_species_str(chemkinstr);
+    parseCK_Species(cksubstr, mech, status);
     status.ReadSpecies = true;
 
     // Read the thermo data.
     if (status.ThermoFile == "") {
-        // Read thermo data from this file.
-        string ck_tm_str = StringFunc::extract_CK_thermo_str(chemkinstr);
-        if (ck_tm_str.find(StringFunc::TM_KEYWORD) != std::string::npos) {
-            ck_tm_str.erase(0,StringFunc::TM_KEYWORD.length());
-        } else {
-            ck_tm_str.erase(0,StringFunc::TM_KEYWORD.substr(0,4).length());
-        }
-        strin.str(ck_tm_str);
-        strin.clear();
-        strin.seekg(0);
-        parseCK_Thermo(strin, mech, status);
+        // Read thermo data from this file. // This could be bugs
+        cksubstr = StringFunc::extract_CK_thermo_str(chemkinstr);
+        istringstream strin(ios_base::in);
+        StringFunc::remove_CK_keyword(cksubstr, StringFunc::TM_KEYWORD);
+        strin.str(cksubstr);
+        parseCK_Thermo(cksubstr, mech, status);
     } else {
         // Read thermo data from thermo file.
         parseCK_Thermo(status.ThermoFile, mech, status);
@@ -159,26 +135,21 @@ void MechanismParser::parseCK(std::ifstream &fin,
     status.ReadThermo = true;
 
     // Read the reactions.
-    string ck_rt_str = StringFunc::extract_CK_reactions_str(chemkinstr);
-    if (ck_rt_str.find(StringFunc::RT_KEYWORD) != std::string::npos) {
-        ck_rt_str.erase(0,StringFunc::RT_KEYWORD.length());
-    } else {
-        ck_rt_str.erase(0,StringFunc::RT_KEYWORD.substr(0,4).length());
-    }
-    strin.str(ck_rt_str);
-    strin.clear();
-    strin.seekg(0);
-    parseCK_Reactions(strin, mech, status);
+    cksubstr = StringFunc::extract_CK_reactions_str(chemkinstr);
+    parseCK_Reactions(cksubstr, mech, status);
     mech.BuildStoichXRef();
     mech.SetUnits(SI);
 }
 
-void MechanismParser::parseCK_Elements(std::istream &strin, Sprog::Mechanism &mech, 
+void MechanismParser::parseCK_Elements(std::string &ck_el_str, Sprog::Mechanism &mech, 
                                     Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     char c = '\0';
     string tag;
     real val = 0.0;
+    istringstream strin(ios_base::in);
+    StringFunc::remove_CK_keyword(ck_el_str, StringFunc::EL_KEYWORD);
+    strin.str(ck_el_str);
 
     Element * last_el = NULL;
 
@@ -291,12 +262,15 @@ void MechanismParser::parseCK_Elements(std::istream &strin, Sprog::Mechanism &me
     }
 }
 
-void MechanismParser::parseCK_Species(std::istream &strin, 
+void MechanismParser::parseCK_Species(std::string &ck_sp_str, 
                                    Sprog::Mechanism &mech, 
                                    Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     char c;
     string tag;
+    istringstream strin(ios_base::in);
+    StringFunc::remove_CK_keyword(ck_sp_str, StringFunc::SP_KEYWORD);
+    strin.str(ck_sp_str);
 
     Species * last_sp;
 
@@ -377,6 +351,9 @@ void MechanismParser::parseCK_Thermo(std::istream &strin, Sprog::Mechanism &mech
     int i;
     char c, line[200];
     string tag, spname;
+    //istringstream strin(ios_base::in);
+    //StringFunc::remove_all_CK_keywords(ck_tm_str);
+    //strin.str(ck_tm_str);
 
     real trange[3], lowT, highT, commT;
     Thermo::THERMO_PARAMS up; // Coeffs for upper T interval.
@@ -527,12 +504,15 @@ void MechanismParser::parseCK_Thermo(std::string &filename, Sprog::Mechanism &me
 }
 
 // Reads all the chemical reactions from the CHEMKIN formatted file stream.
-void MechanismParser::parseCK_Reactions(std::istream &strin, Sprog::Mechanism &mech, 
+void MechanismParser::parseCK_Reactions(std::string &ck_rt_str, Sprog::Mechanism &mech, 
                                      Sprog::IO::MechanismParser::CK_STATUS &status)
 {
     char c;
     string tag, rxndef;
     bool fcont = false; //, fdup = false;
+    istringstream strin(ios_base::in);
+    StringFunc::remove_CK_keyword(ck_rt_str, StringFunc::RT_KEYWORD);
+    strin.str(ck_rt_str);
 
     Kinetics::Reaction * last_rxn = NULL;
 

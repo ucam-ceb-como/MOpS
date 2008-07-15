@@ -186,6 +186,18 @@ namespace Sprog {
                 isin.seekg (current_pos);
                 return chemkinstr;
             }
+
+            void remove_CK_keyword(std::string &ckstr, const std::string &key) {
+                unsigned int pos = ckstr.find(key);
+                if (pos != std::string::npos) {
+                    ckstr.erase(pos,key.length());
+                } else {
+                    pos = ckstr.find(key.substr(0,4));
+                    if (pos != std::string::npos) {
+                        ckstr.erase(pos,key.substr(0,4).length());
+                    }
+                }
+            }
         }
     }
 }

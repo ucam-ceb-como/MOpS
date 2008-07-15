@@ -76,6 +76,8 @@ namespace Sprog {
             // convert a CHEMKIN file istream into a string with all comments removed.
             // Tab and return character are replaced by space and new line character
             std::string CK_is2str(std::istream &isin);
+            // remove specific keyword from part of chemkin definition
+            void remove_CK_keyword(std::string &ckstr, const std::string &key);
         }
     }
 }
