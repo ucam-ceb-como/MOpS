@@ -277,6 +277,9 @@ real Coagulation::RateTerms(const ParticleCache &data, real n, real sqrtT,
     *(++iterm) = n_1 * d2m_1_2  * c / vol;
     *(++iterm) = (m_1_2 * d2 - d2m_1_2) * c / vol;
 
+    // Return iterator to next term after the coagulation terms.
+    ++iterm;
+
     // Sum up total coagulation rates for different regimes.
     real sf = *(isf) + *(isf+1) + *(isf+2) + *(isf+3);
     real fm = *(ifm) + *(ifm+1);

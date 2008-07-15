@@ -54,7 +54,7 @@ using namespace std;
 
 // Default constructor.
 Mechanism::Mechanism(void)
-: m_anydeferred(false), m_coag(NULL), m_icoag(-1), m_termcount(0)
+: m_anydeferred(false), m_coag(NULL), m_death(NULL), m_icoag(-1), m_termcount(0)
 {
 }
 
@@ -101,7 +101,10 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         }
 
         // Copy coagulation process.
-        m_coag = rhs.m_coag->Clone();
+        if (rhs.m_coag) m_coag = rhs.m_coag->Clone();
+
+        // Copy death process.
+        if (rhs.m_death) m_death = rhs.m_death->Clone();
 
         // Copy process counters.
         m_proccount.assign(rhs.m_proccount.begin(), rhs.m_proccount.end());
@@ -213,6 +216,31 @@ void Mechanism::AddCoagulation()
 }
 
 
+// DEATH PROCESS.
+
+// Returns a pointer to the death process.
+DeathProcess *const Mechanism::Death(void) const {return m_death;}
+
+// Enables the death process.
+void Mechanism::EnableDeathProcess(void)
+{
+    if (!m_death) {
+        m_death = new DeathProcess(*this);
+        m_termcount += m_death->TermCount();
+        m_proccount.resize(m_termcount, 0);
+        m_fictcount.resize(m_termcount, 0);
+    }
+}
+
+// Disables the death process.
+void Mechanism::DisableDeathProcess(void)
+{
+    if (m_death) m_termcount -= m_death->TermCount();
+    delete m_death; 
+    m_death = NULL;
+}
+
+
 // PROCESS INFORMATION.
 
 // Returns the number of processes (including 
@@ -221,6 +249,7 @@ unsigned int Mechanism::ProcessCount(void) const
 {
     unsigned int n = m_inceptions.size() + m_processes.size();
     if (m_coag != NULL) ++n;
+    if (m_death != NULL) ++n;
     return n;
 }
 
@@ -278,6 +307,11 @@ real Mechanism::CalcRates(real t, const Cell &sys, fvector &rates) const
         sum += m_coag->RateTerms(t, sys, iterm);
     }
 
+    // Get death process rate.
+    if (m_death != NULL) {
+        sum += m_death->RateTerms(t, sys, iterm);
+    }
+
     return sum;
 }
 
@@ -318,6 +352,11 @@ real Mechanism::CalcJumpRates(real t, const Cell &sys, fvector &rates) const
     // Get coagulation rate.
     if (m_coag != NULL) {
         sum += m_coag->RateTerms(t, sys, iterm);
+    } 
+
+    // Get death process rate.
+    if (m_death != NULL) {
+        sum += m_death->RateTerms(t, sys, iterm);
     }
 
     return sum;
@@ -364,6 +403,11 @@ real Mechanism::CalcJumpRates(real t, const Sprog::Thermo::IdealGas &gas,
     // Get coagulation rate.
     if (m_coag != NULL) {
         sum += m_coag->RateTerms(t, gas, sys, iterm);
+    }
+
+    // Get death process rate.
+    if (m_death != NULL) {
+        sum += m_death->RateTerms(t, sys, iterm);
     }
 
     return sum;
@@ -459,7 +503,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys) const
         // This is another process. 
         PartProcPtrVector::const_iterator ip;
         for(ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
-            if ((unsigned)j < (*ip)->TermCount()) {
+            if (j < (int)(*ip)->TermCount()) {
                 // Do the process.
                 if ((*ip)->Perform(t, sys, j) == 0) {
                     m_proccount[i] += 1;
@@ -473,12 +517,34 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys) const
         }
 
         // We are here because the process was neither an inception
-        // nor a single particle process.  It is therefore a 
-        // coagulation process.
-        if (m_coag->Perform(t, sys, j) == 0) {
-            m_proccount[i] += 1;
-        } else {
-            m_fictcount[i] += 1;
+        // nor a single particle process.  It is therefore either a 
+        // coagulation or a death process.
+        if (m_coag) {
+            // Check if coagulation process.
+            if (j < (int)m_coag->TermCount()) {
+                // This is the coagulation process.
+                if (m_coag->Perform(t, sys, j) == 0) {
+                    m_proccount[i] += 1;
+                } else {
+                    m_fictcount[i] += 1;
+                }
+            } else {
+                // This must be the death process.
+                j -= m_coag->TermCount();
+                if (m_death && (m_death->Perform(t, sys, j) == 0)) {
+                    m_proccount[i] += 1;
+                } else {
+                    m_fictcount[i] += 1;
+                }
+            }
+        } else if (m_death) {
+            // The coagulation process is undefined, so it 
+            // must be the death process
+            if (m_death->Perform(t, sys, j) == 0) {
+                m_proccount[i] += 1;
+            } else {
+                m_fictcount[i] += 1;
+            }
         }
     }
 }
@@ -654,6 +720,14 @@ void Mechanism::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
+        // Write death process.
+        if (m_death != NULL) {
+            out.write((char*)&trueval, sizeof(trueval));
+            ProcessFactory::Write(*m_death, out);
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
         // Write index of first coag process.
         int m = (int)m_icoag;
         out.write((char*)&m, sizeof(m));
@@ -717,6 +791,12 @@ void Mechanism::Deserialize(std::istream &in)
                     m_coag = ProcessFactory::ReadCoag(in, *this);
                 }
 
+                // Read death process.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n == 1) {
+                    m_death = ProcessFactory::ReadDeath(in, *this);
+                }
+
                 // Read index of first coag process.
                 in.read(reinterpret_cast<char*>(&m), sizeof(m));
                 m_icoag = m;
@@ -760,8 +840,11 @@ void Mechanism::releaseMem(void)
     m_processes.clear();
 
     // Delete coagulation process.
-    delete m_coag;
+    delete m_coag; m_coag = NULL;
     m_icoag = -1;
+
+    // Delete death process.
+    delete m_death; m_death = NULL;
 
     m_anydeferred = false;
     m_termcount = 0;

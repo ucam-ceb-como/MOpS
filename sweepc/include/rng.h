@@ -7,6 +7,7 @@
 
   File purpose:
     Random number generators.  Uses the Mersenne Twister generator.
+    Uses several algorithms from the Numerical Recipes in C++ book.
 
   Licence:
     This file is part of "sweepc".
@@ -65,6 +66,7 @@ namespace Sweep
         return (int)((rnd() * (real)(max-min))+0.5) + min;
     };
 
+    // Natural log of the gamma function.
     // From Numerical Recipes, chapter 6.1.
     inline real gammln(real xx)
     {

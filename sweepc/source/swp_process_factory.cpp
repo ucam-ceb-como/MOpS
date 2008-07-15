@@ -171,7 +171,7 @@ ParticleProcess *const ProcessFactory::ReadPartProcess(std::istream &in, const S
             case ActSiteRxn_ID:
                 return new ActSiteReaction(in, mech);
             default:
-                throw runtime_error("Invalid inception type read from "
+                throw runtime_error("Invalid particle process type read from "
                                     "input stream (Sweep, "
                                     "ProcessFactory::ReadPartProcess).");
         }
@@ -202,9 +202,41 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in, const Sweep::Mecha
                 proc = new Coagulation(in, mech);
                 break;
             default:
-                throw runtime_error("Invalid inception type read from "
+                throw runtime_error("Invalid coagulation type read from "
                                     "input stream (Sweep, "
                                     "ProcessFactory::ReadCoag).");
+        }
+
+        return proc;
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, ProcessFactory::ReadInception).");
+    }
+}
+
+// Reads a death process from a binary stream.  The first item read
+// is the process ID which tells the ModelFactory what type
+// of death process to read.
+DeathProcess *const ProcessFactory::ReadDeath(std::istream &in, 
+                                              const Sweep::Mechanism &mech)
+{
+    if (in.good()) {
+        DeathProcess *proc = NULL;
+
+        // Read the process type from the input stream.
+        unsigned int type;
+        in.read((char*)&type, sizeof(type));
+
+        // Read an inception of this particular type.  This will throw
+        // an exception if the type is invalid.
+        switch ((ProcessType)type) {
+            case Death_ID:
+                proc = new DeathProcess(in, mech);
+                break;
+            default:
+                throw runtime_error("Invalid death process type read from "
+                                    "input stream (Sweep, "
+                                    "ProcessFactory::ReadDeath).");
         }
 
         return proc;

@@ -96,6 +96,8 @@
 #include "swp_condensation.h"
 // Coagulation process.
 #include "swp_coagulation.h"
+// Other processes.
+#include "swp_death_process.h"
 
 // Chemical models.
 #include "swp_actsites_type.h"

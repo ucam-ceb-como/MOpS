@@ -51,6 +51,7 @@
 #include "swp_inception.h"
 #include "swp_particle_process.h"
 #include "swp_coagulation.h"
+#include "swp_death_process.h"
 #include <iostream>
 
 namespace Sweep
@@ -99,6 +100,14 @@ public:
     // is the coagulation ID which tells the ModelFactory what type
     // of coagulation to read.
     static Coagulation *const ReadCoag(
+        std::istream &in,            // Input stream.
+        const Sweep::Mechanism &mech // Parent mechanism.
+        );
+
+    // Reads a death process from a binary stream.  The first item read
+    // is the process ID which tells the ModelFactory what type
+    // of death process to read.
+    static DeathProcess *const ReadDeath(
         std::istream &in,            // Input stream.
         const Sweep::Mechanism &mech // Parent mechanism.
         );

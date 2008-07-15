@@ -51,14 +51,20 @@ namespace Processes
 {
     enum ProcessType {
         // Basic processes.
-        Inception_ID=0,       // Inception process.
-        Coagulation_ID=1,     // Coagulation process.
-        SurfaceReaction_ID=2, // Surface reaction.
-        Condensation_ID=3,    // Condensation process.
-        ActSiteRxn_ID=4,      // Active-sites surface reaction.
+        Inception_ID=0,         // Inception process.
+        Coagulation_ID=1,       // Coagulation process.
+        Death_ID=2,             // Death process.
+        Birth_ID=3,             // Birth process.
+
+        // Surface reactions.
+        SurfaceReaction_ID=100, // Surface reaction.
+        ActSiteRxn_ID=101,      // Active-sites surface reaction.
+
+        // Condensation processes.
+        Condensation_ID=200,    // Condensation process.
 
         // ARSSC model processes.
-        ARSSC_Inception_ID=1000  // ARS-SC inception process.
+        ARSSC_Inception_ID=1000 // ARS-SC inception process.
     };
 };
 };

@@ -261,6 +261,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\source\swp_death_process.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_inception.cpp"
 					>
 				</File>
@@ -496,6 +500,10 @@
 				</File>
 				<File
 					RelativePath=".\include\swp_condensation.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_death_process.h"
 					>
 				</File>
 				<File
