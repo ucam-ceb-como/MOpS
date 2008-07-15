@@ -43,6 +43,7 @@
 #include "comostrings.h"
 #include "gpc_mech_io.h"
 #include "gpc_mech.h"
+#include "gpc_string.h"
 
 #include <fstream>
 #include <sstream>
@@ -73,7 +74,7 @@ void MechanismParser::ReadChemkin(const std::string &filename,
         status.ReadReactions = false;
         status.ReadThermo = false;
         status.ThermoFile = thermofile;
-        status.Scale = ARRHENIUS(1.0, 1.0, 1.0);
+        status.Scale = ARRHENIUS(1.0, 1.0, 4.184E7);
 
         // Clear current mechanism.
         mech.Clear();
@@ -104,105 +105,52 @@ void MechanismParser::parseCK(std::ifstream &fin,
                            Sprog::Mechanism &mech, 
                            Sprog::IO::MechanismParser::CK_STATUS &status)
 {
-    char c;
-    string line;
+    //char c;
+    //string line;
 
     // Convert chemkin file stream to a string and store in chemkinstr
-    string chemkinstr;
-    do {
-        // get a charater to see if file is empty, this is a must.
-        // get function consider \r\n sequence as \n
-        fin.get(c);
-        if (fin.eof()) break;
-        // skiping comment until new line or return character is found
-        if  (c=='!') {
-            do {
-                fin.get(c);
-            } while (!fin.eof() && (c!='\r') && (c!='\n'));
-            if (fin.eof()) break;
-        }
-        if (c=='\r') {
-            // replace return character by new line character, if some system doesn't read \r\n as \n
-            c = '\n';
-        } else if (c=='\t') {
-            // replace tab character by a space bar character
-            c = ' ';
-        }
-        chemkinstr.append(1,c);
-        //cout << c ;
-    } while (!fin.eof());
+    string chemkinstr = StringFunc::CK_is2str(fin);
     // Convert chemkin file string to an istringstream for passing as argument in the other parsers
     istringstream strin(ios_base::in);
-    strin.str(chemkinstr);
-
-    // Locate in the string stream the starting point of the elements, species
-    // reactions and thermo data. This is hard coded. It is not the best but it does the job
-    // for this specific case.
-    int el_index = 0, sp_index = 0, rt_index = 0, tm_index = 0;
-    string chemkinCapstr = convertToCaps(chemkinstr);
-    el_index = chemkinCapstr.find("ELEMENTS", 0);
-    sp_index = chemkinCapstr.find("SPECIES", 0);
-    rt_index = chemkinCapstr.find("REACIONS", 0);
-    tm_index = chemkinCapstr.find("THERMO", 0);
-    if (el_index == string::npos) {
-        el_index = chemkinCapstr.find("ELEM", 0);
-        if (el_index == string::npos) {
-            throw invalid_argument("ELEM or ELEMENTS keyword not found in chemkin input file (Sprogc, MechanismParser::parseCK).");
-        } else {
-            el_index += 4;
-        }
-    } else {
-        el_index += 8;
-    }
-    if (sp_index == string::npos) {
-        sp_index = chemkinCapstr.find("SPEC", 0);
-        if (sp_index == string::npos) {
-            throw invalid_argument("SPEC or SPECIES keyword not found in chemkin input file (Sprogc, MechanismParser::parseCK).");
-        } else {
-            sp_index += 4;
-        }
-    } else {
-        sp_index += 7;
-    }
-    if (rt_index == string::npos) {
-        rt_index = chemkinCapstr.find("REAC", 0);
-        if (rt_index == string::npos) {
-            throw invalid_argument("REAC or REACTIONS keyword not found in chemkin input file (Sprogc, MechanismParser::parseCK).");
-        } else {
-            rt_index += 4;
-        }
-    } else {
-        rt_index += 8;
-    }
-    if (tm_index == string::npos) {
-        tm_index = chemkinCapstr.find("THER", 0);
-        if (tm_index == string::npos) {
-            // Thermo keywarod is not needed.
-            //throw invalid_argument("THER or THERMO keyword not found in chemkin input file (Sprogc, MechanismParser::parseCK).");
-        } else {
-            tm_index += 4;
-        }
-    } else {
-        tm_index += 6;
-    }
 
     // Read the elements.
+    string ck_el_str = StringFunc::extract_CK_elements_str(chemkinstr);
+    if (ck_el_str.find(StringFunc::EL_KEYWORD) != std::string::npos) {
+        ck_el_str.erase(0,StringFunc::EL_KEYWORD.length());
+    } else {
+        ck_el_str.erase(0,StringFunc::EL_KEYWORD.substr(0,4).length());
+    }
+    strin.str(ck_el_str);
     strin.clear();
-    strin.seekg(el_index);
+    strin.seekg(0);
     parseCK_Elements(strin, mech, status);
     status.ReadElements = true;
 
     // Read the species.
+    string ck_sp_str = StringFunc::extract_CK_species_str(chemkinstr);
+    if (ck_sp_str.find(StringFunc::SP_KEYWORD) != std::string::npos) {
+        ck_sp_str.erase(0,StringFunc::SP_KEYWORD.length());
+    } else {
+        ck_sp_str.erase(0,StringFunc::SP_KEYWORD.substr(0,4).length());
+    }
+    strin.str(ck_sp_str);
     strin.clear();
-    strin.seekg(sp_index);
+    strin.seekg(0);
     parseCK_Species(strin, mech, status);
     status.ReadSpecies = true;
 
     // Read the thermo data.
     if (status.ThermoFile == "") {
         // Read thermo data from this file.
+        string ck_tm_str = StringFunc::extract_CK_thermo_str(chemkinstr);
+        if (ck_tm_str.find(StringFunc::TM_KEYWORD) != std::string::npos) {
+            ck_tm_str.erase(0,StringFunc::TM_KEYWORD.length());
+        } else {
+            ck_tm_str.erase(0,StringFunc::TM_KEYWORD.substr(0,4).length());
+        }
+        strin.str(ck_tm_str);
         strin.clear();
-        strin.seekg(tm_index);
+        strin.seekg(0);
         parseCK_Thermo(strin, mech, status);
     } else {
         // Read thermo data from thermo file.
@@ -211,8 +159,15 @@ void MechanismParser::parseCK(std::ifstream &fin,
     status.ReadThermo = true;
 
     // Read the reactions.
+    string ck_rt_str = StringFunc::extract_CK_reactions_str(chemkinstr);
+    if (ck_rt_str.find(StringFunc::RT_KEYWORD) != std::string::npos) {
+        ck_rt_str.erase(0,StringFunc::RT_KEYWORD.length());
+    } else {
+        ck_rt_str.erase(0,StringFunc::RT_KEYWORD.substr(0,4).length());
+    }
+    strin.str(ck_rt_str);
     strin.clear();
-    strin.seekg(rt_index);
+    strin.seekg(0);
     parseCK_Reactions(strin, mech, status);
     mech.BuildStoichXRef();
     mech.SetUnits(SI);
