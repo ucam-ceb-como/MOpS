@@ -46,6 +46,7 @@
 #include "gpc_stoich.h"
 #include <cmath>
 #include <stdexcept>
+#include <memory.h>
 
 using namespace Sprog;
 using namespace Sprog::Kinetics;
