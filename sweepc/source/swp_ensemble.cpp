@@ -123,6 +123,7 @@ Ensemble &Ensemble::operator=(const Sweep::Ensemble &rhs)
             m_scale      = rhs.m_scale;
             m_contfactor = rhs.m_contfactor;
             // Doubling.
+            m_maxcount   = rhs.m_maxcount;
             m_ndble      = rhs.m_ndble;
             m_dbleactive = rhs.m_dbleactive;
             m_dblecutoff = rhs.m_dblecutoff;
@@ -208,10 +209,11 @@ void Ensemble::Initialise(unsigned int capacity, const Sweep::ParticleModel &mod
     m_contfactor = (real)(m_capacity-1) / (real)(m_capacity);
 
     // Initialise doubling.
+    m_maxcount   = 0;
     m_ndble      = 0;
     m_dbleon     = true;
     m_dbleactive = false;
-    m_dblecutoff = 3 * m_capacity / 4;
+    m_dblecutoff = (int)(3.0 * (real)m_capacity / 4.0);
     m_dblelimit  = m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
 }
@@ -293,6 +295,8 @@ int Ensemble::Add(Particle &sp)
         }
         ascendingRecalc(j);
     }
+
+    m_maxcount = max(m_maxcount, m_count);
 
     return i;
 }
@@ -686,6 +690,14 @@ void Ensemble::dble()
     // list and changes the scaling factor to keep it consistent.  Once the
     // ensemble is back above half full, the routine updates the binary tree.
 
+    // As an additional check, in case the maximum count did not reach 
+    // the required threshold (75%), we check for a 20% reduction from
+    // the maximum achieved particle count, assuming that this is statistically
+    // significant.
+    m_dbleactive = m_dbleactive || 
+                   ((m_maxcount >= (unsigned int)(0.1*(real)m_capacity)) && 
+                    (m_count <= (unsigned int)(0.8*(real)m_maxcount)));
+
     // Check that doubling is on and the activation condition has been met.
     if (m_dbleon && m_dbleactive) {
         Particle* sp;
@@ -724,6 +736,8 @@ void Ensemble::dble()
             m_ndble++;
             n *= 2;
         }
+
+        m_maxcount = max(m_maxcount, m_count);
     }
 }
 
@@ -893,6 +907,7 @@ void Ensemble::init(void)
     m_ncont      = 0;
 
     // Doubling algorithm.
+    m_maxcount   = 0;
     m_ndble      = 0;
     m_dbleactive = false;
     m_dblecutoff = 0;

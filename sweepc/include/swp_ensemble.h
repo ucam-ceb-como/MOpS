@@ -271,6 +271,7 @@ private:
     unsigned int m_ncont;    // Number of ensemble contractions that have occurred.
 
     // DOUBLING ALGORITHM VARIABLES.
+    unsigned int m_maxcount;   // The maximum particle count reached by the ensemble.
     unsigned int m_ndble;      // Number of ensemble doublings that have occurred.
     bool m_dbleactive;         // Is doubling active or not.  Condition is to reach cutoff (see below).
     unsigned int m_dblecutoff; // Min. particle count at which doubling is activated.
