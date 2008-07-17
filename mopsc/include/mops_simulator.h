@@ -257,6 +257,17 @@ private:
     // Writes tracked particles to the binary output file.
     void outputPartTrack(const Reactor &r) const;
     
+    // Writes the gas-phase reaction rates-of-progress and
+    // the species molar production rates due to gas-phase
+    // reactions to the binary output file.
+    void outputGasRxnRates(const Reactor &r) const;
+
+    // Writes the particle process rates and the molar production
+    // rates for each species due to particle processes for the
+    // given reactor to the binary output file.
+    void outputPartRxnRates(const Reactor &r) const;
+
+
     // CONSOLE OUTPUT.
 
     // Sets up console output using the given mechanism as a template.
@@ -317,8 +328,36 @@ private:
     static void readParticleDataPoint(
         std::istream &in,             // Input stream.
         const Sweep::Mechanism &mech, // Chemical mechanism.
-        fvector &sum,                 // Sums of chemistry data.
+        fvector &sum,                 // Sums of particle stats data.
         fvector &sumsqr,              // Sums of the squares.
+        bool calcsqrs = false         // Set =true to also calculate sums of squares.
+        );
+
+    // Reads a gasp-phase reaction rates stats data point from the binary file.
+    // To allow the averages and confidence intervals to be calculated
+    // the data point is added to a vector of sums, and the squares are
+    // added to the vector sumsqr if necessary.
+    static void readGasRxnDataPoint(
+        std::istream &in,             // Input stream.
+        const Mops::Mechanism &mech,  // Particle mechanism.
+        fvector &rates_sum,           // Sums of reaction rates.
+        fvector &rates_sumsqr,        // Sums of the squares of reaction rates.
+        fvector &wdot_sum,            // Sums of species prod. rates.
+        fvector &wdot_sumsqr,         // Sums of the squares of species prod. rates.
+        bool calcsqrs = false         // Set =true to also calculate sums of squares.
+        );
+
+    // Reads a particle process rates stats data point from the binary file.
+    // To allow the averages and confidence intervals to be calculated
+    // the data point is added to a vector of sums, and the squares are
+    // added to the vector sumsqr if necessary.
+    static void readPartRxnDataPoint(
+        std::istream &in,             // Input stream.
+        const Sweep::Mechanism &mech, // Particle mechanism.
+        fvector &rates_sum,           // Sums of process rates.
+        fvector &rates_sumsqr,        // Sums of the squares of process rates.
+        fvector &wdot_sum,            // Sums of species prod. rates.
+        fvector &wdot_sumsqr,         // Sums of the squares of species prod. rates.
         bool calcsqrs = false         // Set =true to also calculate sums of squares.
         );
 
@@ -388,6 +427,33 @@ private:
         const Mechanism &mech,           // Mechanism defining particle ensemble.
         const timevector &times,         // Output time profile.
         std::vector<fvector> &avg,       // Vector of gas-phase time points.
+        const std::vector<fvector> &err  // Vector of confidence intervals.
+        );
+
+    // Writes gas-phase reaction rates profile to a CSV file.
+    static void writeGasRxnCSV(
+        const std::string &filename,     // Output file name (incl. extension).
+        const Mechanism &mech,           // Mechanism defining kinetics.
+        const timevector &times,         // Output time profile.
+        std::vector<fvector> &avg,       // Vector of gas-phase reaction time points.
+        const std::vector<fvector> &err  // Vector of confidence intervals.
+        );
+
+    // Writes molar prod. rates profile to a CSV file.
+    static void writeProdRatesCSV(
+        const std::string &filename,     // Output file name (incl. extension).
+        const Mechanism &mech,           // Mechanism defining kinetics.
+        const timevector &times,         // Output time profile.
+        std::vector<fvector> &avg,       // Vector of molar prod. rate time points.
+        const std::vector<fvector> &err  // Vector of confidence intervals.
+        );
+
+    // Writes particle process rates profile to a CSV file.
+    static void writePartProcCSV(
+        const std::string &filename,     // Output file name (incl. extension).
+        const Sweep::Mechanism &mech,    // Mechanism defining particle processes.
+        const timevector &times,         // Output time profile.
+        std::vector<fvector> &avg,       // Vector of process rate time points.
         const std::vector<fvector> &err  // Vector of confidence intervals.
         );
 

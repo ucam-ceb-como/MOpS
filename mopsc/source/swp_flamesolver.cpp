@@ -239,7 +239,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
             linInterpGas(t, m_gasprof, *r.Mixture());
 
             // Get the process jump rates (and the total rate).
-            jrate = mech.CalcJumpRates(t, *r.Mixture(), *r.Mixture(), rates);
+            jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), rates);
 
             // Calculate the splitting end time.
             tsplit = calcSplitTime(t, tstop, jrate, r.Mixture()->ParticleCount(), dtg);
@@ -255,7 +255,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
             linInterpGas(t, m_gasprof, *r.Mixture());
 
             // Calculate jump rates.
-            jrate = mech.CalcJumpRates(t, *r.Mixture(), *r.Mixture(), rates);
+            jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), rates);
 
             // Perform time step.
             dt = timeStep(t, *r.Mixture(), mech, rates, jrate);
