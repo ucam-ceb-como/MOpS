@@ -1476,22 +1476,47 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 {
     Reactor *r = NULL;
     unsigned int step = 0;
-    Sweep::Stats::EnsembleStats stats(mech.ParticleMech());
     fvector psl;
+    vector<fvector> ppsl;
 
-    // Build header row for CSV output files.
+    // Get reference to the particle mechanism.
+    const Sweep::Mechanism &pmech = mech.ParticleMech();
+
+    // Create an ensemble stats object.
+    Sweep::Stats::EnsembleStats stats(pmech);
+
+    // Build header row for PSL CSV output files.
     vector<string> header;
     stats.PSL_Names(header);
 
+    // Build header row for primary-PSL CSV output files.
+    vector<string> priheader;
+    if (stats.GeneratesPPSL()) {
+        stats.PPSL_Names(priheader);
+    }
+
     // Open output files for all PSL save points.  Remember to
     // write the header row as well.
-    vector<CSV_IO*> out(times.size());
+    vector<CSV_IO*> out(times.size(), NULL);
     for (unsigned int i=0; i!=times.size(); ++i) {
         real t = times[i].EndTime();
         out[i] = new CSV_IO();
         out[i]->Open(m_output_filename + "-psl(" +
                     cstr(t) + "s).csv", true);
         out[i]->Write(header);
+    }
+
+    // Open output files for all primary-PSL save points.  Remember to
+    // write the header row as well.
+    vector<CSV_IO*> priout(times.size(), NULL);
+    if (stats.GeneratesPPSL()) {
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            real t = times[i].EndTime();
+            priout[i] = new CSV_IO();
+            priout[i]->Open(m_output_filename + "-pri-psl(" +
+                            cstr(t) + "s).csv", true);
+            priout[i]->Write(priheader);
+        }
     }
 
     // Loop over all time intervals.
@@ -1515,6 +1540,16 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                               psl, 1.0/(r->Mixture()->SampleVolume()*scale));
                     // Output particle PSL to CSV file.
                     out[i]->Write(psl);
+
+                    // Get primary-PSL.
+                    if (stats.GeneratesPPSL()) {
+                        stats.PPSL(r->Mixture()->Particles(), j, times[i].EndTime(), 
+                                   ppsl, 1.0/(r->Mixture()->SampleVolume()*scale));
+                        // Output primary-PSL to CSV file.
+                        for (unsigned int k=0; k!=ppsl.size(); ++k) {
+                            priout[i]->Write(ppsl[k]);
+                        }
+                    }
                 }
 
                 // Draw particle images for tracked particles.
