@@ -41,6 +41,7 @@
 
 #include "mops_flow_stream.h"
 #include "mops_reactor.h"
+#include <stdexcept>
 
 using namespace Mops;
 

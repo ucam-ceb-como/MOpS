@@ -210,7 +210,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter, 
                         Mops::Solver::OutFnPtr out, void *data)
 {
-    int err = 0;
+//    int err = 0;
     real tsplit, dtg, dt, jrate;
     const Sweep::Mechanism &mech = r.Mech()->ParticleMech();
     fvector rates(mech.TermCount(), 0.0);

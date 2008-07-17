@@ -128,18 +128,18 @@ void PredCorSolver::Reset(const Reactor &r)
 void PredCorSolver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
                           OutFnPtr out, void *data)
 {
-    unsigned int step=0, iter=0;
+    int step=0, iter=0;
 
     // Calculate step size.
     real dt = (tstop - r.Time()) / (real)nsteps;
 
     // Internal splits without file output.
-    for (step=0; step!=nsteps-1; ++step) {
+    for (step=0; step<nsteps-1; ++step) {
         // Start the iteration procedure.
         beginIteration(r, step, dt);
 
         // Iterate this step for the required number of runs.
-        for (iter=0; iter!=niter; ++iter) {
+        for (iter=0; iter<niter; ++iter) {
             if (m_ncalls==0) m_ode.ResetSolver(*m_reac_copy);
             iteration(r, dt);
         }

@@ -1033,7 +1033,7 @@ void Simulator::calcAvgConf(std::vector<fvector> &avg,
 
     // Pre-calc some useful values.
     real invruns = 1.0 / (real)nruns;
-    real invruns_1 = 1.0 / (real)(nruns-1);
+//    real invruns_1 = 1.0 / (real)(nruns-1);
     unsigned int npoints = avg.size();
 
     // Loop over all steps and all variables.

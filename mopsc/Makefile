@@ -51,7 +51,7 @@ obj=mops.o mops_mechanism.o mops_mixture.o \
     mops_particle_solver.o mops_predcor_solver.o mops_psr.o mops_reactor.o \
     mops_reactor_factory.o  mops_ode_solver.o mops_settings_io.o mops_solver.o \
     mops_src_terms.o mops_strang_solver.o mops_timeinterval.o \
-    swp_flamesolver.o swp_gas_profile.o
+    mops_flow_stream.o mops_simulator.o swp_flamesolver.o swp_gas_profile.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -100,6 +100,9 @@ mops_mechanism.o: $(src)/mops_mechanism.cpp
 mops_mixture.o: $(src)/mops_mixture.cpp
 	$(cpp) $(flag) $(src)/mops_mixture.cpp
 
+mops_flow_stream.o: $(src)/mops_flow_stream.cpp
+	$(cpp) $(flag) $(src)/mops_flow_stream.cpp
+
 mops_reactor.o: $(src)/mops_reactor.cpp
 	$(cpp) $(flag) $(src)/mops_reactor.cpp
 
@@ -131,6 +134,9 @@ swp_flamesolver.o: $(src)/swp_flamesolver.cpp
 
 mops_predcor_solver.o: $(src)/mops_predcor_solver.cpp
 	$(cpp) $(flag) $(src)/mops_predcor_solver.cpp
+
+mops_simulator.o: $(src)/mops_simulator.cpp
+	$(cpp) $(flag) $(src)/mops_simulator.cpp
 
 # Auxilliary classes.
 
