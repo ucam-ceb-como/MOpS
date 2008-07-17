@@ -448,20 +448,20 @@ void PriPartStats::PPSL(const Ensemble &ens, unsigned int i,
         vector<fvector>::reference psl = ppsl.at(k);
 
         // Resize vector if too small.
-        if (start+PSL_Count()-1 >= psl.size()) {
+        if (start+PPSL_Count()-1 >= psl.size()) {
             psl.resize(start+PPSL_Count(), 0.0);
         }
 
         // Get an iterator to the first point of insertion in the
         // primary output stats array.
-        fvector::iterator j = psl.begin()+start-1;
+        fvector::iterator j = psl.begin()+start;
 
         // Get the PPSL stats.
-        *(++j) = (real)pp->MonomerCount(k);
-        *(++j) = pp->PriDiameter(k);
-        *(++j) = pp->PriSurface(k);
-        *(++j) = pp->PriVolume(k);
-        *(++j) = pp->PriMass(k);
+        *(j++) = (real)pp->MonomerCount(k);
+        *(j++) = pp->PriDiameter(k) * 1.0e9; // m to nm.
+        *(j++) = pp->PriSurface(k)  * 1.0e4; // m2 to cm2.
+        *(j++) = pp->PriVolume(k)   * 1.0e6; // m3 to cm3.
+        *(j++) = pp->PriMass(k)     * 1.0e3; // kg to g.
     }
 }
 
