@@ -259,6 +259,7 @@
 			UseInBuild="false"
 			UseDependenciesInBuild="false"
 			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject="..\comostrings\comostrings.vcproj"
 		/>
 	</References>
 	<Files>
@@ -317,6 +318,10 @@
 			</File>
 			<File
 				RelativePath=".\source\gpc_stoich.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\gpc_string.cpp"
 				>
 			</File>
 			<File
@@ -403,6 +408,10 @@
 			</File>
 			<File
 				RelativePath=".\include\gpc_stoich.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\gpc_string.h"
 				>
 			</File>
 			<File

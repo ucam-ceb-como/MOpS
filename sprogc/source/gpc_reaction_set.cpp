@@ -468,10 +468,10 @@ void ReactionSet::GetRateConstants(real T,
         if (!fallocated) {
             // Allocate temporary memory.
             tbconcs.resize(m_rxns.size(), 0.0);
-            kf.resize(m_rxns.size(), 0.0);
-            kr.resize(m_rxns.size(), 0.0);
             fallocated = true;
         }
+        kf.resize(m_rxns.size(), 0.0);
+        kr.resize(m_rxns.size(), 0.0);
     }
 
     // Calculate concentration-independent rate constants.
