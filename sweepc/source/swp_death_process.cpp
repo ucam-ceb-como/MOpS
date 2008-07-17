@@ -52,14 +52,16 @@ using namespace std;
 
 // Default constructor (protected).
 DeathProcess::DeathProcess(void)
-: m_a(0.0)
+: Process(), m_a(0.0)
 {
+    m_name = "Death Process";
 }
 
 // Initialising constructor.
 DeathProcess::DeathProcess(const Sweep::Mechanism &mech)
 : Process(mech), m_a(0.0)
 {
+    m_name = "Death Process";
 }
 
 // Copy constructor.

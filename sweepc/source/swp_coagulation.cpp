@@ -59,6 +59,7 @@ const real Coagulation::m_efm = 2.2; // 2.2 is for soot.
 Coagulation::Coagulation(const Sweep::Mechanism &mech)
 : Process(mech)
 {
+    m_name = "Coagulation";
 }
 
 // Copy contructor.

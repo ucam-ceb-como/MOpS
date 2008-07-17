@@ -79,6 +79,15 @@ public:
     Process &operator=(const Process &rhs);
 
 
+    // PROCESS NAME/DESCRIPTION.
+
+    // Returns the process name.
+    const std::string &Name(void) const;
+
+    // Sets the process name.
+    void SetName(const std::string &name);
+
+
 	// PARENT MECHANISM.
 
     // Returns reference to parent mechanism.
@@ -227,6 +236,10 @@ public:
         );
 
 protected:
+    // Process name/description.
+    std::string m_name;
+
+    // Process data.
     const Sweep::Mechanism *m_mech; // Pointer to the parent Mechanism.
     Sprog::StoichMap m_reac; // Reactant species stoichiometry.
     Sprog::StoichMap m_prod; // Product species stoichiometry.

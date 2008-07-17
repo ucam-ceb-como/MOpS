@@ -308,17 +308,25 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
     vector<CamXML::Element*> items, subitems;
     vector<CamXML::Element*>::iterator i, j;
     string str;
-
+    unsigned int k = 0;
     int id  = -1;
     real dx = 0.0;
     
     // Get list of inceptions from XML data.
     xml.Root()->GetChildren("inception", items);
 
-    for (i=items.begin(); i!=items.end(); ++i) {
+    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
         // Create new inception.
         Inception *icn = new Inception(mech);
         icn->SetMechanism(mech);
+
+        // Read name.
+        str = (*i)->GetAttributeValue("name");
+        if (str != "") {
+            icn->SetName(str);
+        } else {
+            icn->SetName("Inception " + cstr(k));
+        }
 
         // Read reactants.
         try {
@@ -403,11 +411,12 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
     vector<CamXML::Element*>::iterator i, j;
     CamXML::Element *el;
     string str;
+    unsigned int k = 0;
 
     // Get all surface reactions.
     xml.Root()->GetChildren("reaction", items);
 
-    for (i=items.begin(); i!=items.end(); ++i) {
+    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
         // Get the type of reaction.
         str = (*i)->GetAttributeValue("type");
 
@@ -438,6 +447,14 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
             rxn->SetDeferred(true);
         } else {
             rxn->SetDeferred(false);
+        }
+
+        // Read name.
+        str = (*i)->GetAttributeValue("name");
+        if (str != "") {
+            rxn->SetName(str);
+        } else {
+            rxn->SetName("Reaction " + cstr(k));
         }
 
         // Read reactants.
@@ -553,11 +570,12 @@ void MechParser::readCondensations(CamXML::Document &xml, Mechanism &mech)
     vector<CamXML::Element*>::iterator i, j;
     CamXML::Element *el;
     string str;
+    unsigned int k = 0;
 
     // Get all surface reactions.
     xml.Root()->GetChildren("condensation", items);
 
-    for (i=items.begin(); i!=items.end(); ++i) {
+    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
         // Create a new condensation object.
         Condensation *cond = new Condensation(mech);
 
@@ -567,6 +585,14 @@ void MechParser::readCondensations(CamXML::Document &xml, Mechanism &mech)
             cond->SetDeferred(true);
         } else {
             cond->SetDeferred(false);
+        }
+
+        // Read name.
+        str = (*i)->GetAttributeValue("name");
+        if (str != "") {
+            cond->SetName(str);
+        } else {
+            cond->SetName("Reaction " + cstr(k));
         }
 
         // Read reactants.

@@ -57,8 +57,10 @@ const real Condensation::m_efm             = 2.2;
 
 // Default constructor (protected).
 Condensation::Condensation(void)
-: m_a(1.0), m_kfm1(0.0), m_kfm2(0.0), m_kfm3(0.0)
+: ParticleProcess(), m_a(1.0), m_kfm1(0.0), m_kfm2(0.0), m_kfm3(0.0)
 {
+    m_defer = true;
+    m_name = "Condensation";
 }
 
 // Initialising constructor.
@@ -67,6 +69,7 @@ Condensation::Condensation(const Sweep::Mechanism &mech)
 {
     // Assume the condensation is simulated as a deferred process (LPDA).
     m_defer = true;
+    m_name = "Condensation";
 }
 
 // Copy constructor.

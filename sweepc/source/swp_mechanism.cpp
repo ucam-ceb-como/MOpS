@@ -275,6 +275,41 @@ void Mechanism::CheckDeferred(void) const
     }
 }
 
+// Returns a vector containing the names of all processes.
+void Mechanism::GetProcessNames(std::vector<std::string> &names, 
+                                unsigned int start) const
+{
+    // Resize the output vector to hold all process names from
+    // start index onwards.
+    unsigned int N = start + m_inceptions.size() + m_processes.size();
+    if (m_coag) ++N;
+    if (m_death) ++N;
+    names.resize(N, "");
+
+    // Get iterator to first insertion point.
+    vector<string>::iterator i = names.begin()+start;
+
+    // Add inception names.
+    for (unsigned int j=0; j!=m_inceptions.size(); ++j) {
+        *i = m_inceptions[j]->Name(); ++i;
+    }
+
+    // Add particle process names.
+    for (unsigned int j=0; j!=m_processes.size(); ++j) {
+        *i = m_processes[j]->Name(); ++i;
+    }
+
+    // Add coagulation name.
+    if (m_coag) {
+        *i = m_coag->Name(); ++i;
+    }
+
+    // Add death process name.
+    if (m_death) {
+        *i = m_death->Name(); ++i;
+    }
+}
+
 
 // RATE CALCULATION.
 

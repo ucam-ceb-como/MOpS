@@ -57,6 +57,7 @@ using namespace std;
 ActSiteReaction::ActSiteReaction(const Sweep::Mechanism &mech)
 : SurfaceReaction(mech), m_asmodel(NULL)
 {
+    m_name = "Active-site Reaction";
 }
 
 // Copy constructor.

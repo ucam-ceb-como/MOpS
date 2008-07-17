@@ -54,12 +54,14 @@ using namespace std;
 ARSSC_Inception::ARSSC_Inception(void)
 : m_sites(SubModels::ARSSC_Model::SiteTypeCount,0.0)
 {
+    m_name = "ARS-SC Inception";
 }
 
 // Initialising constructor.
 ARSSC_Inception::ARSSC_Inception(const Sweep::Mechanism &mech)
 : Inception(mech), m_sites(SubModels::ARSSC_Model::SiteTypeCount,0.0)
 {
+    m_name = "ARS-SC Inception";
 }
 
 // Copy constructor.

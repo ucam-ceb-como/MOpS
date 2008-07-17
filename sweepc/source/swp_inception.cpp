@@ -56,15 +56,16 @@ const real Inception::m_efm = 2.2; // 2.2 is for soot.
 
 // Default constructor (protected).
 Inception::Inception(void)
-: m_a(0.5), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0)
+: Process(), m_a(0.5), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0)
 {
+    m_name = "Inception";
 }
 
 // Initialising constructor.
 Inception::Inception(const Sweep::Mechanism &mech)
 : Process(mech), m_a(0.5), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0)
 {
-    
+    m_name = "Inception";
 }
 
 // Copy constructor.

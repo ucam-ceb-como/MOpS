@@ -152,6 +152,12 @@ public:
     // Checks all processes to see if any are deferred.
     void CheckDeferred(void) const;
 
+    // Returns a vector containing the names of all processes.
+    void GetProcessNames(
+        std::vector<std::string> &names, // Output vector for names.
+        unsigned int start=0             // Optional vector start index.
+        ) const;
+
 
 	// RATE CALCULATION.
 

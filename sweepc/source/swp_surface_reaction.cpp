@@ -59,9 +59,10 @@ const real Processes::SurfaceReaction::m_majfactor = 2.0;
 
 // Default constructor.
 SurfaceReaction::SurfaceReaction(void)
-: m_arr(0.0,0.0,0.0), m_pid(0), m_modelid(SubModels::BasicModel_ID)
+: ParticleProcess(), m_arr(0.0,0.0,0.0), m_pid(0), m_modelid(SubModels::BasicModel_ID)
 {
     m_defer = true;
+    m_name = "Surface Reaction";
 }
 
 // Initialising constructor.
@@ -69,6 +70,7 @@ SurfaceReaction::SurfaceReaction(const Sweep::Mechanism &mech)
 : ParticleProcess(mech), m_arr(0.0,0.0,0.0), m_pid(0), m_modelid(SubModels::BasicModel_ID)
 {
     m_defer = true;
+    m_name = "Surface Reaction";
 }
 
 // Copy constructor.

@@ -52,7 +52,7 @@ using namespace std;
 
 // Default constructor.
 ParticleProcess::ParticleProcess()
-: m_defer(false)
+: Process(), m_defer(false)
 {
 }
 

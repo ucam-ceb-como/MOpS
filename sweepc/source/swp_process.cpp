@@ -54,13 +54,13 @@ using namespace std;
 
 // Default constructor.
 Process::Process(void)
-: m_mech(NULL)
+: m_name(""), m_mech(NULL)
 {
 }
 
 // Initialising constructor.
 Process::Process(const Sweep::Mechanism &mech)
-: m_mech(&mech)
+: m_name(""), m_mech(&mech)
 {
 }
 
@@ -82,6 +82,7 @@ Process::~Process(void)
 Process &Process::operator=(const Process &rhs)
 {
     if (this != &rhs) {
+        m_name = rhs.m_name;
         m_mech = rhs.m_mech;
 
         // Copy reactants.
@@ -97,6 +98,15 @@ Process &Process::operator=(const Process &rhs)
     }
     return *this;
 }
+
+
+// PROCESS NAME/DESCRIPTION.
+
+// Returns the process name.
+const std::string &Process::Name(void) const {return m_name;}
+
+// Sets the process name.
+void Process::SetName(const std::string &name) {m_name = name;}
 
 
 // PARENT MECHANISM.
@@ -254,8 +264,16 @@ void Process::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
+        // Write the length of the name to the stream.
+        unsigned int n = m_name.length();
+        out.write((char*)&n, sizeof(n));
+
+        // Write the name to the stream.
+        out.write(m_name.c_str(), n);
+
+
         // Write reactant count.
-        unsigned int n = (unsigned int)m_reac.size();
+        n = (unsigned int)m_reac.size();
         out.write((char*)&n, sizeof(n));
 
         // Write reactant stoichiometry.
@@ -306,9 +324,19 @@ void Process::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 
         int m = 0;
         unsigned int n = 0, id = 0;
+        char *name = NULL;
 
         switch (version) {
             case 0:
+                // Read the length of the process name.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read the process name.
+                name = new char[n];
+                in.read(name, n);
+                m_name.assign(name, n);
+                delete [] name;
+
                 // Read reactant count.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
 
