@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\fortran_ode\include;..\sweepc\include;..\cvode\include;..\cvode\source;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
+				AdditionalIncludeDirectories="..\sweepc\include;..\cvode\include;..\cvode\source;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
@@ -110,7 +110,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\fortran_ode\include;..\sweepc\include;..\cvode\include;..\cvode\source;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
+				AdditionalIncludeDirectories="..\sweepc\include;..\cvode\include;..\cvode\source;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
 			/>
@@ -125,7 +125,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\sprogc\lib\sprog.lib ..\comostrings\lib\comostrings.lib ..\camxml\lib\camxml.lib ..\cvode\lib\cvode.lib ..\sweepc\lib\sweep.lib ..\fortran_ode\lib\odesolvers_v1.lib"
+				AdditionalDependencies="..\sprogc\lib\sprog.lib ..\comostrings\lib\comostrings.lib ..\camxml\lib\camxml.lib ..\cvode\lib\cvode.lib ..\sweepc\lib\sweep.lib"
 				OutputFile="bin\$(ProjectName).exe"
 				GenerateManifest="false"
 				EnableUAC="false"
