@@ -166,7 +166,8 @@ public:
     real CalcRates(
         real t,          // Time at which to get rates.
         const Cell &sys, // System cell for which to get rates.
-        fvector &rates   // Return vector for process rates.
+        fvector &rates,  // Return vector for process rates.
+        bool scale=false // Scale the rates to the ensemble (=true), leave per unit vol (=false).
         ) const;
 
     // Get rates of all processes separated into different

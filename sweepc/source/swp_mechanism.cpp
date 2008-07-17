@@ -315,7 +315,7 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
 
 // Get total rates of all processes.  Returns the sum of
 // all rates.
-real Mechanism::CalcRates(real t, const Cell &sys, fvector &rates) const
+real Mechanism::CalcRates(real t, const Cell &sys, fvector &rates, bool scale) const
 {
     // Ensure rates vector is the correct length, then set to zero.
     rates.resize(ProcessCount(), 0.0);
@@ -342,6 +342,15 @@ real Mechanism::CalcRates(real t, const Cell &sys, fvector &rates) const
         *i = m_death->Rate(t, sys);
         sum += *i;
         ++i;
+    }
+
+    if (!scale) {
+        // Need to return the rates to per unit vol.
+        real invvol = 1.0 / sys.SampleVolume();
+        for(i=rates.begin(); i!=rates.end(); ++i) {
+            *i *= invvol;
+        }
+        sum *= invvol;
     }
 
     return sum;
