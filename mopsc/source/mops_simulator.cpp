@@ -1301,13 +1301,12 @@ void Simulator::writePartProcCSV(const std::string &filename,
     vector<string> head;
     head.push_back("Step");
     head.push_back("Time (s)");
-    for (unsigned int i=0; i<mech.Inceptions().size(); ++i) {
-        head.push_back("Inception " + cstr(i) + " (1/cm3s)");
+    mech.GetProcessNames(head, 2);
+    // Add units.
+    for (unsigned int i=2; i!=head.size(); ++i) {
+        head[i] = head[i] + " (1/cm3s)";
     }
-    for (unsigned int i=0; i<mech.Processes().size(); ++i) {
-        head.push_back("Reaction " + cstr(i) + " (1/cm3s)");
-    }
-    head.push_back("Coagulation (1/cm3s)");
+    // Add error columns.
     for (unsigned int i=head.size(); i!=2; --i) {
         head.insert(head.begin()+i, "Err");
     }
