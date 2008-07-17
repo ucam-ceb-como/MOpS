@@ -49,6 +49,7 @@
 #include "swp_submodel_cache.h"
 #include <vector>
 #include <stdexcept>
+#include <memory.h>
 
 using namespace Sweep;
 using namespace Sweep::SubModels;

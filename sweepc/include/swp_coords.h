@@ -45,6 +45,7 @@
 #include "swp_params.h"
 #include <cmath>
 #include <vector>
+#include <memory.h>
 
 namespace Sweep
 {

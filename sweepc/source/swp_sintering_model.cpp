@@ -45,6 +45,7 @@
 #include "swp_particle.h"
 #include "swp_cell.h"
 #include <cmath>
+#include <stdexcept>
 
 using namespace Sweep;
 using namespace Sweep::Processes;

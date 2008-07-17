@@ -46,6 +46,7 @@
 #include "swp_particle_cache.h"
 #include "swp_cell.h"
 #include <stdexcept>
+#include <memory.h>
 
 using namespace Sweep;
 using namespace Sweep::SubModels;

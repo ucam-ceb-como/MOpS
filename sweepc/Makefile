@@ -49,7 +49,8 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_particle_process.o swp_process.o swp_process_factory.o \
     swp_surface_reaction.o swp_particle_model.o swp_imgnode.o \
     swp_particle_image.o swp_surfvol_stats.o swp_pripart_stats.o \
-    swp_sintering_model.o
+    swp_sintering_model.o swp_arssc_model.o swp_arssc_inception.o \
+    swp_death_process.o swp_birth_process.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -173,6 +174,9 @@ swp_submodel_cache.o: $(src)/swp_submodel_cache.cpp
 swp_model_factory.o: $(src)/swp_model_factory.cpp
 	$(cpp) $(flag) $(src)/swp_model_factory.cpp
 
+swp_arssc_model.o: $(src)/swp_arssc_model.cpp
+	$(cpp) $(flag) $(src)/swp_arssc_model.cpp
+
 # Processes.
 
 swp_actsites_reaction.o: $(src)/swp_actsites_reaction.cpp
@@ -198,6 +202,15 @@ swp_process_factory.o: $(src)/swp_process_factory.cpp
 
 swp_surface_reaction.o: $(src)/swp_surface_reaction.cpp
 	$(cpp) $(flag) $(src)/swp_surface_reaction.cpp
+
+swp_arssc_inception.o: $(src)/swp_arssc_inception.cpp
+	$(cpp) $(flag) $(src)/swp_arssc_inception.cpp
+
+swp_birth_process.o: $(src)/swp_birth_process.cpp
+	$(cpp) $(flag) $(src)/swp_birth_process.cpp
+
+swp_death_process.o: $(src)/swp_death_process.cpp
+	$(cpp) $(flag) $(src)/swp_death_process.cpp
 
 # Solver.
 
