@@ -34,7 +34,7 @@ endif
 obj=gpc_el_comp.o gpc_element.o gpc_element_lib.o gpc_gasphase.o \
     gpc_idealgas.o gpc_mech.o gpc_mech_io.o gpc_mixture.o \
     gpc_mixture_factory.o gpc_reaction.o gpc_reaction_set.o gpc_species.o \
-    gpc_stoich.o gpc_thermo.o
+    gpc_stoich.o gpc_thermo.o gpc_string.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -100,6 +100,9 @@ gpc_mech.o: $(src)/gpc_mech.cpp
 
 gpc_mech_io.o: $(src)/gpc_mech_io.cpp gpc_mech.o $(comostrings)
 	$(cpp) $(flag) $(src)/gpc_mech_io.cpp
+
+gpc_string.o: $(src)/gpc_string.cpp gpc_string.o $(comostrings)
+	$(cpp) $(flag) $(src)/gpc_string.cpp
 
 	
 
