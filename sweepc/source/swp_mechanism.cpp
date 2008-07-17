@@ -282,9 +282,46 @@ void Mechanism::CheckDeferred(void) const
 // all rates.
 real Mechanism::CalcRates(real t, const Cell &sys, fvector &rates) const
 {
+    // Ensure rates vector is the correct length, then set to zero.
+    rates.resize(ProcessCount(), 0.0);
+    fill(rates.begin(), rates.end(), 0.0);
+
+    real sum = 0.0;
+
+    // Get rates of inception processes.
+    sum += Inception::CalcRates(t, sys, m_inceptions, rates);
+
+    // Query other processes for their rates.
+    sum += ParticleProcess::CalcRates(t, sys, m_processes, rates, m_inceptions.size());
+
+    // Get coagulation rate.
+    fvector::iterator i = rates.begin()+m_inceptions.size()+m_processes.size();
+    if (m_coag != NULL) {
+        *i = m_coag->Rate(t, sys);
+        sum += *i;
+        ++i;
+    }
+
+    // Get death process rate.
+    if (m_death != NULL) {
+        *i = m_death->Rate(t, sys);
+        sum += *i;
+        ++i;
+    }
+
+    return sum;
+}
+
+// Get rates of all processes separated into different
+// terms.  Rate terms are useful for subsequent particle
+// selection by different properties for the same process.
+// In particular this is used for the condensation and
+// coagulation processes.  Returns the sum of all rates.
+real Mechanism::CalcRateTerms(real t, const Cell &sys, fvector &terms) const
+{
     // Ensure rates vector is the correct length.
-    rates.resize(m_termcount);
-    fvector::iterator iterm = rates.begin();
+    terms.resize(m_termcount, 0.0);
+    fvector::iterator iterm = terms.begin();
 
     real sum = 0.0;
 
@@ -297,8 +334,15 @@ real Mechanism::CalcRates(real t, const Cell &sys, fvector &rates) const
     // Query other processes for their rates.
     if (sys.ParticleCount() > 0) {
         PartProcPtrVector::const_iterator i;
-        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=rates.end()); ++i) {
+        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
             sum += (*i)->RateTerms(t, sys, iterm);
+        }
+    } else {
+        // Fill vector with zeros.
+        PartProcPtrVector::const_iterator i;
+        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
+            fill(iterm, iterm+(*i)->TermCount(), 0.0);
+            iterm += (*i)->TermCount();
         }
     }
 
@@ -317,15 +361,16 @@ real Mechanism::CalcRates(real t, const Cell &sys, fvector &rates) const
 
 // Get total rates of non-deferred processes.  Returns the sum
 // of all rates.
-real Mechanism::CalcJumpRates(real t, const Cell &sys, fvector &rates) const
+real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, fvector &terms) const
 {
     // This routine only calculates the rates of those processes which are
     // not deferred.  The rate terms of deferred processes are returned
     // as zero.
 
-    // Ensure vector is the correct length.
-    rates.resize(m_termcount);
-    fvector::iterator iterm = rates.begin();
+    // Ensure vector is the correct length, then set to zero.
+    terms.resize(m_termcount, 0.0);
+    fill(terms.begin(), terms.end(), 0.0);
+    fvector::iterator iterm = terms.begin();
 
     real sum = 0.0;
 
@@ -338,7 +383,7 @@ real Mechanism::CalcJumpRates(real t, const Cell &sys, fvector &rates) const
     // Query other processes for their rates.
     if (sys.ParticleCount() > 0) {
         PartProcPtrVector::const_iterator i;
-        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=rates.end()); ++i) {
+        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
             if (!(*i)->IsDeferred()) {
                 // Calculate rate if not deferred.
                 sum += (*i)->RateTerms(t, sys, iterm);
@@ -346,6 +391,13 @@ real Mechanism::CalcJumpRates(real t, const Cell &sys, fvector &rates) const
                 // If process is deferred, then set rate to zero.
                 for (unsigned int j=0; j!=(*i)->TermCount(); ++j) {*(iterm++)=0.0;}
             }
+        }
+    } else {
+        // Fill vector with zeros.
+        PartProcPtrVector::const_iterator i;
+        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
+            fill(iterm, iterm+(*i)->TermCount(), 0.0);
+            iterm += (*i)->TermCount();
         }
     }
 
@@ -362,9 +414,10 @@ real Mechanism::CalcJumpRates(real t, const Cell &sys, fvector &rates) const
     return sum;
 }
 
-    // Get total rates of non-deferred processes.  Returns the sum
-    // of all rates.  Uses supplied gas-phase conditions rather than
-    // those in the given system.
+/*
+// Get total rates of non-deferred processes.  Returns the sum
+// of all rates.  Uses supplied gas-phase conditions rather than
+// those in the given system.
 real Mechanism::CalcJumpRates(real t, const Sprog::Thermo::IdealGas &gas, 
                               const Cell &sys, fvector &rates) const
 {
@@ -412,6 +465,7 @@ real Mechanism::CalcJumpRates(real t, const Sprog::Thermo::IdealGas &gas,
 
     return sum;
 }
+*/
 
 // Calculates the rates-of-change of the chemical species fractions, 
 // gas-phase temperature and density due to particle processes.
@@ -419,9 +473,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
 {
     // Resize vector to hold all species and set all rates to zero.
     rates.resize(m_species->size()+2, 0.0);
-    for (fvector::iterator i=rates.begin(); i!=rates.end(); ++i) {
-        *i = 0.0;
-    }
+    fill(rates.begin(), rates.end(), 0.0);
     fvector::iterator idrho = rates.begin() + (rates.size()-1);
 
     // Precalculate parameters.
@@ -580,6 +632,7 @@ void Mechanism::LPDA(real t, Cell &sys) const
     }
 }
 
+/*
 // Performs linear update algorithm on the given system up to given time,
 // with the given chemical conditions rather than those in the 
 // given system.
@@ -609,13 +662,53 @@ void Mechanism::LPDA(real t, const Sprog::Thermo::IdealGas &gas,
         sys.Particles().UnfreezeDoubling();
     }
 }
+*/
 
 // Performs linear process updates on a particle in the given system.
 void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 {
-    UpdateParticle(sp, sys, sys, t);
+    // If there are no deferred processes then stop right now.
+    if (m_anydeferred) {
+        PartProcPtrVector::const_iterator i;
+        unsigned int num;
+        real rate, dt;
+
+        while ((sp.LastUpdateTime() < t) && sp.IsValid()) {
+            // Calculate delta-t and update particle time.
+            dt = t - sp.LastUpdateTime();
+            sp.SetTime(t);
+
+            // Loop through all processes, performing those
+            // which are deferred.
+            for (i=m_processes.begin(); i!=m_processes.end(); ++i) {
+                if ((*i)->IsDeferred()) {
+                    // Get the process rate x the time interval.
+                    rate = (*i)->Rate(t, sys, sp) * dt;
+
+                    // Use a Poission deviate to calculate number of 
+                    // times to perform the process.
+                    num = ignpoi(rate);
+
+                    if (num > 0) {
+                        // Do the process to the particle.
+                        (*i)->Perform(t, sys, sp, num);
+                    }
+                }
+            }
+
+            // Perform sintering update.
+            if (m_sint_model.IsEnabled()) {
+                sp.Sinter(dt, sys, m_sint_model);
+            }
+        }
+
+        // Check that the particle is still valid, only calculate 
+        // cache if it is.
+        if (sp.IsValid()) sp.UpdateCache();
+    }
 }
 
+/*
 // Performs linear process updates on a particle in the given system,
 // with the current chemical conditions precalculated.
 void Mechanism::UpdateParticle(Particle &sp, const Sprog::Thermo::IdealGas &gas, 
@@ -661,6 +754,7 @@ void Mechanism::UpdateParticle(Particle &sp, const Sprog::Thermo::IdealGas &gas,
         if (sp.IsValid()) sp.UpdateCache();
     }
 }
+*/
 
 
 // READ/WRITE/COPY.

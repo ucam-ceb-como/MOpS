@@ -6,9 +6,10 @@
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
-    Definition of a uniform death process.  Particles are uniformly
-    deleted at the calculated rate.  This provides a method for
-    simulating Cell outflow events.
+    Definition of a sampled birth process.  Particles are sampled
+    from a given distribution and introduced at the defined rate.  If
+    no ensemble/particle is defined from which to sample, then an
+    empty particle is introduced.
 
   Licence:
     This file is part of "sweepc".
@@ -41,12 +42,13 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#ifndef SWEEP_DEATH_PROCESS_H
-#define SWEEP_DEATH_PROCESS_H
+#ifndef SWEEP_BIRTH_PROCESS_H
+#define SWEEP_BIRTH_PROCESS_H
 
 #include "swp_params.h"
 #include "swp_process.h"
 #include "swp_process_type.h"
+#include "swp_particle.h"
 #include "swp_cell.h"
 #include "sprog.h"
 #include <iostream>
@@ -58,22 +60,22 @@ class Mechanism;
 
 namespace Processes
 {
-class DeathProcess : public Process
+class BirthProcess : public Process
 {
 public: 
     // Constructors.
-    DeathProcess(const Sweep::Mechanism &mech); // Initialising constructor.
-    DeathProcess(const DeathProcess &copy);     // Copy constructor.
-    DeathProcess(                               // Stream-reading constructor.
+    BirthProcess(const Sweep::Mechanism &mech); // Initialising constructor.
+    BirthProcess(const BirthProcess &copy);     // Copy constructor.
+    BirthProcess(                               // Stream-reading constructor.
         std::istream &in,                       //  - Input stream.
         const Sweep::Mechanism &mech            //  - Parent mechanism.
         );
 
     // Destructors.
-    ~DeathProcess(void);
+    ~BirthProcess(void);
 
     // Operators.
-    DeathProcess &operator=(const DeathProcess &rhs);
+    BirthProcess &operator=(const BirthProcess &rhs);
 
 
     // RATE CONSTANT.
@@ -84,6 +86,10 @@ public:
     // Sets the rate constant.
     void SetA(real a);
 
+    // DEFAULT PARTICLE.
+
+    // Returns a pointer to the default particle used for
+    // the birth process.
 
 	// TOTAL RATE CALCULATIONS.
 
@@ -145,7 +151,7 @@ public:
     // READ/WRITE/COPY.
 
     // Creates a copy of the inception.
-    DeathProcess *const Clone(void) const;
+    BirthProcess *const Clone(void) const;
 
     // Returns the process type.  Used to identify different
     // processes and for serialisation.
@@ -164,9 +170,13 @@ protected:
     // Rate parameters.
     real m_a; // Rate constant.
 
+    // Particle sampling.
+    Particle *m_particle; // A uniform birth process particle.
+    Cell *m_cell; // The cell from which to sample particle.
+
     // Default constructor is protected to prevent a process being
     // defined without knowledge of the parent mechanism.
-    DeathProcess(void);
+    BirthProcess(void);
 };
 };
 };

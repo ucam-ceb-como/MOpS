@@ -163,6 +163,18 @@ public:
         fvector &rates   // Return vector for process rates.
         ) const;
 
+    // Get rates of all processes separated into different
+    // terms.  Rate terms are useful for subsequent particle
+    // selection by different properties for the same process.
+    // In particular this is used for the condensation and
+    // coagulation processes.  Returns the sum of all rates.
+    real CalcRateTerms(
+        real t,          // Time at which to get rates.
+        const Cell &sys, // System cell for which to get rates.
+        fvector &terms   // Return vector for process rates.
+        ) const;
+
+/*
     // Get total rates of all processes.  Returns the sum of
     // all rates.  Uses supplied gas-phase conditions rather than
     // those in the given system.
@@ -172,16 +184,17 @@ public:
         const Cell &sys, // System cell for which to get rates.
         fvector &rates   // Return vector for process rates.
         ) const;
-
+*/
 
     // Get total rates of non-deferred processes.  Returns the sum
     // of all rates.
-    real CalcJumpRates(
+    real CalcJumpRateTerms(
         real t,          // Time at which to get rates.
         const Cell &sys, // System cell for which to get rates.
         fvector &rates   // Return vector for process rates.
         ) const;
 
+/*
     // Get total rates of non-deferred processes.  Returns the sum
     // of all rates.  Uses supplied gas-phase conditions rather than
     // those in the given system.
@@ -191,6 +204,7 @@ public:
         const Cell &sys, // System cell for which to get rates.
         fvector &rates   // Return vector for process rates.
         ) const;
+*/
 
     // Calculates the rates-of-change of the chemical species fractions, 
     // gas-phase temperature and density due to particle processes.
@@ -221,6 +235,7 @@ public:
         Cell &sys // System to update.
         ) const;
 
+/*
     // Performs linear update algorithm on the given system up to given time,
     // with the given chemical conditions rather than those in the 
     // given system.
@@ -229,6 +244,7 @@ public:
         const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
         Cell &sys // System to update.
         ) const;
+*/
 
     // Performs linear process updates on a particle in the given system.
     void UpdateParticle(
@@ -237,6 +253,7 @@ public:
         real t        // Time up to which to integrate.
         ) const;
 
+/*
     // Performs linear process updates on a particle in the given system,
     // with the current chemical conditions precalculated.
     void UpdateParticle(
@@ -245,7 +262,7 @@ public:
         Cell &sys,    // System to which the particle belongs.
         real t        // Time up to which to integrate.
         ) const;
-
+*/
 
     // READ/WRITE/COPY.
 

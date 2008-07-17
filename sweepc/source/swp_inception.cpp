@@ -213,6 +213,7 @@ real Inception::Rate(real t, const Cell &sys) const
                 sys.SampleVolume());
 }
 
+/*
 // Calculates the process rate using the given 
 // chemical conditions, rather than those conditions in the
 // given system.
@@ -228,18 +229,17 @@ real Inception::Rate(const real t, const Sprog::Thermo::IdealGas &gas,
                 T/ViscosityAir(T), MeanFreePathAir(T,P), 
                 sys.SampleVolume());
 }
+*/
 
 // Calculates the rate of multiple inceptions given a
 // vector of inceptions and an iterator to a vector of
 // reals for output.
-real Inception::CalcRates(real t, const Sprog::Thermo::IdealGas &gas,
-                          const Cell &sys, 
-                          const IcnPtrVector &icns, 
+real Inception::CalcRates(real t, const Cell &sys, const IcnPtrVector &icns, 
                           fvector &rates, unsigned int start)
 {
     // Precalculate some values.
-    real T     = gas.Temperature();
-    real P     = gas.Pressure();
+    real T     = sys.Temperature();
+    real P     = sys.Pressure();
     real sqrtT = sqrt(T);
     real T_mu  = T / ViscosityAir(T);
     real MFP   = MeanFreePathAir(T,P);
@@ -249,7 +249,7 @@ real Inception::CalcRates(real t, const Sprog::Thermo::IdealGas &gas,
     fvector::iterator i = (rates.begin()+start);
     real sum = 0.0;
     for (p=icns.begin(); p!=icns.end(); ++p,++i) {
-        *i = (*p)->Rate(gas.MoleFractions(), gas.Density(), sqrtT, 
+        *i = (*p)->Rate(sys.MoleFractions(), sys.Density(), sqrtT, 
                         T_mu, MFP, vol);
         sum += *i;
     }
@@ -314,6 +314,7 @@ real Inception::RateTerms(const real t, const Cell &sys,
     return *(iterm++);
 }
 
+/*
 // Calculates the rate terms given an iterator to a real vector. The 
 // iterator is advanced to the position after the last term for this
 // process.  The given chemical conditions are used instead of those
@@ -331,7 +332,7 @@ real Inception::RateTerms(const real t, const Sprog::Thermo::IdealGas &gas,
                   sys.SampleVolume());
     return *(iterm++);
 }
-
+*/
 
 // PERFORMING THE PROCESS.
 

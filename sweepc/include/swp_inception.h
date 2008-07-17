@@ -138,6 +138,7 @@ public:
         const Cell &sys // System for which to calculate rate.
         ) const;
 
+/*
 	// Calculates the process rate using the given 
     // chemical conditions, rather than those conditions in the
     // given system.
@@ -146,14 +147,14 @@ public:
         const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
         const Cell &sys           // System for which to calculate rate.
         ) const;
-
+*/
 
     // Calculates the rate of multiple inceptions given a
     // vector of inceptions and an iterator to a vector of
     // reals for output.
     static real CalcRates(
         real t,                   // Time.
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
+//        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
         const Cell &sys,          // System for which to calculate rates.
         const IcnPtrVector &icns, // Vector of inception processes.
         fvector &rates,           // Output rates vector.
@@ -175,6 +176,7 @@ public:
         fvector::iterator &iterm // Iterator to the first term.
         ) const;
 
+/*
     // Calculates the rate terms given an iterator to a real vector. The 
     // iterator is advanced to the position after the last term for this
     // process.  The given chemical conditions are used instead of those
@@ -185,7 +187,7 @@ public:
         const Cell &sys,          // System for which to calculate rate terms.
         fvector::iterator &iterm  // Iterator to the first term.
         ) const;
-
+*/
 
 	// PERFORMING THE PROCESS.
 

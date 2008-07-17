@@ -115,6 +115,7 @@ real Coagulation::Rate(real t, const Cell &sys) const
     }
 }
 
+/*
 // Calculates the process rate using the given 
 // chemical conditions, rather than those conditions in the
 // given system.
@@ -138,6 +139,7 @@ real Coagulation::Rate(real t, const Sprog::Thermo::IdealGas &gas,
         return 0.0;
     }
 }
+*/
 
 // More efficient rate routine for coagulation only.  
 // All parameters required to calculate rate passed 
@@ -218,6 +220,7 @@ real Coagulation::RateTerms(real t, const Cell &sys,
     }
 }
 
+/*
 // Calculates the rate terms given an iterator to a real vector. The 
 // iterator is advanced to the position after the last term for this
 // process.  The given chemical conditions are used instead of those
@@ -243,6 +246,7 @@ real Coagulation::RateTerms(real t, const Sprog::Thermo::IdealGas &gas,
         return 0.0;
     }
 }
+*/
 
 // More efficient rate routine for coagulation only.  
 // All parameters required to calculate rate terms

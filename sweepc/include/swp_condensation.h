@@ -103,6 +103,7 @@ public:
         const Cell &sys // System for which to calculate rate.
         ) const;
 
+/*
 	// Calculates the process rate using the given 
     // chemical conditions, rather than those conditions in the
     // given system.
@@ -111,7 +112,7 @@ public:
         const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
         const Cell &sys // System for which to calculate rate.
         ) const;
-
+*/
 
 	// SINGLE PARTICLE RATE CALCULATIONS.
 
@@ -123,6 +124,7 @@ public:
         const Particle &sp  // Particle for which to calculate rate.
         ) const;
 
+/*
 	// Returns rate of the process for the given particle using the
     // given chemical conditions rather than those conditions in the
     // the given system.
@@ -132,6 +134,7 @@ public:
         const Cell &sys,   // System to which the particle belongs.
         const Particle &sp // Particle for which to calculate rate.
         ) const;
+*/
 
     // Returns majorant rate of the process for the given system.
     real MajorantRate(
@@ -140,6 +143,7 @@ public:
         const Particle &sp  // Particle for which to calculate rate.
         ) const;
 
+/*
 	// Calculates the majorant process rate using the given 
     // chemical conditions, rather than those conditions in the
     // given system.
@@ -149,7 +153,7 @@ public:
         const Cell &sys,   // System to which the particle belongs.
         const Particle &sp // Particle for which to calculate rate.
         ) const;
-
+*/
 
 	// RATE TERM CALCULATIONS.
     //   These routines return the individual rate terms for a 
@@ -167,6 +171,7 @@ public:
         fvector::iterator &iterm // Iterator to the first term.
         ) const;
 
+/*
     // Calculates the rate terms given an iterator to a real vector. The 
     // iterator is advanced to the position after the last term for this
     // process.  The given chemical conditions are used instead of those
@@ -177,7 +182,7 @@ public:
         const Cell &sys,          // System for which to calculate rate terms.
         fvector::iterator &iterm  // Iterator to the first term.
         ) const;
-
+*/
 
     // PERFORMING THE PROCESS.
 

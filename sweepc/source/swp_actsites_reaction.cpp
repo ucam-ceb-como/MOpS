@@ -96,9 +96,11 @@ ActSiteReaction &ActSiteReaction::operator =(const ActSiteReaction &rhs)
 // Returns rate of the process for the given system.
 real ActSiteReaction::Rate(real t, const Cell &sys) const
 {
-    return Rate(t, sys, sys);
+    return SurfaceReaction::Rate(t, sys) * 
+           m_asmodel->SiteDensity(t, sys, sys.Particles());
 }
 
+/*
 // Calculates the process rate using the given 
 // chemical conditions, rather than those conditions in the
 // given system.
@@ -108,6 +110,7 @@ real ActSiteReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas,
     return SurfaceReaction::Rate(t, gas, sys) * 
            m_asmodel->SiteDensity(t, gas, sys.Particles());
 }
+*/
 
 
 // SINGLE PARTICLE RATE CALCULATIONS.
@@ -116,9 +119,11 @@ real ActSiteReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas,
 // the system. Process must be linear in particle number.
 real ActSiteReaction::Rate(real t, const Cell &sys, const Particle &sp) const
 {
-    return Rate(t,sys, sys, sp);
+    return SurfaceReaction::Rate(t, sys, sp) *
+           m_asmodel->SiteDensity(t, sys, sp);
 }
 
+/*
 // Returns rate of the process for the given particle using the
 // given chemical conditions rather than those conditions in the
 // the given system.
@@ -128,7 +133,7 @@ real ActSiteReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas,
     return SurfaceReaction::Rate(t, gas, sys, sp) *
            m_asmodel->SiteDensity(t, gas, sp);
 }
-
+*/
 
 // ACTIVE SITES MODEL.
 

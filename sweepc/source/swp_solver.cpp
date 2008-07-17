@@ -86,10 +86,10 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech)
     {
         if (mech.AnyDeferred() && (sys.ParticleCount() > 0)) {
             // Get the process jump rates (and the total rate).
-            jrate = mech.CalcJumpRates(t, sys, rates);
+            jrate = mech.CalcJumpRateTerms(t, sys, rates);
 
             // Calculate split end time.
-            tsplit = calcSplitTime(t, tstop,jrate, sys.ParticleCount(), dtg);
+            tsplit = calcSplitTime(t, tstop, jrate, sys.ParticleCount(), dtg);
         } else {
             // There are no deferred processes, therefore there
             // is no need to perform LPDA splitting steps.
@@ -98,7 +98,7 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech)
 
         // Perform stochastic jump processes.
         while (t < tsplit) {
-            jrate = mech.CalcJumpRates(t, sys, rates);
+            jrate = mech.CalcJumpRateTerms(t, sys, rates);
             dt = timeStep(t, sys, mech, rates, jrate);
             if (dt >= 0.0) {
                 t+=dt; t = min(t, tstop);

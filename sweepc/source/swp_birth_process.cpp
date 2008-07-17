@@ -6,7 +6,7 @@
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
-    Implementation of the DeathProcess class declared in the
+    Implementation of the BirthProcess class declared in the
     swp_death_process.h header file.
 
   Licence:
@@ -40,7 +40,7 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#include "swp_death_process.h"
+#include "swp_birth_process.h"
 #include "swp_mechanism.h"
 #include <stdexcept>
 
@@ -51,42 +51,54 @@ using namespace std;
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (protected).
-DeathProcess::DeathProcess(void)
-: m_a(0.0)
+BirthProcess::BirthProcess(void)
+: m_a(0.0), m_particle(NULL), m_cell(NULL)
 {
 }
 
 // Initialising constructor.
-DeathProcess::DeathProcess(const Sweep::Mechanism &mech)
-: Process(mech), m_a(0.0)
+BirthProcess::BirthProcess(const Sweep::Mechanism &mech)
+: Process(mech), m_a(0.0), m_particle(NULL), m_cell(NULL)
 {
+    // Create a default inflow particle.
+    m_particle = new Particle(0.0, mech);
 }
 
 // Copy constructor.
-DeathProcess::DeathProcess(const DeathProcess &copy)
+BirthProcess::BirthProcess(const BirthProcess &copy)
 {
     *this = copy;
 }
 
 // Stream-reading constructor.
-DeathProcess::DeathProcess(std::istream &in, const Sweep::Mechanism &mech)
+BirthProcess::BirthProcess(std::istream &in, const Sweep::Mechanism &mech)
 {
     Deserialize(in, mech);
 }
 
 // Default destructor.
-DeathProcess::~DeathProcess(void)
+BirthProcess::~BirthProcess(void)
 {
+    delete m_particle;
 }
 
 // OPERATOR OVERLOADS.
 
 // Assignment operator.
-DeathProcess &DeathProcess::operator =(const DeathProcess &rhs)
+BirthProcess &BirthProcess::operator =(const BirthProcess &rhs)
 {
     if (this != &rhs) {
         Process::operator =(rhs);
         m_a = rhs.m_a;
+        // Copy default particle.
+        delete m_particle;
+        if (rhs.m_particle) {
+            m_particle = rhs.m_particle->Clone();
+        } else {
+            m_particle = NULL;
+        }
+        // Copy pointer to sampling ensemble.
+        m_cell = rhs.m_cell;
     }
     return *this;
 }
@@ -95,43 +107,55 @@ DeathProcess &DeathProcess::operator =(const DeathProcess &rhs)
 // RATE CONSTANT.
 
 // Returns the rate constant.
-real DeathProcess::A(void) const {return m_a;}
+real BirthProcess::A(void) const {return m_a;}
 
 // Sets the rate constant.
-void DeathProcess::SetA(real a) {m_a = a;}
+void BirthProcess::SetA(real a) {m_a = a;}
 
 
 // TOTAL RATE CALCULATIONS.
 
 // Returns rate of the process for the given system.
-real DeathProcess::Rate(real t, const Cell &sys) const 
+real BirthProcess::Rate(real t, const Cell &sys) const 
 {
-    return m_a * sys.ParticleCount();
+    if (m_cell) {
+        return m_a * m_cell->ParticleCount(); // Rate depends on birth cell.
+    } else {
+        return m_a; // Constant rate.
+    }
 }
 
 /*
 // Calculates the process rate using the given 
 // chemical conditions, rather than those conditions in the
 // given system.
-real DeathProcess::Rate(const real t, const Sprog::Thermo::IdealGas &gas, 
+real BirthProcess::Rate(const real t, const Sprog::Thermo::IdealGas &gas, 
                         const Cell &sys) const
 {
-    return m_a * sys.ParticleCount();
+    if (m_cell) {
+        return m_a * m_cell->ParticleCount(); // Rate depends on birth cell.
+    } else {
+        return m_a; // Constant rate.
+    }
 }
 */
 
 // RATE TERM CALCULATIONS.
 
 // Returns the number of rate terms for this process (one).
-unsigned int DeathProcess::TermCount(void) const {return 1;}
+unsigned int BirthProcess::TermCount(void) const {return 1;}
 
 // Calculates the rate terms given an iterator to a real vector. The 
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
-real DeathProcess::RateTerms(const real t, const Cell &sys, 
+real BirthProcess::RateTerms(const real t, const Cell &sys, 
                              fvector::iterator &iterm) const
 {
-    *iterm = m_a * sys.ParticleCount();
+    if (m_cell) {
+        *iterm = m_a * m_cell->ParticleCount(); // Rate depends on birth cell.
+    } else {
+        *iterm = m_a; // Constant rate.
+    }
     return *(iterm++);
 }
 
@@ -140,10 +164,14 @@ real DeathProcess::RateTerms(const real t, const Cell &sys,
 // iterator is advanced to the position after the last term for this
 // process.  The given chemical conditions are used instead of those
 // in the given system object.
-real DeathProcess::RateTerms(const real t, const Sprog::Thermo::IdealGas &gas,
+real BirthProcess::RateTerms(const real t, const Sprog::Thermo::IdealGas &gas,
                              const Cell &sys, fvector::iterator &iterm) const
 {
-    *iterm = m_a * sys.ParticleCount();
+    if (m_cell) {
+        *iterm = m_a * m_cell->ParticleCount(); // Rate depends on birth cell.
+    } else {
+        *iterm = m_a; // Constant rate.
+    }
     return *(iterm++);
 }
 */
@@ -152,12 +180,32 @@ real DeathProcess::RateTerms(const real t, const Sprog::Thermo::IdealGas &gas,
 
 // Performs the process on the given system.  The responsible rate term is given
 // by index.  Returns 0 on success, otherwise negative.
-int DeathProcess::Perform(real t, Cell &sys, unsigned int iterm) const 
+int BirthProcess::Perform(real t, Cell &sys, unsigned int iterm) const 
 {
-    // Select a particle for deletion.
-    int i = sys.Particles().Select();
-    // Delete the particle.
-    if (i>=0) sys.Particles().Remove(i);
+    Particle *p = NULL;
+
+    if (m_cell || (m_cell->ParticleCount()==0)) {
+        // Uniformly select a particle from the sampling
+        // cell.
+        int i = m_cell->Particles().Select();
+        if (i >= 0) {
+            p = m_cell->Particles().At(i)->Clone();
+        } else {
+            // If sampling failed, then just use the default
+            // particle.  This is a serious error, and really
+            // should never happen.
+            p = m_particle->Clone();
+            printf("sweep: Ensemble sampling failed.  Using default particle "
+                   "(Sweep, BirthProcess::Perform).");
+        }
+    } else {
+        // Create a copy of the default particle, if there
+        // is no sampling cell.
+        p = m_particle->Clone();
+    }
+
+    // Add the new particle to the ensemble.
+    sys.Particles().Add(*p);
     return 0;
 }
 
@@ -165,16 +213,19 @@ int DeathProcess::Perform(real t, Cell &sys, unsigned int iterm) const
 // READ/WRITE/COPY.
 
 // Creates a copy of the inception.
-DeathProcess *const DeathProcess::Clone(void) const {return new DeathProcess(*this);}
+BirthProcess *const BirthProcess::Clone(void) const {return new BirthProcess(*this);}
 
 // Returns the process type.  Used to identify different
 // processes and for serialisation.
-ProcessType DeathProcess::ID(void) const {return Death_ID;}
+ProcessType BirthProcess::ID(void) const {return Birth_ID;}
 
 // Writes the object to a binary stream.
-void DeathProcess::Serialize(std::ostream &out) const
+void BirthProcess::Serialize(std::ostream &out) const
 {
     if (out.good()) {
+        const unsigned int trueval  = 1;
+        const unsigned int falseval = 0;
+
         // Output the version ID (=0 at the moment).
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
@@ -185,15 +236,25 @@ void DeathProcess::Serialize(std::ostream &out) const
         // Write rate constant.
         double v = (double)m_a;
         out.write((char*)&v, sizeof(v));
+
+        // Write default particle.
+        if (m_particle) {
+            out.write((char*)&trueval, sizeof(trueval));
+            m_particle->Serialize(out);
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
     } else {
         throw invalid_argument("Output stream not ready "
-                               "(Sweep, DeathProcess::Serialize).");
+                               "(Sweep, BirthProcess::Serialize).");
     }
 }
 
 // Reads the object from a binary stream.
-void DeathProcess::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
+void BirthProcess::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 {
+    delete m_particle; m_particle = NULL;
+
     if (in.good()) {
         // Read the output version.  Currently there is only one
         // output version, so we don't do anything with this variable.
@@ -212,14 +273,19 @@ void DeathProcess::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
                 // Read rate constant.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_a = (real)val;
-                
+
+                // Read default particle.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n==1) {
+                    m_particle = new Particle(in, mech);
+                }
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, DeathProcess::Deserialize).");
+                                    "(Sweep, BirthProcess::Deserialize).");
         }
     } else {
         throw invalid_argument("Input stream not ready "
-                               "(Sweep, DeathProcess::Deserialize).");
+                               "(Sweep, BirthProcess::Deserialize).");
     }
 }

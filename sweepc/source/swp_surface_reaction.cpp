@@ -142,9 +142,27 @@ void SurfaceReaction::SetPropertyID(unsigned int i, SubModels::SubModelType mode
 // Returns rate of the process for the given system.
 real SurfaceReaction::Rate(real t, const Cell &sys) const
 {
-    return Rate(t, sys, sys);
+    // Rate constant.
+    real rate = m_arr.A;
+
+    // Chemical species concentration dependence.
+    rate *= chemRatePart(sys.MoleFractions(), sys.Density());
+
+    // Temperature dependance.
+    real T = sys.Temperature();
+    rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
+
+    // Particle dependence.
+    rate *= sys.Particles().GetSum(m_modelid, m_pid);
+
+    if (m_mech->AnyDeferred()) {
+        return rate * m_majfactor;
+    } else {
+        return rate;
+    }
 }
 
+/*
 // Calculates the process rate using the given 
 // chemical conditions, rather than those conditions in the
 // given system.
@@ -170,7 +188,7 @@ real SurfaceReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas,
         return rate;
     }
 }
-
+*/
 
 // SINGLE PARTICLE RATE CALCULATIONS.
 
@@ -178,9 +196,27 @@ real SurfaceReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas,
 // the system. Process must be linear in particle number.
 real SurfaceReaction::Rate(real t, const Cell &sys, const Particle &sp) const
 {
-    return Rate(t,sys, sys, sp);
+    // Rate constant.
+    real rate = m_arr.A;
+
+    // Chemical species concentration dependence.
+    rate *= chemRatePart(sys.MoleFractions(), sys.Density());
+
+    // Temperature dependance.
+    real T = sys.Temperature();
+    rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
+
+    // Paticle dependence.
+    if (m_modelid == SubModels::BasicModel_ID) {
+        rate *= sp.Property(static_cast<ParticleCache::PropID>(m_pid));
+    } else {
+        rate *= sp.SubModel(m_modelid)->Property(m_pid);
+    }
+
+    return rate;
 }
 
+/*
 // Returns rate of the process for the given particle using the
 // given chemical conditions rather than those conditions in the
 // the given system.
@@ -206,14 +242,16 @@ real SurfaceReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas,
 
     return rate;
 }
+*/
 
 // Returns majorant rate of the process for the given system.
 real SurfaceReaction::MajorantRate(real t, const Cell &sys, 
                                    const Particle &sp) const
 {
-    return Rate(t, sys, sys, sp) * m_majfactor;
+    return Rate(t, sys, sp) * m_majfactor;
 }
 
+/*
 // Calculates the majorant process rate using the given 
 // chemical conditions, rather than those conditions in the
 // given system.
@@ -222,6 +260,7 @@ real SurfaceReaction::MajorantRate(real t, const Sprog::Thermo::IdealGas &gas,
 {
     return Rate(t, gas, sys, sp) * m_majfactor;
 }
+*/
 
 
 // RATE TERM CALCULATIONS.
@@ -237,9 +276,10 @@ unsigned int SurfaceReaction::TermCount(void) const {return 1;}
 real SurfaceReaction::RateTerms(real t, const Cell &sys, 
                                 fvector::iterator &iterm) const
 {
-    return *(iterm++) = Rate(t, sys, sys);
+    return *(iterm++) = Rate(t, sys);
 }
 
+/*
 // Calculates the rate terms given an iterator to a real vector. The 
 // iterator is advanced to the position after the last term for this
 // process.  The given chemical conditions are used instead of those
@@ -249,7 +289,7 @@ real SurfaceReaction::RateTerms(real t, const Sprog::Thermo::IdealGas &gas,
 {
     return *(iterm++) = Rate(t, gas, sys);
 }
-
+*/
 
 // PERFORMING THE PROCESS.
 
