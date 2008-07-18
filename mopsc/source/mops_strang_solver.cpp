@@ -98,7 +98,7 @@ void StrangSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
         Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech());
     m_swp_ctime += calcDeltaCT(m_cpu_mark);
     
-    for (unsigned int i=1; i!=nsteps; ++i) {
+    for (int i=1; i<nsteps; ++i) {
         m_cpu_mark = clock();
             // Solve whole step of gas-phase chemistry.
             rho = r.Mixture()->Density();
