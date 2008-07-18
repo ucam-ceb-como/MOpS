@@ -203,7 +203,7 @@ void DeathProcess::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-        unsigned int n = 0;
+//        unsigned int n = 0;
         double val = 0.0;
 
         switch (version) {

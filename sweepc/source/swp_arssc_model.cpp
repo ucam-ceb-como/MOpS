@@ -164,7 +164,7 @@ void ARSSC_Model::RemoveSites(SiteType type, real n) {
 void ARSSC_Model::AdjustNeighbourSites(SiteType parent, int n)
 {
     if (n >= 0) {
-        for (unsigned int i=0; i!=n; ++i) {
+        for (int i=0; i!=n; ++i) {
             SiteType k = SelectNeighbour(parent);
             switch (k) {
                 // For free-edges, zigzags and armchairs site
@@ -185,7 +185,7 @@ void ARSSC_Model::AdjustNeighbourSites(SiteType parent, int n)
 
         }
     } else {
-        for (int i=0; i!=n; i) {
+        for (int i=0; i!=n; --i) {
             SiteType k = SelectNeighbour(parent, true);
             switch (k) {
                 // For zigzags and armchairs site
@@ -603,7 +603,7 @@ void ARSSC_Model::Deserialize(std::istream &in, Primary &parent)
                 m_ipah = (unsigned int)i;
 
                 // Read neighbour weights.
-                for (unsigned int i=0; i!=n; ++i) {
+                for (i=0; i!=n; ++i) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
                     m_fe_wt[i] = (real)val;
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
