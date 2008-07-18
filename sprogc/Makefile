@@ -98,10 +98,10 @@ gpc_reaction_set.o: $(src)/gpc_reaction_set.cpp gpc_reaction.o gpc_stoich.o
 gpc_mech.o: $(src)/gpc_mech.cpp
 	$(cpp) $(flag) $(src)/gpc_mech.cpp
 
-gpc_mech_io.o: $(src)/gpc_mech_io.cpp gpc_mech.o $(comostrings)
+gpc_mech_io.o: $(src)/gpc_mech_io.cpp gpc_mech.o
 	$(cpp) $(flag) $(src)/gpc_mech_io.cpp
 
-gpc_string.o: $(src)/gpc_string.cpp gpc_string.o $(comostrings)
+gpc_string.o: $(src)/gpc_string.cpp
 	$(cpp) $(flag) $(src)/gpc_string.cpp
 
 	
