@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
             case OpSplit:
                 // Not implemented yet.
                 printf("Attempted to use simple splitting solver, which is not"
-                       " yet implemented (Mops, main).\n\n");
+                       " yet implemented (mops, main).\n\n");
                 return -1;
             case Strang:
                 solver = new StrangSolver();
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
             case MoMIC:
                 // Not implemented yet.
                 printf("Attempted to use MoMIC solver, which is not"
-                       " yet implemented (Mops, main).\n\n");
+                       " yet implemented (mops, main).\n\n");
                 return -1;
             case FlamePP:
                 // Post-process a gas-phase profile.
@@ -152,9 +152,14 @@ int main(int argc, char *argv[])
                 solver = new Solver();
                 break;
         }
-    } catch (std::exception &e) {
-        printf("Mops: Failed to initialise solver.  Message:\n  ");
-        printf(e.what());
+    } catch (std::logic_error &le) {
+        printf("mops: Failed to initialise solver due to bad inputs.  Message:\n  ");
+        printf(le.what());
+        printf("\n\n");
+        return -1;
+    } catch (std::runtime_error &re) {
+        printf("mops: Failed to initialise solver due to a program error.  Message:\n  ");
+        printf(re.what());
         printf("\n\n");
         return -1;
     }
@@ -162,13 +167,19 @@ int main(int argc, char *argv[])
     // Read the chemical mechanism / profile.
     try {
         if (soltype != FlamePP) {
-            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile);
+            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, true);
         } else {
             dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(chemfile, mech);
         }
-    } catch (std::exception &e) {
-        printf("Mops: Failed to read chemical mechanism/profile.  Message:\n  ");
-        printf(e.what());
+    } catch (std::logic_error &le) {
+        printf("mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n");
+        printf(le.what());
+        printf("\n\n");
+        delete solver; // Must clear memory now.
+        return -1;
+    } catch (std::runtime_error &re) {
+        printf("mops: Failed to read chemical mechanism/profile due to a program error.  Message:\n\n");
+        printf(re.what());
         printf("\n\n");
         delete solver; // Must clear memory now.
         return -1;
@@ -181,9 +192,15 @@ int main(int argc, char *argv[])
             Sweep::MechParser::Read(swpfile, mech.ParticleMech());
             mech.ParticleMech().AddCoagulation();
         }
-    } catch (std::exception &e) {
-        printf("Mops: Failed to read particle mechanism.  Message:\n  ");
-        printf(e.what());
+    } catch (std::logic_error &le) {
+        printf("mops: Failed to read particle mechanism due to bad inputs.  Message:\n  ");
+        printf(le.what());
+        printf("\n\n");
+        delete solver; // Must clear memory now.
+        return -1;
+    } catch (std::runtime_error &re) {
+        printf("mops: Failed to read particle mechanism due to a program error.  Message:\n  ");
+        printf(re.what());
         printf("\n\n");
         delete solver; // Must clear memory now.
         return -1;
@@ -198,9 +215,15 @@ int main(int argc, char *argv[])
             // New format.
             reactor = Settings_IO::LoadFromXML(settfile, reactor, times, sim, *solver, mech);
         }
-    } catch (std::exception &e) {
-        printf("Mops: Failed to load settings file.  Message:\n  ");
-        printf(e.what());
+    } catch (std::logic_error &le) {
+        printf("mops: Failed to load settings file due to bad inputs.  Message:\n  ");
+        printf(le.what());
+        printf("\n\n");
+        delete solver; // Must clear memory now.
+        return -1;
+    } catch (std::runtime_error &re) {
+        printf("mops: Failed to load settings file due to a program error.  Message:\n  ");
+        printf(re.what());
         printf("\n\n");
         delete solver; // Must clear memory now.
         return -1;
@@ -209,9 +232,16 @@ int main(int argc, char *argv[])
     // Solve reactor.
     try {
         if (fsolve) sim.RunSimulation(*reactor, times, *solver);
-    } catch (std::exception &e) {
-        printf("Mops: Failed to solve reactor.  Message:\n  ");
-        printf(e.what());
+    } catch (std::logic_error &le) {
+        printf("mops: Failed to solve reactor due to bad inputs.  Message:\n  ");
+        printf(le.what());
+        printf("\n\n");
+        delete solver; // Must clear memory now.
+        delete reactor;
+        return -1;
+    } catch (std::runtime_error &re) {
+        printf("mops: Failed to solve reactor due to a program error.  Message:\n  ");
+        printf(re.what());
         printf("\n\n");
         delete solver; // Must clear memory now.
         delete reactor;
@@ -221,9 +251,16 @@ int main(int argc, char *argv[])
     // Post-process.
     try {
         if (fpostprocess) sim.PostProcess();
-    } catch (std::exception &e) {
-        printf("Mops: Failed to post-process.  Message:\n  ");
-        printf(e.what());
+    } catch (std::logic_error &le) {
+        printf("mops: Failed to post-process due to bad inputs.  Message:\n  ");
+        printf(le.what());
+        printf("\n\n");
+        delete solver; // Must clear memory now.
+        delete reactor;
+        return -1;
+    } catch (std::runtime_error &re) {
+        printf("mops: Failed to post-process due to a program error.  Message:\n  ");
+        printf(re.what());
         printf("\n\n");
         delete solver; // Must clear memory now.
         delete reactor;
@@ -234,7 +271,7 @@ int main(int argc, char *argv[])
     delete solver;
     delete reactor;
 
-    printf("Mops: Simulation completed successfully!\n");
-    printf("Mops: Thank you for choosing mops for your particle modelling!\n");
+    printf("mops: Simulation completed successfully!\n");
+    printf("mops: Thank you for choosing mops for your particle modelling!\n");
     return 0;
 }
