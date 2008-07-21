@@ -60,13 +60,21 @@ using namespace Strings;
 // Reads a mechanism from a CHEMKIN input file.
 void MechanismParser::ReadChemkin(const std::string &filename, 
                                   Sprog::Mechanism &mech, 
-                                  const std::string &thermofile)
+                                  const std::string &thermofile,
+                                  bool verbose)
 {
+    string msg;
+
     // Open file for reading.
     ifstream fin; //(filename.c_str(), ios::in);
     fin.open(filename.c_str(), ios::in);
 
     if (fin.good()) {
+        if (verbose) {
+            msg = "sprog: Successfully opened CHEMKIN file: " + filename + ".\n";
+            printf(msg.c_str());
+        }
+
         CK_STATUS status;
         status.Status = FindKey;
         status.ReadElements = false;
@@ -83,93 +91,260 @@ void MechanismParser::ReadChemkin(const std::string &filename,
         mech.SetUnits(CGS);
 
         try {
-            parseCK(fin, mech, status);
-        } catch (exception &e) {
+            parseCK(fin, mech, status, verbose);
+        } catch (logic_error &le) {
             fin.close();
-            throw e;
+            throw le;
+        } catch (runtime_error &re) {
+            fin.close();
+            throw re;
         }
         
         fin.close();
         return;
     } else {
         // Failed to open file.
-        throw invalid_argument(string("Could not open CHEMKIN file: ").append(filename));
+        throw std::invalid_argument("Could not open CHEMKIN file: " + filename);
     }
 }
 
 
 // CHEMKIN PARSING ROUTINES.
 
+// Reads a CHEMKIN file stream into a std::string.  Removes
+// comments and fixes line endings as well.
+void MechanismParser::loadCK_File(std::ifstream &fin, std::string &out)
+{
+    // Current position in the file stream (for later reset).
+    int current_pos = fin.tellg();
+
+    // Seek to beginning of stream
+    fin.clear();
+    fin.seekg (0, std::ios::beg);
+
+    // Convert CK file stream to a string.
+    char c;
+    // Must try to get the first character in the stream first 
+    // because the stream might be empty.  This sets good=false.
+    fin.get(c);
+    while (fin.good()) {
+        // Skipping comment until new line or return character is found.
+        if  (c=='!') {
+            do {
+                fin.get(c);
+            } while (fin.good() && (c!='\r') && (c!='\n'));
+            if (!fin.good()) break;
+        }
+
+        // Fix line endings and tabs.
+        if (c=='\r') {
+            // replace return character by new line character, if some 
+            // systems don't read \r\n as \n
+            c = '\n';
+        } else if (c=='\t') {
+            // replace tab character by a space bar character
+            c = ' ';
+        }
+
+        // Store this character.
+        out.append(1,c);
+        
+        // Get next character.
+        fin.get(c);
+    };
+
+    // Reset position of of stream to where it was before
+    // we read it.
+    fin.clear();
+    fin.seekg(current_pos);
+
+    // Convert the string to capital letters.
+    out = Strings::convertToCaps(out);
+}
+
 // Loads a mechanism from a CHEMKIN formatted file stream.
 void MechanismParser::parseCK(std::ifstream &fin, 
                            Sprog::Mechanism &mech, 
-                           Sprog::IO::MechanismParser::CK_STATUS &status)
+                           Sprog::IO::MechanismParser::CK_STATUS &status,
+                           bool verbose)
 {
-    string cksubstr;
+    string msg;
 
-    // Convert chemkin file stream to a string and store in chemkinstr
-    string chemkinstr = StringFunc::CK_is2str(fin);
+    // READ FILE INTO A STRING.
+
+    string ck;
+    loadCK_File(fin, ck);
+
+    // PARSE THE STRING.
+
+    string substr = "";
+    unsigned int lineno=0, n=0;
 
     // Read the elements.
-    cksubstr = StringFunc::extract_CK_elements_str(chemkinstr);
-    parseCK_Elements(cksubstr, mech, status);
+    if (verbose) printf("sprog: Parsing CHEMKIN file for elements...\n");
+    extractCK_Elements(ck, substr, lineno);
+    n = parseCK_Elements(substr, mech, lineno, status);
     status.ReadElements = true;
+    if (verbose) {
+        msg = "sprog: Read ";
+        msg = msg + cstr(n) + " elements.\n";
+        printf(msg.c_str());
+    }
 
     // Read the species.
-    cksubstr = StringFunc::extract_CK_species_str(chemkinstr);
-    parseCK_Species(cksubstr, mech, status);
+    if (verbose) printf("sprog: Parsing CHEMKIN file for species...\n");
+    extractCK_Species(ck, substr, lineno);
+    n = parseCK_Species(substr, mech, lineno, status);
     status.ReadSpecies = true;
+    if (verbose) {
+        msg = "sprog: Read ";
+        msg = msg + cstr(n) + " species.\n";
+        printf(msg.c_str());
+    }
 
     // Read the thermo data.
     if (status.ThermoFile == "") {
         // Read thermo data from this file. // This could be bugs
-        cksubstr = StringFunc::extract_CK_thermo_str(chemkinstr);
-        istringstream strin(ios_base::in);
-        StringFunc::remove_CK_keyword(cksubstr, StringFunc::TM_KEYWORD);
-        strin.str(cksubstr);
-        parseCK_Thermo(cksubstr, mech, status);
+        if (verbose) printf("sprog: Parsing CHEMKIN file for thermo data...\n");
+        extractCK_Thermo(ck, substr, lineno);
     } else {
         // Read thermo data from thermo file.
-        parseCK_Thermo(status.ThermoFile, mech, status);
+        if (verbose) printf("sprog: Parsing THERMO file for thermo data...\n");
+        // Read the file into a string.
+        string thermo = "";
+        ifstream tfin;
+        tfin.open(status.ThermoFile.c_str(), ios::in);
+        loadCK_File(tfin, thermo);
+        tfin.close();
+        // Extract the thermo data.
+        extractCK_Thermo(thermo, substr, lineno);
     }
+    parseCK_Thermo(substr, mech, lineno, status);
     status.ReadThermo = true;
 
     // Read the reactions.
-    cksubstr = StringFunc::extract_CK_reactions_str(chemkinstr);
-    parseCK_Reactions(cksubstr, mech, status);
+    if (verbose) printf("sprog: Parsing CHEMKIN file for reactions...\n");
+    extractCK_Reactions(ck, substr, lineno);
+    n = parseCK_Reactions(substr, mech, lineno, status);
     mech.BuildStoichXRef();
     mech.SetUnits(SI);
+    if (verbose) {
+        msg = "sprog: Read ";
+        msg = msg + cstr(n) + " reactions.\n";
+        printf(msg.c_str());
+    }
 }
 
-void MechanismParser::parseCK_Elements(std::string &ck_el_str, Sprog::Mechanism &mech, 
-                                    Sprog::IO::MechanismParser::CK_STATUS &status)
+// Get positions of a CK keyword and END keyword.
+MechanismParser::KEY_POS MechanismParser::getCK_KeyPos(const std::string &key, 
+                                                       const std::string &ckstr)
 {
-    char c = '\0';
+    KEY_POS pos;
+
+    // Try to locate the full keyword.
+    pos.begin = ckstr.find(key, 0);
+
+    // Try to locate smaller, 4-character keyword.
+    if (pos.begin == std::string::npos) {
+        pos.begin  = ckstr.find(key.substr(0,4), 0);
+        pos.length = 4;
+    } else {
+        pos.length = key.length();
+    }
+
+    // Find the end keyword.
+    pos.end = ckstr.find("END", pos.begin);
+
+    // Now try to find the other keywords before the END.  If
+    // keywords are present before END then this is an error.
+    if (ckstr.find("ELEM", pos.begin+pos.length) < pos.end){
+        throw std::invalid_argument("Erroneous ELEM/ELEMENTS keyword found within " +
+                                    key + " definition "
+                                    "(Sprog, MechanismParser::getCK_KeyPos).");
+    }
+    if (ckstr.find("SPEC", pos.begin+pos.length) < pos.end){
+        throw std::invalid_argument("Erroneous SPEC/SPECIES keyword found within " +
+                                    key + " definition "
+                                    "(Sprog, MechanismParser::getCK_KeyPos).");
+    }
+    if (ckstr.find("REAC", pos.begin+pos.length) < pos.end){
+        throw std::invalid_argument("Erroneous REAC/REACTIONS keyword found within " +
+                                    key + " definition "
+                                    "(Sprog, MechanismParser::getCK_KeyPos).");
+    }
+    if (ckstr.find("THER", pos.begin+pos.length) < pos.end){
+        throw std::invalid_argument("Erroneous THER/THERMO keyword found within " +
+                                    key + " definition "
+                                    "(Sprog, MechanismParser::getCK_KeyPos).");
+    }
+
+    // Determine the keyword line number.
+    pos.line = 1;
+    int linepos = ckstr.find_last_of("\n", pos.begin);
+    while (linepos != ckstr.npos) {
+        ++pos.line;
+        linepos = ckstr.find_last_of("\n", linepos-1);
+    }
+
+    // No erroneous keywords were found.
+    return pos;
+}
+
+// Extract element names from ck string.
+void MechanismParser::extractCK_Elements(const std::string &ckstr, 
+                                         std::string &elements,
+                                         unsigned int &lineno)
+{
+    KEY_POS pos;
+
+    // Find the beginning and end of the elements.
+    pos = getCK_KeyPos("ELEMENTS", ckstr);
+
+    // Check for valid keyword positions.
+    if (pos.begin == std::string::npos) {
+        throw std::invalid_argument("ELEM/ELEMENTS keyword not found in "
+                                    "CHEMKIN input file "
+                                    "(Sprog, MechanismParser::extractCK_Elements).");
+    }
+    if (pos.end == std::string::npos) {
+        throw std::invalid_argument("END keyword missing after ELEM/ELEMENTS "
+                                    "keywords in CHEMKIN input file "
+                                    "(Sprog, MechanismParser::extractCK_Elements).");
+    }
+    
+    // Copy only the elements part from chemkin string, ignoring
+    // the keywords.
+    elements = ckstr.substr(pos.begin + pos.length, pos.end - pos.begin - pos.length);
+    lineno   = pos.line;
+}
+
+// Parse the element data in a CHEMKIN input file.
+unsigned int MechanismParser::parseCK_Elements(const std::string &elements, 
+                                       Sprog::Mechanism &mech,
+                                       unsigned int lineno,
+                                       Sprog::IO::MechanismParser::CK_STATUS &status)
+{
     string tag;
     real val = 0.0;
-    istringstream strin(ios_base::in);
-    StringFunc::remove_CK_keyword(ck_el_str, StringFunc::EL_KEYWORD);
-    strin.str(ck_el_str);
-
-    Element * last_el = NULL;
-
+    Element *last_el = NULL;
     status.Status = BeginParseEl;
+    unsigned int n = 0; // Element count.
 
-    while((status.Status!=End) && (status.Status!=Fail) && (strin.good())) {
-        // Get the next character from the input file.
-        strin.get(c);
+    // Get iterator to beginning of elements declaration.
+    string::const_iterator c = elements.begin();
 
+    while((status.Status!=End) && (status.Status!=Fail) && (c!=elements.end())) {
         switch(status.Status) {
             case BeginParseEl:
                 // Here we are looking for the start of an element name.
-                if (isLetter(c)) {
+                if (isLetter(*c)) {
                     // This is the start of an element name.
-                    tag = c;
+                    tag = *c;
                     status.Status = ParseEl;
 
                     // Clear the last read element.
                     last_el = NULL;
-                } else if (c == '/') {
+                } else if (*c == '/') {
                     // This character means that the last element's Mol. Wt. is defined in
                     // the input file.  If the last element is valid, then we must read
                     // the mol. wt. from the file.
@@ -180,46 +355,47 @@ void MechanismParser::parseCK_Elements(std::string &ck_el_str, Sprog::Mechanism 
                         // Oh dear.  There is an element mol. wt. definition without an
                         // element.  This is an error.
                         status.Status = Fail;
-                        throw range_error("Invalid / character in element definition.");
+                        throw invalid_argument("Invalid / character in element definition "
+                                               "on line number " + cstr(lineno) +
+                                               " (Sprog, MechanismParser::parseCK_Elements).");
                     }
-                } else if (c == '!') {
+                } else if (*c == '!') {
                     // This is a comment.
                     status.Status = ParseElComment;
-                } else if (!isWhiteSpace(c)) {
+                } else if (*c == '\n') {
+                    // This is a new line.
+                    ++lineno;
+                } else if (!isWhiteSpace(*c)) {
                     // This must be an invalid character.
                     status.Status = Fail;
-                    throw range_error("Invalid character in element definition.");
+                    string msg = "Invalid character in element definition on line number "+
+                        cstr(lineno)+" of CHEMKIN input file.\n"
+                        "Function: (Sprog, MechanismParser::parseCK_Elements).";
+                    throw std::invalid_argument(msg);
+
                 }
                 break;
             case ParseEl:
                 // We are now reading an element name.
-                if (isLetterOrNum(c)) {
+                if (isLetterOrNum(*c)) {
                     // This is a valid character for the element name.
-                    tag.append(&c, 1);
-                } else if (isWhiteSpace(c)) {
-                    // We have read to the end of the element name.  We need to check
-                    // that this element name is not actually a keyword.
-                    if (convertToCaps(tag.substr(0,4)) == "ELEM") {
-                        status.Status = BeginParseEl;
-                    } else if (convertToCaps(tag.substr(0,4)) == "SPEC") {
-                        status.Status = End;
-                    } else if (convertToCaps(tag.substr(0,4)) == "REAC") {
-                        status.Status = End;
-                    } else if (convertToCaps(tag.substr(0,4)) == "END") {
-                        status.Status = End;
-                    } else {
-                        // This is an element name, so add a new
-                        // element to the mechanism and set its name.
-                        last_el = mech.AddElement();
-                        last_el->SetName(tag);
-                        // Attempt to find the element weight in the library of
-                        // know elements.
-                        last_el->SetMolWtFromLibrary();
-                        // Start searching for the next element.
-                        status.Status = BeginParseEl;
-                    }
+                    tag.append(&(*c), 1);
+                } else if (isWhiteSpace(*c)) {
+                    if (*c == '\n') ++lineno;
+
+                    // This tag contains a complete element name, so add a new
+                    // element to the mechanism and set its name.
+                    last_el = mech.AddElement();
+                    last_el->SetName(tag);
+                    // Attempt to find the element weight in the library of
+                    // know elements.
+                    last_el->SetMolWtFromLibrary();
+                    // Start searching for the next element.
+                    status.Status = BeginParseEl;
                     tag = "";
-                } else if (c == '/') {
+                    // Increment element count.
+                    ++n;
+                } else if (*c == '/') {
                     // This character means that the element Mol. Wt. is defined in
                     // the input file.  First task is to initialise a new element.
                     last_el = mech.AddElement();
@@ -231,7 +407,7 @@ void MechanismParser::parseCK_Elements(std::string &ck_el_str, Sprog::Mechanism 
                 break;
             case ParseElWt:
                 // We are reading an element mol. wt. from the file.
-                if (c == '/') {
+                if (*c == '/') {
                     // This is the end of the mol. wt. definition.  Attempt to convert it
                     // to a number.
                     val = cdble(tag);
@@ -241,17 +417,21 @@ void MechanismParser::parseCK_Elements(std::string &ck_el_str, Sprog::Mechanism 
                     } else {
                         // The mol. wt. is invalid.
                         status.Status = Fail;
-                        throw range_error(string("An invalid mol. wt. was found for element ").append(last_el->Name()));
+                        throw invalid_argument("An invalid mol. wt. was found for element " + 
+                                               last_el->Name() + " on line number " + 
+                                               cstr(lineno) +
+                                               "(Sprog, MechanismParser::parseCK_Elements).");
                     }
                 } else {
                     // Add character to number.
-                    tag.append(&c, 1);
+                    tag.append(&(*c), 1);
                 }
                 break;
             case ParseElComment:
                 // We are reading a comment in the element list.  A comment is only
                 // terminated by a line ending.
-                if ((c == '\n') || (c == '\r')) {
+                if (*c == '\n') {
+                    ++lineno;
                     status.Status = BeginParseEl;
                 }
                 break;
@@ -259,80 +439,104 @@ void MechanismParser::parseCK_Elements(std::string &ck_el_str, Sprog::Mechanism 
                 throw runtime_error("Illegal parsing flag encountered "
                                     "(Sprog, MechanismParser::parseCK_Elements).");
         }
+
+        // Increment string location.
+        ++c;
     }
+
+    return n;
 }
 
-void MechanismParser::parseCK_Species(std::string &ck_sp_str, 
-                                   Sprog::Mechanism &mech, 
-                                   Sprog::IO::MechanismParser::CK_STATUS &status)
+// Extract species names from CHEMKIN string.
+void MechanismParser::extractCK_Species(const std::string &ckstr, 
+                                        std::string &species,
+                                        unsigned int &lineno)
 {
-    char c;
+    KEY_POS pos;
+
+    // Find the beginning and end of the elements.
+    pos = getCK_KeyPos("SPECIES", ckstr);
+
+    // Check for valid keyword positions.
+    if (pos.begin == std::string::npos) {
+        throw std::invalid_argument("SPEC/SPECIES keyword not found in "
+                                    "CHEMKIN input file.\n"
+                                    "Function: (Sprog, MechanismParser::extractCK_Species).");
+    }
+    if (pos.end == std::string::npos) {
+        throw std::invalid_argument("END keyword missing after SPEC/SPECIES "
+                                    "keywords in CHEMKIN input file.\n"
+                                    "Function: (Sprog, MechanismParser::extractCK_Species).");
+    }
+    
+    // Copy only the elements part from chemkin string, ignoring
+    // the keywords.
+    species = ckstr.substr(pos.begin + pos.length, pos.end - pos.begin - pos.length);
+    lineno   = pos.line;
+}
+
+// Parse the species data in a CHEMKIN input file 
+// (elements must already have been read).
+unsigned int MechanismParser::parseCK_Species(const std::string &species, 
+                                      Sprog::Mechanism &mech,
+                                      unsigned int lineno,
+                                      Sprog::IO::MechanismParser::CK_STATUS &status)
+{
     string tag;
-    istringstream strin(ios_base::in);
-    StringFunc::remove_CK_keyword(ck_sp_str, StringFunc::SP_KEYWORD);
-    strin.str(ck_sp_str);
-
-    Species * last_sp;
-
+    Species *last_sp;
     status.Status = BeginParseSp;
+    unsigned int n = 0; // Species count.
 
-    while((status.Status!=End) && (status.Status!=Fail) && (strin.good())) {
-        // Get the next character from the input file.
-        strin.get(c);
+    // Get iterator to first character in the species defintion.
+    string::const_iterator c = species.begin();
 
+    // Loop over all characters in the species definition.
+    while((status.Status!=End) && (status.Status!=Fail) && (c!=species.end())) {
         switch(status.Status) {
             case BeginParseSp:
                 // We are searching for the beginning of a species name.
-                if (isLetter(c)) {
+                if (isLetter(*c)) {
                     // This is the start of a species name.
-                    tag = c;
+                    tag = *c;
                     status.Status = ParseSp;
 
                     // Clear the last read species.
                     last_sp = NULL;
-                } else if (c == '!') {
+                } else if (*c == '!') {
                     // This is a comment.
                     status.Status = ParseSpComment;
-                } else if (!isWhiteSpace(c)) {
+                } else if (*c == '\n') {
+                    // A new line.
+                    ++lineno;
+                } else if (!isWhiteSpace(*c)) {
                     // This must be an invalid character.
                     status.Status = Fail;
-                    throw range_error("Invalid character in species definition.");
+                    throw invalid_argument("Invalid character in species definition on"
+                        "line number " + cstr(lineno) + "of CHEMKIN input file.\n"
+                        "Function: (Sprog, MechanismParser::parseCK_Species).");
                 }
                 break;
             case ParseSp:
                 // We are now reading a species name.
-                if (isLetterOrNum(c) || (c=='(') || (c==')') ||
-                    (c=='*') || (c=='-') || (c=='+')) {
+                if (isLetterOrNum(*c) || (*c=='(') || (*c==')') ||
+                    (*c=='*') || (*c=='-') || (*c=='+')) {
                     // This is a valid character for the species name.
-                    tag.append(&c, 1);
-                } else if (isWhiteSpace(c)) {
-                    // We have read to the end of the species name.  We need to check
-                    // that this species name is not actually a keyword.
-                    if (convertToCaps(tag.substr(0,4)) == "ELEM") {
-                        // This is an error. The elements must be defined before
-                        // the species.
-                        status.Status = Fail;
-                        throw range_error("Element definition after species definitions.");
-                    } else if (convertToCaps(tag.substr(0,4)) == "SPEC") {
-                        status.Status = BeginParseSp;
-                    } else if (convertToCaps(tag.substr(0,4)) == "REAC") {
-                        status.Status = End;
-                    } else if (convertToCaps(tag.substr(0,4)) == "END") {
-                        status.Status = End;
-                    } else {
-                        // This is a species name, so add a new
-                        // species to the mechanism and set its name.
-                        last_sp = mech.AddSpecies();
-                        last_sp->SetName(tag);
-                        // Begin searching for the next species name.
-                        status.Status = BeginParseSp;
-                    }
+                    tag.append(&(*c), 1);
+                } else if (isWhiteSpace(*c)) {
+                    // This tag contains a full species name, so add a new
+                    // species to the mechanism and set its name.
+                    ++n;
+                    last_sp = mech.AddSpecies();
+                    last_sp->SetName(tag);
+                    // Begin searching for the next species name.
+                    status.Status = BeginParseSp;
                 }
                 break;
             case ParseSpComment:
                 // We are reading a comment in the species list.  A comment is only
                 // terminated by a line ending.
-                if ((c == '\n') || (c == '\r')) {
+                if (*c == '\n') {
+                    ++lineno;
                     status.Status = BeginParseSp;
                 }
                 break;
@@ -340,20 +544,59 @@ void MechanismParser::parseCK_Species(std::string &ck_sp_str,
                 throw runtime_error("Illegal parsing flag encountered "
                                     "(Sprog, MechanismParser::parseCK_Species).");
         }
+
+        // Increment iterator.
+        ++c;
     }
+
+    return n;
+}
+
+// Extract thermo data from CHEMKIN string.
+void MechanismParser::extractCK_Thermo(const std::string &ckstr, 
+                                       std::string &thermo,
+                                       unsigned int &lineno)
+{
+    KEY_POS pos;
+
+    // Find the beginning and end of the elements.
+    pos = getCK_KeyPos("THERMO", ckstr);
+
+    // Check for valid keyword positions.
+    if (pos.begin == std::string::npos) {
+        throw std::invalid_argument("THER/THERMO keyword not found in "
+                                    "CHEMKIN input file.\n"
+                                    "Function: (Sprog, MechanismParser::extractCK_Species).");
+    }
+    if (pos.end == std::string::npos) {
+        throw std::invalid_argument("END keyword missing after THER/THERMO "
+                                    "keywords in CHEMKIN input file.\n"
+                                    "Function: (Sprog, MechanismParser::extractCK_Species).");
+    }
+    
+    // Unlike other CHEMKIN data, the thermo has a strict
+    // 80 character format.  We must locate the first character
+    // on the line following the THERMO keyword.  This involves searching
+    // for the line ending \n.
+    int i = -1;
+    while (ckstr[pos.begin+pos.length+(++i)] != '\n');
+    ++i;
+
+    // Copy only the thermo part from chemkin string, ignoring
+    // the keywords.
+    thermo = ckstr.substr(i + pos.length, pos.end - i - pos.length);
+    lineno = pos.line;
 }
 
 // Reads CHEMKIN formatted thermo data for all species in the given mechanism from
 // the supplied file stream.
-void MechanismParser::parseCK_Thermo(std::istream &strin, Sprog::Mechanism &mech, 
-                                  Sprog::IO::MechanismParser::CK_STATUS &status)
+void MechanismParser::parseCK_Thermo(const std::string &thermo, Sprog::Mechanism &mech, 
+                                     unsigned int lineno,
+                                     Sprog::IO::MechanismParser::CK_STATUS &status)
 {
-    int i;
-    char c, line[200];
+    unsigned int i, j1, j2;
+    char c;
     string tag, spname;
-    //istringstream strin(ios_base::in);
-    //StringFunc::remove_all_CK_keywords(ck_tm_str);
-    //strin.str(ck_tm_str);
 
     real trange[3], lowT, highT, commT;
     Thermo::THERMO_PARAMS up; // Coeffs for upper T interval.
@@ -361,177 +604,197 @@ void MechanismParser::parseCK_Thermo(std::istream &strin, Sprog::Mechanism &mech
     vector<string> els(4);
     int nels[4];
 
-    Species * sp;
+    Species *sp;
 
     status.Status = ParseTherm;
-    tag.resize(200,' ');
+    tag.resize(81,' ');
 
-    // The first line holds the temperature ranges for 2 sets of coefficients.
-    strin.getline(&line[0], 200);
-    while (line[0]=='\0') strin.getline(&line[0], 200);
-    tag.clear();
-    tag = line;
+    // The first line holds the temperature ranges for 
+    // 2 sets of coefficients.
+    j1 = j2 = 0;
+    tag = "\0";
+    while ((tag == "\0") && (j2<thermo.length())){
+        j1 = j2;
+        j2 = thermo.find("\n", j1) + 1;
+        tag = thermo.substr(j1, j2-j1); ++lineno;
+    }
     trange[0] = cdble(tag.substr(0,10));
     trange[1] = cdble(tag.substr(10,10));
     trange[2] = cdble(tag.substr(20,10));
 
-    while((status.Status!=End) && (status.Status!=Fail) && (strin.good())) {
-        // Get species name line.
-        strin.getline(&line[0], 200);
-        tag.clear();
-        tag = line;
+    while ((status.Status!=End) && (status.Status!=Fail) && (j2 != thermo.npos)) {
+        // Get the next line, ignoring blank lines.
+        tag = "\0";
+        while ((tag=="\0") && (j2<thermo.length())) {
+            j1 = j2;
+            j2 = thermo.find("\n", j1) + 1;
+            tag = thermo.substr(j1, j2-j1-1); ++lineno;
+        }
 
-        if ((tag != "") && (line[0] != '!')) {
+        // Check for end of data.
+        if (j2>=thermo.length()) break;
+
+        if ((tag != "") && (tag[0] != '!')) {
             // Get species name from line.
-            c = line[0];
-            for(i=1; (i<18)&&(!isWhiteSpace(c)); i++) {
-                c = line[i];
+            c = tag[0];
+            for(i=1; (i<18)&&(!isWhiteSpace(c)); ++i) {
+                c = tag[i];
             }
             spname = tag.substr(0,i-1);
 
-            if (spname.compare("END") != 0) {
-                // Find species in the mechanism.
-                sp = mech.GetSpecies(spname);
+            // Find species in the mechanism.
+            sp = mech.GetSpecies(spname);
 
-                if (sp != NULL) {
-                    // Species was found in the mechanism, so we need to
-                    // read the thermo data.
-                    
-                    // Get elemental composition from this (1st) line.
-                    els[0] = tag.substr(24, 2);
-                    els[1] = tag.substr(29, 2);
-                    els[2] = tag.substr(34, 2);
-                    els[3] = tag.substr(39, 2);
-                    nels[0] = (int)cdble(tag.substr(26,3));
-                    nels[1] = (int)cdble(tag.substr(31,3));
-                    nels[2] = (int)cdble(tag.substr(36,3));
-                    nels[3] = (int)cdble(tag.substr(41,3));
+            if (sp != NULL) {
+                // Species was found in the mechanism, so we need to
+                // read the thermo data.
+                
+                // Get elemental composition from this (1st) line.
+                els[0] = tag.substr(24, 2);
+                els[1] = tag.substr(29, 2);
+                els[2] = tag.substr(34, 2);
+                els[3] = tag.substr(39, 2);
+                nels[0] = (int)cdble(tag.substr(26,3));
+                nels[1] = (int)cdble(tag.substr(31,3));
+                nels[2] = (int)cdble(tag.substr(36,3));
+                nels[3] = (int)cdble(tag.substr(41,3));
 
-                    // Get the thermo temperature ranges from this (1st) line.
-                    lowT = cdble(tag.substr(45,10));
-                    highT = cdble(tag.substr(55,10));
-                    commT = cdble(tag.substr(65,10));
-                    if (commT == 0) commT = trange[1];
+                // Get the thermo temperature ranges from this (1st) line.
+                lowT = cdble(tag.substr(45,10));
+                highT = cdble(tag.substr(55,10));
+                commT = cdble(tag.substr(65,10));
+                if (commT == 0) commT = trange[1];
 
-                    // Get 2nd line and read thermo coeffs.
-                    strin.getline(&line[0], 200);
-                    tag = line;
-                    up.Count = 7;
-                    up.Params[0] = cdble(tag.substr(0,15));
-                    up.Params[1] = cdble(tag.substr(15,15));
-                    up.Params[2] = cdble(tag.substr(30,15));
-                    up.Params[3] = cdble(tag.substr(45,15));
-                    up.Params[4] = cdble(tag.substr(60,15));
-
-                    // Get 3rd line and read thermo coeffs.
-                    strin.getline(&line[0], 200);
-                    tag = line;
-                    up.Params[5] = cdble(tag.substr(0,15));
-                    up.Params[6] = cdble(tag.substr(15,15));
-                    lp.Count = 7;
-                    lp.Params[0] = cdble(tag.substr(30,15));
-                    lp.Params[1] = cdble(tag.substr(45,15));
-                    lp.Params[2] = cdble(tag.substr(60,15));
-
-                    // Get 4th line and read thermo coeffs.
-                    strin.getline(&line[0], 200);
-                    tag = line;
-                    lp.Params[3] = cdble(tag.substr(0,15));
-                    lp.Params[4] = cdble(tag.substr(15,15));
-                    lp.Params[5] = cdble(tag.substr(30,15));
-                    lp.Params[6] = cdble(tag.substr(45,15));
-
-                    // Now save the data to the species:
-                    
-                    // Add the elemental composition to the species.
-                    for (i=0; i<4; i++) {
-                        // Need to check the element name is valid.
-                        try {
-                            if (!isWhiteSpace(*els[i].substr(0,1).c_str())) {
-                                if (!isWhiteSpace(*els[i].substr(1,1).c_str())) {
-                                    sp->AddElement(els[i], nels[i]);
-                                } else {
-                                    sp->AddElement(els[i].substr(0,1), nels[i]);
-                                }                    
-                            }
-                        } catch (std::invalid_argument &ia) {
-                            throw ia;
-                        }
-                    }
-                    
-                    // Add the thermo parameters.
-                    sp->SetThermoStartTemperature(lowT);
-                    sp->AddThermoParams(commT, lp);
-                    sp->AddThermoParams(highT, up);
-                } else {
-                    // Species was not found in the mechanism, so we need to
-                    // skip lines to the next species.
-                    strin.getline(&line[0], 200);
-                    strin.getline(&line[0], 200);
-                    strin.getline(&line[0], 200);
+                // Get 2nd line and read thermo coeffs.
+                tag = "\0";
+                while ((tag=="\0") && (j2<thermo.length() )) {
+                    j1 = j2;
+                    j2 = thermo.find("\n", j1) + 1;
+                    tag = thermo.substr(j1, j2-j1-1); ++lineno;
                 }
+                up.Count = 7;
+                up.Params[0] = cdble(tag.substr(0,15));
+                up.Params[1] = cdble(tag.substr(15,15));
+                up.Params[2] = cdble(tag.substr(30,15));
+                up.Params[3] = cdble(tag.substr(45,15));
+                up.Params[4] = cdble(tag.substr(60,15));
+
+                // Get 3rd line and read thermo coeffs.
+                tag = "\0";
+                while ((tag=="\0") && (j2<thermo.length())) {
+                    j1 = j2;
+                    j2 = thermo.find("\n", j1) + 1;
+                    tag = thermo.substr(j1, j2-j1-1); ++lineno;
+                }
+                up.Params[5] = cdble(tag.substr(0,15));
+                up.Params[6] = cdble(tag.substr(15,15));
+                lp.Count = 7;
+                lp.Params[0] = cdble(tag.substr(30,15));
+                lp.Params[1] = cdble(tag.substr(45,15));
+                lp.Params[2] = cdble(tag.substr(60,15));
+
+                // Get 4th line and read thermo coeffs.
+                tag = "\0";
+                while ((tag=="\0") && (j2<thermo.length())) {
+                    j1 = j2;
+                    j2 = thermo.find("\n", j1) + 1;
+                    tag = thermo.substr(j1, j2-j1-1); ++lineno;
+                }
+                lp.Params[3] = cdble(tag.substr(0,15));
+                lp.Params[4] = cdble(tag.substr(15,15));
+                lp.Params[5] = cdble(tag.substr(30,15));
+                lp.Params[6] = cdble(tag.substr(45,15));
+
+                // Now save the data to the species:
+                
+                // Add the elemental composition to the species.
+                for (i=0; i<4; i++) {
+                    // Need to check the element name is valid.
+                    try {
+                        if (!isWhiteSpace(*els[i].substr(0,1).c_str())) {
+                            if (!isWhiteSpace(*els[i].substr(1,1).c_str())) {
+                                sp->AddElement(els[i], nels[i]);
+                            } else {
+                                sp->AddElement(els[i].substr(0,1), nels[i]);
+                            }                    
+                        }
+                    } catch (std::invalid_argument &ia) {
+                        throw ia;
+                    }
+                }
+                
+                // Add the thermo parameters.
+                sp->SetThermoStartTemperature(lowT);
+                sp->AddThermoParams(commT, lp);
+                sp->AddThermoParams(highT, up);
             } else {
-                status.Status = End;
+                // Species was not found in the mechanism, so we need to
+                // skip lines to the next species.
+                j2 = thermo.find("\n", j1=j2) + 1;
+                j2 = thermo.find("\n", j1=j2) + 1;
+                j2 = thermo.find("\n", j1=j2) + 1;
+                lineno += 3;
             }
         }
     }
 }
 
-// Reads CHEMKIN formatted thermo data for all species in the given mechanism from
-// the file specified by the file name.
-void MechanismParser::parseCK_Thermo(std::string &filename, Sprog::Mechanism &mech, 
-                                     Sprog::IO::MechanismParser::CK_STATUS &status)
+// Extract element names from ck string.
+void MechanismParser::extractCK_Reactions(const std::string &ckstr, 
+                                          std::string &reac,
+                                          unsigned int &lineno)
 {
-    // Open file for reading.
-    ifstream fin; //(filename.c_str(), ios::in);
-    fin.open(filename.c_str(), ios::in);
+    KEY_POS pos;
 
-    if (fin.good()) {
-        try {
-            char c[81]; fin.getline(&c[0],80); // Discard first line.
-            parseCK_Thermo(fin, mech, status);
-        } catch (exception &e) {
-            fin.close();
-            throw e;
-        }
-        
-        fin.close();
-        return;
-    } else {
-        // Failed to open file.
-        throw invalid_argument(string("Could not open THERMO file: ").append(filename));
+    // Find the beginning and end of the elements.
+    pos = getCK_KeyPos("REACTIONS", ckstr);
+
+    // Check for valid keyword positions.
+    if (pos.begin == std::string::npos) {
+        throw std::invalid_argument("REAC/REACTIONS keyword not found in "
+                                    "CHEMKIN input file "
+                                    "(Sprog, MechanismParser::extractCK_Reactions).");
     }
+    if (pos.end == std::string::npos) {
+        throw std::invalid_argument("END keyword missing after REAC/REACTIONS "
+                                    "keywords in CHEMKIN input file "
+                                    "(Sprog, MechanismParser::extractCK_Reactions).");
+    }
+    
+    // Copy only the elements part from chemkin string, ignoring
+    // the keywords.
+    reac   = ckstr.substr(pos.begin + pos.length, pos.end - pos.begin - pos.length);
+    lineno = pos.line;
 }
 
 // Reads all the chemical reactions from the CHEMKIN formatted file stream.
-void MechanismParser::parseCK_Reactions(std::string &ck_rt_str, Sprog::Mechanism &mech, 
-                                     Sprog::IO::MechanismParser::CK_STATUS &status)
+unsigned int MechanismParser::parseCK_Reactions(const std::string &reac, Sprog::Mechanism &mech, 
+                                        unsigned int lineno,
+                                        Sprog::IO::MechanismParser::CK_STATUS &status)
 {
-    char c;
-    string tag, rxndef;
+    string tag="", rxndef="";
     bool fcont = false; //, fdup = false;
-    istringstream strin(ios_base::in);
-    StringFunc::remove_CK_keyword(ck_rt_str, StringFunc::RT_KEYWORD);
-    strin.str(ck_rt_str);
+    unsigned int n = 0; // Reaction count.
 
-    Kinetics::Reaction * last_rxn = NULL;
+    Kinetics::Reaction *last_rxn = NULL;
 
     status.Status = ParseRxn;
-    tag.clear();
-    rxndef.clear();
 
-    while((status.Status!=End) && (status.Status!=Fail) && (strin.good())) {
-        // Get the next character from the input file.
-        strin.get(c);
+    // First try to read the reaction units.
+    unsigned int i = reac.find("\n");
+    tag = reac.substr(0, i);
+    parseCK_Units(tag, status.Scale);
 
+    // Get iterator to beginning of reactions declaration.
+    string::const_iterator c = reac.begin()+i;
+
+    while((status.Status!=End) && (status.Status!=Fail) && (c!=reac.end())) {
         switch(status.Status) {
             case BeginParseRxn:
+                fcont = false;
                 // Clear white space at the beginning of the line.
-                if (c=='!') {
-                    status.Status = BeginParseRxnComment;
-                    rxndef = "";
-                } else if (!isWhiteSpace(c)) {
-                    rxndef = c;
+                if (!isWhiteSpace(*c)) {
+                    rxndef = *c;
                     status.Status = ParseRxn;
                 }
                 break;
@@ -540,102 +803,79 @@ void MechanismParser::parseCK_Reactions(std::string &ck_rt_str, Sprog::Mechanism
                 // a string rxndef to hold to the reaction info.  This string will be
                 // passed to the function parseCK_Reaction for translation.
 
-                if (c=='!') {
-                    // Break if this is the end of the reaction definitions.
-                    if (rxndef.substr(0,3).compare("END")==0) {                    
-                        // Before parsing the string we should check that it doesn't
-                        // hold auxilliary info for the previous reaction.
-                        if (!parseCK_RxnAux(rxndef, last_rxn, mech, status.Scale, status)) {
-                            // No aux info.  First add the last reaction to the
-                            // mechanism.
-                            if (last_rxn != NULL) mech.AddReaction(last_rxn);
-                        }
-                        status.Status = End;
-                        break;
-                    }
-
-                    // This is the beginning of a comment.  All the preceeding line must
-                    // be the reaction definition unless a continuation & was present.
-                    if (!fcont) {
-                        // Before parsing the string we should check that it doesn't
-                        // hold auxilliary info for the previous reaction.
-                        if (!parseCK_RxnAux(rxndef, last_rxn, mech, status.Scale, status)) {
-                            // No aux info.  First add the last reaction to the
-                            // mechanism.
-                            if (last_rxn != NULL) mech.AddReaction(last_rxn);
-
-                            // No aux info, so parse the reaction definition.
-                            if (rxndef.length() > 0) last_rxn = parseCK_Reaction(rxndef, mech, status);
-                        }
-
-                        rxndef = "";
-                    }
-                    status.Status = BeginParseRxnComment;
-                } else if ((c=='\n') || (c=='\r')) {
-                    // Break if this is the end of the reaction definitions.
-                    if (rxndef.substr(0,3).compare("END")==0) {                    
-                        // Before parsing the string we should check that it doesn't
-                        // hold auxilliary info for the previous reaction.
-                        if (!parseCK_RxnAux(rxndef, last_rxn, mech, status.Scale, status)) {
-                            // No aux info.  First add the last reaction to the
-                            // mechanism.
-                            if (last_rxn != NULL) mech.AddReaction(last_rxn);
-                        }
-                        status.Status = End;
-                        break;
-                    }
-
+                if (*c=='\n') {
                     // This is the end of the line.  If there was a continuation character '&'
                     // then we continue reading the reaction string, otherwise it gets passed
                     // to parseCK_Reaction for translation.
                     if (!fcont) {
                         // Before parsing the string we should check that it doesn't
                         // hold auxilliary info for the previous reaction.
-                        if (!parseCK_RxnAux(rxndef, last_rxn, mech, status.Scale, status)) {
+                        if (!parseCK_RxnAux(rxndef, last_rxn, mech, status.Scale, status, lineno)) {
                             // No aux info.  First add the last reaction to the
                             // mechanism.
                             if (last_rxn != NULL) {
                                 mech.AddReaction(last_rxn);
                                 delete last_rxn;
                                 last_rxn = NULL;
+                                ++n;
                             }
 
                             // No aux info, so parse the reaction definition.
-                            if (rxndef.length() > 0) last_rxn = parseCK_Reaction(rxndef, mech, status);
+                            if (rxndef.length() > 0) {
+                                last_rxn = parseCK_Reaction(rxndef, mech, lineno, status);
+                            }
                         }
                         status.Status = BeginParseRxn;
+                    } else {
+                        // Reset continuation flag to avoid reading all
+                        // lines at once.
+                        fcont = false;
                     }
+                    // Increment line number.
+                    ++lineno;
+                } else if (*c == '&') {
+                    // Continuation character located.
+                    fcont = true;
                 } else {
-                    rxndef.append(&c, 1);
-                }
-                break;
-            case ParseRxnComment:
-                // We are reading a comment in the reaction list.  A comment is only
-                // terminated by a line ending.
-                if ((c == '\n') || (c == '\r')) {
-                    status.Status = ParseRxn;
-                }
-                break;
-            case BeginParseRxnComment:
-                // We are reading a comment in the reaction list.  A comment is only
-                // terminated by a line ending.
-                if ((c == '\n') || (c == '\r')) {
-                    status.Status = BeginParseRxn;
+                    if (fcont && !isWhiteSpace(*c)) {
+                        // There should not be any non-white space
+                        // characters after a continuation & character.
+                        throw invalid_argument("Illegal character after continuation '&' "
+                                "on line number " + cstr(lineno) + ".\n"
+                                "Function: (Sprog, MechanismParser::parseCK_Reactions).");
+                    } else {
+                        rxndef.append(&(*c), 1);
+                    }
                 }
                 break;
             default:
                 throw runtime_error("Illegal parsing flag encountered "
                                     "(Sprog, MechanismParser::parseCK_Reactions).");
         }
+
+        // Increment string iterator.
+        ++c;
     }
+
+    // Add the last read reaction, if exists.
+    if (last_rxn != NULL) {
+        ++n;
+        mech.AddReaction(last_rxn);
+        delete last_rxn;
+        last_rxn = NULL;
+    }
+
+    return n;
 }
 
 // Parses a string and builds a Reaction object from the data therein.
-Sprog::Kinetics::Reaction *const MechanismParser::parseCK_Reaction(const std::string &rxndef, 
-                                                                Sprog::Mechanism &mech, 
-                                                                Sprog::IO::MechanismParser::CK_STATUS &status)
+Sprog::Kinetics::Reaction *const MechanismParser::parseCK_Reaction(
+                                    const std::string &rxndef, 
+                                    Sprog::Mechanism &mech, unsigned int lineno,
+                                    Sprog::IO::MechanismParser::CK_STATUS &status)
 {
-    // The reaction string contains four pieces of information:  the reaction formula, A, n & E.
+    // The reaction string contains four pieces of information:  
+    // the reaction formula, A, n & E.
     Kinetics::Reaction * rxn = NULL;
 
     string::size_type i=0, k=0, ilast_reac=0; // String & vector indices.
@@ -676,7 +916,10 @@ Sprog::Kinetics::Reaction *const MechanismParser::parseCK_Reaction(const std::st
                 frev = true;
             } else {
                 // No delimiter found.
-                throw invalid_argument("No reactant/product delimiter found in reaction definition.");
+                throw invalid_argument("No reactant/product delimiter found "
+                        "in reaction definition on line " + cstr(lineno) + 
+                        " of the CHEMKIN input file.\n"
+                        "Function: (Sprog, MechanismParser::parseCK_Reaction)");
             }
         }
     }
@@ -714,11 +957,12 @@ Sprog::Kinetics::Reaction *const MechanismParser::parseCK_Reaction(const std::st
     }
 
     // Get the reactant stoichiometry and set it in the reaction.
-    parseCK_RxnSpStoich(rxndef.substr(0,ilast_reac+1), mech, rmui, rmuf, fistb, fisfo, strtb);
+    parseCK_RxnSpStoich(rxndef.substr(0,ilast_reac+1), mech, rmui, rmuf, 
+                        fistb, fisfo, strtb, lineno);
 
     // Get the product stoichiometry and set it in the reaction.
     parseCK_RxnSpStoich(rxndef.substr(ifirst_prod,ilast_prod-ifirst_prod+1), 
-                        mech, pmui, pmuf, fistb, fisfo, strtb);
+                        mech, pmui, pmuf, fistb, fisfo, strtb, lineno);
 
     // Now we have got the reactants and the products, we must now parse the Arrhenius coefficients.
     // This is quite simple as they must be space delimited.
@@ -768,7 +1012,8 @@ void Sprog::IO::MechanismParser::parseCK_RxnSpStoich(const std::string &sp,
                                                   std::vector<Sprog::Stoich> &mui, 
                                                   std::vector<Sprog::Stoichf> &muf, 
                                                   bool &isthirdbody, bool &isfalloff, 
-                                                  std::string &thirdbody)
+                                                  std::string &thirdbody, 
+                                                  unsigned int lineno)
 {
     vector<string> species;
     vector<string>::iterator k;
@@ -823,8 +1068,8 @@ void Sprog::IO::MechanismParser::parseCK_RxnSpStoich(const std::string &sp,
         species.push_back(str.substr(0, str.find_last_not_of(" ")+1));
     }
 
-    // Now we must separate the stoichiometry from the species' names.  Also we can check here
-    // for third-bodies or fall-off reactions.
+    // Now we must separate the stoichiometry from the species' names.  
+    // Also we can check here for third-bodies or fall-off reactions.
     string sym, mu;
     int intmu;
     real floatmu;
@@ -852,7 +1097,8 @@ void Sprog::IO::MechanismParser::parseCK_RxnSpStoich(const std::string &sp,
             i = mech.FindSpecies(sym);
             
             if (i >= 0) {
-                // Before we save the species stoichiometry we need to check if it is integer or real.
+                // Before we save the species stoichiometry we need to check
+                // if it is integer or real.
                 intmu = atoi(mu.c_str()); floatmu = cdble(mu);
                 if (floatmu == (real)intmu) {
                     // This is integer stoichiometry.
@@ -863,7 +1109,10 @@ void Sprog::IO::MechanismParser::parseCK_RxnSpStoich(const std::string &sp,
                 }
             } else {
                 // Species not found in mechanism.
-                throw invalid_argument("Unknown species in reaction.");
+                throw invalid_argument(
+                    "Unknown species in reaction on line " + cstr(lineno) + 
+                    "of the CHEMKIN input file.\n"
+                    "Function: (Sprog, MechanismParser::parseCK_RxnSpStoich)");
             }
         }
     }
@@ -874,7 +1123,8 @@ bool Sprog::IO::MechanismParser::parseCK_RxnAux(const std::string &rxndef,
                                              Sprog::Kinetics::Reaction *last_rxn, 
                                              const Sprog::Mechanism &mech,
                                              Sprog::Kinetics::ARRHENIUS scale,
-                                             Sprog::IO::MechanismParser::CK_STATUS &status)
+                                             Sprog::IO::MechanismParser::CK_STATUS &status,
+                                             unsigned int lineno)
 {
     string str, key, vals;
     vector<string> params;
@@ -902,7 +1152,10 @@ bool Sprog::IO::MechanismParser::parseCK_RxnAux(const std::string &rxndef,
             if (k == rxndef.npos) {
                 // An unterminated set of parameters.  This is an error.
                 status.Status = Fail;
-                throw invalid_argument("Unterminated set of parameters in auxilliary data.");
+                throw invalid_argument(
+                    "Unterminated set of parameters in auxilliary data on "
+                    "line " + cstr(lineno) + " of the CHEMKIN input file.\n"
+                    "Function: (Sprog, MechanismParser::parseCK_RxnAux)");
             }
 
             // Get the parameters.
@@ -927,7 +1180,10 @@ bool Sprog::IO::MechanismParser::parseCK_RxnAux(const std::string &rxndef,
                                                         cdble(params[2]) * scale.E));
             } else {
                 // Insufficient parameters.
-                throw invalid_argument("Insufficient parameters for LOW keyword in auxilliary data.");
+                throw invalid_argument(
+                    "Insufficient parameters for LOW keyword in auxilliary data on "
+                    "line " + cstr(lineno) + " of the CHEMKIN input file.\n"
+                    "Function: (Sprog, MechanismParser::parseCK_RxnAux)");
             }
         } else if (key.compare("HIGH") == 0) {
             // High-pressure limit for chemically activated reaction (3 parameters).
@@ -951,7 +1207,10 @@ bool Sprog::IO::MechanismParser::parseCK_RxnAux(const std::string &rxndef,
                 }
             } else {
                 // Insufficient parameters.
-                throw invalid_argument("Insufficient parameters for TROE keyword in auxilliary data.");
+                throw invalid_argument(
+                    "Insufficient parameters for TROE keyword in auxilliary data on "
+                    "line " + cstr(lineno) + " of the CHEMKIN input file.\n"
+                    "Function: (Sprog, MechanismParser::parseCK_RxnAux)");
             }
         } else if (key.compare("SRI") == 0) {
             // SRI pressure-dependent reaction (3 or 5 parameters).
@@ -973,7 +1232,10 @@ bool Sprog::IO::MechanismParser::parseCK_RxnAux(const std::string &rxndef,
                 last_rxn->SetFallOffParams(SRI, foparams);
             } else {
                 // Insufficient parameters.
-                throw invalid_argument("Insufficient parameters for SRI keyword in auxilliary data.");
+                throw invalid_argument(
+                    "Insufficient parameters for SRI keyword in auxilliary data on "
+                    "line " + cstr(lineno) + " of the CHEMKIN input file.\n"
+                    "Function: (Sprog, MechanismParser::parseCK_RxnAux)");
             }
         } else if (key.compare("USER") == 0) {
             // User-defined pressure fall-off reaction (5 parameters).
@@ -986,7 +1248,10 @@ bool Sprog::IO::MechanismParser::parseCK_RxnAux(const std::string &rxndef,
                                                     cdble(params[2]) * scale.E));
             } else {
                 // Insufficient parameters.
-                throw invalid_argument("Insufficient parameters for REV keyword in auxilliary data.");
+                throw invalid_argument(
+                    "Insufficient parameters for REV keyword in auxilliary data on "
+                    "line " + cstr(lineno) + " of the CHEMKIN input file.\n"
+                    "Function: (Sprog, MechanismParser::parseCK_RxnAux)");
             }
         } else if (key.compare("LT") == 0) {
             // Landau-Teller reaction parameters (2 required).
@@ -994,7 +1259,10 @@ bool Sprog::IO::MechanismParser::parseCK_RxnAux(const std::string &rxndef,
                 last_rxn->SetLTCoeffs(LTCOEFFS(cdble(params[0]), cdble(params[1])));
             } else {
                 // Insufficient parameters.
-                throw invalid_argument("Insufficient parameters for LT keyword in auxilliary data.");
+                throw invalid_argument(
+                    "Insufficient parameters for LT keyword in auxilliary data on "
+                    "line " + cstr(lineno) + " of the CHEMKIN input file.\n"
+                    "Function: (Sprog, MechanismParser::parseCK_RxnAux)");
             }
         } else if (key.compare("RLT") == 0) {
             // Reverse Landau-Teller parameters (2 required).
@@ -1002,7 +1270,10 @@ bool Sprog::IO::MechanismParser::parseCK_RxnAux(const std::string &rxndef,
                 last_rxn->SetRevLTCoeffs(LTCOEFFS(cdble(params[0]), cdble(params[1])));
             } else {
                 // Insufficient parameters.
-                throw invalid_argument("Insufficient parameters for RLT keyword in auxilliary data.");
+                throw invalid_argument(
+                    "Insufficient parameters for RLT keyword in auxilliary data on "
+                    "line " + cstr(lineno) + " of the CHEMKIN input file.\n"
+                    "Function: (Sprog, MechanismParser::parseCK_RxnAux)");
             }
        } else if (key.compare("TDEP") == 0) {
             // Species temperature dependence (1 parameter).
@@ -1039,7 +1310,10 @@ bool Sprog::IO::MechanismParser::parseCK_RxnAux(const std::string &rxndef,
                 last_rxn->AddThirdBody(sp, val);
             } else {
                 // Unrecognised species or missing efficiency.
-                throw invalid_argument("Error parsing auxilliary data.  Unknown keyword.");
+                throw invalid_argument(
+                    "Error parsing auxilliary reaction data.  Unknown keyword on "
+                    "line " + cstr(lineno) + " of the CHEMKIN input file.\n"
+                    "Function: (Sprog, MechanismParser::parseCK_RxnAux)");
             }
         }
 
@@ -1055,7 +1329,8 @@ bool Sprog::IO::MechanismParser::parseCK_RxnAux(const std::string &rxndef,
 }
 
 // Parses the units from the REACTION line of a CHEMKIN formatted file.
-void Sprog::IO::MechanismParser::parseCK_Units(const std::string &rxndef, Sprog::Kinetics::ARRHENIUS &scale)
+void Sprog::IO::MechanismParser::parseCK_Units(const std::string &rxndef, 
+                                               Sprog::Kinetics::ARRHENIUS &scale)
 {
     // Split the string into parts.
     vector<string> parts;
@@ -1066,9 +1341,8 @@ void Sprog::IO::MechanismParser::parseCK_Units(const std::string &rxndef, Sprog:
     scale.n = 1.0;
     scale.E = 4.184e7; // Convert cal/mol -> J/mol.
 
-    // The first part will be the REACTION keyword, so we ignore that.
     vector<string>::iterator i;
-    for (i=parts.begin()+1; i!=parts.end(); i++) {
+    for (i=parts.begin(); i!=parts.end(); ++i) {
         if ((*i).compare("CAL/MOLE")==0) {
             // Default scaling.
         } else if ((*i).compare("KCAL/MOLE")==0) {

@@ -57,7 +57,9 @@ public:
     static void ReadChemkin(
         const std::string &filename,    // File name of the CHEMKIN input file.
         Sprog::Mechanism &mech,         // Mechanism object to build using data in file.
-        const std::string &thermofile); // File name of thermo data file (optional).
+        const std::string &thermofile,  // File name of thermo data file (optional).
+        bool verbose=false              // Set =true to print parser messages to console.
+        );
 
 private:
     // CHEMKIN FILE RELATED THINGS.
@@ -81,43 +83,109 @@ private:
         Sprog::Kinetics::ARRHENIUS Scale;  // Arrhenius constant scaling factors.
     };
 
+    // Structure to locate keyworded sections in the CK file.
+    struct KEY_POS{
+        unsigned int begin;  // First character in the keyword.
+        unsigned int end;    // First character in the END keyword.
+        unsigned int length; // Keyword length.
+        unsigned int line;   // Line number of this keyword.
+    };
+
+    // Reads a CHEMKIN file stream into a std::string.  Removes
+    // comments and fixes line endings as well.
+    static void loadCK_File(
+        std::ifstream &fin, // File stream to read.
+        std::string &out    // Output string to hold file data.
+        );
+
     // Parses a file stream of a CHEMKIN input file.
-    static void parseCK(std::ifstream &fin,     // File stream.
-                        Sprog::Mechanism &mech, // Mechanism into which to read file.
-                        CK_STATUS &status);     // Status & parsing information.
+    static void parseCK(
+        std::ifstream &fin,     // File stream.
+        Sprog::Mechanism &mech, // Mechanism into which to read file.
+        CK_STATUS &status,      // Status & parsing information.
+        bool verbose=false      // Set =true to print parser messages to console.
+        );
+
+    // Get positions of a CK keyword and END keyword.
+    static KEY_POS getCK_KeyPos(
+        const std::string &key,  // Keyword to be found.
+        const std::string &ckstr // CK file string to search.
+        );
+
+    // Extract element names from CHEMKIN string.
+    static void extractCK_Elements(
+        const std::string &ckstr, // CK file string to search.
+        std::string &elements,    // Return string containing elements.
+        unsigned int &lineno      // The line number of the ELEM/ELEMENTS keyword.
+        );
+
+    
+    //// extract only reactions string from chemkin string
+    //std::string extract_CK_reactions_str(std::string &ckstr);
+    //// extract only thermo string from chemkin string
+    //std::string extract_CK_thermo_str(std::string &ckstr);
 
     // Parse the element data in a CHEMKIN input file.
-    static void parseCK_Elements(std::string &ck_el_str,     // CHEMKIN string for element definitions.
-                                 Sprog::Mechanism &mech, // Mechanism to receive element information.
-                                 CK_STATUS &status);       // Status and parsing information.
+    static unsigned int parseCK_Elements(
+        const std::string &elements, // CHEMKIN string for element definitions.
+        Sprog::Mechanism &mech,      // Mechanism to receive element information.
+        unsigned int lineno,         // Line number of ELEM/ELEMENTS keyword.
+        CK_STATUS &status            // Status and parsing information.
+        );          
 
-    // Parse the species data in a CHEMKIN input file (elements must already have been read).
-    static void parseCK_Species(std::string &ck_sp_str,     // File stream.
-                                Sprog::Mechanism &mech, // Mechanism to receive species information.
-                                CK_STATUS &status);     // Status and parsing information.
+    // Extract species names from CHEMKIN string.
+    static void extractCK_Species(
+        const std::string &ckstr, // CK file string to search.
+        std::string &species,     // Return string containing species.
+        unsigned int &lineno      // The line number of the SPEC/SPECIES keyword.
+        );
 
-    // Parse the thermo data from a CHEMKIN input file (elements and species must already have
-    // been read).
-    static void parseCK_Thermo(std::istream &strin,     // File stream.
-                               Sprog::Mechanism &mech, // Mechanism to receive thermo data.
-                               CK_STATUS &status);     // Status and parsing information.
+    // Parse the species data in a CHEMKIN input file
+    // (elements must already have been read).
+    static unsigned int parseCK_Species(
+        const std::string &species, // Species names in a string.
+        Sprog::Mechanism &mech,     // Mechanism to receive species information.
+        unsigned int lineno,        // Line number of SPEC/SPECIES keyword.
+        CK_STATUS &status           // Status and parsing information.
+        );     
 
-    // Parse the thermo data from a separate file (given by filename).  Elements and species
-    // must already have been read.
-    static void parseCK_Thermo(std::string &ck_tm_str,  // File name.
-                               Sprog::Mechanism &mech, // Mechanism to receive thermo data.
-                               CK_STATUS &status);     // Status and parsing information.
+    // Extract thermo data string from CHEMKIN string.
+    static void extractCK_Thermo(
+        const std::string &ckstr, // CK file string to search.
+        std::string &thermo,      // Return string containing thermo data.
+        unsigned int &lineno      // The line number of the THER/THERMO keyword.
+        );
+
+    // Parse the thermo data from a separate file (given by filename).
+    // Elements and species must already have been read.
+    static void parseCK_Thermo(
+        const std::string &thermo, // File name.
+        Sprog::Mechanism &mech,    // Mechanism to receive thermo data.
+        unsigned int lineno,       // Line number of THER/THERMO keyword.
+        CK_STATUS &status          // Status and parsing information.
+        );
+
+    // Extract reaction data string from CHEMKIN string.
+    static void extractCK_Reactions(
+        const std::string &ckstr, // CK file string to search.
+        std::string &reac,        // Return string containing reaction data.
+        unsigned int &lineno      // The line number of the REAC/REACTIONS keyword.
+        );
 
     // Parse the reaction data from a CHEMKIN input file.
-    static void parseCK_Reactions(std::string &ck_rt_str,     // File stream.
-                                  Sprog::Mechanism &mech, // Mechanism to receive reaction data.
-                                  CK_STATUS &status);     // Status and parsing information.
+    static unsigned int parseCK_Reactions(
+        const std::string &reac, // File stream.
+        Sprog::Mechanism &mech,  // Mechanism to receive reaction data.
+        unsigned int lineno,     // The line number of the REAC/REACTIONS keyword.
+        CK_STATUS &status        // Status and parsing information.
+        );
 
     // Parse a single reaction object from a CHEMKIN formatted string.  Returns pointer to
     // new reaction if successful.
     static Sprog::Kinetics::Reaction *const parseCK_Reaction(
         const std::string &rxndef, // String containing the reaction definition.
         Sprog::Mechanism &mech,    // Mechanism into which the reaction will be inserted (for species definitions).
+        unsigned int lineno,       // Line number of reaction definition.
         CK_STATUS &status);        // Status and parsing information.
 
     // Reads strings of reactant/product species within a reaction string and separates
@@ -130,7 +198,9 @@ private:
         std::vector<Sprog::Stoichf> &muf, // Vector of real coefficient stoichiometry.
         bool &isthirdbody,                // Returns true if a third body was detected.
         bool &isfalloff,                  // Returns true if this reaction has fall-off parameters.
-        std::string &thirdbody);          // Returns the name of the third body, if detected.
+        std::string &thirdbody,           // Returns the name of the third body, if detected.
+        unsigned int lineno               // Line number on which the reaction is defined.
+        );
 
     // Reads auxilliary reaction data from a CHEMKIN formatted string.  Returns true
     // if auxilliary data was found in the string.
@@ -139,11 +209,14 @@ private:
         Sprog::Kinetics::Reaction *last_rxn,    // Reaction object into which to read auxilliary information.
         const Sprog::Mechanism &mech,           // Mechanism for which the reaction is defined.
         const Sprog::Kinetics::ARRHENIUS scale, // Scaling parameters for Arrhenius cofficients to convert to correct units.
-        CK_STATUS &status);                     // Status and parsing information.
+        CK_STATUS &status,                      // Status and parsing information.
+        unsigned int lineno                     // Line number on which the reaction aux info is defined.
+        );
 
     // Parse the units data from the REACTION line in a chemkin formatted mechanism file.
-    static void parseCK_Units(const std::string &rxndef,          // String containing the REACTION statement.
-                              Sprog::Kinetics::ARRHENIUS &scale); // Scaling factors.
+    static void parseCK_Units(
+        const std::string &rxndef,          // String containing the REACTION statement.
+        Sprog::Kinetics::ARRHENIUS &scale); // Scaling factors.
 
 };
 };
