@@ -449,7 +449,7 @@ void EnsembleStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
 void EnsembleStats::SetStatBoundary(const Sweep::Stats::IModelStats::StatBound &sb) {
     m_statbound = sb;
     m_basicstats->SetStatBoundary(sb);
-    m_aggstats->SetStatBoundary(sb);
+    if (m_aggstats) m_aggstats->SetStatBoundary(sb);
 }
 
 // MEMORY MANAGEMENT.
