@@ -124,6 +124,7 @@ void PSR::SetResidenceTime(real t)
     if (t > 0.0) {
         m_restime = t;
         m_invrt = 1.0 / m_restime;
+        m_mix->AddOutflow(m_invrt, m_mech->ParticleMech());
     } else {
         throw out_of_range("Residence time must be greater "
                            "than zero (Mops, PSR::SetResidenceTime).");

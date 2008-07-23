@@ -411,13 +411,6 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
                                 " (Mops::Settings_IO::LoadFromXML).");
         }
 
-        if (reac->SerialType() == Serial_PSR) {
-            // Enable death process in mechanism.
-            real tau = dynamic_cast<PSR*>(reac)->ResidenceTime();
-            mech.ParticleMech().EnableDeathProcess();
-            mech.ParticleMech().Death()->SetA(1.0/tau);
-        }
-
         // TIME INTERVALS.
 
         node = root->GetFirstChild("timeintervals");
@@ -582,7 +575,7 @@ Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
 
     // Fill the mixture object.
     node.GetChildren("component", nodes);
-    for (i=nodes.begin(); i!=nodes.end(); i++) {
+    for (i=nodes.begin(); i!=nodes.end(); ++i) {
         // Check the ID attribute.
         attr = (*i)->GetAttribute("id");
         if (attr != NULL) {
@@ -642,7 +635,7 @@ Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
 
             // Fill the inflow Mixture object.
             subnode->GetChildren("component", nodes);
-            for (i=nodes.begin(); i!=nodes.end(); i++) {
+            for (i=nodes.begin(); i!=nodes.end(); ++i) {
                 // Check the ID attribute.
                 attr = (*i)->GetAttribute("id");
                 if (attr != NULL) {
