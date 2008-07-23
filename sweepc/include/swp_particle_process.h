@@ -50,6 +50,7 @@
 #include "swp_process_type.h"
 #include "sprog.h"
 #include <iostream>
+#include <vector>
 
 namespace Sweep
 {

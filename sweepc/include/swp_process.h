@@ -6,7 +6,7 @@
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
-    A specialised process for Sweep, which acts on Sweep::System
+    A specialised process for Sweep, which acts on Sweep::Cell
     objects.
 
   Licence:
@@ -44,7 +44,6 @@
 #define SWEEP_PROCESS_H
 
 #include "swp_params.h"
-#include "swp_cell.h"
 #include "swp_particle.h"
 #include "swp_particle_cache.h"
 #include "swp_process_type.h"
@@ -58,6 +57,8 @@ namespace Sweep
 {
 // Forward declare parent mechanism.
 class Mechanism;
+// Forward declare the Cell class.
+class Cell;
 
 namespace Processes
 {

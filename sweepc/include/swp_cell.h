@@ -49,12 +49,15 @@
 #include "swp_particle_model.h"
 #include "swp_ensemble.h"
 #include "swp_ensemble_stats.h"
+#include "swp_birth_process.h"
+#include "swp_death_process.h"
 #include "sprog.h"
 #include <string>
 #include <iostream>
 
 namespace Sweep
 {
+// Forward declare Mechanism class.
 class Mechanism;
 
 class Cell : public Sprog::Thermo::IdealGas
@@ -137,6 +140,43 @@ public:
     void SetVariableChem(bool vari = true);
 
 
+    // PARTICLE INFLOW PROCESSES.
+
+    // Returns the number of inflow processes defined 
+    // for this Cell.
+    unsigned int InflowCount(void) const;
+
+    // Returns the vector of particle inflow processes.
+    const Processes::BirthPtrVector &Inflows(void) const;
+
+    // Returns the ith particle inflow process.
+    Processes::BirthProcess *const Inflows(unsigned int i) const;
+
+    // Add an inflow process to the Cell. The process is copied.
+    void AddInflow(Processes::BirthProcess &inf);
+
+
+    // PARTICLE OUTFLOW PROCESSES.
+
+    // Returns the number of outflow processes defined 
+    // for this Cell.
+    unsigned int OutflowCount(void) const;
+
+    // Returns the vector of particle outflow processes.
+    const Processes::DeathPtrVector &Outflows(void) const;
+
+    // Returns the ith particle outflow process.
+    Processes::DeathProcess *const Outflows(unsigned int i) const;
+
+    // Add an outflow process to the Cell. The process is copied.
+    void AddOutflow(Processes::DeathProcess &out);
+
+    // Add an outflow process with the given rate to the Cell.
+    void AddOutflow(
+        real rate, // Rate constant for outflow.
+        const Sweep::Mechanism &mech // Mechanism which defines LPDA for outflow.
+        );
+
     // READ/WRITE/COPY.
 
     // Writes the object to a binary stream.
@@ -169,6 +209,16 @@ private:
     // If the chemical conditions are fixed, then they cannot be altered by
     // any particle processes.  Default is false.
     bool m_fixed_chem;
+
+    // Particle inflow processes.  These are not stored in the
+    // mechanism, but are used by the Mechanism class when
+    // calculating rates.
+    Processes::BirthPtrVector m_inflow;
+
+    // Particle outflow processes.  These are not stored in the
+    // mechanism, but are used by the Mechanism class when
+    // calculating rates.
+    Processes::DeathPtrVector m_outflow;
 };
 };
 

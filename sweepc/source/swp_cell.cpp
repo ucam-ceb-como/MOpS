@@ -42,6 +42,8 @@
 
 #include "swp_cell.h"
 #include "swp_particle_model.h"
+#include "swp_birth_process.h"
+#include "swp_death_process.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -236,6 +238,66 @@ void Cell::SetFixedChem(bool fixed) {m_fixed_chem = fixed;}
 
 // Set the chemical conditions to be variable.
 void Cell::SetVariableChem(bool vari) {m_fixed_chem = !vari;}
+
+
+// PARTICLE INFLOW PROCESSES.
+
+// Returns the number of inflow processes defined 
+// for this Cell.
+unsigned int Cell::InflowCount(void) const {return m_inflow.size();}
+
+// Returns the vector of particle inflow processes.
+const Processes::BirthPtrVector &Cell::Inflows(void) const {return m_inflow;}
+
+// Returns the ith particle inflow process.
+Processes::BirthProcess *const Cell::Inflows(unsigned int i) const
+{
+    if (i < m_inflow.size()) {
+        return m_inflow[i];
+    } else {
+        return NULL;
+    }
+}
+
+// Add an inflow process to the Cell. The process is copied.
+void Cell::AddInflow(Processes::BirthProcess &inf)
+{
+    m_inflow.push_back(inf.Clone());
+}
+
+
+// PARTICLE OUTFLOW PROCESSES.
+
+// Returns the number of outflow processes defined 
+// for this Cell.
+unsigned int Cell::OutflowCount(void) const {return m_outflow.size();}
+
+// Returns the vector of particle outflow processes.
+const Processes::DeathPtrVector &Cell::Outflows(void) const {return m_outflow;}
+
+// Returns the ith particle outflow process.
+Processes::DeathProcess *const Cell::Outflows(unsigned int i) const
+{
+    if (i < m_outflow.size()) {
+        return m_outflow[i];
+    } else {
+        return NULL;
+    }
+}
+
+
+// Add an outflow process to the Cell. The process is copied.
+void Cell::AddOutflow(Processes::DeathProcess &out)
+{
+    m_outflow.push_back(out.Clone());
+}
+
+// Add an outflow process with the given rate to the Cell.
+void Cell::AddOutflow(real rate, const Sweep::Mechanism &mech)
+{
+    Processes::DeathProcess *death = new Processes::DeathProcess(mech);
+    m_outflow.push_back(death);
+}
 
 
 // READ/WRITE/COPY.

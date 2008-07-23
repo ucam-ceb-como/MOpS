@@ -253,6 +253,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\source\swp_birth_process.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_coagulation.cpp"
 					>
 				</File>
@@ -492,6 +496,10 @@
 				</File>
 				<File
 					RelativePath=".\include\swp_arssc_reaction.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_birth_process.h"
 					>
 				</File>
 				<File

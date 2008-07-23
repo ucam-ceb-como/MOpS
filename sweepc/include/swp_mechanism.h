@@ -60,7 +60,6 @@
 #include "swp_inception.h"
 #include "swp_particle_process.h"
 #include "swp_coagulation.h"
-#include "swp_death_process.h"
 #include "sprog.h"
 #include <vector>
 #include <string>
@@ -124,18 +123,6 @@ public:
     void AddCoagulation();
 
     
-    // DEATH PROCESS.
-
-    // Returns a pointer to the death process.
-    Processes::DeathProcess *const Death(void) const;
-
-    // Enables the death process.
-    void EnableDeathProcess(void);
-
-    // Disables the death process.
-    void DisableDeathProcess(void);
-
-
     // PROCESS INFORMATION.
 
     // Returns the number of processes (including 
@@ -295,7 +282,6 @@ private:
     Processes::IcnPtrVector m_inceptions;     // Inception process list.
     Processes::PartProcPtrVector m_processes; // Particle process list.
     Processes::Coagulation *m_coag;           // Coagulation process.
-    Processes::DeathProcess *m_death;         // Death process (simulates outflow).
 
     // Auxilliary information about the processes.
     int m_icoag;              // Index of first coagulation process in mechanism.

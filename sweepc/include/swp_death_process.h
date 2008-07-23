@@ -45,16 +45,18 @@
 #define SWEEP_DEATH_PROCESS_H
 
 #include "swp_params.h"
-#include "swp_process.h"
 #include "swp_process_type.h"
-#include "swp_cell.h"
+#include "swp_process.h"
 #include "sprog.h"
 #include <iostream>
+#include <vector>
 
 namespace Sweep
 {
 // Forward declare the Mechanism class.
 class Mechanism;
+// Forward declare the Cell class.
+class Cell;
 
 namespace Processes
 {
@@ -168,6 +170,7 @@ protected:
     // defined without knowledge of the parent mechanism.
     DeathProcess(void);
 };
+typedef std::vector<DeathProcess*> DeathPtrVector;
 };
 };
 
