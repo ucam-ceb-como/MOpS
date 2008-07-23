@@ -49,10 +49,12 @@
 #include <stdexcept>
 #include <string>
 #include <math.h>
+#include "string_functions.h"
 
 using namespace Sprog;
 using namespace Sprog::Kinetics;
 using namespace std;
+using namespace Strings;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -1362,6 +1364,161 @@ void Reaction::Deserialize(std::istream &in)
         }
     } else {
         throw invalid_argument("Input stream not ready (Sprog, Reaction::Deserialize).");
+    }
+}
+
+// Prints a diagnostic output file containing all the
+// reaction data.  This is used to debug.
+void Reaction::WriteDiagnostics(std::ostream &out) const
+{
+    string data = "";
+    real val = 0.0;
+    int ival = 0;
+
+    if (out.good()) {
+        // Name.
+        out.write(string(m_name+" ").c_str(), m_name.length());
+
+        // Reaction reversibility.
+        if (m_reversible) {
+            data = "R ";
+        } else {
+            data = "- ";
+        }
+        out.write(data.c_str(), data.length());
+
+        // Integer reactant stoichiometry.
+        for (unsigned int i=0; i!=m_reac.size(); ++i) {
+            // Species name.
+            data = m_mech->Species(m_reac[i].Index())->Name() + " ";
+            out.write(data.c_str(), data.length());
+            // Stoichiometry.
+            val = m_reac[i].Mu();
+            data = cstr(val) + " ";
+            out.write(data.c_str(), data.length());
+        }
+
+        // Integer product stoichiometry.
+        for (unsigned int i=0; i!=m_prod.size(); ++i) {
+            // Species name.
+            data = m_mech->Species(m_prod[i].Index())->Name() + " ";
+            out.write(data.c_str(), data.length());
+            // Stoichiometry.
+            val = m_prod[i].Mu();
+            data = cstr(val) + " ";
+            out.write(data.c_str(), data.length());
+        }
+
+        // Real reactant stoichiometry.
+        for (unsigned int i=0; i!=m_freac.size(); ++i) {
+            // Species name.
+            data = m_mech->Species(m_freac[i].Index())->Name() + " ";
+            out.write(data.c_str(), data.length());
+            // Stoichiometry.
+            val = m_freac[i].Mu();
+            data = cstr(val) + " ";
+            out.write(data.c_str(), data.length());
+        }
+
+        // Real product stoichiometry.
+        for (unsigned int i=0; i!=m_fprod.size(); ++i) {
+            // Species name.
+            data = m_mech->Species(m_fprod[i].Index())->Name() + " ";
+            out.write(data.c_str(), data.length());
+            // Stoichiometry.
+            val = m_fprod[i].Mu();
+            data = cstr(val) + " ";
+            out.write(data.c_str(), data.length());
+        }
+
+        // Stoichiometry changes.
+        data = cstr(m_dstoich) + " ";
+        out.write(data.c_str(), data.length());
+        data = cstr(m_dreac) + " ";
+        out.write(data.c_str(), data.length());
+        data = cstr(m_dprod) + " ";
+        out.write(data.c_str(), data.length());
+
+        // Forward Arrhenius coefficients.
+        data = cstr(m_arrf.A) + " ";
+        out.write(data.c_str(), data.length());
+        data = cstr(m_arrf.n) + " ";
+        out.write(data.c_str(), data.length());
+        data = cstr(m_arrf.E) + " ";
+        out.write(data.c_str(), data.length());
+
+        // Reverse Arrhenius coefficients.
+        if (m_arrr != NULL) {
+            data = cstr(m_arrr->A) + " ";
+            out.write(data.c_str(), data.length());
+            data = cstr(m_arrr->n) + " ";
+            out.write(data.c_str(), data.length());
+            data = cstr(m_arrr->E) + " ";
+            out.write(data.c_str(), data.length());
+        }
+
+        // Forward LT parameters.
+        if (m_lt != NULL) {
+            data = cstr(m_lt->B) + " ";
+            out.write(data.c_str(), data.length());
+            data = cstr(m_lt->C) + " ";
+            out.write(data.c_str(), data.length());
+        }
+
+        // Reverse LT parameters.
+        if (m_revlt != NULL) {
+            data = cstr(m_revlt->B) + " ";
+            out.write(data.c_str(), data.length());
+            data = cstr(m_revlt->C) + " ";
+            out.write(data.c_str(), data.length());
+        }
+
+        // Third body flag.
+        if (m_usetb) {
+            data = "TB ";
+        } else {
+            data = "-- ";
+        }
+        out.write(data.c_str(), data.length());
+
+        // Write third bodies.
+        for (unsigned int i=0; i!=m_thirdbodies.size(); ++i) {
+            // Write species name.
+            data = m_mech->Species(m_thirdbodies[i].Index())->Name() + " ";
+            out.write(data.c_str(), data.length());
+            // Write mu.
+            data = cstr(m_thirdbodies[i].Mu()) + " ";
+            out.write(data.c_str(), data.length());
+        }
+
+        // Write fall-off type.
+        ival = (int)m_fotype;
+        data = cstr(ival) + " ";
+        out.write(data.c_str(), data.length());
+
+        // Write fall-off low pressure limit.
+        data = cstr(m_foparams.LowP_Limit.A) + " ";
+        out.write(data.c_str(), data.length());
+        data = cstr(m_foparams.LowP_Limit.n) + " ";
+        out.write(data.c_str(), data.length());
+        data = cstr(m_foparams.LowP_Limit.E) + " ";
+        out.write(data.c_str(), data.length());
+
+        // Write fall-off third body.
+        if (m_foparams.ThirdBody >= 0) {
+            data = m_mech->Species(m_foparams.ThirdBody)->Name() + " ";
+            out.write(data.c_str(), data.length());
+        }
+
+        // Write fall-off parameters.
+        for (unsigned int i=0; i!=(unsigned)FALLOFF_PARAMS::MAX_FALLOFF_PARAMS; ++i) {
+            data = cstr(m_foparams.Params[i]) + " ";
+            out.write(data.c_str(), data.length());
+        }
+
+        // New line.
+        data = "\n";
+        out.write(data.c_str(), data.length());
     }
 }
 

@@ -121,6 +121,10 @@ public:
     // Reads the element data from a binary data stream.
     void Deserialize(std::istream &in);
 
+    // Prints a diagnostic output file containing all the
+    // element data.  This is used to debug.
+    void WriteDiagnostics(std::ostream &out) const;
+
 protected:
     // Element data.
     std::string m_name;       // Element name/symbol.

@@ -187,6 +187,10 @@ public:
     // Reads the species data from a binary data stream.
     void Deserialize(std::istream &in);
 
+    // Prints a diagnostic output file containing all the
+    // species data.  This is used to debug.
+    void WriteDiagnostics(std::ostream &out) const;
+
 protected:
     // Species data.
     std::string m_name;       // Name/symbol.

@@ -58,7 +58,7 @@ public:
         const std::string &filename,    // File name of the CHEMKIN input file.
         Sprog::Mechanism &mech,         // Mechanism object to build using data in file.
         const std::string &thermofile,  // File name of thermo data file (optional).
-        bool verbose=false              // Set =true to print parser messages to console.
+        int verbose=0                   // Set >0 to print parser messages to console.
         );
 
 private:
@@ -103,7 +103,7 @@ private:
         std::ifstream &fin,     // File stream.
         Sprog::Mechanism &mech, // Mechanism into which to read file.
         CK_STATUS &status,      // Status & parsing information.
-        bool verbose=false      // Set =true to print parser messages to console.
+        int verbose=0           // Set >0 to print parser messages to console.
         );
 
     // Get positions of a CK keyword and END keyword.
@@ -130,7 +130,8 @@ private:
         const std::string &elements, // CHEMKIN string for element definitions.
         Sprog::Mechanism &mech,      // Mechanism to receive element information.
         unsigned int lineno,         // Line number of ELEM/ELEMENTS keyword.
-        CK_STATUS &status            // Status and parsing information.
+        CK_STATUS &status,           // Status and parsing information.
+        int verbose=0               // Set >0 to print parser messages to console.
         );          
 
     // Extract species names from CHEMKIN string.
@@ -146,7 +147,8 @@ private:
         const std::string &species, // Species names in a string.
         Sprog::Mechanism &mech,     // Mechanism to receive species information.
         unsigned int lineno,        // Line number of SPEC/SPECIES keyword.
-        CK_STATUS &status           // Status and parsing information.
+        CK_STATUS &status,          // Status and parsing information.
+        int verbose=0               // Set >0 to print parser messages to console.
         );     
 
     // Extract thermo data string from CHEMKIN string.
@@ -158,11 +160,12 @@ private:
 
     // Parse the thermo data from a separate file (given by filename).
     // Elements and species must already have been read.
-    static void parseCK_Thermo(
+    static unsigned int parseCK_Thermo(
         const std::string &thermo, // File name.
         Sprog::Mechanism &mech,    // Mechanism to receive thermo data.
         unsigned int lineno,       // Line number of THER/THERMO keyword.
-        CK_STATUS &status          // Status and parsing information.
+        CK_STATUS &status,         // Status and parsing information.
+        int verbose=0              // Set >0 to print parser messages to console.
         );
 
     // Extract reaction data string from CHEMKIN string.
@@ -177,7 +180,8 @@ private:
         const std::string &reac, // File stream.
         Sprog::Mechanism &mech,  // Mechanism to receive reaction data.
         unsigned int lineno,     // The line number of the REAC/REACTIONS keyword.
-        CK_STATUS &status        // Status and parsing information.
+        CK_STATUS &status,       // Status and parsing information.
+        int verbose=0            // Set >0 to print parser messages to console.
         );
 
     // Parse a single reaction object from a CHEMKIN formatted string.  Returns pointer to
@@ -186,7 +190,9 @@ private:
         const std::string &rxndef, // String containing the reaction definition.
         Sprog::Mechanism &mech,    // Mechanism into which the reaction will be inserted (for species definitions).
         unsigned int lineno,       // Line number of reaction definition.
-        CK_STATUS &status);        // Status and parsing information.
+        CK_STATUS &status,         // Status and parsing information.
+        int verbose=0              // Set >0 to print parser messages to console.
+        );
 
     // Reads strings of reactant/product species within a reaction string and separates
     // the species from the stoichiometry.  Also checks for third-bodies and fall-off
@@ -210,7 +216,8 @@ private:
         const Sprog::Mechanism &mech,           // Mechanism for which the reaction is defined.
         const Sprog::Kinetics::ARRHENIUS scale, // Scaling parameters for Arrhenius cofficients to convert to correct units.
         CK_STATUS &status,                      // Status and parsing information.
-        unsigned int lineno                     // Line number on which the reaction aux info is defined.
+        unsigned int lineno,                    // Line number on which the reaction aux info is defined.
+        int verbose=0                           // Set >0 to print parser messages to console.
         );
 
     // Parse the units data from the REACTION line in a chemkin formatted mechanism file.

@@ -218,6 +218,12 @@ public:
     // Reads the mechanism data from a binary data stream.
     virtual void Deserialize(std::istream &in);
 
+    // OUTPUT FUNCTIONS.
+
+    // Prints a diagnostic output file containing all the
+    // mechanism data.  This is used to debug.
+    void WriteDiagnostics(const std::string &filename) const;
+
 protected:
     // Mechanism data.
     UnitSystem m_units;             // The system of units used by this mechanism.

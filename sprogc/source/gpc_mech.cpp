@@ -45,9 +45,12 @@
 #include <string>
 #include <math.h>
 #include <stdexcept>
+#include <fstream>
+#include "string_functions.h"
 
 using namespace Sprog;
 using namespace std;
+using namespace Strings;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -782,4 +785,48 @@ void Mechanism::releaseMemory()
 
     // Clear other variables.
     m_stoich_xref.clear();
+}
+
+
+// OUTPUT FUNCTIONS.
+
+// Prints a diagnostic output file containing all the
+// mechanism data.  This is used to debug.
+void Mechanism::WriteDiagnostics(const std::string &filename) const
+{
+    string data = "";
+
+    // Open the output file.
+    ofstream fout;
+    fout.open(filename.c_str());
+
+    // Write the Elements to the file.
+    data = "Elements:\n";
+    fout.write(data.c_str(), data.length());
+    for (unsigned int i=0; i!=m_elements.size(); ++i) {
+        m_elements[i]->WriteDiagnostics(fout);
+    }
+    data = "End of elements.\n";
+    fout.write(data.c_str(), data.length());
+
+    // Write the Species to the file.
+    data = "Species:\n";
+    fout.write(data.c_str(), data.length());
+    for (unsigned int i=0; i!=m_species.size(); ++i) {
+        m_species[i]->WriteDiagnostics(fout);
+    }
+    data = "End of species.\n";
+    fout.write(data.c_str(), data.length());
+
+    // Write the reactions to the file.
+    data = "Reactions:\n";
+    fout.write(data.c_str(), data.length());
+    for (unsigned int i=0; i!=m_rxns.Count(); ++i) {
+        m_rxns.Reactions(i)->WriteDiagnostics(fout);
+    }
+    data = "End of reactions.\n";
+    fout.write(data.c_str(), data.length());
+
+    // Close the output file.
+    fout.close();
 }

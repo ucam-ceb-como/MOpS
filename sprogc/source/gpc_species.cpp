@@ -45,9 +45,11 @@
 #include "gpc_mech.h"
 #include <stdexcept>
 #include <string>
+#include "string_functions.h"
 
 using namespace Sprog;
 using namespace std;
+using namespace Strings;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -603,5 +605,52 @@ void Species::Deserialize(std::istream &in)
         }
     } else {
         throw invalid_argument("Input stream not ready (Sprog, Species::Deserialize).");
+    }
+}
+
+// Prints a diagnostic output file containing all the
+// species data.  This is used to debug.
+void Species::WriteDiagnostics(std::ostream &out) const
+{
+    string data = "";
+    real val = 0.0;
+    int ival = 0;
+
+    if (out.good()) {
+        // Name.
+        data = m_name + " ";
+        out.write(data.c_str(), data.length());
+        // Composition.
+        for (unsigned int j=0; j!=m_elcomp.size(); ++j) {
+            // Element name.
+            data = m_mech->Elements(m_elcomp[j].Index())->Name() + " ";
+            out.write(data.c_str(), data.length());
+            // Element count.
+            ival = m_elcomp[j].Count();
+            data = cstr(ival) + " ";
+            out.write(data.c_str(), data.length());
+        }
+        // Mol. Wt.
+        val = m_molwt;
+        data = cstr(val) + " ";
+        out.write(data.c_str(), data.length());
+        // Thermo params.
+        for (Thermo::ThermoMap::const_iterator i=m_thermoparams.begin(); 
+             i!=m_thermoparams.end(); ++i) {
+            // Temperature.
+            val = i->first;
+            data = cstr(val) + " ";
+            out.write(data.c_str(), data.length());
+            // Parameters.
+            for (int j=0; j!=7; ++j) {
+                val = i->second.Params[j];
+                data = cstr(val) + " ";
+                out.write(data.c_str(), data.length());
+            }
+        }
+        // Thermo start T.
+        val = m_T1;
+        data = cstr(val) + "\n";
+        out.write(data.c_str(), data.length());
     }
 }

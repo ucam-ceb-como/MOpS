@@ -45,9 +45,11 @@
 #include <stdexcept>
 #include <iostream>
 #include <string>
+#include "string_functions.h"
 
 using namespace Sprog;
 using namespace std;
+using namespace Strings;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -277,5 +279,20 @@ void Element::Deserialize(std::istream &in)
     } else {
         throw invalid_argument("Input stream not ready "
                                "(Sprog, Element::Deserialize).");
+    }
+}
+
+// Prints a diagnostic output file containing all the
+// element data.  This is used to debug.
+void Element::WriteDiagnostics(std::ostream &out) const
+{
+    string data = "";
+
+    if (out.good()) {
+        // Name.
+        out.write(string(m_name+" ").c_str(), m_name.length());
+        // Mol. Wt.
+        data = cstr(m_molwt) + "\n";
+        out.write(data.c_str(), data.length());
     }
 }

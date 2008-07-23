@@ -321,6 +321,10 @@ public:
     // Reads the reaction data from a binary data stream.
     void Deserialize(std::istream &in);
 
+    // Prints a diagnostic output file containing all the
+    // reaction data.  This is used to debug.
+    void WriteDiagnostics(std::ostream &out) const;
+
 protected:
     // Reaction data.
     std::string m_name;                    // Reaction description.
