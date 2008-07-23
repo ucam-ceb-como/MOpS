@@ -296,6 +296,7 @@ void Cell::AddOutflow(Processes::DeathProcess &out)
 void Cell::AddOutflow(real rate, const Sweep::Mechanism &mech)
 {
     Processes::DeathProcess *death = new Processes::DeathProcess(mech);
+    death->SetA(rate);
     m_outflow.push_back(death);
 }
 
