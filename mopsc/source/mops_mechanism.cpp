@@ -42,6 +42,7 @@
 
 #include "mops_mechanism.h"
 #include <stdexcept>
+#include <fstream>
 
 using namespace Mops;
 

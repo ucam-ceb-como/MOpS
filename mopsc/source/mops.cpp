@@ -44,6 +44,7 @@
 #include "sprog.h"
 #include "sweep.h"
 #include <vector>
+#include <stdexcept>
 
 using namespace Mops;
 using namespace std;
@@ -59,6 +60,7 @@ int main(int argc, char *argv[])
     bool fpostprocess  = false; // .. but not post-process.
     bool foldfmt       = false; // Settings file format, new format not yet implemented.
     SolverType soltype = GPC;
+    int diag = 0; // Diagnostics level.
 
     // Read command line arguments.
     for (int i=1; i!=argc; ++i) {
@@ -106,6 +108,16 @@ int main(int argc, char *argv[])
 //        } else if (strcmp(argv[i], "-momic") == 0) {
 //            // Use method-of-moments to solve particles (1D only!).
 //            soltype = MoMIC;
+
+        // the next statements determine diagnostics level (if any).
+        } else if (strcmp(argv[i], "-diag1") == 0) {
+            diag = 1; // Minimal diagnostics printed to console.
+        } else if (strcmp(argv[i], "-diag2") == 0) {
+            diag = 2;
+        } else if (strcmp(argv[i], "-diag3") == 0) {
+            diag = 3;
+        } else if (strcmp(argv[i], "-diag4") == 0) {
+            diag = 4; // Full diagnostics.
 
         } else {
             // Currently nothing else is implemented here.  However, in future
@@ -167,7 +179,8 @@ int main(int argc, char *argv[])
     // Read the chemical mechanism / profile.
     try {
         if (soltype != FlamePP) {
-            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, true);
+            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
+            if (diag>0) mech.WriteDiagnostics("ckmech.diag");
         } else {
             dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(chemfile, mech);
         }
