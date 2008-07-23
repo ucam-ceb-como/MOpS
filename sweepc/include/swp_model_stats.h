@@ -143,6 +143,17 @@ public:
         const Sweep::ParticleModel &model // Defining particle model.
         ) = 0;
 
+    // Statistical Boundaries. Properties outside this range will not be 
+    // included in Statistical Calculations.
+    struct StatBound {
+        real Lower;
+        real Upper;
+        Sweep::ParticleCache::PropID PID;
+        void StatsBound(void) {Lower=0.0;Upper=1.0e30;PID=ParticleCache::iDcol;};
+    };
+    // Set statbound to this abstract class
+    void SetStatBoundary(const StatBound &sb) { m_statbound = sb; }
+
 protected:
     enum StatType {
         None=-1,
@@ -150,6 +161,7 @@ protected:
         Avg  // Just average this stat.
     };
 
+    StatBound m_statbound;
 };
 
 typedef std::map<SubModels::SubModelType,IModelStats*> ModelStatsMap;

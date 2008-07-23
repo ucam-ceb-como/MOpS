@@ -445,6 +445,12 @@ void EnsembleStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
     }
 }
 
+// Set statbound to this class and its children stats
+void EnsembleStats::SetStatBoundary(const Sweep::Stats::IModelStats::StatBound &sb) {
+    m_statbound = sb;
+    m_basicstats->SetStatBoundary(sb);
+    m_aggstats->SetStatBoundary(sb);
+}
 
 // MEMORY MANAGEMENT.
 

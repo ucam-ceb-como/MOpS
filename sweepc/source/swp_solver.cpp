@@ -154,7 +154,7 @@ real Solver::timeStep(real t, Cell &sys, const Mechanism &mech,
         dt = - log(dt) / jrate;
     } else {
         // Avoid divide by zero.
-        dt = 1.0e30;
+        dt = 1.0e-30;
     }
 
     // Truncate if step is too long and select a process

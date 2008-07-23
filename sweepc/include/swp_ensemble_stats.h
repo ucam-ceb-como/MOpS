@@ -177,6 +177,9 @@ public:
         const Sweep::ParticleModel &model // Defining particle model.
         );
 
+    // Set statbound to this class
+    void SetStatBoundary(const Sweep::Stats::IModelStats::StatBound &sb);
+
 private:
     // Basic particle stats (from the ParticleData object).
     ParticleStats *m_basicstats;
@@ -194,6 +197,9 @@ private:
 
     // Clears all memory associated with the EnsembleStats object.
     void releaseMem(void);
+
+    // Statistical boundary
+    Sweep::Stats::IModelStats::StatBound m_statbound;
 };
 };
 };

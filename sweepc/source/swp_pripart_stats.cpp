@@ -170,23 +170,29 @@ void PriPartStats::Calculate(const Ensemble &e, real scale)
 
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
+    unsigned int n = 0;
     for (ip=e.begin(); ip!=e.end(); ++ip) {
         // Get surface-volume cache.
         const AggModels::PriPartCache* cache = 
             dynamic_cast<const AggModels::PriPartCache*>((*ip)->AggCache());
-
-        // Sum stats from this particle.
-        m_stats[iPPN]    += cache->Count();
-        m_stats[iPPN+1]  += cache->Count();
-        m_stats[iPPD]    += cache->AvgPriDiameter() * cache->Count() * 1e9; // Convert from m to nm.
-        m_stats[iS]      += cache->SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
-        m_stats[iS+1]    += cache->SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
-        m_stats[iS]      += cache->PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
-        m_stats[iS+1]    += cache->PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+        real sz = cache->Parent()->Property(m_statbound.PID);
+        // Check if the value of the property is within the stats bound
+        if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
+            // Sum stats from this particle.
+            m_stats[iPPN]    += cache->Count();
+            m_stats[iPPN+1]  += cache->Count();
+            m_stats[iPPD]    += cache->AvgPriDiameter() * cache->Count() * 1e9; // Convert from m to nm.
+            m_stats[iS]      += cache->SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+            m_stats[iS+1]    += cache->SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+            m_stats[iS]      += cache->PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+            m_stats[iS+1]    += cache->PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+            ++n;
+        }
     }
     
     // Get the particle count.
-    real np    = (real)e.Count();
+    //real np    = (real)e.Count();
+    real np    = (real) n;
     real invnp = (np>0) ? 1.0 / np : 0.0;
 
     // Scale the summed stats and calculate the averages.

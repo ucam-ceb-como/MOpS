@@ -694,9 +694,12 @@ void Ensemble::dble()
     // the required threshold (75%), we check for a 20% reduction from
     // the maximum achieved particle count, assuming that this is statistically
     // significant.
-    m_dbleactive = m_dbleactive || 
-                   ((m_maxcount >= (unsigned int)(0.1*(real)m_capacity)) && 
-                    (m_count <= (unsigned int)(0.8*(real)m_maxcount)));
+    //m_dbleactive = m_dbleactive || 
+    //               ((m_maxcount >= (unsigned int)(0.1*(real)m_capacity)) && 
+    //                (m_count <= (unsigned int)(0.9*(real)m_maxcount)));
+    //m_dbleactive = m_dbleactive || 
+    //               ((m_maxcount >= 50) && 
+    //                (m_count <= 30));
 
     // Check that doubling is on and the activation condition has been met.
     if (m_dbleon && m_dbleactive) {

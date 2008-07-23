@@ -208,32 +208,39 @@ void ParticleStats::Calculate(const Ensemble &e, real scale)
 
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
+    unsigned int n = 0;
     for (ip=e.begin(); ip!=e.end(); ++ip) {
-        // Sum stats from this particle.
-        m_stats[iD]    += (*ip)->SphDiameter() * 1.0e9;  // Convert from m to nm.
-        m_stats[iDcol] += (*ip)->CollDiameter() * 1.0e9; // Convert from m to nm.
-        m_stats[iDmob] += (*ip)->MobDiameter() * 1.0e9;  // Convert from m to nm.
-        m_stats[iS]    += (*ip)->SurfaceArea() * 1.0e4;  // Convert from m2 to cm2.
-        m_stats[iS+1]  += (*ip)->SurfaceArea() * 1.0e4;  // Convert from m2 to cm2.
-        m_stats[iV]    += (*ip)->Volume() * 1.0e6;       // Convert from m3 to cm3.
-        m_stats[iV+1]  += (*ip)->Volume() * 1.0e6;       // Convert from m3 to cm3.
-        m_stats[iM]    += (*ip)->Mass() * 1.0e3;         // Convert from kg to g.
-        m_stats[iM+1]  += (*ip)->Mass() * 1.0e3;         // Convert from kg to g.
+        real sz = (*ip)->Property(m_statbound.PID);
+        // Check if the value of the property is within the stats bound
+        if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
+            // Sum stats from this particle.
+            m_stats[iD]    += (*ip)->SphDiameter() * 1.0e9;  // Convert from m to nm.
+            m_stats[iDcol] += (*ip)->CollDiameter() * 1.0e9; // Convert from m to nm.
+            m_stats[iDmob] += (*ip)->MobDiameter() * 1.0e9;  // Convert from m to nm.
+            m_stats[iS]    += (*ip)->SurfaceArea() * 1.0e4;  // Convert from m2 to cm2.
+            m_stats[iS+1]  += (*ip)->SurfaceArea() * 1.0e4;  // Convert from m2 to cm2.
+            m_stats[iV]    += (*ip)->Volume() * 1.0e6;       // Convert from m3 to cm3.
+            m_stats[iV+1]  += (*ip)->Volume() * 1.0e6;       // Convert from m3 to cm3.
+            m_stats[iM]    += (*ip)->Mass() * 1.0e3;         // Convert from kg to g.
+            m_stats[iM+1]  += (*ip)->Mass() * 1.0e3;         // Convert from kg to g.
 
-        // Sum component and tracker values.
-        fvector::iterator i = m_stats.begin()+STAT_COUNT;
-        for (unsigned int j=0; j!=m_ncomp; ++j,++i) {
-            *i     += (*ip)->Composition(j);
-            *(++i) += (*ip)->Composition(j);
-        }
-        for (unsigned int j=0; j!=m_ntrack; ++j,++i) {
-            *i     += (*ip)->Values(j);
-            *(++i) += (*ip)->Values(j);
+            // Sum component and tracker values.
+            fvector::iterator i = m_stats.begin()+STAT_COUNT;
+            for (unsigned int j=0; j!=m_ncomp; ++j,++i) {
+                *i     += (*ip)->Composition(j);
+                *(++i) += (*ip)->Composition(j);
+            }
+            for (unsigned int j=0; j!=m_ntrack; ++j,++i) {
+                *i     += (*ip)->Values(j);
+                *(++i) += (*ip)->Values(j);
+            }
+            ++n;
         }
     }
     
     // Get the particle count.
-    m_stats[iNP] = (real)e.Count();
+    //m_stats[iNP] = (real)e.Count();
+    m_stats[iNP] = (real)n;
     m_stats[iM0] = m_stats[0];
     real invNP = (m_stats[iNP]>0) ? 1.0 / m_stats[iNP] : 0.0;
 
