@@ -180,6 +180,14 @@ void Simulator::SetOutputFile(const std::string &name)
 // Set simulator to output every iteration.
 void Simulator::SetOutputEveryIter(bool fout) {m_output_every_iter=fout;}
 
+// STATISTICAL BOUNDS OUTPUT
+
+void Simulator::SetOutputStatBoundary(Sweep::ParticleCache::PropID pid, double lower, double upper) 
+{
+    m_statbound.Lower = lower;
+    m_statbound.Upper = upper;
+    m_statbound.PID   = pid;
+}
 
 // SOLVING REACTORS.
 
@@ -516,6 +524,7 @@ void Simulator::outputParticleStats(const Reactor &r) const
 {
     // Write particle stats to file.
     static Sweep::Stats::EnsembleStats stats(r.Mech()->ParticleMech());
+    stats.SetStatBoundary(m_statbound);
     r.Mixture()->GetVitalStats(stats);
     stats.Serialize(m_file);
 }
@@ -693,6 +702,7 @@ void Simulator::consoleOutput(const Mops::Reactor &r) const
 
     // Get output data from particles.
     Sweep::Stats::EnsembleStats stats(r.Mech()->ParticleMech());
+    stats.SetStatBoundary(m_statbound);
     r.Mixture()->GetVitalStats(stats);
     out.push_back(stats.BasicStats().PCount());
     out.push_back(stats.BasicStats().M0());

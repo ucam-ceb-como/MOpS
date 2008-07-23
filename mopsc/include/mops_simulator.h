@@ -140,7 +140,11 @@ public:
 
     // Set simulator to output every iteration.
     void SetOutputEveryIter(bool fout);
+    
+    // STATISTICAL BOUNDS OUTPUT
 
+    // Set simulator to output data of a given statistical range
+    void SetOutputStatBoundary(const Sweep::ParticleCache::PropID pid, double lower, double upper);
 
     // SOLUTION AND POST-PROCESSING.
 
@@ -228,6 +232,10 @@ private:
     // unless m_output_every_iter==true, in which case all
     // iterations are output.
     unsigned int m_output_iter;
+
+    // STATISTICAL OUTPUT PARAMETERS
+
+    Sweep::Stats::IModelStats::StatBound m_statbound;
 
 
     // PARTICLE TRACKING PARAMETERS.

@@ -797,6 +797,48 @@ void Settings_IO::readOutput(const CamXML::Element &node, Simulator &sim)
         throw runtime_error("No output file name defined "
                             "(Mops, Settings_IO::readOutput)");
     }
+
+
+    // STATISTICAL BOUNDARIES OF OUTPUT
+    
+    // Bound parameters
+    Sweep::ParticleCache::PropID pid = Sweep::ParticleCache::iDcol;
+    double lower = 0.0; // Default value of the lower bound
+    double upper = 1e30; // Default value of the upper bound
+    pid = Sweep::ParticleCache::iDcol; // Default value of Property ID is iDcol
+    // Read the statistical boundaries
+    subnode = node.GetFirstChild("statsbound");
+    if (subnode != NULL) {
+        const CamXML::Element *lobonode = subnode->GetFirstChild("lower");
+        const CamXML::Element *upbonode = subnode->GetFirstChild("upper");
+        // Set the upper and lower bounds if found the entry in MOPS input file
+        if (lobonode != NULL) {
+            lower = cdble(lobonode->Data());
+            // need check if cdble convert an invalid string
+        }
+        if (upbonode != NULL) {
+            upper = cdble(upbonode->Data());
+            // Check if upper bound is greater than lower bound
+            if (upper <= lower) {
+                throw std::invalid_argument("STATSBOUND Error: Upper bound is less than or equal to lower bound. "
+                                            "(MOPS, Settings_IO::readOutput).");
+            }
+            // need check if cdble convert an invalid string
+        }
+        // Set the property id of the particle to enforce the statistical bounds on
+        // Currently, only 2 properties are implemented
+        string prop_str = subnode->GetAttributeValue("property");
+        if ((prop_str.compare("dcol") == 0) || 
+            (prop_str.compare("Dcol") == 0)) {
+            pid = Sweep::ParticleCache::iDcol;
+        } else if ((prop_str.compare("dmob") == 0) ||
+                   (prop_str.compare("Dmob") == 0)) {
+            pid = Sweep::ParticleCache::iDmob;
+        }
+    }
+    // Set statistical bounds to simulator
+    sim.SetOutputStatBoundary(pid, lower, upper);
+
 }
 
 // Returns the temperature in K by reading the value from the given
