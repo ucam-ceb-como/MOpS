@@ -72,7 +72,7 @@ namespace Strings
         );
 
     // Converts any type into a string representation.
-    template<class T> std::string cstr(T &t);
+    template<class T> std::string cstr(const T &t);
 
     // Converts a string into a double if possible.
     double cdble(const std::string &str);

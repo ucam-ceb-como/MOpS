@@ -106,7 +106,7 @@ char &Strings::cchar(unsigned int i, char &c)
 };
 
 
-template<class T> std::string Strings::cstr(T &t)
+template<class T> std::string Strings::cstr(const T &t)
 {
     // This routine takes advantage of the STL ostringstream class.
     std::ostringstream ss;
@@ -117,11 +117,11 @@ template<class T> std::string Strings::cstr(T &t)
         return ss.str();
     }
 }
-template std::string Strings::cstr<int>(int&);
-template std::string Strings::cstr<unsigned int>(unsigned int&);
-template std::string Strings::cstr<float>(float&);
-template std::string Strings::cstr<double>(double&);
-template std::string Strings::cstr<long double>(long double&);
+template std::string Strings::cstr<int>(const int&);
+template std::string Strings::cstr<unsigned int>(const unsigned int&);
+template std::string Strings::cstr<float>(const float&);
+template std::string Strings::cstr<double>(const double&);
+template std::string Strings::cstr<long double>(const long double&);
 
 double Strings::cdble(const std::string &str)
 {
