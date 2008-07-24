@@ -315,7 +315,11 @@ void EnsembleStats::PSL(const Sweep::ParticleCache &sp, real time, fvector &psl)
 // primary-particle size lists to be generated.
 bool EnsembleStats::GeneratesPPSL(void) const
 {
-    return (m_aggstats->ID() == (unsigned int)AggModels::PriPartList_ID);
+    if (m_aggstats) {
+        return (m_aggstats->ID() == (unsigned int)AggModels::PriPartList_ID);
+    } else {
+        return false;
+    }
 }
 
 // Returns the number of primary-PSL output variables.
