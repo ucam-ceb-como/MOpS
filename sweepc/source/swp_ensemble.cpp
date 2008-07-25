@@ -122,6 +122,7 @@ Ensemble &Ensemble::operator=(const Sweep::Ensemble &rhs)
             m_ncont      = rhs.m_ncont;
             m_scale      = rhs.m_scale;
             m_contfactor = rhs.m_contfactor;
+            m_contwarn   = rhs.m_contwarn;
             // Doubling.
             m_maxcount   = rhs.m_maxcount;
             m_ndble      = rhs.m_ndble;
@@ -207,6 +208,7 @@ void Ensemble::Initialise(unsigned int capacity, const Sweep::ParticleModel &mod
     m_ncont      = 0;
     m_scale      = 1.0;
     m_contfactor = (real)(m_capacity-1) / (real)(m_capacity);
+    m_contwarn   = false;
 
     // Initialise doubling.
     m_maxcount   = 0;
@@ -258,7 +260,10 @@ const Particle *const Ensemble::At(unsigned int i) const
 int Ensemble::Add(Particle &sp)
 {
     // Check for doubling activation.
-    m_dbleactive = m_dbleactive || (m_count >= m_dblecutoff-1);
+    if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
+        m_dbleactive = true;
+        printf("sweep: Particle doubling activated.\n");
+    }
 
     // Check ensemble for space, if there is not enough space then need
     // to generate some by contracting the ensemble.
@@ -269,7 +274,11 @@ int Ensemble::Add(Particle &sp)
     } else {
         // We must contract the ensemble to accomodate a new particle.
         i = irnd(0, m_capacity);
-        ++m_ncont;
+        if (!m_contwarn && ((real)(++m_ncont)/(real)m_capacity > 0.01)) {
+            m_contwarn = true;
+            printf("sweep: Ensemble contracting too often; "
+                   "possible stiffness issue.\n");
+        }
     }
 
     if (i < 0) {
@@ -573,6 +582,7 @@ void Ensemble::ResetScaling()
 {
     m_ncont = 0;
     m_ndble = 0;
+    m_contwarn = false;
 }
 
 
@@ -694,12 +704,11 @@ void Ensemble::dble()
     // the required threshold (75%), we check for a 20% reduction from
     // the maximum achieved particle count, assuming that this is statistically
     // significant.
-    //m_dbleactive = m_dbleactive || 
-    //               ((m_maxcount >= (unsigned int)(0.1*(real)m_capacity)) && 
-    //                (m_count <= (unsigned int)(0.9*(real)m_maxcount)));
-    //m_dbleactive = m_dbleactive || 
-    //               ((m_maxcount >= 50) && 
-    //                (m_count <= 30));
+    if (!m_dbleactive && (m_maxcount >= (unsigned int)(0.1*(real)m_capacity)) && 
+        (m_count <= (unsigned int)(0.9*(real)m_maxcount))) {
+        m_dbleactive = true;
+        printf("sweep: Particle doubling activated.\n");
+    }
 
     // Check that doubling is on and the activation condition has been met.
     if (m_dbleon && m_dbleactive) {
@@ -712,6 +721,8 @@ void Ensemble::dble()
 
         // Continue while there are too few particles in the ensemble.
         while (n<=m_dblelimit) {
+            printf("sweep: Doubling particle ensemble.\n");
+
             left = isLeftBranch(n);
 
             // Copy particles.
@@ -736,7 +747,7 @@ void Ensemble::dble()
             }
 
             // Update scaling.
-            m_ndble++;
+            ++m_ndble;
             n *= 2;
         }
 
@@ -791,6 +802,13 @@ void Ensemble::Serialize(std::ostream &out) const
 
         // Output if doubling is turned on.
         if (m_dbleon) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+        // Contraction warning flag.
+        if (m_contwarn) {
             out.write((char*)&trueval, sizeof(trueval));
         } else {
             out.write((char*)&falseval, sizeof(falseval));
@@ -861,6 +879,14 @@ void Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
                     m_dbleon = false;
                 }
 
+                // Read contraction warning flag.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n==1) {
+                    m_contwarn = true;
+                } else {
+                    m_contwarn = false;
+                }
+
                 // Calculate binary tree.
                 Update();
 
@@ -908,6 +934,7 @@ void Ensemble::init(void)
     m_scale      = 1.0;
     m_contfactor = 0;
     m_ncont      = 0;
+    m_contwarn   = false;
 
     // Doubling algorithm.
     m_maxcount   = 0;

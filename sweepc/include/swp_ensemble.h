@@ -269,6 +269,7 @@ private:
     real m_scale;            // Scaling factor due to internal operations (doubling etc.).
     real m_contfactor;       // Contraction scaling factor, precalculated for speed.
     unsigned int m_ncont;    // Number of ensemble contractions that have occurred.
+    bool m_contwarn;         // Has a contraction warning msg been printed?
 
     // DOUBLING ALGORITHM VARIABLES.
     unsigned int m_maxcount;   // The maximum particle count reached by the ensemble.
