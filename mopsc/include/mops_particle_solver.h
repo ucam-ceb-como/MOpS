@@ -65,9 +65,23 @@ public:
     // Destructors.
     virtual ~ParticleSolver(void); // Default destructor.
 
+
+    // COMPUTATION TIME.
+    
+    // Returns the number of CT time variables tracked by this
+    // solver type.
+    virtual unsigned int CT_Count(void) const;
+
     // Outputs internal computation time data to the given
     // binary stream.
     virtual void OutputCT(std::ostream &out) const;
+
+    // Adds the CT descriptions to a vector of strings.
+    virtual void CT_Names(
+        std::vector<std::string> &names, // Vector of CT names.
+        unsigned int start=0 // Optional start index in vector.
+        ) const;
+
 
 protected:
     // COMPUTATION TIME.

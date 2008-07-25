@@ -269,7 +269,13 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot) const
     }
 
     // Temperature derivative.
-    ydot[m_iT] = 0.0;
+    if (m_Tfunc) {
+        // Add imposed temperature gradient, if defined.
+        ydot[m_iT] = m_Tfunc(t, y, ydot, *this);
+    } else {
+        // Constant temperature.
+        ydot[m_iT] = 0.0;
+    }
 
     // Density derivative.
     if (m_constv) {
@@ -313,6 +319,9 @@ void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
     ydot[m_iT] *= - y[m_iT] / (Cp * y[m_iDens]);
     ydot[m_iT] += (m_in->Mixture()->Density() / (y[m_iDens] * Cp * m_restime)) * 
                   ((H*y[m_iT]) - (m_infH * m_in->Mixture()->Temperature()));
+
+    // Add imposed temperature gradient, if defined.
+    if (m_Tfunc) ydot[m_iT] += m_Tfunc(t, y, ydot, *this);
 
     // Calculate density derivative.
     if (m_constv) {

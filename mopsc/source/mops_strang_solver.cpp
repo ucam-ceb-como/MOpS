@@ -71,6 +71,10 @@ StrangSolver::~StrangSolver(void)
 void StrangSolver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
                          OutFnPtr out, void *data)
 {
+    // Mark the time at the start of the step, in order to
+    // calculate total computation time.
+    clock_t totmark = clock();
+
     // Time counters.
     real t2 = r.Time();
     real dt = (tstop - t2) / (real)nsteps; // Step size.
@@ -121,6 +125,9 @@ void StrangSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
         m_ode.Solve(r, t2+=h);
         r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
+
+    // Calculate total computation time.
+    m_tottime += calcDeltaCT(totmark);
 
     // Call the output function.
     if (out) out(nsteps, niter, r, *this, data);

@@ -115,68 +115,7 @@ public:
     // Sets the under-relaxation coefficient.
     void SetUnderRelaxCoeff(real relax);
 
-/*
-    // SWEEP SETTINGS.
-
-    // Returns the number of runs to perform
-    unsigned int RunCount(void) const;
-
-    // Sets the number of runs to peform.
-    void SetRunCount(unsigned int n);
-
-    // Returns the max. stochastic particle count.
-    unsigned int MaxPartCount(void) const;
-
-    // Sets the max. stochastic particle count.
-    void SetMaxPartCount(unsigned int n);
-
-    // Returns the max. M0, for initial ensemble scaling.
-    real MaxM0(void) const;
-
-    // Sets max. M0.
-    void SetMaxM0(real m0);
-
-
-    // CONSOLE OUTPUT.
-
-    // Returns the console output interval (in # of steps).
-    unsigned int ConsoleInterval() const;
-
-    // Sets the console output interval (# of steps).
-    void SetConsoleInterval(unsigned int cint);
-
-    // Returns the vector of console output names.
-    const std::vector<std::string> &ConsoleVariables() const;
-
-    // Returns the ith console output name.  Returns "" if i is invalid
-    const std::string ConsoleVariable(unsigned int i) const;
-
-    // Adds a variable to the console output.
-    void AddConsoleVariable(const std::string &var);
-
-    // Removes the console output variable with the given name.
-    void RemoveConsoleVariable(const std::string &var);
-
-    // Removes the ith console output variable.
-    void RemoveConsoleVariable(unsigned int i);
-
-    // Returns whether or not messages will be printed to the console.
-    bool UseConsoleMsgs() const;
-
-    // Sets whether or not messages are printed to the console.
-    void SetUseConsoleMsgs(bool msgs);
-
-
-    // FILE OUTPUT.
-
-    // Returns the output file name.
-    const std::string &OutputFile() const;
-
-    // Sets the output file name.
-    void SetOutputFile(const std::string &name);
-*/
-
-    // SOLUTION AND POST-PROCESSING.
+    // SOLUTION.
 
     // Runs the solver for the given reactor, advancing it
     // to the given stop time.  The numerical parameters given
@@ -194,26 +133,22 @@ public:
             void *data    // Custom data object which will be passed as argument to out().
         );
 
-/*
-    // Run the solver for the given reactor and the 
-    // given time intervals.
-    virtual void SolveReactor(
-        Reactor &r,              // Reactor object to solve.
-        const timevector &times, // Vector of time intervals.
-        unsigned int nruns = 1   // Number of runs to perform.
-        );
 
-    // Post-processes binary output files with the given file name
-    // into CSV files.
-    virtual void PostProcess(
-        const std::string &filename, // Filename to post-process.
-        unsigned int nruns = 1       // Number of runs.
-        ) const;
-*/
+    // COMPUTATION TIME.
+    
+    // Returns the number of CT time variables tracked by this
+    // solver type.
+    virtual unsigned int CT_Count(void) const;
 
     // Outputs internal computation time data to the given
     // binary stream.
     virtual void OutputCT(std::ostream &out) const;
+
+    // Adds the CT descriptions to a vector of strings.
+    virtual void CT_Names(
+        std::vector<std::string> &names, // Vector of CT names.
+        unsigned int start=0 // Optional start index in vector.
+        ) const;
 
 protected:
     // ODE SOLVER.
