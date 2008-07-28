@@ -462,6 +462,7 @@ void Ensemble::Clear()
     for(j=m_tree.begin(); j!=m_tree.end(); ++j) j->Clear();
 
     // Reset doubling.
+    m_maxcount   = 0;
     m_ndble      = 0;
     m_dbleactive = false;
 }
