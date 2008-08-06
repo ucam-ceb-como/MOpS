@@ -207,6 +207,10 @@ public:
     // Returns the surface area.
     real SurfaceArea(void) const;
 
+    // Returns the equivalent sphere surface area, based
+    // on the volume.
+    real SphSurfaceArea(void) const;
+
     // Returns the volume.
     real Volume(void) const;
 

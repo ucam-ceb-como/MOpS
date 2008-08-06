@@ -170,17 +170,14 @@ real SinteringModel::SintTime(const Cell &sys,const Primary &p) const
 real SinteringModel::Rate(real t, const Cell &sys, const Particle &p) const
 {
     real tau = SintTime(sys, p);
-    real Asph = PI * pow(6.0*p.Volume()/PI, TWO_THIRDS);
-    return (p.SurfaceArea() - Asph) / tau;
+    return (p.SurfaceArea() - p.SphSurfaceArea()) / tau;
 }
 
 // Returns the rate of the process for the given primary.
 real SinteringModel::Rate(real t, const Cell &sys, const Primary &p) const
 {
     real tau = SintTime(sys, p);
-    real Asph = pow(6.0*p.Volume()/PI, ONE_THIRD);
-    Asph *= Asph * PI;
-    return max((p.SurfaceArea() - Asph) / tau, 0.0);
+    return max((p.SurfaceArea() - p.SphSurfaceArea()) / tau, 0.0);
 }
 
 

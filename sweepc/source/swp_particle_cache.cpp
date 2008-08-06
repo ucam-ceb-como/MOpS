@@ -608,6 +608,13 @@ real ParticleCache::MobDiameter(void) const {return m_dmob;}
 // Returns the surface area.
 real ParticleCache::SurfaceArea(void) const {return m_surf;}
 
+// Returns the equivalent sphere surface area, based
+// on the volume.
+real ParticleCache::SphSurfaceArea(void) const
+{
+    return PI * pow(m_vol * 6.0 / PI, TWO_THIRDS);
+}
+
 // Returns the volume.
 real ParticleCache::Volume(void) const {return m_vol;}
 

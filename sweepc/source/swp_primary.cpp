@@ -368,6 +368,13 @@ real Primary::MobDiameter(void) const {return m_dmob;}
 // Returns the surface area.
 real Primary::SurfaceArea(void) const {return m_surf;}
 
+// Returns the equivalent sphere surface area, based
+// on the volume.
+real Primary::SphSurfaceArea(void) const
+{
+    return PI * m_diam * m_diam;
+}
+
 // Returns the volume.
 real Primary::Volume(void) const {return m_vol;}
 
