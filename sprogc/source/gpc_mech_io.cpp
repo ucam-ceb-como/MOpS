@@ -160,6 +160,18 @@ void MechanismParser::loadCK_File(std::ifstream &fin, std::string &out)
 
     // Convert the string to capital letters.
     out = Strings::convertToCaps(out);
+
+    // Now correct 0.0D+0 exponentials to 0.0E+0.
+    std::string::size_type pos = out.find("D+", 0);
+    while(pos != out.npos) {
+        out.replace(pos, 1, "E");
+        pos = out.find("D+", pos+2);
+    }
+    pos = out.find("D-", 0);
+    while(pos != out.npos) {
+        out.replace(pos, 1, "E");
+        pos = out.find("D-", pos+2);
+    }
 }
 
 // Loads a mechanism from a CHEMKIN formatted file stream.
@@ -276,7 +288,7 @@ MechanismParser::KEY_POS MechanismParser::getCK_KeyPos(const std::string &key,
         pos.length = key.length();
     }
 
-    // Find the end keyword.
+    // Find the END keyword.
     pos.end = ckstr.find("END", pos.begin);
 
     // Now try to find the other keywords before the END.  If
