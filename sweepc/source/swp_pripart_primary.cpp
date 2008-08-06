@@ -507,8 +507,8 @@ void PriPartPrimary::distMonomers(unsigned int n)
     }
 
     // Now distribute mass weighted by surface area, starting with the largest
-    // particle.
-    for (unsigned int i=0; i!=N; ++i) {
+    // particle, until the N-1 particle.
+    for (unsigned int i=0; i<N-1; ++i) {
         // Determine number of monomers to be added to this primary (m).
         unsigned int m = ignbin(dm, (float)(m_primaries[i].Surface/surfsums[i]));
         // Add monomers.
@@ -520,6 +520,13 @@ void PriPartPrimary::distMonomers(unsigned int n)
         // Update number of remaining monomers.
         if ((dm-=m) == 0) break;
     }
+
+    // Whatever mass is left shall be put on the smallest (last)
+    // primary particle.
+    m_primaries[N-1].Monomers += dm;
+    m_totprisurf -= m_primaries[N-1].Surface;
+    m_primaries[N-1].Surface = calcSurf(m_primaries[N-1].Monomers);
+    m_totprisurf += m_primaries[N-1].Surface;
 
     // Ensure the primary list is sorted.
     sortList(0, m_primaries.size()-1);
@@ -644,6 +651,7 @@ void PriPartPrimary::mergeInList(const std::vector<PriPart> &list)
         for (i=0; i!=m_primaries.size(); ++i) {
             if (j->Monomers > m_primaries[i].Monomers) {
                 m_primaries.insert(m_primaries.begin()+i, PriPart(*j));
+                m_totprisurf += j->Surface;
                 ++i;
                 break;
             }
@@ -652,6 +660,7 @@ void PriPartPrimary::mergeInList(const std::vector<PriPart> &list)
         // the list then add it at the end.
         if (i==m_primaries.size()) {
             m_primaries.insert(m_primaries.end(), PriPart(*j));
+            m_totprisurf += j->Surface;
         }
     }
 

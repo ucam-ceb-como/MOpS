@@ -184,8 +184,8 @@ void PriPartStats::Calculate(const Ensemble &e, real scale)
             m_stats[iPPD]    += cache->AvgPriDiameter() * cache->Count() * 1e9; // Convert from m to nm.
             m_stats[iS]      += cache->SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
             m_stats[iS+1]    += cache->SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
-            m_stats[iS]      += cache->PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
-            m_stats[iS+1]    += cache->PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+            m_stats[iPPS]    += cache->PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+            m_stats[iPPS+1]  += cache->PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
             ++n;
         }
     }
