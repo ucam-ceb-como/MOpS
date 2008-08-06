@@ -284,8 +284,9 @@ private:
     Processes::Coagulation *m_coag;           // Coagulation process.
 
     // Auxilliary information about the processes.
-    int m_icoag;              // Index of first coagulation process in mechanism.
-    unsigned int m_termcount; // the rate term count of all processes.
+    int m_icoag;                 // Index of first coagulation process in mechanism.
+    unsigned int m_termcount;    // The rate term count of all processes.
+    unsigned int m_processcount; // The process count.
 
     // Process counters.
     mutable std::vector<unsigned int> m_proccount, m_fictcount; 

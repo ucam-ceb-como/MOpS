@@ -54,7 +54,7 @@ using namespace std;
 
 // Default constructor.
 Mechanism::Mechanism(void)
-: m_anydeferred(false), m_coag(NULL), m_icoag(-1), m_termcount(0)
+: m_anydeferred(false), m_coag(NULL), m_icoag(-1), m_termcount(0), m_processcount(0)
 {
 }
 
@@ -84,9 +84,10 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         ParticleModel::operator=(rhs);
 
         // Easily copied data.
-        m_anydeferred = rhs.m_anydeferred;
-        m_icoag       = rhs.m_icoag;
-        m_termcount   = rhs.m_termcount;
+        m_anydeferred  = rhs.m_anydeferred;
+        m_icoag        = rhs.m_icoag;
+        m_termcount    = rhs.m_termcount;
+        m_processcount = rhs.m_processcount;
 
         // Copy inceptions.
         for (IcnPtrVector::const_iterator i=rhs.m_inceptions.begin();
@@ -156,6 +157,7 @@ void Mechanism::AddInception(Inception &icn)
     // Add the inception to the mechanism.
     m_inceptions.push_back(&icn);
     m_termcount += icn.TermCount();
+    ++m_processcount;
     m_proccount.resize(m_termcount, 0);
     m_fictcount.resize(m_termcount, 0);
 
@@ -188,6 +190,7 @@ void Mechanism::AddProcess(ParticleProcess &p)
     // Add the process to the mechanism.
     m_processes.push_back(&p);
     m_termcount += p.TermCount();
+    ++m_processcount;
     m_proccount.resize(m_termcount, 0);
     m_fictcount.resize(m_termcount, 0);
 
@@ -204,7 +207,11 @@ void Mechanism::AddProcess(ParticleProcess &p)
 // Adds a coagulation process to the mechanism.
 void Mechanism::AddCoagulation()
 {
-    if (m_coag != NULL) m_termcount -= m_coag->TermCount();
+    if (m_coag != NULL) {
+        m_termcount -= m_coag->TermCount();
+    } else {
+        ++m_processcount;
+    }
     delete m_coag;
     m_coag = new Coagulation(*this);
     m_termcount += m_coag->TermCount();
@@ -219,9 +226,12 @@ void Mechanism::AddCoagulation()
 // inceptions) in the mechanism.
 unsigned int Mechanism::ProcessCount(void) const
 {
+/*
     unsigned int n = m_inceptions.size() + m_processes.size();
     if (m_coag != NULL) ++n;
     return n;
+*/
+    return m_processcount;
 }
 
 // Returns the number of terms in all process rate expressions.
@@ -252,8 +262,8 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
 {
     // Resize the output vector to hold all process names from
     // start index onwards.
-    unsigned int N = start + m_inceptions.size() + m_processes.size();
-    if (m_coag) ++N;
+    unsigned int N = start + m_processcount; //m_inceptions.size() + m_processes.size();
+//    if (m_coag) ++N;
     names.resize(N, "");
 
     // Get iterator to first insertion point.
@@ -283,7 +293,7 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
 real Mechanism::CalcRates(real t, const Cell &sys, fvector &rates, bool scale) const
 {
     // Ensure rates vector is the correct length, then set to zero.
-    rates.resize(ProcessCount()+sys.InflowCount()+sys.OutflowCount(), 0.0);
+    rates.resize(m_processcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
     fill(rates.begin(), rates.end(), 0.0);
 
     real sum = 0.0;
@@ -851,6 +861,10 @@ void Mechanism::Serialize(std::ostream &out) const
         // Write term count.
         n = (unsigned int)m_termcount;
         out.write((char*)&n, sizeof(n));
+
+        // Write process count.
+        n = (unsigned int)m_processcount;
+        out.write((char*)&n, sizeof(n));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, Mechanism::Serialize).");
@@ -915,6 +929,10 @@ void Mechanism::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_termcount = n;
 
+                // Read process count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_processcount = n;
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -955,6 +973,7 @@ void Mechanism::releaseMem(void)
 
     m_anydeferred = false;
     m_termcount = 0;
+    m_processcount = 0;
     m_proccount.clear();
     m_fictcount.clear();
 }
