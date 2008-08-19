@@ -101,18 +101,6 @@ real ActSiteReaction::Rate(real t, const Cell &sys) const
            m_asmodel->SiteDensity(t, sys, sys.Particles());
 }
 
-/*
-// Calculates the process rate using the given 
-// chemical conditions, rather than those conditions in the
-// given system.
-real ActSiteReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas, 
-                           const Cell &sys) const
-{
-    return SurfaceReaction::Rate(t, gas, sys) * 
-           m_asmodel->SiteDensity(t, gas, sys.Particles());
-}
-*/
-
 
 // SINGLE PARTICLE RATE CALCULATIONS.
 
@@ -124,17 +112,6 @@ real ActSiteReaction::Rate(real t, const Cell &sys, const Particle &sp) const
            m_asmodel->SiteDensity(t, sys, sp);
 }
 
-/*
-// Returns rate of the process for the given particle using the
-// given chemical conditions rather than those conditions in the
-// the given system.
-real ActSiteReaction::Rate(real t, const Sprog::Thermo::IdealGas &gas, 
-                           const Cell &sys, const Particle &sp) const
-{
-    return SurfaceReaction::Rate(t, gas, sys, sp) *
-           m_asmodel->SiteDensity(t, gas, sp);
-}
-*/
 
 // ACTIVE SITES MODEL.
 

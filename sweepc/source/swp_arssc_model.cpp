@@ -118,7 +118,6 @@ ARSSC_Model &ARSSC_Model::operator=(const ARSSC_Model &rhs)
 {
     if (this != &rhs) {
         m_sites.assign(rhs.m_sites.begin(), rhs.m_sites.end());
-        m_ipah   = rhs.m_ipah;
     }
     return *this;
 }
@@ -172,8 +171,10 @@ void ARSSC_Model::AdjustNeighbourSites(SiteType parent, int n)
                 case FreeEdge:
                 case Zigzag:
                 case Armchair:
-                    m_sites[k] = max(m_sites[k]-=1.0, 0.0);
-                    m_sites[k+1] += 1.0;
+                    if (m_sites[k] >= 1.0) {
+                        m_sites[k]   -= 1.0;
+                        m_sites[k+1] += 1.0;
+                    }
                     break;
                 case Bay:
                     // For bay sites we do nothing.
@@ -192,8 +193,66 @@ void ARSSC_Model::AdjustNeighbourSites(SiteType parent, int n)
                 // decrementing occurs.
                 case Zigzag:
                 case Armchair:
-                    m_sites[k] = max(m_sites[k]-=1.0, 0.0);
-                    m_sites[k+1] += 1.0;
+                    if (m_sites[k] >= 1.0) {
+                        m_sites[k]   -= 1.0;
+                        m_sites[k-1] += 1.0;
+                    }
+                    break;
+                case Bay:
+                    // For bay sites we do nothing.
+                    break;
+                default:
+                    // Something has gone wrong to bring us here.
+                    // This includes if a free-edge was chosen, which 
+                    // should be impossible.
+                    break;
+            }
+
+        }
+    }
+}
+
+// Updates the site counts using the rules for neighbouring
+// sites.  The neighbour sites weights are provided as a vector,
+// rather than using the weights for a given parent site.  A negative
+// count for the number of sites to update indicates site decrementing.
+void ARSSC_Model::AdjustNeighbourSites(fvector wts, int n)
+{
+    if (n >= 0) {
+        for (int i=0; i!=n; ++i) {
+            SiteType k = SelectNeighbour(wts);
+            switch (k) {
+                // For free-edges, zigzags and armchairs site
+                // incrementing occurs.
+                case FreeEdge:
+                case Zigzag:
+                case Armchair:
+                    if (m_sites[k] >= 1.0) {
+                        m_sites[k]   -= 1.0;
+                        m_sites[k+1] += 1.0;
+                    }
+                    break;
+                case Bay:
+                    // For bay sites we do nothing.
+                    break;
+                default:
+                    // Something has gone wrong to bring us here.
+                    break;
+            }
+
+        }
+    } else {
+        for (int i=0; i!=n; --i) {
+            SiteType k = SelectNeighbour(wts, true);
+            switch (k) {
+                // For zigzags and armchairs site
+                // decrementing occurs.
+                case Zigzag:
+                case Armchair:
+                    if (m_sites[k] >= 1.0) {
+                        m_sites[k]   -= 1.0;
+                        m_sites[k-1] += 1.0;
+                    }
                     break;
                 case Bay:
                     // For bay sites we do nothing.
@@ -281,40 +340,38 @@ ARSSC_Model::SiteType ARSSC_Model::SelectNeighbour(SiteType parent, bool dec) co
 {
     // Select corrent site weights for the given parent
     // site type.
-    static fvector probs(4, 0.0);
+    static fvector wts(4, 0.0);
     switch (parent) {
         case FreeEdge:
-            probs[FreeEdge] = m_fe_wt[FreeEdge];
-            probs[Zigzag]   = m_fe_wt[Zigzag];
-            probs[Armchair] = m_fe_wt[Armchair];
-            probs[Bay]      = m_fe_wt[Bay];
-            break;
+            return SelectNeighbour(m_fe_wt, dec);
         case Zigzag:
-            probs[FreeEdge] = m_zz_wt[FreeEdge];
-            probs[Zigzag]   = m_zz_wt[Zigzag];
-            probs[Armchair] = m_zz_wt[Armchair];
-            probs[Bay]      = m_zz_wt[Bay];
-            break;
+            return SelectNeighbour(m_zz_wt, dec);
         case Armchair:
-            probs[FreeEdge] = m_ac_wt[FreeEdge];
-            probs[Zigzag]   = m_ac_wt[Zigzag];
-            probs[Armchair] = m_ac_wt[Armchair];
-            probs[Bay]      = m_ac_wt[Bay];
-            break;
+            return SelectNeighbour(m_ac_wt, dec);
         case Bay:
-            probs[FreeEdge] = m_bay_wt[FreeEdge];
-            probs[Zigzag]   = m_bay_wt[Zigzag];
-            probs[Armchair] = m_bay_wt[Armchair];
-            probs[Bay]      = m_bay_wt[Bay];
-            break;
+            return SelectNeighbour(m_bay_wt, dec);
         default:
             // Invalid parent site, chosen uniformly.
-            probs[FreeEdge] = 0.25;
-            probs[Zigzag]   = 0.25;
-            probs[Armchair] = 0.25;
-            probs[Bay]      = 0.25;
-            break;
+            wts[FreeEdge] = 0.25;
+            wts[Zigzag]   = 0.25;
+            wts[Armchair] = 0.25;
+            wts[Bay]      = 0.25;
+            return SelectNeighbour(wts, dec);
     }
+}
+
+// Randomly selects a neighbour site using the given custom
+// weights.  If the optional
+// dec flag is set to true then a neighbour for the
+// decrementing process is selected (free-edges are
+// ignored).
+ARSSC_Model::SiteType ARSSC_Model::SelectNeighbour(const fvector &wts, bool dec) const
+{
+    static fvector probs(4, 0.0);
+    probs[FreeEdge] = wts[FreeEdge];
+    probs[Zigzag]   = wts[Zigzag];
+    probs[Armchair] = wts[Armchair];
+    probs[Bay]      = wts[Bay];
 
     // Multiply the site weights by the current site
     // counts.

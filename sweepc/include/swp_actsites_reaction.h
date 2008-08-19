@@ -81,16 +81,6 @@ public:
         const Cell &sys // System for which to calculate rate.
         ) const;
 
-/*
-	// Calculates the process rate using the given 
-    // chemical conditions, rather than those conditions in the
-    // given system.
-    virtual real Rate(
-        real t,         // Time.
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        const Cell &sys // System for which to calculate rate.
-        ) const;
-*/
 
 	// SINGLE PARTICLE RATE CALCULATIONS.
 
@@ -102,17 +92,6 @@ public:
         const Particle &sp  // Particle for which to calculate rate.
         ) const;
 
-/*
-	// Returns rate of the process for the given particle using the
-    // given chemical conditions rather than those conditions in the
-    // the given system.
-    virtual real Rate(
-        real t,            // Current time (s).
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        const Cell &sys,   // System to which the particle belongs.
-        const Particle &sp // Particle for which to calculate rate.
-        ) const;
-*/
 
     // ACTIVE SITES MODEL.
 

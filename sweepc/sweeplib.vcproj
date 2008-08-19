@@ -229,6 +229,10 @@
 				Name="Sub-models"
 				>
 				<File
+					RelativePath=".\source\swp_arssc_cache.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_arssc_model.cpp"
 					>
 				</File>
@@ -250,6 +254,10 @@
 				</File>
 				<File
 					RelativePath=".\source\swp_arssc_inception.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_arssc_reaction.cpp"
 					>
 				</File>
 				<File
@@ -546,6 +554,10 @@
 			<Filter
 				Name="Sub-models"
 				>
+				<File
+					RelativePath=".\include\swp_arssc_cache.h"
+					>
+				</File>
 				<File
 					RelativePath=".\include\swp_arssc_model.h"
 					>

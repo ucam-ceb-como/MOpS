@@ -64,7 +64,9 @@ namespace Processes
         Condensation_ID=200,    // Condensation process.
 
         // ARSSC model processes.
-        ARSSC_Inception_ID=1000 // ARS-SC inception process.
+        ARSSC_Inception_ID=1000,   // ARS-SC inception process.
+        ARSSC_Reaction_ID=1001,    // ARS-SC reaction process.
+        ARSSC_Condensation_ID=1002 // ARS-SC condensation process.
     };
 };
 };

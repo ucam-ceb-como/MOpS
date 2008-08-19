@@ -131,7 +131,10 @@ int ARSSC_Inception::Perform(real t, Cell &sys, unsigned int iterm) const
 // READ/WRITE/COPY.
 
 // Creates a copy of the inception.
-ARSSC_Inception *const ARSSC_Inception::Clone(void) const {return new ARSSC_Inception(*this);}
+ARSSC_Inception *const ARSSC_Inception::Clone(void) const
+{
+    return new ARSSC_Inception(*this);
+}
 
 // Returns the process type.  Used to identify different
 // processes and for serialisation.

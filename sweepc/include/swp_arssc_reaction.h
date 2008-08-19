@@ -45,7 +45,12 @@
 #define SWEEP_ARSSC_RXN_H
 
 #include "swp_params.h"
+#include "swp_process_type.h"
 #include "swp_actsites_reaction.h"
+#include "swp_arssc_model.h"
+#include "swp_cell.h"
+#include "swp_particle.h"
+#include <iostream>
 
 namespace Sweep
 {
@@ -58,8 +63,8 @@ class ARSSC_Reaction : public ActSiteReaction
 {
 public:
     // Constructors.
-    ActSiteReaction(const Sweep::Mechanism &mech); // Default constructor.
-    ARSSC_Reaction(const ARSSC_Reaction &copy);    // Copy constructor.
+    ARSSC_Reaction(const Sweep::Mechanism &mech); // Default constructor.
+    ARSSC_Reaction(const ARSSC_Reaction &copy);   // Copy constructor.
     ARSSC_Reaction(                  // Stream-reading constructor.
         std::istream &in,            //  - Input stream.
         const Sweep::Mechanism &mech //  - Parent mechanism.
@@ -72,60 +77,84 @@ public:
     ARSSC_Reaction &operator=(const ARSSC_Reaction &rhs);
 
 
-    // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
+    // PERFORMING THE PROCESS.
 
-    // Returns rate of the process for the given system.
-    virtual real Rate(
-        real t,         // Time.
-        const Cell &sys // System for which to calculate rate.
+    // Performs the process on the given system.  The responsible rate term is given
+    // by index.  Returns 0 on success, otherwise negative.
+    virtual int Perform(
+        real t,              // Time.
+        Cell &sys,           // System to update.
+        unsigned int iterm=0 // The process term responsible for this event.
         ) const;
 
-/*
-	// Calculates the process rate using the given 
-    // chemical conditions, rather than those conditions in the
-    // given system.
-    virtual real Rate(
-        real t,         // Time.
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        const Cell &sys // System for which to calculate rate.
-        ) const;
-*/
-
-	// SINGLE PARTICLE RATE CALCULATIONS.
-
-    // Returns the rate of the process for the given particle in
-    // the system. Process must be linear in particle number.
-    virtual real Rate(
-        real t,             // Current time (s).
-        const Cell &sys,    // System to which the particle belongs.
-        const Particle &sp  // Particle for which to calculate rate.
+    // Performs the process on a given particle in the system.  Particle
+    // is given by index.  The process is performed n times.
+    virtual int Perform(
+        real t,        // Current time (s).
+        Cell &sys,     // System to which the particle belongs.
+        Particle &sp,  // Particle for which to perform process.
+        unsigned int n // Number of times to perform the process.
         ) const;
 
-/*
-	// Returns rate of the process for the given particle using the
-    // given chemical conditions rather than those conditions in the
-    // the given system.
-    virtual real Rate(
-        real t,            // Current time (s).
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        const Cell &sys,   // System to which the particle belongs.
-        const Particle &sp // Particle for which to calculate rate.
-        ) const;
-*/
 
-    // ACTIVE SITES MODEL.
+    // SITE COUNTS.
 
-    // Sets the active sites model.
-    void SetModel(ActSites::ActSitesModel &model);
+    // Returns the change in the count of the given site type.
+    real SiteCount(SubModels::ARSSC_Model::SiteType type) const;
 
-    // Returns the active sites model.
-    ActSites::ActSitesModel *const Model(void) const;
+    // Returns the change in the number of free-edges.
+    real FreeEdgeCount(void) const;
+
+    // Returns the change in the number of armchairs.
+    real ArmchairCount(void) const;
+
+    // Returns the change in the number of zigzags.
+    real ZigzagCount(void) const;
+
+    // Returns the change in the number of bays.
+    real BayCount(void) const;
+
+    // Returns the change in the number of R5s.
+    real R5Count(void) const;
+
+    // Sets the change in the site count of the given site type.
+    void SetSiteCount(SubModels::ARSSC_Model::SiteType type, real n);
+
+
+    // PARENT SITE FOR NEIGHBOUR UPDATES.
+
+    // Returns the parent site used for neighbour updates.
+    SubModels::ARSSC_Model::SiteType ParentSite(void) const;
+
+    // Sets the parent site used for neighbour updates.
+    void SetParentSite(SubModels::ARSSC_Model::SiteType parent);
+
+
+    // Enables use of parent site for neighbour updates, as opposed
+    // to custom neighbour weights defined for this reaction.
+    void EnableParentWts(void);
+
+
+    // CUSTOM NEIGHBOUR WEIGHTS.
+
+    // Returns the custom neighbour weight for the given site.
+    real NeighWt(SubModels::ARSSC_Model::SiteType site) const;
+
+    // Sets the custom neighbour weight of the given site.
+    void SetNeighWt(
+        SubModels::ARSSC_Model::SiteType site, // Set of which to set weight.
+        real wt // Neighbour weight.
+        );
+
+    // Enable custom neighbour weights, as opposed to those
+    // specified for the parent site.
+    void EnableCustomWts(void);
 
 
     // READ/WRITE/COPY.
     
     // Creates a copy of the particle process.
-    virtual ActSiteReaction *const Clone(void) const;
+    virtual ARSSC_Reaction *const Clone(void) const;
 
     // Returns the process type.  Used to identify different
     // processes and for serialisation.
@@ -141,12 +170,34 @@ public:
         );
 
 protected:
-    // The active sites model instance.
-    ActSites::ActSitesModel *m_asmodel;
+    // Aromatic site count deviations due to reaction.
+    fvector m_sites; 
+
+    // Number of neighbour sites to update after reaction.  Negative
+    // value means sites are decremented.
+    int m_upd_count;
+
+    // Parent site type used for selecting neighbours with correct
+    // weights.
+    SubModels::ARSSC_Model::SiteType m_upd_parent;
+
+    // Flag indicating if the parent site neighbour weights are used
+    // for selecting a neighbour.  If false then the custom weights
+    // defined for the reaction are used.
+    bool m_use_parent_wts;
+
+    // Neighbour weights (if not using those for the parent site).
+    fvector m_neigh_wts;
 
     // Default constructor is protected to prevent reactions being
     // defined without knowledge of the parent mechanism.
-    ActSiteReaction(void);
+    ARSSC_Reaction(void);
+
+    // Adjusts a primary particle according to the rules of the reaction.
+    unsigned int adjustPri(
+        Sweep::Primary &pri, // Primary to adjust.
+        unsigned int n=1     // Number of times to perform adjustment.
+        ) const;
 };
 };
 };

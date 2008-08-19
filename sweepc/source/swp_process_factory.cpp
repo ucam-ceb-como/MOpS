@@ -44,6 +44,10 @@
 #include "swp_surface_reaction.h"
 #include "swp_condensation.h"
 #include "swp_actsites_reaction.h"
+#include "swp_coagulation.h"
+#include "swp_inception.h"
+#include "swp_arssc_inception.h"
+#include "swp_arssc_reaction.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -66,6 +70,12 @@ Process *const ProcessFactory::Create(ProcessType id, const Sweep::Mechanism &me
             return new Condensation(mech);
         case ActSiteRxn_ID:
             return new ActSiteReaction(mech);
+        case ARSSC_Inception_ID:
+            return new ARSSC_Inception(mech);
+        case ARSSC_Reaction_ID:
+            return new ARSSC_Reaction(mech);
+        case ARSSC_Condensation_ID:
+//            return new ARSSC_Condensation(mech);
         default:
             throw invalid_argument("Invalid process ID (Sweep, "
                                    "ProcessFactory::Create).");
@@ -103,7 +113,13 @@ Process *const ProcessFactory::Read(std::istream &in, const Sweep::Mechanism &me
                 proc = new Condensation(in, mech);
                 break;
             case ActSiteRxn_ID:
-                return new ActSiteReaction(in, mech);
+                proc = new ActSiteReaction(in, mech);
+            case ARSSC_Inception_ID:
+                proc = new ARSSC_Inception(in, mech);
+            case ARSSC_Reaction_ID:
+                proc = new ARSSC_Reaction(in, mech);
+            case ARSSC_Condensation_ID:
+//                proc = new ARSSC_Condensation(in, mech);
             default:
                 throw runtime_error("Invalid process type read from "
                                     "input stream (Sweep, ProcessFactory::Read).");
@@ -119,7 +135,8 @@ Process *const ProcessFactory::Read(std::istream &in, const Sweep::Mechanism &me
 // Reads an inception from a binary stream.  The first item read
 // is the inception ID which tells the ModelFactory what type
 // of inception to read.
-Inception *const ProcessFactory::ReadInception(std::istream &in, const Sweep::Mechanism &mech)
+Inception *const ProcessFactory::ReadInception(std::istream &in, 
+                                               const Sweep::Mechanism &mech)
 {
     if (in.good()) {
         Inception *proc = NULL;
@@ -134,6 +151,8 @@ Inception *const ProcessFactory::ReadInception(std::istream &in, const Sweep::Me
             case Inception_ID:
                 proc = new Inception(in, mech);
                 break;
+            case ARSSC_Inception_ID:
+                proc = new ARSSC_Inception(in, mech);
             default:
                 throw runtime_error("Invalid inception type read from "
                                     "input stream (Sweep, "
@@ -150,7 +169,8 @@ Inception *const ProcessFactory::ReadInception(std::istream &in, const Sweep::Me
 // Reads a particle process from a binary stream.  The first item read
 // is the process ID which tells the ModelFactory what type
 // of process to read.
-ParticleProcess *const ProcessFactory::ReadPartProcess(std::istream &in, const Sweep::Mechanism &mech)
+ParticleProcess *const ProcessFactory::ReadPartProcess(std::istream &in, 
+                                                       const Sweep::Mechanism &mech)
 {
     if (in.good()) {
         ParticleProcess *proc = NULL;
@@ -170,6 +190,12 @@ ParticleProcess *const ProcessFactory::ReadPartProcess(std::istream &in, const S
                 break;
             case ActSiteRxn_ID:
                 return new ActSiteReaction(in, mech);
+            case ARSSC_Reaction_ID:
+                proc = new ARSSC_Reaction(in, mech);
+                break;
+            case ARSSC_Condensation_ID:
+//                proc = new ARSSC_Condensation(in, mech);
+                break;
             default:
                 throw runtime_error("Invalid particle process type read from "
                                     "input stream (Sweep, "
@@ -186,7 +212,8 @@ ParticleProcess *const ProcessFactory::ReadPartProcess(std::istream &in, const S
 // Reads an coagulation from a binary stream.  The first item read
 // is the coagulation ID which tells the ModelFactory what type
 // of coagulation to read.
-Coagulation *const ProcessFactory::ReadCoag(std::istream &in, const Sweep::Mechanism &mech)
+Coagulation *const ProcessFactory::ReadCoag(std::istream &in, 
+                                            const Sweep::Mechanism &mech)
 {
     if (in.good()) {
         Coagulation *proc = NULL;

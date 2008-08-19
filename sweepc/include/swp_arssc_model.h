@@ -134,6 +134,14 @@ public:
         int n            // Number of sites to increment (+ve) / decrement (-ve).
         );
 
+    // Updates the site counts using the rules for neighbouring
+    // sites.  The neighbour sites weights are provided as a vector,
+    // rather than using the weights for a given parent site.  A negative
+    // count for the number of sites to update indicates site decrementing.
+    void AdjustNeighbourSites(
+        fvector wts, // Custom site weights.
+        int n        // Number of sites to increment (+ve) / decrement (-ve).
+        );
 
     // PAH COUNT.
 
@@ -184,6 +192,16 @@ public:
     SiteType SelectNeighbour(
         SiteType parent, // Parent site type.
         bool dec=false // Choose for decrementing process?
+        ) const;
+
+    // Randomly selects a neighbour site using the given custom
+    // weights.  If the optional
+    // dec flag is set to true then a neighbour for the
+    // decrementing process is selected (free-edges are
+    // ignored).
+    SiteType SelectNeighbour(
+        const fvector &wts, // Custom neighbour weights.
+        bool dec=false      // Choose for decrementing process?
         ) const;
 
 
