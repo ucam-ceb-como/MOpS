@@ -53,6 +53,14 @@ using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
+// Default constructor is protected to prevent reactions being
+// defined without knowledge of the parent mechanism.
+ActSiteReaction::ActSiteReaction(void)
+: SurfaceReaction(), m_asmodel(NULL)
+{
+    m_name = "Active-site Reaction";
+}
+
 // Default constructor.
 ActSiteReaction::ActSiteReaction(const Sweep::Mechanism &mech)
 : SurfaceReaction(mech), m_asmodel(NULL)
