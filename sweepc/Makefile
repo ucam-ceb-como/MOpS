@@ -14,7 +14,7 @@ ifeq ($(debug),0)
   endif
 else
   flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprog/include -Wall -ggdb -pg
+       -I../sprog/include -Wall -g -pg
 endif
 
 # Source directories.
@@ -50,7 +50,8 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_surface_reaction.o swp_particle_model.o swp_imgnode.o \
     swp_particle_image.o swp_surfvol_stats.o swp_pripart_stats.o \
     swp_sintering_model.o swp_arssc_model.o swp_arssc_inception.o \
-    swp_death_process.o swp_birth_process.o
+    swp_death_process.o swp_birth_process.o swp_arssc_cache.o \
+    swp_arssc_reaction.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -177,6 +178,9 @@ swp_model_factory.o: $(src)/swp_model_factory.cpp
 swp_arssc_model.o: $(src)/swp_arssc_model.cpp
 	$(cpp) $(flag) $(src)/swp_arssc_model.cpp
 
+swp_arssc_cache.o: $(src)/swp_arssc_cache.cpp
+	$(cpp) $(flag) $(src)/swp_arssc_cache.cpp
+
 # Processes.
 
 swp_actsites_reaction.o: $(src)/swp_actsites_reaction.cpp
@@ -205,6 +209,9 @@ swp_surface_reaction.o: $(src)/swp_surface_reaction.cpp
 
 swp_arssc_inception.o: $(src)/swp_arssc_inception.cpp
 	$(cpp) $(flag) $(src)/swp_arssc_inception.cpp
+
+swp_arssc_reaction.o: $(src)/swp_arssc_reaction.cpp
+	$(cpp) $(flag) $(src)/swp_arssc_reaction.cpp
 
 swp_birth_process.o: $(src)/swp_birth_process.cpp
 	$(cpp) $(flag) $(src)/swp_birth_process.cpp
