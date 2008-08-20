@@ -671,6 +671,38 @@ void PriPartPrimary::mergeInList(const std::vector<PriPart> &list)
 // Sorts the primary particle list in descending order of mass.
 void PriPartPrimary::sortList(unsigned int i1, unsigned int i2)
 {
+    // Insertion sort - this sorting algorithm is very good for 
+    // sorted or almosted list. Previous combination sorting algorithms
+    // of quick sort and bubble sort take about 36% of CPU time.
+    // This is reduced to 6% with insertion sort and total computational
+    // time is reduced by 10%. An optimization to this sorting problem
+    // is to make a primary particle list class to keep track if the list
+    // should be sorted.
+    int n = m_primaries.size();
+    if (n <= 1) {
+        // No need to sort if the array only has one element.
+        return;
+    } else {
+        PriPart temp;
+        for (unsigned int i = 0; i < n; i++) {
+            for (unsigned int j = i; j > 0; j--) {
+                if (m_primaries[j-1].Monomers < m_primaries[j].Monomers) {
+                    // Store k in temp.
+                    temp.Monomers = m_primaries[j].Monomers;
+                    temp.Surface  = m_primaries[j].Surface;
+                    // Put k+1 into k.
+                    m_primaries[j].Monomers = m_primaries[j-1].Monomers;
+                    m_primaries[j].Surface  = m_primaries[j-1].Surface;
+                    // Put temp into k+1.
+                    m_primaries[j-1].Monomers = temp.Monomers;
+                    m_primaries[j-1].Surface  = temp.Surface;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+    /*
     if (m_primaries.size() <= 1) {
         // No need to sort if the array only has one element.
         return;
@@ -694,7 +726,7 @@ void PriPartPrimary::sortList(unsigned int i1, unsigned int i2)
                     // Put temp into k.
                     m_primaries[k].Monomers = temp.Monomers;
                     m_primaries[k].Surface  = temp.Surface;
-                }
+			    }
             }
         }
     } else {
@@ -744,4 +776,5 @@ void PriPartPrimary::sortList(unsigned int i1, unsigned int i2)
         if (i1 < ip-1) sortList(i1, ip-1);
         if (ip < i2) sortList(ip, i2);
     }   
+    */
 }
