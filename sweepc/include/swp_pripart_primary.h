@@ -189,6 +189,8 @@ protected:
     struct PriPart {
         unsigned int Monomers;
         real Surface;
+        real Volume;
+        real Diameter;
     };
 
     // Vector of primary particles (the list).
@@ -220,14 +222,14 @@ protected:
 
     // PRIPART-LIST MANAGEMENT.
 
-    // Calculates the surface area of a spherical primary with the
-    // given monomer count.
-    real calcSurf(unsigned int n) const;
-
     // Calculates the average primary-particle diameter for
     // the current list.  The primaries are assumed to be
     // spherical.
     real calcAvgDiam();
+
+    // Calculate and update properties of given PriPart (primary particle) with 
+    // the given number of monomer count.
+    void updatePriPartProperties(PriPart &pripart, unsigned int n);
 
     // Randomly creates the pripart-list to match the number of monomers
     // and as-good-as match the surface area.

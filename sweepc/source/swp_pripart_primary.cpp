@@ -109,8 +109,7 @@ PriPartPrimary &PriPartPrimary::operator=(const Primary &rhs)
         // a single primary particle.
         m_primaries.clear();
         vector<PriPart>::iterator i = m_primaries.insert(m_primaries.end(), PriPart());
-        i->Monomers = (unsigned int)rhs.Composition(m_icomp);
-        i->Surface  = calcSurf(i->Monomers);
+        updatePriPartProperties(*i, (unsigned int)rhs.Composition(m_icomp));
 
         // Set bulk primary properties.
         m_totprisurf = i->Surface;
@@ -140,8 +139,7 @@ PriPartPrimary &PriPartPrimary::operator=(const SurfVolPrimary &rhs)
         // Add a single primary to the list with the correct mass.
         m_primaries.clear();
         vector<PriPart>::iterator i = m_primaries.insert(m_primaries.end(), PriPart());
-        i->Monomers = (unsigned int)rhs.Composition(m_icomp);
-        i->Surface  = calcSurf(i->Monomers);
+        updatePriPartProperties(*i, (unsigned int)rhs.Composition(m_icomp));
 
         // Set bulk primary properties.
         m_totprisurf = i->Surface;
@@ -300,14 +298,12 @@ PriPartPrimary &PriPartPrimary::Coagulate(const Primary &rhs)
     if (rhs.AggID() == Spherical_ID) {
         // Add a new pri-particle to the list.
         vector<PriPart>::iterator i = m_primaries.insert(m_primaries.end(), PriPart());
-        i->Monomers = (unsigned int)rhs.Composition(m_icomp);
-        i->Surface  = calcSurf(i->Monomers);
+        updatePriPartProperties(*i, (unsigned int)rhs.Composition(m_icomp));
     } else if (rhs.AggID() == SurfVol_ID) {
         // Add a number of new pri-particles to the
         // list until the surface area is matched.
         vector<PriPart>::iterator i = m_primaries.insert(m_primaries.end(), PriPart());
-        i->Monomers = (unsigned int)rhs.Composition(m_icomp);
-        i->Surface  = calcSurf(i->Monomers);
+        updatePriPartProperties(*i, (unsigned int)rhs.Composition(m_icomp));
 //        addRandom((unsigned int)rhs.Composition(m_icomp), rhs.SurfaceArea());
     } else {
         // Attempt to cast the RHS as a PriPartPrimary.  This
@@ -455,20 +451,6 @@ void PriPartPrimary::init(void)
 
 // PRIPART-LIST MANAGEMENT.
 
-// Calculates the surface area of a spherical primary with the
-// given monomer count.
-real PriPartPrimary::calcSurf(unsigned int n) const
-{
-    // The primary is assumed to be spherical with n monomers.
-    // In order to calculate the surface area, the volume must
-    // first be calculated.
-    real vol = (real)n * m_pmodel->Components(m_icomp)->MolWt() / 
-               (NA * m_pmodel->Components(m_icomp)->Density());
-
-    // Return the surface area.
-    return PI * pow(6.0*vol/PI, TWO_THIRDS);
-}
-
 // Calculates the average primary-particle diameter for
 // the current list.  The primaries are assumed to be
 // spherical.
@@ -477,12 +459,20 @@ real PriPartPrimary::calcAvgDiam()
     real sumd = 0.0;
     for (vector<PriPart>::const_iterator i=m_primaries.begin(); 
          i!=m_primaries.end(); ++i) {
-        real vol = (real)i->Monomers  * m_pmodel->Components(m_icomp)->MolWt() / 
-                   (NA * m_pmodel->Components(m_icomp)->Density());
-        sumd += pow(vol*6.0/PI, ONE_THIRD);
+        //real vol = (real)i->Monomers  * m_pmodel->Components(m_icomp)->MolWt() / 
+        //           (NA * m_pmodel->Components(m_icomp)->Density());
+        sumd += i->Diameter;
     }
     m_avgpridiam = sumd / (real)(m_primaries.size());
     return m_avgpridiam;
+}
+
+void PriPartPrimary::updatePriPartProperties(PriPart &pripart, unsigned int n) {
+    pripart.Monomers = n;
+    pripart.Volume = (real)n * m_pmodel->Components(m_icomp)->MolWt() / 
+                     (NA * m_pmodel->Components(m_icomp)->Density());
+    pripart.Surface = PI * pow(6.0*pripart.Volume/PI, TWO_THIRDS);
+    pripart.Diameter = pow(pripart.Volume*6.0/PI, ONE_THIRD);
 }
 
 // Distributes a number of monomers among the pri-particles, weighted
@@ -511,21 +501,24 @@ void PriPartPrimary::distMonomers(unsigned int n)
     for (unsigned int i=0; i<N-1; ++i) {
         // Determine number of monomers to be added to this primary (m).
         unsigned int m = ignbin(dm, (float)(m_primaries[i].Surface/surfsums[i]));
-        // Add monomers.
-        m_primaries[i].Monomers += m;
-        // Calculate surface area.
-        m_totprisurf -= m_primaries[i].Surface;
-        m_primaries[i].Surface   = calcSurf(m_primaries[i].Monomers);
-        m_totprisurf += m_primaries[i].Surface;
-        // Update number of remaining monomers.
-        if ((dm-=m) == 0) break;
+        
+        // If m is zero then don't update surface area and primary particle properties
+        // This conditon is added to reduce computational time.
+        if (m > 0) {
+            // Calculate surface area.
+            m_totprisurf -= m_primaries[i].Surface;
+            // Calculate primary particle properties
+            updatePriPartProperties(m_primaries[i], m_primaries[i].Monomers + m);
+            m_totprisurf += m_primaries[i].Surface;
+            // Update number of remaining monomers.
+            if ((dm-=m) == 0) break;
+        }
     }
 
     // Whatever mass is left shall be put on the smallest (last)
     // primary particle.
-    m_primaries[N-1].Monomers += dm;
     m_totprisurf -= m_primaries[N-1].Surface;
-    m_primaries[N-1].Surface = calcSurf(m_primaries[N-1].Monomers);
+    updatePriPartProperties(m_primaries[N-1], m_primaries[N-1].Monomers + dm);
     m_totprisurf += m_primaries[N-1].Surface;
 
     // Ensure the primary list is sorted.
@@ -563,10 +556,10 @@ void PriPartPrimary::removeMonomers(unsigned int n)
         // Determine number of monomers to be added to this primary (m).
         unsigned int m = ignbin(dm, (float)(m_primaries[i].Surface/surfsums[i]));
         // Remove monomers.
-        m_primaries[i].Monomers -= m;
         // Calculate surface area.
         m_totprisurf -= m_primaries[i].Surface;
-        m_primaries[i].Surface   = calcSurf(m_primaries[i].Monomers);
+        // Calculate primary particle properties
+        updatePriPartProperties(m_primaries[i], m_primaries[i].Monomers - m);
         m_totprisurf += m_primaries[i].Surface;
         // Update number of remaining monomers to remove.
         if ((dm-=m) == 0) break;
@@ -597,8 +590,7 @@ void PriPartPrimary::updatePrimaries(void)
         } else {
             // Add the first primary.
             m_primaries.push_back(PriPart());
-            m_primaries[0].Monomers = (unsigned int)m_comp[m_icomp];
-            m_primaries[0].Surface = calcSurf((unsigned int)m_comp[m_icomp]);
+            updatePriPartProperties(m_primaries[0], (unsigned int)m_comp[m_icomp]);
             m_totprisurf = m_primaries[0].Surface;
             m_avgpridiam = calcAvgDiam();
         }
@@ -610,32 +602,49 @@ void PriPartPrimary::updatePrimaries(void)
         }
     }
 
-    // Calculate required change in surface area to match
-    // surface-volume model.
-    real ds = m_surf - m_totprisurf;
+    real ds = 0.0;
+    real surfremoved = 0.0;
+    unsigned int m = 0;
 
     // Now the difficult bit, probably need to destroy primaries to 
     // reduce surface area.  The methodology is to remove the smallest
     // primaries, adding their mass to the larger, until the total surface
     // area is less than or equal to the aggregate surface area.
-    if (ds < 0.0) {
-        while ((m_totprisurf > m_surf) && (m_primaries.size() > 1)) {
+    while ((m_totprisurf > m_surf) && (m_primaries.size() > 1)) {
+        // Calculate required change in surface area to match
+        // surface-volume model.
+        ds = m_totprisurf - m_surf;
+
+        // Reset counters.
+        m = 0;
+        surfremoved = 0.0;
+
+        // Get iterator to last (smallest) primary.
+        vector<PriPart>::iterator i = (m_primaries.end()-1);
+        
+        // Calculate how many primaries must be removed to reduced the
+        // surface area by ds.  Store total monomers in these primaries.
+        while ((surfremoved < ds) && (m_primaries.size() > 1)) {
             // Store the mass of the smallest primary, then remove it.
-            vector<PriPart>::iterator i = (m_primaries.end()-1);
-            unsigned int m = i->Monomers; // Store monomer count.
+            m += i->Monomers;             // Store monomer count.
             m_totprisurf -= i->Surface;   // Remove contribution to total surface area.
+            surfremoved += i->Surface;    // Sum up removed surface area.
             m_primaries.erase(i);         // Erase the primary.
-
-            // Distribute this mass over the remaining primaries.
-            distMonomers(m);
+            i = (m_primaries.end()-1);    // Get pointer to new last (smallest) primary.
         }
-    }
 
-    // Ensure that the list is sorted.
-    sortList(0, m_primaries.size()-1);
+        // Distribute this mass over the remaining primaries and update
+        // the surface area which must be removed.
+        distMonomers(m);
+    }
+    
+    // These two functions are already sorted in any of above sections.
+    // However, if there is any change to this function, you may need to
+    // enable these two functions to esure that the list is sorted.
+    // sortList(0, m_primaries.size()-1);
 
     // Calculate the average primary diameter.
-    calcAvgDiam();
+    // calcAvgDiam();
 }
 
 // Merges a pri-particle list into the current list.
@@ -690,12 +699,15 @@ void PriPartPrimary::sortList(unsigned int i1, unsigned int i2)
                     // Store k in temp.
                     temp.Monomers = m_primaries[j].Monomers;
                     temp.Surface  = m_primaries[j].Surface;
+                    temp.Volume  = m_primaries[j].Volume;
                     // Put k+1 into k.
                     m_primaries[j].Monomers = m_primaries[j-1].Monomers;
                     m_primaries[j].Surface  = m_primaries[j-1].Surface;
+                    m_primaries[j].Volume  = m_primaries[j-1].Volume;
                     // Put temp into k+1.
                     m_primaries[j-1].Monomers = temp.Monomers;
                     m_primaries[j-1].Surface  = temp.Surface;
+                    m_primaries[j-1].Volume  = temp.Volume;
                 } else {
                     break;
                 }

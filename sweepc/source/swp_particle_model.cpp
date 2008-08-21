@@ -146,11 +146,13 @@ const CompPtrVector &ParticleModel::Components() const
 // Returns the component with the given index.
 const Component *const ParticleModel::Components(unsigned int i) const
 {
-    if (i < m_components.size()) {
-        return m_components[i];
-    } else {
-        return NULL;
-    }
+    // Remove index checking for optimization purpose
+    return m_components[i];
+    //if (i < m_components.size()) {
+    //    return m_components[i];
+    //} else {
+    //    return NULL;
+    //}
 }
 
 // Returns the index of the component with the 
