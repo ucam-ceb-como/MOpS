@@ -143,12 +143,17 @@ public:
     
     // STATISTICAL BOUNDS OUTPUT
 
-    // Set simulator to output data of a given statistical range
+    // Set simulator to output data of a given statistical range.
     void SetOutputStatBoundary(
         const Sweep::ParticleCache::PropID pid,
         real lower,
         real upper
         );
+
+    // POVRAY OUTPUT.
+
+    // Set number of particle trackings.
+    void SetParticleTrackCount(unsigned int ptcount);
 
     // SOLUTION AND POST-PROCESSING.
 

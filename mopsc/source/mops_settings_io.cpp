@@ -832,6 +832,25 @@ void Settings_IO::readOutput(const CamXML::Element &node, Simulator &sim)
     // Set statistical bounds to simulator
     sim.SetOutputStatBoundary(pid, lower, upper);
 
+    // POVRAY OUTPUT.
+
+    // Read POVRAY particle tracking output. 
+    subnode = node.GetFirstChild("ptrack");
+    if (subnode != NULL) {
+        string str_enable = subnode->GetAttributeValue("enable");
+        if (str_enable.compare("true") == 0) {
+            string str_ptcount = subnode->GetAttributeValue("ptcount");
+            sim.SetParticleTrackCount((unsigned int)cdble(str_ptcount));
+        } else if (str_enable.compare("false") == 0) {
+            sim.SetParticleTrackCount(0);
+        } else {
+            throw runtime_error("Unknown ptrack enabling keyword in MOPS input "
+                                "(Mops, Settings_IO::readOutput)");
+        }
+    } else {
+        // Set number of particle tracking to zero if ptrack is not found.
+        sim.SetParticleTrackCount(0);
+    }
 }
 
 // Returns the temperature in K by reading the value from the given

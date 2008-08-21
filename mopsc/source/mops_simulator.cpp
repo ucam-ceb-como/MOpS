@@ -189,6 +189,12 @@ void Simulator::SetOutputStatBoundary(Sweep::ParticleCache::PropID pid, double l
     m_statbound.PID   = pid;
 }
 
+// POVRAY OUTPUT.
+
+void Simulator::SetParticleTrackCount(unsigned int ptcount) {
+    m_ptrack_count = ptcount;
+}
+
 // SOLVING REACTORS.
 
 // Solves the given reactor for the given time intervals.
