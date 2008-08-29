@@ -253,7 +253,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\source\swp_arssc_condensation.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_arssc_inception.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_arssc_process.cpp"
 					>
 				</File>
 				<File
@@ -499,7 +507,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\swp_arssc_condensation.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\swp_arssc_inception.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_arssc_process.h"
 					>
 				</File>
 				<File

@@ -52,14 +52,14 @@ using namespace std;
 
 // Default constructor (protected).
 ARSSC_Inception::ARSSC_Inception(void)
-: m_sites(SubModels::ARSSC_Model::SiteTypeCount,0.0)
+: Inception(), ARSSC_Process()
 {
     m_name = "ARS-SC Inception";
 }
 
 // Initialising constructor.
 ARSSC_Inception::ARSSC_Inception(const Sweep::Mechanism &mech)
-: Inception(mech), m_sites(SubModels::ARSSC_Model::SiteTypeCount,0.0)
+: Inception(mech), ARSSC_Process()
 {
     m_name = "ARS-SC Inception";
 }
@@ -88,6 +88,7 @@ ARSSC_Inception &ARSSC_Inception::operator =(const ARSSC_Inception &rhs)
 {
     if (this != &rhs) {
         Inception::operator=(rhs);
+        ARSSC_Process::operator =(rhs);
         m_sites.assign(rhs.m_sites.begin(), rhs.m_sites.end());
     }
     return *this;
@@ -150,16 +151,7 @@ void ARSSC_Inception::Serialize(std::ostream &out) const
 
         // Serialize base class.
         Inception::Serialize(out);
-
-        // Write number of sites
-        unsigned int n = (unsigned int)m_sites.size();
-        out.write((char*)&n, sizeof(n));
-
-        // Write site values.
-        for (fvector::const_iterator i=m_sites.begin(); i!=m_sites.end(); ++i) {
-            double v = (double)*i;
-            out.write((char*)&v, sizeof(v));
-        }
+        ARSSC_Process::Serialize(out);
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, ARSSC_Inception::Serialize).");
@@ -183,16 +175,7 @@ void ARSSC_Inception::Deserialize(std::istream &in, const Sweep::Mechanism &mech
             case 0:
                 // Deserialize base class.
                 Inception::Deserialize(in, mech);
-
-                // Read new site count.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-
-                // Read component values.
-                m_sites.clear();
-                for (unsigned int i=0; i!=n; ++i) {
-                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_sites.push_back((real)val);
-                }
+                ARSSC_Process::Deserialize(in);
 
                 break;
             default:

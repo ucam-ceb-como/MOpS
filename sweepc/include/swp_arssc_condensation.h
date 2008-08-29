@@ -6,8 +6,8 @@
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
-    Definition of a surface reaction process which includes 
-    manipulation of ARS-SC sites.
+    Definition of a condensation process which includes terms
+    for ARS-SC sites.
 
   Licence:
     This file is part of "sweepc".
@@ -40,12 +40,12 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#ifndef SWEEP_ARSSC_RXN_H
-#define SWEEP_ARSSC_RXN_H
+#ifndef SWEEP_ARSSC_CONDENSATION_H
+#define SWEEP_ARSSC_CONDENSATION_H
 
 #include "swp_params.h"
 #include "swp_process_type.h"
-#include "swp_actsites_reaction.h"
+#include "swp_condensation.h"
 #include "swp_arssc_model.h"
 #include "swp_arssc_process.h"
 #include "swp_cell.h"
@@ -59,22 +59,22 @@ class Mechanism;
 
 namespace Processes
 {
-class ARSSC_Reaction : public ActSiteReaction, public ARSSC_Process
+class ARSSC_Condensation : public Condensation, public ARSSC_Process
 {
 public:
     // Constructors.
-    ARSSC_Reaction(const Sweep::Mechanism &mech); // Default constructor.
-    ARSSC_Reaction(const ARSSC_Reaction &copy);   // Copy constructor.
-    ARSSC_Reaction(                  // Stream-reading constructor.
+    ARSSC_Condensation(const Sweep::Mechanism &mech); // Default constructor.
+    ARSSC_Condensation(const ARSSC_Condensation &copy);   // Copy constructor.
+    ARSSC_Condensation(              // Stream-reading constructor.
         std::istream &in,            //  - Input stream.
         const Sweep::Mechanism &mech //  - Parent mechanism.
         );
 
     // Destructor.
-    virtual ~ARSSC_Reaction(void);
+    virtual ~ARSSC_Condensation(void);
 
     // Operators.
-    ARSSC_Reaction &operator=(const ARSSC_Reaction &rhs);
+    ARSSC_Condensation &operator=(const ARSSC_Condensation &rhs);
 
 
     // PERFORMING THE PROCESS.
@@ -100,7 +100,7 @@ public:
     // READ/WRITE/COPY.
     
     // Creates a copy of the particle process.
-    virtual ARSSC_Reaction *const Clone(void) const;
+    virtual ARSSC_Condensation *const Clone(void) const;
 
     // Returns the process type.  Used to identify different
     // processes and for serialisation.
@@ -116,12 +116,11 @@ public:
         );
 
 protected:
-
     // Default constructor is protected to prevent reactions being
     // defined without knowledge of the parent mechanism.
-    ARSSC_Reaction(void);
+    ARSSC_Condensation(void);
 
-    // Adjusts a primary particle according to the rules of the reaction.
+    // Adjusts a primary particle according to the rules of the condensation.
     unsigned int adjustPri(
         Sweep::Primary &pri, // Primary to adjust.
         unsigned int n=1     // Number of times to perform adjustment.

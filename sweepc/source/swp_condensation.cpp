@@ -153,34 +153,6 @@ real Condensation::Rate(real t, const Cell &sys) const
     }
 }
 
-/*
-// Calculates the process rate using the given 
-// chemical conditions, rather than those conditions in the
-// given system.
-real Condensation::Rate(real t, const Sprog::Thermo::IdealGas &gas, const Cell &sys) const
-{
-    // Calculate temperature terms.
-    real cterm = m_a * sqrt(gas.Temperature()) * NA;
-
-     // Chemical species concentration dependence.
-    cterm *= chemRatePart(gas.MoleFractions(), gas.Density());
-
-    // Free molecular terms.
-    cterm *= (m_kfm1 * sys.ParticleCount()) + 
-             (m_kfm2 * sys.Particles().GetSum(ParticleCache::iDcol)) +
-             (m_kfm3 * sys.Particles().GetSum(ParticleCache::iD2));
-
-    // If the mechanism contains any deferred processes then we must use the
-    // majorant form of the rate, in order to account for any changes to
-    // particles during deferred process updates.
-    if (m_mech->AnyDeferred()) {
-        return cterm * m_majfactor;
-    } else {
-        return cterm;
-    }
-}
-*/
-
 
 // SINGLE PARTICLE RATE CALCULATIONS.
 
@@ -205,31 +177,6 @@ real Condensation::Rate(real t, const Cell &sys, const Particle &sp) const
     return cterm; //trm[0] + trm[1] + trm[2];
 }
 
-/*
-// Returns rate of the process for the given particle using the
-// given chemical conditions rather than those conditions in the
-// the given system.
-real Condensation::Rate(real t, const Sprog::Thermo::IdealGas &gas, 
-                        const Cell &sys, const Particle &sp) const
-{
-    // Calculate temperature terms.
-    real cterm = m_a * sqrt(gas.Temperature()) * NA;
-//    real trm[3];
-
-    // Chemical species concentration dependence.
-    cterm *= chemRatePart(gas.MoleFractions(), gas.Density());
-
-    // Free molecular terms.
-//    trm[0] = cterm * m_kfm1;
-//    trm[1] = cterm * (m_kfm2 * sp.CollDiameter());
-//    trm[2] = cterm * (m_kfm3 * sp.CoagModelCache->CollDiamSquared());
-    cterm *= m_kfm1 + 
-             (m_kfm2 * sp.CollDiameter()) +
-             (m_kfm3 * sp.CollDiamSquared());
-    return cterm; //trm[0] + trm[1] + trm[2];
-}
-*/
-
 // Returns majorant rate of the process for the given system.
 real Condensation::MajorantRate(real t, const Cell &sys, const Particle &sp) const
 {
@@ -237,19 +184,6 @@ real Condensation::MajorantRate(real t, const Cell &sys, const Particle &sp) con
     // condensation majorant factor.
     return Rate(t, sys, sp) * m_majfactor;
 }
-
-/*
-// Calculates the majorant process rate using the given 
-// chemical conditions, rather than those conditions in the
-// given system.
-real Condensation::MajorantRate(real t, const Sprog::Thermo::IdealGas &gas, 
-                                const Cell &sys, const Particle &sp) const
-{
-    // Return the single particle rate multiplied by the 
-    // condensation majorant factor.
-    return Rate(t, gas, sys, sp) * m_majfactor;
-}
-*/
 
 
 // RATE TERM CALCULATIONS.
@@ -285,34 +219,6 @@ real Condensation::RateTerms(real t, const Cell &sys,
     return sum;
 }
 
-/*
-// Calculates the rate terms given an iterator to a real vector. The 
-// iterator is advanced to the position after the last term for this
-// process.  The given chemical conditions are used instead of those
-// in the given system object.
-real Condensation::RateTerms(real t, const Sprog::Thermo::IdealGas &gas, 
-                             const Cell &sys, fvector::iterator &iterm) const
-{
-    // Calculate temperature terms.
-    real cterm = m_a * sqrt(gas.Temperature()) * NA;
-
-     // Chemical species concentration dependence.
-    cterm *= chemRatePart(gas.MoleFractions(), gas.Density());
-
-    // If the mechanism contains any deferred processes then we must use the
-    // majorant form of the rate, in order to account for any changes to
-    // particles during deferred process updates.
-    if (m_mech->AnyDeferred()) cterm *= m_majfactor;
-
-    // Free molecular terms.
-    real sum = 0.0;
-    sum += *(iterm++) = m_kfm1 * cterm * sys.ParticleCount();
-    sum += *(iterm++) = m_kfm2 * cterm * sys.Particles().GetSum(ParticleCache::iDcol);
-    sum += *(iterm++) = m_kfm3 * cterm * 
-                        sys.Particles().GetSum(ParticleCache::iD2);
-    return sum;
-}
-*/
 
 // PERFORMING THE PROCESS.
 
@@ -387,6 +293,13 @@ int Condensation::Perform(real t, Cell &sys, Particle &sp,
     adjustGas(sys, m);
     return 0;
 }
+
+// Adjusts a primary particle according to the rules of the condensation.
+unsigned int Condensation::adjustPri(Sweep::Primary &pri, unsigned int n) const
+{
+    return pri.Adjust(m_dcomp, m_dvals, n);
+}
+
 
 // READ/WRITE/COPY.
 

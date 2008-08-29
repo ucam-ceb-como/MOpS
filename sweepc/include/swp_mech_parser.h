@@ -45,6 +45,12 @@
 
 #include "swp_mechanism.h"
 #include "swp_process.h"
+#include "swp_inception.h"
+#include "swp_arssc_inception.h"
+#include "swp_surface_reaction.h"
+#include "swp_arssc_reaction.h"
+#include "swp_condensation.h"
+#include "swp_maths_functional.h"
 #include "camxml.h"
 #include <string>
 
@@ -67,6 +73,8 @@ private:
         Mechanism &mech        // Mechanism to construct from XML.
         );
 
+    // PARTICLE DEFINITIONS.
+
     // Reads components from a sweep mechanism XML file.
     static void readComponents(
         CamXML::Document &xml, // CamXML document pre-constructed from file.
@@ -79,23 +87,49 @@ private:
         Mechanism &mech        // Mechanism to construct from XML.
         );
 
+    // INCEPTIONS.
+
     // Reads inception processes from a sweep mechanism XML file.
     static void readInceptions(
         CamXML::Document &xml, // CamXML document pre-constructed from file.
         Mechanism &mech        // Mechanism to construct from XML.
         );
 
+    // Reads an inception process from an XML element.
+    static void readInception(
+        CamXML::Element &xml,     // CamXML document pre-constructed from file.
+        Processes::Inception &icn // Inception to construct from XML.
+        );
+
+    // SURFACE REACTIONS.
+
     // Reads surface reactions from a sweep mechanism XML file.
     static void readSurfRxns(
         CamXML::Document &xml, // CamXML document pre-constructed from file.
-        Mechanism &mech              // Mechanism to construct from XML.
+        Mechanism &mech        // Mechanism to construct from XML.
         );
+
+    // Reads a surface reaction from a sweep mechanism XML file.
+    static void readSurfRxn(
+        CamXML::Element &xml,           // CamXML document pre-constructed from file.
+        Processes::SurfaceReaction &rxn // Reaction to construct from XML.
+        );
+
+    // CONDENSATIONS.
 
     // Reads condensation processes from a sweep mechanism XML file.
     static void readCondensations(
         CamXML::Document &xml, // CamXML document pre-constructed from file.
         Mechanism &mech        // Mechanism to construct from XML.
         );
+
+    // Reads a condensation process from a sweep mechanism XML file.
+    static void readCondensation(
+        CamXML::Element &xml,         // CamXML document pre-constructed from file.
+        Processes::Condensation &cond // Condensation to construct from XML.
+        );
+
+    // REACTION SHARED COMPONENTS.
 
     // Reads reactants into a process.
     static void readReactants(
@@ -127,6 +161,48 @@ private:
     static void readTrackChanges(
         CamXML::Element &xml,            // CamXML element containing the process definition.
         Processes::ParticleProcess &proc // Process into which to read the composition changes.
+        );
+
+
+    // AUXILLIARY BITS AND BOBS.
+
+    // Reads a maths functional from XML and creates an object to contain it.
+    static Sweep::Maths::Functional *const readFunctional(
+        CamXML::Element &xml // CamXML element containing the functional def'n.
+        );
+
+
+    // ARS-SC MODEL.
+    
+    // Reads ARS-SC model static parameters into a mechanism.
+    static void readARSSC_Model(
+        CamXML::Element &xml, // CamXML element containing the ARS-SC model def'n.
+        Mechanism &mech       // Mechanism into which to read ARS-SC model.
+        );
+
+    // Reads ARS-SC inception processes from a sweep mechanism XML file.
+    static void readARSSC_Inceptions(
+        CamXML::Document &xml, // CamXML document pre-constructed from file.
+        Mechanism &mech        // Mechanism to construct from XML.
+        );
+
+    // Reads ARS-SC surface reactions from a sweep mechanism XML file.
+    static void readARSSC_SurfRxns(
+        CamXML::Document &xml, // CamXML document pre-constructed from file.
+        Mechanism &mech              // Mechanism to construct from XML.
+        );
+
+    // Reads ARS-SC condensation processes from a sweep mechanism XML file.
+    static void readARSSC_Condensations(
+        CamXML::Document &xml, // CamXML document pre-constructed from file.
+        Mechanism &mech        // Mechanism to construct from XML.
+        );
+
+    // Reads ARS-SC site parameters for a process into
+    // the given ARSSC_Process object.
+    static void readARSSC_Sites(
+        CamXML::Element &xml,          // CamXML document pre-constructed from file.
+        Processes::ARSSC_Process &proc // Process to construct from XML.
         );
 };
 };

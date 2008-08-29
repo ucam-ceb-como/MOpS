@@ -49,6 +49,8 @@
 #include "swp_inception.h"
 #include "swp_cell.h"
 #include "swp_mechanism.h"
+#include "swp_arssc_model.h"
+#include "swp_arssc_process.h"
 #include <vector>
 #include <iostream>
 
@@ -56,7 +58,7 @@ namespace Sweep
 {
 namespace Processes
 {
-class ARSSC_Inception : public Inception
+class ARSSC_Inception : public Inception, public ARSSC_Process
 {
 public: 
     // Constructors.
@@ -104,9 +106,6 @@ public:
         );
 
 protected:
-    // Aromatic site counts of newly incepted particle.
-    fvector m_sites; 
-
     // Default constructor is protected to prevent an inception being
     // defined without knowledge of the parent mechanism.
     ARSSC_Inception(void);

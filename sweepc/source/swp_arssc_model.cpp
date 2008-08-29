@@ -44,6 +44,7 @@
 //#include "swp_arssc_cache.h"
 #include "swp_primary.h"
 #include "rng.h"
+#include "string_functions.h"
 #include <cmath>
 #include <stdexcept>
 
@@ -123,6 +124,62 @@ ARSSC_Model &ARSSC_Model::operator=(const ARSSC_Model &rhs)
 }
 
 
+// SITE INFO.
+
+// Returns the site type enum value given the site ID as
+// a string.  It is quite forgiving, but will return -1 if
+// the site name is genuinely not known.
+ARSSC_Model::SiteType ARSSC_Model::IdentifySite(const std::string &id)
+{
+    // Convert the string to all capital letters.
+    string str = Strings::convertToCaps(id);
+
+    // Check for a free-edge.
+    if ((str=="EDGES")     || (str=="EDGE")      || (str=="FREEEDGE") || 
+        (str=="FREEEDGES") || (str=="FREE-EDGE") || (str=="FREE-EDGES") ||
+        (str=="FE")        || (str=="ED")) {
+        return SubModels::ARSSC_Model::FreeEdge;
+
+    // Check for a zigzag.
+    } else if ((str=="ZIGZAG")   || (str=="ZIGZAGS") || (str=="ZIG-ZAG") || 
+               (str=="ZIG-ZAGS") || (str=="ZZ")) {
+        return SubModels::ARSSC_Model::Zigzag;
+
+    // Check for an armchair.
+    } else if ((str=="ARMCHAIR") || (str=="ARMCHAIRS") || (str=="AC")) {
+        return SubModels::ARSSC_Model::Armchair;
+
+    // Check for a bay.
+    } else if ((str=="BAY") || (str=="BAYS") || (str=="BY")) {
+        return SubModels::ARSSC_Model::Bay;
+
+    // Check for a R5 ring.
+    } else if ((str=="ZIGR5") || (str=="ZIGR5S") || (str=="R5") || (str=="R5S")) {
+        return SubModels::ARSSC_Model::R5;
+
+    // Check for a R6 ring.
+    } else if ((str=="R6") || (str=="R6S")) {
+        return SubModels::ARSSC_Model::R6;
+
+    // Check for an armchair next to a R6 ring.
+    } else if ((str=="ACR6") || (str=="ACR6S") || (str=="AC_R6") || (str=="AC_R6S")) {
+        return SubModels::ARSSC_Model::ACR6;
+
+    // Check for a R5 ring next to a free-edge.
+    } else if ((str=="R5ED") || (str=="R5EDS") || (str=="R5_ED") || (str=="R5_EDS")) {
+        return SubModels::ARSSC_Model::R5ED;
+
+    // Check for a R5 next to an armchair.
+    } else if ((str=="R5AC") || (str=="R5ACS") || (str=="R5_AC") || (str=="R5_ACS")) {
+        return SubModels::ARSSC_Model::R5AC;
+
+    // Unidentified site ID.
+    } else {
+        return InvalidSite;
+    }
+}
+
+    
 // SITE COUNTS.
 
 // Returns the count for the given site type.
@@ -271,7 +328,10 @@ void ARSSC_Model::AdjustNeighbourSites(fvector wts, int n)
 
 // PAH COUNT.
 
-// Returns the number of PAHs.
+// Sets the index of the PAH count tracker variable.
+void ARSSC_Model::SetPAH_Tracker(unsigned int i) {m_ipah = i;}
+
+    // Returns the number of PAHs.
 real ARSSC_Model::PAH_Count(void) const {return m_parent->Values(m_ipah);}
 
 // Sets the number of PAHs.

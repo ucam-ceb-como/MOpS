@@ -6,8 +6,8 @@
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
-    Implementation of the ARSSC_Reaction class declared in the
-    swp_arssc_reaction.h header file.
+    Implementation of the ARSSC_Condensation class declared in the
+    swp_arssc_condensation.h header file.
 
   Licence:
     This file is part of "sweepc".
@@ -40,11 +40,10 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#include "swp_arssc_reaction.h"
+#include "swp_arssc_condensation.h"
 #include "swp_mechanism.h"
 #include "swp_process_type.h"
 #include "swp_model_factory.h"
-#include "swp_actsites_model.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -54,26 +53,26 @@ using namespace std;
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor.
-ARSSC_Reaction::ARSSC_Reaction(const Sweep::Mechanism &mech)
-: ActSiteReaction(mech), ARSSC_Process()
+ARSSC_Condensation::ARSSC_Condensation(const Sweep::Mechanism &mech)
+: Condensation(mech), ARSSC_Process()
 {
-    m_name = "ARS-SC Reaction";
+    m_name = "ARS-SC Condensation";
 }
 
 // Copy constructor.
-ARSSC_Reaction::ARSSC_Reaction(const ARSSC_Reaction &copy)
+ARSSC_Condensation::ARSSC_Condensation(const ARSSC_Condensation &copy)
 {
     *this = copy;
 }
 
 // Stream-reading constructor.
-ARSSC_Reaction::ARSSC_Reaction(std::istream &in, const Sweep::Mechanism &mech)
+ARSSC_Condensation::ARSSC_Condensation(std::istream &in, const Sweep::Mechanism &mech)
 {
     Deserialize(in, mech);
 }
 
 // Default destructor.
-ARSSC_Reaction::~ARSSC_Reaction(void)
+ARSSC_Condensation::~ARSSC_Condensation(void)
 {
     // Nothing special to destruct.
 }
@@ -82,10 +81,10 @@ ARSSC_Reaction::~ARSSC_Reaction(void)
 // OPERATOR OVERLOADS.
 
 // Assignment operator.
-ARSSC_Reaction &ARSSC_Reaction::operator=(const ARSSC_Reaction &rhs)
+ARSSC_Condensation &ARSSC_Condensation::operator=(const ARSSC_Condensation &rhs)
 {
     if (this != &rhs) {
-        ActSiteReaction::operator =(rhs);
+        Condensation::operator =(rhs);
         ARSSC_Process::operator =(rhs);
     }
     return *this;
@@ -96,80 +95,84 @@ ARSSC_Reaction &ARSSC_Reaction::operator=(const ARSSC_Reaction &rhs)
 
 // Performs the process on the given system.  The responsible rate term is given
 // by index.  Returns 0 on success, otherwise negative.
-int ARSSC_Reaction::Perform(real t, Cell &sys, unsigned int iterm) const
+int ARSSC_Condensation::Perform(real t, Cell &sys, unsigned int iterm) const
 {
-    int i = sys.Particles().Select(m_modelid, m_pid);
+    // Select particle based on which term was called.
+    int i  = -1;
+    ParticleCache::PropID id = ParticleCache::iUniform;
+    switch(iterm) {
+        case 1:
+            id = ParticleCache::iDcol;
+            i  = sys.Particles().Select(id);
+            break;
+        case 2:
+            id = ParticleCache::iD2;
+            i  = sys.Particles().Select(id);
+            break;
+        case 0:
+        default:
+            id = ParticleCache::iUniform;
+            i  = sys.Particles().Select();
+            break;
+    }
 
+    // Check for a valid particle (i>=0).
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);
 
-        // Update particle with deferred processes.
+        real majr = MajorantRate(t, sys, *sp);
+
         if (m_mech->AnyDeferred()) {
-            // Calculate majorant rate then update the particle.
-            real majr = MajorantRate(t, sys, *sp);
+            // Update particle with deferred processes.
             m_mech->UpdateParticle(*sp, sys, t);
+        }
 
-            // Check that the particle is still valid.
-            if (sp->IsValid()) {
-                real truer = Rate(t, sys, *sp);
+        // Check that the particle is still valid.
+        if (sp->IsValid()) {
+            // Get the true process rate (after updates).
+            real truer = Rate(t, sys, *sp);
 
-                if (!Ficticious(majr, truer)) {
-                    // Choose a primary particle to update.
-                    SubParticle *sub = sp->SelectLeaf(m_modelid, m_pid);
-                    Primary *pri = sub->Primary();
-                    
-                    // Do ARS-SC primary update.
-                    unsigned int n = adjustPri(*pri);
+            // Check that the event is not ficticious by comparing the
+            // majorant rate with the true rate.
+            if (!Ficticious(majr, truer) || !m_mech->AnyDeferred()) {
+                // Choose a primary particle to update.  Use surface
+                // area to weight in the first instance.
+                SubParticle *sub = sp->SelectLeaf(
+                    SubModels::BasicModel_ID, ParticleCache::iS);
+                Primary *pri = sub->Primary();
+                
+                // Do ARS-SC primary update.
+                unsigned int n = adjustPri(*pri);
 
-                    // Update the sub-particle tree above this primary.
-                    pri->UpdateCache();
-                    sub->UpdateTree();
+                // Update the sub-particle tree above this primary.
+                pri->UpdateCache();
+                sub->UpdateTree();
 
-                    // Update the particle ensemble.
-                    sys.Particles().Update(i);
+                // Update the particle ensemble.
+                sys.Particles().Update(i);
 
-                    // Apply changes to gas-phase chemistry.
-                    adjustGas(sys, n);
-                }
-            } else {
-                // If not valid then remove the particle.
-                sys.Particles().Remove(i);
+                // Apply changes to gas-phase chemistry.
+                adjustGas(sys, n);
             }
         } else {
-            // No particle update required, just perform the surface
-            // reaction.
-
-            // Choose a primary particle to update.
-            SubParticle *sub = sp->SelectLeaf(m_modelid, m_pid);
-            Primary *pri = sub->Primary();
-            
-            // Do ARS-SC primary update.
-            unsigned int n = adjustPri(*pri);
-
-            // Update the sub-particle tree above this primary.
-            pri->UpdateCache();
-            sub->UpdateTree();
-
-            // Update the particle ensemble.
-            sys.Particles().Update(i);
-
-            // Apply changes to gas-phase chemistry.
-            adjustGas(sys, n);
+            // If not valid then remove the particle.
+            sys.Particles().Remove(i);
         }
     } else {
         // Failed to select a particle.
         return -1;
     }
-
     return 0;
 }
 
 // Performs the process on a given particle in the system.  Particle
 // is given by index.  The process is performed n times.
-int ARSSC_Reaction::Perform(real t, Cell &sys, Particle &sp, unsigned int n) const
+int ARSSC_Condensation::Perform(real t, Cell &sys, Particle &sp, unsigned int n) const
 {
-    // Choose a primary particle to update.
-    SubParticle *sub = sp.SelectLeaf(m_modelid, m_pid);
+    // Choose a primary particle to update.  Use surface
+    // area to weight in the first instance.
+    SubParticle *sub = sp.SelectLeaf(
+        SubModels::BasicModel_ID, ParticleCache::iS);
     Primary *pri = sub->Primary();
 
     // Do ARS-SC primary update.
@@ -186,8 +189,8 @@ int ARSSC_Reaction::Perform(real t, Cell &sys, Particle &sp, unsigned int n) con
     return m;
 }
 
-// Adjusts a primary particle according to the rules of the reaction.
-unsigned int ARSSC_Reaction::adjustPri(Sweep::Primary &pri, unsigned int n) const
+// Adjusts a primary particle according to the rules of the condensation.
+unsigned int ARSSC_Condensation::adjustPri(Sweep::Primary &pri, unsigned int n) const
 {
     int m = n;
 
@@ -213,13 +216,6 @@ unsigned int ARSSC_Reaction::adjustPri(Sweep::Primary &pri, unsigned int n) cons
             }
         }
 
-        // Adjust neighbour sites.
-        if (m_use_parent_wts) {
-            ars->AdjustNeighbourSites(m_upd_parent, m*m_upd_count);
-        } else {
-            ars->AdjustNeighbourSites(m_neigh_wts, m*m_upd_count);
-        }
-
         // Add those sites created by the reaction.
         for (unsigned int j=0; j!=SubModels::ARSSC_Model::SiteTypeCount; ++j) {
             if (m_sites[j] > 0.0) {
@@ -227,8 +223,8 @@ unsigned int ARSSC_Reaction::adjustPri(Sweep::Primary &pri, unsigned int n) cons
             }
         }
 
-        // Perform surface reaction update.
-        SurfaceReaction::adjustPri(pri, m);
+        // Perform condensation update.
+        Condensation::adjustPri(pri, m);
     }
 
     // Return number of events that were performed.
@@ -239,17 +235,17 @@ unsigned int ARSSC_Reaction::adjustPri(Sweep::Primary &pri, unsigned int n) cons
 // READ/WRITE/COPY.
 
 // Creates a copy of the particle process.
-ARSSC_Reaction *const ARSSC_Reaction::Clone(void) const
+ARSSC_Condensation *const ARSSC_Condensation::Clone(void) const
 {
-    return new ARSSC_Reaction(*this);
+    return new ARSSC_Condensation(*this);
 }
 
 // Returns the process type.  Used to identify different
 // processes and for serialisation.
-ProcessType ARSSC_Reaction::ID(void) const {return ActSiteRxn_ID;}
+ProcessType ARSSC_Condensation::ID(void) const {return ARSSC_Condensation_ID;}
 
 // Writes the object to a binary stream.
-void ARSSC_Reaction::Serialize(std::ostream &out) const
+void ARSSC_Condensation::Serialize(std::ostream &out) const
 {
     if (out.good()) {
         // Output the version ID (=0 at the moment).
@@ -257,16 +253,16 @@ void ARSSC_Reaction::Serialize(std::ostream &out) const
         out.write((char*)&version, sizeof(version));
 
         // Serialize base class.
-        ActSiteReaction::Serialize(out);
+        Condensation::Serialize(out);
         ARSSC_Process::Serialize(out);
     } else {
         throw invalid_argument("Output stream not ready "
-                               "(Sweep, ARSSC_Reaction::Serialize).");
+                               "(Sweep, ARSSC_Condensation::Serialize).");
     }
 }
 
 // Reads the object from a binary stream.
-void ARSSC_Reaction::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
+void ARSSC_Condensation::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 {
     if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -278,16 +274,16 @@ void ARSSC_Reaction::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
         switch (version) {
             case 0:
                 // Deserialize base class.
-                ActSiteReaction::Deserialize(in, mech);
+                Condensation::Deserialize(in, mech);
                 ARSSC_Process::Deserialize(in);
 
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, ARSSC_Reaction::Deserialize).");
+                                    "(Sweep, ARSSC_Condensation::Deserialize).");
         }
     } else {
         throw invalid_argument("Input stream not ready "
-                               "(Sweep, ARSSC_Reaction::Deserialize).");
+                               "(Sweep, ARSSC_Condensation::Deserialize).");
     }
 }

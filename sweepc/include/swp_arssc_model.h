@@ -77,7 +77,9 @@ public:
         // Principal sites.
         FreeEdge=0, Zigzag=1, Armchair=2, Bay=3, R5=4,
         // Combined sites.
-        R6=5, ACR6=6, R5ED=7, R5AC=8
+        R6=5, ACR6=6, R5ED=7, R5AC=8,
+        // Error site ID.
+        InvalidSite=-1
     };
 
     // Constructors.
@@ -95,6 +97,14 @@ public:
 
     // Operators.
     ARSSC_Model &operator=(const ARSSC_Model &rhs);
+
+
+    // SITE INFO.
+
+    // Returns the site type enum value given the site ID as
+    // a string.  It is quite forgiving, but will return -1 if
+    // the site name is genuinely not known.
+    static SiteType IdentifySite(const std::string &id);
 
 
     // SITE COUNTS.
@@ -144,6 +154,9 @@ public:
         );
 
     // PAH COUNT.
+
+    // Sets the index of the PAH count tracker variable.
+    static void SetPAH_Tracker(unsigned int i);
 
     // Returns the number of PAHs.
     real PAH_Count(void) const;
