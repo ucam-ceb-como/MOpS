@@ -69,6 +69,10 @@ class Cell;
 class Particle;
 class Primary;
 
+namespace AggModels {
+class PriPartPrimary;
+};
+
 namespace Processes
 {
 class SinteringModel
@@ -123,6 +127,13 @@ public:
     // Sets the characteristic temperature (E) in Kelvin.
     void SetE(real e);
 
+    // MINIMUM PRIMARY PARTICLE DIAMETER PARAMETER.
+
+    // Returns the minimum primary particle diameter in the system (Dpmin) in m.
+    real Dpmin(void) const;
+
+    // Sets the minimum primary particle diameter in the system (Dpmin) in m.
+    void SetDpmin(real dpmin);
 
     // SINTERING MODEL TYPE.
 
@@ -149,6 +160,10 @@ public:
         const Primary &p // Particle for which to calculate time.
         ) const;
 
+    real SintTime(
+        const Cell &sys,
+        const AggModels::PriPartPrimary &p
+        ) const;
 
     // RATE CALCULATION.
 
@@ -164,6 +179,12 @@ public:
         real t,          // Time.
         const Cell &sys, // System to which the particle belongs (for T).
         const Primary &p // Particle for which to calculate rate.
+        ) const;
+    
+    real Rate(
+        real t, 
+        const Cell &sys, 
+        const AggModels::PriPartPrimary &p
         ) const;
 
 
@@ -208,6 +229,9 @@ private:
 
     // Characteristic temperature (energy) in Kelvin.
     real m_E;
+
+    // Minimum primary particle diameter in the system (Dpmin) in m.
+    real m_dpmin;
 
     // Sintering model type.
     SintType m_type;

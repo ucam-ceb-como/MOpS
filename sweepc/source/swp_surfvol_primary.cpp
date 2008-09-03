@@ -273,7 +273,8 @@ void SurfVolPrimary::Sinter(real dt, const Cell &sys,
     // the primary for the given time.
     
     // Declare time step variables.
-    real t1=0.0, t2=0.0, tstop=dt;
+    real t1=0.0, delt=0.0, tstop=dt;
+    real r=0.0;
 
     // Define the maximum allowed change in surface
     // area in one internal time step (10% spherical surface).
@@ -287,13 +288,23 @@ void SurfVolPrimary::Sinter(real dt, const Cell &sys,
     // Perform integration loop.
     while (t1 < tstop) {
         // Calculate sintering rate.
-        real r = model.Rate(m_time+t1, sys, *this);
+        r = model.Rate(m_time+t1, sys, *this);
+
         // Calculate next time-step end point so that the
         // surface area changes by no more than dAmax.
-        t2 = min(t1+(dAmax/max(r,1.0e-300)), tstop); // 1.0e-300 catches DIV ZERO.
+        delt = dAmax / max(r, 1.0e-300);
+
         // Approximate sintering by a poisson process.  Calculate
         // number of poisson events.
-        int n = ignpoi(r * (t2 - t1) / (scale*dAmax));
+        int n;
+        if (tstop > (t1+delt)) {
+            // A sub-step, we have changed surface by dAmax, on average.
+            n = ignpoi(1.0 / scale);
+        } else {
+            // Step until end.  Calculate degree of sintering explicitly.
+            n = ignpoi(r * (tstop - t1) / (scale*dAmax));
+        }
+
         // Adjust the surface area.
         if (n > 0) {
             m_surf -= (real)n * scale * dAmax;
@@ -303,8 +314,9 @@ void SurfVolPrimary::Sinter(real dt, const Cell &sys,
                 break;
             }
         }
+
         // Set t1 for next time step.
-        t1 = t2;
+        t1 += delt;
     }
 }
 

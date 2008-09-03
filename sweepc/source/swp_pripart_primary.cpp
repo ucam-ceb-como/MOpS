@@ -326,6 +326,58 @@ void PriPartPrimary::Sinter(real dt,const Cell &sys,
     // property.
     SurfVolPrimary::Sinter(dt, sys, model);
 
+    // Begin Sintering Process (Currently, it is the same as SurfVolPrimary::Sinter).
+    // Modification required for using primaries list infomation
+    //// Perform a first order integration method to sinter
+    //// the primary for the given time.
+    //
+    //// Declare time step variables.
+    //real t1=0.0, delt=0.0, tstop=dt;
+    //real r=0.0;
+
+    //// Define the maximum allowed change in surface
+    //// area in one internal time step (10% spherical surface).
+    //real dAmax = 0.1 * m_sphsurf;
+
+    //// The scale parameter discretises the delta-S when using
+    //// the Poisson distribution.  This allows a smoother change
+    //// (smaller scale = higher precision).
+    //real scale = 0.01;
+
+    //// Perform integration loop.
+    //while (t1 < tstop) {
+    //    // Calculate sintering rate.
+    //    r = model.Rate(m_time+t1, sys, *this);
+
+    //    // Calculate next time-step end point so that the
+    //    // surface area changes by no more than dAmax.
+    //    delt = dAmax / max(r, 1.0e-300);
+
+    //    // Approximate sintering by a poisson process.  Calculate
+    //    // number of poisson events.
+    //    int n;
+    //    if (tstop > (t1+delt)) {
+    //        // A sub-step, we have changed surface by dAmax, on average.
+    //        n = ignpoi(1.0 / scale);
+    //    } else {
+    //        // Step until end.  Calculate degree of sintering explicitly.
+    //        n = ignpoi(r * (tstop - t1) / (scale*dAmax));
+    //    }
+
+    //    // Adjust the surface area.
+    //    if (n > 0) {
+    //        m_surf -= (real)n * scale * dAmax;
+    //        // Check that primary is not completely sintered.
+    //        if (m_surf <= m_sphsurf) {
+    //            m_surf = m_sphsurf;
+    //            break;
+    //        }
+    //    }
+
+    //    // Set t1 for next time step.
+    //    t1 += delt;
+    //}
+
     // Now update the primary particle list to match the new 
     // surface area.
     updatePrimaries();
@@ -517,9 +569,11 @@ void PriPartPrimary::distMonomers(unsigned int n)
 
     // Whatever mass is left shall be put on the smallest (last)
     // primary particle.
-    m_totprisurf -= m_primaries[N-1].Surface;
-    updatePriPartProperties(m_primaries[N-1], m_primaries[N-1].Monomers + dm);
-    m_totprisurf += m_primaries[N-1].Surface;
+    if (dm > 0) {
+        m_totprisurf -= m_primaries[N-1].Surface;
+        updatePriPartProperties(m_primaries[N-1], m_primaries[N-1].Monomers + dm);
+        m_totprisurf += m_primaries[N-1].Surface;
+    }
 
     // Ensure the primary list is sorted.
     sortList(0, m_primaries.size()-1);
@@ -556,13 +610,15 @@ void PriPartPrimary::removeMonomers(unsigned int n)
         // Determine number of monomers to be added to this primary (m).
         unsigned int m = ignbin(dm, (float)(m_primaries[i].Surface/surfsums[i]));
         // Remove monomers.
-        // Calculate surface area.
-        m_totprisurf -= m_primaries[i].Surface;
-        // Calculate primary particle properties
-        updatePriPartProperties(m_primaries[i], m_primaries[i].Monomers - m);
-        m_totprisurf += m_primaries[i].Surface;
-        // Update number of remaining monomers to remove.
-        if ((dm-=m) == 0) break;
+        if (m > 0) {
+            // Calculate surface area.
+            m_totprisurf -= m_primaries[i].Surface;
+            // Calculate primary particle properties
+            updatePriPartProperties(m_primaries[i], m_primaries[i].Monomers - m);
+            m_totprisurf += m_primaries[i].Surface;
+            // Update number of remaining monomers to remove.
+            if ((dm-=m) == 0) break;
+        }
     }
 
     // Ensure the primary list is sorted.
@@ -700,14 +756,18 @@ void PriPartPrimary::sortList(unsigned int i1, unsigned int i2)
                     temp.Monomers = m_primaries[j].Monomers;
                     temp.Surface  = m_primaries[j].Surface;
                     temp.Volume  = m_primaries[j].Volume;
+                    temp.Diameter  = m_primaries[j].Diameter;
                     // Put k+1 into k.
                     m_primaries[j].Monomers = m_primaries[j-1].Monomers;
                     m_primaries[j].Surface  = m_primaries[j-1].Surface;
                     m_primaries[j].Volume  = m_primaries[j-1].Volume;
+                    m_primaries[j].Diameter  = m_primaries[j-1].Diameter;
+                    // Put temp into k+1.
                     // Put temp into k+1.
                     m_primaries[j-1].Monomers = temp.Monomers;
                     m_primaries[j-1].Surface  = temp.Surface;
                     m_primaries[j-1].Volume  = temp.Volume;
+                    m_primaries[j-1].Diameter  = temp.Diameter;
                 } else {
                     break;
                 }

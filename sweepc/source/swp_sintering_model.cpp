@@ -42,6 +42,7 @@
 
 #include "swp_sintering_model.h"
 #include "swp_primary.h"
+#include "swp_pripart_primary.h"
 #include "swp_particle.h"
 #include "swp_cell.h"
 #include <cmath>
@@ -55,7 +56,7 @@ using namespace std;
 
 // Default constructor.
 SinteringModel::SinteringModel()
-: m_enable(false), m_A(0.0), m_E(0.0), m_type(GBD)
+: m_enable(false), m_A(0.0), m_E(0.0), m_dpmin(0.0), m_type(GBD)
 {
 }
 
@@ -122,6 +123,14 @@ real SinteringModel::E(void) const {return m_E;}
 // Sets the characteristic temperature (E) in Kelvin.
 void SinteringModel::SetE(real e) {m_E = e;}
 
+// MINIMUM PRIMARY PARTICLE DIAMETER PARAMETER.
+
+// Returns the minimum primary particle diameter in the system (Dpmin) in m.
+real SinteringModel::Dpmin(void) const {return m_dpmin;}
+
+// Sets the minimum primary particle diameter in the system (Dpmin) in m.
+void SinteringModel::SetDpmin(real dpmin) {m_dpmin = dpmin;}
+
 
 // SINTERING MODEL TYPE.
 
@@ -150,16 +159,31 @@ real SinteringModel::SintTime(const Cell &sys, const Particle &p) const
 // given primary.
 real SinteringModel::SintTime(const Cell &sys,const Primary &p) const
 {
+    real dp = 6.0 * p.Volume() / p.SurfaceArea();
     switch (m_type) {
         case ViscousFlow:
-            return m_A * (6.0 * p.Volume() / p.SurfaceArea()) * 
-                   exp(m_E/sys.Temperature());
+            return m_A * dp * 
+                   exp((m_E*(1-(m_dpmin/dp)))/sys.Temperature());
             break;
         case GBD:
         default:
-            real dp = 6.0 * p.Volume() / p.SurfaceArea();
             return m_A * dp * dp * dp * dp * sys.Temperature() *  
-                   exp(m_E/sys.Temperature());
+                   exp((m_E*(1-(m_dpmin/dp)))/sys.Temperature());
+    }
+}
+
+real SinteringModel::SintTime(const Cell &sys,const Sweep::AggModels::PriPartPrimary &p) const
+{
+    real dp = p.AvgPriDiameter();
+    switch (m_type) {
+        case ViscousFlow:
+            return m_A * dp * 
+                   exp((m_E*(1-(m_dpmin/dp)))/sys.Temperature());
+            break;
+        case GBD:
+        default:
+            return m_A * dp * dp * dp * dp * sys.Temperature() *  
+                   exp((m_E*(1-(m_dpmin/dp)))/sys.Temperature());
     }
 }
 
@@ -175,6 +199,13 @@ real SinteringModel::Rate(real t, const Cell &sys, const Particle &p) const
 
 // Returns the rate of the process for the given primary.
 real SinteringModel::Rate(real t, const Cell &sys, const Primary &p) const
+{
+    real tau = SintTime(sys, p);
+    return max((p.SurfaceArea() - p.SphSurfaceArea()) / tau, 0.0);
+}
+
+// Returns the rate of the process for the given primary.
+real SinteringModel::Rate(real t, const Cell &sys, const AggModels::PriPartPrimary &p) const
 {
     real tau = SintTime(sys, p);
     return max((p.SurfaceArea() - p.SphSurfaceArea()) / tau, 0.0);

@@ -47,6 +47,7 @@
 
 #include "swp_params.h"
 #include "swp_surfvol_primary.h"
+//#include "swp_pripart_primary.h"
 #include "swp_particle_model.h"
 #include "swp_aggmodel_type.h"
 #include "swp_pripart_cache.h"
@@ -177,7 +178,6 @@ public:
         std::istream &in,                 // Input stream.
         const Sweep::ParticleModel &model // Defining particle model.
         );
-
 
 protected:
     // Structure to describe a primary particle in the list.  Primary

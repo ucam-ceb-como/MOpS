@@ -226,6 +226,13 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         // Get characteristic temperature.
         str = (*i)->GetFirstChild("E")->Data();
         mech.SintModel().SetE(cdble(str));
+
+        // Get minimum primary particle diameter. 
+        // S. Tsantilis, H. Briesen and S.E. Pratsinis,
+        // Sintering Time for Silica Particle Growth
+        // Aerosol Science and Technology 34: 237–246 (2001).
+        str = (*i)->GetFirstChild("Dpmin")->Data();
+        mech.SintModel().SetDpmin(cdble(str));
     } else {
         // No sintering model defined.
         mech.SintModel().Disable();
