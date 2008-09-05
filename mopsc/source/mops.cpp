@@ -74,6 +74,10 @@ int main(int argc, char *argv[])
             // Settings file (F90 mops format).
             settfile = argv[++i];
             foldfmt  = true;
+		} else if (strcmp(argv[i], "-rnew") == 0) {
+            // Settings file (C++ mops format).
+            settfile = argv[++i];
+            foldfmt  = false;
         } else if (strcmp(argv[i], "-s") == 0) {
             // Sweep mechanism file.
             swpfile = argv[++i];
