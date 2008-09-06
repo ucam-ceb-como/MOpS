@@ -93,6 +93,10 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "-gpc") == 0) {
             // Solver gas-phase chemistry only.
             soltype = GPC;
+		} else if (strcmp(argv[i], "-opsplit") == 0) {
+            // Use Simple operator splitting to couple gas-phase
+			// and particle system.
+            soltype = OpSplit;
         } else if (strcmp(argv[i], "-strang") == 0) {
             // Use Strang splitting to couple gas-phase and particle
             // system.
@@ -139,10 +143,12 @@ int main(int argc, char *argv[])
     try {
         switch (soltype) {
             case OpSplit:
-                // Not implemented yet.
+				/* // Not implemented yet.
                 printf("Attempted to use simple splitting solver, which is not"
                        " yet implemented (mops, main).\n\n");
-                return -1;
+                return -1; */
+				solver = new SimpleSplitSolver();
+				break;
             case Strang:
                 solver = new StrangSolver();
                 break;
