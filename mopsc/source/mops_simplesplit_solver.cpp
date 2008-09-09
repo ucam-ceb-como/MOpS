@@ -141,7 +141,7 @@ void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n, Mops::Reac
 {
     // Time counters.
     real t2 = r.Time();
-    real h  = dt * 0.5; // Half step size.
+    //real h  = dt * 0.5; // Half step size.
 
     // Sweep time counters.
     real ts1 = r.Time();
@@ -151,7 +151,7 @@ void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n, Mops::Reac
     // scaled with gas-phase expansion.
     real rho = 0.0, m0 = 0.0;
 
-    m_cpu_mark = clock();
+    /* m_cpu_mark = clock();
         // Solve first half-step of gas-phase chemistry.
         rho = r.Mixture()->Density();
         m_ode.Solve(r, t2+=h);
@@ -163,9 +163,9 @@ void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n, Mops::Reac
         m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
         r.Mixture()->SetM0(r.Mixture()->Density() * m0 / rho);
         Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech());
-    m_swp_ctime += calcDeltaCT(m_cpu_mark);
+    m_swp_ctime += calcDeltaCT(m_cpu_mark); */
     
-    for (unsigned int i=1; i!=n; ++i) {
+    for (unsigned int i=1; i=n; ++i) {
         m_cpu_mark = clock();
             // Solve whole step of gas-phase chemistry.
             rho = r.Mixture()->Density();
@@ -183,11 +183,11 @@ void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n, Mops::Reac
         
     }
 
-    m_cpu_mark = clock();
+    /* m_cpu_mark = clock();
         // Solve last half-step of gas-phase chemistry.    
         m_ode.ResetSolver();
         m_ode.Solve(r, t2+=h);
         r.SetTime(t2);
-    m_chemtime += calcDeltaCT(m_cpu_mark);
+    m_chemtime += calcDeltaCT(m_cpu_mark); */
 }
 
