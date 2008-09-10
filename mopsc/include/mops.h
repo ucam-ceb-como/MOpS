@@ -57,6 +57,7 @@
 
 #include "mops_solvertype.h"
 #include "mops_solver.h"
+#include "mops_simplesplit_solver.h"
 #include "mops_strang_solver.h"
 #include "mops_predcor_solver.h"
 

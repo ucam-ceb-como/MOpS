@@ -577,24 +577,26 @@ void Simulator::outputGasRxnRates(const Reactor &r) const
 // species molar production rates to the binary output file.
 void Simulator::outputPartRxnRates(const Reactor &r) const
 {
-    // Calculate the process rates.
-    static fvector rates;
-    r.Mech()->ParticleMech().CalcRates(r.Time(), *r.Mixture(), rates);
+    if (r.Mech()->ParticleMech().ProcessCount() != 0) {
+        // Calculate the process rates.
+        static fvector rates;
+        r.Mech()->ParticleMech().CalcRates(r.Time(), *r.Mixture(), rates);
 
-    // Calculate the molar production rates (mol/mol).
-    static fvector wdot;
-    r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), wdot);
+        // Calculate the molar production rates (mol/mol).
+        static fvector wdot;
+        r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), wdot);
 
-    // Now convert from mol/mol to mol/m3.
-    fvector::iterator rhodot = wdot.begin()+r.Mech()->SpeciesCount()+1;
-    for (unsigned int k=0; k!=r.Mech()->SpeciesCount(); ++k) {
-        wdot[k] = (r.Mixture()->Density() * wdot[k]) + 
-                  (r.Mixture()->MoleFraction(k) * (*rhodot));
+        // Now convert from mol/mol to mol/m3.
+        fvector::iterator rhodot = wdot.begin()+r.Mech()->SpeciesCount()+1;
+        for (unsigned int k=0; k!=r.Mech()->SpeciesCount(); ++k) {
+            wdot[k] = (r.Mixture()->Density() * wdot[k]) + 
+                      (r.Mixture()->MoleFraction(k) * (*rhodot));
+        }
+
+        // Write rates to the file.
+        m_file.write((char*)&rates[0], sizeof(rates[0]) * r.Mech()->ParticleMech().ProcessCount());
+        m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->SpeciesCount());
     }
-
-    // Write rates to the file.
-    m_file.write((char*)&rates[0], sizeof(rates[0]) * r.Mech()->ParticleMech().ProcessCount());
-    m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->SpeciesCount());
 }
 
 
@@ -995,7 +997,7 @@ void Simulator::readPartRxnDataPoint(std::istream &in, const Sweep::Mechanism &m
                                      bool calcsqrs)
 {
     // Check for valid stream.
-    if (in.good()) {
+    if (in.good() && (mech.ProcessCount() > 0)) {
         // Get the process rates vector.
         fvector rates(mech.ProcessCount());
         in.read(reinterpret_cast<char*>(&rates[0]),

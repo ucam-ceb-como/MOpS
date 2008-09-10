@@ -53,12 +53,12 @@ using namespace Strings;
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor.
-SimpleSplitSolver::StrangSolver(void)
+SimpleSplitSolver::SimpleSplitSolver(void)
 {
 }
 
 // Default destructor.
-SimpleSplitSolver::~StrangSolver(void)
+SimpleSplitSolver::~SimpleSplitSolver(void)
 {
 }
 
