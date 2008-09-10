@@ -100,7 +100,7 @@ public:
     Linear(const Linear &copy) {*this = copy;}
     
     // Destructor.
-    ~Linear(void) {}
+    virtual ~Linear(void) {}
 
     // Operators.
     inline Linear &operator=(const Linear &rhs) {

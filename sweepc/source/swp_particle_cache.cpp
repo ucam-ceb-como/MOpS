@@ -74,6 +74,7 @@ ParticleCache::ParticleCache(real time, const Sweep::ParticleModel &model)
     m_createt = time;
     m_time    = time;
 
+
     // Resize component and tracker vectors to match number of
     // each in the particle model.
 	m_comp.assign(model.ComponentCount(), 0.0);
@@ -98,6 +99,7 @@ ParticleCache::ParticleCache(const Primary &pri)
     // Set create time.
     m_createt = pri.CreateTime();
     m_time    = pri.LastUpdateTime();
+
 
     // Resize component and tracker vectors to match number of
     // each in the primary.
@@ -162,6 +164,8 @@ ParticleCache &ParticleCache::operator=(const Sweep::ParticleCache &rhs)
         // Copy times.
         m_createt = rhs.m_createt;
         m_time    = rhs.m_time;
+
+
 
         // Copy the aggregation model data.
         if (rhs.m_aggcache != NULL) {
@@ -365,6 +369,7 @@ ParticleCache &ParticleCache::operator+=(const Sweep::ParticleCache &rhs)
         m_inv_dcolsqr  += rhs.m_inv_dcolsqr;
         m_inv_sqrtmass += rhs.m_inv_sqrtmass;
         m_d2_m_1_2     += rhs.m_d2_m_1_2;
+
     } else {
         // Use assignment if the caches do not subscribe to the same
         // particle model.
@@ -480,7 +485,8 @@ void ParticleCache::Clear(void)
 
     // Clear times.
     m_createt = 0.0;
-    m_time    = 0.0;
+	m_time    = 0.0;
+
 
     // Clear derived properties.
     m_diam = 0.0;
@@ -682,6 +688,9 @@ real ParticleCache::Property(PropID id) const
 
 
 // BASIC DERIVED PROPERTY OVERWRITES.
+
+
+
 
 // Sets the spherical particle diameter
 void ParticleCache::SetSphDiameter(real diam) {m_diam = diam;}

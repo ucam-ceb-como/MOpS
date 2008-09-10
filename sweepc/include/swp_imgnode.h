@@ -47,6 +47,7 @@
 
 #include "swp_params.h"
 #include "swp_coords.h"
+#include "swp_subparticle.h"
 
 namespace Sweep
 {
@@ -75,6 +76,8 @@ public:
     // well-balanced binary tree structure by observing
     // the minimum branch depth below node.
     void Insert(real radius);
+
+	void CopySPT(const SubParticle *sp);
 
     // Returns true if this node is a leaf (has no children).
     bool IsLeaf(void) const;

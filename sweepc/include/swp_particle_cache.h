@@ -101,7 +101,9 @@ public:
         iD_1,     // Inverse collision diameter.
         iD_2,     // Inverse of the diameter squared.
         iM_1_2,   // Inverse of the square-root of the mass.
-        iD2_M_1_2 // D^2 * M^-1/2.
+        iD2_M_1_2, // D^2 * M^-1/2.
+
+
     };
 
     // Constructors.
@@ -220,6 +222,7 @@ public:
     // Returns the property with the given ID.
     real Property(PropID id) const;
 
+	real Sintered();
 
     // BASIC DERIVED PROPERTY OVERWRITES.
 
@@ -240,6 +243,7 @@ public:
 
     // Sets the mass.
     void SetMass(real m);
+
 
 
     // COLLISION RATE CALCULATION PARTICLE PROPERTIES.
@@ -283,6 +287,8 @@ protected:
     fvector m_values; // Other particle values (defined at run time).
     real m_createt;   // Time at which particle was created (earliest part).
     real m_time;      // Last time particle was updated.  Required for LPDA.
+
+
 
     // Additional particle models.
     AggModels::AggModelCache *m_aggcache;    // The aggregation-model used by the particle.

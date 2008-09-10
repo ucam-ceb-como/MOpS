@@ -106,6 +106,44 @@ void ParticleImage::ConstructRandom(real minrad, real maxrad, unsigned int n)
 }
 
 
+
+
+void ParticleImage::Write3dout(std::ofstream &file)
+{
+    if (file.good()) {
+        string line;
+        real val = 0.0;
+
+        // vector of arrays to store primary coordinates.  First
+        // 3 values are the cartesian coordinates, final value
+        // is the primary radius.
+        vector<fvector> coords;
+
+        // Get the primary coordinates from the aggregate tree.
+        m_root.GetPriCoords(coords);
+
+        // Write the primaries to the 3dout file.
+        for (unsigned int i=0; i!=coords.size(); ++i) {
+            val  = coords[i][3] * m_necking;
+            line = cstr(coords[i][0]) + " " + cstr(coords[i][1]) + 
+                   " " + cstr(coords[i][2])+"\n";
+            file.write(line.c_str(), line.length());
+            line = cstr(val)+"\n";							//write diameter
+            file.write(line.c_str(), line.length());
+        }
+
+       
+        line = "\n";
+        file.write(line.c_str(), line.length());
+
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, ParticleImage::Write3dout).");
+    }
+}
+
+
+
 // RENDERING FUNCTIONS.
 
 // Draws the particle image to a POVRAY file.
@@ -175,6 +213,10 @@ void ParticleImage::constructAgg_FM(const Particle &sp)
         // we can usethat to construct the sphere-tree for
         // image output.
         // TODO:  Complete sub-particle tree TEM output.
+		constructSubParttree(&sp);
+
+		cout <<"use subparttree to create the image tree";
+
     } else {
         const AggModels::SurfVolPrimary *svp = NULL;
         const AggModels::PriPartPrimary *ppp = NULL;
@@ -200,6 +242,15 @@ void ParticleImage::constructAgg_FM(const Particle &sp)
                 break;
         }
     }
+}
+void ParticleImage::constructSubParttree(const SubParticle *sp)
+{
+	//Copy the subparticle tree into the img tree
+    m_root.CopySPT(sp);
+    // Use the free-molecular regime to calculate the
+    // aggregate structure.
+    calc_FM(m_root);
+    m_root.CentreCOM();
 }
 
 // Constructs a PNode sphere-tree aggregate from the given 
@@ -306,11 +357,11 @@ void ParticleImage::calc_FM(ImgNode &node)
             //// target and bullet.  We do this in case both the
             //// target and bullet are leaf nodes, and hence the
             //// binary tree traversal won't happen.
-            //hit = calcCollZ(target->m_cen_mass, target->m_r,
-            //                bullet->m_cen_mass, bullet->m_r,
-            //                D[0], D[1], dz1);
-            //if (!hit) continue; // Should never happen.
-            //D[2] = target->m_cen_bsph[2] + dz1;
+           // hit = calcCollZ(target->m_cen_mass, target->m_r,
+           //                 bullet->m_cen_mass, bullet->m_r,
+           //                 D[0], D[1], dz1);
+           // if (!hit) continue; // Should never happen.
+           // D[2] = target->m_cen_bsph[2] + dz1;
 
             // The next code determines the displacement along the z-axis
             // required for the target and bullet aggregates to touch.  This

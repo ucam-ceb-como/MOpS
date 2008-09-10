@@ -46,6 +46,10 @@
 #include "swp_abf_model.h"
 #include <stdexcept>
 
+//added to test 3-d output
+#include "swp_imgnode.h"
+#include "swp_particle_image.h"
+
 using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
@@ -738,6 +742,23 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 
             // Perform sintering update.
             if (m_sint_model.IsEnabled()) {
+
+/*				//added to test the 3-d output		
+				        if(sp.Property(ParticleCache::iM)>4E-22)
+						{
+							string fname = "subparttree";
+							Sweep::Imaging::ParticleImage img;
+							img.Construct(sp);
+	//                        img.ConstructRandom(1.0, 5.0, 10001);
+							ofstream file; file.open(fname.c_str());
+							ofstream filepov; filepov.open("subtree.pov");
+							img.Write3dout(file);
+							img.WritePOVRAY(filepov);
+							file.close();
+							filepov.close();
+							cout << "break";
+						}
+*/
                 sp.Sinter(dt, sys, m_sint_model);
             }
         }

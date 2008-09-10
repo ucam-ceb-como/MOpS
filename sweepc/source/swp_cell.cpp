@@ -153,12 +153,19 @@ void Cell::AdjustConcs(const fvector &dc)
         for (k=0; k!=m_species->size(); ++k) {
             drho += dc[k];
         }
-
+		real xtot=0.;
         // Calculate changes to the mole fractions.
         real invrho = 1.0 / *m_pdens;
         for (k=0; k!=m_species->size(); ++k) {
             m_data[k] += (invrho * dc[k]) - (invrho * m_data[k] * drho);
+			if (m_data[k]<0.) m_data[k]=0;
+			xtot+=m_data[k];
         }
+		if (xtot != 1.0) {
+			for (unsigned int i=0; i!=m_species->size(); ++i) {
+				m_data[i] /= xtot;
+			}
+		}
     }
 }
 

@@ -105,6 +105,11 @@ public:
         unsigned int n // Number of primaries to generate.
         );
 
+
+	void constructSubParttree(const SubParticle *sp);
+	void Write3dout(std::ofstream &file);
+
+
     // RENDERING FUNCTIONS.
 
     // Draws the particle image to a POVRAY file.

@@ -1,45 +1,12 @@
 /*
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
-  Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
-  Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
     The SubParticle class is integral to the sub-particle tree paradigm.  It is
     the tree node in a binary tree structure in which each sub-particle consists
     of either two further sub-particles or a primary particle.  In this way
     advanced particle structure and processes (such as sintering) may be modelled.
-
-  Licence:
-    This file is part of "sweepc".
-
-    sweepc is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-  Contact:
-    Dr Markus Kraft
-    Dept of Chemical Engineering
-    University of Cambridge
-    New Museums Site
-    Pembroke Street
-    Cambridge
-    CB2 3RA
-    UK
-
-    Email:       mk306@cam.ac.uk
-    Website:     http://como.cheng.cam.ac.uk
 */
 
 #ifndef SWEEP_SUBPARTICLE_H
@@ -51,6 +18,7 @@
 #include "swp_particle_cache.h"
 #include "swp_primary.h"
 #include <iostream>
+
 
 namespace Sweep
 {
@@ -74,6 +42,7 @@ public:
     // Destructors.
     virtual ~SubParticle(void);
 
+
     // Operators.
     SubParticle &operator=(const SubParticle &rhs);
     SubParticle &operator=(const Sweep::Primary &rhs);
@@ -81,7 +50,9 @@ public:
     SubParticle &operator+=(const Sweep::Primary &rhs);
     const SubParticle operator+(const SubParticle &rhs) const;
     const SubParticle operator+(const Sweep::Primary &rhs) const;
-
+	//Sintering tree
+	void setSintered(real sintered);
+	real Sintered();
 
     // PARENT SUB-PARTICLE.
 
@@ -108,13 +79,15 @@ public:
     SubParticle *const Right(void);
     const SubParticle *const Right(void) const;
 
-    // Selects a leaf from the sub-particle tree below this
+
+	// Selects a leaf from the sub-particle tree below this
     // sub-particle using the given property ID to weight the
     // primaries.
     Sweep::SubParticle *const SelectLeaf(
         SubModels::SubModelType model_id, // Sub-model ID for weighting parameter.
         int id                            // Weighting property ID.
         );
+
 
 
     // PROPERTY SETTING OVERRIDES (FROM PARTICLE CACHE).
@@ -145,7 +118,17 @@ public:
 
     // Sets the mass.
     void SetMass(real m);
+	
+	// Sets the sintering level of the children
+    void SetSintering(real);
 
+	// Returns the sintering level of the childen
+    real GetSintering();
+
+void printSubtree(std::ostream &out, ParticleCache::PropID id) const;
+void printSubtreeLoop(std::ostream &out, ParticleCache::PropID id) const;
+void printSubtreepic(std::ostream &out) const;
+void printSubtreepicLoop(std::ostream &out,real x, real y, real z) const;
 
     // PARTICLE OPERATIONS.
 
@@ -187,6 +170,7 @@ public:
     // sub-particle tree to the root particle.
     void UpdateTree(void);
 
+
     // Check the that the particle is valid by querying the
     // validity conditions of the models and ensuring that it 
     // contains any components.
@@ -207,10 +191,22 @@ public:
         const Sweep::ParticleModel &model // Defining particle model.
         );
 
+    // CHILD SUB-PARTICLES IN SUB-PARTICLE TREE.
+
+    // Sets the pointer to the left child.
+    void setLeftPtr(SubParticle *const sub);
+
+    // Sets the pointer to the right child.
+    void setRightPtr(SubParticle *const sub);
+
+	void SinterPart();
+
+
 protected:
+
     // Parent sub-particle.
     SubParticle *m_parent;
-
+	
     // Left and right children in the sub-particle tree structure.
     SubParticle *m_leftchild, *m_rightchild;
 
@@ -221,6 +217,12 @@ protected:
     // SubParticle class cannot be created without knowledge of the
     // components and the values.
     SubParticle(void);
+
+	//stores the sintering level of the two children to the parent particle
+	real m_sintered;
+
+	//time the two subparticles are connected
+	real m_connect_time;
 
 
     // MEMORY MANAGEMENT.
@@ -243,7 +245,7 @@ protected:
     // Sets the pointer to the child primary particle.
     void setPrimaryPtr(Sweep::Primary *const pri);
 
-    // Selects a leaf from the sub-particle tree below this
+	// Selects a leaf from the sub-particle tree below this
     // sub-particle using the given property ID to weight the
     // primaries.  This particular function is used internally by the SubParticle class
     // to reuse the random variable used to select the correct leaf which
@@ -255,13 +257,9 @@ protected:
        );
 
 
-    // CHILD SUB-PARTICLES IN SUB-PARTICLE TREE.
 
-    // Sets the pointer to the left child.
-    void setLeftPtr(SubParticle *const sub);
 
-    // Sets the pointer to the right child.
-    void setRightPtr(SubParticle *const sub);
+
 
 
     // OPERATIONS.
