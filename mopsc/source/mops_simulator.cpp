@@ -1468,7 +1468,7 @@ void Simulator::createSavePoint(const Reactor &r, unsigned int step,
     ofstream fout;
     fout.open(fname.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
 
-    if (m_file.good()) {
+    if (fout.good()) {
         fout.write((char*)&step, sizeof(step));
         fout.write((char*)&run, sizeof(run));
         ReactorFactory::Write(r, fout);
