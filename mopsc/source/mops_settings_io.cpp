@@ -851,6 +851,25 @@ void Settings_IO::readOutput(const CamXML::Element &node, Simulator &sim)
         // Set number of particle tracking to zero if ptrack is not found.
         sim.SetParticleTrackCount(0);
     }
+
+    // FLUX ANALYSIS OUTPUT
+
+    // Read the flux analysis settings for postprocessing.
+    subnode = node.GetFirstChild("fluxanalysis");
+    if (subnode != NULL) {
+        string str_enable = subnode->GetAttributeValue("enable");
+        if (str_enable.compare("true") == 0) {
+            vector<CamXML::Element*> elem_nodes;
+            subnode->GetChildren("element", elem_nodes);
+            for (unsigned int i = 0; i < elem_nodes.size(); i++) {
+                sim.AddFluxElement(elem_nodes.at(i)->GetAttributeValue("id"));
+            }
+        } else if (str_enable.compare("false") == 0) {
+            sim.ClearFluxElements();
+        }
+    } else {
+        sim.ClearFluxElements();
+    }
 }
 
 // Returns the temperature in K by reading the value from the given

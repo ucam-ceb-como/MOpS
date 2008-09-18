@@ -200,6 +200,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\mops_flux_postprocessor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\mops_mechanism.cpp"
 				>
 			</File>
@@ -279,6 +283,10 @@
 			</File>
 			<File
 				RelativePath=".\include\mops_flow_stream.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\mops_flux_postprocessor.h"
 				>
 			</File>
 			<File

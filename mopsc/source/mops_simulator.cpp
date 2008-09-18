@@ -40,6 +40,7 @@
 */
 
 #include "mops_simulator.h"
+#include "mops_flux_postprocessor.h"
 #include "mops_reactor_factory.h"
 #include "string_functions.h"
 #include "csv_io.h"
@@ -331,6 +332,8 @@ void Simulator::PostProcess()
 
     // Declare gas-phase rate outputs (averages and errors).
     vector<fvector> agprates(npoints), egprates(npoints);
+    vector<fvector> agpfwdrates(npoints), egpfwdrates(npoints);
+    vector<fvector> agprevrates(npoints), egprevrates(npoints);
     vector<fvector> agpwdot(npoints), egpwdot(npoints);
 
     // Declare particle-phase rate outputs (averages and errors).
@@ -361,8 +364,16 @@ void Simulator::PostProcess()
     // once, as they are the same for all runs.
     readGasPhaseDataPoint(fin, mech, achem[0], echem[0], true);
     readParticleDataPoint(fin, pmech, astat[0], estat[0], true);
-    readGasRxnDataPoint(fin, mech, agprates[0], egprates[0], agpwdot[0], egpwdot[0], true);
-    readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[0], epprates[0], appwdot[0], eppwdot[0], true);
+    readGasRxnDataPoint(fin, mech,
+                        agprates[0], egprates[0],
+                        agpfwdrates[0], egpfwdrates[0],
+                        agprevrates[0], egprevrates[0],
+                        agpwdot[0], egpwdot[0],
+                        true);
+    readPartRxnDataPoint(fin, mech.ParticleMech(),
+                         apprates[0], epprates[0],
+                         appwdot[0], eppwdot[0],
+                         true);
     readCTDataPoint(fin, ncput, acpu[0], ecpu[0], true);
     for(unsigned int irun=0; irun!=m_nruns; ++irun) {
         ptrack[irun].resize(npoints); // Resize particle tracking vector.
@@ -379,6 +390,8 @@ void Simulator::PostProcess()
         multVals(achem[0], m_nruns*m_niter);
         multVals(astat[0], m_nruns*m_niter);
         multVals(agprates[0], m_nruns*m_niter);
+        multVals(agpfwdrates[0], m_nruns*m_niter);
+        multVals(agprevrates[0], m_nruns*m_niter);
         multVals(agpwdot[0], m_nruns*m_niter);
         multVals(apprates[0], m_nruns*m_niter);
         multVals(appwdot[0], m_nruns*m_niter);
@@ -386,6 +399,8 @@ void Simulator::PostProcess()
         multVals(echem[0], m_nruns*m_niter);
         multVals(estat[0], m_nruns*m_niter);
         multVals(egprates[0], m_nruns*m_niter);
+        multVals(egpfwdrates[0], m_nruns*m_niter);
+        multVals(egprevrates[0], m_nruns*m_niter);
         multVals(egpwdot[0], m_nruns*m_niter);
         multVals(epprates[0], m_nruns*m_niter);
         multVals(eppwdot[0], m_nruns*m_niter);
@@ -394,6 +409,8 @@ void Simulator::PostProcess()
         multVals(achem[0], m_nruns);
         multVals(astat[0], m_nruns);
         multVals(agprates[0], m_nruns);
+        multVals(agpfwdrates[0], m_nruns);
+        multVals(agprevrates[0], m_nruns);
         multVals(agpwdot[0], m_nruns);
         multVals(apprates[0], m_nruns);
         multVals(appwdot[0], m_nruns);
@@ -401,6 +418,8 @@ void Simulator::PostProcess()
         multVals(echem[0], m_nruns);
         multVals(estat[0], m_nruns);
         multVals(egprates[0], m_nruns);
+        multVals(egpfwdrates[0], m_nruns);
+        multVals(egprevrates[0], m_nruns);
         multVals(egpwdot[0], m_nruns);
         multVals(epprates[0], m_nruns);
         multVals(eppwdot[0], m_nruns);
@@ -424,7 +443,12 @@ void Simulator::PostProcess()
                         // Read output point for all iterations for step.
                         readGasPhaseDataPoint(fin, mech, achem[step], echem[step], true);
                         readParticleDataPoint(fin, pmech, astat[step], estat[step], true);
-                        readGasRxnDataPoint(fin, mech, agprates[step], egprates[step], agpwdot[step], egpwdot[step], true);
+                        readGasRxnDataPoint(fin, mech,
+                                            agprates[step], egprates[step],
+                                            agpfwdrates[step], egpfwdrates[step],
+                                            agprevrates[step], egprevrates[step],
+                                            agpwdot[step], egpwdot[step],
+                                            true);
                         readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], true);
                         readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                         readPartTrackPoint(fin, pmech, ptrack[irun][step]);
@@ -433,7 +457,12 @@ void Simulator::PostProcess()
                     // Read single output point for step.
                     readGasPhaseDataPoint(fin, mech, achem[step], echem[step], true);
                     readParticleDataPoint(fin, pmech, astat[step], estat[step], true);
-                    readGasRxnDataPoint(fin, mech, agprates[step], egprates[step], agpwdot[step], egpwdot[step], true);
+                    readGasRxnDataPoint(fin, mech,
+                                        agprates[step], egprates[step],
+                                        agpfwdrates[step], egpfwdrates[step],
+                                        agprevrates[step], egprevrates[step],
+                                        agpwdot[step], egpwdot[step],
+                                        true);
                     readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], true);
                     readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                     readPartTrackPoint(fin, pmech, ptrack[irun][step]);
@@ -451,6 +480,8 @@ void Simulator::PostProcess()
         calcAvgConf(achem, echem, m_nruns*m_niter);
         calcAvgConf(astat, estat, m_nruns*m_niter);
         calcAvgConf(agprates, egprates, m_nruns*m_niter);
+        calcAvgConf(agpfwdrates, egpfwdrates, m_nruns*m_niter);
+        calcAvgConf(agprevrates, egprevrates, m_nruns*m_niter);
         calcAvgConf(agpwdot, egpwdot, m_nruns*m_niter);
         calcAvgConf(apprates, epprates, m_nruns*m_niter);
         calcAvgConf(appwdot, eppwdot, m_nruns*m_niter);
@@ -459,17 +490,25 @@ void Simulator::PostProcess()
         calcAvgConf(achem, echem, m_nruns);
         calcAvgConf(astat, estat, m_nruns);
         calcAvgConf(agprates, egprates, m_nruns);
+        calcAvgConf(agpfwdrates, egpfwdrates, m_nruns);
+        calcAvgConf(agprevrates, egprevrates, m_nruns);
         calcAvgConf(agpwdot, egpwdot, m_nruns);
         calcAvgConf(apprates, epprates, m_nruns);
         calcAvgConf(appwdot, eppwdot, m_nruns);
         calcAvgConf(acpu, ecpu, m_nruns);
     }
 
+    // POST-PROCESS ELEMENT FLUX
+    // Element flux must be output before CSV files since writeXXXCSV will change the contents of what it output afterwards
+    writeElementFluxOutput(m_output_filename+"-elem-flux.csv", mech, times, agpfwdrates, agprevrates, achem);
+
     // OUTPUT TO CSV FILES.
 
     writeGasPhaseCSV(m_output_filename+"-chem.csv", mech, times, achem, echem);
     writeParticleStatsCSV(m_output_filename+"-part.csv", mech, times, astat, estat);
     writeGasRxnCSV(m_output_filename+"-gp-rates.csv", mech, times, agprates, egprates);
+    //writeGasRxnCSV(m_output_filename+"-gp-fwd-rates.csv", mech, times, agpfwdrates, egpfwdrates);
+    //writeGasRxnCSV(m_output_filename+"-gp-rev-rates.csv", mech, times, agprevrates, egprevrates);
     writeProdRatesCSV(m_output_filename+"-gp-wdot.csv", mech, times, agpwdot, egpwdot);
     writePartProcCSV(m_output_filename+"-part-rates.csv", mech.ParticleMech(), times, apprates, epprates);
     writeProdRatesCSV(m_output_filename+"-part-wdot.csv", mech, times, appwdot, eppwdot);
@@ -561,8 +600,8 @@ void Simulator::outputPartTrack(const Reactor &r) const
 void Simulator::outputGasRxnRates(const Reactor &r) const
 {
     // Calculate the rates-of-progress.
-    static fvector rop;
-    r.Mech()->Reactions().GetRatesOfProgress(*r.Mixture(), rop);
+    static fvector rop, rfwd, rrev;
+    r.Mech()->Reactions().GetRatesOfProgress(*r.Mixture(), rop, rfwd, rrev);
 
     // Calculate the molar production rates.
     static fvector wdot;
@@ -570,6 +609,8 @@ void Simulator::outputGasRxnRates(const Reactor &r) const
 
     // Write rates to the file.
     m_file.write((char*)&rop[0], sizeof(rop[0]) * r.Mech()->ReactionCount());
+    m_file.write((char*)&rfwd[0], sizeof(rfwd[0]) * r.Mech()->ReactionCount());
+    m_file.write((char*)&rrev[0], sizeof(rrev[0]) * r.Mech()->ReactionCount());
     m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->SpeciesCount());
 }
 
@@ -955,6 +996,8 @@ void Simulator::readParticleDataPoint(std::istream &in,
 // added to the vector sumsqr if necessary.
 void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mech,
                                     fvector &rates_sum, fvector &rates_sumsqr,
+                                    fvector &fwd_rates_sum, fvector &fwd_rates_sumsqr,
+                                    fvector &rev_rates_sum, fvector &rev_rates_sumsqr,
                                     fvector &wdot_sum, fvector &wdot_sumsqr,
                                     bool calcsqrs)
 {
@@ -964,6 +1007,14 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
         fvector rop(mech.ReactionCount());
         in.read(reinterpret_cast<char*>(&rop[0]), sizeof(rop[0])*mech.ReactionCount());
 
+        // Get the forward reaction rates vector.
+        fvector rfwd(mech.ReactionCount());
+        in.read(reinterpret_cast<char*>(&rfwd[0]), sizeof(rop[0])*mech.ReactionCount());
+
+        // Get the reverse reaction rates vector.
+        fvector rrev(mech.ReactionCount());
+        in.read(reinterpret_cast<char*>(&rrev[0]), sizeof(rop[0])*mech.ReactionCount());
+
         // Get the species molar production rates.
         fvector wdot(mech.SpeciesCount());
         in.read(reinterpret_cast<char*>(&wdot[0]), sizeof(wdot[0])*mech.SpeciesCount());
@@ -971,6 +1022,10 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
         // Resize vectors.
         rates_sum.resize(rop.size(), 0.0);
         rates_sumsqr.resize(rop.size(), 0.0);
+        fwd_rates_sum.resize(rfwd.size(), 0.0);
+        fwd_rates_sumsqr.resize(rfwd.size(), 0.0);
+        rev_rates_sum.resize(rrev.size(), 0.0);
+        rev_rates_sumsqr.resize(rrev.size(), 0.0);
         wdot_sum.resize(wdot.size(), 0.0);
         wdot_sumsqr.resize(wdot.size(), 0.0);
 
@@ -979,6 +1034,14 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
         for (unsigned int i=0; i!=rop.size(); ++i) {
             rates_sum[i] += rop[i];
             if (calcsqrs) rates_sumsqr[i] += (rop[i] * rop[i]);
+        }
+        for (unsigned int i=0; i!=rfwd.size(); ++i) {
+            fwd_rates_sum[i] += rfwd[i];
+            if (calcsqrs) fwd_rates_sumsqr[i] += (rfwd[i] * rfwd[i]);
+        }
+        for (unsigned int i=0; i!=rrev.size(); ++i) {
+            rev_rates_sum[i] += rrev[i];
+            if (calcsqrs) rev_rates_sumsqr[i] += (rrev[i] * rrev[i]);
         }
         for (unsigned int i=0; i!=wdot.size(); ++i) {
             wdot_sum[i] += wdot[i];
@@ -1643,6 +1706,38 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
     }
 }
 
+// Writes element fluxes to FluxViewer format.
+void Simulator::writeElementFluxOutput(const std::string &filename, 
+                               const Mechanism &mech, 
+                               const timevector &times, 
+                               const std::vector<fvector> &agpfwdrates,
+                               const std::vector<fvector> &agprevrates,
+                               const std::vector<fvector> &achem)
+{
+    Mops::fvector atemperatures;
+    for (unsigned int i = 0; i < achem.size(); i++) {
+        atemperatures.push_back(achem.at(i).at(achem.at(i).size() - 3));
+    }
+    FluxAnalyser fa(mech, times, agpfwdrates, agprevrates, atemperatures);
+    for (unsigned int i = 0; i < mech.ElementCount(); i++) {
+        for (unsigned int j = 0; j < m_flux_elements.size(); j++) {
+            if (mech.Elements(i)->Name().compare(Strings::convertToCaps(m_flux_elements.at(j))) == 0) {
+                fa.addFluxElement(*mech.Elements(i));
+            }
+        }
+    }
+    fa.writeFluxes(filename);
+}
+
+// Add element for flux analysis postprocessor
+void Simulator::AddFluxElement(const std::string &elem_str) {
+    m_flux_elements.push_back(elem_str);
+}
+
+// Clear element list for flux analysis postprocessor
+void Simulator::ClearFluxElements() {
+    m_flux_elements.clear();
+}
 
 // COMPUTATION TIME CALCULATION.
 

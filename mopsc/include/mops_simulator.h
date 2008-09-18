@@ -169,6 +169,11 @@ public:
     // into CSV files.
     void PostProcess(void);
 
+    // Add element for flux analysis postprocessor
+    void AddFluxElement(const std::string &elem_str);
+
+    // Clear element list for flux analysis postprocessor
+    void ClearFluxElements();
 
     // READ/WRITE/COPY FUNCTIONS.
 
@@ -254,6 +259,12 @@ private:
     // a separate CSV file.  If a primary-particle model in implemented, then
     // TEM-style images will also be generated.
     unsigned int m_ptrack_count;
+
+    // FLUX ANALLYSIS ELEMENT LIST.
+
+    // A vector list containing pointers to elements which are wanted to analyse the flux of
+    // that element.
+    std::vector<std::string> m_flux_elements;
 
 
     // FILE OUTPUT.
@@ -373,6 +384,10 @@ private:
         const Mops::Mechanism &mech,  // Particle mechanism.
         fvector &rates_sum,           // Sums of reaction rates.
         fvector &rates_sumsqr,        // Sums of the squares of reaction rates.
+        fvector &fwd_rates_sum,       // Sums of forward reaction rates.
+        fvector &fwd_rates_sumsqr,    // Sums of the squares of forward reaction rates.
+        fvector &rev_rates_sum,       // Sums of reverse reaction rates.
+        fvector &rev_rates_sumsqr,    // Sums of the squares of reverse reaction rates.
         fvector &wdot_sum,            // Sums of species prod. rates.
         fvector &wdot_sumsqr,         // Sums of the squares of species prod. rates.
         bool calcsqrs = false         // Set =true to also calculate sums of squares.
@@ -520,6 +535,17 @@ private:
         const Mechanism &mech,  // Mechanism use to solve system.
         const timevector &times // Simulation output time intervals.
         ) const;
+    
+    // FLUX VIEWR OUTPUT
+    // Writes element fluxes to FluxViewer format.
+    void writeElementFluxOutput(
+        const std::string &filename,     // Output file name (incl. extension).
+        const Mechanism &mech,           // Mechanism defining kinetics.
+        const timevector &times,         // Output time profile.
+        const std::vector<fvector> &agpfwdrates,       // Vector of gas-phase reaction time points.
+        const std::vector<fvector> &agprevrates,       // Vector of gas-phase reaction time points.
+        const std::vector<fvector> &achem  // Vector of confidence intervals.
+        );
 
 
     // COMPUTATION TIME CALCULATION.
