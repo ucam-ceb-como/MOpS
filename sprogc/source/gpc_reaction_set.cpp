@@ -348,32 +348,34 @@ void ReactionSet::GetRatesOfProgress(real density,
                                      unsigned int n,
                                      const fvector &kforward,
                                      const fvector &kreverse,
-                                     fvector &rop) const
+                                     fvector &rop,
+                                     fvector &rfwd,
+                                     fvector &rrev) const
 {
     unsigned int i;
     int j, k;
-    static fvector rev;
 
     // Resize output vector to sufficient length.
     rop.resize(m_rxns.size(), 0.0);
 
     if (n >= m_mech->Species().size()) {
         // Assign temp memory.
-        rev.resize(m_rxns.size(), 0.0);
+        rfwd.resize(m_rxns.size(), 0.0);
+        rrev.resize(m_rxns.size(), 0.0);
 
         // Loop over all reactions.
         for (i=0; i!=m_rxns.size(); ++i) {
-            // Use rop to store forward rates of production, 
-            // and rev to store reverse rates.
-            rop[i] = kforward[i];
-            rev[i] = kreverse[i];
+            // Use rfwd to store forward rates of production, 
+            // and rrev to store reverse rates.
+            rfwd[i] = kforward[i];
+            rrev[i] = kreverse[i];
 
             // Integer reactants.
             for (k=0; k!=m_rxns[i]->ReactantCount(); ++k) {
                 // As the stoichiometry is integer, it is more computationally efficient
                 // to multiply the values together than to use the pow() function.
                 for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
-                    rop[i] *= density * x[m_rxns[i]->Reactants()[k].Index()];
+                    rfwd[i] *= density * x[m_rxns[i]->Reactants()[k].Index()];
                 }
             }
 
@@ -382,14 +384,14 @@ void ReactionSet::GetRatesOfProgress(real density,
                 // As the stoichiometry is integer, it is more computationally efficient
                 // to multiply the values together than to use the pow() function.
                 for (j=0; j!=m_rxns[i]->Products()[k].Mu(); ++j) {
-                    rev[i] *= density * x[m_rxns[i]->Products()[k].Index()];
+                    rrev[i] *= density * x[m_rxns[i]->Products()[k].Index()];
                 }
             }
 
             // Real reactants.
             for (k=0; k!=m_rxns[i]->FReactantCount(); ++k) {
                 // Now the stoichiometry is non-integer, we must use the pow() function.
-                rop[i] *= pow(density * x[m_rxns[i]->FReactants()[k].Index()], 
+                rfwd[i] *= pow(density * x[m_rxns[i]->FReactants()[k].Index()], 
                               m_rxns[i]->FReactants()[k].Mu()); 
 
             }
@@ -397,15 +399,28 @@ void ReactionSet::GetRatesOfProgress(real density,
             // Real products.
             for (k=0; k!=m_rxns[i]->FProductCount(); ++k) {
                 // Now the stoichiometry is non-integer, we must use the pow() function.
-                rev[i] *= pow(density * x[m_rxns[i]->FProducts()[k].Index()], 
+                rrev[i] *= pow(density * x[m_rxns[i]->FProducts()[k].Index()], 
                               m_rxns[i]->FProducts()[k].Mu()); 
 
             }
 
             // Calculate the net rates of production.
-            rop[i] -= rev[i];
+            rop[i] = rfwd[i] - rrev[i];
         }
     }
+}
+
+// Calculates the rate of progress of each reaction given the
+// precalculated rate constants.
+void ReactionSet::GetRatesOfProgress(real density,
+                                     const real *const x,
+                                     unsigned int n,
+                                     const fvector &kforward,
+                                     const fvector &kreverse,
+                                     fvector &rop) const
+{
+    static fvector rfwd, rrev;
+    GetRatesOfProgress(density, x, n, kforward, kreverse, rop, rfwd, rrev);
 }
 
 // Returns the rates of progress of all reactions given the mixture
@@ -423,9 +438,22 @@ void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &mix,
 // Calculates the rate of progress of each reaction.
 void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &gas, fvector &rop) const
 {
-    static fvector kf, kr, Gs;
+    static fvector kf, kr;
     GetRateConstants(gas, kf, kr);
     GetRatesOfProgress(gas, kf, kr, rop);
+}
+
+// Calculates the rate of progress of each reaction.
+void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &gas,
+                                     fvector &rop,
+                                     fvector &rfwd,
+                                     fvector &rrev) const
+{
+    static fvector kf, kr;
+    GetRateConstants(gas, kf, kr);
+    GetRatesOfProgress(gas.Density(), &(gas.MoleFractions()[0]),
+                       m_mech->Species().size(),
+                       kf, kr, rop, rfwd, rrev);
 }
 
 // Calculates the rate of progress of each reaction.

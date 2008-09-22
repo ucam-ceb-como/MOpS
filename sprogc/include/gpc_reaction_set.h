@@ -144,11 +144,31 @@ public:
         fvector &rop             // Return vector for rates of progress.
         ) const;
 
+    // Calculates the rate of progress of each reaction.
+    void GetRatesOfProgress(
+        real density,            // Mixture molar density.
+        const real *const x,     // Species mole fractions.
+        unsigned int n,          // Number of values in x array.
+        const fvector &kforward, // Forward rate constants of all reactions.
+        const fvector &kreverse, // Reverse rate constants of all reactions.
+        fvector &rop,            // Return vector for rates of progress.
+        fvector &rfwd,           // Return vector for forward rates of all reactions
+        fvector &rrev            // Return vector for reverse rates of all reactions
+        ) const;
+
 
     // Calculates the rate of progress of each reaction.
     void GetRatesOfProgress(
         const Sprog::Thermo::GasPhase &gas, // The gas for which to calculate the rates.
         fvector & rop                       // Return vector for rates of progress.
+        ) const;
+
+    // Calculates the rate of progress of each reaction.
+    void GetRatesOfProgress(
+        const Sprog::Thermo::GasPhase &gas, // The gas for which to calculate the rates.
+        fvector & rop,                      // Return vector for rates of progress.
+        fvector &rfwd,                      // Return vector for forward rates of all reactions
+        fvector &rrev                       // Return vector for reverse rates of all reactions
         ) const;
 
     // Calculates the rate of progress of each reaction.
@@ -160,7 +180,6 @@ public:
         const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
         fvector &rop         // Return vector for rates of progress.
         ) const;
-
 
     // RATE CONSTANTS.
 
