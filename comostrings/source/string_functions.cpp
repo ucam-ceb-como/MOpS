@@ -208,4 +208,18 @@ std::string Strings::convertToCaps(const std::string &str)
         }
     }
     return caps;
+
+}
+
+std::string Strings::trim(const std::string &str){
+	int b = str.find_first_not_of(" \t");
+	if( b < 0)
+		return "";
+	int e = str.find_last_not_of(" \t");
+	
+	return str.substr(b,e-b+1);
+}
+
+bool Strings::isEmpty(const std::string &str){
+	return (trim(str)).empty();
 }

@@ -91,6 +91,12 @@ namespace Strings
 
     // Converts a string to all capital letters.
     std::string convertToCaps(const std::string &str);
+	//following functions are added by vinod
+
+	std::string trim(const std::string &str);
+	bool isEmpty(const std::string &str);
+
+
 };
 
 #endif
