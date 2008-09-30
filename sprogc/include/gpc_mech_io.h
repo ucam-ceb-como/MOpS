@@ -1,5 +1,5 @@
 /*
-  Author(s):      Matthew Celnik (msc37)
+  Author(s):      Matthew Celnik (msc37), 
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
   
@@ -60,6 +60,16 @@ public:
         const std::string &thermofile,  // File name of thermo data file (optional).
         int verbose=0                   // Set >0 to print parser messages to console.
         );
+	
+	// overloaded function to assist reading the transport file together with other relevat files
+	// added by Vinod
+	static void ReadChemkin(
+        const std::string &filename,    // File name of the CHEMKIN input file.
+        Sprog::Mechanism &mech,         // Mechanism object to build using data in file.
+        const std::string &thermofile,  // File name of thermo data file (optional).
+		const std::string &transFile);	// filename of transport data
+
+	static void ReadTransport(const std::string &, Sprog::Mechanism & ); // method to read transport data: added by vinod
 
 private:
     // CHEMKIN FILE RELATED THINGS.

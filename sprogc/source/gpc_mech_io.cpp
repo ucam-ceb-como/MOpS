@@ -1,5 +1,5 @@
 /*
-  Author(s):      Matthew Celnik (msc37)
+  Author(s):      Matthew Celnik (msc37), 
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
   
@@ -51,6 +51,8 @@
 #include <stdlib.h>
 #include <stdexcept>
 #include <iostream>
+#include <vector>
+#include <map>
 
 using namespace Sprog::IO;
 using namespace std;
@@ -107,6 +109,61 @@ void MechanismParser::ReadChemkin(const std::string &filename,
         throw std::invalid_argument("Could not open CHEMKIN file: " + filename);
     }
 }
+
+
+
+void MechanismParser::ReadChemkin(const std::string &filename, 
+                                  Sprog::Mechanism &mech, 
+                                  const std::string &thermofile,
+								  const std::string &transFile)
+{
+	// member function added by vniod to enable the reading of transport data.
+	// This function utilizes the ReadChemkin function which was provided earlier.
+
+	//std::string mchFile = filename;
+	//Sprog::Mechanism mch = mech;
+	//std::string thermo = thermofile;
+	//int verb = verbose;
+	//std::string trans = transFile;
+
+	ReadChemkin(filename,mech,thermofile);
+
+	ReadTransport(transFile,mech);
+}
+
+void MechanismParser::ReadTransport(const string& transFile, Sprog::Mechanism &mech){
+	// function added by vinod to read the transport data
+	ifstream inf;	
+	int i;
+	inf.open(transFile.c_str());
+	if(inf.good()){
+		std::string transString;
+		vector<std::string> transpVector;
+		map<string,vector<string>> transpMap;
+		while(!inf.eof()){
+			getline(inf,transString);
+			if (!isEmpty(transString)){								
+				Strings::split(transString,transpVector," \t");						
+				i = mech.FindSpecies(convertToCaps(transpVector[0]));
+				if( i>= 0){
+					//cout << transpVector[0] <<  endl;
+					transpMap.insert(pair<std::string,vector<string>>(convertToCaps(transpVector[0]),transpVector));
+				}							
+				
+			}
+			
+		}
+		cout << "Transport data read successfully\n";		
+		mech.setSpeciesTransport(transpMap,mech); 
+		// pass the map and mech object forf setting the transport object for species
+		
+	}else{
+		cout << "Transport file not specified \n";
+		exit(1);
+	}
+
+}
+
 
 
 // CHEMKIN PARSING ROUTINES.

@@ -46,6 +46,7 @@
 #include "gpc_element.h"
 #include "gpc_el_comp.h"
 #include "gpc_thermo_params.h"
+#include "gpc_transport_data.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -191,12 +192,23 @@ public:
     // species data.  This is used to debug.
     void WriteDiagnostics(std::ostream &out) const;
 
+	
+	// TRANSPORT RELATED FUNCTIONS Added by vinod
+	
+	void setTransportData(vector<string> &data) ;
+	Sprog::Transport::TransportData& getTransportData() const;
+	double getViscosity(double T) const; // returns the viscosity of the pure species
+	double getSelfDiffusion(double T, double p) const; // returns the self diffusion coefficient
+	double getThermalConductivity(double T, double p, double cp) const;
+
+
 protected:
     // Species data.
     std::string m_name;       // Name/symbol.
     ElCompVector m_elcomp;    // Elemental composition.
     real m_molwt;             // Molecular weight (kg/mol).
     Sprog::Mechanism *m_mech; // Parent mechanism.
+	
 
     //const ElementPtrVector *m_elements; // Elements used to define species.
 
@@ -204,6 +216,9 @@ protected:
     // end point temperature up to which the parameters are valid.
     Sprog::Thermo::ThermoMap m_thermoparams;
     real m_T1; // Start temperature for range.
+	
+	Sprog::Transport::TransportData *td;
+	
 };
 
 // Inline function definitions.

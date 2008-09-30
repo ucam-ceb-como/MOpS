@@ -42,6 +42,7 @@
 
 #include "gpc_params.h"
 #include "gpc_mixture.h"
+#include "gpc_transport_factory.h"
 #include <vector>
 #include <stdexcept>
 
@@ -453,4 +454,23 @@ void Mixture::Deserialize(std::istream &in)
 Serial_MixtureType Mixture::SerialType() const
 {
     return Serial_Mixture;
+}
+
+
+// Following transport related routines are added by Vinod
+
+double Mixture::getViscosity() const{
+
+	Sprog::Transport::MixtureTransport mt;
+	return mt.getViscosity(Temperature(),*this);
+}
+
+double Mixture::getThermalConductivity(double pre) const{
+	Sprog::Transport::MixtureTransport mt;
+	return mt.getThermalConductivity(Temperature(),pre,*this);
+}
+
+const vector<double> Mixture::getMixtureDiffusionCoeff(const double pre) const{
+	Sprog::Transport::MixtureTransport mt;
+	return mt.getMixtureDiffusionCoeff(Temperature(),pre,*this);
 }

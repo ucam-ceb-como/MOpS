@@ -43,8 +43,11 @@
 #include "gpc_species.h"
 #include "gpc_el_comp.h"
 #include "gpc_mech.h"
+#include "gpc_params.h"
+#include "gpc_transport_factory.h"
 #include <stdexcept>
 #include <string>
+#include <cmath>
 #include "string_functions.h"
 
 using namespace Sprog;
@@ -80,7 +83,7 @@ Species::Species(istream &in)
 // Destructor.
 Species::~Species(void)
 {
-    // Nothing special to destruct.
+   
 }
 
 
@@ -653,4 +656,42 @@ void Species::WriteDiagnostics(std::ostream &out) const
         data = cstr(val) + "\n";
         out.write(data.c_str(), data.length());
     }
+}
+
+// Following transport related routines added by vinod 
+
+
+void Species::setTransportData(vector<string> &data){
+		
+
+	if(td != NULL)
+		td = 0;
+
+	td = new Transport::TransportData(
+		(int)Strings::cdble(data[1]), // molecule index
+		Strings::cdble(data[2])*kB, // LJ well depth-
+		Strings::cdble(data[3])*Angstroem__, // LJ collision dia- convert to A
+		Strings::cdble(data[4])*Debye__, // dipole converting to C-m
+		Strings::cdble(data[5])*pow(Angstroem__,3), // polarity
+		Strings::cdble(data[6]) // rot relaxation at 298 K
+		);
+}
+
+Sprog::Transport::TransportData& Species::getTransportData() const{
+	return *this->td;
+}
+
+double Species::getViscosity(double T) const{
+	Sprog::Transport::PureSpeciesTransport pst;
+	return pst.getViscosity(T,*this);
+}
+
+double Species::getSelfDiffusion(double T, double p) const{
+	Sprog::Transport::PureSpeciesTransport pst;
+	return pst.getSlefDiffusionCoeff(T,p,*this);
+}
+
+double Species::getThermalConductivity(double T, double p, double cp) const{
+	Sprog::Transport::PureSpeciesTransport pst;
+	return pst.getThermalConductivity(T,p,cp, *this);
 }

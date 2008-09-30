@@ -224,6 +224,8 @@ public:
     // mechanism data.  This is used to debug.
     void WriteDiagnostics(const std::string &filename) const;
 
+	void setSpeciesTransport(map<string,vector<string>> &trMap,Sprog::Mechanism &mech) const;
+
 protected:
     // Mechanism data.
     UnitSystem m_units;             // The system of units used by this mechanism.

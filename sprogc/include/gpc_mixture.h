@@ -169,6 +169,13 @@ public:
     // Identifies the mixture type for serialisation.
     virtual Serial_MixtureType SerialType() const;
 
+	//TRANSPORT RELATED FUNCTIONS added by Vinod
+
+	double getViscosity() const;
+	double getThermalConductivity(double pre) const; // pass  the operating pressure as argument
+	const vector<double> getMixtureDiffusionCoeff(const double pre)const; 
+
+
 protected:
     // The default constructor is protected to prevent mixture objects being
     // generated without knowledge of the defining species list.

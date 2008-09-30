@@ -328,6 +328,14 @@
 				RelativePath=".\source\gpc_thermo.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\source\gpc_transport_data.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\gpc_transport_factory.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -420,6 +428,14 @@
 			</File>
 			<File
 				RelativePath=".\include\gpc_thermo_params.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\gpc_transport_data.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\gpc_transport_factory.h"
 				>
 			</File>
 			<File
