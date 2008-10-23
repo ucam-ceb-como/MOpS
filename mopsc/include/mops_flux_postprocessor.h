@@ -3,7 +3,7 @@
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
   
-  Copyright (C) 2008 Matthew S Celnik.
+  Copyright (C) 2008 Weerapong Phadungsukanan.
 
   File purpose:
     The element flux analysis class post-processes the forward and reverse reaction rates
@@ -65,35 +65,48 @@ public:
             Rate = 0.0;
         }
     };
+    typedef std::vector<FluxPath> FluxNetwork;
+
     FluxAnalyser(const Mechanism &mech, 
                  const timevector &times, 
                  const std::vector<fvector> &agpfwdrates,
                  const std::vector<fvector> &agprevrates,
                  const fvector &atemperatures);
-    void addFluxElement(const Sprog::Element &elem);
-    void writeFluxes(const std::string &filename);
+    void addElement(const Sprog::Element &elem);
+    void writeFluxes(const std::string &filenameprefix, bool doIntFluxes = false);
 
 private:
     vector<unsigned int> m_ElementIndexes;
     const Mops::Mechanism *m_mech; // The mechanism which defines reaction set.
-    fvector m_times; 
+    fvector m_times;
+    vector<unsigned int> m_times_stop;
     const std::vector<fvector> *m_agpfwdrates;
     const std::vector<fvector> *m_agprevrates;
     const fvector *m_atemperatures;
 
-    std::vector<FluxPath> m_flux_network;
+
+    // Time-Point Flux methods.
+    std::vector<FluxNetwork> m_flux_networks;
+    // Integrated Flux methods.
+    std::vector<FluxNetwork> m_int_flux_networks;
+    //
 
     // Private methods
-
-    int getFluxPathIndex(Mops::FluxAnalyser::FluxPath &fpath);
-    void addToFluxPathRate(Mops::FluxAnalyser::FluxPath &fpath);
-    void calculateFluxAt(unsigned int index, unsigned int iel);
+    // Time-Point Flux methods.
+    void calculateFluxAt(unsigned int index, unsigned int iel, Mops::FluxAnalyser::FluxNetwork &flux_network);
+    // Integrated Flux methods.
+    void calculateIntFluxAt(unsigned int index, Mops::FluxAnalyser::FluxNetwork &flux_network, Mops::FluxAnalyser::FluxNetwork &int_flux_network);
+    
+    // Supplementary methods.
+    int getFluxPathIndex(Mops::FluxAnalyser::FluxPath &fpath, Mops::FluxAnalyser::FluxNetwork &flux_network);
+    void addToFluxPathRate(Mops::FluxAnalyser::FluxPath &fpath, Mops::FluxAnalyser::FluxNetwork &flux_network);
+    void sortDecendingFluxNetwork(Mops::FluxAnalyser::FluxNetwork &flux_network);
+    void writeFluxAt(unsigned int iel, std::ofstream &fout, Mops::FluxAnalyser::FluxNetwork &flux_network);
+    
+    void writeHeader(ofstream &fout, unsigned int npoints);
     real getTotalElementStoi(const Sprog::Kinetics::Reaction &rxn, unsigned int iel);
     real getNumberOfElementAtom(const Sprog::Stoich &sc, unsigned int iel);
     real getNumberOfElementAtom(const Sprog::Stoichf &sc, unsigned int iel);
-    void sortDecendingFluxNetwork();
-    void writeFluxAt(unsigned int index, unsigned int iel, std::ofstream &fout);
-
     string formatWhiteSpace(std::string str, unsigned int len, bool isright = true);
 };
 }

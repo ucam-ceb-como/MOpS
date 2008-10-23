@@ -52,43 +52,255 @@ FluxAnalyser::FluxAnalyser(const Mechanism &mech,
     m_agpfwdrates = &agpfwdrates;
     m_agprevrates = &agprevrates;
     m_atemperatures = &atemperatures;
-    // Make all time points.
+    // Make all time points and time stop points.
+    real t = times.at(0).StartTime();
+    m_times.push_back(t);
     for (unsigned int i = 0; i < times.size(); i++) {
-        for (unsigned int j = 0; j <= times.at(i).StepCount(); j++) {
-            real t = times.at(i).StartTime();
-            t += ((real) j) * times.at(i).StepSize();
+        for (unsigned int j = 1; j <= times.at(i).StepCount(); j++) {
+            t += times.at(i).StepSize();
             m_times.push_back(t);
         }
+        m_times_stop.push_back(m_times.size()-1);
     }
 }
 
-void FluxAnalyser::addFluxElement(const Sprog::Element &elem) {
+void FluxAnalyser::addElement(const Sprog::Element &elem) {
     int iel = m_mech->FindElement(elem);
     if (iel > -1) {
-        m_ElementIndexes.push_back((unsigned int)iel);
+        // Check whether index already in the index list
+        bool ExistIndex = false;
+        for (unsigned int i = 0; i < m_ElementIndexes.size(); i++) {
+            if (m_ElementIndexes.at(i) == iel) {
+                ExistIndex = true;
+                break;
+            }
+        }
+        if (!ExistIndex) {
+            m_ElementIndexes.push_back((unsigned int)iel);
+            FluxNetwork fnw;
+            m_flux_networks.push_back(fnw);
+            m_int_flux_networks.push_back(fnw);
+        }
     } else {
-        throw runtime_error("Attemp to add unknow element in Flux analysis "
-                            "(Mops, FluxAnalyser::addFluxElement).");
+        std::cout << "Element " << elem.Name() << " Not Found. Ignoring "
+                  << elem.Name() << " from flux analyzer." << std::endl;
+        //throw runtime_error("Attemp to add unknow element in Flux analysis "
+        //                    "(Mops, FluxAnalyser::addFluxElement).");
     }
 }
 
-int FluxAnalyser::getFluxPathIndex(Mops::FluxAnalyser::FluxPath &fpath) {
-    for (unsigned int i = 0; i < m_flux_network.size(); i++) {
-        if ((m_flux_network.at(i).SourceSpecies == fpath.SourceSpecies) &&
-            (m_flux_network.at(i).TargetSpecies == fpath.TargetSpecies)) {
+void FluxAnalyser::writeFluxes(const std::string &filenameprefix, bool doIntFluxes) {
+    //  write output to file
+    if (m_ElementIndexes.size() > 0) {
+        cout << "mops: Writting output from FluxAnalyser..." << endl;
+
+        ofstream fflux;
+        ofstream fintflux;
+        std::string file_flux = filenameprefix + "-elem-flux.fvr";
+        std::string file_int_flux = filenameprefix + "-elem-int-flux.fvr";
+        fflux.open(file_flux.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
+        writeHeader(fflux, m_times.size()-1);
+        if (doIntFluxes) {
+            fintflux.open(file_int_flux.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
+            writeHeader(fintflux, m_times_stop.size());
+        }
+        // ofstream of fflux and fintflux has been checked in writeHeaders
+        int int_flux_time_stop_index = 0;
+        for (unsigned int i = 1; i < m_times.size(); i++) {
+            unsigned int i_times = m_times_stop.at(int_flux_time_stop_index);
+            bool isAtTimeStop = (i_times <= i);
+
+            fflux << formatWhiteSpace(ComoString::int2string(i),5,false) << "  "
+                 << m_times.at(i) << " t/s  " << m_atemperatures->at(i) << " T/K " << endl;
+
+            if (doIntFluxes && isAtTimeStop) {
+                fintflux << formatWhiteSpace(ComoString::int2string(int_flux_time_stop_index+1),5,false) << "  "
+                    << m_times.at(i_times) << " t/s  " << m_atemperatures->at(i_times) << " T/K " << endl;
+            }
+
+            for (unsigned int j = 0; j < m_ElementIndexes.size(); j++) {
+                calculateFluxAt(i, m_ElementIndexes.at(j), m_flux_networks.at(j));
+                writeFluxAt(m_ElementIndexes.at(j), fflux, m_flux_networks.at(j));
+                if (doIntFluxes) {
+                    calculateIntFluxAt(i, m_flux_networks.at(j), m_int_flux_networks.at(j));
+                    if (isAtTimeStop) {
+                        writeFluxAt(m_ElementIndexes.at(j), fintflux, m_int_flux_networks.at(j));
+                    }
+                }
+            }
+            // increase the index of the time stop if time point pass the current index.
+            if (isAtTimeStop) int_flux_time_stop_index++;
+        }
+        fflux.close();
+        if (doIntFluxes) fintflux.close();
+    }
+}
+
+void FluxAnalyser::calculateFluxAt(unsigned int index, unsigned int iel, Mops::FluxAnalyser::FluxNetwork &flux_network) {
+    flux_network.clear();
+
+    for (unsigned int i = 0; i < m_mech->ReactionCount(); i++) {
+        if (m_mech->Reactions(i)->ReactantCount() > 0) {
+            // Integer Stoichiometry
+            for (int j = 0; j < m_mech->Reactions(i)->ReactantCount(); j++) {
+                for (int k = 0; k < m_mech->Reactions(i)->ProductCount(); k++) {
+                    real n_total_stoi = getTotalElementStoi(*m_mech->Reactions(i), iel);
+                    real n_A_elem     = getNumberOfElementAtom(m_mech->Reactions(i)->Reactant(j), iel);
+                    real n_B_elem     = getNumberOfElementAtom(m_mech->Reactions(i)->Product(k), iel);
+                    real flux_fraction = 0.0;
+                    if (n_total_stoi > 0) {
+                        flux_fraction = n_A_elem * n_B_elem / n_total_stoi;
+                    } else {
+                        flux_fraction = 0.0;
+                    }
+                    // A => B Flux
+                    FluxPath temp_fpath;
+                    temp_fpath.Rate = (m_agpfwdrates->at(index)).at(i) * flux_fraction;
+                    if (temp_fpath.Rate > 0.0) {
+                        temp_fpath.SourceSpecies = m_mech->Reactions(i)->Reactant(j).Index();
+                        temp_fpath.TargetSpecies = m_mech->Reactions(i)->Product(k).Index();
+                        addToFluxPathRate(temp_fpath, flux_network);
+                    }
+
+                    // B => A Flux, this is only if reaction is reversible.
+                    if (m_mech->Reactions(i)->IsReversible()) {
+                        temp_fpath.Rate = (m_agprevrates->at(index)).at(i) * flux_fraction;
+                        if (temp_fpath.Rate > 0.0) {
+                            temp_fpath.SourceSpecies = m_mech->Reactions(i)->Product(k).Index();
+                            temp_fpath.TargetSpecies = m_mech->Reactions(i)->Reactant(j).Index();
+                            addToFluxPathRate(temp_fpath, flux_network);
+                        }
+                    }
+                }
+            }
+        } else {
+            // Real Stoichiometry
+            for (int j = 0; j < m_mech->Reactions(i)->FReactantCount(); j++) {
+                for (int k = 0; k < m_mech->Reactions(i)->FProductCount(); k++) {
+                    real n_total_stoi = getTotalElementStoi(*m_mech->Reactions(i), iel);
+                    real n_A_elem     = getNumberOfElementAtom(m_mech->Reactions(i)->FReactant(j), iel);
+                    real n_B_elem     = getNumberOfElementAtom(m_mech->Reactions(i)->FProduct(k), iel);
+                    real flux_fraction = n_A_elem * n_B_elem / n_total_stoi;
+                    // A => B Flux
+                    FluxPath temp_fpath;
+                    temp_fpath.SourceSpecies = m_mech->Reactions(i)->FReactant(j).Index();
+                    temp_fpath.TargetSpecies = m_mech->Reactions(i)->FProduct(k).Index();
+                    temp_fpath.Rate          = (m_agpfwdrates->at(index)).at(i) * flux_fraction;
+                    addToFluxPathRate(temp_fpath, flux_network);
+
+                    // B => A Flux, this is only if reaction is reversible.
+                    if (m_mech->Reactions(i)->IsReversible()) {
+                        temp_fpath.SourceSpecies = m_mech->Reactions(i)->FProduct(k).Index();
+                        temp_fpath.TargetSpecies = m_mech->Reactions(i)->FReactant(j).Index();
+                        temp_fpath.Rate          = (m_agprevrates->at(index)).at(i) * flux_fraction;
+                        addToFluxPathRate(temp_fpath, flux_network);
+                    }
+                }
+            }
+        }
+    }
+
+    // Sort current Flux Network
+    sortDecendingFluxNetwork(flux_network);
+}
+
+void FluxAnalyser::calculateIntFluxAt(unsigned int index, Mops::FluxAnalyser::FluxNetwork &flux_network, Mops::FluxAnalyser::FluxNetwork &int_flux_network) {
+    for (unsigned int j = 0; j < flux_network.size(); j++) {
+        // This is over estimated fluxes. Need modification for proper integration.
+        flux_network.at(j).Rate = flux_network.at(j).Rate * (m_times.at(index) - m_times.at(index - 1));
+        addToFluxPathRate(flux_network.at(j), int_flux_network);
+    }
+    sortDecendingFluxNetwork(int_flux_network);
+}
+
+int FluxAnalyser::getFluxPathIndex(Mops::FluxAnalyser::FluxPath &fpath, Mops::FluxAnalyser::FluxNetwork &flux_network) {
+    for (unsigned int i = 0; i < flux_network.size(); i++) {
+        if ((flux_network.at(i).SourceSpecies == fpath.SourceSpecies) &&
+            (flux_network.at(i).TargetSpecies == fpath.TargetSpecies)) {
             return (int) i;
         }
     }
     return -1;
 }
 
-void FluxAnalyser::addToFluxPathRate(Mops::FluxAnalyser::FluxPath &fpath) {
-    int index = getFluxPathIndex(fpath);
+void FluxAnalyser::addToFluxPathRate(Mops::FluxAnalyser::FluxPath &fpath, Mops::FluxAnalyser::FluxNetwork &flux_network) {
+    int index = getFluxPathIndex(fpath, flux_network);
     if (index < 0) {
-        m_flux_network.push_back(fpath);
+        flux_network.push_back(fpath);
     } else {
-        m_flux_network.at(index).Rate += fpath.Rate;
+        flux_network.at(index).Rate += fpath.Rate;
     }
+}
+
+void FluxAnalyser::sortDecendingFluxNetwork(Mops::FluxAnalyser::FluxNetwork &flux_network) {
+    unsigned int n = flux_network.size();
+    for (unsigned int i = 0; i < n; i++) {
+        for (unsigned int j = i; j > 0; j--) {
+            if (flux_network[j-1].Rate < flux_network[j].Rate) {
+                FluxPath temp;
+                // Store j in temp.
+                temp.Rate = flux_network[j].Rate;
+                temp.SourceSpecies  = flux_network[j].SourceSpecies;
+                temp.TargetSpecies  = flux_network[j].TargetSpecies;
+                // Put j+1 into j.
+                flux_network[j].Rate = flux_network[j-1].Rate;
+                flux_network[j].SourceSpecies  = flux_network[j-1].SourceSpecies;
+                flux_network[j].TargetSpecies  = flux_network[j-1].TargetSpecies;
+                // Put temp into j+1.
+                // Put temp into j+1.
+                flux_network[j-1].Rate = temp.Rate;
+                flux_network[j-1].SourceSpecies  = temp.SourceSpecies;
+                flux_network[j-1].TargetSpecies  = temp.TargetSpecies;
+            } else {
+                break;
+            }
+        }
+    }
+
+}
+
+void FluxAnalyser::writeFluxAt(unsigned int iel, std::ofstream &fout, Mops::FluxAnalyser::FluxNetwork &flux_network) {
+    if (fout.is_open()) {
+        // Write flux network to file.
+        if (flux_network.size() > 0) {
+            fout << "Fluxes of " << m_mech->Elements(iel)->Name() << endl;
+            for (unsigned int i = 0; i < flux_network.size(); i++) {
+                fout << formatWhiteSpace(ComoString::int2string(i+1),5,false) << "  "
+                     << formatWhiteSpace(m_mech->GetSpecies(flux_network.at(i).SourceSpecies)->Name(), 17)
+                     << "=> "
+                     << formatWhiteSpace(m_mech->GetSpecies(flux_network.at(i).TargetSpecies)->Name(), 19)
+                     << formatWhiteSpace(Strings::cstr(flux_network.at(i).Rate), 12, false)
+                     << endl;
+            }
+            fout << endl;
+        }
+    } else {
+        throw runtime_error("File stream is not opened for writting flux analysis "
+                            "(Mops, FluxAnalyser::writeFluxAt).");
+    }
+}
+
+void FluxAnalyser::writeHeader(ofstream &fout, unsigned int npoints) {
+    if (fout.is_open()) {
+        // Write header
+        fout << formatWhiteSpace(ComoString::int2string(m_mech->SpeciesCount()),5,false) << "/ Number of species" << endl;
+        fout << formatWhiteSpace(ComoString::int2string(m_mech->ReactionCount()),5,false) << "/ Number of reactions" << endl;
+        fout << formatWhiteSpace(ComoString::int2string(npoints),5,false) << "/ Number of points" << endl;
+        for (unsigned int i = 0; i < m_ElementIndexes.size(); i++) {
+            fout << formatWhiteSpace(m_mech->Elements(m_ElementIndexes.at(i))->Name(), 4);
+        }
+        fout << endl;
+        for (unsigned int i = 0; i < m_mech->SpeciesCount(); i++) {
+            fout << formatWhiteSpace(m_mech->GetSpecies(i)->Name(), 16);
+        }
+        fout << endl;
+        fout << endl;
+    } else {
+        // Throw error if the output file failed to open.
+        throw runtime_error("Failed to open file for write element flux "
+                            "output (Mops, Simulator::FluxAnalyser::writeHeader).");
+    }
+
 }
 
 real FluxAnalyser::getTotalElementStoi(const Sprog::Kinetics::Reaction &rxn, unsigned int iel) {
@@ -119,67 +331,6 @@ real FluxAnalyser::getNumberOfElementAtom(const Sprog::Stoichf &sc, unsigned int
         return 0.0;
     }
 }
-void FluxAnalyser::writeFluxAt(unsigned int index, unsigned int iel, std::ofstream &fout) {
-    // If index of time point is greater than total number of time point then do not do flux analysis
-    if (index >= m_times.size()) {
-        return;
-    }
-    if (fout.is_open()) {
-        calculateFluxAt(index, iel);
-        // Write flux network to file.
-        if (m_flux_network.size() > 0) {
-            fout << "Fluxes of " << m_mech->Elements(iel)->Name() << endl;
-            for (unsigned int i = 0; i < m_flux_network.size(); i++) {
-                fout << formatWhiteSpace(ComoString::int2string(i+1),5,false) << "  "
-                     << formatWhiteSpace(m_mech->GetSpecies(m_flux_network.at(i).SourceSpecies)->Name(), 17)
-                     << "=> "
-                     << formatWhiteSpace(m_mech->GetSpecies(m_flux_network.at(i).TargetSpecies)->Name(), 19)
-                     << formatWhiteSpace(Strings::cstr(m_flux_network.at(i).Rate), 12, false)
-                     << endl;
-            }
-            fout << endl;
-        }
-    } else {
-        throw runtime_error("File stream is not opened for writting flux analysis "
-                            "(Mops, FluxAnalyser::writeFluxAt).");
-    }
-}
-
-void FluxAnalyser::writeFluxes(const std::string &filename) {
-    //  write output to file
-    if (m_ElementIndexes.size() > 0) {
-        ofstream fout;
-        fout.open(filename.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
-        cout << "mops: Writting output from FluxAnalyser..." << endl;
-        if (fout.is_open()) {
-            // Write header
-            fout << formatWhiteSpace(ComoString::int2string(m_mech->SpeciesCount()),5,false) << "/ Number of species" << endl;
-            fout << formatWhiteSpace(ComoString::int2string(m_mech->ReactionCount()),5,false) << "/ Number of reactions" << endl;
-            fout << formatWhiteSpace(ComoString::int2string(m_times.size() - 1),5,false) << "/ Number of points" << endl;
-            for (unsigned int i = 0; i < m_ElementIndexes.size(); i++) {
-                fout << formatWhiteSpace(m_mech->Elements(m_ElementIndexes.at(i))->Name(), 4);
-            }
-            fout << endl;
-            for (unsigned int i = 0; i < m_mech->SpeciesCount(); i++) {
-                fout << formatWhiteSpace(m_mech->GetSpecies(i)->Name(), 16);
-            }
-            fout << endl;
-            fout << endl;
-            for (unsigned int i = 1; i < m_times.size(); i++) {
-                fout << formatWhiteSpace(ComoString::int2string(i),5,false) << "  "
-                     << m_times.at(i) << " t/s  " << m_atemperatures->at(i) << " T/K " << endl;
-                for (unsigned int j = 0; j < m_ElementIndexes.size(); j++) {
-                    writeFluxAt(i, m_ElementIndexes.at(j), fout);
-                }
-            }
-            fout.close();
-        } else {
-            // Throw error if the output file failed to open.
-            throw runtime_error("Failed to open file for write element flux "
-                                "output (Mops, Simulator::FluxAnalyser::writeFluxes).");
-        }
-    }
-}
 
 std::string FluxAnalyser::formatWhiteSpace(std::string str, unsigned int len, bool isright) {
     string wstr = "";
@@ -198,102 +349,3 @@ std::string FluxAnalyser::formatWhiteSpace(std::string str, unsigned int len, bo
     }
     return wstr;
 }
-
-void FluxAnalyser::calculateFluxAt(unsigned int index, unsigned int iel) {
-    m_flux_network.clear();
-    // If index of time point is greater than total number of time point then do not do flux analysis
-    //if (index >= m_times-) {
-    //    return;
-    //}
-    for (unsigned int i = 0; i < m_mech->ReactionCount(); i++) {
-        if (m_mech->Reactions(i)->ReactantCount() > 0) {
-            // Integer Stoichiometry
-            for (int j = 0; j < m_mech->Reactions(i)->ReactantCount(); j++) {
-                for (int k = 0; k < m_mech->Reactions(i)->ProductCount(); k++) {
-                    real n_total_stoi = getTotalElementStoi(*m_mech->Reactions(i), iel);
-                    real n_A_elem     = getNumberOfElementAtom(m_mech->Reactions(i)->Reactant(j), iel);
-                    real n_B_elem     = getNumberOfElementAtom(m_mech->Reactions(i)->Product(k), iel);
-                    real flux_fraction = 0.0;
-                    if (n_total_stoi > 0) {
-                        flux_fraction = n_A_elem * n_B_elem / n_total_stoi;
-                    } else {
-                        flux_fraction = 0.0;
-                    }
-                    // A => B Flux
-                    FluxPath temp_fpath;
-                    temp_fpath.Rate = (m_agpfwdrates->at(index)).at(i) * flux_fraction;
-                    if (temp_fpath.Rate > 0.0) {
-                        temp_fpath.SourceSpecies = m_mech->Reactions(i)->Reactant(j).Index();
-                        temp_fpath.TargetSpecies = m_mech->Reactions(i)->Product(k).Index();
-                        addToFluxPathRate(temp_fpath);
-                    }
-
-                    // B => A Flux, this is only if reaction is reversible.
-                    if (m_mech->Reactions(i)->IsReversible()) {
-                        temp_fpath.Rate = (m_agprevrates->at(index)).at(i) * flux_fraction;
-                        if (temp_fpath.Rate > 0.0) {
-                            temp_fpath.SourceSpecies = m_mech->Reactions(i)->Product(k).Index();
-                            temp_fpath.TargetSpecies = m_mech->Reactions(i)->Reactant(j).Index();
-                            addToFluxPathRate(temp_fpath);
-                        }
-                    }
-                }
-            }
-        } else {
-            // Real Stoichiometry
-            for (int j = 0; j < m_mech->Reactions(i)->FReactantCount(); j++) {
-                for (int k = 0; k < m_mech->Reactions(i)->FProductCount(); k++) {
-                    real n_total_stoi = getTotalElementStoi(*m_mech->Reactions(i), iel);
-                    real n_A_elem     = getNumberOfElementAtom(m_mech->Reactions(i)->FReactant(j), iel);
-                    real n_B_elem     = getNumberOfElementAtom(m_mech->Reactions(i)->FProduct(k), iel);
-                    real flux_fraction = n_A_elem * n_B_elem / n_total_stoi;
-                    // A => B Flux
-                    FluxPath temp_fpath;
-                    temp_fpath.SourceSpecies = m_mech->Reactions(i)->FReactant(j).Index();
-                    temp_fpath.TargetSpecies = m_mech->Reactions(i)->FProduct(k).Index();
-                    temp_fpath.Rate          = (m_agpfwdrates->at(index)).at(i) * flux_fraction;
-                    addToFluxPathRate(temp_fpath);
-
-                    // B => A Flux, this is only if reaction is reversible.
-                    if (m_mech->Reactions(i)->IsReversible()) {
-                        temp_fpath.SourceSpecies = m_mech->Reactions(i)->FProduct(k).Index();
-                        temp_fpath.TargetSpecies = m_mech->Reactions(i)->FReactant(j).Index();
-                        temp_fpath.Rate          = (m_agprevrates->at(index)).at(i) * flux_fraction;
-                        addToFluxPathRate(temp_fpath);
-                    }
-                }
-            }
-        }
-    }
-
-    // Sort current Flux Network
-    sortDecendingFluxNetwork();
-}
-
-void FluxAnalyser::sortDecendingFluxNetwork() {
-    unsigned int n = m_flux_network.size();
-    for (unsigned int i = 0; i < n; i++) {
-        for (unsigned int j = i; j > 0; j--) {
-            if (m_flux_network[j-1].Rate < m_flux_network[j].Rate) {
-                FluxPath temp;
-                // Store j in temp.
-                temp.Rate = m_flux_network[j].Rate;
-                temp.SourceSpecies  = m_flux_network[j].SourceSpecies;
-                temp.TargetSpecies  = m_flux_network[j].TargetSpecies;
-                // Put j+1 into j.
-                m_flux_network[j].Rate = m_flux_network[j-1].Rate;
-                m_flux_network[j].SourceSpecies  = m_flux_network[j-1].SourceSpecies;
-                m_flux_network[j].TargetSpecies  = m_flux_network[j-1].TargetSpecies;
-                // Put temp into j+1.
-                // Put temp into j+1.
-                m_flux_network[j-1].Rate = temp.Rate;
-                m_flux_network[j-1].SourceSpecies  = temp.SourceSpecies;
-                m_flux_network[j-1].TargetSpecies  = temp.TargetSpecies;
-            } else {
-                break;
-            }
-        }
-    }
-
-}
-

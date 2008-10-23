@@ -500,7 +500,7 @@ void Simulator::PostProcess()
 
     // POST-PROCESS ELEMENT FLUX
     // Element flux must be output before CSV files since writeXXXCSV will change the contents of what it output afterwards
-    writeElementFluxOutput(m_output_filename+"-elem-flux.csv", mech, times, agpfwdrates, agprevrates, achem);
+    writeElementFluxOutput(m_output_filename, mech, times, agpfwdrates, agprevrates, achem);
 
     // OUTPUT TO CSV FILES.
 
@@ -1722,11 +1722,11 @@ void Simulator::writeElementFluxOutput(const std::string &filename,
     for (unsigned int i = 0; i < mech.ElementCount(); i++) {
         for (unsigned int j = 0; j < m_flux_elements.size(); j++) {
             if (mech.Elements(i)->Name().compare(Strings::convertToCaps(m_flux_elements.at(j))) == 0) {
-                fa.addFluxElement(*mech.Elements(i));
+                fa.addElement(*mech.Elements(i));
             }
         }
     }
-    fa.writeFluxes(filename);
+    fa.writeFluxes(filename, true);
 }
 
 // Add element for flux analysis postprocessor
