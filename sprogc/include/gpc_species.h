@@ -197,9 +197,9 @@ public:
 	
 	void setTransportData(vector<string> &data) ;
 	Sprog::Transport::TransportData& getTransportData() const;
-	double getViscosity(double T) const; // returns the viscosity of the pure species
-	double getSelfDiffusion(double T, double p) const; // returns the self diffusion coefficient
-	double getThermalConductivity(double T, double p, double cp) const;
+	double getViscosity(double T) const; // returns the viscosity of the pure species in Kg/m-s
+	double getSelfDiffusion(double T, double p) const; // returns the self diffusion coefficient m^2/s
+	double getThermalConductivity(double T, double p, double cp) const; // returns the thermal conductivity in J/m-s-K
 
 
 protected:

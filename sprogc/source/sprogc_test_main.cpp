@@ -37,17 +37,19 @@ void main()
 
 		
 		k = mech.FindSpecies("H2");				
-		massFrac[k] = 0.3;		
+		massFrac[k] = 0.0;		
 		k = mech.FindSpecies("CO");
-		massFrac[k] = 0.2;
+		massFrac[k] = 0.0;
 		k = mech.FindSpecies("CH4");
-		massFrac[k] = 0.1;
+		massFrac[k] = 0.0;
 		k = mech.FindSpecies("CO2");
-		massFrac[k] = 0.1;
+		massFrac[k] = 0.0;
 		k = mech.FindSpecies("O2");
-		massFrac[k] = 0.1;		
+		massFrac[k] = 0.2329;		
 		k = mech.FindSpecies("H2O");
-		massFrac[k] = 0.2;
+		massFrac[k] = 0.0;
+		k = mech.FindSpecies("N2");
+		massFrac[k] = 0.7671;
 		
 		mix.SetMassFracs(massFrac);			
 		mix.SetTemperature(temp);
@@ -68,6 +70,8 @@ void main()
 		cout << Dkm[k] << endl;
 		k = mech.FindSpecies("N2");
 		cout << Dkm[k] << endl;
+
+		cout << "mixture specific heat " << mix.getSpecificHeatCapacity(massFrac,temp) << endl;
 
 
 		

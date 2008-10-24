@@ -53,7 +53,7 @@ using namespace Sprog::Transport;
 
 // Collision integral values for the evaluation of diffusion coeffcient
 // Adapted from DETCHEM
-double TransportFactory::Omega11Matrix[37*5] = {
+real TransportFactory::Omega11Matrix[37*5] = {
 		4.008e+000,-1.0380e+00, 5.9659e+00,-2.9977e+00, 4.9812e-01,
 		3.1300e+00,-4.6244e-01, 2.2622e+00,-8.4707e-01, 1.0961e-01,
 		2.6490e+00,-3.6366e-01, 1.4543e+00,-4.7309e-01, 5.2330e-02,
@@ -95,7 +95,7 @@ double TransportFactory::Omega11Matrix[37*5] = {
 		
 // Collision integral values for the evaluation of viscosities
 // Adapted from DETCHEM
-double TransportFactory::Omega22Matrix[37*5]	= {		
+real TransportFactory::Omega22Matrix[37*5]	= {		
 		4.1000e+00,-4.9400e-01, 5.1705e+00,-2.4579e+00, 3.8700e-01,
 		3.2630e+00,-4.8580e-01, 2.4444e+00,-9.0334e-01, 1.1276e-01,
 		2.8400e+00,-4.7159e-01, 1.5619e+00,-4.5765e-01, 4.0936e-02,
@@ -136,7 +136,7 @@ double TransportFactory::Omega22Matrix[37*5]	= {
 	};
 
 // Reduced temperature values against with the values of Omega11 and Omega22 are plotted
-double TransportFactory::TStar[37] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0,
+real TransportFactory::TStar[37] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0,
 						1.2, 1.4, 1.6, 1.8, 2.0,
 						2.5, 3.0, 3.5, 4.0,
 						5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
@@ -150,13 +150,13 @@ double TransportFactory::TStar[37] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.
 
 
 // F(T) function for Z_rot calculation Eq. 33 SAND86-8246
-double rotFunctionFT(double T, double LJdepth){
-	double factor = LJdepth/(kB*T);
+real rotFunctionFT(real T, real LJdepth){
+	real factor = LJdepth/(kB*T);
 	return (1+ 0.5*sqrt(PI)*PI * sqrt(factor) + (0.25*PI*PI+2)*factor + sqrt(PI)*PI*sqrt(factor)*factor);
 }
 
 // correction factor for polar non polar interaction
-double getChi(const int polar, const int nonPolar, const Sprog::Thermo::Mixture &mix){
+real getChi(const int polar, const int nonPolar, const Sprog::Thermo::Mixture &mix){
 	// routine returns polar non-polar interaction corrrection factor
 	// @polar : index of polar species
 	// @nonPolar : index of nonPolar species
@@ -165,16 +165,16 @@ double getChi(const int polar, const int nonPolar, const Sprog::Thermo::Mixture 
 	Transport::TransportData tdPolar = (*spv)[polar]->getTransportData();
 	Transport::TransportData tdNonPolar = (*spv)[nonPolar]->getTransportData();
 
-	double alphaNonPolar = tdNonPolar.getPolarity(); // polarity
-	double sigmaNonPolar = tdNonPolar.getCollisionDia(); // LJ- collision dia
-	double sigmaPolar = tdPolar.getCollisionDia(); // LJ-collision dia
-	double muPolar = tdPolar.getDipole(); // dipole moment
-	double epsilonPolar = tdPolar.getWellDepth(); // LJ well depth
-	double epsilonNonPolar = tdNonPolar.getWellDepth(); // LJ well depth
+	real alphaNonPolar = tdNonPolar.getPolarity(); // polarity
+	real sigmaNonPolar = tdNonPolar.getCollisionDia(); // LJ- collision dia
+	real sigmaPolar = tdPolar.getCollisionDia(); // LJ-collision dia
+	real muPolar = tdPolar.getDipole(); // dipole moment
+	real epsilonPolar = tdPolar.getWellDepth(); // LJ well depth
+	real epsilonNonPolar = tdNonPolar.getWellDepth(); // LJ well depth
 	
 
-	double reducedAlpha = alphaNonPolar/pow(sigmaNonPolar,3);
-	double reducedMu = muPolar/(sqrt(epsilonPolar*pow(sigmaPolar,3)));
+	real reducedAlpha = alphaNonPolar/pow(sigmaNonPolar,3);
+	real reducedMu = muPolar/(sqrt(epsilonPolar*pow(sigmaPolar,3)));
 
 	return (1+0.25*reducedAlpha*reducedMu*sqrt(epsilonPolar/epsilonNonPolar));
 }
@@ -183,9 +183,9 @@ double getChi(const int polar, const int nonPolar, const Sprog::Thermo::Mixture 
 
 
 
-double TransportFactory::polyFitOmega(double delta,double *matrixPtr) const{	
+real TransportFactory::polyFitOmega(real delta,real *matrixPtr) const{	
 	int i;
-	double omega = *(matrixPtr+4);
+	real omega = *(matrixPtr+4);
 	for(i=0; i<4; i++){
 		matrixPtr--;
 		omega = omega*delta + *(matrixPtr+4);
@@ -194,9 +194,9 @@ double TransportFactory::polyFitOmega(double delta,double *matrixPtr) const{
 	return omega;
 }
 
-double TransportFactory::QuadInterPol(int imin, double *oPtr, double Tr) const{
+real TransportFactory::QuadInterPol(int imin, real *oPtr, real Tr) const{
 // Quadratic interpolation routine
-	double x12, m12, x23, m23, x2x, m2x;
+	real x12, m12, x23, m23, x2x, m2x;
 	x12 = 0.5*(TStar[imin]+TStar[imin-1]);
 
 	m12 = (*(oPtr+1) - *(oPtr))/(TStar[imin]-TStar[imin-1]);
@@ -214,7 +214,7 @@ double TransportFactory::QuadInterPol(int imin, double *oPtr, double Tr) const{
 }
 
 // routine for finding the  interval in which the reduced temperature lays
-void TransportFactory::getTempInterval(const double rT, int &iMin, int &iMax) const{
+void TransportFactory::getTempInterval(const real rT, int &iMin, int &iMax) const{
 	int i;
 
 	for(i=0; i <37; i++)
@@ -234,7 +234,7 @@ void TransportFactory::getTempInterval(const double rT, int &iMin, int &iMax) co
 
 	
 
-double TransportFactory::getReducedTemp(const double T, const Sprog::Species &sp) const{
+real TransportFactory::getReducedTemp(const real T, const Sprog::Species &sp) const{
 	// calculate the reduced temperature T* = kB*T/epsilon
 
 	Transport::TransportData td =  sp.getTransportData();
@@ -242,7 +242,7 @@ double TransportFactory::getReducedTemp(const double T, const Sprog::Species &sp
 
 }
 
-double TransportFactory::getReducedDipole(const Sprog::Species &sp) const {
+real TransportFactory::getReducedDipole(const Sprog::Species &sp) const {
 	// calculate the reduced dipole moment
 	// delta* = mu^2/(8 PI epsilon sigma^3)
 
@@ -251,12 +251,12 @@ double TransportFactory::getReducedDipole(const Sprog::Species &sp) const {
 	return (pow(td.getDipole(),2)/(8*PI*EPSILON0*td.getWellDepth()*pow(td.getCollisionDia(),3)));
 }
 
-double TransportFactory::getOmega11(double rT, const double deltaStar) const{
+real TransportFactory::getOmega11(real rT, const real deltaStar) const{
 
 	int i;
 	int iMin, iMax;
-	double Omega11;
-	double o11[3];
+	real Omega11;
+	real o11[3];
 
 	
 	// find the temperarature interval
@@ -285,17 +285,17 @@ double TransportFactory::getOmega11(double rT, const double deltaStar) const{
 }
 
 
-double TransportFactory::getOmega22(const double T,const Sprog::Species &sp) const{
+real TransportFactory::getOmega22(const real T,const Sprog::Species &sp) const{
 
 	int i;
 	int iMin, iMax;
-	double Omega22;
-	double o22[3];
+	real Omega22;
+	real o22[3];
 	Transport::TransportData td =  sp.getTransportData();
 
-	double rT = kB*T/td.getWellDepth();	
+	real rT = kB*T/td.getWellDepth();	
 	//get reduced Dipole moment and check the dependancy
-	double deltaStar = getReducedDipole(sp);
+	real deltaStar = getReducedDipole(sp);
 
 	// find the temperarature interval
 	getTempInterval(rT,iMin,iMax);
@@ -326,36 +326,36 @@ double TransportFactory::getOmega22(const double T,const Sprog::Species &sp) con
 }
 
 
-double PureSpeciesTransport::getViscosity(const double T, const Sprog::Species &sp) const{
+real PureSpeciesTransport::getViscosity(const real T, const Sprog::Species &sp) const{
 
-	double eta, omega22;
+	real eta, omega22;
 	omega22 = getOmega22(T,sp);
 	Transport::TransportData td =  sp.getTransportData();
 	eta = 5.0/16.0*sqrt(PI*sp.MolWt()*kB*T/NA)/(PI*pow(td.getCollisionDia(),2)*omega22);		
 	return eta;
 }
 
-double PureSpeciesTransport::getSlefDiffusionCoeff(const double T, double p, const Sprog::Species &sp) const{
-	double selfDiff, omega11;
-	double rT = getReducedTemp(T,sp);
-	double deltaStar = getReducedDipole(sp);
+real PureSpeciesTransport::getSlefDiffusionCoeff(const real T, real p, const Sprog::Species &sp) const{
+	real selfDiff, omega11;
+	real rT = getReducedTemp(T,sp);
+	real deltaStar = getReducedDipole(sp);
 	omega11 = getOmega11(rT, deltaStar);
 	Transport::TransportData td = sp.getTransportData();
 	selfDiff = (3.0/8.0)*sqrt(PI*NA*pow((kB*T),3)/sp.MolWt())/(p*PI*pow(td.getCollisionDia(),2)*omega11);
 	return selfDiff;
 }
 
-double PureSpeciesTransport::getThermalConductivity(const double T, 
-													const double p,
-													const double cp, 
+real PureSpeciesTransport::getThermalConductivity(const real T, 
+													const real p,
+													const real cp, 
 													const Sprog::Species &sp )const {
 // pure species thermal conductivities are used only for the calculation of mixture conductivity
 	int molIndex;
-	double CvTrans, CvRot, CvVib, Cv;
-	double fTrans, fRot, fVib ,Zrot;
-	double A, B, T0=298.0;
-	double selfDiff, eta_k, rho;
-	double lambda;
+	real CvTrans, CvRot, CvVib, Cv;
+	real fTrans, fRot, fVib ,Zrot;
+	real A, B, T0=298.0;
+	real selfDiff, eta_k, rho;
+	real lambda;
 	Transport::TransportData td = sp.getTransportData();
 	molIndex = td.getMolIndex();
 
@@ -401,13 +401,13 @@ double PureSpeciesTransport::getThermalConductivity(const double T,
 
 
 
-double MixtureTransport::getViscosity(const double T, const Sprog::Thermo::Mixture &mix) const{
+real MixtureTransport::getViscosity(const real T, const Sprog::Thermo::Mixture &mix) const{
 	// vector<Sprog::Species*> const *sp = mix.Species();
 	const SpeciesPtrVector  *spv = mix.Species();
 	vector<real> moleFrac = mix.MoleFractions();	
 	int k,j;
-	double xTimesEta, xTimesPhi , eta;
-	double m_kj, eta_kj, phi_kj;
+	real xTimesEta, xTimesPhi , eta;
+	real m_kj, eta_kj, phi_kj;
 
 	eta = 0.0;
 	int size = spv->size();
@@ -428,10 +428,10 @@ double MixtureTransport::getViscosity(const double T, const Sprog::Thermo::Mixtu
 	return eta;
 }
 
-double MixtureTransport::getThermalConductivity(const double T, double p, const Sprog::Thermo::Mixture &mix) const{
+real MixtureTransport::getThermalConductivity(const real T, real p, const Sprog::Thermo::Mixture &mix) const{
 
 	int k;
-	double lambdaProd, lambdaFrac;
+	real lambdaProd, lambdaFrac;
 
 	lambdaProd = 0;
 	lambdaFrac = 0;
@@ -452,29 +452,29 @@ double MixtureTransport::getThermalConductivity(const double T, double p, const 
 		lambdaProd += moleFrac[k] * (*spv)[k]->getThermalConductivity(T,p,cp[k]);
 		lambdaFrac += moleFrac[k] / (*spv)[k]->getThermalConductivity(T,p,cp[k]);		
 	}
-	double lambda = 0.5*(lambdaProd + (1.0/lambdaFrac));
+	real lambda = 0.5*(lambdaProd + (1.0/lambdaFrac));
 
 	return 0.5*(lambdaProd + (1.0/lambdaFrac));
 }
 			
-double MixtureTransport::binaryDiffusionCoeff(const int j, 
+real MixtureTransport::binaryDiffusionCoeff(const int j, 
 										 const int k, 
-										 const double T, 
-										 const double p, 
+										 const real T, 
+										 const real p, 
 										 const Sprog::Thermo::Mixture &mix) const{
 	
 	const SpeciesPtrVector *spv = mix.Species();
 	Transport::TransportData td_j = (*spv)[j]->getTransportData();
 	Transport::TransportData td_k = (*spv)[k]->getTransportData();
 
-	double threeBy16 = 3.0/16.0;
-	double m_j, m_k, m_jk;
-	double mu_j, mu_k, mu_jk;
-	double epsilon_j, epsilon_k, epsilon_jk;
-	double sigma_j, sigma_k, sigma_jk;
-	double numer, denom, Chi;
-	double rT, deltaStar; // reduced temperature and reduced Dipole moment
-	double omega11;
+	real threeBy16 = 3.0/16.0;
+	real m_j, m_k, m_jk;
+	real mu_j, mu_k, mu_jk;
+	real epsilon_j, epsilon_k, epsilon_jk;
+	real sigma_j, sigma_k, sigma_jk;
+	real numer, denom, Chi;
+	real rT, deltaStar; // reduced temperature and reduced Dipole moment
+	real omega11;
 
 	m_j = (*spv)[j]->MolWt();
 	m_k = (*spv)[k]->MolWt();
@@ -524,8 +524,8 @@ double MixtureTransport::binaryDiffusionCoeff(const int j,
 
 }
 		
-vector<double> MixtureTransport::getMixtureDiffusionCoeff(const double T, 
-														  const double p,
+vector<double> MixtureTransport::getMixtureDiffusionCoeff(const real T, 
+														  const real p,
 														  const Sprog::Thermo::Mixture &mix) const
 {
 	const SpeciesPtrVector *spv = mix.Species();

@@ -46,7 +46,7 @@
 #include<string>
 #include<map>
 #include<vector>
-
+#include "gpc_params.h"
 using namespace std;
 namespace Sprog{
 	class Mechanism;
@@ -55,20 +55,20 @@ namespace Sprog{
 
 		class TransportData{				
 			int	   molIndex; // molecule index:- 0=atom, 1=linear molec, 2= non-linear molec
-			double LJwellDepth; // L-J potential well depth e/kb (K)
-			double LJcollisionDia; // L-J collistion dia
-			double dipol; // Dipole moment Debye
-			double polarity; // Polarizability
-			double rotRelaxNum; // Rotational relaxation number
+			real LJwellDepth; // L-J potential well depth e/kb (K)
+			real LJcollisionDia; // L-J collistion dia
+			real dipol; // Dipole moment Debye
+			real polarity; // Polarizability
+			real rotRelaxNum; // Rotational relaxation number
 
 		public:
 			TransportData();
 			TransportData(int molIndex,
-				double LJwellDepth,
-				double LJcollisionDia,
-				double dipol,
-				double polarity,
-				double rotRelaxNum);
+				real LJwellDepth,
+				real LJcollisionDia,
+				real dipol,
+				real polarity,
+				real rotRelaxNum);
 			//TransportData(const TransportData &td); // Copy constructor
 
 			
@@ -79,20 +79,20 @@ namespace Sprog{
 			void setMolIndex(int molIndex);
 			int getMolIndex() const;
 
-			void setWellDepth(double LJwellDepth);
-			double getWellDepth() const;
+			void setWellDepth(real LJwellDepth);
+			real getWellDepth() const;
 		
-			void setCollisionDia(double LJcollisionDia);
-			double getCollisionDia() const;
+			void setCollisionDia(real LJcollisionDia);
+			real getCollisionDia() const;
 
-			void setDipole(double dipol);
-			double getDipole()const;
+			void setDipole(real dipol);
+			real getDipole()const;
 
-			void setPolarity(double polarity);
-			double getPolarity()const;
+			void setPolarity(real polarity);
+			real getPolarity()const;
 
-			void setRotRelaxNum(double rotRelaxNum);
-			double getRotRelaxNum()const;
+			void setRotRelaxNum(real rotRelaxNum);
+			real getRotRelaxNum()const;
 
 			void validateTransport(map<string,vector<string>> &trMap,Sprog::Mechanism &mech);
 		};

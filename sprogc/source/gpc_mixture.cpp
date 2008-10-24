@@ -42,6 +42,7 @@
 
 #include "gpc_params.h"
 #include "gpc_mixture.h"
+#include "gpc_idealgas.h"
 #include "gpc_transport_factory.h"
 #include <vector>
 #include <stdexcept>
@@ -456,21 +457,44 @@ Serial_MixtureType Mixture::SerialType() const
     return Serial_Mixture;
 }
 
+// returns the avg mol wt given the mass fractions added by Vinod
+real Mixture::getAvgMolWt(Sprog::fvector &massFrac){
+	real avgMolWt = 0.0;
+
+	for(unsigned int i=0; i!= m_species->size(); i++)
+		avgMolWt += massFrac[i]/(*m_species)[i]->MolWt();
+
+	return 1.0/avgMolWt;
+}
+
 
 // Following transport related routines are added by Vinod
-
-double Mixture::getViscosity() const{
+// returns the mixture viscosity in Kg/m-s
+real Mixture::getViscosity() const{
 
 	Sprog::Transport::MixtureTransport mt;
 	return mt.getViscosity(Temperature(),*this);
 }
-
-double Mixture::getThermalConductivity(double pre) const{
+// returns the mixture thermal conductivity in J/m-s-K
+real Mixture::getThermalConductivity(real pre) const{
 	Sprog::Transport::MixtureTransport mt;
 	return mt.getThermalConductivity(Temperature(),pre,*this);
 }
+// returns the mixture specific heat capacity in J/Kg K
+real Mixture::getSpecificHeatCapacity(std::vector<real> &massFrac, Sprog::real T){
+	real cp = 0.0;
+	vector<real> cpMols;
+	Sprog::Thermo::IdealGas ig(*this->Species());
+	ig.CalcCps(T,cpMols);
+	for(int i=0; i != m_species->size(); i++)
+		cp += massFrac[i]*(cpMols[i])/(*m_species)[i]->MolWt();
 
-const vector<double> Mixture::getMixtureDiffusionCoeff(const double pre) const{
+	return cp;
+}
+	
+
+// returns the vector of mixture diffusion coefficient in m^2/s
+const vector<real> Mixture::getMixtureDiffusionCoeff(const real pre) const{
 	Sprog::Transport::MixtureTransport mt;
 	return mt.getMixtureDiffusionCoeff(Temperature(),pre,*this);
 }

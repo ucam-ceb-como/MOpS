@@ -44,6 +44,7 @@
 #include "gpc_reaction.h"
 #include "gpc_mech.h"
 #include "gpc_stoich.h"
+#include "gpc_idealgas.h"
 #include <cmath>
 #include <stdexcept>
 #include <memory.h>
@@ -339,6 +340,29 @@ real ReactionSet::GetMolarProdRates(real T, real density, const real *const x,
 }
 
 
+
+
+
+
+void ReactionSet::GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) const{		
+	
+	fvector kfrwd,krev,rop,Gs;
+	Sprog::Thermo::IdealGas ig(*mix.Species());
+	ig.CalcGs_RT(mix.Temperature(),Gs);
+	GetRateConstants(mix.Temperature(),mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),Gs,kfrwd,krev);
+	GetRatesOfProgress(mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),kfrwd,krev,rop);
+	GetMolarProdRates(rop,wdot);
+	
+}
+
+
+
+
+
+
+
+
+
 // REACTION RATES OF PROGRESS.
 
 // Calculates the rate of progress of each reaction given the
@@ -434,6 +458,8 @@ void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &mix,
                        m_mech->Species().size(),
                        kforward, kreverse, rop);
 }
+
+
 
 // Calculates the rate of progress of each reaction.
 void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &gas, fvector &rop) const

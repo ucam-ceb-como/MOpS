@@ -169,11 +169,16 @@ public:
     // Identifies the mixture type for serialisation.
     virtual Serial_MixtureType SerialType() const;
 
+	// routine to return the avg moleculat weight in Kg/mol	
+	real getAvgMolWt(fvector &massFrac);
+
 	//TRANSPORT RELATED FUNCTIONS added by Vinod
 
-	double getViscosity() const;
-	double getThermalConductivity(double pre) const; // pass  the operating pressure as argument
-	const vector<double> getMixtureDiffusionCoeff(const double pre)const; 
+
+	real getViscosity() const; // returns the mixture viscosity in Kg/m-s
+	real getThermalConductivity(real pre) const; // returns the mixture thermal conductivity in J/m-s-K
+	real getSpecificHeatCapacity(vector<real> &massFrac, real T); // returns the mixture specific heat capacity in J/Kg K
+	const vector<real> getMixtureDiffusionCoeff(const real pre)const; // returns the vector of mixture diffusion coefficient in m^2/s
 
 
 protected:

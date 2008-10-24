@@ -46,7 +46,7 @@
 #include "gpc_mech.h"
 #include <string>
 
-
+using namespace Sprog;
 using namespace Sprog::Transport;
 using namespace std;
 
@@ -60,11 +60,11 @@ TransportData::TransportData(){
 }
 
 TransportData::TransportData(int mi, 
-							 double LJDepth, 
-							 double LJcd, 
-							 double dpol, 
-							 double polar, 
-							 double rotRelax){
+							 real LJDepth, 
+							 real LJcd, 
+							 real dpol, 
+							 real polar, 
+							 real rotRelax){
 
 	
 	TransportData::molIndex = mi;	
@@ -91,58 +91,58 @@ TransportData TransportData::operator =(Sprog::Transport::TransportData td){
 
 }
 
-
+// sets the mol index
 void TransportData::setMolIndex(int mi){
 	this->molIndex = mi;
 }
-
+// returns the molar index 0-1-2
 int TransportData::getMolIndex() const{
 	return this->molIndex;
 }
-
-void TransportData::setWellDepth(double wd){
+// sets the lennard jones well depth
+void TransportData::setWellDepth(real wd){
 	this->LJwellDepth = wd;
 }
-
-double TransportData::getWellDepth() const{
+// returns the LJ well depth in J
+real TransportData::getWellDepth() const{
 	return this->LJwellDepth;
 }
-
-void TransportData::setCollisionDia(double cd){
+// sets the L-J collisiion dia
+void TransportData::setCollisionDia(real cd){
 	this->LJcollisionDia = cd;
 }
-
-double TransportData::getCollisionDia() const{
+// retuns the LJ collision dia in A
+real TransportData::getCollisionDia() const{
 	return this->LJcollisionDia;
 }
 
-
-void TransportData::setDipole(double dipol){
+// sets the dipole
+void TransportData::setDipole(real dipol){
 	this->dipol = dipol;
 }
-
-double TransportData::getDipole() const{
+// returns the dipol
+real TransportData::getDipole() const{
 	return this->dipol;
 }
 
 
-
-void TransportData::setPolarity(double p){
+// sets the Polarity of the species
+void TransportData::setPolarity(real p){
 	this->polarity = p;
 }
-
-double TransportData::getPolarity() const{
+// returns the polarity of the species
+real TransportData::getPolarity() const{
 	return this->polarity;
 }
-
-void TransportData::setRotRelaxNum(double rrn){
+// sets the rotational relaxation number
+void TransportData::setRotRelaxNum(real rrn){
 	this->rotRelaxNum = rrn;
 }
-
-double TransportData::getRotRelaxNum() const{
+// returns the rotational relaxation number
+real TransportData::getRotRelaxNum() const{
 	return this->rotRelaxNum;
 }
-
+// validate the transport data
 void TransportData::validateTransport(std::map<string,vector<string> > &trMap,
 									  Sprog::Mechanism &mech)
 {
@@ -167,10 +167,3 @@ void TransportData::validateTransport(std::map<string,vector<string> > &trMap,
 
 
 	
-	
-
-
-
-
-
-

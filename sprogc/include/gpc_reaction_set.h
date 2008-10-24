@@ -46,6 +46,7 @@
 #include "gpc_params.h"
 #include "gpc_reaction.h"
 #include "gpc_gasphase.h"
+#include "gpc_mixture.h"
 #include <vector>
 #include <map>
 #include <iostream>
@@ -124,6 +125,12 @@ public:
         ) const;
 
 
+
+
+	void GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) const;
+
+
+
     // REACTION RATES OF PROGRESS.
 
     // Calculates the rate of progress of each reaction.
@@ -133,6 +140,8 @@ public:
         const fvector &kreverse,  // Reverse rate constants of all reactions.
         fvector & rop             // Return vector for rates of progress.
         ) const;
+
+
 
     // Calculates the rate of progress of each reaction.
     void GetRatesOfProgress(
