@@ -256,11 +256,11 @@ private:
 
     // Number of particles for which to produce tracking output.  Tracked
     // particles will have their PSL properties output at each time-step in
-    // a separate CSV file.  If a primary-particle model in implemented, then
+    // a separate CSV file.  If a primary-particle model is implemented, then
     // TEM-style images will also be generated.
     unsigned int m_ptrack_count;
 
-    // FLUX ANALLYSIS ELEMENT LIST.
+    // FLUX ANALYSIS ELEMENT LIST.
 
     // A vector list containing pointers to elements which are wanted to analyse the flux of
     // that element.
@@ -340,7 +340,7 @@ private:
     // OUTPUT POINT READING.
 
     // Reads a gas-phase chemistry data point from the binary file.
-    // To allow the averages and confidence intervals to be calculated
+    // To allow the averages and confidence intervals to be calculated -
     // the data point is added to a vector of sums, and the squares are
     // added to the vector sumsqr if necessary.
     static void readGasPhaseDataPoint(
@@ -375,7 +375,7 @@ private:
         bool calcsqrs = false         // Set =true to also calculate sums of squares.
         );
 
-    // Reads a gasp-phase reaction rates stats data point from the binary file.
+    // Reads a gas-phase reaction rates stats data point from the binary file.
     // To allow the averages and confidence intervals to be calculated
     // the data point is added to a vector of sums, and the squares are
     // added to the vector sumsqr if necessary.
@@ -536,7 +536,7 @@ private:
         const timevector &times // Simulation output time intervals.
         ) const;
     
-    // FLUX VIEWR OUTPUT
+    // FLUX VIEWER OUTPUT
     // Writes element fluxes to FluxViewer format.
     void writeElementFluxOutput(
         const std::string &filename,     // Output file name (incl. extension).

@@ -75,7 +75,7 @@ public:
     // is treated (ignored or not).
     enum EnergyModel {
         ConstT,    // Constant temperature.
-        Adiabatic, // No heat transfer (full heating/cooling).
+        Adiabatic  // No heat transfer (full heating/cooling).
     };
 
     // Constructors.

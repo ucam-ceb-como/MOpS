@@ -191,10 +191,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\source\mops.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\source\mops_flow_stream.cpp"
 				>
 			</File>
@@ -208,6 +204,10 @@
 			</File>
 			<File
 				RelativePath=".\source\mops_mechanism.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\mops_methods.cpp"
 				>
 			</File>
 			<File
@@ -294,6 +294,10 @@
 			</File>
 			<File
 				RelativePath=".\include\mops_mechanism.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\mops_methods.h"
 				>
 			</File>
 			<File
