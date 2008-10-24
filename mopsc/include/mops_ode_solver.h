@@ -49,8 +49,8 @@
 
 // CVODE includes.
 #include "nvector/nvector_serial.h"
-#include "cvode_impl.h" // For CVodeMem.
-#include "cvode_dense_impl.h" // For DenseMat.
+#include "cvodes_impl.h" // For CVodeMem.
+#include "cvodes_dense_impl.h" // For DenseMat.
 
 #include <istream>
 

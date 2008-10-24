@@ -45,10 +45,10 @@
 
 // CVODE includes.
 #include "nvector/nvector_serial.h"
-#include "cvode/cvode.h"
-#include "cvode_impl.h"
-#include "cvode/cvode_dense.h"
-#include "cvode_dense_impl.h"
+#include "cvodes/cvodes.h"
+#include "cvodes_impl.h"
+#include "cvodes/cvodes_dense.h"
+#include "cvodes_dense_impl.h"
 
 #include <vector>
 #include <cmath>

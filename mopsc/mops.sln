@@ -2,6 +2,11 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual C++ Express 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mops", "mops.vcproj", "{A25EDCBA-213A-4502-824D-BC78B9C467EE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7C44C01A-392C-4AF9-AF17-45567398432D} = {7C44C01A-392C-4AF9-AF17-45567398432D}
+		{4F627552-B6A3-4A4C-8F65-1E72722A8309} = {4F627552-B6A3-4A4C-8F65-1E72722A8309}
+		{667E4098-08F2-4C66-8B80-29643A05639B} = {667E4098-08F2-4C66-8B80-29643A05639B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sprogc", "..\sprogc\sprogc.vcproj", "{4F627552-B6A3-4A4C-8F65-1E72722A8309}"
 EndProject
@@ -11,7 +16,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "camxml", "..\camxml\camxml.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sweeplib", "..\sweepc\sweeplib.vcproj", "{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cvode", "..\cvode\cvode.vcproj", "{9F7C637F-9905-4EF1-85D6-176C71B71DCE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cvodes", "..\cvodes\cvodes.vcproj", "{7C44C01A-392C-4AF9-AF17-45567398432D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,10 +44,10 @@ Global
 		{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}.Debug|Win32.Build.0 = Debug|Win32
 		{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}.Release|Win32.ActiveCfg = Release|Win32
 		{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}.Release|Win32.Build.0 = Release|Win32
-		{9F7C637F-9905-4EF1-85D6-176C71B71DCE}.Debug|Win32.ActiveCfg = Debug|Win32
-		{9F7C637F-9905-4EF1-85D6-176C71B71DCE}.Debug|Win32.Build.0 = Debug|Win32
-		{9F7C637F-9905-4EF1-85D6-176C71B71DCE}.Release|Win32.ActiveCfg = Release|Win32
-		{9F7C637F-9905-4EF1-85D6-176C71B71DCE}.Release|Win32.Build.0 = Release|Win32
+		{7C44C01A-392C-4AF9-AF17-45567398432D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7C44C01A-392C-4AF9-AF17-45567398432D}.Debug|Win32.Build.0 = Debug|Win32
+		{7C44C01A-392C-4AF9-AF17-45567398432D}.Release|Win32.ActiveCfg = Release|Win32
+		{7C44C01A-392C-4AF9-AF17-45567398432D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\sweepc\include;..\cvode\include;..\cvode\source;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
+				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source;..\sweepc\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
@@ -56,7 +56,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\sweepc\lib\sweep_d.lib ..\sprogc\lib\sprog_d.lib ..\camxml\lib\camxml_d.lib ..\cvode\lib\cvode_d.lib ..\comostrings\lib\comostrings_d.lib"
+				AdditionalDependencies="..\sweepc\lib\sweep_d.lib ..\sprogc\lib\sprog_d.lib ..\camxml\lib\camxml_d.lib ..\cvodes\lib\cvodes_d.lib ..\comostrings\lib\comostrings_d.lib"
 				OutputFile="$(OutDir)\mops_d.exe"
 				GenerateManifest="true"
 				GenerateDebugInformation="true"
@@ -110,7 +110,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\sweepc\include;..\cvode\include;..\cvode\source;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
+				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source;..\sweepc\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
 			/>
@@ -125,7 +125,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\sprogc\lib\sprog.lib ..\comostrings\lib\comostrings.lib ..\camxml\lib\camxml.lib ..\cvode\lib\cvode.lib ..\sweepc\lib\sweep.lib"
+				AdditionalDependencies="..\sprogc\lib\sprog.lib ..\comostrings\lib\comostrings.lib ..\camxml\lib\camxml.lib ..\sweepc\lib\sweep.lib ..\cvodes\lib\cvodes.lib"
 				OutputFile="bin\$(ProjectName).exe"
 				GenerateManifest="false"
 				EnableUAC="false"
@@ -182,7 +182,6 @@
 			UseInBuild="false"
 			UseDependenciesInBuild="false"
 			CopyLocalSatelliteAssemblies="false"
-			RelativePathToProject="..\cvode\cvode.vcproj"
 		/>
 	</References>
 	<Files>
@@ -201,6 +200,10 @@
 			</File>
 			<File
 				RelativePath=".\source\mops_flux_postprocessor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\mops_gpc_sensitivity.cpp"
 				>
 			</File>
 			<File
