@@ -223,7 +223,7 @@ void IdealGas::CalcHs(real T, fvector &H) const
     for (i=1; i<n-1; i++) {
         t[i] = (real)i * t[i-1] * T / (real)(i+1);
     }
-    t[n-1] = 1.0 / T;
+    t[n-1] = R;
 
     // Sum terms in polynomial for Hs.
     sumTerms(T, t, n, H);
@@ -850,6 +850,11 @@ void IdealGas::sumTerms(real T, real *t, int n, std::vector<real> &Xs) const
         }
     }
 }
+
+
+
+
+
 
 
 

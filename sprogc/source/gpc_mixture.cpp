@@ -480,6 +480,15 @@ real Mixture::getThermalConductivity(real pre) const{
 	Sprog::Transport::MixtureTransport mt;
 	return mt.getThermalConductivity(Temperature(),pre,*this);
 }
+
+
+const vector<real> Mixture::getMolarEnthalpy(real T){
+	vector<real> enthalpy;
+	Sprog::Thermo::IdealGas ig(*this->Species());
+	ig.CalcHs(T,enthalpy);
+	return enthalpy;
+
+}
 // returns the mixture specific heat capacity in J/Kg K
 real Mixture::getSpecificHeatCapacity(std::vector<real> &massFrac, Sprog::real T){
 	real cp = 0.0;
@@ -491,10 +500,10 @@ real Mixture::getSpecificHeatCapacity(std::vector<real> &massFrac, Sprog::real T
 
 	return cp;
 }
-	
 
 // returns the vector of mixture diffusion coefficient in m^2/s
 const vector<real> Mixture::getMixtureDiffusionCoeff(const real pre) const{
 	Sprog::Transport::MixtureTransport mt;
 	return mt.getMixtureDiffusionCoeff(Temperature(),pre,*this);
 }
+

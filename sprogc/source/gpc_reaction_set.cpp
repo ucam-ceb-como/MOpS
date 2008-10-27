@@ -343,7 +343,7 @@ real ReactionSet::GetMolarProdRates(real T, real density, const real *const x,
 
 
 
-
+// returns the molar production rate given the species mixture
 void ReactionSet::GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) const{		
 	
 	fvector kfrwd,krev,rop,Gs;

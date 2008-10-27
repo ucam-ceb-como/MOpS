@@ -169,10 +169,16 @@ public:
     // Identifies the mixture type for serialisation.
     virtual Serial_MixtureType SerialType() const;
 
-	// routine to return the avg moleculat weight in Kg/mol	
-	real getAvgMolWt(fvector &massFrac);
+	//FUNCTIONS added by Vinod
 
-	//TRANSPORT RELATED FUNCTIONS added by Vinod
+
+	// return the molar enthalpy of all species as a vector J/mol
+	const vector<real> getMolarEnthalpy(real T);
+	// routine to return the avg moleculat weight in Kg/mol	
+	real getAvgMolWt(fvector &massFrac);	
+
+
+	//TRANSPORT RELATED 
 
 
 	real getViscosity() const; // returns the mixture viscosity in Kg/m-s
