@@ -412,7 +412,7 @@ void IdealGas::CalcGs(real T, fvector &G) const
     for (i=2; i!=Thermo::CP_PARAM_COUNT; ++i) {
         t[i] = (real)(i-1) * t[i-1] * T / (real)(i+1);
     }
-    t[H_PARAM_COUNT-1] = T;
+    t[H_PARAM_COUNT-1] = R;
 
     // Sum terms in polynomial for G.
     sumTerms(T, t, n, G);
