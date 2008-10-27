@@ -244,7 +244,7 @@ void IdealGas::CalcHs_RT(real T, fvector &H) const
     for (i=1; i<n-1; i++) {
         t[i] = (real)i * t[i-1] * T / (real)(i+1);
     }
-    t[n-1] = R;
+    t[n-1] = 1.0 / T;
 
     // Sum terms in polynomial for H.
     sumTerms(T, t, n, H);
@@ -333,7 +333,7 @@ void IdealGas::CalcSs_R(real T, fvector &S) const
 
     // Precalculate temperature terms.
     n = Thermo::S_PARAM_COUNT;
-    t[0] = CVDenseDQJac(T);
+    t[0] = log(T);
     t[1] = T;
     for (i=2; i<n-2; i++) {
         t[i] = (real)(i-1) * t[i-1] * T / (real)i;
