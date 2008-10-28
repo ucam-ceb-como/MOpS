@@ -330,10 +330,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\source\mops_methods.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\source\mops_mixture.cpp"
 				>
 			</File>
@@ -417,10 +413,6 @@
 			</File>
 			<File
 				RelativePath=".\include\mops_mechanism.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\mops_methods.h"
 				>
 			</File>
 			<File
