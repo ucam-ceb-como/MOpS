@@ -182,8 +182,8 @@ public:
 
 
 	real getViscosity() const; // returns the mixture viscosity in Kg/m-s
-	real getThermalConductivity(real pre) const; // returns the mixture thermal conductivity in J/m-s-K
-	real getSpecificHeatCapacity(vector<real> &massFrac, real T); // returns the mixture specific heat capacity in J/Kg K
+	real getThermalConductivity(real pre) const; // returns the mixture thermal conductivity in J/m-s-K	
+	real getSpecificHeatCapacity(real T);// returns the mixture specific heat capacity in J/Kg K
 	const vector<real> getMixtureDiffusionCoeff(const real pre)const; // returns the vector of mixture diffusion coefficient in m^2/s
 
 

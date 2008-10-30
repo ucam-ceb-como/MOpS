@@ -489,12 +489,14 @@ const vector<real> Mixture::getMolarEnthalpy(real T){
 	return enthalpy;
 
 }
+
 // returns the mixture specific heat capacity in J/Kg K
-real Mixture::getSpecificHeatCapacity(std::vector<real> &massFrac, Sprog::real T){
+real Mixture::getSpecificHeatCapacity(Sprog::real T){
 	real cp = 0.0;
-	vector<real> cpMols;
+	vector<real> cpMols, massFrac;
 	Sprog::Thermo::IdealGas ig(*this->Species());
 	ig.CalcCps(T,cpMols);
+	GetMassFractions(massFrac);
 	for(int i=0; i != m_species->size(); i++)
 		cp += massFrac[i]*(cpMols[i])/(*m_species)[i]->MolWt();
 
