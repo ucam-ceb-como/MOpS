@@ -1,7 +1,7 @@
 #include "fl_initial.h"
-
+#include<string>
 using namespace FlameLab;
-
+using namespace Sprog::Thermo;
 // sets the velocity in (m/s)
 void InitialConditions::setVelocity(real vel){
 	this->velocity = vel;
@@ -60,3 +60,23 @@ void InitialConditions::setDensity(real dens){
 real InitialConditions::getDensity() const{
 	return this->density;
 }
+//sets the inlet fuel mixture
+void InitialConditions::setFuelMixture(Sprog::Thermo::Mixture mix){
+	nozzleMixture.insert(pair<string,Sprog::Thermo::Mixture>("fuel",mix));
+}
+// sets the inlet oxidizer mixture
+void InitialConditions::setOxidizerMixture(Sprog::Thermo::Mixture mix){
+	nozzleMixture.insert(pair<string,Sprog::Thermo::Mixture>("oxidizer",mix));
+}
+// returns the initial fuel inlet mixture
+Sprog::Thermo::Mixture& InitialConditions::getFuelMixture() {
+	ni = nozzleMixture.find("fuel");
+	return ni->second;
+}
+// retuns the initial oxidizer inlet mixture
+Sprog::Thermo::Mixture& InitialConditions::getOxidizerMixture()  {
+	ni = nozzleMixture.find("oxidizer");
+	return ni->second;
+}
+
+

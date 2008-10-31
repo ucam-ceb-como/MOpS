@@ -29,6 +29,7 @@ namespace FlameLab{
 		void readInlet(Reactor &reac, const CamXML::Element &node);
 		void readNozzleConditions(Reactor &reac, InitialConditions &nozzle, const CamXML::Element &node);
 		void readSolverControl(SolverControl &solver, const CamXML::Element &node);
+		void readInitialGuess(Reactor &reac, const CamXML::Element &node);
 		void readMonitor(const CamXML::Element &node);
 		void prepareConsole(Sprog::Mechanism &mech, FlameLab::Premix &flame);
 		void writeToConsole(Reactor &reac) const;

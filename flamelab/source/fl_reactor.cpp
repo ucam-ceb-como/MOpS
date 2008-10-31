@@ -6,14 +6,8 @@ using namespace Strings;
 using namespace Sprog;
 using namespace std;
 
-
-// base member intialization are for holding the position of mass flux variable and tmperature
-// in the variables vector
-//Reactor::Reactor(const Sprog::Mechanism &mech):MPOS(mech.SpeciesCount()+1),TPOS(mech.SpeciesCount()+2)
-//{
-//	fuel = NULL;
-//	oxidizer = NULL;	
-//}
+int Reactor::nSpecies;
+const Sprog::Mechanism* Reactor::mech;
 
 Reactor::Reactor(){
 	fuel = NULL;
@@ -27,6 +21,9 @@ Reactor::~Reactor(){
 		delete oxidizer;
 }
 
+Reactor::Reactor(const Reactor &copy){
+	*this = copy;
+}
 		
 // sets the reactor with premix or cdflame model
 void Reactor::setReactorModel(ReactorModel modelID){
@@ -62,10 +59,7 @@ void Reactor::setMixture(Sprog::Thermo::Mixture &mix){
 Sprog::Thermo::Mixture& Reactor::getMixture() const{
 	return *mix;
 }
-//returns the mixture pointer
-Sprog::Thermo::Mixture *const Reactor::getMixturePtr() const{
-	return mix;
-}
+
 // set the current mechsnism
 void Reactor::setMechanism(const Sprog::Mechanism &mech){
 	this->mech = &mech;
@@ -85,3 +79,7 @@ int Reactor::getSpeciesCount(){
 	return this->nSpecies;
 }
 
+// sets the guess values for species mass/mole fraction
+void Reactor::setFraction(const std::string &name, FlameLab::real fraction){
+	guessSpecies.insert(pair<std::string, FlameLab::real>(name,fraction));
+}

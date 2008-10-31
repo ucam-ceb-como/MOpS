@@ -18,6 +18,7 @@ void FlameLabIO::readInput(const std::string &fileName, FlameLab::Reactor &reac,
 		readOPConditions(reac, *root);
 		readInlet(reac, *root);
 		readSolverControl(solver, *root);
+		readInitialGuess(reac,*root);
 		readMonitor(*root);
 
 	}
@@ -68,6 +69,7 @@ void FlameLabIO::readGeometry(FlameLab::Reactor &reac, const CamXML::Element &no
 			}else{
 				reac.setAspectRatio(1.0);
 			}
+		
 						
 		}else{
 			throw ErrorHandler("Undefined reactor model\nUse either premix or cdflame\n",100);
@@ -98,7 +100,7 @@ void  FlameLabIO::readOPConditions(FlameLab::Reactor &reac, const CamXML::Elemen
 					reac.setTemptrSolution(Reactor::Isothermal);
 					reac.setTemperature(cdble(subnode->Data()));
 				}else if(!attrValue.compare("adiabatic")){
-					reac.setTemptrSolution(Reactor::Isothermal);
+					reac.setTemptrSolution(Reactor::Adiabatic);
 					reac.setTemperature(cdble(subnode->Data()));
 				}else if(!convertToCaps(attrValue).compare("USERDEFINED")){
 					reac.setTemptrSolution(Reactor::UserDefined);
@@ -118,6 +120,17 @@ void  FlameLabIO::readOPConditions(FlameLab::Reactor &reac, const CamXML::Elemen
 			}else{
 				throw ErrorHandler("Unsupported pressure units\nSupported units are Pa and atm\n",107);
 			}
+		}
+		// get the diffuson setting
+		subnode = opNode->GetFirstChild("diffusion");
+		if(subnode != NULL){
+			string mode = subnode->Data();
+			if(! convertToCaps(mode).compare("OFF") )
+				reac.setDiffusion(reac.OFF);
+			else
+				reac.setDiffusion(reac.ON);
+		}else{
+			reac.setDiffusion(reac.OFF);
 		}
 					
 			
@@ -290,6 +303,68 @@ void FlameLabIO::readSolverControl(FlameLab::SolverControl &solver, const CamXML
 	
 }
 
+void FlameLabIO::readInitialGuess(Reactor &reac, const CamXML::Element &node){
+	CamXML::Element *subnode, *guess;
+	vector<CamXML::Element*> subnodes;
+	vector<CamXML::Element*>::iterator p;
+	const CamXML::Attribute *attr;
+	string attrValue;
+	
+	guess = node.GetFirstChild("initialize");
+
+	if(guess != NULL){
+		subnode = node.GetFirstChild("massfrac");
+		if(subnode != NULL){
+			std::string nodeValue, finalSpecies;
+			real sumFrac=0.0;		
+			subnode->GetChildren("species",subnodes);
+			for(p=subnodes.begin(); p!= subnodes.end(); ++p){
+				attr = (*p)->GetAttribute("name");
+				if(attr != NULL){
+					attrValue = attr->GetValue();
+					nodeValue = (*p)->Data();
+					if(!nodeValue.compare("*"))
+						finalSpecies = attrValue;
+					else{
+						sumFrac += cdble(nodeValue);
+						reac.setFraction(attrValue,cdble(nodeValue));
+					}					
+					
+				}
+
+			}
+
+			reac.setFraction(finalSpecies,1-sumFrac);
+
+		}else{
+			subnode = node.GetFirstChild("molefrac");
+			if(subnode != NULL){
+				std::string nodeValue, finalSpecies;
+				real sumFrac = 0.0;				
+				subnode->GetChildren("species",subnodes);
+				for(p=subnodes.begin(); p!= subnodes.end(); ++p){
+					attr = (*p)->GetAttribute("name");
+					if(attr != NULL){
+						attrValue = attr->GetValue();
+						nodeValue = (*p)->Data();
+						if(!nodeValue.compare("*"))
+							finalSpecies = attrValue;
+						else{
+							sumFrac += cdble(nodeValue);
+							reac.setFraction(attrValue,cdble(nodeValue));
+						}					
+					}
+					
+				}
+
+				reac.setFraction(finalSpecies,1-sumFrac);
+			}
+		}
+	}
+}
+
+			
+
 void FlameLabIO::readMonitor(const CamXML::Element &node){
 
 	CamXML::Element *subnode;
@@ -341,6 +416,8 @@ void FlameLabIO::prepareConsole(Sprog::Mechanism &mech, FlameLab::Premix &flame)
 	
 
 }
+//-------------------------------------- Output routines -----------------------//
+
 
 void FlameLabIO::writeToConsole(Reactor &reac) const{
 	static vector<real> outData;	

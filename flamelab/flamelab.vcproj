@@ -173,6 +173,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\source\fl_cell_interface.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\fl_geometry.cpp"
 				>
 			</File>
@@ -197,6 +201,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\fl_reactor_controls.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\fl_single_cell.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\fl_solver_control.cpp"
 				>
 			</File>
@@ -210,6 +222,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\include\fl_cell_interface.h"
+				>
+			</File>
 			<File
 				RelativePath=".\include\fl_error_handler.h"
 				>
@@ -240,6 +256,14 @@
 			</File>
 			<File
 				RelativePath=".\include\fl_reactor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\fl_reactor_controls.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\fl_single_cell.h"
 				>
 			</File>
 			<File

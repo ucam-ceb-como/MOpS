@@ -1,6 +1,7 @@
 #ifndef FL_INITIAL_H
 #define FL_INITIAL_H
 #include "fl_params.h"
+#include "gpc.h"
 #include <map>
 #include <vector>
 namespace FlameLab{
@@ -10,6 +11,11 @@ namespace FlameLab{
 		enum MassOrMole{
 			Massfraction,
 			Molefraction
+		};
+
+		enum{
+			FUEL=0,
+			OXIDIZER
 		};
 
 		InitialConditions(){}
@@ -35,6 +41,13 @@ namespace FlameLab{
 		MassOrMole getMassOrMole();
 		bool operator==(MassOrMole sp);
 
+		void setFuelMixture(Sprog::Thermo::Mixture mix);
+		void setOxidizerMixture(Sprog::Thermo::Mixture mix);
+
+		Sprog::Thermo::Mixture& getFuelMixture() ;
+		Sprog::Thermo::Mixture& getOxidizerMixture() ;
+
+
 	private:
 
 		real velocity;
@@ -43,7 +56,9 @@ namespace FlameLab{
 
 		MassOrMole mom;
 		std::map<std::string,real> species;
-		vector<real> massFracs;
+		vector<real> massFracs;	
+		map<string,Sprog::Thermo::Mixture> nozzleMixture;
+		map<string,Sprog::Thermo::Mixture>::iterator ni;
 		
 	};
 }

@@ -12,6 +12,7 @@
 using namespace std;
 using namespace FlameLab;
 using namespace Sprog;
+
 int main(){
 	string fChem("chem.inp");
 	string fThermo("therm.dat");
@@ -21,7 +22,7 @@ int main(){
 	Reactor *flame = NULL;
 	SolverManager *solver = NULL;
 	SolverControl *solverControl = new SolverControl();
-	Mechanism mech;
+	static Mechanism mech;
 	
 	
 	try{

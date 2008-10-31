@@ -1,6 +1,7 @@
 #include "fl_geometry.h"
 using namespace FlameLab;
 
+
 // constructor
 Geometry::Geometry(int n){
 	nCell = n;
