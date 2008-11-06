@@ -1,3 +1,44 @@
+/*
+  Author(s):      Vinod Janardhanan (vj231)
+  Project:        flameLab (premix solver)
+  Sourceforge:    http://sourceforge.net/projects/mopssuite
+  
+  Copyright (C) 2008 Vinod M Janardhanan.
+
+  File purpose:
+	This is the main file for flameLab. This file drives both
+	premix flame code as well as counter flow diffusion flame code
+  Licence:
+    This file is part of "flameLab".
+
+    flameLab is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Dr Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
+*/
+
 #include <string>
 #include <iostream>
 #include <map>
@@ -40,54 +81,12 @@ int main(){
 		Thermo::Mixture mix(mech.Species());
 		//cout << boolalpha << (*flame==flame->PremixFlame) << endl;
 		// if premix reactor create a premix object and assign to the base class reactor
-		if( (*flame==flame->PremixFlame) || (*flame==flame->Plug) ){
+		if( flame->getReactorModel() == flame->PremixFlame || flame->getReactorModel() == flame->Plug ){
 			solver = new Premix(mech);
 			//solver->initSolver(mech,mix,*solverControl,*flame);
 			solver->solve(mech,*solverControl,*flame,*fio);
-			//Premix p(mech);
-			//premixFlame = &p;
-			
-			//premixFlame->initVariables(mech,flame->getFuelInletConditions(),mix);
-		}			
 
-		//solverControl->initSolver(*flame,mech,mix);
-		
-		//testing part for input parameters
-		//cout << "reactor parameters" << endl;
-		//cout << "aspect ratio " << flame->getAspectRatio() <<endl;
-		//vector<FlameLab::real> dz = flame->getGeometry();
-		//for(int i =0 ; i< flame->getnCells(); i++)
-		//	cout << dz[i] << endl;						
-		//cout << flame->getTemperature() << endl;
-		//cout << flame->getnCells() << endl;
-		//cout << flame->getLength() << endl;
-		//cout << flame->getPressure() << endl;
-		//cout << "fuel inlet conditions\n";
-		//InitialConditions ic = flame->getFuelInletConditions();
-		//cout << ic.getVelocity() << endl;
-		//cout << ic.getTemperature() << endl;
-		//map<std::string,real> inSpec = ic.getFraction();
-		//map<std::string,real>::iterator p;
-		//p = inSpec.begin();
-		//while(p != inSpec.end()){
-		//	cout << p->first << "  " << p->second << endl;
-		//	p++;
-		//}		
-		//cout << "oxi inlet conditions\n";
-		//ic = flame->getOxidizerInletConditions();
-		//cout << ic.getVelocity() << endl;
-		//cout << ic.getTemperature() << endl;
-		//inSpec = ic.getFraction();		
-		//p = inSpec.begin();
-		//while(p != inSpec.end()){
-		//	cout << p->first << "  " << p->second << endl;
-		//	p++;
-		//}
-		//cout << "solver parameters \n";
-		//cout << solverControl->getATol() << endl;
-		//cout << solverControl->getRTol() << endl;
-		//cout << solverControl->getIniStep() << endl;
-		//cout << solverControl->getMaxStep() << endl;
+		}			
 		
 				
 	}catch(ErrorHandler rh){

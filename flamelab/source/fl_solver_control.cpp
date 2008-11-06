@@ -1,3 +1,44 @@
+/*
+  Author(s):      Vinod Janardhanan (vj231)
+  Project:        flameLab (premix solver)
+  Sourceforge:    http://sourceforge.net/projects/mopssuite
+  
+  Copyright (C) 2008 Vinod M Janardhanan.
+
+  File purpose:
+	This class can be used to control the behavior of the solver
+	based on the controls defined in the input file
+  Licence:
+    This file is part of "flameLab".
+
+    flameLab is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Dr Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
+*/
+
 #include "fl_solver_control.h"
 using namespace FlameLab;
 //sets the absolute tolerence
@@ -50,11 +91,27 @@ real SolverControl::getTimeStep() const{
 	return this->timeStep;
 }
 //sets the solution mode such as steady or transient
-void SolverControl::setSolMode(FlameLab::SolverControl::SolutionMode mode) {
+void SolverControl::setSolMode(int mode) {
 	this->solMode = mode;
 }
 //returns the solution mode steady/transient
 
-bool SolverControl::operator ==(SolverControl::SolutionMode sm){
-	return this->solMode == sm;
+//bool SolverControl::operator ==(SolverControl::SolutionMode sm){
+//	return this->solMode == sm;
+//}
+
+void SolverControl::setOutInterval(std::map<real,real> interval, real dt){
+	outInterval.insert(pair<map<real,real>,real>(interval,dt));
+}
+
+const int SolverControl::getIntervalCount() const{
+	return outInterval.size();
+}
+
+const map<map<real,real>,real>& SolverControl::getOutputInterval() const{
+	return outInterval;
+}
+
+int SolverControl::getSolMode() const{
+	return this->solMode;
 }

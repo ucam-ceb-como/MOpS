@@ -1,3 +1,42 @@
+/*
+  Author(s):      Vinod Janardhanan (vj231)
+  Project:        flameLab (premix solver)
+  Sourceforge:    http://sourceforge.net/projects/mopssuite
+  
+  Copyright (C) 2008 Vinod M Janardhanan.
+
+  File purpose:
+	This class manages the reading of input file flame.xml
+  Licence:
+    This file is part of "flameLab".
+
+    flameLab is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Dr Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
+*/
 #include "fl_io.h"
 #include "string_functions.h"
 #include "fl_error_handler.h"
@@ -96,14 +135,14 @@ void  FlameLabIO::readOPConditions(FlameLab::Reactor &reac, const CamXML::Elemen
 			attr = subnode->GetAttribute("condition");
 			if( attr != NULL){
 				attrValue = attr->GetValue();
-				if(!attrValue.compare("isothermal")) {
-					reac.setTemptrSolution(Reactor::Isothermal);
+				if(!attrValue.compare("isothermal")) {					
+					reac.setEnergModel(reac.Isothermal);
 					reac.setTemperature(cdble(subnode->Data()));
 				}else if(!attrValue.compare("adiabatic")){
-					reac.setTemptrSolution(Reactor::Adiabatic);
+					reac.setEnergModel(reac.Adiabatic);
 					reac.setTemperature(cdble(subnode->Data()));
-				}else if(!convertToCaps(attrValue).compare("USERDEFINED")){
-					reac.setTemptrSolution(Reactor::UserDefined);
+				}else if(!convertToCaps(attrValue).compare("USERDEFINED")){					
+					reac.setEnergModel(reac.UserDefined);
 				}
 				
 			}
@@ -260,7 +299,9 @@ void FlameLabIO::readNozzleConditions(FlameLab::Reactor &reac,
 void FlameLabIO::readSolverControl(FlameLab::SolverControl &solver, const CamXML::Element &node){
 
 	CamXML::Element *subnode, *solverNode;	
-	const CamXML::Attribute *attr;
+	vector<CamXML::Element*> subnodes;
+	vector<CamXML::Element*>::const_iterator p;
+	const CamXML::Attribute *attr, *attr2;
 	string attrValue;
 	solverNode = node.GetFirstChild("solver");
 	if(solverNode != NULL){
@@ -297,27 +338,56 @@ void FlameLabIO::readSolverControl(FlameLab::SolverControl &solver, const CamXML
 			solver.setMaxStep(cdble(subnode->Data()));
 		else
 			solver.setMaxStep(0.0);
-		
-	}
 
+		subnode = solverNode->GetFirstChild("tMax");
+		if(subnode != NULL)
+			solver.setMaxTime(cdble(subnode->Data()));
+
+		subnode = solverNode->GetFirstChild("output");
+		if(subnode != NULL) subnode->GetChildren("interval",subnodes);
+
+
+		string from, to;
+		std::map<real,real> interval;
+		for(p=subnodes.begin(); p < subnodes.end(); p++){
+
+			attr = (*p)->GetAttribute("from");
+			attr2 = (*p)->GetAttribute("to");
+
+			if(attr != NULL){
+				string nodeValue;
+				from = attr->GetValue();
+				to = attr2->GetValue();
+				if(! to.compare("*")){
+					nodeValue = (*p)->Data();
+					interval.insert(pair<real,real>(cdble(from),cdble("0")));
+					solver.setOutInterval(interval,cdble(nodeValue));
+				}else{
+					nodeValue = (*p)->Data();
+					interval.insert(pair<real,real>(cdble(from),cdble(to)));
+					solver.setOutInterval(interval,cdble(nodeValue));
+				}
+			}
+
+		}
+
+	}
 	
 }
 
 void FlameLabIO::readInitialGuess(Reactor &reac, const CamXML::Element &node){
-	CamXML::Element *subnode, *guess;
+	CamXML::Element *subnode;
 	vector<CamXML::Element*> subnodes;
-	vector<CamXML::Element*>::iterator p;
+	vector<CamXML::Element*>::const_iterator p;
 	const CamXML::Attribute *attr;
-	string attrValue;
+	string attrValue, nodeValue, finalSpecies;
 	
-	guess = node.GetFirstChild("initialize");
-
-	if(guess != NULL){
-		subnode = node.GetFirstChild("massfrac");
+	subnode = node.GetFirstChild("initialize");
+	if(subnode != NULL){
+		subnode = subnode->GetFirstChild("massfrac");
 		if(subnode != NULL){
-			std::string nodeValue, finalSpecies;
-			real sumFrac=0.0;		
 			subnode->GetChildren("species",subnodes);
+			real sumFrac = 0.0;
 			for(p=subnodes.begin(); p!= subnodes.end(); ++p){
 				attr = (*p)->GetAttribute("name");
 				if(attr != NULL){
@@ -328,20 +398,15 @@ void FlameLabIO::readInitialGuess(Reactor &reac, const CamXML::Element &node){
 					else{
 						sumFrac += cdble(nodeValue);
 						reac.setFraction(attrValue,cdble(nodeValue));
-					}					
-					
+					}
 				}
-
 			}
-
 			reac.setFraction(finalSpecies,1-sumFrac);
-
 		}else{
-			subnode = node.GetFirstChild("molefrac");
+			subnode = subnode->GetFirstChild("molefrac");
 			if(subnode != NULL){
-				std::string nodeValue, finalSpecies;
-				real sumFrac = 0.0;				
 				subnode->GetChildren("species",subnodes);
+				real sumFrac = 0.0;
 				for(p=subnodes.begin(); p!= subnodes.end(); ++p){
 					attr = (*p)->GetAttribute("name");
 					if(attr != NULL){
@@ -352,14 +417,13 @@ void FlameLabIO::readInitialGuess(Reactor &reac, const CamXML::Element &node){
 						else{
 							sumFrac += cdble(nodeValue);
 							reac.setFraction(attrValue,cdble(nodeValue));
-						}					
+						}
 					}
-					
 				}
-
 				reac.setFraction(finalSpecies,1-sumFrac);
 			}
 		}
+
 	}
 }
 
@@ -374,7 +438,20 @@ void FlameLabIO::readMonitor(const CamXML::Element &node){
 	string attrValue;
 
 	subnode = node.GetFirstChild("monitor");
-	if(subnode != NULL){
+	attr = subnode->GetAttribute("mode");
+	if( attr != NULL){
+		attrValue = attr->GetValue();
+		if( ! convertToCaps(attrValue).compare("ON"))
+			setMonitorSwtich(ON);
+		else if (! convertToCaps(attrValue).compare("OFF"))
+			setMonitorSwtich(OFF);
+		else
+			throw ErrorHandler("Unknown mode for monitor optionn\nUse ON or OFF\n",301);
+	}else{
+		throw ErrorHandler("Monitor mode need to be specified\n",302);
+	}
+
+	if(subnode != NULL){		
 		subnode->GetChildren("species",subnodes);
 		for(p=subnodes.begin(); p!= subnodes.end(); ++p){
 			attr = (*p)->GetAttribute("name");
@@ -386,11 +463,22 @@ void FlameLabIO::readMonitor(const CamXML::Element &node){
 	}
 }
 
+void FlameLabIO::setMonitorSwtich(int n){
+	monitorSwitch = n;
+}
 
+const int& FlameLabIO::getMonitorSwitch() const{
+	return monitorSwitch;
+}
+
+//-------------------------------------- Output routines -----------------------//
+//********************************************************************************//
 void FlameLabIO::prepareConsole(Sprog::Mechanism &mech, FlameLab::Premix &flame){
+
 
 	vector<string> header;
 	consoleMask.clear();
+
 
 	header.push_back("AxlPsn(m)");
 	header.push_back("Temp (K)");
@@ -411,12 +499,12 @@ void FlameLabIO::prepareConsole(Sprog::Mechanism &mech, FlameLab::Premix &flame)
 	//int nColumns = 6 > (monitor.size()+2) ? 6: (monitor.size()+2);
 	flameLabConsole.PrintDivider();
 	flameLabConsole.PrintRow(header);
-	flameLabConsole.PrintDivider();
+	flameLabConsole.PrintDivider();	
+			
 
-	
 
 }
-//-------------------------------------- Output routines -----------------------//
+
 
 
 void FlameLabIO::writeToConsole(Reactor &reac) const{
@@ -439,5 +527,7 @@ void FlameLabIO::writeToConsole(Reactor &reac) const{
 	}
 	outData.push_back(sum);
 	flameLabConsole.PrintRow(outData,consoleMask);
+	
+
 	
 }

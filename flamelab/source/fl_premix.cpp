@@ -1,3 +1,46 @@
+/*
+  Author(s):      Vinod Janardhanan (vj231)
+  Project:        flameLab (premix solver)
+  Sourceforge:    http://sourceforge.net/projects/mopssuite
+  
+  Copyright (C) 2008 Vinod M Janardhanan.
+
+  File purpose:
+	This is the premix class. This class manages all functions related
+	to premix problem solutions. This class contains implemention of 
+	solver call for both steady state and transient problems. The residual
+	functions are also defined in this class. 
+  Licence:
+    This file is part of "flameLab".
+
+    flameLab is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Dr Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
+*/
+
 #include "fl_premix.h"
 #include "gpc_idealgas.h"
 #include <iostream>
@@ -44,7 +87,7 @@ void Premix::initVariables(Reactor &reac)
 		mi++;
 	}
 	 //conver to mass fractions if the inputs are in mole fractions.		
-	if(ic==ic.getMassOrMole()){ // true if mole fraction
+	if(ic.Molefraction == ic.getMassOrMole()){ // true if mole fraction
 		unsigned int i;
 		spv = mech.Species();		
 		//calculate everage molecular mass
@@ -118,6 +161,8 @@ void Premix::initTransVector(FlameLab::Reactor &reac){
 			sc.setVelocity(variables[VEL]);
 			sc.setPressure(reac.getPressure());
 			sc.setMassFlux(variables[MFLX]);
+
+			cells.push_back(sc);
 		}
 		//reset the variables based on cells
 		variables.clear();
@@ -139,6 +184,27 @@ void Premix::initTransVector(FlameLab::Reactor &reac){
 
 //call premix to solve the problem
 void Premix::solve(Sprog::Mechanism &mech, FlameLab::SolverControl &sc, Reactor &reac, FlameLabIO &io){
+
+	ptrToReactor = &reac;
+	// set the reactor run model
+	if(sc.getSolMode() ==sc.steadyState){
+		if(reac.getReactorModel() == reac.Plug) reac.setReactorRunModel(reac.NDS);
+		if(reac.getReactorModel() == reac.PremixFlame){
+			if(reac.getDiffusion())
+				reac.setReactorRunModel(reac.WDS);
+			else
+				reac.setReactorRunModel(reac.NDS);
+		}
+	}else if(sc.getSolMode() ==sc.transient){
+		if(reac.getReactorModel() ==reac.Plug) reac.setReactorRunModel(reac.NDT);
+		if(reac.getReactorModel() == reac.PremixFlame){
+			if(reac.getDiffusion())
+				reac.setReactorRunModel(reac.WDT);
+			else
+				reac.setReactorRunModel(reac.NDT);
+		}
+	}
+
 	
 	int nCells;
 	nCells = reac.getnCells();	
@@ -146,33 +212,15 @@ void Premix::solve(Sprog::Mechanism &mech, FlameLab::SolverControl &sc, Reactor 
 	reac.setMixture(mix);
 	reac.setMechanism(mech);
 	reac.setSpaceToTime(reac.OFF);
-	initSolver(sc,reac);
-	// prepare for console out
-	io.prepareConsole(mech,*this);
+
+
 	// this call is for a marching problem
 	if(sc.getMaxTime()<=0)
 		tMax = 100000.0;
 	else
 		tMax = sc.getMaxTime();
 
-	// set the reactor run model
-	if(sc==sc.steadyState){
-		if(reac == reac.Plug) reac.setReactorRunModel(reac.NDS);
-		if(reac == reac.PremixFlame){
-			if(reac.getDiffusion())
-				reac.setReactorRunModel(reac.WDS);
-			else
-				reac.setReactorRunModel(reac.NDS);
-		}
-	}else if(sc==sc.transient){
-		if(reac ==reac.Plug) reac.setReactorRunModel(reac.NDT);
-		if(reac == reac.PremixFlame){
-			if(reac.getDiffusion())
-				reac.setReactorRunModel(reac.WDT);
-			else
-				reac.setReactorRunModel(reac.NDT);
-		}
-	}
+	
 
 	/////////////////////////////////////////////////////////
 	///////////////    Solver Calls  ////////////////////////
@@ -181,6 +229,10 @@ void Premix::solve(Sprog::Mechanism &mech, FlameLab::SolverControl &sc, Reactor 
 		reac.getReactorRunModel() == reac.WDS){
 		
 		reac.setSpaceToTime(reac.OFF);
+		//initialize the solver
+		initSolver(sc,reac);
+		// prepare for console out
+		if(io.getMonitorSwitch() == io.ON) io.prepareConsole(mech,*this);
 		for(int i=0; i< nCells; i++){
 			reac.setAxialPosition(i);
 			while (currentTime < tMax ){
@@ -195,10 +247,10 @@ void Premix::solve(Sprog::Mechanism &mech, FlameLab::SolverControl &sc, Reactor 
 			// save the solution for time marching
 			saveSolution(NV_DATA_S(solVect),reac);
 			//save the current mixture
-			Sprog::Thermo::Mixture newMix = mix;
+			//Sprog::Thermo::Mixture newMix = mix;
 			currentTime = 0.0;
 			// output to console
-			io.writeToConsole(reac);
+			if(io.getMonitorSwitch()==io.ON) io.writeToConsole(reac);
 			//reinitialize the solver for next cell
 			reInitSolver(sc);
 			
@@ -212,19 +264,48 @@ void Premix::solve(Sprog::Mechanism &mech, FlameLab::SolverControl &sc, Reactor 
 	if (reac.getReactorRunModel() == reac.WDS ||
 		reac.getReactorRunModel() == reac.WDT ||
 		reac.getReactorRunModel() == reac.NDT )
+	
 	{
 
-		initSolver(sc,reac);	
-		currentTime = 0.0;
-		while (currentTime < tMax ){
+		initSolver(sc,reac);			
+		cout.setf(ios::scientific);
+		cout.width(6);
 
-			int CVodeError = CVode(cvode_mem,tMax,solVect,&currentTime,CV_ONE_STEP);
-			if(CVodeError < 0) {
-				string error = CVodeGetReturnFlagName(CVodeError);
-				error += "\n";
-				throw ErrorHandler(error, CVodeError);
-			}
-		}	
+		map<map<real,real>,real> outPut = sc.getOutputInterval();
+		map<map<real,real>,real>::iterator outPutIter;
+		outPutIter = outPut.begin();
+
+		map<real,real> fromTo;
+		map<real,real>::iterator ftIter;
+		real nextOut = 0.0;
+	
+
+		while(outPutIter != outPut.end()){
+			
+			fromTo = outPutIter->first;
+			ftIter = fromTo.end();
+			ftIter--;
+			real tOut = ftIter->second;
+			if(tOut == 0) tOut=tMax;
+			real delta_t = outPutIter->second;
+			nextOut += delta_t;
+			do{
+				int CVodeError = CVode(cvode_mem,nextOut,solVect,&currentTime,CV_NORMAL);
+				if(CVodeError < 0) {
+					string error = CVodeGetReturnFlagName(CVodeError);
+					error += "\n";
+					throw ErrorHandler(error, CVodeError);
+				}else{
+					if(io.getMonitorSwitch() == io.ON) 
+						cout << currentTime << endl;
+					nextOut += delta_t;
+				}
+			}while(currentTime <= tOut);
+
+			outPutIter++;
+		}			
+
+
 	}
 
 	CVodeFree(&cvode_mem);
@@ -245,10 +326,12 @@ void Premix::initSolver(SolverControl &sc, Reactor &reac){
 	// current integration time
 	currentTime = 0.0;	
 	// set the reactor pointer
-	ptrToReactor = &reac;
+	//ptrToReactor = &reac;
 
 	
-	if (reac.getSpaceToTime()== reac.OFF)
+	if ((reac.getReactorRunModel() == reac.WDS ||
+		reac.getReactorRunModel() == reac.NDS) &&
+		reac.getSpaceToTime() == reac.OFF )
 	{
 		nEq = mech.SpeciesCount() + 2;
 		//initialize the solution vector and update mixture mixture
@@ -266,6 +349,16 @@ void Premix::initSolver(SolverControl &sc, Reactor &reac){
 		solVect = NULL;
 		solVect = N_VMake_Serial(nEq,&variables[0]);
 
+
+		NV_DATA_S(solVect);
+		// nVector for derivatives
+		//derivative = N_VNew_Serial(nEq);	
+		aTol = sc.getATol();	
+		//initialize integrator memory
+		CVodeMalloc(cvode_mem,&residual,currentTime,solVect,CV_SS,sc.getRTol(),(void*)&aTol);
+		
+		CVDense(cvode_mem,nEq);
+
 	}else if(reac.getSpaceToTime() == reac.ON){
 		if( ! (reac.getReactorRunModel() == reac.WDT ||	reac.getReactorRunModel() == reac.NDT)){
 			CVodeFree(&cvode_mem);
@@ -277,30 +370,36 @@ void Premix::initSolver(SolverControl &sc, Reactor &reac){
 		solVect = NULL;
 		solVect = N_VMake_Serial(nEq,&variables[0]);
 
-	}
-			
-	NV_DATA_S(solVect);
-	// nVector for derivatives
-	//derivative = N_VNew_Serial(nEq);	
-	aTol = sc.getATol();	
-	//initialize integrator memory
-	CVodeMalloc(cvode_mem,&residual,currentTime,solVect,CV_SS,sc.getRTol(),(void*)&aTol);
-
-	// set the memory pointer to user defined data
-	CVodeSetFdata(cvode_mem,(void*)this);
-
-	if(reac.getSpaceToTime() == reac.OFF)
-		// dense need to be set for space marching		
-		CVDense(cvode_mem,nEq);
-	else{
+		NV_DATA_S(solVect);
+		aTol = sc.getATol();	
+		CVodeMalloc(cvode_mem,&trResidual,currentTime,solVect,CV_SS,sc.getRTol(),(void*)&aTol);
+		// Jacobian set up
 		int nUp = (nVar*2) + 7;
 		int nLo = (nVar*2) + 7;
 		CVBand(cvode_mem,nEq,nUp,nLo);
+
+	}else if( reac.getSpaceToTime() == reac.OFF && 
+		reac.getReactorRunModel() == reac.WDT || reac.getReactorRunModel() == reac.NDT ){
+		cvode_mem = NULL;
+		cvode_mem = CVodeCreate(CV_BDF,CV_NEWTON);	
+		nEq = (mech.SpeciesCount()+2)*reac.getnCells();		
+		initTransVector(reac);
+		ptrToSlnVector = &variables[0];
+		solVect = NULL;
+		solVect = N_VMake_Serial(nEq,&variables[0]);
+
+		NV_DATA_S(solVect);
+		aTol = sc.getATol();	
+		CVodeMalloc(cvode_mem,&trResidual,currentTime,solVect,CV_SS,sc.getRTol(),(void*)&aTol);
+		// Jacobian set up
+		int nUp = (nVar*2) + 7;
+		int nLo = (nVar*2) + 7;
+		CVBand(cvode_mem,nEq,nUp,nLo);
+
 	}
 
-
-	
-	//set the solver controllers
+	// set the memory pointer to user defined data
+	CVodeSetFdata(cvode_mem,(void*)this);
 	//set initial step size
 	CVodeSetInitStep(cvode_mem,sc.getIniStep());
 	// set the max step size
@@ -322,10 +421,12 @@ void Premix::updateVariables(FlameLab::real *y, void *object){
 	vector<real> massFracs;
 	Premix *p = static_cast<Premix*>(object);
 
-	//if (p->ptrToReactor->getReactorRunModel() == p->ptrToReactor->WDS ||
-	//	p->ptrToReactor->getReactorRunModel() == p->ptrToReactor->NDS){
 
-	if( p->ptrToReactor->getSpaceToTime() == p->ptrToReactor->OFF){
+
+	if( p->ptrToReactor->getSpaceToTime() == p->ptrToReactor->OFF &&
+		(p->ptrToReactor->getReactorRunModel() == p->ptrToReactor->WDS ||
+		p->ptrToReactor->getReactorRunModel() == p->ptrToReactor->NDS ))
+	{
 
 		/*-------------------------------------
 		 This is a single cell marching problem
@@ -350,8 +451,8 @@ void Premix::updateVariables(FlameLab::real *y, void *object){
 		// calculate the velocity
 		variables[VEL] = variables[MFLX]/variables[DENS];
 	}
-	if( (p->ptrToReactor->getSpaceToTime() == p->ptrToReactor->ON) && 
-		(p->ptrToReactor->getReactorRunModel() == p->ptrToReactor->WDS) ||
+	if( ((p->ptrToReactor->getSpaceToTime() == p->ptrToReactor->ON) && 
+		(p->ptrToReactor->getReactorRunModel() == p->ptrToReactor->WDS) )||
 		 p->ptrToReactor->getReactorRunModel() == p->ptrToReactor->WDT  ||
 		 p->ptrToReactor->getReactorRunModel() == p->ptrToReactor->NDT   ) {
 		
@@ -382,7 +483,9 @@ void Premix::updateVariables(FlameLab::real *y, void *object){
 			vector<real> dz = p->ptrToReactor->getGeometry();
 			for(int i=1; i<p->ptrToReactor->getnCells(); i++){
 				real pre = p->ptrToReactor->getPressure();
-				p->cells[i].evaluateFluxes(pre,dz);
+				real mfW = p->cells[i-1].getMassFlux();
+				real mfP = p->cells[i].getMassFlux();
+				p->cells[i].evaluateFluxes(pre,mfW,mfP,dz);
 			}
 		}
 	}
@@ -392,27 +495,26 @@ void Premix::updateVariables(FlameLab::real *y, void *object){
 int Premix::residual(double time,N_Vector y, N_Vector ydot, void *object){
 
 	Premix *p = static_cast<Premix*>(object);		
-	
-
 	p->updateVariables(NV_DATA_S(y), object);
 	
-	switch (p->ptrToReactor->getSpaceToTime()){
 
-		case p->ptrToReactor->OFF :
+	scMassFlux(time, NV_DATA_S(y), NV_DATA_S(ydot), object);
+	scSpeciesResidual(time, NV_DATA_S(y), NV_DATA_S(ydot), object);
+	scEnergyResidual(time, NV_DATA_S(y), NV_DATA_S(ydot), object);
 
-			scMassFlux(time, NV_DATA_S(y), NV_DATA_S(ydot), object);
-			scSpeciesResidual(time, NV_DATA_S(y), NV_DATA_S(ydot), object);
-			scEnergyResidual(time, NV_DATA_S(y), NV_DATA_S(ydot), object);
-			break;
-
-		default :
-			mcResidual(time,NV_DATA_S(y), NV_DATA_S(ydot), object);
-			boundary(time,NV_DATA_S(y), NV_DATA_S(ydot), object);
-	}	
 	return 0;
 	
 }
 
+int Premix::trResidual(double time,N_Vector y, N_Vector ydot, void *object){
+
+	Premix *p = static_cast<Premix*>(object);			
+	p->updateVariables(NV_DATA_S(y), object);
+	mcResidual(time,NV_DATA_S(y), NV_DATA_S(ydot), object);
+	boundary(time,NV_DATA_S(y), NV_DATA_S(ydot), object);
+
+	return 0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////// SINGLE CELLS RESIDUAL DEFINTIONS FOLLOW/////////////////////////////////
@@ -516,10 +618,10 @@ void Premix::scSpeciesResidual(FlameLab::real &time, FlameLab::real *y, FlameLab
 // single cell residual definition for temperature solution
 void Premix::scEnergyResidual(FlameLab::real &time, FlameLab::real *y, FlameLab::real *ydot, void *object){
 	Premix *p = static_cast<Premix*>(object);
-	if( !(*p->ptrToReactor != p->ptrToReactor->Isothermal)) {
+	if( p->ptrToReactor->getEnergyModel() == p->ptrToReactor->Isothermal) {
 		
 		ydot[p->TEMP] = 0.0;
-	}else if(!(*p->ptrToReactor != p->ptrToReactor->Adiabatic)){
+	}else if(p->ptrToReactor->getEnergyModel() == p->ptrToReactor->Adiabatic ){
 		int axPos = p->ptrToReactor->getAxialPosition();
 		
 
@@ -556,7 +658,7 @@ void Premix::scEnergyResidual(FlameLab::real &time, FlameLab::real *y, FlameLab:
 				source += wdot[l]*hs[l];
 			}
 
-			source /= p->variables[p->DENS]*cpP;
+			source /= (p->variables[p->DENS]*cpP);
 
 		}else{
 			real delta = 0.5*(dz[axPos-1]+dz[axPos]);
@@ -580,7 +682,7 @@ void Premix::scEnergyResidual(FlameLab::real &time, FlameLab::real *y, FlameLab:
 				source += wdot[l]*hs[l];
 			}
 
-			source /= p->variables[p->DENS]*cpP;
+			source /= (p->variables[p->DENS]*cpP);
 
 
 		}
@@ -595,113 +697,114 @@ void Premix::scEnergyResidual(FlameLab::real &time, FlameLab::real *y, FlameLab:
 
 void Premix::mcResidual(FlameLab::real &time, FlameLab::real *y, FlameLab::real *ydot, void *object){
 
-	Premix *p = static_cast<Premix*>(object);
-	vector<real> jW,jE;
-	vector<real> hW,hE,hP;
-	vector<real> wdot;
 
+	Premix *p = static_cast<Premix*>(object);
 	const Mechanism *mech = p->ptrToReactor->getMechanism();
 	const Sprog::SpeciesPtrVector *spv = p->ptrToReactor->getMixture().Species();
-	// get the number of cells
-	int nCells = p->ptrToReactor->getnCells();	
-	vector<real> dz = p->ptrToReactor->getGeometry();
-	
-	real diffusion, convection, source, heatSource;
-	real sumEnthFlxW, sumEnthFlxE;
-	int mIndex_, mIndex;
-	int spIndex_, spIndex;
-	int TIndex_, TIndex;
 
+	
+
+	// index variables for species,mass and temperature
+	int  mIndex, mIndex_;
+	int  spIndex, spIndex_;
+	int  TIndex, TIndex_;
+
+
+	vector<real> jW,jE; // vector for species flux
+	vector<real> hW,hE,hP; // vecotor of enthalpies
+	vector<real> wdot; // vector for rate of production
+
+	vector<real> dz = p->ptrToReactor->getGeometry();// Geometry information
+	int nCells = p->ptrToReactor->getnCells();	// number of finite volume cells
+
+	real diffusion, convection, source, heatSource; // source terms
+	real sumEnthFlxW, sumEnthFlxE; // sum of energy flux terms
 	real density; // present cell density
-	vector<SingleCell>::iterator scp;
-	scp = p->cells.begin();	
 	
-	// loop over the cells
-	for(int axPos =0; axPos <nCells; axPos++){
-		// for the present cell only the west face properties are defined.
-		// inorder to get the east cell properties, one need to get the 
-		// face property of the next cell
+	vector<SingleCell>::iterator scp;
+	scp = p->cells.begin()+1;	
 
-		// check for boundary cells
-		if(axPos > 0 && axPos <(nCells-1)){
-			// mass flux storage indexes
-			mIndex_ = ( (axPos-1)*p->nVar ) + p->MFLX;
-			mIndex = (axPos*p->nVar) + p->MFLX;
-			// get the species diffusion fluxes
+	for(int axPos =1; axPos < nCells-1; axPos++){
+		//species fluxes
+		jW = scp->getFaceSpFluxes();	// west cell face flux for the present cell
+		jE = (scp+1)->getFaceSpFluxes(); // east cell face flux for the present cell
+		mech->Reactions().GetMolarProdRates(scp->getMixture(),wdot);// molar production rates
+		// get the cell density
+		density = scp->getMixture().MassDensity();
+
+		// get the face mass fluxes
+		real mfW = scp->getFaceMassFlux();
+		real mfE = (scp+1)->getFaceMassFlux();
+
+
+		mIndex_ = ((axPos-1)*p->nVar)  + p->MFLX;
+		mIndex  = (axPos*p->nVar) + p->MFLX;
+		
+		// ========================Species residual definitions ====================
+		for(int l=0; l<p->nSpecies; l++){
+			spIndex =  (axPos*p->nVar) +l;
+			spIndex_ = ((axPos-1)*p->nVar) + l;
+
+			diffusion = (jW[l]-jE[l])/(density*dz[axPos]);
 			
-			jW = scp->getFaceSpFluxes();	// west cell face flux for the present cell
-			jE = (scp+1)->getFaceSpFluxes(); // east cell face flux for the present cell
+			convection = (mfW*y[spIndex_] - mfE*y[spIndex])/
+				(density*dz[axPos]);
 
-			// species residual definitions
-			// get the molar production rates for the present cell
-			mech->Reactions().GetMolarProdRates(scp->getMixture(),wdot);
+			source = (*spv)[l]->MolWt()*wdot[l]/density;
 
+			ydot[spIndex] = diffusion + convection + source;	
 
-			// enthalpy flux		
-			hW = scp->getFaceMolarEnthalpy();	// west cell face enthalpy for the present cell
-			hE = (scp+1)->getFaceMolarEnthalpy(); // east cell face enthalpy for the present cell
-
-			// get the molar enthalpy for heat source calculation
-			hP = scp->getMixture().getMolarEnthalpy(y[p->TEMP]);
-			// get the cell density
-			density = scp->getMixture().MassDensity();
+		}//========== End of Species residuals=======================================
+		
+		//===============      mass flux  residual ==================================
+			
+		ydot[mIndex] = scp->getVelocity()*( y[mIndex_] - y[mIndex])/dz[axPos];
+		
+		//===================  temperature residual ================================
+		TIndex  = (axPos*p->nVar) + p->TEMP;			
+		TIndex_ = ((axPos-1)*p->nVar) + p->TEMP;
+		if (p->ptrToReactor->getEnergyModel() == p->ptrToReactor->Isothermal ) {
+			ydot[TIndex] = 0.0; //isothermal
+		}else if(p->ptrToReactor->getEnergyModel() == p->ptrToReactor->Adiabatic) {
 			sumEnthFlxW = 0.0;
 			sumEnthFlxE = 0.0;
 			heatSource = 0.0;
-			for(int l=0; l<p->nSpecies; l++){
+			// enthalpy flux		
+			hW = scp->getFaceMolarEnthalpy();	// west cell face enthalpy for the present cell
+			hE = (scp+1)->getFaceMolarEnthalpy(); // east cell face enthalpy for the present cell
+			// get the molar enthalpy for heat source calculation
+			hP = scp->getMixture().getMolarEnthalpy(y[p->TEMP]);
 
-				diffusion = (jW[l]-jE[l])/(density*dz[axPos]);
+			// cell center specific heat for the west cell
+			real cpW =  (scp-1)->getMixture().getSpecificHeatCapacity(y[TIndex_]);
+			// cell center specific heat for the present cell
+			real cpP =	scp->getMixture().getSpecificHeatCapacity(y[TIndex]);
 
-				spIndex_ = ((axPos-1)*p->nVar) + l;
-				spIndex = (axPos*p->nVar) +l;
+			sumEnthFlxW = 0.0;
+			sumEnthFlxE = 0.0;
+			heatSource = 0.0;
 
-				convection = (y[mIndex_]*y[spIndex_] - y[mIndex]*y[mIndex])/
-					(density*dz[axPos]);
-				source = wdot[l]*(*spv)[l]->MolWt()/density;
-				ydot[spIndex] = diffusion + convection + source;
-
-				// enthalpy transport
+			for(int l=0; l< p->nSpecies; l++){
 				sumEnthFlxW += jW[l]*hW[l]* (*spv)[l]->MolWt();
 				sumEnthFlxE += jE[l]*hE[l]* (*spv)[l]->MolWt();
-
 				heatSource += wdot[l]*hP[l];
-				
-				
 			}
-			// mass flx
-			ydot[mIndex] = scp->getVelocity()*( y[mIndex_] - y[mIndex])/dz[axPos];
 
+			heatSource /= (density*cpP);
 
-			if ( !(*p->ptrToReactor != p->ptrToReactor->Isothermal) ) {
-				ydot[(axPos*p->nVar) + p->TEMP] = 0.0;
-			}else {
-				// energy balance
-				TIndex = (axPos*p->nVar) + p->TEMP;
-				TIndex_ = ((axPos-1)*p->nVar) + p->TEMP;
-
-				// cell center specific heat for the west cell
-				real cpW =  (scp-1)->getMixture().getSpecificHeatCapacity(y[TIndex_]);
-				// cell center specific heat for the present cell
-				real cpP =	scp->getMixture().getSpecificHeatCapacity(y[TIndex]);
-				
-
-				convection = (y[mIndex_]*cpW*y[TIndex_] - y[mIndex]*cpP*y[TIndex])/
+			convection = (mfW*cpW*y[TIndex_] - mfE*cpP*y[TIndex])/
 					(density*cpP*dz[axPos]);
 
-				real qW = scp->getFaceThermalCondFluxes(); // west cell face flux for the present cell
-				real qE = (scp+1)->getFaceThermalCondFluxes(); // east cell face flux for the present cell
+			real qW = scp->getFaceThermalCondFluxes(); // west cell face flux for the present cell
+			real qE = (scp+1)->getFaceThermalCondFluxes(); // east cell face flux for the present cell
+			real conduction = (qE- qW)/(density*cpP*dz[axPos]);
+			real enthalpyFlx = (sumEnthFlxW - sumEnthFlxE)/(density*cpP*dz[axPos]);
 
-				real conduction = (qE- qW)/(density*cpP*dz[axPos]);
-
-				real enthalpyFlx = (sumEnthFlxW - sumEnthFlxE)/(density*cpP*dz[axPos]);
-
-				heatSource /= (density*cpP);
-				
-				ydot[TIndex] = convection + conduction + enthalpyFlx - heatSource;
-			}				
-
+			ydot[TIndex] = convection + conduction + enthalpyFlx -heatSource; //adiabatic
 		}
+
 		scp++;
+
 	}
 
 }
@@ -712,128 +815,146 @@ void Premix::boundary(FlameLab::real &time, FlameLab::real *y, FlameLab::real *y
 	const Mechanism *mech = p->ptrToReactor->getMechanism();
 	const SpeciesPtrVector *spv = p->ptrToReactor->getMixture().Species();
 
-	vector<real> jW,jE;
-	vector<real> hW,hE,hP;
-	vector<real> wdot,dz;
-	real diffusion, convection, source, heatSource, density;
-	real sumEnthFlxE, sumEnthFlxW;
-	vector<SingleCell>::iterator scp;
-	scp = p->cells.begin();
+	int nCells = p->ptrToReactor->getnCells();
 
-	dz = p->ptrToReactor->getGeometry();
+	int  mIndex, mIndex_;
+	int  spIndex, spIndex_;
+	int  TIndex, TIndex_;
 
-	int nCells = p->ptrToReactor->getnCells();	
-	for(int axPos = 0; axPos<nCells; axPos+=(nCells-1)){
+	vector<real> jW,jE; // vector for species flux
+	vector<real> hW,hE,hP; // vecotor of enthalpies
+	vector<real> wdot; // vector for rate of production
 
-		if(axPos==0){
-			// first cell
-			vector<real> inletMassFracs;
-			// get the east cell face fluxes
-			InitialConditions ic = p->ptrToReactor->getFuelInletConditions();
-			ic.getFuelMixture().GetMassFractions(inletMassFracs);
-			jE = (scp+1)->getFaceSpFluxes();
-			// get face molar enthalpy
+	vector<real> dz = p->ptrToReactor->getGeometry();// Geometry information
+	
+
+	real diffusion, convection, source, heatSource; // source terms
+	real sumEnthFlxW, sumEnthFlxE; // sum of energy flux terms
+	real density; // present cell density
+	vector<SingleCell>::iterator scp;	
+
+	//******************************first cell********************************************//
+	{
+		scp = p->cells.begin();//initialize the cell iterator
+
+		int axPos = 0;
+		density = scp->getMixture().MassDensity();
+		vector<real> inletMassFracs;
+		InitialConditions ic = p->ptrToReactor->getFuelInletConditions();
+		ic.getFuelMixture().GetMassFractions(inletMassFracs);
+		jE = (scp+1)->getFaceSpFluxes();
+
+		mech->Reactions().GetMolarProdRates(scp->getMixture(),wdot); // get the molar production rate
+
+		real mfE = (scp+1)->getFaceMassFlux();
+
+		for(int l=0; l<p->nSpecies; l++){
+			spIndex = (axPos*p->nVar) +l;	
+			diffusion = -jE[l] / (density*dz[axPos]);
+			convection = (ic.getDensity()*ic.getVelocity()*inletMassFracs[l]  - 
+				mfE*y[l])/(density*dz[axPos]);
+
+			source = (*spv)[l]->MolWt()*wdot[l]/density;
+
+			ydot[spIndex] = diffusion + convection + source;										
+		}
+		mIndex = (axPos*p->nVar) + p->MFLX;			
+		ydot[mIndex] = scp->getVelocity()* (ic.getVelocity()*ic.getDensity() - y[p->MFLX])/(dz[axPos]);
+					
+		TIndex= (axPos*p->nVar) + p->TEMP;
+
+		if (p->ptrToReactor->getEnergyModel() == p->ptrToReactor->Isothermal) {
+
+			ydot[TIndex] = 0.0;
+
+		}else if(p->ptrToReactor->getEnergyModel() == p->ptrToReactor->Adiabatic){
+
+			real cpW = ic.getFuelMixture().getSpecificHeatCapacity(ic.getTemperature());
+			real cpP = scp->getMixture().getSpecificHeatCapacity(y[p->TEMP]);
 			hE = (scp+1)->getFaceMolarEnthalpy();
-			// get the molar production rate
-			mech->Reactions().GetMolarProdRates(scp->getMixture(),wdot);
-			density = scp->getMixture().MassDensity(); // get the present cell density
 			hP = scp->getMixture().getMolarEnthalpy(y[p->TEMP]);// molar enthalpy for heat source calc
 			sumEnthFlxE = 0.0;
 			heatSource = 0.0;
 			for(int l=0; l<p->nSpecies; l++){
-				diffusion = -jE[l] / (density*dz[axPos]);
-
-				convection = (ic.getDensity()*ic.getVelocity()*inletMassFracs[l]  - 
-					y[p->MFLX]*y[l])/(density*dz[axPos]);
-
-				source = wdot[l]*(*spv)[l]->MolWt()/density;
-
-				ydot[l] = diffusion + convection + source;
-
 				sumEnthFlxE += jE[l]*hE[l]* (*spv)[l]->MolWt();
 				heatSource += wdot[l]*hP[l];
 			}
-			// mass flux
-			ydot[p->MFLX] = scp->getVelocity()* 
-				(ic.getVelocity()*ic.getDensity() - y[p->MFLX])/(dz[axPos]);
-			//energy balance
-			if( !(*p->ptrToReactor != p->ptrToReactor->Isothermal)) {
 
-				ydot[p->TEMP] = 0.0;
-			}else{
-				real cpW = ic.getFuelMixture().getSpecificHeatCapacity(ic.getTemperature());
-				real cpP = scp->getMixture().getSpecificHeatCapacity(y[p->TEMP]);
+			heatSource /= (density*cpP);
+			convection = (ic.getVelocity()*ic.getDensity()*cpW*ic.getTemperature()-
+					mfE*cpP*y[p->TEMP])/(dz[axPos]*cpP*density);
 
-				convection = (ic.getVelocity()*ic.getDensity()*cpW*ic.getTemperature()-
-					y[p->MFLX]*cpP*y[p->TEMP])/(dz[axPos]*cpP*density);
+			real qE = (scp+1)->getFaceThermalCondFluxes();
+			real conduction = qE/(scp->getMixture().MassDensity()*cpP*dz[axPos]);
 
-				real qE = (scp+1)->getFaceThermalCondFluxes();
+			real enthalpyFlx = - sumEnthFlxE/(density*cpP*dz[axPos]);
 
-				real conduction = qE/(scp->getMixture().MassDensity()*cpP*dz[axPos]);
 
-				real enthalpyFlx = - sumEnthFlxE/(density*cpP*dz[axPos]);
+			ydot[TIndex] = convection + conduction + enthalpyFlx-heatSource;
+		}
 
-				heatSource /= (density*cpP);
-				ydot[p->TEMP] = convection + conduction + enthalpyFlx - heatSource;
-			}
+	}
+	//**********************************last cell****************************************//
+	{
+		int axPos = nCells-1;
+		scp = p->cells.begin();
+		scp+= nCells-1;
+		mIndex = (axPos*p->nVar) + p->MFLX;
+		mIndex_ = (axPos-1)*p->nVar + p->MFLX;
+		jW = scp->getFaceSpFluxes();
 
-		}else if(axPos == nCells-1){
-			scp += nCells-1;
-			//get the molar production rates
-			mech->Reactions().GetMolarProdRates(scp->getMixture(),wdot);
-			jW = scp->getFaceSpFluxes();
-			density = scp->getMixture().MassDensity();
-			
-			int mIndex_, mIndex;
-			int spIndex_, spIndex;
-			int TIndex_, TIndex;
-			
-			mIndex_ = (axPos-1)*p->nVar + p->MFLX;
-			mIndex = axPos*p->nVar + p->MFLX;
+		real mfW = scp->getFaceMassFlux();
+
+		mech->Reactions().GetMolarProdRates(scp->getMixture(),wdot); //get the molar production rate
+		density = scp->getMixture().MassDensity();
+		for(int l=0; l<p->nSpecies; l++){
+			spIndex = (axPos*p->nVar) +l;
+			spIndex_ = ((axPos-1)*p->nVar) + l;
+
+			diffusion = jW[l]/(density*dz[axPos]);
+			convection = (mfW*y[spIndex_] - y[mIndex]*y[spIndex])/(density*dz[axPos]);
+			source = (*spv)[l]->MolWt()*wdot[l]/density;
+			ydot[spIndex] = diffusion + convection + source;										
+		}
+		
+		ydot[mIndex] = scp->getVelocity()*( y[mIndex_]-y[mIndex] )/dz[axPos];
+					
+		TIndex= (axPos*p->nVar) + p->TEMP;	
+		TIndex_ = ((axPos-1)*p->nVar) + p->TEMP;
+
+		if (p->ptrToReactor->getEnergyModel() == p->ptrToReactor->Isothermal) {
+
+			ydot[TIndex] = 0.0;
+
+		}else if(p->ptrToReactor->getEnergyModel() == p->ptrToReactor->Adiabatic){
+
+			real cpW = (scp-1)->getMixture().getSpecificHeatCapacity(y[TIndex_]);
+			real cpP = scp->getMixture().getSpecificHeatCapacity(y[TIndex]);
 
 			hP = scp->getMixture().getMolarEnthalpy(y[p->TEMP]);// molar enthalpy for heat source calc
 			hW = scp->getFaceMolarEnthalpy();
+
 			sumEnthFlxW = 0.0;
 			heatSource = 0.0;
-	
-			for(int l=0; l<p->nSpecies; l++){
-				spIndex = axPos * p->nVar + l;
-				spIndex_ = (axPos-1)* p->nVar + l;
-
-				diffusion = jW[l]/(density*dz[axPos]);
-				convection = (y[mIndex_]*y[spIndex_] - y[mIndex]*y[spIndex])/(density*dz[axPos]);
-				source = wdot[l]*(*spv)[l]->MolWt()/density;
-				ydot[spIndex] = diffusion + convection + source;
-
+			for(int l=0; l< p->nSpecies; l++){
 				sumEnthFlxW += jW[l]*hW[l];
 				heatSource += wdot[l]*hP[l];
 			}
-				// mass balance
-			ydot[mIndex] = scp->getVelocity()*( y[mIndex_]-y[mIndex] )/dz[axPos];
-			//energy balance
-			if( !(*p->ptrToReactor != p->ptrToReactor->Isothermal)) {
-				ydot[(axPos-1)*p->nVar + p->TEMP] = 0.0;
-			}else{
-				TIndex_ = (axPos-1)*p->nVar + p->TEMP;
-				TIndex = axPos*p->nVar + p->TEMP;
 
-				real cpW = (scp-1)->getMixture().getSpecificHeatCapacity(y[TIndex_]);
-				real cpP = scp->getMixture().getSpecificHeatCapacity(y[TIndex]);
+			heatSource /= (density*cpP);
+			convection = (mfW*cpW*y[TIndex_] - y[mIndex]*cpP*y[TIndex])/(density*cpP*dz[axPos]);
 
-				convection = (y[mIndex_]*cpW*y[TIndex_] - y[mIndex]*cpP*y[TIndex])/(density*cpP*dz[axPos]);
+			real qW = scp->getFaceThermalCondFluxes();
+			real conduction = -qW/(density*cpP*dz[axPos]);
 
-				real qW = scp->getFaceThermalCondFluxes();
+			real enthalpyFlx = sumEnthFlxW/(density*cpP*dz[axPos]);
 
-				real conduction = -qW/(density*cpP*dz[axPos]);
+			ydot[TIndex] = convection + conduction + enthalpyFlx-heatSource;
 
-				real enthalpyFlx = sumEnthFlxW/(density*cpP*dz[axPos]);
-
-				heatSource /= (density*cpP);
-
-				ydot[TIndex] = convection + conduction + enthalpyFlx + heatSource;
-			}
 		}
+
 	}
+		
 }
 
 
@@ -898,5 +1019,5 @@ bool Premix::checkConvergance(FlameLab::real *dy){
 		return 0;
 }
 
-	
+
 	

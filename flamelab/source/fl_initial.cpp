@@ -1,3 +1,44 @@
+/*
+  Author(s):      Vinod Janardhanan (vj231)
+  Project:        flameLab (premix solver)
+  Sourceforge:    http://sourceforge.net/projects/mopssuite
+  
+  Copyright (C) 2008 Vinod M Janardhanan.
+
+  File purpose:
+	This class contains information about the initial conditions.
+	Inlet conditions at the fuel and oxidizer nozzle are manged in
+	this class. The reactor object contains objects of intial conditions
+  Licence:
+    This file is part of "flameLab".
+
+    flameLab is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Dr Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
+*/
 #include "fl_initial.h"
 #include<string>
 using namespace FlameLab;
@@ -19,11 +60,11 @@ real InitialConditions::getTemperature() const{
 	return this->temperature;
 }
 // sets the inlet species conditions such as mass or mole fracs
-void InitialConditions::setMassOrMole(FlameLab::InitialConditions::MassOrMole sp){
+void InitialConditions::setMassOrMole(int sp){
 	this->mom = sp;
 }
 // returns the nature of inlet species values (mass/mole) fracs
-InitialConditions::MassOrMole InitialConditions::getMassOrMole(){
+int InitialConditions::getMassOrMole() const{
 	return this->mom;
 }
 
@@ -48,9 +89,9 @@ vector<real> InitialConditions::getMassFractions() const{
 }
 
 //overloaded operator to check if the inlet inputs are in mass or mole
-bool InitialConditions::operator ==(FlameLab::InitialConditions::MassOrMole sp){
-	return this->Molefraction == sp;
-}
+//bool InitialConditions::operator ==(FlameLab::InitialConditions::MassOrMole sp){
+//	return this->Molefraction == sp;
+//}
 // set the density (Kg/m3)
 void InitialConditions::setDensity(real dens){
 	this->density = dens;

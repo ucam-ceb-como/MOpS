@@ -6,9 +6,7 @@
   Copyright (C) 2008 Vinod M Janardhanan.
 
   File purpose:
-	This class encapsulates the operating conditions. It stores
-	information such as whether the reactor is isothermal/adiabatic.
-	Operating pressure and temperature in case of isothermal operation
+	This class controls the operation of the reactor
   Licence:
     This file is part of "flameLab".
 
@@ -40,44 +38,34 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#ifndef FL_PROCESS_CONDITIONS_H
-#define FL_PROCESS_CONDITIONS_H
-#include "fl_params.h"
-#include <vector>
-namespace FlameLab{
-	class ProcessConditions{
+#include "fl_reactor_controls.h"
+using namespace FlameLab;
 
-		//std::vector<real> species;
-		//real vecocity;
-		real temperature;
-		real pressure;
-
-	public:
-		ProcessConditions(){}
-		~ProcessConditions(){}
-
-		enum EnergyEquation{
-			Isothermal,
-			Adiabatic,
-			UserDefined
-		};
-		
-		void setTemperature(real temp);
-		void setPressure(real pre);
-		//void setTemptrSolution(EnergyEquation ee);
-		void setEnergModel(int n);
-		int getEnergyModel();
-		
-		real getTemperature() const;
-		real getPressure() const;
-		//EnergyEquation getTemptrSolution();
-
-	protected:
-		EnergyEquation temptrSolution;
-		int energyModel;
-	};
-
-
+void ReactorControls::setSpaceToTime(int onOrOff){
+	spaceToTime = onOrOff;
 }
-	
-#endif
+
+int ReactorControls::getSpaceToTime(){
+	if(!(spaceToTime == OFF ||
+		spaceToTime == ON)){
+			throw ErrorHandler("Space to Time Not yet Initialized", 300);
+	}
+	return spaceToTime;
+}
+// set the reactor run model
+void ReactorControls::setReactorRunModel(int n){
+	runModel = n;
+}
+// returns the reactor run model
+int ReactorControls::getReactorRunModel(){
+	return runModel;
+}
+//set the diffusion switch
+void ReactorControls::setDiffusion(int n){
+	DiffnSwtch = n;
+}
+// returns zero if diffusion is switched on
+bool ReactorControls::getDiffusion(){
+	return (DiffnSwtch == ON);
+}
+
