@@ -188,6 +188,8 @@ public:
 
     // Returns a pointer to the ith reaction. Returns NULL if i is invalid.
     const Kinetics::Reaction *const Reactions(unsigned int i) const;
+    // Returns a pointer to the ith reaction. Returns NULL if i is invalid.
+    Kinetics::Reaction * GetReactions(unsigned int i);
 
     // Adds an empty reaction to the mechanism.
     Kinetics::Reaction *const AddReaction(void);

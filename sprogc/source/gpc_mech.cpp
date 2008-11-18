@@ -483,6 +483,11 @@ const Kinetics::Reaction *const Mechanism::Reactions(unsigned int i) const
 {
     return m_rxns[i];
 }
+// Returns a pointer to the ith reaction. Returns NULL if i is invalid.
+Kinetics::Reaction * Mechanism::GetReactions(unsigned int i)
+{
+    return m_rxns[i];
+}
 
 // Adds an empty reaction to the mechanism.
 Sprog::Kinetics::Reaction *const Mechanism::AddReaction()
