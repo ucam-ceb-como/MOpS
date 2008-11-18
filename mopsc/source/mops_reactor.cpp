@@ -554,14 +554,14 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
 
 // Definition of Jacobian evaluator function for constant
 // temperature model.
-void Reactor::Jacobian(real t, real *const y, 
-                       const real *const ydot, real **J,
-                       real uround) const
-{
-    m_mech->Reactions().CalcJacobian(y[m_iT], y[m_iDens], y, 
-                                     m_nsp, *m_mix, uround, J, 
-                                     m_constv, m_emodel==ConstT);
-}
+//void Reactor::Jacobian(real t, real *const y, 
+//                       const real *const ydot, real **J,
+//                       real uround) const
+//{
+//    m_mech->Reactions().CalcJacobian(y[m_iT], y[m_iDens], y, 
+//                                     m_nsp, *m_mix, uround, J, 
+//                                     m_constv, m_emodel==ConstT);
+//}
 
 
 // INITIALISATION.
