@@ -212,13 +212,13 @@ public:
 
     // Definition of Jacobian evaluator function for constant
     // temperature model.
-    virtual void Jacobian(
-        real t,                 // Flow time.
-        real *const y,          // Solution values.
-        const real *const ydot, // Derivatives (unperturbed).
-        real **J,               // Jacobian Matrix J[j][i] = dFi/dYj.
-        real uround             // Perturbation size parameter.
-        ) const;
+    //virtual void Jacobian(
+    //    real t,                 // Flow time.
+    //    real *const y,          // Solution values.
+    //    const real *const ydot, // Derivatives (unperturbed).
+    //    real **J,               // Jacobian Matrix J[j][i] = dFi/dYj.
+    //    real uround             // Perturbation size parameter.
+    //    ) const;
 
 protected:
     // Reactor variables.
