@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
     
     // This is needed by Sensitivity Analyzer
     {
-        sensi.Enable(1);
+        sensi.Enable(0);
         sensi.SetMethod(1);
         sensi.EnableErrorControl(1);
         string fsensi = "sensi.xml";
