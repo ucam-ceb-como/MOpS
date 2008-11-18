@@ -1,5 +1,5 @@
 /*
-  Author(s):      Matthew Celnik (msc37)
+  Author(s):      Matthew Celnik (msc37), Weerapong Phadungsukanan (wp214)
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
   
@@ -8,6 +8,10 @@
   File purpose:
     Implementation of the ODE_Solver class declared in the
     mops_ode_solver.h header file.
+
+  Future work:
+    Copy constructure is not fully copy CVODES ODE workspace. This
+    is need to be finished.
 
   Licence:
     This file is part of "mops".
@@ -42,6 +46,7 @@
 
 #include "mops_ode_solver.h"
 #include "mops_reactor.h"
+#include "mops_rhs_func.h"
 
 // CVODE includes.
 #include "nvector/nvector_serial.h"
@@ -101,6 +106,24 @@ ODE_Solver &ODE_Solver::operator=(const Mops::ODE_Solver &rhs)
         m_srcterms = rhs.m_srcterms;
         _srcTerms  = rhs._srcTerms;
 
+        // Delete memories
+        if (m_yS != NULL) N_VDestroyVectorArray_Serial(m_yS, m_sensi.NParams());
+        // Reset pointers to NULL in case of rsh is zero.
+        m_yS = NULL;
+        m_sensi = rhs.m_sensi;
+        // No memory allocation require if m_NS is zero.
+        if (m_sensi.NParams() != 0) {
+            m_yS = N_VCloneVectorArrayEmpty_Serial(m_sensi.NParams(), rhs.m_yS[0]);
+        }
+        // Set values of varibles to rhs variables.
+        for (unsigned int i = 0; i < m_sensi.NParams(); i++) {
+            m_yS[i] = N_VClone_Serial(rhs.m_yS[i]);
+        }
+        if (m_yvec != NULL) N_VDestroy_Serial(m_yvec);
+        m_yvec = N_VClone_Serial(rhs.m_yvec);
+        //if (m_solvec != NULL) N_VDestroy_Serial(m_solvec);
+        //VCopy_Serial(rhs.m_solvec, m_solvec);
+
         // Copy ODE workspace.
         if (rhs.m_odewk != NULL) {
             if (m_odewk == NULL) InitCVode();
@@ -147,9 +170,17 @@ void ODE_Solver::InitCVode(void)
     m_odewk = CVodeCreate(CV_BDF, CV_NEWTON);
 
     // Allocate CVODE stuff.
-    CVodeMalloc(m_odewk, &rhsFn_CVODE, m_time, 
-                N_VMake_Serial(m_neq, m_soln), 
-                CV_SS, m_rtol, (void*)&m_atol);
+    if (m_yvec != NULL) N_VDestroy_Serial(m_yvec);
+    m_yvec = N_VMake_Serial(m_neq, m_soln);
+    if (m_sensi.isEnable()) {
+        CVodeMalloc(m_odewk, &rhsFn_CVODES, m_time, 
+                    m_yvec, 
+                    CV_SS, m_rtol, (void*)&m_atol);
+    } else {
+        CVodeMalloc(m_odewk, &rhsFn_CVODE, m_time, 
+                    m_yvec, 
+                    CV_SS, m_rtol, (void*)&m_atol);
+    }
 
     // Set up internal solution array.
     m_solvec = N_VNewEmpty_Serial(m_neq);
@@ -165,18 +196,56 @@ void ODE_Solver::InitCVode(void)
     CVDense(m_odewk, m_neq);
 
     // Set the Jacobian function in CVODE.
-//    CVDenseSetJacFn(m_odewk, jacFn_CVODE, (void*)this);
+    // CVDenseSetJacFn(m_odewk, jacFn_CVODE, (void*)this);
+    if (m_sensi.isEnable()) {
+        m_yS = N_VCloneVectorArray_Serial(m_sensi.NParams(), m_yvec);
+        //if (check_flag((void *)m_yS, "N_VCloneVectorArray_Serial", 0)) return(1);
+        for (unsigned int is=0;is<m_sensi.NParams();is++) N_VConst(ZERO, m_yS[is]);
+        int flag = 0;
+        flag = CVodeSensMalloc(m_odewk, m_sensi.NParams(), m_sensi.GetMethod(), m_yS);
+        //if(check_flag(&flag, "CVodeSensMalloc", 1)) return(1);
+        
+        //flag = CVodeSetSensRhs1Fn(cvode_mem, fS, data);
+        //if (check_flag(&flag, "CVodeSetSensRhs1Fn", 1)) return(1);
+        flag = CVodeSetSensErrCon(m_odewk, m_sensi.isEnableErrorControl());
+        //if (check_flag(&flag, "CVodeSetSensErrCon", 1)) return(1);
+        flag = CVodeSetSensParams(m_odewk, m_sensi.ParamsPtr(), m_sensi.ParamBarsPtr(), NULL);
+        //if (check_flag(&flag, "CVodeSetSensParams", 1)) return(1);
+
+        //printf("Sensitivity: YES ");
+        //if(GetMethod() == CV_SIMULTANEOUS)   
+        //    printf("( SIMULTANEOUS +");
+        //else 
+        //    if(GetMethod() == CV_STAGGERED) printf("( STAGGERED +");
+        //    else                           printf("( STAGGERED1 +");   
+        //if(isEnableErrorControl()) printf(" FULL ERROR CONTROL )");
+        //else        printf(" PARTIAL ERROR CONTROL )");
+    } else {
+        //printf("Sensitivity: NO ");
+    }
 }
 
 // Reset the solver.  Need to do this if the the reactor
 // contents has been changed between calls to Solve().
 void ODE_Solver::ResetSolver(void)
 {
-    CVodeReInit(m_odewk, &rhsFn_CVODE, m_time, 
-                N_VMake_Serial(m_neq, m_soln),
-                CV_SS, m_rtol, (void*)&m_atol);
+    if (m_yvec != NULL) N_VDestroy_Serial(m_yvec);
+    m_yvec = N_VMake_Serial(m_neq, m_soln);
+    if (m_yS != NULL) N_VDestroyVectorArray_Serial(m_yS, m_sensi.NParams());
+    m_yS = N_VCloneVectorArray_Serial(m_sensi.NParams(), m_yvec);
+    for (unsigned int is=0;is<m_sensi.NParams();is++) N_VConst(ZERO, m_yS[is]);
+    if (m_sensi.isEnable()) {
+        CVodeReInit(m_odewk, &rhsFn_CVODES, m_time, 
+                    m_yvec,
+                    CV_SS, m_rtol, (void*)&m_atol);
+        CVodeSensReInit(m_odewk, m_sensi.GetMethod(), m_yS);
+    } else {
+        CVodeReInit(m_odewk, &rhsFn_CVODE, m_time, 
+                    m_yvec,
+                    CV_SS, m_rtol, (void*)&m_atol);
+    }
     
-}
+} 
 
 // Reset the solver.  Need to do this if the the reactor
 // contents has been changed between calls to Solve().
@@ -188,9 +257,21 @@ void ODE_Solver::ResetSolver(const Reactor &reac)
     if (reac.ODE_Count() == m_neq) {
         m_time = reac.Time();
         m_soln = reac.Mixture()->RawData();
-        CVodeReInit(m_odewk, &rhsFn_CVODE, m_time, 
-                    N_VMake_Serial(m_neq, m_soln),
-                    CV_SS, m_rtol, (void*)&m_atol);
+        if (m_yvec != NULL) N_VDestroy_Serial(m_yvec);
+        m_yvec = N_VMake_Serial(m_neq, m_soln);
+        if (m_yS != NULL) N_VDestroyVectorArray_Serial(m_yS, m_sensi.NParams());
+        m_yS = N_VCloneVectorArray_Serial(m_sensi.NParams(), m_yvec);
+        for (unsigned int is=0;is<m_sensi.NParams();is++) N_VConst(ZERO, m_yS[is]);
+        if (m_sensi.isEnable()) {
+            CVodeReInit(m_odewk, &rhsFn_CVODES, m_time, 
+                        m_yvec,
+                        CV_SS, m_rtol, (void*)&m_atol);
+            CVodeSensReInit(m_odewk, m_sensi.GetMethod(), m_yS);
+        } else {
+            CVodeReInit(m_odewk, &rhsFn_CVODE, m_time, 
+                        N_VMake_Serial(m_neq, m_soln),
+                        CV_SS, m_rtol, (void*)&m_atol);
+        }
     } else {
         Initialise(reac);
     }
@@ -248,6 +329,12 @@ void ODE_Solver::Solve(Reactor &reac, real stop_time)
     // Add the source terms to derivatives, if defined.
     if (_srcTerms != NULL) 
         _srcTerms(m_deriv, m_neq, stop_time, *m_srcterms);
+    if (m_sensi.isEnable()) {
+        int flag = CVodeGetSens(m_odewk, m_time, m_yS);
+        //if (m_sensi.check_flag(&flag, "CVodeGetSens", 1)) break;
+        m_sensi.PrintOutputS(m_yS);
+    }
+
 }
 
 
@@ -404,55 +491,25 @@ void ODE_Solver::Deserialize(std::istream &in)
 }
 
 
-// RHS FUNCTION AND GOVERNING EQUATIONS.
-
-// The right-hand side evaluator.  This function calculates the RHS of
-// the reactor differential equations.  CVODE uses a void* pointer to
-// allow the calling code to pass whatever information it wants to
-// the RHS function.  In this case the void* pointer should be cast
-// into a Reactor object.
-int ODE_Solver::rhsFn_CVODE(double t,      // Independent variable.
-                            N_Vector y,    // Solution array.
-                            N_Vector ydot, // Derivatives of y wrt t.
-                            void* solver) // Pointer to ODE solver object.
-{
-    // Cast the Solver object.
-    ODE_Solver *s = static_cast<ODE_Solver*>(solver);
-    Reactor *r    = s->m_reactor;
-
-    // Get the RHS from the system model.
-    if (r->EnergyEquation() == Reactor::ConstT) {
-        r->RHS_ConstT(t, NV_DATA_S(y), NV_DATA_S(ydot));
-    } else {
-        r->RHS_Adiabatic(t, NV_DATA_S(y), NV_DATA_S(ydot));
-    }
-
-    // Add the source terms, if defined.
-    if (s->_srcTerms != NULL) 
-        s->_srcTerms(NV_DATA_S(ydot), s->m_neq, t, *s->m_srcterms);
-
-    return 0;
-};
-
 // The Jacobian matrix evaluator.  This function calculates the 
 // Jacobian matrix given the current state.  CVODE uses a void* pointer to
 // allow the calling code to pass whatever information it wants to
 // the function.  In this case the void* pointer should be cast
 // into an ODE_Solver object.
-int ODE_Solver::jacFn_CVODE(long int N, DenseMat J, double t, N_Vector y,
-                            N_Vector ydot, void* solver,
-                            N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-{
-    // Cast the Solver object.
-    ODE_Solver *s = static_cast<ODE_Solver*>(solver);
-    Reactor *r    = s->m_reactor;
-
-    // Get the Jacobian from the reactor model
-    r->Jacobian(t, NV_DATA_S(y), NV_DATA_S(ydot), J->data, 
-                ((CVodeMem)s->m_odewk)->cv_uround);
-
-    return 0;
-}
+//int ODE_Solver::jacFn_CVODE(long int N, DenseMat J, double t, N_Vector y,
+//                            N_Vector ydot, void* solver,
+//                            N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+//{
+//    // Cast the Solver object.
+//    ODE_Solver *s = static_cast<ODE_Solver*>(solver);
+//    Reactor *r    = s->m_reactor;
+//
+//    // Get the Jacobian from the reactor model
+//    r->Jacobian(t, NV_DATA_S(y), NV_DATA_S(ydot), J->data, 
+//                ((CVodeMem)s->m_odewk)->cv_uround);
+//
+//    return 0;
+//}
 
 
 // INITIALISATION AND MEMORY RELEASE.
@@ -471,6 +528,8 @@ void ODE_Solver::init(void)
     m_neq      = 0;
     m_srcterms = NULL;
     _srcTerms  = NULL;
+    m_yvec     = NULL;
+    m_yS       = NULL;
 
     // Init CVODE.
     m_odewk = NULL;
@@ -482,6 +541,9 @@ void ODE_Solver::releaseMemory(void)
     delete [] m_deriv;
     if (m_odewk != NULL) CVodeFree(&m_odewk);
 
+    // Free extra space
+    if (m_yvec != NULL) N_VDestroy_Serial(m_yvec);
+    if (m_yS != NULL) N_VDestroyVectorArray_Serial(m_yS, m_sensi.NParams());
     // Set values to defaults.
     init();
 }
@@ -541,6 +603,92 @@ void ODE_Solver::assignCVMem(const CVodeMemRec &copy)
 
         mem.cv_efun    = copy.cv_efun;   // Function to set ewt.
         mem.cv_e_data  = copy.cv_e_data; // User data pointer passed to efun.
+        
+        //QUADRATURE RELATED DATA
+        
+        mem.cv_quadr    = copy.cv_quadr;    // TRUE if integrating quadratures
+
+        mem.cv_fQ       = copy.cv_fQ;
+        mem.cv_fQ_data  = copy.cv_fQ_data;  // user pointer passed to fQ
+        mem.cv_itolQ    = copy.cv_itolQ;
+        mem.cv_errconQ  = copy.cv_errconQ;
+
+        mem.cv_reltolQ  = copy.cv_reltolQ;  // relative tolerance for quadratures
+        mem.cv_SabstolQ = copy.cv_SabstolQ; // scalar absolute tolerance for quadratures
+
+        // Clear and re-assign vector abs. tolerance.
+        if (mem.cv_lrw1Q == copy.cv_lrw1Q) {
+            // Workspaces are same size.  Just perform memory copy.
+            if (copy.cv_VabstolQMallocDone) {
+                if (mem.cv_VabstolQMallocDone) {
+                    // Vector exists in both workspaces.
+                    memcpy(NV_DATA_S(mem.cv_VabstolQ), NV_DATA_S(copy.cv_VabstolQ), 
+                           copy.cv_lrw1Q*sizeof(realtype));
+                } else {
+                    // Vector only exists in copy workspace.
+                    mem.cv_VabstolQ = N_VClone_Serial(copy.cv_VabstolQ);
+                }
+            } else {
+                if (mem.cv_VabstolQMallocDone) {
+                    // Vector exists in mem workspace only.
+                    N_VDestroy_Serial(mem.cv_VabstolQ);
+                    mem.cv_VabstolQ = NULL;
+                }
+            }
+        } else {
+            // Workspaces are diferent sizes, need to resize vectors.
+            if (mem.cv_VabstolQMallocDone) N_VDestroy_Serial(mem.cv_VabstolQ);
+            if (copy.cv_VabstolQMallocDone) {
+                // Vector exists in copy workspace.
+                mem.cv_VabstolQ = N_VClone_Serial(copy.cv_VabstolQ);
+            } else {
+                // Vector does not exist in copy workspace.
+                mem.cv_VabstolQ = NULL;
+            }
+        }
+
+        // SENSITIVITY RELATED DATA 
+
+        mem.cv_sensi        = copy.cv_sensi;        // TRUE if computing sensitivities
+
+        mem.cv_Ns           = copy.cv_Ns;           // Number of sensitivities
+
+        mem.cv_ism          = copy.cv_ism;          // ism = SIMULTANEOUS or STAGGERED
+
+        mem.cv_fS           = copy.cv_fS;           // fS = (df/dy)*yS + (df/dp)
+        mem.cv_fS1          = copy.cv_fS1;          // fS1 = (df/dy)*yS_i + (df/dp)
+        mem.cv_user_fS_data = copy.cv_user_fS_data; // user data pointer for fS
+        mem.cv_fS_data      = copy.cv_fS_data;      // actual data pointer passed to fS
+        mem.cv_fSDQ         = copy.cv_fSDQ;
+        mem.cv_ifS          = copy.cv_ifS;          // ifS = ALLSENS or ONESENS
+
+        mem.cv_p            = copy.cv_p;            // parameters in f(t,y,p), no copy here since cvode do not free this memory
+        // Scale factors for parameters
+        delete [] mem.cv_pbar; mem.cv_pbar = NULL;
+        if (mem.cv_Ns > 0) {
+            mem.cv_pbar = new realtype[mem.cv_Ns];
+            memcpy(mem.cv_pbar, copy.cv_pbar, mem.cv_Ns*sizeof(realtype));
+        }
+        // List of sensitivities
+        delete [] mem.cv_plist; mem.cv_plist = NULL;
+        if (mem.cv_Ns > 0) {
+            mem.cv_plist = new int[mem.cv_Ns];
+            memcpy(mem.cv_plist, copy.cv_plist, mem.cv_Ns*sizeof(int));
+        }
+        mem.cv_DQtype   = copy.cv_DQtype;            // central/forward finite differences
+        mem.cv_DQrhomax = copy.cv_DQrhomax;         // cut-off value for separate/simultaneous FD
+
+        mem.cv_errconS  = copy.cv_errconS;          // TRUE if sensitivities are in err. control
+
+        mem.cv_itolS  = copy.cv_itolS;
+        mem.cv_reltolS  = copy.cv_reltolS;          // relative tolerance for sensitivities
+        // Scalar absolute tolerances for sensi.
+        delete [] mem.cv_SabstolS; mem.cv_SabstolS = NULL;
+        if (mem.cv_Ns > 0) {
+            mem.cv_SabstolS = new realtype[mem.cv_Ns];
+            memcpy(mem.cv_SabstolS, copy.cv_SabstolS, mem.cv_Ns*sizeof(realtype));
+        }
+    //N_Vector *cv_VabstolS;   // vector absolute tolerances for sensi.
 
         // VECTORS.
 
@@ -677,10 +825,50 @@ void ODE_Solver::assignCVMem(const CVodeMemRec &copy)
             else mem.cv_ftemp = NULL;
         }
 
+        
+        // QUADRATURE RELATED VECTORS 
+
+        // Assumming Workspaces are different sizes.  Need to reallocate
+        // all vectors.  Use Clone facility of N_Vector.
+
+        // NORDSIECK HISTORY ARRAY FOR QUADRATURES.
+
+        // Resize and re-assign Nordsieck array vectors.
+        for (int i=0; i!=mem.cv_qmax+1; ++i) {
+            N_VDestroy_Serial(mem.cv_znQ[i]);
+            mem.cv_znQ[i] = N_VClone_Serial(copy.cv_znQ[i]);
+        }
+
+        // OTHER VECTORS OF LENGTH N.
+
+        // Error weight vector for quadratures
+        if (mem.cv_ewtQ != NULL) N_VDestroy_Serial(mem.cv_ewtQ);
+        if (copy.cv_ewtQ != NULL) mem.cv_ewtQ = N_VClone_Serial(copy.cv_ewtQ);
+        else mem.cv_ewtQ = NULL;
+
+        // Temporary storage vector. Unlike y, yQ is not allocated by the user.
+        if (mem.cv_yQ != NULL) N_VDestroy_Serial(mem.cv_yQ);
+        if (copy.cv_yQ != NULL) mem.cv_yQ = N_VClone_Serial(copy.cv_yQ);
+        else mem.cv_yQ = NULL;
+
+        // Estimated local vector. acorQ = yQ_n(m) - yQ_n(0).
+        if (mem.cv_acorQ != NULL) N_VDestroy_Serial(mem.cv_acorQ);
+        if (copy.cv_acorQ != NULL) mem.cv_acorQ = N_VClone_Serial(copy.cv_acorQ);
+        else mem.cv_acorQ = NULL;
+
+        // Temporary storage vector.
+        if (mem.cv_tempvQ != NULL) N_VDestroy_Serial(mem.cv_tempvQ);
+        if (copy.cv_tempvQ != NULL) mem.cv_tempvQ = N_VClone_Serial(copy.cv_tempvQ);
+        else mem.cv_tempvQ = NULL;
+
+        // DOES CVODESENSMALLOC ALLOCATE ADDITIONAL SPACE?
+
+        mem.cv_stgr1alloc = copy.cv_stgr1alloc; // Did we allocate ncfS1, ncfnS1, and nniS1?
+
         // TSTOP INFORMATION.
 
-        mem.cv_tstopset = copy.cv_tstopset;
         mem.cv_istop    = copy.cv_istop;
+        mem.cv_tstopset = copy.cv_tstopset;
         mem.cv_tstop    = copy.cv_tstop;
 
         // STEP DATA.
@@ -721,18 +909,29 @@ void ODE_Solver::assignCVMem(const CVodeMemRec &copy)
         mem.cv_gamrat = copy.cv_gamrat; // gamma / gammap.
 
         mem.cv_crate   = copy.cv_crate;   // Estimated corrector convergence rate.
-        mem.cv_acnrm   = copy.cv_acnrm;   // | acor | wrms.
+        mem.cv_crateS  = copy.cv_crateS;  // est. corrector conv. rate in NlsStgr
+        mem.cv_acnrm   = copy.cv_acnrm;   // | acor | nrms.
+        mem.cv_acnrmS  = copy.cv_acnrmS;  // | acorS |
+        mem.cv_acnrmQ  = copy.cv_acnrmQ;  // | acorQ |
         mem.cv_nlscoef = copy.cv_nlscoef; // Coefficient in non-linear convergence test.
         mem.cv_mnewt   = copy.cv_mnewt;   // Newton iteration counter.
+        // Array of Ns local counters for conv. failures (used in CVStep for STAGGERED1)
+        delete [] mem.cv_ncfS1; mem.cv_ncfS1 = NULL;
+        if (mem.cv_Ns > 0) {
+            mem.cv_ncfS1 = new int[mem.cv_Ns];
+            memcpy(mem.cv_ncfS1, copy.cv_ncfS1, mem.cv_Ns*sizeof(int));
+        }
 
         // LIMITS.
 
-        mem.cv_qmax   = copy.cv_qmax;   // q <= qmax.
-        mem.cv_mxstep = copy.cv_mxstep; // Max. number of internal steps for one user call.
-        mem.cv_maxcor = copy.cv_maxcor; // Max number of corrector iterations for soln. of non-linear eqn.
-        mem.cv_mxhnil = copy.cv_mxhnil; // Max. warning msg. count.
-        mem.cv_maxnef = copy.cv_maxnef; // Max. error test failure count.
-        mem.cv_maxncf = copy.cv_maxncf; // Max. non-linear convergence failure count.
+        mem.cv_qmax   = copy.cv_qmax;     // q <= qmax.
+        mem.cv_mxstep = copy.cv_mxstep;   // Max. number of internal steps for one user call.
+        mem.cv_maxcor = copy.cv_maxcor;   // Max number of corrector iterations for soln. of non-linear eqn.
+
+        mem.cv_maxcorS = copy.cv_maxcorS;
+        mem.cv_mxhnil  = copy.cv_mxhnil;   // Max. warning msg. count.
+        mem.cv_maxnef  = copy.cv_maxnef;   // Max. error test failure count.
+        mem.cv_maxncf  = copy.cv_maxncf;   // Max. non-linear convergence failure count.
 
         mem.cv_hmin     = copy.cv_hmin;     // |h| >= hmin.
         mem.cv_hmax_inv = copy.cv_hmax_inv; // |h| <= 1/hmax_inv.
@@ -740,24 +939,47 @@ void ODE_Solver::assignCVMem(const CVodeMemRec &copy)
 
         // COUNTERS.
 
-        mem.cv_nst     = copy.cv_nst;     // Internal steps taken count.
-        mem.cv_nfe     = copy.cv_nfe;     // F call count.
-        mem.cv_ncfn    = copy.cv_ncfn;    // Corrected convergence failure count.
-        mem.cv_netf    = copy.cv_netf;    // Error test failure count.
-        mem.cv_nni     = copy.cv_nni;     // Newton iterations performed count.
-        mem.cv_nsetups = copy.cv_nsetups; // Setup call count.
-        mem.cv_nhnil   = copy.cv_nhnil;   // Msgs. issued to user count.
+        mem.cv_nst      = copy.cv_nst;      // Internal steps taken count.
+        mem.cv_nfe      = copy.cv_nfe;      // F call count.
+        mem.cv_nfSe      = copy.cv_nfSe;    // number of fS calls
+        mem.cv_nfQe      = copy.cv_nfQe;    // number of fQ calls
+        mem.cv_nfeS      = copy.cv_nfeS;    // number of f calls from sensi DQ
 
-        mem.cv_etaqm1 = copy.cv_etaqm1; // Ratio of new to old h for order q-1.
-        mem.cv_etaq   = copy.cv_etaq;   // Ratio of new to old h for order q.
-        mem.cv_etaqp1 = copy.cv_etaqp1; // Ratio of new to old h for order q+1.
+        mem.cv_ncfn     = copy.cv_ncfn;     // Corrected convergence failure count.
+        mem.cv_ncfnS    = copy.cv_ncfnS;   // Number of total sensi. corr. conv. failures
+        // Number of sensi. corrector conv. failures
+        delete [] mem.cv_ncfnS1; mem.cv_ncfnS1 = NULL;
+        if (mem.cv_Ns > 0) {
+            mem.cv_ncfnS1 = new long int[mem.cv_Ns];
+            memcpy(mem.cv_ncfnS1, copy.cv_ncfnS1, mem.cv_Ns*sizeof(long int));
+        }
+
+        mem.cv_nni      = copy.cv_nni;      // Newton iterations performed count.
+        mem.cv_nniS     = copy.cv_nniS;     // Number of total sensi. nonlinear iterations
+        // Number of sensi. nonlinear iterations
+        delete [] mem.cv_nniS1; mem.cv_nniS1 = NULL;
+        if (mem.cv_Ns > 0) {
+            mem.cv_nniS1 = new long int[mem.cv_Ns];
+            memcpy(mem.cv_nniS1, copy.cv_nniS1, mem.cv_Ns*sizeof(long int));
+        }
+
+        mem.cv_netf     = copy.cv_netf;     // Error test failure count.
+        mem.cv_netfS    = copy.cv_netfS;    // Number of sensi. error test failures
+        mem.cv_netfQ    = copy.cv_netfQ;    // Number of quadr. error test failures
+
+        mem.cv_nsetups  = copy.cv_nsetups;  // Setup call count.
+        mem.cv_nsetupsS = copy.cv_nsetupsS; // Number of setup calls due to sensitivities
+        
+        mem.cv_nhnil    = copy.cv_nhnil;   // Msgs. issued to user count.
 
         // SPACE REQUIREMENTS FOR CVODE.
 
-        mem.cv_lrw1 = copy.cv_lrw1; // No. of realtype words in 1 N_Vector.
-        mem.cv_liw1 = copy.cv_liw1; // No. of integer words in 1 N_Vector.
-        mem.cv_lrw  = copy.cv_lrw;  // No. of realtype words in CVODE work vectors.
-        mem.cv_liw  = copy.cv_liw;  // No. of integer words in CVODE work vectors.
+        mem.cv_lrw1  = copy.cv_lrw1;  // No. of realtype words in 1 N_Vector.
+        mem.cv_liw1  = copy.cv_liw1;  // No. of integer words in 1 N_Vector.
+        mem.cv_lrw1Q = copy.cv_lrw1Q; // no. of realtype words in 1 N_Vector yQ
+        mem.cv_liw1Q = copy.cv_liw1Q; // no. of integer words in 1 N_Vector yQ
+        mem.cv_lrw   = copy.cv_lrw;   // No. of realtype words in CVODE work vectors.
+        mem.cv_liw   = copy.cv_liw;   // No. of integer words in CVODE work vectors.
 
         // LINEAR SOLVER FUNCTIONS.
 
@@ -765,6 +987,12 @@ void ODE_Solver::assignCVMem(const CVodeMemRec &copy)
         mem.cv_lsetup = copy.cv_lsetup;
         mem.cv_lsolve = copy.cv_lsolve;
         mem.cv_lfree  = copy.cv_lfree;
+        
+        //STEP SIZE RATIOS
+
+        mem.cv_etaqm1  = copy.cv_etaqm1;      // Ratio of new to old h for order q-1
+        mem.cv_etaq    = copy.cv_etaq;        // Ratio of new to old h for order q
+        mem.cv_etaqp1  = copy.cv_etaqp1;      // Ratio of new to old h for order q+1
 
         // LINEAR SOLVER SPECIFIC MEMORY.
 
@@ -840,6 +1068,9 @@ void ODE_Solver::assignCVMem(const CVodeMemRec &copy)
             mem.cv_lfree(&mem);
         }
 
+        mem.cv_forceSetup = copy.cv_forceSetup;     // Flag to request a call to the setup routine
+
+
         // SAVED VALUES.
 
         mem.cv_qu           = copy.cv_qu;           // Last successful q value used.
@@ -850,11 +1081,20 @@ void ODE_Solver::assignCVMem(const CVodeMemRec &copy)
         mem.cv_jcur         = copy.cv_jcur;         // Is Jacobian info used by linear solver current?
         mem.cv_tolsf        = copy.cv_tolsf;        // tolerance scale factor.
         mem.cv_qmax_alloc   = copy.cv_qmax_alloc;   // Value of qmax used when allocating memory.
+        mem.cv_qmax_allocQ  = copy.cv_qmax_allocQ;  // value of qmax used when allocating quad. memory
+        mem.cv_qmax_allocS  = copy.cv_qmax_allocS;  // value of qmax used when allocating sensi. memory
         mem.cv_indx_acor    = copy.cv_indx_acor;    // Index of xn vector in which acor is stored.
         mem.cv_setupNonNull = copy.cv_setupNonNull; // Does setup do something?
 
-        mem.cv_VabstolMallocDone = copy.cv_VabstolMallocDone;
-        mem.cv_MallocDone        = copy.cv_MallocDone;
+        mem.cv_VabstolMallocDone     = copy.cv_VabstolMallocDone;
+        mem.cv_MallocDone            = copy.cv_MallocDone;
+
+        mem.cv_VabstolQMallocDone    = copy.cv_VabstolQMallocDone;
+        mem.cv_quadMallocDone        = copy.cv_quadMallocDone;
+
+        mem.cv_VabstolSMallocDone    = copy.cv_VabstolSMallocDone;
+        mem.cv_SabstolSMallocDone    = copy.cv_SabstolSMallocDone;
+        mem.cv_sensMallocDone        = copy.cv_sensMallocDone;
 
         // ERROR HANDLER FUNCTION AND OUTPUT FILE.
 

@@ -296,6 +296,9 @@ private:
     // Writes tracked particles to the binary output file.
     void outputPartTrack(const Reactor &r) const;
     
+    // Write sensitivity output to the binary file.
+    void outputSensitivity(const Reactor &r) const;
+
     // Writes the gas-phase reaction rates-of-progress and
     // the species molar production rates due to gas-phase
     // reactions to the binary output file.

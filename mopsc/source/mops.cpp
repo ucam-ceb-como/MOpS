@@ -1,4 +1,4 @@
-/*
+ /*
   Author(s):      Matthew Celnik (msc37)
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
@@ -44,6 +44,7 @@
 #include "sprog.h"
 #include "sweep.h"
 #include <vector>
+#include <string>
 #include <stdexcept>
 
 using namespace Mops;
@@ -93,6 +94,11 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "-gpc") == 0) {
             // Solver gas-phase chemistry only.
             soltype = GPC;
+        } else if (strcmp(argv[i], "-sensi") == 0) {
+            // Solver gas-phase chemistry sensitivity.
+            SensitivityAnalyzer sa;
+            sa.Solve();
+            return 0;
 		} else if (strcmp(argv[i], "-opsplit") == 0) {
             // Use Simple operator splitting to couple gas-phase
 			// and particle system.
@@ -109,9 +115,9 @@ int main(int argc, char *argv[])
             // Post-process a flame gas-phase chemistry
             // profile, just like sweep1.
             soltype = FlamePP;
-//        } else if (strcmp(argv[i], "-momic") == 0) {
-//            // Use method-of-moments to solve particles (1D only!).
-//            soltype = MoMIC;
+ //       } else if (strcmp(argv[i], "-momic") == 0) {
+ //           // Use method-of-moments to solve particles (1D only!).
+ //           soltype = MoMIC;
 
         // the next statements determine diagnostics level (if any).
         } else if (strcmp(argv[i], "-diag1") == 0) {
@@ -138,6 +144,7 @@ int main(int argc, char *argv[])
     Mechanism mech;          // Chemical and particle mechanism.
     timevector times;        // A list of output times and step counts.
     Simulator sim;           // The simulator.
+    SensitivityAnalyzer sensi; // The sensitvity analyzer.
 
     // Create the solver.
     try {
@@ -246,6 +253,16 @@ int main(int argc, char *argv[])
         printf("\n\n");
         delete solver; // Must clear memory now.
         return -1;
+    }
+    
+    // This is needed by Sensitivity Analyzer
+    {
+        sensi.Enable(1);
+        sensi.SetMethod(1);
+        sensi.EnableErrorControl(1);
+        string fsensi = "sensi.xml";
+        sensi.DefineSensiParams(mech, fsensi);
+        solver->GetODE_Solver().SetSensitivity(sensi);
     }
 
     // Solve reactor.

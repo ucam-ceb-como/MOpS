@@ -46,6 +46,7 @@
 #include "mops_params.h"
 #include "mops_src_terms.h"
 #include "mops_reactor.h"
+#include "mops_gpc_sensitivity.h"
 
 // CVODE includes.
 #include "nvector/nvector_serial.h"
@@ -53,6 +54,8 @@
 #include "cvodes_dense_impl.h" // For DenseMat.
 
 #include <istream>
+
+#define ZERO  RCONST(0.0)
 
 namespace Mops
 {
@@ -73,7 +76,7 @@ public:
     ODE_Solver &operator=(const ODE_Solver &rhs);
 
     // Enumeration of ODE solvers.
-    enum SolverType {CVODE_Solver, RADAU5_Solver};
+    // enum SolverType {CVODE_Solver, RADAU5_Solver};
 
     
     // SOLVER SETUP.
@@ -145,6 +148,29 @@ public:
     // Reads the solver data from a binary data stream.
     void Deserialize(std::istream &in);
 
+    // RHS FUNCTION INTERFACE.
+    // These function are implemented for being interface with Rhs functions of
+    // CVODE and CVODES. Rhs functions are exported to mops_rhs_func.cpp/.h
+    // so that the Rhs functions can be made non-static.
+
+    // Return Reactor object.
+    Reactor *GetReactor() { return m_reactor;}
+
+    // Return a source term function pointer.
+    SrcTermFnPtr GetsrcTermsFn() { return _srcTerms;};
+    
+    // Return a source term as SrcProfile object.
+    const SrcProfile *GetsrcTerms() { return m_srcterms;};
+
+    // Return number of equation.
+    unsigned int GetNEquations() { return m_neq; }
+
+    // Set sensitivity object by making a copy of given sensitivity object.
+    void SetSensitivity(Mops::SensitivityAnalyzer &sensi) {m_sensi = sensi;};
+
+    // Get sensitivity object.
+    Mops::SensitivityAnalyzer &GetSensitivity() {return m_sensi;};
+
 protected:
     // ODE solution variables.
     real m_rtol, m_atol;    // Relative and absolute tolerances.
@@ -163,42 +189,37 @@ protected:
     const SrcProfile *m_srcterms; // Vector of externally defined source terms on  the RHS.
     SrcTermFnPtr _srcTerms; // Source term function pointer.
 
+    // Sensitivity related variables
+    Mops::SensitivityAnalyzer m_sensi;
+    N_Vector *m_yS;
+
+
 private:
     // CVODE variables.
     void *m_odewk;     // CVODE workspace.
     N_Vector m_solvec; // Internal solution array for CVODE interface.
+    N_Vector m_yvec;   // Internal y work space for CVODE interface.
 
 
     // VERY IMPORTANT FOR CVODE INTEGRATION!
 
-    // The right-hand side evaluator.  This function calculates the RHS of
-    // the reactor differential equations.  CVODE uses a void* pointer to
-    // allow the calling code to pass whatever information it wants to
-    // the RHS function.  In this case the void* pointer should be cast
-    // into an ODE_Solver object.
-    static int rhsFn_CVODE(
-        double t,      // Current flow time.
-        N_Vector y,    // The current solution variables.
-        N_Vector ydot, // Derivatives to return.
-        void* solver   // An ODE_Solver object (to be cast).
-        );
 
     // The Jacobian matrix evaluator.  This function calculates the 
     // Jacobian matrix given the current state.  CVODE uses a void* pointer to
     // allow the calling code to pass whatever information it wants to
     // the function.  In this case the void* pointer should be cast
     // into an ODE_Solver object.
-    static int jacFn_CVODE(
-        long int N,    // Problem size.
-        DenseMat J,    // Jacobian matrix.
-        double t,      // Time.
-        N_Vector y,    // Current solution variables.
-        N_Vector ydot, // Current value of the vector f(t,y), the RHS.
-        void* solver,  // An ODE_Solver object (to be cast).
-        N_Vector tmp1, // Temporary array available for calculations.
-        N_Vector tmp2, // Temporary array available for calculations.
-        N_Vector tmp3  // Temporary array available for calculations.
-        );
+    //static int jacFn_CVODE(
+    //    long int N,    // Problem size.
+    //    DenseMat J,    // Jacobian matrix.
+    //    double t,      // Time.
+    //    N_Vector y,    // Current solution variables.
+    //    N_Vector ydot, // Current value of the vector f(t,y), the RHS.
+    //    void* solver,  // An ODE_Solver object (to be cast).
+    //    N_Vector tmp1, // Temporary array available for calculations.
+    //    N_Vector tmp2, // Temporary array available for calculations.
+    //    N_Vector tmp3  // Temporary array available for calculations.
+    //    );
 
 
     // INITIALISATION AND DESTRUCTION.

@@ -40,6 +40,7 @@
 */
 
 #include "mops_simulator.h"
+#include "mops_ode_solver.h"
 #include "mops_flux_postprocessor.h"
 #include "mops_reactor_factory.h"
 #include "string_functions.h"
@@ -594,6 +595,10 @@ void Simulator::outputPartTrack(const Reactor &r) const
         }
     }
 }
+// Write sensitivity output to the binary file.
+void Simulator::outputSensitivity(const Reactor &r) const
+{
+}
 
 // Writes the gas-phase reaction rates-of-progress and the
 // species molar production rates to the binary output file.
@@ -669,6 +674,9 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
 
             // Do particle tracking output.
             me->outputPartTrack(r);
+
+            // Write sensitivityto file.
+            me->outputSensitivity(r);
         }
     }
 }

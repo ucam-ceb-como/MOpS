@@ -1,13 +1,13 @@
 /*
-  Author(s):      Matthew Celnik (msc37)
+  Author(s):      Weerapong Phadungsukana (wp214)
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
   
-  Copyright (C) 2008 Matthew S Celnik.
+  Copyright (C) 2008 Weerapong Phadungsukanan.
 
   File purpose:
-    This is the main include file for other projects which use
-    mops.  All components of mops are included here.
+    Gas phase sensitivity analyzer class. It contains setup function for
+    mops_gpc_sensitivity_solver.h and mops_gpc_sensitivity_solver.cpp.
 
   Licence:
     This file is part of "mops".
@@ -40,31 +40,15 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#ifndef MOPS_H
-#define MOPS_H
+#ifndef MOPS_GPC_SENSITIVITY_SOLVER_H
+#define MOPS_GPC_SENSITIVITY_SOLVER_H
 
-#include "mops_reactor_type.h"
-#include "mops_reactor.h"
-#include "mops_psr.h"
-#include "mops_reactor_factory.h"
+namespace Mops
+{
+class SensitivitySolver
+{
 
-#include "mops_params.h"
-#include "mops_mixture.h"
-#include "mops_mechanism.h"
+};
+};
 
-#include "mops_settings_io.h"
-#include "mops_timeinterval.h"
-
-#include "mops_solvertype.h"
-#include "mops_solver.h"
-#include "mops_simplesplit_solver.h"
-#include "mops_strang_solver.h"
-#include "mops_predcor_solver.h"
-
-#include "mops_flux_postprocessor.h"
-#include "mops_gpc_sensitivity.h"
-#include "mops_gpc_sensitivity_solver.h"
-
-#include "swp_gas_profile.h"
-#include "swp_flamesolver.h"
 #endif

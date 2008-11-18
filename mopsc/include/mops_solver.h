@@ -150,6 +150,8 @@ public:
         unsigned int start=0 // Optional start index in vector.
         ) const;
 
+    ODE_Solver &GetODE_Solver() { return m_ode; };
+
 protected:
     // ODE SOLVER.
 

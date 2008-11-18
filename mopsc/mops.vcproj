@@ -326,6 +326,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\mops_gpc_sensitivity_solver.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\mops_mechanism.cpp"
 				>
 			</File>
@@ -355,6 +359,10 @@
 			</File>
 			<File
 				RelativePath=".\source\mops_reactor_factory.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\mops_rhs_func.cpp"
 				>
 			</File>
 			<File
@@ -412,6 +420,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\mops_gpc_sensitivity.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\mops_gpc_sensitivity_solver.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\mops_mechanism.h"
 				>
 			</File>
@@ -449,6 +465,10 @@
 			</File>
 			<File
 				RelativePath=".\include\mops_reactor_type.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\mops_rhs_func.h"
 				>
 			</File>
 			<File
