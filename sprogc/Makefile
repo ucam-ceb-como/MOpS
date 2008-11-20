@@ -34,7 +34,7 @@ endif
 obj=gpc_el_comp.o gpc_element.o gpc_element_lib.o gpc_gasphase.o \
     gpc_idealgas.o gpc_mech.o gpc_mech_io.o gpc_mixture.o \
     gpc_mixture_factory.o gpc_reaction.o gpc_reaction_set.o gpc_species.o \
-    gpc_stoich.o gpc_thermo.o gpc_string.o
+    gpc_stoich.o gpc_thermo.o gpc_string.o gpc_transport_data.o gpc_transport_factory.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -104,7 +104,12 @@ gpc_mech_io.o: $(src)/gpc_mech_io.cpp gpc_mech.o
 gpc_string.o: $(src)/gpc_string.cpp
 	$(cpp) $(flag) $(src)/gpc_string.cpp
 
-	
+# transport models
+gpc_transport_data.o: $(src)/gpc_transport_data.cpp
+	$(cpp) $(flag) $(src)/gpc_transport_data.cpp
+
+gpc_transport_factory.o: $(src)/gpc_transport_factory.cpp
+	$(cpp) $(flag) $(src)/gpc_transport_factory.cpp
 
 # TARGET clean: leave just source code.
 

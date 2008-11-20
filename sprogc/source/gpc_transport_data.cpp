@@ -143,27 +143,27 @@ real TransportData::getRotRelaxNum() const{
 	return this->rotRelaxNum;
 }
 // validate the transport data
-void TransportData::validateTransport(std::map<string,vector<string> > &trMap,
-									  Sprog::Mechanism &mech)
-{
-	vector<Species*> vSpecies = mech.Species();
-	map<std::string,vector<string>>::iterator p;
-	
-	int vsize = vSpecies.size();
-	
-	for(int i=0; i< vsize; i++){
-		p = trMap.find(vSpecies[i]->Name());
-		if( p== trMap.end()){
-			cout << " Species :" << vSpecies[i]->Name() << "not found in transport data!!" << endl;
-			exit(1);
-		
-		}
-
-	}
-
-}
-
-
-
+//void TransportData::validateTransport(std::map<string,vector<string> > &trMap,
+//									  Sprog::Mechanism &mech)
+//{
+//	vector<Species*> vSpecies = mech.Species();
+//	map<std::string,vector<string>>::iterator p;
+//	
+//	int vsize = vSpecies.size();
+//	
+//	for(int i=0; i< vsize; i++){
+//		p = trMap.find(vSpecies[i]->Name());
+//		if( p== trMap.end()){
+//			cout << " Species :" << vSpecies[i]->Name() << "not found in transport data!!" << endl;
+//			exit(1);
+//		
+//		}
+//
+//	}
+//
+//}
+//
+//
+//
 
 	

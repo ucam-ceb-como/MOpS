@@ -223,10 +223,10 @@ public:
     // OUTPUT FUNCTIONS.
 
     // Prints a diagnostic output file containing all the
-    // mechanism data.  This is used to debug.
+    // mechanism data.  This is used to debug. 
     void WriteDiagnostics(const std::string &filename) const;
 
-	void setSpeciesTransport(map<string,vector<string>> &trMap,Sprog::Mechanism &mech) const;
+	void setSpeciesTransport(map< string,vector<string> > &trMap,Sprog::Mechanism &mech) const;
 
 protected:
     // Mechanism data.

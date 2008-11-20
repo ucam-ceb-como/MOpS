@@ -836,22 +836,22 @@ void Mechanism::WriteDiagnostics(const std::string &filename) const
     fout.close();
 }
 
-void Mechanism::setSpeciesTransport(std::map<string,vector<string>> &trMap, Sprog::Mechanism &mech) const{
+void Mechanism::setSpeciesTransport(std::map< string,vector<string> > &trMap, Sprog::Mechanism &mech) const{
 
-	map<string,vector<string>>::iterator mi;
+	map< string,vector<string> >::iterator mi;
 	vector<std::string> transData;
 	unsigned int nSpecies = mech.SpeciesCount();
 
 	//Transport::TransportData *td;
 
-	for(int i =0; i!=nSpecies; i++){
+	for(unsigned int i =0; i!=nSpecies; i++){
 		mi = trMap.find(mech.m_species[i]->Name());
 		if( mi != trMap.end()){
 			transData = mi->second;			
 			mech.m_species[i]->setTransportData(transData);													
 		}else{
 			cout << "Species :" << mech.m_species[i]->Name() << "not found in transport data \n";
-			exit(1);
+			//exit(1);
 		}
 	}
    

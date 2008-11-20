@@ -94,7 +94,7 @@ namespace Sprog{
 			void setRotRelaxNum(real rotRelaxNum);
 			real getRotRelaxNum()const;
 
-			void validateTransport(map<string,vector<string>> &trMap,Sprog::Mechanism &mech);
+			//void validateTransport(map<string,vector<string>> &trMap,Sprog::Mechanism &mech);
 		};
 	};
 };

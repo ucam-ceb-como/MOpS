@@ -405,12 +405,12 @@ real MixtureTransport::getViscosity(const real T, const Sprog::Thermo::Mixture &
 	// vector<Sprog::Species*> const *sp = mix.Species();
 	const SpeciesPtrVector  *spv = mix.Species();
 	vector<real> moleFrac = mix.MoleFractions();	
-	int k,j;
+	unsigned int k,j;
 	real xTimesEta, xTimesPhi , eta;
 	real m_kj, eta_kj, phi_kj;
 
 	eta = 0.0;
-	int size = spv->size();
+	//int size = spv->size();
 
 	for(k=0; k!= spv->size(); k++){
 		xTimesEta = moleFrac[k] * (*spv)[k]->getViscosity(T);
@@ -430,7 +430,7 @@ real MixtureTransport::getViscosity(const real T, const Sprog::Thermo::Mixture &
 
 real MixtureTransport::getThermalConductivity(const real T, real p, const Sprog::Thermo::Mixture &mix) const{
 
-	int k;
+	unsigned int k;
 	real lambdaProd, lambdaFrac;
 
 	lambdaProd = 0;
@@ -452,7 +452,7 @@ real MixtureTransport::getThermalConductivity(const real T, real p, const Sprog:
 		lambdaProd += moleFrac[k] * (*spv)[k]->getThermalConductivity(T,p,cp[k]);
 		lambdaFrac += moleFrac[k] / (*spv)[k]->getThermalConductivity(T,p,cp[k]);		
 	}
-	real lambda = 0.5*(lambdaProd + (1.0/lambdaFrac));
+	//real lambda = 0.5*(lambdaProd + (1.0/lambdaFrac));
 
 	return 0.5*(lambdaProd + (1.0/lambdaFrac));
 }
@@ -467,7 +467,7 @@ real MixtureTransport::binaryDiffusionCoeff(const int j,
 	Transport::TransportData td_j = (*spv)[j]->getTransportData();
 	Transport::TransportData td_k = (*spv)[k]->getTransportData();
 
-	real threeBy16 = 3.0/16.0;
+	//real threeBy16 = 3.0/16.0;
 	real m_j, m_k, m_jk;
 	real mu_j, mu_k, mu_jk;
 	real epsilon_j, epsilon_k, epsilon_jk;

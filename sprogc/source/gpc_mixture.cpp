@@ -497,7 +497,7 @@ real Mixture::getSpecificHeatCapacity(Sprog::real T){
 	Sprog::Thermo::IdealGas ig(*this->Species());
 	ig.CalcCps(T,cpMols);
 	GetMassFractions(massFrac);
-	for(int i=0; i != m_species->size(); i++)
+	for(unsigned int i=0; i != m_species->size(); i++)
 		cp += massFrac[i]*(cpMols[i])/(*m_species)[i]->MolWt();
 
 	return cp;

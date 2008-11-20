@@ -139,7 +139,7 @@ void MechanismParser::ReadTransport(const string& transFile, Sprog::Mechanism &m
 	if(inf.good()){
 		std::string transString;
 		vector<std::string> transpVector;
-		map<string,vector<string>> transpMap;
+		map< string,vector<string> > transpMap;
 		while(!inf.eof()){
 			getline(inf,transString);
 			if (!isEmpty(transString)){								
@@ -147,7 +147,7 @@ void MechanismParser::ReadTransport(const string& transFile, Sprog::Mechanism &m
 				i = mech.FindSpecies(convertToCaps(transpVector[0]));
 				if( i>= 0){
 					//cout << transpVector[0] <<  endl;
-					transpMap.insert(pair<std::string,vector<string>>(convertToCaps(transpVector[0]),transpVector));
+					transpMap.insert(pair< std::string,vector<string> >(convertToCaps(transpVector[0]),transpVector));
 				}							
 				
 			}
@@ -159,7 +159,7 @@ void MechanismParser::ReadTransport(const string& transFile, Sprog::Mechanism &m
 		
 	}else{
 		cout << "Transport file not specified \n";
-		exit(1);
+		//exit(1);
 	}
 
 }
