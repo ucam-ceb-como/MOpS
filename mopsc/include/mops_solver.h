@@ -150,7 +150,10 @@ public:
         unsigned int start=0 // Optional start index in vector.
         ) const;
 
-    ODE_Solver &GetODE_Solver() { return m_ode; };
+    // Attach sensitivity to ODE_Solver by making copy.
+    void AttachSensitivity(SensitivityAnalyzer &sensi) const { m_ode.SetSensitivity(sensi); };
+
+    //const ODE_Solver &GetODE_Solver() const { return m_ode; };
 
 protected:
     // ODE SOLVER.

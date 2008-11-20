@@ -102,7 +102,7 @@ public:
     };
 
     // Enumeration of Sensitivity Types
-    enum SensitivityType {Reaction_Rates};
+    enum SensitivityType {Reaction_Rates, Init_Concentrations};
 
     // Constructor.
     SensitivityAnalyzer();
@@ -115,12 +115,15 @@ public:
     
     // Operators.
     SensitivityAnalyzer &operator=(const SensitivityAnalyzer &rhs);
+
+    // Reset all setting.
+    void Clear();
     
     // Enable/Disable sensitivity analyzer.
-    void Enable(booleantype enable);
+    void Enable(bool enable);
 
     // Get enable status.
-    booleantype isEnable();
+    bool isEnable() const;
 
     // Set sensitivity method. This is for CVODES.
     void SetMethod(int sensi_meth);
@@ -135,7 +138,7 @@ public:
     booleantype isEnableErrorControl();
 
     // Define the mechanism and parameters.
-    void DefineSensiParams(Mops::Mechanism &mech, string &sfile);
+    void SetupProblem(Mops::Mechanism &mech, const string &sfile);
 
     // Return number of parameters.
     unsigned int NParams();
@@ -151,7 +154,7 @@ public:
     void ResetMechParams();
 
     // File output.
-    // void
+    void outputTo() {};
 
     // Parameter pointer to array of real. This is needed by CVODES.
     // CVODES will access and change these parameters.
@@ -175,7 +178,7 @@ private:
     SensitivityType m_probType;
 
     // Enable sensitivity analyzer status.
-    booleantype m_enable;
+    bool m_enable;
 
     // Error control method.
     booleantype m_err_con;
@@ -192,13 +195,19 @@ private:
     // PARAMETERS' MEMORIES
     // Number of sensitivity parameters
     unsigned int m_NS;
-    vector<ARRHENIUS_PARAMS> m_arr_params;
     real *m_org_params;
     real *m_params;
     real *m_parambars;
+    vector<ARRHENIUS_PARAMS> m_arr_params;
 
-    void AddParam(const ARRHENIUS_PARAMS &arr);
+    bool AddParam(const ARRHENIUS_PARAMS &arr);
      /* Prototypes of functions by CVODES */
+
+    // Setup sensitivity problem from given setting xml version 1.0.
+    // Clear function must be called before using this function, otherwise 
+    // program might behave abnormally. m_mech pointer must be set after 
+    // use clear function.
+    void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA);
 
     static int f(realtype t, N_Vector y, N_Vector ydot, void *f_data);
     //static int f(realtype t, N_Vector y, N_Vector ydot, void *f_data);

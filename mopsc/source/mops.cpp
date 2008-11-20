@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
     string thermfile("therm.dat");
     string settfile("mops.inx");
     string swpfile("sweep.xml");
+    string sensifile("sensi.xml");
     bool fsolve        = true;  // Default is to solve ..
     bool fpostprocess  = false; // .. but not post-process.
     bool foldfmt       = false; // Settings file format, new format not yet implemented.
@@ -94,11 +95,6 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "-gpc") == 0) {
             // Solver gas-phase chemistry only.
             soltype = GPC;
-        } else if (strcmp(argv[i], "-sensi") == 0) {
-            // Solver gas-phase chemistry sensitivity.
-            SensitivityAnalyzer sa;
-            sa.Solve();
-            return 0;
 		} else if (strcmp(argv[i], "-opsplit") == 0) {
             // Use Simple operator splitting to couple gas-phase
 			// and particle system.
@@ -144,7 +140,6 @@ int main(int argc, char *argv[])
     Mechanism mech;          // Chemical and particle mechanism.
     timevector times;        // A list of output times and step counts.
     Simulator sim;           // The simulator.
-    SensitivityAnalyzer sensi; // The sensitvity analyzer.
 
     // Create the solver.
     try {
@@ -255,14 +250,30 @@ int main(int argc, char *argv[])
         return -1;
     }
     
-    // This is needed by Sensitivity Analyzer
-    {
-        sensi.Enable(0);
-        sensi.SetMethod(1);
-        sensi.EnableErrorControl(1);
-        string fsensi = "sensi.xml";
-        sensi.DefineSensiParams(mech, fsensi);
-        solver->GetODE_Solver().SetSensitivity(sensi);
+    // This is needed by Sensitivity Analyzer.
+    // - Sensitivity Analyzer (SA) object requires access to mechanism object's parameters so it is
+    //   necessary that SA has a pointer to a non-constant Mop::Mechanism (mech). SA is attached
+    //   to the solver and paas on to ODE_Solver. Ideally, it should access Mop::Mechanism object from
+    //   Mop::Reactor. However, current reactor keeps a pointer to constant mechanism object so SA
+    //   would not be able to change mechanism parameters. So it is required here to pass the same 
+    //   mechanism object which is passed on to reactor to SA object be fore attach it to the solver.
+    // - Valuse in sensitivity object is in SI unit.
+    try {
+        // The sensitvity analyzer.
+        SensitivityAnalyzer *sensi = new SensitivityAnalyzer();
+        sensi->SetupProblem(mech, sensifile);
+        if (sensi->isEnable()) {
+            // a copy of sensi is made during attaching so you can delete it aftrwards.
+            solver->AttachSensitivity(*sensi);
+        }
+        delete sensi;
+    } catch (std::runtime_error &re) {
+        printf("mops: Failed to load sensitivity setting files due to a program error.  Message:\n  ");
+        printf(re.what());
+        printf("\n\n");
+        delete solver; // Must clear memory now.
+        delete reactor;
+        return -1;
     }
 
     // Solve reactor.

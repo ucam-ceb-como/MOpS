@@ -166,10 +166,10 @@ public:
     unsigned int GetNEquations() { return m_neq; }
 
     // Set sensitivity object by making a copy of given sensitivity object.
-    void SetSensitivity(Mops::SensitivityAnalyzer &sensi) {m_sensi = sensi;};
+    void SetSensitivity(Mops::SensitivityAnalyzer &sensi) const {m_sensi = sensi;};
 
     // Get sensitivity object.
-    Mops::SensitivityAnalyzer &GetSensitivity() {return m_sensi;};
+    Mops::SensitivityAnalyzer &GetSensitivity() const {return m_sensi;};
 
 protected:
     // ODE solution variables.
@@ -190,7 +190,7 @@ protected:
     SrcTermFnPtr _srcTerms; // Source term function pointer.
 
     // Sensitivity related variables
-    Mops::SensitivityAnalyzer m_sensi;
+    mutable Mops::SensitivityAnalyzer m_sensi;
     N_Vector *m_yS;
 
 

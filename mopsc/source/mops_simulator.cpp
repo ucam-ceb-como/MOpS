@@ -676,7 +676,7 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
             me->outputPartTrack(r);
 
             // Write sensitivityto file.
-            me->outputSensitivity(r);
+            //s.GetODE_Solver().GetSensitivity().outputTo();
         }
     }
 }

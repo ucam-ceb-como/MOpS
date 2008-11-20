@@ -40,6 +40,8 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 #include "mops_gpc_sensitivity.h"
+#include "camxml.h"
+#include "string_functions.h"
 #include <stdexcept>
 
 using namespace Mops;
@@ -99,17 +101,30 @@ using namespace Mops;
 //
 
 // Constructor.
-SensitivityAnalyzer::SensitivityAnalyzer() : 
-    m_probType(Reaction_Rates),
-    m_enable(FALSE),
-    m_err_con(FALSE),
-    m_sensi_meth(CV_SIMULTANEOUS),
+SensitivityAnalyzer::SensitivityAnalyzer() :
     m_mech(NULL),
-    m_NS(0),
     m_org_params(NULL),
     m_params(NULL),
     m_parambars(NULL)
 {
+    Clear();
+}
+
+void SensitivityAnalyzer::Clear()
+{ 
+    m_probType = Reaction_Rates;
+    m_enable  = false;
+    m_err_con = FALSE;
+    m_sensi_meth = CV_SIMULTANEOUS;
+    m_mech = NULL;
+    m_NS = 0;
+    if (m_org_params != NULL) delete [] m_org_params;
+    if (m_params     != NULL) delete [] m_params;
+    if (m_parambars  != NULL) delete [] m_parambars;
+    m_arr_params.clear();
+    m_org_params = NULL;
+    m_params     = NULL;
+    m_parambars  = NULL;
 }
 
 // Destructor.
@@ -166,13 +181,13 @@ SensitivityAnalyzer &SensitivityAnalyzer::operator=(const SensitivityAnalyzer &r
 }
 
 // Enable/Disable sensitivity analyzer.
-void SensitivityAnalyzer::Enable(booleantype enable)
+void SensitivityAnalyzer::Enable(bool enable)
 {
     m_enable = enable;
 }
 
 // Get enable status.
-booleantype SensitivityAnalyzer::isEnable()
+bool SensitivityAnalyzer::isEnable() const
 {
     return m_enable;
 }
@@ -202,18 +217,179 @@ booleantype SensitivityAnalyzer::isEnableErrorControl()
 }
 
 // Define the mechanism and parameters.
-void SensitivityAnalyzer::DefineSensiParams(Mops::Mechanism &mech, string &sfile)
+void SensitivityAnalyzer::SetupProblem(Mops::Mechanism &mech, const string &sfile)
 {
+    Clear();
     m_mech = &mech;
-    //unsigned int nrxn = m_mech->ReactionCount();
-    unsigned int nrxn = 3;
-    m_org_params = new Mops::real[nrxn];
-    m_params     = new Mops::real[nrxn];
-    m_parambars  = new Mops::real[nrxn];
-    for (unsigned int i = 0; i < nrxn; i++) {
-        ARRHENIUS_PARAMS arrp(i, ARR_A);
-        AddParam(arrp);
-        m_org_params[i] = m_params[i] = m_parambars[i] = m_mech->Reactions(i)->Arrhenius().A;
+    CamXML::Document xmlSA;
+    try {
+        xmlSA.Load(sfile);
+    } catch (std::exception &ex) {
+        // do nothing
+    }
+    if (xmlSA.Root()->GetChildren().size() > 0) {
+        if (xmlSA.Root()->GetAttributeValue("version").compare("1.0") == 0) {
+            ReadSettingV1(*xmlSA.Root());
+        } else {
+            throw std::runtime_error("Semsitivity XML version not supported "
+                                     "(Mops, SensitivityAnalyzer::SetupProblem).");
+        }
+    }
+}
+
+void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
+{
+    // General pre-settings
+    CamXML::Element *settingElem = NULL;
+    CamXML::Element *paramsElem = NULL;
+    settingElem = elemSA.GetFirstChild("settings");
+    if (settingElem != NULL)
+    {
+        CamXML::Element *sensiElem = NULL;
+        CamXML::Element *errConElem = NULL;
+        CamXML::Element *probTypeElem = NULL;
+        // Read Sensitivity Method
+        // Default value is CV_SIMULTANEOUS.
+        sensiElem = settingElem->GetFirstChild("sensitivity");
+        if (sensiElem != NULL) {
+            if (sensiElem->GetAttributeValue("enable").compare("true") == 0) {
+                m_enable = true;
+            } else {
+                m_enable = false;
+            }
+            if (sensiElem->GetAttributeValue("method").compare("1") == 0) {
+                m_sensi_meth = CV_SIMULTANEOUS;
+            } else if (sensiElem->GetAttributeValue("method").compare("2") == 0) {
+                m_sensi_meth = CV_STAGGERED;
+            } else if (sensiElem->GetAttributeValue("method").compare("3") == 0) {
+                m_sensi_meth = CV_STAGGERED1;
+            } else {
+                m_sensi_meth = CV_SIMULTANEOUS;
+            }
+        }
+        // Read Error Control.
+        // Default value is TRUE.
+        errConElem = settingElem->GetFirstChild("errorControl");
+        if (errConElem == NULL) {
+            m_err_con = 1;
+        } else {
+            int r = errConElem->GetAttributeValue("enable").compare("true");
+            m_err_con = (r != 0) ? (0) : (1);
+        }
+        // Read Problem Type.
+        // Default value of problemtype is Reaction_Rate.
+        probTypeElem = settingElem->GetFirstChild("problemType");
+        if (probTypeElem != NULL) {
+            if (probTypeElem->GetAttributeValue("type").compare("Reaction_Rates") == 0) {
+                m_probType = Reaction_Rates;
+            } else if (probTypeElem->GetAttributeValue("type").compare("Init_Concentrations") == 0) {
+                m_probType = Init_Concentrations;
+            } else {
+                m_probType = Reaction_Rates;
+            }
+        }
+    } else {
+        throw std::runtime_error("'settings' element not found in Sensitivity XML "
+                                 "(Mops, SensitivityAnalyzer::ReadSettingV1).");
+    }
+    paramsElem = elemSA.GetFirstChild("parameters");
+    if (paramsElem != NULL)
+    {
+        if (m_probType == Reaction_Rates) {
+            CamXML::Element *AElem = NULL;
+            CamXML::Element *nElem = NULL;
+            CamXML::Element *EElem = NULL;
+
+            CamXML::Element *AddiParams = NULL;
+            vector<CamXML::Element *> AParams, nParams, EParams;
+
+            bool enableA = false;
+            bool enablen = false;
+            bool enableE = false;
+            bool allA = false;
+            bool alln = false;
+            bool allE = false;
+
+            const int nrxn = m_mech->ReactionCount();
+
+            AElem = paramsElem->GetFirstChild("A");
+            nElem = paramsElem->GetFirstChild("n");
+            EElem = paramsElem->GetFirstChild("E");
+            if (AElem != NULL) {
+                enableA = (AElem->GetAttributeValue("enable").compare("true") == 0);
+                allA    = (AElem->GetAttributeValue("all").compare("true") == 0);
+            }
+            if (nElem != NULL) {
+                enablen = (nElem->GetAttributeValue("enable").compare("true") == 0);
+                alln    = (nElem->GetAttributeValue("all").compare("true") == 0);
+            }
+            if (EElem != NULL) {
+                enableE = (EElem->GetAttributeValue("enable").compare("true") == 0);
+                allE    = (EElem->GetAttributeValue("all").compare("true") == 0);
+            }
+            // m_enable = m_enable && (enableA || enablen || enableE);
+
+            // Get additional user define parameters. This xml node is only in use if allX is false.
+            AddiParams = paramsElem->GetFirstChild("additional");
+            if (AddiParams != NULL) {
+                AddiParams->GetChildren("paramA", AParams);
+                AddiParams->GetChildren("paramn", nParams);
+                AddiParams->GetChildren("paramE", EParams);
+            }
+
+            // Add parameters to parameter list.
+            // Add A parameters
+            if (enableA) {
+                unsigned int nend = (allA) ? nrxn : AParams.size();
+                for (unsigned int i = 0; i < nend; i++) {
+                    int rxn_index = (allA) ? (i) : ((int)Strings::cdble(AParams.at(i)->GetAttributeValue("rxnth")));
+                    ARRHENIUS_PARAMS arrp(rxn_index, ARR_A);
+                    AddParam(arrp);
+                }
+            }
+            // Add n parameters
+            if (enablen) {
+                unsigned int nend = (alln) ? nrxn : nParams.size();
+                for (unsigned int i = 0; i < nend; i++) {
+                    int rxn_index = (alln) ? (i) : ((int)Strings::cdble(nParams.at(i)->GetAttributeValue("rxnth")));
+                    ARRHENIUS_PARAMS arrp(rxn_index, ARR_n);
+                    AddParam(arrp);
+                }
+            }
+            // Add E parameters
+            if (enableE) {
+                unsigned int nend = (allE) ? nrxn : EParams.size();
+                for (unsigned int i = 0; i < nend; i++) {
+                    int rxn_index = (allE) ? (i) : ((int)Strings::cdble(EParams.at(i)->GetAttributeValue("rxnth")));
+                    ARRHENIUS_PARAMS arrp(rxn_index, ARR_n);
+                    AddParam(arrp);
+                }
+            }
+            // Sensitivity is also disable if there is no parameter defined.
+            m_enable = m_enable && (m_NS > 0);
+            // Allocating memories.
+            m_org_params = new Mops::real[m_NS];
+            m_params     = new Mops::real[m_NS];
+            m_parambars  = new Mops::real[m_NS];
+            // Initializing allocated memories.
+            for (unsigned int i = 0; i < m_arr_params.size(); i++) {
+                Mops::real val = 0.0;
+                if (m_arr_params.at(i).Type == ARR_A) {
+                    val = m_mech->Reactions(m_arr_params.at(i).Rxnth)->Arrhenius().A;
+                } else if (m_arr_params.at(i).Type == ARR_n) {
+                    val = m_mech->Reactions(m_arr_params.at(i).Rxnth)->Arrhenius().n;
+                } else {
+                    val = m_mech->Reactions(m_arr_params.at(i).Rxnth)->Arrhenius().E;
+                }
+                m_org_params[i] = m_params[i] = m_parambars[i] = val;
+            }
+        } else {
+            throw std::runtime_error("Unknown problem type "
+                                     "(Mops, SensitivityAnalyzer::ReadSettingV1).");
+        }
+    } else {
+        throw std::runtime_error("'parameters' element not found in Sensitivity XML "
+                                 "(Mops, SensitivityAnalyzer::ReadSettingV1).");
     }
 }
 
@@ -279,10 +455,10 @@ real * SensitivityAnalyzer::ParamBarsPtr()
     return m_parambars;
 }
 
-void SensitivityAnalyzer::AddParam(const ARRHENIUS_PARAMS &arrp)
+bool SensitivityAnalyzer::AddParam(const ARRHENIUS_PARAMS &arrp)
 {
+    bool paramExist = false;
     if (m_NS == m_arr_params.size()) {
-        bool paramExist = false;
         for (unsigned int i = 0; i < m_NS; i++) {
             if ((m_arr_params.at(i).Rxnth == arrp.Rxnth) &&
                 (m_arr_params.at(i).Type == arrp.Type)) {
@@ -298,6 +474,7 @@ void SensitivityAnalyzer::AddParam(const ARRHENIUS_PARAMS &arrp)
         throw runtime_error("Number of sensitivity parameters in array and in sensitivity "
                             "object are not the same. (Mops, SensitivityAnalyzer::AddParam).");
     }
+    return !paramExist;
 }
 
 unsigned int SensitivityAnalyzer::NParams()
@@ -325,7 +502,7 @@ int SensitivityAnalyzer::Solve()
     int iout, flag;
 
     realtype pbar[NS];
-    int is; 
+    //int is; 
     N_Vector *yS;
 
     cvode_mem = NULL;
