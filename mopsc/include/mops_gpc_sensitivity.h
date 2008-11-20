@@ -207,7 +207,7 @@ private:
     // Clear function must be called before using this function, otherwise 
     // program might behave abnormally. m_mech pointer must be set after 
     // use clear function.
-    void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA);
+    void ReadSettingV1(const CamXML::Element &elemSA);
 
     static int f(realtype t, N_Vector y, N_Vector ydot, void *f_data);
     //static int f(realtype t, N_Vector y, N_Vector ydot, void *f_data);
