@@ -65,6 +65,11 @@
 #include <string>
 #include <iostream>
 
+#include "swp_ensemble_image.h"
+#include "swp_particle_image.h"
+
+
+
 namespace Sweep
 {
 class Mechanism : public ParticleModel
@@ -269,6 +274,8 @@ public:
     // Reads the object from a binary stream.
     void Deserialize(std::istream &in);
 
+
+
 private:
     // True if the mechanism contains deferred (LPDA)
     // processes, otherwise false. 
@@ -293,6 +300,12 @@ private:
 
     // Clears the mechanism from memory.
     void releaseMem(void);
+
+    //time when the last particle emsenble has been written to a file
+	mutable real last3dout;
+
+
+	
 };
 };
 #endif

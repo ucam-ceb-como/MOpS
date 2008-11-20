@@ -107,7 +107,8 @@ public:
 
 
 	void constructSubParttree(const SubParticle *sp);
-	void Write3dout(std::ofstream &file);
+	void copysptinsert(const SubParticle *sp);
+	void Write3dout(std::ofstream &file, double x, double y, double z);
 
 
     // RENDERING FUNCTIONS.

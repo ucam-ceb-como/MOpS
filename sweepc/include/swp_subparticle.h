@@ -1,5 +1,5 @@
 /*
-  Author(s):      Matthew Celnik (msc37)
+  Author(s):      Matthew Celnik (msc37) and Markus Sander (ms785)
   Project:        sweep (population balance solver)
 
   File purpose:
@@ -90,6 +90,10 @@ public:
 
 
 
+
+	real Diamter();
+
+
     // PROPERTY SETTING OVERRIDES (FROM PARTICLE CACHE).
 
     // Sets the composition vector.
@@ -125,6 +129,20 @@ public:
 	// Returns the sintering level of the childen
     real GetSintering();
 
+	void UpdateTree_sinter(SubParticle *has_sintered);
+	void UpdateTree_sinter(SubParticle *has_sintered, SubParticle *newsinter);
+	void UpdateCache_sinter(SubParticle *has_sintered);
+	void UpdateCache_sinter(SubParticle *has_sintered, SubParticle *newsinter);
+	void CheckTree();
+	SubParticle *FindRoot();
+	//void UpdateSinterParticles();
+	int FindPath(bool &path, SubParticle *target, SubParticle *root, int &depth);
+	void UpdatethisSinterParticle(SubParticle *target, const SubParticle *original);
+	void UpdateFreeSurface();
+	void ResetFreeSurface();
+	void RecalcFreeSurface();
+
+
 void printSubtree(std::ostream &out, ParticleCache::PropID id) const;
 void printSubtreeLoop(std::ostream &out, ParticleCache::PropID id) const;
 void printSubtreepic(std::ostream &out) const;
@@ -149,6 +167,7 @@ void printSubtreepicLoop(std::ostream &out,real x, real y, real z) const;
     // Combines this particle with another.
     virtual SubParticle &Coagulate(const SubParticle &sp);
 
+
     // Sinters the sub-particle for the given time using the given
     // sintering model.
     virtual void Sinter(
@@ -164,6 +183,7 @@ void printSubtreepicLoop(std::ostream &out,real x, real y, real z) const;
     // unique properties.  This function moves down the tree
     // from the root to the leaves.
     void UpdateCache(void);
+    void UpdateCache_thispart(void);
 
     // Tells the parent sub-particle to update its cache of
     // derived properties.  This operation is passed up the
@@ -200,7 +220,30 @@ void printSubtreepicLoop(std::ostream &out,real x, real y, real z) const;
     void setRightPtr(SubParticle *const sub);
 
 	void SinterPart();
+	
+	real avgeomdiam(double oneovernumsubpart);
 
+	real SubPartSurfaceArea(void) const;
+
+	real SubPartSumVol(void) const;
+	real SubPartSphSurfaceArea(void) const;
+
+	int NumSubPart();
+
+	// The children on the left subtree that is involved in the sintering of this node
+	SubParticle *m_leftsinter;
+
+	// The children on the right subtree that is involved in the sintering of this node
+	SubParticle *m_rightsinter;
+
+	real vol_sinter;
+	//real surf_sinter;
+    real m_real_surface_init;
+	real m_sinter_level;
+	real m_sumsinterdiameter;
+	//Volume change of the left and right sinterparticle due to sintering
+	real dV_left;
+	real dV_right;
 
 protected:
 
@@ -223,6 +266,25 @@ protected:
 
 	//time the two subparticles are connected
 	real m_connect_time;
+	
+	//average diameter of the childs
+	real m_avg_diam; 
+
+	//the surface of the two particles that are sintering in this node
+	real m_real_surface;
+
+	// the volume of the two particles that are sintering in this node
+	real m_sumvol_sinterpart;
+
+	// the surface of a sphere that has the same volume as both sinter particles
+	real m_sph_surfacearea;
+
+	real m_leftsinterdiam;
+
+	real m_rightsinterdiam;
+
+
+
 
 
     // MEMORY MANAGEMENT.

@@ -157,6 +157,7 @@ private:
     // Transforms the node coordinates using the given
     // transformation matrix.
     void transform(const Coords::Matrix &mat);
+
 };
 };
 };

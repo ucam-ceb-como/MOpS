@@ -710,7 +710,39 @@ void Ensemble::dble()
         m_dbleactive = true;
         printf("sweep: Particle doubling activated.\n");
     }
+/*	if (m_dbleactive)
+	{
+		m_dbleon=false;
+		cout << " Double?";
+		string ans;
+		cin >> ans;
+			if (ans=="y")
+				m_dbleon=true;
+	}*/
+	/*
+	while (m_count<=0.9*(real)m_maxcount) {
+				unsigned int i,k;
+				 Particle* sp;
+			    vector<TreeNode>::iterator inode;
+                sp = m_particles[1]->Clone();
+                m_particles[i=m_count++] = sp;
+				// Put properties into bottom of tree.
+                k = treeIndex(m_count-1);
+                if (left) {
+                    m_tree[k].LeftData = *m_particles[i];
+                } else {
+                    m_tree[k].RightData = *m_particles[i];
+                }
+            
 
+            // Update the tree from second last level up.
+            for (inode=(m_tree.begin()+m_halfcap-2); inode!=m_tree.begin(); --inode) {
+                inode->LeftData = inode->Left->LeftData + inode->Left->RightData;
+                inode->RightData = inode->Right->LeftData + inode->Right->RightData;
+			}
+	}
+
+*/
     // Check that doubling is on and the activation condition has been met.
     if (m_dbleon && m_dbleactive) {
         Particle* sp;

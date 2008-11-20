@@ -220,6 +220,9 @@ ParticleCache &ParticleCache::operator=(const Sweep::ParticleCache &rhs)
         m_inv_dcolsqr  = rhs.m_inv_dcolsqr;
         m_inv_sqrtmass = rhs.m_inv_sqrtmass;
         m_d2_m_1_2     = rhs.m_d2_m_1_2;
+
+	    m_freesurface = rhs.m_freesurface;
+		m_numsubpart = rhs.m_numsubpart;
     }
     return *this;
 }
@@ -299,6 +302,8 @@ ParticleCache &ParticleCache::operator=(const Sweep::Primary &rhs)
     m_inv_sqrtmass = 1.0 / sqrt(m_mass);
     m_d2_m_1_2     = m_dcolsqr * m_inv_sqrtmass;
 
+
+
     return *this;
 }
 
@@ -370,6 +375,9 @@ ParticleCache &ParticleCache::operator+=(const Sweep::ParticleCache &rhs)
         m_inv_sqrtmass += rhs.m_inv_sqrtmass;
         m_d2_m_1_2     += rhs.m_d2_m_1_2;
 
+		m_freesurface += rhs.m_freesurface;
+		m_numsubpart += rhs.m_numsubpart;
+
     } else {
         // Use assignment if the caches do not subscribe to the same
         // particle model.
@@ -434,7 +442,7 @@ ParticleCache &ParticleCache::operator+=(const Sweep::Primary &rhs)
         m_diam += diam;
         m_dcol += dcol;
         m_dmob += dmob;
-        m_surf += surf;
+        m_surf += surf;           
         m_vol  += vol;
         m_mass += mass;
 
@@ -444,6 +452,11 @@ ParticleCache &ParticleCache::operator+=(const Sweep::Primary &rhs)
         m_inv_dcolsqr  += 1.0 / (dcol * dcol);
         m_inv_sqrtmass += 1.0 / sqrt(mass);
         m_d2_m_1_2     += (dcol * dcol) / sqrt(mass);
+	
+
+
+	
+
     } else {
         // Use assignment if the caches do not subscribe to the same
         // particle model.
@@ -677,6 +690,8 @@ real ParticleCache::Property(PropID id) const
             return m_inv_sqrtmass;
         case iD2_M_1_2:
             return m_d2_m_1_2;
+		case iFS:
+			return m_freesurface;
         case -1:
             // Special case property, used to select particles
             // uniformly.

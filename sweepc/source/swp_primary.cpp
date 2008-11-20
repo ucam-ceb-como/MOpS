@@ -514,6 +514,7 @@ void Primary::Sinter(real dt, const Cell &sys,
                      const Processes::SinteringModel &model)
 {
     // Spherical primaries don't sinter.
+	
     return;
 }
 

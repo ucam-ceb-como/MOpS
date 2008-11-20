@@ -1,5 +1,5 @@
 /*
-  Author(s):      Matthew Celnik (msc37)
+  Author(s):      Matthew Celnik (msc37) and Markus Sander (ms785)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
   
@@ -68,6 +68,7 @@ namespace Sweep
 class Cell;
 class Particle;
 class Primary;
+class SubParticle;
 
 namespace AggModels {
 class PriPartPrimary;
@@ -160,10 +161,16 @@ public:
         const Primary &p // Particle for which to calculate time.
         ) const;
 
+    // Returns the characteristic sintering time for the
+    // given subparticle.
+	real SintTimeSubPart(const Cell &sys, const SubParticle &sp) const;
     real SintTime(
         const Cell &sys,
         const AggModels::PriPartPrimary &p
         ) const;
+
+	real SintTime(const Cell &sys, const SubParticle &sp) const;
+
 
     // RATE CALCULATION.
 
@@ -186,6 +193,11 @@ public:
         const Cell &sys, 
         const AggModels::PriPartPrimary &p
         ) const;
+	
+	 // Returns the rate of the process for the given subparticle.
+	real Rate(real t, const Cell &sys, const SubParticle &sp) const;
+
+
 
 
     // PERFORMING THE SINTERING.

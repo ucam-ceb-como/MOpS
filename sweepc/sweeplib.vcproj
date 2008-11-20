@@ -369,6 +369,14 @@
 				Name="Imaging"
 				>
 				<File
+					RelativePath=".\source\swp_ensemble_image.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_ensemble_imgnode.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_imgnode.cpp"
 					>
 				</File>
@@ -468,34 +476,6 @@
 				</File>
 				<File
 					RelativePath=".\include\rng.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Aggregation Models"
-				>
-				<File
-					RelativePath=".\include\swp_aggmodel_cache.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_aggmodel_type.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_pripart_cache.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_pripart_primary.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_surfvol_cache.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_surfvol_primary.h"
 					>
 				</File>
 			</Filter>
@@ -635,6 +615,14 @@
 				Name="Imaging"
 				>
 				<File
+					RelativePath=".\include\swp_ensemble_image.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_ensemble_imgnode.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\swp_imgnode.h"
 					>
 				</File>
@@ -652,6 +640,34 @@
 				</File>
 				<File
 					RelativePath=".\include\swp_maths_functional.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Aggregation Models"
+				>
+				<File
+					RelativePath=".\include\swp_aggmodel_cache.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_aggmodel_type.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_pripart_cache.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_pripart_primary.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_surfvol_cache.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_surfvol_primary.h"
 					>
 				</File>
 			</Filter>

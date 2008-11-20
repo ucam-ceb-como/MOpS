@@ -47,12 +47,18 @@
 #include <stdexcept>
 
 //added to test 3-d output
-#include "swp_imgnode.h"
+//#include "swp_imgnode.h"
 #include "swp_particle_image.h"
+#include "swp_ensemble_image.h"
+#include "string_functions.h"
+
 
 using namespace Sweep;
 using namespace Sweep::Processes;
+using namespace Sweep::Imaging;
 using namespace std;
+using namespace Strings;
+
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -650,8 +656,9 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys) const
 
 // Performs linear update algorithm on the 
 // given system up to given time.
+
 void Mechanism::LPDA(real t, Cell &sys) const
-{
+{	
     // Check that there are particles to update and that there are
     // deferred processes to perform.
     if ((sys.ParticleCount() > 0) && (m_anydeferred)) {
@@ -665,6 +672,7 @@ void Mechanism::LPDA(real t, Cell &sys) const
             UpdateParticle(*(*i), sys, t);
             ++k;
         }
+
         
         // Now remove any invalid particles and update the ensemble.
         sys.Particles().RemoveInvalids();
@@ -742,24 +750,122 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 
             // Perform sintering update.
             if (m_sint_model.IsEnabled()) {
+				sp.UpdateFreeSurface();
 
-/*				//added to test the 3-d output		
-				        if(sp.Property(ParticleCache::iM)>4E-22)
-						{
-							string fname = "subparttree";
-							Sweep::Imaging::ParticleImage img;
+				//	 sp.FindRoot()->CheckTree();
+			    // cout << "check before sinter passed\n";
+			    sp.Sinter(dt, sys, m_sint_model);
+    			//	sp.FindRoot()->CheckTree();
+				// cout << "check after sinter passed\n";
+				//added to test the 3-d output		
+				  /*   if(sp.Property(ParticleCache::iM)>4E-23)   
+					  {
+						    Sweep::Imaging::ParticleImage img;
 							img.Construct(sp);
-	//                        img.ConstructRandom(1.0, 5.0, 10001);
-							ofstream file; file.open(fname.c_str());
-							ofstream filepov; filepov.open("subtree.pov");
-							img.Write3dout(file);
-							img.WritePOVRAY(filepov);
+							ofstream filepart; filepart.open("part.3d");
+							img.Write3dout(filepart,0,0,0);
+					   }*/
+						 if (sys.ParticleCount() > 10 && t-last3dout>0.001)
+						{	ofstream file;
+						    string fname;
+							Ensemble::iterator i;
+							cout << "creating subpart image...";
+							last3dout=t;
+							fname = "subpart1" + cstr(t) + ".3d";
+							 file.open(fname.c_str());
+							i=sys.Particles().begin();
+							Sweep::Imaging::ParticleImage img;
+							img.Construct(*(*i));
+							img.Write3dout(file,0,0,0);
 							file.close();
-							filepov.close();
-							cout << "break";
+							EnsembleImage *ensimg = new EnsembleImage;
+							fname = "subparttree" + cstr(t) + ".3d";
+							 file.open(fname.c_str());
+							ensimg->PrintEnsemble(sys,file);
+							file.close();
+							delete ensimg;
+							
+				
+							
+							int numpart=0;
+							int numsubpart=0;
+							real avcoldiam=0.;
+							numpart=0;
+							numsubpart=0;
+							int coldiamdistr[500]={0};
+							fname = "avcoldiam.txt";
+							file.open(fname.c_str(),ios::app);
+					//		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
+							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
+								avcoldiam=(*(*i)).CollDiameter()+avcoldiam;
+								numpart++;
+								numsubpart+=(*(*i)).NumSubPart();
+								int intdiam=(int)((*(*i)).CollDiameter()*1e9);
+								coldiamdistr[intdiam]++;
+							}
+							if (numpart>0)
+							{	
+								avcoldiam=avcoldiam/numpart;
+								file << t << "     " << avcoldiam << endl;
+							}
+							file.close();
+							fname = "coldiamdistr" + cstr(t) + ".txt";
+							file.open(fname.c_str());
+							for (int j=0;j<500;j++)
+							{
+								file<<j<< "    "<<coldiamdistr[j]<<endl;
+							}
+							file.close();
+						
+
+
+							fname = "numsubpart.txt";
+							file.open(fname.c_str(),ios::app);
+							if (numpart>0)
+							{	
+								file << t << "     " << numsubpart << endl;
+							}
+
+							file.close();
+
+
+							real avsubpartdiam=0.;
+							real avsubpartdiam2=1.;
+							int avdiamdistr[500]={0};
+							fname = "avdiam.txt";
+							file.open(fname.c_str(),ios::app);
+					//		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
+							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
+								avsubpartdiam2=(*(*i)).avgeomdiam(1.0/numsubpart)*avsubpartdiam2;
+								avsubpartdiam=(*(*i)).Volume()/(*(*i)).SurfaceArea()+avsubpartdiam;
+							
+							}
+							//avsubpartdiam=pow(6*avsubpartdiam/(PI*numsubpart),ONE_THIRD);
+							avsubpartdiam=6*avsubpartdiam/numpart;
+							if (numpart>0)
+							{	
+								file << t << "     " << avsubpartdiam << endl;
+							}
+							file.close();
+
+
+
+
+
+							
+							fname = "temperature.txt";
+							file.open(fname.c_str(),ios::app);
+					//		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
+
+							file << t << "     " << sys.Temperature() << endl;
+							
+							file.close();
+
+							cout << "done"<<endl;
+	
 						}
-*/
-                sp.Sinter(dt, sys, m_sint_model);
+
+			
             }
         }
 

@@ -341,6 +341,7 @@ real Inception::RateTerms(const real t, const Sprog::Thermo::IdealGas &gas,
 // by index.  Returns 0 on success, otherwise negative.
 int Inception::Perform(real t, Cell &sys, unsigned int iterm) const 
 {
+
     // This routine performs the inception on the given chemical system.
 
     // Create a new particle of the type specified

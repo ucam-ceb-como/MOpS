@@ -7,14 +7,14 @@ cpp=g++
 ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprog/include -Wall
+       -I../sprogc/include -Wall
   else
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprog/include -Wall -pg
+       -I../sprogc/include -Wall -pg
   endif
 else
   flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprog/include -Wall -g -pg
+       -I../sprogc/include -Wall -g -pg
 endif
 
 # Source directories.
@@ -29,11 +29,11 @@ lib=$(path)/lib
 ifeq ($(debug),0)
   comostrings=../comostrings/lib/comostrings.a
   camxml=../camxml/lib/camxml.a
-  sprog=../sprog/lib/sprog.a
+  sprog=../sprogc/lib/sprog.a
 else
   comostrings=../comostrings/lib/comostrings_d.a
   camxml=../camxml/lib/camxml_d.a
-  sprog=../sprog/lib/sprog_d.a
+  sprog=../sprogc/lib/sprog_d.a
 endif
 
 # Target objects.
@@ -48,7 +48,7 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_coagulation.o swp_condensation.o swp_inception.o \
     swp_particle_process.o swp_process.o swp_process_factory.o \
     swp_surface_reaction.o swp_particle_model.o swp_imgnode.o \
-    swp_particle_image.o swp_surfvol_stats.o swp_pripart_stats.o \
+    swp_particle_image.o swp_ensemble_image.o swp_ensemble_imgnode.o swp_surfvol_stats.o swp_pripart_stats.o \
     swp_sintering_model.o swp_arssc_model.o swp_arssc_inception.o \
     swp_death_process.o swp_birth_process.o swp_arssc_cache.o \
     swp_arssc_reaction.o swp_arssc_condensation.o swp_arssc_process.o
@@ -115,6 +115,13 @@ swp_imgnode.o: $(src)/swp_imgnode.cpp
 
 swp_particle_image.o: $(src)/swp_particle_image.cpp
 	$(cpp) $(flag) $(src)/swp_particle_image.cpp
+
+swp_ensemble_imgnode.o: $(src)/swp_ensemble_imgnode.cpp
+	$(cpp) $(flag) $(src)/swp_ensemble_imgnode.cpp
+
+swp_ensemble_image.o: $(src)/swp_ensemble_image.cpp
+	$(cpp) $(flag) $(src)/swp_ensemble_image.cpp
+
 	
 # Mechanism.
 

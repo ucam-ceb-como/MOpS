@@ -100,31 +100,28 @@ void ImgNode::Clear(void)
 void ImgNode::CopySPT(const SubParticle *sp)
 {
 	Primary::PropID id=Primary::iD;
-    // Check for an empty tree.
-    if (sp->Primary()== NULL) {
-            // This node is not empty, but also has
-            // no children.
 
-            // Set left child to have the properties
-            // of this node.
+    if (sp->Primary()== NULL) {
+
             m_left = new ImgNode();
             m_left->m_parent = this;
 			m_left->CopySPT(sp->Left());
-            // Add a new right node for the new primary.
+
             m_right = new ImgNode();
             m_right->m_parent = this;
 			m_right->CopySPT(sp->Right());
 
-            // Mark this node as not calculated.
+
            setRadius(0.0);
 
-           // Set the tree depth.
+
            m_mindepth = 1;
         
     } else {
-        // This node has children.
+        
 			setRadius( (sp->Primary()->Property(id))*0.5e9);       //convert to nm
-        // Recalulate the minimum tree depth of this node.
+
+       
     }
 }
 

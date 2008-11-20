@@ -102,6 +102,7 @@ public:
         iD_2,     // Inverse of the diameter squared.
         iM_1_2,   // Inverse of the square-root of the mass.
         iD2_M_1_2, // D^2 * M^-1/2.
+		iFS,		// the free surface available for other particles to sinter
 
 
     };
@@ -308,6 +309,14 @@ protected:
     real m_inv_dcolsqr;  // Inverse of the diameter squared.
     real m_inv_sqrtmass; // Inverse of the square-root of the mass.
     real m_d2_m_1_2;     // D^2 * M^-1/2.
+
+
+
+	// The free surface available for other particles to sinter
+	real m_freesurface;
+	//number of subparticles below this node
+	int m_numsubpart;
+
 
     // ParticleCache class cannot be created without knowledge of the
     // defining particle model.

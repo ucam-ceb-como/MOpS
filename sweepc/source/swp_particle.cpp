@@ -107,6 +107,7 @@ Particle &Particle::operator+=(const Sweep::Particle &rhs)
     return *this;
 }
 
+
 // Addition operator.  This also implements coagulation.
 const Particle Particle::operator +(const Sweep::Particle &rhs) const
 {

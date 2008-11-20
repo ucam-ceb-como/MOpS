@@ -108,7 +108,7 @@ void ParticleImage::ConstructRandom(real minrad, real maxrad, unsigned int n)
 
 
 
-void ParticleImage::Write3dout(std::ofstream &file)
+void ParticleImage::Write3dout(std::ofstream &file, double x, double y, double z)
 {
     if (file.good()) {
         string line;
@@ -121,20 +121,17 @@ void ParticleImage::Write3dout(std::ofstream &file)
 
         // Get the primary coordinates from the aggregate tree.
         m_root.GetPriCoords(coords);
-
+		file.write(line.c_str(), line.length());
         // Write the primaries to the 3dout file.
         for (unsigned int i=0; i!=coords.size(); ++i) {
             val  = coords[i][3] * m_necking;
-            line = cstr(coords[i][0]) + " " + cstr(coords[i][1]) + 
-                   " " + cstr(coords[i][2])+"\n";
+            line = cstr(coords[i][0]+x) + " " + cstr(coords[i][1]+y) + 
+                   " " + cstr(coords[i][2]+z)+"\n ";
             file.write(line.c_str(), line.length());
             line = cstr(val)+"\n";							//write diameter
             file.write(line.c_str(), line.length());
         }
 
-       
-        line = "\n";
-        file.write(line.c_str(), line.length());
 
     } else {
         throw invalid_argument("Output stream not ready "
@@ -215,7 +212,7 @@ void ParticleImage::constructAgg_FM(const Particle &sp)
         // TODO:  Complete sub-particle tree TEM output.
 		constructSubParttree(&sp);
 
-		cout <<"use subparttree to create the image tree";
+	//	cout <<"use subparttree to create the image tree";
 
     } else {
         const AggModels::SurfVolPrimary *svp = NULL;
@@ -246,12 +243,31 @@ void ParticleImage::constructAgg_FM(const Particle &sp)
 void ParticleImage::constructSubParttree(const SubParticle *sp)
 {
 	//Copy the subparticle tree into the img tree
-    m_root.CopySPT(sp);
-    // Use the free-molecular regime to calculate the
+   // m_root.CopySPT(sp);
+	m_root.Clear();
+	copysptinsert(sp);
+
+	// Use the free-molecular regime to calculate the
     // aggregate structure.
     calc_FM(m_root);
     m_root.CentreCOM();
 }
+
+
+void ParticleImage::copysptinsert(const SubParticle *sp)
+{
+	Primary::PropID id=Primary::iD;
+	if (sp->Primary()== NULL) {
+		copysptinsert(sp->Left());
+		copysptinsert(sp->Right());
+	        
+		} else {
+	        
+				m_root.Insert(sp->Primary()->Property(id)*0.5e9);       //convert to nm 
+		}
+}
+
+
 
 // Constructs a PNode sphere-tree aggregate from the given 
 // pri-part list primary using free-molecular collision dynamics.
