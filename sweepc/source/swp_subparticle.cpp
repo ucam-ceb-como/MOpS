@@ -800,10 +800,7 @@ bool FileExists( const char* FileName )
 // Sinters this particle with another particle
 void SubParticle::SinterPart()
 {	bool lefttree;
-	SubModels::SubModelType model = SubModels::BasicModel_ID;
 	// Chose the subparticle according to the following property
-	ParticleCache::PropID id=ParticleCache::iUniform;
-	ParticleCache::PropID idsubtreeprint=ParticleCache::iFS;
 	/*if (!FileExists("beforesinterprim.inp"))
 	{
 		ofstream out;
@@ -1143,7 +1140,6 @@ void SubParticle::UpdateCache(void)
 		m_avg_diam=m_leftchild->m_avg_diam+m_rightchild->m_avg_diam;
         ParticleCache::operator=(*m_leftchild);
         ParticleCache::operator+=(*m_rightchild);
-		ParticleCache::PropID id=ParticleCache::iV;
 		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.9));
 	
     }
@@ -1167,7 +1163,6 @@ void SubParticle::UpdateCache_thispart(void)
         ParticleCache::operator=(*m_leftchild);
 		m_avg_diam=m_leftchild->m_avg_diam+m_rightchild->m_avg_diam;
         ParticleCache::operator+=(*m_rightchild);		
-		ParticleCache::PropID id=ParticleCache::iV;
 		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.9));
     }
 }
@@ -1397,7 +1392,6 @@ void SubParticle::UpdateTree(void)
     } else {
         ParticleCache::operator=(*m_leftchild);
         ParticleCache::operator+=(*m_rightchild);
-		ParticleCache::PropID id=ParticleCache::iV;
 	    ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.9));
 		m_avg_diam=m_leftchild->m_avg_diam+m_rightchild->m_avg_diam;
 		
