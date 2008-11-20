@@ -110,23 +110,6 @@ SensitivityAnalyzer::SensitivityAnalyzer() :
     Clear();
 }
 
-void SensitivityAnalyzer::Clear()
-{ 
-    m_probType = Reaction_Rates;
-    m_enable  = false;
-    m_err_con = FALSE;
-    m_sensi_meth = CV_SIMULTANEOUS;
-    m_mech = NULL;
-    m_NS = 0;
-    if (m_org_params != NULL) delete [] m_org_params;
-    if (m_params     != NULL) delete [] m_params;
-    if (m_parambars  != NULL) delete [] m_parambars;
-    m_arr_params.clear();
-    m_org_params = NULL;
-    m_params     = NULL;
-    m_parambars  = NULL;
-}
-
 // Destructor.
 SensitivityAnalyzer::~SensitivityAnalyzer()
 {
@@ -178,6 +161,23 @@ SensitivityAnalyzer &SensitivityAnalyzer::operator=(const SensitivityAnalyzer &r
         }
     }
     return *this;
+}
+
+void SensitivityAnalyzer::Clear()
+{ 
+    m_probType = Reaction_Rates;
+    m_enable  = false;
+    m_err_con = FALSE;
+    m_sensi_meth = CV_SIMULTANEOUS;
+    m_mech = NULL;
+    m_NS = 0;
+    if (m_org_params != NULL) delete [] m_org_params;
+    if (m_params     != NULL) delete [] m_params;
+    if (m_parambars  != NULL) delete [] m_parambars;
+    m_arr_params.clear();
+    m_org_params = NULL;
+    m_params     = NULL;
+    m_parambars  = NULL;
 }
 
 // Enable/Disable sensitivity analyzer.
@@ -400,7 +400,8 @@ Mops::Mechanism &SensitivityAnalyzer::GetMech()
 }
 
 // Change mechanism parameters to the values in m_params.
-void SensitivityAnalyzer::ChangeMechParams() {
+void SensitivityAnalyzer::ChangeMechParams()
+{
     for(unsigned int i = 0; i < m_NS; i++) {
         Sprog::Kinetics::ARRHENIUS arr = m_mech->Reactions(m_arr_params.at(i).Rxnth)->Arrhenius();
         switch ( m_arr_params.at(i).Type ) {
@@ -422,7 +423,8 @@ void SensitivityAnalyzer::ChangeMechParams() {
 
 // Reset mechanism parameters to its original values.
 // This might not be needed.
-void SensitivityAnalyzer::ResetMechParams() {
+void SensitivityAnalyzer::ResetMechParams()
+{
     for(unsigned int i = 0; i < m_NS; i++) {
         Sprog::Kinetics::ARRHENIUS arr = m_mech->Reactions(m_arr_params.at(i).Rxnth)->Arrhenius();
         switch ( m_arr_params.at(i).Type ) {
@@ -440,6 +442,11 @@ void SensitivityAnalyzer::ResetMechParams() {
         }
         m_mech->GetReactions(i)->SetArrhenius(arr);
     }
+}
+
+// Set output.
+void SensitivityAnalyzer::SetOutputFile(const string &ofile)
+{
 }
 
 // Parameter pointer to array of real. This is needed by CVODES.

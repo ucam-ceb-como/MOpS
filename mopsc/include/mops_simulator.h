@@ -230,8 +230,11 @@ private:
     // Name of output file.
     std::string m_output_filename;
 
-    // Output file stream.
+    // Simulation output file stream.
     mutable std::fstream m_file;
+
+    // Sensitivity output file stream.
+    mutable std::fstream m_senfile;
 
     // Flag controlling iteration output.  If true then output
     // is performed for every iteration at the end of a time step,

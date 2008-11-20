@@ -531,6 +531,7 @@ void Simulator::PostProcess()
 // Opens the simulation output file.
 void Simulator::openOutputFile() const
 {
+    // SIMULATOR OUTPUT FILE
     // Build the simulation output file name.
     string fname = m_output_filename + ".sim";
 
@@ -542,13 +543,28 @@ void Simulator::openOutputFile() const
         throw runtime_error("Failed to open file for simulation "
                             "output (Mops, Simulator::openOutputFile).");
     }
+
+    // SIMULATOR SENSITIVITY OUTPUT FILE
+    // Build the simulation output file name.
+    string fsenname = m_output_filename + ".sen";
+
+    // Open the sensitivity simulation output file.
+    m_senfile.open(fsenname.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
+
+    // Throw error if the output file failed to open.
+    if (!m_senfile.good()) {
+        throw runtime_error("Failed to open file for sensitivity simulation "
+                            "output (Mops, Simulator::openOutputFile).");
+    }
 }
 
 // Closes the output file.
 void Simulator::closeOutputFile() const
 {
-    // Close the output file.
+    // Close the simulation output file.
     m_file.close();
+    // Close the sensitivity output file.
+    m_senfile.close();
 }
 
 // Writes the gas-phase conditions of the given reactor to

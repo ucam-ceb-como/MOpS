@@ -79,6 +79,9 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "-s") == 0) {
             // Sweep mechanism file.
             swpfile = argv[++i];
+        } else if (strcmp(argv[i], "-ss") == 0) {
+            // Sensitivity setup file.
+            sensifile = argv[++i];
         } else if (strcmp(argv[i], "-p") == 0) {
             // Post-processing switch.  Used to turn PP on.
             fpostprocess = true;

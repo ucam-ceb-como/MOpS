@@ -156,6 +156,9 @@ public:
     // File output.
     void outputTo() {};
 
+    // Set output.
+    void SetOutputFile(const string &ofile);
+
     // Parameter pointer to array of real. This is needed by CVODES.
     // CVODES will access and change these parameters.
     real *ParamsPtr();
