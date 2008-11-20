@@ -42,7 +42,7 @@
 
 #include "mops_flux_postprocessor.h"
 #include "string_functions.h"
-
+#include <stdexcept>
 FluxAnalyser::FluxAnalyser(const Mechanism &mech, 
                            const timevector &times, 
                            const std::vector<fvector> &agpfwdrates,

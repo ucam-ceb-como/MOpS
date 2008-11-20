@@ -7,19 +7,19 @@ cpp=g++
 ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-         -I../sprog/include -I../sweep/include -I../cvode/include \
-         -I../cvode/source -Wall
+         -I../sprogc/include -I../sweepc/include -I../cvodes/include \
+         -I../cvodes/source -Wall 
     flink= 
   else
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-         -I../sprog/include -I../sweep/include -I../cvode/include \
-         -I../cvode/source -Wall -pg
+         -I../sprogc/include -I../sweepc/include -I../cvodes/include \
+         -I../cvodes/source -Wall -pg
     flink=-pg
   endif
 else
   flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprog/include -I../sweep/include -I../cvode/include \
-       -I../cvode/source -Wall -ggdb -pg
+       -I../sprogc/include -I../sweepc/include -I../cvodes/include \
+       -I../cvodes/source -Wall -ggdb -pg
   flink=-pg 
 endif
 
@@ -33,17 +33,17 @@ inc=include
 ifeq ($(debug),0)
   comostrings=../comostrings/lib/comostrings.a
   camxml=../camxml/lib/camxml.a
-  sprog=../sprog/lib/sprog.a
-  sweep=../sweep/lib/sweep.a
-  cvode=../cvode/lib/cvode.a
+  sprog=../sprogc/lib/sprog.a
+  sweep=../sweepc/lib/sweep.a
+  cvodes=../cvodes/lib/cvodes.a
 else
   comostrings=../comostrings/lib/comostrings_d.a
   camxml=../camxml/lib/camxml_d.a
-  sprog=../sprog/lib/sprog_d.a
-  sweep=../sweep/lib/sweep_d.a
-  cvode=../cvode/lib/cvode_d.a
+  sprog=../sprogc/lib/sprog_d.a
+  sweep=../sweepc/lib/sweep_d.a
+  cvode=s../cvodes/lib/cvodes_d.a
 endif
-linklibs=$(comostrings) $(camxml) $(sprog) $(sweep) $(cvode)
+linklibs=$(comostrings) $(camxml) $(sprog) $(sweep) $(cvodes)
 
 # Target objects.
 
@@ -51,21 +51,35 @@ obj=mops.o mops_mechanism.o mops_mixture.o \
     mops_particle_solver.o mops_predcor_solver.o mops_psr.o mops_reactor.o \
     mops_reactor_factory.o  mops_ode_solver.o mops_settings_io.o mops_solver.o \
     mops_src_terms.o mops_strang_solver.o mops_timeinterval.o \
-    mops_flow_stream.o mops_simulator.o swp_flamesolver.o swp_gas_profile.o
+    mops_flow_stream.o mops_simulator.o swp_flamesolver.o swp_gas_profile.o mops_gpc_sensitivity.o \
+    mops_flux_postprocessor.o mops_rhs_func.o mops_simplesplit_solver.o
 
 # TARGET all: Compile to a static library (*.a).
 
-all: comostringslib camxmllib sproglib sweeplib cvodelib $(obj)
+all: comostringslib camxmllib sproglib sweeplib cvodeslib $(obj)
 	mkdir -p bin
 ifeq ($(debug),0)
   ifeq ($(profile),0)
-		$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops.x
+		$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops.x -static
   else
-		$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops_p.x
+		$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops_p.x -static
   endif 
 else
-	$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops_d.x
+	$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops_d.x -static
 endif
+
+32bit: comostringslib camxmllib sproglib sweeplib cvodeslib $(obj)
+	mkdir -p bin
+ifeq ($(debug),0)
+  ifeq ($(profile),0)
+		$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops32.x -static
+  else
+		$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops32_p.x -static
+  endif
+else
+		$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops32_d.x -static
+endif
+
 
 # Required libraries.
 comostringslib:
@@ -74,11 +88,11 @@ comostringslib:
 camxmllib:
 	$(MAKE) -f ../camxml/Makefile -C ../camxml debug=$(debug) profile=$(profile)
 sproglib:
-	$(MAKE) -f ../sprog/Makefile -C ../sprog debug=$(debug) profile=$(profile)
+	$(MAKE) -f ../sprogc/Makefile -C ../sprogc debug=$(debug) profile=$(profile)
 sweeplib:
-	$(MAKE) -f ../sweep/Makefile -C ../sweep debug=$(debug) profile=$(profile)
-cvodelib:
-	$(MAKE) -f ../cvode/Makefile -C ../cvode debug=$(debug) profile=$(profile)
+	$(MAKE) -f ../sweepc/Makefile -C ../sweepc debug=$(debug) profile=$(profile)
+cvodeslib:
+	$(MAKE) -f ../cvodes/Makefile -C ../cvodes debug=$(debug) profile=$(profile)
 
 # Source code.
 
@@ -117,7 +131,7 @@ mops_reactor_factory.o: $(src)/mops_reactor_factory.cpp
 mops_timeinterval.o: $(src)/mops_timeinterval.cpp
 	$(cpp) $(flag) $(src)/mops_timeinterval.cpp
 
-mops_ode_solver.o: $(src)/mops_ode_solver.cpp ../cvode/nvector_serial.o
+mops_ode_solver.o: $(src)/mops_ode_solver.cpp ../cvodes/nvector_serial.o
 	$(cpp) $(flag) $(src)/mops_ode_solver.cpp
 
 mops_solver.o: $(src)/mops_solver.cpp
@@ -137,6 +151,23 @@ mops_predcor_solver.o: $(src)/mops_predcor_solver.cpp
 
 mops_simulator.o: $(src)/mops_simulator.cpp
 	$(cpp) $(flag) $(src)/mops_simulator.cpp
+	
+# sensistivity and flux analysis	
+
+mops_flux_postprocessor.o: $(src)/mops_flux_postprocessor.cpp
+	$(cpp) $(flag) $(src)/mops_flux_postprocessor.cpp
+
+mops_gpc_sensitivity.o: $(src)/mops_gpc_sensitivity.cpp
+	$(cpp) $(flag) $(src)/mops_gpc_sensitivity.cpp
+  
+
+mops_rhs_func.o: $(src)/mops_rhs_func.cpp
+	$(cpp) $(flag) $(src)/mops_rhs_func.cpp
+
+mops_simplesplit_solver.o: $(src)/mops_simplesplit_solver.cpp
+	$(cpp) $(flag) $(src)/mops_simplesplit_solver.cpp
+
+
 
 # Auxilliary classes.
 
@@ -152,7 +183,7 @@ swp_gas_profile.o: $(src)/swp_gas_profile.cpp
 clean:
 	$(MAKE) clean -f ../comostrings/Makefile -C ../comostrings
 	$(MAKE) clean -f ../camxml/Makefile -C ../camxml
-	$(MAKE) clean -f ../sprog/Makefile -C ../sprog
-	$(MAKE) clean -f ../sweep/Makefile -C ../sweep
-	$(MAKE) clean -f ../cvode/Makefile -C ../cvode
+	$(MAKE) clean -f ../sprogc/Makefile -C ../sprogc
+	$(MAKE) clean -f ../sweepc/Makefile -C ../sweepc
+	$(MAKE) clean -f ../cvodes/Makefile -C ../cvodes
 	rm -rf *.o \#* *~
