@@ -151,8 +151,10 @@ public:
         ) const;
 
     // Attach sensitivity to ODE_Solver by making copy.
-    void AttachSensitivity(SensitivityAnalyzer &sensi) const { m_ode.SetSensitivity(sensi); };
+    void AttachSensitivity(SensitivityAnalyzer &sensi) const;
 
+    // Outputs sensitivity results to given file stream.
+    void OutputSensitivity(std::fstream &fout, const Mops::Reactor &r, void *sim) const;
     //const ODE_Solver &GetODE_Solver() const { return m_ode; };
 
 protected:

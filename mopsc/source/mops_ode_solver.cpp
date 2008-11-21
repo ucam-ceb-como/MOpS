@@ -212,14 +212,6 @@ void ODE_Solver::InitCVode(void)
         flag = CVodeSetSensParams(m_odewk, m_sensi.ParamsPtr(), m_sensi.ParamBarsPtr(), NULL);
         //if (check_flag(&flag, "CVodeSetSensParams", 1)) return(1);
 
-        //printf("Sensitivity: YES ");
-        //if(GetMethod() == CV_SIMULTANEOUS)   
-        //    printf("( SIMULTANEOUS +");
-        //else 
-        //    if(GetMethod() == CV_STAGGERED) printf("( STAGGERED +");
-        //    else                           printf("( STAGGERED1 +");   
-        //if(isEnableErrorControl()) printf(" FULL ERROR CONTROL )");
-        //else        printf(" PARTIAL ERROR CONTROL )");
     } else {
         //printf("Sensitivity: NO ");
     }
@@ -329,10 +321,12 @@ void ODE_Solver::Solve(Reactor &reac, real stop_time)
     // Add the source terms to derivatives, if defined.
     if (_srcTerms != NULL) 
         _srcTerms(m_deriv, m_neq, stop_time, *m_srcterms);
+
+    // Set a pointer in sensitivity object to result for outputting.
     if (m_sensi.isEnable()) {
         int flag = CVodeGetSens(m_odewk, m_time, m_yS);
         //if (m_sensi.check_flag(&flag, "CVodeGetSens", 1)) break;
-        m_sensi.PrintOutputS(m_yS);
+        m_sensi.SetSensResult(m_yS);
     }
 
 }

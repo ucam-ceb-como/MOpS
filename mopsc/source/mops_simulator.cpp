@@ -80,8 +80,24 @@ void Simulator::SetRunCount(unsigned int n) {m_nruns = n;}
 // Returns the number of iteration to perform per step.
 unsigned int Simulator::IterCount(void) const {return m_niter;}
 
+// Return time vector.
+const timevector &Simulator::TimeVector() const { return m_times; }
+
+// Return the number of time steps.
+unsigned int Simulator::TimeStepCount() const 
+{
+    unsigned int n_time_steps = 0;
+    for (unsigned int i =0; i < m_times.size(); ++i) {
+        n_time_steps += m_times.at(i).StepCount();
+    }
+    return n_time_steps;
+}
+
 // Sets the number of iterations to perform per step.
 void Simulator::SetIterCount(unsigned int n) {m_niter = n;}
+
+// Sets the time vector.
+void Simulator::SetTimeVector(const timevector &times) {m_times = times;}
 
     
 // These particle count related settings should be part of the
@@ -201,7 +217,7 @@ void Simulator::SetParticleTrackCount(unsigned int ptcount) {
 
 // Solves the given reactor for the given time intervals.
 void Simulator::RunSimulation(Mops::Reactor &r, 
-                              const timevector &times, 
+                              //const timevector &times, 
                               Solver &s)
 {
     unsigned int icon;
@@ -214,7 +230,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     initmix.SetDensity(r.Mixture()->Density());
 
     // Initialise the reactor with the start time.
-    t2 = times[0].StartTime();
+    t2 = m_times[0].StartTime();
     r.SetTime(t2);
     r.Mixture()->Particles().Initialise(m_pcount, r.Mech()->ParticleMech());
     r.Mixture()->SetMaxM0(m_maxm0);
@@ -223,10 +239,11 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     s.Initialise(r);
 
     // Set up file output.
-    writeAux(*r.Mech(), times, s);
+    writeAux(*r.Mech(), m_times, s);
     openOutputFile();
 
     // Output initial conditions.
+    // - Note: added sensitivity output will write system initial condition, not initial values.
     fileOutput(m_output_step, m_output_iter, r, s, this);
 
     // Set up the console output.
@@ -240,7 +257,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         m_runtime  = 0.0;
 
         // Initialise the reactor with the start time.
-        t2 = times[0].StartTime();
+        t2 = m_times[0].StartTime();
         r.Mixture()->SetFracs(initmix.MoleFractions());
         r.Mixture()->SetTemperature(initmix.Temperature());
         r.Mixture()->SetDensity(initmix.Density());
@@ -258,7 +275,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         // Loop over the time intervals.
         unsigned int global_step = 0;
         timevector::const_iterator iint;
-        for (iint=times.begin(); iint!=times.end(); ++iint) {
+        for (iint=m_times.begin(); iint!=m_times.end(); ++iint) {
             // Get the step size for this interval.
             dt = (*iint).StepSize();
 
@@ -345,12 +362,12 @@ void Simulator::PostProcess()
     // Runs -> time steps -> particles -> coordinate.
     vector<vector<vector<fvector> > > ptrack(m_nruns);
 
-    // OPEN SIMULATION OUTPUT FILE.
+    // OPEN SIMULATION OUTPUT FILES.
 
     // Build the simulation input file name.
     string fname = m_output_filename + ".sim";
 
-    // Open the simulation output file.
+    // Open the simulation input file.
     fstream fin(fname.c_str(), ios_base::in | ios_base::binary);
 
     // Throw error if the output file failed to open.
@@ -502,6 +519,9 @@ void Simulator::PostProcess()
     // POST-PROCESS ELEMENT FLUX
     // Element flux must be output before CSV files since writeXXXCSV will change the contents of what it output afterwards
     writeElementFluxOutput(m_output_filename, mech, times, agpfwdrates, agprevrates, achem);
+
+    // Sensitivity output.
+    Mops::SensitivityAnalyzer::PostProcess(m_output_filename);
 
     // OUTPUT TO CSV FILES.
 
@@ -692,7 +712,7 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
             me->outputPartTrack(r);
 
             // Write sensitivityto file.
-            //s.GetODE_Solver().GetSensitivity().outputTo();
+            s.OutputSensitivity(me->m_senfile, r, me);
         }
     }
 }
@@ -1754,12 +1774,14 @@ void Simulator::writeElementFluxOutput(const std::string &filename,
 }
 
 // Add element for flux analysis postprocessor
-void Simulator::AddFluxElement(const std::string &elem_str) {
+void Simulator::AddFluxElement(const std::string &elem_str)
+{
     m_flux_elements.push_back(elem_str);
 }
 
 // Clear element list for flux analysis postprocessor
-void Simulator::ClearFluxElements() {
+void Simulator::ClearFluxElements()
+{
     m_flux_elements.clear();
 }
 

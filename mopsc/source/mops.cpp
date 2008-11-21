@@ -281,7 +281,10 @@ int main(int argc, char *argv[])
 
     // Solve reactor.
     try {
-        if (fsolve) sim.RunSimulation(*reactor, times, *solver);
+        if (fsolve) {
+            sim.SetTimeVector(times);
+            sim.RunSimulation(*reactor, *solver);
+        }
     } catch (std::logic_error &le) {
         printf("mops: Failed to solve reactor due to bad inputs.  Message:\n  ");
         printf(le.what());

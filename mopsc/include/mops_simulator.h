@@ -79,12 +79,20 @@ public:
     // Sets the number of runs to perform.
     void SetRunCount(unsigned int n);
 
+    // Return time vector.
+    const timevector &TimeVector() const;
+
     // Returns the number of iteration to perform per step.
     unsigned int IterCount(void) const;
 
     // Sets the number of iterations to perform per step.
     void SetIterCount(unsigned int n);
 
+    // Sets the time vector.
+    void SetTimeVector(const timevector &times);
+
+    // Return the number of time steps.
+    unsigned int TimeStepCount() const;
 
     // Particle counts should be properties of the Reactor class!
 
@@ -161,7 +169,7 @@ public:
     // given time intervals.
     void RunSimulation(
         Reactor &r,              // Reactor object to solve.
-        const timevector &times, // Vector of time intervals.
+        //const timevector &times, // Vector of time intervals.
         Solver &s                // Solver to use for simulation.
         );
 
@@ -191,6 +199,9 @@ private:
 
     // Number of internal solver iterations to perform.
     unsigned int m_niter;
+
+    // Simulation time vector.
+    timevector m_times;
 
     // These should be properties of the Reactor class!
 
@@ -552,7 +563,6 @@ private:
         const std::vector<fvector> &agprevrates,       // Vector of gas-phase reaction time points.
         const std::vector<fvector> &achem  // Vector of confidence intervals.
         );
-
 
     // COMPUTATION TIME CALCULATION.
 

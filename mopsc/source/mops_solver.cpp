@@ -165,8 +165,20 @@ void Mops::Solver::OutputCT(std::ostream &out) const
     out.write((char*)&m_chemtime, sizeof(m_chemtime));
 }
 
+// Attach sensitivity to ODE_Solver by making copy.
+void Solver::AttachSensitivity(SensitivityAnalyzer &sensi) const
+{
+    m_ode.SetSensitivity(sensi);
+}
+
+// Outputs sensitivity results to given file stream.
+void Solver::OutputSensitivity(std::fstream &fout, const Mops::Reactor &r, void *sim) const
+{
+    m_ode.GetSensitivity().OutputSens(fout, r, sim);
+}
+
 // Adds the CT descriptions to a vector of strings.
-void Mops::Solver::CT_Names(vector<string> &names, unsigned int start) const
+void Solver::CT_Names(vector<string> &names, unsigned int start) const
 {
     // Resize output vector to hold names, and get iterator
     // to first insertion point.

@@ -48,6 +48,7 @@
 #include <vector>
 #include <camxml.h>
 #include <mops_mechanism.h>
+#include <mops_reactor.h>
 
 #include <cvodes/cvodes.h>           /* prototypes for CVODES fcts. and consts. */
 #include <cvodes/cvodes_dense.h>     /* prototype for CVDENSE fcts. and constants */
@@ -55,28 +56,28 @@
 #include <sundials/sundials_types.h> /* def. of type realtype */
 #include <sundials/sundials_math.h>  /* definition of ABS */
 
- /* Accessor macros */
-
-#define Ith(v,i)    NV_Ith_S(v,i-1)       /* i-th vector component i=1..NEQ */
-#define IJth(A,i,j) DENSE_ELEM(A,i-1,j-1) /* (i,j)-th matrix component i,j=1..NEQ */
-
- /* Problem Constants */
-
-#define NEQ   3             /* number of equations  */
-#define Y1    RCONST(1.0)   /* initial y components */
-#define Y2    RCONST(0.0)
-#define Y3    RCONST(0.0)
-#define RTOLK  RCONST(1e-4)  /* scalar relative tolerance */
-#define ATOL1 RCONST(1e-8)  /* vector absolute tolerance components */
-#define ATOL2 RCONST(1e-14)
-#define ATOL3 RCONST(1e-6)
-#define T0    RCONST(0.0)   /* initial time */
-#define T1    RCONST(0.4)   /* first output time */
-#define TMULT RCONST(10.0)  /* output time factor */
-#define NOUT  12            /* number of output times */
-
-#define NP    3             /* number of problem parameters */
-#define NS    3             /* number of sensitivities computed */
+// /* Accessor macros */
+//
+//#define Ith(v,i)    NV_Ith_S(v,i-1)       /* i-th vector component i=1..NEQ */
+//#define IJth(A,i,j) DENSE_ELEM(A,i-1,j-1) /* (i,j)-th matrix component i,j=1..NEQ */
+//
+// /* Problem Constants */
+//
+//#define NEQ   3             /* number of equations  */
+//#define Y1    RCONST(1.0)   /* initial y components */
+//#define Y2    RCONST(0.0)
+//#define Y3    RCONST(0.0)
+//#define RTOLK  RCONST(1e-4)  /* scalar relative tolerance */
+//#define ATOL1 RCONST(1e-8)  /* vector absolute tolerance components */
+//#define ATOL2 RCONST(1e-14)
+//#define ATOL3 RCONST(1e-6)
+//#define T0    RCONST(0.0)   /* initial time */
+//#define T1    RCONST(0.4)   /* first output time */
+//#define TMULT RCONST(10.0)  /* output time factor */
+//#define NOUT  12            /* number of output times */
+//
+//#define NP    3             /* number of problem parameters */
+//#define NS    3             /* number of sensitivities computed */
 
 
 namespace Mops
@@ -154,10 +155,10 @@ public:
     void ResetMechParams();
 
     // File output.
-    void outputTo() {};
+    void OutputSens(std::fstream &fout, const Mops::Reactor &r, void *sim);
 
-    // Set output.
-    void SetOutputFile(const string &ofile);
+    // File postprocessing.
+    static void PostProcess(const std::string &filename);
 
     // Parameter pointer to array of real. This is needed by CVODES.
     // CVODES will access and change these parameters.
@@ -165,6 +166,9 @@ public:
 
     // Parameter scaling factors. approx by original params.
     real *ParamBarsPtr();
+
+    // Set a pointer to last sensitivity output result.
+    void SetSensResult(N_Vector *sens_matrix);
 
     // Test solve.
     int Solve();
@@ -203,7 +207,14 @@ private:
     real *m_parambars;
     vector<ARRHENIUS_PARAMS> m_arr_params;
 
+    // SENSITIVITY TEMP RESULT
+    N_Vector *m_sens_matrix;
+
+    // Add parameters function. m_NS should not be touch anywhere in
+    // the code except here.
     bool AddParam(const ARRHENIUS_PARAMS &arr);
+
+
      /* Prototypes of functions by CVODES */
 
     // Setup sensitivity problem from given setting xml version 1.0.
