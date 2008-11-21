@@ -163,7 +163,7 @@ void SensitivityAnalyzer::EnableErrorControl(booleantype err_con)
 }
 
 // Get enable error control status in CVODES.
-booleantype SensitivityAnalyzer::isEnableErrorControl()
+booleantype SensitivityAnalyzer::isEnableErrorControl() const
 {
     return m_err_con;
 }

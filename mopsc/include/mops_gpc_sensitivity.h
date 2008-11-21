@@ -136,7 +136,7 @@ public:
     void EnableErrorControl(booleantype err_con);
 
     // Get enable error control status in CVODES.
-    booleantype isEnableErrorControl();
+    booleantype isEnableErrorControl() const;
 
     // Define the mechanism and parameters.
     void SetupProblem(Mops::Mechanism &mech, const string &sfile);
@@ -171,15 +171,12 @@ public:
     void SetSensResult(N_Vector *sens_matrix);
 
     // Test solve.
-    int Solve();
-    static void PrintOutput(void *cvode_mem, realtype t, N_Vector u);
-    static void PrintOutputS(N_Vector *uS);
-    static void PrintFinalStats(void *cvode_mem, booleantype sensi);
-    static int check_flag(void *flagvalue, char *funcname, int opt);
+    //int Solve();
+    //static void PrintOutput(void *cvode_mem, realtype t, N_Vector u);
+    //static void PrintOutputS(N_Vector *uS);
+    //static void PrintFinalStats(void *cvode_mem, booleantype sensi);
+    //static int check_flag(void *flagvalue, char *funcname, int opt);
 private:
-    typedef struct {
-      realtype p[3];           /* problem parameters */
-    } *UserData;
 
     // Define problem type.
     SensitivityType m_probType;
@@ -214,16 +211,21 @@ private:
     // the code except here.
     bool AddParam(const ARRHENIUS_PARAMS &arr);
 
+    // Read sensitivity setting from file.
+    void ReadSettingV1(const CamXML::Element &elemSA);
 
      /* Prototypes of functions by CVODES */
+    //typedef struct {
+    //  realtype p[3];           /* problem parameters */
+    //} *UserData;
 
     // Setup sensitivity problem from given setting xml version 1.0.
     // Clear function must be called before using this function, otherwise 
     // program might behave abnormally. m_mech pointer must be set after 
     // use clear function.
-    void ReadSettingV1(const CamXML::Element &elemSA);
+    //void ReadSettingV1(const CamXML::Element &elemSA);
 
-    static int f(realtype t, N_Vector y, N_Vector ydot, void *f_data);
+    //static int f(realtype t, N_Vector y, N_Vector ydot, void *f_data);
     //static int f(realtype t, N_Vector y, N_Vector ydot, void *f_data);
 
     //static int Jac(long int N, DenseMat J, realtype t,
@@ -234,7 +236,7 @@ private:
     //              int iS, N_Vector yS, N_Vector ySdot, 
     //              void *fS_data, N_Vector tmp1, N_Vector tmp2);
 
-    static int ewt(N_Vector y, N_Vector w, void *e_data);
+    //static int ewt(N_Vector y, N_Vector w, void *e_data);
 
      /* Prototypes of private functions */
 
