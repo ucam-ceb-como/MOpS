@@ -46,6 +46,7 @@
 #include "string_functions.h"
 
 #include <stdexcept>
+#include <math.h>
 
 using namespace Mops;
 
@@ -429,11 +430,11 @@ void SensitivityAnalyzer::OutputSens(std::fstream &fout, const Mops::Reactor &r,
             // output sensitivity problemtype.
             fout.write((char*)&m_probType, sizeof(m_probType));
 
-            // output number of variables (number of species + 2). // T and P
-            fout.write((char*)&n_vars, sizeof(n_vars));
-
             // output number of sensitivity parameters.
             fout.write((char*)&m_NS, sizeof(m_NS));
+
+            // output number of variables (number of species + 2). // T and P
+            fout.write((char*)&n_vars, sizeof(n_vars));
 
             // output variable name list.
             for (unsigned int i = 0; i < n_vars - 2; ++i) {
@@ -457,7 +458,7 @@ void SensitivityAnalyzer::OutputSens(std::fstream &fout, const Mops::Reactor &r,
             // Write simulation time.
             real time = r.Time();
             fout.write((char*)&time, sizeof(time));
-
+            //cout << "Time : " << r.Time() << endl;
             // Write main sensitivity matrix.
             for (unsigned int i = 0; i < m_NS; ++i) {
                 real *sdata;
@@ -465,7 +466,9 @@ void SensitivityAnalyzer::OutputSens(std::fstream &fout, const Mops::Reactor &r,
                 for (unsigned int j = 0; j < n_vars; ++j) {
                     real val = sdata[j];
                     fout.write((char*)&val, sizeof(val));
+                    //cout << val << ", " ;
                 }
+                //cout << endl;
             }
             fout.flush();
         } else {
@@ -480,11 +483,12 @@ void SensitivityAnalyzer::OutputSens(std::fstream &fout, const Mops::Reactor &r,
 void SensitivityAnalyzer::PostProcess(const std::string &filename)
 {
     // Build the sensitivity binary file name.
-    string fname = filename + ".sen";
+    string finname = filename + ".sen";
+    string foutname = filename + "-sensi.csv";
 
     // Open the sensitivity binary file.
     ifstream fin;
-    fin.open(fname.c_str(), ios_base::in | ios_base::binary);
+    fin.open(finname.c_str(), ios_base::in | ios_base::binary);
     //// Read the gas-phase conditions.
     //fvector y(N, 0.0);
     //real T=0.0, D=0.0, P=0.0;
@@ -506,10 +510,10 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
     unsigned int n_timesteps = 0;
     // Sensitivity problemtype.
     SensitivityType probType = Reaction_Rates;
-    // Number of variables (number of species + 2). // T and P
-    unsigned int n_vars = 2;
     // Number of sensitivity parameters.
     unsigned int NS = 0;
+    // Number of variables (number of species + 2). // T and P
+    unsigned int n_vars = 2;
     // Variable name list.
     vector<string> var_names;
     // Parameter list.
@@ -527,9 +531,9 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
 
         fin.read(reinterpret_cast<char*>(&probType), sizeof(probType));
 
-        fin.read(reinterpret_cast<char*>(&n_vars), sizeof(n_vars));
-
         fin.read(reinterpret_cast<char*>(&NS), sizeof(NS));
+
+        fin.read(reinterpret_cast<char*>(&n_vars), sizeof(n_vars));
 
         for (unsigned int i = 0; i < n_vars - 2; ++i) {
             unsigned int len = 0;
@@ -552,6 +556,105 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
             fin.read(reinterpret_cast<char*>(&arr.Rxnth), sizeof(arr.Rxnth));
             arr_params.push_back(arr);
         }
+        // Allocating memories for calculated results
+        // Total memories require = 2 * n_timesteps * NS * n_vars * sizeof(real);
+        //unsigned int mem_space = 2 * n_timesteps * NS * n_vars * sizeof(real);
+        //if (mem_space < 209715200) {
+        //  // if require mem less than 200MB then will calculate it on RAM.
+        real *** avg;
+        real *** err_sd;
+        real **  temp_sum;
+        real **  temp_sum_sqr;
+        real *times = new real [n_timesteps];
+        
+        // Allocate memories for overall result
+        avg     = new real ** [n_timesteps];
+        err_sd  = new real ** [n_timesteps];
+        for (unsigned int i = 0; i < n_timesteps; ++i) {
+            avg[i]     = new real * [NS];
+            err_sd[i]  = new real * [NS];
+            for (unsigned int j = 0; j < NS; ++j) {
+                avg[i][j]     = new real [n_vars];
+                err_sd[i][j] = new real [n_vars];
+                for (unsigned int k = 0; k < n_vars; ++k) {
+                    avg[i][j][k]     = 0.0;
+                    err_sd[i][j][k]  = 0.0;
+                }
+            }
+        }
+        // Allocate memories for temporarily calculations.
+        temp_sum     = new real * [NS];
+        temp_sum_sqr = new real * [NS];
+        for (unsigned int i = 0; i < NS; ++i) {
+            temp_sum[i]     = new real [n_vars];
+            temp_sum_sqr[i] = new real [n_vars];
+            for (unsigned int j = 0; j < n_vars; ++j) {
+                temp_sum[i][j]     = 0.0;
+                temp_sum_sqr[i][j] = 0.0;
+            }
+        }
+
+        // Calculating Sum and Sum square for n_runs.
+        for (unsigned int r = 0; r < n_runs; ++r) {
+            for (unsigned int i = 0; i < n_timesteps; ++i) {
+                ReadSensMatrix(fin, NS, n_vars, times[i], temp_sum, temp_sum_sqr);
+                for (unsigned int j = 0; j < NS; ++j) {
+                    for (unsigned int k = 0; k < n_vars; ++k) {
+                        avg[i][j][k]     += temp_sum[j][k];
+                        err_sd[i][j][k]  += temp_sum_sqr[j][k];
+                    }
+                }
+            }
+        }
+        // Calculate Average and SD in to sum and sum_sqr.
+        fstream fout;
+        fout.open(foutname.c_str(), ios_base::in | ios_base::out | ios_base::trunc);
+        if (fout.good()) {
+            // Output header line.
+            fout << "Time (s), Parameter Type, Parameter Index" ;
+            for (unsigned int i = 0; i < var_names.size(); ++i) {
+                fout << ", " << var_names.at(i);
+                fout << ", Err";
+            }
+            fout << endl;
+            for (unsigned int i = 0; i < n_timesteps; ++i) {
+                for (unsigned int j = 0; j < NS; ++j) {
+                    fout << times[i] << "," << arr_params.at(j).Type << "," << arr_params.at(j).Rxnth;
+                    for (unsigned int k = 0; k < n_vars; ++k) {
+                        avg[i][j][k]     /= n_runs;
+                        err_sd[i][j][k]  /= n_runs;
+                        err_sd[i][j][k]  -= avg[i][j][k] * avg[i][j][k];
+                        err_sd[i][j][k]  /= n_runs;
+                        // fabs might be needed before taking sqrt.
+                        err_sd[i][j][k]  = sqrt(err_sd[i][j][k]);
+                        fout << "," << avg[i][j][k] << "," << err_sd[i][j][k];
+                    }
+                    fout << endl;
+                }
+            }
+        }
+        fout.close();
+        // Free memories
+        for (unsigned int i = 0; i < n_timesteps; ++i) {
+            for (unsigned int j = 0; j < NS; ++j) {
+                delete [] avg[i][j];
+                delete [] err_sd[i][j];
+            }
+            delete [] avg[i];
+            delete [] err_sd[i];
+        }
+        delete [] avg;
+        delete [] err_sd;
+        delete [] times;
+        // Free memories for temporarily calculations.
+        for (unsigned int i = 0; i < NS; ++i) {
+            delete [] temp_sum[i];
+            delete [] temp_sum_sqr[i];
+        }
+        delete [] temp_sum;
+        delete [] temp_sum_sqr;
+        //} else {
+        //}
     }
     fin.close();
 
@@ -570,6 +673,20 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
     //        }
     //    }
     //}
+}
+
+// Read Sensitivity Matrix block.
+// Read block of n x m from fin to matrix and simulation time.
+void SensitivityAnalyzer::ReadSensMatrix(ifstream &fin, const unsigned int n, const unsigned int m, real &time, real ** matrix, real ** matrix_sql)
+{
+    fin.read(reinterpret_cast<char*>(&time), sizeof(time));
+
+    for (unsigned int i = 0; i < n; ++i) {
+        for (unsigned int j = 0; j < m; ++j) {
+            fin.read(reinterpret_cast<char*>(&matrix[i][j]), sizeof(real));
+            matrix_sql[i][j] = matrix[i][j] * matrix[i][j];
+        }
+    }
 }
 
 // Parameter pointer to array of real. This is needed by CVODES.

@@ -142,6 +142,7 @@ void Solver::Solve(Reactor &r, real tstop, int nsteps, int niter,
     m_cpu_mark = clock();
     // Solve reactor.
     m_ode.Solve(r, tstop);
+    r.SetTime(tstop);
     // Calculate CPU time.
     double dt = calcDeltaCT(m_cpu_mark);
     m_tottime += dt;

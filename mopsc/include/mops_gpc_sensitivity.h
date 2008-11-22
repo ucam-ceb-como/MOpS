@@ -214,6 +214,10 @@ private:
     // Read sensitivity setting from file.
     void ReadSettingV1(const CamXML::Element &elemSA);
 
+    // Read Sensitivity Matrix block.
+    // Read block of n x m from fin to matrix and simulation time.
+    static void ReadSensMatrix(ifstream &fin, const unsigned int n, const unsigned int m, real &time, real ** matrix, real ** matrix_sqr);
+
      /* Prototypes of functions by CVODES */
     //typedef struct {
     //  realtype p[3];           /* problem parameters */
