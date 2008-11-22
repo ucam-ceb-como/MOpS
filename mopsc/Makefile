@@ -41,7 +41,7 @@ else
   camxml=../camxml/lib/camxml_d.a
   sprog=../sprogc/lib/sprog_d.a
   sweep=../sweepc/lib/sweep_d.a
-  cvode=s../cvodes/lib/cvodes_d.a
+  cvodes=../cvodes/lib/cvodes_d.a
 endif
 linklibs=$(comostrings) $(camxml) $(sprog) $(sweep) $(cvodes)
 
