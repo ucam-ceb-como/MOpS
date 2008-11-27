@@ -87,7 +87,7 @@ public:
     // changed then this function also forces a recalculation
     // of the image aggregate structure, assuming that it 
     // has already been initialised.
-	void PrintEnsemble(Cell &sys,std::ofstream &file);
+	void PrintEnsemble(Cell &sys,std::ofstream &file, real shiftz);
 	void Write3dout(std::ofstream &file, EnsembleImgNode *curr_node);
 
 

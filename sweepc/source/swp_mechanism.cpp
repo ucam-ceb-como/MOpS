@@ -765,7 +765,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 							ofstream filepart; filepart.open("part.3d");
 							img.Write3dout(filepart,0,0,0);
 					   }*/
-						 if (sys.ParticleCount() > 10 && t-last3dout>0.001)
+						 if (sys.ParticleCount() > 10 && t-last3dout>0.004)
 						{	ofstream file;
 						    string fname;
 							Ensemble::iterator i;
@@ -781,12 +781,17 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 							EnsembleImage *ensimg = new EnsembleImage;
 							fname = "subparttree" + cstr(t) + ".3d";
 							 file.open(fname.c_str());
-							ensimg->PrintEnsemble(sys,file);
+							ensimg->PrintEnsemble(sys,file,0.);
 							file.close();
-							delete ensimg;
-							
+							delete ensimg;		
+
+							ensimg = new EnsembleImage;
+							fname = "subparttreetemp.3d";
+							 file.open(fname.c_str(),ios::app);
+							ensimg->PrintEnsemble(sys,file,t/0.004);
+							file.close();
+							delete ensimg;	
 				
-							
 							int numpart=0;
 							int numsubpart=0;
 							real avcoldiam=0.;

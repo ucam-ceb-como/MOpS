@@ -109,7 +109,7 @@ void EnsembleImage::Write3dout(std::ofstream &file, EnsembleImgNode *curr_node)
 
 
 
-void EnsembleImage::PrintEnsemble(Cell &sys,std::ofstream &file)
+void EnsembleImage::PrintEnsemble(Cell &sys,std::ofstream &file, real shiftz)
 {
 	
 	bool treedimage=false;
@@ -135,11 +135,12 @@ void EnsembleImage::PrintEnsemble(Cell &sys,std::ofstream &file)
 	else 
 	{
 		maxd=1e9*6*pow(maxd,0.3333333);
+		maxd=200;
 		boxlength=pow(numsubpart,0.5);
 		boxlength*=maxd;
 	}
 
-
+	shiftz=shiftz*boxlength;
 	numsubpart=0;
 	for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
 		numsubpart++;
@@ -162,10 +163,11 @@ void EnsembleImage::PrintEnsemble(Cell &sys,std::ofstream &file)
 			}
 			Sweep::Imaging::ParticleImage img;
 			img.Construct(*(*i));
-			img.Write3dout(file,x+(rnd()-0.5)*(boxlength-(*(*i)).Property(id)*1e9),y+(rnd()-0.5)*(boxlength-(*(*i)).Property(id)*1e9),z+(rnd()-0.5)*(boxlength-(*(*i)).Property(id)*1e9));
+			//img.Write3dout(file,x+(rnd()-0.5)*(boxlength-(*(*i)).Property(id)*1e9),y+(rnd()-0.5)*(boxlength-(*(*i)).Property(id)*1e9),z+(rnd()-0.5)*(boxlength-(*(*i)).Property(id)*1e9));
+			img.Write3dout(file,(x-boxlength/2)+(rnd()-0.5)*boxlength,y-boxlength/2+(rnd()-0.5)*boxlength,z+shiftz);
+		
 		}
 	}
-
 	
 }
 

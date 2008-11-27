@@ -802,7 +802,7 @@ void SubParticle::SinterPart()
 {	bool lefttree;
 	// Chose the subparticle according to the following property
 	/*if (!FileExists("beforesinterprim.inp"))
-	{
+	{ ParticleCache::PropID idsubtreeprint=ParticleCache::iFS;
 		ofstream out;
 		out.open("beforesinterprim.inp");
 	    this->FindRoot()->printSubtree(out,idsubtreeprint);
