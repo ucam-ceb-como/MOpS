@@ -172,19 +172,22 @@ public:
 	//FUNCTIONS added by Vinod
 
 
-	// return the molar enthalpy of all species as a vector J/mol
+	// return the molar enthalpy of all species as a vector J/mol.
 	const vector<real> getMolarEnthalpy(real T);
-	// routine to return the avg moleculat weight in Kg/mol	
+	// routine to return the avg moleculat weight in Kg/mol.	
 	real getAvgMolWt(fvector &massFrac);	
 
 
 	//TRANSPORT RELATED 
 
-
-	real getViscosity() const; // returns the mixture viscosity in Kg/m-s
-	real getThermalConductivity(real pre) const; // returns the mixture thermal conductivity in J/m-s-K	
-	real getSpecificHeatCapacity(real T);// returns the mixture specific heat capacity in J/Kg K
-	const vector<real> getMixtureDiffusionCoeff(const real pre)const; // returns the vector of mixture diffusion coefficient in m^2/s
+	// returns the mixture viscosity in Kg/m-s.
+	real getViscosity() const; 
+	// returns the mixture thermal conductivity in J/m-s-K	.
+	real getThermalConductivity(real pre) const; 
+	// returns the mixture specific heat capacity in J/Kg K.
+	real getSpecificHeatCapacity(real T);
+	// returns the vector of mixture diffusion coefficient in m^2/s.
+	const vector<real> getMixtureDiffusionCoeff(const real pre)const; 
 
 
 protected:
