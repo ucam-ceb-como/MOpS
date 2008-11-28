@@ -45,6 +45,7 @@
 #include <vector>
 #include "fl_io.h"
 #include "fl_premix.h"
+#include "fl_counter_diffusion.h"
 #include "fl_solver_control.h"
 #include "fl_error_handler.h"
 #include "fl_params.h"
@@ -86,7 +87,11 @@ int main(){
 			//solver->initSolver(mech,mix,*solverControl,*flame);
 			solver->solve(mech,*solverControl,*flame,*fio);
 
-		}			
+		}else if(flame->getReactorModel() == flame->CDflmae) {
+			solver = new CounterDiffusion(mech);
+			solver->solve(mech,*solverControl,*flame,*fio);
+		}
+
 		
 				
 	}catch(ErrorHandler rh){

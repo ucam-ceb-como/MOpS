@@ -54,7 +54,7 @@ namespace FlameLab{
 	class Premix : public SolverManager, SingleCell{
 		int nEq, nVar, nSpecies;
 		real aTol;
-		Reactor *ptrToReactor;		
+		Reactor *ptrToReactor;
 		
 		std::vector<SingleCell> cells;
 		
@@ -63,7 +63,8 @@ namespace FlameLab{
 		const int TEMP;
 		const int VEL;
 		const int DENS;
-		
+		real heatConvection, heatSource;
+
 		Premix(const Sprog::Mechanism &mech);
 		~Premix(){}
 
@@ -72,7 +73,7 @@ namespace FlameLab{
 		void solve(Sprog::Mechanism &mech,SolverControl &sc, Reactor &reac, FlameLabIO &io);
 
 		void initSolver(SolverControl &sc, Reactor &reac);
-		void reInitSolver(SolverControl &sc);
+		void reInitSolver(SolverControl &sc, Reactor &reac);
 		void updateVariables(FlameLab::real *y, void *object);
 		
 		//residual function for premix/plug flow reactor
@@ -113,6 +114,8 @@ namespace FlameLab{
 
 		// returns the mass flx given the cell id
 		//real getFlux(int &cellId);
+
+		static Premix *p;
 
 	};
 }

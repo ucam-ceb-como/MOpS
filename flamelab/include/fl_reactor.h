@@ -66,7 +66,11 @@ namespace FlameLab{
 			CDflmae,
 			Plug
 		};
-		
+
+		enum {
+			MASSFRACTION,
+			MOLEFRACTION
+		};
 
 		Reactor();
 		Reactor(const Reactor &copy); //copy constructor
@@ -94,18 +98,45 @@ namespace FlameLab{
 		int getSpeciesCount();
 		//set the guess values for species
 		void setFraction(const std::string &name, real fraction);
+		//returns the initial guess
+		map<string,FlameLab::real> getInitialGuess() const;
+		//set the measured temperature
+		void setUserTemperature(real x, real T);
+		// do the spline fot for user defined temperature
+		void naturalCubicSplineFit();
+		//returns the temperature for given position based on natural cubic spline interpolation
+		FlameLab::real getUserTemperature(const FlameLab::real position);
+		//sets the whether the initial guess is in mole or mass fraction
+		void setInitialGuessCondition(int n);
+		//returns the initital guess condition
+		int getInitialGuessCondition() const;
+		//set the strain rate 1/s
+		void setStrainRate(real srate);
+		//return the strain rate 1/s
+		real getStrainRate() const;
+
 		
-	protected:		
+	protected:	
+
+		typedef struct{
+			real a;
+			real b;
+			real c;
+			//real d;
+			real T;
+		}splineProperty;
+				
 			
-		int rModel;
-		
+		int rModel, guessCond;
+		real strainRate;
 		
 		InitialConditions *fuel, *oxidizer;
-		vector<real> variables;
+		vector<real> variables, splineCoeff;
 		map<string,real> guessSpecies;
+		map<real,splineProperty> userTemperature;// user defined temperature storage		
 		Sprog::Thermo::Mixture *mix;		
 		static const Sprog::Mechanism *mech;
-		static int nSpecies;		
+		static int nSpecies;			
 				
 
 	};

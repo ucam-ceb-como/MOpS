@@ -48,7 +48,7 @@ namespace FlameLab{
 	class SolverControl{
 
 		real aTol,rTol; // aobsolute and relative tolerances
-		real iniStep, maxStep; // inital step and max allowed step size
+		real iniStep, maxStep, minStep; // inital step and max allowed step size
 		real maxTime, timeStep;
 		
 
@@ -65,6 +65,7 @@ namespace FlameLab{
 		void setRTol(real rTol);
 		void setIniStep(real iniStep);
 		void setMaxStep(real maxStep);
+		void setMinStep(real minStep);
 		void setMaxTime(real maxTime);
 		void setTimeStep(real timeStep);
 		void setSolMode(int mode);
@@ -79,6 +80,7 @@ namespace FlameLab{
 		real getRTol() const;
 		real getIniStep() const;
 		real getMaxStep() const;
+		real getMinStep() const;
 		real getMaxTime() const;
 		real getTimeStep() const;
 		int getSolMode() const;

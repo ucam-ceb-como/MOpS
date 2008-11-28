@@ -77,16 +77,42 @@ void SingleCell::evaluateFluxes(FlameLab::real &pre,
 								vector<FlameLab::real> &dz){	
 	wFace.calcFluxes(this->cellId,
 		pre,
-		mfW,
-		mfP,
-		cellMixture[this->cellId -1],
-		cellMixture[this->cellId],
+		mfW,mfP,
+		cellMixture[this->cellId -1],cellMixture[this->cellId],
 		dz);
 
 }
+//Evaluate the species diffusion fluxes and thermal conduction fluxes for boundary cell
+void SingleCell::evaluateFluxes(FlameLab::real &pre, 
+								FlameLab::real &mfW, 
+								FlameLab::real &mfP, 
+								std::vector<FlameLab::real> &dz, 
+								FlameLab::InitialConditions &ic){
+	if(this->cellId == 0){
+		wFace.calcFluxes(this->cellId,
+			pre,
+			mfW,mfP,
+			ic.getFuelMixture(),cellMixture[this->cellId],
+			dz);
+	}else if(this->cellId == dz.size()-1){
+		
+		///calculate for east cell
+		// this is only for the last cell (Oxidizer inlet)
+		eFace.calcFluxes(this->cellId+1,
+			pre,
+			mfW,mfP,
+			cellMixture[this->cellId],ic.getOxidizerMixture(),
+			dz);
+	}
+
+}
+
 // returns the species diffusion fluxes in kg/m2s
-const vector<FlameLab::real>& SingleCell::getFaceSpFluxes() const{
-	return this->wFace.getFaceSpeciesFlx();
+const vector<FlameLab::real>& SingleCell::getFaceSpFluxes(int eastFace) const{
+	if(eastFace==0)
+		return this->wFace.getFaceSpeciesFlx();
+	else
+		return this->eFace.getFaceSpeciesFlx();
 }
 // returns the thermal conduction fluxes in J/m2s
 const FlameLab::real& SingleCell::getFaceThermalCondFluxes() const{
@@ -127,4 +153,28 @@ void SingleCell::setPressure(FlameLab::real pre){
 // get the pressure
 const FlameLab::real& SingleCell::getPressure() const{
 	return this->pressure;
+}
+//set the radial velocity
+void SingleCell::setRadialVelocityGrad(FlameLab::real vel){
+	radVelGrad = vel;
+}
+//return the radial velocity
+const FlameLab::real& SingleCell::getRadVelGrad() const{
+	return radVelGrad;
+}
+//set the mass density
+void SingleCell::setDensity(FlameLab::real dens){
+	this->density = dens;
+}
+//return the mass density
+const FlameLab::real& SingleCell::getDensity() const{
+	return this->density;
+}
+//return the inteface west face density
+const FlameLab::real& SingleCell::getFaceDensity() const{
+	return wFace.getFaceDensity();
+}
+//return the face viscosity
+const FlameLab::real& SingleCell::getFaceViscosity() const{
+	return wFace.getFaceViscosity();
 }

@@ -40,6 +40,8 @@
 #include "fl_io.h"
 #include "string_functions.h"
 #include "fl_error_handler.h"
+#include "fl_initial.h"
+#include "gpc.h"
 #include<cstring>
 #include<iostream>
 using namespace FlameLab;
@@ -108,6 +110,13 @@ void FlameLabIO::readGeometry(FlameLab::Reactor &reac, const CamXML::Element &no
 			}else{
 				reac.setAspectRatio(1.0);
 			}
+			subnode = reactorNode->GetFirstChild("strain_rate");
+			if(subnode != NULL){
+				reac.setStrainRate(cdble(subnode->Data()));
+			}else{
+				reac.setStrainRate(0.0);
+			}
+
 		
 						
 		}else{
@@ -152,9 +161,9 @@ void  FlameLabIO::readOPConditions(FlameLab::Reactor &reac, const CamXML::Elemen
 			attr = subnode->GetAttribute("unit");
 			attr1 = subnode->GetAttribute("mode");
 			attrValue = attr->GetValue();
-			if(!attrValue.compare("Pa")){
+			if(!convertToCaps(attrValue).compare("PA")){
 				reac.setPressure(cdble(subnode->Data()));
-			}else if(!attrValue.compare("atm")){
+			}else if(!convertToCaps(attrValue).compare("ATM")){
 				reac.setPressure(cdble(subnode->Data())*101325.0);
 			}else{
 				throw ErrorHandler("Unsupported pressure units\nSupported units are Pa and atm\n",107);
@@ -215,7 +224,7 @@ void FlameLabIO::readNozzleConditions(FlameLab::Reactor &reac,
 	vector<CamXML::Element*>::const_iterator p;
 	std::string attrValue;
 
-	// manage velocity settings
+	// manage axial velocity settings
 	subnode = node.GetFirstChild("velocity");
 	if(subnode != NULL){
 		attr = subnode->GetAttribute("unit");		
@@ -229,7 +238,42 @@ void FlameLabIO::readNozzleConditions(FlameLab::Reactor &reac,
 		else{
 			throw ErrorHandler("supported units are m/s and cm/s\n",105);
 		}
+	}else{
+		nozzle.setVelocity(0.0);
 	}
+	// manage flow rate settings
+	subnode = node.GetFirstChild("flowrate");
+	if(subnode != NULL){
+		attr = subnode->GetAttribute("unit");
+		attrValue = attr->GetValue();
+		if(! convertToCaps(attrValue).compare("CGS")){
+			real flow = cdble(subnode->Data())*10;
+			nozzle.setFlowRate(flow);
+		}else if(! convertToCaps(attrValue).compare("SI")){
+			nozzle.setFlowRate(cdble(subnode->Data()));
+		}else{
+			throw ErrorHandler("supported units are CGS and SI\n",106);
+		}
+
+	}else{
+		nozzle.setFlowRate(0.0);
+	}
+	//manege non-axial component of velocity setting
+	subnode = node.GetFirstChild("velocity_gradient");
+	if(subnode != NULL){
+		attr = subnode->GetAttribute("unit");		
+		attrValue = attr->GetValue();
+		if(!attrValue.compare("1/s")){
+			real vel = cdble(subnode->Data());
+			nozzle.setRadialVelocityGrad(cdble(subnode->Data()));			
+		}
+		else{
+			throw ErrorHandler("supported units is 1/s \n",105);
+		}
+	}else{
+		nozzle.setRadialVelocityGrad(0.0);
+	}
+
 	// manage temperature settings
 	subnode = node.GetFirstChild("temperature");
 	if(subnode != NULL){
@@ -338,6 +382,11 @@ void FlameLabIO::readSolverControl(FlameLab::SolverControl &solver, const CamXML
 			solver.setMaxStep(cdble(subnode->Data()));
 		else
 			solver.setMaxStep(0.0);
+		subnode = solverNode->GetFirstChild("minStep");
+		if(subnode != NULL)
+			solver.setMinStep(cdble(subnode->Data()));
+		else
+			solver.setMinStep(0.0);
 
 		subnode = solverNode->GetFirstChild("tMax");
 		if(subnode != NULL)
@@ -376,17 +425,21 @@ void FlameLabIO::readSolverControl(FlameLab::SolverControl &solver, const CamXML
 }
 
 void FlameLabIO::readInitialGuess(Reactor &reac, const CamXML::Element &node){
-	CamXML::Element *subnode;
+	CamXML::Element *subnode, *tempNode, *speciesNode;
 	vector<CamXML::Element*> subnodes;
 	vector<CamXML::Element*>::const_iterator p;
-	const CamXML::Attribute *attr;
+	const CamXML::Attribute *attr, *attr2;
 	string attrValue, nodeValue, finalSpecies;
 	
 	subnode = node.GetFirstChild("initialize");
+	
 	if(subnode != NULL){
-		subnode = subnode->GetFirstChild("massfrac");
-		if(subnode != NULL){
-			subnode->GetChildren("species",subnodes);
+		tempNode = subnode->GetFirstChild("Tprofile");
+		speciesNode = subnode->GetFirstChild("massfrac");
+
+		if(speciesNode != NULL){
+			reac.setInitialGuessCondition(reac.MASSFRACTION);
+			speciesNode->GetChildren("species",subnodes);
 			real sumFrac = 0.0;
 			for(p=subnodes.begin(); p!= subnodes.end(); ++p){
 				attr = (*p)->GetAttribute("name");
@@ -403,9 +456,10 @@ void FlameLabIO::readInitialGuess(Reactor &reac, const CamXML::Element &node){
 			}
 			reac.setFraction(finalSpecies,1-sumFrac);
 		}else{
-			subnode = subnode->GetFirstChild("molefrac");
-			if(subnode != NULL){
-				subnode->GetChildren("species",subnodes);
+			speciesNode = subnode->GetFirstChild("molefrac");
+			if(speciesNode != NULL){
+				reac.setInitialGuessCondition(reac.MOLEFRACTION);
+				speciesNode->GetChildren("species",subnodes);
 				real sumFrac = 0.0;
 				for(p=subnodes.begin(); p!= subnodes.end(); ++p){
 					attr = (*p)->GetAttribute("name");
@@ -425,6 +479,35 @@ void FlameLabIO::readInitialGuess(Reactor &reac, const CamXML::Element &node){
 		}
 
 	}
+	real converterL, converterT;	
+	if(tempNode != NULL){
+		attr = tempNode->GetAttribute("unit_L");
+		attr2 = tempNode->GetAttribute("unit_T");
+		if(attr != NULL){
+			attrValue = attr->GetValue();
+			if(!convertToCaps(attrValue).compare("CM")) converterL = 0.01;
+			if(!convertToCaps(attrValue).compare("M")) converterL = 1.0;
+			if(!convertToCaps(attrValue).compare("IN")) converterL = 0.0254;
+		}
+		if(attr2 != NULL){
+			attrValue = attr2->GetValue();
+			if(!convertToCaps(attrValue).compare("C")) converterT=273.15;
+			if(!convertToCaps(attrValue).compare("K")) converterT=0.0;
+		}
+
+		tempNode->GetChildren("position",subnodes);
+		real position, temp;
+		for(p=subnodes.begin(); p!= subnodes.end(); p++){
+			position = cdble((*p)->GetAttributeValue("x"))*converterL;
+			temp = cdble((*p)->Data())+converterT;
+			reac.setUserTemperature(position,temp);
+		}
+
+		reac.naturalCubicSplineFit();
+		
+	}	
+	
+		
 }
 
 			
@@ -450,6 +533,17 @@ void FlameLabIO::readMonitor(const CamXML::Element &node){
 	}else{
 		throw ErrorHandler("Monitor mode need to be specified\n",302);
 	}
+	
+	attr = subnode->GetAttribute("species");
+	if( attr != NULL){
+		attrValue = attr->GetValue();
+		if( ! convertToCaps(attrValue).compare("MOLE"))
+			setSpeciesOut(MOLE);
+		else
+			setSpeciesOut(MASS);
+	}else{
+		setSpeciesOut(MOLE);
+	}
 
 	if(subnode != NULL){		
 		subnode->GetChildren("species",subnodes);
@@ -471,6 +565,13 @@ const int& FlameLabIO::getMonitorSwitch() const{
 	return monitorSwitch;
 }
 
+void FlameLabIO::setSpeciesOut(int n){
+	speciesOut = n;
+}
+
+int FlameLabIO::getSpeciesOut() const{
+	return speciesOut;
+}
 //-------------------------------------- Output routines -----------------------//
 //********************************************************************************//
 void FlameLabIO::prepareConsole(Sprog::Mechanism &mech, FlameLab::Premix &flame){
@@ -531,3 +632,109 @@ void FlameLabIO::writeToConsole(Reactor &reac) const{
 
 	
 }
+//prepare header for file output
+void FlameLabIO::prepareFileOutput(FlameLab::Reactor &reac) {
+	const Sprog::Mechanism *mech = reac.getMechanism();
+	Sprog::SpeciesPtrVector spv = mech->Species();
+	int count = mech->SpeciesCount();
+	string name;
+	string xy;
+	fileHeader.clear();
+	if(reac.getReactorRunModel() == reac.WDT || reac.getReactorRunModel() == reac.NDT)
+		fileHeader.push_back("time(s)");
+
+	fileHeader.push_back("x(m)"); //axial position
+	fileHeader.push_back("rho(Kg/m3)");//density
+	fileHeader.push_back("T(K)"); //temperature
+	fileHeader.push_back("u(m/s)");//velocity
+
+	if(getSpeciesOut() == MASS) 
+		xy = "y";   //species names are appeneded with "Y"
+	else
+		xy = "x"; // species names are appended with "X"
+
+	for(int l=0; l<count; l++){
+		name = xy + spv[l]->Name();
+		fileHeader.push_back(name);
+	}
+
+}
+
+
+//prepare to write file
+void FlameLabIO::writeToFile(const FlameLab::real &time, std::vector<SingleCell> &sc, FlameLab::Reactor &reac) {
+
+	static int fileNr;
+	fileNr += 1;
+	string ext=".dat";
+	string name = "profile_";
+	std::stringstream intToString;
+	intToString << fileNr;
+	string stringFileNr = intToString.str();
+	string fileName = name+stringFileNr+ext;
+
+	flameReport.Open(fileName,true);
+	prepareFileOutput(reac);
+	flameReport.Write(fileHeader);
+	
+	vector<FlameLab::real> data,fraction;
+	data.push_back(time);
+	int nCell = reac.getnCells();
+	InitialConditions ic = reac.getFuelInletConditions();
+
+	if(getSpeciesOut() == MASS ) {
+		ic.getFuelMixture().GetMassFractions(fraction); //get the mass fractions
+	}else{
+		fraction = ic.getFuelMixture().MoleFractions();
+	}
+
+	int nSpecies = reac.getMechanism()->SpeciesCount();
+	//**** DO NOT CHANGE THIS ORDER ***************//
+	data.clear();
+	data.push_back(time); //time
+	data.push_back(0.0); //position
+	data.push_back(ic.getDensity()); //density
+	data.push_back(ic.getTemperature()); //temperature
+	data.push_back(ic.getVelocity()); //velocity
+	for(int l=0; l<nSpecies; l++) 
+		data.push_back(fraction[l]);
+
+	//interior cells
+	vector<real> dz= reac.getGeometry();
+	real axPos = 0.5*dz[0];
+	flameReport.Write(data);
+	for(int i=0; i<nCell; i++){
+		data.clear();		
+		if(i>0) axPos+= dz[i];
+
+		data.push_back(time);
+		data.push_back(axPos);
+		data.push_back(sc[i].getMixture().MassDensity());
+		data.push_back(sc[i].getMixture().Temperature());
+		data.push_back(sc[i].getVelocity());
+		if(getSpeciesOut() == MASS)
+			sc[i].getMixture().GetMassFractions(fraction);
+		else
+			fraction = sc[i].getMixture().MoleFractions();
+
+		for(int l = 0; l<nSpecies; l++)
+			data.push_back(fraction[l]);
+
+		flameReport.Write(data);
+	}
+	//exit boundary
+	data.clear();
+	axPos += 0.5*dz[nCell-1];
+	data.push_back(time);
+	data.push_back(axPos);
+	data.push_back(sc[nCell-1].getMixture().MassDensity());
+	data.push_back(sc[nCell-1].getMixture().Temperature());
+	data.push_back(sc[nCell-1].getVelocity());
+	for(int l = 0;l<nSpecies; l++)
+		data.push_back(fraction[l]);
+
+	flameReport.Write(data);
+	flameReport.Close();
+}
+
+

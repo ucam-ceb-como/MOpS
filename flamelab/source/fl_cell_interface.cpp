@@ -65,6 +65,7 @@ void CellInterface::calcFluxes(int cellId,
 	vector<real> dCoeffW,dCoeffP;
 	vector<real> mF_W, mF_P;
 	vector<real> hW, hP;
+	real delta;
 	dCoeffW = wMix.getMixtureDiffusionCoeff(pre);
 	dCoeffP = pMix.getMixtureDiffusionCoeff(pre);
 	
@@ -78,26 +79,53 @@ void CellInterface::calcFluxes(int cellId,
 	hP = pMix.getMolarEnthalpy(pMix.Temperature());
 
 
+	if(cellId == 0){
+		delta = 0.5*dz[cellId];
+		intfcRho = wMix.MassDensity();
+		mFlux = mfW;
+		intfVisc = wMix.getViscosity();
+	}else if(cellId == dz.size()){		
+		delta = 0.5*dz[cellId-1];
+		intfcRho = pMix.MassDensity();
+		mFlux = mfP;
+		intfVisc = pMix.getViscosity();
+	}else{
+		delta = 0.5*(dz[cellId]+dz[cellId-1]);
+		real rhoW = wMix.MassDensity();
+		real rhoP = pMix.MassDensity();
+		//arithmatic mean for density
+		//real intfcRho = rhoW + (rhoW-rhoP)*(0.5*dz[cellId]/delta);
+		//Harmonic mean for density
+		intfcRho = rhoP*rhoW/(rhoP- ((rhoP-rhoW)*(0.5*dz[cellId]/delta)));
+		// Harmonic average for mass flux
+		mFlux = mfW*mfP/(mfP- ((mfP-mfW)*(0.5*dz[cellId]/delta)));
+		real viscW = wMix.getViscosity();
+		real viscP = pMix.getViscosity();
+		intfVisc = viscP*viscW/(viscP - ( (viscP-viscW)*(0.5*dz[cellId]/delta)));
 
-	real delta = 0.5*(dz[cellId]+dz[cellId-1]);
+	}
 
 	
-	real rhoW = wMix.MassDensity();
-	real rhoP = pMix.MassDensity();
-	//arithmatic mean for density
-	//real intfcRho = rhoW + (rhoW-rhoP)*(0.5*dz[cellId]/delta);
-	//Harmonic mean for density
-	real intfcRho = rhoP*rhoW/(rhoP- ((rhoP-rhoW)*(0.5*dz[cellId]/delta)));
-	
-
 	real jCorr = 0.0;
 	real jAbsSum = 0.0;
 	speciesFlx.resize(dCoeffP.size(),0.0);
 	molarEnthalpy.resize(dCoeffP.size(),0.0);
+	real Dmix_f;
 	for(int l=0; l != dCoeffW.size(); l++){
+		if(cellId == 0){
+			Dmix_f = dCoeffW[l];
+			molarEnthalpy[l] = hW[l];
+		}else if(cellId = dz.size()){
+			Dmix_f = dCoeffP[l];
+			molarEnthalpy[l] = hP[l];
+		}else{
 		//calculate the inteface diffusion coefficient based on Harmonic average
-		real temp = (1.0/dCoeffW[l]) - ( ((1/dCoeffW[l]) - (1/dCoeffP[l]) )*(0.5*dz[cellId]/delta));
-		real Dmix_f = 1/temp;
+			real temp = (1.0/dCoeffW[l]) - ( ((1/dCoeffW[l]) - (1/dCoeffP[l]) )*(0.5*dz[cellId]/delta));
+			Dmix_f = 1/temp;
+		// harmonic mean molar enthalpy
+		molarEnthalpy[l] = hP[l]*hW[l]/(hP[l]- ((hP[l]-hW[l])*(0.5*dz[cellId]/delta)));
+
+		}
 
 		real grad = (mF_P[l] - mF_W[l])/delta;
 		speciesFlx[l] = -Dmix_f*intfcRho*grad;
@@ -106,8 +134,6 @@ void CellInterface::calcFluxes(int cellId,
 		jCorr += speciesFlx[l];
 		jAbsSum += fabs(speciesFlx[l]);
 
-		// harmonic mean molar enthalpy
-		molarEnthalpy[l] = hP[l]*hW[l]/(hP[l]- ((hP[l]-hW[l])*(0.5*dz[cellId]/delta)));
 		
 	}
 	// Apply flux correction
@@ -127,12 +153,17 @@ void CellInterface::calcFluxes(int cellId,
 	// Calcualte the thermal conduction flux
 	real kW = wMix.getThermalConductivity(pre);
 	real kP = pMix.getThermalConductivity(pre);
+	real kF;
+	if(cellId == 0)
+		kF = kW;
+	else if (cellId == dz.size())
+		kF = kP;
+	else
 	//Harmonic average for thermal conductuvity
-	real kF = kW*kP/(kP- ((kP-kW)*(0.5*dz[cellId]/delta)));
+		kF = kW*kP/(kP- ((kP-kW)*(0.5*dz[cellId]/delta)));
+
 	real TGrad = (pMix.Temperature()-wMix.Temperature())/delta;
 	q = kF*TGrad;
-	// Harmonic average for mass flux
-	mFlux = mfW*mfP/(mfP- ((mfP-mfW)*(0.5*dz[cellId]/delta)));
 
 
 	
@@ -165,4 +196,13 @@ const vector<real>& CellInterface::getFaceMolarEnthalpy() const{
 // returns the mass flux for the west face
 const real& CellInterface::getFaceMassFlux() const{
 	return this->mFlux;
+}
+
+// return the face density
+const real& CellInterface::getFaceDensity() const{
+	return this->intfcRho;
+}
+//return the viscosity
+const real& CellInterface::getFaceViscosity() const{
+	return this->intfVisc;
 }

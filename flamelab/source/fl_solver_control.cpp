@@ -62,6 +62,11 @@ void SolverControl::setMaxStep(real maxStep){
 void SolverControl::setMaxTime(real maxTime){
 	this->maxTime = maxTime;
 }
+//sets the mininum allowed step
+void SolverControl::setMinStep(FlameLab::real minStep){
+	this->minStep = minStep;
+}
+
 // sets the time step in (s)
 void SolverControl::setTimeStep(real timeStep){
 	this->timeStep = timeStep;
@@ -77,6 +82,10 @@ real SolverControl::getRTol() const{
 // returns the max allowed step 0->initinite
 real SolverControl::getMaxStep() const{
 	return this->maxStep;
+}
+//return the min step
+FlameLab::real SolverControl::getMinStep() const{
+	return this->minStep;
 }
 // returns the initial step size
 real SolverControl::getIniStep() const{

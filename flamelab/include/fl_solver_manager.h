@@ -47,9 +47,9 @@
 #include "fl_solver_control.h"
 //#include "fl_io.h"
 #include "nvector/nvector_serial.h"
-#include "cvodes_impl.h" // For CVodeMem.
-#include "cvodes_band_impl.h" // For band mat.
-#include "cvodes_dense_impl.h"
+#include "cvode_impl.h" // For CVodeMem.
+#include "cvode_band_impl.h" // For band mat.
+#include "cvode_dense_impl.h"
 #include <vector>
 namespace FlameLab{
 	class FlameLabIO;

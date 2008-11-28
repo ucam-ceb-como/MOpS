@@ -46,6 +46,7 @@
 #include "gpc.h"
 #include "fl_cell_interface.h"
 #include "fl_geometry.h"
+#include "fl_initial.h"
 #include <vector>
 
 //	faceId	0       1       2       3       4       5       6
@@ -57,11 +58,13 @@ namespace FlameLab{
 	class SingleCell {
 		int cellId;
 		real velocity;
+		real radVelGrad;
 		real massFlux;
 		real pressure;
+		real density;
 		static std::vector<Sprog::Thermo::Mixture> cellMixture;
 		//only one face for each cell is stored to save memory
-		CellInterface wFace;
+		CellInterface wFace, eFace;
 		
 	public:
 		SingleCell(int n){cellId=n;};
@@ -75,13 +78,23 @@ namespace FlameLab{
 		Sprog::Thermo::Mixture& getMixture();
 		// get the cell id
 		int getCellId();
-		// calculate fluxes
+
+		// calculate fluxes use for interior cells
 		void evaluateFluxes(real &pre, // pressure
 			real &mfW,					// west cell mass flux
 			real &mfP,					// present cell mass flux
 			vector<real>& dz);			// geometry information
+
+		// calculate fluxes for boundary cells
+		void evaluateFluxes(real &pre, // pressure
+			real &mfW,					// west cell mass flux
+			real &mfP,					// present cell mass flux
+			vector<real>& dz,			// geometry information
+			InitialConditions &ic);		// nozzle conditions
+
+
 		//always rturns the east side face fluxes
-		const vector<real>& getFaceSpFluxes() const;
+		const vector<real>& getFaceSpFluxes(int eastFace=0) const;
 		const real& getFaceThermalCondFluxes() const;
 		const real& getFaceMassFlux() const;
 		// set the cell center velocity
@@ -98,6 +111,19 @@ namespace FlameLab{
 		void setPressure(FlameLab::real pre);
 		//return the pressure in Pa
 		const FlameLab::real& getPressure() const;
+		//set the radial velocity gradient (1/s)
+		void setRadialVelocityGrad(real vel);
+		//return the radial velocity (1/s)
+		const FlameLab::real& getRadVelGrad() const;
+		// set the mass density
+		void setDensity(FlameLab::real dens);
+		// returns the mass density in Kg/m3
+		const FlameLab::real& getDensity() const;
+		// returns the interface mass density in Kg/m3
+		const FlameLab::real& getFaceDensity() const;
+		//rturn the west face viscosity in Kg/ms
+		const FlameLab::real& getFaceViscosity() const;
+
 
 	protected:
 		SingleCell(){};

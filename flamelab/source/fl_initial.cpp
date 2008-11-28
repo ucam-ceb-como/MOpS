@@ -51,6 +51,22 @@ void InitialConditions::setVelocity(real vel){
 real InitialConditions::getVelocity() const{
 	return this->velocity;
 }
+//set flow rate
+void InitialConditions::setFlowRate(real flr){
+	this->flowRate = flr;
+}
+// return the flow rate
+real InitialConditions::getFlowRate() const{
+	return this->flowRate;
+}
+//set radial velocity gradient
+void InitialConditions::setRadialVelocityGrad(FlameLab::real vel){
+	this->radVelGrad = vel;
+}
+//return the radial velocity gradient
+real& InitialConditions::getRadialVelocityGrad() {
+	return this->radVelGrad;
+}
 // sets the temperature in (K)
 void InitialConditions::setTemperature(real temp){
 	this->temperature = temp;
@@ -84,7 +100,7 @@ void InitialConditions::setFraction(std::vector<real> fracs){
 		massFracs[i] = fracs[i];
 }
 
-vector<real> InitialConditions::getMassFractions() const{
+vector<real>& InitialConditions::getMassFractions(){
 	return massFracs;
 }
 
@@ -101,6 +117,8 @@ void InitialConditions::setDensity(real dens){
 real InitialConditions::getDensity() const{
 	return this->density;
 }
+
+
 //sets the inlet fuel mixture
 void InitialConditions::setFuelMixture(Sprog::Thermo::Mixture mix){
 	nozzleMixture.insert(pair<string,Sprog::Thermo::Mixture>("fuel",mix));
@@ -119,5 +137,7 @@ Sprog::Thermo::Mixture& InitialConditions::getOxidizerMixture()  {
 	ni = nozzleMixture.find("oxidizer");
 	return ni->second;
 }
+
+
 
 

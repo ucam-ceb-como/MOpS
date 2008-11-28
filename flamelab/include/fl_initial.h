@@ -63,22 +63,33 @@ namespace FlameLab{
 		InitialConditions(){}
 		~InitialConditions(){}
 
-
+		//set the axial velocity in m/s
 		void setVelocity(real vel);
+		// return the axial velocity in m/s
 		real getVelocity() const;
-
+		//set the flow rate in SI units
+		void setFlowRate(real flr);
+		//return the flow rate in Kg/m3 s
+		real getFlowRate() const;
+		// set the radial velocity gradient in /s
+		void setRadialVelocityGrad(real vel);
+		// return the radial velocity gradient in /s
+		real& getRadialVelocityGrad();
+		//set the temperature in K
 		void setTemperature(real temp);
+		// return the temperature in K
 		real getTemperature() const;
-
+		//set the density in Kg/m3
 		void setDensity(real dens);
+		//return the density in kg/m3
 		real getDensity() const;
-
+		//set the mass/mole fraction for a given species
 		void setFraction(const std::string &name, real fraction);
 		map<std::string,real> getFraction() const;
-		
+		//sets the mass fraction at a nozzle
 		void setFraction(vector<real> fracs);
-		vector<real> getMassFractions() const;
-
+		vector<real>& getMassFractions();
+		//sets wether the inlet conditions are in mass or mole fraction
 		void setMassOrMole(int sp);
 		int getMassOrMole() const;
 		//bool operator==(MassOrMole sp);
@@ -92,15 +103,19 @@ namespace FlameLab{
 
 	private:
 
-		real velocity;
+		real velocity; // axial velocity
+		real flowRate;
+		real radVelGrad; // radial velocity gradient in case of counter flow diffusion
 		real temperature;
 		real density;
 
 		int mom;
 		std::map<std::string,real> species;
 		vector<real> massFracs;	
+		//this is required since the default constructor for mixture is protected
 		map<string,Sprog::Thermo::Mixture> nozzleMixture;
-		map<string,Sprog::Thermo::Mixture>::iterator ni;
+		map<string,Sprog::Thermo::Mixture>::iterator ni;		
+
 		
 	};
 }

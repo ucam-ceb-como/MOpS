@@ -103,3 +103,12 @@ void Geometry::setAxialPosition(int n){
 int Geometry::getAxialPosition() const{
 	return this->axialPosition;
 }
+
+real Geometry::getAxialPosition(int n) const{
+	real pos=0.0;
+	int i;
+	if(n==0) return dz[0];
+	for(i=0; i<n; i++)
+		pos += dz[i];
+	return pos;
+}

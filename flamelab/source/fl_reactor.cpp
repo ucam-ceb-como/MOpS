@@ -127,3 +127,147 @@ int Reactor::getSpeciesCount(){
 void Reactor::setFraction(const std::string &name, FlameLab::real fraction){
 	guessSpecies.insert(pair<std::string, FlameLab::real>(name,fraction));
 }
+//returns the initial guess conditions
+map<string,FlameLab::real> Reactor::getInitialGuess() const{
+	return guessSpecies;
+}
+
+void Reactor::setUserTemperature(FlameLab::real x, FlameLab::real T){	
+	splineProperty spl;
+	spl.T = T;
+	userTemperature.insert(pair<real,splineProperty>(x,spl));
+}
+/* Natural cubic spline fitting function
+Over n intervals the routine fits n equations subject to the
+boundary conditions of n+1 data points. The spline variable is zero
+for the frist segment and the last segment for natural spline
+
+         z1       z2       z3       z4       z5  
+|--------|--------|--------|--------|--------|-------|
+0  h0    1   h1   2   h2   3   h3   4   h4   5  h5   6
+ 
+*/
+
+void Reactor::naturalCubicSplineFit(){
+	vector<FlameLab::real> h,x,T;	
+	vector<real> a,b,c,d;
+	splineProperty s;
+
+	int nData = userTemperature.size();
+	map<real,splineProperty>::iterator p;
+
+	for(p=userTemperature.begin(); p!= userTemperature.end(); p++){
+		x.push_back(p->first);
+		s = p->second;
+		T.push_back(s.T);
+	}
+	// get the distance between adjuscent points
+	for(int i=0;i<nData-1;i++)
+		h.push_back(x[i+1]-x[i]);
+
+
+	//Formulate the matrix
+	a.push_back(0);
+	b.push_back(0);
+	c.push_back(0);
+	for(int i=1; i<nData-1; i++){
+		//diagonal elements
+		b.push_back((h[i]+h[i-1])*2);
+		if(i == nData-2)
+			c.push_back(0);
+		else
+			c.push_back(h[i]);
+		if(i==1)
+			a.push_back(0);
+		else
+			a.push_back(h[i-1]);
+	}	
+
+
+
+	d.push_back(0);
+	for(int i=1; i<nData-1; i++){
+		real dVal = ( (T[i+1]-T[i])/h[i] -  (T[i]-T[i-1])/h[i-1] );
+		d.push_back(6*dVal);
+	}
+
+
+
+	// TDMA implementation
+	c[1] /= b[1];
+	d[1] /= b[1];
+	
+	double *z = new double[d.size()];
+
+	for(int i=2; i<nData-1; i++){
+
+		FlameLab::real divide = b[i]- c[i-1]*a[i];
+		c[i] /= divide;
+		d[i] = (d[i]-d[i-1]*a[i])/divide;
+	}
+	// back substitution
+	z[nData-2] = d[nData-2];
+	for(int i = nData-3; i >0; i--)
+		z[i] = d[i] - z[i+1]*c[i];
+
+	//store the spline coefficients
+	splineCoeff.push_back(0);
+	for(int i=1;i<nData-1; i++)
+		splineCoeff.push_back(z[i]);
+
+	splineCoeff.push_back(0);
+	delete []z;
+	
+	p = userTemperature.begin();
+	for(int i=0;i<nData-1;i++){
+		
+		p->second.a = (splineCoeff[i+1]-splineCoeff[i])/(6*h[i]);
+		p->second.b = splineCoeff[i]/2;
+		p->second.c = (T[i+1]-T[i])/h[i] - (h[i]*(2*splineCoeff[i]+splineCoeff[i+1])/6.0);
+		//p->second.d = T[i];
+
+		p++;
+	}
+	
+
+}
+
+// calculates and returns the user defined temperature for an interpolated point
+FlameLab::real Reactor::getUserTemperature(const FlameLab::real position){
+	map<real,splineProperty>::iterator bound, lowerBound;
+	splineProperty sp;
+	bound = userTemperature.find(position);
+	if(bound == userTemperature.end()){
+		bound = userTemperature.upper_bound(position);
+		real x = bound->first;
+		lowerBound = --bound;
+		real xLower = lowerBound->first;
+		bound = fabs(position-x) > fabs(position-xLower)? lowerBound : bound;
+	}
+
+	sp = bound->second;
+	real diff = position- bound->first;
+	return  (sp.a*pow(diff,3) + sp.b*pow(diff,2) + sp.c*diff+ sp.T);	
+	
+}
+		
+void Reactor::setInitialGuessCondition(int n){
+	guessCond = n;
+}
+
+int Reactor::getInitialGuessCondition() const{
+	return guessCond;
+}
+//set the strain rate 1/s
+void Reactor::setStrainRate(FlameLab::real srate){
+	strainRate = srate;
+}
+//return the strain rate in 1/s
+FlameLab::real Reactor::getStrainRate() const{
+	return strainRate;
+}
+
+
+
+
+		

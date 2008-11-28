@@ -46,7 +46,9 @@
 #include "fl_solver_control.h"
 #include "fl_params.h"
 #include "fl_premix.h"
+#include "fl_single_cell.h"
 #include "console_io.h"
+#include "csv_io.h"
 #include "camxml.h"
 #include "gpc_mech.h"
 #include "gpc_mixture.h"
@@ -58,12 +60,19 @@ namespace FlameLab{
 	class FlameLabIO{
 		vector<string> monitor;
 		vector<unsigned int> consoleMask;
+		vector<string> fileHeader;
 		Console_IO flameLabConsole;
-		int monitorSwitch;
+		CSV_IO flameReport;
+		int monitorSwitch, speciesOut;
+
 	public:
 		enum{
 			ON,
 			OFF
+		};
+		enum{
+			MOLE,
+			MASS
 		};
 		FlameLabIO(){}
 		~FlameLabIO(){}
@@ -75,10 +84,22 @@ namespace FlameLab{
 		void readSolverControl(SolverControl &solver, const CamXML::Element &node);
 		void readInitialGuess(Reactor &reac, const CamXML::Element &node);
 		void readMonitor(const CamXML::Element &node);
+		//prepare for console output
 		void prepareConsole(Sprog::Mechanism &mech, FlameLab::Premix &flame);
+		// write to the console
 		void writeToConsole(Reactor &reac) const;
+		// switch in integration monitoring
 		void setMonitorSwtich(int n);
+		// returns the monitor switch
 		const int& getMonitorSwitch() const;
+		//prepare file output
+		void prepareFileOutput(Reactor &reac);
+		//prepare output data
+		void writeToFile(const FlameLab::real &time, vector<SingleCell> &sc, Reactor &reac) ;
+		//set the specieso oput;
+		void setSpeciesOut(int n);
+		//return the species out
+		int getSpeciesOut() const;
 		
 	};
 }

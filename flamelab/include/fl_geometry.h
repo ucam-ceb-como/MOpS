@@ -68,6 +68,7 @@ namespace FlameLab{
 		real getAspectRatio() const;
 		void setAxialPosition(int n);
 		int getAxialPosition()const;
+		real getAxialPosition(int n) const;
 
 	protected:
 		vector<real> dz; // vector holding descretization info

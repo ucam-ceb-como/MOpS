@@ -78,10 +78,14 @@ namespace FlameLab{
 		const vector<real>& getFaceMolarEnthalpy() const;
 		// return the mass flux in Kg/m2s
 		const real& getFaceMassFlux() const;
+		//returns the interface density in Kg/m3
+		const real& getFaceDensity() const;
+		//returns the face viscosity in Kg/m-s
+		const real& getFaceViscosity() const;
 	
 	protected:		
 		real q;
-		real mFlux;
+		real mFlux,intfcRho, intfVisc;
 		vector<real> speciesFlx;
 		vector<real> molarEnthalpy;
 	};
