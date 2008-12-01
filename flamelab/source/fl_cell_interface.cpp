@@ -123,7 +123,7 @@ void CellInterface::calcFluxes(int cellId,
 			real temp = (1.0/dCoeffW[l]) - ( ((1/dCoeffW[l]) - (1/dCoeffP[l]) )*(0.5*dz[cellId]/delta));
 			Dmix_f = 1/temp;
 		// harmonic mean molar enthalpy
-		molarEnthalpy[l] = hP[l]*hW[l]/(hP[l]- ((hP[l]-hW[l])*(0.5*dz[cellId]/delta)));
+			molarEnthalpy[l] = hP[l]*hW[l]/(hP[l]- ((hP[l]-hW[l])*(0.5*dz[cellId]/delta)));
 
 		}
 

@@ -1,87 +1,74 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <flamecode>
-  <reactor model="cdflame">
-    <length unit="cm"> 1.0 </length>
+  <reactor model="premix">
+    <length unit="cm"> 10 </length>
     <ncells>50</ncells>
     <aspect_ratio>0.2</aspect_ratio>
-    <strain_rate>-100</strain_rate>
   </reactor>
   <op_condition>
     <temperature condition="userdefined"> 1073.15 </temperature>
-    <pressure unit="atm" mode="constant">1.0</pressure>
+    <pressure unit="atm" mode="constant">0.0329</pressure>
     <diffusion>on</diffusion>
   </op_condition>
   <inlet>
      <fuel>
        <velocity unit="m/s">1.0</velocity>
-       <temperature unit="K">300.0</temperature>
-       <!--flowrate unit="cgs">4.63e-3</flowrate-->
-       <velocity_gradient unit="1/s">0.0</velocity_gradient>
+       <temperature unit="K">373.7</temperature>
+       <flowrate unit="cgs">4.63e-3</flowrate>
        <molefrac>
-        <species name="H2">0.5</species>
-        <species name="N2">*</species>
+        <species name="H2">0.268</species>
+        <species name="O2">0.0911</species>
+        <species name="H">3.95e-04</species>
+        <species name="O">3.322e-08</species>
+        <species name="OH">3.692e-05</species>
+        <species name="HO2">1.542e-05</species>
+        <species name="H2O2">5.281e-07</species>
+        <species name="H2O">1.187e-03</species>
+        <species name="AR">*</species>
        </molefrac>
      </fuel>
-     <oxidizer>
-       <velocity unit="m/s">1.0</velocity>
-       <temperature unit="K">300</temperature>
-       <velocityGradient unit="1/s">0.0</velocityGradient>
-       <molefrac>
-        <species name="O2">0.21</species>
+     <!--oxidizer>
+       <velocity unit="m/s">0.02</velocity>
+       <temperature unit="K">800</temperature>
+       <massfrac>
+        <species name="O2">0.14</species>
         <species name="N2">*</species>
-       </molefrac>
-     </oxidizer>
+       </massfrac>
+     </oxidizer-->
   </inlet>
   <solver mode="transient">
-   <aTol>1e-06</aTol>
-   <rTol>1.e-03</rTol>
+   <aTol>1e-08</aTol>
+   <rTol>1.e-05</rTol>
    <iniStep>0</iniStep>
    <maxStep>0</maxStep>
-   <tMax>0</tMax>
    <!--minStep>0</minStep-->
    <tMax>0</tMax>
    <output>
-     <interval from="0" to="1">1e-03</interval>
-     <interval from="1" to="10">5</interval>
+     <interval from="0" to="0.1">5e-03</interval>
+     <interval from="0.1" to="10">5</interval>
      <interval from="10" to="*">10000</interval>
    </output>
   </solver>
   <initialize>
     <massfrac>
-      <species name="H2O">0.075</species>
-      <species name="H2">0.025</species>
-      <species name="O2">0.015</species>
+      <species name="H2">0.1</species>
+      <species name="O2">0.3</species>
       <species name="N2">*</species>
     </massfrac>
     <Tprofile unit_L="cm" unit_T="K">
-      <position x="0.00">3.000e2</position>
-      <position x="0.05">3.002e2</position>
-      <position x="0.08">3.005e2</position>
-      <position x="0.10">3.013e2</position>
-      <position x="0.14">3.045e2</position>
-      <position x="0.17">3.136e2</position>
-      <position x="0.21">3.374e2</position>
-      <position x="0.25">3.906e2</position>
-      <position x="0.31">5.795e2</position>
-      <position x="0.38">8.878e2</position>
-      <position x="0.44">1.259e3</position>
-      <position x="0.50">1.631e3</position>
-      <position x="0.56">1.964e3</position>
-      <position x="0.62">2.221e3</position>
-      <position x="0.66">2.290e3</position>
-      <position x="0.69">2.283e3</position>
-      <position x="0.70">2.223e3</position>
-      <position x="0.72">2.146e3</position>
-      <position x="0.75">1.850e3</position>
-      <position x="0.80">1.118e3</position>
-      <position x="0.82">8.000e2</position>
-      <position x="0.83">5.561e2</position>
-      <position x="0.84">4.725e2</position>
-      <position x="0.86">3.709e2</position>
-      <position x="0.88">3.254e2</position>
-      <position x="0.90">3.085e2</position>
-      <position x="0.95">3.004e2</position>
-      <position x="1.00">3.000e2</position>
+      <position x="0.0">373.7</position>
+      <position x="0.125">484.5</position>
+      <position x="0.25">583.7</position>
+      <position x="0.375">672.2</position>
+      <position x="0.5">753.5</position>
+      <position x="0.75">901.4</position>
+      <position x="1.0">1027.0</position>
+      <position x="1.25">1120.0</position>
+      <position x="1.5">1184.0</position>
+      <position x="2.0">1260.0</position>
+      <position x="3.0">1348.0</position>
+      <position x="6.0">1475</position>
+      <position x="10.0">1524.0</position>
     </Tprofile>
   </initialize>
   <monitor mode="on" species="MOLE">

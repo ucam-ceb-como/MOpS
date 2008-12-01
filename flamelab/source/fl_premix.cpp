@@ -146,6 +146,7 @@ void Premix::initVariables(Reactor &reac)
 		reac.getFuelInletConditions().setVelocity(variables[VEL]);
 	}else{
 		variables[MFLX] = rho*ic.getVelocity();
+		reac.getFuelInletConditions().setFlowRate(rho*ic.getVelocity());
 		variables[VEL] = ic.getVelocity();
 	}
 	
@@ -308,7 +309,7 @@ void Premix::solve(Sprog::Mechanism &mech, FlameLab::SolverControl &sc, Reactor 
 
 		initSolver(sc,reac);			
 		cout.setf(ios::scientific);
-		cout.width(6);
+		cout.width(5);
 
 		map<map<real,real>,real> outPut = sc.getOutputInterval();
 		map<map<real,real>,real>::iterator outPutIter;
@@ -319,49 +320,57 @@ void Premix::solve(Sprog::Mechanism &mech, FlameLab::SolverControl &sc, Reactor 
 		real nextOut = 0.0;
 		real prevTime = 0.0;
 
-		while (currentTime < tMax ){
-			
-			int CVodeError = CVode(cvode_mem,tMax,solVect,&currentTime,CV_ONE_STEP);
-			if(CVodeError < 0) {
-				string error = CVodeGetReturnFlagName(CVodeError);
-				error += "\n";
-				throw ErrorHandler(error, CVodeError);
-			}else{
-				if( (currentTime-prevTime) > 10 )
-					io.writeToFile(currentTime,cells,reac);				
-				cout << currentTime << endl;
-
-			}
-		}
-	
-
-		//while(outPutIter != outPut.end()){
+		//while (currentTime < tMax ){
 		//	
-		//	fromTo = outPutIter->first;
-		//	ftIter = fromTo.end();
-		//	ftIter--;
-		//	real tOut = ftIter->second;
-		//	if(tOut == 0) tOut=tMax;
-		//	real delta_t = outPutIter->second;
-		//	nextOut += delta_t;
-		//	do{
-		//		int CVodeError = CVode(cvode_mem,nextOut,solVect,&currentTime,CV_NORMAL);
-		//		if(CVodeError < 0) {
-		//			string error = CVodeGetReturnFlagName(CVodeError);
-		//			error += "\n";
-		//			throw ErrorHandler(error, CVodeError);
-		//		}else{
-		//			if(io.getMonitorSwitch() == io.ON) 
-		//				cout << currentTime << endl;
-		//			io.writeToFile(currentTime, cells,reac);
-		//			nextOut += delta_t;
-		//		}
-		//	}while(currentTime <= tOut);
+		//	int CVodeError = CVode(cvode_mem,tMax,solVect,&currentTime,CV_ONE_STEP);
+		//	if(CVodeError < 0) {
+		//		string error = CVodeGetReturnFlagName(CVodeError);
+		//		error += "\n";
+		//		throw ErrorHandler(error, CVodeError);
+		//	}else{
+		//		if( (currentTime-prevTime) > 10 )
+		//			io.writeToFile(currentTime,cells,reac);				
+		//		cout << " " <<currentTime << endl;
 
-		//	outPutIter++;
-		//}			
+		//	}
+		//}
+	
+		cout << "Calculating premix flame\n";
+		while(outPutIter != outPut.end()){
+			
+			fromTo = outPutIter->first;
+			ftIter = fromTo.end();
+			ftIter--;
+			real tOut = ftIter->second;
+			if(tOut == 0) tOut=tMax;
+			real delta_t = outPutIter->second;
+			nextOut += delta_t;
+			int count = 0;
+			do{
+				if((count%20)==0){
+					cout << "\n";
+					cout << " Time(s)  " <<endl;
+					cout <<"---------------\n";
+					
+				}
+				count++;
+				CVodeSetStopTime(cvode_mem,nextOut);
+				int CVodeError = CVode(cvode_mem,nextOut,solVect,&currentTime,CV_NORMAL_TSTOP);
+				if(CVodeError < 0) {
+					string error = CVodeGetReturnFlagName(CVodeError);
+					error += "\n";
+					throw ErrorHandler(error, CVodeError);
+				}else{
+					if(io.getMonitorSwitch() == io.ON) 
+						cout << " "<<currentTime << endl;
+					io.writeToFile(currentTime, cells,reac);
+					nextOut += delta_t;
+				}
+			}while(currentTime <= tOut);
 
-
+			outPutIter++;
+		}			
+		
 	}
 
 	CVodeFree(&cvode_mem);
@@ -430,8 +439,8 @@ void Premix::initSolver(SolverControl &sc, Reactor &reac){
 		aTol = sc.getATol();	
 		CVodeMalloc(cvode_mem,&trResidual,currentTime,solVect,CV_SS,sc.getRTol(),(void*)&aTol);
 		// Jacobian set up
-		int nUp = (nVar*2) + 7;
-		int nLo = (nVar*2) + 7;
+		int nUp = (nVar*2);// + 7;
+		int nLo = (nVar*2);// + 7;
 		CVBand(cvode_mem,nEq,nUp,nLo);
 
 	}else if( reac.getSpaceToTime() == reac.OFF && 
@@ -575,11 +584,18 @@ void Premix::updateVariables(FlameLab::real *y, void *object){
 			//loop over cells and evaluate fluxes
 			// No inlet diffusion supported
 			vector<real> dz = p->ptrToReactor->getGeometry();
-			for(int i=1; i<p->ptrToReactor->getnCells(); i++){
+			real mfW, mfP;
+			for(int i=0; i<p->ptrToReactor->getnCells(); i++){
 				real pre = p->ptrToReactor->getPressure();
-				real mfW = p->cells[i-1].getMassFlux();
-				real mfP = p->cells[i].getMassFlux();
-				p->cells[i].evaluateFluxes(pre,mfW,mfP,dz);
+				if(i==0){
+					mfW = p->ptrToReactor->getFuelInletConditions().getFlowRate();
+					mfP = p->cells[i].getMassFlux();
+					p->cells[i].evaluateFluxes(pre,mfW,mfP,dz,p->ptrToReactor->getFuelInletConditions());
+				}else{
+					mfW = p->cells[i-1].getMassFlux();
+					mfP = p->cells[i].getMassFlux();
+					p->cells[i].evaluateFluxes(pre,mfW,mfP,dz);
+				}
 			}
 		}
 	}
@@ -857,8 +873,8 @@ void Premix::mcResidual(FlameLab::real &time, FlameLab::real *y, FlameLab::real 
 
 			diffusion = (jW[l]-jE[l])/(density*dz[axPos]);
 			
-			convection = (mfW*y[spIndex_] - mfE*y[spIndex])/
-				(density*dz[axPos]);
+			convection = (mfW*y[spIndex_] - mfE*y[spIndex])/(density*dz[axPos]);
+			
 
 			source = (*spv)[l]->MolWt()*wdot[l]/density;
 
@@ -956,16 +972,15 @@ void Premix::boundary(FlameLab::real &time, FlameLab::real *y, FlameLab::real *y
 		InitialConditions ic = p->ptrToReactor->getFuelInletConditions();
 		ic.getFuelMixture().GetMassFractions(inletMassFracs);
 		jE = (scp+1)->getFaceSpFluxes();
-
+		jW = scp->getFaceSpFluxes();
 		mech->Reactions().GetMolarProdRates(scp->getMixture(),wdot); // get the molar production rate
 
 		real mfE = (scp+1)->getFaceMassFlux();
 
 		for(int l=0; l<p->nSpecies; l++){
 			spIndex = (axPos*p->nVar) +l;	
-			diffusion = -jE[l] / (density*dz[axPos]);
-			convection = (ic.getDensity()*ic.getVelocity()*inletMassFracs[l]  - 
-				mfE*y[l])/(density*dz[axPos]);
+			diffusion = (jW[l]-jE[l]) / (density*dz[axPos]);
+			convection = (ic.getDensity()*ic.getVelocity()*inletMassFracs[l] - mfE*y[l])/(density*dz[axPos]);			
 
 			source = (*spv)[l]->MolWt()*wdot[l]/density;
 
@@ -1029,6 +1044,7 @@ void Premix::boundary(FlameLab::real &time, FlameLab::real *y, FlameLab::real *y
 
 			diffusion = jW[l]/(density*dz[axPos]);
 			convection = (mfW*y[spIndex_] - y[mIndex]*y[spIndex])/(density*dz[axPos]);
+			
 			source = (*spv)[l]->MolWt()*wdot[l]/density;
 			ydot[spIndex] = diffusion + convection + source;										
 		}

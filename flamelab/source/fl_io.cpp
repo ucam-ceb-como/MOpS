@@ -643,10 +643,16 @@ void FlameLabIO::prepareFileOutput(FlameLab::Reactor &reac) {
 	if(reac.getReactorRunModel() == reac.WDT || reac.getReactorRunModel() == reac.NDT)
 		fileHeader.push_back("time(s)");
 
+	if(reac.getReactorModel() == reac.CDflmae)
+		fileHeader.push_back("time(s)");
+
 	fileHeader.push_back("x(m)"); //axial position
 	fileHeader.push_back("rho(Kg/m3)");//density
 	fileHeader.push_back("T(K)"); //temperature
 	fileHeader.push_back("u(m/s)");//velocity
+	if(reac.getReactorModel() == reac.CDflmae){
+		fileHeader.push_back("v/r(1/s)");
+	}
 
 	if(getSpeciesOut() == MASS) 
 		xy = "y";   //species names are appeneded with "Y"
@@ -657,6 +663,7 @@ void FlameLabIO::prepareFileOutput(FlameLab::Reactor &reac) {
 		name = xy + spv[l]->Name();
 		fileHeader.push_back(name);
 	}
+	fileHeader.push_back("sum");
 
 }
 
@@ -678,6 +685,7 @@ void FlameLabIO::writeToFile(const FlameLab::real &time, std::vector<SingleCell>
 	flameReport.Write(fileHeader);
 	
 	vector<FlameLab::real> data,fraction;
+	real sum;
 	data.push_back(time);
 	int nCell = reac.getnCells();
 	InitialConditions ic = reac.getFuelInletConditions();
@@ -696,13 +704,20 @@ void FlameLabIO::writeToFile(const FlameLab::real &time, std::vector<SingleCell>
 	data.push_back(ic.getDensity()); //density
 	data.push_back(ic.getTemperature()); //temperature
 	data.push_back(ic.getVelocity()); //velocity
-	for(int l=0; l<nSpecies; l++) 
+	if(reac.getReactorModel() == reac.CDflmae){
+		data.push_back(ic.getRadialVelocityGrad());
+	}
+	sum = 0.0;
+	for(int l=0; l<nSpecies; l++) {
 		data.push_back(fraction[l]);
-
+		sum += fraction[l];
+	}
+	data.push_back(sum);
+	flameReport.Write(data);
 	//interior cells
 	vector<real> dz= reac.getGeometry();
 	real axPos = 0.5*dz[0];
-	flameReport.Write(data);
+	
 	for(int i=0; i<nCell; i++){
 		data.clear();		
 		if(i>0) axPos+= dz[i];
@@ -712,14 +727,19 @@ void FlameLabIO::writeToFile(const FlameLab::real &time, std::vector<SingleCell>
 		data.push_back(sc[i].getMixture().MassDensity());
 		data.push_back(sc[i].getMixture().Temperature());
 		data.push_back(sc[i].getVelocity());
+		if(reac.getReactorModel() == reac.CDflmae){
+			data.push_back(sc[i].getRadVelGrad());
+		}
 		if(getSpeciesOut() == MASS)
 			sc[i].getMixture().GetMassFractions(fraction);
 		else
 			fraction = sc[i].getMixture().MoleFractions();
-
-		for(int l = 0; l<nSpecies; l++)
+		sum = 0.0;
+		for(int l = 0; l<nSpecies; l++){
 			data.push_back(fraction[l]);
-
+			sum += fraction[l];
+		}
+		data.push_back(sum);
 		flameReport.Write(data);
 	}
 	//exit boundary
@@ -727,12 +747,36 @@ void FlameLabIO::writeToFile(const FlameLab::real &time, std::vector<SingleCell>
 	axPos += 0.5*dz[nCell-1];
 	data.push_back(time);
 	data.push_back(axPos);
-	data.push_back(sc[nCell-1].getMixture().MassDensity());
-	data.push_back(sc[nCell-1].getMixture().Temperature());
-	data.push_back(sc[nCell-1].getVelocity());
-	for(int l = 0;l<nSpecies; l++)
-		data.push_back(fraction[l]);
+	if(reac.getReactorModel() == reac.CDflmae){
+		ic = reac.getOxidizerInletConditions();
+		data.push_back(ic.getOxidizerMixture().MassDensity());
+		data.push_back(ic.getTemperature());
+		data.push_back(ic.getVelocity());
+		data.push_back(ic.getRadialVelocityGrad());
+		if(getSpeciesOut() == MASS)
+			ic.getOxidizerMixture().GetMassFractions(fraction);
+		else
+			fraction = ic.getOxidizerMixture().MoleFractions();
 
+		sum = 0.0;
+		for(int l = 0;l<nSpecies; l++){
+			data.push_back(fraction[l]);
+			sum += fraction[l];
+		}
+		data.push_back(sum);
+
+	}else{
+		data.push_back(sc[nCell-1].getMixture().MassDensity());
+		data.push_back(sc[nCell-1].getMixture().Temperature());
+		data.push_back(sc[nCell-1].getVelocity());
+		sum = 0.0;
+		for(int l = 0;l<nSpecies; l++){
+			data.push_back(fraction[l]);
+			sum += fraction[l];
+		}
+		data.push_back(sum);
+	}
+	
 	flameReport.Write(data);
 	flameReport.Close();
 }
