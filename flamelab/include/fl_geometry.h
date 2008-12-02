@@ -42,6 +42,8 @@
 #ifndef FL_GEOMETRY_H
 #define FL_GEOMETRY_H
 #include "fl_params.h"
+#include "fl_error_handler.h"
+#include<map>
 namespace FlameLab{
 
 	class Geometry{
@@ -49,7 +51,10 @@ namespace FlameLab{
 		int nCell; // number of max finite volume cells
 		int axialPosition;
 		real rLength; // length of the reactor
-		real aspectRatio;
+		//real aspectRatio. First map contains from-to data and the
+		//second map contains number of cells and aspect ratio
+		map< map<real,real>, real > aspectRatioMap;
+		vector<int> numCells;
 		
 	public:
 		Geometry():nCell(10){// default number of max u,ber of cells			
@@ -60,12 +65,13 @@ namespace FlameLab{
 		~Geometry();
 		void setnCells(int n);
 		void setLength(real len);
-		void setAspectRatio(real ar);
+		void setAspectRatio(map< map<real,real>,real> fromTo, 
+							vector<int> numCells);
 		int getnCells() const;
 		real getLength() const;
 		void descretize();
 		vector<real> getGeometry() const;
-		real getAspectRatio() const;
+		//real getAspectRatio() const;
 		void setAxialPosition(int n);
 		int getAxialPosition()const;
 		real getAxialPosition(int n) const;

@@ -85,11 +85,18 @@ int main(){
 		if( flame->getReactorModel() == flame->PremixFlame || flame->getReactorModel() == flame->Plug ){
 			solver = new Premix(mech);
 			//solver->initSolver(mech,mix,*solverControl,*flame);
-			solver->solve(mech,*solverControl,*flame,*fio);
+			if(solverControl->getSolMode() == solverControl->preProcess)
+				fio->writeGrid(*flame);
+			else				
+				solver->solve(mech,*solverControl,*flame,*fio);
 
 		}else if(flame->getReactorModel() == flame->CDflmae) {
 			solver = new CounterDiffusion(mech);
-			solver->solve(mech,*solverControl,*flame,*fio);
+			if(solverControl->getSolMode() == solverControl->preProcess)
+				fio->writeGrid(*flame);
+			else
+				solver->solve(mech,*solverControl,*flame,*fio);
+
 		}
 
 		

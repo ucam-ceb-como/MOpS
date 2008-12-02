@@ -2,8 +2,8 @@
 <flamecode>
   <reactor model="premix">
     <length unit="cm"> 10 </length>
-    <ncells>50</ncells>
-    <aspect_ratio>0.2</aspect_ratio>
+    <!--ncells>20</ncells-->
+    <aspect_ratio from="0" to="10" ncells="20">1.3</aspect_ratio>
   </reactor>
   <op_condition>
     <temperature condition="userdefined"> 1073.15 </temperature>

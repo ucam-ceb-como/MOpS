@@ -57,6 +57,7 @@
 namespace FlameLab{
 	class SingleCell {
 		int cellId;
+		real centroid;
 		real velocity;
 		real radVelGrad;
 		real massFlux;
@@ -72,6 +73,10 @@ namespace FlameLab{
 		~SingleCell(){};
 		//set the cell id
 		void setCellId(int n);
+		//set the cell centroid
+		void setCentroid(FlameLab::real x);
+		// return the centroid
+		const FlameLab::real  getCentroid();
 		//set the cell mixture
 		void setMixture(Sprog::Thermo::Mixture mix);
 		// get the cell mixture

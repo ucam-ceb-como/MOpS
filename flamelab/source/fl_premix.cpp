@@ -57,6 +57,7 @@ Premix::Premix(const Sprog::Mechanism &mech):MFLX(mech.SpeciesCount()),
 											DENS(mech.SpeciesCount()+2),
 											VEL(mech.SpeciesCount()+3){
 	
+	
 }
 
 //initializes premix variables and updates the mixture with mass fraction temperature and mass density
@@ -181,18 +182,26 @@ void Premix::initTransVector(FlameLab::Reactor &reac){
 		//initialize the cells
 		
 		vector<real> dz = reac.getGeometry();
-		real axPos = 0.0;
-		for(int i=0; i<reac.getnCells(); i++){
+		real axPos = 0.0;		
+		for(int i=0; i<reac.getnCells(); i++){			
 			SingleCell sc(i);
-			//get the temperature
-			if(i>0) axPos += dz[i-1];
+			//set the cell centroid
+			if(i==0){
+				sc.setCentroid(0.5*dz[i]);
+			}else{
+				axPos += dz[i-1];
+				sc.setCentroid(axPos+0.5*dz[i]);
+			}
+			//get the user defined temperature profile
 			if(reac.getEnergyModel() == reac.UserDefined){
 				if( i==0){
 					real temp = reac.getUserTemperature(0.5*dz[i]);
 					reac.getMixture().SetTemperature(temp);
+					
 				}else{
 					real temp = reac.getUserTemperature(axPos+0.5*dz[i]);
-					reac.getMixture().SetTemperature(temp);
+					reac.getMixture().SetTemperature(temp);					
+					
 				}
 			}
 

@@ -58,13 +58,21 @@ vector<Sprog::Thermo::Mixture> SingleCell::cellMixture;
 void SingleCell::setMixture(Sprog::Thermo::Mixture mix){
 	cellMixture.push_back(mix);
 }
-
+//set the cell ID
 void SingleCell::setCellId(int n){
 	this->cellId = n;
 }
-
+//return the cell id
 int SingleCell::getCellId(){
 	return this->cellId;
+}
+//set the cell centroid
+void SingleCell::setCentroid(FlameLab::real x){
+	this->centroid = x;
+}
+// return the cell centroid
+const FlameLab::real SingleCell::getCentroid(){
+	return this->centroid;
 }
 
 Sprog::Thermo::Mixture& SingleCell::getMixture(){

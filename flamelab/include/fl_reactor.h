@@ -64,7 +64,7 @@ namespace FlameLab{
 		enum ReactorModel{
 			PremixFlame,
 			CDflmae,
-			Plug
+			Plug			
 		};
 
 		enum {

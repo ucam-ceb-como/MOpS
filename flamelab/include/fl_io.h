@@ -100,6 +100,7 @@ namespace FlameLab{
 		void setSpeciesOut(int n);
 		//return the species out
 		int getSpeciesOut() const;
+		void writeGrid(Reactor &reac);
 		
 	};
 }

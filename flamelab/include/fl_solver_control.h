@@ -56,7 +56,8 @@ namespace FlameLab{
 	public:
 		enum SolutionMode{
 			steadyState,
-			transient
+			transient,
+			preProcess
 		};
 
 		SolverControl(){}

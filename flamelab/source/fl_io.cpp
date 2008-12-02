@@ -44,6 +44,8 @@
 #include "gpc.h"
 #include<cstring>
 #include<iostream>
+#include<vector>
+#include<map>
 using namespace FlameLab;
 using namespace Strings;
 // main routine for reading the input file
@@ -68,8 +70,11 @@ void FlameLabIO::readInput(const std::string &fileName, FlameLab::Reactor &reac,
 void FlameLabIO::readGeometry(FlameLab::Reactor &reac, const CamXML::Element &node){
 
 	CamXML::Element *subnode, *reactorNode;
+	vector<CamXML::Element*> subnodes;
+	vector<CamXML::Element*>::iterator p;
 	const CamXML::Attribute *attr;
 	std::string attrValue;
+	real converter=1.0;
 	reactorNode = node.GetFirstChild("reactor");
 	if(reactorNode != NULL){
 		attr = reactorNode->GetAttribute("model");
@@ -85,9 +90,10 @@ void FlameLabIO::readGeometry(FlameLab::Reactor &reac, const CamXML::Element &no
 			if( subnode != NULL) {
 				attr = subnode->GetAttribute("unit");
 				attrValue = attr->GetValue();
-				if(!attrValue.compare("cm"))reac.setLength(cdble(subnode->Data())/100.0);
+				
+				if(!attrValue.compare("cm")){reac.setLength(cdble(subnode->Data())/100.0);converter=1.0/100.0;}
 				if(!attrValue.compare("m")) reac.setLength(cdble(subnode->Data()));
-				if(!attrValue.compare("in"))reac.setLength(cdble(subnode->Data())*0.0254);
+				if(!attrValue.compare("in")){reac.setLength(cdble(subnode->Data())*0.0254);converter=0.0254;}
 				if(! (attrValue.compare("cm") ||attrValue.compare("m") || attrValue.compare("in")) ){
 
 					throw ErrorHandler("Supported units for length are cm, m, and in\n", 101);
@@ -104,12 +110,39 @@ void FlameLabIO::readGeometry(FlameLab::Reactor &reac, const CamXML::Element &no
 				reac.setnCells(50);
 			}
 
-			subnode = reactorNode->GetFirstChild("aspect_ratio");
+			/*subnode = reactorNode->GetFirstChild("aspect_ratio");
 			if(subnode != NULL){
 				reac.setAspectRatio(cdble(subnode->Data()));
 			}else{
 				reac.setAspectRatio(1.0);
+			}*/
+			real totalLength = 0;
+			reactorNode->GetChildren("aspect_ratio",subnodes);
+			map<real,real> fromTo;
+			map< map<real,real>,real> fromToVal;			
+			vector<int> numCells;
+			for(p=subnodes.begin(); p!= subnodes.end(); ++p){
+				attr = (*p)->GetAttribute("from");
+				attrValue = attr->GetValue();
+				real from = cdble(attrValue)*converter;
+				attr = (*p)->GetAttribute("to");
+				attrValue = attr->GetValue();
+				real to = cdble(attrValue)*converter;
+				
+				fromTo.insert(pair<real,real>(from,to));
+				fromToVal.insert(pair<map<real,real>,real>(fromTo,cdble((*p)->Data())));
+				
+
+				attr = (*p)->GetAttribute("ncells");
+				attrValue = attr->GetValue();
+				//int ncells = int(cdble(attrValue));
+				numCells.push_back(int(cdble(attrValue)));
+
+				
 			}
+			reac.setAspectRatio(fromToVal,numCells);
+			
+
 			subnode = reactorNode->GetFirstChild("strain_rate");
 			if(subnode != NULL){
 				reac.setStrainRate(cdble(subnode->Data()));
@@ -354,8 +387,9 @@ void FlameLabIO::readSolverControl(FlameLab::SolverControl &solver, const CamXML
 		if(attr != NULL){
 			attrValue = attr->GetValue();
 			// get the reactor model and set the reactor model
-			if(!attrValue.compare("steady")) solver.setSolMode(SolverControl::steadyState);
-			if(!attrValue.compare("transient"))solver.setSolMode(SolverControl::transient);
+			if(!convertToCaps(attrValue).compare("STEADY")) solver.setSolMode(SolverControl::steadyState);
+			if(!convertToCaps(attrValue).compare("TRANSIENT"))solver.setSolMode(SolverControl::transient);
+			if(!convertToCaps(attrValue).compare("PREPROCESS"))solver.setSolMode(SolverControl::preProcess);
 		}
 
 
@@ -714,16 +748,17 @@ void FlameLabIO::writeToFile(const FlameLab::real &time, std::vector<SingleCell>
 	}
 	data.push_back(sum);
 	flameReport.Write(data);
-	//interior cells
+
+	// data handling for the interior cell points
 	vector<real> dz= reac.getGeometry();
-	real axPos = 0.5*dz[0];
+	//real axPos = 0.5*dz[0];
 	
 	for(int i=0; i<nCell; i++){
 		data.clear();		
-		if(i>0) axPos+= dz[i];
+		//if(i>0) axPos+= dz[i];
 
 		data.push_back(time);
-		data.push_back(axPos);
+		data.push_back(sc[i].getCentroid());
 		data.push_back(sc[i].getMixture().MassDensity());
 		data.push_back(sc[i].getMixture().Temperature());
 		data.push_back(sc[i].getVelocity());
@@ -744,9 +779,10 @@ void FlameLabIO::writeToFile(const FlameLab::real &time, std::vector<SingleCell>
 	}
 	//exit boundary
 	data.clear();
-	axPos += 0.5*dz[nCell-1];
+	//axPos += 0.5*dz[nCell-1];
+	//real centroid = sc[nCell-1].getCentroid()+0.5*dz[nCell-1];
 	data.push_back(time);
-	data.push_back(axPos);
+	data.push_back(reac.getLength());//last cell exit
 	if(reac.getReactorModel() == reac.CDflmae){
 		ic = reac.getOxidizerInletConditions();
 		data.push_back(ic.getOxidizerMixture().MassDensity());
@@ -782,3 +818,28 @@ void FlameLabIO::writeToFile(const FlameLab::real &time, std::vector<SingleCell>
 }
 
 
+void FlameLabIO::writeGrid(FlameLab::Reactor &reac){
+	int nCells = reac.getnCells();
+	vector<FlameLab::real> dz = reac.getGeometry();
+	std::ofstream gridFile;
+	real axPos = 0.0;
+	gridFile.open("grid.dat");
+	if(gridFile.good()){
+		gridFile << "axPos,Val" << endl;
+		for(int i=0; i<nCells; i++){
+			if(i==0) // inlet
+				gridFile << 0 <<","<< 1 << endl;
+			else{
+				axPos += dz[i-1];
+				gridFile << (axPos+0.5*dz[i]) <<","<< 1 << endl;
+			}
+		}
+		//outlet
+		gridFile << reac.getLength() <<","<<1<<endl;
+
+		gridFile.close();
+	}else{
+		throw ErrorHandler("Can not open file for writing the grid\n",303);
+	}
+		
+}
