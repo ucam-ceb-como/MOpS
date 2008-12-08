@@ -264,7 +264,11 @@ int main(int argc, char *argv[])
     try {
         // The sensitvity analyzer.
         SensitivityAnalyzer *sensi = new SensitivityAnalyzer();
-        sensi->SetupProblem(mech, sensifile);
+        // Constructor taking both mech and reactor is in in fact not a good idea.
+        // Only reactor should be enough but reactor contains constant mechanism
+        // so taking meachanism is neccessary here. In the future, reactor should be modified to only
+        // keep non-constant mechanism.
+        sensi->SetupProblem(mech, *reactor, sensifile);
         if (sensi->isEnable()) {
             // a copy of sensi is made during attaching so you can delete it aftrwards.
             solver->AttachSensitivity(*sensi);

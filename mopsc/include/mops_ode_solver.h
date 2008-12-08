@@ -73,6 +73,8 @@ public:
     ~ODE_Solver(void); // Default destructor.
 
     // Operators.
+    // Assigned operator. This function cannot be used with sensitivity problem.
+    // Sensitivity assignment has yet to be implemented.
     ODE_Solver &operator=(const ODE_Solver &rhs);
 
     // Enumeration of ODE solvers.
@@ -191,7 +193,13 @@ protected:
 
     // Sensitivity related variables
     mutable Mops::SensitivityAnalyzer m_sensi;
+    // Space required by rate parameter sensitivity.
     N_Vector *m_yS;
+    // Space required by initial condition sensitivity.
+    void *m_odeadj; // CVODES worksapce for adjoint sensitivity.
+    N_Vector m_q;   // Quadrature solution of the concentration integration.
+    N_Vector m_yB;  // Backwards solution of lamda for sensitivity.
+    N_Vector m_qB;  // Backwards integration solution of concentration.
 
 
 private:
@@ -199,27 +207,6 @@ private:
     void *m_odewk;     // CVODE workspace.
     N_Vector m_solvec; // Internal solution array for CVODE interface.
     N_Vector m_yvec;   // Internal y work space for CVODE interface.
-
-
-    // VERY IMPORTANT FOR CVODE INTEGRATION!
-
-
-    // The Jacobian matrix evaluator.  This function calculates the 
-    // Jacobian matrix given the current state.  CVODE uses a void* pointer to
-    // allow the calling code to pass whatever information it wants to
-    // the function.  In this case the void* pointer should be cast
-    // into an ODE_Solver object.
-    //static int jacFn_CVODE(
-    //    long int N,    // Problem size.
-    //    DenseMat J,    // Jacobian matrix.
-    //    double t,      // Time.
-    //    N_Vector y,    // Current solution variables.
-    //    N_Vector ydot, // Current value of the vector f(t,y), the RHS.
-    //    void* solver,  // An ODE_Solver object (to be cast).
-    //    N_Vector tmp1, // Temporary array available for calculations.
-    //    N_Vector tmp2, // Temporary array available for calculations.
-    //    N_Vector tmp3  // Temporary array available for calculations.
-    //    );
 
 
     // INITIALISATION AND DESTRUCTION.
@@ -235,6 +222,8 @@ private:
     void InitCVode(void);
 
     // Copies the given CVode workspace into this ODE_Solver object.
+    // This function cannot be used with sensitivity problem.
+    // Sensitivity assignment has yet to be implemented.
     void assignCVMem(const CVodeMemRec &mem); 
 };
 };

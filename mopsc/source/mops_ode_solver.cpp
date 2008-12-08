@@ -93,7 +93,7 @@ ODE_Solver::~ODE_Solver(void)
 
 // OPERATORS.
 
-// Assignment operator.
+// Assignment operator. (This function cannot be used with sensitivity problem.)
 ODE_Solver &ODE_Solver::operator=(const Mops::ODE_Solver &rhs)
 {
     if (this != &rhs) {
@@ -196,21 +196,79 @@ void ODE_Solver::InitCVode(void)
     CVDense(m_odewk, m_neq);
 
     // Set the Jacobian function in CVODE.
-    // CVDenseSetJacFn(m_odewk, jacFn_CVODE, (void*)this);
+    // Benchmark results from certain test case :
+    // - No sensitivity analysis : External Jacobian is faster than CVODE internal jacobain.
+    // - Sensitivity analyis (Rate parameters) : CVODE internal jacobian is fastest (114 s). jacFn_CVODES is slightly slower (120 s)
+    //   and jacFn_CVODE is very slow (146 s). Thus, Jacobian function will be set according to this test.
     if (m_sensi.isEnable()) {
-        m_yS = N_VCloneVectorArray_Serial(m_sensi.NParams(), m_yvec);
-        //if (check_flag((void *)m_yS, "N_VCloneVectorArray_Serial", 0)) return(1);
-        for (unsigned int is=0;is<m_sensi.NParams();is++) N_VConst(ZERO, m_yS[is]);
-        int flag = 0;
-        flag = CVodeSensMalloc(m_odewk, m_sensi.NParams(), m_sensi.GetMethod(), m_yS);
-        //if(check_flag(&flag, "CVodeSensMalloc", 1)) return(1);
-        
-        //flag = CVodeSetSensRhs1Fn(cvode_mem, fS, data);
-        //if (check_flag(&flag, "CVodeSetSensRhs1Fn", 1)) return(1);
-        flag = CVodeSetSensErrCon(m_odewk, m_sensi.isEnableErrorControl());
-        //if (check_flag(&flag, "CVodeSetSensErrCon", 1)) return(1);
-        flag = CVodeSetSensParams(m_odewk, m_sensi.ParamsPtr(), m_sensi.ParamBarsPtr(), NULL);
-        //if (check_flag(&flag, "CVodeSetSensParams", 1)) return(1);
+        if (m_sensi.ProblemType() == SensitivityAnalyzer::Reaction_Rates) {
+            // Internal one is fastest so don't set jacobian function.
+            // CVDenseSetJacFn(m_odewk, jacFn_CVODES, (void*)this);
+        } else if (m_sensi.ProblemType() == SensitivityAnalyzer::Init_Concentrations) {
+            // CVDenseSetJacFn(m_odewk, jacFn_CVODES, (void*)this); <== need test
+        }
+    } else {
+        CVDenseSetJacFn(m_odewk, jacFn_CVODE, (void*)this);
+    }
+    int flag = 0;
+    if (m_sensi.isEnable()) {
+        if (m_sensi.ProblemType() == SensitivityAnalyzer::Reaction_Rates) {
+
+            m_yS = N_VCloneVectorArray_Serial(m_sensi.NParams(), m_yvec);
+
+            for (unsigned int is = 0; is < m_sensi.NParams(); is++) {
+                N_VConst(ZERO, m_yS[is]);
+            }
+
+            flag = CVodeSensMalloc(m_odewk, m_sensi.NParams(), m_sensi.GetMethod(), m_yS);
+
+            //flag = CVodeSetSensRhs1Fn(cvode_mem, fS, data);
+
+            flag = CVodeSetSensErrCon(m_odewk, m_sensi.isEnableErrorControl());
+
+            flag = CVodeSetSensParams(m_odewk, m_sensi.ParamsPtr(), m_sensi.ParamBarsPtr(), NULL);
+
+        } else if (m_sensi.ProblemType() == SensitivityAnalyzer::Init_Concentrations) {
+            /*/ Space required by initial condition sensitivity.
+            void *m_odeadj; // CVODES worksapce for adjoint sensitivity.
+            N_Vector *m_q;  // Quadrature solution of the concentration integration.
+            N_Vector m_yB;  // Backwards solution of lamda for sensitivity.
+            N_Vector m_qB;  // Backwards integration solution of concentration.
+
+            flag = CVodeQuadMalloc(m_odewk, rhsQuadFn_CVODES, m_q);
+
+            flag = CVodeSetQuadFdata(m_odewk, (void*)this);
+
+            flag = CVodeSetQuadErrCon(m_odewk, TRUE, CV_SS, reltolQ, &abstolQ);
+
+            // Allocate global memory //
+
+            steps = 10;
+            cvadj_mem = CVadjMalloc(cvode_mem, steps, CV_HERMITE);
+            // Initialize yB //
+            yB = N_VNew_Serial(NEQ);
+            if (check_flag((void *)yB, "N_VNew_Serial", 0)) return(1);
+            Ith(yB,1) = ZERO;
+            Ith(yB,2) = ZERO;
+            Ith(yB,3) = ZERO;
+
+            // Initialize qB //
+            qB = N_VNew_Serial(NP);
+            if (check_flag((void *)qB, "N_VNew", 0)) return(1);
+            Ith(qB,1) = ZERO;
+            Ith(qB,2) = ZERO;
+            Ith(qB,3) = ZERO;
+
+            // Set the scalar relative tolerance reltolB //
+            reltolB = RTOL;               
+
+            // Set the scalar absolute tolerance abstolB //
+            abstolB = ATOLl;
+
+            // Set the scalar absolute tolerance abstolQB //
+            abstolQB = ATOLq;
+            */
+        }
 
     } else {
         //printf("Sensitivity: NO ");
@@ -485,25 +543,6 @@ void ODE_Solver::Deserialize(std::istream &in)
 }
 
 
-// The Jacobian matrix evaluator.  This function calculates the 
-// Jacobian matrix given the current state.  CVODE uses a void* pointer to
-// allow the calling code to pass whatever information it wants to
-// the function.  In this case the void* pointer should be cast
-// into an ODE_Solver object.
-//int ODE_Solver::jacFn_CVODE(long int N, DenseMat J, double t, N_Vector y,
-//                            N_Vector ydot, void* solver,
-//                            N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-//{
-//    // Cast the Solver object.
-//    ODE_Solver *s = static_cast<ODE_Solver*>(solver);
-//    Reactor *r    = s->m_reactor;
-//
-//    // Get the Jacobian from the reactor model
-//    r->Jacobian(t, NV_DATA_S(y), NV_DATA_S(ydot), J->data, 
-//                ((CVodeMem)s->m_odewk)->cv_uround);
-//
-//    return 0;
-//}
 
 
 // INITIALISATION AND MEMORY RELEASE.
@@ -523,7 +562,13 @@ void ODE_Solver::init(void)
     m_srcterms = NULL;
     _srcTerms  = NULL;
     m_yvec     = NULL;
+    // Space required by rate parameter sensitivity.
     m_yS       = NULL;
+    // Space required by initial condition sensitivity.
+    m_q        = NULL;  // Quadrature solution of the concentration integration.
+    m_odeadj   = NULL;  // CVODES worksapce for adjoint sensitivity.
+    m_yB       = NULL;  // Backwards solution of lamda for sensitivity.
+    m_qB       = NULL;  // Backwards integration solution of concentration.
 
     // Init CVODE.
     m_odewk = NULL;
@@ -542,7 +587,8 @@ void ODE_Solver::releaseMemory(void)
     init();
 }
 
-// Copies the given CVode workspace into this ODE_Solver object.
+// Copies the given CVode workspace into this ODE_Solver object. 
+// (This function cannot be used with sensitivity problem.)
 void ODE_Solver::assignCVMem(const CVodeMemRec &copy)
 {
     if (m_odewk != NULL) {

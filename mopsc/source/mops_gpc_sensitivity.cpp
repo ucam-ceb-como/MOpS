@@ -79,11 +79,18 @@ SensitivityAnalyzer::SensitivityAnalyzer(const SensitivityAnalyzer &copy)
 SensitivityAnalyzer &SensitivityAnalyzer::operator=(const SensitivityAnalyzer &rhs)
 {
     if (this != &rhs) {
-        m_probType = rhs.m_probType;
-        m_enable = rhs.m_enable;
-        m_err_con = rhs.m_err_con;
+        m_probType   = rhs.m_probType;
+        m_enable     = rhs.m_enable;
+        m_err_con    = rhs.m_err_con;
         m_sensi_meth = rhs.m_sensi_meth;
-        m_mech = rhs.m_mech;
+        m_start_time = rhs.m_start_time;
+        m_abstolQ    = rhs.m_abstolQ;
+        m_reltolQ    = rhs.m_reltolQ;
+        m_abstolB    = rhs.m_abstolB;
+        m_reltolB    = rhs.m_reltolB;
+        m_abstolQB   = rhs.m_abstolQB;
+        m_mech       = rhs.m_mech;
+        m_reactor    = rhs.m_reactor;
         // Copy pointer array
         if(m_NS != rhs.m_NS) {
             // Delete memories
@@ -102,10 +109,10 @@ SensitivityAnalyzer &SensitivityAnalyzer::operator=(const SensitivityAnalyzer &r
                 m_parambars = new real[m_NS];
             }
         }
-        m_arr_params.clear();
+        m_sens_params.clear();
         // Set values of varibles to rhs variables.
         for (unsigned int i = 0; i < m_NS; i++) {
-            m_arr_params.push_back(rhs.m_arr_params.at(i));
+            m_sens_params.push_back(rhs.m_sens_params.at(i));
             m_org_params[i] = rhs.m_org_params[i];
             m_params[i] = rhs.m_params[i];
             m_parambars[i] = rhs.m_parambars[i];
@@ -117,16 +124,19 @@ SensitivityAnalyzer &SensitivityAnalyzer::operator=(const SensitivityAnalyzer &r
 
 void SensitivityAnalyzer::Clear()
 { 
-    m_probType = Reaction_Rates;
-    m_enable  = false;
-    m_err_con = FALSE;
-    m_sensi_meth = CV_SIMULTANEOUS;
-    m_mech = NULL;
-    m_NS = 0;
+    m_probType      = Reaction_Rates;
+    m_enable        = false;
+    m_err_con       = FALSE;
+    m_sensi_meth    = CV_SIMULTANEOUS;
+    m_start_time    = 0.0;
+    m_abstolQ = m_reltolQ = m_abstolB = m_reltolB = m_abstolQB = 1e-6;
+    m_mech          = NULL;
+    m_reactor       = NULL;
+    m_NS            = 0;
     if (m_org_params != NULL) delete [] m_org_params;
     if (m_params     != NULL) delete [] m_params;
     if (m_parambars  != NULL) delete [] m_parambars;
-    m_arr_params.clear();
+    m_sens_params.clear();
     m_org_params  = NULL;
     m_params      = NULL;
     m_parambars   = NULL;
@@ -170,10 +180,11 @@ booleantype SensitivityAnalyzer::isEnableErrorControl() const
 }
 
 // Define the mechanism and parameters.
-void SensitivityAnalyzer::SetupProblem(Mops::Mechanism &mech, const string &sfile)
+void SensitivityAnalyzer::SetupProblem(Mops::Mechanism &mech, Mops::Reactor &reactor, const string &sfile)
 {
     Clear();
     m_mech = &mech;
+    m_reactor = &reactor;
     CamXML::Document xmlSA;
     try {
         xmlSA.Load(sfile);
@@ -200,6 +211,7 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
     {
         CamXML::Element *sensiElem = NULL;
         CamXML::Element *errConElem = NULL;
+        CamXML::Element *errTolElem = NULL;
         CamXML::Element *probTypeElem = NULL;
         // Read Sensitivity Method
         // Default value is CV_SIMULTANEOUS.
@@ -229,6 +241,19 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
             int r = errConElem->GetAttributeValue("enable").compare("true");
             m_err_con = (r != 0) ? (0) : (1);
         }
+        // Read Error Tolerances
+        // Default value is 1e-6.
+        errTolElem = settingElem->GetFirstChild("atolB");
+        if (errTolElem != NULL) m_abstolB    = Strings::cdble(errTolElem->Data());
+        errTolElem = settingElem->GetFirstChild("atolQ");
+        if (errTolElem != NULL) m_abstolQ    = Strings::cdble(errTolElem->Data());
+        errTolElem = settingElem->GetFirstChild("atolQB");
+        if (errTolElem != NULL) m_abstolQB    = Strings::cdble(errTolElem->Data());
+        errTolElem = settingElem->GetFirstChild("rtolB");
+        if (errTolElem != NULL) m_reltolB    = Strings::cdble(errTolElem->Data());
+        errTolElem = settingElem->GetFirstChild("rtolQ");
+        if (errTolElem != NULL) m_reltolQ    = Strings::cdble(errTolElem->Data());
+
         // Read Problem Type.
         // Default value of problemtype is Reaction_Rate.
         probTypeElem = settingElem->GetFirstChild("problemType");
@@ -296,7 +321,7 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
                 unsigned int nend = (allA) ? nrxn : AParams.size();
                 for (unsigned int i = 0; i < nend; i++) {
                     int rxn_index = (allA) ? (i) : ((int)Strings::cdble(AParams.at(i)->GetAttributeValue("rxnth")));
-                    ARRHENIUS_PARAMS arrp(rxn_index, ARR_A);
+                    SENS_PARAM arrp(rxn_index, ARR_A);
                     AddParam(arrp);
                 }
             }
@@ -305,7 +330,7 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
                 unsigned int nend = (alln) ? nrxn : nParams.size();
                 for (unsigned int i = 0; i < nend; i++) {
                     int rxn_index = (alln) ? (i) : ((int)Strings::cdble(nParams.at(i)->GetAttributeValue("rxnth")));
-                    ARRHENIUS_PARAMS arrp(rxn_index, ARR_n);
+                    SENS_PARAM arrp(rxn_index, ARR_n);
                     AddParam(arrp);
                 }
             }
@@ -314,7 +339,7 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
                 unsigned int nend = (allE) ? nrxn : EParams.size();
                 for (unsigned int i = 0; i < nend; i++) {
                     int rxn_index = (allE) ? (i) : ((int)Strings::cdble(EParams.at(i)->GetAttributeValue("rxnth")));
-                    ARRHENIUS_PARAMS arrp(rxn_index, ARR_n);
+                    SENS_PARAM arrp(rxn_index, ARR_n);
                     AddParam(arrp);
                 }
             }
@@ -325,14 +350,61 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
             m_params     = new Mops::real[m_NS];
             m_parambars  = new Mops::real[m_NS];
             // Initializing allocated memories.
-            for (unsigned int i = 0; i < m_arr_params.size(); i++) {
+            for (unsigned int i = 0; i < m_sens_params.size(); i++) {
                 Mops::real val = 0.0;
-                if (m_arr_params.at(i).Type == ARR_A) {
-                    val = m_mech->Reactions(m_arr_params.at(i).Rxnth)->Arrhenius().A;
-                } else if (m_arr_params.at(i).Type == ARR_n) {
-                    val = m_mech->Reactions(m_arr_params.at(i).Rxnth)->Arrhenius().n;
+                if (m_sens_params.at(i).Type == ARR_A) {
+                    val = m_mech->Reactions(m_sens_params.at(i).Index)->Arrhenius().A;
+                } else if (m_sens_params.at(i).Type == ARR_n) {
+                    val = m_mech->Reactions(m_sens_params.at(i).Index)->Arrhenius().n;
                 } else {
-                    val = m_mech->Reactions(m_arr_params.at(i).Rxnth)->Arrhenius().E;
+                    val = m_mech->Reactions(m_sens_params.at(i).Index)->Arrhenius().E;
+                }
+                m_org_params[i] = m_params[i] = m_parambars[i] = val;
+            }
+        } else if (m_probType == Init_Concentrations) {
+            vector<CamXML::Element *> initParams;
+
+            // Add initial condition parameter list
+            paramsElem->GetChildren("init", initParams );
+            for (unsigned int i = 0; i < initParams.size(); i++) {
+                string id = Strings::trim(initParams.at(i)->GetAttributeValue("id"));
+                if (id.compare("T")) {
+                    // initial temperature parameter, only work if a non-constant temperature is applied.
+                    SENS_PARAM arrp(0, INIT_T);
+                    AddParam(arrp);
+                } else if (id.compare("P")) {
+                    // initial pressure parameter, only work if a non-constant pressure is applied
+                    // problem: does not have P in Jacobain but density
+                    //SENS_PARAM arrp(0, INIT_P);
+                    //AddParam(arrp);
+                } else {
+                    // initial concentration parameters.
+                    int sp_index = m_mech->FindSpecies(id);
+                    if (sp_index > -1) {
+                        SENS_PARAM arrp(sp_index, INIT_C);
+                        AddParam(arrp);
+                    } else {
+                        // ignore non-existing species.
+                    }
+                }
+            }
+
+            // Sensitivity is also disable if there is no parameter defined.
+            m_enable = m_enable && (m_NS > 0);
+            // Allocating memories.
+            m_org_params = new Mops::real[m_NS];
+            m_params     = new Mops::real[m_NS];
+            m_parambars  = new Mops::real[m_NS];
+            // Initializing allocated memories.
+            for (unsigned int i = 0; i < m_sens_params.size(); i++) {
+                Mops::real val = 0.0;
+                if (m_sens_params.at(i).Type == INIT_T) {
+                    unsigned int n_sp = m_mech->SpeciesCount();
+                    val = m_reactor->Mixture()->RawData()[n_sp]; // Temperature is at n_sp.
+                } else if (m_sens_params.at(i).Type == INIT_P) {
+                    //val = m_mech->Reactions(m_sens_params.at(i).Rxnth)->Arrhenius().n;
+                } else {
+                    val = m_reactor->Mixture()->RawData()[m_sens_params.at(i).Index];
                 }
                 m_org_params[i] = m_params[i] = m_parambars[i] = val;
             }
@@ -355,22 +427,39 @@ Mops::Mechanism &SensitivityAnalyzer::GetMech()
 // Change mechanism parameters to the values in m_params.
 void SensitivityAnalyzer::ChangeMechParams()
 {
-    for(unsigned int i = 0; i < m_NS; i++) {
-        Sprog::Kinetics::ARRHENIUS arr = m_mech->Reactions(m_arr_params.at(i).Rxnth)->Arrhenius();
-        switch ( m_arr_params.at(i).Type ) {
-            case ARR_A :
-                arr.A = m_params[i];
-                break;
-            case ARR_n :
-                arr.n = m_params[i];
-                break;
-            case ARR_E :
-                arr.E = m_params[i];
-                break;
-            default :
-                break;
+    if (m_probType == Reaction_Rates) {
+        for(unsigned int i = 0; i < m_NS; i++) {
+            Sprog::Kinetics::ARRHENIUS arr = m_mech->Reactions(m_sens_params.at(i).Index)->Arrhenius();
+            switch ( m_sens_params.at(i).Type ) {
+                case ARR_A :
+                    arr.A = m_params[i];
+                    break;
+                case ARR_n :
+                    arr.n = m_params[i];
+                    break;
+                case ARR_E :
+                    arr.E = m_params[i];
+                    break;
+                default :
+                    break;
+            }
+            m_mech->GetReactions(i)->SetArrhenius(arr);
         }
-        m_mech->GetReactions(i)->SetArrhenius(arr);
+    } else if (m_probType == Init_Concentrations) {
+        for(unsigned int i = 0; i < m_NS; i++) {
+            //m_mech->GetReactions(i)->SetArrhenius(arr);
+            if (m_sens_params.at(i).Type == INIT_T) {
+                unsigned int n_sp = m_mech->SpeciesCount();
+                m_reactor->Mixture()->RawData()[n_sp] = m_params[i]; // Temperature is at n_sp.
+            } else if (m_sens_params.at(i).Type == INIT_P) {
+                //val = m_mech->Reactions(m_sens_params.at(i).Rxnth)->Arrhenius().n;
+            } else {
+                m_reactor->Mixture()->RawData()[m_sens_params.at(i).Index] = m_params[i];
+            }
+        }
+    } else {
+        throw std::runtime_error("Undefined Type: Impossible case. Contact you programmer."
+                                 "(Mops, SensitivityAnalyzer::ChangeMechParams).");
     }
 }
 
@@ -378,22 +467,39 @@ void SensitivityAnalyzer::ChangeMechParams()
 // This might not be needed.
 void SensitivityAnalyzer::ResetMechParams()
 {
-    for(unsigned int i = 0; i < m_NS; i++) {
-        Sprog::Kinetics::ARRHENIUS arr = m_mech->Reactions(m_arr_params.at(i).Rxnth)->Arrhenius();
-        switch ( m_arr_params.at(i).Type ) {
-            case ARR_A :
-                arr.A = m_org_params[i];
-                break;
-            case ARR_n :
-                arr.n = m_org_params[i];
-                break;
-            case ARR_E :
-                arr.E = m_org_params[i];
-                break;
-            default :
-                break;
+    if (m_probType == Reaction_Rates) {
+        for(unsigned int i = 0; i < m_NS; i++) {
+            Sprog::Kinetics::ARRHENIUS arr = m_mech->Reactions(m_sens_params.at(i).Index)->Arrhenius();
+            switch ( m_sens_params.at(i).Type ) {
+                case ARR_A :
+                    arr.A = m_org_params[i];
+                    break;
+                case ARR_n :
+                    arr.n = m_org_params[i];
+                    break;
+                case ARR_E :
+                    arr.E = m_org_params[i];
+                    break;
+                default :
+                    break;
+            }
+            m_mech->GetReactions(i)->SetArrhenius(arr);
         }
-        m_mech->GetReactions(i)->SetArrhenius(arr);
+    } else if (m_probType == Init_Concentrations) {
+        for(unsigned int i = 0; i < m_NS; i++) {
+            //m_mech->GetReactions(i)->SetArrhenius(arr);
+            if (m_sens_params.at(i).Type == INIT_T) {
+                unsigned int n_sp = m_mech->SpeciesCount();
+                m_reactor->Mixture()->RawData()[n_sp] = m_org_params[i];; // Temperature is at n_sp.
+            } else if (m_sens_params.at(i).Type == INIT_P) {
+                //val = m_mech->Reactions(m_sens_params.at(i).Rxnth)->Arrhenius().n;
+            } else {
+                m_reactor->Mixture()->RawData()[m_sens_params.at(i).Index] = m_org_params[i];
+            }
+        }
+    } else {
+        throw std::runtime_error("Undefined Type: Impossible case. Contact you programmer."
+                                 "(Mops, SensitivityAnalyzer::ResetMechParams).");
     }
 }
 
@@ -402,7 +508,7 @@ void SensitivityAnalyzer::OutputSens(std::fstream &fout, const Mops::Reactor &r,
 {
     // Cast the void pointer to a Simulator object.
     Simulator *me = static_cast<Simulator*>(sim);
-    if (m_NS - m_arr_params.size()) {
+    if (m_NS - m_sens_params.size()) {
         throw std::runtime_error("Number of sensitivity parameters miss matched "
                              "(Mops, SensitivityAnalyzer::OutputSens).");
     }
@@ -445,9 +551,9 @@ void SensitivityAnalyzer::OutputSens(std::fstream &fout, const Mops::Reactor &r,
             }
 
             // output parameter list.
-            for (unsigned int i = 0; i < m_arr_params.size(); ++i) {
-                fout.write((char*)&m_arr_params.at(i).Type, sizeof(m_arr_params.at(i).Type));
-                fout.write((char*)&m_arr_params.at(i).Rxnth, sizeof(m_arr_params.at(i).Rxnth));
+            for (unsigned int i = 0; i < m_sens_params.size(); ++i) {
+                fout.write((char*)&m_sens_params.at(i).Type, sizeof(m_sens_params.at(i).Type));
+                fout.write((char*)&m_sens_params.at(i).Index, sizeof(m_sens_params.at(i).Index));
             }
         }
 
@@ -489,16 +595,6 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
     // Open the sensitivity binary file.
     ifstream fin;
     fin.open(finname.c_str(), ios_base::in | ios_base::binary);
-    //// Read the gas-phase conditions.
-    //fvector y(N, 0.0);
-    //real T=0.0, D=0.0, P=0.0;
-
-    //in.read(reinterpret_cast<char*>(&y[0]), sizeof(y[0])*N);
-    //in.read(reinterpret_cast<char*>(&T), sizeof(T));
-    //in.read(reinterpret_cast<char*>(&D), sizeof(D));
-    //D *= 1.0e-6; // Convert density from m^3 to cm^3.
-    //in.read(reinterpret_cast<char*>(&P), sizeof(P));
-
 
     // Enable status of sensitivity.
     bool enable = false;
@@ -517,7 +613,7 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
     // Variable name list.
     vector<string> var_names;
     // Parameter list.
-    vector<ARRHENIUS_PARAMS> arr_params;
+    vector<SENS_PARAM> arr_params;
 
     fin.read(reinterpret_cast<char*>(&enable), sizeof(enable));
 
@@ -551,9 +647,9 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
 
 
         for (unsigned int i = 0; i < NS; ++i) {
-            ARRHENIUS_PARAMS arr;
+            SENS_PARAM arr;
             fin.read(reinterpret_cast<char*>(&arr.Type), sizeof(arr.Type));
-            fin.read(reinterpret_cast<char*>(&arr.Rxnth), sizeof(arr.Rxnth));
+            fin.read(reinterpret_cast<char*>(&arr.Index), sizeof(arr.Index));
             arr_params.push_back(arr);
         }
         // Allocating memories for calculated results
@@ -619,7 +715,7 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
             fout << endl;
             for (unsigned int i = 0; i < n_timesteps; ++i) {
                 for (unsigned int j = 0; j < NS; ++j) {
-                    fout << times[i] << "," << arr_params.at(j).Type << "," << arr_params.at(j).Rxnth;
+                    fout << times[i] << "," << arr_params.at(j).Type << "," << arr_params.at(j).Index;
                     for (unsigned int k = 0; k < n_vars; ++k) {
                         avg[i][j][k]     /= n_runs;
                         err_sd[i][j][k]  /= n_runs;
@@ -657,22 +753,6 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
         //}
     }
     fin.close();
-
-    //if (m_sens_matrix != NULL) {
-    //    // Write simulation time.
-    //    real time = r.Time();
-    //    fout.write((char*)&time, sizeof(time));
-
-    //    // Write main sensitivity matrix.
-    //    for (unsigned int i = 0; i < m_NS; ++i) {
-    //        real *sdata;
-    //        sdata = NV_DATA_S(m_sens_matrix[i]);
-    //        for (unsigned int j = 0; j < n_vars; ++j) {
-    //            real val = sdata[j];
-    //            fout.write((char*)&val, sizeof(val));
-    //        }
-    //    }
-    //}
 }
 
 // Read Sensitivity Matrix block.
@@ -702,25 +782,31 @@ void SensitivityAnalyzer::SetSensResult(N_Vector *sens_matrix)
     m_sens_matrix = sens_matrix;
 }
 
+// Return sensitivity problem type.
+SensitivityAnalyzer::SensitivityType SensitivityAnalyzer::ProblemType()
+{
+    return m_probType;
+}
+
 // Parameter scaling factors. approx by original params.
 real * SensitivityAnalyzer::ParamBarsPtr()
 {
     return m_parambars;
 }
 
-bool SensitivityAnalyzer::AddParam(const ARRHENIUS_PARAMS &arrp)
+bool SensitivityAnalyzer::AddParam(const SENS_PARAM &arrp)
 {
     bool paramExist = false;
-    if (m_NS == m_arr_params.size()) {
+    if (m_NS == m_sens_params.size()) {
         for (unsigned int i = 0; i < m_NS; i++) {
-            if ((m_arr_params.at(i).Rxnth == arrp.Rxnth) &&
-                (m_arr_params.at(i).Type == arrp.Type)) {
+            if ((m_sens_params.at(i).Index == arrp.Index) &&
+                (m_sens_params.at(i).Type == arrp.Type)) {
                 paramExist = true;
                 break;
             }
         }
         if (!paramExist) {
-            m_arr_params.push_back(arrp);
+            m_sens_params.push_back(arrp);
             ++m_NS;
         }
     } else {
@@ -735,460 +821,3 @@ unsigned int SensitivityAnalyzer::NParams()
     return m_NS;
 }
 
-//void SensitivityAnalyzer::ReadSensiSettings(const CamXML::Document &doc) {
-//    //const CamXML::Element * elem = doc.Root();
-//    //std::string probStr = elem->GetFirstChild("problemType")->GetAttributeValue("name");
-//    //if (probStr.compare("Init_Concentrations")==0) {
-//    //    m_probType = Init_Concentrations;
-//    //} else if (probStr.compare("Reaction_Rates")==0) {
-//    //    m_probType = Reaction_Rates;
-//
-//    //}
-//}
-
-//int SensitivityAnalyzer::Solve()
-//{
-//    void *cvode_mem;
-//    UserData data;
-//    realtype t, tout;
-//    N_Vector y;
-//    int iout, flag;
-//
-//    realtype pbar[NS];
-//    //int is; 
-//    N_Vector *yS;
-//
-//    cvode_mem = NULL;
-//    data      = NULL;
-//    y         =  NULL;
-//    yS        = NULL;
-//
-//    /* Process arguments */
-//    //ProcessArgs(argc, argv, &sensi, &sensi_meth, &err_con);
-//    Enable(TRUE);
-//    EnableErrorControl(TRUE);
-//    
-//    /* User data structure */
-//    data = (UserData) malloc(sizeof *data);
-//    if (check_flag((void *)data, "malloc", 2)) return(1);
-//    data->p[0] = RCONST(0.04);
-//    data->p[1] = RCONST(1.0e4);
-//    data->p[2] = RCONST(3.0e7);
-//
-//    /* Initial conditions */
-//    y = N_VNew_Serial(NEQ);
-//    if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
-//
-//    Ith(y,1) = Y1;
-//    Ith(y,2) = Y2;
-//    Ith(y,3) = Y3;
-//
-//    /* Create CVODES object */
-//    cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
-//    if (check_flag((void *)cvode_mem, "CVodeCreate", 0)) return(1);
-//
-//    /* Allocate space for CVODES */
-//    flag = CVodeMalloc(cvode_mem, f, T0, y, CV_WF, 0.0, NULL);
-//    if (check_flag(&flag, "CVodeMalloc", 1)) return(1);
-//
-//    /* Use private function to compute error weights */
-//    flag = CVodeSetEwtFn(cvode_mem, ewt, NULL);
-//    if (check_flag(&flag, "CVodeSetEwtFn", 1)) return(1);
-//
-//    /* Attach user data */
-//    flag = CVodeSetFdata(cvode_mem, data);
-//    if (check_flag(&flag, "CVodeSetFdata", 1)) return(1);
-//
-//    /* Attach linear solver */
-//    flag = CVDense(cvode_mem, NEQ);
-//    if (check_flag(&flag, "CVDense", 1)) return(1);
-//
-//    //flag = CVDenseSetJacFn(cvode_mem, Jac, data);
-//    //if (check_flag(&flag, "CVDenseSetJacFn", 1)) return(1);
-//
-//    printf("\n3-species chemical kinetics problem\n");
-//
-//    /* Sensitivity-related settings */
-//    if (isEnable()) {
-//        pbar[0] = data->p[2];
-//        pbar[1] = data->p[2];
-//        pbar[2] = data->p[2];
-//
-//        yS = N_VCloneVectorArray_Serial(NS, y);
-//        if (check_flag((void *)yS, "N_VCloneVectorArray_Serial", 0)) return(1);
-//        //for (is=0;is<NS;is++) N_VConst(ZERO, yS[is]);
-//
-//        flag = CVodeSensMalloc(cvode_mem, NS, GetMethod(), yS);
-//        if(check_flag(&flag, "CVodeSensMalloc", 1)) return(1);
-//
-//        //flag = CVodeSetSensRhs1Fn(cvode_mem, fS, data);
-//        //if (check_flag(&flag, "CVodeSetSensRhs1Fn", 1)) return(1);
-//        flag = CVodeSetSensErrCon(cvode_mem, isEnableErrorControl());
-//        if (check_flag(&flag, "CVodeSetSensErrCon", 1)) return(1);
-//        flag = CVodeSetSensParams(cvode_mem, data->p, pbar, NULL);
-//        if (check_flag(&flag, "CVodeSetSensParams", 1)) return(1);
-//
-//        printf("Sensitivity: YES ");
-//        if(GetMethod() == CV_SIMULTANEOUS)   
-//            printf("( SIMULTANEOUS +");
-//        else 
-//            if(GetMethod() == CV_STAGGERED) printf("( STAGGERED +");
-//            else                           printf("( STAGGERED1 +");   
-//        if(isEnableErrorControl()) printf(" FULL ERROR CONTROL )");
-//        else        printf(" PARTIAL ERROR CONTROL )");
-//    } else {
-//        printf("Sensitivity: NO ");
-//    }
-//
-//    /* In loop over output points, call CVode, print results, test for error */
-//
-//    printf("\n\n");
-//    printf("===========================================");
-//    printf("============================\n");
-//    printf("     T     Q       H      NST           y1");
-//    printf("           y2           y3    \n");
-//    printf("===========================================");
-//    printf("============================\n");
-//
-//    for (iout=1, tout=T1; iout <= NOUT; iout++, tout *= TMULT) {
-//
-//        flag = CVode(cvode_mem, tout, y, &t, CV_NORMAL);
-//        if (check_flag(&flag, "CVode", 1)) break;
-//
-//        PrintOutput(cvode_mem, t, y);
-//
-//        if (isEnable()) {
-//            flag = CVodeGetSens(cvode_mem, t, yS);
-//            if (check_flag(&flag, "CVodeGetSens", 1)) break;
-//            PrintOutputS(yS);
-//        } 
-//        printf("-----------------------------------------");
-//        printf("------------------------------\n");
-//
-//    }
-//
-//    /* Print final statistics */
-//    PrintFinalStats(cvode_mem, isEnable());
-//
-//    /* Free memory */
-//
-//    N_VDestroy_Serial(y);                    /* Free y vector */
-//    if (isEnable()) {
-//        N_VDestroyVectorArray_Serial(yS, NS);  /* Free yS vector */
-//    }
-//    free(data);                              /* Free user data */
-//    CVodeFree(&cvode_mem);                   /* Free CVODES memory */
-//
-//    return(0);
-//}
-
- /*
- *--------------------------------------------------------------------
- * FUNCTIONS CALLED BY CVODES
- *--------------------------------------------------------------------
- */
-
- /*
- * f routine. Compute f(t,y). 
- */
-
-//int SensitivityAnalyzer::f(realtype t, N_Vector y, N_Vector ydot, void *f_data)
-//{
-//    realtype y1, y2, y3, yd1, yd3;
-//    UserData data;
-//    realtype k1, k2, k3;
-//
-//    y1 = Ith(y,1); y2 = Ith(y,2); y3 = Ith(y,3);
-//    data = (UserData) f_data;
-//    k1 = data->p[0]; k2 = data->p[1]; k3 = data->p[2];
-//
-//    yd1 = Ith(ydot,1) = -k1*y1 + k2*y2*y3;
-//    yd3 = Ith(ydot,3) = k3*y2*y2;
-//        Ith(ydot,2) = -yd1 - yd3;
-//
-//    return(0);
-//}
-
-
- /* 
- * Jacobian routine. Compute J(t,y). 
- */
-
-//int SensitivityAnalyzer::Jac(long int N, DenseMat J, realtype t,
-//               N_Vector y, N_Vector fy, void *jac_data, 
-//               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-//{
-//    realtype y1, y2, y3;
-//    UserData data;
-//    realtype p1, p2, p3;
-//
-//    y1 = Ith(y,1); y2 = Ith(y,2); y3 = Ith(y,3);
-//    data = (UserData) jac_data;
-//    p1 = data->p[0]; p2 = data->p[1]; p3 = data->p[2];
-//
-//    IJth(J,1,1) = -p1;  IJth(J,1,2) = p2*y3;          IJth(J,1,3) = p2*y2;
-//    IJth(J,2,1) =  p1;  IJth(J,2,2) = -p2*y3-2*p3*y2; IJth(J,2,3) = -p2*y2;
-//                      IJth(J,3,2) = 2*p3*y2;
-//
-//    return(0);
-//}
-
-/* 
- * fS routine. Compute sensitivity r.h.s. 
- */
-
-//int SensitivityAnalyzer::fS(int Ns, realtype t, N_Vector y, N_Vector ydot, 
-//              int iS, N_Vector yS, N_Vector ySdot, 
-//              void *fS_data, N_Vector tmp1, N_Vector tmp2)
-//{
-//    UserData data;
-//    realtype p1, p2, p3;
-//    realtype y1, y2, y3;
-//    realtype s1, s2, s3;
-//    realtype sd1, sd2, sd3;
-//
-//    data = (UserData) fS_data;
-//    p1 = data->p[0]; p2 = data->p[1]; p3 = data->p[2];
-//
-//    y1 = Ith(y,1);  y2 = Ith(y,2);  y3 = Ith(y,3);
-//    s1 = Ith(yS,1); s2 = Ith(yS,2); s3 = Ith(yS,3);
-//
-//    sd1 = -p1*s1 + p2*y3*s2 + p2*y2*s3;
-//    sd3 = 2*p3*y2*s2;
-//    sd2 = -sd1-sd3;
-//
-//    switch (iS) {
-//    case 0:
-//    sd1 += -y1;
-//    sd2 +=  y1;
-//    break;
-//    case 1:
-//    sd1 +=  y2*y3;
-//    sd2 += -y2*y3;
-//    break;
-//    case 2:
-//    sd2 += -y2*y2;
-//    sd3 +=  y2*y2;
-//    break;
-//    }
-//
-//    Ith(ySdot,1) = sd1;
-//    Ith(ySdot,2) = sd2;
-//    Ith(ySdot,3) = sd3;
-//
-//    return(0);
-//}
-//
- /*
- * EwtSet function. Computes the error weights at the current solution.
- */
-
-//int SensitivityAnalyzer::ewt(N_Vector y, N_Vector w, void *e_data)
-//{
-//    int i;
-//    realtype yy, ww, rtol, atol[3];
-//
-//    rtol    = RTOLK;
-//    atol[0] = ATOL1;
-//    atol[1] = ATOL2;
-//    atol[2] = ATOL3;
-//
-//    for (i=1; i<=3; i++) {
-//        yy = Ith(y,i);
-//        ww = rtol * ABS(yy) + atol[i-1];  
-//        if (ww <= 0.0) return (-1);
-//        Ith(w,i) = 1.0/ww;
-//    }
-//
-//    return(0);
-//}
-
- /*
- *--------------------------------------------------------------------
- * PRIVATE FUNCTIONS
- *--------------------------------------------------------------------
- */
-
- /*
- * Print current t, step count, order, stepsize, and solution.
- */
-
-//void SensitivityAnalyzer::PrintOutput(void *cvode_mem, realtype t, N_Vector u)
-//{
-//    long int nst;
-//    int qu, flag;
-//    realtype hu, *udata;
-//
-//    udata = NV_DATA_S(u);
-//
-//    flag = CVodeGetNumSteps(cvode_mem, &nst);
-//    check_flag(&flag, "CVodeGetNumSteps", 1);
-//    flag = CVodeGetLastOrder(cvode_mem, &qu);
-//    check_flag(&flag, "CVodeGetLastOrder", 1);
-//    flag = CVodeGetLastStep(cvode_mem, &hu);
-//    check_flag(&flag, "CVodeGetLastStep", 1);
-//
-//#if defined(SUNDIALS_EXTENDED_PRECISION)
-//    printf("%8.3Le %2d  %8.3Le %5ld\n", t, qu, hu, nst);
-//#elif defined(SUNDIALS_DOUBLE_PRECISION)
-//    printf("%8.3le %2d  %8.3le %5ld\n", t, qu, hu, nst);
-//#else
-//    printf("%8.3e %2d  %8.3e %5ld\n", t, qu, hu, nst);
-//#endif
-//
-//    printf("                  Solution       ");
-//
-//#if defined(SUNDIALS_EXTENDED_PRECISION)
-//    printf("%12.4Le %12.4Le %12.4Le \n", udata[0], udata[1], udata[2]);
-//#elif defined(SUNDIALS_DOUBLE_PRECISION)
-//    printf("%12.4le %12.4le %12.4le \n", udata[0], udata[1], udata[2]);
-//#else
-//    printf("%12.4e %12.4e %12.4e \n", udata[0], udata[1], udata[2]);
-//#endif
-//
-//}
-//
-// /* 
-// * Print sensitivities.
-// */
-//
-//void SensitivityAnalyzer::PrintOutputS(N_Vector *uS)
-//{
-//    realtype *sdata;
-//
-//    sdata = NV_DATA_S(uS[0]);
-//    printf("                  Sensitivity 1  ");
-//
-//#if defined(SUNDIALS_EXTENDED_PRECISION)
-//    printf("%12.4Le %12.4Le %12.4Le \n", sdata[0], sdata[1], sdata[2]);
-//#elif defined(SUNDIALS_DOUBLE_PRECISION)
-//    printf("%12.4le %12.4le %12.4le %12.4le %12.4le \n", sdata[0], sdata[1], sdata[2], sdata[3], sdata[4]);
-//#else
-//    printf("%12.4e %12.4e %12.4e \n", sdata[0], sdata[1], sdata[2]);
-//#endif
-//  
-//    sdata = NV_DATA_S(uS[1]);
-//    printf("                  Sensitivity 2  ");
-//
-//#if defined(SUNDIALS_EXTENDED_PRECISION)
-//    printf("%12.4Le %12.4Le %12.4Le \n", sdata[0], sdata[1], sdata[2]);
-//#elif defined(SUNDIALS_DOUBLE_PRECISION)
-//    printf("%12.4le %12.4le %12.4le %12.4le %12.4le \n", sdata[0], sdata[1], sdata[2], sdata[3], sdata[4]);
-//#else
-//    printf("%12.4e %12.4e %12.4e \n", sdata[0], sdata[1], sdata[2]);
-//#endif
-//
-//    sdata = NV_DATA_S(uS[2]);
-//    printf("                  Sensitivity 3  ");
-//
-//#if defined(SUNDIALS_EXTENDED_PRECISION)
-//    printf("%12.4Le %12.4Le %12.4Le \n", sdata[0], sdata[1], sdata[2]);
-//#elif defined(SUNDIALS_DOUBLE_PRECISION)
-//    printf("%12.4le %12.4le %12.4le %12.4le %12.4le \n", sdata[0], sdata[1], sdata[2], sdata[3], sdata[4]);
-//#else
-//    printf("%12.4e %12.4e %12.4e \n", sdata[0], sdata[1], sdata[2]);
-//#endif
-//}
-//
-// /* 
-// * Print some final statistics from the CVODES memory.
-// */
-//
-//void SensitivityAnalyzer::PrintFinalStats(void *cvode_mem, booleantype sensi)
-//{
-//    long int nst;
-//    long int nfe, nsetups, nni, ncfn, netf;
-//    long int nfSe, nfeS, nsetupsS, nniS, ncfnS, netfS;
-//    long int nje, nfeLS;
-//    int flag;
-//
-//    flag = CVodeGetNumSteps(cvode_mem, &nst);
-//    check_flag(&flag, "CVodeGetNumSteps", 1);
-//    flag = CVodeGetNumRhsEvals(cvode_mem, &nfe);
-//    check_flag(&flag, "CVodeGetNumRhsEvals", 1);
-//    flag = CVodeGetNumLinSolvSetups(cvode_mem, &nsetups);
-//    check_flag(&flag, "CVodeGetNumLinSolvSetups", 1);
-//    flag = CVodeGetNumErrTestFails(cvode_mem, &netf);
-//    check_flag(&flag, "CVodeGetNumErrTestFails", 1);
-//    flag = CVodeGetNumNonlinSolvIters(cvode_mem, &nni);
-//    check_flag(&flag, "CVodeGetNumNonlinSolvIters", 1);
-//    flag = CVodeGetNumNonlinSolvConvFails(cvode_mem, &ncfn);
-//    check_flag(&flag, "CVodeGetNumNonlinSolvConvFails", 1);
-//
-//    if (sensi) {
-//        flag = CVodeGetNumSensRhsEvals(cvode_mem, &nfSe);
-//        check_flag(&flag, "CVodeGetNumSensRhsEvals", 1);
-//        flag = CVodeGetNumRhsEvalsSens(cvode_mem, &nfeS);
-//        check_flag(&flag, "CVodeGetNumRhsEvalsSens", 1);
-//        flag = CVodeGetNumSensLinSolvSetups(cvode_mem, &nsetupsS);
-//        check_flag(&flag, "CVodeGetNumSensLinSolvSetups", 1);
-//        flag = CVodeGetNumSensErrTestFails(cvode_mem, &netfS);
-//        check_flag(&flag, "CVodeGetNumSensErrTestFails", 1);
-//        flag = CVodeGetNumSensNonlinSolvIters(cvode_mem, &nniS);
-//        check_flag(&flag, "CVodeGetNumSensNonlinSolvIters", 1);
-//        flag = CVodeGetNumSensNonlinSolvConvFails(cvode_mem, &ncfnS);
-//        check_flag(&flag, "CVodeGetNumSensNonlinSolvConvFails", 1);
-//    }
-//
-//    flag = CVDenseGetNumJacEvals(cvode_mem, &nje);
-//    check_flag(&flag, "CVDenseGetNumJacEvals", 1);
-//    flag = CVDenseGetNumRhsEvals(cvode_mem, &nfeLS);
-//    check_flag(&flag, "CVDenseGetNumRhsEvals", 1);
-//
-//    printf("\nFinal Statistics\n\n");
-//    printf("nst     = %5ld\n\n", nst);
-//    printf("nfe     = %5ld\n",   nfe);
-//    printf("netf    = %5ld    nsetups  = %5ld\n", netf, nsetups);
-//    printf("nni     = %5ld    ncfn     = %5ld\n", nni, ncfn);
-//
-//    if(sensi) {
-//        printf("\n");
-//        printf("nfSe    = %5ld    nfeS     = %5ld\n", nfSe, nfeS);
-//        printf("netfs   = %5ld    nsetupsS = %5ld\n", netfS, nsetupsS);
-//        printf("nniS    = %5ld    ncfnS    = %5ld\n", nniS, ncfnS);
-//    }
-//
-//    printf("\n");
-//    printf("nje    = %5ld    nfeLS     = %5ld\n", nje, nfeLS);
-//
-//}
-//
-// /* 
-// * Check function return value.
-// *    opt == 0 means SUNDIALS function allocates memory so check if
-// *             returned NULL pointer
-// *    opt == 1 means SUNDIALS function returns a flag so check if
-// *             flag >= 0
-// *    opt == 2 means function allocates memory so check if returned
-// *             NULL pointer 
-// */
-//
-//int SensitivityAnalyzer::check_flag(void *flagvalue, char *funcname, int opt)
-//{
-//    int *errflag;
-//
-//    /* Check if SUNDIALS function returned NULL pointer - no memory allocated */
-//    if (opt == 0 && flagvalue == NULL) {
-//        fprintf(stderr, 
-//            "\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
-//        funcname);
-//        return(1); }
-//
-//    /* Check if flag < 0 */
-//    else if (opt == 1) {
-//        errflag = (int *) flagvalue;
-//        if (*errflag < 0) {
-//            fprintf(stderr, 
-//                "\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
-//            funcname, *errflag);
-//        return(1); }}
-//
-//    /* Check if function returned NULL pointer - no memory allocated */
-//    else if (opt == 2 && flagvalue == NULL) {
-//        fprintf(stderr, 
-//            "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
-//        funcname);
-//        return(1); }
-//
-//    return(0);
-//}

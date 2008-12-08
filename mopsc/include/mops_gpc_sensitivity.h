@@ -56,50 +56,30 @@
 #include <sundials/sundials_types.h> /* def. of type realtype */
 #include <sundials/sundials_math.h>  /* definition of ABS */
 
-// /* Accessor macros */
-//
-//#define Ith(v,i)    NV_Ith_S(v,i-1)       /* i-th vector component i=1..NEQ */
-//#define IJth(A,i,j) DENSE_ELEM(A,i-1,j-1) /* (i,j)-th matrix component i,j=1..NEQ */
-//
-// /* Problem Constants */
-//
-//#define NEQ   3             /* number of equations  */
-//#define Y1    RCONST(1.0)   /* initial y components */
-//#define Y2    RCONST(0.0)
-//#define Y3    RCONST(0.0)
-//#define RTOLK  RCONST(1e-4)  /* scalar relative tolerance */
-//#define ATOL1 RCONST(1e-8)  /* vector absolute tolerance components */
-//#define ATOL2 RCONST(1e-14)
-//#define ATOL3 RCONST(1e-6)
-//#define T0    RCONST(0.0)   /* initial time */
-//#define T1    RCONST(0.4)   /* first output time */
-//#define TMULT RCONST(10.0)  /* output time factor */
-//#define NOUT  12            /* number of output times */
-//
-//#define NP    3             /* number of problem parameters */
-//#define NS    3             /* number of sensitivities computed */
-
-
 namespace Mops
 {
 class SensitivityAnalyzer
 {
 public:
     // Enumeration of parameter type.
-    enum ARRHENIUS_TYPE {ARR_A,  // Pre-exponential factor.
-                         ARR_n,  // Temperature exponent.
-                         ARR_E}; // Activation energy.
+    enum SENS_TYPE {ARR_A,  // Pre-exponential factor.
+                    ARR_n,  // Temperature exponent.
+                    ARR_E,  // Activation energy.
+                    INIT_C,
+                    INIT_T,
+                    INIT_P
+    }; 
     // Arrhenius parameters for sensitivity.
-    struct ARRHENIUS_PARAMS
+    struct SENS_PARAM
     {
-        unsigned int Rxnth; // Reaction number in the mechanism.
-        ARRHENIUS_TYPE Type;
+        unsigned int Index; // Reaction number in the mechanism.
+        SENS_TYPE Type;
 
         // Constructors.
-        ARRHENIUS_PARAMS(void) // Default constructor.
-        {Type = ARR_A; Rxnth=0;}; 
-        ARRHENIUS_PARAMS(unsigned int aRxnth, ARRHENIUS_TYPE aType) // Initialising constructor.
-        {Type=aType; Rxnth = aRxnth;};
+        SENS_PARAM(void) // Default constructor.
+        {Type = ARR_A; Index=0;}; 
+        SENS_PARAM(unsigned int aIndex, SENS_TYPE aType) // Initialising constructor.
+        {Type=aType; Index = aIndex;};
     };
 
     // Enumeration of Sensitivity Types
@@ -139,7 +119,7 @@ public:
     booleantype isEnableErrorControl() const;
 
     // Define the mechanism and parameters.
-    void SetupProblem(Mops::Mechanism &mech, const string &sfile);
+    void SetupProblem(Mops::Mechanism &mech, Mops::Reactor &reactor, const string &sfile);
 
     // Return number of parameters.
     unsigned int NParams();
@@ -170,12 +150,30 @@ public:
     // Set a pointer to last sensitivity output result.
     void SetSensResult(N_Vector *sens_matrix);
 
-    // Test solve.
-    //int Solve();
-    //static void PrintOutput(void *cvode_mem, realtype t, N_Vector u);
-    //static void PrintOutputS(N_Vector *uS);
-    //static void PrintFinalStats(void *cvode_mem, booleantype sensi);
-    //static int check_flag(void *flagvalue, char *funcname, int opt);
+    // Return sensitivity problem type.
+    SensitivityType ProblemType();
+
+    // Return the scalar absolute tolerance for quadrature problem.
+    real AbsTolQ() { return m_abstolQ; };
+
+    // Return the scalar relative tolerance for quadrature problem.
+    real RelTolQ() { return m_reltolQ; };
+
+    // Return the scalar absolute tolerance for backward problem.
+    real AbsTolB() { return m_abstolB; };
+
+    // Return the scalar relative tolerance for backward problem.
+    real RelTolB() { return m_reltolB; };
+
+    // Return the scalar absolute tolerance for backward quadrature problem.
+    real AbsTolQB() { return m_abstolQB; };
+
+    // Return the overall start time point for initial condition sensitivity.
+    real StartTime() { return m_start_time; };
+
+    // Set the overall start time point for initial condition sensitivity.
+    real SetStartTime(real time) { m_start_time = time; };
+
 private:
 
     // Define problem type.
@@ -190,11 +188,35 @@ private:
     // Sensitivity method.
     int m_sensi_meth;
 
+    // Sensitivity method.
+    real m_start_time;
+
+
+    // Error control tolerances
+    // The scalar absolute tolerance for quadrature problem.
+    real m_abstolQ;
+
+    // The scalar relative tolerance for quadrature problem.
+    real m_reltolQ;
+
+    // The scalar absolute tolerance for backward problem.
+    real m_abstolB;
+
+    // The scalar relative tolerance for backward problem.
+    real m_reltolB;
+
+    // The scalar absolute tolerance for backward quadrature problem.
+    real m_abstolQB;
+
     // Non-constant mechanism which will be used by rshFn_CVODES in
     // mops_rhs_func.cpp to access reaction set variables.
     // This can only be set via SetMechanism and where Mechanism
     // object is not made constant, ex from mops.cpp.
     Mops::Mechanism *m_mech;
+
+    // Non-constant mechanism which will be used for initial temperature
+    // sensitivity.
+    Mops::Reactor *m_reactor;
 
     // PARAMETERS' MEMORIES
     // Number of sensitivity parameters
@@ -202,14 +224,14 @@ private:
     real *m_org_params;
     real *m_params;
     real *m_parambars;
-    vector<ARRHENIUS_PARAMS> m_arr_params;
+    vector<SENS_PARAM> m_sens_params;
 
     // SENSITIVITY TEMP RESULT
     N_Vector *m_sens_matrix;
 
     // Add parameters function. m_NS should not be touch anywhere in
     // the code except here.
-    bool AddParam(const ARRHENIUS_PARAMS &arr);
+    bool AddParam(const SENS_PARAM &arr);
 
     // Read sensitivity setting from file.
     void ReadSettingV1(const CamXML::Element &elemSA);
@@ -217,32 +239,6 @@ private:
     // Read Sensitivity Matrix block.
     // Read block of n x m from fin to matrix and simulation time.
     static void ReadSensMatrix(ifstream &fin, const unsigned int n, const unsigned int m, real &time, real ** matrix, real ** matrix_sqr);
-
-     /* Prototypes of functions by CVODES */
-    //typedef struct {
-    //  realtype p[3];           /* problem parameters */
-    //} *UserData;
-
-    // Setup sensitivity problem from given setting xml version 1.0.
-    // Clear function must be called before using this function, otherwise 
-    // program might behave abnormally. m_mech pointer must be set after 
-    // use clear function.
-    //void ReadSettingV1(const CamXML::Element &elemSA);
-
-    //static int f(realtype t, N_Vector y, N_Vector ydot, void *f_data);
-    //static int f(realtype t, N_Vector y, N_Vector ydot, void *f_data);
-
-    //static int Jac(long int N, DenseMat J, realtype t,
-    //               N_Vector y, N_Vector fy, void *jac_data, 
-    //               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
-    //static int fS(int Ns, realtype t, N_Vector y, N_Vector ydot, 
-    //              int iS, N_Vector yS, N_Vector ySdot, 
-    //              void *fS_data, N_Vector tmp1, N_Vector tmp2);
-
-    //static int ewt(N_Vector y, N_Vector w, void *e_data);
-
-     /* Prototypes of private functions */
 
 
 };

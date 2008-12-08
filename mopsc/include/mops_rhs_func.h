@@ -73,4 +73,71 @@ int rhsFn_CVODES(
     void* solver   // An ODE_Solver object (to be cast).
     );
 
+// The right-hand side evaluator.  This function calculates the RHS of
+// lamda for adjoint sensitivit analysis.
+int rhsLamdaFn_CVODES(
+    double t,      // Current flow time.
+    N_Vector y,    // The current solution variables.
+    N_Vector yB, // Derivatives to return.
+    N_Vector yBdot, // Derivatives to return.
+    void* solver   // An ODE_Solver object (to be cast).
+    );
+
+// The right-hand side evaluator.  This function calculates the RHS of
+// quadrature function for adjoint sensitivit analysis.
+int rhsQuadFn_CVODES(
+    double t,      // Current flow time.
+    N_Vector y,    // The current solution variables.
+    N_Vector qdot, // Derivatives to return.
+    void* solver   // An ODE_Solver object (to be cast).
+    );
+
+// The right-hand side evaluator.  This function calculates the RHS of
+// quadrature function for adjoint sensitivit analysis.
+int rhsQuadBFn_CVODES(
+    double t,      // Current flow time.
+    N_Vector y,    // The current solution variables.
+    N_Vector qBdot, // Derivatives to return.
+    void* solver   // An ODE_Solver object (to be cast).
+    );
+
+// The Jacobian matrix evaluator.  This function calculates the 
+// Jacobian matrix given the current state.  CVODE uses a void* pointer to
+// allow the calling code to pass whatever information it wants to
+// the function.  In this case the void* pointer should be cast
+// into an ODE_Solver object.
+int jacFn_CVODE(
+    long int N,    // Problem size.
+    DenseMat J,    // Jacobian matrix.
+    double t,      // Time.
+    N_Vector y,    // Current solution variables.
+    N_Vector ydot, // Current value of the vector f(t,y), the RHS.
+    void* solver,  // An ODE_Solver object (to be cast).
+    N_Vector tmp1, // Temporary array available for calculations.
+    N_Vector tmp2, // Temporary array available for calculations.
+    N_Vector tmp3  // Temporary array available for calculations.
+    );
+
+// The Jacobian matrix evaluator.  This function calculates the Jacobian matrix
+// given the current state. This function work exactly the same
+// as jacFn_CVODE but it allows CVODES to have access to problem parameters.
+// This is vital for CVODES to use internal sensitivity Rhs estimator as we
+// do not privide CVODES a function to evaluate
+int jacFn_CVODES(
+    long int N,    // Problem size.
+    DenseMat J,    // Jacobian matrix.
+    double t,      // Time.
+    N_Vector y,    // Current solution variables.
+    N_Vector ydot, // Current value of the vector f(t,y), the RHS.
+    void* solver,  // An ODE_Solver object (to be cast).
+    N_Vector tmp1, // Temporary array available for calculations.
+    N_Vector tmp2, // Temporary array available for calculations.
+    N_Vector tmp3  // Temporary array available for calculations.
+    );
+//static int fQ(realtype t, N_Vector y, N_Vector qdot, void *fQ_data);
+//static int fB(realtype t, N_Vector y, 
+//              N_Vector yB, N_Vector yBdot, void *f_dataB);
+//static int fQB(realtype t, N_Vector y, N_Vector yB, 
+//               N_Vector qBdot, void *fQ_dataB);
+
 #endif
