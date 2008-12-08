@@ -243,17 +243,17 @@ public:
     // i with respect to i: dFi/dYj.  It is assumed that the Jacobian
     // matrix array J has already been allocated for NSP+2 variables
     // (all species, temperature and density).
-    //void CalcJacobian(
-    //    real T,           // The mixture temperature.
-    //    real density,     // Mixture molar density.
-    //    real *const x,    // Species mole fractions.
-    //    unsigned int n,   // Number of values in x array.
-    //    const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
-    //    real pfac,        // Perturbation factor for calculating J entries.
-    //    real **J,         // Jacobian matrix array.
-    //    bool constV=true, // Is system constant volume or constant pressure?
-    //    bool constT=false // Is system constant temperature or adiabatic?
-    //    ) const;
+    void CalcJacobian(
+        real T,           // The mixture temperature.
+        real density,     // Mixture molar density.
+        real *const x,    // Species mole fractions.
+        unsigned int n,   // Number of values in x array.
+        const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
+        real pfac,        // Perturbation factor for calculating J entries.
+        real **J,         // Jacobian matrix array.
+        bool constV=true, // Is system constant volume or constant pressure?
+        bool constT=false // Is system constant temperature or adiabatic?
+        ) const;
 
 
     // PARENT MECHANISM.
