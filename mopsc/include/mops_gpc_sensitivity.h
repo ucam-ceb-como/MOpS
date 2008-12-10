@@ -83,7 +83,7 @@ public:
     };
 
     // Enumeration of Sensitivity Types
-    enum SensitivityType {Reaction_Rates, Init_Concentrations};
+    enum SensitivityType {Reaction_Rates, Init_Conditions};
 
     // Constructor.
     SensitivityAnalyzer();
@@ -149,6 +149,9 @@ public:
 
     // Set a pointer to last sensitivity output result.
     void SetSensResult(N_Vector *sens_matrix);
+
+    // Initialise sensitivity matrix.
+    void InitSensMatrix(N_Vector *sens_matrix);
 
     // Return sensitivity problem type.
     SensitivityType ProblemType();

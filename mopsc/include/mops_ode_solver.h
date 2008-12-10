@@ -195,11 +195,27 @@ protected:
     mutable Mops::SensitivityAnalyzer m_sensi;
     // Space required by rate parameter sensitivity.
     N_Vector *m_yS;
-    // Space required by initial condition sensitivity.
+    /*/ Space required by initial condition sensitivity.
     void *m_odeadj; // CVODES worksapce for adjoint sensitivity.
     N_Vector m_q;   // Quadrature solution of the concentration integration.
     N_Vector m_yB;  // Backwards solution of lamda for sensitivity.
     N_Vector m_qB;  // Backwards integration solution of concentration.
+    // Error control tolerances
+    // The scalar absolute tolerance for quadrature problem.
+    real m_abstolQ;
+    // The scalar relative tolerance for quadrature problem.
+    real m_reltolQ;
+    // The scalar absolute tolerance for backward problem.
+    real m_abstolB;
+    // The scalar relative tolerance for backward problem.
+    real m_reltolB;
+    // The scalar absolute tolerance for backward quadrature problem.
+    real m_abstolQB;
+    // A flag which check if backward problem memory has been created.
+    bool m_isInitB;
+    // Initialises CVode for backward problem.
+    void ReInitCVodeB(real t_final);*/
+
 
 
 private:

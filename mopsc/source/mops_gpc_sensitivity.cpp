@@ -260,8 +260,8 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
         if (probTypeElem != NULL) {
             if (probTypeElem->GetAttributeValue("type").compare("Reaction_Rates") == 0) {
                 m_probType = Reaction_Rates;
-            } else if (probTypeElem->GetAttributeValue("type").compare("Init_Concentrations") == 0) {
-                m_probType = Init_Concentrations;
+            } else if (probTypeElem->GetAttributeValue("type").compare("Init_Conditions") == 0) {
+                m_probType = Init_Conditions;
             } else {
                 m_probType = Reaction_Rates;
             }
@@ -361,18 +361,18 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
                 }
                 m_org_params[i] = m_params[i] = m_parambars[i] = val;
             }
-        } else if (m_probType == Init_Concentrations) {
+        } else if (m_probType == Init_Conditions) {
             vector<CamXML::Element *> initParams;
 
             // Add initial condition parameter list
             paramsElem->GetChildren("init", initParams );
             for (unsigned int i = 0; i < initParams.size(); i++) {
                 string id = Strings::trim(initParams.at(i)->GetAttributeValue("id"));
-                if (id.compare("T")) {
+                if (id.compare("T") == 0) {
                     // initial temperature parameter, only work if a non-constant temperature is applied.
                     SENS_PARAM arrp(0, INIT_T);
                     AddParam(arrp);
-                } else if (id.compare("P")) {
+                } else if (id.compare("P") == 0) {
                     // initial pressure parameter, only work if a non-constant pressure is applied
                     // problem: does not have P in Jacobain but density
                     //SENS_PARAM arrp(0, INIT_P);
@@ -445,7 +445,7 @@ void SensitivityAnalyzer::ChangeMechParams()
             }
             m_mech->GetReactions(i)->SetArrhenius(arr);
         }
-    } else if (m_probType == Init_Concentrations) {
+    } else if (m_probType == Init_Conditions) {
         for(unsigned int i = 0; i < m_NS; i++) {
             //m_mech->GetReactions(i)->SetArrhenius(arr);
             if (m_sens_params.at(i).Type == INIT_T) {
@@ -485,7 +485,7 @@ void SensitivityAnalyzer::ResetMechParams()
             }
             m_mech->GetReactions(i)->SetArrhenius(arr);
         }
-    } else if (m_probType == Init_Concentrations) {
+    } else if (m_probType == Init_Conditions) {
         for(unsigned int i = 0; i < m_NS; i++) {
             //m_mech->GetReactions(i)->SetArrhenius(arr);
             if (m_sens_params.at(i).Type == INIT_T) {
@@ -780,6 +780,35 @@ real * SensitivityAnalyzer::ParamsPtr()
 void SensitivityAnalyzer::SetSensResult(N_Vector *sens_matrix)
 {
     m_sens_matrix = sens_matrix;
+}
+
+// Set a pointer to last sensitivity output result.
+void SensitivityAnalyzer::InitSensMatrix(N_Vector *sens_matrix)
+{
+    for (unsigned int i = 0; i < m_NS; i++) {
+        N_VConst(ZERO, sens_matrix[i]);
+    }
+    // initialise with 1 if parameter is the same as variable, else zero.
+    if (m_probType == Init_Conditions) {
+        // number of variables (number of species + 2). // T and P
+        unsigned int n_sp = m_mech->SpeciesCount();
+        for (unsigned int i = 0; i < m_sens_params.size(); i++) {
+            for (unsigned int j = 0; j < n_sp + 2; j++) {
+                if ((m_sens_params.at(i).Type == INIT_T) &&
+                    (j == n_sp)) {
+                    NV_Ith_S(sens_matrix[i],j) = RCONST(1.0); // Temperature is at n_sp.
+                    break;
+                } else if ((m_sens_params.at(i).Type == INIT_P)) {
+                    //val = m_mech->Reactions(m_sens_params.at(i).Rxnth)->Arrhenius().n;
+                    break;
+                } else if ((m_sens_params.at(i).Type == INIT_C) &&
+                           (m_sens_params.at(i).Index == j)) {
+                    NV_Ith_S(sens_matrix[i],j) = RCONST(1.0);
+                    break;
+                }
+            }
+        }
+    }
 }
 
 // Return sensitivity problem type.

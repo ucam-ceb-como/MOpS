@@ -121,6 +121,7 @@ int rhsQuadFn_CVODES(
 int rhsQuadBFn_CVODES(
     double t,      // Current flow time.
     N_Vector y,    // The current solution variables.
+    N_Vector yB,   //  yB to return
     N_Vector qBdot, // Derivatives to return.
     void* solver   // An ODE_Solver object (to be cast).
     )
