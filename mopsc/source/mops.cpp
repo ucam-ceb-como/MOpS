@@ -272,6 +272,7 @@ int main(int argc, char *argv[])
         if (sensi->isEnable()) {
             // a copy of sensi is made during attaching so you can delete it aftrwards.
             solver->AttachSensitivity(*sensi);
+            if (soltype != GPC) throw runtime_error("Sensitivity of non-GPC solver type is not allowed");
         }
         delete sensi;
     } catch (std::runtime_error &re) {
