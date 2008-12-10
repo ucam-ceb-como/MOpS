@@ -73,35 +73,6 @@ int rhsFn_CVODES(
     void* solver   // An ODE_Solver object (to be cast).
     );
 
-// The right-hand side evaluator.  This function calculates the RHS of
-// lamda for adjoint sensitivit analysis.
-int rhsLamdaFn_CVODES(
-    double t,      // Current flow time.
-    N_Vector y,    // The current solution variables.
-    N_Vector yB, // Derivatives to return.
-    N_Vector yBdot, // Derivatives to return.
-    void* solver   // An ODE_Solver object (to be cast).
-    );
-
-// The right-hand side evaluator.  This function calculates the RHS of
-// quadrature function for adjoint sensitivit analysis.
-int rhsQuadFn_CVODES(
-    double t,      // Current flow time.
-    N_Vector y,    // The current solution variables.
-    N_Vector qdot, // Derivatives to return.
-    void* solver   // An ODE_Solver object (to be cast).
-    );
-
-// The right-hand side evaluator.  This function calculates the RHS of
-// quadrature function for adjoint sensitivit analysis.
-int rhsQuadBFn_CVODES(
-    double t,      // Current flow time.
-    N_Vector y,    // The current solution variables.
-    N_Vector yB,   //  yB to return
-    N_Vector qBdot, // Derivatives to return.
-    void* solver   // An ODE_Solver object (to be cast).
-    );
-
 // The Jacobian matrix evaluator.  This function calculates the 
 // Jacobian matrix given the current state.  CVODE uses a void* pointer to
 // allow the calling code to pass whatever information it wants to
@@ -135,10 +106,5 @@ int jacFn_CVODES(
     N_Vector tmp2, // Temporary array available for calculations.
     N_Vector tmp3  // Temporary array available for calculations.
     );
-//static int fQ(realtype t, N_Vector y, N_Vector qdot, void *fQ_data);
-//static int fB(realtype t, N_Vector y, 
-//              N_Vector yB, N_Vector yBdot, void *f_dataB);
-//static int fQB(realtype t, N_Vector y, N_Vector yB, 
-//               N_Vector qBdot, void *fQ_dataB);
 
 #endif

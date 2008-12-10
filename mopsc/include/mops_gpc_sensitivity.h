@@ -156,27 +156,6 @@ public:
     // Return sensitivity problem type.
     SensitivityType ProblemType();
 
-    // Return the scalar absolute tolerance for quadrature problem.
-    real AbsTolQ() { return m_abstolQ; };
-
-    // Return the scalar relative tolerance for quadrature problem.
-    real RelTolQ() { return m_reltolQ; };
-
-    // Return the scalar absolute tolerance for backward problem.
-    real AbsTolB() { return m_abstolB; };
-
-    // Return the scalar relative tolerance for backward problem.
-    real RelTolB() { return m_reltolB; };
-
-    // Return the scalar absolute tolerance for backward quadrature problem.
-    real AbsTolQB() { return m_abstolQB; };
-
-    // Return the overall start time point for initial condition sensitivity.
-    real StartTime() { return m_start_time; };
-
-    // Set the overall start time point for initial condition sensitivity.
-    real SetStartTime(real time) { m_start_time = time; };
-
 private:
 
     // Define problem type.
@@ -190,26 +169,6 @@ private:
 
     // Sensitivity method.
     int m_sensi_meth;
-
-    // Sensitivity method.
-    real m_start_time;
-
-
-    // Error control tolerances
-    // The scalar absolute tolerance for quadrature problem.
-    real m_abstolQ;
-
-    // The scalar relative tolerance for quadrature problem.
-    real m_reltolQ;
-
-    // The scalar absolute tolerance for backward problem.
-    real m_abstolB;
-
-    // The scalar relative tolerance for backward problem.
-    real m_reltolB;
-
-    // The scalar absolute tolerance for backward quadrature problem.
-    real m_abstolQB;
 
     // Non-constant mechanism which will be used by rshFn_CVODES in
     // mops_rhs_func.cpp to access reaction set variables.

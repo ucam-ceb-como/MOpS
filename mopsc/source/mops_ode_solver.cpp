@@ -105,12 +105,6 @@ ODE_Solver &ODE_Solver::operator=(const Mops::ODE_Solver &rhs)
         m_neq      = rhs.m_neq;
         m_srcterms = rhs.m_srcterms;
         _srcTerms  = rhs._srcTerms;
-        //m_abstolQ  = rhs.m_abstolQ;
-        //m_reltolQ  = rhs.m_reltolQ;
-        //m_abstolB  = rhs.m_abstolB;
-        //m_reltolB  = rhs.m_reltolB;
-        //m_abstolQB = rhs.m_abstolQB;
-        //m_isInitB  = rhs.m_isInitB;
 
         // Delete memories
         if (m_yS != NULL) N_VDestroyVectorArray_Serial(m_yS, m_sensi.NParams());
@@ -234,53 +228,6 @@ void ODE_Solver::InitCVode(void)
     }
 }
 
-// Initialises CVode for backward problem.
-//void ODE_Solver::ReInitCVodeB(real t_final)
-//{
-//    if (!m_isInitB) {
-//        // Allocate global memory
-//
-//        // Space required by initial condition sensitivity.
-//        int steps = 10;
-//        m_odeadj = CVadjMalloc(m_odewk, steps, CV_HERMITE);
-//        // Initialize m_yB
-//        m_yB = N_VNew_Serial(m_neq);
-//        N_VConst(ZERO, m_yB);
-//
-//        // Initialize m_qB
-//        m_qB = N_VNew_Serial(m_neq);
-//        N_VConst(ZERO, m_qB);
-//
-//        // Setup problem
-//        CVodeCreateB(m_odeadj, CV_BDF, CV_NEWTON);
-//
-//        CVodeMallocB(m_odeadj, &rhsLamdaFn_CVODES, t_final, m_yB, CV_SS, m_reltolB, &m_abstolB);
-//
-//        CVodeSetFdataB(m_odeadj, (void*)this);
-//
-//        CVDenseB(m_odeadj, m_neq);
-//
-//        //CVDenseSetJacFnB(m_odeadj, &rhs_, data);
-//
-//        CVodeQuadMallocB(m_odeadj, &rhsQuadBFn_CVODES, m_qB);
-//
-//        CVodeSetQuadFdataB(m_odeadj, (void*)this);
-//
-//        CVodeSetQuadErrConB(m_odeadj, TRUE, CV_SS, m_reltolB, &m_abstolQB);
-//
-//        m_isInitB = true;
-//    } else {
-//        // Backward problem has been initialised before.
-//        N_VConst(ZERO, m_yB);
-//
-//        N_VConst(ZERO, m_qB);
-//
-//        CVodeReInitB(m_odeadj, &rhsLamdaFn_CVODES, t_final, m_yB, CV_SS, m_reltolB, &m_abstolB);
-//
-//        CVodeQuadReInitB(m_odeadj, &rhsQuadBFn_CVODES, m_qB); 
-//   }
-//}
-
 // Reset the solver.  Need to do this if the the reactor
 // contents has been changed between calls to Solve().
 void ODE_Solver::ResetSolver(void)
@@ -297,12 +244,6 @@ void ODE_Solver::ResetSolver(void)
                     m_yvec,
                     CV_SS, m_rtol, (void*)&m_atol);
         CVodeSensReInit(m_odewk, m_sensi.GetMethod(), m_yS);
-        // Reintialise sensitivity related workspace.
-        //if (m_sensi.ProblemType() == SensitivityAnalyzer::Reaction_Rates) {
-        //    CVodeSensReInit(m_odewk, m_sensi.GetMethod(), m_yS);
-        //} else if (m_sensi.ProblemType() == SensitivityAnalyzer::Init_Conditions) {
-        //    CVodeQuadReInit(m_odewk, &rhsQuadFn_CVODES, m_q);
-        //}
     } else {
         CVodeReInit(m_odewk, &rhsFn_CVODE, m_time, 
                     m_yvec,
@@ -332,12 +273,6 @@ void ODE_Solver::ResetSolver(const Reactor &reac)
                         m_yvec,
                         CV_SS, m_rtol, (void*)&m_atol);
             CVodeSensReInit(m_odewk, m_sensi.GetMethod(), m_yS);
-            // Reintialise sensitivity related workspace.
-            //if (m_sensi.ProblemType() == SensitivityAnalyzer::Reaction_Rates) {
-            //    CVodeSensReInit(m_odewk, m_sensi.GetMethod(), m_yS);
-            //} else if (m_sensi.ProblemType() == SensitivityAnalyzer::Init_Conditions) {
-            //    CVodeQuadReInit(m_odewk, &rhsQuadFn_CVODES, m_q);
-            //}
         } else {
             CVodeReInit(m_odewk, &rhsFn_CVODE, m_time, 
                         m_yvec,
@@ -375,26 +310,6 @@ void ODE_Solver::Solve(Reactor &reac, real stop_time)
     while (m_time < stop_time) {
         int CVode_error = 0;
         CVode_error = CVode(m_odewk, stop_time, m_solvec, &m_time, CV_NORMAL_TSTOP);
-        //if (m_sensi.isEnable() && (m_sensi.ProblemType() == SensitivityAnalyzer::Init_Conditions)) {
-        //    // Reinitialing is always needed for initial concentration problem due to change from previous backward solver.
-        //    CVodeReInit(m_odewk, &rhsFn_CVODES, m_time, m_solvec, CV_SS, m_rtol, (void*)&m_atol);
-
-        //    CVodeQuadReInit(m_odewk, &rhsQuadFn_CVODES, m_q); 
-
-        //    int ncheck = 0;  
-        //    CVode_error = CVodeF(m_odeadj, stop_time, m_solvec, &m_time, CV_NORMAL_TSTOP, &ncheck);
-
-        //    CVodeGetQuad(m_odewk, stop_time, m_q);
-
-        //    ReInitCVodeB(stop_time);
-
-        //    CVode_error = CVodeB(m_odeadj, m_sensi.StartTime(), m_yB, &m_time, CV_NORMAL_TSTOP);
-
-        //    CVodeGetQuadB(m_odeadj, m_qB);
-
-        //} else {
-        //    CVode_error = CVode(m_odewk, stop_time, m_solvec, &m_time, CV_NORMAL_TSTOP);
-        //}
         // If no error then this line will quickly skip throwing exception which help to speed up checking
         if (CVode_error < 0) {
             switch (CVode_error) {
@@ -604,17 +519,6 @@ void ODE_Solver::init(void)
     m_yvec     = NULL;
     // Space required by rate parameter sensitivity.
     m_yS       = NULL;
-    // Space required by initial condition sensitivity.
-    //m_q        = NULL;  // Quadrature solution of the concentration integration.
-    //m_odeadj   = NULL;  // CVODES worksapce for adjoint sensitivity.
-    //m_yB       = NULL;  // Backwards solution of lamda for sensitivity.
-    //m_qB       = NULL;  // Backwards integration solution of concentration.
-    //m_abstolQ  = 1.0e-6;
-    //m_reltolQ  = 1.0e-3;
-    //m_abstolB  = 1.0e-6;
-    //m_reltolB  = 1.0e-3;
-    //m_abstolQB = 1.0e-6;
-    //m_isInitB  = false;
 
     // Init CVODE.
     m_odewk = NULL;

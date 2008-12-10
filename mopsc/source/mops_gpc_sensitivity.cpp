@@ -83,12 +83,6 @@ SensitivityAnalyzer &SensitivityAnalyzer::operator=(const SensitivityAnalyzer &r
         m_enable     = rhs.m_enable;
         m_err_con    = rhs.m_err_con;
         m_sensi_meth = rhs.m_sensi_meth;
-        m_start_time = rhs.m_start_time;
-        m_abstolQ    = rhs.m_abstolQ;
-        m_reltolQ    = rhs.m_reltolQ;
-        m_abstolB    = rhs.m_abstolB;
-        m_reltolB    = rhs.m_reltolB;
-        m_abstolQB   = rhs.m_abstolQB;
         m_mech       = rhs.m_mech;
         m_reactor    = rhs.m_reactor;
         // Copy pointer array
@@ -128,8 +122,6 @@ void SensitivityAnalyzer::Clear()
     m_enable        = false;
     m_err_con       = FALSE;
     m_sensi_meth    = CV_SIMULTANEOUS;
-    m_start_time    = 0.0;
-    m_abstolQ = m_reltolQ = m_abstolB = m_reltolB = m_abstolQB = 1e-6;
     m_mech          = NULL;
     m_reactor       = NULL;
     m_NS            = 0;
@@ -211,7 +203,7 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
     {
         CamXML::Element *sensiElem = NULL;
         CamXML::Element *errConElem = NULL;
-        CamXML::Element *errTolElem = NULL;
+        //CamXML::Element *errTolElem = NULL;
         CamXML::Element *probTypeElem = NULL;
         // Read Sensitivity Method
         // Default value is CV_SIMULTANEOUS.
@@ -241,18 +233,6 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
             int r = errConElem->GetAttributeValue("enable").compare("true");
             m_err_con = (r != 0) ? (0) : (1);
         }
-        // Read Error Tolerances
-        // Default value is 1e-6.
-        errTolElem = settingElem->GetFirstChild("atolB");
-        if (errTolElem != NULL) m_abstolB    = Strings::cdble(errTolElem->Data());
-        errTolElem = settingElem->GetFirstChild("atolQ");
-        if (errTolElem != NULL) m_abstolQ    = Strings::cdble(errTolElem->Data());
-        errTolElem = settingElem->GetFirstChild("atolQB");
-        if (errTolElem != NULL) m_abstolQB    = Strings::cdble(errTolElem->Data());
-        errTolElem = settingElem->GetFirstChild("rtolB");
-        if (errTolElem != NULL) m_reltolB    = Strings::cdble(errTolElem->Data());
-        errTolElem = settingElem->GetFirstChild("rtolQ");
-        if (errTolElem != NULL) m_reltolQ    = Strings::cdble(errTolElem->Data());
 
         // Read Problem Type.
         // Default value of problemtype is Reaction_Rate.
