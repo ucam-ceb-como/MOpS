@@ -44,9 +44,12 @@
 #include "rng.h"
 #include <stdlib.h>
 #include <cmath>
-
+#include "string_functions.h"
+#include <stdexcept>
+#include <ctime> 
 using namespace Sweep;
 using namespace std;
+using namespace Strings;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -55,7 +58,8 @@ Solver::Solver(void)
 : m_maxdt(0.0), m_splitratio(1.0e9)
 {
     // Seed the random number generator.
-    srnd(123);
+    //srnd(123);
+	srnd(time(0));
 }
 
 // Default destructor.
@@ -86,6 +90,44 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech)
 		cout <<"setting all species to 0";
 	}*/
 
+
+/*
+	//introduced by ms785 to test the sintering of one single particle
+	jrate=10000000000000000;
+	rates[0]=10000000000000000;
+	dt = timeStep(t, sys, mech, rates, jrate);
+	dt = timeStep(t, sys, mech, rates, jrate);
+	dt = timeStep(t, sys, mech, rates, jrate);
+	dt = timeStep(t, sys, mech, rates, jrate);
+	Ensemble::iterator i,j,k;
+	i=sys.Particles().begin();
+	j=i+1;
+	k=j+1;
+	(*(*i)).Coagulate(*(*k));
+	(*(*i)).Coagulate(*(*j));
+	for (int l=0;l<100000;l++)
+	{
+		(*(*i)).Sinter(1e-4, sys, mech.SintModel());
+		(*(*i)).UpdateCache();
+		ofstream out;
+		string fname = "tree" + cstr(l) + ".inp";
+		out.open(fname.c_str());
+		ParticleCache::PropID id=ParticleCache::iFS;
+		(*(*i)).printSubtree(out,id);
+		out.close();
+
+		fname = "subpart1" + cstr(t) + ".3d";
+	    out.open(fname.c_str());
+		Sweep::Imaging::ParticleImage img;
+		img.Construct(*(*i));
+		img.Write3dout(out,0,0,0);
+		out.close();
+	}*/
+	//mech.m_inceptions[0]->Perform(t, sys, 0);
+
+//	end ms785
+
+
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
@@ -115,9 +157,10 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech)
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
         if (mech.AnyDeferred()) {
-            mech.LPDA(t, sys);
+            mech.LPDA(t, sys);	
         }
-    }
+		mech.output(sys, t);
+	}
 
     return err;
 }

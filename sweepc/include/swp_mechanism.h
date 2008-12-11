@@ -275,6 +275,8 @@ public:
     void Deserialize(std::istream &in);
 
 
+	void  output(Cell &sys, real t) const;
+
 
 private:
     // True if the mechanism contains deferred (LPDA)

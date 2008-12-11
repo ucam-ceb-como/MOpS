@@ -135,7 +135,7 @@ void EnsembleImage::PrintEnsemble(Cell &sys,std::ofstream &file, real shiftz)
 	else 
 	{
 		maxd=1e9*6*pow(maxd,0.3333333);
-		maxd=200;
+		maxd=100;
 		boxlength=pow(numsubpart,0.5);
 		boxlength*=maxd;
 	}

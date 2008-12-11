@@ -765,14 +765,14 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 							ofstream filepart; filepart.open("part.3d");
 							img.Write3dout(filepart,0,0,0);
 					   }*/
-						 if (sys.ParticleCount() > 10 && t-last3dout>0.004)
+					/*	 if (sys.ParticleCount() > 10 && t-last3dout>0.000004)
 						{	ofstream file;
 						    string fname;
-							Ensemble::iterator i;
+				  			Ensemble::iterator i;
 							cout << "creating subpart image...";
 							last3dout=t;
 							fname = "subpart1" + cstr(t) + ".3d";
-							 file.open(fname.c_str());
+							file.open(fname.c_str());
 							i=sys.Particles().begin();
 							Sweep::Imaging::ParticleImage img;
 							img.Construct(*(*i));
@@ -807,21 +807,168 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 								numsubpart+=(*(*i)).NumSubPart();
 								int intdiam=(int)((*(*i)).CollDiameter()*1e9);
 								coldiamdistr[intdiam]++;
-							}
+							} 
 							if (numpart>0)
 							{	
 								avcoldiam=avcoldiam/numpart;
 								file << t << "     " << avcoldiam << endl;
 							}
 							file.close();
+
+
 							fname = "coldiamdistr" + cstr(t) + ".txt";
 							file.open(fname.c_str());
 							for (int j=0;j<500;j++)
 							{
-								file<<j<< "    "<<coldiamdistr[j]<<endl;
+								file<<j<< "    "<<coldiamdistr[j]+(0.0000000001/log10(float(j)))<<endl;
 							}
 							file.close();
 						
+
+							fname = "primdiamdistr" + cstr(t) + ".txt";
+							file.open(fname.c_str());
+							double primdistr[1000]={0};
+							for(int j=0;j<1000;j++) primdistr[j]=0;
+							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
+							(*(*i)).Getprimarydistribution(primdistr);
+							}
+							for (int j=0;j<500;j++)
+							{
+								file<<j<< "    "<<primdistr[j]+(0.0000000001/log10(float(j)))<<endl;
+							}
+							file.close();
+
+
+							fname = "numsubpart.txt";
+							file.open(fname.c_str(),ios::app);
+							if (numpart>0)
+							{	
+								file << t << "     " << numsubpart << endl;
+							}
+
+							file.close();
+
+
+							real avsubpartdiam=0.;
+							real avsubpartdiam2=1.;
+							int avdiamdistr[500]={0};
+							fname = "avdiam.txt";
+							file.open(fname.c_str(),ios::app);
+					//		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
+							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
+								avsubpartdiam2=(*(*i)).avgeomdiam(1.0/numsubpart)*avsubpartdiam2;
+								avsubpartdiam=(*(*i)).Volume()/(*(*i)).SurfaceArea()+avsubpartdiam;
+							
+							}
+							//avsubpartdiam=pow(6*avsubpartdiam/(PI*numsubpart),ONE_THIRD);
+							avsubpartdiam=6*avsubpartdiam/numpart;
+							if (numpart>0)
+							{	
+								file << t << "     " << avsubpartdiam << endl;
+							}
+							file.close();
+
+
+
+
+
+							
+							fname = "temperature.txt";
+							file.open(fname.c_str(),ios::app);
+					//		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
+
+							file << t << "     " << sys.Temperature() << endl;
+							
+							file.close();
+
+							cout << "done"<<endl;
+	
+						}*/
+
+			
+            }
+        }
+
+        // Check that the particle is still valid, only calculate 
+        // cache if it is.
+        if (sp.IsValid()) sp.UpdateCache();
+    }
+}
+
+void  Mechanism::output(Cell &sys, real t) const
+{
+						 if (sys.ParticleCount() > 10 && t-last3dout>0.004)
+						{	ofstream file;
+						    string fname;
+				  			Ensemble::iterator i;
+							cout << "creating subpart image...";
+							last3dout=t;
+							fname = "subpart1" + cstr(t) + ".3d";
+							file.open(fname.c_str());
+							i=sys.Particles().begin();
+							Sweep::Imaging::ParticleImage img;
+							img.Construct(*(*i));
+							img.Write3dout(file,0,0,0);
+							file.close();
+							EnsembleImage *ensimg = new EnsembleImage;
+							fname = "subparttree" + cstr(t) + ".3d";
+							 file.open(fname.c_str());
+							ensimg->PrintEnsemble(sys,file,0.);
+							file.close();
+							delete ensimg;		
+
+							ensimg = new EnsembleImage;
+							fname = "subparttreetemp.3d";
+							 file.open(fname.c_str(),ios::app);
+							ensimg->PrintEnsemble(sys,file,t/0.004);
+							file.close();
+							delete ensimg;	
+				
+							int numpart=0;
+							int numsubpart=0;
+							real avcoldiam=0.;
+							numpart=0;
+							numsubpart=0;
+							int coldiamdistr[500]={0};
+							fname = "avcoldiam.txt";
+							file.open(fname.c_str(),ios::app);
+					//		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
+							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
+								avcoldiam=(*(*i)).CollDiameter()+avcoldiam;
+								numpart++;
+								numsubpart+=(*(*i)).NumSubPart();
+								int intdiam=(int)((*(*i)).CollDiameter()*1e9);
+								coldiamdistr[intdiam]++;
+							} 
+							if (numpart>0)
+							{	
+								avcoldiam=avcoldiam/numpart;
+								file << t << "     " << avcoldiam << endl;
+							}
+							file.close();
+
+
+							fname = "coldiamdistr" + cstr(t) + ".txt";
+							file.open(fname.c_str());
+							for (int j=0;j<500;j++)
+							{
+								file<<j<< "    "<<(coldiamdistr[j]+0.0000000001)/log10(float(j))<<endl;
+							}
+							file.close();
+						
+
+							fname = "primdiamdistr" + cstr(t) + ".txt";
+							file.open(fname.c_str());
+							double primdistr[1000]={0};
+							for(int j=0;j<1000;j++) primdistr[j]=0;
+							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
+							(*(*i)).Getprimarydistribution(primdistr);
+							}
+							for (int j=0;j<500;j++)
+							{
+								file<<j<< "    "<<(primdistr[j]+0.0000000001)/log10(float(j))<<endl;
+							}
+							file.close();
 
 
 							fname = "numsubpart.txt";
@@ -869,16 +1016,9 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 							cout << "done"<<endl;
 	
 						}
-
-			
-            }
-        }
-
-        // Check that the particle is still valid, only calculate 
-        // cache if it is.
-        if (sp.IsValid()) sp.UpdateCache();
-    }
 }
+						
+
 
 /*
 // Performs linear process updates on a particle in the given system,

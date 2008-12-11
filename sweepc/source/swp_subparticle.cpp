@@ -1247,6 +1247,21 @@ void SubParticle::CheckTree()
 	}
 }
 
+
+void SubParticle::Getprimarydistribution(double *distribution)
+{
+	if(m_primary!=NULL)
+	{	
+		int intdiam=(int)(CollDiameter()*1e9);
+		distribution[intdiam]++;
+	}
+	else
+	{
+	    m_leftchild->Getprimarydistribution(distribution);
+		m_rightchild->Getprimarydistribution(distribution);
+	}
+}
+
 /*
 void SubParticle::UpdateSinterParticles()
 {
@@ -1513,9 +1528,9 @@ void SubParticle::printSubtreeLoop(std::ostream &out, ParticleCache::PropID id) 
   if (m_primary==NULL)
   { //out<<"leftchild "<<10E8*m_leftchild->SphDiameter()<<endl;   
 	//out<<"rightchild "<<10E8*m_rightchild->SphDiameter()<<endl;    
-	out<<"\" "<<this<<"\" "<<" [label = \""<<this->m_freesurface<<"\"];"<<endl;
-	out<<"\" "<<this->m_leftchild<<"\" "<<" [label = \""<<this->m_leftchild->m_freesurface<<"\"];"<<endl;
-	out<<"\" "<<this->m_rightchild<<"\" "<<" [label = \""<<this->m_rightchild->m_freesurface<<"\"];"<<endl;
+	out<<"\" "<<this<<"\" "<<" [label = \""<<this->m_sinter_level<<"\"];"<<endl;
+	out<<"\" "<<this->m_leftchild<<"\" "<<" [label = \""<<this->m_leftchild->m_sinter_level<<"\"];"<<endl;
+	out<<"\" "<<this->m_rightchild<<"\" "<<" [label = \""<<this->m_rightchild->m_sinter_level<<"\"];"<<endl;
 	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_leftchild<<"\"; "<<endl;
 	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_rightchild<<"\"; "<<endl;
 	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_leftsinter<<"\"[label=\""<<this->dV_left<<"\",color=\"blue\"]; "<<endl;
@@ -1527,7 +1542,7 @@ void SubParticle::printSubtreeLoop(std::ostream &out, ParticleCache::PropID id) 
   if (m_primary!=NULL)
   {   Primary::PropID idprim=Primary::iD;
       //out<<"\" "<<this<<"\" "<<" [label = \""<<2*pow((this->vol_sinter)*3/(4*PI),ONE_THIRD)<<"\"];"<<endl;
-      out<<"\" "<<this<<"\" "<<" [label = \""<<this->m_freesurface<<"\"];"<<endl;
+      out<<"\" "<<this<<"\" "<<" [label = \""<<this->m_sinter_level<<"\"];"<<endl;
 	  out<<"\" "<<this->m_primary<<"\" "<<" [label = \""<<this->m_primary->Property(idprim)<<"\"];"<<endl;
 	  out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_primary<<"\"; "<<endl;  
   }

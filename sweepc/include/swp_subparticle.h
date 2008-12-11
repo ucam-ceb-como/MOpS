@@ -176,6 +176,8 @@ void printSubtreepicLoop(std::ostream &out,real x, real y, real z) const;
         const Processes::SinteringModel &model // Sintering model to use.
         );
 
+	void Getprimarydistribution(double *distribution);
+
 
     // PARTICLE UPDATE AND CHECKING.
 

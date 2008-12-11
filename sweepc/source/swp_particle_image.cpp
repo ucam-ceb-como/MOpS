@@ -243,8 +243,8 @@ void ParticleImage::constructAgg_FM(const Particle &sp)
 void ParticleImage::constructSubParttree(const SubParticle *sp)
 {
 	//Copy the subparticle tree into the img tree
-   // m_root.CopySPT(sp);
-	m_root.Clear();
+	m_root.Clear(); 
+//	m_root.CopySPT(sp);
 	copysptinsert(sp);
 
 	// Use the free-molecular regime to calculate the
