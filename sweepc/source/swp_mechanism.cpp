@@ -754,7 +754,13 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 
 				//	 sp.FindRoot()->CheckTree();
 			    // cout << "check before sinter passed\n";
+
 			    sp.Sinter(dt, sys, m_sint_model);
+				if (sp.NumSubPart()>30) 
+				{
+					int test;
+					cin>>test;
+				}
     			//	sp.FindRoot()->CheckTree();
 				// cout << "check after sinter passed\n";
 				//added to test the 3-d output		
@@ -999,9 +1005,6 @@ void  Mechanism::output(Cell &sys, real t) const
 								file << t << "     " << avsubpartdiam << endl;
 							}
 							file.close();
-
-
-
 
 
 							

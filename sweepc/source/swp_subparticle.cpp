@@ -801,13 +801,14 @@ bool FileExists( const char* FileName )
 void SubParticle::SinterPart()
 {	bool lefttree;
 	// Chose the subparticle according to the following property
-	/*if (!FileExists("beforesinterprim.inp"))
-	{ ParticleCache::PropID idsubtreeprint=ParticleCache::iFS;
+	//if (!FileExists("beforesinterprim.inp"))
+//	{ 
+		ParticleCache::PropID idsubtreeprint=ParticleCache::iFS;
 		ofstream out;
 		out.open("beforesinterprim.inp");
 	    this->FindRoot()->printSubtree(out,idsubtreeprint);
 		out.close();
-	}*/
+//	}
 	if (m_pmodel->UseSubPartTree()) 
 	{
 		//both childrens are primaries
@@ -1009,13 +1010,13 @@ void SubParticle::SinterPart()
 			//out.close();
 		
 		}
-		/*if (!FileExists("aftersinter.inp"))
-		{
+		//if (!FileExists("aftersinter.inp"))
+	//	{
 			ofstream out;
 			out.open("aftersinter.inp");
 			this->FindRoot()->printSubtree(out,idsubtreeprint);
 			out.close();
-		}*/
+	//	}
 	}
 
 }
