@@ -755,12 +755,6 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 				//	 sp.FindRoot()->CheckTree();
 			    // cout << "check before sinter passed\n";
 
-			    sp.Sinter(dt, sys, m_sint_model);
-				if (sp.NumSubPart()>30) 
-				{
-					int test;
-					cin>>test;
-				}
     			//	sp.FindRoot()->CheckTree();
 				// cout << "check after sinter passed\n";
 				//added to test the 3-d output		
@@ -958,7 +952,8 @@ void  Mechanism::output(Cell &sys, real t) const
 							file.open(fname.c_str());
 							for (int j=0;j<500;j++)
 							{
-								file<<j<< "    "<<(coldiamdistr[j]+0.0000000001)/log10(float(j))<<endl;
+//								file<<j<< "    "<<(coldiamdistr[j]+0.0000000001)/log10(float(j))<<endl;
+								file<<j<< "    "<<coldiamdistr[j]/numpart<<endl;
 							}
 							file.close();
 						
@@ -972,7 +967,8 @@ void  Mechanism::output(Cell &sys, real t) const
 							}
 							for (int j=0;j<500;j++)
 							{
-								file<<j<< "    "<<(primdistr[j]+0.0000000001)/log10(float(j))<<endl;
+	//							file<<j<< "    "<<(primdistr[j]+0.0000000001)/log10(float(j))<<endl;
+								file<<j<< "    "<<primdistr[j]/numsubpart<<endl;
 							}
 							file.close();
 

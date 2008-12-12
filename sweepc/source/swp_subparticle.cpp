@@ -803,11 +803,11 @@ void SubParticle::SinterPart()
 	// Chose the subparticle according to the following property
 	//if (!FileExists("beforesinterprim.inp"))
 //	{ 
-		ParticleCache::PropID idsubtreeprint=ParticleCache::iFS;
+/*		ParticleCache::PropID idsubtreeprint=ParticleCache::iFS;
 		ofstream out;
 		out.open("beforesinterprim.inp");
 	    this->FindRoot()->printSubtree(out,idsubtreeprint);
-		out.close();
+		out.close();*/
 //	}
 	if (m_pmodel->UseSubPartTree()) 
 	{
@@ -1012,10 +1012,10 @@ void SubParticle::SinterPart()
 		}
 		//if (!FileExists("aftersinter.inp"))
 	//	{
-			ofstream out;
+	/*		ofstream out;
 			out.open("aftersinter.inp");
 			this->FindRoot()->printSubtree(out,idsubtreeprint);
-			out.close();
+			out.close();*/
 	//	}
 	}
 
