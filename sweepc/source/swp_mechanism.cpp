@@ -751,7 +751,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
             // Perform sintering update.
             if (m_sint_model.IsEnabled()) {
 				sp.UpdateFreeSurface();
-				  sp.Sinter(dt, sys, m_sint_model);
+			    sp.Sinter(dt, sys, m_sint_model);
 				//	 sp.FindRoot()->CheckTree();
 			    // cout << "check before sinter passed\n";
 
@@ -929,7 +929,7 @@ void  Mechanism::output(Cell &sys, real t) const
 							real avcoldiam=0.;
 							numpart=0;
 							numsubpart=0;
-							int coldiamdistr[500]={0};
+							float coldiamdistr[500]={0};
 							fname = "avcoldiam.txt";
 							file.open(fname.c_str(),ios::app);
 					//		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
