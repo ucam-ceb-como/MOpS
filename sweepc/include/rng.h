@@ -189,7 +189,7 @@ namespace Sweep
                     em = sq * y + am;
                 } while (em < 0.0 || em >= (en+1.0)); // Reject.
                 em = floor(em); // Trick for integer-valued distribution.
-                t = 1.2 * sq * (1.0+y+y) * exp(oldg - gammln(em+1.0) - 
+                t = 1.2 * sq * (1.0+y*y) * exp(oldg - gammln(em+1.0) - 
                                                gammln(en-em+1.0) + 
                                                em*plog +(en-em)*pclog);
             } while (rnd() > t); // Reject.  This occurs about 1.5 times per deviate.
