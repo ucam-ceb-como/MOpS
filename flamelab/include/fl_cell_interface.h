@@ -61,13 +61,14 @@ namespace FlameLab{
 	public:
 		CellInterface(){ q = 0;};
 		~CellInterface(){};
-		void calcFluxes(int cellId, // cell number
-				real &pre,			// cell pressure
-				real &mfW,			// west cell mass flux
-				real &mfP,			// present cell mass flux
+		void calcFluxes(const int cellId, 	// cell number
+				real &pre,							// cell pressure
+				real &mfW,							// west cell mass flux
+				real &mfP,							// present cell mass flux
 				Sprog::Thermo::Mixture &lMix, // left cell mixture object
 				Sprog::Thermo::Mixture &rMix, // right cell mixture object
-				vector<real> &dz);		// descretization 
+				vector<real> &dz);				// descretization 
+
 		// returns the cell inteface flux in m2/s
 		const vector<real>& getFaceSpeciesFlx() const;
 
@@ -76,12 +77,18 @@ namespace FlameLab{
 
 		//returns the vector of molar enthalpy of all species the face in J/mol
 		const vector<real>& getFaceMolarEnthalpy() const;
+
 		// return the mass flux in Kg/m2s
 		const real& getFaceMassFlux() const;
+
 		//returns the interface density in Kg/m3
 		const real& getFaceDensity() const;
+
 		//returns the face viscosity in Kg/m-s
-		const real& getFaceViscosity() const;
+		const real& getFaceViscosity() const;		
+
+		//return the face diffusion coefficient
+		//const vector<real>& getFaceDiffusionCoefficient() const;
 	
 	protected:		
 		real q;

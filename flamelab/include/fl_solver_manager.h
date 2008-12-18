@@ -50,27 +50,43 @@
 #include "cvode_impl.h" // For CVodeMem.
 #include "cvode_band_impl.h" // For band mat.
 #include "cvode_dense_impl.h"
+//#include<cvode/cvode_spgmr.h>
+//#include<cvode/cvode_bandpre.h>
+// kinsol header files
+//#include "kinsol_impl.h"
+//#include "kinsol_band_impl.h"
+//#include <kinsol/kinsol_spgmr.h>
 #include <vector>
+#include <map>
 namespace FlameLab{
 	class FlameLabIO;
 	class SolverManager{
 
 	protected:
-		void *cvode_mem; // memory space
-		real *ptrToSlnVector; // pointer to solution vector
+		void *cvode_mem, *kin_mem, *bp_data; // memory space
+		//real *ptrToSlnVector; // pointer to solution vector
 		real tMax,timeStep, currentTime;
+		int currentLoop;
 		
 
 		N_Vector solVect; // solution vector
-		N_Vector derivative;
+		N_Vector derivative; // derivatives for residual evaluation
+		N_Vector templ; // work space for Newton
 		vector<real> variables;
 		vector<real> mcVariables;//variables for multi cell
+
+		typedef struct{
+			int lower;
+			int upper;
+		}JacBounds;
+
+		map<int,JacBounds> JacInfo;
 
 	public:
 
 		virtual void initSolver(SolverControl &sc,Reactor &reac)=0;
 		virtual void solve(Sprog::Mechanism &mech, SolverControl &sc, Reactor &reac, FlameLabIO &io)=0;
-		
+
 
 	};
 }

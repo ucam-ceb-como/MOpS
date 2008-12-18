@@ -72,8 +72,11 @@ real ProcessConditions::getPressure() const{
 real ProcessConditions::getTemperature() const{
 	return temperature;
 }
-// returns the nature of energy soltuion methods
-//ProcessConditions::EnergyEquation ProcessConditions::getTemptrSolution(){
-//	return temptrSolution;
-//}
-
+//set the maximum allowed temperature
+void ProcessConditions::setMaxTemperature(FlameLab::real T_max){
+	Tmax = T_max;
+}
+//return the maximum allowed temperature
+real ProcessConditions::getMaxTemperature(){
+	return Tmax;
+}

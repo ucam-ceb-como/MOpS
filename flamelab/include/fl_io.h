@@ -77,28 +77,53 @@ namespace FlameLab{
 		FlameLabIO(){}
 		~FlameLabIO(){}
 		void readInput(const string &fileName, Reactor &reac, SolverControl &solver);
+
+		//read the geometry related informations
 		void readGeometry(Reactor &reac, const CamXML::Element &node);
+
+		//read operating conditions
 		void readOPConditions(Reactor &reac, const CamXML::Element &node);
+
+		//read the inlet conditions inturn calls read nozzle
 		void readInlet(Reactor &reac, const CamXML::Element &node);
+
+		//read the nozzle inlet conditions
 		void readNozzleConditions(Reactor &reac, InitialConditions &nozzle, const CamXML::Element &node);
+
+		//read solver control options
 		void readSolverControl(SolverControl &solver, const CamXML::Element &node);
+
+		//initial guess for fully transient case
 		void readInitialGuess(Reactor &reac, const CamXML::Element &node);
+
+		//read the monitoring options
 		void readMonitor(const CamXML::Element &node);
+
 		//prepare for console output
 		void prepareConsole(Sprog::Mechanism &mech, FlameLab::Premix &flame);
+
 		// write to the console
 		void writeToConsole(Reactor &reac) const;
+
 		// switch in integration monitoring
 		void setMonitorSwtich(int n);
+
 		// returns the monitor switch
 		const int& getMonitorSwitch() const;
+
 		//prepare file output
 		void prepareFileOutput(Reactor &reac);
-		//prepare output data
-		void writeToFile(const FlameLab::real &time, vector<SingleCell> &sc, Reactor &reac) ;
-		//set the specieso oput;
+
+		//write data to file
+		void writeToFile(const FlameLab::real &time, vector<SingleCell> &sc, Reactor &reac, bool restart=false) ;
+
+		//prepare for the reporting and call write function
+		void reporter(const string fileName, const FlameLab::real &time, vector<SingleCell> &sc, Reactor &reac);
+
+		//set the species output option whether mass or mole fraction to report
 		void setSpeciesOut(int n);
-		//return the species out
+
+		//return whether the species should be reported in mass or mole fractions
 		int getSpeciesOut() const;
 		void writeGrid(Reactor &reac);
 		

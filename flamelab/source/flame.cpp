@@ -82,7 +82,9 @@ int main(){
 		Thermo::Mixture mix(mech.Species());
 		//cout << boolalpha << (*flame==flame->PremixFlame) << endl;
 		// if premix reactor create a premix object and assign to the base class reactor
-		if( flame->getReactorModel() == flame->PremixFlame || flame->getReactorModel() == flame->Plug ){
+		if( flame->getReactorModel() == flame->PremixFlame || 
+			flame->getReactorModel() == flame->PremixFree ||
+			flame->getReactorModel() == flame->Plug ){
 			solver = new Premix(mech);
 			//solver->initSolver(mech,mix,*solverControl,*flame);
 			if(solverControl->getSolMode() == solverControl->preProcess)

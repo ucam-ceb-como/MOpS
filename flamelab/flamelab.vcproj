@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include;..\camxml\include;..\sprogc\include;..\comostrings\include;..\cvode\include;..\cvode\source"
+				AdditionalIncludeDirectories="include;..\camxml\include;..\sprogc\include;..\comostrings\include;..\cvode\include;..\cvode\source;..\kinsol\include;..\kinsol\source"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\camxml\lib\camxml_d.lib ..\comostrings\lib\comostrings_d.lib ..\sprogc\lib\sprog_d.lib ..\cvode\lib\cvode_d.lib"
+				AdditionalDependencies="..\camxml\lib\camxml_d.lib ..\comostrings\lib\comostrings_d.lib ..\sprogc\lib\sprog_d.lib ..\cvode\lib\cvode_d.lib ..\kinsol\lib\kinsol_d.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -116,7 +116,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="include;..\camxml\include;..\sprogc\include;..\comostrings\include;..\cvode\include;..\cvode\source"
+				AdditionalIncludeDirectories="include;..\camxml\include;..\sprogc\include;..\comostrings\include;..\cvode\include;..\cvode\source;..\kinsol\include;..\kinsol\source"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -135,7 +135,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\camxml\lib\camxml.lib ..\comostrings\lib\comostrings.lib ..\sprogc\lib\sprog.lib ..\cvode\lib\cvode.lib"
+				AdditionalDependencies="..\camxml\lib\camxml.lib ..\comostrings\lib\comostrings.lib ..\sprogc\lib\sprog.lib ..\cvode\lib\cvode.lib ..\kinsol\lib\kinsol.lib"
 				LinkIncremental="0"
 				GenerateDebugInformation="false"
 				SubSystem="0"

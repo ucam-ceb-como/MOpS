@@ -82,7 +82,7 @@ Sprog::Thermo::Mixture& SingleCell::getMixture(){
 void SingleCell::evaluateFluxes(FlameLab::real &pre,
 								FlameLab::real &mfW,
 								FlameLab::real &mfP,
-								vector<FlameLab::real> &dz){	
+								vector<FlameLab::real> &dz){
 	wFace.calcFluxes(this->cellId,
 		pre,
 		mfW,mfP,
@@ -102,7 +102,7 @@ void SingleCell::evaluateFluxes(FlameLab::real &pre,
 			mfW,mfP,
 			ic.getFuelMixture(),cellMixture[this->cellId],
 			dz);
-	}else if(this->cellId == dz.size()-1){
+	}else if(this->cellId == int(dz.size()-1)){
 		
 		///calculate for east cell
 		// this is only for the last cell (Oxidizer inlet)
@@ -122,6 +122,7 @@ const vector<FlameLab::real>& SingleCell::getFaceSpFluxes(int eastFace) const{
 	else
 		return this->eFace.getFaceSpeciesFlx();
 }
+
 // returns the thermal conduction fluxes in J/m2s
 const FlameLab::real& SingleCell::getFaceThermalCondFluxes() const{
 	return this->wFace.getFaceCondFlx();
@@ -175,8 +176,9 @@ void SingleCell::setDensity(FlameLab::real dens){
 	this->density = dens;
 }
 //return the mass density
-const FlameLab::real& SingleCell::getDensity() const{
-	return this->density;
+const FlameLab::real SingleCell::getDensity() const{	
+	//return this->density;
+	return cellMixture[this->cellId].Density();
 }
 //return the inteface west face density
 const FlameLab::real& SingleCell::getFaceDensity() const{
@@ -186,3 +188,8 @@ const FlameLab::real& SingleCell::getFaceDensity() const{
 const FlameLab::real& SingleCell::getFaceViscosity() const{
 	return wFace.getFaceViscosity();
 }
+
+//return the face diffusion coefficients
+//const vector<FlameLab::real>& SingleCell::getFaceDiffCoeff() const{
+//	return wFace.getFaceDiffusionCoefficient();
+//}

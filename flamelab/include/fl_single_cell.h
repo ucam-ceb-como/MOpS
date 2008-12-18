@@ -71,63 +71,90 @@ namespace FlameLab{
 		SingleCell(int n){cellId=n;};
 
 		~SingleCell(){};
+
 		//set the cell id
 		void setCellId(int n);
-		//set the cell centroid
-		void setCentroid(FlameLab::real x);
-		// return the centroid
-		const FlameLab::real  getCentroid();
-		//set the cell mixture
-		void setMixture(Sprog::Thermo::Mixture mix);
-		// get the cell mixture
-		Sprog::Thermo::Mixture& getMixture();
+
 		// get the cell id
 		int getCellId();
 
+		//set the cell centroid
+		void setCentroid(FlameLab::real x);
+
+		// return the centroid
+		const FlameLab::real  getCentroid();
+
+		//set the cell mixture
+		void setMixture(Sprog::Thermo::Mixture mix);
+
+		// get the cell mixture
+		Sprog::Thermo::Mixture& getMixture();
+
+
 		// calculate fluxes use for interior cells
-		void evaluateFluxes(real &pre, // pressure
-			real &mfW,					// west cell mass flux
-			real &mfP,					// present cell mass flux
-			vector<real>& dz);			// geometry information
+		void evaluateFluxes(real &pre, 	// pressure
+			real &mfW,							// west cell mass flux
+			real &mfP,							// present cell mass flux
+			vector<real>& dz);				// geometry information
 
 		// calculate fluxes for boundary cells
-		void evaluateFluxes(real &pre, // pressure
-			real &mfW,					// west cell mass flux
-			real &mfP,					// present cell mass flux
-			vector<real>& dz,			// geometry information
-			InitialConditions &ic);		// nozzle conditions
+		void evaluateFluxes(real &pre, 	// pressure
+			real &mfW,							// west cell mass flux
+			real &mfP,							// present cell mass flux
+			vector<real>& dz,					// geometry information
+			InitialConditions &ic);			// nozzle conditions
 
 
-		//always rturns the east side face fluxes
+		// returns the east side face fluxes if eastFace not equal to 0
 		const vector<real>& getFaceSpFluxes(int eastFace=0) const;
+
+		//return the thermal conductivities
 		const real& getFaceThermalCondFluxes() const;
+
+		// rturn the mass flux
 		const real& getFaceMassFlux() const;
+
 		// set the cell center velocity
 		void setVelocity(FlameLab::real vel);
+
 		// return the cell center velocity m/s
 		const FlameLab::real& getVelocity() const;
+
 		//set the cell center mass flx in kg/m2s
 		void setMassFlux(FlameLab::real mf);
+
 		// return the cell center mass flux in kg/m2s
 		const FlameLab::real& getMassFlux() const;
+
 		//return the vector of molar enthalpies all species J/mol
 		const vector<real>& getFaceMolarEnthalpy()const;
+
 		//set the pressure
 		void setPressure(FlameLab::real pre);
+
 		//return the pressure in Pa
 		const FlameLab::real& getPressure() const;
+
 		//set the radial velocity gradient (1/s)
 		void setRadialVelocityGrad(real vel);
+
 		//return the radial velocity (1/s)
 		const FlameLab::real& getRadVelGrad() const;
+
 		// set the mass density
 		void setDensity(FlameLab::real dens);
+
 		// returns the mass density in Kg/m3
-		const FlameLab::real& getDensity() const;
+		const FlameLab::real getDensity() const;
+
 		// returns the interface mass density in Kg/m3
 		const FlameLab::real& getFaceDensity() const;
+
 		//rturn the west face viscosity in Kg/ms
 		const FlameLab::real& getFaceViscosity() const;
+
+		//return face diffusion coefficients
+		//const vector<FlameLab::real>& getFaceDiffCoeff() const;
 
 
 	protected:

@@ -133,9 +133,13 @@ map<string,FlameLab::real> Reactor::getInitialGuess() const{
 }
 
 void Reactor::setUserTemperature(FlameLab::real x, FlameLab::real T){	
-	splineProperty spl;
-	spl.T = T;
-	userTemperature.insert(pair<real,splineProperty>(x,spl));
+	fitProperty fP;
+	fP.T = T;
+	//set 0 to the rest
+	fP.a = 0.0;
+	fP.b = 0.0;
+	fP.c = 0.0;
+	userTemperature.insert(pair<real,fitProperty>(x,fP));
 }
 /* Natural cubic spline fitting function
 Over n intervals the routine fits n equations subject to the
@@ -149,12 +153,14 @@ for the frist segment and the last segment for natural spline
 */
 
 void Reactor::naturalCubicSplineFit(){
+
+	setTempFit(SPLINE);
 	vector<FlameLab::real> h,x,T;	
 	vector<real> a,b,c,d;
-	splineProperty s;
+	fitProperty s;
 
 	int nData = userTemperature.size();
-	map<real,splineProperty>::iterator p;
+	map<real,fitProperty>::iterator p;
 
 	for(p=userTemperature.begin(); p!= userTemperature.end(); p++){
 		x.push_back(p->first);
@@ -231,23 +237,61 @@ void Reactor::naturalCubicSplineFit(){
 	
 
 }
+//linear fit
+void Reactor::linearFit(){
 
+	setTempFit(LINEAR);
+	vector<FlameLab::real> x,T;
+	//int nData = userTemperature.size();
+	map<real,fitProperty>::iterator p;
+	fitProperty linear;
+
+	for(p=userTemperature.begin(); p!= userTemperature.end(); p++){
+		x.push_back(p->first);
+		linear = p->second;
+		T.push_back(linear.T);
+	}
+	p = userTemperature.begin();
+	for(unsigned int i=0; i< x.size()-1; i++){
+		real m =  (T[i]-T[i+1])/(x[i]-x[i+1]);
+		p->second.a = m;      //slope
+		p->second.b = T[i]-(m*x[i]);	// intersect	
+		p++;
+	}
+
+}
 // calculates and returns the user defined temperature for an interpolated point
 FlameLab::real Reactor::getUserTemperature(const FlameLab::real position){
-	map<real,splineProperty>::iterator bound, lowerBound;
-	splineProperty sp;
+
+	map<real,fitProperty>::iterator bound, lowerBound;
+	fitProperty fp;
+	//check for out of bound exception
+	bound = userTemperature.end();
+	bound--;
+	if(bound->first < position)
+		throw ErrorHandler("User defined temperature position out of bounds exception\n",304);
 	bound = userTemperature.find(position);
 	if(bound == userTemperature.end()){
 		bound = userTemperature.upper_bound(position);
 		real x = bound->first;
 		lowerBound = --bound;
 		real xLower = lowerBound->first;
-		bound = fabs(position-x) > fabs(position-xLower)? lowerBound : bound;
+		bound = fabs(position-x) > fabs(position-xLower)? lowerBound : ++bound;
 	}
 
-	sp = bound->second;
-	real diff = position- bound->first;
-	return  (sp.a*pow(diff,3) + sp.b*pow(diff,2) + sp.c*diff+ sp.T);	
+	real temp;
+	if (getTempFit() == SPLINE){
+		fp = bound->second;
+		real diff = position- bound->first;
+		temp = (fp.a*pow(diff,3) + fp.b*pow(diff,2) + fp.c*diff+ fp.T);	
+	}else{		
+		bound = userTemperature.upper_bound(position);
+		--bound;
+		real slope = bound->second.a;
+		real intersect = bound->second.b;
+		temp = slope*position + intersect;
+	}
+	return  temp;
 	
 }
 		
@@ -266,8 +310,24 @@ void Reactor::setStrainRate(FlameLab::real srate){
 FlameLab::real Reactor::getStrainRate() const{
 	return strainRate;
 }
+//set the temperature fit
+void Reactor::setTempFit(int n){
+	tempFit = n;
+}
+// return the temperature fit
+int Reactor::getTempFit() const{
+	return tempFit;
+}
 
+//set the energy solution option
+void Reactor::setSolveEnergy(bool option){
+	solveEnergy = option;
+}
 
+//return the energy solution option
+bool Reactor::getSolveEnergy(){
+	return solveEnergy;
+}
 
 
 		

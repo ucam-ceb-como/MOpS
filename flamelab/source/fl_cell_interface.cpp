@@ -54,7 +54,11 @@
 //
 using namespace FlameLab;
 using namespace Sprog::Thermo;
-void CellInterface::calcFluxes(int cellId, 
+
+//calculate the fluxes based on arithmatic average.
+//harmonic averages lead to convergance issues, and 
+//therefore are commented out
+void CellInterface::calcFluxes(const int cellId, 
 							   real &pre, 
 							   real &mfW,
 							   real &mfP,
@@ -84,7 +88,7 @@ void CellInterface::calcFluxes(int cellId,
 		intfcRho = wMix.MassDensity();
 		mFlux = mfW;
 		intfVisc = wMix.getViscosity();
-	}else if(cellId == dz.size()){		
+	}else if(cellId == int(dz.size())){		
 		delta = 0.5*dz[cellId-1];
 		intfcRho = pMix.MassDensity();
 		mFlux = mfP;
@@ -95,13 +99,26 @@ void CellInterface::calcFluxes(int cellId,
 		real rhoP = pMix.MassDensity();
 		//arithmatic mean for density
 		//real intfcRho = rhoW + (rhoW-rhoP)*(0.5*dz[cellId]/delta);
+
 		//Harmonic mean for density
-		intfcRho = rhoP*rhoW/(rhoP- ((rhoP-rhoW)*(0.5*dz[cellId]/delta)));
+		//intfcRho = rhoP*rhoW/(rhoP- ((rhoP-rhoW)*(0.5*dz[cellId]/delta)));
+
+		//Mean for density
+		intfcRho = 0.5*(rhoP+rhoW);
+
 		// Harmonic average for mass flux
-		mFlux = mfW*mfP/(mfP- ((mfP-mfW)*(0.5*dz[cellId]/delta)));
+		//mFlux = mfW*mfP/(mfP- ((mfP-mfW)*(0.5*dz[cellId]/delta)));
+
+		//mean for mass flux
+		mFlux = 0.5*(mfW+mfP);
+
 		real viscW = wMix.getViscosity();
 		real viscP = pMix.getViscosity();
-		intfVisc = viscP*viscW/(viscP - ( (viscP-viscW)*(0.5*dz[cellId]/delta)));
+		//Harmonic mean for viscosity
+		//intfVisc = viscP*viscW/(viscP - ( (viscP-viscW)*(0.5*dz[cellId]/delta)));
+		
+		//mean for viscosity
+		intfVisc = 0.5*(viscP+viscW);
 
 	}
 
@@ -111,19 +128,25 @@ void CellInterface::calcFluxes(int cellId,
 	speciesFlx.resize(dCoeffP.size(),0.0);
 	molarEnthalpy.resize(dCoeffP.size(),0.0);
 	real Dmix_f;
-	for(int l=0; l != dCoeffW.size(); l++){
+	for(unsigned int l=0; l != dCoeffW.size(); l++){
 		if(cellId == 0){
 			Dmix_f = dCoeffW[l];
 			molarEnthalpy[l] = hW[l];
-		}else if(cellId = dz.size()){
+		}else if(cellId == int(dz.size())){
 			Dmix_f = dCoeffP[l];
 			molarEnthalpy[l] = hP[l];
 		}else{
-		//calculate the inteface diffusion coefficient based on Harmonic average
-			real temp = (1.0/dCoeffW[l]) - ( ((1/dCoeffW[l]) - (1/dCoeffP[l]) )*(0.5*dz[cellId]/delta));
-			Dmix_f = 1/temp;
-		// harmonic mean molar enthalpy
-			molarEnthalpy[l] = hP[l]*hW[l]/(hP[l]- ((hP[l]-hW[l])*(0.5*dz[cellId]/delta)));
+			//calculate the inteface diffusion coefficient based on Harmonic average
+			//real temp = (1.0/dCoeffW[l]) - ( ((1/dCoeffW[l]) - (1/dCoeffP[l]) )*(0.5*dz[cellId]/delta));
+			//Dmix_f[l] = 1/temp;
+
+			//mean diffusion coefficent			
+			Dmix_f = 0.5*(dCoeffP[l]+dCoeffW[l]);
+			// harmonic mean molar enthalpy
+			//molarEnthalpy[l] = hP[l]*hW[l]/(hP[l]- ((hP[l]-hW[l])*(0.5*dz[cellId]/delta)));
+
+			//average enthalpy
+			molarEnthalpy[l]=0.5*(hP[l]+hW[l]);
 
 		}
 
@@ -142,7 +165,7 @@ void CellInterface::calcFluxes(int cellId,
 	if(fabs(jCorr) <= fabs(speciesFlx[last])*1e-2){
 		speciesFlx[last]=speciesFlx[last]-jCorr;
 	}else{
-		for(int l=0;l!=speciesFlx.size(); l++){
+		for(unsigned int l=0;l!=speciesFlx.size(); l++){
 			speciesFlx[l] -= jCorr*fabs(speciesFlx[l])/jAbsSum;
 			
 		}
@@ -153,17 +176,20 @@ void CellInterface::calcFluxes(int cellId,
 	// Calcualte the thermal conduction flux
 	real kW = wMix.getThermalConductivity(pre);
 	real kP = pMix.getThermalConductivity(pre);
-	real kF;
+	real kF; // face thermal conductivity
 	if(cellId == 0)
 		kF = kW;
-	else if (cellId == dz.size())
+	else if (cellId == int(dz.size()))
 		kF = kP;
 	else
-	//Harmonic average for thermal conductuvity
-		kF = kW*kP/(kP- ((kP-kW)*(0.5*dz[cellId]/delta)));
+		//Harmonic average for thermal conductuvity
+		//kF = kW*kP/(kP- ((kP-kW)*(0.5*dz[cellId]/delta)));
+
+		//average thermal conductivity
+		kF = 0.5*(kW+kP);
 
 	real TGrad = (pMix.Temperature()-wMix.Temperature())/delta;
-	q = kF*TGrad;
+	q = -kF*TGrad;
 
 
 	
@@ -206,3 +232,8 @@ const real& CellInterface::getFaceDensity() const{
 const real& CellInterface::getFaceViscosity() const{
 	return this->intfVisc;
 }
+
+//return the face diffusion coefficients
+//const vector<real>& CellInterface::getFaceDiffusionCoefficient() const{
+//	return this->Dmix_f;
+//}

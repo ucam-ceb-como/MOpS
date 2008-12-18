@@ -96,7 +96,7 @@ map<std::string,real> InitialConditions::getFraction() const{
 
 void InitialConditions::setFraction(std::vector<real> fracs){
 	massFracs.resize(fracs.size());
-	for(int i = 0; i!= fracs.size(); i++)
+	for(unsigned int i = 0; i!= fracs.size(); i++)
 		massFracs[i] = fracs[i];
 }
 

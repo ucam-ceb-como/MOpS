@@ -81,9 +81,10 @@ void FlameLabIO::readGeometry(FlameLab::Reactor &reac, const CamXML::Element &no
 		if(attr != NULL){
 			attrValue = attr->GetValue();
 			// get the reactor model and set the reactor model
-			if(!attrValue.compare("premix")) reac.setReactorModel(Reactor::PremixFlame);
-			if(!attrValue.compare("cdflame")) reac.setReactorModel(Reactor::CDflmae);
-			if(!attrValue.compare("plug")) reac.setReactorModel(Reactor::Plug);
+			if(!convertToCaps(attrValue).compare("PREMIX")) reac.setReactorModel(Reactor::PremixFlame);
+			if(!convertToCaps(attrValue).compare("PREMIXFREE"))reac.setReactorModel(Reactor::PremixFree);
+			if(!convertToCaps(attrValue).compare("CDFLAME")) reac.setReactorModel(Reactor::CDflmae);
+			if(!convertToCaps(attrValue).compare("PLUG")) reac.setReactorModel(Reactor::Plug);
 
 			// get the reactor length and set the reactor length
 			subnode = reactorNode->GetFirstChild("length");
@@ -116,21 +117,26 @@ void FlameLabIO::readGeometry(FlameLab::Reactor &reac, const CamXML::Element &no
 			}else{
 				reac.setAspectRatio(1.0);
 			}*/
-			real totalLength = 0;
+			//real totalLength = 0;
 			reactorNode->GetChildren("aspect_ratio",subnodes);
 			map<real,real> fromTo;
 			map< map<real,real>,real> fromToVal;			
 			vector<int> numCells;
+			vector<real> vfrom,vto,vaspRatios;
 			for(p=subnodes.begin(); p!= subnodes.end(); ++p){
 				attr = (*p)->GetAttribute("from");
 				attrValue = attr->GetValue();
 				real from = cdble(attrValue)*converter;
+				vfrom.push_back(from);
+
 				attr = (*p)->GetAttribute("to");
 				attrValue = attr->GetValue();
 				real to = cdble(attrValue)*converter;
+				vto.push_back(to);
 				
-				fromTo.insert(pair<real,real>(from,to));
-				fromToVal.insert(pair<map<real,real>,real>(fromTo,cdble((*p)->Data())));
+				//fromTo.insert(pair<real,real>(from,to));
+				//fromToVal.insert(pair<map<real,real>,real>(fromTo,cdble((*p)->Data())));
+				vaspRatios.push_back(cdble((*p)->Data()));
 				
 
 				attr = (*p)->GetAttribute("ncells");
@@ -140,7 +146,9 @@ void FlameLabIO::readGeometry(FlameLab::Reactor &reac, const CamXML::Element &no
 
 				
 			}
-			reac.setAspectRatio(fromToVal,numCells);
+			//reac.setAspectRatio(fromToVal,numCells);
+			reac.setAspectRatio(vfrom,vto,numCells,vaspRatios);
+
 			
 
 			subnode = reactorNode->GetFirstChild("strain_rate");
@@ -213,6 +221,26 @@ void  FlameLabIO::readOPConditions(FlameLab::Reactor &reac, const CamXML::Elemen
 		}else{
 			reac.setDiffusion(reac.OFF);
 		}
+
+		//set the energy equation option
+		subnode = opNode->GetFirstChild("energy");
+		if(subnode != NULL){
+			string mode = subnode->Data();
+			if(! convertToCaps(mode).compare("OFF") )
+				reac.setSolveEnergy(false);
+			else
+				reac.setSolveEnergy(true);
+		}else{
+			reac.setSolveEnergy(false);
+		}
+
+		//set the maximum allowed temperature
+		subnode = opNode->GetFirstChild("Tmax");
+		if(subnode != NULL){
+			reac.setMaxTemperature(cdble(subnode->Data()));
+		}else{
+			reac.setMaxTemperature(2500.0);
+		}
 					
 			
 	}else{
@@ -263,7 +291,7 @@ void FlameLabIO::readNozzleConditions(FlameLab::Reactor &reac,
 		attr = subnode->GetAttribute("unit");		
 		attrValue = attr->GetValue();
 		if(!attrValue.compare("m/s")){
-			real vel = cdble(subnode->Data());
+			//real vel = cdble(subnode->Data());
 			nozzle.setVelocity(cdble(subnode->Data()));			
 		}
 		else if(!attrValue.compare("cm/s"))
@@ -297,7 +325,7 @@ void FlameLabIO::readNozzleConditions(FlameLab::Reactor &reac,
 		attr = subnode->GetAttribute("unit");		
 		attrValue = attr->GetValue();
 		if(!attrValue.compare("1/s")){
-			real vel = cdble(subnode->Data());
+			//real vel = cdble(subnode->Data());
 			nozzle.setRadialVelocityGrad(cdble(subnode->Data()));			
 		}
 		else{
@@ -382,6 +410,7 @@ void FlameLabIO::readSolverControl(FlameLab::SolverControl &solver, const CamXML
 	string attrValue;
 	solverNode = node.GetFirstChild("solver");
 	if(solverNode != NULL){
+		
 		attr = solverNode->GetAttribute("mode");
 
 		if(attr != NULL){
@@ -392,7 +421,24 @@ void FlameLabIO::readSolverControl(FlameLab::SolverControl &solver, const CamXML
 			if(!convertToCaps(attrValue).compare("PREPROCESS"))solver.setSolMode(SolverControl::preProcess);
 		}
 
+		attr = solverNode->GetAttribute("method");
+		if( attr != NULL){
+			attrValue = attr->GetValue();
+			if(!convertToCaps(attrValue).compare("DIRECT"))solver.setMethod(solver.DIRECT);
+			if(!convertToCaps(attrValue).compare("KRYLOV"))solver.setMethod(solver.KRYLOV);
+		}else{
+			solver.setMethod(solver.DIRECT);
+		}
 
+
+
+		subnode = solverNode->GetFirstChild("nsweep");
+		if(subnode != NULL)
+			solver.setNSweep(int(cdble(subnode->Data())));
+		else
+			solver.setNSweep(1);
+
+				
 		subnode = solverNode->GetFirstChild("aTol");
 		if(subnode != NULL) 
 			solver.setATol(cdble(subnode->Data()));
@@ -404,6 +450,12 @@ void FlameLabIO::readSolverControl(FlameLab::SolverControl &solver, const CamXML
 			solver.setRTol(cdble(subnode->Data()));
 		else
 			solver.setRTol(1.e-06);
+
+		subnode = solverNode->GetFirstChild("resTol");
+		if(subnode != NULL)
+			solver.setResTol(cdble(subnode->Data()));
+		else
+			solver.setResTol(1e-06);
 
 		subnode = solverNode->GetFirstChild("iniStep");
 		if(subnode != NULL)
@@ -427,6 +479,10 @@ void FlameLabIO::readSolverControl(FlameLab::SolverControl &solver, const CamXML
 			solver.setMaxTime(cdble(subnode->Data()));
 
 		subnode = solverNode->GetFirstChild("output");
+		attr = subnode->GetAttribute("mode");
+		attrValue = attr->GetValue();
+		if(! convertToCaps(attrValue).compare("FINAL")) solver.setReportMode(solver.Final);
+		if(! convertToCaps(attrValue).compare("INTERMEDIATE")) solver.setReportMode(solver.Intermediate);
 		if(subnode != NULL) subnode->GetChildren("interval",subnodes);
 
 
@@ -462,10 +518,11 @@ void FlameLabIO::readInitialGuess(Reactor &reac, const CamXML::Element &node){
 	CamXML::Element *subnode, *tempNode, *speciesNode;
 	vector<CamXML::Element*> subnodes;
 	vector<CamXML::Element*>::const_iterator p;
-	const CamXML::Attribute *attr, *attr2;
+	const CamXML::Attribute *attr, *attr2, *attr3;
 	string attrValue, nodeValue, finalSpecies;
 	
 	subnode = node.GetFirstChild("initialize");
+	tempNode = NULL;
 	
 	if(subnode != NULL){
 		tempNode = subnode->GetFirstChild("Tprofile");
@@ -513,10 +570,12 @@ void FlameLabIO::readInitialGuess(Reactor &reac, const CamXML::Element &node){
 		}
 
 	}
-	real converterL, converterT;	
+	real converterL=1.0;
+	real converterT=0.0;	
 	if(tempNode != NULL){
 		attr = tempNode->GetAttribute("unit_L");
 		attr2 = tempNode->GetAttribute("unit_T");
+		attr3 = tempNode->GetAttribute("fit");
 		if(attr != NULL){
 			attrValue = attr->GetValue();
 			if(!convertToCaps(attrValue).compare("CM")) converterL = 0.01;
@@ -536,8 +595,16 @@ void FlameLabIO::readInitialGuess(Reactor &reac, const CamXML::Element &node){
 			temp = cdble((*p)->Data())+converterT;
 			reac.setUserTemperature(position,temp);
 		}
-
-		reac.naturalCubicSplineFit();
+	
+		if(attr3 != NULL){
+			attrValue = attr3->GetValue();
+			if(!convertToCaps(attrValue).compare("LINEAR"))
+				reac.linearFit();
+			else
+				reac.naturalCubicSplineFit();
+		}else{
+			reac.linearFit();
+		}
 		
 	}	
 	
@@ -674,7 +741,8 @@ void FlameLabIO::prepareFileOutput(FlameLab::Reactor &reac) {
 	string name;
 	string xy;
 	fileHeader.clear();
-	if(reac.getReactorRunModel() == reac.WDT || reac.getReactorRunModel() == reac.NDT)
+	if(reac.getReactorRunModel() == reac.WDT || reac.getReactorRunModel() == reac.NDT ||
+		(reac.getSpaceToTime() == reac.ON && reac.getReactorRunModel() == reac.WDS))
 		fileHeader.push_back("time(s)");
 
 	if(reac.getReactorModel() == reac.CDflmae)
@@ -703,16 +771,38 @@ void FlameLabIO::prepareFileOutput(FlameLab::Reactor &reac) {
 
 
 //prepare to write file
-void FlameLabIO::writeToFile(const FlameLab::real &time, std::vector<SingleCell> &sc, FlameLab::Reactor &reac) {
+void FlameLabIO::writeToFile(const FlameLab::real &time, 
+							 std::vector<SingleCell> &sc,
+							 FlameLab::Reactor &reac, 
+							 bool restart) 
+{
 
+	
 	static int fileNr;
-	fileNr += 1;
-	string ext=".dat";
-	string name = "profile_";
-	std::stringstream intToString;
-	intToString << fileNr;
-	string stringFileNr = intToString.str();
-	string fileName = name+stringFileNr+ext;
+	string fileName;
+	if(restart){
+		fileName = "restart.dat";
+	}else{
+		if(time == 0)
+			fileName = "profile_steady.dat";
+		else{
+			fileNr += 1;
+			string ext=".dat";
+			string name = "profile_";
+			std::stringstream intToString;
+			intToString << fileNr;
+			string stringFileNr = intToString.str();
+			fileName = name+stringFileNr+ext;
+		}
+	}
+	reporter(fileName,time,sc,reac);
+
+}
+
+void FlameLabIO::reporter(const string fileName,
+						  const FlameLab::real &time, 
+						  std::vector<SingleCell> &sc, 
+						  FlameLab::Reactor &reac){
 
 	flameReport.Open(fileName,true);
 	prepareFileOutput(reac);
@@ -825,17 +915,17 @@ void FlameLabIO::writeGrid(FlameLab::Reactor &reac){
 	real axPos = 0.0;
 	gridFile.open("grid.dat");
 	if(gridFile.good()){
-		gridFile << "axPos,Val" << endl;
+		gridFile << "axPos,Val,constVal" << endl;
 		for(int i=0; i<nCells; i++){
 			if(i==0) // inlet
-				gridFile << 0 <<","<< 1 << endl;
+				gridFile << 0 <<","<< exp(0.5*dz[i]*10) << ","<< 1<< endl;
 			else{
 				axPos += dz[i-1];
-				gridFile << (axPos+0.5*dz[i]) <<","<< 1 << endl;
+				gridFile << (axPos+0.5*dz[i]) <<","<< exp(axPos*10) << ","<< 1 << endl;
 			}
 		}
 		//outlet
-		gridFile << reac.getLength() <<","<<1<<endl;
+		gridFile << reac.getLength() <<","<<exp(reac.getLength()*10)<< ","<< 1 <<endl;
 
 		gridFile.close();
 	}else{

@@ -58,14 +58,22 @@ namespace FlameLab{
 
 		ReactorControls(){};
 		~ReactorControls(){};
+
+		//defines the change over from marching problem to transient problem
 		void setSpaceToTime(int onOrOff);
+
+		//return the present status of integration
 		int getSpaceToTime();
+
 		//set the reactor run model
 		void setReactorRunModel(int n);
+
 		// return the reactor run model
 		int getReactorRunModel();
+
 		// set the diffusion switch
 		void setDiffusion(int n);
+
 		// get the diffusion switch
 		bool getDiffusion();
 

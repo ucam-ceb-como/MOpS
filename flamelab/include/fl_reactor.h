@@ -63,6 +63,7 @@ namespace FlameLab{
 
 		enum ReactorModel{
 			PremixFlame,
+			PremixFree,
 			CDflmae,
 			Plug			
 		};
@@ -70,6 +71,11 @@ namespace FlameLab{
 		enum {
 			MASSFRACTION,
 			MOLEFRACTION
+		};
+
+		enum {
+			LINEAR,
+			SPLINE
 		};
 
 		Reactor();
@@ -104,6 +110,8 @@ namespace FlameLab{
 		void setUserTemperature(real x, real T);
 		// do the spline fot for user defined temperature
 		void naturalCubicSplineFit();
+		// do linear fit
+		void linearFit();
 		//returns the temperature for given position based on natural cubic spline interpolation
 		FlameLab::real getUserTemperature(const FlameLab::real position);
 		//sets the whether the initial guess is in mole or mass fraction
@@ -114,29 +122,41 @@ namespace FlameLab{
 		void setStrainRate(real srate);
 		//return the strain rate 1/s
 		real getStrainRate() const;
+		//set the temperature fit option
+		void setTempFit(int n);
+		// return the temperature fit
+		int getTempFit() const;
+		// set the option to solve the energy equation
+		void setSolveEnergy(bool option);
+		// return the option for the solution of energy equation
+		bool getSolveEnergy();
+	
+		
 
 		
 	protected:	
 
 		typedef struct{
-			real a;
-			real b;
+			real a; // slope in the case of linear fit
+			real b; // intersect in the case of linear fit
 			real c;
 			//real d;
 			real T;
-		}splineProperty;
+		}fitProperty;
 				
 			
-		int rModel, guessCond;
+		int rModel, guessCond, tempFit;
 		real strainRate;
-		
+			
 		InitialConditions *fuel, *oxidizer;
 		vector<real> variables, splineCoeff;
+		//vector<real> slope, intersect;
 		map<string,real> guessSpecies;
-		map<real,splineProperty> userTemperature;// user defined temperature storage		
+		map<real,fitProperty> userTemperature;// user defined temperature storage		
 		Sprog::Thermo::Mixture *mix;		
 		static const Sprog::Mechanism *mech;
-		static int nSpecies;			
+		static int nSpecies;	
+		bool solveEnergy;
 				
 
 	};

@@ -75,6 +75,25 @@ void Geometry::setAspectRatio(map< map<real,real>,real> fromTo,
 
 }
 
+//set the grid aspect ratio
+void Geometry::setAspectRatio(std::vector<real> from, 
+							  std::vector<real> to,
+							  std::vector<int> numCells,
+							  std::vector<real> ar)
+{
+	int len = from.size();
+	for(int i=0; i<len; i++){
+		aspectRatioStruct ars;
+		ars.from = from[i];
+		ars.to = to[i];
+		ars.numCells = numCells[i];
+		ars.ar = ar[i];
+		data_AspectRatio.push_back(ars);
+	}
+	descretize();
+
+}
+
 // descretize the geometry in to nCells.
 // This function descretizes the geometry based on aspect ratios
 // Aspect ratios can be > or < 1. If the AR is > 1, then  fine 
@@ -83,32 +102,25 @@ void Geometry::setAspectRatio(map< map<real,real>,real> fromTo,
 // flow diffusion flames it is ideal to define 2 ARs with one AR>1 and
 // the other with AR<1
 void Geometry::descretize(){
-	//get the size of aspect ratio map
-	int arSize = aspectRatioMap.size();
+	//get the size of vector
+	int arSize = data_AspectRatio.size();
 	if(arSize > 2 )
 		throw ErrorHandler("More than 2 section not supported\n",4004);
-	map< map<real,real>, real>::iterator p; //iterator for from-to value paies
-	real totalLength=0;
-	vector<real> length, aspectRatio;
-	nCell = 0;
-	int counter = 0;
-	for(p=aspectRatioMap.begin(); p!= aspectRatioMap.end(); ++p){
-		map<real,real> fromTo = p->first; // get the from-to key from the map
-		map<real,real>::iterator ftp= fromTo.begin(); //iterate from-key to strip from and to
-		real from = ftp->first;
-		real to = ftp->second;
-		totalLength += (to-from); // sum of aspect ratio segments should not exceed the defined reactor length
-		length.push_back(to-from);
-		aspectRatio.push_back(p->second);
-		// this over writes any prescribed finite volume cells
-		nCell += numCells[counter]; 
-		counter ++;
+
+	real totalLength = 0;
+	aspectRatioStruct ars;
+	nCell =0;
+	for(int i=0; i< arSize; i++){
+		ars = data_AspectRatio[i];
+		totalLength += (ars.to-ars.from);
+		nCell += ars.numCells;
 		
 	}
 
 	if(totalLength != rLength) throw ErrorHandler("Aspect ratio in-consistancy\n",606);
 	dz.resize(nCell,0.0);
-	for(unsigned int j=0; j<length.size(); j++){
+	int pos,cellBegin,cellEnd=0;
+	for(int j=0; j< arSize; j++){
 
 		real sum = 0;
 		real d =1.0;
@@ -117,28 +129,29 @@ void Geometry::descretize(){
 		** implementation is same for ARs >&< 1. The directions are chosen
 		** while assignment to dz
 		**/
-		if(aspectRatio[j] <1) 
-			aspect = 1+aspectRatio[j];
+		ars = data_AspectRatio[j];
+		if(ars.ar <1) 
+			aspect = 1+ars.ar;
 		else
-			aspect = aspectRatio[j];
+			aspect = ars.ar;
 
-		for(int i=0; i<numCells[j]; i++){
+		for(int i=0; i<ars.numCells; i++){
 			sum += d;
 			d *= aspect;
 		}
-		d = length[j]/sum;
-		int pos,cellBegin,cellEnd;
+		d = (ars.to-ars.from)/sum;
+		
 		if(j==0){
 			cellBegin = 0; 
-			cellEnd = numCells[j];
+			cellEnd = ars.numCells;
 		}else{
-			cellBegin = numCells[j-1];
-			cellEnd = cellBegin+numCells[j];
+			cellBegin = cellEnd;
+			cellEnd = cellBegin+ars.numCells;
 		}
 		for(int i=cellBegin; i<cellEnd; i++){
 			pos = i;
-			if(aspectRatio[j]<1) // reverse the direction
-				pos=numCells[j]-1-i;
+			if(ars.ar < 1) // reverse the direction
+				pos=ars.numCells-1-i;
 			dz[pos] = d;
 			d *= aspect;
 		}

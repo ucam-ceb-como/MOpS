@@ -67,17 +67,43 @@ namespace FlameLab{
 		void setLength(real len);
 		void setAspectRatio(map< map<real,real>,real> fromTo, 
 							vector<int> numCells);
+		void setAspectRatio(vector<real> from,
+							vector<real> to,
+							vector<int> numCells,
+							vector<real> ar);
+		//return the number of cells
 		int getnCells() const;
+
+		//return the length of the reactor
 		real getLength() const;
+
+		//do the descretization
 		void descretize();
+
+		// return the descretizes geometry
 		vector<real> getGeometry() const;
+
 		//real getAspectRatio() const;
 		void setAxialPosition(int n);
+
+		// return the cell id corresponding to the axial position
 		int getAxialPosition()const;
+
+		//return the axial position in m
 		real getAxialPosition(int n) const;
 
 	protected:
 		vector<real> dz; // vector holding descretization info
+		typedef struct{
+			real from;
+			real to;
+			int numCells;
+			real ar;
+		}aspectRatioStruct;
+		
+		vector<aspectRatioStruct> data_AspectRatio;
+
+				
 
 
 	};

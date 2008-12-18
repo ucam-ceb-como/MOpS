@@ -65,30 +65,46 @@ namespace FlameLab{
 
 		//set the axial velocity in m/s
 		void setVelocity(real vel);
+
 		// return the axial velocity in m/s
 		real getVelocity() const;
+
 		//set the flow rate in SI units
 		void setFlowRate(real flr);
+
 		//return the flow rate in Kg/m3 s
 		real getFlowRate() const;
+
 		// set the radial velocity gradient in /s
 		void setRadialVelocityGrad(real vel);
+
 		// return the radial velocity gradient in /s
 		real& getRadialVelocityGrad();
+
 		//set the temperature in K
 		void setTemperature(real temp);
+
 		// return the temperature in K
 		real getTemperature() const;
+
 		//set the density in Kg/m3
 		void setDensity(real dens);
+
 		//return the density in kg/m3
 		real getDensity() const;
+
 		//set the mass/mole fraction for a given species
 		void setFraction(const std::string &name, real fraction);
+
+		//return the user defined inlet species fractions mass/mole
 		map<std::string,real> getFraction() const;
+
 		//sets the mass fraction at a nozzle
 		void setFraction(vector<real> fracs);
+
+		//return the initial mass fractions
 		vector<real>& getMassFractions();
+
 		//sets wether the inlet conditions are in mass or mole fraction
 		void setMassOrMole(int sp);
 		int getMassOrMole() const;
@@ -103,11 +119,11 @@ namespace FlameLab{
 
 	private:
 
-		real velocity; // axial velocity
-		real flowRate;
-		real radVelGrad; // radial velocity gradient in case of counter flow diffusion
-		real temperature;
-		real density;
+		real velocity; 	// axial velocity
+		real flowRate;		//inlet flow rate
+		real radVelGrad;  // radial velocity gradient in case of counter flow diffusion
+		real temperature; //inlet temperature
+		real density;     //inlet density
 
 		int mom;
 		std::map<std::string,real> species;

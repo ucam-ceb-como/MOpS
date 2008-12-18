@@ -50,6 +50,10 @@ void SolverControl::setATol(real aTol){
 void SolverControl::setRTol(real rTol){
 	this->rTol = rTol;
 }
+//set the residual tolerance
+void SolverControl::setResTol(FlameLab::real rsTol){
+	this->resTol = rsTol;
+}
 // sets the initial step size
 void SolverControl::setIniStep(real iniStep){
 	this->iniStep = iniStep;
@@ -71,6 +75,10 @@ void SolverControl::setMinStep(FlameLab::real minStep){
 void SolverControl::setTimeStep(real timeStep){
 	this->timeStep = timeStep;
 }
+//set the report mode
+void SolverControl::setReportMode(int mode){
+	this->rptMode = mode;
+}
 // returns the absolute tolerence
 real SolverControl::getATol() const{
 	return this->aTol;
@@ -78,6 +86,10 @@ real SolverControl::getATol() const{
 // returns the relative tolerence
 real SolverControl::getRTol() const{
 	return this->rTol;
+}
+// returns the residual tolerance
+real SolverControl::getResTol() const{
+	return this->resTol;
 }
 // returns the max allowed step 0->initinite
 real SolverControl::getMaxStep() const{
@@ -123,4 +135,28 @@ const map<map<real,real>,real>& SolverControl::getOutputInterval() const{
 
 int SolverControl::getSolMode() const{
 	return this->solMode;
+}
+//return the report mode
+int SolverControl::getReportMode() const{
+	return rptMode;
+}
+
+//set the number of sweep
+void SolverControl::setNSweep(int n){
+	this->nSweep = n;
+}
+
+// return the number of sweep
+int SolverControl::getNSweep() const{
+	return this->nSweep;
+}
+
+// set the mrthod
+void SolverControl::setMethod(int n){
+	method = n;
+}
+//return the method
+
+int SolverControl::getMethod(){
+	return method;
 }

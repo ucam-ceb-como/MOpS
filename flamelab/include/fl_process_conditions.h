@@ -51,6 +51,7 @@ namespace FlameLab{
 		//real vecocity;
 		real temperature;
 		real pressure;
+		
 
 	public:
 		ProcessConditions(){}
@@ -62,19 +63,37 @@ namespace FlameLab{
 			UserDefined
 		};
 		
+		//set the process temperature
 		void setTemperature(real temp);
+
+		//set the reactor pressure. A constant pressure system is assumed in all case
 		void setPressure(real pre);
-		//void setTemptrSolution(EnergyEquation ee);
+
+		//set the energy model(isothermal, userdefined, or adiabatic)
 		void setEnergModel(int n);
+
+		//return the energy model
 		int getEnergyModel();
 		
+		//return the process temperature in K
 		real getTemperature() const;
+
+		//return the reactor pressure in Pa
 		real getPressure() const;
-		//EnergyEquation getTemptrSolution();
+
+		//set the maximum allowed temperature
+		void setMaxTemperature(real T_max);
+
+		//reutrn the maximum allowed temperature. In certain cases if there is 
+		//a sudden jump in temerature above certain limit may lead to failure
+		//of thermodynamic property calculations
+		real getMaxTemperature();
+
 
 	protected:
 		EnergyEquation temptrSolution;
-		int energyModel;
+		int energyModel; //adiabatic,isothermal,userdefined
+		real Tmax;//maximum allowed temperature
 	};
 
 
