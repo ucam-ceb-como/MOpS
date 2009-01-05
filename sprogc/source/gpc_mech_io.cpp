@@ -153,7 +153,7 @@ void MechanismParser::ReadTransport(const string& transFile, Sprog::Mechanism &m
 			}
 			
 		}
-		cout << "Transport data read successfully\n";		
+		//cout << "Transport data read successfully\n";		
 		mech.setSpeciesTransport(transpMap,mech); 
 		// pass the map and mech object forf setting the transport object for species
 		
@@ -1154,6 +1154,7 @@ void Sprog::IO::MechanismParser::parseCK_RxnSpStoich(const std::string &sp,
                                                   std::string &thirdbody, 
                                                   unsigned int lineno)
 {
+
     vector<string> species;
     vector<string>::iterator k;
     string str;
@@ -1182,7 +1183,7 @@ void Sprog::IO::MechanismParser::parseCK_RxnSpStoich(const std::string &sp,
             species.push_back(str.substr(0, str.find_last_not_of(" ")+1));
 
             // Save fall-off species name and reset iterators.
-            i = j + 1; j = sp.find_first_of(")");
+            i = j + 1; j = sp.find_first_of(")",i);
             thirdbody.assign(sp.begin()+i, sp.begin()+j);
             if (thirdbody.compare("M")==0) thirdbody = "";
 
