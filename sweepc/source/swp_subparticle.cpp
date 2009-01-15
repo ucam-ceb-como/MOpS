@@ -1344,7 +1344,7 @@ void SubParticle::UpdatethisSinterParticle(SubParticle *target, const SubParticl
 SubParticle *SubParticle::FindRoot()
 {
 	if (m_parent==NULL) return this;
-	else m_parent->FindRoot();
+	else return m_parent->FindRoot();
 }
 
 
