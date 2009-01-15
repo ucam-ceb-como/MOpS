@@ -46,7 +46,6 @@
 #include "string_functions.h"
 #include "csv_io.h"
 #include <stdexcept>
-
 using namespace Mops;
 using namespace std;
 using namespace Strings;
@@ -366,7 +365,11 @@ void Simulator::PostProcess()
 
     // Build the simulation input file name.
     string fname = m_output_filename + ".sim";
-
+	//std::ostringstream ranstream;
+	//srand(getpid());
+	//ranstream << rand();
+	//string fname = "/scratch/ms785/"+m_output_filename+ranstream.str()+".sim";
+	
     // Open the simulation input file.
     fstream fin(fname.c_str(), ios_base::in | ios_base::binary);
 
@@ -553,8 +556,12 @@ void Simulator::openOutputFile() const
 {
     // SIMULATOR OUTPUT FILE
     // Build the simulation output file name.
-    string fname = m_output_filename + ".sim";
-
+     string fname = m_output_filename + ".sim";
+	std::ostringstream ranstream;
+	srand(getpid());
+	ranstream << rand();
+	//string fname = "/scratch/ms785/"+m_output_filename+ranstream.str()+".sim";
+	//string fname = "/scratch/ms785/"+m_output_filename+".sim";
     // Open the simulation output file.
     m_file.open(fname.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
 
