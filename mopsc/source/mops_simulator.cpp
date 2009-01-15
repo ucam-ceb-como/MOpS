@@ -366,8 +366,7 @@ void Simulator::PostProcess()
     // Build the simulation input file name.
     string fname = m_output_filename + ".sim";
 	//std::ostringstream ranstream;
-	//srand(getpid());
-	//ranstream << rand();
+	//ranstream << getpid();
 	//string fname = "/scratch/ms785/"+m_output_filename+ranstream.str()+".sim";
 	
     // Open the simulation input file.
@@ -558,8 +557,7 @@ void Simulator::openOutputFile() const
     // Build the simulation output file name.
      string fname = m_output_filename + ".sim";
 	std::ostringstream ranstream;
-	srand(getpid());
-	ranstream << rand();
+//	ranstream <<getpid();
 	//string fname = "/scratch/ms785/"+m_output_filename+ranstream.str()+".sim";
 	//string fname = "/scratch/ms785/"+m_output_filename+".sim";
     // Open the simulation output file.
