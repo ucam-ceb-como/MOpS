@@ -71,7 +71,7 @@ void main()
 		k = mech.FindSpecies("N2");
 		cout << Dkm[k] << endl;
 
-		cout << "mixture specific heat " << mix.getSpecificHeatCapacity(massFrac,temp) << endl;
+		cout << "mixture specific heat " << mix.getSpecificHeatCapacity(temp) << endl;
 
 
 		
