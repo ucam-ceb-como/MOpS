@@ -132,3 +132,44 @@ int jacFn_CVODES(long int N, DenseMat J, double t, N_Vector y,
 
     return 0;
 }
+
+int rhsSensFn_CVODES(int Ns, realtype t,
+                             N_Vector y, N_Vector ydot,
+                             N_Vector *yS, N_Vector *ySdot,
+                             void *solver,
+                             N_Vector tmp1, N_Vector tmp2)
+
+{
+    // Cast the Solver object.
+    Mops::ODE_Solver *s = static_cast<Mops::ODE_Solver*>(solver);
+    Mops::Reactor *r    = s->GetReactor();
+    double **  temp_jac;
+    unsigned int n_jac_size = NV_LENGTH_S(yS[0]);
+    // Allocate memories for temporarily calculations.
+    temp_jac     = new double * [n_jac_size];
+    for (unsigned int i = 0; i < n_jac_size; ++i) {
+        temp_jac[i]     = new double [n_jac_size];
+        for (unsigned int j = 0; j < n_jac_size; ++j) {
+            temp_jac[i][j]     = 0.0;
+        }
+    }
+
+    s->GetSensitivity().ChangeMechParams();
+    // Get the Jacobian from the reactor model
+    r->Jacobian(t, NV_DATA_S(y), NV_DATA_S(ydot), temp_jac,
+                UNIT_ROUNDOFF);
+    
+    for (unsigned int k = 0; k < Ns; ++k) {
+        for (unsigned int i = 0; i < n_jac_size; ++i) {
+            for (unsigned int j = 0; j < n_jac_size; ++j) {
+                NV_Ith_S(ySdot[k], i) += temp_jac[i][j] * NV_Ith_S(yS[k], j);
+            }
+        }
+    }
+    for (unsigned int i = 0; i < n_jac_size; ++i) {
+        delete [] temp_jac[i];
+    }
+    delete [] temp_jac;
+
+    return 0;
+}

@@ -426,17 +426,17 @@ void SensitivityAnalyzer::ChangeMechParams()
             m_mech->GetReactions(i)->SetArrhenius(arr);
         }
     } else if (m_probType == Init_Conditions) {
-        for(unsigned int i = 0; i < m_NS; i++) {
-            //m_mech->GetReactions(i)->SetArrhenius(arr);
-            if (m_sens_params.at(i).Type == INIT_T) {
-                unsigned int n_sp = m_mech->SpeciesCount();
-                m_reactor->Mixture()->RawData()[n_sp] = m_params[i]; // Temperature is at n_sp.
-            } else if (m_sens_params.at(i).Type == INIT_P) {
-                //val = m_mech->Reactions(m_sens_params.at(i).Rxnth)->Arrhenius().n;
-            } else {
-                m_reactor->Mixture()->RawData()[m_sens_params.at(i).Index] = m_params[i];
-            }
-        }
+        //for(unsigned int i = 0; i < m_NS; i++) {
+        //    //m_mech->GetReactions(i)->SetArrhenius(arr);
+        //    if (m_sens_params.at(i).Type == INIT_T) {
+        //        unsigned int n_sp = m_mech->SpeciesCount();
+        //        m_reactor->Mixture()->RawData()[n_sp] = m_params[i]; // Temperature is at n_sp.
+        //    } else if (m_sens_params.at(i).Type == INIT_P) {
+        //        //val = m_mech->Reactions(m_sens_params.at(i).Rxnth)->Arrhenius().n;
+        //    } else {
+        //        m_reactor->Mixture()->RawData()[m_sens_params.at(i).Index] = m_params[i];
+        //    }
+        //}
     } else {
         throw std::runtime_error("Undefined Type: Impossible case. Contact you programmer."
                                  "(Mops, SensitivityAnalyzer::ChangeMechParams).");

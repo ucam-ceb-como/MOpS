@@ -106,5 +106,10 @@ int jacFn_CVODES(
     N_Vector tmp2, // Temporary array available for calculations.
     N_Vector tmp3  // Temporary array available for calculations.
     );
+int rhsSensFn_CVODES(int Ns, realtype t,
+                             N_Vector y, N_Vector ydot,
+                             N_Vector *yS, N_Vector *ySdot,
+                             void *solver,
+                             N_Vector tmp1, N_Vector tmp2);
 
 #endif

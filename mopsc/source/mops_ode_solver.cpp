@@ -205,7 +205,7 @@ void ODE_Solver::InitCVode(void)
             // Internal one is fastest so don't set jacobian function.
             // CVDenseSetJacFn(m_odewk, jacFn_CVODES, (void*)this);
         } else if (m_sensi.ProblemType() == SensitivityAnalyzer::Init_Conditions) {
-            // CVDenseSetJacFn(m_odewk, jacFn_CVODES, (void*)this); <== need test
+            // CVDenseSetJacFn(m_odewk, jacFn_CVODES, (void*)this); //<== need test
         }
     } else {
         CVDenseSetJacFn(m_odewk, jacFn_CVODE, (void*)this);
@@ -217,11 +217,12 @@ void ODE_Solver::InitCVode(void)
 
         flag = CVodeSensMalloc(m_odewk, m_sensi.NParams(), m_sensi.GetMethod(), m_yS);
 
-        //flag = CVodeSetSensRhs1Fn(cvode_mem, fS, data);
+        //flag = CVodeSetSensRhsFn(m_odewk, rhsSensFn_CVODES, (void*)this);
 
         flag = CVodeSetSensErrCon(m_odewk, m_sensi.isEnableErrorControl());
 
         flag = CVodeSetSensParams(m_odewk, m_sensi.ParamsPtr(), m_sensi.ParamBarsPtr(), NULL);
+        //flag = CVodeSetSensParams(m_odewk, m_sensi.ParamsPtr(), NULL, NULL);
 
     } else {
         //printf("Sensitivity: NO ");
