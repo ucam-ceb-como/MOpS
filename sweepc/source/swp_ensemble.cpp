@@ -274,7 +274,8 @@ int Ensemble::Add(Particle &sp)
     } else {
         // We must contract the ensemble to accomodate a new particle.
         i = irnd(0, m_capacity);
-        if (!m_contwarn && ((real)(++m_ncont)/(real)m_capacity > 0.01)) {
+		++m_ncont;
+        if (!m_contwarn && ((real)(m_ncont)/(real)m_capacity > 0.01)) {
             m_contwarn = true;
             printf("sweep: Ensemble contracting too often; "
                    "possible stiffness issue.\n");
