@@ -52,7 +52,7 @@ obj=mops.o mops_mechanism.o mops_mixture.o \
     mops_reactor_factory.o  mops_ode_solver.o mops_settings_io.o mops_solver.o \
     mops_src_terms.o mops_strang_solver.o mops_timeinterval.o \
     mops_flow_stream.o mops_simulator.o swp_flamesolver.o swp_gas_profile.o mops_gpc_sensitivity.o \
-    mops_flux_postprocessor.o mops_rhs_func.o mops_simplesplit_solver.o
+    mops_flux_postprocessor.o mops_rhs_func.o mops_simplesplit_solver.o  swp_PAHsolver.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -145,6 +145,9 @@ mops_strang_solver.o: $(src)/mops_strang_solver.cpp
 
 swp_flamesolver.o: $(src)/swp_flamesolver.cpp
 	$(cpp) $(flag) $(src)/swp_flamesolver.cpp
+
+swp_PAHsolver.o: $(src)/swp_PAHsolver.cpp
+	$(cpp) $(flag) $(src)/swp_PAHsolver.cpp
 
 mops_predcor_solver.o: $(src)/mops_predcor_solver.cpp
 	$(cpp) $(flag) $(src)/mops_predcor_solver.cpp

@@ -243,8 +243,10 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
     // Output initial conditions.
     // - Note: added sensitivity output will write system initial condition, not initial values.
-    fileOutput(m_output_step, m_output_iter, r, s, this);
-
+	if (r.Mixture()->Particles().ParticleModel()->AggModel()==Sweep::AggModels::PAH_ID)
+	{
+        fileOutput(m_output_step, m_output_iter, r, s, this);   // Commented out by ms785 due to problems with flamePP and PAH solver
+	}
     // Set up the console output.
     icon = m_console_interval;
     setupConsole(*r.Mech());
@@ -302,7 +304,6 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             // interval.
             createSavePoint(r, global_step, irun);
         }
-
         // Print run time to the console.
         printf("mops: Run number %d completed in %.1f s.\n", irun+1, m_runtime);
     }    
@@ -365,9 +366,9 @@ void Simulator::PostProcess()
 
     // Build the simulation input file name.
     string fname = m_output_filename + ".sim";
-	//std::ostringstream ranstream;
-	//ranstream << getpid();
-	//string fname = "/scratch/ms785/"+m_output_filename+ranstream.str()+".sim";
+	std::ostringstream ranstream;
+//	ranstream << getpid();
+//	string fname = "/scratch/ms785/"+m_output_filename+ranstream.str()+".sim";
 	
     // Open the simulation input file.
     fstream fin(fname.c_str(), ios_base::in | ios_base::binary);
@@ -559,7 +560,6 @@ void Simulator::openOutputFile() const
 	std::ostringstream ranstream;
 //	ranstream <<getpid();
 	//string fname = "/scratch/ms785/"+m_output_filename+ranstream.str()+".sim";
-	//string fname = "/scratch/ms785/"+m_output_filename+".sim";
     // Open the simulation output file.
     m_file.open(fname.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
 

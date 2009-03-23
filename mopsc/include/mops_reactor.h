@@ -262,7 +262,7 @@ protected:
         const real *const ydot, // Derivatives to return.
         const Reactor &r        // Calling reactor.
         );
-
+	
 private:
     // INITIALISATION AND DESTRUCTION.
     

@@ -51,8 +51,7 @@ using namespace Mops;
 using namespace std;
 
 int main(int argc, char *argv[])
-{
-    // Command line arguments with default values.
+{   // Command line arguments with default values.
     string chemfile("chem.inp");
     string thermfile("therm.dat");
     string settfile("mops.inx");
@@ -114,6 +113,9 @@ int main(int argc, char *argv[])
             // Post-process a flame gas-phase chemistry
             // profile, just like sweep1.
             soltype = FlamePP;
+	    } else if (strcmp(argv[i], "-PAH") == 0) {
+            //Collision of PAHs
+            soltype = PAH;
  //       } else if (strcmp(argv[i], "-momic") == 0) {
  //           // Use method-of-moments to solve particles (1D only!).
  //           soltype = MoMIC;
@@ -170,6 +172,10 @@ int main(int argc, char *argv[])
                 // Post-process a gas-phase profile.
                 solver = new Sweep::FlameSolver();
                 break;
+		    case PAH:
+            // PAH Collisions
+            solver = new Sweep::PAHSolver();
+            break;
             case GPC:
             default:
                 solver = new Solver();
@@ -189,12 +195,20 @@ int main(int argc, char *argv[])
 
     // Read the chemical mechanism / profile.
     try {
-        if (soltype != FlamePP) {
+        if (soltype != FlamePP && soltype != PAH) {
             Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
             if (diag>0) mech.WriteDiagnostics("ckmech.diag");
-        } else {
-            dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(chemfile, mech);
-        }
+        } else
+			{
+				if (soltype == FlamePP){
+					dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(chemfile, mech);
+				}
+				if (soltype == PAH){
+					dynamic_cast<Sweep::PAHSolver*>(solver)->LoadGasProfile(chemfile, mech);
+					dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data.csv");
+				}
+
+			}
     } catch (std::logic_error &le) {
         printf("mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n");
         printf(le.what());

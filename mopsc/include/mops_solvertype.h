@@ -51,6 +51,7 @@ namespace Mops
         PredCor, // Split-Predictor---Split-Corrector.
         FlamePP, // Post-process a gas-phase profile (like sweep1).
         MoMIC,   // Method-of-moments for 1D particles.
+		PAH,     // Collision of PAHs only
     };
 };
 
