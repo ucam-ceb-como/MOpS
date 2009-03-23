@@ -276,6 +276,7 @@ public:
 
 
 	void  output(Cell &sys, real t) const;
+	void  Mill(Cell &sys, real t) const;
 
 
 private:

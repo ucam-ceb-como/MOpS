@@ -51,7 +51,8 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_particle_image.o swp_ensemble_image.o swp_ensemble_imgnode.o swp_surfvol_stats.o swp_pripart_stats.o \
     swp_sintering_model.o swp_arssc_model.o swp_arssc_inception.o \
     swp_death_process.o swp_birth_process.o swp_arssc_cache.o \
-    swp_arssc_reaction.o swp_arssc_condensation.o swp_arssc_process.o
+    swp_arssc_reaction.o swp_arssc_condensation.o swp_arssc_process.o \
+    swp_PAH_primary.o swp_PAH_cache.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -165,6 +166,13 @@ swp_surfvol_cache.o: $(src)/swp_surfvol_cache.cpp
 
 swp_pripart_cache.o: $(src)/swp_pripart_cache.cpp
 	$(cpp) $(flag) $(src)/swp_pripart_cache.cpp
+
+swp_PAH_cache.o: $(src)/swp_PAH_cache.cpp
+	$(cpp) $(flag) $(src)/swp_PAH_cache.cpp
+
+swp_PAH_primary.o: $(src)/swp_PAH_primary.cpp
+	$(cpp) $(flag) $(src)/swp_PAH_primary.cpp 
+
 
 # Sintering model.
 

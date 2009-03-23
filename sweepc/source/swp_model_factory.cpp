@@ -52,6 +52,8 @@
 #include "swp_surfvol_primary.h"
 #include "swp_pripart_cache.h"
 #include "swp_pripart_primary.h"
+#include "swp_PAH_primary.h"
+#include "swp_PAH_cache.h"
 #include "swp_particle_stats.h"
 #include "swp_surfvol_stats.h"
 #include "swp_pripart_stats.h"
@@ -73,6 +75,8 @@ Primary *const ModelFactory::CreatePrimary(AggModels::AggModelType id,
             return new AggModels::SurfVolPrimary(time, model);
         case AggModels::PriPartList_ID:
             return new AggModels::PriPartPrimary(time, model);
+		case AggModels::PAH_ID:  
+            return new AggModels::PAHPrimary(time, model);
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
@@ -333,6 +337,8 @@ AggModels::AggModelCache *const ModelFactory::CreateAggCache(AggModels::AggModel
             return new AggModels::SurfVolCache(parent);
         case AggModels::PriPartList_ID:
             return new AggModels::PriPartCache(parent);
+		case AggModels::PAH_ID:
+            return new AggModels::PAHCache(parent);
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateAggCache).");
@@ -352,6 +358,8 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
             return new Stats::SurfVolStats();
         case AggModels::PriPartList_ID:
             return new Stats::PriPartStats();
+	   case AggModels::PAH_ID:
+            return NULL;							// ms785: postprocessing not yet implemented  
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateAggStats).");

@@ -124,7 +124,7 @@ void EnsembleImage::PrintEnsemble(Cell &sys,std::ofstream &file, real shiftz)
 	for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
 		maxd=max((*(*i)).Property(id),maxd);
 		numsubpart++;
-		if (numsubpart>100) break;
+		if (numsubpart>500) break;
 	}
 	if (treedimage==true)
 	{
@@ -135,7 +135,7 @@ void EnsembleImage::PrintEnsemble(Cell &sys,std::ofstream &file, real shiftz)
 	else 
 	{
 		maxd=1e9*6*pow(maxd,0.3333333);
-		maxd=100;
+		maxd=200;
 		boxlength=pow(numsubpart,0.5);
 		boxlength*=maxd;
 	}
@@ -144,7 +144,7 @@ void EnsembleImage::PrintEnsemble(Cell &sys,std::ofstream &file, real shiftz)
 	numsubpart=0;
 	for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
 		numsubpart++;
-		if(numsubpart<100)
+		if(numsubpart<500)
 		{ 
 			if (x<boxlength && y<boxlength)
 			{

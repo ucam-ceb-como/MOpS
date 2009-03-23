@@ -263,7 +263,7 @@ void ParticleImage::copysptinsert(const SubParticle *sp)
 	        
 		} else {
 	        
-				m_root.Insert(sp->Primary()->Property(id)*0.5e9);       //convert to nm 
+				m_root.Insert(sp->Primary()->Property(id)*0.5e9);       //convert to nm, store the radius not the diameter
 		}
 }
 

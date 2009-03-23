@@ -27,6 +27,7 @@ SubParticle::SubParticle(void)
 	m_sumvol_sinterpart=0;
 	dV_left=0;
 	dV_right=0;
+	vol_sinter=0;
 	m_sinter_level=0;
 
 
@@ -47,6 +48,7 @@ SubParticle::SubParticle(real t, const Sweep::ParticleModel &model)
 	dV_left=0;
 	dV_right=0;
 	m_sinter_level=0;
+	vol_sinter=0;
 
 }
 
@@ -90,6 +92,7 @@ SubParticle::SubParticle(const SubParticle &copy)
 	dV_left=0;
 	dV_right=0;
 	m_sinter_level=0;
+	vol_sinter=0;
 	*this        = copy;
 
 }
@@ -114,6 +117,25 @@ SubParticle::SubParticle(std::istream &in, const Sweep::ParticleModel &model)
 SubParticle::~SubParticle()
 {
     releaseMem();
+}
+
+void SubParticle::CreateTestTree()
+{
+	
+	SubParticle *sp1=new SubParticle;
+	sp1->m_vol=1;
+	sp1->m_surf=2;
+	sp1->m_sinter_level=0.8;
+	sp1->m_primary=m_primary;
+	SubParticle *sp2=new SubParticle;
+	sp2->m_vol=2;
+	sp2->m_surf=3;
+	sp2->m_sinter_level=0.8;
+	sp2->m_primary=m_primary;
+    this->m_primary=NULL;
+	this->m_leftchild=sp1;
+	this->m_rightchild=sp2;
+	m_sinter_level=0.8;
 }
 
 
@@ -525,6 +547,7 @@ unsigned int SubParticle::adjustLoop(const fvector &dcomp,
                                      int id, real r,
                                      unsigned int n
                                      )
+
 {
     unsigned int m = n;
 
@@ -532,7 +555,18 @@ unsigned int SubParticle::adjustLoop(const fvector &dcomp,
         // This is a leaf-node sub-particle as it contains a
         // primary particle.  The adjustment is applied to
         // the primary.
+
+		double volbefore=m_primary->Volume();
         m = m_primary->Adjust(dcomp, dvalues, n);
+		double volafter=m_primary->Volume();
+		double dV=volafter-volbefore;
+		int Nneighbors=0;
+		int disttonode=0;
+		
+		Nneighbors=Numneighbors(this);
+		disttonode=(int)(1+Nneighbors*(rnd()*0.9999999999));				//avoid that rnd()=1
+		ChangeSphericalSurface(disttonode, this, dV);
+
     } else {
         // This sub-particle is somewhere in the tree.  The adjustment
         // is passed down the tree until it reaches a primary particle.
@@ -569,6 +603,45 @@ unsigned int SubParticle::adjustLoop(const fvector &dcomp,
     return m;
 }
 
+
+
+
+void SubParticle::ChangeSphericalSurface(int disttonode, SubParticle *target, double dV)
+{	double volbefore,volafter;
+    if(this->m_leftsinter==target || this->m_rightsinter==target)
+	{
+		disttonode--;
+		if (disttonode==0)
+		{
+		//			string test;
+		//cin>>test;
+			double radius=sqrt(m_sph_surfacearea/(4*PI));
+			volbefore=4/3*PI*radius*radius*radius;
+			volafter=volbefore+dV;
+			double dS=3*sqrt(3*PI/4)*(pow(volafter,(2/3))-pow(volbefore,(2/3)));
+			m_sph_surfacearea+=dS;
+			m_sinter_level=m_sph_surfacearea*((1./m_real_surface)-1./m_real_surface_init)/(1-(m_sph_surfacearea/m_real_surface_init));
+			if (m_sinter_level>0.95)
+			{
+				m_leftsinter->vol_sinter=m_leftsinter->vol_sinter-dV_left;      //added 20.01.09 ms785
+				m_rightsinter->vol_sinter=m_rightsinter->vol_sinter-dV_right;	  //added 20.01.09
+			   	SinterPart();
+			    UpdateCache();
+				UpdateTree();
+			}
+
+		}
+		else 
+		{
+			m_parent->ChangeSphericalSurface(disttonode, target, dV);
+		}
+	}
+	else 
+	{
+		m_parent->ChangeSphericalSurface(disttonode, target, dV);
+	}
+	
+}
 
 // Combines this particle with another.
 SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
@@ -750,8 +823,11 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
 		if ( m_leftsinter->m_freesurface<0)	m_leftsinter->m_freesurface=0;
 
 		m_sinter_level=0.;
-		m_leftsinter->vol_sinter=m_leftsinter->m_primary->Volume();
-		m_rightsinter->vol_sinter=m_rightsinter->m_primary->Volume();
+		if (m_leftsinter->vol_sinter==0)
+		m_leftsinter->vol_sinter=m_leftsinter->m_primary->Volume();				//ms785 20.01.09
+		if (m_rightsinter->vol_sinter==0)
+		m_rightsinter->vol_sinter=m_rightsinter->m_primary->Volume();			//ms785 20.01.09
+		//cout << m_leftsinter->vol_sinter<<endl;
 		dV_left=0.;
 		dV_right=0.;
 
@@ -1052,6 +1128,13 @@ void SubParticle::Sinter(real dt, const Cell &sys,
 			m_sumsinterdiameter = 2*min(pow((m_leftsinter->vol_sinter-dV_left)*3/(4*PI),ONE_THIRD),
 								  pow((m_rightsinter->vol_sinter-dV_right)*3/(4*PI),ONE_THIRD));	
 
+			if (m_leftsinter->vol_sinter-dV_left<0 || m_rightsinter->vol_sinter-dV_right<0)
+			{
+					string test;
+				
+				cout<<"error ln1057 swp_subparticle";
+				cin>>test;
+			}
 		//	m_sumsinterdiameter = 2*min(pow((m_leftsinter->vol_sinter)*3/(4*PI),ONE_THIRD),
 		//						  pow((m_rightsinter->vol_sinter)*3/(4*PI),ONE_THIRD));
 			// Perform integration loop.
@@ -1065,7 +1148,12 @@ void SubParticle::Sinter(real dt, const Cell &sys,
 					// number of poisson events.
 					int n = ignpoi(r * (t2 - t1) / (scale*dAmax));
 					// Adjust the surface area.
-					if (n<0) break;
+					if (n<0) {		//	string test;
+										//cout<<"error ln1076 swp_subparticle n<0";
+										//cin>>test;
+										break;
+							}
+					
 					if (n > 0) {
 						m_real_surface -= (real)n * scale * dAmax;
 						// Check that primary is not completely sintered.
@@ -1094,8 +1182,10 @@ void SubParticle::Sinter(real dt, const Cell &sys,
 
 				}
 
-			 if ( m_sinter_level>0.95 || Sintered()==1 || m_leftsinter->m_diam<1e-9 ||  m_rightsinter->m_diam<1e-9 )
+			 if ( m_sinter_level>0.95 || Sintered()==1 || m_leftsinter->m_diam<1e-9 ||  m_rightsinter->m_diam<1e-9 )        //<1e-9 nm in order to avoid numerical problems, the sintering time is very small for these small particles and they sinter instantaneously
 			   {	//cout <<"sinter dt="<<dt<<endl;
+				   	m_leftsinter->vol_sinter=m_leftsinter->vol_sinter-dV_left;      //added 20.01.09 ms785
+					m_rightsinter->vol_sinter=m_rightsinter->vol_sinter-dV_right;	  //added 20.01.09
 			   	   	SinterPart();
 				    UpdateCache();
 					UpdateTree();
@@ -1130,9 +1220,10 @@ void SubParticle::UpdateCache(void)
         ParticleCache::operator=(*m_primary);
 		m_avg_diam=m_primary->CollDiameter();
 		m_numsubpart=1;
-		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.9));
-		
-
+		if(m_pmodel->UseSubPartTree())
+		{
+		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
+		}
 		
     } else {
         // The cache is the sum of the left and right child caches.
@@ -1141,7 +1232,7 @@ void SubParticle::UpdateCache(void)
 		m_avg_diam=m_leftchild->m_avg_diam+m_rightchild->m_avg_diam;
         ParticleCache::operator=(*m_leftchild);
         ParticleCache::operator+=(*m_rightchild);
-		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.9));
+		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
 	
     }
 }
@@ -1156,7 +1247,7 @@ void SubParticle::UpdateCache_thispart(void)
         m_primary->UpdateCache();
         ParticleCache::operator=(*m_primary);
 		m_avg_diam=m_primary->CollDiameter();
-		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.9));
+		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
 		
 		
     } else {
@@ -1164,7 +1255,7 @@ void SubParticle::UpdateCache_thispart(void)
         ParticleCache::operator=(*m_leftchild);
 		m_avg_diam=m_leftchild->m_avg_diam+m_rightchild->m_avg_diam;
         ParticleCache::operator+=(*m_rightchild);		
-		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.9));
+		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
     }
 }
 
@@ -1263,6 +1354,59 @@ void SubParticle::Getprimarydistribution(double *distribution)
 	}
 }
 
+
+void SubParticle::Getsinteringleveldistribution(double *distribution, real binsize, const int numbins)
+{
+	if(m_primary!=NULL)
+	{	
+
+	}
+	else
+	{	int bin=(int)(m_sinter_level/binsize);
+		//cout <<bin<<endl;
+		distribution[bin]++;
+	    m_leftchild->Getsinteringleveldistribution(distribution, binsize, numbins);
+		m_rightchild->Getsinteringleveldistribution(distribution, binsize, numbins);
+	}
+}
+
+void SubParticle::GetCollDiamDistrMill(double sintertresh, int *nparticles, double *distribution, const int numbins, double *averagecolldiam, double *Volume, double *Surface, int *nprimaries)
+{
+	if (m_primary!=NULL)
+	{	
+		(*nprimaries)++;
+		*Volume=(*Volume)+m_vol;
+		*Surface=(*Surface)+m_surf;
+	}
+	else
+	{
+		if(m_sinter_level>=sintertresh)   // create a new particles if sinterlevel < tresh
+		{
+			m_leftchild->GetCollDiamDistrMill(sintertresh, nparticles, distribution, numbins, averagecolldiam, Volume, Surface, nprimaries);
+			m_rightchild->GetCollDiamDistrMill(sintertresh, nparticles, distribution, numbins, averagecolldiam, Volume, Surface, nprimaries);
+		}
+		else
+		{
+			double Vsub=0;
+			double *Vsubp=&Vsub;
+			int nprimariessub=0;
+			int *nprimariessubp=&nprimariessub;
+			double Ssub=0;
+			double *Ssubp=&Ssub;
+		    m_leftchild->GetCollDiamDistrMill(sintertresh, nparticles, distribution, numbins, averagecolldiam, Vsubp, Ssubp, nprimariessubp);
+			m_rightchild->GetCollDiamDistrMill(sintertresh, nparticles, distribution, numbins, averagecolldiam, Volume, Surface, nprimaries);
+			double coldiamsub=((6*Vsub/Ssub)*pow(nprimariessub,1/1.8));
+			(*nparticles)++;
+			(*averagecolldiam)+=coldiamsub;
+		}
+
+	}
+	if(m_parent==NULL)
+	{
+		(*averagecolldiam)+=((6*(*Volume)/(*Surface))*pow(*nprimaries,1/1.8));
+		(*nparticles)++;
+	}
+}
 /*
 void SubParticle::UpdateSinterParticles()
 {
@@ -1347,7 +1491,23 @@ SubParticle *SubParticle::FindRoot()
 	else return m_parent->FindRoot();
 }
 
+int SubParticle::Numneighbors( SubParticle *target)
+{
+	if (m_parent==NULL) 
+	{
+		if (m_leftsinter==target || m_rightsinter==target)
+		{	
+			return 1;
+		}
+		else
+			return 0;
+	}
+	if (m_leftsinter==target || m_rightsinter==target)
+	 return 1+m_parent->Numneighbors(target);
+	else
+	  return m_parent->Numneighbors(target);
 
+}
 
 
 void SubParticle::UpdateFreeSurface()
@@ -1402,13 +1562,13 @@ void SubParticle::UpdateTree(void)
     // Update the cache for this sub-particle.
     if (m_primary != NULL) {
         ParticleCache::operator=(*m_primary); 
-		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.9));
+		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
 		m_avg_diam=m_primary->CollDiameter();
 		
     } else {
         ParticleCache::operator=(*m_leftchild);
         ParticleCache::operator+=(*m_rightchild);
-	    ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.9));
+	    ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
 		m_avg_diam=m_leftchild->m_avg_diam+m_rightchild->m_avg_diam;
 		
     }
@@ -1523,6 +1683,7 @@ void SubParticle::printSubtree(std::ostream &out, ParticleCache::PropID id) cons
   printSubtreeLoop(out,id);
   out << "}"<<endl;
 }
+
 
 void SubParticle::printSubtreeLoop(std::ostream &out, ParticleCache::PropID id) const
 { 

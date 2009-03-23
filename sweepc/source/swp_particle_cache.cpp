@@ -613,6 +613,7 @@ const SubModels::SubModelCache *const ParticleCache::SubModel(SubModels::SubMode
 }
 
 
+
 // BASIC DERIVED PARTICLE PROPERTIES.
 
 // Returns the particle equivalent sphere diameter.

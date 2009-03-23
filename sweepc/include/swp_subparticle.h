@@ -135,6 +135,8 @@ public:
 	void UpdateCache_sinter(SubParticle *has_sintered, SubParticle *newsinter);
 	void CheckTree();
 	SubParticle *FindRoot();
+	int Numneighbors(SubParticle *target);
+	void ChangeSphericalSurface(int disttonode, SubParticle *target, double dV);
 	//void UpdateSinterParticles();
 	int FindPath(bool &path, SubParticle *target, SubParticle *root, int &depth);
 	void UpdatethisSinterParticle(SubParticle *target, const SubParticle *original);
@@ -176,9 +178,11 @@ void printSubtreepicLoop(std::ostream &out,real x, real y, real z) const;
         const Processes::SinteringModel &model // Sintering model to use.
         );
 
+	// Gets several distributions
 	void Getprimarydistribution(double *distribution);
-
-
+    void Getsinteringleveldistribution(double *distribution, real binsize,const int numbins);
+    void GetCollDiamDistrMill(double sintertresh, int *nparticles, double *distribution, const int numbins, double *averagecolldiam, double *Volume, double *Surface, int *nprimaries);
+	void CreateTestTree();
     // PARTICLE UPDATE AND CHECKING.
 
     // Recalculates the derived properties from the 

@@ -329,6 +329,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\source\swp_PAH_cache.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_PAH_primary.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_pripart_cache.cpp"
 					>
 				</File>
@@ -652,6 +660,14 @@
 				</File>
 				<File
 					RelativePath=".\include\swp_aggmodel_type.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_PAH_cache.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_PAH_primary.h"
 					>
 				</File>
 				<File

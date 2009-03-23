@@ -210,6 +210,13 @@ public:
     // Reads the object from a binary stream.
     void Deserialize(std::istream &in);
 
+	// stores the collision efficiency depending on the reduced mass for PAHs
+	 std::vector<double> m_reduced_mass;
+	 std::vector<double> m_collision_eff;
+	 
+	 double CollisionEff(Particle *p1, Particle *p2) const;
+
+
 protected:
     // The species used to define the processes and the particles.
     const Sprog::SpeciesPtrVector *m_species;

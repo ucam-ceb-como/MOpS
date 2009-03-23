@@ -48,6 +48,7 @@
 #include "swp_model_factory.h"
 #include "swp_actsites_type.h"
 #include "swp_abf_model.h"
+#include "swp_PAH_primary.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -353,6 +354,74 @@ Particle *const ParticleModel::CreateParticle(real time) const
     return part;
 }
 
+
+
+//Collision Efficiency
+double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
+{
+	double redmass=0;
+//	double col1=p1->CollDiameter();
+//	double col2=p2->CollDiameter();
+	double ncarbon1=p1->Mass()/1.99e-26;
+	double ncarbon2=p2->Mass()/1.99e-26;
+	const AggModels::PAHPrimary *pah = NULL;
+	pah = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
+	ncarbon1=pah->m_numcarbon;
+	pah = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary());
+	ncarbon2=pah->m_numcarbon;
+	ncarbon1=0;
+	ncarbon2=0;
+	pah = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
+	ncarbon1=pah->m_PAH.begin()->m_numcarbon;
+	if (pah->m_numPAH>1)
+	{
+		max(ncarbon1,1.0*(pah->m_PAH.at(1).m_numcarbon));
+		//ncarbon1+=0.5*pah->m_PAH.at(1).m_numcarbon;
+	}
+	pah = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary());
+	ncarbon2=pah->m_PAH.begin()->m_numcarbon;
+	if (pah->m_numPAH>1)
+	{
+		max(ncarbon2,1.0*(pah->m_PAH.at(1).m_numcarbon));
+		//ncarbon2+=0.5*pah->m_PAH.at(1).m_numcarbon;
+	}
+	redmass=12*ncarbon1*ncarbon2/(ncarbon1+ncarbon2);
+
+	//redmass=col1*col2/(col1+col2)*1e10;
+	if (redmass<m_reduced_mass.at(0))
+		return m_collision_eff.at(0);
+	double cefflarger;
+	double ceffsmaller;
+	double redmasslarger;
+	double redmasssmaller;
+	int j;
+	for (j=0;j<m_reduced_mass.size();j++)
+	{
+		if (redmass<m_reduced_mass.at(j))
+		{
+			redmasslarger=m_reduced_mass.at(j);
+			cefflarger=m_collision_eff.at(j);
+			break;
+		}
+		else
+		{
+			redmasssmaller=m_reduced_mass.at(j);
+			ceffsmaller=m_collision_eff.at(j);
+		}
+		if (j==m_reduced_mass.size()-1) 
+		{
+			redmasslarger=m_reduced_mass.at(j);
+			cefflarger=m_collision_eff.at(j);
+		}
+	}
+	if (cefflarger==ceffsmaller) return cefflarger;
+	double a=(cefflarger-ceffsmaller)/(redmasslarger-redmasssmaller);
+//	if (pah->m_numPAH==2)
+//	{
+//		cout <<"Coagulate Dimer, Ceff="<<ceffsmaller+(redmass-redmasssmaller)*a;
+//	}
+	return ceffsmaller+(redmass-redmasssmaller)*a;
+}
 
 // READ/WRITE/COPY.
 

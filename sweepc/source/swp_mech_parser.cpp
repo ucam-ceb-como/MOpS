@@ -53,6 +53,7 @@
 #include "camxml.h"
 #include "string_functions.h"
 #include "swp_arssc_model.h"
+#include "csv_io.h"
 #include <stdexcept>
 #include <string>
 
@@ -184,7 +185,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     } else {
         mech.DisableSubPartTree();
     }
-
+	
     // Check the aggregation model.
     str = (*i)->GetAttributeValue("model");
     if (str == "spherical") {
@@ -193,6 +194,22 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetAggModel(AggModels::SurfVol_ID);
     } else if (str == "pripartlist") {
         mech.SetAggModel(AggModels::PriPartList_ID);
+    } else if (str == "PAH") {
+        mech.SetAggModel(AggModels::PAH_ID);
+		std::vector<std::string> values;	
+		CSV_IO *csvinput = new CSV_IO("collisionefficiency.csv",false);
+		for (int j=0;j<10000;j++)
+		{
+			values.clear();	
+			csvinput->Read(values);
+		    if (values.size()==0)
+				break;
+			double redmass=atof(values[0].c_str());
+			double ceff=atof(values[1].c_str());
+			mech.m_reduced_mass.push_back(redmass);
+			mech.m_collision_eff.push_back(ceff);
+		}
+		csvinput->Close();
     } else {
         mech.SetAggModel(AggModels::Spherical_ID);
     }

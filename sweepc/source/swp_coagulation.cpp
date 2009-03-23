@@ -44,6 +44,8 @@
 #include "swp_mechanism.h"
 #include "swp_ensemble.h"
 #include "swp_particle_cache.h"
+#include "swp_PAH_primary.h"
+#include "swp_aggmodel_type.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -51,7 +53,7 @@ using namespace Sweep::Processes;
 using namespace std;
 
 // Free-molecular enhancement factor.
-const real Coagulation::m_efm = 2.2; // 2.2 is for soot.
+const real Coagulation::m_efm = 2.2; // 2.2 is for soot.    
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -331,7 +333,7 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
     if (sys.ParticleCount() < 2) {
         return 1;
     }
-
+	
     int ip1=-1, ip2=-1;
     MajorantType maj;
     TermType term = (TermType)iterm;
@@ -460,6 +462,14 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
         // majorant rate and the current (after updates) true rate.
         real majk = CoagKernel(*sp1old, *sp2old, T, P, maj);
         real truek = CoagKernel(*sp1, *sp2, T, P, None);
+
+		//added by ms785 to include the collision efficiency in the calculation of the rate
+		if (sys.Particles().ParticleModel()->AggModel()==AggModels::PAH_ID)
+		{
+					double ceff=sys.Particles().ParticleModel()->CollisionEff(sp1,sp2);
+					truek*=ceff;
+		}
+
         if (!Ficticious(majk, truek)) {
             // We can now coagulate the particles, remember to
             // remove second particle afterwards.
