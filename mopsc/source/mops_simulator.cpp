@@ -243,7 +243,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
     // Output initial conditions.
     // - Note: added sensitivity output will write system initial condition, not initial values.
-	if (r.Mixture()->Particles().ParticleModel()->AggModel()==Sweep::AggModels::PAH_ID)
+	if (!r.Mixture()->Particles().ParticleModel()->AggModel()==Sweep::AggModels::PAH_ID)
 	{
         fileOutput(m_output_step, m_output_iter, r, s, this);   // Commented out by ms785 due to problems with flamePP and PAH solver
 	}
