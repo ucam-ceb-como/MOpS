@@ -41,6 +41,9 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
+#include <iomanip>
+
+
 #include "csv_io.h"
 #include "string_functions.h"
 #include <string>
@@ -174,6 +177,8 @@ void CSV_IO::Write(const std::vector<long double> &values)
     writeLine<long double>(values);
 }
 
+//wtite tab seperated strings
+
 
 // INTERNAL READ/WRITE FUNCTIONS.
 
@@ -245,7 +250,7 @@ void CSV_IO::writeLine(const std::vector<T> &values)
 {
     // If this is not the first line, then output a newline
     // character.
-    streamoff i = m_file.tellp();
+    streamoff i = m_file.tellp(); 
     if (i != 0) {
         m_file << '\n';
     }
@@ -263,3 +268,5 @@ void CSV_IO::writeLine(const std::vector<T> &values)
         }
     }
 }
+
+
