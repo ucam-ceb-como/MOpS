@@ -460,13 +460,21 @@ Serial_MixtureType Mixture::SerialType() const
 // returns the avg mol wt given the mass fractions added by Vinod
 real Mixture::getAvgMolWt(Sprog::fvector &massFrac){
 	real avgMolWt = 0.0;
-
 	for(unsigned int i=0; i!= m_species->size(); i++)
 		avgMolWt += massFrac[i]/(*m_species)[i]->MolWt();
 
 	return 1.0/avgMolWt;
 }
 
+real Mixture::getAvgMolWt(){
+    real avgMolWt = 0.0;
+    vector<real> moleFrac = MoleFractions();
+    for(unsigned int i=0; i!= m_species->size(); i++)
+        avgMolWt += moleFrac[i]*(*m_species)[i]->MolWt();
+    
+    return avgMolWt;
+
+}
 
 // Following transport related routines are added by Vinod
 // returns the mixture viscosity in Kg/m-s
@@ -490,12 +498,32 @@ const vector<real> Mixture::getMolarEnthalpy(real T){
 
 }
 
+const vector<real> Mixture::getMolarEnthalpy(){
+    vector<real> enthalpy;
+    Sprog::Thermo::IdealGas ig(*this->Species());
+    ig.CalcHs(Temperature(),enthalpy);
+    return enthalpy;
+}
+
 // returns the mixture specific heat capacity in J/Kg K
 real Mixture::getSpecificHeatCapacity(Sprog::real T){
 	real cp = 0.0;
 	vector<real> cpMols, massFrac;
 	Sprog::Thermo::IdealGas ig(*this->Species());
 	ig.CalcCps(T,cpMols);
+	GetMassFractions(massFrac);
+	for(unsigned int i=0; i != m_species->size(); i++)
+		cp += massFrac[i]*(cpMols[i])/(*m_species)[i]->MolWt();
+
+	return cp;
+}
+
+//return the specific heat capacity for the given mixture
+real Mixture::getSpecificHeatCapacity(){
+	real cp = 0.0;
+	vector<real> cpMols, massFrac;
+	Sprog::Thermo::IdealGas ig(*this->Species());
+	ig.CalcCps(Temperature(),cpMols);
 	GetMassFractions(massFrac);
 	for(unsigned int i=0; i != m_species->size(); i++)
 		cp += massFrac[i]*(cpMols[i])/(*m_species)[i]->MolWt();

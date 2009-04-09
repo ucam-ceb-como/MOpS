@@ -45,10 +45,11 @@
 #include "gpc_mech.h"
 #include "gpc_stoich.h"
 #include "gpc_idealgas.h"
+#include <iostream>
 #include <cmath>
 #include <stdexcept>
 #include <memory.h>
-
+#include <iostream>
 using namespace Sprog;
 using namespace Sprog::Kinetics;
 using namespace std;
@@ -345,14 +346,16 @@ real ReactionSet::GetMolarProdRates(real T, real density, const real *const x,
 
 // returns the molar production rate given the species mixture
 void ReactionSet::GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) const{		
-	
-	fvector kfrwd,krev,rop,Gs;
+
+   	fvector kfrwd,krev,rop,Gs;
 	Sprog::Thermo::IdealGas ig(*mix.Species());
 	ig.CalcGs_RT(mix.Temperature(),Gs);
-	GetRateConstants(mix.Temperature(),mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),Gs,kfrwd,krev);
+ 	GetRateConstants(mix.Temperature(),mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),Gs,kfrwd,krev);
 	GetRatesOfProgress(mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),kfrwd,krev,rop);
 	GetMolarProdRates(rop,wdot);
-	
+ 
+
+ 
 }
 
 
