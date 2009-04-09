@@ -107,6 +107,8 @@ public:
     // Writes a line of comma-separated long doubles to the file.
     void Write(const std::vector<long double> &values);
 
+
+
 private:
     std::string m_name;  // The file name.
     std::fstream m_file; // A file stream for reading/writing files
@@ -123,6 +125,8 @@ private:
     // Writes a line of values of type T to the file stream.
     template<class T>
     void writeLine(const std::vector<T> &values);
+
+
 };
 
 #endif
