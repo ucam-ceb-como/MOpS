@@ -46,6 +46,7 @@
 #include "gpc_transport_factory.h"
 #include <vector>
 #include <stdexcept>
+//#include <bits/stl_vector.h>
 
 using namespace Sprog;
 using namespace Sprog::Thermo;
@@ -489,6 +490,13 @@ real Mixture::getThermalConductivity(real pre) const{
 	return mt.getThermalConductivity(Temperature(),pre,*this);
 }
 
+const vector<real> Mixture::getMolarSpecificHeat(){
+
+        vector<real> cpMols;
+	Sprog::Thermo::IdealGas ig(*this->Species());
+	ig.CalcCps(Temperature(),cpMols);
+        return cpMols;
+}
 
 const vector<real> Mixture::getMolarEnthalpy(real T){
 	vector<real> enthalpy;
@@ -518,7 +526,7 @@ real Mixture::getSpecificHeatCapacity(Sprog::real T){
 	return cp;
 }
 
-//return the specific heat capacity for the given mixture
+//return the specific heat capacity for the given mixture in J/kg K
 real Mixture::getSpecificHeatCapacity(){
 	real cp = 0.0;
 	vector<real> cpMols, massFrac;
