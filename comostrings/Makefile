@@ -20,10 +20,9 @@ export path=.
 src=$(path)/source
 inc=$(path)include
 lib=$(path)/lib
-
 # Target objects.
 
-obj=string_functions.o csv_io.o console_io.o
+obj=string_functions.o csv_io.o console_io.o data_io.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -46,7 +45,9 @@ csv_io.o: $(src)/csv_io.cpp string_functions.o
 console_io.o: $(src)/console_io.cpp
 	$(cpp) $(flag) $(src)/console_io.cpp
 
+data_io.o: $(src)/data_io.cpp
+	$(cpp) $(flag) $(src)/data_io.cpp
 # TARGET clean: leave just source code.
 
 clean:
-	rm -rf $(path)/*.o \#* *~
+	rm -rf $(path)/*.o  

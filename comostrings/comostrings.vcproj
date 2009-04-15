@@ -267,6 +267,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\data_io.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\string_functions.cpp"
 				>
 			</File>
@@ -282,6 +286,10 @@
 			</File>
 			<File
 				RelativePath=".\include\csv_io.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\data_io.h"
 				>
 			</File>
 			<File
