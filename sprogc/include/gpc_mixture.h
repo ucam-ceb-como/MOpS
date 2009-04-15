@@ -190,8 +190,10 @@ public:
 	real getThermalConductivity(real pre) const; 
 	// returns the mixture specific heat capacity in J/Kg K.
 	real getSpecificHeatCapacity(real T);
-        //return the specifi heat capacity for a given temp
+        //return the specifi heat capacity for a given temp in J/Kg K.
         real getSpecificHeatCapacity();
+        //return the molar specific heats
+        const vector<real> getMolarSpecificHeat();
 	// returns the vector of mixture diffusion coefficient in m^2/s.
 	const vector<real> getMixtureDiffusionCoeff(const real pre)const; 
 
