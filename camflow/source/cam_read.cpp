@@ -1,0 +1,469 @@
+/*
+ * File:   cam_messenger.cpp
+ * Author: vinod
+ *
+ * Created on January 17, 2009, 5:38 PM
+ * File purpose:
+ *  This class contains the implementation IO functions
+ *
+ * Licence:
+ *  This file is part of "Camflow".
+ *
+ *  Camflow is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either version 2
+ *  of the License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Contact:
+ *  Dr Markus Kraft
+ *  Dept of Chemical Engineering
+ *  University of Cambridge
+ *  New Museum Site
+ *  Pembroke Street
+ *  Cambridge
+ *  CB2 3RA
+ *  UK
+ *
+ *  Email   :   mk306@cam.ac.uk
+ *  Website :   http://como.cheng.cam.ac.uk
+
+ */
+
+#include "cam_geometry.h"
+
+
+#include "cam_control.h"
+
+#include <string>
+
+
+#include "cam_boundary.h"
+#include "cam_admin.h"
+
+
+#include "cam_read.h"
+#include "string_functions.h"
+#include "cam_error.h"
+#include<vector>
+using namespace Camflow;
+using namespace Strings;
+
+void CamRead::readInput(const string fileName,
+                            CamControl& cc,
+                            CamGeometry& cg,
+                            CamConverter& convert,
+                            CamAdmin& ca,
+                            CamBoundary& cb,
+                            CamProfile& cp,
+                            CamConfiguration& config){
+
+    CamXML::Document doc;
+    const CamXML::Element* root;
+    if(doc.Load(fileName) == 0){
+        root = doc.Root();
+        readGeometry(cg,config,convert,*root);
+        readProcessConditions(convert,ca,*root);
+        readBoundary(ca,cb,convert,*root);        
+        readControl(cc,*root);        
+        readInitialGuess(cp,convert,*root);
+        readReport(ca,*root);
+        readGrid(cg,*root);
+    }
+}
+
+//this function reads in the information concerning the model geometry
+void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
+                                CamConverter& convert,const CamXML::Element& node){
+    CamXML::Element *reactorNode, *subnode;
+    vector<CamXML::Element*> subnodes;
+    //vector<CamXML::Element*>::iterator p;
+    const CamXML::Attribute *attr;
+    std::string attrValue;
+    doublereal factor = 1.0;
+    
+    reactorNode = node.GetFirstChild("reactor");
+    if(reactorNode != NULL){
+        attr    =   reactorNode->GetAttribute("model");
+        if(attr != NULL){
+            attrValue   =   attr->GetValue();
+            if(!convertToCaps(attrValue).compare("PREMIX")) config.setConfiguration(config.PREMIX);
+            if(!convertToCaps(attrValue).compare("PLUG")) config.setConfiguration(config.PLUG);
+            if(!convertToCaps(attrValue).compare("CONTER_FLOW")) config.setConfiguration(config.COUNTERFLOW);
+        }else{
+            throw CamError("Model remains undefined\n");
+        }
+        
+
+        subnode = reactorNode->GetFirstChild("diameter");
+        if(subnode != NULL){
+            attrValue = subnode->GetAttributeValue("unit");
+            factor = convert.getConvertionFactor(attrValue);
+            cg.setDia(cdble(subnode->Data())*factor);
+        }else{
+            throw CamError("Diameter not specified\n");
+        }
+
+        subnode = reactorNode->GetFirstChild("length");
+        if(subnode != NULL){
+            attrValue = subnode->GetAttributeValue("unit");
+            factor = convert.getConvertionFactor(attrValue);
+            cg.setLength(cdble(subnode->Data())*factor);
+        }else{
+            throw CamError("Length not specified\n");
+        }
+
+    }else{
+        throw CamError("Reactor definition missing\n");
+    }
+
+}
+
+//this function reads in the process conditions
+void CamRead::readProcessConditions(CamConverter& convert,
+                                        CamAdmin& ca,
+                                        const CamXML::Element& node){
+    
+    CamXML::Element *subnode, *opNode;
+    
+    opNode = node.GetFirstChild("op_condition");
+    if(opNode == NULL){
+        throw CamError("op_condition not defined\n");
+    }else{
+    //read temperature
+        subnode = opNode->GetFirstChild("temperature");
+        if(subnode != NULL)
+            ca.setEnergyModel(subnode->Data());
+        else
+            throw CamError("temperature calculation not defined\n");
+
+    //read the wall temperature
+        subnode = opNode->GetFirstChild("twall");
+        if(subnode!= NULL){
+            string val = subnode->GetAttributeValue("unit");
+            doublereal factor = convert.getConvertionFactor(val);
+            ca.setWallTemp(cdble(subnode->Data())+factor);
+        }
+            
+    //read pressure
+        subnode = opNode->GetFirstChild("pressure");
+        if(subnode !=NULL){
+            string unit = subnode->GetAttribute("unit")->GetValue();
+            doublereal fact = convert.getConvertionFactor(unit);
+            doublereal pre = cdble(subnode->Data())*fact;
+            ca.setPressure(pre);
+        }else{
+            throw CamError("operating pressure not defined\n");
+        }
+
+    }
+    
+}
+    
+//this function reads the boundary conditions
+void CamRead::readBoundary(CamAdmin& ca,
+                                CamBoundary& cb,
+                                CamConverter& convert,
+                                const CamXML::Element& node){
+
+    CamXML::Element *subnode, *inletNode;
+    
+    inletNode = node.GetFirstChild("inlet");
+    if(inletNode != NULL){
+        subnode = inletNode->GetFirstChild("fuel");
+        if(subnode != NULL){
+            try{
+                readNozzle(cb,convert,*subnode);
+            }catch(CamError &ce){
+                throw ce;
+            }
+            
+            ca.setLeftBoundary(cb);
+            
+        }else{
+            throw CamError("fuel definition missing in inlet element\n");
+        }
+        subnode = inletNode->GetFirstChild("oxidizer");
+        if(subnode != NULL){
+            try{
+                readNozzle(cb,convert,*subnode);
+            }catch(CamError &ce){
+                throw ce;
+            }
+            ca.setRightBoundary(cb);
+        }
+    }else{
+        throw CamError("inlet definition missing\n");
+    }
+
+    
+}
+
+//actual implementation of boundary conditions
+void CamRead::readNozzle(CamBoundary& cb,
+                                CamConverter convert,
+                                const CamXML::Element& node){
+
+    CamXML::Element *subnode;
+    const CamXML::Attribute *atr;
+    map<string, doublereal> fracs;
+    string atrVal;
+
+
+    subnode = node.GetFirstChild("velocity");
+    if(subnode != NULL){
+        atr = subnode->GetAttribute("unit");
+        atrVal = atr->GetValue();
+        doublereal fact = convert.getConvertionFactor(atrVal);
+        doublereal vel = cdble(subnode->Data())*fact;
+        cb.setVelocity(vel);
+    }else{
+        cb.setVelocity(0.0);
+    }
+
+    subnode = node.GetFirstChild("temperature");
+    if(subnode != NULL){
+        atr = subnode->GetAttribute("unit");
+        atrVal = atr->GetValue();
+        doublereal fact = convert.getConvertionFactor(atrVal);
+        doublereal temp = cdble(subnode->Data()) + fact;
+        cb.setTemperature(temp);
+    }else{
+        throw CamError("Temperature at the inlet must be specified\n");
+    }
+
+
+    subnode = node.GetFirstChild("flowrate");
+    if(subnode != NULL){
+        atr = subnode->GetAttribute("unit");
+        atrVal = atr->GetValue();
+        doublereal fact = convert.getConvertionFactor(atrVal);
+        doublereal flow = cdble(subnode->Data())*fact;
+        cb.setFlowRate(flow);
+    }else{
+        if(cb.getVelocity() == 0.0)
+            throw CamError("Either valocity of flow rate needs specified\n");
+        else
+            cb.setFlowRate(0.0);
+    }
+
+    subnode = node.GetFirstChild("massfrac");
+    if(subnode != NULL){
+        cb.setFracType(cb.MASS);
+        readFrac(fracs,*subnode);
+        cb.setSpecies(fracs);
+    }
+    subnode = node.GetFirstChild("molefrac");
+    if(subnode != NULL){
+        cb.setFracType(cb.MOLE);
+        readFrac(fracs,*subnode);
+        cb.setSpecies(fracs);
+    }
+}
+
+//function to read the mole or mass fractions for any element
+void CamRead::readFrac(map<string,doublereal>& fracs, const CamXML::Element& subnode){
+
+    vector<CamXML::Element*> subnodes;
+    vector<CamXML::Element*>::const_iterator p;
+    const CamXML::Attribute *atr;
+    string atrVal;
+    string frac,finalSpecies;
+    doublereal sumfrac = 0.0;
+    subnode.GetChildren("species",subnodes);
+    for(p=subnodes.begin(); p<subnodes.end(); ++p){
+        atr = (*p)->GetAttribute("name");
+        if(atr!=NULL){
+            atrVal = atr->GetValue();
+            frac = (*p)->Data();
+            if(!frac.compare("*")){
+                finalSpecies = atrVal;
+            }else{
+                sumfrac += cdble(frac);
+                fracs.insert(make_pair(atrVal,cdble(frac)));
+            }
+        }
+    }
+    if(! isEmpty(finalSpecies))
+        fracs.insert(make_pair(finalSpecies,1-sumfrac));
+}
+
+//function to read solver control parameters
+void CamRead::readControl(CamControl& cc, const CamXML::Element& node){
+    CamXML::Element *solverNode, *subnode, *tols;
+    const CamXML::Attribute *atr;
+    string atrVal;
+    solverNode = node.GetFirstChild("solver");
+    if(solverNode != NULL){
+        atr = solverNode->GetAttribute("mode");
+        if(atr != NULL){
+            atrVal = atr->GetValue();
+            if(!convertToCaps(atrVal).compare("STEADY"))
+                cc.setSolutionMode(cc.STEADY);
+            if(!convertToCaps(atrVal).compare("TRANSIENT"))
+                cc.setSolutionMode(cc.TRANSIENT);
+        }else{
+            throw CamError(" integration mode not specified in solver element\n");
+        }
+        atr = solverNode->GetAttribute("solver");
+        if(atr != NULL){
+            atrVal = atr->GetValue();
+            if(!convertToCaps(atrVal).compare("CVODE"))
+                cc.setSolver(cc.CVODE);
+            if(!convertToCaps(atrVal).compare("RADAU"))
+                cc.setSolver(cc.RADAU);
+            if(!convertToCaps(atrVal).compare("KINSOL"))
+                cc.setSolver(cc.KINSOL);
+            if(!convertToCaps(atrVal).compare("IDA"))
+                cc.setSolver(cc.IDA);
+        }else{
+            throw CamError(" solver need to be specified\n");
+        }
+
+        subnode = solverNode->GetFirstChild("iniStep");
+        if(subnode != NULL)
+            cc.setIniStep(cdble(subnode->Data()));
+        subnode = solverNode->GetFirstChild("minStep");
+        if(subnode!=NULL)
+            cc.setMinStep(cdble(subnode->Data()));
+        subnode = solverNode->GetFirstChild("maxStep");
+        if(subnode!=NULL)
+            cc.setMaxStep(cdble(subnode->Data()));
+        subnode = solverNode->GetFirstChild("maxTime");
+        if(subnode!=NULL)
+            cc.setMaxTime(cdble(subnode->Data()));
+
+        //read tolerences
+        subnode = solverNode->GetFirstChild("tols");
+        if(subnode != NULL){
+            tols = subnode->GetFirstChild("resTol");
+            if(tols != NULL){
+                cc.setResTol(cdble(tols->Data()));
+            }
+            doublereal atol, rtol;
+            tols = subnode->GetFirstChild("species");
+            if(tols != NULL) {
+                readTol(*tols,atol,rtol);               
+                cc.setSpeciesAbsTol(atol);
+                cc.setSpeciesRelTol(rtol);
+            }
+
+            tols = subnode->GetFirstChild("temperature");
+            if(tols != NULL){
+                readTol(*tols,atol,rtol);
+                cc.setTempAbsTol(atol);;
+                cc.setTempRelTol(rtol);
+            }
+            tols = subnode->GetFirstChild("flow");
+            if(tols != NULL){
+                readTol(*tols,atol,rtol);
+                cc.setFlowAbsTol(atol);
+                cc.setFlowRelTol(rtol);
+            }
+
+        }
+
+    }else{
+        throw CamError("solver definition missing\n");
+    }
+
+}
+//funtion to read tolerence
+void CamRead::readTol(const CamXML::Element& node, doublereal& atol, doublereal& rtol){
+
+    CamXML::Element *subnode;
+    atol = 0;
+    rtol = 0;
+    subnode = node.GetFirstChild("aTol");
+    if(subnode!= NULL)
+        atol = cdble(subnode->Data());
+    subnode = node.GetFirstChild("rTol");
+    if(subnode!= NULL)
+        rtol = cdble(subnode->Data());
+}
+
+//function to read initial guess
+void CamRead::readInitialGuess(CamProfile& cp,
+                                    CamConverter& convert,
+                                    const CamXML::Element& node){
+    CamXML::Element *subnode, *subsubnode;
+    vector<CamXML::Element*> subsubnodes;
+    vector<CamXML::Element*>::const_iterator p;
+    subnode = node.GetFirstChild("initialize");
+    if(subnode != NULL){
+        //temperature profile
+        subsubnode = subnode->GetFirstChild("Tprofile");
+        if(subsubnode != NULL){
+            const CamXML::Attribute *length, *temp;
+            length = subsubnode->GetAttribute("unit_L");
+            temp = subsubnode->GetAttribute("unit_T");
+            doublereal convertL = convert.getConvertionFactor(length->GetValue());
+            doublereal convertT = convert.getConvertionFactor(temp->GetValue());
+
+            subsubnode->GetChildren("position",subsubnodes);
+            
+            for(p=subsubnodes.begin(); p<subsubnodes.end(); ++p){
+                doublereal pos = cdble((*p)->GetAttributeValue("x"))*convertL;
+                doublereal temp = cdble((*p)->Data())+convertT;
+                cp.setUserTemp(pos,temp);
+            }
+        }
+        //intermediate species
+        map<string,doublereal> fracs;
+        subsubnode = subnode->GetFirstChild("massfrac");
+        if(subsubnode!=NULL){
+            cp.setFracType(cp.MASS);
+            readFrac(fracs,*subsubnode);
+            cp.setSpecies(fracs);
+        }
+
+        subsubnode = subnode->GetFirstChild("molefrac");
+        if(subsubnode != NULL){
+            cp.setFracType(cp.MOLE);
+            readFrac(fracs,*subsubnode);
+            cp.setSpecies(fracs);
+        }
+        
+    }
+
+}
+
+void CamRead::readReport(CamAdmin& ca, const CamXML::Element& node){
+
+    CamXML::Element *subnode;
+    string atrVal;
+    subnode = node.GetFirstChild("report");
+    if(subnode!=NULL){
+        atrVal = subnode->GetAttributeValue("species");
+        if(!convertToCaps(atrVal).compare("MOLE")){
+            ca.setSpeciesOut(ca.MOLE);
+        }else{
+            ca.setSpeciesOut(ca.MASS);
+        }
+        atrVal = subnode->GetAttributeValue("outfile");
+        if(!convertToCaps(atrVal).compare("INTER")){
+            ca.setReportSchedule(ca.INTER);
+        }else{
+            ca.setReportSchedule(ca.FINAL);
+        }
+    }else{
+        throw CamError("Report information missing\n");
+    }
+
+}
+
+void CamRead::readGrid(CamGeometry& cg, const CamXML::Element& node){
+    CamXML::Element *subnode;
+    subnode = node.GetFirstChild("grid");
+    if(subnode!=NULL){
+        cg.setGridFile(subnode->Data());
+    }
+}

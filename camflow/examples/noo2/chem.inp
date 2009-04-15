@@ -1,0 +1,15 @@
+ELEMENTS
+O N
+END
+SPECIES
+O2 NO NO2 N2 O
+END
+REACTIONS
+ O+O+M = O2+M                            2.900E+17   -1.00         0.00
+   O2/0.4/ N2/0.4/
+ NO2+M = NO+O+M                          1.100E+16    0.00     65936.90
+   O2/0.4/ N2/0.4/
+ NO2+O = NO+O2                           1.000E+13    0.00       599.90
+ NO2+NO2 = NO+NO+O2                      1.600E+12    0.00     26097.03
+!
+END
