@@ -59,7 +59,7 @@ namespace Camflow{
     public:
 
         CamResidual(){};
-        ~CamResidual(){
+        virtual ~CamResidual(){
             // delete CamMixture;
             //delete CamMech;
             //delete yData;
@@ -113,7 +113,7 @@ namespace Camflow{
         //return the total number of equations
         const int& getNEqn() const;
         //derivative calculation
-        doublereal dydx(doublereal nr1, doublereal nr2, doublereal dr);
+        doublereal dydx(doublereal nr1, doublereal nr2, doublereal dr){return ((nr1-nr2)/dr);}
         
 
     protected:

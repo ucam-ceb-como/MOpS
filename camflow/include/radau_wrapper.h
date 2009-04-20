@@ -45,7 +45,6 @@
 #include "cam_control.h"
 #include "StiffIntegratorT.h"
 #include "cam_residual.h"
-#include "dae_solver.h"
 namespace Camflow{
     class RadauWrapper {
 

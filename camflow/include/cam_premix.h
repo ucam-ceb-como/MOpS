@@ -69,7 +69,7 @@ namespace Camflow{
 
         CamPremix(){};
         //CamPremix(){}
-        ~CamPremix(){};
+        virtual ~CamPremix(){};
 
 
         /*

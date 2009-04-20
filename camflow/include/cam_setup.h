@@ -18,6 +18,9 @@ using namespace Sprog;
 namespace Camflow{
     class CamSetup : public CamResidual{
     public:
+        CamSetup(){}
+        virtual ~CamSetup(){}
+        
         //return the inlet species mass fractions for the given boundary
         void getInletMassFrac(CamBoundary &cb, vector<doublereal>& fracs);
         //return the inlet temperature
@@ -27,11 +30,11 @@ namespace Camflow{
         //return the inlet velocity
         const doublereal getInletVelocity(CamBoundary &cb);
         //return the initial  guess for species mass fractions
-        void getInitialGuess(vector<doublereal> &fracs);
+        //void getInitialGuess(vector<doublereal> &fracs);
         //create the solution vector at the specified boundary
         void createSolnVector(CamBoundary &cb, CamControl &cc, vector<doublereal> &soln);
         //create the solution vector for intermediate soln points
-        void createSolnVector(CamBoundary &cb, CamControl &cc,int n1, int n2, vector<doublereal> &soln);
+        //void createSolnVector(CamBoundary &cb, CamControl &cc,int n1, int n2, vector<doublereal> &soln);
         
     protected:
         CamProfile *profile;

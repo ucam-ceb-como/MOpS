@@ -45,6 +45,9 @@
 #include "cam_converter.h"
 #include "cam_conc.h"
 #include "gpc.h"
+#include "array.h"
+#include "cam_geometry.h"
+#include "cam_boundary.h"
 #include <string>
 #include <map>
 using namespace Sprog;
@@ -52,19 +55,50 @@ using namespace std;
 namespace Camflow{
     class CamProfile : public CamConc {
         vector<doublereal> u_pos, u_temp;         //user defined temp profile
-        map<string, doublereal> iniSpec;      //initial guess for intermediate species
-        vector<doublereal> initialfrac;
+        map<string, doublereal> list_prdt, list_intmd;
+        vector<doublereal> m_prdt, m_intmd;
+        doublereal mWidth, mCenter;
         int fracType;
-        
+        Array2D start;
+        CamGeometry *geom;
     public:
         CamProfile(){}
         ~CamProfile(){}
 
-        //set the initial species guess
-        void setSpecies(map<string, doublereal> spec);
+        /*
+         *set the geometry object
+         */
+        void setGeometryObj(CamGeometry& cg);
+        /*
+         *set mixing length and mixing width
+         */
+        void setMixingCenter(doublereal len);
+        void setMixingWidth(doublereal len);
+        /*
+         *populte the product and intermediate mass fracs
+         */
+        void populateProducts(Mechanism& mech);
+        void populateIntermdts(Mechanism& mech);
+        /*
+         *set the start profile
+         */
+        void setStarProfile(CamBoundary& cb, Mechanism& mech);
+        /*
+         *set the gaussian for intermediates
+         */
+        void setGaussian(Mechanism &mech);
+        /*
+         *return the start profile
+         */
+        Array2D& getStartProfile();
+
+        //set guess for products
+        void setProductSpecies(map<string, doublereal> spec);
+        //set guess for intermediates
+        void setIntermediateSpecies(map<string, doublereal> spec);
 
         //return the initial species guess
-        vector<doublereal>& getInitialSpeciesGuess(Mechanism &mech);
+        void getmassFracs(map<string,doublereal>& spec, Mechanism& mech, vector<doublereal>& frac);
 
         //set the user defined temp profile
         void setUserTemp(doublereal pos, doublereal temp);

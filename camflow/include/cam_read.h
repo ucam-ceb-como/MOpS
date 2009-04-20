@@ -104,7 +104,7 @@ namespace Camflow{
         void readTol(const CamXML::Element &node, doublereal& atol, doublereal& rtol);
         
         //read mass or mole fractions
-        void readFrac(map<string,doublereal>& fracs, const CamXML::Element &subnode);
+        void readFrac(string& member, map<string,doublereal>& fracs, const CamXML::Element &subnode);
 
 
     };

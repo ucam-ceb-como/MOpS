@@ -56,8 +56,8 @@ namespace Camflow{
     class CamPlug: public CamSetup{
 
     public:
-         CamPlug(){};
-        ~CamPlug(){}
+        CamPlug(){};
+        virtual ~CamPlug(){}
         
         /*
          *the following 3 functions are called by
