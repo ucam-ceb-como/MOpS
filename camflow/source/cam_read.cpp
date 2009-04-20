@@ -38,6 +38,9 @@
 
  */
 
+#include "cam_profile.h"
+
+
 #include "cam_geometry.h"
 
 
@@ -254,23 +257,23 @@ void CamRead::readNozzle(CamBoundary& cb,
         else
             cb.setFlowRate(0.0);
     }
-
+    string member = "species";
     subnode = node.GetFirstChild("massfrac");
     if(subnode != NULL){
         cb.setFracType(cb.MASS);
-        readFrac(fracs,*subnode);
+        readFrac(member,fracs,*subnode);
         cb.setSpecies(fracs);
     }
     subnode = node.GetFirstChild("molefrac");
     if(subnode != NULL){
         cb.setFracType(cb.MOLE);
-        readFrac(fracs,*subnode);
+        readFrac(member,fracs,*subnode);
         cb.setSpecies(fracs);
     }
 }
 
 //function to read the mole or mass fractions for any element
-void CamRead::readFrac(map<string,doublereal>& fracs, const CamXML::Element& subnode){
+void CamRead::readFrac(string& member, map<string,doublereal>& fracs, const CamXML::Element& subnode){
 
     vector<CamXML::Element*> subnodes;
     vector<CamXML::Element*>::const_iterator p;
@@ -278,7 +281,7 @@ void CamRead::readFrac(map<string,doublereal>& fracs, const CamXML::Element& sub
     string atrVal;
     string frac,finalSpecies;
     doublereal sumfrac = 0.0;
-    subnode.GetChildren("species",subnodes);
+    subnode.GetChildren(member,subnodes);
     for(p=subnodes.begin(); p<subnodes.end(); ++p){
         atr = (*p)->GetAttribute("name");
         if(atr!=NULL){
@@ -416,20 +419,26 @@ void CamRead::readInitialGuess(CamProfile& cp,
                 cp.setUserTemp(pos,temp);
             }
         }
-        //intermediate species
+        //intermediate and product species
+        string mem1 = "product";
+        string mem2 = "intrmdt";
         map<string,doublereal> fracs;
         subsubnode = subnode->GetFirstChild("massfrac");
         if(subsubnode!=NULL){
             cp.setFracType(cp.MASS);
-            readFrac(fracs,*subsubnode);
-            cp.setSpecies(fracs);
+            readFrac(mem1,fracs,*subsubnode);
+            cp.setProductSpecies(fracs);
+            readFrac(mem2,fracs,*subsubnode);
+            cp.setIntermediateSpecies(fracs);
         }
 
         subsubnode = subnode->GetFirstChild("molefrac");
         if(subsubnode != NULL){
             cp.setFracType(cp.MOLE);
-            readFrac(fracs,*subsubnode);
-            cp.setSpecies(fracs);
+            readFrac(mem1,fracs,*subsubnode);
+            cp.setProductSpecies(fracs);
+            readFrac(mem2,fracs,*subsubnode);
+            cp.setIntermediateSpecies(fracs);
         }
         
     }

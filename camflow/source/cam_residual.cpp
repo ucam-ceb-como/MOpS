@@ -285,6 +285,3 @@ const int& CamResidual::getNEqn() const{
 }
 
 
-inline doublereal CamResidual::dydx(doublereal nr1, doublereal nr2, doublereal dr){
-    return ((nr1-nr2)/dr);
-}

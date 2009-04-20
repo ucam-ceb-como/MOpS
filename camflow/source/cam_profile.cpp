@@ -2,6 +2,10 @@
 #include <map>
 #include <vector>
 
+#include "cam_params.h"
+
+#include "array.h"
+
 /*
  * File:   cam_profile.h
  * Author: vinod
@@ -45,19 +49,150 @@
 using namespace Camflow;
 using namespace Strings;
 
-void CamProfile::setSpecies(map<string,doublereal> spec){
-    iniSpec = spec;
+/*
+ *set products
+ */
+void CamProfile::setProductSpecies(map<string,doublereal> spec){
+    list_prdt = spec;
 }
+/*
+ *set intermediates
+ */
+void CamProfile::setIntermediateSpecies(map<string,doublereal> spec){
+    list_intmd = spec;
+}
+/*
+ *populate the product and intermediates
+ */
+void CamProfile::populateProducts(Mechanism& mech){
+    if(list_prdt.size()>0)
+        getmassFracs(list_prdt,mech,m_prdt);
+}
+void CamProfile::populateIntermdts(Mechanism& mech){
+    if(list_intmd.size()>0)
+        getmassFracs(list_intmd,mech,m_intmd);
+}
+/*
+ *set the geometry object
+ */
+void CamProfile::setGeometryObj(CamGeometry& cg){
+    geom = &cg;
+}
+/*
+ *set mixing center
+ */
+void CamProfile::setMixingCenter(doublereal len){
+    mCenter = len;
+}
+/*
+ *set the mixing width
+ */
+void CamProfile::setMixingWidth(doublereal len){
+    mWidth = len;
+}
+/*
+ *set the start profile
+ */
+void CamProfile::setStarProfile(CamBoundary& cb, Mechanism& mech){
 
+    vector<doublereal> m_in = cb.getInletMassfracs();
+    vector<doublereal> position = geom->getAxpos();
+    int len = position.size();
+
+    start.resize(len,mech.SpeciesCount());
+
+    populateIntermdts(mech);
+    populateProducts(mech);
+
+   
+    if(mWidth != 0 && mCenter != 0 && m_prdt.size() != 0 && m_intmd.size() != 0){
+
+        for(int i=0; i<len; i++){
+            /*
+             *sum the intermediates
+             */
+            doublereal sumInter=0;
+            for(unsigned int l=0; l<mech.SpeciesCount();l++){
+                sumInter += start(i,l);
+            }
+            doublereal factor = 1-sumInter;
+            /*
+             * scaling factor
+             */
+            doublereal f_prdt, f_reac;
+            if(position[i] <= (mCenter-mWidth/2.0)) {
+                f_prdt = 0.0;                                        
+            }else{
+                if(position[i] < (mCenter+mWidth/2.0)){
+                    f_prdt = (1.0/mWidth)*(position[i]-mCenter)+0.5;
+                }else{
+                    f_prdt = 1.0;
+                }
+            }
+            f_reac = 1-f_prdt;
+
+            map<string, doublereal>::iterator p;
+            map<string,doublereal> spec = cb.getInletSpecies();
+            p = spec.begin();
+            while(p!= spec.end()){
+                int index = mech.FindSpecies(convertToCaps(trim(p->first)));
+                start(i,index) = factor*(f_prdt*m_prdt[index]+f_reac*m_in[index]);
+                p++;
+            }
+            p=list_prdt.begin();
+            while(p!=list_prdt.end()){
+                int index = mech.FindSpecies(convertToCaps(trim(p->first)));
+                if(m_in[index]==0){
+                    start(i,index) = factor*(f_prdt*m_prdt[index] + f_reac*m_in[index]);
+                }
+                p++;
+            }
+            
+        }
+
+    }else{
+        for(int i=0; i<len; i++){
+            for(unsigned int l=0; l<mech.SpeciesCount(); l++){
+                start(i,l) = m_in[l];
+            }
+        }
+
+    }
+
+}
+/*
+ *set the gaussian
+ */
+void CamProfile::setGaussian(Mechanism& mech){
+    vector<doublereal> position = geom->getAxpos();
+    int len = position.size();
+    map<string, doublereal>::iterator p;
+    p = list_intmd.begin();
+    while(p!=list_intmd.end()){
+        int index = mech.FindSpecies(convertToCaps(trim(p->first)));
+        doublereal gWidth = -log(0.15*m_intmd[index])/pow(mWidth/2.0,2);
+        for(int i=0; i<len; i++){
+            start(i,index) = m_intmd[index]*exp(-gWidth*pow(position[i]-mCenter,2));
+        }
+
+    }
+
+}
+/*
+ *return the array
+ */
+Array2D& CamProfile::getStartProfile(){
+    return start;
+}
 //return the species initial guesses
-vector<doublereal>& CamProfile::getInitialSpeciesGuess(Mechanism& mech){
+void CamProfile::getmassFracs(map<string,doublereal>& spec, Mechanism& mech, vector<doublereal>& frac){
     int index;
-    initialfrac.resize(mech.SpeciesCount(),0.0);
+    frac.resize(mech.SpeciesCount(),0.0);
     vector<doublereal> temp;
     temp.resize(mech.SpeciesCount(),0.0);
     map<string,doublereal>::iterator p;
-    p = iniSpec.begin();
-    while(p!=iniSpec.end()){
+    p = spec.begin();
+    while(p!=spec.end()){
         index = mech.FindSpecies(convertToCaps(trim(p->first)));
         if(index < 0)
            throw CamError("Species "+p->first +" not found in species list\n");
@@ -67,13 +202,11 @@ vector<doublereal>& CamProfile::getInitialSpeciesGuess(Mechanism& mech){
     }
 
     if(getFracType() == MASS){
-        initialfrac = temp;
+        frac = temp;
     }else{
         CamConverter cc;
-        cc.mole2mass(temp,initialfrac,mech);
+        cc.mole2mass(temp,frac,mech);
     }
-
-    return initialfrac;
 
 }
 

@@ -59,40 +59,22 @@ const doublereal CamSetup::getInletVelocity(CamBoundary& cb){
 }
 
 
-void CamSetup::getInitialGuess(vector<doublereal>& fracs){
+//void CamSetup::getInitialGuess(vector<doublereal>& fracs){
+//
+//    fracs = profile->getInitialSpeciesGuess(*camMech);
+//}
 
-    fracs = profile->getInitialSpeciesGuess(*camMech);
-}
 
-void CamSetup::createSolnVector(CamBoundary& cb, CamControl &cc, vector<doublereal>& soln){
-    /*
-     *This function generates the solution vector
-     *at the inlet in the following order
-     *Species, temperature, mass flow
-     */
-    getInletMassFrac(cb, soln);
-    rTol.resize(soln.size(),cc.getSpeciesRelTol());
-    aTol.resize(soln.size(),cc.getSpeciesAbsTol());
-
-    doublereal flow = getInletFlowRate(cb);
-    soln.push_back(flow);
-    rTol.push_back(cc.getFlowRelTol());
-    aTol.push_back(cc.getFlowAbsTol());
-
-    doublereal T = getInletTemperature(cb);
-    soln.push_back(T);
-    rTol.push_back(cc.getTempRelTol());
-    aTol.push_back(cc.getTempAbsTol());
-}
-
-void CamSetup::createSolnVector(CamBoundary &cb, CamControl &cc, int n1, int n2, vector<doublereal>& soln){
+void CamSetup::createSolnVector(CamBoundary &cb, CamControl &cc, vector<doublereal>& soln){
     /*
      *This function generates the solution
      *vector and the associated tolerances for the interior cells.
      *The vector elements are arranged in the following order
      *Species,massflow,Temperature
      */
-    vector<doublereal> initial, position;
+    soln.clear();
+    profile->setStarProfile(cb,*camMech);
+    vector<doublereal>  position;
     doublereal flow = getInletFlowRate(cb);
     doublereal T = cb.getTemperature();
 
@@ -103,17 +85,18 @@ void CamSetup::createSolnVector(CamBoundary &cb, CamControl &cc, int n1, int n2,
     doublereal cTol_r = cc.getFlowRelTol();
     doublereal cTol_a = cc.getFlowAbsTol();
 
-    getInitialGuess(initial);
+    
     position = reacGeom->getAxpos();
+    Array2D start = profile->getStartProfile();
 
-
-    for(int i = n1; i< n2; i++){
+    for(int i = cellBegin; i< cellEnd; i++){
         for(int l=0; l<nSpc; l++ ){
-            soln.push_back(initial[l]);
+            //soln.push_back(initial[l]);
+            soln.push_back(start(i,l));
             rTol.push_back(sTol_r);
             aTol.push_back(sTol_a);
+            
         }
- 
         //mass flow assignment
         soln.push_back(flow);
         rTol.push_back(cTol_r);

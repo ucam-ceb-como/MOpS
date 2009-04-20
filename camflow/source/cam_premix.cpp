@@ -234,7 +234,7 @@ void CamPremix::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile&
     reacGeom->addZeroWidthCells();
 
     opPre = ca.getPressure();
-
+    profile->setGeometryObj(cg);
     reporter = new CamReporter();
     nSpc = camMech->SpeciesCount();
     nVar = nSpc + 2;
@@ -273,8 +273,6 @@ void CamPremix::setupSolutionVector(CamBoundary &cb, CamControl &cc){
      */
 
     createSolnVector(cb,cc,solvect);
-    createSolnVector(cb,cc,loopBegin,cellEnd, solvect);
-
      
     reporter->header("PREMIX");
     reporter->problemDescription(cb,*this);
