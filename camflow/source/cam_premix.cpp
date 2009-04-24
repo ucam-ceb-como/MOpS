@@ -172,7 +172,7 @@ void CamPremix::speciesBoundary(const doublereal& t, doublereal* y, doublereal* 
     for(int l=0; l<nSpc ; l++){
         convection = m_u[0]*dydx(ud_inlet.Species[l],y[l],dz[0]);
         diffusion = dydx(0,s_jk(loopBegin,l),dz[0])/m_rho[0];
-        f[l] = convection;// + diffusion;
+        f[l] = convection+ diffusion;
 
     }
 
