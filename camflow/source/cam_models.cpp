@@ -53,7 +53,7 @@ void CamModels::solve(CamAdmin& ca,
     if(configID == config.PLUG){
         CamPlug cplug;
         try{
-            cplug.solve(cc,ca,cg,mech);
+            cplug.solve(cc,ca,cg,cp,mech);
         }catch(CamError ce){
             cout << ce.errorMessge << endl;
         }

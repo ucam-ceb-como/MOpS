@@ -59,19 +59,25 @@ namespace Camflow{
     public:
 
         CamResidual(){};
-        virtual ~CamResidual(){
-            // delete CamMixture;
-            //delete CamMech;
-            //delete yData;
-        }
+        virtual ~CamResidual(){}
 
         //residual evaluation function
         virtual int eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval)=0;
+        /*
+         *console output for monitoring the integration process
+         */
         virtual void report(doublereal t, doublereal* solution)=0;
+        /*
+         *console output for monitoring the integration process
+         *with residual output
+         */
+        virtual void report(doublereal t, doublereal* solutio, doublereal& res)=0;
+        /*
+         *mass matrix definition for Radau
+         */
         virtual void massMatrix(doublereal **M)=0;
         //get intitial
         virtual void getInitial(vector<doublereal> &initial)=0;
-
         
         //base class definition for species residuals
         virtual void speciesResidual(const doublereal& time, doublereal* y, doublereal* f);
@@ -84,10 +90,6 @@ namespace Camflow{
         
         //stores the mixture properties for the calculation of fluxes
         virtual void saveMixtureProp(doublereal* y, bool thermo);
-        //get the molar production rate
-//        virtual void  getMolarProductionRate(int i,const doublereal T,
-//                                        const vector<doublereal>& massfrac,
-//                                        vector<doublereal>& source);
         
 
         //update the thermal flux. The flux is stored on the west cell
@@ -95,16 +97,12 @@ namespace Camflow{
         //returned for cell index 2 is the interface flux between 1 and 2
         virtual void updateThermo();
 
-        //Ccalculates the diffusion fluxes and stores in cr_jk.
+        //Calculates the diffusion fluxes and stores in cr_jk.
         //The fluxes are stored at for the left cell face (w), i.e
         //the flux stored at cell index 2 is the flux at the interface
         //between cell index 1 and 2. The fluxes are calculated based
         //on mixture averaged approach
         void updateDiffusionFluxes();
-        /*
-         *return the diffusion fluxes
-         */
-        void getDiffusionFlux(int i, doublereal *y, vector<doublereal>& jk);
 
         //return the number of species
         const int& getNSpecies() const ;
@@ -131,11 +129,13 @@ namespace Camflow{
         vector<doublereal> m_k;                  //mixture thermal conductivity
         vector<doublereal> m_rho;                //mixture density
         vector<doublereal> m_u;                  //fluid velocity
-        vector<doublereal> m_q;          //thermal conduction flux
+        vector<doublereal> m_q;                  //thermal conduction flux
+        vector<doublereal> m_flow;               //mass flow
         vector<doublereal> wdot;                 //rate of production
         vector<doublereal> dz;                   //grid spacting
         vector<doublereal> axpos;                //axial position
-        
+
+        vector<doublereal> resSp, resT, resM;
        
         doublereal opPre;                        //operating pressure
 

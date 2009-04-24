@@ -14,31 +14,19 @@ void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doubler
 
 
     /*
-     *preperation for array offsets
-     */
-    int ptrSP, ptrSW;
-    int ptrCE, ptrCP, ptrCW;
-
-    /*
      *prepare flux terms
      */
     doublereal convection, diffusion, source;
-    map<int, vector<doublereal> >::iterator p;
     
 
     for(int i= loopBegin; i< loopEnd; i++ ){
-        ptrCE = nVar*(i+1) + ptrC;
-        ptrCP = nVar * i + ptrC;
-        ptrCW = nVar *(i-1) + ptrC;
         
         
         for(int l=0; l<nSpc; l++){
-            ptrSP = nVar*i + l;
-            ptrSW = nVar*(i-1) +l;
             /*
              *convection term
              */
-            convection = (-y[ptrCP]/m_rho[i])*dydx(y[ptrSP],y[ptrSW],dz[i]);
+            convection = -m_u[i]*dydx(s_mf(i,l),s_mf(i-1,l),dz[i]);
             /*
              *diffusion term
              */            
@@ -48,7 +36,7 @@ void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doubler
              */
             source = s_Wdot(i,l)*(*spv)[l]->MolWt()/m_rho[i];            
 
-            f[ptrSP] = convection + diffusion + source ;
+            f[i*nSpc+l] = convection + diffusion + source ;
            
         }
 
@@ -62,10 +50,6 @@ void CamResidual::energyResidual(const doublereal& time, doublereal* y, doublere
 
 
     if(admin->getEnergyModel() == admin->ADIABATIC){
-        /*
-         *array offsets
-         */
-        int ptrTP, ptrTW, ptrTE;
         doublereal sumHSource, flxk, sumFlx;;
         for(int i=loopBegin; i<loopEnd; i++){
             /*
@@ -78,17 +62,11 @@ void CamResidual::energyResidual(const doublereal& time, doublereal* y, doublere
                 flxk = 0.5*(s_jk(i-1,l)+s_jk(i,l));
                 sumFlx += flxk*s_cp(i,l)/(*spv)[l]->MolWt();
             }
-            /*
-             *prepate offsets
-             */
-            ptrTP = i*nVar + ptrT;
-            ptrTE = (i+1)*nVar + ptrT;
-            ptrTW = (i-1)*nVar + ptrT;
 
             /*
              *convection
              */
-            doublereal convection =  -m_u[i]*dydx(y[ptrTP],y[ptrTW],dz[i]);
+            doublereal convection =  -m_u[i]*dydx(m_T[i],m_T[i-1],dz[i]);
             /*
              *conduction
              */
@@ -96,21 +74,20 @@ void CamResidual::energyResidual(const doublereal& time, doublereal* y, doublere
             /*
              *flux transport
              */
-            sumFlx *= dydx(y[ptrTP],y[ptrTW],dz[i]);
+            sumFlx *= dydx(m_T[i],m_T[i-1],dz[i]);
 
             /*
              *residual
              */
-            f[ptrTP] = convection + (conduction - sumHSource - sumFlx)/(m_rho[i]*m_cp[i]);
+            f[i] = convection + (conduction - sumHSource - sumFlx)/(m_rho[i]*m_cp[i]);
+            //f[i] = convection + (conduction - sumHSource )/(m_rho[i]*m_cp[i]);
             
 
         }
     }else{
-        int ptrTP,ptrTW;
+        
         for(int i=loopBegin; i< loopEnd; i++){
-            ptrTP = nVar*i + ptrT;
-            ptrTW = nVar*(i-1) + ptrT;
-            f[ptrTP] = 0;
+            f[i] = 0;
             //f[ptrTP] = y[ptrTW]-y[ptrTP];
 
         }
@@ -123,16 +100,10 @@ void CamResidual::energyResidual(const doublereal& time, doublereal* y, doublere
 
 void CamResidual::massFlowResidual(const doublereal& time, doublereal* y, doublereal* f){
 
-    /*
-     *prepare array offsets
-     */
-    int ptrCP, ptrCW, ptrCE;
+  
     for(int i=loopBegin; i<loopEnd; i++){
-        ptrCP = nVar*i + ptrC;
-        ptrCE = nVar*(i+1) + ptrC;
-        ptrCW = nVar*(i-1) + ptrC;
-
-        f[ptrCP] = -(y[ptrCP]/m_rho[i])*(y[ptrCP]-y[ptrCW])/dz[i];
+  
+        f[i] = -m_u[i]*(m_flow[i]-m_flow[i-1])/dz[i];
         //f[ptrCP] = y[ptrCW]-y[ptrCP];
         
     }
@@ -149,7 +120,7 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo){
     m_k.clear();
     m_rho.clear();
     m_u.clear();
-    
+    m_flow.clear();
 
     s_H.resize(cellEnd,nSpc);
     s_cp.resize(cellEnd,nSpc);
@@ -181,6 +152,7 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo){
                                 
         m_rho.push_back(dens);                
         m_u.push_back(y[i*nVar+ptrC]/dens);
+        m_flow.push_back(y[i*nVar+ptrC]);
         //store the diffusion coefficient
         temp = camMixture->getMixtureDiffusionCoeff(opPre);
         //the following properties are needed only when the

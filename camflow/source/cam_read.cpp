@@ -331,6 +331,16 @@ void CamRead::readControl(CamControl& cc, const CamXML::Element& node){
             throw CamError(" solver need to be specified\n");
         }
 
+        atr = solverNode->GetAttribute("residual");
+        if(atr != NULL){
+
+            atrVal = atr->GetValue();
+            if(!convertToCaps(atrVal).compare("ON"))
+                cc.setResidualMonitor(true);
+            else
+                cc.setResidualMonitor(false);
+        }
+
         subnode = solverNode->GetFirstChild("iniStep");
         if(subnode != NULL)
             cc.setIniStep(cdble(subnode->Data()));

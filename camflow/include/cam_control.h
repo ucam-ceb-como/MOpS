@@ -55,7 +55,7 @@ namespace Camflow{
         doublereal resTol;                    //residual tolerence
         doublereal iniStep, maxStep,minStep;  //solver stepsize control
         doublereal maxTime;                   //max integration time
-
+        bool resMonitor;
     protected:
         int solMode;                    //solution mode steady or trans
         int repotMode;                  //repot mode intermediate or final
@@ -126,6 +126,8 @@ namespace Camflow{
         //set the solver
         void setSolver(int n);
 
+        void setResidualMonitor(bool lopt);
+        
         //return the species rel tol
         doublereal getSpeciesRelTol() const;
 
@@ -167,6 +169,8 @@ namespace Camflow{
 
         //return the max integration time
         doublereal getMaxTime() const;
+
+        bool getResidualMonitor() const;
 
     };
 }

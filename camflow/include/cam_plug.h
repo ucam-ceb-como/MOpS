@@ -64,14 +64,17 @@ namespace Camflow{
          *the DAE solver
          */
         int eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval);
-        //report the results
+        //console output
         void report(doublereal x, doublereal* solution);
+        //console output with residuals
+        void report(doublereal x, doublereal* solution, doublereal& res);
         //mass matrix evaluation
         void massMatrix(doublereal **M);
 
         
         //solve
-        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg, Mechanism &mech);
+        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg, CamProfile&cp,
+                            Mechanism &mech);
 
         //return the initial solution vector
         void getInitial(vector<doublereal>& initial);
@@ -88,7 +91,7 @@ namespace Camflow{
         void residenceTime(const doublereal& x, doublereal *y, doublereal *f);
         
         //update the mixture properties
-        void updateMixture(doublereal *y);
+        void updateMixture(const doublereal& x, doublereal *y);
 
         //header information
         void header();

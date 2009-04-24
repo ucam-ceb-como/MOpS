@@ -36,6 +36,9 @@
  * Created on January 24, 2009, 12:08 PM
  */
 
+#include "cam_profile.h"
+
+
 #include "cam_admin.h"
 
 #include <vector>
@@ -56,15 +59,14 @@ void CamPlug::getInitial(vector<doublereal>& initial){
 }
 
 //plug solve main call
-void CamPlug::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, Mechanism &mech){
+void CamPlug::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
+                                Mechanism &mech){
 
-
-    
     camMech = &mech;
     Thermo::Mixture mix(mech.Species());
     camMixture = &mix;
     spv = camMixture->Species();
-
+    profile = &cp;
     CamBoundary cb;
     admin = &ca;
 
@@ -174,31 +176,36 @@ void CamPlug::residual(const doublereal& x, doublereal* y, doublereal* f){
      *@y - solution vector
      *@f - dy/dx
      */
-    updateMixture(y);
+    updateMixture(x,y);
     speciesResidual(x,y,f);
     energyResidual(x,y,f);
     massFlowResidual(x,y,f);
     residenceTime(x,y,f);
 }
 
-void CamPlug::updateMixture(doublereal* y){
+void CamPlug::updateMixture(const doublereal& x, doublereal* y){
     /*
      *update the mixture with the current mass fraction
      *temperature and density
      */
+    doublereal tmptr;
     vector<doublereal> massfracs;
     massfracs.resize(nSpc,0.0);
     for (int l = 0; l < nSpc; l++) {
         massfracs[l] = y[l];
     }
     camMixture->SetMassFracs(massfracs);
-    camMixture->SetTemperature(y[ptrT]);
+    if(admin->getEnergyModel() == admin->USERDEFINED)
+        tmptr = profile->getUserDefTemp(x);
+    else
+        tmptr = y[ptrT];
+    camMixture->SetTemperature(tmptr);
 
     /*
      *evaluate density and hence the velocity
      */
     real avgMolWt = camMixture->getAvgMolWt();
-    rho = avgMolWt*opPre/(R*y[ptrT]);
+    rho = avgMolWt*opPre/(R*tmptr);
     camMixture->SetMassDensity(rho);
     vel = y[ptrC]/rho;
 
@@ -279,7 +286,7 @@ void CamPlug::report(doublereal x, doublereal* soln){
     //std::setw(5); std::setprecision(4);
     cout.width(5);
     cout.setf(ios::scientific);
-    updateMixture(soln);
+    updateMixture(x,soln);
     cout << x << endl;
 
     //prepare to report
@@ -312,4 +319,11 @@ void CamPlug::report(doublereal x, doublereal* soln){
     data.push_back(sum);
     reporter->writeStdFileOut(data);
 
+}
+
+/*
+ *this is a dummy function
+ */
+void CamPlug::report(doublereal x, doublereal* soln, doublereal& res){
+    cout << "nothing implemented\n";
 }

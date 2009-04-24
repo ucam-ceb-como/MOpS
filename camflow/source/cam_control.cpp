@@ -54,7 +54,7 @@ CamControl::CamControl(){
     setTempRelTol(1.e-03);
     setFlowAbsTol(1.e-03);
     setFlowRelTol(1.e-03);
-    setResTol(1.e-05);
+    setResTol(1.e-07);
     setReportInterval(CamControl::FINAL);
     setIniStep(0.0);
     setMaxTime(1e5);
@@ -117,6 +117,10 @@ void CamControl::setSolver(int n){
     solver = n;
 }
 
+void CamControl::setResidualMonitor(bool lopt){
+    resMonitor = lopt;
+}
+
 doublereal CamControl::getSpeciesRelTol() const{   
     return this->relTolSp;
 }
@@ -171,4 +175,8 @@ doublereal CamControl::getMaxStep() const{
 
 doublereal CamControl::getMaxTime() const{
     return this->maxTime;
+}
+
+bool CamControl::getResidualMonitor() const{
+    return resMonitor;
 }

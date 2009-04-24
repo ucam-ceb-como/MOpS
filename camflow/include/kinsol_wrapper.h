@@ -12,6 +12,7 @@
 #include "cam_residual.h"
 #include <kinsol/kinsol.h>
 #include <kinsol/kinsol_band.h>
+#include "kinsol/kinsol_dense.h"
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_types.h>
 namespace Camflow{

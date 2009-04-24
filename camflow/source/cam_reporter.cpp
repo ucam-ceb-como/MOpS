@@ -74,6 +74,7 @@ void CamReporter::problemDescription(CamBoundary& cb, CamResidual& cr){
 }
 
 void CamReporter::consoleHead(string head){
+    cout << "\n";
     cout << " " << head << endl;
     int len = head.length();
     for (int i = 0; i < len+2; i++) {

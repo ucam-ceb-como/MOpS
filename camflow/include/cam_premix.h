@@ -79,6 +79,8 @@ namespace Camflow{
         int eval(doublereal x, doublereal* y, doublereal* ydot,bool jacEval);
         //report the results
         void report(doublereal t, doublereal* solution);
+        //console output with resisual monitoring
+        void report(doublereal t, doublereal* solution, doublereal& res);
         //write the results to output file
         void reportToFile(doublereal t, doublereal* soln);
         //mass matrix evaluation
@@ -95,7 +97,9 @@ namespace Camflow{
         void residual(const doublereal& t, doublereal *y, doublereal *f);
 
         //boundary residual
-        void boundaryCondition(const doublereal& t, doublereal *y, doublereal *f);
+        void massFlowBoundary(const doublereal& t, doublereal *y, doublereal *f);
+        void speciesBoundary(const doublereal& t, doublereal *y, doublereal *f);
+        void energyBoundary(const doublereal& t, doublereal *y, doublereal *f);
 
         //set up the solution vector
         void setupSolutionVector(CamBoundary &cb, CamControl &cc);
@@ -112,6 +116,8 @@ namespace Camflow{
 
     protected:
         inletStruct ud_inlet;
+        doublereal resNorm;
+        
 
         
     };

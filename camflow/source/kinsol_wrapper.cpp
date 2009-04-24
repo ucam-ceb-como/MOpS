@@ -19,9 +19,9 @@ void KinsolWrapper::init(int n, vector<doublereal>& solnVec, doublereal rtol, in
   y = scale = NULL;
   kmem = NULL;
 
-  y = N_VNew_Serial(n);
+  //y = N_VNew_Serial(n);
   //if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
-
+  y = N_VMake_Serial(n,&solnVec[0]);
   scale = N_VNew_Serial(n);
   //if (check_flag((void *)scale, "N_VNew_Serial", 0)) return(1);
 
@@ -34,7 +34,7 @@ void KinsolWrapper::init(int n, vector<doublereal>& solnVec, doublereal rtol, in
 
   /* y is used as a template */
 
-  flag = KINMalloc(kmem, func, y);
+  flag = KINMalloc(kmem, func, scale);
   //if (check_flag(&flag, "KINMalloc", 1)) return(1);
 
   /* -------------------
@@ -50,12 +50,14 @@ void KinsolWrapper::init(int n, vector<doublereal>& solnVec, doublereal rtol, in
   /* -------------------------
    * Attach band linear solver
    * ------------------------- */
-
-  flag = KINBand(kmem, n, band, band);
+  if(band < n)
+    flag = KINBand(kmem, n, band, band);
+  else
+      flag = KINDense(kmem,n);
   //if (check_flag(&flag, "KINBand", 1)) return(1);
 
   flag = KINSetFdata(kmem,(void*)&cr);
-
+  
   /* ------------------------------
    * Parameters for Modified Newton
    * ------------------------------ */
@@ -70,6 +72,7 @@ void KinsolWrapper::init(int n, vector<doublereal>& solnVec, doublereal rtol, in
   msubset = 1;
   flag = KINSetMaxSubSetupCalls(kmem, msubset);
   //if (check_flag(&flag, "KINSetMaxSubSetupCalls", 1)) return(1);
+  
 
   /* -------------
    * Initial guess
@@ -84,6 +87,8 @@ void KinsolWrapper::init(int n, vector<doublereal>& solnVec, doublereal rtol, in
   /* No scaling used */
   N_VConst_Serial(1.0,scale);
 
+
+
 }
 
 void KinsolWrapper::solve(){
@@ -96,9 +101,10 @@ void KinsolWrapper::solve(){
         throw CamError(errorStr);
     }else{
         cout << "Newton solver converged successfully\n";
+        
     }
     
-    N_VDestroy_Serial(y);
+    //N_VDestroy_Serial(y);
     N_VDestroy_Serial(scale);
     KINFree(&kmem);
 }

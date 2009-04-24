@@ -55,7 +55,7 @@ int main() {
     string fChem("chem.inp");
     string fThermo("therm.dat");
     string fTrans("tran.dat");
-    string fCamFlow("flame.xml");
+    string fCamFlow("camflow.xml");
 
     //mechanism object
     static Mechanism mech;
@@ -85,7 +85,7 @@ int main() {
     }catch(CamError &ce){
         cout << ce.errorMessge;
     }
-    cout << "Camflow end of execution..\n";
+    cout << "Camflow finished successfully..\n";
     return (EXIT_SUCCESS);
 }
 

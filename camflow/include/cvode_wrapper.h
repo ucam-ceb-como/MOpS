@@ -10,7 +10,7 @@
 
 #include "cam_params.h"
 #include "cam_residual.h"
-
+#include <cmath>
 #include "cvode/cvode.h"
 #include "cvode/cvode_band.h"
 #include "cvode/cvode_dense.h"
@@ -20,9 +20,11 @@
 namespace Camflow{
     class CVodeWrapper{
         void *cvode_mem;
-        N_Vector y;
+        N_Vector y,yPrime;
         doublereal atol, currentTime, maxTime;
+        int eqnSize;
         CamResidual *reacPtr;
+        doublereal resNorm;
     public:
         CVodeWrapper(){}
         ~CVodeWrapper(){}
@@ -36,7 +38,9 @@ namespace Camflow{
          *additional solver control
          */
         void setIniStep(doublereal istep);
-        void solve(int stopMode);
+        doublereal& solve(int stopMode);
+        void solve(int stopMode, doublereal resTol);
+        void calcResNorm();
         void destroy();
     };
 }

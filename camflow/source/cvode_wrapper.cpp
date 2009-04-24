@@ -18,11 +18,13 @@ void CVodeWrapper::init(int n, vector<doublereal>& solnVec, doublereal tol,
 
     cvode_mem = NULL;
     y=NULL;
-
+    yPrime = NULL;
     /*
      *create the soln vector
      */
     y = N_VMake_Serial(n,&solnVec[0]);
+    yPrime = N_VNew_Serial(n);
+    eqnSize = n;
     atol = tol;
     currentTime = 0.0;
     maxTime = maxIntTime;
@@ -48,23 +50,52 @@ void CVodeWrapper::setIniStep(doublereal istep){
     CVodeSetInitStep(cvode_mem,istep);
 }
 
-void CVodeWrapper::solve(int stopMode){
+doublereal& CVodeWrapper::solve(int stopMode){
 
-    int flag;
-    //CVodeSetStopTime(cvode_mem,maxTime);
+    int flag;    
     do{
         flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);
         if(flag < 0){
             cout << "Cvode Integration error\n";            
         }else{
-            //cout << currentTime << endl;
             reacPtr->report(currentTime,NV_DATA_S(y));
         }
     }while(currentTime < maxTime);
+    
+    CVodeGetDky(cvode_mem,currentTime,1,yPrime);
+    calcResNorm();
+    return resNorm;
+
+}
+
+void CVodeWrapper::solve(int stopMode, doublereal resTol){
+
+    int flag;
+    do{
+        flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);
+        if(flag < 0){
+            cout << "Cvode Integration error\n";
+        }else{
+            CVodeGetDky(cvode_mem,currentTime,1,yPrime);
+            calcResNorm();
+            reacPtr->report(currentTime,NV_DATA_S(y),resNorm);
+        }
+    }while(resNorm > resTol);
 
 }
 
 void CVodeWrapper::destroy(){
     CVodeFree(&cvode_mem);
     N_VDestroy(y);
+    N_VDestroy(yPrime);
+}
+
+void CVodeWrapper::calcResNorm(){
+    resNorm = 0;
+    doublereal *yp;
+    yp = NV_DATA_S(yPrime);
+    for(int i=0; i<eqnSize; i++)
+        resNorm += yp[i]*yp[i];
+
+    resNorm = sqrt(resNorm);
 }

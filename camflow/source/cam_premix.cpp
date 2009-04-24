@@ -54,7 +54,6 @@
 using namespace Camflow;
 
 
-
 int CamPremix::eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval){
 
     /*
@@ -114,6 +113,10 @@ void CamPremix::massMatrix(doublereal** M){
 
 
 void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f){
+
+    resSp.resize(cellEnd*nSpc,0);
+    resT.resize(cellEnd,0);
+    resM.resize(cellEnd,0);
     /*
      *residual evaluation function for premix. Internal
      *cell residuals are evaluated by calling the base class
@@ -121,20 +124,42 @@ void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f){
      */
     saveMixtureProp(y,true);
     updateDiffusionFluxes();
-
     if(admin->getEnergyModel() == admin->ADIABATIC) updateThermo();
     
-    boundaryCondition(t, y,f);
+    //massFlowBoundary(t,y,&resM[0]);
+    speciesBoundary(t,y,&resSp[0]);
+    energyBoundary(t,y,&resT[0]);
    
-    speciesResidual(t,y,f);
-   
-    energyResidual(t,y,f);
-    massFlowResidual(t,y,f);
+    speciesResidual(t,y,&resSp[0]);
+    energyResidual(t,y,&resT[0]);
+    //massFlowResidual(t,y,&resM[0]);
+
+    for(int i=0; i<cellEnd; i++){
+        for(int l=0; l<nSpc; l++){
+            f[i*nVar+l] = resSp[i*nSpc+l];
+        }
+        f[i*nVar+ptrC] = resM[i];
+        f[i*nVar+ptrT] = resT[i];
+    }
         
 }
 
 
-void CamPremix::boundaryCondition(const doublereal& t,  doublereal* y, doublereal* f){
+void CamPremix::massFlowBoundary(const doublereal& t, doublereal* y, doublereal* f){
+    //f[0] = ud_inlet.FlowRate - y[0]
+    //f[loopEnd] = y[loopEnd-1] - y[loopEnd];
+
+    f[0] = ud_inlet.Vel*(ud_inlet.FlowRate -m_flow[0])/dz[0];
+
+    /*
+     *Mass flow
+     */
+
+    f[loopEnd] = -m_u[loopEnd]*(m_flow[loopEnd]-m_flow[loopEnd-1])/dz[loopEnd];
+
+}
+
+void CamPremix::speciesBoundary(const doublereal& t, doublereal* y, doublereal* f){
 
     //-------------------------------------------
     //
@@ -142,29 +167,14 @@ void CamPremix::boundaryCondition(const doublereal& t,  doublereal* y, doublerea
     //
     //------------------------------------------
 
-    /*
-     *species boundary conditions
-     */        
     doublereal convection, diffusion;
-    
+
     for(int l=0; l<nSpc ; l++){
-        convection = y[ptrC]*dydx(ud_inlet.Species[l],y[l],dz[0])/m_rho[0];
+        convection = m_u[0]*dydx(ud_inlet.Species[l],y[l],dz[0]);
         diffusion = dydx(0,s_jk(loopBegin,l),dz[0])/m_rho[0];
-        f[l] = convection + diffusion;
+        f[l] = convection;// + diffusion;
 
     }
-    /*
-     *mass flow
-     */
-    f[ptrC] = ud_inlet.Vel*(ud_inlet.FlowRate -y[ptrC])/dz[0];
-    /*
-     *energy: irrespective of the condition, inlet is fixed at the
-     *user defined temperature
-     */
-     // once newton is implmented uncommnet this and comment the one below
-     //f[ptrT] = ud_inlet.T -y[ptrT];
-     f[ptrT] = 0.0;
-
 
      //---------------------------------------------------
      //
@@ -172,42 +182,36 @@ void CamPremix::boundaryCondition(const doublereal& t,  doublereal* y, doublerea
      //
      //---------------------------------------------------
 
-    /**
-     * Species boundary condition
-     */
-    
-    int ptrSP, ptrSW, ptrCP, ptrCW;
-    ptrCP = loopEnd*nVar + ptrC;
     for(int l=0; l<nSpc; l++){
-        ptrSP = loopEnd*nVar + l;
-        ptrSW = (loopEnd-1)*nVar + l;
-
-        f[ptrSP] = (-y[ptrCP]/m_rho[loopEnd])*dydx(y[ptrSP],y[ptrSW],dz[loopEnd]);
+        f[loopEnd*nSpc+l] = -m_u[loopEnd]*dydx(s_mf(loopEnd,l),s_mf(loopEnd-1,l),dz[loopEnd]);
     }
 
-    /*
-     *Mass flow
-     */
-    ptrCW = (loopEnd-1)*nVar + ptrC;
-    f[ptrCP] = -(y[ptrCP]/m_rho[loopEnd])*(y[ptrCP]-y[ptrCW])/dz[loopEnd];
+}
 
-    /*
-     * Energy
-     */
-    int ptrTP, ptrTW;
-    ptrTP = loopEnd*nVar + ptrT;
+
+void CamPremix::energyBoundary(const doublereal& t, doublereal* y, doublereal* f){
+    //-------------------------------------------
+    //
+    //  Left Boundary Settings
+    //
+    //------------------------------------------
+
+    f[0] = 0.0;
+
+     //---------------------------------------------------
+     //
+     // Right Boundary Settings
+     //
+     //---------------------------------------------------
     if(admin->getEnergyModel() == admin->ADIABATIC){
 
-        ptrTW = (loopEnd-1)*nVar + ptrT;
-        f[ptrTP] = (-y[ptrCP]/m_rho[loopEnd])*(dydx(y[ptrTP],y[ptrTW],dz[loopEnd]));
+        f[loopEnd] = -m_u[loopEnd]*(dydx(m_T[loopEnd],m_T[loopEnd-1],dz[loopEnd]));
 
     }else{
 
-        f[ptrTP] = 0;
+        f[loopEnd] = 0;
     }
 
-    
-    
 }
 
 
@@ -293,8 +297,14 @@ void CamPremix::setupSolutionVector(CamBoundary &cb, CamControl &cc){
     if(solver == cc.CVODE){
         CVodeWrapper cvw;
         cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(), cc.getMaxTime(),band,*this);
-        //cvw.setIniStep(1e-06);
-        cvw.solve(CV_ONE_STEP);
+        if(cc.getResidualMonitor()){
+
+            cvw.solve(CV_ONE_STEP,cc.getResTol());
+        }else{
+            resNorm = cvw.solve(CV_ONE_STEP);
+            cout << "ressidual at the end of maxTime " << resNorm << endl;
+
+        }
         reportToFile(cc.getMaxTime(),&solvect[0]);
         cvw.destroy();
     }
@@ -305,20 +315,32 @@ void CamPremix::setupSolutionVector(CamBoundary &cb, CamControl &cc){
         reportToFile(cc.getMaxTime(),&solvect[0]);
 
     }
-
-    
-
-    
+  
 }
 
-
+/*
+ *console putput
+ */
 void CamPremix::report(doublereal t, doublereal* soln){
+    static int nSteps=0;
     cout.width(5);
     cout.setf(ios::scientific);    
-    cout << t << endl;   
-	
-
+    cout << t << endl;  
+    if(nSteps%10==0)reporter->consoleHead("time(s)");
+    nSteps++;
 }
+/*
+ *console output with residual monitoring
+ */
+void CamPremix::report(doublereal t, doublereal* soln, doublereal& res){
+    static int nStep=0;
+    cout.width(5);
+    cout.setf(ios::scientific);
+    cout << t <<"\t" << res << endl;
+    if(nStep%10==0) reporter->consoleHead("time(s) \t residual");
+    nStep++;
+}
+
 
 void CamPremix::reportToFile(doublereal t, doublereal* soln){
     saveMixtureProp(soln,false);
