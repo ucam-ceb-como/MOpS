@@ -58,6 +58,7 @@ CamControl::CamControl(){
     setReportInterval(CamControl::FINAL);
     setIniStep(0.0);
     setMaxTime(1e5);
+    setNumIterations(1);
 }
 
 void CamControl::setSpeciesRelTol(doublereal tol){
@@ -121,6 +122,10 @@ void CamControl::setResidualMonitor(bool lopt){
     resMonitor = lopt;
 }
 
+void CamControl::setNumIterations(int n){
+    nIter = n;
+}
+
 doublereal CamControl::getSpeciesRelTol() const{   
     return this->relTolSp;
 }
@@ -180,3 +185,8 @@ doublereal CamControl::getMaxTime() const{
 bool CamControl::getResidualMonitor() const{
     return resMonitor;
 }
+
+int CamControl::getNumIterations() const{
+    return nIter;
+}
+

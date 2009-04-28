@@ -89,6 +89,8 @@ namespace Camflow{
 
         //solve
         void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp, Mechanism &mech );
+        void csolve(CamControl &cc);
+        void ssolve(CamControl &cc);
 
         //return the initial solution vector
         void getInitial(vector<doublereal>& initial);

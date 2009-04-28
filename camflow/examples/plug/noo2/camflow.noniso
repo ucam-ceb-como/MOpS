@@ -20,7 +20,7 @@
        </massfrac>
      </fuel>
   </inlet>
-  <solver mode="steady" solver="cvode">
+  <solver mode="coupled" solver="cvode">
 	  <tols>
 		  <species>
 			  <aTol>1.e-06</aTol>

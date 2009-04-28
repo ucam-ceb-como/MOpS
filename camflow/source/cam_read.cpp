@@ -309,10 +309,10 @@ void CamRead::readControl(CamControl& cc, const CamXML::Element& node){
         atr = solverNode->GetAttribute("mode");
         if(atr != NULL){
             atrVal = atr->GetValue();
-            if(!convertToCaps(atrVal).compare("STEADY"))
-                cc.setSolutionMode(cc.STEADY);
-            if(!convertToCaps(atrVal).compare("TRANSIENT"))
-                cc.setSolutionMode(cc.TRANSIENT);
+            if(!convertToCaps(atrVal).compare("COUPLED"))
+                cc.setSolutionMode(cc.COUPLED);
+            if(!convertToCaps(atrVal).compare("SEGREGATED"))
+                cc.setSolutionMode(cc.SEGREGATED);
         }else{
             throw CamError(" integration mode not specified in solver element\n");
         }
@@ -341,6 +341,10 @@ void CamRead::readControl(CamControl& cc, const CamXML::Element& node){
                 cc.setResidualMonitor(false);
         }
 
+        subnode = solverNode->GetFirstChild("iterations");
+        if(subnode != NULL)
+            cc.setNumIterations(int(cdble(subnode->Data())));
+        
         subnode = solverNode->GetFirstChild("iniStep");
         if(subnode != NULL)
             cc.setIniStep(cdble(subnode->Data()));

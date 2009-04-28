@@ -39,6 +39,7 @@
 
 #include <vector>
 #include <map>
+#include <math.h>
 
 #include "cam_params.h"
 #include "cam_admin.h"
@@ -116,32 +117,55 @@ void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f){
 
     resSp.resize(cellEnd*nSpc,0);
     resT.resize(cellEnd,0);
-    resM.resize(cellEnd,0);
+    resM.resize(cellEnd,0);    
     /*
      *residual evaluation function for premix. Internal
      *cell residuals are evaluated by calling the base class
      *function
      */
-    saveMixtureProp(y,true);
-    updateDiffusionFluxes();
-    if(admin->getEnergyModel() == admin->ADIABATIC) updateThermo();
-    
-    //massFlowBoundary(t,y,&resM[0]);
-    speciesBoundary(t,y,&resSp[0]);
-    energyBoundary(t,y,&resT[0]);
-   
-    speciesResidual(t,y,&resSp[0]);
-    energyResidual(t,y,&resT[0]);
-    //massFlowResidual(t,y,&resM[0]);
+    if(eqn_slvd == EQN_ALL){
+        saveMixtureProp(y,true);
+        updateDiffusionFluxes();
+        if(admin->getEnergyModel() == admin->ADIABATIC) updateThermo();
 
-    for(int i=0; i<cellEnd; i++){
-        for(int l=0; l<nSpc; l++){
-            f[i*nVar+l] = resSp[i*nSpc+l];
+        //massFlowBoundary(t,y,&resM[0]);
+        speciesBoundary(t,y,&resSp[0]);
+        energyBoundary(t,y,&resT[0]);
+
+        speciesResidual(t,y,&resSp[0]);
+        energyResidual(t,y,&resT[0]);
+        //massFlowResidual(t,y,&resM[0]);
+
+        for(int i=0; i<cellEnd; i++){
+            for(int l=0; l<nSpc; l++){
+                f[i*nVar+l] = resSp[i*nSpc+l];
+            }
+            f[i*nVar+ptrC] = resM[i];
+            f[i*nVar+ptrT] = resT[i];
         }
-        f[i*nVar+ptrC] = resM[i];
-        f[i*nVar+ptrT] = resT[i];
+    }else{
+        if(eqn_slvd == EQN_SPECIES){
+            mergeSpeciesVector(y);
+            saveMixtureProp(&solvect[0],false);
+            updateDiffusionFluxes();
+            speciesBoundary(t,y,f);
+            speciesResidual(t,y,f);
+        }else if(eqn_slvd == EQN_MASSFLOW){
+            mergeMassFlowVector(y);
+            saveMixtureProp(&solvect[0],false);
+            massFlowBoundary(t,y,f);
+            massFlowResidual(t,y,f);
+        }else if(eqn_slvd==EQN_ENERGY){
+            mergeEnergyVector(y);
+            saveMixtureProp(&solvect[0],true);
+            updateDiffusionFluxes();
+            updateThermo();            
+            energyResidual(t,y,f);
+            energyBoundary(t,y,f);
+
+        }
     }
-        
+
 }
 
 
@@ -172,7 +196,7 @@ void CamPremix::speciesBoundary(const doublereal& t, doublereal* y, doublereal* 
     for(int l=0; l<nSpc ; l++){
         convection = m_u[0]*dydx(ud_inlet.Species[l],y[l],dz[0]);
         diffusion = dydx(0,s_jk(loopBegin,l),dz[0])/m_rho[0];
-        f[l] = convection+ diffusion;
+        f[l] = convection + diffusion;
 
     }
 
@@ -283,6 +307,21 @@ void CamPremix::setupSolutionVector(CamBoundary &cb, CamControl &cc){
     reporter->consoleHead("time (s) ");
     header();
 
+    if(cc.getSolutionMode() == cc.COUPLED)
+        csolve(cc);
+    else{
+        ssolve(cc);
+        csolve(cc);
+    }
+
+  
+}
+/*
+ *couples solver
+ */
+void CamPremix::csolve(CamControl& cc){
+    
+    eqn_slvd = EQN_ALL;
     int solver = cc.getSolver();
     int band = nVar*2;
 
@@ -315,9 +354,61 @@ void CamPremix::setupSolutionVector(CamBoundary &cb, CamControl &cc){
         reportToFile(cc.getMaxTime(),&solvect[0]);
 
     }
-  
+
 }
 
+/*
+ *segregated solver
+ */
+void CamPremix::ssolve(CamControl& cc){
+    /*
+     *preperations
+     */
+    int nCell = reacGeom->getnCells();
+    int seg_eqn, band;
+    vector<doublereal> seg_soln_vec;
+    CVodeWrapper cvw;
+    for(int i=0; i<cc.getNumIterations(); i++){
+        /*
+         *integrate mass flow
+         */
+        cout << "solving mass flow\n";
+        eqn_slvd = EQN_MASSFLOW;
+        seg_eqn = nCell;
+        band = seg_eqn;
+        extractMassFlowVector(seg_soln_vec);
+        cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(), cc.getMaxTime(),band,*this);
+        cvw.solve(CV_ONE_STEP,1e-03);
+        mergeMassFlowVector(&seg_soln_vec[0]);
+        cvw.destroy();
+        /*
+         *integrate species
+         */
+        cout << "Solving species\n";
+        eqn_slvd = EQN_SPECIES;
+        seg_eqn = nSpc*nCell;
+        band = nSpc*2;
+        extractSpeciesVector(seg_soln_vec);
+        cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(), cc.getMaxTime(),band,*this);
+        cvw.solve(CV_ONE_STEP,1e-03);
+        mergeSpeciesVector(&seg_soln_vec[0]);
+        cvw.destroy();
+        /*
+         *integrate energy
+         */
+        cout << "Solving energy\n";
+        eqn_slvd = EQN_ENERGY;
+        seg_eqn = nCell;
+        band = nCell;
+        extractEnergyVector(seg_soln_vec);
+        cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(), cc.getMaxTime(),band,*this);
+        cvw.solve(CV_ONE_STEP,1e-03);
+        mergeEnergyVector(&seg_soln_vec[0]);
+        cvw.destroy();
+
+
+    }
+}
 /*
  *console putput
  */
@@ -356,6 +447,7 @@ void CamPremix::reportToFile(doublereal t, doublereal* soln){
         data.clear();
         data.push_back(t);
         data.push_back(axpos[i]);
+        data.push_back(axpos[i]/m_u[i]);
         data.push_back(m_rho[i]);
         data.push_back(m_u[i]);
         data.push_back(soln[i*nVar+ptrC]);
@@ -446,8 +538,9 @@ void CamPremix::storeInlet(CamBoundary& cb){
 
 void CamPremix::header(){
     headerData.clear();
-    headerData.push_back("time");
+    headerData.push_back("int_time");
     headerData.push_back("x");
+    headerData.push_back("tau");
     headerData.push_back("rho");
     headerData.push_back("u");
     headerData.push_back("mdot");

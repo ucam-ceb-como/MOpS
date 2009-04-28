@@ -21,7 +21,7 @@
        </molefrac>
      </fuel>
   </inlet>
-  <solver mode="steady" solver="cvode">
+  <solver mode="coupled" solver="cvode">
 	  <maxTime>10000</maxTime>
 	  <tols>
 		  <species>

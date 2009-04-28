@@ -21,8 +21,9 @@
        </molefrac>
      </fuel>
   </inlet>
-  <solver mode="steady" solver="cvode" residual="on">
+  <solver mode="segregated" solver="cvode" residual="on">
 	  <maxTime>10000</maxTime>
+	  <iterations>4</iterations>
 	  <tols>
 		  <species>
 			  <aTol>1.e-15</aTol>

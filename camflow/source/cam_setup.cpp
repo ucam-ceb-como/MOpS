@@ -113,7 +113,7 @@ void CamSetup::createSolnVector(CamBoundary &cb, CamControl &cc, vector<doublere
         }
         rTol.push_back(TTol_r);
         aTol.push_back(TTol_a);
-      
+    
     }
 
 }

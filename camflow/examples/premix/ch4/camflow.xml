@@ -5,7 +5,7 @@
     <length unit="cm">10</length>
   </reactor>
   <op_condition>
-	  <temperature>adiabatic</temperature>
+	  <temperature>userdefined</temperature>
 	  <twall unit="K">1073</twall>
     <pressure unit="atm">1.0</pressure>
   </op_condition>
@@ -20,12 +20,12 @@
        </molefrac>
      </fuel>
   </inlet>
-  <solver mode="steady" solver="cvode" residual="off">
+  <solver mode="coupled" solver="cvode" residual="on">
 	  <maxTime>100000</maxTime>
 	  <tols>
 		  <species>
-			  <aTol>1.e-10</aTol>
-			  <rTol>1.e-05</rTol>	  
+			  <aTol>1.e-06</aTol>
+			  <rTol>1.e-04</rTol>	  
 		  </species>
 		  <temperature>
 			  <aTol>1.e-03</aTol>

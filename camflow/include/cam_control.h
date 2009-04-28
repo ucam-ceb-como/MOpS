@@ -60,11 +60,12 @@ namespace Camflow{
         int solMode;                    //solution mode steady or trans
         int repotMode;                  //repot mode intermediate or final
         int solver;
+        int nIter;                      //number of iterations for segregated solver
 
     public:
         enum Solution{                  //steady state or transient solution
-            STEADY,
-            TRANSIENT
+            COUPLED,
+            SEGREGATED
         };
 
         enum Report{                    //output control
@@ -127,6 +128,9 @@ namespace Camflow{
         void setSolver(int n);
 
         void setResidualMonitor(bool lopt);
+
+        //number of iterations
+        void setNumIterations(int n);
         
         //return the species rel tol
         doublereal getSpeciesRelTol() const;
@@ -171,6 +175,9 @@ namespace Camflow{
         doublereal getMaxTime() const;
 
         bool getResidualMonitor() const;
+
+        //return the number of iterations
+        int getNumIterations() const;
 
     };
 }

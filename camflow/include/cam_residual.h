@@ -58,6 +58,13 @@ namespace Camflow{
 
     public:
 
+        enum EqnType{
+            EQN_ALL,
+            EQN_SPECIES,
+            EQN_ENERGY,
+            EQN_MASSFLOW
+        };
+
         CamResidual(){};
         virtual ~CamResidual(){}
 
@@ -112,6 +119,22 @@ namespace Camflow{
         const int& getNEqn() const;
         //derivative calculation
         doublereal dydx(doublereal nr1, doublereal nr2, doublereal dr){return ((nr1-nr2)/dr);}
+
+        /*
+         *extract various dependent variabes
+         */
+        void extractMassFlowVector(vector<doublereal>& vec);
+        void extractSpeciesVector(vector<doublereal>& vec);
+        void extractEnergyVector(vector<doublereal>& vec);
+
+        /*
+         *merge
+         */
+        void mergeMassFlowVector(doublereal* vec);
+        void mergeSpeciesVector(doublereal* vec);
+        void mergeEnergyVector(doublereal* vec);
+
+
         
 
     protected:
@@ -149,6 +172,7 @@ namespace Camflow{
         int ptrR;    //aray offset for residence time
         int loopBegin, cellBegin;//first cell
         int loopEnd, cellEnd;//last cell
+        int eqn_slvd;
 
         Sprog::Thermo::Mixture *camMixture;
         Sprog::Mechanism *camMech;

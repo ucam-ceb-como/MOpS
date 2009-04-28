@@ -20,7 +20,7 @@
        </molefrac>
      </fuel>
   </inlet>
-  <solver mode="steady" solver="cvode" residual="off">
+  <solver mode="segregated" solver="cvode" residual="on">
 	  <maxTime>100000</maxTime>
 	  <tols>
 		  <species>

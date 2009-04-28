@@ -79,8 +79,9 @@ void CamResidual::energyResidual(const doublereal& time, doublereal* y, doublere
             /*
              *residual
              */
-            f[i] = convection + (conduction - sumHSource - sumFlx)/(m_rho[i]*m_cp[i]);
-            //f[i] = convection + (conduction - sumHSource )/(m_rho[i]*m_cp[i]);
+            //f[i] = convection + (conduction - sumHSource - sumFlx)/(m_rho[i]*m_cp[i]);
+            f[i] = convection + (conduction - sumHSource )/(m_rho[i]*m_cp[i]);
+            //cout << convection << "      " << conduction << "    " << sumHSource << endl;
             
 
         }
@@ -256,4 +257,39 @@ const int& CamResidual::getNEqn() const{
     return this->nEqn;
 }
 
+void CamResidual::extractEnergyVector(vector<doublereal>& vec){
+    vec.resize(cellEnd,0);
+    for(int i=0; i<cellEnd; i++)
+        vec[i] = solvect[i*nVar+ptrT];
+}
 
+void CamResidual::extractMassFlowVector(vector<doublereal>& vec){
+    vec.resize(cellEnd,0);
+    for(int i=0; i<cellEnd; i++)
+        vec[i] = solvect[i*nVar+ptrC];
+}
+
+void CamResidual::extractSpeciesVector(vector<doublereal>& vec){
+    vec.resize(cellEnd*nSpc,0);
+    for(int i=0; i<cellEnd; i++){
+        for(int l=0; l<nSpc; l++)
+            vec[i*nSpc+l] = solvect[i*nVar+l];
+    }
+}
+
+void CamResidual::mergeEnergyVector(doublereal* vec){
+    for(int i=0; i<cellEnd; i++)
+        solvect[i*nVar+ptrT] = vec[i];
+}
+
+void CamResidual::mergeMassFlowVector(doublereal* vec){
+    for(int i=0; i<cellEnd; i++)
+        solvect[i*nVar+ptrC] = vec[i];
+}
+
+void CamResidual::mergeSpeciesVector(doublereal* vec){
+    for(int i=0; i<cellEnd; i++){
+        for(int l=0; l<nSpc; l++)
+            solvect[i*nVar+l] = vec[i*nSpc+l];
+    }
+}
