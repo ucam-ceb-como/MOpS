@@ -76,8 +76,9 @@ namespace Sweep
     // Free-molecular coagulation kernel parameters.
     const real CFM     = 4.65695224e-12; // Sqrt(KB * PI / 2) = sqrt(J/K).
     const real CFM_CGS = 1.47265760e-08; // = sqrt(erg/K).
-    const real CFMMAJ  = 1.4178;
-
+    const real CFMMAJ  = 1.4178;		 //ATTENTION deleted by ms785    this value can only be used if the particles are spherical
+  //	const real CFMMAJ  = 2;
+	
     // Slip-flow coagulation kernel parameters.
     const real CSF     = 9.2046667e-24; // = KB * 2/3 (J/K).
     const real CSF_CGS = 9.2046667e-17; // = KB * 2/3 (erg/K).
