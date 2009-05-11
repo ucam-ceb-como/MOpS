@@ -147,12 +147,18 @@ void PAHPrimary::UpdateCache(void)
 	m_numPAH=0;
 	 for (vector<PAH>::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
         m_numcarbon += i->m_numcarbon;
-		m_PAHCollDiameter=max(m_PAHCollDiameter,2.4162*sqrt(2.0*(i->m_numcarbon)/3.));    // in Angstrom
+		m_PAHCollDiameter=max(m_PAHCollDiameter,2.4162*sqrt((i->m_numcarbon)*2.0/3.));    // in Angstrom
 		m_numPAH++;
     }
 	 m_PAHmass=m_numcarbon*1.9945e-26;        //convert to kg
-	// m_PAHCollDiameter=2.4162*sqrt(2.0*(m_numcarbon)/3.);
-	 SetCollDiameter(m_PAHCollDiameter*1e-10);	//convert from Angstrom to m
+	m_PAHCollDiameter*=1e-10;//convert from Angstrom to m
+
+	 double V=m_PAHmass/1.6e3;
+	 double cdiamsphere=pow((3*V/(4*PI)),(1.0/3.0));
+	 double alpha=1.0/(pow(m_numPAH,0.1));
+	// double cdiam=alpha*m_PAHCollDiameter+(1-alpha)*cdiamsphere;
+	double cdiam=max(cdiamsphere,m_PAHCollDiameter);
+	 SetCollDiameter(cdiam);	
 	 SetMass(m_PAHmass);
 	
 

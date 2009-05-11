@@ -53,7 +53,7 @@ using namespace Sweep::Processes;
 using namespace std;
 
 // Free-molecular enhancement factor.
-const real Coagulation::m_efm = 2.2; // 2.2 is for soot.    
+const real Coagulation::m_efm = 2.4; // 2.2 is for soot.    
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -462,13 +462,18 @@ int Coagulation::Perform(real t, Cell &sys, unsigned int iterm) const
         // majorant rate and the current (after updates) true rate.
         real majk = CoagKernel(*sp1old, *sp2old, T, P, maj);
         real truek = CoagKernel(*sp1, *sp2, T, P, None);
+		double ceff=0;
+		if (majk<truek)
+			cout << "maj< true"<<endl;
 
 		//added by ms785 to include the collision efficiency in the calculation of the rate
 		if (sys.Particles().ParticleModel()->AggModel()==AggModels::PAH_ID)
 		{
-					double ceff=sys.Particles().ParticleModel()->CollisionEff(sp1,sp2);
-					truek*=ceff;
+			 ceff=sys.Particles().ParticleModel()->CollisionEff(sp1,sp2);
+		   	truek*=ceff;
 		}
+
+
 
         if (!Ficticious(majk, truek)) {
             // We can now coagulate the particles, remember to

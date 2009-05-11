@@ -358,36 +358,29 @@ Particle *const ParticleModel::CreateParticle(real time) const
 
 //Collision Efficiency
 double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
-{
+{	double aeff=4e-7;
 	double redmass=0;
-//	double col1=p1->CollDiameter();
-//	double col2=p2->CollDiameter();
-	double ncarbon1=p1->Mass()/1.99e-26;
-	double ncarbon2=p2->Mass()/1.99e-26;
-	const AggModels::PAHPrimary *pah = NULL;
-	pah = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
-	ncarbon1=pah->m_numcarbon;
-	pah = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary());
-	ncarbon2=pah->m_numcarbon;
-	ncarbon1=0;
-	ncarbon2=0;
-	pah = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
-	ncarbon1=pah->m_PAH.begin()->m_numcarbon;
-	if (pah->m_numPAH>1)
-	{
-		max(ncarbon1,1.0*(pah->m_PAH.at(1).m_numcarbon));
-		//ncarbon1+=0.5*pah->m_PAH.at(1).m_numcarbon;
-	}
-	pah = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary());
-	ncarbon2=pah->m_PAH.begin()->m_numcarbon;
-	if (pah->m_numPAH>1)
-	{
-		max(ncarbon2,1.0*(pah->m_PAH.at(1).m_numcarbon));
-		//ncarbon2+=0.5*pah->m_PAH.at(1).m_numcarbon;
-	}
-	redmass=12*ncarbon1*ncarbon2/(ncarbon1+ncarbon2);
+	int ncarbon1,ncarbon2;
+	const AggModels::PAHPrimary *pah1 = NULL;
+	const AggModels::PAHPrimary *pah2 = NULL;
+	pah1 = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
+	pah2 = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary());
+	ncarbon2=(int)(1.0*pah2->m_numcarbon);
+	ncarbon1=(int)(1.0*pah1->m_numcarbon);
+	double x;
+	double y;
+	x=1e10*pah1->CollDiameter();
+	y=1e10*pah2->CollDiameter();
+	double reddiam;
+	double ceffi;
+	reddiam=min(x,y);
+	redmass=12*min(ncarbon1,ncarbon2);
+	ceffi=1/(1+exp(-2.0* (reddiam*reddiam*reddiam/(redmass)+pow(redmass/1100,6.0)-5.0)));
+	return ceffi;
 
-	//redmass=col1*col2/(col1+col2)*1e10;
+
+//  Used to read in the collision efficiency from a database instead from a formula
+/*
 	if (redmass<m_reduced_mass.at(0))
 		return m_collision_eff.at(0);
 	double cefflarger;
@@ -416,11 +409,7 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 	}
 	if (cefflarger==ceffsmaller) return cefflarger;
 	double a=(cefflarger-ceffsmaller)/(redmasslarger-redmasssmaller);
-//	if (pah->m_numPAH==2)
-//	{
-//		cout <<"Coagulate Dimer, Ceff="<<ceffsmaller+(redmass-redmasssmaller)*a;
-//	}
-	return ceffsmaller+(redmass-redmasssmaller)*a;
+	return ceffsmaller+(redmass-redmasssmaller)*a;*/
 }
 
 // READ/WRITE/COPY.

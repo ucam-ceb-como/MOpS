@@ -240,6 +240,7 @@ protected:
         real vol,   // System sample volume.
         fvector::iterator &iterm // Iterator to first coagulation term.
         ) const;
+	
 };
 };
 };
