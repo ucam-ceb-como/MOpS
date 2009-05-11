@@ -267,6 +267,7 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 					}
 	
     // Loop over time until we reach the stop time.
+	int numincepted=0;
     while (t < tstop)
     {
         tsplit = tstop;
@@ -277,6 +278,7 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
             // Calculate the chemical conditions.
             linInterpGas(t, m_gasprof, *r.Mixture());
 			//update the number of particles that the incepting species matches the gas phase
+			
 			while(true)
 			{
 				// Calculate the number density of the incepting species
@@ -297,12 +299,13 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 				double numdenspart=numpah/Volume;
 		//		cout << "numdenspart="<<numdenspart<<endl;
 				
-
+				
 				if (numdenspart>numdensgas) break;  
 
 				// we need to add more particles to the system to match the gas-phase particles concentration
 				else                              
 				{
+					numincepted++;
 					Particle *sp = mech.CreateParticle(t);
 					//Assign an ID to the particle and initialise timeevolution vectors
 					int newID;
@@ -323,6 +326,7 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
 				}
 			}
+			
 			(*(r.Mixture())).Particles().Update();
             // Calculate jump rates.
             jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), rates);
@@ -337,8 +341,9 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         }
 
     }
+	//cout << numincepted << " incepted"<< endl;
 	r.SetTime(t);
-	if (r.Time()>0.00461)
+	if (r.Time()>0.005)
 		Output(r);
 	
     return;
@@ -355,15 +360,20 @@ void PAHSolver::Output(Mops::Reactor &r)
 	double maxpahmass=0.;
 	const int numbins=1000;
 	int distribution[numbins];
+	int dimercompdistr[numbins];
 	for (j=0;j<numbins;j++)
 	{
 		distribution[j]=0;
+		dimercompdistr[j]=0;
 	}
 	for (i=(*r.Mixture()).Particles().begin(); i!=(*r.Mixture()).Particles().end() ; ++i) {
 		const AggModels::PAHPrimary *pah = NULL;
 		pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
-		numpah+=pah->m_numPAH;
-		numparticles++;
+		if (pah->m_numPAH>1)
+		{
+			numpah+=pah->m_numPAH;
+			numparticles++;
+		}
 		maxpahmass=max(pah->m_PAHmass/1.99e-26,maxpahmass);
 	}	
 	fname = "avnumpah.txt" ;
@@ -372,15 +382,20 @@ void PAHSolver::Output(Mops::Reactor &r)
 	file.close();
 
 	double binsize=maxpahmass/(numbins-1);
-	binsize=2;
+	binsize=1;
 	cout << "binsize=" << binsize<<endl;
 	for (i=(*r.Mixture()).Particles().begin(); i!=(*r.Mixture()).Particles().end() ; ++i) {
 		const AggModels::PAHPrimary *pah = NULL;
 		pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
-		int binnumber=(int)(pah->m_PAHmass/binsize/1.99e-26);
+		int binnumber=(int)(1.0*pah->m_numcarbon/binsize);
 		if (binnumber<numbins)
 			distribution[binnumber]++;
+		else
+		{	
+		//	cout <<">maxbins";
+		}
 	}	
+
 
 	//fname = "nummasssdistr" + cstr(r.Time()) +".txt" ;
 	fname = "nummasssdistr.txt" ;
@@ -402,7 +417,7 @@ void PAHSolver::Output(Mops::Reactor &r)
 		pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
 		if (pah->m_numPAH==1)
 		{
-			int binnumber=(int)(pah->m_PAHmass/binsize/1.99e-26);
+			int binnumber=(int)(1.0*pah->m_numcarbon/binsize);
 			//cout << binnumber<<endl;
 		//	if (binnumber==1)
 		//	{
@@ -433,9 +448,16 @@ void PAHSolver::Output(Mops::Reactor &r)
 		pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
 		if (pah->m_numPAH==2)
 		{
-			int binnumber=(int)(pah->m_PAHmass/binsize/1.99e-26);
+			int binnumber=(int)(1.0*pah->m_numcarbon/binsize);
 			if (binnumber<numbins)
 				distribution[binnumber]++;
+			binnumber=(int)(1.0*pah->m_PAH.at(0).m_numcarbon/binsize);
+			if (binnumber<numbins)
+				dimercompdistr[binnumber]++;
+			binnumber=(int)(1.0*pah->m_PAH.at(1).m_numcarbon/binsize);
+			if (binnumber<numbins)
+				dimercompdistr[binnumber]++;
+
 		}
 	}	
 
@@ -448,6 +470,16 @@ void PAHSolver::Output(Mops::Reactor &r)
 	}
 	file.close();
 
+
+	fname = "nummasssdistrdimercomp.txt" ;
+	file.open(fname.c_str());
+	for (j=0;j<numbins;j++)
+	{
+		file << 12*j*binsize<< "     "  << dimercompdistr[j]/r.Mixture()->SampleVolume()  << endl;
+	}
+	file.close();
+
+
 		// mass distr for trimers
 	for (j=0;j<numbins;j++)
 	{
@@ -458,7 +490,7 @@ void PAHSolver::Output(Mops::Reactor &r)
 		pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
 		if (pah->m_numPAH==3)
 		{
-			int binnumber=(int)(pah->m_PAHmass/binsize/1.99e-26);
+			int binnumber=(int)(1.0*pah->m_numcarbon/binsize);
 			if (binnumber<numbins)
 				distribution[binnumber]++;
 		}
