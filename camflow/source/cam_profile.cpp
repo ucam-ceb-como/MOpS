@@ -90,6 +90,20 @@ void CamProfile::setMixingCenter(doublereal len){
 void CamProfile::setMixingWidth(doublereal len){
     mWidth = len;
 }
+
+/*
+ *set start profile given 2 inletes
+ */
+void CamProfile::setStartprofile(CamBoundary& left, CamBoundary& right,
+                                                            Mechanism& mech){
+    /*
+     *assign the oxidizer inlet species map to
+     *product map
+     */
+    list_prdt = right.getInletSpecies();
+    setStarProfile(left,mech);
+
+}
 /*
  *set the start profile
  */

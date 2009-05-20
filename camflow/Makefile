@@ -58,6 +58,7 @@ obj=   cam_kernel.o cam_read.o cam_setup.o cam_geometry.o \
 		 cam_control.o cam_conveter.o cam_math.o cam_conc.o \
 		 cam_admin.o cam_boundary.o cam_configuration.o cam_profile.o\
 		 cam_reporter.o cam_models.o cam_plug.o cam_premix.o cam_residual.o \
+		 stagflow.o \
 		 cvode_wrapper.o ida_wrapper.o kinsol_wrapper.o radau_wrapper.o
 
 
@@ -67,12 +68,12 @@ all: comostringslib camxmllib sproglib cvodelib idalib kinlib radaulib $(obj)
 	mkdir -p bin
 ifeq ($(debug),0)
   ifeq ($(profile),0)
-		$(cpp) $(flink) $(obj) $(linklibs) -o bin/flame
+		$(cpp) $(flink) $(obj) $(linklibs) -o bin/camflow
   else
-		$(cpp) $(flink) $(obj) $(linklibs) -o bin/flame_p
+		$(cpp) $(flink) $(obj) $(linklibs) -o bin/camflow_p
   endif 
 else
-	$(cpp) $(flink) $(obj) $(linklibs) -o bin/flame_d
+	$(cpp) $(flink) $(obj) $(linklibs) -o bin/camflow_d
 endif
 
 # Required libraries.
@@ -130,6 +131,8 @@ cam_plug.o: $(src)/cam_plug.cpp
 	$(cpp) $(flag) $(src)/cam_plug.cpp
 cam_premix.o: $(src)/cam_premix.cpp
 	$(cpp) $(flag) $(src)/cam_premix.cpp
+stagflow.o: $(src)/stagflow.cpp
+	$(cpp) $(flag) $(src)/stagflow.cpp
 cvode_wrapper.o: $(src)/cvode_wrapper.cpp
 	$(cpp) $(flag) $(src)/cvode_wrapper.cpp
 ida_wrapper.o: $(src)/ida_wrapper.cpp
@@ -150,4 +153,7 @@ clean:
 	$(MAKE) clean -f ../camxml/Makefile -C ../camxml
 	$(MAKE) clean -f ../sprog/Makefile -C ../sprog
 	$(MAKE) clean -f ../cvode/Makefile -C ../cvode
+	$(MAKE) clean -f ../ida/Makefile -C ../ida
+	$(MAKE) clean -f ../kinsol/Makefile -C ../kinsol
+	$(MAKE) clean -f ../radau/Makefile -C ../radau
 	rm -rf *.o \#* *~

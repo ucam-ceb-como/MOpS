@@ -111,7 +111,7 @@ void CamAdmin::setLeftBoundary(CamBoundary &cb){
 }
 
 void CamAdmin::setRightBoundary(CamBoundary &cb){
-    this->right = cb;
+    this->right = cb;    
 }
 
 
@@ -146,7 +146,7 @@ void CamAdmin::getLeftBoundary(CamBoundary &cb){
 }
 
 void CamAdmin::getRightBoundary(CamBoundary &cb){
-    cb = right;
+    cb = right;    
 }
 
 doublereal CamAdmin::getNre(const doublereal& hd,

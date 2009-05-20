@@ -85,7 +85,7 @@ int main() {
     }catch(CamError &ce){
         cout << ce.errorMessge;
     }
-    cout << "Camflow finished successfully..\n";
+    cout << "\nCamflow finished successfully..\n";
     return (EXIT_SUCCESS);
 }
 

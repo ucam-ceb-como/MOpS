@@ -1,3 +1,6 @@
+
+#include "stagflow.h"
+
 /*
  * File:   cam_models.cpp
  * Author: vinod
@@ -50,6 +53,7 @@ void CamModels::solve(CamAdmin& ca,
                       Mechanism &mech ){
     int configID;
     configID = config.getConfiguration();
+    
     if(configID == config.PLUG){
         CamPlug cplug;
         try{
@@ -65,6 +69,15 @@ void CamModels::solve(CamAdmin& ca,
         }catch(CamError ce){
             cout << ce.errorMessge << endl;
         }
+    }else if(configID == config.STAGFLOW){
+        StagFlow stflow;
+        
+        try{
+            stflow.solve(cc,ca,cg,cp,mech);
+        }catch(CamError ce){
+            cout << ce.errorMessge << endl;
+        }
+        
     }
 
 }

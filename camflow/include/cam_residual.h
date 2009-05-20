@@ -68,8 +68,10 @@ namespace Camflow{
         CamResidual(){};
         virtual ~CamResidual(){}
 
-        //residual evaluation function
+        //residual evaluation function for ODE and DAEs
         virtual int eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval)=0;
+        //residual evaluation for newton solvers
+        virtual int eval(doublereal* y, doublereal* ydot);
         /*
          *console output for monitoring the integration process
          */
@@ -82,9 +84,9 @@ namespace Camflow{
         /*
          *mass matrix definition for Radau
          */
-        virtual void massMatrix(doublereal **M)=0;
+        virtual void massMatrix(doublereal **M);
         //get intitial
-        virtual void getInitial(vector<doublereal> &initial)=0;
+        //virtual void getInitial(vector<doublereal> &initial);
         
         //base class definition for species residuals
         virtual void speciesResidual(const doublereal& time, doublereal* y, doublereal* f);
@@ -118,7 +120,35 @@ namespace Camflow{
         //return the total number of equations
         const int& getNEqn() const;
         //derivative calculation
-        doublereal dydx(doublereal nr1, doublereal nr2, doublereal dr){return ((nr1-nr2)/dr);}
+        doublereal dydx(doublereal nr1, doublereal nr2, doublereal dr){
+            return ((nr1-nr2)/dr);
+        }
+
+        doublereal dydx(const int i, doublereal phi_E, doublereal phi_P, doublereal phi_W,
+                                            doublereal dr){
+            doublereal u_e, u_w;
+            doublereal phi_e, phi_w;
+            u_e = 0.5*(m_u[i+1]+m_u[i]);
+            u_w = 0.5*(m_u[i]+m_u[i-1]);
+            if( u_e > 0 ){
+                phi_e = phi_P;
+            }else if(u_e < 0){
+                phi_e = phi_E;
+            }else {
+                phi_e = 0.5*(phi_E+phi_P);
+            }
+
+            if(u_w > 0){
+                phi_w = phi_W;
+            }else if(u_w < 0){
+                phi_w = phi_P;
+            }else {
+                phi_w = 0.5*(phi_P+phi_W);
+            }
+
+            return ((phi_e-phi_w)/dr);
+
+        }
 
         /*
          *extract various dependent variabes
@@ -154,11 +184,12 @@ namespace Camflow{
         vector<doublereal> m_u;                  //fluid velocity
         vector<doublereal> m_q;                  //thermal conduction flux
         vector<doublereal> m_flow;               //mass flow
+        vector<doublereal> m_G;                  //momentum
         vector<doublereal> wdot;                 //rate of production
         vector<doublereal> dz;                   //grid spacting
         vector<doublereal> axpos;                //axial position
 
-        vector<doublereal> resSp, resT, resM;
+        vector<doublereal> resSp, resT, resFlow;
        
         doublereal opPre;                        //operating pressure
 
@@ -166,8 +197,9 @@ namespace Camflow{
         int nVar;    //number of variables
         int nSpc;    //number of species
         int ptrT;    //array offset to temperature
-        int ptrC;    //array offset to continuity
-        int ptrM;    //array offset to momentum
+        int ptrF;    //array offset to continuity
+        int ptrG;    //array offset to momentum
+        int ptrH;    // 1/r (dp/dr)
         int ptrS;    //array offset to species
         int ptrR;    //aray offset for residence time
         int loopBegin, cellBegin;//first cell

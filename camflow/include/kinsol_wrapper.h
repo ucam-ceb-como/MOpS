@@ -11,7 +11,7 @@
 #include "cam_params.h"
 #include "cam_residual.h"
 #include <kinsol/kinsol.h>
-#include <kinsol/kinsol_band.h>
+#include "kinsol/kinsol_spgmr.h"
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_types.h>
 namespace Camflow{
@@ -22,6 +22,7 @@ namespace Camflow{
         ~KinsolWrapper(){}
         void init(int n, vector<doublereal> &solnVec, doublereal rtol, int band, CamResidual &cr);
         void solve();
+        void destroy();
 
     private:
         N_Vector y, scale;

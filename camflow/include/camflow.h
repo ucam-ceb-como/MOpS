@@ -53,5 +53,6 @@
 #include "cam_profile.h"
 #include "cam_plug.h"
 #include "cam_premix.h"
+#include "stagflow.h"
 #endif	/* _CAMFLOW_H */
 

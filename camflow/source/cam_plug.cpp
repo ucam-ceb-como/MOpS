@@ -82,8 +82,8 @@ void CamPlug::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& c
     nVar = nSpc+3; //species + temperature + massflow + residence time
     nEqn = nVar;
     ptrT = nSpc;
-    ptrC = ptrT +1;
-    ptrR = ptrC +1;
+    ptrF = ptrT +1;
+    ptrR = ptrF +1;
     
     /*get the fuel inlet conditions and the fill the
      *solution vector with species mass fractions
@@ -128,7 +128,11 @@ void CamPlug::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& c
     reporter->openFiles();
     header();
     reporter->writeHeader(headerData);
-
+    /*
+     *report the values at the inlet
+     */
+    report(0.0,&solvect[0]);
+    
     int solver = cc.getSolver();
 
     if(solver == cc.RADAU){
@@ -207,7 +211,7 @@ void CamPlug::updateMixture(const doublereal& x, doublereal* y){
     real avgMolWt = camMixture->getAvgMolWt();
     rho = avgMolWt*opPre/(R*tmptr);
     camMixture->SetMassDensity(rho);
-    vel = y[ptrC]/rho;
+    vel = y[ptrF]/rho;
 
 }
 //species residual definition
@@ -215,7 +219,7 @@ void CamPlug::speciesResidual(const doublereal& x, doublereal* y, doublereal* f)
 
     camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
     for (int l = 0; l < nSpc; l++) {
-        f[l]= wdot[l]*(*spv)[l]->MolWt()/(y[ptrC]);
+        f[l]= wdot[l]*(*spv)[l]->MolWt()/(y[ptrF]);
     }
 
 }
@@ -251,14 +255,14 @@ void CamPlug::energyResidual(const doublereal& x, doublereal* y, doublereal* f){
 
         }
 
-        f[ptrT] = (-heat*Ac + extSource)/(y[ptrC]*cp*Ac);
+        f[ptrT] = (-heat*Ac + extSource)/(y[ptrF]*cp*Ac);
 
     }
 }
 
 //mass flow residual
 void CamPlug::massFlowResidual(const doublereal& x, doublereal* y, doublereal* f){
-    f[ptrC] = 0;
+    f[ptrF] = 0;
 }
 
 //residence time
@@ -296,7 +300,7 @@ void CamPlug::report(doublereal x, doublereal* soln){
     data.push_back(x);
     data.push_back(rho);
     data.push_back(vel);
-    data.push_back(soln[ptrC]);
+    data.push_back(soln[ptrF]);
     data.push_back(soln[ptrR]);
     data.push_back(soln[ptrT]);
 

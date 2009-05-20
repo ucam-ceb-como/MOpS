@@ -7,7 +7,7 @@ extern "C"{
 
     int func(N_Vector y, N_Vector fval, void *udata){
         CamResidual *residual = (CamResidual*)udata;
-        residual->eval(0.0,NV_DATA_S(y),NV_DATA_S(fval), true);
+        residual->eval(NV_DATA_S(y),NV_DATA_S(fval));
 		  return 0;
     }
 
@@ -19,7 +19,7 @@ void KinsolWrapper::init(int n, vector<doublereal>& solnVec, doublereal rtol, in
   y = scale = NULL;
   kmem = NULL;
 
-  y = N_VNew_Serial(n);
+  y = N_VMake_Serial(n,&solnVec[0]);
   //if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
 
   scale = N_VNew_Serial(n);
@@ -51,35 +51,13 @@ void KinsolWrapper::init(int n, vector<doublereal>& solnVec, doublereal rtol, in
    * Attach band linear solver
    * ------------------------- */
 
-  flag = KINBand(kmem, n, band, band);
-  //if (check_flag(&flag, "KINBand", 1)) return(1);
+  int maxl = 15;
+  flag = KINSpgmr(kmem,maxl);
+
+  flag = KINSetNumMaxIters(kmem,5000);
 
   flag = KINSetFdata(kmem,(void*)&cr);
 
-  /* ------------------------------
-   * Parameters for Modified Newton
-   * ------------------------------ */
-
-  /* Force a Jacobian re-evaluation every mset iterations */
-  mset = 100;
-  flag = KINSetMaxSetupCalls(kmem, mset);
-  //if (check_flag(&flag, "KINSetMaxSetupCalls", 1)) return(1);
-
-  /* Every msubset iterations, test if a Jacobian evaluation
-     is necessary */
-  msubset = 1;
-  flag = KINSetMaxSubSetupCalls(kmem, msubset);
-  //if (check_flag(&flag, "KINSetMaxSubSetupCalls", 1)) return(1);
-
-  /* -------------
-   * Initial guess
-   * ------------- */
-
-  N_VConst_Serial(0.0, y);
-
-  /* ----------------------------
-   * Call KINSol to solve problem
-   * ---------------------------- */
 
   /* No scaling used */
   N_VConst_Serial(1.0,scale);
@@ -87,7 +65,7 @@ void KinsolWrapper::init(int n, vector<doublereal>& solnVec, doublereal rtol, in
 }
 
 void KinsolWrapper::solve(){
-    flag = KINSol(kmem,y,KIN_LINESEARCH,scale,scale);
+    flag = KINSol(kmem,y,KIN_NONE,scale,scale);
     
     if(flag != KIN_SUCCESS){
         cout << "KINsol Error " << flag << endl;
@@ -98,6 +76,10 @@ void KinsolWrapper::solve(){
         cout << "Newton solver converged successfully\n";
     }
     
+    
+}
+
+void KinsolWrapper::destroy(){
     N_VDestroy_Serial(y);
     N_VDestroy_Serial(scale);
     KINFree(&kmem);

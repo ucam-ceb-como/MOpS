@@ -6,7 +6,7 @@ extern "C"{
 
     int cvodeResid(doublereal time, N_Vector y, N_Vector ydot, void *udata){
         CamResidual *residual = (CamResidual*)(udata);
-        residual->eval(time,NV_DATA_S(y),NV_DATA_S(ydot), true);
+        residual->eval(time,NV_DATA_S(y),NV_DATA_S(ydot), false);
         return 0;
     }
 }

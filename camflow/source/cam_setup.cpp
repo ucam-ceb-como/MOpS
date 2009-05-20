@@ -1,4 +1,7 @@
 
+#include "cam_profile.h"
+
+
 #include <vector>
 
 
@@ -40,6 +43,10 @@ const doublereal CamSetup::getInletFlowRate(CamBoundary& cb){
 
     doublereal flow;
     if(cb.getFlowRate() == 0){
+        vector<doublereal> massfracs;
+        getInletMassFrac(cb,massfracs);
+        camMixture->SetMassFracs(massfracs);
+        camMixture->SetTemperature(getInletTemperature(cb));
         doublereal avgMolWt = camMixture->getAvgMolWt();
         rho = opPre*avgMolWt/(R*camMixture->Temperature());
         flow = rho*cb.getVelocity();
@@ -58,62 +65,99 @@ const doublereal CamSetup::getInletVelocity(CamBoundary& cb){
     return vel;
 }
 
+/*
+ *init species
+ */
+void CamSetup::initSpecies(CamBoundary& cb, CamControl& cc,
+                                    vector<doublereal>& soln){
 
-//void CamSetup::getInitialGuess(vector<doublereal>& fracs){
-//
-//    fracs = profile->getInitialSpeciesGuess(*camMech);
-//}
-
-
-void CamSetup::createSolnVector(CamBoundary &cb, CamControl &cc, vector<doublereal>& soln){
-    /*
-     *This function generates the solution
-     *vector and the associated tolerances for the interior cells.
-     *The vector elements are arranged in the following order
-     *Species,massflow,Temperature
-     */
-    soln.clear();
-    profile->setStarProfile(cb,*camMech);
+    soln.resize(nSpc*cellEnd,0);
     vector<doublereal>  position;
-    doublereal flow = getInletFlowRate(cb);
-    doublereal T = cb.getTemperature();
-
-    doublereal sTol_r = cc.getSpeciesRelTol();
-    doublereal sTol_a = cc.getSpeciesAbsTol();
-    doublereal TTol_r = cc.getTempRelTol();
-    doublereal TTol_a = cc.getTempAbsTol();
-    doublereal cTol_r = cc.getFlowRelTol();
-    doublereal cTol_a = cc.getFlowAbsTol();
-
-    
     position = reacGeom->getAxpos();
+    profile->setStarProfile(cb,*camMech);
     Array2D start = profile->getStartProfile();
 
-    for(int i = cellBegin; i< cellEnd; i++){
-        for(int l=0; l<nSpc; l++ ){
-            //soln.push_back(initial[l]);
-            soln.push_back(start(i,l));
-            rTol.push_back(sTol_r);
-            aTol.push_back(sTol_a);
-            
+    for(int i=cellBegin; i<cellEnd; i++){
+        for(int l=0; l<nSpc; l++){
+            soln[i*nSpc+l] = start(i,l);
         }
-        //mass flow assignment
-        soln.push_back(flow);
-        rTol.push_back(cTol_r);
-        aTol.push_back(cTol_a);
-
-
-        //temperature assignment
-        if(admin->getEnergyModel() == admin->ISOTHERMAL){
-            soln.push_back(T);
-        }else{
-            T = profile->getUserDefTemp(position[i]);
-            soln.push_back(T);
-
-        }
-        rTol.push_back(TTol_r);
-        aTol.push_back(TTol_a);
-    
     }
 
+}
+/*
+ *init species given 2 inlets
+ */
+void CamSetup::initSpecies(CamBoundary& left, CamBoundary& right,
+                    CamControl& cc, vector<doublereal>& soln){
+
+    soln.resize(nSpc*cellEnd,0);
+    vector<doublereal>  position;
+    position = reacGeom->getAxpos();
+    profile->setStartprofile(left,right,*camMech);
+    Array2D start = profile->getStartProfile();
+    for(int i=cellBegin; i<cellEnd; i++){
+        for(int l=0; l<nSpc; l++){
+            soln[i*nSpc+l] = start(i,l);
+        }
+    }
+
+}
+/*
+ *init mass
+ */
+void CamSetup::initMassFlow(CamBoundary& cb, CamControl& cc,
+                                        vector<doublereal>& soln){
+
+    soln.resize(cellEnd,0);
+    vector<doublereal>  position;
+    position = reacGeom->getAxpos();
+    doublereal flow = getInletFlowRate(cb);
+    for(int i=cellBegin; i<cellEnd; i++)
+        soln[i] = flow;
+
+}
+
+/*
+ *init temperature
+ */
+void CamSetup::initTemperature(CamBoundary& cb, CamControl& cc,
+                        vector<doublereal>& soln){
+
+    soln.resize(cellEnd,0);
+    vector<doublereal>  position;
+    position = reacGeom->getAxpos();
+    doublereal T = getInletTemperature(cb);
+
+    if(admin->getEnergyModel() == admin->ISOTHERMAL){
+        for(int i=cellBegin; i<cellEnd; i++)
+            soln[i] = T;
+    }else{
+        for(int i=cellBegin; i<cellEnd; i++){
+            T = profile->getUserDefTemp(position[i]);
+            soln[i] = T;
+
+        }
+    }
+
+
+}
+
+void CamSetup::storeInlet(CamBoundary& cb, inletStruct& ud_inlet){
+    /*
+     *stote the inlet properties in the
+     *structure to use with the inlet boundary
+     */
+    vector<doublereal> temp;
+    getInletMassFrac(cb,temp);
+    camMixture->SetMassFracs(temp);
+    doublereal T = getInletTemperature(cb);
+    camMixture->SetTemperature(T);
+    ud_inlet.T = T;
+    ud_inlet.FlowRate = getInletFlowRate(cb);
+    ud_inlet.Vel = getInletVelocity(cb);
+    ud_inlet.rVelGrad = 0.0;
+    ud_inlet.Dens = ud_inlet.FlowRate/ud_inlet.Vel;
+    ud_inlet.Species = temp;
+    ud_inlet.Dk = camMixture->getMixtureDiffusionCoeff(opPre);
+    
 }

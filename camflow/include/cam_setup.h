@@ -18,6 +18,18 @@ using namespace Sprog;
 namespace Camflow{
     class CamSetup : public CamResidual{
     public:
+        
+        typedef struct{
+            vector<doublereal> Species;
+            doublereal FlowRate;
+            doublereal Vel;
+            doublereal rVelGrad;
+            doublereal Dens;
+            doublereal T;
+            vector<doublereal> Dk;
+            vector<doublereal> jk;
+        } inletStruct;
+
         CamSetup(){}
         virtual ~CamSetup(){}
         
@@ -29,15 +41,29 @@ namespace Camflow{
         const doublereal getInletFlowRate(CamBoundary &cb);
         //return the inlet velocity
         const doublereal getInletVelocity(CamBoundary &cb);
-        //return the initial  guess for species mass fractions
-        //void getInitialGuess(vector<doublereal> &fracs);
-        //create the solution vector at the specified boundary
-        void createSolnVector(CamBoundary &cb, CamControl &cc, vector<doublereal> &soln);
-        //create the solution vector for intermediate soln points
-        //void createSolnVector(CamBoundary &cb, CamControl &cc,int n1, int n2, vector<doublereal> &soln);
+
+        /*
+         *init species
+         */
+        void initSpecies(CamBoundary &cb, CamControl &cc, vector<doublereal>& soln);
+        void initSpecies(CamBoundary &left, CamBoundary &right,
+                                CamControl &cc, vector<doublereal>& soln);
+        /*
+         *init mass flow
+         */
+        void initMassFlow(CamBoundary &cb, CamControl &cc, vector<doublereal> &soln);
+        /*
+         *init temperature
+         */
+        void initTemperature(CamBoundary &cb, CamControl &cc, vector<doublereal> &soln);
+        /*
+         *store the inlet conditions
+         */
+        void storeInlet(CamBoundary &cb, inletStruct& ud_inlet);
         
     protected:
         CamProfile *profile;
+
     };
 }
 

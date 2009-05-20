@@ -42,17 +42,10 @@
 
 
 #include "cam_geometry.h"
-
-
 #include "cam_control.h"
-
 #include <string>
-
-
 #include "cam_boundary.h"
 #include "cam_admin.h"
-
-
 #include "cam_read.h"
 #include "string_functions.h"
 #include "cam_error.h"
@@ -100,7 +93,8 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
             attrValue   =   attr->GetValue();
             if(!convertToCaps(attrValue).compare("PREMIX")) config.setConfiguration(config.PREMIX);
             if(!convertToCaps(attrValue).compare("PLUG")) config.setConfiguration(config.PLUG);
-            if(!convertToCaps(attrValue).compare("CONTER_FLOW")) config.setConfiguration(config.COUNTERFLOW);
+            if(!convertToCaps(attrValue).compare("TWINFLAME")) config.setConfiguration(config.TWINFLAME);
+            if(!convertToCaps(attrValue).compare("STAGFLOW"))config.setConfiguration(config.STAGFLOW);
         }else{
             throw CamError("Model remains undefined\n");
         }
@@ -200,7 +194,7 @@ void CamRead::readBoundary(CamAdmin& ca,
                 readNozzle(cb,convert,*subnode);
             }catch(CamError &ce){
                 throw ce;
-            }
+            }            
             ca.setRightBoundary(cb);
         }
     }else{

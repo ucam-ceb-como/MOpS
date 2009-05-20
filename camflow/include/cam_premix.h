@@ -48,7 +48,6 @@
 #include "cam_boundary.h"
 #include "cam_profile.h"
 #include "cam_setup.h"
-#include "radau_wrapper.h"
 #include "cam_profile.h"
 using namespace Sprog;
 namespace Camflow{
@@ -56,16 +55,6 @@ namespace Camflow{
 
         
     public:
-
-        typedef struct{
-            vector<doublereal> Species;
-            doublereal FlowRate;
-            doublereal Vel;
-            doublereal Dens;
-            doublereal T;
-            vector<doublereal> Dk;
-            vector<doublereal> jk;
-        } inletStruct;
 
         CamPremix(){};
         //CamPremix(){}
@@ -104,17 +93,19 @@ namespace Camflow{
         void energyBoundary(const doublereal& t, doublereal *y, doublereal *f);
 
         //set up the solution vector
-        void setupSolutionVector(CamBoundary &cb, CamControl &cc);
+        void initSolutionVector(CamBoundary &cb, CamControl &cc);
 
         //header information
         void header();
 
         //store the inlet
-        void storeInlet(CamBoundary &cb);
+        //void storeInlet(CamBoundary &cb);
         //update the diffusion fluxes
         void updateDiffusionFluxes();
         //update the thermal fluxes
         void updateThermo();
+        //save the flow variables
+        void saveFlowVariables(doublereal* y);
 
     protected:
         inletStruct ud_inlet;

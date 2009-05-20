@@ -84,6 +84,10 @@ namespace Camflow{
          */
         void setStarProfile(CamBoundary& cb, Mechanism& mech);
         /*
+         *set start profile given 2 inlets
+         */
+        void setStartprofile(CamBoundary &left, CamBoundary &right, Mechanism &mech);
+        /*
          *set the gaussian for intermediates
          */
         void setGaussian(Mechanism &mech);
