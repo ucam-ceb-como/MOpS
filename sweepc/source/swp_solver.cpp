@@ -60,7 +60,7 @@ Solver::Solver(void)
     // Seed the random number generator.
     srnd(123);               
  //  srnd(time(0));			//added by ms785 
- //srnd(getpid());			//added by ms785 
+// srnd(getpid());			//added by ms785 
  
 	
 }

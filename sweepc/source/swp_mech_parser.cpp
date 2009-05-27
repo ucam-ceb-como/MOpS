@@ -197,7 +197,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     } else if (str == "PAH") {
         mech.SetAggModel(AggModels::PAH_ID);
 		std::vector<std::string> values;	
-		CSV_IO *csvinput = new CSV_IO("collisionefficiency.csv",false);
+		/*CSV_IO *csvinput = new CSV_IO("collisionefficiency.csv",false);
 		for (int j=0;j<10000;j++)
 		{
 			values.clear();	
@@ -209,7 +209,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 			mech.m_reduced_mass.push_back(redmass);
 			mech.m_collision_eff.push_back(ceff);
 		}
-		csvinput->Close();
+		csvinput->Close();*/
     } else {
         mech.SetAggModel(AggModels::Spherical_ID);
     }

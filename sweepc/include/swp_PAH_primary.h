@@ -108,6 +108,12 @@ public:
 
 	AggModels::PAHCache *const CreateAggCache(ParticleCache &pcache) const;
 
+	//serialize
+	void Deserialize(std::istream &in, const Sweep::ParticleModel &model);
+	void Serialize(std::ostream &out) const;
+
+	AggModels::AggModelType AggID(void) const;
+
 protected:
 
 };

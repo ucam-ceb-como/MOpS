@@ -227,11 +227,9 @@ void PAHCache::Deserialize(std::istream &in, ParticleCache &parent)
 
         switch (version) {
             case 0:
-                // Read the sphere surface area.
+               //read the number of PAHs
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_numPAH = (real)val;
-
- 
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "

@@ -150,20 +150,20 @@ void PAHPrimary::UpdateCache(void)
 		m_PAHCollDiameter=max(m_PAHCollDiameter,2.4162*sqrt((i->m_numcarbon)*2.0/3.));    // in Angstrom
 		m_numPAH++;
     }
-	 m_PAHmass=m_numcarbon*1.9945e-26;        //convert to kg
+	m_PAHmass=m_numcarbon*1.9945e-26;        //convert to kg
 	m_PAHCollDiameter*=1e-10;//convert from Angstrom to m
 
 	 double V=m_PAHmass/1.6e3;
-	 double cdiamsphere=pow((3*V/(4*PI)),(1.0/3.0));
-	 double alpha=1.0/(pow(m_numPAH,0.1));
+	 double cdiamsphere=pow((6*V/PI),(1.0/3.0));
+	 //double alpha=1.0/(pow(m_numPAH,0.1));
 	// double cdiam=alpha*m_PAHCollDiameter+(1-alpha)*cdiamsphere;
-	double cdiam=max(cdiamsphere,m_PAHCollDiameter);
+	 double cdiam=max(cdiamsphere,m_PAHCollDiameter);
 	 SetCollDiameter(cdiam);	
 	 SetMass(m_PAHmass);
-	
-
-	
-
+	 SetVolume(V);
+     m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
+     m_dmob = m_diam;
+     m_surf = PI * m_diam * m_diam;
 }
 
 // Creates an aggregation data cache for this primary type.
@@ -194,3 +194,54 @@ PAHPrimary &PAHPrimary::Instance() {return *this;}
 const PAHPrimary &PAHPrimary::Instance() const {return *this;}
 
 
+// AGGREGATION MODEL.
+
+// Returns the aggregation model which this primary describes.
+AggModels::AggModelType PAHPrimary::AggID(void) const {return AggModels::PAH_ID;}
+
+
+
+// Writes the object to a binary stream.
+void PAHPrimary::Serialize(std::ostream &out) const
+{
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Output base class.
+        Primary::Serialize(out);
+
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, PAHPrimary::Serialize).");
+    }
+}
+
+// Reads the object from a binary stream.
+void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
+{
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        double val = 0.0;
+
+        switch (version) {
+            case 0:
+                // Read base class.
+                Primary::Deserialize(in, model);
+
+                break;
+            default:
+                throw runtime_error("Serialized version number is invalid "
+                                    "(Sweep, PAHPrimary::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, PAHPrimary::Deserialize).");
+    }
+}

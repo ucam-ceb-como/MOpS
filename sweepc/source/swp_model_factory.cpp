@@ -111,6 +111,9 @@ Primary *const ModelFactory::ReadPrimary(std::istream &in,
             case AggModels::PriPartList_ID:
                 pri = new AggModels::PriPartPrimary(in, model);
                 break;
+		    case AggModels::PAH_ID:
+                pri = new AggModels::PAHPrimary(in, model);
+                break;
             default:
                 throw invalid_argument("Invalid model ID (Sweep, "
                                        "ModelFactory::ReadPrimary).");
@@ -391,6 +394,10 @@ AggModels::AggModelCache *const ModelFactory::ReadAggCache(std::istream &in,
                 break;
             case AggModels::PriPartList_ID:
                 model = new AggModels::PriPartCache(in, parent);
+                model->SetParent(parent);
+                break;
+	        case AggModels::PAH_ID:
+                model = new AggModels::PAHCache(in, parent);
                 model->SetParent(parent);
                 break;
             default:

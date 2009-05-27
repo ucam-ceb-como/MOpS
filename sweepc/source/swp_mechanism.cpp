@@ -811,6 +811,8 @@ void  Mechanism::Mill(Cell &sys, real t) const
 				}
 				file.close();
 }
+
+//added by ms785 to print out the sintering properties.
 void  Mechanism::output(Cell &sys, real t) const
 {
 						 if (sys.ParticleCount() > 10 && t-last3dout>0.004)
