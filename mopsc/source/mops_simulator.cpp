@@ -243,10 +243,9 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
     // Output initial conditions.
     // - Note: added sensitivity output will write system initial condition, not initial values.
-	if (!r.Mixture()->Particles().ParticleModel()->AggModel()==Sweep::AggModels::PAH_ID)
-	{
-        fileOutput(m_output_step, m_output_iter, r, s, this);   // Commented out by ms785 due to problems with flamePP and PAH solver
-	}
+
+    fileOutput(m_output_step, m_output_iter, r, s, this);   
+
     // Set up the console output.
     icon = m_console_interval;
     setupConsole(*r.Mech());
@@ -385,12 +384,16 @@ void Simulator::PostProcess()
     // once, as they are the same for all runs.
     readGasPhaseDataPoint(fin, mech, achem[0], echem[0], true);
     readParticleDataPoint(fin, pmech, astat[0], estat[0], true);
-    readGasRxnDataPoint(fin, mech,
+	if (!mech.ParticleMech().AggModel()==Sweep::AggModels::PAH_ID)
+	{ 
+		//if loop added by ms785
+	   readGasRxnDataPoint(fin, mech,
                         agprates[0], egprates[0],
                         agpfwdrates[0], egpfwdrates[0],
                         agprevrates[0], egprevrates[0],
                         agpwdot[0], egpwdot[0],
                         true);
+	}
     readPartRxnDataPoint(fin, mech.ParticleMech(),
                          apprates[0], epprates[0],
                          appwdot[0], eppwdot[0],
@@ -464,26 +467,37 @@ void Simulator::PostProcess()
                         // Read output point for all iterations for step.
                         readGasPhaseDataPoint(fin, mech, achem[step], echem[step], true);
                         readParticleDataPoint(fin, pmech, astat[step], estat[step], true);
-                        readGasRxnDataPoint(fin, mech,
+						if (!mech.ParticleMech().AggModel()==Sweep::AggModels::PAH_ID)
+						{ //if loop added by ms785
+							 readGasRxnDataPoint(fin, mech,
                                             agprates[step], egprates[step],
                                             agpfwdrates[step], egpfwdrates[step],
                                             agprevrates[step], egprevrates[step],
                                             agpwdot[step], egpwdot[step],
                                             true);
+						}
+
                         readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], true);
                         readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                         readPartTrackPoint(fin, pmech, ptrack[irun][step]);
                     }
-                } else {
-                    // Read single output point for step.
-                    readGasPhaseDataPoint(fin, mech, achem[step], echem[step], true);
+				} else  {
+
+
+					// Read single output point for step.
+				    readGasPhaseDataPoint(fin, mech, achem[step], echem[step], true);
                     readParticleDataPoint(fin, pmech, astat[step], estat[step], true);
-                    readGasRxnDataPoint(fin, mech,
+									
+
+					if (!mech.ParticleMech().AggModel()==Sweep::AggModels::PAH_ID)
+					{ //if loop added by ms785
+						 readGasRxnDataPoint(fin, mech,
                                         agprates[step], egprates[step],
                                         agpfwdrates[step], egpfwdrates[step],
                                         agprevrates[step], egprevrates[step],
                                         agpwdot[step], egpwdot[step],
                                         true);
+					}
                     readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], true);
                     readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                     readPartTrackPoint(fin, pmech, ptrack[irun][step]);
@@ -557,7 +571,7 @@ void Simulator::openOutputFile() const
     // SIMULATOR OUTPUT FILE
     // Build the simulation output file name.
      string fname = m_output_filename + ".sim";
-	std::ostringstream ranstream;
+//	std::ostringstream ranstream;
 //	ranstream <<getpid();
 	//string fname = "/scratch/ms785/"+m_output_filename+ranstream.str()+".sim";
     // Open the simulation output file.
@@ -707,7 +721,12 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
 
             // Write gas-phase and particle reaction rates
             // to the file.
-            me->outputGasRxnRates(r);
+			if (!r.Mixture()->Particles().ParticleModel()->AggModel()==Sweep::AggModels::PAH_ID)
+			{
+			    // Commented out by ms785 due to problems with flamePP and PAH solver because no gas phase reactions are existing
+				me->outputGasRxnRates(r);
+			}
+            
             me->outputPartRxnRates(r);
 
             // Write CPU times to file.

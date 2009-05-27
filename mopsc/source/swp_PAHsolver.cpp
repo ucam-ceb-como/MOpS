@@ -341,6 +341,9 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         }
 
     }
+	    // Call the output function.
+    if (out) out(nsteps, niter, r, *this, data);
+
 	//cout << numincepted << " incepted"<< endl;
 	r.SetTime(t);
 	if (r.Time()>0.005)
@@ -356,19 +359,33 @@ void PAHSolver::Output(Mops::Reactor &r)
 	Ensemble::iterator i;
 	int j;
 	double numpah=0;
-	double numparticles=0;
+	double numparticles=0;		// count only particles with more than 1 PAH
 	double maxpahmass=0.;
+	int numallparticles=0;		//count all the particles in the system 
 	const int numbins=1000;
+	const int maxnumpah=1000;
 	int distribution[numbins];
 	int dimercompdistr[numbins];
+	int pahdistribution[maxnumpah];
 	for (j=0;j<numbins;j++)
 	{
 		distribution[j]=0;
 		dimercompdistr[j]=0;
 	}
+
+	for (j=0;j<maxnumpah;j++)
+	{
+		pahdistribution[j]=0;
+	}
+
 	for (i=(*r.Mixture()).Particles().begin(); i!=(*r.Mixture()).Particles().end() ; ++i) {
 		const AggModels::PAHPrimary *pah = NULL;
 		pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
+		if (pah->m_numPAH<maxnumpah)
+		{
+			pahdistribution[pah->m_numPAH]++;
+			numallparticles++;
+		}
 		if (pah->m_numPAH>1)
 		{
 			numpah+=pah->m_numPAH;
@@ -376,6 +393,14 @@ void PAHSolver::Output(Mops::Reactor &r)
 		}
 		maxpahmass=max(pah->m_PAHmass/1.99e-26,maxpahmass);
 	}	
+	fname = "pahdistr.txt" ;
+	file.open(fname.c_str());
+	for (j=0;j<maxnumpah;j++)
+	{
+		file << j<< "     "  << pahdistribution[j]*1.0/numallparticles  << endl;
+	}
+	file.close();
+
 	fname = "avnumpah.txt" ;
 	file.open(fname.c_str(),ios::app);
 	file << r.Time()<< "     "  <<  numpah/numparticles << endl;
