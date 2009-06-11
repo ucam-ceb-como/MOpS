@@ -407,7 +407,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 
         node = root->GetFirstChild("reactor");
         if (node != NULL) {
-            reac = readReactor(*node, mech, sim.MaxPartCount());
+			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0());
         } else {
             throw runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");
@@ -492,7 +492,8 @@ void Settings_IO::readGlobalSettings(const CamXML::Element &node,
 // Reads the reactor initial settings from the given XML node.
 Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
                                         const Mechanism &mech,
-                                        const unsigned int max_particle_count)
+                                        const unsigned int max_particle_count,
+										const real maxM0)
 {
     Reactor *reac = NULL;
     const CamXML::Element *subnode, *subsubnode;
@@ -604,6 +605,7 @@ Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
     // Assign the species mole fraction vector to the reactor mixture.
     mix->SetFracs(molefracs);
     mix->Particles().Initialise(max_particle_count, mech.ParticleMech());
+	mix->Reset(maxM0);
     reac->Fill(*mix);
     
     // Particles
