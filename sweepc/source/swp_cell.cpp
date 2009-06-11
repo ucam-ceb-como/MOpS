@@ -201,7 +201,7 @@ real Cell::SampleVolume() const
 int Cell::SetM0(const real m0)
 {
     if ((m_ensemble.Count() > 0) && (m0 > 0.0)) {
-        m_smpvol = (real)m_ensemble.Count() / m0;
+        m_smpvol = m_ensemble.Count() / m0;
         m_ensemble.ResetScaling();
         return 0;
     }// else {
@@ -228,18 +228,24 @@ int Cell::SetM0(const real m0)
     }
 }*/
 
+/**
+ * Clear any particles and set the sample volume so that a full ensemble
+ * (of m_ensemble.Capacity() particles) has the specified m0.
+ *
+ *@param[in]    m0      Particle number density for full ensemble
+ */
 void Cell::Reset(const real m0)
 {
     m_ensemble.Clear();
+    m_ensemble.ResetScaling();
     
     if ((m_ensemble.Capacity() > 0) && (m0 > 0.0)) {
-        m_smpvol = m_ensemble.Scaling() * (real)m_ensemble.Capacity() / m0;
+        m_smpvol = m_ensemble.Capacity() / m0;
     } 
     else {
         // The ensemble has not yet been initialised
         m_smpvol = 1.0;
     }
-    m_ensemble.ResetScaling();
 
 }
 
