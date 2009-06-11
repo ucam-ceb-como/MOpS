@@ -603,15 +603,17 @@ Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
 
     // Assign the species mole fraction vector to the reactor mixture.
     mix->SetFracs(molefracs);
+    mix->Particles().Initialise(max_particle_count, mech.ParticleMech());
     reac->Fill(*mix);
     
     // Particles
     subnode = node.GetFirstChild("population");
     
     // List will be empty unless a population node is present
-    PartPtrList particleList;
-    real initialM0 = 0;
     if(subnode) {
+        PartPtrList particleList;
+        real initialM0 = 0;
+
         // Find the overall number density represented by the population
         CamXML::Element* m0Node = subnode->GetFirstChild("m0");
         if(!m0Node) {
@@ -626,11 +628,12 @@ Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
         
         // Now read in the list of particles
         particleList = ReadInitialParticles(*subnode, max_particle_count, mech.ParticleMech());
+
+        //mix->Particles().Initialise(max_particle_count, mech.ParticleMech());
+        mix->Particles().SetParticles(particleList.begin(), particleList.end());
+        mix->SetM0(initialM0);
     }
     
-    mix->Particles().Initialise(max_particle_count, mech.ParticleMech());
-    mix->Particles().SetParticles(particleList.begin(), particleList.end());
-    mix->SetM0(initialM0);
 
     // TEMPERATURE GRADIENT PROFILE.
 
