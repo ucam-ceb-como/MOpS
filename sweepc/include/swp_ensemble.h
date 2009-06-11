@@ -67,6 +67,7 @@
 #include "swp_particle_cache.h"
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 
 namespace Sweep
 {
@@ -113,6 +114,13 @@ public:
         unsigned int capacity,             // Max. number of particles.
         const Sweep::ParticleModel &model  // Model which defines the particles.
         );
+    
+    //* Initialise with some particles
+    template<class T> void SetParticles(
+        //unsigned int capacity,
+        //const Sweep::ParticleModel &model,
+        T particle_list_begin,
+        T particle_list_end);
 
 
     // THE PARTICLE MODEL.
@@ -306,13 +314,17 @@ private:
 
     // Recalculates a branch of the tree from the given node upwards.
     void ascendingRecalc(unsigned int i);
+    
+    // Recalculate all the non leaf nodes (useful after several particles
+    // have been changed
+    void recalcAllNonLeaf();
 
     // Performs the doubling algorithm.
     void dble();
-};
+}; // end of class Ensemble
 
+}; // end of namespace Sweep
 // Include inline function definitions.
 #include "swp_ensemble_inl.h"
-};
 
 #endif

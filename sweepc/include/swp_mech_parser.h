@@ -129,6 +129,13 @@ private:
         Processes::Condensation &cond // Condensation to construct from XML.
         );
 
+    // COAGULATION
+    //* Allow user to choose coagulation kernel via a sweep mechanism XML file.
+    static void readCoagulation(        
+        CamXML::Document &xml, // CamXML document pre-constructed from file.
+        Mechanism &mech        // Mechanism to construct from XML.
+        );
+    
     // REACTION SHARED COMPONENTS.
 
     // Reads reactants into a process.

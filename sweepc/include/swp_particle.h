@@ -47,6 +47,7 @@
 #include "swp_params.h"
 #include "swp_particle_model.h"
 #include "swp_subparticle.h"
+#include "camxml.h"
 #include <vector>
 #include <iostream>
 
@@ -72,6 +73,9 @@ public:
 
 	// Destructor.
     ~Particle(void);
+    
+    //* Create a new particle using the model according to the xml data 
+    static Particle* createFromXMLNode(const CamXML::Element& xml, const Sweep::ParticleModel& model);
 
     // Operators.
     Particle &operator=(const Particle &rhs);

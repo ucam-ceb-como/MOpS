@@ -95,8 +95,7 @@
 #include "swp_surface_reaction.h"
 #include "swp_actsites_reaction.h"
 #include "swp_condensation.h"
-// Coagulation process.
-#include "swp_coagulation.h"
+
 // Other processes.
 #include "swp_death_process.h"
 

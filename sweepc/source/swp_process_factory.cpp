@@ -44,7 +44,8 @@
 #include "swp_surface_reaction.h"
 #include "swp_condensation.h"
 #include "swp_actsites_reaction.h"
-#include "swp_coagulation.h"
+#include "swp_transcoag.h"
+#include "swp_addcoag.h"
 #include "swp_inception.h"
 #include "swp_arssc_inception.h"
 #include "swp_arssc_reaction.h"
@@ -62,8 +63,10 @@ Process *const ProcessFactory::Create(ProcessType id, const Sweep::Mechanism &me
     switch (id) {
         case Inception_ID:
             return new Inception(mech);
-        case Coagulation_ID:
-            return new Coagulation(mech);
+        case Transition_Coagulation_ID:
+            return new TransitionCoagulation(mech);
+        case Additive_Coagulation_ID:
+            return new AdditiveCoagulation(mech);
         case SurfaceReaction_ID:
             return new SurfaceReaction(mech);
         case Condensation_ID:
@@ -103,8 +106,11 @@ Process *const ProcessFactory::Read(std::istream &in, const Sweep::Mechanism &me
             case Inception_ID:
                 proc = new Inception(in, mech);
                 break;
-            case Coagulation_ID:
-                proc = new Coagulation(in, mech);
+            case Transition_Coagulation_ID:
+                proc = new TransitionCoagulation(in, mech);
+                break;
+            case Additive_Coagulation_ID:
+                proc = new AdditiveCoagulation(in, mech);
                 break;
             case SurfaceReaction_ID:
                 proc = new SurfaceReaction(in, mech);
@@ -113,11 +119,14 @@ Process *const ProcessFactory::Read(std::istream &in, const Sweep::Mechanism &me
                 proc = new Condensation(in, mech);
                 break;
             case ActSiteRxn_ID:
-                proc = new ActSiteReaction(in, mech);
+                //proc = new ActSiteReaction(in, mech);
+                //break;
             case ARSSC_Inception_ID:
-                proc = new ARSSC_Inception(in, mech);
+                //proc = new ARSSC_Inception(in, mech);
+                //break;
             case ARSSC_Reaction_ID:
-                proc = new ARSSC_Reaction(in, mech);
+                //proc = new ARSSC_Reaction(in, mech);
+                //break;
             case ARSSC_Condensation_ID:
 //                proc = new ARSSC_Condensation(in, mech);
             default:
@@ -225,8 +234,11 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in,
         // Read an inception of this particular type.  This will throw
         // an exception if the type is invalid.
         switch ((ProcessType)type) {
-            case Coagulation_ID:
-                proc = new Coagulation(in, mech);
+            case Transition_Coagulation_ID:
+                proc = new TransitionCoagulation(in, mech);
+                break;
+            case Additive_Coagulation_ID:
+                proc = new AdditiveCoagulation(in, mech);
                 break;
             default:
                 throw runtime_error("Invalid coagulation type read from "

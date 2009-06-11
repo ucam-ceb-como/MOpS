@@ -125,8 +125,7 @@ public:
     // COAGULATIONS.
 
     // Adds a coagulation process to the mechanism.
-    void AddCoagulation();
-
+    void AddCoagulation(Processes::Coagulation &coag);
     
     // PROCESS INFORMATION.
 

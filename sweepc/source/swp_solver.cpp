@@ -167,7 +167,7 @@ real Solver::timeStep(real t, Cell &sys, const Mechanism &mech,
         dt = 1.0e+30;
     }
 
-    // Truncate if step is too long and select a process
+    // Truncate if step is too long or select a process
     // to perform.
     if (dt > m_maxdt) {
         dt = m_maxdt;
@@ -183,14 +183,6 @@ real Solver::timeStep(real t, Cell &sys, const Mechanism &mech,
     // Perform process.
     if (i >= 0) {
         mech.DoProcess(i, t+dt, sys);
-/*        if (j==0) {
-            m_processcounter[i]++;
-        } else if (j==1) {
-            m_ficticiouscounter[i]++;
-        } else {
-            // Return invalid time step on error.
-            dt = -dt;
-        }*/
     }
 
     return dt;

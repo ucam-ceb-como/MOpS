@@ -214,7 +214,7 @@ int Cell::SetM0(const real m0)
 
 // Sets the number density which the full 
 // ensemble would represent.
-int Cell::SetMaxM0(const real m0)
+/*int Cell::SetMaxM0(const real m0)
 {
     if ((m_ensemble.Capacity() > 0) && (m0 > 0.0)) {
         m_smpvol = m_ensemble.Scaling() * (real)m_ensemble.Capacity() / m0;
@@ -226,12 +226,21 @@ int Cell::SetMaxM0(const real m0)
         m_smpvol = 1.0;
         return -1;
     }
-}
+}*/
 
 void Cell::Reset(const real m0)
 {
     m_ensemble.Clear();
-    SetMaxM0(m0);
+    
+    if ((m_ensemble.Capacity() > 0) && (m0 > 0.0)) {
+        m_smpvol = m_ensemble.Scaling() * (real)m_ensemble.Capacity() / m0;
+    } 
+    else {
+        // The ensemble has not yet been initialised
+        m_smpvol = 1.0;
+    }
+    m_ensemble.ResetScaling();
+
 }
 
 

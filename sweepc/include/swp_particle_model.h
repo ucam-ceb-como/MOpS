@@ -7,7 +7,7 @@
 
   File purpose:
     The ParticleModel class defines the set of chemical species, particle
-    components and particle tracker variables used to defines particles and
+    components and particle tracker variables used to define particles and
     particle processes.  It is principally used as the base class of the
     Mechanism class, but also has use in creating and defining particles,
     which need not know of the particle processes.  This class also knows
@@ -69,8 +69,8 @@ class ParticleModel
 {
 public:
 	// Constructors.
-	ParticleModel(void);                      // Default Constructor.
-	ParticleModel(const ParticleModel &copy); // Copy-Constructor.
+    ParticleModel(void);                      // Default Constructor.
+    ParticleModel(const ParticleModel &copy); // Copy-Constructor.
     ParticleModel(std::istream &in);          // Stream-reading constructor.
 
     // Destructor.

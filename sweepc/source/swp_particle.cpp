@@ -43,7 +43,9 @@
 #include "swp_particle.h"
 #include "swp_particle_model.h"
 #include "swp_submodel.h"
+#include "string_functions.h"
 #include <cmath>
+#include <stdexcept>
 
 using namespace Sweep;
 using namespace std;
@@ -88,6 +90,64 @@ Particle::~Particle()
 }
 
 
+Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::ParticleModel& model)
+{
+    // Read initial particle composition.
+    vector<CamXML::Element*> subitems; 
+    xml.GetChildren("component", subitems);
+    fvector components(model.ComponentCount(), 0);
+    
+    for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); ++j) {
+        // Get component ID.
+        string str = (*j)->GetAttributeValue("id");
+        int id = model.ComponentIndex(str);
+
+        if (id >= 0) {
+            // Get component value (XML uses dx to match format for inception).
+            str = (*j)->GetAttributeValue("dx");
+            components[id] = Strings::cdble(str);
+        } else {
+            // Unknown component in mechanism.
+            throw std::runtime_error(str + ": Component not found in mechanism \
+                                       (Sweep, Particle::createFromXMLNode).");
+        }
+    }
+
+    // Read initial tracker variable values.
+    xml.GetChildren("track", subitems);
+    fvector trackers(model.TrackerCount(), 0);
+    
+    for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); j++) {
+        // Get tracker ID.
+        string str = (*j)->GetAttributeValue("id");
+        int id = model.GetTrackerIndex(str);
+
+        if (id >= 0) {
+            // Get tracker value (XML uses dx to match format for inception).
+            str = (*j)->GetAttributeValue("dx");
+            trackers[id] = Strings::cdble(str);
+        } else {
+            // Unknown tracker variable in mechanism.
+            throw std::runtime_error(str + ": Tracker variable not found in mechanism. \
+                                       (Sweep, Particle::createFromXMLNode).");
+        }
+    }
+    
+    
+    //Particle* const pNew = new Particle(0, model);
+    Particle* const pNew = model.CreateParticle(0.0);
+    
+    // Initialise the new particle.
+    pNew->Primary()->SetComposition(components);
+    pNew->Primary()->SetValues(trackers);
+    pNew->UpdateCache();
+    
+    return pNew;
+}
+
+
+
+// Compound assignment (coagulation).
 // OPERATOR OVERLOADING.
 
 // Assignment operator.

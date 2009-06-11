@@ -45,7 +45,7 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_submodel.o swp_submodel_cache.o swp_model_factory.o \
     swp_surfvol_cache.o swp_surfvol_primary.o swp_primary.o \
     swp_pripart_cache.o swp_pripart_primary.o swp_actsites_reaction.o \
-    swp_coagulation.o swp_condensation.o swp_inception.o \
+    swp_coagulation.o swp_transcoag.o swp_addcoag.o swp_condensation.o swp_inception.o \
     swp_particle_process.o swp_process.o swp_process_factory.o \
     swp_surface_reaction.o swp_particle_model.o swp_imgnode.o \
     swp_particle_image.o swp_ensemble_image.o swp_ensemble_imgnode.o swp_surfvol_stats.o swp_pripart_stats.o \
@@ -201,8 +201,16 @@ swp_arssc_cache.o: $(src)/swp_arssc_cache.cpp
 swp_actsites_reaction.o: $(src)/swp_actsites_reaction.cpp
 	$(cpp) $(flag) $(src)/swp_actsites_reaction.cpp
 
-swp_coagulation.o: $(src)/swp_coagulation.cpp
+swp_coagulation.o: $(src)/swp_coagulation.cpp $(inc)/swp_coagulation.h $(inc)/swp_mechanism.h
 	$(cpp) $(flag) $(src)/swp_coagulation.cpp
+
+swp_transcoag.o: $(src)/swp_transcoag.cpp $(inc)/swp_coagulation.h $(inc)/swp_transcoag.h \
+                 $(inc)/swp_cell.h $(inc)/swp_mechanism.h $(inc)/swp_params.h
+	$(cpp) $(flag) $(src)/swp_transcoag.cpp
+
+swp_addcoag.o: $(src)/swp_addcoag.cpp $(inc)/swp_coagulation.h $(inc)/swp_addcoag.h \
+               $(inc)/swp_cell.h $(inc)/swp_mechanism.h $(inc)/swp_params.h
+	$(cpp) $(flag) $(src)/swp_addcoag.cpp
 
 swp_condensation.o: $(src)/swp_condensation.cpp
 	$(cpp) $(flag) $(src)/swp_condensation.cpp
@@ -216,7 +224,8 @@ swp_particle_process.o: $(src)/swp_particle_process.cpp
 swp_process.o: $(src)/swp_process.cpp
 	$(cpp) $(flag) $(src)/swp_process.cpp
 
-swp_process_factory.o: $(src)/swp_process_factory.cpp
+swp_process_factory.o: $(src)/swp_process_factory.cpp $(inc)/swp_process_factory.h \
+                       $(inc)/swp_transcoag.h $(inc)/swp_addcoag.h
 	$(cpp) $(flag) $(src)/swp_process_factory.cpp
 
 swp_surface_reaction.o: $(src)/swp_surface_reaction.cpp

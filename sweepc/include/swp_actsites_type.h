@@ -52,6 +52,8 @@
 #ifndef SWEEP_ACTSITES_TYPE_H
 #define SWEEP_ACTSITES_TYPE_H
 
+#include <set>
+
 namespace Sweep
 {
 namespace ActSites

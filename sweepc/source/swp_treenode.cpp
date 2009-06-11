@@ -76,7 +76,7 @@ TreeNode::~TreeNode(void)
 
 // OPERATOR OVERLOADING
 
-// Assignment operator.
+// Assignment operator ignores the pointer members
 TreeNode &TreeNode::operator=(const TreeNode &rhs)
 {
     if (this != &rhs) {

@@ -52,7 +52,6 @@ namespace Processes
     enum ProcessType {
         // Basic processes.
         Inception_ID=0,         // Inception process.
-        Coagulation_ID=1,       // Coagulation process.
         Death_ID=2,             // Death process.
         Birth_ID=3,             // Birth process.
 
@@ -66,7 +65,12 @@ namespace Processes
         // ARSSC model processes.
         ARSSC_Inception_ID=1000,   // ARS-SC inception process.
         ARSSC_Reaction_ID=1001,    // ARS-SC reaction process.
-        ARSSC_Condensation_ID=1002 // ARS-SC condensation process.
+        ARSSC_Condensation_ID=1002, // ARS-SC condensation process.
+
+        // Coagulation processes
+        Transition_Coagulation_ID=10000,   // Transition regime coagulation
+        Additive_Coagulation_ID=10001      // Additive coagulation kernel
+
     };
 };
 };

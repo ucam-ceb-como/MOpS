@@ -112,7 +112,13 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         }
 
         // Copy coagulation process.
-        if (rhs.m_coag) m_coag = rhs.m_coag->Clone();
+        if (rhs.m_coag) 
+        {
+            // The dynamic cast should never fail, because m_coag is
+            // of type Coagulation*, but the Clone method returns
+            // a Process* so the cast is necessary.
+            m_coag = dynamic_cast<Coagulation*>(rhs.m_coag->Clone());
+        }
 
         // Copy process counters.
         m_proccount.assign(rhs.m_proccount.begin(), rhs.m_proccount.end());
@@ -215,7 +221,7 @@ void Mechanism::AddProcess(ParticleProcess &p)
 // COAGULATIONS.
 
 // Adds a coagulation process to the mechanism.
-void Mechanism::AddCoagulation()
+void Mechanism::AddCoagulation(Coagulation& coag)
 {
     if (m_coag != NULL) {
         m_termcount -= m_coag->TermCount();
@@ -223,8 +229,9 @@ void Mechanism::AddCoagulation()
         ++m_processcount;
     }
     delete m_coag;
-    m_coag = new Coagulation(*this);
-    m_termcount += m_coag->TermCount();
+    
+    m_coag = &coag;
+    m_termcount += coag.TermCount();
     m_proccount.resize(m_termcount, 0);
     m_fictcount.resize(m_termcount, 0);
 }
@@ -893,7 +900,6 @@ void  Mechanism::output(Cell &sys, real t) const
 								tempdistr[j]=0;
 							}
 							
-							int n=0;
 							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
 							(*(*i)).Getprimarydistribution(primdistr);
 								
@@ -941,7 +947,6 @@ void  Mechanism::output(Cell &sys, real t) const
 
 							real avsubpartdiam=0.;
 							real avsubpartdiam2=1.;
-							int avdiamdistr[500]={0};
 							fname = "avdiam.txt";
 							file.open(fname.c_str(),ios::app);
 					//		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {

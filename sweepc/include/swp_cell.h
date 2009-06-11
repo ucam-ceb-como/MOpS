@@ -123,7 +123,7 @@ public:
 
     // Sets the number density which the full 
     // ensemble would represent.
-    int SetMaxM0(real m0);
+    //int SetMaxM0(real m0);
 
     void Reset(real m0);
 
@@ -191,8 +191,8 @@ public:
 protected:
     // Default constructor is protected as it makes no
     // sense to define a mixture without knowledge of the
-    // definin species.  This trait is brought over from Sprog.
-    Cell(void);
+    // defining species.  This trait is brought over from Sprog.
+    Cell();
 
 private:
     // Particle ensemble.
