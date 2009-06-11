@@ -150,12 +150,8 @@ int main(int argc, char *argv[])
     try {
         switch (soltype) {
             case OpSplit:
-				/* // Not implemented yet.
-                printf("Attempted to use simple splitting solver, which is not"
-                       " yet implemented (mops, main).\n\n");
-                return -1; */
-				solver = new SimpleSplitSolver();
-				break;
+		solver = new SimpleSplitSolver();
+		break;
             case Strang:
                 solver = new StrangSolver();
                 break;
@@ -198,17 +194,17 @@ int main(int argc, char *argv[])
         if (soltype != FlamePP && soltype != PAH) {
             Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
             if (diag>0) mech.WriteDiagnostics("ckmech.diag");
-        } else
-			{
-				if (soltype == FlamePP){
-					dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(chemfile, mech);
-				}
-				if (soltype == PAH){
-					dynamic_cast<Sweep::PAHSolver*>(solver)->LoadGasProfile(chemfile, mech);
-					dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data.csv");
-				}
+        } 
+        else {
+            if (soltype == FlamePP){
+                dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(chemfile, mech);
+            }
+            if (soltype == PAH){
+                    dynamic_cast<Sweep::PAHSolver*>(solver)->LoadGasProfile(chemfile, mech);
+                    dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data.csv");
+            }
 
-			}
+        }
     } catch (std::logic_error &le) {
         printf("mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n");
         printf(le.what());
@@ -228,7 +224,6 @@ int main(int argc, char *argv[])
         if (soltype != GPC) {
             mech.ParticleMech().SetSpecies(mech.Species());
             Sweep::MechParser::Read(swpfile, mech.ParticleMech());
-            mech.ParticleMech().AddCoagulation();
         }
     } catch (std::logic_error &le) {
         printf("mops: Failed to read particle mechanism due to bad inputs.  Message:\n  ");

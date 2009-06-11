@@ -190,3 +190,7 @@ clean:
 	$(MAKE) clean -f ../sweepc/Makefile -C ../sweepc
 	$(MAKE) clean -f ../cvodes/Makefile -C ../cvodes
 	rm -rf *.o \#* *~
+
+cleansolver:
+	$(MAKE) clean -f ../sweepc/Makefile -C ../sweepc
+	rm -rf *.o \#* *~

@@ -55,6 +55,8 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <memory>
+#include <cstdlib>
 
 using namespace Mops;
 using namespace std;
@@ -405,7 +407,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 
         node = root->GetFirstChild("reactor");
         if (node != NULL) {
-            reac = readReactor(*node, mech);
+            reac = readReactor(*node, mech, sim.MaxPartCount());
         } else {
             throw runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");
@@ -489,7 +491,8 @@ void Settings_IO::readGlobalSettings(const CamXML::Element &node,
 
 // Reads the reactor initial settings from the given XML node.
 Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
-                                        const Mechanism &mech)
+                                        const Mechanism &mech,
+                                        const unsigned int max_particle_count)
 {
     Reactor *reac = NULL;
     const CamXML::Element *subnode, *subsubnode;
@@ -589,8 +592,8 @@ Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
             if (j >= 0) {
                 molefracs[j] = cdble((*i)->Data());
             } else {
-                throw runtime_error("Unknown species initial condition "
-                                    "(Mops, Settings_IO::readReactor).");
+                throw runtime_error("No initial condition for species " + str +
+                                    " (Mops, Settings_IO::readReactor).");
             }
         } else {
             throw runtime_error("Initial condition must have ID "
@@ -601,6 +604,33 @@ Reactor *const Settings_IO::readReactor(const CamXML::Element &node,
     // Assign the species mole fraction vector to the reactor mixture.
     mix->SetFracs(molefracs);
     reac->Fill(*mix);
+    
+    // Particles
+    subnode = node.GetFirstChild("population");
+    
+    // List will be empty unless a population node is present
+    PartPtrList particleList;
+    real initialM0 = 0;
+    if(subnode) {
+        // Find the overall number density represented by the population
+        CamXML::Element* m0Node = subnode->GetFirstChild("m0");
+        if(!m0Node) {
+            throw std::runtime_error("m0 (number density) must be specified for initial particle population \
+                                     (Mops, Settings_IO::readReactor)");
+        }
+        initialM0 = std::atof((m0Node->Data()).c_str());
+        if(initialM0 < 0) {
+            throw std::runtime_error("m0 for initial particle population may not be negative \
+                                     (Mops, Settings_IO::readReactor)");
+        }
+        
+        // Now read in the list of particles
+        particleList = ReadInitialParticles(*subnode, max_particle_count, mech.ParticleMech());
+    }
+    
+    mix->Particles().Initialise(max_particle_count, mech.ParticleMech());
+    mix->Particles().SetParticles(particleList.begin(), particleList.end());
+    mix->SetM0(initialM0);
 
     // TEMPERATURE GRADIENT PROFILE.
 
@@ -933,4 +963,76 @@ real Settings_IO::readPressure(const CamXML::Element &node)
     }
 
     return P;
+}
+
+/**
+ * Read a list of initial particles specified in an XML file
+ *
+ *@param[in]    population_xml      xml node containing initial particles as children
+ *@param[in]    max_ensemble_size   Maximum number of particles that can be handled
+ *@param[in]    particle_mech       Mechanism defining the meaning of the particles
+ *
+ *@return       Container of the particles that form the initial population
+ */
+PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& population_xml, 
+                                              const unsigned int max_ensemble_size,
+                                              const Sweep::Mechanism & particle_mech)
+{
+    // Accumulate in this container a collection of particles to be inserted into the ensemble
+    PartPtrList particleList;
+ 
+    // Now get the XML defining the particles
+    vector<CamXML::Element*> particleXML;
+    population_xml.GetChildren("particle", particleXML);
+
+    // An empty population means nothing to do
+    if(particleXML.empty())
+    {
+        return particleList;
+    }
+
+    // Now loop through the particles one by one
+    vector<CamXML::Element*>::const_iterator it(particleXML.begin());
+    const vector<CamXML::Element*>::const_iterator itEnd(particleXML.end());
+    while(it != itEnd)
+    {
+        const std::auto_ptr<const Sweep::Particle> pParticle(Sweep::Particle::createFromXMLNode(**it, particle_mech));
+
+        // See how many times this particle appears (default is 1)
+        int repeatCount = 1;
+
+        // Will initialise to NULL if no count attribute present and if block
+        // will be skipped.
+        const CamXML::Attribute* const  countAttrib = (*it)->GetAttribute("count");
+        if(countAttrib)
+        {
+            // Read the count specified by the user
+            const string countString = countAttrib->GetValue();
+            repeatCount = atoi(countString.c_str());
+
+            // The count must be a strictly positive integer
+            if(repeatCount <= 0)
+            {
+                // Delete any particles already read into the local list
+                // The list itself will be destroyed when the throw takes
+                // place so there is no need to nullify the pointers
+                PartPtrList::iterator it = particleList.begin();
+                const PartPtrList::iterator itEnd = particleList.end();
+                while(it != itEnd)
+                {
+                    delete *it++;
+                }
+                throw std::runtime_error("Particle counts must be > 0. Mops Reactor::ReadInitialParticles");
+            }
+        }
+
+        // Add the specified number of copies of the particle to the initial
+        // particle container
+        while(repeatCount--)
+            particleList.push_back(new Sweep::Particle(*pParticle));
+
+        // Move on to the next particle in the xml
+        ++it;
+    }
+    return particleList;
 }

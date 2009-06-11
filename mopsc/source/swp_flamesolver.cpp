@@ -119,6 +119,11 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
                                 "column (Mops, Sweep::FlameSolver::LoadGasProfile).");
         }
 
+        if (Acol < 0) {
+            fin.close();
+            throw runtime_error("Gas-phase profile contains no alpha "
+                                "column (Mops, Sweep::FlameSolver::LoadGasProfile).");
+        }
 
         // All other columns are chemical species.  Add them, and note
         // their columns.
@@ -139,7 +144,6 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             real P = 0.0;
             real alpha = 0.0;
             GasPoint gpoint(mech.Species());
-//            Sprog::Thermo::IdealGas gas(mech.Species());
 
             // Split the line by columns.
             split(line, subs, delim);
@@ -260,7 +264,21 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
             // Perform time step.
             dt = timeStep(t, *r.Mixture(), mech, rates, jrate);
             if (dt >= 0.0) {
-                t += dt; t = min(t, tstop);
+                t += dt; 
+
+                //if(t > tstop)
+                //{
+                //    std::cerr << "Overshoot " << t << ' ' << tstop << ' ' << jrate << '\n';
+                //}
+                // The following line is suspicious, it seems to be a mathematically
+                // inadmissible solution to the problem of stochastic time steps
+                // going past the end of the period under consideration.  The
+                // correct solution is not to simulate the random time step, but
+                // only to perform the event if it falls withing the interval
+                // being considered, otherwise one should just move the time 
+                // counter to the end of the period. (riap 25/05/2009)
+                t = min(t, tstop);
+
             } else {
                 return;
             }
@@ -272,183 +290,15 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
             linInterpGas(t, m_gasprof, *r.Mixture());
             mech.LPDA(t, *r.Mixture());
         }
+        r.SetTime(t);
     }
-
+    
     // Restore initial chemical conditions to sys.
     *static_cast<Cell*>(r.Mixture()) = chem;
     r.Mixture()->SetFixedChem(fixedchem);
 
     return;
 }
-
-/*
-// Run the solver for the given reactor and the 
-// given time intervals.
-void FlameSolver::SolveReactor(Mops::Reactor &r, 
-                               const Mops::timevector &times,
-                               unsigned int nruns)
-{
-    unsigned int icon;
-    real t1;     // Current time.
-    real dt, t2; // Stop time for each step.
-
-    // Initialise the reactor with the start time.
-    t1 = times[0].StartTime();
-    t2 = t1;
-    dynamic_cast<Sweep::Cell&>(*r.Mixture()) = m_gasprof[0].Gas;
-    r.Mixture()->Particles().Initialise(m_pcount, r.Mech()->ParticleMech());
-    r.Mixture()->SetMaxM0(m_maxm0);
-
-    // Initialise ODE solver.
-    m_ode.Initialise(r);
-
-    // Set up file output.
-    writeAux(m_output_filename, *r.Mech(), times);
-
-    // Set up the console output.
-    icon = m_console_interval;
-    setupConsole(*r.Mech());
-
-    for (unsigned int irun=0; irun!=nruns; ++irun) {
-        // Start the CPU timing clock.
-        m_cpu_start = clock();
-        m_chemtime  = 0.0;
-
-        // Re-initialise the solution.
-        r.Mixture()->Reset(m_maxm0);
-        t1 = times[0].StartTime();
-        t2 = t1;
-        r.SetTime(t1);
-
-        // Begin file output for this run.
-        openOutputFile(irun);
-        printf("Run Number %d of %d.\n", irun+1, nruns);
-        m_console.PrintDivider();
-
-        // Output initial conditions.
-        fileOutput(r);
-        consoleOutput(r);
-
-        // Loop over the time intervals.
-        unsigned int global_step = 0;
-        Mops::timevector::const_iterator iint;
-        for (iint=times.begin(); iint!=times.end(); ++iint) {
-            // Get the step size for this interval.
-            dt = (*iint).StepSize();
-
-            // Loop over the steps in this interval.
-            for (unsigned int istep=0; istep<(*iint).StepCount(); 
-                 ++istep, ++global_step) {
-                // Run the reactor solver for this step (timed).
-                m_cpu_mark = clock();
-                    Run(t1, t2+=dt, m_gasprof, *r.Mixture(), 
-                        r.Mech()->ParticleMech());
-                    r.SetTime(t1);
-                m_swp_ctime += calcDeltaCT(m_cpu_mark);
-
-                // Generate file output.
-                r.SetTime(t1);
-                fileOutput(r);
-
-                // Generate console output.
-                if (--icon == 0) {
-                    consoleOutput(r);
-                    icon = m_console_interval;
-                }
-            }
-
-            createSavePoint(r, global_step, irun);
-        }
-
-        // Close the output files.
-        closeOutputFile();
-    }
-}
-
-// Post-processes binary output files with the given file name
-// into CSV files.
-void FlameSolver::PostProcess(const std::string &filename, unsigned int nruns) const
-{
-    // Read auxilliary information about the simulation (mechanism
-    // and time intervals).
-    Mops::Mechanism mech;
-    Mops::timevector times;
-    readAux(filename, mech, times);
-    Sweep::Mechanism &pmech = mech.ParticleMech();
-
-    // Calculate number of output points.
-    unsigned int npoints = 1; // 1 for initial conditions.
-    for(Mops::timevector::const_iterator i=times.begin(); i!=times.end(); ++i) {
-        npoints += i->StepCount();
-    }
-    // Declare gas-phase output variables (temporary, not processed).
-    fvector achem, echem;
-    // Declare stats outputs (averages and errors).
-    vector<fvector> astat(npoints), estat(npoints);
-    Stats::EnsembleStats stats(pmech);
-
-    // Declare CPU time outputs (averages and errors).
-    vector<fvector> acpu(npoints), ecpu(npoints);
-
-
-    // Now we must read the mixture conditions at all time points for
-    // all runs:
-
-    for(unsigned int irun=0; irun!=nruns; ++irun) {
-        // Build the simulation input file name.
-        string fname = filename + "(" + cstr(irun) + ").dat";
-
-        // Open the simulation output file.
-        fstream fin(fname.c_str(), ios_base::in | ios_base::binary);
-
-        // Throw error if the output file failed to open.
-        if (!fin.good()) {
-            throw runtime_error("Failed to open file for post-processing "
-                                "(Mops, Sweep::FlameSolver::PostProcess).");
-        }
-
-        // Read initial stats and computation times.
-        {
-            // Read the gas-phase.
-            readGasPhaseDataPoint(fin, mech, achem, echem, nruns>1);
-            // Read the stats.
-            readParticleDataPoint(fin, pmech, astat[0], estat[0], nruns>1);
-            // Read the computation time.
-            readCTDataPoint(fin, 3, acpu[0], ecpu[0], nruns>1);
-        }
-
-        // Loop over all time intervals.
-        unsigned int step = 1;
-        for (Mops::timevector::const_iterator iint=times.begin(); 
-             iint!=times.end(); ++iint) {
-            // Loop over all time steps in this interval.
-            for (unsigned int istep=0; istep!=(*iint).StepCount(); ++istep, ++step) {
-                readGasPhaseDataPoint(fin, mech, achem, echem, nruns>1);
-                readParticleDataPoint(fin, pmech, astat[step], estat[step], nruns>1);
-                readCTDataPoint(fin, 3, acpu[step], ecpu[step], nruns>1);
-            }
-        }
-
-        // Close the input file.
-        fin.close();
-    }
-    
-    // CALCULATE AVERAGES AND CONFIDENCE INTERVALS.
-
-    calcAvgConf(astat, estat, nruns);
-    calcAvgConf(acpu, ecpu, nruns);
-
-    // OUTPUT TO CSV FILE.
-    
-    writeParticleStatsCSV(filename+"-part.csv", mech, times, astat, estat);
-    writeCT_CSV(filename+"-cpu.csv", times, acpu, ecpu);
-
-    // POST-PROCESS PSLs.
-
-    // Now post-process the PSLs.
-    postProcessPSLs(nruns, mech, times);
-}
-*/
 
 // HELPER ROUTINES.
 

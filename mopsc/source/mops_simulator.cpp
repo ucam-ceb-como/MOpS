@@ -46,6 +46,7 @@
 #include "string_functions.h"
 #include "csv_io.h"
 #include <stdexcept>
+#include <memory>
 using namespace Mops;
 using namespace std;
 using namespace Strings;
@@ -222,28 +223,24 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     unsigned int icon;
     real dt, t2; // Stop time for each step.
 
-    // Store the initial conditions.
-    Mixture initmix(r.Mech()->ParticleMech());
-    initmix.SetFracs(r.Mixture()->MoleFractions());
-    initmix.SetTemperature(r.Mixture()->Temperature());
-    initmix.SetDensity(r.Mixture()->Density());
+    // Make a copy of the initial mixture and store in an auto pointer
+    // so that it will be deleted when we leave this scope.
+    std::auto_ptr<Mixture> initmix(r.Mixture()->Clone());
 
     // Initialise the reactor with the start time.
     t2 = m_times[0].StartTime();
     r.SetTime(t2);
-    r.Mixture()->Particles().Initialise(m_pcount, r.Mech()->ParticleMech());
-    r.Mixture()->SetMaxM0(m_maxm0);
-
+    //r.Mixture()->SetMaxM0(m_maxm0);
+    
     // Set up the solver.
     s.Initialise(r);
 
     // Set up file output.
     writeAux(*r.Mech(), m_times, s);
-    openOutputFile();
+    openOutputFile(); //.sim
 
     // Output initial conditions.
     // - Note: added sensitivity output will write system initial condition, not initial values.
-
     fileOutput(m_output_step, m_output_iter, r, s, this);   
 
     // Set up the console output.
@@ -258,11 +255,9 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
         // Initialise the reactor with the start time.
         t2 = m_times[0].StartTime();
-        r.Mixture()->SetFracs(initmix.MoleFractions());
-        r.Mixture()->SetTemperature(initmix.Temperature());
-        r.Mixture()->SetDensity(initmix.Density());
-        r.Mixture()->Reset(m_maxm0);
         r.SetTime(t2);
+        // also reset the contents of the reactor
+        r.Fill(*(initmix->Clone()), true);
 
         // Set up the ODE solver for this run.
         s.Reset(r);
@@ -535,7 +530,7 @@ void Simulator::PostProcess()
 
     // POST-PROCESS ELEMENT FLUX
     // Element flux must be output before CSV files since writeXXXCSV will change the contents of what it output afterwards
-    writeElementFluxOutput(m_output_filename, mech, times, agpfwdrates, agprevrates, achem);
+    //writeElementFluxOutput(m_output_filename, mech, times, agpfwdrates, agprevrates, achem);
 
     // Sensitivity output.
     Mops::SensitivityAnalyzer::PostProcess(m_output_filename);

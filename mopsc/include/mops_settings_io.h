@@ -51,10 +51,14 @@
 #include "mops_timeinterval.h"
 #include "camxml.h"
 #include <vector>
+#include <list>
 #include <string>
 
 namespace Mops
 {
+    //* Use for passing around lists of particles
+    typedef std::list<Sweep::Particle*> PartPtrList;
+
 class Settings_IO
 {
 public:
@@ -105,8 +109,14 @@ private:
     // Reads the reactor initial settings from the given XML node.
     static Reactor *const readReactor(
         const CamXML::Element &node, // XML node containing reactor.
-        const Mechanism &mech        // Mechanism to define reactor mixture.
+        const Mechanism &mech,       // Mechanism to define reactor mixture.
+        const unsigned int max_particle_count  // Maximum number of stochastic particles that will be handled
         );
+    
+    // Read initial particles from a file into a list
+    static PartPtrList ReadInitialParticles(const CamXML::Element &node, 
+                                            const unsigned int max_ensemble_size,
+                                            const Sweep::Mechanism & particle_mech);
 
     // Reads time intervals from given XML node.
     static void readTimeIntervals(

@@ -53,19 +53,6 @@ namespace Sweep
 class FlameSolver : public Mops::ParticleSolver, public Sweep::Solver
 {
 public:
-/*
-    // A map of Time/Gas-Phase pairs which describes a gas-phase
-    // chemistry profile.
-    struct GasPoint {
-        real Time;
-        Sprog::Thermo::IdealGas Gas;
-        GasPoint(const Sprog::SpeciesPtrVector &species);
-    };
-    typedef std::vector<GasPoint> GasProfile;
-    typedef std::map<real, Sprog::Thermo::IdealGas> GasProfile;
-    typedef std::pair<real, Sprog::Thermo::IdealGas> GasPoint;
-*/
-
     // Constructors.
     FlameSolver(void); // Default constructor.
 
@@ -98,59 +85,10 @@ public:
         void *data                  // Custom data object which will be passed as argument to out().
         );
 
-/*
-    // Run the solver for the given reactor and the 
-    // given time intervals.
-    void SolveReactor(
-        Mops::Reactor &r,              // Reactor object to solve.
-        const Mops::timevector &times, // Vector of time intervals.
-        unsigned int nruns = 1         // Number of runs to perform.
-        );
-
-    // Post-processes binary output files with the given file name
-    // into CSV files.
-    void PostProcess(
-        const std::string &filename, // Output file name root (no extension).
-        unsigned int nruns = 1       // Number of runs to post-process.
-        ) const;
-*/
-
 private:
-    /*
-    static const real CONFA;
-*/
-    // The gas-phase chemistry profile.
+
+    //* The gas-phase chemistry profile.
     GasProfile m_gasprof;
-/*
-    // Stats output.
-    EnsembleStats *m_stats;
-
-    // CONSOLE OUTPUT.
-
-    // Sets up console output using the given mechanism as a template.
-    void setupConsole(const Sweep::Mechanism &mech);
-
-    // Writes current reactor state to the console.
-    void consoleOutput(real time, const Sweep::Cell &sys) const;
-    // FILE OUTPUT.
-
-    // Sets up the file output by outputting an auxilliary file
-    // which stores all the information required to post-process the
-    // simulation.
-    void beginFileOutput(
-        const Mops::Mechanism &mech, // Mechanism which defines the output.
-        const Mops::timevector &times // Vector of time intervals.
-        );
-
-    // Sets up file output for a new run given the run number.
-    void beginRunFileOutput(unsigned int run);
-
-    // Writes the current system state to the output file.
-    void fileOutput(real time, const Sweep::Cell &sys);
-
-    // Ends file output by closing all open files.
-    void endFileOutput();
-*/
 
     // HELPER FUNCTIONS.
 

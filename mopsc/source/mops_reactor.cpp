@@ -41,10 +41,14 @@
 
 #include "mops_reactor.h"
 #include "mops_mixture.h"
+#include "swp_ensemble.h"
 
 #include <vector>
+#include <list>
 #include <cmath>
+#include <cstdlib>
 #include <stdexcept>
+#include <memory>
 
 using namespace Mops;
 using namespace std;
@@ -126,76 +130,6 @@ void Reactor::SetTime(real t)
 {
     m_time = t;
 }
-/*
-// Initialises the reactor to the given time.
-void Reactor::Initialise(real time)
-{
-    if (m_odewk != NULL) CVodeFree(&m_odewk);
-    m_odewk = CVodeCreate(CV_ADAMS, CV_NEWTON);
-    //N_VDestroy_Serial(m_solvec);
-
-    m_time = time;
-    
-    // Fill solution and derivative vectors.
-    for (unsigned int i=0; i<m_neq; i++) {
-        m_deriv[i] = 0.0;
-    }
-
-    // Allocate CVODE stuff.
-    CVodeMalloc(m_odewk, &rhsFn_CVODE, time, 
-                N_VMake_Serial(m_neq, m_mix->RawData()), 
-                CV_SS, m_rtol, (void*)&m_atol);
-
-    // Set up internal solution array.
-    m_solvec = N_VNewEmpty_Serial(m_neq);
-
-    // Set the f_data pointer to this Reactor object.
-    CVodeSetFdata(m_odewk, (void*)this);
-
-    // Set other parameters.
-    CVodeSetMaxNumSteps(m_odewk, 2000);
-
-    // Set CVDense as the linear system solver.
-    CVDense(m_odewk, m_neq);
-    
-}
-
-// Reset the solver.  Need to do this if the the reactor
-// contents has been changed between calls to Solve().
-void Reactor::ResetSolver(void)
-{
-    
-    CVodeReInit(m_odewk, &rhsFn_CVODE, m_time, 
-                N_VMake_Serial(m_neq, m_mix->RawData()),
-                CV_SS, m_rtol, (void*)&m_atol);
-    
-}
-
-// Solves the reactor up to the given time.
-void Reactor::Solve(real time)
-{
-    
-    // Put the solution into an N_Vector data pointer.  This does not
-    // involve copying the data.
-    NV_DATA_S(m_solvec) = m_mix->RawData();
-    CVodeSetStopTime(m_odewk, time);
-
-    // Solve over time step.
-    while (m_time < time) {
-        CVode(m_odewk, time, m_solvec, &m_time, CV_NORMAL);
-        m_mix->Normalise(); // This should not be required if CVODE solves correctly.
-    }
-    
-
-    // Calculate derivatives at end point.
-    if (m_emodel == ConstT) {
-        RHS_ConstT(time, m_mix->RawData(), m_deriv);
-    } else {
-        RHS_Adiabatic(time, m_mix->RawData(), m_deriv);
-    }
-}
-*/
-
 
 // REACTOR CONTENTS.
 
@@ -454,7 +388,7 @@ void Reactor::Deserialize(std::istream &in, const Mops::Mechanism &mech)
                         m_deriv[i] = (real)val;
                     }
                 }
-
+                
                 break;
             default:
                 throw runtime_error("Reactor serialized version number "

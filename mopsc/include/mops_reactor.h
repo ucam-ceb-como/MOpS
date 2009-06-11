@@ -52,7 +52,6 @@
 #include "mops_src_terms.h"
 #include "nvector/nvector_serial.h"
 #include "sweep.h"
-#include <istream>
 
 namespace Mops
 {
@@ -114,7 +113,7 @@ public:
         bool clearfirst = false // Set to true if the reactor should clear current
                                 // mixture from memory first.
         );
-
+    
 
     // REACTOR MECHANISM.
 
@@ -123,8 +122,8 @@ public:
 
     // Returns the current mechanism.
     void SetMech(const Mops::Mechanism &mech);
-
-
+    
+    
     // ENERGY MODEL.
 
     // Returns the current energy model.
@@ -247,7 +246,6 @@ protected:
     int m_iDens;            // Index of density in solution vectors.
     real *m_deriv;          // Array to hold current solution derivatives.
 
-
     // Reactors should not be defined without knowledge of a Mechanism
     // object.  Therefore the default constructor is declared as protected.
     Reactor(void);
@@ -262,7 +260,7 @@ protected:
         const real *const ydot, // Derivatives to return.
         const Reactor &r        // Calling reactor.
         );
-	
+
 private:
     // INITIALISATION AND DESTRUCTION.
     
