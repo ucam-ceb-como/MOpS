@@ -110,7 +110,8 @@ private:
     static Reactor *const readReactor(
         const CamXML::Element &node, // XML node containing reactor.
         const Mechanism &mech,       // Mechanism to define reactor mixture.
-        const unsigned int max_particle_count  // Maximum number of stochastic particles that will be handled
+        const unsigned int max_particle_count,  // Maximum number of stochastic particles that will be handled
+		const real maxM0
         );
     
     // Read initial particles from a file into a list
