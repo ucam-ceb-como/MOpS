@@ -3,8 +3,8 @@ export debug=0
 export profile=0
 
 # C++ compiler.
-#cpp=g++
-cpp=mpicxx -DUSE_MPI
+cpp=g++
+#cpp=mpicxx -DUSE_MPI
 ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
