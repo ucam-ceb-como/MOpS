@@ -117,7 +117,8 @@ public:
         ParticleCache &parent // Parent.
         );
 	  real m_numPAH;
-	  real testcachevar;
+	  real m_PAHDiameter;
+	  real m_numcarbon;
 
 protected:
   

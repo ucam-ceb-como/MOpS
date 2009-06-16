@@ -57,6 +57,8 @@ using namespace std;
 PAHCache::PAHCache(void)
 {
 	m_numPAH=1;
+	m_PAHDiameter=0.;
+	m_numcarbon=0.;
 }
 
 // Default constructor (public).
@@ -64,6 +66,8 @@ PAHCache::PAHCache(ParticleCache &parent)
 : AggModelCache(parent)
 {
 	m_numPAH=0;
+	m_PAHDiameter=0.;
+	m_numcarbon=0.;
 }
 
 // Copy constructor.
@@ -93,6 +97,8 @@ PAHCache &PAHCache::operator=(const PAHCache &rhs)
 {
     if (this != &rhs) {
         m_numPAH = rhs.m_numPAH;
+		m_PAHDiameter = rhs.m_PAHDiameter;
+		m_numcarbon=rhs.m_numcarbon;
     }
     return *this;
 }
@@ -101,6 +107,8 @@ PAHCache &PAHCache::operator=(const PAHCache &rhs)
 PAHCache &PAHCache::operator=(const PAHPrimary &rhs)
 {
     m_numPAH = rhs.m_numPAH;
+	m_PAHDiameter = rhs.m_PAHCollDiameter;
+	m_numcarbon=rhs.m_numcarbon;
     return *this;
 }
 
@@ -135,6 +143,8 @@ PAHCache &PAHCache::operator=(const Primary &rhs)
 PAHCache &PAHCache::operator+=(const PAHCache &rhs)
 {
     m_numPAH += rhs.m_numPAH;
+	m_PAHDiameter += rhs.m_PAHDiameter;
+	m_numcarbon += rhs.m_numcarbon;
     return *this;
 }
 
@@ -142,6 +152,8 @@ PAHCache &PAHCache::operator+=(const PAHCache &rhs)
 PAHCache &PAHCache::operator+=(const PAHPrimary &rhs)
 {
     m_numPAH += rhs.m_numPAH;
+	m_PAHDiameter += rhs.m_PAHCollDiameter;
+	m_numcarbon += rhs.m_numcarbon;
     return *this;
 }
 
@@ -179,6 +191,8 @@ real PAHCache::NumPAH()
 void PAHCache::Clear()
 {
     m_numPAH = 0.0;
+	m_PAHDiameter = 0.0;
+	m_numcarbon =0.0;
 }
 
 
@@ -203,6 +217,13 @@ void PAHCache::Serialize(std::ostream &out) const
 
         double v = (double)m_numPAH;
         out.write((char*)&v, sizeof(v));
+
+        v = (double)m_PAHDiameter;
+        out.write((char*)&v, sizeof(v));
+
+        v = (double)m_numcarbon;
+        out.write((char*)&v, sizeof(v));
+		 
 
     } else {
         throw invalid_argument("Output stream not ready "
@@ -230,6 +251,13 @@ void PAHCache::Deserialize(std::istream &in, ParticleCache &parent)
                //read the number of PAHs
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_numPAH = (real)val;
+
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_PAHDiameter = (real)val;
+
+				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_numcarbon = (real)val;
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "

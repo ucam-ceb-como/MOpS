@@ -98,11 +98,15 @@ public:
 		double time_created;
 		std::vector<double> time;
 		std::vector<int> n_carbon_t;
+		double lastupdated;
+		double freezetime;
     };
 	int m_numcarbon;
 	double m_PAHmass;
 	double m_PAHCollDiameter;
 	int m_numPAH;
+
+
 	// Vector of PAHs.
     std::vector<PAH> m_PAH;
 

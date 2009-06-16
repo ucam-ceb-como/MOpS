@@ -69,6 +69,8 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model)
 	new_PAH->ID=0;
 	new_PAH->m_numcarbon=0;
 	new_PAH->time_created=time;
+	new_PAH->freezetime=0;
+	new_PAH->lastupdated=time;
 	m_PAH.insert(m_PAH.begin(),*new_PAH);
 	this->UpdateCache();
 }
@@ -129,14 +131,14 @@ void PAHPrimary::UpdateTime(double t)
 	unsigned int j=0;
 	for (vector<PAH>::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
 		for (j=0;j<i->time.size();j++)
-		{	
+		{	//if (this->m_numPAH>1000) i->freezetime+=rnd()*(t-i->lastupdated);
 			i->m_numcarbon=i->n_carbon_t.at(j);
-			//double timeatpos=i->time.at(j);
-			if (i->time.at(j)>=t-i->time_created)
+			if (i->time.at(j)>=t-i->time_created-i->freezetime)
 			{
 				break;
 			}
 		}
+		i->lastupdated=t;
 	}
 }
 
@@ -150,13 +152,11 @@ void PAHPrimary::UpdateCache(void)
 		m_PAHCollDiameter=max(m_PAHCollDiameter,2.4162*sqrt((i->m_numcarbon)*2.0/3.));    // in Angstrom
 		m_numPAH++;
     }
-	m_PAHmass=m_numcarbon*1.9945e-26;        //convert to kg
-	m_PAHCollDiameter*=1e-10;//convert from Angstrom to m
+	m_PAHmass=m_numcarbon*1.9945e-26;        //convert to kg, hydrogen atoms are not considered
+	m_PAHCollDiameter*=1e-10;				 //convert from Angstrom to m
 
 	 double V=m_PAHmass/1.6e3;
 	 double cdiamsphere=pow((6*V/PI),(1.0/3.0));
-	 //double alpha=1.0/(pow(m_numPAH,0.1));
-	// double cdiam=alpha*m_PAHCollDiameter+(1-alpha)*cdiamsphere;
 	 double cdiam=max(cdiamsphere,m_PAHCollDiameter);
 	 SetCollDiameter(cdiam);	
 	 SetMass(m_PAHmass);
@@ -209,6 +209,31 @@ void PAHPrimary::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
+		double val = 0.0;
+		// Write number of PAHs.
+        val = (double) m_numPAH;
+        out.write((char*)&val, sizeof(val));
+
+		// Write PAHcollisiondiameter
+        val = (double) m_PAHCollDiameter;
+        out.write((char*)&val, sizeof(val));
+
+
+		// write the PAH stack
+		PAH currPAH;
+		for (unsigned int i=0; i!=m_numPAH; ++i) {
+			currPAH = m_PAH[i];
+            out.write((char*)&currPAH.ID, sizeof(currPAH.ID));
+			out.write((char*)&currPAH.time_created, sizeof(currPAH.time_created));
+			out.write((char*)&currPAH.m_numcarbon, sizeof(currPAH.m_numcarbon));
+        }
+
+		// Write PAHmass
+        val = (double) m_PAHmass;
+        out.write((char*)&val, sizeof(val));
+		
+
+
         // Output base class.
         Primary::Serialize(out);
 
@@ -228,7 +253,30 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-        double val = 0.0;
+		double val = 0.0;
+		// Read number of PAHs.
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_numPAH = (real)val;
+        
+		// Read PAHcolldiamter.
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_PAHCollDiameter = (real)val;
+
+
+	    // Read PAHs.
+		
+		for (unsigned int i=0; i!=m_numPAH; ++i) {
+			PAH currPAH;
+			//currPAH = new PAH;
+			in.read(reinterpret_cast<char*>(&currPAH.ID), sizeof(currPAH.ID));
+			in.read(reinterpret_cast<char*>(&currPAH.time_created), sizeof(currPAH.time_created));
+			in.read(reinterpret_cast<char*>(&currPAH.m_numcarbon), sizeof(currPAH.m_numcarbon));
+			m_PAH.push_back(currPAH); 
+		}
+
+		// Read PAHmass.
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_PAHmass = (real)val;
 
         switch (version) {
             case 0:

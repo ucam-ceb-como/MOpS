@@ -873,7 +873,7 @@ bool FileExists( const char* FileName )
 }
 */
 
-// Sinters this particle with another particle
+// Sinters the two particles at which this node points
 void SubParticle::SinterPart()
 {	bool lefttree;
 	// Chose the subparticle according to the following property
@@ -1222,6 +1222,7 @@ void SubParticle::UpdateCache(void)
 		m_numsubpart=1;
 		if(m_pmodel->UseSubPartTree())
 		{
+			//currently the collision diameter is calculated using a fractal dimension of 1.8
 		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
 		}
 		

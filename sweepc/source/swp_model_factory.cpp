@@ -57,6 +57,7 @@
 #include "swp_particle_stats.h"
 #include "swp_surfvol_stats.h"
 #include "swp_pripart_stats.h"
+#include "swp_PAH_stats.h"
 #include "swp_abf_model.h"
 #include <stdexcept>
 #include <iostream>
@@ -362,7 +363,7 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
         case AggModels::PriPartList_ID:
             return new Stats::PriPartStats();
 	   case AggModels::PAH_ID:
-            return NULL;							// ms785: postprocessing not yet implemented  
+		   return new Stats::PAHStats();							// ms785: postprocessing not yet implemented  
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateAggStats).");
@@ -433,6 +434,9 @@ Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in,
                 break;
             case AggModels::PriPartList_ID:
                 stats = new Stats::PriPartStats(in, model);
+                break;
+		    case AggModels::PAH_ID:
+                stats = new Stats::PAHStats(in, model);
                 break;
             default:
                 throw invalid_argument("Invalid model ID (Sweep, "
