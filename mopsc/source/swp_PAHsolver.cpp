@@ -277,8 +277,8 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
             // Calculate the chemical conditions.
             linInterpGas(t, m_gasprof, *r.Mixture());
+
 			//update the number of particles that the incepting species matches the gas phase
-			
 			while(true)
 			{
 				// Calculate the number density of the incepting species
@@ -346,8 +346,8 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
 	//cout << numincepted << " incepted"<< endl;
 	r.SetTime(t);
-	if (r.Time()>0.005)
-		Output(r);
+//	if (r.Time()>0.005)
+//		Output(r);
 	
     return;
 }
@@ -386,7 +386,7 @@ void PAHSolver::Output(Mops::Reactor &r)
 			pahdistribution[pah->m_numPAH]++;
 			numallparticles++;
 		}
-		if (pah->m_numPAH>1)
+		if (pah->m_numPAH>0)                  // ms785:  The average number of PAHs in the first coag paper has been calculated only for particles with more than 1 PAH
 		{
 			numpah+=pah->m_numPAH;
 			numparticles++;
@@ -408,7 +408,6 @@ void PAHSolver::Output(Mops::Reactor &r)
 
 	double binsize=maxpahmass/(numbins-1);
 	binsize=1;
-	cout << "binsize=" << binsize<<endl;
 	for (i=(*r.Mixture()).Particles().begin(); i!=(*r.Mixture()).Particles().end() ; ++i) {
 		const AggModels::PAHPrimary *pah = NULL;
 		pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());

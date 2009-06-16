@@ -40,6 +40,14 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
+// The MPI versions works at the moment only for PAH stacking simulations				ms785
+//#define USE_MPI
+#ifdef USE_MPI
+#include <mpi.h>
+#include "string_functions.h"
+using namespace Strings;
+#endif
+
 #include "mops.h"
 #include "sprog.h"
 #include "sweep.h"
@@ -51,7 +59,17 @@ using namespace Mops;
 using namespace std;
 
 int main(int argc, char *argv[])
-{   // Command line arguments with default values.
+{ 
+#ifdef USE_MPI
+	 int numprocs, rank, namelen;
+	 char processor_name[MPI_MAX_PROCESSOR_NAME];
+	 MPI_Init(&argc, &argv);
+	 MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+	 MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	 MPI_Get_processor_name(processor_name, &namelen);
+     printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
+#endif
+	// Command line arguments with default values.
     string chemfile("chem.inp");
     string thermfile("therm.dat");
     string settfile("mops.inx");
@@ -314,9 +332,33 @@ int main(int argc, char *argv[])
         delete reactor;
         return -1;
     }
+	
+	#ifdef USE_MPI
+	  MPI_Finalize();
+	#endif
 
     // Post-process.
     try {
+#ifdef USE_MPI
+		if (rank==0)
+		{
+			ofstream out;
+			ifstream in;
+			string infilename;
+			out.open("soot.sim", ios::app );
+			for (int i=0;i<numprocs;i++)
+			{	
+				infilename="soot" + cstr(i) + ".sim";
+				in.open(infilename.c_str(), ios::out );
+				out << in.rdbuf();
+				in.close();
+			}
+			out.close();
+			cout <<"postprocessing"<<endl;
+		}
+		
+		if (rank==0)
+#endif
         if (fpostprocess) sim.PostProcess();
     } catch (std::logic_error &le) {
         printf("mops: Failed to post-process due to bad inputs.  Message:\n  ");
@@ -340,5 +382,7 @@ int main(int argc, char *argv[])
 
     printf("mops: Simulation completed successfully!\n");
     printf("mops: Thank you for choosing mops for your particle modelling!\n");
-    return 0;
+
+
+	return 0;
 }

@@ -38,6 +38,11 @@
     Email:       mk306@cam.ac.uk
     Website:     http://como.cheng.cam.ac.uk
 */
+//#define USE_MPI
+
+#ifdef USE_MPI
+#include <mpi.h>
+#endif
 
 #include "mops_simulator.h"
 #include "mops_ode_solver.h"
@@ -236,19 +241,49 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     s.Initialise(r);
 
     // Set up file output.
+	#ifdef USE_MPI
+	int rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	if (rank==0)
+	{					//ms785 only write aux file if this is the master nodes
+	#endif
+
     writeAux(*r.Mech(), m_times, s);
     openOutputFile(); //.sim
 
     // Output initial conditions.
     // - Note: added sensitivity output will write system initial condition, not initial values.
+	#ifdef USE_MPI
+	}
+	if (rank==0)						//ms785
+	#endif
+
     fileOutput(m_output_step, m_output_iter, r, s, this);   
+
+	#ifdef USE_MPI
+	closeOutputFile();						//ms785
+	#endif
 
     // Set up the console output.
     icon = m_console_interval;
     setupConsole(*r.Mech());
-
-    // Loop over runs.
+	string m_output_filename_base=m_output_filename;		//ms785
+    
+	// Loop over runs.
+	#ifdef USE_MPI
+	#else
     for (unsigned int irun=0; irun!=m_nruns; ++irun) {
+	#endif
+
+		#ifdef USE_MPI
+		
+		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+		int irun=rank;
+		m_output_filename=m_output_filename_base+cstr(rank);				//ms785
+		openOutputFile();
+		
+		#endif
+
         // Start the CPU timing clock.
         m_cpu_start = clock();
         m_runtime  = 0.0;
@@ -288,6 +323,9 @@ void Simulator::RunSimulation(Mops::Reactor &r,
                 m_runtime += calcDeltaCT(m_cpu_mark);
 
                 // Generate console output.
+				#ifdef USE_MPI					//ms785
+				if (rank==0)
+				#endif
                 if (--icon == 0) {
                     consoleOutput(r);
                     icon = m_console_interval;
@@ -296,14 +334,27 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
             // Create a save point at the end of this time
             // interval.
+			#ifdef USE_MPI					//ms785
+			m_output_filename=m_output_filename_base;
+			#endif
+
             createSavePoint(r, global_step, irun);
         }
         // Print run time to the console.
         printf("mops: Run number %d completed in %.1f s.\n", irun+1, m_runtime);
-    }    
 
+	#ifdef USE_MPI
+		 closeOutputFile();			//ms785
+		
+	#else
+	}   
+	#endif 
+
+	#ifdef USE_MPI
+	#else
     // Close the output files.
     closeOutputFile();
+	#endif	
 }
 
 
@@ -449,6 +500,7 @@ void Simulator::PostProcess()
 
     // Now we must read the reactor conditions at all time points
     // and all runs.
+	cout << "postprocessing "<<m_nruns<<" runs"<<endl;
     for(unsigned int irun=0; irun!=m_nruns; ++irun) {
         // Loop over all time intervals.
         unsigned int step = 1;
@@ -793,7 +845,12 @@ void Simulator::setupConsole(const Mops::Mechanism &mech)
             }
         }
     }
-
+	#ifdef USE_MPI
+	int rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	if (rank==0)
+	{
+	#endif 
     // Print the first header.
     m_console.PrintDivider();
     m_console.PrintRow(header);
@@ -802,6 +859,9 @@ void Simulator::setupConsole(const Mops::Mechanism &mech)
     // Set up the console output class.
     m_console.SetAutoHeader(header);
     m_console.EnableAutoDividers();
+	#ifdef USE_MPI
+	}
+	#endif
 }
 
 // Writes output to the console.
@@ -1829,6 +1889,13 @@ void Simulator::Serialize(std::ostream &out) const
 
         // Write number of runs.
         unsigned int n = (unsigned int)m_nruns;
+
+		#ifdef USE_MPI							//ms785
+		int numprocs;
+		MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+		n = numprocs;
+		#endif
+
         out.write((char*)&n, sizeof(n));
 
         // Number of internal solver iterations to perform.
