@@ -221,12 +221,12 @@ void PAHPrimary::Serialize(std::ostream &out) const
 
 		// write the PAH stack
 		PAH currPAH;
-		for (unsigned int i=0; i!=m_numPAH; ++i) {
+		for (int i=0; i!=m_numPAH; ++i) {
 			currPAH = m_PAH[i];
-            out.write((char*)&currPAH.ID, sizeof(currPAH.ID));
-			out.write((char*)&currPAH.time_created, sizeof(currPAH.time_created));
-			out.write((char*)&currPAH.m_numcarbon, sizeof(currPAH.m_numcarbon));
-        }
+                        out.write((char*)&currPAH.ID, sizeof(currPAH.ID));
+                        out.write((char*)&currPAH.time_created, sizeof(currPAH.time_created));
+                        out.write((char*)&currPAH.m_numcarbon, sizeof(currPAH.m_numcarbon));
+                }
 
 		// Write PAHmass
         val = (double) m_PAHmass;
@@ -265,7 +265,7 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
 
 	    // Read PAHs.
 		
-		for (unsigned int i=0; i!=m_numPAH; ++i) {
+		for (int i=0; i!=m_numPAH; ++i) {
 			PAH currPAH;
 			//currPAH = new PAH;
 			in.read(reinterpret_cast<char*>(&currPAH.ID), sizeof(currPAH.ID));

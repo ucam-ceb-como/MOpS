@@ -358,7 +358,7 @@ Particle *const ParticleModel::CreateParticle(real time) const
 
 //Collision Efficiency
 double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
-{	double aeff=4e-7;
+{	
 	double redmass=0;
 	int ncarbon1,ncarbon2;
 	const AggModels::PAHPrimary *pah1 = NULL;

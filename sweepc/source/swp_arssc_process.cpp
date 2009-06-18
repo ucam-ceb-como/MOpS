@@ -264,7 +264,7 @@ void ARSSC_Process::Deserialize(std::istream &in)
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-        unsigned int n=0, id=0;
+        unsigned int n=0;
         int i=0;
         double val=0.0;
 
@@ -275,9 +275,9 @@ void ARSSC_Process::Deserialize(std::istream &in)
                 m_sites.resize(n, 0.0);
 
                 // Read sites.
-                for (i=0; i!=n; ++i) {
+                for (unsigned int j=0; j!=n; ++j) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_sites[i] = (real)val;
+                    m_sites[j] = (real)val;
                 }
 
                 // Read update site count.
@@ -297,9 +297,9 @@ void ARSSC_Process::Deserialize(std::istream &in)
                 m_neigh_wts.resize(n, 0.0);
 
                 // Read custom neighbour weights.
-                for (i=0; i!=n; ++i) {
+                for (unsigned int j=0; j!=n; ++j) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_neigh_wts[i] = (real)val;
+                    m_neigh_wts[j] = (real)val;
                 }
 
                 break;

@@ -743,7 +743,7 @@ void PriPartPrimary::sortList(unsigned int i1, unsigned int i2)
     // time is reduced by 10%. An optimization to this sorting problem
     // is to make a primary particle list class to keep track if the list
     // should be sorted.
-    int n = m_primaries.size();
+    unsigned int n = m_primaries.size();
     if (n <= 1) {
         // No need to sort if the array only has one element.
         return;
@@ -774,79 +774,5 @@ void PriPartPrimary::sortList(unsigned int i1, unsigned int i2)
             }
         }
     }
-    /*
-    if (m_primaries.size() <= 1) {
-        // No need to sort if the array only has one element.
-        return;
-    } else if (i2-i1 < 15) {
-        // Too few elements for a quick-sort to be efficient.  Use a 
-        // bubble sort instead.
 
-        // Temporary storage variable.
-        PriPart temp;
-
-        // Perform bubble sort.
-        for (unsigned int j=i1; j<i2; ++j) {
-            for (unsigned int k=j+1; k<=i2; ++k) {
-                if (m_primaries[j].Monomers < m_primaries[k].Monomers) {
-                    // Store j in temp.
-                    temp.Monomers = m_primaries[j].Monomers;
-                    temp.Surface  = m_primaries[j].Surface;
-                    // Put k into j.
-                    m_primaries[j].Monomers = m_primaries[k].Monomers;
-                    m_primaries[j].Surface  = m_primaries[k].Surface;
-                    // Put temp into k.
-                    m_primaries[k].Monomers = temp.Monomers;
-                    m_primaries[k].Surface  = temp.Surface;
-			    }
-            }
-        }
-    } else {
-        // Use a quick-sort algorithm.
-
-        // Choose a pivot at the mid-point.
-        unsigned int ip = i1 + ((i2 - i1)/2);
-
-        // Temporary storage variable.
-        PriPart temp;
-
-        // Iteration indices.
-        unsigned int j=i1, k=i2;
-
-        // Sort everything larger than the pivot to the front of 
-        // the list, and everthing smaller to the end of the list.
-        while (j < k) {
-            // Find next element below pivot which is smaller, and next
-            // element above pivot which is larger.
-            while(m_primaries[ip].Monomers <= m_primaries[j].Monomers) {
-                ++j;
-                if (j >= k) break;
-            }
-            while(m_primaries[ip].Monomers > m_primaries[k].Monomers) {
-                if (k == 0) break;
-                --k;
-            }
-
-            // Swap j and k.
-            if (j < k) {
-                // Store j in temp.
-                temp.Monomers = m_primaries[j].Monomers;
-                temp.Surface  = m_primaries[j].Surface;
-                // Put k into j.
-                m_primaries[j].Monomers = m_primaries[k].Monomers;
-                m_primaries[j].Surface  = m_primaries[k].Surface;
-                // Put temp into k.
-                m_primaries[k].Monomers = temp.Monomers;
-                m_primaries[k].Surface  = temp.Surface;
-            } else {
-                break;
-            }
-        }
-
-        // Now sort the two halves of the list either side of the
-        // pivot.
-        if (i1 < ip-1) sortList(i1, ip-1);
-        if (ip < i2) sortList(ip, i2);
-    }   
-    */
 }

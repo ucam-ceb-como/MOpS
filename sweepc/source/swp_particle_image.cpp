@@ -237,6 +237,11 @@ void ParticleImage::constructAgg_FM(const Particle &sp)
                 ppp = dynamic_cast<const AggModels::PriPartPrimary*>(sp.Primary());
                 if (ppp != NULL) constructAgg_FM(*ppp);
                 break;
+            // Other cases previously unhandled, added a default
+            // case to avoid compiler warnings (riap 17 Jun 2009)
+            default:
+                throw std::runtime_error("Unhandled case in switch statement (ParticleImage::constructAgg_FM)");
+                break;
         }
     }
 }

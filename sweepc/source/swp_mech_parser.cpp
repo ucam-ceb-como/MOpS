@@ -1073,6 +1073,10 @@ void MechParser::readARSSC_Model(CamXML::Element &xml, Mechanism &mech)
                 SubModels::ARSSC_Model::SetR5AC_Variable(var);
                 SubModels::ARSSC_Model::SetR5AC_Functional(*fun);
                 break;
+            // Do nothing in all other cases
+            default:
+                throw std::runtime_error("Unhandled case in switch statement (MechParser::readARSSC_Model)");
+                break;
         }
     }
 
