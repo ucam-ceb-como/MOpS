@@ -338,7 +338,7 @@ void ODE_Solver::Solve(Reactor &reac, real stop_time)
 
     // Set a pointer in sensitivity object to result for outputting.
     if (m_sensi.isEnable()) {
-        int flag = CVodeGetSens(m_odewk, m_time, m_yS);
+        //int flag = CVodeGetSens(m_odewk, m_time, m_yS);
         //if (m_sensi.check_flag(&flag, "CVodeGetSens", 1)) break;
         m_sensi.SetSensResult(m_yS);
     }

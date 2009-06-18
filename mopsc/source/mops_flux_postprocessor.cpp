@@ -70,7 +70,7 @@ void FluxAnalyser::addElement(const Sprog::Element &elem) {
         // Check whether index already in the index list
         bool ExistIndex = false;
         for (unsigned int i = 0; i < m_ElementIndexes.size(); i++) {
-            if (m_ElementIndexes.at(i) == iel) {
+            if (m_ElementIndexes.at(i) == static_cast<unsigned int>(iel)) {
                 ExistIndex = true;
                 break;
             }

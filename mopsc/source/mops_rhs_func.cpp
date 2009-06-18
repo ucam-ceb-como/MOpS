@@ -84,7 +84,6 @@ int rhsFn_CVODES(double t,      // Current flow time.
 {
     // Cast the Solver object.
     Mops::ODE_Solver *s = static_cast<Mops::ODE_Solver*>(solver);
-    Mops::Reactor *r    = s->GetReactor();
 
     s->GetSensitivity().ChangeMechParams();
     int rvalue = rhsFn_CVODE(t, y, ydot, solver);
@@ -159,7 +158,9 @@ int rhsSensFn_CVODES(int Ns, realtype t,
     r->Jacobian(t, NV_DATA_S(y), NV_DATA_S(ydot), temp_jac,
                 UNIT_ROUNDOFF);
     
-    for (unsigned int k = 0; k < Ns; ++k) {
+    // Make an unsigned copy of Ns to avoid compiler warnings
+    const unsigned int uNs = Ns;
+    for (unsigned int k = 0; k < uNs; ++k) {
         for (unsigned int i = 0; i < n_jac_size; ++i) {
             for (unsigned int j = 0; j < n_jac_size; ++j) {
                 NV_Ith_S(ySdot[k], i) += temp_jac[i][j] * NV_Ith_S(yS[k], j);

@@ -165,7 +165,7 @@ void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n, Mops::Reac
         Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech());
     m_swp_ctime += calcDeltaCT(m_cpu_mark); */
     
-    for (unsigned int i=1; i=n; ++i) {
+    for (unsigned int i=1; i!=n; ++i) {
         m_cpu_mark = clock();
             // Solve whole step of gas-phase chemistry.
             rho = r.Mixture()->Density();
