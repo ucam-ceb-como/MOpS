@@ -259,12 +259,12 @@ void CSV_IO::writeLine(const std::vector<T> &values)
     // the values vector has some values to write.
     if (m_file.is_open() && m_file.good() && (values.size()>0)) {
         // Declare vector iterator and set it to beginning of values.
-        typename vector<T>::const_iterator i = values.begin();
+        typename vector<T>::const_iterator it = values.begin();
 
         // Output the comma-separated values.
-        m_file << *(i++);
-        while (i!=values.end()) {
-            m_file << ',' << *(i++);
+        m_file << *(it++);
+        while (it!=values.end()) {
+            m_file << ',' << *(it++);
         }
     }
 }
