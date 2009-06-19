@@ -46,6 +46,12 @@
 namespace Camflow{
     typedef Sprog::real doublereal;
     const doublereal pi = 3.1415;
+
+    /*
+     * cgs units used in the sot model
+     */
+    const doublereal kB_cgs = 1.3807e-16;
+    
 }
 
 #endif	/* _CAM_PARAMS_H */

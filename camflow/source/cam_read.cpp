@@ -38,9 +38,8 @@
 
  */
 
+#include "cam_soot.h"
 #include "cam_profile.h"
-
-
 #include "cam_geometry.h"
 #include "cam_control.h"
 #include <string>
@@ -60,7 +59,7 @@ void CamRead::readInput(const string fileName,
                             CamAdmin& ca,
                             CamBoundary& cb,
                             CamProfile& cp,
-                            CamConfiguration& config){
+                            CamConfiguration& config, CamSoot &cSoot){
 
     CamXML::Document doc;
     const CamXML::Element* root;
@@ -68,11 +67,12 @@ void CamRead::readInput(const string fileName,
         root = doc.Root();
         readGeometry(cg,config,convert,*root);
         readProcessConditions(convert,ca,*root);
-        readBoundary(ca,cb,convert,*root);        
-        readControl(cc,*root);        
+        readBoundary(ca,cb,convert,*root);
+        readControl(cc,*root);
         readInitialGuess(cp,convert,*root);
         readReport(ca,*root);
         readGrid(cg,*root);
+        readSoot(cSoot,convert,*root);
     }
 }
 
@@ -95,6 +95,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
             if(!convertToCaps(attrValue).compare("PLUG")) config.setConfiguration(config.PLUG);
             if(!convertToCaps(attrValue).compare("TWINFLAME")) config.setConfiguration(config.TWINFLAME);
             if(!convertToCaps(attrValue).compare("STAGFLOW"))config.setConfiguration(config.STAGFLOW);
+            if(!convertToCaps(attrValue).compare("BATCH_CV"))config.setConfiguration(config.BATCH_CV);
         }else{
             throw CamError("Model remains undefined\n");
         }
@@ -405,13 +406,30 @@ void CamRead::readTol(const CamXML::Element& node, doublereal& atol, doublereal&
 void CamRead::readInitialGuess(CamProfile& cp,
                                     CamConverter& convert,
                                     const CamXML::Element& node){
-    CamXML::Element *subnode, *subsubnode;
+    CamXML::Element *initialize, *subsubnode;
     vector<CamXML::Element*> subsubnodes;
     vector<CamXML::Element*>::const_iterator p;
-    subnode = node.GetFirstChild("initialize");
-    if(subnode != NULL){
+    initialize = node.GetFirstChild("initialize");
+    if(initialize != NULL){
+        //mixing center
+        subsubnode = initialize->GetFirstChild("mCenter");
+        if(subsubnode != NULL){
+            const CamXML::Attribute *length;
+            length = subsubnode->GetAttribute("unit");
+            doublereal convertL = convert.getConvertionFactor(length->GetValue());
+            cp.setMixingCenter(cdble(subsubnode->Data())*convertL);
+        }
+        //mixing width
+        subsubnode = initialize->GetFirstChild("mWidth");
+        if(subsubnode != NULL){
+            const CamXML::Attribute *length;
+            length = subsubnode->GetAttribute("unit");
+            doublereal convertL = convert.getConvertionFactor(length->GetValue());
+            cp.setMixingWidth(cdble(subsubnode->Data())*convertL);
+        }
+
         //temperature profile
-        subsubnode = subnode->GetFirstChild("Tprofile");
+        subsubnode = initialize->GetFirstChild("Tprofile");
         if(subsubnode != NULL){
             const CamXML::Attribute *length, *temp;
             length = subsubnode->GetAttribute("unit_L");
@@ -431,7 +449,7 @@ void CamRead::readInitialGuess(CamProfile& cp,
         string mem1 = "product";
         string mem2 = "intrmdt";
         map<string,doublereal> fracs;
-        subsubnode = subnode->GetFirstChild("massfrac");
+        subsubnode = initialize->GetFirstChild("massfrac");
         if(subsubnode!=NULL){
             cp.setFracType(cp.MASS);
             readFrac(mem1,fracs,*subsubnode);
@@ -440,7 +458,7 @@ void CamRead::readInitialGuess(CamProfile& cp,
             cp.setIntermediateSpecies(fracs);
         }
 
-        subsubnode = subnode->GetFirstChild("molefrac");
+        subsubnode = initialize->GetFirstChild("molefrac");
         if(subsubnode != NULL){
             cp.setFracType(cp.MOLE);
             readFrac(mem1,fracs,*subsubnode);
@@ -483,4 +501,75 @@ void CamRead::readGrid(CamGeometry& cg, const CamXML::Element& node){
     if(subnode!=NULL){
         cg.setGridFile(subnode->Data());
     }
+}
+
+void CamRead::readSoot(CamSoot& cSoot,CamConverter& convert,
+                                    const CamXML::Element& node){
+
+    CamXML::Element *soot;
+    CamXML::Element *subnode;
+    vector<CamXML::Element*> sootSpecies;
+    vector<CamXML::Element*>::const_iterator p;
+    const CamXML::Attribute *atr;
+    vector<string> species;
+    soot = node.GetFirstChild("soot");
+    if(soot != NULL){
+        cSoot.setSootMomentActive();
+        soot->GetChildren("species",sootSpecies);
+        for(p=sootSpecies.begin(); p<sootSpecies.end(); ++p){
+            atr = (*p)->GetAttribute("name");
+            if(atr!=NULL){
+                species.push_back(atr->GetValue());
+            }
+        }
+        cSoot.setSootSpecies(species);
+
+        subnode = soot->GetFirstChild("inception_species");
+        if(subnode!=NULL){
+            string atrVal = subnode->GetAttributeValue("name");
+            cSoot.setInceptionSpecies(atrVal);
+
+        }else{
+            throw CamError("Inception species not specified\n");
+        }
+
+        subnode = soot->GetFirstChild("nMoments");
+        if(subnode!=NULL){
+            cSoot.setNumMoments(int(cdble(subnode->Data())));
+        }else{
+            throw CamError("Number of moments not specified\n");
+        }
+        
+        subnode = soot->GetFirstChild("M0");
+        if(subnode != NULL){
+            cSoot.setFirstMom(cdble(subnode->Data()));
+        }else{
+            throw CamError("First moment not specified\n");
+        }
+
+
+        subnode = soot->GetFirstChild("dPAH");
+        if(subnode!=NULL){
+            string atrVal = subnode->GetAttributeValue("unit");
+            doublereal convertL = convert.getConvertionFactor(atrVal);
+            cSoot.setPAHDia(cdble(subnode->Data())*convertL);
+        }
+        subnode = soot->GetFirstChild("cPAH");
+        if(subnode != NULL){
+            cSoot.setNumCAtomInception(int(cdble(subnode->Data())));
+        }
+
+        string atrVal = soot->GetAttributeValue("regime");
+        
+        if(!convertToCaps(trim(atrVal)).compare("FREEMOL"))
+            cSoot.setRegime(cSoot.FM);
+        else if(!convertToCaps(trim(atrVal)).compare("TRANSITION"))
+            cSoot.setRegime(cSoot.TR);
+        else if(!convertToCaps(trim(atrVal)).compare("CONTINUUM"))
+            cSoot.setRegime(cSoot.CT);                    
+        else
+            throw CamError("Unknown transport regime\n");
+
+    }
+
 }

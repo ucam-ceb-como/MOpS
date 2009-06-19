@@ -49,6 +49,12 @@ void CVodeWrapper::init(int n, vector<doublereal>& solnVec, doublereal tol,
 void CVodeWrapper::setIniStep(doublereal istep){
     CVodeSetInitStep(cvode_mem,istep);
 }
+/*
+ *set the max allowed step size
+ */
+void CVodeWrapper::setMaxStep(doublereal maxStep){
+    CVodeSetMaxStep(cvode_mem,maxStep);
+}
 
 doublereal& CVodeWrapper::solve(int stopMode){
 
@@ -69,7 +75,7 @@ doublereal& CVodeWrapper::solve(int stopMode){
 }
 
 void CVodeWrapper::solve(int stopMode, doublereal resTol){
-
+    
     int flag;
     do{
         flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);

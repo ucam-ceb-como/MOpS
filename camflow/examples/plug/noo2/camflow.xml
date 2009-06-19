@@ -5,7 +5,7 @@
 	 <length unit="cm">5</length>
   </reactor>
   <op_condition>
-	  <temperature>nonisothermal</temperature>
+	  <temperature>isothermal</temperature>
 	  <twall unit="K">1073</twall>
     <pressure unit="Pa">1e5</pressure>
   </op_condition>
@@ -20,7 +20,7 @@
        </massfrac>
      </fuel>
   </inlet>
-  <solver mode="steady" solver="cvode">
+  <solver mode="adiabatic" solver="cvode">
 	  <tols>
 		  <species>
 			  <aTol>1.e-06</aTol>

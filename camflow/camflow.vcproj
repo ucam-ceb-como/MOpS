@@ -175,6 +175,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\source\batch.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\cam_admin.cpp"
 				>
 			</File>
@@ -243,6 +247,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\cam_soot.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\cvode_wrapper.cpp"
 				>
 			</File>
@@ -258,6 +266,10 @@
 				RelativePath=".\source\radau_wrapper.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\source\stagflow.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -266,6 +278,10 @@
 			>
 			<File
 				RelativePath=".\include\array.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\batch.h"
 				>
 			</File>
 			<File
@@ -341,6 +357,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\cam_soot.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\camflow.h"
 				>
 			</File>
@@ -362,6 +382,10 @@
 			</File>
 			<File
 				RelativePath=".\include\radau_wrapper.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\stagflow.h"
 				>
 			</File>
 		</Filter>

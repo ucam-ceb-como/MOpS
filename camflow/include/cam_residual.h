@@ -48,6 +48,7 @@
 #include "cam_geometry.h"
 #include "array.h"
 #include "gpc.h"
+#include "cam_soot.h"
 #include <map>
 #include <vector>
 using namespace Sprog;
@@ -62,7 +63,10 @@ namespace Camflow{
             EQN_ALL,
             EQN_SPECIES,
             EQN_ENERGY,
-            EQN_MASSFLOW
+            EQN_MOMENTUM,
+            EQN_CONTINUITY,
+            EQN_MOMENTS,
+            EQN_FLOW //solve momentum and continuity coupled
         };
 
         CamResidual(){};
@@ -98,7 +102,7 @@ namespace Camflow{
         virtual void massFlowResidual(const doublereal& time, doublereal* y, doublereal* f);
         
         //stores the mixture properties for the calculation of fluxes
-        virtual void saveMixtureProp(doublereal* y, bool thermo);
+        virtual void saveMixtureProp(doublereal* y, bool thermo, bool mom);
         
 
         //update the thermal flux. The flux is stored on the west cell
@@ -126,43 +130,28 @@ namespace Camflow{
 
         doublereal dydx(const int i, doublereal phi_E, doublereal phi_P, doublereal phi_W,
                                             doublereal dr){
-            doublereal u_e, u_w;
-            doublereal phi_e, phi_w;
-            u_e = 0.5*(m_u[i+1]+m_u[i]);
-            u_w = 0.5*(m_u[i]+m_u[i-1]);
-            if( u_e > 0 ){
-                phi_e = phi_P;
-            }else if(u_e < 0){
-                phi_e = phi_E;
-            }else {
-                phi_e = 0.5*(phi_E+phi_P);
-            }
-
-            if(u_w > 0){
-                phi_w = phi_W;
-            }else if(u_w < 0){
-                phi_w = phi_P;
-            }else {
-                phi_w = 0.5*(phi_P+phi_W);
-            }
-
-            return ((phi_e-phi_w)/dr);
+            doublereal val = m_u[i] > 0 ? (phi_P-phi_W)/dr : (phi_E-phi_P)/dr;
+            return val;
 
         }
 
         /*
          *extract various dependent variabes
          */
-        void extractMassFlowVector(vector<doublereal>& vec);
+        void extractContinuity(vector<doublereal>& vec);
         void extractSpeciesVector(vector<doublereal>& vec);
         void extractEnergyVector(vector<doublereal>& vec);
+        void extractMomentum(vector<doublereal>& vec);
+        void extractSootMoments(vector<doublereal>& vec);
 
         /*
          *merge
          */
-        void mergeMassFlowVector(doublereal* vec);
+        void mergeContinuity(doublereal* vec);
         void mergeSpeciesVector(doublereal* vec);
         void mergeEnergyVector(doublereal* vec);
+        void mergeMomentum(doublereal* vec);
+        void mergeSootMoments(doublereal* vec);
 
 
         
@@ -181,20 +170,25 @@ namespace Camflow{
         vector<doublereal> m_cp;                 //mixture specific heat
         vector<doublereal> m_k;                  //mixture thermal conductivity
         vector<doublereal> m_rho;                //mixture density
-        vector<doublereal> m_u;                  //fluid velocity
+        vector<doublereal> m_u;                  //axial velocity
+        vector<doublereal> m_v_grd;              //radial velocity gradient
         vector<doublereal> m_q;                  //thermal conduction flux
         vector<doublereal> m_flow;               //mass flow
         vector<doublereal> m_G;                  //momentum
+        vector<doublereal> m_mu;                 //viscosity
+        vector<doublereal> m_shear;              //shear rate
+        vector<doublereal> m_eigen;              //pressure gradient eigen value
         vector<doublereal> wdot;                 //rate of production
         vector<doublereal> dz;                   //grid spacting
         vector<doublereal> axpos;                //axial position
 
-        vector<doublereal> resSp, resT, resFlow;
+        vector<doublereal> resSp, resT, resFlow, resMoment, resAxVel;
        
         doublereal opPre;                        //operating pressure
 
         int nEqn;    //number of equations
         int nVar;    //number of variables
+        int nMoments;//number of moments
         int nSpc;    //number of species
         int ptrT;    //array offset to temperature
         int ptrF;    //array offset to continuity
@@ -202,8 +196,8 @@ namespace Camflow{
         int ptrH;    // 1/r (dp/dr)
         int ptrS;    //array offset to species
         int ptrR;    //aray offset for residence time
-        int loopBegin, cellBegin;//first cell
-        int loopEnd, cellEnd;//last cell
+        int iMesh_s, cellBegin;//first cell
+        int iMesh_e, cellEnd;//last cell
         int eqn_slvd;
 
         Sprog::Thermo::Mixture *camMixture;
@@ -218,6 +212,7 @@ namespace Camflow{
         CamAdmin *admin;
         CamReporter *reporter;
         CamGeometry *reacGeom;
+        CamSoot *sootMom;
 
     };
 

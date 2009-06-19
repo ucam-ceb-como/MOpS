@@ -11,7 +11,6 @@
   </op_condition>
   <inlet>
      <fuel>
-       <velocity unit="m/s">1.0</velocity>
        <temperature unit="K">373.7</temperature>
        <flowrate unit="cgs">4.63e-3</flowrate>
        <molefrac>

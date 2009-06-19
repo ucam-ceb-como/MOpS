@@ -133,23 +133,12 @@ void CamPlug::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& c
      */
     report(0.0,&solvect[0]);
     
-    int solver = cc.getSolver();
+    
 
-    if(solver == cc.RADAU){
-
-        RadauWrapper rw;
-        rw.setBandWidth(nEqn);
-        rw.setControl(cc);
-        rw.initSolver(nEqn,0.0,cg.getLenth(),solvect,rTol,aTol, *this);
-        rw.Integrate();
-    }else if(solver == cc.CVODE ){
-
-        CVodeWrapper cvw;
-        cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(), cc.getSpeciesRelTol(), cg.getLenth(),nEqn,*this);
-        cvw.setIniStep(cc.getIniStep());
-        cvw.solve(CV_ONE_STEP);
-    }
-
+    CVodeWrapper cvw;
+    cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(), cc.getSpeciesRelTol(), cg.getLenth(),nEqn,*this);
+    cvw.setIniStep(cc.getIniStep());
+    cvw.solve(CV_ONE_STEP);
     reporter->closeFiles();
 }
 

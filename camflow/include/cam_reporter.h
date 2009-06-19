@@ -53,6 +53,7 @@ namespace Camflow{
         DataIO *standard;
         DataIO *rates;
         DataIO *transport;
+        DataIO *custom;
     public:
         CamReporter(){}
         ~CamReporter(){}
@@ -61,6 +62,8 @@ namespace Camflow{
         //title for the consol output
         void consoleHead(string head);
         //write the data to file
+        void openFile(string fileName);
+        void closeFile();
         void openFiles(bool stdrd = true, bool ratesOut = false, bool transOut = false);
         void closeFiles(bool stdrd = true, bool ratesOut = false, bool transOut = false);
         void writeHeader(vector<string>& stdHeader);
@@ -68,6 +71,8 @@ namespace Camflow{
         void wrteHeader(vector<string>& stdHeader, vector<string>& ratesHeader, vector<string>& transHeader);
         void writeToFile(string fname,CamResidual &resid);
         void writeStdFileOut(vector<doublereal>& data);
+        void writeCustomHeader(vector<string>& header);
+        void writeCustomFileOut(vector<doublereal>& data);
     };
 }
 

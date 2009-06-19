@@ -49,6 +49,7 @@
 #include "cam_profile.h"
 #include "cam_setup.h"
 #include "cam_profile.h"
+#include "cam_soot.h"
 using namespace Sprog;
 namespace Camflow{
     class CamPremix : public CamSetup {
@@ -73,11 +74,12 @@ namespace Camflow{
         //write the results to output file
         void reportToFile(doublereal t, doublereal* soln);
         //mass matrix evaluation
-        void massMatrix(doublereal **M);
+        //void massMatrix(doublereal **M);
 
 
         //solve
-        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp, Mechanism &mech );
+        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
+                CamSoot &cs,Mechanism &mech );
         void csolve(CamControl &cc);
         void ssolve(CamControl &cc);
 
@@ -91,6 +93,7 @@ namespace Camflow{
         void massFlowBoundary(const doublereal& t, doublereal *y, doublereal *f);
         void speciesBoundary(const doublereal& t, doublereal *y, doublereal *f);
         void energyBoundary(const doublereal& t, doublereal *y, doublereal *f);
+        void momentBoundary(const doublereal& t, doublereal *y, doublereal *f);
 
         //set up the solution vector
         void initSolutionVector(CamBoundary &cb, CamControl &cc);

@@ -82,7 +82,7 @@ namespace Camflow{
         /*
          *set the start profile
          */
-        void setStarProfile(CamBoundary& cb, Mechanism& mech);
+        void setStartProfile(CamBoundary& cb, Mechanism& mech);
         /*
          *set start profile given 2 inlets
          */

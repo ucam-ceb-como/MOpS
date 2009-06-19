@@ -42,8 +42,14 @@
 
 #ifndef _CAM_MODELS_H
 #define	_CAM_MODELS_H
-#include "camflow.h"
+#include "cam_admin.h"
+#include "cam_boundary.h"
+#include "cam_configuration.h"
+#include "cam_control.h"
+#include "cam_geometry.h"
+#include "cam_profile.h"
 #include "gpc.h"
+#include "cam_soot.h"
 using namespace Sprog;
 namespace Camflow{
     class CamModels{
@@ -57,7 +63,9 @@ namespace Camflow{
                    CamControl &cc,
                    CamGeometry &cg,
                    CamProfile &cp,
+                   CamSoot &cs,
                    Mechanism &mech);
+
     };
 }
 

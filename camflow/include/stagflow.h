@@ -49,7 +49,7 @@
 #include "cam_profile.h"
 #include "cam_setup.h"
 #include "cam_profile.h"
-
+#include "kinsol_wrapper.h"
 namespace Camflow{
     class StagFlow : public CamSetup {
 
@@ -70,9 +70,14 @@ namespace Camflow{
          */
         void ssolve(CamControl &cc);
         /*
+         *solve the algebraic equation system
+         */
+        void solveAES();
+        /*
          *function called by the solver (DAE and ODEs)
          */
         int eval(doublereal t, doublereal* y, doublereal *ydot, bool jacEval);
+        void residual(const doublereal& t, doublereal* y, doublereal* f);
         /*
          *function called by newton solver
          */
@@ -80,15 +85,27 @@ namespace Camflow{
         /*
          *mass flow residual
          */
-        void massFlowResidual(const doublereal& time, doublereal* y, doublereal *f);
+        void continuity(const doublereal& time, doublereal* y, doublereal *f);
+        /*
+         *momentum residual
+         */
+        void momentumResidual(const doublereal& time, doublereal* y, doublereal *f);
+        /*
+         *species boundary condition
+         */
+        void speciesBoundary(const doublereal& t, doublereal* y, doublereal* f);
+        /*
+         *energy boundary
+         */
+        void energyBoundary(const doublereal& t, doublereal* y, doublereal* f);
+        /*
+         *calculate eigen value
+         */
+        void calcEigenValuePGad();
         /*
          *initialize the solution vector
          */
         void initSolutionVector(CamControl &cc);
-        /*
-         *initialize pressure grad
-         */
-        void initPressureGrad(vector<doublereal> &soln);
         /*
          *initialize the mass flow
          */
@@ -100,22 +117,44 @@ namespace Camflow{
         void initMomentum(const doublereal fLeft, const doublereal fRight,
                     vector<doublereal>& soln);
         /*
-         *save mixture properties
+         *update the shear rate
          */
-        void saveFlowVariables(doublereal* y);
+        void updateMomentum(doublereal* y);
+        /*
+         *update flow: save the velocities
+         */
+        void updateFlow(doublereal* y);
+        /*
+         *update diffusion fluxes
+         */
+        void updateDiffusionFluxes();
+        /*
+         *save the axial velocity
+         */
+        void saveAxVel(doublereal* y);
+        /*
+         *save the result of newton iteration
+         */
+        void saveNewton();
         /*
          *report functions
          */
         void report(doublereal t, doublereal* solution);
         void report(doublereal t, doublereal* solutio, doublereal& res);
+        void header();
+        void reportToFile(doublereal t, doublereal* soln);
     private:
+        void readVelocity();
         inletStruct fuel, oxid;
         int nCells;
         /*
          *Newton solver variables
          */
         int alg_nEqn, alg_nVar, alg_band;
-        vector<doublereal> alg_solvect;
+        vector<doublereal> alg_solvect;        
+        vector<doublereal> vFlow;
+        KinsolWrapper *newton;
+        doublereal tol_res, eigen;
     };
 }
 

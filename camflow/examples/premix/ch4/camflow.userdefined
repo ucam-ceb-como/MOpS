@@ -11,8 +11,8 @@
   </op_condition>
   <inlet>
      <fuel>
-       <velocity unit="m/s">0.4101</velocity>
-       <temperature unit="K">3.03e2</temperature>
+		 <temperature unit="K">3.03e2</temperature>
+		 <flowrate unit="cgs">0.0463</flowrate>
        <molefrac>
         <species name="CH4">9.5e-2</species>
         <species name="O2">1.9e-1</species>
@@ -24,8 +24,8 @@
 	  <maxTime>100000</maxTime>
 	  <tols>
 		  <species>
-			  <aTol>1.e-06</aTol>
-			  <rTol>1.e-04</rTol>	  
+			  <aTol>1.e-10</aTol>
+			  <rTol>1.e-06</rTol>	  
 		  </species>
 		  <temperature>
 			  <aTol>1.e-03</aTol>

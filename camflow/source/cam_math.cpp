@@ -1,3 +1,6 @@
+
+#include "array.h"
+
 #include "cam_math.h"
 using namespace Camflow;
 
@@ -36,7 +39,51 @@ double CamMath::sumVector(vector<double>& vec1, vector<double>& vec2){
     return sum<double>(vec1,vec2);
 }
 
-//inline double CamMath::dydx(double nr1, double nr2, double dr){
-//    return ((nr2-nr1)/dr);
-//}
+doublereal CamMath::interpolateLG(doublereal at, int size, Array2D& dPrime,
+                                      const vector<doublereal>& val){
+    doublereal prod = 1;
+    for( int i=0; i< size; i++ )
+        prod *= (at-i);
+
+    doublereal retVal = 1;
+    for( int i=0; i<size; i++){        
+        doublereal expnt = prod/((at-i)*dPrime(size,i+1));
+        retVal *= pow(val[i],expnt);
+
+    }
+
+    return retVal;
+}
+
+void CamMath::binomCoeff(int n, Array2D& bCoeff){
+    bCoeff.resize(n+1,n+1);
+    for(int i=0; i<=n; i++){
+        bCoeff(0,i) = 1.0;
+        bCoeff(i,i) = 1.0;
+        for(int j=1; j<=i; j++){
+            bCoeff(j,i) = bCoeff(j-1,i-1) + bCoeff(j,i-1);
+            
+        }
+    }
+}
+
+void CamMath::prime(int size, Array2D& prime){
+    
+    
+    prime.resize(size+1,size+1);
+    
+    for (int n = 1; n < size+1; n++) {
+        for(int m=1;m<=n;m++){
+            prime(n,m) =1.0;
+            for(int l=1; l<=n;l++){
+                if(l!=m) prime(n,m) *= (m-l);
+            }
+            
+        }
+
+
+    }
+
+}
+
 

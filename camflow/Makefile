@@ -46,9 +46,7 @@ else
   camxml=../camxml/lib/camxml_d.a
   sprog=../sprog/lib/sprog_d.a
   cvode=../cvode/lib/cvode_d.a
-  ida=../ida/lib/ida_d.a
   kinsol=../kinsol/lib/kinsol_d.a
-  radau=../radau/lib/radau_d.a
 endif
 linklibs=$(comostrings) $(camxml) $(sprog) $(cvode) $(ida) $(kinsol) $(radau)
 
@@ -58,8 +56,8 @@ obj=   cam_kernel.o cam_read.o cam_setup.o cam_geometry.o \
 		 cam_control.o cam_conveter.o cam_math.o cam_conc.o \
 		 cam_admin.o cam_boundary.o cam_configuration.o cam_profile.o\
 		 cam_reporter.o cam_models.o cam_plug.o cam_premix.o cam_residual.o \
-		 stagflow.o \
-		 cvode_wrapper.o ida_wrapper.o kinsol_wrapper.o radau_wrapper.o
+		 stagflow.o cam_soot.o batch.o \
+		 cvode_wrapper.o  kinsol_wrapper.o 
 
 
 # TARGET all: Compile to a static library (*.a).
@@ -133,14 +131,14 @@ cam_premix.o: $(src)/cam_premix.cpp
 	$(cpp) $(flag) $(src)/cam_premix.cpp
 stagflow.o: $(src)/stagflow.cpp
 	$(cpp) $(flag) $(src)/stagflow.cpp
+batch.o: $(src)/batch.cpp
+	$(cpp) $(flag) $(src)/batch.cpp
+cam_soot.o: $(src)/cam_soot.cpp
+	$(cpp) $(flag) $(src)/cam_soot.cpp
 cvode_wrapper.o: $(src)/cvode_wrapper.cpp
 	$(cpp) $(flag) $(src)/cvode_wrapper.cpp
-ida_wrapper.o: $(src)/ida_wrapper.cpp
-	$(cpp) $(flag) $(src)/ida_wrapper.cpp
 kinsol_wrapper.o: $(src)/kinsol_wrapper.cpp
 	$(cpp) $(flag) $(src)/kinsol_wrapper.cpp
-radau_wrapper.o: $(src)/radau_wrapper.cpp
-	$(cpp) $(flag) $(src)/radau_wrapper.cpp
 
 
 # Combined mechanisms.

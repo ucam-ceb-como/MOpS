@@ -50,9 +50,10 @@ void KinsolWrapper::init(int n, vector<doublereal>& solnVec, doublereal rtol, in
   /* -------------------------
    * Attach band linear solver
    * ------------------------- */
-
-  int maxl = 15;
-  flag = KINSpgmr(kmem,maxl);
+  if(band < n)
+      flag = KINBand(kmem,n,band,band);
+  else
+      flag = KINDense(kmem,n);
 
   flag = KINSetNumMaxIters(kmem,5000);
 
@@ -65,15 +66,13 @@ void KinsolWrapper::init(int n, vector<doublereal>& solnVec, doublereal rtol, in
 }
 
 void KinsolWrapper::solve(){
-    flag = KINSol(kmem,y,KIN_NONE,scale,scale);
+    flag = KINSol(kmem,y,KIN_LINESEARCH,scale,scale);
     
     if(flag != KIN_SUCCESS){
         cout << "KINsol Error " << flag << endl;
         string errorStr = KINGetReturnFlagName(flag);
         errorStr += "\n";
         throw CamError(errorStr);
-    }else{
-        cout << "Newton solver converged successfully\n";
     }
     
     

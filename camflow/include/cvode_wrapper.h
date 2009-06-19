@@ -38,6 +38,7 @@ namespace Camflow{
          *additional solver control
          */
         void setIniStep(doublereal istep);
+        void setMaxStep(doublereal maxStep);
         doublereal& solve(int stopMode);
         void solve(int stopMode, doublereal resTol);
         void calcResNorm();

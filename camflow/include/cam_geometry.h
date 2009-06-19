@@ -47,25 +47,38 @@
 #include <map>
 namespace Camflow{
     class CamGeometry{
-        doublereal length;                    //length of the model geometry
-        doublereal dia;                 //rector diameter
+        doublereal length;                   //length of the model geometry
+        doublereal dia;                      //rector diameter
         
-        int nCell;                      //total number of FV cells
-        vector<doublereal> dz, axPos;                //cell width
+        int nCell;                           //total number of FV cells
+        vector<doublereal> dz, axPos;        //cell width
         string gridFile;
+
+        /*
+         *grid refinement
+         */
+        doublereal a_slope;
+        doublereal curve;
+        doublereal minRange;
+        doublereal mPrune;
+        map<int, int> z_loc, z_keep;
 
     public:
         CamGeometry(){
             length = 0;
             nCell = 0;
+            a_slope = 0.8;
+            curve = 0.8;
+            minRange = 0.01;
+            mPrune = -0.001;
         }
         ~CamGeometry(){}
 
 
         void setGridFile(string name);
-        //descretise the geometry. This will set the length 
+        //discretise the geometry. This will set the length
         //of the reactor the total number of cells
-        void descretize();
+        void discretize();
 
         //set the reactor length
         void setLength(doublereal len);
@@ -97,6 +110,8 @@ namespace Camflow{
         vector<doublereal>& getAxpos();
         //add cells with zero width
         void addZeroWidthCells();
+
+        void refine(doublereal* y, const int nVar, const int nSpec, int ptrT=0);
     };
 }
 

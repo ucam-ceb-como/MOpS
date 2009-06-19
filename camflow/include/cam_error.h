@@ -42,13 +42,15 @@
 #ifndef _CAM_ERROR_H
 #define	_CAM_ERROR_H
 #include <string>
+#include "string_functions.h"
+using namespace Strings;
 using namespace std;
 namespace Camflow{
     class CamError{
     public:
         string errorMessge;
         CamError(string str){
-            errorMessge = str;
+            errorMessge = "\n"+convertToCaps(str);
             
         }
 

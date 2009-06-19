@@ -40,77 +40,32 @@
 #include <vector>
 #include <map>
 #include <math.h>
+#include <cstring>
 
+#include "cam_soot.h"
+#include <iostream>
+#include <sstream>
 #include "cam_params.h"
 #include "cam_admin.h"
 #include "cam_profile.h"
 #include "cam_residual.h"
 #include "cam_setup.h"
-#include "radau_wrapper.h"
 #include "cam_premix.h"
 #include "cam_reporter.h"
 #include "kinsol_wrapper.h"
 #include "cvode_wrapper.h"
-#include "ida_wrapper.h"
+//#include "ida_wrapper.h"
 using namespace Camflow;
-
+using namespace std;
 
 int CamPremix::eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval){
 
     /*
      *this is called by the DAE wrapper object. Given y, ydot is returned
-     */   
+     */
     residual(t,y,ydot);
     return 0;
 }
-//mass matrix evaluation
-
-void CamPremix::massMatrix(doublereal** M){
-
-    /*
-     *inlet boundary: all governing equations are algebraic except energy
-     */
-
-    /*
-     * on all interior mesh points except the mass flow
-     * all other governing equations are ODE. Two additional
-     * imaginary cells are padded to handle the inlet and exhaust
-     */
-    int nCells = reacGeom->getnCells()+2;
-
-    for(int i=0; i< nEqn; i++)
-        M[0][i] = 1.0;
-    /*
-     *at the inlet species conservation eqauations are algebraic
-     */
-    for(int l=0; l<nSpc; l++)
-        M[0][l] = 0.0;
-    /*
-     *mass flow
-     */
-    for(int i=0; i< nCells; i++){
-        int ptr = nVar*i + ptrF;
-        M[0][ptr] = 0.0;
-    }
-    /*
-     *at the exit both species and energy eqn are algebraic
-     */
-    int ptr;
-    for(int l=0; l<nSpc; l++){
-        ptr = nVar*loopEnd+l;
-        M[0][ptr] = 0.0;
-    }
-    if(admin->getEnergyModel() == admin->ADIABATIC){
-        
-        M[0][ptrT] = 0.0;
-
-        ptr = nVar*loopEnd + ptrT;
-        M[0][ptr] = 0.0;
-    }
-
-}
-
-
 
 
 void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f){
@@ -124,10 +79,15 @@ void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f){
      *function
      */
     if(eqn_slvd == EQN_ALL){
-        saveMixtureProp(y,true);
+        if(admin->getEnergyModel() == admin->ADIABATIC){
+            saveMixtureProp(y,true,false);
+            updateThermo();
+        }else{
+            saveMixtureProp(y,false,false);
+        }
         saveFlowVariables(y);
         updateDiffusionFluxes();
-        if(admin->getEnergyModel() == admin->ADIABATIC) updateThermo();
+
 
         //massFlowBoundary(t,y,&resM[0]);
         speciesBoundary(t,y,&resSp[0]);
@@ -144,29 +104,53 @@ void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f){
             f[i*nVar+ptrF] = resFlow[i];
             f[i*nVar+ptrT] = resT[i];
         }
+
+        //soot moments
+        if(sootMom->active()){
+            resMoment.resize(cellEnd*nMoments,0);
+            sootMom->momentResidual(t,iMesh_s,iMesh_e,nVar,nSpc,dz,m_u,m_rho,y,&resMoment[0]);
+            momentBoundary(t,y,&resMoment[0]);
+
+            for(int i=0; i<cellEnd; i++){
+//                for(int l=nSpc; l<(nSpc+nMomemts); l++){
+//                    f[i*nVar+l] = resMoment[l-nSpc];
+//
+//                }
+                for(int l=0; l<nMoments; l++){
+                    f[i*nVar+l+nSpc] = resMoment[i*nMoments+l];
+                }
+            }
+        }
+
+
     }else{
         if(eqn_slvd == EQN_SPECIES){
             mergeSpeciesVector(y);
-            saveMixtureProp(&solvect[0],false);
+            saveMixtureProp(&solvect[0],false,false);
             saveFlowVariables(&solvect[0]);
             updateDiffusionFluxes();
             speciesBoundary(t,y,f);
             speciesResidual(t,y,f);
-        }else if(eqn_slvd == EQN_MASSFLOW){
-            mergeMassFlowVector(y);
-            saveMixtureProp(&solvect[0],false);
+        }else if(eqn_slvd == EQN_CONTINUITY){
+            mergeContinuity(y);
+            saveMixtureProp(&solvect[0],false,false);
             saveFlowVariables(&solvect[0]);
             massFlowBoundary(t,y,f);
             massFlowResidual(t,y,f);
         }else if(eqn_slvd==EQN_ENERGY){
             mergeEnergyVector(y);
-            saveMixtureProp(&solvect[0],true);
+            saveMixtureProp(&solvect[0],true,false);
             saveFlowVariables(&solvect[0]);
             updateDiffusionFluxes();
-            updateThermo();            
+            updateThermo();
             energyResidual(t,y,f);
             energyBoundary(t,y,f);
-
+        }else if(eqn_slvd==EQN_MOMENTS){
+            mergeSootMoments(y);
+            saveMixtureProp(&solvect[0],false,false);
+            saveFlowVariables(&solvect[0]);
+            momentBoundary(t,y,f);
+            sootMom->momentResidual(t,iMesh_s,iMesh_e,dz,m_u,m_rho,y,f);
         }
     }
 
@@ -175,7 +159,7 @@ void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f){
 
 void CamPremix::massFlowBoundary(const doublereal& t, doublereal* y, doublereal* f){
     //f[0] = ud_inlet.FlowRate - y[0]
-    //f[loopEnd] = y[loopEnd-1] - y[loopEnd];
+    //f[iMesh_e] = y[iMesh_e-1] - y[iMesh_e];
 
     f[0] = ud_inlet.Vel*(ud_inlet.FlowRate -m_flow[0])/dz[0];
 
@@ -183,7 +167,7 @@ void CamPremix::massFlowBoundary(const doublereal& t, doublereal* y, doublereal*
      *Mass flow
      */
 
-    f[loopEnd] = -m_u[loopEnd]*(m_flow[loopEnd]-m_flow[loopEnd-1])/dz[loopEnd];
+    f[iMesh_e] = -m_u[iMesh_e]*(m_flow[iMesh_e]-m_flow[iMesh_e-1])/dz[iMesh_e];
 
 }
 
@@ -199,7 +183,7 @@ void CamPremix::speciesBoundary(const doublereal& t, doublereal* y, doublereal* 
 
     for(int l=0; l<nSpc ; l++){
         convection = m_u[0]*dydx(ud_inlet.Species[l],y[l],dz[0]);
-        diffusion = dydx(0,s_jk(loopBegin,l),dz[0])/m_rho[0];
+        diffusion = dydx(0,s_jk(iMesh_s,l),dz[0])/m_rho[0];
         f[l] = convection + diffusion;
 
     }
@@ -211,11 +195,37 @@ void CamPremix::speciesBoundary(const doublereal& t, doublereal* y, doublereal* 
      //---------------------------------------------------
 
     for(int l=0; l<nSpc; l++){
-        f[loopEnd*nSpc+l] = -m_u[loopEnd]*dydx(s_mf(loopEnd,l),s_mf(loopEnd-1,l),dz[loopEnd]);
+        f[iMesh_e*nSpc+l] = -m_u[iMesh_e]*dydx(s_mf(iMesh_e,l),s_mf(iMesh_e-1,l),dz[iMesh_e]);
     }
 
 }
 
+/*
+ *soot moment boundary conditions
+ */
+void CamPremix::momentBoundary(const doublereal& t, doublereal* y, doublereal* f){
+    //-------------------------------------------
+    //
+    //  Left Boundary Settings
+    //
+    //------------------------------------------
+    for(int l=0; l<nMoments; l++){
+        f[l] = 0;
+    }
+    //-------------------------------------------
+    //
+    //  Right Boundary Settings
+    //
+    //------------------------------------------
+    doublereal convection;
+    for(int l=0; l<nMoments; l++){
+        doublereal phi_e = y[iMesh_e*nVar+nSpc+l];
+        doublereal phi_w = y[(iMesh_e-1)*nVar+nSpc+l];
+        convection = -m_u[iMesh_e]*(phi_e-phi_w)/dz[iMesh_e];
+        f[iMesh_e*nMoments+l] = convection;
+    }
+
+}
 
 void CamPremix::energyBoundary(const doublereal& t, doublereal* y, doublereal* f){
     //-------------------------------------------
@@ -233,24 +243,25 @@ void CamPremix::energyBoundary(const doublereal& t, doublereal* y, doublereal* f
      //---------------------------------------------------
     if(admin->getEnergyModel() == admin->ADIABATIC){
 
-        f[loopEnd] = -m_u[loopEnd]*(dydx(m_T[loopEnd],m_T[loopEnd-1],dz[loopEnd]));
+        f[iMesh_e] = -m_u[iMesh_e]*(dydx(m_T[iMesh_e],m_T[iMesh_e-1],dz[iMesh_e]));
 
     }else{
 
-        f[loopEnd] = 0;
+        f[iMesh_e] = 0;
     }
 
 }
 
 
 
-void CamPremix::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp, Mechanism& mech){
+void CamPremix::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
+        CamProfile& cp, CamSoot &cs, Mechanism& mech){
     /*
      *function to set up the solver.
      *Initialisation of the solution vector is
      *done here
      */
-    
+
     camMech = &mech;
     Thermo::Mixture mix(mech.Species());
     camMixture = &mix;
@@ -262,7 +273,8 @@ void CamPremix::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile&
     admin = &ca;
     reacGeom = &cg;
     admin->getLeftBoundary(cb);
-    reacGeom->descretize();
+    sootMom = &cs;
+    reacGeom->discretize();
     /*
      * 2 additional cells are padded to consider the
      * inlet and the exhaust
@@ -274,17 +286,28 @@ void CamPremix::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile&
     profile->setGeometryObj(cg);
     reporter = new CamReporter();
     nSpc = camMech->SpeciesCount();
+
     nVar = nSpc + 2;
+    /*
+     *check whether to solve for the soot moments
+     */
+    if(cs.active()){
+        nMoments = cs.getNumMoments();
+        nVar += nMoments;
+        ptrF = nSpc + nMoments;
+        ptrT = ptrF + 1;
+    }else{
+        ptrF = nSpc;
+        ptrT = ptrF + 1;
+    }
+
     nEqn = nVar *(reacGeom->getnCells());
-    ptrF = nSpc;
-    ptrT = ptrF + 1;
 
     /*
      *this loop is for residual evaluation by the base class
      */
-    loopBegin = 1;
-    loopEnd = reacGeom->getnCells()-1;
-
+    iMesh_s = 1;
+    iMesh_e = reacGeom->getnCells()-1;
     cellBegin = 0;
     cellEnd = reacGeom->getnCells();
 
@@ -309,10 +332,18 @@ void CamPremix::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile&
 
 void CamPremix::initSolutionVector(CamBoundary &cb, CamControl &cc){
 
+    
+
     dz = reacGeom->getGeometry();
-   
-    admin->getLeftBoundary(cb);
+
+    //admin->getLeftBoundary(cb);
     opPre = admin->getPressure();
+
+//    /*
+//     *assert the inlet flow rate specification
+//     */
+//    if(cb.getFlowRate() == 0)
+//        throw CamError("premix error: inlet flow rate not specified\n");
 
     storeInlet(cb,ud_inlet);
     /*
@@ -322,35 +353,41 @@ void CamPremix::initSolutionVector(CamBoundary &cb, CamControl &cc){
 
     //createSolnVector(cb,cc,solvect);
     solvect.resize(nEqn,0);
-    vector<doublereal> vSpec, vMass, vT;
-    initMassFlow(cb,cc,vMass);    
-    initSpecies(cb,cc,vSpec);    
+    vector<doublereal> vSpec, vMass, vT, vSoot;
+    initMassFlow(cb,cc,vMass);
+    initSpecies(cb,cc,vSpec);
     initTemperature(cb,cc,vT);
-    
+
     mergeEnergyVector(&vT[0]);
-    mergeMassFlowVector(&vMass[0]);
+    mergeContinuity(&vMass[0]);
     mergeSpeciesVector(&vSpec[0]);
-     
-  
+
+    if(sootMom->active()){
+        //nMoments = sootMom->getNumMoments();
+        vector<doublereal> temp;
+        sootMom->initMoments(*camMech,temp,cellEnd);
+        vSoot.resize(nMoments*cellEnd,0.0);
+        for(int i=0; i<cellEnd; i++){
+            for(int l=0; l<nMoments; l++){
+                vSoot[i*nMoments+l] = temp[l];
+            }
+        }
+        mergeSootMoments(&vSoot[0]);
+    }
+
+   
+
 }
 /*
  *couples solver
  */
 void CamPremix::csolve(CamControl& cc){
-    
+
     cout << "\nPremix coupled solver\n";
     eqn_slvd = EQN_ALL;
     int solver = cc.getSolver();
     int band = nVar*2;
 
-    if(solver == cc.RADAU){
-        RadauWrapper rw;
-        rw.setBandWidth(band);
-        rw.setControl(cc);
-        rw.initSolver(nEqn, 0.0, cc.getMaxTime() ,solvect,rTol,aTol,*this);
-        rw.Integrate();
-        reportToFile(cc.getMaxTime(),&solvect[0]);
-    }
     if(solver == cc.CVODE){
         CVodeWrapper cvw;
         cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(), cc.getMaxTime(),band,*this);
@@ -365,13 +402,13 @@ void CamPremix::csolve(CamControl& cc){
         reportToFile(cc.getMaxTime(),&solvect[0]);
         cvw.destroy();
     }
-    if(solver == cc.IDA){
-        IDAWrapper ida;
-        ida.init(nEqn,solvect,cc.getResTol(),cc.getMaxTime(),band,*this);
-        ida.solve();
-        reportToFile(cc.getMaxTime(),&solvect[0]);
-
-    }
+//    if(solver == cc.IDA){
+//        IDAWrapper ida;
+//        ida.init(nEqn,solvect,cc.getResTol(),cc.getMaxTime(),band,*this);
+//        ida.solve();
+//        reportToFile(cc.getMaxTime(),&solvect[0]);
+//
+//    }
 
 }
 
@@ -391,14 +428,32 @@ void CamPremix::ssolve(CamControl& cc){
          *integrate mass flow
          */
         cout << "solving mass flow: " << i << endl;
-        eqn_slvd = EQN_MASSFLOW;
+        eqn_slvd = EQN_CONTINUITY;
         seg_eqn = nCell;
         band = 1;
-        extractMassFlowVector(seg_soln_vec);
+        extractContinuity(seg_soln_vec);
         cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(), cc.getMaxTime(),band,*this);
         cvw.solve(CV_ONE_STEP,1e-03);
-        mergeMassFlowVector(&seg_soln_vec[0]);
+        mergeContinuity(&seg_soln_vec[0]);
         cvw.destroy();
+        /*
+         *integrate soot moemnts
+         */
+        if(sootMom->active()){
+            /*
+             *integrate moments
+             */
+            cout << "Solving moments: " << i << endl;
+            eqn_slvd = EQN_MOMENTS;
+            seg_eqn = nCell*nMoments;
+            band = nMoments*2;
+            extractSootMoments(seg_soln_vec);
+            cvw.init(seg_eqn,seg_soln_vec,1e-03,1e-03,cc.getMaxTime(),band,*this);
+            cvw.solve(CV_ONE_STEP,1e-03);
+            mergeSootMoments(&seg_soln_vec[0]);
+            cvw.destroy();
+        }
+
         /*
          *integrate species
          */
@@ -411,18 +466,22 @@ void CamPremix::ssolve(CamControl& cc){
         cvw.solve(CV_ONE_STEP,1e-03);
         mergeSpeciesVector(&seg_soln_vec[0]);
         cvw.destroy();
-        /*
-         *integrate energy
-         */
-        cout << "Solving energy: " << i << endl;
-        eqn_slvd = EQN_ENERGY;
-        seg_eqn = nCell;
-        band = 1;
-        extractEnergyVector(seg_soln_vec);
-        cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(), cc.getMaxTime(),band,*this);
-        cvw.solve(CV_ONE_STEP,1e-03);
-        mergeEnergyVector(&seg_soln_vec[0]);
-        cvw.destroy();
+
+        if(admin->getEnergyModel()==admin->ADIABATIC){
+            /*
+             *integrate energy
+             */
+            cout << "Solving energy: " << i << endl;
+            eqn_slvd = EQN_ENERGY;
+            seg_eqn = nCell;
+            band = 1;
+            extractEnergyVector(seg_soln_vec);
+            cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(), cc.getMaxTime(),band,*this);
+            cvw.solve(CV_ONE_STEP,1e-03);
+            mergeEnergyVector(&seg_soln_vec[0]);
+            cvw.destroy();
+        }
+
 
 
     }
@@ -433,8 +492,8 @@ void CamPremix::ssolve(CamControl& cc){
 void CamPremix::report(doublereal t, doublereal* soln){
     static int nSteps=0;
     cout.width(5);
-    cout.setf(ios::scientific);    
-    cout << t << endl;  
+    cout.setf(ios::scientific);
+    cout << t << endl;
     if(nSteps%10==0)reporter->consoleHead("time(s)");
     nSteps++;
 }
@@ -444,7 +503,7 @@ void CamPremix::report(doublereal t, doublereal* soln){
 void CamPremix::report(doublereal t, doublereal* soln, doublereal& res){
     static int nStep=0;
     cout.width(5);
-    cout.setf(ios::scientific);    
+    cout.setf(ios::scientific);
     if(nStep%10==0) reporter->consoleHead("time(s) \t residual");
     cout << t <<"\t" << res << endl;
     nStep++;
@@ -452,7 +511,7 @@ void CamPremix::report(doublereal t, doublereal* soln, doublereal& res){
 
 
 void CamPremix::reportToFile(doublereal t, doublereal* soln){
-    saveMixtureProp(soln,false);
+    saveMixtureProp(soln,false,false);
     doublereal sum =0;
 
     reporter->openFiles();
@@ -492,11 +551,23 @@ void CamPremix::reportToFile(doublereal t, doublereal* soln){
             }
         }
         data.push_back(sum);
+
+        //soot moments
+        if(sootMom->active()){
+            for(int l=nSpc; l<(nMoments+nSpc); l++){
+                data.push_back(soln[i*nVar+l]);
+            }
+        }
         reporter->writeStdFileOut(data);
 
     }
 
     reporter->closeFiles();
+
+    /*
+     *moment output
+     */
+    //sootMom->report(len);
 
 }
 
@@ -522,7 +593,7 @@ void CamPremix::updateDiffusionFluxes(){
      */
     CamResidual::updateDiffusionFluxes();
     for(int l=0; l<nSpc; l++)
-        s_jk(loopEnd+1,l)=0.0;
+        s_jk(iMesh_e+1,l)=0.0;
 }
 
 /*
@@ -543,7 +614,7 @@ void CamPremix::saveFlowVariables(doublereal* y){
         m_u.push_back(y[i*nVar+ptrF]/m_rho[i]);
         m_flow.push_back(y[i*nVar+ptrF]);
     }
-    
+
 }
 
 void CamPremix::header(){
@@ -559,4 +630,67 @@ void CamPremix::header(){
         headerData.push_back( (*spv)[l]->Name() );
     }
     headerData.push_back("sumfracs");
+
+    //moment headeres
+    if(sootMom->active()){
+
+        for(int l=0; l<nMoments; l++){
+            stringstream int2str;
+            int2str << l;
+            string moment = "M$"+int2str.str();
+            headerData.push_back(moment);
+        }
+    }
+
 }
+
+
+
+////mass matrix evaluation
+//
+//void CamPremix::massMatrix(doublereal** M){
+//
+//    /*
+//     *inlet boundary: all governing equations are algebraic except energy
+//     */
+//
+//    /*
+//     * on all interior mesh points except the mass flow
+//     * all other governing equations are ODE. Two additional
+//     * imaginary cells are padded to handle the inlet and exhaust
+//     */
+//    int nCells = reacGeom->getnCells()+2;
+//
+//    for(int i=0; i< nEqn; i++)
+//        M[0][i] = 1.0;
+//    /*
+//     *at the inlet species conservation eqauations are algebraic
+//     */
+//    for(int l=0; l<nSpc; l++)
+//        M[0][l] = 0.0;
+//    /*
+//     *mass flow
+//     */
+//    for(int i=0; i< nCells; i++){
+//        int ptr = nVar*i + ptrF;
+//        M[0][ptr] = 0.0;
+//    }
+//    /*
+//     *at the exit both species and energy eqn are algebraic
+//     */
+//    int ptr;
+//    for(int l=0; l<nSpc; l++){
+//        ptr = nVar*iMesh_e+l;
+//        M[0][ptr] = 0.0;
+//    }
+//    if(admin->getEnergyModel() == admin->ADIABATIC){
+//
+//        M[0][ptrT] = 0.0;
+//
+//        ptr = nVar*iMesh_e + ptrT;
+//        M[0][ptr] = 0.0;
+//    }
+//
+//}
+//
+

@@ -53,7 +53,8 @@ namespace Camflow{
             TWINFLAME,
             STAGFLOW,
             PREMIX,
-            PLUG
+            PLUG,
+            BATCH_CV
         };
 
         CamConfiguration(){}

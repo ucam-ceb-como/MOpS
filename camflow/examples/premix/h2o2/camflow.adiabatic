@@ -21,13 +21,13 @@
        </molefrac>
      </fuel>
   </inlet>
-  <solver mode="segregated" solver="cvode" residual="on">
-	  <maxTime>10000</maxTime>
-	  <iterations>4</iterations>
+  <solver mode="segrgated" solver="cvode" residual="on">
+	  <maxTime>10000000</maxTime>
+	  <iterations>2</iterations>
 	  <tols>
 		  <species>
-			  <aTol>1.e-15</aTol>
-			  <rTol>1.e-10</rTol>	  
+			  <aTol>1.e-08</aTol>
+			  <rTol>1.e-06</rTol>	  
 		  </species>
 		  <temperature>
 			  <aTol>1.e-03</aTol>

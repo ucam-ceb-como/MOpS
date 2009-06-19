@@ -74,15 +74,15 @@ void CamSetup::initSpecies(CamBoundary& cb, CamControl& cc,
     soln.resize(nSpc*cellEnd,0);
     vector<doublereal>  position;
     position = reacGeom->getAxpos();
-    profile->setStarProfile(cb,*camMech);
+    profile->setStartProfile(cb,*camMech);    
     Array2D start = profile->getStartProfile();
 
     for(int i=cellBegin; i<cellEnd; i++){
         for(int l=0; l<nSpc; l++){
-            soln[i*nSpc+l] = start(i,l);
+            soln[i*nSpc+l] = start(i,l);            
         }
     }
-
+    
 }
 /*
  *init species given 2 inlets

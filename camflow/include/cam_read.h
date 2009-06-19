@@ -49,6 +49,7 @@
 #include "cam_profile.h"
 #include "camxml.h"
 #include "cam_converter.h"
+#include "cam_soot.h"
 namespace Camflow{
     class CamRead{
     public:
@@ -63,7 +64,7 @@ namespace Camflow{
                        CamAdmin& ca,
                        CamBoundary& cb,
                        CamProfile& cp,
-                       CamConfiguration& config);
+                       CamConfiguration& config, CamSoot &cSoot);
         //read the geometry information
         void readGeometry(CamGeometry &cg,
                           CamConfiguration& config,
@@ -96,6 +97,10 @@ namespace Camflow{
 
         //read the grid file
         void readGrid(CamGeometry& cg, const CamXML::Element &node);
+
+        //read the input to solve for soot moments
+        void readSoot(CamSoot &cSoot, CamConverter &convert,
+                               const CamXML::Element &node);
        
 
     private:

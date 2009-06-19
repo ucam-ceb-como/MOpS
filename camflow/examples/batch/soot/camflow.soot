@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<camflow>
+	<reactor model="batch_cv">
+	 <diameter unit="m">0.015</diameter>
+    <length unit="cm">5</length>
+  </reactor>
+  <op_condition>
+	  <temperature>isothermal</temperature>
+	  <twall unit="K">1073</twall>
+    <pressure unit="bar">0.08</pressure>
+  </op_condition>
+  <inlet>
+     <fuel>
+       <flowrate unit="cgs">5.37e-03</flowrate>
+       <temperature unit="K">1809.0</temperature>
+       <molefrac>
+        <species name="C2H4">0.5</species>
+        <species name="O2">*</species>
+       </molefrac>
+     </fuel>
+  </inlet>
+  <solver mode="coupled" solver="cvode" residual="on">
+	  <maxTime>100000</maxTime>
+	  <iterations>5</iterations>
+	  <tols>
+		  <species>
+			  <aTol>1.e-10</aTol>
+			  <rTol>1.e-10</rTol>	  
+		  </species>
+		  <temperature>
+			  <aTol>1.e-03</aTol>
+			  <rTol>1.e-03</rTol>	  
+		  </temperature>
+		  <flow>
+			  <aTol>1.e-03</aTol>
+			  <rTol>1.e-03</rTol>	  
+		  </flow>
+  	  </tols>
+  </solver>
+  <initialize>
+	  <mCenter unit="cm">1</mCenter>
+	  <mWidth unit="cm">0.75</mWidth>
+	  <product name="H2">0.4</product>
+	  <product name="CO">0.2</product>
+	  <product name="CO2">0.2</product>
+	  <product name="CH4">0.2</product>
+	  <intrmdt name="H">0.1</intrmdt>
+	  <intrmdt name="OH">0.12</intrmdt>
+	  <intrmdt name="HO2">0.001</intrmdt>
+    <Tprofile unit_L="cm" unit_T="K">
+       <position x="0.0">3.0e2</position>
+	    <position x="0.025">3.14e2</position>
+	    <position x="0.0375">3.37e2</position>
+	    <position x="0.05">4.00e2</position>
+	    <position x="0.055">4.52e2</position>
+		 <position x="0.06">5.30e2</position>
+		 <position x="0.0656">6.57e2</position>
+		 <position x="0.075">9.66e2</position>
+		 <position x="0.0787">1.12e3</position>
+		 <position x="0.0825">1.27e3</position>
+		 <position x="0.0881">1.49e3</position>
+		 <position x="0.09">1.56e3</position>
+		 <position x="0.0975">1.73e3</position>
+		 <position x="0.1">1.76e3</position>
+		 <position x="0.12">1.86e3</position>
+		 <position x="0.15">1.93e3</position>
+		 <position x="0.24">2.04e3</position>
+		 <position x="0.3">2.07e3</position>
+		 <position x="0.54">2.13e3</position>
+       <position x="0.7812">2.16e3</position>
+		 <position x="1.26">2.19e3</position>
+		 <position x="2.0">2.21e3</position>
+		 <position x="3.0">2.23e3</position>
+		 <position x="4.0">2.23e3</position>
+		 <position x="5.0">2.23e3</position>
+    </Tprofile>
+ </initialize>
+ <report outfile="final" species="mole">
+ </report>
+ <grid>grid.inp</grid>
+ <soot regime="freemol">
+   <cPAH>16</cPAH>
+	<dPAH unit="cm">7.11e-08</dPAH>
+	<nMoments>6</nMoments>
+   <M0>15</M0>
+   <species name="A4"></species>
+   <species name="C2H2"></species>
+   <species name="CO"></species>
+   <species name="H"></species>
+   <species name="H2"></species>
+   <species name="H2O"></species>
+   <species name="O2"></species>
+   <species name="OH"></species>
+   <inception_species name="A4"></inception_species>
+ </soot>
+</camflow>

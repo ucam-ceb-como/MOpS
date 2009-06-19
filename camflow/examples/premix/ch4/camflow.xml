@@ -5,13 +5,13 @@
     <length unit="cm">10</length>
   </reactor>
   <op_condition>
-	  <temperature>userdefined</temperature>
+	  <temperature>adiabatic</temperature>
 	  <twall unit="K">1073</twall>
     <pressure unit="atm">1.0</pressure>
   </op_condition>
   <inlet>
      <fuel>
-       <velocity unit="m/s">0.4101</velocity>
+       <flowrate unit="cgs">0.0463</flowrate>
        <temperature unit="K">3.03e2</temperature>
        <molefrac>
         <species name="CH4">9.5e-2</species>
@@ -20,12 +20,12 @@
        </molefrac>
      </fuel>
   </inlet>
-  <solver mode="coupled" solver="cvode" residual="on">
+  <solver mode="segregated" solver="cvode" residual="off">
 	  <maxTime>100000</maxTime>
 	  <tols>
 		  <species>
-			  <aTol>1.e-06</aTol>
-			  <rTol>1.e-04</rTol>	  
+			  <aTol>1.e-10</aTol>
+			  <rTol>1.e-05</rTol>	  
 		  </species>
 		  <temperature>
 			  <aTol>1.e-03</aTol>

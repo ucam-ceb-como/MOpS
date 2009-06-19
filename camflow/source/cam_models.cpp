@@ -40,20 +40,25 @@
  *  Website :   http://como.cheng.cam.ac.uk
  */
 #include "cam_models.h"
+#include "cam_plug.h"
+#include "batch.h"
+#include "cam_premix.h"
+#include "stagflow.h"
 #include "cam_error.h"
 #include <iostream>
 using namespace Camflow;
 using namespace std;
-void CamModels::solve(CamAdmin& ca,
-                      CamBoundary& cb,
-                      CamConfiguration &config,
-                      CamControl &cc,
-                      CamGeometry &cg,
-                      CamProfile &cp,
-                      Mechanism &mech ){
+
+void CamModels::solve(CamAdmin& ca, CamBoundary& cb,
+        CamConfiguration& config,
+        CamControl& cc,
+        CamGeometry& cg,
+        CamProfile& cp,
+        CamSoot& cs,
+        Mechanism& mech){
     int configID;
     configID = config.getConfiguration();
-    
+
     if(configID == config.PLUG){
         CamPlug cplug;
         try{
@@ -61,23 +66,33 @@ void CamModels::solve(CamAdmin& ca,
         }catch(CamError ce){
             cout << ce.errorMessge << endl;
         }
-        
+
     }else if(configID == config.PREMIX){
         CamPremix cpremix;
         try{
-            cpremix.solve(cc,ca,cg,cp,mech);
+            cpremix.solve(cc,ca,cg,cp,cs,mech);
         }catch(CamError ce){
             cout << ce.errorMessge << endl;
         }
     }else if(configID == config.STAGFLOW){
         StagFlow stflow;
-        
+
         try{
             stflow.solve(cc,ca,cg,cp,mech);
         }catch(CamError ce){
             cout << ce.errorMessge << endl;
         }
-        
+
+    }else if(configID == config.BATCH_CV){
+        Batch batch;
+        try{
+            batch.solve(cc,ca,cg,cp,cs,mech);
+        }catch(CamError ce){
+            cout << ce.errorMessge << endl;
+        }
+    }else{
+        cout << "Unknown reactor model\n";
     }
+
 
 }

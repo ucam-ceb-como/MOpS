@@ -82,6 +82,12 @@ void CamReporter::consoleHead(string head){
     }
     cout << endl;
 }
+void CamReporter::openFile(string fileName){
+    custom = new DataIO(fileName);
+}
+void CamReporter::closeFile(){
+    custom->close();
+}
 
 void CamReporter::openFiles(bool stdrd, bool ratesOut, bool transOut){
     if(stdrd) standard  = new DataIO("profile.dat");
@@ -92,7 +98,11 @@ void CamReporter::closeFiles(bool stdrd, bool ratesOut, bool transOut){
     if(stdrd) standard->close();
     if(ratesOut) rates->close();
 }
-
+//write a custom header
+void CamReporter::writeCustomHeader(vector<string>& header){
+    if(header.size() == 0)throw CamError("header info missing\n");
+    custom->write(header);
+}
 //write the header for standard output data
 void CamReporter::writeHeader(vector<string>& stdHeader){
     if(stdHeader.size() == 0)throw CamError("header info missing\n");
@@ -114,4 +124,7 @@ void CamReporter::wrteHeader(vector<string>& stdHeader, vector<string>& ratesHea
 
 void CamReporter::writeStdFileOut(vector<doublereal>& data){
     standard->write(data);
+}
+void CamReporter::writeCustomFileOut(vector<doublereal>& data){
+    custom->write(data);
 }

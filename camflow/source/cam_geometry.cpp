@@ -1,3 +1,4 @@
+
 /*
  * File:   cam_geometry.cpp
  * Author: vinod
@@ -36,6 +37,8 @@
  *  Website :   http://como.cheng.cam.ac.uk
  */
 #include <vector>
+#include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include "cam_geometry.h"
@@ -49,7 +52,7 @@ void CamGeometry::setGridFile(string name){
 }
 
 
-void CamGeometry::descretize(){
+void CamGeometry::discretize(){
     vector<doublereal> grid;
     ifstream inf;
     inf.open(gridFile.c_str(),ios::in);
@@ -111,7 +114,7 @@ doublereal CamGeometry::getArea() const{
 }
 
 doublereal CamGeometry::getSurfArea() {
-    if(length==0)descretize();
+    if(length==0)discretize();
     return (pi*dia*length);
 }
 
@@ -150,3 +153,117 @@ void CamGeometry::addZeroWidthCells(){
     //reset the number of cells
     nCell = dz.size();
 }
+
+static doublereal mcPrec(){
+    doublereal x = 1.0;
+    while(1.0+x != 1.0) x*= 0.5;
+    return sqrt(x);
+
+}
+
+/*
+ *grid refinement
+ */
+void CamGeometry::refine(doublereal* y, const int nVar, const int nSpec, int ptrT){
+
+    
+
+    vector<doublereal> v,slope;
+    doublereal vmin, vmax, smin, smax;
+    doublereal maxAbsV, maxAbsS;
+    doublereal thresh;
+    thresh = mcPrec();
+
+    v.resize(nCell,0);
+    slope.resize(nCell-1,0);
+    /*
+     *species
+     */
+    for(int l=0; l<nSpec; l++){
+
+
+        for(int i=0; i<nCell; i++){
+            v[i] = y[i*nVar+l];
+        }
+        for(int i=0; i<nCell-1;i++){
+            slope[i] = (v[i+1]-v[i])/(axPos[i+1]-axPos[i]);
+        }
+        vmin = *min_element(v.begin(),v.end());
+        vmax = *max_element(v.begin(),v.end());
+        smin = *min_element(slope.begin(),slope.end());
+        smax = *max_element(slope.begin(),slope.end());
+
+        /*
+         *max absolute of values and slope
+         */
+        maxAbsV = max(fabs(vmin),fabs(vmax));
+        maxAbsS = max(fabs(smin),fabs(smax));
+
+        /*
+         *refine based on this component only if its range is
+         *greater than a fraction of min range
+         */
+        if( (vmax - vmin) > maxAbsV*minRange ){
+
+            //maximum allowable difference in value between
+            //adjucent points
+
+            doublereal dmax = a_slope*(vmax-vmin)+thresh;
+            for(int i=0; i<nCell-1; i++){
+                doublereal r = fabs(v[i+1]-v[i])/dmax;
+                if(r>1.0){
+                    z_loc[i] = 1;
+                    z_keep[i] = 1;
+                }
+                if( r>= mPrune){
+                    z_keep[i] =1;
+                    z_keep[i+1] =1;
+                }else{
+                    z_keep[i]=0;
+                    z_keep[i]=-1;
+                }
+            }
+        }
+
+        /*
+         *refine based on slope of the component
+         */
+        if( (smax-smin) > minRange*maxAbsS ){
+
+            doublereal dmax = curve*(smax-smin);
+
+            for(int i=0; i<nCell-2; i++){
+                doublereal r = fabs(slope[i+1]-slope[i])/(dmax + thresh/dz[i]);
+                if( r>1.0){
+                    z_loc[i] =1;
+                    z_loc[i+1] =1;
+                }
+                if(r>= mPrune){
+                    z_keep[i+1] =1;
+                }else{
+                    if(z_keep[i+1]==0){
+                        z_keep[i+1]=-1;
+                    }
+                }
+            }
+        }
+
+    }
+
+    nCell = 0;
+    vector<doublereal> temp = axPos;
+    axPos.clear();
+    for(int j=0; j<nCell-1; j++){
+        nCell++;
+        axPos.push_back(temp[j]);
+        if(z_loc.find(j) != z_loc.end()) {
+            nCell++;
+            axPos.push_back(0.5*(temp[j]+temp[j+1]));
+
+        }
+    }
+    
+
+}
+
+

@@ -17,11 +17,11 @@ void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doubler
      *prepare flux terms
      */
     doublereal convection, diffusion, source;
-    
 
-    for(int i= loopBegin; i< loopEnd; i++ ){
-        
-        
+
+    for(int i= iMesh_s; i< iMesh_e; i++ ){
+
+
         for(int l=0; l<nSpc; l++){
             /*
              *convection term
@@ -30,21 +30,21 @@ void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doubler
             convection = -m_u[i]*dydx(i,s_mf(i+1,l),s_mf(i,l),s_mf(i-1,l),dz[i]);
             /*
              *diffusion term
-             */            
+             */
             diffusion = dydx(s_jk(i,l),s_jk(i+1,l),dz[i])/m_rho[i];
             /*
              *reaction source
              */
-            source = s_Wdot(i,l)*(*spv)[l]->MolWt()/m_rho[i];            
+            source = s_Wdot(i,l)*(*spv)[l]->MolWt()/m_rho[i];
 
             f[i*nSpc+l] = convection + diffusion + source ;
-           
+
         }
 
-        
+
     }
-   
-  
+
+
 }
 
 void CamResidual::energyResidual(const doublereal& time, doublereal* y, doublereal* f){
@@ -52,7 +52,7 @@ void CamResidual::energyResidual(const doublereal& time, doublereal* y, doublere
 
     if(admin->getEnergyModel() == admin->ADIABATIC){
         doublereal sumHSource, flxk, sumFlx;;
-        for(int i=loopBegin; i<loopEnd; i++){
+        for(int i=iMesh_s; i<iMesh_e; i++){
             /*
              *evaluate the summation terms
              */
@@ -83,12 +83,12 @@ void CamResidual::energyResidual(const doublereal& time, doublereal* y, doublere
              */
             //f[i] = convection + (conduction - sumHSource - sumFlx)/(m_rho[i]*m_cp[i]);
             f[i] = convection + (conduction - sumHSource )/(m_rho[i]*m_cp[i]);
-            
+
 
         }
     }else{
-        
-        for(int i=loopBegin; i< loopEnd; i++){
+
+        for(int i=iMesh_s; i< iMesh_e; i++){
             f[i] = 0;
             //f[ptrTP] = y[ptrTW]-y[ptrTP];
 
@@ -102,23 +102,23 @@ void CamResidual::energyResidual(const doublereal& time, doublereal* y, doublere
 
 void CamResidual::massFlowResidual(const doublereal& time, doublereal* y, doublereal* f){
 
-  
-    for(int i=loopBegin; i<loopEnd; i++){
-  
+
+    for(int i=iMesh_s; i<iMesh_e; i++){
+
         f[i] = -m_u[i]*(m_flow[i]-m_flow[i-1])/dz[i];
         //f[ptrCP] = y[ptrCW]-y[ptrCP];
-        
+
     }
 }
 
 
-void CamResidual::saveMixtureProp(doublereal* y, bool thermo){
+void CamResidual::saveMixtureProp(doublereal* y, bool thermo, bool mom){
     //clear all the vectors and maps before saving
     m_T.clear();
     m_cp.clear();
     m_k.clear();
     m_rho.clear();
-    //m_u.clear();
+    m_mu.clear();
     //m_flow.clear();
 
     s_H.resize(cellEnd,nSpc);
@@ -133,7 +133,7 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo){
     vector<doublereal> temp, htemp, cptemp;  //diffusion coefficient
     doublereal temperature, dens;
 
-    
+    if(sootMom->active()) sootMom->clearRates(cellEnd);
 
     for(int i=cellBegin; i< cellEnd;i++){
         mf.clear();
@@ -148,12 +148,11 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo){
         dens = opPre*camMixture->getAvgMolWt()/(R*temperature);
         camMixture->SetMassDensity(dens);
         camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
-                                
-        m_rho.push_back(dens);                
-        //m_u.push_back(y[i*nVar+ptrF]/dens);
-        //m_flow.push_back(y[i*nVar+ptrF]);
+
+        m_rho.push_back(dens);
         //store the diffusion coefficient
         temp = camMixture->getMixtureDiffusionCoeff(opPre);
+        if(mom) m_mu.push_back(camMixture->getViscosity());
         //the following properties are needed only when the
         //energy equation is solved. They may not be needed
         //for jacobian avaluation as well.
@@ -166,20 +165,48 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo){
             cptemp = camMixture->getMolarSpecificHeat();
             //store the the thermal conductivity (J/m-s-K)
             m_k.push_back(camMixture->getThermalConductivity(opPre));
-            //store the specific heat capacity (K/kg K)
+            //store the specific heat capacity (J/kg K)
             m_cp.push_back(camMixture->getSpecificHeatCapacity());
         }
+        if(sootMom->active()){
+            //get the concentrations
+            vector<doublereal> conc;
+            camMixture->GetConcs(conc);
 
+            /*
+             *moment concetrations
+             */
+            vector<doublereal> concMomts;
+            concMomts.clear();
+            for(int l=0; l<nMoments; l++){
+                concMomts.push_back(exp(y[i*nVar+l+nSpc]));
+            }
+
+            //nulceation rate
+            
+            //sootMom->sootReactions(i,conc,concMomts,nSpc,temperature,opPre);
+            vector<doublereal> dummy;
+            dummy.resize(nMoments,0.0);
+            sootMom->rateAll(conc,concMomts,temperature,opPre,dummy,i);
+            
+
+
+        }
         for(int l=0; l<nSpc; l++){
             s_Wdot(i,l)=wdot[l];
             s_Diff(i,l)=temp[l];
             s_mf(i,l) = mf[l];
+            if(mf[l] > 1.1) {
+                cout << l << "  " << mf[l] << endl;
+                throw CamError("invalid mass frac\n");
+            }
             s_H(i,l) = htemp[l];
             s_cp(i,l) = cptemp[l];
         }
 
 
     }
+    if(sootMom->active()) sootMom->addRates(cellEnd,s_Wdot);
 }
 
 
@@ -190,7 +217,7 @@ void CamResidual::updateDiffusionFluxes(){
 
     s_jk.resize(cellEnd+1,nSpc);
 
-    
+
     vector<doublereal> flx;
     doublereal avgD, grad, avgRho;
     doublereal delta;
@@ -199,24 +226,24 @@ void CamResidual::updateDiffusionFluxes(){
     //preperation for flux correction
     doublereal jCorr;
 
-    for(int i=loopBegin; i<loopEnd; i++){
-    
+    for(int i=iMesh_s; i<iMesh_e; i++){
+
         avgRho = (m_rho[i]+m_rho[i-1])/2.0;
         delta = (dz[i]+dz[i-1])/2.0;
         flx.resize(nSpc,0.0);
 
         jCorr = 0.0;
-        
-        for(int l=0; l<nSpc; l++){            
-            grad = dydx(s_mf(i,l),s_mf(i-1,l),delta);            
+
+        for(int l=0; l<nSpc; l++){
+            grad = dydx(s_mf(i,l),s_mf(i-1,l),delta);
             avgD = (s_Diff(i-1,l)+s_Diff(i,l))/2.0;
-				//if( (i-1) == 0 ) avgD = s_Diff(i-1,l);
+            //if((i-1)==0)avgD = s_Diff(i-1,l);
             flx[l] = -avgD*avgRho*grad;
             //preparing for flux correction
             jCorr += flx[l];
-            
+
         }
-        
+
        //correction
         for(int l=0; l<nSpc; l++){
             flx[l] -= s_mf(i,l)*jCorr;
@@ -234,13 +261,13 @@ void CamResidual::updateThermo(){
      */
     m_q.resize(cellEnd+1,0.0);
     doublereal delta;
-    for (int i = loopBegin; i < loopEnd; i++) {
+    for (int i = iMesh_s; i < iMesh_e; i++) {
         delta = (dz[i]+dz[i-1])/2.0;
         doublereal value = 0.5*(m_k[i]+m_k[i-1])*(m_T[i]-m_T[i-1])/delta;
         m_q[i] = value;
-        
+
     }
-    
+
 }
 
 //return the number of species
@@ -262,7 +289,7 @@ void CamResidual::extractEnergyVector(vector<doublereal>& vec){
         vec[i] = solvect[i*nVar+ptrT];
 }
 
-void CamResidual::extractMassFlowVector(vector<doublereal>& vec){
+void CamResidual::extractContinuity(vector<doublereal>& vec){
     vec.resize(cellEnd,0);
     for(int i=0; i<cellEnd; i++)
         vec[i] = solvect[i*nVar+ptrF];
@@ -275,13 +302,27 @@ void CamResidual::extractSpeciesVector(vector<doublereal>& vec){
             vec[i*nSpc+l] = solvect[i*nVar+l];
     }
 }
+void CamResidual::extractSootMoments(vector<doublereal>& vec){
+    vec.resize(cellEnd*nMoments,0);
+    for(int i=0; i<cellEnd; i++){
+        for(int l=0; l<nMoments; l++)
+            vec[i*nMoments+l] = solvect[i*nVar+l+nSpc];
+    }
+
+}
+
+void CamResidual::extractMomentum(vector<doublereal>& vec){
+    vec.resize(cellEnd,0);
+    for(int i=0; i<cellEnd; i++)
+        vec[i] = solvect[i*nVar+ptrG];
+}
 
 void CamResidual::mergeEnergyVector(doublereal* vec){
     for(int i=0; i<cellEnd; i++)
         solvect[i*nVar+ptrT] = vec[i];
 }
 
-void CamResidual::mergeMassFlowVector(doublereal* vec){
+void CamResidual::mergeContinuity(doublereal* vec){
     for(int i=0; i<cellEnd; i++)
         solvect[i*nVar+ptrF] = vec[i];
 }
@@ -292,6 +333,29 @@ void CamResidual::mergeSpeciesVector(doublereal* vec){
             solvect[i*nVar+l] = vec[i*nSpc+l];
     }
 }
+/*
+ *soot moments are arranged right below the species vector
+ */
+void CamResidual::mergeSootMoments(doublereal* vec){
+    for(int i=0; i<cellEnd; i++){
+//        for(int l=nSpc; l<(nSpc+nMomemts); l++){
+//            solvect[i*nVar+l] = vec[l-nSpc];
+//            //cout << i << "  " << solvect[i*nVar+l] << endl;
+//        }
+        //int dd; cin >> dd;
+        for(int l=0; l<nMoments; l++){
+            solvect[i*nVar+l+nSpc] = vec[i*nMoments+l];
+            //cout << i << "  " << solvect[i*nVar+l+nSpc] << endl;
+        }
+        //int dd; cin >> dd;
+    }
+   
+}
+
+void CamResidual::mergeMomentum(doublereal* vec){
+    for(int i=0; i<cellEnd; i++)
+        solvect[i*nVar+ptrG] = vec[i];
+}
 
 void CamResidual::massMatrix(doublereal** M){
     cout << "Base class function: nothing implemented\n";
@@ -299,5 +363,5 @@ void CamResidual::massMatrix(doublereal** M){
 
 int CamResidual::eval(doublereal* y, doublereal* ydot){
     cout << "Base class function nothing to do\n";
-	 return 0;
+    return 0;
 }

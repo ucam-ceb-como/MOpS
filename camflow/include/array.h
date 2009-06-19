@@ -58,10 +58,10 @@ namespace Camflow{
          */
         virtual ~Array2D(){}
 
-        void resize(int m, int n, doublereal v=0.0){
+        void resize(int m, int n, doublereal v=0.0){           
             nRows = n;
             nCols = m;
-            aData.resize(m*n,v);
+            aData.resize(m*n,v);           
         }
 
         /*
@@ -90,6 +90,69 @@ namespace Camflow{
     protected:
         vector<doublereal> aData;
         int nRows, nCols;
+    };
+
+
+    class Array1D{
+    public:
+        //Dfault constructor
+        Array1D(){
+            minIndex = 0;
+            maxIndex = 0;
+            aData.clear();
+        }
+
+        Array1D(int m, int n, doublereal v=0.0){
+            int size = n-m;
+            minIndex = m;
+            maxIndex = n;
+            aData.resize(size,v);
+        }
+        /*
+         *copy constructor
+         */
+        Array1D(const Array1D &a){
+            minIndex = a.minIndex;
+            maxIndex = a.maxIndex;
+            aData = a.aData;
+        }
+
+        Array1D& operator=(const Array1D& a){
+            minIndex = a.minIndex;
+            maxIndex = a.maxIndex;
+            aData = a.aData;
+            return *this;
+        }
+
+        void resize(int m, int n, doublereal v=0.0){
+            int size = n-m;
+            minIndex = m;
+            maxIndex = n;
+            aData.resize(size,v);
+            
+        }
+
+        doublereal& operator ()(int i){
+            return value(i);
+        }
+
+        doublereal operator ()(int i) const{
+            return value(i);
+        }
+        
+        doublereal value(int i) const{
+            
+            return aData[i-minIndex];
+        }
+
+        doublereal& value(int i){
+            return aData[i-minIndex];
+        }
+
+
+    protected:
+        vector<doublereal> aData;
+        int minIndex, maxIndex;
     };
 }
 

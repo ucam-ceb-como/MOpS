@@ -46,6 +46,7 @@
 #include "cam_profile.h"
 #include "cam_plug.h"
 #include "comostrings.h"
+#include <cmath>
 using namespace Camflow;
 using namespace Strings;
 
@@ -101,13 +102,13 @@ void CamProfile::setStartprofile(CamBoundary& left, CamBoundary& right,
      *product map
      */
     list_prdt = right.getInletSpecies();
-    setStarProfile(left,mech);
+    setStartProfile(left,mech);
 
 }
 /*
  *set the start profile
  */
-void CamProfile::setStarProfile(CamBoundary& cb, Mechanism& mech){
+void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
 
     vector<doublereal> m_in = cb.getInletMassfracs();
     vector<doublereal> position = geom->getAxpos();
@@ -117,7 +118,7 @@ void CamProfile::setStarProfile(CamBoundary& cb, Mechanism& mech){
 
     populateIntermdts(mech);
     populateProducts(mech);
-
+    setGaussian(mech);
    
     if(mWidth != 0 && mCenter != 0 && m_prdt.size() != 0 && m_intmd.size() != 0){
 
@@ -150,14 +151,14 @@ void CamProfile::setStarProfile(CamBoundary& cb, Mechanism& mech){
             p = spec.begin();
             while(p!= spec.end()){
                 int index = mech.FindSpecies(convertToCaps(trim(p->first)));
-                start(i,index) = factor*(f_prdt*m_prdt[index]+f_reac*m_in[index]);
+                start(i,index) = factor*(f_prdt*m_prdt[index]+f_reac*m_in[index]);             
                 p++;
             }
             p=list_prdt.begin();
             while(p!=list_prdt.end()){
                 int index = mech.FindSpecies(convertToCaps(trim(p->first)));
                 if(m_in[index]==0){
-                    start(i,index) = factor*(f_prdt*m_prdt[index] + f_reac*m_in[index]);
+                    start(i,index) = factor*(f_prdt*m_prdt[index] + f_reac*m_in[index]);                   
                 }
                 p++;
             }
@@ -172,7 +173,7 @@ void CamProfile::setStarProfile(CamBoundary& cb, Mechanism& mech){
         }
 
     }
-
+    
 }
 /*
  *set the gaussian
@@ -188,8 +189,21 @@ void CamProfile::setGaussian(Mechanism& mech){
         for(int i=0; i<len; i++){
             start(i,index) = m_intmd[index]*exp(-gWidth*pow(position[i]-mCenter,2));
         }
+        p++;
 
     }
+//    p = list_intmd.begin();
+//    while(p!=list_intmd.end()){
+//        int index = mech.FindSpecies(convertToCaps(trim(p->first)));
+//        for(int i=0; i<len; i++){
+//            cout << start(i,index) << endl;
+//        }
+//        p++;
+//
+//    }
+//    cout << "finished\n";
+//    int dd;
+//    cin >> dd;
 
 }
 /*

@@ -42,7 +42,16 @@
 #include <string>
 #include "gpc.h"
 #include "cam_read.h"
+#include "cam_admin.h"
+#include "cam_control.h"
+#include "cam_geometry.h"
+#include "cam_converter.h"
+#include "cam_boundary.h"
+#include "cam_profile.h"
+#include "cam_configuration.h"
+#include "cam_read.h"
 #include "cam_models.h"
+#include "cam_soot.h"
 /*
  * 
  */
@@ -70,8 +79,9 @@ int main() {
     CamConfiguration config;
     CamRead cm;
     CamModels models;
+    CamSoot cSoot;
     try{
-        cm.readInput(fCamFlow,cc,cg,convert,ca,cb,cp,config);
+        cm.readInput(fCamFlow,cc,cg,convert,ca,cb,cp,config,cSoot);
     }catch(CamError &ce){
         cout << ce.errorMessge;
     }
@@ -81,11 +91,11 @@ int main() {
     IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,fTrans);
     
     try{
-        models.solve(ca,cb,config,cc,cg,cp,mech);
+        models.solve(ca,cb,config,cc,cg,cp,cSoot,mech);
     }catch(CamError &ce){
         cout << ce.errorMessge;
     }
-    cout << "\nCamflow finished successfully..\n";
+    cout << "\nCamflow end of execution..\n";
     return (EXIT_SUCCESS);
 }
 
