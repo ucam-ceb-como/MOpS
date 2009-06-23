@@ -430,7 +430,7 @@ void Simulator::PostProcess()
     // once, as they are the same for all runs.
     readGasPhaseDataPoint(fin, mech, achem[0], echem[0], true);
     readParticleDataPoint(fin, pmech, astat[0], estat[0], true);
-	if (!mech.ParticleMech().AggModel()==Sweep::AggModels::PAH_ID)
+	if (mech.ParticleMech().AggModel()!=Sweep::AggModels::PAH_ID)
 	{ 
 		//if loop added by ms785
 	   readGasRxnDataPoint(fin, mech,
@@ -514,7 +514,7 @@ void Simulator::PostProcess()
                         // Read output point for all iterations for step.
                         readGasPhaseDataPoint(fin, mech, achem[step], echem[step], true);
                         readParticleDataPoint(fin, pmech, astat[step], estat[step], true);
-						if (!mech.ParticleMech().AggModel()==Sweep::AggModels::PAH_ID)
+						if (mech.ParticleMech().AggModel()!=Sweep::AggModels::PAH_ID)
 						{ //if loop added by ms785
 							 readGasRxnDataPoint(fin, mech,
                                             agprates[step], egprates[step],
@@ -536,7 +536,7 @@ void Simulator::PostProcess()
                     readParticleDataPoint(fin, pmech, astat[step], estat[step], true);
 									
 
-					if (!mech.ParticleMech().AggModel()==Sweep::AggModels::PAH_ID)
+					if (mech.ParticleMech().AggModel()!=Sweep::AggModels::PAH_ID)
 					{ //if loop added by ms785
 						 readGasRxnDataPoint(fin, mech,
                                         agprates[step], egprates[step],
