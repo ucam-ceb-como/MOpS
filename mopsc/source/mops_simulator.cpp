@@ -582,7 +582,7 @@ void Simulator::PostProcess()
 
     // POST-PROCESS ELEMENT FLUX
     // Element flux must be output before CSV files since writeXXXCSV will change the contents of what it output afterwards
-    //writeElementFluxOutput(m_output_filename, mech, times, agpfwdrates, agprevrates, achem);
+    writeElementFluxOutput(m_output_filename, mech, times, agpfwdrates, agprevrates, achem);
 
     // Sensitivity output.
     Mops::SensitivityAnalyzer::PostProcess(m_output_filename);
