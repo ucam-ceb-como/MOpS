@@ -768,7 +768,7 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
 
             // Write gas-phase and particle reaction rates
             // to the file.
-			if (!r.Mixture()->Particles().ParticleModel()->AggModel()==Sweep::AggModels::PAH_ID)
+			if (!(r.Mixture()->Particles().ParticleModel()->AggModel()==Sweep::AggModels::PAH_ID))
 			{
 			    // Commented out by ms785 due to problems with flamePP and PAH solver because no gas phase reactions are existing
 				me->outputGasRxnRates(r);
