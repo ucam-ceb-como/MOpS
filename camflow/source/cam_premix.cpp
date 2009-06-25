@@ -52,7 +52,6 @@
 #include "cam_setup.h"
 #include "cam_premix.h"
 #include "cam_reporter.h"
-#include "kinsol_wrapper.h"
 #include "cvode_wrapper.h"
 //#include "ida_wrapper.h"
 using namespace Camflow;

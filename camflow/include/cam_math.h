@@ -27,6 +27,8 @@ namespace Camflow{
 
         void binomCoeff(int n, Array2D &bCoeff);
         void prime(int size, Array2D &prime);
+        void TDMA(vector<doublereal>& a, vector<doublereal>&b, vector<doublereal>&c,
+                vector<doublereal>& r, vector<doublereal>& u);
         
 
     };

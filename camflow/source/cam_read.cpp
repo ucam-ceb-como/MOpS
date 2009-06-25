@@ -162,6 +162,14 @@ void CamRead::readProcessConditions(CamConverter& convert,
             throw CamError("operating pressure not defined\n");
         }
 
+        // read strain rate for strained flames
+        subnode = opNode->GetFirstChild("strain");
+        if(subnode != NULL){
+            ca.setStrainRate(cdble(subnode->Data()));
+        }else{
+            ca.setStrainRate(0.0);
+        }
+
     }
     
 }
@@ -247,10 +255,7 @@ void CamRead::readNozzle(CamBoundary& cb,
         doublereal flow = cdble(subnode->Data())*fact;
         cb.setFlowRate(flow);
     }else{
-        if(cb.getVelocity() == 0.0)
-            throw CamError("Either valocity of flow rate needs specified\n");
-        else
-            cb.setFlowRate(0.0);
+        cb.setFlowRate(0.0);
     }
     string member = "species";
     subnode = node.GetFirstChild("massfrac");

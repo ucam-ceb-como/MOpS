@@ -88,7 +88,7 @@ namespace Camflow{
         /*
          *mass matrix definition for Radau
          */
-        virtual void massMatrix(doublereal **M);
+        //virtual void massMatrix(doublereal **M);
         //get intitial
         //virtual void getInitial(vector<doublereal> &initial);
         
@@ -100,6 +100,9 @@ namespace Camflow{
 
         //base class definition for mass flow
         virtual void massFlowResidual(const doublereal& time, doublereal* y, doublereal* f);
+
+        //flow field evaluation (algebraic equation system)
+        virtual void calcFlowField(const doublereal& time, doublereal* y);
         
         //stores the mixture properties for the calculation of fluxes
         virtual void saveMixtureProp(doublereal* y, bool thermo, bool mom);
@@ -174,7 +177,7 @@ namespace Camflow{
         vector<doublereal> m_v_grd;              //radial velocity gradient
         vector<doublereal> m_q;                  //thermal conduction flux
         vector<doublereal> m_flow;               //mass flow
-        vector<doublereal> m_G;                  //momentum
+        vector<doublereal> m_G;                  //radial velocity gradient
         vector<doublereal> m_mu;                 //viscosity
         vector<doublereal> m_shear;              //shear rate
         vector<doublereal> m_eigen;              //pressure gradient eigen value

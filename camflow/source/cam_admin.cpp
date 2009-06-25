@@ -55,7 +55,12 @@ void CamAdmin::setPressure(doublereal p_){
     this->pre = p_;
 }
 
-
+/*
+ *set the strain rate
+ */
+void CamAdmin::setStrainRate(doublereal sr){
+    this->strain = sr;
+}
 
 /*
  *set the wall temperature
@@ -127,7 +132,9 @@ doublereal CamAdmin::getPressure() const{
     return this->pre;
 }
 
-
+doublereal CamAdmin::getStrainRate() const{
+    return this->strain;
+}
 //doublereal CamAdmin::getTemperature() const{
 //    return this->T;
 //}

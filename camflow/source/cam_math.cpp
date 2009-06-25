@@ -86,4 +86,42 @@ void CamMath::prime(int size, Array2D& prime){
 
 }
 
+/*
+ *This is a Tridiagonal Matrix Algorith implementation to
+ *solve equations of the following form
+ *
+ * ---                         ----- --
+ * | b0 c0 0 ....                  | | u0  |   |r0  |
+ * | a1 b1 c1 0 ....               | | u1  |   |r1  |
+ * | 0  a2 b2 c2 0 ....            | | .   |   |    |
+ * |                               | | .   | = |    |
+ * |                               | |     |   |    |
+ * |             an-2   bn-2  cn-2 | |     |   |    |
+ * |__                  an-1  bn-1_| | un-1|   |rn-1|
+ *
+ */
+void CamMath::TDMA(     vector<doublereal>& a,
+                        vector<doublereal>& b,
+                        vector<doublereal>& c,
+                        vector<doublereal>& r,
+                        vector<doublereal>& u){
 
+    int n = a.size();
+    vector<doublereal> gam(n);
+    doublereal bet;
+    if(b[0] == 0.0){
+        throw CamError("Error in TDMA\n");
+    }
+    u[0] = r[0]/(bet=b[0]);
+    for(int j=1; j<n; j++){
+        gam[j] = c[j-1]/bet;
+        bet = b[j]-a[j]*gam[j];
+        if(bet == 0.0) throw CamError("Error in TDMA\n");
+        u[j] = (r[j]-a[j]*u[j-1])/bet;
+    }
+    //Back substitution
+    for(int j=(n-2); j>=0;j--){
+        u[j] -= gam[j+1]*u[j+1];
+    }
+
+}

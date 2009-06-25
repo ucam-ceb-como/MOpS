@@ -1,3 +1,9 @@
+
+#include <cmath>
+#include <algorithm>
+
+#include "cam_params.h"
+
 /*
  * File:   stagflow.cpp
  * Author: vinod (vj231@cam.ac.uk)
@@ -45,6 +51,7 @@
 #include "array.h"
 #include "cam_geometry.h"
 #include "cam_setup.h"
+#include "cam_math.h"
 #include <stdlib.h>
 #include <vector>
 
@@ -59,7 +66,7 @@ void StagFlow::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
      *Initialisation of the solution vector is
      *done here
      */
-
+    
     camMech = &mech;
     Thermo::Mixture mix(mech.Species());
     camMixture = &mix;
@@ -79,19 +86,15 @@ void StagFlow::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
     nCells = reacGeom->getnCells();
 
     opPre = ca.getPressure();
+    strainRate = ca.getStrainRate();
     profile->setGeometryObj(cg);
     reporter = new CamReporter();
     nSpc = camMech->SpeciesCount();
-
-    /*
-     *array offsets for newton solver
-     */
-    ptrF = 0;
     /*
      *array offsets for ODE
      */
     ptrT = nSpc;
-    ptrG = ptrT+1;
+    //ptrG = ptrT+1;
     
     /*
      *number of finite volume cells and
@@ -105,21 +108,11 @@ void StagFlow::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
     cellEnd = nCells;
     
 
-
-    /*
-     *number of variables and the number of equations
-     *to be solved by the newton solver
-     */
-    alg_nVar = 1; // F(x)
-    alg_nEqn =  alg_nVar*nCells;
-    alg_band = alg_nVar*2;
-    
-
     /*
      *number of equations and the number of variables to
-     *be slved by the ODE
+     *be slved by the ODE. (Species, Energy equations)
      */
-    nVar = nSpc+2;
+    nVar = nSpc+1;
     nEqn = nVar*nCells;
 
     /*
@@ -127,11 +120,6 @@ void StagFlow::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
      */
     initSolutionVector(cc);
 
-    /*
-     *newton solver pointer
-     */
-    newton = new KinsolWrapper();
-    tol_res = cc.getResTol();
 
     header();
     if(cc.getSolutionMode() == cc.COUPLED)
@@ -155,82 +143,94 @@ void StagFlow::initSolutionVector(CamControl& cc){
 
     CamBoundary left, right;
     admin->getLeftBoundary(left);
-    admin->getRightBoundary(right);
+    //admin->getRightBoundary(right);
 
-    if(left.getVelocity()==0)
-        throw CamError("Stagflow error: inlet velocity not specified\n");
 
     /*
      *store the inlets and change the
      *sign of flow for the oxidizer
      */
     storeInlet(left,fuel);
-    storeInlet(right,oxid);
+    //storeInlet(right,oxid);
 
-    oxid.FlowRate *= -1;
-    oxid.Vel *= -1;
-    right.setVelocity(-right.getVelocity());
-    right.setFlowRate(-right.getFlowRate());
+    //oxid.FlowRate *= -1;
+    //oxid.Vel *= -1;
+    //right.setVelocity(-right.getVelocity());
+    //right.setFlowRate(-right.getFlowRate());
 
 
     /*
      *initialize the ODE vector
      */
     solvect.resize(nEqn,0);
-    vector<doublereal> vSpec, vT, vMom, vU;
-    initSpecies(left,right,cc,vSpec);
-    initMomentum(fuel.FlowRate,oxid.FlowRate,vMom);
+    vector<doublereal> vSpec, vT;
+    initSpecies(left,right,cc,vSpec);        
     initTemperature(left,cc,vT);
-    //initMassFlow(fuel.Vel, oxid.Vel,vU);
 
+    initMomentum();
+    initMassFlow();
+    
     mergeEnergyVector(&vT[0]);
-    mergeSpeciesVector(&vSpec[0]);
-    mergeMomentum(&vMom[0]);
-    //mergeContinuity(&vU[0]);
-    //mergeContinuity(&m_u[0]);
-
-    /*
-     *initialize the algebraic equations vector
-     */
-    alg_solvect.resize(alg_nEqn,0.0);
-    initMassFlow(fuel.Vel, oxid.Vel,m_u);
-    /*
-     *merge the dependent vaiables into
-     *algebraic solution vector
-     */
-    for(int i=0; i<cellEnd; i++){
-        alg_solvect[i*alg_nVar+ptrF] = m_u[i];
-
-    }
-
+    mergeSpeciesVector(&vSpec[0]);    
+    
+   
 }
 /*
  *initialize the mass flow
  */
-void StagFlow::initMassFlow(const doublereal fLeft, const doublereal fRight,
-                            vector<doublereal>& soln){
-    soln.resize(cellEnd,0);
-    doublereal flowGrad = (fRight-fLeft)/reacGeom->getLenth();
-    doublereal xPos=0;
-    for(int i=0; i<cellEnd; i++){
-        xPos += dz[i];
-        soln[i] = flowGrad*(xPos-0.0) + fLeft;
-    }
+void StagFlow::initMassFlow(){
+    //store the flow rates on the cell faces
+    m_u.resize(cellEnd,fuel.Vel);    
+    m_u[0]=fuel.Vel;
+    m_u[cellEnd-1] = 0.0;
 
-    //readVelocity();
+    m_flow.resize(cellEnd,0.001);
+    m_flow[cellEnd-1] = 0.0;
+
+    /*
+     *setting up TDMA coefficients
+     */
+    vector<doublereal> a, b,c;
+    a.resize(nCells-2,0);
+    b = c = a;
+
+    doublereal oneBydelEP, oneBydelPW;
+    //1st cell
+    int i = 1;
+    oneBydelEP = 1.0/(0.5*(dz[i]+dz[i+1]));
+    oneBydelPW = 1.0/(0.5*dz[i]);
+    b[0] = oneBydelEP+oneBydelPW;
+    c[0] = -oneBydelEP;
+    for(i=2; i<nCells-2; i++){
+        oneBydelEP = 1.0/(0.5*(dz[i]+dz[i+1]));
+        oneBydelPW = 1.0/(0.5*(dz[i]+dz[i-1]));
+        b[i-1] = oneBydelEP+oneBydelPW;
+        a[i-1] = -oneBydelPW;
+        c[i-1] = -oneBydelEP;
+    }
+    //last cell
+    i = nCells-2;
+    oneBydelEP = 1.0/(0.5*dz[i]);
+    oneBydelPW = 1.0/(0.5*(dz[i]+dz[i-1]));
+    b[i-1] = oneBydelEP+oneBydelPW;
+    a[i-1] = -oneBydelPW;
+
+    //store the vectors to TDMA struct
+    tdmaFlow.a = a;
+    tdmaFlow.b = b;
+    tdmaFlow.c = c;
 
 }
 /*
  *initialize momentum
  */
-void StagFlow::initMomentum(const doublereal fLeft, const doublereal fRight,
-                            vector<doublereal>& soln){
+void StagFlow::initMomentum(){
 
-    
-    doublereal flowGrad = 0.01;//(fRight-fLeft)/reacGeom->getLenth();
-    soln.resize(cellEnd,flowGrad);
-    soln[0] = fuel.rVelGrad;
-    soln[iMesh_e] = oxid.rVelGrad;
+    /*
+     *Ref : G. Stahl and J. Warnatz
+     *Combustion and flame 85:285-299
+     */
+    m_G.resize(nCells,1.0);
 
 }
 
@@ -244,7 +244,7 @@ void StagFlow::csolve(CamControl& cc){
     int band = nVar*2;
     cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
                         cc.getMaxTime(),band,*this);
-    cvw.solve(CV_ONE_STEP,cc.getResTol());
+    cvw.solveDAE(CV_ONE_STEP,cc.getResTol());
     cvw.destroy();
 
 }
@@ -259,17 +259,6 @@ void StagFlow::ssolve(CamControl& cc){
     CVodeWrapper cvw;
 
     for(int i=0; i<cc.getNumIterations(); i++){
-        /*
-         *solve momentum
-         */
-        cout << "solving momentum\n";
-        eqn_slvd = nCells;
-        band = 1;
-        extractMomentum(seg_soln_vec);
-        cvw.init(seg_eqn,seg_soln_vec,cc.getFlowAbsTol(),cc.getFlowRelTol(),
-                        cc.getMaxTime(),band,*this);
-        cvw.solve(CV_ONE_STEP,1e-03);
-        cvw.destroy();
 
         /*
          *integrate species
@@ -282,7 +271,7 @@ void StagFlow::ssolve(CamControl& cc){
         cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
                         cc.getMaxTime(),band,*this);
         //cvw.setMaxStep(1e-04);
-        cvw.solve(CV_ONE_STEP,1e-03);
+        cvw.solveDAE(CV_ONE_STEP,1e-03);
         mergeSpeciesVector(&seg_soln_vec[0]);
         reportToFile(cc.getMaxTime(),&solvect[0]);
         cvw.destroy();
@@ -297,7 +286,7 @@ void StagFlow::ssolve(CamControl& cc){
             extractEnergyVector(seg_soln_vec);
             cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
                     cc.getMaxTime(),band,*this);
-            cvw.solve(CV_ONE_STEP,1e-03);
+            cvw.solveDAE(CV_ONE_STEP,1e-03);
             mergeEnergyVector(&seg_soln_vec[0]);
             cvw.destroy();
 
@@ -324,12 +313,12 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f){
     resSp.resize(cellEnd*nSpc,0);
     resT.resize(cellEnd,0);
     resFlow.resize(cellEnd,0);
-    resAxVel.resize(cellEnd,0);
+    
     /*
      *residual evaluation function for Stagflow. Internal
      *cell residuals are evaluated by calling the base class
      *function
-     */
+     */    
     if(eqn_slvd == EQN_ALL){
         if(admin->getEnergyModel() == admin->ADIABATIC){
             saveMixtureProp(y,true,true);
@@ -337,11 +326,10 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f){
         }else{
             saveMixtureProp(y,false,true);
         }
-        updateMomentum(y);        
+        
+        
         updateDiffusionFluxes();
-
-
-        solveAES();
+        
         speciesBoundary(t,y,&resSp[0]);
         energyBoundary(t,y,&resT[0]);
 
@@ -349,45 +337,28 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f){
         speciesResidual(t,y,&resSp[0]);
         energyResidual(t,y,&resT[0]);
         
-        momentumResidual(t,y,&resFlow[0]);
+        
         
         for(int i=0; i<cellEnd; i++){
             for(int l=0; l<nSpc; l++){
                 f[i*nVar+l] = resSp[i*nSpc+l];
                 
             }                        
-            f[i*nVar+ptrT] = resT[i];
-            f[i*nVar+ptrG] = resFlow[i];
+            f[i*nVar+ptrT] = resT[i];            
             
         }        
     }else{
         if(eqn_slvd == EQN_SPECIES){
             mergeSpeciesVector(y);
-            saveMixtureProp(&solvect[0],false,true);
-            updateFlow(&solvect[0]);
-            updateMomentum(&solvect[0]);
-            updateDiffusionFluxes();
-            //solveAES();
+            saveMixtureProp(&solvect[0],false,true);                        
+            updateDiffusionFluxes();            
             speciesBoundary(t,y,f);
             speciesResidual(t,y,f);
-        }else if(eqn_slvd == EQN_CONTINUITY) {
-            mergeContinuity(y);
-            saveMixtureProp(&solvect[0],false,true);
-            updateFlow(&solvect[0]);
-            continuity(t,y,f);
-        }else if(eqn_slvd == EQN_MOMENTUM){
-            mergeMomentum(y);
-            saveMixtureProp(&solvect[0],false,true);
-            updateMomentum(&solvect[0]);
-            //solveAES();
-            momentumResidual(t,y,f);
         }else if(eqn_slvd==EQN_ENERGY){
             mergeEnergyVector(y);
-            saveMixtureProp(&solvect[0],true,false);
-            updateMomentum(&solvect[0]);
+            saveMixtureProp(&solvect[0],true,false);            
             updateDiffusionFluxes();
-            updateThermo();
-            //solveAES();
+            updateThermo();         
             energyResidual(t,y,f);
             energyBoundary(t,y,f);
 
@@ -396,157 +367,8 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f){
 
 
 }
-/*
- *function called by newton solver
- */
-int StagFlow::eval(doublereal* y, doublereal* ydot){
-    /*
-     *save the dependent variables
-     */
-    saveAxVel(y);
-    /*
-     *mass flow residual
-     */    
-    continuity(0.0,y,ydot);
-    return 0;
-}
 
 
-void StagFlow::solveAES(){
-
-//    for(int i=0; i<cellEnd; i++)
-//        alg_solvect[i] = m_u[i];
-    newton->init(alg_nEqn,alg_solvect,tol_res,alg_band,*this);
-    newton->solve();    
-    saveNewton();
-    newton->destroy();
-//    for(int i=0; i<alg_nEqn; i++)
-//        cout << alg_solvect[i] << endl;
-    
-}
-/*
- *save newton results
- */
-void StagFlow::saveNewton(){
-    for(int i=0; i<cellEnd; i++){
-        m_u[i] = alg_solvect[i];        
-    }
-}
-/*
- *mass flow residual: node storage
- */
-void StagFlow::continuity(const doublereal& time, doublereal* y,
-                                                doublereal* f){
-/*
- *This is for Newton Solver
- */
-    //---------------------------------------------------------------
-    //  Fuel inlet
-    //---------------------------------------------------------------
-    f[0] = fuel.Vel - m_u[0];
-    //---------------------------------------------------------------
-    //  Interior mesh
-    //---------------------------------------------------------------
-    doublereal grad, phiP,phiE,phiW;
-    for(int i=iMesh_s; i<iMesh_e; i++){
-        phiP = m_rho[i]*m_u[i];
-        phiE = m_rho[i+1]*m_u[i+1];
-        phiW = m_rho[i-1]*m_u[i-1];
-
-        grad = (m_u[i] > 0) ? (phiP-phiW)/dz[i] : (phiE-phiP)/dz[i];
-        //grad = (phiE-phiP)/dz[i];
-
-        f[i] = grad + 2*m_rho[i]*m_G[i];
-
-    }
-
-    //---------------------------------------------------------------
-    //   Last cell
-    //---------------------------------------------------------------
-    f[iMesh_e] = oxid.Vel - m_u[iMesh_e];
-
-/*
- *ODE implementation
- */
-//    //---------------------------------------------------------------
-//    //  Fuel inlet
-//    //---------------------------------------------------------------
-//    f[0] = 0;
-//    //---------------------------------------------------------------
-//    //  Interior mesh
-//    //---------------------------------------------------------------
-//    doublereal grad, sh_e, sh_w;
-//    doublereal muAvg_e,muAvg_w, delta;
-//    doublereal rhs1, rhs2, rhs3, rhs4;
-//    doublereal fourthird = 4.0/3.0;
-//    for(int i=iMesh_s; i<iMesh_e; i++){
-//        //east
-//        muAvg_e = 0.5*(m_mu[i]+m_mu[i+1]);
-//        delta = 0.5*(dz[i]+dz[i+1]);
-//        sh_e = muAvg_e*(m_u[i+1]-m_u[i])/delta;
-//
-//        muAvg_w = 0.5*(m_mu[i]+m_mu[i-1]);
-//        delta = 0.5*(dz[i]+dz[i-1]);
-//        sh_w = muAvg_w*(m_u[i]-m_u[i-1])/delta;
-//
-//        doublereal Ge = 0.5*(m_G[i]+m_G[i+1]);
-//        doublereal Gw = 0.5*(m_G[i]+m_G[i-1]);
-//
-//        doublereal muGe = muAvg_e*Ge;
-//        doublereal muGw = muAvg_w*Gw;
-//
-//        rhs1 = (fourthird/m_rho[i])*(muGe-muGw)/dz[i];
-//
-//        rhs2 = (2*m_mu[i]/m_rho[i])*(Ge-Gw)/dz[i];
-//
-//        rhs3 = (fourthird/m_rho[i])*(sh_e-sh_w)/dz[i];
-//
-//        rhs4 = (m_u[i] > 0) ? (m_u[i] -m_u[i-1]) : (m_u[i+1] - m_u[i]);
-//        rhs4 *= (m_u[i]/dz[i]);
-//
-//
-//        f[i] = -rhs1 + rhs2 + rhs3 - rhs4;
-//
-//    }
-//
-//    //---------------------------------------------------------------
-//    //   Last cell
-//    //---------------------------------------------------------------
-//    f[iMesh_e] = 0;
-//
-
-
-}
-/*
- *momentum residual
- */
-void StagFlow::momentumResidual(const doublereal& time, doublereal* y,
-                                                     doublereal* f){
-
-    eigen = -m_rho[iMesh_e]*100*100;
-    //---------------------------------------------------------------
-    //  Inlet cell
-    //---------------------------------------------------------------
-    f[0] = 0;
-
-    //---------------------------------------------------------------
-    //  Interior mesh
-    //---------------------------------------------------------------
-    doublereal shear, velGrad,pgrad;
-    for(int i=iMesh_s; i<iMesh_e; i++){
-
-        shear = (m_shear[i+1]-m_shear[i])/(m_rho[i]*dz[i]);
-        //velGrad = m_u[i]*(m_G[i+1]-m_G[i-1])/(2*dz[i]);
-        velGrad = ( m_u[i] > 0 )? (m_G[i]-m_G[i-1]) : (m_G[i+1]-m_G[i]) ;
-        velGrad *= (m_u[i]/dz[i]);
-        pgrad = eigen/m_rho[i];
-        f[i] = shear - velGrad - (m_G[i]*m_G[i]) - pgrad;
-    }
-    //---------------------------------------------------------------
-    //  Last cell
-    //---------------------------------------------------------------
-    f[iMesh_e] = 0;
-}
 /*
  *species boundary condition implementation
  */
@@ -572,13 +394,15 @@ void StagFlow::speciesBoundary(const doublereal& t, doublereal* y, doublereal* f
      // Right Boundary Settings
      //
      //---------------------------------------------------
-
     for(int l=0; l<nSpc; l++){
-
-        convection = m_u[iMesh_e]*dydx(s_mf(iMesh_e,l),oxid.Species[l],dz[iMesh_e]);
-        diffusion = dydx(s_jk(iMesh_e,l),0,dz[iMesh_e])/m_rho[iMesh_e];
-        f[iMesh_e*nSpc+l] = convection+diffusion;
+        f[iMesh_e*nSpc+l] = -m_u[iMesh_e]*dydx(s_mf(iMesh_e,l),s_mf(iMesh_e-1,l),dz[iMesh_e]);
     }
+//    for(int l=0; l<nSpc; l++){
+//
+//        convection = m_u[iMesh_e]*dydx(s_mf(iMesh_e,l),oxid.Species[l],dz[iMesh_e]);
+//        diffusion = dydx(s_jk(iMesh_e,l),0,dz[iMesh_e])/m_rho[iMesh_e];
+//        f[iMesh_e*nSpc+l] = convection+diffusion;
+//    }
 
 }
 /*
@@ -598,68 +422,154 @@ void StagFlow::energyBoundary(const doublereal& t, doublereal* y, doublereal* f)
      // Right Boundary Settings
      //
      //---------------------------------------------------
-    f[iMesh_e] = 0;
+    if(admin->getEnergyModel() == admin->ADIABATIC){
+
+        f[iMesh_e] = -m_u[iMesh_e]*(dydx(m_T[iMesh_e],m_T[iMesh_e-1],dz[iMesh_e]));
+
+    }else{
+
+        f[iMesh_e] = 0;
+    }
     
 }
+
 /*
- *calculate the eigen value pressure gradient
+ *calculate the axial velocity
  */
-void StagFlow::calcEigenValuePGad(){
-    eigen = -(m_shear[iMesh_e]/dz[iMesh_e]) -
-            (m_G[iMesh_e]*m_G[iMesh_e]*m_rho[iMesh_e]) -
-        (m_u[iMesh_e]*m_rho[iMesh_e]*(oxid.rVelGrad-m_G[iMesh_e])/dz[iMesh_e]);
-   
-}
-/*
- *save axial velocity
- */
-void StagFlow::saveAxVel(doublereal* y){
-    for(int i=0; i<cellEnd; i++){
-        m_u[i] = y[i*alg_nVar+ptrF];
-    }
-}
-/*
- *update flow
- */
-void StagFlow::updateFlow(doublereal* y){
-    m_u.resize(cellEnd,0);
-    m_G.resize(cellEnd,0);
-    for(int i=0; i<cellEnd; i++){
-        m_u[i] = y[i*nVar+ptrF];
-        m_G[i] = y[i*nVar+ptrG];
-    }
-}
-/*
- *update momentum
- */
-void StagFlow::updateMomentum(doublereal* y){
-    //save the radial velocity gradient (Vr/r)
-    m_G.resize(cellEnd,0);
-    for(int i=0; i<cellEnd; i++){
-        m_G[i] = y[i*nVar+ptrG];
-    }
-    //shear calculation
-    m_shear.resize(cellEnd+1,0);
-    doublereal delta,muAvg, grad;
-    for(int i= iMesh_s; i<iMesh_e; i++){
+void StagFlow::calcFlowField(const doublereal& time, doublereal* y){
+
         
-        delta = (dz[i]+dz[i-1])/2.0;
-        muAvg = (m_mu[i]+m_mu[i-1])/2.0;
-        if((i-1) == 0)muAvg = m_mu[i];
-        
-        grad = dydx(m_G[i],m_G[i-1],delta);
-        m_shear[i] = muAvg*grad;
-        
+    /*
+     *prepare
+     */
+    if(eqn_slvd == EQN_ALL){
+        saveMixtureProp(y,true,true);        
+    }else{
+        if(eqn_slvd == EQN_SPECIES){
+            mergeSpeciesVector(y);
+            saveMixtureProp(&solvect[0],false,true);
+        }else if(eqn_slvd == EQN_ENERGY){
+            mergeEnergyVector(y);
+            saveMixtureProp(&solvect[0],true,true);
+        }
     }
 
-    /*
-     *oxidizer inlet
-     */
-    delta = 0.5*(dz[iMesh_e]+dz[iMesh_e-1]);
-    muAvg = (m_mu[iMesh_e]+m_mu[iMesh_e-1])/2.0;
-    grad = dydx(m_G[iMesh_e],m_G[iMesh_e-1],delta);
-    m_shear[iMesh_e] = muAvg*grad;
+
+
+//    doublereal resG,resFlow, res;
+//    do {
+//        for(int n=0; n<500000; n++){
+//            resFlow = calcVelocity();
+//        }
+//        //for(int n=0; n<10; n++){
+//        //    resG = calcMomentum();
+//        //}
+//        res = resFlow;
+//    }while(res > 1e-03);
+    //------------------------------------------------------------
+    //           Inlet face
+    //----------------------------------------------------------
+    m_flow[0] = fuel.FlowRate; // this is the vanishing cell
+    //----------------------------------------------------------
+    //           Exit face
+    //------------------------------------------------------------
+    m_flow[iMesh_e] = 0.0;   // this is the vanishing cell
+    vector<doublereal> flow;
+    calcVelocity(flow);
+    for(int i=1; i<iMesh_e; i++){
+        m_flow[i] = flow[i-1];
+    }
+    for(int i=0; i<cellEnd; i++){
+        cout << (m_flow[i]/m_rho[i]) << endl;
+    }
+
+    cout << "Flowfield done\n" << endl;
+    int dd; cin >> dd;
+}
+
+doublereal StagFlow::calcVelocity(vector<doublereal>& u){
     
+    vector<doublereal> r;
+    u.resize(tdmaFlow.b.size(),0);
+    r = u;
+    /*
+     *right hand side for tridiagonal matrix
+     */
+    //first cell
+    int i = 1;
+    doublereal rho_e = 0.5*(m_rho[i+1]+m_rho[i]);
+    doublereal rho_w = m_rho[i-1];
+    doublereal Ge = 0.5*(m_G[i]+m_G[i+1]);
+    doublereal Gw = m_G[i-1];
+    doublereal rhoGe = rho_e*Ge;
+    doublereal rhoGw = rho_w*Gw;
+    r[i-1] = 2*strainRate*(rhoGe - rhoGw) +
+            (2*fuel.FlowRate/dz[i]);
+    //last cell
+    i = iMesh_e-1;
+    rho_e = m_rho[i+1];
+    rho_w = 0.5*(m_rho[i]+m_rho[i-1]);
+    Ge = m_G[i+1];
+    Gw = 0.5*(m_G[i]+m_G[i-1]);
+    rhoGe = rho_e*Ge;
+    rhoGw = rho_w*Gw;
+    r[i-1] = 2*strainRate*(rhoGe-rhoGw);
+    //other cells
+    for( i = 2; i<iMesh_e-1; i++){
+        rho_e = 0.5*(m_rho[i+1]+m_rho[i]);
+        rho_w = 0.5*(m_rho[i]+m_rho[i-1]);
+        Ge = 0.5*(m_G[i]+m_G[i+1]);
+        Gw = 0.5*(m_G[i]+m_G[i-1]);
+        rhoGe = rho_e*Ge;
+        rhoGw = rho_w*Gw;
+        r[i-1] = 2*strainRate*(rhoGe-rhoGw);
+    }
+
+    CamMath cm;
+    cm.TDMA(tdmaFlow.a,tdmaFlow.b,tdmaFlow.c,r,u);
+
+
+	return 0;
+}
+/*
+ *calculate the momentum
+ */
+doublereal StagFlow::calcMomentum(){
+    vector<doublereal> g_old = m_G;
+    doublereal diff, resid;
+    resid = 0;
+    //------------------------------------------------
+    //          Inlet boundary ie. the fuel side (hot edge)
+    //------------------------------------------------
+    m_G[0] = sqrt(m_rho[iMesh_e]/m_rho[0]);
+    //-------------------------------------------------
+    //      Interior cells
+    //-----------------------------------------------
+    doublereal mu_e, mu_w, Fe, Fw, DE, DW, dEP, dWP, rho_e, rho_w, u_e, u_w;
+
+    for(int i=iMesh_s; i<iMesh_e; i++){
+        mu_e = 0.5*(m_mu[i+1]+m_mu[i]);
+        mu_w = 0.5*(m_mu[i-1]+m_mu[i]);
+        dEP = 0.5*(dz[i]+dz[i+1]);
+        dWP = 0.5*(dz[i]+dz[i-1]);
+        DE = mu_e/(dz[i]*dEP);
+        DW = mu_w/(dz[i]*dWP);
+        rho_e = 0.5*(m_rho[i]+m_rho[i+1]);
+        rho_w = 0.5*(m_rho[i]+m_rho[i-1]);
+        u_e = 0.5*(m_u[i]+m_u[i+1]);
+        u_w = 0.5*(m_u[i]+m_u[i-1]);
+        Fe = u_e*rho_e/(2*dz[i]);
+        Fw = u_w*rho_w/(2*dz[i]);
+        m_G[i] = (m_G[i-1]*(Fw+DW) - m_G[i+1]*(Fe-DE))/(DE+DW);
+        diff = m_G[i] - g_old[i];
+        resid += diff*diff;
+    }
+    //-----------------------------------------------
+    //          Last cell (wall) gradient is zero
+    //-----------------------------------------------
+    m_G[iMesh_e] = m_G[iMesh_e-1];
+
+    return sqrt(resid);
 }
 /*
  *update diffusion fluxes
@@ -667,28 +577,30 @@ void StagFlow::updateMomentum(doublereal* y){
 void StagFlow::updateDiffusionFluxes(){
 
     CamResidual::updateDiffusionFluxes();
+    for(int l=0; l<nSpc; l++)
+        s_jk(iMesh_e+1,l)=0.0;
     /*
      *flux at the oxidizer inlet
      */
-    doublereal delta = 0.5*(dz[iMesh_e]+dz[iMesh_e-1]);
-    vector<doublereal> flx;
-    flx.resize(nSpc,0);
-    //preperation for flux correction
-    doublereal jCorr = 0;
-    for(int l=0; l<nSpc; l++){
-        doublereal grad = dydx(s_mf(iMesh_e,l),s_mf(iMesh_e-1,l),delta);
-        doublereal avgRho = 0.5*(m_rho[iMesh_e]+m_rho[iMesh_e-1]);
-        doublereal avgD = (s_Diff(iMesh_e,l)+s_Diff(iMesh_e-1,l))/2.0;
-        flx[l] = -avgD*avgRho*grad;
-
-        jCorr += flx[l];
-
-    }
-   //correction
-    for(int l=0; l<nSpc; l++){
-        flx[l] -= s_mf(iMesh_e,l)*jCorr;
-        s_jk(iMesh_e,l) = flx[l];
-    }
+//    doublereal delta = 0.5*(dz[iMesh_e]+dz[iMesh_e-1]);
+//    vector<doublereal> flx;
+//    flx.resize(nSpc,0);
+//    //preperation for flux correction
+//    doublereal jCorr = 0;
+//    for(int l=0; l<nSpc; l++){
+//        doublereal grad = dydx(s_mf(iMesh_e,l),s_mf(iMesh_e-1,l),delta);
+//        doublereal avgRho = 0.5*(m_rho[iMesh_e]+m_rho[iMesh_e-1]);
+//        doublereal avgD = (s_Diff(iMesh_e,l)+s_Diff(iMesh_e-1,l))/2.0;
+//        flx[l] = -avgD*avgRho*grad;
+//
+//        jCorr += flx[l];
+//
+//    }
+//   //correction
+//    for(int l=0; l<nSpc; l++){
+//        flx[l] -= s_mf(iMesh_e,l)*jCorr;
+//        s_jk(iMesh_e,l) = flx[l];
+//    }
 
 }
 /*

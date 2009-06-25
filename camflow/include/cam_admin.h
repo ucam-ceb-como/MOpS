@@ -51,6 +51,7 @@ namespace Camflow{
     class CamAdmin : public CamConc {
         doublereal T, T_wall;     //temperature in case of isothermal operation
         doublereal pre;   //constant pressure system
+        doublereal strain; // strain rate
         int energyModel;
         int speciesOut;  //identifier for species output mass/mole
         int repSch;     //report schedule
@@ -73,6 +74,9 @@ namespace Camflow{
 
         //set the operating pressure
         void setPressure(doublereal p_);
+
+        //set strain rate
+        void setStrainRate(doublereal sr);
 
         //set the wall temperature
         void setWallTemp(doublereal Tw);
@@ -102,6 +106,9 @@ namespace Camflow{
         
         //return the pressure
         doublereal getPressure()const;
+
+        //return the strain rate
+        doublereal getStrainRate() const;
 
         //return the energy model
         int getEnergyModel() const;

@@ -41,6 +41,7 @@ namespace Camflow{
         void setMaxStep(doublereal maxStep);
         doublereal& solve(int stopMode);
         void solve(int stopMode, doublereal resTol);
+        void solveDAE(int stopMode, doublereal resTol);
         void calcResNorm();
         void destroy();
     };

@@ -88,11 +88,7 @@ void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
 
 
     nSpc = mech.SpeciesCount();
-    nVar = nSpc+1; //species + temperature + massflow + residence time
-    if(sootMom->active()){
-        nMoments = sootMom->getNumMoments();
-        nVar += nMoments;
-    }
+    nVar = nSpc+1; //species + temperature
     nEqn = nVar;
     ptrT = nVar-1;
     
@@ -103,31 +99,23 @@ void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
     
     ca.getLeftBoundary(cb);
     getInletMassFrac(cb,solvect);
-    //set the relative tolerance for species
-    //rTol.resize(solvect.size(),cc.getSpeciesRelTol());
-    //set the absolute tolerance for species
-    //aTol.resize(solvect.size(),cc.getSpeciesAbsTol());
+    //set the initial pressure
+    opPre = ca.getPressure();
 
+    
     /*
      *initialize the solution vector with species
      *mass fractions
      */
     camMixture->SetMassFracs(solvect);
-    /*
-     *initialize the solution vector with moments
-     *if soot moments are active
-     */
-    
-    if(sootMom->active()) sootMom->initMoments(mech,solvect);
-//    for(int i=0; i<nMoments; i++){
-//        rTol.push_back(1.0e-06);
-//        aTol.push_back(1.0e-06);
-//    }
-    
-
     //fill the temparature
     doublereal temp = cb.getTemperature();
     camMixture->SetTemperature(temp);
+
+    real avgMolWt = camMixture->getAvgMolWt();
+    rho = avgMolWt*opPre/(R*temp);
+    camMixture->SetMassDensity(rho);
+    camMixture->GetConcs(solvect);
     solvect.push_back(temp);
 //    rTol.push_back(cc.getTempRelTol());
 //    aTol.push_back(cc.getTempAbsTol());
@@ -136,8 +124,6 @@ void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
         throw CamError("number of solution variable differ from the vector size");
     }
 
-    //set the operating pressure
-    opPre = ca.getPressure();
 
     reporter->header("BATCH ");
     reporter->problemDescription(cb,*this);
@@ -203,36 +189,24 @@ void Batch::updateMixture(const doublereal& x, doublereal* y){
      *temperature and density
      */
     doublereal tmptr;
-    vector<doublereal> massfracs;
-    massfracs.resize(nSpc,0.0);
+    vector<doublereal> molefracs;
+    molefracs.resize(nSpc,0.0);
+    doublereal cb = 0;
     for (int l = 0; l < nSpc; l++) {
-        massfracs[l] = y[l];
+        cb += y[l];
     }
-    camMixture->SetMassFracs(massfracs);
+    for(int l=0; l< nSpc; l++){
+        molefracs[l] = y[l]/cb;
+    }
+    //camMixture->SetMassFracs(massfracs);
+    camMixture->SetFracs(molefracs);
     if(admin->getEnergyModel() == admin->USERDEFINED)
         tmptr = profile->getUserDefTemp(x);
     else
         tmptr = y[ptrT];
     camMixture->SetTemperature(tmptr);
 
-    /*
-     *evaluate density and hence the velocity
-     */
-    real avgMolWt = camMixture->getAvgMolWt();
-    rho = avgMolWt*opPre/(R*tmptr);
-    camMixture->SetMassDensity(rho);
-    /*
-     *calculate the moment rates
-     */
-    if(sootMom->active()){
-        vector<doublereal> conc,moments;
-        camMixture->GetConcs(conc);
-        momRates.resize(nMoments,0.0);
-        for(int r=0; r<nMoments; r++)
-            moments.push_back(y[r+nSpc]);
-        sootMom->rateAll(conc,moments,tmptr,opPre,momRates);
-    }
-
+    opPre = cb*R*tmptr;
 
 }
 //species residual definition
@@ -240,7 +214,7 @@ void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f){
 
     camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
     for (int l = 0; l < nSpc; l++) {
-        f[l]= wdot[l]*(*spv)[l]->MolWt()/rho;
+        f[l]= wdot[l];
     }
 
 }
@@ -285,6 +259,7 @@ void Batch::energyResidual(const doublereal& x, doublereal* y, doublereal* f){
 void Batch::header(){
     headerData.clear();
     headerData.push_back("time");
+    headerData.push_back("pre");
     headerData.push_back("rho");
     headerData.push_back("T");
     for (int l = 0; l < nSpc; l++) {
@@ -294,14 +269,6 @@ void Batch::header(){
     /*
      *additional output if soot moment are active
      */
-    if(sootMom->active()){
-       for(int m=0; m<nMoments; m++){
-           stringstream int2str;
-           int2str << m;
-           string moment = "M$"+ int2str.str();
-           headerData.push_back(moment);
-       }
-    }
 
 }
 //report the solution
@@ -339,6 +306,7 @@ void Batch::reportToFile(doublereal time, doublereal* soln){
     vector<doublereal> data;
     data.clear();
     data.push_back(time);
+    data.push_back(opPre);
     data.push_back(rho);
     data.push_back(soln[ptrT]);
 
@@ -355,25 +323,20 @@ void Batch::reportToFile(doublereal time, doublereal* soln){
         }
 
     }else{
-        sum =0;
+        vector<doublereal> massfracs;
+        camMixture->GetMassFractions(massfracs);
+        sum =0.0;
         for (int l = 0; l < nSpc; l++) {
-            if(fabs(soln[l]) > 1e-99)
-                data.push_back(fabs(soln[l]));
+            if(fabs(massfracs[l])> 1e-99)
+                data.push_back(fabs(massfracs[l]));
             else
                 data.push_back(0.0);
-            sum += soln[l];
+            sum += massfracs[l];
         }
     }
     data.push_back(sum);
 
-    /*
-     *additional output in case soot moments
-     */
-    if(sootMom->active()){
-        for(int m=0; m<nMoments;m++){
-            data.push_back(soln[nSpc+m]);
-        }
-    }
+  
 
     reporter->writeStdFileOut(data);
 

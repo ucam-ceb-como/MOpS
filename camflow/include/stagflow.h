@@ -49,11 +49,14 @@
 #include "cam_profile.h"
 #include "cam_setup.h"
 #include "cam_profile.h"
-#include "kinsol_wrapper.h"
 namespace Camflow{
     class StagFlow : public CamSetup {
 
     public:
+        typedef struct {
+            vector<doublereal> a,b,c;
+        }tdma_coeff;
+
         StagFlow(){}
         virtual ~StagFlow(){}
 
@@ -70,26 +73,18 @@ namespace Camflow{
          */
         void ssolve(CamControl &cc);
         /*
-         *solve the algebraic equation system
-         */
-        void solveAES();
-        /*
          *function called by the solver (DAE and ODEs)
          */
         int eval(doublereal t, doublereal* y, doublereal *ydot, bool jacEval);
         void residual(const doublereal& t, doublereal* y, doublereal* f);
+
         /*
-         *function called by newton solver
+         *calculate axial velocity
          */
-        int eval(doublereal* y, doublereal* ydot);
-        /*
-         *mass flow residual
-         */
-        void continuity(const doublereal& time, doublereal* y, doublereal *f);
-        /*
-         *momentum residual
-         */
-        void momentumResidual(const doublereal& time, doublereal* y, doublereal *f);
+        void calcFlowField(const doublereal& time, doublereal* y);
+        doublereal calcVelocity(vector<doublereal>& flow);
+        doublereal calcMomentum();
+      
         /*
          *species boundary condition
          */
@@ -99,43 +94,21 @@ namespace Camflow{
          */
         void energyBoundary(const doublereal& t, doublereal* y, doublereal* f);
         /*
-         *calculate eigen value
-         */
-        void calcEigenValuePGad();
-        /*
          *initialize the solution vector
          */
         void initSolutionVector(CamControl &cc);
         /*
          *initialize the mass flow
          */
-        void initMassFlow(const doublereal fLeft, const doublereal fRight,
-                    vector<doublereal>& soln);
+        void initMassFlow();
         /*
          *initialize momentum
          */
-        void initMomentum(const doublereal fLeft, const doublereal fRight,
-                    vector<doublereal>& soln);
-        /*
-         *update the shear rate
-         */
-        void updateMomentum(doublereal* y);
-        /*
-         *update flow: save the velocities
-         */
-        void updateFlow(doublereal* y);
+        void initMomentum();
         /*
          *update diffusion fluxes
          */
         void updateDiffusionFluxes();
-        /*
-         *save the axial velocity
-         */
-        void saveAxVel(doublereal* y);
-        /*
-         *save the result of newton iteration
-         */
-        void saveNewton();
         /*
          *report functions
          */
@@ -146,15 +119,17 @@ namespace Camflow{
     private:
         void readVelocity();
         inletStruct fuel, oxid;
-        int nCells;
+        tdma_coeff tdmaFlow;
+        int nCells;        
         /*
          *Newton solver variables
          */
         int alg_nEqn, alg_nVar, alg_band;
         vector<doublereal> alg_solvect;        
         vector<doublereal> vFlow;
-        KinsolWrapper *newton;
+        //KinsolWrapper *newton;
         doublereal tol_res, eigen;
+        doublereal strainRate;
     };
 }
 

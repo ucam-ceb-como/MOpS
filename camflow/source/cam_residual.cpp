@@ -132,10 +132,8 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo, bool mom){
     vector<doublereal> mf; //mas fraction
     vector<doublereal> temp, htemp, cptemp;  //diffusion coefficient
     doublereal temperature, dens;
-
-    if(sootMom->active()) sootMom->clearRates(cellEnd);
-
-    for(int i=cellBegin; i< cellEnd;i++){
+    
+    for(int i=cellBegin; i< cellEnd;i++){        
         mf.clear();
         for(int l=0; l<nSpc; l++){
             mf.push_back(y[i*nVar+l]);
@@ -148,7 +146,7 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo, bool mom){
         dens = opPre*camMixture->getAvgMolWt()/(R*temperature);
         camMixture->SetMassDensity(dens);
         camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
-
+        
         m_rho.push_back(dens);
         //store the diffusion coefficient
         temp = camMixture->getMixtureDiffusionCoeff(opPre);
@@ -168,30 +166,6 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo, bool mom){
             //store the specific heat capacity (J/kg K)
             m_cp.push_back(camMixture->getSpecificHeatCapacity());
         }
-        if(sootMom->active()){
-            //get the concentrations
-            vector<doublereal> conc;
-            camMixture->GetConcs(conc);
-
-            /*
-             *moment concetrations
-             */
-            vector<doublereal> concMomts;
-            concMomts.clear();
-            for(int l=0; l<nMoments; l++){
-                concMomts.push_back(exp(y[i*nVar+l+nSpc]));
-            }
-
-            //nulceation rate
-            
-            //sootMom->sootReactions(i,conc,concMomts,nSpc,temperature,opPre);
-            vector<doublereal> dummy;
-            dummy.resize(nMoments,0.0);
-            sootMom->rateAll(conc,concMomts,temperature,opPre,dummy,i);
-            
-
-
-        }
         for(int l=0; l<nSpc; l++){
             s_Wdot(i,l)=wdot[l];
             s_Diff(i,l)=temp[l];
@@ -206,7 +180,7 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo, bool mom){
 
 
     }
-    if(sootMom->active()) sootMom->addRates(cellEnd,s_Wdot);
+
 }
 
 
@@ -357,11 +331,16 @@ void CamResidual::mergeMomentum(doublereal* vec){
         solvect[i*nVar+ptrG] = vec[i];
 }
 
-void CamResidual::massMatrix(doublereal** M){
-    cout << "Base class function: nothing implemented\n";
-}
+//void CamResidual::massMatrix(doublereal** M){
+//    cout << "Base class function: nothing implemented\n";
+//}
 
 int CamResidual::eval(doublereal* y, doublereal* ydot){
     cout << "Base class function nothing to do\n";
     return 0;
+}
+
+//flow field evaluation
+void CamResidual::calcFlowField(const doublereal& time, doublereal* y){
+    throw CamError("Base class function calcFlowField nothing to do\n");
 }

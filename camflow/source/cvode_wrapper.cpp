@@ -90,6 +90,24 @@ void CVodeWrapper::solve(int stopMode, doublereal resTol){
 
 }
 
+void CVodeWrapper::solveDAE(int stopMode, doublereal resTol){
+
+    int flag;    
+    do{
+        //solve the algebraic equation system
+        reacPtr->calcFlowField(currentTime,NV_DATA_S(y));
+        //call Cvode to solve the ODE
+        flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);
+        if(flag < 0){
+            cout << "Cvode Integration error\n";
+        }else{
+            CVodeGetDky(cvode_mem,currentTime,1,yPrime);
+            calcResNorm();
+            reacPtr->report(currentTime,NV_DATA_S(y),resNorm);
+        }
+    }while(resNorm > resTol);
+}
+
 void CVodeWrapper::destroy(){
     CVodeFree(&cvode_mem);
     N_VDestroy(y);
