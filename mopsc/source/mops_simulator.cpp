@@ -430,16 +430,12 @@ void Simulator::PostProcess()
     // once, as they are the same for all runs.
     readGasPhaseDataPoint(fin, mech, achem[0], echem[0], true);
     readParticleDataPoint(fin, pmech, astat[0], estat[0], true);
-	if (mech.ParticleMech().AggModel()!=Sweep::AggModels::PAH_ID)
-	{ 
-		//if loop added by ms785
-	   readGasRxnDataPoint(fin, mech,
+    readGasRxnDataPoint(fin, mech,
                         agprates[0], egprates[0],
                         agpfwdrates[0], egpfwdrates[0],
                         agprevrates[0], egprevrates[0],
                         agpwdot[0], egpwdot[0],
                         true);
-	}
     readPartRxnDataPoint(fin, mech.ParticleMech(),
                          apprates[0], epprates[0],
                          appwdot[0], eppwdot[0],
@@ -514,37 +510,31 @@ void Simulator::PostProcess()
                         // Read output point for all iterations for step.
                         readGasPhaseDataPoint(fin, mech, achem[step], echem[step], true);
                         readParticleDataPoint(fin, pmech, astat[step], estat[step], true);
-						if (mech.ParticleMech().AggModel()!=Sweep::AggModels::PAH_ID)
-						{ //if loop added by ms785
-							 readGasRxnDataPoint(fin, mech,
+
+                        readGasRxnDataPoint(fin, mech,
                                             agprates[step], egprates[step],
                                             agpfwdrates[step], egpfwdrates[step],
                                             agprevrates[step], egprevrates[step],
                                             agpwdot[step], egpwdot[step],
                                             true);
-						}
 
                         readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], true);
                         readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                         readPartTrackPoint(fin, pmech, ptrack[irun][step]);
                     }
-				} else  {
-
-
-					// Read single output point for step.
-				    readGasPhaseDataPoint(fin, mech, achem[step], echem[step], true);
+                }
+                else  {
+                    // Read single output point for step.
+                    readGasPhaseDataPoint(fin, mech, achem[step], echem[step], true);
                     readParticleDataPoint(fin, pmech, astat[step], estat[step], true);
-									
 
-					if (mech.ParticleMech().AggModel()!=Sweep::AggModels::PAH_ID)
-					{ //if loop added by ms785
-						 readGasRxnDataPoint(fin, mech,
+                    readGasRxnDataPoint(fin, mech,
                                         agprates[step], egprates[step],
                                         agpfwdrates[step], egpfwdrates[step],
                                         agprevrates[step], egprevrates[step],
                                         agpwdot[step], egpwdot[step],
                                         true);
-					}
+
                     readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], true);
                     readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                     readPartTrackPoint(fin, pmech, ptrack[irun][step]);
@@ -706,19 +696,21 @@ void Simulator::outputSensitivity(const Reactor &r) const
 // species molar production rates to the binary output file.
 void Simulator::outputGasRxnRates(const Reactor &r) const
 {
-    // Calculate the rates-of-progress.
-    static fvector rop, rfwd, rrev;
-    r.Mech()->Reactions().GetRatesOfProgress(*r.Mixture(), rop, rfwd, rrev);
+    if(r.Mech()->ReactionCount() > 0) {
+        // Calculate the rates-of-progress.
+        static fvector rop, rfwd, rrev;
+        r.Mech()->Reactions().GetRatesOfProgress(*r.Mixture(), rop, rfwd, rrev);
 
-    // Calculate the molar production rates.
-    static fvector wdot;
-    r.Mech()->Reactions().GetMolarProdRates(rop, wdot);
+        // Calculate the molar production rates.
+        static fvector wdot;
+        r.Mech()->Reactions().GetMolarProdRates(rop, wdot);
 
-    // Write rates to the file.
-    m_file.write((char*)&rop[0], sizeof(rop[0]) * r.Mech()->ReactionCount());
-    m_file.write((char*)&rfwd[0], sizeof(rfwd[0]) * r.Mech()->ReactionCount());
-    m_file.write((char*)&rrev[0], sizeof(rrev[0]) * r.Mech()->ReactionCount());
-    m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->SpeciesCount());
+        // Write rates to the file.
+        m_file.write((char*)&rop[0], sizeof(rop[0]) * r.Mech()->ReactionCount());
+        m_file.write((char*)&rfwd[0], sizeof(rfwd[0]) * r.Mech()->ReactionCount());
+        m_file.write((char*)&rrev[0], sizeof(rrev[0]) * r.Mech()->ReactionCount());
+        m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->SpeciesCount());
+    }
 }
 
 // Writes the particle process rates and the
@@ -766,14 +758,9 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
             // Write particle stats to file.
             me->outputParticleStats(r);
 
-            // Write gas-phase and particle reaction rates
-            // to the file.
-			if (!(r.Mixture()->Particles().ParticleModel()->AggModel()==Sweep::AggModels::PAH_ID))
-			{
-			    // Commented out by ms785 due to problems with flamePP and PAH solver because no gas phase reactions are existing
-				me->outputGasRxnRates(r);
-			}
-            
+            // Write gas-phase reaction rates
+            me->outputGasRxnRates(r);
+
             me->outputPartRxnRates(r);
 
             // Write CPU times to file.
@@ -1126,49 +1113,55 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
 {
     // Check for valid stream.
     if (in.good()) {
-        // Get the reaction rates-of-progress vector.
-        fvector rop(mech.ReactionCount());
-        in.read(reinterpret_cast<char*>(&rop[0]), sizeof(rop[0])*mech.ReactionCount());
+        // Create vectors into which to read the file data
+        const unsigned int rxnCount = mech.ReactionCount();
+        fvector rop(rxnCount);
+        fvector rfwd(rxnCount);
+        fvector rrev(rxnCount);
+        fvector wdot(rxnCount);
 
-        // Get the forward reaction rates vector.
-        fvector rfwd(mech.ReactionCount());
-        in.read(reinterpret_cast<char*>(&rfwd[0]), sizeof(rop[0])*mech.ReactionCount());
+        // Resize vectors passed in as reference arguments.
+        rates_sum.resize(rxnCount, 0.0);
+        rates_sumsqr.resize(rxnCount, 0.0);
+        fwd_rates_sum.resize(rxnCount, 0.0);
+        fwd_rates_sumsqr.resize(rxnCount, 0.0);
+        rev_rates_sum.resize(rxnCount, 0.0);
+        rev_rates_sumsqr.resize(rxnCount, 0.0);
+        wdot_sum.resize(rxnCount, 0.0);
+        wdot_sumsqr.resize(rxnCount, 0.0);
 
-        // Get the reverse reaction rates vector.
-        fvector rrev(mech.ReactionCount());
-        in.read(reinterpret_cast<char*>(&rrev[0]), sizeof(rop[0])*mech.ReactionCount());
+        // Nothing to read or calculate if there are no reactions
+        if(rxnCount > 0) {
+            // Get the reaction rates-of-progress vector.
+            in.read(reinterpret_cast<char*>(&rop[0]), sizeof(rop[0])*mech.ReactionCount());
 
-        // Get the species molar production rates.
-        fvector wdot(mech.SpeciesCount());
-        in.read(reinterpret_cast<char*>(&wdot[0]), sizeof(wdot[0])*mech.SpeciesCount());
+            // Get the forward reaction rates vector.
+            in.read(reinterpret_cast<char*>(&rfwd[0]), sizeof(rop[0])*mech.ReactionCount());
 
-        // Resize vectors.
-        rates_sum.resize(rop.size(), 0.0);
-        rates_sumsqr.resize(rop.size(), 0.0);
-        fwd_rates_sum.resize(rfwd.size(), 0.0);
-        fwd_rates_sumsqr.resize(rfwd.size(), 0.0);
-        rev_rates_sum.resize(rrev.size(), 0.0);
-        rev_rates_sumsqr.resize(rrev.size(), 0.0);
-        wdot_sum.resize(wdot.size(), 0.0);
-        wdot_sumsqr.resize(wdot.size(), 0.0);
+            // Get the reverse reaction rates vector.
+            in.read(reinterpret_cast<char*>(&rrev[0]), sizeof(rop[0])*mech.ReactionCount());
 
-        // Calculate sums and sums of squares (for average and
-        // error calculation).
-        for (unsigned int i=0; i!=rop.size(); ++i) {
-            rates_sum[i] += rop[i];
-            if (calcsqrs) rates_sumsqr[i] += (rop[i] * rop[i]);
-        }
-        for (unsigned int i=0; i!=rfwd.size(); ++i) {
-            fwd_rates_sum[i] += rfwd[i];
-            if (calcsqrs) fwd_rates_sumsqr[i] += (rfwd[i] * rfwd[i]);
-        }
-        for (unsigned int i=0; i!=rrev.size(); ++i) {
-            rev_rates_sum[i] += rrev[i];
-            if (calcsqrs) rev_rates_sumsqr[i] += (rrev[i] * rrev[i]);
-        }
-        for (unsigned int i=0; i!=wdot.size(); ++i) {
-            wdot_sum[i] += wdot[i];
-            if (calcsqrs) wdot_sumsqr[i] += (wdot[i] * wdot[i]);
+            // Get the species molar production rates.
+            in.read(reinterpret_cast<char*>(&wdot[0]), sizeof(wdot[0])*mech.SpeciesCount());
+
+            // Calculate sums and sums of squares (for average and
+            // error calculation).
+            for (unsigned int i=0; i!=rop.size(); ++i) {
+                rates_sum[i] += rop[i];
+                if (calcsqrs) rates_sumsqr[i] += (rop[i] * rop[i]);
+            }
+            for (unsigned int i=0; i!=rfwd.size(); ++i) {
+                fwd_rates_sum[i] += rfwd[i];
+                if (calcsqrs) fwd_rates_sumsqr[i] += (rfwd[i] * rfwd[i]);
+            }
+            for (unsigned int i=0; i!=rrev.size(); ++i) {
+                rev_rates_sum[i] += rrev[i];
+                if (calcsqrs) rev_rates_sumsqr[i] += (rrev[i] * rrev[i]);
+            }
+            for (unsigned int i=0; i!=wdot.size(); ++i) {
+                wdot_sum[i] += wdot[i];
+                if (calcsqrs) wdot_sumsqr[i] += (wdot[i] * wdot[i]);
+            }
         }
     }
 }
@@ -1837,19 +1830,21 @@ void Simulator::writeElementFluxOutput(const std::string &filename,
                                const std::vector<fvector> &agprevrates,
                                const std::vector<fvector> &achem)
 {
-    Mops::fvector atemperatures;
-    for (unsigned int i = 0; i < achem.size(); i++) {
-        atemperatures.push_back(achem.at(i).at(achem.at(i).size() - 3));
-    }
-    FluxAnalyser fa(mech, times, agpfwdrates, agprevrates, atemperatures);
-    for (unsigned int i = 0; i < mech.ElementCount(); i++) {
-        for (unsigned int j = 0; j < m_flux_elements.size(); j++) {
-            if (mech.Elements(i)->Name().compare(Strings::convertToCaps(m_flux_elements.at(j))) == 0) {
-                fa.addElement(*mech.Elements(i));
+    if(mech.ReactionCount() > 0) {
+        Mops::fvector atemperatures;
+        for (unsigned int i = 0; i < achem.size(); i++) {
+            atemperatures.push_back(achem.at(i).at(achem.at(i).size() - 3));
+        }
+        FluxAnalyser fa(mech, times, agpfwdrates, agprevrates, atemperatures);
+        for (unsigned int i = 0; i < mech.ElementCount(); i++) {
+            for (unsigned int j = 0; j < m_flux_elements.size(); j++) {
+                if (mech.Elements(i)->Name().compare(Strings::convertToCaps(m_flux_elements.at(j))) == 0) {
+                    fa.addElement(*mech.Elements(i));
+                }
             }
         }
+        fa.writeFluxes(filename, true);
     }
-    fa.writeFluxes(filename, true);
 }
 
 // Add element for flux analysis postprocessor
