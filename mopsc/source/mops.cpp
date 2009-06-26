@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     string sensifile("sensi.xml");
     bool fsolve        = true;  // Default is to solve ..
     bool fpostprocess  = false; // .. but not post-process.
-    bool foldfmt       = false; // Settings file format, new format not yet implemented.
+    bool foldfmt       = false;
     SolverType soltype = GPC;
     int diag = 0; // Diagnostics level.
 
@@ -93,6 +93,10 @@ int main(int argc, char *argv[])
             // Settings file (F90 mops format).
             settfile = argv[++i];
             foldfmt  = true;
+        } else if (strcmp(argv[i], "-rr") == 0) {
+            // Settings file new format.
+            settfile = argv[++i];
+            foldfmt  = false;
         } else if (strcmp(argv[i], "-s") == 0) {
             // Sweep mechanism file.
             swpfile = argv[++i];
@@ -186,10 +190,10 @@ int main(int argc, char *argv[])
                 // Post-process a gas-phase profile.
                 solver = new Sweep::FlameSolver();
                 break;
-		    case PAH:
-            // PAH Collisions
-            solver = new Sweep::PAHSolver();
-            break;
+            case PAH:
+                // PAH Collisions
+                solver = new Sweep::PAHSolver();
+                break;
             case GPC:
             default:
                 solver = new Solver();
