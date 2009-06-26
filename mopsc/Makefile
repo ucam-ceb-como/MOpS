@@ -28,6 +28,7 @@ endif
 
 src=source
 inc=include
+lib=lib
 
 # Additional libraries.
 
@@ -48,7 +49,7 @@ linklibs=$(comostrings) $(camxml) $(sprog) $(sweep) $(cvodes)
 
 # Target objects.
 
-obj=mops.o mops_mechanism.o mops_mixture.o \
+obj=mops_mechanism.o mops_mixture.o \
     mops_particle_solver.o mops_predcor_solver.o mops_psr.o mops_reactor.o \
     mops_reactor_factory.o  mops_ode_solver.o mops_settings_io.o mops_solver.o \
     mops_src_terms.o mops_strang_solver.o mops_timeinterval.o \
@@ -57,28 +58,28 @@ obj=mops.o mops_mechanism.o mops_mixture.o \
 
 # TARGET all: Compile to a static library (*.a).
 
-all: comostringslib camxmllib sproglib sweeplib cvodeslib $(obj)
+all: comostringslib camxmllib sproglib sweeplib cvodeslib $(obj) mops.o
 	mkdir -p bin
 ifeq ($(debug),0)
   ifeq ($(profile),0)
-		$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops.x -static
+		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops.x -static
   else
-		$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops_p.x -static
+		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops_p.x -static
   endif 
 else
-	$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops_d.x -static
+	$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops_d.x -static
 endif
 
 32bit: comostringslib camxmllib sproglib sweeplib cvodeslib $(obj)
 	mkdir -p bin
 ifeq ($(debug),0)
   ifeq ($(profile),0)
-		$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops32.x -static
+		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops32.x -static
   else
-		$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops32_p.x -static
+		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops32_p.x -static
   endif
 else
-		$(cpp) $(flink) $(obj) $(linklibs) -o bin/mops32_d.x -static
+		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops32_d.x -static
 endif
 
 
@@ -95,7 +96,14 @@ sweeplib:
 cvodeslib:
 	$(MAKE) -f ../cvodes/Makefile -C ../cvodes debug=$(debug) profile=$(profile)
 
-# Source code.
+# Mops library
+mopslib: $(obj) $(linklibs)
+	mkdir -p lib
+ifeq ($(debug),0)
+	ar rc $(lib)/mops.a $(obj) $(comostrings) $(camxml) $(sprog) $(sweep)
+else
+	ar rc $(lib)/mops_d.a $(obj) $(comostrings) $(camxml) $(sprog) $(sweep)
+endif
 
 # Driver program.
 
@@ -184,7 +192,7 @@ swp_gas_profile.o: $(src)/swp_gas_profile.cpp
 
 # TARGET clean: leave just source code.
 
-clean:
+cleanlibs:
 	$(MAKE) clean -f ../comostrings/Makefile -C ../comostrings
 	$(MAKE) clean -f ../camxml/Makefile -C ../camxml
 	$(MAKE) clean -f ../sprogc/Makefile -C ../sprogc
@@ -192,6 +200,10 @@ clean:
 	$(MAKE) clean -f ../cvodes/Makefile -C ../cvodes
 	rm -rf *.o \#* *~
 
-cleansolver:
+cleanparticles:
 	$(MAKE) clean -f ../sweepc/Makefile -C ../sweepc
 	rm -rf *.o \#* *~
+
+clean:
+	rm -rf *.o \#* *~ $(lib)/*.a
+
