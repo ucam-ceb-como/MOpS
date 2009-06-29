@@ -339,7 +339,7 @@ real Inception::RateTerms(const real t, const Sprog::Thermo::IdealGas &gas,
 
 // Performs the process on the given system.  The responsible rate term is given
 // by index.  Returns 0 on success, otherwise negative.
-int Inception::Perform(real t, Cell &sys, unsigned int iterm) const 
+int Inception::Perform(real t, Cell &sys, unsigned int iterm, TransportOutflow*) const
 {
 
     // This routine performs the inception on the given chemical system.

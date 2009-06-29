@@ -72,11 +72,6 @@ namespace Sweep
             ARSSC_Model_ID = 1, // Aromatic-site site-counting model (Celnik et al., Combust. Flame, 2008, in press (PP51)).
             CNT_Model_ID   = 2, // Simple carbon nanotube model (Celnik et al., Carbon, 46(3), 422-433, 2008).
 
-            // ACTIVE-SITE MODELS.
-            // These models have no data hence cannot be generated with the
-            // ModelFactory class.
-//            ActSites_ID = 20003, // Active sites model base.
-//            ABFSites_ID = 20004  // ABF active-sites model.
         };
 
         typedef std::set<SubModelType> SubModelTypeSet;

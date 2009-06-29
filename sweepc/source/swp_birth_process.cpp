@@ -180,7 +180,7 @@ real BirthProcess::RateTerms(const real t, const Sprog::Thermo::IdealGas &gas,
 
 // Performs the process on the given system.  The responsible rate term is given
 // by index.  Returns 0 on success, otherwise negative.
-int BirthProcess::Perform(real t, Cell &sys, unsigned int iterm) const 
+int BirthProcess::Perform(real t, Cell &sys, unsigned int iterm, TransportOutflow*) const
 {
     Particle *p = NULL;
 

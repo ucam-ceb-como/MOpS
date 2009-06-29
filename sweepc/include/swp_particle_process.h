@@ -56,6 +56,7 @@ namespace Sweep
 {
 // Forward declare the Mechanism class.
 class Mechanism;
+class TransportOutflow;
 
 namespace Processes
 {
@@ -204,7 +205,8 @@ public:
     virtual int Perform(
         real t,                // Time.
         Cell &sys,             // System to update.
-        unsigned int iterm = 0 // The process term responsible for this event.
+        unsigned int iterm = 0,// The process term responsible for this event.
+        TransportOutflow *out = 0 // Not used for these processes
         ) const = 0;
 
     // Performs the process on a given particle in the system.  Particle

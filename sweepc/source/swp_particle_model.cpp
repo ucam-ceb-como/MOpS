@@ -340,7 +340,7 @@ Processes::SinteringModel &ParticleModel::SintModel(void) const {return m_sint_m
 // Creates a new particle and sets it up with all the models
 // required by the ParticleModel.  A particle created here
 // will have a single primary.
-Particle *const ParticleModel::CreateParticle(real time) const
+Sweep::Particle *const ParticleModel::CreateParticle(real time) const
 {
     // Create new primary using the aggregation model currently
     // set in this model.

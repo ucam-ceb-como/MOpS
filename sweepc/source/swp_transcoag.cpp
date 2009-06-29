@@ -202,7 +202,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const ParticleCac
 
 // Performs the process on the given system. Must return 0
 // on success, otherwise negative.
-int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned int iterm) const
+int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned int iterm, TransportOutflow*) const
 {
     // Select properties by which to choose particles (-1 means
     // choose uniformly).  Note we need to choose 2 particles.  There

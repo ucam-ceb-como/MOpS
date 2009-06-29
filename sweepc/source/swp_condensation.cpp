@@ -224,7 +224,7 @@ real Condensation::RateTerms(real t, const Cell &sys,
 
 // Performs the process on the given system.  The responsible rate term is given
 // by index.  Returns 0 on success, otherwise negative.
-int Condensation::Perform(const real t, Cell &sys, const unsigned int iterm) const
+int Condensation::Perform(const real t, Cell &sys, const unsigned int iterm, TransportOutflow*) const
 {
     // Select particle based on which term was called.
     int i  = -1;

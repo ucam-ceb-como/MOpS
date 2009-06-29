@@ -56,6 +56,9 @@
 
 namespace Sweep
 {
+    // Forward declaration
+    class TransportOutflow;
+
 namespace Processes
 {
 class ARSSC_Inception : public Inception, public ARSSC_Process
@@ -83,7 +86,8 @@ public:
     int Perform(
         real t,                // Time.
         Cell &sys,             // System to update.
-        unsigned int iterm = 0 // The process term responsible for this event.
+        unsigned int iterm = 0,// The process term responsible for this event.
+        TransportOutflow *out = 0 // Unused for this process
         ) const;
 
 

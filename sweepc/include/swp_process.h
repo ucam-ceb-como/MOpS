@@ -40,6 +40,11 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
+/*!
+ *\file swp_process.h
+ *\brief Interface declaration for process classes
+ */
+
 #ifndef SWEEP_PROCESS_H
 #define SWEEP_PROCESS_H
 
@@ -59,6 +64,7 @@ namespace Sweep
 class Mechanism;
 // Forward declare the Cell class.
 class Cell;
+class TransportOutflow;
 
 namespace Processes
 {
@@ -160,17 +166,6 @@ public:
         const Cell &sys // System for which to calculate rate.
         ) const = 0;
 
-/*
-	// Calculates the process rate using the given 
-    // chemical conditions, rather than those conditions in the
-    // given system.
-    virtual real Rate(
-        real t,                   // Time.
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        const Cell &sys           // System for which to calculate rate.
-        ) const = 0;
-*/
-
 	// RATE TERM CALCULATIONS.
     //   These routines return the individual rate terms for a 
     //   process, which may have multiple terms (e.g. condensation).
@@ -187,27 +182,22 @@ public:
         fvector::iterator &iterm // Iterator to the first term.
         ) const = 0;
 
-/*
-    // Calculates the rate terms given an iterator to a real vector. The 
-    // iterator is advanced to the position after the last term for this
-    // process.  The given chemical conditions are used instead of those
-    // in the given system object.  Returns the sum of all rate terms.
-    virtual real RateTerms(
-        real t,                   // Time.
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        const Cell &sys,          // System for which to calculate rate terms.
-        fvector::iterator &iterm  // Iterator to the first term.
-        ) const = 0;
-*/
+    // PERFORMING THE PROCESS.
 
-	// PERFORMING THE PROCESS.
-
-    // Performs the process on the given system.  The responsible rate term is given
-    // by index.  Returns 0 on success, otherwise negative.
+    //! Performs the process on the given system.
+    /*!
+     * \param       t       Time
+     * \param       sys     System to update
+     * \param       iterm   Process term responsible for this event
+     * \param       out     Details of any particle being transported out of system
+     *
+     * \return      0 on success, otherwise negative.
+     */
     virtual int Perform(
-        real t,                // Time.
-        Cell &sys,             // System to update.
-        unsigned int iterm = 0 // The process term responsible for this event.
+        real t,
+        Cell &sys,
+        unsigned int iterm = 0,
+        TransportOutflow *out = 0
         ) const = 0;
 
 

@@ -70,7 +70,7 @@ Sweep::real Sweep::Processes::AdditiveCoagulation::RateTerms(real t, const Cell 
 
 // Performs the process on the given system. Must return 0
 // on success, otherwise negative.
-int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned int iterm) const
+int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned int iterm, TransportOutflow*) const
 {
     // debugging variables
     //int numParticles = sys.ParticleCount();
