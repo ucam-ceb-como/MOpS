@@ -1118,7 +1118,7 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
         fvector rop(rxnCount);
         fvector rfwd(rxnCount);
         fvector rrev(rxnCount);
-        fvector wdot(rxnCount);
+        fvector wdot(mech.SpeciesCount());
 
         // Resize vectors passed in as reference arguments.
         rates_sum.resize(rxnCount, 0.0);
@@ -1127,8 +1127,8 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
         fwd_rates_sumsqr.resize(rxnCount, 0.0);
         rev_rates_sum.resize(rxnCount, 0.0);
         rev_rates_sumsqr.resize(rxnCount, 0.0);
-        wdot_sum.resize(rxnCount, 0.0);
-        wdot_sumsqr.resize(rxnCount, 0.0);
+        wdot_sum.resize(mech.SpeciesCount(), 0.0);
+        wdot_sumsqr.resize(mech.SpeciesCount(), 0.0);
 
         // Nothing to read or calculate if there are no reactions
         if(rxnCount > 0) {
