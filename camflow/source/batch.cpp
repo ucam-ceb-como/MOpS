@@ -80,12 +80,6 @@ void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
     sootMom = &cs;
 
     reporter = new CamReporter();
-    //cg.descretize();
-    reacGeom = &cg;
-    Ac = cg.getArea();
-    As = cg.getSurfAres_l();
-
-
 
     nSpc = mech.SpeciesCount();
     nVar = nSpc+1; //species + temperature
@@ -117,12 +111,6 @@ void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
     camMixture->SetMassDensity(rho);
     camMixture->GetConcs(solvect);
     solvect.push_back(temp);
-//    rTol.push_back(cc.getTempRelTol());
-//    aTol.push_back(cc.getTempAbsTol());
-
-    if(nVar != solvect.size()){
-        throw CamError("number of solution variable differ from the vector size");
-    }
 
 
     reporter->header("BATCH ");
@@ -140,7 +128,7 @@ void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
     CVodeWrapper cvw;
     cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(), cc.getSpeciesRelTol(),
                         cc.getMaxTime(),nEqn,*this);
-    cvw.setIniStep(cc.getIniStep());
+    //cvw.setIniStep(cc.getIniStep());
     cvw.solve(CV_ONE_STEP,cc.getResTol());
     reporter->closeFiles();
 }
@@ -215,7 +203,9 @@ void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f){
     camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
     for (int l = 0; l < nSpc; l++) {
         f[l]= wdot[l];
+        
     }
+    
 
 }
 

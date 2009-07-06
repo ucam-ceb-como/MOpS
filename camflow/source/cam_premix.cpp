@@ -104,23 +104,6 @@ void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f){
             f[i*nVar+ptrT] = resT[i];
         }
 
-        //soot moments
-        if(sootMom->active()){
-            resMoment.resize(cellEnd*nMoments,0);
-            sootMom->momentResidual(t,iMesh_s,iMesh_e,nVar,nSpc,dz,m_u,m_rho,y,&resMoment[0]);
-            momentBoundary(t,y,&resMoment[0]);
-
-            for(int i=0; i<cellEnd; i++){
-//                for(int l=nSpc; l<(nSpc+nMomemts); l++){
-//                    f[i*nVar+l] = resMoment[l-nSpc];
-//
-//                }
-                for(int l=0; l<nMoments; l++){
-                    f[i*nVar+l+nSpc] = resMoment[i*nMoments+l];
-                }
-            }
-        }
-
 
     }else{
         if(eqn_slvd == EQN_SPECIES){
@@ -144,12 +127,6 @@ void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f){
             updateThermo();
             energyResidual(t,y,f);
             energyBoundary(t,y,f);
-        }else if(eqn_slvd==EQN_MOMENTS){
-            mergeSootMoments(y);
-            saveMixtureProp(&solvect[0],false,false);
-            saveFlowVariables(&solvect[0]);
-            momentBoundary(t,y,f);
-            sootMom->momentResidual(t,iMesh_s,iMesh_e,dz,m_u,m_rho,y,f);
         }
     }
 
@@ -287,18 +264,9 @@ void CamPremix::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
     nSpc = camMech->SpeciesCount();
 
     nVar = nSpc + 2;
-    /*
-     *check whether to solve for the soot moments
-     */
-    if(cs.active()){
-        nMoments = cs.getNumMoments();
-        nVar += nMoments;
-        ptrF = nSpc + nMoments;
-        ptrT = ptrF + 1;
-    }else{
-        ptrF = nSpc;
-        ptrT = ptrF + 1;
-    }
+    ptrF = nSpc;
+    ptrT = ptrF + 1;
+
 
     nEqn = nVar *(reacGeom->getnCells());
 
@@ -360,22 +328,7 @@ void CamPremix::initSolutionVector(CamBoundary &cb, CamControl &cc){
     mergeEnergyVector(&vT[0]);
     mergeContinuity(&vMass[0]);
     mergeSpeciesVector(&vSpec[0]);
-
-    if(sootMom->active()){
-        //nMoments = sootMom->getNumMoments();
-        vector<doublereal> temp;
-        sootMom->initMoments(*camMech,temp,cellEnd);
-        vSoot.resize(nMoments*cellEnd,0.0);
-        for(int i=0; i<cellEnd; i++){
-            for(int l=0; l<nMoments; l++){
-                vSoot[i*nMoments+l] = temp[l];
-            }
-        }
-        mergeSootMoments(&vSoot[0]);
-    }
-
    
-
 }
 /*
  *couples solver
@@ -401,13 +354,6 @@ void CamPremix::csolve(CamControl& cc){
         reportToFile(cc.getMaxTime(),&solvect[0]);
         cvw.destroy();
     }
-//    if(solver == cc.IDA){
-//        IDAWrapper ida;
-//        ida.init(nEqn,solvect,cc.getResTol(),cc.getMaxTime(),band,*this);
-//        ida.solve();
-//        reportToFile(cc.getMaxTime(),&solvect[0]);
-//
-//    }
 
 }
 
@@ -435,23 +381,6 @@ void CamPremix::ssolve(CamControl& cc){
         cvw.solve(CV_ONE_STEP,1e-03);
         mergeContinuity(&seg_soln_vec[0]);
         cvw.destroy();
-        /*
-         *integrate soot moemnts
-         */
-        if(sootMom->active()){
-            /*
-             *integrate moments
-             */
-            cout << "Solving moments: " << i << endl;
-            eqn_slvd = EQN_MOMENTS;
-            seg_eqn = nCell*nMoments;
-            band = nMoments*2;
-            extractSootMoments(seg_soln_vec);
-            cvw.init(seg_eqn,seg_soln_vec,1e-03,1e-03,cc.getMaxTime(),band,*this);
-            cvw.solve(CV_ONE_STEP,1e-03);
-            mergeSootMoments(&seg_soln_vec[0]);
-            cvw.destroy();
-        }
 
         /*
          *integrate species
@@ -551,22 +480,12 @@ void CamPremix::reportToFile(doublereal t, doublereal* soln){
         }
         data.push_back(sum);
 
-        //soot moments
-        if(sootMom->active()){
-            for(int l=nSpc; l<(nMoments+nSpc); l++){
-                data.push_back(soln[i*nVar+l]);
-            }
-        }
         reporter->writeStdFileOut(data);
 
     }
 
     reporter->closeFiles();
 
-    /*
-     *moment output
-     */
-    //sootMom->report(len);
 
 }
 
@@ -629,17 +548,6 @@ void CamPremix::header(){
         headerData.push_back( (*spv)[l]->Name() );
     }
     headerData.push_back("sumfracs");
-
-    //moment headeres
-    if(sootMom->active()){
-
-        for(int l=0; l<nMoments; l++){
-            stringstream int2str;
-            int2str << l;
-            string moment = "M$"+int2str.str();
-            headerData.push_back(moment);
-        }
-    }
 
 }
 

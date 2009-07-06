@@ -50,7 +50,7 @@ namespace Camflow{
     public:
 
         enum Connfiguration{
-            TWINFLAME,
+            COUNTERFLOW,
             STAGFLOW,
             PREMIX,
             PLUG,

@@ -1,8 +1,8 @@
 
 #include <cmath>
 #include <algorithm>
-
 #include "cam_params.h"
+#include "cam_boundary.h"
 
 /*
  * File:   stagflow.cpp
@@ -60,7 +60,7 @@ using namespace Camflow;
  *solve the stagnation/twinflame model
  */
 void StagFlow::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
-                            CamProfile& cp, Mechanism& mech){
+                   CamProfile& cp,CamConfiguration &config, Mechanism& mech){
     /*
      *function to set up the solver.
      *Initialisation of the solution vector is
@@ -72,6 +72,7 @@ void StagFlow::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
     camMixture = &mix;
     spv = camMixture->Species();
     profile = &cp;
+    camConfig = &config;
 
     
     admin = &ca;
@@ -84,6 +85,7 @@ void StagFlow::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
 
     reacGeom->addZeroWidthCells();
     nCells = reacGeom->getnCells();
+    configID = camConfig->getConfiguration();
 
     opPre = ca.getPressure();
     strainRate = ca.getStrainRate();
@@ -120,7 +122,7 @@ void StagFlow::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
      */
     initSolutionVector(cc);
 
-
+    reporter->header("StagFlow");    
     header();
     if(cc.getSolutionMode() == cc.COUPLED)
         csolve(cc);
@@ -138,25 +140,20 @@ void StagFlow::initSolutionVector(CamControl& cc){
     /*
      *initialize the geometry
      */
-    dz = reacGeom->getGeometry();
+    dz = reacGeom->getGeometry();    
 
 
     CamBoundary left, right;
     admin->getLeftBoundary(left);
-    //admin->getRightBoundary(right);
-
-
-    /*
-     *store the inlets and change the
-     *sign of flow for the oxidizer
-     */
     storeInlet(left,fuel);
-    //storeInlet(right,oxid);
-
-    //oxid.FlowRate *= -1;
-    //oxid.Vel *= -1;
-    //right.setVelocity(-right.getVelocity());
-    //right.setFlowRate(-right.getFlowRate());
+    if(configID == camConfig->COUNTERFLOW){
+        admin->getRightBoundary(right);
+        storeInlet(right,oxid);
+        oxid.Vel *= -1;
+        oxid.FlowRate *= -1;
+        right.setVelocity(-right.getVelocity());
+        right.setFlowRate(-right.getFlowRate());
+    }
 
 
     /*
@@ -166,6 +163,11 @@ void StagFlow::initSolutionVector(CamControl& cc){
     vector<doublereal> vSpec, vT;
     initSpecies(left,right,cc,vSpec);        
     initTemperature(left,cc,vT);
+
+    if(admin->getEnergyModel() == admin->ADIABATIC){
+        if(configID == camConfig->STAGFLOW)
+            vT[iMesh_e] = admin->getWallTemp();
+    }
 
     initMomentum();
     initMassFlow();
@@ -183,10 +185,15 @@ void StagFlow::initMassFlow(){
     m_u.resize(cellEnd,fuel.Vel);    
     m_u[0]=fuel.Vel;
     m_u[cellEnd-1] = 0.0;
-
     m_flow.resize(cellEnd,0.001);
+    m_flow[0] = fuel.FlowRate;
     m_flow[cellEnd-1] = 0.0;
-
+    if(configID == camConfig->COUNTERFLOW) {
+        m_u[cellEnd-1] = oxid.Vel;
+        m_flow[cellEnd-1] = oxid.FlowRate;
+    }
+    
+   
     /*
      *setting up TDMA coefficients
      */
@@ -230,7 +237,7 @@ void StagFlow::initMomentum(){
      *Ref : G. Stahl and J. Warnatz
      *Combustion and flame 85:285-299
      */
-    m_G.resize(nCells,1.0);
+    m_G.resize(nCells,0.0);
 
 }
 
@@ -245,6 +252,8 @@ void StagFlow::csolve(CamControl& cc){
     cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
                         cc.getMaxTime(),band,*this);
     cvw.solveDAE(CV_ONE_STEP,cc.getResTol());
+
+    reportToFile(cc.getMaxTime(),&solvect[0]);
     cvw.destroy();
 
 }
@@ -394,42 +403,42 @@ void StagFlow::speciesBoundary(const doublereal& t, doublereal* y, doublereal* f
      // Right Boundary Settings
      //
      //---------------------------------------------------
-    for(int l=0; l<nSpc; l++){
-        f[iMesh_e*nSpc+l] = -m_u[iMesh_e]*dydx(s_mf(iMesh_e,l),s_mf(iMesh_e-1,l),dz[iMesh_e]);
+    if(configID == camConfig->STAGFLOW){
+        for(int l=0; l<nSpc; l++){
+            f[iMesh_e*nSpc+l] = -m_u[iMesh_e-1]*dydx(s_mf(iMesh_e,l),s_mf(iMesh_e-1,l),dz[iMesh_e]);
+        }
+    }else{
+        for(int l=0; l<nSpc; l++){
+
+            convection = m_u[iMesh_e]*dydx(s_mf(iMesh_e,l),oxid.Species[l],dz[iMesh_e]);
+            diffusion = 0.0;//dydx(s_jk(iMesh_e,l),0,dz[iMesh_e])/m_rho[iMesh_e];
+            f[iMesh_e*nSpc+l] = convection+diffusion;
+        }
     }
-//    for(int l=0; l<nSpc; l++){
-//
-//        convection = m_u[iMesh_e]*dydx(s_mf(iMesh_e,l),oxid.Species[l],dz[iMesh_e]);
-//        diffusion = dydx(s_jk(iMesh_e,l),0,dz[iMesh_e])/m_rho[iMesh_e];
-//        f[iMesh_e*nSpc+l] = convection+diffusion;
-//    }
 
 }
 /*
  *energy boundary
  */
 void StagFlow::energyBoundary(const doublereal& t, doublereal* y, doublereal* f){
-    //-------------------------------------------
-    //
-    //  Left Boundary Settings
-    //
-    //------------------------------------------
 
+    /*--------------------------------------------------------------------------
+     * Left Boundary:
+     *--------------------------------------------------------------------------
+     * The temperature is fixed at the fuel inlet temperature
+     */
     f[0] = 0.0;
 
-     //---------------------------------------------------
-     //
-     // Right Boundary Settings
-     //
-     //---------------------------------------------------
-    if(admin->getEnergyModel() == admin->ADIABATIC){
-
-        f[iMesh_e] = -m_u[iMesh_e]*(dydx(m_T[iMesh_e],m_T[iMesh_e-1],dz[iMesh_e]));
-
-    }else{
-
-        f[iMesh_e] = 0;
-    }
+    /*-------------------------------------------------------------------------
+     * Right Boundary:
+     *---------------------------------------------------------------------
+     * The temperature at the right boundary is  fixed at the surface
+     * temperature in case of stagnation flow, and oxidizer inlet temperature
+     * in case of counter flow flames
+     */
+     
+     f[iMesh_e] = 0;
+    
     
 }
 
@@ -454,40 +463,54 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y){
         }
     }
 
+    for(int i=0; i<10; i++){
+        //------------------------------------------------------------
+        //           Inlet face
+        //----------------------------------------------------------
+        //m_flow[0] = fuel.FlowRate; // this is the vanishing cell
+        m_flow[0] = fuel.Vel*m_rho[0];
+        fuel.FlowRate = m_flow[0];
+        //----------------------------------------------------------
+        //           Exit face
+        //------------------------------------------------------------
+           // this is the vanishing cell
+        if(configID == camConfig->STAGFLOW){
+            m_flow[iMesh_e] = 0.0;
+        }else{
+            m_flow[iMesh_e] = oxid.Vel*m_rho[iMesh_e];
+            oxid.FlowRate = m_flow[iMesh_e];
+        }
+        vector<doublereal> flow;
+        calcVelocity(flow);
+        for(int i=1; i<iMesh_e; i++){
+            m_flow[i] = flow[i-1];            
+        }
+        
 
-
-//    doublereal resG,resFlow, res;
-//    do {
-//        for(int n=0; n<500000; n++){
-//            resFlow = calcVelocity();
-//        }
-//        //for(int n=0; n<10; n++){
-//        //    resG = calcMomentum();
-//        //}
-//        res = resFlow;
-//    }while(res > 1e-03);
-    //------------------------------------------------------------
-    //           Inlet face
-    //----------------------------------------------------------
-    m_flow[0] = fuel.FlowRate; // this is the vanishing cell
-    //----------------------------------------------------------
-    //           Exit face
-    //------------------------------------------------------------
-    m_flow[iMesh_e] = 0.0;   // this is the vanishing cell
-    vector<doublereal> flow;
-    calcVelocity(flow);
-    for(int i=1; i<iMesh_e; i++){
-        m_flow[i] = flow[i-1];
+        m_G[0] = sqrt(m_rho[iMesh_e]/m_rho[0]);
+        if(configID==camConfig->COUNTERFLOW){
+            m_G[iMesh_e] = 1.0;
+        }
+        vector<doublereal> mom;
+        calcMomentum(mom);
+        for(int i=1; i<iMesh_e;i++){
+            m_G[i] = mom[i-1];
+        }
+        if(configID==camConfig->STAGFLOW){
+            m_G[iMesh_e] = m_G[iMesh_e-1];
+        }else{
+            m_G[iMesh_e] = 1.0;
+        }
     }
-    for(int i=0; i<cellEnd; i++){
-        cout << (m_flow[i]/m_rho[i]) << endl;
-    }
 
-    cout << "Flowfield done\n" << endl;
-    int dd; cin >> dd;
+    for(int i=0; i<iMesh_e+1; i++){
+        m_u[i]=m_flow[i]/m_rho[i];        
+    }
+    
+   
 }
 
-doublereal StagFlow::calcVelocity(vector<doublereal>& u){
+void StagFlow::calcVelocity(vector<doublereal>& u){
     
     vector<doublereal> r;
     u.resize(tdmaFlow.b.size(),0);
@@ -514,6 +537,9 @@ doublereal StagFlow::calcVelocity(vector<doublereal>& u){
     rhoGe = rho_e*Ge;
     rhoGw = rho_w*Gw;
     r[i-1] = 2*strainRate*(rhoGe-rhoGw);
+    if(configID == camConfig->COUNTERFLOW){
+        r[i-1] += 2*oxid.FlowRate/dz[i];
+    }
     //other cells
     for( i = 2; i<iMesh_e-1; i++){
         rho_e = 0.5*(m_rho[i+1]+m_rho[i]);
@@ -524,53 +550,101 @@ doublereal StagFlow::calcVelocity(vector<doublereal>& u){
         rhoGw = rho_w*Gw;
         r[i-1] = 2*strainRate*(rhoGe-rhoGw);
     }
-
-    CamMath cm;
+    
+    CamMath cm;//    
     cm.TDMA(tdmaFlow.a,tdmaFlow.b,tdmaFlow.c,r,u);
-
-
-	return 0;
+    
+   
 }
 /*
  *calculate the momentum
  */
-doublereal StagFlow::calcMomentum(){
-    vector<doublereal> g_old = m_G;
-    doublereal diff, resid;
-    resid = 0;
-    //------------------------------------------------
-    //          Inlet boundary ie. the fuel side (hot edge)
-    //------------------------------------------------
-    m_G[0] = sqrt(m_rho[iMesh_e]/m_rho[0]);
-    //-------------------------------------------------
-    //      Interior cells
-    //-----------------------------------------------
-    doublereal mu_e, mu_w, Fe, Fw, DE, DW, dEP, dWP, rho_e, rho_w, u_e, u_w;
+void StagFlow::calcMomentum(vector<doublereal>& mom){
+    /*
+     *this evaluates the g equation using TDMA.
+     *At the stagnation plane the boundary zero gradient boundary
+     *condition is implemented. At the hot edge (fuel inlet) the boundary
+     * condition is g=sqrt(rho_ub/rho_b). At the cold edge the boundary
+     * condition is g=1
+     * (Ref: JG. Stahl and J. Warnatz Cobust. Flame 85 (1991) 285-299
+     */
+    /*
+     *preparation
+     */
+    int i;
+    doublereal De, fe, Dw, fw;
+    doublereal delPW, delPE;
+    doublereal mu_e, mu_w;
+    vector<doublereal> a,b,c,r;
+    c.resize(nCells-2,0.0);
+    mom = a = b = r = c;
+    /*---------------------------------------------------
+     *        First cell
+     *--------------------------------------------------/
+     */
+    
+    i = 1;
+    delPE = 0.5*(dz[i]+dz[i+1]);
+    delPW = 0.5*dz[i];
+    mu_e = 0.5*(m_mu[i]+m_mu[i+1]);
+    De = mu_e/delPE;
+    fe = 0.5*(m_flow[i]+m_flow[i+1]);
+    b[i-1] = De + 0.5*fuel.FlowRate + m_mu[i-1]/delPW;
+    c[i-1] = De - 0.5*fe ;
+    r[i-1] = (m_mu[i-1]/delPW + fuel.FlowRate) *m_G[i-1] +
+            strainRate*m_rho[iMesh_e]*dz[i];
 
-    for(int i=iMesh_s; i<iMesh_e; i++){
-        mu_e = 0.5*(m_mu[i+1]+m_mu[i]);
-        mu_w = 0.5*(m_mu[i-1]+m_mu[i]);
-        dEP = 0.5*(dz[i]+dz[i+1]);
-        dWP = 0.5*(dz[i]+dz[i-1]);
-        DE = mu_e/(dz[i]*dEP);
-        DW = mu_w/(dz[i]*dWP);
-        rho_e = 0.5*(m_rho[i]+m_rho[i+1]);
-        rho_w = 0.5*(m_rho[i]+m_rho[i-1]);
-        u_e = 0.5*(m_u[i]+m_u[i+1]);
-        u_w = 0.5*(m_u[i]+m_u[i-1]);
-        Fe = u_e*rho_e/(2*dz[i]);
-        Fw = u_w*rho_w/(2*dz[i]);
-        m_G[i] = (m_G[i-1]*(Fw+DW) - m_G[i+1]*(Fe-DE))/(DE+DW);
-        diff = m_G[i] - g_old[i];
-        resid += diff*diff;
+
+    /*------------------------------------------------
+     * interior cells
+     *------------------------------------------------/
+     */
+    for(i=2; i<iMesh_e-1;i++){
+        delPE = 0.5*(dz[i]+dz[i+1]);
+        delPW = 0.5*(dz[i]+dz[i-1]);
+        mu_e = 0.5*(m_mu[i]+m_mu[i+1]);
+        mu_w = 0.5*(m_mu[i]+m_mu[i-1]);
+        fe = 0.5*(m_flow[i]+m_flow[i+1]);
+        fw = 0.5*(m_flow[i]+m_flow[i-1]);
+        De = mu_e/delPE;
+        Dw = mu_w/delPW;
+        a[i-1] = -(0.5*fw+Dw);
+        b[i-1] = De+Dw;
+        c[i-1] = -(De-0.5*fe);
+        r[i-1] = strainRate*m_rho[iMesh_e]*dz[i];
+
     }
-    //-----------------------------------------------
-    //          Last cell (wall) gradient is zero
-    //-----------------------------------------------
-    m_G[iMesh_e] = m_G[iMesh_e-1];
 
-    return sqrt(resid);
+    /*------------------------------------------------
+     * last cell
+     *------------------------------------------------/
+     */
+    i = iMesh_e-1;
+    mu_w = 0.5*(m_mu[i]+m_mu[i-1]);
+    delPW = 0.5*(dz[i]+dz[i-1]);
+    Dw = mu_w/delPW;
+    fw = 0.5*(m_flow[i]+m_flow[i-1]);
+
+    b[i-1] = Dw;
+    a[i-1] = -(Dw+0.5*fw);
+    r[i-1] = strainRate*m_rho[iMesh_e]*dz[i];
+
+    if(configID == camConfig->COUNTERFLOW){
+        mu_e = m_mu[iMesh_e];
+        delPE = 0.5*dz[i];
+        fe = 0.5*oxid.FlowRate;
+        De = mu_e/delPE;
+        b[i-1] = Dw+De-fe;
+        r[i-1] += (De-fe)*m_G[iMesh_e];
+
+    }
+    
+
+    CamMath cm;
+    cm.TDMA(a,b,c,r,mom);        
+
 }
+
 /*
  *update diffusion fluxes
  */
@@ -632,6 +706,7 @@ void StagFlow::header(){
     for (int l = 0; l < nSpc; l++) {
         headerData.push_back( (*spv)[l]->Name() );
     }
+    headerData.push_back("sumfracs");
 
 }
 
@@ -674,41 +749,10 @@ void StagFlow::reportToFile(doublereal t, doublereal* soln){
                 sum += molfrac[l];
             }
         }
-        //data.push_back(sum);
+        data.push_back(sum);
         reporter->writeStdFileOut(data);
 
     }
 
     reporter->closeFiles();
-}
-
-void StagFlow::readVelocity(){
-    vector<doublereal> grid;
-    ifstream inf;
-    string velFile = "vel.inp";
-    inf.open(velFile.c_str(),ios::in);
-    if(inf.good()){
-        std::string position;
-
-        while(!inf.eof()){
-            getline(inf,position);
-            if(! isEmpty(position)){
-                grid.push_back(cdble(position));
-            }
-        }
-    }
-
-    inf.close();
-    int len = grid.size();
-    cout << len << endl;
-    m_u.resize(cellEnd,0);
-    m_u[0] = grid[0]/100.0;
-    for(int i=1; i<len; i++){
-        //cout << i << "  " << grid[i-1] << "  " << grid[i] << endl;
-        m_u[i] = 0.5*(grid[i-1]+grid[i])/100;
-    }
-    m_u[len] = grid[len-1]/100;
-
-//    for(int i=0; i<= iMesh_e; i++)
-//        cout << i << "  " << m_u[i] << endl;
 }

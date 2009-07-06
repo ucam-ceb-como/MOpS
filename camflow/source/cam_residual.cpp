@@ -162,7 +162,7 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo, bool mom){
             //molar specific heats
             cptemp = camMixture->getMolarSpecificHeat();
             //store the the thermal conductivity (J/m-s-K)
-            m_k.push_back(camMixture->getThermalConductivity(opPre));
+            m_k.push_back(camMixture->getThermalConductivity(opPre));            
             //store the specific heat capacity (J/kg K)
             m_cp.push_back(camMixture->getSpecificHeatCapacity());
         }

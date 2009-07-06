@@ -8,20 +8,17 @@ ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
          -I../sprog/include -I../cvode/include \
-			-I ../ida/include -I ../kinsol/include -I../radau/include \
          -I../cvode/source -Wall
     flink= 
   else
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
          -I../sprog/include -I../cvode/include \
-			-I ../ida/include -I ../kinsol/include -I../radau/include \
          -I../cvode/source -Wall -pg
     flink=-pg
   endif
 else
   flag=-c -O2  -Iinclude -I../comostrings/include -I../camxml/include \
        -I../sprog/include -I../cvode/include \
-		 -I ../ida/include -I ../kinsol/include -I../radau/include \
        -I../cvode/source -Wall -ggdb -pg
   flink=-pg 
 endif
@@ -38,17 +35,13 @@ ifeq ($(debug),0)
   camxml=../camxml/lib/camxml.a
   sprog=../sprog/lib/sprog.a
   cvode=../cvode/lib/cvode.a
-  ida=../ida/lib/ida.a
-  kinsol=../kinsol/lib/kinsol.a
-  radau=../radau/lib/radau.a
 else
   comostrings=../comostrings/lib/comostrings_d.a
   camxml=../camxml/lib/camxml_d.a
   sprog=../sprog/lib/sprog_d.a
   cvode=../cvode/lib/cvode_d.a
-  kinsol=../kinsol/lib/kinsol_d.a
 endif
-linklibs=$(comostrings) $(camxml) $(sprog) $(cvode) $(ida) $(kinsol) $(radau)
+linklibs=$(comostrings) $(camxml) $(sprog) $(cvode)
 
 # Target objects.
 
@@ -57,12 +50,12 @@ obj=   cam_kernel.o cam_read.o cam_setup.o cam_geometry.o \
 		 cam_admin.o cam_boundary.o cam_configuration.o cam_profile.o\
 		 cam_reporter.o cam_models.o cam_plug.o cam_premix.o cam_residual.o \
 		 stagflow.o cam_soot.o batch.o \
-		 cvode_wrapper.o  kinsol_wrapper.o 
+		 cvode_wrapper.o 
 
 
 # TARGET all: Compile to a static library (*.a).
 
-all: comostringslib camxmllib sproglib cvodelib idalib kinlib radaulib $(obj)
+all: comostringslib camxmllib sproglib cvodelib $(obj)
 	mkdir -p bin
 ifeq ($(debug),0)
   ifeq ($(profile),0)
@@ -84,12 +77,6 @@ sproglib:
 	$(MAKE) -f ../sprog/Makefile -C ../sprog debug=$(debug) profile=$(profile)
 cvodelib:
 	$(MAKE) -f ../cvode/Makefile -C ../cvode debug=$(debug) profile=$(profile)
-idalib:
-	$(MAKE) -f ../ida/Makefile -C ../ida debug=$(debug) profile=$(profile)
-kinlib:
-	$(MAKE) -f ../kinsol/Makefile -C ../kinsol debug=$(debug) profile=$(profile)
-radaulib:
-	$(MAKE) -f ../radau/Makefile -C ../radau debug=$(debug) profile=$(profile)
 
 # Source code.
 
@@ -137,8 +124,6 @@ cam_soot.o: $(src)/cam_soot.cpp
 	$(cpp) $(flag) $(src)/cam_soot.cpp
 cvode_wrapper.o: $(src)/cvode_wrapper.cpp
 	$(cpp) $(flag) $(src)/cvode_wrapper.cpp
-kinsol_wrapper.o: $(src)/kinsol_wrapper.cpp
-	$(cpp) $(flag) $(src)/kinsol_wrapper.cpp
 
 
 # Combined mechanisms.
@@ -151,7 +136,4 @@ clean:
 	$(MAKE) clean -f ../camxml/Makefile -C ../camxml
 	$(MAKE) clean -f ../sprog/Makefile -C ../sprog
 	$(MAKE) clean -f ../cvode/Makefile -C ../cvode
-	$(MAKE) clean -f ../ida/Makefile -C ../ida
-	$(MAKE) clean -f ../kinsol/Makefile -C ../kinsol
-	$(MAKE) clean -f ../radau/Makefile -C ../radau
 	rm -rf *.o \#* *~

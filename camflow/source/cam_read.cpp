@@ -93,7 +93,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
             attrValue   =   attr->GetValue();
             if(!convertToCaps(attrValue).compare("PREMIX")) config.setConfiguration(config.PREMIX);
             if(!convertToCaps(attrValue).compare("PLUG")) config.setConfiguration(config.PLUG);
-            if(!convertToCaps(attrValue).compare("TWINFLAME")) config.setConfiguration(config.TWINFLAME);
+            if(!convertToCaps(attrValue).compare("COUNTERFLOW")) config.setConfiguration(config.COUNTERFLOW);
             if(!convertToCaps(attrValue).compare("STAGFLOW"))config.setConfiguration(config.STAGFLOW);
             if(!convertToCaps(attrValue).compare("BATCH_CV"))config.setConfiguration(config.BATCH_CV);
         }else{
@@ -107,7 +107,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
             factor = convert.getConvertionFactor(attrValue);
             cg.setDia(cdble(subnode->Data())*factor);
         }else{
-            throw CamError("Diameter not specified\n");
+            cg.setDia(0.0);
         }
 
         subnode = reactorNode->GetFirstChild("length");
@@ -116,7 +116,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
             factor = convert.getConvertionFactor(attrValue);
             cg.setLength(cdble(subnode->Data())*factor);
         }else{
-            throw CamError("Length not specified\n");
+            cg.setLength(0.0);
         }
 
     }else{

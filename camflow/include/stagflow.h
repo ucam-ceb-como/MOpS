@@ -49,6 +49,7 @@
 #include "cam_profile.h"
 #include "cam_setup.h"
 #include "cam_profile.h"
+#include "cam_configuration.h"
 namespace Camflow{
     class StagFlow : public CamSetup {
 
@@ -63,7 +64,8 @@ namespace Camflow{
         /*
          *solve function
          */
-        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp, Mechanism &mech );
+        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
+             CamConfiguration &config,  Mechanism &mech );
         /*
          *coupled solver
          */
@@ -79,11 +81,11 @@ namespace Camflow{
         void residual(const doublereal& t, doublereal* y, doublereal* f);
 
         /*
-         *calculate axial velocity
+         *calculate flow field
          */
         void calcFlowField(const doublereal& time, doublereal* y);
-        doublereal calcVelocity(vector<doublereal>& flow);
-        doublereal calcMomentum();
+        void calcVelocity(vector<doublereal>& flow);
+        void calcMomentum(vector<doublereal>& mom);
       
         /*
          *species boundary condition
@@ -117,10 +119,10 @@ namespace Camflow{
         void header();
         void reportToFile(doublereal t, doublereal* soln);
     private:
-        void readVelocity();
+        
         inletStruct fuel, oxid;
         tdma_coeff tdmaFlow;
-        int nCells;        
+        int nCells, configID;
         /*
          *Newton solver variables
          */
@@ -130,6 +132,7 @@ namespace Camflow{
         //KinsolWrapper *newton;
         doublereal tol_res, eigen;
         doublereal strainRate;
+        CamConfiguration *camConfig;
     };
 }
 

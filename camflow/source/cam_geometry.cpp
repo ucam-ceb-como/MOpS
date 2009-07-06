@@ -89,7 +89,7 @@ void CamGeometry::setLength(doublereal len){
 
 doublereal CamGeometry::getLenth() const{
     if(length == 0)
-        throw CamError("descretisation not invoked\n");
+        throw CamError("Length not specified\n");
     else
         return this->length;
 }

@@ -92,10 +92,13 @@ void CVodeWrapper::solve(int stopMode, doublereal resTol){
 
 void CVodeWrapper::solveDAE(int stopMode, doublereal resTol){
 
-    int flag;    
+    int flag;
+    static int iter = 0;
     do{
+        if(iter%10 == 0){
         //solve the algebraic equation system
-        reacPtr->calcFlowField(currentTime,NV_DATA_S(y));
+            reacPtr->calcFlowField(currentTime,NV_DATA_S(y));
+        }
         //call Cvode to solve the ODE
         flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);
         if(flag < 0){
@@ -105,6 +108,7 @@ void CVodeWrapper::solveDAE(int stopMode, doublereal resTol){
             calcResNorm();
             reacPtr->report(currentTime,NV_DATA_S(y),resNorm);
         }
+        iter++;
     }while(resNorm > resTol);
 }
 

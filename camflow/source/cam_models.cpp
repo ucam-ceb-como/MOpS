@@ -1,6 +1,3 @@
-
-#include "stagflow.h"
-
 /*
  * File:   cam_models.cpp
  * Author: vinod
@@ -74,11 +71,11 @@ void CamModels::solve(CamAdmin& ca, CamBoundary& cb,
         }catch(CamError ce){
             cout << ce.errorMessge << endl;
         }
-    }else if(configID == config.STAGFLOW){
+    }else if(configID == config.STAGFLOW || configID == config.COUNTERFLOW){
         StagFlow stflow;
 
         try{
-            stflow.solve(cc,ca,cg,cp,mech);
+            stflow.solve(cc,ca,cg,cp,config, mech);
         }catch(CamError ce){
             cout << ce.errorMessge << endl;
         }
