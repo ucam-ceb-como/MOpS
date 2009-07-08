@@ -348,11 +348,14 @@ int main(int argc, char *argv[])
 		{
 			ofstream out;
 			ifstream in;
-			string infilename;
-			out.open("soot.sim", ios::app );
+			string infilename, outfilename;
+            outfilename=sim.OutputFile().c_str();
+            outfilename=outfilename +  + ".sim";
+            cout << outfilename;
+			out.open(outfilename.c_str() , ios::app );
 			for (int i=0;i<numprocs;i++)
 			{	
-				infilename="soot" + cstr(i) + ".sim";
+				infilename=sim.OutputFile().c_str() + cstr(i) + ".sim";
 				in.open(infilename.c_str(), ios::out );
 				out << in.rdbuf();
 				in.close();
