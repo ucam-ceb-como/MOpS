@@ -51,7 +51,7 @@ namespace Sweep
 {
 // Forward declare mechanism class.
 class Mechanism;
-class TransportOutflow;
+struct TransportOutflow;
 
 namespace Processes
 {

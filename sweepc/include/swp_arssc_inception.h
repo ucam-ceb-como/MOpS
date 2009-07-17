@@ -57,7 +57,7 @@
 namespace Sweep
 {
     // Forward declaration
-    class TransportOutflow;
+    struct TransportOutflow;
 
 namespace Processes
 {

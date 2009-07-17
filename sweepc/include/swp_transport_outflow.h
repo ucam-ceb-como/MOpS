@@ -10,9 +10,9 @@
 
 #include "swp_params.h"
 
-class Particle;
-
 namespace Sweep {
+    // Forward declaration
+    class Particle;
 
     //! Indicate direction of transport
     /*!

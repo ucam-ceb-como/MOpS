@@ -70,8 +70,8 @@ Mechanism::Mechanism(void)
 
 // Copy constructor.
 Mechanism::Mechanism(const Mechanism &copy)
+: m_coag(NULL)
 {
-        m_coag = NULL;
 	*this = copy;
 }
 
@@ -306,11 +306,6 @@ void Mechanism::AddCoagulation(Coagulation& coag)
 // inceptions) in the mechanism.
 unsigned int Mechanism::ProcessCount(void) const
 {
-/*
-    unsigned int n = m_inceptions.size() + m_processes.size();
-    if (m_coag != NULL) ++n;
-    return n;
-*/
     return m_processcount;
 }
 
