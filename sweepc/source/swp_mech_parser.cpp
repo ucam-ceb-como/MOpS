@@ -69,11 +69,7 @@ void MechParser::Read(const std::string &filename, Sweep::Mechanism &mech)
     CamXML::Document xml;
 
     // Try to load XML file into data structure.
-    try {
-        xml.Load(filename);
-    } catch (exception &e) {;
-        throw e;
-    }
+    xml.Load(filename);
 
     // Read the mechanism file version from document, then parse
     // the correct version.
@@ -183,7 +179,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     } else {
         mech.DisableSubPartTree();
     }
-	
+
     // Check the aggregation model.
     str = (*i)->GetAttributeValue("model");
     if (str == "spherical") {
@@ -194,11 +190,11 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetAggModel(AggModels::PriPartList_ID);
     } else if (str == "PAH") {
         mech.SetAggModel(AggModels::PAH_ID);
-		std::vector<std::string> values;	
+		std::vector<std::string> values;
 		/*CSV_IO *csvinput = new CSV_IO("collisionefficiency.csv",false);
 		for (int j=0;j<10000;j++)
 		{
-			values.clear();	
+			values.clear();
 			csvinput->Read(values);
 		    if (values.size()==0)
 				break;
@@ -216,7 +212,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     (*i)->GetChildren("sintering", items);
     if (items.size() > 0) {
         i = items.begin();
-        
+
         // Check if sintering model enabled.
         str = (*i)->GetAttributeValue("enable");
         if (str == "true") {
@@ -242,7 +238,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         str = (*i)->GetFirstChild("E")->Data();
         mech.SintModel().SetE(cdble(str));
 
-        // Get minimum primary particle diameter. 
+        // Get minimum primary particle diameter.
         // S. Tsantilis, H. Briesen and S.E. Pratsinis,
         // Sintering Time for Silica Particle Growth
         // Aerosol Science and Technology 34: 237�246 (2001).
@@ -259,7 +255,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     readInceptions(xml, mech);
     readSurfRxns(xml, mech);
     readCondensations(xml, mech);
-    
+
     // Read which coagulation kernel to use
     readCoagulation(xml, mech);
 
@@ -295,7 +291,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             throw runtime_error("Component statement found with no ""id"" attribute "
                                 "(Sweep, MechParser::readComponents).");
         }
-        
+
         // Get component density.
         el = (*i)->GetFirstChild("density");
         if (el!=NULL) {
@@ -304,15 +300,21 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
                 comp->SetDensity(cdble(str) * 1.0e3); // Convert from g/cm3 to kg/m3.
             } else {
                 // Density contains no data.
+                std::string msg("Component ");
+                msg += comp->Name();
+                msg += " density contains no data (Sweep, MechParser::readComponents).";
+
                 delete comp;
-                throw runtime_error("Component " + comp->Name() + " density "
-                                    "contains no data (Sweep, MechParser::readComponents).");
+                throw runtime_error(msg);
             }
         } else {
             // Component does not have density specified.
+            std::string msg("Density required for component ");
+            msg += comp->Name();
+            msg += " specification (Sweep, MechParser::readComponents).";
+
             delete comp;
-            throw runtime_error("Density required for component " + comp->Name() + 
-                                " specification (Sweep, MechParser::readComponents).");
+            throw runtime_error(msg);
         }
 
         // Get component mol. wt.
@@ -323,15 +325,21 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
                 comp->SetMolWt(cdble(str)*1.0e-3); // Convert from g/mol to kg/mol.
             } else {
                 // Mol. wt. contains no data.
+                std::string msg("Component ");
+                msg += comp->Name();
+                msg += " mol. wt. contains no data (Sweep, MechParser::readComponents).";
+
                 delete comp;
-                throw runtime_error("Component " + comp->Name() + " mol. wt. "
-                                    "contains no data (Sweep, MechParser::readComponents).");
+                throw runtime_error(msg);
             }
         } else {
             // Component does not have molecular weight specified.
+            std::string msg("Mol. wt. required for component ");
+            msg += comp->Name();
+            msg += " specification (Sweep, MechParser::readComponents).";
+                    
             delete comp;
-            throw runtime_error("Mol. wt. required for component " + comp->Name() + 
-                                " specification (Sweep, MechParser::readComponents).");
+            throw runtime_error(msg);
         }
 
         // Add component to mechanism.
@@ -371,7 +379,7 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
     vector<CamXML::Element*>::iterator i, j;
     string str;
     unsigned int k = 0;
-    
+
     // Get list of inceptions from XML data.
     xml.Root()->GetChildren("inception", items);
 
@@ -502,7 +510,7 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
             asrxn->SetModel(ActSites::ABFModel::Instance());
         } else {
             // Unrecognised reaction type.
-            throw runtime_error("Unrecognised reaction type: " + str + 
+            throw runtime_error("Unrecognised reaction type: " + str +
                                 " (Sweep, MechParser::readSurfRxns).");
         }
 
@@ -634,7 +642,7 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
         } else {
             // Maybe it is an ARS-SC model property.
             if (rxn.Mechanism()->ContainsSubModel(SubModels::ARSSC_Model_ID)) {
-                SubModels::ARSSC_Model::SiteType site = 
+                SubModels::ARSSC_Model::SiteType site =
                     SubModels::ARSSC_Model::IdentifySite(str);
                 if (site != SubModels::ARSSC_Model::InvalidSite) {
                     rxn.SetPropertyID((unsigned int)site, SubModels::ARSSC_Model_ID);
@@ -756,7 +764,7 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
 void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
 {
     vector<CamXML::Element*> items;
-    
+
     // Get list of inceptions from XML data.
     xml.Root()->GetChildren("coagulation", items);
 
@@ -785,9 +793,9 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
             else
                 // Unrecognised option
                 throw std::logic_error("Coagulation kernel " + kernelName + "not yet available \
-                                        (Sweep, MechParser::readCoagulation)");               
+                                        (Sweep, MechParser::readCoagulation)");
         }
-        
+
     }
     else
     {
@@ -795,6 +803,93 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                                  (Sweep, MechParser::readCoagulation)");
     }
 }
+
+// TRANSPORT PROCESSES
+
+///*!
+// *\param[in]        xml         XML document containing a mechanism description
+// *\param[inout]     mech        Mechanism to which transport processes will be added
+// */
+//void MechParser::readTransportProcs(CamXML::Document &xml, Mechanism &mech)
+//{
+//    vector<CamXML::Element*> items;
+//    vector<CamXML::Element*>::iterator i;
+//    string str;
+//    unsigned int k = 0;
+//
+//    // Get all transport processes.
+//    xml.Root()->GetChildren("transport", items);
+//
+//    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
+//        TransportProcess *tran = new TransportProcess();
+//        // Set default name.
+//        tran->SetName("Transport " + cstr(k));
+//
+//        // Read the reaction properties.
+//        try {
+//            readTransportProc(*(*i), *tran);
+//        } catch (std::exception &e) {
+//            delete tran;
+//            throw;
+//        }
+//
+//        // Add process to mechanism.
+//        //mech.AddProcess(*rxn);
+//    }
+//}
+//
+/*!
+ *\param[in]        xml     XML node of type ????
+ *\param[in]        rxn     mechanism to which to add the process
+ */
+void MechParser::readTransportProc(CamXML::Element &xml, Processes::TransportProcess &tran)
+{
+    string str;
+    CamXML::Element *el = NULL;
+
+    // Read name.
+    str = xml.GetAttributeValue("name");
+    if (str != "")
+        tran.SetName(str);
+
+    // Particle dependency.
+    el = xml.GetFirstChild("particleterm");
+    if (el!=NULL) {
+        // Get property ID.
+        str = el->GetAttributeValue("id");
+
+        // Get power.
+        int id = (int)cdble(el->GetAttributeValue("power"));
+
+        if (str.compare("d")==0) {
+            // This reaction depends on some power of the diameter.
+            switch (id) {
+                case 1:
+                    tran.SetPropertyID(ParticleCache::iD);
+                    break;
+                case 2:
+                    tran.SetPropertyID(ParticleCache::iD2);
+                    break;
+                case -1:
+                    tran.SetPropertyID(ParticleCache::iD_1);
+                    break;
+                case -2:
+                    tran.SetPropertyID(ParticleCache::iD_2);
+                    break;
+                default:
+                    // Oh dear, can't have a zero power.
+                    throw runtime_error("""particleterm"" tag found with "
+                                        "invalid or zero power attribute "
+                                        "(Sweep, MechParser::readTransportProc)");
+            }
+        }
+        else {
+            throw runtime_error("Surface process defined without ""particleterm"" "
+                                "element (Sweep, MechParser::readTransportProc).");
+        }
+    }
+}
+
 
 // REACTION SHARED COMPONENTS.
 
@@ -824,7 +919,7 @@ void MechParser::readReactants(CamXML::Element &xml, Process &proc)
 
             // Add reactant to inception.
             proc.AddReactant(isp, mu);
-        }            
+        }
     }
 }
 
@@ -854,18 +949,18 @@ void MechParser::readProducts(CamXML::Element &xml, Process &proc)
 
             // Add product to inception.
             proc.AddProduct(isp, mu);
-        }            
+        }
     }
 }
 
 // Reads reactant masses and diameters.  This is required by inceptions
 // and condensation to calculate collision rates.
-void MechParser::readReactantMDs(CamXML::Element &xml, 
+void MechParser::readReactantMDs(CamXML::Element &xml,
                                  fvector &mass, fvector &diam)
 {
     vector<CamXML::Element*> items;
     vector<CamXML::Element*>::iterator i;
-    
+
     // Get reactants.
     xml.GetChildren("reactant", items);
 
@@ -894,7 +989,7 @@ void MechParser::readReactantMDs(CamXML::Element &xml,
             // Species can't have zero diameter!
             throw runtime_error("Species can't have zero diameter "
                                 "(Sweep, MechParser::readReactantMDs).");
-        }            
+        }
     }
 }
 
@@ -903,7 +998,7 @@ void MechParser::readCompChanges(CamXML::Element &xml, ParticleProcess &proc)
 {
     vector<CamXML::Element*> items;
     vector<CamXML::Element*>::iterator i;
-    
+
     // Get list of component changes from XML.
     xml.GetChildren("component", items);
 
@@ -930,7 +1025,7 @@ void MechParser::readTrackChanges(CamXML::Element &xml, ParticleProcess &proc)
 {
     vector<CamXML::Element*> items;
     vector<CamXML::Element*>::iterator i;
-    
+
     // Get list of component changes from XML.
     xml.GetChildren("track", items);
 
@@ -1155,7 +1250,7 @@ void MechParser::readARSSC_Inceptions(CamXML::Document &xml, Sweep::Mechanism &m
     vector<CamXML::Element*> items, subitems;
     vector<CamXML::Element*>::iterator i, j;
     string str;
-    
+
     // Get list of inceptions from XML data.
     xml.Root()->GetChildren("arsinception", items);
 
@@ -1195,7 +1290,7 @@ void MechParser::readARSSC_SurfRxns(CamXML::Document &xml, Sweep::Mechanism &mec
     vector<CamXML::Element*>::iterator i, j;
     string str;
     unsigned int k = 0;
-    
+
     // Get list of reactions from XML data.
     xml.Root()->GetChildren("arsreaction", items);
 
@@ -1234,7 +1329,7 @@ void MechParser::readARSSC_Condensations(CamXML::Document &xml, Sweep::Mechanism
     vector<CamXML::Element*>::iterator i, j;
     string str;
     unsigned int k = 0;
-    
+
     // Get list of reactions from XML data.
     xml.Root()->GetChildren("arscondensation", items);
 

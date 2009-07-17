@@ -67,6 +67,7 @@
 
 #include "swp_ensemble_image.h"
 #include "swp_particle_image.h"
+#include "swp_transport_process.h"
 
 
 
@@ -120,6 +121,17 @@ public:
 
     // Adds a process to the mechanism.
     void AddProcess(Processes::ParticleProcess &p);
+
+    // TRANSPORT PROCESSES.
+
+    //! Returns the vector of transport processes.
+    const Processes::TransportPtrVector &Transports(void) const;
+
+    //! Returns the process with the given index.
+    const Processes::TransportProcess *const Transports(unsigned int i) const;
+
+    //! Adds a transport process to the mechanism.
+    void AddTransport(Processes::TransportProcess &p);
 
 
     // COAGULATIONS.
@@ -217,10 +229,11 @@ public:
 
     // Performs the Process specified.  Process index could be
     // an inception, particle process or a coagulation event.
-	void DoProcess(
+    void DoProcess(
         unsigned int i, // Index of process to perform.
         real t,         // Current time (s).
-        Cell &sys       // System to update (includes ensemble).
+        Cell &sys,      // System to update (includes ensemble).
+        TransportOutflow *out = 0 // Details of any particle transported out
         ) const;
 
 
@@ -290,6 +303,8 @@ private:
     // Processes in mechanism.
     Processes::IcnPtrVector m_inceptions;     // Inception process list.
     Processes::PartProcPtrVector m_processes; // Particle process list.
+    //! List of transport processes
+    Processes::TransportPtrVector m_transports;
     Processes::Coagulation *m_coag;           // Coagulation process.
 
     // Auxilliary information about the processes.

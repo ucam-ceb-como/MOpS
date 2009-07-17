@@ -52,7 +52,8 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_sintering_model.o swp_arssc_model.o swp_arssc_inception.o \
     swp_death_process.o swp_birth_process.o swp_arssc_cache.o \
     swp_arssc_reaction.o swp_arssc_condensation.o swp_arssc_process.o \
-    swp_PAH_primary.o swp_PAH_cache.o swp_PAH_stats.o
+    swp_PAH_primary.o swp_PAH_cache.o swp_PAH_stats.o swp_transport_process.o \
+    mt19937.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -251,11 +252,18 @@ swp_birth_process.o: $(src)/swp_birth_process.cpp
 swp_death_process.o: $(src)/swp_death_process.cpp
 	$(cpp) $(flag) $(src)/swp_death_process.cpp
 
+swp_transport_process.o: $(src)/swp_transport_process.cpp
+	$(cpp) $(flag) $(src)/swp_transport_process.cpp
+
 # Solver.
 
 swp_solver.o: $(src)/swp_solver.cpp
 	$(cpp) $(flag) $(src)/swp_solver.cpp
 
+# Random number generation
+
+mt19937.o: $(src)/mt19937.cpp $(inc)/mt19937.h
+	$(cpp) $(flag) $(src)/mt19937.cpp
 	
 
 # TARGET clean: leave just source code.

@@ -71,6 +71,7 @@ Mechanism::Mechanism(void)
 // Copy constructor.
 Mechanism::Mechanism(const Mechanism &copy)
 {
+        m_coag = NULL;
 	*this = copy;
 }
 
@@ -103,6 +104,12 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         for (IcnPtrVector::const_iterator i=rhs.m_inceptions.begin();
              i!=rhs.m_inceptions.end(); ++i) {
             m_inceptions.push_back((*i)->Clone());
+        }
+
+        // Copy particle processes.
+        for (TransportPtrVector::const_iterator i=rhs.m_transports.begin();
+             i!=rhs.m_transports.end(); ++i) {
+             m_transports.push_back((*i)->Clone());
         }
 
         // Copy particle processes.
@@ -218,6 +225,62 @@ void Mechanism::AddProcess(ParticleProcess &p)
 }
 
 
+// TRANSPORT PROCESSES.
+
+/*!
+ * Get the full list of transport processes, this is
+ * a const function so the pointers in the vector should
+ * not be used to modify the processes, even though this
+ * is permitted by the language.
+ *
+ *\return   Vector of pointers to the transport processes
+ */
+const TransportPtrVector &Mechanism::Transports() const
+{
+    return m_transports;
+}
+
+/*!
+ * Return a pointer to the ith transport process in the
+ * mechanism, or null if there are fewer than i transport
+ * process.
+ *
+ *\param[in]    i   Index of requested transport process in transport process array
+ *
+ *\return   Pointer to ith transport process
+ */
+const TransportProcess *const Mechanism::Transports(unsigned int i) const
+{
+    if (i < m_transports.size()) {
+        return m_transports[i];
+    } else {
+        return NULL;
+    }
+}
+
+/*!
+ * Insert a transport process in the mechanism for use
+ * in simulation.  The same transport process instance
+ * cannot be added to another mechanism.
+ *
+ *\param[in]    p   Trnsport process to add to mechanism
+ */
+void Mechanism::AddTransport(TransportProcess &p)
+{
+    // Add the process to the mechanism.
+    m_transports.push_back(&p);
+    m_termcount += p.TermCount();
+    ++m_processcount;
+    m_proccount.resize(m_termcount, 0);
+    m_fictcount.resize(m_termcount, 0);
+
+    // Check for any deferred.
+    m_anydeferred = m_anydeferred || p.IsDeferred();
+
+    // Set the process to belong to this mechanism.
+    p.SetMechanism(*this);
+}
+
 // COAGULATIONS.
 
 // Adds a coagulation process to the mechanism.
@@ -297,6 +360,13 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
         *i = m_processes[j]->Name(); ++i;
     }
 
+    // Add transport process names.
+    for (TransportPtrVector::const_iterator it = m_transports.begin();
+         it != m_transports.end(); ++it) {
+        *i = (*it)->Name();
+        ++i;
+    }
+
     // Add coagulation name.
     if (m_coag) {
         *i = m_coag->Name(); ++i;
@@ -322,8 +392,11 @@ real Mechanism::CalcRates(real t, const Cell &sys, fvector &rates, bool scale) c
     // Query other processes for their rates.
     sum += ParticleProcess::CalcRates(t, sys, m_processes, rates, m_inceptions.size());
 
+    // Query transport processes for their rates.
+    sum += TransportProcess::CalcRates(t, sys, m_transports, rates, m_inceptions.size() + m_processes.size());
+
     // Get coagulation rate.
-    fvector::iterator i = rates.begin()+m_inceptions.size()+m_processes.size();
+    fvector::iterator i = rates.begin()+m_inceptions.size()+m_transports.size()+m_processes.size();
     if (m_coag != NULL) {
         *i = m_coag->Rate(t, sys);
         sum += *i;
@@ -377,14 +450,22 @@ real Mechanism::CalcRateTerms(real t, const Cell &sys, fvector &terms) const
 
     // Query other processes for their rates.
     if (sys.ParticleCount() > 0) {
-        PartProcPtrVector::const_iterator i;
-        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
+        for(PartProcPtrVector::const_iterator i=m_processes.begin();
+            (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
+            sum += (*i)->RateTerms(t, sys, iterm);
+        }
+        for(TransportPtrVector::const_iterator i=m_transports.begin();
+            (i!=m_transports.end()) && (iterm!=terms.end()); ++i) {
             sum += (*i)->RateTerms(t, sys, iterm);
         }
     } else {
         // Fill vector with zeros.
-        PartProcPtrVector::const_iterator i;
-        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
+        for(PartProcPtrVector::const_iterator i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
+            fill(iterm, iterm+(*i)->TermCount(), 0.0);
+            iterm += (*i)->TermCount();
+        }
+        for(TransportPtrVector::const_iterator i=m_transports.begin();
+            (i!=m_transports.end()) && (iterm!=terms.end()); ++i) {
             fill(iterm, iterm+(*i)->TermCount(), 0.0);
             iterm += (*i)->TermCount();
         }
@@ -431,8 +512,19 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, fvector &terms) const
 
     // Query other processes for their rates.
     if (sys.ParticleCount() > 0) {
-        PartProcPtrVector::const_iterator i;
-        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
+        for(PartProcPtrVector::const_iterator i=m_processes.begin();
+            (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
+            if (!(*i)->IsDeferred()) {
+                // Calculate rate if not deferred.
+                sum += (*i)->RateTerms(t, sys, iterm);
+            } else {
+                // If process is deferred, then set rate to zero.
+                for (unsigned int j=0; j!=(*i)->TermCount(); ++j) {*(iterm++)=0.0;}
+            }
+        }
+
+        for(TransportPtrVector::const_iterator i=m_transports.begin();
+            (i!=m_transports.end()) && (iterm!=terms.end()); ++i) {
             if (!(*i)->IsDeferred()) {
                 // Calculate rate if not deferred.
                 sum += (*i)->RateTerms(t, sys, iterm);
@@ -443,8 +535,13 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, fvector &terms) const
         }
     } else {
         // Fill vector with zeros.
-        PartProcPtrVector::const_iterator i;
-        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
+        for(PartProcPtrVector::const_iterator i=m_processes.begin();
+            (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
+            fill(iterm, iterm+(*i)->TermCount(), 0.0);
+            iterm += (*i)->TermCount();
+        }
+        for(TransportPtrVector::const_iterator i=m_transports.begin();
+            (i!=m_transports.end()) && (iterm!=terms.end()); ++i) {
             fill(iterm, iterm+(*i)->TermCount(), 0.0);
             iterm += (*i)->TermCount();
         }
@@ -468,58 +565,6 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, fvector &terms) const
     return sum;
 }
 
-/*
-// Get total rates of non-deferred processes.  Returns the sum
-// of all rates.  Uses supplied gas-phase conditions rather than
-// those in the given system.
-real Mechanism::CalcJumpRates(real t, const Sprog::Thermo::IdealGas &gas, 
-                              const Cell &sys, fvector &rates) const
-{
-    // This routine only calculates the rates of those processes which are
-    // not deferred.  The rate terms of deferred processes are returned
-    // as zero.
-
-    // Ensure vector is the correct length.
-    rates.resize(m_termcount);
-    fvector::iterator iterm = rates.begin()+m_inceptions.size();
-
-    real sum = 0.0;
-
-    // Get rates of inception processes.
-    sum += Inception::CalcRates(t, gas, sys, m_inceptions, rates, 0);
-
-    //IcnPtrVector::const_iterator ii;
-    //for (ii=m_inceptions.begin(); ii!=m_inceptions.end(); ++ii) {
-    //    sum += (*ii)->RateTerms(t, gas, sys, iterm);
-    //}
-
-    // Query other processes for their rates.
-    if (sys.ParticleCount() > 0) {
-        PartProcPtrVector::const_iterator i;
-        for(i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=rates.end()); ++i) {
-            if (!(*i)->IsDeferred()) {
-                // Calculate rate if not deferred.
-                sum += (*i)->RateTerms(t, gas, sys, iterm);
-            } else {
-                // If process is deferred, then set rate to zero.
-                for (unsigned int j=0; j!=(*i)->TermCount(); ++j) {*(iterm++)=0.0;}
-            }
-        }
-    }
-
-    // Get coagulation rate.
-    if (m_coag != NULL) {
-        sum += m_coag->RateTerms(t, gas, sys, iterm);
-    }
-
-    // Get death process rate.
-    if (m_death != NULL) {
-        sum += m_death->RateTerms(t, sys, iterm);
-    }
-
-    return sum;
-}
-*/
 
 // Calculates the rates-of-change of the chemical species fractions, 
 // gas-phase temperature and density due to particle processes.
@@ -560,7 +605,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
         }
     }
 
-    // Loop over the contributions of all other processes (except coagulation).
+    // Loop over the contributions of all other processes (except coagulation and transport).
     for (PartProcPtrVector::const_iterator i=m_processes.begin(); 
          i!=m_processes.end(); ++i) {
 
@@ -596,7 +641,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
 
 // Performs the Process specified.  Process index could be
 // an inception, particle process or a coagulation event.
-void Mechanism::DoProcess(unsigned int i, real t, Cell &sys) const
+void Mechanism::DoProcess(unsigned int i, real t, Cell &sys, TransportOutflow *out) const
 {
     // Work out to which process this term belongs.
     int j = i - m_inceptions.size();
@@ -607,8 +652,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys) const
         m_proccount[i] += 1;
     } else {
         // This is another process. 
-        PartProcPtrVector::const_iterator ip;
-        for(ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
+        for(PartProcPtrVector::const_iterator ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
             if (j < (int)(*ip)->TermCount()) {
                 // Do the process.
                 if ((*ip)->Perform(t, sys, j) == 0) {
@@ -619,6 +663,21 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys) const
                 return;
             } else {
                 j -= (*ip)->TermCount();
+            }
+        }
+
+        // See if this is a transport process.
+        for(TransportPtrVector::const_iterator it = m_transports.begin(); it != m_transports.end(); ++it) {
+            if (j < static_cast<int>((*it)->TermCount())) {
+                // Do the process.
+                if ((*it)->Perform(t, sys, j, out) == 0) {
+                    m_proccount[i] += 1;
+                } else {
+                    m_fictcount[i] += 1;
+                }
+                return;
+            } else {
+                j -= (*it)->TermCount();
             }
         }
 
@@ -692,37 +751,6 @@ void Mechanism::LPDA(real t, Cell &sys) const
     }
 }
 
-/*
-// Performs linear update algorithm on the given system up to given time,
-// with the given chemical conditions rather than those in the 
-// given system.
-void Mechanism::LPDA(real t, const Sprog::Thermo::IdealGas &gas, 
-                     Cell &sys) const
-{
-    // Check that there are particles to update and that there are
-    // deferred processes to perform.
-    if ((sys.ParticleCount() > 0) && (m_anydeferred)) {
-        // Stop ensemble from doubling while updating particles.
-        sys.Particles().FreezeDoubling();
-
-        // Perform deferred processes on all particles individually.
-        Ensemble::iterator i;
-        unsigned int k = 0;
-        for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
-            UpdateParticle(*(*i), gas, sys, t);
-            ++k;
-        }
-        
-        // Now remove any invalid particles and update the ensemble.
-        sys.Particles().RemoveInvalids();
-        sys.Particles().Update();
-
-        // Start particle doubling again.  This will also double the ensemble
-        // if too many particles have been removed.
-        sys.Particles().UnfreezeDoubling();
-    }
-}
-*/
 
 // Performs linear process updates on a particle in the given system.
 void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
@@ -980,55 +1008,6 @@ void  Mechanism::output(Cell &sys, real t) const
 						
 
 
-/*
-// Performs linear process updates on a particle in the given system,
-// with the current chemical conditions precalculated.
-void Mechanism::UpdateParticle(Particle &sp, const Sprog::Thermo::IdealGas &gas, 
-                               Cell &sys, real t) const
-{
-    // If there are no deferred processes then stop right now.
-    if (m_anydeferred) {
-        PartProcPtrVector::const_iterator i;
-        unsigned int num;
-        real rate, dt;
-
-        while ((sp.LastUpdateTime() < t) && sp.IsValid()) {
-            // Calculate delta-t and update particle time.
-            dt = t - sp.LastUpdateTime();
-            sp.SetTime(t);
-
-            // Loop through all processes, performing those
-            // which are deferred.
-            for (i=m_processes.begin(); i!=m_processes.end(); ++i) {
-                if ((*i)->IsDeferred()) {
-                    // Get the process rate x the time interval.
-                    rate = (*i)->Rate(t, gas, sys, sp) * dt;
-
-                    // Use a Poission deviate to calculate number of 
-                    // times to perform the process.
-                    num = ignpoi(rate);
-
-                    if (num > 0) {
-                        // Do the process to the particle.
-                        (*i)->Perform(t, sys, sp, num);
-                    }
-                }
-            }
-
-            // Perform sintering update.
-            if (m_sint_model.IsEnabled()) {
-                sp.Sinter(dt, sys, m_sint_model);
-            }
-        }
-
-        // Check that the particle is still valid, only calculate 
-        // cache if it is.
-        if (sp.IsValid()) sp.UpdateCache();
-    }
-}
-*/
-
-
 // READ/WRITE/COPY.
 
 // Creates a copy of the mechanism.
@@ -1077,6 +1056,8 @@ void Mechanism::Serialize(std::ostream &out) const
              i!=m_processes.end(); ++i) {
             ProcessFactory::Write(*(*i), out);
         }
+
+        //TODO transport processes
 
         // Write coagulation process.
         if (m_coag != NULL) {
@@ -1147,6 +1128,8 @@ void Mechanism::Deserialize(std::istream &in)
                     m_processes.push_back(p);
                 }
 
+                //TODO transport processes
+
                 // Read coagulation process.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n == 1) {
@@ -1198,6 +1181,13 @@ void Mechanism::releaseMem(void)
         delete *i;
     }
     m_processes.clear();
+
+    // Delete transport processes.
+    for (TransportPtrVector::iterator i=m_transports.begin();
+         i!=m_transports.end(); ++i) {
+        delete *i;
+    }
+    m_transports.clear();
 
     // Delete coagulation process.
     delete m_coag; m_coag = NULL;

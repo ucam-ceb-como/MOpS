@@ -10,12 +10,25 @@
 #include "swp_process.h"
 #include "swp_transport_outflow.h"
 
+#include <vector>
+
 namespace Sweep {
 namespace Processes {
+
+// Forward declaration
+class TransportProcess;
+//! Vector of pointers to transport processes
+typedef std::vector<TransportProcess*> TransportPtrVector;
+
 
 //! Transport of particles by jumps
 class TransportProcess : public Process {
 public:
+    //! Create a copy of the transport process.
+    virtual TransportProcess *const Clone(void) const;
+
+    //! Return the process type for identification during serialisation
+    virtual ProcessType ID(void) const;
 
     //! Set the ID number of the particle property used for rate calculation
     void SetPropertyID(
@@ -28,7 +41,7 @@ public:
     virtual real Rate(
         real t,
         const Cell &sys
-        ) const;
+        ) const {return 0;}
 
     // RATE TERM CALCULATIONS.
     //   These routines return the individual rate terms for a
@@ -43,6 +56,17 @@ public:
         const Cell &sys,         // System for which to calculate rate terms.
         fvector::iterator &iterm // Iterator to the first term.
         ) const;
+
+    // Calculates the rate of multiple inceptions given a
+    // vector of inceptions and an iterator to a vector of
+    // reals for output.
+    static real CalcRates(
+        real t,                   // Time.
+        const Cell &sys,          // System for which to calculate rates.
+        const TransportPtrVector &itrans, // Vector of inception processes.
+        fvector &rates,           // Output rates vector.
+        unsigned int start = 0    // Vector position to start at in vector rates.
+        );
 
     // PERFORMING THE PROCESS.
 
@@ -61,6 +85,13 @@ public:
         unsigned int iterm = 0,
         TransportOutflow *out = 0
         ) const;
+
+    /*!
+     *\brief    Transport processes are not deferred (for now)
+     *
+     *\return   True if the process is deferred
+     */
+    bool IsDeferred() const {return false;}
 
 private:
     //! Direction of the transport

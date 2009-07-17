@@ -51,6 +51,7 @@
 #include "swp_arssc_reaction.h"
 #include "swp_condensation.h"
 #include "swp_maths_functional.h"
+#include "swp_transport_process.h"
 #include "camxml.h"
 #include <string>
 
@@ -130,12 +131,25 @@ private:
         );
 
     // COAGULATION
-    //* Allow user to choose coagulation kernel via a sweep mechanism XML file.
+    //! Allow user to choose coagulation kernel via a sweep mechanism XML file.
     static void readCoagulation(        
         CamXML::Document &xml, // CamXML document pre-constructed from file.
         Mechanism &mech        // Mechanism to construct from XML.
         );
-    
+
+    // TRANSPORT
+    //! Read any transport processes from the XML document
+    static void readTransportProcs(
+        CamXML::Document &xml,
+        Mechanism &mech
+        );
+
+    //! Read one transport process from its XML description
+    static void readTransportProc(
+        CamXML::Element &xml,
+        Processes::TransportProcess& tran
+        );
+
     // REACTION SHARED COMPONENTS.
 
     // Reads reactants into a process.

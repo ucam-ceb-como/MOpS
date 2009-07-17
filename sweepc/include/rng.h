@@ -44,20 +44,20 @@
 #define SWEEP_RNG_H
 
 #include "swp_params.h"
-#include "mt19937ar.h"
+#include "mt19937.h"
 
 namespace Sweep
 {
     // Seeds the random number generator.
     inline void srnd(unsigned long seed)
     {
-        init_genrand(seed);
+        Sweep::init_genrand(seed);
     };
 
     // Returns a uniform random number [0,1].
     inline real rnd()
     {
-        return genrand_real1();
+        return Sweep::genrand_real1();
     };
 
     // Returns a uniform random integer in the given range.

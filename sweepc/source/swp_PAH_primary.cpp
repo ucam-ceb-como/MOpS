@@ -131,7 +131,7 @@ void PAHPrimary::UpdateTime(double t)
 	unsigned int j=0;
 	for (vector<PAH>::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
 		for (j=0;j<i->time.size();j++)
-		{	//if (this->m_numPAH>1000) i->freezetime+=rnd()*(t-i->lastupdated);
+		{
 			i->m_numcarbon=i->n_carbon_t.at(j);
 			if (i->time.at(j)>=t-i->time_created-i->freezetime)
 			{

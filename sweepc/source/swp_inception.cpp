@@ -96,6 +96,8 @@ Inception &Inception::operator =(const Inception &rhs)
         m_kfm  = rhs.m_kfm;
         m_ksf1 = rhs.m_ksf1;
         m_ksf2 = rhs.m_ksf2;
+        m_newcomp = rhs.m_newcomp;
+        m_newvals = rhs.m_newvals;
     }
     return *this;
 }
