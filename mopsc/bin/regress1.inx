@@ -49,9 +49,8 @@
         <column fmt="float">#sp</column>
         <!--column fmt="sci">T</column-->
         <column fmt="sci">M0</column>
-        <column fmt="sci">M1</column>
-        <!--column fmt="sci">fv</column-->
-        <!--column fmt="sci">ct</column-->
+        <column fmt="sci">fv</columns>
+        <column fmt="sci">ct</column>
       </tabular>
     </console>
     

@@ -97,12 +97,12 @@ cvodeslib:
 	$(MAKE) -f ../cvodes/Makefile -C ../cvodes debug=$(debug) profile=$(profile)
 
 # Mops library
-mopslib: $(obj) $(linklibs)
+mopslib: $(obj) comostringslib camxmllib sproglib sweeplib cvodeslib
 	mkdir -p lib
 ifeq ($(debug),0)
-	ar rc $(lib)/mops.a $(obj) $(comostrings) $(camxml) $(sprog) $(sweep)
+	ar -rcs $(lib)/mops.a $(obj)
 else
-	ar rc $(lib)/mops_d.a $(obj) $(comostrings) $(camxml) $(sprog) $(sweep)
+	ar -rcs $(lib)/mops_d.a $(obj)
 endif
 
 # Driver program.

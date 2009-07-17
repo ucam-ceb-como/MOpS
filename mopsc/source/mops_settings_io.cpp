@@ -48,6 +48,8 @@
 #include "mops_flow_stream.h"
 #include "mops_reactor_factory.h"
 #include "mops_predcor_solver.h"
+#include "mops_simulator.h"
+#include "mops_solver.h"
 
 #include "camxml.h"
 #include "string_functions.h"

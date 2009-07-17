@@ -100,7 +100,13 @@ Reactor &Reactor::operator=(const Mops::Reactor &rhs)
 
         // Copy the reactor properties.
         m_time    = rhs.m_time;
-        m_mix     = rhs.m_mix->Clone(); // Need to clone mixture!
+
+        // Clone the mixture, if it exists in rhs
+        if(rhs.m_mix)
+            m_mix     = rhs.m_mix->Clone(); // Need to clone mixture!
+        else
+            m_mix = NULL;
+
         m_emodel  = rhs.m_emodel;
         m_nsp     = rhs.m_nsp;
         m_neq     = rhs.m_neq;

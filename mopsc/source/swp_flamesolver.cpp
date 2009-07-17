@@ -211,7 +211,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 // flavour the gas-phase chemistry is interpolated from a vector of
 // IdealGas objects rather than being taken from the given system object.
 // However, the particles in the system object are updated accordingly.
-void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter, 
+void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
                         Mops::Solver::OutFnPtr out, void *data)
 {
 //    int err = 0;
@@ -296,6 +296,8 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     // Restore initial chemical conditions to sys.
     *static_cast<Cell*>(r.Mixture()) = chem;
     r.Mixture()->SetFixedChem(fixedchem);
+
+    out(nsteps, niter, r, *this, data);
 
     return;
 }

@@ -50,7 +50,6 @@
 #include "mops_mechanism.h"
 #include "mops_reactor_type.h"
 #include "mops_src_terms.h"
-#include "nvector/nvector_serial.h"
 #include "sweep.h"
 
 namespace Mops

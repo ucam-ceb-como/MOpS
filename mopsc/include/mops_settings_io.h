@@ -45,17 +45,25 @@
 #define MOPS_SETTINGS_IO_H
 
 #include "mops_params.h"
-#include "mops_simulator.h"
-#include "mops_reactor.h"
-#include "mops_solver.h"
 #include "mops_timeinterval.h"
 #include "camxml.h"
 #include <vector>
 #include <list>
 #include <string>
 
+namespace Sweep {
+    class Particle;
+    class Mechanism;
+}
+
 namespace Mops
 {
+    // forward declarations
+    class Simulator;
+    class Solver;
+    class Reactor;
+    class Mechanism;
+    
     //* Use for passing around lists of particles
     typedef std::list<Sweep::Particle*> PartPtrList;
 
@@ -95,6 +103,12 @@ public:
         Mechanism &mech                   // Mechanism used to define reactor.
         );
 
+    // Reads time intervals from given XML node.
+    static void readTimeIntervals(
+        const CamXML::Element &node,     // XML node containing time intervals.
+        std::vector<TimeInterval> &times // Vector of output time intervals.
+        );
+
 private:
 
     // V2 SETTINGS FILE SECTIONS.
@@ -118,12 +132,6 @@ private:
     static PartPtrList ReadInitialParticles(const CamXML::Element &node, 
                                             const unsigned int max_ensemble_size,
                                             const Sweep::Mechanism & particle_mech);
-
-    // Reads time intervals from given XML node.
-    static void readTimeIntervals(
-        const CamXML::Element &node,     // XML node containing time intervals.
-        std::vector<TimeInterval> &times // Vector of output time intervals.
-        );
 
     // Reads simulation output parameters from given XML node.
     static void readOutput(

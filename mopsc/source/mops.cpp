@@ -49,6 +49,7 @@ using namespace Strings;
 #endif
 
 #include "mops.h"
+#include "mops_simulator.h"
 #include "sprog.h"
 #include "sweep.h"
 #include <vector>
