@@ -245,10 +245,6 @@
 				Name="Processes"
 				>
 				<File
-					RelativePath=".\source\swp_actsites_reaction.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\source\swp_addcoag.cpp"
 					>
 				</File>
@@ -312,6 +308,10 @@
 					RelativePath=".\source\swp_transcoag.cpp"
 					>
 				</File>
+				<File
+					RelativePath=".\source\swp_transport_process.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Active-sites Models"
@@ -365,6 +365,10 @@
 				Name="Stats"
 				>
 				<File
+					RelativePath=".\source\swp_actsites_reaction.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_ensemble_stats.cpp"
 					>
 				</File>
@@ -402,6 +406,14 @@
 				</File>
 				<File
 					RelativePath=".\source\swp_particle_image.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Random Numbers"
+				>
+				<File
+					RelativePath=".\source\mt19937.cpp"
 					>
 				</File>
 			</Filter>
@@ -491,7 +503,7 @@
 				Name="Random Numbers"
 				>
 				<File
-					RelativePath=".\include\mt19937ar.h"
+					RelativePath=".\include\mt19937.h"
 					>
 				</File>
 				<File
@@ -572,6 +584,10 @@
 				</File>
 				<File
 					RelativePath=".\include\swp_transcoag.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_transport_process.h"
 					>
 				</File>
 			</Filter>
