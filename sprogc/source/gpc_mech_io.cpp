@@ -350,7 +350,7 @@ MechanismParser::KEY_POS MechanismParser::getCK_KeyPos(const std::string &key,
 
     // Now try to find the other keywords before the END.  If
     // keywords are present before END then this is an error.
-    if (ckstr.find("ELEM", pos.begin+pos.length) < pos.end){
+    /*if (ckstr.find("ELEM", pos.begin+pos.length) < pos.end){
         throw std::invalid_argument("Erroneous ELEM/ELEMENTS keyword found within " +
                                     key + " definition "
                                     "(Sprog, MechanismParser::getCK_KeyPos).");
@@ -369,7 +369,7 @@ MechanismParser::KEY_POS MechanismParser::getCK_KeyPos(const std::string &key,
         throw std::invalid_argument("Erroneous THER/THERMO keyword found within " +
                                     key + " definition "
                                     "(Sprog, MechanismParser::getCK_KeyPos).");
-    }
+    }*/
 
     // Determine the keyword line number.
     pos.line = 1;
