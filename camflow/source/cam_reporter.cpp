@@ -82,8 +82,8 @@ void CamReporter::consoleHead(string head){
     }
     cout << endl;
 }
-void CamReporter::openFile(string fileName){
-    custom = new DataIO(fileName);
+void CamReporter::openFile(string fileName, bool old){
+    custom = new DataIO(fileName, old);
 }
 void CamReporter::closeFile(){
     custom->close();

@@ -53,7 +53,7 @@ namespace Camflow{
         DataIO *standard;
         DataIO *rates;
         DataIO *transport;
-        DataIO *custom;
+        DataIO *custom;        
     public:
         CamReporter(){}
         ~CamReporter(){}
@@ -62,7 +62,7 @@ namespace Camflow{
         //title for the consol output
         void consoleHead(string head);
         //write the data to file
-        void openFile(string fileName);
+        void openFile(string fileName, bool old);
         void closeFile();
         void openFiles(bool stdrd = true, bool ratesOut = false, bool transOut = false);
         void closeFiles(bool stdrd = true, bool ratesOut = false, bool transOut = false);

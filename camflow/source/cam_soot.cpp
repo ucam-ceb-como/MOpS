@@ -822,7 +822,7 @@ void CamSoot::report(int nCells){
     header.push_back("M5");
 
     CamReporter cr;
-    cr.openFile("moments.dat");
+    cr.openFile("moments.dat",false);
     cr.writeCustomHeader(header);
 
     for(int i=0; i<nCells; i++){

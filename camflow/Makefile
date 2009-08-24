@@ -28,6 +28,9 @@ endif
 src=source
 inc=include
 
+export path=.
+lib=$(path)/lib
+
 # Additional libraries.
 
 ifeq ($(debug),0)
@@ -45,27 +48,37 @@ linklibs=$(comostrings) $(camxml) $(sprog) $(cvode)
 
 # Target objects.
 
-obj=   cam_kernel.o cam_read.o cam_setup.o cam_geometry.o \
+obj=   cam_read.o cam_setup.o cam_geometry.o \
 		 cam_control.o cam_conveter.o cam_math.o cam_conc.o \
 		 cam_admin.o cam_boundary.o cam_configuration.o cam_profile.o\
 		 cam_reporter.o cam_models.o cam_plug.o cam_premix.o cam_residual.o \
-		 stagflow.o cam_soot.o batch.o \
+		 stagflow.o cam_soot.o batch.o flamelet.o interface.o\
 		 cvode_wrapper.o 
 
+objlocal=	cam_kernel.o
 
-# TARGET all: Compile to a static library (*.a).
+# TARGET binary: Compile to a  binary.
 
-all: comostringslib camxmllib sproglib cvodelib $(obj)
+binary: comostringslib camxmllib sproglib cvodelib $(objlocal) $(obj)
 	mkdir -p bin
 ifeq ($(debug),0)
   ifeq ($(profile),0)
-		$(cpp) $(flink) $(obj) $(linklibs) -o bin/camflow
+		$(cpp) $(flink) $(obj) $(objlocal) $(linklibs) -o bin/camflow
   else
-		$(cpp) $(flink) $(obj) $(linklibs) -o bin/camflow_p
+		$(cpp) $(flink) $(obj) $(objlocal) $(linklibs) -o bin/camflow_p
   endif 
 else
-	$(cpp) $(flink) $(obj) $(linklibs) -o bin/camflow_d
+	$(cpp) $(flink) $(obj) $(objlocal) $(linklibs) -o bin/camflow_d
 endif
+
+library: $(obj)
+	mkdir -p $(lib)
+ifeq ($(debug),0)
+	ar rc $(lib)/camflow.a $(obj) $(linklibs)
+else
+	ar rc $(lib)/camflow_d.a $(obj) $(linklibs) 
+endif
+
 
 # Required libraries.
 comostringslib:
@@ -122,8 +135,12 @@ batch.o: $(src)/batch.cpp
 	$(cpp) $(flag) $(src)/batch.cpp
 cam_soot.o: $(src)/cam_soot.cpp
 	$(cpp) $(flag) $(src)/cam_soot.cpp
+interface.o: $(src)/interface.cpp
+	$(cpp) $(flag) $(src)/interface.cpp
 cvode_wrapper.o: $(src)/cvode_wrapper.cpp
 	$(cpp) $(flag) $(src)/cvode_wrapper.cpp
+flamelet.o: $(src)/flamelet.cpp
+	$(cpp) $(flag) $(src)/flamelet.cpp
 
 
 # Combined mechanisms.

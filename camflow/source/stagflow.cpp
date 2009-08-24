@@ -1,9 +1,3 @@
-
-#include <cmath>
-#include <algorithm>
-#include "cam_params.h"
-#include "cam_boundary.h"
-
 /*
  * File:   stagflow.cpp
  * Author: vinod (vj231@cam.ac.uk)
@@ -52,7 +46,10 @@
 #include "cam_geometry.h"
 #include "cam_setup.h"
 #include "cam_math.h"
-#include <stdlib.h>
+#include <cmath>
+#include <algorithm>
+#include "cam_params.h"
+#include "cam_boundary.h"
 #include <vector>
 
 using namespace Camflow;

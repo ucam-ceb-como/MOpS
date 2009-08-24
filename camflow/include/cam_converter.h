@@ -67,7 +67,7 @@ namespace Camflow{
         doublereal mole2mass(vector<doublereal>& mole,
                              vector<doublereal>& mass,
                              Mechanism &mech );
-
+        // convert from mass to mole
         doublereal mass2mole(vector<doublereal>& mass,
                              vector<doublereal>& mole,
                              Mechanism &mech);

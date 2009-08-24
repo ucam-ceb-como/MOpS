@@ -1,6 +1,3 @@
-
-#include <vector>
-
 /*
  * File:   batch.h
  * Author: vj231
@@ -43,6 +40,7 @@
 #include "batch.h"
 #include "cam_math.h"
 #include "cvode_wrapper.h"
+#include <vector>
 #include <cstring>
 #include <iostream>
 #include <sstream>
@@ -62,11 +60,16 @@ int Batch::getType(){
 }
 
 /*
- *solve the batch reactor. This is called by CamModels
- *entering call to batch reactor model
+ *Solve the batch reactor. This is called by CamModel.
+ *Entering call to batch reactor model
  */
 
-//batch solve main call
+/*
+ * batch solve main call. This function stores the mechanism object and the
+ * mixture object to the corresponding pointers, sets the array offsets, the
+ * number of equations to be solved, the total number of variables in the
+ * system etc.
+ */
 void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
                       CamSoot &cs, Mechanism &mech){
 
@@ -111,6 +114,7 @@ void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
     camMixture->SetMassDensity(rho);
     camMixture->GetConcs(solvect);
     solvect.push_back(temp);
+   
 
 
     reporter->header("BATCH ");
@@ -128,12 +132,14 @@ void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
     CVodeWrapper cvw;
     cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(), cc.getSpeciesRelTol(),
                         cc.getMaxTime(),nEqn,*this);
-    //cvw.setIniStep(cc.getIniStep());
+    
     cvw.solve(CV_ONE_STEP,cc.getResTol());
     reporter->closeFiles();
 }
 
-
+/*
+ * function called by the ODE solver
+ */
 int Batch::eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval){
     /*
      *this is called by the DAE wrapper object. Given y, ydot is returned
@@ -146,9 +152,9 @@ int Batch::eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval){
 //residual definitions
 void Batch::residual(const doublereal& time, doublereal* y, doublereal* f){
 
-    updateMixture(time,y);
-    speciesResidual(time,y,f);
-    energyResidual(time,y,f);
+    updateMixture(time,y);          //saves the dependent variables
+    speciesResidual(time,y,f);      // solve species residual
+    energyResidual(time,y,f);       // solve energy residual
     /*
      *moment residuals
      */

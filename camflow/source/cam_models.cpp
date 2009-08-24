@@ -41,11 +41,16 @@
 #include "batch.h"
 #include "cam_premix.h"
 #include "stagflow.h"
+#include "flamelet.h"
 #include "cam_error.h"
 #include <iostream>
 using namespace Camflow;
 using namespace std;
-
+/*
+ *this member function chooses the reactor model based on the
+ *configuration ID and calls the passes the control to the right
+ * reactor object
+ */
 void CamModels::solve(CamAdmin& ca, CamBoundary& cb,
         CamConfiguration& config,
         CamControl& cc,
@@ -53,8 +58,11 @@ void CamModels::solve(CamAdmin& ca, CamBoundary& cb,
         CamProfile& cp,
         CamSoot& cs,
         Mechanism& mech){
+
     int configID;
     configID = config.getConfiguration();
+
+    
 
     if(configID == config.PLUG){
         CamPlug cplug;
@@ -63,7 +71,8 @@ void CamModels::solve(CamAdmin& ca, CamBoundary& cb,
         }catch(CamError ce){
             cout << ce.errorMessge << endl;
         }
-
+        
+        
     }else if(configID == config.PREMIX){
         CamPremix cpremix;
         try{
@@ -71,7 +80,9 @@ void CamModels::solve(CamAdmin& ca, CamBoundary& cb,
         }catch(CamError ce){
             cout << ce.errorMessge << endl;
         }
+        
     }else if(configID == config.STAGFLOW || configID == config.COUNTERFLOW){
+        
         StagFlow stflow;
 
         try{
@@ -79,7 +90,7 @@ void CamModels::solve(CamAdmin& ca, CamBoundary& cb,
         }catch(CamError ce){
             cout << ce.errorMessge << endl;
         }
-
+        
     }else if(configID == config.BATCH_CV){
         Batch batch;
         try{
@@ -87,9 +98,38 @@ void CamModels::solve(CamAdmin& ca, CamBoundary& cb,
         }catch(CamError ce){
             cout << ce.errorMessge << endl;
         }
-    }else{
+        
+    }else if(configID == config.FLAMELET){
+        FlameLet flmlt;
+        
+        try{
+            flmlt.solve(cc,ca,cg,cp,mech,false);
+        }catch(CamError ce){
+            cout << ce.errorMessge << endl;
+        }
+        
+    } else{
         cout << "Unknown reactor model\n";
     }
-
-
+    
 }
+
+
+//void CamModels::solve(CamAdmin& ca,
+//                        CamBoundary& cb,
+//                        CamConfiguration& config,
+//                        CamControl& cc,
+//                        CamGeometry& cg,
+//                        CamProfile& cp,
+//                        CamSoot& cs,
+//                        Mechanism& mech,
+//                        FlameLet& flmlt, doublereal sdr){
+//
+//        flmlt.setExternalScalarDissipationRate(sdr);
+//        try{
+//            flmlt.solve(cc,ca,cg,cp,mech,true);
+//        }catch(CamError ce){
+//            cout << ce.errorMessge << endl;
+//        }
+//}
+

@@ -36,9 +36,12 @@
  * Created on January 24, 2009, 12:08 PM
  */
 
+#include "cam_reporter.h"
+
+
 #include "cam_profile.h"
 
-
+#include <sys/stat.h>
 #include "cam_admin.h"
 
 #include <vector>
@@ -133,13 +136,18 @@ void CamPlug::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& c
      */
     report(0.0,&solvect[0]);
     
-    
+    createSummary();
 
     CVodeWrapper cvw;
     cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(), cc.getSpeciesRelTol(), cg.getLenth(),nEqn,*this);
     cvw.setIniStep(cc.getIniStep());
     cvw.solve(CV_ONE_STEP);
     reporter->closeFiles();
+    /*
+     *write the summary
+     */
+    reportSummary(cg.getLenth(),&solvect[0]);
+    reporter->closeFile();
 }
 
 
@@ -274,6 +282,19 @@ void CamPlug::header(){
     headerData.push_back("sumfracs");
 
 }
+//create the summary file
+void CamPlug::createSummary(){
+    struct stat stFileInfo;
+    string fileName = "summary.dat";
+    int intStat;
+    intStat = stat(fileName.c_str(),&stFileInfo);
+    if(intStat!=0){
+        reporter->openFile("summary.dat",true);
+        reporter->writeCustomHeader(headerData);
+    }else{
+        reporter->openFile("summary.dat",true);
+    }
+}
 //report the solution
 void CamPlug::report(doublereal x, doublereal* soln){
     //std::setw(5); std::setprecision(4);
@@ -282,16 +303,34 @@ void CamPlug::report(doublereal x, doublereal* soln){
     updateMixture(x,soln);
     cout << x << endl;
 
-    //prepare to report
-    doublereal sum =0;
+    //prepare to report    
     vector<doublereal> data;
+    vectorize(x,soln,data);
+    reporter->writeStdFileOut(data);
+
+}
+/*
+ *report the summary
+ */
+void CamPlug::reportSummary(doublereal x, doublereal* soln){
+    vector<doublereal> data;
+    vectorize(x,soln,data);
+    reporter->writeCustomFileOut(data);
+}
+/*
+ *create the data vector for output
+ */
+void CamPlug::vectorize(doublereal x, doublereal* soln, vector<doublereal>& data){
+
+    doublereal sum =0;
     data.clear();
     data.push_back(x);
     data.push_back(rho);
     data.push_back(vel);
     data.push_back(soln[ptrF]);
     data.push_back(soln[ptrR]);
-    data.push_back(soln[ptrT]);
+    //data.push_back(soln[ptrT]);
+    data.push_back(camMixture->Temperature());
 
     if(admin->getSpeciesOut()==admin->MOLE){
         vector<doublereal> molefracs;
@@ -310,7 +349,6 @@ void CamPlug::report(doublereal x, doublereal* soln){
         }
     }
     data.push_back(sum);
-    reporter->writeStdFileOut(data);
 
 }
 

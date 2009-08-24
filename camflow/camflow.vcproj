@@ -255,6 +255,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\flamelet.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\interface.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\stagflow.cpp"
 				>
 			</File>
@@ -354,6 +362,14 @@
 			</File>
 			<File
 				RelativePath=".\include\cvode_wrapper.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\flamelet.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\interface.h"
 				>
 			</File>
 			<File

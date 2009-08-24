@@ -58,10 +58,10 @@ namespace Camflow{
         CamConc(){}
         ~CamConc(){}
         CamConc(CamConc &cc);
-        //set the fraction type
+        //set the fraction type mass or mole
         void setFracType(int n);
 
-        //return the frac type
+        //return the frac type such as mass or mole
         int getFracType() const;
     };
 }

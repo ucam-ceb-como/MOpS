@@ -77,9 +77,9 @@ void CamGeometry::discretize(){
     doublereal pos =0;
     for(int i=0; i<nCell; i++){
         pos += dz[i];
-        axPos.push_back((pos - dz[i]/2.0));
-        
+        axPos.push_back((pos - dz[i]/2.0));        
     }
+    length = grid[len];
 }
 
 void CamGeometry::setLength(doublereal len){

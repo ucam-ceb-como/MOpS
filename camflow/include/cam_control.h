@@ -64,20 +64,26 @@ namespace Camflow{
 
     public:
         enum Solution{                  //steady state or transient solution
-            COUPLED,
-            SEGREGATED
+            COUPLED,                    // coupled solver
+            SEGREGATED                  // segregated solver
         };
 
         enum Report{                    //output control
             INTERMEDIATE,
             FINAL
         };
-
+        /*
+         *only CVode is supported at the moment. The wraper classes
+         *and its implementation may be found in the distribution.
+         *However they are not included in the makefile. You may try other
+         *solvers at own risk
+         */
         enum Solvers{
             RADAU,
             CVODE,
             KINSOL,
-            IDA
+            IDA,
+            NEWTON
         };
 
         //constructor

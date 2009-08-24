@@ -250,7 +250,14 @@ void CamPremix::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
     reacGeom = &cg;
     admin->getLeftBoundary(cb);
     sootMom = &cs;
+
+    doublereal checkLen = cg.getLenth();
+
     reacGeom->discretize();
+
+    if(checkLen != cg.getLenth()){
+        throw CamError("Specified reactor length differes from grid file\n");
+    }
     /*
      * 2 additional cells are padded to consider the
      * inlet and the exhaust

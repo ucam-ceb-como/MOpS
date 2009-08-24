@@ -29,6 +29,21 @@ namespace Camflow{
         void prime(int size, Array2D &prime);
         void TDMA(vector<doublereal>& a, vector<doublereal>&b, vector<doublereal>&c,
                 vector<doublereal>& r, vector<doublereal>& u);
+
+        doublereal erf(doublereal x);
+        doublereal erfc(doublereal x);
+        doublereal erfccheb(doublereal z);
+        doublereal inverfc(doublereal p);
+        doublereal inverf(doublereal p);
+
+        template<class T>
+        inline T SQR(const T a){
+            return a*a;
+        };
+
+    private:
+        static const int ncof=28;
+        static const doublereal cof[28];
         
 
     };

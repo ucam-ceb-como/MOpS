@@ -126,6 +126,25 @@ namespace Camflow{
         const int& getNVar() const;
         //return the total number of equations
         const int& getNEqn() const;
+
+                /*
+         *return the species mass fractions to the calling program
+         */
+        virtual void getSpeciesMassFracs(Array2D& mf);
+        /*
+         *return the temperature
+         */
+        virtual void getTemperatureVector(vector<doublereal>& temp);
+        /*
+         *return the density vecot
+         */
+        virtual void getDensityVector(vector<doublereal>& density);
+        /*
+         *return the independant variable
+         */
+        virtual void getIndepedantVar(vector<doublereal>& indVar);
+
+
         //derivative calculation
         doublereal dydx(doublereal nr1, doublereal nr2, doublereal dr){
             return ((nr1-nr2)/dr);

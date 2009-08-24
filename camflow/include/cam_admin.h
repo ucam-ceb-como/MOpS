@@ -129,26 +129,30 @@ namespace Camflow{
         //return the report schedule
         int getReportSchedule();
 
-        //Evaluation of dimensionaless number
+        //Evaluation of dimensionaless numbers
         doublereal getNre(const doublereal& hd, //hydraulic dia
                 const doublereal& u, //velocity
                 const doublereal& rho,//density
                 const doublereal& eta // viscosity
                 );
 
+        //return the prandtl number
         doublereal getPrandtl(const doublereal& eta, //viscosity
                 const doublereal& lambda,//thermal conductivity
                 const doublereal& cp //specific heat
                 );
 
+        //return the Graetz number
         doublereal getGraetzInv(const doublereal& x,//axial position
                     const doublereal& dh,   //hydraulic dia
                     const doublereal& Nre,  //Reynolds number
                     const doublereal& Pr    //Prandtl number
                     );
 
+        //return the nussult number
         doublereal getNusselt(const doublereal& gzInv);
-        
+
+        //return the heat transfer coefficient
         doublereal getHeatTransferCoeff(const doublereal& x,
                                         const doublereal& vel,
                                         const doublereal& hd,

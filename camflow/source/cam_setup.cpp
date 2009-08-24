@@ -92,8 +92,8 @@ void CamSetup::initSpecies(CamBoundary& left, CamBoundary& right,
 
     soln.resize(nSpc*cellEnd,0);
     vector<doublereal>  position;
-    position = reacGeom->getAxpos();
-    profile->setStartprofile(left,right,*camMech);
+    position = reacGeom->getAxpos();    
+    profile->setStartprofile(left,right,*camMech);    
     Array2D start = profile->getStartProfile();
     for(int i=cellBegin; i<cellEnd; i++){
         for(int l=0; l<nSpc; l++){
@@ -141,6 +141,12 @@ void CamSetup::initTemperature(CamBoundary& cb, CamControl& cc,
 
 
 }
+
+void CamSetup::initTempGauss(vector<doublereal>& soln){
+    profile->setGaussTempProfile(soln);
+}
+
+
 
 void CamSetup::storeInlet(CamBoundary& cb, inletStruct& ud_inlet){
     /*

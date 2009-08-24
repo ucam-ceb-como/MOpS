@@ -65,9 +65,15 @@ namespace Camflow{
          */
         int eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval);
         //console output
-        void report(doublereal x, doublereal* solution);
+        void report(doublereal x, doublereal* soln);
         //console output with residuals
-        void report(doublereal x, doublereal* solution, doublereal& res);
+        void report(doublereal x, doublereal* soln, doublereal& res);
+        //prepare the data vector for output
+        void vectorize(doublereal x, doublereal* soln, vector<doublereal>& data);
+        //create the cummary file
+        void createSummary();
+        //write the summary
+        void reportSummary(doublereal x, doublereal * soln);
         //mass matrix evaluation
         void massMatrix(doublereal **M);
 

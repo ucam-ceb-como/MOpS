@@ -192,20 +192,28 @@ void CamProfile::setGaussian(Mechanism& mech){
         p++;
 
     }
-//    p = list_intmd.begin();
-//    while(p!=list_intmd.end()){
-//        int index = mech.FindSpecies(convertToCaps(trim(p->first)));
-//        for(int i=0; i<len; i++){
-//            cout << start(i,index) << endl;
-//        }
-//        p++;
-//
-//    }
-//    cout << "finished\n";
-//    int dd;
-//    cin >> dd;
-
 }
+
+/*
+ *set the temperature profile based on a guassian distribution
+ */
+
+void CamProfile::setGaussTempProfile(vector<doublereal>& vTemp){
+
+    if(mWidth == 0.0 || mCenter == 0.0){
+        throw CamError("Invalid mixing center and mixing width definition\n");
+    }
+    doublereal dmax = 1.0;
+    vector<doublereal> position = geom->getAxpos();
+    int len = position.size();
+    vTemp.resize(len,0.0);
+    doublereal gWidth = -log(0.15*dmax)/pow(mWidth/2.0,2);
+    for(int i=0; i<len; i++){
+        doublereal temp = exp(-gWidth*pow(position[i]-mCenter,2));        
+        vTemp[i] = temp*2000+300;
+    }
+}
+
 /*
  *return the array
  */

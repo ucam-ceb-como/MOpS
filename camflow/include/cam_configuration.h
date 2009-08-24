@@ -50,11 +50,12 @@ namespace Camflow{
     public:
 
         enum Connfiguration{
-            COUNTERFLOW,
-            STAGFLOW,
-            PREMIX,
-            PLUG,
-            BATCH_CV
+            COUNTERFLOW,            //counter flow flame
+            STAGFLOW,               //stagnation flow configuration
+            PREMIX,                 //laminar premix reactor
+            PLUG,                   // laminar plug flow reactor
+            BATCH_CV,               // constant volume batch reactor
+            FLAMELET                // flamelet model (counter flow)
         };
 
         CamConfiguration(){}

@@ -52,6 +52,7 @@
 #include "cam_read.h"
 #include "cam_models.h"
 #include "cam_soot.h"
+#include "interface.h"
 /*
  * 
  */
@@ -79,7 +80,7 @@ int main() {
     CamConfiguration config;
     CamRead cm;
     CamModels models;
-    CamSoot cSoot;
+    CamSoot cSoot;    
     try{
         cm.readInput(fCamFlow,cc,cg,convert,ca,cb,cp,config,cSoot);
     }catch(CamError &ce){
@@ -87,9 +88,9 @@ int main() {
     }
     //CamBoundary *cb2 = &cb;
     
-    //read mechanism, thermo and trasnport data
+    //read mechanism, thermo and trasnport data    
     IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,fTrans);
-    
+        
     try{
         models.solve(ca,cb,config,cc,cg,cp,cSoot,mech);
     }catch(CamError &ce){

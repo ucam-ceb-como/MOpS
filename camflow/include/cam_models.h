@@ -50,6 +50,8 @@
 #include "cam_profile.h"
 #include "gpc.h"
 #include "cam_soot.h"
+#include "cam_residual.h"
+#include "flamelet.h"
 using namespace Sprog;
 namespace Camflow{
     class CamModels{
@@ -57,6 +59,9 @@ namespace Camflow{
     public:
         CamModels(){};
         ~CamModels(){};
+        /*
+         *this caling interface is for the kernel
+         */
         void solve(CamAdmin &ca,
                    CamBoundary &cb,
                    CamConfiguration &config,
@@ -64,7 +69,24 @@ namespace Camflow{
                    CamGeometry &cg,
                    CamProfile &cp,
                    CamSoot &cs,
-                   Mechanism &mech);
+                   Mechanism &mech
+                   );
+        /*
+         *flamelet interface. This is provided since the handle to the
+         *object call still remain with the interface object. That helps
+         *querying the reactor object in a much easier fashion
+         */
+//        void solve(CamAdmin &ca,
+//                   CamBoundary &cb,
+//                   CamConfiguration &config,
+//                   CamControl &cc,
+//                   CamGeometry &cg,
+//                   CamProfile &cp,
+//                   CamSoot &cs,
+//                   Mechanism &mech,
+//                   FlameLet &flmlt,
+//                   doublereal sdr
+//                   );
 
     };
 }

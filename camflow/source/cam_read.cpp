@@ -96,6 +96,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
             if(!convertToCaps(attrValue).compare("COUNTERFLOW")) config.setConfiguration(config.COUNTERFLOW);
             if(!convertToCaps(attrValue).compare("STAGFLOW"))config.setConfiguration(config.STAGFLOW);
             if(!convertToCaps(attrValue).compare("BATCH_CV"))config.setConfiguration(config.BATCH_CV);
+            if(!convertToCaps(attrValue).compare("FLAMELET"))config.setConfiguration(config.FLAMELET);
         }else{
             throw CamError("Model remains undefined\n");
         }
@@ -327,6 +328,8 @@ void CamRead::readControl(CamControl& cc, const CamXML::Element& node){
                 cc.setSolver(cc.KINSOL);
             if(!convertToCaps(atrVal).compare("IDA"))
                 cc.setSolver(cc.IDA);
+            if(!convertToCaps(atrVal).compare("NEWTON"))
+                cc.setSolver(cc.NEWTON);
         }else{
             throw CamError(" solver need to be specified\n");
         }

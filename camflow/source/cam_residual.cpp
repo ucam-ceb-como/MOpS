@@ -8,6 +8,7 @@
 #include "cam_params.h"
 #include "cam_residual.h"
 #include "cam_math.h"
+#include "cam_read.h"
 using namespace Camflow;
 
 void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doublereal* f){
@@ -343,4 +344,29 @@ int CamResidual::eval(doublereal* y, doublereal* ydot){
 //flow field evaluation
 void CamResidual::calcFlowField(const doublereal& time, doublereal* y){
     throw CamError("Base class function calcFlowField nothing to do\n");
+}
+
+/*
+ *return the species mass fraction array
+ */
+void CamResidual::getSpeciesMassFracs(Array2D& mf){
+    mf = s_mf;
+}
+/*
+ *return the density
+ */
+void CamResidual::getDensityVector(vector<doublereal>& density){
+    density = m_rho;
+}
+/*
+ *return the temperature
+ */
+void CamResidual::getTemperatureVector(vector<doublereal>& temp){
+    temp = m_T;
+}
+/*
+ *return the independant variable
+ */
+void CamResidual::getIndepedantVar(vector<doublereal>& indVar){
+    indVar = reacGeom->getAxpos();
 }

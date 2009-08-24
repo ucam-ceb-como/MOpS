@@ -1,109 +1,122 @@
 
-#include <cmath>
 #include <stdlib.h>
-
-
-#include "cam_residual.h"
+#include <stdio.h>
 #include "giant_wrapper.h"
-#include "cam_read.h"
-
 using namespace Camflow;
+
 extern "C"{
-    void giantFun(int n, doublereal *u, doublereal *fu, int nfcn, int *fail,
-            void* udata){
-        CamResidual *residual = (CamResidual*)(udata);
-        residual->eval(0.0,u,fu,true);
-        *fail = 0;
+    #define AJDEL 1.0e-08
+    #define AJMIN 1.0e-04
+    void giantResidual(int *neq, doublereal* y, doublereal* f,void *uData ,
+                                            int *fail){
+
+        CamResidual *residual = (CamResidual*)uData;
+        residual->eval(0,y,f,false);
+        fail = 0;
+    }
+
+    void giantJac(int n ,doublereal* x, doublereal* fscale ,doublereal* fxk, int njac,
+                            void *uData, int *fail){
+        vector<doublereal> f, fdelta;
+        f.resize(n);fdelta.resize(n);
+        CamResidual *residual = (CamResidual*)uData;
+        residual->eval(0,x,&f[0],false);
         
-    }
 
-    void giantJac(int n, doublereal *x, doublereal *xscale, doublereal *fx,
-            int nJac, int *fail, void* udata){
-        CamResidual *residual = (CamResidual*)(udata);
-
-        /*
-         *this is a dense approximation. On call fx
-         *contains the current function values
-         */
-        *fail = 0;
-        int kn;
-        doublereal w,u;
-        vector<doublereal> v, temp;
-        v.clear();
-        v.resize(n,0.0);
-        for(int i=0; i<n; i++){            
-            temp.push_back(fx[i]);
-        }
-        for(int k=0; k<n; k++){
-            w = x[k];
-            if(xscale)
-                u = MAX(fabs(x[k]),xscale[k]);
-            else
-                u = fabs(x[k]);
-            u = MAX(u,1e-04)*1e-08*SIGN(x[k]);
-            cout << u << endl;
+        int i,k,kn;
+        for(k=0;k<n;k++){
+            doublereal w=x[k];
+            doublereal u = fabs(x[k]);
+            u = MAX(u,AJMIN)*AJDEL*SIGN(x[k]);
             x[k] = w+u;
-            residual->eval(0.0,x,&v[0],true);
+            
+            residual->eval(0,x,&fdelta[0],false);
+            
             x[k] = w;
-
-//            kn = k*n;
-//            for(int i=0; i<n; i++){
-//                fx[kn+i] = (v[i]-temp[i])/u;
-//            }
-
-                        
+            kn = k*n;
+            for(i=0; i<n;i++){
+                fxk[kn+i] = (fdelta[i]-f[i])/u;
+            }
         }
-
+        njac++;
+        fail = 0;
     }
-
- 
-}
-
-void GiantWrapper::init(int n, vector<doublereal>& solnVec, doublereal rtol,
-                        CamResidual& cr){
-
-
-
-    /*
-     *prepeate giant fun
-     */
-    fun.fun = &giantFun;
-    fun.jac = &giantJac;
-
-    if(n!=solnVec.size())
-        throw CamError("Number of Eqns and soln vec size do not match\n");
-    nEq = n;
-    y = &solnVec[0];
-
-    /*
-     *prepare opt
-     */
-
-    opt.tol = rtol;
-    opt.maxiter = 1000;
-    opt.nonlin = Highly_Nonlinear;
-    opt.restricted = False;
-    opt.errorlevel = Verbose;
-    opt.monitorlevel = Verbose;
-    opt.datalevel = None;
-    opt.errorfile = NULL;
-    opt.monitorfile = NULL;
-    opt.datafile = NULL;
-    opt.iterfile = NULL;
-    opt.resfile =NULL;
-    opt.miscfile = NULL;
-    opt.scale = NULL;
-    opt.scaleopt = opt.StandardScale;
-    opt.udata = (void*)&cr;
-    
-
-    /*
-     *prepare info
-     */
     
 }
 
-void GiantWrapper::solve(){
 
-    giant_gmres(fun,nEq,y,&opt,&info);
+void GiantWrapper::solve(int neq,
+        doublereal tol,vector<doublereal>& iniGuess,CamResidual& cr){
+    /*
+     *memory allocation for the structures
+     */
+//      resid = (GIANT_FUN*)malloc(sizeof(struct GIANT_FUN));
+//      optional = (GIANT_OPT*)malloc(sizeof(struct GIANT_OPT));
+//      info = (GIANT_INFO*)malloc(sizeof(struct GIANT_INFO));
+
+      resid = (NLEQ_FUN*)malloc(sizeof(struct NLEQ_FUN));
+      optional = (NLEQ_OPT*)malloc(sizeof(struct NLEQ_OPT));
+      info = (NLEQ_INFO*)malloc(sizeof(struct NLEQ_INFO));
+
+      /*
+       *set the residual function pointer
+       */
+      resid->fun = &giantResidual;
+      /*
+       *set the jacobian function
+       */
+      //resid->jac = &giantJac;
+      resid->jac = NULL;
+      /*
+       *optional parameter setting for giant
+       */
+//      optional->tol = tol;
+//      optional->maxiter = 500;
+//      optional->lin_maxiter = 5000;
+//      optional->i_max = 10;
+//      optional->datalevel = None;
+//      optional->iterfile = NULL;
+//      optional->resfile = NULL;
+//      optional->miscfile = NULL;
+//      optional->datafile = NULL;
+//      optional->nonlin = Highly_Nonlinear;
+//      optional->restricted = False;
+//      optional->scale = NULL;
+//      optional->scaleopt = GIANT_OPT::StandardScale;
+//      optional->monitorlevel = None;
+//      optional->errorlevel = None;
+//      optional->monitorfile = NULL;
+//      optional->linmonlevel = None;
+
+      optional->uData = &cr;
+
+      optional->datalevel = None;
+      optional->errorlevel = None;
+      optional->monitorlevel = None;
+      optional->datafile = NULL;
+      optional->errorfile = NULL;
+      optional->iterfile = NULL;
+      optional->miscfile = NULL;
+      optional->monitorfile = NULL;
+      optional->resfile = NULL;      
+      optional->scaleopt = NLEQ_OPT::StandardScale;
+
+      optional->tol = tol;
+      optional->maxiter = 500;
+      optional->nonlin = Extremely_Nonlinear;
+      optional->restricted = False;
+      optional->nleqcalled = False;
+
+
+
+
+
+      /*
+       *solver call
+       */
+      //giant_gmres(*resid,neq,&iniGuess[0],optional,info);
+      nleq_res(*resid,neq,&iniGuess[0],optional,info);
+
+
+
 }

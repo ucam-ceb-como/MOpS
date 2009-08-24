@@ -46,6 +46,9 @@ namespace Camflow{
          *init species
          */
         void initSpecies(CamBoundary &cb, CamControl &cc, vector<doublereal>& soln);
+        /*
+         *initialize the species vector for a counter flow flame
+         */
         void initSpecies(CamBoundary &left, CamBoundary &right,
                                 CamControl &cc, vector<doublereal>& soln);
         /*
@@ -56,6 +59,10 @@ namespace Camflow{
          *init temperature
          */
         void initTemperature(CamBoundary &cb, CamControl &cc, vector<doublereal> &soln);
+        /*
+         *init temperature based on a gauss profile
+         */
+        void initTempGauss(vector<doublereal> &soln);
         /*
          *store the inlet conditions
          */

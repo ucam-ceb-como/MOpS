@@ -111,6 +111,9 @@ namespace Camflow{
         //return the user defined temperature based on the interpolation
         doublereal getUserDefTemp(const doublereal& pos);
 
+        //set temperature based on a gaussian
+        void setGaussTempProfile(vector<doublereal>& vTemp);
+
         //return the position vector
         vector<doublereal>& getPosition();
 

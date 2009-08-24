@@ -34,6 +34,7 @@ namespace Camflow{
                                         doublereal maxIntTime,
                                         int band,
                                         CamResidual &cr);
+        
         /*
          *additional solver control
          */

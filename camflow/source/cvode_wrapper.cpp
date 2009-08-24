@@ -14,6 +14,7 @@ extern "C"{
 void CVodeWrapper::init(int n, vector<doublereal>& solnVec, doublereal tol,
                doublereal rtol,doublereal maxIntTime ,int band, CamResidual& cr){
 
+    
     reacPtr = &cr;
 
     cvode_mem = NULL;
@@ -29,7 +30,7 @@ void CVodeWrapper::init(int n, vector<doublereal>& solnVec, doublereal tol,
     currentTime = 0.0;
     maxTime = maxIntTime;
     cvode_mem = CVodeCreate(CV_BDF,CV_NEWTON);
-    
+
     CVodeMalloc(cvode_mem,cvodeResid,currentTime,y,CV_SS,rtol,(void*)&atol);
 
 
@@ -40,6 +41,8 @@ void CVodeWrapper::init(int n, vector<doublereal>& solnVec, doublereal tol,
     }
     CVodeSetFdata(cvode_mem,(void*)&cr);
     CVodeSetMaxNumSteps(cvode_mem,5000);
+
+    
 
 }
 

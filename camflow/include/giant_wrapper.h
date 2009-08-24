@@ -7,25 +7,38 @@
 
 #ifndef _GIANT_WRAPPER_H
 #define	_GIANT_WRAPPER_H
-#include "cam_params.h"
-#include "giant.h"
+#include <vector>
 #include "cam_residual.h"
+#include "cam_params.h"
+
+using namespace std;
+
+extern "C"{
+   // #include "giant.h"
+    #include "nleq.h"
+}
+
 namespace Camflow{
+
+
     class GiantWrapper{
-        int nEq;
-        doublereal *y;
-        GIANT_FUN fun;
-        GIANT_OPT opt;
-        GIANT_INFO info;
     public:
         GiantWrapper(){}
-        ~GiantWrapper(){}
-        void init(int n, vector<doublereal>& solnVec,
-                doublereal rtol,
-                CamResidual &cr);
-        void solve();
+        virtual ~GiantWrapper(){};
+        void solve(int neq,
+                doublereal tol,vector<doublereal>& iniGuess,CamResidual& cr);
+
+    private:
+        //struct GIANT_FUN *resid;
+        //struct GIANT_OPT *optional;
+        //struct GIANT_INFO *info;
+        struct NLEQ_FUN *resid;
+        struct NLEQ_OPT *optional;
+        struct NLEQ_INFO *info;
+        
     };
 }
+
 
 
 #endif	/* _GIANT_WRAPPER_H */

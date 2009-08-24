@@ -55,7 +55,7 @@ namespace Camflow{
         string gridFile;
 
         /*
-         *grid refinement
+         *grid refinement, not well implemented in the present version
          */
         doublereal a_slope;
         doublereal curve;
@@ -111,6 +111,7 @@ namespace Camflow{
         //add cells with zero width
         void addZeroWidthCells();
 
+        //refine the grid
         void refine(doublereal* y, const int nVar, const int nSpec, int ptrT=0);
     };
 }
