@@ -19,10 +19,10 @@ class DataIO{
 public:
     DataIO(){}
     ~DataIO(){}
-    DataIO(const string &name);
+    DataIO(const string &name, bool old=false);
 
 
-    void open(const string &name);
+    void open(const string &name, bool old);
     void close();
 
     void write(const vector<string>& data);

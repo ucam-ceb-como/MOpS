@@ -7,9 +7,9 @@
 
 
 //parameterised constructor
-DataIO::DataIO(const string& name){
+DataIO::DataIO(const string& name, bool old){
     
-    open(name);
+    open(name, old);
 }
 
 void DataIO::close(){
@@ -18,9 +18,15 @@ void DataIO::close(){
 }
 //open the file
 
-void DataIO::open(const string& name){
+void DataIO::open(const string& name, bool old){
 
-    dataStream.open(name.c_str(),ios_base::out | ios_base::in | ios_base::trunc);
+    if (old){
+        dataStream.open(name.c_str(),ios_base::out | ios_base::in | ios_base::app);
+    }else{
+        dataStream.open(name.c_str(),ios_base::out | ios_base::in | ios_base::trunc);
+    }
+
+    
 }
 
 void DataIO::write(const vector<string>& data){
