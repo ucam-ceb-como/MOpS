@@ -359,6 +359,12 @@ void CamResidual::getDensityVector(vector<doublereal>& density){
     density = m_rho;
 }
 /*
+ *return the viscosity
+ */
+void CamResidual::getViscosityVector(vector<doublereal>& viscosity){
+    viscosity = m_mu;
+}
+/*
  *return the temperature
  */
 void CamResidual::getTemperatureVector(vector<doublereal>& temp){

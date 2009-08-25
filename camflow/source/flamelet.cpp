@@ -375,6 +375,7 @@ void FlameLet::saveMixtureProp(doublereal* y){
     m_T.resize(mCord,0.0);
     m_rho.resize(mCord,0.0);
     m_cp.resize(mCord,0.0);
+    m_mu.resize(mCord,0.0);
 
     vector<doublereal> mf,htemp;
     htemp.resize(nSpc,0.0);
@@ -391,6 +392,7 @@ void FlameLet::saveMixtureProp(doublereal* y){
         camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
         htemp = camMixture->getMolarEnthalpy();                 //enthalpy
         m_cp[i] = camMixture->getSpecificHeatCapacity();        //specific heat
+        m_mu[i] = camMixture->getViscosity();                   //mixture viscosity
         for(int l=0; l<nSpc; l++){
             s_mf(i,l) = mf[l];
             s_Wdot(i,l) = wdot[l];
@@ -504,7 +506,7 @@ doublereal FlameLet::scalarDissipationRate(const doublereal m_frac){
 int FlameLet::eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval){
 
     residual(x,y,ydot);
-	 return 0;
+    return 0;
     
 }
 

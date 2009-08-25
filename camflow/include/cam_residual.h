@@ -140,6 +140,10 @@ namespace Camflow{
          */
         virtual void getDensityVector(vector<doublereal>& density);
         /*
+         *return the viscosity vector
+         */
+        virtual void getViscosityVector(vector<doublereal>& viscosity);
+        /*
          *return the independant variable
          */
         virtual void getIndepedantVar(vector<doublereal>& indVar);

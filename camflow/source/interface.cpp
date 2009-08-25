@@ -126,7 +126,14 @@ doublereal Interface::getTemperature(doublereal axpos){
     doublereal temp = getVariableAt(axpos,TVector);
     return temp;
 }
-
+/*
+ *return the viscosity
+ */
+doublereal Interface::getViscosity(doublereal axpos){
+    
+    doublereal temp = getVariableAt(axpos,muVector);
+    return temp;
+}
 /*
  *private function to do the interpolation of the solution variables
  */

@@ -56,9 +56,9 @@ namespace Camflow{
          */
         doublereal getDensity(doublereal axpos);
         /*
-         *restart the calculation with the converged solution
+         *return the viscosity
          */
-        void restart(doublereal sdr, doublereal intTime=0);
+        doublereal getViscosity(doublereal axpos);
 
     private:
         CamControl cc;
@@ -80,6 +80,7 @@ namespace Camflow{
         Array2D spMassFracs;            //species mass fractions
         vector<doublereal> TVector;     //temperature
         vector<doublereal> rhoVector;   //density
+        vector<doublereal> muVector;    //viscosity
         vector<doublereal> indVar;      //independant variable
 
         /*
