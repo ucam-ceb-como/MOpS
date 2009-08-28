@@ -59,7 +59,10 @@ namespace Camflow{
          *return the viscosity
          */
         doublereal getViscosity(doublereal axpos);
-
+        /*
+         *return the stoichiometric mixture fraction
+         */
+        doublereal getStMixtureFrac();
     private:
         CamControl cc;
         CamGeometry cg;
@@ -83,6 +86,7 @@ namespace Camflow{
         vector<doublereal> muVector;    //viscosity
         vector<doublereal> indVar;      //independant variable
 
+        doublereal stMixtureFrac;       //stoichiometric mixture fraction
         /*
          *reactor pinters
          */

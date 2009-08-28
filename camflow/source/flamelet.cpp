@@ -470,10 +470,12 @@ doublereal FlameLet::stoichiometricMixtureFraction(){
     cout << "O2 mass frac " << temp[iO2] << endl;
 
     doublereal stO2 = cAtoms + hAtoms/4.0;
+    
     /*
      *stoichiometric mass ratio
      */
-    smr = stO2*0.016/avgMolWt;
+    smr = stO2*0.032/avgMolWt;
+    
     /*
      *stoichiometric mixture fraction
      */

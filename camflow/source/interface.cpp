@@ -90,12 +90,18 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation){
         flmlt->getSpeciesMassFracs(spMassFracs);
         flmlt->getTemperatureVector(TVector);
         flmlt->getIndepedantVar(indVar);
+        stMixtureFrac = flmlt->stoichiometricMixtureFraction();
 
     }catch(CamError &ce){
         cout << ce.errorMessge;
     }
 }
-
+/*
+ *return the stoichiometric mixture fraction
+ */
+doublereal Interface::getStMixtureFrac(){
+    return stMixtureFrac;
+}
 /*
  *
  *return the density
