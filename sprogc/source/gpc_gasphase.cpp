@@ -84,32 +84,32 @@ GasPhase::~GasPhase(void)
 
 void GasPhase::Us(Sprog::fvector &U) const
 {
-    CalcUs(*m_pT, U);
+    CalcUs(Temperature(), U);
 }
 
 void GasPhase::Hs(Sprog::fvector &H) const
 {
-    CalcHs(*m_pT, H);
+    CalcHs(Temperature(), H);
 }
 
 void GasPhase::Ss(Sprog::fvector &S) const
 {
-    CalcSs(*m_pT, S);
+    CalcSs(Temperature(), S);
 }
 
 void GasPhase::Gs(Sprog::fvector &G) const
 {
-    CalcGs(*m_pT, G);
+    CalcGs(Temperature(), G);
 }
 
 void GasPhase::Cps(Sprog::fvector &Cp) const
 {
-    CalcCps(*m_pT, Cp);
+    CalcCps(Temperature(), Cp);
 }
 
 void GasPhase::Cvs(Sprog::fvector &Cv) const
 {
-    CalcCvs(*m_pT, Cv);
+    CalcCvs(Temperature(), Cv);
 }
 
 
@@ -117,32 +117,32 @@ void GasPhase::Cvs(Sprog::fvector &Cv) const
 
 void GasPhase::Us_RT(Sprog::fvector &U) const
 {
-    CalcUs_RT(*m_pT, U);
+    CalcUs_RT(Temperature(), U);
 }
 
 void GasPhase::Hs_RT(Sprog::fvector &H) const
 {
-    CalcHs_RT(*m_pT, H);
+    CalcHs_RT(Temperature(), H);
 }
 
 void GasPhase::Ss_R(Sprog::fvector &S) const
 {
-    CalcSs_R(*m_pT, S);
+    CalcSs_R(Temperature(), S);
 }
 
 void GasPhase::Gs_RT(Sprog::fvector &G) const
 {
-    CalcGs_RT(*m_pT, G);
+    CalcGs_RT(Temperature(), G);
 }
 
 void GasPhase::Cps_R(Sprog::fvector &Cp) const
 {
-    CalcCps_R(*m_pT, Cp);
+    CalcCps_R(Temperature(), Cp);
 }
 
 void GasPhase::Cvs_R(Sprog::fvector &Cv) const
 {
-    CalcCvs_R(*m_pT, Cv);
+    CalcCvs_R(Temperature(), Cv);
 }
 
 // BULK MIXTURE PROPERTIES.
@@ -150,35 +150,35 @@ void GasPhase::Cvs_R(Sprog::fvector &Cv) const
 // Calculates the bulk internal energies in current units.
 real GasPhase::BulkU() const
 {
-    return CalcBulkU(*m_pT, &m_data[0], m_species->size());
+    return CalcBulkU(Temperature(), &MoleFractions().front(), Species()->size());
 }
 
 // Calculates the bulk enthalpy in current units.
 real GasPhase::BulkH() const
 {
-    return CalcBulkH(*m_pT, &m_data[0], m_species->size());
+    return CalcBulkH(Temperature(), &MoleFractions().front(), Species()->size());
 }
 
 // Calculates the bulk entropy in current units.
 real GasPhase::BulkS() const
 {
-    return CalcBulkS(*m_pT, &m_data[0], m_species->size());
+    return CalcBulkS(Temperature(), &MoleFractions().front(), Species()->size());
 }
 
 // Calculates the bulk Gibbs free energies in current units.
 real GasPhase::BulkG() const
 {
-    return CalcBulkG(*m_pT, &m_data[0], m_species->size());
+    return CalcBulkG(Temperature(), &MoleFractions().front(), Species()->size());
 }
 
 // Calculates the mean molar heat capacity at const. P.
 real GasPhase::BulkCp() const
 {
-    return CalcBulkCp(*m_pT, &m_data[0], m_species->size());
+    return CalcBulkCp(Temperature(), &MoleFractions().front(), Species()->size());
 }
 
 // Calculates the mean molar heat capacity at const. V.
 real GasPhase::BulkCv() const
 {
-    return CalcBulkCv(*m_pT, &m_data[0], m_species->size());
+    return CalcBulkCv(Temperature(), &MoleFractions().front(), Species()->size());
 }

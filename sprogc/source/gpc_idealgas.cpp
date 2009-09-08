@@ -123,7 +123,7 @@ real IdealGas::Pressure() const
 // Sets the mixture density using the given pressure.
 void IdealGas::SetPressure(Sprog::real p)
 {
-    *m_pdens = p / (R * (*m_pT));
+    SetDensity(p / (R * (Temperature())));
 }
 
 
@@ -165,13 +165,13 @@ real IdealGas::CalcBulkU(Sprog::real T,
                          Sprog::fvector &U) const
 {
     // Check that there are sufficient values in the x array.
-    if (n >= m_species->size()) {
+    if (n >= Species()->size()) {
         // Calculate the species internal energies.
         CalcUs(T, U);
 
         // Calculate the bulk energy.
         real bulku = 0.0;
-        for (unsigned int i=0; i!=m_species->size(); ++i) {
+        for (unsigned int i=0; i!=Species()->size(); ++i) {
             bulku += U[i] * x[i];
         }
 
@@ -189,13 +189,13 @@ real IdealGas::CalcBulkU_RT(Sprog::real T,
                             Sprog::fvector &U) const
 {
     // Check that there are sufficient values in the x array.
-    if (n >= m_species->size()) {
+    if (n >= Species()->size()) {
         // Calculate the species internal energies.
         CalcUs_RT(T, U);
 
         // Calculate the bulk energy.
         real bulku = 0.0;
-        for (unsigned int i=0; i!=m_species->size(); ++i) {
+        for (unsigned int i=0; i!=Species()->size(); ++i) {
             bulku += U[i] * x[i];
         }
 
@@ -215,7 +215,7 @@ void IdealGas::CalcHs(real T, fvector &H) const
     real t[Thermo::H_PARAM_COUNT];
     
     // Ensure output array has sufficient length.
-    H.resize(m_species->size());
+    H.resize(Species()->size());
 
     // Precalculate temperature terms.
     t[0] = R * T;
@@ -236,7 +236,7 @@ void IdealGas::CalcHs_RT(real T, fvector &H) const
     real t[Thermo::H_PARAM_COUNT];
 
     // Ensure output array has sufficient length.
-    H.resize(m_species->size());
+    H.resize(Species()->size());
 
     // Precalculate temperature terms.
     t[0] = 1.0;
@@ -257,13 +257,13 @@ real IdealGas::CalcBulkH(Sprog::real T,
                          unsigned int n,
                          Sprog::fvector &H) const
 {
-    if (n >= m_species->size()) {
+    if (n >= Species()->size()) {
         // Get individual species enthalpies.
         CalcHs(T, H);
         
         // Sum to get bulk enthalpy.
         real bulkH = 0.0;
-        for(unsigned int i=0; i!=m_species->size(); ++i) {
+        for(unsigned int i=0; i!=Species()->size(); ++i) {
             bulkH += x[i] * H[i];
         }
 
@@ -280,13 +280,13 @@ real IdealGas::CalcBulkH_RT(Sprog::real T,
                             unsigned int n,
                             Sprog::fvector &H) const
 {
-    if (n >= m_species->size()) {
+    if (n >= Species()->size()) {
         // Get individual species enthalpies.
         CalcHs_RT(T, H);
         
         // Sum to get bulk enthalpy.
         real bulkH = 0.0;
-        for(unsigned int i=0; i!=m_species->size(); ++i) {
+        for(unsigned int i=0; i!=Species()->size(); ++i) {
             bulkH += x[i] * H[i];
         }
 
@@ -306,7 +306,7 @@ void IdealGas::CalcSs(real T, fvector &S) const
     real t[Thermo::S_PARAM_COUNT];
 
     // Ensure output array has sufficient length.
-    S.resize(m_species->size());
+    S.resize(Species()->size());
 
     // Precalculate temperature terms.
     n = Thermo::S_PARAM_COUNT;
@@ -329,7 +329,7 @@ void IdealGas::CalcSs_R(real T, fvector &S) const
     real t[Thermo::S_PARAM_COUNT];
 
     // Ensure output array has sufficient length.
-    S.resize(m_species->size());
+    S.resize(Species()->size());
 
     // Precalculate temperature terms.
     n = Thermo::S_PARAM_COUNT;
@@ -352,13 +352,13 @@ real IdealGas::CalcBulkS(Sprog::real T,
                          unsigned int n,
                          Sprog::fvector &S) const
 {
-    if (n >= m_species->size()) {
+    if (n >= Species()->size()) {
         // Get individual species entropies.
         CalcSs(T, S);
         
         // Sum to get bulk entropy.
         real bulkS = 0.0;
-        for(unsigned int i=0; i!=m_species->size(); ++i) {
+        for(unsigned int i=0; i!=Species()->size(); ++i) {
             bulkS += x[i] * S[i];
         }
 
@@ -375,13 +375,13 @@ real IdealGas::CalcBulkS_R(Sprog::real T,
                            unsigned int n,
                            Sprog::fvector &S) const
 {
-    if (n >= m_species->size()) {
+    if (n >= Species()->size()) {
         // Get individual species entropies.
         CalcSs_R(T, S);
         
         // Sum to get bulk entropy.
         real bulkS = 0.0;
-        for(unsigned int i=0; i!=m_species->size(); ++i) {
+        for(unsigned int i=0; i!=Species()->size(); ++i) {
             bulkS += x[i] * S[i];
         }
 
@@ -401,7 +401,7 @@ void IdealGas::CalcGs(real T, fvector &G) const
     real t[Thermo::S_PARAM_COUNT];
 
     // Ensure output array has sufficient length.
-    G.resize(m_species->size());
+    G.resize(Species()->size());
 
     // Precalculate temperature terms.
     n = Thermo::S_PARAM_COUNT;
@@ -425,7 +425,7 @@ void IdealGas::CalcGs_RT(real T, fvector &G) const
     real t[Thermo::S_PARAM_COUNT];
 
     // Ensure output array has sufficient length.
-    G.resize(m_species->size());
+    G.resize(Species()->size());
 
     // Precalculate temperature terms.
     t[0] = 1.0 - log(T);
@@ -448,7 +448,7 @@ void IdealGas::CalcGs(Sprog::real T,
                       const Sprog::fvector &S, 
                       Sprog::fvector &G) const
 {
-    for (unsigned int i=0; i!=m_species->size(); ++i) {
+    for (unsigned int i=0; i!=Species()->size(); ++i) {
         G[i] = H[i] - (T * S[i]);
     }
 }
@@ -460,7 +460,7 @@ void IdealGas::CalcGs_RT(Sprog::real T,
                          const Sprog::fvector &S_R, 
                          Sprog::fvector &G_RT) const
 {
-    for (unsigned int i=0; i!=m_species->size(); ++i) {
+    for (unsigned int i=0; i!=Species()->size(); ++i) {
         G_RT[i] = H_RT[i] - S_R[i];
     }
 }
@@ -473,13 +473,13 @@ real IdealGas::CalcBulkG(Sprog::real T,
                          Sprog::fvector &G) const
 {
     // Check length of x array.
-    if (n >= m_species->size()) {
+    if (n >= Species()->size()) {
         // Calculate species Gibbs free energies.
         CalcGs(T, G);
 
         // Calculate bulk Gibbs free energy.
         real bulkG = 0.0;
-        for (unsigned int i=0; i!=m_species->size(); ++i) {
+        for (unsigned int i=0; i!=Species()->size(); ++i) {
             bulkG += G[i] * x[i];
         }
 
@@ -497,13 +497,13 @@ real IdealGas::CalcBulkG_RT(Sprog::real T,
                             Sprog::fvector &G) const
 {
     // Check length of x array.
-    if (n >= m_species->size()) {
+    if (n >= Species()->size()) {
         // Calculate species Gibbs free energies.
         CalcGs_RT(T, G);
 
         // Calculate bulk Gibbs free energy.
         real bulkG = 0.0;
-        for (unsigned int i=0; i!=m_species->size(); ++i) {
+        for (unsigned int i=0; i!=Species()->size(); ++i) {
             bulkG += G[i] * x[i];
         }
 
@@ -523,7 +523,7 @@ void IdealGas::CalcCps(real T, fvector &Cp) const
     real t[Thermo::CP_PARAM_COUNT];
 
     // Ensure output array has sufficient length.
-    Cp.resize(m_species->size());
+    Cp.resize(Species()->size());
 
     // Precalculate temperature terms.
     n = Thermo::CP_PARAM_COUNT;
@@ -543,7 +543,7 @@ void IdealGas::CalcCps_R(real T, fvector &Cp) const
     real t[Thermo::CP_PARAM_COUNT];
 
     // Ensure output array has sufficient length.
-    Cp.resize(m_species->size());
+    Cp.resize(Species()->size());
 
     // Precalculate temperature terms.
     n = Thermo::CP_PARAM_COUNT;
@@ -562,13 +562,13 @@ real IdealGas::CalcBulkCp(Sprog::real T,
                           unsigned int n, 
                           Sprog::fvector &Cp) const
 {
-    if (n >= m_species->size()) {
+    if (n >= Species()->size()) {
         // Get individual species heat capacities.
         CalcCps(T, Cp);
         
         // Sum to get bulk heat capacity.
         real bulkCp = 0.0;
-        for(unsigned int i=0; i!=m_species->size(); ++i) {
+        for(unsigned int i=0; i!=Species()->size(); ++i) {
             bulkCp += x[i] * Cp[i];
         }
 
@@ -584,13 +584,13 @@ real IdealGas::CalcBulkCp_R(Sprog::real T,
                             unsigned int n, 
                             Sprog::fvector &Cp) const
 {
-    if (n >= m_species->size()) {
+    if (n >= Species()->size()) {
         // Get individual species heat capacities.
         CalcCps_R(T, Cp);
         
         // Sum to get bulk heat capacity.
         real bulkCp = 0.0;
-        for(unsigned int i=0; i!=m_species->size(); ++i) {
+        for(unsigned int i=0; i!=Species()->size(); ++i) {
             bulkCp += x[i] * Cp[i];
         }
 
@@ -637,13 +637,13 @@ real IdealGas::CalcBulkCv(Sprog::real T,
                           unsigned int n, 
                           Sprog::fvector &Cv) const
 {
-    if (n >= m_species->size()) {
+    if (n >= Species()->size()) {
         // Get individual species heat capacities.
         CalcCvs(T, Cv);
         
         // Sum to get bulk heat capacity.
         real bulkCv = 0.0;
-        for(unsigned int i=0; i!=m_species->size(); ++i) {
+        for(unsigned int i=0; i!=Species()->size(); ++i) {
             bulkCv += x[i] * Cv[i];
         }
 
@@ -659,13 +659,13 @@ real IdealGas::CalcBulkCv_R(Sprog::real T,
                             unsigned int n, 
                             Sprog::fvector &Cv) const
 {
-    if (n >= m_species->size()) {
+    if (n >= Species()->size()) {
         // Get individual species heat capacities.
         CalcCvs_R(T, Cv);
         
         // Sum to get bulk heat capacity.
         real bulkCv = 0.0;
-        for(unsigned int i=0; i!=m_species->size(); ++i) {
+        for(unsigned int i=0; i!=Species()->size(); ++i) {
             bulkCv += x[i] * Cv[i];
         }
 
@@ -691,9 +691,9 @@ void IdealGas::CalcCpHSs(real T,
     const THERMO_PARAMS *a;
 
     // Ensure output arrays have sufficient length.
-    Cp.resize(m_species->size());
-    H.resize(m_species->size());
-    S.resize(m_species->size());
+    Cp.resize(Species()->size());
+    H.resize(Species()->size());
+    S.resize(Species()->size());
 
     // Precalculate temperature terms.
     nc = CP_PARAM_COUNT;
@@ -717,13 +717,13 @@ void IdealGas::CalcCpHSs(real T,
     ts[ns-1] = R;
 
     // Sum terms in polynomials.
-    for (i=0; i!=m_species->size(); ++i) {
+    for (i=0; i!=Species()->size(); ++i) {
         // Set sums to 0 initially.
         Cp[i] = H[i] = S[i] = 0.0;
 
         // Get the thermo fitting parameters for this species
         // at this temperature.
-        a = &(*m_species)[i]->ThermoParams(T);
+        a = &(*Species())[i]->ThermoParams(T);
 
         // Calculate the thermo property for this species.
         for (k=0; k<nc; k++) {
@@ -751,9 +751,9 @@ void IdealGas::CalcCpHSs_RT(real T,
     const THERMO_PARAMS *a;
 
     // Ensure output arrays have sufficient length.
-    Cp.resize(m_species->size());
-    H.resize(m_species->size());
-    S.resize(m_species->size());
+    Cp.resize(Species()->size());
+    H.resize(Species()->size());
+    S.resize(Species()->size());
 
     // Precalculate temperature terms.
     nc = CP_PARAM_COUNT;
@@ -777,13 +777,13 @@ void IdealGas::CalcCpHSs_RT(real T,
     ts[ns-1] = 1.0;
 
     // Sum terms in polynomials.
-    for (i=0; i!=m_species->size(); ++i) {
+    for (i=0; i!=Species()->size(); ++i) {
         // Set sums to 0 initially.
         Cp[i] = H[i] = S[i] = 0.0;
         
         // Get the thermo fitting parameters for this species
         // at this temperature.
-        a = &(*m_species)[i]->ThermoParams(T);
+        a = &(*Species())[i]->ThermoParams(T);
 
         // Calculate the thermo property for this species.
         for (k=0; k<nc; k++) {
@@ -836,13 +836,13 @@ void IdealGas::sumTerms(real T, real *t, int n, std::vector<real> &Xs) const
     int k;
     const THERMO_PARAMS *a;
 
-    for (i=0; i!=min(m_species->size(),Xs.size()); ++i) {
+    for (i=0; i!=min(Species()->size(),Xs.size()); ++i) {
         // Set sums to zero initially.
         Xs[i] = 0.0;
 
         // Get the thermo fitting parameters for this species
         // at this temperature.
-        a = &(*m_species)[i]->ThermoParams(T);
+        a = &(*Species())[i]->ThermoParams(T);
 
         // Calculate the thermo property for this species.
         for (k=0; k!=n; ++k) {

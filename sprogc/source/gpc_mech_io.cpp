@@ -93,13 +93,13 @@ void MechanismParser::ReadChemkin(const std::string &filename,
         mech.SetUnits(CGS);
 
         try {
-            parseCK(fin, mech, status, verbose);
+                parseCK(fin, mech, status, verbose);
         } catch (logic_error &le) {
             fin.close();
-            throw le;
+            throw;
         } catch (runtime_error &re) {
             fin.close();
-            throw re;
+            throw;
         }
         
         fin.close();
@@ -115,7 +115,7 @@ void MechanismParser::ReadChemkin(const std::string &filename,
 void MechanismParser::ReadChemkin(const std::string &filename, 
                                   Sprog::Mechanism &mech, 
                                   const std::string &thermofile,
-								  const std::string &transFile)
+                                  const std::string &transFile)
 {
 	// member function added by vniod to enable the reading of transport data.
 	// This function utilizes the ReadChemkin function which was provided earlier.

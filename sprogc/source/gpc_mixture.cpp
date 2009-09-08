@@ -58,8 +58,6 @@ using namespace std;
 Mixture::Mixture(void)
 {
     m_data.clear();
-    m_pT      = NULL;
-    m_pdens   = NULL;
     m_species = NULL;
 }
 
@@ -99,8 +97,6 @@ Mixture &Mixture::operator=(const Mixture &mix)
     if (this != &mix) {
         m_data.assign(mix.m_data.begin(), mix.m_data.end());
         m_species = mix.m_species;
-        m_pT      = &m_data.at(m_data.size()-2);
-        m_pdens   = &m_data.at(m_data.size()-1);
     }
 
     return *this;
@@ -112,14 +108,14 @@ Mixture &Mixture::operator=(const Mixture &mix)
 // Returns the mixture temperature.
 real Mixture::Temperature() const
 {
-    return *m_pT;
+    return m_data[temperatureIndex()];
 }
 
 
 // Set the mixture temperature.
 void Mixture::SetTemperature(Sprog::real T)
 {
-    *m_pT = T;
+    m_data[temperatureIndex()] = T;
 }
 
 
@@ -135,13 +131,13 @@ const fvector &Mixture::MoleFractions() const
 void Mixture::GetConcs(fvector &concs) const
 {
     // Resize output vector.
-    concs.resize(m_species->size());
+    const size_t numSpecies = m_species->size();
+    concs.resize(numSpecies);
 
     // Loop over all mole fractions and convert to concentrations.
-    fvector::const_iterator i;
-    fvector::iterator j;
-    for (i=m_data.begin(),j=concs.begin(); i!=m_data.end()-2; i++,j++) {
-        (*j) = (*i) * (*m_pdens);
+    const real density = m_data[densityIndex()];
+    for (unsigned int i = 0; i != numSpecies; ++i) {
+        concs[i] = m_data[i] * density;
     }
 }
 
@@ -179,7 +175,7 @@ real Mixture::MoleFraction(unsigned int i) const
 real Mixture::MolarConc(unsigned int i) const
 {
     if (i < m_species->size()) {
-        return m_data[i] * (*m_pdens);
+        return m_data[i] * m_data[densityIndex()];
     } else {
         return 0.0;
     }
@@ -249,14 +245,14 @@ void Mixture::SetConcs(const fvector &concs)
     // Check that the concentration vector is of sufficient length.
     if (concs.size() >= m_species->size()) {
         // Sum up the total concentration.
-        *m_pdens = 0.0;
+        m_data[densityIndex()] = 0.0;
         for (unsigned int i=0; i!=m_species->size(); ++i) {
             m_data[i] = concs[i];
-            *m_pdens += concs[i];
+            m_data[densityIndex()] += concs[i];
         }
 
         // Convert values to mole fractions.
-        real invdens = 1.0 / (*m_pdens);
+        real invdens = 1.0 / m_data[densityIndex()];
         for (unsigned int i=0; i!=m_species->size(); ++i) {
             m_data[i] *= invdens;
         }
@@ -317,7 +313,7 @@ void Mixture::Normalise()
 // Returns the mixture molar density.
 real Mixture::Density() const
 {
-    return *m_pdens;
+    return m_data[densityIndex()];
 }
 
 // Returns the mixture mass density.
@@ -330,27 +326,27 @@ real Mixture::MassDensity() const
     for (unsigned int i=0; i!=m_species->size(); ++i) {
         rho += m_data[i] * (*m_species)[i]->MolWt();
     }
-    rho *= (*m_pdens);
+    rho *= m_data[densityIndex()];
     return rho;
 }
 
 // Sets the mixture molar density.
 void Mixture::SetDensity(Sprog::real dens)
 {
-    *m_pdens = dens;
+    m_data[densityIndex()] = dens;
 }
 
 // Sets the molar density using the supplied mass density.
 void Mixture::SetMassDensity(Sprog::real dens)
 {
-    *m_pdens = 0.0;
+    m_data[densityIndex()] = 0.0;
     
     // Calcualate molar density:
     //   rho_mass = rho_mole * sum(x * wt)
     for (unsigned int i=0; i!=m_species->size(); ++i) {
-        *m_pdens += m_data[i] * (*m_species)[i]->MolWt();
+        m_data[densityIndex()] += m_data[i] * (*m_species)[i]->MolWt();
     }
-   *m_pdens = dens / (*m_pdens);
+   m_data[densityIndex()] = dens / m_data[densityIndex()];
 }
 
 
@@ -366,9 +362,7 @@ const SpeciesPtrVector *const Mixture::Species() const
 void Mixture::SetSpecies(const Sprog::SpeciesPtrVector &sp)
 {
     m_species = &sp;
-    m_data.resize(m_species->size()+2);
-    m_pT    = &m_data.at(m_species->size());
-    m_pdens = &m_data.at(m_species->size()+1);
+    m_data.resize(m_species->size()+sNumNonSpeciesData);
 }
 
 
@@ -434,11 +428,6 @@ void Mixture::Deserialize(std::istream &in)
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
                     m_data.push_back(val);
                 }
-
-                // The last two elements in the data vector are the temperature
-                // and the density respectively.
-                m_pT = &m_data[sz-2];
-                m_pdens = &m_data[sz-1];
 
                 // The mixture has no species associated it with right now.
                 m_species = NULL;

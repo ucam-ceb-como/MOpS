@@ -78,7 +78,13 @@ public:
     real Temperature(void) const;
 
     // Set the temperature.
-    void SetTemperature(real T);
+    void SetTemperature(const real T);
+
+    //! Return bulk gas velocity
+    real Velocity() const {return m_data[velocityIndex()];}
+
+    //! Set bulk gas velocity (species must be defined already)
+    void SetVelocity(const real v) {m_data[velocityIndex()] = v;}
 
 
     // SPECIES CONCENTRATIONS/FRACTIONS.
@@ -203,14 +209,25 @@ protected:
     // generated without knowledge of the defining species list.
     Mixture(void);
 
+private:
     // The data vector contains, in order, the species mole fractions,
     // the mixture temperature and the mixture density.
     fvector m_data;
-    real *m_pT;    // Pointer to mixture temperature.
-    real *m_pdens; // Pointer to mixture density.
 
     // Vector of species for which this mixture is defined.
     const SpeciesPtrVector *m_species;
+
+    //! Index of temperature in m_data
+    size_t temperatureIndex() const {return m_species->size();}
+
+    //! Index of density in m_data
+    size_t densityIndex() const {return m_species->size() + 1;}
+
+    //! Index of velocity in m_data
+    size_t velocityIndex() const {return m_species->size() + 2;}
+
+    //! Number of items of data that are not species concentrations that are stored at the end of m_data
+    static const size_t sNumNonSpeciesData = 3;
 };
 };
 };
