@@ -122,51 +122,65 @@ void Cell::SetGasPhase(const Sprog::Thermo::IdealGas &gas)
 // Adjusts the concentration of the ith species.
 void Cell::AdjustConc(unsigned int i, real dc)
 {
-    if (!m_fixed_chem) {
-        unsigned int k;
+   if (!m_fixed_chem) {
+       unsigned int k;
 
-        // Precalculate DC / density.
-        real dc_rho = dc / *m_pdens;
+       // Precalculate DC / density.
+       real dc_rho = dc / Density();
 
-        // Calculate change to all mole fractions k < i.
-        for (k=0; k<i; ++k) {
-            m_data[k] -= dc_rho * m_data[k];
-        }
+       // New concentrations will be calculated by adjusting a copy of the existing data
+       fvector newConcs = MoleFractions();
 
-        // Calculate change for ith species.
-        m_data[i] += dc_rho * (1.0 - m_data[i]);
+       // Calculate change to all mole fractions k < i.
+       for (k=0; k<i; ++k) {
+           newConcs[k] -= dc_rho * newConcs[k];
+       }
 
-        // Calculate change for all mole fractions k > i.
-        for (k=i+1; k<m_species->size(); ++k) {
-            m_data[k] -= dc_rho * m_data[k];
-        }
-    }
+       // Calculate change for ith species.
+       newConcs[i] += dc_rho * (1.0 - newConcs[i]);
+
+       // Calculate change for all mole fractions k > i.
+       for (k=i+1; k < Species()->size(); ++k) {
+           newConcs[k] -= dc_rho * newConcs[k];
+       }
+
+       // Set the new data
+       SetFracs(newConcs);
+   }
 }
 
 // Adjusts the concentration of all species.
 void Cell::AdjustConcs(const fvector &dc)
 {
-    if (!m_fixed_chem) {
-        // Calculate total change in density.
-        real drho = 0.0;
-        unsigned int k;
-        for (k=0; k!=m_species->size(); ++k) {
-            drho += dc[k];
-        }
-		real xtot=0.;
-        // Calculate changes to the mole fractions.
-        real invrho = 1.0 / *m_pdens;
-        for (k=0; k!=m_species->size(); ++k) {
-            m_data[k] += (invrho * dc[k]) - (invrho * m_data[k] * drho);
-			if (m_data[k]<0.) m_data[k]=0;
-			xtot+=m_data[k];
-        }
-		if (xtot != 1.0) {
-			for (unsigned int i=0; i!=m_species->size(); ++i) {
-				m_data[i] /= xtot;
-			}
-		}
-    }
+   if (!m_fixed_chem) {
+       // Calculate total change in density.
+       real drho = 0.0;
+       unsigned int k;
+       for (k=0; k!=Species()->size(); ++k) {
+           drho += dc[k];
+       }
+
+       // New concentrations will be calculated by adjusting a copy of the existing data
+       fvector newConcs = MoleFractions();
+
+       real xtot=0.;
+       // Calculate changes to the mole fractions.
+       const real invrho = 1.0 / Density();
+       for (k=0; k!=Species()->size(); ++k) {
+           newConcs[k] += (invrho * dc[k]) - (invrho * newConcs[k] * drho);
+           if (newConcs[k]<0.) newConcs[k]=0;
+               xtot+=newConcs[k];
+       }
+
+       if (xtot != 1.0) {
+           for (unsigned int i=0; i!=Species()->size(); ++i) {
+               newConcs[i] /= xtot;
+           }
+       }
+
+       // Set the new data
+       SetFracs(newConcs);
+   }
 }
 
 
@@ -379,7 +393,7 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
                 m_ensemble.Deserialize(in, model);
 
                 // Set the species.
-                m_species = model.Species();
+                SetSpecies(*model.Species());
 
                 break;
             default:
