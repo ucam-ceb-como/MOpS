@@ -78,7 +78,7 @@ int Document::Load(const std::wstring &filename)
             }
         } catch (std::exception &e) {
             fin.close();
-            throw e;
+            throw;
         }
         
         fin.close();
@@ -221,20 +221,16 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                         fin.unget();
                         STATUS childstat = Begin;
 
-                        try {
-                            Element *child = parseElement(fin, childstat);
-                            if ((child!=NULL) && (childstat != Fail)) {
-                                el->AddChild(*child, false);
-                            } else if (childstat!=EndComment) {
-                                st = Fail;
-                                if (el!=NULL) delete el;
-                                if (child!=NULL) delete child;
-                                string stag;
-                                ComoUnicode::WStringToString(stag, tag);
-                                throw runtime_error("Failed to read child of element: " + stag);
-                            }
-                        } catch (std::exception &e) {
-                            throw e;
+                        Element *child = parseElement(fin, childstat);
+                        if ((child!=NULL) && (childstat != Fail)) {
+                            el->AddChild(*child, false);
+                        } else if (childstat!=EndComment) {
+                            st = Fail;
+                            if (el!=NULL) delete el;
+                            if (child!=NULL) delete child;
+                            string stag;
+                            ComoUnicode::WStringToString(stag, tag);
+                            throw runtime_error("Failed to read child of element: " + stag);
                         }
                     }
                 } else {
@@ -258,20 +254,16 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                     fin.unget();
                     STATUS attrstat = Begin;
 
-                    try {
-                        Attribute *attr = parseAttr(fin, attrstat);
-                        if ((attr!=NULL) && (attrstat!=Fail)) {
-                            el->SetAttribute(attr->GetName(), attr->GetValue());
-                            delete attr;
-                        } else {
-                            st = Fail;
-                            if (el!=NULL) delete el;
-                            string stag;
-                            ComoUnicode::WStringToString(stag, tag);
-                            throw runtime_error("Failed to read attribute of element: " + stag);
-                        }
-                    } catch (std::exception &e) {
-                        throw e;
+                    Attribute *attr = parseAttr(fin, attrstat);
+                    if ((attr!=NULL) && (attrstat!=Fail)) {
+                        el->SetAttribute(attr->GetName(), attr->GetValue());
+                        delete attr;
+                    } else {
+                        st = Fail;
+                        if (el!=NULL) delete el;
+                        string stag;
+                        ComoUnicode::WStringToString(stag, tag);
+                        throw runtime_error("Failed to read attribute of element: " + stag);
                     }
 
                 } else if (isWhiteSpace(c)) {
