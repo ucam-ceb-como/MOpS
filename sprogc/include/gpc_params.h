@@ -77,10 +77,10 @@ namespace Sprog
     // Error = 1.5e-5 J/mol/K.
     const real R     = 8.314472e0; // J/mol/K   (SI).
 	//const real R = kB*NA;
-    const real R_CGS = 8.314472e7; // ergs/molK (CGS).
-    const real RCAL  = 1.9872e-3;  // kcal/molK (calories).
+    const real R_CGS = 8.314472e7; // ergs/mol/K (CGS).
+    const real RCAL  = 1.9872e-3;  // kcal/mol/K (calories).
 
 
-};
+} //namespace Sprog
 
 #endif
