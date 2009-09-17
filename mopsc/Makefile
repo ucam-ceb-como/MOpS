@@ -60,7 +60,7 @@ obj=mops_mechanism.o mops_mixture.o \
 
 # TARGET all: Compile to a static library (*.a).
 
-all: comostringslib camxmllib sproglib sweeplib cvodeslib $(obj) mops.o
+all: comostringslib camxmllib sproglib sweeplib cvodeslib geomlib $(obj) mops.o
 	mkdir -p bin
 ifeq ($(debug),0)
   ifeq ($(profile),0)
@@ -97,6 +97,8 @@ sweeplib:
 	$(MAKE) -f ../sweepc/Makefile -C ../sweepc debug=$(debug) profile=$(profile)
 cvodeslib:
 	$(MAKE) -f ../cvodes/Makefile -C ../cvodes debug=$(debug) profile=$(profile)
+geomlib:
+	$(MAKE) -f ../geometry/Makefile -C ../geometry debug=$(debug) profile=$(profile)
 
 # Mops library
 mopslib: $(obj) comostringslib camxmllib sproglib sweeplib cvodeslib
@@ -200,6 +202,7 @@ cleanlibs:
 	$(MAKE) clean -f ../sprogc/Makefile -C ../sprogc
 	$(MAKE) clean -f ../sweepc/Makefile -C ../sweepc
 	$(MAKE) clean -f ../cvodes/Makefile -C ../cvodes
+	$(MAKE) clean -f ../geometry/Makefile -C ../geometry
 	rm -rf *.o \#* *~
 
 cleanparticles:
