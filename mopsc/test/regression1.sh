@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # run mops on a very simple problem
-./mops_d.x -flamepp -p -c regress1.inp -rr regress1.inx -s regress1.xml
+../bin/mops_d.x -flamepp -p -c regress1.inp -rr regress1.inx -s regress1.xml
 echo "Finished simulation"
 echo "========================"
 
