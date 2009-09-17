@@ -44,15 +44,14 @@
 #ifndef MOPS_SETTINGS_IO_H
 #define MOPS_SETTINGS_IO_H
 
-#include "mops_params.h"
 #include "mops_timeinterval.h"
+#include "swp_particle.h"
 #include "camxml.h"
 #include <vector>
 #include <list>
 #include <string>
 
 namespace Sweep {
-    class Particle;
     class Mechanism;
 }
 
@@ -64,18 +63,8 @@ namespace Mops
     class Reactor;
     class Mechanism;
     
-    //* Use for passing around lists of particles
-    typedef std::list<Sweep::Particle*> PartPtrList;
-
-class Settings_IO
+namespace Settings_IO
 {
-public:
-    // Constructors.
-    Settings_IO(void); // Default constructor.
-
-    //Destructors.
-    ~Settings_IO(void); // Default destructor.
-
     // An enumeration of different possible reactor types that
     // may be specified in the settings file.
     // enum ReactorType {Batch, PSR, ShockTube};
@@ -84,7 +73,7 @@ public:
 
     // Loads an XML document into the class.  This operation needs
     // to be performed before settings can be acquired.
-    static Reactor *const LoadFromXML_V1(
+    Reactor *const LoadFromXML_V1(
         const std::string &filename,      // Input file name.
         Reactor *reac,                    // The reactor to be simulated.
         std::vector<TimeInterval> &times, // Vector of output time intervals.
@@ -94,7 +83,7 @@ public:
         );
 
     // Read a new-format XMl file settings file.
-    static Reactor *const LoadFromXML(
+    Reactor *const LoadFromXML(
         const std::string &filename,      // Input file name.
         Reactor *reac,                    // The reactor to be simulated.
         std::vector<TimeInterval> &times, // Vector of output time intervals.
@@ -104,49 +93,16 @@ public:
         );
 
     // Reads time intervals from given XML node.
-    static void readTimeIntervals(
+    void readTimeIntervals(
         const CamXML::Element &node,     // XML node containing time intervals.
         std::vector<TimeInterval> &times // Vector of output time intervals.
         );
 
-private:
-
-    // V2 SETTINGS FILE SECTIONS.
-
-    // Reads global simulation settings from the given XML node.
-    static void readGlobalSettings(
-        const CamXML::Element &node, // Root XML node containing simulation settings.
-        Simulator &sim,              // General settings incl. output settings. 
-        Solver &solver               // Solver object into which to read numerical parameters.
-        );
-
-    // Reads the reactor initial settings from the given XML node.
-    static Reactor *const readReactor(
-        const CamXML::Element &node, // XML node containing reactor.
-        const Mechanism &mech,       // Mechanism to define reactor mixture.
-        const unsigned int max_particle_count,  // Maximum number of stochastic particles that will be handled
-		const real maxM0
-        );
-    
     // Read initial particles from a file into a list
-    static PartPtrList ReadInitialParticles(const CamXML::Element &node, 
-                                            const unsigned int max_ensemble_size,
-                                            const Sweep::Mechanism & particle_mech);
-
-    // Reads simulation output parameters from given XML node.
-    static void readOutput(
-        const CamXML::Element &node, // XML node containing output parameters.
-        Simulator &sim               // General settings incl. output settings. 
-        );
-
-    // Returns the temperature in K by reading the value from the given
-    // XML node and checking the units.
-    static real readTemperature(const CamXML::Element &node);
-
-    // Returns the pressure in Pa by reading the value from the given
-    // XML node and checking the units.
-    static real readPressure(const CamXML::Element &node);
-};
-};
+    Sweep::PartPtrList ReadInitialParticles(const CamXML::Element &node,
+                                                   const unsigned int max_ensemble_size,
+                                                   const Sweep::Mechanism & particle_mech);
+} //namespace Settings_IO
+} //namespace Mops
 
 #endif

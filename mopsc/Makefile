@@ -9,18 +9,18 @@ ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
          -I../sprogc/include -I../sweepc/include -I../cvodes/include \
-         -I../cvodes/source -Wall 
+         -I../cvodes/source -I../geometry/include -Wall 
     flink= 
   else
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
          -I../sprogc/include -I../sweepc/include -I../cvodes/include \
-         -I../cvodes/source -Wall -pg
+         -I../cvodes/source -I../geometry/include -Wall -pg
     flink=-pg
   endif
 else
   flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
        -I../sprogc/include -I../sweepc/include -I../cvodes/include \
-       -I../cvodes/source -Wall -ggdb -pg
+       -I../cvodes/source -I../geometry/include -Wall -ggdb -pg
   flink=-pg 
 endif
 
@@ -38,14 +38,16 @@ ifeq ($(debug),0)
   sprog=../sprogc/lib/sprog.a
   sweep=../sweepc/lib/sweep.a
   cvodes=../cvodes/lib/cvodes.a
+  geom=../geometry/lib/geometry.a
 else
   comostrings=../comostrings/lib/comostrings_d.a
   camxml=../camxml/lib/camxml_d.a
   sprog=../sprogc/lib/sprog_d.a
   sweep=../sweepc/lib/sweep_d.a
   cvodes=../cvodes/lib/cvodes_d.a
+  geom=../geometry/lib/geometry_d.a
 endif
-linklibs=$(comostrings) $(camxml) $(sprog) $(sweep) $(cvodes)
+linklibs=$(comostrings) $(camxml) $(sprog) $(sweep) $(cvodes) $(geom)
 
 # Target objects.
 

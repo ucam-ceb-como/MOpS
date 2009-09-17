@@ -329,7 +329,7 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 			
 			(*(r.Mixture())).Particles().Update();
             // Calculate jump rates.
-            jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), rates);
+            jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
             // Perform time step.
             dt = timeStep(t, *r.Mixture(), mech, rates, jrate);

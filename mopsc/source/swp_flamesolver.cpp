@@ -221,7 +221,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     
     // Save the initial chemical conditions in sys so that we
     // can restore them at the end of the run.
-    Sprog::Thermo::IdealGas chem = *r.Mixture();
+    const Sprog::Thermo::IdealGas chem = *r.Mixture();
 
     // Store if chemical conditions are fixed at present, because we
     // shall set them to be fixed during this run, to be restored afterwards.
@@ -243,7 +243,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
             linInterpGas(t, m_gasprof, *r.Mixture());
 
             // Get the process jump rates (and the total rate).
-            jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), rates);
+            jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
             // Calculate the splitting end time.
             tsplit = calcSplitTime(t, tstop, jrate, r.Mixture()->ParticleCount(), dtg);
@@ -259,7 +259,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
             linInterpGas(t, m_gasprof, *r.Mixture());
 
             // Calculate jump rates.
-            jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), rates);
+            jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
             // Perform time step.
             dt = timeStep(t, *r.Mixture(), mech, rates, jrate);
@@ -294,7 +294,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     }
     
     // Restore initial chemical conditions to sys.
-    *static_cast<Cell*>(r.Mixture()) = chem;
+    //*static_cast<Cell*>(r.Mixture()) = chem;
     r.Mixture()->SetFixedChem(fixedchem);
 
     out(nsteps, niter, r, *this, data);

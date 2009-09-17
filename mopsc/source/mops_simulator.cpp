@@ -50,6 +50,7 @@
 #include "mops_reactor_factory.h"
 #include "string_functions.h"
 #include "csv_io.h"
+#include "geometry1d.h"
 #include <stdexcept>
 #include <memory>
 using namespace Mops;
@@ -720,7 +721,7 @@ void Simulator::outputPartRxnRates(const Reactor &r) const
     if (r.Mech()->ParticleMech().ProcessCount() != 0) {
         // Calculate the process rates.
         static fvector rates;
-        r.Mech()->ParticleMech().CalcRates(r.Time(), *r.Mixture(), rates);
+        r.Mech()->ParticleMech().CalcRates(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
         // Calculate the molar production rates (mol/mol).
         static fvector wdot;
