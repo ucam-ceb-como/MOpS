@@ -38,7 +38,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\comostrings\include;..\sprogc\include;..\camxml\include;include"
+				AdditionalIncludeDirectories="..\comostrings\include;..\sprogc\include;..\camxml\include;include;..\geometry\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
@@ -55,7 +55,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="..\sprogc\lib\sprog_d.lib ..\camxml\lib\camxml_d.lib"
+				AdditionalDependencies="..\sprogc\lib\sprog_d.lib ..\camxml\lib\camxml_d.lib ..\geometry\lib\geometry_d.lib"
 				OutputFile="$(ProjectDir)lib\sweep_d.lib"
 			/>
 			<Tool
@@ -249,6 +249,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\source\swp_advection_process.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_arssc_condensation.cpp"
 					>
 				</File>
@@ -278,6 +282,10 @@
 				</File>
 				<File
 					RelativePath=".\source\swp_death_process.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_diffusion_process.cpp"
 					>
 				</File>
 				<File
@@ -523,6 +531,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\swp_advection_process.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\swp_arssc_condensation.h"
 					>
 				</File>
@@ -552,6 +564,10 @@
 				</File>
 				<File
 					RelativePath=".\include\swp_death_process.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_diffusion_process.h"
 					>
 				</File>
 				<File
