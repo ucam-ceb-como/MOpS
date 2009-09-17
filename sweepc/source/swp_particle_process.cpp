@@ -83,6 +83,8 @@ ParticleProcess &ParticleProcess::operator=(const ParticleProcess &rhs)
     if (this != &rhs) {
         Process::operator=(rhs);
         m_defer = rhs.m_defer;
+        m_dcomp = rhs.m_dcomp;
+        m_dvals = rhs.m_dvals;
     }
     return *this;
 }

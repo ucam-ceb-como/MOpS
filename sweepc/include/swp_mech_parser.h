@@ -51,12 +51,18 @@
 #include "swp_arssc_reaction.h"
 #include "swp_condensation.h"
 #include "swp_maths_functional.h"
-#include "swp_transport_process.h"
 #include "camxml.h"
 #include <string>
 
 namespace Sweep
 {
+
+//forward declaration
+namespace Processes {
+    class DiffusionProcess;
+    class AdvectionProcess;
+}
+
 class MechParser
 {
 public:
@@ -138,16 +144,28 @@ private:
         );
 
     // TRANSPORT
-    //! Read any transport processes from the XML document
-    static void readTransportProcs(
+    //! Read any diffusion processes from the XML document
+    static void readDiffusionProcs(
         CamXML::Document &xml,
         Mechanism &mech
         );
 
-    //! Read one transport process from its XML description
-    static void readTransportProc(
+    //! Read one diffusion process from its XML description
+    static void readDiffusionProc(
         CamXML::Element &xml,
-        Processes::TransportProcess& tran
+        Processes::DiffusionProcess& tran
+        );
+
+    //! Read any advection processes from the XML document
+    static void readAdvectionProcs(
+        CamXML::Document &xml,
+        Mechanism &mech
+        );
+
+    //! Read one advection process from its XML description
+    static void readAdvectionProc(
+        CamXML::Element &xml,
+        Processes::AdvectionProcess& tran
         );
 
     // REACTION SHARED COMPONENTS.

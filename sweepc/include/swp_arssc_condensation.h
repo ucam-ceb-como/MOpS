@@ -56,7 +56,10 @@ namespace Sweep
 {
 // Forward declare Mechanism class.
 class Mechanism;
-struct TransportOutflow;
+
+namespace Transport {
+    struct TransportOutflow;
+}
 
 namespace Processes
 {
@@ -86,7 +89,7 @@ public:
         real t,              // Time.
         Cell &sys,           // System to update.
         unsigned int iterm=0,// The process term responsible for this event.
-        TransportOutflow *out = 0 // Unused for this process
+        Transport::TransportOutflow *out = 0 // Unused for this process
         ) const;
 
     // Performs the process on a given particle in the system.  Particle

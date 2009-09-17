@@ -89,7 +89,7 @@ public:
         iUniform=-1, // Special Case:  Always returns 1.0.  Used to select particles uniformly.
         iCTime,  // Create time.
         iLUTime, // Last update time.
-        iD,      // Equivalent sphere diameter.
+        iDsph,   // Equivalent sphere diameter.
         iDcol,   // Collision diameter.
         iDmob,   // Mobility diameter.
         iS,      // Surface area.

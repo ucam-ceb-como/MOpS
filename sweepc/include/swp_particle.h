@@ -49,12 +49,12 @@
 #include "swp_subparticle.h"
 #include "camxml.h"
 #include <vector>
+#include <list>
 #include <iostream>
 
 namespace Sweep
 {
 class Ensemble;
-class Mechanism;
 
 class Particle : public SubParticle
 {
@@ -107,6 +107,7 @@ private:
 };
 
 typedef std::vector<Particle*> PartPtrVector;
-};
+typedef std::list<Particle*> PartPtrList;
+}
 
 #endif

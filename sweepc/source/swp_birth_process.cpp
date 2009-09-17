@@ -125,21 +125,6 @@ real BirthProcess::Rate(real t, const Cell &sys) const
     }
 }
 
-/*
-// Calculates the process rate using the given 
-// chemical conditions, rather than those conditions in the
-// given system.
-real BirthProcess::Rate(const real t, const Sprog::Thermo::IdealGas &gas, 
-                        const Cell &sys) const
-{
-    if (m_cell) {
-        return m_a * m_cell->ParticleCount(); // Rate depends on birth cell.
-    } else {
-        return m_a; // Constant rate.
-    }
-}
-*/
-
 // RATE TERM CALCULATIONS.
 
 // Returns the number of rate terms for this process (one).
@@ -159,28 +144,11 @@ real BirthProcess::RateTerms(const real t, const Cell &sys,
     return *(iterm++);
 }
 
-/*
-// Calculates the rate terms given an iterator to a real vector. The 
-// iterator is advanced to the position after the last term for this
-// process.  The given chemical conditions are used instead of those
-// in the given system object.
-real BirthProcess::RateTerms(const real t, const Sprog::Thermo::IdealGas &gas,
-                             const Cell &sys, fvector::iterator &iterm) const
-{
-    if (m_cell) {
-        *iterm = m_a * m_cell->ParticleCount(); // Rate depends on birth cell.
-    } else {
-        *iterm = m_a; // Constant rate.
-    }
-    return *(iterm++);
-}
-*/
-
 // PERFORMING THE PROCESS.
 
 // Performs the process on the given system.  The responsible rate term is given
 // by index.  Returns 0 on success, otherwise negative.
-int BirthProcess::Perform(real t, Cell &sys, unsigned int iterm, TransportOutflow*) const
+int BirthProcess::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const  
 {
     Particle *p = NULL;
 

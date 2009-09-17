@@ -69,7 +69,10 @@
 #include "swp_particle_image.h"
 #include "swp_transport_process.h"
 
-
+// Forward declaration
+namespace Geometry {
+    class LocalGeometry1d;
+}
 
 namespace Sweep
 {
@@ -169,6 +172,7 @@ public:
     real CalcRates(
         real t,          // Time at which to get rates.
         const Cell &sys, // System cell for which to get rates.
+        const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         fvector &rates,  // Return vector for process rates.
         bool scale=false // Scale the rates to the ensemble (=true), leave per unit vol (=false).
         ) const;
@@ -181,40 +185,26 @@ public:
     real CalcRateTerms(
         real t,          // Time at which to get rates.
         const Cell &sys, // System cell for which to get rates.
+        const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         fvector &terms   // Return vector for process rates.
         ) const;
-
-/*
-    // Get total rates of all processes.  Returns the sum of
-    // all rates.  Uses supplied gas-phase conditions rather than
-    // those in the given system.
-    real CalcRates(
-        real t,          // Time at which to get rates.
-        const Sprog::Thermo::IdealGas &gas, // Use these gas-phase conditions instead.
-        const Cell &sys, // System cell for which to get rates.
-        fvector &rates   // Return vector for process rates.
-        ) const;
-*/
 
     // Get total rates of non-deferred processes.  Returns the sum
     // of all rates.
     real CalcJumpRateTerms(
         real t,          // Time at which to get rates.
         const Cell &sys, // System cell for which to get rates.
+        const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         fvector &rates   // Return vector for process rates.
         ) const;
 
-/*
-    // Get total rates of non-deferred processes.  Returns the sum
-    // of all rates.  Uses supplied gas-phase conditions rather than
-    // those in the given system.
-    real CalcJumpRates(
+    //! Rate of processes that are deferred
+    real CalcDeferredRateTerms(
         real t,          // Time at which to get rates.
-        const Sprog::Thermo::IdealGas &gas, // Use these gas-phase conditions instead.
         const Cell &sys, // System cell for which to get rates.
+        const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         fvector &rates   // Return vector for process rates.
         ) const;
-*/
 
     // Calculates the rates-of-change of the chemical species fractions, 
     // gas-phase temperature and density due to particle processes.
@@ -233,7 +223,8 @@ public:
         unsigned int i, // Index of process to perform.
         real t,         // Current time (s).
         Cell &sys,      // System to update (includes ensemble).
-        TransportOutflow *out = 0 // Details of any particle transported out
+        const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
+        Transport::TransportOutflow *out = 0 // Details of any particle transported out
         ) const;
 
 
@@ -246,16 +237,6 @@ public:
         Cell &sys // System to update.
         ) const;
 
-/*
-    // Performs linear update algorithm on the given system up to given time,
-    // with the given chemical conditions rather than those in the 
-    // given system.
-    void LPDA(
-        real t,    // Time up to which to integrate.
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        Cell &sys // System to update.
-        ) const;
-*/
 
     // Performs linear process updates on a particle in the given system.
     void UpdateParticle(
@@ -263,17 +244,6 @@ public:
         Cell &sys,    // System to which the particle belongs.
         real t        // Time up to which to integrate.
         ) const;
-
-/*
-    // Performs linear process updates on a particle in the given system,
-    // with the current chemical conditions precalculated.
-    void UpdateParticle(
-        Particle &sp, // Particle to update.
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        Cell &sys,    // System to which the particle belongs.
-        real t        // Time up to which to integrate.
-        ) const;
-*/
 
     // READ/WRITE/COPY.
 
@@ -319,10 +289,7 @@ private:
     void releaseMem(void);
 
     //time when the last particle emsenble has been written to a file
-	mutable real last3dout;
-
-
-	
+    mutable real last3dout;
 };
-};
+} // namespace Sweep
 #endif

@@ -48,6 +48,10 @@
 
 namespace Sweep
 {
+    // Forward declaration
+    class ParticleModel;
+
+//! Building block for binary tree
 class TreeNode
 {
 friend class Ensemble;
@@ -70,18 +74,18 @@ public:
 
 private:
 	// MEMBER VARIABLES.
-	ParticleCache LeftData;  // Sum of the left child leaves.
+    ParticleCache LeftData;  // Sum of the left child leaves.
     ParticleCache RightData; // Sum of the right child leaves.
-	TreeNode *Left;          // Pointer to left child node.
-	TreeNode *Right;         // Pointer to right child node.
-	TreeNode *Parent;        // Pointer to parent node.
+    TreeNode *Left;          // Pointer to left child node.
+    TreeNode *Right;         // Pointer to right child node.
+    TreeNode *Parent;        // Pointer to parent node.
 
     // Default Constructor is private to prevent uninitialised nodes
     // being created.
-	TreeNode(void);
+    TreeNode(void);
 };
 
 typedef std::vector<TreeNode> Tree;
-};
+} //namespace Sweep
 
 #endif

@@ -8,11 +8,19 @@
 #define	SWP_TRANSPORT_PROCESS_H
 
 #include "swp_process.h"
-#include "swp_transport_outflow.h"
+
+#include "local_geometry1d.h"
 
 #include <vector>
 
 namespace Sweep {
+
+namespace Transport
+{
+    // Forward declaration of type to carry particles for onward transport
+    struct TransportOutflow;
+}
+
 namespace Processes {
 
 // Forward declaration
@@ -25,45 +33,97 @@ typedef std::vector<TransportProcess*> TransportPtrVector;
 class TransportProcess : public Process {
 public:
     //! Create a copy of the transport process.
-    virtual TransportProcess *const Clone(void) const;
+    virtual TransportProcess *const Clone(void) const = 0;
 
-    //! Return the process type for identification during serialisation
-    virtual ProcessType ID(void) const;
+    //! Set the rate scaling factor
+    void SetA(const real a) {m_a = a;}
 
-    //! Set the ID number of the particle property used for rate calculation
-    void SetPropertyID(
-        unsigned int id,
-        SubModels::SubModelType modelid = SubModels::BasicModel_ID
-        );
+    //! Get the rate scaling factor
+    real A() const {return m_a;}
 
-
-    //! Rate of the process for the given system.
+    //! Backwards compatiliblity method, always returns 0
     virtual real Rate(
         real t,
         const Cell &sys
-        ) const {return 0;}
+        ) const;
+
+    //! Rate of the process
+    virtual real Rate(
+        real t,
+        const Cell &sys,
+        const Geometry::LocalGeometry1d& local_geom
+        ) const = 0;
+
+    // SINGLE PARTICLE RATE CALCULATIONS.
+
+    /*!
+     * Calculate the particle dependent part of the process rate
+     * for a single particle.  Scaling factors depending on the
+     * chemical environment such as temperature, pressure and
+     * species concentrations will not be included.
+     *
+     * This method (and its concrete implementations) do not seem
+     * to need geometry information, because particle properties
+     * are used in the same way for all possible directions.
+     *
+     *@param[in]        t       Time at which rate is to be calculated
+     *@param[in]        sys     System containing particle
+     *@param[in]        sp      Particle for which to calculate rate
+     *
+     *@return       Particle dependent part of process rate
+     */
+    virtual real Rate(
+        real t,
+        const Cell &sys,
+        const Particle &sp
+        ) const = 0;
+
+
+    /*!
+     * Calculate the particle dependent part of the process majorant rate
+     * for a single particle.  Scaling factors depending on the
+     * chemical environment such as temperature, pressure and
+     * species concentrations will not be included.
+     *
+     *@param[in]        t       Time at which rate is to be calculated
+     *@param[in]        sys     System containing particle
+     *@param[in]        sp      Particle for which to calculate rate
+     *
+     *@return       Particle dependent part of process majorant rate
+     */
+    virtual real MajorantRate(
+        real t,
+        const Cell &sys,
+        const Particle &sp
+        ) const = 0;
 
     // RATE TERM CALCULATIONS.
     //   These routines return the individual rate terms for a
     //   process, which may have multiple terms (e.g. condensation).
 
-    //! Number of rate terms for this process.
-    virtual unsigned int TermCount(void) const;
-
-    //! Puts rates terms into a vector
+    //! Puts rate terms into a vector assuming all transport blocked
     virtual real RateTerms(
-        real t,                  // Time.
-        const Cell &sys,         // System for which to calculate rate terms.
-        fvector::iterator &iterm // Iterator to the first term.
+        real t,
+        const Cell &sys,
+        fvector::iterator &iterm 
         ) const;
 
-    // Calculates the rate of multiple inceptions given a
-    // vector of inceptions and an iterator to a vector of
-    // reals for output.
+    //! Puts rate terms into a vector for transport in permitted directions
+    virtual real RateTerms(
+        real t,
+        const Cell &sys,
+        //const Sweep::Transport::DirectionMask &transport_mask,
+        const Geometry::LocalGeometry1d& local_geom,
+        fvector::iterator &iterm
+        ) const = 0;
+
+    //! Calculate rates for a vector of transport processes
     static real CalcRates(
         real t,                   // Time.
         const Cell &sys,          // System for which to calculate rates.
-        const TransportPtrVector &itrans, // Vector of inception processes.
+        //const Sweep::Transport::DirectionMask &transport_mask,
+        const Geometry::LocalGeometry1d& local_geom,
+        const TransportPtrVector &trans, // Vector of transport processes.
         fvector &rates,           // Output rates vector.
         unsigned int start = 0    // Vector position to start at in vector rates.
         );
@@ -71,40 +131,44 @@ public:
     // PERFORMING THE PROCESS.
 
     //! Performs the process on the given system.
-    /*!
-     * \param       t       Time
-     * \param       sys     System to update
-     * \param       iterm   Process term responsible for this event
-     * \param       out     Details of any particle being transported out of system
-     *
-     * \return      0 on success, otherwise negative.
-     */
+    virtual int Perform(
+        real t,
+        Cell &sys,
+        const Geometry::LocalGeometry1d& local_geom,
+        unsigned int iterm = 0,
+        Transport::TransportOutflow *out = 0
+        ) const = 0;
+
+    //! Backwards compatibility method, should never be called
     virtual int Perform(
         real t,
         Cell &sys,
         unsigned int iterm = 0,
-        TransportOutflow *out = 0
+        Transport::TransportOutflow *out = 0
+        ) const;
+
+    //! Remove a particle and put it into the TransportOutflow object for onward transport
+    int Outflow(
+        real t,
+        Cell &sys,
+        const Geometry::LocalGeometry1d& local_geom,
+        const int particle_index,
+        const Geometry::Direction &direction,
+        Transport::TransportOutflow *out
         ) const;
 
     /*!
      *\brief    Transport processes are not deferred (for now)
      *
      *\return   True if the process is deferred
+     *
+     * This method may eventually be moved into concrete derived classes.
      */
     bool IsDeferred() const {return false;}
 
 private:
-    //! Direction of the transport
-    TransportDirection m_direction;
-
-    //! Particle property to which the rate of the process is proportional.
-    unsigned int m_pid;
-
-    //! Particle model for which the above particle property ID is valid.
-    SubModels::SubModelType m_modelid;
-
-
-
+    //! Constant factor multiplying the rate (must not be negative)
+    real m_a;
 };
 
 } // namespace Processes

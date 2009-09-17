@@ -398,12 +398,16 @@ real Process::chemRatePart(const fvector &fracs, real density) const
 // products defined for this process.
 void Process::adjustGas(Cell &sys, unsigned int n) const
 {
-    fvector dc(m_mech->Species()->size(), 0.0);
-    Sprog::StoichMap::const_iterator i;
-    real n_NAvol = (real)n / (NA * sys.SampleVolume());
-    for (i=m_reac.begin(); i!=m_reac.end(); ++i)
-        dc[i->first] -= (real)(i->second) * n_NAvol;
-    for (i=m_prod.begin(); i!=m_prod.end(); ++i)
-        dc[i->first] +=(real)(i->second) * n_NAvol;
-    sys.AdjustConcs(dc);
+    if(!sys.FixedChem()) {
+        //riap 7 Sep 2009
+        // Only adjust the gas if the chemistry is not fixed.
+        fvector dc(m_mech->Species()->size(), 0.0);
+        Sprog::StoichMap::const_iterator i;
+        real n_NAvol = (real)n / (NA * sys.SampleVolume());
+        for (i=m_reac.begin(); i!=m_reac.end(); ++i)
+            dc[i->first] -= (real)(i->second) * n_NAvol;
+        for (i=m_prod.begin(); i!=m_prod.end(); ++i)
+            dc[i->first] +=(real)(i->second) * n_NAvol;
+        sys.AdjustConcs(dc);
+    }
 }

@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -204,40 +204,22 @@ void Inception::SetParticleTracker(unsigned int i, real track)
 // TOTAL RATE CALCULATIONS.
 
 // Returns rate of the process for the given system.
-real Inception::Rate(real t, const Cell &sys) const 
+real Inception::Rate(real t, const Cell &sys) const
 {
     // Get the current chemical conditions.
     real T = sys.Temperature();
     real P = sys.Pressure();
 
     // Calculate the rate.
-    return Rate(sys.MoleFractions(), sys.Density(), sqrt(T), 
-                T/ViscosityAir(T), MeanFreePathAir(T,P), 
+    return Rate(sys.MoleFractions(), sys.Density(), sqrt(T),
+                T/ViscosityAir(T), MeanFreePathAir(T,P),
                 sys.SampleVolume());
 }
-
-/*
-// Calculates the process rate using the given 
-// chemical conditions, rather than those conditions in the
-// given system.
-real Inception::Rate(const real t, const Sprog::Thermo::IdealGas &gas, 
-                     const Cell &sys) const
-{
-    // Get the current chemical conditions.
-    real T = gas.Temperature();
-    real P = gas.Pressure();
-
-    // Calculate the rate.
-    return Rate(gas.MoleFractions(), gas.Density(), sqrt(T), 
-                T/ViscosityAir(T), MeanFreePathAir(T,P), 
-                sys.SampleVolume());
-}
-*/
 
 // Calculates the rate of multiple inceptions given a
 // vector of inceptions and an iterator to a vector of
 // reals for output.
-real Inception::CalcRates(real t, const Cell &sys, const IcnPtrVector &icns, 
+real Inception::CalcRates(real t, const Cell &sys, const IcnPtrVector &icns,
                           fvector &rates, unsigned int start)
 {
     // Precalculate some values.
@@ -252,7 +234,7 @@ real Inception::CalcRates(real t, const Cell &sys, const IcnPtrVector &icns,
     fvector::iterator i = (rates.begin()+start);
     real sum = 0.0;
     for (p=icns.begin(); p!=icns.end(); ++p,++i) {
-        *i = (*p)->Rate(sys.MoleFractions(), sys.Density(), sqrtT, 
+        *i = (*p)->Rate(sys.MoleFractions(), sys.Density(), sqrtT,
                         T_mu, MFP, vol);
         sum += *i;
     }
@@ -262,7 +244,7 @@ real Inception::CalcRates(real t, const Cell &sys, const IcnPtrVector &icns,
 // A faster rate calculation routine for Inception events only.  Requires all the
 // parameters that would otherwise be calculated by the routine to be passed as
 // arguments.
-real Inception::Rate(const fvector &fracs, real density, real sqrtT, 
+real Inception::Rate(const fvector &fracs, real density, real sqrtT,
                      real T_mu, real MFP, real vol) const
 {
     // Temperature and pressure dependence.
@@ -300,10 +282,10 @@ real Inception::chemRatePart(const fvector &fracs, real density) const
 // Returns the number of rate terms for this process (one).
 unsigned int Inception::TermCount(void) const {return 1;}
 
-// Calculates the rate terms given an iterator to a real vector. The 
+// Calculates the rate terms given an iterator to a real vector. The
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
-real Inception::RateTerms(const real t, const Cell &sys, 
+real Inception::RateTerms(const real t, const Cell &sys,
                           fvector::iterator &iterm) const
 {
     // Get the current chemical conditions.
@@ -311,45 +293,24 @@ real Inception::RateTerms(const real t, const Cell &sys,
     real P = sys.Pressure();
 
     // Calculate the single rate term and advance iterator.
-    *iterm = Rate(sys.MoleFractions(), sys.Density(), sqrt(T), 
-                  T/ViscosityAir(T), MeanFreePathAir(T,P), 
+    *iterm = Rate(sys.MoleFractions(), sys.Density(), sqrt(T),
+                  T/ViscosityAir(T), MeanFreePathAir(T,P),
                   sys.SampleVolume());
     return *(iterm++);
 }
-
-/*
-// Calculates the rate terms given an iterator to a real vector. The 
-// iterator is advanced to the position after the last term for this
-// process.  The given chemical conditions are used instead of those
-// in the given system object.
-real Inception::RateTerms(const real t, const Sprog::Thermo::IdealGas &gas,
-                          const Cell &sys, fvector::iterator &iterm) const
-{
-    // Get the current chemical conditions.
-    real T = gas.Temperature();
-    real P = gas.Pressure();
-
-    // Calculate rate term and advance iterator.
-    *iterm = Rate(gas.MoleFractions(), gas.Density(), sqrt(T), 
-                  T/ViscosityAir(T), MeanFreePathAir(T,P), 
-                  sys.SampleVolume());
-    return *(iterm++);
-}
-*/
 
 // PERFORMING THE PROCESS.
 
 // Performs the process on the given system.  The responsible rate term is given
 // by index.  Returns 0 on success, otherwise negative.
-int Inception::Perform(real t, Cell &sys, unsigned int iterm, TransportOutflow*) const
-{
+int Inception::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const {
 
     // This routine performs the inception on the given chemical system.
 
     // Create a new particle of the type specified
     // by the system ensemble.
     Particle *sp = m_mech->CreateParticle(t);
-    
+
     // Initialise the new particle.
     sp->Primary()->SetComposition(m_newcomp);
     sp->Primary()->SetValues(m_newvals);
@@ -476,7 +437,7 @@ void Inception::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
                     m_newvals.push_back((real)val);
                 }
-                
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "

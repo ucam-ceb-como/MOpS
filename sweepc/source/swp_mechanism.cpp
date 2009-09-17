@@ -44,6 +44,9 @@
 #include "swp_model_factory.h"
 #include "swp_process_factory.h"
 #include "swp_abf_model.h"
+
+#include "geometry1d.h"
+
 #include <stdexcept>
 
 //added to test 3-d output
@@ -102,20 +105,29 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 
         // Copy inceptions.
         for (IcnPtrVector::const_iterator i=rhs.m_inceptions.begin();
-             i!=rhs.m_inceptions.end(); ++i) {
+            i!=rhs.m_inceptions.end(); ++i) {
             m_inceptions.push_back((*i)->Clone());
+            
+            // Need to update the parent mechanism
+            m_inceptions.back()->SetMechanism(*this);
         }
 
         // Copy particle processes.
         for (TransportPtrVector::const_iterator i=rhs.m_transports.begin();
-             i!=rhs.m_transports.end(); ++i) {
-             m_transports.push_back((*i)->Clone());
+            i!=rhs.m_transports.end(); ++i) {
+            m_transports.push_back((*i)->Clone());
+
+            // Need to update the parent mechanism
+            m_transports.back()->SetMechanism(*this);
         }
 
         // Copy particle processes.
         for (PartProcPtrVector::const_iterator i=rhs.m_processes.begin();
-             i!=rhs.m_processes.end(); ++i) {
+            i!=rhs.m_processes.end(); ++i) {
             m_processes.push_back((*i)->Clone());
+
+            // Need to update the parent mechanism
+            m_processes.back()->SetMechanism(*this);
         }
 
         // Copy coagulation process.
@@ -125,6 +137,9 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
             // of type Coagulation*, but the Clone method returns
             // a Process* so the cast is necessary.
             m_coag = dynamic_cast<Coagulation*>(rhs.m_coag->Clone());
+
+            // Need to update the parent mechanism
+            m_coag->SetMechanism(*this);
         }
 
         // Copy process counters.
@@ -373,7 +388,7 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
 
 // Get total rates of all processes.  Returns the sum of
 // all rates.
-real Mechanism::CalcRates(real t, const Cell &sys, fvector &rates, bool scale) const
+real Mechanism::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom, fvector &rates, bool scale) const
 {
     // Ensure rates vector is the correct length, then set to zero.
     rates.resize(m_processcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
@@ -388,7 +403,7 @@ real Mechanism::CalcRates(real t, const Cell &sys, fvector &rates, bool scale) c
     sum += ParticleProcess::CalcRates(t, sys, m_processes, rates, m_inceptions.size());
 
     // Query transport processes for their rates.
-    sum += TransportProcess::CalcRates(t, sys, m_transports, rates, m_inceptions.size() + m_processes.size());
+    sum += TransportProcess::CalcRates(t, sys, local_geom, m_transports, rates, m_inceptions.size() + m_processes.size());
 
     // Get coagulation rate.
     fvector::iterator i = rates.begin()+m_inceptions.size()+m_transports.size()+m_processes.size();
@@ -429,7 +444,7 @@ real Mechanism::CalcRates(real t, const Cell &sys, fvector &rates, bool scale) c
 // selection by different properties for the same process.
 // In particular this is used for the condensation and
 // coagulation processes.  Returns the sum of all rates.
-real Mechanism::CalcRateTerms(real t, const Cell &sys, fvector &terms) const
+real Mechanism::CalcRateTerms(real t, const Cell &sys, const Geometry::LocalGeometry1d& local_geom, fvector &terms) const
 {
     // Ensure rates vector is the correct length.
     terms.resize(m_termcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
@@ -451,7 +466,7 @@ real Mechanism::CalcRateTerms(real t, const Cell &sys, fvector &terms) const
         }
         for(TransportPtrVector::const_iterator i=m_transports.begin();
             (i!=m_transports.end()) && (iterm!=terms.end()); ++i) {
-            sum += (*i)->RateTerms(t, sys, iterm);
+            sum += (*i)->RateTerms(t, sys, local_geom, iterm);
         }
     } else {
         // Fill vector with zeros.
@@ -486,7 +501,7 @@ real Mechanism::CalcRateTerms(real t, const Cell &sys, fvector &terms) const
 
 // Get total rates of non-deferred processes.  Returns the sum
 // of all rates.
-real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, fvector &terms) const
+real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, const Geometry::LocalGeometry1d& local_geom, fvector &terms) const
 {
     // This routine only calculates the rates of those processes which are
     // not deferred.  The rate terms of deferred processes are returned
@@ -494,7 +509,6 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, fvector &terms) const
 
     // Ensure vector is the correct length, then set to zero.
     terms.resize(m_termcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
-    fill(terms.begin(), terms.end(), 0.0);
     fvector::iterator iterm = terms.begin();
 
     real sum = 0.0;
@@ -522,7 +536,7 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, fvector &terms) const
             (i!=m_transports.end()) && (iterm!=terms.end()); ++i) {
             if (!(*i)->IsDeferred()) {
                 // Calculate rate if not deferred.
-                sum += (*i)->RateTerms(t, sys, iterm);
+                sum += (*i)->RateTerms(t, sys, local_geom, iterm);
             } else {
                 // If process is deferred, then set rate to zero.
                 for (unsigned int j=0; j!=(*i)->TermCount(); ++j) {*(iterm++)=0.0;}
@@ -560,6 +574,55 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, fvector &terms) const
     return sum;
 }
 
+/*!
+ * LPDA allows some processes to be deferred and removed from the main simulation
+ * loop in a kind of splitting.  This method calculates the combined rate of all
+ * the processes that are deferred in this way.  The result is the expected number
+ * of events per second in sys, the second argument.  The result will therefore
+ * scale linearly with the sample volume of sys, if particle concentrations are
+ * held constant.
+ *
+ *@param[in]    t           Time at which to calculate the rates
+ *@param[in]    sys         System for which rates are to be calculated
+ *@param[in]    local_geom  Information on location of surrounding cells
+ *@param[out]   terms       Vector to fill with the terms contributing to the summed rate
+ *
+ *@return   The total rate of all deferred processes
+ */
+real Mechanism::CalcDeferredRateTerms(real t, const Cell &sys, const Geometry::LocalGeometry1d& local_geom, fvector &terms) const
+{
+    // This routine only calculates the rates of those processes which are
+    // deferred.  The rate terms of non-deferred processes are returned
+    // as zero.
+
+    // Ensure vector is the correct length and full of zeros.
+    fill(terms.begin(), terms.end(), 0.0);
+    terms.resize(m_termcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
+    fvector::iterator iterm = terms.begin();
+
+    real sum = 0.0;
+
+    // Query other processes for their rates.
+    if (sys.ParticleCount() > 0) {
+        for(PartProcPtrVector::const_iterator i=m_processes.begin();
+            (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
+            if ((*i)->IsDeferred()) {
+                // Calculate rate if not deferred.
+                sum += (*i)->RateTerms(t, sys, iterm);
+            }
+        }
+
+        for(TransportPtrVector::const_iterator i=m_transports.begin();
+            (i!=m_transports.end()) && (iterm!=terms.end()); ++i) {
+            if ((*i)->IsDeferred()) {
+                // Calculate rate if not deferred.
+                sum += (*i)->RateTerms(t, sys, local_geom, iterm);
+            }
+        }
+    }
+
+    return sum;
+}
 
 // Calculates the rates-of-change of the chemical species fractions, 
 // gas-phase temperature and density due to particle processes.
@@ -636,7 +699,9 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
 
 // Performs the Process specified.  Process index could be
 // an inception, particle process or a coagulation event.
-void Mechanism::DoProcess(unsigned int i, real t, Cell &sys, TransportOutflow *out) const
+void Mechanism::DoProcess(unsigned int i, real t, Cell &sys, 
+                          const Geometry::LocalGeometry1d& local_geom,
+                          Transport::TransportOutflow *out) const
 {
     // Work out to which process this term belongs.
     int j = i - m_inceptions.size();
@@ -665,7 +730,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys, TransportOutflow *o
         for(TransportPtrVector::const_iterator it = m_transports.begin(); it != m_transports.end(); ++it) {
             if (j < static_cast<int>((*it)->TermCount())) {
                 // Do the process.
-                if ((*it)->Perform(t, sys, j, out) == 0) {
+                if ((*it)->Perform(t, sys, local_geom, j, out) == 0) {
                     m_proccount[i] += 1;
                 } else {
                     m_fictcount[i] += 1;

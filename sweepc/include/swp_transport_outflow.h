@@ -14,17 +14,7 @@ namespace Sweep {
     // Forward declaration
     class Particle;
 
-    //! Indicate direction of transport
-    /*!
-     * Enum is intended to be extended or even replaced with
-     * some kind of vector when more complex geometries are
-     * implemented.
-     */
-    enum TransportDirection {
-        none,
-        left,
-        right,
-    };
+namespace Transport {
 
 /*!
  *Collect together all the information needed when a particle is transported
@@ -34,7 +24,7 @@ namespace Sweep {
  */
 struct TransportOutflow {
     TransportOutflow()
-            : particle(0), weight(0.0), direction(none), origin(-1)
+        : particle(0), weight(0.0), destination(-1)
     {}
 
     //! Pointer to particle that is being moved
@@ -43,14 +33,12 @@ struct TransportOutflow {
     //! Statistical weight of particle begin moved
     real weight;
 
-    //! Rule to find destination of particle
-    TransportDirection direction;
-
-    //! Index of particle origin
-    int origin;
+    //! Index of destination cell
+    int destination;
 };
 
-}; // namespace Sweep
+} // namespace Transport
+} // namespace Sweep
 
 #endif	/* SWP_TRANSPORT_OUTFLOW_H */
 

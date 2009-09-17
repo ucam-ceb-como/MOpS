@@ -52,12 +52,16 @@
 #include "swp_abf_model.h"
 #include "swp_arssc_reaction.h"
 #include "swp_arssc_condensation.h"
+#include "swp_diffusion_process.h"
+#include "swp_advection_process.h"
 #include "camxml.h"
 #include "string_functions.h"
 #include "swp_arssc_model.h"
 #include "csv_io.h"
 #include <stdexcept>
 #include <string>
+#include <cassert>
+#include <memory>
 
 using namespace Sweep;
 using namespace Sweep::Processes;
@@ -255,6 +259,8 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     readInceptions(xml, mech);
     readSurfRxns(xml, mech);
     readCondensations(xml, mech);
+    readDiffusionProcs(xml, mech);
+    readAdvectionProcs(xml, mech);
 
     // Read which coagulation kernel to use
     readCoagulation(xml, mech);
@@ -522,7 +528,7 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
             readSurfRxn(*(*i), *rxn);
         } catch (std::exception &e) {
             delete rxn;
-            throw e;
+            throw;
         }
 
         // Add process to mechanism.
@@ -548,34 +554,16 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
         rxn.SetDeferred(false);
     }
 
-    // Read reactants.
-    try {
-        // Get reactant stoichiometry.
-        readReactants(xml, rxn);
-    } catch (std::exception &e) {
-        throw e;
-    }
+    readReactants(xml, rxn);
 
     // Read products.
-    try {
-        readProducts(xml, rxn);
-    } catch (std::exception &e) {
-        throw e;
-    }
+    readProducts(xml, rxn);
 
     // Read particle composition change.
-    try {
-        readCompChanges(xml, rxn);
-    } catch (std::exception &e) {
-        throw e;
-    }
+    readCompChanges(xml, rxn);
 
     // Read tracker variable changes.
-    try {
-        readTrackChanges(xml, rxn);
-    } catch (std::exception &e) {
-        throw e;
-    }
+    readTrackChanges(xml, rxn);
 
     // Read Arrhenius rate parameters.
     Sprog::Kinetics::ARRHENIUS arr;
@@ -622,7 +610,7 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
             // This reaction depends on some power of the diameter.
             switch (id) {
                 case 1:
-                    rxn.SetPropertyID(ParticleCache::iD);
+                    rxn.SetPropertyID(ParticleCache::iDcol);
                     break;
                 case 2:
                     rxn.SetPropertyID(ParticleCache::iD2);
@@ -725,25 +713,16 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
     }
 
     // Read products.
-    try {
-        readProducts(xml, cond);
-    } catch (std::exception &e) {
-        throw e;
-    }
+    readProducts(xml, cond);
 
     // Read particle composition change.
-    try {
-        readCompChanges(xml, cond);
-    } catch (std::exception &e) {
-        throw e;
-    }
+    readCompChanges(xml, cond);
 
     // Read tracker variable changes.
-    try {
-        readTrackChanges(xml, cond);
-    } catch (std::exception &e) {
-        throw e;
-    }
+    readTrackChanges(xml, cond);
+
+    // The condensation should change something, otherwise what is the point of having it?
+    assert((cond.CompChange().size() > 0) || (cond.TrackChange().size() > 0));
 
     // Read Arrhenius rate parameters.
     real A = 0.0;
@@ -785,17 +764,34 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
         }
         else
         {
+            // Work out which kernel to use and create it
             const string kernelName = kernel->Data();
+
+            std::auto_ptr<Processes::Coagulation> coag;
             if(kernelName == "transition")
-                mech.AddCoagulation(*(new Processes::TransitionCoagulation(mech)));
+                coag.reset(new Processes::TransitionCoagulation(mech));
             else if(kernelName == "additive")
-                mech.AddCoagulation(*(new Processes::AdditiveCoagulation(mech)));
+                coag.reset(new Processes::AdditiveCoagulation(mech));
             else
                 // Unrecognised option
                 throw std::logic_error("Coagulation kernel " + kernelName + "not yet available \
                                         (Sweep, MechParser::readCoagulation)");
-        }
 
+            // Rate scaling now that a process has been created
+            real A = 0.0;
+            CamXML::Element *el = (items.front())->GetFirstChild("A");
+            if (el != NULL) {
+                A = cdble(el->Data());
+            } else {
+                A = 1.0;
+            }
+            coag->SetA(A);
+
+            mech.AddCoagulation(*coag);
+
+            // Get rid of the auto_ptr without deleting the coagulation object
+            coag.release();
+        }
     }
     else
     {
@@ -806,43 +802,43 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
 
 // TRANSPORT PROCESSES
 
-///*!
-// *\param[in]        xml         XML document containing a mechanism description
-// *\param[inout]     mech        Mechanism to which transport processes will be added
-// */
-//void MechParser::readTransportProcs(CamXML::Document &xml, Mechanism &mech)
-//{
-//    vector<CamXML::Element*> items;
-//    vector<CamXML::Element*>::iterator i;
-//    string str;
-//    unsigned int k = 0;
-//
-//    // Get all transport processes.
-//    xml.Root()->GetChildren("transport", items);
-//
-//    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
-//        TransportProcess *tran = new TransportProcess();
-//        // Set default name.
-//        tran->SetName("Transport " + cstr(k));
-//
-//        // Read the reaction properties.
-//        try {
-//            readTransportProc(*(*i), *tran);
-//        } catch (std::exception &e) {
-//            delete tran;
-//            throw;
-//        }
-//
-//        // Add process to mechanism.
-//        //mech.AddProcess(*rxn);
-//    }
-//}
-//
 /*!
- *\param[in]        xml     XML node of type ????
+ *\param[in]        xml         XML document containing a mechanism description
+ *\param[inout]     mech        Mechanism to which transport processes will be added
+ */
+void MechParser::readDiffusionProcs(CamXML::Document &xml, Mechanism &mech)
+{
+    vector<CamXML::Element*> items;
+    vector<CamXML::Element*>::iterator i;
+    string str;
+    unsigned int k = 0;
+
+    // Get all transport processes.
+    xml.Root()->GetChildren("diffusion", items);
+
+    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
+        DiffusionProcess *tran = new DiffusionProcess();
+        // Set default name.
+        tran->SetName("Diffusion " + cstr(k));
+
+        // Read the reaction properties.
+        try {
+            readDiffusionProc(*(*i), *tran);
+        } catch (std::exception &e) {
+            delete tran;
+            throw;
+        }
+
+        // Add process to mechanism.
+        mech.AddTransport(*tran);
+    }
+}
+
+/*!
+ *\param[in]        xml     XML node of type diffusion
  *\param[in]        rxn     mechanism to which to add the process
  */
-void MechParser::readTransportProc(CamXML::Element &xml, Processes::TransportProcess &tran)
+void MechParser::readDiffusionProc(CamXML::Element &xml, Processes::DiffusionProcess &tran)
 {
     string str;
     CamXML::Element *el = NULL;
@@ -859,13 +855,16 @@ void MechParser::readTransportProc(CamXML::Element &xml, Processes::TransportPro
         str = el->GetAttributeValue("id");
 
         // Get power.
-        int id = (int)cdble(el->GetAttributeValue("power"));
+        int id = atoi(el->GetAttributeValue("power").c_str());
 
         if (str.compare("d")==0) {
-            // This reaction depends on some power of the diameter.
+            // This reaction depends on some power of the collision diameter.
             switch (id) {
+                case 0:
+                    tran.SetPropertyID(ParticleCache::iUniform);
+                    break;
                 case 1:
-                    tran.SetPropertyID(ParticleCache::iD);
+                    tran.SetPropertyID(ParticleCache::iDcol);
                     break;
                 case 2:
                     tran.SetPropertyID(ParticleCache::iD2);
@@ -878,16 +877,92 @@ void MechParser::readTransportProc(CamXML::Element &xml, Processes::TransportPro
                     break;
                 default:
                     // Oh dear, can't have a zero power.
-                    throw runtime_error("""particleterm"" tag found with "
-                                        "invalid or zero power attribute "
-                                        "(Sweep, MechParser::readTransportProc)");
+                    throw runtime_error("particleterm"" tag found with \
+                                         invalid power attribute \
+                                        (Sweep, MechParser::readTransportProc)");
             }
         }
         else {
-            throw runtime_error("Surface process defined without ""particleterm"" "
-                                "element (Sweep, MechParser::readTransportProc).");
+            throw runtime_error("Surface process defined without particleterm \
+                                 element (Sweep, MechParser::readTransportProc).");
         }
     }
+
+    // Temperature dependency.
+    el = xml.GetFirstChild("temperature");
+    real power = 0;
+    if (el!=NULL) {
+        // Get power.
+        power = atof(el->GetAttributeValue("power").c_str());
+    }
+    tran.SetTemperatureExponent(power);
+
+    // Read scaling factor
+    real A = 0.0;
+    el = xml.GetFirstChild("A");
+    if (el != NULL) {
+        A = atof(el->Data().c_str());
+    } else {
+        A = 1.0;
+    }
+    tran.SetA(A);
+}
+
+/*!
+ *\param[in]        xml         XML document containing a mechanism description
+ *\param[inout]     mech        Mechanism to which transport processes will be added
+ */
+void MechParser::readAdvectionProcs(CamXML::Document &xml, Mechanism &mech)
+{
+    vector<CamXML::Element*> items;
+    vector<CamXML::Element*>::iterator i;
+    string str;
+    unsigned int k = 0;
+
+    // Get all transport processes.
+    xml.Root()->GetChildren("advection", items);
+
+    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
+        AdvectionProcess *tran = new AdvectionProcess();
+        // Set default name.
+        tran->SetName("Advection " + cstr(k));
+
+        // Read the reaction properties.
+        try {
+            readAdvectionProc(*(*i), *tran);
+        } catch (std::exception &e) {
+            delete tran;
+            throw;
+        }
+
+        // Add process to mechanism.
+        mech.AddTransport(*tran);
+    }
+}
+
+/*!
+ *\param[in]        xml     XML node of type advection
+ *\param[in]        rxn     mechanism to which to add the process
+ */
+void MechParser::readAdvectionProc(CamXML::Element &xml, Processes::AdvectionProcess &tran)
+{
+    string str;
+    CamXML::Element *el = NULL;
+
+    // Read name.
+    str = xml.GetAttributeValue("name");
+    if (str != "")
+        tran.SetName(str);
+
+    // Read scaling factor
+    real A = 0.0;
+    el = xml.GetFirstChild("A");
+    if (el != NULL) {
+        A = atof(el->Data().c_str());
+    } else {
+        A = 1.0;
+    }
+    tran.SetA(A);
 }
 
 

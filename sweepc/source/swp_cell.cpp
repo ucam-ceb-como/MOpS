@@ -125,62 +125,62 @@ void Cell::AdjustConc(unsigned int i, real dc)
    if (!m_fixed_chem) {
        unsigned int k;
 
-       // Precalculate DC / density.
-       real dc_rho = dc / Density();
+        // Precalculate DC / density.
+        real dc_rho = dc / Density();
 
-       // New concentrations will be calculated by adjusting a copy of the existing data
-       fvector newConcs = MoleFractions();
+        // New concentrations will be calculated by adjusting a copy of the existing data
+        fvector newConcs = MoleFractions();
 
-       // Calculate change to all mole fractions k < i.
-       for (k=0; k<i; ++k) {
-           newConcs[k] -= dc_rho * newConcs[k];
-       }
+        // Calculate change to all mole fractions k < i.
+        for (k=0; k<i; ++k) {
+            newConcs[k] -= dc_rho * newConcs[k];
+        }
 
-       // Calculate change for ith species.
-       newConcs[i] += dc_rho * (1.0 - newConcs[i]);
+        // Calculate change for ith species.
+        newConcs[i] += dc_rho * (1.0 - newConcs[i]);
 
-       // Calculate change for all mole fractions k > i.
-       for (k=i+1; k < Species()->size(); ++k) {
-           newConcs[k] -= dc_rho * newConcs[k];
-       }
+        // Calculate change for all mole fractions k > i.
+        for (k=i+1; k < Species()->size(); ++k) {
+            newConcs[k] -= dc_rho * newConcs[k];
+        }
 
-       // Set the new data
-       SetFracs(newConcs);
-   }
+        // Set the new data
+        SetFracs(newConcs);
+    }
 }
 
 // Adjusts the concentration of all species.
 void Cell::AdjustConcs(const fvector &dc)
 {
-   if (!m_fixed_chem) {
-       // Calculate total change in density.
-       real drho = 0.0;
-       unsigned int k;
-       for (k=0; k!=Species()->size(); ++k) {
-           drho += dc[k];
-       }
+    if (!m_fixed_chem) {
+        // Calculate total change in density.
+        real drho = 0.0;
+        unsigned int k;
+        for (k=0; k!=Species()->size(); ++k) {
+            drho += dc[k];
+        }
 
-       // New concentrations will be calculated by adjusting a copy of the existing data
-       fvector newConcs = MoleFractions();
+        // New concentrations will be calculated by adjusting a copy of the existing data
+        fvector newConcs = MoleFractions();
 
-       real xtot=0.;
-       // Calculate changes to the mole fractions.
-       const real invrho = 1.0 / Density();
-       for (k=0; k!=Species()->size(); ++k) {
-           newConcs[k] += (invrho * dc[k]) - (invrho * newConcs[k] * drho);
-           if (newConcs[k]<0.) newConcs[k]=0;
-               xtot+=newConcs[k];
-       }
+        real xtot=0.;
+        // Calculate changes to the mole fractions.
+        const real invrho = 1.0 / Density();
+        for (k=0; k!=Species()->size(); ++k) {
+            newConcs[k] += (invrho * dc[k]) - (invrho * newConcs[k] * drho);
+            if (newConcs[k]<0.) newConcs[k]=0;
+                xtot+=newConcs[k];
+        }
 
-       if (xtot != 1.0) {
-           for (unsigned int i=0; i!=Species()->size(); ++i) {
-               newConcs[i] /= xtot;
-           }
-       }
+        if (xtot != 1.0) {
+            for (unsigned int i=0; i!=Species()->size(); ++i) {
+                newConcs[i] /= xtot;
+            }
+        }
 
-       // Set the new data
-       SetFracs(newConcs);
-   }
+        // Set the new data
+        SetFracs(newConcs);
+    }
 }
 
 
@@ -225,22 +225,6 @@ int Cell::SetM0(const real m0)
     //}
     return 1;
 }
-
-// Sets the number density which the full 
-// ensemble would represent.
-/*int Cell::SetMaxM0(const real m0)
-{
-    if ((m_ensemble.Capacity() > 0) && (m0 > 0.0)) {
-        m_smpvol = m_ensemble.Scaling() * (real)m_ensemble.Capacity() / m0;
-        m_ensemble.ResetScaling();
-        return 0;
-    } else {
-        // The ensemble has not yet been initialised, hence guess
-        // unit volume and report an error.
-        m_smpvol = 1.0;
-        return -1;
-    }
-}*/
 
 /**
  * Clear any particles and set the sample volume so that a full ensemble

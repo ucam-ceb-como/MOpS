@@ -177,14 +177,24 @@ void Sweep::Ensemble::Initialise(unsigned int capacity, const Sweep::ParticleMod
     // Calculate nearest power of 2 capacity.  Ensemble capacity must be a power
     // of 2.  This constraint is due to the binary tree implementation.
     real rl    = log((real)capacity) / log(2.0);
-    m_levels   = (int)(rl + 0.5);
-    m_capacity = (int)pow(2.0, (int)m_levels);
-    m_halfcap  = capacity / 2;
+    m_levels   = static_cast<int>(rl + 0.5);
+
+    // Capacity is 2^levels, which is most efficiently calculated with a bit shift.
+    // Note that 1 has the binary representation (8 bits only for brevity) 00000001.
+    // The left shift used here moves bits left the specified numer of places,
+    // while filling the right hand places with 0.  Bits at the left hand end of
+    // the number are discarded when shifted out of the range of the data type.
+    // For example 5 << 3 or with 5 in binary notation 00000101 << 3 == 00101000 == 40 == 5 * 2^3.
+    // In particular 1 << n == 2^n.
+    m_capacity = 1 << m_levels;
+
+    m_halfcap  = m_capacity / 2;
+
     m_count    = 0;
 
     // Reserve memory for ensemble.
-    m_particles.resize(capacity, NULL);
-    m_tree.resize(capacity-1, TreeNode(model));
+    m_particles.resize(m_capacity, NULL);
+    m_tree.resize(m_capacity-1, TreeNode(model));
     
     // Set all tree nodes to correct size and link up tree.
     unsigned int i, j;
@@ -482,6 +492,10 @@ int Sweep::Ensemble::Select(ParticleCache::PropID id) const
     // This routine uses the binary tree to select a particle weighted
     // by a given particle property (by index).
 
+    // Do not try to use the tree for uniform selection
+    if(id == ParticleCache::iUniform)
+        return Select();
+
     int isp=-1;
 
     // Calculate random number weighted by sum of desired property (wtid).
@@ -589,7 +603,7 @@ void Sweep::Ensemble::ResetScaling()
 // sums for all particles in the ensemble.
 const ParticleCache & Sweep::Ensemble::GetSums(void) const
 {
-	m_sums = m_tree[0].LeftData + m_tree[0].RightData;
+    m_sums = m_tree[0].LeftData + m_tree[0].RightData;
     return m_sums;
 }
 
@@ -597,7 +611,10 @@ const ParticleCache & Sweep::Ensemble::GetSums(void) const
 // over all particles.
 real Sweep::Ensemble::GetSum(ParticleCache::PropID id) const
 {
-    return m_tree[0].LeftData.Property(id) + m_tree[0].RightData.Property(id);
+    if(id != ParticleCache::iUniform)
+        return m_tree[0].LeftData.Property(id) + m_tree[0].RightData.Property(id);
+    else
+        return m_count;
 }
 
 // Returns the sum of one particle property with the given index 

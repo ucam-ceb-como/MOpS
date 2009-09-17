@@ -310,79 +310,75 @@ ParticleCache &ParticleCache::operator=(const Sweep::Primary &rhs)
 // Addition-assignment operator (ParticleCache RHS).
 //   This function is not used to coagulate particles, rather
 //   it is used to sum up particle properties in the ensemble binary tree.
+//
+// It is the responsibility of the caller to make sure that both particle
+// cache objects use the same particle model.  It is not meaningful to add
+// caches for different particle models.
 ParticleCache &ParticleCache::operator+=(const Sweep::ParticleCache &rhs)
 {
-    // Check that the particle caches subscribe to the same particle
-    // model.  If they don't then just use assignment operator; can't add.
-    if (m_pmodel==rhs.m_pmodel) {
-        unsigned int i = 0;
+    unsigned int i = 0;
 
-        // Add the components.
-        for (i=0; i!=min(m_comp.size(),rhs.m_comp.size()); ++i) {
-            m_comp[i] += rhs.m_comp[i];
-        }
-
-        // Add the tracker values.
-        for (i=0; i!=min(m_values.size(),rhs.m_values.size()); ++i) {
-            m_values[i] += rhs.m_values[i];
-        }
-
-        // Now allow the particle models to deal with the additions.
-        for (SubModelCacheMap::iterator j=m_submodels.begin(); 
-             j!=m_submodels.end(); ++j) {
-            // Try to find the model in RHS cache.
-            SubModelCacheMap::const_iterator k = rhs.m_submodels.find(j->first);
-            if (k != rhs.m_submodels.end()) {
-                *(j->second) += *(k->second);
-            }
-        }
-
-        // Now check for models which are in the RHS but not the LHS.
-        for (SubModelCacheMap::const_iterator j=rhs.m_submodels.begin(); 
-             j!=rhs.m_submodels.end(); ++j) {
-            // Try to find model in this cache.
-            SubModelCacheMap::const_iterator k = m_submodels.find(j->first);
-            if (k == m_submodels.end()) {
-                m_submodels[j->first] = j->second->Clone();
-                m_submodels[j->first]->SetParent(*this);
-            }
-        }
-
-        // Allow aggregation model to deal with the addition as well.
-        if (m_aggcache == NULL) {
-            if (rhs.m_aggcache != NULL) {
-                m_aggcache = rhs.m_aggcache->Clone();
-            }
-        } else {
-            if (rhs.m_aggcache != NULL) {
-                *m_aggcache += *rhs.m_aggcache;
-            } else {
-                delete m_aggcache;
-                m_aggcache = NULL;
-            }
-        }
-
-        // Sum cache variables.
-        m_diam += rhs.m_diam;
-        m_dcol += rhs.m_dcol;
-        m_dmob += rhs.m_dmob;
-        m_surf += rhs.m_surf;
-        m_vol  += rhs.m_vol;
-        m_mass += rhs.m_mass;
-        m_dcolsqr      += rhs.m_dcolsqr;
-        m_inv_dcol     += rhs.m_inv_dcol;
-        m_inv_dcolsqr  += rhs.m_inv_dcolsqr;
-        m_inv_sqrtmass += rhs.m_inv_sqrtmass;
-        m_d2_m_1_2     += rhs.m_d2_m_1_2;
-
-		m_freesurface += rhs.m_freesurface;
-		m_numsubpart += rhs.m_numsubpart;
-
-    } else {
-        // Use assignment if the caches do not subscribe to the same
-        // particle model.
-        *this = rhs;
+    // Add the components.
+    for (i=0; i!=min(m_comp.size(),rhs.m_comp.size()); ++i) {
+        m_comp[i] += rhs.m_comp[i];
     }
+
+    // Add the tracker values.
+    for (i=0; i!=min(m_values.size(),rhs.m_values.size()); ++i) {
+        m_values[i] += rhs.m_values[i];
+    }
+
+    // Now allow the particle models to deal with the additions.
+    for (SubModelCacheMap::iterator j=m_submodels.begin();
+         j!=m_submodels.end(); ++j) {
+        // Try to find the model in RHS cache.
+        SubModelCacheMap::const_iterator k = rhs.m_submodels.find(j->first);
+        if (k != rhs.m_submodels.end()) {
+            *(j->second) += *(k->second);
+        }
+    }
+
+    // Now check for models which are in the RHS but not the LHS.
+    for (SubModelCacheMap::const_iterator j=rhs.m_submodels.begin();
+         j!=rhs.m_submodels.end(); ++j) {
+        // Try to find model in this cache.
+        SubModelCacheMap::const_iterator k = m_submodels.find(j->first);
+        if (k == m_submodels.end()) {
+            m_submodels[j->first] = j->second->Clone();
+            m_submodels[j->first]->SetParent(*this);
+        }
+    }
+
+    // Allow aggregation model to deal with the addition as well.
+    if (m_aggcache == NULL) {
+        if (rhs.m_aggcache != NULL) {
+            m_aggcache = rhs.m_aggcache->Clone();
+        }
+    } else {
+        if (rhs.m_aggcache != NULL) {
+            *m_aggcache += *rhs.m_aggcache;
+        } else {
+            delete m_aggcache;
+            m_aggcache = NULL;
+        }
+    }
+
+    // Sum cache variables.
+    m_diam += rhs.m_diam;
+    m_dcol += rhs.m_dcol;
+    m_dmob += rhs.m_dmob;
+    m_surf += rhs.m_surf;
+    m_vol  += rhs.m_vol;
+    m_mass += rhs.m_mass;
+    m_dcolsqr      += rhs.m_dcolsqr;
+    m_inv_dcol     += rhs.m_inv_dcol;
+    m_inv_dcolsqr  += rhs.m_inv_dcolsqr;
+    m_inv_sqrtmass += rhs.m_inv_sqrtmass;
+    m_d2_m_1_2     += rhs.m_d2_m_1_2;
+
+    m_freesurface += rhs.m_freesurface;
+    m_numsubpart += rhs.m_numsubpart;
+
 
     return *this;
 }
@@ -668,7 +664,7 @@ real ParticleCache::Property(PropID id) const
             return m_createt;
         case iLUTime: // Last update time.
             return m_time;
-        case iD:      // Equivalent sphere diameter.
+        case iDsph:      // Equivalent sphere diameter.
             return m_diam;
         case iDcol:   // Collision diameter.
             return m_dcol;

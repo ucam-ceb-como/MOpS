@@ -1661,6 +1661,9 @@ void SubParticle::UpdateTree_sinter(SubParticle *has_sintered,SubParticle *newsi
 // contains any components.
 bool SubParticle::IsValid() const
 {
+    //if(Mass() < 6.375e-25)
+    //    return false;
+    
     fvector::const_iterator i;
     for (i=m_comp.begin(); i!=m_comp.end(); ++i) {
         if (*i > 0.0) return true;

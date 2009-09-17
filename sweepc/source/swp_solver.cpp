@@ -42,6 +42,8 @@
 
 #include "swp_solver.h"
 #include "rng.h"
+#include "geometry1d.h"
+
 #include <stdlib.h>
 #include <cmath>
 #include "string_functions.h"
@@ -92,7 +94,7 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech)
     {
         if (mech.AnyDeferred() && (sys.ParticleCount() > 0)) {
             // Get the process jump rates (and the total rate).
-            jrate = mech.CalcJumpRateTerms(t, sys, rates);
+            jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
 
             // Calculate split end time.
             tsplit = calcSplitTime(t, tstop, jrate, sys.ParticleCount(), dtg);
@@ -104,7 +106,8 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech)
 
         // Perform stochastic jump processes.
         while (t < tsplit) {
-            jrate = mech.CalcJumpRateTerms(t, sys, rates);
+            // Sweep does not do transport
+            jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
             dt = timeStep(t, sys, mech, rates, jrate);
             if (dt >= 0.0) {
                 t+=dt; t = min(t, tstop);
@@ -182,7 +185,7 @@ real Solver::timeStep(real t, Cell &sys, const Mechanism &mech,
 
     // Perform process.
     if (i >= 0) {
-        mech.DoProcess(i, t+dt, sys);
+        mech.DoProcess(i, t+dt, sys, Geometry::LocalGeometry1d());
     }
 
     return dt;

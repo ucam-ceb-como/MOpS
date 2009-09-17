@@ -1,3 +1,43 @@
+/*
+  Author(s):      Robert I A Patterson
+  Project:        sweepc (population balance solver)
+  Sourceforge:    http://sourceforge.net/projects/mopssuite
+
+  Copyright (C) 2009 Robert I A Patterson.
+
+  File purpose:
+    Implementation of additive coagulation kernel
+
+  Licence:
+    This file is part of "sweepc".
+
+    sweepc is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Dr Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
+*/
 
 #include "swp_addcoag.h"
 
@@ -39,7 +79,7 @@ Sweep::real Sweep::Processes::AdditiveCoagulation::Rate(real t, const Cell &sys)
         real massSum = sys.Particles().GetSums().Mass();
         
         //real vol = sys.SampleVolume());
-        return (n - 1) * massSum * s_MajorantFactor / sys.SampleVolume();
+        return A() * (n - 1) * massSum * s_MajorantFactor / sys.SampleVolume();
     } else {
         return 0.0;
     }
@@ -70,7 +110,7 @@ Sweep::real Sweep::Processes::AdditiveCoagulation::RateTerms(real t, const Cell 
 
 // Performs the process on the given system. Must return 0
 // on success, otherwise negative.
-int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned int iterm, TransportOutflow*) const
+int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const  
 {
     // debugging variables
     //int numParticles = sys.ParticleCount();
@@ -188,12 +228,22 @@ int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned i
             //          << '\n';
 
         } else {
-            delete sp1old; delete sp2old;
+            sys.Particles().Update(ip1);
+            sys.Particles().Update(ip2);
+            delete sp1old;
+            delete sp2old;
             return 1; // Ficticious event.
         }
     } else {
         // One or both particles were invalidated on update,
-        // but that's not a problem.
+        // but that's not a problem.  Information on the update
+        // of valid particles must be propagated into the binary
+        // tree
+        if(ip1 >= 0)
+            sys.Particles().Update(ip1);
+
+        if(ip2 >= 0)
+            sys.Particles().Update(ip2);
     }
 
     assert(sys.Particles().Count() <= sys.Particles().Capacity());
@@ -216,7 +266,7 @@ int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned i
 Sweep::real Sweep::Processes::AdditiveCoagulation::CoagKernel(const Particle &sp1, const Particle &sp2, 
                                      const Cell& sys, MajorantType maj) const
 {
-    real kernelValue = sp1.Mass() + sp2.Mass();
+    real kernelValue = (sp1.Mass() + sp2.Mass()) * A();
     switch (maj) {
         case None:
             return kernelValue;

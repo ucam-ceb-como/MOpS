@@ -95,7 +95,7 @@ ARSSC_Condensation &ARSSC_Condensation::operator=(const ARSSC_Condensation &rhs)
 
 // Performs the process on the given system.  The responsible rate term is given
 // by index.  Returns 0 on success, otherwise negative.
-int ARSSC_Condensation::Perform(real t, Cell &sys, unsigned int iterm, TransportOutflow*) const
+int ARSSC_Condensation::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const  
 {
     // Select particle based on which term was called.
     int i  = -1;

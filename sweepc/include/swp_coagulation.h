@@ -61,6 +61,13 @@ public:
     //* Ordinary method of construction just passes argument through.
     Coagulation(const Sweep::Mechanism &mech);
 
+    //* Scaling factor for rate.
+    real A(void) const {return m_a;}
+
+    // Sets the rate constant.
+    void SetA(real a) {m_a = a;}
+
+
     // Writes the object to a binary stream.
     virtual void Serialize(std::ostream &out) const;
 
@@ -75,6 +82,10 @@ protected:
     // Default constructor is protected to prevent coagulations being
     // defined without knowledge of the parent mechanism.
     Coagulation(void) {};
+    
+private:
+    //* Scaling factor for rate
+    real m_a;
 };
 
 

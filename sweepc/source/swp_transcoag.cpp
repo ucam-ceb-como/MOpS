@@ -1,3 +1,43 @@
+/*
+  Author(s):      Robert I A Patterson
+  Project:        sweepc (population balance solver)
+  Sourceforge:    http://sourceforge.net/projects/mopssuite
+
+  Copyright (C) 2009 Robert I A Patterson.
+
+  File purpose:
+    Implementation of transition regime coagulation kernel
+
+  Licence:
+    This file is part of "sweepc".
+
+    sweepc is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Dr Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
+*/
 #include "swp_transcoag.h"
 
 #include "swp_params.h"
@@ -59,9 +99,9 @@ Sweep::real Sweep::Processes::TransitionCoagulation::Rate(const ParticleCache &d
 {
     // Some prerequisites.
     real n_1 = n - 1.0;
-    real a = CSF * T_mu;
-    real b = a * MFP * 1.257;
-    real c = CFMMAJ * m_efm * CFM * sqrtT;
+    real a = CSF * T_mu * A();
+    real b = a * MFP * 1.257 * A();
+    real c = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
     real d       = data.CollDiameter();
@@ -139,9 +179,9 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const ParticleCac
 {
     // Some prerequisites.
     real n_1 = n - 1.0;
-    real a   = CSF * T_mu;
-    real b   = a * MFP * 1.257 * 2.0;
-    real c   = CFMMAJ * m_efm * CFM * sqrtT;
+    real a   = CSF * T_mu * A();
+    real b   = a * MFP * 1.257 * 2.0 * A();
+    real c   = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
     real d       = data.CollDiameter();
@@ -202,7 +242,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const ParticleCac
 
 // Performs the process on the given system. Must return 0
 // on success, otherwise negative.
-int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned int iterm, TransportOutflow*) const
+int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow *out) const  
 {
     // Select properties by which to choose particles (-1 means
     // choose uniformly).  Note we need to choose 2 particles.  There
@@ -224,7 +264,7 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
             maj = SlipFlow;
             break;
         case SlipFlow2:
-            ip1 = sys.Particles().Select(ParticleCache::iD);
+            ip1 = sys.Particles().Select(ParticleCache::iDcol);
             maj = SlipFlow;
             break;
         case SlipFlow3:
@@ -232,7 +272,7 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
             maj = SlipFlow;
             break;
         case SlipFlow4:
-            ip1 = sys.Particles().Select(ParticleCache::iD);
+            ip1 = sys.Particles().Select(ParticleCache::iDcol);
             maj = SlipFlow;
             break;
         case FreeMol1:
@@ -369,12 +409,22 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
                 sys.Particles().Remove(ip1, !m_mech->UseSubPartTree());
             }
         } else {
-            delete sp1old; delete sp2old;
+            sys.Particles().Update(ip1);
+            sys.Particles().Update(ip2);
+            delete sp1old;
+            delete sp2old;
             return 1; // Ficticious event.
         }
     } else {
         // One or both particles were invalidated on update,
-        // but that's not a problem.
+        // but that's not a problem.  Information on the update
+        // of valid particles must be propagated into the binary
+        // tree
+        if(ip1 >= 0)
+            sys.Particles().Update(ip1);
+
+        if(ip2 >= 0)
+            sys.Particles().Update(ip2);
     }
 
     delete sp1old; delete sp2old;
@@ -422,12 +472,12 @@ Sweep::real Sweep::Processes::TransitionCoagulation::FreeMolKernel(const Particl
 
     if (maj) {
         // The majorant form is always >= the non-majorant form.
-        return CFMMAJ * m_efm * CFM * sqrt(T) * 
+        return CFMMAJ * m_efm * CFM * sqrt(T) * A() *
                (sp1.InvSqrtMass() + sp2.InvSqrtMass()) *
                (sp1.CollDiamSquared() + sp2.CollDiamSquared());
     } else {
         real dterm = sp1.CollDiameter()+sp2.CollDiameter();
-        return m_efm * CFM * 
+        return m_efm * CFM * A() *
                sqrt(T * ((1.0/sp1.Mass())+(1.0/sp2.Mass()))) * 
                dterm * dterm;
     }
@@ -444,6 +494,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::SlipFlowKernel(const Partic
     return ((1.257 * 2.0 * MeanFreePathAir(T,P) * 
              (sp1.InvCollDiamSquared() + sp2.InvCollDiamSquared())) +
             (sp1.InvCollDiam() + sp2.InvCollDiam())) * 
-           CSF * T * (sp1.CollDiameter()+sp2.CollDiameter()) / ViscosityAir(T);
+           CSF * T * (sp1.CollDiameter()+sp2.CollDiameter())
+           * A() / ViscosityAir(T);
 }
 

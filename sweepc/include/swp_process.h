@@ -64,7 +64,12 @@ namespace Sweep
 class Mechanism;
 // Forward declare the Cell class.
 class Cell;
-struct TransportOutflow;
+
+namespace Transport
+{
+    // Forward declaration of unused argument type
+    struct TransportOutflow;
+}
 
 namespace Processes
 {
@@ -197,7 +202,7 @@ public:
         real t,
         Cell &sys,
         unsigned int iterm = 0,
-        TransportOutflow *out = 0
+        Transport::TransportOutflow *out = 0
         ) const = 0;
 
 

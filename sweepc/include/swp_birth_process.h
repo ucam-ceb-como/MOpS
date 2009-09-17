@@ -60,7 +60,9 @@ class Mechanism;
 // Forward declare the Cell class.
 class Cell;
 
-struct TransportOutflow;
+namespace Transport {
+    struct TransportOutflow;
+}
 
 namespace Processes
 {
@@ -149,7 +151,7 @@ public:
         real t,                // Time.
         Cell &sys,             // System to update.
         unsigned int iterm = 0,// The process term responsible for this event.
-        TransportOutflow *out = 0 //Not used for this process
+        Transport::TransportOutflow *out = 0 //Not used for this process
         ) const;
 
 

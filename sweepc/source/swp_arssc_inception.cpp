@@ -99,7 +99,7 @@ ARSSC_Inception &ARSSC_Inception::operator =(const ARSSC_Inception &rhs)
 
 // Performs the process on the given system.  The responsible rate term is given
 // by index.  Returns 0 on success, otherwise negative.
-int ARSSC_Inception::Perform(real t, Cell &sys, unsigned int iterm, TransportOutflow*) const
+int ARSSC_Inception::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const  
 {
     // This routine performs the inception on the given chemical system.
 

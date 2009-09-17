@@ -52,10 +52,11 @@ using namespace std;
 // Base coagulation class.
 
 /**
-  Nothing to do as no data members
+  Default rate scaling to 1 for backwards compatibilty
  */
  Coagulation::Coagulation(const Sweep::Mechanism &mech)
- : Process(mech) 
+ : Process(mech)
+ , m_a(1.0)
  {}
 
 // Writes the object to a binary stream.
@@ -65,6 +66,9 @@ void Coagulation::Serialize(std::ostream &out) const
         // Output the version ID (=0 at the moment).
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
+
+        // Output rate scaling factor
+        out.write(reinterpret_cast<const char*>(&m_a), sizeof(m_a));
 
         // Serialize base class.
         Process::Serialize(out);
@@ -87,6 +91,10 @@ void Coagulation::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 
         switch (version) {
             case 0:
+                real a;
+                in.read(reinterpret_cast<char*>(&a), sizeof(a));
+                SetA(a);
+
                 // Deserialize base class.
                 Process::Deserialize(in, mech);
 

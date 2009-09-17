@@ -69,10 +69,16 @@ namespace Processes
 
         // Coagulation processes
         Transition_Coagulation_ID=10000,   // Transition regime coagulation
-        Additive_Coagulation_ID=10001      // Additive coagulation kernel
+        Additive_Coagulation_ID=10001,     // Additive coagulation kernel
+
+        // Transport processes
+        //! Particle diffusion
+        Diffusion_ID=100000,
+        //! Particle advection
+        Advection_ID=100001,
 
     };
-};
-};
+}
+}
 
 #endif

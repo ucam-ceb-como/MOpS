@@ -220,7 +220,7 @@ real SurfaceReaction::RateTerms(real t, const Cell &sys,
 
 // Performs the process on the given system.  The responsible rate term is given
 // by index.  Returns 0 on success, otherwise negative.
-int SurfaceReaction::Perform(real t, Cell &sys, unsigned int iterm, TransportOutflow*) const
+int SurfaceReaction::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const  
 {
     int i = sys.Particles().Select(m_modelid, m_pid);
 

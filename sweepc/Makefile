@@ -1,5 +1,5 @@
 # Compiler options.
-export debug=0
+export debug=1
 export profile=0
 
 # C++ compiler.
@@ -7,14 +7,14 @@ cpp=g++
 ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -Wall
+       -I../sprogc/include -I../geometry/include -Wall
   else
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -Wall -pg
+       -I../sprogc/include -I../geometry/include -Wall -pg
   endif
 else
   flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -Wall -g -pg
+       -I../sprogc/include -I../geometry/include -Wall -g -pg
 endif
 
 # Source directories.
@@ -30,10 +30,12 @@ ifeq ($(debug),0)
   comostrings=../comostrings/lib/comostrings.a
   camxml=../camxml/lib/camxml.a
   sprog=../sprogc/lib/sprog.a
+  geom=../geom/lib/geom.a
 else
   comostrings=../comostrings/lib/comostrings_d.a
   camxml=../camxml/lib/camxml_d.a
   sprog=../sprogc/lib/sprog_d.a
+  geom=../geom/lib/geom_d.a
 endif
 
 # Target objects.
@@ -53,6 +55,7 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_death_process.o swp_birth_process.o swp_arssc_cache.o \
     swp_arssc_reaction.o swp_arssc_condensation.o swp_arssc_process.o \
     swp_PAH_primary.o swp_PAH_cache.o swp_PAH_stats.o swp_transport_process.o \
+    swp_diffusion_process.o swp_advection_process.o \
     mt19937.o
 
 # TARGET all: Compile to a static library (*.a).
@@ -60,9 +63,9 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
 all: $(obj)
 	mkdir -p $(lib)
 ifeq ($(debug),0)
-	ar rc $(lib)/sweep.a $(obj) $(comostrings) $(camxml) $(sprog)
+	ar rc $(lib)/sweep.a $(obj)
 else
-	ar rc $(lib)/sweep_d.a $(obj) $(comostrings) $(camxml) $(sprog)
+	ar rc $(lib)/sweep_d.a $(obj)
 endif
 
 # Source code.
@@ -252,8 +255,14 @@ swp_birth_process.o: $(src)/swp_birth_process.cpp
 swp_death_process.o: $(src)/swp_death_process.cpp
 	$(cpp) $(flag) $(src)/swp_death_process.cpp
 
-swp_transport_process.o: $(src)/swp_transport_process.cpp
+swp_transport_process.o: $(src)/swp_transport_process.cpp $(inc)/swp_transport_process.h
 	$(cpp) $(flag) $(src)/swp_transport_process.cpp
+
+swp_diffusion_process.o: $(src)/swp_diffusion_process.cpp $(inc)/swp_diffusion_process.h $(inc)/swp_transport_process.h
+	$(cpp) $(flag) $(src)/swp_diffusion_process.cpp
+
+swp_advection_process.o: $(src)/swp_advection_process.cpp $(inc)/swp_advection_process.h $(inc)/swp_transport_process.h
+	$(cpp) $(flag) $(src)/swp_advection_process.cpp
 
 # Solver.
 

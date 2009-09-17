@@ -7,7 +7,7 @@
   Copyright (C) 2009 Robert I A Patterson.
 
   File purpose:
-    Definition of the coagulation process for the additive kernel.
+    Declaration of the coagulation process for the additive kernel.
 
   Licence:
     This file is part of "sweepc".
@@ -49,12 +49,14 @@ namespace Sweep
 {
 // Forward declare Mechanism class.
 class Mechanism;
+
+namespace Transport
+{
 struct TransportOutflow;
+} // namespace Transport
 
 namespace Processes
 {
-
-
 class AdditiveCoagulation : public Coagulation
 {
 private:
@@ -112,7 +114,7 @@ public:
         real t,                // Time.
         Cell &sys,             // System to update.
         unsigned int iterm = 0,// The process term responsible for this event.
-        TransportOutflow* out = 0 //Not used for this process
+        Transport::TransportOutflow *out = 0 //Not used for this process
         ) const;
     
 private:

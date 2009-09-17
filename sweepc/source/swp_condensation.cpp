@@ -44,6 +44,7 @@
 #include "swp_mechanism.h"
 #include <cmath>
 #include <stdexcept>
+#include <cassert>
 
 using namespace Sweep;
 using namespace Sweep::Processes;
@@ -224,7 +225,7 @@ real Condensation::RateTerms(real t, const Cell &sys,
 
 // Performs the process on the given system.  The responsible rate term is given
 // by index.  Returns 0 on success, otherwise negative.
-int Condensation::Perform(const real t, Cell &sys, const unsigned int iterm, TransportOutflow*) const
+int Condensation::Perform(const real t, Cell &sys, const unsigned int iterm, Transport::TransportOutflow*) const  
 {
     // Select particle based on which term was called.
     int i  = -1;
@@ -263,6 +264,14 @@ int Condensation::Perform(const real t, Cell &sys, const unsigned int iterm, Tra
 
             // Check that the event is not ficticious by comparing the
             // majorant rate with the true rate.
+
+            // The reason for the second part of the || expression is that,
+            // in the absence of any deferred processes, the pyrene jump rate
+            // is calculated without majorant factor.  However, in this method,
+            // the fictitious jump test always uses the majorant factor and so
+            // some events would wrongly be treated as fictitious.  The ugly
+            // solution used here is to ensure that there are no fictitious
+            // events when there are no deferred processes.
             if (!Ficticious(majr, truer) || !m_mech->AnyDeferred()) {
                 // Adjust particle.
                 sp->Adjust(m_dcomp, m_dvals,SubModels::BasicModel_ID, 
