@@ -70,6 +70,13 @@ FlameSolver::~FlameSolver()
 // PROFILE INPUT.
 
 // Reads a flame gas-phase profile from a TAB formatted file.
+// Species concentrations should be expressed in mole fractions with molar
+// concentrations being inferred from the temperature and pressure.  This
+// rescaling means that quantities proportional to the mole fractions, such
+// as molar concentrations may also be used, but will still be rescaled to satisfy
+// PV = nRT.  This rescaling means that in all cases the input data must cover
+// all gas phase species, if species are omitted the molar concentrations of the
+// remaining species will be overstated.
 void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 {
     map<real,real> alpha_prof;
