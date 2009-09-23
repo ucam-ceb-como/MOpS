@@ -427,6 +427,24 @@ void Primary::SetVolume(real vol) {m_vol = vol;}
 // Sets the mass.
 void Primary::SetMass(real m) {m_mass = m;}
 
+/*!
+ * Check that this primary is a physically valid particle.  This currently
+ * means checking that the amount of each component is within a range specifed
+ * for that component.
+ *
+ *@return   True iff primary particle is valid as a physical particle
+ */
+bool Primary::IsValid() const {
+    for(unsigned int i = 0; i < m_comp.size(); ++i) {
+        // Check each component value, but stop as soon as an invalid value
+        // is found
+        if(!m_pmodel->Components(i)->IsValidValue(m_comp[i]))
+            return false;
+    }
+
+    // All values were OK
+    return true;
+}
 
 // OPERATIONS.
 

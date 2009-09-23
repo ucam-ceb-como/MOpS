@@ -9,7 +9,6 @@
 #include <fstream>
 #include <iostream>
 using namespace Sweep;
-using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -236,7 +235,7 @@ real SubParticle::avgeomdiam(double oneovernumsubpart)
 {
 	Primary::PropID primid=Primary::iD;
 	if (m_primary!=NULL)
-	return pow(m_primary->Property(primid),oneovernumsubpart);
+	return std::pow(m_primary->Property(primid),oneovernumsubpart);
 	else 
 	{
 		return m_leftchild->avgeomdiam(oneovernumsubpart)*m_rightchild->avgeomdiam(oneovernumsubpart);
@@ -1655,20 +1654,23 @@ void SubParticle::UpdateTree_sinter(SubParticle *has_sintered,SubParticle *newsi
 }
 
 
-
-// Check the that the particle is valid by querying the
-// validity conditions of the models and ensuring that it 
-// contains any components.
+/*!
+ * Check that this is a valid particle and has not been changed so that it no
+ * longer belongs to the particle phase.  Proceed recursively for particles
+ * made up of sub-particles and look at the one constituent primary in all other
+ * cases.
+ *
+ *@return   Particle is valid
+ */
 bool SubParticle::IsValid() const
 {
-    //if(Mass() < 6.375e-25)
-    //    return false;
-    
-    fvector::const_iterator i;
-    for (i=m_comp.begin(); i!=m_comp.end(); ++i) {
-        if (*i > 0.0) return true;
+    if(m_primary != NULL) {
+        // Sub particle is made up of a single primary particle so check that
+        return m_primary->IsValid();
     }
-    return false;
+
+    // No primary particle so look at the child sub-particles
+    return m_leftchild->IsValid() && m_rightchild->IsValid();
 }
 
 

@@ -348,6 +348,23 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             throw runtime_error(msg);
         }
 
+		// Get minimum valid value for component
+        el = (*i)->GetFirstChild("min");
+        if (el!=NULL) {
+            str = el->Data();
+            if (str != "") {
+                comp->SetMinValid(atof(str.c_str()));
+            } else {
+                // Mol. wt. contains no data.
+                std::string msg("Component ");
+                msg += comp->Name();
+                msg += " minimum valid value contains no data (Sweep, MechParser::readComponents).";
+
+                delete comp;
+                throw runtime_error(msg);
+            }
+        }
+
         // Add component to mechanism.
         mech.AddComponent(*comp);
     }

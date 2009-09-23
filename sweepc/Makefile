@@ -89,7 +89,7 @@ swp_particle.o: $(src)/swp_particle.cpp
 
 # Particle system & ensemble.
 
-swp_cell.o: $(src)/swp_cell.cpp swp_mechanism.o
+swp_cell.o: $(src)/swp_cell.cpp $(inc)/swp_mechanism.h
 	$(cpp) $(flag) $(src)/swp_cell.cpp
 
 swp_treenode.o: $(src)/swp_treenode.cpp
@@ -100,11 +100,11 @@ swp_ensemble.o: $(src)/swp_ensemble.cpp
 
 # Statistics generation.
 
-swp_particle_stats.o: $(src)/swp_particle_stats.cpp swp_particle.o
+swp_particle_stats.o: $(src)/swp_particle_stats.cpp  $(inc)/swp_particle.h
 	$(cpp) $(flag) $(src)/swp_particle_stats.cpp
 	
-swp_ensemble_stats.o: $(src)/swp_ensemble_stats.cpp swp_model_factory.o \
-                      swp_mechanism.o
+swp_ensemble_stats.o: $(src)/swp_ensemble_stats.cpp  $(inc)/swp_model_factory.h \
+                       $(inc)/swp_model_factory.h
 	$(cpp) $(flag) $(src)/swp_ensemble_stats.cpp
 
 swp_surfvol_stats.o: $(src)/swp_surfvol_stats.cpp
@@ -133,19 +133,19 @@ swp_ensemble_image.o: $(src)/swp_ensemble_image.cpp
 swp_particle_model.o: $(src)/swp_particle_model.cpp
 	$(cpp) $(flag) $(src)/swp_particle_model.cpp
 
-swp_mech_parser.o: $(src)/swp_mech_parser.cpp swp_component.o swp_tracker.o \
-                   swp_inception.o swp_surface_reaction.o \
-                   swp_actsites_reaction.o swp_condensation.o \
-                   swp_abf_model.o $(camxml) $(comostrings)
+swp_mech_parser.o: $(src)/swp_mech_parser.cpp  $(inc)/swp_component.h  $(inc)/swp_component.h \
+                    $(inc)/swp_component.h  $(inc)/swp_component.h \
+                    $(inc)/swp_component.h  $(inc)/swp_component.h \
+                    $(inc)/swp_component.h $(camxml) $(comostrings)
 	$(cpp) $(flag) $(src)/swp_mech_parser.cpp
 
-swp_mechanism.o: $(src)/swp_mechanism.cpp swp_model_factory.o \
-                 swp_process_factory.o swp_abf_model.o
+swp_mechanism.o: $(src)/swp_mechanism.cpp  $(inc)/swp_model_factory.h \
+                  $(inc)/swp_model_factory.h  $(inc)/swp_model_factory.h
 	$(cpp) $(flag) $(src)/swp_mechanism.cpp
 
 # Active site models.
 
-swp_abf_model.o: $(src)/swp_abf_model.cpp swp_component.o
+swp_abf_model.o: $(src)/swp_abf_model.cpp  $(inc)/swp_component.h
 	$(cpp) $(flag) $(src)/swp_abf_model.cpp
 
 swp_actsites_model.o: $(src)/swp_actsites_model.cpp

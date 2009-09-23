@@ -61,6 +61,7 @@ public:
     Component(                  // Initialising constructor.
         real molwt,             //   - Component molecular weight.
         real dens,              //   - Component density.
+        real min,               //   - Min value for a valid particle
         const std::string &name //   - Component name or symbol.
         );
     Component(const Component &copy); // Copy constructor.
@@ -99,6 +100,15 @@ public:
     // Sets the symbol or name.
     void SetName(const std::string &name);
 
+    // MINIMUM VALID VALUE
+    //! Get the minimum amount that a valid particle may have of this component
+    real MinValid() const {return m_minValid;}
+
+    //! Set the minimum amount that a valid particle must have of this component
+    void SetMinValid(const real min) {m_minValid = min;}
+
+    //! Check is a valid particle can have specified amount of this component
+    bool IsValidValue(const real r) const;
 
     // READ/WRITE/COPY.
 
@@ -114,6 +124,10 @@ public:
 private:
     real m_density;     // Component density (g/cm3).
     real m_molwt;       // Component molecular weight (g/mol).
+
+    //! Minimum value a valid particle can have for this component
+    real m_minValid;
+
     std::string m_name; // Component symbol or name.
 };
 

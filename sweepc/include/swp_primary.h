@@ -245,6 +245,8 @@ public:
     // Sets the mass.
     void SetMass(real m);
 
+    //! Check particle still meets physical conditions for being a particle.
+    bool IsValid() const;
 
     // OPERATIONS.
 

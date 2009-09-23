@@ -44,24 +44,25 @@
 #include <stdexcept>
 
 using namespace Sweep;
-using namespace std;
 
 // CONSRUCTORS AND DESTRUCTORS.
 
 // Default constructor.
 Component::Component()
-: m_density(0.0), m_molwt(0.0), m_name("")
+: m_density(0.0), m_molwt(0.0), m_minValid(0.0), m_name("")
 {
 }
 
 // Initialising constructor.
 Component::Component(Sweep::real molwt, 
-                     Sweep::real dens, 
+                     Sweep::real dens,
+                     Sweep::real min,
                      const std::string &name)
 {
     // Initialise the component properties.
     m_density = dens;
     m_molwt   = molwt;
+    m_minValid = min;
     m_name    = name;
 }
 
@@ -89,9 +90,22 @@ Component &Component::operator=(const Component &rhs)
     if (this != &rhs) {
         m_density = rhs.m_density;
         m_molwt   = rhs.m_molwt;
+        m_minValid = rhs.m_minValid;
         m_name    = rhs.m_name;
     }
     return *this;
+}
+
+/*! 
+ * Method intended for use in Particle::IsValid()
+ *
+ *@param[in]    r   Amount of this component in a particle
+ *
+ *@return       True if it is possible for a valid particle to have the 
+ *              specifed amount of this component
+ */
+bool Component::IsValidValue(const real r) const {
+    return r >= m_minValid;
 }
 
 
@@ -116,6 +130,10 @@ void Component::Serialize(std::ostream &out) const
         v = (double)m_density;
         out.write((char*)&v, sizeof(v));
 
+        // Write minimum value for a valid particle
+        v = static_cast<double>(m_minValid);
+        out.write((char*)&v, sizeof(v));
+
         // Write the length of the component name to the stream.
         unsigned int n = m_name.length();
         out.write((char*)&n, sizeof(n));
@@ -123,8 +141,8 @@ void Component::Serialize(std::ostream &out) const
         // Write the component name to the stream.
         out.write(m_name.c_str(), n);
     } else {
-        throw invalid_argument("Output stream not ready "
-                               "(Sweep, Component::Serialize).");
+        throw std::invalid_argument("Output stream not ready "
+                                    "(Sweep, Component::Serialize).");
     }
 }
 
@@ -152,6 +170,10 @@ void Component::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_density = (real)val;
 
+                // Read minimum value for a valid particle
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_minValid = static_cast<real>(val);
+
                 // Read the length of the species name.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 
@@ -163,11 +185,11 @@ void Component::Deserialize(std::istream &in)
 
                 break;
             default:
-                throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, Component::Deserialize).");
+                throw std::runtime_error("Serialized version number is invalid "
+                                         "(Sweep, Component::Deserialize).");
         }
     } else {
-        throw invalid_argument("Input stream not ready "
-                               "(Sweep, Component::Deserialize).");
+        throw std::invalid_argument("Input stream not ready "
+                                    "(Sweep, Component::Deserialize).");
     }
 }
