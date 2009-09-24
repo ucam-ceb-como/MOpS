@@ -121,6 +121,12 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                 if (str.compare("abf")==0) {
                     // The ABF correlation for alpha should be used.
                     ActSites::ABFModel::Instance().UseAlphaCorrelation();
+                } else if (str.compare("profile")==0) {
+                    // The profile for alpha which should have been 
+                    // loaded in the solver should be used.  (Nb, not
+                    // sure why alpha profiles are loaded in the solver,
+                    // but FlameSolver is definitely where it happens)
+                    ActSites::ABFModel::Instance().UseAlphaProfile();
                 } else {
                     // Hopefully a numeric value has been supplied, which
                     // shall be used as a constant value for alpha.
