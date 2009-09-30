@@ -425,7 +425,7 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
             throw;
         } catch (std::exception &e) {
             delete icn;
-            throw e;
+            throw;
         }
 
         // Add inception to mechanism.  Once entered into mechanism, the mechanism
@@ -692,7 +692,7 @@ void MechParser::readCondensations(CamXML::Document &xml, Mechanism &mech)
             readCondensation(*(*i), *cond);
         } catch (std::exception &e) {
             delete cond;
-            throw e;
+            throw;
         }
 
         // Add condensation to mechanism.
@@ -732,7 +732,7 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
             cond.SetCondensingSpecies(mass[0], diam[0]);
         }
     } catch (std::exception &e) {
-        throw e;
+        throw;
     }
 
     // Read products.
@@ -1364,7 +1364,7 @@ void MechParser::readARSSC_Inceptions(CamXML::Document &xml, Sweep::Mechanism &m
             readInception(*(*i), *icn);
         } catch (std::exception &e) {
             delete icn;
-            throw e;
+            throw;
         }
 
         // Read ARS-SC inception parameters.
@@ -1372,7 +1372,7 @@ void MechParser::readARSSC_Inceptions(CamXML::Document &xml, Sweep::Mechanism &m
             readARSSC_Sites(*(*i), *icn);
         } catch (std::exception &e) {
             delete icn;
-            throw e;
+            throw;
         }
 
         // Add inception to mechanism.  Once entered into mechanism, the mechanism
@@ -1403,7 +1403,7 @@ void MechParser::readARSSC_SurfRxns(CamXML::Document &xml, Sweep::Mechanism &mec
             readSurfRxn(*(*i), *rxn);
         } catch (std::exception &e) {
             delete rxn;
-            throw e;
+            throw;
         }
 
         // Read ARS-SC parameters.
@@ -1411,7 +1411,7 @@ void MechParser::readARSSC_SurfRxns(CamXML::Document &xml, Sweep::Mechanism &mec
             readARSSC_Sites(*(*i), *rxn);
         } catch (std::exception &e) {
             delete rxn;
-            throw e;
+            throw;
         }
 
         // Add reaction to mechanism.  Once entered into mechanism, the mechanism
@@ -1442,7 +1442,7 @@ void MechParser::readARSSC_Condensations(CamXML::Document &xml, Sweep::Mechanism
             readCondensation(*(*i), *cond);
         } catch (std::exception &e) {
             delete cond;
-            throw e;
+            throw;
         }
 
         // Read ARS-SC parameters.
@@ -1450,7 +1450,7 @@ void MechParser::readARSSC_Condensations(CamXML::Document &xml, Sweep::Mechanism
             readARSSC_Sites(*(*i), *cond);
         } catch (std::exception &e) {
             delete cond;
-            throw e;
+            throw;
         }
 
         // Add reaction to mechanism.  Once entered into mechanism, the mechanism
