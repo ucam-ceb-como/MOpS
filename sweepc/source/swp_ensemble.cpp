@@ -44,10 +44,15 @@
 #include "swp_particle_model.h"
 #include "swp_submodel_type.h"
 #include "swp_submodel.h"
+#include "swp_particle_cache.h"
 #include "rng.h"
 #include <cmath>
 #include <vector>
 #include <stdexcept>
+#include <cassert>
+#include <limits>
+#include <functional>
+#include <algorithm>
 
 using namespace Sweep;
 
@@ -381,50 +386,25 @@ void Sweep::Ensemble::RemoveInvalids(void)
     // all the invalid particles being collected at the end of the vector,
     // from where they can be deleted.
 
-    unsigned int i=0, k=m_count-1;
-    unsigned int ix=0, tx=0, n=0;
-    bool found=false;
+    // Rearrange the particle list in m_particles so that all the valid particles
+    // are in the range [m_particles.begin(), validEnd) and all the invalid
+    // particles are in the range [validEnd, m_particles.end()).
+    iterator validEnd = std::partition(m_particles.begin(),
+                                       m_particles.begin() + m_count,
+                                       std::mem_fun(&Particle::IsValid));
 
-    if (m_particles[i] != NULL) {
-        while (i<k) {
-            found = false;
+    // Update the number of particles in the tree
+    m_count = std::distance(m_particles.begin(), validEnd);
 
-            // Locate next invalid particle in list.
-            while ((i!=k) && m_particles[i]->IsValid()) {++i; ++ix;}
-
-            // Locate next valid particle from end of list, remember
-            // to delete invalid particles at same time.
-            while ((k!=i) && (!m_particles[k]->IsValid())) {
-                delete m_particles[k];
-                m_particles[k] = NULL;
-                --m_count;
-                --k;
-            }
-
-            if (i<k) {            
-                delete m_particles[i]; // Delete invalid particle from memory.
-                m_particles[i] = m_particles[k]; // Put valid particle at index i.
-                m_particles[k] = NULL;           // Clear duplicate pointer.
-                ++n;       // Increment number of invalid particles.
-                --m_count; // Decrement number of particles.
-
-                // Update binary tree.
-                tx = treeIndex(ix);
-                if (isLeftBranch(ix)) {
-                    m_tree[tx].LeftData = *m_particles[i];
-                } else {
-                    m_tree[tx].RightData = *m_particles[i];
-                }
-                ascendingRecalc(tx);
-
-                // Move on indices.
-                ++i; --k;
-            } else {
-                // All invalid particles have been deleted.
-                break;
-            }
-        }
+    // Now delete the invalid particles and nullify the corresponding pointers
+    while(validEnd != m_particles.end()) {
+        delete *validEnd;
+        *validEnd = NULL;
+        ++validEnd;
     }
+
+    // Rebuild the binary tree structure
+    Update();
 
     // If we removed too many invalid particles then we'll have to double.
     dble();
@@ -611,6 +591,8 @@ const ParticleCache & Sweep::Ensemble::GetSums(void) const
 // over all particles.
 real Sweep::Ensemble::GetSum(ParticleCache::PropID id) const
 {
+    assert(m_tree.front().LeftData.Property(ParticleCache::iM) >= 0.0);
+
     if(id != ParticleCache::iUniform)
         return m_tree[0].LeftData.Property(id) + m_tree[0].RightData.Property(id);
     else
@@ -681,6 +663,9 @@ void Sweep::Ensemble::Update()
     if (!odd) {
         ascendingRecalc(j);
     }
+
+    assert(m_tree.front().LeftData.Property(ParticleCache::iM) < std::numeric_limits<real>::max());
+    assert(m_tree.front().LeftData.Property(ParticleCache::iM) >= 0.0);
 }
 
 
@@ -700,10 +685,17 @@ void Sweep::Ensemble::ascendingRecalc(unsigned int i)
         // Climb up the tree until the root node, 
         // summing up the properties.
         while (n->Parent != NULL) {
+            assert(n->LeftData.Property(ParticleCache::iM) < std::numeric_limits<real>::max());
+            assert(n->LeftData.Property(ParticleCache::iM) >= 0.0);
+            assert(n->RightData.Property(ParticleCache::iM) < std::numeric_limits<real>::max());
+            assert(n->RightData.Property(ParticleCache::iM) >= 0.0);
+
             n = n->Parent;
             (n->LeftData  = n->Left->LeftData)  += n->Left->RightData;
             (n->RightData = n->Right->LeftData) += n->Right->RightData;
         }
+        assert(m_tree.front().LeftData.Property(ParticleCache::iM) < std::numeric_limits<real>::max());
+        assert(m_tree.front().LeftData.Property(ParticleCache::iM) >= 0.0);
     }
 }
 

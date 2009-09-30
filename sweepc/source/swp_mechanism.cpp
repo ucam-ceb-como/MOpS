@@ -803,7 +803,6 @@ void Mechanism::LPDA(real t, Cell &sys) const
         
         // Now remove any invalid particles and update the ensemble.
         sys.Particles().RemoveInvalids();
-        sys.Particles().Update();
 
         // Start particle doubling again.  This will also double the ensemble
         // if too many particles have been removed.
