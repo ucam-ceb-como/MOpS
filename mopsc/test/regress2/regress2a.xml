@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="ABF soot mechanism" units="CGS">
+
+    <!-- Choose which models to use -->
+    
+    <model type="activesites" id="haca" alpha="profile" />
+    
+    <!-- Define particle components. -->
+    
+    <component id="C" type="bulk">
+      <description>
+        Carbon in graphite lattice.
+      </description>
+      <density units="g/cm3">1.8</density>
+      <molwt units="g/mol">12.011</molwt>
+      <min>31.9</min>
+    </component> 
+    
+
+    <!-- Define particle models. -->
+    
+    <particle id="[Soot]" model="spherical" subtree="false">
+      <description>
+        A soot particle.
+      </description>
+   </particle>
+
+    <includemech id="abfsoot" />
+    
+    <!-- Inceptions -->
+    
+    <inception name="Pyrene inception">
+        <formula>A4 + A4 to [X32]</formula>
+        <reactant id="A4" stoich="2" m="3.2e-22" d="7.11e-8"/>
+        <particleout id="[Soot]"/>
+        <component id="C" dx="32"/>
+    </inception>
+    
+    <!-- Surface reactions (single particle events) -->
+    
+    <!--reaction type="surface" name="OH oxidation" defer="true">
+        <formula>[X] + OH to [X-1] + CO + H</formula>        
+        <reactant id="OH" stoich="1"/>
+        <product id="CO" stoich="1"/>
+        <product id="H" stoich="1"/>
+        <A>2.1693357e30</A>
+        <n>0.5</n>
+        <E>0.0</E>
+        <particleterm id="d" power="2.0"/>
+        <component id="C" dx="-1"/>
+    </reaction-->
+
+    <!--reaction type="abf" name="C2H2 addition" defer="true">
+        <formula>[X] + C2H2 to [X+2] + H</formula>
+        <reactant id="C2H2" stoich="1"/>
+        <product id="H" stoich="1"/>
+        <particlein id="[Soot]"/>
+        <particleout id="[Soot]"/>
+        <A>8.0E7</A>
+        <n>1.56</n>
+        <E units="cal">3.8E0</E>
+        <particleterm id="as" power="1.0"/>
+        <component id="C" dx="+2"/>
+    </reaction-->
+    
+    <!--reaction type="abf" name="O2 oxidation" defer="true">
+        <formula>[X] + O2 to [X-2] + 2CO</formula>
+        <reactant id="O2" stoich="1"/>
+        <product id="CO" stoich="2"/>
+        <A>2.2e16</A>
+        <n>0.0</n>
+        <E units="cal">7.5</E>
+        <particleterm id="as" power="1.0"/>
+        <component id="C" dx="-2"/>
+    </reaction-->
+
+    <!-- Condensation reactions (single particle events) -->
+    
+    <condensation type="condensation" name="A4 condensation" defer="false">
+        <formula>[X] + A4 to [X+16]</formula>        
+        <reactant id="A4" stoich="1" m="3.2e-22" d="7.11e-8"/>
+        <component id="C" dx="+16"/>
+    </condensation>
+    
+</mechanism>
