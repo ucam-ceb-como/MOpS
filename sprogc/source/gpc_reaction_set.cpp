@@ -1268,7 +1268,7 @@ void ReactionSet::Deserialize(std::istream &in)
                     // Clear reaction set memory before throwing error to
                     // higher level.
                     releaseMemory();
-                    throw e;
+                    throw;
                 }
 
                 // Read number of reactions with explicit reverse parameters.

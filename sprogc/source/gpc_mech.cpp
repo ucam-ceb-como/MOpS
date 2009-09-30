@@ -693,7 +693,7 @@ void Mechanism::Deserialize(std::istream &in)
                     // Ensure the mechanism is cleared before throwing 
                     // the exception to the next layer up.
                     releaseMemory();
-                    throw e;
+                    throw;
                 }
 
                 // Read the number of species and reserve memory.
@@ -715,7 +715,7 @@ void Mechanism::Deserialize(std::istream &in)
                     // Ensure the mechanism is cleared before throwing 
                     // the exception to the next layer up.
                     releaseMemory();
-                    throw e;
+                    throw;
                 }
 
                 // Read the reaction set.
@@ -726,7 +726,7 @@ void Mechanism::Deserialize(std::istream &in)
                     // Ensure the mechanism is cleared before throwing 
                     // the exception to the next layer up.
                     releaseMemory();
-                    throw e;
+                    throw;
                 }
 
                 // Rebuild the stoich xref.
