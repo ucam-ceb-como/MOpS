@@ -1,0 +1,427 @@
+/*!
+ *\file brush.cpp
+ *\author Robert I A Patterson
+ *
+ *\brief Main program for brush
+ *
+ *  Copyright (C) 2009 Robert I A Patterson.
+ *
+
+ Licence:
+    This file is part of "brush".
+
+    brush is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Prof Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
+ */
+
+#include <string>
+#include <cstring>
+#include <cstdlib>
+#include <iostream>
+#include <memory>
+
+#include "camxml.h"
+#include "gpc_mech_io.h"
+#include "mops_mechanism.h"
+#include "swp_mech_parser.h"
+#include "mops_timeinterval.h"
+#include "mops_settings_io.h"
+
+#include "geometry1d.h"
+#include "reactor1d.h"
+#include "pred_corr_solver.h"
+#include "reset_chemistry.h"
+#include "simulator.h"
+
+#include "linear_interpolator.hpp"
+
+//! Write summary usage information to stdout
+void printUsage();
+
+using namespace Brush;
+
+//! Run brush
+int main(int argc, char* argv[])
+{
+    std::cout << "Starting brush\n";
+    //======== Command line arguments ============================
+
+    // Input file names with default values.
+    std::string chemfile("chem.inp");
+    std::string thermfile("therm.dat");
+    std::string settfile("brush.xml");
+    std::string swpfile("sweep.xml");
+    std::string geomfile("geometry.xml");
+    std::string chemsolnfile("chemsoln.dat");
+    std::string partsolnfile("partsoln.xml");
+    
+    // Offset for random number sequence so that independent realisations
+    // can be computed in separated program instances.
+    size_t randomSeedOffset = 0;
+
+    // Diagnostic level
+    int diag = 0;
+
+    for (int i=1; i!=argc; ++i) {
+        if (std::strcmp(argv[i], "-c") == 0) {
+            // Chemical mechanism file (CK format).
+            chemfile = argv[++i];
+        }
+        else if (std::strcmp(argv[i], "-d") == 0) {
+            // Initial estimate of chemistry solution
+            chemsolnfile = argv[++i];
+        }
+        else if (std::strcmp(argv[i], "-a") == 0) {
+            // Initial estimate of particle solution
+            partsolnfile = argv[++i];
+        }
+        else if (strcmp(argv[i], "-t") == 0) {
+            // Thermodynamic properties file (CK format).
+            thermfile = argv[++i];
+        }
+        else if (strcmp(argv[i], "-s") == 0) {
+            // Sweep mechanism file.
+            swpfile = argv[++i];
+        }
+        else if (strcmp(argv[i], "-g") == 0) {
+            // Initial geometry file.
+            geomfile = argv[++i];
+        }
+        else if (strcmp(argv[i], "-b") == 0) {
+            // Initial geometry file.
+            settfile = argv[++i];
+        }
+        else if (strcmp(argv[i], "-v") == 0) {
+            // Verbosity
+            diag = atoi(argv[++i]);
+        }
+        else if (strcmp(argv[i], "-h") == 0) {
+            // Print help message and exit
+            printUsage();
+            return 0;
+        }
+        else if (strcmp(argv[i], "-e") == 0) {
+            // Verbosity
+            randomSeedOffset = atoi(argv[++i]);
+        }
+        else {
+            // Options do not make sense so stop give up and quit.
+            std::cerr << "Unrecognised option " << argv[i] << " used for brush\n";
+            return 1;
+        }
+    }
+
+
+    //========= Read numerical settings ===========================
+    std::cout << "Reading numerical settings\n";
+    // Initial geometry
+    std::auto_ptr<Geometry::Geometry1d> pGeom;
+    try {
+        // Load the XML
+        CamXML::Document geomXML;
+        geomXML.Load(geomfile);
+
+        // Build the geometry object and hold a smart pointer to it
+        pGeom.reset(new Geometry::Geometry1d(*geomXML.Root()));
+    }
+    catch (std::exception &e) {
+        std::cerr << "Failed to load geometry from " << geomfile << ", because\n"
+                  << e.what() << '\n';
+        return 1;
+    }
+    // Log the geometry for testing purposes (remove prior to release)
+    std::cout << pGeom->printMesh() << '\n';
+            
+    Mops::timevector timeIntervals;
+    int runs, iterations;
+    std::string outputFileBaseName;
+    std::vector<std::pair<real, real> > maxPCounts, maxM0s;
+    try {
+        // Load the XML
+        CamXML::Document settingsXML;
+        settingsXML.Load(settfile);
+        const CamXML::Element * const root = settingsXML.Root();
+
+        // Time intervals for stepping through the solution process with output
+        const CamXML::Element * node = root->GetFirstChild("timeintervals");
+        if (node != NULL) {
+            Mops::Settings_IO::readTimeIntervals(*node, timeIntervals);
+        } else {
+            throw std::runtime_error("No time intervals found");
+        }
+
+        // Number of paths
+        node = root->GetFirstChild("runs");
+        if (node != NULL) {
+            runs = atoi(node->Data().c_str());
+        } else {
+            throw std::runtime_error("A <runs> element must be supplied to indicate number of paths");
+        }
+
+        // Number of corrector iterations
+        node = root->GetFirstChild("iter");
+        if (node != NULL) {
+            iterations = atoi(node->Data().c_str());
+        } else {
+            throw std::runtime_error("An <iter> element must be supplied to specify number of corrector iterations");
+        }
+
+        // Maximum number of computational particles per cell
+        std::vector<CamXML::Element*> settings;
+        root->GetChildren("pcount", settings);
+        if (settings.empty()) {
+            throw std::runtime_error("At least one <pcount> element must be supplied to specify max number of computational particles in cells");
+        } else {
+            for(std::vector<CamXML::Element*>::const_iterator it = settings.begin();
+                it != settings.end(); ++it) {
+                // Loop over the pcount entries
+                real maxPCount = atof((*it)->Data().c_str());
+                
+                // Look for position information
+                const CamXML::Attribute* const  posnAttrib = (*it)->GetAttribute("x");
+                real x = 0;
+                if(posnAttrib) {
+                    //Found a position so store the full setting
+                    x = atof(posnAttrib->GetValue().c_str());
+                }
+                else if(settings.size() == 1) {
+                    // Allow one element to be specified without a position, if no other
+                    // elements are specified so a global setting may be given
+                    x = 0.0;
+                }
+                else {
+                    throw std::runtime_error("x (position) attribute must be supplied for all <pcount> elements\n \
+                                              or exactly one global <pcount> must be supplied withou an x attribute\n");
+                }
+                maxPCounts.push_back(std::make_pair<real, real>(x, maxPCount));
+            }
+        }
+
+        // Maximum particle concentration
+        root->GetChildren("maxm0", settings);
+        if (settings.empty()) {
+            throw std::runtime_error("At least one <maxm0> element must be supplied to specify max concentration in cells");
+        } else {
+            for(std::vector<CamXML::Element*>::const_iterator it = settings.begin();
+                it != settings.end(); ++it) {
+                // Loop over the pcount entries
+                real maxM0 = atof((*it)->Data().c_str());
+
+                // Look for position information
+                const CamXML::Attribute* const  posnAttrib = (*it)->GetAttribute("x");
+                real x = 0;
+                if(posnAttrib) {
+                    //Found a position so store the full setting
+                    x = atof(posnAttrib->GetValue().c_str());
+                }
+                else if(settings.size() == 1) {
+                    // Allow one element to be specified without a position, if no other
+                    // elements are specified so a global setting may be given
+                    x = 0.0;
+                }
+                else {
+                    throw std::runtime_error("x (position) attribute must be supplied for all <maxm0> elements\n \
+                                              or exactly one global <maxm0> must be supplied withou an x attribute\n");
+                }
+                maxM0s.push_back(std::make_pair<real, real>(x, maxM0));
+            }
+        }
+
+        // Output details
+        node = root->GetFirstChild("output");
+        if(node != NULL) {
+            node = node->GetFirstChild("filename");
+            if(node != NULL) {
+                outputFileBaseName = node->Data();
+            }
+            else {
+                throw std::runtime_error("A <filename> element must be supplied in the output section");
+            }
+        }
+        else {
+            throw std::runtime_error("A <output> element must be supplied with details for the required output");
+        }
+
+    }
+    catch (std::exception &e) {
+        std::cerr << "Failed to settings from " << settfile << ", because\n"
+                  << e.what() << '\n';
+        return 1;
+    }
+    std::cout << "Read " << timeIntervals.size() << " time intervals\n";
+
+    //========= Load chemical mechanism ==========================
+    // For fixed chemistry simulations the mech does not have to
+    // contain reactions, only the species names are required.
+    Mops::Mechanism mech;
+    try {
+        if(diag > 0) {
+            std::cout << "Reading chemical species...\n";
+        }
+        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag); //, true);
+        if (diag>0) 
+            mech.WriteDiagnostics("ckmech.diag");
+    }
+    catch (std::exception &e) {
+        std::cerr << "Failed to read chemical species from " << chemfile << ", because\n"
+                  << e.what() << '\n';
+        return 1;
+    }
+
+    //========= Load particle mechanism ==========================
+    try {
+        if(diag > 0) {
+            std::cout << "Setting species on particle mechanism...\n";
+        }
+        mech.ParticleMech().SetSpecies(mech.Species());
+        if(diag > 0) {
+            std::cout << "Reading particle mechanism...\n";
+        }
+        Sweep::MechParser::Read(swpfile, mech.ParticleMech());
+        if(diag > 0) {
+            std::cout << "Read particle mechanism with " << mech.ParticleMech().ProcessCount()
+                      << " processes\n";
+        }
+    }
+    catch (std::exception &e) {
+        std::cerr << "Failed to read particle mechanism from " << swpfile << ", because\n"
+                  << e.what() << '\n';
+        return 1;
+    }
+
+
+    //========= Read initial guess for solution ==================
+    std::list<ParticlePopulationPoint1d> initialPopulationPoints;
+    try {
+        // Load the XML
+        CamXML::Document initialParticlesXML;
+        initialParticlesXML.Load(partsolnfile);
+        const CamXML::Element * const root = initialParticlesXML.Root();
+
+        // Now get the XML for each separate population
+        typedef std::vector<CamXML::Element*> xml_element_list;
+        xml_element_list populations;
+        root->GetChildren("population", populations);
+
+        // Read the position and details of each population
+        for(xml_element_list::const_iterator it = populations.begin();
+            it != populations.end(); ++it) {
+
+            ParticlePopulationPoint1d populationDetails;
+
+            // Get the position
+            const CamXML::Attribute *attr = (*it)->GetAttribute("x");
+            if(attr) {
+                populationDetails.position = atof(attr->GetValue().c_str());
+            }
+            else {
+                throw std::runtime_error("No x (position) attribute for a <population> element.");
+            }
+
+            // Get the number density of the particles
+            const CamXML::Element * const m0XML = (*it)->GetFirstChild("m0");
+            if(m0XML) {
+                populationDetails.m0 = atof(m0XML->Data().c_str());
+            }
+            else {
+                throw std::runtime_error("No <m0> (number density) child element for a <population> element.");
+            }
+
+            // Read in the population
+            //!\todo remove the arbitrary 128
+            populationDetails.particleList = Mops::Settings_IO::ReadInitialParticles(**it, 128, mech.ParticleMech());
+
+            initialPopulationPoints.push_back(populationDetails);
+        }
+    }
+    catch(std::exception &e) {
+        std::cerr << "Failed to read initial particle solution from " << partsolnfile
+                  << ", because " << e.what() << '\n';
+        return 1;
+    }
+
+
+    std::auto_ptr<ResetChemistry> pInitialChem;
+    // Initial chemistry is the fixed chemistry
+    try {
+        if(diag > 0) {
+            std::cout << "Reading initial chemistry solution...\n";
+        }
+        pInitialChem.reset(new ResetChemistry(chemsolnfile, mech, diag));
+        if(diag > 0) {
+            std::cout << "Read initial chemistry solution\n";
+        }
+    }
+    catch(std::exception &e) {
+        std::cerr << "Failed to read initial chemistry solution from " << chemsolnfile
+                  << ", because " << e.what() << '\n';
+        return 1;
+    }
+
+    //========= Build the initial reactor ========================
+    Reactor1d initialReactor(*pGeom, mech, maxPCounts, maxM0s);
+    pGeom.release();
+
+    // Put the initial species concentrations into the reactor.
+    // Second argument indicates chemical conditions are fixed and not updated
+    // as a result of particle events that affect the gaseous species concentrations.
+    // This will need changing when we have proper coupling.
+    initialReactor.ReplaceChemistry(*pInitialChem, true);
+
+    // Put the initial particles into the reactor
+    initialReactor.ReplaceParticles(initialPopulationPoints.begin(), initialPopulationPoints.end());
+
+    //========= Now run the simulation ===========================
+    Simulator sim(runs, iterations, timeIntervals, initialReactor, *pInitialChem, outputFileBaseName);
+    sim.runSimulation(randomSeedOffset);
+
+    //========= Output ===========================================
+
+
+    //========= Clean up =========================================
+
+    return 0;
+}
+
+/*!
+ * Method needs to be extended as new options are added.
+ */
+void printUsage() {
+    std::cout << "Usage: brush [OPTION] ...\n";
+    std::cout << "Simulate a particle population in an inhomogeneous reactor\n";
+    std::cout << "-a INITIAL-PARTICLE-SOLUTION-FILE\n";
+    std::cout << "-b BRUSH-SETTINGS-FILE\n";
+    std::cout << "-c CHEMICAL-MECHANISM-FILE\n";
+    std::cout << "-d INITIAL-CHEMISTRY-SOLUTION-FILE\n";
+    std::cout << "-e offset for random number generator seed\n";
+    std::cout << "-g GEOMETRY-FILE\n";
+    std::cout << "-h output summary usage information\n";
+    std::cout << "-s SWEEP-SETTINGS-FILE\n";
+    std::cout << "-t THERMODYNAMICAL-DATA-FILE\n";
+    std::cout << "-v verbosity (Integer indicating level of debug info, higher integers mean more output)\n";
+}
+

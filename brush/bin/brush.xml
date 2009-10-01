@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<brush version="2">
+  
+  <!-- Default parameters (can be overidden). --> 
+  <runs>5</runs>
+  <iter>2</iter>
+  <atol>1.0e-2</atol> 
+  <rtol>1.0e-4</rtol>
+  <pcount x="1.0">128</pcount>
+  <pcount x="2.0">128</pcount>
+  <!--pcount>1024</pcount>-->
+  <maxm0 x="0.5">1e16</maxm0>
+  <maxm0 x="1.5">1e16</maxm0>
+  <relax>0.5</relax>
+  
+
+
+  <!-- Output time sequence. -->
+  <timeintervals splits="1">
+    <start>0.0</start>
+    <time steps="1" splits="1">0.1</time>
+    <time steps="1" splits="1">0.2</time>
+    <time steps="1" splits="1">0.3</time>
+    <time steps="1" splits="1">0.4</time>
+    <time steps="1" splits="1">0.5</time>
+    <time steps="1" splits="1">0.6</time>
+    <time steps="1" splits="1">0.7</time>
+    <time steps="1" splits="1">0.8</time>
+    <time steps="1" splits="1">0.9</time>
+    <time steps="1" splits="1">1.0</time>
+  </timeintervals>
+
+
+  <output>
+    <filename>HWC3test</filename>
+  </output>
+  
+</brush>
