@@ -105,9 +105,12 @@ int Sweep::Processes::TransportProcess::Outflow(const real t, Cell &sys,
 
             // Check whether the event is  ficticious
             if (Ficticious(majorantRate, trueRate)) {
-                // Fictitious event so update the particle and leave it in
-                // its original location
+                // Fictitious event so update the existing binary tree with the
+                // updated particle and leave the particle in its original
+                // location.
                 sys.Particles().Update(particle_index);
+
+                // Particle should not be transported
                 out->particle = NULL;
             }
             else {

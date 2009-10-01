@@ -74,12 +74,8 @@ Sweep::real Sweep::Processes::AdvectionProcess::Rate(real t, const Cell &sys,
     // Negative velocity means leftwards movement, positive means rightward
     Geometry::Direction direction = (velocity > 0 ? Geometry::right : Geometry::left);
 
-    real rate = 0;
-
-    if(local_geom.permittedDirection(direction)) {
-        rate = std::abs(velocity) / local_geom.calcSpacing(direction);
-    }
-
+    const real rate = std::abs(velocity) / local_geom.calcSpacing(direction);
+    
     return rate * sys.Particles().Count() * A() * s_MajorantFactor;
 }
 

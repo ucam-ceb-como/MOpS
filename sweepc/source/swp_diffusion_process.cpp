@@ -84,13 +84,13 @@ Sweep::real Sweep::Processes::DiffusionProcess::Rate(real t, const Cell &sys,
     real rate = 0;
 
     // Rate of leftwards jumps
-    if(local_geom.permittedDirection(Geometry::left)) {
+    if(!local_geom.zeroGradient(Geometry::left)) {
         const real dx_1 = 1.0 / local_geom.calcSpacing(Geometry::left);
         rate += 0.5 * dx_1 * dx_1;
     }
 
     // Rate of rightwards jumps
-    if(local_geom.permittedDirection(Geometry::right)) {
+    if(!local_geom.zeroGradient(Geometry::right)) {
         const real dx_1 = 1.0 / local_geom.calcSpacing(Geometry::right);
         rate += 0.5 * dx_1 * dx_1;
     }
@@ -158,13 +158,13 @@ int Sweep::Processes::DiffusionProcess::Perform(real t, Cell &sys,
                                                 Transport::TransportOutflow *out) const {
     // Rate of leftwards jumps (factors shared with rightwards jumps are ignored)
     real leftRate = 0;
-    if(local_geom.permittedDirection(Geometry::left)) {
+    if(!local_geom.zeroGradient(Geometry::left)) {
         leftRate = 1.0 / local_geom.calcSpacing(Geometry::left);
     }
 
     // Rate of rightwards jumps (factors shared with leftwards jumps are ignored)
     real rightRate = 0;
-    if(local_geom.permittedDirection(Geometry::right)) {
+    if(!local_geom.zeroGradient(Geometry::right)) {
         rightRate = 1.0 / local_geom.calcSpacing(Geometry::right);
     }
 
