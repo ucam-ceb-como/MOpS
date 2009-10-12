@@ -99,7 +99,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\sprogc\include;..\comostrings\include;..\camxml\include;include"
+				AdditionalIncludeDirectories="..\sprogc\include;..\comostrings\include;..\camxml\include;..\geometry\include;include"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
 			/>
