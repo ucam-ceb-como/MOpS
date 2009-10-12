@@ -421,10 +421,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\mops_gpc_sensitivity_solver.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\mops_mechanism.h"
 				>
 			</File>

@@ -63,7 +63,6 @@
 
 #include "mops_flux_postprocessor.h"
 #include "mops_gpc_sensitivity.h"
-#include "mops_gpc_sensitivity_solver.h"
 
 #include "swp_gas_profile.h"
 #include "swp_flamesolver.h"
