@@ -46,7 +46,7 @@
 #include "cvodes/cvodes.h"
 #include "cvodes_impl.h"
 #include "cvodes/cvodes_dense.h"
-#include "cvodes_dense_impl.h"
+#include "cvodes_direct_impl.h"
 
 // The right-hand side evaluator.  This function calculates the RHS of
 // the reactor differential equations.  CVODE uses a void* pointer to
@@ -80,10 +80,10 @@ int rhsFn_CVODES(
 // into an ODE_Solver object.
 int jacFn_CVODE(
     long int N,    // Problem size.
-    DenseMat J,    // Jacobian matrix.
     double t,      // Time.
     N_Vector y,    // Current solution variables.
     N_Vector ydot, // Current value of the vector f(t,y), the RHS.
+    DlsMat J,    // Jacobian matrix.
     void* solver,  // An ODE_Solver object (to be cast).
     N_Vector tmp1, // Temporary array available for calculations.
     N_Vector tmp2, // Temporary array available for calculations.
@@ -97,7 +97,7 @@ int jacFn_CVODE(
 // do not privide CVODES a function to evaluate
 int jacFn_CVODES(
     long int N,    // Problem size.
-    DenseMat J,    // Jacobian matrix.
+    DlsMat J,    // Jacobian matrix.
     double t,      // Time.
     N_Vector y,    // Current solution variables.
     N_Vector ydot, // Current value of the vector f(t,y), the RHS.

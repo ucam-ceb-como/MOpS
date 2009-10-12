@@ -352,11 +352,10 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
                     // initial temperature parameter, only work if a non-constant temperature is applied.
                     SENS_PARAM arrp(0, INIT_T);
                     AddParam(arrp);
-                } else if (id.compare("P") == 0) {
-                    // initial pressure parameter, only work if a non-constant pressure is applied
-                    // problem: does not have P in Jacobain but density
-                    //SENS_PARAM arrp(0, INIT_P);
-                    //AddParam(arrp);
+                } else if (id.compare("D") == 0) {
+                    // initial density parameter
+                    SENS_PARAM arrp(0, INIT_D);
+                    AddParam(arrp);
                 } else {
                     // initial concentration parameters.
                     int sp_index = m_mech->FindSpecies(id);
@@ -381,7 +380,7 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
                 if (m_sens_params.at(i).Type == INIT_T) {
                     unsigned int n_sp = m_mech->SpeciesCount();
                     val = m_reactor->Mixture()->RawData()[n_sp]; // Temperature is at n_sp.
-                } else if (m_sens_params.at(i).Type == INIT_P) {
+                } else if (m_sens_params.at(i).Type == INIT_D) {
                     //val = m_mech->Reactions(m_sens_params.at(i).Rxnth)->Arrhenius().n;
                 } else {
                     val = m_reactor->Mixture()->RawData()[m_sens_params.at(i).Index];
@@ -426,17 +425,18 @@ void SensitivityAnalyzer::ChangeMechParams()
             m_mech->GetReactions(i)->SetArrhenius(arr);
         }
     } else if (m_probType == Init_Conditions) {
-        //for(unsigned int i = 0; i < m_NS; i++) {
-        //    //m_mech->GetReactions(i)->SetArrhenius(arr);
-        //    if (m_sens_params.at(i).Type == INIT_T) {
-        //        unsigned int n_sp = m_mech->SpeciesCount();
-        //        m_reactor->Mixture()->RawData()[n_sp] = m_params[i]; // Temperature is at n_sp.
-        //    } else if (m_sens_params.at(i).Type == INIT_P) {
-        //        //val = m_mech->Reactions(m_sens_params.at(i).Rxnth)->Arrhenius().n;
-        //    } else {
-        //        m_reactor->Mixture()->RawData()[m_sens_params.at(i).Index] = m_params[i];
-        //    }
-        //}
+        unsigned int i_temp = m_reactor->Mixture()->temperatureIndex();
+        unsigned int i_dens = m_reactor->Mixture()->densityIndex();
+        for(unsigned int i = 0; i < m_NS; i++) {
+            if (m_sens_params.at(i).Type == INIT_T) {
+                unsigned int n_sp = m_mech->SpeciesCount();
+                m_reactor->Mixture()->RawData()[i_temp] = m_params[i];
+            } else if (m_sens_params.at(i).Type == INIT_D) {
+                m_reactor->Mixture()->RawData()[i_dens] = m_params[i];
+            } else {
+                m_reactor->Mixture()->RawData()[m_sens_params.at(i).Index] = m_params[i];
+            }
+        }
     } else {
         throw std::runtime_error("Undefined Type: Impossible case. Contact you programmer."
                                  "(Mops, SensitivityAnalyzer::ChangeMechParams).");
@@ -466,13 +466,13 @@ void SensitivityAnalyzer::ResetMechParams()
             m_mech->GetReactions(i)->SetArrhenius(arr);
         }
     } else if (m_probType == Init_Conditions) {
+        unsigned int i_temp = m_reactor->Mixture()->temperatureIndex();
+        unsigned int i_dens = m_reactor->Mixture()->densityIndex();
         for(unsigned int i = 0; i < m_NS; i++) {
-            //m_mech->GetReactions(i)->SetArrhenius(arr);
             if (m_sens_params.at(i).Type == INIT_T) {
-                unsigned int n_sp = m_mech->SpeciesCount();
-                m_reactor->Mixture()->RawData()[n_sp] = m_org_params[i];; // Temperature is at n_sp.
-            } else if (m_sens_params.at(i).Type == INIT_P) {
-                //val = m_mech->Reactions(m_sens_params.at(i).Rxnth)->Arrhenius().n;
+                m_reactor->Mixture()->RawData()[i_temp] = m_org_params[i];
+            } else if (m_sens_params.at(i).Type == INIT_D) {
+                m_reactor->Mixture()->RawData()[i_dens] = m_org_params[i];
             } else {
                 m_reactor->Mixture()->RawData()[m_sens_params.at(i).Index] = m_org_params[i];
             }
@@ -772,14 +772,17 @@ void SensitivityAnalyzer::InitSensMatrix(N_Vector *sens_matrix)
     if (m_probType == Init_Conditions) {
         // number of variables (number of species + 2). // T and P
         unsigned int n_sp = m_mech->SpeciesCount();
+        unsigned int i_temp = m_reactor->Mixture()->temperatureIndex();
+        unsigned int i_dens = m_reactor->Mixture()->densityIndex();
         for (unsigned int i = 0; i < m_sens_params.size(); i++) {
             for (unsigned int j = 0; j < n_sp + 2; j++) {
                 if ((m_sens_params.at(i).Type == INIT_T) &&
-                    (j == n_sp)) {
-                    NV_Ith_S(sens_matrix[i],j) = RCONST(1.0); // Temperature is at n_sp.
+                    (j == i_temp)) {
+                    NV_Ith_S(sens_matrix[i],j) = RCONST(1.0);
                     break;
-                } else if ((m_sens_params.at(i).Type == INIT_P)) {
-                    //val = m_mech->Reactions(m_sens_params.at(i).Rxnth)->Arrhenius().n;
+                } else if ((m_sens_params.at(i).Type == INIT_D) &&
+                    (j == i_dens)) {
+                    NV_Ith_S(sens_matrix[i],j) = RCONST(1.0);
                     break;
                 } else if ((m_sens_params.at(i).Type == INIT_C) &&
                            (m_sens_params.at(i).Index == j)) {

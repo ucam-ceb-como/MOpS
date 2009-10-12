@@ -49,9 +49,11 @@
 #include "mops_gpc_sensitivity.h"
 
 // CVODE includes.
+#include <sundials/sundials_dense.h>
 #include "nvector/nvector_serial.h"
+#include "cvodes_direct_impl.h"
 #include "cvodes_impl.h" // For CVodeMem.
-#include "cvodes_dense_impl.h" // For DenseMat.
+//#include "cvodes_dense_impl.h" // For DenseMat.
 
 #include <istream>
 
@@ -214,11 +216,7 @@ private:
     // Initialises the CVode ODE solver assuming that the
     // remainder of the the solver has been correctly set up.
     void InitCVode(void);
-
-    // Copies the given CVode workspace into this ODE_Solver object.
-    // This function cannot be used with sensitivity problem.
-    // Sensitivity assignment has yet to be implemented.
-    void assignCVMem(const CVodeMemRec &mem); 
+    
 };
 };
 

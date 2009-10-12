@@ -96,8 +96,8 @@ int rhsFn_CVODES(double t,      // Current flow time.
 // allow the calling code to pass whatever information it wants to
 // the function.  In this case the void* pointer should be cast
 // into an ODE_Solver object.
-int jacFn_CVODE(long int N, DenseMat J, double t, N_Vector y,
-                            N_Vector ydot, void* solver,
+int jacFn_CVODE(long int N, double t, N_Vector y,
+                            N_Vector ydot, DlsMat J, void* solver,
                             N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
     // Cast the Solver object.
@@ -105,7 +105,7 @@ int jacFn_CVODE(long int N, DenseMat J, double t, N_Vector y,
     Mops::Reactor *r    = s->GetReactor();
 
     // Get the Jacobian from the reactor model
-    r->Jacobian(t, NV_DATA_S(y), NV_DATA_S(ydot), J->data, 
+    r->Jacobian(t, NV_DATA_S(y), NV_DATA_S(ydot), J->cols, 
                 UNIT_ROUNDOFF);
 
     return 0;
@@ -116,8 +116,8 @@ int jacFn_CVODE(long int N, DenseMat J, double t, N_Vector y,
 // as jacFn_CVODE but it allows CVODES to have access to problem parameters.
 // This is vital for CVODES to use internal sensitivity Rhs estimator as we
 // do not privide CVODES a function to evaluate
-int jacFn_CVODES(long int N, DenseMat J, double t, N_Vector y,
-                            N_Vector ydot, void* solver,
+int jacFn_CVODES(long int N, double t, N_Vector y,
+                            N_Vector ydot, DlsMat J, void* solver,
                             N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
     // Cast the Solver object.
@@ -126,7 +126,7 @@ int jacFn_CVODES(long int N, DenseMat J, double t, N_Vector y,
 
     s->GetSensitivity().ChangeMechParams();
     // Get the Jacobian from the reactor model
-    r->Jacobian(t, NV_DATA_S(y), NV_DATA_S(ydot), J->data, 
+    r->Jacobian(t, NV_DATA_S(y), NV_DATA_S(ydot), J->cols, 
                 UNIT_ROUNDOFF);
 
     return 0;

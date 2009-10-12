@@ -67,7 +67,7 @@ public:
                     ARR_E,  // Activation energy.
                     INIT_C,
                     INIT_T,
-                    INIT_P
+                    INIT_D
     }; 
     // Arrhenius parameters for sensitivity.
     struct SENS_PARAM

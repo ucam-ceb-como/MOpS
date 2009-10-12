@@ -72,6 +72,7 @@ void PredCorSolver::Initialise(const Reactor &r)
 {
     // Set up ODE solver.
     FlameSolver::Initialise(r);
+    m_ode.Initialise(r);
     m_ode.SetExtSrcTermFn(AddSourceTerms);
     m_ode_copy.Initialise(r);
     m_ode_copy.SetExtSrcTermFn(AddSourceTerms);

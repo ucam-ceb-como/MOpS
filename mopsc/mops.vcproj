@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source;..\sweepc\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include;..\geometry\include"
+				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source\cvodes;..\sweepc\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include;..\geometry\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
@@ -110,8 +110,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source;..\sweepc\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
+				WholeProgramOptimization="false"
+				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source\cvodes;..\sweepc\include;..\comostrings\include;..\sprogc\include;..\camxml\include;..\geometry\include;include"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
 			/>
@@ -180,7 +180,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source;..\sweepc\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
+				AdditionalIncludeDirectories="..\cvodes-2.6.0\include;..\cvodes-2.6.0\source;..\sweepc\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
@@ -241,7 +241,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source;..\sweepc\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
+				AdditionalIncludeDirectories="..\cvodes-2.6.0\include;..\cvodes-2.6.0\source;..\sweepc\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
 			/>
@@ -315,23 +315,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\source\mops_gpc_sensitivity.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\mops_gpc_sensitivity_solver.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\source\mops_mechanism.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\source\mops_mixture.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\mops_ode_solver.cpp"
 				>
 			</File>
 			<File
@@ -398,6 +386,22 @@
 				RelativePath=".\source\swp_PAHsolver.cpp"
 				>
 			</File>
+			<Filter
+				Name="ODESolver"
+				>
+				<File
+					RelativePath=".\source\cvodes_utils.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\mops_gpc_sensitivity.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\mops_ode_solver.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -417,10 +421,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\mops_gpc_sensitivity.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\mops_gpc_sensitivity_solver.h"
 				>
 			</File>
@@ -430,10 +430,6 @@
 			</File>
 			<File
 				RelativePath=".\include\mops_mixture.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\mops_ode_solver.h"
 				>
 			</File>
 			<File
@@ -512,6 +508,22 @@
 				RelativePath=".\include\swp_PAHsolver.h"
 				>
 			</File>
+			<Filter
+				Name="ODESolver"
+				>
+				<File
+					RelativePath=".\include\cvodes_utils.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\mops_gpc_sensitivity.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\mops_ode_solver.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"
