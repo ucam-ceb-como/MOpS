@@ -1,5 +1,5 @@
 # Compiler options.
-export debug=0
+export debug=1
 export profile=0
 
 # C++ compiler.
@@ -24,12 +24,12 @@ lib=$(path)/lib
 # Target objects.
 
 obj=cvodea.o cvodea_io.o cvodes.o cvodes_band.o cvodes_bandpre.o \
-    cvodes_bbdpre.o cvodes_dense.o cvodes_diag.o cvodes_direct.o cvodes_io.o cvodes_lapack.io \
-    cvodes_spbcgs.o cvodes_spgmr.o cvodes_spils.o cvodes_sptfqmr.o \
+    cvodes_bbdpre.o cvodes_dense.o cvodes_diag.o cvodes_direct.o \
+    cvodes_io.o cvodes_lapack.o cvodes_spbcgs.o cvodes_spgmr.o \
+    cvodes_spils.o cvodes_sptfqmr.o \
     fnvector_serial.o nvector_serial.o sundials_band.o sundials_dense.o \
-    sundials_iterative.o sundials_math.o sundials_nvector.o sundials_direct.o \
-    sundials_spbcgs.o sundials_spgmr.o sundials_sptfqmr.o
-
+    sundials_direct.o sundials_iterative.o sundials_math.o sundials_nvector.o \
+    sundials_spbcgs.o sundials_spgmr.o sundials_sptfqmr.o 
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -69,13 +69,13 @@ cvodes_dense.o: $(src)/cvodes/cvodes_dense.c
 cvodes_diag.o: $(src)/cvodes/cvodes_diag.c
 	$(cpp) $(flag) $(src)/cvodes/cvodes_diag.c
 
-cvodes_diag.o: $(src)/cvodes/cvodes_direct.c
+cvodes_direct.o: $(src)/cvodes/cvodes_direct.c
 	$(cpp) $(flag) $(src)/cvodes/cvodes_direct.c
 
 cvodes_io.o: $(src)/cvodes/cvodes_io.c
 	$(cpp) $(flag) $(src)/cvodes/cvodes_io.c
 
-cvodes_spbcgs.o: $(src)/cvodes/cvodes_lapack.c
+cvodes_lapack.o: $(src)/cvodes/cvodes_lapack.c
 	$(cpp) $(flag) $(src)/cvodes/cvodes_lapack.c
 
 cvodes_spbcgs.o: $(src)/cvodes/cvodes_spbcgs.c
@@ -104,6 +104,9 @@ sundials_band.o: $(src)/sundials/sundials_band.c
 
 sundials_dense.o: $(src)/sundials/sundials_dense.c
 	$(cpp) $(flag) $(src)/sundials/sundials_dense.c
+
+sundials_direct.o: $(src)/sundials/sundials_direct.c
+	$(cpp) $(flag) $(src)/sundials/sundials_direct.c
 
 sundials_iterative.o: $(src)/sundials/sundials_iterative.c
 	$(cpp) $(flag) $(src)/sundials/sundials_iterative.c
