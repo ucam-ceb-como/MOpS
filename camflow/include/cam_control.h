@@ -55,6 +55,7 @@ namespace Camflow{
         doublereal resTol;                    //residual tolerence
         doublereal iniStep, maxStep,minStep;  //solver stepsize control
         doublereal maxTime;                   //max integration time
+        doublereal urSpecies;                 //under relaxation for species sources
         bool resMonitor;
     protected:
         int solMode;                    //solution mode steady or trans
@@ -135,6 +136,9 @@ namespace Camflow{
 
         void setResidualMonitor(bool lopt);
 
+        //set the under relaxation for the species
+        void setSpeciesUnderRelax(doublereal ur);
+
         //number of iterations
         void setNumIterations(int n);
         
@@ -184,6 +188,9 @@ namespace Camflow{
 
         //return the number of iterations
         int getNumIterations() const;
+
+        //return the species under relaxation factor
+        doublereal getSpeciesUnderRelax() const;
 
     };
 }

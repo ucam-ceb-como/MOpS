@@ -8,7 +8,6 @@
 #ifndef _FLAMELET_H
 #define	_FLAMELET_H
 
-
 #include "cam_residual.h"
 #include "cam_control.h"
 #include "cam_admin.h"
@@ -30,9 +29,35 @@ namespace Camflow{
         void report(doublereal x, doublereal* solution, doublereal& res);
         //file output
         void reportToFile(doublereal x, doublereal* solution);
-        //solve the flamelet
+
+        /**
+         * solve the flamelet: call for coupling without
+         * solving population balance
+         */
         void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg, CamProfile&cp,
                             Mechanism &mech, bool interface=false);
+
+        /**
+         * stand alone call as well as first call from an external
+         * code that solves the population balance
+         */
+        void solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp,
+                CamConfiguration& config, CamSoot& cs, Mechanism& mech);
+
+        /**
+         * continulation call from an external code that
+         * solves the population balance
+         */
+        void solve(vector<Thermo::Mixture>& cstrs,
+                const vector< vector<doublereal> >& iniSource,
+                const vector< vector<doublereal> >& fnlSource,
+                Mechanism& mech,
+                CamControl &cc,
+                CamAdmin &ca,
+                CamGeometry &cg,
+                CamProfile& cp);
+
+
         //initialize the solution vector
         void initSolutionVector(CamControl &cc);
         //calculate the stoichiometric mixture fraction
@@ -74,7 +99,7 @@ namespace Camflow{
         /*
          *set the external scalar dissipation rate
          */
-        void setExternalScalarDissipationRate(doublereal sr);
+        void setExternalScalarDissipationRate(const doublereal sr);
         
 
 

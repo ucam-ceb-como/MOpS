@@ -65,7 +65,8 @@ namespace Camflow{
          *solve function
          */
         void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
-             CamConfiguration &config,  Mechanism &mech );
+             CamConfiguration &config, CamSoot &cs,  Mechanism &mech );
+
         /*
          *coupled solver
          */

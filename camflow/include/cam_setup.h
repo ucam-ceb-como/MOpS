@@ -67,6 +67,14 @@ namespace Camflow{
          *store the inlet conditions
          */
         void storeInlet(CamBoundary &cb, inletStruct& ud_inlet);
+
+        /**
+         *  store the objects those are comon across the reactor
+         *  models
+         */
+        virtual void storeObjects(CamControl& cc,   CamAdmin& ca,    CamGeometry& cg,
+                    CamProfile& cp,   CamBoundary& cb,    Mechanism& mech);
+        
         
     protected:
         CamProfile *profile;

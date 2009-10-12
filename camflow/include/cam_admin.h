@@ -96,7 +96,7 @@ namespace Camflow{
         //set the species output
         void setSpeciesOut(int n);
 
-        int getSpeciesOut();
+        int getSpeciesOut() const;
 
         //return the temperature
         //doublereal getTemperature() const;

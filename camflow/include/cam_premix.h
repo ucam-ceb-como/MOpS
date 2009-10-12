@@ -49,6 +49,7 @@
 #include "cam_profile.h"
 #include "cam_setup.h"
 #include "cam_profile.h"
+#include "cam_configuration.h"
 #include "cam_soot.h"
 using namespace Sprog;
 namespace Camflow{
@@ -67,51 +68,117 @@ namespace Camflow{
          *the DAE solver
          */
         int eval(doublereal x, doublereal* y, doublereal* ydot,bool jacEval);
-        //report the results
+        /*
+         * report the results without residual monitoring
+         */
         void report(doublereal t, doublereal* solution);
-        //console output with resisual monitoring
+        /*
+         * console output with resisual monitoring
+         */
         void report(doublereal t, doublereal* solution, doublereal& res);
-        //write the results to output file
+        /*
+         * write the results to output file
+         */
         void reportToFile(doublereal t, doublereal* soln);
-        //mass matrix evaluation
-        //void massMatrix(doublereal **M);
-
-
-        //solve
+        
+        /*
+         *solve the premix reactor for the stand alone case
+         */
         void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
-                CamSoot &cs,Mechanism &mech );
+             CamConfiguration &config, CamSoot &cs,  Mechanism &mech );
+
+
+        /*
+         *solve the premix reactor problem for continuation calls from the
+         *external interface
+         */
+        void solve(vector<Thermo::Mixture>& cstrs,
+                const vector< vector<doublereal> >& iniSource,
+                const vector< vector<doublereal> >& fnlSource,
+                Mechanism& mech,
+                CamControl &cc,
+                CamAdmin &ca,
+                CamGeometry &cg,
+                CamProfile& cp);
+
+        /**
+         *  Save the inlet after solution for the
+         *  next call from population balance solver
+         */
+        void saveInlet();
+
+  
+        /*
+         *coupled solver. In this case all the equations are solved
+         *simultaneousl
+         */
         void csolve(CamControl &cc);
+        /*
+         *segregated solver. It is found that CVode failes to
+         *handle the energy equation for large problems. In this case
+         *segregated solvers are used to solve the equation system by
+         *decoupling the energy equation and the species transport equation.
+         *Once the specified number of iterations are completed, the control
+         *is given back to the coupled solver to complete the intergration
+         */
         void ssolve(CamControl &cc);
 
-        //return the initial solution vector
+        /*
+         * return the initial solution vector
+         */
         void getInitial(vector<doublereal>& initial);
 
-        //residual function definition----------------
+        /*
+         *residual function definition.
+         */
         void residual(const doublereal& t, doublereal *y, doublereal *f);
 
-        //boundary residual
+        /*
+         *definition of boundary condition for the total continuity
+         */
         void massFlowBoundary(const doublereal& t, doublereal *y, doublereal *f);
+        /*
+         *definition of species boundary conditions
+         */
         void speciesBoundary(const doublereal& t, doublereal *y, doublereal *f);
+        /*
+         *definition of energy equation boundary conditions
+         */
         void energyBoundary(const doublereal& t, doublereal *y, doublereal *f);
+        /*
+         *definition of moment conditions for soot model
+         */
         void momentBoundary(const doublereal& t, doublereal *y, doublereal *f);
 
-        //set up the solution vector
+        /*
+         * set up the solution vector of dependent variables
+         */
         void initSolutionVector(CamBoundary &cb, CamControl &cc);
 
-        //header information
+        /*
+         * header information to write the file output
+         */
         void header();
 
-        //store the inlet
-        //void storeInlet(CamBoundary &cb);
-        //update the diffusion fluxes
+        
+        /*
+         * update the species diffusion fluxes to solve the species
+         * transport equations
+         */
         void updateDiffusionFluxes();
-        //update the thermal fluxes
+        /*
+         * update the thermal fluxes for solving the energy transport
+         */
         void updateThermo();
-        //save the flow variables
+        /*
+         * save the flow variables. i.e. extract the bulk velocity
+         * and store it for later use
+         */
         void saveFlowVariables(doublereal* y);
 
     protected:
         inletStruct ud_inlet;
+        inletStruct soln_inlet;
         doublereal resNorm;
         
 

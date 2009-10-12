@@ -104,12 +104,18 @@ namespace Camflow{
         int getnCells() const;
 
         //reuturn the geometry info
-        vector<doublereal>& getGeometry();
+        const vector<doublereal>& getGeometry() const ;
 
         //return the axial position vector
-        vector<doublereal>& getAxpos();
+        const vector<doublereal>& getAxpos() const ;
         //add cells with zero width
         void addZeroWidthCells();
+
+        /*
+         * set the geometry information. this will set the vector of
+         *cell widths into dz vctor
+         */
+        void setGeometry(const vector<doublereal>& dz_);
 
         //refine the grid
         void refine(doublereal* y, const int nVar, const int nSpec, int ptrT=0);

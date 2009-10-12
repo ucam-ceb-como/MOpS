@@ -44,10 +44,8 @@
 #include "cam_residual.h"
 #include "cam_control.h"
 #include "cam_admin.h"
-//#include "cam_boundary.h"
-//#include "cam_geometry.h"
+#include "cam_configuration.h"
 #include "cam_reporter.h"
-//#include "radau_wrapper.h"
 #include "gpc.h"
 #include "cam_setup.h"
 
@@ -79,8 +77,8 @@ namespace Camflow{
 
         
         //solve
-        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg, CamProfile&cp,
-                            Mechanism &mech);
+        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
+             CamConfiguration &config, CamSoot &cs,  Mechanism &mech );
 
         //return the initial solution vector
         void getInitial(vector<doublereal>& initial);

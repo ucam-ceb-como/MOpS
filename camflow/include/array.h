@@ -86,6 +86,13 @@ namespace Camflow{
         doublereal value(int i, int j) const{
             return aData[nRows*i + j];
         }
+
+        /*
+         *return the size mxn
+         */
+        int size() const{
+            return aData.size();
+        }
         
     protected:
         vector<doublereal> aData;

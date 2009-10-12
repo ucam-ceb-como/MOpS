@@ -47,7 +47,7 @@
 #include "cam_reporter.h"
 #include "gpc.h"
 #include "cam_setup.h"
-
+#include "cam_configuration.h"
 using namespace Sprog;
 namespace Camflow{
     class Batch : public CamSetup{
@@ -85,8 +85,10 @@ namespace Camflow{
 
 
         //solve
-        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg, CamProfile&cp,
-                     CamSoot &cs,Mechanism &mech);
+//        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg, CamProfile&cp,
+//                     CamSoot &cs,Mechanism &mech);
+        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
+             CamConfiguration &config, CamSoot &cs,  Mechanism &mech );
 
         //return the initial solution vector
         void getInitial(vector<doublereal>& initial);

@@ -62,8 +62,7 @@ namespace Camflow{
         /*
          *this caling interface is for the kernel
          */
-        void solve(CamAdmin &ca,
-                   CamBoundary &cb,
+        void solve(CamAdmin &ca,                   
                    CamConfiguration &config,
                    CamControl &cc,
                    CamGeometry &cg,
@@ -71,6 +70,19 @@ namespace Camflow{
                    CamSoot &cs,
                    Mechanism &mech
                    );
+
+//        /*
+//         *calling interface for external programs
+//         */
+//        void solve(CamAdmin &ca,
+//                   CamConfiguration &config,
+//                   CamControl &cc,
+//                   CamGeometry &cg,
+//                   CamProfile &cp,
+//                   CamSoot &cs,
+//                   Mechanism &mech,
+//                   vector<Thermo::Mixture>& mixtures
+//                   );
         /*
          *flamelet interface. This is provided since the handle to the
          *object call still remain with the interface object. That helps
