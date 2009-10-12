@@ -203,6 +203,17 @@ public:
 	// returns the vector of mixture diffusion coefficient in m^2/s.
 	const vector<real> getMixtureDiffusionCoeff(const real pre)const; 
 
+    //! Index of temperature in m_data
+    size_t temperatureIndex() const {return m_species->size();}
+
+    //! Index of density in m_data
+    size_t densityIndex() const {return m_species->size() + 1;}
+
+    //! Index of velocity in m_data
+    size_t velocityIndex() const {return m_species->size() + 2;}
+
+    //! Number of items of data that are not species concentrations that are stored at the end of m_data
+    static const size_t sNumNonSpeciesData = 3;
 
 protected:
     // The default constructor is protected to prevent mixture objects being
@@ -217,17 +228,6 @@ private:
     // Vector of species for which this mixture is defined.
     const SpeciesPtrVector *m_species;
 
-    //! Index of temperature in m_data
-    size_t temperatureIndex() const {return m_species->size();}
-
-    //! Index of density in m_data
-    size_t densityIndex() const {return m_species->size() + 1;}
-
-    //! Index of velocity in m_data
-    size_t velocityIndex() const {return m_species->size() + 2;}
-
-    //! Number of items of data that are not species concentrations that are stored at the end of m_data
-    static const size_t sNumNonSpeciesData = 3;
 };
 };
 };
