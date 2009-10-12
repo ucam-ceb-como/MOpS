@@ -1,17 +1,12 @@
 
 #include "cam_residual.h"
-
-
 #include "cam_configuration.h"
-
-
 #include "cam_control.h"
-
 #include "interface.h"
 #include "flamelet.h"
 using namespace Camflow;
 
-Mechanism Interface::mech;
+
 /*
  *this interface is for external programs to call any of the models
  *within camflow. The interface constructor does read the input files.
@@ -50,6 +45,137 @@ Interface::Interface(){
 
     flmlt = NULL;
 }
+
+/*
+ *Interface for external drivers which passed a reference to the
+ *mechanism object
+ */
+Interface::Interface(Mechanism& mech_in,
+        vector<doublereal>& dz,
+        vector<Thermo::Mixture>& cstrs,
+        void* rModel, const doublereal sdr
+                                                                ){
+
+    string fCamFlow("camflow.xml");    
+    try{
+        cm.readInput(fCamFlow,cc,cg,convert,ca,cb,cp,config,cSoot);
+    }catch(CamError &ce){
+        throw;
+    }
+    /*
+     *reset the reactor mesh to the passed in values
+     */
+    if(dz.size() != 0)cg.setGeometry(dz);
+    
+    CamSoot cs;
+
+    model = (CamResidual*)rModel;
+    if(sdr==0){
+        model->solve(cc,ca,cg,cp,config,cs,mech_in);
+        resetMixtures(cstrs);
+    }else{
+        /**
+         * assumes that the call is made for flamelet
+         * model if the scalar dissipation rate is
+         * non-zero
+         */
+        model->setExternalScalarDissipationRate(sdr);
+        model->solve(cc,ca,cg,cp,config,cs,mech_in);
+    }
+
+
+}
+
+/*
+ *reset the mixtures with the newly evaluated rties
+ */
+void Interface::resetMixtures(vector<Thermo::Mixture>& cstrs){
+     //Get the species mass fractions
+    Array2D massFracs;
+    model->getSpeciesMassFracs(massFracs);
+
+    //storage for density, velocity, and temperature
+    vector<doublereal> density, vel, temp;
+
+    //Get the density
+    model->getDensityVector(density);
+    //Get the velocity
+    model->getVelocity(vel);
+    //Get the temperature
+    model->getTemperatureVector(temp);
+
+    int nCells = cg.getnCells();
+    if(cstrs.size() >0){
+        if(cstrs.size() != nCells-2)
+            throw("size of mixtures is not consistant with the grid\n");
+        int nSp = mech.SpeciesCount();
+        for(int i=0; i<nCells-2;i++){
+            vector<doublereal> mf;
+            for(int l=0; l<nSp; l++){
+                mf.push_back(massFracs(i+1,l));
+            }
+            cstrs[i].SetMassFracs(mf);
+            cstrs[i].SetMassDensity(density[i+1]);
+            cstrs[i].SetTemperature(temp[i+1]);
+            cstrs[i].SetVelocity(vel[i+1]);
+        }
+    }else{
+        /*
+         *create the cstrs
+         */
+        Thermo::Mixture mix(mech.Species());
+        int nSp = mech.SpeciesCount();
+        for(int i=0; i<nCells-2;i++){
+            vector<doublereal> mf;
+            for(int l=0; l<nSp; l++){
+                mf.push_back(massFracs(i+1,l));
+            }
+            mix.SetMassFracs(mf);
+            mix.SetMassDensity(density[i+1]);
+            mix.SetTemperature(temp[i+1]);
+            mix.SetVelocity(vel[i+1]);
+            cstrs.push_back(mix);
+        }
+    }
+
+}
+
+/*
+ *solve the reactor problem
+ */
+void Interface::solve(vector<Thermo::Mixture>& cstrs,
+        const vector<doublereal>& dz,
+        const vector< vector<doublereal> >& initalSource,
+        const vector< vector<doublereal> >& finalSource,
+        CamControl& ccObj,
+        CamConfiguration& confObj,
+        Mechanism& mech_in,
+        void* reactorModel,
+        const doublereal sdr){
+
+
+    cc = ccObj;    
+    config = confObj;
+    if(cstrs.size() != dz.size()){
+        throw CamError("Mismatch between the number of mixtures passed and the cell geometry\n");
+    }else{
+        //set the rector geometry passed in by the external code to the
+        //geometry object
+        cg.setGeometry(dz);
+    }
+    /*
+     *solve the reactor problem
+     */
+    model = (CamResidual*)reactorModel;
+    if(sdr==0){
+        model->solve(cstrs,initalSource,finalSource,mech_in,ccObj,ca,cg,cp);
+        resetMixtures(cstrs);
+    }
+    
+   
+
+}
+
 /*
  *return the number of species
  */
@@ -90,23 +216,24 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation){
         flmlt->getSpeciesMassFracs(spMassFracs);
         flmlt->getTemperatureVector(TVector);
         flmlt->getIndepedantVar(indVar);
+        flmlt->getViscosityVector(muVector);
         stMixtureFrac = flmlt->stoichiometricMixtureFraction();
 
     }catch(CamError &ce){
-        cout << ce.errorMessge;
+        throw ;
     }
 }
 /*
  *return the stoichiometric mixture fraction
  */
-doublereal Interface::getStMixtureFrac(){
+const doublereal Interface::getStMixtureFrac(){
     return stMixtureFrac;
 }
 /*
  *
  *return the density
  */
-doublereal Interface::getDensity(doublereal axpos){
+const doublereal Interface::getDensity(const doublereal axpos){
 
     doublereal dens = getVariableAt(axpos,rhoVector);
     return dens;
@@ -114,7 +241,7 @@ doublereal Interface::getDensity(doublereal axpos){
 /*
  *return the mass fractions
  */
-doublereal Interface::getMassFrac(int spIndex, doublereal axpos){
+const doublereal Interface::getMassFrac(const int spIndex, const doublereal axpos){
     vector<doublereal> mf;
     int len = indVar.size();
     for(int i=0; i<len; i++){
@@ -127,7 +254,7 @@ doublereal Interface::getMassFrac(int spIndex, doublereal axpos){
 /*
  *return the temperature
  */
-doublereal Interface::getTemperature(doublereal axpos){
+const doublereal Interface::getTemperature(const doublereal axpos){
     
     doublereal temp = getVariableAt(axpos,TVector);
     return temp;
@@ -135,7 +262,7 @@ doublereal Interface::getTemperature(doublereal axpos){
 /*
  *return the viscosity
  */
-doublereal Interface::getViscosity(doublereal axpos){
+const doublereal Interface::getViscosity(const doublereal axpos){
     
     doublereal temp = getVariableAt(axpos,muVector);
     return temp;
@@ -158,15 +285,13 @@ doublereal Interface::getVariableAt(const doublereal& pos,
         }else if( i>0 && (pos > indVar[i-1]) && (pos < indVar[i]) ){
             vu = var[i];
             xu = indVar[i];
-            //cout << "location " << i << " pos " << pos << endl;
+            
             vl = var[i-1];
             xl = indVar[i-1];
-            //cout << tu << "  " << xu << endl;
-            //cout << tl << "  " << xl << endl;
+            
             doublereal slope = (vu-vl)/(xu-xl);
             doublereal intersect = vu- (slope*xu);
-            //cout << "slope " << slope << endl;
-            //cout << "intersect " << intersect << endl;
+            
             temp= slope*pos + intersect;
             break;
         }
@@ -176,4 +301,43 @@ doublereal Interface::getVariableAt(const doublereal& pos,
 
 }
 
+/*
+ *return the handle to CamAdmin
+ */
+CamAdmin& Interface::getCamAdmin(){
+    return ca;
+}
+/*
+ *return the boundary object
+ */
+CamBoundary& Interface::getCamBoundary(){
+    return cb;
+}
+/*
+ *return the object for controlling solver
+ */
+CamControl&  Interface::getCamControl(){
+    return cc;
+}
+/*
+ *return the geometry object
+ */
+CamGeometry& Interface::getCamGeometry(){
+    return cg;
+}
+
+/*
+ *return the profile object which handles the
+ *user defined profiles
+ */
+
+CamProfile& Interface::getCamProfile(){
+    return cp;
+}
+/*
+ *return the configuration object
+ */
+CamConfiguration& Interface::getCamConfiguration(){
+    return config;
+}
 

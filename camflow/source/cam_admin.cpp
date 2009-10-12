@@ -124,7 +124,7 @@ void CamAdmin::setSpeciesOut(int n){
     speciesOut = n;
 }
 
-int CamAdmin::getSpeciesOut(){
+int CamAdmin::getSpeciesOut() const{
     return speciesOut;
 }
 

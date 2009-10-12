@@ -18,8 +18,15 @@ void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doubler
      *prepare flux terms
      */
     doublereal convection, diffusion, source;
-
-
+    /*
+     *interpolation preparation
+     */
+    doublereal slope, intersect;
+    /*
+     *particle source
+     */
+    doublereal pSource = 0;
+    
     for(int i= iMesh_s; i< iMesh_e; i++ ){
 
 
@@ -33,11 +40,8 @@ void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doubler
              *diffusion term
              */
             diffusion = dydx(s_jk(i,l),s_jk(i+1,l),dz[i])/m_rho[i];
-            /*
-             *reaction source
-             */
-            source = s_Wdot(i,l)*(*spv)[l]->MolWt()/m_rho[i];
 
+            source = s_Wdot(i,l)   *(*spv)[l]->MolWt()/m_rho[i];
             f[i*nSpc+l] = convection + diffusion + source ;
 
         }
@@ -48,7 +52,9 @@ void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doubler
 
 }
 
-void CamResidual::energyResidual(const doublereal& time, doublereal* y, doublereal* f){
+
+
+void CamResidual::energyResidual(const doublereal& time, doublereal* y, doublereal* f, bool flxTrans){
 
 
     if(admin->getEnergyModel() == admin->ADIABATIC){
@@ -82,8 +88,11 @@ void CamResidual::energyResidual(const doublereal& time, doublereal* y, doublere
             /*
              *residual
              */
-            //f[i] = convection + (conduction - sumHSource - sumFlx)/(m_rho[i]*m_cp[i]);
-            f[i] = convection + (conduction - sumHSource )/(m_rho[i]*m_cp[i]);
+            if(flxTrans){
+                f[i] = convection + (conduction - sumHSource - sumFlx)/(m_rho[i]*m_cp[i]);
+            }else{
+                f[i] = convection + (conduction - sumHSource )/(m_rho[i]*m_cp[i]);
+            }
 
 
         }
@@ -113,13 +122,15 @@ void CamResidual::massFlowResidual(const doublereal& time, doublereal* y, double
 }
 
 
-void CamResidual::saveMixtureProp(doublereal* y, bool thermo, bool mom){
+void CamResidual::saveMixtureProp(const doublereal time,
+                        doublereal* y, bool thermo, bool mom){
     //clear all the vectors and maps before saving
     m_T.clear();
     m_cp.clear();
     m_k.clear();
     m_rho.clear();
     m_mu.clear();
+    avgMolWt.clear();
     //m_flow.clear();
 
     s_H.resize(cellEnd,nSpc);
@@ -132,8 +143,12 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo, bool mom){
     //as they are hardly kept constant
     vector<doublereal> mf; //mas fraction
     vector<doublereal> temp, htemp, cptemp;  //diffusion coefficient
-    doublereal temperature, dens;
-    
+    doublereal temperature, dens, mwt;
+    /*
+     *check if particle sources are present
+     */
+    int npSource = max( s_ParticleBegin.size(), s_ParticleEnd.size());
+    doublereal slope, intersect;
     for(int i=cellBegin; i< cellEnd;i++){        
         mf.clear();
         for(int l=0; l<nSpc; l++){
@@ -144,7 +159,9 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo, bool mom){
         m_T.push_back(temperature);
         camMixture->SetMassFracs(mf);
         camMixture->SetTemperature(temperature);
-        dens = opPre*camMixture->getAvgMolWt()/(R*temperature);
+        mwt = camMixture->getAvgMolWt();
+        dens = opPre*mwt/(R*temperature);
+        avgMolWt.push_back(mwt);
         camMixture->SetMassDensity(dens);
         camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
         
@@ -167,8 +184,28 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo, bool mom){
             //store the specific heat capacity (J/kg K)
             m_cp.push_back(camMixture->getSpecificHeatCapacity());
         }
+        
+
         for(int l=0; l<nSpc; l++){
-            s_Wdot(i,l)=wdot[l];
+            /*
+             *if there is a particle process source present
+             *add that into the species source terms to
+             *account for the particle processes
+             */
+            doublereal pSource =0;
+            if(npSource != 0){
+                 /*
+                 *the particle process source terms are assumed to be
+                 *piece-wise linear. At a given time, the source term
+                 *is evaluated by interpolating between the initial and
+                 *final value
+                 */
+
+                slope = ( s_ParticleBegin(i,l) - s_ParticleEnd(i,l) )/control->getMaxTime();
+                intersect = s_ParticleBegin(i,l);
+                pSource = slope * time + intersect;
+            }
+            s_Wdot(i,l)=wdot[l]+pSource;
             s_Diff(i,l)=temp[l];
             s_mf(i,l) = mf[l];
             if(mf[l] > 1.1) {
@@ -184,7 +221,10 @@ void CamResidual::saveMixtureProp(doublereal* y, bool thermo, bool mom){
 
 }
 
-
+//set external scalar dissipation rate
+void CamResidual::setExternalScalarDissipationRate(const doublereal sr){
+    throw CamError("Base class function: set scalar dissipation rate\n");
+}
 
 //
 //calculate the species diffusion fluxes in kg/m2s
@@ -346,6 +386,16 @@ void CamResidual::calcFlowField(const doublereal& time, doublereal* y){
     throw CamError("Base class function calcFlowField nothing to do\n");
 }
 
+// external funcation call to solve the reactor mode
+void CamResidual::solve(vector<Thermo::Mixture>& cstrs,
+       const  vector< vector<doublereal> >& iniSource,
+        const vector< vector<doublereal> >& fnlSource,
+        Mechanism& mech, CamControl& cc,
+        CamAdmin& ca, CamGeometry& cg,
+        CamProfile& cp){
+    throw CamError("Base class function interface call nothing implemented\n");
+}
+
 /*
  *return the species mass fraction array
  */
@@ -357,6 +407,12 @@ void CamResidual::getSpeciesMassFracs(Array2D& mf){
  */
 void CamResidual::getDensityVector(vector<doublereal>& density){
     density = m_rho;
+}
+/*
+ *return the velocity
+ */
+void CamResidual::getVelocity(vector<doublereal>& vel){
+    vel = m_u;
 }
 /*
  *return the viscosity
@@ -376,3 +432,36 @@ void CamResidual::getTemperatureVector(vector<doublereal>& temp){
 void CamResidual::getIndepedantVar(vector<doublereal>& indVar){
     indVar = reacGeom->getAxpos();
 }
+
+
+void CamResidual::setParticleSource(const vector<vector<doublereal> >& initial,
+        const vector<vector<doublereal> >& final){
+    int n = initial.size();
+    int m = final.size();
+    if(m!=n) throw CamError("size mismatch : initial and final particle source terms\n");
+
+    //resize array to allocate memory
+    s_ParticleBegin.resize(cellEnd,nSpc);
+    s_ParticleEnd.resize(cellEnd,nSpc);
+
+    /*
+     *The source terms passed in covers only the interior mech points.
+     *At the inlet and outlet the  functions contain no chemical source
+     *terms. Therfore, the sources at the inlet and outllet are set to 0
+     */
+
+    for(int i=iMesh_s; i<iMesh_e; i++){
+        vector<doublereal> s_tBegin = initial[i-1];
+        vector<doublereal> s_tEnd = final[i-1];
+        for(int l=0; l<nSpc; l++){
+
+            s_ParticleBegin(i,l) = s_tBegin[l];
+            s_ParticleEnd(i,l) = s_tEnd[l];
+        }
+    }
+
+   
+}
+
+
+

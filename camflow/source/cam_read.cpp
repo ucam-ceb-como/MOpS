@@ -310,10 +310,13 @@ void CamRead::readControl(CamControl& cc, const CamXML::Element& node){
         atr = solverNode->GetAttribute("mode");
         if(atr != NULL){
             atrVal = atr->GetValue();
-            if(!convertToCaps(atrVal).compare("COUPLED"))
+            if(!convertToCaps(atrVal).compare("COUPLED")){
                 cc.setSolutionMode(cc.COUPLED);
-            if(!convertToCaps(atrVal).compare("SEGREGATED"))
+            }else if(!convertToCaps(atrVal).compare("SEGREGATED")){
                 cc.setSolutionMode(cc.SEGREGATED);
+            }else{
+                throw CamError(" integration mode not specified in solver element\n");
+            }
         }else{
             throw CamError(" integration mode not specified in solver element\n");
         }

@@ -44,7 +44,6 @@
  *  Website :   http://como.cheng.cam.ac.uk
  */
 #include "cam_profile.h"
-#include "cam_plug.h"
 #include "comostrings.h"
 #include <cmath>
 using namespace Camflow;

@@ -70,8 +70,10 @@ int Batch::getType(){
  * number of equations to be solved, the total number of variables in the
  * system etc.
  */
-void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
-                      CamSoot &cs, Mechanism &mech){
+void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp,
+                      CamConfiguration& config, CamSoot &cs, Mechanism& mech){
+//void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
+//                      CamSoot &cs, Mechanism &mech){
 
     camMech = &mech;
     Thermo::Mixture mix(mech.Species());
@@ -212,7 +214,7 @@ void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f){
         
     }
     
-
+    
 }
 
 //temperature residual

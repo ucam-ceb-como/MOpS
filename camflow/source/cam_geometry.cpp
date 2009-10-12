@@ -82,6 +82,11 @@ void CamGeometry::discretize(){
     length = grid[len];
 }
 
+void CamGeometry::setGeometry(const vector<doublereal>& dz_){
+    dz = dz_;
+    nCell=dz.size();
+}
+
 void CamGeometry::setLength(doublereal len){
     this->length = len;
 }
@@ -95,10 +100,7 @@ doublereal CamGeometry::getLenth() const{
 }
 
 int CamGeometry::getnCells() const{
-    if(nCell == 0)
-        throw CamError("descretisation not invoked\n");
-    else
-        return this->nCell;
+    return this->nCell;
 }
 
 void CamGeometry::setDia(doublereal d){
@@ -122,11 +124,11 @@ doublereal CamGeometry::getSurfAres_l() const{
     return (pi*dia);
 }
 
-vector<doublereal>& CamGeometry::getGeometry(){
+const vector<doublereal>& CamGeometry::getGeometry() const {
     return dz;
 }
 
-vector<doublereal>& CamGeometry::getAxpos(){
+const vector<doublereal>& CamGeometry::getAxpos() const {
     return axPos;
 }
 

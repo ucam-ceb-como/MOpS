@@ -56,8 +56,8 @@ using namespace Camflow;
 /*
  *solve the stagnation/twinflame model
  */
-void StagFlow::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
-                   CamProfile& cp,CamConfiguration &config, Mechanism& mech){
+void StagFlow::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
+             CamConfiguration &config, CamSoot &cs,  Mechanism &mech ){
     /*
      *function to set up the solver.
      *Initialisation of the solution vector is
@@ -264,12 +264,12 @@ void StagFlow::ssolve(CamControl& cc){
     vector<doublereal> seg_soln_vec;
     CVodeWrapper cvw;
 
-    for(int i=0; i<cc.getNumIterations(); i++){
+    //for(int i=0; i<cc.getNumIterations(); i++){
 
         /*
          *integrate species
          */
-        cout << "Solving species: " << i << endl;
+        //cout << "Solving species: " << i << endl;
         eqn_slvd = EQN_SPECIES;
         seg_eqn = nSpc*nCells;
         band = nSpc*2;
@@ -281,25 +281,25 @@ void StagFlow::ssolve(CamControl& cc){
         mergeSpeciesVector(&seg_soln_vec[0]);
         reportToFile(cc.getMaxTime(),&solvect[0]);
         cvw.destroy();
-        /*
-         *Integrate energy
-         */
-        if(admin->getEnergyModel()==admin->ADIABATIC){
-            cout << "Solving energy: " << i << endl;
-            eqn_slvd = EQN_ENERGY;
-            seg_eqn = nCells;
-            band = 1;
-            extractEnergyVector(seg_soln_vec);
-            cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
-                    cc.getMaxTime(),band,*this);
-            cvw.solveDAE(CV_ONE_STEP,1e-03);
-            mergeEnergyVector(&seg_soln_vec[0]);
-            cvw.destroy();
+//        /*
+//         *Integrate energy
+//         */
+//        if(admin->getEnergyModel()==admin->ADIABATIC){
+//            cout << "Solving energy: " << i << endl;
+//            eqn_slvd = EQN_ENERGY;
+//            seg_eqn = nCells;
+//            band = 1;
+//            extractEnergyVector(seg_soln_vec);
+//            cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
+//                    cc.getMaxTime(),band,*this);
+//            cvw.solveDAE(CV_ONE_STEP,1e-03);
+//            mergeEnergyVector(&seg_soln_vec[0]);
+//            cvw.destroy();
+//
+//        }
+//
 
-        }
-
-
-    }
+    //}
 
 
     
@@ -327,10 +327,10 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f){
      */    
     if(eqn_slvd == EQN_ALL){
         if(admin->getEnergyModel() == admin->ADIABATIC){
-            saveMixtureProp(y,true,true);
+            saveMixtureProp(t,y,true,true);
             updateThermo();
         }else{
-            saveMixtureProp(y,false,true);
+            saveMixtureProp(t,y,false,true);
         }
         
         
@@ -341,7 +341,7 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f){
 
 
         speciesResidual(t,y,&resSp[0]);
-        energyResidual(t,y,&resT[0]);
+        energyResidual(t,y,&resT[0],true);
         
         
         
@@ -356,16 +356,16 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f){
     }else{
         if(eqn_slvd == EQN_SPECIES){
             mergeSpeciesVector(y);
-            saveMixtureProp(&solvect[0],false,true);                        
+            saveMixtureProp(t,&solvect[0],false,true);
             updateDiffusionFluxes();            
             speciesBoundary(t,y,f);
             speciesResidual(t,y,f);
         }else if(eqn_slvd==EQN_ENERGY){
             mergeEnergyVector(y);
-            saveMixtureProp(&solvect[0],true,false);            
+            saveMixtureProp(t,&solvect[0],true,false);
             updateDiffusionFluxes();
             updateThermo();         
-            energyResidual(t,y,f);
+            energyResidual(t,y,f,true);
             energyBoundary(t,y,f);
 
         }
@@ -449,14 +449,14 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y){
      *prepare
      */
     if(eqn_slvd == EQN_ALL){
-        saveMixtureProp(y,true,true);        
+        saveMixtureProp(time, y,true,true);
     }else{
         if(eqn_slvd == EQN_SPECIES){
             mergeSpeciesVector(y);
-            saveMixtureProp(&solvect[0],false,true);
+            saveMixtureProp(time, &solvect[0],false,true);
         }else if(eqn_slvd == EQN_ENERGY){
             mergeEnergyVector(y);
-            saveMixtureProp(&solvect[0],true,true);
+            saveMixtureProp(time,&solvect[0],true,true);
         }
     }
 
@@ -709,7 +709,7 @@ void StagFlow::header(){
 
 void StagFlow::reportToFile(doublereal t, doublereal* soln){
 
-    saveMixtureProp(soln,false,true);
+    saveMixtureProp(t,soln,false,true);
     doublereal sum;
     reporter->openFiles();
     reporter->writeHeader(headerData);

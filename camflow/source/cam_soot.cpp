@@ -288,7 +288,7 @@ void CamSoot::sootReactions(int cell, vector<doublereal>& conc, vector<doublerea
     /*
      *condensation
      */
-    doublereal ratePAH=0;
+    doublereal ratePAH;
     condensation(T,mom[0],conc_cgs[iInception], ratePAH);
 
 

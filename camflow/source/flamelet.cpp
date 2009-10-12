@@ -1,8 +1,8 @@
 
+#include "cam_setup.h"
+#include "cam_residual.h"
 #include <vector>
-
 #include "cam_reporter.h"
-
 #include <iostream>
 #include "cam_profile.h"
 #include "cam_admin.h"
@@ -16,55 +16,53 @@ using namespace std;
  *this is called by the model object. The boolean interface decides
  *if the call originates from the interface or from camflow kernel
  */
+void FlameLet::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp,
+        CamConfiguration& config, CamSoot& cs, Mechanism& mech){
+
+    solve(cc,ca,cg,cp,mech,false);
+    
+}
+
 void FlameLet::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
                                 CamProfile& cp, Mechanism& mech, bool interface){
+
 
     /*
      *check for mixture fraction bounds. In this case the input given in the
      * grid file is treated as mixture fraction coordinates. The reactor
      * length specified in the reactor section is simply ignored.
      */
-    camMech = &mech;
+   
+    CamBoundary cb;
     Thermo::Mixture mix(mech.Species());
     camMixture = &mix;
-    spv = camMixture->Species();
-    profile = &cp;    
 
-
-    admin = &ca;
-    reacGeom = &cg;
-    reacGeom->discretize();
-    /*
-     * 2 additional cells are padded to consider the
-     * inlet and the exhaust
-     */
-
-    reacGeom->addZeroWidthCells();
-    mCord = reacGeom->getnCells();
-    
-    /*
-     *get the operating pressure
-     */
-    opPre = ca.getPressure();
-    /*
-     *get the strain rate
-     */
-    strain = ca.getStrainRate();
-    profile->setGeometryObj(cg);
-    reporter = new CamReporter();
-    
-    /*
-     *array offsets for ODE
-     */
+    storeObjects(cc,ca,cg,cp,cb,mech);
+   
     nSpc = camMech->SpeciesCount(); // number of species
     ptrT = nSpc;                    // temperature offset
     nVar = nSpc+1;                  // number of variables
+
+    if(reacGeom->getnCells()==0) reacGeom->discretize();
+
+    reacGeom->addZeroWidthCells();
+
+    mCord = reacGeom->getnCells();
+   
     nEqn = nVar*mCord;              // number of equations
     iMesh_s = 1;                    // internal grid starting
     iMesh_e = mCord-1;              // internal grid ending
 
     cellBegin = 0;
     cellEnd = mCord;
+    
+    /*
+     *get the strain rate
+     */
+    strain = ca.getStrainRate();
+    //profile->setGeometryObj(cg);
+    reporter = new CamReporter();
+    
 
     /*
      *init the solution vector
@@ -82,11 +80,107 @@ void FlameLet::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
 
 }
 
+
+
+/**
+ *contuation call from an external code that
+ *solves for population balance
+ */
+void FlameLet::solve(vector<Thermo::Mixture>& cstrs,
+        const vector<vector<doublereal> >& iniSource,
+        const vector<vector<doublereal> >& fnlSource,
+        Mechanism& mech,
+        CamControl& cc,
+        CamAdmin& ca,
+        CamGeometry& cg,
+        CamProfile& cp){
+
+    CamBoundary cb;
+    Thermo::Mixture mix(mech.Species());
+    camMixture = &mix;
+
+    storeObjects(cc,ca,cg,cp,cb,mech);
+
+    nSpc = camMech->SpeciesCount(); // number of species
+    ptrT = nSpc;                    // temperature offset
+    nVar = nSpc+1;
+
+    reacGeom->addZeroWidthCells();
+
+    mCord = reacGeom->getnCells();
+
+    nEqn = nVar*mCord;              // number of equations
+    iMesh_s = 1;                    // internal grid starting
+    iMesh_e = mCord-1;              // internal grid ending
+
+    cellBegin = 0;
+    cellEnd = mCord;
+    
+     /*
+     *set the source terms for the particle process
+     */
+    setParticleSource(iniSource,fnlSource);
+    
+    /*
+     *  reset the solution vector. cstrs contain only
+     *  the interor cells. The inlet condisions need to
+     *  be taken care of.
+     */
+    CamBoundary left, right;
+    admin->getLeftBoundary(left);
+    admin->getRightBoundary(right);
+    storeInlet(left,fuel);    
+    storeInlet(right,oxid);
+    fuel.T = left.getTemperature();
+    oxid.T = right.getTemperature();
+
+    solvect.clear();
+    solvect.resize(nEqn,0.0);
+
+    /**!
+     *  Inlet  boundary ie. z=0
+     *  this is the oxidizer
+     */
+    //Species
+    for(int l=0; l<nSpc; l++){
+        solvect[l] = oxid.Species[l];
+    }
+    solvect[ptrT] = oxid.T;
+
+    /**!
+     *  Interior mesh points
+     */
+    for(int i=iMesh_s; i<iMesh_e;i++){
+        vector<doublereal> massFrac;
+        cstrs[i-1].GetMassFractions(massFrac);
+        for(int l=0; l<nSpc; l++){
+            solvect[i*nVar+l] = massFrac[l];
+        }
+        //Temperature
+        solvect[i*nVar+ptrT] = cstrs[i-1].Temperature();
+    }
+
+    /**
+     *  outlet boundary
+     *  this is the fuel inlet
+     */
+    //Species
+    for(int l=0; l<nSpc; l++){
+        solvect[iMesh_e*nVar+l] = fuel.Species[l];
+    }
+    //Temperature
+    solvect[iMesh_e*nVar+ptrT] = fuel.T;
+
+    
+    
+
+
+}
+
+
 void FlameLet::initSolutionVector(CamControl &cc){
 
 
-    //profile->setMixingCenter(0.5);
-    //profile->setMixingWidth(0.4);
     /*
      *initialize the geometry
      */
@@ -104,7 +198,9 @@ void FlameLet::initSolutionVector(CamControl &cc){
     fuel.T = left.getTemperature();
     oxid.T = right.getTemperature();
 
-
+    stoichZ = stoichiometricMixtureFraction();
+    profile->setMixingCenter(stoichZ);
+    profile->setMixingWidth(0.5*stoichZ);
     /*
      *initialize the ODE vector
      */
@@ -122,9 +218,26 @@ void FlameLet::initSolutionVector(CamControl &cc){
     initSpecies(right,left,cc,vSpec);
     /*
      *the following will initialize the temperature vecotor with
-     *a guassian profile
+     *a linear profile
      */
-    initTempGauss(vT);
+    //initTempGauss(vT);
+    doublereal inrsctOx, inrsctFl;
+    doublereal slopeOx, slopeFl;
+    inrsctOx = oxid.T;
+    
+    slopeOx = (2000.0-oxid.T)/stoichZ;
+    slopeFl = (2000.0-fuel.T)/(stoichZ-1.0);
+    inrsctFl = fuel.T - slopeFl;
+    vector<doublereal> position = reacGeom->getAxpos();
+    int len = position.size();
+    vT.resize(len,0.0);
+    for(unsigned int i=0; i<dz.size();i++){
+        if(position[i] < stoichZ){
+            vT[i] = slopeOx*position[i] + inrsctOx;
+        }else{
+            vT[i] = slopeFl*position[i] + inrsctFl;
+        }
+    }
 
     /*
      *fix the temperature for mixture fraction zero
@@ -376,6 +489,7 @@ void FlameLet::saveMixtureProp(doublereal* y){
     m_rho.resize(mCord,0.0);
     m_cp.resize(mCord,0.0);
     m_mu.resize(mCord,0.0);
+    m_u.resize(mCord,0.0);
 
     vector<doublereal> mf,htemp;
     htemp.resize(nSpc,0.0);
@@ -475,7 +589,7 @@ doublereal FlameLet::stoichiometricMixtureFraction(){
      *stoichiometric mass ratio
      */
     smr = stO2*0.032/avgMolWt;
-    
+    cout << "Avg mol wt " << avgMolWt << endl;
     /*
      *stoichiometric mixture fraction
      */
@@ -603,6 +717,6 @@ void FlameLet::header(){
  *set the scalar dissipation rate provided by the external
  *calling program
  */
-void FlameLet::setExternalScalarDissipationRate(doublereal sr){
+void FlameLet::setExternalScalarDissipationRate(const doublereal sr){
     sdr_ext = sr;
 }

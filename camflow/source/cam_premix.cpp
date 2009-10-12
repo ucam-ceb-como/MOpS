@@ -79,10 +79,10 @@ void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f){
      */
     if(eqn_slvd == EQN_ALL){
         if(admin->getEnergyModel() == admin->ADIABATIC){
-            saveMixtureProp(y,true,false);
+            saveMixtureProp(t,y,true,false);
             updateThermo();
         }else{
-            saveMixtureProp(y,false,false);
+            saveMixtureProp(t,y,false,false);
         }
         saveFlowVariables(y);
         updateDiffusionFluxes();
@@ -108,20 +108,20 @@ void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f){
     }else{
         if(eqn_slvd == EQN_SPECIES){
             mergeSpeciesVector(y);
-            saveMixtureProp(&solvect[0],false,false);
+            saveMixtureProp(t,&solvect[0],false,false);
             saveFlowVariables(&solvect[0]);
             updateDiffusionFluxes();
             speciesBoundary(t,y,f);
             speciesResidual(t,y,f);
         }else if(eqn_slvd == EQN_CONTINUITY){
             mergeContinuity(y);
-            saveMixtureProp(&solvect[0],false,false);
+            saveMixtureProp(t,&solvect[0],false,false);
             saveFlowVariables(&solvect[0]);
             massFlowBoundary(t,y,f);
             massFlowResidual(t,y,f);
         }else if(eqn_slvd==EQN_ENERGY){
             mergeEnergyVector(y);
-            saveMixtureProp(&solvect[0],true,false);
+            saveMixtureProp(t,&solvect[0],true,false);
             saveFlowVariables(&solvect[0]);
             updateDiffusionFluxes();
             updateThermo();
@@ -230,50 +230,34 @@ void CamPremix::energyBoundary(const doublereal& t, doublereal* y, doublereal* f
 
 
 
-void CamPremix::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
-        CamProfile& cp, CamSoot &cs, Mechanism& mech){
+void CamPremix::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
+             CamConfiguration &config, CamSoot &cs,  Mechanism &mech ){
     /*
      *function to set up the solver.
      *Initialisation of the solution vector is
      *done here
      */
+    
 
-    camMech = &mech;
+    
+    CamBoundary cb;
     Thermo::Mixture mix(mech.Species());
     camMixture = &mix;
-    spv = camMixture->Species();
-    profile = &cp;
+    
+    storeObjects(cc,ca,cg,cp,cb,mech);
 
-
-    CamBoundary cb;
-    admin = &ca;
-    reacGeom = &cg;
-    admin->getLeftBoundary(cb);
-    sootMom = &cs;
-
-    doublereal checkLen = cg.getLenth();
-
-    reacGeom->discretize();
-
-    if(checkLen != cg.getLenth()){
-        throw CamError("Specified reactor length differes from grid file\n");
-    }
-    /*
-     * 2 additional cells are padded to consider the
-     * inlet and the exhaust
-     */
-
-    reacGeom->addZeroWidthCells();
-
-    opPre = ca.getPressure();
-    profile->setGeometryObj(cg);
-    reporter = new CamReporter();
     nSpc = camMech->SpeciesCount();
-
     nVar = nSpc + 2;
     ptrF = nSpc;
     ptrT = ptrF + 1;
 
+
+    sootMom = &cs;
+
+    
+    if(reacGeom->getnCells()==0) reacGeom->discretize();
+    
+    reacGeom->addZeroWidthCells();
 
     nEqn = nVar *(reacGeom->getnCells());
 
@@ -286,11 +270,12 @@ void CamPremix::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
     cellEnd = reacGeom->getnCells();
 
     initSolutionVector(cb,cc);
-
+    reporter = new CamReporter();
     reporter->header("PREMIX");
     reporter->problemDescription(cb,*this);
     header();
 
+    
     /*
      *solution call
      */
@@ -304,6 +289,147 @@ void CamPremix::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
 
 }
 
+/**
+ *  Save the inlet after integration
+ */
+void CamPremix::saveInlet(){
+    
+    soln_inlet.Species.clear();
+    for(int l=0; l<nSpc;l++){
+        soln_inlet.Species.push_back(s_mf(0,l));
+    }
+    soln_inlet.Dens = m_rho[0];
+    soln_inlet.FlowRate = m_flow[0];
+    soln_inlet.T = m_T[0];
+    soln_inlet.Vel = m_u[0];
+}
+
+
+
+/*
+ *solve the problem  for continuation calls from the external interface
+ */
+void CamPremix::solve(vector<Thermo::Mixture>& cstrs,
+        const vector< vector<doublereal> >& iniSource,
+        const vector< vector<doublereal> >& fnlSource,
+        Mechanism& mech,
+        CamControl& cc,
+        CamAdmin& ca,
+        CamGeometry& cg, CamProfile& cp){
+
+
+    CamBoundary cb;
+    Thermo::Mixture mix(mech.Species());
+    camMixture = &mix;
+
+    storeObjects(cc,ca,cg,cp,cb,mech);
+
+
+    nSpc = camMech->SpeciesCount();
+    nVar = nSpc + 2;
+    ptrF = nSpc;
+    ptrT = ptrF + 1;
+
+
+    reacGeom->addZeroWidthCells();
+
+    nEqn = nVar *(reacGeom->getnCells());
+
+
+    /*
+     *this loop is for residual evaluation by the base class
+     */
+    iMesh_s = 1;
+    iMesh_e = reacGeom->getnCells()-1;
+    cellBegin = 0;
+    cellEnd = reacGeom->getnCells();
+
+    /*
+     *set the source terms for the particle process
+     */
+    setParticleSource(iniSource,fnlSource);
+    
+    /*
+     *initialise the solution vector. The cstrs contain only the interior
+     *cells. The inlet concentration needs to be taken care of
+     */
+
+    solvect.clear();
+    solvect.resize(nEqn,0.0);
+    /*
+     *-----------------------------------------
+     *inlet cell
+     *-----------------------------------------//
+     */
+
+    //species
+    for(int l=0; l<nSpc; l++){
+        solvect[l] = soln_inlet.Species[l];
+    }
+    //Temperature
+    solvect[ptrT] = ud_inlet.T;
+    //mass flow
+    solvect[ptrF] = ud_inlet.FlowRate;
+
+    /*
+     *interior cells
+     */
+    int len = cstrs.size();
+    for(int i=iMesh_s; i<iMesh_e; i++){
+        vector<doublereal> massFrac;
+        cstrs[i-1].GetMassFractions(massFrac);
+        for(int l=0; l<nSpc; l++){
+            solvect[i*nVar+l]=massFrac[l];
+        }
+        //Temperature
+        solvect[i*nVar+ptrT] = cstrs[i-1].Temperature();
+        //Mass flow
+        solvect[i*nVar+ptrF] = cstrs[i-1].MassDensity()*cstrs[i-1].Velocity();
+    }
+
+    /*-------------------------------------
+     *last cell
+     *
+     *-----------------------------------//
+     */
+
+    //species
+    for(int l=0; l<nSpc; l++)
+        solvect[iMesh_e*nVar+l] = solvect[(iMesh_e-1)*nVar+l];
+
+    //Temperature
+    solvect[iMesh_e*nVar+ptrT] = solvect[(iMesh_e-1)*nVar+ptrT];
+    //Mass flow
+    solvect[iMesh_e*nVar+ptrF] = solvect[(iMesh_e-1)*nVar+ptrF];
+
+
+    /*
+     *solve the problem
+     */
+    if(cc.getSolutionMode() == cc.COUPLED)
+        csolve(cc);
+    else{
+        ssolve(cc);
+        csolve(cc);
+    }
+
+
+    /*
+     *set the solution back into the vector of mixtures
+     */
+    for(int i=iMesh_s; i<iMesh_e; i++){
+        vector<doublereal> massfracs;
+        for(int l=0; l<nSpc; l++){
+            massfracs.push_back(solvect[i*nVar+l]);
+        }
+        cstrs[i-1].SetMassFracs(massfracs);
+        cstrs[i-1].SetTemperature(m_T[i]);
+        cstrs[i-1].SetMassDensity(m_rho[i]);
+        cstrs[i-1].SetVelocity(m_u[i]);
+    }
+    
+}
+
 void CamPremix::initSolutionVector(CamBoundary &cb, CamControl &cc){
 
     
@@ -313,11 +439,7 @@ void CamPremix::initSolutionVector(CamBoundary &cb, CamControl &cc){
     //admin->getLeftBoundary(cb);
     opPre = admin->getPressure();
 
-//    /*
-//     *assert the inlet flow rate specification
-//     */
-//    if(cb.getFlowRate() == 0)
-//        throw CamError("premix error: inlet flow rate not specified\n");
+
 
     storeInlet(cb,ud_inlet);
     /*
@@ -446,7 +568,7 @@ void CamPremix::report(doublereal t, doublereal* soln, doublereal& res){
 
 
 void CamPremix::reportToFile(doublereal t, doublereal* soln){
-    saveMixtureProp(soln,false,false);
+    saveMixtureProp(t,soln,false,false);
     doublereal sum =0;
 
     reporter->openFiles();

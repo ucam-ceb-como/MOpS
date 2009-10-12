@@ -167,3 +167,25 @@ void CamSetup::storeInlet(CamBoundary& cb, inletStruct& ud_inlet){
     ud_inlet.Dk = camMixture->getMixtureDiffusionCoeff(opPre);
     
 }
+
+
+void CamSetup::storeObjects(CamControl& cc,
+                            CamAdmin& ca,
+                            CamGeometry& cg,
+                            CamProfile& cp,
+                            CamBoundary& cb,
+                            Mechanism& mech){
+
+    camMech = &mech;
+    control = &cc;
+    spv = camMixture->Species();
+    profile = &cp;
+    admin = &ca;
+    reacGeom = &cg;
+    CamBoundary cblocal;
+    admin->getLeftBoundary(cblocal);
+    cb = cblocal;
+    opPre = ca.getPressure();
+    profile->setGeometryObj(cg);
+}
+

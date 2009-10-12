@@ -59,6 +59,7 @@ CamControl::CamControl(){
     setIniStep(0.0);
     setMaxTime(1e5);
     setNumIterations(1);
+    setSpeciesUnderRelax(1.0);
 }
 
 void CamControl::setSpeciesRelTol(doublereal tol){
@@ -126,6 +127,10 @@ void CamControl::setNumIterations(int n){
     nIter = n;
 }
 
+void CamControl::setSpeciesUnderRelax(doublereal ur){
+    urSpecies = ur;
+}
+
 doublereal CamControl::getSpeciesRelTol() const{   
     return this->relTolSp;
 }
@@ -190,4 +195,7 @@ int CamControl::getNumIterations() const{
     return nIter;
 }
 
+doublereal CamControl::getSpeciesUnderRelax() const{
+    return urSpecies;
+}
 

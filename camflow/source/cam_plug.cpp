@@ -62,8 +62,8 @@ void CamPlug::getInitial(vector<doublereal>& initial){
 }
 
 //plug solve main call
-void CamPlug::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
-                                Mechanism &mech){
+void CamPlug::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
+             CamConfiguration &config, CamSoot &cs,  Mechanism &mech ){
 
     camMech = &mech;
     Thermo::Mixture mix(mech.Species());

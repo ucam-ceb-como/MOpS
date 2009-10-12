@@ -51,7 +51,7 @@ using namespace std;
  *configuration ID and calls the passes the control to the right
  * reactor object
  */
-void CamModels::solve(CamAdmin& ca, CamBoundary& cb,
+void CamModels::solve(CamAdmin& ca, 
         CamConfiguration& config,
         CamControl& cc,
         CamGeometry& cg,
@@ -62,74 +62,126 @@ void CamModels::solve(CamAdmin& ca, CamBoundary& cb,
     int configID;
     configID = config.getConfiguration();
 
-    
 
+    CamResidual *rModel;
     if(configID == config.PLUG){
-        CamPlug cplug;
-        try{
-            cplug.solve(cc,ca,cg,cp,mech);
-        }catch(CamError ce){
-            cout << ce.errorMessge << endl;
-        }
-        
-        
+        rModel = new CamPlug();
     }else if(configID == config.PREMIX){
-        CamPremix cpremix;
-        try{
-            cpremix.solve(cc,ca,cg,cp,cs,mech);
-        }catch(CamError ce){
-            cout << ce.errorMessge << endl;
-        }
-        
-    }else if(configID == config.STAGFLOW || configID == config.COUNTERFLOW){
-        
-        StagFlow stflow;
-
-        try{
-            stflow.solve(cc,ca,cg,cp,config, mech);
-        }catch(CamError ce){
-            cout << ce.errorMessge << endl;
-        }
-        
+        rModel = new CamPremix();
     }else if(configID == config.BATCH_CV){
-        Batch batch;
-        try{
-            batch.solve(cc,ca,cg,cp,cs,mech);
-        }catch(CamError ce){
-            cout << ce.errorMessge << endl;
-        }
-        
-    }else if(configID == config.FLAMELET){
-        FlameLet flmlt;
-        
-        try{
-            flmlt.solve(cc,ca,cg,cp,mech,false);
-        }catch(CamError ce){
-            cout << ce.errorMessge << endl;
-        }
-        
-    } else{
-        cout << "Unknown reactor model\n";
+        rModel = new Batch();
+    }else if(configID == config.STAGFLOW || configID == config.COUNTERFLOW){
+        rModel = new StagFlow();
+    }else if(configID==config.FLAMELET){
+        rModel = new FlameLet();
+    }else{
+        throw CamError("Unknown reactor model\n");
     }
-    
-}
+    try{
+        rModel->solve(cc,ca,cg,cp,config,cs,mech);
+    }catch(CamError &ce){
+        cout << ce.errorMessge << endl;
+    }
 
+}
+/*
+ *this function is involked if the call initiates from the
+ *external interface. Once the steady state is attained
+ *species properties are set to the mixtures
+ */
 
 //void CamModels::solve(CamAdmin& ca,
-//                        CamBoundary& cb,
-//                        CamConfiguration& config,
-//                        CamControl& cc,
-//                        CamGeometry& cg,
-//                        CamProfile& cp,
-//                        CamSoot& cs,
-//                        Mechanism& mech,
-//                        FlameLet& flmlt, doublereal sdr){
+//                                    CamConfiguration& config,
+//                                    CamControl& cc,
+//                                    CamGeometry& cg,
+//                                    CamProfile& cp,
+//                                    CamSoot& cs,
+//                                    Mechanism& mech,
+//                                    vector<Thermo::Mixture>& mixtures){
 //
-//        flmlt.setExternalScalarDissipationRate(sdr);
-//        try{
-//            flmlt.solve(cc,ca,cg,cp,mech,true);
-//        }catch(CamError ce){
-//            cout << ce.errorMessge << endl;
+//    int configID;
+//    configID = config.getConfiguration();
+//
+//
+//    CamResidual *rModel;
+//    if(configID == config.PLUG){
+//        rModel = new CamPlug();
+//    }else if(configID == config.PREMIX){
+//        rModel = new CamPremix();
+//    }else if(configID == config.BATCH_CV){
+//        rModel = new Batch();
+//    }else if(configID == config.STAGFLOW || configID == config.COUNTERFLOW){
+//        rModel = new StagFlow();
+//    }else if(configID==config.FLAMELET){
+//        rModel = new FlameLet();
+//    }else{
+//        throw CamError("Unknown reactor model\n");
+//    }
+//    try{
+//        rModel->solve(cc,ca,cg,cp,config,cs,mech);
+//    }catch(CamError &ce){
+//        cout << ce.errorMessge << endl;
+//    }
+//
+//    //Get the species mass fractions
+//    Array2D massFracs;
+//    rModel->getSpeciesMassFracs(massFracs);
+//
+//    //storage for density, velocity, and temperature
+//    vector<doublereal> density, vel, temp;
+//
+//    //Get the density
+//    rModel->getDensityVector(density);
+//    //Get the velocity
+//    rModel->getVelocity(vel);
+//    //Get the temperature
+//    rModel->getTemperatureVector(temp);
+//
+//    /*
+//     * Set the properties to the mixtures. If the mixture
+//     *size is zero, then create the mixture and push back
+//     *to the vector
+//     */
+//    int nCells = cg.getnCells();
+//    if(mixtures.size() >0){
+//        if(mixtures.size() != nCells-2)
+//            throw("size of mixtures is not consistant with the grid\n");
+//        int nSp = mech.SpeciesCount();
+//        for(int i=0; i<nCells-2;i++){
+//            vector<doublereal> mf;
+//            for(int l=0; l<nSp; l++){
+//                mf.push_back(massFracs(i+1,l));
+//            }
+//            mixtures[i].SetMassFracs(mf);
+//            mixtures[i].SetMassDensity(density[i+1]);
+//            mixtures[i].SetTemperature(temp[i+1]);
+//            mixtures[i].SetVelocity(vel[i+1]);
 //        }
+//    }else{
+//
+//        Thermo::Mixture mix(mech.Species());
+//        int nSp = mech.SpeciesCount();
+//        for(int i=0; i<nCells-2;i++){
+//            vector<doublereal> mf;
+//            for(int l=0; l<nSp; l++){
+//                mf.push_back(massFracs(i+1,l));
+//            }
+//            mix.SetMassFracs(mf);
+//            mix.SetMassDensity(density[i+1]);
+//            mix.SetTemperature(temp[i+1]);
+//            mix.SetVelocity(vel[i+1]);
+//            mixtures.push_back(mix);
+//        }
+//    }
 //}
+//
+
+
+
+
+
+
+
+
+
 

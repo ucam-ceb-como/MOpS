@@ -53,6 +53,7 @@
 #include "cam_models.h"
 #include "cam_soot.h"
 #include "interface.h"
+#include "cam_premix.h"
 /*
  * 
  */
@@ -68,7 +69,7 @@ int main() {
     string fCamFlow("camflow.xml");
 
     //mechanism object
-    static Mechanism mech;
+    Mechanism mech;
 
     //read Camflow input file
     CamControl cc;
@@ -90,9 +91,25 @@ int main() {
     
     //read mechanism, thermo and trasnport data    
     IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,fTrans);
+
+    //Following is a test call to the interface
+//-----------------------------------------------------------
+//    try{
+//        vector<doublereal> dz; dz.clear();
+//        Thermo::Mixture mix(mech.Species());
+//        vector<Thermo::Mixture> mixtures;
+//        //CamPremix cp;
+//        FlameLet fl;
+//        Interface intf(mech,dz,mixtures,&fl);
+//    }catch(CamError &ce){
+//        cout << ce.errorMessge << endl;
+//    }
+//    cout << "Calculation finished\n";
+//    int dd; cin >> dd;
+//----------------------------------------------------------
         
     try{
-        models.solve(ca,cb,config,cc,cg,cp,cSoot,mech);
+        models.solve(ca,config,cc,cg,cp,cSoot,mech);
     }catch(CamError &ce){
         cout << ce.errorMessge;
     }

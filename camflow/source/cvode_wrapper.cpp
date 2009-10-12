@@ -68,7 +68,7 @@ doublereal& CVodeWrapper::solve(int stopMode){
             cout << "Cvode Integration error\n";            
         }else{
             reacPtr->report(currentTime,NV_DATA_S(y));
-        }
+        }        
     }while(currentTime < maxTime);
     
     CVodeGetDky(cvode_mem,currentTime,1,yPrime);
