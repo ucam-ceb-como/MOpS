@@ -67,19 +67,18 @@ int Geometry::LocalGeometry1d::calcDestination(const Direction direction) const 
     return mGeom->calcDestination(mIndex, direction);
 }
 
-/*!
- * Is transport in the indicated direction permitted by the geometry.  The
- * most likely (currently only) reason for a negative answer is a Neumann
- * boundary condition.
+/*
+ * This method is mainly provided for use in diffusion process jump rate
+ * calculations.  It checks whether a zero spatial gradient condition is imposed
+ * on the solution at a particular point and direction, which would ensure no
+ * diffusion.
  *
- *\param[in]	direction	Proposed transport direction
+ *\param[in]    direction       Direction in which to look at gradient conditions
  *
- *\return       True if transport is permitted in direction indicated from the local cell
+ *\return       True iff there is a zero gradient condition
  */
-bool Geometry::LocalGeometry1d::permittedDirection(const Direction direction) const {
-    // If the direction is included in the blocked directions mask will return non-zero (=true) when
-    // the bitwise and is carried out.  This is negated to get the correct return value.
-    return !(mGeom->blockedDirections(mIndex) & direction);
+bool Geometry::LocalGeometry1d::zeroGradient(const Direction direction) const {
+    return mGeom->zeroGradient(mIndex, direction);
 }
 
 /*!
@@ -93,3 +92,37 @@ Geometry::real Geometry::LocalGeometry1d::calcSpacing(const Direction direction)
     return mGeom->calcSpacing(mIndex, direction);
 }
 
+/*!
+ * Get all the cell vertices, the order in which the vertices is not guaranteed.
+ *
+ * If no geometry data is present (mGeom == NULL) then the vertices will be
+ * returned as 0.
+ *
+ *\return       Vector of vertex positions
+ */
+Geometry::fvector Geometry::LocalGeometry1d::cellVertices() const {
+    if(mGeom != NULL) {
+        return mGeom->cellVertices(mIndex);
+    }
+
+    // No information available so return both end points as 0.
+    return fvector(2, 0.0);
+}
+
+/*!
+ * Check if x is contained in the local cell.  If there is no local cell, then
+ * x is not inside a local cell.
+ *
+ *@param[in]    x       Position to check for inclusion in local cell
+ *
+ *@return       True iff x is inside the local cell
+ */
+bool Geometry::LocalGeometry1d::isInCell(const real x) const {
+    if(mGeom != NULL) {
+        // Have some information to check against
+        return mGeom->isInCell(mIndex, x);
+    }
+
+    // There is no cell that could possibly contain x
+    return false;
+}

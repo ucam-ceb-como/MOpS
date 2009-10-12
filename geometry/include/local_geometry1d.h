@@ -42,7 +42,6 @@
 
 #include "types.h"
 
-//! Layout and boundaries of grids/meshes
 namespace Geometry {
     //forward declaration
     class Geometry1d;
@@ -71,14 +70,20 @@ public:
     //! Build an object with geometry information around the specified cell
     LocalGeometry1d(const Geometry1d &geom, const size_t cell_index);
 
-    //! Directions in which transport will not occur from a cell
-    bool permittedDirection(const Direction direction) const;
+    //! True is solution is assumed to be spatially homogeneous in direction.
+    bool zeroGradient(const Direction direction) const;
 
     //! Find index of destination cell
     int calcDestination(const Direction direction) const;
 
     //! Distance to next cell centre in specified direction
     real calcSpacing(const Direction direction) const;
+
+    //! Unordered list of cell vertices
+    fvector cellVertices() const;
+
+    //! Check if a position is within the local cell
+    bool isInCell(const real x) const;
 
 private:
     //! Original geometry object which holds the layout information

@@ -3,10 +3,12 @@
  * \author Robert I A Patterson
  *
  * \brief Spatial grid layout for 1d system
+ *
+ * \mainpage Library to represent spatial structure of a one dimensional system.
 
  Copyright (C) 2009 Robert I A Patterson.
 
- Licence:
+ \section Licence
     This file is part of "brush".
 
     brush is free software; you can redistribute it and/or
@@ -23,7 +25,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-  Contact:
+  \section Contact
     Prof Markus Kraft
     Dept of Chemical Engineering
     University of Cambridge
@@ -46,6 +48,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <sstream>
+#include <limits>
 
 /*!
  * Read the geometry from an xml tree which should have a root node of
@@ -167,23 +170,48 @@ Geometry::real Geometry::Geometry1d::cellCentre(const size_t cell_index) const {
 }
 
 /*!
+ * Get all the cell vertices, the order in which the vertices is not guaranteed.
+ * No index checking.
+ *
+ *\param[in]    cell_index      Index of cell for which vertices are requested
+ *
+ *\return       Vector of vertex positions
+ */
+Geometry::fvector Geometry::Geometry1d::cellVertices(const size_t cell_index) const {
+
+    // In 1d case there will be exactly two vertices, the left and right hand ends
+    fvector vertices(2);
+
+    // left end
+    vertices[0] = mCellEnds[cell_index];
+
+    // right end
+    vertices[1] =  mCellEnds[cell_index + 1];
+
+    return vertices;
+}
+
+/*!
  * Find the index of the cell containing the specified position or return
  * a negative number to show that the position is outside the area covered
- * by the geometry.
+ * by the geometry.  Cells are regarded as closed at the starting (left) end and
+ * open at the other (right) end.  The reverse effect would be achieved by using
+ * lower_bound in place of upper_bound.  The current convention is chosen on the
+ * so that particles can enter the positive half line at 0.
  *
  *@param[in]    x   Position for which cell index requested
  *
  *@return       Cell index
  */
 int Geometry::Geometry1d::containingCell(const real x) const {
-   const fvector::const_iterator it = std::lower_bound(mCellEnds.begin(), mCellEnds.end(), x);
+   const fvector::const_iterator it = std::upper_bound(mCellEnds.begin(), mCellEnds.end(), x);
 
    if(it == mCellEnds.begin()) {
-       // Position is before start of first cell
+       // Position is strictly before start of first cell
        return -1;
    }
    else if(it == mCellEnds.end()) {
-       // Position is after end of last cell
+       // Position is at or after end of last cell
        return -1;
    }
 
@@ -198,36 +226,32 @@ int Geometry::Geometry1d::containingCell(const real x) const {
  *\param[in]    origin_index    Index of cell from which the transport is starting
  *\param[in]    direction       Direction in which particle is to move
  *
- *\return   Index of destination cell or a negative number of no destination
+ *\return   Index of destination cell or a negative number if no destination
+ *
+ *@exception    std::logic_error    Unhandled enum value
  */
 int Geometry::Geometry1d::calcDestination(const size_t origin_index, const Direction direction) const {
     int newIndex;
     switch(direction) {
         case left:
-            if(origin_index == 0 && mLeftBoundary == neumann) {
-                // Transport across the boundary does not happen, so destination
-                // is back where it came from
-                newIndex = origin_index;
-            }
-            else {
-                // Destination is one cell to the left, which may mean leaving
-                // the domain.
-                newIndex = origin_index - 1;
-            }
+            // Moving one cell left will reduce the index by 1.  If origin_index
+            // is already 0, the leftmost cell, then the particle will leave the
+            // domain of the geometry as shown by the destination of -1.
+            newIndex = origin_index - 1;
             break;
         case right:
-            if((origin_index + 1) == numCells() && mRightBoundary == neumann) {
-                // Transport across the boundary does not happen, so destination
-                // is back where it came from
-                newIndex = origin_index;
+            if((origin_index + 1) == numCells()) {
+                // Moving right from the rightmost cell involves leaving the
+                // domain so a negative value must be returned.  Here the most
+                // negative possible number is chosen, to give the effect of
+                // wrapping round from the maximum value of int.
+                newIndex = std::numeric_limits<int>::min();
             }
             else {
+                // Moving right is simply a case of going to the next cell
                 newIndex = origin_index + 1;
             }
             
-            // Check if the particle has left the right hand end of the domain
-            if(newIndex >= static_cast<int>(numCells()))
-                newIndex = -1;
             break;
         case none:
             newIndex = -1;
@@ -280,39 +304,50 @@ Geometry::real Geometry::Geometry1d::calcSpacing(const size_t cell_index, const 
 }
 
 /*
- * Construct a bitmask showing all the directions in which transport is not possible.
- * This will generally be because of a Neumann boundary condition at the cell edge.
- * The bit mask primitive will be made up of the values of Transport::Direction
- * values.
+ * This method is mainly provided for use in diffusion process jump rate
+ * calculations.  It checks whether a zero spatial gradient condition is imposed
+ * on the solution at a particular point and direction, which would ensure no
+ * diffusion.
  *
- * Note the case when there is only one cell, with Neumann conditions at both ends.
- * It is important that one does not assume that a cell can only have one blocked
- * direction.
+ *\param[in]    cell_index      Cell for which to look for gradient conditions
+ *\param[in]    direction       Direction in which to look at gradient conditions
  *
- *\param[in]    cell_index      Cell for which to find blocked directions
- *
- *\return       Bitmask of blocked directions
+ *\return       True iff there is a zero gradient condition
  */
-Geometry::DirectionMask Geometry::Geometry1d::blockedDirections(const size_t cell_index) const {
-    // Start off with no directions blocked
-    DirectionMask blocked = none;
+bool Geometry::Geometry1d::zeroGradient(const size_t cell_index,
+                                        const Direction direction) const {
+    // Start off assuming spatial solution gradients are possible
+    bool isZero = false;
 
     // If the left hand end has a Neumann boundary there will be no leftwards
-    // flow from the cell
-    if(cell_index == 0 && mLeftBoundary == neumann)
-        blocked |= left;
+    // gradient
+    if(cell_index == 0 && direction == left && mLeftBoundary == neumann)
+        isZero = true;
 
     // If the right hand end has a Neumann boundary there will be no rightwards
-    // flow from the cell
-    if(cell_index == (numCells() - 1) && mRightBoundary == neumann)
-        blocked |= right;
+    // gradient
+    if(cell_index == (numCells() - 1) && direction == right && mRightBoundary == neumann)
+        isZero = true;
 
-    return blocked;
+    return isZero;
 }
 
+/*!
+ * Note that cells are taken to be closed at their left or lower end and open
+ * at their right or upper end.  This method need to be consistent with the
+ * \ref containingCell method also in this class.
+ *
+ *@param[in]    cell_index      The cell which may contain the position
+ *@param[in]    x               Position to check for inclusion in cell
+ *
+ *@return       True iff x in contained in cell with index cell_index
+ */
+bool Geometry::Geometry1d::isInCell(const size_t cell_index, const real x) const {
+    return (mCellEnds[cell_index] <= x && x < mCellEnds[cell_index + 1]);
+}
 
 /*!
- * Write the cell boundaries to a string in a human readable form useful for logging.
+ *@return The cell boundaries in a human readable form useful for logging.
  */
 std::string Geometry::Geometry1d::printMesh() const {
     std::ostringstream log;

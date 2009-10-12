@@ -76,17 +76,23 @@ public:
     //! Position of cell centre
     real cellCentre(const size_t cell_index) const;
 
+    //! List of cell vertices
+    fvector cellVertices(const size_t cell_index) const;
+
     //! Index of cell containing specified position
     int containingCell(const real x) const;
 
-    //! Directions in which transport will not occur from a cell
-    DirectionMask blockedDirections(const size_t cell_index) const;
+    //! True if the solution is assumed to be spatially homogeneous
+    bool zeroGradient(const size_t cell_index, const Direction direction) const;
 
     //! Find destination of a particle being transported
     int calcDestination(const size_t origin_index, const Direction direction) const;
 
     //! Calculate grid spacing in specified direction
     real calcSpacing(const size_t cell_index, const Direction direction) const;
+
+    //! Check if position is in a particular cell
+    bool isInCell(const size_t cell_index, const real x) const;
 
 private:
     //! Cells ends (should be 1 longer than array of reactors)

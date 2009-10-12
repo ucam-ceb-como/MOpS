@@ -65,14 +65,6 @@ namespace Geometry {
         right = 0x02,
     };
 
-    /*! 
-     *\brief Mask composed of Direction values by bitwise composition
-     */
-    typedef unsigned int DirectionMask;
-
-    //! Constant to indicate no transport (for use in 0d code)
-    //const DirectionMask NoTransport = ~none;
-
     //! Floating point type to use throughout
     typedef double real;
 
@@ -81,10 +73,10 @@ namespace Geometry {
 
     //! Specify how solution behaves at edges of domain
     enum BoundaryConditionType {
-        //! Function takes value 0 on boundary
+        //! Solution has no particles at boundary
         dirichlet,
 
-        //! Function has 0 derivative normal to boundary
+        //! Particle distribution is constant along lines normal to boundary
         neumann,
     };
 
