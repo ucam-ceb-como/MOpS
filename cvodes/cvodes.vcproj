@@ -151,86 +151,6 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath=".\source\cvodea.c"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodea_io.c"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes.c"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_band.c"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_band_impl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_bandpre.c"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_bandpre_impl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_bbdpre.c"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_bbdpre_impl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_dense.c"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_dense_impl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_diag.c"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_diag_impl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_impl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_io.c"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_spbcgs.c"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_spgmr.c"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_spils.c"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_spils_impl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\source\cvodes_sptfqmr.c"
-				>
-			</File>
 			<Filter
 				Name="nvec_ser"
 				>
@@ -259,6 +179,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\source\sundials\sundials_direct.c"
+					>
+				</File>
+				<File
 					RelativePath=".\source\sundials\sundials_iterative.c"
 					>
 				</File>
@@ -271,10 +195,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\source\sundials\sundials_smalldense.c"
-					>
-				</File>
-				<File
 					RelativePath=".\source\sundials\sundials_spbcgs.c"
 					>
 				</File>
@@ -284,6 +204,94 @@
 				</File>
 				<File
 					RelativePath=".\source\sundials\sundials_sptfqmr.c"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="cvodes"
+				>
+				<File
+					RelativePath=".\source\cvodes\cvodea.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodea_io.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_band.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_bandpre.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_bandpre_impl.h"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_bbdpre.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_bbdpre_impl.h"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_dense.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_diag.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_diag_impl.h"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_direct.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_direct_impl.h"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_impl.h"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_io.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_lapack.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_spbcgs.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_spgmr.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_spils.c"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_spils_impl.h"
+					>
+				</File>
+				<File
+					RelativePath=".\source\cvodes\cvodes_sptfqmr.c"
 					>
 				</File>
 			</Filter>
@@ -309,6 +317,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\sundials\sundials_direct.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\sundials\sundials_fnvector.h"
 					>
 				</File>
@@ -317,15 +329,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\sundials\sundials_lapack.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\sundials\sundials_math.h"
 					>
 				</File>
 				<File
 					RelativePath=".\include\sundials\sundials_nvector.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\sundials\sundials_smalldense.h"
 					>
 				</File>
 				<File
@@ -378,6 +390,14 @@
 				</File>
 				<File
 					RelativePath=".\include\cvodes\cvodes_diag.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\cvodes\cvodes_direct.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\cvodes\cvodes_lapack.h"
 					>
 				</File>
 				<File
