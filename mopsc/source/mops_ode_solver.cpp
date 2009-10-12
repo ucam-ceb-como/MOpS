@@ -115,10 +115,10 @@ ODE_Solver &ODE_Solver::operator=(const Mops::ODE_Solver &rhs)
         }
         // Set values of varibles to rhs variables.
         for (unsigned int i = 0; i < m_sensi.NParams(); i++) {
-            m_yS[i] = N_VClone_Serial(rhs.m_yS[i]);
+            m_yS[i] = CVODES::N_VExactClone_Serial(rhs.m_yS[i]);
         }
         if (m_yvec != NULL) N_VDestroy_Serial(m_yvec);
-        m_yvec = N_VClone_Serial(rhs.m_yvec);
+        m_yvec = CVODES::N_VExactClone_Serial(rhs.m_yvec);
         //if (m_solvec != NULL) N_VDestroy_Serial(m_solvec);
         //VCopy_Serial(rhs.m_solvec, m_solvec);
 

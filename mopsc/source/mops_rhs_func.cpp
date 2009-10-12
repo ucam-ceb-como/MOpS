@@ -50,9 +50,9 @@
 // the RHS function.  In this case the void* pointer should be cast
 // into a Reactor object.
 int rhsFn_CVODE(double t,      // Independent variable.
-                            N_Vector y,    // Solution array.
-                            N_Vector ydot, // Derivatives of y wrt t.
-                            void* solver) // Pointer to ODE solver object.
+                N_Vector y,    // Solution array.
+                N_Vector ydot, // Derivatives of y wrt t.
+                void* solver) // Pointer to ODE solver object.
 {
     // Cast the Solver object.
     Mops::ODE_Solver *s = static_cast<Mops::ODE_Solver*>(solver);
@@ -78,9 +78,9 @@ int rhsFn_CVODE(double t,      // Independent variable.
 // This is vital for CVODES to use internal sensitivity Rhs estimator as we
 // do not privide CVODES a function to evaluate
 int rhsFn_CVODES(double t,      // Current flow time.
-                N_Vector y,     // The current solution variables.
-                N_Vector ydot,  // Derivatives to return.
-                void* solver)   // An ODE_Solver object (to be cast).
+                 N_Vector y,     // The current solution variables.
+                 N_Vector ydot,  // Derivatives to return.
+                 void* solver)   // An ODE_Solver object (to be cast).
 {
     // Cast the Solver object.
     Mops::ODE_Solver *s = static_cast<Mops::ODE_Solver*>(solver);
@@ -96,9 +96,15 @@ int rhsFn_CVODES(double t,      // Current flow time.
 // allow the calling code to pass whatever information it wants to
 // the function.  In this case the void* pointer should be cast
 // into an ODE_Solver object.
-int jacFn_CVODE(long int N, double t, N_Vector y,
-                            N_Vector ydot, DlsMat J, void* solver,
-                            N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+int jacFn_CVODE(long int N,
+                double t,
+                N_Vector y,
+                N_Vector ydot,
+                DlsMat J,
+                void* solver,
+                N_Vector tmp1,
+                N_Vector tmp2,
+                N_Vector tmp3)
 {
     // Cast the Solver object.
     Mops::ODE_Solver *s = static_cast<Mops::ODE_Solver*>(solver);
@@ -116,9 +122,15 @@ int jacFn_CVODE(long int N, double t, N_Vector y,
 // as jacFn_CVODE but it allows CVODES to have access to problem parameters.
 // This is vital for CVODES to use internal sensitivity Rhs estimator as we
 // do not privide CVODES a function to evaluate
-int jacFn_CVODES(long int N, double t, N_Vector y,
-                            N_Vector ydot, DlsMat J, void* solver,
-                            N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+int jacFn_CVODES(long int N,
+                 double t,
+                 N_Vector y,
+                 N_Vector ydot,
+                 DlsMat J,
+                 void* solver,
+                 N_Vector tmp1,
+                 N_Vector tmp2,
+                 N_Vector tmp3)
 {
     // Cast the Solver object.
     Mops::ODE_Solver *s = static_cast<Mops::ODE_Solver*>(solver);
@@ -133,10 +145,13 @@ int jacFn_CVODES(long int N, double t, N_Vector y,
 }
 
 int rhsSensFn_CVODES(int Ns, realtype t,
-                             N_Vector y, N_Vector ydot,
-                             N_Vector *yS, N_Vector *ySdot,
-                             void *solver,
-                             N_Vector tmp1, N_Vector tmp2)
+                     N_Vector y,
+                     N_Vector ydot,
+                     N_Vector *yS,
+                     N_Vector *ySdot,
+                     void *solver,
+                     N_Vector tmp1,
+                     N_Vector tmp2)
 
 {
     // Cast the Solver object.

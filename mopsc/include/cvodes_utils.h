@@ -59,12 +59,12 @@ public:
      * Assign CVODE memory data functions with values copied/cloned.
      */
     static void CVodeMemRecCopy_Serial(CVodeMemRec &mem_dsc, CVodeMemRec &mem_src);
-private:
-    // CVODES auxilary functions
     /**
      * Clone functions with values copied.
      */
     static N_Vector N_VExactClone_Serial(N_Vector w);
+private:
+    // CVODES auxilary functions
     static N_Vector *N_VExactCloneVectorArray_Serial(int size, N_Vector *w);
     /**
      * Assign functions with values cloned.

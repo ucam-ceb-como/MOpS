@@ -318,7 +318,7 @@ void CVODES::CVodeMemRecCopy_Serial(CVodeMemRec &mem_dsc, CVodeMemRec &mem_src) 
     //  CVRhsFn cv_f;               /* y' = f(t,y(t))                               */
         mem_dsc.cv_f            = mem_src.cv_f;
     //  void *cv_user_data;         /* user pointer passed to f                     */
-        mem_dsc.cv_user_data    = mem_src.cv_user_data;
+        //mem_dsc.cv_user_data    = mem_src.cv_user_data;
     //  int cv_lmm;                 /* lmm = ADAMS or BDF                           */
         mem_dsc.cv_lmm          = mem_src.cv_lmm;
     //  int cv_iter;                /* iter = FUNCTIONAL or NEWTON                  */
@@ -429,9 +429,10 @@ void CVODES::CVodeMemRecCopy_Serial(CVodeMemRec &mem_dsc, CVodeMemRec &mem_src) 
     //                                 zn[j] = [1/factorial(j)] * h^j * 
     //                                 (jth derivative of the interpolating poly.)  */
     //
+
         for (int i=0; i < mem_src.cv_q; i++) {
-            N_VDestroy_Serial(mem_src.cv_zn[i]);
-            mem_src.cv_zn[i] = N_VExactClone_Serial(mem_dsc.cv_zn[i]);
+            N_VDestroy_Serial(mem_dsc.cv_zn[i]);
+            mem_dsc.cv_zn[i] = N_VExactClone_Serial(mem_src.cv_zn[i]);
         }
     //  /*-------------------
     //    Vectors of length N 
@@ -536,17 +537,17 @@ void CVODES::CVodeMemRecCopy_Serial(CVodeMemRec &mem_dsc, CVodeMemRec &mem_src) 
     //  realtype cv_tau[L_MAX+1];    /* array of previous q+1 successful step
     //                                * sizes indexed from 1 to q+1                 */
         for (int i=0; i < mem_src.cv_q+1; i++) {
-            mem_src.cv_tau[i] = mem_dsc.cv_tau[i];
+            mem_dsc.cv_tau[i] = mem_src.cv_tau[i];
         }
     //  realtype cv_tq[NUM_TESTS+1]; /* array of test quantities indexed from
     //                                * 1 to NUM_TESTS(=5)                          */
         for (int i=0; i < NUM_TESTS+1; i++) {
-            mem_src.cv_tq[i] = mem_dsc.cv_tq[i];
+            mem_dsc.cv_tq[i] = mem_src.cv_tq[i];
         }
     //  realtype cv_l[L_MAX];        /* coefficients of l(x) (degree q poly)        */
     //
         for (int i=0; i < mem_src.cv_q; i++) {
-            mem_src.cv_l[i] =mem_dsc.cv_l[i];
+            mem_dsc.cv_l[i] = mem_src.cv_l[i];
         }
     //  realtype cv_rl1;             /* the scalar 1/l[1]                           */
         mem_dsc.cv_rl1          = mem_src.cv_rl1;
