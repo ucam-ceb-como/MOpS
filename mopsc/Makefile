@@ -1,5 +1,5 @@
 # Compiler options.
-export debug=0
+export debug=1
 export profile=0
 
 # C++ compiler.
@@ -56,7 +56,8 @@ obj=mops_mechanism.o mops_mixture.o \
     mops_reactor_factory.o  mops_ode_solver.o mops_settings_io.o mops_solver.o \
     mops_src_terms.o mops_strang_solver.o mops_timeinterval.o \
     mops_flow_stream.o mops_simulator.o swp_flamesolver.o swp_gas_profile.o mops_gpc_sensitivity.o \
-    mops_flux_postprocessor.o mops_rhs_func.o mops_simplesplit_solver.o  swp_PAHsolver.o
+    mops_flux_postprocessor.o mops_rhs_func.o mops_simplesplit_solver.o  swp_PAHsolver.o \
+    cvodes_utils.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -192,6 +193,9 @@ mops_src_terms.o: $(src)/mops_src_terms.cpp
 
 swp_gas_profile.o: $(src)/swp_gas_profile.cpp
 	$(cpp) $(flag) $(src)/swp_gas_profile.cpp
+
+cvodes_utils.o: $(src)/cvodes_utils.cpp
+	$(cpp) $(flag) $(src)/cvodes_utils.cpp
 
 
 # TARGET clean: leave just source code.
