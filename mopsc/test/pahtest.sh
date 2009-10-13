@@ -34,13 +34,14 @@
 #    Website:     http://como.cheng.cam.ac.uk
 
 cd pahtest
+dos2unix PAH_data*
 ./pahtest.pl
-cd ..
 if(($?!=0)) 
   then
+    cd ..
     exit $?
 fi
-
+cd ..
 
 # All tests passed
 echo "All tests passed"
