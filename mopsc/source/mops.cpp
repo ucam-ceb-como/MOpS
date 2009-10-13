@@ -224,7 +224,11 @@ int main(int argc, char *argv[])
             }
             if (soltype == PAH){
                     dynamic_cast<Sweep::PAHSolver*>(solver)->LoadGasProfile(chemfile, mech);
-                    dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data.csv");
+                    dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data1.csv");
+                    //dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data.csv2");
+                    //dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data.csv3");
+                   // dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data.csv4");
+                    //dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data.csv5");
             }
 
         }

@@ -46,6 +46,8 @@
 #include "swp_gas_profile.h"
 #include "sweep.h"
 #include "swp_PAH_primary.h"
+#include "swp_PAH_trajectory.h"
+#include "swp_PAH_database.h"
 #include <map>
 
 namespace Sweep
@@ -88,18 +90,25 @@ public:
 
 	 void LoadGasProfile(const std::string &file, Mops::Mechanism &mech);
 	 void LoadPAHProfile(const std::string &file);
+	 void UpdateFractalDimension(Mops::Reactor &r);
+
 
 private:
     // The gas-phase chemistry profile.
     GasProfile m_gasprof;
-	// the id of the PAH. This number is increased by 
-	int ID;
-	int maxID;
+	// the id of the PAH. 
+	//int ID;
+/*	int maxID;
 	struct trajectory {
 		std::vector<double> time;
 		std::vector<int> n_carbon_t;
     };
-	std::vector<trajectory> alltrajectories;
+	std::vector<trajectory> alltrajectories;*/
+    void UpdateNumberPAHs(Mops::Reactor &r,real time); 
+    void UpdatePAHs(Mops::Reactor &r, real t);
+	//std::vector<Trajectory>  m_trajectory;
+   // Trajectory  m_trajectory;
+    PAH_database m_PAHDatabase;
 };
 };
 

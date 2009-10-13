@@ -47,10 +47,10 @@
 #include "string_functions.h"
 #include "csv_io.h"
 #include "swp_PAH_primary.h"
-#include "csv_io.h"
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include "swp_PAH_trajectory.h"
 
 using namespace Sweep;
 using namespace Sweep::ActSites;
@@ -199,33 +199,7 @@ void PAHSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 
 void PAHSolver::LoadPAHProfile(const std::string &file)
 {
-   	CSV_IO *csvinput = new CSV_IO(file,false);
-	std::vector<std::string> values;	
-	values.clear();
-	csvinput->Read(values);
-    maxID=values.size()/2-1;
-	for (int j=0;j<maxID;j++)
-	{
-		trajectory newtraj;
-		alltrajectories.push_back(newtraj);
-	}
-	for (int j=0;j<10000;j++)
-		{	
-			if (values.size()==0)
-				break;
-			for (int ID=0;ID<maxID;ID=ID+1)
-			{
-				string tempstring=values[0];
-				double time=atof(tempstring.c_str());
-				alltrajectories.at(ID).time.push_back(time);
-				tempstring=values[2*ID+2];
-				int ncarb=atoi(tempstring.c_str());
-				alltrajectories.at(ID).n_carbon_t.push_back(ncarb);
-			}
-			csvinput->Read(values);
-		}
-
-
+	m_PAHDatabase.LoadPAHProfiles();
 }
 
 
@@ -245,29 +219,14 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     m_tstop = tstop;
 
 
-	// find the ID of the incepting species in the database
-	string incspecies="A4";
-	int incspeciesid=-1;
-	for (unsigned int i=0;i<(*(r.Mixture())).Species()->size();i++)
-		{
-			if ((*(r.Mixture())).Species()->at(i)->Name()==incspecies)
-			{
-				incspeciesid=i;
-				break;
-			}
-		}
+    //Update the PAHs in the particle ensemble using the database
 
-	//Update the surface reactions of all the particles using the database provided
-	Ensemble::iterator E;
-    for (E=(*r.Mixture()).Particles().begin(); E!=(*r.Mixture()).Particles().end() ; ++E) {
-						const AggModels::PAHPrimary *pah = NULL;
-						pah = dynamic_cast<AggModels::PAHPrimary*>((*(*E)).Primary());
-						const_cast<Sweep::AggModels::PAHPrimary*>(pah)->UpdateTime(t);
-						(*(*E)).UpdateCache();
-					}
+    UpdatePAHs(r, t) ;
 	
+
+
     // Loop over time until we reach the stop time.
-	int numincepted=0;
+
     while (t < tstop)
     {
         tsplit = tstop;
@@ -277,62 +236,16 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
             // Calculate the chemical conditions.
             linInterpGas(t, m_gasprof, *r.Mixture());
-
 			//update the number of particles that the incepting species matches the gas phase
-			while(true)
-			{
-				// Calculate the number density of the incepting species
-				double molfrac= (*(r.Mixture())).MoleFraction(incspeciesid);
-				double pressure=(*(r.Mixture())).Pressure()*1E-5;     // in bar
-				double temperature=(*(r.Mixture())).Temperature();    // T in K
-				double numdensgas=6.023E23*pressure*1E5*molfrac/8.314/temperature;   // in part/m^3
-		//		cout << "Pressure="<<pressure<<endl;  
-		//		cout << "molfracgas="<<(*(r.Mixture())).MolarConc(incspeciesid)<<endl;
-		//		cout << "numdensgas="<<numdensgas<<endl;
 
-				// number density of the incepting species in the particle ensemble in part/m^3
-				const ParticleCache *pcache=&(*(r.Mixture())).Particles().GetSums();
-				const AggModels::PAHCache* cache = 
-				dynamic_cast<const AggModels::PAHCache*>(pcache->AggCache());
-				real numpah=const_cast<Sweep::AggModels::PAHCache*>(cache)->NumPAH();
-				double Volume=(*(r.Mixture())).SampleVolume();
-				double numdenspart=numpah/Volume;
-		//		cout << "numdenspart="<<numdenspart<<endl;
-				
-				
-				if (numdenspart>numdensgas) break;  
+            UpdateNumberPAHs(r,t);  
 
-				// we need to add more particles to the system to match the gas-phase particles concentration
-				else                              
-				{
-					numincepted++;
-					Particle *sp = mech.CreateParticle(t);
-					//Assign an ID to the particle and initialise timeevolution vectors
-					int newID;
-					newID=(int)(maxID*rnd());
-					const AggModels::PAHPrimary *pah = NULL;
-					pah = dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
-					const Sweep::AggModels::PAHPrimary::PAH *first_PAH = &(*(pah->m_PAH.begin()));
-					const_cast<Sweep::AggModels::PAHPrimary::PAH*>(first_PAH)->ID=newID;
-					const_cast<Sweep::AggModels::PAHPrimary::PAH*>(first_PAH)->time=(alltrajectories.at(newID).time);
-					const_cast<Sweep::AggModels::PAHPrimary::PAH*>(first_PAH)->n_carbon_t=(alltrajectories.at(newID).n_carbon_t);
-					const_cast<Sweep::AggModels::PAHPrimary*>(pah)->UpdateTime(t);
-					sp->UpdateCache();
-					// Add particle to system's ensemble.
-					(*(r.Mixture())).Particles().Add(*sp);
-					//(*(r.Mixture())).Particles().Update();
-					//cout << "Particle added"<<endl;
-
-
-				}
-			}
-			
-			(*(r.Mixture())).Particles().Update();
             // Calculate jump rates.
             jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
             // Perform time step.
             dt = timeStep(t, *r.Mixture(), mech, rates, jrate);
+
             if (dt >= 0.0) {
                 t += dt; t = min(t, tstop);
             } else {
@@ -341,17 +254,118 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         }
 
     }
-	    // Call the output function.
-    if (out) out(nsteps, niter, r, *this, data);
 
+
+  /*  if (r.Time()>0.02495)
+    {
+      UpdateFractalDimension(r);
+    }*/
+	    // Call the output function.
+    if (out) 
+    {
+        out(nsteps, niter, r, *this, data);
+    }
+	
+	
 	//cout << numincepted << " incepted"<< endl;
 	r.SetTime(t);
-//	if (r.Time()>0.005)
+//	if (r.Time()>0.024)
 //		Output(r);
 	
     return;
 }
 
+void PAHSolver::UpdatePAHs(Mops::Reactor &r, real t)  
+{
+	//Update the surface reactions of all the particles using the database provided
+	Ensemble::iterator E;
+    for (E=(*r.Mixture()).Particles().begin(); E!=(*r.Mixture()).Particles().end() ; ++E) {
+						AggModels::PAHPrimary *pah = NULL;
+						pah = dynamic_cast<AggModels::PAHPrimary*>((*(*E)).Primary());
+						(pah)->UpdatePAHs(t);
+						(pah)->UpdateCache();  
+                        // coalescence level has changed due to surface growth
+                        (pah)->CheckCoalescence();   
+                        (*(*E)).UpdateCache();                      
+					}
+}
+
+void PAHSolver::UpdateNumberPAHs(Mops::Reactor &r, real t)                        
+{		
+    // find the ID of the incepting species in the database
+	string incspecies="A4";
+	int incspeciesid=-1;
+    for (unsigned int i=0;i<(*(r.Mixture())).Species()->size();i++)
+		{
+			if ((*(r.Mixture())).Species()->at(i)->Name()==incspecies)
+			{
+				incspeciesid=i;
+				break;
+			}
+		}
+       int numincepted=0;
+    const Sweep::Mechanism &mech = r.Mech()->ParticleMech();
+    while(true)
+        {
+			// Calculate the number density of the incepting species
+			double molfrac= (*(r.Mixture())).MoleFraction(incspeciesid);
+			double pressure=(*(r.Mixture())).Pressure()*1E-5;     // in bar
+			double temperature=(*(r.Mixture())).Temperature();    // T in K
+			double numdensgas=6.023E23*pressure*1E5*molfrac/8.314/temperature;   // in part/m^3
+	//		cout << "Pressure="<<pressure<<endl;  
+	//		cout << "molfracgas="<<(*(r.Mixture())).MolarConc(incspeciesid)<<endl;
+	//		cout << "numdensgas="<<numdensgas<<endl;
+
+			// number density of the incepting species in the particle ensemble in part/m^3
+			const ParticleCache *pcache=&(*(r.Mixture())).Particles().GetSums();
+			const AggModels::PAHCache* cache = 
+			dynamic_cast<const AggModels::PAHCache*>(pcache->AggCache());
+			real numpah=cache->NumPAH();
+			double Volume=(*(r.Mixture())).SampleVolume();
+			double numdenspart=numpah/Volume;
+	//		cout << "numdenspart="<<numdenspart<<endl;
+     //       cout <<numpah<<endl;
+			
+			if (numdenspart>numdensgas) break;  
+
+			// we need to add more particles to the system to match the gas-phase particles concentration
+			else                              
+			{
+				numincepted++;
+				Particle *sp = mech.CreateParticle(t);
+				//Assign an ID to the particle and initialise timeevolution vectors
+				int newID;
+                Trajectory  *newtrajectory=m_PAHDatabase.GetTrajectory(t);
+				newID=(int)(newtrajectory->maxID()*rnd());
+				AggModels::PAHPrimary *pahprimary = NULL;
+				pahprimary = dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
+                pahprimary->AddPAH(t,newID,newtrajectory);
+                //Update the number of carbon atoms using the database
+				pahprimary->UpdatePAHs(t);
+                //Update the other properties
+				sp->UpdateCache();
+				// Add particle to system's ensemble.
+				(*(r.Mixture())).Particles().Add(*sp);
+				//(*(r.Mixture())).Particles().Update();
+			}
+		}
+}
+
+
+void PAHSolver::UpdateFractalDimension(Mops::Reactor &r)
+{
+	Ensemble::iterator E;
+	for (E=(*r.Mixture()).Particles().begin(); E!=(*r.Mixture()).Particles().end() ; ++E) {
+		AggModels::PAHPrimary *pah = NULL;
+		pah = dynamic_cast<AggModels::PAHPrimary*>((*(*E)).Primary());
+        pah->UpdateCache();
+		pah->CalcFractalDimension();
+		(*(*E)).UpdateCache();
+		//file << nprim << "    " << sqrtLW <<endl;
+	}
+	//file.close();
+}
+/*
 void PAHSolver::Output(Mops::Reactor &r)
 {
 	ofstream file;
@@ -379,19 +393,19 @@ void PAHSolver::Output(Mops::Reactor &r)
 	}
 
 	for (i=(*r.Mixture()).Particles().begin(); i!=(*r.Mixture()).Particles().end() ; ++i) {
-		const AggModels::PAHPrimary *pah = NULL;
-		pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
-		if (pah->m_numPAH<maxnumpah)
+		const AggModels::PAHPrimary *pahprimary = NULL;
+		pahprimary = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
+		if (pahprimary->NumPAH()<maxnumpah)
 		{
-			pahdistribution[pah->m_numPAH]++;
+			pahdistribution[pahprimary->NumPAH()]++;
 			numallparticles++;
 		}
-		if (pah->m_numPAH>0)                  // ms785:  The average number of PAHs in the first coag paper has been calculated only for particles with more than 1 PAH
+		if (pahprimary->NumPAH()>0)                  // ms785:  The average number of PAHs in the first coag paper has been calculated only for particles with more than 1 PAH
 		{
-			numpah+=pah->m_numPAH;
+			numpah+=pahprimary->NumPAH();
 			numparticles++;
 		}
-		maxpahmass=max(pah->m_PAHmass/1.99e-26,maxpahmass);
+		maxpahmass=max(pahprimary->Mass()/1.99e-26,maxpahmass);
 	}	
 	fname = "pahdistr.txt" ;
 	file.open(fname.c_str());
@@ -409,9 +423,9 @@ void PAHSolver::Output(Mops::Reactor &r)
 	double binsize=maxpahmass/(numbins-1);
 	binsize=1;
 	for (i=(*r.Mixture()).Particles().begin(); i!=(*r.Mixture()).Particles().end() ; ++i) {
-		const AggModels::PAHPrimary *pah = NULL;
-		pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
-		int binnumber=(int)(1.0*pah->m_numcarbon/binsize);
+		const AggModels::PAHPrimary *pahprimary = NULL;
+		pahprimary = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
+		int binnumber=(int)(1.0*pahprimary->NumCarbon()/binsize);
 		if (binnumber<numbins)
 			distribution[binnumber]++;
 		else
@@ -437,11 +451,11 @@ void PAHSolver::Output(Mops::Reactor &r)
 		distribution[j]=0;
 	}
 	for (i=(*r.Mixture()).Particles().begin(); i!=(*r.Mixture()).Particles().end() ; ++i) {
-		const AggModels::PAHPrimary *pah = NULL;
-		pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
-		if (pah->m_numPAH==1)
+		const AggModels::PAHPrimary *pahprimary = NULL;
+		pahprimary = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
+		if (pahprimary->NumPAH()==1)
 		{
-			int binnumber=(int)(1.0*pah->m_numcarbon/binsize);
+			int binnumber=(int)(1.0*pahprimary->NumCarbon()/binsize);
 			//cout << binnumber<<endl;
 		//	if (binnumber==1)
 		//	{
@@ -468,17 +482,17 @@ void PAHSolver::Output(Mops::Reactor &r)
 		distribution[j]=0;
 	}
 	for (i=(*r.Mixture()).Particles().begin(); i!=(*r.Mixture()).Particles().end() ; ++i) {
-		const AggModels::PAHPrimary *pah = NULL;
-		pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
-		if (pah->m_numPAH==2)
+		const AggModels::PAHPrimary *pahprimary = NULL;
+		pahprimary = dynamic_cast<const AggModels::PAHPrimary*>((*(*i)).Primary());
+		if (pahprimary->NumPAH()==2)
 		{
-			int binnumber=(int)(1.0*pah->m_numcarbon/binsize);
+			int binnumber=(int)(1.0*pahprimary->NumCarbon()/binsize);
 			if (binnumber<numbins)
 				distribution[binnumber]++;
-			binnumber=(int)(1.0*pah->m_PAH.at(0).m_numcarbon/binsize);
+			binnumber=(int)(1.0*pahprimary->m_PAH.at(0).m_numcarbon/binsize);
 			if (binnumber<numbins)
 				dimercompdistr[binnumber]++;
-			binnumber=(int)(1.0*pah->m_PAH.at(1).m_numcarbon/binsize);
+			binnumber=(int)(1.0*pahprimary->m_PAH.at(1).m_numcarbon/binsize);
 			if (binnumber<numbins)
 				dimercompdistr[binnumber]++;
 
@@ -530,7 +544,7 @@ void PAHSolver::Output(Mops::Reactor &r)
 	file.close();
 
 }
-
+*/
 
 
 

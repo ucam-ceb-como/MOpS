@@ -49,6 +49,7 @@
 #include "mops_flux_postprocessor.h"
 #include "mops_reactor_factory.h"
 #include "string_functions.h"
+#include "swp_PAHsolver.h"
 #include "csv_io.h"
 #include "geometry1d.h"
 #include <stdexcept>
@@ -335,9 +336,12 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
             // Create a save point at the end of this time
             // interval.
-			#ifdef USE_MPI					//ms785
-			m_output_filename=m_output_filename_base;
-			#endif
+           
+			m_output_filename=m_output_filename_base;    
+            //Calculate fractal dimension before creating save point
+            Sweep::PAHSolver *pahsolver = dynamic_cast<Sweep::PAHSolver*>(&s);
+            if (pahsolver!=NULL)
+                pahsolver->UpdateFractalDimension(r);            
 
             createSavePoint(r, global_step, irun);
         }
@@ -345,8 +349,8 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         printf("mops: Run number %d completed in %.1f s.\n", irun+1, m_runtime);
 
 	#ifdef USE_MPI
+
 		 closeOutputFile();			//ms785
-		
 	#else
 	}   
 	#endif 
