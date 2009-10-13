@@ -136,7 +136,7 @@ PAHCache &PAHCache::operator=(const PAHPrimary &rhs)
     m_primarydiam=rhs.PrimaryDiam();
     m_fdim=rhs.Fdim();
     m_Rg=rhs.Rg();
-    m_avg_coalesc+=rhs.AvgCoalesc();
+    m_avg_coalesc=rhs.AvgCoalesc();
     return *this;
 }
 
