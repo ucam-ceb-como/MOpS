@@ -88,11 +88,13 @@ public:
     // Returns component density (g/cm3).
     real Density() const;
 
+    real CoalescThresh() const;
+
     // Sets the density (g/cm3).
     void SetDensity(real dens);
 
+    void SetCoalescThresh(real ct);
 
-    // COMPONENT NAME.
 
     // Returns component symbol or name.
     const std::string &Name() const;
@@ -129,6 +131,9 @@ private:
     real m_minValid;
 
     std::string m_name; // Component symbol or name.
+
+    //! threshold after which two individual primaries are replaced by one
+    real m_coalesc_thresh;
 };
 
 // Typedef of a vector of pointers to Component objects.

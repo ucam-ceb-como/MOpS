@@ -140,9 +140,9 @@ public:
 	//void UpdateSinterParticles();
 	int FindPath(bool &path, SubParticle *target, SubParticle *root, int &depth);
 	void UpdatethisSinterParticle(SubParticle *target, const SubParticle *original);
-	void UpdateFreeSurface();
-	void ResetFreeSurface();
-	void RecalcFreeSurface();
+	//void UpdateFreeSurface();
+	//void ResetFreeSurface();
+	//void RecalcFreeSurface();
 
 
 void printSubtree(std::ostream &out, ParticleCache::PropID id) const;
@@ -179,7 +179,8 @@ void printSubtreepicLoop(std::ostream &out,real x, real y, real z) const;
         );
 
 	// Gets several distributions
-	void Getprimarydistribution(double *distribution);
+//	void Getprimarydistribution(double *distribution);
+    void Getprimarydistribution(ofstream *file);
     void Getsinteringleveldistribution(double *distribution, real binsize,const int numbins);
     void GetCollDiamDistrMill(double sintertresh, int *nparticles, double *distribution, const int numbins, double *averagecolldiam, double *Volume, double *Surface, int *nprimaries);
 	void CreateTestTree();

@@ -43,6 +43,7 @@
 #include "swp_params.h"
 #include "swp_cell.h"
 #include "swp_mechanism.h"
+#include "swp_PAH_primary.h"
 
 //* Free-molecular enhancement factor.
 const Sweep::real Sweep::Processes::TransitionCoagulation::m_efm = 2.2; // 2.2 is for soot.    
@@ -248,7 +249,6 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
     // choose uniformly).  Note we need to choose 2 particles.  There
     // are six possible rate terms to choose from; 4 slip-flow and 2
     // free molecular.
-    
     if (sys.ParticleCount() < 2) {
         return 1;
     }
@@ -293,31 +293,18 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
     real T = sys.Temperature();
     real P = sys.Pressure();
 
-    // Choose and get first particle, then update it.
-    Particle *sp1=NULL, *sp1old=NULL;
+    // Choose and get first particle.
+    Particle *sp1=NULL;
     if (ip1 >= 0) {
         sp1 = sys.Particles().At(ip1);
-
-        // Create a copy of the particle before updating.
-        sp1old = sp1->Clone();
-
-        m_mech->UpdateParticle(*sp1, sys, t);
     } else {
         // Failed to choose a particle.
         return -1;
     }
 
-    // Check that particle is still valid.  If not,
-    // remove it and cease coagulating.
-    if (!sp1->IsValid()) {
-        // Must remove first particle now.
-        sys.Particles().Remove(ip1);
 
-        // Invalidating the index tells this routine not to perform coagulation.
-        ip1 = -1;
-    }
 
-    // Choose and get unique second particle, then update it.  Note, we are allowed to do
+    // Choose and get unique second particle.  Note, we are allowed to do
     // this even if the first particle was invalidated.
     ip2 = ip1;
     unsigned int guard = 0;
@@ -352,20 +339,32 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
             break;
     }
 
-    Particle *sp2=NULL, *sp2old=NULL;
+
+    Particle *sp2=NULL;
     if ((ip2>=0) && (ip2!=ip1)) {
-        sp2 = sys.Particles().At(ip2);
-
-        // Create a copy of the particle before updating.
-        sp2old = sp2->Clone();
-
-        m_mech->UpdateParticle(*sp2, sys, t);
+        sp2 = sys.Particles().At(ip2);     
     } else {
         // Failed to select a unique particle.
-        delete sp1old;
         return -1;
     }
 
+    //Calculte the majorant rate before updating the particles
+    real majk = CoagKernel(*sp1, *sp2, T, P, maj);
+
+    //Update the particles
+    m_mech->UpdateParticle(*sp1, sys, t);
+    // Check that particle is still valid.  If not,
+    // remove it and cease coagulating.
+    if (!sp1->IsValid()) {
+        // Must remove first particle now.
+        sys.Particles().Remove(ip1);
+
+        // Invalidating the index tells this routine not to perform coagulation.
+        ip1 = -1;
+        return 0;
+    }
+
+    m_mech->UpdateParticle(*sp2, sys, t);
     // Check validity of particles after update.
     if (!sp2->IsValid()) {
         // Must remove second particle now.
@@ -375,11 +374,12 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
         ip2 = -1;
     }
 
+
     // Check that both the particles are still valid.
     if ((ip1>=0) && (ip2>=0)) {
-        // Must check for ficticious event now by calculate the original
+        // Must check for ficticious event now by comparing the original
         // majorant rate and the current (after updates) true rate.
-        real majk = CoagKernel(*sp1old, *sp2old, T, P, maj);
+        
         real truek = CoagKernel(*sp1, *sp2, T, P, None);
 		double ceff=0;
 		if (majk<truek)
@@ -389,7 +389,7 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
 		if (sys.Particles().ParticleModel()->AggModel()==AggModels::PAH_ID)
 		{
 			 ceff=sys.Particles().ParticleModel()->CollisionEff(sp1,sp2);
-		   	truek*=ceff;
+			 truek*=ceff;
 		}
 
 
@@ -411,8 +411,6 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
         } else {
             sys.Particles().Update(ip1);
             sys.Particles().Update(ip2);
-            delete sp1old;
-            delete sp2old;
             return 1; // Ficticious event.
         }
     } else {
@@ -427,7 +425,6 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
             sys.Particles().Update(ip2);
     }
 
-    delete sp1old; delete sp2old;
     return 0;
 }
 

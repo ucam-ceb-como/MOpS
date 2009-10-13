@@ -247,6 +247,7 @@ real SinteringModel::Rate(real t, const Cell &sys, const SubParticle &sp) const
 {
     real tau = SintTime(sys, sp);
 	//cout << "sintering time="<< tau<<endl;
+    if (tau<1e-300) return 1e300;       
     return (sp.SubPartSurfaceArea() - sp.SubPartSphSurfaceArea()) / tau;
 }
 

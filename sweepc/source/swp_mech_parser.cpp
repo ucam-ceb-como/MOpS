@@ -329,6 +329,28 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             throw runtime_error(msg);
         }
 
+
+        // Get coalesc threshold.
+        el = (*i)->GetFirstChild("coalthresh");
+        if (el!=NULL) {
+            str = el->Data();
+            if (str != "") {
+                comp->SetCoalescThresh(cdble(str)); 
+            } else {
+                // coalthresh contains no data.
+                std::string msg("Component ");
+                msg += comp->Name();
+                msg += " coalthresh contains no data (Sweep, MechParser::readComponents).";
+
+                delete comp;
+                throw runtime_error(msg);
+            }
+        } else {
+            comp->SetCoalescThresh(1.0); 
+        }
+
+
+
         // Get component mol. wt.
         el = (*i)->GetFirstChild("molwt");
         if (el!=NULL) {
@@ -420,13 +442,11 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
 
         try {
             readInception(*(*i), *icn);
-        } catch (std::runtime_error &re) {
+        } 
+        catch (std::exception &e) {
             delete icn;
             throw;
-        } catch (std::exception &e) {
-            delete icn;
-            throw;
-        }
+        } 
 
         // Add inception to mechanism.  Once entered into mechanism, the mechanism
         // takes control of the inception object for memory management.

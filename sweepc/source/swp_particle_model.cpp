@@ -365,8 +365,8 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 	const AggModels::PAHPrimary *pah2 = NULL;
 	pah1 = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
 	pah2 = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary());
-	ncarbon2=(int)(1.0*pah2->m_numcarbon);
-	ncarbon1=(int)(1.0*pah1->m_numcarbon);
+	ncarbon2=(int)(1.0*pah2->NumCarbon());
+	ncarbon1=(int)(1.0*pah1->NumCarbon());
 	double x;
 	double y;
 	x=1e10*pah1->CollDiameter();
@@ -376,6 +376,8 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 	reddiam=min(x,y);
 	redmass=12*min(ncarbon1,ncarbon2);
 	ceffi=1/(1+exp(-2.0* (reddiam*reddiam*reddiam/(redmass)+pow(redmass/1100,6.0)-5.0)));
+	if (pah1->NumPAH()>1 && pah2->NumPAH()>1)
+		ceffi=1;
 	return ceffi;
 
 

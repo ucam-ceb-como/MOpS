@@ -89,7 +89,7 @@ public:
     // Resets the model data to the default state.
     virtual void Clear();
 
-	real NumPAH();
+	real NumPAH() const;
     // AGGREGATION MODEL PARAMETERS.
 
 
@@ -116,9 +116,16 @@ public:
         std::istream &in,     // Input stream.
         ParticleCache &parent // Parent.
         );
-	  real m_numPAH;
+	  int m_numPAH;
 	  real m_PAHDiameter;
-	  real m_numcarbon;
+	  int m_numcarbon;
+	  int m_numprimary;
+      double m_sqrtLW;
+	  double m_LdivW;
+	  double m_primarydiam;
+      double m_fdim;
+      double m_Rg;
+      double m_avg_coalesc;
 
 protected:
   
@@ -128,7 +135,7 @@ protected:
     PAHCache(void);
 
 };
-};
-};
+}//namespace Aggmodels
+}//namespace Sweep
 
 #endif

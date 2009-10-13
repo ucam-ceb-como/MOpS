@@ -49,7 +49,7 @@ using namespace Sweep;
 
 // Default constructor.
 Component::Component()
-: m_density(0.0), m_molwt(0.0), m_minValid(0.0), m_name("")
+: m_density(0.0), m_molwt(0.0), m_minValid(0.0), m_name(""),m_coalesc_thresh(1.0)
 {
 }
 
@@ -64,6 +64,7 @@ Component::Component(Sweep::real molwt,
     m_molwt   = molwt;
     m_minValid = min;
     m_name    = name;
+    m_coalesc_thresh = 1.0;      //added by ms785, do not coalesce particles by default
 }
 
 // Copy constructor.
@@ -92,6 +93,7 @@ Component &Component::operator=(const Component &rhs)
         m_molwt   = rhs.m_molwt;
         m_minValid = rhs.m_minValid;
         m_name    = rhs.m_name;
+        m_coalesc_thresh= rhs.m_coalesc_thresh;
     }
     return *this;
 }

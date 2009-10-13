@@ -1,4 +1,12 @@
-/*
+/*!
+ * \file   swp_PAH_primary.h
+ * \author Markus Sander
+ *  Copyright (C) 2009 Markus Sander.
+ *
+ *  Project:        sweepc (population balance solver)
+ *  Sourceforge:    http://sourceforge.net/projects/mopssuite
+ *
+ * \brief  Defines a primary including detailed PAH information
   Author(s):      Markus Sander (ms785)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
@@ -49,16 +57,19 @@
 #include "swp_aggmodel_type.h"
 #include "swp_surfvol_cache.h"
 #include "swp_PAH_cache.h"
+#include "swp_PAH_trajectory.h"
 #include <iostream>
 
 namespace Sweep
 {
 namespace AggModels 
 {
+//! PAH primary particle class
 class PAHPrimary : public Primary
 {
 public:
 	    // Constructors.
+	PAHPrimary() ;
     //   Note:  Default constructor is protected to prevent a
     //          SurfVolPrimary being created without knowledge of the
     //          defining particle model.
@@ -74,42 +85,41 @@ public:
 	  
     // Destructors.
     virtual ~PAHPrimary(void);
-      // READ/WRITE/COPY.
 
 	PAHPrimary &operator=(const Primary &rhs);
 
-    // Returns a copy of the primary.
+    //! Returns a copy of the primary.
     virtual PAHPrimary *const Clone(void) const;
 
-    // Returns this object's instance.  This may seem rather circular, but
-    // it has an important purpose for getting the correct object type reference
-    // from a base class reference/pointer.
-    virtual PAHPrimary &Instance();
-    virtual const PAHPrimary &Instance() const;
-    // Returns the collision diameter.
-    real PAHCollDiameter(void) const;
+    //! coagulates this particle with rhs
 	PAHPrimary &Coagulate(const Primary &rhs);
+
+    //! prints the tree to a file that can be converted to a graph using graphviz
+    void PrintTree(string filename);
+    
+    //! updates the particle cache using the particle details
 	void UpdateCache(void);
-	void UpdateTime(double t);
 
-	struct PAH {
-        unsigned int m_numcarbon;
-		unsigned int ID;
-		double time_created;
-		std::vector<double> time;
-		std::vector<int> n_carbon_t;
-		double lastupdated;
-		double freezetime;
-    };
-	int m_numcarbon;
-	double m_PAHmass;
-	double m_PAHCollDiameter;
-	int m_numPAH;
+    //! updates the evolution of the PAHs using the database and the current time
+	void UpdatePAHs(double t);
 
+    //! adds a PAH to a particle
+    void AddPAH(real time, int ID, Trajectory *trajectory);
 
-	// Vector of PAHs.
-    std::vector<PAH> m_PAH;
+    //! returns the coalescence level
+    double CoalescenceLevel();
+    
+    //! returns the left child
+    const PAHPrimary *LeftChild() const;
+    //! returns the right child
+    const PAHPrimary *RightChild() const;
 
+    //! Checks if the coalescence level is higher then the treshold and merges the primaries if necessary
+    bool CheckCoalescence();
+
+    //! Updates the fractal dimension
+	void CalcFractalDimension();
+	
 	AggModels::PAHCache *const CreateAggCache(ParticleCache &pcache) const;
 
 	//serialize
@@ -117,10 +127,114 @@ public:
 	void Serialize(std::ostream &out) const;
 
 	AggModels::AggModelType AggID(void) const;
+    
+    //! returns L divided by W
+    double LdivW() const;
+    //! sum of the diameter of the primaries under this treenode needed for stats
+    double PrimaryDiam() const;
+    //! returns the fractal dimension
+    double Fdim() const;
+    //! returns the radius of gyration
+    double Rg() const;
+    //! returns the diameter of the largest PAH
+    double PAHCollDiameter() const;
+    //! returns the number of primary particles
+    int Numprimary() const;
+    //! returns the number of carbon atoms in the particle
+    int NumCarbon() const;
+    //! returns the number of PAH in the particle
+    int NumPAH() const;
+    //! returns sqrt(L*W)
+    double sqrtLW() const;
+    double AvgCoalesc() const;
 
 protected:
+    //! help function for printree
+    void PrintTreeLoop(std::ostream &out);
+    //! sets the children properties to 0
+    void ResetChildrenProperties();
+    //! updates the particle
+    void UpdateCache(PAHPrimary *root);
+    //! help function 
+    PAHPrimary *SelectRandomSubparticleLoop(int target);
+    //! sets the pointers to the primary particles correct after a copy event 
+    void UpdateAllPointers( const PAHPrimary *source);
+    //! updates the properties of a primary only, not the entire tree
+    void UpdatePrimary(void);
+    //! sets some properties to 0
+    void Reset();
+    //! merges the two children primaries together
+    PAHPrimary &Merge();
+    //! updates the pointers after a merge event
+    void ChangePointer(PAHPrimary *source, PAHPrimary *target);
+    //! copies the node withoud the children
+	void CopyParts( const PAHPrimary *source);
+    //! copies the subtree of a node
+    void CopyTree( const PAHPrimary *source);
+    //! returns a uniformly chosen primary particle
+    PAHPrimary *SelectRandomSubparticle(); 
+	void ReleaseMem();
+    
 
+  //  double pow(double a, double b);
+
+private:
+    struct PAH {
+        unsigned int m_numcarbon;
+		unsigned int ID;
+		double time_created;
+		double lastupdated;
+		double freezetime;
+        //stores the last position in the database when the PAH has been updated
+        int lastposPAHupdate;
+		Trajectory *m_trajectory;
+    };
+
+    // Vector of PAHs.
+    std::vector<PAH> m_PAH;
+    //some basic properties
+    //derived from the PAHs by UpdataCache()
+	int m_numcarbon;
+	double m_PAHmass;
+    double m_PAHCollDiameter;	
+	int m_numPAH;
+//! Number of primaries below this node 
+	int m_numprimary;
+
+    //sum of the diameter of the primaries under this treenode needed for stats
+	double m_primarydiam;
+
+    //properties needed to calculate the coalesence level
+    //of the two primaries connected by this node
+    double m_children_radius;
+
+    double m_children_vol;
+
+    double m_leftparticle_vol_old;
+
+    double m_rightparticle_vol_old;
+
+    int m_rightparticle_numPAH;
+
+    int m_leftparticle_numPAH;
+
+    double m_children_surf;
+
+    double m_children_coalescence;
+
+    
+
+    // radius of gyration and fractal dimension
+    // the values are only update in CalcFractaldimension()
+    double m_Rg;
+    double m_fdim;
+	double m_sqrtLW;
+	double m_LdivW;
+    double m_avg_coalesc;
+
+
+    PAHPrimary *m_leftchild, *m_rightchild, *m_parent, *m_leftparticle, *m_rightparticle;
 };
-};
-};
-#endif
+};//namespace AggModels
+};//namespace Sweep
+#endif    

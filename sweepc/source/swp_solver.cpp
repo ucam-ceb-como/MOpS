@@ -60,10 +60,13 @@ Solver::Solver(void)
 : m_maxdt(0.0), m_splitratio(1.0e9)
 {
     // Seed the random number generator.
-    srnd(123);               
+  srnd(123);               
 //  srnd(time(0));			//added by ms785 
-// srnd(getpid());			//added by ms785 
- 
+//    srnd(getpid());	
+ #ifdef USE_MPI
+srnd(getpid());			//added by ms785 
+ #endif
+
 	
 }
 

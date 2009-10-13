@@ -56,12 +56,18 @@ inline void Sweep::Component::SetMolWt(const Sweep::real molwt) {m_molwt = molwt
 
 // DENSITY.
 
-// Returns component density (g/cm3).
+//! Returns the coalescence threshold 
+inline Sweep::real Sweep::Component::CoalescThresh() const {return m_coalesc_thresh;};
+
+
+//! Returns component density (g/cm3).
 inline Sweep::real Sweep::Component::Density() const {return m_density;};
 
-// Sets the density (g/cm3).
+//! Sets the density (g/cm3).
 inline void Sweep::Component::SetDensity(const Sweep::real dens) {m_density = dens;};
 
+//! Sets the coalescence threshold 
+inline void Sweep::Component::SetCoalescThresh(const Sweep::real ct) {m_coalesc_thresh = ct;};
 // COMPONENT NAME.
 
 // Returns component symbol or name.

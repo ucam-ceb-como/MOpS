@@ -227,7 +227,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity, const Sweep::ParticleMod
     m_dbleon     = true;
     m_dbleactive = false;
     m_dblecutoff = (int)(3.0 * (real)m_capacity / 4.0);
-    m_dblelimit  = m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
+    m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
 }
 
@@ -717,7 +717,7 @@ void Sweep::Ensemble::dble()
     }
 
     // Check that doubling is on and the activation condition has been met.
-    if (m_dbleon && m_dbleactive) {
+    if (m_dbleon && m_dbleactive) {     
         bool left;
 
         // Continue while there are too few particles in the ensemble.

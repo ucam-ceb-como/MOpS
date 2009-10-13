@@ -55,22 +55,33 @@ using namespace std;
 
 const std::string PAHStats::m_statnames[PAHStats::STAT_COUNT] = {
     std::string("Avg. Number of PAHs"),
+    std::string("Number of PAHs cm-3"),
     std::string("Avg. PAH Collision Diameter"),
 	std::string("Avg. Number of Carbon Atoms"),
+    std::string("Avg. Coalesc Threshold"),
 
 };
 
 const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. Number of PAHs.
+    IModelStats::Sum,  // Number of PAHs.
     IModelStats::Avg,  // Avg. PAH Collision Diameter
 	IModelStats::Avg,  // Avg. Number of Carbon atoms
+    IModelStats::Avg,  // Avg. Coalesc Threshold 
 
+   
 };
 
 const std::string PAHStats::m_const_pslnames[PAHStats::PSL_COUNT] = {
     std::string("Number of PAHs"),
     std::string("PAH Diameter"),
 	std::string("Number of Carbon atoms"),
+	std::string("Number primaries"),
+	std::string("sqrt(LW)"),
+	std::string("LdivW"),
+	std::string("Avg. primary diameter"),
+    std::string("Radius of gyration"),
+    std::string("fdim"),
 
 };
 
@@ -163,8 +174,10 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
 			m_stats[iNPAH]    += cache->m_numPAH;
-			m_stats[iPAHD]    += pah->m_PAHCollDiameter*1e9;
+			m_stats[iPAHD]    += pah->PAHCollDiameter()*1e9;
 			m_stats[iNCARB]	  += cache->m_numcarbon;
+            m_stats[iNPAH+1]    += cache->m_numPAH;
+            m_stats[iCOAL]    += cache->m_avg_coalesc;
 			++n;
         }
     }
@@ -329,10 +342,15 @@ void PAHStats::PSL(const Sweep::ParticleCache &sp, real time,
 
     // Get the PSL stats.
     if (cache != NULL) {
-
 		*(++j) = (real)(cache->m_numPAH);
 		*(++j) = (real)(cache->m_PAHDiameter)*1e9;			//convert to nm
 		*(++j) = (real) (cache->m_numcarbon);
+		*(++j) = (real) (cache->m_numprimary);
+		*(++j) = (real) (cache->m_sqrtLW);
+		*(++j) = (real) (cache->m_LdivW);
+		*(++j) = (real) (cache->m_primarydiam)*1e9/(real)(cache->m_numprimary);//convert to nm
+        *(++j) = (real) (cache->m_Rg)*1e9;
+        *(++j) = (real) (cache->m_fdim);
 
     } else {
         fill (j+1, j+2, 0.0);

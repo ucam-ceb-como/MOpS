@@ -54,7 +54,7 @@
 #include "swp_particle_image.h"
 #include "swp_ensemble_image.h"
 #include "string_functions.h"
-
+#include "swp_particle.h"
 
 using namespace Sweep;
 using namespace Sweep::Processes;
@@ -813,7 +813,14 @@ void Mechanism::LPDA(real t, Cell &sys) const
 
 // Performs linear process updates on a particle in the given system.
 void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
-{
+{   
+    // Deal with the growth of the PAHs
+    if (ParticleModel::AggModel()==AggModels::PAH_ID)
+    {
+        AggModels::PAHPrimary *pah = NULL;
+        pah = dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
+        pah->UpdateCache();
+    }
     // If there are no deferred processes then stop right now.
     if (m_anydeferred) {
         PartProcPtrVector::const_iterator i;
@@ -845,7 +852,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 
             // Perform sintering update.
             if (m_sint_model.IsEnabled()) {
-				sp.UpdateFreeSurface();
+//				sp.UpdateFreeSurface();
 			    sp.Sinter(dt, sys, m_sint_model);
 				//sp.CreateTestTree();
 				//	 sp.FindRoot()->CheckTree();
@@ -865,7 +872,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 
 
 void  Mechanism::Mill(Cell &sys, real t) const
-{
+{/*
 				ofstream file;
 			    string fname;
 				double sintertresh=0.0;
@@ -903,7 +910,7 @@ void  Mechanism::Mill(Cell &sys, real t) const
 					}
 					file << sintertresh << "     " << allavcoldiam/N << endl;
 				}
-				file.close();
+				file.close();*/
 }
 
 //added by ms785 to print out the sintering properties.
@@ -919,7 +926,7 @@ void  Mechanism::output(Cell &sys, real t) const
 							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
 								((*(*i))).UpdateCache();
 							} 
-							Mill(sys, t);
+						//	Mill(sys, t);
 							cout << "creating subpart image...";
 							last3dout=t;
 							fname = "subpart1" + cstr(t) + ".3d";
@@ -949,16 +956,20 @@ void  Mechanism::output(Cell &sys, real t) const
 							numpart=0;
 							numsubpart=0;
 							float coldiamdistr[500]={0};
-							fname = "avcoldiam.txt";
-							file.open(fname.c_str(),ios::app);
+							fname = "coldiamdistr" + cstr(t) + ".txt";
+							file.open(fname.c_str());
 					//		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
 							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
 								avcoldiam=(*(*i)).CollDiameter()+avcoldiam;
 								numpart++;
 								numsubpart+=(*(*i)).NumSubPart();
-								int intdiam=(int)((*(*i)).CollDiameter()*1e9);
-								coldiamdistr[intdiam]++;
+							//	int intdiam=(int)((*(*i)).CollDiameter()*1e9);
+							//	coldiamdistr[intdiam]++;
+                                file << (*(*i)).CollDiameter() <<endl;
 							} 
+                            file.close();
+                            fname = "avcoldiam.txt";
+							file.open(fname.c_str(),ios::app);
 							if (numpart>0)
 							{	
 								avcoldiam=avcoldiam/numpart;
@@ -967,6 +978,8 @@ void  Mechanism::output(Cell &sys, real t) const
 							file.close();
 
 
+                            //old coll diam distr 
+/*
 							fname = "coldiamdistr" + cstr(t) + ".txt";
 							file.open(fname.c_str());
 							for (int j=0;j<500;j++)
@@ -975,7 +988,7 @@ void  Mechanism::output(Cell &sys, real t) const
 								file<<j<< "    "<<coldiamdistr[j]/numpart<<endl;
 							}
 							file.close();
-						
+						*/
 
 							fname = "primdiamdistr" + cstr(t) + ".txt";
 							file.open(fname.c_str());
@@ -988,18 +1001,21 @@ void  Mechanism::output(Cell &sys, real t) const
 							}
 							
 							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
-							(*(*i)).Getprimarydistribution(primdistr);
+							  // *(*i)).Getprimarydistribution(primdistr);
+            //                    *(*i)).Getprimarydistribution(&file);
 								
 							}
 
+                            //old prim diam distr 
+/*
 							for (int j=0;j<500;j++)
 							{
 	//							file<<j<< "    "<<(primdistr[j]+0.0000000001)/log10(float(j))<<endl;
 								file<<j<< "    "<<primdistr[j]/numsubpart<<endl;
-							}
+							}*/
 							file.close();
 
-
+/*
 
 							fname = "sinteringleveldistr" + cstr(t) + ".txt";
 							file.open(fname.c_str());
@@ -1020,7 +1036,7 @@ void  Mechanism::output(Cell &sys, real t) const
 							}
 							file.close();
 
-
+*/
 
 							fname = "numsubpart.txt";
 							file.open(fname.c_str(),ios::app);

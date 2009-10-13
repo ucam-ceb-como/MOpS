@@ -201,6 +201,16 @@ void ImgNode::GetPriCoords(std::vector<fvector> &coords) const
 
 // COORDINATE MANIPULATION.
 
+//!Projects the particle to the x-z plane (sets all y to zero)
+void ImgNode::Project()
+{
+    m_cen_mass[1]=0;
+    if (!IsLeaf()) { 
+        m_left->Project();
+        m_right->Project();
+    }
+}
+
 // Translates (moves) the aggregate node and child structure
 // by the given amounts along the cartesian axes.
 void ImgNode::Translate(real dx, real dy, real dz)
@@ -294,8 +304,10 @@ void ImgNode::RotateOrigin(real dtheta, real dphi)
 void ImgNode::transform(const Coords::Matrix &mat)
 {
     // Rotate child nodes.
-    if (m_left != NULL) m_left->transform(mat);
-    if (m_right != NULL) m_right->transform(mat);
+    if (m_left != NULL) 
+        m_left->transform(mat);
+    if (m_right != NULL) 
+        m_right->transform(mat);
     // Rotate centre-of-mass and bounding sphere coords.
     m_cen_mass = mat.Mult(m_cen_mass);
     m_cen_bsph = mat.Mult(m_cen_bsph);
@@ -369,12 +381,15 @@ void ImgNode::CalcCOM(void)
 
         // Mass is proportional to r^3.  Calculated total
         // mass (inverse) of left and right children.
-        real invtotmass = 1.0 / (m_left->m_r3 + m_right->m_r3);
-
+    //    real invtotmass = 1.0 / (m_left->m_r3 + m_right->m_r3);
+        m_mass=m_left->m_mass + m_right->m_mass;
+        real invtotmass = 1.0 / m_mass;
         // Now calculate centre of mass.
         for (unsigned int i=0; i!=3; ++i) {
-            m_cen_mass[i]  = m_left->m_cen_mass[i] * m_left->m_r3;
-            m_cen_mass[i] += m_right->m_cen_mass[i] * m_right->m_r3;
+            //m_cen_mass[i]  = m_left->m_cen_mass[i] * m_left->m_r3;
+          //  m_cen_mass[i] += m_right->m_cen_mass[i] * m_right->m_r3;
+            m_cen_mass[i]  = m_left->m_cen_mass[i] * m_left->m_mass;
+            m_cen_mass[i] += m_right->m_cen_mass[i] * m_right->m_mass;
             m_cen_mass[i] *= invtotmass;
         }
     } else {
@@ -383,5 +398,6 @@ void ImgNode::CalcCOM(void)
         m_cen_mass[0] = m_cen_bsph[0];
         m_cen_mass[1] = m_cen_bsph[1];
         m_cen_mass[2] = m_cen_bsph[2];
+        m_mass=m_r3;
     }
 }

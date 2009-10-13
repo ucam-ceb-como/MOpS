@@ -37,6 +37,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/D NONSPHERE"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\comostrings\include;..\sprogc\include;..\camxml\include;include;..\geometry\include"
 				RuntimeLibrary="1"
@@ -345,7 +346,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\source\swp_PAH_database.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_PAH_primary.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_PAH_trajectory.cpp"
 					>
 				</File>
 				<File
@@ -723,7 +732,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\swp_PAH_database.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\swp_PAH_primary.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_PAH_trajectory.h"
 					>
 				</File>
 				<File

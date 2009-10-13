@@ -43,6 +43,7 @@
 #include "swp_particle_image.h"
 #include "rng.h"
 #include "string_functions.h"
+#include "swp_PAH_primary.h"
 #include <fstream>
 #include <vector>
 #include <stdexcept>
@@ -106,6 +107,10 @@ void ParticleImage::ConstructRandom(real minrad, real maxrad, unsigned int n)
 }
 
 
+void ParticleImage::Project()
+{
+    m_root.Project();
+}
 
 
 void ParticleImage::Write3dout(std::ofstream &file, double x, double y, double z)
@@ -122,13 +127,20 @@ void ParticleImage::Write3dout(std::ofstream &file, double x, double y, double z
         // Get the primary coordinates from the aggregate tree.
         m_root.GetPriCoords(coords);
 		file.write(line.c_str(), line.length());
+        //write the radius of gyration
+        double Rg=RadiusofGyration();
+        line = cstr(0) + " " + cstr(0) + 
+               " " + cstr(0)+"\n ";
+        file.write(line.c_str(), line.length());
+        line = cstr(Rg)+"\n";							//write radius of gyration
+        file.write(line.c_str(), line.length());
         // Write the primaries to the 3dout file.
         for (unsigned int i=0; i!=coords.size(); ++i) {
             val  = coords[i][3] * m_necking;
             line = cstr(coords[i][0]+x) + " " + cstr(coords[i][1]+y) + 
                    " " + cstr(coords[i][2]+z)+"\n ";
             file.write(line.c_str(), line.length());
-            line = cstr(val)+"\n";							//write diameter
+            line = cstr(val)+"\n";							//write radius
             file.write(line.c_str(), line.length());
         }
 
@@ -140,6 +152,97 @@ void ParticleImage::Write3dout(std::ofstream &file, double x, double y, double z
 }
 
 
+void ParticleImage::LengthWidth(double &L, double &W)
+{	
+    //align the particle along the z axis
+	double xmax=0,xmax_y=0,xmax_z=0;
+	double ymax=0;
+	double xmin=0;
+	double ymin=0;
+    double zmax=0;
+	double zmin=0;
+    double dx=0,dy=0,dz=0;
+    //the radius of outher spheres
+	double yminrad=0;
+	double xminrad=0;
+	double ymaxrad=0;
+	double xmaxrad=0;
+    double zmaxrad=0;
+    double zminrad=0;
+	vector<fvector> coords;
+    m_root.GetPriCoords(coords);
+    double dist=0, distmax=0;
+	for (unsigned int i=0; i!=coords.size(); ++i) {
+        dist=sqrt(coords[i][0]*coords[i][0]+coords[i][1]*coords[i][1]+coords[i][2]*coords[i][2])+coords[i][3];
+		if (dist>distmax) {
+            xmax=coords[i][0];ymax=coords[i][1];zmax=coords[i][2];
+            distmax=dist;
+        }
+	}
+    //added to debug ms785
+    if (m_root.m_left!=NULL)
+    {   
+        double phi=atan2(ymax,xmax);
+        double theta=(PI/2)-atan(zmax/sqrt((xmax*xmax)+(ymax*ymax)));
+
+      //  m_root.Translate(-dx,-dy,-dz);      
+        m_root.RotateOrigin(0,-phi-PI/2);
+        ofstream out;
+       // out.open("particlebeforeshift.3d");
+       // this->Write3dout(out,0,0,0);
+       // out.close();
+        m_root.RotateOrigin(-theta,0);
+
+      //  out.open("particleaftershift.3d");
+      //  this->Write3dout(out,0,0,0);
+      //  out.close();
+    }
+    coords.clear();
+    m_root.GetPriCoords(coords);
+	xmax=coords[0][0];
+	xmin=xmax;
+	ymax=coords[0][1];
+	ymin=ymax;
+    zmax=coords[0][2];
+	zmin=zmax;
+	for (unsigned int i=0; i!=coords.size(); ++i) {
+		if (xmax<=coords[i][0]+coords[i][3]) {xmax=coords[i][0]+coords[i][3];xmaxrad=coords[i][3];}
+		if (ymax<=coords[i][1]+coords[i][3]) {ymax=coords[i][1]+coords[i][3];ymaxrad=coords[i][3];}
+        if (zmax<=coords[i][2]+coords[i][3]) {zmax=coords[i][2]+coords[i][3];zmaxrad=coords[i][3];}
+		if (xmin>=coords[i][0]-coords[i][3]) {xmin=coords[i][0]-coords[i][3];xminrad=coords[i][3];}
+		if (ymin>=coords[i][1]-coords[i][3]) {ymin=coords[i][1]-coords[i][3];yminrad=coords[i][3];}
+        if (zmin>=coords[i][2]-coords[i][3]) {zmin=coords[i][2]-coords[i][3];zminrad=coords[i][3];}
+	}
+    dx=abs(xmax-xmin);
+    dy=abs(ymax-ymin);
+    dz=abs(zmax-zmin);
+	L=dz;
+
+   // W=max(dy,dx);
+    W=dx;
+
+}
+
+
+double ParticleImage::RadiusofGyration()
+{
+    double sum=0;
+    double mass;
+    double totalmass=0;
+    double r2;
+    double Rg;
+    vector<fvector> coords;
+    m_root.GetPriCoords(coords);
+	for (unsigned int i=0; i!=coords.size(); ++i) {
+        //mass is proportional to the cube of the radius
+        mass=coords[i][3]*coords[i][3]*coords[i][3];
+        r2=coords[i][0]*coords[i][0]+coords[i][1]*coords[i][1]+coords[i][2]*coords[i][2];
+        sum+=mass*r2;
+        totalmass+=mass;
+	}
+    Rg=sqrt(sum/totalmass);
+    return Rg;
+}
 
 // RENDERING FUNCTIONS.
 
@@ -272,6 +375,33 @@ void ParticleImage::copysptinsert(const SubParticle *sp)
 		}
 }
 
+void ParticleImage::constructSubParttree(const Sweep::AggModels::PAHPrimary *p)
+{
+	//Copy the subparticle tree into the img tree
+	m_root.Clear(); 
+//	m_root.CopySPT(sp);
+	copysptinsert(p);
+
+	// Use the free-molecular regime to calculate the
+    // aggregate structure.
+    calc_FM(m_root);
+    //m_root.CalcCOM();
+    m_root.CentreCOM();
+}
+
+void ParticleImage::copysptinsert(const Sweep::AggModels::PAHPrimary *p)
+{
+	if (p->LeftChild()!=NULL) {
+		copysptinsert(p->LeftChild());
+		copysptinsert(p->RightChild());
+	        
+		} else {
+	        
+            m_root.Insert(p->SphDiameter()*0.5e9);       //convert to nm, store the radius not the diameter
+		}
+}
+
+
 
 
 // Constructs a PNode sphere-tree aggregate from the given 
@@ -299,6 +429,7 @@ void ParticleImage::constructAgg_FM(const AggModels::PriPartPrimary &pri)
     // aggregate structure.
     calc_FM(m_root);
     m_root.CentreCOM();
+
 }
 
 // Constructs a PNode sphere-tree aggregate with uniform 

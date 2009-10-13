@@ -134,11 +134,16 @@ public:
     // node values.
     void CalcCOM(void);
 
+    //sets all y values to zero
+    void Project();
+
 private:
     // Size.
     real m_r;  // Bounding sphere radius of aggregate/primary.
     real m_r2; // r squared (useful for efficient collision detection computation).
     real m_r3; // r cubed (useful for calculating centre-of-mass).
+
+    real m_mass;
 
     // Position.
     Coords::Vector m_cen_bsph; // Bounding-sphere centre.

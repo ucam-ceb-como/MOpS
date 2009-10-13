@@ -3,7 +3,7 @@
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
   
-  Copyright (C) 2008 Matthew S Celnik.
+  Copyright (C) 2008 Markus Sander.
 
   File purpose:
 
@@ -58,16 +58,30 @@ PAHCache::PAHCache(void)
 {
 	m_numPAH=1;
 	m_PAHDiameter=0.;
-	m_numcarbon=0.;
+    m_numcarbon=0;
+    m_numprimary=0;
+    m_sqrtLW=0.0;
+    m_LdivW=0.0;
+    m_primarydiam=0.0;
+    m_fdim=0.0;
+    m_Rg=0.0;
+    m_avg_coalesc=0;
 }
 
 // Default constructor (public).
 PAHCache::PAHCache(ParticleCache &parent)
 : AggModelCache(parent)
 {
-	m_numPAH=0;
+	m_numPAH=1;
 	m_PAHDiameter=0.;
-	m_numcarbon=0.;
+    m_numcarbon=0;
+    m_numprimary=0;
+    m_sqrtLW=0.0;
+    m_LdivW=0.0;
+    m_primarydiam=0.0;
+    m_fdim=0.0;
+    m_Rg=0.0;
+    m_avg_coalesc=0;
 }
 
 // Copy constructor.
@@ -99,6 +113,13 @@ PAHCache &PAHCache::operator=(const PAHCache &rhs)
         m_numPAH = rhs.m_numPAH;
 		m_PAHDiameter = rhs.m_PAHDiameter;
 		m_numcarbon=rhs.m_numcarbon;
+        m_numprimary=rhs.m_numprimary;
+        m_sqrtLW=rhs.m_sqrtLW;
+        m_LdivW=rhs.m_LdivW;
+        m_primarydiam=rhs.m_primarydiam;
+        m_fdim=rhs.m_fdim;
+        m_Rg=rhs.m_Rg;
+        m_avg_coalesc=rhs.m_avg_coalesc;
     }
     return *this;
 }
@@ -106,9 +127,16 @@ PAHCache &PAHCache::operator=(const PAHCache &rhs)
 // Assignment operator (PAHPrimary RHS).
 PAHCache &PAHCache::operator=(const PAHPrimary &rhs)
 {
-    m_numPAH = rhs.m_numPAH;
-	m_PAHDiameter = rhs.m_PAHCollDiameter;
-	m_numcarbon=rhs.m_numcarbon;
+    m_numPAH = rhs.NumPAH();
+	m_PAHDiameter = rhs.PAHCollDiameter();
+	m_numcarbon=rhs.NumCarbon();
+    m_numprimary=rhs.Numprimary();
+    m_sqrtLW=rhs.sqrtLW();
+    m_LdivW=rhs.LdivW();
+    m_primarydiam=rhs.PrimaryDiam();
+    m_fdim=rhs.Fdim();
+    m_Rg=rhs.Rg();
+    m_avg_coalesc+=rhs.AvgCoalesc();
     return *this;
 }
 
@@ -145,15 +173,30 @@ PAHCache &PAHCache::operator+=(const PAHCache &rhs)
     m_numPAH += rhs.m_numPAH;
 	m_PAHDiameter += rhs.m_PAHDiameter;
 	m_numcarbon += rhs.m_numcarbon;
+    m_numprimary+=rhs.m_numprimary;
+    m_sqrtLW+=rhs.m_sqrtLW;
+    m_LdivW+=rhs.m_LdivW;
+    m_primarydiam+=rhs.m_primarydiam;
+    m_fdim+=rhs.m_fdim;
+    m_Rg+=rhs.m_Rg;
+    m_avg_coalesc+=rhs.m_avg_coalesc;
     return *this;
 }
 
 // Compound assignment (PAHPrimary RHS).
 PAHCache &PAHCache::operator+=(const PAHPrimary &rhs)
 {
-    m_numPAH += rhs.m_numPAH;
-	m_PAHDiameter += rhs.m_PAHCollDiameter;
-	m_numcarbon += rhs.m_numcarbon;
+    m_numPAH += rhs.NumPAH();
+	m_PAHDiameter += rhs.PAHCollDiameter();
+	m_numcarbon+=rhs.NumCarbon();
+    m_numprimary+=rhs.Numprimary();
+    m_sqrtLW+=rhs.sqrtLW();
+    m_LdivW+=rhs.LdivW();
+    m_primarydiam+=rhs.PrimaryDiam();
+    m_fdim+=rhs.Fdim();
+    m_Rg+=rhs.Rg();
+    m_avg_coalesc+=rhs.AvgCoalesc();
+
     return *this;
 }
 
@@ -179,7 +222,7 @@ PAHCache &PAHCache::operator+=(const Primary &rhs)
 }
 
 
-real PAHCache::NumPAH()
+real PAHCache::NumPAH() const
 {
     return m_numPAH;
 }
@@ -190,9 +233,16 @@ real PAHCache::NumPAH()
 // Resets the model data to the default state.
 void PAHCache::Clear()
 {
-    m_numPAH = 0.0;
+    m_numPAH = 0;
 	m_PAHDiameter = 0.0;
-	m_numcarbon =0.0;
+	m_numcarbon =0;
+    m_numprimary=0;
+    m_sqrtLW=0.0;
+    m_LdivW=0.0;
+    m_primarydiam=0.0;
+    m_fdim=0.0;
+    m_Rg=0.0;
+    m_avg_coalesc=0.0;
 }
 
 
@@ -215,15 +265,36 @@ void PAHCache::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
-        double v = (double)m_numPAH;
+        double v = (int)m_numPAH;
         out.write((char*)&v, sizeof(v));
 
         v = (double)m_PAHDiameter;
         out.write((char*)&v, sizeof(v));
 
-        v = (double)m_numcarbon;
+        v = (int)m_numcarbon;
         out.write((char*)&v, sizeof(v));
-		 
+		
+        v = (int)m_numprimary;
+        out.write((char*)&v, sizeof(v));
+
+        v = (double)m_sqrtLW;
+        out.write((char*)&v, sizeof(v));
+
+        v = (double)m_LdivW;
+        out.write((char*)&v, sizeof(v));
+
+        v = (double)m_primarydiam;
+        out.write((char*)&v, sizeof(v));
+
+        v = (double)m_fdim;
+        out.write((char*)&v, sizeof(v));
+
+        v = (double)m_Rg;
+        out.write((char*)&v, sizeof(v));
+
+        v = (double)m_avg_coalesc;
+        out.write((char*)&v, sizeof(v));
+
 
     } else {
         throw invalid_argument("Output stream not ready "
@@ -249,14 +320,35 @@ void PAHCache::Deserialize(std::istream &in, ParticleCache &parent)
             case 0:
                //read the number of PAHs
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_numPAH = (real)val;
+                m_numPAH = (int)val;
 
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_PAHDiameter = (real)val;
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_numcarbon = (real)val;
+                m_numcarbon = (int)val;
 
+				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_numprimary = (int)val;
+
+				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_sqrtLW = (real)val;
+
+				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_LdivW = (real)val;
+
+				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_primarydiam = (real)val;
+
+				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_fdim = (real)val;
+
+				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_Rg = (real)val;	
+
+				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_avg_coalesc = (real)val;
+                   
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "

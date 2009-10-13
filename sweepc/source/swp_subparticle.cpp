@@ -612,8 +612,6 @@ void SubParticle::ChangeSphericalSurface(int disttonode, SubParticle *target, do
 		disttonode--;
 		if (disttonode==0)
 		{
-		//			string test;
-		//cin>>test;
 			double radius=sqrt(m_sph_surfacearea/(4*PI));
 			volbefore=4/3*PI*radius*radius*radius;
 			volafter=volbefore+dV;
@@ -831,16 +829,6 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
 		dV_right=0.;
 
 
-/*		UpdateTree_sinter(temp);
-		UpdateCache_sinter(temp);
-		UpdateTree_sinter(this);
-		UpdateCache_sinter(this);*/
-
-//		FindRoot()->CheckTree();
-//		cout << "Checktree after coag passed\n";
-//		m_real_surface=m_leftchild->m_real_surface+m_rightchild->m_real_surface;
-//		m_sumvol_sinterpart = m_leftchild->m_sumvol_sinterpart+m_rightchild->m_sumvol_sinterpart;
-
     } else {
         // If we are not using the sub-particle tree, then we just need
         // to coagulate the primary particles.
@@ -850,27 +838,7 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
 
     return *this;
 }
-/*
-bool FileExists( const char* FileName )
-{
-    FILE* fp = NULL;
 
-    //will not work if you do not have read permissions
-
-    //to the file, but if you don't have read, it
-
-    //may as well not exist to begin with.
-
-    fp = fopen( FileName, "rb" );
-    if( fp != NULL )
-    {
-        fclose( fp );
-        return true;
-    }
-
-    return false;
-}
-*/
 
 // Sinters the two particles at which this node points
 void SubParticle::SinterPart()
@@ -1180,7 +1148,7 @@ void SubParticle::Sinter(real dt, const Cell &sys,
 					if (m_sintered==1) break;
 
 				}
-
+                
 			 if ( m_sinter_level>0.95 || Sintered()==1 || m_leftsinter->m_diam<1e-9 ||  m_rightsinter->m_diam<1e-9 )        //<1e-9 nm in order to avoid numerical problems, the sintering time is very small for these small particles and they sinter instantaneously
 			   {	//cout <<"sinter dt="<<dt<<endl;
 				   	m_leftsinter->vol_sinter=m_leftsinter->vol_sinter-dV_left;      //added 20.01.09 ms785
@@ -1239,7 +1207,7 @@ void SubParticle::UpdateCache(void)
 
 // Recalculates the derived properties from the unique properties.
 // This function calculates only the cache of the current particle 
-// assuiming the caches of the childrens do not need to be updated.
+// assuming the caches of the childrens do not need to be updated.
 void SubParticle::UpdateCache_thispart(void)
 {	//ParticleCache::PropID id=ParticleCache::iS;
     if (m_primary != NULL) {
@@ -1261,45 +1229,9 @@ void SubParticle::UpdateCache_thispart(void)
 
 
 
-//Checks if the two particles that sintered together are not involved in other sintering processes.
-/*void SubParticle::UpdateCache_sinter(SubParticle *has_sintered)
-{	//ParticleCache::PropID id=ParticleCache::iS;
-	bool haschanged=false;
-    if (m_primary != NULL) {
-		m_leftsinter=NULL;
-		m_rightsinter=NULL;			
-    } else {
-		SubModels::SubModelType model = SubModels::BasicModel_ID;
-		ParticleCache::PropID id=ParticleCache::iUniform;
-		
-		if(m_rightsinter==has_sintered ){
-			m_rightsinter=m_rightchild->SelectLeaf(model,id);
-			m_sintered=0;
-			haschanged=true;
-		}
-		if(m_leftsinter==has_sintered ){
-			m_leftsinter=m_leftchild->SelectLeaf(model,id);
-			m_sintered=0;
-			haschanged=true;
-		}
-		if(haschanged){
-			m_real_surface=m_leftsinter->m_primary->SurfaceArea()+m_rightsinter->m_primary->SurfaceArea();
-		    m_sumvol_sinterpart = m_leftsinter->m_primary->Volume()+m_rightsinter->m_primary->Volume();
-		}
-        m_leftchild->UpdateCache_sinter(has_sintered);
-        m_rightchild->UpdateCache_sinter(has_sintered);
-		
-    }
-
-	if(m_leftsinter!=NULL)
-	if(m_leftsinter->m_primary->Volume()==0) cout <<"test";    // ms785 test
-	if(m_rightsinter!=NULL)
-	if(m_rightsinter->m_primary->Volume()==0) cout <<"test";    // ms785 test
-
-}
-*/
+//this function sets the pointer in the tree after a sintering event to the new particle 
 void SubParticle::UpdateCache_sinter(SubParticle *has_sintered, SubParticle *newsinter)
-{	//ParticleCache::PropID id=ParticleCache::iS;
+{	
     if (m_primary != NULL) {
 		m_leftsinter=NULL;
 		m_rightsinter=NULL;
@@ -1339,7 +1271,7 @@ void SubParticle::CheckTree()
 	}
 }
 
-
+/*
 void SubParticle::Getprimarydistribution(double *distribution)
 {
 	if(m_primary!=NULL)
@@ -1353,7 +1285,20 @@ void SubParticle::Getprimarydistribution(double *distribution)
 		m_rightchild->Getprimarydistribution(distribution);
 	}
 }
+*/
 
+void SubParticle::Getprimarydistribution(ofstream *file)
+{
+	if(m_primary!=NULL)
+	{	
+            *file << CollDiameter()*1e9<<endl;
+	}
+	else
+	{
+	    m_leftchild->Getprimarydistribution(file);
+		m_rightchild->Getprimarydistribution(file);
+	}
+}
 
 void SubParticle::Getsinteringleveldistribution(double *distribution, real binsize, const int numbins)
 {
@@ -1370,6 +1315,8 @@ void SubParticle::Getsinteringleveldistribution(double *distribution, real binsi
 	}
 }
 
+
+//This function breaks the particle if the sintering level is below a treshold and returns a distribution function
 void SubParticle::GetCollDiamDistrMill(double sintertresh, int *nparticles, double *distribution, const int numbins, double *averagecolldiam, double *Volume, double *Surface, int *nprimaries)
 {
 	if (m_primary!=NULL)
@@ -1407,28 +1354,8 @@ void SubParticle::GetCollDiamDistrMill(double sintertresh, int *nparticles, doub
 		(*nparticles)++;
 	}
 }
-/*
-void SubParticle::UpdateSinterParticles()
-{
-    if (m_primary != NULL) {
-		m_leftsinter=NULL;
-		m_rightsinter=NULL;			
-    } else {
-		SubModels::SubModelType model = SubModels::BasicModel_ID;
-		ParticleCache::PropID id=ParticleCache::iUniform;
-		
-			m_rightsinter=m_rightchild->SelectLeaf(model,id);
-			m_sintered=0;
-			m_leftsinter=m_leftchild->SelectLeaf(model,id);
-			m_real_surface=m_leftsinter->m_primary->SurfaceArea()+m_rightsinter->m_primary->SurfaceArea();
-		    m_sumvol_sinterpart = m_leftsinter->m_primary->Volume()+m_rightsinter->m_primary->Volume();
-			Primary::PropID primid=Primary::iD;
-			m_leftsinterdiam = m_leftsinter->m_primary->Property(primid);
-			m_rightsinterdiam = m_rightsinter->m_primary->Property(primid);
-		
-    }
-}
-*/
+
+
 // This function is used to find the two sinter particles when the entire particle is duplicated
 void SubParticle::UpdatethisSinterParticle(SubParticle *target, const SubParticle *original)
 {	
@@ -1450,7 +1377,7 @@ void SubParticle::UpdatethisSinterParticle(SubParticle *target, const SubParticl
 			orgsinter=orgsinter->m_parent;
 			depth++;
 		}
-		target->m_leftsinter=m_leftchild;
+		target->m_leftsinter=target->m_leftchild;
 		for (i=depth-2;i>-1;i--)
 		{
 			if (path[i]==true)
@@ -1471,7 +1398,7 @@ void SubParticle::UpdatethisSinterParticle(SubParticle *target, const SubParticl
 			depth++;
 			orgsinter=orgsinter->m_parent;
 		}
-		target->m_rightsinter=m_rightchild;
+		target->m_rightsinter=target->m_rightchild;
 		for (i=depth-2;i>-1;i--)
 		{
 			if (path[i]==true)
@@ -1509,7 +1436,7 @@ int SubParticle::Numneighbors( SubParticle *target)
 
 }
 
-
+/*
 void SubParticle::UpdateFreeSurface()
 {
 		ResetFreeSurface();
@@ -1543,15 +1470,11 @@ void SubParticle::RecalcFreeSurface()
 		m_leftchild->RecalcFreeSurface();
 		m_rightchild->RecalcFreeSurface();
 	}
-}
+}*/
 
 int SubParticle::NumSubPart()
-{	return m_numsubpart;
-	/*
-	if (m_primary!=NULL)
-		return 1;
-	else
-		return m_leftchild->NumSubPart()+m_rightchild->NumSubPart();*/
+{	
+    return m_numsubpart;
 }
 
 // Tells the parent sub-particle to update its cache of
@@ -1577,52 +1500,11 @@ void SubParticle::UpdateTree(void)
     if (m_parent != NULL) {
         m_parent->UpdateTree();
     }
-/*	//Update the entire tree
-	else 
-	{
-		UpdateCache();
-	}*/
 }
 
 
-//Checks that the two sintering children are still existing
-/*void SubParticle::UpdateTree_sinter(SubParticle *has_sintered)
-{  
-	bool haschanged=false;
-   
-    if (m_primary != NULL) {
-		m_leftsinter=NULL;
-		m_rightsinter=NULL;
-		
-    } else {
-		SubModels::SubModelType model = SubModels::BasicModel_ID;
-		ParticleCache::PropID id=ParticleCache::iUniform;
-		if(m_rightsinter==has_sintered){
-			m_rightsinter=m_rightchild->SelectLeaf(model,id);
-			haschanged=true;
-			m_sintered=0;
 
-		}
-		if(m_leftsinter==has_sintered){
-			m_leftsinter=m_leftchild->SelectLeaf(model,id);
-			haschanged=true;
-		}
-		
-    }
-
-	if(haschanged)
-	{
-			m_real_surface=m_leftsinter->m_primary->SurfaceArea()+m_rightsinter->m_primary->SurfaceArea();
-		    m_sumvol_sinterpart = m_leftsinter->m_primary->Volume()+m_rightsinter->m_primary->Volume();
-	}
-
-    // Update the tree above this sub-particle.
-    if (m_parent != NULL) {
-        m_parent->UpdateTree_sinter(has_sintered);
-    }
-
-}
-*/
+// resets the pointer after a sintering event
 void SubParticle::UpdateTree_sinter(SubParticle *has_sintered,SubParticle *newsinter)
 {    
     if (m_primary != NULL) {
@@ -1638,19 +1520,12 @@ void SubParticle::UpdateTree_sinter(SubParticle *has_sintered,SubParticle *newsi
 			m_leftsinter=newsinter;
 
 		}
-		
-
     }
 
     // Update the tree above this sub-particle.
     if (m_parent != NULL) {
-        m_parent->UpdateTree_sinter(has_sintered,newsinter);
+        m_parent->UpdateTree_sinter(has_sintered,newsinter);				
     }
-	//Update the entire tree
-/*	else 
-	{
-		UpdateCache_sinter(has_sintered,newsinter);
-	}*/
 }
 
 
@@ -1745,43 +1620,16 @@ void SubParticle::printSubtreepicLoop(std::ostream &out,real x, real y, real z) 
 	{
 		 out<<3<<endl;
 	}
-	//  out<<x*10E8<<"   "<<y*10E8<<"   "<<z*10E8<<endl;
 	 
   }
   else
-  { //out<<"leftchild "<<10E8*m_leftchild->SphDiameter()<<endl;   
-	//out<<"rightchild "<<10E8*m_rightchild->SphDiameter()<<endl;
-    //out<<"this "<<10E8*SphDiameter()<<endl;
-	/*if(random<=0.33)
-	{   
-		x1=x-0.5*(SphDiameter()-m_leftchild->SphDiameter());
-	}
-	if(random>0.33 && random<=0.66)
-	{	
-		y1=y-0.5*(SphDiameter()-m_leftchild->SphDiameter());
-	}
-	if (random>0.66)
-	{
-		z1=z-0.5*(SphDiameter()-m_leftchild->SphDiameter());
-	}*/
+  { 
 	m_leftchild->printSubtreepicLoop(out, x1, y1, z1);
 
     x1=x;
     y1=y;
     z1=z;
 
-	/*if(random<=0.33)
-	{
-		x1=x-0.5*(SphDiameter())+m_leftchild->SphDiameter()+0.5*(m_rightchild->SphDiameter());
-	}
-	if(random>0.33 && random<=0.66)
-	{
-		y1=y-0.5*(SphDiameter())+m_leftchild->SphDiameter()+0.5*(m_rightchild->SphDiameter());
-	}
-	if (random>0.66)
-	{
-		z1=z-0.5*(SphDiameter())+m_leftchild->SphDiameter()+0.5*(m_rightchild->SphDiameter());
-	}*/
 
     m_rightchild->printSubtreepicLoop(out, x1, y1, z1);
   }
@@ -1875,7 +1723,7 @@ void SubParticle::releaseMem(void)
 {
     delete m_leftchild;  m_leftchild  = NULL;
     delete m_rightchild; m_rightchild = NULL;
-    delete m_primary;    m_primary    = NULL;
+    delete m_primary;    	m_primary    = NULL;
 }
 
 // Initialisation routine.
