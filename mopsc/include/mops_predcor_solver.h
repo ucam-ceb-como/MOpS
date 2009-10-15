@@ -73,10 +73,10 @@ public:
     // SOLVER INITIALISATION.
 
     // Initialises the solver to solve the given reactor.
-    virtual void Initialise(const Reactor &r);
+    virtual void Initialise(Reactor &r);
 
     // Resets the solver to solve the given reactor.
-    virtual void Reset(const Reactor &r);
+    virtual void Reset(Reactor &r);
 
 
     // SOLUTION.

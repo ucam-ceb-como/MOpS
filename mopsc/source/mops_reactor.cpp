@@ -140,7 +140,12 @@ void Reactor::SetTime(real t)
 // REACTOR CONTENTS.
 
 // Returns a pointer to the current reactor contents.
-Mops::Mixture *const Reactor::Mixture() const
+const Mops::Mixture *const Reactor::Mixture() const
+{
+    return m_mix;
+}
+
+Mops::Mixture *const Reactor::Mixture()
 {
     return m_mix;
 }

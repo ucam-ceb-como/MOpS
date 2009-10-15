@@ -71,7 +71,7 @@ Solver::~Solver(void)
 // SOLVER INITIALISATION AND RESET.
 
 // Initialises the solver to solve the given reactor.
-void Solver::Initialise(const Reactor &r)
+void Solver::Initialise(Reactor &r)
 {
     // Set up the ODE solver.
     m_ode.Initialise(r);
@@ -80,7 +80,7 @@ void Solver::Initialise(const Reactor &r)
 }
 
 // Resets the solver to solve the given reactor.
-void Solver::Reset(const Reactor &r)
+void Solver::Reset(Reactor &r)
 {
     // Reset the ODE solver.
     m_ode.ResetSolver(r);

@@ -86,7 +86,7 @@ public:
     // SOLVER SETUP.
 
     // Initialises the solver at the given time.
-    void Initialise(const Reactor &reac);
+    void Initialise(Reactor &reac);
 
     // Reset the solver.  Need to do this if the the reactor
     // contents has been changed between calls to Solve().
@@ -94,7 +94,7 @@ public:
 
     // Reset the solver.  Need to do this if the the reactor
     // contents has been changed between calls to Solve().
-    void ResetSolver(const Reactor &reac);
+    void ResetSolver(Reactor &reac);
 
     // Sets the time in the ODE solver.
 //    void SetTime(real time);

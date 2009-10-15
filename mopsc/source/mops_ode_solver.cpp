@@ -140,7 +140,7 @@ ODE_Solver &ODE_Solver::operator=(const Mops::ODE_Solver &rhs)
 // SOLVER SET UP.
 
 // Initialises the reactor to the given time.
-void ODE_Solver::Initialise(const Reactor &reac)
+void ODE_Solver::Initialise(Reactor &reac)
 {
     // Store useful variables.
     m_time = reac.Time();
@@ -245,7 +245,7 @@ void ODE_Solver::ResetSolver(void)
 
 // Reset the solver.  Need to do this if the the reactor
 // contents has been changed between calls to Solve().
-void ODE_Solver::ResetSolver(const Reactor &reac)
+void ODE_Solver::ResetSolver(Reactor &reac)
 {
     // Check that this reactor has the same problem size
     // as the last reactor.  If not then we have to resize the

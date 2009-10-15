@@ -104,7 +104,8 @@ public:
 
     // Returns a pointer to the mixture currently occupying
     // the reactor.
-    Mops::Mixture *const Mixture() const;
+    const Mops::Mixture *const Mixture() const;
+    Mops::Mixture *const Mixture();
 
     // Fills the reactor with the given mixture.
     void Fill(

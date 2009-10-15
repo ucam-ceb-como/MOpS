@@ -68,7 +68,7 @@ PredCorSolver::~PredCorSolver(void)
 // SOLVER INITIALISATION AND RESET.
 
 // Initialises the solver to solve the given reactor.
-void PredCorSolver::Initialise(const Reactor &r)
+void PredCorSolver::Initialise(Reactor &r)
 {
     // Set up ODE solver.
     FlameSolver::Initialise(r);
@@ -95,7 +95,7 @@ void PredCorSolver::Initialise(const Reactor &r)
 }
 
 // Resets the solver to solve the given reactor.
-void PredCorSolver::Reset(const Reactor &r)
+void PredCorSolver::Reset(Reactor &r)
 {
     // Set up ODE solver.
     FlameSolver::Reset(r);

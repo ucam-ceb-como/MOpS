@@ -653,7 +653,7 @@ void Simulator::closeOutputFile() const
 void Simulator::outputGasPhase(const Reactor &r) const
 {
     // Write gas-phase conditions to file.
-    m_file.write((char*)&r.Mixture()->RawData()[0], 
+    m_file.write(reinterpret_cast<const char*>(&r.Mixture()->RawData()[0]), 
                  sizeof(r.Mixture()->RawData()[0]) *
                  r.Mech()->SpeciesCount());
     real T = r.Mixture()->Temperature();
