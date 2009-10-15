@@ -100,6 +100,9 @@ public:
     // Returns true if the current point is after the given time.
     static bool IsAfterTime(const GasPoint &lhs, real t);
 
+    //Checks that two entries have the same time point
+    static bool IsEqualTime(const GasPoint &lhs, const GasPoint &rhs);
+
     // DATA.
 
     // Time at which gas conditions are valid.

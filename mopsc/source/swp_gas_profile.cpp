@@ -93,6 +93,12 @@ bool GasPoint::IsBeforePoint(const GasPoint &lhs, const GasPoint &rhs)
     return lhs.Time < rhs.Time;
 }
 
+//Checks that two entries have the same time point
+bool GasPoint::IsEqualTime(const GasPoint &lhs, const GasPoint &rhs)
+{
+    return lhs.Time == rhs.Time;
+}
+
 // Returns true if the current point is before the given time.
 bool GasPoint::IsBeforeTime(const GasPoint &lhs, real t)
 {
@@ -124,7 +130,11 @@ bool GasPoint::IsAfterTime(const GasPoint &lhs, real t)
 // Sort a gas-profile in order of ascending time.
 void Sweep::SortGasProfile(Sweep::GasProfile &prof)
 {
-    std::sort(prof.begin(), prof.end(), GasPoint::IsBeforePoint);
+    Sweep::GasProfile temp(prof);
+    prof.clear();
+    std::stable_sort(temp.begin(), temp.end(), GasPoint::IsBeforePoint);
+    GasProfile::iterator new_end=std::unique(temp.begin(), temp.end(), GasPoint::IsEqualTime);
+    prof.insert(prof.begin(),temp.begin(),new_end);
 }
 
 // Returns the first GasPoint defined after the given time.  If the time
