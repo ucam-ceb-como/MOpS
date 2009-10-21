@@ -224,8 +224,8 @@ void TransportFactory::getTempInterval(const real rT, int &iMin, int &iMax) cons
 	if(iMin < 0) iMin = 0;
 	iMax = iMin+3;
 	if(iMax > 36){
-		iMax = 36;
-		iMin = iMax-3;
+            iMax = 36;
+            iMin = iMax-3;
 	}
 
 
@@ -271,14 +271,17 @@ real TransportFactory::getOmega11(real rT, const real deltaStar) const{
 		}
 	}
 
+       
 	// Temperature denpendancy
 	if(rT < TStar[1]) rT = TStar[1];
 	if(rT > 500.e0) rT = 500.0;
-
+       
+        
 	if( rT <= 100 )
 		Omega11 = QuadInterPol(iMin, o11,rT); // quadratic interpolation
 	else
 		Omega11 = 0.623e0+rT*(-1.36e-3+ rT*(3.46e-6+ rT*(-3.43e-9)));
+        
 	return Omega11;
 
 
@@ -340,6 +343,8 @@ real PureSpeciesTransport::getSlefDiffusionCoeff(const real T, real p, const Spr
 	real rT = getReducedTemp(T,sp);
 	real deltaStar = getReducedDipole(sp);
 	omega11 = getOmega11(rT, deltaStar);
+                
+
 	Transport::TransportData td = sp.getTransportData();
 	selfDiff = (3.0/8.0)*sqrt(PI*NA*pow((kB*T),3)/sp.MolWt())/(p*PI*pow(td.getCollisionDia(),2)*omega11);
 	return selfDiff;
@@ -389,7 +394,7 @@ real PureSpeciesTransport::getThermalConductivity(const real T,
 		fTrans = 2.5*(1 - (2*CvRot *A/(PI*CvTrans*B)));
 		fRot = (rho*selfDiff/eta_k)*(1+ (2*A/(PI*B)));
 		fVib = rho * selfDiff/eta_k;
-
+                
 		lambda = eta_k*(fTrans*CvTrans + fRot* CvRot + fVib*CvVib)/sp.MolWt();
 	}
 	return lambda;
@@ -407,19 +412,22 @@ real MixtureTransport::getViscosity(const real T, const Sprog::Thermo::Mixture &
 	vector<real> moleFrac = mix.MoleFractions();	
 	unsigned int k,j;
 	real xTimesEta, xTimesPhi , eta;
-	real m_kj, eta_kj, phi_kj;
+	real m_kj, m_jk,eta_kj, phi_kj, nk;
 
 	eta = 0.0;
 	//int size = spv->size();
 
 	for(k=0; k!= spv->size(); k++){
-		xTimesEta = moleFrac[k] * (*spv)[k]->getViscosity(T);
-
+            nk = (*spv)[k]->getViscosity(T);
+		xTimesEta = moleFrac[k] * nk;
+                
 		xTimesPhi = 0.0;
 		for(j=0; j!= spv->size(); j++){
 			m_kj = (*spv)[k]->MolWt()/(*spv)[j]->MolWt();
-			eta_kj = (*spv)[k]->getViscosity(T) / (*spv)[j]->getViscosity(T);
-			phi_kj = 1/sqrt(8.0) * pow((1+m_kj),-0.5) * pow( (1+sqrt(eta_kj)*pow(m_kj,0.25)),2);
+                        m_jk = 1/m_kj;
+			eta_kj = nk / (*spv)[j]->getViscosity(T);
+			phi_kj = (1/sqrt(8.0)) * pow((1+m_kj),-0.5) * pow( (1+sqrt(eta_kj)*pow(m_jk,0.25)),2);
+                        
 			xTimesPhi += moleFrac[j]*phi_kj;
 		}
 		eta += xTimesEta/xTimesPhi;
@@ -447,10 +455,12 @@ real MixtureTransport::getThermalConductivity(const real T, real p, const Sprog:
 
 	//Transport::TransportData td;
 	//td = (*spv)[k]->getTransportData();
-
+        real  tc;
 	for(k=0;k!=spv->size();k++){
-		lambdaProd += moleFrac[k] * (*spv)[k]->getThermalConductivity(T,p,cp[k]);
-		lambdaFrac += moleFrac[k] / (*spv)[k]->getThermalConductivity(T,p,cp[k]);		
+                 tc = (*spv)[k]->getThermalConductivity(T,p,cp[k]);
+                 
+		lambdaProd += moleFrac[k] * tc ;
+		lambdaFrac += moleFrac[k] / tc;
 	}
 	//real lambda = 0.5*(lambdaProd + (1.0/lambdaFrac));
 
@@ -517,8 +527,12 @@ real MixtureTransport::binaryDiffusionCoeff(const int j,
 
 	omega11 = getOmega11(rT,deltaStar);
 
+
 	numer = sqrt(2*PI*NA*pow((kB*T),3)/m_jk);
+
 	denom = p*PI*pow(sigma_jk,2)*omega11;
+
+
 
 	return ((3.0/16.0)*(numer/denom));
 
@@ -531,12 +545,16 @@ vector<double> MixtureTransport::getMixtureDiffusionCoeff(const real T,
 	const SpeciesPtrVector *spv = mix.Species();
 	int size = spv->size();
 	int j,k;
+        real bDiff;
 	vector<double> Dmix(size);
 	vector<double> moleFracs = mix.MoleFractions();
 	for(k=0; k!=size; k++){
 		for(j=k+1; j!=size; j++){
-			 Dmix[k] += moleFracs[j]/binaryDiffusionCoeff(j,k,T,p,mix);
-			 Dmix[j] += moleFracs[k]/binaryDiffusionCoeff(j,k,T,p,mix);
+                    bDiff = binaryDiffusionCoeff(j,k,T,p,mix);
+			 //Dmix[k] += moleFracs[j]/binaryDiffusionCoeff(j,k,T,p,mix);
+			 //Dmix[j] += moleFracs[k]/binaryDiffusionCoeff(j,k,T,p,mix);
+                    Dmix[k] += moleFracs[j]/bDiff;
+                    Dmix[j] += moleFracs[k]/bDiff;
 		}
 	}
 
