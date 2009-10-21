@@ -70,7 +70,7 @@ void MechanismParser::ReadChemkin(const std::string &filename,
     // Open file for reading.
     ifstream fin; //(filename.c_str(), ios::in);
     fin.open(filename.c_str(), ios::in);
-
+    
     if (fin.good()) {
         if (verbose>0) {
             msg = "sprog: Successfully opened CHEMKIN file: " + filename + ".\n";
@@ -93,7 +93,7 @@ void MechanismParser::ReadChemkin(const std::string &filename,
         mech.SetUnits(CGS);
 
         try {
-                parseCK(fin, mech, status, verbose);
+            parseCK(fin, mech, status, verbose);
         } catch (logic_error &le) {
             fin.close();
             throw;
@@ -137,28 +137,28 @@ void MechanismParser::ReadTransport(const string& transFile, Sprog::Mechanism &m
 	int i;
 	inf.open(transFile.c_str());
 	if(inf.good()){
-		std::string transString;
-		vector<std::string> transpVector;
-		map< string,vector<string> > transpMap;
-		while(!inf.eof()){
-			getline(inf,transString);
-			if (!isEmpty(transString)){								
-				Strings::split(transString,transpVector," \t");						
-				i = mech.FindSpecies(convertToCaps(transpVector[0]));
-				if( i>= 0){
-					//cout << transpVector[0] <<  endl;
-					transpMap.insert(pair< std::string,vector<string> >(convertToCaps(transpVector[0]),transpVector));
-				}							
-				
-			}
-			
-		}
-		//cout << "Transport data read successfully\n";		
-		mech.setSpeciesTransport(transpMap,mech); 
-		// pass the map and mech object forf setting the transport object for species
+            std::string transString;
+            vector<std::string> transpVector;
+            map< string,vector<string> > transpMap;
+            while(!inf.eof()){
+                getline(inf,transString);
+                if (!isEmpty(transString)){
+                    Strings::split(transString,transpVector," \t");
+                    i = mech.FindSpecies(convertToCaps(transpVector[0]));
+                    if( i>= 0){
+                        //cout << transpVector[0] <<  endl;
+                        transpMap.insert(pair< std::string,vector<string> >(convertToCaps(transpVector[0]),transpVector));
+                    }
+
+                }
+
+            }
+            //cout << "Transport data read successfully\n";
+            mech.setSpeciesTransport(transpMap,mech);
+            // pass the map and mech object forf setting the transport object for species
 		
 	}else{
-		cout << "Transport file not specified \n";
+            cout << "Transport file not specified \n";
 		//exit(1);
 	}
 
@@ -615,7 +615,7 @@ unsigned int MechanismParser::parseCK_Species(const std::string &species,
             case ParseSp:
                 // We are now reading a species name.
                 if (isLetterOrNum(*c) || (*c=='(') || (*c==')') ||
-                    (*c=='*') || (*c=='-') || (*c=='+')) {
+                    (*c=='*') || (*c=='-') || (*c=='+')  || (*c=='.') || (*c=='_')  ) {
                     // This is a valid character for the species name.
                     tag.append(&(*c), 1);
                 } else if (isWhiteSpace(*c)) {
@@ -813,11 +813,23 @@ unsigned int MechanismParser::parseCK_Thermo(const std::string &thermo, Sprog::M
                     // Need to check the element name is valid.
                     try {
                         if (!isWhiteSpace(*els[i].substr(0,1).c_str())) {
-                            if (!isWhiteSpace(*els[i].substr(1,1).c_str())) {
-                                sp->AddElement(els[i], nels[i]);
+                            if (!isWhiteSpace(*els[i].substr(1,1).c_str())  ) {
+                                bool letter = false;
+                                for(int k=0; k<els[i].length(); k++){
+                                    letter = isLetter(*els[i].c_str());
+                                    if(!letter) break;
+                                }
+                                
+                                if(letter) sp->AddElement(els[i], nels[i]);
+                                
                                 if (verbose>3) printf((string("sprog: ") + cstr(nels[i]) + "x " + els[i] + ".\n").c_str());
                             } else {
-                                sp->AddElement(els[i].substr(0,1), nels[i]);
+                                bool letter = false;
+                                for(int k=0; k<els[i].length(); k++){
+                                    letter = isLetter(*els[i].c_str());
+                                    if(!letter) break;
+                                }
+                                if(letter) sp->AddElement(els[i].substr(0,1), nels[i]);
                                 if (verbose>3) printf((string("sprog: ") + cstr(nels[i]) + "x " + els[i].substr(0,1) + ".\n").c_str());
                             }                    
                         }
