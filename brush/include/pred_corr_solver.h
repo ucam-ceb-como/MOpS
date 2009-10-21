@@ -66,12 +66,11 @@ namespace Brush {
 class PredCorrSolver {
 
 public:
-    //! Create with an object to specify the fixed chemistry
-    PredCorrSolver(const ResetChemistry& reset_chem)
-        : mResetChemistry(reset_chem)
-        , mMaxDt(3.0e-4)
-        , mDeferralRatio(10.0)
-        {}
+    //! Create with an object with details of the chemistry, which is time invariant
+    PredCorrSolver(const ResetChemistry& reset_chem,
+                   const size_t corrector_iterations,
+                   const real rtol, const real atol,
+                   const bool split_diffusion, const bool split_advection);
 
     //! Advance solution to specified time
     void solve(Reactor1d &reac, const real t_stop, const int n_steps, const int n_iter) const;
@@ -92,6 +91,9 @@ protected:
     //! Put a particle that has left one cell into its destination
     void transportIn(Reactor1d & reac, const size_t destination_index, const Sweep::Transport::TransportOutflow &particle_details) const;
 
+    //! Carry out split transport on all particles from all cells
+    void splitParticleTransport(Reactor1d &reac, const real t_stop) const;
+
 private:
     //! Not possible to have a solver of this type without a reset chemistry object
     PredCorrSolver();
@@ -104,6 +106,12 @@ private:
 
     //! Expected number of events deferred per particle between fixed updates
     real mDeferralRatio;
+
+    //! Indicate if diffusion is to be split from the main particle processes
+    bool mSplitDiffusion;
+
+    //! Indicate if advection is to be split from the main particle processes
+    bool mSplitAdvection;
 
 }; //class PredCorrSolver
 } //namespace Brush

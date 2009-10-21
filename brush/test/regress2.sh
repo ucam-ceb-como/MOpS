@@ -36,7 +36,7 @@
 # Clean up any old files
 rm regress2*.csv
 
-../bin/brush_d.x -v 2 -b ./regress2/brush2a.xml -c ./regress2/chem.inp -d ./regress2/chemsoln.dat -t ./regress2/therm.dat -s ./regress2/sweep2a.xml -g ./regress2/geometry.xml -a ./regress2/partsoln2a.xml
+../bin/brush_d.x -v 2 -b ./regress2/brush2a.xml -c ./regress2/chem.inp -d ./regress2/chemsoln2a.dat -t ./regress2/therm.dat -s ./regress2/sweep2a.xml -g ./regress2/geometry.xml -a ./regress2/partsoln2a.xml
 if(($? != 0))
   then
     echo "Simulation failed"
@@ -72,6 +72,8 @@ if(($count124 != 114))
 fi
 
 ./regress2/regress2b.pl
+
+rm regress2*.csv
 
 # All tests passed if we get to here
 echo "All tests passed"

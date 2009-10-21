@@ -84,7 +84,7 @@ print "$m0, $m1\n";
 # Count number of failures
 my $failures = 0;
 
-if(abs($m0 - 4.465e10) > 4e8) {
+if(abs($m0 - 4.465e10) > 8e8) {
   print "Simulated mean M0 was $m0, when 4.465e10 cm^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -92,7 +92,7 @@ if(abs($m0 - 4.465e10) > 4e8) {
   ++$failures;
 }
 
-if(abs($m1 - 3.823e-11) > 2e-13) {
+if(abs($m1 - 3.823e-11) > 4e-13) {
   print "Simulated mean M1 was $m1, when 3.823e-11 g cm^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";

@@ -36,6 +36,10 @@
 
     Email:       mk306@cam.ac.uk
     Website:     http://como.cheng.cam.ac.uk
+ *
+ *
+ *\main Brush is a program for the coupled simulation of laminar reacting flow
+ * and particle population development in 1d systems.
  */
 
 #include <string>
@@ -155,11 +159,15 @@ int main(int argc, char* argv[])
     }
     // Log the geometry for testing purposes (remove prior to release)
     std::cout << pGeom->printMesh() << '\n';
-            
+
+    // Variables to hold data read from the input file
     Mops::timevector timeIntervals;
     int runs, iterations;
     std::string outputFileBaseName;
     std::vector<std::pair<real, real> > maxPCounts, maxM0s;
+    bool splitDiffusion = false;
+    bool splitAdvection = false;
+
     try {
         // Load the XML
         CamXML::Document settingsXML;
@@ -188,6 +196,20 @@ int main(int argc, char* argv[])
             iterations = atoi(node->Data().c_str());
         } else {
             throw std::runtime_error("An <iter> element must be supplied to specify number of corrector iterations");
+        }
+
+        // Numerical method for diffusion
+        node = root->GetFirstChild("diffusion");
+        if ((node != NULL) && ("split" == node->Data())) {
+            // simulate diffusion using spltting
+            splitDiffusion = true;
+        }
+
+        // Numerical method for advection
+        node = root->GetFirstChild("advection");
+        if ((node != NULL) && ("split" == node->Data())) {
+            // simulate advection using spltting
+            splitAdvection = true;
         }
 
         // Maximum number of computational particles per cell
@@ -352,8 +374,7 @@ int main(int argc, char* argv[])
             }
 
             // Read in the population
-            //!\todo remove the arbitrary 128
-            populationDetails.particleList = Mops::Settings_IO::ReadInitialParticles(**it, 128, mech.ParticleMech());
+            populationDetails.particleList = Mops::Settings_IO::ReadInitialParticles(**it, mech.ParticleMech());
 
             initialPopulationPoints.push_back(populationDetails);
         }
@@ -396,7 +417,8 @@ int main(int argc, char* argv[])
     initialReactor.ReplaceParticles(initialPopulationPoints.begin(), initialPopulationPoints.end());
 
     //========= Now run the simulation ===========================
-    Simulator sim(runs, iterations, timeIntervals, initialReactor, *pInitialChem, outputFileBaseName);
+    Simulator sim(runs, iterations, timeIntervals, initialReactor, *pInitialChem,
+                  outputFileBaseName, splitDiffusion, splitAdvection);
     sim.runSimulation(randomSeedOffset);
 
     //========= Output ===========================================

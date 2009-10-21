@@ -33,28 +33,19 @@
 #    Email:       mk306@cam.ac.uk
 #    Website:     http://como.cheng.cam.ac.uk
 
-regress1/regress1a.pl
-if(($?!=0)) 
+# Run the test
+./regress3/regress3a.pl
+
+if(($?!=0))
   then
+    echo "Simulation script failed"
+    echo "**************************"
+    echo "****** TEST FAILURE ******"
+    echo "**************************"
     exit $?
 fi
 
-regress1/regress1b.pl
-if(($?!=0)) 
-  then
-    exit $?
-fi
-
-regress1/regress1c.pl
-if(($?!=0)) 
-  then
-    exit $?
-fi
-
-# All tests passed
+# All tests passed if we get to here
 echo "All tests passed"
-
-rm regress1*.csv
-
 exit 0
 

@@ -120,6 +120,9 @@ public:
     //! Look at the contents of cell i
     const Mops::Reactor& getCell(const size_t i) const {return mReactors[i];}
 
+    //! Write access to the contents of cell i
+    Mops::Reactor& getCell(const size_t i) {return mReactors[i];}
+
     //! Physical time of reactor. Could be refined
     real getTime() const {return mReactors.front().Time();}
 

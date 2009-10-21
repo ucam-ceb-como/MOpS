@@ -41,6 +41,8 @@
 
 #include "reset_chemistry.h"
 
+#include <cassert>
+
 /*!
  * Create an object with a collection of empty reactors, all sharing
  * the same mechanism instance.  A copy of the mechanism is stored in
@@ -72,6 +74,8 @@ Brush::Reactor1d::Reactor1d(const Geometry::Geometry1d &geom, const Mops::Mechan
 
         r.Mixture()->Particles().Initialise(particleCount, mMech.ParticleMech());
         r.Mixture()->Reset(maxM0);
+
+        assert(r.Mixture() != NULL);
     }
 }
 

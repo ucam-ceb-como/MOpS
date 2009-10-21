@@ -59,16 +59,8 @@ public:
               const Mops::timevector &output_times,
               const Reactor1d &initial_reactor,
               const ResetChemistry &reset_chem,
-              const std::string output_file)
-        : mPaths(n_paths)
-        , mCorrectorIterations(n_corrector_iterations)
-        , mRtol(0.0)
-        , mAtol(0.0)
-        , mOutputTimeSteps(output_times)
-        , mInitialReactor(initial_reactor)
-        , mResetChemistry(reset_chem)
-        , mOutputFile(output_file)
-    {}
+              const std::string& output_file,
+              const bool split_diffusion, const bool split_advection);
 
     //! Run the simulation paths and store output
     void runSimulation(const size_t seed_offset);
@@ -107,6 +99,12 @@ private:
 
     //! Absolute error tolerance for ODE solver for chemistry
     real mAtol;
+
+    //! Whether to perform split simulation of particle diffusion
+    bool mSplitDiffusion;
+
+    //! Whether to perform split simulation of particle advection
+    bool mSplitAdvection;
 
     //! Use specified output steps
     Mops::timevector mOutputTimeSteps;

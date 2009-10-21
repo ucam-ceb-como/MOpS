@@ -38,44 +38,68 @@ use warnings;
 
 # Arguments for simulation
 my @simulationCommand = ("../bin/brush_d.x",
-                         "-g", "regress2/geometry.xml",
-                         "-c", "regress2/chem.inp",
-                         "-d", "regress2/chemsoln2b.dat",
-                         "-s", "regress2/sweep2b.xml",
-                         "-t", "regress2/therm.dat",
-                         "-b", "regress2/brush2b.xml",
-                         "-a", "regress2/partsoln2b.xml");
+                         "-g", "regress3/geometry.xml",
+                         "-c", "regress3/chem.inp",
+                         "-d", "regress3/chemsoln3a.dat",
+                         "-s", "regress3/sweep3a.xml",
+                         "-t", "regress3/therm.dat",
+                         "-b", "regress3/brush3a.xml",
+                         "-a", "regress3/partsoln3a.xml");
 
 # Run the simulation and wait for it to finish
 system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";
 
 # Collect all the moment data together
-system("../bin/merge-partstats.sh regress2badvection") == 0 or die "ERR: failed to merge moment files: $!";
+system("../bin/merge-partstats.sh regress3a-adv-diffn") == 0 or die "ERR: failed to merge moment files: $!";
 
 # Parse the moments file
 my $momentFile;
-open($momentFile, "<regress2badvectionMerged_partstats.csv") or die "ERR: failed to open merged moment file: $!";
+open($momentFile, "<regress3a-adv-diffnMerged_partstats.csv") or die "ERR: failed to open merged moment file: $!";
 
-my $m0 = 0;
+my $m0a = 0;
+my $counta = 0;
+
+my $m0b = 0;
+my $countb = 0;
 
 while(<$momentFile>) {
   my @fields = split /,/;
 
-  if(($fields[0] =~ /^0\.3/) && ((abs($fields[1] - 1.35) < 1e-6 ) || (abs($fields[1] - 1.25) < 1e-6) || (abs($fields[1] - 1.45) < 1e-6))) {
-      $m0 += $fields[3];
-      #print "$fields[3], ";
+  if(($fields[0] =~ /^0\.2$/) && (abs($fields[1] - 0.017) < 1e-6)) {
+      $m0a += $fields[3];
+      #print "t=0.2 x=0.017 $fields[3]\n";
+      $counta++;
+  }
+
+  if(($fields[0] =~ /^0\.3$/) && (abs($fields[1] - 0.0245) < 1e-6)) {
+      $m0b += $fields[3];
+      #print "t=0.3 x=0.0245 $fields[3]\n";
+      $countb++;
   }
 }
 
-print "$m0\n";
-if($m0 < 6.1e-7) {
-  print "Simulated M0 near x=1.35 was $m0, when at least 6.1e-7 cm^-3 expected\n";
+# take the mean of the m0 values
+$m0a = $m0a / $counta;
+$m0b = $m0b / $countb;
+
+#print "$m0a\n";
+if(abs($m0a - 1.7e-4) > 2e-5) {
+  print "Simulated M0 at t=0.2 near x=0.017 was $m0a, when analytic solution is 1.7e-4\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
+if(abs($m0b - 2.6e-4) > 3e-5) {
+  print "Simulated M0 at t=0.3 near x=0.0245 was $m0b, when analytic solution is 2.6e-4\n";
+  print "**************************\n";
+  print "****** TEST FAILURE ******\n";
+  print "**************************\n";
+  exit 2;
+}
+
+system("rm regress3*.csv");
 
 #print "All tests passed\n";
 exit 0;

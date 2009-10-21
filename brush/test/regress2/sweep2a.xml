@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <mechanism name="Rob test soot 1" units="CGS">
-    
+
+    <model type="drag" id="Temperature">
+        <!-- This value effectively turns off the simulation
+             of diffusion in the split particle transport
+             code by forcing the diffusion co-efficient to be
+             almost 0. -->
+        <A>1e100</A>
+    </model>
     
     <!-- Define particle components. -->
     

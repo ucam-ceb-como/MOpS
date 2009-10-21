@@ -55,6 +55,42 @@ using namespace Brush;
 const size_t Brush::Simulator::sFirstSeed = 123;
 
 /*!
+ *@param[in]    n_paths                     Number of independent paths to simulation
+ *@param[in]    n_corrector_iterations      Number of corrector iterations per step
+ *@param[in]    output_times                Times at which to save output
+ *@param[in]    intial_reactor              Initial condition
+ *@param[in]    reset_chem                  Object to specify chemical conditions
+ *@param[in]    output_file                 Base output file name
+ *@param[in]    split_diffusion             Activate split simulation of diffusion
+ *@param[in]    split_advection             Activate split simulation of advection
+ */
+Brush::Simulator::Simulator(const size_t n_paths,
+                            const size_t n_corrector_iterations,
+                            const Mops::timevector &output_times,
+                            const Reactor1d &initial_reactor,
+                            const ResetChemistry &reset_chem,
+                            const std::string& output_file,
+                            const bool split_diffusion,
+                            const bool split_advection)
+        : mPaths(n_paths)
+        , mCorrectorIterations(n_corrector_iterations)
+        , mRtol(0.0)
+        , mAtol(0.0)
+        , mSplitDiffusion(split_diffusion)
+        , mSplitAdvection(split_advection)
+        , mOutputTimeSteps(output_times)
+        , mInitialReactor(initial_reactor)
+        , mResetChemistry(reset_chem)
+        , mOutputFile(output_file)
+{
+    for(size_t i = 0; i != initial_reactor.getNumCells(); ++i) {
+        assert(initial_reactor.getCell(i).Mixture() != NULL);
+        assert(mInitialReactor.getCell(i).Mixture() != NULL);
+    }
+}
+
+
+/*!
  *@param[in]    seed_offset     Offset from standard seed for random number generation.
  * 
  * Run the simulation paths
@@ -84,7 +120,8 @@ void Brush::Simulator::runOnePath(const int seed) {
 
     // It might be better to change the solver from a class
     // to a namespace
-    PredCorrSolver solver(mResetChemistry);
+    PredCorrSolver solver(mResetChemistry, mCorrectorIterations, mRtol, mAtol,
+                          mSplitDiffusion, mSplitAdvection);
 
     //==================== File to store the moments for this run
     std::ofstream momentsFile(buildParticleStatsFileName(seed).c_str());
