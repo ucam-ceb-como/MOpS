@@ -811,30 +811,32 @@ unsigned int MechanismParser::parseCK_Thermo(const std::string &thermo, Sprog::M
                 if (verbose>3) printf("sprog: Elemental composition:\n");
                 for (i=0; i!=4; ++i) {
                     // Need to check the element name is valid.
-                    try {
-                        if (!isWhiteSpace(*els[i].substr(0,1).c_str())) {
-                            if (!isWhiteSpace(*els[i].substr(1,1).c_str())  ) {
-                                bool letter = false;
-                                for(int k=0; k<els[i].length(); k++){
-                                    letter = isLetter(*els[i].c_str());
-                                    if(!letter) break;
-                                }
+                    if (!isWhiteSpace(*els[i].substr(0,1).c_str())) {
+                        if (!isWhiteSpace(*els[i].substr(1,1).c_str())  ) {
+                            bool letter = false;
+                            for(unsigned int k=0; k<els[i].length(); k++){
+                                letter = isLetter(*els[i].c_str());
+                                if(!letter) break;
+                            }
+ 
+                            if(letter) 
+                                sp->AddElement(els[i], nels[i]);
                                 
-                                if(letter) sp->AddElement(els[i], nels[i]);
-                                
-                                if (verbose>3) printf((string("sprog: ") + cstr(nels[i]) + "x " + els[i] + ".\n").c_str());
-                            } else {
-                                bool letter = false;
-                                for(int k=0; k<els[i].length(); k++){
-                                    letter = isLetter(*els[i].c_str());
-                                    if(!letter) break;
-                                }
-                                if(letter) sp->AddElement(els[i].substr(0,1), nels[i]);
-                                if (verbose>3) printf((string("sprog: ") + cstr(nels[i]) + "x " + els[i].substr(0,1) + ".\n").c_str());
-                            }                    
-                        }
-                    } catch (std::invalid_argument &ia) {
-                        throw ia;
+                            if (verbose>3) 
+                                std::cout << "sprog: " << cstr(nels[i]) << "x " << els[i] << ".\n";
+
+                        } else {
+                            bool letter = false;
+                            for(unsigned int k=0; k<els[i].length(); k++){
+                                letter = isLetter(*els[i].c_str());
+                                if(!letter) break;
+                            }
+                            if(letter)
+                                sp->AddElement(els[i].substr(0,1), nels[i]);
+
+                            if (verbose>3) 
+                                std::cout << "sprog: " << cstr(nels[i]) << "x " << els[i].substr(0,1) << ".\n";
+                        }                    
                     }
                 }
                 

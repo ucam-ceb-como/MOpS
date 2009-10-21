@@ -49,10 +49,6 @@ using namespace Sprog::Thermo;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-ThermoInterface::ThermoInterface(void)
-{
-}
-
 ThermoInterface::~ThermoInterface(void)
 {
 }

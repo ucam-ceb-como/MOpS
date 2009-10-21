@@ -80,9 +80,6 @@ namespace Thermo
 class ThermoInterface
 {
 public:
-    // Constructors
-    ThermoInterface(void); // Default constructor.
-
     // Destructors.
     virtual ~ThermoInterface(void); // Default destructor.
 
