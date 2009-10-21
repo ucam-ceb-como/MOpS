@@ -155,7 +155,7 @@ void ParticleImage::Write3dout(std::ofstream &file, double x, double y, double z
 void ParticleImage::LengthWidth(double &L, double &W)
 {	
     //align the particle along the z axis
-	double xmax=0,xmax_y=0,xmax_z=0;
+	double xmax=0;
 	double ymax=0;
 	double xmin=0;
 	double ymin=0;

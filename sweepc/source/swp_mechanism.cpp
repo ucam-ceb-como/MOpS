@@ -955,16 +955,12 @@ void  Mechanism::output(Cell &sys, real t) const
 							real avcoldiam=0.;
 							numpart=0;
 							numsubpart=0;
-							float coldiamdistr[500]={0};
 							fname = "coldiamdistr" + cstr(t) + ".txt";
 							file.open(fname.c_str());
-					//		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
 							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
 								avcoldiam=(*(*i)).CollDiameter()+avcoldiam;
 								numpart++;
 								numsubpart+=(*(*i)).NumSubPart();
-							//	int intdiam=(int)((*(*i)).CollDiameter()*1e9);
-							//	coldiamdistr[intdiam]++;
                                 file << (*(*i)).CollDiameter() <<endl;
 							} 
                             file.close();
