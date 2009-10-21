@@ -73,13 +73,13 @@ void Strings::split(const std::string &str,
     }
 }
 
-int Strings::findinlist(std::string str, std::vector<std::string> &list)
+int Strings::findinlist(std::string str, std::vector<std::string> &string_list)
 {
     // Very straightforward, just loop over the list and locate
     // the first element that matches the given string.
     int i;
-    for (i=0; i<(int)list.size(); i++) {
-        if (str.compare(list[i]) == 0) return i;
+    for (i=0; i<(int)string_list.size(); i++) {
+        if (str.compare(string_list[i]) == 0) return i;
     }
     return -1;
 }

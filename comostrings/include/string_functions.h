@@ -60,7 +60,7 @@ namespace Strings
     // < 0 if not found.
     int findinlist(
         std::string str,               // String to locate.
-        std::vector<std::string> &list // Vector of strings in which 
+        std::vector<std::string> &string_list // Vector of strings in which 
                                        // to locate target string.
         );
 
