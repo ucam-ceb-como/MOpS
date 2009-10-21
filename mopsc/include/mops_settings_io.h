@@ -100,8 +100,7 @@ namespace Settings_IO
 
     // Read initial particles from a file into a list
     Sweep::PartPtrList ReadInitialParticles(const CamXML::Element &node,
-                                                   const unsigned int max_ensemble_size,
-                                                   const Sweep::Mechanism & particle_mech);
+                                            const Sweep::Mechanism & particle_mech);
 } //namespace Settings_IO
 } //namespace Mops
 

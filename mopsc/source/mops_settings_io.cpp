@@ -321,7 +321,7 @@ Reactor *const readReactor(const CamXML::Element &node,
         }
 
         // Now read in the list of particles
-        particleList = Settings_IO::ReadInitialParticles(*subnode, max_particle_count, mech.ParticleMech());
+        particleList = Settings_IO::ReadInitialParticles(*subnode, mech.ParticleMech());
 
         //mix->Particles().Initialise(max_particle_count, mech.ParticleMech());
         mix->Particles().SetParticles(particleList.begin(), particleList.end());
@@ -973,14 +973,14 @@ void Settings_IO::readTimeIntervals(const CamXML::Element &node,
  * Read a list of initial particles specified in an XML file
  *
  *@param[in]    population_xml      xml node containing initial particles as children
- *@param[in]    max_ensemble_size   Maximum number of particles that can be handled
  *@param[in]    particle_mech       Mechanism defining the meaning of the particles
  *
  *@return       Container of the particles that form the initial population
+ *
+ *@exception    std::runtime_error  If particles are specified they must have strictly positive counts
  */
 Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& population_xml,
-                                              const unsigned int max_ensemble_size,
-                                              const Sweep::Mechanism & particle_mech)
+                                                     const Sweep::Mechanism & particle_mech)
 {
     // Accumulate in this container a collection of particles to be inserted into the ensemble
     Sweep::PartPtrList particleList;
@@ -995,12 +995,25 @@ Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& popu
         return particleList;
     }
 
+    // See if there is a spatial position for the particles
+    const CamXML::Attribute *attr = population_xml.GetAttribute("x");
+    real position = 0.0;
+    if(attr) {
+        position = atof(attr->GetValue().c_str());
+    }
+
     // Now loop through the particles one by one
     vector<CamXML::Element*>::const_iterator it(particleXML.begin());
     const vector<CamXML::Element*>::const_iterator itEnd(particleXML.end());
     while(it != itEnd)
     {
-        const std::auto_ptr<const Sweep::Particle> pParticle(Sweep::Particle::createFromXMLNode(**it, particle_mech));
+        // Build a particle from the xml and use an auto_ptr so the particle
+        // instance will be deleted if an exception is thrown while processing
+        // the rest of the input.
+        const std::auto_ptr<Sweep::Particle> pParticle(Sweep::Particle::createFromXMLNode(**it, particle_mech));
+
+        // Assume particle population applies at time 0.
+        pParticle->setPositionAndTime(position, 0.0);
 
         // See how many times this particle appears (default is 1)
         int repeatCount = 1;

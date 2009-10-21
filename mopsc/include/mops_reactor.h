@@ -272,6 +272,6 @@ private:
 };
 
 typedef Reactor Batch;
-};
+} //namespace Mops
 
 #endif
