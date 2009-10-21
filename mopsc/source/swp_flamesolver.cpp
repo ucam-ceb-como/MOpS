@@ -246,8 +246,16 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     {
         // Calculate LPDA splitting time step.
         if (mech.AnyDeferred() && (r.Mixture()->ParticleCount() > 0)) {
+
+            //save the old reactors density
+            double old_dens=r.Mixture()->MassDensity();
+
             // Calculate the chemical conditions.
             linInterpGas(t, m_gasprof, *r.Mixture());
+
+            // Scale M0 according to gas-phase expansion.
+            real m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
+            r.Mixture()->SetM0(r.Mixture()->MassDensity() * m0 / old_dens);
 
             // Get the process jump rates (and the total rate).
             jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);

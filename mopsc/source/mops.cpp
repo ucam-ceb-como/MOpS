@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
     string settfile("mops.inx");
     string swpfile("sweep.xml");
     string sensifile("sensi.xml");
+    string gasphase("gasphase.inp");
     bool fsolve        = true;  // Default is to solve ..
     bool fpostprocess  = false; // .. but not post-process.
     bool foldfmt       = false;
@@ -87,7 +88,11 @@ int main(int argc, char *argv[])
         if (strcmp(argv[i], "-c") == 0) {
             // Chemical mechanism file (CK format).
             chemfile = argv[++i];
-        } else if (strcmp(argv[i], "-t") == 0) {
+        }
+        else if (strcmp(argv[i], "-gp") == 0) {
+            // Gas-phase profile for flame pp mode.
+            gasphase = argv[++i];
+        }   else if (strcmp(argv[i], "-t") == 0) {
             // Thermodynamic properties file (CK format).
             thermfile = argv[++i];
         } else if (strcmp(argv[i], "-r") == 0) {
@@ -220,15 +225,13 @@ int main(int argc, char *argv[])
         } 
         else {
             if (soltype == FlamePP){
-                dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(chemfile, mech);
+                dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gasphase, mech);
             }
             if (soltype == PAH){
-                    dynamic_cast<Sweep::PAHSolver*>(solver)->LoadGasProfile(chemfile, mech);
+                    dynamic_cast<Sweep::PAHSolver*>(solver)->LoadGasProfile(gasphase, mech);
+                    Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
                     dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data1.csv");
-                    //dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data.csv2");
-                    //dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data.csv3");
-                   // dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data.csv4");
-                    //dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data.csv5");
+                    
             }
 
         }
