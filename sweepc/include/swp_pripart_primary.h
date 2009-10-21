@@ -260,7 +260,7 @@ protected:
     void updatePrimaries(void);
 
     // Merges a pri-particle list into the current list.
-    void mergeInList(const std::vector<PriPart> &list);
+    void mergeInList(const std::vector<PriPart> &particle_list);
 
     // Sorts the primary particle list between the two
     // given iterators in descending order of mass.
