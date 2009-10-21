@@ -61,9 +61,8 @@ SubModelCache::SubModelCache(Sweep::ParticleCache &parent)
 
 // Copy constructor.
 SubModelCache::SubModelCache(const SubModelCache &copy)
+    : m_parent(copy.m_parent)
 {
-    // Use assignment operator.
-    *this = copy;
 }
 
 // Default destructor.

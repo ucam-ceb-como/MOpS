@@ -54,19 +54,24 @@ using namespace std;
 
 // Default constructor (protected).
 Particle::Particle(void)
-: m_ensemble(NULL)
+: m_Position(0.0)
+, m_PositionTime(0.0)
 {
 }
 
 // Initialising constructor.
 Particle::Particle(real time, const Sweep::ParticleModel &model)
-: SubParticle(time, model), m_ensemble(NULL)
+: SubParticle(time, model)
+, m_Position(0.0)
+, m_PositionTime(0.0)
 {
 }
 
 // Initialising constructor (from Primary particle).
 Particle::Particle(Sweep::Primary &pri)
-: SubParticle(pri), m_ensemble(NULL)
+: SubParticle(pri)
+, m_Position(0.0)
+, m_PositionTime(0.0)
 {
 }
 
@@ -155,34 +160,49 @@ Particle &Particle::operator=(const Sweep::Particle &rhs)
 {
     if (this != &rhs) {
         SubParticle::operator=(rhs);
-        m_ensemble = rhs.m_ensemble;
+        m_Position = rhs.m_Position;
+        m_PositionTime = rhs.m_PositionTime;
     }
     return *this;
 }
 
-// Addition-assignment operator.  This implements coagulation.
+/*!
+ * Addition-assignment operator.  This implements coagulation.
+ *
+ *@param[in]    rhs     Particle with which to coagulate
+ *
+ *@return       Newly coagulated particle
+ */
 Particle &Particle::operator+=(const Sweep::Particle &rhs)
 {
     SubParticle::operator+=(rhs);
+
+    m_Position = (m_Position + rhs.m_Position) * 0.5;
+    m_PositionTime = (m_PositionTime + rhs.m_PositionTime) * 0.5;
+
     return *this;
 }
 
 
 // Addition operator.  This also implements coagulation.
-const Particle Particle::operator +(const Sweep::Particle &rhs) const
+const Particle Particle::operator+(const Sweep::Particle &rhs) const
 {
+    // Make a new particle and then increment it.
     return Particle(*this) += rhs;
 }
 
-
-// PARENT ENSEMBLE.
-
-// Returns the parent ensemble.
-const Sweep::Ensemble *const Particle::Ensemble(void) const {return m_ensemble;}
-
-// Sets the parent ensemble.
-void Particle::SetEnsemble(Sweep::Ensemble &ens) {m_ensemble = &ens;}
-
+/*!
+ * Both position and the associated time must be updated together.  This is
+ * because it makes no sense to specify a position without knowing when it
+ * applies.
+ *
+ *@param[in]    x       New position of particle
+ *@param[in]    t       Time at which new position is correct
+ */
+void Particle::setPositionAndTime(const real x, const real t) {
+    m_Position = x;
+    m_PositionTime = t;
+}
 
 // READ/WRITE/COPY.
 

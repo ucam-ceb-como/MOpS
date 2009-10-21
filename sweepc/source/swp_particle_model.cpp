@@ -50,6 +50,7 @@
 #include "swp_abf_model.h"
 #include "swp_PAH_primary.h"
 #include <stdexcept>
+#include <cmath>
 
 using namespace Sweep;
 using namespace std;
@@ -110,6 +111,14 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
 
         // Copy aggregation model.
         m_aggmodel = rhs.m_aggmodel;
+
+        // Copy Knudsen drag formula parameters
+        m_DragA = rhs.m_DragA;
+        m_DragB = rhs.m_DragB;
+        m_DragE = rhs.m_DragE;
+
+        // Choice of drag expression
+        m_DragType = rhs.m_DragType;
     }
     return *this;
 }
@@ -473,6 +482,15 @@ void ParticleModel::Serialize(std::ostream &out) const
         // Write the aggregation model ID.
         n = (unsigned int)m_aggmodel;
         out.write((char*)&n, sizeof(n));
+
+        // Write Knudsen drag parameters
+        out.write(reinterpret_cast<const char *>(&m_DragA), sizeof(m_DragA));
+        out.write(reinterpret_cast<const char *>(&m_DragB), sizeof(m_DragB));
+        out.write(reinterpret_cast<const char *>(&m_DragE), sizeof(m_DragE));
+
+        // Drag model choice
+        out.write(reinterpret_cast<const char *>(&m_DragType), sizeof(m_DragType));
+
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, ParticleModel::Serialize).");
@@ -528,6 +546,14 @@ void ParticleModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_aggmodel = (AggModels::AggModelType)n;
 
+                // Read in Knudsen drag parameters
+                in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
+                in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
+                in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
+
+                // Drag model choice
+                in.read(reinterpret_cast<char*>(&m_DragType), sizeof(m_DragType));
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -550,6 +576,12 @@ void ParticleModel::init(void)
     m_species      = NULL;
     m_subpart_tree = false;
     m_aggmodel     = AggModels::Spherical_ID;
+
+    m_DragA = 0.0;
+    m_DragB = 0.0;
+    m_DragE = 0.0;
+
+    // Not sure what to put as default for m_DragType
 }
 
 // Clears the current ParticleModel from memory.
@@ -578,4 +610,107 @@ void ParticleModel::releaseMem(void)
     // Set sub-particle tree and aggregation models to default values.
     m_subpart_tree = false;
     m_aggmodel     = AggModels::Spherical_ID;
+}
+
+/*!
+ * The Knudsen correction to the Stokes formula for the drag coefficient depends
+ * on three constants, see table I of Li & Wang, Phys. Rev. E 68, 061206 (2003).
+ * The formula is
+ * \f[
+ *    \frac{6 \pi \mu R}{1 + Kn \left[A + B \exp\left(-E/Kn\right)\right]}
+ * \f]
+ *
+ *@param[in]    A   Constant A from above table
+ *@param[in]    B   Constant B from above table
+ *@param[in]    E   Constant E from above table
+ */
+void ParticleModel::SetKnudsenDragConstants(const real A, const real B, const real E) {
+    m_DragA = A;
+    m_DragB = B;
+    m_DragE = E;
+}
+
+/*!
+ * The drag coefficient is calculated using the the Knudsen correction to the
+ * Stokes formula for the drag coefficient, see table I of Li & Wang,
+ * Phys. Rev. E 68, 061206 (2003).  Note that this article casts considerable
+ * doubt on the general validity of this standard formula, which is implemented
+ * here as a base case for further work.
+ * The formula is
+ * \f[
+ *    \frac{6 \pi \mu R}{1 + Kn \left[A + B \exp\left(-E/Kn\right)\right]}.
+ * \f]
+ *
+ *@param[in]    sys     System in which particle experiences drag
+ *@param[in]    sp      Particle for which to calculate drag coefficient
+ *
+ *@return       Drag coefficient
+ */
+real ParticleModel::KnudsenDragCoefficient(const Cell &sys, const Particle &sp) const {
+    const real Kn = Sweep::KnudsenAir(sys.Temperature(), sys.Pressure(), sp.CollDiameter());
+
+    // 3 * pi = 9.424777962 and note that diameter not radius is used below
+    const real numerator = 9.424777962 * sp.CollDiameter() * Sweep::ViscosityAir(sys.Temperature());
+
+    return numerator / (1 + Kn * (m_DragA + m_DragB * std::exp(-m_DragE / Kn)));
+}
+
+/*!
+ * The drag coefficient for the free molecular regimes is calculated using a
+ * reduced collision integral of 1 following the formula in table I of Li & Wang,
+ * Phys. Rev. E 68, 061206 (2003).
+ * The formula is
+ * \f[
+ *    \frac{8}{3}\sqrt{2 \pi m_{\mathrm{gas}} k T} N R^2,
+ * \f]
+ * where \f$ m_{\mathrm{gas}} = 0.028 \mathrm{kg mol}^{-1}\f$.
+ *
+ *@param[in]    sys     System in which particle experiences drag
+ *@param[in]    sp      Particle for which to calculate drag coefficient
+ *
+ *@return       Drag coefficient
+ */
+real ParticleModel::FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const {
+    return 5.355264342e-24 * std::sqrt(sys.Temperature()) * sys.Density() * sp.CollDiamSquared();
+}
+
+/*!
+ * For testing purposes it is useful to have a drag coefficient that is
+ * proprtional to temperature so that the diffusion constant calculated using
+ * Einstein's relation \see{DiffusionCoefficient} is a constant independent of
+ * particle properties and the gaseous environment.
+ *
+ *@param[in]    sys     System in which particle experiences drag
+ *@param[in]    sp      Particle for which to calculate drag coefficient
+ *
+ *@return       Drag coefficient
+ */
+real ParticleModel::TemperatureDragCoefficient(const Cell &sys, const Particle &sp) const {
+    return m_DragA * sys.Temperature();
+}
+
+/*!
+ * Calculate diffusion co-efficient using Einstein's relation
+ * \f[
+ *    D = \frac{k_B T}{k_d}.
+ * \f]
+ *
+ *@param[in]    sys     System in which particle experiences drag
+ *@param[in]    sp      Particle for which to calculate drag coefficient
+ *
+ *@return       Diffusion coefficient
+ */
+real ParticleModel::DiffusionCoefficient(const Cell &sys, const Particle &sp) const {
+    switch(m_DragType) {
+        case KnudsenDrag:
+            return Sweep::KB * sys.Temperature() / KnudsenDragCoefficient(sys, sp);
+            // Will not go any further because of return statement.
+        case FreeMolDrag:
+            return Sweep::KB * sys.Temperature() / FreeMolDragCoefficient(sys, sp);
+        case TemperatureDrag:
+            return Sweep::KB * sys.Temperature() / TemperatureDragCoefficient(sys, sp);
+    }
+
+    throw std::runtime_error("Unrecognised drag type in Sweep::ParticleModel::DiffusionCoefficient()");
+    return 0.0;
 }

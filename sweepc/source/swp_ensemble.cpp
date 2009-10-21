@@ -297,12 +297,10 @@ int Sweep::Ensemble::Add(Particle &sp)
         // We are adding a new particle.
         i=m_count++;
         m_particles[i] = &sp;
-        sp.SetEnsemble(*this);
     } else if ((unsigned)i < m_capacity) {
         // Replace an existing particle (if i=m_capacity) then
         // we are removing the new particle, so just ignore it.
         Replace(i, sp);
-        sp.SetEnsemble(*this);
     }
 
     // Now we must recalculate the tree by inserting the particle properties
@@ -851,7 +849,6 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 // Read the particles.
                 for (unsigned int i=0; i!=m_count; ++i) {
                     Particle *p = new Particle(in, model);
-                    p->SetEnsemble(*this);
                     m_particles[i] = p;
                 }
 

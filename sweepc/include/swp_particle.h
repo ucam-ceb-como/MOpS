@@ -74,7 +74,7 @@ public:
 	// Destructor.
     ~Particle(void);
     
-    //* Create a new particle using the model according to the xml data 
+    //! Create a new particle using the model according to the xml data
     static Particle* createFromXMLNode(const CamXML::Element& xml, const Sweep::ParticleModel& model);
 
     // Operators.
@@ -82,24 +82,31 @@ public:
     Particle &operator+=(const Particle &rhs);
     const Particle operator+(const Particle &rhs) const;
 
-
-    // PARENT ENSEMBLE.
-
-    // Returns the parent ensemble.
-    const Sweep::Ensemble *const Ensemble(void) const;
-
-    // Sets the parent ensemble.
-    void SetEnsemble(Sweep::Ensemble &ens);
-
+    // POSITION DATA
+    
+    //! Get spatial position
+    real getPosition() const {return m_Position;}
+    
+    //! Get time at which spatial position was valid
+    real getPositionTime() const {return m_PositionTime;}
+    
+    //! Set spatial position of particle and time at which it applied
+    void setPositionAndTime(const real x, const real t);
 
     // READ/WRITE/COPY.
 
     // Creates a clone of the particle.
     Particle *const Clone() const;
 
+    // Why is there no serialisation?
+
 private:
-    // Parent ensemble.
-    Sweep::Ensemble *m_ensemble;
+
+    //! Spatial position of particle
+    real m_Position;
+
+    //! Time at which position was valid
+    real m_PositionTime;
 
     // Can't create a particle without knowledge of the components
     // and the tracker variables.

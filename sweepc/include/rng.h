@@ -198,6 +198,28 @@ namespace Sweep
         if (p != pp) bnl = n - bnl; // Remember to undo symmetry transformation.
         return (int)bnl;
     }
+
+    /*!
+     * Return a real number from a normal (Gaussian) distribution with given
+     * mean and standard deviation by polar form of Box-Muller transformation
+     *
+     *@param[in]    mean    Mean of Normal distribution
+     *@param[in]    stddev  Standard deviation of Normal distribution
+     *
+     *@return       Sample from N(mean, stddev)
+     */
+    inline double randNorm(const double mean, const double stddev ) {
+        double x, y, r;
+        do
+        {
+                x = 2.0 * rnd() - 1.0;
+                y = 2.0 * rnd() - 1.0;
+                r = x * x + y * y;
+        }
+        while ( r >= 1.0 || r == 0.0 );
+        double s = sqrt( -2.0 * log(r) / r );
+        return mean + x * s * stddev;
+    }
 };
 
 #endif

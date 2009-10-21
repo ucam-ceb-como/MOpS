@@ -57,7 +57,14 @@ class ParticleCache;
 
 namespace SubModels
 {
-// Declare base class for storing sub-model data caches.
+/*!
+ * Base class for storing sub-model data caches.
+ *
+ * There is a major problem with this class in that it defines an interface
+ * throught pure virtual functions, but also contains a data member.  How does
+ * one implement assignment in concrete derived classes when operator= is pure
+ * virtual in a class that has a data member.
+ */
 class SubModelCache
 {
 public:

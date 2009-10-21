@@ -170,6 +170,67 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                 }
                 SubModels::ARSSC_Model::SetPAH_Tracker(ipah);
             }
+        } else if (str == "drag") {
+            // Read drag model ID.
+            str = (*i)->GetAttributeValue("id");
+            
+            if(str == "StokesCunningham") {
+                // Parameters of the drag expression
+                real A, B, E;
+
+                CamXML::Element* numberXML = (*i)->GetFirstChild("A");
+                if(numberXML != NULL) {
+                    A = atof(numberXML->Data().c_str());
+                }
+                else {
+                    throw std::runtime_error("Parameter A value must be given for StokesCunningham drag (Sweep, MechParser::readV1)");
+                }
+
+                numberXML = (*i)->GetFirstChild("B");
+                if(numberXML != NULL) {
+                    B = atof(numberXML->Data().c_str());
+                }
+                else {
+                    throw std::runtime_error("Parameter B value must be given for StokesCunningham drag (Sweep, MechParser::readV1)");
+                }
+
+                numberXML = (*i)->GetFirstChild("E");
+                if(numberXML != NULL) {
+                    E = atof(numberXML->Data().c_str());
+                }
+                else {
+                    throw std::runtime_error("Parameter E value must be given for StokesCunningham drag (Sweep, MechParser::readV1)");
+                }
+
+                // Set the drag parameters on the mechanism
+                mech.SetKnudsenDragConstants(A, B, E);
+                mech.SetDragType(Sweep::ParticleModel::KnudsenDrag);
+                
+            }
+            else if(str == "FreeMol") {
+                mech.SetDragType(Sweep::ParticleModel::FreeMolDrag);
+            } else if(str == "Temperature") {
+                mech.SetDragType(Sweep::ParticleModel::TemperatureDrag);
+
+                // Get constant of proportionality between drag and temperature
+                CamXML::Element* numberXML = (*i)->GetFirstChild("A");
+                real coeff;
+                if(numberXML != NULL) {
+                    coeff = atof(numberXML->Data().c_str());
+                }
+                else {
+                    throw std::runtime_error("Parameter A value must be given for drag proprtional to temperature (Sweep, MechParser::readV1)");
+                }
+
+                // This option is just for testing so just reuse the support
+                // for the Knudsen regime
+                mech.SetKnudsenDragConstants(coeff, 0.0, 0.0);
+
+
+            } else {
+                throw std::runtime_error("Unrecognised drag model id (Sweep, MechParser::readV1).");
+            }
+            
         } else {
             // An invalid model type has been supplied.
             throw runtime_error("Invalid model type (" + str + ") in XML file "

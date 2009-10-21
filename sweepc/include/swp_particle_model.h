@@ -210,8 +210,37 @@ public:
     // Reads the object from a binary stream.
     void Deserialize(std::istream &in);
 	 
-	 double CollisionEff(Particle *p1, Particle *p2) const;
+    double CollisionEff(Particle *p1, Particle *p2) const;
 
+    //! Initialise the Knudsem drag coefficient  calculation
+    void SetKnudsenDragConstants(const real A, const real B, const real E);
+
+    //! Calculate the drag coefficient for a particle using the Knudsen correction
+    real KnudsenDragCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate the drag coefficient for a particle using the Knudsen correction
+    real FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate the drag coefficient for a particle as constant times temperature
+    real TemperatureDragCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate a particle diffusion coefficient
+    real DiffusionCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Select between possible drag models for use in diffusion coefficients
+    enum DragType {
+        //! Knudsen expression for drag coefficient
+        KnudsenDrag,
+
+        //! Free molecular regime drag coefficient
+        FreeMolDrag,
+
+        //! Drag coefficient proprtional to temperature
+        TemperatureDrag,
+    };
+
+    //! Choose between drag models
+    void SetDragType(const DragType& drag) {m_DragType = drag;}
 
 protected:
     // The species used to define the processes and the particles.
@@ -245,6 +274,18 @@ protected:
     // Clears the model from memory.
     void releaseMem(void);
 
+private:
+    //! Constant A from Knudsen drag coefficient expression
+    real m_DragA;
+
+    //! Constant B from Knudsen drag coefficient expression
+    real m_DragB;
+
+    //! Constant E from Knudsen drag coefficient expression
+    real m_DragE;
+
+    //! Drag expression to use
+    DragType m_DragType;
 };
-};
+} //namespace Sweep
 #endif

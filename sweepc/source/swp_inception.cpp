@@ -41,7 +41,11 @@
 */
 
 #include "swp_inception.h"
+
 #include "swp_mechanism.h"
+
+#include "local_geometry1d.h"
+
 #include <cmath>
 #include <stdexcept>
 
@@ -301,15 +305,63 @@ real Inception::RateTerms(const real t, const Cell &sys,
 
 // PERFORMING THE PROCESS.
 
-// Performs the process on the given system.  The responsible rate term is given
-// by index.  Returns 0 on success, otherwise negative.
-int Inception::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const {
+/*!
+ * \param       t       Time
+ * \param       sys     System to update
+ * \param       iterm   Process term responsible for this event
+ * \param       out     Details of any particle being transported out of system
+ *
+ * \return      0 on success, otherwise negative.
+ *
+ * This method is provided to implement a pure virtual method in the parent
+ * class.  It provides default geometry information for a call through to an
+ * overload.
+ */
+ int Sweep::Processes::Inception::Perform(real t, Cell &sys, unsigned int iterm,
+                                          Transport::TransportOutflow *out) const {
+     return Perform(t, sys, Geometry::LocalGeometry1d(), iterm, Sweep::rnd, out);
+ }
+
+/*!
+ * Create a new particle and add it to the ensemble with position uniformly
+ * distributed over the grid cell.
+ *
+ * The iterm parameter is included because it will be needed for many process
+ * types and this function is meant to have a general signature.
+ *
+ * \param[in]       t               Time
+ * \param[in]       local_geom      Details of geometry around current location
+ * \param[in,out]   sys             System to update
+ * \param[in]       iterm           Process term responsible for this event
+ * \param[out]      out             Details of any particle being transported out of system
+ *
+ * \return      0 on success, otherwise negative.
+ */
+int Inception::Perform(const real t, Cell &sys,
+                       const Geometry::LocalGeometry1d &local_geom,
+                       const unsigned int iterm,
+                       real (*rng)(),
+                       Transport::TransportOutflow * const out) const {
 
     // This routine performs the inception on the given chemical system.
 
     // Create a new particle of the type specified
     // by the system ensemble.
     Particle *sp = m_mech->CreateParticle(t);
+
+    // Get the cell vertices
+    fvector vertices = local_geom.cellVertices();
+
+    // Sample a uniformly distributed position, note that this method
+    // works whether the vertices come in increasing or decreasing order,
+    // but 1d is assumed for now.
+    real posn = vertices.front();
+
+    const real width = vertices.back() - posn;
+    posn += width /2; //* rng();
+
+    sp->setPositionAndTime(posn, t);
+
 
     // Initialise the new particle.
     sp->Primary()->SetComposition(m_newcomp);

@@ -78,7 +78,7 @@ class Process
 public:
 	/// Constructors.
     Process(const Sweep::Mechanism &mech); // Default Constructor.
-	Process(const Process &copy);          // Copy-constructor.
+    Process(const Process &copy);          // Copy-constructor.
     Process(                         // Stream-reading constructor.
         std::istream &in,            //  - Input stream.
         const Sweep::Mechanism &mech //  - Parent mechanism.

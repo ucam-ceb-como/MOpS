@@ -52,6 +52,12 @@
 #include "swp_cell.h"
 #include <vector>
 
+namespace Geometry
+{
+    // Forward declaration
+    class LocalGeometry1d;
+}
+
 namespace Sweep
 {
 // Forward declare the Mechanism class.
@@ -144,23 +150,11 @@ public:
         const Cell &sys // System for which to calculate rate.
         ) const;
 
-/*
-	// Calculates the process rate using the given 
-    // chemical conditions, rather than those conditions in the
-    // given system.
-    real Rate(
-        real t,                   // Time.
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        const Cell &sys           // System for which to calculate rate.
-        ) const;
-*/
-
     // Calculates the rate of multiple inceptions given a
     // vector of inceptions and an iterator to a vector of
     // reals for output.
     static real CalcRates(
         real t,                   // Time.
-//        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
         const Cell &sys,          // System for which to calculate rates.
         const IcnPtrVector &icns, // Vector of inception processes.
         fvector &rates,           // Output rates vector.
@@ -182,20 +176,7 @@ public:
         fvector::iterator &iterm // Iterator to the first term.
         ) const;
 
-/*
-    // Calculates the rate terms given an iterator to a real vector. The 
-    // iterator is advanced to the position after the last term for this
-    // process.  The given chemical conditions are used instead of those
-    // in the given system object.
-    real RateTerms(
-        real t,                   // Time.
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        const Cell &sys,          // System for which to calculate rate terms.
-        fvector::iterator &iterm  // Iterator to the first term.
-        ) const;
-*/
-
-	// PERFORMING THE PROCESS.
+    // PERFORMING THE PROCESS.
 
     // Performs the process on the given system.  The responsible rate term is given
     // by index.  Returns 0 on success, otherwise negative.
@@ -206,6 +187,15 @@ public:
         Transport::TransportOutflow *out = 0 // Not used for this process
         ) const;
 
+    //! Performs the process on the given system.
+    virtual int Perform(
+        const real t,
+        Cell &sys,
+        const Geometry::LocalGeometry1d& local_geom,
+        const unsigned int iterm,
+        real (*rng)(),
+        Transport::TransportOutflow * const out = 0
+        ) const;
 
     // READ/WRITE/COPY.
 

@@ -118,8 +118,23 @@ int Sweep::Processes::TransportProcess::Outflow(const real t, Cell &sys,
                 sys.Particles().Remove(particle_index, false);
 
                 // Pass details of the transport back to the caller to handle onward routing
-                out->weight = 1.0 / sys.SampleVolume();
+
+                // Statistical weight is adjusted by the ratio of physical volumes
+                // of the cells so that the number of physical particles
+                // represented by the computational particle does not change
+                // during transport.  Recall that statistical weight is the
+                // concentration of physical particles represented by a computational
+                // particle and that the number of physical particles in a cell
+                // will be the conentration multiplied by the cell volume.
+                out->weight = local_geom.cellVolume()
+                              / local_geom.cellVolume(direction)
+                              / sys.SampleVolume();
                 out->destination = local_geom.calcDestination(direction);
+
+                // Update the particle with its new position
+                real newPosition = out->particle->getPosition();
+                newPosition += ((direction == Geometry::right)? 1 : -1) * local_geom.calcSpacing(direction);
+                out->particle->setPositionAndTime(newPosition, t);
             }
         }
         else {

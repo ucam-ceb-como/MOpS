@@ -708,7 +708,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
 
     if (j < 0) {
         // This is an inception process.
-        m_inceptions[i]->Perform(t, sys, 0);
+        m_inceptions[i]->Perform(t, sys, local_geom, 0, Sweep::rnd, out);
         m_proccount[i] += 1;
     } else {
         // This is another process. 
