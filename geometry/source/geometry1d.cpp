@@ -170,7 +170,10 @@ Geometry::real Geometry::Geometry1d::cellCentre(const size_t cell_index) const {
 }
 
 /*!
- * Get all the cell vertices, the order in which the vertices is not guaranteed.
+ * Get all the cell vertices, the order in which the vertices is not guaranteed,
+ * while it is easy to see the behaviour at the moment, future implementations 
+ * my alter this.
+ *
  * No index checking.
  *
  *\param[in]    cell_index      Index of cell for which vertices are requested
@@ -192,6 +195,18 @@ Geometry::fvector Geometry::Geometry1d::cellVertices(const size_t cell_index) co
 }
 
 /*!
+ * In the 1d case the cross section area is assumed to be 1, so the volume is
+ * proportional to the length of the cell.
+ *
+ *@param[in]    cell_index      Index of cell for which vertices are requested
+ *
+ *@return       Physical volume covered by the cell
+ */
+Geometry::real Geometry::Geometry1d::cellVolume(const size_t cell_index) const {
+    return (mCellEnds[cell_index + 1] - mCellEnds[cell_index]) * sCrossSectionalArea;
+}
+
+/*!
  * Find the index of the cell containing the specified position or return
  * a negative number to show that the position is outside the area covered
  * by the geometry.  Cells are regarded as closed at the starting (left) end and
@@ -204,7 +219,7 @@ Geometry::fvector Geometry::Geometry1d::cellVertices(const size_t cell_index) co
  *@return       Cell index
  */
 int Geometry::Geometry1d::containingCell(const real x) const {
-   const fvector::const_iterator it = std::upper_bound(mCellEnds.begin(), mCellEnds.end(), x);
+    const fvector::const_iterator it = std::upper_bound(mCellEnds.begin(), mCellEnds.end(), x);
 
    if(it == mCellEnds.begin()) {
        // Position is strictly before start of first cell

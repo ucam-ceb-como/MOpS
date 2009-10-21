@@ -85,6 +85,12 @@ public:
     //! Check if a position is within the local cell
     bool isInCell(const real x) const;
 
+    //! Volume of cell
+    real cellVolume() const;
+
+    //! Volume of cell
+    real cellVolume(const Direction direction) const;
+
 private:
     //! Original geometry object which holds the layout information
     const Geometry1d *mGeom;

@@ -126,3 +126,20 @@ bool Geometry::LocalGeometry1d::isInCell(const real x) const {
     // There is no cell that could possibly contain x
     return false;
 }
+
+/*!
+ *@return Physical volume covered by the local cell
+ */
+Geometry::real Geometry::LocalGeometry1d::cellVolume() const {
+    return mGeom->cellVolume(mIndex);
+}
+
+/*!
+ *@param[in]    direction   Direction to cell for which volume is requested
+ *
+ *@return       Physical volume of next cell in indicated direction
+ */
+Geometry::real Geometry::LocalGeometry1d::cellVolume(const Direction direction) const {
+    return mGeom->cellVolume(mGeom->calcDestination(mIndex, direction));
+}
+

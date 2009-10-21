@@ -60,7 +60,9 @@ namespace Geometry {
  * The geometry is defined by a list of vertices (cell ends), which
  * define the cells of the spatial discretisation.  The number of cells
  * will be one less than the number of vertices and any indices will
- * be zero based.
+ * be zero based.  No default constructor is provided and one will not
+ * be generated because another constructor is declared so instances of
+ * this class are guaranteed to contain a mesh of at least one cell.
  */
 class Geometry1d {
 public:
@@ -78,6 +80,9 @@ public:
 
     //! List of cell vertices
     fvector cellVertices(const size_t cell_index) const;
+
+    //! Volume of cell
+    real cellVolume(const size_t cell_index) const;
 
     //! Index of cell containing specified position
     int containingCell(const real x) const;
@@ -103,6 +108,9 @@ private:
 
     //! Boundary condition at final cell
     BoundaryConditionType mRightBoundary;
+
+    //! Reactors are assumed to have a constant cross-section.
+    static const real sCrossSectionalArea = 1.0;
 };
 
 } //namespace Geometry
