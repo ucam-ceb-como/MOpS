@@ -159,6 +159,7 @@ public:
     // numerical operations to be performed on the mixture, for example
     // integration of ODEs.
     real *const RawData();
+    const real *const RawData() const;
 
 
     // READ/WRITE/COPY FUNCTIONS.

@@ -373,6 +373,10 @@ real *const Mixture::RawData()
     return &(m_data[0]);
 }
 
+const real *const Mixture::RawData() const
+{
+    return &(m_data[0]);
+}
 
 // READ/WRITE/COPY FUNCTIONS.
 
