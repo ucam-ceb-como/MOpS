@@ -106,7 +106,7 @@ void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
     for (int i=1; i<=nsteps; ++i) {
         m_cpu_mark = clock();
             // Solve whole step of gas-phase chemistry.
-            rho = r.Mixture()->Density();
+            rho = r.Mixture()->MassDensity();
             m_ode.ResetSolver();
             m_ode.Solve(r, t2+=dt);
             r.SetTime(t2);
@@ -115,7 +115,7 @@ void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
         m_cpu_mark = clock();
             // Solve whole step of population balance (Sweep).
             m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
-            r.Mixture()->SetM0(r.Mixture()->Density() * m0 / rho);
+            r.Mixture()->SetM0(r.Mixture()->MassDensity() * m0 / rho);
             Run(t1, t2, *r.Mixture(), r.Mech()->ParticleMech());
         m_swp_ctime += calcDeltaCT(m_cpu_mark);        
     }
@@ -168,7 +168,7 @@ void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n, Mops::Reac
     for (unsigned int i=1; i!=n; ++i) {
         m_cpu_mark = clock();
             // Solve whole step of gas-phase chemistry.
-            rho = r.Mixture()->Density();
+            rho = r.Mixture()->MassDensity();
             m_ode.ResetSolver();
             m_ode.Solve(r, t2+=dt);
             r.SetTime(t2);
@@ -177,7 +177,7 @@ void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n, Mops::Reac
         m_cpu_mark = clock();
             // Solve whole step of population balance (Sweep).
             m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
-            r.Mixture()->SetM0(r.Mixture()->Density() * m0 / rho);
+            r.Mixture()->SetM0(r.Mixture()->MassDensity() * m0 / rho);
             Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech());
         m_swp_ctime += calcDeltaCT(m_cpu_mark);
         
