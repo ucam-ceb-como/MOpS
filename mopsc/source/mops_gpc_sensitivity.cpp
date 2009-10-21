@@ -380,8 +380,7 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
             for (unsigned int i = 0; i < m_sens_params.size(); i++) {
                 Mops::real val = 0.0;
                 if (m_sens_params.at(i).Type == INIT_T) {
-                    unsigned int n_sp = m_mech->SpeciesCount();
-                    val = m_reactor->Mixture()->RawData()[i_temp]; // Temperature is at n_sp.
+                    val = m_reactor->Mixture()->RawData()[i_temp];
                 } else if (m_sens_params.at(i).Type == INIT_D) {
                     val = m_reactor->Mixture()->RawData()[i_dens];
                 } else {
@@ -431,7 +430,6 @@ void SensitivityAnalyzer::ChangeMechParams()
         unsigned int i_dens = m_reactor->Mixture()->densityIndex();
         for(unsigned int i = 0; i < m_NS; i++) {
             if (m_sens_params.at(i).Type == INIT_T) {
-                unsigned int n_sp = m_mech->SpeciesCount();
                 m_reactor->Mixture()->RawData()[i_temp] = m_params[i];
             } else if (m_sens_params.at(i).Type == INIT_D) {
                 m_reactor->Mixture()->RawData()[i_dens] = m_params[i];

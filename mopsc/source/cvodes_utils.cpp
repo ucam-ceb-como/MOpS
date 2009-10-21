@@ -362,7 +362,7 @@ void CVODES::CVodeMemRecCopy_Serial(CVodeMemRec &mem_dsc, CVodeMemRec &mem_src) 
     //  booleantype cv_sensi;       /* TRUE if computing sensitivities              */
         mem_dsc.cv_sensi        = mem_src.cv_sensi;
     //  int cv_Ns;                  /* Number of sensitivities                      */
-        int old_Ns = mem_dsc.cv_Ns; // For N_Vector copying.
+        // For N_Vector copying.
         mem_dsc.cv_Ns           = mem_src.cv_Ns;
     //  int cv_ism;                 /* ism = SIMULTANEOUS or STAGGERED              */
         mem_dsc.cv_ism          = mem_src.cv_ism;
@@ -625,7 +625,6 @@ void CVODES::CVodeMemRecCopy_Serial(CVodeMemRec &mem_dsc, CVodeMemRec &mem_src) 
     //  long int cv_nfQeS;       /* number of fQ calls from sensi DQ                */
         mem_dsc.cv_nfQeS        = mem_src.cv_nfQeS;
     //  long int cv_ncfn;        /* number of corrector convergence failures        */
-        long int old_ncfn            = mem_dsc.cv_ncfn;
         mem_dsc.cv_ncfn         = mem_src.cv_ncfn;
     //  long int cv_ncfnS;       /* number of total sensi. corr. conv. failures     */
         mem_dsc.cv_ncfnS = mem_src.cv_ncfnS;
@@ -634,7 +633,6 @@ void CVODES::CVodeMemRecCopy_Serial(CVodeMemRec &mem_dsc, CVodeMemRec &mem_src) 
     //  long int cv_nni;         /* number of nonlinear iterations performed        */
         mem_dsc.cv_nni = mem_src.cv_nni;
     //  long int cv_nniS;        /* number of total sensi. nonlinear iterations     */
-        long int old_nniS       = mem_dsc.cv_nniS;
         mem_dsc.cv_nniS = mem_src.cv_nniS;
 //TODO:Not needed   long int *cv_nniS1;      /* number of sensi. nonlinear iterations           */
 //TODO:Not needed       longintArrayExactCopy(old_nniS, mem_dsc.cv_nniS1, mem_src.cv_nniS, mem_src.cv_nniS1);
