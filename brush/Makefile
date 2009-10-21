@@ -38,7 +38,6 @@ ifeq ($(debug),0)
   sprog=../sprogc/lib/sprog.a
   sweep=../sweepc/lib/sweep.a
   mops=../mopsc/lib/mops.a
-  cvode=../cvode/lib/cvode.a
   cvodes=../cvodes/lib/cvodes.a
   geom=../geometry/lib/geometry.a
   brushlib=./lib/brush.a
@@ -48,13 +47,11 @@ else
   sprog=../sprogc/lib/sprog_d.a
   sweep=../sweepc/lib/sweep_d.a
   mops=../mopsc/lib/mops_d.a
-  cvode=../cvode/lib/cvode_d.a
   cvodes=../cvodes/lib/cvodes_d.a
   geom=../geometry/lib/geometry_d.a
   brushlib=./lib/brush_d.a
 endif
-linklibs=$(mops) $(sweep) $(geom) $(sprog) $(camxml) $(comostrings) $(cvodes) $(cvode)
-
+linklibs=$(mops) $(sweep) $(geom) $(sprog) $(camxml) $(comostrings) $(cvodes)
 # Target objects.
 
 obj=reactor1d.o pred_corr_solver.o reset_chemistry.o simulator.o
