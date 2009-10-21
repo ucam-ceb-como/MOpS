@@ -41,7 +41,9 @@ system("rm regression2b-nuc-coag-acet*");
 
 # Arguments for simulation
 my @simulationCommand = ("../bin/mops_d.x", "-flamepp", "-p",
-                         "-c", "regress2/regress2.inp",
+                         "-gp", "regress2/regress2.inp",
+                        "-c", "regress2/chem.inp",
+                        "-t", "regress2/therm.dat",
                          "-s", "regress2/regress2b.xml",
                          "-rr", "regress2/regress2b.inx");
 

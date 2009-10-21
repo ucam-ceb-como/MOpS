@@ -41,8 +41,10 @@ system("rm regression2a-nuc-coag-pyr*");
 
 # Arguments for simulation
 my @simulationCommand = ("../bin/mops_d.x", "-flamepp", "-p",
-                         "-c", "regress2/regress2.inp",
+                         "-gp", "regress2/regress2.inp",
                          "-s", "regress2/regress2a.xml",
+			"-c", "regress2/chem.inp",
+			"-t", "regress2/therm.dat",
                          "-rr", "regress2/regress2a.inx");
 
 # Run the simulation and wait for it to finish
