@@ -241,7 +241,7 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
             // Scale M0 according to gas-phase expansion.
             real m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
-            r.Mixture()->SetM0(r.Mixture()->MassDensity() *  m0 / (old_dens));
+            r.Mixture()->SetM0(r.Mixture()->MassDensity() *  m0 / old_dens);
 
 			//update the number of particles that the incepting species matches the gas phase
             UpdateNumberPAHs(r,t);  
