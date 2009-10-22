@@ -50,6 +50,8 @@
 #include <sstream>
 #include <limits>
 
+const Geometry::real Geometry::Geometry1d::sCrossSectionalArea = 1.0;
+
 /*!
  * Read the geometry from an xml tree which should have a root node of
  * type "geometry" which contains a list of at least two elements of 

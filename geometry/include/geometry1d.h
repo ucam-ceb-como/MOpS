@@ -110,7 +110,7 @@ private:
     BoundaryConditionType mRightBoundary;
 
     //! Reactors are assumed to have a constant cross-section.
-    static const real sCrossSectionalArea = 1.0;
+    static const real sCrossSectionalArea;
 };
 
 } //namespace Geometry
