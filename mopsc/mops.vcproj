@@ -391,20 +391,10 @@
 				>
 			</File>
 			<Filter
-				Name="ODESolver"
+				Name="Resource Files"
+				Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
+				UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 				>
-				<File
-					RelativePath=".\source\cvodes_utils.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\mops_gpc_sensitivity.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\mops_ode_solver.cpp"
-					>
-				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -526,10 +516,20 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+			Name="ODESolver"
 			>
+			<File
+				RelativePath=".\source\cvodes_utils.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\mops_gpc_sensitivity.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\mops_ode_solver.cpp"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

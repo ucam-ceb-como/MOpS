@@ -230,21 +230,21 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     while (t < tstop)
     {
         tsplit = tstop;
-        
+
+        //save the old reactors density
+        double old_dens=r.Mixture()->MassDensity();
+        // Calculate the chemical conditions.
+        linInterpGas(t, m_gasprof, *r.Mixture());
+
+        // Scale M0 according to gas-phase expansion.
+        real m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
+        r.Mixture()->SetM0(r.Mixture()->MassDensity() *  m0 / old_dens);
+
+		//update the number of particles that the incepting species matches the gas phase
+        UpdateNumberPAHs(r,t);  
+
         // Perform stochastic jump processes.
         while (t < tsplit) {
-
-            //save the old reactors density
-            double old_dens=r.Mixture()->MassDensity();
-            // Calculate the chemical conditions.
-            linInterpGas(t, m_gasprof, *r.Mixture());
-
-            // Scale M0 according to gas-phase expansion.
-            real m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
-            r.Mixture()->SetM0(r.Mixture()->MassDensity() *  m0 / old_dens);
-
-			//update the number of particles that the incepting species matches the gas phase
-            UpdateNumberPAHs(r,t);  
 
             // Calculate jump rates.
             jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
