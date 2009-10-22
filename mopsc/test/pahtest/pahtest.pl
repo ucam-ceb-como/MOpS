@@ -40,7 +40,7 @@ use warnings;
 system("rm soot*");
 
 # Arguments for simulation
-my @simulationCommand = ("../../bin/mops_d.exe", "-PAH", "-p",);
+my @simulationCommand = ("../../bin/mops_d.x", "-PAH", "-p",);
 
 # Run the simulation and wait for it to finish
 system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";
