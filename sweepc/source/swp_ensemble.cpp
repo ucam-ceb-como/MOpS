@@ -273,7 +273,7 @@ int Sweep::Ensemble::Add(Particle &sp)
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
         m_dbleactive = true;
-        printf("sweep: Particle doubling activated.\n");
+        //printf("sweep: Particle doubling activated.\n");
     }
 
     // Check ensemble for space, if there is not enough space then need
@@ -301,6 +301,10 @@ int Sweep::Ensemble::Add(Particle &sp)
         // Replace an existing particle (if i=m_capacity) then
         // we are removing the new particle, so just ignore it.
         Replace(i, sp);
+    } else {
+        // The new particle is to be removed immediately
+        assert(static_cast<unsigned int>(i) == m_capacity);
+        delete &sp;
     }
 
     // Now we must recalculate the tree by inserting the particle properties
