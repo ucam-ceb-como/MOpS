@@ -405,7 +405,6 @@ int main(int argc, char* argv[])
 
     //========= Build the initial reactor ========================
     Reactor1d initialReactor(*pGeom, mech, maxPCounts, maxM0s);
-    pGeom.release();
 
     // Put the initial species concentrations into the reactor.
     // Second argument indicates chemical conditions are fixed and not updated

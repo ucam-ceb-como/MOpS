@@ -400,6 +400,9 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
     if(Sweep::rnd() < incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume()) {
         reac.getCell(destination_index).Mixture()->Particles().Add(*(new Sweep::Particle(*particle_details.particle)));
     }
+
+    // Finished cloning the particle
+    delete particle_details.particle;
 }
 
 /*!

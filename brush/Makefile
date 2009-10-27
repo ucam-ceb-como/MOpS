@@ -60,9 +60,9 @@ obj=reactor1d.o pred_corr_solver.o reset_chemistry.o simulator.o
 all: $(brushlib) brush.o
 	mkdir -p bin
 ifeq ($(debug),0)
-	$(cpp) $(flink) brush.o $(brushlib) $(linklibs) -static -o bin/brush.x
+	$(cpp) $(flink) brush.o $(brushlib) $(linklibs) -o bin/brush.x
 else
-	$(cpp) $(flink) brush.o $(brushlib) $(linklibs) -static -o bin/brush_d.x
+	$(cpp) $(flink) brush.o $(brushlib) $(linklibs) -o bin/brush_d.x
 endif
 
 # Bring everything except the main function into a library
