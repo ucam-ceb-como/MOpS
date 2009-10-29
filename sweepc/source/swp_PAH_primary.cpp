@@ -519,6 +519,7 @@ double PAHPrimary::CoalescenceLevel()
 {
     if (m_leftparticle!=NULL)
     {
+
         double dV=0;
         
         
@@ -554,7 +555,7 @@ double PAHPrimary::CoalescenceLevel()
             //calculate the volume change of the right particle in the last timestep
             dV+= m_rightparticle->m_vol - m_rightparticle_vol_old;          
         }
-
+        
         //adjust the number of PAHs and vol for the next step
         m_rightparticle_numPAH=m_rightparticle->m_numPAH;
         m_rightparticle_vol_old=m_rightparticle->m_vol;
@@ -664,9 +665,7 @@ PAHPrimary &PAHPrimary::Merge()
 				//append to left subtree because there are fewer primaries 
                 //this is only to keep the tree balanced
 				PAHPrimary *oldleftparticle=m_leftparticle;
-                //set the pointers from the leftprimary to the rightprimary
-                //this will be the new bigger primary
-				m_leftparticle->ChangePointer(m_leftparticle,m_rightparticle);
+
                 //copy the PAHs
 
 				//for (j=oldleftparticle->m_PAH.begin(); j!=oldleftparticle->m_PAH.end(); ++j) {
@@ -674,6 +673,10 @@ PAHPrimary &PAHPrimary::Merge()
 				//}
                 m_rightparticle->m_PAH.insert(m_rightparticle->m_PAH.end(),oldleftparticle->m_PAH.begin(),oldleftparticle->m_PAH.end());
                 m_rightparticle->UpdatePrimary();
+                //set the pointers from the leftprimary to the rightprimary
+                //this will be the new bigger primary
+				oldleftparticle->ChangePointer(oldleftparticle,m_rightparticle);
+                m_rightparticle->ChangePointer(m_rightparticle,m_rightparticle);
                 //set the pointer to the parent node 
 				if (oldleftparticle->m_parent->m_leftchild==oldleftparticle)
 				{
@@ -697,18 +700,21 @@ PAHPrimary &PAHPrimary::Merge()
 				    m_leftchild->m_parent=this; 
                 } 
 				oldleftchild->ReleaseMem();
+
 			}
 
 			else
 			{
 				//append to right subtree
 				PAHPrimary *oldrightparticle=m_rightparticle;
-				m_rightparticle->ChangePointer(m_rightparticle,m_leftparticle);
+				
 			//	for (j=oldrightparticle->m_PAH.begin(); j!=oldrightparticle->m_PAH.end(); ++j) {
 			//		m_leftparticle->m_PAH.insert(m_leftparticle->m_PAH.end(),PAH(*j));
 			//	}
                 m_leftparticle->m_PAH.insert(m_leftparticle->m_PAH.end(),oldrightparticle->m_PAH.begin(),oldrightparticle->m_PAH.end());
                 m_leftparticle->UpdatePrimary();
+                oldrightparticle->ChangePointer(oldrightparticle,m_leftparticle);
+                m_leftparticle->ChangePointer(m_leftparticle,m_leftparticle);
 				if (oldrightparticle->m_parent->m_leftchild==oldrightparticle)
 				{
 					oldrightparticle->m_parent->m_leftchild=m_leftchild;
@@ -730,6 +736,7 @@ PAHPrimary &PAHPrimary::Merge()
 				    m_leftchild->m_parent=this; 
                 } 
 				oldrightchild->ReleaseMem();
+                
 			}
 
 		}
@@ -821,7 +828,7 @@ bool PAHPrimary::CheckCoalescence()
            // PrintTree("before.inp");
            //  cout <<"merging"<<m_children_coalescence<<endl;
              Merge();
-          //   PrintTree("after.inp");
+           //  PrintTree("after.inp");
            hascoalesced=true;
            //check again because this node has changed
          CheckCoalescence();
