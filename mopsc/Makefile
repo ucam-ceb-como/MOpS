@@ -146,7 +146,7 @@ mops_reactor_factory.o: $(src)/mops_reactor_factory.cpp
 mops_timeinterval.o: $(src)/mops_timeinterval.cpp
 	$(cpp) $(flag) $(src)/mops_timeinterval.cpp
 
-mops_ode_solver.o: $(src)/mops_ode_solver.cpp ../cvodes/nvector_serial.o
+mops_ode_solver.o: $(src)/mops_ode_solver.cpp
 	$(cpp) $(flag) $(src)/mops_ode_solver.cpp
 
 mops_solver.o: $(src)/mops_solver.cpp
