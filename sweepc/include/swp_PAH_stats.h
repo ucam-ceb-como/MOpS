@@ -162,11 +162,11 @@ public:
 
 private:
     // Stats count and indices.
-    static const unsigned int STAT_COUNT = 5;
-	enum StatIndices {iNPAH=0, iPAHD=2,iNCARB=3, iCOAL=4 ,iNPRIM=5,iSQRTLW=6,iLDIVW=7, iavgdim=8, irgyr=9, ifdim=10};
+    static const unsigned int STAT_COUNT = 6;
+	enum StatIndices {iNPAH=0, iPARTSURF=2, iPAHD=3,iNCARB=4, iCOAL=5 ,iNPRIM=6,iSQRTLW=7,iLDIVW=8, iavgdim=9, irgyr=10, ifdim=11};
 
     // PSL count and indices.
-    static const unsigned int PSL_COUNT  = 11;
+    static const unsigned int PSL_COUNT  = 12;
     static const unsigned int PPSL_COUNT = 0;
 
     // The stats.

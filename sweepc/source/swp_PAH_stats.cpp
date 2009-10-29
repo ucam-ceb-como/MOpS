@@ -56,6 +56,7 @@ using namespace std;
 const std::string PAHStats::m_statnames[PAHStats::STAT_COUNT] = {
     std::string("Avg. Number of PAHs"),
     std::string("Number of PAHs cm-3"),
+    std::string("Surface real Part"),
     std::string("Avg. PAH Collision Diameter"),
 	std::string("Avg. Number of Carbon Atoms"),
     std::string("Avg. Coalesc Threshold"),
@@ -65,6 +66,7 @@ const std::string PAHStats::m_statnames[PAHStats::STAT_COUNT] = {
 const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. Number of PAHs.
     IModelStats::Sum,  // Number of PAHs.
+    IModelStats::Sum,  // Surface real Part
     IModelStats::Avg,  // Avg. PAH Collision Diameter
 	IModelStats::Avg,  // Avg. Number of Carbon atoms
     IModelStats::Avg,  // Avg. Coalesc Threshold 
@@ -163,6 +165,8 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
     unsigned int n = 0;
+    //particles with more then one PAH
+    unsigned int nrealpart= 0;
     for (ip=e.begin(); ip!=e.end(); ++ip) {
         // Get surface-volume cache.
         const AggModels::PAHCache* cache = 
@@ -179,6 +183,11 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
             m_stats[iNPAH+1]    += cache->m_numPAH;
             m_stats[iCOAL]    += cache->m_avg_coalesc;
 			++n;
+            if (cache->m_numPAH>1)
+            {
+                ++nrealpart;
+                m_stats[iPARTSURF]+=(*ip)->SurfaceArea();
+            }
         }
     }
     
