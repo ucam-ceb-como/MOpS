@@ -143,7 +143,7 @@ ParticleCache::~ParticleCache()
 ParticleCache &ParticleCache::operator=(const Sweep::ParticleCache &rhs)
 {
     if (this != &rhs) {
-        if (m_pmodel != rhs.m_pmodel) {
+        if ((m_pmodel == NULL) || (m_pmodel != rhs.m_pmodel)) {
             // Set particle model.
             m_pmodel = rhs.m_pmodel;
             // Copy components.

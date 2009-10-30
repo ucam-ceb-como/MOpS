@@ -66,6 +66,7 @@ Sweep::Ensemble::Ensemble(void)
 
 // Initialising constructor (no particles).
 Sweep::Ensemble::Ensemble(const Sweep::ParticleModel &model)
+: m_sums(0.0, model)
 {
     init();
     m_model = &model;
@@ -161,6 +162,8 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
             for (unsigned int i=0; i!=m_capacity-1; ++i) {
                 m_tree[i] = rhs.m_tree[i];
             }
+
+            m_sums = rhs.m_sums;
         }
     }
     return *this;
@@ -449,6 +452,8 @@ void Sweep::Ensemble::Clear()
     vector<TreeNode>::iterator j;
     for(j=m_tree.begin(); j!=m_tree.end(); ++j) j->Clear();
 
+    m_sums.Clear();
+
     // Reset doubling.
     m_maxcount   = 0;
     m_ndble      = 0;
@@ -585,7 +590,6 @@ void Sweep::Ensemble::ResetScaling()
 // sums for all particles in the ensemble.
 const ParticleCache & Sweep::Ensemble::GetSums(void) const
 {
-    m_sums = m_tree[0].LeftData + m_tree[0].RightData;
     return m_sums;
 }
 
@@ -593,10 +597,8 @@ const ParticleCache & Sweep::Ensemble::GetSums(void) const
 // over all particles.
 real Sweep::Ensemble::GetSum(ParticleCache::PropID id) const
 {
-    assert(m_tree.front().LeftData.Property(ParticleCache::iM) >= 0.0);
-
     if(id != ParticleCache::iUniform)
-        return m_tree[0].LeftData.Property(id) + m_tree[0].RightData.Property(id);
+        return m_sums.Property(id);
     else
         return m_count;
 }
@@ -608,8 +610,7 @@ real Sweep::Ensemble::GetSum(SubModels::SubModelType model_id, unsigned int id) 
     if (model_id == SubModels::BasicModel_ID) {
         return GetSum(static_cast<ParticleCache::PropID>(id));
     } else {
-        return m_tree[0].LeftData.SubModel(model_id)->Property(id) + 
-               m_tree[0].RightData.SubModel(model_id)->Property(id);
+        return m_sums.SubModel(model_id)->Property(id);
     }
 }
 
@@ -636,8 +637,7 @@ void Sweep::Ensemble::Update(unsigned int i)
 // Updates the ensemble tree completely.
 void Sweep::Ensemble::Update()
 {
-    // This flavour updates the whole binary tree.
-
+    // Put the particle values into the bottom of the tree
     bool odd=true;
     unsigned int j=0;
     for (unsigned int i=0; i!=m_count; ++i) {
@@ -646,7 +646,6 @@ void Sweep::Ensemble::Update()
             m_tree[j].LeftData = *m_particles[i];
         } else {
             m_tree[j].RightData = *m_particles[i];
-            ascendingRecalc(j);
         }
         odd = !odd;
     }
@@ -656,15 +655,12 @@ void Sweep::Ensemble::Update()
             m_tree[j].LeftData.Clear();
         } else {
             m_tree[j].RightData.Clear();
-            ascendingRecalc(j);
         }
         odd = !odd;
     }
 
-    // Need to do one last recalc if there are an odd number of particles.
-    if (!odd) {
-        ascendingRecalc(j);
-    }
+    // Calculate the nodes further up the tree
+    recalcAllNonLeaf();
 
     assert(m_tree.front().LeftData.Property(ParticleCache::iM) < std::numeric_limits<real>::max());
     assert(m_tree.front().LeftData.Property(ParticleCache::iM) >= 0.0);
@@ -696,6 +692,8 @@ void Sweep::Ensemble::ascendingRecalc(unsigned int i)
             (n->LeftData  = n->Left->LeftData)  += n->Left->RightData;
             (n->RightData = n->Right->LeftData) += n->Right->RightData;
         }
+        m_sums = m_tree.front().LeftData + m_tree.front().RightData;
+
         assert(m_tree.front().LeftData.Property(ParticleCache::iM) < std::numeric_limits<real>::max());
         assert(m_tree.front().LeftData.Property(ParticleCache::iM) >= 0.0);
     }
@@ -949,4 +947,6 @@ void Sweep::Ensemble::init(void)
     m_dblelimit  = 0;
     m_dbleslack  = 0;
     m_dbleon     = true;
+
+    m_sums.Clear();
 }

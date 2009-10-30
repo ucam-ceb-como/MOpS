@@ -290,7 +290,7 @@ private:
 
     // TREE.
     std::vector<TreeNode> m_tree;   // The binary tree nodes.
-    mutable ParticleCache m_sums;
+    ParticleCache m_sums;
 
 
     // MEMORY MANAGEMENT.

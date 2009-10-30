@@ -136,7 +136,11 @@ inline void Sweep::Ensemble::recalcAllNonLeaf() {
 
     TreeNode& right = m_tree[2];
     node.Right = &right;
-    node.RightData = right.LeftData + right.RightData;    
+    node.RightData = right.LeftData + right.RightData;
+
+    // Cache the overall sums
+    m_sums = node.LeftData + node.RightData;
+
 }
 
 /**
