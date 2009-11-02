@@ -191,9 +191,9 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
             if (cache->m_numPAH>1)
             {
                 ++nrealpart;
-                m_stats[iPARTSURF]+=(*ip)->SurfaceArea();
+                m_stats[iPARTSURF]+=(*ip)->Primary->SurfaceArea();
                 m_stats[iNPRIM]+=cache->m_numprimary;
-                m_stats[iPARTMASS]+=(*ip)->Mass();
+                m_stats[iPARTMASS]+=(*ip)->Primary()->Mass();
                 m_stats[iNAVGPAH]+=cache->m_numPAH;
             }
         }
