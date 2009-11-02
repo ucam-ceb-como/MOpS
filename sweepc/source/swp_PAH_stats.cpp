@@ -57,6 +57,7 @@ const std::string PAHStats::m_statnames[PAHStats::STAT_COUNT] = {
     std::string("Avg. Number of PAHs"),
     std::string("Number of PAHs cm-3"),
     std::string("Surface real Part"),
+    std::string("Mass real Part"),
     std::string("Avg. PAH Collision Diameter"),
 	std::string("Avg. Number of Carbon Atoms"),
     std::string("Avg. Coalesc Threshold"),
@@ -68,6 +69,7 @@ const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. Number of PAHs.
     IModelStats::Sum,  // Number of PAHs.
     IModelStats::Sum,  // Surface real Part
+    IModelStats::Sum,  // Mass real Part
     IModelStats::Avg,  // Avg. PAH Collision Diameter
 	IModelStats::Avg,  // Avg. Number of Carbon atoms
     IModelStats::Avg,  // Avg. Coalesc Threshold 
@@ -190,6 +192,7 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
                 ++nrealpart;
                 m_stats[iPARTSURF]+=(*ip)->SurfaceArea();
                 m_stats[iNPRIM]+=cache->m_numprimary;
+                m_stats[iPARTMASS]+=(*ip)->Mass();
             }
         }
     }
@@ -204,7 +207,7 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
         if (m_mask[i] == Sum) {
             m_stats[i] *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
         } else {
-            if (i==iNPRIM)
+            if (i==iNPRIM || i==iPARTMASS)
             {
                 if (nrealpart>0)
                     m_stats[i] *= 1.0/nrealpart;
