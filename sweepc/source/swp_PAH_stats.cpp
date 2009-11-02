@@ -70,7 +70,8 @@ const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. Number of PAHs.
     IModelStats::Sum,  // Number of PAHs.
     IModelStats::Sum,  // Surface real Part
-    IModelStats::Sum,  // Mass real Part
+    IModelStats::Avg,  // Avg. Mass real Part
+    IModelStats::Avg,  // Avg. PAH real Part
     IModelStats::Avg,  // Avg. PAH Collision Diameter
 	IModelStats::Avg,  // Avg. Number of Carbon atoms
     IModelStats::Avg,  // Avg. Coalesc Threshold 
