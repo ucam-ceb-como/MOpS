@@ -252,9 +252,11 @@ template<class T> void Sweep::Ensemble::SetParticles(
     m_ndble      = 0;
     m_dbleon     = true;
     m_dbleactive = false;
-    m_dblecutoff = (int)(3.0 * (real)m_capacity / 4.0);
-    m_dblelimit  = m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
-    m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
+    m_dblecutoff = (3u * m_capacity) / 4u;
+
+    // This is 2^(m_levels - 5) provided m_levels > 5, otherwise 1
+    m_dbleslack  = 1u << ((m_levels > 5u) ? m_levels-5 : 0);
+    m_dblelimit  = m_halfcap - m_dbleslack;
      
 }
 

@@ -706,16 +706,6 @@ void Sweep::Ensemble::dble()
     // list and changes the scaling factor to keep it consistent.  Once the
     // ensemble is back above half full, the routine updates the binary tree.
 
-    // As an additional check, in case the maximum count did not reach 
-    // the required threshold (75%), we check for a 20% reduction from
-    // the maximum achieved particle count, assuming that this is statistically
-    // significant.
-    if (!m_dbleactive && (m_maxcount >= (unsigned int)(0.1*(real)m_capacity)) && 
-        (m_count <= (unsigned int)(0.9*(real)m_maxcount))) {
-        m_dbleactive = true;
-        printf("sweep: Particle doubling activated.\n");
-    }
-
     // Check that doubling is on and the activation condition has been met.
     if (m_dbleon && m_dbleactive) {     
         bool left;
