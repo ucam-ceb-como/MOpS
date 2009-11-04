@@ -400,9 +400,6 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
     if(Sweep::rnd() < incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume()) {
         reac.getCell(destination_index).Mixture()->Particles().Add(*(new Sweep::Particle(*particle_details.particle)));
     }
-
-    // Finished cloning the particle
-    delete particle_details.particle;
 }
 
 /*!
@@ -520,12 +517,17 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
     // Add particles that are moving to new cells to their destinations
     for(unsigned int i = 0; i != numCells; ++i) {
         // Process the list waiting to be added to cell i
-        for(std::list<Sweep::Transport::TransportOutflow>::const_iterator itPart = inflowLists[i].begin();
+        for(std::list<Sweep::Transport::TransportOutflow>::iterator itPart = inflowLists[i].begin();
             itPart != inflowLists[i].end();
             ++itPart) {
                 // At the moment particles have to be added one by one, a more
                 // efficient method could be devised.
                 transportIn(reac, i, *itPart);
+
+                // Delete the particles, which have now had clones added to
+                // their destination populations
+                delete itPart->particle;
+                itPart->particle = NULL;
         }
 
         // Now the population of cell i has been updated doubling can be
