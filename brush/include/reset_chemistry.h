@@ -70,8 +70,17 @@ class Reactor1d;
  */
 class ResetChemistry {
 public:
+    //! Format of input file
+    enum InputFileType {
+        //! Mass fractions and SI units
+        Camflow,
+
+        //! Mole fractions and cgs units
+        Premix,
+    };
+
     //! Read in the data needed for the given mechanism
-    ResetChemistry(const string &fname, const Sprog::Mechanism& mech, const int verbosity);
+    ResetChemistry(const string &fname, const InputFileType file_type, const Sprog::Mechanism& mech, const int verbosity);
     
     //! Overwrite chemistry information with that stored in this object
     void apply(const real x, Mops::Reactor &reac) const;
@@ -79,7 +88,7 @@ public:
     //! Position of first data point
     real startLocation() const;
 
-    //! Positio of final data point
+    //! Position of final data point
     real endLocation() const;
 
 private:
@@ -114,6 +123,18 @@ private:
 
     //! Number of data items that are not species mass fractions
     static const size_t sNumNonSpeciesData;
+
+    //! Is the data stored in this instance stored as mass fractions or molefractions
+    bool mMassFractionData;
+
+    //! Index of temperature data in data_point
+    static const size_t sTemperatureIndex;
+
+    //! Index of density data in data_point
+    static const size_t sDensityIndex;
+
+    //! Index of velocity data in data_point
+    static const size_t sVelocityIndex;
 
 };
 

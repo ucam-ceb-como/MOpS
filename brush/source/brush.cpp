@@ -90,6 +90,9 @@ int main(int argc, char* argv[])
     // Diagnostic level
     int diag = 0;
 
+    // Format for initial chemistry solution data
+    ResetChemistry::InputFileType chemFileType = ResetChemistry::Camflow;
+
     for (int i=1; i!=argc; ++i) {
         if (std::strcmp(argv[i], "-c") == 0) {
             // Chemical mechanism file (CK format).
@@ -122,6 +125,10 @@ int main(int argc, char* argv[])
         else if (strcmp(argv[i], "-v") == 0) {
             // Verbosity
             diag = atoi(argv[++i]);
+        }
+        else if (strcmp(argv[i], "--premix-chem") == 0) {
+            // Verbosity
+            chemFileType = ResetChemistry::Premix;
         }
         else if (strcmp(argv[i], "-h") == 0) {
             // Print help message and exit
@@ -392,7 +399,7 @@ int main(int argc, char* argv[])
         if(diag > 0) {
             std::cout << "Reading initial chemistry solution...\n";
         }
-        pInitialChem.reset(new ResetChemistry(chemsolnfile, mech, diag));
+        pInitialChem.reset(new ResetChemistry(chemsolnfile, chemFileType, mech, diag));
         if(diag > 0) {
             std::cout << "Read initial chemistry solution\n";
         }
@@ -444,5 +451,6 @@ void printUsage() {
     std::cout << "-s SWEEP-SETTINGS-FILE\n";
     std::cout << "-t THERMODYNAMICAL-DATA-FILE\n";
     std::cout << "-v verbosity (Integer indicating level of debug info, higher integers mean more output)\n";
+    std::cout << "--premix-chem initial chemistry solution file is in Chemkin format\n";
 }
 

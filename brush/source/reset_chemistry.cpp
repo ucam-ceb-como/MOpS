@@ -56,9 +56,31 @@ using namespace Brush;
 /*!
  * For any element of mInputChemistryData the range
  * [0, sNumNonSpeciesData) will contain all of the data that
- * is not species mass fractions.
+ * is not species mass or mole fractions.
+ *
+ * Index 0 is the spatial position to which the
+ * data applied, the other indices in the range should
+ * have their own static constants.
  */
 const size_t ResetChemistry::sNumNonSpeciesData = 4;
+
+/*!
+ * Position of temperature data in the elements of mInputChemistryData.
+ * The data will always have units K.
+ */
+const size_t ResetChemistry::sTemperatureIndex = 1;
+
+/*!
+ * Position of density data in the elements of mInputChemistryData.
+ * The data will always be have units \f$\mathrm{kg\,m^{-3}
+ */
+const size_t ResetChemistry::sDensityIndex = 2;
+
+/*!
+ * Position of velocity data in the elements of mInputChemistryData.
+ * The data will always have units \f$\mathrm{m\,s^{-1}}\f$
+ */
+const size_t ResetChemistry::sVelocityIndex = 3;
 
 /**
  * Construct an object from a data file and associate the concentration data
@@ -68,8 +90,8 @@ const size_t ResetChemistry::sNumNonSpeciesData = 4;
  * by complete rows of numerical data, completely blank lines are permitted and
  * ignored.  The columns may be separated by spaces or tabs.
  *
- * Mandatory columns in the file are
- * - x Spatial position to which the row of data applies
+ * Mandatory columns in the file are (Camflow format \see InputFileType)
+ * - x Spatial position to which the row of data applies (\f$\mathrm{m}\f$)
  * - T Temperature (K)
  * - rho Mass density of the gas mixture (\f$\mathrm{kg\,m^{-3}}\f$)
  * - u Velocity of gas mixture (\f$\mathrm{m\,s^{-1}}\f$)
@@ -77,15 +99,26 @@ const size_t ResetChemistry::sNumNonSpeciesData = 4;
  *   mechanism and the column headings for these species must be identical to the
  *   strings specified as species names when the mechanism was constructed.
  *
+ * Mandatory columns in the file are (Premix format \see InputFileType)
+ * - x Spatial position to which the row of data applies (\f$\mathrm{cm}\f$)
+ * - T Temperature (K)
+ * - rho Mass density of the gas mixture (\f$\mathrm{g\,cm^{-3}}\f$)
+ * - u Velocity of gas mixture (\f$\mathrm{cm\,s^{-1}}\f$)
+ * - A column of mole fraction data must be provided for each species in the
+ *   mechanism and the column headings for these species must be identical to the
+ *   strings specified as species names when the mechanism was constructed.
+ *
  *\param[in]    fname       Path of file from which to read the data
+ *\param[in]    file_type   Style of data in file
  *\param[in]    mech        Mechanism defining species indexes
  *\param[in]    verbosity   Level of debugging information sent to standard out (higher is more)
  *
  *\exception    std::runtime_error  No data for a species present in the mechanism
  */
-Brush::ResetChemistry::ResetChemistry(const string &fname, const Sprog::Mechanism& mech, const int verbosity) {
+Brush::ResetChemistry::ResetChemistry(const string &fname, const InputFileType file_type, 
+                                      const Sprog::Mechanism& mech, const int verbosity) {
     // Delimeters to use when splitting lines of data from file into the individual column entries
-    const std::string delims(" \t");
+    const std::string delims(" ,\t");
 
     // Iterators to the species in the mechanism
     Sprog::Mechanism::const_sp_iterator spIt = mech.SpBegin();
@@ -99,10 +132,23 @@ Brush::ResetChemistry::ResetChemistry(const string &fname, const Sprog::Mechanis
     // Position, temperature, velocity and density will both be needed as well as species names.
     // The order of these insertions is important for the interpretation of the data
     // in the apply method
-    speciesNames.push_back("x");
-    speciesNames.push_back("T");
-    speciesNames.push_back("rho");
-    speciesNames.push_back("u");
+    switch(file_type) {
+        case Camflow:
+            speciesNames.push_back("x");
+            speciesNames.push_back("T");
+            speciesNames.push_back("rho");
+            speciesNames.push_back("u");
+            mMassFractionData = true;
+            break;
+        case Premix:
+            speciesNames.push_back("X[cm]");
+            speciesNames.push_back("T[K]");
+            speciesNames.push_back("RHO[g/cm3]");
+            speciesNames.push_back("V[cm/s]");
+            mMassFractionData = false;
+            break;
+    }
+            
 
     // Chemical species names
     while(spIt != spItEnd) {
@@ -176,16 +222,27 @@ Brush::ResetChemistry::ResetChemistry(const string &fname, const Sprog::Mechanis
             data_point dataRow;
 
             for(size_t i = 0; i < speciesNames.size(); ++i) {
-                // Read the appropriate floating point number from text
-                std::string massFracText = lineEntries[speciesFileIndices[i]];
-                real massFrac = atof(massFracText.c_str());
+                // Read the appropriate (mass or mole fraction) floating point number from text.
+                std::string fracText = lineEntries[speciesFileIndices[i]];
+                real frac = atof(fracText.c_str());
 
                 if(verbosity > 1) {
-                    std::cout << speciesNames[i] << ' ' << massFrac << ' ';
+                    std::cout << speciesNames[i] << ' ' << frac << ' ';
+                }
+
+                // Unit conversions, if file not in SI units
+                if(file_type == Premix) {
+                    if(i == sDensityIndex)
+                        // convert g cm^-3 to kg m^-3
+                        frac *= 1e3;
+
+                    if(i == sVelocityIndex)
+                        // convert cm s^-1 to m s^-1
+                        frac *= 1e-2;
                 }
 
                 // and assume the storage order should be the same as the species name list order
-                dataRow.push_back(massFrac);
+                dataRow.push_back(frac);
             }
             if(verbosity > 1) {
                 std::cout << std::endl;
@@ -271,18 +328,23 @@ void Brush::ResetChemistry::apply(const real x, Mops::Reactor &reac) const {
     // Build a chemical mixture object
     Sprog::Thermo::IdealGas chemMixture(reac.Mech()->Species());
 
-    // Set the species mass fractions
-    fvector massFracs(dataToUse.begin() + sNumNonSpeciesData, dataToUse.end());
-    chemMixture.SetMassFracs(massFracs);
+    // Set the species data
+    fvector speciesData(dataToUse.begin() + sNumNonSpeciesData, dataToUse.end());
+    if(mMassFractionData) {
+        chemMixture.SetMassFracs(speciesData);
+    }
+    else {
+        chemMixture.SetFracs(speciesData);
+    }
 
 
     // Set the bulk properties
-    chemMixture.SetTemperature(dataToUse[1]);
+    chemMixture.SetTemperature(dataToUse[sTemperatureIndex]);
     // Mass density cannot be set until after mass fractions are set,
     // because there is an internal conversion to molar density that
     // requires the mass fractions.
-    chemMixture.SetMassDensity(dataToUse[2]);
-    chemMixture.SetVelocity(dataToUse[3]);
+    chemMixture.SetMassDensity(dataToUse[sDensityIndex]);
+    chemMixture.SetVelocity(dataToUse[sVelocityIndex]);
     
     if(reac.Mixture() == NULL)
         reac.Fill(*(new Mops::Mixture(reac.Mech()->ParticleMech())));
