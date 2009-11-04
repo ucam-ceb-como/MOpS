@@ -49,6 +49,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <iomanip>
 
 using namespace Sweep;
 using namespace Sweep::ActSites;
@@ -143,6 +144,16 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             }
         }
 
+        // riap For logging input in way that should match PSDF_input.dat files
+        /*unsigned int logIndices[7];
+        logIndices[0] = mech.FindSpecies("C2H2");
+        logIndices[1] = mech.FindSpecies("H2");
+        logIndices[2] = mech.FindSpecies("H");
+        logIndices[3] = mech.FindSpecies("O2");
+        logIndices[4] = mech.FindSpecies("OH");
+        logIndices[5] = mech.FindSpecies("H2O");
+        logIndices[6] = mech.FindSpecies("A4");*/
+
         // Now we can read the profile.
         while(!getline(fin, line).eof()) {
             // Set t=0 and create a new IdealGas object.
@@ -190,6 +201,13 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             // Add the profile point.
             alpha_prof[t] = alpha;
             m_gasprof.push_back(gpoint);
+
+            // Output in PSDF_input.dat format
+            /*std::cout << t << '\t' << std::scientific <<std::setprecision(6) << T << '\t';
+            for(unsigned int j = 0; j != 7; ++j) {
+                std::cout << gpoint.Gas.MolarConc(logIndices[j]) * 1e-6 << '\t';
+            }
+            std::cout << alpha << '\t' << P << '\n';*/
         }
 
         // Set up ABF model to use alpha profile.
@@ -244,19 +262,21 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
+
+        //save the old gas phase mass density
+        double old_dens = r.Mixture()->MassDensity();
+        //double old_dens = r.Mixture()->Temperature();
+
+        // Update the chemical conditions.
+        linInterpGas(t, m_gasprof, *r.Mixture());
+
+        // Scale particle M0 according to gas-phase expansion.
+        real m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
+        r.Mixture()->SetM0(r.Mixture()->MassDensity() * m0 / old_dens);
+        //r.Mixture()->SetM0(old_dens * m0 / r.Mixture()->Temperature() );
+
         // Calculate LPDA splitting time step.
         if (mech.AnyDeferred() && (r.Mixture()->ParticleCount() > 0)) {
-
-            //save the old reactors density
-            double old_dens=r.Mixture()->MassDensity();
-
-            // Calculate the chemical conditions.
-            linInterpGas(t, m_gasprof, *r.Mixture());
-
-            // Scale M0 according to gas-phase expansion.
-            real m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
-            r.Mixture()->SetM0(r.Mixture()->MassDensity() * m0 / old_dens);
-
             // Get the process jump rates (and the total rate).
             jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
@@ -270,9 +290,6 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
         // Perform stochastic jump processes.
         while (t < tsplit) {
-            // Calculate the chemical conditions.
-            linInterpGas(t, m_gasprof, *r.Mixture());
-
             // Calculate jump rates.
             jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
@@ -309,7 +326,6 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     }
     
     // Restore initial chemical conditions to sys.
-    //*static_cast<Cell*>(r.Mixture()) = chem;
     r.Mixture()->SetFixedChem(fixedchem);
 
     out(nsteps, niter, r, *this, data);

@@ -8,7 +8,8 @@ echo "========================"
 # Array of particle numbers - these should be the count of particles of sizes 1,2 and 3 in the psl file
 # Put a negative values at the start so that the number of particles of size 1 comes at index 1
 # These numbers are for a seed of 123 in the Mersenne Twister random number generator
-testValues=(-1 1013 100 21 1 0)
+# Analytic solution is 1053 91 12 2
+testValues=(-1 1022 116 6 2 0)
 
 i=1
 while ((i <= 5))
@@ -30,5 +31,6 @@ done
 
 # All tests passed
 echo "All tests passed"
+rm regression1-128-10*
 exit 0
 

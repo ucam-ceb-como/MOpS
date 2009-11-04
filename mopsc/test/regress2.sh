@@ -38,18 +38,21 @@ if(($?!=0))
   then
     exit $?
 fi
+rm regression2a*
 
 regress2/regress2b.pl
 if(($?!=0)) 
   then
     exit $?
 fi
+rm regression2b*
 
 regress2/regress2c.pl
 if(($?!=0)) 
   then
     exit $?
 fi
+rm regression2c*
 
 # All tests passed
 echo "All tests passed"
