@@ -49,22 +49,22 @@ fi
 count123=`grep "^0.2,1\.45" "regress2adiffusion123_psl.csv" | wc -l`
 count124=`grep "^0.1,1\.35" "regress2adiffusion124_psl.csv" | wc -l`
 
-if(($count123 != 96)) 
+if(($count123 != 112)) 
   then
     # Regression test has failed; print summary message and exit with non zero
     # value
-    echo "Found $count123 particles, when 96 expected"
+    echo "Found $count123 particles, when 112 expected"
     echo "**************************"
     echo "****** TEST FAILURE ******"
     echo "**************************"
     exit $count123
 fi
 
-if(($count124 != 114)) 
+if(($count124 != 12)) 
   then
     # Regression test has failed; print summary message and exit with non zero
     # value
-    echo "Found $count124 particles, when 114 expected"
+    echo "Found $count124 particles, when 12 expected"
     echo "**************************"
     echo "****** TEST FAILURE ******"
     echo "**************************"
