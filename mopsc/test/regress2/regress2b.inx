@@ -6,7 +6,7 @@
   <atol>1.0e-8</atol> 
   <rtol>1.0e-6</rtol>
   <pcount>1024</pcount>
-  <maxm0>5.0e11</maxm0>
+  <maxm0>4.5e11</maxm0>
   <relax>0.5</relax>
   
   <!-- Reactor definition (given initial conditions). -->
