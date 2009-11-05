@@ -65,6 +65,12 @@ using namespace Brush;
 const size_t ResetChemistry::sNumNonSpeciesData = 4;
 
 /*!
+ * Position of spatial position data in the elements of mInputChemistryData.
+ * The data will always have units m.
+ */
+const size_t ResetChemistry::sPositionIndex = 0;
+
+/*!
  * Position of temperature data in the elements of mInputChemistryData.
  * The data will always have units K.
  */
@@ -232,6 +238,10 @@ Brush::ResetChemistry::ResetChemistry(const string &fname, const InputFileType f
 
                 // Unit conversions, if file not in SI units
                 if(file_type == Premix) {
+                    if(i == sPositionIndex)
+                        // convert cm to m
+                        frac *= 1e-2;
+
                     if(i == sDensityIndex)
                         // convert g cm^-3 to kg m^-3
                         frac *= 1e3;

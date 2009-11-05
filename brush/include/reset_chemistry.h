@@ -128,6 +128,9 @@ private:
     bool mMassFractionData;
 
     //! Index of temperature data in data_point
+    static const size_t sPositionIndex;
+
+    //! Index of temperature data in data_point
     static const size_t sTemperatureIndex;
 
     //! Index of density data in data_point
