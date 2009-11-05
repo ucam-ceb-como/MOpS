@@ -171,6 +171,14 @@ void CamRead::readProcessConditions(CamConverter& convert,
             ca.setStrainRate(0.0);
         }
 
+        //read the ignition step for temperature
+        subnode = opNode->GetFirstChild("step_ignite");
+        if(subnode != NULL){
+            ca.setIgnitionStep(cdble(subnode->Data()));
+        }else{
+            ca.setIgnitionStep(0.0);
+        }
+
     }
     
 }

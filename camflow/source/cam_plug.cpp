@@ -91,39 +91,56 @@ void CamPlug::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp
     /*get the fuel inlet conditions and the fill the
      *solution vector with species mass fractions
      */
-    real avgMolWt=0;
-    ca.getLeftBoundary(cb);
-    getInletMassFrac(cb,solvect);
-    //set the relative tolerance for species    
-    rTol.resize(solvect.size(),cc.getSpeciesRelTol());
-    //set the absolute tolerance for species
-    aTol.resize(solvect.size(),cc.getSpeciesAbsTol());
     
-    camMixture->SetMassFracs(solvect);
+    ca.getLeftBoundary(cb);
 
+    TStep =  ca.getIgnitionStep();
+    doublereal Texit;
+    if(TStep != 0){
+        Tignition = cb.getTemperature();
+        ignited = false;
+        do{
+            Tignition += TStep;
+            cb.setTemperature(Tignition);
+            cout << "Looping in ignition\n";
+            integrate(cb,cc);
+            //check the inlet temperature with outlet
+            Texit = solvect[ptrT];
+            if(Texit > Tignition+20) {                
+                ignited = true;
+            }
+        }while(!ignited);
+        cout  << "MINIMUM  TEMPERATURE REQUIRED " << Tignition << endl;
+    }else{
+        integrate(cb,cc);
+    }
+    
+}
+
+
+void CamPlug::integrate(CamBoundary& cb, CamControl& cc){
+
+    getInletMassFrac(cb,solvect);
+    //set the relative tolerance for species
+    camMixture->SetMassFracs(solvect);
     //fill the temparature
     doublereal temp = cb.getTemperature();
     camMixture->SetTemperature(temp);
     solvect.push_back(cb.getTemperature());
-    rTol.push_back(cc.getTempRelTol());
-    aTol.push_back(cc.getTempAbsTol());
 
 
+    real avgMolWt=0;
     //fill the mass flow rate
-    opPre = ca.getPressure();
+    opPre = admin->getPressure();
     avgMolWt = camMixture->getAvgMolWt();
     doublereal rho = opPre*avgMolWt/(R*temp);
     if(cb.getFlowRate() == 0.0){
         cb.setFlowRate(rho*cb.getVelocity());
     }
     solvect.push_back(cb.getFlowRate());
-    rTol.push_back(cc.getFlowRelTol());
-    aTol.push_back(cc.getFlowAbsTol());
 
     //residence time
     solvect.push_back(0.0);
-    rTol.push_back(cc.getFlowRelTol());
-    aTol.push_back(cc.getFlowAbsTol());
 
     reporter->header("PLUG  ");
     reporter->problemDescription(cb,*this);
@@ -135,20 +152,25 @@ void CamPlug::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp
      *report the values at the inlet
      */
     report(0.0,&solvect[0]);
-    
-    createSummary();
 
+    createSummary();    
     CVodeWrapper cvw;
-    cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(), cc.getSpeciesRelTol(), cg.getLenth(),nEqn,*this);
+    cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(), cc.getSpeciesRelTol(), reacGeom->getLenth(),nEqn,*this);
     cvw.setIniStep(cc.getIniStep());
     cvw.solve(CV_ONE_STEP);
     reporter->closeFiles();
     /*
      *write the summary
      */
-    reportSummary(cg.getLenth(),&solvect[0]);
+    reportSummary(reacGeom->getLenth(),&solvect[0]);
     reporter->closeFile();
+
+
+
 }
+
+
+
 
 
 int CamPlug::eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval){
@@ -193,7 +215,7 @@ void CamPlug::updateMixture(const doublereal& x, doublereal* y){
     vector<doublereal> massfracs;
     massfracs.resize(nSpc,0.0);
     for (int l = 0; l < nSpc; l++) {
-        massfracs[l] = y[l];
+        massfracs[l] = y[l];        
     }
     camMixture->SetMassFracs(massfracs);
     if(admin->getEnergyModel() == admin->USERDEFINED)
@@ -214,11 +236,11 @@ void CamPlug::updateMixture(const doublereal& x, doublereal* y){
 //species residual definition
 void CamPlug::speciesResidual(const doublereal& x, doublereal* y, doublereal* f){
 
-    camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
+    camMech->Reactions().GetMolarProdRates(*camMixture,wdot);    
     for (int l = 0; l < nSpc; l++) {
-        f[l]= wdot[l]*(*spv)[l]->MolWt()/(y[ptrF]);
+        f[l]= wdot[l]*(*spv)[l]->MolWt()/(y[ptrF]);        
     }
-
+    
 }
 
 //temperature residual

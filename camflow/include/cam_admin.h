@@ -52,6 +52,7 @@ namespace Camflow{
         doublereal T, T_wall;     //temperature in case of isothermal operation
         doublereal pre;   //constant pressure system
         doublereal strain; // strain rate
+        doublereal stepIgnition;    //step change of temperature for ignition
         int energyModel;
         int speciesOut;  //identifier for species output mass/mole
         int repSch;     //report schedule
@@ -77,6 +78,9 @@ namespace Camflow{
 
         //set strain rate
         void setStrainRate(doublereal sr);
+
+        //set the step for ignition temp
+        void setIgnitionStep(doublereal step);
 
         //set the wall temperature
         void setWallTemp(doublereal Tw);
@@ -109,6 +113,9 @@ namespace Camflow{
 
         //return the strain rate
         doublereal getStrainRate() const;
+
+        //return the ignition step
+        doublereal getIgnitionStep() const;
 
         //return the energy model
         int getEnergyModel() const;

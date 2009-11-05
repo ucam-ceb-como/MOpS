@@ -283,6 +283,7 @@ namespace Camflow{
         vector<doublereal> resSp, resT, resFlow, resMoment, resAxVel;
        
         doublereal opPre;                        //operating pressure
+        doublereal Tignition;                   //Ignition temperature
         
 
         int nEqn;    //number of equations

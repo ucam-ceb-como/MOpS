@@ -80,6 +80,10 @@ namespace Camflow{
         void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
              CamConfiguration &config, CamSoot &cs,  Mechanism &mech );
 
+
+        // call the solver to solve the problem
+        void integrate(CamBoundary& cb, CamControl& cc);
+        
         //return the initial solution vector
         void getInitial(vector<doublereal>& initial);
         
@@ -99,6 +103,11 @@ namespace Camflow{
 
         //header information
         void header();
+
+    private:
+        bool ignited;
+        doublereal TStep;
+
 
     };
 }

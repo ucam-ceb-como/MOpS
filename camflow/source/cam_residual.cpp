@@ -18,10 +18,7 @@ void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doubler
      *prepare flux terms
      */
     doublereal convection, diffusion, source;
-    /*
-     *interpolation preparation
-     */
-    doublereal slope, intersect;
+   
     /*
      *particle source
      */
@@ -155,6 +152,11 @@ void CamResidual::saveMixtureProp(const doublereal time,
             mf.push_back(y[i*nVar+l]);
         }
         temperature = y[i*nVar+ptrT];
+        if(temperature < 0 || temperature > 3500){
+            cout << "Invalid temperature " << temperature << endl;
+            throw CamError("Invalid temperature");
+        }
+
         //store the temperature
         m_T.push_back(temperature);
         camMixture->SetMassFracs(mf);
@@ -209,7 +211,9 @@ void CamResidual::saveMixtureProp(const doublereal time,
             s_Diff(i,l)=temp[l];
             s_mf(i,l) = mf[l];
             if(mf[l] > 1.1) {
-                cout << l << "  " << mf[l] << endl;
+                cout << "Species " << "  " << mf[l] << endl;
+                cout << "Temperature " << temperature << endl;
+                cout << "Pressure " << opPre << endl;
                 throw CamError("invalid mass frac\n");
             }
             s_H(i,l) = htemp[l];

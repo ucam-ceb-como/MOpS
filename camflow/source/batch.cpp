@@ -1,3 +1,4 @@
+
 /*
  * File:   batch.h
  * Author: vj231
@@ -209,11 +210,12 @@ void Batch::updateMixture(const doublereal& x, doublereal* y){
 void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f){
 
     camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
+    
     for (int l = 0; l < nSpc; l++) {
         f[l]= wdot[l];
-        
-    }
     
+    }
+
     
 }
 

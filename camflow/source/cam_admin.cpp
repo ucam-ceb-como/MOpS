@@ -55,6 +55,13 @@ void CamAdmin::setPressure(doublereal p_){
     this->pre = p_;
 }
 
+/**
+ *  Set the ignition step for temperature
+ */
+void CamAdmin::setIgnitionStep(doublereal step){
+    this->stepIgnition = step;
+}
+
 /*
  *set the strain rate
  */
@@ -110,6 +117,10 @@ int CamAdmin::getReportSchedule(){
     return repSch;
 }
 
+
+doublereal CamAdmin::getIgnitionStep() const{
+    return stepIgnition;
+}
 
 void CamAdmin::setLeftBoundary(CamBoundary &cb){    
     this->left = cb;

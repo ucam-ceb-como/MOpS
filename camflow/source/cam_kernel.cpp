@@ -88,10 +88,11 @@ int main() {
         cout << ce.errorMessge;
     }
     //CamBoundary *cb2 = &cb;
+
     
     //read mechanism, thermo and trasnport data    
     IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,fTrans);
-
+    
     //Following is a test call to the interface
 //-----------------------------------------------------------
 //    try{
@@ -106,9 +107,8 @@ int main() {
 //    }
 //    cout << "Calculation finished\n";
 //    int dd; cin >> dd;
-//----------------------------------------------------------
-        
-    try{
+//----------------------------------------------------------        
+    try{        
         models.solve(ca,config,cc,cg,cp,cSoot,mech);
     }catch(CamError &ce){
         cout << ce.errorMessge;
