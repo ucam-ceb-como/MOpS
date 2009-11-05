@@ -411,6 +411,13 @@ void Sweep::Ensemble::RemoveInvalids(void)
     // Rebuild the binary tree structure
     Update();
 
+    // Stop doubling because the number of particles has dropped from above
+    // m_dblelimit during this function, which means a rapid loss of particles
+    // so doubling will make the sample volume needlessly large.
+    if(m_count < m_capacity - m_dblecutoff) {
+        m_dbleactive = false;
+    }
+
     // If we removed too many invalid particles then we'll have to double.
     dble();
 }
@@ -712,6 +719,10 @@ void Sweep::Ensemble::dble()
 
         // Continue while there are too few particles in the ensemble.
         while (m_count < m_dblelimit) {
+            if(m_count == 0) {
+                throw std::runtime_error("Attempt to double particle ensemble with 0 particles");
+            }
+            
             printf("sweep: Doubling particle ensemble.\n");
 
             left = isLeftBranch(m_count);
