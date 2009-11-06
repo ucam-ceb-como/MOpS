@@ -404,7 +404,11 @@ void FlameLet::speciesResidual(const doublereal& t, doublereal* y,
      *set the externally specified scalar dissipation rate
      *to sdr
      */
-    if(sdr_ext!=0)sdr=sdr_ext;
+    if(timeHistory){
+        sdr = getSDR(t);
+    }else  if(sdr_ext!=0){
+        sdr=sdr_ext;
+    }
     i=0;
     //sdr = scalarDissipationRate(dz[i]);
     for(int l=0; l<nSpc; l++){
@@ -719,4 +723,45 @@ void FlameLet::header(){
  */
 void FlameLet::setExternalScalarDissipationRate(const doublereal sr){
     sdr_ext = sr;
+}
+
+/**
+ *  When the scalar dissipation rate has a time history
+ *  use that during intergration
+ */
+void FlameLet::setExternalScalarDissipationRate(const vector<doublereal>& time, const vector<doublereal>& sdr){
+    v_sdr.resize(time.size());
+    v_time.resize(time.size());
+
+    v_sdr = sdr;
+    v_time = time;
+    timeHistory = true;
+
+}
+
+/**
+ *  Interpolate and return the scalar dissipation rate
+ */
+const doublereal FlameLet::getSDR(const doublereal time){
+    doublereal tsdr=0;
+    doublereal vu, vl, xu, xl;
+    for(size_t i =0; i < v_sdr.size(); i++){
+        if(time == v_time[i]){
+            tsdr = v_sdr[i];
+            break;
+        }else if( i>0 && (time > v_time[i-1]) && (time < v_time[i])) {
+            vu = v_sdr[i];
+            xu = v_time[i];
+
+            vl = v_sdr[i-1];
+            xl = v_time[i-1];
+
+            doublereal slope = (vu-vl)/(xu-xl);
+            doublereal intersect = vu- (slope*xu);
+
+            tsdr =  slope*time + intersect;
+            break;
+        }
+    }
+    return tsdr;
 }

@@ -19,7 +19,7 @@ using namespace Sprog;
 namespace Camflow{
     class FlameLet: public CamSetup{
     public:
-        FlameLet(){sdr_ext=0;}
+        FlameLet(){sdr_ext=0;timeHistory=false;}
         virtual ~FlameLet(){}
 
         int eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval);
@@ -100,14 +100,26 @@ namespace Camflow{
          *set the external scalar dissipation rate
          */
         void setExternalScalarDissipationRate(const doublereal sr);
-        
 
+        /*
+         *set the time history of scalar dissipation rate
+         */
+        void setExternalScalarDissipationRate(const vector<doublereal>& time, const vector<doublereal>& sdr);
+
+        /**
+         *  get scalar dissipation rate
+         */
+        
+        const doublereal getSDR(const doublereal time);
 
     private:
         doublereal stoichZ; //stoichiometric mixture fraction
         doublereal smr;     //stoichiometric mass ratio
         doublereal sdr;     // scalar dissipation rate
         doublereal sdr_ext; // scalar dissipation rate passed by exteranl program
+        vector<doublereal> v_sdr;   //scalar dissipation rate that has a time history
+        vector<doublereal> v_time; //time profile of scalar dissipation rates
+        bool timeHistory;
         doublereal strain;  // strain rate
         int mCord;          // this is the mixture fraction coordinates
         inletStruct fuel, oxid;

@@ -189,6 +189,27 @@ void Interface::getSpeciesNames(vector<string>& names){
     names.clear();
     names = speciesNames;
 }
+
+/**
+ *  This function is called by the external code that
+ *  passed a scalar dissipation rate with time history
+ */
+void Interface::flamelet(const vector<doublereal>& sdr, const vector<doublereal>& intTime, bool continuation){
+    int len = (int) sdr.size();
+    if(len != (int)intTime.size())
+        throw CamError("Mismatch in the size of SDR and TIME vector\n");
+
+    if(flmlt == NULL ) flmlt = new FlameLet();
+    //Set the time history of the scalar dissipation rate
+    flmlt->setExternalScalarDissipationRate(intTime,sdr);
+    try{
+        flamelet(sdr[len-1], intTime[len-1],continuation);
+    }catch(CamError& ce){
+        throw;
+    }
+
+}
+
 /*
  *this function is the interface for calling the flamelet code
  *for the implementation of interactive falmelets. The function
