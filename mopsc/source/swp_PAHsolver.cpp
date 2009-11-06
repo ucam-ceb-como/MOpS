@@ -317,7 +317,7 @@ void PAHSolver::UpdateNumberPAHs(Mops::Reactor &r, real t)
 			double molfrac= (*(r.Mixture())).MoleFraction(incspeciesid);
 			double pressure=(*(r.Mixture())).Pressure()*1E-5;     // in bar
 			double temperature=(*(r.Mixture())).Temperature();    // T in K
-			double numdensgas=6.023E23*pressure*1E5*molfrac/8.314/temperature;   // in part/m^3
+			double numdensgas=6.023E23*pressure*1E5*molfrac/(8.314*temperature);   // in part/m^3
 	//		cout << "Pressure="<<pressure<<endl;  
 	//		cout << "molfracgas="<<(*(r.Mixture())).MolarConc(incspeciesid)<<endl;
 	//		cout << "numdensgas="<<numdensgas<<endl;
