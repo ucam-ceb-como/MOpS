@@ -793,8 +793,16 @@ void PAHPrimary::UpdatePAHs(double t)
         unsigned int j=0;
 	    for (vector<PAH>::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
 		    //for (j=0;j<i->time.size();j++)
+            double minPAH=m_pmodel->Components(0)->MinPAH();
+            if (m_numPAH>=minPAH)
+            {
+                double growthfact=m_pmodel->Components(0)->GrowthFact();
+                double deltat=t-i->lastupdated;
+                i->freezetime=i->freezetime+deltat*(1.0-growthfact);
+            }
 		    for (j=i->lastposPAHupdate;j<i->m_trajectory->alltrajectories.at(i->ID).time.size();j++)
-		    {	//if (this->m_numPAH>1000) i->freezetime+=rnd()*(t-i->lastupdated);
+            {  
+                //if (this->m_numPAH>1000) i->freezetime+=rnd()*(t-i->lastupdated);
 			    //i->m_numcarbon=i->n_carbon_t.at(j);
 			    i->m_numcarbon=i->m_trajectory->alltrajectories.at(i->ID).n_carbon_t.at(j);
 			    //if (i->time.at(j)>=t-i->time_created-i->freezetime)

@@ -90,11 +90,18 @@ public:
 
     real CoalescThresh() const;
 
+    real GrowthFact() const;
+
+    real MinPAH() const;
+
     // Sets the density (g/cm3).
     void SetDensity(real dens);
 
     void SetCoalescThresh(real ct);
 
+    void SetGrowthFact(real gf);
+
+    void SetMinPAH(int mp);
 
     // Returns component symbol or name.
     const std::string &Name() const;
@@ -134,6 +141,12 @@ private:
 
     //! threshold after which two individual primaries are replaced by one
     real m_coalesc_thresh;
+
+    //! factor with which the PAH growth is multiplied
+    real m_growthfact;
+
+    //! minimum number of PAHs withinin the primary that are needed to apply m_growthfact
+    int m_minPAH;
 };
 
 // Typedef of a vector of pointers to Component objects.

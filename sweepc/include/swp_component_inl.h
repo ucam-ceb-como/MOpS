@@ -59,6 +59,11 @@ inline void Sweep::Component::SetMolWt(const Sweep::real molwt) {m_molwt = molwt
 //! Returns the coalescence threshold 
 inline Sweep::real Sweep::Component::CoalescThresh() const {return m_coalesc_thresh;};
 
+//! Returns the growhtfact 
+inline Sweep::real Sweep::Component::GrowthFact() const {return m_growthfact;};
+
+//! Returns the minpah 
+inline Sweep::real Sweep::Component::MinPAH() const {return m_minPAH;};
 
 //! Returns component density (g/cm3).
 inline Sweep::real Sweep::Component::Density() const {return m_density;};
@@ -68,6 +73,13 @@ inline void Sweep::Component::SetDensity(const Sweep::real dens) {m_density = de
 
 //! Sets the coalescence threshold 
 inline void Sweep::Component::SetCoalescThresh(const Sweep::real ct) {m_coalesc_thresh = ct;};
+
+//! Sets the growhtfact 
+inline void Sweep::Component::SetGrowthFact(const Sweep::real gf) {m_growthfact = gf;};
+
+//! Sets the minimum number of PAHs
+inline void Sweep::Component::SetMinPAH(const int mp) {m_minPAH = mp;};
+
 // COMPONENT NAME.
 
 // Returns component symbol or name.

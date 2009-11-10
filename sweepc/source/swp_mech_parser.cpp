@@ -411,6 +411,45 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         }
 
 
+        // Get m_growthfact.
+        el = (*i)->GetFirstChild("growthfact");
+        if (el!=NULL) {
+            str = el->Data();
+            if (str != "") {
+                comp->SetGrowthFact(cdble(str)); 
+            } else {
+                // coalthresh contains no data.
+                std::string msg("Component ");
+                msg += comp->Name();
+                msg += " growthfact contains no data (Sweep, MechParser::readComponents).";
+
+                delete comp;
+                throw runtime_error(msg);
+            }
+        } else {
+            comp->SetGrowthFact(1.0); 
+        }
+
+
+        // Get minPAH.
+        el = (*i)->GetFirstChild("minPAH");
+        if (el!=NULL) {
+            str = el->Data();
+            if (str != "") {
+                comp->SetMinPAH(int(cdble(str))); 
+            } else {
+                // coalthresh contains no data.
+                std::string msg("Component ");
+                msg += comp->Name();
+                msg += " minPAH contains no data (Sweep, MechParser::readComponents).";
+
+                delete comp;
+                throw runtime_error(msg);
+            }
+        } else {
+            comp->SetMinPAH(0); 
+        }
+
 
         // Get component mol. wt.
         el = (*i)->GetFirstChild("molwt");
