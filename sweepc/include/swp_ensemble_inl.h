@@ -104,38 +104,60 @@ inline bool Sweep::Ensemble::isLeftBranch(unsigned int i) {
  * initialised.  This will set the values of tree elements in the
  * range [0, m_halfcap - 1) (note half open range).
  */
+
+
+/**
+@param[in]    i   index of parent cell
+@return       x   index of right child cell
+*/
+inline unsigned int Sweep::Ensemble::LeftChildIndex(unsigned int i){
+    unsigned int x = 2*i +1;
+    return x;
+}
+
+/**
+@param[in]    i   index of parent cell
+@return       x   index of right child cell
+*/
+inline unsigned int Sweep::Ensemble::RightChildIndex(unsigned int i){
+    unsigned int x = 2*i + 2;
+    return x;
+}
+
+/**
+@param[in]    i   index of child cell
+@return       x   index of parent cell
+*/
+inline unsigned int Sweep::Ensemble::ParentIndex(unsigned int i){
+    unsigned int x = (i-1)/2 ;
+    return x;
+}
+
+
 inline void Sweep::Ensemble::recalcAllNonLeaf() {
 
     // The top (root) node does not have a parent so handle separately
     for(size_t treeIndex = m_halfcap - 2; treeIndex > 0; --treeIndex)
     {
-        // Define node as an alias for m_tree[treeIndex]
-        TreeNode& node = m_tree[treeIndex];
-        
-        // Pointer to parent node
-        node.Parent = &m_tree[(treeIndex - 1) / 2];
+       // Define node as an alias for m_tree[treeIndex]
+       TreeNode& node = m_tree[treeIndex];
         
         // Node below and to the left
         TreeNode& left = m_tree[treeIndex * 2 + 1];
-        node.Left = &left;
         node.LeftData = left.LeftData + left.RightData;
         
-        // Node below and to the right
+        //Node below and to the right
         TreeNode& right = m_tree[treeIndex * 2 + 2];
-        node.Right = &right;
         node.RightData = right.LeftData + right.RightData;
     }
     
-    // Root node has not parent, but is otherwise the same
+    //Root node has not parent, but is otherwise the same
     TreeNode& node = m_tree[0];
-    node.Parent = NULL;
 
     TreeNode& left = m_tree[1];
-    node.Left = &left;
     node.LeftData = left.LeftData + left.RightData;
 
     TreeNode& right = m_tree[2];
-    node.Right = &right;
     node.RightData = right.LeftData + right.RightData;
 
     // Cache the overall sums
@@ -186,16 +208,9 @@ template<class T> void Sweep::Ensemble::SetParticles(
     while(it != itEnd)
     {
         if(isLeft) {
-            // Set the parent pointer the first time we get to this node
-            // does not have to be done again when the right hand side
-            // of the node is set.
-            m_tree[treeIndex].Parent = &m_tree[(treeIndex - 1) / 2];
 
             // Put the particle data into the tree
             m_tree[treeIndex].LeftData = **it;
-            
-            // This is a leaf node so it does not have a left child
-            m_tree[treeIndex].Left = NULL;
             
             // The next particle will be on the right of the current leaf (treeIndex not changed) 
             isLeft = false;
@@ -203,10 +218,7 @@ template<class T> void Sweep::Ensemble::SetParticles(
         else {
             // Put the particle data into the tree
             m_tree[treeIndex].RightData = **it;
-            
-            // This is a leaf node so it does not have a right child
-            m_tree[treeIndex].Right = NULL;
-            
+
             // The next particle will be on the left of the next leaf
             ++treeIndex;
             isLeft = true;
@@ -220,7 +232,6 @@ template<class T> void Sweep::Ensemble::SetParticles(
         // Last inserted particle was to the left of m_tree[treeIndex] so need
         // to initialise the right hand part of m_tree[treeIndex]
         m_tree[treeIndex].RightData.Clear();
-        m_tree[treeIndex].Right = NULL;
         ++treeIndex;
     }
     
@@ -229,10 +240,7 @@ template<class T> void Sweep::Ensemble::SetParticles(
     {
         TreeNode& node = m_tree[treeIndex];
         node.LeftData.Clear();
-        node.Left = NULL;
         node.RightData.Clear();
-        node.Right = NULL;
-        node.Parent = &m_tree[(treeIndex - 1) / 2];
         ++treeIndex;
     }
     // All the leaves of the tree should now be initialised so sum

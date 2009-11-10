@@ -260,7 +260,18 @@ public:
         const Sweep::ParticleModel &mech // Model used to define particles.
         );
 
+
 private:
+
+    //!Returns left index of left child
+    static unsigned int LeftChildIndex(unsigned int i);
+
+    //!Returns index of right child
+    static unsigned int RightChildIndex(unsigned int i);
+
+    //!Returns index of parent
+    static unsigned int ParentIndex(unsigned int i);
+
     // Particle model used to define particles.
     const Sweep::ParticleModel *m_model;
 

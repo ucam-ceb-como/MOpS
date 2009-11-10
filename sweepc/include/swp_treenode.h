@@ -76,9 +76,6 @@ private:
 	// MEMBER VARIABLES.
     ParticleCache LeftData;  // Sum of the left child leaves.
     ParticleCache RightData; // Sum of the right child leaves.
-    TreeNode *Left;          // Pointer to left child node.
-    TreeNode *Right;         // Pointer to right child node.
-    TreeNode *Parent;        // Pointer to parent node.
 
     // Default Constructor is private to prevent uninitialised nodes
     // being created.

@@ -141,23 +141,6 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
                 m_particles[i] = rhs.m_particles[i]->Clone();
             }
 
-            // Set up the pointers to the related nodes
-            unsigned int i, j;
-            m_tree[0].Parent = NULL;
-            for (i=0,j=1; i!=m_halfcap-1; ++i) {
-                j = (2*i) + 1;
-                m_tree[i].Left          = &m_tree.at(j);
-                m_tree[i].Left->Parent  = &(m_tree[i]);
-                m_tree[i].Right         = &m_tree.at(j+1);
-                m_tree[i].Right->Parent = &(m_tree[i]);
-            }
-            //  Nodes in last half of tree refer to particles, and
-            //  have no children.
-            for (i=m_halfcap-1; i!=m_capacity-1; ++i) {
-                m_tree[i].Left  = NULL;
-                m_tree[i].Right = NULL;
-            }
-
             // Now copy data from rhs tree to this (pointers are not affected)
             for (unsigned int i=0; i!=m_capacity-1; ++i) {
                 m_tree[i] = rhs.m_tree[i];
@@ -204,20 +187,6 @@ void Sweep::Ensemble::Initialise(unsigned int capacity, const Sweep::ParticleMod
     m_particles.resize(m_capacity, NULL);
     m_tree.resize(m_capacity-1, TreeNode(model));
     
-    // Set all tree nodes to correct size and link up tree.
-    unsigned int i, j;
-    m_tree[0].Parent = NULL;
-    for (i=0,j=1; i<m_halfcap-1; i++,j=(2*i)+1) {
-        m_tree[i].Left = &m_tree.at(j);
-        m_tree[i].Left->Parent = &(m_tree[i]);
-        m_tree[i].Right = &m_tree.at(j+1);
-        m_tree[i].Right->Parent = &(m_tree[i]);
-    }
-    for (i=m_halfcap-1; i!=m_capacity-1; ++i) {
-        m_tree[i].Left  = NULL;
-        m_tree[i].Right = NULL;
-    }
-
     // Initialise scaling.
     m_ncont      = 0;
     m_scale      = 1.0;
@@ -497,20 +466,17 @@ int Sweep::Ensemble::Select(ParticleCache::PropID id) const
                       m_tree[0].RightData.Property(id));
 
     // Fall down the binary tree until reaching a base node.
-    const TreeNode *n = &m_tree[0];
-    int j=0;
-    while(n->Left!=NULL) {
-        if (r <= n->LeftData.Property(id)) {
-            n = n->Left;
-            j = (2*j) + 1;
+    unsigned int j=0;
+    while (j <= (m_halfcap-2)){
+        if (r <= m_tree[j].LeftData.Property(id)){
+            j = LeftChildIndex(j);
         } else {
-            r -= n->LeftData.Property(id);
-            n = n->Right;
-            j = (2*j) + 2;
+            r -= m_tree[j].LeftData.Property(id);
+            j = RightChildIndex(j); 
         }
     }
     // last level!
-    if (r <=n->LeftData.Property(id)) {
+    if (r <=m_tree[j].LeftData.Property(id)) {
         isp = (2*j) + 2 - m_capacity;
     } else {
         isp = (2*j) + 3 - m_capacity;
@@ -544,20 +510,17 @@ int Sweep::Ensemble::Select(SubModels::SubModelType model_id, unsigned int id) c
           m_tree[0].RightData.SubModel(model_id)->Property(id));
 
     // Fall down the binary tree until reaching a base node.
-    const TreeNode *n = &m_tree[0];
-    int j=0;
-    while(n->Left!=NULL) {
-        if (r <= n->LeftData.SubModel(model_id)->Property(id)) {
-            n = n->Left;
-            j = (2*j) + 1;
+    unsigned int j=0;
+    while(j <= (m_halfcap - 2)){
+        if (r <= m_tree[j].LeftData.SubModel(model_id)->Property(id)) {
+            j = LeftChildIndex(j);
         } else {
-            r -= n->LeftData.SubModel(model_id)->Property(id);
-            n = n->Right;
-            j = (2*j) + 2;
+            r -= m_tree[j].LeftData.SubModel(model_id)->Property(id);
+            j = RightChildIndex(j);
         }
     }
     // Last level!
-    if (r <=n->LeftData.SubModel(model_id)->Property(id)) {
+    if (r <=m_tree[j].LeftData.SubModel(model_id)->Property(id)) {
         isp = (2*j) + 2 - m_capacity;
     } else {
         isp = (2*j) + 3 - m_capacity;
@@ -684,20 +647,14 @@ void Sweep::Ensemble::ascendingRecalc(unsigned int i)
     // the nodes.
 
     if (i<m_capacity) {
-        // Get the node at the bottom of the branch.
-        TreeNode *n = &m_tree[i];
 
         // Climb up the tree until the root node, 
         // summing up the properties.
-        while (n->Parent != NULL) {
-            assert(n->LeftData.Property(ParticleCache::iM) < std::numeric_limits<real>::max());
-            assert(n->LeftData.Property(ParticleCache::iM) >= 0.0);
-            assert(n->RightData.Property(ParticleCache::iM) < std::numeric_limits<real>::max());
-            assert(n->RightData.Property(ParticleCache::iM) >= 0.0);
+        while (i > 0){
 
-            n = n->Parent;
-            (n->LeftData  = n->Left->LeftData)  += n->Left->RightData;
-            (n->RightData = n->Right->LeftData) += n->Right->RightData;
+            i = ParentIndex(i);
+            m_tree[i].LeftData = m_tree[LeftChildIndex(i)].LeftData + m_tree[LeftChildIndex(i)].RightData;
+            m_tree[i].RightData = m_tree[RightChildIndex(i)].RightData + m_tree[RightChildIndex(i)].LeftData;
         }
         m_sums = m_tree.front().LeftData + m_tree.front().RightData;
 

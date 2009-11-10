@@ -49,7 +49,6 @@ using namespace std;
 
 // Default Constructor (private).
 TreeNode::TreeNode(void)
-: Left(NULL), Right(NULL), Parent(NULL)
 {
 }
 
@@ -62,8 +61,7 @@ TreeNode::TreeNode(const TreeNode & tn)
 
 // Initialising constructor.
 TreeNode::TreeNode(const Sweep::ParticleModel &model)
-: LeftData(0.0, model), RightData(0.0, model),
-  Left(NULL), Right(NULL), Parent(NULL)
+: LeftData(0.0, model), RightData(0.0, model)
 {
 }
 
@@ -80,11 +78,6 @@ TreeNode::~TreeNode(void)
 TreeNode &TreeNode::operator=(const TreeNode &rhs)
 {
     if (this != &rhs) {
-        /*
-        Left      = rhs.Left;
-        Right     = rhs.Right;
-        Parent    = rhs.Parent;
-        */
         LeftData  = rhs.LeftData;
         RightData = rhs.RightData;
     }
