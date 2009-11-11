@@ -800,14 +800,17 @@ void PAHPrimary::UpdatePAHs(double t)
                 double deltat=t-i->lastupdated;
                 i->freezetime=i->freezetime+deltat*(1.0-growthfact);
             }
+            double seektime=i->m_trajectory->StartTime()+t-(i->time_created)-(i->freezetime);
 		    for (j=i->lastposPAHupdate;j<i->m_trajectory->alltrajectories.at(i->ID).time.size();j++)
             {  
                 //if (this->m_numPAH>1000) i->freezetime+=rnd()*(t-i->lastupdated);
 			    //i->m_numcarbon=i->n_carbon_t.at(j);
+                if (i->m_trajectory->alltrajectories.at(i->ID).n_carbon_t.at(j)>16)
+                    cout<< "break";
 			    i->m_numcarbon=i->m_trajectory->alltrajectories.at(i->ID).n_carbon_t.at(j);
 			    //if (i->time.at(j)>=t-i->time_created-i->freezetime)
-                double seektime=i->m_trajectory->StartTime()+t-(i->time_created)-(i->freezetime);
-			    if (i->m_trajectory->alltrajectories.at(i->ID).time.at(j)>=seektime)
+                
+			    if (i->m_trajectory->alltrajectories.at(i->ID).time.at(j)>=0.999*seektime)
 			    {
                     i->lastposPAHupdate=j;
 				    break;            
