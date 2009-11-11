@@ -28,7 +28,7 @@ void CVodeWrapper::init(int n, vector<doublereal>& solnVec, doublereal tol,
     eqnSize = n;
     atol = tol;
     currentTime = 0.0;
-    maxTime = maxIntTime;
+    maxTime = maxIntTime;    
     cvode_mem = CVodeCreate(CV_BDF,CV_NEWTON);
 
     CVodeMalloc(cvode_mem,cvodeResid,currentTime,y,CV_SS,rtol,(void*)&atol);
@@ -89,7 +89,9 @@ void CVodeWrapper::solve(int stopMode, doublereal resTol){
             calcResNorm();
             reacPtr->report(currentTime,NV_DATA_S(y),resNorm);
         }
-    }while(resNorm > resTol);
+        if(currentTime > maxTime)
+            break;
+    }while(resNorm > resTol );
 
 }
 

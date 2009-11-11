@@ -273,6 +273,7 @@ void FlameLet::csolve(CamControl& cc, bool interface){
         int band = nVar*2;
         cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
                             cc.getMaxTime(),band,*this);
+
         cvw.solve(CV_ONE_STEP,cc.getResTol());
         /*
          *write the output to file only if the call is not
@@ -406,6 +407,7 @@ void FlameLet::speciesResidual(const doublereal& t, doublereal* y,
      */
     if(timeHistory){
         sdr = getSDR(t);
+       
     }else  if(sdr_ext!=0){
         sdr=sdr_ext;
     }
@@ -748,6 +750,7 @@ const doublereal FlameLet::getSDR(const doublereal time){
     for(size_t i =0; i < v_sdr.size(); i++){
         if(time == v_time[i]){
             tsdr = v_sdr[i];
+            
             break;
         }else if( i>0 && (time > v_time[i-1]) && (time < v_time[i])) {
             vu = v_sdr[i];
@@ -755,6 +758,19 @@ const doublereal FlameLet::getSDR(const doublereal time){
 
             vl = v_sdr[i-1];
             xl = v_time[i-1];
+
+            doublereal slope = (vu-vl)/(xu-xl);
+            doublereal intersect = vu- (slope*xu);
+
+            tsdr =  slope*time + intersect;            
+            break;
+        }else{
+            size_t l = v_sdr.size();
+            vu = v_sdr[l-1];
+            xu = v_time[l-1];
+
+            vl = v_sdr[l-2];
+            xl = v_time[l-2];
 
             doublereal slope = (vu-vl)/(xu-xl);
             doublereal intersect = vu- (slope*xu);

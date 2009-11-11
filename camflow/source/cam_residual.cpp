@@ -18,7 +18,7 @@ void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doubler
      *prepare flux terms
      */
     doublereal convection, diffusion, source;
-   
+    
     /*
      *particle source
      */
