@@ -805,8 +805,6 @@ void PAHPrimary::UpdatePAHs(double t)
             {  
                 //if (this->m_numPAH>1000) i->freezetime+=rnd()*(t-i->lastupdated);
 			    //i->m_numcarbon=i->n_carbon_t.at(j);
-                if (i->m_trajectory->alltrajectories.at(i->ID).n_carbon_t.at(j)>16)
-                    cout<< "break";
 			    i->m_numcarbon=i->m_trajectory->alltrajectories.at(i->ID).n_carbon_t.at(j);
 			    //if (i->time.at(j)>=t-i->time_created-i->freezetime)
                 
