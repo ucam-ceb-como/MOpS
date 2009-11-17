@@ -1,4 +1,7 @@
 
+#include <vector>
+
+
 #include "cam_residual.h"
 #include "cam_configuration.h"
 #include "cam_control.h"
@@ -238,6 +241,9 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation){
         flmlt->getTemperatureVector(TVector);
         flmlt->getIndepedantVar(indVar);
         flmlt->getViscosityVector(muVector);
+        flmlt->getSpecificHeat(spHeat);
+        flmlt->getThermalConductivity(lambda);
+        flmlt->getDiffusionCoefficient(mDiff);
         stMixtureFrac = flmlt->stoichiometricMixtureFraction();
 
     }catch(CamError &ce){
@@ -287,6 +293,42 @@ const doublereal Interface::getViscosity(const doublereal axpos){
     
     doublereal temp = getVariableAt(axpos,muVector);
     return temp;
+}
+
+/**
+ *  Return the specific heat
+ */
+const doublereal Interface::getSpecificHeat(const doublereal axPos){
+    doublereal temp = getVariableAt(axPos,spHeat);
+    return temp;
+}
+
+/**
+ *  Return the thermal conductivity
+ */
+const doublereal Interface::getThermalConductivity(const doublereal axPos){
+    doublereal temp = getVariableAt(axPos,lambda);
+    return temp;
+}
+/**
+ *  Return a vector of diffusion coefficients
+ */
+const vector<doublereal> Interface::getDiffusionCoefficients(const doublereal axPos){
+    vector<doublereal> diff, rmDiff;
+    int len = indVar.size();
+    rmDiff.clear();
+    for(int k=0; k<nSpecies; k++){
+        diff.clear();
+        //get the diffusion coefficient of species k for all mixture fraction
+        for(int i=0; i<len; i++){
+            diff.push_back(mDiff(i,k));
+        }
+        doublereal spDiff = getVariableAt(axPos,diff);
+        rmDiff.push_back(spDiff);
+    }
+
+    return rmDiff;
+
 }
 /*
  *private function to do the interpolation of the solution variables

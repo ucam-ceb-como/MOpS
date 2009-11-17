@@ -19,11 +19,7 @@ void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doubler
      */
     doublereal convection, diffusion, source;
     
-    /*
-     *particle source
-     */
-    doublereal pSource = 0;
-    
+       
     for(int i= iMesh_s; i< iMesh_e; i++ ){
 
 
@@ -429,6 +425,27 @@ void CamResidual::getViscosityVector(vector<doublereal>& viscosity){
  */
 void CamResidual::getTemperatureVector(vector<doublereal>& temp){
     temp = m_T;
+}
+
+/*
+ *  Return the specific heat
+ */
+void CamResidual::getSpecificHeat(vector<doublereal>& spHeat){
+    spHeat = m_cp;
+}
+
+/*
+ *  Return the diffusion coefficient
+ */
+void CamResidual::getDiffusionCoefficient(Array2D& dCoeff){
+    dCoeff = s_Diff;
+}
+
+/*
+ *  Return the thermal conductivity
+ */
+void CamResidual::getThermalConductivity(vector<doublereal>& lambda){
+    lambda = m_k;
 }
 /*
  *return the independant variable

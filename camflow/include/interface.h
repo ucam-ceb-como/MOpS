@@ -218,6 +218,19 @@ namespace Camflow{
          *return the viscosity
          */
         const doublereal getViscosity(const doublereal axpos);
+
+        /*
+         *  return the specific heat at a given mixture fraction /axpos
+         */
+        const doublereal getSpecificHeat(const doublereal axPos);
+        /*
+         *  return the thermal conductivity at a given mixture fraction / axpos
+         */
+        const doublereal getThermalConductivity(const doublereal axPos);
+        /*
+         *  Return a vector of diffusion coefficents (size number of gasphase species)
+         */
+        const vector<doublereal> getDiffusionCoefficients(const doublereal axPos);
         /*
          *return the stoichiometric mixture fraction
          */
@@ -288,6 +301,9 @@ namespace Camflow{
         vector<doublereal> rhoVector;   //density
         vector<doublereal> muVector;    //viscosity
         vector<doublereal> indVar;      //independant variable
+        vector<doublereal> spHeat;              //specific heats
+        vector<doublereal> lambda;      //thermal conductivity
+        Array2D mDiff;                      //Diffusion coefficients
 
         doublereal stMixtureFrac;       //stoichiometric mixture fraction
         /*

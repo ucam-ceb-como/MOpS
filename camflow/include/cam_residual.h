@@ -203,6 +203,19 @@ namespace Camflow{
          *return point velocities
          */
         virtual void getVelocity(vector<doublereal>& vel);
+
+        /*
+         *  return the specific heat
+         */
+        virtual void getSpecificHeat(vector<doublereal>& spHeat);
+        /*
+         * return a 2D array for Diffusion coefficient
+         */
+        virtual void getDiffusionCoefficient(Array2D& dCoeff);
+        /*
+         * Return the thermal conductivity
+         */
+        virtual void getThermalConductivity(vector<doublereal>& lambda);
         /*
          *return the independant variable
          */
