@@ -1201,6 +1201,8 @@ void SubParticle::UpdateCache(void)
         ParticleCache::operator=(*m_leftchild);
         ParticleCache::operator+=(*m_rightchild);
 		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
+        //update the spherical diameter
+        ParticleCache::SetSphDiameter(2*pow(3*m_vol/(4*PI),ONE_THIRD));
 	
     }
 }
