@@ -1,4 +1,7 @@
 
+#include "array.h"
+
+
 #include "cam_setup.h"
 #include "cam_residual.h"
 #include <vector>
@@ -271,6 +274,7 @@ void FlameLet::csolve(CamControl& cc, bool interface){
         CVodeWrapper cvw;
         eqn_slvd = EQN_ALL;
         int band = nVar*2;
+        
         cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
                             cc.getMaxTime(),band,*this);
 
@@ -490,14 +494,14 @@ void FlameLet::saveMixtureProp(doublereal* y){
     s_mf.resize(mCord,nSpc);
     s_Wdot.resize(mCord,nSpc);
     s_H.resize(mCord,nSpc);
-    
+    s_Diff.resize(mCord,nSpc);
     m_T.resize(mCord,0.0);
     m_rho.resize(mCord,0.0);
     m_cp.resize(mCord,0.0);
     m_mu.resize(mCord,0.0);
     m_u.resize(mCord,0.0);
-
-    vector<doublereal> mf,htemp;
+    m_k.resize(mCord,0.0);
+    vector<doublereal> mf,htemp, temp;
     htemp.resize(nSpc,0.0);
     for(int i=0; i<mCord; i++){
         mf.clear();
@@ -512,11 +516,14 @@ void FlameLet::saveMixtureProp(doublereal* y){
         camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
         htemp = camMixture->getMolarEnthalpy();                 //enthalpy
         m_cp[i] = camMixture->getSpecificHeatCapacity();        //specific heat
+        m_k[i] = camMixture->getThermalConductivity(opPre); //thermal conductivity
         m_mu[i] = camMixture->getViscosity();                   //mixture viscosity
+        temp = camMixture->getMixtureDiffusionCoeff(opPre);
         for(int l=0; l<nSpc; l++){
             s_mf(i,l) = mf[l];
             s_Wdot(i,l) = wdot[l];
             s_H(i,l) = htemp[l];
+            s_Diff(i,l) = temp[l];
         }
     }
 }
