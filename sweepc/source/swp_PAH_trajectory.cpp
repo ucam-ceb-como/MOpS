@@ -65,12 +65,12 @@ Trajectory::~Trajectory()
 {
 }
 
-int Trajectory::maxID()
+int Trajectory::maxID() const
 {
     return m_maxID;
 }
 
-double Trajectory::StartTime()
+double Trajectory::StartTime() const
 {
     return m_starttime;
 }

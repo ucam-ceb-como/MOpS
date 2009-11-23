@@ -131,6 +131,16 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model)
 	m_rightparticle(NULL)
 {
     m_comp[0]=1;
+
+    int newID; 
+    Trajectory const *newtrajectory=model.m_PAHDatabase.GetTrajectory(time);
+	newID=(int)(newtrajectory->maxID()*rnd());
+    AddPAH(time,newID,newtrajectory);
+    //Update the number of carbon atoms using the database
+	UpdatePAHs(time);
+    //Update the other properties
+	UpdateCache();
+
     this->UpdateCache();
 }
 
@@ -140,7 +150,7 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model)
  * @param[in] ID ID of the PAH
  * @param[in] trajectory Pointer to the database
 */
-void PAHPrimary::AddPAH(real time, int ID, Trajectory *trajectory)
+void PAHPrimary::AddPAH(real time, int ID, const Trajectory *trajectory)
 {
 	PAH *new_PAH=new PAH;
 	new_PAH->ID=ID;

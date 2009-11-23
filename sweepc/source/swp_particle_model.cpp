@@ -51,6 +51,7 @@
 #include "swp_PAH_primary.h"
 #include <stdexcept>
 #include <cmath>
+#include "swp_PAH_trajectory.h"
 
 using namespace Sweep;
 using namespace std;
@@ -347,7 +348,7 @@ Processes::SinteringModel &ParticleModel::SintModel(void) const {return m_sint_m
 // PARTICLE FUNCTIONS.
 
 // Creates a new particle and sets it up with all the models
-// required by the ParticleModel.  A particle created here
+// required by the ParticleModel. A particle created here
 // will have a single primary.
 Sweep::Particle *const ParticleModel::CreateParticle(real time) const
 {
@@ -361,6 +362,13 @@ Sweep::Particle *const ParticleModel::CreateParticle(real time) const
 
     // Returns particle.
     return part;
+}
+
+
+
+void ParticleModel::LoadPAHProfile(const std::string &file)
+{
+	m_PAHDatabase.LoadPAHProfiles();
 }
 
 

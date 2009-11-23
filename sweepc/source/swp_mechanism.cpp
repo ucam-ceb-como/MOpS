@@ -56,6 +56,7 @@
 #include "string_functions.h"
 #include "swp_particle.h"
 
+
 using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace Sweep::Imaging;
@@ -188,6 +189,8 @@ const Inception *const Mechanism::Inceptions(unsigned int i) const
         return NULL;
     }
 }
+
+
 
 // Adds an inception to the mechanism.
 void Mechanism::AddInception(Inception &icn)

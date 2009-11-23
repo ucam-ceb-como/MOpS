@@ -61,7 +61,7 @@ public:
 
     void LoadPAHProfiles();
 
-    Trajectory *GetTrajectory(double t);
+    Trajectory const *GetTrajectory(double t) const;
 
 private:
     std::vector<Trajectory> m_Trajectories;

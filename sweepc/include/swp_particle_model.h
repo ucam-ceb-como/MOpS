@@ -58,6 +58,8 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include "swp_PAH_database.h"
+#include "swp_PAH_trajectory.h"
 
 namespace Sweep
 {
@@ -241,6 +243,9 @@ public:
 
     //! Choose between drag models
     void SetDragType(const DragType& drag) {m_DragType = drag;}
+
+    void LoadPAHProfile(const std::string &file);
+    PAH_database m_PAHDatabase;
 
 protected:
     // The species used to define the processes and the particles.

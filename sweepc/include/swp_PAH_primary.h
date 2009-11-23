@@ -104,7 +104,7 @@ public:
 	void UpdatePAHs(double t);
 
     //! adds a PAH to a particle
-    void AddPAH(real time, int ID, Trajectory *trajectory);
+    void AddPAH(real time, int ID, const Trajectory *trajectory);
 
     //! returns the coalescence level
     double CoalescenceLevel();
@@ -187,7 +187,7 @@ private:
 		double freezetime;
         //stores the last position in the database when the PAH has been updated
         int lastposPAHupdate;
-		Trajectory *m_trajectory;
+		Trajectory const *m_trajectory;
     };
 
     // Vector of PAHs.

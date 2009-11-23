@@ -67,9 +67,9 @@ public:
     };
 	std::vector<trajectory_base> alltrajectories;
 
-    int maxID();
+    int maxID() const;
 
-    double StartTime();
+    double StartTime() const;
 
 
 private:

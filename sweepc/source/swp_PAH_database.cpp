@@ -66,9 +66,9 @@ PAH_database::~PAH_database()
 {
 }
 
-Trajectory *PAH_database::GetTrajectory(double t)
+Trajectory const *PAH_database::GetTrajectory(double t) const
 {
-    Trajectory *result=NULL;
+    Trajectory const *result=NULL;
     for (int i=0;i<m_num_traj;i++)
     {
         result=&(m_Trajectories.at(i));
