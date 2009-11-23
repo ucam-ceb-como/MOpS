@@ -89,7 +89,6 @@ public:
                                Sprog::Thermo::IdealGas &gas) const;
 
 	 void LoadGasProfile(const std::string &file, Mops::Mechanism &mech);
-	 void LoadPAHProfile(const std::string &file);
 	 void UpdateFractalDimension(Mops::Reactor &r);
 
 
@@ -106,9 +105,7 @@ private:
 	std::vector<trajectory> alltrajectories;*/
     void UpdateNumberPAHs(Mops::Reactor &r,real time); 
     void UpdatePAHs(Mops::Reactor &r, real t);
-	//std::vector<Trajectory>  m_trajectory;
-   // Trajectory  m_trajectory;
-    PAH_database m_PAHDatabase;
+
 };
 };
 

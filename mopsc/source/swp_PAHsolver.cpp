@@ -197,11 +197,6 @@ void PAHSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
     }
 }
 
-void PAHSolver::LoadPAHProfile(const std::string &file)
-{
-	m_PAHDatabase.LoadPAHProfiles();
-}
-
 
 void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter, 
                         Mops::Solver::OutFnPtr out, void *data)
@@ -339,16 +334,6 @@ void PAHSolver::UpdateNumberPAHs(Mops::Reactor &r, real t)
 			{
 				numincepted++;
 				Particle *sp = mech.CreateParticle(t);
-				//Assign an ID to the particle and initialise timeevolution vectors
-				int newID;
-                Trajectory  *newtrajectory=m_PAHDatabase.GetTrajectory(t);
-				newID=(int)(newtrajectory->maxID()*rnd());
-				AggModels::PAHPrimary *pahprimary = NULL;
-				pahprimary = dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
-                pahprimary->AddPAH(t,newID,newtrajectory);
-                //Update the number of carbon atoms using the database
-				pahprimary->UpdatePAHs(t);
-                //Update the other properties
 				sp->UpdateCache();
 				// Add particle to system's ensemble.
 				(*(r.Mixture())).Particles().Add(*sp);

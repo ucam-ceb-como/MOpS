@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
             if (soltype == PAH){
                     dynamic_cast<Sweep::PAHSolver*>(solver)->LoadGasProfile(gasphase, mech);
                     Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
-                    dynamic_cast<Sweep::PAHSolver*>(solver)->LoadPAHProfile("PAH_data1.csv");
+                    mech.ParticleMech().LoadPAHProfile("PAH_data1.csv");
                     
             }
 
