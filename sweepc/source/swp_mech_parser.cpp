@@ -323,9 +323,16 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     }
 
     // Read the processes (inceptions, surface reactions and condensations).
-    readInceptions(xml, mech);
-    readSurfRxns(xml, mech);
-    readCondensations(xml, mech);
+    if (mech.AggModel()==AggModels::PAH_ID)
+    {
+        readPAHInceptions(xml, mech);
+    }
+    else
+    {
+        readInceptions(xml, mech);
+        readSurfRxns(xml, mech);
+        readCondensations(xml, mech);
+    }
     readDiffusionProcs(xml, mech);
     readAdvectionProcs(xml, mech);
 
@@ -536,7 +543,7 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
 
     for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
         // Create new inception.
-        Inception *icn = new Inception(mech);
+        DimerInception *icn = new DimerInception(mech);
         icn->SetMechanism(mech);
         icn->SetName("Inception " + cstr(k));
 
@@ -555,7 +562,7 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
 }
 
 // Reads an inception process from an XML element.
-void MechParser::readInception(CamXML::Element &xml, Processes::Inception &icn)
+void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &icn)
 {
     string str;
     vector<CamXML::Element*> items, subitems;
@@ -624,6 +631,80 @@ void MechParser::readInception(CamXML::Element &xml, Processes::Inception &icn)
         }
     }
 }
+
+
+// Reads inception processes from a sweep mechanism XML file.
+void MechParser::readPAHInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
+{
+    vector<CamXML::Element*> items, subitems;
+    vector<CamXML::Element*>::iterator i, j;
+    string str;
+    unsigned int k = 0;
+
+    // Get list of inceptions from XML data.
+    xml.Root()->GetChildren("pahinception", items);
+
+    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
+        // Create new inception.
+        PAHInception *icn = new PAHInception(mech);
+        icn->SetMechanism(mech);
+        icn->SetName("Inception " + cstr(k));
+
+        try {
+            readPAHInception(*(*i), *icn);
+        } 
+        catch (std::exception &e) {
+            delete icn;
+            throw;
+        } 
+
+        // Add inception to mechanism.  Once entered into mechanism, the mechanism
+        // takes control of the inception object for memory management.
+        mech.AddInception(*icn);
+    }
+}
+
+// Reads an inception process from an XML element.
+void MechParser::readPAHInception(CamXML::Element &xml, Processes::PAHInception &icn)
+{
+    string str;
+    vector<CamXML::Element*> items, subitems;
+    vector<CamXML::Element*>::iterator j;
+    int id  = -1;
+    real dx = 0.0;
+
+    // Read name.
+    str = xml.GetAttributeValue("name");
+    if (str != "") icn.SetName(str);
+
+    // Read reactants.
+    //readReactants(xml, icn);
+
+    // Read products.
+    //readProducts(xml, icn);
+
+    // Read initial tracker variable values.
+    xml.GetChildren("track", subitems);
+    for (j=subitems.begin(); j!=subitems.end(); j++) {
+        // Get tracker ID.
+        str = (*j)->GetAttributeValue("id");
+        id = icn.Mechanism()->GetTrackerIndex(str);
+
+        if (id >= 0) {
+            // Get tracker change.
+            str = (*j)->GetAttributeValue("dx");
+            dx = cdble(str);
+            // Set tracker change.
+            icn.SetParticleTracker(id, dx);
+        } else {
+            // Unknown tracker variable in mechanism.
+            throw runtime_error(str + ": Tracker variable not found in mechanism. "
+                                "(Sweep, MechParser::readPAHInception).");
+        }
+    }
+}
+
+
 
 
 // SURFACE REACTIONS.

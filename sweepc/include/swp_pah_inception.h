@@ -6,9 +6,10 @@
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
-    Definition of an inception process which is also aware of the 
-    ARS-SC model. This allows the inception to create particles with
-    a number of aromatic surface sites.
+    Definition of an inception process.  Inceptions are modelled as the coagulation
+    of 2 gas-phase species.  The rate is given by the collision kernel of these species,
+    therefore one must provide their masses and diameters.  Kernel parameters are
+    calculated internally.
 
   Licence:
     This file is part of "sweepc".
@@ -41,47 +42,49 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#ifndef SWEEP_ARSSC_INCEPTION_H
-#define SWEEP_ARSSC_INCEPTION_H
+#ifndef SWEEP_PAH_INCEPTION_H
+#define SWEEP_PAH_INCEPTION_H
 
-#include "swp_params.h"
-#include "swp_process_type.h"
-#include "swp_dimer_inception.h"
-#include "swp_cell.h"
-#include "swp_mechanism.h"
-#include "swp_arssc_model.h"
-#include "swp_arssc_process.h"
-#include <vector>
-#include <iostream>
+#include "swp_inception.h"
+
+namespace Geometry
+{
+    // Forward declaration
+    class LocalGeometry1d;
+}
 
 namespace Sweep
 {
-// Forward declaration
-namespace Transport {
+// Forward declare the Mechanism class.
+class Mechanism;
+
+namespace Transport
+{
+    // Forward declaration of unused argument type
     struct TransportOutflow;
 }
 
 namespace Processes
 {
-class ARSSC_Inception : public DimerInception, public ARSSC_Process
+
+class PAHInception : public Inception
 {
 public: 
     // Constructors.
-    ARSSC_Inception(const Sweep::Mechanism &mech); // Initialising constructor.
-    ARSSC_Inception(const ARSSC_Inception &copy);  // Copy constructor.
-    ARSSC_Inception(                 // Stream-reading constructor.
-        std::istream &in,            //  - Input stream.
-        const Sweep::Mechanism &mech //  - Parent mechanism.
+    PAHInception(const Sweep::Mechanism &mech); // Initialising constructor.
+    PAHInception(const PAHInception &copy);        // Copy constructor.
+    PAHInception(                               // Stream-reading constructor.
+        std::istream &in,                    //  - Input stream.
+        const Sweep::Mechanism &mech         //  - Parent mechanism.
         );
 
     // Destructors.
-    ~ARSSC_Inception(void);
+    ~PAHInception(void);
 
     // Operators.
-    ARSSC_Inception &operator=(const ARSSC_Inception &rhs);
+    PAHInception &operator=(const PAHInception &rhs);
 
-
-	// PERFORMING THE PROCESS.
+    // PERFORMING THE PROCESS.
 
     // Performs the process on the given system.  The responsible rate term is given
     // by index.  Returns 0 on success, otherwise negative.
@@ -89,14 +92,46 @@ public:
         real t,                // Time.
         Cell &sys,             // System to update.
         unsigned int iterm = 0,// The process term responsible for this event.
-        Transport::TransportOutflow *out = 0 // Unused for this process
+        Transport::TransportOutflow *out = 0 // Not used for this process
+        ) const;
+
+    //! Performs the process on the given system.
+    virtual int Perform(
+        const real t,
+        Cell &sys,
+        const Geometry::LocalGeometry1d& local_geom,
+        const unsigned int iterm,
+        real (*rng)(),
+        Transport::TransportOutflow * const out = 0
+        ) const;
+
+	// TOTAL RATE CALCULATIONS.
+
+    // Returns rate of the process for the given system.
+    real Rate(
+        real t,         // Time.
+        const Cell &sys // System for which to calculate rate.
+        ) const;
+
+	// RATE TERM CALCULATIONS.
+
+    // Returns the number of rate terms for this process.
+    unsigned int TermCount(void) const;
+
+    // Calculates the rate terms given an iterator to a real vector. The 
+    // iterator is advanced to the position after the last term for this
+    // process.  Returns the sum of all terms.
+    real RateTerms(
+        real t,                  // Time.
+        const Cell &sys,         // System for which to calculate rate terms.
+        fvector::iterator &iterm // Iterator to the first term.
         ) const;
 
 
     // READ/WRITE/COPY.
 
     // Creates a copy of the inception.
-    ARSSC_Inception *const Clone(void) const;
+    PAHInception *const Clone(void) const;
 
     // Returns the process type.  Used to identify different
     // processes and for serialisation.
@@ -112,11 +147,14 @@ public:
         );
 
 protected:
+    // Rate parameters.
+
     // Default constructor is protected to prevent an inception being
     // defined without knowledge of the parent mechanism.
-    ARSSC_Inception(void);
+    PAHInception(void);
+
 };
-};
-};
+}
+}
 
 #endif

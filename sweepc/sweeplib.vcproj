@@ -290,7 +290,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\source\swp_dimer_inception.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_inception.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\swp_pah_inception.cpp"
 					>
 				</File>
 				<File
@@ -580,7 +588,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\swp_dimer_inception.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\swp_inception.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\swp_pah_inception.h"
 					>
 				</File>
 				<File

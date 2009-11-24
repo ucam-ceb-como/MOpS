@@ -45,7 +45,8 @@
 
 #include "swp_mechanism.h"
 #include "swp_process.h"
-#include "swp_inception.h"
+#include "swp_pah_inception.h"
+#include "swp_dimer_inception.h"
 #include "swp_arssc_inception.h"
 #include "swp_surface_reaction.h"
 #include "swp_arssc_reaction.h"
@@ -105,8 +106,23 @@ private:
     // Reads an inception process from an XML element.
     static void readInception(
         CamXML::Element &xml,     // CamXML document pre-constructed from file.
-        Processes::Inception &icn // Inception to construct from XML.
+        Processes::DimerInception &icn // Inception to construct from XML.
         );
+
+    /*!
+    * reads a PAH inception process
+    @param[in] xml      XML node of type pahinception
+    @param[in,out] icn      Inception process to initialise
+    */
+    static void readPAHInception(CamXML::Element &xml, Processes::PAHInception &icn);
+
+    /*!
+    * reads a PAH inception process
+    * node that do not contain pahinception will be ignored
+    @param[in] xml      XML node with one or more children of type pahinception
+    @param[in,out] mech  Mechanism to which the processes will be added
+    */
+    static void readPAHInceptions(CamXML::Document &xml, Sweep::Mechanism &mech);
 
     // SURFACE REACTIONS.
 

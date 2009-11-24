@@ -46,7 +46,8 @@
 #include "swp_actsites_reaction.h"
 #include "swp_transcoag.h"
 #include "swp_addcoag.h"
-#include "swp_inception.h"
+#include "swp_pah_inception.h"
+#include "swp_dimer_inception.h"
 #include "swp_arssc_inception.h"
 #include "swp_arssc_reaction.h"
 #include <stdexcept>
@@ -61,8 +62,10 @@ using namespace std;
 Process *const ProcessFactory::Create(ProcessType id, const Sweep::Mechanism &mech)
 {
     switch (id) {
-        case Inception_ID:
-            return new Inception(mech);
+        case PAH_Inception_ID:
+            return new PAHInception(mech);
+        case Dimer_Inception_ID:
+            return new DimerInception(mech);
         case Transition_Coagulation_ID:
             return new TransitionCoagulation(mech);
         case Additive_Coagulation_ID:
@@ -103,8 +106,11 @@ Process *const ProcessFactory::Read(std::istream &in, const Sweep::Mechanism &me
         // Read a process of this particular type.  This will throw
         // an exception if the type is invalid.
         switch ((ProcessType)type) {
-            case Inception_ID:
-                proc = new Inception(in, mech);
+            case Dimer_Inception_ID:
+                proc = new DimerInception(in, mech);
+                break;
+            case PAH_Inception_ID:
+                proc = new PAHInception(in, mech);
                 break;
             case Transition_Coagulation_ID:
                 proc = new TransitionCoagulation(in, mech);
@@ -157,8 +163,11 @@ Inception *const ProcessFactory::ReadInception(std::istream &in,
         // Read an inception of this particular type.  This will throw
         // an exception if the type is invalid.
         switch ((ProcessType)type) {
-            case Inception_ID:
-                proc = new Inception(in, mech);
+            case Dimer_Inception_ID:
+                proc = new DimerInception(in, mech);
+                break;
+            case PAH_Inception_ID:
+                proc = new PAHInception(in, mech);
                 break;
             case ARSSC_Inception_ID:
                 proc = new ARSSC_Inception(in, mech);

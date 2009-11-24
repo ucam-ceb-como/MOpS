@@ -51,7 +51,10 @@ namespace Processes
 {
     enum ProcessType {
         // Basic processes.
-        Inception_ID=0,         // Inception process.
+        //! Form a soot particle with one PAH particle
+        PAH_Inception_ID=0,         // Inception process for PAH inceptions
+        //! Form a particle from two gas-phase molecules
+        Dimer_Inception_ID=1,        // Inception process for dimer inceptions
         Death_ID=2,             // Death process.
         Birth_ID=3,             // Birth process.
 

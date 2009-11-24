@@ -366,7 +366,7 @@ Sweep::Particle *const ParticleModel::CreateParticle(real time) const
 
 
 
-void ParticleModel::LoadPAHProfile(const std::string &file)
+void ParticleModel::LoadPAHProfile()
 {
 	m_PAHDatabase.LoadPAHProfiles();
 }

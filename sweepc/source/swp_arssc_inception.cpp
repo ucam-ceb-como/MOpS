@@ -52,14 +52,14 @@ using namespace std;
 
 // Default constructor (protected).
 ARSSC_Inception::ARSSC_Inception(void)
-: Inception(), ARSSC_Process()
+: DimerInception(), ARSSC_Process()
 {
     m_name = "ARS-SC Inception";
 }
 
 // Initialising constructor.
 ARSSC_Inception::ARSSC_Inception(const Sweep::Mechanism &mech)
-: Inception(mech), ARSSC_Process()
+: DimerInception(mech), ARSSC_Process()
 {
     m_name = "ARS-SC Inception";
 }
@@ -87,7 +87,7 @@ ARSSC_Inception::~ARSSC_Inception(void)
 ARSSC_Inception &ARSSC_Inception::operator =(const ARSSC_Inception &rhs)
 {
     if (this != &rhs) {
-        Inception::operator=(rhs);
+        DimerInception::operator=(rhs);
         ARSSC_Process::operator =(rhs);
         m_sites.assign(rhs.m_sites.begin(), rhs.m_sites.end());
     }
@@ -150,7 +150,7 @@ void ARSSC_Inception::Serialize(std::ostream &out) const
         out.write((char*)&version, sizeof(version));
 
         // Serialize base class.
-        Inception::Serialize(out);
+        DimerInception::Serialize(out);
         ARSSC_Process::Serialize(out);
     } else {
         throw invalid_argument("Output stream not ready "
@@ -171,7 +171,7 @@ void ARSSC_Inception::Deserialize(std::istream &in, const Sweep::Mechanism &mech
         switch (version) {
             case 0:
                 // Deserialize base class.
-                Inception::Deserialize(in, mech);
+                DimerInception::Deserialize(in, mech);
                 ARSSC_Process::Deserialize(in);
 
                 break;

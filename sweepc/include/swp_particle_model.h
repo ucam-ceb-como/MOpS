@@ -244,7 +244,7 @@ public:
     //! Choose between drag models
     void SetDragType(const DragType& drag) {m_DragType = drag;}
 
-    void LoadPAHProfile(const std::string &file);
+    void LoadPAHProfile();
     PAH_database m_PAHDatabase;
 
 protected:

@@ -57,7 +57,7 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_arssc_reaction.o swp_arssc_condensation.o swp_arssc_process.o \
     swp_PAH_primary.o swp_PAH_cache.o swp_PAH_stats.o swp_transport_process.o \
     swp_diffusion_process.o swp_advection_process.o swp_PAH_database.o\
-    swp_PAH_trajectory.o mt19937.o
+    swp_PAH_trajectory.o mt19937.o swp_dimer_inception.o swp_pah_inception.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -228,6 +228,12 @@ swp_condensation.o: $(src)/swp_condensation.cpp
 
 swp_inception.o: $(src)/swp_inception.cpp
 	$(cpp) $(flag) $(src)/swp_inception.cpp
+
+swp_dimer_inception.o: $(src)/swp_dimer_inception.cpp
+	$(cpp) $(flag) $(src)/swp_dimer_inception.cpp
+
+swp_pah_inception.o: $(src)/swp_pah_inception.cpp
+	$(cpp) $(flag) $(src)/swp_pah_inception.cpp
 
 swp_particle_process.o: $(src)/swp_particle_process.cpp
 	$(cpp) $(flag) $(src)/swp_particle_process.cpp
