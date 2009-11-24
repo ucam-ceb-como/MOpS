@@ -104,11 +104,12 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         split(line, subs, delim);
 
         // Get important column indices (time, temperature and pressure).
-        int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1;
+        int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1, Rcol=-1;
         tcol = findinlist(string("Time"), subs);
         Tcol = findinlist(string("T"), subs);
         Pcol = findinlist(string("P"), subs);
         Acol = findinlist(string("Alpha"), subs);
+        Rcol = findinlist(string("wdotA4"), subs);
 
         // Check that the file contains required columns.
         if (tcol < 0) {
@@ -127,7 +128,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
                                 "column (Mops, Sweep::FlameSolver::LoadGasProfile).");
         }
 
-        if (Acol < 0) {
+        if (Acol < 0 && Rcol <0) {
             fin.close();
             throw runtime_error("Gas-phase profile contains no alpha "
                                 "column (Mops, Sweep::FlameSolver::LoadGasProfile).");
@@ -161,6 +162,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             real T = 0.0;
             real P = 0.0;
             real alpha = 0.0;
+            real PAHRate = 0.0;
             GasPoint gpoint(mech.Species());
 
             // Split the line by columns.
@@ -181,6 +183,8 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
                     P = cdble(subs[i]);
                 } else if (i==Acol) {
                     alpha = cdble(subs[i]);
+                } else if (i==Rcol) {
+                    PAHRate = cdble(subs[i]);
                 } else {
                     // This is a gas-phase species column.
                     map<unsigned int,int>::iterator isp = spcols.find(i);
@@ -197,6 +201,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gpoint.Gas.SetTemperature(T);
             gpoint.Gas.SetPressure(P*1.0e5);
             gpoint.Gas.Normalise();
+            gpoint.Gas.SetPAHFormationRate(PAHRate*1000);
 
             // Add the profile point.
             alpha_prof[t] = alpha;
@@ -219,6 +224,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 
         // Sort the profile by time.
         SortGasProfile(m_gasprof);
+
     } else {
         // There was no data in the file.
         fin.close();

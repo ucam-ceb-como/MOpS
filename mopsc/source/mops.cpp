@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
             if (soltype == PAH){
                     dynamic_cast<Sweep::PAHSolver*>(solver)->LoadGasProfile(gasphase, mech);
                     Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
-                    mech.ParticleMech().LoadPAHProfile("PAH_data1.csv");
+                    //mech.ParticleMech().LoadPAHProfile();
                     
             }
 
@@ -254,6 +254,8 @@ int main(int argc, char *argv[])
         if (soltype != GPC) {
             mech.ParticleMech().SetSpecies(mech.Species());
             Sweep::MechParser::Read(swpfile, mech.ParticleMech());
+            if(mech.ParticleMech().AggModel()==Sweep::AggModels::PAH_ID)
+                 mech.ParticleMech().LoadPAHProfile();
         }
     } catch (std::logic_error &le) {
         printf("mops: Failed to read particle mechanism due to bad inputs.  Message:\n  ");
