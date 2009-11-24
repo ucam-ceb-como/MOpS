@@ -102,6 +102,18 @@ Mixture &Mixture::operator=(const Mixture &mix)
     return *this;
 }
 
+// Returns the PAH formation rate.
+real Mixture::PAHFormationRate() const
+{
+    return m_data[PAHFormationIndex()];
+}
+
+// Set the PAH formation rate.
+void Mixture::SetPAHFormationRate(Sprog::real r)
+{
+    m_data[PAHFormationIndex()] = r;
+}
+
 
 // TEMPERATURE.
 

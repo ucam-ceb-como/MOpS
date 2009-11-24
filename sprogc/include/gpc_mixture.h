@@ -80,6 +80,13 @@ public:
     // Set the temperature.
     void SetTemperature(const real T);
 
+    
+    // Returns the PAH formation rate.
+    real PAHFormationRate() const;
+
+    // Set the PAH formation rate.
+    void SetPAHFormationRate(Sprog::real r);
+
     //! Return bulk gas velocity
     real Velocity() const {return m_data[velocityIndex()];}
 
@@ -213,8 +220,11 @@ public:
     //! Index of velocity in m_data
     size_t velocityIndex() const {return m_species->size() + 2;}
 
+    //! Index of velocity in m_data
+    size_t PAHFormationIndex() const {return m_species->size() + 3;}
+
     //! Number of items of data that are not species concentrations that are stored at the end of m_data
-    static const size_t sNumNonSpeciesData = 3;
+    static const size_t sNumNonSpeciesData = 4;
 
 protected:
     // The default constructor is protected to prevent mixture objects being
