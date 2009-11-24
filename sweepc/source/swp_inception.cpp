@@ -226,20 +226,11 @@ real Inception::Rate(real t, const Cell &sys) const
 real Inception::CalcRates(real t, const Cell &sys, const IcnPtrVector &icns,
                           fvector &rates, unsigned int start)
 {
-    // Precalculate some values.
-    real T     = sys.Temperature();
-    real P     = sys.Pressure();
-    real sqrtT = sqrt(T);
-    real T_mu  = T / ViscosityAir(T);
-    real MFP   = MeanFreePathAir(T,P);
-    real vol   = sys.SampleVolume();
-
     IcnPtrVector::const_iterator p;
     fvector::iterator i = (rates.begin()+start);
     real sum = 0.0;
     for (p=icns.begin(); p!=icns.end(); ++p,++i) {
-        *i = (*p)->Rate(sys.MoleFractions(), sys.Density(), sqrtT,
-                        T_mu, MFP, vol);
+        *i = (*p)->Rate(t, sys);
         sum += *i;
     }
     return sum;
@@ -358,7 +349,7 @@ int Inception::Perform(const real t, Cell &sys,
     real posn = vertices.front();
 
     const real width = vertices.back() - posn;
-    posn += width /2; //* rng();
+    posn += width /2; //* \todo rng();
 
     sp->setPositionAndTime(posn, t);
 
