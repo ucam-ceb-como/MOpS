@@ -74,7 +74,7 @@ double PAHPrimary::pow(double a, double b) {
 
 // CONSTRUCTORS AND DESTRUCTORS.
 PAHPrimary::PAHPrimary() : Primary(),
-	m_numcarbon(0),
+    m_numcarbon(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -93,11 +93,11 @@ PAHPrimary::PAHPrimary() : Primary(),
     m_sqrtLW(0),
     m_LdivW(0),
     m_avg_coalesc(0),
-	m_leftchild(NULL),
-	m_rightchild(NULL),
+    m_leftchild(NULL),
+    m_rightchild(NULL),
     m_parent(NULL),
-	m_leftparticle(NULL),
-	m_rightparticle(NULL)
+    m_leftparticle(NULL),
+    m_rightparticle(NULL)
 {
 }
 
@@ -105,7 +105,7 @@ PAHPrimary::PAHPrimary() : Primary(),
 // Initialising constructor.
 PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model)
 : Primary(time, model),
-	m_numcarbon(0),
+    m_numcarbon(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -124,29 +124,33 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model)
     m_sqrtLW(0),
     m_LdivW(0),
     m_avg_coalesc(0),
-	m_leftchild(NULL),
-	m_rightchild(NULL),
+    m_leftchild(NULL),
+    m_rightchild(NULL),
     m_parent(NULL),
-	m_leftparticle(NULL),
-	m_rightparticle(NULL)
+    m_leftparticle(NULL),
+    m_rightparticle(NULL)
 {
+    // Other parts of the code check for a non-zero composition
     m_comp[0]=1;
 
-    int newID; 
+    // Select a PAH life story uniformly at random from the database
     Trajectory const *newtrajectory=model.m_PAHDatabase.GetTrajectory(time);
-	newID=(int)(newtrajectory->maxID()*rnd());
+    const int newID = static_cast<int>(newtrajectory->maxID()*rnd());
+
     AddPAH(time,newID,newtrajectory);
-    //Update the number of carbon atoms using the database
-	UpdatePAHs(time);
+    
+    //Get the number of carbon atoms in PAH with id newID from  the database
+    UpdatePAHs(time);
+
     //Update the other properties
-	UpdateCache();
+    UpdateCache();
 }
 
 
 // Initialising constructor.
 PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 : Primary(time, model),
-	m_numcarbon(0),
+    m_numcarbon(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -165,23 +169,22 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
     m_sqrtLW(0),
     m_LdivW(0),
     m_avg_coalesc(0),
-	m_leftchild(NULL),
-	m_rightchild(NULL),
+    m_leftchild(NULL),
+    m_rightchild(NULL),
     m_parent(NULL),
-	m_leftparticle(NULL),
-	m_rightparticle(NULL)
+    m_leftparticle(NULL),
+    m_rightparticle(NULL)
 {
     m_comp[0]=1;
 
 }
 
-
-
-//adds a PAH to the primary particle
 /*!
- * @param[in] time create time of the PAH
- * @param[in] ID ID of the PAH
- * @param[in] trajectory Pointer to the database
+ * Add a PAH to the primary particle
+ *
+ * @param[in]   time        create time of the PAH
+ * @param[in]   ID          integer identifying the PAH in the trajectory database
+ * @param[in]   trajectory  Pointer to the trajectory database
 */
 void PAHPrimary::AddPAH(real time, int ID, const Trajectory *trajectory)
 {
