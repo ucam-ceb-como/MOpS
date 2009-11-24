@@ -140,9 +140,42 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model)
 	UpdatePAHs(time);
     //Update the other properties
 	UpdateCache();
-
-    this->UpdateCache();
 }
+
+
+// Initialising constructor.
+PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
+: Primary(time, model),
+	m_numcarbon(0),
+    m_PAHmass(0),
+    m_PAHCollDiameter(0),
+    m_numPAH(0),
+    m_numprimary(0),
+    m_primarydiam(0.0),
+    m_children_radius(0),
+    m_children_vol(0),
+    m_leftparticle_vol_old(0),
+    m_rightparticle_vol_old(0),
+    m_rightparticle_numPAH(0),
+    m_leftparticle_numPAH(0),
+    m_children_surf(0),
+    m_children_coalescence(0),
+    m_Rg(0),
+    m_fdim(0),
+    m_sqrtLW(0),
+    m_LdivW(0),
+    m_avg_coalesc(0),
+	m_leftchild(NULL),
+	m_rightchild(NULL),
+    m_parent(NULL),
+	m_leftparticle(NULL),
+	m_rightparticle(NULL)
+{
+    m_comp[0]=1;
+
+}
+
+
 
 //adds a PAH to the primary particle
 /*!
@@ -197,8 +230,8 @@ PAHPrimary::~PAHPrimary()
 void PAHPrimary::CopyTree( const PAHPrimary *source)
 {
     //create the new left and right children 
-	PAHPrimary *newleft = new PAHPrimary(source->CreateTime(),*m_pmodel);
-	PAHPrimary *newright = new PAHPrimary(source->CreateTime(),*m_pmodel);
+	PAHPrimary *newleft = new PAHPrimary(source->CreateTime(),*m_pmodel,false);
+	PAHPrimary *newright = new PAHPrimary(source->CreateTime(),*m_pmodel,false);
     // copy the properties
 	newleft->CopyParts(source->m_leftchild);
 	newright->CopyParts(source->m_rightchild);

@@ -83,6 +83,9 @@ public:
         const Sweep::ParticleModel &model //  - Defining particle model.
         );
 	  
+
+    PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH);
+
     // Destructors.
     virtual ~PAHPrimary(void);
 
