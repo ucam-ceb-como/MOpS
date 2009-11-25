@@ -184,11 +184,11 @@ namespace Camflow{
          *calling interface to solve the flameletes. continuation true means the
          *call is a continuation call to the same problem
          */
-        void flamelet(doublereal sdr, doublereal intTime=0, bool continuation=false);
+        void flamelet(doublereal sdr, doublereal intTime=0, bool continuation=false, bool lnone=true);
         /*
          *calling interface to solve flamelets with time-history-scalar dissipation rates
          */
-        void flamelet(const vector<doublereal>& sdr, const vector<doublereal>& intTime, bool continuation=false);
+        void flamelet(const vector<doublereal>& sdr, const vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
         /*
          *assigen the species mass fractions, temperature, density, and
          *velocity into the vector of mixture objects
@@ -309,7 +309,7 @@ namespace Camflow{
         /*
          *reactor pinters
          */
-        FlameLet *flmlt;
+        FlameLet* flmlt;
 
         doublereal getVariableAt(const doublereal& pos, vector<doublereal>& var);
 

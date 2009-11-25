@@ -262,6 +262,21 @@ namespace Camflow{
         void mergeSootMoments(doublereal* vec);
 
 
+        //The following functions are specifically for flamelets
+
+        /**
+         *  Set the lewis number to be used
+         */
+        void setLewisNumber(int n){
+            Lewis = n;
+        }
+
+        /**
+         *  Return the Lewis number flag
+         */
+        int getLewisNumber() const{
+            return Lewis;
+        }
         
 
     protected:
@@ -312,6 +327,9 @@ namespace Camflow{
         int iMesh_s, cellBegin;//first cell
         int iMesh_e, cellEnd;//last cell
         int eqn_slvd;
+
+        int Lewis;
+        
 
         Sprog::Thermo::Mixture *camMixture;
         Sprog::Mechanism *camMech;

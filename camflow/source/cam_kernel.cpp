@@ -63,6 +63,31 @@ using namespace Camflow;
 
 int main() {
 
+//    Interface inter;
+//    inter.flamelet(36.0,0.00069);
+//    cout << "Thermal conductivity " << inter.getThermalConductivity(0.5) << endl;
+//    int dd ; cin >> dd;
+//    cout << "Continuation\n";
+//    vector<doublereal> v_t, v_sdr;
+//    v_t.resize(2);
+//    v_sdr.resize(2);
+//
+//    v_t[0] = 0;
+//    v_t[1] = 0.00164;
+//
+//    v_sdr[0] = 36.0;
+//    v_sdr[1] = 1.6;
+//
+////    for(int i=0; i<10; i++){
+////        v_t[i] = i*0.1;
+////        v_sdr[i] = i;
+////    }
+//    inter.flamelet(v_sdr,v_t,true);
+//    cout << "Thermal conductivity " << inter.getThermalConductivity(0.5) << endl;
+
+    
+
+
     string fChem("chem.inp");
     string fThermo("therm.dat");
     string fTrans("tran.dat");
@@ -81,7 +106,7 @@ int main() {
     CamConfiguration config;
     CamRead cm;
     CamModels models;
-    CamSoot cSoot;    
+    CamSoot cSoot;
     try{
         cm.readInput(fCamFlow,cc,cg,convert,ca,cb,cp,config,cSoot);
     }catch(CamError &ce){
@@ -89,10 +114,10 @@ int main() {
     }
     //CamBoundary *cb2 = &cb;
 
-    
-    //read mechanism, thermo and trasnport data    
+
+    //read mechanism, thermo and trasnport data
     IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,fTrans);
-    
+
     //Following is a test call to the interface
 //-----------------------------------------------------------
 //    try{
@@ -107,8 +132,8 @@ int main() {
 //    }
 //    cout << "Calculation finished\n";
 //    int dd; cin >> dd;
-//----------------------------------------------------------        
-    try{        
+//----------------------------------------------------------
+    try{
         models.solve(ca,config,cc,cg,cp,cSoot,mech);
     }catch(CamError &ce){
         cout << ce.errorMessge;

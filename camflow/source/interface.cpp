@@ -1,7 +1,5 @@
 
 #include <vector>
-
-
 #include "cam_residual.h"
 #include "cam_configuration.h"
 #include "cam_control.h"
@@ -50,7 +48,7 @@ Interface::Interface(){
 }
 
 /*
- *Interface for external drivers which passed a reference to the
+ *Interface for external drivers which passes a reference to the
  *mechanism object
  */
 Interface::Interface(Mechanism& mech_in,
@@ -173,9 +171,7 @@ void Interface::solve(vector<Thermo::Mixture>& cstrs,
     if(sdr==0){
         model->solve(cstrs,initalSource,finalSource,mech_in,ccObj,ca,cg,cp);
         resetMixtures(cstrs);
-    }
-    
-   
+    }       
 
 }
 
@@ -195,18 +191,18 @@ void Interface::getSpeciesNames(vector<string>& names){
 
 /**
  *  This function is called by the external code that
- *  passed a scalar dissipation rate with time history
+ *  passes a scalar dissipation rate with time history
  */
-void Interface::flamelet(const vector<doublereal>& sdr, const vector<doublereal>& intTime, bool continuation){
+void Interface::flamelet(const vector<doublereal>& sdr, const vector<doublereal>& intTime, bool continuation, bool lnone){
     int len = (int) sdr.size();
     if(len != (int)intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
 
-    if(flmlt == NULL ) flmlt = new FlameLet();
+    if(flmlt == NULL ) flmlt = new FlameLet();    
     //Set the time history of the scalar dissipation rate
     flmlt->setExternalScalarDissipationRate(intTime,sdr);
     try{
-        flamelet(sdr[len-1], intTime[len-1],continuation);
+        flamelet(sdr[len-1], intTime[len-1],continuation,lnone);
     }catch(CamError& ce){
         throw;
     }
@@ -222,10 +218,11 @@ void Interface::flamelet(const vector<doublereal>& sdr, const vector<doublereal>
  *file/default value. If steady state is obtained before the specified
  *integration time, the program return with the converged solution.
  */
-void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation){
+void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, bool lnone){
     
     if(intTime!=0)cc.setMaxTime(intTime);
     if(flmlt == NULL ) flmlt = new FlameLet();
+    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
     flmlt->setExternalScalarDissipationRate(sdr);
     try{
         if(!continuation){
@@ -245,7 +242,7 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation){
         flmlt->getThermalConductivity(lambda);
         flmlt->getDiffusionCoefficient(mDiff);
         stMixtureFrac = flmlt->stoichiometricMixtureFraction();
-
+        cout << "Size of thermal conductivity " << lambda.size() << endl;
     }catch(CamError &ce){
         throw ;
     }

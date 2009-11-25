@@ -55,7 +55,8 @@ namespace Camflow{
             PREMIX,                 //laminar premix reactor
             PLUG,                   // laminar plug flow reactor
             BATCH_CV,               // constant volume batch reactor
-            FLAMELET                // flamelet model (counter flow)
+            FLAMELET,                // flamelet model (counter flow)
+            FLAMELET_NULN       //flamelets with Non unity Lewis number
         };
 
         CamConfiguration(){}

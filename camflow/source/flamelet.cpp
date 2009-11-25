@@ -7,6 +7,7 @@
 #include <vector>
 #include "cam_reporter.h"
 #include <iostream>
+#include <stdexcept>
 #include "cam_profile.h"
 #include "cam_admin.h"
 #include "flamelet.h"
@@ -174,9 +175,6 @@ void FlameLet::solve(vector<Thermo::Mixture>& cstrs,
     //Temperature
     solvect[iMesh_e*nVar+ptrT] = fuel.T;
 
-    
-    
-
 
 }
 
@@ -292,6 +290,9 @@ void FlameLet::csolve(CamControl& cc, bool interface){
         cout << "Not implemented\n";
     }
 }
+
+
+
 /*
  *restart the solution. This is normally called from the interface routine
  *The solver is reinitialized each time with the previous solution.
@@ -421,10 +422,30 @@ void FlameLet::speciesResidual(const doublereal& t, doublereal* y,
         f[l] = 0.0;
         
     }
+
+    /**
+     *  For non-unity Lewis numbers
+     */
+    
+    Le.resize(mCord,nSpc,1.0);
+    convection.resize(mCord,nSpc,0);
+    doublereal onebLe;
+    doublereal oneby16 = 1.0/16;
+    if(Lewis == FlameLet::LNNONE){
+        for(int i=0; i<mCord; i++){
+            for(int l=0; l<nSpc; l++){
+                Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*s_Diff(i,l));
+                onebLe = 1/Le(i,l);
+                convection(i,l) = oneby16*(onebLe-1)*(s_mf(i+1,l)-s_mf(i-1,l))*(m_rho[i+1]-m_rho[i-1]);
+            }
+        }
+    }
     /*
      *interior mixture fraction coordinates
      */
+    
     for(i=iMesh_s; i<iMesh_e;i++){
+
         zPE = 0.5*(dz[i]+dz[i+1]);
         zPW = 0.5*(dz[i]+dz[i-1]);
         if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
@@ -432,8 +453,9 @@ void FlameLet::speciesResidual(const doublereal& t, doublereal* y,
             grad_e = (s_mf(i+1,l)-s_mf(i,l))/zPE;
             grad_w = (s_mf(i,l)-s_mf(i-1,l))/zPW;
             source = s_Wdot(i,l)*(*spv)[l]->MolWt()/m_rho[i];
-            f[i*nSpc+l] = sdr*(grad_e-grad_w)/(2*dz[i]) + source;
+            f[i*nSpc+l] = sdr*(grad_e-grad_w)/(2*Le(i,l)*dz[i]) + source + convection(i,l)*sdr/(m_rho[i]*dz[i]*dz[i]);
         }
+
     }
     /*
      *Mixture fraction 1. The fuel inlet. Concentrations are
@@ -462,6 +484,8 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
      */
     i=0;    
     f[i] = 0.0;
+
+    
     /*
      *intermediate mixture fraction coordinates
      */
@@ -478,6 +502,26 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
         grad_w = (m_T[i]-m_T[i-1])/zPW;
 
         f[i] = sdr*(grad_e-grad_w)/(2*dz[i])-(source/(m_rho[i]*m_cp[i]));
+
+        /**
+         *  Accounting for non-unity Lewis number
+         */
+        if(Lewis == FlameLet::LNNONE){
+            doublereal conduction = 0;
+            conduction = sdr*(m_cp[i+1]-m_cp[i-1])*(m_T[i+1]-m_T[i-1])/(8*m_cp[i]*dz[i]*dz[i]);
+            doublereal enthFlux = 0;
+            doublereal tGrad = (m_T[i+1]-m_T[i-1])/dz[i];
+            doublereal cpterm=0;
+            doublereal spGrad =0;
+            for(int l=0; l<nSpc; l++){
+                cpterm = (1-CpSpec(i,l)/m_cp[i]);
+                spGrad = ((s_mf(i+1,l)-s_mf(i-1,l))/dz[i]) + (s_mf(i,l)*(avgMolWt[i+1]-avgMolWt[i-1])/(avgMolWt[i]*dz[i]));
+                enthFlux += spGrad*cpterm/Le(i,l);
+            }
+           
+            f[i] += enthFlux*sdr*tGrad/8.0;
+            
+        }
         
 
     }
@@ -495,13 +539,15 @@ void FlameLet::saveMixtureProp(doublereal* y){
     s_Wdot.resize(mCord,nSpc);
     s_H.resize(mCord,nSpc);
     s_Diff.resize(mCord,nSpc);
+    CpSpec.resize(mCord,nSpc);
     m_T.resize(mCord,0.0);
     m_rho.resize(mCord,0.0);
     m_cp.resize(mCord,0.0);
     m_mu.resize(mCord,0.0);
     m_u.resize(mCord,0.0);
     m_k.resize(mCord,0.0);
-    vector<doublereal> mf,htemp, temp;
+    avgMolWt.resize(mCord,0.0);
+    vector<doublereal> mf,htemp, temp, cptemp;
     htemp.resize(nSpc,0.0);
     for(int i=0; i<mCord; i++){
         mf.clear();
@@ -511,7 +557,8 @@ void FlameLet::saveMixtureProp(doublereal* y){
         m_T[i] = y[i*nVar+ptrT];                                //temperature
         camMixture->SetMassFracs(mf);                           //mass fraction
         camMixture->SetTemperature(m_T[i]);                     //temperature
-        m_rho[i] = opPre*camMixture->getAvgMolWt()/(R*m_T[i]);  //density
+        avgMolWt[i] = camMixture->getAvgMolWt();
+        m_rho[i] = opPre*avgMolWt[i]/(R*m_T[i]);  //density
         camMixture->SetMassDensity(m_rho[i]);                   //density
         camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
         htemp = camMixture->getMolarEnthalpy();                 //enthalpy
@@ -519,11 +566,14 @@ void FlameLet::saveMixtureProp(doublereal* y){
         m_k[i] = camMixture->getThermalConductivity(opPre); //thermal conductivity
         m_mu[i] = camMixture->getViscosity();                   //mixture viscosity
         temp = camMixture->getMixtureDiffusionCoeff(opPre);
+        cptemp = camMixture->getMolarSpecificHeat();
         for(int l=0; l<nSpc; l++){
             s_mf(i,l) = mf[l];
             s_Wdot(i,l) = wdot[l];
             s_H(i,l) = htemp[l];
             s_Diff(i,l) = temp[l];
+            //Specific heat capacity of species in J/Kg K
+            CpSpec(i,l) =cptemp[l]/(*spv)[l]->MolWt();
         }
     }
 }

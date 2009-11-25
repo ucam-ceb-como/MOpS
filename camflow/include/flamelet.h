@@ -19,6 +19,12 @@ using namespace Sprog;
 namespace Camflow{
     class FlameLet: public CamSetup{
     public:
+
+        enum{
+            LNONE,
+            LNNONE
+        };
+        
         FlameLet(){sdr_ext=0;timeHistory=false;}
         virtual ~FlameLet(){}
 
@@ -58,6 +64,7 @@ namespace Camflow{
                 CamProfile& cp);
 
 
+        
         //initialize the solution vector
         void initSolutionVector(CamControl &cc);
         //calculate the stoichiometric mixture fraction
@@ -119,10 +126,15 @@ namespace Camflow{
         doublereal sdr_ext; // scalar dissipation rate passed by exteranl program
         vector<doublereal> v_sdr;   //scalar dissipation rate that has a time history
         vector<doublereal> v_time; //time profile of scalar dissipation rates
+        
+
         bool timeHistory;
         doublereal strain;  // strain rate
         int mCord;          // this is the mixture fraction coordinates
         inletStruct fuel, oxid;
+
+        Array2D Le, convection, CpSpec; //Lewis numbers
+        
     };
 }
 
