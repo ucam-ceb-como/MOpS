@@ -431,7 +431,7 @@ void FlameLet::speciesResidual(const doublereal& t, doublereal* y,
     convection.resize(mCord,nSpc,0);
     doublereal onebLe;
     doublereal oneby16 = 1.0/16;
-    if(Lewis == FlameLet::LNNONE){
+    if(Lewis == FlameLet::LNNONE){       
         for(int i=0; i<mCord; i++){
             for(int l=0; l<nSpc; l++){
                 Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*s_Diff(i,l));
@@ -485,6 +485,16 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
     i=0;    
     f[i] = 0.0;
 
+    /*
+     *set the externally specified scalar dissipation rate
+     *to sdr
+     */
+//    if(timeHistory){
+//        sdr = getSDR(t);
+//
+//    }else  if(sdr_ext!=0){
+//        sdr=sdr_ext;
+//    }
     
     /*
      *intermediate mixture fraction coordinates
@@ -507,8 +517,8 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
          *  Accounting for non-unity Lewis number
          */
         if(Lewis == FlameLet::LNNONE){
-            doublereal conduction = 0;
-            conduction = sdr*(m_cp[i+1]-m_cp[i-1])*(m_T[i+1]-m_T[i-1])/(8*m_cp[i]*dz[i]*dz[i]);
+            doublereal conduction = 0;            
+            conduction = sdr*(m_cp[i+1]-m_cp[i-1])*(m_T[i+1]-m_T[i-1])/(8*m_cp[i]*dz[i]*dz[i]);            
             doublereal enthFlux = 0;
             doublereal tGrad = (m_T[i+1]-m_T[i-1])/dz[i];
             doublereal cpterm=0;
@@ -518,9 +528,10 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
                 spGrad = ((s_mf(i+1,l)-s_mf(i-1,l))/dz[i]) + (s_mf(i,l)*(avgMolWt[i+1]-avgMolWt[i-1])/(avgMolWt[i]*dz[i]));
                 enthFlux += spGrad*cpterm/Le(i,l);
             }
-           
-            f[i] += enthFlux*sdr*tGrad/8.0;
+
             
+            f[i] +=  - enthFlux*sdr*tGrad/8.0 ;
+
         }
         
 
@@ -794,6 +805,7 @@ void FlameLet::setExternalScalarDissipationRate(const vector<doublereal>& time, 
 
     v_sdr = sdr;
     v_time = time;
+    
     timeHistory = true;
 
 }
