@@ -194,12 +194,14 @@ void Interface::getSpeciesNames(vector<string>& names){
  *  passes a scalar dissipation rate with time history
  */
 void Interface::flamelet(const vector<doublereal>& sdr, const vector<doublereal>& intTime, bool continuation, bool lnone){
+
     int len = (int) sdr.size();
     if(len != (int)intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
 
     if(flmlt == NULL ) flmlt = new FlameLet();    
     //Set the time history of the scalar dissipation rate
+    flmlt->setRestartTime(intTime[0]);
     flmlt->setExternalScalarDissipationRate(intTime,sdr);
     try{
         flamelet(sdr[len-1], intTime[len-1],continuation,lnone);
@@ -224,6 +226,9 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
     if(flmlt == NULL ) flmlt = new FlameLet();
     if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
     flmlt->setExternalScalarDissipationRate(sdr);
+    if(sdr==0){
+        cout << "Passed in value of SDR is zero\n SDR automatic calcilation activated\n" ;
+    }
     try{
         if(!continuation){
             flmlt->solve(cc,ca,cg,cp,mech,true);

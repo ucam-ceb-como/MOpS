@@ -33,7 +33,7 @@ namespace Camflow{
                                         doublereal rtol,
                                         doublereal maxIntTime,
                                         int band,
-                                        CamResidual &cr);
+                                        CamResidual &cr, doublereal iniTime=0);
         
         /*
          *additional solver control

@@ -12,7 +12,7 @@ extern "C"{
 }
 
 void CVodeWrapper::init(int n, vector<doublereal>& solnVec, doublereal tol,
-               doublereal rtol,doublereal maxIntTime ,int band, CamResidual& cr){
+               doublereal rtol,doublereal maxIntTime ,int band, CamResidual& cr, doublereal iniTime){
 
     
     reacPtr = &cr;
@@ -27,7 +27,7 @@ void CVodeWrapper::init(int n, vector<doublereal>& solnVec, doublereal tol,
     yPrime = N_VNew_Serial(n);
     eqnSize = n;
     atol = tol;
-    currentTime = 0.0;
+    currentTime = iniTime;
     maxTime = maxIntTime;    
     cvode_mem = CVodeCreate(CV_BDF,CV_NEWTON);
 

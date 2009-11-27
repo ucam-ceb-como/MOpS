@@ -119,11 +119,17 @@ namespace Camflow{
         
         const doublereal getSDR(const doublereal time);
 
+        /**
+         *  Set restart time
+         */
+        void setRestartTime(doublereal t);
+
     private:
         doublereal stoichZ; //stoichiometric mixture fraction
         doublereal smr;     //stoichiometric mass ratio
         doublereal sdr;     // scalar dissipation rate
         doublereal sdr_ext; // scalar dissipation rate passed by exteranl program
+        doublereal rstartTime;
         vector<doublereal> v_sdr;   //scalar dissipation rate that has a time history
         vector<doublereal> v_time; //time profile of scalar dissipation rates
         

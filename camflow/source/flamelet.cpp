@@ -84,7 +84,11 @@ void FlameLet::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
 
 }
 
-
+/**
+ */
+void FlameLet::setRestartTime(doublereal t){
+    rstartTime = t;
+}
 
 /**
  *contuation call from an external code that
@@ -307,7 +311,7 @@ void FlameLet::restart(CamControl& cc){
     int band = nVar*2;
     
     cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
-                            cc.getMaxTime(),band,*this);
+                            cc.getMaxTime(),band,*this,rstartTime);
     cvw.solve(CV_ONE_STEP,cc.getResTol());
 }
 /*
