@@ -76,7 +76,14 @@ Sweep::Ensemble::Ensemble(const Sweep::ParticleModel &model)
 Sweep::Ensemble::Ensemble(unsigned int count, const Sweep::ParticleModel &model)
 {
     // Call initialisation routine.
-    Initialise(count, model);
+    //If there are no particles, do not initialise binary tree
+    //Instead, initialise the ensemble to zero and skip the binary tree
+    if (count ==0)
+        init();
+
+    else
+    //Initialise binary tree, which also initialises the ensemble
+        Initialise(count, model);
 }
 
 // Copy contructor.
@@ -164,6 +171,10 @@ void Sweep::Ensemble::Initialise(unsigned int capacity, const Sweep::ParticleMod
  
     // Store new particle model.
     m_model = &model;
+
+    //Check that there is no ensemble with zero capacity
+    if (capacity == 0)
+        throw invalid_argument("You numpty! Cannot create a binary tree for an ensemble with zero capacity! (Sweep::Ensemble::Initialise)");
 
     // Calculate nearest power of 2 capacity.  Ensemble capacity must be a power
     // of 2.  This constraint is due to the binary tree implementation.
@@ -734,6 +745,10 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
         unsigned int n = (unsigned int)m_capacity;
         out.write((char*)&n, sizeof(n));
 
+        // Nothing more to do if ensemble has 0 capacity
+        if(n == 0)
+            return;
+
         // Output ensemble particle count.
         n = (unsigned int)m_count;
         out.write((char*)&n, sizeof(n));
@@ -800,6 +815,12 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
             case 0:
                 // Read the ensemble capacity.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // capacity of 0 should mean the ensemble was never initialised
+                if (n == 0){ 
+                    init();
+                    return;
+                }
                 Initialise(n, model);
 
                 // Read the particle count.
