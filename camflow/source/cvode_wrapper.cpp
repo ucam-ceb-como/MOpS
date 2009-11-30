@@ -29,8 +29,7 @@ void CVodeWrapper::init(int n, vector<doublereal>& solnVec, doublereal tol,
     atol = tol;
     currentTime = iniTime;
     maxTime = maxIntTime;    
-    cvode_mem = CVodeCreate(CV_BDF,CV_NEWTON);
-
+    cvode_mem = CVodeCreate(CV_BDF,CV_NEWTON);    
     CVodeMalloc(cvode_mem,cvodeResid,currentTime,y,CV_SS,rtol,(void*)&atol);
 
 
