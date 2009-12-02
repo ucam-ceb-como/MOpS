@@ -147,6 +147,26 @@ Geometry::Geometry1d::Geometry1d(const CamXML::Element &xml) {
 }
 
 /*!
+ * Construct geometry according to a detailed specification 
+ * 
+ *@param[in]    vertices        List of cell boundaries
+ *@param[in]    left_boundary   Boundary condition at cell 0
+ *@param[in]    right_boundary  Boundary condition at final cell
+ * 
+ *@exception   std::invalid_argument    Less than two vertices specified
+ */
+Geometry::Geometry1d::Geometry1d(const fvector& vertices,
+                       const BoundaryConditionType left_boundary,
+                       const BoundaryConditionType right_boundary)
+    : mCellEnds(vertices)
+    , mLeftBoundary(left_boundary)
+    , mRightBoundary(right_boundary)
+{
+    if(vertices.size() < 2u)
+        throw std::invalid_argument("Geometry must have at least two vertices (Geometry1d::Geometry1d)");
+}
+
+/*!
  * Calculate the number of cells specified by the geometry.
  * This will generally be one less than the number of vertices,
  * except that 0 vertices means 0 cells.
