@@ -246,6 +246,7 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
         flmlt->getSpecificHeat(spHeat);
         flmlt->getThermalConductivity(lambda);
         flmlt->getDiffusionCoefficient(mDiff);
+        flmlt->getVelocity(mVelocity);
         stMixtureFrac = flmlt->stoichiometricMixtureFraction();
         cout << "Size of thermal conductivity " << lambda.size() << endl;
     }catch(CamError &ce){
@@ -267,17 +268,40 @@ const doublereal Interface::getDensity(const doublereal axpos){
     doublereal dens = getVariableAt(axpos,rhoVector);
     return dens;
 }
+
+/*!
+ *@param[in]    spIndex     Index of species for which mass fractions requested
+ *
+ *@return   Vector of mass fractions at all the independent variable points
+ */
+const vector<doublereal> Interface::getMassFracsBySpecies(const int spIndex) const {
+    // Find the length of the mass fraction profile and create an empty
+    // vector with this much space
+    const size_t len = indVar.size();
+    vector<doublereal> mf(len);
+
+    for(size_t i=0; i<len; i++){
+        mf[i] = spMassFracs(i,spIndex);
+    }
+}
+
+/*!
+ *@param[in]    indVarIndex     Mass fractions requested at indVar[indVarIndex]
+ *
+ *@return   Vector of all mass fractions at one independent variable point
+ */
+const vector<doublereal> Interface::getMassFracsByPoint(const int indVarIndex) const {
+    vector<doublereal> mf(nSpecies);
+
+    for(int i = 0; i < nSpecies; i++){
+        mf[i] = spMassFracs(indVarIndex, i);
+    }
+}
 /*
  *return the mass fractions
  */
 const doublereal Interface::getMassFrac(const int spIndex, const doublereal axpos){
-    vector<doublereal> mf;
-    int len = indVar.size();
-    for(int i=0; i<len; i++){
-        mf.push_back(spMassFracs(i,spIndex));
-    }
-
-    doublereal massfrac = getVariableAt(axpos,mf);
+    doublereal massfrac = getVariableAt(axpos, getMassFracsBySpecies(spIndex));
     return massfrac;
 }
 /*
@@ -336,7 +360,7 @@ const vector<doublereal> Interface::getDiffusionCoefficients(const doublereal ax
  *private function to do the interpolation of the solution variables
  */
 doublereal Interface::getVariableAt(const doublereal& pos,
-                                        vector<doublereal>& var){
+                                    const vector<doublereal>& var) const{
 
     doublereal vu, vl, xu, xl, temp=0.0;
     int len = indVar.size();

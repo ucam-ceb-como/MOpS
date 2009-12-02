@@ -6,19 +6,25 @@ export profile=0
 cpp=g++
 ifeq ($(debug),0)
   ifeq ($(profile),0)
-    flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-         -I../sprog/include -I../cvode/include \
+    flag=-c -O2 -Iinclude -Iinclude -I../comostrings/include -I../camxml/include \
+       -I../sprog/include -I../cvode/include -I../brush/include \
+       -I../geometry/include  -I../mopsc/include \
+       -I../sweepc/include -I../utils/include \
          -I../cvode/source -Wall
     flink= 
   else
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-         -I../sprog/include -I../cvode/include \
+       -I../sprog/include -I../cvode/include -I../brush/include \
+       -I../geometry/include  -I../mopsc/include \
+       -I../sweepc/include -I../utils/include \
          -I../cvode/source -Wall -pg
     flink=-pg
   endif
 else
-  flag=-c -O2  -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprog/include -I../cvode/include \
+  flag=-c  -Iinclude -I../comostrings/include -I../camxml/include \
+       -I../sprog/include -I../cvode/include -I../brush/include \
+       -I../geometry/include  -I../mopsc/include \
+       -I../sweepc/include -I../utils/include \
        -I../cvode/source -Wall -ggdb -pg
   flink=-pg 
 endif
@@ -44,7 +50,7 @@ else
   sprog=../sprog/lib/sprog_d.a
   cvode=../cvode/lib/cvode_d.a
 endif
-linklibs=$(comostrings) $(camxml) $(sprog) $(cvode)
+linklibs=$(comostrings) $(camxml) $(sprog) $(cvode) $(sweep) $(mops) $(brush)
 
 # Target objects.
 
@@ -71,12 +77,12 @@ else
 	$(cpp) $(flink) $(obj) $(objlocal) $(linklibs) -o bin/camflow_d
 endif
 
-library: $(obj)
+library: $(obj) soot_flamelet.o
 	mkdir -p $(lib)
 ifeq ($(debug),0)
-	ar rc $(lib)/camflow.a $(obj) $(linklibs)
+	ar rc $(lib)/camflow.a $(obj) soot_flamelet.o $(linklibs)
 else
-	ar rc $(lib)/camflow_d.a $(obj) $(linklibs) 
+	ar rc $(lib)/camflow_d.a $(obj) soot_flamelet.o $(linklibs) 
 endif
 
 
@@ -141,6 +147,8 @@ cvode_wrapper.o: $(src)/cvode_wrapper.cpp
 	$(cpp) $(flag) $(src)/cvode_wrapper.cpp
 flamelet.o: $(src)/flamelet.cpp
 	$(cpp) $(flag) $(src)/flamelet.cpp
+soot_flamelet.o: $(src)/soot_flamelet.cpp
+	$(cpp) $(flag) $(src)/soot_flamelet.cpp
 
 
 # Combined mechanisms.

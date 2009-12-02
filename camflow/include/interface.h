@@ -58,7 +58,6 @@
 #include "cam_models.h"
 #include "cam_soot.h"
 using namespace std;
-using namespace Sprog;
 
 /*--------------------------------------------------------------------------------------------------
  * How to use Code Snippet:
@@ -206,14 +205,33 @@ namespace Camflow{
          *return the species mass frac given the indenpendant variable
          */
         const doublereal getMassFrac(const int spIndex, const doublereal axpos);
+
+        //! Get spatial profile of one species
+        const vector<doublereal> getMassFracsBySpecies(const int spIndex) const;
+
+        //! Get mass fractions for all species at one point
+        const vector<doublereal> getMassFracsByPoint(const int indVarIndex) const;
+
         /*
          *return the temperature given the independant variable
          */
         const doublereal getTemperature(const doublereal axpos);
+
+        /*!
+         *@return   Vector of temperatures at all the independent variable points.
+         */
+        const vector<doublereal>& getTemperatures() const {return TVector;}
+
         /*
          *return the density given the independant variable
          */
         const doublereal getDensity(const doublereal axpos);
+
+        /*!
+         *@return   Vector of densities at all the independent variable points.
+         */
+        const vector<doublereal>& getDensities() const {return rhoVector;}
+
         /*
          *return the viscosity
          */
@@ -235,6 +253,19 @@ namespace Camflow{
          *return the stoichiometric mixture fraction
          */
         const doublereal getStMixtureFrac();
+
+
+        /*!
+         *@return   Vector of velocities at all the independent variable points.
+         */
+        const vector<doublereal>& getVelocities() const {return mVelocity;}
+
+
+        /*!
+         *@return   Vector of the independent variable values.
+         */
+        const vector<doublereal>& getIndepVars() const {return indVar;}
+
 
         /*
          *return the controller
@@ -290,7 +321,7 @@ namespace Camflow{
         CamResidual *model;
 
         CamSoot cSoot;        
-        Mechanism mech;
+        Sprog::Mechanism mech;
         int nSpecies;
         vector<string> speciesNames;
         /*
@@ -303,6 +334,7 @@ namespace Camflow{
         vector<doublereal> indVar;      //independant variable
         vector<doublereal> spHeat;              //specific heats
         vector<doublereal> lambda;      //thermal conductivity
+        vector<doublereal> mVelocity;   //velocity
         Array2D mDiff;                      //Diffusion coefficients
 
         doublereal stMixtureFrac;       //stoichiometric mixture fraction
@@ -311,7 +343,7 @@ namespace Camflow{
          */
         FlameLet* flmlt;
 
-        doublereal getVariableAt(const doublereal& pos, vector<doublereal>& var);
+        doublereal getVariableAt(const doublereal& pos, const vector<doublereal>& var) const;
 
     };
 }
