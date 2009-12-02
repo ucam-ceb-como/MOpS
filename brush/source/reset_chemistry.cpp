@@ -46,6 +46,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <ostream>
 #include <algorithm>
 #include <stdexcept>
 #include <cstdlib>
@@ -272,6 +273,94 @@ Brush::ResetChemistry::ResetChemistry(const string &fname, const InputFileType f
         msg += " in PredCorrSolver::readChemistry()\n";
         throw std::runtime_error(msg);
      }
+}
+
+/*!
+ *@param[in]    x           Positions to which data apply (\f$\mathrm{m}\f$)
+ *@param[in]    Temp        Temperature data (K)
+ *@param[in]    rho         Mixture density data (\f$\mathrm{kg\,m^{-3}}\f$)
+ *@param[in]    u           Bulk gas velocity data (\f$\mathrm{m\,s^{-1}}\f$)
+ *@param[in]    massFracs   Vector of vectors of mass fractions
+ *
+ * The first four arguments must all have the same length, which must also be
+ * the length of the elements of massFracs.  This is because
+ *
+ *@exception     std::invalid_argument   Input vectors have differing lengths
+ */
+ResetChemistry::ResetChemistry(const fvector &x, const fvector &Temp,
+                               const fvector &rho, const fvector &u,
+                               const std::vector<fvector> &massFracs) {
+    //===== Check all input vectors have the same length ===========
+    const size_t len = x.size();
+    if(len != Temp.size()) {
+        std::ostringstream msg;
+        msg << "Length of temperature vector is " << Temp.size()
+            << ", but it must match the x vector length of " << len
+            << " (ResetChemistry::ResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
+
+    if(len != rho.size()) {
+        std::ostringstream msg;
+        msg << "Length of density vector is " << rho.size()
+            << ", but it must match the x vector length of " << len
+            << " (ResetChemistry::ResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
+
+    if(len != u.size()) {
+        std::ostringstream msg;
+        msg << "Length of velocity vector is " << u.size()
+            << ", but it must match the x vector length of " << len
+            << " (ResetChemistry::ResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
+
+    const std::vector<fvector>::const_iterator itEnd = massFracs.end();
+    for(std::vector<fvector>::const_iterator it = massFracs.begin();
+        it != itEnd; ++it) {
+            if(len != it->size()) {
+                std::ostringstream msg;
+                msg << "Length of a mass fraction vector "
+                    << std::distance(massFracs.begin(), it)
+                    << " is " << it->size()
+                    << ", but it must match the x vector length of " << len
+                    << " (ResetChemistry::ResetChemistry)";
+                throw std::invalid_argument(msg.str());
+            }
+    }
+
+    //Input data vectors all have same length, if this point is reached
+    //================================================================
+
+    // Temporary to hold data structure as it is built up
+    data_collection tempData;
+
+    for(size_t i = 0; i != len; ++i) {
+        // Build up row of data
+        data_point dataRow(massFracs.size() + sNumNonSpeciesData);
+        dataRow[sPositionIndex] = x[i];
+        dataRow[sTemperatureIndex] = Temp[i];
+        dataRow[sDensityIndex] = rho[i];
+        dataRow[sVelocityIndex] = u[i];
+
+        // copy mass fraction data for position x[i]
+        const std::vector<fvector>::const_iterator itFracEnd = massFracs.end();
+
+        // non species data has been copied above
+        data_point::iterator itTarget = dataRow.begin() + sNumNonSpeciesData;
+
+        for(std::vector<fvector>::const_iterator itFrac = massFracs.begin();
+            itFrac != itFracEnd; ++itFrac, ++itTarget) {
+                *itTarget = itFrac->operator[](i);
+            }
+
+        // Now store the row that has just been built up
+        tempData.push_back(dataRow);
+    }
+
+    // Data read successfully so store it in the class member and finish
+    mInputChemistryData.swap(tempData);
 }
 
 /*!

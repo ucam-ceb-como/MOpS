@@ -81,7 +81,11 @@ public:
 
     //! Read in the data needed for the given mechanism
     ResetChemistry(const string &fname, const InputFileType file_type, const Sprog::Mechanism& mech, const int verbosity);
-    
+
+    //! Use data from vectors
+    ResetChemistry(const fvector &x, const fvector &Temp, const fvector &rho,
+                   const fvector &u, const std::vector<fvector> &massFracs);
+
     //! Overwrite chemistry information with that stored in this object
     void apply(const real x, Mops::Reactor &reac) const;
     
