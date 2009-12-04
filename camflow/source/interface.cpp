@@ -283,6 +283,8 @@ const vector<doublereal> Interface::getMassFracsBySpecies(const int spIndex) con
     for(size_t i=0; i<len; i++){
         mf[i] = spMassFracs(i,spIndex);
     }
+
+    return mf;
 }
 
 /*!
@@ -296,6 +298,8 @@ const vector<doublereal> Interface::getMassFracsByPoint(const int indVarIndex) c
     for(int i = 0; i < nSpecies; i++){
         mf[i] = spMassFracs(indVarIndex, i);
     }
+
+    return mf;
 }
 /*
  *return the mass fractions
