@@ -94,6 +94,42 @@ public:
     void SetVelocity(const real v) {m_data[velocityIndex()] = v;}
 
 
+
+    //PARTICLE RELATED DATA
+
+    //! Return mixture fraction diffusion coefficient
+    real MixFracDiffCoeff() const {return m_data[MixFracDiffCoeffIndex()];}
+
+    //! Set mixture fraction diffusion coefficient
+    void SetMixFracDiffCoeff (const real d) {m_data[MixFracDiffCoeffIndex()]= d;}
+
+    //! Return derivative of mixture fraction
+    real GradientMixFrac() const {return m_data[GradientMixFracIndex()];}
+
+    //! Set derivative of mixture fraction
+    void SetGradientMixFrac (const real g) {m_data[GradientMixFracIndex()] = g;}
+
+    //! Return second derivative of mixture fraction
+    real LaplacianMixFrac() const {return m_data[LaplacianMixFracIndex()];}
+
+    //! Set second derivative of mixture fraction
+    void SetLaplacianMixFrac (const real l) {m_data[LaplacianMixFracIndex()] = l;}
+
+    //! Return derivative of density times mixture fraction diffusion coefficient
+    real GradientRhoMixFracDiffCoeff() const {return m_data[GradientRhoMixFracDiffCoeffIndex()];}
+   
+    //! Set derivative of density times mixture fraction diffusion coefficient
+    void SetGradientRhoMixFracDiffCoeff (const real s) {m_data[GradientRhoMixFracDiffCoeffIndex()] = s;}
+
+    //!Return the thermophoretic velocity
+    real ThermoVelocity() const {return m_data[ThermoVelocityIndex()];}
+
+    //! Set the thermophoretic velocity
+    void SetThermoVelocity (const real v) {m_data[ThermoVelocityIndex()] = v;}
+
+
+
+
     // SPECIES CONCENTRATIONS/FRACTIONS.
 
     // Returns the mole fractions of all species.
@@ -183,33 +219,33 @@ public:
     // Identifies the mixture type for serialisation.
     virtual Serial_MixtureType SerialType() const;
 
-	//FUNCTIONS added by Vinod
+    //FUNCTIONS added by Vinod
 
 
-	// return the molar enthalpy of all species as a vector J/mol.
-	const vector<real> getMolarEnthalpy(real T);
+    // return the molar enthalpy of all species as a vector J/mol.
+    const vector<real> getMolarEnthalpy(real T);
         //return the molar enthalpy for th given mixture
         const vector<real> getMolarEnthalpy();
-	// routine to return the avg moleculat weight in Kg/mol.	
-	real getAvgMolWt(fvector &massFrac);
+    // routine to return the avg moleculat weight in Kg/mol.    
+    real getAvgMolWt(fvector &massFrac);
 
         real getAvgMolWt();
 
 
-	//TRANSPORT RELATED 
+    //TRANSPORT RELATED 
 
-	// returns the mixture viscosity in Kg/m-s.
-	real getViscosity() const; 
-	// returns the mixture thermal conductivity in J/m-s-K	.
-	real getThermalConductivity(real pre) const; 
-	// returns the mixture specific heat capacity in J/Kg K.
-	real getSpecificHeatCapacity(real T);
+    // returns the mixture viscosity in Kg/m-s.
+    real getViscosity() const; 
+    // returns the mixture thermal conductivity in J/m-s-K    .
+    real getThermalConductivity(real pre) const; 
+    // returns the mixture specific heat capacity in J/Kg K.
+    real getSpecificHeatCapacity(real T);
         //return the specifi heat capacity for a given temp in J/Kg K.
         real getSpecificHeatCapacity();
         //return the molar specific heats
         const vector<real> getMolarSpecificHeat();
-	// returns the vector of mixture diffusion coefficient in m^2/s.
-	const vector<real> getMixtureDiffusionCoeff(const real pre)const; 
+    // returns the vector of mixture diffusion coefficient in m^2/s.
+    const vector<real> getMixtureDiffusionCoeff(const real pre)const; 
 
     //! Index of temperature in m_data
     size_t temperatureIndex() const {return m_species->size();}
@@ -223,8 +259,23 @@ public:
     //! Index of velocity in m_data
     size_t PAHFormationIndex() const {return m_species->size() + 3;}
 
+    //! Index of mixture fraction diffusion coefficient
+    size_t MixFracDiffCoeffIndex() const {return m_species->size() + 4;}
+
+    //!  Index of derivative of mixture fraction
+    size_t GradientMixFracIndex() const {return m_species->size() + 5;}
+
+    //!  Index of second derivative of mixture fraction
+    size_t LaplacianMixFracIndex() const {return m_species->size() + 6;}
+
+    //!  Index of derivative of density times mixture fraction diffusion coefficient
+    size_t GradientRhoMixFracDiffCoeffIndex() const {return m_species->size() + 7;}
+
+    //!  Index of thermophoretic velocity
+    size_t ThermoVelocityIndex() const {return m_species->size() + 8;}
+
     //! Number of items of data that are not species concentrations that are stored at the end of m_data
-    static const size_t sNumNonSpeciesData = 4;
+    static const size_t sNumNonSpeciesData = 9;
 
 protected:
     // The default constructor is protected to prevent mixture objects being
