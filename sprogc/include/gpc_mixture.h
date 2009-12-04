@@ -85,7 +85,7 @@ public:
     real PAHFormationRate() const;
 
     // Set the PAH formation rate.
-    void SetPAHFormationRate(Sprog::real r);
+    void SetPAHFormationRate(const real r);
 
     //! Return bulk gas velocity
     real Velocity() const {return m_data[velocityIndex()];}
@@ -256,7 +256,7 @@ public:
     //! Index of velocity in m_data
     size_t velocityIndex() const {return m_species->size() + 2;}
 
-    //! Index of velocity in m_data
+    //! Index of PAH formation rate in m_data
     size_t PAHFormationIndex() const {return m_species->size() + 3;}
 
     //! Index of mixture fraction diffusion coefficient
