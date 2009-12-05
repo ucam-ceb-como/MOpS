@@ -67,6 +67,8 @@ using namespace Brush;
  *@param[in]                            Absolute tolerance for ODE solver used for gas phase
  *@param[in]    split_diffusion         True if diffusion is to be simulated via splitting
  *@param[in]    split_advection         True if advection is to be simulated via splitting
+ *
+ *@todo     Need generalisation to move away from using ResetChemistry
  */
 Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
                                       const size_t,
@@ -324,15 +326,6 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop)
         activeProcess = chooseIndex(jRates[activeCell], Sweep::rnd);
         //std::cout << "active process is " << activeProcess << '\n';
 
-        // Save the initial chemical conditions in sys so that we
-        // can restore them at the end of the run.
-        //Sprog::Thermo::IdealGas chem = *r.Mixture();
-
-        // Store if chemical conditions are fixed at present, because we
-        // shall set them to be fixed during this run, to be restored afterwards.
-        //bool fixedchem = r.Mixture()->FixedChem();
-        //r.Mixture()->SetFixedChem();
-
         // Perform the event and find out if a particle was transported out of its cell
         Sweep::Transport::TransportOutflow out;
 
@@ -491,6 +484,9 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
                     // Add the details of the particle to a list ready for inserting
                     // into its destination cell
                     inflowLists[out.destination].push_back(out);
+
+//                    std::cout << "Moved particle from cell " << i << " to "
+//                              << out.destination <<'\n';
                 }
                 else {
                     // Particle has left simulation domain
