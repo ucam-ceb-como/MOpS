@@ -116,17 +116,10 @@ public:
     void SetLaplacianMixFrac (const real l) {m_data[LaplacianMixFracIndex()] = l;}
 
     //! Return derivative of density times mixture fraction diffusion coefficient
-    real GradientRhoMixFracDiffCoeff() const {return m_data[GradientRhoMixFracDiffCoeffIndex()];}
+    real GradientTemperature() const {return m_data[GradientTemperatureIndex()];}
    
     //! Set derivative of density times mixture fraction diffusion coefficient
-    void SetGradientRhoMixFracDiffCoeff (const real s) {m_data[GradientRhoMixFracDiffCoeffIndex()] = s;}
-
-    //!Return the thermophoretic velocity
-    real ThermoVelocity() const {return m_data[ThermoVelocityIndex()];}
-
-    //! Set the thermophoretic velocity
-    void SetThermoVelocity (const real v) {m_data[ThermoVelocityIndex()] = v;}
-
+    void SetGradientTemperature (const real g) {m_data[GradientTemperatureIndex()] = g;}
 
 
 
@@ -269,13 +262,10 @@ public:
     size_t LaplacianMixFracIndex() const {return m_species->size() + 6;}
 
     //!  Index of derivative of density times mixture fraction diffusion coefficient
-    size_t GradientRhoMixFracDiffCoeffIndex() const {return m_species->size() + 7;}
-
-    //!  Index of thermophoretic velocity
-    size_t ThermoVelocityIndex() const {return m_species->size() + 8;}
+    size_t GradientTemperatureIndex() const {return m_species->size() + 7;}
 
     //! Number of items of data that are not species concentrations that are stored at the end of m_data
-    static const size_t sNumNonSpeciesData = 9;
+    static const size_t sNumNonSpeciesData = 8;
 
 protected:
     // The default constructor is protected to prevent mixture objects being
