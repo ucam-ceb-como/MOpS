@@ -49,6 +49,12 @@
  *@brief    Wrapper to combine chemistry and particle solvers for sooty flamelets
  *
  * Chemistry is calculated by Camflow, with Brush (and Sweep) used for the particles.
+ *
+ * To run a chemistry only calculation, without soot related input files, it should
+ * be possible to modify the constructor by removing all of its contents.  The Brush
+ * related code in the run method would also need to be removed.  The preferred
+ * way of doing such a calculation is to use an instance of Interface, instead of
+ * an instance of SootFlamelet.
  */
 class SootFlamelet {
 public:
@@ -65,11 +71,19 @@ public:
     //SootFlamelet& operator=(const SootFlamelet &rhs);
 
     //! Advance flamelet time
-    void run(const real t_stop, const vector<real>& data_times, const std::vector<real>& sdr_data);
+    void run(const real t_stop, const vector<real>& data_times,
+                                const std::vector<real>& mix_frac_diff,
+                                const std::vector<real>& grad_mix_frac,
+                                const std::vector<real>& lapl_mix_frac,
+                                const std::vector<real>& grad_rho_mix_frac_diff);
 
 protected:
     //! Build a brush object that will set the gas phase mixture details on the 1d reactor
-    Brush::ResetChemistry buildResetChemistry();
+    Brush::ResetChemistry buildResetChemistry(const vector<real>& data_times,
+                                              const std::vector<real>& mix_frac_diff,
+                                              const std::vector<real>& grad_mix_frac,
+                                              const std::vector<real>& lapl_mix_frac,
+                                              const std::vector<real>& grad_rho_mix_frac_diff);
 
     //! Build a brush style geometry object
     Geometry::Geometry1d buildBrushGeometry();

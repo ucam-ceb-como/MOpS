@@ -144,17 +144,29 @@ Geometry::Geometry1d SootFlamelet::buildBrushGeometry() {
 }
 
 /*!
- *@param[in]    data_times     Vector of times at which data points apply
- *@param[in]    sdr_data       Scalar dissipation rates at data_times
+ *@param[in]    t_stop                  Time upto which to advance the flamelet
+ *@param[in]    data_times              Vector of times at which data points apply
+ *@param[in]    mix_frac_diff           Mixture fraction diffusion coefficient
+ *@param[in]    grad_mix_frac           Gradient of mixture fraction
+ *@param[in]    lapl_mix_frac           Laplacian of mixture fraction
+ *@param[in]    grad_rho_mix_frac_diff  Gradient of gas mass density times mixture fraction diffusion coefficient
  *
  */
-void SootFlamelet::run(const real t_stop, const vector<real>& data_times, const std::vector<real>& sdr_data) {
+void SootFlamelet::run(const real t_stop, const vector<real>& data_times,
+                       const std::vector<real>& mix_frac_diff,
+                       const std::vector<real>& grad_mix_frac,
+                       const std::vector<real>& lapl_mix_frac,
+                       const std::vector<real>& grad_rho_mix_frac_diff) {
     //run the chemistry
     mChemistry.flamelet(sdr_data, data_times, mCalcStarted);
     mCalcStarted = true;
 
     // Extract the chemistry from mChemistry ready to use for the particle calculations
-    Brush::ResetChemistry newChem = buildResetChemistry();
+    Brush::ResetChemistry newChem = buildResetChemistry(data_times,
+                                                        mix_frac_diff,
+                                                        grad_mix_frac,
+                                                        lapl_mix_frac,
+                                                        grad_rho_mix_frac_diff);
 
     // Create and run the particle solver
     Brush::PredCorrSolver particleSolver(newChem, 0, 0.0, 0.0, true, true);
@@ -162,17 +174,121 @@ void SootFlamelet::run(const real t_stop, const vector<real>& data_times, const 
 }
 
 /*!
+ *@param[in]    data_times              Vector of times at which data points apply
+ *@param[in]    mix_frac_diff           Mixture fraction diffusion coefficient
+ *@param[in]    grad_mix_frac           Gradient of mixture fraction
+ *@param[in]    lapl_mix_frac           Laplacian of mixture fraction
+ *@param[in]    grad_rho_mix_frac_diff  Gradient of gas mass density times mixture fraction diffusion coefficient
+ *
  *@return    Object that can be used to set the gas phase mixture details on the 1d reactor
+ *
+ *@exception    std::invalid_argument   Input vectors must be of length 1 or 2
+ *@excpetion    std::invalid_argument   Input vectors must all have same length
  */
-Brush::ResetChemistry SootFlamelet::buildResetChemistry() {
-    const size_t numDataPoints = mChemistry.getIndepVars().size();
-    std::vector<std::vector<real> > chemData(numDataPoints);
+Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data_times,
+                                                        const std::vector<real>& mix_frac_diff,
+                                                        const std::vector<real>& grad_mix_frac,
+                                                        const std::vector<real>& lapl_mix_frac,
+                                                        const std::vector<real>& grad_rho_mix_frac_diff) {
+    //========= Check the lengths of the input vectors ===============
+    const size_t len = data_times.size();
+    if((len != 1) && (len != 2)) {
+        std::ostringstream msg("List of times to which data applies must have length 2, not ");
+        msg << len << " (SootFlamelet::buildResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
 
+    if(len != mix_frac_diff.size()) {
+        std::ostringstream msg;
+        msg << "Length of mixture fraction diffusion coefficient vector is "
+            << mix_frac_diff.size()
+            << ", but it must match the time vector length of " << len
+            << " (SootFlamelet::buildResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
+
+    if(len != grad_mix_frac.size()) {
+        std::ostringstream msg;
+        msg << "Length of mixture fraction gradient vector is "
+            << grad_mix_frac.size()
+            << ", but it must match the time vector length of " << len
+            << " (SootFlamelet::buildResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
+
+    if(len != lapl_mix_frac.size()) {
+        std::ostringstream msg;
+        msg << "Length of mixture fraction Laplacian vector is "
+            << lapl_mix_frac.size()
+            << ", but it must match the time vector length of " << len
+            << " (SootFlamelet::buildResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
+
+    if(len != grad_rho_mix_frac_diff.size()) {
+        std::ostringstream msg;
+        msg << "Length of gradient of gas mass density times mixture fraction diffusion coefficient vector is "
+            << grad_rho_mix_frac_diff.size()
+            << ", but it must match the time vector length of " << len
+            << " (SootFlamelet::buildResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
+    //========================================================================
+    // Input vectors now guaranteed to all have length 1 or all to have
+    // length 2.
+
+    real mixFracDiffusion = mix_frac_diff.front();
+    real gradMixFrac = grad_mix_frac.front();
+    real laplMixFrac = lapl_mix_frac.front();
+    real gradRhoMixFracDiffusion = grad_rho_mix_frac_diff.front();
+
+    // If there is only one value for each quantity use that value unchanged,
+    // otherwise use a midpoint approach
+    if(len == 2) {
+        mixFracDiffusion += mix_frac_diff[1];
+        mixFracDiffusion /= 2.0;
+
+        gradMixFrac += grad_mix_frac[1];
+        gradMixFrac /= 2.0;
+
+        laplMixFrac += lapl_mix_frac[1];
+        laplMixFrac /= 2.0;
+
+        gradRhoMixFracDiffusion += grad_rho_mix_frac_diff[1];
+        gradRhoMixFracDiffusion /= 2.0;
+    }
+
+    const size_t numDataPoints = mChemistry.getIndepVars().size();
+
+    // Assume that these values hold for all values of the indep variable,
+    // so create vectors with an appropriate number of repeats
+    std::vector<real> mixFracDiffusions(numDataPoints, mixFracDiffusion);
+    std::vector<real> gradMixFracs(numDataPoints, gradMixFrac);
+    std::vector<real> laplMixFracs(numDataPoints, laplMixFrac);
+    std::vector<real> gradRhoMixFracDiffusios(numDataPoints, gradRhoMixFracDiffusio);
+
+    // Now collect the species mass fraction data
+    std::vector<std::vector<real> > chemData(numDataPoints);
     for(size_t i = 0; i != numDataPoints; ++i) {
         chemData[i] = mChemistry.getMassFracsByPoint(i);
     }
 
-    return Brush::ResetChemistry(mChemistry.getIndepVars(), mChemistry.getTemperatures(),
-                                 mChemistry.getDensities(), mChemistry.getVelocities(), chemData);
+    //PAH formation rate assumed 0 for now
+    std::vector<real> pahFormations(numDataPoints, 0.0);
+
+    //Thermophoretic velocity assumed 0 for now
+    std::vector<real> uThermophoretic(numDataPoints, 0.0);
+
+
+    return Brush::ResetChemistry(mChemistry.getIndepVars(),
+                                 mChemistry.getTemperatures(),
+                                 mChemistry.getDensities(), 
+                                 mChemistry.getVelocities(),
+                                 pahFormations,
+                                 mixFracDiffuions,
+                                 gradMixFracs,
+                                 laplMixFracs,
+                                 uThermophoretic,
+                                 chemData);
 }
 
