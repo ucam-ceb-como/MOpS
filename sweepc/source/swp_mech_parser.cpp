@@ -231,6 +231,37 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                 throw std::runtime_error("Unrecognised drag model id (Sweep, MechParser::readV1).");
             }
             
+        } else if (str == "diffusion") {
+            // Read diffusion model ID.
+            str = (*i)->GetAttributeValue("id");
+
+            if(str == "flamelet") {
+                // Diffusion according to soot flamelet equation in flamelet space
+                mech.setDiffusionType(Sweep::ParticleModel::FlameletDiffusion);
+            }
+            else if(str == "einstein") {
+                // Diffusion to represent transport in physical space
+                // according to Einstein's work
+                mech.setDiffusionType(Sweep::ParticleModel::EinsteinDiffusion);
+            }
+            else {
+                throw std::runtime_error("Unrecognised diffusion model id (Sweep, MechParser::readV1).");
+            }
+
+        } else if (str == "advection") {
+            // Read advection model ID.
+            str = (*i)->GetAttributeValue("id");
+            if(str == "flamelet") {
+                // Advection according to soot flamelet equation in flamelet space
+                mech.setAdvectionType(Sweep::ParticleModel::FlameletAdvection);
+            }
+            else if(str == "physical") {
+                // Advection at bulk gas velocity in physical space
+                mech.setAdvectionType(Sweep::ParticleModel::BulkAdvection);
+            }
+            else {
+                throw std::runtime_error("Unrecognised advection model id (Sweep, MechParser::readV1).");
+            }
         } else {
             // An invalid model type has been supplied.
             throw runtime_error("Invalid model type (" + str + ") in XML file "

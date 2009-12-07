@@ -229,6 +229,9 @@ public:
     //! Calculate a particle diffusion coefficient
     real DiffusionCoefficient(const Cell &sys, const Particle &sp) const;
 
+    //! Calculate the advection velocity
+    real AdvectionVelocity(const Cell &sys, const Particle &sp) const;
+
     //! Select between possible drag models for use in diffusion coefficients
     enum DragType {
         //! Knudsen expression for drag coefficient
@@ -241,8 +244,35 @@ public:
         TemperatureDrag,
     };
 
+    //! Select between possible diffusion terms
+    enum DiffusionType {
+        //! Flamelet diffusion
+        FlameletDiffusion,
+
+        //! Ordinary physical diffusion according to Einstein's formula
+        EinsteinDiffusion,
+    };
+
+    //! Select between possible advection terms
+    enum AdvectionType {
+        //! Move with bulk gas velocity in physical space
+        BulkAdvection,
+
+        //! Move with bulk gas velocity and thermophoresis in physical space
+        //BulkThermophoresisAdvection,
+
+        //! Flamelet advection
+        FlameletAdvection,
+    };
+
     //! Choose between drag models
     void SetDragType(const DragType& drag) {m_DragType = drag;}
+
+    //! Choose the diffusion expression
+    void setDiffusionType(const DiffusionType& diff) {m_DiffusionType = diff;}
+
+    //! Choose the advection model
+    void setAdvectionType(const AdvectionType& adv) {m_AdvectionType = adv;}
 
     void LoadPAHProfile();
     PAH_database m_PAHDatabase;
@@ -269,6 +299,19 @@ protected:
     // The sintering model.
     mutable Processes::SinteringModel m_sint_model;
 
+    //! Calculate a phsyical particle diffusion coefficient from its drag
+    real EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //==== Collision integrals ==========================
+    //! Knudsen based average of specular and diffusive 1,1 integrals
+    real Omega1_1_avg(const Cell &sys, const Particle &sp) const;
+
+    //! Diffuse scattering 1,1 collision integral approximation
+    real Omega1_1_diff(const real t_star, const real sigma_prime) const;
+
+    //! Specular scattering 1,1 collision integral approximation
+    real Omega1_1_spec(const real t_star, const real sigma_prime) const;
+
 
     // MEMORY MANAGEMENT.
 
@@ -291,6 +334,12 @@ private:
 
     //! Drag expression to use
     DragType m_DragType;
+
+    //! Diffusion expression to use
+    DiffusionType m_DiffusionType;
+
+    //! Advection expression to use
+    AdvectionType m_AdvectionType;
 };
 } //namespace Sweep
 #endif

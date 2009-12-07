@@ -118,8 +118,10 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
         m_DragB = rhs.m_DragB;
         m_DragE = rhs.m_DragE;
 
-        // Choice of drag expression
+        // Choice of transport expressions
         m_DragType = rhs.m_DragType;
+        m_DiffusionType = rhs.m_DiffusionType;
+        m_AdvectionType = rhs.m_AdvectionType;
     }
     return *this;
 }
@@ -496,8 +498,10 @@ void ParticleModel::Serialize(std::ostream &out) const
         out.write(reinterpret_cast<const char *>(&m_DragB), sizeof(m_DragB));
         out.write(reinterpret_cast<const char *>(&m_DragE), sizeof(m_DragE));
 
-        // Drag model choice
+        // Transport model choices
         out.write(reinterpret_cast<const char *>(&m_DragType), sizeof(m_DragType));
+        out.write(reinterpret_cast<const char *>(&m_DiffusionType), sizeof(m_DiffusionType));
+        out.write(reinterpret_cast<const char *>(&m_AdvectionType), sizeof(m_AdvectionType));
 
     } else {
         throw invalid_argument("Output stream not ready "
@@ -559,8 +563,10 @@ void ParticleModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
                 in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
 
-                // Drag model choice
+                // Transport model choices
                 in.read(reinterpret_cast<char*>(&m_DragType), sizeof(m_DragType));
+                in.read(reinterpret_cast<char*>(&m_DiffusionType), sizeof(m_DiffusionType));
+                in.read(reinterpret_cast<char*>(&m_AdvectionType), sizeof(m_AdvectionType));
 
                 break;
             default:
@@ -589,7 +595,7 @@ void ParticleModel::init(void)
     m_DragB = 0.0;
     m_DragE = 0.0;
 
-    // Not sure what to put as default for m_DragType
+    // Not sure what to put as default for m_DragType etc
 }
 
 // Clears the current ParticleModel from memory.
@@ -708,7 +714,7 @@ real ParticleModel::TemperatureDragCoefficient(const Cell &sys, const Particle &
  *
  *@return       Diffusion coefficient
  */
-real ParticleModel::DiffusionCoefficient(const Cell &sys, const Particle &sp) const {
+real ParticleModel::EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const {
     switch(m_DragType) {
         case KnudsenDrag:
             return Sweep::KB * sys.Temperature() / KnudsenDragCoefficient(sys, sp);
@@ -717,8 +723,151 @@ real ParticleModel::DiffusionCoefficient(const Cell &sys, const Particle &sp) co
             return Sweep::KB * sys.Temperature() / FreeMolDragCoefficient(sys, sp);
         case TemperatureDrag:
             return Sweep::KB * sys.Temperature() / TemperatureDragCoefficient(sys, sp);
+        default:
+            throw std::runtime_error("Unrecognised drag type in Sweep::ParticleModel::EinsteinDiffusionCoefficient()");
     }
 
-    throw std::runtime_error("Unrecognised drag type in Sweep::ParticleModel::DiffusionCoefficient()");
     return 0.0;
+}
+
+/*!
+ * Calculate diffusion co-efficient using Einstein's relation
+ * \f[
+ *    D = \frac{k_B T}{k_d}.
+ * \f]
+ * In the flamelet case this is multiplied by a factor of
+ * \f[
+ *    \left(\frac{\partial Z}{\partial x}\right)^2.
+ * \f]
+ *
+ *@param[in]    sys     System in which particle experiences drag
+ *@param[in]    sp      Particle for which to calculate drag coefficient
+ *
+ *@return       Diffusion coefficient
+ */
+real ParticleModel::DiffusionCoefficient(const Cell &sys, const Particle &sp) const {
+    switch(m_DiffusionType) {
+        case EinsteinDiffusion:
+            return EinsteinDiffusionCoefficient(sys, sp);
+            // Will not go any further because of return statement.
+        case FlameletDiffusion:
+            //@todo Multiply by dissipation rate
+            return EinsteinDiffusionCoefficient(sys, sp)
+                     * sys.GradientMixFrac() * sys.GradientMixFrac();
+        default:
+            throw std::runtime_error("Unrecognised diffusion type in Sweep::ParticleModel::DiffusionCoefficient()");
+    }
+
+    return 0.0;
+}
+
+/*!
+ *@param[in]    sys     System in which particle experiences drag
+ *@param[in]    sp      Particle for which to calculate drag coefficient
+ *
+ *@return       Advection velocity
+ */
+real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp) const {
+    switch(m_AdvectionType) {
+        case BulkAdvection:
+            // Particle moves with the gas flow
+            return sys.Velocity();
+
+        case FlameletAdvection:
+        {
+            // Mass of soot per unit volume of gas [kg m^-3] is needed repeatedly
+            const real sootMassDensity = sys.Particles().GetSum(ParticleCache::iM)
+                                         / sys.SampleVolume();
+            
+            // Thermophoretic drift term
+            real v = sys.GradientMixFrac() * sys.ThermoVelocity()
+                     * sootMassDensity;
+
+            // Difference in diffusion of soot and mixture fraction
+            v += sys.LaplacianMixFrac() * sootMassDensity
+                 * (sys.MixFracDiffCoeff() - EinsteinDiffusionCoefficient(sys, sp));
+
+            // Another term I do not have a good way to calculate
+
+
+            // Divide by density to get a velocity
+            return v / sootMassDensity;
+        }
+        default:
+            throw std::runtime_error("Unrecognised advectopm type in Sweep::ParticleModel::AdvectionVelocity()");
+    }
+    return 0.0;
+}
+
+/*!
+ * Collision integral is calculated using the formula from
+ * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
+ * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
+ *
+ *@param[in]    sys     System in which particle experiences drag
+ *@param[in]    sp      Particle for which to calculate drag coefficient
+ *
+ *@return       Collision integral interpolated between diffuse and specular limits
+ */
+real ParticleModel::Omega1_1_avg(const Cell &sys, const Particle &sp) const {
+    // Knudsen number is used to interpolate between the specular and diffuse integrals
+    const real knudsen = Sweep::KnudsenAir(sys.Temperature(), sys.Pressure(), sp.CollDiameter());
+
+    // @todo Reduced collision diameter
+    const real sigmaPrime = 1.0;
+
+    //@todo Modified temperature to power -1/4
+    const real TStar = 1.0;
+
+    // Collision integrals calculated for pure specular and pure diffusion scattering
+    const real specular = Omega1_1_spec(TStar, sigmaPrime);
+    const real diffuse  = Omega1_1_diff(TStar, sigmaPrime);
+
+    //@todo proper interpolation
+    return (specular + diffuse) / 2.0;
+}
+
+/*!
+ * Collision integral is calculated using the formula from
+ * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
+ * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
+ *
+ *@param[in]    t_star_1_4      Modified temperature
+ *@param[in]    sigma_prime     Reduced collision diameter
+ *
+ *@return   Collision integral calculated with diffuse scattering
+ */
+real ParticleModel::Omega1_1_diff(const real t_star_1_4, const real sigma_prime) const {
+    // 1 + pi/8
+    real integral = 1.3926;
+
+    integral += sigma_prime * (1.072 + 2.078 * t_star_1_4
+                               + 1.261 * t_star_1_4 * t_star_1_4);
+
+    integral += sigma_prime * sigma_prime
+                * (3.285 - 8.872 * t_star_1_4 + 5.225 * t_star_1_4 * t_star_1_4);
+
+    return integral;
+}
+
+/*!
+ * Collision integral is calculated using the formula from
+ * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
+ * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
+ *
+ *@param[in]    t_star_1_4      Modified temperature
+ *@param[in]    sigma_prime     Reduced collision diameter
+ *
+ *@return   Collision integral calculated with specular scattering
+ */
+real ParticleModel::Omega1_1_spec(const real t_star_1_4, const real sigma_prime) const {
+    real integral = 1.0;
+
+    integral += sigma_prime * (0.316 + 1.47 * t_star_1_4
+                               + 0.476 * t_star_1_4 * t_star_1_4);
+
+    integral += sigma_prime * sigma_prime
+                * (1.53 - 85.013 * t_star_1_4 + 4.025 * t_star_1_4 * t_star_1_4);
+
+    return integral;
 }
