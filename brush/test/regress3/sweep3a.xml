@@ -8,6 +8,9 @@
         <E>100</E>
     </model>
     
+    <model type="diffusion" id="einstein">
+    </model>
+
     <!-- Define particle components. -->
     
     <component id="pah" type="bulk">

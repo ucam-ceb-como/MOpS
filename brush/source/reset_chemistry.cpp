@@ -63,31 +63,72 @@ using namespace Brush;
  * data applied, the other indices in the range should
  * have their own static constants.
  */
-const size_t ResetChemistry::sNumNonSpeciesData = 4;
+const size_t ResetChemistry::sNumNonSpeciesData = 10;
 
 /*!
- * Position of spatial position data in the elements of mInputChemistryData.
+ * Index of spatial position data in the elements of mInputChemistryData.
  * The data will always have units m.
  */
 const size_t ResetChemistry::sPositionIndex = 0;
 
 /*!
- * Position of temperature data in the elements of mInputChemistryData.
+ * Index of temperature data in the elements of mInputChemistryData.
  * The data will always have units K.
  */
 const size_t ResetChemistry::sTemperatureIndex = 1;
 
 /*!
- * Position of density data in the elements of mInputChemistryData.
+ * Index of density data in the elements of mInputChemistryData.
  * The data will always be have units \f$\mathrm{kg\,m^{-3}
  */
 const size_t ResetChemistry::sDensityIndex = 2;
 
 /*!
- * Position of velocity data in the elements of mInputChemistryData.
+ * Index of velocity data in the elements of mInputChemistryData.
  * The data will always have units \f$\mathrm{m\,s^{-1}}\f$
  */
 const size_t ResetChemistry::sVelocityIndex = 3;
+
+/*!
+ * Rate of PAH formation for use with PAH-PP model
+ */
+const size_t ResetChemistry::sPAHFormationIndex = 4;
+
+/*!
+ * Index of mixture fraction diffusion coefficient (only for use
+ * in flamelet calculations).
+ * The data will have units
+ * \f$\mathrm{m^2\,s^{-1}}\f$
+ */
+const size_t ResetChemistry::sMixFracDiffCoeffIndex = 5;
+
+/*!
+ * Index of spatial gradient (in physical space) of mixture
+ * fraction, that is
+ * \f[ \frac{\partial Z}{\partial x} \f],
+ * for use in flamelet calculations.
+ */
+const size_t ResetChemistry::sGradientMixFracIndex = 6;
+
+/*!
+ * Index of Laplacian (in physical space) of mixture
+ * fraction, that is
+ * \f[ \frac{\partial^2 Z}{\partial x^2} \f],
+ * for use in flamelet calculations.
+ */
+const size_t ResetChemistry::sLaplacianMixFracIndex = 7;
+
+/*!
+ * Index of
+ * \f[ \frac{\partial}{\partial x} \left( \rho D_Z \right), \f]
+ * for use in flamelet calculations.
+ */
+const size_t ResetChemistry::sGradientRhoMixFracDiffCoeffIndex = 8;
+
+/*!
+ * Index of thermophoretic velocity.  Is this field needed?
+ */
+const size_t ResetChemistry::sThermoVelocityIndex = 9;
 
 /**
  * Construct an object from a data file and associate the concentration data
@@ -225,8 +266,10 @@ Brush::ResetChemistry::ResetChemistry(const string &fname, const InputFileType f
             if(lineEntries.empty())
                 continue;
 
-            // Empty row of data for this line in the file
-            data_point dataRow;
+            // Empty row of data for this line in the file, with one entry for
+            // each item of non-species data.  The unknown number of species
+            // entries will be added to the end of the vector.
+            data_point dataRow(sNumNonSpeciesData);
 
             for(size_t i = 0; i < speciesNames.size(); ++i) {
                 // Read the appropriate (mass or mole fraction) floating point number from text.
@@ -252,8 +295,16 @@ Brush::ResetChemistry::ResetChemistry(const string &fname, const InputFileType f
                         frac *= 1e-2;
                 }
 
-                // and assume the storage order should be the same as the species name list order
-                dataRow.push_back(frac);
+                // Space has already been allocated for the non-species data
+                // The input file should not contain columns for PAH formation
+                // and flamelet related quantities.
+                if(i < sPAHFormationIndex) {
+                    dataRow[i] = frac;
+                }
+                else {
+                    // and assume the storage order should be the same as the species name list order
+                    dataRow.push_back(frac);
+                }
             }
             if(verbosity > 1) {
                 std::cout << std::endl;
@@ -276,19 +327,31 @@ Brush::ResetChemistry::ResetChemistry(const string &fname, const InputFileType f
 }
 
 /*!
+ * Method for use when coupling to flamelet codes.
+ * 
  *@param[in]    x           Positions to which data apply (\f$\mathrm{m}\f$)
  *@param[in]    Temp        Temperature data (K)
  *@param[in]    rho         Mixture density data (\f$\mathrm{kg\,m^{-3}}\f$)
  *@param[in]    u           Bulk gas velocity data (\f$\mathrm{m\,s^{-1}}\f$)
+ *@param[in]    PAH         PAH formation rate
+ *@param[in]    D_Z         Mixture fraction diffusion coefficient
+ *@param[in]    grad_Z      Gradient of mixture fraction in physical space
+ *@param[in]    lapl_Z      Laplacian of mixture fraction in physical space
+ *@param[in]    grad_rhoZ   Gradient of product of gas density and D_Z
+ *@param[in]    u_therm     Thermophoretic velocity
  *@param[in]    massFracs   Vector of vectors of mass fractions
  *
- * The first four arguments must all have the same length, which must also be
- * the length of the elements of massFracs.  This is because
+ * The first ten arguments must all have the same length, which must also be
+ * the length of the elements of massFracs.  This is because they are the
+ * columns of a rectangular 2d array of data, where one data set is one row.
  *
  *@exception     std::invalid_argument   Input vectors have differing lengths
  */
 ResetChemistry::ResetChemistry(const fvector &x, const fvector &Temp,
                                const fvector &rho, const fvector &u,
+                               const fvector &PAH, const fvector &D_Z,
+                               const fvector &grad_Z, const fvector &lapl_Z,
+                               const fvector &grad_rhoZ, const fvector &u_therm,
                                const std::vector<fvector> &massFracs) {
     //===== Check all input vectors have the same length ===========
     const size_t len = x.size();
@@ -311,6 +374,56 @@ ResetChemistry::ResetChemistry(const fvector &x, const fvector &Temp,
     if(len != u.size()) {
         std::ostringstream msg;
         msg << "Length of velocity vector is " << u.size()
+            << ", but it must match the x vector length of " << len
+            << " (ResetChemistry::ResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
+
+    if(len != PAH.size()) {
+        std::ostringstream msg;
+        msg << "Length of PAH production rate vector is " << PAH.size()
+            << ", but it must match the x vector length of " << len
+            << " (ResetChemistry::ResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
+
+    if(len != D_Z.size()) {
+        std::ostringstream msg;
+        msg << "Length of mixture fraction diffusion coefficient vector is "
+            << D_Z.size()
+            << ", but it must match the x vector length of " << len
+            << " (ResetChemistry::ResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
+
+    if(len != grad_Z.size()) {
+        std::ostringstream msg;
+        msg << "Length of mixture fraction gradient vector is " << grad_Z.size()
+            << ", but it must match the x vector length of " << len
+            << " (ResetChemistry::ResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
+
+    if(len != lapl_Z.size()) {
+        std::ostringstream msg;
+        msg << "Length of mixture fraction Laplacian vector is " << lapl_Z.size()
+            << ", but it must match the x vector length of " << len
+            << " (ResetChemistry::ResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
+
+    if(len != grad_rhoZ.size()) {
+        std::ostringstream msg;
+        msg << "Length of gradient of product of gas density and D_Z vector is "
+            << grad_rhoZ.size()
+            << ", but it must match the x vector length of " << len
+            << " (ResetChemistry::ResetChemistry)";
+        throw std::invalid_argument(msg.str());
+    }
+
+    if(len != u_therm.size()) {
+        std::ostringstream msg;
+        msg << "Length of thermophoretic velocity vector is " << u_therm.size()
             << ", but it must match the x vector length of " << len
             << " (ResetChemistry::ResetChemistry)";
         throw std::invalid_argument(msg.str());
@@ -343,6 +456,12 @@ ResetChemistry::ResetChemistry(const fvector &x, const fvector &Temp,
         dataRow[sTemperatureIndex] = Temp[i];
         dataRow[sDensityIndex] = rho[i];
         dataRow[sVelocityIndex] = u[i];
+        dataRow[sPAHFormationIndex] = PAH[i];
+        dataRow[sMixFracDiffCoeffIndex] = D_Z[i];
+        dataRow[sGradientMixFracIndex] = grad_Z[i];
+        dataRow[sLaplacianMixFracIndex] = lapl_Z[i];
+        dataRow[sGradientRhoMixFracDiffCoeffIndex] = grad_rhoZ[i];
+        dataRow[sThermoVelocityIndex] = u_therm[i];
 
         // copy mass fraction data for position x[i]
         const std::vector<fvector>::const_iterator itFracEnd = massFracs.end();
@@ -443,7 +562,16 @@ void Brush::ResetChemistry::apply(const real x, Mops::Reactor &reac) const {
     // because there is an internal conversion to molar density that
     // requires the mass fractions.
     chemMixture.SetMassDensity(dataToUse[sDensityIndex]);
+
+    // Other properties that have been addded to the mixture
     chemMixture.SetVelocity(dataToUse[sVelocityIndex]);
+    chemMixture.SetPAHFormationRate(dataToUse[sPAHFormationIndex]);
+    chemMixture.SetMixFracDiffCoeff(dataToUse[sMixFracDiffCoeffIndex]);
+    chemMixture.SetGradientMixFrac(dataToUse[sGradientMixFracIndex]);
+    chemMixture.SetLaplacianMixFrac(dataToUse[sLaplacianMixFracIndex]);
+    chemMixture.SetGradientRhoMixFracDiffCoeff(dataToUse[sGradientRhoMixFracDiffCoeffIndex]);
+    chemMixture.SetThermoVelocity(dataToUse[sThermoVelocityIndex]);
+
     
     if(reac.Mixture() == NULL)
         reac.Fill(*(new Mops::Mixture(reac.Mech()->ParticleMech())));

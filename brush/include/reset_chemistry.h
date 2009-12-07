@@ -83,8 +83,12 @@ public:
     ResetChemistry(const string &fname, const InputFileType file_type, const Sprog::Mechanism& mech, const int verbosity);
 
     //! Use data from vectors
-    ResetChemistry(const fvector &x, const fvector &Temp, const fvector &rho,
-                   const fvector &u, const std::vector<fvector> &massFracs);
+    ResetChemistry(const fvector &x, const fvector &Temp, 
+                   const fvector &rho, const fvector &u,
+                   const fvector &PAH, const fvector &D_Z,
+                   const fvector &grad_Z, const fvector &lapl_Z,
+                   const fvector &grad_rhoZ, const fvector &u_therm,
+                   const std::vector<fvector> &massFracs);
 
     //! Overwrite chemistry information with that stored in this object
     void apply(const real x, Mops::Reactor &reac) const;
@@ -142,6 +146,24 @@ private:
 
     //! Index of velocity data in data_point
     static const size_t sVelocityIndex;
+
+    //! Index of velocity data in data_point
+    static const size_t sPAHFormationIndex;
+
+    //! Index of velocity data in data_point
+    static const size_t sMixFracDiffCoeffIndex;
+
+    //! Index of velocity data in data_point
+    static const size_t sGradientMixFracIndex;
+
+    //! Index of velocity data in data_point
+    static const size_t sLaplacianMixFracIndex;
+
+    //! Index of velocity data in data_point
+    static const size_t sGradientRhoMixFracDiffCoeffIndex;
+
+    //! Index of velocity data in data_point
+    static const size_t sThermoVelocityIndex;
 
 };
 
