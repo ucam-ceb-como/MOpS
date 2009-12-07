@@ -87,7 +87,7 @@ public:
                    const fvector &rho, const fvector &u,
                    const fvector &PAH, const fvector &D_Z,
                    const fvector &grad_Z, const fvector &lapl_Z,
-                   const fvector &grad_rhoZ, const fvector &u_therm,
+                   const fvector &grad_T,
                    const std::vector<fvector> &massFracs);
 
     //! Overwrite chemistry information with that stored in this object
@@ -160,10 +160,7 @@ private:
     static const size_t sLaplacianMixFracIndex;
 
     //! Index of velocity data in data_point
-    static const size_t sGradientRhoMixFracDiffCoeffIndex;
-
-    //! Index of velocity data in data_point
-    static const size_t sThermoVelocityIndex;
+    static const size_t sGradientTemperatureIndex;
 
 };
 

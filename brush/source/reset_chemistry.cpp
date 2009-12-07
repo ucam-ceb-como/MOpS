@@ -63,7 +63,7 @@ using namespace Brush;
  * data applied, the other indices in the range should
  * have their own static constants.
  */
-const size_t ResetChemistry::sNumNonSpeciesData = 10;
+const size_t ResetChemistry::sNumNonSpeciesData = 9;
 
 /*!
  * Index of spatial position data in the elements of mInputChemistryData.
@@ -120,15 +120,10 @@ const size_t ResetChemistry::sLaplacianMixFracIndex = 7;
 
 /*!
  * Index of
- * \f[ \frac{\partial}{\partial x} \left( \rho D_Z \right), \f]
+ * \f[ \frac{\partial T}{\partial x}, \f]
  * for use in flamelet calculations.
  */
-const size_t ResetChemistry::sGradientRhoMixFracDiffCoeffIndex = 8;
-
-/*!
- * Index of thermophoretic velocity.  Is this field needed?
- */
-const size_t ResetChemistry::sThermoVelocityIndex = 9;
+const size_t ResetChemistry::sGradientTemperatureIndex = 8;
 
 /**
  * Construct an object from a data file and associate the concentration data
@@ -337,11 +332,10 @@ Brush::ResetChemistry::ResetChemistry(const string &fname, const InputFileType f
  *@param[in]    D_Z         Mixture fraction diffusion coefficient
  *@param[in]    grad_Z      Gradient of mixture fraction in physical space
  *@param[in]    lapl_Z      Laplacian of mixture fraction in physical space
- *@param[in]    grad_rhoZ   Gradient of product of gas density and D_Z
- *@param[in]    u_therm     Thermophoretic velocity
+ *@param[in]    grad_T      Gradient of temperature
  *@param[in]    massFracs   Vector of vectors of mass fractions
  *
- * The first ten arguments must all have the same length, which must also be
+ * The first nine arguments must all have the same length, which must also be
  * the length of the elements of massFracs.  This is because they are the
  * columns of a rectangular 2d array of data, where one data set is one row.
  *
@@ -351,7 +345,7 @@ ResetChemistry::ResetChemistry(const fvector &x, const fvector &Temp,
                                const fvector &rho, const fvector &u,
                                const fvector &PAH, const fvector &D_Z,
                                const fvector &grad_Z, const fvector &lapl_Z,
-                               const fvector &grad_rhoZ, const fvector &u_therm,
+                               const fvector &grad_T,
                                const std::vector<fvector> &massFracs) {
     //===== Check all input vectors have the same length ===========
     const size_t len = x.size();
@@ -412,18 +406,10 @@ ResetChemistry::ResetChemistry(const fvector &x, const fvector &Temp,
         throw std::invalid_argument(msg.str());
     }
 
-    if(len != grad_rhoZ.size()) {
+    if(len != grad_T.size()) {
         std::ostringstream msg;
-        msg << "Length of gradient of product of gas density and D_Z vector is "
-            << grad_rhoZ.size()
-            << ", but it must match the x vector length of " << len
-            << " (ResetChemistry::ResetChemistry)";
-        throw std::invalid_argument(msg.str());
-    }
-
-    if(len != u_therm.size()) {
-        std::ostringstream msg;
-        msg << "Length of thermophoretic velocity vector is " << u_therm.size()
+        msg << "Length of gradient of temperature vector is "
+            << grad_T.size()
             << ", but it must match the x vector length of " << len
             << " (ResetChemistry::ResetChemistry)";
         throw std::invalid_argument(msg.str());
@@ -460,8 +446,7 @@ ResetChemistry::ResetChemistry(const fvector &x, const fvector &Temp,
         dataRow[sMixFracDiffCoeffIndex] = D_Z[i];
         dataRow[sGradientMixFracIndex] = grad_Z[i];
         dataRow[sLaplacianMixFracIndex] = lapl_Z[i];
-        dataRow[sGradientRhoMixFracDiffCoeffIndex] = grad_rhoZ[i];
-        dataRow[sThermoVelocityIndex] = u_therm[i];
+        dataRow[sGradientTemperatureIndex] = grad_T[i];
 
         // copy mass fraction data for position x[i]
         const std::vector<fvector>::const_iterator itFracEnd = massFracs.end();
@@ -569,8 +554,7 @@ void Brush::ResetChemistry::apply(const real x, Mops::Reactor &reac) const {
     chemMixture.SetMixFracDiffCoeff(dataToUse[sMixFracDiffCoeffIndex]);
     chemMixture.SetGradientMixFrac(dataToUse[sGradientMixFracIndex]);
     chemMixture.SetLaplacianMixFrac(dataToUse[sLaplacianMixFracIndex]);
-    chemMixture.SetGradientRhoMixFracDiffCoeff(dataToUse[sGradientRhoMixFracDiffCoeffIndex]);
-    chemMixture.SetThermoVelocity(dataToUse[sThermoVelocityIndex]);
+    chemMixture.SetGradientTemperature(dataToUse[sGradientTemperatureIndex]);
 
     
     if(reac.Mixture() == NULL)
