@@ -55,12 +55,14 @@
 #include "swp_aggmodel_type.h"
 #include "swp_sintering_model.h"
 #include "sprog.h"
-#include <vector>
-#include <string>
-#include <iostream>
 #include "swp_PAH_database.h"
 #include "swp_PAH_trajectory.h"
 
+#include "local_geometry1d.h"
+
+#include <vector>
+#include <string>
+#include <iostream>
 namespace Sweep
 {
 // Forward declare the Particle class.
@@ -230,7 +232,12 @@ public:
     real DiffusionCoefficient(const Cell &sys, const Particle &sp) const;
 
     //! Calculate the advection velocity
-    real AdvectionVelocity(const Cell &sys, const Particle &sp) const;
+    real AdvectionVelocity(const Cell &sys, const Particle &sp,
+                           const std::vector<const Cell*> &neighbours,
+                           const Geometry::LocalGeometry1d &geom) const;
+
+    //! Calculate the thermophoretic velocity
+    real ThermophoreticVelocity(const Cell &sys, const Particle &sp) const;
 
     //! Select between possible drag models for use in diffusion coefficients
     enum DragType {
@@ -265,6 +272,15 @@ public:
         FlameletAdvection,
     };
 
+    //! Select between possible thermophoresis terms
+    enum ThermophoresisType {
+        //! Traditional
+        WaldmannThermophoresis,
+
+        // wang
+
+    };
+
     //! Choose between drag models
     void SetDragType(const DragType& drag) {m_DragType = drag;}
 
@@ -273,6 +289,9 @@ public:
 
     //! Choose the advection model
     void setAdvectionType(const AdvectionType& adv) {m_AdvectionType = adv;}
+
+    //! Choose the thermophoresis model
+    void setThermophoresisType(const ThermophoresisType& therm) {m_ThermophoresisType = therm;}
 
     void LoadPAHProfile();
     PAH_database m_PAHDatabase;
@@ -313,6 +332,15 @@ protected:
     real Omega1_1_spec(const real t_star, const real sigma_prime) const;
 
 
+    //! Knudsen based average of specular and diffusive 1,2 integrals
+    real Omega1_2_avg(const Cell &sys, const Particle &sp) const;
+
+    //! Diffuse scattering 1,2 collision integral approximation
+    real Omega1_2_diff(const real t_star, const real sigma_prime) const;
+
+    //! Specular scattering 1,2 collision integral approximation
+    real Omega1_2_spec(const real t_star, const real sigma_prime) const;
+
     // MEMORY MANAGEMENT.
 
     // Initialises the model to the default condition.  Used in
@@ -340,6 +368,9 @@ private:
 
     //! Advection expression to use
     AdvectionType m_AdvectionType;
+
+    //! Thermphoresis expression to use
+    ThermophoresisType m_ThermophoresisType;
 };
 } //namespace Sweep
 #endif

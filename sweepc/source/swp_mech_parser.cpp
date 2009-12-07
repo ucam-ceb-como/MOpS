@@ -262,6 +262,16 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             else {
                 throw std::runtime_error("Unrecognised advection model id (Sweep, MechParser::readV1).");
             }
+        }else if (str == "thermophoresis") {
+            // Read advection model ID.
+            str = (*i)->GetAttributeValue("id");
+            if(str == "waldmann") {
+                // Advection according to soot flamelet equation in flamelet space
+                mech.setThermophoresisType(Sweep::ParticleModel::WaldmannThermophoresis);
+            }
+            else {
+                throw std::runtime_error("Unrecognised thermophoresis model id (Sweep, MechParser::readV1).");
+            }
         } else {
             // An invalid model type has been supplied.
             throw runtime_error("Invalid model type (" + str + ") in XML file "

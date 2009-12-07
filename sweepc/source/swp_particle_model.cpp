@@ -122,6 +122,7 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
         m_DragType = rhs.m_DragType;
         m_DiffusionType = rhs.m_DiffusionType;
         m_AdvectionType = rhs.m_AdvectionType;
+        m_ThermophoresisType = rhs.m_ThermophoresisType;
     }
     return *this;
 }
@@ -502,6 +503,7 @@ void ParticleModel::Serialize(std::ostream &out) const
         out.write(reinterpret_cast<const char *>(&m_DragType), sizeof(m_DragType));
         out.write(reinterpret_cast<const char *>(&m_DiffusionType), sizeof(m_DiffusionType));
         out.write(reinterpret_cast<const char *>(&m_AdvectionType), sizeof(m_AdvectionType));
+        out.write(reinterpret_cast<const char *>(&m_ThermophoresisType), sizeof(m_ThermophoresisType));
 
     } else {
         throw invalid_argument("Output stream not ready "
@@ -567,7 +569,7 @@ void ParticleModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&m_DragType), sizeof(m_DragType));
                 in.read(reinterpret_cast<char*>(&m_DiffusionType), sizeof(m_DiffusionType));
                 in.read(reinterpret_cast<char*>(&m_AdvectionType), sizeof(m_AdvectionType));
-
+                in.read(reinterpret_cast<char*>(&m_ThermophoresisType), sizeof(m_ThermophoresisType));
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -762,12 +764,21 @@ real ParticleModel::DiffusionCoefficient(const Cell &sys, const Particle &sp) co
 }
 
 /*!
- *@param[in]    sys     System in which particle experiences drag
- *@param[in]    sp      Particle for which to calculate drag coefficient
+ * Calculate the advection term based on soot particle transport equations of
+ * various kinds.  Information on neighbouring cells is used in the flamelet
+ * cases, because there are terms in gradient in mixture fraction space.
+ *
+ *@param[in]    sys         System in which particle experiences drag
+ *@param[in]    sp          Particle for which to calculate drag coefficient
+ *@param[in]    neighbours  Pointers to neighbouring cells
+ *@param[in]    geom        Information on layout of neighbouring cells
  *
  *@return       Advection velocity
+ *@exception    std::runtime_error  Unrecognised advection type
  */
-real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp) const {
+real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
+                                      const std::vector<const Cell*> &neighbours,
+                                      const Geometry::LocalGeometry1d &geom) const {
     switch(m_AdvectionType) {
         case BulkAdvection:
             // Particle moves with the gas flow
@@ -780,24 +791,87 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp) const
                                          / sys.SampleVolume();
             
             // Thermophoretic drift term
-            real v = sys.GradientMixFrac() * sys.ThermoVelocity()
+            real v = sys.GradientMixFrac() * ThermophoreticVelocity(sys, sp)
                      * sootMassDensity;
 
             // Difference in diffusion of soot and mixture fraction
             v += sys.LaplacianMixFrac() * sootMassDensity
                  * (sys.MixFracDiffCoeff() - EinsteinDiffusionCoefficient(sys, sp));
 
-            // Another term I do not have a good way to calculate
+            // Estimate two gradients in mixture fraction space using the
+            // formula grad f ~ (f(z_{i+1}) - f(z_{i-1})) / (z_{i+1} - z_{i-1})
+            {
+                // Distance between the two Z values
+                const real dZ = geom.calcSpacing(Geometry::left) +
+                                geom.calcSpacing(Geometry::right);
+
+                // rho D_Z at z_{i-1}
+                const real leftRhoDZ  = neighbours[0]->MassDensity() *
+                                        neighbours[0]->MixFracDiffCoeff();
+                // rho D_Z at z_{i+1}
+                const real rightRhoDZ = neighbours[1]->MassDensity() *
+                                        neighbours[1]->MixFracDiffCoeff();
+                // Now calculate the gradient estimate for the produect
+                // of gas mass density and mixture fraction diffusion
+                // coefficient.
+                const real gradRhoDZ = (rightRhoDZ - leftRhoDZ) / dZ;
+
+                // Same process for product of soot mass per unit volume of gas
+                // and particule diffusion coefficient of this particle.
+                const real leftVal  = neighbours[0]->Particles().GetSum(ParticleCache::iM) /
+                                      neighbours[0]->SampleVolume() *
+                                      EinsteinDiffusionCoefficient(*neighbours[0], sp);
+                const real rightVal = neighbours[1]->Particles().GetSum(ParticleCache::iM) /
+                                      neighbours[1]->SampleVolume() *
+                                      EinsteinDiffusionCoefficient(*neighbours[1], sp);
+                // Finish the gradient calculation
+                const real grad = (rightVal - leftVal) / dZ;
+
+
+                // Put together this term in the equation and add it to the
+                // velocity.
+                v+= sys.GradientMixFrac() * sys.GradientMixFrac() *
+                    (sootMassDensity / sys.MassDensity() * gradRhoDZ - grad);
+            }
 
 
             // Divide by density to get a velocity
             return v / sootMassDensity;
         }
         default:
-            throw std::runtime_error("Unrecognised advectopm type in Sweep::ParticleModel::AdvectionVelocity()");
+            throw std::runtime_error("Unrecognised advection type in Sweep::ParticleModel::AdvectionVelocity()");
     }
     return 0.0;
 }
+
+/*!
+ * Formulae taken from Z Li and H Wang, "Thermophoretic force and velocity of
+ * nanoparticles in the free molecule regime" Phys. Rev. E 70:021205 (2004).
+ *
+ *@param[in]    sys         System in which particle experiences drag
+ *@param[in]    sp          Particle for which to calculate drag coefficient
+ *
+ *@return       Thermophoretic velocity
+ *@exception    std::runtime_error  Unrecognised thremophoresis type
+ */
+real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) const {
+
+    // The following factor involving the temperature gradient seems common
+    // to several models
+    const real tempFactor = sys.getThermalConductivity(sys.Pressure())
+                            * sys.GradientTemperature() / sys.Pressure();
+
+    switch(m_ThermophoresisType) {
+        case WaldmannThermophoresis:
+            // Equation 2 of the Li & Wang paper with phi = 0.9
+            // 1 / (5 * (1 + pi * phi / 8)) == 0.14777
+            return tempFactor * -0.14777;
+        default:
+            throw std::runtime_error("Unrecognised advection type in Sweep::ParticleModel::AdvectionVelocity()");
+    }
+    return 0.0;
+}
+
 
 /*!
  * Collision integral is calculated using the formula from
