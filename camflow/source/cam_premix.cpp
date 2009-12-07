@@ -66,7 +66,10 @@ int CamPremix::eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval)
     return 0;
 }
 
-
+/**
+ *@parameter[in]    y       current solution value
+ *@parameter[out]   f       residuals
+ */
 void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f){
 
     resSp.resize(cellEnd*nSpc,0);
@@ -163,6 +166,7 @@ void CamPremix::speciesBoundary(const doublereal& t, doublereal* y, doublereal* 
         f[l] = convection + diffusion;
 
     }
+    // remaining nSpc * num Cells entries are not touched by this loop
 
      //---------------------------------------------------
      //
@@ -171,6 +175,7 @@ void CamPremix::speciesBoundary(const doublereal& t, doublereal* y, doublereal* 
      //---------------------------------------------------
 
     for(int l=0; l<nSpc; l++){
+        // Only deals with the final cell (offset iMesh_e * nSpc
         f[iMesh_e*nSpc+l] = -m_u[iMesh_e]*dydx(s_mf(iMesh_e,l),s_mf(iMesh_e-1,l),dz[iMesh_e]);
     }
 

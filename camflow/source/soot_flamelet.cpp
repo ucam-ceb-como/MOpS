@@ -178,7 +178,7 @@ void SootFlamelet::run(const real t_stop, const vector<real>& data_times,
  *@param[in]    mix_frac_diff           Mixture fraction diffusion coefficient
  *@param[in]    grad_mix_frac           Gradient of mixture fraction
  *@param[in]    lapl_mix_frac           Laplacian of mixture fraction
- *@param[in]    grad_rho_mix_frac_diff  Gradient of gas mass density times mixture fraction diffusion coefficient
+ *@param[in]    grad_T                  Gradient of temperature
  *
  *@return    Object that can be used to set the gas phase mixture details on the 1d reactor
  *
@@ -189,7 +189,7 @@ Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data
                                                         const std::vector<real>& mix_frac_diff,
                                                         const std::vector<real>& grad_mix_frac,
                                                         const std::vector<real>& lapl_mix_frac,
-                                                        const std::vector<real>& grad_rho_mix_frac_diff) {
+                                                        const std::vector<real>& grad_T) {
     //========= Check the lengths of the input vectors ===============
     const size_t len = data_times.size();
     if((len != 1) && (len != 2)) {
@@ -225,9 +225,9 @@ Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data
         throw std::invalid_argument(msg.str());
     }
 
-    if(len != grad_rho_mix_frac_diff.size()) {
+    if(len != grad_T.size()) {
         std::ostringstream msg;
-        msg << "Length of gradient of gas mass density times mixture fraction diffusion coefficient vector is "
+        msg << "Length of gradient of temperature vector is "
             << grad_rho_mix_frac_diff.size()
             << ", but it must match the time vector length of " << len
             << " (SootFlamelet::buildResetChemistry)";
@@ -240,7 +240,7 @@ Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data
     real mixFracDiffusion = mix_frac_diff.front();
     real gradMixFrac = grad_mix_frac.front();
     real laplMixFrac = lapl_mix_frac.front();
-    real gradRhoMixFracDiffusion = grad_rho_mix_frac_diff.front();
+    real gradT = grad_T.front();
 
     // If there is only one value for each quantity use that value unchanged,
     // otherwise use a midpoint approach
@@ -254,8 +254,8 @@ Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data
         laplMixFrac += lapl_mix_frac[1];
         laplMixFrac /= 2.0;
 
-        gradRhoMixFracDiffusion += grad_rho_mix_frac_diff[1];
-        gradRhoMixFracDiffusion /= 2.0;
+        gradTn += grad_T[1];
+        gradT /= 2.0;
     }
 
     const size_t numDataPoints = mChemistry.getIndepVars().size();
@@ -265,7 +265,7 @@ Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data
     std::vector<real> mixFracDiffusions(numDataPoints, mixFracDiffusion);
     std::vector<real> gradMixFracs(numDataPoints, gradMixFrac);
     std::vector<real> laplMixFracs(numDataPoints, laplMixFrac);
-    std::vector<real> gradRhoMixFracDiffusios(numDataPoints, gradRhoMixFracDiffusio);
+    std::vector<real> gradTs(numDataPoints, gradT);
 
     // Now collect the species mass fraction data
     std::vector<std::vector<real> > chemData(numDataPoints);
@@ -276,10 +276,6 @@ Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data
     //PAH formation rate assumed 0 for now
     std::vector<real> pahFormations(numDataPoints, 0.0);
 
-    //Thermophoretic velocity assumed 0 for now
-    std::vector<real> uThermophoretic(numDataPoints, 0.0);
-
-
     return Brush::ResetChemistry(mChemistry.getIndepVars(),
                                  mChemistry.getTemperatures(),
                                  mChemistry.getDensities(), 
@@ -288,7 +284,7 @@ Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data
                                  mixFracDiffuions,
                                  gradMixFracs,
                                  laplMixFracs,
-                                 uThermophoretic,
+                                 gradT,
                                  chemData);
 }
 

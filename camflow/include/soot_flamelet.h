@@ -75,7 +75,7 @@ public:
                                 const std::vector<real>& mix_frac_diff,
                                 const std::vector<real>& grad_mix_frac,
                                 const std::vector<real>& lapl_mix_frac,
-                                const std::vector<real>& grad_rho_mix_frac_diff);
+                                const std::vector<real>& grad_T);
 
 protected:
     //! Build a brush object that will set the gas phase mixture details on the 1d reactor
@@ -83,7 +83,7 @@ protected:
                                               const std::vector<real>& mix_frac_diff,
                                               const std::vector<real>& grad_mix_frac,
                                               const std::vector<real>& lapl_mix_frac,
-                                              const std::vector<real>& grad_rho_mix_frac_diff);
+                                              const std::vector<real>& grad_T);
 
     //! Build a brush style geometry object
     Geometry::Geometry1d buildBrushGeometry();
