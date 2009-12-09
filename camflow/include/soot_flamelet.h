@@ -71,15 +71,15 @@ public:
     //SootFlamelet& operator=(const SootFlamelet &rhs);
 
     //! Advance flamelet time
-    void run(const real t_stop, const vector<real>& data_times,
-                                const std::vector<real>& mix_frac_diff,
-                                const std::vector<real>& grad_mix_frac,
-                                const std::vector<real>& lapl_mix_frac,
-                                const std::vector<real>& grad_T);
+    void run(const std::vector<real>& data_times,
+             const std::vector<real>& mix_frac_diff,
+             const std::vector<real>& grad_mix_frac,
+             const std::vector<real>& lapl_mix_frac,
+             const std::vector<real>& grad_T);
 
 protected:
     //! Build a brush object that will set the gas phase mixture details on the 1d reactor
-    Brush::ResetChemistry buildResetChemistry(const vector<real>& data_times,
+    Brush::ResetChemistry buildResetChemistry(const std::vector<real>& data_times,
                                               const std::vector<real>& mix_frac_diff,
                                               const std::vector<real>& grad_mix_frac,
                                               const std::vector<real>& lapl_mix_frac,

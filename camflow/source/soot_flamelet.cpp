@@ -144,52 +144,23 @@ Geometry::Geometry1d SootFlamelet::buildBrushGeometry() {
 }
 
 /*!
- *@param[in]    t_stop                  Time upto which to advance the flamelet
+ * Run the flamelet upto the time specified by the last element of data_times.
+ *
  *@param[in]    data_times              Vector of times at which data points apply
  *@param[in]    mix_frac_diff           Mixture fraction diffusion coefficient
  *@param[in]    grad_mix_frac           Gradient of mixture fraction
  *@param[in]    lapl_mix_frac           Laplacian of mixture fraction
  *@param[in]    grad_rho_mix_frac_diff  Gradient of gas mass density times mixture fraction diffusion coefficient
  *
+ *@exception    std::invalid_argument   Input vectors must be of length 1 or 2
+ *@excpetion    std::invalid_argument   Input vectors must all have same length
+ *
  */
-void SootFlamelet::run(const real t_stop, const vector<real>& data_times,
+void SootFlamelet::run(const std::vector<real>& data_times,
                        const std::vector<real>& mix_frac_diff,
                        const std::vector<real>& grad_mix_frac,
                        const std::vector<real>& lapl_mix_frac,
-                       const std::vector<real>& grad_rho_mix_frac_diff) {
-    //run the chemistry
-    mChemistry.flamelet(sdr_data, data_times, mCalcStarted);
-    mCalcStarted = true;
-
-    // Extract the chemistry from mChemistry ready to use for the particle calculations
-    Brush::ResetChemistry newChem = buildResetChemistry(data_times,
-                                                        mix_frac_diff,
-                                                        grad_mix_frac,
-                                                        lapl_mix_frac,
-                                                        grad_rho_mix_frac_diff);
-
-    // Create and run the particle solver
-    Brush::PredCorrSolver particleSolver(newChem, 0, 0.0, 0.0, true, true);
-    particleSolver.solve(*mParticles, t_stop, 1, 0);
-}
-
-/*!
- *@param[in]    data_times              Vector of times at which data points apply
- *@param[in]    mix_frac_diff           Mixture fraction diffusion coefficient
- *@param[in]    grad_mix_frac           Gradient of mixture fraction
- *@param[in]    lapl_mix_frac           Laplacian of mixture fraction
- *@param[in]    grad_T                  Gradient of temperature
- *
- *@return    Object that can be used to set the gas phase mixture details on the 1d reactor
- *
- *@exception    std::invalid_argument   Input vectors must be of length 1 or 2
- *@excpetion    std::invalid_argument   Input vectors must all have same length
- */
-Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data_times,
-                                                        const std::vector<real>& mix_frac_diff,
-                                                        const std::vector<real>& grad_mix_frac,
-                                                        const std::vector<real>& lapl_mix_frac,
-                                                        const std::vector<real>& grad_T) {
+                       const std::vector<real>& grad_T) {
     //========= Check the lengths of the input vectors ===============
     const size_t len = data_times.size();
     if((len != 1) && (len != 2)) {
@@ -228,7 +199,7 @@ Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data
     if(len != grad_T.size()) {
         std::ostringstream msg;
         msg << "Length of gradient of temperature vector is "
-            << grad_rho_mix_frac_diff.size()
+            << grad_T.size()
             << ", but it must match the time vector length of " << len
             << " (SootFlamelet::buildResetChemistry)";
         throw std::invalid_argument(msg.str());
@@ -237,6 +208,48 @@ Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data
     // Input vectors now guaranteed to all have length 1 or all to have
     // length 2.
 
+    // make a vector of scalar dissipation rates
+    std::vector<real> scalarDissipRate(grad_mix_frac.size());
+    for(size_t i = 0; i != grad_mix_frac.size(); ++i) {
+        scalarDissipRate[i] = grad_mix_frac[i] * grad_mix_frac[i] * mix_frac_diff[i] * 2;
+    }
+
+    //=========================================================================
+    // run the chemistry
+    mChemistry.flamelet(scalarDissipRate, data_times, mCalcStarted);
+    mCalcStarted = true;
+
+    //=========================================================================
+    // Particles
+    // Extract the chemistry from mChemistry ready to use for the particle calculations
+    Brush::ResetChemistry newChem = buildResetChemistry(data_times,
+                                                        mix_frac_diff,
+                                                        grad_mix_frac,
+                                                        lapl_mix_frac,
+                                                        grad_T);
+
+    // Create and run the particle solver
+    Brush::PredCorrSolver particleSolver(newChem, 0, 0.0, 0.0, true, true);
+    particleSolver.solve(*mParticles, data_times.back(), 1, 0);
+}
+
+/*!
+ *@param[in]    data_times              Vector of times at which data points apply
+ *@param[in]    mix_frac_diff           Mixture fraction diffusion coefficient
+ *@param[in]    grad_mix_frac           Gradient of mixture fraction
+ *@param[in]    lapl_mix_frac           Laplacian of mixture fraction
+ *@param[in]    grad_T                  Gradient of temperature
+ *
+ *@pre  All of the agument vectors must have the same length and this length
+ *      must be 1 or 2.
+ *
+ *@return    Object that can be used to set the gas phase mixture details on the 1d reactor
+ */
+Brush::ResetChemistry SootFlamelet::buildResetChemistry(const std::vector<real>& data_times,
+                                                        const std::vector<real>& mix_frac_diff,
+                                                        const std::vector<real>& grad_mix_frac,
+                                                        const std::vector<real>& lapl_mix_frac,
+                                                        const std::vector<real>& grad_T) {
     real mixFracDiffusion = mix_frac_diff.front();
     real gradMixFrac = grad_mix_frac.front();
     real laplMixFrac = lapl_mix_frac.front();
@@ -244,7 +257,7 @@ Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data
 
     // If there is only one value for each quantity use that value unchanged,
     // otherwise use a midpoint approach
-    if(len == 2) {
+    if(data_times.size() == 2) {
         mixFracDiffusion += mix_frac_diff[1];
         mixFracDiffusion /= 2.0;
 
@@ -254,7 +267,7 @@ Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data
         laplMixFrac += lapl_mix_frac[1];
         laplMixFrac /= 2.0;
 
-        gradTn += grad_T[1];
+        gradT += grad_T[1];
         gradT /= 2.0;
     }
 
@@ -281,10 +294,10 @@ Brush::ResetChemistry SootFlamelet::buildResetChemistry(const vector<real>& data
                                  mChemistry.getDensities(), 
                                  mChemistry.getVelocities(),
                                  pahFormations,
-                                 mixFracDiffuions,
+                                 mixFracDiffusions,
                                  gradMixFracs,
                                  laplMixFracs,
-                                 gradT,
+                                 gradTs,
                                  chemData);
 }
 
