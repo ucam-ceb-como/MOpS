@@ -123,6 +123,16 @@ namespace Camflow{
          *  Set restart time
          */
         void setRestartTime(doublereal t);
+ 
+        
+        
+    //! Computes the Planck mean absorption constants, as part of the radiative heat loss dissipation model.
+    void PlanckAbsorption (const doublereal Temperature, doublereal Absorption[3])const;
+    
+    //! Computes  the radiative heat loss term for radiative heat dissipation model
+    doublereal RadiativeLoss (const doublereal rho, const doublereal cp, const doublereal Temperature,
+                              const doublereal SootVolFrac)const;
+
 
     private:
         doublereal stoichZ; //stoichiometric mixture fraction

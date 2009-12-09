@@ -1,7 +1,7 @@
 
 #include "array.h"
 
-
+#include <cmath>
 #include "cam_setup.h"
 #include "cam_residual.h"
 #include <vector>
@@ -16,6 +16,7 @@
 
 using namespace Camflow;
 using namespace std;
+
 /*
  *this is called by the model object. The boolean interface decides
  *if the call originates from the interface or from camflow kernel
@@ -472,6 +473,173 @@ void FlameLet::speciesResidual(const doublereal& t, doublereal* y,
     
 
 }
+/* This code computes the spectral and soot related components or radiative heat loss.  
+
+    References:
+    1.	Radiation Models, International Workshop on Measurement and Computation of Turbulent  Nonpremixed Flames,
+        www.sandia.gov/TNF/radiation.html.  This reference covers the details of implementing the spectral part of 
+        the radiation term.
+
+    2.	Kim, S-K., Kim, Y., Assessment of the Eulerian particle flamelet model for nonpremixed turbulent jet flames, 
+        Combustion and Flame 154 (2008) 232-247.  This article shows a modern implementation of the procedure used 
+        in [1], for the spectral part of the radiation term.
+
+    3.	Carbonnel, D., Oliva, A., Perez-Segarra, C.D., Implementation of two-equation soot flamelet models for laminar
+        diffusion flames.  This paper includes a term, used here, for modelling soot radiative heat loss.
+
+    4.  Grosshandler, W.L., RADCAL: A Narrow-Band Model For Radiation Calculations in a Combustion Environment, NIST 
+        technical note 1402, 1993.
+   
+   */
+
+
+
+ 
+/*!
+    *Computes the Planck mean absorption coefficients
+ 
+    *@param[in]      Temperature      Temperature at a point of the grid, as obtained by the energy residual function.
+    *@param[out]     Absorption       An output array containing the computed Planck absorption coefficients.      
+    *
+    * The coefficients are produced for H2O, CO2, and CO, because these are the species that tend to produce the 
+    * greatest spectral radiative effect in mixtures commonly associated with combustion. Coefficients are known
+    * for CH4 as well, but they can lead to inaccurate results, and therefore are not included here.  The computation
+    * of these coefficients are based on data from the RADCAL model.  This data was for temperatures between 300K 
+    * and 2500K.
+    
+    */    
+void FlameLet::PlanckAbsorption (const doublereal Temperature, doublereal Absorption[3])const
+{
+        
+    
+    //This quantity is reused repeatedly in the equations below
+    const doublereal beta = 1000/Temperature;
+
+    //This helps avoid repeated, costly calls to pow().  There is a modest tradeoff of speed vs. accuracy here.
+    const doublereal beta2 = beta * beta;
+    const doublereal beta3 = beta2 * beta;
+    const doublereal beta4 = beta3 * beta;
+    const doublereal beta5 = beta4 * beta;
+ 
+    // This code computes the Planck mean absorption coefficient for H2O, using an equation in reference [1].  The specific 
+    // equation is based on fitted results from the RADCAL program. See reference [4].
+
+    Absorption[0] = -0.23093 - 1.12390 * beta + 9.41530 * beta2 - 2.99880 * beta3 + 0.51382 * beta4
+                    - 1.86840e-5 * beta5;
+ 
+
+    // This code computes the Planck mean absorption coefficient for CO2, using an equation in reference [1].  The specific 
+    // equation is based on fitted results from the RADCAL program. See reference [4].
+
+    Absorption[1] = -18.7410 - 121.3000 * beta + 273.5000 * beta2 - 194.0500 * beta3 + 56.3100 * beta4
+                    - 5.8169e-5 * beta5;
+
+
+    // This code computes the Planck mean absorption coefficient for CO, using two equations in reference [1].  It uses a 
+    // conditional statement on temperature to determine which of the two equations to use. The specific  equation is based
+    // on fitted results from the RADCAL program. See reference [4].
+
+    if (Temperature <= 750) {
+        Absorption[2]  =  4.7869 + Temperature * (-0.06953 + Temperature * (2.95775e-4 + Temperature * 
+                          (-4.25732e-7 + Temperature * 2.202849e-10))); 
+    }
+    else {
+        Absorption[2]  = 10.0900 + Temperature * (-0.01183 + Temperature * (4.7753e-6 + Temperature * 
+                         (-5.87209e-10 + Temperature * 2.5334e-14)));
+    }
+    
+    
+    // After this function has been called the end result is a vector populated with absorption coefficients, to be used in 
+    // the function RadiativeLoss.
+}
+
+//
+/*! 
+      *Computes  the radiative heat loss term for radiative heat dissipation model
+
+      *@param[in]      rho                             Density of the mixture, as obtained by the energy residual function.
+      *@param[in]      cp                              Specific heat of the mixture, as obtained by the energy residual function.
+      *@param[in]      Temperature                     Temperature at a point of the grid, as obtained by the energy residual function.
+      *@param[in]      SootVolFrac                     The soot value fraction, as provided by the user or obtained from an external source.  
+      *@return                                         A term equivalent to the total radiative heat loss.
+      *
+      *                                                This function will be called from the energy residual code in Camflow's Flamelet class,
+      *                                                which will provide such parameters as temperature, density, specific heat, mass fractions 
+      *                                                and soot volume fractions.  
+      *
+      *
+      */ 
+
+
+doublereal FlameLet::RadiativeLoss (const doublereal rho, const doublereal cp, const doublereal Temperature,
+                                    const doublereal SootVolFrac)const
+  {
+      
+          
+    // RadiativeLoss requires a background setting temperature.  It is usually assumed to be 300K, unless experimental conditions 
+    // suggest another temperature.
+    const doublereal BackgroundTemp = 300;
+
+
+    // Absorption coefficients are for H2O, CO2, and CO, in that order.
+    doublereal AbsorptionVector[3] = {0,0,0};
+    
+
+    // The function calls PlanckAbsorption to produce the absorption coefficients.
+    PlanckAbsorption(Temperature, AbsorptionVector);
+
+
+    // Using a single equation in reference [1], the function computes a Radiative Heat Dissipation term.  It uses the Planck mean 
+    // absorption coefficients for H2O, CO2 abd CO, as well as the density of each of these species, the specific heat of each species,
+    // the temperature, the partial pressure of each species, and the soot volume fraction.
+
+    
+    //Get species indexes corresponding to H20, CO2, CO
+    const int iH2O = camMech->FindSpecies("H2O");
+    const int iCO2 = camMech->FindSpecies("CO2");
+    const int iCO  = camMech->FindSpecies("CO");
+
+    //Get mass fractions for H2O, CO2, CO, using the indices found above.  
+    doublereal moleFrac[3];
+    moleFrac[0] = camMixture->MoleFraction(iH2O);
+    moleFrac[1] = camMixture->MoleFraction(iCO2);
+    moleFrac[2] = camMixture->MoleFraction(iCO);
+           
+    //Partial pressures of species k.  0 corresponds to H2O, 1 corresponds to CO2, 2 corresponds to CO.
+    doublereal partialPress[3];
+    partialPress[0]  =  moleFrac[0] * opPre;
+    partialPress[1]  =  moleFrac[1] * opPre;
+    partialPress[2]  =  moleFrac[2] * opPre;
+
+    
+    doublereal radiationScalar;  //To hold intermediate results
+    doublereal spectralRadiation;   //An intermediate result    
+    
+    spectralRadiation = 0;
+    
+    //The following is used repeatedly in the loop below
+    const doublereal temperaturePowers = 1/(rho * cp) * 4* 5.669e-8 * (pow(Temperature, 4) - pow(BackgroundTemp, 4));
+
+
+    for (unsigned int j = 0; j < 3; ++j){
+        // 0 = H2O,  1 = CO2,  2 = CO
+
+
+        //Spectral radiative heat loss due to each of H2O, CO2, and CO 
+        radiationScalar =  temperaturePowers * partialPress[j] * AbsorptionVector[j];
+
+        //Total spectral radiative heat loss.
+        spectralRadiation += radiationScalar;
+    }
+     
+    //Total spectral radiative heat loss + radiative heat loss due to soot
+    return spectralRadiation + 3.337e-41 * SootVolFrac * pow(Temperature, 5);
+
+    
+}
+       
+
+
 /*
  *energy residual
  */
@@ -480,7 +648,7 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
     doublereal grad_e, grad_w;
     doublereal zPE, zPW;
     doublereal source;
-
+    
     /*
      *starting with mixture fraction zero: i.e oxidizer
      *inlet. The temperature is fixed at the oxidizer
@@ -507,6 +675,7 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
         zPE = 0.5*(dz[i]+dz[i+1]);
         zPW = 0.5*(dz[i]+dz[i-1]);
         source = 0.0;
+        
         for(int l=0; l<nSpc; l++){
             source += s_Wdot(i,l)*s_H(i,l);
         }
@@ -534,10 +703,15 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
             }
 
             
-            f[i] +=  - enthFlux*sdr*tGrad/8.0 ;
+            f[i] -= enthFlux*sdr*tGrad/8.0 ;
 
         }
-        
+    
+        //======Radiative Heat Loss Term===============
+
+        //Soot Volume Fraction is set to zero here
+        f[i] += RadiativeLoss(m_rho[i],m_cp[i],m_T[i],0.0);
+
 
     }
 
