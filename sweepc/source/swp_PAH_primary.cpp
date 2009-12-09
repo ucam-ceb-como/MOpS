@@ -531,8 +531,8 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
 		    this->m_rightparticle=m_rightchild->SelectRandomSubparticle();
 
             //initialise the variables used to calculate the coalesence ratio
-            m_children_surf=m_leftparticle->m_surf+m_rightparticle->m_surf;
             m_children_vol=m_leftparticle->m_vol+m_rightparticle->m_vol;
+            m_children_surf=(m_leftparticle->m_surf+m_rightparticle->m_surf);
             m_leftparticle_vol_old=m_leftparticle->m_vol;
             m_rightparticle_vol_old=m_rightparticle->m_vol;
             m_leftparticle_numPAH=m_leftparticle->m_numPAH;
@@ -609,7 +609,8 @@ double PAHPrimary::CoalescenceLevel()
         //update the children volume, this value is used to calculate dV n the next timestep
         m_children_vol=m_rightparticle->m_vol+m_leftparticle->m_vol;
         //calculate dS, at the moment it is assumed that the particles always grow
-        const double dS=dV*2.0/m_children_radius;
+        double ct=m_pmodel->Components(0)->CoalescThresh();
+        const double dS=dV*ct/m_children_radius;
         //update the radius for the next event
         m_children_radius=pow(3.0/(4.0*PI)*(m_children_vol),(ONE_THIRD));
         m_children_surf+=dS;
@@ -617,7 +618,11 @@ double PAHPrimary::CoalescenceLevel()
         const double spherical_surface=4*PI*m_children_radius*m_children_radius;
        // double two_1_3=pow(2,-1*ONE_THIRD);
         const double two_1_3=0.79370052231642452;
-        return ((spherical_surface/m_children_surf)-two_1_3)/(1-two_1_3);
+        double clevel= ((spherical_surface/m_children_surf)-two_1_3)/(1-two_1_3);
+        if (clevel<0)
+            return 0;
+        else
+            return clevel;
     }
     else 
         return 0;
@@ -878,10 +883,11 @@ bool PAHPrimary::CheckCoalescence()
 {
     bool hascoalesced=false;
    // cout << m_children_coalescence<<endl;
-   if (m_children_coalescence> m_pmodel->Components(0)->CoalescThresh() && m_leftparticle!=NULL)
+ //  if (m_children_coalescence> m_pmodel->Components(0)->CoalescThresh() && m_leftparticle!=NULL)
+    if (m_children_coalescence> 0.99 && m_leftparticle!=NULL)
         {
            // PrintTree("before.inp");
-           //  cout <<"merging"<<m_children_coalescence<<endl;
+          //   cout <<"merging"<<m_children_coalescence<<endl;
              Merge();
            //  PrintTree("after.inp");
            hascoalesced=true;
@@ -893,6 +899,7 @@ bool PAHPrimary::CheckCoalescence()
         hascoalesced=m_leftchild->CheckCoalescence();
         hascoalesced=m_rightchild->CheckCoalescence();
     }
+    UpdateCache();
     return hascoalesced;
 }
 
@@ -949,59 +956,62 @@ void PAHPrimary::Reset()
 */
 void PAHPrimary::UpdateCache(PAHPrimary *root)
 {	
-    if (this==root && this->m_leftchild!=NULL)
-    {
-        m_PAH.clear();
-    }
+    //Update the children 
 	if (m_leftchild!=NULL)
 	{
 		m_leftchild->UpdateCache(root);
 		m_rightchild->UpdateCache(root);
-		this->m_numprimary=m_leftchild->m_numprimary+m_rightchild->m_numprimary;
+		m_numprimary=m_leftchild->m_numprimary+m_rightchild->m_numprimary;
 	}
+    //this is a primary and the number of primaries below this node is one (this node and no children)
 	else
 	{
 		m_numprimary=1;
+        m_avg_coalesc=0;
 	}
      
-	if (m_leftchild==NULL) 
-	 {   
-         //this is a primary particle
-    //     UpdatePrimary();  
-         m_avg_coalesc=0;
-	 }
-	 else   
-	 {
-        // this is a node in the tree, sum up the properties.
+    //this is not a primary, sum up the properties 
+	if (m_leftchild!=NULL) 
+    {
+        // remove the PAHs from this node to free memory
         Reset();
 		m_surf = m_leftchild->m_surf+m_rightchild->m_surf;
 		m_primarydiam = (m_leftchild->m_primarydiam+m_rightchild->m_primarydiam);
         m_vol=m_leftchild->m_vol+m_rightchild->m_vol;
         m_numPAH = m_leftchild->m_numPAH+m_rightchild->m_numPAH;
         m_primarydiam = (m_leftchild->m_primarydiam+m_rightchild->m_primarydiam);
-        m_children_coalescence=CoalescenceLevel();
         m_mass=(m_leftchild->m_mass+m_rightchild->m_mass);
         m_PAHCollDiameter=max(m_leftchild->m_PAHCollDiameter,m_rightchild->m_PAHCollDiameter);
         m_numcarbon=m_leftchild->m_numcarbon+m_rightchild->m_numcarbon;
-        m_avg_coalesc=m_children_coalescence+m_leftchild->m_avg_coalesc+m_rightchild->m_avg_coalesc;
+        // calculate the coalescence level of the two primaries connected by this node
+        m_children_coalescence=CoalescenceLevel();
 
+        //sum up the avg coal level 
+        m_avg_coalesc=m_children_coalescence+m_leftchild->m_avg_coalesc+m_rightchild->m_avg_coalesc;
+        
+        // calculate the different diameters only for the root node because this goes into the 
+        // particle tree and gets used by the coagulation kernel
         if (this==root)
         {
-            double spherical_radius=pow(3*m_vol/(4*PI),ONE_THIRD);
-            double meandiam=(spherical_radius+sqrt(m_surf/(4*PI)));            //2*0.5*(radius(vol)+radius(sphere))
-            double cdiam=max(meandiam,m_PAHCollDiameter);            
-            SetCollDiameter(cdiam);
-            //spherical eqiv diameter
+             //spherical eqiv radius
+            double spherical_radius=pow(3*m_vol/(4*PI),ONE_THIRD);         
             m_diam=2*spherical_radius;
+            // there are m_numprimary-1 connections between the primary particles          
+            m_avg_coalesc=m_avg_coalesc/(m_numprimary-1);
+            //approxmiate the surface of the particle
+            const real numprim_1_3=pow(m_numprimary,-0.333333);
+            m_surf=4*PI*spherical_radius*spherical_radius/
+                (m_avg_coalesc*(1-numprim_1_3)+numprim_1_3);
+
+            //calculate the surface equivalent radius
+            const double radius_surf=sqrt(m_surf/(4*PI));
+            // the average between the surface and voluem equiv diameter
+            const double meandiam=spherical_radius+radius_surf;            //2*0.5*(radius(vol)+radius(sphere))
+            // the maximum of the largest PAH diameter and  
+            // the average between the surface and voluem equiv diameter       
+            const double cdiam=max(meandiam,m_PAHCollDiameter);      
             m_dmob = meandiam;
-            if (m_numprimary>1)
-            {
-                m_avg_coalesc=m_avg_coalesc/(m_numprimary-1);
-            }
-            else
-            {
-                m_avg_coalesc=0;
-            }
+            SetCollDiameter(cdiam);
         }
         else 
         {
