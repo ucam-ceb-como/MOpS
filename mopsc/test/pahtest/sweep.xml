@@ -13,8 +13,20 @@
       </description>
       <density units="g/cm3">1.2</density>
       <molwt units="g/mol">0.0</molwt>
-      <coalthresh>0.0</coalthresh>	
-    </component> 
+<density units="g/cm3">
+1.333
+</density>
+<coalthresh>
+1
+</coalthresh>
+<growthfact>
+0.8
+</growthfact>
+<minPAH>
+2
+</minPAH>
+    
+</component> 
     
 
     <particle id="[silica]" model="PAH" subtree="false">
