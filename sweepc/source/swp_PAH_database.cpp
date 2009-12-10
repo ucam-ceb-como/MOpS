@@ -85,8 +85,13 @@ void PAH_database::LoadPAHProfiles()
     m_num_traj=5;
     for (int i=1;i<=m_num_traj;i++)
     {
+        // Read one file for each position in the flame
         string fname = "PAH_data" + cstr(i) + ".csv";
+
+        // Trajectory is a collection of life stories for many
+        // different PAH molecules
         Trajectory newtraj;
+        
         newtraj.LoadPAHProfile(fname.c_str());
         m_Trajectories.push_back(newtraj);
     }
