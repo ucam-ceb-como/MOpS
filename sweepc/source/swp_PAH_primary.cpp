@@ -312,10 +312,12 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
     m_fdim=source->m_fdim;
     m_Rg=source->m_Rg;
     m_avg_coalesc=source->m_avg_coalesc;
+    m_numcarbon=source->m_numcarbon;
 	vector<PAH>::const_iterator j;
 	//for (j=source->m_PAH.begin(); j!=source->m_PAH.end(); ++j) {
 	//	m_PAH.insert(m_PAH.end(),PAH(*j));
 	//}
+    m_PAH.clear();
     m_PAH.insert(m_PAH.end(),source->m_PAH.begin(),source->m_PAH.end());
 	
 }
@@ -985,7 +987,8 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
         m_numcarbon=m_leftchild->m_numcarbon+m_rightchild->m_numcarbon;
         // calculate the coalescence level of the two primaries connected by this node
         m_children_coalescence=CoalescenceLevel();
-
+        if (m_children_coalescence>1)
+            m_children_coalescence=1;
         //sum up the avg coal level 
         m_avg_coalesc=m_children_coalescence+m_leftchild->m_avg_coalesc+m_rightchild->m_avg_coalesc;
         
