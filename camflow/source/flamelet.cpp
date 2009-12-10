@@ -437,13 +437,31 @@ void FlameLet::speciesResidual(const doublereal& t, doublereal* y,
     doublereal onebLe;
     doublereal oneby16 = 1.0/16;
     if(Lewis == FlameLet::LNNONE){       
-        for(int i=0; i<mCord; i++){
+        
+        //Iterating over the interior points
+        for(int i=1; i<mCord-1; i++){
             for(int l=0; l<nSpc; l++){
                 Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*s_Diff(i,l));
                 onebLe = 1/Le(i,l);
+                        
                 convection(i,l) = oneby16*(onebLe-1)*(s_mf(i+1,l)-s_mf(i-1,l))*(m_rho[i+1]-m_rho[i-1]);
             }
+    
         }
+        for(int l=0; l<nSpc; l++){
+            // Computation at the i = 0 end of the grid
+            Le(0,l) = m_k[0]/(m_rho[0]*m_cp[0]*s_Diff(0,l));
+            onebLe = 1/Le(0,l);
+            convection(0,l) = oneby16*(onebLe-1)*4*(s_mf(1,l)-s_mf(0,l))*(m_rho[1]-m_rho[0]);
+
+
+            // Computation at the i = mCord - 1 end of the grid
+            Le(mCord-1,l) = m_k[mCord-1]/(m_rho[mCord -1]*m_cp[mCord-1]*s_Diff(mCord-1,l));
+            onebLe = 1/Le(mCord-1,l);
+            convection(mCord-1,l) = oneby16*(onebLe-1)*4*(s_mf(mCord-1,l)-s_mf(mCord-2,l))*(m_rho[mCord-1]-m_rho[mCord-2]);
+        }
+
+
     }
     /*
      *interior mixture fraction coordinates
