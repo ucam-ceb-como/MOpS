@@ -75,33 +75,62 @@ double Trajectory::StartTime() const
     return m_starttime;
 }
 
+/*!
+ * Read in the life stories for a collection of PAH molecules
+ *
+ *@param[in]    file    Name of file from which to read the PAH life stories
+ *
+ *@exception    std::runtime_error      No PAH stories found
+ */
 void Trajectory::LoadPAHProfile(const std::string &file)
 {
    	CSV_IO *csvinput = new CSV_IO(file,false);
 	std::vector<std::string> values;	
 	values.clear();
+
+    // Read first line
 	csvinput->Read(values);
-    m_maxID=values.size()/2-1;
+
+    // One column for number of H atoms in the PAH molecules
+    // and one column for C atoms.  First column is the times
+    m_maxID = (values.size() - 1) / 2;
+
+    // Create an empty trajectory (life story) for each PAH
+    // that is being read.
 	for (int j=0;j<m_maxID;j++)
 	{
 		trajectory_base newtraj;
 		alltrajectories.push_back(newtraj);
 	}
+
 	for (int j=0;j<10000;j++)
 		{	
-			if (values.size()==0)
-				break;
-			for (int ID=0;ID<m_maxID;ID=ID+1)
+			if ((j == 0) && (values.size() == 0)) {
+                std::string msg("No PAHs found in ");
+                msg += file;
+                msg += "(Trajectory::LoadPAHProfile)";
+                throw std::runtime_error(msg);
+            }
+
+            // Now read the next step of each PAH story/trajectory
+            for (int ID=0;ID<m_maxID;ID=ID+1)
 			{
-				string tempstring=values[0];
-				double time=atof(tempstring.c_str());
+				double time=atof(values[0].c_str());
+
                 if (ID==0 && j==0)
                     m_starttime=time;
-				alltrajectories.at(ID).time.push_back(time);
-				tempstring=values[2*ID+2];
-				int ncarb=atoi(tempstring.c_str());
+
+                alltrajectories.at(ID).time.push_back(time);
+
+                int ncarb=atoi(values[2*ID+2].c_str());
 				alltrajectories.at(ID).n_carbon_t.push_back(ncarb);
 			}
+
+            // Read the next line
 			csvinput->Read(values);
+            if(values.empty()) {
+                //no more lines
+                break;
+            }
 		}
 }
