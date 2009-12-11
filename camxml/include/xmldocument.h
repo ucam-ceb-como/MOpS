@@ -52,7 +52,6 @@
 //#include <tchar.h>
 
 using namespace CamXML;
-using namespace std;
 
 namespace CamXML
 {

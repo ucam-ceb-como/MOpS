@@ -49,7 +49,6 @@
 //#include <cstdlib>
 #include <sstream>
 //#include <iomanip>
-using namespace std;
 
 namespace ComoString {
     // Check if there is any white space to the right of wstring.
