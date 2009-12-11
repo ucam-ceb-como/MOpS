@@ -689,7 +689,9 @@ void MechParser::readPAHInceptions(CamXML::Document &xml, Sweep::Mechanism &mech
         // Create new inception.
         PAHInception *icn = new PAHInception(mech);
         icn->SetMechanism(mech);
-        icn->SetName("Inception " + cstr(k));
+        // This inception only involves one molecule and not two as in the usual inception process
+        icn->SetA(1.0);
+        icn->SetName("PAHInception " + cstr(k));
 
         try {
             readPAHInception(*(*i), *icn);

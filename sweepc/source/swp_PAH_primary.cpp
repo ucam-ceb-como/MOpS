@@ -1007,13 +1007,15 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
                 (m_avg_coalesc*(1-numprim_1_3)+numprim_1_3);
 
             //calculate the surface equivalent radius
-            const double radius_surf=sqrt(m_surf/(4*PI));
+           // const double radius_surf=sqrt(m_surf/(4*PI));
             // the average between the surface and voluem equiv diameter
-            const double meandiam=spherical_radius+radius_surf;            //2*0.5*(radius(vol)+radius(sphere))
+            //const double meandiam=spherical_radius+radius_surf;            //2*0.5*(radius(vol)+radius(sphere))
+            const double aggcolldiam=(6*m_vol/m_surf)*
+                                     pow(pow(m_surf,3)/(36*PI*m_vol*m_vol),(1.0/1.8));
             // the maximum of the largest PAH diameter and  
             // the average between the surface and voluem equiv diameter       
-            const double cdiam=max(meandiam,m_PAHCollDiameter);      
-            m_dmob = meandiam;
+            const double cdiam=max(aggcolldiam,m_PAHCollDiameter);      
+            m_dmob = aggcolldiam;
             SetCollDiameter(cdiam);
         }
         else 
