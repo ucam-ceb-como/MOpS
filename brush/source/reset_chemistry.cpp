@@ -158,7 +158,7 @@ const size_t ResetChemistry::sGradientTemperatureIndex = 8;
  *
  *\exception    std::runtime_error  No data for a species present in the mechanism
  */
-Brush::ResetChemistry::ResetChemistry(const string &fname, const InputFileType file_type, 
+Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileType file_type,
                                       const Sprog::Mechanism& mech, const int verbosity) {
     // Delimeters to use when splitting lines of data from file into the individual column entries
     const std::string delims(" ,\t");
