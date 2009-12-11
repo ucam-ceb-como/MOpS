@@ -92,9 +92,9 @@ namespace Camflow{
          *solve the premix reactor problem for continuation calls from the
          *external interface
          */
-        void solve(vector<Thermo::Mixture>& cstrs,
-                const vector< vector<doublereal> >& iniSource,
-                const vector< vector<doublereal> >& fnlSource,
+        void solve(std::vector<Thermo::Mixture>& cstrs,
+                const std::vector< std::vector<doublereal> >& iniSource,
+                const std::vector< std::vector<doublereal> >& fnlSource,
                 Mechanism& mech,
                 CamControl &cc,
                 CamAdmin &ca,
@@ -126,7 +126,7 @@ namespace Camflow{
         /*
          * return the initial solution vector
          */
-        void getInitial(vector<doublereal>& initial);
+        void getInitial(std::vector<doublereal>& initial);
 
         /*
          *residual function definition.

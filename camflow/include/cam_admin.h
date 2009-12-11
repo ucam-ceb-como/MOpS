@@ -89,7 +89,7 @@ namespace Camflow{
         void setEnergyModel(int n);
 
         //set the energymodel
-        void setEnergyModel(string model);
+        void setEnergyModel(std::string model);
 
         //set left side boundary (normally for fuel inlet)
         void setLeftBoundary(CamBoundary &cb);
@@ -130,7 +130,7 @@ namespace Camflow{
         void getLeftBoundary(CamBoundary &cb) ;
 
         //set the report schedule
-        void setReportSchedule(string repo);
+        void setReportSchedule(std::string repo);
         void setReportSchedule(int n);
 
         //return the report schedule

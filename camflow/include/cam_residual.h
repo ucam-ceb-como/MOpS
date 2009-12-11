@@ -54,8 +54,9 @@
 #include "cam_profile.h"
 #include <map>
 #include <vector>
+
 using namespace Sprog;
-using namespace std;
+
 namespace Camflow{
     class CamReporter;
     class CamResidual{
@@ -98,9 +99,9 @@ namespace Camflow{
         /*
          *call to solve the reactor from the external interface
          */
-        virtual  void solve(vector<Thermo::Mixture>& cstrs,
-                const vector< vector<doublereal> >& iniSource,
-                const vector< vector<doublereal> >& fnlSource,
+        virtual  void solve(std::vector<Thermo::Mixture>& cstrs,
+                const std::vector< std::vector<doublereal> >& iniSource,
+                const std::vector< std::vector<doublereal> >& fnlSource,
                 Mechanism& mech,
                 CamControl &cc,
                 CamAdmin &ca,
@@ -190,24 +191,24 @@ namespace Camflow{
         /*
          *return the temperature
          */
-        virtual void getTemperatureVector(vector<doublereal>& temp);
+        virtual void getTemperatureVector(std::vector<doublereal>& temp);
         /*
          *return the density vecot
          */
-        virtual void getDensityVector(vector<doublereal>& density);
+        virtual void getDensityVector(std::vector<doublereal>& density);
         /*
          *return the viscosity vector
          */
-        virtual void getViscosityVector(vector<doublereal>& viscosity);
+        virtual void getViscosityVector(std::vector<doublereal>& viscosity);
         /*
          *return point velocities
          */
-        virtual void getVelocity(vector<doublereal>& vel);
+        virtual void getVelocity(std::vector<doublereal>& vel);
 
         /*
          *  return the specific heat
          */
-        virtual void getSpecificHeat(vector<doublereal>& spHeat);
+        virtual void getSpecificHeat(std::vector<doublereal>& spHeat);
         /*
          * return a 2D array for Diffusion coefficient
          */
@@ -215,18 +216,18 @@ namespace Camflow{
         /*
          * Return the thermal conductivity
          */
-        virtual void getThermalConductivity(vector<doublereal>& lambda);
+        virtual void getThermalConductivity(std::vector<doublereal>& lambda);
         /*
          *return the independant variable
          */
-        virtual void getIndepedantVar(vector<doublereal>& indVar);
+        virtual void getIndepedantVar(std::vector<doublereal>& indVar);
 
         /*
          *store the particle source terms for use in species residual
          *by passing the initial and final source terms
          */
-        virtual void setParticleSource(const vector< vector<doublereal> >& initial,
-               const  vector< vector<doublereal> >& final);
+        virtual void setParticleSource(const std::vector< std::vector<doublereal> >& initial,
+               const  std::vector< std::vector<doublereal> >& final);
 
 
         //derivative calculation
@@ -245,11 +246,11 @@ namespace Camflow{
          *extract various dependent variabes from the master
          *solution vector
          */
-        void extractContinuity(vector<doublereal>& vec);
-        void extractSpeciesVector(vector<doublereal>& vec);
-        void extractEnergyVector(vector<doublereal>& vec);
-        void extractMomentum(vector<doublereal>& vec);
-        void extractSootMoments(vector<doublereal>& vec);
+        void extractContinuity(std::vector<doublereal>& vec);
+        void extractSpeciesVector(std::vector<doublereal>& vec);
+        void extractEnergyVector(std::vector<doublereal>& vec);
+        void extractMomentum(std::vector<doublereal>& vec);
+        void extractSootMoments(std::vector<doublereal>& vec);
 
         /*
          *merge the denepdent variables to the
@@ -290,25 +291,25 @@ namespace Camflow{
         Array2D s_jk;
         Array2D s_cp;
         
-        vector<doublereal> m_T;                  //mixture temperature
-        vector<doublereal> m_cp;                 //mixture specific heat
-        vector<doublereal> m_k;                  //mixture thermal conductivity
-        vector<doublereal> m_rho;                //mixture density
-        vector<doublereal> m_u;                  //axial velocity
-        vector<doublereal> m_v_grd;              //radial velocity gradient
-        vector<doublereal> m_q;                  //thermal conduction flux
-        vector<doublereal> m_flow;               //mass flow
-        vector<doublereal> m_G;                  //radial velocity gradient
-        vector<doublereal> m_mu;                 //viscosity
-        vector<doublereal> m_shear;              //shear rate
-        vector<doublereal> m_eigen;              //pressure gradient eigen value
-        vector<doublereal> wdot;                 //rate of production
-        vector<doublereal> dz;                   //grid spacting
-        vector<doublereal> axpos;                //axial position
-        vector<doublereal> avgMolWt;             //average molecular weight
-        vector<doublereal> slopes;              //slopes of piece-wise linear particle sources
+        std::vector<doublereal> m_T;                  //mixture temperature
+        std::vector<doublereal> m_cp;                 //mixture specific heat
+        std::vector<doublereal> m_k;                  //mixture thermal conductivity
+        std::vector<doublereal> m_rho;                //mixture density
+        std::vector<doublereal> m_u;                  //axial velocity
+        std::vector<doublereal> m_v_grd;              //radial velocity gradient
+        std::vector<doublereal> m_q;                  //thermal conduction flux
+        std::vector<doublereal> m_flow;               //mass flow
+        std::vector<doublereal> m_G;                  //radial velocity gradient
+        std::vector<doublereal> m_mu;                 //viscosity
+        std::vector<doublereal> m_shear;              //shear rate
+        std::vector<doublereal> m_eigen;              //pressure gradient eigen value
+        std::vector<doublereal> wdot;                 //rate of production
+        std::vector<doublereal> dz;                   //grid spacting
+        std::vector<doublereal> axpos;                //axial position
+        std::vector<doublereal> avgMolWt;             //average molecular weight
+        std::vector<doublereal> slopes;              //slopes of piece-wise linear particle sources
 
-        vector<doublereal> resSp, resT, resFlow, resMoment, resAxVel;
+        std::vector<doublereal> resSp, resT, resFlow, resMoment, resAxVel;
        
         doublereal opPre;                        //operating pressure
         doublereal Tignition;                   //Ignition temperature
@@ -337,9 +338,9 @@ namespace Camflow{
        // doublereal* yData;
 
         //members for the reactor models
-        vector<doublereal> solvect, rTol, aTol;
+        std::vector<doublereal> solvect, rTol, aTol;
         doublereal vel,rho, Ac, As;
-        vector<string> headerData;        
+        std::vector<std::string> headerData;        
         CamAdmin *admin;
         CamReporter *reporter;
         CamGeometry *reacGeom;

@@ -45,14 +45,15 @@
 #include "cam_error.h"
 #include <vector>
 #include <map>
+
 namespace Camflow{
     class CamGeometry{
         doublereal length;                   //length of the model geometry
         doublereal dia;                      //rector diameter
         
         int nCell;                           //total number of FV cells
-        vector<doublereal> dz, axPos;        //cell width
-        string gridFile;
+        std::vector<doublereal> dz, axPos;        //cell width
+        std::string gridFile;
 
         /*
          *grid refinement, not well implemented in the present version
@@ -61,7 +62,7 @@ namespace Camflow{
         doublereal curve;
         doublereal minRange;
         doublereal mPrune;
-        map<int, int> z_loc, z_keep;
+        std::map<int, int> z_loc, z_keep;
 
     public:
         CamGeometry(){
@@ -75,7 +76,7 @@ namespace Camflow{
         ~CamGeometry(){}
 
 
-        void setGridFile(string name);
+        void setGridFile(std::string name);
         //discretise the geometry. This will set the length
         //of the reactor the total number of cells
         void discretize();
@@ -104,10 +105,10 @@ namespace Camflow{
         int getnCells() const;
 
         //reuturn the geometry info
-        const vector<doublereal>& getGeometry() const ;
+        const std::vector<doublereal>& getGeometry() const ;
 
         //return the axial position vector
-        const vector<doublereal>& getAxpos() const ;
+        const std::vector<doublereal>& getAxpos() const ;
         //add cells with zero width
         void addZeroWidthCells();
 
@@ -115,7 +116,7 @@ namespace Camflow{
          * set the geometry information. this will set the vector of
          *cell widths into dz vctor
          */
-        void setGeometry(const vector<doublereal>& dz_);
+        void setGeometry(const std::vector<doublereal>& dz_);
 
         //refine the grid
         void refine(doublereal* y, const int nVar, const int nSpec, int ptrT=0);

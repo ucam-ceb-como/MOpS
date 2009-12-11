@@ -11,8 +11,6 @@
 #include "cam_residual.h"
 #include "cam_params.h"
 
-using namespace std;
-
 extern "C"{
    // #include "giant.h"
     #include "nleq.h"
@@ -26,7 +24,7 @@ namespace Camflow{
         GiantWrapper(){}
         virtual ~GiantWrapper(){};
         void solve(int neq,
-                doublereal tol,vector<doublereal>& iniGuess,CamResidual& cr);
+                doublereal tol,std::vector<doublereal>& iniGuess,CamResidual& cr);
 
     private:
         //struct GIANT_FUN *resid;

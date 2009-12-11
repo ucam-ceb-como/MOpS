@@ -14,27 +14,29 @@
 #include "cam_profile.h"
 #include "cam_control.h"
 #include <vector>
+
 using namespace Sprog;
+
 namespace Camflow{
     class CamSetup : public CamResidual{
     public:
         
         typedef struct{
-            vector<doublereal> Species;
+            std::vector<doublereal> Species;
             doublereal FlowRate;
             doublereal Vel;
             doublereal rVelGrad;
             doublereal Dens;
             doublereal T;
-            vector<doublereal> Dk;
-            vector<doublereal> jk;
+            std::vector<doublereal> Dk;
+            std::vector<doublereal> jk;
         } inletStruct;
 
         CamSetup(){}
         virtual ~CamSetup(){}
         
         //return the inlet species mass fractions for the given boundary
-        void getInletMassFrac(CamBoundary &cb, vector<doublereal>& fracs);
+        void getInletMassFrac(CamBoundary &cb, std::vector<doublereal>& fracs);
         //return the inlet temperature
         const doublereal getInletTemperature(CamBoundary &cb);
         //return the inlet flow rate
@@ -45,24 +47,24 @@ namespace Camflow{
         /*
          *init species
          */
-        void initSpecies(CamBoundary &cb, CamControl &cc, vector<doublereal>& soln);
+        void initSpecies(CamBoundary &cb, CamControl &cc, std::vector<doublereal>& soln);
         /*
          *initialize the species vector for a counter flow flame
          */
         void initSpecies(CamBoundary &left, CamBoundary &right,
-                                CamControl &cc, vector<doublereal>& soln);
+                                CamControl &cc, std::vector<doublereal>& soln);
         /*
          *init mass flow
          */
-        void initMassFlow(CamBoundary &cb, CamControl &cc, vector<doublereal> &soln);
+        void initMassFlow(CamBoundary &cb, CamControl &cc, std::vector<doublereal> &soln);
         /*
          *init temperature
          */
-        void initTemperature(CamBoundary &cb, CamControl &cc, vector<doublereal> &soln);
+        void initTemperature(CamBoundary &cb, CamControl &cc, std::vector<doublereal> &soln);
         /*
          *init temperature based on a gauss profile
          */
-        void initTempGauss(vector<doublereal> &soln);
+        void initTempGauss(std::vector<doublereal> &soln);
         /*
          *store the inlet conditions
          */

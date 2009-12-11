@@ -47,7 +47,9 @@
 #include "gpc.h"
 #include <string>
 #include <vector>
+
 using namespace Sprog;
+
 namespace Camflow{
     class CamConverter{
         doublereal factor;
@@ -55,21 +57,21 @@ namespace Camflow{
         CamConverter(){}
         ~CamConverter(){}
         //return the conversion factor based in the string argument
-        doublereal getConvertionFactor(string unit);
+        doublereal getConvertionFactor(std::string unit);
 
         //return a string given an integer
-        string getString(int n);
+        std::string getString(int n);
 
         //return a string given a doublereal
-        string getString(doublereal a);
+        std::string getString(doublereal a);
 
         //convert from mole to mass and returns tha average molecular weight
-        doublereal mole2mass(vector<doublereal>& mole,
-                             vector<doublereal>& mass,
+        doublereal mole2mass(std::vector<doublereal>& mole,
+                             std::vector<doublereal>& mass,
                              Mechanism &mech );
         // convert from mass to mole
-        doublereal mass2mole(vector<doublereal>& mass,
-                             vector<doublereal>& mole,
+        doublereal mass2mole(std::vector<doublereal>& mass,
+                             std::vector<doublereal>& mole,
                              Mechanism &mech);
     };
 }

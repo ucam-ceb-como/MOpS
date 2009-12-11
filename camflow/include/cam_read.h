@@ -50,14 +50,16 @@
 #include "camxml.h"
 #include "cam_converter.h"
 #include "cam_soot.h"
+
 namespace Camflow{
+
     class CamRead{
     public:
         CamRead(){}
         ~CamRead(){}
 
         //main call to read input data set
-        void readInput(const string fileName, 
+        void readInput(const std::string fileName, 
                        CamControl& cc,
                        CamGeometry& cg,
                        CamConverter& convert,
@@ -109,7 +111,7 @@ namespace Camflow{
         void readTol(const CamXML::Element &node, doublereal& atol, doublereal& rtol);
         
         //read mass or mole fractions
-        void readFrac(string& member, map<string,doublereal>& fracs, const CamXML::Element &subnode);
+        void readFrac(std::string& member, std::map<std::string,doublereal>& fracs, const CamXML::Element &subnode);
 
 
     };

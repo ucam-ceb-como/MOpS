@@ -49,14 +49,16 @@
 #include <string>
 #include<map>
 #include<vector>
+
 using namespace Sprog;
+
 namespace Camflow{
     class CamBoundary : public CamConc{
         doublereal velocity;
         doublereal flowRate;
         doublereal T;
-        map<string, doublereal> species;
-        vector<doublereal> inletFracs;
+        std::map<std::string, doublereal> species;
+        std::vector<doublereal> inletFracs;
         int fracType;
     public:
 
@@ -79,10 +81,10 @@ namespace Camflow{
         void setFlowRate(doublereal flow);
 
         //set the inlet species
-        void setSpecies(map<string, doublereal> species);
+        void setSpecies(std::map<std::string, doublereal> species);
 
         //set the inlet mass fraction
-        void setInletMassfracs(vector<doublereal> fracs);
+        void setInletMassfracs(std::vector<doublereal> fracs);
 
         /*set the inlet mass fraction vector based on the
          *species map and the mechanism object. This function
@@ -94,7 +96,7 @@ namespace Camflow{
          *an instance of CamError. If the validity check is
          *successful the function will return the inlet mass/mole vector
          */
-        vector<doublereal>& setInletfracs( Mechanism &mech);
+        std::vector<doublereal>& setInletfracs( Mechanism &mech);
 
         //return the velocity
         const doublereal& getVelocity() const;
@@ -109,11 +111,11 @@ namespace Camflow{
         const doublereal& getFlowRate() const;
 
         //return the inlet species
-        const map<string,doublereal>& getInletSpecies() const;
+        const std::map<std::string,doublereal>& getInletSpecies() const;
 
 
         //return the inlet mass fractions
-        const vector<doublereal>& getInletMassfracs() const;
+        const std::vector<doublereal>& getInletMassfracs() const;
 
     };
 }

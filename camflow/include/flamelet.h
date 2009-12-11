@@ -16,6 +16,7 @@
 #include "cam_setup.h"
 
 using namespace Sprog;
+
 namespace Camflow{
     class FlameLet: public CamSetup{
     public:
@@ -54,9 +55,9 @@ namespace Camflow{
          * continulation call from an external code that
          * solves the population balance
          */
-        void solve(vector<Thermo::Mixture>& cstrs,
-                const vector< vector<doublereal> >& iniSource,
-                const vector< vector<doublereal> >& fnlSource,
+        void solve(std::vector<Thermo::Mixture>& cstrs,
+                const std::vector< std::vector<doublereal> >& iniSource,
+                const std::vector< std::vector<doublereal> >& fnlSource,
                 Mechanism& mech,
                 CamControl &cc,
                 CamAdmin &ca,
@@ -111,7 +112,7 @@ namespace Camflow{
         /*
          *set the time history of scalar dissipation rate
          */
-        void setExternalScalarDissipationRate(const vector<doublereal>& time, const vector<doublereal>& sdr);
+        void setExternalScalarDissipationRate(const std::vector<doublereal>& time, const std::vector<doublereal>& sdr);
 
         /**
          *  get scalar dissipation rate
@@ -144,8 +145,8 @@ namespace Camflow{
         doublereal sdr;     // scalar dissipation rate
         doublereal sdr_ext; // scalar dissipation rate passed by exteranl program
         doublereal rstartTime;
-        vector<doublereal> v_sdr;   //scalar dissipation rate that has a time history
-        vector<doublereal> v_time; //time profile of scalar dissipation rates
+        std::vector<doublereal> v_sdr;   //scalar dissipation rate that has a time history
+        std::vector<doublereal> v_time; //time profile of scalar dissipation rates
 
         //! Spatial profile of soot volume fraction
         std::vector<doublereal> m_SootFv;

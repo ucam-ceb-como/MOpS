@@ -1,5 +1,5 @@
 # Compiler options.
-export debug=0
+export debug=1
 export profile=0
 
 # C++ compiler.
@@ -7,14 +7,14 @@ cpp=g++
 ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprog/include -I../cvode/include -I../brush/include \
+       -I../sprogc/include -I../cvode/include -I../brush/include \
        -I../geometry/include  -I../mopsc/include \
        -I../sweepc/include -I../utils/include \
          -I../cvode/source -Wall
     flink= 
   else
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprog/include -I../cvode/include -I../brush/include \
+       -I../sprogc/include -I../cvode/include -I../brush/include \
        -I../geometry/include  -I../mopsc/include \
        -I../sweepc/include -I../utils/include \
          -I../cvode/source -Wall -pg
@@ -22,7 +22,7 @@ ifeq ($(debug),0)
   endif
 else
   flag=-c  -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprog/include -I../cvode/include -I../brush/include \
+       -I../sprogc/include -I../cvode/include -I../brush/include \
        -I../geometry/include  -I../mopsc/include \
        -I../sweepc/include -I../utils/include \
        -I../cvode/source -Wall -ggdb -pg
@@ -42,12 +42,12 @@ lib=$(path)/lib
 ifeq ($(debug),0)
   comostrings=../comostrings/lib/comostrings.a
   camxml=../camxml/lib/camxml.a
-  sprog=../sprog/lib/sprog.a
+  sprog=../sprogc/lib/sprog.a
   cvode=../cvode/lib/cvode.a
 else
   comostrings=../comostrings/lib/comostrings_d.a
   camxml=../camxml/lib/camxml_d.a
-  sprog=../sprog/lib/sprog_d.a
+  sprog=../sprogc/lib/sprog_d.a
   cvode=../cvode/lib/cvode_d.a
 endif
 linklibs=$(comostrings) $(camxml) $(sprog) $(cvode) $(sweep) $(mops) $(brush)
@@ -93,7 +93,7 @@ comostringslib:
 camxmllib:
 	$(MAKE) -f ../camxml/Makefile -C ../camxml debug=$(debug) profile=$(profile)
 sproglib:
-	$(MAKE) -f ../sprog/Makefile -C ../sprog debug=$(debug) profile=$(profile)
+	$(MAKE) -f ../sprogc/Makefile -C ../sprogc debug=$(debug) profile=$(profile)
 cvodelib:
 	$(MAKE) -f ../cvode/Makefile -C ../cvode debug=$(debug) profile=$(profile)
 

@@ -9,6 +9,7 @@
 #define	_ARRAY_H
 #include "cam_params.h"
 #include <vector>
+
 namespace Camflow{
     /*
      * This is costructed in a Column major format
@@ -95,7 +96,7 @@ namespace Camflow{
         }
         
     protected:
-        vector<doublereal> aData;
+        std::vector<doublereal> aData;
         int nRows, nCols;
     };
 
@@ -158,7 +159,7 @@ namespace Camflow{
 
 
     protected:
-        vector<doublereal> aData;
+        std::vector<doublereal> aData;
         int minIndex, maxIndex;
     };
 }

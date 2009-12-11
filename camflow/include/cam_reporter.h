@@ -48,7 +48,9 @@
 #include "gpc.h"
 #include "comostrings.h"
 #include <fstream>
+
 namespace Camflow{
+
     class CamReporter{
         DataIO *standard;
         DataIO *rates;
@@ -57,22 +59,22 @@ namespace Camflow{
     public:
         CamReporter(){}
         ~CamReporter(){}
-        void header(string prog);
+        void header(std::string prog);
         void problemDescription(CamBoundary &cb, CamResidual &cr);
         //title for the consol output
-        void consoleHead(string head);
+        void consoleHead(std::string head);
         //write the data to file
-        void openFile(string fileName, bool old);
+        void openFile(std::string fileName, bool old);
         void closeFile();
         void openFiles(bool stdrd = true, bool ratesOut = false, bool transOut = false);
         void closeFiles(bool stdrd = true, bool ratesOut = false, bool transOut = false);
-        void writeHeader(vector<string>& stdHeader);
-        void writeHeader(vector<string>& stdHeader, vector<string>& ratesHeader);
-        void wrteHeader(vector<string>& stdHeader, vector<string>& ratesHeader, vector<string>& transHeader);
-        void writeToFile(string fname,CamResidual &resid);
-        void writeStdFileOut(vector<doublereal>& data);
-        void writeCustomHeader(vector<string>& header);
-        void writeCustomFileOut(vector<doublereal>& data);
+        void writeHeader(std::vector<std::string>& stdHeader);
+        void writeHeader(std::vector<std::string>& stdHeader, std::vector<std::string>& ratesHeader);
+        void wrteHeader(std::vector<std::string>& stdHeader, std::vector<std::string>& ratesHeader, std::vector<std::string>& transHeader);
+        void writeToFile(std::string fname,CamResidual &resid);
+        void writeStdFileOut(std::vector<doublereal>& data);
+        void writeCustomHeader(std::vector<std::string>& header);
+        void writeCustomFileOut(std::vector<doublereal>& data);
     };
 }
 
