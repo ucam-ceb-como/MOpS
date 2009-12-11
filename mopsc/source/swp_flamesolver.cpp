@@ -138,7 +138,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         // their columns.
         map<unsigned int,int> spcols;
         for (int i=0; (unsigned)i!=subs.size(); ++i) {
-            if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol)) {
+            if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol) && (i!=Rcol)) {
                 Sprog::Species *sp = mech.AddSpecies();
                 sp->SetName(subs[i]);
                 spcols[i] = mech.FindSpecies(subs[i]);
@@ -201,7 +201,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gpoint.Gas.SetTemperature(T);
             gpoint.Gas.SetPressure(P*1.0e5);
             gpoint.Gas.Normalise();
-            gpoint.Gas.SetPAHFormationRate(PAHRate*1000);
+            gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);
 
             // Add the profile point.
             alpha_prof[t] = alpha;

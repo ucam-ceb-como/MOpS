@@ -98,11 +98,12 @@ void PAHSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         split(line, subs, delim);
 
         // Get important column indices (time, temperature and pressure).
-        int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1;
+        int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1,Rcol=-1;
         tcol = findinlist(string("Time"), subs);
         Tcol = findinlist(string("T"), subs);
         Pcol = findinlist(string("P"), subs);
         Acol = findinlist(string("Alpha"), subs);
+        Rcol = findinlist(string("wdotA4"), subs);
 
         // Check that the file contains required columns.
         if (tcol < 0) {
@@ -126,7 +127,7 @@ void PAHSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         // their columns.
         map<unsigned int,int> spcols;
         for (int i=0; (unsigned)i!=subs.size(); ++i) {
-            if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol)) {
+            if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol) && (i!=Rcol)) {
                 Sprog::Species *sp = mech.AddSpecies();
                 sp->SetName(subs[i]);
                 spcols[i] = mech.FindSpecies(subs[i]);
@@ -140,6 +141,7 @@ void PAHSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             real T = 0.0;
             real P = 0.0;
             real alpha = 0.0;
+            real PAHRate = 0.0;
             GasPoint gpoint(mech.Species());
 //            Sprog::Thermo::IdealGas gas(mech.Species());
 
@@ -161,6 +163,8 @@ void PAHSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
                     P = cdble(subs[i]);
                 } else if (i==Acol) {
                     alpha = cdble(subs[i]);
+                } else if (i==Rcol) {
+                    PAHRate = cdble(subs[i]);
                 } else {
                     // This is a gas-phase species column.
                     map<unsigned int,int>::iterator isp = spcols.find(i);
@@ -177,6 +181,7 @@ void PAHSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gpoint.Gas.SetTemperature(T);
             gpoint.Gas.SetPressure(P*1.0e5);
             gpoint.Gas.Normalise();
+            gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);
 
             // Add the profile point.
             alpha_prof[t] = alpha;
@@ -216,7 +221,7 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
     //Update the PAHs in the particle ensemble using the database
 
-    UpdatePAHs(r, t) ;
+    //UpdatePAHs(r, t) ;
 	
 
 
@@ -236,7 +241,7 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         r.Mixture()->SetM0(r.Mixture()->MassDensity() *  m0 / old_dens);
 
 		//update the number of particles that the incepting species matches the gas phase
-        UpdateNumberPAHs(r,t);  
+        //UpdateNumberPAHs(r,t);  
 
         // Perform stochastic jump processes.
         while (t < tsplit) {
