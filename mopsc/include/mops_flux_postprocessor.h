@@ -76,10 +76,10 @@ public:
     void writeFluxes(const std::string &filenameprefix, bool doIntFluxes = false);
 
 private:
-    vector<unsigned int> m_ElementIndexes;
+    std::vector<unsigned int> m_ElementIndexes;
     const Mops::Mechanism *m_mech; // The mechanism which defines reaction set.
     fvector m_times;
-    vector<unsigned int> m_times_stop;
+    std::vector<unsigned int> m_times_stop;
     const std::vector<fvector> *m_agpfwdrates;
     const std::vector<fvector> *m_agprevrates;
     const fvector *m_atemperatures;
@@ -103,11 +103,11 @@ private:
     void sortDecendingFluxNetwork(Mops::FluxAnalyser::FluxNetwork &flux_network);
     void writeFluxAt(unsigned int iel, std::ofstream &fout, Mops::FluxAnalyser::FluxNetwork &flux_network);
     
-    void writeHeader(ofstream &fout, unsigned int npoints);
+    void writeHeader(std::ofstream &fout, unsigned int npoints);
     real getTotalElementStoi(const Sprog::Kinetics::Reaction &rxn, unsigned int iel);
     real getNumberOfElementAtom(const Sprog::Stoich &sc, unsigned int iel);
     real getNumberOfElementAtom(const Sprog::Stoichf &sc, unsigned int iel);
-    string formatWhiteSpace(std::string str, unsigned int len, bool isright = true);
+    std::string formatWhiteSpace(std::string str, unsigned int len, bool isright = true);
 };
 }
 

@@ -119,7 +119,7 @@ public:
     booleantype isEnableErrorControl() const;
 
     // Define the mechanism and parameters.
-    void SetupProblem(Mops::Mechanism &mech, Mops::Reactor &reactor, const string &sfile);
+    void SetupProblem(Mops::Mechanism &mech, Mops::Reactor &reactor, const std::string &sfile);
 
     // Return number of parameters.
     unsigned int NParams();
@@ -186,7 +186,7 @@ private:
     real *m_org_params;
     real *m_params;
     real *m_parambars;
-    vector<SENS_PARAM> m_sens_params;
+    std::vector<SENS_PARAM> m_sens_params;
 
     // SENSITIVITY TEMP RESULT
     N_Vector *m_sens_matrix;
@@ -200,7 +200,7 @@ private:
 
     // Read Sensitivity Matrix block.
     // Read block of n x m from fin to matrix and simulation time.
-    static void ReadSensMatrix(ifstream &fin, const unsigned int n, const unsigned int m, real &time, real ** matrix, real ** matrix_sqr);
+    static void ReadSensMatrix(std::ifstream &fin, const unsigned int n, const unsigned int m, real &time, real ** matrix, real ** matrix_sqr);
 
 
 };
