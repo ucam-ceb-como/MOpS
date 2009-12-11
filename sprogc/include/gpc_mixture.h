@@ -216,9 +216,9 @@ public:
 
 
     // return the molar enthalpy of all species as a vector J/mol.
-    const vector<real> getMolarEnthalpy(real T);
+    const std::vector<real> getMolarEnthalpy(real T);
         //return the molar enthalpy for th given mixture
-        const vector<real> getMolarEnthalpy();
+        const std::vector<real> getMolarEnthalpy();
     // routine to return the avg moleculat weight in Kg/mol.    
     real getAvgMolWt(fvector &massFrac);
 
@@ -236,9 +236,9 @@ public:
         //return the specifi heat capacity for a given temp in J/Kg K.
         real getSpecificHeatCapacity();
         //return the molar specific heats
-        const vector<real> getMolarSpecificHeat();
+        const std::vector<real> getMolarSpecificHeat();
     // returns the vector of mixture diffusion coefficient in m^2/s.
-    const vector<real> getMixtureDiffusionCoeff(const real pre)const; 
+    const std::vector<real> getMixtureDiffusionCoeff(const real pre)const; 
 
     //! Index of temperature in m_data
     size_t temperatureIndex() const {return m_species->size();}

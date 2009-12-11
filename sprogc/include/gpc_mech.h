@@ -226,7 +226,7 @@ public:
     // mechanism data.  This is used to debug. 
     void WriteDiagnostics(const std::string &filename) const;
 
-	void setSpeciesTransport(map< string,vector<string> > &trMap,Sprog::Mechanism &mech) const;
+	void setSpeciesTransport(std::map< std::string,std::vector<std::string> > &trMap,Sprog::Mechanism &mech) const;
 
 protected:
     // Mechanism data.

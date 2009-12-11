@@ -195,7 +195,7 @@ public:
 	
 	// TRANSPORT RELATED FUNCTIONS Added by vinod
 	
-	void setTransportData(vector<string> &data) ;
+	void setTransportData(std::vector<std::string> &data);
 	Sprog::Transport::TransportData& getTransportData() const;
 	double getViscosity(double T) const; // returns the viscosity of the pure species in Kg/m-s
 	double getSelfDiffusion(double T, double p) const; // returns the self diffusion coefficient m^2/s

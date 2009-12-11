@@ -47,7 +47,7 @@
 #include<map>
 #include<vector>
 #include "gpc_params.h"
-using namespace std;
+
 namespace Sprog{
 	class Mechanism;
 
