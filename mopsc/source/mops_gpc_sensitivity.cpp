@@ -172,7 +172,7 @@ booleantype SensitivityAnalyzer::isEnableErrorControl() const
 }
 
 // Define the mechanism and parameters.
-void SensitivityAnalyzer::SetupProblem(Mops::Mechanism &mech, Mops::Reactor &reactor, const string &sfile)
+void SensitivityAnalyzer::SetupProblem(Mops::Mechanism &mech, Mops::Reactor &reactor, const std::string &sfile)
 {
     Clear();
     m_mech = &mech;
@@ -259,7 +259,7 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
             CamXML::Element *EElem = NULL;
 
             CamXML::Element *AddiParams = NULL;
-            vector<CamXML::Element *> AParams, nParams, EParams;
+            std::vector<CamXML::Element *> AParams, nParams, EParams;
 
             bool enableA = false;
             bool enablen = false;
@@ -342,12 +342,12 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
                 m_org_params[i] = m_params[i] = m_parambars[i] = val;
             }
         } else if (m_probType == Init_Conditions) {
-            vector<CamXML::Element *> initParams;
+            std::vector<CamXML::Element *> initParams;
 
             // Add initial condition parameter list
             paramsElem->GetChildren("init", initParams );
             for (unsigned int i = 0; i < initParams.size(); i++) {
-                string id = Strings::trim(initParams.at(i)->GetAttributeValue("id"));
+                std::string id = Strings::trim(initParams.at(i)->GetAttributeValue("id"));
                 if (id.compare("T") == 0) {
                     // initial temperature parameter, only work if a non-constant temperature is applied.
                     SENS_PARAM arrp(0, INIT_T);
@@ -524,7 +524,7 @@ void SensitivityAnalyzer::OutputSens(std::fstream &fout, const Mops::Reactor &r,
 
             // output variable name list.
             for (unsigned int i = 0; i < n_vars - 2; ++i) {
-                string sname = r.Mech()->GetSpecies(i)->Name();
+                std::string sname = r.Mech()->GetSpecies(i)->Name();
                 unsigned int len = sname.length();
                 fout.write((char*)&len, sizeof(len));
                 fout.write(sname.c_str(), len * sizeof(char));
@@ -544,7 +544,7 @@ void SensitivityAnalyzer::OutputSens(std::fstream &fout, const Mops::Reactor &r,
             // Write simulation time.
             real time = r.Time();
             fout.write((char*)&time, sizeof(time));
-            //cout << "Time : " << r.Time() << endl;
+            //cout << "Time : " << r.Time() << std::endl;
             // Write main sensitivity matrix.
             for (unsigned int i = 0; i < m_NS; ++i) {
                 real *sdata;
@@ -554,7 +554,7 @@ void SensitivityAnalyzer::OutputSens(std::fstream &fout, const Mops::Reactor &r,
                     fout.write((char*)&val, sizeof(val));
                     //cout << val << ", " ;
                 }
-                //cout << endl;
+                //cout << std::endl;
             }
             fout.flush();
         } else {
@@ -569,12 +569,12 @@ void SensitivityAnalyzer::OutputSens(std::fstream &fout, const Mops::Reactor &r,
 void SensitivityAnalyzer::PostProcess(const std::string &filename)
 {
     // Build the sensitivity binary file name.
-    string finname = filename + ".sen";
-    string foutname = filename + "-sensi.csv";
+    std::string finname = filename + ".sen";
+    std::string foutname = filename + "-sensi.csv";
 
     // Open the sensitivity binary file.
-    ifstream fin;
-    fin.open(finname.c_str(), ios_base::in | ios_base::binary);
+    std::ifstream fin;
+    fin.open(finname.c_str(), std::ios_base::in | std::ios_base::binary);
 
     // Enable status of sensitivity.
     bool enable = false;
@@ -591,9 +591,9 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
     // Number of variables (number of species + 2). // T and P
     unsigned int n_vars = 2;
     // Variable name list.
-    vector<string> var_names;
+    std::vector<std::string> var_names;
     // Parameter list.
-    vector<SENS_PARAM> arr_params;
+    std::vector<SENS_PARAM> arr_params;
 
     fin.read(reinterpret_cast<char*>(&enable), sizeof(enable));
 
@@ -616,14 +616,14 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
             fin.read(reinterpret_cast<char*>(&len), sizeof(len));
             char *csname = new char[len];
             fin.read(csname, len);
-            string sname;
+            std::string sname;
             sname.assign(csname, len);
             var_names.push_back(sname);
             //if (len == 1) delete csname; else delete [] csname;
             delete [] csname;
         }
-        var_names.push_back(string("T"));
-        var_names.push_back(string("P"));
+        var_names.push_back(std::string("T"));
+        var_names.push_back(std::string("P"));
 
 
         for (unsigned int i = 0; i < NS; ++i) {
@@ -683,8 +683,8 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
             }
         }
         // Calculate Average and SD in to sum and sum_sqr.
-        fstream fout;
-        fout.open(foutname.c_str(), ios_base::in | ios_base::out | ios_base::trunc);
+        std::fstream fout;
+        fout.open(foutname.c_str(), std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
         if (fout.good()) {
             // Output header line.
             fout << "Time (s), Parameter Type, Parameter Index" ;
@@ -692,7 +692,7 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
                 fout << ", " << var_names.at(i);
                 fout << ", Err";
             }
-            fout << endl;
+            fout << std::endl;
             for (unsigned int i = 0; i < n_timesteps; ++i) {
                 for (unsigned int j = 0; j < NS; ++j) {
                     fout << times[i] << "," << arr_params.at(j).Type << "," << arr_params.at(j).Index;
@@ -705,7 +705,7 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
                         err_sd[i][j][k]  = sqrt(err_sd[i][j][k]);
                         fout << "," << avg[i][j][k] << "," << err_sd[i][j][k];
                     }
-                    fout << endl;
+                    fout << std::endl;
                 }
             }
         }
@@ -737,7 +737,7 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
 
 // Read Sensitivity Matrix block.
 // Read block of n x m from fin to matrix and simulation time.
-void SensitivityAnalyzer::ReadSensMatrix(ifstream &fin, const unsigned int n, const unsigned int m, real &time, real ** matrix, real ** matrix_sql)
+void SensitivityAnalyzer::ReadSensMatrix(std::ifstream &fin, const unsigned int n, const unsigned int m, real &time, real ** matrix, real ** matrix_sql)
 {
     fin.read(reinterpret_cast<char*>(&time), sizeof(time));
 
@@ -822,7 +822,7 @@ bool SensitivityAnalyzer::AddParam(const SENS_PARAM &arrp)
             ++m_NS;
         }
     } else {
-        throw runtime_error("Number of sensitivity parameters in array and in sensitivity "
+        throw std::runtime_error("Number of sensitivity parameters in array and in sensitivity "
                             "object are not the same. (Mops, SensitivityAnalyzer::AddParam).");
     }
     return !paramExist;

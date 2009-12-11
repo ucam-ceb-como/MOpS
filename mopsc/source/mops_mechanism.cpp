@@ -84,7 +84,7 @@ void Mechanism::Serialize(std::ostream &out) const
         m_pmech.Serialize(out);
 
     } else {
-        throw invalid_argument("Output stream not ready "
+        throw std::invalid_argument("Output stream not ready "
                                "(Mops, Mechanism::Serialize).");
     }
 }
@@ -108,10 +108,10 @@ void Mechanism::Deserialize(std::istream &in)
 
                 break;
             default:
-                throw runtime_error("Mechanism serialized version number "
+                throw std::runtime_error("Mechanism serialized version number "
                                     "is unsupported (Mops, Mechanism::Deserialize).");
         }
     } else {
-        throw invalid_argument("Input stream not ready (Mops, Mechanism::Deserialize).");
+        throw std::invalid_argument("Input stream not ready (Mops, Mechanism::Deserialize).");
     }
 }

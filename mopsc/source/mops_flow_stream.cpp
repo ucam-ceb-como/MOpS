@@ -216,7 +216,7 @@ void Mops::FlowStream::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
        }
     } else {
-        throw invalid_argument("Output stream not ready (Mops, FlowStream::Serialize).");
+        throw std::invalid_argument("Output stream not ready (Mops, FlowStream::Serialize).");
     }
 }
 
@@ -249,11 +249,11 @@ void Mops::FlowStream::Deserialize(std::istream &in, const Mops::Mechanism &mech
                 }
                 break;
             default:
-                throw runtime_error("Reactor serialized version number "
+                throw std::runtime_error("Reactor serialized version number "
                                     "is invalid (Mops, FlowStream::Deserialize).");
         }
     } else {
-        throw invalid_argument("Input stream not ready "
+        throw std::invalid_argument("Input stream not ready "
                                "(Mops, FlowStream::Deserialize).");
     }
 }

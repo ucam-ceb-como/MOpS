@@ -71,7 +71,7 @@ ifeq ($(debug),0)
 		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops_p.x -static
   endif 
 else
-	$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops_d.x -static
+	$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops_d.x
 endif
 
 32bit: comostringslib camxmllib sproglib sweeplib cvodeslib $(obj)

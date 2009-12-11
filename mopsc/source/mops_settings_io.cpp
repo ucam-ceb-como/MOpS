@@ -179,8 +179,8 @@ Reactor *const readReactor(const CamXML::Element &node,
 {
     Reactor *reac = NULL;
     const CamXML::Element *subnode, *subsubnode;
-    vector<CamXML::Element*> nodes;
-    vector<CamXML::Element*>::const_iterator i;
+    std::vector<CamXML::Element*> nodes;
+    std::vector<CamXML::Element*>::const_iterator i;
     const CamXML::Attribute *attr;
     std::string str;
 
@@ -199,7 +199,7 @@ Reactor *const readReactor(const CamXML::Element &node,
             reac = ReactorFactory::Create(Serial_PSR, mech);
         } else if (str.compare("shocktube") == 0) {
             // This is a shocktube (const. V batch).
-            throw runtime_error("Shocktube not currently implemented"
+            throw std::runtime_error("Shocktube not currently implemented"
                                 " (Mops::Settings_IO::readReactor).");
         } else {
             // Default reactor is a batch reactor.
@@ -285,11 +285,11 @@ Reactor *const readReactor(const CamXML::Element &node,
             if (j >= 0) {
                 molefracs[j] = Strings::cdble((*i)->Data());
             } else {
-                throw runtime_error("No initial condition for species " + str +
+                throw std::runtime_error("No initial condition for species " + str +
                                     " (Mops, Settings_IO::readReactor).");
             }
         } else {
-            throw runtime_error("Initial condition must have ID "
+            throw std::runtime_error("Initial condition must have ID "
                                 "(Mops, Settings_IO::readReactor)");
         }
     }
@@ -377,11 +377,11 @@ Reactor *const readReactor(const CamXML::Element &node,
                     if (j >= 0) {
                         molefracs[j] = Strings::cdble((*i)->Data());
                     } else {
-                        throw runtime_error("Unknown species inflow condition "
+                        throw std::runtime_error("Unknown species inflow condition "
                                             "(Mops, Settings_IO::readReactor).");
                     }
                 } else {
-                    throw runtime_error("Inflow condition must have ID! "
+                    throw std::runtime_error("Inflow condition must have ID! "
                                         "(Mops, Settings_IO::readReactor)");
                 }
             }
@@ -391,7 +391,7 @@ Reactor *const readReactor(const CamXML::Element &node,
             inf->Mixture()->SetFracs(molefracs);
             dynamic_cast<PSR*>(reac)->SetInflow(*inf);
         } else {
-            throw runtime_error("Inflow conditions must be defined for a PSR "
+            throw std::runtime_error("Inflow conditions must be defined for a PSR "
                                 "(Mops, Settings_IO::readReactor)");
         }
 
@@ -410,10 +410,10 @@ Reactor *const readReactor(const CamXML::Element &node,
 void readOutput(const CamXML::Element &node, Simulator &sim)
 {
     const CamXML::Element *subnode;
-    vector<CamXML::Element*> nodes;
-    vector<CamXML::Element*>::const_iterator i;
+    std::vector<CamXML::Element*> nodes;
+    std::vector<CamXML::Element*>::const_iterator i;
     const CamXML::Attribute *attr;
-    string str;
+    std::string str;
 
     // CONSOLE OUTPUT.
 
@@ -433,11 +433,11 @@ void readOutput(const CamXML::Element &node, Simulator &sim)
                 sim.AddConsoleVariable((*i)->Data());
             }
         } else {
-            throw runtime_error("No tabular data defined for console output "
+            throw std::runtime_error("No tabular data defined for console output "
                                 "(Mops, Settings_IO::readOutput)");
         }
     } else {
-        throw runtime_error("No console output defined "
+        throw std::runtime_error("No console output defined "
                             "(Mops, Settings_IO::readOutput)");
     }
 
@@ -449,7 +449,7 @@ void readOutput(const CamXML::Element &node, Simulator &sim)
     if (subnode != NULL) {
         sim.SetOutputFile(subnode->Data());
     } else {
-        throw runtime_error("No output file name defined "
+        throw std::runtime_error("No output file name defined "
                             "(Mops, Settings_IO::readOutput)");
     }
 
@@ -469,7 +469,7 @@ void readOutput(const CamXML::Element &node, Simulator &sim)
         // Set the upper and lower bounds if found the entry in MOPS input file
         if (lobonode != NULL) {
             lower = Strings::cdble(lobonode->Data());
-            // need check if Strings::cdble convert an invalid string
+            // need check if Strings::cdble convert an invalid std::string
         }
         if (upbonode != NULL) {
             upper = Strings::cdble(upbonode->Data());
@@ -478,11 +478,11 @@ void readOutput(const CamXML::Element &node, Simulator &sim)
                 throw std::invalid_argument("STATSBOUND Error: Upper bound is less than or equal to lower bound. "
                                             "(MOPS, Settings_IO::readOutput).");
             }
-            // need check if Strings::cdble convert an invalid string
+            // need check if Strings::cdble convert an invalid std::string
         }
         // Set the property id of the particle to enforce the statistical bounds on
         // Currently, only 2 properties are implemented
-        string prop_str = subnode->GetAttributeValue("property");
+        std::string prop_str = subnode->GetAttributeValue("property");
         if ((prop_str.compare("dcol") == 0) ||
             (prop_str.compare("Dcol") == 0)) {
             pid = Sweep::ParticleCache::iDcol;
@@ -499,14 +499,14 @@ void readOutput(const CamXML::Element &node, Simulator &sim)
     // Read POVRAY particle tracking output.
     subnode = node.GetFirstChild("ptrack");
     if (subnode != NULL) {
-        string str_enable = subnode->GetAttributeValue("enable");
+        std::string str_enable = subnode->GetAttributeValue("enable");
         if (str_enable.compare("true") == 0) {
-            string str_ptcount = subnode->GetAttributeValue("ptcount");
+            std::string str_ptcount = subnode->GetAttributeValue("ptcount");
             sim.SetParticleTrackCount((unsigned int)Strings::cdble(str_ptcount));
         } else if (str_enable.compare("false") == 0) {
             sim.SetParticleTrackCount(0);
         } else {
-            throw runtime_error("Unknown ptrack enabling keyword in MOPS input "
+            throw std::runtime_error("Unknown ptrack enabling keyword in MOPS input "
                                 "(Mops, Settings_IO::readOutput)");
         }
     } else {
@@ -519,9 +519,9 @@ void readOutput(const CamXML::Element &node, Simulator &sim)
     // Read the flux analysis settings for postprocessing.
     subnode = node.GetFirstChild("fluxanalysis");
     if (subnode != NULL) {
-        string str_enable = subnode->GetAttributeValue("enable");
+        std::string str_enable = subnode->GetAttributeValue("enable");
         if (str_enable.compare("true") == 0) {
-            vector<CamXML::Element*> elem_nodes;
+            std::vector<CamXML::Element*> elem_nodes;
             subnode->GetChildren("element", elem_nodes);
             for (unsigned int i = 0; i < elem_nodes.size(); i++) {
                 sim.AddFluxElement(elem_nodes.at(i)->GetAttributeValue("id"));
@@ -545,10 +545,10 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
 {
     CamXML::Document doc;
     const CamXML::Element *root, *node;
-    vector<CamXML::Element*> nodes;
-    vector<CamXML::Element*>::const_iterator i;
+    std::vector<CamXML::Element*> nodes;
+    std::vector<CamXML::Element*>::const_iterator i;
     const CamXML::Attribute *attr;
-    string str;
+    std::string str;
 
     // We need a blank reactor object to create.  If the pointer
     // passed to this function is valid then it needs to be
@@ -575,7 +575,7 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
                 reac = ReactorFactory::Create(Serial_PSR, mech);
             } else if (str.compare("shocktube") == 0) {
                 // This is a shocktube (const. V batch).
-                throw invalid_argument("Shocktube not currently implemented");
+                throw std::invalid_argument("Shocktube not currently implemented");
             } else {
                 // Default reactor is a batch reactor.
                 reac = ReactorFactory::Create(Serial_Batch, mech);
@@ -650,12 +650,12 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
                     if (j >= 0) {
                         molefracs[j] = Strings::cdble((*i)->Data());
                     } else {
-                        throw runtime_error("Unknown species initial condition "
+                        throw std::runtime_error("Unknown species initial condition "
                                             "(Mops, Settings_IO::LoadFromXML_V1).");
                     }
                 }
             } else {
-                throw invalid_argument("Initial condition must have ID!");
+                throw std::invalid_argument("Initial condition must have ID!");
             }
         }
 
@@ -695,7 +695,7 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
                         molefracs[j] = Strings::cdble((*i)->Data());
                     }
                 } else {
-                    throw invalid_argument("Inflow condition must have ID!");
+                    throw std::invalid_argument("Inflow condition must have ID!");
                 }
             }
 
@@ -776,7 +776,7 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
                     ti->SetStepCount((unsigned int)Strings::cdble(attr->GetValue()));
                 } else {
                     if (ti != NULL) delete ti;
-                    throw invalid_argument("Time interval must define number of steps.");
+                    throw std::invalid_argument("Time interval must define number of steps.");
                 }
 
                 // Add the completed time interval to the vector.
@@ -805,7 +805,7 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
 
             // Read the column variables.
             str = node->Data();
-            vector<string> cvars;
+            std::vector<std::string> cvars;
             Strings::split(str, cvars, " ");
             for (unsigned int j=0; j!=cvars.size(); ++j) {
                 sim.AddConsoleVariable(cvars[j]);
@@ -855,7 +855,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
         const CamXML::Attribute *attr = root->GetAttribute("version");
 
         if ((attr!=NULL) && (attr->GetValue() != "2")) {
-            throw runtime_error("Settings file has wrong version number (expecting 2)"
+            throw std::runtime_error("Settings file has wrong version number (expecting 2)"
                                 " (Mops::Settings_IO::LoadFromXML).");
         }
 
@@ -869,7 +869,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
         if (node != NULL) {
 			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0());
         } else {
-            throw runtime_error("Settings file does not contain a reactor definition"
+            throw std::runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");
         }
 
@@ -879,7 +879,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
         if (node != NULL) {
             readTimeIntervals(*node, times);
         } else {
-            throw runtime_error("Settings file does not contain a time intervals"
+            throw std::runtime_error("Settings file does not contain a time intervals"
                                 " (Mops::Settings_IO::LoadFromXML).");
         }
 
@@ -889,7 +889,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
         if (node != NULL) {
             readOutput(*node, sim);
         } else {
-            throw runtime_error("Settings file does not contain output"
+            throw std::runtime_error("Settings file does not contain output"
                                 " information (Mops::Settings_IO::LoadFromXML).");
         }
     }
@@ -908,10 +908,10 @@ void Settings_IO::readTimeIntervals(const CamXML::Element &node,
                                            std::vector<TimeInterval> &times)
 {
     const CamXML::Element *subnode;
-    vector<CamXML::Element*> nodes;
-    vector<CamXML::Element*>::const_iterator i;
+    std::vector<CamXML::Element*> nodes;
+    std::vector<CamXML::Element*>::const_iterator i;
     const CamXML::Attribute *attr;
-    string str;
+    std::string str;
 
     // Read default splits per step.
     unsigned int splits = 1;
@@ -928,7 +928,7 @@ void Settings_IO::readTimeIntervals(const CamXML::Element &node,
         ti = new TimeInterval();
         ti->SetStartTime(Strings::cdble(subnode->Data()));
     } else {
-        throw runtime_error("Time intervals must have start time defined "
+        throw std::runtime_error("Time intervals must have start time defined "
                             "(Mops, Settings_IO::readTimeIntervals)");
     }
 
@@ -944,7 +944,7 @@ void Settings_IO::readTimeIntervals(const CamXML::Element &node,
             ti->SetStepCount((unsigned int)Strings::cdble(attr->GetValue()));
         } else {
             if (ti != NULL) delete ti;
-            throw runtime_error("Time interval must define number of steps "
+            throw std::runtime_error("Time interval must define number of steps "
                                 "(Mops, Settings_IO::readTimeIntervals)");
         }
 
@@ -986,7 +986,7 @@ Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& popu
     Sweep::PartPtrList particleList;
 
     // Now get the XML defining the particles
-    vector<CamXML::Element*> particleXML;
+    std::vector<CamXML::Element*> particleXML;
     population_xml.GetChildren("particle", particleXML);
 
     // An empty population means nothing to do
@@ -1003,8 +1003,8 @@ Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& popu
     }
 
     // Now loop through the particles one by one
-    vector<CamXML::Element*>::const_iterator it(particleXML.begin());
-    const vector<CamXML::Element*>::const_iterator itEnd(particleXML.end());
+    std::vector<CamXML::Element*>::const_iterator it(particleXML.begin());
+    const std::vector<CamXML::Element*>::const_iterator itEnd(particleXML.end());
     while(it != itEnd)
     {
         // Build a particle from the xml and use an auto_ptr so the particle
@@ -1024,14 +1024,14 @@ Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& popu
         if(countAttrib)
         {
             // Read the count specified by the user
-            const string countString = countAttrib->GetValue();
+            const std::string countString = countAttrib->GetValue();
             repeatCount = atoi(countString.c_str());
 
             // The count must be a strictly positive integer
             if(repeatCount <= 0)
             {
                 // Delete any particles already read into the local list
-                // The list itself will be destroyed when the throw takes
+                // The list itself will be destroyed when the throw std::takes
                 // place so there is no need to nullify the pointers
                 Sweep::PartPtrList::iterator it = particleList.begin();
                 const Sweep::PartPtrList::iterator itEnd = particleList.end();

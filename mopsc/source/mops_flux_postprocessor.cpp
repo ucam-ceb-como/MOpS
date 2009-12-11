@@ -84,7 +84,7 @@ void FluxAnalyser::addElement(const Sprog::Element &elem) {
     } else {
         std::cout << "Element " << elem.Name() << " Not Found. Ignoring "
                   << elem.Name() << " from flux analyzer." << std::endl;
-        //throw runtime_error("Attemp to add unknow element in Flux analysis "
+        //throw std::runtime_error("Attemp to add unknow element in Flux analysis "
         //                    "(Mops, FluxAnalyser::addFluxElement).");
     }
 }
@@ -92,30 +92,30 @@ void FluxAnalyser::addElement(const Sprog::Element &elem) {
 void FluxAnalyser::writeFluxes(const std::string &filenameprefix, bool doIntFluxes) {
     //  write output to file
     if (m_ElementIndexes.size() > 0) {
-        cout << "mops: Writting output from FluxAnalyser..." << endl;
+        std::cout << "mops: Writting output from FluxAnalyser..." << std::endl;
 
-        ofstream fflux;
-        ofstream fintflux;
+        std::ofstream fflux;
+        std::ofstream fintflux;
         std::string file_flux = filenameprefix + "-elem-flux.fvr";
         std::string file_int_flux = filenameprefix + "-elem-int-flux.fvr";
-        fflux.open(file_flux.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
+        fflux.open(file_flux.c_str(), std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
         writeHeader(fflux, m_times.size()-1);
         if (doIntFluxes) {
-            fintflux.open(file_int_flux.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
+            fintflux.open(file_int_flux.c_str(), std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
             writeHeader(fintflux, m_times_stop.size());
         }
-        // ofstream of fflux and fintflux has been checked in writeHeaders
+        // std::ofstream of fflux and fintflux has been checked in writeHeaders
         int int_flux_time_stop_index = 0;
         for (unsigned int i = 1; i < m_times.size(); i++) {
             unsigned int i_times = m_times_stop.at(int_flux_time_stop_index);
             bool isAtTimeStop = (i_times <= i);
 
             fflux << formatWhiteSpace(ComoString::int2string(i),5,false) << "  "
-                 << m_times.at(i) << " t/s  " << m_atemperatures->at(i) << " T/K " << endl;
+                 << m_times.at(i) << " t/s  " << m_atemperatures->at(i) << " T/K " << std::endl;
 
             if (doIntFluxes && isAtTimeStop) {
                 fintflux << formatWhiteSpace(ComoString::int2string(int_flux_time_stop_index+1),5,false) << "  "
-                    << m_times.at(i_times) << " t/s  " << m_atemperatures->at(i_times) << " T/K " << endl;
+                    << m_times.at(i_times) << " t/s  " << m_atemperatures->at(i_times) << " T/K " << std::endl;
             }
 
             for (unsigned int j = 0; j < m_ElementIndexes.size(); j++) {
@@ -271,41 +271,41 @@ void FluxAnalyser::writeFluxAt(unsigned int iel, std::ofstream &fout, Mops::Flux
     if (fout.is_open()) {
         // Write flux network to file.
         if (flux_network.size() > 0) {
-            fout << "Fluxes of " << m_mech->Elements(iel)->Name() << endl;
+            fout << "Fluxes of " << m_mech->Elements(iel)->Name() << std::endl;
             for (unsigned int i = 0; i < flux_network.size(); i++) {
                 fout << formatWhiteSpace(ComoString::int2string(i+1),5,false) << "  "
                      << formatWhiteSpace(m_mech->GetSpecies(flux_network.at(i).SourceSpecies)->Name(), 17)
                      << "=> "
                      << formatWhiteSpace(m_mech->GetSpecies(flux_network.at(i).TargetSpecies)->Name(), 19)
                      << formatWhiteSpace(Strings::cstr(flux_network.at(i).Rate), 12, false)
-                     << endl;
+                     << std::endl;
             }
-            fout << endl;
+            fout << std::endl;
         }
     } else {
-        throw runtime_error("File stream is not opened for writting flux analysis "
+        throw std::runtime_error("File stream is not opened for writting flux analysis "
                             "(Mops, FluxAnalyser::writeFluxAt).");
     }
 }
 
-void FluxAnalyser::writeHeader(ofstream &fout, unsigned int npoints) {
+void FluxAnalyser::writeHeader(std::ofstream &fout, unsigned int npoints) {
     if (fout.is_open()) {
         // Write header
-        fout << formatWhiteSpace(ComoString::int2string(m_mech->SpeciesCount()),5,false) << "/ Number of species" << endl;
-        fout << formatWhiteSpace(ComoString::int2string(m_mech->ReactionCount()),5,false) << "/ Number of reactions" << endl;
-        fout << formatWhiteSpace(ComoString::int2string(npoints),5,false) << "/ Number of points" << endl;
+        fout << formatWhiteSpace(ComoString::int2string(m_mech->SpeciesCount()),5,false) << "/ Number of species" << std::endl;
+        fout << formatWhiteSpace(ComoString::int2string(m_mech->ReactionCount()),5,false) << "/ Number of reactions" << std::endl;
+        fout << formatWhiteSpace(ComoString::int2string(npoints),5,false) << "/ Number of points" << std::endl;
         for (unsigned int i = 0; i < m_ElementIndexes.size(); i++) {
             fout << formatWhiteSpace(m_mech->Elements(m_ElementIndexes.at(i))->Name(), 4);
         }
-        fout << endl;
+        fout << std::endl;
         for (unsigned int i = 0; i < m_mech->SpeciesCount(); i++) {
             fout << formatWhiteSpace(m_mech->GetSpecies(i)->Name(), 16);
         }
-        fout << endl;
-        fout << endl;
+        fout << std::endl;
+        fout << std::endl;
     } else {
         // Throw error if the output file failed to open.
-        throw runtime_error("Failed to open file for write element flux "
+        throw std::runtime_error("Failed to open file for write element flux "
                             "output (Mops, Simulator::FluxAnalyser::writeHeader).");
     }
 
@@ -343,13 +343,13 @@ real FluxAnalyser::getNumberOfElementAtom(const Sprog::Stoichf &sc, unsigned int
 }
 
 std::string FluxAnalyser::formatWhiteSpace(std::string str, unsigned int len, bool isright) {
-    string wstr = "";
+    std::string wstr = "";
     if (str.length() <= len) {
         for (unsigned int i = 0; i < len - str.length(); i++) {
             wstr += " ";
         }
     } else {
-        throw runtime_error("String is too long to output in flux analysis "
+        throw std::runtime_error("String is too long to output in flux analysis "
                             "(Mops, FluxAnalyser::formatWhiteSpace).");
     }
     if (isright) {
