@@ -189,7 +189,7 @@ private:
 		double lastupdated;
 		double freezetime;
         //stores the last position in the database when the PAH has been updated
-        int lastposPAHupdate;
+        unsigned int lastposPAHupdate;
 		Trajectory const *m_trajectory;
     };
 

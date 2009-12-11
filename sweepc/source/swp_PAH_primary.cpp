@@ -272,13 +272,13 @@ PAHPrimary::PAHPrimary(std::istream &in, const Sweep::ParticleModel &model)
 }
 
 
-//returns a copy of the PAHprimary, the pointers are not corrected. 
-// The children are not copied
-//It can be necessary to adjust the pointers to the particles afterwards
 /*!
+ * This function is like a limited assignment operator, except that the
+ * children are not copied and the pointers to the particles may need
+ * adjuesting after this method has finished.
+ *
  * @param[in] source Pointer to the primary to be copied
- * @param[in,out] target Pointer to the target primary
-*/
+ */
 void PAHPrimary::CopyParts( const PAHPrimary *source)
 {
 	SetCollDiameter(source->CollDiameter());
@@ -312,11 +312,9 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
     m_fdim=source->m_fdim;
     m_Rg=source->m_Rg;
     m_avg_coalesc=source->m_avg_coalesc;
-    m_numcarbon=source->m_numcarbon;
-	vector<PAH>::const_iterator j;
-	//for (j=source->m_PAH.begin(); j!=source->m_PAH.end(); ++j) {
-	//	m_PAH.insert(m_PAH.end(),PAH(*j));
-	//}
+    m_numcarbon = source->m_numcarbon;
+
+    // Replace the PAHs with those from the source
     m_PAH.clear();
     m_PAH.insert(m_PAH.end(),source->m_PAH.begin(),source->m_PAH.end());
 	
@@ -832,37 +830,66 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
 }
 
 /*!
- * @param[in] t Time
-*/
-void PAHPrimary::UpdatePAHs(double t)
+ * @param[in]   t   Time upto which to update
+ *
+ * The actual interval over which the update is carried out on a PAH is from
+ * lastupdated to t - freezetime.
+ */
+void PAHPrimary::UpdatePAHs(real t)
 {
+    // Either the primary has two children or it is a leaf of the
+    // tree
 	if (m_leftchild!=NULL)
 	{
+        // Recurse down to the leaves
 		m_leftchild->UpdatePAHs(t);
 		m_rightchild->UpdatePAHs(t);
 	}
     else
     {   
-        unsigned int j=0;
-	    for (vector<PAH>::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
-		    //for (j=0;j<i->time.size();j++)
-            double minPAH=m_pmodel->Components(0)->MinPAH();
+        // Loop over each PAH in this primary
+        for (std::vector<PAH>::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
+
+            // This is a model parameter that defines when primary particles
+            // contain too many PAHs for them all to have full access to the
+            // surrounding gas phase.  Once a primary contains more than minPAH
+            // PAHs the growth rate of each PAH is reduced according to the
+            // growth factor
+            const double minPAH=m_pmodel->Components(0)->MinPAH();
+
             if (m_numPAH>=minPAH)
             {
-                double growthfact=m_pmodel->Components(0)->GrowthFact();
-                double deltat=t-i->lastupdated;
+                // Increase in age is slowed down by this factor to reflect
+                // the slower growth of molecules that are closely surrounded
+                // by many other PAHs.
+                const real growthfact=m_pmodel->Components(0)->GrowthFact();
+
+                const real deltat=t-i->lastupdated;
+
+                // Increment freezetime to reduce the time upto which updates
+                // are carried out.
                 i->freezetime=i->freezetime+deltat*(1.0-growthfact);
             }
-            double seektime=i->m_trajectory->StartTime()+t-(i->time_created)-(i->freezetime);
-		    for (j=i->lastposPAHupdate;j<i->m_trajectory->alltrajectories.at(i->ID).time.size();j++)
-            {  
-                //if (this->m_numPAH>1000) i->freezetime+=rnd()*(t-i->lastupdated);
-			    //i->m_numcarbon=i->n_carbon_t.at(j);
+
+            // Time at which to find new size of PAH
+            const real seektime = i->m_trajectory->StartTime() + t -
+                                    (i->time_created) - (i->freezetime);
+
+            // Linear search through database to find seektime, note that
+            // lastposPAHupdate will almost always be only one away from the
+            // position we are looking for, because PAHs are normally updated
+            // fairly regularly.
+            // Updates over each time step in the database will be applied in
+            // successive iterations through this loop.
+		    for (unsigned int j=i->lastposPAHupdate;j<i->m_trajectory->alltrajectories.at(i->ID).time.size();j++)
+            {
+                // Update the size of the PAH
 			    i->m_numcarbon=i->m_trajectory->alltrajectories.at(i->ID).n_carbon_t.at(j);
-			    //if (i->time.at(j)>=t-i->time_created-i->freezetime)
                 
+                //@todo remove the 0.999
 			    if (i->m_trajectory->alltrajectories.at(i->ID).time.at(j)>=0.999*seektime)
 			    {
+                    // Cache the new trajectory database row index and exit the loop
                     i->lastposPAHupdate=j;
 				    break;            
 			    }
@@ -870,8 +897,10 @@ void PAHPrimary::UpdatePAHs(double t)
 		    i->lastupdated=t;
         }
 
+        // Calculate derived quantities such as collision diameter and surface
+        // area by iterating through all the PAHs.  This call is rather expensive.
         UpdatePrimary();
-	}
+    }
 }
 
 
@@ -884,8 +913,6 @@ void PAHPrimary::UpdateCache(void)
 bool PAHPrimary::CheckCoalescence()
 {
     bool hascoalesced=false;
-   // cout << m_children_coalescence<<endl;
- //  if (m_children_coalescence> m_pmodel->Components(0)->CoalescThresh() && m_leftparticle!=NULL)
     if (m_children_coalescence> 0.99 && m_leftparticle!=NULL)
         {
            // PrintTree("before.inp");
@@ -909,16 +936,15 @@ bool PAHPrimary::CheckCoalescence()
 //this function updates a primary particle
 void PAHPrimary::UpdatePrimary(void)
 {	 
-    double sootdens=0;
 	m_numcarbon=0;
     m_PAHmass=0;
 	m_PAHCollDiameter=0;
-	m_numPAH=0;
+	m_numPAH= m_PAH.size();
+
     unsigned int maxcarbon=0;
     for (vector<PAH>::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
         m_numcarbon += i->m_numcarbon;
 		maxcarbon=max(maxcarbon,i->m_numcarbon);    // search for the largest PAH in the PRimary, in Angstrom
-		m_numPAH++;
     }
 	m_PAHmass=m_numcarbon*1.9945e-26;        //convert to kg, hydrogen atoms are not considered
     m_PAHCollDiameter=sqrt(maxcarbon*2.0/3.);
@@ -926,20 +952,16 @@ void PAHPrimary::UpdatePrimary(void)
 
     if(m_pmodel->ComponentCount()!=1)        //at the moment we have only one component: soot
     {
-        cout<<"Warning: Model contains more then one component. At the moment only soot is supported"<<endl;
+        throw std::runtime_error("Model contains more then one component. Only soot is supported. (PAHPrimary::UpdatePrimary)");
     }
-    else
-    {   
-       sootdens=m_pmodel->Components(0)->Density();        //in kg/m^3
-    }
-	 m_mass=m_PAHmass;
-	 m_vol=m_PAHmass/sootdens;
-	 m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);    
-     m_dmob = m_diam;
-     m_dcol = max(m_diam,m_PAHCollDiameter);
-     m_surf = PI * m_diam * m_diam;
-     m_primarydiam = m_diam;
-     m_avg_coalesc=0;
+    m_vol = m_PAHmass / m_pmodel->Components(0)->Density();        //in m^3
+	m_mass=m_PAHmass;
+	m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);    
+    m_dmob = m_diam;
+    m_dcol = max(m_diam,m_PAHCollDiameter);
+    m_surf = PI * m_diam * m_diam;
+    m_primarydiam = m_diam;
+    m_avg_coalesc=0;
 }
 
 
