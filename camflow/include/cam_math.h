@@ -17,18 +17,20 @@
 namespace Camflow{
     class CamMath{
     public:
-        template <class T> T sum(const vector<T>& data);
-        template <class T> T sum(const vector<T>& vec1, vector<double>& vec2);
-        double sumVector(vector<double>& vec1);
-        double sumVector(vector<double>& vec1, vector<double>& vec2);
+        template <class T> T sum(const std::vector<T>& data);
+        template <class T> T sum(const std::vector<T>& vec1, std::vector<double>& vec2);
+        double sumVector(std::vector<double>& vec1);
+        double sumVector(std::vector<double>& vstd::ec1, vector<double>& vec2);
         //double dydx(double nr1, double nr2, double dr);
         //lagrange interpolation
-        doublereal interpolateLG(doublereal at, int size, Array2D &prime, const vector<doublereal>& val);
+        doublereal interpolateLG(doublereal at, int size, Array2D &prime, 
+                                 const std::vector<doublereal>& val);
 
         void binomCoeff(int n, Array2D &bCoeff);
         void prime(int size, Array2D &prime);
-        void TDMA(vector<doublereal>& a, vector<doublereal>&b, vector<doublereal>&c,
-                vector<doublereal>& r, vector<doublereal>& u);
+        void TDMA(std::vector<doublereal>& a, std::vector<doublereal>&b,
+                  std::vector<doublereal>&c, std::vector<doublereal>& r,
+                  std::vector<doublereal>& u);
 
         doublereal erf(doublereal x);
         doublereal erfc(doublereal x);

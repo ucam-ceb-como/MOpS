@@ -5,7 +5,7 @@
 using namespace Camflow;
 
 template <class T>
-T CamMath::sum(const vector<T>& data){
+T CamMath::sum(const std::vector<T>& data){
     double ss =0;
     int len = data.size();
     for (int i = 0; i < len; i++) {
@@ -17,7 +17,7 @@ T CamMath::sum(const vector<T>& data){
 
 
 template <class T>
-T CamMath::sum(const vector<T>& vec1, vector<double>& vec2){
+T CamMath::sum(const std::vector<T>& vec1, std::vector<double>& vec2){
     double ss =0;
     int l1 = vec1.size();
     int l2 = vec2.size();
@@ -31,16 +31,16 @@ T CamMath::sum(const vector<T>& vec1, vector<double>& vec2){
 };
 
 
-double CamMath::sumVector(vector<double>& vec1){
+double CamMath::sumVector(std::vector<double>& vec1){
     return sum<double>(vec1);
 }
 
-double CamMath::sumVector(vector<double>& vec1, vector<double>& vec2){
+double CamMath::sumVector(std::vector<double>& vec1, std::vector<double>& vec2){
     return sum<double>(vec1,vec2);
 }
 
 doublereal CamMath::interpolateLG(doublereal at, int size, Array2D& dPrime,
-                                      const vector<doublereal>& val){
+                                      const std::vector<doublereal>& val){
     doublereal prod = 1;
     for( int i=0; i< size; i++ )
         prod *= (at-i);
@@ -100,14 +100,14 @@ void CamMath::prime(int size, Array2D& prime){
  * |__                  an-1  bn-1_| | un-1|   |rn-1|
  *
  */
-void CamMath::TDMA(     vector<doublereal>& a,
-                        vector<doublereal>& b,
-                        vector<doublereal>& c,
-                        vector<doublereal>& r,
-                        vector<doublereal>& u){
+void CamMath::TDMA(     std::vector<doublereal>& a,
+                        std::vector<doublereal>& b,
+                        std::vector<doublereal>& c,
+                        std::vector<doublereal>& r,
+                        std::vector<doublereal>& u){
 
     int n = a.size();
-    vector<doublereal> gam(n);
+    std::vector<doublereal> gam(n);
     doublereal bet;
     if(b[0] == 0.0){
         throw CamError("Error in TDMA\n");
