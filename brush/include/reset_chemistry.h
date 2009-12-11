@@ -80,7 +80,7 @@ public:
     };
 
     //! Read in the data needed for the given mechanism
-    ResetChemistry(const string &fname, const InputFileType file_type, const Sprog::Mechanism& mech, const int verbosity);
+    ResetChemistry(const std::string &fname, const InputFileType file_type, const Sprog::Mechanism& mech, const int verbosity);
 
     //! Use data from vectors
     ResetChemistry(const fvector &x, const fvector &Temp, 
