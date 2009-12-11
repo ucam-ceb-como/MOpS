@@ -103,7 +103,7 @@ namespace Sprog{
 			real binaryDiffusionCoeff(const int j, const int k,
 				const real T, const real p, const Sprog::Thermo::Mixture &mix) const;
 			//returns the diffusion coefficeint in m^2/s
-			vector<double> getMixtureDiffusionCoeff(const real T, const real p, const Sprog::Thermo::Mixture &mix) const;
+			std::vector<double> getMixtureDiffusionCoeff(const real T, const real p, const Sprog::Thermo::Mixture &mix) const;
 			
 		};
 

@@ -409,7 +409,7 @@ real PureSpeciesTransport::getThermalConductivity(const real T,
 real MixtureTransport::getViscosity(const real T, const Sprog::Thermo::Mixture &mix) const{
 	// vector<Sprog::Species*> const *sp = mix.Species();
 	const SpeciesPtrVector  *spv = mix.Species();
-	vector<real> moleFrac = mix.MoleFractions();	
+	std::vector<real> moleFrac = mix.MoleFractions();
 	unsigned int k,j;
 	real xTimesEta, xTimesPhi , eta;
 	real m_kj, m_jk,eta_kj, phi_kj, nk;
@@ -445,7 +445,7 @@ real MixtureTransport::getThermalConductivity(const real T, real p, const Sprog:
 	lambdaFrac = 0;
 	
 
-	vector<real> cp,moleFrac;
+	std::vector<real> cp,moleFrac;
 
 	const SpeciesPtrVector *spv = mix.Species();
 	moleFrac = mix.MoleFractions();
@@ -538,7 +538,7 @@ real MixtureTransport::binaryDiffusionCoeff(const int j,
 
 }
 		
-vector<double> MixtureTransport::getMixtureDiffusionCoeff(const real T, 
+std::vector<double> MixtureTransport::getMixtureDiffusionCoeff(const real T,
 														  const real p,
 														  const Sprog::Thermo::Mixture &mix) const
 {
@@ -546,8 +546,8 @@ vector<double> MixtureTransport::getMixtureDiffusionCoeff(const real T,
 	int size = spv->size();
 	int j,k;
         real bDiff;
-	vector<double> Dmix(size);
-	vector<double> moleFracs = mix.MoleFractions();
+	std::vector<double> Dmix(size);
+	std::vector<double> moleFracs = mix.MoleFractions();
 	for(k=0; k!=size; k++){
 		for(j=k+1; j!=size; j++){
                     bDiff = binaryDiffusionCoeff(j,k,T,p,mix);
