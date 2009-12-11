@@ -383,7 +383,7 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
         real truek = CoagKernel(*sp1, *sp2, T, P, None);
 		double ceff=0;
 		if (majk<truek)
-			cout << "maj< true"<<endl;
+			std::cout << "maj< true"<< std::endl;
 
 		//added by ms785 to include the collision efficiency in the calculation of the rate
 		if (sys.Particles().ParticleModel()->AggModel()==AggModels::PAH_ID)

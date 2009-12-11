@@ -813,7 +813,7 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
 		Primary::PropID primid=Primary::iD;
 		m_leftsinterdiam = m_leftsinter->m_primary->Property(primid);
 		m_rightsinterdiam = m_rightsinter->m_primary->Property(primid);
-		real Dfreesurface=min((m_leftsinter->m_diam)*(m_leftsinter->m_diam)*2*PI,(m_rightsinter->m_diam)*(m_rightsinter->m_diam)*2*PI);
+		real Dfreesurface= std::min((m_leftsinter->m_diam)*(m_leftsinter->m_diam)*2*PI,(m_rightsinter->m_diam)*(m_rightsinter->m_diam)*2*PI);
 		m_rightsinter->m_freesurface-=Dfreesurface;
 		if (m_rightsinter->m_freesurface<0) m_rightsinter->m_freesurface=0;
 		m_leftsinter->m_freesurface-=Dfreesurface;
@@ -824,7 +824,7 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
 		m_leftsinter->vol_sinter=m_leftsinter->m_primary->Volume();				//ms785 20.01.09
 		if (m_rightsinter->vol_sinter==0)
 		m_rightsinter->vol_sinter=m_rightsinter->m_primary->Volume();			//ms785 20.01.09
-		//cout << m_leftsinter->vol_sinter<<endl;
+		//cout << m_leftsinter->vol_sinter<<std::endl;
 		dV_left=0.;
 		dV_right=0.;
 
@@ -858,7 +858,7 @@ void SubParticle::SinterPart()
 		if(m_leftchild->m_primary!=NULL && m_rightchild->m_primary!=NULL) 
 		{//	FindRoot()->CheckTree();
 		//	cout << "Checktree before sinter passed\n";
-			//   cout << "sinter";
+			//   std::cout << "sinter";
 
 			//cout << m_leftchild->Property(id);
 			m_connect_time=0;
@@ -1092,15 +1092,15 @@ void SubParticle::Sinter(real dt, const Cell &sys,
 			real scale = 0.01;
 
 
-			m_sumsinterdiameter = 2*min(pow((m_leftsinter->vol_sinter-dV_left)*3/(4*PI),ONE_THIRD),
-								  pow((m_rightsinter->vol_sinter-dV_right)*3/(4*PI),ONE_THIRD));	
+			m_sumsinterdiameter = 2* std::min(std::pow((m_leftsinter->vol_sinter-dV_left)*3/(4*PI),ONE_THIRD),
+								  std::pow((m_rightsinter->vol_sinter-dV_right)*3/(4*PI),ONE_THIRD));
 
 			if (m_leftsinter->vol_sinter-dV_left<0 || m_rightsinter->vol_sinter-dV_right<0)
 			{
-					string test;
+					std::string test;
 				
-				cout<<"error ln1057 swp_subparticle";
-				cin>>test;
+				std::cout<<"error ln1057 swp_subparticle";
+				std::cin>>test;
 			}
 		//	m_sumsinterdiameter = 2*min(pow((m_leftsinter->vol_sinter)*3/(4*PI),ONE_THIRD),
 		//						  pow((m_rightsinter->vol_sinter)*3/(4*PI),ONE_THIRD));
@@ -1110,7 +1110,7 @@ void SubParticle::Sinter(real dt, const Cell &sys,
 					real r = model.Rate(m_time+t1, sys, *this);
 					// Calculate next time-step end point so that the
 					// surface area changes by no more than dAmax.
-					t2 = min(t1+(dAmax/max(r,1.0e-300)), tstop); // 1.0e-300 catches DIV ZERO.
+					t2 = std::min(t1+(dAmax/ std::max(r,1.0e-300)), tstop); // 1.0e-300 catches DIV ZERO.
 					// Approximate sintering by a poisson process.  Calculate
 					// number of poisson events.
 					int n = ignpoi(r * (t2 - t1) / (scale*dAmax));
@@ -1150,7 +1150,7 @@ void SubParticle::Sinter(real dt, const Cell &sys,
 				}
                 
 			 if ( m_sinter_level>0.95 || Sintered()==1 || m_leftsinter->m_diam<1e-9 ||  m_rightsinter->m_diam<1e-9 )        //<1e-9 nm in order to avoid numerical problems, the sintering time is very small for these small particles and they sinter instantaneously
-			   {	//cout <<"sinter dt="<<dt<<endl;
+			   {	//cout <<"sinter dt="<<dt<<std::endl;
 				   	m_leftsinter->vol_sinter=m_leftsinter->vol_sinter-dV_left;      //added 20.01.09 ms785
 					m_rightsinter->vol_sinter=m_rightsinter->vol_sinter-dV_right;	  //added 20.01.09
 			   	   	SinterPart();
@@ -1265,9 +1265,9 @@ void SubParticle::CheckTree()
 	if(m_primary==NULL)
 	{	
 		if(m_leftsinter!=NULL)
-		if(m_leftsinter->m_primary->Volume()==0) cout <<"test";    
+		if(m_leftsinter->m_primary->Volume()==0) std::cout <<"test";
 		if(m_rightsinter!=NULL)
-		if(m_rightsinter->m_primary->Volume()==0) cout <<"test";   
+		if(m_rightsinter->m_primary->Volume()==0) std::cout <<"test";
 		m_leftchild->CheckTree();
 		m_rightchild->CheckTree();
 	}
@@ -1289,11 +1289,11 @@ void SubParticle::Getprimarydistribution(double *distribution)
 }
 */
 
-void SubParticle::Getprimarydistribution(ofstream *file)
+void SubParticle::Getprimarydistribution(std::ofstream *file)
 {
 	if(m_primary!=NULL)
 	{	
-            *file << CollDiameter()*1e9<<endl;
+            *file << CollDiameter()*1e9<< std::endl;
 	}
 	else
 	{
@@ -1310,7 +1310,7 @@ void SubParticle::Getsinteringleveldistribution(double *distribution, real binsi
 	}
 	else
 	{	int bin=(int)(m_sinter_level/binsize);
-		//cout <<bin<<endl;
+		//cout <<bin<<std::endl;
 		distribution[bin]++;
 	    m_leftchild->Getsinteringleveldistribution(distribution, binsize, numbins);
 		m_rightchild->Getsinteringleveldistribution(distribution, binsize, numbins);
@@ -1464,7 +1464,7 @@ void SubParticle::RecalcFreeSurface()
 {
 	if(m_primary==NULL)
 	{
-		real Dfreesurface=min((m_leftsinter->m_diam)*(m_leftsinter->m_diam)*0.25*PI,(m_rightsinter->m_diam)*(m_rightsinter->m_diam)*0.25*PI);
+		real Dfreesurface=std::min((m_leftsinter->m_diam)*(m_leftsinter->m_diam)*0.25*PI,(m_rightsinter->m_diam)*(m_rightsinter->m_diam)*0.25*PI);
 		m_rightsinter->m_freesurface-=Dfreesurface;
 		if (m_rightsinter->m_freesurface<0) m_rightsinter->m_freesurface=0;
 		m_leftsinter->m_freesurface-=Dfreesurface;
@@ -1562,34 +1562,34 @@ SubParticle *const SubParticle::Clone() const
 
 
 void SubParticle::printSubtree(std::ostream &out, ParticleCache::PropID id) const
-{ out << "digraph unix {"<<endl;
+{ out << "digraph unix {"<<std::endl;
   printSubtreeLoop(out,id);
-  out << "}"<<endl;
+  out << "}"<<std::endl;
 }
 
 
 void SubParticle::printSubtreeLoop(std::ostream &out, ParticleCache::PropID id) const
 { 
   if (m_primary==NULL)
-  { //out<<"leftchild "<<10E8*m_leftchild->SphDiameter()<<endl;   
-	//out<<"rightchild "<<10E8*m_rightchild->SphDiameter()<<endl;    
-	out<<"\" "<<this<<"\" "<<" [label = \""<<this->m_sinter_level<<"\"];"<<endl;
-	out<<"\" "<<this->m_leftchild<<"\" "<<" [label = \""<<this->m_leftchild->m_sinter_level<<"\"];"<<endl;
-	out<<"\" "<<this->m_rightchild<<"\" "<<" [label = \""<<this->m_rightchild->m_sinter_level<<"\"];"<<endl;
-	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_leftchild<<"\"; "<<endl;
-	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_rightchild<<"\"; "<<endl;
-	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_leftsinter<<"\"[label=\""<<this->dV_left<<"\",color=\"blue\"]; "<<endl;
-	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_rightsinter<<"\"[label=\""<<this->dV_right<<"\",color=\"blue\"]; "<<endl;
+  { //out<<"leftchild "<<10E8*m_leftchild->SphDiameter()<<std::endl;
+	//out<<"rightchild "<<10E8*m_rightchild->SphDiameter()<<std::endl;
+	out<<"\" "<<this<<"\" "<<" [label = \""<<this->m_sinter_level<<"\"];"<<std::endl;
+	out<<"\" "<<this->m_leftchild<<"\" "<<" [label = \""<<this->m_leftchild->m_sinter_level<<"\"];"<<std::endl;
+	out<<"\" "<<this->m_rightchild<<"\" "<<" [label = \""<<this->m_rightchild->m_sinter_level<<"\"];"<<std::endl;
+	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_leftchild<<"\"; "<<std::endl;
+	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_rightchild<<"\"; "<<std::endl;
+	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_leftsinter<<"\"[label=\""<<this->dV_left<<"\",color=\"blue\"]; "<<std::endl;
+	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_rightsinter<<"\"[label=\""<<this->dV_right<<"\",color=\"blue\"]; "<<std::endl;
 	m_leftchild->printSubtreeLoop(out,id);
     m_rightchild->printSubtreeLoop(out,id);
   }
 
   if (m_primary!=NULL)
   {   Primary::PropID idprim=Primary::iD;
-      //out<<"\" "<<this<<"\" "<<" [label = \""<<2*pow((this->vol_sinter)*3/(4*PI),ONE_THIRD)<<"\"];"<<endl;
-      out<<"\" "<<this<<"\" "<<" [label = \""<<this->m_sinter_level<<"\"];"<<endl;
-	  out<<"\" "<<this->m_primary<<"\" "<<" [label = \""<<this->m_primary->Property(idprim)<<"\"];"<<endl;
-	  out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_primary<<"\"; "<<endl;  
+      //out<<"\" "<<this<<"\" "<<" [label = \""<<2*pow((this->vol_sinter)*3/(4*PI),ONE_THIRD)<<"\"];"<<std::endl;
+      out<<"\" "<<this<<"\" "<<" [label = \""<<this->m_sinter_level<<"\"];"<<std::endl;
+	  out<<"\" "<<this->m_primary<<"\" "<<" [label = \""<<this->m_primary->Property(idprim)<<"\"];"<<std::endl;
+	  out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_primary<<"\"; "<<std::endl;
   }
 }
 
@@ -1609,18 +1609,18 @@ void SubParticle::printSubtreepicLoop(std::ostream &out,real x, real y, real z) 
   z1=z;
   if (m_primary!=NULL)
   { random=rnd();
-    out<<(m_primary->SphDiameter())*10E8<<endl;
+    out<<(m_primary->SphDiameter())*10E8<<std::endl;
 	if(random<=0.33)
 	{   
-		 out<<1<<endl;
+		 out<<1<<std::endl;
 	}
 	if(random>0.33 && random<=0.66)
 	{	
-		 out<<2<<endl;
+		 out<<2<<std::endl;
 	}
 	if (random>0.66)
 	{
-		 out<<3<<endl;
+		 out<<3<<std::endl;
 	}
 	 
   }
@@ -1665,7 +1665,7 @@ void SubParticle::Serialize(std::ostream &out) const
             m_rightchild->Serialize(out);
         }
     } else {
-        throw invalid_argument("Output stream not ready "
+        throw std::invalid_argument("Output stream not ready "
                                "(Sweep, SubParticle::Serialize).");
     }
 }
@@ -1708,11 +1708,11 @@ void SubParticle::Deserialize(std::istream &in, const Sweep::ParticleModel &mode
 
                 break;
             default:
-                throw runtime_error("Serialized version number is invalid "
+                throw std::runtime_error("Serialized version number is invalid "
                                     "(Sweep, SubParticle::Deserialize).");
         }
     } else {
-        throw invalid_argument("Input stream not ready "
+        throw std::invalid_argument("Input stream not ready "
                                "(Sweep, SubParticle::Deserialize).");
     }
 }

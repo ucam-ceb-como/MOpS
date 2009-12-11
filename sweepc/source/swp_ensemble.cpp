@@ -174,7 +174,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity, const Sweep::ParticleMod
 
     //Check that there is no ensemble with zero capacity
     if (capacity == 0)
-        throw invalid_argument("You numpty! Cannot create a binary tree for an ensemble with zero capacity! (Sweep::Ensemble::Initialise)");
+        throw std::invalid_argument("Cannot create a binary tree for an ensemble with zero capacity! (Sweep::Ensemble::Initialise)");
 
     // Calculate nearest power of 2 capacity.  Ensemble capacity must be a power
     // of 2.  This constraint is due to the binary tree implementation.
@@ -302,7 +302,7 @@ int Sweep::Ensemble::Add(Particle &sp)
         ascendingRecalc(j);
     }
 
-    m_maxcount = max(m_maxcount, m_count);
+    m_maxcount = std::max(m_maxcount, m_count);
 
     return i;
 }
@@ -436,7 +436,7 @@ void Sweep::Ensemble::Clear()
 
     m_ncont = 0; // No contractions any more.
 
-    vector<TreeNode>::iterator j;
+    std::vector<TreeNode>::iterator j;
     for(j=m_tree.begin(); j!=m_tree.end(); ++j) j->Clear();
 
     m_sums.Clear();
@@ -724,7 +724,7 @@ void Sweep::Ensemble::dble()
             ++m_ndble;
         }
 
-        m_maxcount = max(m_maxcount, m_count);
+        m_maxcount = std::max(m_maxcount, m_count);
     }
 }
 
@@ -791,7 +791,7 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
     } else {
-        throw invalid_argument("Output stream not ready "
+        throw std::invalid_argument("Output stream not ready "
                                "(Sweep, Ensemble::Serialize).");
     }
 }
@@ -874,11 +874,11 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
 
                 break;
             default:
-                throw runtime_error("Serialized version number is invalid "
+                throw std::runtime_error("Serialized version number is invalid "
                                     "(Sweep, Ensemble::Deserialize).");
         }
     } else {
-        throw invalid_argument("Input stream not ready "
+        throw std::invalid_argument("Input stream not ready "
                                "(Sweep, Ensemble::Deserialize).");
     }
 }
