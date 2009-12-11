@@ -180,7 +180,7 @@ void printSubtreepicLoop(std::ostream &out,real x, real y, real z) const;
 
 	// Gets several distributions
 //	void Getprimarydistribution(double *distribution);
-    void Getprimarydistribution(ofstream *file);
+    void Getprimarydistribution(std::ofstream *file);
     void Getsinteringleveldistribution(double *distribution, real binsize,const int numbins);
     void GetCollDiamDistrMill(double sintertresh, int *nparticles, double *distribution, const int numbins, double *averagecolldiam, double *Volume, double *Surface, int *nprimaries);
 	void CreateTestTree();

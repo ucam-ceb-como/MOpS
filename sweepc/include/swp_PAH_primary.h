@@ -98,7 +98,7 @@ public:
 	PAHPrimary &Coagulate(const Primary &rhs);
 
     //! prints the tree to a file that can be converted to a graph using graphviz
-    void PrintTree(string filename);
+    void PrintTree(std::string filename);
     
     //! updates the particle cache using the particle details
 	void UpdateCache(void);
