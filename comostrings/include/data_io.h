@@ -11,27 +11,27 @@
 #include <vector>
 #include <fstream>
 #include <ios>
-using namespace std;
+
 class DataIO{
     
-    fstream dataStream;
+    std::fstream dataStream;
 
 public:
     DataIO(){}
     ~DataIO(){}
-    DataIO(const string &name, bool old=false);
+    DataIO(const std::string &name, bool old=false);
 
 
-    void open(const string &name, bool old);
+    void open(const std::string &name, bool old);
     void close();
 
-    void write(const vector<string>& data);
-    void write(const vector<float>& data);
-    void write(const vector<double>& data);
-    void write(const vector<long double> &data);
+    void write(const std::vector<std::string>& data);
+    void write(const std::vector<float>& data);
+    void write(const std::vector<double>& data);
+    void write(const std::vector<long double> &data);
     
     template<class T>
-    void writeData(const vector<T> &data);
+    void writeData(const std::vector<T> &data);
 
 };
 
