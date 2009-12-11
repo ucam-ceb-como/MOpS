@@ -589,8 +589,8 @@ void FlameLet::PlanckAbsorption (const doublereal Temperature, doublereal Absorp
       */ 
 
 
-doublereal FlameLet::RadiativeLoss (const doublereal rho, const doublereal cp, const doublereal Temperature,
-                                    const doublereal SootVolFrac)const
+doublereal FlameLet::RadiativeLoss (const doublereal rho, const doublereal cp, const doublereal temperature,
+                                    const doublereal soot_vol_frac)const
   {
       
           
@@ -604,7 +604,7 @@ doublereal FlameLet::RadiativeLoss (const doublereal rho, const doublereal cp, c
     
 
     // The function calls PlanckAbsorption to produce the absorption coefficients.
-    PlanckAbsorption(Temperature, AbsorptionVector);
+    PlanckAbsorption(temperature, AbsorptionVector);
 
 
     // Using a single equation in reference [1], the function computes a Radiative Heat Dissipation term.  It uses the Planck mean 
@@ -636,7 +636,7 @@ doublereal FlameLet::RadiativeLoss (const doublereal rho, const doublereal cp, c
     spectralRadiation = 0;
     
     //The following is used repeatedly in the loop below
-    const doublereal temperaturePowers = 1/(rho * cp) * 4* 5.669e-8 * (pow(Temperature, 4) - pow(BackgroundTemp, 4));
+    const doublereal temperaturePowers = 1/(rho * cp) * 4* 5.669e-8 * (pow(temperature, 4) - pow(BackgroundTemp, 4));
 
 
     for (unsigned int j = 0; j < 3; ++j){
@@ -651,7 +651,7 @@ doublereal FlameLet::RadiativeLoss (const doublereal rho, const doublereal cp, c
     }
      
     //Total spectral radiative heat loss + radiative heat loss due to soot
-    return spectralRadiation + 3.337e-41 * SootVolFrac * pow(Temperature, 5);
+    return spectralRadiation + 3.337e-41 * soot_vol_frac * pow(temperature, 5);
 
     
 }
@@ -728,7 +728,7 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
         //======Radiative Heat Loss Term===============
 
         //Soot Volume Fraction is set to zero here
-        f[i] += RadiativeLoss(m_rho[i],m_cp[i],m_T[i],0.0);
+        f[i] += RadiativeLoss(m_rho[i],m_cp[i],m_T[i],m_SootFv[i]);
 
 
     }
@@ -996,9 +996,6 @@ void FlameLet::setExternalScalarDissipationRate(const doublereal sr){
  *  use that during intergration
  */
 void FlameLet::setExternalScalarDissipationRate(const vector<doublereal>& time, const vector<doublereal>& sdr){
-    v_sdr.resize(time.size());
-    v_time.resize(time.size());
-
     v_sdr = sdr;
     v_time = time;
     
@@ -1009,7 +1006,7 @@ void FlameLet::setExternalScalarDissipationRate(const vector<doublereal>& time, 
 /**
  *  Interpolate and return the scalar dissipation rate
  */
-const doublereal FlameLet::getSDR(const doublereal time){
+doublereal FlameLet::getSDR(const doublereal time) const {
     doublereal tsdr=0;
     doublereal vu, vl, xu, xl;
     for(size_t i =0; i < v_sdr.size(); i++){
@@ -1045,4 +1042,11 @@ const doublereal FlameLet::getSDR(const doublereal time){
         }
     }
     return tsdr;
+}
+
+/*!
+ *@param[in]    soot_fv     Vector of soot volume fractions, one for each grid cell
+ */
+void FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv) {
+    m_SootFv = soot_fv;
 }

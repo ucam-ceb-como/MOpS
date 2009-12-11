@@ -117,7 +117,11 @@ namespace Camflow{
          *  get scalar dissipation rate
          */
         
-        const doublereal getSDR(const doublereal time);
+        doublereal getSDR(const doublereal time) const;
+
+        //! Provide a soot volume fraction from an external calculation
+        void setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv);
+
 
         /**
          *  Set restart time
@@ -130,8 +134,8 @@ namespace Camflow{
     void PlanckAbsorption (const doublereal Temperature, doublereal Absorption[3])const;
     
     //! Computes  the radiative heat loss term for radiative heat dissipation model
-    doublereal RadiativeLoss (const doublereal rho, const doublereal cp, const doublereal Temperature,
-                              const doublereal SootVolFrac)const;
+    doublereal RadiativeLoss (const doublereal rho, const doublereal cp, const doublereal temperature,
+                              const doublereal soot_vol_frac)const;
 
 
     private:
@@ -142,6 +146,9 @@ namespace Camflow{
         doublereal rstartTime;
         vector<doublereal> v_sdr;   //scalar dissipation rate that has a time history
         vector<doublereal> v_time; //time profile of scalar dissipation rates
+
+        //! Spatial profile of soot volume fraction
+        std::vector<doublereal> m_SootFv;
         
 
         bool timeHistory;
