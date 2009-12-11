@@ -20,7 +20,7 @@ namespace Camflow{
         template <class T> T sum(const std::vector<T>& data);
         template <class T> T sum(const std::vector<T>& vec1, std::vector<double>& vec2);
         double sumVector(std::vector<double>& vec1);
-        double sumVector(std::vector<double>& vstd::ec1, vector<double>& vec2);
+        double sumVector(std::vector<double>& vec1, std::vector<double>& vec2);
         //double dydx(double nr1, double nr2, double dr);
         //lagrange interpolation
         doublereal interpolateLG(doublereal at, int size, Array2D &prime, 
