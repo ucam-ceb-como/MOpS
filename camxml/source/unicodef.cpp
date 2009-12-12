@@ -255,7 +255,7 @@ namespace ComoUnicode {
             }
             catch (std::exception &e) {
                 fout.close();
-                throw e;
+                throw;
             }
             fout.close();
         }
@@ -277,7 +277,7 @@ namespace ComoUnicode {
             }
             catch (std::exception &e) {
                 fout.close();
-                throw e;
+                throw;
             }
             fout.close();
         }

@@ -62,15 +62,15 @@ int Document::Load(const std::string &filename)
 int Document::Load(const std::wstring &filename)
 {
     // Open file for reading.
-    ifstream fin(ComoUnicode::WStringToString(filename).c_str(), ios::in);
+    std::ifstream fin(ComoUnicode::WStringToString(filename).c_str(), std::ios::in);
 
     if (fin.good()) {
         STATUS st = Outside;
 
         try {
-            wstring wstr;
+            std::wstring wstr;
             ComoUnicode::StreamToWString(fin, wstr);
-            wistringstream wistr(wstr);
+            std::wistringstream wistr(wstr);
             Element *const l_root = parseElement(wistr, st);
             // Need to free previous m_root memory before reloading
             if (l_root != NULL) {
@@ -85,7 +85,7 @@ int Document::Load(const std::wstring &filename)
         return 0;
     } else {
         // Failed to open file.
-        throw invalid_argument(string("CamXML could not open file: ").append(ComoUnicode::WStringToString(filename)));
+        throw std::invalid_argument(std::string("CamXML could not open file: ").append(ComoUnicode::WStringToString(filename)));
     }
     return -1;
 }
@@ -108,7 +108,7 @@ int Document::Save(const std::wstring &filename, bool XMLDeclaration)
 Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
 {
     wchar_t c;
-    wstring tag, data, comment;
+    std::wstring tag, data, comment;
     Element *el = NULL;
     bool iscomment=false;
 
@@ -140,7 +140,7 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                     // Something has gone wrong.
                     st = Fail;
                     if (el!=NULL) delete el;
-                    throw range_error("Invalid first character in opening tag.");
+                    throw std::range_error("Invalid first character in opening tag.");
                 }
                 break;
             case ReadDocInfo:
@@ -170,7 +170,7 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                     // Invalid tag name character.
                     st = Fail;
                     if (el!=NULL) delete el;
-                    throw range_error("Invalid character in opening tag name.");
+                    throw std::range_error("Invalid character in opening tag name.");
                 }
                 break;
 
@@ -185,7 +185,7 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                     // Invalid tag name character.
                     st = Fail;
                     if (el!=NULL) delete el;
-                    throw range_error("Invalid first character in closing tag.");
+                    throw std::range_error("Invalid first character in closing tag.");
                 }
                 break;
 
@@ -201,7 +201,7 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                     // Invalid tag name character.
                     st = Fail;
                     if (el!=NULL) delete el;
-                    throw range_error("Invalid character in closing tag name.");
+                    throw std::range_error("Invalid character in closing tag name.");
                 }
                 break;
 
@@ -228,9 +228,9 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                             st = Fail;
                             if (el!=NULL) delete el;
                             if (child!=NULL) delete child;
-                            string stag;
+                            std::string stag;
                             ComoUnicode::WStringToString(stag, tag);
-                            throw runtime_error("Failed to read child of element: " + stag);
+                            throw std::runtime_error("Failed to read child of element: " + stag);
                         }
                     }
                 } else {
@@ -261,9 +261,9 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                     } else {
                         st = Fail;
                         if (el!=NULL) delete el;
-                        string stag;
+                        std::string stag;
                         ComoUnicode::WStringToString(stag, tag);
-                        throw runtime_error("Failed to read attribute of element: " + stag);
+                        throw std::runtime_error("Failed to read attribute of element: " + stag);
                     }
 
                 } else if (isWhiteSpace(c)) {
@@ -272,9 +272,9 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                     // Invalid attribute character!
                     st = Fail;
                     if (el!=NULL) delete el;
-                    string stag;
+                    std::string stag;
                     ComoUnicode::WStringToString(stag, tag);
-                    throw range_error("Invalid first character of attribute name of element: " + stag);
+                    throw std::range_error("Invalid first character of attribute name of element: " + stag);
                 }
                 break;
 
@@ -294,9 +294,9 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                 } else {
                     st = Fail;
                     if (el!=NULL) delete el;
-                    string stag;
+                    std::string stag;
                     ComoUnicode::WStringToString(stag, tag);
-                    throw range_error(string("Expected '>' not found when closing empty element: ").append(stag).c_str());
+                    throw std::range_error(std::string("Expected '>' not found when closing empty element: ").append(stag).c_str());
                 }
                 break;
             case CloseDocInfo:
@@ -308,7 +308,7 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                 } else {
                     st = Fail;
                     if (el!=NULL) delete el;
-                    throw range_error(string("Expected '>' not found when closing doc info."));
+                    throw std::range_error(std::string("Expected '>' not found when closing doc info."));
                 }
                 break;
 
@@ -321,7 +321,7 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                 } else {
                     st = Fail;
                     if (el!=NULL) delete el;
-                    throw range_error("Expected first '-' not found when opening a comment.");
+                    throw std::range_error("Expected first '-' not found when opening a comment.");
                 }
                 break;
             case ReadComment2:
@@ -334,40 +334,42 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
                 } else {
                     st = Fail;
                     if (el!=NULL) delete el;
-                    throw range_error("Expected second '-' not found when opening a comment.");
+                    throw std::range_error("Expected second '-' not found when opening a comment.");
                 }
                 break;
             case ReadComment:
                 if (c==L'-') {
-                    if (data[data.length()-1]=='-') {
+                    if (data.at(data.length()-1)=='-') {
                         // Check that next character is ">", otherwise
                         // this is an error.
                         if (fin.peek()!='>') {
                             st = Fail;
                             if (el!=NULL) delete el;
-                            throw range_error("Expected '>' not found when closing a comment.");
+                            throw std::range_error("Expected '>' not found when closing a comment.");
                         }
                     }
+
+                    // ? should be data.append(1u, c);
                     data.append(&c,1);
                 } else if (c==L'>') {
                     if ((data.length()>1) && (data.substr(data.length()-2,2)==L"--")) {
                         data.erase(data.length()-2,2);
                         st = End;
                     } else {
-                        data.append(&c);
+                        data.append(1u, c);
                     }
                 } else {
-                    data.append(&c,1);
+                    data.append(1u, c);
                 }
                 break;
             default:
-                throw runtime_error("Invalid status flag.");
+                throw std::runtime_error("Invalid status flag.");
         }
     }
 
     if (st==Fail) {
         if (el!=NULL) delete el;
-        throw runtime_error("Unhandled error occured.");
+        throw std::runtime_error("Unhandled error occured.");
     } else if ((st==End) && !iscomment) {
         el->SetTag(tag);
         el->SetData(data);
@@ -382,7 +384,7 @@ Element *const Document::parseElement(std::wistringstream &fin, STATUS &st)
 Attribute *const Document::parseAttr(std::wistringstream &fin, CamXML::Document::STATUS &st)
 {
     Attribute *a=NULL;
-    wstring name=L"", data=L"";
+    std::wstring name=L"", data=L"";
     bool waitQuote=true;
     
     wchar_t c;
@@ -423,7 +425,7 @@ Attribute *const Document::parseAttr(std::wistringstream &fin, CamXML::Document:
                 }
                 break;
             default:
-                throw runtime_error("Illegal status flag.");
+                throw std::runtime_error("Illegal status flag.");
         }
     }
 
