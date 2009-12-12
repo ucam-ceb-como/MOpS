@@ -221,7 +221,7 @@ void PAHSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
     //Update the PAHs in the particle ensemble using the database
 
-    //UpdatePAHs(r, t) ;
+    UpdatePAHs(r, t) ;
 	
 
 
