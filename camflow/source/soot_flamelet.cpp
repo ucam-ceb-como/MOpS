@@ -223,6 +223,7 @@ void SootFlamelet::run(const std::vector<real>& data_times,
         sootFv[i] = mParticles->getCell(i).Mixture()->Particles().GetSum(Sweep::ParticleCache::iV) /
                     mParticles->getCell(i).Mixture()->SampleVolume();
     }
+    mChemistry.setExternalSootVolumeFraction(sootFv);
 
     // run the chemistry
     mChemistry.flamelet(scalarDissipRate, data_times, mCalcStarted);
