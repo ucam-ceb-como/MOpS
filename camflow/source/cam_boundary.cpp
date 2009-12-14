@@ -48,11 +48,11 @@ using namespace Strings;
 //copy cnstructor
 CamBoundary::CamBoundary(const CamBoundary &cb){
 
-    cout << "Invoking copy constructor@@@@@@@@@@@@ \n" ;
-    cout << cb.velocity << endl;
-    cout << cb.flowRate << endl;
-    cout << cb.fracType << getFracType() << endl;
-    cout << cb.T << endl;
+    std::cout << "Invoking copy constructor@@@@@@@@@@@@ \n" ;
+    std::cout << cb.velocity << std::endl;
+    std::cout << cb.flowRate << std::endl;
+    std::cout << cb.fracType << getFracType() << std::endl;
+    std::cout << cb.T << std::endl;
 
     velocity = cb.velocity;
     flowRate = cb.flowRate;
@@ -75,18 +75,18 @@ void CamBoundary::setFlowRate(doublereal flow){
     this->flowRate = flow;
 }
 
-void CamBoundary::setSpecies(map<string,doublereal> species){
+void CamBoundary::setSpecies(std::map<std::string,doublereal> species){
     this->species = species;
 }
 
-void CamBoundary::setInletMassfracs(vector<doublereal> fracs){
+void CamBoundary::setInletMassfracs(std::vector<doublereal> fracs){
     this->inletFracs = fracs;
 }
 
-vector<doublereal>& CamBoundary::setInletfracs(Mechanism& mech){
+std::vector<doublereal>& CamBoundary::setInletfracs(Mechanism& mech){
     int index;
     inletFracs.resize(mech.SpeciesCount(),0.0);
-    map<string,doublereal>::iterator p;
+    std::map<std::string,doublereal>::iterator p;
     p = species.begin();
     while(p!=species.end()){
         index = mech.FindSpecies(convertToCaps(trim(p->first)));
@@ -112,11 +112,11 @@ const doublereal& CamBoundary::getFlowRate() const{
     return this->flowRate;
 }
 
-const map<string,doublereal>& CamBoundary::getInletSpecies() const{
+const std::map<std::string,doublereal>& CamBoundary::getInletSpecies() const{
     return this->species;
 }
 
-const vector<doublereal>& CamBoundary::getInletMassfracs() const{
+const std::vector<doublereal>& CamBoundary::getInletMassfracs() const{
     return this->inletFracs;
 }
 

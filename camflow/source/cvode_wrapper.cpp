@@ -11,7 +11,7 @@ extern "C"{
     }
 }
 
-void CVodeWrapper::init(int n, vector<doublereal>& solnVec, doublereal tol,
+void CVodeWrapper::init(int n, std::vector<doublereal>& solnVec, doublereal tol,
                doublereal rtol,doublereal maxIntTime ,int band, CamResidual& cr, doublereal iniTime){
 
     
@@ -64,7 +64,7 @@ doublereal& CVodeWrapper::solve(int stopMode){
     do{
         flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);
         if(flag < 0){
-            cout << "Cvode Integration error\n";            
+            std::cout << "Cvode Integration error\n";            
         }else{
             reacPtr->report(currentTime,NV_DATA_S(y));
         }        
@@ -82,7 +82,7 @@ void CVodeWrapper::solve(int stopMode, doublereal resTol){
     do{
         flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);
         if(flag < 0){
-            cout << "Cvode Integration error\n";
+            std::cout << "Cvode Integration error\n";
         }else{
             CVodeGetDky(cvode_mem,currentTime,1,yPrime);
             calcResNorm();
@@ -106,7 +106,7 @@ void CVodeWrapper::solveDAE(int stopMode, doublereal resTol){
         //call Cvode to solve the ODE
         flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);
         if(flag < 0){
-            cout << "Cvode Integration error\n";
+            std::cout << "Cvode Integration error\n";
         }else{
             CVodeGetDky(cvode_mem,currentTime,1,yPrime);
             calcResNorm();

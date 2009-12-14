@@ -49,6 +49,8 @@
 #include "gpc.h"
 #include "cam_setup.h"
 
+#include <vector>
+
 using namespace Sprog;
 namespace Camflow{
     class CamPlug: public CamSetup{
@@ -67,7 +69,7 @@ namespace Camflow{
         //console output with residuals
         void report(doublereal x, doublereal* soln, doublereal& res);
         //prepare the data vector for output
-        void vectorize(doublereal x, doublereal* soln, vector<doublereal>& data);
+        void vectorize(doublereal x, doublereal* soln, std::vector<doublereal>& data);
         //create the cummary file
         void createSummary();
         //write the summary
@@ -85,7 +87,7 @@ namespace Camflow{
         void integrate(CamBoundary& cb, CamControl& cc);
         
         //return the initial solution vector
-        void getInitial(vector<doublereal>& initial);
+        void getInitial(std::vector<doublereal>& initial);
         
         //residual function definition----------------
         void residual(const doublereal& x, doublereal *y, doublereal *f);

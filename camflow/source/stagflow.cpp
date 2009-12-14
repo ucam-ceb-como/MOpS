@@ -157,7 +157,7 @@ void StagFlow::initSolutionVector(CamControl& cc){
      *initialize the ODE vector
      */
     solvect.resize(nEqn,0);
-    vector<doublereal> vSpec, vT;
+    std::vector<doublereal> vSpec, vT;
     initSpecies(left,right,cc,vSpec);        
     initTemperature(left,cc,vT);
 
@@ -194,7 +194,7 @@ void StagFlow::initMassFlow(){
     /*
      *setting up TDMA coefficients
      */
-    vector<doublereal> a, b,c;
+    std::vector<doublereal> a, b,c;
     a.resize(nCells-2,0);
     b = c = a;
 
@@ -261,7 +261,7 @@ void StagFlow::csolve(CamControl& cc){
 void StagFlow::ssolve(CamControl& cc){
 
     int seg_eqn, band;
-    vector<doublereal> seg_soln_vec;
+    std::vector<doublereal> seg_soln_vec;
     CVodeWrapper cvw;
 
     //for(int i=0; i<cc.getNumIterations(); i++){
@@ -269,7 +269,7 @@ void StagFlow::ssolve(CamControl& cc){
         /*
          *integrate species
          */
-        //cout << "Solving species: " << i << endl;
+        //std::cout << "Solving species: " << i << std::endl;
         eqn_slvd = EQN_SPECIES;
         seg_eqn = nSpc*nCells;
         band = nSpc*2;
@@ -285,7 +285,7 @@ void StagFlow::ssolve(CamControl& cc){
 //         *Integrate energy
 //         */
 //        if(admin->getEnergyModel()==admin->ADIABATIC){
-//            cout << "Solving energy: " << i << endl;
+//            std::cout << "Solving energy: " << i << std::endl;
 //            eqn_slvd = EQN_ENERGY;
 //            seg_eqn = nCells;
 //            band = 1;
@@ -477,7 +477,7 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y){
             m_flow[iMesh_e] = oxid.Vel*m_rho[iMesh_e];
             oxid.FlowRate = m_flow[iMesh_e];
         }
-        vector<doublereal> flow;
+        std::vector<doublereal> flow;
         calcVelocity(flow);
         for(int i=1; i<iMesh_e; i++){
             m_flow[i] = flow[i-1];            
@@ -488,7 +488,7 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y){
         if(configID==camConfig->COUNTERFLOW){
             m_G[iMesh_e] = 1.0;
         }
-        vector<doublereal> mom;
+        std::vector<doublereal> mom;
         calcMomentum(mom);
         for(int i=1; i<iMesh_e;i++){
             m_G[i] = mom[i-1];
@@ -507,9 +507,9 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y){
    
 }
 
-void StagFlow::calcVelocity(vector<doublereal>& u){
+void StagFlow::calcVelocity(std::vector<doublereal>& u){
     
-    vector<doublereal> r;
+    std::vector<doublereal> r;
     u.resize(tdmaFlow.b.size(),0);
     r = u;
     /*
@@ -556,7 +556,7 @@ void StagFlow::calcVelocity(vector<doublereal>& u){
 /*
  *calculate the momentum
  */
-void StagFlow::calcMomentum(vector<doublereal>& mom){
+void StagFlow::calcMomentum(std::vector<doublereal>& mom){
     /*
      *this evaluates the g equation using TDMA.
      *At the stagnation plane the boundary zero gradient boundary
@@ -572,7 +572,7 @@ void StagFlow::calcMomentum(vector<doublereal>& mom){
     doublereal De, fe, Dw, fw;
     doublereal delPW, delPE;
     doublereal mu_e, mu_w;
-    vector<doublereal> a,b,c,r;
+    std::vector<doublereal> a,b,c,r;
     c.resize(nCells-2,0.0);
     mom = a = b = r = c;
     /*---------------------------------------------------
@@ -654,7 +654,7 @@ void StagFlow::updateDiffusionFluxes(){
      *flux at the oxidizer inlet
      */
 //    doublereal delta = 0.5*(dz[iMesh_e]+dz[iMesh_e-1]);
-//    vector<doublereal> flx;
+//    std::vector<doublereal> flx;
 //    flx.resize(nSpc,0);
 //    //preperation for flux correction
 //    doublereal jCorr = 0;
@@ -683,10 +683,10 @@ void StagFlow::report(doublereal t, doublereal* solution){
 
 void StagFlow::report(doublereal t, doublereal* solutio, doublereal& res){
     static int nStep=0;
-    cout.width(5);
-    cout.setf(ios::scientific);
+    std::cout.width(5);
+    std::cout.setf(std::ios::scientific);
     if(nStep%10==0) reporter->consoleHead("time(s) \t residual");
-    cout << t <<"\t" << res << endl;
+    std::cout << t <<"\t" << res << std::endl;
     nStep++;
     
     
@@ -713,8 +713,8 @@ void StagFlow::reportToFile(doublereal t, doublereal* soln){
     doublereal sum;
     reporter->openFiles();
     reporter->writeHeader(headerData);
-    vector<doublereal> data, axpos;
-    vector<doublereal> molfrac, massfrac;
+    std::vector<doublereal> data, axpos;
+    std::vector<doublereal> molfrac, massfrac;
     axpos = reacGeom->getAxpos();
     int len = axpos.size();
     for(int i=0; i<len; i++){

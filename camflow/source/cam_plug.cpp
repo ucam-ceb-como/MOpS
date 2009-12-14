@@ -57,7 +57,7 @@ using namespace Sprog;
 
 
 //return the initial solution vector
-void CamPlug::getInitial(vector<doublereal>& initial){
+void CamPlug::getInitial(std::vector<doublereal>& initial){
     initial = solvect;
 }
 
@@ -102,7 +102,7 @@ void CamPlug::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp
         do{
             Tignition += TStep;
             cb.setTemperature(Tignition);
-            cout << "Looping in ignition\n";
+            std::cout << "Looping in ignition\n";
             integrate(cb,cc);
             //check the inlet temperature with outlet
             Texit = solvect[ptrT];
@@ -110,7 +110,7 @@ void CamPlug::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp
                 ignited = true;
             }
         }while(!ignited);
-        cout  << "MINIMUM  TEMPERATURE REQUIRED " << Tignition << endl;
+        std::cout  << "MINIMUM  TEMPERATURE REQUIRED " << Tignition << std::endl;
     }else{
         integrate(cb,cc);
     }
@@ -212,7 +212,7 @@ void CamPlug::updateMixture(const doublereal& x, doublereal* y){
      *temperature and density
      */
     doublereal tmptr;
-    vector<doublereal> massfracs;
+    std::vector<doublereal> massfracs;
     massfracs.resize(nSpc,0.0);
     for (int l = 0; l < nSpc; l++) {
         massfracs[l] = y[l];        
@@ -251,7 +251,7 @@ void CamPlug::energyResidual(const doublereal& x, doublereal* y, doublereal* f){
     }else{
         //get the molar enthalpy
         CamMath cm;
-        vector<doublereal> eth = camMixture->getMolarEnthalpy();
+        std::vector<doublereal> eth = camMixture->getMolarEnthalpy();
         doublereal cp = camMixture->getSpecificHeatCapacity();
         //heat release due to chemical reactions
         doublereal heat = cm.sumVector(eth,wdot);
@@ -307,7 +307,7 @@ void CamPlug::header(){
 //create the summary file
 void CamPlug::createSummary(){
     struct stat stFileInfo;
-    string fileName = "summary.dat";
+    std::string fileName = "summary.dat";
     int intStat;
     intStat = stat(fileName.c_str(),&stFileInfo);
     if(intStat!=0){
@@ -320,13 +320,13 @@ void CamPlug::createSummary(){
 //report the solution
 void CamPlug::report(doublereal x, doublereal* soln){
     //std::setw(5); std::setprecision(4);
-    cout.width(5);
-    cout.setf(ios::scientific);
+    std::cout.width(5);
+    std::cout.setf(std::ios::scientific);
     updateMixture(x,soln);
-    cout << x << endl;
+    std::cout << x << std::endl;
 
     //prepare to report    
-    vector<doublereal> data;
+    std::vector<doublereal> data;
     vectorize(x,soln,data);
     reporter->writeStdFileOut(data);
 
@@ -335,14 +335,14 @@ void CamPlug::report(doublereal x, doublereal* soln){
  *report the summary
  */
 void CamPlug::reportSummary(doublereal x, doublereal* soln){
-    vector<doublereal> data;
+    std::vector<doublereal> data;
     vectorize(x,soln,data);
     reporter->writeCustomFileOut(data);
 }
 /*
  *create the data vector for output
  */
-void CamPlug::vectorize(doublereal x, doublereal* soln, vector<doublereal>& data){
+void CamPlug::vectorize(doublereal x, doublereal* soln, std::vector<doublereal>& data){
 
     doublereal sum =0;
     data.clear();
@@ -355,7 +355,7 @@ void CamPlug::vectorize(doublereal x, doublereal* soln, vector<doublereal>& data
     data.push_back(camMixture->Temperature());
 
     if(admin->getSpeciesOut()==admin->MOLE){
-        vector<doublereal> molefracs;
+        std::vector<doublereal> molefracs;
         molefracs = camMixture->MoleFractions();
         sum =0.0;
         for (int l = 0; l < nSpc; l++) {
@@ -378,5 +378,5 @@ void CamPlug::vectorize(doublereal x, doublereal* soln, vector<doublereal>& data
  *this is a dummy function
  */
 void CamPlug::report(doublereal x, doublereal* soln, doublereal& res){
-    cout << "nothing implemented\n";
+    std::cout << "nothing implemented\n";
 }

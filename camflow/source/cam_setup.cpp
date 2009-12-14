@@ -9,7 +9,7 @@
 #include "cam_converter.h"
 using namespace Camflow;
 
-void CamSetup::getInletMassFrac(CamBoundary& cb, vector<doublereal>& fracs){
+void CamSetup::getInletMassFrac(CamBoundary& cb, std::vector<doublereal>& fracs){
 
      /*
      *Function returns the inlet mass fraction based on the
@@ -17,7 +17,7 @@ void CamSetup::getInletMassFrac(CamBoundary& cb, vector<doublereal>& fracs){
      */
 
     CamConverter converter;
-    vector<doublereal> initialFracs = cb.setInletfracs(*camMech);
+    std::vector<doublereal> initialFracs = cb.setInletfracs(*camMech);
     if(cb.getFracType() == cb.MOLE){
         converter.mole2mass(initialFracs,fracs,*camMech);
         cb.setInletMassfracs(fracs);
@@ -43,7 +43,7 @@ const doublereal CamSetup::getInletFlowRate(CamBoundary& cb){
 
     doublereal flow;
     if(cb.getFlowRate() == 0){
-        vector<doublereal> massfracs;
+        std::vector<doublereal> massfracs;
         getInletMassFrac(cb,massfracs);
         camMixture->SetMassFracs(massfracs);
         camMixture->SetTemperature(getInletTemperature(cb));
@@ -69,10 +69,10 @@ const doublereal CamSetup::getInletVelocity(CamBoundary& cb){
  *init species
  */
 void CamSetup::initSpecies(CamBoundary& cb, CamControl& cc,
-                                    vector<doublereal>& soln){
+                                    std::vector<doublereal>& soln){
 
     soln.resize(nSpc*cellEnd,0);
-    vector<doublereal>  position;
+    std::vector<doublereal>  position;
     position = reacGeom->getAxpos();
     profile->setStartProfile(cb,*camMech);    
     Array2D start = profile->getStartProfile();
@@ -88,10 +88,10 @@ void CamSetup::initSpecies(CamBoundary& cb, CamControl& cc,
  *init species given 2 inlets
  */
 void CamSetup::initSpecies(CamBoundary& left, CamBoundary& right,
-                    CamControl& cc, vector<doublereal>& soln){
+                    CamControl& cc, std::vector<doublereal>& soln){
 
     soln.resize(nSpc*cellEnd,0);
-    vector<doublereal>  position;
+    std::vector<doublereal>  position;
     position = reacGeom->getAxpos();    
     profile->setStartprofile(left,right,*camMech);    
     Array2D start = profile->getStartProfile();
@@ -106,10 +106,10 @@ void CamSetup::initSpecies(CamBoundary& left, CamBoundary& right,
  *init mass
  */
 void CamSetup::initMassFlow(CamBoundary& cb, CamControl& cc,
-                                        vector<doublereal>& soln){
+                                        std::vector<doublereal>& soln){
 
     soln.resize(cellEnd,0);
-    vector<doublereal>  position;
+    std::vector<doublereal>  position;
     position = reacGeom->getAxpos();
     doublereal flow = getInletFlowRate(cb);
     for(int i=cellBegin; i<cellEnd; i++)
@@ -121,10 +121,10 @@ void CamSetup::initMassFlow(CamBoundary& cb, CamControl& cc,
  *init temperature
  */
 void CamSetup::initTemperature(CamBoundary& cb, CamControl& cc,
-                        vector<doublereal>& soln){
+                        std::vector<doublereal>& soln){
 
     soln.resize(cellEnd,0);
-    vector<doublereal>  position;
+    std::vector<doublereal>  position;
     position = reacGeom->getAxpos();
     doublereal T = getInletTemperature(cb);
 
@@ -142,7 +142,7 @@ void CamSetup::initTemperature(CamBoundary& cb, CamControl& cc,
 
 }
 
-void CamSetup::initTempGauss(vector<doublereal>& soln){
+void CamSetup::initTempGauss(std::vector<doublereal>& soln){
     profile->setGaussTempProfile(soln);
 }
 
@@ -153,7 +153,7 @@ void CamSetup::storeInlet(CamBoundary& cb, inletStruct& ud_inlet){
      *stote the inlet properties in the
      *structure to use with the inlet boundary
      */
-    vector<doublereal> temp;
+    std::vector<doublereal> temp;
     getInletMassFrac(cb,temp);
     camMixture->SetMassFracs(temp);
     doublereal T = getInletTemperature(cb);

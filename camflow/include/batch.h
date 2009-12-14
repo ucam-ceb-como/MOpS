@@ -48,6 +48,9 @@
 #include "gpc.h"
 #include "cam_setup.h"
 #include "cam_configuration.h"
+
+#include <vector>
+
 using namespace Sprog;
 namespace Camflow{
     class Batch : public CamSetup{
@@ -91,7 +94,7 @@ namespace Camflow{
              CamConfiguration &config, CamSoot &cs,  Mechanism &mech );
 
         //return the initial solution vector
-        void getInitial(vector<doublereal>& initial);
+        void getInitial(std::vector<doublereal>& initial);
 
         //residual function definition----------------
         void residual(const doublereal& time, doublereal *y, doublereal *f);
@@ -111,7 +114,7 @@ namespace Camflow{
         
 
         int batchType;
-        vector<doublereal> momRates;
+	std::vector<doublereal> momRates;
 
     };
 }

@@ -47,8 +47,8 @@
 using namespace Camflow;
 using namespace Strings;
 
-Camflow::doublereal CamConverter::getConvertionFactor(string unit){
-    string unitName = convertToCaps(unit);
+Camflow::doublereal CamConverter::getConvertionFactor(std::string unit){
+    std::string unitName = convertToCaps(unit);
     if(!unitName.compare("CM") ){
         factor = 0.01;
     }else if(!unitName.compare("IN")){
@@ -74,7 +74,7 @@ Camflow::doublereal CamConverter::getConvertionFactor(string unit){
     }else if(!unitName.compare("CGS")){
         factor = 10.0;
     }else{
-        string err = "No conversion factor found for unit" + unit + "\n";
+        std::string err = "No conversion factor found for unit" + unit + "\n";
         throw CamError(err);
     }
 
@@ -82,22 +82,22 @@ Camflow::doublereal CamConverter::getConvertionFactor(string unit){
     
 }
 
-string CamConverter::getString(int n){
+std::string CamConverter::getString(int n){
 
-    stringstream out;
+    std::stringstream out;
     out << n;
     return out.str();
 }
 
-string CamConverter::getString(doublereal a){
-    stringstream out;
+std::string CamConverter::getString(doublereal a){
+    std::stringstream out;
     out << a;
     return out.str();
 }
 
 //convert from mole 2 mass
-Camflow::doublereal CamConverter::mole2mass(vector<doublereal>& mole,
-                vector<doublereal>& mass, Mechanism &mech ){
+Camflow::doublereal CamConverter::mole2mass(std::vector<doublereal>& mole,
+                std::vector<doublereal>& mass, Mechanism &mech ){
 
     const SpeciesPtrVector spv = mech.Species();
     doublereal avgMolWt = 0;
@@ -116,8 +116,8 @@ Camflow::doublereal CamConverter::mole2mass(vector<doublereal>& mole,
 }
 
 
-Camflow::doublereal CamConverter::mass2mole(vector<doublereal>& mass,
-                                            vector<doublereal>& mole,
+Camflow::doublereal CamConverter::mass2mole(std::vector<doublereal>& mass,
+                                            std::vector<doublereal>& mole,
                                             Mechanism& mech){
     const SpeciesPtrVector spv = mech.Species();
     doublereal avgMolWt = 0;

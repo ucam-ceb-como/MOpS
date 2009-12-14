@@ -162,7 +162,7 @@ void Batch::residual(const doublereal& time, doublereal* y, doublereal* f){
      *moment residuals
      */
     if(sootMom->active()){
-        vector<doublereal> mom;
+        std::vector<doublereal> mom;
         for(int m=0; m<nMoments; m++)
             mom.push_back(y[nSpc+m]);
 
@@ -174,7 +174,7 @@ void Batch::residual(const doublereal& time, doublereal* y, doublereal* f){
         
         for(int m=0; m<nMoments; m++){
             f[nSpc+m] = resMoment[m];
-            //cout << f[nSpc+m] << endl;int dd; cin >> dd;
+            //std::cout << f[nSpc+m] << std::endl;int dd; cin >> dd;
         }
         
     }
@@ -186,7 +186,7 @@ void Batch::updateMixture(const doublereal& x, doublereal* y){
      *temperature and density
      */
     doublereal tmptr;
-    vector<doublereal> molefracs;
+    std::vector<doublereal> molefracs;
     molefracs.resize(nSpc,0.0);
     doublereal cb = 0;
     for (int l = 0; l < nSpc; l++) {
@@ -227,7 +227,7 @@ void Batch::energyResidual(const doublereal& x, doublereal* y, doublereal* f){
     }else{
         //get the molar enthalpy
         CamMath cm;
-        vector<doublereal> eth = camMixture->getMolarEnthalpy();
+        std::vector<doublereal> eth = camMixture->getMolarEnthalpy();
         doublereal cp = camMixture->getSpecificHeatCapacity();
         //heat release due to chemical reactions
         doublereal heat = cm.sumVector(eth,wdot);
@@ -275,11 +275,11 @@ void Batch::header(){
 void Batch::report(doublereal x, doublereal* soln){
     //std::setw(5); std::setprecision(4);
     static int nStep =0;
-    cout.width(5);
-    cout.setf(ios::scientific);
+    std::cout.width(5);
+    std::cout.setf(std::ios::scientific);
     updateMixture(x,soln);
     if(nStep%20==0) reporter->consoleHead("time (s)");
-    cout << x << endl;
+    std::cout << x << std::endl;
     reportToFile(x,soln);
     nStep++;
 
@@ -290,11 +290,11 @@ void Batch::report(doublereal x, doublereal* soln){
  */
 void Batch::report(doublereal x, doublereal* soln, doublereal& res){
     static int nStep = 0;
-    cout.width(5);
-    cout.setf(ios::scientific);
+    std::cout.width(5);
+    std::cout.setf(std::ios::scientific);
     updateMixture(x,soln);
     if(nStep%20==0) reporter->consoleHead("time(s) \t residual");
-    cout << x << "     " << res << endl;
+    std::cout << x << "     " << res << std::endl;
     reportToFile(x,soln);
     nStep++;
 
@@ -303,7 +303,7 @@ void Batch::report(doublereal x, doublereal* soln, doublereal& res){
 void Batch::reportToFile(doublereal time, doublereal* soln){
     //prepare to report
     doublereal sum =0;
-    vector<doublereal> data;
+    std::vector<doublereal> data;
     data.clear();
     data.push_back(time);
     data.push_back(opPre);
@@ -311,7 +311,7 @@ void Batch::reportToFile(doublereal time, doublereal* soln){
     data.push_back(soln[ptrT]);
 
     if(admin->getSpeciesOut()==admin->MOLE){
-        vector<doublereal> molefracs;
+        std::vector<doublereal> molefracs;
         molefracs = camMixture->MoleFractions();
         sum =0.0;
         for (int l = 0; l < nSpc; l++) {
@@ -323,7 +323,7 @@ void Batch::reportToFile(doublereal time, doublereal* soln){
         }
 
     }else{
-        vector<doublereal> massfracs;
+        std::vector<doublereal> massfracs;
         camMixture->GetMassFractions(massfracs);
         sum =0.0;
         for (int l = 0; l < nSpc; l++) {

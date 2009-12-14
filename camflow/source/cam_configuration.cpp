@@ -56,5 +56,5 @@ int CamConfiguration::getConfiguration() const{
 }
 
 void CamConfiguration::solve(){
-    cout << "Nothing implemented CamConfiguration::solve\n";
+    std::cout << "Nothing implemented CamConfiguration::solve\n";
 }

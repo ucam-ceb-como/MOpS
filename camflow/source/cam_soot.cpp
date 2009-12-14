@@ -88,7 +88,7 @@ void CamSoot::setPAHDia(doublereal dPAH){
 
 }
 
-void CamSoot::setSootSpecies(vector<string> species){
+void CamSoot::setSootSpecies(std::vector<std::string> species){
     sootSpecies = species;
 
 }
@@ -119,12 +119,12 @@ int CamSoot::getNumMoments() const{
     return mmn2Calc;
 }
 
-void CamSoot::setInceptionSpecies(string species){
+void CamSoot::setInceptionSpecies(std::string species){
     iSpecies = species;
 }
 
 void CamSoot::initialize(int nCells, Mechanism &mech,
-                                        vector<doublereal> &mSolnVec){
+                                        std::vector<doublereal> &mSolnVec){
 
 
     /*
@@ -201,7 +201,7 @@ void CamSoot::initialize(int nCells, Mechanism &mech,
     for(int i=1; i<nMoments; i++){
         mSolnVec[i] = mSolnVec[i-1] + log(doublereal(atomsPerDimer));
     }
-    vector<doublereal> temp = mSolnVec;
+    std::vector<doublereal> temp = mSolnVec;
     mSolnVec.resize(nMoments*nCells,0.0);
     for(int i=0; i<nCells; i++){
         for(int l=0; l<nMoments; l++){
@@ -237,13 +237,13 @@ void CamSoot::initialize(int nCells, Mechanism &mech,
 /*
  *soot reactions
  */
-void CamSoot::sootReactions(int cell, vector<doublereal>& conc, vector<doublereal>& mom,
+void CamSoot::sootReactions(int cell, std::vector<doublereal>& conc, std::vector<doublereal>& mom,
                                     int nSpec, doublereal T, doublereal p){
 
     /*
      *convert all concentration to mol/cm^3
      */
-    vector<doublereal> conc_cgs;
+    std::vector<doublereal> conc_cgs;
     conc_cgs.resize(conc.size(),0.0);
     for(unsigned int i=0; i<conc.size(); i++)
         conc_cgs[i] = conc[i]*1e-06;
@@ -274,7 +274,7 @@ void CamSoot::sootReactions(int cell, vector<doublereal>& conc, vector<doublerea
     /*
      *update size moments
      */
-    vector<doublereal> fp;
+    std::vector<doublereal> fp;
     fp.resize(nMoments,1.0);
     for(int i=1; i<nMoments; i++){
         fp[i] = mom[i]/mom[0];;
@@ -296,7 +296,7 @@ void CamSoot::sootReactions(int cell, vector<doublereal>& conc, vector<doublerea
      *surface reactions
      */
     doublereal a,b,rsq;
-    vector<doublereal> surfRates;
+    std::vector<doublereal> surfRates;
     surface(nMoments,cell,T,mom[0],conc_cgs,surfRates);
     surfRates[0] = 0.0;
     if(surfRates[1] < 0.0 ){
@@ -338,14 +338,14 @@ void CamSoot::sootReactions(int cell, vector<doublereal>& conc, vector<doublerea
 /*
  *calculate the nucleation rate
  */
-void CamSoot::nucleation(vector<doublereal>& conc, doublereal T, doublereal p){
+void CamSoot::nucleation(std::vector<doublereal>& conc, doublereal T, doublereal p){
 
     nucRate.resize(nMoments,0);
 
     /*
      *Nucleation rate for zeroth moment
      */
-    doublereal concPAH = max(0.0,conc[iInception]);
+    doublereal concPAH = std::max(0.0,conc[iInception]);
     nucRate[0] = constNucleation*sqrt(T)*concPAH*concPAH;
 
     /*
@@ -366,7 +366,7 @@ void CamSoot::coagulation(doublereal T, doublereal p, doublereal M0){
     doublereal kCoag = Kf*sqrt(T);
 
 
-    vector<doublereal> f;
+    std::vector<doublereal> f;
     CamMath cm;
     f.clear();
     for(int i=0; i<4; i++){
@@ -503,8 +503,8 @@ void CamSoot::condensation( doublereal T,
  *surface reaction rates
  */
 void CamSoot::surface(int hMoment, int cell, doublereal T, doublereal M0,
-                        vector<doublereal>& conc,
-                        vector<doublereal>& totalRates){
+                        std::vector<doublereal>& conc,
+                        std::vector<doublereal>& totalRates){
 
 
     doublereal RT = 1.987e-3*T;
@@ -526,7 +526,7 @@ void CamSoot::surface(int hMoment, int cell, doublereal T, doublereal M0,
     doublereal denom = rr1 + rr2 + fr3 + fr4 + fr5;
     smRates.clear();
     doublereal p_rate;
-    vector<doublereal> rateC2H2, rateO2, rateOH;
+    std::vector<doublereal> rateC2H2, rateO2, rateOH;
     if(denom != 0.){
         doublereal ssRatio = (fr1+fr2)/denom;
         doublereal cArea = alpha * kSurf * M0;
@@ -651,7 +651,7 @@ void CamSoot::surface(int hMoment, int cell, doublereal T, doublereal M0,
  *calculate the sum of surface growth term
  */
 void CamSoot::sums(int hMoment, doublereal massAdded, doublereal coeff,
-                        vector<doublereal>& rates){
+                        std::vector<doublereal>& rates){
     for (int r = 1; r < hMoment; r++) {
         rates[r] = 0.0;
         for (int l = 0; l < r; l++) {
@@ -722,7 +722,7 @@ doublereal CamSoot::betaC2(int i, int j){
     return x;
 }
 
-void CamSoot::linear(int n, vector<doublereal>& y, doublereal& a, doublereal& b,
+void CamSoot::linear(int n, std::vector<doublereal>& y, doublereal& a, doublereal& b,
                         doublereal& rsq){
     doublereal sum = 1.0*n;
     doublereal x1 = 0.0;
@@ -757,8 +757,8 @@ void CamSoot::linear(int n, vector<doublereal>& y, doublereal& a, doublereal& b,
 
 }
 
-void CamSoot::setSizeMoments(vector<doublereal>& fp){
-    //vector<doublereal> fp;
+void CamSoot::setSizeMoments(std::vector<doublereal>& fp){
+    //std::vector<doublereal> fp;
     //fp.resize(nMoments,1.0);
     CamMath cm;
 
@@ -796,7 +796,7 @@ void CamSoot::clearRates(int nCells){
 }
 
 void CamSoot::report(int nCells){
-    vector<string> header;
+    std::vector<std::string> header;
     header.push_back("C2H2");
     header.push_back("CO");
     header.push_back("H");
@@ -826,7 +826,7 @@ void CamSoot::report(int nCells){
     cr.writeCustomHeader(header);
 
     for(int i=0; i<nCells; i++){
-        vector<doublereal> data;
+        std::vector<doublereal> data;
         data.push_back(conc_received(i,iC2H2));
         data.push_back(conc_received(i,iCO));
         data.push_back(conc_received(i,iH));
@@ -854,7 +854,7 @@ void CamSoot::report(int nCells){
  *Initialize the soot moments based on user defined
  *zeroth moments.
  */
-void CamSoot::initMoments(Mechanism &mech, vector<doublereal>& soln,int nCells){
+void CamSoot::initMoments(Mechanism &mech, std::vector<doublereal>& soln,int nCells){
    
     int st = soln.size();
     /*
@@ -955,7 +955,7 @@ void CamSoot::initMoments(Mechanism &mech, vector<doublereal>& soln,int nCells){
 /*
  *residual evaluation
  */
-void CamSoot::residual(const doublereal& time, vector<doublereal>& wdot,
+void CamSoot::residual(const doublereal& time, std::vector<doublereal>& wdot,
                         doublereal* y, doublereal* f){
     for(int r=0; r<nMoments; r++){
         f[r] = wdot[r];        
@@ -966,15 +966,15 @@ void CamSoot::residual(const doublereal& time, vector<doublereal>& wdot,
 /*
  *calculate all rates
  */
-void CamSoot::rateAll(vector<doublereal>& conc,     //species concentration
-                      vector<doublereal>& moments,  //moments
+void CamSoot::rateAll(std::vector<doublereal>& conc,     //species concentration
+                      std::vector<doublereal>& moments,  //moments
                       doublereal& T,                //temperature
                       doublereal& p,                //pressure
-                      vector<doublereal>& rates,    //return rates
+                      std::vector<doublereal>& rates,    //return rates
                       int cellID){  
     
         
-    vector<doublereal> nucRates, coagRates,cdRates, prodRates, sRates;
+    std::vector<doublereal> nucRates, coagRates,cdRates, prodRates, sRates;
     //Calculate nucleation rate
     rateNucleation(conc[iInception],T,nucRates);
     
@@ -990,7 +990,7 @@ void CamSoot::rateAll(vector<doublereal>& conc,     //species concentration
     sRates[0] = 0.0;
 
     if(sRates[1] <= 0){
-        vector<doublereal> f;
+        std::vector<doublereal> f;
         f.resize(nMoments,0.0);
         for(int r = 1; r< nMoments; r++){
             f[r] = log(reducedMoments(6*r));
@@ -1025,7 +1025,7 @@ void CamSoot::rateAll(vector<doublereal>& conc,     //species concentration
 
     for(int m=0; m<nMoments;m++){
         rates[m] = (nucRates[m]+coagRates[m])/moments[m];
-        //cout << nucRates[m] << "  " << coagRates[m] << endl;
+        //std::cout << nucRates[m] << "  " << coagRates[m] << std::endl;
         wdot(cellID,m) = rates[m];
         
     }
@@ -1037,14 +1037,14 @@ void CamSoot::rateAll(vector<doublereal>& conc,     //species concentration
  *nucleation rate
  */
 void CamSoot::rateNucleation(doublereal& concPAH, doublereal& T,
-                                vector<doublereal>& nucRates){
+                                std::vector<doublereal>& nucRates){
 
     doublereal kNucl = Beta_nucl*sqrt(T);
     nucRates.resize(nMoments,0.0);
     /*
      *nucleation rate for the zeroth moment
      */
-    nucRates[0] = kNucl* max(concPAH,0.0)*concPAH;
+    nucRates[0] = kNucl* std::max(concPAH,0.0)*concPAH;
     
     /*
      *number of carbon atoms per dimer
@@ -1060,8 +1060,8 @@ void CamSoot::rateNucleation(doublereal& concPAH, doublereal& T,
 /*
  *coagulation rate
  */
-void CamSoot::rateCoagulation(vector<doublereal>& mom, doublereal& T,
-                            vector<doublereal>& coagRates){
+void CamSoot::rateCoagulation(std::vector<doublereal>& mom, doublereal& T,
+                            std::vector<doublereal>& coagRates){
 
     doublereal kCoag = Beta_fm * sqrt(T);
     CamMath cm;
@@ -1070,7 +1070,7 @@ void CamSoot::rateCoagulation(vector<doublereal>& mom, doublereal& T,
      *carried out on the log of reduced moments
      *store the exponents of the moments
      */
-    vector<doublereal> wholeOrderRedMom; //whole order reduced moments
+    std::vector<doublereal> wholeOrderRedMom; //whole order reduced moments
     wholeOrderRedMom.resize(mom.size(),0.0);
     for(int r=0; r<nMoments; r++){
         wholeOrderRedMom[r] = mom[r]/mom[0];
@@ -1080,7 +1080,7 @@ void CamSoot::rateCoagulation(vector<doublereal>& mom, doublereal& T,
 //    /*
 //     *evaluate the grid functions
 //     */
-    vector<doublereal> f;
+    std::vector<doublereal> f;
     for(int i=0; i<4; i++){
         f.push_back(gridFunction(i,0,0));
         
@@ -1140,10 +1140,10 @@ void CamSoot::rateCoagulation(vector<doublereal>& mom, doublereal& T,
 /*
  *condensation rates
  */
-doublereal CamSoot::rateCondensation(vector<doublereal>& mom,
+doublereal CamSoot::rateCondensation(std::vector<doublereal>& mom,
                                     doublereal& T,
                                     doublereal& conc,
-                                    vector<doublereal>& cdRates){
+                                    std::vector<doublereal>& cdRates){
 
     doublereal k = sqrt(T)*conc*mom[0];
     cdRates.resize(nMoments,0.0);
@@ -1166,11 +1166,11 @@ doublereal CamSoot::rateCondensation(vector<doublereal>& mom,
 /*
  *surface reaction rates
  */
-void CamSoot::rateSurface(vector<doublereal>& conc,
+void CamSoot::rateSurface(std::vector<doublereal>& conc,
                             doublereal T,
-                            vector<doublereal>& mom,
-                            vector<doublereal>& prodRates,
-                            vector<doublereal>& sRates){
+                            std::vector<doublereal>& mom,
+                            std::vector<doublereal>& prodRates,
+                            std::vector<doublereal>& sRates){
 
  
     
@@ -1193,7 +1193,7 @@ void CamSoot::rateSurface(vector<doublereal>& conc,
     doublereal alpha = tanh(par_a/log10(reducedMoments(6)) + par_b );
 
     doublereal denom = rr1+rr2+fr3+fr4+fr5;
-    vector<doublereal> rateC2H2, rateO2, rateOH;
+    std::vector<doublereal> rateC2H2, rateO2, rateOH;
     doublereal coef;
 
     prodRates.resize(conc.size(),0.0);
@@ -1241,7 +1241,7 @@ void CamSoot::rateSurface(vector<doublereal>& conc,
  *interpolate the whole order reduced moments to evaluate the
  *fractional order reduced moments
  */
-void CamSoot::interpolateReducedMoments(vector<doublereal>& wom){
+void CamSoot::interpolateReducedMoments(std::vector<doublereal>& wom){
 
     /*
      *order of the highest fractional moment is nMoments+1/6
@@ -1282,8 +1282,8 @@ void CamSoot::interpolateReducedMoments(vector<doublereal>& wom){
  */
 void CamSoot::momentResidual(const doublereal& time, int iMesh_s,  int iMesh_e,
                             int nVar, int nSpec,
-                            vector<doublereal>& u, vector<doublereal>& rho,
-                           vector<doublereal>& dz,doublereal* y, doublereal* f){
+                            std::vector<doublereal>& u, std::vector<doublereal>& rho,
+                           std::vector<doublereal>& dz,doublereal* y, doublereal* f){
     doublereal convection;
     for(int i=iMesh_s; i<iMesh_e; i++){
         for(int l=0; l<nMoments; l++){
@@ -1291,7 +1291,7 @@ void CamSoot::momentResidual(const doublereal& time, int iMesh_s,  int iMesh_e,
             doublereal phi_w = y[(i-1)*nVar+l+nSpec];
             convection = -u[i]*(phi_e - phi_w)/dz[i];
             f[i*nMoments+l] =  convection + wdot(i,l);
-            //cout << "moment resid " << phi_e << "  " << phi_w << "  " << wdot(i,l) << endl;
+            //std::cout << "moment resid " << phi_e << "  " << phi_w << "  " << wdot(i,l) << std::endl;
 
         }
         //int dd; cin >> dd;
@@ -1302,9 +1302,9 @@ void CamSoot::momentResidual(const doublereal& time, int iMesh_s,  int iMesh_e,
  *residual definitions
  */
 void CamSoot::momentResidual(const doublereal& time, int iMesh_s, int iMesh_e,
-                                vector<doublereal>& dz,
-                                vector<doublereal>& u,
-                                vector<doublereal>& rho,
+                                std::vector<doublereal>& dz,
+                                std::vector<doublereal>& u,
+                                std::vector<doublereal>& rho,
                                 doublereal* y,
                                 doublereal* f){
     doublereal convection;
@@ -1330,7 +1330,7 @@ void CamSoot::addRates(int nCells, Array2D& rates){
 //    }
     for(int i=0; i<nCells; i++){
         //rates(i,iInception) += surfProdRate(i,iInception);
-        //cout << i << "  " << rates(i,iC2H2) << "  " << surfProdRate(i,iC2H2) << endl;
+        //std::cout << i << "  " << rates(i,iC2H2) << "  " << surfProdRate(i,iC2H2) << std::endl;
         rates(i,iC2H2) += surfProdRate(i,iC2H2);
         rates(i,iH) += surfProdRate(i,iH);
         rates(i,iH2) += surfProdRate(i,iH2);

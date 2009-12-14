@@ -52,13 +52,13 @@ using namespace Strings;
 /*
  *set products
  */
-void CamProfile::setProductSpecies(map<string,doublereal> spec){
+void CamProfile::setProductSpecies(std::map<std::string,doublereal> spec){
     list_prdt = spec;
 }
 /*
  *set intermediates
  */
-void CamProfile::setIntermediateSpecies(map<string,doublereal> spec){
+void CamProfile::setIntermediateSpecies(std::map<std::string,doublereal> spec){
     list_intmd = spec;
 }
 /*
@@ -109,8 +109,8 @@ void CamProfile::setStartprofile(CamBoundary& left, CamBoundary& right,
  */
 void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
 
-    vector<doublereal> m_in = cb.getInletMassfracs();
-    vector<doublereal> position = geom->getAxpos();
+    std::vector<doublereal> m_in = cb.getInletMassfracs();
+    std::vector<doublereal> position = geom->getAxpos();
     int len = position.size();
 
     start.resize(len,mech.SpeciesCount());
@@ -145,8 +145,8 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
             }
             f_reac = 1-f_prdt;
 
-            map<string, doublereal>::iterator p;
-            map<string,doublereal> spec = cb.getInletSpecies();
+            std::map<std::string, doublereal>::iterator p;
+            std::map<std::string,doublereal> spec = cb.getInletSpecies();
             p = spec.begin();
             while(p!= spec.end()){
                 int index = mech.FindSpecies(convertToCaps(trim(p->first)));
@@ -178,9 +178,9 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
  *set the gaussian
  */
 void CamProfile::setGaussian(Mechanism& mech){
-    vector<doublereal> position = geom->getAxpos();
+    std::vector<doublereal> position = geom->getAxpos();
     int len = position.size();
-    map<string, doublereal>::iterator p;
+    std::map<std::string, doublereal>::iterator p;
     p = list_intmd.begin();
     while(p!=list_intmd.end()){
         int index = mech.FindSpecies(convertToCaps(trim(p->first)));
@@ -197,13 +197,13 @@ void CamProfile::setGaussian(Mechanism& mech){
  *set the temperature profile based on a guassian distribution
  */
 
-void CamProfile::setGaussTempProfile(vector<doublereal>& vTemp){
+void CamProfile::setGaussTempProfile(std::vector<doublereal>& vTemp){
 
     if(mWidth == 0.0 || mCenter == 0.0){
         throw CamError("Invalid mixing center and mixing width definition\n");
     }
     doublereal dmax = 1.0;
-    vector<doublereal> position = geom->getAxpos();
+    std::vector<doublereal> position = geom->getAxpos();
     int len = position.size();
     vTemp.resize(len,0.0);
     doublereal gWidth = -log(0.15*dmax)/pow(mWidth/2.0,2);
@@ -220,12 +220,12 @@ Array2D& CamProfile::getStartProfile(){
     return start;
 }
 //return the species initial guesses
-void CamProfile::getmassFracs(map<string,doublereal>& spec, Mechanism& mech, vector<doublereal>& frac){
+void CamProfile::getmassFracs(std::map<std::string,doublereal>& spec, Mechanism& mech, std::vector<doublereal>& frac){
     int index;
     frac.resize(mech.SpeciesCount(),0.0);
-    vector<doublereal> temp;
+    std::vector<doublereal> temp;
     temp.resize(mech.SpeciesCount(),0.0);
-    map<string,doublereal>::iterator p;
+    std::map<std::string,doublereal>::iterator p;
     p = spec.begin();
     while(p!=spec.end()){
         index = mech.FindSpecies(convertToCaps(trim(p->first)));
@@ -268,15 +268,15 @@ doublereal CamProfile::getUserDefTemp(const doublereal& pos){
         }else if( i>0 && (pos > u_pos[i-1]) && (pos < u_pos[i]) ){
             tu = u_temp[i];
             xu = u_pos[i];
-            //cout << "location " << i << " pos " << pos << endl;
+            //std::cout << "location " << i << " pos " << pos << std::endl;
             tl = u_temp[i-1];
             xl = u_pos[i-1];
-            //cout << tu << "  " << xu << endl;
-            //cout << tl << "  " << xl << endl;
+            //std::cout << tu << "  " << xu << std::endl;
+            //std::cout << tl << "  " << xl << std::endl;
             doublereal slope = (tu-tl)/(xu-xl);
             doublereal intersect = tu- (slope*xu);
-            //cout << "slope " << slope << endl;
-            //cout << "intersect " << intersect << endl;
+            //std::cout << "slope " << slope << std::endl;
+            //std::cout << "intersect " << intersect << std::endl;
             temp= slope*pos + intersect;
             break;
         }
@@ -285,6 +285,6 @@ doublereal CamProfile::getUserDefTemp(const doublereal& pos){
     return temp;
 }
 
-vector<doublereal>& CamProfile::getPosition(){
+std::vector<doublereal>& CamProfile::getPosition(){
     return this->u_pos;
 }

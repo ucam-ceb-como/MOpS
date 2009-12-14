@@ -52,7 +52,7 @@
 using namespace Camflow;
 using namespace Strings;
 
-void CamRead::readInput(const string fileName,
+void CamRead::readInput(const std::string fileName,
                             CamControl& cc,
                             CamGeometry& cg,
                             CamConverter& convert,
@@ -80,7 +80,7 @@ void CamRead::readInput(const string fileName,
 void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
                                 CamConverter& convert,const CamXML::Element& node){
     CamXML::Element *reactorNode, *subnode;
-    vector<CamXML::Element*> subnodes;
+    std::vector<CamXML::Element*> subnodes;
     //vector<CamXML::Element*>::iterator p;
     const CamXML::Attribute *attr;
     std::string attrValue;
@@ -148,7 +148,7 @@ void CamRead::readProcessConditions(CamConverter& convert,
     //read the wall temperature
         subnode = opNode->GetFirstChild("twall");
         if(subnode!= NULL){
-            string val = subnode->GetAttributeValue("unit");
+            std::string val = subnode->GetAttributeValue("unit");
             doublereal factor = convert.getConvertionFactor(val);
             ca.setWallTemp(cdble(subnode->Data())+factor);
         }
@@ -156,7 +156,7 @@ void CamRead::readProcessConditions(CamConverter& convert,
     //read pressure
         subnode = opNode->GetFirstChild("pressure");
         if(subnode !=NULL){
-            string unit = subnode->GetAttribute("unit")->GetValue();
+            std::string unit = subnode->GetAttribute("unit")->GetValue();
             doublereal fact = convert.getConvertionFactor(unit);
             doublereal pre = cdble(subnode->Data())*fact;
             ca.setPressure(pre);
@@ -230,8 +230,8 @@ void CamRead::readNozzle(CamBoundary& cb,
 
     CamXML::Element *subnode;
     const CamXML::Attribute *atr;
-    map<string, doublereal> fracs;
-    string atrVal;
+    std::map<std::string, doublereal> fracs;
+    std::string atrVal;
 
 
     subnode = node.GetFirstChild("velocity");
@@ -267,7 +267,7 @@ void CamRead::readNozzle(CamBoundary& cb,
     }else{
         cb.setFlowRate(0.0);
     }
-    string member = "species";
+    std::string member = "species";
     subnode = node.GetFirstChild("massfrac");
     if(subnode != NULL){
         cb.setFracType(cb.MASS);
@@ -283,13 +283,13 @@ void CamRead::readNozzle(CamBoundary& cb,
 }
 
 //function to read the mole or mass fractions for any element
-void CamRead::readFrac(string& member, map<string,doublereal>& fracs, const CamXML::Element& subnode){
+void CamRead::readFrac(std::string& member, std::map<std::string,doublereal>& fracs, const CamXML::Element& subnode){
 
-    vector<CamXML::Element*> subnodes;
-    vector<CamXML::Element*>::const_iterator p;
+    std::vector<CamXML::Element*> subnodes;
+    std::vector<CamXML::Element*>::const_iterator p;
     const CamXML::Attribute *atr;
-    string atrVal;
-    string frac,finalSpecies;
+    std::string atrVal;
+    std::string frac,finalSpecies;
     doublereal sumfrac = 0.0;
     subnode.GetChildren(member,subnodes);
     for(p=subnodes.begin(); p<subnodes.end(); ++p){
@@ -313,7 +313,7 @@ void CamRead::readFrac(string& member, map<string,doublereal>& fracs, const CamX
 void CamRead::readControl(CamControl& cc, const CamXML::Element& node){
     CamXML::Element *solverNode, *subnode, *tols;
     const CamXML::Attribute *atr;
-    string atrVal;
+    std::string atrVal;
     solverNode = node.GetFirstChild("solver");
     if(solverNode != NULL){
         atr = solverNode->GetAttribute("mode");
@@ -427,8 +427,8 @@ void CamRead::readInitialGuess(CamProfile& cp,
                                     CamConverter& convert,
                                     const CamXML::Element& node){
     CamXML::Element *initialize, *subsubnode;
-    vector<CamXML::Element*> subsubnodes;
-    vector<CamXML::Element*>::const_iterator p;
+    std::vector<CamXML::Element*> subsubnodes;
+    std::vector<CamXML::Element*>::const_iterator p;
     initialize = node.GetFirstChild("initialize");
     if(initialize != NULL){
         //mixing center
@@ -466,9 +466,9 @@ void CamRead::readInitialGuess(CamProfile& cp,
             }
         }
         //intermediate and product species
-        string mem1 = "product";
-        string mem2 = "intrmdt";
-        map<string,doublereal> fracs;
+        std::string mem1 = "product";
+        std::string mem2 = "intrmdt";
+        std::map<std::string,doublereal> fracs;
         subsubnode = initialize->GetFirstChild("massfrac");
         if(subsubnode!=NULL){
             cp.setFracType(cp.MASS);
@@ -494,7 +494,7 @@ void CamRead::readInitialGuess(CamProfile& cp,
 void CamRead::readReport(CamAdmin& ca, const CamXML::Element& node){
 
     CamXML::Element *subnode;
-    string atrVal;
+    std::string atrVal;
     subnode = node.GetFirstChild("report");
     if(subnode!=NULL){
         atrVal = subnode->GetAttributeValue("species");
@@ -528,10 +528,10 @@ void CamRead::readSoot(CamSoot& cSoot,CamConverter& convert,
 
     CamXML::Element *soot;
     CamXML::Element *subnode;
-    vector<CamXML::Element*> sootSpecies;
-    vector<CamXML::Element*>::const_iterator p;
+    std::vector<CamXML::Element*> sootSpecies;
+    std::vector<CamXML::Element*>::const_iterator p;
     const CamXML::Attribute *atr;
-    vector<string> species;
+    std::vector<std::string> species;
     soot = node.GetFirstChild("soot");
     if(soot != NULL){
         cSoot.setSootMomentActive();
@@ -546,7 +546,7 @@ void CamRead::readSoot(CamSoot& cSoot,CamConverter& convert,
 
         subnode = soot->GetFirstChild("inception_species");
         if(subnode!=NULL){
-            string atrVal = subnode->GetAttributeValue("name");
+            std::string atrVal = subnode->GetAttributeValue("name");
             cSoot.setInceptionSpecies(atrVal);
 
         }else{
@@ -570,7 +570,7 @@ void CamRead::readSoot(CamSoot& cSoot,CamConverter& convert,
 
         subnode = soot->GetFirstChild("dPAH");
         if(subnode!=NULL){
-            string atrVal = subnode->GetAttributeValue("unit");
+            std::string atrVal = subnode->GetAttributeValue("unit");
             doublereal convertL = convert.getConvertionFactor(atrVal);
             cSoot.setPAHDia(cdble(subnode->Data())*convertL);
         }
@@ -579,7 +579,7 @@ void CamRead::readSoot(CamSoot& cSoot,CamConverter& convert,
             cSoot.setNumCAtomInception(int(cdble(subnode->Data())));
         }
 
-        string atrVal = soot->GetAttributeValue("regime");
+        std::string atrVal = soot->GetAttributeValue("regime");
         
         if(!convertToCaps(trim(atrVal)).compare("FREEMOL"))
             cSoot.setRegime(cSoot.FM);

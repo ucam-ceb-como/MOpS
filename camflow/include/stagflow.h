@@ -50,12 +50,15 @@
 #include "cam_setup.h"
 #include "cam_profile.h"
 #include "cam_configuration.h"
+
+#include <vector>
+
 namespace Camflow{
     class StagFlow : public CamSetup {
 
     public:
         typedef struct {
-            vector<doublereal> a,b,c;
+            std::vector<doublereal> a,b,c;
         }tdma_coeff;
 
         StagFlow(){}
@@ -85,8 +88,8 @@ namespace Camflow{
          *calculate flow field
          */
         void calcFlowField(const doublereal& time, doublereal* y);
-        void calcVelocity(vector<doublereal>& flow);
-        void calcMomentum(vector<doublereal>& mom);
+        void calcVelocity(std::vector<doublereal>& flow);
+        void calcMomentum(std::vector<doublereal>& mom);
       
         /*
          *species boundary condition
@@ -128,8 +131,8 @@ namespace Camflow{
          *Newton solver variables
          */
         int alg_nEqn, alg_nVar, alg_band;
-        vector<doublereal> alg_solvect;        
-        vector<doublereal> vFlow;
+        std::vector<doublereal> alg_solvect;        
+        std::vector<doublereal> vFlow;
         //KinsolWrapper *newton;
         doublereal tol_res, eigen;
         doublereal strainRate;

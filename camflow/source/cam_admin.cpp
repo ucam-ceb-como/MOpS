@@ -88,7 +88,7 @@ void CamAdmin::setEnergyModel(int n){
 /*
  *set the energy model ISOTHERMAL, ADIABATIC, USERDEFINED
  */
-void CamAdmin::setEnergyModel(string model){
+void CamAdmin::setEnergyModel(std::string model){
     if(!convertToCaps(model).compare("ADIABATIC"))
         setEnergyModel(ADIABATIC);
     if(!convertToCaps(model).compare("USERDEFINED"))
@@ -100,7 +100,7 @@ void CamAdmin::setEnergyModel(string model){
 }
 
 
-void CamAdmin::setReportSchedule(string repo){
+void CamAdmin::setReportSchedule(std::string repo){
     if(!convertToCaps(repo).compare("FINAL"))
         setReportSchedule(FINAL);
     if(!convertToCaps(repo).compare("INTER"))

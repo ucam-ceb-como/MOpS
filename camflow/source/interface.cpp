@@ -17,15 +17,15 @@ using namespace Camflow;
  */
 Interface::Interface(){
     
-    string fChem("chem.inp");
-    string fThermo("therm.dat");
-    string fTrans("tran.dat");
-    string fCamFlow("camflow.xml");
+    std::string fChem("chem.inp");
+    std::string fThermo("therm.dat");
+    std::string fTrans("tran.dat");
+    std::string fCamFlow("camflow.xml");
 
     try{
         cm.readInput(fCamFlow,cc,cg,convert,ca,cb,cp,config,cSoot);
     }catch(CamError &ce){
-        cout << ce.errorMessge;
+        std::cout << ce.errorMessge;
     }
     
 
@@ -52,12 +52,12 @@ Interface::Interface(){
  *mechanism object
  */
 Interface::Interface(Mechanism& mech_in,
-        vector<doublereal>& dz,
-        vector<Thermo::Mixture>& cstrs,
+        std::vector<doublereal>& dz,
+        std::vector<Thermo::Mixture>& cstrs,
         void* rModel, const doublereal sdr
                                                                 ){
 
-    string fCamFlow("camflow.xml");    
+    std::string fCamFlow("camflow.xml");    
     try{
         cm.readInput(fCamFlow,cc,cg,convert,ca,cb,cp,config,cSoot);
     }catch(CamError &ce){
@@ -90,13 +90,13 @@ Interface::Interface(Mechanism& mech_in,
 /*
  *reset the mixtures with the newly evaluated rties
  */
-void Interface::resetMixtures(vector<Thermo::Mixture>& cstrs){
+void Interface::resetMixtures(std::vector<Thermo::Mixture>& cstrs){
      //Get the species mass fractions
     Array2D massFracs;
     model->getSpeciesMassFracs(massFracs);
 
     //storage for density, velocity, and temperature
-    vector<doublereal> density, vel, temp;
+    std::vector<doublereal> density, vel, temp;
 
     //Get the density
     model->getDensityVector(density);
@@ -111,7 +111,7 @@ void Interface::resetMixtures(vector<Thermo::Mixture>& cstrs){
             throw("size of mixtures is not consistant with the grid\n");
         int nSp = mech.SpeciesCount();
         for(int i=0; i<nCells-2;i++){
-            vector<doublereal> mf;
+            std::vector<doublereal> mf;
             for(int l=0; l<nSp; l++){
                 mf.push_back(massFracs(i+1,l));
             }
@@ -127,7 +127,7 @@ void Interface::resetMixtures(vector<Thermo::Mixture>& cstrs){
         Thermo::Mixture mix(mech.Species());
         int nSp = mech.SpeciesCount();
         for(int i=0; i<nCells-2;i++){
-            vector<doublereal> mf;
+            std::vector<doublereal> mf;
             for(int l=0; l<nSp; l++){
                 mf.push_back(massFracs(i+1,l));
             }
@@ -144,10 +144,10 @@ void Interface::resetMixtures(vector<Thermo::Mixture>& cstrs){
 /*
  *solve the reactor problem
  */
-void Interface::solve(vector<Thermo::Mixture>& cstrs,
-        const vector<doublereal>& dz,
-        const vector< vector<doublereal> >& initalSource,
-        const vector< vector<doublereal> >& finalSource,
+void Interface::solve(std::vector<Thermo::Mixture>& cstrs,
+        const std::vector<doublereal>& dz,
+        const std::vector< std::vector<doublereal> >& initalSource,
+        const std::vector< std::vector<doublereal> >& finalSource,
         CamControl& ccObj,
         CamConfiguration& confObj,
         Mechanism& mech_in,
@@ -184,7 +184,7 @@ const int Interface::getNumberOfSpecies() const {
 /*
  *return the argument vector with the species names
  */
-void Interface::getSpeciesNames(vector<string>& names){
+void Interface::getSpeciesNames(std::vector<std::string>& names){
     names.clear();
     names = speciesNames;
 }
@@ -193,7 +193,7 @@ void Interface::getSpeciesNames(vector<string>& names){
  *  This function is called by the external code that
  *  passes a scalar dissipation rate with time history
  */
-void Interface::flamelet(const vector<doublereal>& sdr, const vector<doublereal>& intTime, bool continuation, bool lnone){
+void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation, bool lnone){
 
     int len = (int) sdr.size();
     if(len != (int)intTime.size())
@@ -227,7 +227,7 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
     if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
     flmlt->setExternalScalarDissipationRate(sdr);
     if(sdr==0){
-        cout << "Passed in value of SDR is zero\n SDR automatic calcilation activated\n" ;
+        std::cout << "Passed in value of SDR is zero\n SDR automatic calcilation activated\n" ;
     }
     try{
         if(!continuation){
@@ -248,7 +248,7 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
         flmlt->getDiffusionCoefficient(mDiff);
         flmlt->getVelocity(mVelocity);
         stMixtureFrac = flmlt->stoichiometricMixtureFraction();
-        cout << "Size of thermal conductivity " << lambda.size() << endl;
+        std::cout << "Size of thermal conductivity " << lambda.size() << std::endl;
     }catch(CamError &ce){
         throw ;
     }
@@ -274,11 +274,11 @@ const doublereal Interface::getDensity(const doublereal axpos){
  *
  *@return   Vector of mass fractions at all the independent variable points
  */
-const vector<doublereal> Interface::getMassFracsBySpecies(const int spIndex) const {
+const std::vector<doublereal> Interface::getMassFracsBySpecies(const int spIndex) const {
     // Find the length of the mass fraction profile and create an empty
     // vector with this much space
     const size_t len = indVar.size();
-    vector<doublereal> mf(len);
+    std::vector<doublereal> mf(len);
 
     for(size_t i=0; i<len; i++){
         mf[i] = spMassFracs(i,spIndex);
@@ -292,8 +292,8 @@ const vector<doublereal> Interface::getMassFracsBySpecies(const int spIndex) con
  *
  *@return   Vector of all mass fractions at one independent variable point
  */
-const vector<doublereal> Interface::getMassFracsByPoint(const int indVarIndex) const {
-    vector<doublereal> mf(nSpecies);
+const std::vector<doublereal> Interface::getMassFracsByPoint(const int indVarIndex) const {
+    std::vector<doublereal> mf(nSpecies);
 
     for(int i = 0; i < nSpecies; i++){
         mf[i] = spMassFracs(indVarIndex, i);
@@ -343,8 +343,8 @@ const doublereal Interface::getThermalConductivity(const doublereal axPos){
 /**
  *  Return a vector of diffusion coefficients
  */
-const vector<doublereal> Interface::getDiffusionCoefficients(const doublereal axPos){
-    vector<doublereal> diff, rmDiff;
+const std::vector<doublereal> Interface::getDiffusionCoefficients(const doublereal axPos){
+    std::vector<doublereal> diff, rmDiff;
     int len = indVar.size();
     rmDiff.clear();
     for(int k=0; k<nSpecies; k++){
@@ -364,7 +364,7 @@ const vector<doublereal> Interface::getDiffusionCoefficients(const doublereal ax
  *private function to do the interpolation of the solution variables
  */
 doublereal Interface::getVariableAt(const doublereal& pos,
-                                    const vector<doublereal>& var) const{
+                                    const std::vector<doublereal>& var) const{
 
     doublereal vu, vl, xu, xl, temp=0.0;
     int len = indVar.size();

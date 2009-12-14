@@ -11,6 +11,7 @@
 #include "cam_params.h"
 #include "cam_residual.h"
 #include <cmath>
+#include <vector>
 #include "cvode/cvode.h"
 #include "cvode/cvode_band.h"
 #include "cvode/cvode_dense.h"
@@ -28,7 +29,7 @@ namespace Camflow{
     public:
         CVodeWrapper(){}
         ~CVodeWrapper(){}
-        void init(int n, vector<doublereal> &solnVec, 
+        void init(int n, std::vector<doublereal> &solnVec, 
                                         doublereal atol,
                                         doublereal rtol,
                                         doublereal maxIntTime,
