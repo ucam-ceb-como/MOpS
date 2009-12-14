@@ -55,18 +55,7 @@ namespace Sweep
 class PAHSolver : public Mops::ParticleSolver, public Sweep::Solver
 {
 public:
-/*
-    // A map of Time/Gas-Phase pairs which describes a gas-phase
-    // chemistry profile.
-    struct GasPoint {
-        real Time;
-        Sprog::Thermo::IdealGas Gas;
-        GasPoint(const Sprog::SpeciesPtrVector &species);
-    };
-    typedef std::vector<GasPoint> GasProfile;
-    typedef std::map<real, Sprog::Thermo::IdealGas> GasProfile;
-    typedef std::pair<real, Sprog::Thermo::IdealGas> GasPoint;
-*/
+
 
     // Constructors.
     PAHSolver(void); // Default constructor.
@@ -95,16 +84,6 @@ public:
 private:
     // The gas-phase chemistry profile.
     GasProfile m_gasprof;
-	// the id of the PAH. 
-	//int ID;
-/*	int maxID;
-	struct trajectory {
-		std::vector<double> time;
-		std::vector<int> n_carbon_t;
-    };
-	std::vector<trajectory> alltrajectories;*/
-    void UpdateNumberPAHs(Mops::Reactor &r,real time); 
-    void UpdatePAHs(Mops::Reactor &r, real t);
 
 };
 };
