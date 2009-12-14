@@ -49,8 +49,6 @@
 
 #include <stdexcept>
 
-//added to test 3-d output
-//#include "swp_imgnode.h"
 #include "swp_particle_image.h"
 #include "swp_ensemble_image.h"
 #include "string_functions.h"
@@ -818,11 +816,17 @@ void Mechanism::LPDA(real t, Cell &sys) const
 void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 {   
     // Deal with the growth of the PAHs
-    if (ParticleModel::AggModel()==AggModels::PAH_ID)
+    if (AggModel() == AggModels::PAH_ID)
     {
-        AggModels::PAHPrimary *pah = NULL;
-        pah = dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
+        // If the agg model is PAH_ID then all the primary
+        // particles must be PAHPrimary.
+        AggModels::PAHPrimary *pah = 
+                dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
+
+        // Look up new size of PAHs in database
+        pah->UpdatePAHs(t);
         pah->UpdateCache();
+        pah->CheckCoalescence();
     }
     // If there are no deferred processes then stop right now.
     if (m_anydeferred) {

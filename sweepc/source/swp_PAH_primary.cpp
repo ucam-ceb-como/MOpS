@@ -315,25 +315,32 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
     m_numcarbon = source->m_numcarbon;
 
     // Replace the PAHs with those from the source
-    m_PAH.clear();
-    m_PAH.insert(m_PAH.end(),source->m_PAH.begin(),source->m_PAH.end());
+    m_PAH.assign(source->m_PAH.begin(),source->m_PAH.end());
 	
 }
 
-//selects a uniformly chosen primary  
+
 /*!
- * @param[in] root Pointer to the primary root node
-*/
+ * Select a primary uniformly at random from this particle
+ * and descend the aggregate tree to find the primary.
+ * Note that most PAHPrimarys are nodes in a tree representing
+ * connectivity within an aggregate, so it is necessary to 
+ * descend the tree to find a primary that really is a
+ * primary.
+ *
+ * @return      Pointer to an object representing a phsyical primary
+ */
 PAHPrimary *PAHPrimary::SelectRandomSubparticle()
 {
-	double ran=rnd();
+    double ran=rnd();
     int target=int(ran*(m_numprimary));
-	return SelectRandomSubparticleLoop(target);
+    return SelectRandomSubparticleLoop(target);
 
 }
 /*!
- * @param[in] source Pointer to the primary root node to be copied
  * @param[in] target The primary to be selected
+ *
+ * @return      Pointer to the next node down the tree on the path to target primary
 */
 PAHPrimary *PAHPrimary::SelectRandomSubparticleLoop(int target)
 {	
@@ -438,9 +445,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
         {
             PAHPrimary copy_rhs(*rhsparticle);
             PAHPrimary *target = copy_rhs.SelectRandomSubparticle();
-			//for (j=m_PAH.begin(); j!=m_PAH.end(); ++j) {
-			//	target->m_PAH.insert(target->m_PAH.end(),PAH(*j));
-            //}
+
             target->m_PAH.insert(target->m_PAH.end(),m_PAH.begin(),m_PAH.end());
             target->UpdatePrimary();
             CopyParts(&copy_rhs);
@@ -458,18 +463,13 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
 		    if (m_leftchild!=NULL)
 		    {
 			    PAHPrimary *target = SelectRandomSubparticle();
-	    //		for (j=rhsparticle->m_PAH.begin(); j!=rhsparticle->m_PAH.end(); ++j) {
-	    //			target->m_PAH.insert(target->m_PAH.end(),PAH(*j));
-	    //		}
+
                 target->m_PAH.insert(target->m_PAH.end(),rhsparticle->m_PAH.begin(),rhsparticle->m_PAH.end());
                 target->UpdatePrimary();
 
 		    }
 		    else
 		    {
-		    //	for (j=rhsparticle->m_PAH.begin(); j!=rhsparticle->m_PAH.end(); ++j) {
-		    //		m_PAH.insert(m_PAH.end(),PAH(*j));
-		    //	}
                 m_PAH.insert(m_PAH.end(),rhsparticle->m_PAH.begin(),rhsparticle->m_PAH.end());
                 UpdatePrimary();
 		    }
@@ -847,6 +847,10 @@ void PAHPrimary::UpdatePAHs(real t)
 	}
     else
     {   
+        // There are PAHs in this primary so update them, if needed
+        // Flag to show if any PAH has been changed
+        bool PAHchanged = false;
+
         // Loop over each PAH in this primary
         for (std::vector<PAH>::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
 
@@ -881,25 +885,33 @@ void PAHPrimary::UpdatePAHs(real t)
             // fairly regularly.
             // Updates over each time step in the database will be applied in
             // successive iterations through this loop.
-		    for (unsigned int j=i->lastposPAHupdate;j<i->m_trajectory->alltrajectories.at(i->ID).time.size();j++)
+            for (unsigned int j=i->lastposPAHupdate; j<i->m_trajectory->alltrajectories.at(i->ID).time.size(); j++)
             {
-                // Update the size of the PAH
-			    i->m_numcarbon=i->m_trajectory->alltrajectories.at(i->ID).n_carbon_t.at(j);
+                if (i->m_trajectory->alltrajectories.at(i->ID).time.at(j) >= 0.999 * seektime) {
+
+                    if((i->lastposPAHupdate != j) || (i->lastposPAHupdate == 0))
+                    {
+                        // Update the size of the PAH
+                        i->m_numcarbon=i->m_trajectory->alltrajectories.at(i->ID).n_carbon_t.at(j);
                 
-                //@todo remove the 0.999
-			    if (i->m_trajectory->alltrajectories.at(i->ID).time.at(j)>=0.999*seektime)
-			    {
+                        // PAH has been updated to a later time
+                        PAHchanged = true;
+                    }
+
                     // Cache the new trajectory database row index and exit the loop
                     i->lastposPAHupdate=j;
-				    break;            
-			    }
-		    }
-		    i->lastupdated=t;
+                    break;            
+                }
+	    }
+            i->lastupdated=t;
         }
 
         // Calculate derived quantities such as collision diameter and surface
         // area by iterating through all the PAHs.  This call is rather expensive.
-        UpdatePrimary();
+        if(PAHchanged) {
+            UpdatePrimary();
+        }
+        // otherwise there is no need to update
     }
 }
 
@@ -990,8 +1002,15 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
     //this is a primary and the number of primaries below this node is one (this node and no children)
 	else
 	{
-		m_numprimary=1;
-        m_avg_coalesc=0;
+            m_numprimary=1;
+
+            // Check that the primary is begin kept up to date
+//            const real oldNumCarbons = m_numcarbon;
+//            UpdatePrimary();
+//            if(m_numcarbon != oldNumCarbons)
+//                std::cerr << "UpdatePrimary has changed num carbons inside UpdateCache\n";
+
+            m_avg_coalesc=0;
 	}
      
     //this is not a primary, sum up the properties 
@@ -1044,6 +1063,7 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
         {
             m_diam=0;
             m_dmob=0;
+
         }
     }
 }
