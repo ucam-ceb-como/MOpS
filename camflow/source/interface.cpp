@@ -195,21 +195,59 @@ void Interface::getSpeciesNames(std::vector<std::string>& names){
  */
 void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation, bool lnone){
 
-    int len = (int) sdr.size();
-    if(len != (int)intTime.size())
+    if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
 
     if(flmlt == NULL ) flmlt = new FlameLet();    
     //Set the time history of the scalar dissipation rate
     flmlt->setRestartTime(intTime[0]);
     flmlt->setExternalScalarDissipationRate(intTime,sdr);
+
+    // find out the grid size
+    std::vector<doublereal> dummy;
+    flmlt->getIndepedantVar(dummy);
+
+    // Build up a vector of zero soot volume fractions
+    std::vector<doublereal> zeroSoot(dummy.size(), 0.0);
+    flmlt->setExternalSootVolumeFraction(zeroSoot);
+
     try{
+        const size_t len = sdr.size();
         flamelet(sdr[len-1], intTime[len-1],continuation,lnone);
     }catch(CamError& ce){
         throw;
     }
 
 }
+
+/**
+ *  This function is called by the external code that
+ *  passes a scalar dissipation rate with time history
+ *  and a spatial profile of soot volume fraction.
+ */
+void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const std::vector<doublereal>& sdr, 
+                                 const std::vector<doublereal>& intTime, bool continuation, bool lnone){
+
+    if(sdr.size() != intTime.size())
+        throw CamError("Mismatch in the size of SDR and TIME vector\n");
+
+    if(flmlt == NULL ) flmlt = new FlameLet();    
+    //Set the time history of the scalar dissipation rate
+    flmlt->setRestartTime(intTime[0]);
+    flmlt->setExternalScalarDissipationRate(intTime,sdr);
+
+    //@todo check length of the vector
+    flmlt->setExternalSootVolumeFraction(soot_fv);
+
+    try{
+        const size_t len = sdr.size();
+        flamelet(sdr[len-1], intTime[len-1],continuation,lnone);
+    }catch(CamError& ce){
+        throw;
+    }
+
+}
+
 
 /*
  *this function is the interface for calling the flamelet code

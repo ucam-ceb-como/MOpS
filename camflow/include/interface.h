@@ -187,6 +187,11 @@ namespace Camflow{
          *calling interface to solve flamelets with time-history-scalar dissipation rates
          */
         void flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
+
+        //! Interface for use when soot is available
+        void flameletWithSoot(const std::vector<doublereal>& soot_fv, const std::vector<doublereal>& sdr, 
+                              const std::vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
+
         /*
          *assigen the species mass fractions, temperature, density, and
          *velocity into the vector of mixture objects
