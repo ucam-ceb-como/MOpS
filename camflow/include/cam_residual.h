@@ -307,13 +307,18 @@ namespace Camflow{
         std::vector<doublereal> dz;                   //grid spacting
         std::vector<doublereal> axpos;                //axial position
         std::vector<doublereal> avgMolWt;             //average molecular weight
-        std::vector<doublereal> slopes;              //slopes of piece-wise linear particle sources
+        std::vector<doublereal> slopes;               //slopes of piece-wise linear particle sources
+        std::vector<doublereal> radiation;            //radiative heat loss term for output to profile.h
 
         std::vector<doublereal> resSp, resT, resFlow, resMoment, resAxVel;
        
+
         doublereal opPre;                        //operating pressure
         doublereal Tignition;                   //Ignition temperature
         
+
+
+
 
         int nEqn;    //number of equations
         int nVar;    //number of variables
