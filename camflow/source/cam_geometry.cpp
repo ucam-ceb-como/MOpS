@@ -52,7 +52,7 @@ void CamGeometry::setGridFile(string name){
 }
 
 
-void CamGeometry::discretize(){
+/*void CamGeometry::discretize(){
     vector<doublereal> grid;
     ifstream inf;
     inf.open(gridFile.c_str(),ios::in);
@@ -80,11 +80,17 @@ void CamGeometry::discretize(){
         axPos.push_back((pos - dz[i]/2.0));        
     }
     length = grid[len];
-}
+}*/
 
 void CamGeometry::setGeometry(const vector<doublereal>& dz_){
     dz = dz_;
     nCell=dz.size();
+    //axial position info cell centers
+    doublereal pos =0;
+    for(int i=0; i<nCell; i++){
+        pos += dz[i];
+        axPos.push_back((pos - dz[i]/2.0));        
+    }
 }
 
 void CamGeometry::setLength(doublereal len){
@@ -107,6 +113,10 @@ void CamGeometry::setDia(doublereal d){
     dia = d;   
 }
 
+std::string CamGeometry::getGridFileName() const{
+    return gridFile;
+}
+
 doublereal CamGeometry::getDia() const{
     return dia;
 }
@@ -115,10 +125,10 @@ doublereal CamGeometry::getArea() const{
     return (pi*dia*dia/4.0);
 }
 
-doublereal CamGeometry::getSurfArea() {
+/*doublereal CamGeometry::getSurfArea() {
     if(length==0)discretize();
     return (pi*dia*length);
-}
+}*/
 
 doublereal CamGeometry::getSurfAres_l() const{
     return (pi*dia);

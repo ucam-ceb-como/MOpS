@@ -203,12 +203,8 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
     flmlt->setRestartTime(intTime[0]);
     flmlt->setExternalScalarDissipationRate(intTime,sdr);
 
-    // find out the grid size
-    std::vector<doublereal> dummy;
-    flmlt->getIndepedantVar(dummy);
-
     // Build up a vector of zero soot volume fractions
-    std::vector<doublereal> zeroSoot(dummy.size(), 0.0);
+    std::vector<doublereal> zeroSoot(cg.getnCells(), 0.0);
     flmlt->setExternalSootVolumeFraction(zeroSoot);
 
     try{

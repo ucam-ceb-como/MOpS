@@ -143,7 +143,7 @@ SootFlamelet::~SootFlamelet() {
  *@return    Geometry1d with cell boundaries taken from Camflow
  */
 Geometry::Geometry1d SootFlamelet::buildBrushGeometry() {
-    mChemistry.getCamGeometry().discretize();
+
     std::vector<real> cellLengths = mChemistry.getCamGeometry().getGeometry();
 
     // There will be one more vertex than there are cells

@@ -65,13 +65,13 @@ void CamRead::readInput(const std::string fileName,
     const CamXML::Element* root;
     if(doc.Load(fileName) == 0){
         root = doc.Root();
+        readGrid(cg,*root);
         readGeometry(cg,config,convert,*root);
         readProcessConditions(convert,ca,*root);
         readBoundary(ca,cb,convert,*root);
         readControl(cc,*root);
         readInitialGuess(cp,convert,*root);
         readReport(ca,*root);
-        readGrid(cg,*root);
         readSoot(cSoot,convert,*root);
     }
 }
@@ -120,6 +120,32 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
         }else{
             cg.setLength(0.0);
         }
+
+        // Read the grid in from the file, usually grid.inp.
+        std::vector<doublereal> grid;
+        std::vector<doublereal> dz;
+        std::ifstream inf;
+        inf.open(cg.getGridFileName().c_str(),std::ios::in);
+        if(inf.good()){
+            std::string position;       
+            while(!inf.eof()){
+                getline(inf,position);
+                if(! isEmpty(position)){
+                    grid.push_back(cdble(position));
+                }
+            }
+        }
+        inf.close();
+
+        // Calculate cell widths.
+        int len = grid.size()-1;
+        cg.setLength(len);
+        for(int i=0; i<len; i++){
+            dz.push_back(grid[i+1]-grid[i]);
+        }        
+        // Call setGeometry in CamGeometry to assign length, axial positions
+        // and cell widths.
+        cg.setGeometry(dz);
 
     }else{
         throw CamError("Reactor definition missing\n");

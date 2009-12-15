@@ -49,7 +49,7 @@ void FlameLet::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
     ptrT = nSpc;                    // temperature offset
     nVar = nSpc+1;                  // number of variables
 
-    if(reacGeom->getnCells()==0) reacGeom->discretize();
+    //if(reacGeom->getnCells()==0) reacGeom->discretize();
 
     reacGeom->addZeroWidthCells();
 
@@ -751,13 +751,13 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
         const doublereal mole_fracsCO = s_mf(i,iCO)*avgMolWt[i]/molwtCO;
 
         //Soot Volume Fraction is set to zero here
-        radiation.resize(mCord,0.0);
+        //radiation.resize(mCord,0.0);
         
         //This radiation term is sentt to as output to profile.h 
-        radiation[i] = RadiativeLoss(m_rho[i], m_cp[i], m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
+        //radiation[i] = RadiativeLoss(m_rho[i], m_cp[i], m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
         
         //This is the new energy residual term, accounting for radiation.
-        f[i] += RadiativeLoss(m_rho[i], m_cp[i], m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
+        //f[i] += RadiativeLoss(m_rho[i], m_cp[i], m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
 
     }
 
