@@ -159,7 +159,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="include"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
 				DebugInformationFormat="1"
