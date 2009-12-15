@@ -50,11 +50,11 @@
 #include <mops_mechanism.h>
 #include <mops_reactor.h>
 
-#include <cvodes/cvodes.h>           /* prototypes for CVODES fcts. and consts. */
-#include <cvodes/cvodes_dense.h>     /* prototype for CVDENSE fcts. and constants */
-#include <nvector/nvector_serial.h>  /* defs. of serial NVECTOR fcts. and macros  */
-#include <sundials/sundials_types.h> /* def. of type realtype */
-#include <sundials/sundials_math.h>  /* definition of ABS */
+#include "cvodes/cvodes.h"           /* prototypes for CVODES fcts. and consts. */
+#include "cvodes/cvodes_dense.h"     /* prototype for CVDENSE fcts. and constants */
+#include "nvector/nvector_serial.h"  /* defs. of serial NVECTOR fcts. and macros  */
+#include "sundials/sundials_types.h" /* def. of type realtype */
+#include "sundials/sundials_math.h"  /* definition of ABS */
 
 namespace Mops
 {
