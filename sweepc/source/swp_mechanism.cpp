@@ -789,7 +789,8 @@ void Mechanism::LPDA(real t, Cell &sys) const
 {	
     // Check that there are particles to update and that there are
     // deferred processes to perform.
-    if ((sys.ParticleCount() > 0) && (m_anydeferred)) {
+    if ((sys.ParticleCount() > 0) && 
+        (m_anydeferred || (AggModel() == AggModels::PAH_ID))) {
         // Stop ensemble from doubling while updating particles.
         sys.Particles().FreezeDoubling();
 

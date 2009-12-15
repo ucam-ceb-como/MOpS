@@ -143,7 +143,7 @@ real Solver::calcSplitTime(real t, real tstop, real jrate,
 {
     // Calculate the splitting time step, ensuring that it is
     // not longer than the maximum allowable time.
-    real tsplit = n * m_splitratio / (jrate + 1.0);
+    real tsplit = (n + 1) * m_splitratio / (jrate + 1.0);
     tsplit = min(tsplit, maxdt);
 
     // Now put the split end time into tsplit, again
