@@ -44,11 +44,11 @@
 
 #include "pred_corr_solver.h"
 #include "swp_particle_cache.h"
+#include "settings_io.h"
 
 
 /*!
- *
- *
+ * Load all settings from files with standard names.
  */
 SootFlamelet::SootFlamelet()
     : mChemistry()
@@ -75,12 +75,24 @@ SootFlamelet::SootFlamelet()
     std::cout << "Read particle mechanism with " << mech.ParticleMech().ProcessCount()
               << " processes\n";
 
-    // Max particle count and max m0 estimates
-    std::vector<std::pair<real, real> > maxPCounts, maxM0s;
-    maxPCounts.push_back(std::make_pair<real, real>(0, 1024));
-    maxPCounts.push_back(std::make_pair<real, real>(1, 1024));
-    maxM0s.push_back(std::make_pair<real, real>(0, 1e11));
-    maxM0s.push_back(std::make_pair<real, real>(1, 1e11));
+
+    //========= Load numerical parameters for brush ==============
+    CamXML::Document settingsXML;
+    settingsXML.Load("brush.xml");
+    const CamXML::Element * const root = settingsXML.Root();
+
+    // Maximum number of computational particles as a function
+    // of position.
+    std::vector<std::pair<real, real> > maxPCounts =
+        Brush::Settings_IO::readProfile(root, "pcount");
+
+
+    // Note that the max m0 estimates are interpreted as having
+    // units of m^-3, in contrast to Mops which uses cm^-3
+    // for inputs.  Max m0 estimates are used to estimate an
+    // initial sample volume (scaling factor)
+    std::vector<std::pair<real, real> > maxM0s =
+        Brush::Settings_IO::readProfile(root, "maxm0");
 
     // Finally create the object that will contain the particle populations.
     mParticles = new Brush::Reactor1d(geom, mech, maxPCounts, maxM0s);
@@ -95,6 +107,8 @@ SootFlamelet::~SootFlamelet() {
     mParticles = NULL;
 }
 
+// These two methods cannot be implemented until the corresponding methods are
+// implemented for Interface.
 /*!
  *@param[in]    Instance to copy
  */
@@ -129,6 +143,7 @@ SootFlamelet::~SootFlamelet() {
  *@return    Geometry1d with cell boundaries taken from Camflow
  */
 Geometry::Geometry1d SootFlamelet::buildBrushGeometry() {
+    mChemistry.getCamGeometry().discretize();
     std::vector<real> cellLengths = mChemistry.getCamGeometry().getGeometry();
 
     // There will be one more vertex than there are cells
