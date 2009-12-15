@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include;..\camxml\include;..\sprogc\include;..\comostrings\include;..\cvode\include;..\cvode\source"
+				AdditionalIncludeDirectories="..\utils\include;..\geometry\include;..\sweepc\include;..\mopsc\include;..\brush\include;include;..\camxml\include;..\sprogc\include;..\comostrings\include;..\cvode\include;..\cvode\source"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -116,7 +116,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="include;..\camxml\include;..\sprogc\include;..\comostrings\include;..\cvode\include;..\cvode\source"
+				AdditionalIncludeDirectories="..\sweepc\include;include;..\mopsc\include;..\camxml\include;..\sprogc\include;..\comostrings\include;..\cvode\include;..\cvode\source;..\geometry\include;..\brush\include;..\utils\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -263,6 +263,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\soot_flamelet.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\stagflow.cpp"
 				>
 			</File>
@@ -370,6 +374,10 @@
 			</File>
 			<File
 				RelativePath=".\include\interface.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\soot_flamelet.h"
 				>
 			</File>
 			<File
