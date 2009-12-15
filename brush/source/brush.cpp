@@ -60,6 +60,7 @@
 #include "pred_corr_solver.h"
 #include "reset_chemistry.h"
 #include "simulator.h"
+#include "settings_io.h"
 
 #include "linear_interpolator.hpp"
 
@@ -220,65 +221,10 @@ int main(int argc, char* argv[])
         }
 
         // Maximum number of computational particles per cell
-        std::vector<CamXML::Element*> settings;
-        root->GetChildren("pcount", settings);
-        if (settings.empty()) {
-            throw std::runtime_error("At least one <pcount> element must be supplied to specify max number of computational particles in cells");
-        } else {
-            for(std::vector<CamXML::Element*>::const_iterator it = settings.begin();
-                it != settings.end(); ++it) {
-                // Loop over the pcount entries
-                real maxPCount = atof((*it)->Data().c_str());
-                
-                // Look for position information
-                const CamXML::Attribute* const  posnAttrib = (*it)->GetAttribute("x");
-                real x = 0;
-                if(posnAttrib) {
-                    //Found a position so store the full setting
-                    x = atof(posnAttrib->GetValue().c_str());
-                }
-                else if(settings.size() == 1) {
-                    // Allow one element to be specified without a position, if no other
-                    // elements are specified so a global setting may be given
-                    x = 0.0;
-                }
-                else {
-                    throw std::runtime_error("x (position) attribute must be supplied for all <pcount> elements\n \
-                                              or exactly one global <pcount> must be supplied withou an x attribute\n");
-                }
-                maxPCounts.push_back(std::make_pair<real, real>(x, maxPCount));
-            }
-        }
+        maxPCounts = Brush::Settings_IO::readProfile(root, "pcount");
 
         // Maximum particle concentration
-        root->GetChildren("maxm0", settings);
-        if (settings.empty()) {
-            throw std::runtime_error("At least one <maxm0> element must be supplied to specify max concentration in cells");
-        } else {
-            for(std::vector<CamXML::Element*>::const_iterator it = settings.begin();
-                it != settings.end(); ++it) {
-                // Loop over the pcount entries
-                real maxM0 = atof((*it)->Data().c_str());
-
-                // Look for position information
-                const CamXML::Attribute* const  posnAttrib = (*it)->GetAttribute("x");
-                real x = 0;
-                if(posnAttrib) {
-                    //Found a position so store the full setting
-                    x = atof(posnAttrib->GetValue().c_str());
-                }
-                else if(settings.size() == 1) {
-                    // Allow one element to be specified without a position, if no other
-                    // elements are specified so a global setting may be given
-                    x = 0.0;
-                }
-                else {
-                    throw std::runtime_error("x (position) attribute must be supplied for all <maxm0> elements\n \
-                                              or exactly one global <maxm0> must be supplied withou an x attribute\n");
-                }
-                maxM0s.push_back(std::make_pair<real, real>(x, maxM0));
-            }
-        }
+        maxM0s = Brush::Settings_IO::readProfile(root, "maxm0");
 
         // Output details
         node = root->GetFirstChild("output");

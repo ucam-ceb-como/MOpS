@@ -54,7 +54,7 @@ endif
 linklibs=$(mops) $(sweep) $(geom) $(sprog) $(camxml) $(comostrings) $(cvodes)
 # Target objects.
 
-obj=reactor1d.o pred_corr_solver.o reset_chemistry.o simulator.o
+obj=reactor1d.o pred_corr_solver.o reset_chemistry.o simulator.o settings_io.o
 
 # Default target - executable
 all: $(brushlib) brush.o
@@ -90,6 +90,9 @@ reset_chemistry.o: $(src)/reset_chemistry.cpp $(inc)/reset_chemistry.h $(inc)/re
 simulator.o: $(src)/simulator.cpp $(inc)/simulator.h $(inc)/brush_params.h
 	$(cpp) $(flag) $(src)/simulator.cpp
 
+settings_io.o: $(src)/settings_io.cpp $(inc)/settings_io.h $(inc)/brush_params.h
+	$(cpp) $(flag) $(src)/settings_io.cpp
+
 # leave just source code.
 clean:
 	rm -rf $(path)/*.o \#* *~ $(lib)/*.a $(path)/bin/*.x
@@ -114,3 +117,4 @@ geom:
 geomclean:
 	$(MAKE) -f ../geometry/Makefile -C ../geometry clean
 	$(MAKE) -f ../geometry/Makefile -C ../geometry debug=$(debug) profile=$(profile)
+
