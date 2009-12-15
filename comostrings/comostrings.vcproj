@@ -158,7 +158,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="include"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				DebugInformationFormat="1"
 			/>
 			<Tool
