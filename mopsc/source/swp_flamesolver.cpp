@@ -271,7 +271,6 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
         //save the old gas phase mass density
         double old_dens = r.Mixture()->MassDensity();
-        //double old_dens = r.Mixture()->Temperature();
 
         // Update the chemical conditions.
         linInterpGas(t, m_gasprof, *r.Mixture());
@@ -279,20 +278,12 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         // Scale particle M0 according to gas-phase expansion.
         real m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
         r.Mixture()->SetM0(r.Mixture()->MassDensity() * m0 / old_dens);
-        //r.Mixture()->SetM0(old_dens * m0 / r.Mixture()->Temperature() );
 
-        // Calculate LPDA splitting time step.
-        if (mech.AnyDeferred() && (r.Mixture()->ParticleCount() > 0)) {
-            // Get the process jump rates (and the total rate).
-            jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
+        // Get the process jump rates (and the total rate).
+        jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
-            // Calculate the splitting end time.
-            tsplit = calcSplitTime(t, tstop, jrate, r.Mixture()->ParticleCount(), dtg);
-        } else {
-            // There are no deferred processes, therefore there
-            // is no need to perform LPDA splitting steps.
-            tsplit = tstop;
-        }
+        // Calculate the splitting end time.
+        tsplit = calcSplitTime(t, tstop, jrate, r.Mixture()->ParticleCount(), dtg);
 
         // Perform stochastic jump processes.
         while (t < tsplit) {
@@ -304,10 +295,6 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
             if (dt >= 0.0) {
                 t += dt; 
 
-                //if(t > tstop)
-                //{
-                //    std::cerr << "Overshoot " << t << ' ' << tstop << ' ' << jrate << '\n';
-                //}
                 // The following line is suspicious, it seems to be a mathematically
                 // inadmissible solution to the problem of stochastic time steps
                 // going past the end of the period under consideration.  The
@@ -315,7 +302,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
                 // only to perform the event if it falls within the interval
                 // being considered, otherwise one should just move the time 
                 // counter to the end of the period. (riap 25/05/2009)
-                t = min(t, tstop);
+                t = std::min(t, tstop);
 
             } else {
                 return;
@@ -324,10 +311,9 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
-        if (mech.AnyDeferred()) {
-            linInterpGas(t, m_gasprof, *r.Mixture());
-            mech.LPDA(t, *r.Mixture());
-        }
+        linInterpGas(t, m_gasprof, *r.Mixture());
+        mech.LPDA(t, *r.Mixture());
+
         r.SetTime(t);
     }
     

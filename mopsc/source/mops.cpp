@@ -141,13 +141,6 @@ int main(int argc, char *argv[])
             // Post-process a flame gas-phase chemistry
             // profile, just like sweep1.
             soltype = FlamePP;
-	    } else if (strcmp(argv[i], "-PAH") == 0) {
-            //Collision of PAHs
-            soltype = PAH;
- //       } else if (strcmp(argv[i], "-momic") == 0) {
- //           // Use method-of-moments to solve particles (1D only!).
- //           soltype = MoMIC;
-
         // the next statements determine diagnostics level (if any).
         } else if (strcmp(argv[i], "-diag1") == 0) {
             diag = 1; // Minimal diagnostics printed to console.
@@ -196,10 +189,6 @@ int main(int argc, char *argv[])
                 // Post-process a gas-phase profile.
                 solver = new Sweep::FlameSolver();
                 break;
-            case PAH:
-                // PAH Collisions
-                solver = new Sweep::PAHSolver();
-                break;
             case GPC:
             default:
                 solver = new Solver();
@@ -219,21 +208,12 @@ int main(int argc, char *argv[])
 
     // Read the chemical mechanism / profile.
     try {
-        if (soltype != FlamePP && soltype != PAH) {
+        if (soltype != FlamePP) {
             Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
             if (diag>0) mech.WriteDiagnostics("ckmech.diag");
         } 
         else {
-            if (soltype == FlamePP){
-                dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gasphase, mech);
-            }
-            if (soltype == PAH){
-                    dynamic_cast<Sweep::PAHSolver*>(solver)->LoadGasProfile(gasphase, mech);
-                    Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
-                    //mech.ParticleMech().LoadPAHProfile();
-                    
-            }
-
+            dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gasphase, mech);
         }
     } catch (std::logic_error &le) {
         printf("mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n");
@@ -254,6 +234,8 @@ int main(int argc, char *argv[])
         if (soltype != GPC) {
             mech.ParticleMech().SetSpecies(mech.Species());
             Sweep::MechParser::Read(swpfile, mech.ParticleMech());
+
+            // Also read in the PAH database if needed
             if(mech.ParticleMech().AggModel()==Sweep::AggModels::PAH_ID)
                  mech.ParticleMech().LoadPAHProfile();
         }

@@ -51,8 +51,7 @@ namespace Mops
         PredCor, // Split-Predictor---Split-Corrector.
         FlamePP, // Post-process a gas-phase profile (like sweep1).
         MoMIC,   // Method-of-moments for 1D particles.
-		Marchenko, // Marchenko's particle transport method - no gas-phase.
-		PAH     // Collision of PAHs only
+        Marchenko, // Marchenko's particle transport method - no gas-phase.
     };
 };
 
