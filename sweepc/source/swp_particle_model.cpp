@@ -123,6 +123,9 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
         m_DiffusionType = rhs.m_DiffusionType;
         m_AdvectionType = rhs.m_AdvectionType;
         m_ThermophoresisType = rhs.m_ThermophoresisType;
+
+        // PAH database for PAH-PP model
+        m_PAHDatabase = rhs.m_PAHDatabase;
     }
     return *this;
 }
