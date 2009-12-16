@@ -75,6 +75,9 @@ public:
         //! Mass fractions and SI units
         Camflow,
 
+        //! Mass fractions, SI units and additional flamelet data
+        CamflowFlamelet,
+
         //! Mole fractions and cgs units
         Premix,
     };

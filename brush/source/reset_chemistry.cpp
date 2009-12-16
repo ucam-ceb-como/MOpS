@@ -79,7 +79,7 @@ const size_t ResetChemistry::sTemperatureIndex = 1;
 
 /*!
  * Index of density data in the elements of mInputChemistryData.
- * The data will always be have units \f$\mathrm{kg\,m^{-3}
+ * The data will always be have units \f$\mathrm{kg\,m^{-3}}\f$
  */
 const size_t ResetChemistry::sDensityIndex = 2;
 
@@ -133,7 +133,7 @@ const size_t ResetChemistry::sGradientTemperatureIndex = 8;
  * by complete rows of numerical data, completely blank lines are permitted and
  * ignored.  The columns may be separated by spaces or tabs.
  *
- * Mandatory columns in the file are (Camflow format \see InputFileType)
+ * Mandatory columns in the file for the Camflow format (\ref InputFileType) are
  * - x Spatial position to which the row of data applies (\f$\mathrm{m}\f$)
  * - T Temperature (K)
  * - rho Mass density of the gas mixture (\f$\mathrm{kg\,m^{-3}}\f$)
@@ -142,7 +142,19 @@ const size_t ResetChemistry::sGradientTemperatureIndex = 8;
  *   mechanism and the column headings for these species must be identical to the
  *   strings specified as species names when the mechanism was constructed.
  *
- * Mandatory columns in the file are (Premix format \see InputFileType)
+ * In addition to the above mentioned columns the following are mandatory when
+ * the Camflow Flamelet format (\ref InputFileType) is used.  The u column is
+ * still required, but will generally contain zeros.  The wdotA4 is provided
+ * for use with the PAH-PP soot particle model and arbitrary values may be used
+ * with other soot models.
+ *  - The x column heading is replaced by Z
+ *  - wdotA4 The formation rate of pyrene (\f$\mathrm{mol\,m^{-3}\,s^{-1}}\f$)
+ *  - D_z The mixture fraction diffusion coefficient  (\f$\mathrm{m^2\,s^{-1}}\f$)
+ *  - GradZ Gradient in real space of the mixture fraction (\f$\mathrm{m^{-1}}\f$)
+ *  - LaplZ Laplacian in real space of the mixture fraction (\f$\mathrm{m^{-2}}\f$)
+ *  - GradT Gradient in real space of the temperature (\f$\mathrm{K\,m^{-1}}\f$)
+ *
+ * Mandatory columns in the file are (Premix format \ref InputFileType)
  * - x Spatial position to which the row of data applies (\f$\mathrm{cm}\f$)
  * - T Temperature (K)
  * - rho Mass density of the gas mixture (\f$\mathrm{g\,cm^{-3}}\f$)
@@ -189,6 +201,18 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
             speciesNames.push_back("RHO[g/cm3]");
             speciesNames.push_back("V[cm/s]");
             mMassFractionData = false;
+            break;
+        case CamflowFlamelet:
+            speciesNames.push_back("Z");
+            speciesNames.push_back("T");
+            speciesNames.push_back("rho");
+            speciesNames.push_back("u");
+            speciesNames.push_back("wdotA4");
+            speciesNames.push_back("D_z");
+            speciesNames.push_back("GradZ");
+            speciesNames.push_back("LaplZ");
+            speciesNames.push_back("GradT");
+            mMassFractionData = true;
             break;
     }
             
@@ -292,8 +316,10 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
 
                 // Space has already been allocated for the non-species data
                 // The input file should not contain columns for PAH formation
-                // and flamelet related quantities.
-                if(i < sPAHFormationIndex) {
+                // and flamelet related quantities unless it is a flamelet
+                // input file.
+                if((i < sPAHFormationIndex) ||
+                    ((file_type == CamflowFlamelet) && (i < sNumNonSpeciesData))) {
                     dataRow[i] = frac;
                 }
                 else {

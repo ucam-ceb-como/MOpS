@@ -58,7 +58,7 @@ const size_t Brush::Simulator::sFirstSeed = 123;
  *@param[in]    n_paths                     Number of independent paths to simulation
  *@param[in]    n_corrector_iterations      Number of corrector iterations per step
  *@param[in]    output_times                Times at which to save output
- *@param[in]    intial_reactor              Initial condition
+ *@param[in]    initial_reactor             Initial condition
  *@param[in]    reset_chem                  Object to specify chemical conditions
  *@param[in]    output_file                 Base output file name
  *@param[in]    split_diffusion             Activate split simulation of diffusion
