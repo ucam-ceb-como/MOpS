@@ -238,7 +238,7 @@ Geometry::real Geometry::Geometry1d::cellVolume(const size_t cell_index) const {
  *
  *@param[in]    x   Position for which cell index requested
  *
- *@return       Cell index
+ *@return       Cell index or -1 if x is outside the range of the geometry
  */
 int Geometry::Geometry1d::containingCell(const real x) const {
     const fvector::const_iterator it = std::upper_bound(mCellEnds.begin(), mCellEnds.end(), x);
