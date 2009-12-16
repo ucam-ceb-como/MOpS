@@ -77,6 +77,12 @@ public:
              const std::vector<real>& lapl_mix_frac,
              const std::vector<real>& grad_T);
 
+    //! Soot population average properties
+    std::vector<real> getSootStatistics(const real position) const;
+
+    //! List of individual soot particles and their basic properties
+    std::list<std::vector<real> > getSootParticleList(const real position) const;
+
 protected:
     //! Build a brush object that will set the gas phase mixture details on the 1d reactor
     Brush::ResetChemistry buildResetChemistry(const std::vector<real>& data_times,

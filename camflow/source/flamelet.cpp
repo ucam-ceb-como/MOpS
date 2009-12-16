@@ -1084,3 +1084,4 @@ doublereal FlameLet::getSDR(const doublereal time) const {
 void FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv) {
     m_SootFv = soot_fv;
 }
+

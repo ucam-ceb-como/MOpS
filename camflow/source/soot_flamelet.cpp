@@ -46,6 +46,8 @@
 #include "swp_particle_cache.h"
 #include "settings_io.h"
 
+#include "swp_ensemble_stats.h"
+
 
 /*!
  * Load all settings from files with standard names.
@@ -325,3 +327,78 @@ Brush::ResetChemistry SootFlamelet::buildResetChemistry(const std::vector<real>&
                                  chemData);
 }
 
+/*!
+ * Get a vector of the moments and other statistics of the soot particle
+ * population.  The result will have length 0 if statistics are requested for
+ * a position outside the range of the simulation grid.
+ *
+ *@param[in]    position    Mixture fraction value at which statistics required
+ *
+ *@return       Vector of statistics
+ */
+std::vector<real> SootFlamelet::getSootStatistics(const real position) const {
+    const int cellIndex = mParticles->getGeometry().containingCell(position);
+
+    if(cellIndex < 0) {
+        // Position is not inside any cell so return an empty vector
+        return std::vector<real>(0u);
+    }
+
+    // Create a stats object
+    Sweep::Stats::EnsembleStats stats(mParticles->getMechanism().ParticleMech());
+
+    // Reject particles with a collision diameter outside the range (0, 1.0e30)
+    Sweep::Stats::IModelStats::StatBound statsBound;
+    statsBound.Lower = 0;
+    statsBound.Upper = 1.0e30;
+    statsBound.PID = Sweep::ParticleCache::iDcol;
+    stats.SetStatBoundary(statsBound);
+
+    // Collect the statistics
+    stats.Calculate(mParticles->getCell(cellIndex).Mixture()->Particles(),
+                    1.0 / mParticles->getCell(cellIndex).Mixture()->SampleVolume());
+
+    return stats.Get();
+
+}
+
+/*!
+ * Get a list of vectors each describing one computational particle from the
+ * population.  The list will have length 0 if requested for a position outside
+ * the range of the simulation grid.
+ *
+ *@param[in]    position    Mixture fraction value at which statistics required
+ *
+ *@return       List of particle description vectors
+ */
+std::list<std::vector<real> > SootFlamelet::getSootParticleList(const real position) const {
+    // Find index of cell for which the particle list is requested
+    const int cellIndex = mParticles->getGeometry().containingCell(position);
+
+    // Collect result in this variable (default constructs with length 0)
+    std::list<std::vector<real> > particleList;
+
+    if(cellIndex < 0) {
+        // Position is not inside any cell so return an empty list
+        return particleList;
+    }
+
+    // Convenient way of referring to the mixture in the cell of interest
+    const Mops::Mixture &mix = *(mParticles->getCell(cellIndex).Mixture());
+    const Brush::real time = mParticles->getTime();
+
+    // Create a stats object
+    Sweep::Stats::EnsembleStats stats(mParticles->getMechanism().ParticleMech());
+
+    // Loop over the particles
+    for(unsigned int particleIndex = 0; particleIndex < mix.ParticleCount(); ++particleIndex) {
+        // Get a vector containing the particle details
+        fvector particleListEntry;
+        stats.PSL(mix.Particles(), particleIndex, time,
+                  particleListEntry, 1.0 / mix.SampleVolume());
+
+        particleList.push_back(particleListEntry);
+    }
+
+    return particleList;
+}

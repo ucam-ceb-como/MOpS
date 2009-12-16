@@ -155,10 +155,13 @@ soot_flamelet.o: $(src)/soot_flamelet.cpp
 
 
 # TARGET clean: leave just source code.
-
 clean:
+	rm -rf *.o \#* *~
+
+cleanlibs:
 	$(MAKE) clean -f ../comostrings/Makefile -C ../comostrings
 	$(MAKE) clean -f ../camxml/Makefile -C ../camxml
 	$(MAKE) clean -f ../sprog/Makefile -C ../sprog
 	$(MAKE) clean -f ../cvode/Makefile -C ../cvode
 	rm -rf *.o \#* *~
+
