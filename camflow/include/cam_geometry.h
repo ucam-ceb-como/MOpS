@@ -79,12 +79,15 @@ namespace Camflow{
         void setGridFile(std::string name);
         //discretise the geometry. This will set the length
         //of the reactor the total number of cells
-        void discretize();
+        //void discretize();
 
         //set the reactor length
         void setLength(doublereal len);
         //set the reactor diameter
         void setDia(doublereal dia);
+
+        //get the name of the grid input file.
+        std::string getGridFileName() const;
 
         //return the reactor dia
         doublereal getDia() const;
@@ -93,7 +96,7 @@ namespace Camflow{
         doublereal getArea() const;
         
         //return the surface area
-        doublereal getSurfArea();
+        //doublereal getSurfArea();
 
         //return the surface area per unit length
         doublereal getSurfAres_l() const;
