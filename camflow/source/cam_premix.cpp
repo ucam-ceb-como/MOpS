@@ -260,7 +260,7 @@ void CamPremix::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &
     sootMom = &cs;
 
     
-    if(reacGeom->getnCells()==0) reacGeom->discretize();
+    //if(reacGeom->getnCells()==0) reacGeom->discretize();
     
     reacGeom->addZeroWidthCells();
 

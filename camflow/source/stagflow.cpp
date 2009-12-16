@@ -74,7 +74,7 @@ void StagFlow::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &c
     
     admin = &ca;
     reacGeom = &cg;
-    reacGeom->discretize();
+    //reacGeom->discretize();
     /*
      * 2 additional cells are padded to consider the
      * inlet and the exhaust
