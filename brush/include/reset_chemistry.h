@@ -154,6 +154,9 @@ private:
     static const size_t sPAHFormationIndex;
 
     //! Index of velocity data in data_point
+    static const size_t sGradientTemperatureIndex;
+
+    //! Index of velocity data in data_point
     static const size_t sMixFracDiffCoeffIndex;
 
     //! Index of velocity data in data_point
@@ -161,9 +164,6 @@ private:
 
     //! Index of velocity data in data_point
     static const size_t sLaplacianMixFracIndex;
-
-    //! Index of velocity data in data_point
-    static const size_t sGradientTemperatureIndex;
 
 };
 

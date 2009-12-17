@@ -95,12 +95,19 @@ const size_t ResetChemistry::sVelocityIndex = 3;
 const size_t ResetChemistry::sPAHFormationIndex = 4;
 
 /*!
+ * Index of
+ * \f[ \frac{\partial T}{\partial x}, \f]
+ * for use in flamelet calculations.
+ */
+const size_t ResetChemistry::sGradientTemperatureIndex = 5;
+
+/*!
  * Index of mixture fraction diffusion coefficient (only for use
  * in flamelet calculations).
  * The data will have units
  * \f$\mathrm{m^2\,s^{-1}}\f$
  */
-const size_t ResetChemistry::sMixFracDiffCoeffIndex = 5;
+const size_t ResetChemistry::sMixFracDiffCoeffIndex = 6;
 
 /*!
  * Index of spatial gradient (in physical space) of mixture
@@ -108,7 +115,7 @@ const size_t ResetChemistry::sMixFracDiffCoeffIndex = 5;
  * \f[ \frac{\partial Z}{\partial x} \f],
  * for use in flamelet calculations.
  */
-const size_t ResetChemistry::sGradientMixFracIndex = 6;
+const size_t ResetChemistry::sGradientMixFracIndex = 7;
 
 /*!
  * Index of Laplacian (in physical space) of mixture
@@ -116,14 +123,7 @@ const size_t ResetChemistry::sGradientMixFracIndex = 6;
  * \f[ \frac{\partial^2 Z}{\partial x^2} \f],
  * for use in flamelet calculations.
  */
-const size_t ResetChemistry::sLaplacianMixFracIndex = 7;
-
-/*!
- * Index of
- * \f[ \frac{\partial T}{\partial x}, \f]
- * for use in flamelet calculations.
- */
-const size_t ResetChemistry::sGradientTemperatureIndex = 8;
+const size_t ResetChemistry::sLaplacianMixFracIndex = 8;
 
 /**
  * Construct an object from a data file and associate the concentration data
@@ -159,6 +159,8 @@ const size_t ResetChemistry::sGradientTemperatureIndex = 8;
  * - T Temperature (K)
  * - rho Mass density of the gas mixture (\f$\mathrm{g\,cm^{-3}}\f$)
  * - u Velocity of gas mixture (\f$\mathrm{cm\,s^{-1}}\f$)
+ * - wdotA4 The formation rate of pyrene (\f$\mathrm{mol\,cm^{-3}\,s^{-1}}\f$)
+ * - GradT Gradient in real space of the temperature (\f$\mathrm{K\,cm^{-1}}\f$)
  * - A column of mole fraction data must be provided for each species in the
  *   mechanism and the column headings for these species must be identical to the
  *   strings specified as species names when the mechanism was constructed.
@@ -200,6 +202,8 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
             speciesNames.push_back("T[K]");
             speciesNames.push_back("RHO[g/cm3]");
             speciesNames.push_back("V[cm/s]");
+            speciesNames.push_back("wdotA4");
+            speciesNames.push_back("GradT");
             mMassFractionData = false;
             break;
         case CamflowFlamelet:
@@ -208,10 +212,10 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
             speciesNames.push_back("rho");
             speciesNames.push_back("u");
             speciesNames.push_back("wdotA4");
+            speciesNames.push_back("GradT");
             speciesNames.push_back("D_z");
             speciesNames.push_back("GradZ");
             speciesNames.push_back("LaplZ");
-            speciesNames.push_back("GradT");
             mMassFractionData = true;
             break;
     }
@@ -312,14 +316,24 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
                     if(i == sVelocityIndex)
                         // convert cm s^-1 to m s^-1
                         frac *= 1e-2;
+
+                    if(i == sPAHFormationIndex)
+                        // convert cm^-3 to m^-3
+                        frac *= 1e6;
+
+                    if(i == sGradientTemperatureIndex)
+                        // convert K cm^-1 to K m^-1
+                        frac *= 1e2;
+
                 }
 
                 // Space has already been allocated for the non-species data
                 // The input file should not contain columns for PAH formation
                 // and flamelet related quantities unless it is a flamelet
                 // input file.
-                if((i < sPAHFormationIndex) ||
-                    ((file_type == CamflowFlamelet) && (i < sNumNonSpeciesData))) {
+                if((i <= sVelocityIndex) ||
+                    ((file_type == CamflowFlamelet) && (i < sNumNonSpeciesData)) ||
+                    ((file_type == Premix) && (i <= sGradientTemperatureIndex))) {
                     dataRow[i] = frac;
                 }
                 else {
