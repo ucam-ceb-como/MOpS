@@ -7,6 +7,7 @@
 #include <vector>
 #include "cam_reporter.h"
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include "cam_profile.h"
 #include "cam_admin.h"
@@ -547,7 +548,7 @@ void FlameLet::PlanckAbsorption (const doublereal temperature, doublereal Absorp
     const doublereal AtmToPascal = 101325.0;
 
     Absorption[0] = (-0.23093 - 1.12390 * beta + 9.41530 * beta2 - 2.99880 * beta3 + 0.51382 * beta4
-                    - 1.86840e-5 * beta5)*AtmToPascal;
+                    - 1.86840e-5 * beta5)/AtmToPascal;
  
 
     // This code computes the Planck mean absorption coefficient for CO2, using an equation in reference [1].  The specific 
@@ -555,8 +556,8 @@ void FlameLet::PlanckAbsorption (const doublereal temperature, doublereal Absorp
     // converts the absorption coefficients from units of 1/m * 1/atm  to 1/m * 1/pa.
 
 
-    Absorption[1] = (-18.7410 - 121.3000 * beta + 273.5000 * beta2 - 194.0500 * beta3 + 56.3100 * beta4
-                    - 5.8169 * beta5)*AtmToPascal;
+    Absorption[1] = (18.7410 - 121.3000 * beta + 273.5000 * beta2 - 194.0500 * beta3 + 56.3100 * beta4
+                    - 5.8169 * beta5)/AtmToPascal;
 
 
     // This code computes the Planck mean absorption coefficient for CO, using two equations in reference [1].  It uses a 
@@ -567,11 +568,11 @@ void FlameLet::PlanckAbsorption (const doublereal temperature, doublereal Absorp
 
     if (temperature <= 750) {
         Absorption[2]  =  (4.7869 + temperature * (-0.06953 + temperature * (2.95775e-4 + temperature * 
-                          (-4.25732e-7 + temperature * 2.202849e-10))))*AtmToPascal; 
+                          (-4.25732e-7 + temperature * 2.202849e-10))))/AtmToPascal; 
     }
     else {
         Absorption[2]  = (10.0900 + temperature * (-0.01183 + temperature * (4.7753e-6 + temperature * 
-                         (-5.87209e-10 + temperature * 2.5334e-14))))*AtmToPascal;
+                         (-5.87209e-10 + temperature * -2.5334e-14))))/AtmToPascal;
     }
     
     
@@ -646,7 +647,7 @@ doublereal FlameLet::RadiativeLoss(const doublereal rho, const doublereal cp, co
     }
      
     //Total spectral radiative heat loss + radiative heat loss due to soot
-    return spectralRadiation + 3.337e-4 * soot_vol_frac * pow(temperature, 5);
+    return spectralRadiation + 3.3337e-4 * soot_vol_frac * pow(temperature, 5);
     
     cout << "Spectral Radiation\n" << spectralRadiation;
 
@@ -1087,7 +1088,11 @@ doublereal FlameLet::getSDR(const doublereal time) const {
 void FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv) {
     m_SootFv = soot_fv;
 
-    if (m_T.size()!= m_SootFv.size()){
-        throw std::runtime_error("soot volume fraction vector is of the wrong size");
-     }
-}
+    //Solver assumes one soot volume fraction for each cell; temperature is already initialized
+    if (m_T.size() != m_SootFv.size()) {
+        std::ostringstream msg ("new soot volume fraction vector length is ");
+        msg << m_SootFv.size() << " but temperature vector length is " << m_T.size();
+        throw std::runtime_error (msg.str());
+    }
+}     
+
