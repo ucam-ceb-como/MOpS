@@ -260,6 +260,45 @@ void SootFlamelet::run(const std::vector<real>& data_times,
 }
 
 /*!
+ * Load in an input file for the chemistry instead of calling camflow to solve
+ * a flamelet. 
+ */
+void SootFlamelet::run(const real stop_time) {
+
+    //=========================================================================
+    // Particles
+    // Extract the chemistry from mChemistry ready to use for the particle calculations
+
+    // Declare input variables for Brush::ResetChemistry
+    int verbosity = 1;
+    Sprog::Mechanism mech;
+    std::string inputFileName = "camflowFlamelet.dat";   
+    Brush::ResetChemistry::InputFileType file_type = Brush::ResetChemistry::CamflowFlamelet;
+
+    // Set the stop time. If calling from OpenFOAM, it will be whatever has been 
+    // set for 'stopTime' in constant/flowToFlameletDict.
+    std::vector<real> data_times(1);
+    data_times[0] = stop_time;
+
+    // Read the chemical species into Sprog::Mechanism mech.
+    std::cout << "Reading chemical species...\n";
+    Sprog::IO::MechanismParser::ReadChemkin("chem.inp", mech, "therm.dat", "tran.dat");
+
+    Brush::ResetChemistry newChem = Brush::ResetChemistry(inputFileName,
+                                                          file_type,
+                                                          mech,
+                                                          verbosity);
+
+    // Create and run the particle solver
+    Brush::PredCorrSolver particleSolver(newChem, 0, 0.0, 0.0, true, true);
+
+    mParticles->ReplaceChemistry(newChem,false);
+
+    particleSolver.solve(*mParticles, data_times.back(), 1, 0);
+
+}
+
+/*!
  *@param[in]    data_times              Vector of times at which data points apply
  *@param[in]    mix_frac_diff           Mixture fraction diffusion coefficient
  *@param[in]    grad_mix_frac           Gradient of mixture fraction

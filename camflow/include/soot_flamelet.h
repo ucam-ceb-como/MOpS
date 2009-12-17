@@ -77,6 +77,10 @@ public:
              const std::vector<real>& lapl_mix_frac,
              const std::vector<real>& grad_T);
 
+    //! Load in chemistry solution from a file instead of solving a flamelet.
+    //! Use for debug purposes. lrm29.
+    void run(const real stop_time);
+
     //! Soot population average properties
     std::vector<real> getSootStatistics(const real position) const;
 

@@ -178,11 +178,7 @@ namespace Camflow{
          *Default destructor
          */
         ~Interface(){}
-        /*
-         *calling interface to solve the flameletes. continuation true means the
-         *call is a continuation call to the same problem
-         */
-        void flamelet(doublereal sdr, doublereal intTime=0, bool continuation=false, bool lnone=true);
+        
         /*
          *calling interface to solve flamelets with time-history-scalar dissipation rates
          */
@@ -346,6 +342,12 @@ namespace Camflow{
          *reactor pinters
          */
         FlameLet* flmlt;
+
+        /*
+         *calling interface to solve the flameletes. continuation true means the
+         *call is a continuation call to the same problem
+         */
+        void flamelet(doublereal sdr, doublereal intTime=0, bool continuation=false, bool lnone=true);
 
         doublereal getVariableAt(const doublereal& pos, const std::vector<doublereal>& var) const;
 
