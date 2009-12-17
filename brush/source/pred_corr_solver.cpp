@@ -217,11 +217,15 @@ void Brush::PredCorrSolver::solveParticles(Reactor1d &reac, const real t_stop) c
             maxDeferralEnd = std::min(t_stop, mDeferralRatio * deferredRate);
         }
 
+        // Cache to avoid recalculating jump rates for all cells, when only
+        // very few are changed in each time step.
+        JumpRateCache rateCache(reac);
+
         // Simulate jumps upto maxDeferralEnd
         // Put a very small tolerance on the comparison
         while(reac.getTime() <= maxDeferralEnd * (1.0 - std::numeric_limits<real>::epsilon())) {
             // Perform one non-deferred event
-            const real dt = particleTimeStep(reac, maxDeferralEnd);
+            const real dt = particleTimeStep(reac, maxDeferralEnd, rateCache);
 
             if(dt >= 0)
                 reac.setTime(reac.getTime() + dt);
@@ -255,32 +259,13 @@ void Brush::PredCorrSolver::solveParticles(Reactor1d &reac, const real t_stop) c
  *
  *\return       Length of step taken
  */
-real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop) const {
+real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop,
+                                             JumpRateCache &rate_cache) const {
     //std::cout << "Start of time step " << reac.getTime() << ", max step " << t_stop << '\n';
 
-    const size_t numCells = reac.getNumCells();
-
-    // Each entry in this vector will be a vector of rates, one vector per cell.
-    // Within the vector for each cell will be the jump rates, one for each process
-    std::vector<fvector> jRates(numCells, fvector(reac.getMechanism().ParticleMech().ProcessCount()));
-
-    // Put total jumps rates for each cell in this array.  This will mean that
-    // cellRates[i] == sum(jRates[i]).
-    fvector cellRates(numCells);
-
-    // This will be the total rate of all processes in all cells
-    real totRate = 0;
-
-    // Get the rate data from the cells
-    for(size_t i = 0; i < numCells; ++i) {
-        // Get the geometry information for the cell
-        Geometry::LocalGeometry1d cellGeom(reac.getGeometry(), i);
-
-        cellRates[i] = reac.getMechanism().ParticleMech().CalcJumpRateTerms(reac.getTime(),
-                                                                            *(reac.getCell(i).Mixture()),
-                                                                            cellGeom, jRates[i]);
-        totRate += cellRates[i];
-    }
+     // This will be the total rate of all processes in all cells
+    rate_cache.update();
+    real totRate = rate_cache.totalRate();
 
     // Calculate the random time step length
     real dt;
@@ -315,7 +300,7 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop)
         else {
             // This step is an actual event, choose between the cells with weights
             // proportional to their weights
-            activeCell = chooseIndex(cellRates, Sweep::rnd);
+            activeCell = chooseIndex(rate_cache.mCellRates, Sweep::rnd);
             //std::cout << "cell with active process is " << activeCell << '\n';
         }
     }
@@ -323,7 +308,7 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop)
     int activeProcess = -1;
     if(activeCell >= 0) {
         // Work out which process is responsible for the event in the activeCell
-        activeProcess = chooseIndex(jRates[activeCell], Sweep::rnd);
+        activeProcess = chooseIndex(rate_cache.mProcessRates[activeCell], Sweep::rnd);
         //std::cout << "active process is " << activeProcess << '\n';
 
         // Perform the event and find out if a particle was transported out of its cell
@@ -335,10 +320,16 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop)
         reac.getMechanism().ParticleMech().DoProcess(activeProcess, reac.getTime() + dt,
                                                      *(reac.getCell(activeCell).Mixture()), cellGeom, &out);
 
+        // Contents of active cell has changed so mark it for update in the rate cache
+        rate_cache.mInvalidCells.push(activeCell);
+
         if(out.particle) {
             if(out.destination >= 0) {
                 // Particle has stayed in the system
                 transportIn(reac, out.destination, out);
+
+                // Contents of destination cell has changed so mark it for update in the rate cache
+                rate_cache.mInvalidCells.push(out.destination);
             }
 
             // The original copy of the transported particle is no longer needed
@@ -529,5 +520,62 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
         // Now the population of cell i has been updated doubling can be
         // reactivated.
         reac.getCell(i).Mixture()->Particles().UnfreezeDoubling();
+    }
+}
+
+
+/*!
+ * Set up the cache and fill it with rates
+ * 
+ *@param[in]    reac    Reactor with which this cache will be used
+ */
+Brush::PredCorrSolver::JumpRateCache::JumpRateCache(const Reactor1d& reac)
+    : mCellRates(reac.getNumCells())
+    , mProcessRates(reac.getNumCells(),
+                    fvector(reac.getMechanism().ParticleMech().ProcessCount(), 0.0))
+    , mInvalidCells()
+    , mReac(reac)
+{
+    // Update needs to calculate all the cells on construction, so mark them
+    // all as invalid
+    for(size_t i = 0; i < reac.getNumCells(); ++i) {
+        mInvalidCells.push(i);
+    }
+
+    update();
+}
+
+/*!
+ * Return the total rate across all cells assuming all data is correct and does
+ * not need updating.
+ *
+ *@return   Total process rate for entire reactor
+ */
+Brush::real Brush::PredCorrSolver::JumpRateCache::totalRate() const {
+    return std::accumulate(mCellRates.begin(), mCellRates.end(), static_cast<real>(0.0));
+}
+
+/*!
+ * Work through the list of cells for which recalculations are required
+ */
+void Brush::PredCorrSolver::JumpRateCache::update() {
+    while(!mInvalidCells.empty()) {
+        const size_t cellIndex = mInvalidCells.top();
+
+        //std::cout << "JumpRateCache updating cell " << cellIndex << '\n';
+
+         // Get the geometry information for the cell
+        Geometry::LocalGeometry1d cellGeom(mReac.getGeometry(), cellIndex);
+
+        // Update the cache data, note that mProcessRates[i] is passed as a
+        // non-const reference for overwriting.
+        mCellRates[cellIndex] =
+            mReac.getMechanism().ParticleMech().CalcJumpRateTerms(
+                    mReac.getTime(),
+                    *(mReac.getCell(cellIndex).Mixture()),
+                    cellGeom, mProcessRates[cellIndex]);
+        
+        // Remove the index now the update has been carried out
+        mInvalidCells.pop();
     }
 }

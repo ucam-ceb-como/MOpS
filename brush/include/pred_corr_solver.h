@@ -45,6 +45,7 @@
 #include "reset_chemistry.h"
 
 #include <vector>
+#include <stack>
 
 // Forward declarations
 namespace Brush {
@@ -76,6 +77,40 @@ public:
     void solve(Reactor1d &reac, const real t_stop, const int n_steps, const int n_iter) const;
 
 protected:
+        /*!
+     *@brief Store jump rates to avoid recalculating rates for all cells
+     *
+     * Rates for cell i of the reactor used for construction will be stored in
+     * position i of the member vectors.
+     *
+     */
+    class JumpRateCache {
+        public:
+            //! Initialise vectors
+            JumpRateCache(const Reactor1d &reac);
+
+            //! Total jump rate by cell
+            fvector mCellRates;
+
+            //! Individual process rates by cell
+            std::vector<fvector> mProcessRates;
+
+            //! Cell indices for which rates  need recalculating
+            std::stack<size_t> mInvalidCells;
+
+            //! Sum up all cell rates
+            real totalRate() const;
+
+            //! Recalculate rates for any cells listed in mInvalidCells
+            void update();
+        private:
+            //! Cannot contrstruct without knowing size of reactor
+            JumpRateCache();
+
+            //! Reactor with which instance is used
+            const Reactor1d& mReac;
+    };
+
     //! Perform one time step using a predictor followed by some corrector iterations
     void predictorCorrectorStep(Reactor1d &reac, const real t_stop, const int n_iter) const;
 
@@ -83,7 +118,7 @@ protected:
     void solveParticles(Reactor1d &reac, const real t_stop) const;
 
     //! Perform one stochastic jump
-    real particleTimeStep(Reactor1d &reac, const real t_stop) const;
+    real particleTimeStep(Reactor1d &reac, const real t_stop, JumpRateCache &rate_cache) const;
 
     //! Advance chemistry over specified time interval
     void solveChemistry(Reactor1d & reac, const real t_stop) const; //,?some kind of workspace for ODE solver);
