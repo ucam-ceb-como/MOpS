@@ -235,9 +235,6 @@ int main(int argc, char *argv[])
             mech.ParticleMech().SetSpecies(mech.Species());
             Sweep::MechParser::Read(swpfile, mech.ParticleMech());
 
-            // Also read in the PAH database if needed
-            if(mech.ParticleMech().AggModel()==Sweep::AggModels::PAH_ID)
-                 mech.ParticleMech().LoadPAHProfile();
         }
     } catch (std::logic_error &le) {
         printf("mops: Failed to read particle mechanism due to bad inputs.  Message:\n  ");
