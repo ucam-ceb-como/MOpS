@@ -751,13 +751,13 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
         const doublereal mole_fracsCO = s_mf(i,iCO)*avgMolWt[i]/molwtCO;
 
         //Soot Volume Fraction is set to zero here
-        //radiation.resize(mCord,0.0);
+        radiation.resize(mCord,0.0);
         
         //This radiation term is sentt to as output to profile.h 
-        //radiation[i] = RadiativeLoss(m_rho[i], m_cp[i], m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
+        radiation[i] = RadiativeLoss(m_rho[i], m_cp[i], m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
         
         //This is the new energy residual term, accounting for radiation.
-        //f[i] += RadiativeLoss(m_rho[i], m_cp[i], m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
+        f[i] += RadiativeLoss(m_rho[i], m_cp[i], m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
 
     }
 
@@ -923,6 +923,9 @@ doublereal FlameLet::scalarDissipationRate(const doublereal m_frac){
  */
 int FlameLet::eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval){
 
+
+    //Sets soot volume fraction vector to zeros
+    setExternalSootVolumeFraction(std::vector<doublereal>(mCord, 0.0));
     residual(x,y,ydot);
     return 0;
     
@@ -1083,5 +1086,8 @@ doublereal FlameLet::getSDR(const doublereal time) const {
  */
 void FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv) {
     m_SootFv = soot_fv;
-}
 
+    if (m_T.size()!= m_SootFv.size()){
+        throw std::runtime_error("soot volume fraction vector is of the wrong size");
+     }
+}
