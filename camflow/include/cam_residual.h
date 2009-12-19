@@ -189,6 +189,10 @@ namespace Camflow{
          */
         virtual void getSpeciesMassFracs(Array2D& mf);
         /*
+         *return the average molar weight of the mixture to the calling program
+         */
+        virtual void getAverageMolarWeight(std::vector<doublereal>& avgMolWt_);
+        /*
          *return the temperature
          */
         virtual void getTemperatureVector(std::vector<doublereal>& temp);

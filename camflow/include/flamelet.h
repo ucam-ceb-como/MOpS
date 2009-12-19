@@ -135,7 +135,7 @@ namespace Camflow{
     void PlanckAbsorption (const doublereal Temperature, doublereal Absorption[3])const;
     
     //! Computes  the radiative heat loss term for radiative heat dissipation model
-   doublereal RadiativeLoss(const doublereal rho, const doublereal cp, const doublereal Temperature, 
+   doublereal RadiativeLoss(const doublereal Temperature, 
                             const doublereal soot_vol_frac, const doublereal mole_frac_H2O, 
                             const doublereal mole_frac_CO2, const doublereal mole_frac_CO) const; 
 

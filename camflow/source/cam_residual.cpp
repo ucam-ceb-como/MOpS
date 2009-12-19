@@ -403,6 +403,12 @@ void CamResidual::getSpeciesMassFracs(Array2D& mf){
     mf = s_mf;
 }
 /*
+ *return the average molar weight of the mixture to the calling program
+ */
+void CamResidual::getAverageMolarWeight(std::vector<doublereal>& avgMolWt_){
+    avgMolWt_ = avgMolWt;
+}
+/*
  *return the density
  */
 void CamResidual::getDensityVector(std::vector<doublereal>& density){

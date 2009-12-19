@@ -36,12 +36,13 @@ Interface::Interface(){
     nSpecies = mech.SpeciesCount();
     //create the mixture 
     Thermo::Mixture mix(mech.Species());
-    const SpeciesPtrVector *spv = mix.Species();
+    speciesPointerVector = mix.Species();  
+
     /*
      *populate the species names
      */
     for(int l=0; l<nSpecies; l++){
-        speciesNames.push_back((*spv)[l]->Name());
+        speciesNames.push_back((*speciesPointerVector)[l]->Name());
     }
 
     flmlt = NULL;
@@ -260,6 +261,7 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
     if(flmlt == NULL ) flmlt = new FlameLet();
     if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
     flmlt->setExternalScalarDissipationRate(sdr);
+
     if(sdr==0){
         std::cout << "Passed in value of SDR is zero\n SDR automatic calcilation activated\n" ;
     }
@@ -281,6 +283,7 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
         flmlt->getThermalConductivity(lambda);
         flmlt->getDiffusionCoefficient(mDiff);
         flmlt->getVelocity(mVelocity);
+        flmlt->getAverageMolarWeight(avgMolWtVector);
         stMixtureFrac = flmlt->stoichiometricMixtureFraction();
         std::cout << "Size of thermal conductivity " << lambda.size() << std::endl;
     }catch(CamError &ce){
@@ -341,6 +344,18 @@ const std::vector<doublereal> Interface::getMassFracsByPoint(const int indVarInd
 const doublereal Interface::getMassFrac(const int spIndex, const doublereal axpos){
     doublereal massfrac = getVariableAt(axpos, getMassFracsBySpecies(spIndex));
     return massfrac;
+}
+/*
+ *return the mole fractions
+ */
+const doublereal Interface::getMoleFrac(const int spIndex, const doublereal axpos){
+
+    const doublereal speciesMolwt = (*speciesPointerVector)[spIndex] -> MolWt();
+    const doublereal averageMolwt = getVariableAt(axpos,avgMolWtVector);
+
+    doublereal molefrac = getVariableAt(axpos, getMassFracsBySpecies(spIndex))*(averageMolwt/speciesMolwt);
+
+    return molefrac;
 }
 /*
  *return the temperature

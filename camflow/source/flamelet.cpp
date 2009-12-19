@@ -547,6 +547,7 @@ void FlameLet::PlanckAbsorption (const doublereal temperature, doublereal Absorp
 
     const doublereal AtmToPascal = 101325.0;
 
+    // CHECK SECOND TERM COEFFICIENT!
     Absorption[0] = (-0.23093 - 1.12390 * beta + 9.41530 * beta2 - 2.99880 * beta3 + 0.51382 * beta4
                     - 1.86840e-5 * beta5)/AtmToPascal;
  
@@ -556,7 +557,7 @@ void FlameLet::PlanckAbsorption (const doublereal temperature, doublereal Absorp
     // converts the absorption coefficients from units of 1/m * 1/atm  to 1/m * 1/pa.
 
 
-    Absorption[1] = (18.7410 - 121.3000 * beta + 273.5000 * beta2 - 194.0500 * beta3 + 56.3100 * beta4
+    Absorption[1] = (18.7410 - 121.3100 * beta + 273.5000 * beta2 - 194.0500 * beta3 + 56.3100 * beta4
                     - 5.8169 * beta5)/AtmToPascal;
 
 
@@ -568,7 +569,7 @@ void FlameLet::PlanckAbsorption (const doublereal temperature, doublereal Absorp
 
     if (temperature <= 750) {
         Absorption[2]  =  (4.7869 + temperature * (-0.06953 + temperature * (2.95775e-4 + temperature * 
-                          (-4.25732e-7 + temperature * 2.202849e-10))))/AtmToPascal; 
+                          (-4.25732e-7 + temperature * 2.02894e-10))))/AtmToPascal; 
     }
     else {
         Absorption[2]  = (10.0900 + temperature * (-0.01183 + temperature * (4.7753e-6 + temperature * 
@@ -598,12 +599,12 @@ void FlameLet::PlanckAbsorption (const doublereal temperature, doublereal Absorp
       */ 
 
 
-doublereal FlameLet::RadiativeLoss(const doublereal rho, const doublereal cp, const doublereal temperature, 
+doublereal FlameLet::RadiativeLoss(const doublereal temperature, 
                                    const doublereal soot_vol_frac, const doublereal mole_frac_H2O, 
                                    const doublereal mole_frac_CO2, const doublereal mole_frac_CO) const {               
     // RadiativeLoss requires a background setting temperature.  It is usually assumed to be 300K, unless experimental conditions 
-    // suggest another temperature.
-    const doublereal BackgroundTemp = 300;
+    // suggest another temperature. Used 300^4 which is 81e8 in temperaturePowers below.
+    //const doublereal BackgroundTemp = 300; 
 
 
     // Absorption coefficients are for H2O, CO2, and CO, in that order.
@@ -626,13 +627,12 @@ doublereal FlameLet::RadiativeLoss(const doublereal rho, const doublereal cp, co
     partialPress[0]  =  mole_frac_H2O * opPre;
     partialPress[1]  =  mole_frac_CO2 * opPre;
     partialPress[2]  =  mole_frac_CO * opPre;
-
     
     doublereal radiationScalar;  //To hold intermediate results
     doublereal spectralRadiation = 0;   //An intermediate result    
     
     //The following is used repeatedly in the loop below
-    const doublereal temperaturePowers = 1/(rho * cp) * 4* 5.669e-8 * (pow(temperature, 4) - pow(BackgroundTemp, 4));
+    const doublereal temperaturePowers = 4 * 5.669e-8 * (pow(temperature, 4) - 81e8);
 
 
     for (unsigned int j = 0; j < 3; ++j){
@@ -640,14 +640,14 @@ doublereal FlameLet::RadiativeLoss(const doublereal rho, const doublereal cp, co
 
 
         //Spectral radiative heat loss due to each of H2O, CO2, and CO 
-        radiationScalar =  temperaturePowers * partialPress[j] * AbsorptionVector[j];
+        radiationScalar =  partialPress[j] * AbsorptionVector[j];
 
         //Total spectral radiative heat loss.
         spectralRadiation += radiationScalar;
     }
      
     //Total spectral radiative heat loss + radiative heat loss due to soot
-    return spectralRadiation + 3.3337e-4 * soot_vol_frac * pow(temperature, 5);
+    return temperaturePowers * spectralRadiation + 3.3337e-4 * soot_vol_frac * pow(temperature, 5);
     
     cout << "Spectral Radiation\n" << spectralRadiation;
 
@@ -733,16 +733,11 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
         const int iH2O = camMech->FindSpecies("H2O");
         const int iCO2 = camMech->FindSpecies("CO2");
         const int iCO  = camMech->FindSpecies("CO");
-
-     
-      
-
+        
         //The next few lines access the molecular weights of H2O, CO2 and CO.
-        const Sprog::SpeciesPtrVector *speciesDetails = camMixture->Species();
-        const doublereal molwtH2O =   (*speciesDetails)[iH2O] -> MolWt();
-        const doublereal molwtCO2 =   (*speciesDetails)[iCO2] -> MolWt();
-        const doublereal molwtCO =    (*speciesDetails)[iCO] -> MolWt();
-
+        const doublereal molwtH2O =   (*spv)[iH2O] -> MolWt();
+        const doublereal molwtCO2 =   (*spv)[iCO2] -> MolWt();
+        const doublereal molwtCO =    (*spv)[iCO] -> MolWt();
 
         //Computation of mole fractions as inputs to RadiativeLoss
         //Computed using the following equation: 
@@ -752,13 +747,15 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
         const doublereal mole_fracsCO = s_mf(i,iCO)*avgMolWt[i]/molwtCO;
 
         //Soot Volume Fraction is set to zero here
-        radiation.resize(mCord,0.0);
+        //radiation.resize(mCord,0.0);
         
         //This radiation term is sentt to as output to profile.h 
-        radiation[i] = RadiativeLoss(m_rho[i], m_cp[i], m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
+        //radiation[i] = RadiativeLoss(m_rho[i], m_cp[i], m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
         
+        //std::cout << "Cell = " << i << " Residual = " <<  f[i] << " Radiation = " << RadiativeLoss(m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO)/(m_rho[i]*m_cp[i]) << " MfH2O = " << mole_fracsH2O << " MfCO2 = " << mole_fracsCO2 << " MfCO = " << mole_fracsCO << " sootFV = " << m_SootFv[i] << " T = " << m_T[i] << " rho = " << m_rho[i] << " cp = " << m_cp[i] << std::endl;
+
         //This is the new energy residual term, accounting for radiation.
-        f[i] += RadiativeLoss(m_rho[i], m_cp[i], m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
+        //f[i] -= RadiativeLoss(m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO)/(m_rho[i]*m_cp[i]);
 
     }
 
@@ -1089,10 +1086,10 @@ void FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot
     m_SootFv = soot_fv;
 
     //Solver assumes one soot volume fraction for each cell; temperature is already initialized
-    if (m_T.size() != m_SootFv.size()) {
+    /*if (static_cast<size_t>(reacGeom->getnCells()) != m_SootFv.size()) {
         std::ostringstream msg ("new soot volume fraction vector length is ");
-        msg << m_SootFv.size() << " but temperature vector length is " << m_T.size();
+        msg << m_SootFv.size() << " but geometry length is " << reacGeom->getnCells();
         throw std::runtime_error (msg.str());
-    }
+    }*/
 }     
 

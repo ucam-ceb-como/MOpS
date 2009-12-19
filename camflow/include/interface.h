@@ -205,6 +205,10 @@ namespace Camflow{
          *return the species mass frac given the indenpendant variable
          */
         const doublereal getMassFrac(const int spIndex, const doublereal axpos);
+        /*
+         *return the species mole frac given the indenpendant variable
+         */
+        const doublereal getMoleFrac(const int spIndex, const doublereal axpos);
 
         //! Get spatial profile of one species
         const std::vector<doublereal> getMassFracsBySpecies(const int spIndex) const;
@@ -324,6 +328,7 @@ namespace Camflow{
         Sprog::Mechanism mech;
         int nSpecies;
         std::vector<std::string> speciesNames;
+        const SpeciesPtrVector *speciesPointerVector;
         /*
          *memberes to hold dependent variabes
          */
@@ -335,6 +340,7 @@ namespace Camflow{
         std::vector<doublereal> spHeat;              //specific heats
         std::vector<doublereal> lambda;      //thermal conductivity
         std::vector<doublereal> mVelocity;   //velocity
+        std::vector<doublereal> avgMolWtVector;   // Average Molar Weight of the mixture
         Array2D mDiff;                      //Diffusion coefficients
 
         doublereal stMixtureFrac;       //stoichiometric mixture fraction
