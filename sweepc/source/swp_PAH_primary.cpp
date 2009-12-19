@@ -356,10 +356,12 @@ PAHPrimary *PAHPrimary::SelectRandomSubparticleLoop(int target)
 }
 
 
-// This function is used to find the the left and right particles when the entire particle tree is duplicated
+// Each node contains two pointers (m_leftparticle and m_rightparticle) to primary particles that are connected by this node
+// This function is used when the entire particle tree is duplicated.
+// It sets the pointers in the copied node (this), that the connectivity of the primary particles 
+// in this node is the same as in the original node. 
 /*!
  * @param[in] source Pointer to the primary to be copied
- * @param[in,out] target Pointer to the target primary
 */
 void PAHPrimary::UpdateAllPointers( const PAHPrimary *original)
 {	
@@ -368,19 +370,23 @@ void PAHPrimary::UpdateAllPointers( const PAHPrimary *original)
 		m_leftparticle=NULL;
 		m_rightparticle=NULL;			
     } else {	
+        // distance between the node and the primary particle
 		int depth=0;
 		int i;
+        // pathwhay from the node to the children
 		bool path[1000];
 		PAHPrimary *orgparticle;
-        //update the left particle 
+        //update the left particle first
+        //orgparticle is the primary particle to search
 		orgparticle=original->m_leftparticle;
-        // search for the left particle in the original tree and store the pathway in path
+        // we are going up the tree until we find the node that points to this primary particle (orgparticle)  
+        // and store the pathway in path
 		while (orgparticle!=original)
-		{
+		{       
 			if (orgparticle->m_parent->m_leftchild==orgparticle)
-				path[depth]=true;
+				path[depth]=true; // the particle is a leftchild of this parent node
 			else
-				path[depth]=false;
+				path[depth]=false; // the particle is a rightchild of this parent node
 			orgparticle=orgparticle->m_parent;
 			depth++;
 		}
@@ -398,7 +404,7 @@ void PAHPrimary::UpdateAllPointers( const PAHPrimary *original)
             }
 		}
 		
-         //update the right particle 
+         //do the same for the right particle
 		depth=0;
 		orgparticle=original->m_rightparticle;
         // search for the right particle in the original tree and store the pathway in path
