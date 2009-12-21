@@ -730,27 +730,27 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
 
                
         //Get species indexes corresponding to H20, CO2, CO
-        const int iH2O = camMech->FindSpecies("H2O");
-        const int iCO2 = camMech->FindSpecies("CO2");
-        const int iCO  = camMech->FindSpecies("CO");
+        //const int iH2O = camMech->FindSpecies("H2O");
+        //const int iCO2 = camMech->FindSpecies("CO2");
+        //const int iCO  = camMech->FindSpecies("CO");
         
         //The next few lines access the molecular weights of H2O, CO2 and CO.
-        const doublereal molwtH2O =   (*spv)[iH2O] -> MolWt();
-        const doublereal molwtCO2 =   (*spv)[iCO2] -> MolWt();
-        const doublereal molwtCO =    (*spv)[iCO] -> MolWt();
+        //const doublereal molwtH2O =   (*spv)[iH2O] -> MolWt();
+        //const doublereal molwtCO2 =   (*spv)[iCO2] -> MolWt();
+        //const doublereal molwtCO =    (*spv)[iCO] -> MolWt();
 
         //Computation of mole fractions as inputs to RadiativeLoss
         //Computed using the following equation: 
         //mole fraction (species) = mass fraction(species) * molecular mass (average) * (1/molecular mass (species)) 
-        const doublereal mole_fracsH2O = s_mf(i,iH2O)*avgMolWt[i]/molwtH2O;
-        const doublereal mole_fracsCO2 = s_mf(i,iCO2)*avgMolWt[i]/molwtCO2;                       
-        const doublereal mole_fracsCO = s_mf(i,iCO)*avgMolWt[i]/molwtCO;
+        //const doublereal mole_fracsH2O = s_mf(i,iH2O)*avgMolWt[i]/molwtH2O;
+        //const doublereal mole_fracsCO2 = s_mf(i,iCO2)*avgMolWt[i]/molwtCO2;                       
+        //const doublereal mole_fracsCO = s_mf(i,iCO)*avgMolWt[i]/molwtCO;
 
         //Soot Volume Fraction is set to zero here
-        //radiation.resize(mCord,0.0);
+        radiation.resize(mCord,0.0);
         
         //This radiation term is sentt to as output to profile.h 
-        //radiation[i] = RadiativeLoss(m_rho[i], m_cp[i], m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
+        //radiation[i] = RadiativeLoss(m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
         
         //std::cout << "Cell = " << i << " Residual = " <<  f[i] << " Radiation = " << RadiativeLoss(m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO)/(m_rho[i]*m_cp[i]) << " MfH2O = " << mole_fracsH2O << " MfCO2 = " << mole_fracsCO2 << " MfCO = " << mole_fracsCO << " sootFV = " << m_SootFv[i] << " T = " << m_T[i] << " rho = " << m_rho[i] << " cp = " << m_cp[i] << std::endl;
 
@@ -957,7 +957,7 @@ void FlameLet::report(doublereal x, doublereal* solution, doublereal& res){
 void FlameLet::reportToFile(doublereal t, doublereal* soln){
     
     doublereal sum;
-    reporter->openFiles();
+    reporter->openFile("profile.dat",false);
     reporter->writeCustomHeader(headerData);
     vector<doublereal> data, axpos;
     vector<doublereal> molfrac, massfrac;
@@ -997,7 +997,7 @@ void FlameLet::reportToFile(doublereal t, doublereal* soln){
 
     }
 
-    reporter->closeFiles();
+    reporter->closeFile();
 
 }
 /*
