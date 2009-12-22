@@ -227,17 +227,20 @@ PAHPrimary::~PAHPrimary()
 }
 
 /*!
+ * Recursively copy the tree for non-leaf nodes.
+ *
  * @param[in] source Pointer to the primary to be copied
- * @param[in,out] target Pointer to the target primary
 */
 void PAHPrimary::CopyTree( const PAHPrimary *source)
 {
     //create the new left and right children 
 	PAHPrimary *newleft = new PAHPrimary(source->CreateTime(),*m_pmodel,false);
 	PAHPrimary *newright = new PAHPrimary(source->CreateTime(),*m_pmodel,false);
+
     // copy the properties
 	newleft->CopyParts(source->m_leftchild);
 	newright->CopyParts(source->m_rightchild);
+
     //set the pointers to the children and the parent
 	m_leftchild=newleft;
 	m_rightchild=newright;
@@ -247,9 +250,14 @@ void PAHPrimary::CopyTree( const PAHPrimary *source)
     // the left and right particle are set further down in UpdateAllPointers
 	m_leftparticle=NULL;
 	m_rightparticle=NULL;
-    //copy the subtree
-	if (source->m_leftchild->m_leftchild!=NULL) m_leftchild->CopyTree(source->m_leftchild);
-	if (source->m_rightchild->m_leftchild!=NULL) m_rightchild->CopyTree(source->m_rightchild);
+
+    //recurse to copy the subtrees
+	if (source->m_leftchild->m_leftchild!=NULL) 
+        m_leftchild->CopyTree(source->m_leftchild);
+
+	if (source->m_rightchild->m_leftchild!=NULL)
+        m_rightchild->CopyTree(source->m_rightchild);
+
     //set the leftparticle and rightparticle
 	UpdateAllPointers(source);
 }
@@ -356,80 +364,81 @@ PAHPrimary *PAHPrimary::SelectRandomSubparticleLoop(int target)
 }
 
 
-// Each node contains two pointers (m_leftparticle and m_rightparticle) to primary particles that are connected by this node
-// This function is used when the entire particle tree is duplicated.
-// It sets the pointers in the copied node (this), that the connectivity of the primary particles 
-// in this node is the same as in the original node. 
 /*!
+ * Each node contains two pointers (m_leftparticle and m_rightparticle)
+ * to primary particles that are connected by this node
+ * This function is used when the entire particle tree is duplicated.
+ * It sets the pointers in the copied node (this), that the connectivity
+ * of the primary particles in this node is the same as in the original node.
+ *
+ * A large number of asserts are provided to check that the pointer network
+ * describing the aggregate structure is valid.  This can be re-enabled if
+ * there is suspicion of a bug,
+ *
+ *
+ *@todo give this method a more accurate name
+ *
  * @param[in] source Pointer to the primary to be copied
 */
 void PAHPrimary::UpdateAllPointers( const PAHPrimary *original)
 {	
     //the primary has no children => there are no left and right particles
     if (original->m_leftchild == NULL) {
+        // Check that both children are missing in the original and the copy
+        //assert(original->m_rightchild == NULL);
+        //assert(m_leftchild == NULL);
+        //assert(m_rightchild == NULL);
+
+        // Check the original really does not have left and right particles
+        // since it should be representing a physical primary, not a connection
+        // inside an aggregate unit.
+        //assert(original->m_leftparticle == NULL);
+        //assert(original->m_rightparticle == NULL);
+
+        // Since this is not a connecting node it does not have left and
+        // right particles.
 		m_leftparticle=NULL;
 		m_rightparticle=NULL;			
-    } else {	
-        // distance between the node and the primary particle
-		int depth=0;
-		int i;
-        // pathwhay from the node to the children
-		bool path[1000];
-		PAHPrimary *orgparticle;
-        //update the left particle first
-        //orgparticle is the primary particle to search
-		orgparticle=original->m_leftparticle;
-        // we are going up the tree until we find the node that points to this primary particle (orgparticle)  
-        // and store the pathway in path
-		while (orgparticle!=original)
-		{       
-			if (orgparticle->m_parent->m_leftchild==orgparticle)
-				path[depth]=true; // the particle is a leftchild of this parent node
-			else
-				path[depth]=false; // the particle is a rightchild of this parent node
-			orgparticle=orgparticle->m_parent;
-			depth++;
-		}
-        // go the same path in the target tree
-		m_leftparticle=m_leftchild;
-		for (i=depth-2;i>-1;i--)
-		{
-			if (path[i]==true)
-            {
-				m_leftparticle=m_leftparticle->m_leftchild;
-            }
-			else 
-            {
-				m_leftparticle=m_leftparticle->m_rightchild;
-            }
-		}
-		
-         //do the same for the right particle
-		depth=0;
-		orgparticle=original->m_rightparticle;
-        // search for the right particle in the original tree and store the pathway in path
-		while (orgparticle!=original)
-		{
-			if (orgparticle->m_parent->m_leftchild==orgparticle)
-				path[depth]=true;
-			else
-				path[depth]=false;
-			depth++;
-			orgparticle=orgparticle->m_parent;
-		}
-        // go the same path in the target tree
-		m_rightparticle=m_rightchild;
-		for (i=depth-2;i>-1;i--)
-		{
-			if (path[i]==true)
-            {
-				m_rightparticle=m_rightparticle->m_leftchild;
-            }
-			else 
-            {
-				m_rightparticle=m_rightparticle->m_rightchild;
-            }
-		}
+    } else {
+//        assert(original->m_rightchild != NULL);
+//        assert(m_leftchild != NULL);
+//        assert(m_rightchild != NULL);
+
+        // Check the original really does have left and right particles
+        // since it should be representing a connection
+        // inside an aggregate unit.
+//        assert(original->m_leftparticle != NULL);
+//        assert(original->m_rightparticle != NULL);
+
+        // m_leftparticle should be a leaf node so assert that it does not have children
+//        assert(original->m_leftparticle->m_leftchild == NULL);
+//        assert(original->m_leftparticle->m_rightchild == NULL);
+
+        // Find the route to m_leftparticle in the original tree
+        std::stack<bool> route = recordPath(original->m_leftparticle, original);
+
+        // Now follow the same route down the new tree to find the new left particle
+        m_leftparticle = descendPath(this, route);
+
+        // the new m_leftparticle should be a leaf node so assert
+        // that it does not have children
+//        assert(m_leftparticle->m_leftchild == NULL);
+//        assert(m_leftparticle->m_rightchild == NULL);
+
+        // m_rightparticle should be a leaf node so assert that it does not have children
+//        assert(original->m_rightparticle->m_leftchild == NULL);
+//        assert(original->m_rightparticle->m_rightchild == NULL);
+
+        // Find the route to m_rightparticle in the original tree
+        route = recordPath(original->m_rightparticle, original);
+
+        // Now follow the same route down the new tree to find the new right particle
+        m_rightparticle = descendPath(this, route);
+
+        // the new m_rightparticle should be a leaf node so assert
+        // that it does not have children
+//        assert(m_rightparticle->m_leftchild == NULL);
+//        assert(m_rightparticle->m_rightchild == NULL);
 	}
 }
 
@@ -1331,4 +1340,56 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
         throw invalid_argument("Input stream not ready "
                                "(Sweep, PAHPrimary::Deserialize).");
     }
+}
+
+/*!
+ * This is a helper function for ???????
+ * It climbs up the tree from bottom to top recording a route
+ * suitable for use in call to @see descendPath.
+ *
+ *@param[in]    bottom      Tree node from which to start climbing
+ *@param[in]    top         Tree node at which to stop climbing
+ *
+ *@pre      top must be above bottom in a tree
+ *
+ *@return   Stack that can be used to descend the same path by moving to the
+ *          left child each time the top of the stack is true.
+ */
+std::stack<bool> PAHPrimary::recordPath(const PAHPrimary* bottom,
+                                        const PAHPrimary* const top) {
+    std::stack<bool> wasLeftChild;
+
+    while(bottom != top) {
+        // check whether bottom was a left child of its parent
+        wasLeftChild.push(bottom == bottom->m_parent->m_leftchild);
+
+        // Climb one level up the tree
+        bottom = bottom->m_parent;
+    }
+    return wasLeftChild;
+}
+
+/*!
+ *@param[in]        here            Point in tree from which to start descent
+ *@param[in,out]    takeLeftBranch  Instructions for which child to move to at each level
+ *
+ *@return   The node at the bottom of the path
+ *
+ *@pre  here must be a node of tree in which takeLeftBranch is a valid path
+ *@post takeLeftBranch.empty() == true
+ */
+PAHPrimary* PAHPrimary::descendPath(PAHPrimary *here,
+                                    std::stack<bool> &takeLeftBranch) {
+    while(!takeLeftBranch.empty()) {
+        // Move one step down the tree in the instructed direction
+        if(takeLeftBranch.top())
+            here = here->m_leftchild;
+        else
+            here = here->m_rightchild;
+
+        // This instuction has now been processed
+        takeLeftBranch.pop();
+    }
+
+    return here;
 }
