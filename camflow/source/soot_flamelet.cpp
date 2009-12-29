@@ -263,7 +263,7 @@ void SootFlamelet::run(const std::vector<real>& data_times,
  * Load in an input file for the chemistry instead of calling camflow to solve
  * a flamelet. 
  */
-void SootFlamelet::run(const real stop_time) {
+void SootFlamelet::run(const real stop_time, const std::string fileName) {
 
     //=========================================================================
     // Particles
@@ -272,7 +272,7 @@ void SootFlamelet::run(const real stop_time) {
     // Declare input variables for Brush::ResetChemistry
     int verbosity = 1;
     Sprog::Mechanism mech;
-    std::string inputFileName = "camflowFlamelet.dat";   
+    //std::string inputFileName = "camflowFlamelet.dat";   
     Brush::ResetChemistry::InputFileType file_type = Brush::ResetChemistry::CamflowFlamelet;
 
     // Set the stop time. If calling from OpenFOAM, it will be whatever has been 
@@ -284,7 +284,7 @@ void SootFlamelet::run(const real stop_time) {
     std::cout << "Reading chemical species...\n";
     Sprog::IO::MechanismParser::ReadChemkin("chem.inp", mech, "therm.dat", "tran.dat");
 
-    Brush::ResetChemistry newChem = Brush::ResetChemistry(inputFileName,
+    Brush::ResetChemistry newChem = Brush::ResetChemistry(fileName,
                                                           file_type,
                                                           mech,
                                                           verbosity);

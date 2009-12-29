@@ -79,7 +79,7 @@ public:
 
     //! Load in chemistry solution from a file instead of solving a flamelet.
     //! Use for debug purposes. lrm29.
-    void run(const real stop_time);
+    void run(const real stop_time, const std::string fileName);
 
     //! Soot population average properties
     std::vector<real> getSootStatistics(const real position) const;
