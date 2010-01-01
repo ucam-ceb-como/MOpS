@@ -322,6 +322,16 @@ protected:
     real EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const;
 
     //==== Collision integrals ==========================
+    
+    //! Modified reduced diameter for use in collision integral calculations(should perhaps be input)
+    real collisionIntegralDiameter(const Cell &sys, const Particle &sp) const;
+
+    //! Dimensionless temperature for use in collision  integral calculations(should perhaps be input)
+    real collisionIntegralTemperature(const Cell &sys, const Particle &sp) const;
+    
+    //! Blending function between diffuse and specular scattering for collision integrals
+    real accomodationFunction(const Cell &sys, const Particle &sp) const;
+
     //! Knudsen based average of specular and diffusive 1,1 integrals
     real Omega1_1_avg(const Cell &sys, const Particle &sp) const;
 

@@ -756,7 +756,6 @@ real ParticleModel::DiffusionCoefficient(const Cell &sys, const Particle &sp) co
             return EinsteinDiffusionCoefficient(sys, sp);
             // Will not go any further because of return statement.
         case FlameletDiffusion:
-            //@todo Multiply by dissipation rate
             return EinsteinDiffusionCoefficient(sys, sp)
                      * sys.GradientMixFrac() * sys.GradientMixFrac();
         default:
@@ -801,8 +800,13 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
             v += sys.LaplacianMixFrac() * sootMassDensity
                  * (sys.MixFracDiffCoeff() - EinsteinDiffusionCoefficient(sys, sp));
 
+            if((neighbours[0] != NULL) && (neighbours[1] != NULL)) 
             // Estimate two gradients in mixture fraction space using the
             // formula grad f ~ (f(z_{i+1}) - f(z_{i-1})) / (z_{i+1} - z_{i-1})
+            // This will not work if one or both of the neghbouring cells
+            // is missing (at the edge of a domain) and for simplicity
+            // assume this term is 0 in this case.
+            // @todo Use one sided derivatives at the boundary
             {
                 // Distance between the two Z values
                 const real dZ = geom.calcSpacing(Geometry::left) +
@@ -887,21 +891,45 @@ real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) 
  *@return       Collision integral interpolated between diffuse and specular limits
  */
 real ParticleModel::Omega1_1_avg(const Cell &sys, const Particle &sp) const {
-    // Knudsen number is used to interpolate between the specular and diffuse integrals
-    const real knudsen = Sweep::KnudsenAir(sys.Temperature(), sys.Pressure(), sp.CollDiameter());
+    // Reduced collision diameter
+    const real sigmaPrime = collisionIntegralDiameter(sys, sp);
 
-    // @todo Reduced collision diameter
-    const real sigmaPrime = 1.0;
-
-    //@todo Modified temperature to power -1/4
-    const real TStar = 1.0;
+    // Modified temperature to power -1/4
+    const real TStar = std::pow(collisionIntegralTemperature(sys, sp), -0.25);
 
     // Collision integrals calculated for pure specular and pure diffusion scattering
     const real specular = Omega1_1_spec(TStar, sigmaPrime);
     const real diffuse  = Omega1_1_diff(TStar, sigmaPrime);
 
-    //@todo proper interpolation
-    return (specular + diffuse) / 2.0;
+    // Interpolation via the accomodation function
+    const real phi = accomodationFunction(sys, sp);
+    return specular * (1.0 - phi) + diffuse * phi;
+}
+
+/*!
+ * Collision integral is calculated using the formula from
+ * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
+ * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
+ *
+ *@param[in]    sys     System in which particle experiences drag
+ *@param[in]    sp      Particle for which to calculate drag coefficient
+ *
+ *@return       Collision integral interpolated between diffuse and specular limits
+ */
+real ParticleModel::Omega1_2_avg(const Cell &sys, const Particle &sp) const {
+    // Reduced collision diameter
+    const real sigmaPrime = collisionIntegralDiameter(sys, sp);
+
+    // Modified temperature to power -1/4
+    const real TStar = std::pow(collisionIntegralTemperature(sys, sp), -0.25);
+
+    // Collision integrals calculated for pure specular and pure diffusion scattering
+    const real specular = Omega1_2_spec(TStar, sigmaPrime);
+    const real diffuse  = Omega1_2_diff(TStar, sigmaPrime);
+
+    // Interpolation via the accomodation function
+    const real phi = accomodationFunction(sys, sp);
+    return specular * (1.0 - phi) + diffuse * phi;
 }
 
 /*!
@@ -944,7 +972,122 @@ real ParticleModel::Omega1_1_spec(const real t_star_1_4, const real sigma_prime)
                                + 0.476 * t_star_1_4 * t_star_1_4);
 
     integral += sigma_prime * sigma_prime
-                * (1.53 - 85.013 * t_star_1_4 + 4.025 * t_star_1_4 * t_star_1_4);
+                * (1.53 - 5.013 * t_star_1_4 + 4.025 * t_star_1_4 * t_star_1_4);
 
     return integral;
 }
+
+/*!
+ * Collision integral is calculated using the formula from
+ * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
+ * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
+ *
+ *@param[in]    t_star_1_4      Modified temperature
+ *@param[in]    sigma_prime     Reduced collision diameter
+ *
+ *@return   Collision integral calculated with diffuse scattering
+ */
+real ParticleModel::Omega1_2_diff(const real t_star_1_4, const real sigma_prime) const {
+    // 1 + 5 * pi/48
+    real integral = 1.3272;
+
+    integral += sigma_prime * (1.159 + 1.506 * t_star_1_4
+                               + 1.204 * t_star_1_4 * t_star_1_4);
+
+    integral += sigma_prime * sigma_prime
+                * (3.028 - 7.719 * t_star_1_4 + 4.180 * t_star_1_4 * t_star_1_4);
+
+    return integral;
+}
+
+/*!
+ * Collision integral is calculated using the formula from
+ * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
+ * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
+ *
+ *@param[in]    t_star_1_4      Modified temperature
+ *@param[in]    sigma_prime     Reduced collision diameter
+ *
+ *@return   Collision integral calculated with specular scattering
+ */
+real ParticleModel::Omega1_2_spec(const real t_star_1_4, const real sigma_prime) const {
+    real integral = 1.0;
+
+    integral += sigma_prime * (0.338 + 1.315 * t_star_1_4
+                               + 0.412 * t_star_1_4 * t_star_1_4);
+
+    integral += sigma_prime * sigma_prime
+                * (1.503 - 4.654 * t_star_1_4 + 3.410 * t_star_1_4 * t_star_1_4);
+
+    return integral;
+}
+
+
+/*!
+ * Dimensionless collision diameter for use in formul\ae from
+ * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
+ * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
+ *
+ *@param[in]    sys     Gaseous system in which particle is moving
+ *@param[in]    sp      Particle 
+ *
+ *@return       Lennard Jones collision radius divided by particle collision radius
+ */
+real ParticleModel::collisionIntegralDiameter(const Cell &sys, const Particle &sp) const {
+    // Value of Lennard Jones radius (m) taken from Table IV of above cited paper
+    // using combination rules to combine values for gaseous and solid phases.
+    return 3.576e-10 / sp.CollDiameter();
+}
+
+
+/*!
+ * Dimensionless temperature for use in formul\ae from
+ * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
+ * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
+ *
+ *@param[in]    sys     Gaseous system in which particle is moving
+ *@param[in]    sp      Particle 
+ *
+ *@return       Temperature divided by Lennard Jones well depth and collision cross-section cubed
+ */
+real ParticleModel::collisionIntegralTemperature(const Cell &sys, const Particle &sp) const {
+    // Value of well depth (K) taken from Table IV of above cited paper 
+    // using combination rules to combine values for gaseous and solid phases.
+    const real wellDepth = 57.24;
+    
+    const real collisionCubed = std::pow(collisionIntegralDiameter(sys, sp), 3);
+    
+    // 1.107e-29 is volume occupied by 1 Carbon atom assuming bulk density 1800 kg m^-3 (value for soot)
+    return 3.0 * Sprog::kB * sys.Temperature() * 1.107e-29 / (2.0 * Sprog::PI * wellDepth * collisionCubed);
+}
+
+/*!
+ * Proportion of diffuse scattering result to use in formul\ae from
+ * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
+ * of small particles. II. Application", Phys. Rev. E 68:061207 (2003).
+ * This formula is most clearly presented in the follow on paper:
+ * Z Li and H Wang, "Thermophoretic force and velocity of nanoparticles 
+ * in the free molecular regime", Phys, Rev. E 70:021205 (2004), see 
+ * equation 38.
+ *
+ *@param[in]    sys     Gaseous system in which particle is moving
+ *@param[in]    sp      Particle 
+ *
+ *@return       Accomodation function, \f$\phi\f$
+ */
+real ParticleModel::accomodationFunction(const Cell &sys, const Particle &sp) const {
+    // Particle radius in nm divided by 2.5
+    real switchTerm = sp.CollDiameter() / 5e-9;
+    
+    // High power to switch aggressively between regimes
+    switchTerm = std::pow(switchTerm, 15);
+    switchTerm += 1.0;
+    
+    switchTerm = 1.0 - 1.0 / switchTerm;
+
+    // Knudsen number is used to interpolate between the specular and diffuse integrals
+    const real knudsen = Sweep::KnudsenAir(sys.Temperature(), sys.Pressure(), sp.CollDiameter());
+
+    return (1.0 + 0.9 * knudsen * switchTerm) / (1.0 + knudsen);
+}
+
