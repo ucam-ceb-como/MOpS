@@ -8,8 +8,8 @@
         <E>100</E>
     </model>
     
-    <model type="diffusion" id="einstein">
-    </model>
+    <model type="diffusion" id="einstein" />
+    <model type="advection" id="physical" />
 
     <!-- Define particle components. -->
     

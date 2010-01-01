@@ -43,6 +43,7 @@
 
 #include "rng.h"
 #include "swp_transport_outflow.h"
+#include "swp_cell.h"
 
 #include "choose_index.hpp"
 
@@ -404,14 +405,25 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
     for(unsigned int i = 0; i != numCells; ++i) {
         Mops::Mixture &mix = *(reac.getCell(i).Mixture());
         Sweep::Ensemble &particles = mix.Particles();
+        
+        // Flamelet advection needs some information on adjoining cells to calculate gradients
+        const Geometry::LocalGeometry1d geom(reac.getGeometry(), i);
+        std::vector<const Sweep::Cell*> neighbouringCells(2, NULL);
+        
+        // See if there is a left neighbour
+        int neighbourIndex = geom.calcDestination(Geometry::left);
+        if(neighbourIndex >= 0)
+            neighbouringCells[0] = reac.getCell(neighbourIndex).Mixture();
+
+        // See if there is a right neighbour
+        neighbourIndex = geom.calcDestination(Geometry::right);
+        if(neighbourIndex >= 0)
+            neighbouringCells[1] = reac.getCell(neighbourIndex).Mixture();
 
         // Get rid of any scaling in the binary tree, so that a list of
         // particles can be put into the tree at the end of the transport
         // without needing to update any scaling variables.
         mix.SetM0(particles.Count() / mix.SampleVolume());
-
-        // Velocity of gas in the cell is the same for all particvles
-        const real velocity = mix.Velocity();
 
         // Get a list of the particles from the ensemble.  New instances of the
         // particles are required as the existing particles will be deleted
@@ -434,6 +446,12 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
                 // Time since position was last calculated
                 const real dt = t_stop - (*itPart)->getPositionTime();
 
+                const real velocity = 
+                    reac.getMechanism().ParticleMech().AdvectionVelocity(
+                                                        mix,
+                                                        **itPart,
+                                                        neighbouringCells,
+                                                        geom); 
                 // Distance covered due to advection
                 if(mSplitAdvection)
                     newPosition += dt * velocity;
