@@ -16,7 +16,7 @@ using namespace Camflow;
  *queried to get the information on dependent variables
  */
 Interface::Interface(){
-    
+
     std::string fChem("chem.inp");
     std::string fThermo("therm.dat");
     std::string fTrans("tran.dat");
@@ -27,16 +27,16 @@ Interface::Interface(){
     }catch(CamError &ce){
         std::cout << ce.errorMessge;
     }
-    
+
 
     //read mechanism, thermo and trasnport data
     IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,fTrans);
 
     //get the number of species
     nSpecies = mech.SpeciesCount();
-    //create the mixture 
+    //create the mixture
     Thermo::Mixture mix(mech.Species());
-    speciesPointerVector = mix.Species();  
+    speciesPointerVector = mix.Species();
 
     /*
      *populate the species names
@@ -58,7 +58,7 @@ Interface::Interface(Mechanism& mech_in,
         void* rModel, const doublereal sdr
                                                                 ){
 
-    std::string fCamFlow("camflow.xml");    
+    std::string fCamFlow("camflow.xml");
     try{
         cm.readInput(fCamFlow,cc,cg,convert,ca,cb,cp,config,cSoot);
     }catch(CamError &ce){
@@ -68,7 +68,7 @@ Interface::Interface(Mechanism& mech_in,
      *reset the reactor mesh to the passed in values
      */
     if(dz.size() != 0)cg.setGeometry(dz);
-    
+
     CamSoot cs;
 
     model = (CamResidual*)rModel;
@@ -156,7 +156,7 @@ void Interface::solve(std::vector<Thermo::Mixture>& cstrs,
         const doublereal sdr){
 
 
-    cc = ccObj;    
+    cc = ccObj;
     config = confObj;
     if(cstrs.size() != dz.size()){
         throw CamError("Mismatch between the number of mixtures passed and the cell geometry\n");
@@ -172,7 +172,7 @@ void Interface::solve(std::vector<Thermo::Mixture>& cstrs,
     if(sdr==0){
         model->solve(cstrs,initalSource,finalSource,mech_in,ccObj,ca,cg,cp);
         resetMixtures(cstrs);
-    }       
+    }
 
 }
 
@@ -199,10 +199,10 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
     if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
 
-    if(flmlt == NULL ) flmlt = new FlameLet();    
+    if(flmlt == NULL ) flmlt = new FlameLet();
     //Set the time history of the scalar dissipation rate
     flmlt->setRestartTime(intTime[0]);
-    flmlt->setExternalScalarDissipationRate(intTime,sdr);
+    flmlt->setExternalScalarDissipationRate(intTime,sdr,true);
 
     // Build up a vector of zero soot volume fractions
     std::vector<doublereal> zeroSoot(cg.getnCells(), 0.0);
@@ -218,20 +218,76 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
 }
 
 /**
+ * This is called when an sdr profile is required instead of just a constant one.
+ */
+void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >& sdr,
+								   const std::vector< std::vector<doublereal> >& Zcoords,
+								   const std::vector<doublereal>& intTime,
+								   bool continuation,
+								   bool lnone) {
+
+    if(sdr.size() != intTime.size())
+        throw CamError("Mismatch in the size of SDR and TIME vector\n");
+
+    if(flmlt == NULL ) flmlt = new FlameLet();
+
+    flmlt->setRestartTime(intTime[0]);
+    if(intTime[1]!=0)cc.setMaxTime(intTime[1]);
+    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
+
+    //Set the time history of the scalar dissipation rate
+    flmlt->setRestartTime(intTime[0]);
+
+    // Set the scalar dissipation rate profile.
+    flmlt->setExternalScalarDissipationRate(intTime,sdr,Zcoords);
+
+    // Build up a vector of zero soot volume fractions
+    std::vector<doublereal> zeroSoot(cg.getnCells(), 0.0);
+    flmlt->setExternalSootVolumeFraction(zeroSoot);
+
+    try{
+        if(!continuation){
+            flmlt->solve(cc,ca,cg,cp,mech,true);
+        }else{
+            flmlt->restart(cc);
+        }
+        /*
+         *store the results for lookup
+         */
+        flmlt->getDensityVector(rhoVector);
+        flmlt->getSpeciesMassFracs(spMassFracs);
+        flmlt->getTemperatureVector(TVector);
+        flmlt->getIndepedantVar(indVar);
+        flmlt->getViscosityVector(muVector);
+        flmlt->getSpecificHeat(spHeat);
+        flmlt->getThermalConductivity(lambda);
+        flmlt->getDiffusionCoefficient(mDiff);
+        flmlt->getVelocity(mVelocity);
+        flmlt->getAverageMolarWeight(avgMolWtVector);
+        flmlt->getWdotA4(wdotA4);
+        stMixtureFrac = flmlt->stoichiometricMixtureFraction();
+        std::cout << "Size of thermal conductivity " << lambda.size() << std::endl;
+    }catch(CamError &ce){
+        throw ;
+    }
+
+}
+
+/**
  *  This function is called by the external code that
  *  passes a scalar dissipation rate with time history
  *  and a spatial profile of soot volume fraction.
  */
-void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const std::vector<doublereal>& sdr, 
+void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const std::vector<doublereal>& sdr,
                                  const std::vector<doublereal>& intTime, bool continuation, bool lnone){
 
     if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
 
-    if(flmlt == NULL ) flmlt = new FlameLet();    
+    if(flmlt == NULL ) flmlt = new FlameLet();
     //Set the time history of the scalar dissipation rate
     flmlt->setRestartTime(intTime[0]);
-    flmlt->setExternalScalarDissipationRate(intTime,sdr);
+    flmlt->setExternalScalarDissipationRate(intTime,sdr,true);
 
     //@todo check length of the vector
     flmlt->setExternalSootVolumeFraction(soot_fv);
@@ -256,14 +312,14 @@ void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const s
  *integration time, the program return with the converged solution.
  */
 void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, bool lnone){
-    
+
     if(intTime!=0)cc.setMaxTime(intTime);
     if(flmlt == NULL ) flmlt = new FlameLet();
     if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
     flmlt->setExternalScalarDissipationRate(sdr);
 
     if(sdr==0){
-        std::cout << "Passed in value of SDR is zero\n SDR automatic calcilation activated\n" ;
+        std::cout << "Passed in value of SDR is zero\n SDR automatic calculation activated\n" ;
     }
     try{
         if(!continuation){
@@ -284,6 +340,7 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
         flmlt->getDiffusionCoefficient(mDiff);
         flmlt->getVelocity(mVelocity);
         flmlt->getAverageMolarWeight(avgMolWtVector);
+        flmlt->getWdotA4(wdotA4);
         stMixtureFrac = flmlt->stoichiometricMixtureFraction();
         std::cout << "Size of thermal conductivity " << lambda.size() << std::endl;
     }catch(CamError &ce){
@@ -361,7 +418,7 @@ const doublereal Interface::getMoleFrac(const int spIndex, const doublereal axpo
  *return the temperature
  */
 const doublereal Interface::getTemperature(const doublereal axpos){
-    
+
     doublereal temp = getVariableAt(axpos,TVector);
     return temp;
 }
@@ -369,7 +426,7 @@ const doublereal Interface::getTemperature(const doublereal axpos){
  *return the viscosity
  */
 const doublereal Interface::getViscosity(const doublereal axpos){
-    
+
     doublereal temp = getVariableAt(axpos,muVector);
     return temp;
 }
@@ -409,6 +466,16 @@ const std::vector<doublereal> Interface::getDiffusionCoefficients(const doublere
     return rmDiff;
 
 }
+
+/*
+ *return the rate of production of pyrene
+ */
+const doublereal Interface::getWdotA4(const doublereal axpos){
+
+    doublereal temp = getVariableAt(axpos,wdotA4);
+    return temp;
+}
+
 /*
  *private function to do the interpolation of the solution variables
  */
@@ -427,13 +494,13 @@ doublereal Interface::getVariableAt(const doublereal& pos,
         }else if( i>0 && (pos > indVar[i-1]) && (pos < indVar[i]) ){
             vu = var[i];
             xu = indVar[i];
-            
+
             vl = var[i-1];
             xl = indVar[i-1];
-            
+
             doublereal slope = (vu-vl)/(xu-xl);
             doublereal intersect = vu- (slope*xu);
-            
+
             temp= slope*pos + intersect;
             break;
         }

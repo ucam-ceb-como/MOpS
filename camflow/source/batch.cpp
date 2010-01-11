@@ -41,6 +41,7 @@
 #include "batch.h"
 #include "cam_math.h"
 #include "cvode_wrapper.h"
+#include "radau_wrapper.h"
 #include <vector>
 #include <cstring>
 #include <iostream>
@@ -91,18 +92,18 @@ void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp,
     nVar = nSpc+1; //species + temperature
     nEqn = nVar;
     ptrT = nVar-1;
-    
+
 
     /*get the fuel inlet conditions and the fill the
      *solution vector with species mass fractions
      */
-    
+
     ca.getLeftBoundary(cb);
     getInletMassFrac(cb,solvect);
     //set the initial pressure
     opPre = ca.getPressure();
 
-    
+
     /*
      *initialize the solution vector with species
      *mass fractions
@@ -117,7 +118,7 @@ void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp,
     camMixture->SetMassDensity(rho);
     camMixture->GetConcs(solvect);
     solvect.push_back(temp);
-   
+
 
 
     reporter->header("BATCH ");
@@ -130,14 +131,52 @@ void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp,
      */
     report(0.0,&solvect[0]);
 
+    int solverID = cc.getSolver();
 
+    if (solverID == cc.CVODE) {
 
-    CVodeWrapper cvw;
-    cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(), cc.getSpeciesRelTol(),
-                        cc.getMaxTime(),nEqn,*this);
-    
-    cvw.solve(CV_ONE_STEP,cc.getResTol());
-    reporter->closeFiles();
+		CVodeWrapper cvw;
+		cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(), cc.getSpeciesRelTol(),
+							cc.getMaxTime(),nEqn,*this);
+
+		cvw.solve(CV_ONE_STEP,cc.getResTol());
+		reporter->closeFiles();
+
+	} else if (solverID == cc.RADAU) {
+
+		RadauWrapper radauWrapper;
+
+		std::vector<doublereal> relTolVector;
+		std::vector<doublereal> absTolVector;
+
+		relTolVector.push_back(cc.getSpeciesRelTol());
+		absTolVector.push_back(cc.getSpeciesAbsTol());
+
+		radauWrapper.setBandWidth(nEqn);
+
+		radauWrapper.initSolver(nEqn,
+								0.0,
+								cc.getMaxTime(),
+								solvect,
+								relTolVector,
+								absTolVector,
+								*this);
+
+		radauWrapper.Integrate();
+
+		/*
+		 *write the output to file only if the call is not
+		 *from the interface
+		 */
+		//if(!interface) {
+		//	reportToFile(cc.getMaxTime(),&solvect[0]);
+		//}
+	   // radauWrapper.destroy();
+
+		reporter->closeFiles();
+
+	}
+
 }
 
 /*
@@ -171,12 +210,12 @@ void Batch::residual(const doublereal& time, doublereal* y, doublereal* f){
          *evaluate soot residual
          */
         sootMom->residual(time,momRates,&mom[0],&resMoment[0]);
-        
+
         for(int m=0; m<nMoments; m++){
             f[nSpc+m] = resMoment[m];
             //std::cout << f[nSpc+m] << std::endl;int dd; cin >> dd;
         }
-        
+
     }
 }
 
@@ -210,13 +249,13 @@ void Batch::updateMixture(const doublereal& x, doublereal* y){
 void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f){
 
     camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
-    
+
     for (int l = 0; l < nSpc; l++) {
         f[l]= wdot[l];
-    
+
     }
 
-    
+
 }
 
 //temperature residual
@@ -336,7 +375,7 @@ void Batch::reportToFile(doublereal time, doublereal* soln){
     }
     data.push_back(sum);
 
-  
+
 
     reporter->writeStdFileOut(data);
 

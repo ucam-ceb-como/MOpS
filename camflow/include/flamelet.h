@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   flamelet.h
  * Author: vj231
  *
@@ -25,8 +25,8 @@ namespace Camflow{
             LNONE,
             LNNONE
         };
-        
-        FlameLet(){sdr_ext=0;timeHistory=false;}
+
+        FlameLet(){sdr_ext=0;timeHistory=false;sdrProfile=false;sdrAnalytic=false;}
         virtual ~FlameLet(){}
 
         int eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval);
@@ -65,7 +65,7 @@ namespace Camflow{
                 CamProfile& cp);
 
 
-        
+
         //initialize the solution vector
         void initSolutionVector(CamControl &cc);
         //calculate the stoichiometric mixture fraction
@@ -83,6 +83,10 @@ namespace Camflow{
         /*
          *segregated solver
          */
+
+        //mass matrix evaluation
+        void massMatrix(doublereal **M);
+
         void ssolve(CamControl &cc);
         /*
          *restart the solution with the converged solution
@@ -112,32 +116,51 @@ namespace Camflow{
         /*
          *set the time history of scalar dissipation rate
          */
-        void setExternalScalarDissipationRate(const std::vector<doublereal>& time, const std::vector<doublereal>& sdr);
+        void setExternalScalarDissipationRate(const std::vector<doublereal>& time,
+											  const std::vector<doublereal>& sdr,
+											  const bool analytic);
+
+        /*
+         *set the time history of scalar dissipation rate with a profile from the CFD.
+         */
+        void setExternalScalarDissipationRate(const std::vector<doublereal>& time,
+											  const std::vector< std::vector<doublereal> >& sdr,
+											  const std::vector< std::vector<doublereal> >& Zcoords);
 
         /**
          *  get scalar dissipation rate
          */
-        
+
         doublereal getSDR(const doublereal time) const;
+        doublereal getSDRfromProfile(const doublereal time, const doublereal Z) const;
+        doublereal scalarDissipationRateProfile(const doublereal m_frac, const doublereal stoichSDR, const int cell);
 
         //! Provide a soot volume fraction from an external calculation
         void setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv);
 
+        //Get the residual for use in radauWrapper.
+        doublereal getResidual() const;
 
         /**
          *  Set restart time
          */
         void setRestartTime(doublereal t);
- 
-        
-        
+
+
+
     //! Computes the Planck mean absorption constants, as part of the radiative heat loss dissipation model.
     void PlanckAbsorption (const doublereal Temperature, doublereal Absorption[3])const;
-    
+
     //! Computes  the radiative heat loss term for radiative heat dissipation model
-   doublereal RadiativeLoss(const doublereal Temperature, 
-                            const doublereal soot_vol_frac, const doublereal mole_frac_H2O, 
-                            const doublereal mole_frac_CO2, const doublereal mole_frac_CO) const; 
+   doublereal RadiativeLoss(const doublereal Temperature,
+                            const doublereal soot_vol_frac, const doublereal mole_frac_H2O,
+                            const doublereal mole_frac_CO2, const doublereal mole_frac_CO) const;
+
+   /*
+    * return a vector for the rate of production of pyrene.
+    */
+   void getWdotA4(std::vector<doublereal>& wdotA4);
+
 
     private:
         doublereal stoichZ; //stoichiometric mixture fraction
@@ -147,18 +170,20 @@ namespace Camflow{
         doublereal rstartTime;
         std::vector<doublereal> v_sdr;   //scalar dissipation rate that has a time history
         std::vector<doublereal> v_time; //time profile of scalar dissipation rates
+        std::vector< std::vector<doublereal> > profile_sdr; // SDR profile with a time history.
+        std::vector< std::vector<doublereal> > cfdMixFracCoords; // Mixture Fraction coords from CFD.
 
         //! Spatial profile of soot volume fraction
         std::vector<doublereal> m_SootFv;
-        
 
-        bool timeHistory;
+
+        bool timeHistory, sdrProfile, sdrAnalytic;
         doublereal strain;  // strain rate
         int mCord;          // this is the mixture fraction coordinates
         inletStruct fuel, oxid;
 
         Array2D Le, convection, CpSpec; //Lewis numbers
-        
+
     };
 }
 

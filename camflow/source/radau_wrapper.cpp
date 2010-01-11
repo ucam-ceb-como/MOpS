@@ -45,9 +45,9 @@
 #include "cam_residual.h"
 using namespace Camflow;
 
-RadauWrapper::~RadauWrapper(){
-
-}
+//RadauWrapper::~RadauWrapper(){
+//
+//}
 void RadauWrapper::setControl(CamControl &cc){
     solverControl = &cc;
 }
@@ -68,18 +68,34 @@ extern "C"{
         residual->eval(x,y,f, jacCall);
     }
 
+    void Jacobian(double x, double *y, double **J)
+    {
+
+    } // Jacobian
+
     /*
      *function called by radau for writing the output
      */
-    void report(doublereal x, doublereal* y, void* udata){
+    double report(doublereal x, doublereal* y, void* udata){
+
         CamResidual *residual = (CamResidual*)udata;
-        residual->report(x,y);
+        doublereal resNorm = residual->getResidual();
+
+        // Output time and residual to screen.
+        std::cout << "Time = " << x << "   Residual = " << resNorm << std::endl;
+
+        // If the residual is below a certain value, stop RADAU.
+        //if(resNorm < 1e-5){return 1;}
+
+	    return resNorm;
+
     }
 
     void massMatrix(doublereal **M, void* udata){
         CamResidual *residual = (CamResidual*)udata;
         residual->massMatrix(M);
     }
+
 }
 
 
@@ -87,9 +103,9 @@ extern "C"{
 void RadauWrapper::initSolver(  int nEq,
                                 const doublereal tBeg,
                                 const doublereal tEnd,
-                                vector<doublereal>& y,
-                                vector<doublereal>& rTol,
-                                vector<doublereal>& aTol,
+                                std::vector<doublereal>& y,
+                                std::vector<doublereal>& rTol,
+                                std::vector<doublereal>& aTol,
                                 CamResidual &cr){
     /*
      *initialisation of the Radau solver
@@ -103,7 +119,7 @@ void RadauWrapper::initSolver(  int nEq,
    if(tEnd <= 0) throw CamError("Invalid end time for integration\n");
 
    // interval of x for printing output
-   double dx = (tEnd-tBeg)/50;
+   double dx = 1e-3;
    // rtoler and atoler are vectors
    int itoler = 0;
    // use SolutionOutput routine
@@ -112,23 +128,23 @@ void RadauWrapper::initSolver(  int nEq,
    const int ijac = 0;
 
    // Mass matrix routine is identity
-   const int imas = 1;
-   int mlmas = 0;
-   int mumas = 0;
+   const int imas = 0;
+   int mlmas = nEq;
+   int mumas;
 
    // Use default values (see header files) for these parameters:
    double hinit = 0.0;//solverControl->getIniStep();   //initial step size
    double hmax(0.0);                             //max step size
-   int nmax(0);                                  //max number of allowed steps (100000)
-   int nit(0);                                   //max number of newton iteration in each step (7)
-   double uround(0.0), safe(0.0);                //safety factor for step size prediction
+   int nmax(1000000);                                  //max number of allowed steps (100000)
+   int nit(1000);                                   //max number of newton iteration in each step (7)
+   double uround(1e-16), safe(0.0);                //safety factor for step size prediction
    double facl(0.0), facr(0.0);
-   
-   bool startn(false);
-   int nind1(0), nind2(0), nind3(0), npred(0), m1(0), m2(0);
-   bool hess(false);
-   double fnewt(0.0), quot1(0.0), quot2(0.0);
-   double thet(0.00001);                             // Jac evaluation decision (0.001) increase of eval is expensive
+
+   bool startn(true);
+   int nind1(nEq), nind2(0), nind3(0), npred(1), m1(0), m2(0);
+   bool hess(true);
+   double fnewt(0.1), quot1(1.0), quot2(1.2);
+   double thet(0.001);                             // Jac evaluation decision (0.001) increase of eval is expensive
 
    solver = new StiffIntegratorT(
                 nEq,                    //system size
@@ -171,7 +187,7 @@ void RadauWrapper::initSolver(  int nEq,
     * On calling the resiual function this will be
     * returned
     */
-   
+
    solver->setUserData( (void*)&cr);
 
    /*
@@ -183,6 +199,7 @@ void RadauWrapper::initSolver(  int nEq,
     *set the mass matrix function
     */
    solver->setMass(&massMatrix);
+   solver->setJacobian(&Jacobian);
 }
 
 

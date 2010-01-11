@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   RadauWrapper.h
  * Author: vinod (vj231@cam.ac.uk)
  *
@@ -54,8 +54,9 @@ namespace Camflow{
         int bandWidth;
 
     public:
+
         RadauWrapper(){}
-        virtual ~RadauWrapper();
+        ~RadauWrapper(){}
 
         //set the control parameters
         void setControl(CamControl &cc);
@@ -68,13 +69,14 @@ namespace Camflow{
         void initSolver(int nEq,
                         const doublereal tBeg,
                         const doublereal tEnd,
-                        vector<doublereal>& y,
-                        vector<doublereal>& rTol,
-                        vector<doublereal>& aTol,
+                        std::vector<doublereal>& y,
+                        std::vector<doublereal>& rTol,
+                        std::vector<doublereal>& aTol,
                         CamResidual &cr);
 
         //integrate the DAE system
         void Integrate();
+  
     };
 }
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   interface.h
  *Author: vinod (vj231@cam.ac.uk)
  *
@@ -168,7 +168,7 @@ namespace Camflow{
          *are optional.
          *
          */
-        Interface(Mechanism& mech_in, 
+        Interface(Mechanism& mech_in,
                 std::vector<doublereal>& dz,
                 std::vector<Thermo::Mixture>& cstrs,
                 void* rModel,
@@ -178,14 +178,21 @@ namespace Camflow{
          *Default destructor
          */
         ~Interface(){}
-        
+
         /*
          *calling interface to solve flamelets with time-history-scalar dissipation rates
          */
         void flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
 
+        //! Interface for use when an SDR profile is given.
+        void flameletSDRprofile(const std::vector< std::vector<doublereal> >& sdr,
+								const std::vector< std::vector<doublereal> >& Zcoords,
+        						const std::vector<doublereal>& intTime,
+        						bool continuation=false,
+        						bool lnone=true);
+
         //! Interface for use when soot is available
-        void flameletWithSoot(const std::vector<doublereal>& soot_fv, const std::vector<doublereal>& sdr, 
+        void flameletWithSoot(const std::vector<doublereal>& soot_fv, const std::vector<doublereal>& sdr,
                               const std::vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
 
         /*
@@ -254,10 +261,13 @@ namespace Camflow{
          */
         const std::vector<doublereal> getDiffusionCoefficients(const doublereal axPos);
         /*
+         *  Return pyrene production rate
+         */
+        const doublereal getWdotA4(const doublereal axPos);
+        /*
          *return the stoichiometric mixture fraction
          */
         const doublereal getStMixtureFrac();
-
 
         /*!
          *@return   Vector of velocities at all the independent variable points.
@@ -311,7 +321,7 @@ namespace Camflow{
                 void* reactorModel,                                                  //reactor model to solve
                 const doublereal sdr = 0                                        //scalar dissipation rate in case of flamelets
                 );
-        
+
 
     private:
         CamControl cc;
@@ -324,7 +334,7 @@ namespace Camflow{
         CamRead cm;
         CamResidual *model;
 
-        CamSoot cSoot;        
+        CamSoot cSoot;
         Sprog::Mechanism mech;
         int nSpecies;
         std::vector<std::string> speciesNames;
@@ -341,6 +351,7 @@ namespace Camflow{
         std::vector<doublereal> lambda;      //thermal conductivity
         std::vector<doublereal> mVelocity;   //velocity
         std::vector<doublereal> avgMolWtVector;   // Average Molar Weight of the mixture
+        std::vector<doublereal> wdotA4;   // rate of production of pyrene
         Array2D mDiff;                      //Diffusion coefficients
 
         doublereal stMixtureFrac;       //stoichiometric mixture fraction

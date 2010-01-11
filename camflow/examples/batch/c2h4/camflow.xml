@@ -19,8 +19,8 @@
        </molefrac>
      </fuel>
   </inlet>
-  <solver mode="coupled" solver="cvode" residual="on">
-	  <maxTime>100000</maxTime>
+  <solver mode="coupled" solver="radau" residual="on">
+	  <maxTime>34506</maxTime>
 	  <iterations>5</iterations>
 	  <tols>
 		  <species>

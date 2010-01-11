@@ -18,8 +18,8 @@ void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doubler
      *prepare flux terms
      */
     doublereal convection, diffusion, source;
-    
-       
+
+
     for(int i= iMesh_s; i< iMesh_e; i++ ){
 
 
@@ -114,6 +114,11 @@ void CamResidual::massFlowResidual(const doublereal& time, doublereal* y, double
     }
 }
 
+doublereal CamResidual::getResidual() const {
+
+    return 0;
+
+}
 
 void CamResidual::saveMixtureProp(const doublereal time,
                         doublereal* y, bool thermo, bool mom){
@@ -142,7 +147,7 @@ void CamResidual::saveMixtureProp(const doublereal time,
      */
     int npSource = std::max( s_ParticleBegin.size(), s_ParticleEnd.size());
     doublereal slope, intersect;
-    for(int i=cellBegin; i< cellEnd;i++){        
+    for(int i=cellBegin; i< cellEnd;i++){
         mf.clear();
         for(int l=0; l<nSpc; l++){
             mf.push_back(y[i*nVar+l]);
@@ -162,7 +167,7 @@ void CamResidual::saveMixtureProp(const doublereal time,
         avgMolWt.push_back(mwt);
         camMixture->SetMassDensity(dens);
         camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
-        
+
         m_rho.push_back(dens);
         //store the diffusion coefficient
         temp = camMixture->getMixtureDiffusionCoeff(opPre);
@@ -178,11 +183,11 @@ void CamResidual::saveMixtureProp(const doublereal time,
             //molar specific heats
             cptemp = camMixture->getMolarSpecificHeat();
             //store the the thermal conductivity (J/m-s-K)
-            m_k.push_back(camMixture->getThermalConductivity(opPre));            
+            m_k.push_back(camMixture->getThermalConductivity(opPre));
             //store the specific heat capacity (J/kg K)
             m_cp.push_back(camMixture->getSpecificHeatCapacity());
         }
-        
+
 
         for(int l=0; l<nSpc; l++){
             /*
@@ -364,7 +369,7 @@ void CamResidual::mergeSootMoments(doublereal* vec){
         }
         //int dd; cin >> dd;
     }
-   
+
 }
 
 void CamResidual::mergeMomentum(doublereal* vec){
@@ -372,9 +377,9 @@ void CamResidual::mergeMomentum(doublereal* vec){
         solvect[i*nVar+ptrG] = vec[i];
 }
 
-//void CamResidual::massMatrix(doublereal** M){
-//    std::cout << "Base class function: nothing implemented\n";
-//}
+void CamResidual::massMatrix(doublereal** M){
+    std::cout << "Base class function: nothing implemented\n";
+}
 
 int CamResidual::eval(doublereal* y, doublereal* ydot){
     std::cout << "Base class function nothing to do\n";
@@ -487,7 +492,7 @@ void CamResidual::setParticleSource(const std::vector<std::vector<doublereal> >&
         }
     }
 
-   
+
 }
 
 

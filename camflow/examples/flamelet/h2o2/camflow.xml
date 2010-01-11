@@ -27,8 +27,8 @@
        </molefrac>
      </oxidizer>
   </inlet>
-  <solver mode="coupled" solver="cvode" residual="on">
-	  <maxTime>10000</maxTime>
+  <solver mode="coupled" solver="radau" residual="on">
+	  <maxTime>1000</maxTime>
 	  <iterations>1</iterations>
 	  <tols>
 		  <species>

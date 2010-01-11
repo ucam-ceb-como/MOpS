@@ -7,25 +7,25 @@ cpp=g++
 ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -I../cvode/include -I../brush/include \
+       -I../sprogc/include -I../cvode/include -I../radau/include -I../brush/include \
        -I../geometry/include  -I../mopsc/include \
        -I../sweepc/include -I../utils/include \
-         -I../cvode/source -Wall
+       -I../cvode/source -Wall
     flink= 
   else
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -I../cvode/include -I../brush/include \
+       -I../sprogc/include -I../cvode/include -I../radau/include -I../brush/include \
        -I../geometry/include  -I../mopsc/include \
        -I../sweepc/include -I../utils/include \
-         -I../cvode/source -Wall -pg
+       -I../cvode/source -Wall -pg
     flink=-pg
   endif
 else
   flag=-c  -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -I../cvode/include -I../brush/include \
+       -I../sprogc/include -I../cvode/include -I../radau/include -I../brush/include \
        -I../geometry/include  -I../mopsc/include \
        -I../sweepc/include -I../utils/include \
-       -I../cvode/source -Wall -ggdb -pg
+       -I../cvode/source -I../radau/source -Wall -ggdb -pg
   flink=-pg 
 endif
 
@@ -44,13 +44,15 @@ ifeq ($(debug),0)
   camxml=../camxml/lib/camxml.a
   sprog=../sprogc/lib/sprog.a
   cvode=../cvode/lib/cvode.a
+  radau=../radau/lib/radau.a
 else
   comostrings=../comostrings/lib/comostrings_d.a
   camxml=../camxml/lib/camxml_d.a
   sprog=../sprogc/lib/sprog_d.a
   cvode=../cvode/lib/cvode_d.a
+  radau=../radau/lib/radau_d.a
 endif
-linklibs=$(comostrings) $(camxml) $(sprog) $(cvode) $(sweep) $(mops) $(brush)
+linklibs=$(comostrings) $(camxml) $(sprog) $(cvode) $(radau) $(sweep) $(mops) $(brush)
 
 # Target objects.
 
@@ -59,13 +61,13 @@ obj=   cam_read.o cam_setup.o cam_geometry.o \
 		 cam_admin.o cam_boundary.o cam_configuration.o cam_profile.o\
 		 cam_reporter.o cam_models.o cam_plug.o cam_premix.o cam_residual.o \
 		 stagflow.o cam_soot.o batch.o flamelet.o interface.o\
-		 cvode_wrapper.o 
+		 cvode_wrapper.o radau_wrapper.o
 
 objlocal=	cam_kernel.o
 
 # TARGET binary: Compile to a  binary.
 
-binary: comostringslib camxmllib sproglib cvodelib $(objlocal) $(obj)
+binary: comostringslib camxmllib sproglib cvodelib radaulib $(objlocal) $(obj)
 	mkdir -p bin
 ifeq ($(debug),0)
   ifeq ($(profile),0)
@@ -96,6 +98,8 @@ sproglib:
 	$(MAKE) -f ../sprogc/Makefile -C ../sprogc debug=$(debug) profile=$(profile)
 cvodelib:
 	$(MAKE) -f ../cvode/Makefile -C ../cvode debug=$(debug) profile=$(profile)
+radaulib:
+	$(MAKE) -f ../radau/Makefile -C ../radau debug=$(debug) profile=$(profile)
 
 # Source code.
 
@@ -145,6 +149,8 @@ interface.o: $(src)/interface.cpp
 	$(cpp) $(flag) $(src)/interface.cpp
 cvode_wrapper.o: $(src)/cvode_wrapper.cpp
 	$(cpp) $(flag) $(src)/cvode_wrapper.cpp
+radau_wrapper.o: $(src)/radau_wrapper.cpp
+	$(cpp) $(flag) $(src)/radau_wrapper.cpp
 flamelet.o: $(src)/flamelet.cpp
 	$(cpp) $(flag) $(src)/flamelet.cpp
 soot_flamelet.o: $(src)/soot_flamelet.cpp

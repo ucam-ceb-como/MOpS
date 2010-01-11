@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   cam_residual.h
  * Author: vinod (vj231@cam.ac.uk)
  *
@@ -69,14 +69,14 @@ namespace Camflow{
             EQN_ENERGY,
             EQN_MOMENTUM,
             EQN_CONTINUITY,
-            EQN_MOMENTS,            
+            EQN_MOMENTS,
             EQN_FLOW //solve momentum and continuity coupled
         };
 
         CamResidual(){};
         virtual ~CamResidual(){}
 
-        
+
 
         virtual void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
              CamConfiguration &config, CamSoot &cs,  Mechanism &mech )=0;
@@ -85,7 +85,10 @@ namespace Camflow{
          * residual evaluation function for ODE and DAEs
          */
         virtual int eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval)=0;
-      
+
+        //mass matrix evaluation
+        virtual void massMatrix(doublereal **M);
+
         /*
          *console output for monitoring the integration process
          */
@@ -113,7 +116,7 @@ namespace Camflow{
          * residual evaluation for newton solvers
          */
         virtual int eval(doublereal* y, doublereal* ydot);
-        
+
         /*
          * base class definition for species residuals. This function can be used for
          * any boundary value problems. The boundary condition has to be implemented
@@ -144,7 +147,7 @@ namespace Camflow{
          *set the scalar dissipation rate in case of flamelet odel
          */
         virtual void setExternalScalarDissipationRate(const doublereal sr);
-        
+
         /*
          * stores the mixture properties for the calculation of fluxes. This
          * is normally done for each function call from the solver as the
@@ -154,7 +157,7 @@ namespace Camflow{
         virtual void saveMixtureProp(const doublereal time, doublereal* y, bool thermo, bool mom);
 
 
-        
+
 
         /*
          * update the thermal flux. The flux is stored on the west cell
@@ -226,6 +229,9 @@ namespace Camflow{
          */
         virtual void getIndepedantVar(std::vector<doublereal>& indVar);
 
+        //Get the species residual
+        virtual doublereal getResidual() const;
+
         /*
          *store the particle source terms for use in species residual
          *by passing the initial and final source terms
@@ -282,11 +288,11 @@ namespace Camflow{
         int getLewisNumber() const{
             return Lewis;
         }
-        
+
 
     protected:
-        
-        
+
+
         Array2D s_H;
         Array2D s_mf;
         Array2D s_Diff;
@@ -294,7 +300,7 @@ namespace Camflow{
         Array2D s_ParticleBegin, s_ParticleEnd;
         Array2D s_jk;
         Array2D s_cp;
-        
+
         std::vector<doublereal> m_T;                  //mixture temperature
         std::vector<doublereal> m_cp;                 //mixture specific heat
         std::vector<doublereal> m_k;                  //mixture thermal conductivity
@@ -315,11 +321,11 @@ namespace Camflow{
         std::vector<doublereal> radiation;            //radiative heat loss term for output to profile.h
 
         std::vector<doublereal> resSp, resT, resFlow, resMoment, resAxVel;
-       
+
 
         doublereal opPre;                        //operating pressure
         doublereal Tignition;                   //Ignition temperature
-        
+
 
 
 
@@ -339,7 +345,7 @@ namespace Camflow{
         int eqn_slvd;
 
         int Lewis;
-        
+
 
         Sprog::Thermo::Mixture *camMixture;
         Sprog::Mechanism *camMech;
@@ -349,13 +355,13 @@ namespace Camflow{
         //members for the reactor models
         std::vector<doublereal> solvect, rTol, aTol;
         doublereal vel,rho, Ac, As;
-        std::vector<std::string> headerData;        
+        std::vector<std::string> headerData;
         CamAdmin *admin;
         CamReporter *reporter;
         CamGeometry *reacGeom;
         CamSoot *sootMom;
         CamControl *control;
-       
+
 
     };
 
