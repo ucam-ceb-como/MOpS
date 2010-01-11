@@ -48,14 +48,14 @@ Jacobian	Function which computes the partial derivatives of f(x,y) with respect
 			subroutine in the case ijac = 0).
 
 			For ijac = 1, this function must have the prototype:
-			
+
 				void Jacobian(double x, double *y, double **J);
 
 			If (mljac == n) the Jacobian is supposed to be full and the partial
 			derivatives are stored in the array J as:
 
 				J[i][j] = partial f[i] / partial y[j]
-				
+
 			Else, the Jacobian is taken as banded and the diagonals of the
 			Jacobian are stored as rows in J as:
 
@@ -65,9 +65,9 @@ Mass		Function computing the mass-matrix M.
 			If imas = 0, this matrix is assumed to be the identity matrix and
 			does not need to be defined. Supply a dummy function in this case.
 			If imas = 1, the function has the prototype:
-			
+
 				void Mass(double **M);
-			
+
 			If (mlmas == n) the mass-matrix is stored as full matrix like:
 
 				M[i][j] = m[i][j]
@@ -300,17 +300,17 @@ public:
 		int mlmasin, int mumasin);
 
 	// Still need to implement copy constructor and default constructor
-	
+
 	~StiffIntegratorT();
 
 	void Integrate();
-	
+
 	// get number of Jacobian evaluations
 	int NumJacobian() const { return njac; }
-	
+
 	// get number of lu-decompositions of both matrices
 	int NumDecomp() const { return ndec; }
-	
+
 	// get number of forward-backward substitutions, of both systems;
 	int NumSol() const { return nsol; }
 
@@ -320,6 +320,8 @@ public:
         void setRHSFcn(FcnRes res);
         //set the mass matrix function
         void setMass(MassFcn mass);
+        //set the jacobian
+        void setJacobian(JacFcn jac);
         //report function
         void setReportFcn(DataReport drep);
 
@@ -331,11 +333,11 @@ private:
 	virtual int CoreIntegrator();
 
 	virtual double ContinuousOutput(unsigned i);
-	
+
 	void ComputeJacobian();
 
 // Linear Algebra routines:
-	
+
 	int DecompReal();
 
 	int DecompComplex();
@@ -393,7 +395,7 @@ private:
 	int ldmas;
 	// job number (used in linear algebra routines for type of problem--banded or not, etc)
 	int ijob;
-	
+
 	// number of Jacobian evaluations
 	int njac;
 	// number of lu-decompositions of both matrices

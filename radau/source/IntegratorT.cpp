@@ -29,7 +29,7 @@ IntegratorT::IntegratorT(const int nin, double yin[], double xin, const double x
 		cout << "System too big, max. n = " << UINT_MAX - 1 << endl;
 		throw -1;
 	}
-	
+
 	// rtoler, the relative tolerance of the integration
 	if (!rtoler) {
 		itoler = 0;
@@ -37,7 +37,7 @@ IntegratorT::IntegratorT(const int nin, double yin[], double xin, const double x
 		*rtoler = 1.0e-7;
 		rtolerNULL = true;
 	}
-	
+
 	// atoler, the absolute tolerance of the integration
 	if (!atoler) {
 		itoler = 0;
@@ -55,14 +55,14 @@ IntegratorT::IntegratorT(const int nin, double yin[], double xin, const double x
 		cout << " wrong input, nmax = " << nmax << endl;
 		throw -1;
 	}
-	
+
 	// -------- uround--smallest number satisfying 1.0 + uround > 1.0
 	if (uround == 0.0) uround = 1.0e-16;
 	if ((uround <= 1.0e-19) || (uround >= 1.0)) {
 		cout << " coefficients have 20 digits, uround = " << uround << endl;
 		throw -1;
 	}
-	
+
 	// --------- safe--safety factor in step size prediction
 	if (safe == 0.0) safe = 0.9;
 	if ((safe <= 0.001) || (safe >= 1.0)) {
@@ -86,27 +86,31 @@ IntegratorT::~IntegratorT()
 int IntegratorT::SolutionOutput()
 {
     using namespace std;
-	cout << setiosflags(ios::showpoint);// | ios::fixed);
+	cout << setiosflags(ios::scientific);// | ios::fixed);
 
 
         vector<double> solvect;
 	if (naccpt == 0) xd = xold;
+        double compResidual;
 
 	while (xd < x) {
-                                
+
 		if ((xold <= xd) && (x >= xd)) {
-                        solvect.clear();
+                       solvect.clear();
 			//cout << "Step:- " << naccpt << ": t = " << setw(5) <<
 			//	setprecision(2) << xd << "  y = ";
-			for (unsigned i = 0; i < n; i++){
+			for (int i = 0; i < n; i++){
 			//	cout << setw(10) << setprecision(8) <<
 			//		ContinuousOutput(i) << "  ";
                                 solvect.push_back(ContinuousOutput(i));
                         }
 			//cout << endl;
-                        report(xd,&solvect[0],uData);
+                        compResidual = report(xd,&solvect[0],uData);
+			if(compResidual < *atoler*10){return -1;}
+                        
 			xd += dx;
 		}
+
 	}
 
 	return 0;

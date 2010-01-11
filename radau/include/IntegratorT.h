@@ -32,7 +32,7 @@ more details.
 #include "decsol.h"
 
 typedef void (*FcnRes)(double x, double *y, double *f, void *udata, bool jacCall);
-typedef void (*DataReport)(double x, double *y, void *udata);
+typedef double (*DataReport)(double x, double *y, void *udata);
 class IntegratorT
 {
 

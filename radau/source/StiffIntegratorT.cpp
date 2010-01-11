@@ -53,10 +53,10 @@ StiffIntegratorT::StiffIntegratorT(const int nin, double yin[], double xin, doub
 			}
 		}
 	}
-	
+
 	// initial step length
 	if (fabs(h) < 10.0*uround) h = 1.0e-6;
-	
+
 	// facl, facr--parameters for step size selection
 	if (facl == 0.0) facl = 5.0;
 	if (facr == 0.0) facr = 1.0/8.0;
@@ -253,10 +253,10 @@ StiffIntegratorT::StiffIntegratorT(const int nin, double yin[], double xin, doub
 			}
 		}
 	}
-	
+
 	// initial step length
 	if (fabs(h) < 10.0*uround) h = 1.0e-6;
-	
+
 	// facl, facr--parameters for step size selection
 	if (facl == 0.0) facl = 5.0;
 	if (facr == 0.0) facr = 1.0/8.0;
@@ -479,8 +479,17 @@ void StiffIntegratorT::Integrate()
 		//for (int i = 0; i < n; i++)
 		//	std::cout << std::setw(10) << std::setprecision(8) << y[i] << "  ";
 		//std::cout << std::endl;
-            report(xend,y,uData);
 	}
+
+	report(xend,y,uData);
+
+	if (idid == 1) {
+            std::cout << "Computation successful: Reached prescribed end time." << std::endl;
+        }
+
+	if (idid == 2) {
+            std::cout << "Computation successful: Reached a solution within the prescribed tolerance." << std::endl;
+        }
 
 	return;
 
@@ -530,7 +539,7 @@ int StiffIntegratorT::CoreIntegrator()
 	alph = alph/cno;
 	beta = beta/cno;
 
-	const double posneg = _copysign(1.0, xend-x);
+	const double posneg = copysign(1.0, xend-x);
 	const double hmaxn = min(fabs(hmax), fabs(xend - x));
 	const double cfac = safe*(1 + 2*nit);
 
@@ -538,7 +547,7 @@ int StiffIntegratorT::CoreIntegrator()
 	if (implct) Mass(fmas, uData);
 
 	h = min(fabs(h), hmaxn);
-	h = _copysign(h, posneg);
+	h = copysign(h, posneg);
 	hold = h;
 
 	bool last = false;
@@ -882,7 +891,7 @@ int StiffIntegratorT::CoreIntegrator()
 			break;
 		}
 	}
-	
+
 	return 1;
 }  // CoreIntegrator
 
@@ -2057,4 +2066,8 @@ void StiffIntegratorT::setReportFcn(DataReport drep){
 
 void StiffIntegratorT::setMass(MassFcn mass){
     Mass = mass;
+}
+
+void StiffIntegratorT::setJacobian(JacFcn jac){
+    Jacobian = jac;
 }

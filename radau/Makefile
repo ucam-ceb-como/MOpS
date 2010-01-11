@@ -1,5 +1,5 @@
 # Compiler options.
-export debug=0
+export debug=1
 export profile=0
 
 # C++ compiler.
