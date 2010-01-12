@@ -7,7 +7,7 @@
  Copyright (C) 2009 Robert I A Patterson.
 
  Licence:
- 
+
     This utility file is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License
     as published by the Free Software Foundation; either version 2
@@ -43,6 +43,8 @@
 #include <utility>
 #include <algorithm>
 #include <cassert>
+#include <sstream>
+#include <stdexcept>
 
 namespace Utils {
 
@@ -57,8 +59,11 @@ namespace Utils {
  */
 template<typename X, typename Y> class LinearInterpolator {
 public:
-    //! Intialise with the given data
+    //! Initialise with the given data
     LinearInterpolator(const std::vector<std::pair<X, Y> > &data);
+
+    //! Initialise with X and Y given as vectors. They will be paired up by the constructor.
+    LinearInterpolator(const std::vector<X> &positionValues, const std::vector<Y> &dataValues);
 
     //! Get an interpolated value
     const Y interpolate(const X& x) const;
@@ -97,11 +102,46 @@ private:
  *@tparam	X 	Floating point type.
  *@tparam       Y	Type supporting multiplication by type X and addition of another instance of Y, effectively a vector field over X
  *
- *\param[in]    data    Pairs of position value information 
+ *\param[in]    data    Pairs of position value information
  */
 template<typename X, typename Y> Utils::LinearInterpolator<X, Y>::LinearInterpolator(const std::vector<std::pair<X, Y> > &data)
 : mData(data)
 {
+    std::sort(mData.begin(), mData.end(), LessThan());
+}
+
+/*!
+ * Construct the interpolator using two vectors.
+ * Checks the vector lengths, puts them into a vector of pairs, sorts the provided data if necessary
+ * and uses it to initialise the interpolator.
+ *
+ *@tparam	X 	Floating point type.
+ *@tparam       Y	Type supporting multiplication by type X and addition of another instance of Y, effectively a vector field over X
+ *
+ *\param[in]    positionValues    Position information
+ *\param[in]    dataValues	 Value information
+ *
+ *\exception    std::invalid_argument  Check vectors are of equal size.
+ */
+template<typename X, typename Y> Utils::LinearInterpolator<X, Y>::LinearInterpolator(const std::vector<X> &positionValues, const std::vector<Y> &dataValues)
+{
+
+	// Check lengths of vectors are equal.
+	if (positionValues.size() != dataValues.size()) {
+        std::ostringstream msg;
+        msg << "Length of dataValue vector is "
+            << dataValues.size()
+            << ", but it must match the mixture fraction position vector of " << positionValues.size()
+            << " (Utils::LinearInterpolator)";
+        throw std::invalid_argument(msg.str());
+	}
+
+	// Populate mData
+	mData.reserve(positionValues.size());
+	for (size_t i=0; i < positionValues.size(); ++i) {
+		mData.push_back(std::pair<X, Y>(positionValues[i], dataValues[i]));
+	}
+
     std::sort(mData.begin(), mData.end(), LessThan());
 }
 
@@ -120,7 +160,7 @@ template<typename X, typename Y> const Y Utils::LinearInterpolator<X, Y>::interp
 
     Y result;
     // Need a pair<X, Y> with x as its first element to use in the lookup, the contents of the second element
-    // of the pair is ignored.  Note this is a call to the constructor of std::pair, not the evaluation of 
+    // of the pair is ignored.  Note this is a call to the constructor of std::pair, not the evaluation of
     // some other function.
     std::pair<X, Y> lookup(x, result);
     typename data_vector_type::const_iterator itLower = std::lower_bound(mData.begin(), mData.end(), lookup, LessThan());
@@ -138,7 +178,7 @@ template<typename X, typename Y> const Y Utils::LinearInterpolator<X, Y>::interp
         const X xLeft = itLower->first;
         const X xRight = (itLower - 1)->first;
         const X distance = xRight - xLeft;
-        
+
         // Calculate the interpolation weights
         const X leftWeight = (xRight - x) / distance;
         const X rightWeight = (x - xLeft) / distance;

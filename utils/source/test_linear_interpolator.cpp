@@ -60,5 +60,19 @@ int main(int argc, char *argv[]) {
   std::cout << "Interpolating to 1.5 should give 20.0, actual result: " << interp1.interpolate(1.5) << "\n";
   std::cout << "Interpolating to 5.5 should give 30.0, actual result: " << interp1.interpolate(5.5) << "\n";
 
+  std::cout << "Testing linear interpolator with vector inputs for position and data values\n";
+
+  std::vector<double> vector3;
+  std::vector<float> vector4;
+  vector3.push_back(1.0);
+  vector3.push_back(2.0);
+  vector4.push_back(10.0);
+  vector4.push_back(30.0);
+
+  Utils::LinearInterpolator<double, float> interp2(vector3,vector4);
+  std::cout << "Interpolating to 0.5 should give 10.0, actual result: " << interp2.interpolate(0.5) << "\n";
+  std::cout << "Interpolating to 1.5 should give 20.0, actual result: " << interp2.interpolate(1.5) << "\n";
+  std::cout << "Interpolating to 5.5 should give 30.0, actual result: " << interp2.interpolate(5.5) << "\n";
+
   return 0;
 }
