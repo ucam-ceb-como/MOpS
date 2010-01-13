@@ -85,7 +85,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
     const CamXML::Attribute *attr;
     std::string attrValue;
     doublereal factor = 1.0;
-    
+
     reactorNode = node.GetFirstChild("reactor");
     if(reactorNode != NULL){
         attr    =   reactorNode->GetAttribute("model");
@@ -101,7 +101,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
         }else{
             throw CamError("Model remains undefined\n");
         }
-        
+
 
         subnode = reactorNode->GetFirstChild("diameter");
         if(subnode != NULL){
@@ -127,7 +127,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
         std::ifstream inf;
         inf.open(cg.getGridFileName().c_str(),std::ios::in);
         if(inf.good()){
-            std::string position;       
+            std::string position;
             while(!inf.eof()){
                 getline(inf,position);
                 if(! isEmpty(position)){
@@ -139,10 +139,10 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
 
         // Calculate cell widths.
         int len = grid.size()-1;
-        cg.setLength(len);
+        cg.setLength(grid[len]);
         for(int i=0; i<len; i++){
             dz.push_back(grid[i+1]-grid[i]);
-        }        
+        }
         // Call setGeometry in CamGeometry to assign length, axial positions
         // and cell widths.
         cg.setGeometry(dz);
@@ -157,9 +157,9 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
 void CamRead::readProcessConditions(CamConverter& convert,
                                         CamAdmin& ca,
                                         const CamXML::Element& node){
-    
+
     CamXML::Element *subnode, *opNode;
-    
+
     opNode = node.GetFirstChild("op_condition");
     if(opNode == NULL){
         throw CamError("op_condition not defined\n");
@@ -178,7 +178,7 @@ void CamRead::readProcessConditions(CamConverter& convert,
             doublereal factor = convert.getConvertionFactor(val);
             ca.setWallTemp(cdble(subnode->Data())+factor);
         }
-            
+
     //read pressure
         subnode = opNode->GetFirstChild("pressure");
         if(subnode !=NULL){
@@ -207,9 +207,9 @@ void CamRead::readProcessConditions(CamConverter& convert,
         }
 
     }
-    
+
 }
-    
+
 //this function reads the boundary conditions
 void CamRead::readBoundary(CamAdmin& ca,
                                 CamBoundary& cb,
@@ -217,7 +217,7 @@ void CamRead::readBoundary(CamAdmin& ca,
                                 const CamXML::Element& node){
 
     CamXML::Element *subnode, *inletNode;
-    
+
     inletNode = node.GetFirstChild("inlet");
     if(inletNode != NULL){
         subnode = inletNode->GetFirstChild("fuel");
@@ -227,9 +227,9 @@ void CamRead::readBoundary(CamAdmin& ca,
             }catch(CamError &ce){
                 throw ce;
             }
-            
+
             ca.setLeftBoundary(cb);
-            
+
         }else{
             throw CamError("fuel definition missing in inlet element\n");
         }
@@ -239,14 +239,14 @@ void CamRead::readBoundary(CamAdmin& ca,
                 readNozzle(cb,convert,*subnode);
             }catch(CamError &ce){
                 throw ce;
-            }            
+            }
             ca.setRightBoundary(cb);
         }
     }else{
         throw CamError("inlet definition missing\n");
     }
 
-    
+
 }
 
 //actual implementation of boundary conditions
@@ -385,7 +385,7 @@ void CamRead::readControl(CamControl& cc, const CamXML::Element& node){
         subnode = solverNode->GetFirstChild("iterations");
         if(subnode != NULL)
             cc.setNumIterations(int(cdble(subnode->Data())));
-        
+
         subnode = solverNode->GetFirstChild("iniStep");
         if(subnode != NULL)
             cc.setIniStep(cdble(subnode->Data()));
@@ -409,7 +409,7 @@ void CamRead::readControl(CamControl& cc, const CamXML::Element& node){
             doublereal atol, rtol;
             tols = subnode->GetFirstChild("species");
             if(tols != NULL) {
-                readTol(*tols,atol,rtol);               
+                readTol(*tols,atol,rtol);
                 cc.setSpeciesAbsTol(atol);
                 cc.setSpeciesRelTol(rtol);
             }
@@ -484,7 +484,7 @@ void CamRead::readInitialGuess(CamProfile& cp,
             doublereal convertT = convert.getConvertionFactor(temp->GetValue());
 
             subsubnode->GetChildren("position",subsubnodes);
-            
+
             for(p=subsubnodes.begin(); p<subsubnodes.end(); ++p){
                 doublereal pos = cdble((*p)->GetAttributeValue("x"))*convertL;
                 doublereal temp = cdble((*p)->Data())+convertT;
@@ -512,7 +512,7 @@ void CamRead::readInitialGuess(CamProfile& cp,
             readFrac(mem2,fracs,*subsubnode);
             cp.setIntermediateSpecies(fracs);
         }
-        
+
     }
 
 }
@@ -585,7 +585,7 @@ void CamRead::readSoot(CamSoot& cSoot,CamConverter& convert,
         }else{
             throw CamError("Number of moments not specified\n");
         }
-        
+
         subnode = soot->GetFirstChild("M0");
         if(subnode != NULL){
             cSoot.setFirstMom(cdble(subnode->Data()));
@@ -606,13 +606,13 @@ void CamRead::readSoot(CamSoot& cSoot,CamConverter& convert,
         }
 
         std::string atrVal = soot->GetAttributeValue("regime");
-        
+
         if(!convertToCaps(trim(atrVal)).compare("FREEMOL"))
             cSoot.setRegime(cSoot.FM);
         else if(!convertToCaps(trim(atrVal)).compare("TRANSITION"))
             cSoot.setRegime(cSoot.TR);
         else if(!convertToCaps(trim(atrVal)).compare("CONTINUUM"))
-            cSoot.setRegime(cSoot.CT);                    
+            cSoot.setRegime(cSoot.CT);
         else
             throw CamError("Unknown transport regime\n");
 
