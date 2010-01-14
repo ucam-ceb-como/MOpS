@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   cam_geometry.h
  * Author: vinod (vj231@cam.ac.uk)
  *
@@ -50,7 +50,7 @@ namespace Camflow{
     class CamGeometry{
         doublereal length;                   //length of the model geometry
         doublereal dia;                      //rector diameter
-        
+
         int nCell;                           //total number of FV cells
         std::vector<doublereal> dz, axPos;        //cell width
         std::string gridFile;
@@ -94,7 +94,7 @@ namespace Camflow{
 
         //return the cross sectional area
         doublereal getArea() const;
-        
+
         //return the surface area
         //doublereal getSurfArea();
 

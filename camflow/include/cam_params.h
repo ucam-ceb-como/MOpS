@@ -1,11 +1,11 @@
-/* 
- * File:   cam_params.h
- * Author: vinod (vj231@cam.ac.uk)
+/*!
+ * \file   cam_params.h
+ * \author V. Janardhanan
  *
- * Copyright (C) 2008 Vinod M Janardhanan.
+ * \brief Definition of Camflow real type variables.
  *
- * File purpose:
- *  Definition of Camflow real type variables
+ *  Copyright (C) 2009 Vinod Janardhanan.
+ *
  * Licence:
  *  This file is part of "Camflow".
  *
@@ -43,16 +43,23 @@
 #define	_CAM_PARAMS_H
 
 #include  "sprog.h"
+
+/*!
+ *@brief    Camflow namespace.
+ *
+ * Include a more detailed description here.
+ */
 namespace Camflow{
+
+    //! Typedef for doublereal.
     typedef Sprog::real doublereal;
+
+    //! Define \pi.
     const doublereal pi = 3.1415;
 
-    /*
-     * cgs units used in the sot model
-     */
+    //! cgs units used in the soot model.
     const doublereal kB_cgs = 1.3807e-16;
     
 }
 
 #endif	/* _CAM_PARAMS_H */
-

@@ -14,7 +14,6 @@ extern "C"{
 void CVodeWrapper::init(int n, std::vector<doublereal>& solnVec, doublereal tol,
                doublereal rtol,doublereal maxIntTime ,int band, CamResidual& cr, doublereal iniTime){
 
-    
     reacPtr = &cr;
 
     cvode_mem = NULL;
@@ -28,8 +27,8 @@ void CVodeWrapper::init(int n, std::vector<doublereal>& solnVec, doublereal tol,
     eqnSize = n;
     atol = tol;
     currentTime = iniTime;
-    maxTime = maxIntTime;    
-    cvode_mem = CVodeCreate(CV_BDF,CV_NEWTON);    
+    maxTime = maxIntTime;
+    cvode_mem = CVodeCreate(CV_BDF,CV_NEWTON);
     CVodeMalloc(cvode_mem,cvodeResid,currentTime,y,CV_SS,rtol,(void*)&atol);
 
 
@@ -41,7 +40,7 @@ void CVodeWrapper::init(int n, std::vector<doublereal>& solnVec, doublereal tol,
     CVodeSetFdata(cvode_mem,(void*)&cr);
     CVodeSetMaxNumSteps(cvode_mem,5000);
 
-    
+
 
 }
 
@@ -60,16 +59,16 @@ void CVodeWrapper::setMaxStep(doublereal maxStep){
 
 doublereal& CVodeWrapper::solve(int stopMode){
 
-    int flag;    
+    int flag;
     do{
         flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);
         if(flag < 0){
-            std::cout << "Cvode Integration error\n";            
+            std::cout << "Cvode Integration error\n";
         }else{
             reacPtr->report(currentTime,NV_DATA_S(y));
-        }        
+        }
     }while(currentTime < maxTime);
-    
+
     CVodeGetDky(cvode_mem,currentTime,1,yPrime);
     calcResNorm();
     return resNorm;
@@ -77,7 +76,7 @@ doublereal& CVodeWrapper::solve(int stopMode){
 }
 
 void CVodeWrapper::solve(int stopMode, doublereal resTol){
-    
+
     int flag;
     do{
         flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);

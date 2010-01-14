@@ -1,3 +1,42 @@
+/*!
+ * \file   interface.cpp
+ * \author V. Janardhanan
+ *
+ * \brief Interface for coupling flamelet calculations to external codes.
+ *
+ *  Copyright (C) 2009 Vinod Janardhanan.
+ *
+
+ Licence:
+    This file is part of "camflow".
+
+    brush is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Prof Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
+ */
 
 #include <vector>
 #include "cam_residual.h"
@@ -5,8 +44,8 @@
 #include "cam_control.h"
 #include "interface.h"
 #include "flamelet.h"
-using namespace Camflow;
 
+using namespace Camflow;
 
 /*
  *this interface is for external programs to call any of the models
@@ -467,8 +506,12 @@ const std::vector<doublereal> Interface::getDiffusionCoefficients(const doublere
 
 }
 
-/*
- *return the rate of production of pyrene
+/*!
+ * Gets the rate of formation of pyrene. Not sure if this works properly!
+ *
+ *\param[in]    axpos           Value of independent variable.
+ *
+ *\return       Rate of formation of pyrene (\f$\mathrm{mol\,m^{-3}\,s^{-1}}\f$).
  */
 const doublereal Interface::getWdotA4(const doublereal axpos){
 
@@ -476,18 +519,21 @@ const doublereal Interface::getWdotA4(const doublereal axpos){
     return temp;
 }
 
-/*
- *private function to do the interpolation of the solution variables
+/*!
+ * Gets the value of var at a given pos by interpolation.
+ *
+ *\param[in]    pos           Value of independent variable.
+ *\param[in]    var           Variable to be interpolated.
+ *
+ *\return       Value of var at a given pos.
  */
 doublereal Interface::getVariableAt(const doublereal& pos,
                                     const std::vector<doublereal>& var) const{
 
     doublereal vu, vl, xu, xl, temp=0.0;
-    int len = indVar.size();
+    size_t len = indVar.size();
 
-
-
-    for(int i=0; i<len; i++){
+    for(size_t i=0; i<len; i++){
         if(pos == indVar[i]) {
             temp= var[i];
             break;
@@ -510,43 +556,28 @@ doublereal Interface::getVariableAt(const doublereal& pos,
 
 }
 
-/*
- *return the handle to CamAdmin
- */
-CamAdmin& Interface::getCamAdmin(){
+
+CamAdmin& Interface::getCamAdmin() {
     return ca;
 }
-/*
- *return the boundary object
- */
-CamBoundary& Interface::getCamBoundary(){
+
+CamBoundary& Interface::getCamBoundary() {
     return cb;
 }
-/*
- *return the object for controlling solver
- */
-CamControl&  Interface::getCamControl(){
+
+CamControl&  Interface::getCamControl() {
     return cc;
 }
-/*
- *return the geometry object
- */
-CamGeometry& Interface::getCamGeometry(){
+
+CamGeometry& Interface::getCamGeometry() {
     return cg;
 }
 
-/*
- *return the profile object which handles the
- *user defined profiles
- */
-
-CamProfile& Interface::getCamProfile(){
+CamProfile& Interface::getCamProfile() {
     return cp;
 }
-/*
- *return the configuration object
- */
-CamConfiguration& Interface::getCamConfiguration(){
+
+CamConfiguration& Interface::getCamConfiguration() {
     return config;
 }
 

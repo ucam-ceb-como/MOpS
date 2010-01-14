@@ -16,9 +16,17 @@
 #include "cvode_wrapper.h"
 #include "radau_wrapper.h"
 
+#include "linear_interpolator.hpp"
 
 using namespace Camflow;
 using namespace std;
+
+FlameLet::FlameLet() {
+	sdr_ext=0;
+	timeHistory=false;
+	sdrProfile=false;
+	sdrAnalytic=false;
+}
 
 /*
  *this is called by the model object. The boolean interface decides
@@ -738,7 +746,7 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
     if(timeHistory){
         sdr = getSDR(t);
 
-    }else  if(sdr_ext!=0){
+    } else if(sdr_ext!=0){
         sdr=sdr_ext;
     }
 
@@ -991,15 +999,17 @@ doublereal FlameLet::scalarDissipationRateProfile(const doublereal m_frac, const
 
 	CamMath cm;
 
-	//strain = admin->getStrainRate();
 	doublereal fZ = exp(-2*cm.SQR(cm.inverfc(2*m_frac)));
 	doublereal fZst = exp(-2*cm.SQR(cm.inverfc(2*stoichZ)));
 
-	//doublereal phi = 0.75 * ( cm.SQR(std::sqrt(1.15663/m_rho[cell])+1.0) / (2.0*std::sqrt(1.15663/m_rho[cell])+1.0) );
-	//doublereal phist = 0.75 * ( cm.SQR(std::sqrt(1.15663/m_rho[cell])+1.0) / (2.0*std::sqrt(1.15663/m_rho[cell])+1.0) );
+	Utils::LinearInterpolator<doublereal, doublereal> rhoInterpolate(reacGeom->getAxpos(),m_rho);
+	doublereal rhoStoich = rhoInterpolate.interpolate(stoichZ);
 
-	return stoichSDR * (fZ/fZst);
-	//return strain*fZ/pi;
+	doublereal phi = 0.75 * ( cm.SQR(std::sqrt(m_rho[0]/m_rho[cell])+1.0) / (2.0*std::sqrt(m_rho[0]/m_rho[cell])+1.0) );
+	doublereal phist = 0.75 * ( cm.SQR(std::sqrt(m_rho[0]/rhoStoich)+1.0) / (2.0*std::sqrt(m_rho[0]/rhoStoich)+1.0) );
+
+	return stoichSDR * (fZ/fZst) * (phi/phist);
+
 }
 
 /*
@@ -1144,142 +1154,46 @@ void FlameLet::setExternalScalarDissipationRate(const std::vector<doublereal>& t
  *  Interpolate and return the scalar dissipation rate
  */
 doublereal FlameLet::getSDR(const doublereal time) const {
-    doublereal tsdr=0;
-    doublereal vu, vl, xu, xl;
-    for(size_t i =0; i < v_sdr.size(); i++){
-        if(time == v_time[i]){
-            tsdr = v_sdr[i];
 
-            break;
-        }else if( i>0 && (time > v_time[i-1]) && (time < v_time[i])) {
-            vu = v_sdr[i];
-            xu = v_time[i];
+	Utils::LinearInterpolator<doublereal, doublereal> timeInterpolate(v_time, v_sdr);
 
-            vl = v_sdr[i-1];
-            xl = v_time[i-1];
+	return timeInterpolate.interpolate(time);
 
-            doublereal slope = (vu-vl)/(xu-xl);
-            doublereal intersect = vu- (slope*xu);
-
-            tsdr =  slope*time + intersect;
-            break;
-        }else{
-            size_t l = v_sdr.size();
-            vu = v_sdr[l-1];
-            xu = v_time[l-1];
-
-            vl = v_sdr[l-2];
-            xl = v_time[l-2];
-
-            doublereal slope = (vu-vl)/(xu-xl);
-            doublereal intersect = vu- (slope*xu);
-
-            tsdr =  slope*time + intersect;
-            break;
-        }
-    }
-    return tsdr;
 }
 
+/**
+ *  Interpolate and return the scalar dissipation rate from a profile that varies through time.
+ */
 doublereal FlameLet::getSDRfromProfile(const doublereal time, const doublereal Z) const {
 
-	std::vector<doublereal> tsdr;
-    std::vector<doublereal> tMixFrac;
-    doublereal vu, vl, xu, xl;
+	std::vector<doublereal> sdrTime, sdrInterpolated;
+	std::vector<doublereal> cfdMixFracCoordsTime, cfdMixFracCoordsInterpolated;
 
-	// Interpolate the scalar dissipation rates in time.
-    for(size_t Zcoord=0; Zcoord<profile_sdr[0].size(); ++Zcoord){
-		for(size_t i=0; i<profile_sdr.size(); ++i){
-			if(time == v_time[i]){
-				tsdr.push_back(profile_sdr[i][Zcoord]);
+	sdrInterpolated.clear();
+	cfdMixFracCoordsInterpolated.clear();
 
-				break;
-			}else if( i>0 && (time > v_time[i-1]) && (time < v_time[i])) {
-				vu = profile_sdr[i][Zcoord];
-				xu = v_time[i];
+	for (size_t i=0; i<cfdMixFracCoords[0].size(); ++i) {
+		sdrTime.clear();
+		sdrTime.push_back(profile_sdr[0][i]);
+		sdrTime.push_back(profile_sdr[1][i]);
 
-				vl = profile_sdr[i-1][Zcoord];
-				xl = v_time[i-1];
+		cfdMixFracCoordsTime.clear();
+		cfdMixFracCoordsTime.push_back(cfdMixFracCoords[0][i]);
+		cfdMixFracCoordsTime.push_back(cfdMixFracCoords[1][i]);
 
-				doublereal slope = (vu-vl)/(xu-xl);
-				doublereal intersect = vu- (slope*xu);
+		Utils::LinearInterpolator<doublereal, doublereal> timeInterpolate(v_time, sdrTime);
+		doublereal sdrInterpolatedTime = timeInterpolate.interpolate(time);
 
-				tsdr.push_back(slope*time + intersect);
-				break;
-			}else{
-				size_t l = profile_sdr.size();
-				vu = profile_sdr[l-1][Zcoord];
-				xu = v_time[l-1];
+		Utils::LinearInterpolator<doublereal, doublereal> time2Interpolate(v_time, cfdMixFracCoordsTime);
+		doublereal cfdMixFracCoordsInterpolatedTime = time2Interpolate.interpolate(time);
 
-				vl = profile_sdr[l-2][Zcoord];
-				xl = v_time[l-2];
+		sdrInterpolated.push_back(sdrInterpolatedTime);
+		cfdMixFracCoordsInterpolated.push_back(cfdMixFracCoordsInterpolatedTime);
+	}
 
-				doublereal slope = (vu-vl)/(xu-xl);
-				doublereal intersect = vu- (slope*xu);
+	Utils::LinearInterpolator<doublereal, doublereal> spaceInterpolate(cfdMixFracCoordsInterpolated, sdrInterpolated);
 
-				tsdr.push_back(slope*time + intersect);
-				break;
-			}
-		}
-    }
-
-    // Now interpolate the mixture fraction coordinates in time.
-    for(size_t Zcoord=0; Zcoord<cfdMixFracCoords[0].size(); ++Zcoord){
-		for(size_t i=0; i<cfdMixFracCoords.size(); ++i){
-			if(time == v_time[i]){
-				tMixFrac.push_back(cfdMixFracCoords[i][Zcoord]);
-
-				break;
-			}else if( i>0 && (time > v_time[i-1]) && (time < v_time[i])) {
-				vu = cfdMixFracCoords[i][Zcoord];
-				xu = v_time[i];
-
-				vl = cfdMixFracCoords[i-1][Zcoord];
-				xl = v_time[i-1];
-
-				doublereal slope = (vu-vl)/(xu-xl);
-				doublereal intersect = vu- (slope*xu);
-
-				tMixFrac.push_back(slope*time + intersect);
-				break;
-			}else{
-				size_t l = cfdMixFracCoords.size();
-				vu = cfdMixFracCoords[l-1][Zcoord];
-				xu = v_time[l-1];
-
-				vl = cfdMixFracCoords[l-2][Zcoord];
-				xl = v_time[l-2];
-
-				doublereal slope = (vu-vl)/(xu-xl);
-				doublereal intersect = vu- (slope*xu);
-
-				tMixFrac.push_back(slope*time + intersect);
-				break;
-			}
-		}
-    }
-
-    std::vector<doublereal>::iterator lower;
-
-    if( Z < tMixFrac.front() ) {
-
-		/*lower = std::lower_bound(tMixFrac.begin(), tMixFrac.end(), Z);
-		doublereal lowertMixFracValue = tMixFrac[int(lower-tMixFrac.begin())-1];
-		doublereal lowertsdrValue = tsdr[int(lower-tMixFrac.begin())-1];
-		doublereal uppertMixFracValue = tMixFrac[int(lower-tMixFrac.begin())];
-		doublereal uppertsdrValue = tsdr[int(lower-tMixFrac.begin())];
-
-		doublereal slope = (uppertsdrValue - lowertsdrValue) / (uppertMixFracValue - lowertMixFracValue);
-
-		doublereal SDR = uppertsdrValue - slope * (uppertMixFracValue - Z);
-
-		return SDR;*/
-
-    } else {
-
-    	return tsdr.front();
-
-    }
+	return spaceInterpolate.interpolate(Z);
 
 }
 
@@ -1300,7 +1214,7 @@ void FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot
 /*
  *  Return the pyrene(A4) molar production rate term.
  */
-void FlameLet::getWdotA4(std::vector<doublereal>& wdotA4){
+void FlameLet::getWdotA4(std::vector<doublereal>& wdotA4) const {
 
 	wdotA4.clear();
 	// Check the species exists first (returns -1 if it does not).

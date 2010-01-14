@@ -1,43 +1,43 @@
-/*
- * File:   stagflow.cpp
- * Author: vinod (vj231@cam.ac.uk)
+/*!
+ * \file   stagflow.cpp
+ * \author V. Janardhanan
  *
- * Copyright (C) 2008 Vinod M Janardhanan.
+ * \brief This class implements the stagnation flow and twin flame model.
  *
- * File purpose:
- *  This class implements the stagnation flow and twin flame model
- * Licence:
- *  This file is part of "Camflow".
+ *  Copyright (C) 2009 Vinod Janardhanan.
  *
- *  Camflow is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * Contact:
- *  Dr Markus Kraft
- *  Dept of Chemical Engineering
- *  University of Cambridge
- *  New Museum Site
- *  Pembroke Street
- *  Cambridge
- *  CB2 3RA
- *  UK
- *
- *  Email   :   mk306@cam.ac.uk
- *  Website :   http://como.cheng.cam.ac.uk
- *
- * Created on 30 April 2009, 15:03
+
+ Licence:
+    This file is part of "camflow".
+
+    brush is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Prof Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
  */
+
 #include "cam_reporter.h"
 #include "cam_residual.h"
 #include "cvode_wrapper.h"
@@ -63,7 +63,7 @@ void StagFlow::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &c
      *Initialisation of the solution vector is
      *done here
      */
-    
+
     camMech = &mech;
     Thermo::Mixture mix(mech.Species());
     camMixture = &mix;
@@ -71,7 +71,7 @@ void StagFlow::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &c
     profile = &cp;
     camConfig = &config;
 
-    
+
     admin = &ca;
     reacGeom = &cg;
     //reacGeom->discretize();
@@ -94,18 +94,18 @@ void StagFlow::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &c
      */
     ptrT = nSpc;
     //ptrG = ptrT+1;
-    
+
     /*
      *number of finite volume cells and
      *loop initializations
      */
-    
+
     iMesh_s = 1;
     iMesh_e = nCells-1;
 
     cellBegin = 0;
     cellEnd = nCells;
-    
+
 
     /*
      *number of equations and the number of variables to
@@ -119,7 +119,7 @@ void StagFlow::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &c
      */
     initSolutionVector(cc);
 
-    reporter->header("StagFlow");    
+    reporter->header("StagFlow");
     header();
     if(cc.getSolutionMode() == cc.COUPLED)
         csolve(cc);
@@ -137,8 +137,7 @@ void StagFlow::initSolutionVector(CamControl& cc){
     /*
      *initialize the geometry
      */
-    dz = reacGeom->getGeometry();    
-
+    dz = reacGeom->getGeometry();
 
     CamBoundary left, right;
     admin->getLeftBoundary(left);
@@ -152,13 +151,12 @@ void StagFlow::initSolutionVector(CamControl& cc){
         right.setFlowRate(-right.getFlowRate());
     }
 
-
     /*
      *initialize the ODE vector
      */
     solvect.resize(nEqn,0);
     std::vector<doublereal> vSpec, vT;
-    initSpecies(left,right,cc,vSpec);        
+    initSpecies(left,right,cc,vSpec);
     initTemperature(left,cc,vT);
 
     if(admin->getEnergyModel() == admin->ADIABATIC){
@@ -168,18 +166,17 @@ void StagFlow::initSolutionVector(CamControl& cc){
 
     initMomentum();
     initMassFlow();
-    
+
     mergeEnergyVector(&vT[0]);
-    mergeSpeciesVector(&vSpec[0]);    
-    
-   
+    mergeSpeciesVector(&vSpec[0]);
+
 }
 /*
  *initialize the mass flow
  */
 void StagFlow::initMassFlow(){
     //store the flow rates on the cell faces
-    m_u.resize(cellEnd,fuel.Vel);    
+    m_u.resize(cellEnd,fuel.Vel);
     m_u[0]=fuel.Vel;
     m_u[cellEnd-1] = 0.0;
     m_flow.resize(cellEnd,0.001);
@@ -189,8 +186,8 @@ void StagFlow::initMassFlow(){
         m_u[cellEnd-1] = oxid.Vel;
         m_flow[cellEnd-1] = oxid.FlowRate;
     }
-    
-   
+
+
     /*
      *setting up TDMA coefficients
      */
@@ -242,10 +239,11 @@ void StagFlow::initMomentum(){
  *coupled solver
  */
 void StagFlow::csolve(CamControl& cc){
-    
+
     CVodeWrapper cvw;
     eqn_slvd = EQN_ALL;
     int band = nVar*2;
+
     cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
                         cc.getMaxTime(),band,*this);
     cvw.solveDAE(CV_ONE_STEP,cc.getResTol());
@@ -302,7 +300,7 @@ void StagFlow::ssolve(CamControl& cc){
     //}
 
 
-    
+
 }
 /*
  *function called by the solver (DAEs and ODEs)
@@ -319,12 +317,12 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f){
     resSp.resize(cellEnd*nSpc,0);
     resT.resize(cellEnd,0);
     resFlow.resize(cellEnd,0);
-    
+
     /*
      *residual evaluation function for Stagflow. Internal
      *cell residuals are evaluated by calling the base class
      *function
-     */    
+     */
     if(eqn_slvd == EQN_ALL){
         if(admin->getEnergyModel() == admin->ADIABATIC){
             saveMixtureProp(t,y,true,true);
@@ -332,39 +330,39 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f){
         }else{
             saveMixtureProp(t,y,false,true);
         }
-        
-        
+
+
         updateDiffusionFluxes();
-        
+
         speciesBoundary(t,y,&resSp[0]);
         energyBoundary(t,y,&resT[0]);
 
 
         speciesResidual(t,y,&resSp[0]);
         energyResidual(t,y,&resT[0],true);
-        
-        
-        
+
+
+
         for(int i=0; i<cellEnd; i++){
             for(int l=0; l<nSpc; l++){
                 f[i*nVar+l] = resSp[i*nSpc+l];
-                
-            }                        
-            f[i*nVar+ptrT] = resT[i];            
-            
-        }        
+
+            }
+            f[i*nVar+ptrT] = resT[i];
+
+        }
     }else{
         if(eqn_slvd == EQN_SPECIES){
             mergeSpeciesVector(y);
             saveMixtureProp(t,&solvect[0],false,true);
-            updateDiffusionFluxes();            
+            updateDiffusionFluxes();
             speciesBoundary(t,y,f);
             speciesResidual(t,y,f);
         }else if(eqn_slvd==EQN_ENERGY){
             mergeEnergyVector(y);
             saveMixtureProp(t,&solvect[0],true,false);
             updateDiffusionFluxes();
-            updateThermo();         
+            updateThermo();
             energyResidual(t,y,f,true);
             energyBoundary(t,y,f);
 
@@ -433,10 +431,10 @@ void StagFlow::energyBoundary(const doublereal& t, doublereal* y, doublereal* f)
      * temperature in case of stagnation flow, and oxidizer inlet temperature
      * in case of counter flow flames
      */
-     
+
      f[iMesh_e] = 0;
-    
-    
+
+
 }
 
 /*
@@ -444,7 +442,7 @@ void StagFlow::energyBoundary(const doublereal& t, doublereal* y, doublereal* f)
  */
 void StagFlow::calcFlowField(const doublereal& time, doublereal* y){
 
-        
+
     /*
      *prepare
      */
@@ -480,9 +478,9 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y){
         std::vector<doublereal> flow;
         calcVelocity(flow);
         for(int i=1; i<iMesh_e; i++){
-            m_flow[i] = flow[i-1];            
+            m_flow[i] = flow[i-1];
         }
-        
+
 
         m_G[0] = sqrt(m_rho[iMesh_e]/m_rho[0]);
         if(configID==camConfig->COUNTERFLOW){
@@ -501,14 +499,14 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y){
     }
 
     for(int i=0; i<iMesh_e+1; i++){
-        m_u[i]=m_flow[i]/m_rho[i];        
+        m_u[i]=m_flow[i]/m_rho[i];
     }
-    
-   
+
+
 }
 
 void StagFlow::calcVelocity(std::vector<doublereal>& u){
-    
+
     std::vector<doublereal> r;
     u.resize(tdmaFlow.b.size(),0);
     r = u;
@@ -547,11 +545,11 @@ void StagFlow::calcVelocity(std::vector<doublereal>& u){
         rhoGw = rho_w*Gw;
         r[i-1] = 2*strainRate*(rhoGe-rhoGw);
     }
-    
-    CamMath cm;//    
+
+    CamMath cm;//
     cm.TDMA(tdmaFlow.a,tdmaFlow.b,tdmaFlow.c,r,u);
-    
-   
+
+
 }
 /*
  *calculate the momentum
@@ -579,7 +577,7 @@ void StagFlow::calcMomentum(std::vector<doublereal>& mom){
      *        First cell
      *--------------------------------------------------/
      */
-    
+
     i = 1;
     delPE = 0.5*(dz[i]+dz[i+1]);
     delPW = 0.5*dz[i];
@@ -635,10 +633,10 @@ void StagFlow::calcMomentum(std::vector<doublereal>& mom){
         r[i-1] += (De-fe)*m_G[iMesh_e];
 
     }
-    
+
 
     CamMath cm;
-    cm.TDMA(a,b,c,r,mom);        
+    cm.TDMA(a,b,c,r,mom);
 
 }
 
@@ -678,7 +676,7 @@ void StagFlow::updateDiffusionFluxes(){
  *report functions
  */
 void StagFlow::report(doublereal t, doublereal* solution){
-    
+
 }
 
 void StagFlow::report(doublereal t, doublereal* solutio, doublereal& res){
@@ -688,8 +686,8 @@ void StagFlow::report(doublereal t, doublereal* solutio, doublereal& res){
     if(nStep%10==0) reporter->consoleHead("time(s) \t residual");
     std::cout << t <<"\t" << res << std::endl;
     nStep++;
-    
-    
+
+
 }
 
 void StagFlow::header(){

@@ -1,5 +1,5 @@
-/* 
- * File:   cam_messenger.h
+/*!
+ * File:   cam_read.h
  * Author: vinod (vj231@cam.ac.uk)
  *
  * Copyright (C) 2008 Vinod M Janardhanan
@@ -40,8 +40,8 @@
  * Created on January 17, 2009, 5:38 PM
  */
 
-#ifndef _CAM_MESSENGER_H
-#define	_CAM_MESSENGER_H
+#ifndef _CAM_READ_H
+#define	_CAM_READ_H
 #include <string>
 #include "cam_geometry.h"
 #include "cam_admin.h"
@@ -53,13 +53,19 @@
 
 namespace Camflow{
 
+	/*!
+	 *@brief    This class contains the implementation of IO functions.
+	 *
+	 * Include a more detailed description here.
+	 */
     class CamRead{
+
     public:
         CamRead(){}
         ~CamRead(){}
 
         //main call to read input data set
-        void readInput(const std::string fileName, 
+        void readInput(const std::string fileName,
                        CamControl& cc,
                        CamGeometry& cg,
                        CamConverter& convert,
@@ -85,12 +91,12 @@ namespace Camflow{
         //common function for inlet reading
         void readNozzle(CamBoundary& cb, CamConverter convert,
                         const CamXML::Element &node);
-        
+
         //read control parameters
         void readControl(CamControl& cc, const CamXML::Element &node);
 
         //read initial guess
-        void readInitialGuess(CamProfile& cp, 
+        void readInitialGuess(CamProfile& cp,
                 CamConverter& convert,
                 const CamXML::Element &node);
 
@@ -103,13 +109,13 @@ namespace Camflow{
         //read the input to solve for soot moments
         void readSoot(CamSoot &cSoot, CamConverter &convert,
                                const CamXML::Element &node);
-       
+
 
     private:
 
         //read tolerences
         void readTol(const CamXML::Element &node, doublereal& atol, doublereal& rtol);
-        
+
         //read mass or mole fractions
         void readFrac(std::string& member, std::map<std::string,doublereal>& fracs, const CamXML::Element &subnode);
 
@@ -117,5 +123,5 @@ namespace Camflow{
     };
 }
 
-#endif	/* _CAM_MESSENGER_H */
+#endif	/* _CAM_READ_H */
 

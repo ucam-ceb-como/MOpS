@@ -1,8 +1,41 @@
-/*
- * File:   flamelet.h
- * Author: vj231
+/*!
+ * \file   flamelet.h
+ * \author V. Janardhanan
  *
- * Created on 06 July 2009, 12:13
+ * \brief Solver class for flamelets.
+ *
+ *  Copyright (C) 2009 Vinod Janardhanan.
+ *
+
+ Licence:
+    This file is part of "camflow".
+
+    brush is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Prof Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
  */
 
 #ifndef _FLAMELET_H
@@ -17,175 +50,166 @@
 
 using namespace Sprog;
 
-namespace Camflow{
-    class FlameLet: public CamSetup{
-    public:
+namespace Camflow {
 
-        enum{
-            LNONE,
-            LNNONE
-        };
+    /*!
+     *@brief    Flamelet equation solver class.
+     *
+     * Include a more detailed description here.
+     */
+    class FlameLet
+    : public CamSetup {
 
-        FlameLet(){sdr_ext=0;timeHistory=false;sdrProfile=false;sdrAnalytic=false;}
-        virtual ~FlameLet(){}
+        public:
 
-        int eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval);
-        //console output
-        void report(doublereal x, doublereal* solution);
-        //console output with residuals
-        void report(doublereal x, doublereal* solution, doublereal& res);
-        //file output
-        void reportToFile(doublereal x, doublereal* solution);
+            //! Enumerator for Unity or Fixed Lewis number.
+            enum{
+                LNONE,
+                LNNONE
+            };
 
-        /**
-         * solve the flamelet: call for coupling without
-         * solving population balance
-         */
-        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg, CamProfile&cp,
-                            Mechanism &mech, bool interface=false);
+            //! Default constructor. Give boolean flags some default values.
+            FlameLet();
 
-        /**
-         * stand alone call as well as first call from an external
-         * code that solves the population balance
-         */
-        void solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp,
-                CamConfiguration& config, CamSoot& cs, Mechanism& mech);
+            //! Destructor.
+            virtual ~FlameLet(){}
 
-        /**
-         * continulation call from an external code that
-         * solves the population balance
-         */
-        void solve(std::vector<Thermo::Mixture>& cstrs,
-                const std::vector< std::vector<doublereal> >& iniSource,
-                const std::vector< std::vector<doublereal> >& fnlSource,
-                Mechanism& mech,
-                CamControl &cc,
-                CamAdmin &ca,
-                CamGeometry &cg,
-                CamProfile& cp);
+            //! Solve the flamelet. Call for coupling without solving population balance.
+            void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg, CamProfile&cp,
+                                Mechanism &mech, bool interface=false);
 
+            //! Stand alone call as well as first call from an external code that solves the population balance
+            void solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp,
+                    CamConfiguration& config, CamSoot& cs, Mechanism& mech);
 
+            //! Continulation call from an external code that solves the population balance.
+            void solve(std::vector<Thermo::Mixture>& cstrs,
+                       const std::vector< std::vector<doublereal> >& iniSource,
+                       const std::vector< std::vector<doublereal> >& fnlSource,
+                       Mechanism& mech,
+                       CamControl& cc,
+                       CamAdmin& ca,
+                       CamGeometry& cg,
+                       CamProfile& cp);
 
-        //initialize the solution vector
-        void initSolutionVector(CamControl &cc);
-        //calculate the stoichiometric mixture fraction
-        doublereal stoichiometricMixtureFraction();
-        //calculate the scalar dissipation rate
-        doublereal scalarDissipationRate(const doublereal m_frac);
-        /*
-         *create header for file output
-         */
-        void header();
-        /*
-         *coupled solver
-         */
-        void csolve(CamControl &cc, bool interface=false);
-        /*
-         *segregated solver
-         */
+            //! Initialize the solution vector.
+            void initSolutionVector(CamControl &cc);
 
-        //mass matrix evaluation
-        void massMatrix(doublereal **M);
+            //! Coupled solver.
+            void csolve(CamControl &cc, bool interface=false);
 
-        void ssolve(CamControl &cc);
-        /*
-         *restart the solution with the converged solution
-         */
-        void restart(CamControl &cc);
-        /*
-         *save the solution vector
-         */
-        void saveMixtureProp(doublereal* y);
-        /*
-         *residual defiitions
-         */
-        void residual(const doublereal& t, doublereal* y, doublereal* f);
-        /*
-         *species residual
-         */
-        void speciesResidual(const doublereal& t, doublereal* y, doublereal* f);
-        /*
-         *Energy residual
-         */
-        void energyResidual(const doublereal& t, doublereal* y, doublereal* f);
-        /*
-         *set the external scalar dissipation rate
-         */
-        void setExternalScalarDissipationRate(const doublereal sr);
+            //! Segregated solver.
+            void ssolve(CamControl &cc);
 
-        /*
-         *set the time history of scalar dissipation rate
-         */
-        void setExternalScalarDissipationRate(const std::vector<doublereal>& time,
-											  const std::vector<doublereal>& sdr,
-											  const bool analytic);
+            //! Restart the solution with the converged solution.
+            void restart(CamControl &cc);
 
-        /*
-         *set the time history of scalar dissipation rate with a profile from the CFD.
-         */
-        void setExternalScalarDissipationRate(const std::vector<doublereal>& time,
-											  const std::vector< std::vector<doublereal> >& sdr,
-											  const std::vector< std::vector<doublereal> >& Zcoords);
+            //! Save the solution vector.
+            void saveMixtureProp(doublereal* y);
 
-        /**
-         *  get scalar dissipation rate
-         */
+            //! Called by ODE/DAE solver to evaluate residuals.
+            int eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval);
 
-        doublereal getSDR(const doublereal time) const;
-        doublereal getSDRfromProfile(const doublereal time, const doublereal Z) const;
-        doublereal scalarDissipationRateProfile(const doublereal m_frac, const doublereal stoichSDR, const int cell);
+            //! Residual definitions.
+            void residual(const doublereal& t, doublereal* y, doublereal* f);
 
-        //! Provide a soot volume fraction from an external calculation
-        void setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv);
+            //! Species residual calculation.
+            void speciesResidual(const doublereal& t, doublereal* y, doublereal* f);
 
-        //Get the residual for use in radauWrapper.
-        doublereal getResidual() const;
+            //! Energy residual calculation.
+            void energyResidual(const doublereal& t, doublereal* y, doublereal* f);
 
-        /**
-         *  Set restart time
-         */
-        void setRestartTime(doublereal t);
+            //! Computes the Planck mean absorption constants, as input to the radiative heat loss dissipation model.
+            void PlanckAbsorption (const doublereal Temperature, doublereal Absorption[3]) const;
 
+            //! Computes the radiative heat loss term for the radiative heat dissipation model.
+            doublereal RadiativeLoss(const doublereal Temperature,
+                                     const doublereal soot_vol_frac,
+                                     const doublereal mole_frac_H2O,
+                                     const doublereal mole_frac_CO2,
+                                     const doublereal mole_frac_CO) const;
 
+            //! Set the external scalar dissipation rate.
+            void setExternalScalarDissipationRate(const doublereal sr);
 
-    //! Computes the Planck mean absorption constants, as part of the radiative heat loss dissipation model.
-    void PlanckAbsorption (const doublereal Temperature, doublereal Absorption[3])const;
+            //! Set the time history of scalar dissipation rate.
+            void setExternalScalarDissipationRate(const std::vector<doublereal>& time,
+                                                  const std::vector<doublereal>& sdr,
+                                                  const bool analytic);
 
-    //! Computes  the radiative heat loss term for radiative heat dissipation model
-   doublereal RadiativeLoss(const doublereal Temperature,
-                            const doublereal soot_vol_frac, const doublereal mole_frac_H2O,
-                            const doublereal mole_frac_CO2, const doublereal mole_frac_CO) const;
+            //! Set the time history of scalar dissipation rate with a profile from the CFD.
+            void setExternalScalarDissipationRate(const std::vector<doublereal>& time,
+                                                  const std::vector< std::vector<doublereal> >& sdr,
+                                                  const std::vector< std::vector<doublereal> >& Zcoords);
 
-   /*
-    * return a vector for the rate of production of pyrene.
-    */
-   void getWdotA4(std::vector<doublereal>& wdotA4);
+            //! Calculate the stoichiometric mixture fraction.
+            doublereal stoichiometricMixtureFraction();
 
+            //! Calculate the scalar dissipation rate.
+            doublereal scalarDissipationRate(const doublereal m_frac);
 
-    private:
-        doublereal stoichZ; //stoichiometric mixture fraction
-        doublereal smr;     //stoichiometric mass ratio
-        doublereal sdr;     // scalar dissipation rate
-        doublereal sdr_ext; // scalar dissipation rate passed by exteranl program
-        doublereal rstartTime;
-        std::vector<doublereal> v_sdr;   //scalar dissipation rate that has a time history
-        std::vector<doublereal> v_time; //time profile of scalar dissipation rates
-        std::vector< std::vector<doublereal> > profile_sdr; // SDR profile with a time history.
-        std::vector< std::vector<doublereal> > cfdMixFracCoords; // Mixture Fraction coords from CFD.
+            //! Get the SDR at a given time.
+            doublereal getSDR(const doublereal time) const;
 
-        //! Spatial profile of soot volume fraction
-        std::vector<doublereal> m_SootFv;
+            //! Get the SDR at a given time and mixture fraction coordinate.
+            doublereal getSDRfromProfile(const doublereal time, const doublereal Z) const;
+
+            //! Get the SDR at a given mixture fraction coordinate using an analytical profile.
+            doublereal scalarDissipationRateProfile(const doublereal m_frac, const doublereal stoichSDR, const int cell);
+
+            //! Provide a soot volume fraction from an external calculation.
+            void setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv);
+
+            //! Get the residual for use in radauWrapper.
+            doublereal getResidual() const;
+
+            //! Mass matrix evaluation. Called by radauWrapper.
+            void massMatrix(doublereal **M);
+
+            //! Set the restart time for the solver.
+            void setRestartTime(doublereal t);
+
+            //! Get a vector for the rate of production of pyrene.
+            void getWdotA4(std::vector<doublereal>& wdotA4) const;
+
+            //! Create header for file output.
+            void header();
+
+            //! Console output.
+            void report(doublereal x, doublereal* solution);
+
+            //! Console output with residuals.
+            void report(doublereal x, doublereal* solution, doublereal& res);
+
+            //! File output.
+            void reportToFile(doublereal x, doublereal* solution);
+
+        private:
+
+            doublereal stoichZ; //stoichiometric mixture fraction
+            doublereal smr;     //stoichiometric mass ratio
+            doublereal sdr;     // scalar dissipation rate
+            doublereal sdr_ext; // scalar dissipation rate passed by exteranl program
+            doublereal rstartTime;
+            std::vector<doublereal> v_sdr;   //scalar dissipation rate that has a time history
+            std::vector<doublereal> v_time; //time profile of scalar dissipation rates
+            std::vector< std::vector<doublereal> > profile_sdr; // SDR profile with a time history.
+            std::vector< std::vector<doublereal> > cfdMixFracCoords; // Mixture Fraction coords from CFD.
+
+            //! Spatial profile of soot volume fraction
+            std::vector<doublereal> m_SootFv;
 
 
-        bool timeHistory, sdrProfile, sdrAnalytic;
-        doublereal strain;  // strain rate
-        int mCord;          // this is the mixture fraction coordinates
-        inletStruct fuel, oxid;
+            bool timeHistory, sdrProfile, sdrAnalytic;
+            doublereal strain;  // strain rate
+            int mCord;          // this is the mixture fraction coordinates
+            inletStruct fuel, oxid;
 
-        Array2D Le, convection, CpSpec; //Lewis numbers
+            Array2D Le, convection, CpSpec; //Lewis numbers
 
-    };
-}
+    }; // End FlameLet class declaration.
+
+} // End Camflow namespace.
 
 #endif	/* _FLAMELET_H */
 

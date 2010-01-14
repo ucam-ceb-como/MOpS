@@ -1,43 +1,41 @@
-/*
- * File:   interface.h
- *Author: vinod (vj231@cam.ac.uk)
+/*!
+ * \file   interface.h
+ * \author V. Janardhanan
  *
- * Copyright (C) 2009 Vinod M Janardhanan.
+ * \brief Interface for coupling flamelet calculations to external codes.
  *
- * File purpose:
- *  This class contains the definition of interface for coupling
- *  with other programs, which handles the  particle processes.
- * Licence:
- *  This file is part of "Camflow".
+ *  Copyright (C) 2009 Vinod Janardhanan.
  *
- *  Camflow is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * Contact:
- *  Dr Markus Kraft
- *  Dept of Chemical Engineering
- *  University of Cambridge
- *  New Museum Site
- *  Pembroke Street
- *  Cambridge
- *  CB2 3RA
- *  UK
- *
- *  Email   :   mk306@cam.ac.uk
- *  Website :   http://como.cheng.cam.ac.uk
- *
- * Created on 20 August 2009, 17:20
+
+ Licence:
+    This file is part of "camflow".
+
+    brush is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Prof Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
  */
 
 #ifndef _INTERFACE_H
@@ -57,6 +55,7 @@
 #include "cam_read.h"
 #include "cam_models.h"
 #include "cam_soot.h"
+#include "cam_params.h"
 
 /*--------------------------------------------------------------------------------------------------
  * How to use Code Snippet:
@@ -148,228 +147,273 @@
  *
  */
 
-namespace Camflow{
+namespace Camflow {
+/*!
+ *@brief    Wrapper to combine flamelet calculations with external codes (e.g. OpenFOAM).
+ *
+ * How to use Code Snippet:
+ *
+ *  Creating the interface object
+ * -----------------------------------------------------------------
+ * The interface object can be created passing in the
+ * mechanism object, grid sizes, and a vector of
+ * mixtures to hold the mixture object for each
+ * finite volume cells. The following code snippet
+ * demonstrates inistantiating the interface a
+ * premix reactor
+ *
+ * CamPremix cp;
+ * Interface camFlowInterface(mech_in, dz, mixtures,&cp)
+ *
+ *
+ * @mech_in        : Sprog::Mechanism object
+ * @dz                 : Grid points vector of type double
+ *                           This vector contains the width of
+ *                            finite volume cells
+ * @cstrs              : vector of type
+ *                           Sprog::Thermo::Mixture
+ * &cp                 : pointer to premix reactor
+ *
+ * dz, and mixtures can be empty vectors. If these
+ * arguments are provided with the corresponding
+ * contents then the size of  cstrs must be same
+ * as dz.  if the size of dz is foubd to be zero then
+ * the reactor geometry will be read in from the
+ * grid.inp file, which is the grid specification file for
+ * camflow. If the size of cstrs is found to be
+ * zero, then it will be populated with n number of
+ * mixture objects, where n is the number of cells
+ *
+ * Interface instantiation is followed by the
+ * integration and the control will be, returned to
+ * the calling program once steady state is obtained.
+ * Once the control is returned to the calling
+ * program, handles for all objects, which controls
+ * execution of camflow can be obtained by
+ * calling the get function. The most important
+ * oncis the CamControl object
+ *
+ *  Getting the cam control object
+ * -----------------------------------------------------------
+ *  camFlowInterface.getCamControl(CamControl& ccObj);
+ *
+ *  Getting configuration object
+ *---------------------------------------------------------------------------------
+ *  camFlowInterface.getCamConfiguration(CamConfiguration& configObj);
+ *
+ *
+ *  Making successive calls
+ *--------------------------------------------------------------------------------------
+ *  camFlowInterface.solve(vector<Thermo::Mixture>& cstrs,
+                const vector<doublereal>& dz,
+                const vector< vector<doublereal> >& initalSource,
+                const vector< vector<doublereal> >& finalSource,
+                CamControl& ccObj,
+                CamConfig& confObj,
+                Mechanism& mech_in,
+                void* reactorModel
+                );
+ *
+ *@cstrs        : vector of Sprog::Thermo:;Mixture
+ *@dz           : vector of type double containing
+ *                   cell widths
+ *@initialSource: vector of source terms for
+ *                   particle processes at time 0
+ *@finalSource: vector of source term for particle
+ *                  processes at the end of time t+dt
+ *@ccObj        : object of the type CamControl. This
+ *                    object must be set with the maximum
+ *                    integration time by calling function
+ *  setMaxTIme(double time). A number of
+ * other optional parameters can also be set.
+ * Refer to the respective header file.
+ *
+ *@mech_in  : Sprog::Mechanism object
+ *@*reactorModel : This is a pointer to any of the
+ * following reactor type (see instantiation of
+ * Interface for how to pass the pointer)
+ *
+ *      CamPremix
+ *      CamPlug
+ *      Batch
+ *      StagFlow
+ */
     class Interface{
-    public:
-        /*
-         *default interface; for external calling programs which
-         *do not read the mechanism file.
-         */
-        Interface();
-        /*
-         *Interface for external calling program which reads in the
-         *mechanism file. This interface will also perform the
-         *integration until steady state, and return the species massfractions,
-         *velocity, density, and temprature the mixture objects.
-         *The mechanism object and the pointer to the reactor
-         *model are mandatory input parameters, while the vector
-         *containing the width of cells (dz) and the vector of
-         *mixture objects, which corresponds to each finite volume cells
-         *are optional.
-         *
-         */
-        Interface(Mechanism& mech_in,
-                std::vector<doublereal>& dz,
-                std::vector<Thermo::Mixture>& cstrs,
-                void* rModel,
-                const doublereal sdr=0
-                );
-        /*
-         *Default destructor
-         */
-        ~Interface(){}
 
-        /*
-         *calling interface to solve flamelets with time-history-scalar dissipation rates
-         */
-        void flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
+        public:
 
-        //! Interface for use when an SDR profile is given.
-        void flameletSDRprofile(const std::vector< std::vector<doublereal> >& sdr,
-								const std::vector< std::vector<doublereal> >& Zcoords,
-        						const std::vector<doublereal>& intTime,
-        						bool continuation=false,
-        						bool lnone=true);
+            //! Default interface.
+            Interface();
+            /*
+             *Interface for external calling program which reads in the
+             *mechanism file. This interface will also perform the
+             *integration until steady state, and return the species massfractions,
+             *velocity, density, and temprature the mixture objects.
+             *The mechanism object and the pointer to the reactor
+             *model are mandatory input parameters, while the vector
+             *containing the width of cells (dz) and the vector of
+             *mixture objects, which corresponds to each finite volume cells
+             *are optional.
+             *
+             */
+            Interface(Mechanism& mech_in,
+                    std::vector<doublereal>& dz,
+                    std::vector<Thermo::Mixture>& cstrs,
+                    void* rModel,
+                    const doublereal sdr=0
+                    );
 
-        //! Interface for use when soot is available
-        void flameletWithSoot(const std::vector<doublereal>& soot_fv, const std::vector<doublereal>& sdr,
-                              const std::vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
+             //! Default destructor.
+            ~Interface(){}
 
-        /*
-         *assigen the species mass fractions, temperature, density, and
-         *velocity into the vector of mixture objects
-         */
-        void resetMixtures(std::vector<Thermo::Mixture>& cstrs);
-        /*
-         *return the vector of species names
-         */
-        void getSpeciesNames(std::vector<std::string>& names);
-        /*
-         *return the number of species
-         */
-        const int getNumberOfSpecies() const ;
-        /*
-         *return the species mass frac given the indenpendant variable
-         */
-        const doublereal getMassFrac(const int spIndex, const doublereal axpos);
-        /*
-         *return the species mole frac given the indenpendant variable
-         */
-        const doublereal getMoleFrac(const int spIndex, const doublereal axpos);
+            //! Calling interface to solve flamelets with time-history scalar dissipation rates.
+            void flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
 
-        //! Get spatial profile of one species
-        const std::vector<doublereal> getMassFracsBySpecies(const int spIndex) const;
+            //! Calling interface to solve flamelets with a profile of SDRs with a time history.
+            void flameletSDRprofile(const std::vector< std::vector<doublereal> >& sdr,
+                                    const std::vector< std::vector<doublereal> >& Zcoords,
+                                    const std::vector<doublereal>& intTime,
+                                    bool continuation=false,
+                                    bool lnone=true);
 
-        //! Get mass fractions for all species at one point
-        const std::vector<doublereal> getMassFracsByPoint(const int indVarIndex) const;
+            //! Interface for use when soot volume fraction is available.
+            void flameletWithSoot(const std::vector<doublereal>& soot_fv, const std::vector<doublereal>& sdr,
+                                  const std::vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
 
-        /*
-         *return the temperature given the independant variable
-         */
-        const doublereal getTemperature(const doublereal axpos);
+            //! Assign the species mass fractions, temperature, density, and velocity into the vector of mixture objects.
+            void resetMixtures(std::vector<Thermo::Mixture>& cstrs);
 
-        /*!
-         *@return   Vector of temperatures at all the independent variable points.
-         */
-        const std::vector<doublereal>& getTemperatures() const {return TVector;}
+            //! Solve the reactor for the successive calls.
+            void solve(std::vector<Thermo::Mixture>& cstrs,                      //Sprog mixture for each cell
+                       const std::vector<doublereal>& dz,                                   //geomtry cell widths
+                       const std::vector< std::vector<doublereal> >& initalSource,       //initial source terms ( under relaxed )
+                       const std::vector< std::vector<doublereal> >& finalSource,         //final source terms (under relaxed)
+                       CamControl& ccObj,                                                    //Solver control
+                       CamConfiguration& confObj,                                   //configuration object
+                       Mechanism& mech_in,                                             //mechanism object
+                       void* reactorModel,                                                  //reactor model to solve
+                       const doublereal sdr = 0);                                        //scalar dissipation rate in case of flamelets
 
-        /*
-         *return the density given the independant variable
-         */
-        const doublereal getDensity(const doublereal axpos);
+            //! Return a vector of species names.
+            void getSpeciesNames(std::vector<std::string>& names);
 
-        /*!
-         *@return   Vector of densities at all the independent variable points.
-         */
-        const std::vector<doublereal>& getDensities() const {return rhoVector;}
+            //! Return the number of species.
+            const int getNumberOfSpecies() const ;
 
-        /*
-         *return the viscosity
-         */
-        const doublereal getViscosity(const doublereal axpos);
+            //! Return the species mass fraction given the independent variable.
+            const doublereal getMassFrac(const int spIndex, const doublereal axpos);
 
-        /*
-         *  return the specific heat at a given mixture fraction /axpos
-         */
-        const doublereal getSpecificHeat(const doublereal axPos);
-        /*
-         *  return the thermal conductivity at a given mixture fraction / axpos
-         */
-        const doublereal getThermalConductivity(const doublereal axPos);
-        /*
-         *  Return a vector of diffusion coefficents (size number of gasphase species)
-         */
-        const std::vector<doublereal> getDiffusionCoefficients(const doublereal axPos);
-        /*
-         *  Return pyrene production rate
-         */
-        const doublereal getWdotA4(const doublereal axPos);
-        /*
-         *return the stoichiometric mixture fraction
-         */
-        const doublereal getStMixtureFrac();
+            //! Return the species mole fraction given the independent variable.
+            const doublereal getMoleFrac(const int spIndex, const doublereal axpos);
 
-        /*!
-         *@return   Vector of velocities at all the independent variable points.
-         */
-        const std::vector<doublereal>& getVelocities() const {return mVelocity;}
+            //! Get spatial profile of one species.
+            const std::vector<doublereal> getMassFracsBySpecies(const int spIndex) const;
+
+            //! Get mass fractions for all species at one point.
+            const std::vector<doublereal> getMassFracsByPoint(const int indVarIndex) const;
+
+            //! Return the temperature given the independent variable.
+            const doublereal getTemperature(const doublereal axpos);
+
+            //! Return a vector of temperatures at all the independent variable points.
+            const std::vector<doublereal>& getTemperatures() const {return TVector;}
+
+            //! Return the density given the independent variable.
+            const doublereal getDensity(const doublereal axpos);
+
+            //! Return the viscosity given the independent variable.
+            const doublereal getViscosity(const doublereal axpos);
+
+            //! Return the specific heat given the independent variable.
+            const doublereal getSpecificHeat(const doublereal axPos);
+
+            //! Return the thermal conductivity given the independent variable.
+            const doublereal getThermalConductivity(const doublereal axPos);
+
+            //! Return a vector of diffusion coefficents (size equals number of gas phase species).
+            const std::vector<doublereal> getDiffusionCoefficients(const doublereal axPos);
+
+            //! Return pyrene production rate.
+            const doublereal getWdotA4(const doublereal axPos);
+
+            //! Return the stoichiometric mixture fraction.
+            const doublereal getStMixtureFrac();
+
+            //! Return a vector of densities at all the independent variable points.
+            const std::vector<doublereal>& getDensities() const {return rhoVector;}
+
+            //! Return a vector of the independent variable values.
+            const std::vector<doublereal>& getIndepVars() const {return indVar;}
+
+            //! Return a vector of velocities at all the independent variable points.
+            const std::vector<doublereal>& getVelocities() const {return mVelocity;}
 
 
-        /*!
-         *@return   Vector of the independent variable values.
-         */
-        const std::vector<doublereal>& getIndepVars() const {return indVar;}
+            //! Return the controller object.
+            CamControl& getCamControl();
+
+            //! Return the geometry object.
+            CamGeometry& getCamGeometry();
+
+            //! Return CamAdmin object.
+            CamAdmin& getCamAdmin();
+
+            //! Return the boundary object which stores the boundary condition information.
+            CamBoundary& getCamBoundary();
+
+            //! Return the profile object which contains the information of user defined temperature profile.
+            CamProfile& getCamProfile();
+
+            //! Return the configuration that stores the reactor type.
+            CamConfiguration& getCamConfiguration();
 
 
-        /*
-         *return the controller
-         */
-        CamControl& getCamControl();
-        /*
-         *return the geometry object
-         */
-        CamGeometry& getCamGeometry();
-        /*
-         *return CamAdmin
-         */
-        CamAdmin& getCamAdmin();
-        /*
-         *return the boundary object which stores the boundary condition
-         * information
-         */
-        CamBoundary& getCamBoundary();
-        /*
-         *return the profile object which contains the information
-         *of user defined temperature profile
-         */
-        CamProfile& getCamProfile();
-        /*
-         *return the configuration that stores the reactor type
-         */
-        CamConfiguration& getCamConfiguration();
+        private:
 
-        /*
-         *solve the reactor for the successive calls
-         */
-        void solve(std::vector<Thermo::Mixture>& cstrs,                      //Sprog mixture for each cell
-                const std::vector<doublereal>& dz,                                   //geomtry cell widths
-                const std::vector< std::vector<doublereal> >& initalSource,       //initial source terms ( under relaxed )
-                const std::vector< std::vector<doublereal> >& finalSource,         //final source terms (under relaxed)
-                CamControl& ccObj,                                                    //Solver control
-                CamConfiguration& confObj,                                   //configuration object
-                Mechanism& mech_in,                                             //mechanism object
-                void* reactorModel,                                                  //reactor model to solve
-                const doublereal sdr = 0                                        //scalar dissipation rate in case of flamelets
-                );
+            CamControl cc;
+            CamGeometry cg;
+            CamConverter convert;
+            CamAdmin ca;
+            CamBoundary cb;
+            CamProfile cp;
+            CamConfiguration config;
+            CamRead cm;
+            CamResidual *model;
 
+            CamSoot cSoot;
+            Sprog::Mechanism mech;
+            int nSpecies;
+            std::vector<std::string> speciesNames;
+            const SpeciesPtrVector *speciesPointerVector;
+            /*
+             *memberes to hold dependent variabes
+             */
+            Array2D spMassFracs;            //species mass fractions
+            std::vector<doublereal> TVector;     //temperature
+            std::vector<doublereal> rhoVector;   //density
+            std::vector<doublereal> muVector;    //viscosity
+            std::vector<doublereal> indVar;      //independant variable
+            std::vector<doublereal> spHeat;              //specific heats
+            std::vector<doublereal> lambda;      //thermal conductivity
+            std::vector<doublereal> mVelocity;   //velocity
+            std::vector<doublereal> avgMolWtVector;   // Average Molar Weight of the mixture
+            std::vector<doublereal> wdotA4;   // rate of production of pyrene
+            Array2D mDiff;                      //Diffusion coefficients
 
-    private:
-        CamControl cc;
-        CamGeometry cg;
-        CamConverter convert;
-        CamAdmin ca;
-        CamBoundary cb;
-        CamProfile cp;
-        CamConfiguration config;
-        CamRead cm;
-        CamResidual *model;
+            doublereal stMixtureFrac;       //stoichiometric mixture fraction
 
-        CamSoot cSoot;
-        Sprog::Mechanism mech;
-        int nSpecies;
-        std::vector<std::string> speciesNames;
-        const SpeciesPtrVector *speciesPointerVector;
-        /*
-         *memberes to hold dependent variabes
-         */
-        Array2D spMassFracs;            //species mass fractions
-        std::vector<doublereal> TVector;     //temperature
-        std::vector<doublereal> rhoVector;   //density
-        std::vector<doublereal> muVector;    //viscosity
-        std::vector<doublereal> indVar;      //independant variable
-        std::vector<doublereal> spHeat;              //specific heats
-        std::vector<doublereal> lambda;      //thermal conductivity
-        std::vector<doublereal> mVelocity;   //velocity
-        std::vector<doublereal> avgMolWtVector;   // Average Molar Weight of the mixture
-        std::vector<doublereal> wdotA4;   // rate of production of pyrene
-        Array2D mDiff;                      //Diffusion coefficients
+            //! Pointer to flamelet class.
+            FlameLet* flmlt;
 
-        doublereal stMixtureFrac;       //stoichiometric mixture fraction
-        /*
-         *reactor pinters
-         */
-        FlameLet* flmlt;
+            //! Calling interface to solve a flamelet with a given scalar dissipation rate.
+            void flamelet(doublereal sdr, doublereal intTime=0, bool continuation=false, bool lnone=true);
 
-        /*
-         *calling interface to solve the flameletes. continuation true means the
-         *call is a continuation call to the same problem
-         */
-        void flamelet(doublereal sdr, doublereal intTime=0, bool continuation=false, bool lnone=true);
+            //! Function to return a variable's value given the independent variable.
+            doublereal getVariableAt(const doublereal& pos, const std::vector<doublereal>& var) const;
 
-        doublereal getVariableAt(const doublereal& pos, const std::vector<doublereal>& var) const;
+        }; // End Interface class declaration.
 
-    };
-}
+} // End Camflow namespace.
 
 
 #endif	/* _INTERFACE_H */

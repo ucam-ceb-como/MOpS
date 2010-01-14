@@ -74,15 +74,15 @@ void CamSetup::initSpecies(CamBoundary& cb, CamControl& cc,
     soln.resize(nSpc*cellEnd,0);
     std::vector<doublereal>  position;
     position = reacGeom->getAxpos();
-    profile->setStartProfile(cb,*camMech);    
+    profile->setStartProfile(cb,*camMech);
     Array2D start = profile->getStartProfile();
 
     for(int i=cellBegin; i<cellEnd; i++){
         for(int l=0; l<nSpc; l++){
-            soln[i*nSpc+l] = start(i,l);            
+            soln[i*nSpc+l] = start(i,l);
         }
     }
-    
+
 }
 /*
  *init species given 2 inlets
@@ -92,8 +92,8 @@ void CamSetup::initSpecies(CamBoundary& left, CamBoundary& right,
 
     soln.resize(nSpc*cellEnd,0);
     std::vector<doublereal>  position;
-    position = reacGeom->getAxpos();    
-    profile->setStartprofile(left,right,*camMech);    
+    position = reacGeom->getAxpos();
+    profile->setStartprofile(left,right,*camMech);
     Array2D start = profile->getStartProfile();
     for(int i=cellBegin; i<cellEnd; i++){
         for(int l=0; l<nSpc; l++){
@@ -128,6 +128,8 @@ void CamSetup::initTemperature(CamBoundary& cb, CamControl& cc,
     position = reacGeom->getAxpos();
     doublereal T = getInletTemperature(cb);
 
+
+
     if(admin->getEnergyModel() == admin->ISOTHERMAL){
         for(int i=cellBegin; i<cellEnd; i++)
             soln[i] = T;
@@ -138,7 +140,6 @@ void CamSetup::initTemperature(CamBoundary& cb, CamControl& cc,
 
         }
     }
-
 
 }
 
@@ -165,7 +166,7 @@ void CamSetup::storeInlet(CamBoundary& cb, inletStruct& ud_inlet){
     ud_inlet.Dens = ud_inlet.FlowRate/ud_inlet.Vel;
     ud_inlet.Species = temp;
     ud_inlet.Dk = camMixture->getMixtureDiffusionCoeff(opPre);
-    
+
 }
 
 

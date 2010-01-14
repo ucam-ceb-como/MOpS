@@ -58,7 +58,7 @@ void CamGeometry::setGridFile(string name){
     inf.open(gridFile.c_str(),ios::in);
     if(inf.good()){
         std::string position;
-        
+
         while(!inf.eof()){
             getline(inf,position);
             if(! isEmpty(position)){
@@ -77,7 +77,7 @@ void CamGeometry::setGridFile(string name){
     doublereal pos =0;
     for(int i=0; i<nCell; i++){
         pos += dz[i];
-        axPos.push_back((pos - dz[i]/2.0));        
+        axPos.push_back((pos - dz[i]/2.0));
     }
     length = grid[len];
 }*/
@@ -89,7 +89,7 @@ void CamGeometry::setGeometry(const vector<doublereal>& dz_){
     doublereal pos =0;
     for(int i=0; i<nCell; i++){
         pos += dz[i];
-        axPos.push_back((pos - dz[i]/2.0));        
+        axPos.push_back((pos - dz[i]/2.0));
     }
 }
 
@@ -110,7 +110,7 @@ int CamGeometry::getnCells() const{
 }
 
 void CamGeometry::setDia(doublereal d){
-    dia = d;   
+    dia = d;
 }
 
 std::string CamGeometry::getGridFileName() const{
@@ -178,7 +178,7 @@ static doublereal mcPrec(){
  */
 void CamGeometry::refine(doublereal* y, const int nVar, const int nSpec, int ptrT){
 
-    
+
 
     vector<doublereal> v,slope;
     doublereal vmin, vmax, smin, smax;
@@ -274,7 +274,7 @@ void CamGeometry::refine(doublereal* y, const int nVar, const int nSpec, int ptr
 
         }
     }
-    
+
 
 }
 

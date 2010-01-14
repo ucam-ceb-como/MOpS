@@ -1,10 +1,10 @@
-/*
- * File:   cam_messenger.cpp
- * Author: vinod
+/*!
+ * \file:   cam_read.cpp
+ * \author: vinod
  *
  * Created on January 17, 2009, 5:38 PM
- * File purpose:
- *  This class contains the implementation IO functions
+ *
+ * \brief This class contains the implementation IO functions
  *
  * Licence:
  *  This file is part of "Camflow".
@@ -48,7 +48,8 @@
 #include "cam_read.h"
 #include "string_functions.h"
 #include "cam_error.h"
-#include<vector>
+#include <vector>
+
 using namespace Camflow;
 using namespace Strings;
 
