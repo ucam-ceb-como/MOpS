@@ -859,7 +859,7 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
  *@param[in]    sp          Particle for which to calculate drag coefficient
  *
  *@return       Thermophoretic velocity
- *@exception    std::runtime_error  Unrecognised thremophoresis type
+ *@exception    std::runtime_error  Unrecognised thermophoresis type
  */
 real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) const {
 
