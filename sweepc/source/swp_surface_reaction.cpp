@@ -254,7 +254,15 @@ int SurfaceReaction::Perform(real t, Cell &sys, unsigned int iterm, Transport::T
             // No particle update required, just perform the surface
             // reaction.
             sp->Adjust(m_dcomp, m_dvals, m_modelid, m_pid, 1);
-            sys.Particles().Update(i);
+
+            if (sp->IsValid()) {
+                // Tell the binary tree to recalculate
+                sys.Particles().Update(i);
+            }
+            else {
+                // Particle has been removed due to oxidation
+                sys.Particles().Remove(i);
+            }
 
             // Apply changes to gas-phase chemistry.
             adjustGas(sys);
