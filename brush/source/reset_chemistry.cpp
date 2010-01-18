@@ -51,6 +51,7 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <cassert>
+#include <iomanip>
 
 using namespace Brush;
 
@@ -600,6 +601,33 @@ void Brush::ResetChemistry::apply(const real x, Mops::Reactor &reac) const {
     if(reac.Mixture() == NULL)
         reac.Fill(*(new Mops::Mixture(reac.Mech()->ParticleMech())));
     reac.Mixture()->SetGasPhase(chemMixture);
+
+    /* Uncomment this code to check molar concentrations
+    unsigned int logIndices[14];
+    logIndices[0]  = reac.Mech()->FindSpecies("H2");
+    logIndices[1]  = reac.Mech()->FindSpecies("H");
+    logIndices[2]  = reac.Mech()->FindSpecies("O");
+    logIndices[3]  = reac.Mech()->FindSpecies("O2");
+    logIndices[4]  = reac.Mech()->FindSpecies("OH");
+    logIndices[5]  = reac.Mech()->FindSpecies("H2O");
+    logIndices[6]  = reac.Mech()->FindSpecies("CH4");
+    logIndices[7]  = reac.Mech()->FindSpecies("CO");
+    logIndices[8]  = reac.Mech()->FindSpecies("CO2");
+    logIndices[9]  = reac.Mech()->FindSpecies("C2H2");
+    logIndices[10] = reac.Mech()->FindSpecies("C2H4");
+    logIndices[11] = reac.Mech()->FindSpecies("AR");
+    logIndices[12] = reac.Mech()->FindSpecies("N2");
+    logIndices[13] = reac.Mech()->FindSpecies("A4");
+
+
+    // Output in PSDF_input.dat format
+    std::cout << x << '\t' << std::scientific << std::setprecision(6)
+              << reac.Mixture()->Temperature() << '\t';
+    for(unsigned int j = 0; j != 14; ++j) {
+        std::cout <<  reac.Mixture()->GasPhase().MolarConc(logIndices[j]) << '\t';
+    }
+    std::cout << reac.Mixture()->Pressure() << '\t'
+              << reac.Mixture()->Density() << '\n';*/
 }
 
 /*!
