@@ -277,6 +277,9 @@ public:
         //! Traditional
         WaldmannThermophoresis,
 
+        //! Thermphoresis turned off
+        NoThermophoresis,
+
         // wang
 
     };

@@ -269,6 +269,10 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                 // Advection according to soot flamelet equation in flamelet space
                 mech.setThermophoresisType(Sweep::ParticleModel::WaldmannThermophoresis);
             }
+	    else if(str == "none") {
+                // No thermophoresis
+                mech.setThermophoresisType(Sweep::ParticleModel::NoThermophoresis);
+            }
             else {
                 throw std::runtime_error("Unrecognised thermophoresis model id (Sweep, MechParser::readV1).");
             }

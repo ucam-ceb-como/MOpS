@@ -601,6 +601,7 @@ void ParticleModel::init(void)
     m_DragE = 0.0;
 
     // Not sure what to put as default for m_DragType etc
+    m_ThermophoresisType = NoThermophoresis;
 }
 
 // Clears the current ParticleModel from memory.
@@ -863,16 +864,20 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
  */
 real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) const {
 
-    // The following factor involving the temperature gradient seems common
-    // to several models
-    const real tempFactor = sys.getThermalConductivity(sys.Pressure())
-                            * sys.GradientTemperature() / sys.Pressure();
+    // Declare outside the switch statement to keep the compiler happy
+    real tempFactor = 0.0;
 
     switch(m_ThermophoresisType) {
         case WaldmannThermophoresis:
+            tempFactor = sys.getThermalConductivity(sys.Pressure())
+                         * sys.GradientTemperature() / sys.Pressure();
+
             // Equation 2 of the Li & Wang paper with phi = 0.9
             // 1 / (5 * (1 + pi * phi / 8)) == 0.14777
             return tempFactor * -0.14777;
+
+	case NoThermophoresis:
+            return 0.0;
         default:
             throw std::runtime_error("Unrecognised advection type in Sweep::ParticleModel::AdvectionVelocity()");
     }
