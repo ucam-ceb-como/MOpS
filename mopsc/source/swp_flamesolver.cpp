@@ -153,7 +153,22 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         logIndices[3] = mech.FindSpecies("O2");
         logIndices[4] = mech.FindSpecies("OH");
         logIndices[5] = mech.FindSpecies("H2O");
-        logIndices[6] = mech.FindSpecies("A4");*/
+        logIndices[6] = mech.FindSpecies("A4");
+        unsigned int logIndices[14];
+        logIndices[0]  = mech.FindSpecies("H2");
+        logIndices[1]  = mech.FindSpecies("H");
+        logIndices[2]  = mech.FindSpecies("O");
+        logIndices[3]  = mech.FindSpecies("O2");
+        logIndices[4]  = mech.FindSpecies("OH");
+        logIndices[5]  = mech.FindSpecies("H2O");
+        logIndices[6]  = mech.FindSpecies("CH4");
+        logIndices[7]  = mech.FindSpecies("CO");
+        logIndices[8]  = mech.FindSpecies("CO2");
+        logIndices[9]  = mech.FindSpecies("C2H2");
+        logIndices[10] = mech.FindSpecies("C2H4");
+        logIndices[11] = mech.FindSpecies("AR");
+        logIndices[12] = mech.FindSpecies("N2");
+        logIndices[13] = mech.FindSpecies("A4");*/
 
         // Now we can read the profile.
         while(!getline(fin, line).eof()) {
@@ -167,6 +182,9 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 
             // Split the line by columns.
             split(line, subs, delim);
+
+            // Check that the mole fractions sum to 1
+            real checkSum = 0.0;
 
             // Loop over all the elements in the line and save them
             // to the correct gas-phase variable.
@@ -189,9 +207,18 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
                     // This is a gas-phase species column.
                     map<unsigned int,int>::iterator isp = spcols.find(i);
                     if (isp != spcols.end()) {
-                        gpoint.Gas.RawData()[isp->second] = cdble(subs[i]);
+                        const real frac = cdble(subs[i]);
+                        gpoint.Gas.RawData()[isp->second] = frac;
+                        checkSum += frac;
                     }
                 }
+            }
+
+            if((checkSum < 0.997) || checkSum > 1.003) {
+                std::ostringstream msg;
+                msg << "Mole fractions sum to " << checkSum
+                    << ", but should sum to 1.000 (FlameSolver::LoadGasProfile)";
+                throw std::runtime_error(msg.str());
             }
 
             // Set up the gas-phase by setting temperature, pressure and
@@ -208,11 +235,13 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             m_gasprof.push_back(gpoint);
 
             // Output in PSDF_input.dat format
-            /*std::cout << t << '\t' << std::scientific <<std::setprecision(6) << T << '\t';
-            for(unsigned int j = 0; j != 7; ++j) {
-                std::cout << gpoint.Gas.MolarConc(logIndices[j]) * 1e-6 << '\t';
-            }
-            std::cout << alpha << '\t' << P << '\n';*/
+            //std::cout << t << '\t' << std::scientific << std::setprecision(6) << T << '\t';
+            //for(unsigned int j = 0; j != 14; ++j) {
+            //for(unsigned int j = 0; j != 5; ++j) {
+            //    std::cout << gpoint.Gas.MolarConc(logIndices[j]) * 1e-6 << '\t';
+            //}
+            //std::cout << alpha << '\t' << gpoint.Gas.Pressure() << '\t'
+            //          << gpoint.Gas.Density() * 1e-6 << '\n';
         }
 
         // Set up ABF model to use alpha profile.
