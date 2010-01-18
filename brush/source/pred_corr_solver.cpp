@@ -446,20 +446,21 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
                 // Time since position was last calculated
                 const real dt = t_stop - (*itPart)->getPositionTime();
 
-                const real velocity = 
-                    reac.getMechanism().ParticleMech().AdvectionVelocity(
-                                                        mix,
-                                                        **itPart,
-                                                        neighbouringCells,
-                                                        geom); 
-                // Distance covered due to advection
-                if(mSplitAdvection)
-                    newPosition += dt * velocity;
+                if(mSplitAdvection) {
+                    // Bulk advection
+                    real velocity = 
+                        reac.getMechanism().ParticleMech().AdvectionVelocity(
+                                                            mix,
+                                                            **itPart,
+                                                            neighbouringCells,
+                                                            geom);
 
-                const real diffusionCoeff = reac.getMechanism().ParticleMech().DiffusionCoefficient(mix, **itPart);
+                    // Combined displacement
+		    newPosition += dt * velocity;
+                }
 
                 if(mSplitDiffusion) {
-                    //Sweep::randNorm(0.0, std::sqrt(diffusionCoeff * dt));
+                    const real diffusionCoeff = reac.getMechanism().ParticleMech().DiffusionCoefficient(mix, **itPart);
                     newPosition += Sweep::randNorm(0.0, std::sqrt(diffusionCoeff * dt));
                 }
             }
