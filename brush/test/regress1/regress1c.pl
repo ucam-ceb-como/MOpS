@@ -92,8 +92,8 @@ if(abs($m0 - 4.431e10) > 3e8) {
   ++$failures;
 }
 
-if(abs($m1 - 4.629e-11) > 3e-13) {
-  print "Simulated mean M1 was $m1, when 4.629e-11 g cm^-3 expected\n";
+if(abs($m1 - 4.645e-11) > 3e-13) {
+  print "Simulated mean M1 was $m1, when 4.645e-11 g cm^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
