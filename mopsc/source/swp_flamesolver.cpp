@@ -106,10 +106,21 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         // Get important column indices (time, temperature and pressure).
         int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1, Rcol=-1;
         tcol = findinlist(string("Time"), subs);
+
         Tcol = findinlist(string("T"), subs);
+        if(Tcol < 0)
+            Tcol = findinlist(string("T[K]"), subs);
+
         Pcol = findinlist(string("P"), subs);
         Acol = findinlist(string("Alpha"), subs);
         Rcol = findinlist(string("wdotA4"), subs);
+
+        // Columns to ignore, but which are useful to have in files for brush compatibility
+        int Xcol = findinlist(string("X[cm]"), subs);
+        int Dcol = findinlist(string("RHO[g/cm3]"), subs);
+        int Vcol = findinlist(string("V[cm/s]"), subs);
+        int Gcol = findinlist(string("GradT"), subs);
+
 
         // Check that the file contains required columns.
         if (tcol < 0) {
@@ -138,7 +149,8 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         // their columns.
         map<unsigned int,int> spcols;
         for (int i=0; (unsigned)i!=subs.size(); ++i) {
-            if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol) && (i!=Rcol)) {
+            if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol) && (i!=Rcol) &&
+                (i!=Xcol) && (i!=Dcol) && (i!=Vcol) && (i!=Gcol)) {
                 Sprog::Species *sp = mech.AddSpecies();
                 sp->SetName(subs[i]);
                 spcols[i] = mech.FindSpecies(subs[i]);
