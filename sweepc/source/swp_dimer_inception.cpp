@@ -135,7 +135,7 @@ int DimerInception::Perform(const real t, Cell &sys,
     real posn = vertices.front();
 
     const real width = vertices.back() - posn;
-    posn += width /2; //* \todo rng();
+    posn += width * rng();
 
     sp->setPositionAndTime(posn, t);
 
@@ -311,7 +311,6 @@ void DimerInception::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-        unsigned int n = 0;
         double val = 0.0;
 
         switch (version) {
