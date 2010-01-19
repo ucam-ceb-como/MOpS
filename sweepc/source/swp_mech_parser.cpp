@@ -794,7 +794,40 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
     }
 }
 
-// Reads a surface reaction from a sweep mechanism XML file.
+/*!
+ * @param[in]   xml    XML node of type reaction
+ * @param[out]  rxn    Reaction on which to set details from XML
+ *
+ * Rate expressions are of the form
+ * \f[
+ *    A \left[Y\right] T^n e^\frac{E}{RT} \times particle property,
+ * \f]
+ * where \f$\left[Y\right]\f$ gives the number of moles of a gas
+ * phase species \f$Y\f$ per cubic centimetre and the \f$T^n\f$ term is
+ * treated as dimensionless.  This means that for a dimensionless particle
+ * property, such as the number of active sites the dimensions of A must
+ * be \f$\mathrm{cm}^3 \mathrm{mol}^{-1} \mathrm{s}^{-1}\f$.  If the
+ * particle property has dimensions, for example collision diameter
+ * raised to the power \f$k\f$, then \f$A\f$ has different units:
+ * \f$\mathrm{cm}^{3-n} \mathrm{mol}^{-1} \mathrm{s}^{-1}\f$.  If the
+ * particle property is surface or active surface then any power
+ * specified for the property in the input is ignored.
+ * Active surface is also treated like a dimensionless quantity,
+ * because active surface is always multiplied by an active site
+ * density to produce a plain number.
+ * 
+ * For historical reasons user inputs of these reaction rate 
+ * constants must be in units of cm, kcal and K.  However, when
+ * the data is read into the program it is immediately converted
+ * to SI units as all storage and calculations are performed with
+ * SI quantities.
+ * @todo Add support for SI inputs.
+ *
+ * @exception   std::runtime_error  More than one reactant
+ * @exception   std::runtime_error  No rate constant
+ * @exception   std::runtime_error  Power of particle diameter not specified
+ * @exception   std::runtime_error  Particle property on which rate depends not specified
+ */
 void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &rxn)
 {
     string str;
@@ -813,6 +846,13 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
     }
 
     readReactants(xml, rxn);
+    if(rxn.ReactantCount() > 1) {
+        std::ostringstream msg;
+        msg << "Soot surface reactions may not have more than one reactant, but "
+            << rxn.Name() << " has " << rxn.ReactantCount()
+            << "MechParser::readSurfRxn";
+        throw std::runtime_error(msg.str());
+    }
 
     // Read products.
     readProducts(xml, rxn);
@@ -823,13 +863,11 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
     // Read tracker variable changes.
     readTrackChanges(xml, rxn);
 
-    // Read Arrhenius rate parameters.
+    //========== Read Arrhenius rate parameters ======================
     Sprog::Kinetics::ARRHENIUS arr;
     el = xml.GetFirstChild("A");
     if (el != NULL) {
         arr.A = cdble(el->Data());
-        // Must scale rate constant from cm3 to m3.
-        arr.A *= (1.0e-6 * (real)rxn.ReactantCount());
     } else {
         // Reaction must have constant.
         throw runtime_error("Surface reaction found with no rate constant "
@@ -849,35 +887,50 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
         // Default activation energy is zero.
         arr.E = 0.0;
     }
-    rxn.SetArrhenius(arr);
 
-    // Particle dependency.
+    //========= Particle dependency ==================================
     el = xml.GetFirstChild("particleterm");
     if (el!=NULL) {
         // Get property ID.
         str = el->GetAttributeValue("id");
 
         // Get power.
-        int id = (int)cdble(el->GetAttributeValue("power"));
+        int power = (int)cdble(el->GetAttributeValue("power"));
 
-        if ((str.compare("s")==0) || (str.compare("as")==0)) {
+        if (str.compare("as")==0) {
             // This reaction depends on surface area.  Ignore power,
             // they must have meant 1.
             rxn.SetPropertyID(ParticleCache::iS);
-        } else if (str.compare("d")==0) {
+
+            // Must scale rate constant from cm3 to m3, surface area
+            // is multiplied by the site density so that it is a dimensionless
+            // quantity hence A has units cm^3 s^-1.
+            arr.A *= (1.0e-6);
+        }
+        else if (str.compare("s")==0) {
+            // This reaction depends on surface area.  Ignore power,
+            // they must have meant 1.
+            rxn.SetPropertyID(ParticleCache::iS);
+            arr.A *= (1.0e-2);
+        }
+        else if (str.compare("d")==0) {
             // This reaction depends on some power of the diameter.
-            switch (id) {
+            switch (power) {
                 case 1:
                     rxn.SetPropertyID(ParticleCache::iDcol);
+                    arr.A *= (1.0e-4);
                     break;
                 case 2:
                     rxn.SetPropertyID(ParticleCache::iD2);
+                    arr.A *= (1.0e-2);
                     break;
                 case -1:
                     rxn.SetPropertyID(ParticleCache::iD_1);
+                    arr.A *= (1.0e2);
                     break;
                 case -2:
                     rxn.SetPropertyID(ParticleCache::iD_2);
+                    arr.A *= (1.0e4);
                     break;
                 default:
                     // Oh dear, can't have a zero power.
@@ -894,11 +947,15 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
                     rxn.SetPropertyID((unsigned int)site, SubModels::ARSSC_Model_ID);
                 }
             }
+            arr.A *= (1.0e-6);
         }
     } else {
         throw runtime_error("Surface process defined without ""particleterm"" "
                             "element (Sweep, MechParser::readSurfRxn).");
     }
+
+    rxn.SetArrhenius(arr);
+
 }
 
 
