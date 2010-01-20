@@ -130,6 +130,8 @@ namespace Camflow{
 			void header();
 			void reportToFile(doublereal t, doublereal* soln);
 
+			//! Calculate the mixture fraction variable using Bilger's formula.
+	        doublereal getBilgerMixFrac(const int& cell);
 
 		private:
 

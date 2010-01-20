@@ -505,6 +505,13 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y){
 
 }
 
+/*!
+ * Calculate the velocity.
+ *
+ *\param[in]    u           Velocity field (1D).
+ *
+ *\return       Value of var at a given pos.
+ */
 void StagFlow::calcVelocity(std::vector<doublereal>& u){
 
     std::vector<doublereal> r;
@@ -694,6 +701,7 @@ void StagFlow::header(){
     headerData.clear();
     headerData.push_back("int_time");
     headerData.push_back("x");
+    headerData.push_back("mixFrac");
     headerData.push_back("rho");
     headerData.push_back("u");
     headerData.push_back("G");
@@ -719,6 +727,7 @@ void StagFlow::reportToFile(doublereal t, doublereal* soln){
         data.clear();
         data.push_back(t);
         data.push_back(axpos[i]);
+        data.push_back(getBilgerMixFrac(i));
         data.push_back(m_rho[i]);
         data.push_back(m_u[i]);
         data.push_back(m_G[i]);
@@ -750,4 +759,108 @@ void StagFlow::reportToFile(doublereal t, doublereal* soln){
     }
 
     reporter->closeFiles();
+
+}
+
+/*!
+ * Calculates the value of the mixture fraction variable for a given cell [1]. The mixture
+ * fraction is given as follows [2]:
+ *
+ * \f[ \xi = \displaystyle\frac{ \displaystyle\frac{2(Z_C-Z_{C,ox})}{W_C} + \frac{(Z_H-Z_{H,ox})}{2 W_H} - \frac{2(Z_O-Z_{O,ox})}{W_O} }
+ * { \displaystyle\frac{2(Z_{C,fu}-Z_{C,ox})}{W_C} + \frac{(Z_{H,fu}-Z_{H,ox})}{2 W_H} - \frac{2(Z_{O,fu}-Z_{O,ox})}{W_O} } \f]
+ *
+ * \f[ Z_j = \sum^{N}_{i=1} \frac{a_{ij} W_j}{MW_i} Y_i \f]
+ *
+ * [1] Bilger, R. (1988) The Structure of Turbulent Non-Premixed Flames.
+ * Equation 24 page 483.
+ *
+ * [2] Versteeg and Malalasekera, An Introduction to
+ * Computational Fluid Dynamics: The Finite Volume Method, page 395.
+ *
+ *\param[in]    cell           Grid cell index.
+ *
+ *\return       Mixture fraction \f$ (\xi) \f$ in the grid cell.
+ */
+doublereal StagFlow::getBilgerMixFrac(const int& cell) {
+
+	doublereal Z_C = 0.0, Z_Co = 0.0, Z_Cf = 0.0;
+	doublereal Z_H = 0.0, Z_Ho = 0.0, Z_Hf = 0.0;
+	doublereal Z_O = 0.0, Z_Oo = 0.0, Z_Of = 0.0;
+	doublereal W_C = 0.0, W_H = 0.0, W_O = 0.0;
+	doublereal carbonCell = 0.0, carbonBoundary = 0.0;
+	doublereal hydrogenCell = 0.0, hydrogenBoundary = 0.0;
+	doublereal oxygenCell = 0.0, oxygenBoundary = 0.0;
+
+	// Get the vector of species.
+	Sprog::SpeciesPtrVector species = camMech->Species();
+
+	CamBoundary fuelInlet, oxidiserInlet;
+    std::vector<doublereal> fuelInletMassFracs, oxidiserInletMassFracs;
+
+    // Get the fuel and oxidiser boundary mass fractions.
+	admin->getLeftBoundary(fuelInlet);
+	admin->getRightBoundary(oxidiserInlet);
+    getInletMassFrac(fuelInlet,fuelInletMassFracs);
+    getInletMassFrac(oxidiserInlet,oxidiserInletMassFracs);
+
+	// Get the element indices.
+    int index_C = camMech->FindElement("C");
+    int index_H = camMech->FindElement("H");
+    int index_O = camMech->FindElement("O");
+
+    // Check the element exists.
+    if (index_C != -1) {
+
+        // Get the weight of the element carbon.
+    	W_C = camMech->Elements(index_C)->MolWt();
+    	// Get the mass fraction of carbon.
+    	for(size_t i=0; i<species.size(); ++i){
+    		int cAtoms = species[i]->AtomCount(index_C);
+    		Z_C += ( s_mf(cell,i) * cAtoms * W_C) / ( species[i]->MolWt() );
+    		Z_Co += ( oxidiserInletMassFracs[i] * cAtoms * W_C) / ( species[i]->MolWt() );
+    		Z_Cf += ( fuelInletMassFracs[i] * cAtoms * W_C) / ( species[i]->MolWt() );
+    	}
+    	carbonCell = (2.0/W_C)*(Z_C-Z_Co);
+    	carbonBoundary = (2.0/W_C)*(Z_Cf-Z_Co);
+
+    }
+
+    // Check the element exists.
+    if (index_H != -1) {
+
+        // Get the weight of the element hydrogen.
+    	W_H = camMech->Elements(index_H)->MolWt();
+    	// Get the mass fraction of hydrogen.
+    	for(size_t i=0; i<species.size(); ++i){
+    		int hAtoms = species[i]->AtomCount(index_H);
+    		Z_H += ( s_mf(cell,i) * hAtoms * W_H) / ( species[i]->MolWt() );
+    		Z_Ho += ( oxidiserInletMassFracs[i] * hAtoms * W_H) / ( species[i]->MolWt() );
+    		Z_Hf += ( fuelInletMassFracs[i] * hAtoms * W_H) / ( species[i]->MolWt() );
+    	}
+    	hydrogenCell = (0.5/W_H)*(Z_H-Z_Ho);
+    	hydrogenBoundary = (0.5/W_H)*(Z_Hf-Z_Ho);
+
+    }
+
+    // Check the element exists.
+    if (index_O != -1) {
+
+        // Get the weight of the element oxygen.
+    	W_O = camMech->Elements(index_O)->MolWt();
+    	// Get the mass fraction of oxygen.
+    	for(size_t i=0; i<species.size(); ++i){
+    		int oAtoms = species[i]->AtomCount(index_O);
+    		Z_O += ( s_mf(cell,i) * oAtoms * W_O) / ( species[i]->MolWt() );
+    		Z_Oo += ( oxidiserInletMassFracs[i] * oAtoms * W_O) / ( species[i]->MolWt() );
+    		Z_Of += ( fuelInletMassFracs[i] * oAtoms * W_O) / ( species[i]->MolWt() );
+    	}
+    	oxygenCell = -(2.0/W_O)*(Z_O-Z_Oo);
+    	oxygenBoundary = -(2.0/W_O)*(Z_Of-Z_Oo);
+
+    }
+
+	// Equation (12.185) in Versteeg and Malalasekera.
+    return (carbonCell + hydrogenCell + oxygenCell)
+         / (carbonBoundary + hydrogenBoundary + oxygenBoundary);
+
 }
