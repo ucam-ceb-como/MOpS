@@ -92,7 +92,7 @@ Brush::Simulator::Simulator(const size_t n_paths,
 
 /*!
  *@param[in]    seed_offset     Offset from standard seed for random number generation.
- * 
+ *
  * Run the simulation paths
  */
 void Brush::Simulator::runSimulation(const size_t seed_offset) {
@@ -195,16 +195,20 @@ void Brush::Simulator::runOnePath(const int seed) {
     // Now loop over the user specified time steps
     for(Mops::timevector::const_iterator it = mOutputTimeSteps.begin(); it != mOutputTimeSteps.end(); ++it) {
         const Mops::TimeInterval &tInt = *it;
-        real dt = tInt.StepSize();
+        const real dt = tInt.StepSize();
 
         std::cout << "stepping from " << tInt.StartTime() << ' ' << reac.getTime() << '\n';
 
-        for(unsigned int i = 1; i <= tInt.StepCount(); ++i) {
+        for(unsigned int i = 0; i != tInt.StepCount(); ++i) {
             //std::cout << "solving from " << reac.getTime() << '\n';
-            //solve
-            solver.solve(reac, tInt.StartTime() + i * dt, tInt.SplittingStepCount(), mCorrectorIterations);
 
-            //std::cout << "solved up to " << tInt.StartTime() + i * dt << ' ' << reac.getTime() << '\n';
+            const real dt2 = dt / tInt.SubSplittingStepCount();
+            for(unsigned int j = 0; j != tInt.SubSplittingStepCount(); ++j) {
+                solver.solve(reac, tInt.StartTime() + i * dt + (j + 1) * dt2,
+                             tInt.SplittingStepCount(), mCorrectorIterations);
+            }
+
+            //std::cout << "solved up to " << tInt.StartTime() + i * dt  + (j + 1) * dt2 << ' ' << reac.getTime() << '\n';
 
             // write moments to file
             saveParticleStats(reac, momentsFile);
@@ -242,7 +246,7 @@ void Brush::Simulator::saveParticleStats(const Reactor1d &reac, std::ostream &ou
     for(size_t i = 0; i < reac.getNumCells(); ++i) {
         // Collect the statistics
         stats.Calculate(reac.getCell(i).Mixture()->Particles(), 1.0 / reac.getCell(i).Mixture()->SampleVolume());
-        
+
         // Output the time and place to which the statistics apply
         out << reac.getTime() << ',' << reac.getCellCentre(i);
 
