@@ -44,7 +44,7 @@
         <reactant id="OH" stoich="1"/>
         <product id="CO" stoich="1"/>
         <product id="H" stoich="1"/>
-        <A>2.1693357e30</A>
+        <A>2.1693357e26</A>
         <n>0.5</n>
         <E>0.0</E>
         <particleterm id="d" power="2.0"/>
