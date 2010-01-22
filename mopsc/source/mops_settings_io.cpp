@@ -1,7 +1,7 @@
 /*
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -954,6 +954,12 @@ void Settings_IO::readTimeIntervals(const CamXML::Element &node,
             ti->SetSplittingStepCount((unsigned int)Strings::cdble(attr->GetValue()));
         } else {
             ti->SetSplittingStepCount(splits);
+        }
+
+        // Check for splits attribute.
+        attr = (*i)->GetAttribute("subsplits");
+        if (attr != NULL) {
+            ti->SetSubSplittingStepCount((unsigned int)Strings::cdble(attr->GetValue()));
         }
 
         // Add the completed time interval to the vector.

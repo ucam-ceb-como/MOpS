@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -49,6 +49,10 @@
 
 namespace Mops
 {
+/*!
+ * Specification of the time intervals over which calculations are to be
+ * performed.
+ */
 class TimeInterval
 {
 public:
@@ -65,7 +69,7 @@ public:
 
     // Returns the start time.
     real StartTime() const;
-    
+
     // Sets the start time.
     void SetStartTime(real t);
 
@@ -88,11 +92,15 @@ public:
 
     // SPLITTING STEP COUNT.
 
-    // Returns the number of splitting steps per output step.
+    //! Returns the number of splitting steps per output step.
     unsigned int SplittingStepCount() const;
-    // Sets the number of splitting steps per output step.
+    //! Sets the number of splitting steps per output step.
     void SetSplittingStepCount(unsigned int n);
 
+    //! Returns the number of sub steps per splitting step.
+    unsigned int SubSplittingStepCount() const;
+    //! Sets the number of sub steps steps per splitting step.
+    void SetSubSplittingStepCount(unsigned int n);
 
     // STEP SIZE CALCULATION.
 
@@ -115,11 +123,14 @@ private:
     // Start and end times (s).
     real m_start, m_end;
 
-    // Number of output steps to take before this time.
+    //! Number of output steps to take before this time.
     unsigned int m_steps;
 
-    // Number of splitting steps to perform per output step.
+    //! Number of splitting steps to perform per output step.
     unsigned int m_splits;
+
+    //! Number of pieces into which to break each splitting step.
+    unsigned int m_subsplits;
 };
 
 // A typedef for a vector of TimeIntervals.  This is defined as

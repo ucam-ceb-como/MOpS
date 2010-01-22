@@ -1,7 +1,7 @@
 /*
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -56,6 +56,7 @@ TimeInterval::TimeInterval(void)
     m_end    = 0.0;
     m_steps  = 1;
     m_splits = 1;
+    m_subsplits = 1;
 }
 
 // Copy constructor.
@@ -67,6 +68,7 @@ TimeInterval::TimeInterval(const Mops::TimeInterval &ti)
         m_end    = ti.m_end;
         m_steps  = ti.m_steps;
         m_splits = ti.m_splits;
+        m_subsplits = ti.m_subsplits;
     }
 }
 
@@ -133,6 +135,23 @@ void TimeInterval::SetSplittingStepCount(unsigned int n)
     m_splits = n;
 }
 
+/*!
+ *@return   Number of sub steps to take within one splitting step
+ */
+unsigned int TimeInterval::SubSplittingStepCount() const
+{
+    return m_subsplits;
+}
+
+/*!
+ * @param[in]   n   Number of sub steps to take within one splitting step
+ */
+void TimeInterval::SetSubSplittingStepCount(unsigned int n)
+{
+    m_subsplits = n;
+}
+
+
 // Calculates the output step size.
 real TimeInterval::StepSize() const
 {
@@ -191,11 +210,11 @@ void TimeInterval::Deserialize(std::istream &in)
 
         switch (version) {
             case 0:
-                
+
                 // Read the start time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_start = (real)val;
-                
+
                 // Read the end time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_end = (real)val;
