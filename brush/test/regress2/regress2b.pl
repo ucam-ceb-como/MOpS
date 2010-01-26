@@ -36,6 +36,8 @@
 use strict;
 use warnings;
 
+print "Test 2b: Advection jump process (deprecated)"
+
 # Arguments for simulation
 my @simulationCommand = ("../bin/brush_d.x",
                          "-g", "regress2/geometry.xml",

@@ -179,7 +179,7 @@ void Brush::PredCorrSolver::solveChemistry(Reactor1d &reac, const real t_stop) c
  *\param[in]            t_stop      Time to which to advance solution
  */
 void Brush::PredCorrSolver::solveParticles(Reactor1d &reac, const real t_stop) const {
-    
+
     const size_t numCells = reac.getNumCells();
     const Sweep::Mechanism &mech = reac.getMechanism().ParticleMech();
 
@@ -405,11 +405,13 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
     for(unsigned int i = 0; i != numCells; ++i) {
         Mops::Mixture &mix = *(reac.getCell(i).Mixture());
         Sweep::Ensemble &particles = mix.Particles();
-        
+
         // Flamelet advection needs some information on adjoining cells to calculate gradients
         const Geometry::LocalGeometry1d geom(reac.getGeometry(), i);
-        std::vector<const Sweep::Cell*> neighbouringCells(2, NULL);
-        
+        //std::vector<const Sweep::Cell*> neighbouringCells(2, NULL);
+        std::vector<const Sweep::Cell*> neighbouringCells(2);
+        neighbouringCells[0] = neighbouringCells[1] = NULL;
+
         // See if there is a left neighbour
         int neighbourIndex = geom.calcDestination(Geometry::left);
         if(neighbourIndex >= 0)
@@ -448,7 +450,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
 
                 if(mSplitAdvection) {
                     // Bulk advection
-                    real velocity = 
+                    real velocity =
                         reac.getMechanism().ParticleMech().AdvectionVelocity(
                                                             mix,
                                                             **itPart,
@@ -456,7 +458,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
                                                             geom);
 
                     // Combined displacement
-		    newPosition += dt * velocity;
+                    newPosition += dt * velocity;
                 }
 
                 if(mSplitDiffusion) {
@@ -486,7 +488,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
                     // during transport.  Recall that statistical weight is the
                     // concentration of physical particles represented by a computational
                     // particle and that the number of physical particles in a cell
-                    // will be the conentration multiplied by the cell volume.
+                    // will be the concentration multiplied by the cell volume.
                     out.weight = reac.getGeometry().cellVolume(i)
                                   / reac.getGeometry().cellVolume(out.destination)
                                   / mix.SampleVolume();
@@ -517,7 +519,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
 
         // Now put the particles that are staying in cell i back into that cell
         particles.SetParticles(partList.begin(), partList.end());
-        
+
     }// loop over all cells and build up lists of particles that are moving cells
 
     // Add particles that are moving to new cells to their destinations
@@ -545,7 +547,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
 
 /*!
  * Set up the cache and fill it with rates
- * 
+ *
  *@param[in]    reac    Reactor with which this cache will be used
  */
 Brush::PredCorrSolver::JumpRateCache::JumpRateCache(const Reactor1d& reac)
@@ -593,7 +595,7 @@ void Brush::PredCorrSolver::JumpRateCache::update() {
                     mReac.getTime(),
                     *(mReac.getCell(cellIndex).Mixture()),
                     cellGeom, mProcessRates[cellIndex]);
-        
+
         // Remove the index now the update has been carried out
         mInvalidCells.pop();
     }

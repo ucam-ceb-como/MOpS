@@ -36,31 +36,42 @@
 use strict;
 use warnings;
 
+print "Test 3b: Advection, diffusion and thermophoresis";
+
 # Arguments for simulation
 my @simulationCommand = ("../bin/brush_d.x",
                          "-g", "regress3/geometry.xml",
                          "-c", "regress3/chem.inp",
-                         "-d", "regress3/chemsoln3a.dat",
-                         "-s", "regress3/sweep3a.xml",
+                         "-d", "regress3/chemsoln3b.dat",
+                         "-r", "regress3/tran.dat",
+                         "-s", "regress3/sweep3b.xml",
                          "-t", "regress3/therm.dat",
-                         "-b", "regress3/brush3a.xml",
-                         "-a", "regress3/partsoln3.xml");
+                         "-b", "regress3/brush3b.xml",
+                         "-a", "regress3/partsoln3.xml",
+                         "--premix-chem");
 
 # Run the simulation and wait for it to finish
 system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";
 
 # Collect all the moment data together
-system("../bin/merge-partstats.sh regress3a-adv-diffn") == 0 or die "ERR: failed to merge moment files: $!";
+system("../bin/merge-partstats.sh regress3b-adv-diffn-thermoph") == 0 or die "ERR: failed to merge moment files: $!";
 
 # Parse the moments file
 my $momentFile;
-open($momentFile, "<regress3a-adv-diffnMerged_partstats.csv") or die "ERR: failed to open merged moment file: $!";
+open($momentFile, "<regress3b-adv-diffn-thermophMerged_partstats.csv") or die "ERR: failed to open merged moment file: $!";
 
 my $m0a = 0;
 my $counta = 0;
 
 my $m0b = 0;
 my $countb = 0;
+
+#This test should exactly match the results of 3a, because it has
+#adds a constant thermophoresis velocity, which is exactly offset by an increase
+#in the bulk velocity.  As a result the random number sequences should be the
+#same, although this might be affected by some floating point quirks resulting
+#from the switch from Camflow chemistry input format (chemsoln3a.dat) to
+#PREMIX format (chemsoln3b.dat).
 
 while(<$momentFile>) {
   my @fields = split /,/;
@@ -100,7 +111,7 @@ if(abs($m0b - 2.6e-4) > 3e-5) {
   exit 2;
 }
 
-system("rm regress3*.csv");
+system("rm regress3b*.csv");
 
 #print "All tests passed\n";
 exit 0;

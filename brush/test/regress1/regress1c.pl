@@ -39,6 +39,8 @@ use warnings;
 # Clean up any outputs from previous simulations
 system("rm *stats.csv");
 
+print "Test 1b: Nucleation, coagulation and pyrene condensation without transport";
+
 # Arguments for simulation
 my @simulationCommand = ("../bin/brush_d.x",
                          "-g", "regress1/geom.xml",

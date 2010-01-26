@@ -83,7 +83,8 @@ int main(int argc, char* argv[])
     std::string geomfile("geometry.xml");
     std::string chemsolnfile("chemsoln.dat");
     std::string partsolnfile("partsoln.xml");
-    
+    std::string tranfile("");
+
     // Offset for random number sequence so that independent realisations
     // can be computed in separated program instances.
     size_t randomSeedOffset = 0;
@@ -110,6 +111,10 @@ int main(int argc, char* argv[])
         else if (strcmp(argv[i], "-t") == 0) {
             // Thermodynamic properties file (CK format).
             thermfile = argv[++i];
+        }
+        else if (strcmp(argv[i], "-r") == 0) {
+            // Species transport properties file (CK format).
+            tranfile = argv[++i];
         }
         else if (strcmp(argv[i], "-s") == 0) {
             // Sweep mechanism file.
@@ -257,8 +262,15 @@ int main(int argc, char* argv[])
         if(diag > 0) {
             std::cout << "Reading chemical species...\n";
         }
-        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag); //, true);
-        if (diag>0) 
+        // See if there is a transport data file (not needed for advection only)
+        if(tranfile.length() > 0)
+            // Read species transport data along with rest of mechanism
+            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, tranfile, diag);
+        else
+            // Skip species transport data - properties such as thermal conductivity will not be available
+            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
+
+        if (diag>0)
             mech.WriteDiagnostics("ckmech.diag");
     }
     catch (std::exception &e) {
@@ -394,6 +406,7 @@ void printUsage() {
     std::cout << "-e offset for random number generator seed\n";
     std::cout << "-g GEOMETRY-FILE\n";
     std::cout << "-h output summary usage information\n";
+    std::cout << "-r TRANSPORT-DATA-FILE\n";
     std::cout << "-s SWEEP-SETTINGS-FILE\n";
     std::cout << "-t THERMODYNAMICAL-DATA-FILE\n";
     std::cout << "-v verbosity (Integer indicating level of debug info, higher integers mean more output)\n";

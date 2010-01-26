@@ -38,7 +38,19 @@
 
 if(($?!=0))
   then
-    echo "Simulation script failed"
+    echo "Simulation script 3a failed"
+    echo "**************************"
+    echo "****** TEST FAILURE ******"
+    echo "**************************"
+    exit $?
+fi
+
+# Run the test
+./regress3/regress3b.pl
+
+if(($?!=0))
+  then
+    echo "Simulation 3b script failed"
     echo "**************************"
     echo "****** TEST FAILURE ******"
     echo "**************************"
