@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -172,8 +172,8 @@ const Component *const ParticleModel::Components(unsigned int i) const
     //}
 }
 
-// Returns the index of the component with the 
-// given name in the ParticleModel if found, otherwise 
+// Returns the index of the component with the
+// given name in the ParticleModel if found, otherwise
 // return negative.
 int ParticleModel::ComponentIndex(const std::string &name) const
 {
@@ -224,7 +224,7 @@ void ParticleModel::SetComponents(const CompPtrVector &comps)
 // TRACKER VARIABLES.
 
 // Returns the number of tracker variables.
-unsigned int ParticleModel::TrackerCount(void) const 
+unsigned int ParticleModel::TrackerCount(void) const
 {
     return m_trackers.size();
 }
@@ -245,7 +245,7 @@ const Tracker *const ParticleModel::Trackers(unsigned int i) const
     }
 }
 
-// Returns the index of the tracker variable with the given name 
+// Returns the index of the tracker variable with the given name
 // on success, otherwise returns negative.
 int ParticleModel::GetTrackerIndex(const std::string &name) const
 {
@@ -381,7 +381,7 @@ void ParticleModel::LoadPAHProfile()
 
 //Collision Efficiency
 double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
-{	
+{
 	double redmass=0;
 	int ncarbon1,ncarbon2;
 	const AggModels::PAHPrimary *pah1 = NULL;
@@ -426,7 +426,7 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 			redmasssmaller=m_reduced_mass.at(j);
 			ceffsmaller=m_collision_eff.at(j);
 		}
-		if (j==m_reduced_mass.size()-1) 
+		if (j==m_reduced_mass.size()-1)
 		{
 			redmasslarger=m_reduced_mass.at(j);
 			cefflarger=m_collision_eff.at(j);
@@ -461,7 +461,7 @@ void ParticleModel::Serialize(std::ostream &out) const
         out.write((char*)&n, sizeof(n));
 
         // Write components.
-        for (CompPtrVector::const_iterator i=m_components.begin(); 
+        for (CompPtrVector::const_iterator i=m_components.begin();
              i!=m_components.end(); ++i) {
             (*i)->Serialize(out);
         }
@@ -471,7 +471,7 @@ void ParticleModel::Serialize(std::ostream &out) const
         out.write((char*)&n, sizeof(n));
 
         // Write trackers.
-        for (TrackPtrVector::const_iterator i=m_trackers.begin(); 
+        for (TrackPtrVector::const_iterator i=m_trackers.begin();
              i!=m_trackers.end(); ++i) {
             (*i)->Serialize(out);
         }
@@ -554,7 +554,7 @@ void ParticleModel::Deserialize(std::istream &in)
                     in.read(reinterpret_cast<char*>(&id), sizeof(id));
                     m_submodels.insert((SubModels::SubModelType)id);
                 }
-                
+
                 // Read if the sub-particle tree is enabled.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_subpart_tree = (n==1);
@@ -611,14 +611,14 @@ void ParticleModel::releaseMem(void)
     m_species = NULL;
 
     // Delete components.
-    for (CompPtrVector::iterator i=m_components.begin(); 
+    for (CompPtrVector::iterator i=m_components.begin();
          i!=m_components.end(); ++i) {
         delete *i;
     }
     m_components.clear();
 
     // Delete trackers.
-    for (TrackPtrVector::iterator i=m_trackers.begin(); 
+    for (TrackPtrVector::iterator i=m_trackers.begin();
          i!=m_trackers.end();++i) {
         delete *i;
     }
@@ -784,15 +784,14 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
                                       const Geometry::LocalGeometry1d &geom) const {
     switch(m_AdvectionType) {
         case BulkAdvection:
-            // Particle moves with the gas flow
-            return sys.Velocity();
-
+            // Particle moves with the gas flow, thermophoresis can be set to 0
+            return sys.Velocity() + ThermophoreticVelocity(sys, sp);
         case FlameletAdvection:
         {
             // Mass of soot per unit volume of gas [kg m^-3] is needed repeatedly
             const real sootMassDensity = sys.Particles().GetSum(ParticleCache::iM)
                                          / sys.SampleVolume();
-            
+
             // Thermophoretic drift term
             real v = sys.GradientMixFrac() * ThermophoreticVelocity(sys, sp)
                      * sootMassDensity;
@@ -801,7 +800,7 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
             v += sys.LaplacianMixFrac() * sootMassDensity
                  * (sys.MixFracDiffCoeff() - EinsteinDiffusionCoefficient(sys, sp));
 
-            if((neighbours[0] != NULL) && (neighbours[1] != NULL)) 
+            if((neighbours[0] != NULL) && (neighbours[1] != NULL))
             // Estimate two gradients in mixture fraction space using the
             // formula grad f ~ (f(z_{i+1}) - f(z_{i-1})) / (z_{i+1} - z_{i-1})
             // This will not work if one or both of the neghbouring cells
@@ -876,7 +875,7 @@ real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) 
             // 1 / (5 * (1 + pi * phi / 8)) == 0.14777
             return tempFactor * -0.14777;
 
-	case NoThermophoresis:
+        case NoThermophoresis:
             return 0.0;
         default:
             throw std::runtime_error("Unrecognised advection type in Sweep::ParticleModel::AdvectionVelocity()");
@@ -1034,7 +1033,7 @@ real ParticleModel::Omega1_2_spec(const real t_star_1_4, const real sigma_prime)
  * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
  *
  *@param[in]    sys     Gaseous system in which particle is moving
- *@param[in]    sp      Particle 
+ *@param[in]    sp      Particle
  *
  *@return       Lennard Jones collision radius divided by particle collision radius
  */
@@ -1051,17 +1050,17 @@ real ParticleModel::collisionIntegralDiameter(const Cell &sys, const Particle &s
  * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
  *
  *@param[in]    sys     Gaseous system in which particle is moving
- *@param[in]    sp      Particle 
+ *@param[in]    sp      Particle
  *
  *@return       Temperature divided by Lennard Jones well depth and collision cross-section cubed
  */
 real ParticleModel::collisionIntegralTemperature(const Cell &sys, const Particle &sp) const {
-    // Value of well depth (K) taken from Table IV of above cited paper 
+    // Value of well depth (K) taken from Table IV of above cited paper
     // using combination rules to combine values for gaseous and solid phases.
     const real wellDepth = 57.24;
-    
+
     const real collisionCubed = std::pow(collisionIntegralDiameter(sys, sp), 3);
-    
+
     // 1.107e-29 is volume occupied by 1 Carbon atom assuming bulk density 1800 kg m^-3 (value for soot)
     return 3.0 * Sprog::kB * sys.Temperature() * 1.107e-29 / (2.0 * Sprog::PI * wellDepth * collisionCubed);
 }
@@ -1071,23 +1070,23 @@ real ParticleModel::collisionIntegralTemperature(const Cell &sys, const Particle
  * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
  * of small particles. II. Application", Phys. Rev. E 68:061207 (2003).
  * This formula is most clearly presented in the follow on paper:
- * Z Li and H Wang, "Thermophoretic force and velocity of nanoparticles 
- * in the free molecular regime", Phys, Rev. E 70:021205 (2004), see 
+ * Z Li and H Wang, "Thermophoretic force and velocity of nanoparticles
+ * in the free molecular regime", Phys, Rev. E 70:021205 (2004), see
  * equation 38.
  *
  *@param[in]    sys     Gaseous system in which particle is moving
- *@param[in]    sp      Particle 
+ *@param[in]    sp      Particle
  *
  *@return       Accomodation function, \f$\phi\f$
  */
 real ParticleModel::accomodationFunction(const Cell &sys, const Particle &sp) const {
     // Particle radius in nm divided by 2.5
     real switchTerm = sp.CollDiameter() / 5e-9;
-    
+
     // High power to switch aggressively between regimes
     switchTerm = std::pow(switchTerm, 15);
     switchTerm += 1.0;
-    
+
     switchTerm = 1.0 - 1.0 / switchTerm;
 
     // Knudsen number is used to interpolate between the specular and diffuse integrals

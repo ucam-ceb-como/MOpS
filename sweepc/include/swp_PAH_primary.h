@@ -10,7 +10,7 @@
   Author(s):      Markus Sander (ms785)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2009 Markus Sander.
 
   File purpose:
@@ -64,7 +64,7 @@
 
 namespace Sweep
 {
-namespace AggModels 
+namespace AggModels
 {
 //! PAH primary particle class
 class PAHPrimary : public Primary
@@ -101,7 +101,7 @@ public:
 
     //! prints the tree to a file that can be converted to a graph using graphviz
     void PrintTree(std::string filename);
-    
+
     //! updates the particle cache using the particle details
     void UpdateCache(void);
 
@@ -113,7 +113,7 @@ public:
 
     //! returns the coalescence level
     double CoalescenceLevel();
-    
+
     //! returns the left child
     const PAHPrimary *LeftChild() const;
     //! returns the right child
@@ -132,7 +132,7 @@ public:
     void Serialize(std::ostream &out) const;
 
     AggModels::AggModelType AggID(void) const;
-    
+
     //! returns L divided by W
     double LdivW() const;
     //! sum of the diameter of the primaries under this treenode needed for stats
@@ -160,9 +160,9 @@ protected:
     void ResetChildrenProperties();
     //! updates the particle
     void UpdateCache(PAHPrimary *root);
-    //! help function 
+    //! help function
     PAHPrimary *SelectRandomSubparticleLoop(int target);
-    //! sets the pointers to the primary particles correct after a copy event 
+    //! sets the pointers to the primary particles correct after a copy event
     void UpdateAllPointers( const PAHPrimary *source);
     //! updates the properties of a primary only, not the entire tree
     void UpdatePrimary(void);
@@ -177,9 +177,9 @@ protected:
     //! copies the subtree of a node
     void CopyTree( const PAHPrimary *source);
     //! returns a uniformly chosen primary particle
-    PAHPrimary *SelectRandomSubparticle(); 
+    PAHPrimary *SelectRandomSubparticle();
     void ReleaseMem();
-    
+
 
   //  double pow(double a, double b);
 
@@ -195,12 +195,16 @@ private:
 
     struct PAH {
         unsigned int m_numcarbon;
+
+        //! Index of the PAH story within its database
         unsigned int ID;
         double time_created;
         double lastupdated;
         double freezetime;
         //stores the last position in the database when the PAH has been updated
         unsigned int lastposPAHupdate;
+
+        //! Pointer to the collection of PAH stories that began at the same point as this one
         Trajectory const *m_trajectory;
     };
 
@@ -212,7 +216,7 @@ private:
     double m_PAHmass;
     double m_PAHCollDiameter;
     int m_numPAH;
-//! Number of primaries below this node 
+//! Number of primaries below this node
     int m_numprimary;
 
     //sum of the diameter of the primaries under this treenode needed for stats
@@ -236,7 +240,7 @@ private:
 
     double m_children_coalescence;
 
-    
+
 
     // radius of gyration and fractal dimension
     // the values are only update in CalcFractaldimension()
@@ -251,4 +255,4 @@ private:
 };
 } //namespace AggModels
 } //namespace Sweep
-#endif    
+#endif

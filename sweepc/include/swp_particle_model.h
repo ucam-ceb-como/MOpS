@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -105,8 +105,8 @@ public:
     // Returns the component with the given index.
     const Component *const Components(unsigned int i) const;
 
-    // Returns the index of the component with the 
-	// given name in the mechanism if found, otherwise 
+    // Returns the index of the component with the
+	// given name in the mechanism if found, otherwise
 	// return negative.
     int ComponentIndex(const std::string &name) const;
 
@@ -136,7 +136,7 @@ public:
     // Returns the ith tracker variable.
     const Tracker *const Trackers(unsigned int i) const;
 
-    // Returns the index of the tracker variable with the given name 
+    // Returns the index of the tracker variable with the given name
 	// on success, otherwise returns negative.
     int GetTrackerIndex(const std::string &name) const;
 
@@ -196,7 +196,7 @@ public:
 
 
     // PARTICLE FUNCTIONS.
-    
+
     // Creates a new particle and sets it up with all the models
     // required by the mechanism.  The particle create time is
     // given as an argument.
@@ -213,7 +213,7 @@ public:
 
     // Reads the object from a binary stream.
     void Deserialize(std::istream &in);
-	 
+
     double CollisionEff(Particle *p1, Particle *p2) const;
 
     //! Initialise the Knudsem drag coefficient  calculation
@@ -264,9 +264,6 @@ public:
     enum AdvectionType {
         //! Move with bulk gas velocity in physical space
         BulkAdvection,
-
-        //! Move with bulk gas velocity and thermophoresis in physical space
-        //BulkThermophoresisAdvection,
 
         //! Flamelet advection
         FlameletAdvection,
@@ -325,13 +322,13 @@ protected:
     real EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const;
 
     //==== Collision integrals ==========================
-    
+
     //! Modified reduced diameter for use in collision integral calculations(should perhaps be input)
     real collisionIntegralDiameter(const Cell &sys, const Particle &sp) const;
 
     //! Dimensionless temperature for use in collision  integral calculations(should perhaps be input)
     real collisionIntegralTemperature(const Cell &sys, const Particle &sp) const;
-    
+
     //! Blending function between diffuse and specular scattering for collision integrals
     real accomodationFunction(const Cell &sys, const Particle &sp) const;
 
