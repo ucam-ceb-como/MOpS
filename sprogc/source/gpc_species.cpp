@@ -164,8 +164,8 @@ void Species::SetName(const std::string &name)
         if (m_mech->FindSpecies(name) >= 0) {
             // Oh dear:  Species with this name already defined.  We'd
             // better throw an error.
-            throw invalid_argument("Cannot have two species with "
-                                   "the same name (Sprog, Species::SetName).");
+            throw invalid_argument("Cannot have two species named " + name +
+                                   "in the same mechanism (Sprog, Species::SetName).");
         }
     }
 
@@ -676,12 +676,12 @@ void Species::WriteDiagnostics(std::ostream &out) const
 void Species::setTransportData(vector<string> &data){
 
 
-	if(m_transport != NULL) {
+    if(m_transport != NULL) {
         delete m_transport;
         m_transport = NULL;
     }
 
-	m_transport = new Transport::TransportData(
+    m_transport = new Transport::TransportData(
 		(int)Strings::cdble(data[1]), // molecule index
 		Strings::cdble(data[2])*kB, // LJ well depth-
 		Strings::cdble(data[3])*Angstroem__, // LJ collision dia- convert to A
