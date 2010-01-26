@@ -1,8 +1,8 @@
 /*
-  Author(s):      Matthew Celnik (msc37), 
+  Author(s):      Matthew Celnik (msc37),
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -50,6 +50,7 @@ namespace Sprog
 {
 namespace IO
 {
+//! Read species properties and reaction data from CHEMKIN format files
 class MechanismParser
 {
 public:
@@ -58,24 +59,25 @@ public:
         const std::string &filename,    // File name of the CHEMKIN input file.
         Sprog::Mechanism &mech,         // Mechanism object to build using data in file.
         const std::string &thermofile,  // File name of thermo data file (optional).
-        int verbose=0                   // Set >0 to print parser messages to console.
+        const int verbose=0             // Set >0 to print parser messages to console.
         );
-	
-	// overloaded function to assist reading the transport file together with other relevat files
-	// added by Vinod
-	static void ReadChemkin(
-        const std::string &filename,    // File name of the CHEMKIN input file.
-        Sprog::Mechanism &mech,         // Mechanism object to build using data in file.
-        const std::string &thermofile,  // File name of thermo data file (optional).
-		const std::string &transFile);	// filename of transport data
 
-	static void ReadTransport(const std::string &, Sprog::Mechanism & ); // method to read transport data: added by vinod
+	//! Read in a mechanism and species properties including transport properties
+	static void ReadChemkin(
+        const std::string &filename,
+        Sprog::Mechanism &mech,
+        const std::string &thermofile,
+		const std::string &transFile,
+		const int verbose = 0);
+
+	//! method to read transport data
+	static void ReadTransport(const std::string &, Sprog::Mechanism & );
 
 private:
     // CHEMKIN FILE RELATED THINGS.
 
     // Enumeration of status flags for reading CHEMKIN files.
-    enum CK_PARSE_STATUS {FindKey, 
+    enum CK_PARSE_STATUS {FindKey,
                           BeginParseEl, ParseEl, ParseElWt, ParseElComment,
                           BeginParseSp, ParseSp, ParseSpComment,
                           BeginParseRxn, ParseRxn, ParseRxnComment, BeginParseRxnComment,
@@ -129,7 +131,7 @@ private:
         unsigned int &lineno      // The line number of the ELEM/ELEMENTS keyword.
         );
 
-    
+
     //// extract only reactions string from chemkin string
     //std::string extract_CK_reactions_str(std::string &ckstr);
     //// extract only thermo string from chemkin string
@@ -142,7 +144,7 @@ private:
         unsigned int lineno,         // Line number of ELEM/ELEMENTS keyword.
         CK_STATUS &status,           // Status and parsing information.
         int verbose=0               // Set >0 to print parser messages to console.
-        );          
+        );
 
     // Extract species names from CHEMKIN string.
     static void extractCK_Species(
@@ -159,7 +161,7 @@ private:
         unsigned int lineno,        // Line number of SPEC/SPECIES keyword.
         CK_STATUS &status,          // Status and parsing information.
         int verbose=0               // Set >0 to print parser messages to console.
-        );     
+        );
 
     // Extract thermo data string from CHEMKIN string.
     static void extractCK_Thermo(

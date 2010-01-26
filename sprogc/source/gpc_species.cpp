@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -58,19 +58,21 @@ using namespace Strings;
 
 // Default constructor.
 Species::Species(void)
-{
-    m_name     = "";
-    m_elcomp.clear();
-    m_molwt    = 0.0;
-    m_mech     = NULL;
-    m_thermoparams.clear();
-    m_T1       = 0.0;
-}
+    : m_name("")
+    , m_molwt(0.0)
+    , m_mech(NULL)
+    , m_T1(0.0)
+    , m_transport(NULL)
+{}
 
 // Copy constructor.
 Species::Species(const Sprog::Species &sp)
+    : m_name("")
+    , m_molwt(0.0)
+    , m_mech(NULL)
+    , m_T1(0.0)
+    , m_transport(NULL)
 {
-    m_mech = NULL;
     *this  = sp;
 }
 
@@ -83,7 +85,7 @@ Species::Species(istream &in)
 // Destructor.
 Species::~Species(void)
 {
-   
+    delete m_transport;
 }
 
 
@@ -108,6 +110,16 @@ Species &Species::operator=(const Sprog::Species &sp)
         for (i=sp.m_thermoparams.begin(); i!=sp.m_thermoparams.end(); i++) {
             m_thermoparams[i->first] = i->second;
         }
+
+        // Get rid of any pre-existing transport data
+        if(m_transport != NULL) {
+            delete m_transport;
+            m_transport = NULL;
+        }
+
+        // Copy the transport data, if it exists
+        if(sp.m_transport != NULL)
+            m_transport = new Transport::TransportData(*sp.m_transport);
     }
     return *this;
 }
@@ -300,7 +312,7 @@ void Species::AddElement(const std::string &name, unsigned int n)
 }
 
 // Returns true if the species contains the element (given by index).
-bool Species::ContainsElement(unsigned int i) const 
+bool Species::ContainsElement(unsigned int i) const
 {
     // Loop over composition to find element.
     ElCompVector::const_iterator el;
@@ -428,7 +440,7 @@ const Thermo::THERMO_PARAMS &Species::ThermoParams(const Sprog::real T) const
 
 // Adds a set of thermo parameters valid up to the given temperature to the
 // species object.
-void Species::AddThermoParams(const Sprog::real T, 
+void Species::AddThermoParams(const Sprog::real T,
                               const Sprog::Thermo::THERMO_PARAMS &params)
 {
     m_thermoparams[T] = params;
@@ -478,7 +490,7 @@ void Species::Serialize(std::ostream &out) const
             // Write the element index.
             int ix = (*i).Index();
             out.write((char*)&ix, sizeof(ix));
-            
+
             // Write the element count.
             n = (*i).Count();
             out.write((char*)&n, sizeof(n));
@@ -542,7 +554,7 @@ void Species::Deserialize(std::istream &in)
             case 0:
                 // Read the length of the species name.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                
+
                 // Read the species name.
                 name = new char[n];
                 in.read(name, n);
@@ -638,7 +650,7 @@ void Species::WriteDiagnostics(std::ostream &out) const
         data = cstr(val) + " ";
         out.write(data.c_str(), data.length());
         // Thermo params.
-        for (Thermo::ThermoMap::const_iterator i=m_thermoparams.begin(); 
+        for (Thermo::ThermoMap::const_iterator i=m_thermoparams.begin();
              i!=m_thermoparams.end(); ++i) {
             // Temperature.
             val = i->first;
@@ -658,16 +670,18 @@ void Species::WriteDiagnostics(std::ostream &out) const
     }
 }
 
-// Following transport related routines added by vinod 
+// Following transport related routines added by vinod
 
 
 void Species::setTransportData(vector<string> &data){
-		
 
-	if(td != NULL)
-		td = 0;
 
-	td = new Transport::TransportData(
+	if(m_transport != NULL) {
+        delete m_transport;
+        m_transport = NULL;
+    }
+
+	m_transport = new Transport::TransportData(
 		(int)Strings::cdble(data[1]), // molecule index
 		Strings::cdble(data[2])*kB, // LJ well depth-
 		Strings::cdble(data[3])*Angstroem__, // LJ collision dia- convert to A
@@ -678,7 +692,7 @@ void Species::setTransportData(vector<string> &data){
 }
 
 Sprog::Transport::TransportData& Species::getTransportData() const{
-	return *this->td;
+	return *m_transport;
 }
 
 double Species::getViscosity(double T) const{

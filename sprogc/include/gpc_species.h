@@ -216,8 +216,10 @@ protected:
     // end point temperature up to which the parameters are valid.
     Sprog::Thermo::ThermoMap m_thermoparams;
     real m_T1; // Start temperature for range.
-	
-	Sprog::Transport::TransportData *td;
+
+private:
+    //! Data for calculating transport properties
+    Sprog::Transport::TransportData *m_transport;
 	
 };
 
