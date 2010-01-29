@@ -36,7 +36,7 @@
 use strict;
 use warnings;
 
-print "Test 2b: Advection jump process (deprecated)"
+print "Test 2b: Advection jump process (deprecated)\n";
 
 # Arguments for simulation
 my @simulationCommand = ("../bin/brush_d.x",
