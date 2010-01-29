@@ -78,6 +78,7 @@ Species::Species(const Sprog::Species &sp)
 
 // Stream-reading constructor.
 Species::Species(istream &in)
+    : m_transport(NULL)
 {
     Deserialize(in);
 }
