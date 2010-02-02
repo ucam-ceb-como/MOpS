@@ -57,6 +57,7 @@
 #include "swp_aggmodel_type.h"
 #include "swp_surfvol_cache.h"
 #include "swp_PAH_cache.h"
+#include "swp_molecule_evolution.h"
 
 #include <iostream>
 #include <stack>
@@ -209,7 +210,7 @@ private:
         real freezetime;
 
         //! Last position in the database when the PAH has been updated
-        unsigned int lastposPAHupdate;
+        MoleculeEvolution::Database::state_lookup_hint lastposPAHupdate;
 
     };
 
