@@ -69,22 +69,27 @@ while(<$momentFile>) {
   }
 }
 
+# Original MS style code
 # Running the problem with 20 repetitions, but still only 1024 particles
 # gives M0 =(8.65+-0.22)e11 and (8.67+-0.25)e11 for two different random
 # number sequences.  The respective Fv values are (3.34+-0.06)e-8 and
 # (3.36+-0.05)e-8
 
+# riap code of 01 Feb 2010
+# Running the problem with 20 repetitions, but still only 1024 particles
+# gives M0 = (1.036+-0.029)e12 and Fv = (3.139+-0.0493)e-8
+
 print "$m0, $m1\n";
-if(abs($m0 -  8.66e11) > 2e10) {
-  print "Simulated mean M0 was $m0, when  8.66e11cm^-3 expected\n";
+if(abs($m0 -  1.036e12) > 3e10) {
+  print "Simulated mean M0 was $m0, when  1.036e12cm^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($m1 - 3.35e-8) > 3e-10) {
-  print "Simulated mean M1 was $m1, when 3.35e-8 g cm^-3 expected\n";
+if(abs($m1 - 3.139e-8) > 5e-10) {
+  print "Simulated mean M1 was $m1, when 3.139e-8 g cm^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";

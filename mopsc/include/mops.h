@@ -66,5 +66,5 @@
 
 #include "swp_gas_profile.h"
 #include "swp_flamesolver.h"
-#include "swp_PAHsolver.h"
+
 #endif

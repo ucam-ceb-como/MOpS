@@ -8,32 +8,25 @@
     <!-- Define particle components. -->
     
     <component id="soot" type="bulk">
-      <description>
-       soot
-      </description>
+      <description>soot</description>
       <density units="g/cm3">1.2</density>
       <molwt units="g/mol">0.0</molwt>
-<density units="g/cm3">
-1.333
-</density>
-<coalthresh>
-1
-</coalthresh>
-<growthfact>
-0.8
-</growthfact>
-<minPAH>
-2
-</minPAH>
-    
-</component> 
+      <density units="g/cm3">1.333</density>
+      <coalthresh>1</coalthresh>
+      <growthfact>0.8</growthfact>
+      <minPAH>2</minPAH>
+    </component> 
     
 
     <particle id="[silica]" model="PAH" subtree="false">
-      <description>
-      </description>
+      <description />
     </particle>
 
-<pahinception>
-    </pahinception>
+    <pahinception />
+
+    <pahfile path="PAH_data11.csv" time="0.0" />
+    <pahfile path="PAH_data12.csv" time="0.005018" />
+    <pahfile path="PAH_data13.csv" time="0.010036" />
+    <pahfile path="PAH_data14.csv" time="0.015054" />
+    <pahfile path="PAH_data15.csv" time="0.020072" />
 </mechanism>
