@@ -11,7 +11,6 @@
       <description>soot</description>
       <density units="g/cm3">1.2</density>
       <molwt units="g/mol">0.0</molwt>
-      <density units="g/cm3">1.333</density>
       <coalthresh>1</coalthresh>
       <growthfact>0.8</growthfact>
       <minPAH>2</minPAH>
