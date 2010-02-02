@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -54,6 +54,8 @@
 #include "swp_arssc_condensation.h"
 #include "swp_diffusion_process.h"
 #include "swp_advection_process.h"
+#include "swp_molecule_evolution.h"
+
 #include "camxml.h"
 #include "string_functions.h"
 #include "swp_arssc_model.h"
@@ -62,6 +64,7 @@
 #include <string>
 #include <cassert>
 #include <memory>
+#include <cstdlib>
 
 using namespace Sweep;
 using namespace Sweep::Processes;
@@ -122,7 +125,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                     // The ABF correlation for alpha should be used.
                     ActSites::ABFModel::Instance().UseAlphaCorrelation();
                 } else if (str.compare("profile")==0) {
-                    // The profile for alpha which should have been 
+                    // The profile for alpha which should have been
                     // loaded in the solver should be used.  (Nb, not
                     // sure why alpha profiles are loaded in the solver,
                     // but FlameSolver is definitely where it happens)
@@ -173,7 +176,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         } else if (str == "drag") {
             // Read drag model ID.
             str = (*i)->GetAttributeValue("id");
-            
+
             if(str == "StokesCunningham") {
                 // Parameters of the drag expression
                 real A, B, E;
@@ -205,7 +208,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                 // Set the drag parameters on the mechanism
                 mech.SetKnudsenDragConstants(A, B, E);
                 mech.SetDragType(Sweep::ParticleModel::KnudsenDrag);
-                
+
             }
             else if(str == "FreeMol") {
                 mech.SetDragType(Sweep::ParticleModel::FreeMolDrag);
@@ -230,7 +233,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             } else {
                 throw std::runtime_error("Unrecognised drag model id (Sweep, MechParser::readV1).");
             }
-            
+
         } else if (str == "diffusion") {
             // Read diffusion model ID.
             str = (*i)->GetAttributeValue("id");
@@ -306,7 +309,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetAggModel(AggModels::PriPartList_ID);
     } else if (str == "PAH") {
         mech.SetAggModel(AggModels::PAH_ID);
-        mech.LoadPAHProfile();
+        loadPAHStories(*(xml.Root()), mech);
     } else {
         mech.SetAggModel(AggModels::Spherical_ID);
     }
@@ -435,7 +438,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         if (el!=NULL) {
             str = el->Data();
             if (str != "") {
-                comp->SetCoalescThresh(cdble(str)); 
+                comp->SetCoalescThresh(cdble(str));
             } else {
                 // coalthresh contains no data.
                 std::string msg("Component ");
@@ -446,7 +449,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
                 throw runtime_error(msg);
             }
         } else {
-            comp->SetCoalescThresh(1.0); 
+            comp->SetCoalescThresh(1.0);
         }
 
 
@@ -455,7 +458,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         if (el!=NULL) {
             str = el->Data();
             if (str != "") {
-                comp->SetGrowthFact(cdble(str)); 
+                comp->SetGrowthFact(cdble(str));
             } else {
                 // coalthresh contains no data.
                 std::string msg("Component ");
@@ -466,7 +469,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
                 throw runtime_error(msg);
             }
         } else {
-            comp->SetGrowthFact(1.0); 
+            comp->SetGrowthFact(1.0);
         }
 
 
@@ -475,7 +478,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         if (el!=NULL) {
             str = el->Data();
             if (str != "") {
-                comp->SetMinPAH(int(cdble(str))); 
+                comp->SetMinPAH(int(cdble(str)));
             } else {
                 // coalthresh contains no data.
                 std::string msg("Component ");
@@ -486,7 +489,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
                 throw runtime_error(msg);
             }
         } else {
-            comp->SetMinPAH(0); 
+            comp->SetMinPAH(0);
         }
 
 
@@ -510,7 +513,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             std::string msg("Mol. wt. required for component ");
             msg += comp->Name();
             msg += " specification (Sweep, MechParser::readComponents).";
-                    
+
             delete comp;
             throw runtime_error(msg);
         }
@@ -581,11 +584,11 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
 
         try {
             readInception(*(*i), *icn);
-        } 
+        }
         catch (std::exception &e) {
             delete icn;
             throw;
-        } 
+        }
 
         // Add inception to mechanism.  Once entered into mechanism, the mechanism
         // takes control of the inception object for memory management.
@@ -686,11 +689,11 @@ void MechParser::readPAHInceptions(CamXML::Document &xml, Sweep::Mechanism &mech
 
         try {
             readPAHInception(*(*i), *icn);
-        } 
+        }
         catch (std::exception &e) {
             delete icn;
             throw;
-        } 
+        }
 
         // Add inception to mechanism.  Once entered into mechanism, the mechanism
         // takes control of the inception object for memory management.
@@ -815,8 +818,8 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
  * Active surface is also treated like a dimensionless quantity,
  * because active surface is always multiplied by an active site
  * density to produce a plain number.
- * 
- * For historical reasons user inputs of these reaction rate 
+ *
+ * For historical reasons user inputs of these reaction rate
  * constants must be in units of cm, kcal and K.  However, when
  * the data is read into the program it is immediately converted
  * to SI units as all storage and calculations are performed with
@@ -1803,4 +1806,54 @@ void MechParser::readARSSC_Sites(CamXML::Element &xml, Processes::ARSSC_Process 
             proc.EnableParentWts();
         }
     }
+}
+
+/*!
+ * @param[in]   xml     XML node with one or more <pahfile> children
+ *
+ * @exception   std::runtime_error  No pahfile child elements found
+ * @exception   std::runtime_error  Neither time nor position specified for a file
+ */
+void MechParser::loadPAHStories(CamXML::Element &xml, Mechanism &mech) {
+    // Extract the details of the pah story files
+    std::vector<CamXML::Element*> items;
+    xml.GetChildren("pahfile", items);
+
+    std::vector<CamXML::Element*>::iterator it = items.begin();
+    const std::vector<CamXML::Element*>::iterator itEnd = items.end();
+
+    if(it == itEnd)
+        throw std::runtime_error("No pahfile elements found in mechanism (MechParser::loadPAHStories)");
+
+    MoleculeEvolution::Database db;
+
+    while(it != itEnd) {
+        std::string fileName = (*it)->GetAttributeValue("path");
+
+        // See if a creation time has been specified for the molecules in this file
+        real time = 0.0;
+        const CamXML::Attribute *timeAttr = (*it)->GetAttribute("time");
+
+        if(timeAttr != NULL)
+            time = std::atof(timeAttr->GetValue().c_str());
+
+        // See if a creation position has been specified for the molecules in this file
+        real position = 0.0;
+        const CamXML::Attribute *posnAttr = (*it)->GetAttribute("position");
+
+        if(posnAttr != NULL)
+            position = std::atof(posnAttr->GetValue().c_str());
+
+        if((timeAttr == NULL) && (posnAttr == NULL)) {
+            throw std::runtime_error("At least one of time and position must be specified for " +
+                                      fileName + " (MechParser::loadPAHStories)");
+        }
+
+        db.addStoriesFromFile(fileName, time, position);
+
+        // Move on to next file
+        ++it;
+    }
+
+    mech.setMoleculeStories(db);
 }

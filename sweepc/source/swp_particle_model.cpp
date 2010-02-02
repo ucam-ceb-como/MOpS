@@ -51,7 +51,6 @@
 #include "swp_PAH_primary.h"
 #include <stdexcept>
 #include <cmath>
-#include "swp_PAH_trajectory.h"
 
 using namespace Sweep;
 using namespace std;
@@ -124,8 +123,7 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
         m_AdvectionType = rhs.m_AdvectionType;
         m_ThermophoresisType = rhs.m_ThermophoresisType;
 
-        // PAH database for PAH-PP model
-        m_PAHDatabase = rhs.m_PAHDatabase;
+        m_MoleculeStories = rhs.m_MoleculeStories;
     }
     return *this;
 }
@@ -370,15 +368,6 @@ Sweep::Particle *const ParticleModel::CreateParticle(real time) const
     return part;
 }
 
-
-
-void ParticleModel::LoadPAHProfile()
-{
-	m_PAHDatabase.LoadPAHProfiles();
-}
-
-
-
 //Collision Efficiency
 double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 {
@@ -602,6 +591,8 @@ void ParticleModel::init(void)
 
     // Not sure what to put as default for m_DragType etc
     m_ThermophoresisType = NoThermophoresis;
+
+    m_MoleculeStories.clear();
 }
 
 // Clears the current ParticleModel from memory.

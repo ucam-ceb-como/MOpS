@@ -8,14 +8,14 @@ cpp=g++
 ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -I../geometry/include -Wall
+       -I../sprogc/include -I../geometry/include -I../utils/include -Wall
   else
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -I../geometry/include -Wall -pg
+       -I../sprogc/include -I../geometry/include -I../utils/include -Wall -pg
   endif
 else
   flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -I../geometry/include -Wall -g -pg
+       -I../sprogc/include -I../geometry/include -I../utils/include -Wall -g -pg
 endif
 
 # Source directories.
@@ -56,8 +56,9 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_death_process.o swp_birth_process.o swp_arssc_cache.o \
     swp_arssc_reaction.o swp_arssc_condensation.o swp_arssc_process.o \
     swp_PAH_primary.o swp_PAH_cache.o swp_PAH_stats.o swp_transport_process.o \
-    swp_diffusion_process.o swp_advection_process.o swp_PAH_database.o\
-    swp_PAH_trajectory.o mt19937.o swp_dimer_inception.o swp_pah_inception.o
+    swp_diffusion_process.o swp_advection_process.o \
+    mt19937.o swp_dimer_inception.o swp_pah_inception.o \
+    swp_molecule_evolution.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -181,10 +182,9 @@ swp_PAH_primary.o: $(src)/swp_PAH_primary.cpp
 swp_PAH_stats.o: $(src)/swp_PAH_stats.cpp
 	$(cpp) $(flag) $(src)/swp_PAH_stats.cpp
 
-swp_PAH_trajectory.o: $(src)/swp_PAH_trajectory.cpp
-	$(cpp) $(flag) $(src)/swp_PAH_trajectory.cpp
-swp_PAH_database.o: $(src)/swp_PAH_database.cpp
-	$(cpp) $(flag) $(src)/swp_PAH_database.cpp
+swp_molecule_evolution.o: $(src)/swp_molecule_evolution.cpp $(inc)/swp_molecule_evolution.h
+	$(cpp) $(flag) $(src)/swp_molecule_evolution.cpp
+
 # Sintering model.
 
 swp_sintering_model.o: $(src)/swp_sintering_model.cpp

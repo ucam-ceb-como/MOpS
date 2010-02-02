@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37) and Markus Sander
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -106,7 +106,7 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         for (IcnPtrVector::const_iterator i=rhs.m_inceptions.begin();
             i!=rhs.m_inceptions.end(); ++i) {
             m_inceptions.push_back((*i)->Clone());
-            
+
             // Need to update the parent mechanism
             m_inceptions.back()->SetMechanism(*this);
         }
@@ -130,7 +130,7 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         }
 
         // Copy coagulation process.
-        if (rhs.m_coag) 
+        if (rhs.m_coag)
         {
             // The dynamic cast should never fail, because m_coag is
             // of type Coagulation*, but the Clone method returns
@@ -308,7 +308,7 @@ void Mechanism::AddCoagulation(Coagulation& coag)
         ++m_processcount;
     }
     delete m_coag;
-    
+
     m_coag = &coag;
     m_termcount += coag.TermCount();
     m_proccount.resize(m_termcount, 0);
@@ -318,7 +318,7 @@ void Mechanism::AddCoagulation(Coagulation& coag)
 
 // PROCESS INFORMATION.
 
-// Returns the number of processes (including 
+// Returns the number of processes (including
 // inceptions) in the mechanism.
 unsigned int Mechanism::ProcessCount(void) const
 {
@@ -328,7 +328,7 @@ unsigned int Mechanism::ProcessCount(void) const
 // Returns the number of terms in all process rate expressions.
 unsigned int Mechanism::TermCount(void) const {return m_termcount;}
 
-// Returns true if the mechanism contains deferred (LPDA) 
+// Returns true if the mechanism contains deferred (LPDA)
 // processes otherwise false.
 bool Mechanism::AnyDeferred(void) const {return m_anydeferred;}
 
@@ -349,7 +349,7 @@ void Mechanism::CheckDeferred(void) const
 
 
 // Returns a vector containing the names of all processes.
-void Mechanism::GetProcessNames(std::vector<std::string> &names, 
+void Mechanism::GetProcessNames(std::vector<std::string> &names,
                                 unsigned int start) const
 {
     // Resize the output vector to hold all process names from
@@ -560,7 +560,7 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, const Geometry::Local
     // Get coagulation rate.
     if (m_coag != NULL) {
         sum += m_coag->RateTerms(t, sys, iterm);
-    } 
+    }
 
     // Get birth and death rates from the Cell.
     const BirthPtrVector &inf = sys.Inflows();
@@ -625,7 +625,7 @@ real Mechanism::CalcDeferredRateTerms(real t, const Cell &sys, const Geometry::L
     return sum;
 }
 
-// Calculates the rates-of-change of the chemical species fractions, 
+// Calculates the rates-of-change of the chemical species fractions,
 // gas-phase temperature and density due to particle processes.
 void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) const
 {
@@ -641,22 +641,22 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
     // at the moment.
 
     // Loop over the contributions of all inception processes.
-    for (IcnPtrVector::const_iterator i=m_inceptions.begin(); 
+    for (IcnPtrVector::const_iterator i=m_inceptions.begin();
          i!=m_inceptions.end(); ++i) {
 
         // Calculate the inception rate.
         real rate = (*i)->Rate(t, sys);
 
         // Loop over all reactants, subtracting their contributions.
-        for (Sprog::StoichMap::const_iterator j=(*i)->Reactants().begin(); 
+        for (Sprog::StoichMap::const_iterator j=(*i)->Reactants().begin();
              j!=(*i)->Reactants().end(); ++j) {
             real dc = rate * (real)j->second * invVolNA;
             rates[j->first] -= dc;
             *idrho -= dc;
         }
-        
+
         // Loop over all products, adding their contributions.
-        for (Sprog::StoichMap::const_iterator j=(*i)->Products().begin(); 
+        for (Sprog::StoichMap::const_iterator j=(*i)->Products().begin();
              j!=(*i)->Products().end(); ++j) {
             real dc = rate * (real)j->second * invVolNA;
             rates[j->first] += dc;
@@ -665,22 +665,22 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
     }
 
     // Loop over the contributions of all other processes (except coagulation and transport).
-    for (PartProcPtrVector::const_iterator i=m_processes.begin(); 
+    for (PartProcPtrVector::const_iterator i=m_processes.begin();
          i!=m_processes.end(); ++i) {
 
         // Calculate the process rate.
         real rate = (*i)->Rate(t, sys);
 
         // Loop over all reactants, subtracting their contributions.
-        for (Sprog::StoichMap::const_iterator j=(*i)->Reactants().begin(); 
+        for (Sprog::StoichMap::const_iterator j=(*i)->Reactants().begin();
              j!=(*i)->Reactants().end(); ++j) {
             real dc = rate * (real)j->second * invVolNA;
             rates[j->first] -= dc;
             *idrho -= dc;
         }
-        
+
         // Loop over all products, adding their contributions.
-        for (Sprog::StoichMap::const_iterator j=(*i)->Products().begin(); 
+        for (Sprog::StoichMap::const_iterator j=(*i)->Products().begin();
              j!=(*i)->Products().end(); ++j) {
             real dc = rate * (real)j->second * invVolNA;
             rates[j->first] += dc;
@@ -700,7 +700,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
 
 // Performs the Process specified.  Process index could be
 // an inception, particle process or a coagulation event.
-void Mechanism::DoProcess(unsigned int i, real t, Cell &sys, 
+void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
                           const Geometry::LocalGeometry1d& local_geom,
                           Transport::TransportOutflow *out) const
 {
@@ -712,7 +712,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
         m_inceptions[i]->Perform(t, sys, local_geom, 0, Sweep::rnd, out);
         m_proccount[i] += 1;
     } else {
-        // This is another process. 
+        // This is another process.
         for(PartProcPtrVector::const_iterator ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
             if (j < (int)(*ip)->TermCount()) {
                 // Do the process.
@@ -743,7 +743,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
         }
 
         // We are here because the process was neither an inception
-        // nor a single particle process.  It is therefore either a 
+        // nor a single particle process.  It is therefore either a
         // coagulation or a birth/death process.
         if (m_coag) {
             // Check if coagulation process.
@@ -761,7 +761,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
             }
         }
 
-        // The coagulation process is undefined, so it 
+        // The coagulation process is undefined, so it
         // must be either a birth or death process from
         // the cell.
         if ((j < (int)sys.InflowCount()) && (j>=0)) {
@@ -782,14 +782,14 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
 
 // LINEAR PROCESS DEFERMENT ALGORITHM.
 
-// Performs linear update algorithm on the 
+// Performs linear update algorithm on the
 // given system up to given time.
 
 void Mechanism::LPDA(real t, Cell &sys) const
-{	
+{
     // Check that there are particles to update and that there are
     // deferred processes to perform.
-    if ((sys.ParticleCount() > 0) && 
+    if ((sys.ParticleCount() > 0) &&
         (m_anydeferred || (AggModel() == AggModels::PAH_ID))) {
         // Stop ensemble from doubling while updating particles.
         sys.Particles().FreezeDoubling();
@@ -802,7 +802,7 @@ void Mechanism::LPDA(real t, Cell &sys) const
             ++k;
         }
 
-        
+
         // Now remove any invalid particles and update the ensemble.
         sys.Particles().RemoveInvalids();
 
@@ -815,17 +815,17 @@ void Mechanism::LPDA(real t, Cell &sys) const
 
 // Performs linear process updates on a particle in the given system.
 void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
-{   
+{
     // Deal with the growth of the PAHs
     if (AggModel() == AggModels::PAH_ID)
     {
         // If the agg model is PAH_ID then all the primary
         // particles must be PAHPrimary.
-        AggModels::PAHPrimary *pah = 
+        AggModels::PAHPrimary *pah =
                 dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
 
         // Look up new size of PAHs in database
-        pah->UpdatePAHs(t);
+        pah->UpdatePAHs(t, *this);
         pah->UpdateCache();
         pah->CheckCoalescence();
     }
@@ -847,7 +847,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
                     // Get the process rate x the time interval.
                     rate = (*i)->Rate(t, sys, sp) * dt;
 
-                    // Use a Poission deviate to calculate number of 
+                    // Use a Poission deviate to calculate number of
                     // times to perform the process.
                     num = ignpoi(rate);
 
@@ -868,11 +868,11 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 
     			//	sp.FindRoot()->CheckTree();
 				// cout << "check after sinter passed\n";
-				//added to test the 3-d output		
+				//added to test the 3-d output
             }
         }
 
-        // Check that the particle is still valid, only calculate 
+        // Check that the particle is still valid, only calculate
         // cache if it is.
         if (sp.IsValid()) sp.UpdateCache();
     }
@@ -896,17 +896,17 @@ void  Mechanism::Mill(Cell &sys, real t) const
 				{
 					double allavcoldiam=0;
 					double N=0;
-					for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {					
+					for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
 						int nparticles=0;
-						double distribution=0; 
-						double averagecolldiam=0; 
+						double distribution=0;
+						double averagecolldiam=0;
 						double Volume=0;
 						double Surface=0;
 						int nprimaries=0;
 						int *nparticlesp=&nparticles;
-						double *distributionp=&distribution; 
+						double *distributionp=&distribution;
 						const int numbins=0;
-						double *averagecolldiamp=&averagecolldiam; 
+						double *averagecolldiamp=&averagecolldiam;
 						double *Volumep=&Volume;
 						double *Surfacep=&Surface;
 						int *nprimariesp=&nprimaries;
@@ -926,14 +926,14 @@ void  Mechanism::output(Cell &sys, real t) const
 {
 						 if (sys.ParticleCount() > 10 && t-last3dout>0.004)
 						//	 if (sys.ParticleCount() > 10 && t-last3dout>0.000004)
-						 {	
-							
+						 {
+
 							ofstream file;
 						    string fname;
 				  			Ensemble::iterator i;
 							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
 								((*(*i))).UpdateCache();
-							} 
+							}
 						//	Mill(sys, t);
 							cout << "creating subpart image...";
 							last3dout=t;
@@ -949,15 +949,15 @@ void  Mechanism::output(Cell &sys, real t) const
 						    file.open(fname.c_str());
 							ensimg->PrintEnsemble(sys,file,0.);
 							file.close();
-							delete ensimg;		
+							delete ensimg;
 
 							ensimg = new EnsembleImage;
 							fname = "subparttreetemp.3d";
 							 file.open(fname.c_str(),ios::app);
 							ensimg->PrintEnsemble(sys,file,t/0.004);
 							file.close();
-							delete ensimg;	
-				
+							delete ensimg;
+
 							int numpart=0;
 							real numsubpart=0;
 							real avcoldiam=0.;
@@ -970,19 +970,19 @@ void  Mechanism::output(Cell &sys, real t) const
 								numpart++;
 								numsubpart+=(*(*i)).NumSubPart();
                                 file << (*(*i)).CollDiameter() <<endl;
-							} 
+							}
                             file.close();
                             fname = "avcoldiam.txt";
 							file.open(fname.c_str(),ios::app);
 							if (numpart>0)
-							{	
+							{
 								avcoldiam=avcoldiam/numpart;
 								file << t << "     " << avcoldiam << endl;
 							}
 							file.close();
 
 
-                            //old coll diam distr 
+                            //old coll diam distr
 /*
 							fname = "coldiamdistr" + cstr(t) + ".txt";
 							file.open(fname.c_str());
@@ -1003,14 +1003,14 @@ void  Mechanism::output(Cell &sys, real t) const
 								primdistr[j]=0;
 								tempdistr[j]=0;
 							}
-							
+
 							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
 							  // *(*i)).Getprimarydistribution(primdistr);
             //                    *(*i)).Getprimarydistribution(&file);
-								
+
 							}
 
-                            //old prim diam distr 
+                            //old prim diam distr
 /*
 							for (int j=0;j<500;j++)
 							{
@@ -1023,16 +1023,16 @@ void  Mechanism::output(Cell &sys, real t) const
 
 							fname = "sinteringleveldistr" + cstr(t) + ".txt";
 							file.open(fname.c_str());
-					
+
 							const int numbins=100;
-							double binsize=1.0/numbins; 
-							
+							double binsize=1.0/numbins;
+
 							double sinterdistr[numbins]={0};
-							
+
 							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
 								(*(*i)).Getsinteringleveldistribution(sinterdistr,binsize,numbins);
-								
-							}							
+
+							}
 
 							for (int j=0;j<numbins;j++)
 							{
@@ -1045,7 +1045,7 @@ void  Mechanism::output(Cell &sys, real t) const
 							fname = "numsubpart.txt";
 							file.open(fname.c_str(),ios::app);
 							if (numpart>0)
-							{	
+							{
 								file << t << "     " << numsubpart*1.0/numpart << endl;
 							}
 
@@ -1060,31 +1060,31 @@ void  Mechanism::output(Cell &sys, real t) const
 							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
 								avsubpartdiam2=(*(*i)).avgeomdiam(1.0/numsubpart)*avsubpartdiam2;
 								avsubpartdiam=(*(*i)).Volume()/(*(*i)).SurfaceArea()+avsubpartdiam;
-							
+
 							}
 							//avsubpartdiam=pow(6*avsubpartdiam/(PI*numsubpart),ONE_THIRD);
 							avsubpartdiam=6*avsubpartdiam/numpart;
 							if (numpart>0)
-							{	
+							{
 								file << t << "     " << avsubpartdiam << endl;
 							}
 							file.close();
 
 
-							
+
 							fname = "temperature.txt";
 							file.open(fname.c_str(),ios::app);
 					//		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
 
 							file << t << "     " << sys.Temperature() << endl;
-							
+
 							file.close();
 
 							cout << "done"<<endl;
-	
+
 						}
 }
-						
+
 
 
 // READ/WRITE/COPY.
@@ -1121,7 +1121,7 @@ void Mechanism::Serialize(std::ostream &out) const
         out.write((char*)&n, sizeof(n));
 
         // Write inceptions.
-        for (IcnPtrVector::const_iterator i=m_inceptions.begin(); 
+        for (IcnPtrVector::const_iterator i=m_inceptions.begin();
              i!=m_inceptions.end(); ++i) {
             ProcessFactory::Write(*(*i), out);
         }
@@ -1131,7 +1131,7 @@ void Mechanism::Serialize(std::ostream &out) const
         out.write((char*)&n, sizeof(n));
 
         // Write particle processes.
-        for (PartProcPtrVector::const_iterator i=m_processes.begin(); 
+        for (PartProcPtrVector::const_iterator i=m_processes.begin();
              i!=m_processes.end(); ++i) {
             ProcessFactory::Write(*(*i), out);
         }
@@ -1248,14 +1248,14 @@ void Mechanism::releaseMem(void)
     ParticleModel::releaseMem();
 
     // Delete inceptions.
-    for (IcnPtrVector::iterator i=m_inceptions.begin(); 
+    for (IcnPtrVector::iterator i=m_inceptions.begin();
          i!=m_inceptions.end(); ++i) {
         delete *i;
     }
     m_inceptions.clear();
 
     // Delete processes.
-    for (PartProcPtrVector::iterator i=m_processes.begin(); 
+    for (PartProcPtrVector::iterator i=m_processes.begin();
          i!=m_processes.end(); ++i) {
         delete *i;
     }

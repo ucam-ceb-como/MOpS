@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -154,7 +154,7 @@ private:
 
     // COAGULATION
     //! Allow user to choose coagulation kernel via a sweep mechanism XML file.
-    static void readCoagulation(        
+    static void readCoagulation(
         CamXML::Document &xml, // CamXML document pre-constructed from file.
         Mechanism &mech        // Mechanism to construct from XML.
         );
@@ -228,7 +228,7 @@ private:
 
 
     // ARS-SC MODEL.
-    
+
     // Reads ARS-SC model static parameters into a mechanism.
     static void readARSSC_Model(
         CamXML::Element &xml, // CamXML element containing the ARS-SC model def'n.
@@ -259,6 +259,9 @@ private:
         CamXML::Element &xml,          // CamXML document pre-constructed from file.
         Processes::ARSSC_Process &proc // Process to construct from XML.
         );
+
+    //! Load PAH stories from files
+    static void loadPAHStories(CamXML::Element &xml, Mechanism &mech);
 };
 };
 

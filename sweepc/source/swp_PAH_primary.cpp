@@ -8,7 +8,7 @@
   Author(s):      Markus Sander (ms785)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Markus Sander.
 
   File purpose:
@@ -52,10 +52,10 @@
 #include "swp_aggmodel_type.h"
 #include "swp_model_factory.h"
 #include "swp_PAH_cache.h"
-//#include <math.h>
 #include "rng.h"
 #include "swp_particle_image.h"
 #include <stdexcept>
+#include <cassert>
 #include "string_functions.h"
 using namespace Sweep;
 using namespace Sweep::AggModels;
@@ -63,13 +63,13 @@ using namespace Sweep::SubModels;
 using namespace std;
 using namespace Strings;
 /*
-double PAHPrimary::pow(double a, double b) {   
-    int tmp = (*(1 + (int *)&a));   
-    int tmp2 = (int)(b * (tmp - 1072632447) + 1072632447);   
-    double p = 0.0;   
-    *(1 + (int * )&p) = tmp2;   
-    return p;   
-}  
+double PAHPrimary::pow(double a, double b) {
+    int tmp = (*(1 + (int *)&a));
+    int tmp2 = (int)(b * (tmp - 1072632447) + 1072632447);
+    double p = 0.0;
+    *(1 + (int * )&p) = tmp2;
+    return p;
+}
 */
 
 // CONSTRUCTORS AND DESTRUCTORS.
@@ -133,14 +133,10 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model)
     // Other parts of the code check for a non-zero composition
     m_comp[0]=1;
 
-    // Select a PAH life story uniformly at random from the database
-    Trajectory const *newtrajectory=model.m_PAHDatabase.GetTrajectory(time);
-    const int newID = static_cast<int>(newtrajectory->maxID()*rnd());
+    // Select one particular life story uniformly at random from the family/trajectory.
+    const int newID = model.getMoleculeStories().selectMoleculeNearTime(time, Sweep::irnd);
 
-    AddPAH(time,newID,newtrajectory);
-    
-    //Get the number of carbon atoms in PAH with id newID from  the database
-    UpdatePAHs(time);
+    AddPAH(time,newID, model);
 
     //Update the other properties
     UpdateCache();
@@ -184,24 +180,32 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
  *
  * @param[in]   time        create time of the PAH
  * @param[in]   ID          integer identifying the PAH in the trajectory database
- * @param[in]   trajectory  Pointer to the trajectory database
+ * @param[in]   model       Particle model containing molecule database
 */
-void PAHPrimary::AddPAH(real time, int ID, const Trajectory *trajectory)
+void PAHPrimary::AddPAH(real time, int ID, const Sweep::ParticleModel &model)
 {
-	PAH *new_PAH=new PAH;
-	new_PAH->ID=ID;
-    new_PAH->m_trajectory=trajectory;
-	new_PAH->m_numcarbon=0;
-	new_PAH->time_created=time;
-	new_PAH->freezetime=0;
-	new_PAH->lastupdated=time;
-    new_PAH->lastposPAHupdate=0;
-	m_PAH.insert(m_PAH.begin(),*new_PAH);
+    assert(model.getMoleculeStories().size() > 0);
+
+	PAH new_PAH;
+	new_PAH.ID=ID;
+
+	// No updates yet, set this lookup hint to 0 for the beginning of the story
+	new_PAH.lastposPAHupdate=0;
+	new_PAH.m_numcarbon = model.getMoleculeStories().getMoleculeState(ID, 0.0, new_PAH.lastposPAHupdate);
+
+	new_PAH.time_created=time;
+	new_PAH.lastupdated=time;
+	new_PAH.freezetime = 0.0;
+
+	m_PAH.push_back(new_PAH);
+
+	// Set the particle mass, diameter etc
+	UpdatePrimary();
 }
 
 // Copy constructor.
-PAHPrimary::PAHPrimary(const PAHPrimary &copy) 
-{   
+PAHPrimary::PAHPrimary(const PAHPrimary &copy)
+{
     if (this!=&copy)
     {
         *this = copy;
@@ -215,11 +219,11 @@ PAHPrimary::PAHPrimary(const PAHPrimary &copy)
 
 // Default destructor.
 PAHPrimary::~PAHPrimary()
-{  
+{
 	delete m_leftchild;
 	delete m_rightchild;
-    // it is not necessary to delete m_leftparticle because 
-    // this is also m_leftchild somewhere down the tree  
+    // it is not necessary to delete m_leftparticle because
+    // this is also m_leftchild somewhere down the tree
 
     // delete the PAH list
     releaseMem();
@@ -233,7 +237,7 @@ PAHPrimary::~PAHPrimary()
 */
 void PAHPrimary::CopyTree( const PAHPrimary *source)
 {
-    //create the new left and right children 
+    //create the new left and right children
 	PAHPrimary *newleft = new PAHPrimary(source->CreateTime(),*m_pmodel,false);
 	PAHPrimary *newright = new PAHPrimary(source->CreateTime(),*m_pmodel,false);
 
@@ -252,7 +256,7 @@ void PAHPrimary::CopyTree( const PAHPrimary *source)
 	m_rightparticle=NULL;
 
     //recurse to copy the subtrees
-	if (source->m_leftchild->m_leftchild!=NULL) 
+	if (source->m_leftchild->m_leftchild!=NULL)
         m_leftchild->CopyTree(source->m_leftchild);
 
 	if (source->m_rightchild->m_leftchild!=NULL)
@@ -261,7 +265,7 @@ void PAHPrimary::CopyTree( const PAHPrimary *source)
     //set the leftparticle and rightparticle
 	UpdateAllPointers(source);
 }
-	
+
 PAHPrimary &PAHPrimary::operator=(const Primary &rhs)
 {
     if (this != &rhs) {
@@ -296,7 +300,7 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
 	SetSurfaceArea(source->SurfaceArea());
 	m_time=source->m_time;
 	m_PAHmass=source->m_PAHmass;
-    m_leftchild=source->m_leftchild;               
+    m_leftchild=source->m_leftchild;
 	m_rightchild=source->m_rightchild;
 	m_leftparticle=source->m_leftparticle;
 	m_rightparticle=source->m_rightparticle;
@@ -324,7 +328,7 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
 
     // Replace the PAHs with those from the source
     m_PAH.assign(source->m_PAH.begin(),source->m_PAH.end());
-	
+
 }
 
 
@@ -332,7 +336,7 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
  * Select a primary uniformly at random from this particle
  * and descend the aggregate tree to find the primary.
  * Note that most PAHPrimarys are nodes in a tree representing
- * connectivity within an aggregate, so it is necessary to 
+ * connectivity within an aggregate, so it is necessary to
  * descend the tree to find a primary that really is a
  * primary.
  *
@@ -351,7 +355,7 @@ PAHPrimary *PAHPrimary::SelectRandomSubparticle()
  * @return      Pointer to the next node down the tree on the path to target primary
 */
 PAHPrimary *PAHPrimary::SelectRandomSubparticleLoop(int target)
-{	
+{
 	if (m_leftchild==NULL) return this;
 	if (target<=m_leftchild->m_numprimary)
 	{
@@ -381,7 +385,7 @@ PAHPrimary *PAHPrimary::SelectRandomSubparticleLoop(int target)
  * @param[in] source Pointer to the primary to be copied
 */
 void PAHPrimary::UpdateAllPointers( const PAHPrimary *original)
-{	
+{
     //the primary has no children => there are no left and right particles
     if (original->m_leftchild == NULL) {
         // Check that both children are missing in the original and the copy
@@ -398,7 +402,7 @@ void PAHPrimary::UpdateAllPointers( const PAHPrimary *original)
         // Since this is not a connecting node it does not have left and
         // right particles.
 		m_leftparticle=NULL;
-		m_rightparticle=NULL;			
+		m_rightparticle=NULL;
     } else {
 //        assert(original->m_rightchild != NULL);
 //        assert(m_leftchild != NULL);
@@ -453,7 +457,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
 	const PAHPrimary *rhsparticle = NULL;
 	rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
 
-	//only one PAH in rhs or this particle -> condensation or inception process. 
+	//only one PAH in rhs or this particle -> condensation or inception process.
 	if ( (rhsparticle->m_numPAH==1 || this->m_numPAH==1 ))
 	{
         if (rhsparticle->Numprimary()>1)
@@ -473,7 +477,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
         }
         else
         {
-            // particle has more then one primary select the primary where 
+            // particle has more then one primary select the primary where
             // the PAH condenses to and add it to the list
 		    if (m_leftchild!=NULL)
 		    {
@@ -490,14 +494,14 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
 		    }
         }
 		UpdateCache();
-        //Check the coalescence ratio 
+        //Check the coalescence ratio
         CheckCoalescence();
 
 	}
-	
+
     else
-    {   
-            //coagulation process 
+    {
+            //coagulation process
             PAHPrimary *newleft = new PAHPrimary;
 		    PAHPrimary *newright = new PAHPrimary;
             PAHPrimary copy_rhs(*rhsparticle);
@@ -553,10 +557,10 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
             m_leftparticle_numPAH=m_leftparticle->m_numPAH;
             m_rightparticle_numPAH=m_rightparticle->m_numPAH;
             m_children_radius=pow(3.0/(4.0*PI)*(m_children_vol),(ONE_THIRD));
-            m_children_coalescence=CoalescenceLevel();  
+            m_children_coalescence=CoalescenceLevel();
             CheckCoalescence();
-            //must set all the pointer to NULL otherwise the delete function 
-            //will also delete the children 
+            //must set all the pointer to NULL otherwise the delete function
+            //will also delete the children
 	        copy_rhs.m_leftchild=NULL;
 	        copy_rhs.m_rightchild=NULL;
 	        copy_rhs.m_parent=NULL;
@@ -570,26 +574,26 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
         //    }
         // if (print)
     //     PrintTree("after");
-        
+
 	}
     return *this;
 }
 
 //returns the CoalescenceLevel of the two primaries that are connected by this node
-double PAHPrimary::CoalescenceLevel() 
+double PAHPrimary::CoalescenceLevel()
 {
     if (m_leftparticle!=NULL)
     {
 
         double dV=0;
-        
-        
-        //make sure that the volume growth does not arise from a former coalescence event 
+
+
+        //make sure that the volume growth does not arise from a former coalescence event
         //(number of PAHs must remain const, or increase by 1 in case of a condensation
         // event
-        // if the volume changes due to a coalescence event the chilren surface is changed in 
+        // if the volume changes due to a coalescence event the chilren surface is changed in
         // PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
-        
+
         // m_leftparticle->m_numPAH is the actual number of PAHs in the left one of the two
         // touching primary particles.
 
@@ -598,25 +602,25 @@ double PAHPrimary::CoalescenceLevel()
 
         // The following test checks that at most one PAH has been added to the left one
         // of the two touching primaries since this method was last called.
-        if (m_leftparticle->m_numPAH - m_leftparticle_numPAH<2) 
-        {   
+        if (m_leftparticle->m_numPAH - m_leftparticle_numPAH<2)
+        {
             //calculate the volume change of the left particle in the last timestep
-            dV+= m_leftparticle->m_vol - m_leftparticle_vol_old;         
+            dV+= m_leftparticle->m_vol - m_leftparticle_vol_old;
         }
 
         //adjust the number of PAHs and vol for the next step
         m_leftparticle_numPAH=m_leftparticle->m_numPAH;
         m_leftparticle_vol_old=m_leftparticle->m_vol;
 
-        //make sure that the volume growth does not arise from a coalescence event 
+        //make sure that the volume growth does not arise from a coalescence event
         //(number of PAHs must remain const, or increase by1 in case of a condensation
         // event
-        if (m_rightparticle->m_numPAH-m_rightparticle_numPAH<2)   
-        {   
+        if (m_rightparticle->m_numPAH-m_rightparticle_numPAH<2)
+        {
             //calculate the volume change of the right particle in the last timestep
-            dV+= m_rightparticle->m_vol - m_rightparticle_vol_old;          
+            dV+= m_rightparticle->m_vol - m_rightparticle_vol_old;
         }
-        
+
         //adjust the number of PAHs and vol for the next step
         m_rightparticle_numPAH=m_rightparticle->m_numPAH;
         m_rightparticle_vol_old=m_rightparticle->m_vol;
@@ -639,7 +643,7 @@ double PAHPrimary::CoalescenceLevel()
         else
             return clevel;
     }
-    else 
+    else
         return 0;
 }
 
@@ -650,7 +654,7 @@ void PAHPrimary::CalcFractalDimension()
     // construct the particle by colliding the primary particles
 	img.constructSubParttree(this);
 	double L,W;
-    // calculate the length and the width of the particle 
+    // calculate the length and the width of the particle
     img.LengthWidth(L,W);
     // calculate the radius of gyration
     m_Rg=img.RadiusofGyration();
@@ -659,7 +663,7 @@ void PAHPrimary::CalcFractalDimension()
     m_Rg=m_Rg*1e-9;
     m_fdim=log((double)m_numprimary)/log(2*m_Rg/(m_primarydiam/m_numprimary));
   /*  if (m_fdim>0 && m_fdim<3)
-    {    
+    {
        string filename;
        filename=cstr(m_fdim)+".3d";
        ofstream out;
@@ -667,10 +671,10 @@ void PAHPrimary::CalcFractalDimension()
        img.Write3dout(out,0,0,0);
        out.close();
     }*/
-    
-}   
 
-// sets all the childrenproperties to zero, this function is used after the children are coalesced 
+}
+
+// sets all the childrenproperties to zero, this function is used after the children are coalesced
 void PAHPrimary::ResetChildrenProperties()
 {
             m_children_coalescence=0.0;
@@ -695,12 +699,12 @@ PAHPrimary &PAHPrimary::Merge()
 	  if(m_leftchild!=NULL)
            {
 		if ( m_leftchild==m_leftparticle && m_rightchild==m_rightparticle)
-		{	
+		{
             //this node has only two primaries in its subtree
             //it is possible that this node is not the root node and belongs to a bigger particle
             //copy the PAHs of both children to the parent node
 
-            //m_PAH is empty, therefore no need to append 
+            //m_PAH is empty, therefore no need to append
             m_PAH=m_rightparticle->m_PAH;
 
             m_PAH.insert(this->m_PAH.end(),m_leftparticle->m_PAH.begin(),m_leftparticle->m_PAH.end());
@@ -713,7 +717,7 @@ PAHPrimary &PAHPrimary::Merge()
             m_leftchild->m_parent=NULL;
             m_rightchild->m_parent=NULL;
             delete m_leftchild;
-            delete m_rightchild;                    
+            delete m_rightchild;
 			m_leftchild=NULL;
 			m_rightchild=NULL;
 			m_leftparticle=NULL;
@@ -728,7 +732,7 @@ PAHPrimary &PAHPrimary::Merge()
 		{
 			if (m_leftchild->m_numprimary<m_rightchild->m_numprimary)
 			{
-				//append to left subtree because there are fewer primaries 
+				//append to left subtree because there are fewer primaries
                 //this is only to keep the tree balanced
 				PAHPrimary *oldleftparticle=m_leftparticle;
 
@@ -743,7 +747,7 @@ PAHPrimary &PAHPrimary::Merge()
                 //this will be the new bigger primary
 				oldleftparticle->ChangePointer(oldleftparticle,m_rightparticle);
                 m_rightparticle->ChangePointer(m_rightparticle,m_rightparticle);
-                //set the pointer to the parent node 
+                //set the pointer to the parent node
 				if (oldleftparticle->m_parent->m_leftchild==oldleftparticle)
 				{
 					oldleftparticle->m_parent->m_leftchild=m_rightchild;
@@ -754,7 +758,7 @@ PAHPrimary &PAHPrimary::Merge()
 				}
 				m_rightchild->m_parent=oldleftparticle->m_parent;
 
-			
+
 				PAHPrimary *oldleftchild=m_leftchild;
 				PAHPrimary *oldparent=m_parent;
                 //copy the properties of the former leftchild to this node
@@ -763,8 +767,8 @@ PAHPrimary &PAHPrimary::Merge()
                 if (m_leftchild!=NULL)
                 {
 				    m_rightchild->m_parent=this;
-				    m_leftchild->m_parent=this; 
-                } 
+				    m_leftchild->m_parent=this;
+                }
 				oldleftchild->ReleaseMem();
 
 			}
@@ -773,7 +777,7 @@ PAHPrimary &PAHPrimary::Merge()
 			{
 				//append to right subtree
 				PAHPrimary *oldrightparticle=m_rightparticle;
-				
+
 			//	for (j=oldrightparticle->m_PAH.begin(); j!=oldrightparticle->m_PAH.end(); ++j) {
 			//		m_leftparticle->m_PAH.insert(m_leftparticle->m_PAH.end(),PAH(*j));
 			//	}
@@ -799,14 +803,14 @@ PAHPrimary &PAHPrimary::Merge()
                 if (m_leftchild!=NULL)
                 {
 				    m_rightchild->m_parent=this;
-				    m_leftchild->m_parent=this; 
-                } 
+				    m_leftchild->m_parent=this;
+                }
 				oldrightchild->ReleaseMem();
-                
+
 			}
 
 		}
-         
+
         UpdateCache();
   //      PrintTree("after.inp");
         }
@@ -815,14 +819,14 @@ PAHPrimary &PAHPrimary::Merge()
 
 void PAHPrimary::ReleaseMem()
 {
-    m_PAH.clear();  
+    m_PAH.clear();
 }
 /*!//add explanation
- * @param[in] source Pointer to the original particle 
+ * @param[in] source Pointer to the original particle
  * @param[in,out] target Pointer to the new particle
 */
 void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
-{    
+{
 		if(m_rightparticle==source){
 			m_rightparticle=target;
             double sphericalsurface=
@@ -850,75 +854,60 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
  * The actual interval over which the update is carried out on a PAH is from
  * lastupdated to t - freezetime.
  */
-void PAHPrimary::UpdatePAHs(real t)
+void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model)
 {
     // Either the primary has two children or it is a leaf of the
     // tree
 	if (m_leftchild!=NULL)
 	{
         // Recurse down to the leaves
-		m_leftchild->UpdatePAHs(t);
-		m_rightchild->UpdatePAHs(t);
+		m_leftchild->UpdatePAHs(t, model);
+		m_rightchild->UpdatePAHs(t, model);
 	}
     else
-    {   
+    {
         // There are PAHs in this primary so update them, if needed
         // Flag to show if any PAH has been changed
         bool PAHchanged = false;
 
         // Loop over each PAH in this primary
-        for (std::vector<PAH>::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
+        const std::vector<PAH>::iterator itEnd = m_PAH.end();
+        for (std::vector<PAH>::iterator it = m_PAH.begin(); it != itEnd; ++it) {
 
             // This is a model parameter that defines when primary particles
             // contain too many PAHs for them all to have full access to the
             // surrounding gas phase.  Once a primary contains more than minPAH
             // PAHs the growth rate of each PAH is reduced according to the
             // growth factor
-            const double minPAH=m_pmodel->Components(0)->MinPAH();
+            const double minPAH = model.Components(0)->MinPAH();
 
             if (m_numPAH>=minPAH)
             {
                 // Increase in age is slowed down by this factor to reflect
                 // the slower growth of molecules that are closely surrounded
                 // by many other PAHs.
-                const real growthfact=m_pmodel->Components(0)->GrowthFact();
-
-                const real deltat=t-i->lastupdated;
+                const real growthfact = model.Components(0)->GrowthFact();
 
                 // Increment freezetime to reduce the time upto which updates
                 // are carried out.
-                i->freezetime=i->freezetime+deltat*(1.0-growthfact);
+                it->freezetime += (t - it->lastupdated) * (1.0 - growthfact);
             }
 
             // Time at which to find new size of PAH
-            const real seektime = i->m_trajectory->StartTime() + t -
-                                    (i->time_created) - (i->freezetime);
+            const real seektime = t - it->time_created - it->freezetime;
+            assert(seektime >= 0.0);
 
-            // Linear search through database to find seektime, note that
-            // lastposPAHupdate will almost always be only one away from the
-            // position we are looking for, because PAHs are normally updated
-            // fairly regularly.
-            // Updates over each time step in the database will be applied in
-            // successive iterations through this loop.
-            for (unsigned int j=i->lastposPAHupdate; j<i->m_trajectory->alltrajectories.at(i->ID).time.size(); j++)
-            {
-                if (i->m_trajectory->alltrajectories.at(i->ID).time.at(j) >= 0.999 * seektime) {
+            // The update position encodes the position in the life story which
+            // the molecule had reached last time it was updated; it is passed
+            // in all the calls to getMoleculeState to shorten the search for
+            // the appropriate time point.
+            const unsigned int oldNumCarbon = it->m_numcarbon;
+            it->m_numcarbon = model.getMoleculeStories().getMoleculeState(it->ID, seektime, it->lastposPAHupdate);
+            it->lastupdated=t;
 
-                    if((i->lastposPAHupdate != j) || (i->lastposPAHupdate == 0))
-                    {
-                        // Update the size of the PAH
-                        i->m_numcarbon=i->m_trajectory->alltrajectories.at(i->ID).n_carbon_t.at(j);
-                
-                        // PAH has been updated to a later time
-                        PAHchanged = true;
-                    }
-
-                    // Cache the new trajectory database row index and exit the loop
-                    i->lastposPAHupdate=j;
-                    break;            
-                }
-	    }
-            i->lastupdated=t;
+            // See if anything changed, as this will required a call to UpdatePrimary() below
+            if(oldNumCarbon != it->m_numcarbon)
+                PAHchanged = true;
         }
 
         // Calculate derived quantities such as collision diameter and surface
@@ -962,7 +951,7 @@ bool PAHPrimary::CheckCoalescence()
 
 //this function updates a primary particle
 void PAHPrimary::UpdatePrimary(void)
-{	 
+{
 	m_numcarbon=0;
     m_PAHmass=0;
 	m_PAHCollDiameter=0;
@@ -983,7 +972,7 @@ void PAHPrimary::UpdatePrimary(void)
     }
     m_vol = m_PAHmass / m_pmodel->Components(0)->Density();        //in m^3
 	m_mass=m_PAHmass;
-	m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);    
+	m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
     m_dmob = m_diam;
     m_dcol = max(m_diam,m_PAHCollDiameter);
     m_surf = PI * m_diam * m_diam;
@@ -1006,8 +995,8 @@ void PAHPrimary::Reset()
  * @param[in] root The root node of this particle
 */
 void PAHPrimary::UpdateCache(PAHPrimary *root)
-{	
-    //Update the children 
+{
+    //Update the children
 	if (m_leftchild!=NULL)
 	{
 		m_leftchild->UpdateCache(root);
@@ -1027,9 +1016,9 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
 
             m_avg_coalesc=0;
 	}
-     
-    //this is not a primary, sum up the properties 
-	if (m_leftchild!=NULL) 
+
+    //this is not a primary, sum up the properties
+	if (m_leftchild!=NULL)
     {
         // remove the PAHs from this node to free memory
         Reset();
@@ -1045,17 +1034,17 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
         m_children_coalescence=CoalescenceLevel();
         if (m_children_coalescence>1)
             m_children_coalescence=1;
-        //sum up the avg coal level 
+        //sum up the avg coal level
         m_avg_coalesc=m_children_coalescence+m_leftchild->m_avg_coalesc+m_rightchild->m_avg_coalesc;
-        
-        // calculate the different diameters only for the root node because this goes into the 
+
+        // calculate the different diameters only for the root node because this goes into the
         // particle tree and gets used by the coagulation kernel
         if (this==root)
         {
              //spherical eqiv radius
-            double spherical_radius=pow(3*m_vol/(4*PI),ONE_THIRD);         
+            double spherical_radius=pow(3*m_vol/(4*PI),ONE_THIRD);
             m_diam=2*spherical_radius;
-            // there are m_numprimary-1 connections between the primary particles          
+            // there are m_numprimary-1 connections between the primary particles
             m_avg_coalesc=m_avg_coalesc/(m_numprimary-1);
             //approxmiate the surface of the particle
             const real numprim_1_3=pow(m_numprimary,-0.333333);
@@ -1068,13 +1057,13 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
             //const double meandiam=spherical_radius+radius_surf;            //2*0.5*(radius(vol)+radius(sphere))
             const double aggcolldiam=(6*m_vol/m_surf)*
                                      pow(pow(m_surf,3)/(36*PI*m_vol*m_vol),(1.0/1.8));
-            // the maximum of the largest PAH diameter and  
-            // the average between the surface and voluem equiv diameter       
-            const double cdiam=max(aggcolldiam,m_PAHCollDiameter);      
+            // the maximum of the largest PAH diameter and
+            // the average between the surface and voluem equiv diameter
+            const double cdiam=max(aggcolldiam,m_PAHCollDiameter);
             m_dmob = aggcolldiam;
             SetCollDiameter(cdiam);
         }
-        else 
+        else
         {
             m_diam=0;
             m_dmob=0;
@@ -1101,10 +1090,10 @@ void PAHPrimary::PrintTree(string filename)
  * @param[in] out Output stream
 */
 void PAHPrimary::PrintTreeLoop(std::ostream &out)
-{ 
+{
   if (m_leftchild!=NULL)
-  { //out<<"leftchild "<<10E8*m_leftchild->SphDiameter()<<endl;   
-	//out<<"rightchild "<<10E8*m_rightchild->SphDiameter()<<endl;    
+  { //out<<"leftchild "<<10E8*m_leftchild->SphDiameter()<<endl;
+	//out<<"rightchild "<<10E8*m_rightchild->SphDiameter()<<endl;
       out<<"\" "<<this<<"\" "<<" [shape = \"record\" label = \"surf="<<this->m_surf<<"|m_children_surf="<<this->m_children_surf<<"|m_vol="<<this->m_vol<<"|"<<this->m_children_coalescence<<"|"<<this<<"\"];"<<endl;
 	out<<"\" "<<this->m_leftchild<<"\" "<<" [shape = \"record\" label = \"surf="<<this->m_surf<<"|m_children_surf="<<this->m_children_surf<<"|m_vol="<<this->m_vol<<"|"<<this->m_children_coalescence<<"|"<<this<<"\"];"<<endl;
 	out<<"\" "<<this->m_rightchild<<"\" "<<" [shape = \"record\" label = \"surf="<<this->m_surf<<"|m_children_surf="<<this->m_children_surf<<"|m_vol="<<this->m_vol<<"|"<<this->m_children_coalescence<<"|"<<this<<"\"];"<<endl;
@@ -1117,7 +1106,7 @@ void PAHPrimary::PrintTreeLoop(std::ostream &out)
   }
 
   else
-  {  
+  {
       //out<<"\" "<<this<<"\" "<<" [label = \""<<2*pow((this->vol_sinter)*3/(4*PI),ONE_THIRD)<<"\"];"<<endl;
       out<<"\" "<<this<<"\" "<<" [shape = \"record\" label = \"surf="<<this->m_surf<<"|m_children_surf="<<this->m_children_surf<<"|m_vol="<<this->m_vol<<"|"<<this->m_children_coalescence<<"|"<<this<<"\"];"<<endl;
   }
@@ -1127,7 +1116,7 @@ void PAHPrimary::PrintTreeLoop(std::ostream &out)
 // Creates an aggregation data cache for this primary type.
 AggModels::PAHCache *const PAHPrimary::CreateAggCache(ParticleCache &pcache) const
 {
-    PAHCache *cache = 
+    PAHCache *cache =
         static_cast<PAHCache*>(ModelFactory::CreateAggCache(AggModels::PAH_ID, pcache));
     if (cache != NULL) *cache = *this;
     return cache;
@@ -1257,7 +1246,7 @@ void PAHPrimary::Serialize(std::ostream &out) const
 		// Write PAHmass
         val = (double) m_PAHmass;
         out.write((char*)&val, sizeof(val));
-		
+
 
 
         // Output base class.
@@ -1283,7 +1272,7 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
 		// Read number of PAHs.
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_numPAH = (int)val;
-        
+
 		// Read PAHcolldiamter.
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_PAHCollDiameter = (real)val;
@@ -1304,18 +1293,18 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
         m_fdim = (real)val;
 
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_Rg = (real)val;	
+        m_Rg = (real)val;
 
 
 	    // Read PAHs.
-	/*	
+	/*
 		for (int i=0; i!=m_numPAH; ++i) {
 			PAH currPAH;
 			//currPAH = new PAH;
 			in.read(reinterpret_cast<char*>(&currPAH.ID), sizeof(currPAH.ID));
 			in.read(reinterpret_cast<char*>(&currPAH.time_created), sizeof(currPAH.time_created));
 			in.read(reinterpret_cast<char*>(&currPAH.m_numcarbon), sizeof(currPAH.m_numcarbon));
-			m_PAH.push_back(currPAH); 
+			m_PAH.push_back(currPAH);
 		}
 */
 		// Read PAHmass.

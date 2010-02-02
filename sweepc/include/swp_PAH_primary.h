@@ -57,7 +57,6 @@
 #include "swp_aggmodel_type.h"
 #include "swp_surfvol_cache.h"
 #include "swp_PAH_cache.h"
-#include "swp_PAH_trajectory.h"
 
 #include <iostream>
 #include <stack>
@@ -106,10 +105,10 @@ public:
     void UpdateCache(void);
 
     //! updates the evolution of the PAHs using the database and the current time
-    void UpdatePAHs(double t);
+    void UpdatePAHs(double t, const Sweep::ParticleModel &model);
 
     //! adds a PAH to a particle
-    void AddPAH(real time, int ID, const Trajectory *trajectory);
+    void AddPAH(real time, int ID, const Sweep::ParticleModel &model);
 
     //! returns the coalescence level
     double CoalescenceLevel();
@@ -194,18 +193,24 @@ private:
                                    std::stack<bool> &takeLeftBranch);
 
     struct PAH {
+        //! Number of Carbon atoms in the PAH
         unsigned int m_numcarbon;
 
         //! Index of the PAH story within its database
         unsigned int ID;
+
+        //! Simulated time at point when molecule created
         double time_created;
+
+        //! Simulated time when molecule size was last updated
         double lastupdated;
-        double freezetime;
-        //stores the last position in the database when the PAH has been updated
+
+        //! Amount of growth time to ignore
+        real freezetime;
+
+        //! Last position in the database when the PAH has been updated
         unsigned int lastposPAHupdate;
 
-        //! Pointer to the collection of PAH stories that began at the same point as this one
-        Trajectory const *m_trajectory;
     };
 
     // Vector of PAHs.
