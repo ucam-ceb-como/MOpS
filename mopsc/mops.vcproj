@@ -386,10 +386,6 @@
 				RelativePath=".\source\swp_gas_profile.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\source\swp_PAHsolver.cpp"
-				>
-			</File>
 			<Filter
 				Name="Resource Files"
 				Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
@@ -492,10 +488,6 @@
 			</File>
 			<File
 				RelativePath=".\include\swp_gas_profile.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\swp_PAHsolver.h"
 				>
 			</File>
 			<Filter
