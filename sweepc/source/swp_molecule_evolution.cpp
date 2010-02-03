@@ -72,8 +72,8 @@ using namespace Sweep::MoleculeEvolution;
  * @exception   std::runtime_error  Molecule stories do not start at age 0
  */
 void Database::addStoriesFromFile(const std::string& file_name,
-                                  const real formation_time,
-                                  const real formation_position) {
+                                  const Sweep::real formation_time,
+                                  const Sweep::real formation_position) {
     // Open the file for reading
     CSV_IO *csvinput = new CSV_IO(file_name,false);
 
@@ -210,7 +210,7 @@ void Database::clear() {
  *
  * @exception   std::runtime_error      Invalid molecule id
  */
-Database::molecule_state Database::getMoleculeState(const molecule_id id, const real age,
+Database::molecule_state Database::getMoleculeState(const molecule_id id, const Sweep::real age,
                                                     state_lookup_hint &hint) const {
     // Use a reference to make the following code shorter
     if(id >= mMoleculeStories.size()) {
@@ -268,7 +268,7 @@ Database::molecule_state Database::getMoleculeState(const molecule_id id, const 
  *
  * @exception   std::logic_error    Empty database
  */
-Database::molecule_id Database::selectMoleculeNearTime(const real t, int (*rng)(int, int)) const {
+Database::molecule_id Database::selectMoleculeNearTime(const Sweep::real t, int (*rng)(int, int)) const {
     // See if there are any molecules formed exactly at the specified time.
     // This is rather unlikely and so the range will generally contain 0 elements.
     Utils::FirstOfPairComparator<real, molecule_id> comp;

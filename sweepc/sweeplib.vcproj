@@ -39,7 +39,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/D NONSPHERE"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\comostrings\include;..\sprogc\include;..\camxml\include;include;..\geometry\include"
+				AdditionalIncludeDirectories="..\utils\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include;..\geometry\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
@@ -350,19 +350,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\source\swp_molecule_evolution.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\source\swp_PAH_cache.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\source\swp_PAH_database.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\source\swp_PAH_primary.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_PAH_trajectory.cpp"
 					>
 				</File>
 				<File
@@ -736,6 +732,10 @@
 				Name="Aggregation Models"
 				>
 				<File
+					RelativePath="..\utils\include\first_of_pair_comparator.hpp"
+					>
+				</File>
+				<File
 					RelativePath=".\include\swp_aggmodel_cache.h"
 					>
 				</File>
@@ -744,19 +744,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\swp_molecule_evolution.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\swp_PAH_cache.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_PAH_database.h"
-					>
-				</File>
-				<File
 					RelativePath=".\include\swp_PAH_primary.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_PAH_trajectory.h"
 					>
 				</File>
 				<File
