@@ -447,6 +447,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
             {
                 // Time since position was last calculated
                 const real dt = t_stop - (*itPart)->getPositionTime();
+                assert(dt >= 0.0);
 
                 if(mSplitAdvection) {
                     // Bulk advection

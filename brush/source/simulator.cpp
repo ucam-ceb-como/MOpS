@@ -290,7 +290,7 @@ void Brush::Simulator::saveParticleList(const Reactor1d &reac, std::ostream &out
                       particleListEntry, 1.0 / mix.SampleVolume());
 
             // Output the time and place at which the particle is found
-            out << reac.getTime() << ',' << reac.getCellCentre(i);
+            out << reac.getTime() << ',' << mix.Particles().At(particleIndex)->getPosition();
 
             // Output the particle details
             for(fvector::const_iterator it = particleListEntry.begin();
