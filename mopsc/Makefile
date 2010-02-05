@@ -103,7 +103,7 @@ geomlib:
 	$(MAKE) -f ../geometry/Makefile -C ../geometry debug=$(debug) profile=$(profile)
 
 # Mops library
-mopslib: $(obj) comostringslib camxmllib sproglib sweeplib cvodeslib
+mopslib: $(obj) comostringslib camxmllib sproglib sweeplib cvodeslib geomlib
 	mkdir -p lib
 ifeq ($(debug),0)
 	ar -rcs $(lib)/mops.a $(obj)
