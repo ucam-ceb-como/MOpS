@@ -101,9 +101,12 @@ PAHPrimary::PAHPrimary() : Primary(),
 {
 }
 
-
-// Initialising constructor.
-PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model)
+/*!
+ * @param[in]   time        Time at which particle is being created
+ * @param[in]   model       Model which defines the meaning of the primary
+ *
+ */
+PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model)
 : Primary(time, model),
     m_numcarbon(0),
     m_PAHmass(0),
@@ -137,6 +140,52 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model)
     const int newID = model.getMoleculeStories().selectMoleculeNearTime(time, Sweep::irnd);
 
     AddPAH(time,newID, model);
+
+    //Update the other properties
+    UpdateCache();
+}
+
+/*!
+ * @param[in]   time        Time at which particle is being created
+ * @param[in]   position    Position at which particle is being created
+ * @param[in]   model       Model which defines the meaning of the primary
+ *
+ */
+PAHPrimary::PAHPrimary(const real time, const real position,
+                       const Sweep::ParticleModel &model)
+: Primary(time, model),
+    m_numcarbon(0),
+    m_PAHmass(0),
+    m_PAHCollDiameter(0),
+    m_numPAH(0),
+    m_numprimary(0),
+    m_primarydiam(0.0),
+    m_children_radius(0),
+    m_children_vol(0),
+    m_leftparticle_vol_old(0),
+    m_rightparticle_vol_old(0),
+    m_rightparticle_numPAH(0),
+    m_leftparticle_numPAH(0),
+    m_children_surf(0),
+    m_children_coalescence(0),
+    m_Rg(0),
+    m_fdim(0),
+    m_sqrtLW(0),
+    m_LdivW(0),
+    m_avg_coalesc(0),
+    m_leftchild(NULL),
+    m_rightchild(NULL),
+    m_parent(NULL),
+    m_leftparticle(NULL),
+    m_rightparticle(NULL)
+{
+    // Other parts of the code check for a non-zero composition
+    m_comp[0]=1;
+
+    // Select one particular life story uniformly at random from the family/trajectory.
+    const int newID = model.getMoleculeStories().selectMoleculeNearPosition(position, Sweep::irnd);
+
+    AddPAH(time, newID, model);
 
     //Update the other properties
     UpdateCache();

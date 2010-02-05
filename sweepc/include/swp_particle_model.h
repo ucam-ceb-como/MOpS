@@ -67,7 +67,7 @@ namespace Sweep
 // Forward declare the Particle class.
 class Particle;
 
-// Definition of the ParticleModel class.
+//! Class that defines the interpretation of the data in a particle
 class ParticleModel
 {
 public:
@@ -196,10 +196,11 @@ public:
 
     // PARTICLE FUNCTIONS.
 
-    // Creates a new particle and sets it up with all the models
-    // required by the mechanism.  The particle create time is
-    // given as an argument.
-    Particle *const CreateParticle(real time) const;
+    //! Create a new particle on the heap
+    Particle *const CreateParticle(const real time) const;
+
+    //! Create a new particle on the heap
+    Particle *const CreateParticle(const real time, const real position) const;
 
 
     // READ/WRITE/COPY.

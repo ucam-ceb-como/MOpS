@@ -97,7 +97,7 @@ PAHInception &PAHInception::operator =(const PAHInception &rhs)
 
 /*!
  * Create a new particle and add it to the ensemble with position uniformly
- * distributed over the grid cell.
+ * distributed over the grid cell, if it is of positive size.
  *
  * The iterm parameter is included because it will be needed for many process
  * types and this function is meant to have a general signature.
@@ -116,11 +116,7 @@ int PAHInception::Perform(const real t, Cell &sys,
                        real (*rng)(),
                        Transport::TransportOutflow * const out) const {
 
-    // This routine performs the inception on the given chemical system.
-
-    // Create a new particle of the type specified
-    // by the system ensemble.
-    Particle *sp = m_mech->CreateParticle(t);
+    Particle *sp = NULL;
 
     // Get the cell vertices
     fvector vertices = local_geom.cellVertices();
@@ -131,9 +127,17 @@ int PAHInception::Perform(const real t, Cell &sys,
     real posn = vertices.front();
 
     const real width = vertices.back() - posn;
-    posn += width * rng();
 
-    sp->setPositionAndTime(posn, t);
+    if(width > 0) {
+        // There is some real spatial detail
+        posn += width * rng();
+        sp = m_mech->CreateParticle(t, posn);
+    }
+    else {
+        // Ignore all questions of position
+        sp = m_mech->CreateParticle(t);
+        rng();
+    }
 
     sp->UpdateCache();
 
@@ -174,7 +178,7 @@ real PAHInception::Rate(real t, const Cell &sys) const
 {
     // Rate cannot be negative
     const real rate= NA*sys.PAHFormationRate()*A()*sys.SampleVolume();
-    if (rate<0) 
+    if (rate<0)
         return 0;
     return rate;
 }

@@ -70,15 +70,13 @@ namespace AggModels
 class PAHPrimary : public Primary
 {
 public:
-        // Constructors.
-    PAHPrimary() ;
-    //   Note:  Default constructor is protected to prevent a
-    //          SurfVolPrimary being created without knowledge of the
-    //          defining particle model.
-    PAHPrimary(                       // Initialising constructor.
-        real time,                        //  - Create time.
-        const Sweep::ParticleModel &model //  - Defining particle model.
-        );
+    //! Build a new primary with one molecule
+    PAHPrimary(const real time, const Sweep::ParticleModel &model);
+
+    //! Build a new primary with one molecule
+    PAHPrimary(const real time, const real position,
+               const Sweep::ParticleModel &model);
+
     PAHPrimary(const PAHPrimary &copy); // Copy constructor.
     PAHPrimary(                       // Stream-reading constructor.
         std::istream &in,                 //  - Input stream.
@@ -154,6 +152,9 @@ public:
     double AvgCoalesc() const;
 
 protected:
+    //! Empty primary not meaningful
+    PAHPrimary();
+
     //! help function for printree
     void PrintTreeLoop(std::ostream &out);
     //! sets the children properties to 0

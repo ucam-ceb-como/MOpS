@@ -351,10 +351,17 @@ Processes::SinteringModel &ParticleModel::SintModel(void) const {return m_sint_m
 
 // PARTICLE FUNCTIONS.
 
-// Creates a new particle and sets it up with all the models
-// required by the ParticleModel. A particle created here
-// will have a single primary.
-Sweep::Particle *const ParticleModel::CreateParticle(real time) const
+/*!
+ * @param[in]   time        Time at which particle is being created
+ *
+ * Creates a new particle and sets it up with all the models
+ * required by the ParticleModel. A particle created here
+ * will have a single primary.  Ownership of the particle
+ * (in particular responsibility for calling delete) is taken
+ * by the caller.
+ *
+ */
+Sweep::Particle *const ParticleModel::CreateParticle(const real time) const
 {
     // Create new primary using the aggregation model currently
     // set in this model.
@@ -363,6 +370,36 @@ Sweep::Particle *const ParticleModel::CreateParticle(real time) const
     // Now create a particle from this primary.  This sets up the
     // sub-model cache within the particle automatically.
     Particle *part = new Particle(*pri);
+
+    // No position information available
+    part->setPositionAndTime(-1.0, -1.0);
+
+    // Returns particle.
+    return part;
+}
+
+/*!
+ * @param[in]   time        Time at which particle is being created
+ * @param[in]   position    Position at which particle is being created
+ *
+ * Creates a new particle and sets it up with all the models
+ * required by the ParticleModel. A particle created here
+ * will have a single primary.  Ownership of the particle
+ * (in particular responsibility for calling delete) is taken
+ * by the caller.
+ *
+ */
+Sweep::Particle *const ParticleModel::CreateParticle(const real time, const real position) const
+{
+    // Create new primary using the aggregation model currently
+    // set in this model.
+    Primary *pri = ModelFactory::CreatePrimary(m_aggmodel, time, position, *this);
+
+    // Now create a particle from this primary.  This sets up the
+    // sub-model cache within the particle automatically.
+    Particle *part = new Particle(*pri);
+
+    part->setPositionAndTime(position, time);
 
     // Returns particle.
     return part;

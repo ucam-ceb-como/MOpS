@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -60,15 +60,24 @@
 
 namespace Sweep
 {
+//! Factory class for particles, their statistics and sub-models
 class ModelFactory
 {
 public:
     // PRIMARY PARTICLE CREATION.
 
-    // Creates a new primary particle of the given type.
+    //! Creates a new primary particle of the given type.
     static Primary *const CreatePrimary(
-        AggModels::AggModelType id, // Model ID.
-        real time,                  // Primary create time.
+        const AggModels::AggModelType id, // Model ID.
+        const real time,                  // Primary create time.
+        const ParticleModel &model  // Defining particle model.
+        );
+
+    //! Creates a new primary particle of the given type.
+    static Primary *const CreatePrimary(
+        const AggModels::AggModelType id, // Model ID.
+        const real time,                  // Primary create time.
+        const real position,
         const ParticleModel &model  // Defining particle model.
         );
 
@@ -178,7 +187,7 @@ public:
 
     // AGGEGATION MODEL STREAM INPUT.
 
-    // Reads an aggregation model cache from a binary stream.  The first 
+    // Reads an aggregation model cache from a binary stream.  The first
     // item read is the model ID which tells the ModelFactory what type
     // of model to read.
     static AggModels::AggModelCache *const ReadAggCache(
@@ -186,7 +195,7 @@ public:
         ParticleCache &parent // Parent object.
         );
 
-    // Reads aggregation model stats from a binary stream.  The first 
+    // Reads aggregation model stats from a binary stream.  The first
     // item read is the model ID which tells the ModelFactory what type
     // of aggregation model stats to read.
     static Stats::IModelStats *const ReadAggStats(
@@ -203,7 +212,7 @@ public:
         std::ostream &out                      // Output stream.
         );
 
-    // Writes an aggregation model stats object, along with 
+    // Writes an aggregation model stats object, along with
     // its ID, to an output stream.
     static void WriteAggStats(
         const Stats::IModelStats &stats, // Stats to write.

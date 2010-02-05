@@ -267,6 +267,8 @@ Database::molecule_state Database::getMoleculeState(const molecule_id id, const 
  * @return      Id for a molecule formed around the specified time
  *
  * @exception   std::logic_error    Empty database
+ *
+ * Changes to this method should generally be replicated in selectMoleculNearPosition
  */
 Database::molecule_id Database::selectMoleculeNearTime(const Sweep::real t, int (*rng)(int, int)) const {
     // See if there are any molecules formed exactly at the specified time.
@@ -298,7 +300,6 @@ Database::molecule_id Database::selectMoleculeNearTime(const Sweep::real t, int 
                 const real tNext = (range.second)->first;
 
                 if((t - tPrevious) > (tNext - t)) {
-                //if(false) {
                     // The molecules formed after t are closer than those formed before,
                     // so find all the molecules formed at tNext.
                     // Note that range.first already points to the first molecule
@@ -342,6 +343,98 @@ Database::molecule_id Database::selectMoleculeNearTime(const Sweep::real t, int 
     const formation_lookup::size_type numRelevantMolecules = std::distance(range.first, range.second);
     if(numRelevantMolecules < 10)
         std::cerr << "Only found " << numRelevantMolecules << " (Database::selectMoleculeNearTime)\n";
+
+    //@todo The range should probably be extended to ensure minimum size
+
+    // Get an iterator to one molecule chosen uniformly at random
+    formation_lookup::const_iterator selectedMolecule(range.first);
+    std::advance(selectedMolecule, rng(0, numRelevantMolecules - 1));
+    return selectedMolecule->second;
+}
+
+/*!
+ * @param[in]   x       Position around which molecule formed
+ * @param       rng     Function to generate uniform integers on [a, b] by the call rng(a, b)
+ *
+ * @return      Id for a molecule formed around the specified position
+ *
+ * @exception   std::logic_error    Empty database
+ *
+ * Changes to this method should generally be replicated in selectMoleculNearTime
+ */
+Database::molecule_id Database::selectMoleculeNearPosition(const real x, int (*rng)(int, int)) const {
+    // See if there are any molecules formed exactly at the specified time.
+    // This is rather unlikely and so the range will generally contain 0 elements.
+    Utils::FirstOfPairComparator<real, molecule_id> comp;
+    std::pair<formation_lookup::const_iterator, formation_lookup::const_iterator> range
+      = std::equal_range(mFormationPositions.begin(), mFormationPositions.end(), x, comp);
+
+    // Store the range of molecules from which to select in this pair
+    std::pair<formation_lookup::const_iterator, formation_lookup::const_iterator> rangeToUse = range;
+
+    if(std::distance(range.first, range.second) == 0) {
+    // Initial search did not find any molecules that formed exactly at x so
+    // look at the closest molecules that formed at previous and later positions.
+
+        // Indicate if there were any molecules formed before x
+        const bool havePrevious = (range.first != mFormationPositions.begin());
+
+        // Indicate if there were any molecules formed after x
+        const bool haveNext = (range.second != mFormationPositions.end());
+
+        // Find a range of molecule ids from which to make a random selection
+        if(havePrevious) {
+            // Last time prior to x at which a molecule was formed
+            const real xPrevious = (range.first - 1)->first;
+
+            if(haveNext) {
+                // First time after t at which a molecule was formed
+                const real xNext = (range.second)->first;
+
+                if((x - xPrevious) > (xNext - x)) {
+                    // The molecules formed after x are closer than those formed before,
+                    // so find all the molecules formed at xNext.
+                    // Note that range.first already points to the first molecule
+                    // formed at xNext.
+                    range.second = std::upper_bound(range.first, mFormationPositions.end(), xNext, comp);
+                }
+                else {
+                    // The molecules formed before x are closer than those formed after,
+                    // so find all the molecules formed at xPrevious.
+                    // Note that range.second already points to one past the last molecule
+                    // formed at xPrevious.
+                    range.first = std::lower_bound(mFormationPositions.begin(), range.second, xPrevious, comp);
+                }
+            }
+            else {
+                // Only have molecules formed prior to x
+                //std::cerr << "WARNING: " << x << " is after the last molecule formation position\n";
+
+                // Have to look at the molecules formed prior to x
+                // Note that range.second already points to one past the last molecule
+                // formed at xPrevious.
+                range.first = std::lower_bound(mFormationPositions.begin(), range.second, xPrevious, comp);
+            }
+        }
+        else {
+            // No particles formed before x
+            if(haveNext) {
+                std::cerr << "WARNING: " << x << " is before the first molecule formation position\n";
+
+                // Look at the molecules formed after t since there are none formed any earlier
+                range.second = std::upper_bound(range.first, mFormationPositions.end(), (range.first)->first, comp);
+
+            }
+            else {
+                throw std::logic_error("Database::selectMoleculeNearPosition called on empty database");
+            }
+        }
+    }
+    // Should now have a non-empty range of ids of molecules formed around t in [range.first, range.second)
+
+    const formation_lookup::size_type numRelevantMolecules = std::distance(range.first, range.second);
+    if(numRelevantMolecules < 10)
+        std::cerr << "Only found " << numRelevantMolecules << " (Database::selectMoleculeNearPosition)\n";
 
     //@todo The range should probably be extended to ensure minimum size
 

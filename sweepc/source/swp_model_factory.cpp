@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -67,16 +67,48 @@ using namespace std;
 
 // PRIMARY PARTICLE CREATION.
 
-// Creates a new primary particle of the given type.
-Primary *const ModelFactory::CreatePrimary(AggModels::AggModelType id, 
-                                           real time, const ParticleModel &model)
+/*!
+ * @param[in]   id          Model for the aggregate structure of the particle
+ * @param[in]   time        Time at which particle is being created
+ * @param[in]   position    Position at which particle is being created
+ * @param[in]   model       Model which defines the meaning of the particles
+ *
+ * @return      Pointer to dynamically allocated primary (caller must delete)
+ */
+Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
+                                           const real time, const real position,
+                                           const ParticleModel &model)
 {
     switch (id) {
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolPrimary(time, model);
         case AggModels::PriPartList_ID:
             return new AggModels::PriPartPrimary(time, model);
-		case AggModels::PAH_ID:  
+		case AggModels::PAH_ID:
+            return new AggModels::PAHPrimary(time, position, model);
+        case AggModels::Spherical_ID:
+            // Spherical primary model is default.
+        default:
+            return new Primary(time, model);
+    }
+}
+
+/*!
+ * @param[in]   id          Model for the aggregate structure of the particle
+ * @param[in]   time        Time at which particle is being created
+ * @param[in]   model       Model which defines the meaning of the particles
+ *
+ * @return      Pointer to dynamically allocated primary (caller must delete)
+ */
+Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
+                                           const real time, const ParticleModel &model)
+{
+    switch (id) {
+        case AggModels::SurfVol_ID:
+            return new AggModels::SurfVolPrimary(time, model);
+        case AggModels::PriPartList_ID:
+            return new AggModels::PriPartPrimary(time, model);
+        case AggModels::PAH_ID:
             return new AggModels::PAHPrimary(time, model);
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
@@ -90,7 +122,7 @@ Primary *const ModelFactory::CreatePrimary(AggModels::AggModelType id,
 // Reads a primary particle from a binary stream.  First reads
 // the primary type ID, in order to create a primary of the
 // correct type.
-Primary *const ModelFactory::ReadPrimary(std::istream &in, 
+Primary *const ModelFactory::ReadPrimary(std::istream &in,
                                          const ParticleModel &model)
 {
     if (in.good()) {
@@ -150,7 +182,7 @@ void ModelFactory::WritePrimary(const Primary &pri, std::ostream &out)
 // SUB-MODEL DATA CREATION.
 
 // Creates a new sub-model data object of the given type.
-SubModels::SubModel *const ModelFactory::Create(SubModels::SubModelType id, 
+SubModels::SubModel *const ModelFactory::Create(SubModels::SubModelType id,
                                                 Primary &parent)
 {
     switch (id) {
@@ -164,7 +196,7 @@ SubModels::SubModel *const ModelFactory::Create(SubModels::SubModelType id,
 }
 
 // Creates a new sub-model cache object of the given type.
-SubModels::SubModelCache *const ModelFactory::CreateCache(SubModels::SubModelType id, 
+SubModels::SubModelCache *const ModelFactory::CreateCache(SubModels::SubModelType id,
                                                           ParticleCache &parent)
 {
     switch (id) {
@@ -183,7 +215,7 @@ SubModels::SubModelCache *const ModelFactory::CreateCache(SubModels::SubModelTyp
 // Reads a sub-model from a binary stream.  The first item read
 // is the model ID which tells the ModelFactory what type
 // of model to read.
-SubModels::SubModel *const ModelFactory::Read(std::istream &in, 
+SubModels::SubModel *const ModelFactory::Read(std::istream &in,
                                               Primary &parent)
 {
     if (in.good()) {
@@ -215,7 +247,7 @@ SubModels::SubModel *const ModelFactory::Read(std::istream &in,
 // Reads a sub-model cache from a binary stream.  The first item read
 // is the model ID which tells the ModelFactory what type
 // of model to read.
-SubModels::SubModelCache *const ModelFactory::ReadCache(std::istream &in, 
+SubModels::SubModelCache *const ModelFactory::ReadCache(std::istream &in,
                                                         ParticleCache &parent)
 {
     if (in.good()) {
@@ -294,7 +326,7 @@ void ModelFactory::Write(const SubModels::SubModel &model, std::ostream &out)
 }
 
 // Writes a sub-model cache, along with its ID to an output stream.
-void ModelFactory::WriteCache(const SubModels::SubModelCache &cache,  
+void ModelFactory::WriteCache(const SubModels::SubModelCache &cache,
                               std::ostream &out)
 {
     if (out.good()) {
@@ -329,7 +361,7 @@ void ModelFactory::WriteStats(const Stats::IModelStats &stats, std::ostream &out
 // AGGREGATION MODEL CREATION.
 
 // Creates a new aggregation model cache of the given type.
-AggModels::AggModelCache *const ModelFactory::CreateAggCache(AggModels::AggModelType id, 
+AggModels::AggModelCache *const ModelFactory::CreateAggCache(AggModels::AggModelType id,
                                                              ParticleCache &parent)
 {
     switch (id) {
@@ -350,7 +382,7 @@ AggModels::AggModelCache *const ModelFactory::CreateAggCache(AggModels::AggModel
 }
 
 // Creates a new aggregation model stats object of the given type.
-Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType id, 
+Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType id,
                                                        const ParticleModel &model)
 {
     switch (id) {
@@ -363,7 +395,7 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
         case AggModels::PriPartList_ID:
             return new Stats::PriPartStats();
 	   case AggModels::PAH_ID:
-		   return new Stats::PAHStats();							// ms785: postprocessing not yet implemented  
+		   return new Stats::PAHStats();							// ms785: postprocessing not yet implemented
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateAggStats).");
@@ -413,10 +445,10 @@ AggModels::AggModelCache *const ModelFactory::ReadAggCache(std::istream &in,
     }
 }
 
-// Reads aggregation model stats from a binary stream.  The first 
+// Reads aggregation model stats from a binary stream.  The first
 // item read is the model ID which tells the ModelFactory what type
 // of aggregation model stats to read.
-Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in, 
+Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in,
                                                      const ParticleModel &model)
 {
     if (in.good()) {
@@ -469,7 +501,7 @@ void ModelFactory::WriteCache(const AggModels::AggModelCache &cache,
     }
 }
 
-// Writes an aggregation model stats object, along with 
+// Writes an aggregation model stats object, along with
 // its ID, to an output stream.
 void ModelFactory::WriteAggStats(const Stats::IModelStats &stats, std::ostream &out)
 {
