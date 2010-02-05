@@ -136,7 +136,6 @@ int PAHInception::Perform(const real t, Cell &sys,
     else {
         // Ignore all questions of position
         sp = m_mech->CreateParticle(t);
-        rng();
     }
 
     sp->UpdateCache();
