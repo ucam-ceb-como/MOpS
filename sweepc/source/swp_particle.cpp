@@ -177,8 +177,8 @@ Particle &Particle::operator+=(const Sweep::Particle &rhs)
 {
     SubParticle::operator+=(rhs);
 
-    m_Position = (m_Position + rhs.m_Position) * 0.5;
-    m_PositionTime = (m_PositionTime + rhs.m_PositionTime) * 0.5;
+    //m_Position = (m_Position + rhs.m_Position) * 0.5;
+    //m_PositionTime = (m_PositionTime + rhs.m_PositionTime) * 0.5;
 
     return *this;
 }
