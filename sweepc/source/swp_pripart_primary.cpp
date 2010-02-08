@@ -704,13 +704,13 @@ void PriPartPrimary::updatePrimaries(void)
 }
 
 // Merges a pri-particle list into the current list.
-void PriPartPrimary::mergeInList(const std::vector<PriPart> &list)
+void PriPartPrimary::mergeInList(const std::vector<PriPart> &particle_list)
 {
     vector<PriPart>::const_iterator j;
     unsigned int i;
 
     // Loop over list to be merged.
-    for (j=list.begin(); j!=list.end(); ++j) {
+    for (j=particle_list.begin(); j!=particle_list.end(); ++j) {
         // Loop over this list and find the first primary smaller than 
         // that being inserted.
         for (i=0; i!=m_primaries.size(); ++i) {
