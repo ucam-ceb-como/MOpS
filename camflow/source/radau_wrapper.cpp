@@ -130,7 +130,7 @@ void RadauWrapper::initSolver(  int nEq,
    // Mass matrix routine is identity
    const int imas = 0;
    int mlmas = nEq;
-   int mumas;
+   int mumas = 0;
 
    // Use default values (see header files) for these parameters:
    double hinit = 0.0;//solverControl->getIniStep();   //initial step size
