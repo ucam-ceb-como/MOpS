@@ -43,7 +43,7 @@
 #include "cam_conc.h"
 using namespace Camflow;
 
-CamConc::CamConc(CamConc& cc){
+CamConc::CamConc(const CamConc& cc){
     fracType = cc.fracType;
 }
 void CamConc::setFracType(int n){
