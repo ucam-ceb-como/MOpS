@@ -29,7 +29,7 @@ void CamSetup::getInletMassFrac(CamBoundary& cb, std::vector<doublereal>& fracs)
 }
 
 
-const doublereal CamSetup::getInletTemperature(CamBoundary& cb){
+doublereal CamSetup::getInletTemperature(CamBoundary& cb){
     doublereal T=0;
     if(admin->getEnergyModel() == admin->ISOTHERMAL ){
         T = cb.getTemperature();
@@ -39,7 +39,7 @@ const doublereal CamSetup::getInletTemperature(CamBoundary& cb){
     return T;
 }
 
-const doublereal CamSetup::getInletFlowRate(CamBoundary& cb){
+doublereal CamSetup::getInletFlowRate(CamBoundary& cb){
 
     doublereal flow;
     if(cb.getFlowRate() == 0){
@@ -57,7 +57,7 @@ const doublereal CamSetup::getInletFlowRate(CamBoundary& cb){
     return flow;
 }
 
-const doublereal CamSetup::getInletVelocity(CamBoundary& cb){
+doublereal CamSetup::getInletVelocity(CamBoundary& cb){
     doublereal vel;
     doublereal avgMolWt = camMixture->getAvgMolWt();
     rho = opPre*avgMolWt/(R*camMixture->Temperature());
