@@ -57,7 +57,7 @@ namespace Camflow{
         };
         CamConc(){}
         ~CamConc(){}
-        CamConc(CamConc &cc);
+        CamConc(const CamConc &cc);
         //set the fraction type mass or mole
         void setFracType(int n);
 
