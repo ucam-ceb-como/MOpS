@@ -362,7 +362,7 @@ Database::molecule_id Database::selectMoleculeNearTime(const Sweep::real t, int 
  *
  * Changes to this method should generally be replicated in selectMoleculNearTime
  */
-Database::molecule_id Database::selectMoleculeNearPosition(const real x, int (*rng)(int, int)) const {
+Database::molecule_id Database::selectMoleculeNearPosition(const Sweep::real x, int (*rng)(int, int)) const {
     // See if there are any molecules formed exactly at the specified time.
     // This is rather unlikely and so the range will generally contain 0 elements.
     Utils::FirstOfPairComparator<real, molecule_id> comp;
