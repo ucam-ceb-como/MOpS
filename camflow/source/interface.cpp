@@ -218,7 +218,7 @@ void Interface::solve(std::vector<Thermo::Mixture>& cstrs,
 /*
  *return the number of species
  */
-const int Interface::getNumberOfSpecies() const {
+int Interface::getNumberOfSpecies() const {
     return nSpecies;
 }
 /*
@@ -389,14 +389,14 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
 /*
  *return the stoichiometric mixture fraction
  */
-const doublereal Interface::getStMixtureFrac(){
+doublereal Interface::getStMixtureFrac(){
     return stMixtureFrac;
 }
 /*
  *
  *return the density
  */
-const doublereal Interface::getDensity(const doublereal axpos){
+doublereal Interface::getDensity(const doublereal axpos){
 
     doublereal dens = getVariableAt(axpos,rhoVector);
     return dens;
@@ -407,7 +407,7 @@ const doublereal Interface::getDensity(const doublereal axpos){
  *
  *@return   Vector of mass fractions at all the independent variable points
  */
-const std::vector<doublereal> Interface::getMassFracsBySpecies(const int spIndex) const {
+std::vector<doublereal> Interface::getMassFracsBySpecies(const int spIndex) const {
     // Find the length of the mass fraction profile and create an empty
     // vector with this much space
     const size_t len = indVar.size();
@@ -425,7 +425,7 @@ const std::vector<doublereal> Interface::getMassFracsBySpecies(const int spIndex
  *
  *@return   Vector of all mass fractions at one independent variable point
  */
-const std::vector<doublereal> Interface::getMassFracsByPoint(const int indVarIndex) const {
+std::vector<doublereal> Interface::getMassFracsByPoint(const int indVarIndex) const {
     std::vector<doublereal> mf(nSpecies);
 
     for(int i = 0; i < nSpecies; i++){
@@ -437,14 +437,14 @@ const std::vector<doublereal> Interface::getMassFracsByPoint(const int indVarInd
 /*
  *return the mass fractions
  */
-const doublereal Interface::getMassFrac(const int spIndex, const doublereal axpos){
+doublereal Interface::getMassFrac(const int spIndex, const doublereal axpos){
     doublereal massfrac = getVariableAt(axpos, getMassFracsBySpecies(spIndex));
     return massfrac;
 }
 /*
  *return the mole fractions
  */
-const doublereal Interface::getMoleFrac(const int spIndex, const doublereal axpos){
+doublereal Interface::getMoleFrac(const int spIndex, const doublereal axpos){
 
     const doublereal speciesMolwt = (*speciesPointerVector)[spIndex] -> MolWt();
     const doublereal averageMolwt = getVariableAt(axpos,avgMolWtVector);
@@ -456,7 +456,7 @@ const doublereal Interface::getMoleFrac(const int spIndex, const doublereal axpo
 /*
  *return the temperature
  */
-const doublereal Interface::getTemperature(const doublereal axpos){
+doublereal Interface::getTemperature(const doublereal axpos){
 
     doublereal temp = getVariableAt(axpos,TVector);
     return temp;
@@ -464,7 +464,7 @@ const doublereal Interface::getTemperature(const doublereal axpos){
 /*
  *return the viscosity
  */
-const doublereal Interface::getViscosity(const doublereal axpos){
+doublereal Interface::getViscosity(const doublereal axpos){
 
     doublereal temp = getVariableAt(axpos,muVector);
     return temp;
@@ -473,7 +473,7 @@ const doublereal Interface::getViscosity(const doublereal axpos){
 /**
  *  Return the specific heat
  */
-const doublereal Interface::getSpecificHeat(const doublereal axPos){
+doublereal Interface::getSpecificHeat(const doublereal axPos){
     doublereal temp = getVariableAt(axPos,spHeat);
     return temp;
 }
@@ -481,14 +481,14 @@ const doublereal Interface::getSpecificHeat(const doublereal axPos){
 /**
  *  Return the thermal conductivity
  */
-const doublereal Interface::getThermalConductivity(const doublereal axPos){
+doublereal Interface::getThermalConductivity(const doublereal axPos){
     doublereal temp = getVariableAt(axPos,lambda);
     return temp;
 }
 /**
  *  Return a vector of diffusion coefficients
  */
-const std::vector<doublereal> Interface::getDiffusionCoefficients(const doublereal axPos){
+std::vector<doublereal> Interface::getDiffusionCoefficients(const doublereal axPos){
     std::vector<doublereal> diff, rmDiff;
     int len = indVar.size();
     rmDiff.clear();
@@ -513,7 +513,7 @@ const std::vector<doublereal> Interface::getDiffusionCoefficients(const doublere
  *
  *\return       Rate of formation of pyrene (\f$\mathrm{mol\,m^{-3}\,s^{-1}}\f$).
  */
-const doublereal Interface::getWdotA4(const doublereal axpos){
+doublereal Interface::getWdotA4(const doublereal axpos){
 
     doublereal temp = getVariableAt(axpos,wdotA4);
     return temp;
