@@ -66,7 +66,7 @@ public:
     LinearInterpolator(const std::vector<X> &positionValues, const std::vector<Y> &dataValues);
 
     //! Get an interpolated value
-    const Y interpolate(const X& x) const;
+    Y interpolate(const X& x) const;
 
 private:
     //! Type of internal data structure
@@ -156,7 +156,7 @@ template<typename X, typename Y> Utils::LinearInterpolator<X, Y>::LinearInterpol
  *
  *\return	Interpolated value
  */
-template<typename X, typename Y> const Y Utils::LinearInterpolator<X, Y>::interpolate(const X &x) const {
+template<typename X, typename Y> Y Utils::LinearInterpolator<X, Y>::interpolate(const X &x) const {
 
     Y result;
     // Need a pair<X, Y> with x as its first element to use in the lookup, the contents of the second element
