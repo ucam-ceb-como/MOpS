@@ -333,8 +333,7 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop,
                 rate_cache.mInvalidCells.push(out.destination);
             }
 
-            // The original copy of the transported particle is no longer needed
-            delete out.particle;
+            // Ownership of the transported particle was taken by transportIn
             out.particle = NULL;
         }
     }
@@ -346,7 +345,7 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop,
 
 /*!
  * Add a particle that has left one cell into the specified cell.  The particle_details
- * must contain a pointer to a valid particle, ownership of which remains with
+ * must contain a pointer to a valid particle, ownership of which is relinquished by
  * the caller.
  *
  *\param[in,out]    reac                    1D reactor within which the transport is occuring
@@ -383,7 +382,11 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
     // Unfortunately we cannot quite conserve statistical weight, there will always be a bit
     // left over after the loop above.  This can only be handled in an average sense.
     if(Sweep::rnd() < incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume()) {
-        reac.getCell(destination_index).Mixture()->Particles().Add(*(new Sweep::Particle(*particle_details.particle)));
+        reac.getCell(destination_index).Mixture()->Particles().Add(*particle_details.particle);
+    }
+    else {
+        // Ownership of the particle has not been passed on to an ensemble so the memory must be released
+        delete particle_details.particle;
     }
 }
 
@@ -430,12 +433,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
         // Get a list of the particles from the ensemble.  New instances of the
         // particles are required as the existing particles will be deleted
         // when a new list is set on the ensemble.
-        Sweep::PartPtrList partList;
-        Sweep::Ensemble::const_iterator itEns = particles.begin();
-        const Sweep::Ensemble::const_iterator itEnsEnd = particles.end();
-        while(itEns != itEnsEnd) {
-            partList.push_back(new Sweep::Particle(**itEns++));
-        }
+        Sweep::PartPtrList partList = particles.TakeParticles();
 
         // Now go through the particles updating their position
         Sweep::PartPtrList::iterator itPart = partList.begin();
@@ -533,9 +531,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
                 // efficient method could be devised.
                 transportIn(reac, i, *itPart);
 
-                // Delete the particles, which have now had clones added to
-                // their destination populations
-                delete itPart->particle;
+                // Ownership was taken by transportIn
                 itPart->particle = NULL;
         }
 
