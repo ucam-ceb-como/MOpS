@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\utils\include;..\geometry\include;..\sweepc\include;..\mopsc\include;..\brush\include;include;..\camxml\include;..\sprogc\include;..\comostrings\include;..\cvode\include;..\cvode\source"
+				AdditionalIncludeDirectories="..\utils\include;..\geometry\include;..\sweepc\include;..\mopsc\include;..\brush\include;include;..\camxml\include;..\sprogc\include;..\comostrings\include;..\cvode\include;..\cvode\source;..\radau\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -94,7 +94,7 @@
 			OutputDirectory="$(ProjectDir)bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			CharacterSet="1"
+			CharacterSet="0"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -115,14 +115,15 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\sweepc\include;include;..\mopsc\include;..\camxml\include;..\sprogc\include;..\comostrings\include;..\cvode\include;..\cvode\source;..\geometry\include;..\brush\include;..\utils\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				EnableIntrinsicFunctions="false"
+				WholeProgramOptimization="false"
+				AdditionalIncludeDirectories="..\sweepc\include;include;..\mopsc\include;..\camxml\include;..\sprogc\include;..\comostrings\include;..\cvode\include;..\cvode\source;..\geometry\include;..\brush\include;..\utils\include;..\radau\include"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
+				EnableFunctionLevelLinking="false"
+				DisableLanguageExtensions="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				DebugInformationFormat="0"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -135,13 +136,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\camxml\lib\camxml.lib ..\comostrings\lib\comostrings.lib ..\sprogc\lib\sprog.lib ..\cvode\lib\cvode.lib"
-				LinkIncremental="0"
-				GenerateDebugInformation="false"
-				SubSystem="0"
-				OptimizeReferences="0"
-				EnableCOMDATFolding="0"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -263,6 +257,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\radau_wrapper.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\soot_flamelet.cpp"
 				>
 			</File>
@@ -374,6 +372,10 @@
 			</File>
 			<File
 				RelativePath=".\include\interface.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\radau_wrapper.h"
 				>
 			</File>
 			<File
