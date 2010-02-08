@@ -100,7 +100,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\sprogc\include;..\comostrings\include;..\camxml\include;..\geometry\include;include"
+				AdditionalIncludeDirectories="..\sprogc\include;..\comostrings\include;..\camxml\include;..\geometry\include;include;..\utils\include"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
 			/>
@@ -143,7 +143,6 @@
 			UseInBuild="false"
 			UseDependenciesInBuild="false"
 			CopyLocalSatelliteAssemblies="false"
-			RelativePathToProject="..\camxml\camxml.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{667E4098-08F2-4C66-8B80-29643A05639B}"
@@ -152,7 +151,6 @@
 			UseInBuild="false"
 			UseDependenciesInBuild="false"
 			CopyLocalSatelliteAssemblies="false"
-			RelativePathToProject="..\comostrings\comostrings.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{4F627552-B6A3-4A4C-8F65-1E72722A8309}"
@@ -161,7 +159,6 @@
 			UseInBuild="false"
 			UseDependenciesInBuild="false"
 			CopyLocalSatelliteAssemblies="false"
-			RelativePathToProject="..\sprogc\sprogc.vcproj"
 		/>
 	</References>
 	<Files>
