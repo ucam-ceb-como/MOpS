@@ -298,46 +298,46 @@ namespace Camflow {
             void getSpeciesNames(std::vector<std::string>& names);
 
             //! Return the number of species.
-            const int getNumberOfSpecies() const ;
+            int getNumberOfSpecies() const ;
 
             //! Return the species mass fraction given the independent variable.
-            const doublereal getMassFrac(const int spIndex, const doublereal axpos);
+            doublereal getMassFrac(const int spIndex, const doublereal axpos);
 
             //! Return the species mole fraction given the independent variable.
-            const doublereal getMoleFrac(const int spIndex, const doublereal axpos);
+            doublereal getMoleFrac(const int spIndex, const doublereal axpos);
 
             //! Get spatial profile of one species.
-            const std::vector<doublereal> getMassFracsBySpecies(const int spIndex) const;
+            std::vector<doublereal> getMassFracsBySpecies(const int spIndex) const;
 
             //! Get mass fractions for all species at one point.
-            const std::vector<doublereal> getMassFracsByPoint(const int indVarIndex) const;
+            std::vector<doublereal> getMassFracsByPoint(const int indVarIndex) const;
 
             //! Return the temperature given the independent variable.
-            const doublereal getTemperature(const doublereal axpos);
+            doublereal getTemperature(const doublereal axpos);
 
             //! Return a vector of temperatures at all the independent variable points.
             const std::vector<doublereal>& getTemperatures() const {return TVector;}
 
             //! Return the density given the independent variable.
-            const doublereal getDensity(const doublereal axpos);
+            doublereal getDensity(const doublereal axpos);
 
             //! Return the viscosity given the independent variable.
-            const doublereal getViscosity(const doublereal axpos);
+            doublereal getViscosity(const doublereal axpos);
 
             //! Return the specific heat given the independent variable.
-            const doublereal getSpecificHeat(const doublereal axPos);
+            doublereal getSpecificHeat(const doublereal axPos);
 
             //! Return the thermal conductivity given the independent variable.
-            const doublereal getThermalConductivity(const doublereal axPos);
+            doublereal getThermalConductivity(const doublereal axPos);
 
             //! Return a vector of diffusion coefficents (size equals number of gas phase species).
-            const std::vector<doublereal> getDiffusionCoefficients(const doublereal axPos);
+            std::vector<doublereal> getDiffusionCoefficients(const doublereal axPos);
 
             //! Return pyrene production rate.
-            const doublereal getWdotA4(const doublereal axPos);
+            doublereal getWdotA4(const doublereal axPos);
 
             //! Return the stoichiometric mixture fraction.
-            const doublereal getStMixtureFrac();
+            doublereal getStMixtureFrac();
 
             //! Return a vector of densities at all the independent variable points.
             const std::vector<doublereal>& getDensities() const {return rhoVector;}
