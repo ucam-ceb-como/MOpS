@@ -9,6 +9,18 @@
 #include "StiffIntegratorT.h"
 #include "decsol.h"
 #include <cmath>
+
+
+namespace {
+    /*! This function implements the copysign function from C99. It takes the sign
+     *  of the argument y and assigns it to the argument x.
+     */ 
+    double copysign(double x, double y){ 
+        return std::abs(x)* ( (y>=0.0)? 1 : -1);  
+    }
+}
+
+
 // Constructor
 StiffIntegratorT::StiffIntegratorT(const int nin, double yin[], double xin, double xendin,
 	double dxin, int itolerin, double *rtolerin, double *atolerin, const int ioutin,
@@ -539,7 +551,7 @@ int StiffIntegratorT::CoreIntegrator()
 	alph = alph/cno;
 	beta = beta/cno;
 
-	const double posneg = copysign(1.0, xend-x);
+    const double posneg = copysign(1.0, xend-x);
 	const double hmaxn = min(fabs(hmax), fabs(xend - x));
 	const double cfac = safe*(1 + 2*nit);
 
@@ -547,7 +559,7 @@ int StiffIntegratorT::CoreIntegrator()
 	if (implct) Mass(fmas, uData);
 
 	h = min(fabs(h), hmaxn);
-	h = copysign(h, posneg);
+    h = copysign(h, posneg);
 	hold = h;
 
 	bool last = false;
