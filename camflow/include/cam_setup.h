@@ -81,13 +81,13 @@ namespace Camflow{
             void getInletMassFrac(CamBoundary &cb, std::vector<doublereal>& fracs);
 
             //! Return the inlet temperature.
-            const doublereal getInletTemperature(CamBoundary &cb);
+            doublereal getInletTemperature(CamBoundary &cb);
 
             //! Return the inlet flow rate.
-            const doublereal getInletFlowRate(CamBoundary &cb);
+            doublereal getInletFlowRate(CamBoundary &cb);
 
             //! Return the inlet velocity.
-            const doublereal getInletVelocity(CamBoundary &cb);
+            doublereal getInletVelocity(CamBoundary &cb);
 
             //! Initialise the species vector.
             void initSpecies(CamBoundary &cb, CamControl &cc, std::vector<doublereal>& soln);
