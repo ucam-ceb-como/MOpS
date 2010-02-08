@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -168,7 +168,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity, const Sweep::ParticleMod
 {
     // Clear current ensemble.
     Clear();
- 
+
     // Store new particle model.
     m_model = &model;
 
@@ -197,7 +197,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity, const Sweep::ParticleMod
     // Reserve memory for ensemble.
     m_particles.resize(m_capacity, NULL);
     m_tree.resize(m_capacity-1, TreeNode(model));
-    
+
     // Initialise scaling.
     m_ncont      = 0;
     m_scale      = 1.0;
@@ -357,7 +357,7 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
         ascendingRecalc(k);
     }
 
-    // Particle removal might reduce the particle count 
+    // Particle removal might reduce the particle count
     // sufficiently to require particle doubling.
     dble();
 }
@@ -428,7 +428,7 @@ void Sweep::Ensemble::Replace(unsigned int i, Particle &sp)
 void Sweep::Ensemble::Clear()
 {
     // Delete particles from memory and delete vectors.
-    for (int i=0; i!=(int)m_particles.size(); ++i) {
+    for (PartPtrVector::size_type i = 0; i != m_particles.size(); ++i) {
         delete m_particles[i];
         m_particles[i] = NULL;
     }
@@ -473,7 +473,7 @@ int Sweep::Ensemble::Select(ParticleCache::PropID id) const
     int isp=-1;
 
     // Calculate random number weighted by sum of desired property (wtid).
-    real r = rnd() * (m_tree[0].LeftData.Property(id) + 
+    real r = rnd() * (m_tree[0].LeftData.Property(id) +
                       m_tree[0].RightData.Property(id));
 
     // Fall down the binary tree until reaching a base node.
@@ -483,7 +483,7 @@ int Sweep::Ensemble::Select(ParticleCache::PropID id) const
             j = LeftChildIndex(j);
         } else {
             r -= m_tree[j].LeftData.Property(id);
-            j = RightChildIndex(j); 
+            j = RightChildIndex(j);
         }
     }
     // last level!
@@ -517,7 +517,7 @@ int Sweep::Ensemble::Select(SubModels::SubModelType model_id, unsigned int id) c
     // Calculate random number weighted by sum of desired property (wtid).
     real r = rnd();
 
-    r *= (m_tree[0].LeftData.SubModel(model_id)->Property(id) + 
+    r *= (m_tree[0].LeftData.SubModel(model_id)->Property(id) +
           m_tree[0].RightData.SubModel(model_id)->Property(id));
 
     // Fall down the binary tree until reaching a base node.
@@ -584,7 +584,7 @@ real Sweep::Ensemble::GetSum(ParticleCache::PropID id) const
         return m_count;
 }
 
-// Returns the sum of one particle property with the given index 
+// Returns the sum of one particle property with the given index
 // from the given model from the binary tree.
 real Sweep::Ensemble::GetSum(SubModels::SubModelType model_id, unsigned int id) const
 {
@@ -659,7 +659,7 @@ void Sweep::Ensemble::ascendingRecalc(unsigned int i)
 
     if (i<m_capacity) {
 
-        // Climb up the tree until the root node, 
+        // Climb up the tree until the root node,
         // summing up the properties.
         while (i > 0){
 
@@ -682,7 +682,7 @@ void Sweep::Ensemble::dble()
     // ensemble is back above half full, the routine updates the binary tree.
 
     // Check that doubling is on and the activation condition has been met.
-    if (m_dbleon && m_dbleactive) {     
+    if (m_dbleon && m_dbleactive) {
         bool left;
 
         // Continue while there are too few particles in the ensemble.
@@ -690,7 +690,7 @@ void Sweep::Ensemble::dble()
             if(m_count == 0) {
                 throw std::runtime_error("Attempt to double particle ensemble with 0 particles");
             }
-            
+
             printf("sweep: Doubling particle ensemble.\n");
 
             left = isLeftBranch(m_count);
@@ -698,7 +698,7 @@ void Sweep::Ensemble::dble()
             // Copy particles.
             const size_t prevCount = m_count;
             for (size_t i = 0; i != prevCount; ++i) {
-                
+
                 size_t iCopy = prevCount + i;
                 // Create a copy of a particle and add it to the ensemble.
                 m_particles[iCopy] = m_particles[i]->Clone();
@@ -710,13 +710,13 @@ void Sweep::Ensemble::dble()
                 } else {
                     m_tree[leafIndex].RightData = *m_particles[iCopy];
                 }
-                
+
                 // Keep count of the added particles
                 ++m_count;
                 // Next particle will be on the other side of a node
                 left = !left;
             }
-            
+
             // Update the tree from second last level up.
             recalcAllNonLeaf();
 
@@ -726,6 +726,27 @@ void Sweep::Ensemble::dble()
 
         m_maxcount = std::max(m_maxcount, m_count);
     }
+}
+/*!
+ * Empty the tree and pass of list of pointers to the particles in
+ * the tree to the caller, which must take ownership of them.
+ */
+Sweep::PartPtrList Sweep::Ensemble::TakeParticles() {
+    // Copy the pointers to particles
+    PartPtrList listOfParticles(begin(), end());
+
+    // Now set the pointers in m_particles to NULL so that cannot be used
+    // to delete the particles that will now be owned by the caller
+    iterator it = begin();
+    const iterator itEnd = end();
+    while(it != itEnd) {
+        *it++ = NULL;
+    }
+
+    // Reset the tree and other data
+    Clear();
+
+    return listOfParticles;
 }
 
 // READ/WRITE/COPY.
@@ -769,7 +790,7 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
         // Output number of doublings.
         n = (unsigned int)m_ndble;
         out.write((char*)&n, sizeof(n));
-        
+
         // Output if doubling is active.
         if (m_dbleactive) {
             out.write((char*)&trueval, sizeof(trueval));
@@ -817,7 +838,7 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
 
                 // capacity of 0 should mean the ensemble was never initialised
-                if (n == 0){ 
+                if (n == 0){
                     init();
                     return;
                 }
@@ -826,7 +847,7 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 // Read the particle count.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_count = n;
-                
+
                 // Read the particles.
                 for (unsigned int i=0; i!=m_count; ++i) {
                     Particle *p = new Particle(in, model);
@@ -844,7 +865,7 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 // Read number of doublings.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_ndble = n;
-                
+
                 // Read if doubling is active.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n==1) {

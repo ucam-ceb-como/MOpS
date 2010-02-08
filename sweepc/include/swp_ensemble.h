@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37) and Peter Man (plwm2)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -93,7 +93,7 @@ public:
     Ensemble(                             // Initialising constructor (incl. particles).
         unsigned int count,               //  - Capacity (max. number of particles).
         const Sweep::ParticleModel &model //  - Mechanism used to define particles.
-        );  
+        );
     Ensemble(const Ensemble &copy); // Copy constructor.
     Ensemble(                            // Stream-reading constructor.
         std::istream &in,                //   - Input stream.
@@ -105,7 +105,7 @@ public:
 
     // Operators.
     Ensemble &operator=(const Ensemble &rhs);
-    
+
 
     // INITIALISATION.
 
@@ -114,14 +114,15 @@ public:
         unsigned int capacity,             // Max. number of particles.
         const Sweep::ParticleModel &model  // Model which defines the particles.
         );
-    
-    //* Initialise with some particles
+
+    //! Initialise with some particles
     template<class T> void SetParticles(
-        //unsigned int capacity,
-        //const Sweep::ParticleModel &model,
         T particle_list_begin,
         T particle_list_end);
 
+
+    //! Empty the tree and pass on ownership of the particles
+    PartPtrList TakeParticles();
 
     // THE PARTICLE MODEL.
 
@@ -185,7 +186,7 @@ public:
     // property index.  The particle properties are those stored in
     // the ParticleData type. Returns particle index on success, otherwise
     // negative.
-    int Select(ParticleCache::PropID id) const; 
+    int Select(ParticleCache::PropID id) const;
 
 
     // Selects particle according to the particle property
@@ -200,7 +201,7 @@ public:
 
     // Returns the particle count.
     unsigned int Count(void) const;
-    
+
     // Returns the ensemble capacity.
     unsigned int Capacity(void) const;
 
@@ -216,7 +217,7 @@ public:
     // Stops doubling algorithm.
     inline void FreezeDoubling();
 
-    // Restarts doubling if it was off, and checks if the 
+    // Restarts doubling if it was off, and checks if the
     // ensemble should be doubled.
     inline void UnfreezeDoubling();
 
@@ -226,13 +227,13 @@ public:
     // Returns the sums of all properties in the binary tree.
     const ParticleCache &GetSums(void) const;
 
-    // Returns the sum of one particle property with the given index 
+    // Returns the sum of one particle property with the given index
     // from the binary tree.
     real GetSum(
         ParticleCache::PropID id // ID of the ParticleData property.
         ) const;
 
-    // Returns the sum of one particle property with the given index 
+    // Returns the sum of one particle property with the given index
     // from the given model from the binary tree.
     real GetSum(
         SubModels::SubModelType model_id, // ID of model from which to get the property.
@@ -315,17 +316,17 @@ private:
 
     // TREENODE ASSOCIATED FUNCTIONS.
 
-    // Returns the index of the lowest binary tree node under which the 
+    // Returns the index of the lowest binary tree node under which the
     // given particle (by index) lies.
     int treeIndex(unsigned int i) const;
 
-    // Returns true if particle index is a left branch, 
+    // Returns true if particle index is a left branch,
     // false if it is a right one.
-    static bool isLeftBranch(unsigned int i); 
+    static bool isLeftBranch(unsigned int i);
 
     // Recalculates a branch of the tree from the given node upwards.
     void ascendingRecalc(unsigned int i);
-    
+
     // Recalculate all the non leaf nodes (useful after several particles
     // have been changed
     void recalcAllNonLeaf();
