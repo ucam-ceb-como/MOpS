@@ -250,10 +250,6 @@
 				RelativePath=".\include\swp_gas_profile.h"
 				>
 			</File>
-			<File
-				RelativePath=".\include\swp_PAHsolver.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -344,10 +340,6 @@
 			</File>
 			<File
 				RelativePath=".\source\swp_gas_profile.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\source\swp_PAHsolver.cpp"
 				>
 			</File>
 		</Filter>
