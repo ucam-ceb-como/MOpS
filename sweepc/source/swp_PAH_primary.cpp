@@ -255,13 +255,10 @@ void PAHPrimary::AddPAH(real time, int ID, const Sweep::ParticleModel &model)
 // Copy constructor.
 PAHPrimary::PAHPrimary(const PAHPrimary &copy)
 {
-    if (this!=&copy)
+    *this = copy;
+    if (copy.m_leftchild!=NULL)
     {
-        *this = copy;
-	    if (copy.m_leftchild!=NULL)
-	    {
-		    CopyTree(&copy);
-	    }
+        CopyTree(&copy);
     }
 }
 
@@ -286,21 +283,22 @@ PAHPrimary::~PAHPrimary()
 */
 void PAHPrimary::CopyTree( const PAHPrimary *source)
 {
-    //create the new left and right children
-	PAHPrimary *newleft = new PAHPrimary(source->CreateTime(),*m_pmodel,false);
-	PAHPrimary *newright = new PAHPrimary(source->CreateTime(),*m_pmodel,false);
+    //create the new left and right children with nothing in them
+    m_leftchild = new PAHPrimary(source->CreateTime(),*m_pmodel,false);
+    m_rightchild = new PAHPrimary(source->CreateTime(),*m_pmodel,false);
 
-    // copy the properties
-	newleft->CopyParts(source->m_leftchild);
-	newright->CopyParts(source->m_rightchild);
+    // copy the properties such as the volume, surface area and list of
+	// constituent PAH molecules
+	m_leftchild->CopyParts(source->m_leftchild);
+	m_rightchild->CopyParts(source->m_rightchild);
 
-    //set the pointers to the children and the parent
-	m_leftchild=newleft;
-	m_rightchild=newright;
-    newleft->m_parent=this;
-	newright->m_parent=this;
+    //set the pointers to the parent
+	m_leftchild->m_parent=this;
+	m_rightchild->m_parent=this;
 
     // the left and right particle are set further down in UpdateAllPointers
+	// These are the pointers that specify which primary particles touch each
+	// other in the aggregat structure.
 	m_leftparticle=NULL;
 	m_rightparticle=NULL;
 
@@ -336,7 +334,7 @@ PAHPrimary::PAHPrimary(std::istream &in, const Sweep::ParticleModel &model)
 /*!
  * This function is like a limited assignment operator, except that the
  * children are not copied and the pointers to the particles may need
- * adjuesting after this method has finished.
+ * adjusting after this method has finished.
  *
  * @param[in] source Pointer to the primary to be copied
  */
@@ -507,10 +505,11 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
 	rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
 
 	//only one PAH in rhs or this particle -> condensation or inception process.
-	if ( (rhsparticle->m_numPAH==1 || this->m_numPAH==1 ))
+	if ( (rhsparticle->m_numPAH==1) || (m_numPAH==1 ))
 	{
         if (rhsparticle->Numprimary()>1)
         {
+            // Get a copy of the rhs ready to add to the current particle
             PAHPrimary copy_rhs(*rhsparticle);
             PAHPrimary *target = copy_rhs.SelectRandomSubparticle();
 
@@ -518,11 +517,6 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
             target->UpdatePrimary();
             CopyParts(&copy_rhs);
             CopyTree(&copy_rhs);
-            copy_rhs.m_leftchild=NULL;
-	        copy_rhs.m_rightchild=NULL;
-	        copy_rhs.m_parent=NULL;
-            copy_rhs.m_leftparticle=NULL;
-            copy_rhs.m_rightparticle=NULL;
         }
         else
         {
@@ -760,17 +754,15 @@ PAHPrimary &PAHPrimary::Merge()
             //update the pointers that pointed to the two former children
 			ChangePointer(m_leftchild,this);
 			ChangePointer(m_rightchild,this);
-            //delete the children
-			m_leftchild->ReleaseMem();
-			m_rightchild->ReleaseMem();
-            m_leftchild->m_parent=NULL;
-            m_rightchild->m_parent=NULL;
+
+			//delete the children (destructor is recursive for this class)
             delete m_leftchild;
             delete m_rightchild;
 			m_leftchild=NULL;
 			m_rightchild=NULL;
 			m_leftparticle=NULL;
 			m_rightparticle=NULL;
+
             //set the children properties to zero, this node has no more children
             ResetChildrenProperties();
             UpdatePrimary();
@@ -810,15 +802,24 @@ PAHPrimary &PAHPrimary::Merge()
 
 				PAHPrimary *oldleftchild=m_leftchild;
 				PAHPrimary *oldparent=m_parent;
-                //copy the properties of the former leftchild to this node
+
+				//copy the properties of the former leftchild to this node
+				// so that it can be removed from the aggregate tree structure
 				CopyParts(oldleftchild);
+
+				// Now break the links to the tree structure in oldleftchild and free it
+				oldleftchild->m_leftchild = NULL;
+				oldleftchild->m_rightchild = NULL;
+				delete oldleftchild;
+
 				m_parent=oldparent;
                 if (m_leftchild!=NULL)
                 {
 				    m_rightchild->m_parent=this;
 				    m_leftchild->m_parent=this;
                 }
-				oldleftchild->ReleaseMem();
+
+                delete oldleftparticle;
 
 			}
 
@@ -847,14 +848,24 @@ PAHPrimary &PAHPrimary::Merge()
 				//ReleaseMem(oldrightparticle);
 				PAHPrimary *oldrightchild=m_rightchild;
 				PAHPrimary *oldparent=m_parent;
+
+                //copy the properties of the former leftchild to this node
+                // so that it can be removed from the aggregate tree structure
 				CopyParts(oldrightchild);
+
+                // Now break the links to the tree structure in oldrightchild and free it
+                oldrightchild->m_leftchild = NULL;
+                oldrightchild->m_rightchild = NULL;
+                delete oldrightchild;
+
 				m_parent=oldparent;
                 if (m_leftchild!=NULL)
                 {
 				    m_rightchild->m_parent=this;
 				    m_leftchild->m_parent=this;
                 }
-				oldrightchild->ReleaseMem();
+
+                delete oldrightparticle;
 
 			}
 
@@ -981,12 +992,12 @@ bool PAHPrimary::CheckCoalescence()
     if (m_children_coalescence> 0.99 && m_leftparticle!=NULL)
         {
            // PrintTree("before.inp");
-          //   cout <<"merging"<<m_children_coalescence<<endl;
+           // cout <<"merging"<<m_children_coalescence<<endl;
              Merge();
-           //  PrintTree("after.inp");
-           hascoalesced=true;
-           //check again because this node has changed
-         CheckCoalescence();
+             //  PrintTree("after.inp");
+             hascoalesced=true;
+             //check again because this node has changed
+             CheckCoalescence();
         }
     if (m_leftchild!=NULL)
     {

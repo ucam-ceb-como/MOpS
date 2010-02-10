@@ -135,10 +135,7 @@ swp_ensemble_image.o: $(src)/swp_ensemble_image.cpp
 swp_particle_model.o: $(src)/swp_particle_model.cpp
 	$(cpp) $(flag) $(src)/swp_particle_model.cpp
 
-swp_mech_parser.o: $(src)/swp_mech_parser.cpp  $(inc)/swp_component.h  $(inc)/swp_component.h \
-                    $(inc)/swp_component.h  $(inc)/swp_component.h \
-                    $(inc)/swp_component.h  $(inc)/swp_component.h \
-                    $(inc)/swp_component.h $(camxml) $(comostrings)
+swp_mech_parser.o: $(src)/swp_mech_parser.cpp  $(inc)/swp_component.h
 	$(cpp) $(flag) $(src)/swp_mech_parser.cpp
 
 swp_mechanism.o: $(src)/swp_mechanism.cpp  $(inc)/swp_model_factory.h \
