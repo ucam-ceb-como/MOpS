@@ -178,11 +178,8 @@ void SensitivityAnalyzer::SetupProblem(Mops::Mechanism &mech, Mops::Reactor &rea
     m_mech = &mech;
     m_reactor = &reactor;
     CamXML::Document xmlSA;
-    try {
-        xmlSA.Load(sfile);
-    } catch (std::exception ex) {
-        // do nothing
-    }
+    xmlSA.Load(sfile);
+
     if (xmlSA.Root()->GetChildren().size() > 0) {
         if (xmlSA.Root()->GetAttributeValue("version").compare("1.0") == 0) {
             ReadSettingV1(*xmlSA.Root());
@@ -340,6 +337,9 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
                     val = m_mech->Reactions(m_sens_params.at(i).Index)->Arrhenius().E;
                 }
                 m_org_params[i] = m_params[i] = m_parambars[i] = val;
+                if (val ==0.0){
+                m_parambars[i] = 0.9; //!This varies at the user's discretion.
+                }
             }
         } else if (m_probType == Init_Conditions) {
             std::vector<CamXML::Element *> initParams;
@@ -387,6 +387,9 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
                     val = m_reactor->Mixture()->RawData()[m_sens_params.at(i).Index];
                 }
                 m_org_params[i] = m_params[i] = m_parambars[i] = val;
+                if (val == 0.0) {
+                    m_parambars[i] = 0.9; //!This value varies at the user's discretion.
+                }
             }
         } else {
             throw std::runtime_error("Unknown problem type "
@@ -762,6 +765,7 @@ void SensitivityAnalyzer::SetSensResult(N_Vector *sens_matrix)
     m_sens_matrix = sens_matrix;
 }
 
+
 // Set a pointer to last sensitivity output result.
 void SensitivityAnalyzer::InitSensMatrix(N_Vector *sens_matrix)
 {
@@ -793,7 +797,6 @@ void SensitivityAnalyzer::InitSensMatrix(N_Vector *sens_matrix)
         }
     }
 }
-
 // Return sensitivity problem type.
 SensitivityAnalyzer::SensitivityType SensitivityAnalyzer::ProblemType()
 {

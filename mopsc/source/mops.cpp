@@ -281,6 +281,7 @@ int main(int argc, char *argv[])
     //   would not be able to change mechanism parameters. So it is required here to pass the same 
     //   mechanism object which is passed on to reactor to SA object be fore attach it to the solver.
     // - Valuse in sensitivity object is in SI unit.
+    if (soltype == GPC){
     try {
         // The sensitvity analyzer.
         SensitivityAnalyzer *sensi = new SensitivityAnalyzer();
@@ -292,7 +293,7 @@ int main(int argc, char *argv[])
         if (sensi->isEnable()) {
             // a copy of sensi is made during attaching so you can delete it aftrwards.
             solver->AttachSensitivity(*sensi);
-            if (soltype != GPC) throw runtime_error("Sensitivity of non-GPC solver type is not allowed");
+
         }
         delete sensi;
     } catch (std::runtime_error &re) {
@@ -302,6 +303,7 @@ int main(int argc, char *argv[])
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;
+    }
     }
 
     // Solve reactor.

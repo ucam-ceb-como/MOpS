@@ -40,6 +40,7 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
+//! This is the mops header file.
 #ifndef MOPS_H
 #define MOPS_H
 

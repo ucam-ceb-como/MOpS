@@ -113,6 +113,31 @@ void Solver::SetRTOL(real rtol)
     m_ode.SetRTOL(rtol);
 }
 
+/*!
+Sets the solver status to true
+*/
+void Solver::SetLOIStatusTrue()
+{
+    m_LOIEnable = true;
+}
+
+/*!
+Sets the solver status to false
+*/
+void Solver::SetLOIStatusFalse()
+{
+    m_LOIEnable = false;
+}
+
+/*!
+Retrieves the LOI status
+@param[out]     LOIEnable    Boolean status of LOI reduction
+*/
+bool Solver::GetLOIStatus() const
+{
+    return m_LOIEnable;
+}
+
 
 // UNDER-RELAXATION.
 
@@ -151,6 +176,56 @@ void Solver::Solve(Reactor &r, real tstop, int nsteps, int niter,
     if (out) out(nsteps, niter, r, *this, data);
 }
 
+
+/*!
+Retrieves the solution vector if the basic gpc ode solver is called
+@param[in] n_sensi         Number of sensitivities computed
+@param[in] n_species       Number of species in solution
+@see       GetSensSolution Retrieves the pointer to sensitivity solution vector
+@return    double**       Sensitivity solution array
+*/
+double** Solver::GetSensSolution(int n_sensi, int n_species)
+{ 
+    return m_ode.GetSensSolution(n_sensi, n_species);
+
+}
+
+/*!
+Retrieves the solution vector if the basic gpc ode solver is called
+@param[in]      n_sensi     Number of sensitivites computed
+@param[in]      n_species   Number of species in solution
+*/
+void Solver::InitialiseSensMatrix(int n_sensi, int n_species)
+{
+    m_ode.InitialiseSensArray(n_sensi, n_species);
+}
+
+/*!
+Retrieves the solution vector if the basic gpc ode solver is called
+@param[in]      n_species   Number of species in solution
+*/
+void Solver::DestroySensMatrix(int n_species)
+{
+    m_ode.DestroySensArray(n_species);
+}
+
+/*!
+Retrieves the solution vector if the basic gpc ode solver is called
+@return     m_NS       Number of sensitivities initialised for computation
+*/
+unsigned int Solver::GetNumSens() const
+{
+    return m_ode.GetNSensitivities();
+}
+
+/*!
+Retrieves the solution vector if the basic gpc ode solver is called
+@return     m_eq       Number of equations computed by ODE solver
+*/
+unsigned int Solver::GetNEquations() const
+{
+    return m_ode.GetNEquations();
+}
 
 // COMPUTATION TIME.
 

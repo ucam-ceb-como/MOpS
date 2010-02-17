@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source\cvodes;..\sweepc\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include;..\geometry\include"
+				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source\cvodes;..\sweepc\include;..\camxml\include;..\sprogc\include;include;..\comostrings\include;..\geometry\include;..\utils\include"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
@@ -111,7 +111,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source\cvodes;..\sweepc\include;..\comostrings\include;..\sprogc\include;..\camxml\include;..\geometry\include;include"
+				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source\cvodes;..\sweepc\include;..\comostrings\include;..\sprogc\include;..\camxml\include;..\geometry\include;include;../utils/include"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
 			/>
@@ -303,6 +303,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\source\loi_reduction.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\mops.cpp"
 				>
 			</File>
@@ -398,6 +402,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\include\loi_reduction.h"
+				>
+			</File>
 			<File
 				RelativePath=".\include\mops.h"
 				>

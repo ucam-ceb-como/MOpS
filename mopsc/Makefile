@@ -58,7 +58,7 @@ obj=mops_mechanism.o mops_mixture.o \
     mops_src_terms.o mops_strang_solver.o mops_timeinterval.o \
     mops_flow_stream.o mops_simulator.o swp_flamesolver.o swp_gas_profile.o mops_gpc_sensitivity.o \
     mops_flux_postprocessor.o mops_rhs_func.o mops_simplesplit_solver.o \
-    cvodes_utils.o
+    cvodes_utils.o loi_reduction.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -182,7 +182,8 @@ mops_rhs_func.o: $(src)/mops_rhs_func.cpp
 mops_simplesplit_solver.o: $(src)/mops_simplesplit_solver.cpp
 	$(cpp) $(flag) $(src)/mops_simplesplit_solver.cpp
 
-
+loi_reduction.o: $(src)/loi_reduction.cpp
+	$(cpp) $(flag) $(src)/loi_reduction.cpp
 
 # Auxilliary classes.
 

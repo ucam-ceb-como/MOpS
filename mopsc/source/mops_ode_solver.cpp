@@ -327,6 +327,62 @@ void ODE_Solver::Solve(Reactor &reac, real stop_time)
 
 }
 
+/*!
+Method creates 2D array for sensitivity values and initialises it to zero
+@param[in]      n_species        number of species
+@param[in]      n_sensi          number of sensitivities computed
+*/
+void ODE_Solver::InitialiseSensArray(int n_sensi, int n_species)
+{
+    m_sensitivity = new double*[n_sensi];
+    for (int i = 0; i < n_sensi; i++){
+        m_sensitivity[i] = new double[n_species];
+        for (int j = 0; j < n_species; j++){
+            m_sensitivity[i][j] = 1.0;
+        }
+    }
+}
+
+/*!
+Method deletes the memory allocated to double** m_sensitivity
+@param[in]      n_species        number of species in sensitivity matrix
+*/
+void ODE_Solver::DestroySensArray(int n_species)
+{
+    for (int i = 0; i < n_species; i++){
+        delete [] m_sensitivity[i];
+    }
+    delete m_sensitivity;
+}
+
+/*!
+Method loads sensitivity values from N_Vector* into it
+@param[in]      n_species        number of species
+@param[in]      n_sensi          number of sensitivities computed
+@return         m_sensitivity    Sensitivity Array
+*/
+double** ODE_Solver::GetSensSolution(int n_sensi, int n_species)
+{
+    for (int i = 0; i < (n_sensi); i++){
+        double* test; 
+        test[i] = 0.0;
+        test = NV_DATA_S(m_yS[i]);
+        for (int j = 0; j < (n_species); j++){
+            m_sensitivity[i][j] = test[j];
+        }
+    }
+    return m_sensitivity;
+}
+
+
+/*!
+Method retrieves the pointer to the sensitivity solution
+@return     m_NS        Number of sensitivities computed
+*/
+unsigned int ODE_Solver::GetNSensitivities() const
+{
+    return m_sensi.NParams();
+}
 
 // ERROR TOLERANCES.
 
@@ -502,6 +558,7 @@ void ODE_Solver::init(void)
     m_yvec     = NULL;
     // Space required by rate parameter sensitivity.
     m_yS       = NULL;
+    m_sensitivity   = NULL;
 
     // Init CVODE.
     m_odewk = NULL;

@@ -111,7 +111,7 @@ int jacFn_CVODE(long int N,
     Mops::Reactor *r    = s->GetReactor();
 
     // Get the Jacobian from the reactor model
-    r->Jacobian(t, NV_DATA_S(y), NV_DATA_S(ydot), J->cols, 
+    r->Jacobian(t, NV_DATA_S(y), J->cols, 
                 UNIT_ROUNDOFF);
 
     return 0;
@@ -138,7 +138,7 @@ int jacFn_CVODES(long int N,
 
     s->GetSensitivity().ChangeMechParams();
     // Get the Jacobian from the reactor model
-    r->Jacobian(t, NV_DATA_S(y), NV_DATA_S(ydot), J->cols, 
+    r->Jacobian(t, NV_DATA_S(y), J->cols, 
                 UNIT_ROUNDOFF);
 
     return 0;
@@ -170,7 +170,7 @@ int rhsSensFn_CVODES(int Ns, realtype t,
 
     s->GetSensitivity().ChangeMechParams();
     // Get the Jacobian from the reactor model
-    r->Jacobian(t, NV_DATA_S(y), NV_DATA_S(ydot), temp_jac,
+    r->Jacobian(t, NV_DATA_S(y), temp_jac,
                 UNIT_ROUNDOFF);
     
     // Make an unsigned copy of Ns to avoid compiler warnings

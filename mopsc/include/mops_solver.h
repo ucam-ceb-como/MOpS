@@ -106,6 +106,16 @@ public:
     // calculations.
     void SetRTOL(real rtol);
 
+    // SENSITIVITY STATUS FOR ODE SOLVER.
+
+    //! Enables LOI status to true.
+    void SetLOIStatusTrue();
+
+    //! Sets LOI status to false
+    void SetLOIStatusFalse();
+
+    //! Retrieves the LOI status
+    bool GetLOIStatus() const;
     
     // UNDER-RELAXATION.
 
@@ -132,6 +142,23 @@ public:
             OutFnPtr out, // Output function pointer.
             void *data    // Custom data object which will be passed as argument to out().
         );
+    
+    //SENSITIVITY.
+
+    //!Returns the double** m_sensitivity matrix with values calculated by CVODES.
+    virtual double** GetSensSolution(int n_sensi, int n_species);
+
+    //! Initialises the double** m_sensitivity matrix and sets to identity matrix
+    virtual void InitialiseSensMatrix(int n_sensi, int n_species);
+
+    //! Retrieves the number of sensitivity parameters in the problem.
+    virtual unsigned int GetNumSens() const;
+
+    //! Destroys the double** m_sensitivity matrix
+    virtual void DestroySensMatrix(int n_species);
+
+    //! Retrieves the number of equations solved by the ode solver
+    unsigned int GetNEquations() const;
 
 
     // COMPUTATION TIME.
@@ -167,6 +194,11 @@ protected:
 
     // Default error tolerances for the ODE solver.
     real m_atol, m_rtol;
+
+    // SENSITIVITY SETTINGS
+
+    //! Boolean variable for setting sensitivity status
+    bool m_LOIEnable;
 
     // Under-relaxation coefficient.
     real m_rlx_coeff;

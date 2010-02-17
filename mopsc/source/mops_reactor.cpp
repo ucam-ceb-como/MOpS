@@ -184,7 +184,7 @@ void Reactor::SetMech(const Mops::Mechanism &mech)
 
     // Set up vector indices.
     m_nsp   = m_mech->SpeciesCount();
-    m_neq   = m_nsp + 2;
+    m_neq   = m_nsp + 2; // Equations of state; these are not differential equations. See gpc_mech.h m_rxns
     m_iT    = m_nsp;
     m_iDens = m_iT + 1;
 
@@ -500,7 +500,7 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
 // Definition of Jacobian evaluator function for constant
 // temperature model.
 void Reactor::Jacobian(real t, real *const y, 
-                       const real *const ydot, real **J,
+                       real **J,
                        real uround) const
 {
     m_mech->Reactions().CalcJacobian(y[m_iT], y[m_iDens], y, 
@@ -508,6 +508,40 @@ void Reactor::Jacobian(real t, real *const y,
                                      m_constv, m_emodel==ConstT);
 }
 
+/*!
+@param[in]         n_species    number of species in the reaction
+@return            J            Jacobian array, initialised to zero
+*/
+double** Reactor::CreateJac( int n_species) const{
+    
+    double** J;
+    int Dim = n_species + 2; //Temperature and Pressure
+    J = new double*[Dim];
+    for (int i = 0; i < Dim; i++){
+        J[i] = new double[Dim];
+    }
+    for (int i = 0; i < Dim; i++){
+        for (int j = 0; j < Dim; j++){
+            if (i == j)
+                 J[i][j] = 1.0;
+            else
+                J[i][j] = 0.0;
+        }
+    }
+    return J;
+}
+
+/*!
+@param[in]         n_species   number of species in the reaction
+*/
+
+void Reactor::DestroyJac(double** J, int n_species) const{
+
+    for (int i = 0; i < n_species; i++){
+        delete [] J[i];
+    }
+    delete J;
+}
 
 // INITIALISATION.
 

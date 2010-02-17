@@ -53,6 +53,9 @@
 #include "geometry1d.h"
 #include <stdexcept>
 #include <memory>
+#include "gpc_reaction_set.h"
+#include "loi_reduction.h"
+#include "mops_gpc_sensitivity.h"
 using namespace Mops;
 using namespace std;
 using namespace Strings;
@@ -241,12 +244,19 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     // Set up the solver.
     s.Initialise(r);
 
+    if (r.Mech()->ReactionCount() == 0)
+    {
+        cout << "Cannot calculate LOI without differential equations. Please"
+                    "provide proper equations! LOI status has been set to false." << "\n";
+        s.SetLOIStatusFalse();
+    }
+
     // Set up file output.
 	#ifdef USE_MPI
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	if (rank==0)
-	{					//ms785 only write aux file if this is the master nodes
+	{                    //ms785 only write aux file if this is the master nodes
 	#endif
 
     writeAux(*r.Mech(), m_times, s);
@@ -303,6 +313,13 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         m_console.PrintDivider();
         consoleOutput(r);
 
+        unsigned int istep;
+        double uround = 1.0e-7;
+        double **J;
+        vector<fvector> LOI(s.GetNumSens(), fvector(r.Mech()->SpeciesCount())); 
+        if (s.GetLOIStatus() == true){
+            s.InitialiseSensMatrix(s.GetNumSens(),r.Mech()->SpeciesCount());
+        }
         // Loop over the time intervals.
         unsigned int global_step = 0;
         timevector::const_iterator iint;
@@ -315,14 +332,23 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             m_output_iter = max((int)m_niter, 0);
 
             // Loop over the steps in this interval.
-            unsigned int istep;
             for (istep=0; istep<iint->StepCount(); ++istep, ++global_step) {
                 // Run the solver for this step (timed).
                 m_cpu_mark = clock();
-                    s.Solve(r, t2+=dt, iint->SplittingStepCount(), 
-                            m_niter, &fileOutput, (void*)this);
-                m_runtime += calcDeltaCT(m_cpu_mark);
+                s.Solve(r, t2+=dt, iint->SplittingStepCount(), 
+                    m_niter, &fileOutput, (void*)this);
+                //Set up and solve Jacobian here
 
+                if (s.GetLOIStatus() == true)
+                    {
+                    if (istep == 0){
+                        J = r.CreateJac(r.Mech()->SpeciesCount());
+                    }
+                    r.Jacobian(t2, r.Mixture()->RawData(), J, uround);
+                    LOIReduction::CalcLOI(J, s.GetSensSolution(s.GetNumSens(), r.Mech()->SpeciesCount()), LOI, r.Mech()->SpeciesCount(), s.GetNumSens());
+                    }
+            
+                m_runtime += calcDeltaCT(m_cpu_mark);
                 // Generate console output.
 				#ifdef USE_MPI					//ms785
 				if (rank==0)
@@ -342,7 +368,11 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             // the PAH-PP model
 
             createSavePoint(r, global_step, irun);
+            if (s.GetLOIStatus() == true){
+                r.DestroyJac(J, r.Mech()->SpeciesCount());
+            }
         }
+
         // Print run time to the console.
         printf("mops: Run number %d completed in %.1f s.\n", irun+1, m_runtime);
 

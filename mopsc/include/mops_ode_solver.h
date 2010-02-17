@@ -167,13 +167,29 @@ public:
     const SrcProfile *GetsrcTerms() { return m_srcterms;};
 
     // Return number of equation.
-    unsigned int GetNEquations() { return m_neq; }
+    unsigned int GetNEquations() const { return m_neq; };
+
+    //!Creates 2D array to store sensitivity values and initialises to zero.
+    void InitialiseSensArray(int n_sensi, int n_species);
+
+    //! Deletes the space allocated by InitialiseSensArray for the double** m_sensitivity.
+    void DestroySensArray(int n_species);
+
+    //!Transfers sensitivity values from m_yS into standard Sens 2D array.
+    double** GetSensSolution(int n_sensi, int n_species);
+
+    //! Returns number of sensitivities computed.
+    unsigned int GetNSensitivities() const;
 
     // Set sensitivity object by making a copy of given sensitivity object.
     void SetSensitivity(Mops::SensitivityAnalyzer &sensi) const {m_sensi = sensi;};
 
     // Get sensitivity object.
     Mops::SensitivityAnalyzer &GetSensitivity() const {return m_sensi;};
+
+private:
+    //! Sensitivity matrix in double** for LOI access.
+    double** m_sensitivity;
 
 protected:
     // ODE solution variables.

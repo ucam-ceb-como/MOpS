@@ -406,6 +406,30 @@ Reactor *const readReactor(const CamXML::Element &node,
     return reac;
 }
 
+/*!
+@param[in]     node    XML node for input streams
+@param[in]     solver  the solver
+*/
+void ReadLOIStatus(const CamXML::Element &node, Solver &solver)
+{
+    //const CamXML::Element *subnode;
+    const CamXML::Attribute *attr;
+    std::string str;
+
+
+    // Read the relative error tolerance.
+    attr = node.GetAttribute("enable");
+        if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.compare("true") == 0) {
+            // LOI reduction should take place
+            solver.SetLOIStatusTrue();
+            }
+        else
+            solver.SetLOIStatusFalse();
+        }
+}
+
 // Reads simulation output parameters from given XML node.
 void readOutput(const CamXML::Element &node, Simulator &sim)
 {
@@ -871,6 +895,13 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
         } else {
             throw std::runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");
+        }
+
+        // MECHANISM REDUCTION.
+
+        node = root->GetFirstChild("LOI");
+        if (node!= NULL) {
+            ReadLOIStatus(*node, solver);
         }
 
         // TIME INTERVALS.

@@ -61,6 +61,7 @@
 
 namespace Mops
 {
+
 class Simulator
 {
 public:
