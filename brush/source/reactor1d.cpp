@@ -52,7 +52,7 @@
  *\param[in]    geom                    Geometry of new 1d reactor
  *\param[in]    mech                    Mechanism to use in all the reactors
  *\param[in]    max_particle_counts     Maximum number of computatioal particles per cell
- *\param[in]    max_m0s                 Maximum particle concentration
+ *\param[in]    max_m0s                 Maximum particle concentrations (units \f$\mathrm{m}^{-3}\f$)
  */
 Brush::Reactor1d::Reactor1d(const Geometry::Geometry1d &geom, const Mops::Mechanism &mech,
                             const Utils::LinearInterpolator<real, real> &max_particle_counts,
