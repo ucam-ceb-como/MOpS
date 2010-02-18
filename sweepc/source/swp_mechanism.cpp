@@ -941,7 +941,7 @@ void  Mechanism::output(Cell &sys, real t) const
 							file.open(fname.c_str());
 							i=sys.Particles().begin();
 							Sweep::Imaging::ParticleImage img;
-							img.Construct(*(*i));
+							img.Construct(*(*i), *(sys.ParticleModel()));
 							img.Write3dout(file,0,0,0);
 							file.close();
 							EnsembleImage *ensimg = new EnsembleImage;

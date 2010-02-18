@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -53,8 +53,8 @@ using namespace Sweep::Stats;
 // STATIC CONST MEMBER VARIABLES.
 
 const std::string ParticleStats::m_statnames[ParticleStats::STAT_COUNT] = {
-    std::string("Particle Count"), 
-    std::string("M0 (cm-3)"), 
+    std::string("Particle Count"),
+    std::string("M0 (cm-3)"),
     std::string("Equiv. Sphere Diameter (nm)"),
     std::string("Collision Diameter (nm)"),
     std::string("Mobility Diameter (nm)"),
@@ -120,7 +120,7 @@ ParticleStats::ParticleStats(const Sweep::ParticleModel &model)
     m_ncomp  = model.ComponentCount();
     m_ntrack = model.TrackerCount();
     m_stats.resize(STAT_COUNT+2*(m_ncomp+m_ntrack), 0.0);
-    
+
     // Add component and tracker names to m_names and m_pslnames vectors.
     for (unsigned int i=0; i!=m_ncomp; ++i) {
         m_names.push_back(model.Components(i)->Name());
@@ -169,13 +169,13 @@ ParticleStats &ParticleStats::operator=(const ParticleStats &rhs)
 // IMPLEMENTATION.
 
 // Returns the number of basic particle stats.
-unsigned int ParticleStats::Count() const 
+unsigned int ParticleStats::Count() const
 {
     return STAT_COUNT + 2*(m_ncomp + m_ntrack);
 }
 
 // Calculates the model stats for a single particle.
-void ParticleStats::Calculate(const ParticleCache &data)
+void ParticleStats::Calculate(const Particle &data)
 {
     m_stats[iNP]   = 1.0;
     m_stats[iM0]   = 1.0;
@@ -237,7 +237,7 @@ void ParticleStats::Calculate(const Ensemble &e, real scale)
             ++n;
         }
     }
-    
+
     // Get the particle count.
     //m_stats[iNP] = (real)e.Count();
     m_stats[iNP] = (real)n;
@@ -402,12 +402,12 @@ void ParticleStats::PSL_Names(std::vector<std::string> &names,
 
 // Returns the particle size list (PSL) entry for particle i
 // in the given ensemble.
-void ParticleStats::PSL(const Ensemble &ens, unsigned int i, 
+void ParticleStats::PSL(const Ensemble &ens, unsigned int i,
                         real time, fvector &psl, unsigned int start) const
 {
     // Get particle.
-    const Sweep::ParticleCache *const sp = ens.At(i);
-    
+    const Sweep::Particle *const sp = ens.At(i);
+
     if (sp != NULL) {
         PSL(*sp, time, psl, start);
     } else {
@@ -420,8 +420,8 @@ void ParticleStats::PSL(const Ensemble &ens, unsigned int i,
     }
 }
 
-// Returns the PSL entry for the given particle cache.
-void ParticleStats::PSL(const Sweep::ParticleCache &sp, real time,
+// Returns the PSL entry for the given particle.
+void ParticleStats::PSL(const Sweep::Particle &sp, real time,
                         fvector &psl, unsigned int start) const
 {
     // Resize vector if too small.
@@ -462,7 +462,7 @@ ParticleStats *const ParticleStats::Clone(void) const
 
 // Returns the model data type.  Used to identify different models
 // and for serialisation.
-unsigned int ParticleStats::ID(void) const 
+unsigned int ParticleStats::ID(void) const
 {
     return (unsigned int)SubModels::BasicModel_ID;
 }
@@ -560,7 +560,7 @@ void ParticleStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
                     // Read the length of the element name.
                     unsigned int m = 0;
                     in.read(reinterpret_cast<char*>(&m), sizeof(m));
-                    
+
                     // Read the element name.
                     name = new char[m];
                     in.read(name, m);

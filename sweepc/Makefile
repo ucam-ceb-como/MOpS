@@ -80,10 +80,10 @@ swp_component.o: $(src)/swp_component.cpp
 swp_tracker.o: $(src)/swp_tracker.cpp
 	$(cpp) $(flag) $(src)/swp_tracker.cpp
 
-swp_particle_cache.o: $(src)/swp_particle_cache.cpp
+swp_particle_cache.o: $(src)/swp_particle_cache.cpp $(inc)/swp_particle_cache.h
 	$(cpp) $(flag) $(src)/swp_particle_cache.cpp
 
-swp_subparticle.o: $(src)/swp_subparticle.cpp
+swp_subparticle.o: $(src)/swp_subparticle.cpp $(inc)/swp_subparticle.h
 	$(cpp) $(flag) $(src)/swp_subparticle.cpp
 
 swp_particle.o: $(src)/swp_particle.cpp

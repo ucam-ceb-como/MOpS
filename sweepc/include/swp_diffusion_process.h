@@ -67,10 +67,7 @@ public:
     virtual ProcessType ID() const;
 
     //! Set the ID number of the particle property used for rate calculation
-    void SetPropertyID(
-        unsigned int id,
-        SubModels::SubModelType modelid = SubModels::BasicModel_ID
-        );
+    void SetPropertyID(unsigned int id);
 
     //! Set the power of temperature to use in rate calculations
     void SetTemperatureExponent(const real e) {m_TemperatureExponent = e;}
@@ -139,9 +136,6 @@ public:
 private:
     //! Particle property to which the rate of the process is proportional.
     unsigned int m_pid;
-
-    //! Particle model for which the above particle property ID is valid.
-    SubModels::SubModelType m_modelid;
 
     //! Exponent of temperature in rate expression
     real m_TemperatureExponent;

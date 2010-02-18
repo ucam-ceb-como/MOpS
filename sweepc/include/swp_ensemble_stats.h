@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -134,7 +134,7 @@ public:
     // Returns the PSL entry for the given particle.  The particle weight
     // is set to 1.0 because there is only one particle.
     void PSL(
-        const Sweep::ParticleCache &sp, // Particle cache from which to get PSL data.
+        const Sweep::Particle &sp,      // Particle from which to get PSL data.
         real time,                      // Current flow time (used to calculate particle age).
         fvector &psl                    // Output vector.
         );
@@ -190,7 +190,7 @@ private:
     // Map of model stats which are required to be collected.
     ModelStatsMap m_modelstats;
 
-    // Cannot instantiate this class without knowing how many 
+    // Cannot instantiate this class without knowing how many
     // components and tracker variables there are for
     // each particle.
     EnsembleStats(void); // Default constructor.

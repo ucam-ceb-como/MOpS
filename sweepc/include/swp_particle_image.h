@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -56,6 +56,7 @@
 #include "swp_pripart_primary.h"
 #include "swp_imgnode.h"
 #include "swp_PAH_primary.h"
+#include "swp_particle_model.h"
 #include <string>
 #include <fstream>
 #include <vector>
@@ -74,7 +75,7 @@ public:
 
     // Constructors.
     ParticleImage(void);               // Default constructor.
-    ParticleImage(const Particle &sp); // Initialising constructor.
+    ParticleImage(const Particle &sp, const ParticleModel &model); // Initialising constructor.
 
     // Destructors.
     ~ParticleImage(void);
@@ -87,9 +88,9 @@ public:
     CollRegime CollisionRegime(void) const;
 
     // Sets the collision regime used to calculate the
-    // particle image.  If the collision regime is being 
+    // particle image.  If the collision regime is being
     // changed then this function also forces a recalculation
-    // of the image aggregate structure, assuming that it 
+    // of the image aggregate structure, assuming that it
     // has already been initialised.
     void SetCollRegime(CollRegime creg);
 
@@ -97,7 +98,7 @@ public:
     // PARTICLE IMAGE DATA CONSTRUCTION.
 
     // Constructs the particle image from the given particle.
-    void Construct(const Particle &sp);
+    void Construct(const Particle &sp, const ParticleModel &model);
 
     // Constructs a random particle image.
     void ConstructRandom(
@@ -137,15 +138,15 @@ private:
 
     // AGGREGATE SPHERE-TREE CONSTRUCTORS (FREE-MOLECULAR).
 
-    // Constructs a PNode sphere-tree aggregate from the given 
+    // Constructs a PNode sphere-tree aggregate from the given
     // particle using free-molecular collision dynamics.
-    void constructAgg_FM(const Particle &sp);
+    void constructAgg_FM(const Particle &sp, const ParticleModel& model);
 
-    // Constructs a PNode sphere-tree aggregate from the given 
+    // Constructs a PNode sphere-tree aggregate from the given
     // pri-part list primary using free-molecular collision dynamics.
     void constructAgg_FM(const AggModels::PriPartPrimary &pri);
 
-    // Constructs a PNode sphere-tree aggregate with uniform 
+    // Constructs a PNode sphere-tree aggregate with uniform
     // primaries (equal diameter).  The diameter and primary
     // count are passed as arguments.
     void uniformAgg_FM(

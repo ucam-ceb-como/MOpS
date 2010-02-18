@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -61,7 +61,7 @@ const real ABFModel::m_sitedens = 2.3e19; // sites/m2.
 
 // Default constructor.
 ABFModel::ABFModel()
-: A4(-1), C2H2(-1), O2(-1), OH(-1), CO(-1), 
+: A4(-1), C2H2(-1), O2(-1), OH(-1), CO(-1),
   H(-1), H2(-1), H2O(-1), iC(-1), m_aform(AlphaConst),
   m_aconst(1.0)
 {
@@ -95,7 +95,7 @@ ABFModel &ABFModel::operator =(const ABFModel &rhs)
         iC   = rhs.iC;
         m_aform  = rhs.m_aform;
         m_aconst = rhs.m_aconst;
-        for (map<real,real>::const_iterator i = rhs.m_alpha_prof.begin(); 
+        for (map<real,real>::const_iterator i = rhs.m_alpha_prof.begin();
              i!=rhs.m_alpha_prof.end(); ++i) {
             m_alpha_prof[i->first] = i->second;
         }
@@ -165,7 +165,7 @@ int ABFModel::Initialise(const ParticleModel &model)
     }
 
     // Check that indices are valid.
-    if ((A4>=0) && (C2H2>=0) && (O2>=0) && (OH>=0) && 
+    if ((A4>=0) && (C2H2>=0) && (O2>=0) && (OH>=0) &&
         (CO>=0) && (H>=0) && (H2>=0) && (H2O>=0) && (iC>=0)) {
         return 0;
     } else {
@@ -183,7 +183,7 @@ void ABFModel::AddToMech(Mechanism &mech)
 
 // Calculates the active site density for the given gas-phase
 // and particle ensemble.
-real ABFModel::SiteDensity(real t, const Sprog::Thermo::IdealGas &gas, 
+real ABFModel::SiteDensity(real t, const Sprog::Thermo::IdealGas &gas,
                            const Ensemble &particles) const
 {
     return m_sitedens * alpha(t, gas, particles) * radicalSiteFraction(gas);
@@ -191,7 +191,7 @@ real ABFModel::SiteDensity(real t, const Sprog::Thermo::IdealGas &gas,
 
 // Calculates the active site density for the given gas-phase
 // and particle.
-real ABFModel::SiteDensity(real t, const Sprog::Thermo::IdealGas &gas, 
+real ABFModel::SiteDensity(real t, const Sprog::Thermo::IdealGas &gas,
                            const Particle &part) const
 {
     return m_sitedens * alpha(t, gas, part) * radicalSiteFraction(gas);
@@ -223,13 +223,13 @@ real ABFModel::radicalSiteFraction(const Sprog::Thermo::IdealGas &gas) const
 };
 
 // Returns alpha for a particle ensemble.
-real ABFModel::alpha(real t, const Sprog::Thermo::IdealGas &gas, 
+real ABFModel::alpha(real t, const Sprog::Thermo::IdealGas &gas,
                      const Ensemble &particles) const
 {
     switch (m_aform) {
         case AlphaCorrelation:
-            return alpha(gas.Temperature(), 
-                         particles.GetSums().Composition(iC) / 
+            return alpha(gas.Temperature(),
+                         particles.GetSums().Property(ParticleCache::iNumCarbon) /
                          particles.Count());
         case AlphaProfile:
             return alpha(t);
@@ -240,7 +240,7 @@ real ABFModel::alpha(real t, const Sprog::Thermo::IdealGas &gas,
 }
 
 // Returns alpha for a single particle.
-real ABFModel::alpha(real t, const Sprog::Thermo::IdealGas &gas, 
+real ABFModel::alpha(real t, const Sprog::Thermo::IdealGas &gas,
                      const Particle &part) const
 {
     switch (m_aform) {
@@ -271,19 +271,19 @@ real ABFModel::alpha(real t) const
 {
     // Get the time point after the required time.
     map<real,real>::const_iterator j = m_alpha_prof.upper_bound(t);
-    
+
     if (j == m_alpha_prof.begin()) {
         // This time is before the beginning of the profile.  Return
         // the first time point.
         return j->second;
-    } else {       
+    } else {
         // Get the time point before the required time.
         map<real,real>::const_iterator i = j; --i;
 
         // Get alpha at both points..
         real a1 = i->second;
         real a2 = j->second;
-        
+
         // Calculate time interval between points i and j.
         real dt_pro = j->first - i->first;
 
@@ -298,12 +298,12 @@ real ABFModel::alpha(real t) const
 
 // ALPHA CORRELATION.
 
-// Loads a time profile for alpha into the model.  Also sets 
+// Loads a time profile for alpha into the model.  Also sets
 // the model to use this profile for calculations.
 void ABFModel::SetAlphaProfile(const std::map<real,real> &alphas)
 {
     m_alpha_prof.clear();
-    for (map<real,real>::const_iterator i = alphas.begin(); 
+    for (map<real,real>::const_iterator i = alphas.begin();
          i!=alphas.end(); ++i) {
         m_alpha_prof[i->first] = i->second;
     }

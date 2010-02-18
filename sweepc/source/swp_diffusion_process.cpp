@@ -53,11 +53,9 @@ const Sweep::real Sweep::Processes::DiffusionProcess::s_MajorantFactor = 1.5;
  * Copied from the surface reaction.
  *
  *\param[in]            id          Particle property to which rate is proportional
- *\param[in,optional]   modelid     Model in which property applies
  */
-void Sweep::Processes::DiffusionProcess::SetPropertyID(unsigned int id, SubModels::SubModelType modelid) {
+void Sweep::Processes::DiffusionProcess::SetPropertyID(unsigned int id) {
     m_pid     = id;
-    m_modelid = modelid;
 }
 
 /*!
@@ -94,8 +92,8 @@ Sweep::real Sweep::Processes::DiffusionProcess::Rate(real t, const Cell &sys,
         const real dx_1 = 1.0 / local_geom.calcSpacing(Geometry::right);
         rate += 0.5 * dx_1 * dx_1;
     }
-    
-    rate *= sys.Particles().GetSum(m_modelid, m_pid);
+
+    rate *= sys.Particles().GetSum(static_cast<ParticleCache::PropID>(m_pid));
     rate *= std::pow(sys.Temperature(), m_TemperatureExponent);
     return  rate * A() * s_MajorantFactor;
 
@@ -115,13 +113,6 @@ Sweep::real Sweep::Processes::DiffusionProcess::Rate(real t, const Cell &sys,
  */
 Sweep::real Sweep::Processes::DiffusionProcess::Rate(real t, const Cell &sys,
                                                      const Particle &sp) const {
-    // Property on which rate depends is from a special sub-model
-    if(m_modelid != SubModels::BasicModel_ID) {
-        return sp.SubModel(m_modelid)->Property(m_pid);
-    }
-
-    // If we get here it is because the particle property on which the rate
-    // depends is from the main particle model.
     // Static cast is copied from Sweep::Ensemble::Select
     return sp.Property(static_cast<ParticleCache::PropID>(m_pid));
 }
@@ -178,7 +169,7 @@ int Sweep::Processes::DiffusionProcess::Perform(real t, Cell &sys,
     }
 
     // Get the particle that will be transported
-    const int particleIndex = sys.Particles().Select(m_modelid, m_pid);
+    const int particleIndex = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid));
 
     // LPDA updates and fictitious events are dealt with in the function below
     return Outflow(t, sys, local_geom, particleIndex, direction, out);

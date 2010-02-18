@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -22,7 +22,7 @@
     10/11.  Total and average particle mass.
 
     Additionally the total and average values of all particle components
-    and tracker values are appended to the end of the array.  For this 
+    and tracker values are appended to the end of the array.  For this
     reason it is necessary to initialise the class with knowledge of
     the components and tracker variables.
 
@@ -102,7 +102,7 @@ public:
 //    const std::vector<StatType> &Mask(void) const;
 
     // Calculates the model stats for a single particle.
-    void Calculate(const ParticleCache &data);
+    void Calculate(const Particle &data);
 
     // Calculates the model stats for a particle ensemble.
     void Calculate(
@@ -188,7 +188,7 @@ public:
 
     // Returns the PSL entry for the given particle cache.
     void PSL(
-        const Sweep::ParticleCache &sp, // Particle cache from which to get PSL data.
+        const Sweep::Particle &sp,      // Particle from which to get PSL data.
         real time,                      // Current flow time (used to calculate particle age).
         fvector &psl,                   // Output vector.
         unsigned int start = 0          // Optional start index for the first variable.
@@ -216,7 +216,7 @@ public:
 private:
     // Stats count and indices.
     static const unsigned int STAT_COUNT = 11;
-    enum StatIndices {iNP=0, iM0=1, iD=2, iDcol=3, 
+    enum StatIndices {iNP=0, iM0=1, iD=2, iDcol=3,
                       iDmob=4, iS=5, iV=7, iM=9};
 
     // PSL count and indices.
@@ -239,7 +239,7 @@ private:
     static const std::string m_const_pslnames[PSL_COUNT];
     std::vector<std::string> m_pslnames;
 
-    // Cannot instantiate this class without knowing how many 
+    // Cannot instantiate this class without knowing how many
     // components and tracker variables there are for
     // each particle.
     ParticleStats(void); // Default constructor.

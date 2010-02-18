@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -68,60 +68,32 @@ ParticleCache::ParticleCache()
 ParticleCache::ParticleCache(real time, const Sweep::ParticleModel &model)
 {
     init();
-	m_pmodel = &model;
-
-    // Set create time.
-    m_createt = time;
-    m_time    = time;
-
-
-    // Resize component and tracker vectors to match number of
-    // each in the particle model.
-	m_comp.assign(model.ComponentCount(), 0.0);
-	m_values.assign(model.TrackerCount(), 0.0);
-
-    // Create aggregation model cache.
-    m_aggcache = ModelFactory::CreateAggCache(model.AggModel(), *this);
 
     // Now add all sub-models required by the particle model.
-    for (SubModelTypeSet::const_iterator i=model.SubModels().begin();
+    /*for (SubModelTypeSet::const_iterator i=model.SubModels().begin();
          i!=model.SubModels().end(); ++i) {
         m_submodels[*i] = ModelFactory::CreateCache(*i, *this);
-    }
+    }*/
 }
 
 // Initialising constructor (using Primary particle).
 ParticleCache::ParticleCache(const Primary &pri)
 {
     init();
-    m_pmodel = pri.ParticleModel();
-
-    // Set create time.
-    m_createt = pri.CreateTime();
-    m_time    = pri.LastUpdateTime();
-
-
-    // Resize component and tracker vectors to match number of
-    // each in the primary.
-	m_comp.assign(pri.Composition().begin(), pri.Composition().end());
-	m_values.assign(pri.Values().begin(), pri.Values().end());
-
-    // Create aggregation model cache.
-    m_aggcache = pri.CreateAggCache(*this);
 
     // Now add all sub-models required by the particle model.
-    for (SubModelTypeSet::const_iterator i=m_pmodel->SubModels().begin();
+    /*for (SubModelTypeSet::const_iterator i=m_pmodel->SubModels().begin();
          i!=m_pmodel->SubModels().end(); ++i) {
         m_submodels[*i] = pri.SubModel(*i)->CreateCache(*this);
-    }
+    }*/
 }
 
 // Copy constructor.
-ParticleCache::ParticleCache(const Sweep::ParticleCache &copy)
+/*ParticleCache::ParticleCache(const Sweep::ParticleCache &copy)
 {
     init();
 	*this = copy;
-}
+}*/
 
 // Stream-reading constructor.
 ParticleCache::ParticleCache(std::istream &in, const Sweep::ParticleModel &model)
@@ -140,53 +112,16 @@ ParticleCache::~ParticleCache()
 // OPERATOR OVERLOADS.
 
 // Assignment operator (ParticleCache RHS).
-ParticleCache &ParticleCache::operator=(const Sweep::ParticleCache &rhs)
+/*ParticleCache &ParticleCache::operator=(const Sweep::ParticleCache &rhs)
 {
     if (this != &rhs) {
-        if ((m_pmodel == NULL) || (m_pmodel != rhs.m_pmodel)) {
-            // Set particle model.
-            m_pmodel = rhs.m_pmodel;
-            // Copy components.
-            m_comp.assign(rhs.m_comp.begin(), rhs.m_comp.end());
-            // Copy tracker variables.
-            m_values.assign(rhs.m_values.begin(), rhs.m_values.end());
-        } else {
-            // Copy components.
-            if (m_pmodel->ComponentCount() > 0) {
-                memcpy(&m_comp[0], &rhs.m_comp[0], sizeof(real)*m_comp.size());
-            }
-            // Copy tracker variables.
-            if (m_pmodel->TrackerCount() > 0) {
-                memcpy(&m_values[0], &rhs.m_values[0], sizeof(real)*m_values.size());
-            }
-        }
-
-        // Copy times.
-        m_createt = rhs.m_createt;
-        m_time    = rhs.m_time;
-
-
-
-        // Copy the aggregation model data.
-        if (rhs.m_aggcache != NULL) {
-            if ((m_aggcache==NULL) || (m_aggcache->ID() != rhs.m_aggcache->ID())) {
-                delete m_aggcache;
-                m_aggcache = rhs.m_aggcache->Clone();
-                m_aggcache->SetParent(*this);
-            } else {
-                *m_aggcache = *rhs.m_aggcache;
-            }
-        } else {
-            delete m_aggcache; m_aggcache = NULL;
-        }
-
         // Delete sub-models not in RHS.
-        for (SubModelCacheMap::const_iterator i=m_submodels.begin(); 
+        for (SubModelCacheMap::const_iterator i=m_submodels.begin();
              i!=m_submodels.end(); ++i) {
             // Try to find model data in RHS.
             SubModelCacheMap::const_iterator k = rhs.m_submodels.find(i->first);
             if (k == m_submodels.end()) {
-                // This RHS does not contain the model i, 
+                // This RHS does not contain the model i,
                 // need to delete it.
                 delete i->second;
                 m_submodels.erase(i->first);
@@ -194,7 +129,7 @@ ParticleCache &ParticleCache::operator=(const Sweep::ParticleCache &rhs)
         }
 
         // Copy the data for other particle models.
-        for (SubModelCacheMap::const_iterator i=rhs.m_submodels.begin(); 
+        for (SubModelCacheMap::const_iterator i=rhs.m_submodels.begin();
              i!=rhs.m_submodels.end(); ++i) {
             // Try to find model data in this cache.
             SubModelCacheMap::const_iterator k = m_submodels.find(i->first);
@@ -225,48 +160,18 @@ ParticleCache &ParticleCache::operator=(const Sweep::ParticleCache &rhs)
 		m_numsubpart = rhs.m_numsubpart;
     }
     return *this;
-}
+}*/
 
 // Assignment operator (Primary RHS).
 ParticleCache &ParticleCache::operator=(const Sweep::Primary &rhs)
 {
-    if (m_pmodel != rhs.ParticleModel()) {
-        // Set particle model.
-        m_pmodel = rhs.ParticleModel();
-        // Copy components.
-        m_comp.assign(rhs.Composition().begin(), rhs.Composition().end());
-        // Copy tracker variables.
-        m_values.assign(rhs.Values().begin(), rhs.Values().end());
-    } else {
-        // Copy components.
-        if (m_pmodel->ComponentCount() > 0) {
-            memcpy(&m_comp[0], &rhs.Composition()[0], sizeof(real)*m_comp.size());
-        }
-        // Copy tracker variables.
-        if (m_pmodel->TrackerCount() > 0) {
-            memcpy(&m_values[0], &rhs.Values()[0], sizeof(real)*m_values.size());
-        }
-    }
-
-    // Copy times.
-    m_createt = rhs.CreateTime();
-    m_time    = rhs.LastUpdateTime();
-
-    // Copy the aggregation model cache.
-    if ((m_aggcache==NULL) || (m_aggcache->ID() != rhs.AggID())) {
-        delete m_aggcache;
-        m_aggcache = rhs.CreateAggCache(*this);
-    } else {
-        *m_aggcache = rhs;
-    }
-
     // Delete sub-models not in RHS.
-    for (SubModelCacheMap::const_iterator i=m_submodels.begin(); 
+    /*for (SubModelCacheMap::const_iterator i=m_submodels.begin();
          i!=m_submodels.end(); ++i) {
         // Try to find model data in RHS.
         const SubModels::SubModel *mod = rhs.SubModel(i->first);
         if (mod == NULL) {
-            // This RHS does not contain the model i, 
+            // This RHS does not contain the model i,
             // need to delete it.
             delete i->second;
             m_submodels.erase(i->first);
@@ -274,7 +179,7 @@ ParticleCache &ParticleCache::operator=(const Sweep::Primary &rhs)
     }
 
     // Copy the data for other particle models.
-    for (SubModelMap::const_iterator i=rhs.SubModels().begin(); 
+    for (SubModelMap::const_iterator i=rhs.SubModels().begin();
          i!=rhs.SubModels().end(); ++i) {
         // Try to find model data in this cache.
         SubModelCacheMap::const_iterator k = m_submodels.find(i->first);
@@ -285,7 +190,7 @@ ParticleCache &ParticleCache::operator=(const Sweep::Primary &rhs)
             // This ParticleCache does not contain the model i.
             m_submodels[i->first] = i->second->CreateCache(*this);
         }
-    }
+    }*/
 
     // Copy the derived properties.
     m_diam = rhs.SphDiameter();
@@ -302,7 +207,7 @@ ParticleCache &ParticleCache::operator=(const Sweep::Primary &rhs)
     m_inv_sqrtmass = 1.0 / sqrt(m_mass);
     m_d2_m_1_2     = m_dcolsqr * m_inv_sqrtmass;
 
-
+    m_numcarbon = rhs.Composition(iNumCarbon);
 
     return *this;
 }
@@ -316,20 +221,8 @@ ParticleCache &ParticleCache::operator=(const Sweep::Primary &rhs)
 // caches for different particle models.
 ParticleCache &ParticleCache::operator+=(const Sweep::ParticleCache &rhs)
 {
-    unsigned int i = 0;
-
-    // Add the components.
-    for (i=0; i!=min(m_comp.size(),rhs.m_comp.size()); ++i) {
-        m_comp[i] += rhs.m_comp[i];
-    }
-
-    // Add the tracker values.
-    for (i=0; i!=min(m_values.size(),rhs.m_values.size()); ++i) {
-        m_values[i] += rhs.m_values[i];
-    }
-
     // Now allow the particle models to deal with the additions.
-    for (SubModelCacheMap::iterator j=m_submodels.begin();
+    /*for (SubModelCacheMap::iterator j=m_submodels.begin();
          j!=m_submodels.end(); ++j) {
         // Try to find the model in RHS cache.
         SubModelCacheMap::const_iterator k = rhs.m_submodels.find(j->first);
@@ -347,21 +240,7 @@ ParticleCache &ParticleCache::operator+=(const Sweep::ParticleCache &rhs)
             m_submodels[j->first] = j->second->Clone();
             m_submodels[j->first]->SetParent(*this);
         }
-    }
-
-    // Allow aggregation model to deal with the addition as well.
-    if (m_aggcache == NULL) {
-        if (rhs.m_aggcache != NULL) {
-            m_aggcache = rhs.m_aggcache->Clone();
-        }
-    } else {
-        if (rhs.m_aggcache != NULL) {
-            *m_aggcache += *rhs.m_aggcache;
-        } else {
-            delete m_aggcache;
-            m_aggcache = NULL;
-        }
-    }
+    }*/
 
     // Sum cache variables.
     m_diam += rhs.m_diam;
@@ -379,6 +258,7 @@ ParticleCache &ParticleCache::operator+=(const Sweep::ParticleCache &rhs)
     m_freesurface += rhs.m_freesurface;
     m_numsubpart += rhs.m_numsubpart;
 
+    m_numcarbon += rhs.m_numcarbon;
 
     return *this;
 }
@@ -390,21 +270,9 @@ ParticleCache &ParticleCache::operator+=(const Sweep::Primary &rhs)
 {
     // Check that the particle caches subscribe to the same particle
     // model.  If they don't then just use assignment operator; can't add.
-    if (m_pmodel==rhs.ParticleModel()) {
-        unsigned int i = 0;
-
-        // Add the components.
-        for (i=0; i!=min(m_comp.size(),rhs.Composition().size()); ++i) {
-            m_comp[i] += rhs.Composition(i);
-        }
-
-        // Add the tracker values.
-        for (i=0; i!=min(m_values.size(),rhs.Values().size()); ++i) {
-            m_values[i] += rhs.Values(i);
-        }
-
+    /*
         // Now allow the particle models to deal with the additions.
-        for (SubModelCacheMap::iterator j=m_submodels.begin(); 
+        for (SubModelCacheMap::iterator j=m_submodels.begin();
              j!=m_submodels.end(); ++j) {
             // Try to find the model in RHS cache.
             const SubModels::SubModel *mod = rhs.SubModel(j->first);
@@ -414,17 +282,14 @@ ParticleCache &ParticleCache::operator+=(const Sweep::Primary &rhs)
         }
 
         // Now check for models which are in the RHS but not the LHS.
-        for (SubModelMap::const_iterator j=rhs.SubModels().begin(); 
+        for (SubModelMap::const_iterator j=rhs.SubModels().begin();
              j!=rhs.SubModels().end(); ++j) {
             // Try to find model in this cache.
             SubModelCacheMap::const_iterator k = m_submodels.find(j->first);
             if (k == m_submodels.end()) {
                 m_submodels[j->first] = j->second->CreateCache(*this);
             }
-        }
-
-        // Allow aggregation model to deal with the addition as well.
-        *m_aggcache += rhs;
+        }*/
 
         // Get cache properties from primary.
         real diam = rhs.SphDiameter();
@@ -438,7 +303,7 @@ ParticleCache &ParticleCache::operator+=(const Sweep::Primary &rhs)
         m_diam += diam;
         m_dcol += dcol;
         m_dmob += dmob;
-        m_surf += surf;           
+        m_surf += surf;
         m_vol  += vol;
         m_mass += mass;
 
@@ -448,16 +313,9 @@ ParticleCache &ParticleCache::operator+=(const Sweep::Primary &rhs)
         m_inv_dcolsqr  += 1.0 / (dcol * dcol);
         m_inv_sqrtmass += 1.0 / sqrt(mass);
         m_d2_m_1_2     += (dcol * dcol) / sqrt(mass);
-	
 
 
-	
-
-    } else {
-        // Use assignment if the caches do not subscribe to the same
-        // particle model.
-        *this = rhs;
-    }
+        m_numcarbon += rhs.Composition(iNumCarbon);
 
     return *this;
 }
@@ -480,21 +338,12 @@ const ParticleCache ParticleCache::operator+(const Sweep::Primary &rhs) const {
 // Resets the particle cache to its "empty" condition.
 void ParticleCache::Clear(void)
 {
-    // Clear components and tracker values.
-    m_comp.assign(m_comp.size(), 0.0);
-    m_values.assign(m_values.size(), 0.0);
-
-    // Clear aggregation model cache.
-    if (m_aggcache != NULL) m_aggcache->Clear();
 
     // Clear sub-model cache.
-    for (SubModelCacheMap::iterator i=m_submodels.begin(); i!=m_submodels.end(); ++i) {
-        i->second->Clear();
-    }
+    //for (SubModelCacheMap::iterator i=m_submodels.begin(); i!=m_submodels.end(); ++i) {
+    //    i->second->Clear();
+    //}
 
-    // Clear times.
-    m_createt = 0.0;
-	m_time    = 0.0;
 
 
     // Clear derived properties.
@@ -509,96 +358,21 @@ void ParticleCache::Clear(void)
     m_inv_dcolsqr  = 0.0;
     m_inv_sqrtmass = 0.0;
     m_d2_m_1_2     = 0.0;
+
+    m_freesurface = 0.0;
+    m_numsubpart = 0;
+    m_numcarbon = 0;
 }
 
-
-// DEFINING PARTICLE MODEL.
-
-// Returns the component vector.
-const Sweep::ParticleModel *const ParticleCache::ParticleModel() const
-{
-	return m_pmodel;
-}
-
-
-// PARTICLE COMPOSITION.
-
-// Returns the composition vector.
-const fvector &ParticleCache::Composition() const 
-{
-	return m_comp;
-}
-
-// Returns the ith component value.  Returns 0.0 if i is invalid.
-real ParticleCache::Composition(unsigned int i) const
-{
-	if (i < m_comp.size()) {
-		return m_comp[i];
-	} else {
-		return 0.0;
-	}
-}
-
-// Sets the composition vector.
-void ParticleCache::SetComposition(const Sweep::fvector &comp)
-{
-	m_comp.assign(comp.begin(), comp.end());
-}
-
-
-// TRACKER VARIABLE VALUES.
-
-// Returns the tracker value vector.
-const fvector &ParticleCache::Values() const
-{
-	return m_values;
-}
-
-// Returns the ith tracker variable value.  Returns 0.0 if i is invalid.
-real ParticleCache::Values(unsigned int i) const
-{
-	if (i < m_values.size()) {
-		return m_values[i];
-	} else {
-		return 0.0;
-	}
-}
-
-// Sets the values vector.
-void ParticleCache::SetValues(const fvector &vals)
-{
-    m_values.assign(vals.begin(), vals.end());
-}
-
-
-// PARTICLE CREATE TIME.
-
-// Returns the particle create time.
-real ParticleCache::CreateTime() const {return m_createt;}
-
-
-// LAST UPDATE TIME.
-
-// Returns the particle last update time.
-real ParticleCache::LastUpdateTime() const {return m_time;}
-
-// Sets the last update time of the particle.
-void ParticleCache::SetTime(real t) {m_time = t;}
-
-
-// AGGREGATION MODEL CACHE.
-
-// Returns the aggregation model data.
-const AggModels::AggModelCache *const ParticleCache::AggCache() const {return m_aggcache;}
 
 
 // MODEL CACHE.
 
 // Returns the model data.
-const SubModels::SubModelCacheMap &ParticleCache::SubModelCache() const {return m_submodels;}
+//const SubModels::SubModelCacheMap &ParticleCache::SubModelCache() const {return m_submodels;}
 
 // Returns the data for the ith model.
-const SubModels::SubModelCache *const ParticleCache::SubModel(SubModels::SubModelType id) const
+/*const SubModels::SubModelCache *const ParticleCache::SubModel(SubModels::SubModelType id) const
 {
     SubModelCacheMap::const_iterator i = m_submodels.find(id);
     if (i != m_submodels.end()) {
@@ -607,7 +381,7 @@ const SubModels::SubModelCache *const ParticleCache::SubModel(SubModels::SubMode
         return NULL;
     }
 }
-
+*/
 
 
 // BASIC DERIVED PARTICLE PROPERTIES.
@@ -660,10 +434,6 @@ real ParticleCache::CollDiamSqrdInvSqrtMass() const {return m_d2_m_1_2;}
 real ParticleCache::Property(PropID id) const
 {
     switch (id) {
-        case iCTime:  // Create time.
-            return m_createt;
-        case iLUTime: // Last update time.
-            return m_time;
         case iDsph:      // Equivalent sphere diameter.
             return m_diam;
         case iDcol:   // Collision diameter.
@@ -689,6 +459,8 @@ real ParticleCache::Property(PropID id) const
             return m_d2_m_1_2;
 		case iFS:
 			return m_freesurface;
+		case iNumCarbon:
+		    return m_numcarbon;
         case -1:
             // Special case property, used to select particles
             // uniformly.
@@ -728,7 +500,7 @@ void ParticleCache::SetSurfaceArea(real surf) {m_surf = surf;}
 void ParticleCache::SetVolume(real vol) {m_vol = vol;}
 
 // Sets the mass.
-void ParticleCache::SetMass(real m) 
+void ParticleCache::SetMass(real m)
 {
     m_mass         = m;
     m_inv_sqrtmass = 1.0 / sqrt(m_mass);
@@ -755,52 +527,13 @@ void ParticleCache::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
-        // Write number of components.
-        unsigned int n = (unsigned int)m_comp.size();
-        out.write((char*)&n, sizeof(n));
-
-        // Write components.
         double val = 0.0;
-        for (unsigned int i=0; i!=n; ++i) {
-            val = (double)m_comp[i];
-            out.write((char*)&val, sizeof(val));
-        }
 
-        // Write number of tracker values.
-        n = (unsigned int)m_values.size();
-        out.write((char*)&n, sizeof(n));
-
-        // Write values.
-        for (unsigned int i=0; i!=n; ++i) {
-            val = (double)m_values[i];
-            out.write((char*)&val, sizeof(val));
-        }
-
-        // Write create time.
-        val = (double)m_createt;
-        out.write((char*)&val, sizeof(val));
-
-        // Write last update time.
-        val = (double)m_time;
-        out.write((char*)&val, sizeof(val));
-
-        // Output aggregation model.
-        if (m_aggcache != NULL) {
-            out.write((char*)&trueval, sizeof(trueval));
-            ModelFactory::WriteCache(*m_aggcache, out);
-        } else {
-            out.write((char*)&falseval, sizeof(falseval));
-        }
-
-        // Write the number of additional sub-model caches.
-        n = (unsigned int)m_submodels.size();
-        out.write((char*)&n, sizeof(n));
-
-        // Write the models.
-        for (SubModelCacheMap::const_iterator i=m_submodels.begin();
+         // Write the models.
+        /*for (SubModelCacheMap::const_iterator i=m_submodels.begin();
              i!=m_submodels.end(); ++i) {
             ModelFactory::WriteCache(*(*i).second, out);
-        }
+        }*/
 
         // Write equivalent sphere diameter.
         val = (double)m_diam;
@@ -845,6 +578,10 @@ void ParticleCache::Serialize(std::ostream &out) const
         // Output the D^2 / sqrt(M).
         v = (double)m_d2_m_1_2;
         out.write((char*)&v, sizeof(v));
+
+        out.write(reinterpret_cast<const char*>(&m_freesurface), sizeof(m_freesurface));
+        out.write(reinterpret_cast<const char*>(&m_numsubpart), sizeof(m_numsubpart));
+        out.write(reinterpret_cast<const char*>(&m_numcarbon), sizeof(m_numcarbon));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, ParticleCache::Serialize).");
@@ -855,7 +592,7 @@ void ParticleCache::Serialize(std::ostream &out) const
 void ParticleCache::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
     releaseMem();
-    m_pmodel = &model;
+    //m_pmodel = &model;
 
     if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -870,48 +607,15 @@ void ParticleCache::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
 
         switch (version) {
             case 0:
-                // Read number of components.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-
-                // Read components.
-                for (unsigned int i=0; i!=n; ++i) {
-                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_comp.push_back((real)val);
-                }
-
-                // Read number of tracker values.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-
-                // Read values.
-                for (unsigned int i=0; i!=n; ++i) {
-                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_values.push_back((real)val);
-                }
-
-                // Read create time.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_createt = (real)val;
-
-                // Read last update time.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_time = (real)val;
-
-                // Read aggregation model.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                if (n==1) {
-                    m_aggcache = ModelFactory::ReadAggCache(in, *this);
-                } else {
-                    m_aggcache = NULL;
-                }
 
                 // Read the number of additional model data objects.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                /*in.read(reinterpret_cast<char*>(&n), sizeof(n));
 
                 // Read the models.
                 for (unsigned int i=0; i!=n; ++i) {
                     smod = ModelFactory::ReadCache(in, *this);
                     m_submodels[smod->ID()] = smod;
-                }
+                }*/
 
                 // Read equivalent sphere diameter.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
@@ -957,6 +661,16 @@ void ParticleCache::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_d2_m_1_2 = (real)val;
 
+                // Read the free surface.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_freesurface = (real)val;
+
+                // Read the number of sub paricles.
+                in.read(reinterpret_cast<char*>(&m_numsubpart), sizeof(m_numsubpart));
+
+                // Read number of C atoms.
+                in.read(reinterpret_cast<char*>(&m_numcarbon), sizeof(m_numcarbon));
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -974,22 +688,14 @@ void ParticleCache::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
 // Release all memory associated with the ParticleData object.
 void ParticleCache::releaseMem(void)
 {
-    m_comp.clear();
-    m_values.clear();
-    delete m_aggcache; m_aggcache = NULL;
-    for (SubModelCacheMap::iterator i=m_submodels.begin(); i!=m_submodels.end(); ++i) {
-        delete (*i).second;
-    }
-    m_submodels.clear();
+    //m_submodels.clear();
 }
 
 
 // Initialisation routine.
 void ParticleCache::init(void)
 {
-	m_pmodel     = NULL;
-	m_createt    = 0.0;
-	m_time       = 0.0;
+
 	m_diam       = 0.0;
 	m_dcol       = 0.0;
 	m_dmob       = 0.0;
@@ -1001,5 +707,10 @@ void ParticleCache::init(void)
     m_inv_dcolsqr  = 0.0;
     m_inv_sqrtmass = 0.0;
     m_d2_m_1_2     = 0.0;
-	m_aggcache   = NULL;
+
+
+    m_freesurface = 0.0;
+    m_numsubpart = 0;
+
+    m_numcarbon = 0;
 }

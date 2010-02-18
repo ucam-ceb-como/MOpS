@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -98,7 +98,7 @@ ARSSC_Reaction &ARSSC_Reaction::operator=(const ARSSC_Reaction &rhs)
 // by index.  Returns 0 on success, otherwise negative.
 int ARSSC_Reaction::Perform(real t, Cell &sys, unsigned int iterm) const
 {
-    int i = sys.Particles().Select(m_modelid, m_pid);
+    int i = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid));
 
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);
@@ -117,7 +117,7 @@ int ARSSC_Reaction::Perform(real t, Cell &sys, unsigned int iterm) const
                     // Choose a primary particle to update.
                     SubParticle *sub = sp->SelectLeaf(m_modelid, m_pid);
                     Primary *pri = sub->Primary();
-                    
+
                     // Do ARS-SC primary update.
                     unsigned int n = adjustPri(*pri);
 
@@ -142,7 +142,7 @@ int ARSSC_Reaction::Perform(real t, Cell &sys, unsigned int iterm) const
             // Choose a primary particle to update.
             SubParticle *sub = sp->SelectLeaf(m_modelid, m_pid);
             Primary *pri = sub->Primary();
-            
+
             // Do ARS-SC primary update.
             unsigned int n = adjustPri(*pri);
 
@@ -192,14 +192,14 @@ unsigned int ARSSC_Reaction::adjustPri(Sweep::Primary &pri, unsigned int n) cons
     int m = n;
 
     // Get the ARS-SC sub-model from primary.
-    SubModels::ARSSC_Model *ars = 
+    SubModels::ARSSC_Model *ars =
         dynamic_cast<SubModels::ARSSC_Model*>(pri.SubModel(SubModels::ARSSC_Model_ID));
 
     // Remove those sites destroyed by the reaction.  First check that
     // there are sufficient sites to remove.
     for (unsigned int j=0; j!=SubModels::ARSSC_Model::SiteTypeCount; ++j) {
         if (m_sites[j] < 0.0) {
-            m = min(m, (int)(ars->SiteCount((SubModels::ARSSC_Model::SiteType)j) - 
+            m = min(m, (int)(ars->SiteCount((SubModels::ARSSC_Model::SiteType)j) -
                              ((real)m * m_sites[j])));
         }
     }

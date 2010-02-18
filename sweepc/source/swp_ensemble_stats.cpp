@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -97,7 +97,7 @@ EnsembleStats &EnsembleStats::operator=(const EnsembleStats &rhs)
         }
 
         // Copy model stats.
-        for (ModelStatsMap::const_iterator i=rhs.m_modelstats.begin(); 
+        for (ModelStatsMap::const_iterator i=rhs.m_modelstats.begin();
              i!=rhs.m_modelstats.end(); ++i) {
             m_modelstats[i->first] = i->second->Clone();
         }
@@ -113,7 +113,7 @@ unsigned int EnsembleStats::Count(void) const
 {
     unsigned int n = m_basicstats->Count();
     if (m_aggstats!=NULL) n += m_aggstats->Count();
-    for (ModelStatsMap::const_iterator i=m_modelstats.begin(); 
+    for (ModelStatsMap::const_iterator i=m_modelstats.begin();
          i!=m_modelstats.end(); ++i) {
         n += i->second->Count();
     }
@@ -125,7 +125,7 @@ void EnsembleStats::Calculate(const Ensemble &e, real scale)
 {
     m_basicstats->Calculate(e, scale);
     if (m_aggstats!=NULL) m_aggstats->Calculate(e, scale);
-    for (ModelStatsMap::iterator i=m_modelstats.begin(); 
+    for (ModelStatsMap::iterator i=m_modelstats.begin();
          i!=m_modelstats.end(); ++i) {
         i->second->Calculate(e, scale);
     }
@@ -153,7 +153,7 @@ void EnsembleStats::Get(fvector &stats, unsigned int start) const
     }
 
     // Get stats from particle sub-models.
-    for (ModelStatsMap::const_iterator i=m_modelstats.begin(); 
+    for (ModelStatsMap::const_iterator i=m_modelstats.begin();
          i!=m_modelstats.end(); ++i) {
         i->second->Get(stats, start);
         start += i->second->Count();
@@ -182,7 +182,7 @@ void EnsembleStats::Names(std::vector<std::string> &names, unsigned int start) c
     }
 
     // Get stats from particle sub-models.
-    for (ModelStatsMap::const_iterator i=m_modelstats.begin(); 
+    for (ModelStatsMap::const_iterator i=m_modelstats.begin();
          i!=m_modelstats.end(); ++i) {
         i->second->Names(names, start);
         start += i->second->Count();
@@ -206,7 +206,7 @@ unsigned int EnsembleStats::PSL_Count(void) const
 {
     unsigned int n = 1 + m_basicstats->PSL_Count();
     if (m_aggstats!=NULL) n += m_aggstats->PSL_Count();
-    for (ModelStatsMap::const_iterator i=m_modelstats.begin(); 
+    for (ModelStatsMap::const_iterator i=m_modelstats.begin();
          i!=m_modelstats.end(); ++i) {
         n += i->second->PSL_Count();
     }
@@ -236,7 +236,7 @@ void EnsembleStats::PSL_Names(std::vector<std::string> &names, unsigned int star
     }
 
     // Get stats from particle sub-models.
-    for (ModelStatsMap::const_iterator i=m_modelstats.begin(); 
+    for (ModelStatsMap::const_iterator i=m_modelstats.begin();
          i!=m_modelstats.end(); ++i) {
         i->second->PSL_Names(names, start);
         start += i->second->PSL_Count();
@@ -245,7 +245,7 @@ void EnsembleStats::PSL_Names(std::vector<std::string> &names, unsigned int star
 
 // Returns the particle size list (PSL) entry for particle i
 // in the given ensemble.
-void EnsembleStats::PSL(const Ensemble &ens, unsigned int i, 
+void EnsembleStats::PSL(const Ensemble &ens, unsigned int i,
                         real time, fvector &psl, real scale) const
 {
     unsigned int start = 1;
@@ -268,7 +268,7 @@ void EnsembleStats::PSL(const Ensemble &ens, unsigned int i,
     }
 
     // Get stats from particle sub-models.
-    for (ModelStatsMap::const_iterator j=m_modelstats.begin(); 
+    for (ModelStatsMap::const_iterator j=m_modelstats.begin();
          j!=m_modelstats.end(); ++j) {
         j->second->PSL(ens, i, time, psl, start);
         start += j->second->PSL_Count();
@@ -277,7 +277,7 @@ void EnsembleStats::PSL(const Ensemble &ens, unsigned int i,
 
 // Returns the PSL entry for the given particle.  The particle weight
 // is set to 1.0 because there is only one particle.
-void EnsembleStats::PSL(const Sweep::ParticleCache &sp, real time, fvector &psl)
+void EnsembleStats::PSL(const Sweep::Particle &sp, real time, fvector &psl)
 {
     unsigned int start = 1;
 
@@ -301,7 +301,7 @@ void EnsembleStats::PSL(const Sweep::ParticleCache &sp, real time, fvector &psl)
     }
 
     // Get stats from particle sub-models.
-    for (ModelStatsMap::const_iterator j=m_modelstats.begin(); 
+    for (ModelStatsMap::const_iterator j=m_modelstats.begin();
          j!=m_modelstats.end(); ++j) {
         j->second->PSL(sp, time, psl, start);
         start += j->second->PSL_Count();
@@ -386,7 +386,7 @@ void EnsembleStats::Serialize(std::ostream &out) const
         out.write((char*)&n, sizeof(n));
 
         // Serialize the sub-model stats.
-        for (ModelStatsMap::const_iterator i=m_modelstats.begin(); 
+        for (ModelStatsMap::const_iterator i=m_modelstats.begin();
              i!=m_modelstats.end(); ++i) {
             ModelFactory::WriteStats(*i->second, out);
         }
@@ -467,7 +467,7 @@ void EnsembleStats::releaseMem(void)
     delete m_aggstats;
     m_aggstats = NULL;
 
-    for (ModelStatsMap::iterator i=m_modelstats.begin(); 
+    for (ModelStatsMap::iterator i=m_modelstats.begin();
          i!=m_modelstats.end(); ++i) {
         delete i->second;
     }

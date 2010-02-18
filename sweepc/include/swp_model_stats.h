@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -68,7 +68,7 @@ public:
     virtual unsigned int Count(void) const = 0;
 
     // Calculates the model stats for a single particle.
-    virtual void Calculate(const ParticleCache &data) = 0;
+    virtual void Calculate(const Particle &data) = 0;
 
     // Calculates the model stats for a particle ensemble.
     virtual void Calculate(
@@ -116,9 +116,9 @@ public:
         unsigned int start = 0 // Optional start index for the first variable.
         ) const = 0;
 
-    // Returns the PSL entry for the given particle cache.
+    // Returns the PSL entry for the given particle.
     virtual void PSL(
-        const Sweep::ParticleCache &sp, // Particle cache from which to get PSL data.
+        const Sweep::Particle &sp, // Particle from which to get PSL data.
         real time,                      // Current flow time (used to calculate particle age).
         fvector &psl,                   // Output vector.
         unsigned int start = 0          // Optional start index for the first variable.
@@ -143,7 +143,7 @@ public:
         const Sweep::ParticleModel &model // Defining particle model.
         ) = 0;
 
-    // Statistical Boundaries. Properties outside this range will not be 
+    // Statistical Boundaries. Properties outside this range will not be
     // included in Statistical Calculations.
     struct StatBound {
         real Lower;

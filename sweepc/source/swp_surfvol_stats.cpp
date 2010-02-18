@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -123,23 +123,23 @@ SurfVolStats &SurfVolStats::operator=(const Sweep::Stats::SurfVolStats &rhs)
 // IMPLEMENTATION.
 
 // Returns the number of basic particle stats.
-unsigned int SurfVolStats::Count() const 
+unsigned int SurfVolStats::Count() const
 {
     return STAT_COUNT;
 }
 
 // Calculates the model stats for a single particle.
-void SurfVolStats::Calculate(const ParticleCache &data)
+void SurfVolStats::Calculate(const Particle &data)
 {
     // Get surface-volume cache.
-    const AggModels::SurfVolCache* cache = dynamic_cast<const AggModels::SurfVolCache*>(data.AggCache());
+    const AggModels::SurfVolCache& cache = dynamic_cast<const AggModels::SurfVolCache&>(data.AggCache());
 
     // Get stats.
-    m_stats[iS]      = cache->SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+    m_stats[iS]      = cache.SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
     m_stats[iS+1]    = m_stats[iS];
-    m_stats[iPPN]    = cache->PP_Count();
+    m_stats[iPPN]    = cache.PP_Count();
     m_stats[iPPN+1]  = m_stats[iPPN];
-    m_stats[iPPD]    = cache->PP_Diameter() * 1.0e9; // Convert from m to nm.
+    m_stats[iPPD]    = cache.PP_Diameter() * 1.0e9; // Convert from m to nm.
 }
 
 // Calculates the model stats for a particle ensemble.
@@ -153,21 +153,21 @@ void SurfVolStats::Calculate(const Ensemble &e, real scale)
     unsigned int n = 0;
     for (ip=e.begin(); ip!=e.end(); ++ip) {
         // Get surface-volume cache.
-        const AggModels::SurfVolCache* cache = 
-            dynamic_cast<const AggModels::SurfVolCache*>((*ip)->AggCache());
-        real sz = cache->Parent()->Property(m_statbound.PID);
+        const AggModels::SurfVolCache& cache =
+            dynamic_cast<const AggModels::SurfVolCache&>((*ip)->AggCache());
+        real sz = cache.Parent()->Property(m_statbound.PID);
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-            m_stats[iS]      += cache->SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
-            m_stats[iS+1]    += cache->SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
-            m_stats[iPPN]    += cache->PP_Count();
-            m_stats[iPPN+1]  += cache->PP_Count();
-            m_stats[iPPD]    += cache->PP_Diameter() * 1.0e9; // Convert from m to nm.
+            m_stats[iS]      += cache.SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+            m_stats[iS+1]    += cache.SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+            m_stats[iPPN]    += cache.PP_Count();
+            m_stats[iPPN+1]  += cache.PP_Count();
+            m_stats[iPPD]    += cache.PP_Diameter() * 1.0e9; // Convert from m to nm.
             ++n;
         }
     }
-    
+
     // Get the particle count.
     //real np    = (real)e.Count();
     real np    = (real) n;
@@ -306,12 +306,12 @@ void SurfVolStats::PSL_Names(std::vector<std::string> &names,
 
 // Returns the particle size list (PSL) entry for particle i
 // in the given ensemble.
-void SurfVolStats::PSL(const Ensemble &ens, unsigned int i, 
+void SurfVolStats::PSL(const Ensemble &ens, unsigned int i,
                        real time, fvector &psl, unsigned int start) const
 {
     // Get particle.
-    const Sweep::ParticleCache *const sp = ens.At(i);
-    
+    const Sweep::Particle *const sp = ens.At(i);
+
     if (sp != NULL) {
         PSL(*sp, time, psl, start);
     } else {
@@ -324,8 +324,8 @@ void SurfVolStats::PSL(const Ensemble &ens, unsigned int i,
     }
 }
 
-// Returns the PSL entry for the given particle cache.
-void SurfVolStats::PSL(const Sweep::ParticleCache &sp, real time,
+// Returns the PSL entry for the given particle.
+void SurfVolStats::PSL(const Sweep::Particle &sp, real time,
                        fvector &psl, unsigned int start) const
 {
     // Resize vector if too small.
@@ -338,13 +338,13 @@ void SurfVolStats::PSL(const Sweep::ParticleCache &sp, real time,
     fvector::iterator j = psl.begin()+start-1;
 
     // Get surface-volume cache.
-    const AggModels::SurfVolCache* cache = 
-        dynamic_cast<const AggModels::SurfVolCache*>(sp.AggCache());
+    const AggModels::SurfVolCache* cache =
+        dynamic_cast<const AggModels::SurfVolCache*>(&sp.AggCache());
 
     // Get the PSL stats.
     if (cache != NULL) {
         *(++j) = cache->SphSurfaceArea() * 1.0e4; // m2 to cm2.
-        *(++j) = (real)(cache->PP_Count());
+        *(++j) = cache->PP_Count();
         *(++j) = cache->PP_Diameter() * 1.0e9; // m to nm.
     } else {
         fill(j+1, j+3, 0.0);
@@ -361,7 +361,7 @@ SurfVolStats *const SurfVolStats::Clone(void) const
 
 // Returns the model data type.  Used to identify different models
 // and for serialisation.
-unsigned int SurfVolStats::ID(void) const 
+unsigned int SurfVolStats::ID(void) const
 {
     return (unsigned int)AggModels::SurfVol_ID;
 }
@@ -443,7 +443,7 @@ void SurfVolStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mod
                     // Read the length of the name.
                     unsigned int m = 0;
                     in.read(reinterpret_cast<char*>(&m), sizeof(m));
-                    
+
                     // Read the name.
                     name = new char[m];
                     in.read(name, m);

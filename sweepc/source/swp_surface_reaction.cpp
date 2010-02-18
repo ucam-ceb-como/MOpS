@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -155,7 +155,7 @@ real SurfaceReaction::Rate(real t, const Cell &sys) const
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
     // Particle dependence.
-    rate *= sys.Particles().GetSum(m_modelid, m_pid);
+    rate *= sys.Particles().GetSum(static_cast<ParticleCache::PropID>(m_pid));
 
     if (m_mech->AnyDeferred()) {
         return rate * m_majfactor;
@@ -185,14 +185,14 @@ real SurfaceReaction::Rate(real t, const Cell &sys, const Particle &sp) const
     if (m_modelid == SubModels::BasicModel_ID) {
         rate *= sp.Property(static_cast<ParticleCache::PropID>(m_pid));
     } else {
-        rate *= sp.SubModel(m_modelid)->Property(m_pid);
+        throw std::logic_error("Submodels no longer supported (Sweep, SurfaceReaction::Rate)");
     }
 
     return rate;
 }
 
 // Returns majorant rate of the process for the given system.
-real SurfaceReaction::MajorantRate(real t, const Cell &sys, 
+real SurfaceReaction::MajorantRate(real t, const Cell &sys,
                                    const Particle &sp) const
 {
     return Rate(t, sys, sp) * m_majfactor;
@@ -200,16 +200,16 @@ real SurfaceReaction::MajorantRate(real t, const Cell &sys,
 
 
 // RATE TERM CALCULATIONS.
-//   These routines return the individual rate terms for a 
+//   These routines return the individual rate terms for a
 //   process, which may have multiple terms (e.g. condensation).
 
 // Returns the number of rate terms for this process.
 unsigned int SurfaceReaction::TermCount(void) const {return 1;}
 
-// Calculates the rate terms given an iterator to a real vector. The 
+// Calculates the rate terms given an iterator to a real vector. The
 // iterator is advanced to the position after the last term for this
 // process.
-real SurfaceReaction::RateTerms(real t, const Cell &sys, 
+real SurfaceReaction::RateTerms(real t, const Cell &sys,
                                 fvector::iterator &iterm) const
 {
     return *(iterm++) = Rate(t, sys);
@@ -220,9 +220,9 @@ real SurfaceReaction::RateTerms(real t, const Cell &sys,
 
 // Performs the process on the given system.  The responsible rate term is given
 // by index.  Returns 0 on success, otherwise negative.
-int SurfaceReaction::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const  
+int SurfaceReaction::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const
 {
-    int i = sys.Particles().Select(m_modelid, m_pid);
+    int i = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid));
 
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);
@@ -277,7 +277,7 @@ int SurfaceReaction::Perform(real t, Cell &sys, unsigned int iterm, Transport::T
 
 // Performs the process on a given particle in the system.  Particle
 // is given by index.  The process is performed n times.
-int SurfaceReaction::Perform(real t, Cell &sys, Particle &sp, 
+int SurfaceReaction::Perform(real t, Cell &sys, Particle &sp,
                              unsigned int n) const
 {
     unsigned int m = sp.Adjust(m_dcomp, m_dvals, m_modelid, m_pid, n);

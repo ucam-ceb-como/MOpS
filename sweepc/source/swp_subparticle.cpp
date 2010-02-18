@@ -8,14 +8,18 @@
 #include <stdexcept>
 #include <fstream>
 #include <iostream>
+#include <cassert>
+#include <algorithm>
+
 using namespace Sweep;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (protected).
 SubParticle::SubParticle(void)
-: ParticleCache(), m_parent(NULL), m_leftchild(NULL), 
-  m_rightchild(NULL), m_primary(NULL)
+: ParticleCache(), m_parent(NULL), m_leftchild(NULL),
+  m_rightchild(NULL), m_primary(NULL), m_pmodel(NULL),
+  m_createt(0.0), m_time(0.0), m_aggcache(NULL)
 {
 	m_sintered=0;
 	m_connect_time=0;
@@ -34,8 +38,10 @@ SubParticle::SubParticle(void)
 
 // Initialising constructor.
 SubParticle::SubParticle(real t, const Sweep::ParticleModel &model)
-: ParticleCache(t, model), m_parent(NULL), m_leftchild(NULL), 
-  m_rightchild(NULL), m_primary(NULL)
+: ParticleCache(t, model), m_parent(NULL), m_leftchild(NULL),
+  m_rightchild(NULL), m_primary(NULL), m_pmodel(&model),
+  m_createt(0.0), m_time(0.0), m_comp(model.ComponentCount(), 0.0),
+  m_values(model.TrackerCount(), 0.0)
 {
 	m_sintered=0;
 	m_connect_time=0;
@@ -48,13 +54,20 @@ SubParticle::SubParticle(real t, const Sweep::ParticleModel &model)
 	dV_right=0;
 	m_sinter_level=0;
 	vol_sinter=0;
+	m_aggcache = ModelFactory::CreateAggCache(model.AggModel(), *this);
 
 }
 
 // Initialising constructor (from Primary particle).
 SubParticle::SubParticle(Sweep::Primary &pri)
-{  
+: m_pmodel(pri.ParticleModel()),
+  m_comp(pri.Composition().begin(), pri.Composition().end()),
+  m_values(pri.Values().begin(), pri.Values().end())
+
+{
     ParticleCache(pri.CreateTime(), *pri.ParticleModel());
+    m_createt = pri.CreateTime();
+    m_time = pri.CreateTime();
     m_parent     = NULL;
     m_leftchild  = NULL;
     m_rightchild = NULL;
@@ -71,10 +84,12 @@ SubParticle::SubParticle(Sweep::Primary &pri)
 	dV_left=0;
 	dV_right=0;
 	m_sinter_level=0;
+	m_aggcache = pri.CreateAggCache(*this);
 }
 
 // Copy constructor.
 SubParticle::SubParticle(const SubParticle &copy)
+: m_aggcache(NULL)
 {
     // Use assignment operator.
     m_parent     = NULL;
@@ -98,18 +113,12 @@ SubParticle::SubParticle(const SubParticle &copy)
 
 // Stream-reading constructor.
 SubParticle::SubParticle(std::istream &in, const Sweep::ParticleModel &model)
-: m_parent(NULL), m_leftchild(NULL), 
-  m_rightchild(NULL), m_primary(NULL)
+: m_parent(NULL), m_leftchild(NULL),
+  m_rightchild(NULL), m_primary(NULL),
+  m_pmodel(&model), m_aggcache(NULL)
  {
     init();
     Deserialize(in, model);
-	/*m_sintered=0;
-	m_connect_time=0;
-	m_avg_diam=0;
-	SubModels::SubModelType model = SubModels::BasicModel_ID;
-	ParticleCache::PropID id=ParticleCache::iUniform;
-	m_leftsinter=m_leftchild->SelectLeaf(model,id);
-	m_rightsinter=m_rightchild->SelectLeaf(model,id);*/
 }
 
 // Default destructor.
@@ -120,7 +129,7 @@ SubParticle::~SubParticle()
 
 void SubParticle::CreateTestTree()
 {
-	
+
 	SubParticle *sp1=new SubParticle;
 	sp1->m_vol=1;
 	sp1->m_surf=2;
@@ -142,8 +151,9 @@ void SubParticle::CreateTestTree()
 
 // Assignment operator.
 SubParticle &SubParticle::operator=(const SubParticle &rhs)
-{	
+{
     if (this != &rhs) {
+        m_pmodel = rhs.m_pmodel;
         ParticleCache::operator=(rhs);
 
         // Copy left child.
@@ -179,6 +189,25 @@ SubParticle &SubParticle::operator=(const SubParticle &rhs)
             }
         } else {
             delete m_primary; m_primary = NULL;
+        }
+
+        // Copy composition and tracker data
+        m_comp = rhs.m_comp;
+        m_values = rhs.m_values;
+        m_createt = rhs.m_createt;
+        m_time = rhs.m_time;
+
+        if (rhs.m_aggcache != NULL) {
+            if ((m_aggcache==NULL) || (m_aggcache->ID() != rhs.m_aggcache->ID())) {
+                delete m_aggcache;
+                m_aggcache = rhs.m_aggcache->Clone();
+                m_aggcache->SetParent(*this);
+            } else {
+                *m_aggcache = *rhs.m_aggcache;
+            }
+        } else {
+            delete m_aggcache;
+            m_aggcache = NULL;
         }
     }
 	//UpdateSinterParticles();
@@ -236,7 +265,7 @@ real SubParticle::avgeomdiam(double oneovernumsubpart)
 	Primary::PropID primid=Primary::iD;
 	if (m_primary!=NULL)
 	return std::pow(m_primary->Property(primid),oneovernumsubpart);
-	else 
+	else
 	{
 		return m_leftchild->avgeomdiam(oneovernumsubpart)*m_rightchild->avgeomdiam(oneovernumsubpart);
 	}
@@ -255,7 +284,7 @@ real SubParticle::SubPartSphSurfaceArea(void) const
 real SubParticle::SubPartSumVol(void) const
 {
 	return m_sumvol_sinterpart;
-		   
+
 }
 
 // PARENT SUB-PARTICLE.
@@ -275,7 +304,7 @@ void SubParticle::setParent(SubParticle *const p)
 
 // PRIMARY PARTICLE CHILD.
 
-// Returns a pointer to the child primary particle, NULL if 
+// Returns a pointer to the child primary particle, NULL if
 // this sub-particle has no primary.
 Sweep::Primary *const SubParticle::Primary(void) {return m_primary;}
 const Sweep::Primary *const SubParticle::Primary(void) const {return m_primary;}
@@ -306,7 +335,7 @@ void SubParticle::setRightPtr(SubParticle *const sub) {m_rightchild = sub;}
 // Selects a leaf from the sub-particle tree below this
 // sub-particle using the given property ID to weight the
 // primaries.
-Sweep::SubParticle *const SubParticle::SelectLeaf(SubModels::SubModelType model_id, 
+Sweep::SubParticle *const SubParticle::SelectLeaf(SubModels::SubModelType model_id,
                                                   int id)
 {
     if (m_primary != NULL) {
@@ -323,8 +352,9 @@ Sweep::SubParticle *const SubParticle::SelectLeaf(SubModels::SubModelType model_
             right = m_rightchild->Property((ParticleCache::PropID)id);
         } else {
             // This is a sub-model property.
-            left  = m_leftchild->SubModel(model_id)->Property(id);
-            right = m_rightchild->SubModel(model_id)->Property(id);
+            //left  = m_leftchild->SubModel(model_id)->Property(id);
+            //right = m_rightchild->SubModel(model_id)->Property(id);
+            throw std::logic_error("Submodels no longer supported (SubParticle::SelectLeaf)");
         }
 
         // Randomly select which branch to go down.
@@ -339,13 +369,13 @@ Sweep::SubParticle *const SubParticle::SelectLeaf(SubModels::SubModelType model_
     }
 }
 
-// Selects a leaf from the tree.  This particular function is 
-// used internally by the SubParticle class to reuse the 
+// Selects a leaf from the tree.  This particular function is
+// used internally by the SubParticle class to reuse the
 // random variable used to select the correct leaf which
 // is generated by the root sub-particle.
 Sweep::SubParticle *const SubParticle::selLeafLoop(SubModels::SubModelType model_id,
                                                    int id, real r)
-{ 
+{
     if (m_primary != NULL) {
         // This is a leaf-level sub-particle.
         return this;
@@ -360,8 +390,9 @@ Sweep::SubParticle *const SubParticle::selLeafLoop(SubModels::SubModelType model
             right = m_rightchild->Property((ParticleCache::PropID)id);
         } else {
             // This is a sub-model property.
-            left  = m_leftchild->SubModel(model_id)->Property(id);
-            right = m_rightchild->SubModel(model_id)->Property(id);
+            //left  = m_leftchild->SubModel(model_id)->Property(id);
+            //right = m_rightchild->SubModel(model_id)->Property(id);
+            throw std::logic_error("Submodels no longer supported (SubParticle::selLeafLoop)");
         }
 
         // Randomly select which branch to go down.
@@ -471,7 +502,7 @@ void SubParticle::SetMass(real m)
 void SubParticle::SetSintering(real sint)
 {
 	m_sintered=sint;
-    
+
 }
 
 
@@ -482,10 +513,10 @@ real SubParticle::GetSintering()
 }
 // PARTICLE ADJUSTMENT AND PROCESSES.
 
-// Adjusts the particle with the given composition and 
+// Adjusts the particle with the given composition and
 // values changes n times.
-unsigned int SubParticle::Adjust(const fvector &dcomp, 
-                                 const fvector &dvalues, 
+unsigned int SubParticle::Adjust(const fvector &dcomp,
+                                 const fvector &dvalues,
                                  SubModels::SubModelType model_id,
                                  int id,
                                  unsigned int n
@@ -505,7 +536,7 @@ unsigned int SubParticle::Adjust(const fvector &dcomp,
         // given weighting variable.
 
         // Get the sub-particle weightings.
-		
+
         real left=0.0, right=0.0;
         if (model_id == SubModels::BasicModel_ID) {
             // This is a property is the basic particle cache.
@@ -513,8 +544,9 @@ unsigned int SubParticle::Adjust(const fvector &dcomp,
             right = m_rightchild->Property((ParticleCache::PropID)id);
         } else {
             // This is a sub-model property.
-            left  = m_leftchild->SubModel(model_id)->Property(id);
-            right = m_rightchild->SubModel(model_id)->Property(id);
+            //left  = m_leftchild->SubModel(model_id)->Property(id);
+            //right = m_rightchild->SubModel(model_id)->Property(id);
+            throw std::logic_error("Submodels are no longer supported (SubParticle::Adjust)");
         }
 
         // Randomly select which branch to go down.
@@ -535,13 +567,13 @@ unsigned int SubParticle::Adjust(const fvector &dcomp,
     return m;
 }
 
-// Adjusts the particle with the given composition and 
-// values changes n times.  This particular function is 
-// used internally by the SubParticle class to reuse the 
+// Adjusts the particle with the given composition and
+// values changes n times.  This particular function is
+// used internally by the SubParticle class to reuse the
 // random variable used to select the correct leaf which
 // is generated by the root sub-particle.
-unsigned int SubParticle::adjustLoop(const fvector &dcomp, 
-                                     const fvector &dvalues, 
+unsigned int SubParticle::adjustLoop(const fvector &dcomp,
+                                     const fvector &dvalues,
                                      SubModels::SubModelType model_id,
                                      int id, real r,
                                      unsigned int n
@@ -561,7 +593,7 @@ unsigned int SubParticle::adjustLoop(const fvector &dcomp,
 		double dV=volafter-volbefore;
 		int Nneighbors=0;
 		int disttonode=0;
-		
+
 		Nneighbors=Numneighbors(this);
 		disttonode=(int)(1+Nneighbors*(rnd()*0.9999999999));				//avoid that rnd()=1
 		ChangeSphericalSurface(disttonode, this, dV);
@@ -573,7 +605,7 @@ unsigned int SubParticle::adjustLoop(const fvector &dcomp,
         // given weighting variable.
 
         // Get the sub-particle weightings.
-		
+
         real left=0.0, right=0.0;
         if (model_id == SubModels::BasicModel_ID) {
             // This is a property is the basic particle cache.
@@ -581,8 +613,9 @@ unsigned int SubParticle::adjustLoop(const fvector &dcomp,
             right = m_rightchild->Property((ParticleCache::PropID)id);
         } else {
             // This is a sub-model property.
-            left  = m_leftchild->SubModel(model_id)->Property(id);
-            right = m_rightchild->SubModel(model_id)->Property(id);
+            //left  = m_leftchild->SubModel(model_id)->Property(id);
+            //right = m_rightchild->SubModel(model_id)->Property(id);
+            throw std::logic_error("Submodels are no longer supported (SubParticle::adjustLoop)");
         }
 
         // Randomly select which branch to go down.
@@ -628,26 +661,49 @@ void SubParticle::ChangeSphericalSurface(int disttonode, SubParticle *target, do
 			}
 
 		}
-		else 
+		else
 		{
 			m_parent->ChangeSphericalSurface(disttonode, target, dV);
 		}
 	}
-	else 
+	else
 	{
 		m_parent->ChangeSphericalSurface(disttonode, target, dV);
 	}
-	
+
 }
 
 // Combines this particle with another.
 SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
 {
+    // Add the compositions
+    assert(m_comp.size() == rhs.m_comp.size());
+    std::transform(m_comp.begin(), m_comp.end(), rhs.m_comp.begin(),
+                   m_comp.begin(), std::plus<real>());
+
+    // Add the tracker values
+    assert(m_values.size() == rhs.m_values.size());
+    std::transform(m_values.begin(), m_values.end(), rhs.m_values.begin(),
+                   m_values.begin(), std::plus<real>());
+
+    if (rhs.m_aggcache != NULL) {
+        if ((m_aggcache==NULL) || (m_aggcache->ID() != rhs.m_aggcache->ID())) {
+            delete m_aggcache;
+            m_aggcache = rhs.m_aggcache->Clone();
+            m_aggcache->SetParent(*this);
+        } else {
+            *m_aggcache = *rhs.m_aggcache;
+        }
+    } else {
+        delete m_aggcache;
+        m_aggcache = NULL;
+    }
+
     if (m_pmodel->UseSubPartTree()) {
         // We are using the sub-particle tree.  This means
         // we branch the tree to incorporate the new RHS
         // sub-particle.
-		
+
         // Create new sub-particles.
         SubParticle *lsp = new SubParticle(m_time, *m_pmodel);
         SubParticle *rsp = new SubParticle(m_time, *m_pmodel);
@@ -657,11 +713,11 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
         rsp->m_parent = this;
 
 		SubParticle *temp;
-		
+
 
 		if (rnd()>0.5)
 		{
-			// Set left child.   The new sub-particle's children are 
+			// Set left child.   The new sub-particle's children are
 			// the children of this particle.
 			lsp->m_primary    = m_primary;
 			lsp->m_leftchild  = m_leftchild;
@@ -686,7 +742,7 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
 			lsp->m_sinter_level = m_sinter_level;
 			lsp->dV_left = dV_left;
 			lsp->dV_right = dV_right;
-					
+
 //			UpdateTree_sinter(this);
 //			UpdateCache_sinter(this);
 
@@ -722,7 +778,7 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
 
 		else
 		{
-			// Set right child.   The new sub-particle's children are 
+			// Set right child.   The new sub-particle's children are
 			// the children of this particle.
 			rsp->m_primary    = m_primary;
 			rsp->m_leftchild  = m_leftchild;
@@ -798,7 +854,7 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
         lsp->UpdateCache_thispart();
         rsp->UpdateCache_thispart();
 //        UpdateCache_thispart();
-		  
+
 		  UpdateCache();
 		  UpdateTree();
 
@@ -845,24 +901,24 @@ void SubParticle::SinterPart()
 {	bool lefttree;
 	// Chose the subparticle according to the following property
 	//if (!FileExists("beforesinterprim.inp"))
-//	{ 
+//	{
 /*		ParticleCache::PropID idsubtreeprint=ParticleCache::iFS;
 		ofstream out;
 		out.open("beforesinterprim.inp");
 	    this->FindRoot()->printSubtree(out,idsubtreeprint);
 		out.close();*/
 //	}
-	if (m_pmodel->UseSubPartTree()) 
+	if (m_pmodel->UseSubPartTree())
 	{
 		//both childrens are primaries
-		if(m_leftchild->m_primary!=NULL && m_rightchild->m_primary!=NULL) 
+		if(m_leftchild->m_primary!=NULL && m_rightchild->m_primary!=NULL)
 		{//	FindRoot()->CheckTree();
 		//	cout << "Checktree before sinter passed\n";
 			//   std::cout << "sinter";
 
 			//cout << m_leftchild->Property(id);
 			m_connect_time=0;
-			m_sintered=0;	
+			m_sintered=0;
 			setPrimaryPtr(m_leftchild->m_primary);
 			m_primary->Coagulate(*m_rightchild->m_primary);
 			m_rightsinter=NULL;
@@ -872,11 +928,11 @@ void SubParticle::SinterPart()
 	//		out.open("aftersinterprim.inp");
 //			printSubtree(out,id);
 //			out.close();
-			
+
 			UpdateTree_sinter(m_leftchild,this);
 			UpdateTree_sinter(m_rightchild,this);
 
-			
+
 			(*m_rightchild).m_primary    = NULL;
 			(*m_rightchild).m_parent   = NULL;
 			(*m_rightchild).m_leftchild    = NULL;
@@ -899,12 +955,12 @@ void SubParticle::SinterPart()
 			m_real_surface=m_primary->SurfaceArea();
 			m_sumvol_sinterpart = m_primary->Volume();
 			m_sph_surfacearea = m_primary->SurfaceArea();
-			
+
 			m_leftsinterdiam=0;
 			m_rightsinterdiam=0;
 			m_sinter_level=0;
-			
-		
+
+
 
 	//		cout <<"break";
 	//		FindRoot()->CheckTree();
@@ -912,7 +968,7 @@ void SubParticle::SinterPart()
 
 		}
 		else
-		{ 
+		{
 			if (m_rightchild->m_primary==NULL)
 			{
 				lefttree=true;
@@ -926,20 +982,20 @@ void SubParticle::SinterPart()
 				if (rnd()>0.5) lefttree=true;
 				else lefttree=false;
 			}
-			
+
 
 			SubParticle *left=m_leftsinter;
 			SubParticle *right=m_rightsinter;
 
-			// if the parent node is the root node we can not delete the node 
+			// if the parent node is the root node we can not delete the node
 			// because the pointer from the particle node points to this node
-	
+
 				SubParticle *temp;
 				if (lefttree==true)
 				{
 				//	SubParticle *left=m_leftchild->SelectLeaf(model,id);
 				//	SubParticle *right=m_rightchild->SelectLeaf(model,id);
-					left->m_primary->Coagulate(*right->m_primary);  
+					left->m_primary->Coagulate(*right->m_primary);
 					left->vol_sinter+=right->vol_sinter;
 					if (right->Parent()->m_rightchild==right)
 						{
@@ -976,12 +1032,12 @@ void SubParticle::SinterPart()
 					//todelete=right;
 					UpdateCache_sinter(right,left);
 					UpdateTree_sinter(right,left);
-					
+
 				}
 
-				else		
-				
-				{	
+				else
+
+				{
 				//	SubParticle *left=m_leftchild->SelectLeaf(model,id);
 				//	SubParticle *right=m_rightchild->SelectLeaf(model,id);
 					right->m_primary->Coagulate(*left->m_primary);
@@ -1022,12 +1078,12 @@ void SubParticle::SinterPart()
 					UpdateTree_sinter(left,right);
 				//	todelete=left;
 				}
-			
-				// we have to change the left and right sinter particle 
+
+				// we have to change the left and right sinter particle
 				// because the subtree on both sides has changed
 				// m_leftsinter=m_leftchild->SelectLeaf(model,id);
 				// m_rightsinter=m_rightchild->SelectLeaf(model,id);
-				
+
 				//UpdateCache_sinter(todelete);
 				//UpdateTree_sinter(todelete);
 
@@ -1042,16 +1098,16 @@ void SubParticle::SinterPart()
 				delete temp;
 
 	//			UpdateCache_thispart();
-				
+
 	//			UpdateCache();
 	//			UpdateTree();
-				
-			
+
+
 
 			//out.open("aftersinter.inp");
 			//printSubtree(out,id);
 			//out.close();
-		
+
 		}
 		//if (!FileExists("aftersinter.inp"))
 	//	{
@@ -1067,18 +1123,18 @@ void SubParticle::SinterPart()
 
 // Sinters the sub-particle for the given time using the given
 // sintering model.
-void SubParticle::Sinter(real dt, const Cell &sys, 
+void SubParticle::Sinter(real dt, const Cell &sys,
                          const Processes::SinteringModel &model)
-{ 	
-    if (m_primary != NULL) 
+{
+    if (m_primary != NULL)
 	    {
         m_primary->Sinter(dt, sys, model);
-	    } 
+	    }
 
 	else {	 m_connect_time+=dt;
 			// Perform a first order integration method to sinter
 			// the subparticle for the given time.
-		    
+
 			// Declare time step variables.
 			real t1=0.0, t2=0.0, tstop=dt;
 
@@ -1098,7 +1154,7 @@ void SubParticle::Sinter(real dt, const Cell &sys,
 			if (m_leftsinter->vol_sinter-dV_left<0 || m_rightsinter->vol_sinter-dV_right<0)
 			{
 					std::string test;
-				
+
 				std::cout<<"error ln1057 swp_subparticle";
 				std::cin>>test;
 			}
@@ -1120,7 +1176,7 @@ void SubParticle::Sinter(real dt, const Cell &sys,
 										//cin>>test;
 										break;
 							}
-					
+
 					if (n > 0) {
 						m_real_surface -= (real)n * scale * dAmax;
 						// Check that primary is not completely sintered.
@@ -1148,7 +1204,7 @@ void SubParticle::Sinter(real dt, const Cell &sys,
 					if (m_sintered==1) break;
 
 				}
-                
+
 			 if ( m_sinter_level>0.95 || Sintered()==1 || m_leftsinter->m_diam<1e-9 ||  m_rightsinter->m_diam<1e-9 )        //<1e-9 nm in order to avoid numerical problems, the sintering time is very small for these small particles and they sinter instantaneously
 			   {	//cout <<"sinter dt="<<dt<<std::endl;
 				   	m_leftsinter->vol_sinter=m_leftsinter->vol_sinter-dV_left;      //added 20.01.09 ms785
@@ -1185,6 +1241,13 @@ void SubParticle::UpdateCache(void)
         // Get cache from primary particle.
         m_primary->UpdateCache();
         ParticleCache::operator=(*m_primary);
+
+        // Also copy composition and tracking data from primary
+        m_comp = m_primary->Composition();
+        m_values = m_primary->Values();
+        m_createt = m_primary->CreateTime();
+        m_time    = m_primary->LastUpdateTime();
+
 		m_avg_diam=m_primary->CollDiameter();
 		m_numsubpart=1;
 		if(m_pmodel->UseSubPartTree())
@@ -1192,7 +1255,7 @@ void SubParticle::UpdateCache(void)
 			//currently the collision diameter is calculated using a fractal dimension of 1.8
 		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
 		}
-		
+
     } else {
         // The cache is the sum of the left and right child caches.
         m_leftchild->UpdateCache();
@@ -1203,12 +1266,27 @@ void SubParticle::UpdateCache(void)
 		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
         //update the spherical diameter
         ParticleCache::SetSphDiameter(2*pow(3*m_vol/(4*PI),ONE_THIRD));
-	
+
+        // Add the composition from the child particles
+        assert(m_comp.size() == m_leftchild->m_comp.size());
+        assert(m_comp.size() == m_rightchild->m_comp.size());
+        std::transform(m_leftchild->m_comp.begin(), m_leftchild->m_comp.end(),
+                       m_rightchild->m_comp.begin(), m_comp.begin(), std::plus<real>());
+
+        // Add the composition from the child particles
+        assert(m_values.size() == m_leftchild->m_values.size());
+        assert(m_values.size() == m_rightchild->m_values.size());
+        std::transform(m_leftchild->m_values.begin(), m_leftchild->m_values.end(),
+                       m_rightchild->m_values.begin(), m_values.begin(), std::plus<real>());
+
+        m_time    = (m_leftchild->m_time + m_rightchild->m_time) / 2;
+        m_createt    = (m_leftchild->m_createt + m_rightchild->m_createt) / 2;
+
     }
 }
 
 // Recalculates the derived properties from the unique properties.
-// This function calculates only the cache of the current particle 
+// This function calculates only the cache of the current particle
 // assuming the caches of the childrens do not need to be updated.
 void SubParticle::UpdateCache_thispart(void)
 {	//ParticleCache::PropID id=ParticleCache::iS;
@@ -1218,26 +1296,26 @@ void SubParticle::UpdateCache_thispart(void)
         ParticleCache::operator=(*m_primary);
 		m_avg_diam=m_primary->CollDiameter();
 		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
-		
-		
+
+
     } else {
         // The cache is the sum of the left and right child caches.
         ParticleCache::operator=(*m_leftchild);
 		m_avg_diam=m_leftchild->m_avg_diam+m_rightchild->m_avg_diam;
-        ParticleCache::operator+=(*m_rightchild);		
+        ParticleCache::operator+=(*m_rightchild);
 		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
     }
 }
 
 
 
-//this function sets the pointer in the tree after a sintering event to the new particle 
+//this function sets the pointer in the tree after a sintering event to the new particle
 void SubParticle::UpdateCache_sinter(SubParticle *has_sintered, SubParticle *newsinter)
-{	
+{
     if (m_primary != NULL) {
 		m_leftsinter=NULL;
 		m_rightsinter=NULL;
-			
+
     } else {
 		if(m_rightsinter==has_sintered){
 			m_leftsinter->m_freesurface=(m_leftsinter->m_freesurface)+(has_sintered->m_diam)*(has_sintered->m_diam)*2*PI-(newsinter->m_diam)*(newsinter->m_diam)*2*PI;
@@ -1252,7 +1330,7 @@ void SubParticle::UpdateCache_sinter(SubParticle *has_sintered, SubParticle *new
 
         m_leftchild->UpdateCache_sinter(has_sintered,newsinter);
         m_rightchild->UpdateCache_sinter(has_sintered,newsinter);
-		
+
     }
 
 
@@ -1263,7 +1341,7 @@ void SubParticle::UpdateCache_sinter(SubParticle *has_sintered, SubParticle *new
 void SubParticle::CheckTree()
 {
 	if(m_primary==NULL)
-	{	
+	{
 		if(m_leftsinter!=NULL)
 		if(m_leftsinter->m_primary->Volume()==0) std::cout <<"test";
 		if(m_rightsinter!=NULL)
@@ -1277,7 +1355,7 @@ void SubParticle::CheckTree()
 void SubParticle::Getprimarydistribution(double *distribution)
 {
 	if(m_primary!=NULL)
-	{	
+	{
 		int intdiam=(int)(CollDiameter()*1e9);
 		distribution[intdiam]++;
 	}
@@ -1292,7 +1370,7 @@ void SubParticle::Getprimarydistribution(double *distribution)
 void SubParticle::Getprimarydistribution(std::ofstream *file)
 {
 	if(m_primary!=NULL)
-	{	
+	{
             *file << CollDiameter()*1e9<< std::endl;
 	}
 	else
@@ -1305,7 +1383,7 @@ void SubParticle::Getprimarydistribution(std::ofstream *file)
 void SubParticle::Getsinteringleveldistribution(double *distribution, real binsize, const int numbins)
 {
 	if(m_primary!=NULL)
-	{	
+	{
 
 	}
 	else
@@ -1322,7 +1400,7 @@ void SubParticle::Getsinteringleveldistribution(double *distribution, real binsi
 void SubParticle::GetCollDiamDistrMill(double sintertresh, int *nparticles, double *distribution, const int numbins, double *averagecolldiam, double *Volume, double *Surface, int *nprimaries)
 {
 	if (m_primary!=NULL)
-	{	
+	{
 		(*nprimaries)++;
 		*Volume=(*Volume)+m_vol;
 		*Surface=(*Surface)+m_surf;
@@ -1360,11 +1438,11 @@ void SubParticle::GetCollDiamDistrMill(double sintertresh, int *nparticles, doub
 
 // This function is used to find the two sinter particles when the entire particle is duplicated
 void SubParticle::UpdatethisSinterParticle(SubParticle *target, const SubParticle *original)
-{	
+{
     if (original->m_primary != NULL) {
 		target->m_leftsinter=NULL;
-		target->m_rightsinter=NULL;			
-    } else {	
+		target->m_rightsinter=NULL;
+    } else {
 		int depth=0;
 		int i;
 		bool path[1000];
@@ -1384,10 +1462,10 @@ void SubParticle::UpdatethisSinterParticle(SubParticle *target, const SubParticl
 		{
 			if (path[i]==true)
 				target->m_leftsinter=target->m_leftsinter->m_leftchild;
-			else 
+			else
 				target->m_leftsinter=target->m_leftsinter->m_rightchild;
 		}
-		
+
 
 		depth=0;
 		orgsinter=original->m_rightsinter;
@@ -1405,7 +1483,7 @@ void SubParticle::UpdatethisSinterParticle(SubParticle *target, const SubParticl
 		{
 			if (path[i]==true)
 				target->m_rightsinter=target->m_rightsinter->m_leftchild;
-			else 
+			else
 				target->m_rightsinter=target->m_rightsinter->m_rightchild;
 		}
 	}
@@ -1422,10 +1500,10 @@ SubParticle *SubParticle::FindRoot()
 
 int SubParticle::Numneighbors( SubParticle *target)
 {
-	if (m_parent==NULL) 
+	if (m_parent==NULL)
 	{
 		if (m_leftsinter==target || m_rightsinter==target)
-		{	
+		{
 			return 1;
 		}
 		else
@@ -1475,7 +1553,7 @@ void SubParticle::RecalcFreeSurface()
 }*/
 
 int SubParticle::NumSubPart()
-{	
+{
     return m_numsubpart;
 }
 
@@ -1486,16 +1564,16 @@ void SubParticle::UpdateTree(void)
 {   //ParticleCache::PropID id=ParticleCache::iS;
     // Update the cache for this sub-particle.
     if (m_primary != NULL) {
-        ParticleCache::operator=(*m_primary); 
+        ParticleCache::operator=(*m_primary);
 		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
 		m_avg_diam=m_primary->CollDiameter();
-		
+
     } else {
         ParticleCache::operator=(*m_leftchild);
         ParticleCache::operator+=(*m_rightchild);
 	    ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
 		m_avg_diam=m_leftchild->m_avg_diam+m_rightchild->m_avg_diam;
-		
+
     }
 
     // Update the tree about this sub-particle.
@@ -1508,11 +1586,11 @@ void SubParticle::UpdateTree(void)
 
 // resets the pointer after a sintering event
 void SubParticle::UpdateTree_sinter(SubParticle *has_sintered,SubParticle *newsinter)
-{    
+{
     if (m_primary != NULL) {
 		m_leftsinter=NULL;
 		m_rightsinter=NULL;
-		
+
     } else {
 		if(m_rightsinter==has_sintered){
 			m_rightsinter=newsinter;
@@ -1526,7 +1604,7 @@ void SubParticle::UpdateTree_sinter(SubParticle *has_sintered,SubParticle *newsi
 
     // Update the tree above this sub-particle.
     if (m_parent != NULL) {
-        m_parent->UpdateTree_sinter(has_sintered,newsinter);				
+        m_parent->UpdateTree_sinter(has_sintered,newsinter);
     }
 }
 
@@ -1557,7 +1635,7 @@ bool SubParticle::IsValid() const
 SubParticle *const SubParticle::Clone() const
 {
     return new SubParticle(*this);
-	
+
 }
 
 
@@ -1569,7 +1647,7 @@ void SubParticle::printSubtree(std::ostream &out, ParticleCache::PropID id) cons
 
 
 void SubParticle::printSubtreeLoop(std::ostream &out, ParticleCache::PropID id) const
-{ 
+{
   if (m_primary==NULL)
   { //out<<"leftchild "<<10E8*m_leftchild->SphDiameter()<<std::endl;
 	//out<<"rightchild "<<10E8*m_rightchild->SphDiameter()<<std::endl;
@@ -1596,13 +1674,13 @@ void SubParticle::printSubtreeLoop(std::ostream &out, ParticleCache::PropID id) 
 
 
 void SubParticle::printSubtreepic(std::ostream &out) const
-{ 
+{
   printSubtreepicLoop(out,0,0,0);
 }
 
 
 void SubParticle::printSubtreepicLoop(std::ostream &out,real x, real y, real z) const
-{ 
+{
   real x1,z1,y1,random;
   x1=x;
   y1=y;
@@ -1611,21 +1689,21 @@ void SubParticle::printSubtreepicLoop(std::ostream &out,real x, real y, real z) 
   { random=rnd();
     out<<(m_primary->SphDiameter())*10E8<<std::endl;
 	if(random<=0.33)
-	{   
+	{
 		 out<<1<<std::endl;
 	}
 	if(random>0.33 && random<=0.66)
-	{	
+	{
 		 out<<2<<std::endl;
 	}
 	if (random>0.66)
 	{
 		 out<<3<<std::endl;
 	}
-	 
+
   }
   else
-  { 
+  {
 	m_leftchild->printSubtreepicLoop(out, x1, y1, z1);
 
     x1=x;
@@ -1635,7 +1713,7 @@ void SubParticle::printSubtreepicLoop(std::ostream &out,real x, real y, real z) 
 
     m_rightchild->printSubtreepicLoop(out, x1, y1, z1);
   }
-  
+
 }
 
 
@@ -1654,6 +1732,35 @@ void SubParticle::Serialize(std::ostream &out) const
         // Output the base class.
         ParticleCache::Serialize(out);
 
+        // Write number of components.
+        unsigned int n = (unsigned int)m_comp.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write components.
+        real val = 0.0;
+        for (unsigned int i=0; i!=n; ++i) {
+            val = m_comp[i];
+            out.write((char*)&val, sizeof(val));
+        }
+
+        // Write number of tracker values.
+        n = (unsigned int)m_values.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write values.
+        for (unsigned int i=0; i!=n; ++i) {
+            val = m_values[i];
+            out.write((char*)&val, sizeof(val));
+        }
+
+        // Write create time.
+        val = (double)m_createt;
+        out.write((char*)&val, sizeof(val));
+
+        // Write last update time.
+        val = (double)m_time;
+        out.write((char*)&val, sizeof(val));
+
         if (m_primary != NULL) {
             // Write primary particle to stream.
             out.write((char*)&trueval, sizeof(trueval));
@@ -1664,6 +1771,14 @@ void SubParticle::Serialize(std::ostream &out) const
             m_leftchild->Serialize(out);
             m_rightchild->Serialize(out);
         }
+
+        if (m_aggcache != NULL) {
+            out.write((char*)&trueval, sizeof(trueval));
+            ModelFactory::WriteCache(*m_aggcache, out);
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
     } else {
         throw std::invalid_argument("Output stream not ready "
                                "(Sweep, SubParticle::Serialize).");
@@ -1684,11 +1799,41 @@ void SubParticle::Deserialize(std::istream &in, const Sweep::ParticleModel &mode
 
         unsigned int n = 0;
         const unsigned int trueval  = 1;
+        real val;
 
         switch (version) {
             case 0:
+                m_pmodel = &model;
+
                 // Read base class.
                 ParticleCache::Deserialize(in, model);
+
+                // Read number of components.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read components.
+                for (unsigned int i=0; i!=n; ++i) {
+                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                    m_comp.push_back(val);
+                }
+
+                // Read number of tracker values.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+                // Read values.
+                for (unsigned int i=0; i!=n; ++i) {
+                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                    m_values.push_back(val);
+                }
+
+                // Read create time.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_createt = val;
+
+                // Read last update time.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_time = val;
+
 
                 // Read if this sub-particle had a primary particle
                 // or two sub-particle children.
@@ -1704,6 +1849,14 @@ void SubParticle::Deserialize(std::istream &in, const Sweep::ParticleModel &mode
                     m_primary    = NULL;
                     m_leftchild  = new Sweep::SubParticle(in, model);
                     m_rightchild = new Sweep::SubParticle(in, model);
+                }
+
+                // Read aggregation model.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n==1) {
+                    m_aggcache = ModelFactory::ReadAggCache(in, *this);
+                } else {
+                    m_aggcache = NULL;
                 }
 
                 break;
@@ -1726,6 +1879,12 @@ void SubParticle::releaseMem(void)
     delete m_leftchild;  m_leftchild  = NULL;
     delete m_rightchild; m_rightchild = NULL;
     delete m_primary;    	m_primary    = NULL;
+
+    m_comp.clear();
+    m_values.clear();
+
+    // Clear aggregation model cache.
+    delete m_aggcache;
 }
 
 // Initialisation routine.
@@ -1734,3 +1893,51 @@ void SubParticle::init(void)
     m_parent = NULL;
     releaseMem();
 }
+
+// PARTICLE CREATE TIME.
+
+// Returns the particle create time.
+real SubParticle::CreateTime() const {return m_createt;}
+
+
+// LAST UPDATE TIME.
+
+// Returns the particle last update time.
+real SubParticle::LastUpdateTime() const {return m_time;}
+// PARTICLE COMPOSITION.
+
+// Returns the composition vector.
+const fvector &SubParticle::Composition() const
+{
+    return m_comp;
+}
+
+// Returns the ith component value.  Returns 0.0 if i is invalid.
+real SubParticle::Composition(unsigned int i) const
+{
+    if (i < m_comp.size()) {
+        return m_comp[i];
+    } else {
+        return 0.0;
+    }
+}
+
+// TRACKER VARIABLE VALUES.
+
+// Returns the tracker value vector.
+const fvector &SubParticle::Values() const
+{
+    return m_values;
+}
+
+// Returns the ith tracker variable value.  Returns 0.0 if i is invalid.
+real SubParticle::Values(unsigned int i) const
+{
+    if (i < m_values.size()) {
+        return m_values[i];
+    } else {
+        return 0.0;
+    }
+}
+
+

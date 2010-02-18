@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -110,7 +110,7 @@ public:
 
     // Returns the particle model used to define particles in this
     // cell.
-    const Sweep::ParticleModel *const ParticleModel(void) const;
+    const Sweep::ParticleModel *const ParticleModel(void) const {return m_model;}
 
 
     // SCALING ROUTINES INCL. SAMPLE VOLUME.
@@ -121,7 +121,7 @@ public:
     // Sets the number density which the ensemble represents.
     int SetM0(real m0);
 
-    // Sets the number density which the full 
+    // Sets the number density which the full
     // ensemble would represent.
     //int SetMaxM0(real m0);
 
@@ -142,7 +142,7 @@ public:
 
     // PARTICLE INFLOW PROCESSES.
 
-    // Returns the number of inflow processes defined 
+    // Returns the number of inflow processes defined
     // for this Cell.
     unsigned int InflowCount(void) const;
 
@@ -158,7 +158,7 @@ public:
 
     // PARTICLE OUTFLOW PROCESSES.
 
-    // Returns the number of outflow processes defined 
+    // Returns the number of outflow processes defined
     // for this Cell.
     unsigned int OutflowCount(void) const;
 

@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37) and Markus Sander (ms785)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik and Markus Sander.
 
   File purpose:
@@ -78,7 +78,7 @@ void EnsembleImage::PrintEnsemble(Cell &sys,std::ofstream &file)
     calc_FM_ensemble(m_root);
     m_root.CentreCOM();
 	Write3dout(file,&m_root);
-	
+
 }
 
 
@@ -86,14 +86,14 @@ void EnsembleImage::Write3dout(std::ofstream &file, EnsembleImgNode *curr_node)
 {
     if (file.good()) {
         string line;
-		if (curr_node->IsLeaf() && curr_node->sp!=NULL) 
-		{ 		
+		if (curr_node->IsLeaf() && curr_node->sp!=NULL)
+		{
 			Sweep::Imaging::ParticleImage *img= new Sweep::Imaging::ParticleImage;
 			img->Construct(*curr_node->sp);
 			img->Write3dout(file,1e9*curr_node->m_cen_mass[0],1e9*curr_node->m_cen_mass[1],1e9*curr_node->m_cen_mass[2]);
 			delete img;
 		}
-		else 
+		else
 		{
 			Write3dout(file, curr_node->m_left);
 			Write3dout(file, curr_node->m_right);
@@ -111,7 +111,7 @@ void EnsembleImage::Write3dout(std::ofstream &file, EnsembleImgNode *curr_node)
 
 void EnsembleImage::PrintEnsemble(Cell &sys,std::ofstream &file, real shiftz)
 {
-	
+
 	bool treedimage=false;
 	Ensemble::iterator i;
     ParticleCache::PropID id=ParticleCache::iV;
@@ -132,7 +132,7 @@ void EnsembleImage::PrintEnsemble(Cell &sys,std::ofstream &file, real shiftz)
 		boxlength=pow(numsubpart,0.33333333);
 		boxlength*=maxd;
 	}
-	else 
+	else
 	{
 		maxd=1e9*6*pow(maxd,0.3333333);
 		maxd=200;
@@ -145,30 +145,30 @@ void EnsembleImage::PrintEnsemble(Cell &sys,std::ofstream &file, real shiftz)
 	for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
 		numsubpart++;
 		if(numsubpart<500)
-		{ 
+		{
 			if (x<boxlength && y<boxlength)
 			{
-				x=x+maxd; 		
+				x=x+maxd;
 			}
-			if (x>boxlength) 
+			if (x>boxlength)
 			{
 				x=0;
 				y=y+maxd;
 			}
-			if (y>boxlength) 
+			if (y>boxlength)
 			{
 				x=0;
 				y=0;
 				z=z+maxd;
 			}
 			Sweep::Imaging::ParticleImage img;
-			img.Construct(*(*i));
+			img.Construct(*(*i), *sys.ParticleModel());
 			//img.Write3dout(file,x+(rnd()-0.5)*(boxlength-(*(*i)).Property(id)*1e9),y+(rnd()-0.5)*(boxlength-(*(*i)).Property(id)*1e9),z+(rnd()-0.5)*(boxlength-(*(*i)).Property(id)*1e9));
 			img.Write3dout(file,(x-boxlength/2)+(rnd()-0.5)*boxlength,y-boxlength/2+(rnd()-0.5)*boxlength,z+shiftz);
-		
+
 		}
 	}
-	
+
 }
 
 
@@ -196,7 +196,7 @@ void EnsembleImage::calc_FM_ensemble(EnsembleImgNode &node)
         real phi1   = rnd() * 2.0 * PI;
         real theta1 = ((2.0*rnd())-1.0) * PI;
         target->RotateCOM(theta1, phi1);
-        
+
         // Rotate right node randomly about CoM.
         real phi2   = rnd() * 2.0 * PI;
         real theta2 = ((2.0*rnd())-1.0) * PI;
@@ -266,8 +266,8 @@ void EnsembleImage::calc_FM_ensemble(EnsembleImgNode &node)
 // a target and a bullet node by moving down the
 // binary tree.  If the nodes collide then returns
 // true, otherwise returns false.
-bool EnsembleImage::minCollZ_ensemble(const EnsembleImgNode &target, 
-                             const EnsembleImgNode &bullet, 
+bool EnsembleImage::minCollZ_ensemble(const EnsembleImgNode &target,
+                             const EnsembleImgNode &bullet,
                              real dx, real dy, real &dz)
 {
     bool hit=false, hit1=false;
@@ -278,18 +278,18 @@ bool EnsembleImage::minCollZ_ensemble(const EnsembleImgNode &target,
         if (bullet.IsLeaf()) {
             // Bullet is a leaf (both leaves).
            return calcCollZ_ensemble(target.BoundSphCentre(), target.Radius(),
-                            bullet.BoundSphCentre(), bullet.Radius(), 
+                            bullet.BoundSphCentre(), bullet.Radius(),
                             dx, dy, dz);
         } else {
             // Bullet is not a leaf, call sub-nodes.
             // Calculate minimum dz for the target and the bullet left subnode.
             hit1 = calcCollZ_ensemble(target.BoundSphCentre(), target.Radius(),
-                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(), 
+                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(),
                              dx, dy, dz);
             if (hit1) hit = minCollZ_ensemble(target, *bullet.m_left, dx, dy, dz);
             // Calculate minimum dz for the target and the bullet right subnode.
             hit1 = calcCollZ_ensemble(target.BoundSphCentre(), target.Radius(),
-                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(), 
+                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(),
                              dx, dy, dz2);
             if (hit1) hit = minCollZ_ensemble(target, *bullet.m_right, dx, dy, dz2) || hit;
             // Return minimum dz.
@@ -302,12 +302,12 @@ bool EnsembleImage::minCollZ_ensemble(const EnsembleImgNode &target,
             // Bullet is a leaf, call target sub-nodes..
             // Calculate minimum dz for the target left subnode and the bullet.
             hit1 = calcCollZ_ensemble(target.m_left->BoundSphCentre(), target.m_left->Radius(),
-                             bullet.BoundSphCentre(), bullet.Radius(), 
+                             bullet.BoundSphCentre(), bullet.Radius(),
                              dx, dy, dz);
             if (hit1) hit = minCollZ_ensemble(*target.m_left, bullet, dx, dy, dz);
             // Calculate minimum dz for the target right subnode and the bullet.
             hit1 = calcCollZ_ensemble(target.m_right->BoundSphCentre(), target.m_right->Radius(),
-                             bullet.BoundSphCentre(), bullet.Radius(), 
+                             bullet.BoundSphCentre(), bullet.Radius(),
                              dx, dy, dz2);
             if (hit1) hit = minCollZ_ensemble(*target.m_right, bullet, dx, dy, dz2) || hit;
             // Return minimum dz.
@@ -318,22 +318,22 @@ bool EnsembleImage::minCollZ_ensemble(const EnsembleImgNode &target,
             // collision combinations.
             // Target left and bullet left.
             hit1 = calcCollZ_ensemble(target.m_left->BoundSphCentre(), target.m_left->Radius(),
-                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(), 
+                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(),
                              dx, dy, dz);
             if (hit1) hit = minCollZ_ensemble(*target.m_left, *bullet.m_left, dx, dy, dz);
             // Target left and bullet right.
             hit1 = calcCollZ_ensemble(target.m_left->BoundSphCentre(), target.m_left->Radius(),
-                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(), 
+                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(),
                              dx, dy, dz2);
             if (hit1) hit = minCollZ_ensemble(*target.m_left, *bullet.m_right, dx, dy, dz2) || hit;
             // Target right and bullet left.
             hit1 = calcCollZ_ensemble(target.m_right->BoundSphCentre(), target.m_right->Radius(),
-                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(), 
+                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(),
                              dx, dy, dz3);
             if (hit1) hit = minCollZ_ensemble(*target.m_right, *bullet.m_left, dx, dy, dz3) || hit;
             // Target right and bullet right.
             hit1 = calcCollZ_ensemble(target.m_right->BoundSphCentre(), target.m_right->Radius(),
-                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(), 
+                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(),
                              dx, dy, dz4);
             if (hit1) hit = minCollZ_ensemble(*target.m_right, *bullet.m_right, dx, dy, dz4) || hit;
             // Returns minimum dz.
@@ -346,8 +346,8 @@ bool EnsembleImage::minCollZ_ensemble(const EnsembleImgNode &target,
 // Calculates the z-displacement of a bullet sphere for a +ve
 // collision with a target sphere.  Returns true if the
 // spheres collide, otherwise false.
-bool EnsembleImage::calcCollZ_ensemble(const Coords::Vector &p1, real r1, 
-                              const Coords::Vector &p2, real r2, 
+bool EnsembleImage::calcCollZ_ensemble(const Coords::Vector &p1, real r1,
+                              const Coords::Vector &p2, real r2,
                               real dx, real dy, real &dz)
 {
     // Calculate the square of the sum of the radii.

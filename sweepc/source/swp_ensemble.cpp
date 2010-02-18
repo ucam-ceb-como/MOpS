@@ -505,7 +505,7 @@ int Sweep::Ensemble::Select(ParticleCache::PropID id) const
 // Selects particle according to the particle property
 // specified by the given model and the given property id
 // of the model.
-int Sweep::Ensemble::Select(SubModels::SubModelType model_id, unsigned int id) const
+/*int Sweep::Ensemble::Select(SubModels::SubModelType model_id, unsigned int id) const
 {
     // This routine uses the binary tree to select a particle weighted
     // by a given particle property (by index).
@@ -544,7 +544,7 @@ int Sweep::Ensemble::Select(SubModels::SubModelType model_id, unsigned int id) c
         // Chosen an non-existent particle.
         return -1;
     }
-}
+}*/
 
 
 // SCALING AND PARTICLE DOUBLING.
@@ -591,7 +591,9 @@ real Sweep::Ensemble::GetSum(SubModels::SubModelType model_id, unsigned int id) 
     if (model_id == SubModels::BasicModel_ID) {
         return GetSum(static_cast<ParticleCache::PropID>(id));
     } else {
-        return m_sums.SubModel(model_id)->Property(id);
+        throw std::logic_error("Submodels no longer supported (Ensemble::GetSum)");
+        //return m_sums.SubModel(model_id)->Property(id);
+        return 0.0;
     }
 }
 

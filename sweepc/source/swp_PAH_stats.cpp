@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -74,10 +74,10 @@ const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. PAH real Part
     IModelStats::Avg,  // Avg. PAH Collision Diameter
 	IModelStats::Avg,  // Avg. Number of Carbon atoms
-    IModelStats::Avg,  // Avg. Coalesc Threshold 
+    IModelStats::Avg,  // Avg. Coalesc Threshold
     IModelStats::Avg,  // Num Primaries real Part
 
-   
+
 };
 
 const std::string PAHStats::m_const_pslnames[PAHStats::PSL_COUNT] = {
@@ -145,19 +145,19 @@ PAHStats &PAHStats::operator=(const Sweep::Stats::PAHStats &rhs)
 // IMPLEMENTATION.
 
 // Returns the number of basic particle stats.
-unsigned int PAHStats::Count() const 
+unsigned int PAHStats::Count() const
 {
     return STAT_COUNT;
 }
 
 // Calculates the model stats for a single particle.
-void PAHStats::Calculate(const ParticleCache &data)
+void PAHStats::Calculate(const Particle &data)
 {
     // Get surface-volume cache.
-    const AggModels::PAHCache* cache = 
-        dynamic_cast<const AggModels::PAHCache*>(data.AggCache());
-	
-	m_stats[iNPAH]    = cache->m_numPAH;
+    const AggModels::PAHCache& cache =
+        dynamic_cast<const AggModels::PAHCache&>(data.AggCache());
+
+	m_stats[iNPAH]    = cache.m_numPAH;
     // Get stats.
 
 }
@@ -175,31 +175,31 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
     unsigned int nrealpart= 0;
     for (ip=e.begin(); ip!=e.end(); ++ip) {
         // Get surface-volume cache.
-        const AggModels::PAHCache* cache = 
-            dynamic_cast<const AggModels::PAHCache*>((*ip)->AggCache());
+        const AggModels::PAHCache& cache =
+            dynamic_cast<const AggModels::PAHCache&>((*ip)->AggCache());
 		const AggModels::PAHPrimary *pah = NULL;
 			pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*ip)).Primary());
-        real sz = cache->Parent()->Property(m_statbound.PID);
+        real sz = cache.Parent()->Property(m_statbound.PID);
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-			m_stats[iNPAH]    += cache->m_numPAH;
+			m_stats[iNPAH]    += cache.m_numPAH;
 			m_stats[iPAHD]    += pah->PAHCollDiameter()*1e9;
-			m_stats[iNCARB]	  += cache->m_numcarbon;
-            m_stats[iNPAH+1]    += cache->m_numPAH;
-            m_stats[iCOAL]    += cache->m_avg_coalesc;
+			m_stats[iNCARB]	  += cache.m_numcarbon;
+            m_stats[iNPAH+1]    += cache.m_numPAH;
+            m_stats[iCOAL]    += cache.m_avg_coalesc;
 			++n;
-            if (cache->m_numPAH>1)
+            if (cache.m_numPAH>1)
             {
                 ++nrealpart;
                 m_stats[iPARTSURF]+=(*ip)->SurfaceArea();
-                m_stats[iNPRIM]+=cache->m_numprimary;
+                m_stats[iNPRIM]+=cache.m_numprimary;
                 m_stats[iPARTMASS]+=(*ip)->Primary()->Mass();
-                m_stats[iNAVGPAH]+=cache->m_numPAH;
+                m_stats[iNAVGPAH]+=cache.m_numPAH;
             }
         }
     }
-    
+
     // Get the particle count.
     //real np    = (real)e.Count();
     real np    = (real) n;
@@ -329,12 +329,12 @@ void PAHStats::PSL_Names(std::vector<std::string> &names,
 
 // Returns the particle size list (PSL) entry for particle i
 // in the given ensemble.
-void PAHStats::PSL(const Ensemble &ens, unsigned int i, 
+void PAHStats::PSL(const Ensemble &ens, unsigned int i,
                        real time, fvector &psl, unsigned int start) const
 {
     // Get particle.
-    const Sweep::ParticleCache *const sp = ens.At(i);
-    
+    const Sweep::Particle *const sp = ens.At(i);
+
     if (sp != NULL) {
         PSL(*sp, time, psl, start);
     } else {
@@ -347,8 +347,8 @@ void PAHStats::PSL(const Ensemble &ens, unsigned int i,
     }
 }
 
-// Returns the PSL entry for the given particle cache.
-void PAHStats::PSL(const Sweep::ParticleCache &sp, real time,
+// Returns the PSL entry for the given particle.
+void PAHStats::PSL(const Sweep::Particle &sp, real time,
                        fvector &psl, unsigned int start) const
 {
     // Resize vector if too small.
@@ -361,8 +361,8 @@ void PAHStats::PSL(const Sweep::ParticleCache &sp, real time,
     fvector::iterator j = psl.begin()+start-1;
 
     // Get surface-volume cache.
-    const AggModels::PAHCache* cache = 
-        dynamic_cast<const AggModels::PAHCache*>(sp.AggCache());
+    const AggModels::PAHCache* cache =
+        dynamic_cast<const AggModels::PAHCache*>(&sp.AggCache());
 
     // Get the PSL stats.
     if (cache != NULL) {
@@ -395,7 +395,7 @@ PAHStats *const PAHStats::Clone(void) const
 
 // Returns the model data type.  Used to identify different models
 // and for serialisation.
-unsigned int PAHStats::ID(void) const 
+unsigned int PAHStats::ID(void) const
 {
     return (unsigned int)AggModels::PAH_ID;
 }
@@ -477,7 +477,7 @@ void PAHStats::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
                     // Read the length of the name.
                     unsigned int m = 0;
                     in.read(reinterpret_cast<char*>(&m), sizeof(m));
-                    
+
                     // Read the name.
                     name = new char[m];
                     in.read(name, m);

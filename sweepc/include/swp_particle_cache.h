@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -13,7 +13,7 @@
     of type ParticleCache.
 
     The particle cache contains only a sub-set of information about the sub-particle
-    structure.  It is designed as a data store only which is applicable to the 
+    structure.  It is designed as a data store only which is applicable to the
     numerics of the ensemble binary tree (in terms of property sums), but the data
     stored within the ParticleCache class may not be physical.  For example the diameter
     could be the sum of two sub-particle diameters, rather than the true aggregate
@@ -87,8 +87,8 @@ public:
     // the Property() function.
     enum PropID {
         iUniform=-1, // Special Case:  Always returns 1.0.  Used to select particles uniformly.
-        iCTime,  // Create time.
-        iLUTime, // Last update time.
+        //iCTime,  // Create time.
+        //iLUTime, // Last update time.
         iDsph,   // Equivalent sphere diameter.
         iDcol,   // Collision diameter.
         iDmob,   // Mobility diameter.
@@ -104,6 +104,8 @@ public:
         iD2_M_1_2, // D^2 * M^-1/2.
 		iFS,		// the free surface available for other particles to sinter
 
+		iNumCarbon, // Number of Carbon atoms
+
 
     };
 
@@ -115,7 +117,7 @@ public:
         const Sweep::ParticleModel &model // Defining particle model.
         );
     ParticleCache(const Primary &pri);        // Initialising constructor (from primary particle).
-    ParticleCache(const ParticleCache &copy); // Copy constructor.
+    //ParticleCache(const ParticleCache &copy); // Copy constructor.
     ParticleCache(                            // Stream-reading constructor.
         std::istream &in,                     //  - Input stream.
         const Sweep::ParticleModel &model     //  - Model to which this cache subscribes.
@@ -125,7 +127,7 @@ public:
     virtual ~ParticleCache(void);
 
     // Operators.
-    ParticleCache &operator=(const ParticleCache &rhs);
+    //ParticleCache &operator=(const ParticleCache &rhs);
     ParticleCache &operator=(const Primary &rhs);
     ParticleCache &operator+=(const ParticleCache &rhs);
     ParticleCache &operator+=(const Primary &rhs);
@@ -136,64 +138,19 @@ public:
     void Clear(void);
 
 
-    // DEFINING PARTICLE MODEL.
-    
-    // Returns the particle model used to define this particle cache.
-    const Sweep::ParticleModel *const ParticleModel(void) const;
-
-
-    // COMPOSITION.
-
-    // Returns the composition vector.
-    const fvector &Composition(void) const;
-
-    // Returns the ith component value.  Returns 0.0 if i invalid.
-    real Composition(unsigned int i) const;
-
-    // Sets the composition vector.
-    void SetComposition(const fvector &comp);
-
-
-    // TRACKER VALUES.
-
-    // Returns the values vector.
-    const fvector &Values(void) const;
-
-    // Returns the ith value.  Returns 0.0 if i invalid.
-    real Values(unsigned int i) const;
-
-    // Sets the values vector.
-    void SetValues(const fvector &vals);
-
-
-    // PARTICLE CREATE TIME.
-
-    // Returns the particle create time.
-    real CreateTime(void) const;
-
-
-    // LAST UPDATE TIME.
-
-    // Returns the last update time of the particle.
-    real LastUpdateTime(void) const;
-
-    // Sets the last update time of the particle.
-    void SetTime(real t);
-
-
     // AGGREGATION-MODEL CACHE.
 
     // Returns the aggregation model data.
-    const AggModels::AggModelCache *const AggCache(void) const;
+    //const AggModels::AggModelCache *const AggCache(void) const;
 
 
     // SUB-MODEL CACHE.
 
     // Returns the model data.
-    const SubModels::SubModelCacheMap &SubModelCache(void) const;
+    //const SubModels::SubModelCacheMap &SubModelCache(void) const;
 
     // Returns the data for the idth model.  Returns NULL if id is invalid.
-    const SubModels::SubModelCache *const SubModel(SubModels::SubModelType id) const;
+    //const SubModels::SubModelCache *const SubModel(SubModels::SubModelType id) const;
 
 
     // BASIC PROPERTIES.
@@ -280,20 +237,9 @@ public:
         );
 
 protected:
-    // Defining particle model.
-    const Sweep::ParticleModel *m_pmodel;
-
-    // Unique properties.
-    fvector m_comp;   // Composition.
-    fvector m_values; // Other particle values (defined at run time).
-    real m_createt;   // Time at which particle was created (earliest part).
-    real m_time;      // Last time particle was updated.  Required for LPDA.
-
-
 
     // Additional particle models.
-    AggModels::AggModelCache *m_aggcache;    // The aggregation-model used by the particle.
-    SubModels::SubModelCacheMap m_submodels; // Cache of data required by different sub-models.
+    //SubModels::SubModelCacheMap m_submodels; // Cache of data required by different sub-models.
 
     // Basic properties (calculated from above properties).
     real m_diam; // Equivalent spherical diameter.
@@ -315,7 +261,10 @@ protected:
 	// The free surface available for other particles to sinter
 	real m_freesurface;
 	//number of subparticles below this node
-	int m_numsubpart;
+	unsigned int m_numsubpart;
+
+	//! Number of Carbon atoms
+	unsigned int m_numcarbon;
 
 
     // ParticleCache class cannot be created without knowledge of the

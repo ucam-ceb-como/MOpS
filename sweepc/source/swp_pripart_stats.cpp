@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -140,25 +140,25 @@ PriPartStats &PriPartStats::operator=(const Sweep::Stats::PriPartStats &rhs)
 // IMPLEMENTATION.
 
 // Returns the number of basic particle stats.
-unsigned int PriPartStats::Count() const 
+unsigned int PriPartStats::Count() const
 {
     return STAT_COUNT;
 }
 
 // Calculates the model stats for a single particle.
-void PriPartStats::Calculate(const ParticleCache &data)
+void PriPartStats::Calculate(const Particle &data)
 {
     // Get surface-volume cache.
-    const AggModels::PriPartCache* cache = 
-        dynamic_cast<const AggModels::PriPartCache*>(data.AggCache());
+    const AggModels::PriPartCache& cache =
+        dynamic_cast<const AggModels::PriPartCache&>(data.AggCache());
 
     // Get stats.
-    m_stats[iPPN]    = cache->Count();
+    m_stats[iPPN]    = cache.Count();
     m_stats[iPPN+1]  = m_stats[iPPN];
-    m_stats[iPPD]    = cache->AvgPriDiameter() * 1.0e9; // Convert from m to nm.
-    m_stats[iS]      = cache->SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+    m_stats[iPPD]    = cache.AvgPriDiameter() * 1.0e9; // Convert from m to nm.
+    m_stats[iS]      = cache.SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
     m_stats[iS+1]    = m_stats[iS];
-    m_stats[iPPS]    = cache->PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+    m_stats[iPPS]    = cache.PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
     m_stats[iPPS+1]  = m_stats[iS];
 }
 
@@ -173,23 +173,23 @@ void PriPartStats::Calculate(const Ensemble &e, real scale)
     unsigned int n = 0;
     for (ip=e.begin(); ip!=e.end(); ++ip) {
         // Get surface-volume cache.
-        const AggModels::PriPartCache* cache = 
-            dynamic_cast<const AggModels::PriPartCache*>((*ip)->AggCache());
-        real sz = cache->Parent()->Property(m_statbound.PID);
+        const AggModels::PriPartCache& cache =
+            dynamic_cast<const AggModels::PriPartCache&>((*ip)->AggCache());
+        real sz = cache.Parent()->Property(m_statbound.PID);
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-            m_stats[iPPN]    += cache->Count();
-            m_stats[iPPN+1]  += cache->Count();
-            m_stats[iPPD]    += cache->AvgPriDiameter() * cache->Count() * 1e9; // Convert from m to nm.
-            m_stats[iS]      += cache->SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
-            m_stats[iS+1]    += cache->SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
-            m_stats[iPPS]    += cache->PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
-            m_stats[iPPS+1]  += cache->PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+            m_stats[iPPN]    += cache.Count();
+            m_stats[iPPN+1]  += cache.Count();
+            m_stats[iPPD]    += cache.AvgPriDiameter() * cache.Count() * 1e9; // Convert from m to nm.
+            m_stats[iS]      += cache.SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+            m_stats[iS+1]    += cache.SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+            m_stats[iPPS]    += cache.PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
+            m_stats[iPPS+1]  += cache.PriSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
             ++n;
         }
     }
-    
+
     // Get the particle count.
     //real np    = (real)e.Count();
     real np    = (real) n;
@@ -341,12 +341,12 @@ void PriPartStats::PSL_Names(std::vector<std::string> &names,
 
 // Returns the particle size list (PSL) entry for particle i
 // in the given ensemble.
-void PriPartStats::PSL(const Ensemble &ens, unsigned int i, 
+void PriPartStats::PSL(const Ensemble &ens, unsigned int i,
                        real time, fvector &psl, unsigned int start) const
 {
     // Get particle.
-    const Sweep::ParticleCache *const sp = ens.At(i);
-    
+    const Sweep::Particle *const sp = ens.At(i);
+
     if (sp != NULL) {
         PSL(*sp, time, psl, start);
     } else {
@@ -359,8 +359,8 @@ void PriPartStats::PSL(const Ensemble &ens, unsigned int i,
     }
 }
 
-// Returns the PSL entry for the given particle cache.
-void PriPartStats::PSL(const Sweep::ParticleCache &sp, real time,
+// Returns the PSL entry for the given particle.
+void PriPartStats::PSL(const Sweep::Particle &sp, real time,
                        fvector &psl, unsigned int start) const
 {
     // Resize vector if too small.
@@ -373,8 +373,8 @@ void PriPartStats::PSL(const Sweep::ParticleCache &sp, real time,
     fvector::iterator j = psl.begin()+start-1;
 
     // Get surface-volume cache.
-    const AggModels::PriPartCache* cache = 
-        dynamic_cast<const AggModels::PriPartCache*>(sp.AggCache());
+    const AggModels::PriPartCache* cache =
+        dynamic_cast<const AggModels::PriPartCache*>(&sp.AggCache());
 
     // Get the PSL stats.
     if (cache != NULL) {
@@ -426,8 +426,8 @@ void PriPartStats::PPSL_Names(std::vector<std::string> &names,
 
 // Returns the primary-particle size list (PPSL) entry for particle i
 // in the given ensemble.
-void PriPartStats::PPSL(const Ensemble &ens, unsigned int i, 
-                        real time, std::vector<fvector> &ppsl, 
+void PriPartStats::PPSL(const Ensemble &ens, unsigned int i,
+                        real time, std::vector<fvector> &ppsl,
                         unsigned int start) const
 {
     // It only makes sense to call this function if the sub-particle
@@ -442,7 +442,7 @@ void PriPartStats::PPSL(const Ensemble &ens, unsigned int i,
     if (ens.At(i)->Primary() == NULL) return;
 
     // Get primary-particle data.
-    const AggModels::PriPartPrimary* pp = 
+    const AggModels::PriPartPrimary* pp =
         dynamic_cast<const AggModels::PriPartPrimary*>(ens.At(i)->Primary());
 
     // Resize vector of vectors to fit all primaries.
@@ -482,7 +482,7 @@ PriPartStats *const PriPartStats::Clone(void) const
 
 // Returns the model data type.  Used to identify different models
 // and for serialisation.
-unsigned int PriPartStats::ID(void) const 
+unsigned int PriPartStats::ID(void) const
 {
     return (unsigned int)AggModels::PriPartList_ID;
 }
@@ -564,7 +564,7 @@ void PriPartStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mod
                     // Read the length of the name.
                     unsigned int m = 0;
                     in.read(reinterpret_cast<char*>(&m), sizeof(m));
-                    
+
                     // Read the name.
                     name = new char[m];
                     in.read(name, m);

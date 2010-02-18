@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -53,7 +53,6 @@
 #include "swp_params.h"
 #include "swp_model_stats.h"
 #include "swp_ensemble.h"
-#include "swp_particle_cache.h"
 #include "swp_particle_model.h"
 #include "swp_submodel_type.h"
 #include <vector>
@@ -92,7 +91,7 @@ public:
 //    const std::vector<StatType> &Mask(void) const;
 
     // Calculates the model stats for a single particle.
-    void Calculate(const ParticleCache &data);
+    void Calculate(const Particle &data);
 
     // Calculates the model stats for a particle ensemble.
     void Calculate(
@@ -159,9 +158,9 @@ public:
         unsigned int start = 0 // Optional start index for the first variable.
         ) const;
 
-    // Returns the PSL entry for the given particle cache.
+    // Returns the PSL entry for the given particle.
     void PSL(
-        const Sweep::ParticleCache &sp, // Particle cache from which to get PSL data.
+        const Sweep::Particle &sp,      // Particle from which to get PSL data.
         real time,                      // Current flow time (used to calculate particle age).
         fvector &psl,                   // Output vector.
         unsigned int start = 0          // Optional start index for the first variable.

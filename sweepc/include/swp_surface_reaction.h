@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -103,7 +103,7 @@ public:
     // the rate of this process is proportional.
     void SetPropertyID(
         unsigned int i,   // ID number of particle property.
-        SubModels::SubModelType modelid // The model for which this ID is valid. 
+        SubModels::SubModelType modelid // The model for which this ID is valid.
           = SubModels::BasicModel_ID //  - Default model is basic particle properties.
         );
 
@@ -136,13 +136,13 @@ public:
 
 
 	// RATE TERM CALCULATIONS.
-    //   These routines return the individual rate terms for a 
+    //   These routines return the individual rate terms for a
     //   process, which may have multiple terms (e.g. condensation).
 
     // Returns the number of rate terms for this process.
     virtual unsigned int TermCount(void) const;
 
-    // Calculates the rate terms given an iterator to a real vector. The 
+    // Calculates the rate terms given an iterator to a real vector. The
     // iterator is advanced to the position after the last term for this
     // process.
     virtual real RateTerms(
@@ -174,7 +174,7 @@ public:
 
 
     // READ/WRITE/COPY.
-    
+
     // Creates a copy of the particle process.
     virtual SurfaceReaction *const Clone(void) const;
 

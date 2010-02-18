@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -59,7 +59,7 @@ Cell::Cell(void)
 
 // Default constructor (public).
 Cell::Cell(const Sweep::ParticleModel &model)
-: Sprog::Thermo::IdealGas(*model.Species()), m_ensemble(model), m_model(&model), 
+: Sprog::Thermo::IdealGas(*model.Species()), m_ensemble(model), m_model(&model),
   m_smpvol(1.0), m_fixed_chem(false)
 {
 }
@@ -191,7 +191,7 @@ Ensemble &Cell::Particles(void) {return m_ensemble;}
 const Ensemble &Cell::Particles(void) const {return m_ensemble;}
 
 // Returns the particle count.
-unsigned int Cell::ParticleCount(void) const 
+unsigned int Cell::ParticleCount(void) const
 {
     return m_ensemble.Count();
 }
@@ -211,18 +211,20 @@ real Cell::SampleVolume() const
     return m_smpvol * m_ensemble.Scaling();
 }
 
-// Sets the number density which the ensemble represents.
+/*
+ * Set the number density which the ensemble represents.
+ *
+ *@param[in]    m0      Particle number density for full ensemble (units \f$\mathrm{m}^{-3}\f$)
+ *
+ *@return       Zero if value could be set
+ */
 int Cell::SetM0(const real m0)
 {
     if ((m_ensemble.Count() > 0) && (m0 > 0.0)) {
         m_smpvol = m_ensemble.Count() / m0;
         m_ensemble.ResetScaling();
         return 0;
-    }// else {
-    //    // The ensemble contains no particles, so assume this
-    //    // is the maximum M0.        
-    //    return SetMaxM0(m0);
-    //}
+    }
     return 1;
 }
 
@@ -230,16 +232,16 @@ int Cell::SetM0(const real m0)
  * Clear any particles and set the sample volume so that a full ensemble
  * (of m_ensemble.Capacity() particles) has the specified m0.
  *
- *@param[in]    m0      Particle number density for full ensemble
+ *@param[in]    m0      Particle number density for full ensemble (units \f$\mathrm{m}^{-3}\f$)
  */
 void Cell::Reset(const real m0)
 {
     m_ensemble.Clear();
     m_ensemble.ResetScaling();
-    
+
     if ((m_ensemble.Capacity() > 0) && (m0 > 0.0)) {
         m_smpvol = m_ensemble.Capacity() / m0;
-    } 
+    }
     else {
         // The ensemble has not yet been initialised
         m_smpvol = 1.0;
@@ -262,7 +264,7 @@ void Cell::SetVariableChem(bool vari) {m_fixed_chem = !vari;}
 
 // PARTICLE INFLOW PROCESSES.
 
-// Returns the number of inflow processes defined 
+// Returns the number of inflow processes defined
 // for this Cell.
 unsigned int Cell::InflowCount(void) const {return m_inflow.size();}
 
@@ -288,7 +290,7 @@ void Cell::AddInflow(Processes::BirthProcess &inf)
 
 // PARTICLE OUTFLOW PROCESSES.
 
-// Returns the number of outflow processes defined 
+// Returns the number of outflow processes defined
 // for this Cell.
 unsigned int Cell::OutflowCount(void) const {return m_outflow.size();}
 

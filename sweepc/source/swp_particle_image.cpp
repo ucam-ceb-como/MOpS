@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -62,9 +62,9 @@ ParticleImage::ParticleImage(void)
 }
 
 // Initialising constructor.
-ParticleImage::ParticleImage(const Particle &sp)
+ParticleImage::ParticleImage(const Particle &sp, const ParticleModel &model)
 {
-    Construct(sp);
+    Construct(sp, model);
 }
 
 // Destructor.
@@ -75,13 +75,13 @@ ParticleImage::~ParticleImage(void)
 // PARTICLE IMAGE DATA CONSTRUCTION.
 
 // Constructs the particle image from the given particle.
-void ParticleImage::Construct(const Particle &sp)
+void ParticleImage::Construct(const Particle &sp, const ParticleModel &model)
 {
     switch(m_creg) {
         case FreeMol:
             // Free-molecular is the default regime.
         default:
-            constructAgg_FM(sp);
+            constructAgg_FM(sp, model);
     }
 }
 
@@ -129,7 +129,7 @@ void ParticleImage::Write3dout(std::ofstream &file, double x, double y, double z
 		file.write(line.c_str(), line.length());
         //write the radius of gyration
         double Rg=RadiusofGyration();
-        line = cstr(0) + " " + cstr(0) + 
+        line = cstr(0) + " " + cstr(0) +
                " " + cstr(0)+"\n ";
         file.write(line.c_str(), line.length());
         line = cstr(Rg)+"\n";							//write radius of gyration
@@ -137,7 +137,7 @@ void ParticleImage::Write3dout(std::ofstream &file, double x, double y, double z
         // Write the primaries to the 3dout file.
         for (unsigned int i=0; i!=coords.size(); ++i) {
             val  = coords[i][3] * m_necking;
-            line = cstr(coords[i][0]+x) + " " + cstr(coords[i][1]+y) + 
+            line = cstr(coords[i][0]+x) + " " + cstr(coords[i][1]+y) +
                    " " + cstr(coords[i][2]+z)+"\n ";
             file.write(line.c_str(), line.length());
             line = cstr(val)+"\n";							//write radius
@@ -153,7 +153,7 @@ void ParticleImage::Write3dout(std::ofstream &file, double x, double y, double z
 
 
 void ParticleImage::LengthWidth(double &L, double &W)
-{	
+{
     //align the particle along the z axis
 	double xmax=0;
 	double ymax=0;
@@ -181,11 +181,11 @@ void ParticleImage::LengthWidth(double &L, double &W)
 	}
     //added to debug ms785
     if (m_root.m_left!=NULL)
-    {   
+    {
         double phi=atan2(ymax,xmax);
         double theta=(PI/2)-atan(zmax/sqrt((xmax*xmax)+(ymax*ymax)));
 
-      //  m_root.Translate(-dx,-dy,-dz);      
+      //  m_root.Translate(-dx,-dy,-dz);
         m_root.RotateOrigin(0,-phi-PI/2);
         ofstream out;
        // out.open("particlebeforeshift.3d");
@@ -278,7 +278,7 @@ void ParticleImage::WritePOVRAY(std::ofstream &file)
         // Write the primaries to the POV-RAY file.
         for (unsigned int i=0; i!=coords.size(); ++i) {
             val  = coords[i][3] * m_necking;
-            line = "sphere {<" + cstr(coords[i][0]) + ", " + cstr(coords[i][1]) + 
+            line = "sphere {<" + cstr(coords[i][0]) + ", " + cstr(coords[i][1]) +
                    ", " + cstr(coords[i][2]) + ">, " + cstr(val) + ", 1.0}\n";
             file.write(line.c_str(), line.length());
         }
@@ -300,16 +300,16 @@ void ParticleImage::WritePOVRAY(std::ofstream &file)
 
 // AGGREGATE SPHERE-TREE CONSTRUCTORS (FREE-MOLECULAR).
 
-// Constructs a PNode sphere-tree aggregate from the given 
+// Constructs a PNode sphere-tree aggregate from the given
 // particle using free-molecular collision dynamics.
-void ParticleImage::constructAgg_FM(const Particle &sp)
+void ParticleImage::constructAgg_FM(const Particle &sp, const ParticleModel &model)
 {
     // Clear the current image data structure.
     m_root.Clear();
 
     // Need to determine the type of particle this is.
-    if (sp.ParticleModel()->UseSubPartTree()) {
-        // This particle uses the sub-particle tree, so 
+    if (model.UseSubPartTree()) {
+        // This particle uses the sub-particle tree, so
         // we can usethat to construct the sphere-tree for
         // image output.
         // TODO:  Complete sub-particle tree TEM output.
@@ -321,7 +321,7 @@ void ParticleImage::constructAgg_FM(const Particle &sp)
         const AggModels::SurfVolPrimary *svp = NULL;
         const AggModels::PriPartPrimary *ppp = NULL;
 
-        switch(sp.ParticleModel()->AggModel()) {
+        switch(model.AggModel()) {
             case AggModels::Spherical_ID:
                 // Spherical particle model, just draw
                 // a single sphere.
@@ -348,10 +348,11 @@ void ParticleImage::constructAgg_FM(const Particle &sp)
         }
     }
 }
+
 void ParticleImage::constructSubParttree(const SubParticle *sp)
 {
 	//Copy the subparticle tree into the img tree
-	m_root.Clear(); 
+	m_root.Clear();
 //	m_root.CopySPT(sp);
 	copysptinsert(sp);
 
@@ -368,9 +369,9 @@ void ParticleImage::copysptinsert(const SubParticle *sp)
 	if (sp->Primary()== NULL) {
 		copysptinsert(sp->Left());
 		copysptinsert(sp->Right());
-	        
+
 		} else {
-	        
+
 				m_root.Insert(sp->Primary()->Property(id)*0.5e9);       //convert to nm, store the radius not the diameter
 		}
 }
@@ -378,7 +379,7 @@ void ParticleImage::copysptinsert(const SubParticle *sp)
 void ParticleImage::constructSubParttree(const Sweep::AggModels::PAHPrimary *p)
 {
 	//Copy the subparticle tree into the img tree
-	m_root.Clear(); 
+	m_root.Clear();
 //	m_root.CopySPT(sp);
 	copysptinsert(p);
 
@@ -394,9 +395,9 @@ void ParticleImage::copysptinsert(const Sweep::AggModels::PAHPrimary *p)
 	if (p->LeftChild()!=NULL) {
 		copysptinsert(p->LeftChild());
 		copysptinsert(p->RightChild());
-	        
+
 		} else {
-	        
+
             m_root.Insert(p->SphDiameter()*0.5e9);       //convert to nm, store the radius not the diameter
 		}
 }
@@ -404,7 +405,7 @@ void ParticleImage::copysptinsert(const Sweep::AggModels::PAHPrimary *p)
 
 
 
-// Constructs a PNode sphere-tree aggregate from the given 
+// Constructs a PNode sphere-tree aggregate from the given
 // pri-part list primary using free-molecular collision dynamics.
 void ParticleImage::constructAgg_FM(const AggModels::PriPartPrimary &pri)
 {
@@ -432,7 +433,7 @@ void ParticleImage::constructAgg_FM(const AggModels::PriPartPrimary &pri)
 
 }
 
-// Constructs a PNode sphere-tree aggregate with uniform 
+// Constructs a PNode sphere-tree aggregate with uniform
 // primaries (equal diameter).  The diameter and primary
 // count are passed as arguments.
 void ParticleImage::uniformAgg_FM(unsigned int n, real d)
@@ -472,7 +473,7 @@ void ParticleImage::calc_FM(ImgNode &node)
         real phi1   = rnd() * 2.0 * PI;
         real theta1 = ((2.0*rnd())-1.0) * PI;
         target->RotateCOM(theta1, phi1);
-        
+
         // Rotate right node randomly about CoM.
         real phi2   = rnd() * 2.0 * PI;
         real theta2 = ((2.0*rnd())-1.0) * PI;
@@ -542,8 +543,8 @@ void ParticleImage::calc_FM(ImgNode &node)
 // a target and a bullet node by moving down the
 // binary tree.  If the nodes collide then returns
 // true, otherwise returns false.
-bool ParticleImage::minCollZ(const ImgNode &target, 
-                             const ImgNode &bullet, 
+bool ParticleImage::minCollZ(const ImgNode &target,
+                             const ImgNode &bullet,
                              real dx, real dy, real &dz)
 {
     bool hit=false, hit1=false;
@@ -554,18 +555,18 @@ bool ParticleImage::minCollZ(const ImgNode &target,
         if (bullet.IsLeaf()) {
             // Bullet is a leaf (both leaves).
            return calcCollZ(target.BoundSphCentre(), target.Radius(),
-                            bullet.BoundSphCentre(), bullet.Radius(), 
+                            bullet.BoundSphCentre(), bullet.Radius(),
                             dx, dy, dz);
         } else {
             // Bullet is not a leaf, call sub-nodes.
             // Calculate minimum dz for the target and the bullet left subnode.
             hit1 = calcCollZ(target.BoundSphCentre(), target.Radius(),
-                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(), 
+                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(),
                              dx, dy, dz);
             if (hit1) hit = minCollZ(target, *bullet.m_left, dx, dy, dz);
             // Calculate minimum dz for the target and the bullet right subnode.
             hit1 = calcCollZ(target.BoundSphCentre(), target.Radius(),
-                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(), 
+                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(),
                              dx, dy, dz2);
             if (hit1) hit = minCollZ(target, *bullet.m_right, dx, dy, dz2) || hit;
             // Return minimum dz.
@@ -578,12 +579,12 @@ bool ParticleImage::minCollZ(const ImgNode &target,
             // Bullet is a leaf, call target sub-nodes..
             // Calculate minimum dz for the target left subnode and the bullet.
             hit1 = calcCollZ(target.m_left->BoundSphCentre(), target.m_left->Radius(),
-                             bullet.BoundSphCentre(), bullet.Radius(), 
+                             bullet.BoundSphCentre(), bullet.Radius(),
                              dx, dy, dz);
             if (hit1) hit = minCollZ(*target.m_left, bullet, dx, dy, dz);
             // Calculate minimum dz for the target right subnode and the bullet.
             hit1 = calcCollZ(target.m_right->BoundSphCentre(), target.m_right->Radius(),
-                             bullet.BoundSphCentre(), bullet.Radius(), 
+                             bullet.BoundSphCentre(), bullet.Radius(),
                              dx, dy, dz2);
             if (hit1) hit = minCollZ(*target.m_right, bullet, dx, dy, dz2) || hit;
             // Return minimum dz.
@@ -594,22 +595,22 @@ bool ParticleImage::minCollZ(const ImgNode &target,
             // collision combinations.
             // Target left and bullet left.
             hit1 = calcCollZ(target.m_left->BoundSphCentre(), target.m_left->Radius(),
-                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(), 
+                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(),
                              dx, dy, dz);
             if (hit1) hit = minCollZ(*target.m_left, *bullet.m_left, dx, dy, dz);
             // Target left and bullet right.
             hit1 = calcCollZ(target.m_left->BoundSphCentre(), target.m_left->Radius(),
-                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(), 
+                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(),
                              dx, dy, dz2);
             if (hit1) hit = minCollZ(*target.m_left, *bullet.m_right, dx, dy, dz2) || hit;
             // Target right and bullet left.
             hit1 = calcCollZ(target.m_right->BoundSphCentre(), target.m_right->Radius(),
-                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(), 
+                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(),
                              dx, dy, dz3);
             if (hit1) hit = minCollZ(*target.m_right, *bullet.m_left, dx, dy, dz3) || hit;
             // Target right and bullet right.
             hit1 = calcCollZ(target.m_right->BoundSphCentre(), target.m_right->Radius(),
-                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(), 
+                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(),
                              dx, dy, dz4);
             if (hit1) hit = minCollZ(*target.m_right, *bullet.m_right, dx, dy, dz4) || hit;
             // Returns minimum dz.
@@ -622,8 +623,8 @@ bool ParticleImage::minCollZ(const ImgNode &target,
 // Calculates the z-displacement of a bullet sphere for a +ve
 // collision with a target sphere.  Returns true if the
 // spheres collide, otherwise false.
-bool ParticleImage::calcCollZ(const Coords::Vector &p1, real r1, 
-                              const Coords::Vector &p2, real r2, 
+bool ParticleImage::calcCollZ(const Coords::Vector &p1, real r1,
+                              const Coords::Vector &p2, real r2,
                               real dx, real dy, real &dz)
 {
     // Calculate the square of the sum of the radii.
