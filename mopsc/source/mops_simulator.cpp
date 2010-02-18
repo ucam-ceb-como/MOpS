@@ -1,7 +1,7 @@
 /*
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -64,9 +64,9 @@ using namespace Strings;
 
 // Default constructor.
 Simulator::Simulator(void)
-: m_nruns(1), m_niter(1), m_pcount(0), m_maxm0(0.0), 
-  m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_runtime(0.0), 
-  m_console_interval(1), m_console_msgs(true), 
+: m_nruns(1), m_niter(1), m_pcount(0), m_maxm0(0.0),
+  m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_runtime(0.0),
+  m_console_interval(1), m_console_msgs(true),
   m_output_filename("mops-out"), m_output_every_iter(false),
   m_output_step(0), m_output_iter(0), m_ptrack_count(0)
 {
@@ -93,7 +93,7 @@ unsigned int Simulator::IterCount(void) const {return m_niter;}
 const timevector &Simulator::TimeVector() const { return m_times; }
 
 // Return the number of time steps.
-unsigned int Simulator::TimeStepCount() const 
+unsigned int Simulator::TimeStepCount() const
 {
     unsigned int n_time_steps = 0;
     for (unsigned int i =0; i < m_times.size(); ++i) {
@@ -108,7 +108,7 @@ void Simulator::SetIterCount(unsigned int n) {m_niter = n;}
 // Sets the time vector.
 void Simulator::SetTimeVector(const timevector &times) {m_times = times;}
 
-    
+
 // These particle count related settings should be part of the
 // Reactor class!
 
@@ -150,7 +150,7 @@ const std::string Simulator::ConsoleVariable(unsigned int i) const
     if (i < m_console_vars.size()) {
         return m_console_vars[i];
     } else {
-        // Returns the first variable name if index is invalid.     
+        // Returns the first variable name if index is invalid.
         return "";
     }
 }
@@ -209,7 +209,7 @@ void Simulator::SetOutputEveryIter(bool fout) {m_output_every_iter=fout;}
 
 // STATISTICAL BOUNDS OUTPUT
 
-void Simulator::SetOutputStatBoundary(Sweep::ParticleCache::PropID pid, double lower, double upper) 
+void Simulator::SetOutputStatBoundary(Sweep::ParticleCache::PropID pid, double lower, double upper)
 {
     m_statbound.Lower = lower;
     m_statbound.Upper = upper;
@@ -225,8 +225,8 @@ void Simulator::SetParticleTrackCount(unsigned int ptcount) {
 // SOLVING REACTORS.
 
 // Solves the given reactor for the given time intervals.
-void Simulator::RunSimulation(Mops::Reactor &r, 
-                              //const timevector &times, 
+void Simulator::RunSimulation(Mops::Reactor &r,
+                              //const timevector &times,
                               Solver &s)
 {
     unsigned int icon;
@@ -240,7 +240,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     t2 = m_times[0].StartTime();
     r.SetTime(t2);
     //r.Mixture()->SetMaxM0(m_maxm0);
-    
+
     // Set up the solver.
     s.Initialise(r);
 
@@ -269,7 +269,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 	if (rank==0)						//ms785
 	#endif
 
-    fileOutput(m_output_step, m_output_iter, r, s, this);   
+    fileOutput(m_output_step, m_output_iter, r, s, this);
 
 	#ifdef USE_MPI
 	closeOutputFile();						//ms785
@@ -279,7 +279,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     icon = m_console_interval;
     setupConsole(*r.Mech());
 	string m_output_filename_base=m_output_filename;		//ms785
-    
+
 	// Loop over runs.
 	#ifdef USE_MPI
 	#else
@@ -287,12 +287,12 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 	#endif
 
 		#ifdef USE_MPI
-		
+
 		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 		int irun=rank;
 		m_output_filename=m_output_filename_base+cstr(rank);				//ms785
 		openOutputFile();
-		
+
 		#endif
 
         // Start the CPU timing clock.
@@ -316,7 +316,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         unsigned int istep;
         double uround = 1.0e-7;
         double **J;
-        vector<fvector> LOI(s.GetNumSens(), fvector(r.Mech()->SpeciesCount())); 
+        vector<fvector> LOI(s.GetNumSens(), fvector(r.Mech()->SpeciesCount()));
         if (s.GetLOIStatus() == true){
             s.InitialiseSensMatrix(s.GetNumSens(),r.Mech()->SpeciesCount());
         }
@@ -335,10 +335,10 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             for (istep=0; istep<iint->StepCount(); ++istep, ++global_step) {
                 // Run the solver for this step (timed).
                 m_cpu_mark = clock();
-                s.Solve(r, t2+=dt, iint->SplittingStepCount(), 
-                    m_niter, &fileOutput, (void*)this);
-                //Set up and solve Jacobian here
+                s.Solve(r, t2+=dt, iint->SplittingStepCount(),
+                        m_niter, &fileOutput, (void*)this);
 
+                //Set up and solve Jacobian here
                 if (s.GetLOIStatus() == true)
                     {
                     if (istep == 0){
@@ -346,8 +346,8 @@ void Simulator::RunSimulation(Mops::Reactor &r,
                     }
                     r.Jacobian(t2, r.Mixture()->RawData(), J, uround);
                     LOIReduction::CalcLOI(J, s.GetSensSolution(s.GetNumSens(), r.Mech()->SpeciesCount()), LOI, r.Mech()->SpeciesCount(), s.GetNumSens());
-                    }
-            
+                }
+
                 m_runtime += calcDeltaCT(m_cpu_mark);
                 // Generate console output.
 				#ifdef USE_MPI					//ms785
@@ -361,8 +361,8 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
             // Create a save point at the end of this time
             // interval.
-           
-			m_output_filename=m_output_filename_base;    
+
+			m_output_filename=m_output_filename_base;
 
             //@todo Reinstate fractal dimension calculations for
             // the PAH-PP model
@@ -380,14 +380,14 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
 		 closeOutputFile();			//ms785
 	#else
-	}   
-	#endif 
+	}
+	#endif
 
 	#ifdef USE_MPI
 	#else
     // Close the output files.
     closeOutputFile();
-	#endif	
+	#endif
 }
 
 
@@ -447,7 +447,7 @@ void Simulator::PostProcess()
 	std::ostringstream ranstream;
 //	ranstream << getpid();
 //	string fname = "/scratch/ms785/"+m_output_filename+ranstream.str()+".sim";
-	
+
     // Open the simulation input file.
     fstream fin(fname.c_str(), ios_base::in | ios_base::binary);
 
@@ -483,7 +483,7 @@ void Simulator::PostProcess()
     }
 
     // The initial conditions need to be multiplied by the number
-    // of runs and iterations in order for the calcAvgConf to give 
+    // of runs and iterations in order for the calcAvgConf to give
     // the correct result.
     if (m_output_every_iter) {
         multVals(achem[0], m_nruns*m_niter);
@@ -533,7 +533,7 @@ void Simulator::PostProcess()
     for(unsigned int irun=0; irun!=m_nruns; ++irun) {
         // Loop over all time intervals.
         unsigned int step = 1;
-        for (Mops::timevector::const_iterator iint=times.begin(); 
+        for (Mops::timevector::const_iterator iint=times.begin();
              iint!=times.end(); ++iint) {
             // Loop over all time steps in this interval.
             for (unsigned int istep=0; istep!=(*iint).StepCount(); ++istep, ++step) {
@@ -622,7 +622,7 @@ void Simulator::PostProcess()
     writeProdRatesCSV(m_output_filename+"-part-wdot.csv", mech, times, appwdot, eppwdot);
     writeCT_CSV(m_output_filename+"-cput.csv", times, acpu, ecpu, cput_head);
     for(unsigned int irun=0; irun!=m_nruns; ++irun) {
-        writePartTrackCSV(m_output_filename+"("+cstr(irun)+")-track", mech, 
+        writePartTrackCSV(m_output_filename+"("+cstr(irun)+")-track", mech,
                           times, ptrack[irun]);
     }
 
@@ -681,7 +681,7 @@ void Simulator::closeOutputFile() const
 void Simulator::outputGasPhase(const Reactor &r) const
 {
     // Write gas-phase conditions to file.
-    m_file.write(reinterpret_cast<const char*>(&r.Mixture()->RawData()[0]), 
+    m_file.write(reinterpret_cast<const char*>(&r.Mixture()->RawData()[0]),
                  sizeof(r.Mixture()->RawData()[0]) *
                  r.Mech()->SpeciesCount());
     real T = r.Mixture()->Temperature();
@@ -708,11 +708,11 @@ void Simulator::outputPartTrack(const Reactor &r) const
     // Write the number of tracked particles.
     unsigned int n = min(r.Mixture()->ParticleCount(), m_ptrack_count);
     m_file.write((char*)&n, sizeof(n));
-    
+
     // Output the current time.
     double t = (double)r.Time();
     m_file.write((char*)&t, sizeof(t));
-    
+
     if (n > 0) {
         // Serialize the particles.
         for (unsigned int i=0; i!=n; ++i) {
@@ -762,7 +762,7 @@ void Simulator::outputPartRxnRates(const Reactor &r) const
         // Now convert from mol/mol to mol/m3.
         fvector::iterator rhodot = wdot.begin()+r.Mech()->SpeciesCount()+1;
         for (unsigned int k=0; k!=r.Mech()->SpeciesCount(); ++k) {
-            wdot[k] = (r.Mixture()->Density() * wdot[k]) + 
+            wdot[k] = (r.Mixture()->Density() * wdot[k]) +
                       (r.Mixture()->MoleFraction(k) * (*rhodot));
         }
 
@@ -776,7 +776,7 @@ void Simulator::outputPartRxnRates(const Reactor &r) const
 // FILE OUTPUT.
 
 // Writes a reactor and solver variables to the output file.
-void Simulator::fileOutput(unsigned int step, unsigned int iter, 
+void Simulator::fileOutput(unsigned int step, unsigned int iter,
                            const Mops::Reactor &r, const Solver &s,
                            void *sim)
 {
@@ -820,7 +820,7 @@ void Simulator::setupConsole(const Mops::Mechanism &mech)
     // Loop over the column variable names.
     vector<string>::const_iterator i;
     for (i=m_console_vars.begin(); i!=m_console_vars.end(); ++i) {
-        if ((*i).compare("RHO")==0 || (*i).compare("rho")==0 || 
+        if ((*i).compare("RHO")==0 || (*i).compare("rho")==0 ||
             (*i).compare("Rho")==0) {
             // This variable is the mixture density.
             header.push_back("Density");
@@ -829,7 +829,7 @@ void Simulator::setupConsole(const Mops::Mechanism &mech)
             // This variable is the mixture temperature.
             header.push_back("T (K)");
             m_console_mask.push_back(mech.Species().size());
-        } else if ((*i).compare("TIME")==0 || (*i).compare("time")==0 || 
+        } else if ((*i).compare("TIME")==0 || (*i).compare("time")==0 ||
                    (*i).compare("Time")==0) {
             // This variable is the flow time.
             header.push_back("Time (s)");
@@ -842,7 +842,7 @@ void Simulator::setupConsole(const Mops::Mechanism &mech)
             // Particle number density.
             header.push_back("M0 (cm-3)");
             m_console_mask.push_back(mech.Species().size()+4);
-        } else if ((*i).compare("FV")==0 || (*i).compare("fv")==0 || 
+        } else if ((*i).compare("FV")==0 || (*i).compare("fv")==0 ||
                    (*i).compare("Fv")==0) {
             // Particle volume fraction.
             header.push_back("Fv");
@@ -870,7 +870,7 @@ void Simulator::setupConsole(const Mops::Mechanism &mech)
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	if (rank==0)
 	{
-	#endif 
+	#endif
     // Print the first header.
     m_console.PrintDivider();
     m_console.PrintRow(header);
@@ -916,7 +916,7 @@ void Simulator::consoleOutput(const Mops::Reactor &r) const
 // Writes the auxilliary post-processing information using
 // the given file name.  This information is the chemical mechanism
 // and the output time intervals.
-void Simulator::writeAux(const Mops::Mechanism &mech, 
+void Simulator::writeAux(const Mops::Mechanism &mech,
                          const Mops::timevector &times,
                          const Mops::Solver &solv) const
 {
@@ -965,11 +965,11 @@ void Simulator::writeAux(const Mops::Mechanism &mech,
     // Close the post-processing info file.
     fout.close();
 }
-    
+
 // Reads auxilliary post-processing information using the
 // given file name.  This information is the chemical mechanism
 // and the output time intervals.
-void Simulator::readAux(Mops::Mechanism &mech, 
+void Simulator::readAux(Mops::Mechanism &mech,
                         Mops::timevector &times,
                         unsigned int &ncput,
                         std::vector<std::string> &cput_head)
@@ -1077,7 +1077,7 @@ void Simulator::readGasPhaseDataPoint(std::istream &in, const Mops::Mechanism &m
 // the data point is added to a vector of sums, and the squares are
 // added to the vector sumsqr if necessary.
 void Simulator::readCTDataPoint(std::istream &in, unsigned int N,
-                                fvector &sum, fvector &sumsqr, 
+                                fvector &sum, fvector &sumsqr,
                                 bool calcsqrs)
 {
     // Check for valid stream.
@@ -1105,9 +1105,9 @@ void Simulator::readCTDataPoint(std::istream &in, unsigned int N,
 // To allow the averages and confidence intervals to be calculated
 // the data point is added to a vector of sums, and the squares are
 // added to the vector sumsqr if necessary.
-void Simulator::readParticleDataPoint(std::istream &in, 
-                                      const Sweep::Mechanism &mech, 
-                                      fvector &sum, fvector &sumsqr, 
+void Simulator::readParticleDataPoint(std::istream &in,
+                                      const Sweep::Mechanism &mech,
+                                      fvector &sum, fvector &sumsqr,
                                       bool calcsqrs)
 {
     // Check for valid stream.
@@ -1242,7 +1242,7 @@ void Simulator::readPartRxnDataPoint(std::istream &in, const Sweep::Mechanism &m
 // Reads the tracked particles from the binary file.  The particles are
 // processed so that only a vector of vectors is returned, which contains
 // the PSL data for each tracked particle at that point.
-void Simulator::readPartTrackPoint(std::istream &in, 
+void Simulator::readPartTrackPoint(std::istream &in,
                                    const Sweep::Mechanism &mech,
                                    std::vector<fvector> &pdata) const
 {
@@ -1268,7 +1268,7 @@ void Simulator::readPartTrackPoint(std::istream &in,
             fill(i->begin(), i->end(), 0.0);
             i->resize(stats.PSL_Count(), 0.0);
         }
-        
+
         // Read the tracked particles and retrieve the PSL stats
         // using the EnsembleStats class.
         i = pdata.begin();
@@ -1294,8 +1294,8 @@ void Simulator::multVals(fvector &vals, real scale)
 
 // Takes vectors of vectors of variable sums and sums of squares, which
 // are converted into the average values and the confidence intervals.
-void Simulator::calcAvgConf(std::vector<fvector> &avg, 
-                            std::vector<fvector> &err, 
+void Simulator::calcAvgConf(std::vector<fvector> &avg,
+                            std::vector<fvector> &err,
                             unsigned int nruns)
 {
     const real CONFA = 3.29; // for 99.9% confidence interval.
@@ -1332,7 +1332,7 @@ void Simulator::calcAvgConf(std::vector<fvector> &avg,
 // avg = (a1, e1, a2, e2, a3, e3, ..., aN, eN)
 // The step number and time are insert at the beginning of the avg
 // vector.
-void Simulator::buildOutputVector(unsigned int step, real time, 
+void Simulator::buildOutputVector(unsigned int step, real time,
                                   fvector &avg, const fvector &err)
 {
     for (unsigned int i=avg.size(); i!=0; --i) {
@@ -1347,10 +1347,10 @@ void Simulator::buildOutputVector(unsigned int step, real time,
 }
 
 // Writes gas-phase conditions profile to a CSV file.
-void Simulator::writeGasPhaseCSV(const std::string &filename, 
-                                 const Mechanism &mech, 
-                                 const timevector &times, 
-                                 std::vector<fvector> &avg, 
+void Simulator::writeGasPhaseCSV(const std::string &filename,
+                                 const Mechanism &mech,
+                                 const timevector &times,
+                                 std::vector<fvector> &avg,
                                  const std::vector<fvector> &err)
 {
     // Open file for the CSV results.
@@ -1392,8 +1392,8 @@ void Simulator::writeGasPhaseCSV(const std::string &filename,
 }
 
 // Writes computation times profile to a CSV file.
-void Simulator::writeCT_CSV(const std::string &filename, 
-                            const timevector &times, 
+void Simulator::writeCT_CSV(const std::string &filename,
+                            const timevector &times,
                             std::vector<fvector> &avg,
                             const std::vector<fvector> &err,
                             const std::vector<std::string> &head) const
@@ -1432,10 +1432,10 @@ void Simulator::writeCT_CSV(const std::string &filename,
 }
 
 // Writes particle stats profile to a CSV file.
-void Simulator::writeParticleStatsCSV(const std::string &filename, 
-                                      const Mechanism &mech, 
-                                      const timevector &times, 
-                                      std::vector<fvector> &avg, 
+void Simulator::writeParticleStatsCSV(const std::string &filename,
+                                      const Mechanism &mech,
+                                      const timevector &times,
+                                      std::vector<fvector> &avg,
                                       const std::vector<fvector> &err)
 {
     // Open file for the CSV results.
@@ -1474,10 +1474,10 @@ void Simulator::writeParticleStatsCSV(const std::string &filename,
 }
 
 // Writes gas-phase reaction rates profile to a CSV file.
-void Simulator::writeGasRxnCSV(const std::string &filename, 
-                               const Mechanism &mech, 
-                               const timevector &times, 
-                               std::vector<fvector> &avg, 
+void Simulator::writeGasRxnCSV(const std::string &filename,
+                               const Mechanism &mech,
+                               const timevector &times,
+                               std::vector<fvector> &avg,
                                const std::vector<fvector> &err)
 {
     // Open file for the CSV results.
@@ -1516,10 +1516,10 @@ void Simulator::writeGasRxnCSV(const std::string &filename,
 }
 
 // Writes gas-phase reaction rates profile to a CSV file.
-void Simulator::writeProdRatesCSV(const std::string &filename, 
-                                  const Mechanism &mech, 
-                                  const timevector &times, 
-                                  std::vector<fvector> &avg, 
+void Simulator::writeProdRatesCSV(const std::string &filename,
+                                  const Mechanism &mech,
+                                  const timevector &times,
+                                  std::vector<fvector> &avg,
                                   const std::vector<fvector> &err)
 {
     // Open file for the CSV results.
@@ -1558,10 +1558,10 @@ void Simulator::writeProdRatesCSV(const std::string &filename,
 }
 
 // Writes particle process rates profile to a CSV file.
-void Simulator::writePartProcCSV(const std::string &filename, 
-                                 const Sweep::Mechanism &mech, 
-                                 const timevector &times, 
-                                 std::vector<fvector> &avg, 
+void Simulator::writePartProcCSV(const std::string &filename,
+                                 const Sweep::Mechanism &mech,
+                                 const timevector &times,
+                                 std::vector<fvector> &avg,
                                  const std::vector<fvector> &err)
 {
     // Open file for the CSV results.
@@ -1635,7 +1635,7 @@ void Simulator::writePartTrackCSV(const std::string &filename,
         csv[i] = new CSV_IO(filename+"-p"+cstr(i)+".csv", true);
         // Write header row.
         csv[i]->Write(head);
-        // Output particle initial conditions.        
+        // Output particle initial conditions.
         track[0][i].insert(track[0][i].begin(), times[0].StartTime());
         track[0][i].insert(track[0][i].begin(), 0.0);
         csv[i]->Write(track[0][i]);
@@ -1669,11 +1669,11 @@ void Simulator::writePartTrackCSV(const std::string &filename,
 // Creates a simulation save point.  The save points can be
 // used to restart an interrupted simulation, but are primarily
 // used as output points for the particle size distributions.
-void Simulator::createSavePoint(const Reactor &r, unsigned int step, 
+void Simulator::createSavePoint(const Reactor &r, unsigned int step,
                                 unsigned int run) const
 {
     // Build the save point file name.
-    string fname = m_output_filename + "(" + cstr(run) + ")-SP(" + 
+    string fname = m_output_filename + "(" + cstr(run) + ")-SP(" +
                    cstr(step) + ").sav";
 
     // Open the save point file.
@@ -1693,14 +1693,14 @@ void Simulator::createSavePoint(const Reactor &r, unsigned int step,
 }
 
 // Reads a save point file.
-Reactor *const Simulator::readSavePoint(unsigned int step, 
-                                        unsigned int run, 
+Reactor *const Simulator::readSavePoint(unsigned int step,
+                                        unsigned int run,
                                         const Mechanism &mech) const
 {
     Reactor *r = NULL;
 
     // Build the save posint file name.
-    string fname = m_output_filename + "(" + cstr(run) + ")-SP(" + 
+    string fname = m_output_filename + "(" + cstr(run) + ")-SP(" +
                    cstr(step) + ").sav";
 
     // Open the save point file.
@@ -1741,7 +1741,7 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
 }
 
 // Processes the PSLs at each save point into single files.
-void Simulator::postProcessPSLs(const Mechanism &mech, 
+void Simulator::postProcessPSLs(const Mechanism &mech,
                                 const timevector &times) const
 {
     Reactor *r = NULL;
@@ -1806,14 +1806,14 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                 // Get PSL for all particles.
                 for (unsigned int j=0; j!=r->Mixture()->ParticleCount(); ++j) {
                     // Get PSL.
-                    stats.PSL(r->Mixture()->Particles(), j, times[i].EndTime(), 
+                    stats.PSL(r->Mixture()->Particles(), j, times[i].EndTime(),
                               psl, 1.0/(r->Mixture()->SampleVolume()*scale));
                     // Output particle PSL to CSV file.
                     out[i]->Write(psl);
 
                     // Get primary-PSL.
                     if (stats.GeneratesPPSL()) {
-                        stats.PPSL(r->Mixture()->Particles(), j, times[i].EndTime(), 
+                        stats.PPSL(r->Mixture()->Particles(), j, times[i].EndTime(),
                                    ppsl, 1.0/(r->Mixture()->SampleVolume()*scale));
                         // Output primary-PSL to CSV file.
                         for (unsigned int k=0; k!=ppsl.size(); ++k) {
@@ -1828,10 +1828,10 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                     Sweep::Particle *sp = r->Mixture()->Particles().At(j);
                     if (sp != NULL) {
                         real t = times[i].EndTime();
-                        string fname = m_output_filename + "-tem(" + cstr(t) + 
+                        string fname = m_output_filename + "-tem(" + cstr(t) +
                                        "s, " + cstr(j) + ").pov";
                         Sweep::Imaging::ParticleImage img;
-                        img.Construct(*sp);
+                        img.Construct(*sp, mech.ParticleMech());
 //                        img.ConstructRandom(1.0, 5.0, 10001);
                         ofstream file; file.open(fname.c_str());
                         img.WritePOVRAY(file);
@@ -1856,9 +1856,9 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 }
 
 // Writes element fluxes to FluxViewer format.
-void Simulator::writeElementFluxOutput(const std::string &filename, 
-                               const Mechanism &mech, 
-                               const timevector &times, 
+void Simulator::writeElementFluxOutput(const std::string &filename,
+                               const Mechanism &mech,
+                               const timevector &times,
                                const std::vector<fvector> &agpfwdrates,
                                const std::vector<fvector> &agprevrates,
                                const std::vector<fvector> &achem)
@@ -1909,7 +1909,7 @@ void Simulator::Serialize(std::ostream &out) const
 {
     const unsigned int trueval  = 1;
     const unsigned int falseval = 0;
-    
+
     if (out.good()) {
         // Output the version ID (=0 at the moment).
         const unsigned int version = 0;
@@ -1949,7 +1949,7 @@ void Simulator::Serialize(std::ostream &out) const
         // Interval of console output data (in terms of time steps).
         n = (unsigned int)m_console_interval;
         out.write((char*)&n, sizeof(n));
-        
+
         // Console column variable names.
         n = (unsigned int)m_console_vars.size();
         out.write((char*)&n, sizeof(n));
@@ -2052,7 +2052,7 @@ void Simulator::Deserialize(std::istream &in)
                 // Interval of console output data (in terms of time steps).
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_console_interval = n;
-                
+
                 // Console column variable names.
                 m_console_vars.clear();
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
