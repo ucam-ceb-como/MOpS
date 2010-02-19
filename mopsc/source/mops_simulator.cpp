@@ -246,8 +246,6 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
     if (r.Mech()->ReactionCount() == 0)
     {
-        cout << "Cannot calculate LOI without differential equations. Please"
-                    "provide proper equations! LOI status has been set to false." << "\n";
         s.SetLOIStatusFalse();
     }
 
