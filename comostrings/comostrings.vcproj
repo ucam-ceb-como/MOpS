@@ -41,9 +41,10 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="include"
 				RuntimeLibrary="1"
+				BufferSecurityCheck="false"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
-				DebugInformationFormat="1"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -57,6 +58,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				OutputFile="$(OutDir)\$(ProjectName)_d.lib"
+				IgnoreDefaultLibraryNames=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -100,9 +102,12 @@
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="false"
 				AdditionalIncludeDirectories="include"
+				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
 				DisableLanguageExtensions="true"
 				GenerateXMLDocumentationFiles="true"
 				WarningLevel="3"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
