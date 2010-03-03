@@ -367,7 +367,7 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
             // Otherwise mass will be lost.
 
             // Insert one copy of the particle into the destination cell
-            reac.getCell(destination_index).Mixture()->Particles().Add(*(new Sweep::Particle(*particle_details.particle)));
+            reac.getCell(destination_index).Mixture()->Particles().Add(*(new Sweep::Particle(*particle_details.particle)), Sweep::irnd);
             incomingWeight -= destinationWeight;
 
             // Avoid infinite loops
@@ -382,7 +382,7 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
     // Unfortunately we cannot quite conserve statistical weight, there will always be a bit
     // left over after the loop above.  This can only be handled in an average sense.
     if(Sweep::rnd() < incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume()) {
-        reac.getCell(destination_index).Mixture()->Particles().Add(*particle_details.particle);
+        reac.getCell(destination_index).Mixture()->Particles().Add(*particle_details.particle, Sweep::irnd);
     }
     else {
         // Ownership of the particle has not been passed on to an ensemble so the memory must be released

@@ -72,7 +72,7 @@ Brush::Reactor1d::Reactor1d(const Geometry::Geometry1d &geom, const Mops::Mechan
         real maxM0 = max_m0s.interpolate(posn);
         const unsigned int particleCount = static_cast<unsigned int>(max_particle_counts.interpolate(posn) + 0.5);
 
-        r.Mixture()->Particles().Initialise(particleCount, mMech.ParticleMech());
+        r.Mixture()->Particles().Initialise(particleCount);
         r.Mixture()->Reset(maxM0);
 
         assert(r.Mixture() != NULL);
