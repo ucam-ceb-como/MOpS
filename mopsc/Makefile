@@ -10,18 +10,18 @@ ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
          -I../sprogc/include -I../sweepc/include -I../cvodes/include \
-         -I../cvodes/source/cvodes -I../geometry/include -Wall 
+         -I../cvodes/source/cvodes -I../geometry/include -I../utils/include -Wall 
     flink= 
   else
     flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
          -I../sprogc/include -I../sweepc/include -I../cvodes/include \
-         -I../cvodes/source/cvodes -I../geometry/include -Wall -pg
+         -I../cvodes/source/cvodes -I../geometry/include -I../utils/include -Wall -pg
     flink=-pg
   endif
 else
   flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
        -I../sprogc/include -I../sweepc/include -I../cvodes/include \
-       -I../cvodes/source/cvodes -I../geometry/include -Wall -ggdb -pg
+       -I../cvodes/source/cvodes -I../geometry/include -I../utils/include -Wall -ggdb -pg
   flink=-pg 
 endif
 

@@ -296,7 +296,7 @@ Reactor *const readReactor(const CamXML::Element &node,
 
     // Assign the species mole fraction vector to the reactor mixture.
     mix->SetFracs(molefracs);
-    mix->Particles().Initialise(max_particle_count, mech.ParticleMech());
+    mix->Particles().Initialise(max_particle_count);
 	mix->Reset(maxM0);
     reac->Fill(*mix);
 
