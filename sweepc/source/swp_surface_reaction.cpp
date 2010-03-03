@@ -222,7 +222,7 @@ real SurfaceReaction::RateTerms(real t, const Cell &sys,
 // by index.  Returns 0 on success, otherwise negative.
 int SurfaceReaction::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const
 {
-    int i = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid));
+    int i = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid), Sweep::irnd, Sweep::rnd);
 
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);

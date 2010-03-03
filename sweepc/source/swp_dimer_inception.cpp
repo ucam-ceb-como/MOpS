@@ -146,7 +146,7 @@ int DimerInception::Perform(const real t, Cell &sys,
     sp->UpdateCache();
 
     // Add particle to system's ensemble.
-    sys.Particles().Add(*sp);
+    sys.Particles().Add(*sp, Sweep::irnd);
 
     // Update gas-phase chemistry of system.
     adjustGas(sys);

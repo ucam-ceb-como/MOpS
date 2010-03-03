@@ -133,7 +133,7 @@ real DeathProcess::RateTerms(const real t, const Cell &sys,
 int DeathProcess::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const  
 {
     // Select a particle for deletion.
-    int i = sys.Particles().Select();
+    int i = sys.Particles().Select(Sweep::irnd);;
     // Delete the particle.
     if (i>=0) sys.Particles().Remove(i);
     return 0;

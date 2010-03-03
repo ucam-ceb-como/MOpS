@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -116,7 +116,7 @@ void BirthProcess::SetA(real a) {m_a = a;}
 // TOTAL RATE CALCULATIONS.
 
 // Returns rate of the process for the given system.
-real BirthProcess::Rate(real t, const Cell &sys) const 
+real BirthProcess::Rate(real t, const Cell &sys) const
 {
     if (m_cell) {
         return m_a * m_cell->ParticleCount(); // Rate depends on birth cell.
@@ -130,10 +130,10 @@ real BirthProcess::Rate(real t, const Cell &sys) const
 // Returns the number of rate terms for this process (one).
 unsigned int BirthProcess::TermCount(void) const {return 1;}
 
-// Calculates the rate terms given an iterator to a real vector. The 
+// Calculates the rate terms given an iterator to a real vector. The
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
-real BirthProcess::RateTerms(const real t, const Cell &sys, 
+real BirthProcess::RateTerms(const real t, const Cell &sys,
                              fvector::iterator &iterm) const
 {
     if (m_cell) {
@@ -148,14 +148,14 @@ real BirthProcess::RateTerms(const real t, const Cell &sys,
 
 // Performs the process on the given system.  The responsible rate term is given
 // by index.  Returns 0 on success, otherwise negative.
-int BirthProcess::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const  
+int BirthProcess::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const
 {
     Particle *p = NULL;
 
     if (m_cell || (m_cell->ParticleCount()==0)) {
         // Uniformly select a particle from the sampling
         // cell.
-        int i = m_cell->Particles().Select();
+        int i = m_cell->Particles().Select(Sweep::irnd);
         if (i >= 0) {
             p = m_cell->Particles().At(i)->Clone();
         } else {
@@ -173,7 +173,7 @@ int BirthProcess::Perform(real t, Cell &sys, unsigned int iterm, Transport::Tran
     }
 
     // Add the new particle to the ensemble.
-    sys.Particles().Add(*p);
+    sys.Particles().Add(*p, Sweep::irnd);
     return 0;
 }
 

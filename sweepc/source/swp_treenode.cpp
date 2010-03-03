@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -45,44 +45,8 @@
 using namespace Sweep;
 using namespace std;
 
-// CONSTRUCTORS AND DESTRUCTORS.
-
-// Default Constructor (private).
-TreeNode::TreeNode(void)
-{
-}
-
-// Copy-constructor.
-TreeNode::TreeNode(const TreeNode & tn)
-{
-    // Use assignment operator.
-	*this = tn;
-}
-
-// Initialising constructor.
-TreeNode::TreeNode(const Sweep::ParticleModel &model)
-: LeftData(0.0, model), RightData(0.0, model)
-{
-}
-
-// Destructor.
-TreeNode::~TreeNode(void)
-{
-    // Nothing special to destruct.
-}
-
 
 // OPERATOR OVERLOADING
-
-// Assignment operator ignores the pointer members
-TreeNode &TreeNode::operator=(const TreeNode &rhs)
-{
-    if (this != &rhs) {
-        LeftData  = rhs.LeftData;
-        RightData = rhs.RightData;
-    }
-    return *this;
-}
 
 // Compound assignment operator.
 TreeNode & TreeNode::operator+=(const TreeNode &rhs)

@@ -19,7 +19,7 @@
 <folderInfo id="cdt.managedbuild.config.gnu.exe.debug.1355594791." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.exe.debug.723758225" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.debug">
 <targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.debug.248746307" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.debug"/>
-<builder buildPath="${workspace_loc:/sweepc}" id="cdt.managedbuild.target.gnu.builder.exe.debug.244448227" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.exe.debug"/>
+<builder arguments="debug=1" buildPath="${workspace_loc:/sweepc}" command="make" id="cdt.managedbuild.target.gnu.builder.exe.debug.244448227" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="false" parallelizationNumber="2" superClass="cdt.managedbuild.target.gnu.builder.exe.debug"/>
 <tool id="cdt.managedbuild.tool.gnu.archiver.base.21941190" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1451361496" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug">
 <option id="gnu.cpp.compiler.exe.debug.option.optimization.level.811969260" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
@@ -39,7 +39,7 @@
 </inputType>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.1334361750" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug">
-<option id="gnu.both.asm.option.include.paths.937625498" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+<option id="gnu.both.asm.option.include.paths.937625498" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/sweepc/include}&quot;"/>
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/mopsc/include}&quot;"/>
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/brush/include}&quot;"/>
@@ -489,13 +489,21 @@
 <useDefaultCommand>false</useDefaultCommand>
 <runAllBuilders>true</runAllBuilders>
 </target>
-<target name="clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+<target name="Clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 <buildCommand>make</buildCommand>
 <buildArguments>debug=1</buildArguments>
 <buildTarget>clean</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
-<runAllBuilders>false</runAllBuilders>
+<runAllBuilders>true</runAllBuilders>
+</target>
+<target name="ensemble" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+<buildCommand>make</buildCommand>
+<buildArguments>debug=1</buildArguments>
+<buildTarget>swp_ensemble.o</buildTarget>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+<runAllBuilders>true</runAllBuilders>
 </target>
 </buildTargets>
 </storageModule>
@@ -536,7 +544,7 @@
 </inputType>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.assembler.exe.release.56622746" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.release">
-<option id="gnu.both.asm.option.include.paths.1157312883" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+<option id="gnu.both.asm.option.include.paths.1157312883" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/sweepc/include}&quot;"/>
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/mopsc/include}&quot;"/>
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/brush/include}&quot;"/>
@@ -982,13 +990,21 @@
 <useDefaultCommand>false</useDefaultCommand>
 <runAllBuilders>true</runAllBuilders>
 </target>
-<target name="clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+<target name="Clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 <buildCommand>make</buildCommand>
 <buildArguments>debug=1</buildArguments>
 <buildTarget>clean</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
-<runAllBuilders>false</runAllBuilders>
+<runAllBuilders>true</runAllBuilders>
+</target>
+<target name="ensemble" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+<buildCommand>make</buildCommand>
+<buildArguments>debug=1</buildArguments>
+<buildTarget>swp_ensemble.o</buildTarget>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+<runAllBuilders>true</runAllBuilders>
 </target>
 </buildTargets>
 </storageModule>

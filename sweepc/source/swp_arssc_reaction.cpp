@@ -98,7 +98,7 @@ ARSSC_Reaction &ARSSC_Reaction::operator=(const ARSSC_Reaction &rhs)
 // by index.  Returns 0 on success, otherwise negative.
 int ARSSC_Reaction::Perform(real t, Cell &sys, unsigned int iterm) const
 {
-    int i = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid));
+    int i = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid), Sweep::irnd, Sweep::rnd);
 
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);

@@ -59,7 +59,7 @@ Cell::Cell(void)
 
 // Default constructor (public).
 Cell::Cell(const Sweep::ParticleModel &model)
-: Sprog::Thermo::IdealGas(*model.Species()), m_ensemble(model), m_model(&model),
+: Sprog::Thermo::IdealGas(*model.Species()), m_ensemble(), m_model(&model),
   m_smpvol(1.0), m_fixed_chem(false)
 {
 }
@@ -90,8 +90,10 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
     if (this != &rhs) {
         Sprog::Thermo::IdealGas::operator=(rhs);
         m_ensemble   = rhs.m_ensemble;
+        m_model      = rhs.m_model;
         m_smpvol     = rhs.m_smpvol;
         m_fixed_chem = rhs.m_fixed_chem;
+
     }
     return *this;
 }

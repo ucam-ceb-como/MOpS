@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -78,8 +78,6 @@
 #include "swp_pripart_primary.h"
 
 // Particle system definition.
-#include "swp_treenode.h"
-#include "swp_ensemble.h"
 #include "swp_cell.h"
 
 // Mechanism and process definitions.

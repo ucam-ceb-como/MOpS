@@ -112,7 +112,7 @@ Sweep::real Sweep::Processes::AdvectionProcess::Rate(real t, const Cell &sys,
     Geometry::Direction direction = (sys.Velocity() > 0 ? Geometry::right : Geometry::left);
 
     // Choose a particle uniformly
-    const int particleIndex = sys.Particles().Select();
+    const int particleIndex = sys.Particles().Select(Sweep::irnd);;
 
     return Outflow(t, sys, local_geom, particleIndex, direction, out);
  }

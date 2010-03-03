@@ -2,7 +2,7 @@
   Author(s):      Peter Man (plwm2)
   Project:        sweep (population balance solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -58,14 +58,7 @@ friend class Ensemble;
 
 public:
 	// Constructors
-    TreeNode(const ParticleModel &model); // Initialising constructor.
-	TreeNode(const TreeNode &copy);       // Copy-constructor.
 
-    // Destructor.
-	~TreeNode(void);
-
-	// Operators
-	TreeNode & operator=(const TreeNode &rhs);
 	TreeNode & operator+=(const TreeNode &rhs);
 	const TreeNode operator+(const TreeNode &rhs) const;
 
@@ -77,9 +70,6 @@ private:
     ParticleCache LeftData;  // Sum of the left child leaves.
     ParticleCache RightData; // Sum of the right child leaves.
 
-    // Default Constructor is private to prevent uninitialised nodes
-    // being created.
-    TreeNode(void);
 };
 
 typedef std::vector<TreeNode> Tree;

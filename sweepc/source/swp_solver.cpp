@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -48,7 +48,7 @@
 #include <cmath>
 #include "string_functions.h"
 #include <stdexcept>
-#include <ctime> 
+#include <ctime>
 using namespace Sweep;
 using namespace std;
 using namespace Strings;
@@ -60,14 +60,14 @@ Solver::Solver(void)
 : m_maxdt(0.0), m_splitratio(1.0e9)
 {
     // Seed the random number generator.
-  srnd(123);               
-//  srnd(time(0));			//added by ms785 
-//    srnd(getpid());	
+  srnd(123);
+//  srnd(time(0));			//added by ms785
+//    srnd(getpid());
  #ifdef USE_MPI
-srnd(getpid());			//added by ms785 
+srnd(getpid());			//added by ms785
  #endif
 
-	
+
 }
 
 // Default destructor.
@@ -83,7 +83,7 @@ Solver::~Solver(void)
 // the given mechanism to define the stochastic processes.  Updates given
 // system accordingly.  On error returns <0, otherwise returns 0.
 int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech)
-{ 
+{
     int err = 0;
     real tsplit, dtg, dt, jrate;
     static fvector rates(mech.TermCount(), 0.0);
@@ -122,14 +122,14 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech)
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
         if (mech.AnyDeferred()) {
-            mech.LPDA(t, sys);	
+            mech.LPDA(t, sys);
         }
 		// print subtree properties   ms785
-		if (sys.Particles().ParticleModel()->UseSubPartTree()) {
+		if (mech.UseSubPartTree()) {
 		mech.output(sys, t);
 		}
 	}
-	
+
     return err;
 }
 
@@ -138,7 +138,7 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech)
 
 // Calculates the splitting end time after which all particles
 // shallbe updated using LPDA.
-real Solver::calcSplitTime(real t, real tstop, real jrate, 
+real Solver::calcSplitTime(real t, real tstop, real jrate,
                            unsigned int n, real maxdt) const
 {
     // Calculate the splitting time step, ensuring that it is
@@ -154,7 +154,7 @@ real Solver::calcSplitTime(real t, real tstop, real jrate,
 // Performs a single stochastic event on the ensemble from the given
 // mechanism.  Returns the length of the time step if successful,
 // otherwise returns negative.
-real Solver::timeStep(real t, Cell &sys, const Mechanism &mech, 
+real Solver::timeStep(real t, Cell &sys, const Mechanism &mech,
                       const fvector &rates, real jrate)
 {
     // The purpose of this routine is to perform a single stochastic jump process.  This
@@ -198,7 +198,7 @@ real Solver::timeStep(real t, Cell &sys, const Mechanism &mech,
 // as weights.
 int Solver::chooseProcess(const fvector &rates)
 {
-    // This routine implements a DIV algorithm to select a process from a 
+    // This routine implements a DIV algorithm to select a process from a
     // discrete list of processes when each process's rate is given.
 
     // Add together all process rates.

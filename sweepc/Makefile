@@ -94,10 +94,10 @@ swp_particle.o: $(src)/swp_particle.cpp
 swp_cell.o: $(src)/swp_cell.cpp $(inc)/swp_mechanism.h
 	$(cpp) $(flag) $(src)/swp_cell.cpp
 
-swp_treenode.o: $(src)/swp_treenode.cpp
+swp_treenode.o: $(src)/swp_treenode.cpp $(inc)/swp_treenode.h
 	$(cpp) $(flag) $(src)/swp_treenode.cpp
 
-swp_ensemble.o: $(src)/swp_ensemble.cpp
+swp_ensemble.o: $(src)/swp_ensemble.cpp $(inc)/swp_ensemble.h $(inc)/swp_ensemble_inl.h ../utils/$(inc)/binary_tree.hpp
 	$(cpp) $(flag) $(src)/swp_ensemble.cpp
 
 # Statistics generation.

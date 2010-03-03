@@ -63,37 +63,22 @@ ParticleCache::ParticleCache()
 	init();
 }
 
-// Initialising constructor (providing knowledge of the
-// particle model).
-ParticleCache::ParticleCache(real time, const Sweep::ParticleModel &model)
-{
-    init();
-
-    // Now add all sub-models required by the particle model.
-    /*for (SubModelTypeSet::const_iterator i=model.SubModels().begin();
-         i!=model.SubModels().end(); ++i) {
-        m_submodels[*i] = ModelFactory::CreateCache(*i, *this);
-    }*/
-}
-
 // Initialising constructor (using Primary particle).
 ParticleCache::ParticleCache(const Primary &pri)
-{
-    init();
-
-    // Now add all sub-models required by the particle model.
-    /*for (SubModelTypeSet::const_iterator i=m_pmodel->SubModels().begin();
-         i!=m_pmodel->SubModels().end(); ++i) {
-        m_submodels[*i] = pri.SubModel(*i)->CreateCache(*this);
-    }*/
-}
-
-// Copy constructor.
-/*ParticleCache::ParticleCache(const Sweep::ParticleCache &copy)
-{
-    init();
-	*this = copy;
-}*/
+  : m_diam(pri.SphDiameter()),
+    m_dcol(pri.CollDiameter()),
+    m_dmob(pri.MobDiameter()),
+    m_surf(pri.SurfaceArea()),
+    m_vol (pri.Volume()),
+    m_mass(pri.Mass()),
+    m_dcolsqr(m_dcol * m_dcol),
+    m_inv_dcol(1.0 / m_dcol),
+    m_inv_dcolsqr(1.0 / m_dcolsqr),
+    m_inv_sqrtmass(1.0 / sqrt(m_mass)),
+    m_d2_m_1_2(m_dcolsqr * m_inv_sqrtmass),
+    m_numsubpart(0),
+    m_numcarbon(pri.Composition(iNumCarbon))
+{}
 
 // Stream-reading constructor.
 ParticleCache::ParticleCache(std::istream &in, const Sweep::ParticleModel &model)
@@ -102,65 +87,7 @@ ParticleCache::ParticleCache(std::istream &in, const Sweep::ParticleModel &model
     Deserialize(in, model);
 }
 
-// Default destructor.
-ParticleCache::~ParticleCache()
-{
-    releaseMem();
-}
-
-
 // OPERATOR OVERLOADS.
-
-// Assignment operator (ParticleCache RHS).
-/*ParticleCache &ParticleCache::operator=(const Sweep::ParticleCache &rhs)
-{
-    if (this != &rhs) {
-        // Delete sub-models not in RHS.
-        for (SubModelCacheMap::const_iterator i=m_submodels.begin();
-             i!=m_submodels.end(); ++i) {
-            // Try to find model data in RHS.
-            SubModelCacheMap::const_iterator k = rhs.m_submodels.find(i->first);
-            if (k == m_submodels.end()) {
-                // This RHS does not contain the model i,
-                // need to delete it.
-                delete i->second;
-                m_submodels.erase(i->first);
-            }
-        }
-
-        // Copy the data for other particle models.
-        for (SubModelCacheMap::const_iterator i=rhs.m_submodels.begin();
-             i!=rhs.m_submodels.end(); ++i) {
-            // Try to find model data in this cache.
-            SubModelCacheMap::const_iterator k = m_submodels.find(i->first);
-            if (k != m_submodels.end()) {
-                // This ParticleCache contains the model i.
-                *(k->second) = *(i->second);
-            } else {
-                // This ParticleCache does not contain the model i.
-                m_submodels[i->first] = i->second->Clone();
-                m_submodels[i->first]->SetParent(*this);
-            }
-        }
-
-        // Copy the derived properties.
-        m_diam = rhs.m_diam;
-        m_dcol = rhs.m_dcol;
-        m_dmob = rhs.m_dmob;
-        m_surf = rhs.m_surf;
-        m_vol  = rhs.m_vol;
-        m_mass = rhs.m_mass;
-        m_dcolsqr      = rhs.m_dcolsqr;
-        m_inv_dcol     = rhs.m_inv_dcol;
-        m_inv_dcolsqr  = rhs.m_inv_dcolsqr;
-        m_inv_sqrtmass = rhs.m_inv_sqrtmass;
-        m_d2_m_1_2     = rhs.m_d2_m_1_2;
-
-	    m_freesurface = rhs.m_freesurface;
-		m_numsubpart = rhs.m_numsubpart;
-    }
-    return *this;
-}*/
 
 // Assignment operator (Primary RHS).
 ParticleCache &ParticleCache::operator=(const Sweep::Primary &rhs)
@@ -207,6 +134,7 @@ ParticleCache &ParticleCache::operator=(const Sweep::Primary &rhs)
     m_inv_sqrtmass = 1.0 / sqrt(m_mass);
     m_d2_m_1_2     = m_dcolsqr * m_inv_sqrtmass;
 
+    m_numsubpart = 0;
     m_numcarbon = rhs.Composition(iNumCarbon);
 
     return *this;
@@ -510,18 +438,9 @@ void ParticleCache::SetMass(real m)
 
 // READ/WRITE/COPY.
 
-// Returns a clone of the particle data.
-ParticleCache *const ParticleCache::Clone(void) const
-{
-    return new ParticleCache(*this);
-}
-
 // Writes the object to a binary stream.
 void ParticleCache::Serialize(std::ostream &out) const
 {
-    const unsigned int trueval  = 1;
-    const unsigned int falseval = 0;
-
     if (out.good()) {
         // Output the version ID (=0 at the moment).
         const unsigned int version = 0;
@@ -601,9 +520,7 @@ void ParticleCache::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-        unsigned int n   = 0;
         double       val = 0.0;
-        SubModels::SubModelCache *smod = NULL;
 
         switch (version) {
             case 0:

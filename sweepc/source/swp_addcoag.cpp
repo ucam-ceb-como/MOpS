@@ -68,7 +68,7 @@ Sweep::Processes::AdditiveCoagulation::AdditiveCoagulation(std::istream &in, con
 }
 
 // Returns the rate of the process for the given system.
-Sweep::real Sweep::Processes::AdditiveCoagulation::Rate(real t, const Cell &sys) const 
+Sweep::real Sweep::Processes::AdditiveCoagulation::Rate(real t, const Cell &sys) const
 {
     // Get the number of particles in the system.
     unsigned int n = sys.ParticleCount();
@@ -77,7 +77,7 @@ Sweep::real Sweep::Processes::AdditiveCoagulation::Rate(real t, const Cell &sys)
     if (n > 1) {
         // Get system properties required to calculate coagulation rate.
         real massSum = sys.Particles().GetSums().Mass();
-        
+
         //real vol = sys.SampleVolume());
         return A() * (n - 1) * massSum * s_MajorantFactor / sys.SampleVolume();
     } else {
@@ -102,7 +102,7 @@ unsigned int Sweep::Processes::AdditiveCoagulation::TermCount() const {return TY
  * @param[in] sys       Details of the particle population and environment
  * @param[inout] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
  */
-Sweep::real Sweep::Processes::AdditiveCoagulation::RateTerms(real t, const Cell &sys, 
+Sweep::real Sweep::Processes::AdditiveCoagulation::RateTerms(real t, const Cell &sys,
                             fvector::iterator &iterm) const
 {
     return *(iterm++) = Rate(t, sys);
@@ -110,25 +110,25 @@ Sweep::real Sweep::Processes::AdditiveCoagulation::RateTerms(real t, const Cell 
 
 // Performs the process on the given system. Must return 0
 // on success, otherwise negative.
-int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const  
+int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const
 {
     // debugging variables
     //int numParticles = sys.ParticleCount();
     //double massParticles = sys.Particles().GetSums().Mass();
-    
-    // Select properties by which to choose particles.  
+
+    // Select properties by which to choose particles.
     // Note we need to choose 2 particles.  One particle must be chosen
     // uniformly and one with probability proportional
     // to particle mass.
-    
+
     if (sys.ParticleCount() < 2) {
         return 1;
     }
-	
+
     int ip1=-1, ip2=-1;
 
-    ip1 = sys.Particles().Select(ParticleCache::iM);
-    ip2 = sys.Particles().Select();
+    ip1 = sys.Particles().Select(ParticleCache::iM, Sweep::irnd, Sweep::rnd);
+    ip2 = sys.Particles().Select(Sweep::irnd);
 
     // Choose and get first particle, then update it.
     Particle *sp1=NULL;
@@ -159,7 +159,7 @@ int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned i
     // this even if the first particle was invalidated.
     unsigned int guard = 0;
     while ((ip2 == ip1) && (++guard<1000))
-            ip2 = sys.Particles().Select();            
+            ip2 = sys.Particles().Select(Sweep::irnd);
 
     Particle *sp2=NULL, *sp2old=NULL;
     if ((ip2>=0) && (ip2!=ip1)) {
@@ -192,9 +192,9 @@ int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned i
         real truek = CoagKernel(*sp1, *sp2, sys, None);
 
         //added by ms785 to include the collision efficiency in the calculation of the rate
-        if (sys.Particles().ParticleModel()->AggModel()==AggModels::PAH_ID)
+        if (sys.ParticleModel()->AggModel()==AggModels::PAH_ID)
         {
-            double ceff=sys.Particles().ParticleModel()->CollisionEff(sp1,sp2);
+            double ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
             truek*=ceff;
         }
 
@@ -218,13 +218,13 @@ int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned i
                 sys.Particles().Update(ip2);
                 sys.Particles().Remove(ip1, !m_mech->UseSubPartTree());
             }
-        
+
             // riap debugging
             //numParticles = sys.ParticleCount();
             //massParticles = sys.Particles().GetSums().Mass();
             //std::cout << " after coag " << numParticles<< ' ' << massParticles << ' '
-            //          << sp1old->Mass() << ' ' << sp1->Mass() << ' ' 
-            //          << sp2old->Mass() << ' ' << sp2->Mass() << ' ' 
+            //          << sp1old->Mass() << ' ' << sp1->Mass() << ' '
+            //          << sp2old->Mass() << ' ' << sp2->Mass() << ' '
             //          << '\n';
 
         } else {
@@ -263,7 +263,7 @@ int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned i
  *
  *@return       Value of kernel
  */
-Sweep::real Sweep::Processes::AdditiveCoagulation::CoagKernel(const Particle &sp1, const Particle &sp2, 
+Sweep::real Sweep::Processes::AdditiveCoagulation::CoagKernel(const Particle &sp1, const Particle &sp2,
                                      const Cell& sys, MajorantType maj) const
 {
     real kernelValue = (sp1.Mass() + sp2.Mass()) * A();

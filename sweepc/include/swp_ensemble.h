@@ -63,8 +63,10 @@
 #include "swp_params.h"
 #include "swp_treenode.h"
 #include "swp_particle.h"
-#include "swp_particle_model.h"
 #include "swp_particle_cache.h"
+
+#include "binary_tree.hpp"
+
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
@@ -72,7 +74,32 @@
 namespace Sweep
 {
 class Mechanism;
+class ParticleModel;
 
+
+/*!
+ * \brief Manages the particle population inside a cell
+ *
+ *     A particle ensemble for Sweep.  The sweep particle ensemble uses a variable
+    particle count algorithm and employs some scaling techniques to facilitate this.
+
+    As most particle systems simulated involve an initial growth in particle count,
+    followed by a coagulation phase in which particle count decreases (sometimes
+    substantially) a particle doubling algorithm is used.  This algorithm copies
+    one half of the population when the ensemble count falls below half capacity,
+    thereby preventing the removal of all particles and hence statistically significant
+    systematic error.
+
+    The emsemble also uses a contraction algorithm if the ensemble requires more space for
+    particles than is available.  This algorithm uniformly removes a particle from the
+    ensemble to provide more space.
+
+    To speed up particle selection the ensemble implements a binary tree.  Properties
+    from the particle type are stored in the tree allowing for rapid selection by
+    different properties.  The actual properties stored are not defined by the ensemble.
+
+    The binary tree requires that the ensemble capacity must be a power of 2.
+ */
 class Ensemble
 {
 public:
@@ -89,10 +116,8 @@ public:
 
     // Constructors.
     Ensemble(void); // Default constructor.
-    Ensemble(const Sweep::ParticleModel &model); // Initialising constructor (no particles).
     Ensemble(                             // Initialising constructor (incl. particles).
-        unsigned int count,               //  - Capacity (max. number of particles).
-        const Sweep::ParticleModel &model //  - Mechanism used to define particles.
+        unsigned int count               //  - Capacity (max. number of particles).
         );
     Ensemble(const Ensemble &copy); // Copy constructor.
     Ensemble(                            // Stream-reading constructor.
@@ -111,8 +136,7 @@ public:
 
     // Initialises the ensemble with the given capacity.
     void Initialise(
-        unsigned int capacity,             // Max. number of particles.
-        const Sweep::ParticleModel &model  // Model which defines the particles.
+        unsigned int capacity             // Max. number of particles.
         );
 
     //! Initialise with some particles
@@ -124,13 +148,6 @@ public:
     //! Empty the tree and pass on ownership of the particles
     PartPtrList TakeParticles();
 
-    // THE PARTICLE MODEL.
-
-    // Returns a pointer to the particle model to which this
-    // ensemble subscribes.
-    const Sweep::ParticleModel *const ParticleModel(void) const;
-
-
     // PARTICLE ADDITION AND REMOVAL.
 
     // Returns a pointer to the particle at index i.
@@ -140,7 +157,7 @@ public:
     // Adds the given particle to the ensemble.  Returns the new
     // particle's index in the ensemble.  The ensemble then takes
     // control of destruction of the particle.
-    int Add(Particle &sp);
+    int Add(Particle &sp, int (*rand_int)(int, int));
 
     // Removes the particle at the given index from the ensemble.
     void Remove(
@@ -180,51 +197,41 @@ public:
 
     // Select a particle uniformly from the ensemble and returns
     // its index. Returns negative on failure.
-    int Select(void) const;
+    int Select(int (*rand_int)(int, int)) const;
 
     // Randomly selects a particle, weighted by the given particle
     // property index.  The particle properties are those stored in
     // the ParticleData type. Returns particle index on success, otherwise
     // negative.
-    int Select(ParticleCache::PropID id) const;
-
-
-    // Selects particle according to the particle property
-    // specified by the given model and the given property id
-    // of the model.
-    int Select(
-        SubModels::SubModelType model_id, // ID of the model for which to get the property.
-        unsigned int wtid                 // Property ID within the model.
-        ) const;
+    int Select(ParticleCache::PropID id, int (*rand_int)(int, int), real(*rand_u01)()) const;
 
     // ENSEMBLE CAPACITY AND PARTICLE COUNT.
 
-    // Returns the particle count.
+    //! Returns the particle count.
     unsigned int Count(void) const;
 
-    // Returns the ensemble capacity.
+    //!Returns the ensemble capacity.
     unsigned int Capacity(void) const;
 
 
     // SCALING AND PARTICLE DOUBLING.
 
-    // Returns the scaling factor due to particle operations.
+    //! Returns the scaling factor due to particle operations.
     real Scaling() const;
 
-    // Resets the scaling parameters.
+    //! Resets the scaling parameters.
     void ResetScaling();
 
-    // Stops doubling algorithm.
+    //! Stops doubling algorithm.
     inline void FreezeDoubling();
 
-    // Restarts doubling if it was off, and checks if the
-    // ensemble should be doubled.
+    //! Restarts doubling if it was off, and checks if the ensemble should be doubled.
     inline void UnfreezeDoubling();
 
 
     // GET SUMS OF PROPERTIES.
 
-    // Returns the sums of all properties in the binary tree.
+    //! Returns the sums over all particles of all their cached properties.
     const ParticleCache &GetSums(void) const;
 
     // Returns the sum of one particle property with the given index
@@ -233,50 +240,22 @@ public:
         ParticleCache::PropID id // ID of the ParticleData property.
         ) const;
 
-    // Returns the sum of one particle property with the given index
-    // from the given model from the binary tree.
-    real GetSum(
-        SubModels::SubModelType model_id, // ID of model from which to get the property.
-        unsigned int id                   // ID of the property within the model.
-        ) const;
-
-
-    // UPDATE ENSEMBLE.
-
-    // Updates the ensemble tree from the given particle index.
+    //! Inform the ensemble that the particle at index i has been changed
     void Update(unsigned int i);
-
-    // Updates the ensemble tree completely.
-    void Update(void);
-
 
     // READ/WRITE/COPY.
 
-    // Writes the object to a binary stream.
+    //! Writes the object to a binary stream.
     void Serialize(std::ostream &out) const;
 
-    // Reads the object from a binary stream.
+    //! Reads the object from a binary stream.
     void Deserialize(
         std::istream &in,                // Input stream.
         const Sweep::ParticleModel &mech // Model used to define particles.
         );
 
-
 private:
-
-    //!Returns left index of left child
-    static unsigned int LeftChildIndex(unsigned int i);
-
-    //!Returns index of right child
-    static unsigned int RightChildIndex(unsigned int i);
-
-    //!Returns index of parent
-    static unsigned int ParentIndex(unsigned int i);
-
-    // Particle model used to define particles.
-    const Sweep::ParticleModel *m_model;
-
-    // Vector of particles in the ensemble.
+    //! Vector of particles in the ensemble.
     PartPtrVector m_particles;
 
     // ENSEMBLE CAPACITY VARIABLES.
@@ -300,39 +279,43 @@ private:
     unsigned int m_dbleslack;  // Slack space at end of ensemble after doubling operation.
     bool m_dbleon;             // Allows user to manually switch off/on doubling.  Does not affect activation criterion.
 
-    // TREE.
-    std::vector<TreeNode> m_tree;   // The binary tree nodes.
-    ParticleCache m_sums;
+    //! Reset the contents of the binary tree
+    void rebuildTree();
 
+    //! Type of weight tree for particle selection and property summation
+    typedef Utils::BinaryTree<ParticleCache, PartPtrVector::iterator> tree_type;
+
+    //! Tree for inverting probability distributions on the particles and summing their properties
+    tree_type m_tree;
 
     // MEMORY MANAGEMENT.
 
-    // Releases all memory resources used by the ensemble.
+    //! Releases all memory resources used by the ensemble.
     void releaseMem(void);
 
-    // Sets the ensemble to its initial condition.  Used in constructors.
+    //! Sets the ensemble to its initial condition.  Used in constructors.
     void init(void);
 
-
-    // TREENODE ASSOCIATED FUNCTIONS.
-
-    // Returns the index of the lowest binary tree node under which the
-    // given particle (by index) lies.
-    int treeIndex(unsigned int i) const;
-
-    // Returns true if particle index is a left branch,
-    // false if it is a right one.
-    static bool isLeftBranch(unsigned int i);
-
-    // Recalculates a branch of the tree from the given node upwards.
-    void ascendingRecalc(unsigned int i);
-
-    // Recalculate all the non leaf nodes (useful after several particles
-    // have been changed
-    void recalcAllNonLeaf();
-
-    // Performs the doubling algorithm.
+    //! Performs the doubling algorithm.
     void dble();
+
+    //! Functor to extract weights from nodes of the new binary tree
+    class WeightExtractor : public std::unary_function<const ParticleCache&, real>
+    {
+    public:
+        //! Set up an extractor for an indexed property
+        WeightExtractor(const ParticleCache::PropID id);
+
+        //! Extract a weight from a cache
+        real operator()(const ParticleCache& cache) const;
+
+    private:
+        //! Id of property to extract
+        ParticleCache::PropID mId;
+
+        //! Not possible to have an extractor of this kind without specifying an id
+        WeightExtractor();
+    };
 }; // end of class Ensemble
 
 }; // end of namespace Sweep

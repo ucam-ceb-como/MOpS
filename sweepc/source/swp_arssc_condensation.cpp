@@ -103,16 +103,16 @@ int ARSSC_Condensation::Perform(real t, Cell &sys, unsigned int iterm, Transport
     switch(iterm) {
         case 1:
             id = ParticleCache::iDcol;
-            i  = sys.Particles().Select(id);
+            i  = sys.Particles().Select(id, Sweep::irnd, Sweep::rnd);
             break;
         case 2:
             id = ParticleCache::iD2;
-            i  = sys.Particles().Select(id);
+            i  = sys.Particles().Select(id, Sweep::irnd, Sweep::rnd);
             break;
         case 0:
         default:
             id = ParticleCache::iUniform;
-            i  = sys.Particles().Select();
+            i  = sys.Particles().Select(Sweep::irnd);;
             break;
     }
 

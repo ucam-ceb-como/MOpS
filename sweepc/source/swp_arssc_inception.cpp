@@ -120,7 +120,7 @@ int ARSSC_Inception::Perform(real t, Cell &sys, unsigned int iterm, Transport::T
     sp->UpdateCache();
 
     // Add particle to system's ensemble.
-    sys.Particles().Add(*sp);
+    sys.Particles().Add(*sp, Sweep::irnd);
 
     // Update gas-phase chemistry of system.
     adjustGas(sys);

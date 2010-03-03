@@ -426,15 +426,12 @@ void PriPartStats::PPSL_Names(std::vector<std::string> &names,
 
 // Returns the primary-particle size list (PPSL) entry for particle i
 // in the given ensemble.
+// It only makes sense to call this function if the sub-particle
+// tree is not in use.
 void PriPartStats::PPSL(const Ensemble &ens, unsigned int i,
                         real time, std::vector<fvector> &ppsl,
                         unsigned int start) const
 {
-    // It only makes sense to call this function if the sub-particle
-    // tree is not in use.
-    if (ens.ParticleModel() == NULL) return;
-    if (ens.ParticleModel()->UseSubPartTree()) return;
-
     // Cannot get the primary-particle list if this particle
     // does not have a primary (a double-check for sub-particle tree
     // because this statement can only be true if the sub-particle

@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -76,94 +76,13 @@ inline unsigned int Sweep::Ensemble::Capacity(void) const {return m_capacity;};
 // Stops doubling algorithm.
 inline void Sweep::Ensemble::FreezeDoubling() {m_dbleon = false;};
 
-// Restarts doubling if it was off, and checks if the 
+// Restarts doubling if it was off, and checks if the
 // ensemble should be doubled.
 inline void Sweep::Ensemble::UnfreezeDoubling() {m_dbleon=true; dble();};
 
 
 // BINARY TREE.
 
-inline int Sweep::Ensemble::treeIndex(unsigned int i) const {
-    return m_halfcap + (i/2) - 1;
-};
-
-/**
- * Particle at index i is under a left hand tree leaf iff i is even.
- *
- *@param[in]    i   Index of particle in particle list
- *
- *@return       True if the particle is to the left of its tree leaf
- */
-inline bool Sweep::Ensemble::isLeftBranch(unsigned int i) {
-    // i%2 will be 0 if 1 is even and 1 otherwise
-    return !(i%2);
-};
-
-/**
- * Sum up all the tree nodes assuming that all the leaves have been
- * initialised.  This will set the values of tree elements in the
- * range [0, m_halfcap - 1) (note half open range).
- */
-
-
-/**
-@param[in]    i   index of parent cell
-@return       x   index of right child cell
-*/
-inline unsigned int Sweep::Ensemble::LeftChildIndex(unsigned int i){
-    unsigned int x = 2*i +1;
-    return x;
-}
-
-/**
-@param[in]    i   index of parent cell
-@return       x   index of right child cell
-*/
-inline unsigned int Sweep::Ensemble::RightChildIndex(unsigned int i){
-    unsigned int x = 2*i + 2;
-    return x;
-}
-
-/**
-@param[in]    i   index of child cell
-@return       x   index of parent cell
-*/
-inline unsigned int Sweep::Ensemble::ParentIndex(unsigned int i){
-    unsigned int x = (i-1)/2 ;
-    return x;
-}
-
-
-inline void Sweep::Ensemble::recalcAllNonLeaf() {
-
-    // The top (root) node does not have a parent so handle separately
-    for(size_t treeIndex = m_halfcap - 2; treeIndex > 0; --treeIndex)
-    {
-       // Define node as an alias for m_tree[treeIndex]
-       TreeNode& node = m_tree[treeIndex];
-        
-        // Node below and to the left
-        TreeNode& left = m_tree[treeIndex * 2 + 1];
-        node.LeftData = left.LeftData + left.RightData;
-        
-        //Node below and to the right
-        TreeNode& right = m_tree[treeIndex * 2 + 2];
-        node.RightData = right.LeftData + right.RightData;
-    }
-    
-    //Root node has not parent, but is otherwise the same
-    TreeNode& node = m_tree[0];
-
-    TreeNode& left = m_tree[1];
-    node.LeftData = left.LeftData + left.RightData;
-
-    TreeNode& right = m_tree[2];
-    node.RightData = right.LeftData + right.RightData;
-
-    // Cache the overall sums
-    m_sums = node.LeftData + node.RightData;
-
-}
 
 /**
  * Initialise the ensemble to hold particles of the type specified
@@ -176,16 +95,13 @@ template<class T> void Sweep::Ensemble::SetParticles(
     T particle_list_begin,
     T particle_list_end)
 {
-    // Reserve memory for ensemble.
-    m_tree.resize(m_capacity-1, TreeNode(*m_model));
-    
     // Clear any existing particles
     for(iterator it = m_particles.begin(); it != m_particles.end(); ++it) {
         delete *it;
     }
     // Read in the particles from the range
     m_particles.assign(particle_list_begin, particle_list_end);
-    
+
     m_maxcount = m_count = m_particles.size();
     // By definition will not handle more particles than the ensemble capacity
     if(m_count > m_capacity)
@@ -195,58 +111,7 @@ template<class T> void Sweep::Ensemble::SetParticles(
         // exception is thrown.
         throw std::runtime_error("Number of particles specified exceeds ensemble capacity (Sweep Ensemble::SetParticles)");
     }
-    
-    // First particle sits under the left of tree node m_halfcap - 1
-    size_t treeIndex = m_halfcap - 1;
-    bool isLeft = true;
 
-    PartPtrVector::const_iterator it = m_particles.begin();
-    const PartPtrVector::const_iterator itEnd = m_particles.end();
-    
-    // Loop through the particles putting their data into the leaves of the tree
-    // and initialising the pointers that connect tree nodes
-    while(it != itEnd)
-    {
-        if(isLeft) {
-
-            // Put the particle data into the tree
-            m_tree[treeIndex].LeftData = **it;
-            
-            // The next particle will be on the right of the current leaf (treeIndex not changed) 
-            isLeft = false;
-        }
-        else {
-            // Put the particle data into the tree
-            m_tree[treeIndex].RightData = **it;
-
-            // The next particle will be on the left of the next leaf
-            ++treeIndex;
-            isLeft = true;
-        }
-
-        // Move on to next particle in input list
-        ++it;
-    }
-    
-    if(!isLeft) {
-        // Last inserted particle was to the left of m_tree[treeIndex] so need
-        // to initialise the right hand part of m_tree[treeIndex]
-        m_tree[treeIndex].RightData.Clear();
-        ++treeIndex;
-    }
-    
-    // Finally intialise any remaining leaves of the tree to show they have no particles
-    while(treeIndex < m_capacity - 1)
-    {
-        TreeNode& node = m_tree[treeIndex];
-        node.LeftData.Clear();
-        node.RightData.Clear();
-        ++treeIndex;
-    }
-    // All the leaves of the tree should now be initialised so sum
-    // up the rest of the tree
-    recalcAllNonLeaf();
-    
     // Fill the particle list upto its full size, by filling any space with null pointers
     m_particles.resize(m_capacity, NULL);
 
@@ -265,7 +130,12 @@ template<class T> void Sweep::Ensemble::SetParticles(
     // This is 2^(m_levels - 5) provided m_levels > 5, otherwise 1
     m_dbleslack  = 1u << ((m_levels > 5u) ? m_levels-5 : 0);
     m_dblelimit  = m_halfcap - m_dbleslack;
-     
+
+    // Build the tree with the weights for the new particles.
+    rebuildTree();
+
+    assert(m_tree.size() == m_count);
+
 }
 
 #endif

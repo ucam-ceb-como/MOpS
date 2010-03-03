@@ -73,15 +73,12 @@
 
 namespace Sweep
 {
-// Forward declare the Ensemble and TreeNode classes as containers.
-class Ensemble;
-class TreeNode;
 
+/*!
+ * \brief   Summary properties that can be summed and used to calculate overall population rates
+ */
 class ParticleCache
 {
-friend class Ensemble;
-friend class TreeNode;
-
 public:
     // Enumeration of ParticleCache properties which can be accessed using
     // the Property() function.
@@ -109,25 +106,18 @@ public:
 
     };
 
-    // Constructors.
-    //   The default constructor is protected to prevent sub-particles
-    //   being created without knowledge of the defining particle model.
-    ParticleCache( // Initialising constructor.
-        real time,                        // Create time.
-        const Sweep::ParticleModel &model // Defining particle model.
-        );
-    ParticleCache(const Primary &pri);        // Initialising constructor (from primary particle).
-    //ParticleCache(const ParticleCache &copy); // Copy constructor.
+    //! Create cache of zeros
+    ParticleCache();
+
+    //! Initialise from primary particle
+    ParticleCache(const Primary &pri);
+
     ParticleCache(                            // Stream-reading constructor.
         std::istream &in,                     //  - Input stream.
         const Sweep::ParticleModel &model     //  - Model to which this cache subscribes.
         );
 
-    // Destructors.
-    virtual ~ParticleCache(void);
-
     // Operators.
-    //ParticleCache &operator=(const ParticleCache &rhs);
     ParticleCache &operator=(const Primary &rhs);
     ParticleCache &operator+=(const ParticleCache &rhs);
     ParticleCache &operator+=(const Primary &rhs);
@@ -136,21 +126,6 @@ public:
 
     // Resets the particle cache to its "empty" condition.
     void Clear(void);
-
-
-    // AGGREGATION-MODEL CACHE.
-
-    // Returns the aggregation model data.
-    //const AggModels::AggModelCache *const AggCache(void) const;
-
-
-    // SUB-MODEL CACHE.
-
-    // Returns the model data.
-    //const SubModels::SubModelCacheMap &SubModelCache(void) const;
-
-    // Returns the data for the idth model.  Returns NULL if id is invalid.
-    //const SubModels::SubModelCache *const SubModel(SubModels::SubModelType id) const;
 
 
     // BASIC PROPERTIES.
@@ -224,9 +199,6 @@ public:
 
     // READ/WRITE/COPY.
 
-    // Creates a copy of the particle data object.
-    virtual ParticleCache *const Clone(void) const;
-
     // Writes the object to a binary stream.
     virtual void Serialize(std::ostream &out) const;
 
@@ -265,11 +237,6 @@ protected:
 
 	//! Number of Carbon atoms
 	unsigned int m_numcarbon;
-
-
-    // ParticleCache class cannot be created without knowledge of the
-    // defining particle model.
-    ParticleCache(void);
 
     // Release all memory associated with the object.
     void releaseMem(void);

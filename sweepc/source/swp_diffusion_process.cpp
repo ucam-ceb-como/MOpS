@@ -169,7 +169,7 @@ int Sweep::Processes::DiffusionProcess::Perform(real t, Cell &sys,
     }
 
     // Get the particle that will be transported
-    const int particleIndex = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid));
+    const int particleIndex = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid), Sweep::irnd, Sweep::rnd);
 
     // LPDA updates and fictitious events are dealt with in the function below
     return Outflow(t, sys, local_geom, particleIndex, direction, out);

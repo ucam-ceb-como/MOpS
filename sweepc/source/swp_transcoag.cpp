@@ -46,7 +46,7 @@
 #include "swp_PAH_primary.h"
 
 //* Free-molecular enhancement factor.
-const Sweep::real Sweep::Processes::TransitionCoagulation::m_efm = 2.2; // 2.2 is for soot.    
+const Sweep::real Sweep::Processes::TransitionCoagulation::m_efm = 2.2; // 2.2 is for soot.
 
 
 // Default constructor.
@@ -72,7 +72,7 @@ Sweep::Processes::TransitionCoagulation::TransitionCoagulation(std::istream &in,
 // TOTAL RATE CALCULATION.
 
 // Returns the rate of the process for the given system.
-Sweep::real Sweep::Processes::TransitionCoagulation::Rate(real t, const Cell &sys) const 
+Sweep::real Sweep::Processes::TransitionCoagulation::Rate(real t, const Cell &sys) const
 {
     // Get the number of particles in the system.
     unsigned int n = sys.ParticleCount();
@@ -84,18 +84,18 @@ Sweep::real Sweep::Processes::TransitionCoagulation::Rate(real t, const Cell &sy
         real P = sys.Pressure();
 
         // Calculate the rate.
-        return Rate(sys.Particles().GetSums(), (real)n, sqrt(T), 
-                    T/ViscosityAir(T), MeanFreePathAir(T,P), 
+        return Rate(sys.Particles().GetSums(), (real)n, sqrt(T),
+                    T/ViscosityAir(T), MeanFreePathAir(T,P),
                     sys.SampleVolume());
     } else {
         return 0.0;
     }
 }
 
-// More efficient rate routine for coagulation only.  
-// All parameters required to calculate rate passed 
+// More efficient rate routine for coagulation only.
+// All parameters required to calculate rate passed
 // as arguments.
-Sweep::real Sweep::Processes::TransitionCoagulation::Rate(const ParticleCache &data, real n, real sqrtT, 
+Sweep::real Sweep::Processes::TransitionCoagulation::Rate(const ParticleCache &data, real n, real sqrtT,
                        real T_mu, real MFP, real vol) const
 {
     // Some prerequisites.
@@ -146,10 +146,10 @@ Sweep::real Sweep::Processes::TransitionCoagulation::Rate(const ParticleCache &d
 // Returns the number of rate terms for this process.
 unsigned int Sweep::Processes::TransitionCoagulation::TermCount(void) const {return TYPE_COUNT;}
 
-// Calculates the rate terms given an iterator to a real vector. The 
+// Calculates the rate terms given an iterator to a real vector. The
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all rate terms.
-Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(real t, const Cell &sys, 
+Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(real t, const Cell &sys,
                             fvector::iterator &iterm) const
 {
     // Get the number of particles in the system.
@@ -162,7 +162,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(real t, const Cel
         real P = sys.Pressure();
 
         // Calculate the rate terms.
-        return RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/ViscosityAir(T), 
+        return RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/ViscosityAir(T),
                          MeanFreePathAir(T,P), sys.SampleVolume(), iterm);
     } else {
         // No coagulation as there are too few particles.
@@ -171,10 +171,10 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(real t, const Cel
     }
 }
 
-// More efficient rate routine for coagulation only.  
+// More efficient rate routine for coagulation only.
 // All parameters required to calculate rate terms
 // passed as arguments.
-Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const ParticleCache &data, real n, real sqrtT, 
+Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const ParticleCache &data, real n, real sqrtT,
                             real T_mu, real MFP, real vol,
                             fvector::iterator &iterm) const
 {
@@ -243,7 +243,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const ParticleCac
 
 // Performs the process on the given system. Must return 0
 // on success, otherwise negative.
-int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow *out) const  
+int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow *out) const
 {
     // Select properties by which to choose particles (-1 means
     // choose uniformly).  Note we need to choose 2 particles.  There
@@ -252,7 +252,7 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
     if (sys.ParticleCount() < 2) {
         return 1;
     }
-	
+
     int ip1=-1, ip2=-1;
     MajorantType maj;
     TermType term = (TermType)iterm;
@@ -260,31 +260,31 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
     // Select the first particle and note the majorant type.
     switch (term) {
         case SlipFlow1:
-            ip1 = sys.Particles().Select();
+            ip1 = sys.Particles().Select(Sweep::irnd);
             maj = SlipFlow;
             break;
         case SlipFlow2:
-            ip1 = sys.Particles().Select(ParticleCache::iDcol);
+            ip1 = sys.Particles().Select(ParticleCache::iDcol, Sweep::irnd, Sweep::rnd);
             maj = SlipFlow;
             break;
         case SlipFlow3:
-            ip1 = sys.Particles().Select();
+            ip1 = sys.Particles().Select(Sweep::irnd);
             maj = SlipFlow;
             break;
         case SlipFlow4:
-            ip1 = sys.Particles().Select(ParticleCache::iDcol);
+            ip1 = sys.Particles().Select(ParticleCache::iDcol, Sweep::irnd, Sweep::rnd);
             maj = SlipFlow;
             break;
         case FreeMol1:
-            ip1 = sys.Particles().Select();
+            ip1 = sys.Particles().Select(Sweep::irnd);
             maj = FreeMol;
             break;
         case FreeMol2:
-            ip1 = sys.Particles().Select(ParticleCache::iD2);
+            ip1 = sys.Particles().Select(ParticleCache::iD2, Sweep::irnd, Sweep::rnd);
             maj = FreeMol;
             break;
         default :
-            ip1 = sys.Particles().Select();
+            ip1 = sys.Particles().Select(Sweep::irnd);
             maj = SlipFlow;
             break;
     }
@@ -311,38 +311,38 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
     switch (term) {
         case SlipFlow1:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select();            
+                ip2 = sys.Particles().Select(Sweep::irnd);
             break;
         case SlipFlow2:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iD_1);
+                ip2 = sys.Particles().Select(ParticleCache::iD_1, Sweep::irnd, Sweep::rnd);
             break;
         case SlipFlow3:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iD_1);
+                ip2 = sys.Particles().Select(ParticleCache::iD_1, Sweep::irnd, Sweep::rnd);
             break;
         case SlipFlow4:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iD_2);
+                ip2 = sys.Particles().Select(ParticleCache::iD_2, Sweep::irnd, Sweep::rnd);
             break;
         case FreeMol1:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iD2_M_1_2);
+                ip2 = sys.Particles().Select(ParticleCache::iD2_M_1_2, Sweep::irnd, Sweep::rnd);
             break;
         case FreeMol2:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iM_1_2);
+                ip2 = sys.Particles().Select(ParticleCache::iM_1_2, Sweep::irnd, Sweep::rnd);
             break;
         default :
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select();
+                ip2 = sys.Particles().Select(Sweep::irnd);
             break;
     }
 
 
     Particle *sp2=NULL;
     if ((ip2>=0) && (ip2!=ip1)) {
-        sp2 = sys.Particles().At(ip2);     
+        sp2 = sys.Particles().At(ip2);
     } else {
         // Failed to select a unique particle.
         return -1;
@@ -367,11 +367,17 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
     m_mech->UpdateParticle(*sp2, sys, t);
     // Check validity of particles after update.
     if (!sp2->IsValid()) {
+        // Tell the ensemble to update particle one before we confuse things
+        // by removing particle 2
+        sys.Particles().Update(ip1);
+
         // Must remove second particle now.
         sys.Particles().Remove(ip2);
 
         // Invalidating the index tells this routine not to perform coagulation.
         ip2 = -1;
+
+        return 0;
     }
 
 
@@ -379,16 +385,16 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
     if ((ip1>=0) && (ip2>=0)) {
         // Must check for ficticious event now by comparing the original
         // majorant rate and the current (after updates) true rate.
-        
+
         real truek = CoagKernel(*sp1, *sp2, T, P, None);
 		double ceff=0;
 		if (majk<truek)
 			std::cout << "maj< true"<< std::endl;
 
 		//added by ms785 to include the collision efficiency in the calculation of the rate
-		if (sys.Particles().ParticleModel()->AggModel()==AggModels::PAH_ID)
+		if (sys.ParticleModel()->AggModel()==AggModels::PAH_ID)
 		{
-			 ceff=sys.Particles().ParticleModel()->CollisionEff(sp1,sp2);
+			 ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
 			 truek*=ceff;
 		}
 
@@ -431,9 +437,9 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
 
 // COAGULATION KERNELS.
 
-// Returns the transition coagulation kernel value for the 
+// Returns the transition coagulation kernel value for the
 // two given particles.
-Sweep::real Sweep::Processes::TransitionCoagulation::CoagKernel(const Particle &sp1, const Particle &sp2, 
+Sweep::real Sweep::Processes::TransitionCoagulation::CoagKernel(const Particle &sp1, const Particle &sp2,
                              real T, real P, MajorantType maj) const
 {
     // This routine calculates the coagulation kernel for two particles.  The kernel
@@ -458,10 +464,10 @@ Sweep::real Sweep::Processes::TransitionCoagulation::CoagKernel(const Particle &
     return 0.0;
 }
 
-// Returns the free-molecular coagulation kernel value for the 
+// Returns the free-molecular coagulation kernel value for the
 // two given particles.  Can return either the majorant or
 // true kernel.
-Sweep::real Sweep::Processes::TransitionCoagulation::FreeMolKernel(const Particle &sp1, const Particle &sp2, 
+Sweep::real Sweep::Processes::TransitionCoagulation::FreeMolKernel(const Particle &sp1, const Particle &sp2,
                                 real T, real P, bool maj) const
 {
     // This routine calculate the free molecular coagulation kernel for two particles.
@@ -475,22 +481,22 @@ Sweep::real Sweep::Processes::TransitionCoagulation::FreeMolKernel(const Particl
     } else {
         real dterm = sp1.CollDiameter()+sp2.CollDiameter();
         return m_efm * CFM * A() *
-               sqrt(T * ((1.0/sp1.Mass())+(1.0/sp2.Mass()))) * 
+               sqrt(T * ((1.0/sp1.Mass())+(1.0/sp2.Mass()))) *
                dterm * dterm;
     }
 }
 
-// Returns the slip-flow coagulation kernel value for the 
+// Returns the slip-flow coagulation kernel value for the
 // two given particles.  Can return either the majorant or
-// true kernel.  This kernel is currently evaluated assuming 
+// true kernel.  This kernel is currently evaluated assuming
 // that the surrounding gas is air, i.e. principally N2.
-Sweep::real Sweep::Processes::TransitionCoagulation::SlipFlowKernel(const Particle &sp1, const Particle &sp2, 
+Sweep::real Sweep::Processes::TransitionCoagulation::SlipFlowKernel(const Particle &sp1, const Particle &sp2,
                                  real T, real P, bool maj) const
 {
     // For the slip-flow kernel the majorant and non-majorant forms are identical.
-    return ((1.257 * 2.0 * MeanFreePathAir(T,P) * 
+    return ((1.257 * 2.0 * MeanFreePathAir(T,P) *
              (sp1.InvCollDiamSquared() + sp2.InvCollDiamSquared())) +
-            (sp1.InvCollDiam() + sp2.InvCollDiam())) * 
+            (sp1.InvCollDiam() + sp2.InvCollDiam())) *
            CSF * T * (sp1.CollDiameter()+sp2.CollDiameter())
            * A() / ViscosityAir(T);
 }

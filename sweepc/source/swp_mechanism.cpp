@@ -48,6 +48,7 @@
 #include "geometry1d.h"
 
 #include <stdexcept>
+#include <cassert>
 
 #include "swp_particle_image.h"
 #include "swp_ensemble_image.h"
@@ -704,6 +705,9 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
                           const Geometry::LocalGeometry1d& local_geom,
                           Transport::TransportOutflow *out) const
 {
+    // Test for now
+    assert(sys.ParticleModel() != NULL);
+
     // Work out to which process this term belongs.
     int j = i - m_inceptions.size();
 

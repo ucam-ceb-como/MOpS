@@ -38,7 +38,7 @@ SubParticle::SubParticle(void)
 
 // Initialising constructor.
 SubParticle::SubParticle(real t, const Sweep::ParticleModel &model)
-: ParticleCache(t, model), m_parent(NULL), m_leftchild(NULL),
+: m_parent(NULL), m_leftchild(NULL),
   m_rightchild(NULL), m_primary(NULL), m_pmodel(&model),
   m_createt(0.0), m_time(0.0), m_comp(model.ComponentCount(), 0.0),
   m_values(model.TrackerCount(), 0.0)
@@ -65,7 +65,6 @@ SubParticle::SubParticle(Sweep::Primary &pri)
   m_values(pri.Values().begin(), pri.Values().end())
 
 {
-    ParticleCache(pri.CreateTime(), *pri.ParticleModel());
     m_createt = pri.CreateTime();
     m_time = pri.CreateTime();
     m_parent     = NULL;
