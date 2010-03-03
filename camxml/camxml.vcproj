@@ -41,9 +41,10 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="include"
 				RuntimeLibrary="1"
+				BufferSecurityCheck="false"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
-				DebugInformationFormat="1"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -56,7 +57,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				LinkLibraryDependencies="true"
+				LinkLibraryDependencies="false"
 				OutputFile="$(OutDir)\$(ProjectName)_d.lib"
 				IgnoreAllDefaultLibraries="false"
 			/>
@@ -81,6 +82,7 @@
 			OutputDirectory="$(ProjectDir)lib"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
+			UseOfMFC="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -101,9 +103,11 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				AdditionalIncludeDirectories="include"
+				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
-				DebugInformationFormat="0"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
