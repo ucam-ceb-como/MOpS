@@ -43,7 +43,7 @@
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
-				DebugInformationFormat="1"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -58,6 +58,7 @@
 				Name="VCLibrarianTool"
 				AdditionalDependencies="..\comostrings\lib\comostrings_d.lib"
 				OutputFile="$(OutDir)\sprog_d.lib"
+				IgnoreDefaultLibraryNames=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -99,8 +100,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="..\comostrings\include;include"
+				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
