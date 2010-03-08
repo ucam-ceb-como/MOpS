@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include"
+				AdditionalIncludeDirectories="include;..\utils\include"
 				RuntimeLibrary="1"
 				BufferSecurityCheck="false"
 				DisableLanguageExtensions="true"
@@ -57,6 +57,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				LinkLibraryDependencies="false"
 				OutputFile="$(OutDir)\$(ProjectName)_d.lib"
 				IgnoreDefaultLibraryNames=""
 			/>
@@ -101,7 +102,7 @@
 				Name="VCCLCompilerTool"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="include"
+				AdditionalIncludeDirectories="include;..\utils\include"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				DisableLanguageExtensions="true"
