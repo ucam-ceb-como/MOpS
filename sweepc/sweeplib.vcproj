@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="sweeplib"
 	ProjectGUID="{B28BCD7C-9F2F-46BF-849D-3C97FF1BBB23}"
+	RootNamespace="sweeplib"
 	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
@@ -41,9 +42,10 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="..\utils\include;..\comostrings\include;..\sprogc\include;..\camxml\include;include;..\geometry\include"
 				RuntimeLibrary="1"
+				BufferSecurityCheck="false"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
-				DebugInformationFormat="1"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -56,8 +58,9 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="..\sprogc\lib\sprog_d.lib ..\camxml\lib\camxml_d.lib ..\geometry\lib\geometry_d.lib"
+				LinkLibraryDependencies="false"
 				OutputFile="$(ProjectDir)lib\sweep_d.lib"
+				IgnoreDefaultLibraryNames=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -101,8 +104,11 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="..\sprogc\include;..\comostrings\include;..\camxml\include;..\geometry\include;include;..\utils\include"
+				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -115,7 +121,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="..\camxml\lib\camxml.lib ..\sprogc\lib\sprog.lib"
 				OutputFile="$(ProjectDir)lib\sweep.lib"
 			/>
 			<Tool
@@ -143,6 +148,7 @@
 			UseInBuild="false"
 			UseDependenciesInBuild="false"
 			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject="..\camxml\camxml.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{667E4098-08F2-4C66-8B80-29643A05639B}"
@@ -151,14 +157,15 @@
 			UseInBuild="false"
 			UseDependenciesInBuild="false"
 			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject="..\comostrings\comostrings.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{4F627552-B6A3-4A4C-8F65-1E72722A8309}"
 			CopyLocal="false"
-			CopyLocalDependencies="false"
 			UseInBuild="false"
 			UseDependenciesInBuild="false"
 			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject="..\sprogc\sprogc.vcproj"
 		/>
 	</References>
 	<Files>
