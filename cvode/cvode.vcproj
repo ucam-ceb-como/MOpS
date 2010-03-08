@@ -40,10 +40,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include"
+				AdditionalIncludeDirectories="include;..\utils\include"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
-				RuntimeLibrary="2"
+				RuntimeLibrary="1"
 				BufferSecurityCheck="false"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
@@ -60,6 +60,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				LinkLibraryDependencies="false"
 				OutputFile="$(OutDir)\cvode_d.lib"
 				IgnoreDefaultLibraryNames=""
 			/>
@@ -106,7 +107,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="include"
+				AdditionalIncludeDirectories="include;..\utils\include"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
