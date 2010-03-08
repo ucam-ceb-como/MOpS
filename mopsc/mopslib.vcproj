@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="mopslib"
 	ProjectGUID="{293DDB56-7355-45C2-B678-1AE125EBF079}"
+	RootNamespace="mopslib"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="0"
 	>
@@ -39,12 +40,13 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../cvodes/source/cvodes;../cvodes/include;../sweepc/include;../sprogc/include;../geometry/include;../camxml/include;../comostrings/include;include"
+				AdditionalIncludeDirectories="../cvodes/source/cvodes;../cvodes/include;../sweepc/include;../sprogc/include;../geometry/include;../camxml/include;../comostrings/include;include;..\utils\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
-				DisableLanguageExtensions="true"
+				BufferSecurityCheck="false"
+				DisableLanguageExtensions="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -61,6 +63,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				LinkLibraryDependencies="false"
 				OutputFile="$(ProjectDir)lib\mops_d.lib"
 				IgnoreDefaultLibraryNames=""
 			/>
@@ -103,7 +106,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source\cvodes;..\sweepc\include;..\sprogc\include;..\geometry\include;..\camxml\include;..\comostrings\include;include"
+				AdditionalIncludeDirectories="..\cvodes\include;..\cvodes\source\cvodes;..\sweepc\include;..\sprogc\include;..\geometry\include;..\camxml\include;..\comostrings\include;include;..\utils\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
