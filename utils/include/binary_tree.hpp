@@ -888,11 +888,11 @@ template<class Weight, class Selectee> template<class ForwardIteratorType>
       mNumLevels = k;
       //maximum capacity of the tree is 2^k >= inputLength
       mCapacity = 1 << k; //2^k
-    }
 
-    // Get rid of any existing data and replace with 0 and default values
-    mNodes.assign(mCapacity, node_type());
-    mIdentifiers.assign(mCapacity, return_pointer_type());
+      // Get rid of any existing data and replace with default values
+      mNodes.resize(mCapacity);
+      mIdentifiers.resize(mCapacity);
+    }
 
     // Input will go in the first available spaces so the first unused
     // space will be equal to the length of the input.
@@ -912,6 +912,18 @@ template<class Weight, class Selectee> template<class ForwardIteratorType>
         // Move on to the next particle
         ++it;
         ++i;
+    }
+
+    // Set null return pointers and 0 weights for the empty spaces in the tree
+    while(i != mCapacity) {
+      // Return pointer
+      mIdentifiers[i] = return_pointer_type();
+
+      // Zero weight
+      leaf_pos leafPosition = place_entry(i);
+      mNodes[leafPosition.node].*leafPosition.side_ptr = weight_type();
+
+      ++i;
     }
 
     // Finally initialise the binary tree summation structure
