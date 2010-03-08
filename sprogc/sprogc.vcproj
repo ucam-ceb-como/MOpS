@@ -39,8 +39,9 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include;..\comostrings\include"
+				AdditionalIncludeDirectories="include;..\comostrings\include;..\utils\include"
 				RuntimeLibrary="1"
+				BufferSecurityCheck="false"
 				DisableLanguageExtensions="true"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -56,7 +57,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="..\comostrings\lib\comostrings_d.lib"
+				LinkLibraryDependencies="false"
 				OutputFile="$(OutDir)\sprog_d.lib"
 				IgnoreDefaultLibraryNames=""
 			/>
@@ -99,7 +100,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\comostrings\include;include"
+				AdditionalIncludeDirectories="..\comostrings\include;include;..\utils\include"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				DisableLanguageExtensions="true"
@@ -117,7 +118,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="..\comostrings\lib\comostrings.lib"
 				OutputFile="$(OutDir)\sprog.lib"
 			/>
 			<Tool
