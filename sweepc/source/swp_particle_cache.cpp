@@ -77,7 +77,7 @@ ParticleCache::ParticleCache(const Primary &pri)
     m_inv_sqrtmass(1.0 / sqrt(m_mass)),
     m_d2_m_1_2(m_dcolsqr * m_inv_sqrtmass),
     m_numsubpart(0),
-    m_numcarbon(pri.Composition(iNumCarbon))
+    m_numcarbon(static_cast<unsigned int> (pri.Composition(iNumCarbon)))
 {}
 
 // Stream-reading constructor.
@@ -135,7 +135,7 @@ ParticleCache &ParticleCache::operator=(const Sweep::Primary &rhs)
     m_d2_m_1_2     = m_dcolsqr * m_inv_sqrtmass;
 
     m_numsubpart = 0;
-    m_numcarbon = rhs.Composition(iNumCarbon);
+    m_numcarbon = static_cast<unsigned int> (rhs.Composition(iNumCarbon));
 
     return *this;
 }
@@ -243,7 +243,7 @@ ParticleCache &ParticleCache::operator+=(const Sweep::Primary &rhs)
         m_d2_m_1_2     += (dcol * dcol) / sqrt(mass);
 
 
-        m_numcarbon += rhs.Composition(iNumCarbon);
+        m_numcarbon += static_cast<unsigned int>(rhs.Composition(iNumCarbon));
 
     return *this;
 }
