@@ -62,6 +62,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				LinkLibraryDependencies="false"
+				OutputFile="$(ProjectDir)lib\brush_d.lib"
 				IgnoreDefaultLibraryNames=""
 			/>
 			<Tool
