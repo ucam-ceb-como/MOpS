@@ -529,7 +529,7 @@ void Sweep::Ensemble::dble()
 
     // Check that doubling is on and the activation condition has been met.
     if (m_dbleon && m_dbleactive) {
-        bool left;
+       const unsigned originalCount = m_count;
 
         // Continue while there are too few particles in the ensemble.
         while (m_count < m_dblelimit) {
@@ -547,8 +547,6 @@ void Sweep::Ensemble::dble()
 
                 // Keep count of the added particles
                 ++m_count;
-                // Next particle will be on the other side of a node
-                left = !left;
             }
 
             // Update scaling.
@@ -557,8 +555,9 @@ void Sweep::Ensemble::dble()
 
         m_maxcount = std::max(m_maxcount, m_count);
 
-        // Reset the contents of the binary tree to match the new population
-        rebuildTree();
+        // Reset the contents of the binary tree to match the new population, if it has been changed
+        if(originalCount < m_count);
+            rebuildTree();
     }
 }
 /*!
