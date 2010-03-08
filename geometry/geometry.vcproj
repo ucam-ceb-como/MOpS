@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\camxml\include; ..\sprogc\include; include"
+				AdditionalIncludeDirectories="..\camxml\include;..\sprogc\include;include;..\utils\include"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
@@ -60,6 +60,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				LinkLibraryDependencies="false"
 				OutputFile="$(ProjectDir)lib\geometry_d.lib"
 				IgnoreDefaultLibraryNames=""
 			/>
@@ -106,7 +107,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\camxml\include; ..\sprogc\include; include"
+				AdditionalIncludeDirectories="..\camxml\include;..\sprogc\include;include;..\utils/include"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="false"
