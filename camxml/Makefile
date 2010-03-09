@@ -35,22 +35,22 @@ else
 endif
 
 # Source code.
-stringf.o: $(src)/stringf.cpp
+stringf.o: $(src)/stringf.cpp $(inc)/stringf.h
 	$(cpp) $(flag) $(src)/stringf.cpp
 
-unicodef.o: $(src)/unicodef.cpp
+unicodef.o: $(src)/unicodef.cpp $(inc)/unicodef.h
 	$(cpp) $(flag) $(src)/unicodef.cpp
 
-xmlattribute.o: $(src)/xmlattribute.cpp unicodef.o
+xmlattribute.o: $(src)/xmlattribute.cpp $(inc)/xmlattribute.h $(inc)/unicodef.h
 	$(cpp) $(flag) $(src)/xmlattribute.cpp
 
-xmlelement.o: $(src)/xmlelement.cpp unicodef.o stringf.o xmlattribute.o
+xmlelement.o: $(src)/xmlelement.cpp $(inc)/xmlelement.h $(inc)/unicodef.h $(inc)/stringf.h $(inc)/xmlattribute.h
 	$(cpp) $(flag) $(src)/xmlelement.cpp
 
-xmldocument.o: $(src)/xmldocument.cpp unicodef.o xmlattribute.o xmlelement.o
+xmldocument.o: $(src)/xmldocument.cpp $(inc)/xmldocument.h $(inc)/unicodef.h $(inc)/xmlattribute.h $(inc)/xmlelement.h
 	$(cpp) $(flag) $(src)/xmldocument.cpp
 
 # TARGET clean: leave just source code.
 
 clean:
-	rm -rf $(path)/*.o \#* *~
+	rm -rf $(path)/*.o \#* *~ $(lib)/*.a
