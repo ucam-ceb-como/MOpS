@@ -872,10 +872,7 @@ template<class Weight, class Selectee> template<class ForwardIteratorType>
                                             const ForwardIteratorType it_end) {
 
     // First count the number of elements
-    size_type inputLength = 0;
-    ForwardIteratorType it = it_begin;
-    while(it++ != it_end)
-        ++inputLength;
+    const size_type inputLength = std::distance(it_begin, it_end);
 
     //find k to meet description above
     size_type k = 1;
@@ -899,7 +896,7 @@ template<class Weight, class Selectee> template<class ForwardIteratorType>
     mFirstSpace = inputLength;
 
     // Now read in the elements one at a time
-    it = it_begin;
+    ForwardIteratorType it = it_begin;
     size_type i = 0;
     while(it != it_end) {
         // Store the return pointer
