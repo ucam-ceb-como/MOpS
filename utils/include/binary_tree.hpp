@@ -413,7 +413,7 @@ template<class Weight, class Selectee> BinaryTree<Weight, Selectee>::BinaryTree(
   mNodes.resize(mCapacity, node_type());
 
   //Allocate space for the list beneath the tree.
-  mIdentifiers.resize(mCapacity - 1);
+  mIdentifiers.reserve(mCapacity);
 
   assert(isValid());
 }
@@ -749,7 +749,8 @@ template<class Weight, class Selectee> void BinaryTree<Weight, Selectee>::clear(
     // Clear all the mNodes
     mNodes.assign(mCapacity, node_type());
 
-    mIdentifiers.assign(mCapacity, return_pointer_type());
+    mIdentifiers.clear();
+    mIdentifiers.reserve(mCapacity);
 
     assert(isValid());
 }
@@ -806,7 +807,7 @@ template<class Weight, class Selectee> void BinaryTree<Weight, Selectee>::push_b
     mNodes[leaf.node].*(leaf.side_ptr) = x.first;
 
     //store the iterator that points back into the ensemble
-    mIdentifiers[mFirstSpace - 1] = x.second;
+    mIdentifiers.push_back(x.second);
 
     //update the tree structre above the new entry
     ascending_recalc(leaf.node);
@@ -886,10 +887,13 @@ template<class Weight, class Selectee> template<class ForwardIteratorType>
       //maximum capacity of the tree is 2^k >= inputLength
       mCapacity = 1 << k; //2^k
 
-      // Get rid of any existing data and replace with default values
+      // Make space for the additional nodes in the summation structure
       mNodes.resize(mCapacity);
-      mIdentifiers.resize(mCapacity);
     }
+
+    // Get rid of any existing return pointers
+    mIdentifiers.clear();
+    mIdentifiers.reserve(mCapacity);
 
     // Input will go in the first available spaces so the first unused
     // space will be equal to the length of the input.
@@ -900,7 +904,7 @@ template<class Weight, class Selectee> template<class ForwardIteratorType>
     size_type i = 0;
     while(it != it_end) {
         // Store the return pointer
-        mIdentifiers[i] = it->second;
+        mIdentifiers.push_back(it->second);
 
         // Now work out what to do with the weight
         leaf_pos leafPosition = place_entry(i);
@@ -911,11 +915,8 @@ template<class Weight, class Selectee> template<class ForwardIteratorType>
         ++i;
     }
 
-    // Set null return pointers and 0 weights for the empty spaces in the tree
+    // Set 0 weights for the empty spaces in the tree
     while(i != mCapacity) {
-      // Return pointer
-      mIdentifiers[i] = return_pointer_type();
-
       // Zero weight
       leaf_pos leafPosition = place_entry(i);
       mNodes[leafPosition.node].*leafPosition.side_ptr = weight_type();
@@ -996,7 +997,7 @@ template<class Weight, class Selectee>
 
     // Maintain internal consistency with member container sizes
     mNodes.resize(mCapacity);
-    mIdentifiers.resize(mCapacity);
+    mIdentifiers.reserve(mCapacity);
 
     // Set the new values
     assign(newValues.begin(), newValues.end());
@@ -1230,6 +1231,12 @@ template<class Weight, class Selectee> bool BinaryTree<Weight, Selectee>::isVali
     if(!(mCapacity == mNodes.size())){
         std::cerr << "Number of nodes in tree (" << mNodes.size()
                   << ") inconsistent with capacity of " << mCapacity << '\n';
+        valid = false;
+    }
+
+    if(mFirstSpace != mIdentifiers.size()){
+        std::cerr << "Number of return pointers in tree (" << mIdentifiers.size()
+                  << ") inconsistent with position of first space " << mFirstSpace << '\n';
         valid = false;
     }
 
