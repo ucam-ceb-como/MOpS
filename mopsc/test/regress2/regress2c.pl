@@ -39,8 +39,17 @@ use warnings;
 # Clean up any outputs from previous simulations
 system("rm regression2c-nuc-coag-OH*");
 
+# See if this is a windows system
+my $windows = ($ENV{'OS'} =~ /windows.*/i);
+
+# Choose the windows executable name if appropriate
+my $program = "../bin/mops_d.x";
+if($windows) {
+    $program = "../bin/mops_d.exe";
+}
+
 # Arguments for simulation
-my @simulationCommand = ("../bin/mops_d.x", "-flamepp", "-p",
+my @simulationCommand = ($program, "-flamepp", "-p",
                          "-gp", "regress2/regress2.inp",
                         "-c", "regress2/chem.inp",
                         "-t", "regress2/therm.dat",
