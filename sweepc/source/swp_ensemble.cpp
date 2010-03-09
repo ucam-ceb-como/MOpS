@@ -499,10 +499,10 @@ void Ensemble::rebuildTree() {
     const iterator itPartEnd = end();
 
     // Build up new data for binary tree
-    std::vector<tree_type::value_type> newTreeValues(m_count);
-    std::vector<tree_type::value_type>::iterator newTreeValuesIt = newTreeValues.begin();
+    std::vector<tree_type::value_type> newTreeValues;
+    newTreeValues.reserve(m_count);
     while(itPart != itPartEnd) {
-        *newTreeValuesIt++ = tree_type::value_type(**itPart, itPart);
+        newTreeValues.push_back(std::make_pair(static_cast<tree_type::weight_type>(**itPart), itPart));
         ++itPart;
     }
 
@@ -556,7 +556,7 @@ void Sweep::Ensemble::dble()
         m_maxcount = std::max(m_maxcount, m_count);
 
         // Reset the contents of the binary tree to match the new population, if it has been changed
-        if(originalCount < m_count);
+        if(originalCount < m_count)
             rebuildTree();
     }
 }
