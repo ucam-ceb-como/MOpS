@@ -1,7 +1,23 @@
 #!/bin/bash
 
+#Choose the windows or linux names for the executable
+uname -s | grep --ignore-case CYGWIN 
+if(($?==0))
+then
+    windows=1
+else
+    windows=0
+fi
+
+if((windows==1))
+then
+	program="../bin/mops_d.exe"
+else 
+	program="../bin/mops_d.x" 
+fi
+
 # run mops on a very simple problem
-../bin/mops_d.x -flamepp -p -gp regress1.inp -rr regress1.inx -s regress1.xml -c chem.inp -t therm.dat
+$program -flamepp -p -gp regress1.inp -rr regress1.inx -s regress1.xml -c chem.inp -t therm.dat
 echo "Finished simulation"
 echo "========================"
 
@@ -10,6 +26,12 @@ echo "========================"
 # These numbers are for a seed of 123 in the Mersenne Twister random number generator
 # Analytic solution is 1053 91 12 2
 testValues=(-1 1022 116 6 2 0)
+
+# Grep seems to require the file in unix format, even under cygwin
+if((windows==1))
+then
+    dos2unix "regression1-128-10-psl(0.1s).csv"
+fi
 
 i=1
 while ((i <= 5))
