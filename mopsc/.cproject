@@ -296,6 +296,7 @@
 </storageModule>
 <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 <storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
+<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 <storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
 <buildTargets>
 <target name="lib" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
@@ -309,7 +310,14 @@
 <target name="debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 <buildCommand>make</buildCommand>
 <buildArguments/>
-<buildTarget/>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+<runAllBuilders>true</runAllBuilders>
+</target>
+<target name="clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+<buildCommand>make</buildCommand>
+<buildArguments/>
+<buildTarget>clean</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 <runAllBuilders>true</runAllBuilders>
@@ -610,6 +618,7 @@
 </storageModule>
 <storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
 <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 <storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
 <buildTargets>
 <target name="lib" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
@@ -623,7 +632,14 @@
 <target name="debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 <buildCommand>make</buildCommand>
 <buildArguments/>
-<buildTarget/>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+<runAllBuilders>true</runAllBuilders>
+</target>
+<target name="clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+<buildCommand>make</buildCommand>
+<buildArguments/>
+<buildTarget>clean</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 <runAllBuilders>true</runAllBuilders>
