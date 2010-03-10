@@ -269,6 +269,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\source\cvodes_utils.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\loi_reduction.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\mops.cpp"
 				>
 			</File>
@@ -278,6 +286,10 @@
 			</File>
 			<File
 				RelativePath=".\source\mops_flux_postprocessor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\mops_gpc_sensitivity.cpp"
 				>
 			</File>
 			<File
@@ -303,6 +315,10 @@
 						DebugInformationFormat="3"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\source\mops_ode_solver.cpp"
+				>
 			</File>
 			<File
 				RelativePath=".\source\mops_particle_solver.cpp"
