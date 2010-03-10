@@ -44,6 +44,8 @@ else
 	program="../../bin/mops_d.x" 
 fi
 
+dos2unix chem.inp
+
 $program -gpc -p -diag4 -rr mops.inx -s sweep.xml -c chem.inp -t therm.dat
 
 if(($?==0)) 

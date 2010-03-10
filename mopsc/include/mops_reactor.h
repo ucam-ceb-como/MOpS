@@ -218,6 +218,14 @@ public:
         real uround             // Perturbation size parameter.
         ) const;    
     
+    //! Calculates Jacobian domegai/dcj instead of d/dxj[dxi/dt], as is done above.
+    void RateJacobian(
+        real t,                 // Flow time.
+        real *const y,          // Solution values.
+        real **J,               // Jacobian Matrix J[j][i] = domegai/dcj.
+        real uround             // Perturbation size parameter.
+        ) const;
+
     //!Create the Jacobian memory space and initialise to Identity Matrix
     double** CreateJac(int n_species) const;
 

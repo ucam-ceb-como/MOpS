@@ -3,7 +3,7 @@
   <!-- Default parameters (can be overidden). --> 
   <runs>1</runs>
   <iter>1</iter>
-  <atol>1.0e-10</atol> 
+  <atol>1.0e-9</atol> 
   <rtol>1.0e-3</rtol>
   <pcount>4096</pcount>
   <!-- maxm0>1e14</maxm0 -->

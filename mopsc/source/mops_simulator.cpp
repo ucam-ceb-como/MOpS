@@ -342,7 +342,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
                     if (istep == 0){
                         J = r.CreateJac(r.Mech()->SpeciesCount());
                     }
-                    r.Jacobian(t2, r.Mixture()->RawData(), J, uround);
+                    r.RateJacobian(t2, r.Mixture()->RawData(), J, uround);
                     LOIReduction::CalcLOI(J, s.GetSensSolution(s.GetNumSens(), r.Mech()->SpeciesCount()), LOI, r.Mech()->SpeciesCount(), s.GetNumSens());
                 }
 
