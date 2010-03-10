@@ -57,6 +57,7 @@ class Mechanism; // Forward declare Mechanism class.
 
 namespace Kinetics
 {
+//! Calculates reaction data
 class ReactionSet
 {
 public:
@@ -123,9 +124,6 @@ public:
         const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
         fvector &wdot        // Return vector for molar prod. rates.
         ) const;
-
-
-
 
 	void GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) const;
 
@@ -255,6 +253,18 @@ public:
         bool constT=false // Is system constant temperature or adiabatic?
         ) const;
 
+//! Calculates domegai/dcj as opposed to above which calculates d(dxi/dt)/dxj
+    void RateJacobian(
+        real T,           // The mixture temperature.
+        real density,     // Mixture molar density.
+        real *const x,    // Species mole fractions.
+        unsigned int n,   // Number of values in x array.
+        const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
+        real pfac,        // Perturbation factor for calculating J entries.
+        real **J,         // Jacobian matrix array.
+        bool constV=true, // Is system constant volume or constant pressure?
+        bool constT=false // Is system constant temperature or adiabatic?
+        ) const;
 
     // PARENT MECHANISM.
 

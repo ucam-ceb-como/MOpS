@@ -359,13 +359,6 @@ void ReactionSet::GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) 
 }
 
 
-
-
-
-
-
-
-
 // REACTION RATES OF PROGRESS.
 
 // Calculates the rate of progress of each reaction given the
@@ -803,8 +796,8 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
                                real pfac, real **J,
                                bool constV, bool constT) const
 {
-    static bool fallocated=false;
-    static fvector tbconcs, kfT, krT, kf, kr, Gs, rop0, 
+    bool fallocated=false;
+    fvector tbconcs, kfT, krT, kf, kr, Gs, rop0, 
                    rop1, wdot0, wdot1, Hs, xdot0, xdot1;
     real wtot0=0.0, wtot1=0.0, //invrho=1.0 / density, 
          Tdot0=0.0, Tdot1=0.0, Cp=0.0, xsave=0.0, dx=0.0, invdx=0.0;
@@ -1121,6 +1114,324 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     // Calculate density Jacobian entry.
     if (constV) {
         J[m_mech->SpeciesCount()][m_mech->SpeciesCount()+1] = (wtot1 - wtot0) * invdx;
+    } else {
+        J[m_mech->SpeciesCount()][m_mech->SpeciesCount()+1] = 0.0;
+    }
+}
+
+/*!
+The Jacobian matrix is originally calculated for [dOmegai/dxj]/rho
+For LOI it is needed to be [dOmegai/dCj], therefore a change of basis by 
+vector multiplication is needed and is implemented below. It is assumed that this
+will be deleted when the Jacobian is implemented in the correct manner.
+
+@param[in]      T           The mixture temperature.
+@param[in]      density     Mixture molar density.
+@param[in]      x           Species mole fractions.
+@param[in]      n           Number of values in x array.
+@param[in]      thermo      Thermodynamics interface.
+@param[in]      pfac        Perturbation factor for calculating J entries.
+@param[in, out] J           Jacobian matrix array.
+@param[in]      constV      Volume (constant).
+@param[in]      constT      Temperature (constant).
+*/
+void ReactionSet::RateJacobian(
+        real T,            
+        real density,      
+        real *const x,    
+        unsigned int n,   
+        const Sprog::Thermo::ThermoInterface &thermo, 
+        real pfac,         
+        real **J,          
+        bool constV, bool constT
+        ) const
+{
+    bool fallocated=false;
+    fvector tbconcs, kfT, krT, kf, kr, rop0, rop1, wdot0, wdot1, Gs, Hs;
+    real wtot0=0.0, wtot1=0.0, 
+         Tdot0=0.0, Tdot1=0.0, Cp=0.0, xsave=0.0, dconc=0.0, invdconc=0.0;
+
+    // SETUP WORKSPACE.
+
+    // Check that we have been given enough species concentrations.
+    if (n < m_mech->Species().size()) {
+        return;
+    } else {
+        if (!fallocated) {
+            // Allocate temporary memory.
+            tbconcs.resize(m_rxns.size(), 0.0);
+            kfT.resize(m_rxns.size(), 0.0);
+            krT.resize(m_rxns.size(), 0.0);
+            kf.resize(m_rxns.size(), 0.0);
+            kr.resize(m_rxns.size(), 0.0);
+            Gs.resize(m_mech->SpeciesCount(), 0.0);
+            rop0.resize(m_rxns.size(), 0.0);
+            rop1.resize(m_rxns.size(), 0.0);
+            wdot0.resize(m_mech->SpeciesCount(), 0.0);
+            wdot1.resize(m_mech->SpeciesCount(), 0.0);
+            fallocated = true;
+        }
+    }
+
+    // CALCULATE UNPERTURBED VALUES.
+
+    // Calculate Gibbs free energies.
+    thermo.CalcGs_RT(T, Gs);
+
+    // Calculate concentration-independent rate constants.
+    calcRateConstantsT(T, Gs, kfT, krT);
+    
+    // Copy conc-independent rate constants into total rate
+    // constant vectors.  As the vectors are equal lengths we
+    // can just use the memcpy function.
+    memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
+    memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+
+    // Calculate third-body concentrations for all reactions.  These
+    // values will be multiplied by the rate constants, therefore if
+    // a reaction does not have third-bodies then tbconcs is set to 1.0.
+    calcTB_Concs(density, x, n, tbconcs);
+
+    // Calculate the pressure-dependent fall-off terms in the rate
+    // constant expressions.  This function multiplies the rate constants
+    // by the fall-off terms.  This function may also change the values in
+    // the tbconcs vector.
+    calcFallOffTerms(T, density, x, n, tbconcs, kf, kr);
+
+    // Apply third-body concentrations to rate constants.  It is important
+    // to apply the fall-off terms before doing this, as that routine may
+    // change the values in the tbconcs vector.
+    for (RxnMap::const_iterator im=m_tb_rxns.begin(); im!=m_tb_rxns.end(); ++im) {
+        unsigned int j = (*im).first;
+        kf[j] *= tbconcs[j];
+        kr[j] *= tbconcs[j];
+    }
+
+    // Calculate unperturbed reaction rates-of-progress and molar
+    // production rates of species.
+    GetRatesOfProgress(density, x, n, kf, kr, rop0);
+
+    GetMolarProdRates(rop0, wdot0);
+
+    // Copy rates-of-progess to working vector using memcpy.
+    memcpy(&rop1[0], &rop0[0], sizeof(real)*m_rxns.size());
+
+    // Calculate unperturbed temperature term dT/dt.
+    Tdot0 = 0.0;
+    if (!constT) {
+        if (constV) {
+            // Use internal energies for constant volume.
+            thermo.CalcUs_RT(T, Hs);
+            Cp = thermo.CalcBulkCv_R(T, x, n);
+        } else {
+            // Use enthalpies for constant pressure.
+            thermo.CalcHs_RT(T, Hs);
+            Cp = thermo.CalcBulkCp_R(T, x, n);
+        }
+        for (unsigned int i=0; i!=m_mech->SpeciesCount(); ++i) {
+            Tdot0 += wdot0[i] * Hs[i];
+        }
+        Tdot0 *= - T / (density * Cp);
+    }
+
+    // FINITE DIFFERENCING W.R.T. SPECIES MOLE CONCENTRATIONS.
+
+    dconc = 0.0; invdconc=0.0;
+    for (unsigned int k=0; k!=m_mech->SpeciesCount(); ++k) {
+        // PERTURB VARIABLE.
+
+        // Perturb mole fraction of species k.
+        xsave = x[k];
+        dconc    = max(sqrt(pfac) * abs(xsave), 3.6390968218251355e-021);
+        invdconc = 1.0 / dconc;
+        x[k] += dconc;
+
+        // RECALCULATE RATE EXPRESSIONS.
+
+        // Copy back in the concentration-independent parts of
+        // the rate constant expressions.
+        memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
+        memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+
+        // Calculate concentration-dependent terms.
+        // TODO:  Optimise this to only calculate for affected reactions.
+        calcTB_Concs(density, x, n, tbconcs);
+        calcFallOffTerms(T, density, x, n, tbconcs, kf, kr);
+        for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
+            unsigned int j = i->first;
+            kf[j] *= tbconcs[j];
+            kr[j] *= tbconcs[j];
+        }
+
+        // RECALCULATE RATES-OF-PROGRESS.
+
+        // Copy unperturbed values.
+        memcpy(&rop1[0], &rop0[0], sizeof(real)*m_rxns.size());
+        // memcpy(&wdot1[0], &wdot0[0], sizeof(real)*m_mech->SpeciesCount());
+
+        // Recalculate third-body and fall-off reaction rates-of-progress.
+        for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
+            unsigned int j = i->first;
+            rop1[j] = (i->second)->RateOfProgress(density, x, n, kf[j], kr[j]);
+        }
+        for (RxnMap::const_iterator i=m_fo_rxns.begin(); i!=m_fo_rxns.end(); ++i) {
+            unsigned int j = i->first;
+            rop1[j] = (i->second)->RateOfProgress(density, x, n, kf[j], kr[j]);
+        }
+
+        // Recalculate other reaction rates-of-progress for which
+        // the kth species is a reactant.
+        const RxnStoichMap &mu = m_mech->GetStoichXRef(k);
+        for (RxnStoichMap::const_iterator i=mu.begin(); i!=mu.end(); ++i) {
+            unsigned int j = i->first;
+            rop1[j] = m_rxns[j]->RateOfProgress(density, x, n, kf[j], kr[j]);
+        }
+
+        // RECALCULATE MOLAR PRODUCTION RATES.
+
+        // Calculate perturbed molar production rates.
+        // TODO:  Can this be optimised to avoid looping over all species?
+        GetMolarProdRates(rop1, wdot1);
+
+        // Calculate temperature term dT/dt.
+        Tdot1 = 0.0;
+        if (!constT) {
+            for (unsigned int i=0; i!=m_mech->SpeciesCount(); ++i) {
+                Tdot1 += wdot1[i] * Hs[i];
+            }
+            Tdot1 *= - T / (density * Cp);
+        }
+
+        // CALCULATE JACOBIAN ENTRIES.
+
+        // Calculate Jacobian entries for species molar concentrations.
+        for (unsigned int j=0; j!=m_mech->SpeciesCount(); ++j) {
+            J[k][j] = invdconc * (wdot1[j] - wdot0[j]);
+        }
+
+        // Calculate temperature Jacobian entry.
+        J[k][m_mech->SpeciesCount()] = (Tdot1 - Tdot0) * invdconc;
+
+        // Calculate density Jacobian entry.
+        if (constV) {
+            J[k][m_mech->SpeciesCount()+1] = (wtot1 - wtot0) * invdconc;
+        } else {
+            J[k][m_mech->SpeciesCount()+1] = 0.0;
+        }
+
+        // UNPERTURB.
+
+        // Put species mole fraction back to correct value.
+        x[k] = xsave;
+
+    } // (Loop over all species).
+
+
+    // FINITE DIFFERENCING W.R.T. DENSITY.
+    // Density affects (almost) all reaction rates.
+
+    // Perturb density.
+    real Dpert = density;
+    // dconc    = sqrt(1.0e-16 * max(1.0e-8, abs(density)));
+    dconc    = sqrt(pfac) * abs(density);
+    invdconc = 1.0 / dconc;
+    Dpert += dconc;
+
+    // Copy conc-independent rate constants into total rate
+    // constant vectors.  As the vectors are equal lengths we
+    // can just use the memcpy function.
+    memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
+    memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+
+    // Recalculate all rate constants.
+    calcTB_Concs(Dpert, x, n, tbconcs);
+    calcFallOffTerms(T, Dpert, x, n, tbconcs, kf, kr);
+    for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
+        unsigned int j = i->first;
+        kf[j] *= tbconcs[j];
+        kr[j] *= tbconcs[j];
+    }
+
+    // Recalculate reaction rates-of-progress and molar
+    // production rates of species.
+    GetRatesOfProgress(Dpert, x, n, kf, kr, rop1);
+    wtot1 = GetMolarProdRates(rop1, wdot1);
+
+    // Calculate temperature term dT/dt.
+    Tdot1 = 0.0;
+    if (!constT) {
+        for (unsigned int i=0; i!=m_mech->SpeciesCount(); ++i) {
+            Tdot1 += wdot1[i] * Hs[i];
+        }
+        Tdot1 *= - T / (Dpert * Cp);
+    }
+
+    // CALCULATE JACOBIAN ENTRIES.
+
+    // Calculate temperature Jacobian entry.
+    J[m_mech->SpeciesCount()+1][m_mech->SpeciesCount()] = (Tdot1 - Tdot0) * invdconc;
+
+    // Calculate density Jacobian entry.
+    if (constV) {
+        J[m_mech->SpeciesCount()+1][m_mech->SpeciesCount()+1] = (wtot1 - wtot0) * invdconc;
+    } else {
+        J[m_mech->SpeciesCount()+1][m_mech->SpeciesCount()+1] = 0.0;
+    }
+
+
+    // FINITE DIFFERENCING W.R.T. TEMPERATURE.
+    // Temperature affects all reaction rates.
+
+    // Perturb temperature.
+    real Tpert = T;
+    // dconc    = sqrt(1.0e-16 * max(1.0e-8, abs(T)));
+    dconc    = sqrt(pfac) * abs(T);
+    invdconc = 1.0 / dconc;
+    Tpert += dconc;
+
+    // Recalculate all rate constants.
+    thermo.CalcGs_RT(Tpert, Gs);
+    calcRateConstantsT(Tpert, Gs, kf, kr);
+    calcTB_Concs(density, x, n, tbconcs);
+    calcFallOffTerms(Tpert, density, x, n, tbconcs, kf, kr);
+    for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
+        unsigned int j = i->first;
+        kf[j] *= tbconcs[j];
+        kr[j] *= tbconcs[j];
+    }
+
+    // Recalculate reaction rates-of-progress and molar
+    // production rates of species.
+    GetRatesOfProgress(density, x, n, kf, kr, rop1);
+    wtot1 = GetMolarProdRates(rop1, wdot1);
+
+
+    // Calculate temperature term dT/dt.
+    Tdot1 = 0.0;
+    if (!constT) {
+        if (constV) {
+            // Use internal energies for constant volume.
+            thermo.CalcUs_RT(Tpert, Hs);
+            Cp = thermo.CalcBulkCv_R(Tpert, x, n);
+        } else {
+            // Use enthalpies for constant pressure.
+            thermo.CalcHs_RT(Tpert, Hs);
+            Cp = thermo.CalcBulkCp_R(Tpert, x, n);
+        }
+        for (unsigned int i=0; i!=m_mech->SpeciesCount(); ++i) {
+            Tdot1 += wdot1[i] * Hs[i];
+        }
+        Tdot1 *= - Tpert / (density * Cp);
+    }
+
+    // CALCULATE JACOBIAN ENTRIES.
+
+    // Calculate temperature Jacobian entry.
+    J[m_mech->SpeciesCount()][m_mech->SpeciesCount()] = (Tdot1 - Tdot0) * invdconc;
+
+    // Calculate density Jacobian entry.
+    if (constV) {
+        J[m_mech->SpeciesCount()][m_mech->SpeciesCount()+1] = (wtot1 - wtot0) * invdconc;
     } else {
         J[m_mech->SpeciesCount()][m_mech->SpeciesCount()+1] = 0.0;
     }
