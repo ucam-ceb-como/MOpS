@@ -509,6 +509,22 @@ void Reactor::Jacobian(real t, real *const y,
 }
 
 /*!
+@param[in]          t       Time step
+@param[in]          y       solution vector with mole fractions and density and temperature
+@param[in, out]     J       Jacobian array
+@param[in]          uround  The value of the perturbation factor for finite differencing.
+*/
+void Reactor::RateJacobian(real t, real *const y, 
+                       real **J,
+                       real uround) const
+{
+    m_mech->Reactions().RateJacobian(y[m_iT], y[m_iDens], y, 
+                                     m_nsp, *m_mix, uround, J, 
+                                     m_constv, m_emodel==ConstT);
+}
+
+
+/*!
 @param[in]         n_species    number of species in the reaction
 @return            J            Jacobian array, initialised to zero
 */
