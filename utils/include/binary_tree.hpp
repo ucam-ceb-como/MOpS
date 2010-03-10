@@ -273,7 +273,7 @@ template<class Weight, class Selectee> class BinaryTree<Weight, Selectee>::const
     const_iterator operator--(int);
 
     //!Dereference to get a copy of the value only.
-    const_value_type operator*();
+    typename BinaryTree<Weight, Selectee>::const_value_type operator*();
 
     //!Multiple increment
     const_iterator& operator+=(const difference_type n);
@@ -331,7 +331,7 @@ template<class Weight, class Selectee> class BinaryTree<Weight, Selectee>::itera
     iterator operator--(int);
 
     //!Dereference to get a copy of the value only.
-    const_value_type operator*();
+    typename BinaryTree<Weight, Selectee>::value_type operator*();
 
     //! Multiple increment
     iterator& operator+=(const difference_type n);
@@ -423,7 +423,7 @@ template<class Weight, class Selectee> BinaryTree<Weight, Selectee>::BinaryTree(
 /****** 2 BinaryTree node implementation *****************************/
 
 template<class Weight, class Selectee> bool
-  BinaryTree<Weight, Selectee>::node_type::isEqual(const BinaryTree<Weight, Selectee>::node_type& b) {
+  BinaryTree<Weight, Selectee>::node_type::isEqual(const typename BinaryTree<Weight, Selectee>::node_type& b) {
   return (left == b.left && right == b.right);
 }
 
@@ -487,7 +487,7 @@ template<class Weight, class Selectee>
 /*!Return the value pointed to by an iterator.
  * \todo add bounds checking at present */
 template<class Weight, class Selectee>
-  typename BinaryTree<Weight, Selectee>::const_value_type
+  typename BinaryTree<Weight, Selectee>::value_type
   BinaryTree<Weight, Selectee>::iterator::operator*()
 {
   //put together the return value in this variable
