@@ -38,8 +38,17 @@ use warnings;
 
 print "Test 3b: Advection, diffusion and thermophoresis";
 
+# See if this is a windows system
+my $windows = ($ENV{'OS'} =~ /windows.*/i);
+
+# Choose the windows executable name if appropriate
+my $program = "../bin/brush_d.x";
+if($windows) {
+    $program = "../bin/brush_d.exe";
+}
+
 # Arguments for simulation
-my @simulationCommand = ("../bin/brush_d.x",
+my @simulationCommand = ($program,
                          "-g", "regress3/geometry.xml",
                          "-c", "regress3/chem.inp",
                          "-d", "regress3/chemsoln3b.dat",

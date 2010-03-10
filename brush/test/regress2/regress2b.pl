@@ -38,8 +38,17 @@ use warnings;
 
 print "Test 2b: Advection jump process (deprecated)\n";
 
+# See if this is a windows system
+my $windows = ($ENV{'OS'} =~ /windows.*/i);
+
+# Choose the windows executable name if appropriate
+my $program = "../bin/brush_d.x";
+if($windows) {
+    $program = "../bin/brush_d.exe";
+}
+
 # Arguments for simulation
-my @simulationCommand = ("../bin/brush_d.x",
+my @simulationCommand = ($program,
                          "-g", "regress2/geometry.xml",
                          "-c", "regress2/chem.inp",
                          "-d", "regress2/chemsoln2b.dat",

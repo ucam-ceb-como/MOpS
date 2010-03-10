@@ -37,7 +37,24 @@
 rm regress2*.csv
 
 echo "Test 2a: Diffusion jump process"
-../bin/brush_d.x -v 2 -b ./regress2/brush2a.xml -c ./regress2/chem.inp -d ./regress2/chemsoln2a.dat -t ./regress2/therm.dat -s ./regress2/sweep2a.xml -g ./regress2/geometry.xml -a ./regress2/partsoln2a.xml
+
+#Choose the windows or linux names for the executable
+uname -s | grep --ignore-case CYGWIN 
+if(($?==0))
+then
+    windows=1
+else
+    windows=0
+fi
+
+if((windows==1))
+then
+    program="../bin/brush_d.exe"
+else 
+    program="../bin/brush_d.x" 
+fi
+
+$program -v 2 -b ./regress2/brush2a.xml -c ./regress2/chem.inp -d ./regress2/chemsoln2a.dat -t ./regress2/therm.dat -s ./regress2/sweep2a.xml -g ./regress2/geometry.xml -a ./regress2/partsoln2a.xml
 if(($? != 0))
   then
     echo "Simulation failed"

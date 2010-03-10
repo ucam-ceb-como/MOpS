@@ -41,8 +41,17 @@ system("rm *stats.csv");
 
 print "Test 1b: Nucleation and coagulation without transport";
 
+# See if this is a windows system
+my $windows = ($ENV{'OS'} =~ /windows.*/i);
+
+# Choose the windows executable name if appropriate
+my $program = "../bin/brush_d.x";
+if($windows) {
+    $program = "../bin/brush_d.exe";
+}
+
 # Arguments for simulation
-my @simulationCommand = ("../bin/brush_d.x",
+my @simulationCommand = ($program,
                          "-g", "regress1/geom.xml",
                          "-c", "regress1/species.inp",
                          "-d", "regress1/profile.dat",

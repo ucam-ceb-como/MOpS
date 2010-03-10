@@ -17,7 +17,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="Debug"
+			OutputDirectory=".\bin"
 			IntermediateDirectory="Debug"
 			ConfigurationType="1"
 			>
@@ -62,7 +62,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="..\mopsc\lib\mops_d.lib ..\sweepc\lib\sweep_d.lib ..\geometry\lib\geometry_d.lib"
-				OutputFile="$(ProjectDir)bin\brush_d.x"
+				OutputFile="$(ProjectDir)bin\brush_d.exe"
 				LinkIncremental="0"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -92,7 +92,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="Release"
+			OutputDirectory=".\bin"
 			IntermediateDirectory="Release"
 			ConfigurationType="1"
 			>
