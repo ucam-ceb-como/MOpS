@@ -21,7 +21,9 @@
 			OutputDirectory="$(ProjectDir)bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			UseOfMFC="0"
 			CharacterSet="1"
+			EnableManagedIncrementalBuild="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -43,12 +45,13 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="..\utils\include;..\geometry\include;..\sweepc\include;..\mopsc\include;..\brush\include;include;..\camxml\include;..\sprogc\include;..\comostrings\include;..\cvode\include;..\cvode\source;..\radau\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
+				MinimalRebuild="false"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
+				BufferSecurityCheck="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				DebugInformationFormat="4"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -61,8 +64,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\camxml\lib\camxml_d.lib ..\comostrings\lib\comostrings_d.lib ..\sprogc\lib\sprog_d.lib ..\cvode\lib\cvode_d.lib"
+				LinkLibraryDependencies="true"
+				AdditionalDependencies="..\Limex\Debug\limex.obj ..\Limex\Debug\Limex4_2_Dense.obj ..\Limex\Debug\Limex4_2_Auxiliaries.obj ..\AdditionalLibraries\lib\dformd.lib"
+				ShowProgress="0"
 				LinkIncremental="0"
+				AdditionalLibraryDirectories=""
+				IgnoreDefaultLibraryNames="LIBC.LIB;dfor.lib;libcd.lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -136,6 +143,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="..\AdditionalLibraries\lib\dformt.lib ..\Limex\Release\limex.obj ..\Limex\Release\LIMEX4_2_Dense.obj ..\Limex\Release\LIMEX4_2_Auxiliaries.obj"
+				AdditionalLibraryDirectories="....\AdditionalLibraries\lib;....\Limex\Release"
+				IgnoreDefaultLibraryNames="LIBC.LIB;dfor.lib;libcmtd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -257,6 +267,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\limex_wrapper.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\radau_wrapper.cpp"
 				>
 			</File>
@@ -367,11 +381,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\dae_solver.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\flamelet.h"
 				>
 			</File>
 			<File
+				RelativePath=".\include\giant_wrapper.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\ida_wrapper.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\interface.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\kinsol_wrapper.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\limex_wrapper.h"
 				>
 			</File>
 			<File
@@ -393,6 +427,10 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
+		<File
+			RelativePath=".\.cproject"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
