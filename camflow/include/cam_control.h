@@ -74,17 +74,18 @@ namespace Camflow{
             FINAL
         };
         /*
-         *only CVode is supported at the moment. The wraper classes
-         *and its implementation may be found in the distribution.
+         *only CVode is supported at the moment. The wrapper classes
+         *and their implementations may be found in the distribution.
          *However they are not included in the makefile. You may try other
-         *solvers at own risk
+         *solvers at own risk.
          */
         enum Solvers{
             RADAU,
             CVODE,
             KINSOL,
             IDA,
-            NEWTON
+            NEWTON,
+            LIMEX
         };
 
         //constructor
