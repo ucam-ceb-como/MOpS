@@ -15,11 +15,13 @@
 #include "cam_math.h"
 #include "cvode_wrapper.h"
 #include "radau_wrapper.h"
+#include "limex_wrapper.h"
 
 #include "linear_interpolator.hpp"
 
 using namespace Camflow;
 using namespace std;
+using namespace Gadgets;
 
 FlameLet::FlameLet() {
 	sdr_ext=0;
@@ -308,27 +310,27 @@ void FlameLet::csolve(CamControl& cc, bool interface){
 
     } else if (solverID == cc.RADAU) {
 
-    	RadauWrapper radauWrapper;
+        RadauWrapper radauWrapper;
 
-    	eqn_slvd = EQN_ALL;
+        eqn_slvd = EQN_ALL;
 
-    	std::vector<doublereal> relTolVector;
-    	std::vector<doublereal> absTolVector;
+        std::vector<doublereal> relTolVector;
+        std::vector<doublereal> absTolVector;
 
-    	relTolVector.push_back(cc.getSpeciesRelTol());
-    	absTolVector.push_back(cc.getSpeciesAbsTol());
+        relTolVector.push_back(cc.getSpeciesRelTol());
+        absTolVector.push_back(cc.getSpeciesAbsTol());
 
-     	radauWrapper.setBandWidth(nVar);
+        radauWrapper.setBandWidth(nVar);
 
     	radauWrapper.initSolver(nEqn,
-								0.0,
-								cc.getMaxTime(),
-								solvect,
-								relTolVector,
-								absTolVector,
-								*this);
+                                0.0,
+                                cc.getMaxTime(),
+                                solvect,
+                                relTolVector,
+                                absTolVector,
+                                *this);
 
-    	radauWrapper.Integrate();
+        radauWrapper.Integrate();
 
         /*
          *write the output to file only if the call is not
@@ -339,7 +341,9 @@ void FlameLet::csolve(CamControl& cc, bool interface){
         }
        // radauWrapper.destroy();
 
-    }
+    } else if (solverID == cc.LIMEX) {
+          throw std::logic_error("Error -- Limex is not yet supported");
+      }
 }
 
 /*
@@ -362,24 +366,39 @@ void FlameLet::restart(CamControl& cc){
     Thermo::Mixture mix(camMech->Species());
     camMixture = &mix;
 
-    CVodeWrapper cvw;
-    eqn_slvd = EQN_ALL;
-    int band = nVar*2;
 
-    cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
+ int solverID = cc.getSolver();
+    if ( solverID == cc.CVODE){
+        CVodeWrapper cvw;
+        eqn_slvd = EQN_ALL;
+        int band = nVar*2;
+
+        cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
                             cc.getMaxTime(),band,*this,rstartTime);
-    cvw.solve(CV_ONE_STEP,cc.getResTol());
+        cvw.solve(CV_ONE_STEP,cc.getResTol());
 }
+
+     else if (solverID == cc.LIMEX) {
+         throw std::logic_error("Error -- Limex is not yet supported");
+     }
+}
+
 /*
  *segregated solver
  */
 void FlameLet::ssolve(CamControl& cc){
 
-    CVodeWrapper cvw;
+    
     int seg_eqn, band;
-    vector<doublereal> seg_soln_vec;
+       vector<doublereal> seg_soln_vec;
 
-    for(int i=0; i<cc.getNumIterations();i++){
+    
+    int solverID = cc.getSolver();
+    if ( solverID == cc.CVODE){
+    
+       CVodeWrapper cvw;
+       
+       for(int i=0; i<cc.getNumIterations();i++){
         /*
          *solve species equation
          */
@@ -409,12 +428,16 @@ void FlameLet::ssolve(CamControl& cc){
         cvw.solve(CV_ONE_STEP,1e-03);
         mergeEnergyVector(&seg_soln_vec[0]);
         cvw.destroy();
+      }
     }
 
+    else if (solverID == cc.LIMEX) {
+        throw std::logic_error("Error -- Limex is not yet supported");
+    }
+  }
 
-
-}
-/*
+  
+  /*
  *residual definitions
  */
 void FlameLet::residual(const doublereal& t, doublereal* y, doublereal* f){
