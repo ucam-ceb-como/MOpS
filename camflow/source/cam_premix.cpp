@@ -42,6 +42,7 @@
 #include <math.h>
 #include <cstring>
 
+#include "array.h"
 #include "cam_soot.h"
 #include <iostream>
 #include <sstream>
@@ -53,9 +54,11 @@
 #include "cam_premix.h"
 #include "cam_reporter.h"
 #include "cvode_wrapper.h"
+#include "limex_wrapper.h"
 //#include "ida_wrapper.h"
 using namespace Camflow;
 using namespace std;
+using namespace Gadgets;
 
 int CamPremix::eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval){
 
@@ -465,7 +468,7 @@ void CamPremix::initSolutionVector(CamBoundary &cb, CamControl &cc){
    
 }
 /*
- *couples solver
+ *coupled solver
  */
 void CamPremix::csolve(CamControl& cc){
 
@@ -482,25 +485,36 @@ void CamPremix::csolve(CamControl& cc){
             cvw.solve(CV_ONE_STEP,cc.getResTol());
         }else{
             resNorm = cvw.solve(CV_ONE_STEP);
-            cout << "ressidual at the end of maxTime " << resNorm << endl;
+            cout << "residual at the end of maxTime " << resNorm << endl;
 
         }
         reportToFile(cc.getMaxTime(),&solvect[0]);
         cvw.destroy();
     }
 
+
+        else if (solver == cc.LIMEX) {
+            throw std::logic_error("Error -- Limex is not yet supported");
+        }
 }
 
 /*
  *segregated solver
  */
 void CamPremix::ssolve(CamControl& cc){
+   
     /*
-     *preperations
+     *preparations
      */
     int nCell = reacGeom->getnCells();
     int seg_eqn, band;
     vector<doublereal> seg_soln_vec;
+
+    int solverID = cc.getSolver();
+
+    if (solverID == cc.CVODE) {
+
+    
     CVodeWrapper cvw;
     for(int i=0; i<cc.getNumIterations(); i++){
         /*
@@ -542,14 +556,17 @@ void CamPremix::ssolve(CamControl& cc){
             cvw.solve(CV_ONE_STEP,1e-03);
             mergeEnergyVector(&seg_soln_vec[0]);
             cvw.destroy();
-        }
+           }     
+       }    
+    }
 
-
-
+    else if (solverID == cc.LIMEX) {
+        throw std::logic_error("Error -- Limex is not yet supported");
     }
 }
+
 /*
- *console putput
+ *console output
  */
 void CamPremix::report(doublereal t, doublereal* soln){
     static int nSteps=0;
