@@ -125,10 +125,10 @@ doublereal CamGeometry::getArea() const{
     return (pi*dia*dia/4.0);
 }
 
-/*doublereal CamGeometry::getSurfArea() {
-    if(length==0)discretize();
+doublereal CamGeometry::getSurfArea() {
+    //if(length==0)discretize();
     return (pi*dia*length);
-}*/
+} 
 
 doublereal CamGeometry::getSurfAres_l() const{
     return (pi*dia);
