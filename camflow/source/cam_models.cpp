@@ -41,7 +41,6 @@
 #include "batch.h"
 #include "cam_premix.h"
 #include "stagflow.h"
-#include "flamelet.h"
 #include "cam_error.h"
 #include <iostream>
 using namespace Camflow;
