@@ -96,7 +96,7 @@ namespace Camflow{
         doublereal getArea() const;
 
         //return the surface area
-        //doublereal getSurfArea();
+        doublereal getSurfArea();
 
         //return the surface area per unit length
         doublereal getSurfAres_l() const;
