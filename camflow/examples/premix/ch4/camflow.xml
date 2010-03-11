@@ -14,9 +14,9 @@
        <flowrate unit="cgs">0.0463</flowrate>
        <temperature unit="K">3.03e2</temperature>
        <molefrac>
-        <species name="CH4">9.5e-2</species>
-        <species name="O2">1.9e-1</species>
-        <species name="N2">*</species>
+        <species name="H2">0.28</species>
+        <species name="O2">.09</species>
+        <species name="AR">*</species>
        </molefrac>
      </fuel>
   </inlet>
