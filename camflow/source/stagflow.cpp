@@ -50,9 +50,12 @@
 #include <algorithm>
 #include "cam_params.h"
 #include "cam_boundary.h"
+#include "limex_wrapper.h"
 #include <vector>
 
 using namespace Camflow;
+using namespace Gadgets;
+
 /*
  *solve the stagnation/twinflame model
  */
@@ -240,6 +243,11 @@ void StagFlow::initMomentum(){
  */
 void StagFlow::csolve(CamControl& cc){
 
+
+int solverID = cc.getSolver();
+
+    if (solverID == cc.CVODE) {
+
     CVodeWrapper cvw;
     eqn_slvd = EQN_ALL;
     int band = nVar*2;
@@ -251,18 +259,29 @@ void StagFlow::csolve(CamControl& cc){
     reportToFile(cc.getMaxTime(),&solvect[0]);
     cvw.destroy();
 
+
+}   else if (solverID == cc.LIMEX) {
+        throw std::logic_error("Error -- Limex is not yet supported");
+    }
+
 }
 
 /*
  *segregated solver
  */
+
 void StagFlow::ssolve(CamControl& cc){
 
     int seg_eqn, band;
     std::vector<doublereal> seg_soln_vec;
-    CVodeWrapper cvw;
+        
+    int solverID = cc.getSolver();
 
-    //for(int i=0; i<cc.getNumIterations(); i++){
+    if (solverID == cc.CVODE) {
+    
+        CVodeWrapper cvw;
+
+        //for(int i=0; i<cc.getNumIterations(); i++){
 
         /*
          *integrate species
@@ -272,6 +291,7 @@ void StagFlow::ssolve(CamControl& cc){
         seg_eqn = nSpc*nCells;
         band = nSpc*2;
         extractSpeciesVector(seg_soln_vec);
+
         cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
                         cc.getMaxTime(),band,*this);
         //cvw.setMaxStep(1e-04);
@@ -279,7 +299,12 @@ void StagFlow::ssolve(CamControl& cc){
         mergeSpeciesVector(&seg_soln_vec[0]);
         reportToFile(cc.getMaxTime(),&solvect[0]);
         cvw.destroy();
-//        /*
+
+      }   else if (solverID == cc.LIMEX) {
+              throw std::logic_error("Error -- Limex is not yet supported");
+          }        
+}
+
 //         *Integrate energy
 //         */
 //        if(admin->getEnergyModel()==admin->ADIABATIC){
@@ -288,6 +313,10 @@ void StagFlow::ssolve(CamControl& cc){
 //            seg_eqn = nCells;
 //            band = 1;
 //            extractEnergyVector(seg_soln_vec);
+
+//            int solverID = cc.getSolver();
+
+//            if (solverID == cc.CVODE) { 
 //            cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
 //                    cc.getMaxTime(),band,*this);
 //            cvw.solveDAE(CV_ONE_STEP,1e-03);
@@ -296,16 +325,17 @@ void StagFlow::ssolve(CamControl& cc){
 //
 //        }
 //
+//
+//      else if (solverID == cc.LIMEX) {
+//          throw std::logic_error("Error -- Limex is not yet supported");
+//      }
+//}        
 
-    //}
 
-
-
-}
 /*
  *function called by the solver (DAEs and ODEs)
  */
-int StagFlow::eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval){
+int StagFlow::eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval) {
 
     residual(t,y,ydot);
     return 0;
