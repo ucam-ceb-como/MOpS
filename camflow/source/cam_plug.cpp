@@ -46,14 +46,18 @@
 
 #include <vector>
 //#include "RadauWrapper.h"
+#include "array.h"
 #include "cam_residual.h"
 #include "cam_setup.h"
 #include "cam_plug.h"
 //#include "ida_wrapper.h"
 #include "cam_math.h"
 #include "cvode_wrapper.h"
+#include "limex_wrapper.h"
+
 using namespace Camflow;
 using namespace Sprog;
+using namespace Gadgets;
 
 
 //return the initial solution vector
@@ -152,24 +156,28 @@ void CamPlug::integrate(CamBoundary& cb, CamControl& cc){
      *report the values at the inlet
      */
     report(0.0,&solvect[0]);
-
     createSummary();    
+    
+    int solverID = cc.getSolver();
+
+    if (solverID == cc.CVODE) {
+        
     CVodeWrapper cvw;
     cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(), cc.getSpeciesRelTol(), reacGeom->getLenth(),nEqn,*this);
     cvw.setIniStep(cc.getIniStep());
     cvw.solve(CV_ONE_STEP);
     reporter->closeFiles();
+    
+    } else if (solverID == cc.LIMEX) {
+          throw std::logic_error("Error -- Limex is not yet supported");      
+      }
+    
     /*
      *write the summary
      */
     reportSummary(reacGeom->getLenth(),&solvect[0]);
     reporter->closeFile();
-
-
-
 }
-
-
 
 
 
