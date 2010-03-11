@@ -42,11 +42,14 @@
 #include "cam_math.h"
 #include "cvode_wrapper.h"
 #include "radau_wrapper.h"
+#include "limex_wrapper.h"
 #include <vector>
 #include <cstring>
 #include <iostream>
 #include <sstream>
+
 using namespace Camflow;
+using namespace Gadgets;
 
 /*
  *set the reactor type const volume or const pressure
@@ -135,48 +138,49 @@ void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp,
 
     if (solverID == cc.CVODE) {
 
-		CVodeWrapper cvw;
-		cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(), cc.getSpeciesRelTol(),
-							cc.getMaxTime(),nEqn,*this);
+        CVodeWrapper cvw;
+        cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(), cc.getSpeciesRelTol(),
+                            cc.getMaxTime(),nEqn,*this);
 
-		cvw.solve(CV_ONE_STEP,cc.getResTol());
-		reporter->closeFiles();
+        cvw.solve(CV_ONE_STEP,cc.getResTol());
+        reporter->closeFiles();
 
-	} else if (solverID == cc.RADAU) {
+    } else if (solverID == cc.RADAU) {
 
-		RadauWrapper radauWrapper;
+      RadauWrapper radauWrapper;
 
-		std::vector<doublereal> relTolVector;
-		std::vector<doublereal> absTolVector;
+        std::vector<doublereal> relTolVector;
+        std::vector<doublereal> absTolVector;
 
-		relTolVector.push_back(cc.getSpeciesRelTol());
-		absTolVector.push_back(cc.getSpeciesAbsTol());
+        relTolVector.push_back(cc.getSpeciesRelTol());
+        absTolVector.push_back(cc.getSpeciesAbsTol());
 
-		radauWrapper.setBandWidth(nEqn);
+        radauWrapper.setBandWidth(nEqn);
 
-		radauWrapper.initSolver(nEqn,
-								0.0,
-								cc.getMaxTime(),
-								solvect,
-								relTolVector,
-								absTolVector,
-								*this);
+        radauWrapper.initSolver(nEqn,
+                                0.0,
+                                cc.getMaxTime(),
+                                solvect,
+                                relTolVector,
+                                absTolVector,
+                                *this);
 
-		radauWrapper.Integrate();
+        radauWrapper.Integrate();
 
-		/*
-		 *write the output to file only if the call is not
-		 *from the interface
-		 */
-		//if(!interface) {
-		//	reportToFile(cc.getMaxTime(),&solvect[0]);
-		//}
-	   // radauWrapper.destroy();
+        /*
+       *write the output to file only if the call is not
+       *from the interface
+       */
+      //if(!interface) {
+      //    reportToFile(cc.getMaxTime(),&solvect[0]);
+      //}
+      // radauWrapper.destroy();
 
-		reporter->closeFiles();
+         reporter->closeFiles();
 
-	}
-
+    } else if (solverID == cc.LIMEX) {
+          throw std::logic_error("Error -- Limex is not yet supported");
+      }
 }
 
 /*
