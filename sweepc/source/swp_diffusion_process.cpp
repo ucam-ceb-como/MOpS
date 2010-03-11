@@ -135,18 +135,26 @@ Sweep::real Sweep::Processes::DiffusionProcess::Rate(real t, const Cell &sys,
  }
 
 /*!
- * \param       t               Time
- * \param[in]   local_geom      Details of geometry around current location
- * \param       sys             System to update
- * \param       iterm           Process term responsible for this event
- * \param[out]  out             Details of any particle being transported out of system
+ * 
+ *
+ * \param[in]       t           Time
+ * \param[in,out]   sys         System to update
+ * \param[in]       local_geom  Details of local phsyical layout
+ * \param[in]       iterm       Process term responsible for this event
+ * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[out]      out         Details of any particle being transported out of system
  *
  * \return      0 on success, otherwise negative.
  */
-int Sweep::Processes::DiffusionProcess::Perform(real t, Cell &sys,
-                                                const Geometry::LocalGeometry1d& local_geom,
-                                                unsigned int iterm,
-                                                Transport::TransportOutflow *out) const {
+int  Sweep::Processes::DiffusionProcess::Perform(Sweep::real t, 
+                              Sweep::Cell &sys, 
+                              const Geometry::LocalGeometry1d& local_geom,
+                              unsigned int iterm,
+                              int (*rand_int)(int, int), 
+                              Sweep::real(*rand_u01)(), 
+                              Sweep::Transport::TransportOutflow *out) const
+{
     // Rate of leftwards jumps (factors shared with rightwards jumps are ignored)
     real leftRate = 0;
     if(!local_geom.zeroGradient(Geometry::left)) {
@@ -169,7 +177,7 @@ int Sweep::Processes::DiffusionProcess::Perform(real t, Cell &sys,
     }
 
     // Get the particle that will be transported
-    const int particleIndex = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid), Sweep::irnd, Sweep::rnd);
+    const int particleIndex = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid), rand_int, rand_u01);
 
     // LPDA updates and fictitious events are dealt with in the function below
     return Outflow(t, sys, local_geom, particleIndex, direction, out);

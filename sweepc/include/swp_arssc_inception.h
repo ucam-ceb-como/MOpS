@@ -83,15 +83,16 @@ public:
 
 	// PERFORMING THE PROCESS.
 
-    // Performs the process on the given system.  The responsible rate term is given
-    // by index.  Returns 0 on success, otherwise negative.
-    int Perform(
-        real t,                // Time.
-        Cell &sys,             // System to update.
-        unsigned int iterm = 0,// The process term responsible for this event.
-        Transport::TransportOutflow *out = 0 // Unused for this process
+    //! Incept a particle for the arssc model
+    virtual int Perform(
+        real t,
+        Cell &sys,
+        const Geometry::LocalGeometry1d& local_geom,
+        unsigned int iterm,
+        int (*rand_int)(int, int), 
+        real(*rand_u01)(),
+        Transport::TransportOutflow *out = 0
         ) const;
-
 
     // READ/WRITE/COPY.
 

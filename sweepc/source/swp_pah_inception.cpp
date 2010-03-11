@@ -102,19 +102,22 @@ PAHInception &PAHInception::operator =(const PAHInception &rhs)
  * The iterm parameter is included because it will be needed for many process
  * types and this function is meant to have a general signature.
  *
- * \param[in]       t               Time
- * \param[in]       local_geom      Details of geometry around current location
- * \param[in,out]   sys             System to update
- * \param[in]       iterm           Process term responsible for this event
- * \param[out]      out             Details of any particle being transported out of system
+ * \param[in]       t           Time
+ * \param[in,out]   sys         System to update
+ * \param[in]       local_geom  Details of local phsyical layout
+ * \param[in]       iterm       Process term responsible for this event
+ * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[out]      out         Details of any particle being transported out of system
  *
  * \return      0 on success, otherwise negative.
  */
 int PAHInception::Perform(const real t, Cell &sys,
-                       const Geometry::LocalGeometry1d &local_geom,
-                       const unsigned int iterm,
-                       real (*rng)(),
-                       Transport::TransportOutflow * const out) const {
+                          const Geometry::LocalGeometry1d &local_geom,
+                          const unsigned int iterm,
+                          int (*rand_int)(int, int), 
+                          Sweep::real(*rand_u01)(), 
+                          Transport::TransportOutflow * out) const {
 
     Particle *sp = NULL;
 
@@ -130,7 +133,7 @@ int PAHInception::Perform(const real t, Cell &sys,
 
     if(width > 0) {
         // There is some real spatial detail
-        posn += width * rng();
+        posn += width * rand_u01();
         sp = m_mech->CreateParticle(t, posn);
     }
     else {
@@ -141,34 +144,13 @@ int PAHInception::Perform(const real t, Cell &sys,
     sp->UpdateCache();
 
     // Add particle to system's ensemble.
-    sys.Particles().Add(*sp, Sweep::irnd);
+    sys.Particles().Add(*sp, rand_int);
 
     // Update gas-phase chemistry of system.
     adjustGas(sys);
 
     return 0;
 }
-
-// PERFORMING THE PROCESS.
-
-/*!
- * \param       t       Time
- * \param       sys     System to update
- * \param       iterm   Process term responsible for this event
- * \param       out     Details of any particle being transported out of system
- *
- * \return      0 on success, otherwise negative.
- *
- * This method is provided to implement a pure virtual method in the parent
- * class.  It provides default geometry information for a call through to an
- * overload.
- */
- int Sweep::Processes::PAHInception::Perform(real t, Cell &sys, unsigned int iterm,
-                                          Transport::TransportOutflow *out) const {
-     return Perform(t, sys, Geometry::LocalGeometry1d(), iterm, Sweep::rnd, out);
- }
-
-
 
 // TOTAL RATE CALCULATIONS.
 

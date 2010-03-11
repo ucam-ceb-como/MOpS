@@ -150,21 +150,3 @@ int Sweep::Processes::TransportProcess::Outflow(const real t, Cell &sys,
     // This will be < 0, because if particle_index >= 0 function will be exited in above if block
     return particle_index;
 }
-
-/*!
- * \param       t       Time
- * \param       sys     System to update
- * \param       iterm   Process term responsible for this event
- * \param       out     Details of any particle being transported out of system
- *
- * \return      0 on success, otherwise negative.
- *
- * This method is provided to implement a pure virtual method in the parent
- * class.  It calls through to an non-virtual overload with default geometry
- * information.
- */
- int Sweep::Processes::TransportProcess::Perform(real t, Cell &sys,
-                                                 unsigned int iterm,
-                                                 Transport::TransportOutflow *out) const {
-      return Perform(t, sys, Geometry::LocalGeometry1d(), iterm, out);
- }

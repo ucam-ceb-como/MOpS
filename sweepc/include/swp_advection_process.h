@@ -130,12 +130,14 @@ public:
 
     // PERFORMING THE PROCESS.
 
-    //! Performs the process on the given system.
-    int Perform(
+    //! Perform an advection jump
+    virtual int Perform(
         real t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
-        unsigned int iterm = 0,
+        unsigned int iterm,
+        int (*rand_int)(int, int), 
+        real(*rand_u01)(),
         Transport::TransportOutflow *out = 0
         ) const;
 

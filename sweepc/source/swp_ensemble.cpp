@@ -406,8 +406,8 @@ int Sweep::Ensemble::Select(int (*rand_int)(int, int)) const
 
 /*!
  * @param[in]   id          Property by which to weight particle selection
- * @param[in]   rand_int    Pointer to function that generates uniform integers on a range
- * @param[in]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * @param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
  *
  * @return      Index of selected particle
  *

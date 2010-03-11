@@ -132,18 +132,6 @@ public:
         real t,         // Time.
         const Cell &sys // System for which to calculate rate.
         ) const = 0;
-
-/*
-	// Calculates the process rate using the given 
-    // chemical conditions, rather than those conditions in the
-    // given system.
-    virtual real Rate(
-        real t,                   // Time.
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        const Cell &sys           // System for which to calculate rate.
-        ) const = 0;
-*/
-
     static real CalcRates(
         real t, // Time.
         const Cell &sys, // System for which to calculate rates.
@@ -162,56 +150,22 @@ public:
         const Particle &sp  // Particle for which to calculate rate.
         ) const = 0;
 
-/*
-	// Returns rate of the process for the given particle using the
-    // given chemical conditions rather than those conditions in the
-    // the given system.
-    virtual real Rate(
-        real t,                   // Current time (s).
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        const Cell &sys,          // System to which the particle belongs.
-        const Particle &sp        // Particle for which to calculate rate.
-        ) const = 0;
-*/
 
 	// RATE TERM CALCULATIONS.
     //   These routines return the individual rate terms for a 
     //   process, which may have multiple terms (e.g. condensation).
 
-    // Returns the number of rate terms for this process.
-    virtual unsigned int TermCount(void) const = 0;
-
-    // Calculates the rate terms given an iterator to a real vector. The 
-    // iterator is advanced to the position after the last term for this
-    // process.
-    virtual real RateTerms(
-        real t,                  // Time.
-        const Cell &sys,         // System for which to calculate rate terms.
-        fvector::iterator &iterm // Iterator to the first term.
-        ) const = 0;
-
-/*
-    // Calculates the rate terms given an iterator to a real vector. The 
-    // iterator is advanced to the position after the last term for this
-    // process.  The given chemical conditions are used instead of those
-    // in the given system object.
-    virtual real RateTerms(
-        real t,                   // Time.
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        const Cell &sys,          // System for which to calculate rate terms.
-        fvector::iterator &iterm  // Iterator to the first term.
-        ) const = 0;
-*/
-
 	// PERFORMING THE PROCESS.
 
-    // Performs the process on the given system.  The responsible rate term is given
-    // by index.  Returns 0 on success, otherwise negative.
+    //! Declared in parent class, implemented in dervied classes
     virtual int Perform(
-        real t,                // Time.
-        Cell &sys,             // System to update.
-        unsigned int iterm = 0,// The process term responsible for this event.
-        Transport::TransportOutflow *out = 0 // Not used for these processes
+        real t,
+        Cell &sys,
+        const Geometry::LocalGeometry1d& local_geom,
+        unsigned int iterm,
+        int (*rand_int)(int, int), 
+        real(*rand_u01)(),
+        Transport::TransportOutflow *out = 0
         ) const = 0;
 
     // Performs the process on a given particle in the system.  Particle
@@ -228,10 +182,6 @@ public:
     
     // Creates a copy of the particle process.
     virtual ParticleProcess *const Clone(void) const = 0;
-
-    // Returns the process type.  Used to identify different
-    // processes and for serialisation.
-    virtual ProcessType ID(void) const = 0;
 
     // Writes the object to a binary stream.
     virtual void Serialize(std::ostream &out) const;
@@ -254,7 +204,7 @@ protected:
     fvector m_dcomp; // Composition change.
     fvector m_dvals; // Tracker variable value changes.
 };
-};
-};
+}
+}
 
 #endif

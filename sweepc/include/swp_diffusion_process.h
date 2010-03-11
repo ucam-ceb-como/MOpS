@@ -81,7 +81,7 @@ public:
 
         // SINGLE PARTICLE RATE CALCULATIONS.
 
-    //* Particle dependent part of process rate for use in ficitious event tests
+    //! Particle dependent part of process rate for use in ficitious event tests
     virtual real Rate(
         real t,
         const Cell &sys,
@@ -124,12 +124,14 @@ public:
 
     // PERFORMING THE PROCESS.
 
-    //! Performs the process on the given system.
+    //! Perform one step of a diffusion random walk
     virtual int Perform(
         real t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
-        unsigned int iterm = 0,
+        unsigned int iterm,
+        int (*rand_int)(int, int), 
+        real(*rand_u01)(),
         Transport::TransportOutflow *out = 0
         ) const;
 

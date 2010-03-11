@@ -93,9 +93,25 @@ ARSSC_Condensation &ARSSC_Condensation::operator=(const ARSSC_Condensation &rhs)
 
 // PERFORMING THE PROCESS.
 
-// Performs the process on the given system.  The responsible rate term is given
-// by index.  Returns 0 on success, otherwise negative.
-int ARSSC_Condensation::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const  
+/*!
+ * 
+ *
+ * \param[in]       t           Time
+ * \param[in,out]   sys         System to update
+ * \param[in]       local_geom  Details of local phsyical layout
+ * \param[in]       iterm       Process term responsible for this event
+ * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[out]      out         Details of any particle being transported out of system
+ *
+ * \return      0 on success, otherwise negative.
+ */
+int ARSSC_Condensation::Perform(Sweep::real t, Sweep::Cell &sys, 
+                                const Geometry::LocalGeometry1d& local_geom,
+                                unsigned int iterm,
+                                int (*rand_int)(int, int), 
+                                Sweep::real(*rand_u01)(), 
+                                Sweep::Transport::TransportOutflow *out) const
 {
     // Select particle based on which term was called.
     int i  = -1;
@@ -103,16 +119,16 @@ int ARSSC_Condensation::Perform(real t, Cell &sys, unsigned int iterm, Transport
     switch(iterm) {
         case 1:
             id = ParticleCache::iDcol;
-            i  = sys.Particles().Select(id, Sweep::irnd, Sweep::rnd);
+            i  = sys.Particles().Select(id, rand_int, rand_u01);
             break;
         case 2:
             id = ParticleCache::iD2;
-            i  = sys.Particles().Select(id, Sweep::irnd, Sweep::rnd);
+            i  = sys.Particles().Select(id, rand_int, rand_u01);
             break;
         case 0:
         default:
             id = ParticleCache::iUniform;
-            i  = sys.Particles().Select(Sweep::irnd);;
+            i  = sys.Particles().Select(rand_int);;
             break;
     }
 

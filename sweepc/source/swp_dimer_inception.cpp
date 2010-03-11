@@ -110,15 +110,18 @@ DimerInception &DimerInception::operator =(const DimerInception &rhs)
  * \param[in]       local_geom      Details of geometry around current location
  * \param[in,out]   sys             System to update
  * \param[in]       iterm           Process term responsible for this event
+ * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
  * \param[out]      out             Details of any particle being transported out of system
  *
  * \return      0 on success, otherwise negative.
  */
 int DimerInception::Perform(const real t, Cell &sys,
-                       const Geometry::LocalGeometry1d &local_geom,
-                       const unsigned int iterm,
-                       real (*rng)(),
-                       Transport::TransportOutflow * const out) const {
+                            const Geometry::LocalGeometry1d &local_geom,
+                            const unsigned int iterm,
+                            int (*rand_int)(int, int), 
+                            Sweep::real(*rand_u01)(), 
+                            Transport::TransportOutflow * const out) const {
 
     // This routine performs the inception on the given chemical system.
 
@@ -135,7 +138,7 @@ int DimerInception::Perform(const real t, Cell &sys,
     real posn = vertices.front();
 
     const real width = vertices.back() - posn;
-    posn += width * rng();
+    posn += width * rand_u01();
 
     sp->setPositionAndTime(posn, t);
 
@@ -146,7 +149,7 @@ int DimerInception::Perform(const real t, Cell &sys,
     sp->UpdateCache();
 
     // Add particle to system's ensemble.
-    sys.Particles().Add(*sp, Sweep::irnd);
+    sys.Particles().Add(*sp, rand_int);
 
     // Update gas-phase chemistry of system.
     adjustGas(sys);
@@ -155,23 +158,6 @@ int DimerInception::Perform(const real t, Cell &sys,
 }
 
 // PERFORMING THE PROCESS.
-
-/*!
- * \param       t       Time
- * \param       sys     System to update
- * \param       iterm   Process term responsible for this event
- * \param       out     Details of any particle being transported out of system
- *
- * \return      0 on success, otherwise negative.
- *
- * This method is provided to implement a pure virtual method in the parent
- * class.  It provides default geometry information for a call through to an
- * overload.
- */
- int Sweep::Processes::DimerInception::Perform(real t, Cell &sys, unsigned int iterm,
-                                          Transport::TransportOutflow *out) const {
-     return Perform(t, sys, Geometry::LocalGeometry1d(), iterm, Sweep::rnd, out);
- }
 
 
 // INCEPTION KERNEL.

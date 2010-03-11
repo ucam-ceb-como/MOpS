@@ -128,25 +128,6 @@ public:
         unsigned int start = 0    // Vector position to start at in vector rates.
         );
 
-    // PERFORMING THE PROCESS.
-
-    //! Performs the process on the given system.
-    virtual int Perform(
-        real t,
-        Cell &sys,
-        const Geometry::LocalGeometry1d& local_geom,
-        unsigned int iterm = 0,
-        Transport::TransportOutflow *out = 0
-        ) const = 0;
-
-    //! Backwards compatibility method, should never be called
-    virtual int Perform(
-        real t,
-        Cell &sys,
-        unsigned int iterm = 0,
-        Transport::TransportOutflow *out = 0
-        ) const;
-
     //! Remove a particle and put it into the TransportOutflow object for onward transport
     int Outflow(
         real t,

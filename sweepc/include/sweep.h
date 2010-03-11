@@ -82,20 +82,6 @@
 
 // Mechanism and process definitions.
 #include "swp_mechanism.h"
-#include "swp_process_type.h"
-#include "swp_process.h"
-#include "swp_process_factory.h"
-// Inception processes.
-#include "swp_inception.h"
-#include "swp_arssc_inception.h"
-// Particle processes (reactions etc.)
-#include "swp_particle_process.h"
-#include "swp_surface_reaction.h"
-#include "swp_actsites_reaction.h"
-#include "swp_condensation.h"
-
-// Other processes.
-#include "swp_death_process.h"
 
 // Chemical models.
 #include "swp_actsites_type.h"

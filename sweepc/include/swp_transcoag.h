@@ -114,17 +114,16 @@ public:
 
     // PERFORMING THE PROCESS.
 
-    // Performs the process on the given system. Must return 0
-    // on success, otherwise negative.
+    //! Perform a coagulation with particles chosen according to the transition regime kernel
     virtual int Perform(
-        real t,                // Time.
-        Cell &sys,             // System to update.
-        unsigned int iterm = 0,// The process term responsible for this event.
-        Transport::TransportOutflow *out = 0 // Not used for this process
+        real t,
+        Cell &sys,
+        const Geometry::LocalGeometry1d& local_geom,
+        unsigned int iterm,
+        int (*rand_int)(int, int), 
+        real(*rand_u01)(),
+        Transport::TransportOutflow *out = 0
         ) const;
-
-
-
 
     
 private:

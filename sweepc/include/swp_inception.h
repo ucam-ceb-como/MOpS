@@ -132,16 +132,6 @@ public:
     // new particle.
     void SetParticleTracker(unsigned int i, real track);
 
-    //! Performs the process on the given system.
-    virtual int Perform(
-        const real t,
-        Cell &sys,
-        const Geometry::LocalGeometry1d& local_geom,
-        const unsigned int iterm,
-        real (*rng)(),
-        Transport::TransportOutflow * const out = 0
-        ) const=0;
-
 	// TOTAL RATE CALCULATIONS.
 
     // Calculates the rate of multiple inceptions given a

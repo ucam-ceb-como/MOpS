@@ -101,16 +101,6 @@ public:
         const Cell &sys // System for which to calculate rate.
         ) const;
 
-/*
-	// Calculates the process rate using the given 
-    // chemical conditions, rather than those conditions in the
-    // given system.
-    real Rate(
-        real t,                   // Time.
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        const Cell &sys           // System for which to calculate rate.
-        ) const;
-*/
 
 	// RATE TERM CALCULATIONS.
 
@@ -126,28 +116,18 @@ public:
         fvector::iterator &iterm // Iterator to the first term.
         ) const;
 
-/*
-    // Calculates the rate terms given an iterator to a real vector. The 
-    // iterator is advanced to the position after the last term for this
-    // process.  The given chemical conditions are used instead of those
-    // in the given system object.
-    real RateTerms(
-        real t,                   // Time.
-        const Sprog::Thermo::IdealGas &gas, // Gas-phase conditions.
-        const Cell &sys,          // System for which to calculate rate terms.
-        fvector::iterator &iterm  // Iterator to the first term.
-        ) const;
-*/
 
 	// PERFORMING THE PROCESS.
 
-    // Performs the process on the given system.  The responsible rate term is given
-    // by index.  Returns 0 on success, otherwise negative.
-    int Perform(
-        real t,                // Time.
-        Cell &sys,             // System to update.
-        unsigned int iterm = 0,// The process term responsible for this event.
-        Transport::TransportOutflow *out = 0 // Not used for this process
+    //! Kill one particle
+    virtual int Perform(
+        real t,
+        Cell &sys,
+        const Geometry::LocalGeometry1d& local_geom,
+        unsigned int iterm,
+        int (*rand_int)(int, int), 
+        real(*rand_u01)(),
+        Transport::TransportOutflow *out = 0
         ) const;
 
 

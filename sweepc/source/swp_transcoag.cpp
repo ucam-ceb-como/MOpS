@@ -45,6 +45,8 @@
 #include "swp_mechanism.h"
 #include "swp_PAH_primary.h"
 
+using namespace Sweep::Processes;
+
 //* Free-molecular enhancement factor.
 const Sweep::real Sweep::Processes::TransitionCoagulation::m_efm = 2.2; // 2.2 is for soot.
 
@@ -241,9 +243,25 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const ParticleCac
 
 // PERFORMING THE PROCESS.
 
-// Performs the process on the given system. Must return 0
-// on success, otherwise negative.
-int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow *out) const
+/*!
+ * 
+ *
+ * \param[in]       t           Time
+ * \param[in,out]   sys         System to update
+ * \param[in]       local_geom  Details of local phsyical layout
+ * \param[in]       iterm       Process term responsible for this event
+ * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[out]      out         Details of any particle being transported out of system
+ *
+ * \return      0 on success, otherwise negative.
+ */
+int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys, 
+                                   const Geometry::LocalGeometry1d& local_geom,
+                                   unsigned int iterm,
+                                   int (*rand_int)(int, int), 
+                                   Sweep::real(*rand_u01)(), 
+                                   Sweep::Transport::TransportOutflow *out) const
 {
     // Select properties by which to choose particles (-1 means
     // choose uniformly).  Note we need to choose 2 particles.  There
@@ -260,31 +278,31 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
     // Select the first particle and note the majorant type.
     switch (term) {
         case SlipFlow1:
-            ip1 = sys.Particles().Select(Sweep::irnd);
+            ip1 = sys.Particles().Select(rand_int);
             maj = SlipFlow;
             break;
         case SlipFlow2:
-            ip1 = sys.Particles().Select(ParticleCache::iDcol, Sweep::irnd, Sweep::rnd);
+            ip1 = sys.Particles().Select(ParticleCache::iDcol, rand_int, rand_u01);
             maj = SlipFlow;
             break;
         case SlipFlow3:
-            ip1 = sys.Particles().Select(Sweep::irnd);
+            ip1 = sys.Particles().Select(rand_int);
             maj = SlipFlow;
             break;
         case SlipFlow4:
-            ip1 = sys.Particles().Select(ParticleCache::iDcol, Sweep::irnd, Sweep::rnd);
+            ip1 = sys.Particles().Select(ParticleCache::iDcol, rand_int, rand_u01);
             maj = SlipFlow;
             break;
         case FreeMol1:
-            ip1 = sys.Particles().Select(Sweep::irnd);
+            ip1 = sys.Particles().Select(rand_int);
             maj = FreeMol;
             break;
         case FreeMol2:
-            ip1 = sys.Particles().Select(ParticleCache::iD2, Sweep::irnd, Sweep::rnd);
+            ip1 = sys.Particles().Select(ParticleCache::iD2, rand_int, rand_u01);
             maj = FreeMol;
             break;
         default :
-            ip1 = sys.Particles().Select(Sweep::irnd);
+            ip1 = sys.Particles().Select(rand_int);
             maj = SlipFlow;
             break;
     }
@@ -311,31 +329,31 @@ int Sweep::Processes::TransitionCoagulation::Perform(real t, Cell &sys, unsigned
     switch (term) {
         case SlipFlow1:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(Sweep::irnd);
+                ip2 = sys.Particles().Select(rand_int);
             break;
         case SlipFlow2:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iD_1, Sweep::irnd, Sweep::rnd);
+                ip2 = sys.Particles().Select(ParticleCache::iD_1, rand_int, rand_u01);
             break;
         case SlipFlow3:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iD_1, Sweep::irnd, Sweep::rnd);
+                ip2 = sys.Particles().Select(ParticleCache::iD_1, rand_int, rand_u01);
             break;
         case SlipFlow4:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iD_2, Sweep::irnd, Sweep::rnd);
+                ip2 = sys.Particles().Select(ParticleCache::iD_2, rand_int, rand_u01);
             break;
         case FreeMol1:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iD2_M_1_2, Sweep::irnd, Sweep::rnd);
+                ip2 = sys.Particles().Select(ParticleCache::iD2_M_1_2, rand_int, rand_u01);
             break;
         case FreeMol2:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iM_1_2, Sweep::irnd, Sweep::rnd);
+                ip2 = sys.Particles().Select(ParticleCache::iM_1_2, rand_int, rand_u01);
             break;
         default :
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(Sweep::irnd);
+                ip2 = sys.Particles().Select(rand_int);
             break;
     }
 

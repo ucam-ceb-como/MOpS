@@ -146,16 +146,32 @@ real BirthProcess::RateTerms(const real t, const Cell &sys,
 
 // PERFORMING THE PROCESS.
 
-// Performs the process on the given system.  The responsible rate term is given
-// by index.  Returns 0 on success, otherwise negative.
-int BirthProcess::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const
+/*!
+ * 
+ *
+ * \param[in]       t           Time
+ * \param[in,out]   sys         System to update
+ * \param[in]       local_geom  Details of local phsyical layout
+ * \param[in]       iterm       Process term responsible for this event
+ * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[out]      out         Details of any particle being transported out of system
+ *
+ * \return      0 on success, otherwise negative.
+ */
+int BirthProcess::Perform(Sweep::real t, Sweep::Cell &sys, 
+                          const Geometry::LocalGeometry1d& local_geom,
+                          unsigned int iterm,
+                          int (*rand_int)(int, int), 
+                          Sweep::real(*rand_u01)(), 
+                          Sweep::Transport::TransportOutflow *out) const
 {
     Particle *p = NULL;
 
     if (m_cell || (m_cell->ParticleCount()==0)) {
         // Uniformly select a particle from the sampling
         // cell.
-        int i = m_cell->Particles().Select(Sweep::irnd);
+        int i = m_cell->Particles().Select(rand_int);
         if (i >= 0) {
             p = m_cell->Particles().At(i)->Clone();
         } else {
@@ -173,7 +189,7 @@ int BirthProcess::Perform(real t, Cell &sys, unsigned int iterm, Transport::Tran
     }
 
     // Add the new particle to the ensemble.
-    sys.Particles().Add(*p, Sweep::irnd);
+    sys.Particles().Add(*p, rand_int);
     return 0;
 }
 

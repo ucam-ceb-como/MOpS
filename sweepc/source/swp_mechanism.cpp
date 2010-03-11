@@ -713,14 +713,14 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
 
     if (j < 0) {
         // This is an inception process.
-        m_inceptions[i]->Perform(t, sys, local_geom, 0, Sweep::rnd, out);
+        m_inceptions[i]->Perform(t, sys, local_geom, 0, Sweep::irnd, Sweep::rnd, out);
         m_proccount[i] += 1;
     } else {
         // This is another process.
         for(PartProcPtrVector::const_iterator ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
             if (j < (int)(*ip)->TermCount()) {
                 // Do the process.
-                if ((*ip)->Perform(t, sys, j) == 0) {
+                if ((*ip)->Perform(t, sys, local_geom, j, Sweep::irnd, Sweep::rnd, out) == 0) {
                     m_proccount[i] += 1;
                 } else {
                     m_fictcount[i] += 1;
@@ -735,7 +735,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
         for(TransportPtrVector::const_iterator it = m_transports.begin(); it != m_transports.end(); ++it) {
             if (j < static_cast<int>((*it)->TermCount())) {
                 // Do the process.
-                if ((*it)->Perform(t, sys, local_geom, j, out) == 0) {
+                if ((*it)->Perform(t, sys, local_geom, j, Sweep::irnd, Sweep::rnd, out) == 0) {
                     m_proccount[i] += 1;
                 } else {
                     m_fictcount[i] += 1;
@@ -753,7 +753,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
             // Check if coagulation process.
             if (j < (int)m_coag->TermCount()) {
                 // This is the coagulation process.
-                if (m_coag->Perform(t, sys, j) == 0) {
+                if (m_coag->Perform(t, sys, local_geom, j, Sweep::irnd, Sweep::rnd, out) == 0) {
                     m_proccount[i] += 1;
                 } else {
                     m_fictcount[i] += 1;
@@ -771,13 +771,13 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
         if ((j < (int)sys.InflowCount()) && (j>=0)) {
             // An inflow process.
             sys.Inflows(j)->SetMechanism(*this);
-            sys.Inflows(j)->Perform(t, sys);
+            sys.Inflows(j)->Perform(t, sys, local_geom, 0, Sweep::irnd, Sweep::rnd, out);
         } else {
             j -= sys.InflowCount();
             if ((j < (int)sys.OutflowCount()) && (j>=0)) {
                 // An outflow process.
                 sys.Outflows(j)->SetMechanism(*this);
-                sys.Outflows(j)->Perform(t, sys);
+                sys.Outflows(j)->Perform(t, sys, local_geom, 0, Sweep::irnd, Sweep::rnd, out);
             }
         }
     }

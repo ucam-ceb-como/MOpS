@@ -45,6 +45,7 @@
 #include "swp_cell.h"
 #include "swp_mechanism.h"
 
+using namespace Sweep::Processes;
 
 const Sweep::real Sweep::Processes::AdditiveCoagulation::s_MajorantFactor = 1.5;
 
@@ -108,14 +109,26 @@ Sweep::real Sweep::Processes::AdditiveCoagulation::RateTerms(real t, const Cell 
     return *(iterm++) = Rate(t, sys);
 }
 
-// Performs the process on the given system. Must return 0
-// on success, otherwise negative.
-int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const
+/*!
+ * 
+ *
+ * \param[in]       t           Time
+ * \param[in,out]   sys         System to update
+ * \param[in]       local_geom  Details of local phsyical layout
+ * \param[in]       iterm       Process term responsible for this event
+ * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[out]      out         Details of any particle being transported out of system
+ *
+ * \return      0 on success, otherwise negative.
+ */
+int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys, 
+                             const Geometry::LocalGeometry1d& local_geom,
+                             unsigned int iterm,
+                             int (*rand_int)(int, int), 
+                             Sweep::real(*rand_u01)(), 
+                             Sweep::Transport::TransportOutflow *out) const
 {
-    // debugging variables
-    //int numParticles = sys.ParticleCount();
-    //double massParticles = sys.Particles().GetSums().Mass();
-
     // Select properties by which to choose particles.
     // Note we need to choose 2 particles.  One particle must be chosen
     // uniformly and one with probability proportional
@@ -127,8 +140,8 @@ int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned i
 
     int ip1=-1, ip2=-1;
 
-    ip1 = sys.Particles().Select(ParticleCache::iM, Sweep::irnd, Sweep::rnd);
-    ip2 = sys.Particles().Select(Sweep::irnd);
+    ip1 = sys.Particles().Select(ParticleCache::iM, rand_int, rand_u01);
+    ip2 = sys.Particles().Select(rand_int);
 
     // Choose and get first particle, then update it.
     Particle *sp1=NULL;
@@ -159,7 +172,7 @@ int Sweep::Processes::AdditiveCoagulation::Perform(real t, Cell &sys, unsigned i
     // this even if the first particle was invalidated.
     unsigned int guard = 0;
     while ((ip2 == ip1) && (++guard<1000))
-            ip2 = sys.Particles().Select(Sweep::irnd);
+            ip2 = sys.Particles().Select(rand_int);
 
     Particle *sp2=NULL, *sp2old=NULL;
     if ((ip2>=0) && (ip2!=ip1)) {

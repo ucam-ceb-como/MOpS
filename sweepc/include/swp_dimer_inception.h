@@ -96,23 +96,15 @@ public:
 
     // PERFORMING THE PROCESS.
 
-    // Performs the process on the given system.  The responsible rate term is given
-    // by index.  Returns 0 on success, otherwise negative.
-    int Perform(
-        real t,                // Time.
-        Cell &sys,             // System to update.
-        unsigned int iterm = 0,// The process term responsible for this event.
-        Transport::TransportOutflow *out = 0 // Not used for this process
-        ) const;
-
     //! Performs the process on the given system.
     virtual int Perform(
-        const real t,
+        real t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
-        const unsigned int iterm,
-        real (*rng)(),
-        Transport::TransportOutflow * const out = 0
+        unsigned int iterm,
+        int (*rand_int)(int, int), 
+        real(*rand_u01)(),
+        Transport::TransportOutflow *out = 0
         ) const;
 
 

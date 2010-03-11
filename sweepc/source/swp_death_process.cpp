@@ -128,12 +128,28 @@ real DeathProcess::RateTerms(const real t, const Cell &sys,
 
 // PERFORMING THE PROCESS.
 
-// Performs the process on the given system.  The responsible rate term is given
-// by index.  Returns 0 on success, otherwise negative.
-int DeathProcess::Perform(real t, Cell &sys, unsigned int iterm, Transport::TransportOutflow*) const  
+/*!
+ * 
+ *
+ * \param[in]       t           Time
+ * \param[in,out]   sys         System to update
+ * \param[in]       local_geom  Details of local phsyical layout
+ * \param[in]       iterm       Process term responsible for this event
+ * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[out]      out         Details of any particle being transported out of system
+ *
+ * \return      0 on success, otherwise negative.
+ */
+int DeathProcess::Perform(Sweep::real t, Sweep::Cell &sys, 
+                          const Geometry::LocalGeometry1d& local_geom,
+                          unsigned int iterm,
+                          int (*rand_int)(int, int), 
+                          Sweep::real(*rand_u01)(), 
+                          Sweep::Transport::TransportOutflow *out) const
 {
     // Select a particle for deletion.
-    int i = sys.Particles().Select(Sweep::irnd);;
+    int i = sys.Particles().Select(rand_int);;
     // Delete the particle.
     if (i>=0) sys.Particles().Remove(i);
     return 0;
