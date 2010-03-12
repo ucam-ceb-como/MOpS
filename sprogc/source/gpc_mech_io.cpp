@@ -650,7 +650,16 @@ unsigned int MechanismParser::parseCK_Species(const std::string &species,
     return n;
 }
 
-// Extract thermo data from CHEMKIN string.
+/*!
+ * Extract thermo data from CHEMKIN string.
+ *
+ * @param[in]   ckstr       Contents of a chemkin file
+ * @param[out]  thermo      Thermo data from ckstr
+ * @param[out]  lineno      Line number of THER(MO)
+ *
+ * @exception   std::invalid_argument       THER(MO) keyword not found
+ * @exception   std::invalid_argument       END keyword not found
+ */
 void MechanismParser::extractCK_Thermo(const std::string &ckstr,
                                        std::string &thermo,
                                        unsigned int &lineno)
