@@ -19,7 +19,7 @@ ifeq ($(debug),0)
 else
   flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
        -I../geometry/include -I../utils/include -I../sprogc/include \
-       -I../sweepc/include -I../mopsc/include -Wall -ggdb
+       -I../sweepc/include -I../mopsc/include -Wall -ggdb -D_GLIBCXX_DEBUG
   flink=
 endif
 
