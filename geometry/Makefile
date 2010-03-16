@@ -16,7 +16,7 @@ ifeq ($(debug),0)
   endif
 else
   flag=-c -O0 -Iinclude -I../camxml/include \
-       -I../sprogc/include -Wall -ggdb
+       -I../sprogc/include -Wall -ggdb -D_GLIBCXX_DEBUG
   flink=
 endif
 
