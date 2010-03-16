@@ -11,7 +11,8 @@ ifeq ($(debug),0)
     flag=-c -O2 -Iinclude -I../comostrings/include -Wall -pg
   endif
 else
-  flag=-c -O0 -Iinclude -I../comostrings/include -Wall -ggdb -pg
+  flag=-c -O0 -Iinclude -I../comostrings/include -Wall -ggdb -pg \
+       -D_GLIBCXX_DEBUG
 endif
 
 # Source directories.
