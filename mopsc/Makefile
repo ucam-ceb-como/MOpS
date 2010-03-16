@@ -21,7 +21,8 @@ ifeq ($(debug),0)
 else
   flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
        -I../sprogc/include -I../sweepc/include -I../cvodes/include \
-       -I../cvodes/source/cvodes -I../geometry/include -I../utils/include -Wall -ggdb -pg
+       -I../cvodes/source/cvodes -I../geometry/include -I../utils/include \
+       -Wall -ggdb -pg -D_GLIBCXX_DEBUG
   flink=-pg 
 endif
 
