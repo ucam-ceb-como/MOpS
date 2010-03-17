@@ -14,7 +14,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
+    You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
@@ -109,7 +109,7 @@ template<class Weight, class Selectee> class BinaryTree
      * tree to stay consistent if a weight is modified - it is rather
      * like the key of a pair associative STL container.
      */
-    typedef std::pair<weight_type, return_pointer_type> value_type;
+    typedef std::pair<const weight_type, return_pointer_type> value_type;
     typedef const value_type const_value_type; //extra to STL
 
     //! Create an empty tree with no space for particles
@@ -972,16 +972,17 @@ template<class Weight, class Selectee>
 
     // Use this vector to build up the values that will be kept in
     // the resized tree.
-    std::vector<value_type> newValues;
+    typedef std::pair<weight_type, return_pointer_type> mutable_value_type;
+    std::vector<mutable_value_type> newValues;
     newValues.reserve(new_size);
     // Copy the values for all the leaf nodes that have values to both left and right
     for(size_type i = 0;  i < newSize2; ++i) {
-        newValues.push_back(value_type(mNodes[halfCapacity + i].left,  mIdentifiers[2 * i]));
-        newValues.push_back(value_type(mNodes[halfCapacity + i].right, mIdentifiers[2 * i + 1]));
+        newValues.push_back(mutable_value_type(mNodes[halfCapacity + i].left,  mIdentifiers[2 * i]));
+        newValues.push_back(mutable_value_type(mNodes[halfCapacity + i].right, mIdentifiers[2 * i + 1]));
     }
     // See if there is one remaining value to copy
     if((lastData > 0) && (lastData % 2) == 0) {
-        newValues.push_back(value_type(mNodes[halfCapacity + newSize2].left, mIdentifiers[lastData]));
+        newValues.push_back(mutable_value_type(mNodes[halfCapacity + newSize2].left, mIdentifiers[lastData]));
     }
 
     //find smallest possible number of levels for the tree
