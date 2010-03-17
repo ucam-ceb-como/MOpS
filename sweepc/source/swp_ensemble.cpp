@@ -137,8 +137,10 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
             for (unsigned int i=0; i!=rhs.Count(); ++i) {
                 m_particles[i] = rhs.m_particles[i]->Clone();
             }
+
+            m_tree.resize(m_capacity);
+            rebuildTree();
         }
-        m_tree = rhs.m_tree;
     }
     return *this;
 }

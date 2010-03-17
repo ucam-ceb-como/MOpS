@@ -15,7 +15,8 @@ ifeq ($(debug),0)
   endif
 else
   flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -I../geometry/include -I../utils/include -Wall -g -pg
+       -I../sprogc/include -I../geometry/include -I../utils/include -Wall \
+       -g -pg -D_GLIBCXX_DEBUG
 endif
 
 # Source directories.
