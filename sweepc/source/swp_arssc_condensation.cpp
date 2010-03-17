@@ -150,7 +150,7 @@ int ARSSC_Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
 
             // Check that the event is not ficticious by comparing the
             // majorant rate with the true rate.
-            if (!Ficticious(majr, truer) || !m_mech->AnyDeferred()) {
+            if (!Fictitious(majr, truer, rand_u01) || !m_mech->AnyDeferred()) {
                 // Choose a primary particle to update.  Use surface
                 // area to weight in the first instance.
                 SubParticle *sub = sp->SelectLeaf(

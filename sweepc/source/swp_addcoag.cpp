@@ -211,7 +211,7 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
             truek*=ceff;
         }
 
-        if (!Ficticious(majk, truek)) {
+        if (!Fictitious(majk, truek, rand_u01)) {
             assert(sys.Particles().Count() <= sys.Particles().Capacity());
             //std::cout << "Coag #" << ++sCoagCount << ' ' << t << ' ' << numParticles
             //          << ' ' << massParticles;

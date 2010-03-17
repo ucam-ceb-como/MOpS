@@ -418,7 +418,7 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
 
 
 
-        if (!Ficticious(majk, truek)) {
+        if (!Fictitious(majk, truek, rand_u01)) {
             // We can now coagulate the particles, remember to
             // remove second particle afterwards.
             if (ip1 < ip2) {

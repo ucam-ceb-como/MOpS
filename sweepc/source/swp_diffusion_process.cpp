@@ -169,7 +169,7 @@ int  Sweep::Processes::DiffusionProcess::Perform(Sweep::real t,
 
     // Choose direction weighted by rate
     Geometry::Direction direction;
-    if(Sweep::rnd() * (leftRate + rightRate) < leftRate) {
+    if(rand_u01() * (leftRate + rightRate) < leftRate) {
         direction = Geometry::left;
     }
     else {

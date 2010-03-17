@@ -10,7 +10,7 @@
 #include "swp_cell.h"
 #include "swp_mechanism.h"
 #include "swp_transport_outflow.h"
-
+#include "rng.h"
 
 /*!
  * Calculate the rates of all the transport processes from a vector of pointers.
@@ -104,7 +104,7 @@ int Sweep::Processes::TransportProcess::Outflow(const real t, Cell &sys,
             const real trueRate = Rate(t, sys, *(out->particle));
 
             // Check whether the event is  ficticious
-            if (Ficticious(majorantRate, trueRate)) {
+            if (Fictitious(majorantRate, trueRate, Sweep::rnd)) {
                 // Fictitious event so update the existing binary tree with the
                 // updated particle and leave the particle in its original
                 // location.

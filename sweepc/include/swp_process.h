@@ -52,7 +52,6 @@
 #include "swp_particle.h"
 #include "swp_particle_cache.h"
 #include "swp_process_type.h"
-#include "rng.h"
 #include "sprog.h"
 #include <map>
 #include <string>
@@ -215,11 +214,9 @@ public:
 
     // FICTICIOUS EVENTS.
 
-	// Determines whether a rate is ficticious given 
-    // the majorant and true values.
-    static bool Ficticious(real majk, real truek);
+    //! See whether an event is fictitious
+    static bool Fictitious(real majk, real truek, real(*rand_u01)());
 
-    
     // READ/WRITE/COPY.
 
     // Returns a copy of the process

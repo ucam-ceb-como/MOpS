@@ -129,7 +129,7 @@ int ARSSC_Reaction::Perform(Sweep::real t, Sweep::Cell &sys,
             if (sp->IsValid()) {
                 real truer = Rate(t, sys, *sp);
 
-                if (!Ficticious(majr, truer)) {
+                if (!Fictitious(majr, truer, rand_u01)) {
                     // Choose a primary particle to update.
                     SubParticle *sub = sp->SelectLeaf(m_modelid, m_pid);
                     Primary *pri = sub->Primary();

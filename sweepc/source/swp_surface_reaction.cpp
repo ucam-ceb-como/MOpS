@@ -254,7 +254,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
             if (sp->IsValid()) {
                 real truer = Rate(t, sys, *sp);
 
-                if (!Ficticious(majr, truer)) {
+                if (!Fictitious(majr, truer, rand_u01)) {
                     // Adjust particle.
                     sp->Adjust(m_dcomp, m_dvals, m_modelid, m_pid, 1);
                     sys.Particles().Update(i);

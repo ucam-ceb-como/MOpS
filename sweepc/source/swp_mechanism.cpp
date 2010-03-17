@@ -44,6 +44,7 @@
 #include "swp_model_factory.h"
 #include "swp_process_factory.h"
 #include "swp_abf_model.h"
+#include "rng.h"
 
 #include "geometry1d.h"
 

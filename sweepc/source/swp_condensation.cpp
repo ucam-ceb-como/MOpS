@@ -288,7 +288,7 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
             // some events would wrongly be treated as fictitious.  The ugly
             // solution used here is to ensure that there are no fictitious
             // events when there are no deferred processes.
-            if (!Ficticious(majr, truer) || !m_mech->AnyDeferred()) {
+            if (!Fictitious(majr, truer, rand_u01) || !m_mech->AnyDeferred()) {
                 // Adjust particle.
                 sp->Adjust(m_dcomp, m_dvals,SubModels::BasicModel_ID, 
                            ParticleCache::iS, 1); // Use surface area to weight in first instance.

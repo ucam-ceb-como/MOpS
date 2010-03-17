@@ -43,7 +43,6 @@
 #include "swp_params.h"
 #include "swp_process.h"
 #include "swp_mechanism.h"
-#include "rng.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -248,9 +247,9 @@ void Process::RemoveProduct(const std::string &name)
 
 // Determines whether a rate is ficticious given 
 // the majorant and true values.
-bool Process::Ficticious(real majk, real truek)
+bool Process::Fictitious(real majk, real truek, real(*rand_u01)())
 {
-    return !((majk*rnd()) < truek);
+    return (majk*rand_u01() >= truek);
 }
 
 
