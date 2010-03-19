@@ -313,6 +313,9 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     m_maxdt = dtg / 3.0;
     m_tstop = tstop;
 
+    // Set the chemical conditions.
+    linInterpGas(t, m_gasprof, *r.Mixture());
+
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
@@ -359,7 +362,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
-        linInterpGas(t, m_gasprof, *r.Mixture());
+
         mech.LPDA(t, *r.Mixture());
 
         r.SetTime(t);
