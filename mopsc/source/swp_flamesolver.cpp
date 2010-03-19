@@ -151,9 +151,16 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         for (int i=0; (unsigned)i!=subs.size(); ++i) {
             if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol) && (i!=Rcol) &&
                 (i!=Xcol) && (i!=Dcol) && (i!=Vcol) && (i!=Gcol)) {
-                Sprog::Species *sp = mech.AddSpecies();
-                sp->SetName(subs[i]);
-                spcols[i] = mech.FindSpecies(subs[i]);
+                // Try to find this species in the mechanism
+                const int speciesMechIndex = mech.FindSpecies(subs[i]);
+
+                if(speciesMechIndex < 0) {
+                    std::ostringstream msg("Failed to find species ");
+                    msg << subs[i] << " in mechanism (Mops, Sweep::FlameSolver::LoadGasProfile).";
+                    throw std::runtime_error(msg.str());
+                }
+                // Found species
+                spcols[i] = speciesMechIndex;
             }
         }
 
