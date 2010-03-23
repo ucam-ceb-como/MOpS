@@ -501,7 +501,7 @@ void Ensemble::rebuildTree() {
     const iterator itPartEnd = end();
 
     // Build up new data for binary tree
-    std::vector<tree_type::value_type> newTreeValues;
+    std::vector<std::pair<tree_type::weight_type, tree_type::return_pointer_type> > newTreeValues;
     newTreeValues.reserve(m_count);
     while(itPart != itPartEnd) {
         newTreeValues.push_back(std::make_pair(static_cast<tree_type::weight_type>(**itPart), itPart));
