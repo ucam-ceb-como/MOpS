@@ -833,6 +833,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
         pah->UpdatePAHs(t, *this);
         pah->UpdateCache();
         pah->CheckCoalescence();
+        sp.UpdateCache();
     }
     // If there are no deferred processes then stop right now.
     if (m_anydeferred) {
