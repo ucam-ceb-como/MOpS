@@ -243,10 +243,10 @@ void EnsembleStats::PSL_Names(std::vector<std::string> &names, unsigned int star
     }
 }
 
-// Returns the particle size list (PSL) entry for particle i
-// in the given ensemble.
-void EnsembleStats::PSL(const Ensemble &ens, unsigned int i,
-                        real time, fvector &psl, real scale) const
+// Returns the PSL entry for the given particle.  The particle weight
+// is set to 1.0 because there is only one particle.
+void EnsembleStats::PSL(const Sweep::Particle &sp, const Sweep::ParticleModel& model,
+		                real time, fvector &psl, real scale)
 {
     unsigned int start = 1;
 
@@ -255,39 +255,6 @@ void EnsembleStats::PSL(const Ensemble &ens, unsigned int i,
         psl[0] = scale*1.0e-6;
     } else {
         psl.push_back(scale*1.0e-6); // m-3 to cm-3.
-    }
-
-    // Get basic stats.
-    m_basicstats->PSL(ens, i, time, psl, start);
-    start += m_basicstats->PSL_Count();
-
-    // Get aggregation model PSL stats.
-    if (m_aggstats!=NULL) {
-        m_aggstats->PSL(ens, i, time, psl, start);
-        start += m_aggstats->PSL_Count();
-    }
-
-    // Get stats from particle sub-models.
-    for (ModelStatsMap::const_iterator j=m_modelstats.begin();
-         j!=m_modelstats.end(); ++j) {
-        j->second->PSL(ens, i, time, psl, start);
-        start += j->second->PSL_Count();
-    }
-}
-
-// Returns the PSL entry for the given particle.  The particle weight
-// is set to 1.0 because there is only one particle.
-void EnsembleStats::PSL(const Sweep::Particle &sp, real time, fvector &psl)
-{
-    unsigned int start = 1;
-
-    // First PSL variable is the particle weight.  This is set to
-    // 1.0 for a single particle, because no information about the
-    // ensemble is known.
-    if (psl.size() > 0) {
-        psl[0] = 1.0;
-    } else {
-        psl.push_back(1.0);
     }
 
     // Get basic stats.

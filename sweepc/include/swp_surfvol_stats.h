@@ -148,17 +148,7 @@ public:
         unsigned int start = 0 // Optional start index for the first name.
         ) const;
 
-    // Returns the particle size list (PSL) entry for particle i
-    // in the given ensemble.
-    void PSL(
-        const Ensemble &ens,   // Ensemble from which to get properties.
-        unsigned int i,        // Index of particle in ensemble to get.
-        real time,             // The current time.
-        fvector &psl,          // Output vector.
-        unsigned int start = 0 // Optional start index for the first variable.
-        ) const;
-
-    // Returns the PSL entry for the given particle.
+    //! Build the PSL entry for the given particle.
     void PSL(
         const Sweep::Particle &sp,      // Particle from which to get PSL data.
         real time,                      // Current flow time (used to calculate particle age).

@@ -10,22 +10,6 @@
     interface which produces stats from the basic properties of the
     ParticleData object.  It does not consider any particle sub-models.
 
-    The stats stored in this class are:
-
-    1.      Particle count.
-    2.      Number density (M0).
-    3.      Average particle diameter.
-    4.      Average particle collision diameter.
-    5.      Average particle mobility diameter.
-    6/7.    Total and average particlesurface area.
-    8/9.    Total and average particle volume.
-    10/11.  Total and average particle mass.
-
-    Additionally the total and average values of all particle components
-    and tracker values are appended to the end of the array.  For this
-    reason it is necessary to initialise the class with knowledge of
-    the components and tracker variables.
-
   Licence:
     This file is part of "sweepc".
 
@@ -74,6 +58,24 @@ namespace Sweep
 {
 namespace Stats
 {
+/*!
+The stats stored in this class are:
+
+1.      Particle count.
+2.      Number density (M0).
+3.      Average particle diameter.
+4.      Average particle collision diameter.
+5.      Average particle mobility diameter.
+6/7.    Total and average particlesurface area.
+8/9.    Total and average particle volume.
+10/11.  Total and average particle mass.
+12      Number density of secondary particles.
+
+Additionally the total and average values of all particle components
+and tracker values are appended to the end of the array.  For this
+reason it is necessary to initialise the class with knowledge of
+the components and tracker variables.
+*/
 class ParticleStats : public IModelStats
 {
 public:
@@ -96,10 +98,6 @@ public:
 
     // Returns the number of stats for this model.
     unsigned int Count(void) const;
-
-    // Returns the stats mask which informs whether stats should
-    // be summed, averaged or both.
-//    const std::vector<StatType> &Mask(void) const;
 
     // Calculates the model stats for a single particle.
     void Calculate(const Particle &data);
@@ -176,17 +174,7 @@ public:
         unsigned int start = 0 // Optional start index for the first name.
         ) const;
 
-    // Returns the particle size list (PSL) entry for particle i
-    // in the given ensemble.
-    void PSL(
-        const Ensemble &ens,   // Ensemble from which to get properties.
-        unsigned int i,        // Index of particle in ensemble to get.
-        real time,             // The current time.
-        fvector &psl,          // Output vector.
-        unsigned int start = 0 // Optional start index for the first variable.
-        ) const;
-
-    // Returns the PSL entry for the given particle cache.
+    //! Build the PSL entry for the given particle.
     void PSL(
         const Sweep::Particle &sp,      // Particle from which to get PSL data.
         real time,                      // Current flow time (used to calculate particle age).

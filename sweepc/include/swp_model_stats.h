@@ -47,15 +47,19 @@
 #define SWEEP_MODELSTATS_H
 
 #include "swp_params.h"
-#include "swp_particle_cache.h"
-#include "swp_ensemble.h"
 #include "swp_submodel_type.h"
+#include "swp_particle_cache.h"
 #include <vector>
 #include <string>
 #include <iostream>
 
 namespace Sweep
 {
+    // Forward declarations
+    class Particle;
+    class ParticleModel;
+    class Ensemble;
+
 namespace Stats
 {
 class IModelStats
@@ -106,17 +110,7 @@ public:
         unsigned int start = 0 // Optional start index for the first name.
         ) const = 0;
 
-    // Returns the particle size list (PSL) entry for particle i
-    // in the given ensemble.
-    virtual void PSL(
-        const Ensemble &ens,   // Ensemble from which to get properties.
-        unsigned int i,        // Index of particle in ensemble to get.
-        real time,             // The current time.
-        fvector &psl,          // Output vector.
-        unsigned int start = 0 // Optional start index for the first variable.
-        ) const = 0;
-
-    // Returns the PSL entry for the given particle.
+    //! Build the PSL entry for the given particle.
     virtual void PSL(
         const Sweep::Particle &sp, // Particle from which to get PSL data.
         real time,                      // Current flow time (used to calculate particle age).

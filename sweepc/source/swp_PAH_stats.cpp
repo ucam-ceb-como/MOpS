@@ -327,26 +327,6 @@ void PAHStats::PSL_Names(std::vector<std::string> &names,
     }
 }
 
-// Returns the particle size list (PSL) entry for particle i
-// in the given ensemble.
-void PAHStats::PSL(const Ensemble &ens, unsigned int i,
-                       real time, fvector &psl, unsigned int start) const
-{
-    // Get particle.
-    const Sweep::Particle *const sp = ens.At(i);
-
-    if (sp != NULL) {
-        PSL(*sp, time, psl, start);
-    } else {
-        // Resize vector if too small.
-        if (start+PSL_Count()-1 >= psl.size()) {
-            psl.resize(start+PSL_Count(), 0.0);
-        }
-        // Clear data points.
-        fill(psl.begin()+start, psl.begin()+start+PSL_Count()-1, 0.0);
-    }
-}
-
 // Returns the PSL entry for the given particle.
 void PAHStats::PSL(const Sweep::Particle &sp, real time,
                        fvector &psl, unsigned int start) const
