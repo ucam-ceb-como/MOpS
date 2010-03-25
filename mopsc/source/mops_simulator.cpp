@@ -1272,12 +1272,12 @@ void Simulator::readPartTrackPoint(std::istream &in,
         i = pdata.begin();
         for (unsigned int j=0; j!=n; ++j) {
             Sweep::Particle sp(in, mech);
-            stats.PSL(sp, (real)t, *(i++));
+            stats.PSL(sp, mech, (real)t, *(i++), 1.0);
         }
         Sweep::Particle empty(t, mech);
         for (unsigned int j=n; j!=m_ptrack_count; ++j)
         {
-            stats.PSL(empty, (real)t, *(i++));
+            stats.PSL(empty, mech, (real)t, *(i++), 1.0);
         }
     }
 }
@@ -1804,8 +1804,9 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                 // Get PSL for all particles.
                 for (unsigned int j=0; j!=r->Mixture()->ParticleCount(); ++j) {
                     // Get PSL.
-                    stats.PSL(r->Mixture()->Particles(), j, times[i].EndTime(),
-                              psl, 1.0/(r->Mixture()->SampleVolume()*scale));
+                    stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
+                    		  times[i].EndTime(), psl,
+                    		  1.0/(r->Mixture()->SampleVolume()*scale));
                     // Output particle PSL to CSV file.
                     out[i]->Write(psl);
 
