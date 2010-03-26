@@ -67,9 +67,9 @@ all: comostringslib camxmllib sproglib sweeplib cvodeslib geomlib $(obj) mops.o
 	mkdir -p bin
 ifeq ($(debug),0)
   ifeq ($(profile),0)
-		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops.x -static
+		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops.x
   else
-		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops_p.x -static
+		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops_p.x
   endif 
 else
 	$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops_d.x
