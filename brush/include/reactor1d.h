@@ -187,11 +187,11 @@ template<typename IteratorType> void Brush::Reactor1d::ReplaceParticles(const It
             throw std::runtime_error(msg.str());
         }
         else {
-            // Note that this cell has now been visited for particle populatio replacement
+            // Note that this cell has now been visited for particle population replacement
             visitedCells.insert(cellIndex);
 
-            mReactors[cellIndex].Mixture()->Particles().SetParticles(it->particleList.begin(), it->particleList.end());
-            mReactors[cellIndex].Mixture()->SetM0(it->m0);
+            mReactors[cellIndex].Mixture()->SetParticles(it->particleList.begin(), it->particleList.end(),
+                                                         it->m0 / it->particleList.size());
         }
         ++it;
     }

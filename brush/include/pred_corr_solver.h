@@ -44,8 +44,11 @@
 
 #include "reset_chemistry.h"
 
+#include "swp_particle.h"
+
 #include <vector>
 #include <stack>
+#include <list>
 
 // Forward declarations
 namespace Brush {
@@ -56,9 +59,22 @@ namespace Sprog {
 }
 
 namespace Sweep {
+    class Cell;
+    class Particle;
+    class Mechanism;
+
 namespace Transport {
     struct TransportOutflow;
 }
+}
+
+namespace Mops {
+    class Mixture;
+}
+
+namespace Geometry {
+    class LocalGeometry1d;
+    class Geometry1d;
 }
 
 namespace Brush {
@@ -132,6 +148,31 @@ protected:
 private:
     //! Not possible to have a solver of this type without a reset chemistry object
     PredCorrSolver();
+
+    //! Calculate and set a new position on one particle
+    void updateParticlePosition(const real t_stop, const Mops::Mixture &mix,
+                                const Sweep::Mechanism &mech,
+                                const Geometry::LocalGeometry1d & geom,
+                                const std::vector<const Sweep::Cell*> & neighbouring_cells,
+                                Sweep::Particle& sp) const;
+    
+    /*!
+     *  \brief Lists of particles due to be added to cells and their statistical weights
+     *
+     *  Particles in the the lists at index i in the vector are destined to be added to
+     *  cell i of a reactor.
+     */
+    typedef std::vector<std::list<Sweep::Transport::TransportOutflow> > inflow_lists_vector;
+
+    //! Update the positions on a list of particles from one cell
+    inflow_lists_vector updateParticleListPositions(const real t_stop, const Mops::Mixture &mix,
+                                                    const size_t cell_index, const Sweep::Mechanism &mech,
+                                                    const Geometry::Geometry1d &geom,
+                                                    const std::vector<const Sweep::Cell*> &neighbouring_cells,
+                                                    Sweep::PartPtrList& particle_list) const;
+
+    //! Put particles that are actually moving to new cells into their destination
+    void moveParticlesToDifferentCells(Reactor1d & reac, const inflow_lists_vector & inflow_lists) const;
 
     //! Object for setting reactor chemistry to fixed values (? just use pointer)
     ResetChemistry mResetChemistry;
