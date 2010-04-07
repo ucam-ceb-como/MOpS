@@ -255,7 +255,8 @@ void Brush::Simulator::saveParticleStats(const Reactor1d &reac, std::ostream &ou
         // Put the stats data into the file
         //BOOST_FOREACH(real r, stats.Get())
         {
-            const fvector &statsVector = stats.Get();
+            fvector statsVector;
+            stats.Get(statsVector);
             const fvector::const_iterator itEnd = statsVector.end();
             for(fvector::const_iterator it = statsVector.begin(); it != itEnd; ++it) {
                 out << ',' << *it;
