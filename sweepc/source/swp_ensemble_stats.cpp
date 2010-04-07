@@ -121,23 +121,23 @@ unsigned int EnsembleStats::Count(void) const
 }
 
 // Calculates the model stats for a particle ensemble.
-void EnsembleStats::Calculate(const Ensemble &e, real scale)
+void EnsembleStats::Calculate(const Ensemble &e, real scale, real secondary_scale)
 {
-    m_basicstats->Calculate(e, scale);
-    if (m_aggstats!=NULL) m_aggstats->Calculate(e, scale);
+    m_basicstats->Calculate(e, scale, secondary_scale);
+    if (m_aggstats!=NULL) m_aggstats->Calculate(e, scale, secondary_scale);
     for (ModelStatsMap::iterator i=m_modelstats.begin();
          i!=m_modelstats.end(); ++i) {
-        i->second->Calculate(e, scale);
+        i->second->Calculate(e, scale, secondary_scale);
     }
 }
 
 // Returns a vector containing the stats.
-const fvector &EnsembleStats::Get(void) const
+/*const fvector &EnsembleStats::Get(void) const
 {
     static fvector stats;
     Get(stats);
     return stats;
-}
+}*/
 
 // Returns a vector containing the stats.
 void EnsembleStats::Get(fvector &stats, unsigned int start) const

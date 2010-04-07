@@ -66,10 +66,11 @@ The stats stored in this class are:
 3.      Average particle diameter.
 4.      Average particle collision diameter.
 5.      Average particle mobility diameter.
-6/7.    Total and average particlesurface area.
+6/7.    Total and average particle surface area.
 8/9.    Total and average particle volume.
 10/11.  Total and average particle mass.
-12      Number density of secondary particles.
+12      Number of secondary computational particles
+13      Number density of secondary particles.
 
 Additionally the total and average values of all particle components
 and tracker values are appended to the end of the array.  For this
@@ -105,7 +106,8 @@ public:
     // Calculates the model stats for a particle ensemble.
     void Calculate(
         const Ensemble &e, // Ensemble from which to get stats.
-        real scale = 1.0   // Scaling factor to unit volume (summed stats).
+        real scale,        // Scaling factor to unit volume (summed stats).
+        real secondary_scale // Scaling factor to unit volume for secondary particles
         );
 
     // Returns a vector containing the stats.
@@ -129,11 +131,17 @@ public:
 
     // AVAILABLE BASIC STATS.
 
-    // Returns the particle count.
+    //! Returns the particle count.
     real PCount(void) const;
 
-    // Returns the number density.
+    //! Returns the particle count.
+    real SecondaryPCount(void) const;
+
+    //! Returns the number density.
     real M0(void) const;
+
+    //! Returns the number density.
+    real SecondaryM0(void) const;
 
     // Returns the avg. equiv. sphere diameter.
     real AvgDiam(void) const;
@@ -203,9 +211,9 @@ public:
 
 private:
     // Stats count and indices.
-    static const unsigned int STAT_COUNT = 11;
+    static const unsigned int STAT_COUNT = 13;
     enum StatIndices {iNP=0, iM0=1, iD=2, iDcol=3,
-                      iDmob=4, iS=5, iV=7, iM=9};
+                      iDmob=4, iS=5, iV=7, iM=9, i2NP=11, i2M0=12};
 
     // PSL count and indices.
     static const unsigned int PSL_COUNT = 7;

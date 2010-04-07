@@ -59,7 +59,7 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_PAH_primary.o swp_PAH_cache.o swp_PAH_stats.o swp_transport_process.o \
     swp_diffusion_process.o swp_advection_process.o \
     mt19937.o swp_dimer_inception.o swp_pah_inception.o \
-    swp_molecule_evolution.o
+    swp_molecule_evolution.o swp_secondary_freecoag.o swp_secondary_primary_coag.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -220,6 +220,16 @@ swp_transcoag.o: $(src)/swp_transcoag.cpp $(inc)/swp_coagulation.h $(inc)/swp_tr
 swp_addcoag.o: $(src)/swp_addcoag.cpp $(inc)/swp_coagulation.h $(inc)/swp_addcoag.h \
                $(inc)/swp_cell.h $(inc)/swp_mechanism.h $(inc)/swp_params.h
 	$(cpp) $(flag) $(src)/swp_addcoag.cpp
+
+swp_secondary_freecoag.o: $(src)/swp_secondary_freecoag.cpp $(inc)/swp_coagulation.h \
+                          $(inc)/swp_secondary_freecoag.h $(inc)/swp_cell.h \
+                          $(inc)/swp_mechanism.h $(inc)/swp_params.h
+	$(cpp) $(flag) $(src)/swp_secondary_freecoag.cpp
+
+swp_secondary_primary_coag.o: $(src)/swp_secondary_primary_coag.cpp $(inc)/swp_coagulation.h \
+                              $(inc)/swp_secondary_primary_coag.h $(inc)/swp_cell.h \
+                             $(inc)/swp_mechanism.h $(inc)/swp_params.h
+	$(cpp) $(flag) $(src)/swp_secondary_primary_coag.cpp
 
 swp_condensation.o: $(src)/swp_condensation.cpp
 	$(cpp) $(flag) $(src)/swp_condensation.cpp

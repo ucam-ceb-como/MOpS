@@ -43,6 +43,7 @@
 #include "swp_particle_model.h"
 #include "swp_particle.h"
 #include "swp_primary.h"
+#include "swp_PAH_primary.h"
 #include "swp_surfvol_primary.h"
 #include "swp_pripart_primary.h"
 #include "swp_model_factory.h"
@@ -51,6 +52,7 @@
 #include "swp_PAH_primary.h"
 #include <stdexcept>
 #include <cmath>
+#include <limits>
 
 using namespace Sweep;
 using namespace std;
@@ -124,6 +126,14 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
         m_ThermophoresisType = rhs.m_ThermophoresisType;
 
         m_MoleculeStories = rhs.m_MoleculeStories;
+
+        // Secondary particles
+        m_SecondaryParticles = rhs.m_SecondaryParticles;
+        m_MinSecondaryMass = rhs.m_MinSecondaryMass;
+        m_MaxSecondaryMass = rhs.m_MaxSecondaryMass;
+        m_MinSecondaryCollDiam = rhs.m_MinSecondaryCollDiam;
+        m_MaxSecondaryCollDiam = rhs.m_MaxSecondaryCollDiam;
+
     }
     return *this;
 }
@@ -534,6 +544,12 @@ void ParticleModel::Serialize(std::ostream &out) const
         out.write(reinterpret_cast<const char *>(&m_AdvectionType), sizeof(m_AdvectionType));
         out.write(reinterpret_cast<const char *>(&m_ThermophoresisType), sizeof(m_ThermophoresisType));
 
+        // Secondary particle model details
+        out.write(reinterpret_cast<const char *>(&m_SecondaryParticles), sizeof(m_SecondaryParticles));
+        out.write(reinterpret_cast<const char *>(&m_MinSecondaryMass), sizeof(m_MinSecondaryMass));
+        out.write(reinterpret_cast<const char *>(&m_MaxSecondaryMass), sizeof(m_MaxSecondaryMass));
+        out.write(reinterpret_cast<const char *>(&m_MinSecondaryCollDiam), sizeof(m_MinSecondaryCollDiam));
+        out.write(reinterpret_cast<const char *>(&m_MaxSecondaryCollDiam), sizeof(m_MaxSecondaryCollDiam));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, ParticleModel::Serialize).");
@@ -599,6 +615,14 @@ void ParticleModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&m_DiffusionType), sizeof(m_DiffusionType));
                 in.read(reinterpret_cast<char*>(&m_AdvectionType), sizeof(m_AdvectionType));
                 in.read(reinterpret_cast<char*>(&m_ThermophoresisType), sizeof(m_ThermophoresisType));
+
+                // Secondary particvle details
+                in.read(reinterpret_cast<char*>(&m_SecondaryParticles), sizeof(m_SecondaryParticles));
+                in.read(reinterpret_cast<char*>(&m_MinSecondaryMass), sizeof(m_MinSecondaryMass));
+                in.read(reinterpret_cast<char*>(&m_MaxSecondaryMass), sizeof(m_MaxSecondaryMass));
+                in.read(reinterpret_cast<char*>(&m_MinSecondaryCollDiam), sizeof(m_MinSecondaryCollDiam));
+                in.read(reinterpret_cast<char*>(&m_MaxSecondaryCollDiam), sizeof(m_MaxSecondaryCollDiam));
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -630,6 +654,12 @@ void ParticleModel::init(void)
     m_ThermophoresisType = NoThermophoresis;
 
     m_MoleculeStories.clear();
+
+    m_SecondaryParticles = false;
+    m_MinSecondaryMass = 0.0;
+    m_MaxSecondaryMass = std::numeric_limits<real>::max();
+    m_MinSecondaryCollDiam = 0.0;
+    m_MaxSecondaryCollDiam = std::numeric_limits<real>::max();
 }
 
 // Clears the current ParticleModel from memory.
@@ -658,6 +688,12 @@ void ParticleModel::releaseMem(void)
     // Set sub-particle tree and aggregation models to default values.
     m_subpart_tree = false;
     m_aggmodel     = AggModels::Spherical_ID;
+
+    m_SecondaryParticles = false;
+    m_MinSecondaryMass = 0.0;
+    m_MaxSecondaryMass = std::numeric_limits<real>::max();
+    m_MinSecondaryCollDiam = 0.0;
+    m_MaxSecondaryCollDiam = std::numeric_limits<real>::max();
 }
 
 /*!
@@ -1123,3 +1159,31 @@ real ParticleModel::accomodationFunction(const Cell &sys, const Particle &sp) co
     return (1.0 + 0.9 * knudsen * switchTerm) / (1.0 + knudsen);
 }
 
+/*!
+ * @param[in]   sp  Particle to check
+ *
+ * @return      True if sufficiently small and simple for a secondary population
+ */
+bool ParticleModel::isSecondary(const Particle &sp) const {
+    if(m_SecondaryParticles){
+        if((sp.Mass() > m_MinSecondaryMass) && (sp.CollDiameter() < m_MaxSecondaryCollDiam)) {
+            if(m_aggmodel == AggModels::PAH_ID) {
+                const AggModels::PAHPrimary* pri = dynamic_cast<const AggModels::PAHPrimary*>(sp.Primary());
+
+                return (pri->Numprimary() == 1);
+            }
+            else
+                return true;
+        }
+    }
+
+    return false;
+
+}
+
+/*!
+ * @param[in]   on_off      True iff some particles are to be treated as secondary particles
+ */
+void ParticleModel::setSecondary(bool on_off) {
+    m_SecondaryParticles = on_off;
+}

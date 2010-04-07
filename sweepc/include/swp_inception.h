@@ -132,6 +132,12 @@ public:
     // new particle.
     void SetParticleTracker(unsigned int i, real track);
 
+    //! Should new particles be considered for the secondary population
+    void SetUseSecondary(bool use_secondary);
+
+    //! Should new particles be considered for the secondary population
+    bool UseSecondary() const;
+
 	// TOTAL RATE CALCULATIONS.
 
     // Calculates the rate of multiple inceptions given a
@@ -165,8 +171,8 @@ public:
         );
 
 protected:
-    // Rate parameters.
-    real m_a;            // Rate constant.
+    //! Multiplicative rate adjustment factor
+    real m_a;
 
     // Properties of newly incepted particles.
     fvector m_newcomp; // Composition.
@@ -176,6 +182,10 @@ protected:
     // Default constructor is protected to prevent an inception being
     // defined without knowledge of the parent mechanism.
     Inception(void);
+
+private:
+    //! Indicate if new particles should be added to secondary population if possible
+    bool m_UseSecondary;
 
 };
 } // namespace Processes

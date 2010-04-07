@@ -53,25 +53,41 @@ class Mechanism;
 
 namespace Processes
 {
+    //Forward declaration to make typedef possible
+    class Coagulation;
 
+    //! Vector of polymorphic coagulation processes
+    typedef std::vector<Coagulation*> CoagPtrVector;
+
+//! Processes that stick two particles together to form one
 class Coagulation : public Process
 {
 public:
 
-    //* Ordinary method of construction just passes argument through.
+    //! Ordinary method of construction just passes argument through.
     Coagulation(const Sweep::Mechanism &mech);
 
-    //* Scaling factor for rate.
+    //! Scaling factor for rate.
     real A(void) const {return m_a;}
 
-    // Sets the rate constant.
+    //! Sets the rate constant.
     void SetA(real a) {m_a = a;}
 
+    //! Returns a copy of the coagulation process
+    virtual Coagulation *const Clone(void) const = 0;
 
-    // Writes the object to a binary stream.
+    //! Calculate rates for a sequence of coagulation processes
+    static real CalcRates(real t, const Cell &sys, const CoagPtrVector &coags,
+                          fvector &rates, unsigned int start = 0);
+
+    //! Calculate rate terms for a sequence of coagulation processes
+    static real CalcRateTerms(real t, const Cell &sys, const CoagPtrVector &coags,
+                              fvector::iterator &iterm);
+
+    //! Writes the object to a binary stream.
     virtual void Serialize(std::ostream &out) const;
 
-    // Reads the object from a binary stream.
+    //! Reads the object from a binary stream.
     virtual void Deserialize(
         std::istream &in,            // Input stream.
         const Sweep::Mechanism &mech // Parent mechanism.
@@ -84,12 +100,11 @@ protected:
     Coagulation(void) {};
     
 private:
-    //* Scaling factor for rate
+    //! Scaling factor for rate
     real m_a;
 };
 
-
-};
-};
+} //namespace Processes
+} //namespace Sweep
 
 #endif

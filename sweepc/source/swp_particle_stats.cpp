@@ -63,7 +63,9 @@ const std::string ParticleStats::m_statnames[ParticleStats::STAT_COUNT] = {
     std::string("Fv"),
     std::string("Avg. Volume (cm3)"),
     std::string("Mass (g/cm3)"),
-    std::string("Avg. Mass (g)")
+    std::string("Avg. Mass (g)"),
+    std::string("Secondary Particle Count"),
+    std::string("Secondary M0 (cm-3)")
 };
 
 const IModelStats::StatType ParticleStats::m_mask[ParticleStats::STAT_COUNT] = {
@@ -77,7 +79,9 @@ const IModelStats::StatType ParticleStats::m_mask[ParticleStats::STAT_COUNT] = {
     IModelStats::Sum,  // Volume.
     IModelStats::Avg,  // Avg. volume.
     IModelStats::Sum,  // Mass.
-    IModelStats::Avg   // Avg. mass.
+    IModelStats::Avg,  // Avg. mass.
+    IModelStats::None, // Secondary particle count.
+    IModelStats::Sum   // Secondary M0.
 };
 
 const std::string ParticleStats::m_const_pslnames[ParticleStats::PSL_COUNT] = {
@@ -188,6 +192,8 @@ void ParticleStats::Calculate(const Particle &data)
     m_stats[iV+1]  = m_stats[iV];
     m_stats[iM]    = data.Mass() * 1.0e3;         // Convert from kg to g.
     m_stats[iM+1]  = m_stats[iM+1];
+    m_stats[i2NP]  = 0.0; // Not used here, because particle assumed not to be secondary
+    m_stats[i2M0]  = 0.0; // Not used here, because particle assumed not to be secondary
 
     // Add component and tracker values to stats.
     fvector::iterator i = m_stats.begin()+STAT_COUNT;
@@ -202,9 +208,9 @@ void ParticleStats::Calculate(const Particle &data)
 }
 
 // Calculates the model stats for a particle ensemble.
-void ParticleStats::Calculate(const Ensemble &e, real scale)
+void ParticleStats::Calculate(const Ensemble &e, real scale, real secondary_scale)
 {
-    fill(m_stats.begin(), m_stats.end(), 0.0);
+    m_stats.assign(m_stats.size(), 0.0);
 
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
@@ -239,25 +245,30 @@ void ParticleStats::Calculate(const Ensemble &e, real scale)
     }
 
     // Get the particle count.
-    //m_stats[iNP] = (real)e.Count();
-    m_stats[iNP] = (real)n;
-    m_stats[iM0] = m_stats[0];
-    real invNP = (m_stats[iNP]>0) ? 1.0 / m_stats[iNP] : 0.0;
+    m_stats[iNP] = (real)e.Count();
+    m_stats[iM0] = (real)n;
+    const real invNumPart = (n>0) ? 1.0 / n : 0.0;
 
     // Scale the summed stats and calculate the averages.
-    for (unsigned int i=1; i!=STAT_COUNT; ++i) {
+    for (unsigned int i=1; i!=STAT_COUNT - 2; ++i) {
         if (m_mask[i] == Sum) {
             m_stats[i] *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
         } else {
-            m_stats[i] *= invNP;
+            m_stats[i] *= invNumPart;
         }
     }
+
+    // Secondary population quantities
+    m_stats[i2NP] = e.SecondaryCount();
+    m_stats[i2M0] = e.SecondaryCount() * (secondary_scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
+
+
 
     // Scale and calculate averages for components and tracker
     // variables.
     for (unsigned int i=STAT_COUNT; i!=Count(); ++i) {
         m_stats[i]   *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
-        m_stats[++i] *= invNP;
+        m_stats[++i] *= invNumPart;
     }
 }
 
@@ -333,8 +344,14 @@ void ParticleStats::Names(std::vector<std::string> &names,
 // Returns the particle count.
 real ParticleStats::PCount(void) const {return m_stats[iNP];}
 
+//! Returns the secondary particle count.
+real ParticleStats::SecondaryPCount(void) const {return m_stats[i2NP];}
+
 // Returns the number density.
 real ParticleStats::M0(void) const {return m_stats[iM0];}
+
+// Returns the secondary number density.
+real ParticleStats::SecondaryM0(void) const {return m_stats[i2M0];}
 
 // Returns the avg. equiv. sphere diameter.
 real ParticleStats::AvgDiam(void) const {return m_stats[iD];}

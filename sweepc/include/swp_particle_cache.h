@@ -244,6 +244,6 @@ protected:
     // Initialisation routine.
     void init(void);
 };
-};
+}
 
 #endif

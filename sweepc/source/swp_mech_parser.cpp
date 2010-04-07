@@ -49,6 +49,8 @@
 #include "swp_condensation.h"
 #include "swp_transcoag.h"
 #include "swp_addcoag.h"
+#include "swp_secondary_freecoag.h"
+#include "swp_secondary_primary_coag.h"
 #include "swp_abf_model.h"
 #include "swp_arssc_reaction.h"
 #include "swp_arssc_condensation.h"
@@ -288,11 +290,10 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 
     // READ PARTICLE MODEL.
 
-    xml.Root()->GetChildren("particle", items);
-    i = items.begin();
+    const CamXML::Element* particleXML = xml.Root()->GetFirstChild("particle");
 
     // Check if the sub-particle tree is active.
-    string str = (*i)->GetAttributeValue("subtree");
+    string str = particleXML->GetAttributeValue("subtree");
     if (str == "true") {
         mech.EnableSubPartTree();
     } else {
@@ -300,7 +301,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     }
 
     // Check the aggregation model.
-    str = (*i)->GetAttributeValue("model");
+    str = particleXML->GetAttributeValue("model");
     if (str == "spherical") {
         mech.SetAggModel(AggModels::Spherical_ID);
     } else if (str == "surfvol") {
@@ -314,8 +315,63 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetAggModel(AggModels::Spherical_ID);
     }
 
+    // See if there are any secondary particle criteria
+    const CamXML::Element* secondaryXML = particleXML->GetFirstChild("secondaryparticle");
+    if(secondaryXML != NULL) {
+        mech.setSecondary(true);
+
+        // Get the limits on particle properties that define secondary particles
+        std::vector<CamXML::Element*> limitsXML;
+        secondaryXML->GetChildren("limit", limitsXML);
+
+        // Currently need to specify values for m_MinSecondaryMass and m_MaxSecondaryCollDiam
+        if(limitsXML.size() < 2)
+            throw std::runtime_error("Insufficient limits provided to specify secondary particles (Sweep, MechParser::readV1).");
+
+        std::vector<CamXML::Element*>::const_iterator it = limitsXML.begin();
+        const std::vector<CamXML::Element*>::const_iterator itEnd = limitsXML.end();
+        while(it != itEnd) {
+            // Get name of particle property used to define the limit
+            const CamXML::Attribute* idXML =  (*it)->GetAttribute("id");
+            const std::string id = idXML->GetValue();
+
+            // Look for an upper limit on the property value
+            const CamXML::Element* maxXML = (*it)->GetFirstChild("max");
+            if(maxXML != NULL) {
+                const real maxVal = std::atof((maxXML->Data()).c_str());
+                if(id == "d") {
+                    mech.setMaxSecondaryCollDiam(maxVal);
+                }
+                else if(id == "m") {
+                    mech.setMaxSecondaryMass(maxVal);
+                }
+                else {
+                    throw std::runtime_error("Unrecognised particle term for secondary max (Sweep, MechParser::readV1).");
+                }
+            }
+
+            // Look for a lower limit on the property value
+            const CamXML::Element* minXML = (*it)->GetFirstChild("min");
+            if(minXML != NULL) {
+                const real minVal = std::atof((minXML->Data()).c_str());
+                if(id == "d") {
+                    mech.setMinSecondaryCollDiam(minVal);
+                }
+                else if(id == "m") {
+                    mech.setMinSecondaryMass(minVal);
+                }
+                else {
+                    throw std::runtime_error("Unrecognised particle term for secondary min (Sweep, MechParser::readV1).");
+                }
+            }
+
+
+            ++it;
+        }
+    }
+
     // Get the sintering model.
-    (*i)->GetChildren("sintering", items);
+    particleXML->GetChildren("sintering", items);
     if (items.size() > 0) {
         i = items.begin();
 
@@ -739,6 +795,11 @@ void MechParser::readPAHInception(CamXML::Element &xml, Processes::PAHInception 
                                 "(Sweep, MechParser::readPAHInception).");
         }
     }
+
+    // See if particles are to be added to the secondary population where possible
+    CamXML::Element* secondary = xml.GetFirstChild("usesecondary");
+    if(secondary != NULL)
+        icn.SetUseSecondary(true);
 }
 
 
@@ -1056,7 +1117,12 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
 //COAGULATION
 
 /**
+ * @param[in]       xml     XML document containing zero or more top level <coagulation> nodes
+ * @param[in,out]   mech    Mechanism to which to add coagulation processes
  *
+ * By default a transition regime coagulation process is created and added to the mechanism,
+ * this will happen if no coagulation nodes are found immediately below the root node of the
+ * XML tree.
  */
 void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
 {
@@ -1070,51 +1136,57 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
         // Use the default (transition regime) kernel
         mech.AddCoagulation(*(new Processes::TransitionCoagulation(mech)));
     }
-    else if(items.size() == 1)
-    {
-        // Read the user choice of kernel.  If no kernel is specified
-        // a default will be used
-        const CamXML::Element* const kernel = (items.front())->GetFirstChild("kernel");
-        if(kernel ==  NULL)
-        {
-            throw std::runtime_error("No kernel given for coagulation \
-                                     (Sweep, MechParser::readCoagulation)");
-        }
-        else
-        {
-            // Work out which kernel to use and create it
-            const string kernelName = kernel->Data();
-
-            std::auto_ptr<Processes::Coagulation> coag;
-            if(kernelName == "transition")
-                coag.reset(new Processes::TransitionCoagulation(mech));
-            else if(kernelName == "additive")
-                coag.reset(new Processes::AdditiveCoagulation(mech));
-            else
-                // Unrecognised option
-                throw std::logic_error("Coagulation kernel " + kernelName + "not yet available \
-                                        (Sweep, MechParser::readCoagulation)");
-
-            // Rate scaling now that a process has been created
-            real A = 0.0;
-            CamXML::Element *el = (items.front())->GetFirstChild("A");
-            if (el != NULL) {
-                A = cdble(el->Data());
-            } else {
-                A = 1.0;
-            }
-            coag->SetA(A);
-
-            mech.AddCoagulation(*coag);
-
-            // Get rid of the auto_ptr without deleting the coagulation object
-            coag.release();
-        }
-    }
     else
     {
-        throw std::runtime_error("More than one coagulation process specified \
-                                 (Sweep, MechParser::readCoagulation)");
+        for(vector<CamXML::Element*>::const_iterator it = items.begin();
+            it != items.end(); ++it) {
+
+            // Read the user choice of kernel.  If no kernel is specified
+            // a default will be used
+            const CamXML::Element* const kernel = (*it)->GetFirstChild("kernel");
+            if(kernel ==  NULL)
+            {
+                throw std::runtime_error("No kernel given for coagulation \
+                                         (Sweep, MechParser::readCoagulation)");
+            }
+            else
+            {
+                // Work out which kernel to use and create it
+                const string kernelName = kernel->Data();
+
+                // Create a process of the appropriate type, but wrap it with an auto_ptr so
+                // that it gets deleted if an exception is thrown when reading in the value
+                // of A.
+                std::auto_ptr<Processes::Coagulation> coag;
+                if(kernelName == "transition")
+                    coag.reset(new Processes::TransitionCoagulation(mech));
+                else if(kernelName == "additive")
+                    coag.reset(new Processes::AdditiveCoagulation(mech));
+                else if(kernelName == "secondaryfreemol")
+                    coag.reset(new Processes::SecondaryFreeCoag(mech));
+                else if(kernelName == "secondaryprimary")
+                    coag.reset(new Processes::SecondaryFreeCoag(mech));
+                else
+                    // Unrecognised option
+                    throw std::logic_error("Coagulation kernel " + kernelName + "not yet available \
+                                            (Sweep, MechParser::readCoagulation)");
+
+                // Rate scaling now that a process has been created
+                real A = 0.0;
+                CamXML::Element *el = (*it)->GetFirstChild("A");
+                if (el != NULL) {
+                    A = cdble(el->Data());
+                } else {
+                    A = 1.0;
+                }
+                coag->SetA(A);
+
+                mech.AddCoagulation(*coag);
+
+                // Get rid of the auto_ptr without deleting the coagulation object
+                coag.release();
+            }
+        }
     }
 }
 
@@ -1122,7 +1194,7 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
 
 /*!
  *\param[in]        xml         XML document containing a mechanism description
- *\param[inout]     mech        Mechanism to which transport processes will be added
+ *\param[in,out]     mech        Mechanism to which transport processes will be added
  */
 void MechParser::readDiffusionProcs(CamXML::Document &xml, Mechanism &mech)
 {

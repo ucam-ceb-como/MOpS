@@ -245,11 +245,18 @@ void Process::RemoveProduct(const std::string &name)
 
 // FICTICIOUS EVENTS.
 
-// Determines whether a rate is ficticious given 
-// the majorant and true values.
-bool Process::Fictitious(real majk, real truek, real(*rand_u01)())
+/*!
+ * @param[in]       majr        Majorant rate for event
+ * @param[in]       truer       True rate for event
+ * @param[in,out]   rand_u01    Pointer to U[0,1] generator
+ *
+ * @pre     truer <= majr
+ *
+ * @return      True with probability truek/majk, otherwise false
+ */
+bool Process::Fictitious(real majr, real truer, real(*rand_u01)())
 {
-    return (majk*rand_u01() >= truek);
+    return (majr * rand_u01() >= truer);
 }
 
 

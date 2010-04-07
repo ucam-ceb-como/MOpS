@@ -61,15 +61,6 @@ namespace Processes
 class ProcessFactory
 {
 public:
-    // PROCESS CREATION.
-
-    // Creates a new process data object of the given type.
-    static Process *const Create(
-        ProcessType id,              // ID of process type to create.
-        const Sweep::Mechanism &mech // Parent mechanism.
-        );
-
-
     // STREAM INPUT.
 
     // Reads a process from a binary stream.  The first item read

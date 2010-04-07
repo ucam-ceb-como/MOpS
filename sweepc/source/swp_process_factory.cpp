@@ -46,6 +46,8 @@
 #include "swp_actsites_reaction.h"
 #include "swp_transcoag.h"
 #include "swp_addcoag.h"
+#include "swp_secondary_freecoag.h"
+#include "swp_secondary_primary_coag.h"
 #include "swp_pah_inception.h"
 #include "swp_dimer_inception.h"
 #include "swp_arssc_inception.h"
@@ -55,39 +57,6 @@
 using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
-
-// PROCESS CREATION.
-
-// Creates a new process data object of the given type.
-Process *const ProcessFactory::Create(ProcessType id, const Sweep::Mechanism &mech)
-{
-    switch (id) {
-        case PAH_Inception_ID:
-            return new PAHInception(mech);
-        case Dimer_Inception_ID:
-            return new DimerInception(mech);
-        case Transition_Coagulation_ID:
-            return new TransitionCoagulation(mech);
-        case Additive_Coagulation_ID:
-            return new AdditiveCoagulation(mech);
-        case SurfaceReaction_ID:
-            return new SurfaceReaction(mech);
-        case Condensation_ID:
-            return new Condensation(mech);
-        case ActSiteRxn_ID:
-            return new ActSiteReaction(mech);
-        case ARSSC_Inception_ID:
-            return new ARSSC_Inception(mech);
-        case ARSSC_Reaction_ID:
-            return new ARSSC_Reaction(mech);
-        case ARSSC_Condensation_ID:
-//            return new ARSSC_Condensation(mech);
-        default:
-            throw invalid_argument("Invalid process ID (Sweep, "
-                                   "ProcessFactory::Create).");
-    }
-}
-
 
 // STREAM INPUT.
 
@@ -114,6 +83,12 @@ Process *const ProcessFactory::Read(std::istream &in, const Sweep::Mechanism &me
                 break;
             case Transition_Coagulation_ID:
                 proc = new TransitionCoagulation(in, mech);
+                break;
+            case Secondary_FreeCoagulation_ID:
+                proc = new SecondaryFreeCoag(in, mech);
+                break;
+            case Secondary_Primary_Coagulation_ID:
+                proc = new SecondaryPrimaryCoag(in, mech);
                 break;
             case Additive_Coagulation_ID:
                 proc = new AdditiveCoagulation(in, mech);
@@ -248,6 +223,12 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in,
                 break;
             case Additive_Coagulation_ID:
                 proc = new AdditiveCoagulation(in, mech);
+                break;
+            case Secondary_FreeCoagulation_ID:
+                proc = new SecondaryFreeCoag(in, mech);
+                break;
+            case Secondary_Primary_Coagulation_ID:
+                proc = new SecondaryPrimaryCoag(in, mech);
                 break;
             default:
                 throw runtime_error("Invalid coagulation type read from "

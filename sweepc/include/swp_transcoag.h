@@ -83,7 +83,7 @@ public:
     //* Virtual destructor
     virtual ~TransitionCoagulation() {};
     
-    virtual Process* const Clone() const;
+    virtual TransitionCoagulation* const Clone() const;
 
     //* Returns the process type for identification during serialisation
     virtual ProcessType ID(void) const {return Transition_Coagulation_ID;};

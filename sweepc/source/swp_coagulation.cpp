@@ -51,13 +51,73 @@ using namespace std;
 
 // Base coagulation class.
 
-/**
-  Default rate scaling to 1 for backwards compatibilty
+/*!
+ * @param[in]   mech    Mechanism to which this process should look for services like LPDA
+ *
+ * Default rate scaling to 1 for backwards compatibility
  */
  Coagulation::Coagulation(const Sweep::Mechanism &mech)
  : Process(mech)
  , m_a(1.0)
  {}
+
+/*!
+ * @param[in]       t       Time at which rates are to be calculated
+ * @param[in]       sys     System for which rates are to be calculated
+ * @param[in]       coags   Coagulation processes defining the rates
+ * @param[in,out]   rates   Vector to which to add the rates of the individual coagulations
+ * @param[in]       start   Position in rates at which to start inserting rates
+ *
+ * @return      Total rate of all the coagulation processes
+ */
+real Coagulation::CalcRates(real t, const Cell &sys, const CoagPtrVector &coags,
+                            fvector &rates, unsigned int start)
+{
+    // Iterators for the coagulation processes
+    CoagPtrVector::const_iterator itCoag = coags.begin();
+    const CoagPtrVector::const_iterator itCoagEnd = coags.end();
+
+    // Iterator for the rate vector
+    fvector::iterator it = (rates.begin()+start);
+
+    // Use this variable to accumulate the overall sum of the rates
+    real sum = 0.0;
+    while(itCoag != itCoagEnd) {
+        // Store the rate and move on to the next coagulation process
+        *it = (*itCoag++)->Rate(t, sys);
+
+        // Add the rate to the sum and move the rates vector iterator onto the next position
+        sum += *it++;
+    }
+    return sum;
+}
+
+/*!
+ * @param[in]       t       Time at which rates are to be calculated
+ * @param[in]       sys     System for which rates are to be calculated
+ * @param[in]       coags   Coagulation processes defining the rates
+ * @param[in,out]   iterm   Iterator to point at which to put rate terms of the individual coagulations
+ *
+ * @return      Total rate of all the coagulation processes
+ */
+real Coagulation::CalcRateTerms(real t, const Cell &sys, const CoagPtrVector &coags,
+                                fvector::iterator &iterm) {
+    // Iterators for the coagulation processes
+    CoagPtrVector::const_iterator itCoag = coags.begin();
+    const CoagPtrVector::const_iterator itCoagEnd = coags.end();
+
+    // Use this variable to accumulate the overall sum of the rates
+    real sum = 0.0;
+    while(itCoag != itCoagEnd) {
+        // The next line does three things, effectively in the following order
+        // i) Calls RateTerms on *itCoag
+        // ii) Advances itCoag
+        // iii) Adds the return value of RateTerms to sum
+        // Note that the order of 2 and 3 could be reversed without having any effect
+        sum += (*itCoag++)->RateTerms(t, sys, iterm);
+    }
+    return sum;
+ }
 
 // Writes the object to a binary stream.
 void Coagulation::Serialize(std::ostream &out) const

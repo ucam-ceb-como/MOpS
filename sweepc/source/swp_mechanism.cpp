@@ -68,13 +68,12 @@ using namespace Strings;
 
 // Default constructor.
 Mechanism::Mechanism(void)
-: m_anydeferred(false), m_coag(NULL), m_icoag(-1), m_termcount(0), m_processcount(0)
+: m_anydeferred(false), m_icoag(-1), m_termcount(0), m_processcount(0)
 {
 }
 
 // Copy constructor.
 Mechanism::Mechanism(const Mechanism &copy)
-: m_coag(NULL)
 {
 	*this = copy;
 }
@@ -131,17 +130,15 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
             m_processes.back()->SetMechanism(*this);
         }
 
-        // Copy coagulation process.
-        if (rhs.m_coag)
-        {
-            // The dynamic cast should never fail, because m_coag is
-            // of type Coagulation*, but the Clone method returns
-            // a Process* so the cast is necessary.
-            m_coag = dynamic_cast<Coagulation*>(rhs.m_coag->Clone());
+        // Copy coagulation processes.
+        for (CoagPtrVector::const_iterator i=rhs.m_coags.begin();
+            i!=rhs.m_coags.end(); ++i) {
+            m_coags.push_back((*i)->Clone());
 
             // Need to update the parent mechanism
-            m_coag->SetMechanism(*this);
+            m_coags.back()->SetMechanism(*this);
         }
+
 
         // Copy process counters.
         m_proccount.assign(rhs.m_proccount.begin(), rhs.m_proccount.end());
@@ -301,20 +298,26 @@ void Mechanism::AddTransport(TransportProcess &p)
 
 // COAGULATIONS.
 
-// Adds a coagulation process to the mechanism.
+/*!
+ * @param[in,out]   coag    New coagulation process
+ *
+ * Ownership of the process will be taken by the mechanism.  The
+ * process must be heap allocated so that delete can be called on
+ * it.
+ */
 void Mechanism::AddCoagulation(Coagulation& coag)
 {
-    if (m_coag != NULL) {
-        m_termcount -= m_coag->TermCount();
-    } else {
-        ++m_processcount;
-    }
-    delete m_coag;
 
-    m_coag = &coag;
+    m_coags.push_back(&coag);
+    m_termcount += coag.TermCount();
+    ++m_processcount;
+
     m_termcount += coag.TermCount();
     m_proccount.resize(m_termcount, 0);
     m_fictcount.resize(m_termcount, 0);
+
+    // Set the coagulation to belong to this mechanism.
+    coag.SetMechanism(*this);
 }
 
 
@@ -381,8 +384,9 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
     }
 
     // Add coagulation name.
-    if (m_coag) {
-        *i = m_coag->Name(); ++i;
+    for (CoagPtrVector::const_iterator it = m_coags.begin();
+         it != m_coags.end(); ++it) {
+        *i++ = (*it)->Name();
     }
 }
 
@@ -409,14 +413,10 @@ real Mechanism::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry
     sum += TransportProcess::CalcRates(t, sys, local_geom, m_transports, rates, m_inceptions.size() + m_processes.size());
 
     // Get coagulation rate.
-    fvector::iterator i = rates.begin()+m_inceptions.size()+m_transports.size()+m_processes.size();
-    if (m_coag != NULL) {
-        *i = m_coag->Rate(t, sys);
-        sum += *i;
-        ++i;
-    }
+    sum += Coagulation::CalcRates(t, sys, m_coags, rates, m_inceptions.size() + m_processes.size() + m_transports.size());
 
     // Get birth and death rates from the Cell.
+    fvector::iterator i = rates.begin() + m_inceptions.size() + m_transports.size() + m_processes.size() + m_coags.size();
     const BirthPtrVector &inf = sys.Inflows();
     for (BirthPtrVector::const_iterator j=inf.begin(); j!=inf.end(); ++j) {
         *i = (*j)->Rate(t, sys);
@@ -484,10 +484,8 @@ real Mechanism::CalcRateTerms(real t, const Cell &sys, const Geometry::LocalGeom
         }
     }
 
-    // Get coagulation rate.
-    if (m_coag != NULL) {
-        sum += m_coag->RateTerms(t, sys, iterm);
-    }
+    // Coagulation
+    sum += Coagulation::CalcRateTerms(t, sys, m_coags, iterm);
 
     // Get birth and death rates from the Cell.
     const BirthPtrVector &inf = sys.Inflows();
@@ -560,9 +558,7 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, const Geometry::Local
     }
 
     // Get coagulation rate.
-    if (m_coag != NULL) {
-        sum += m_coag->RateTerms(t, sys, iterm);
-    }
+    sum += Coagulation::CalcRateTerms(t, sys, m_coags, iterm);
 
     // Get birth and death rates from the Cell.
     const BirthPtrVector &inf = sys.Inflows();
@@ -750,11 +746,11 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
         // We are here because the process was neither an inception
         // nor a single particle process.  It is therefore either a
         // coagulation or a birth/death process.
-        if (m_coag) {
+        for(CoagPtrVector::const_iterator it = m_coags.begin(); it != m_coags.end(); ++it) {
             // Check if coagulation process.
-            if (j < (int)m_coag->TermCount()) {
+            if (j < static_cast<int>((*it)->TermCount())) {
                 // This is the coagulation process.
-                if (m_coag->Perform(t, sys, local_geom, j, Sweep::irnd, Sweep::rnd, out) == 0) {
+                if ((*it)->Perform(t, sys, local_geom, j, Sweep::irnd, Sweep::rnd, out) == 0) {
                     m_proccount[i] += 1;
                 } else {
                     m_fictcount[i] += 1;
@@ -762,7 +758,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
                 return;
             } else {
                 // This must be the birth/death process.
-                j -= m_coag->TermCount();
+                j -= (*it)->TermCount();
             }
         }
 
@@ -801,12 +797,25 @@ void Mechanism::LPDA(real t, Cell &sys) const
 
         // Perform deferred processes on all particles individually.
         Ensemble::iterator i;
-        unsigned int k = 0;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
             UpdateParticle(*(*i), sys, t);
-            ++k;
         }
 
+        // Perform deferred processes on secondary particles
+        for(unsigned int k=0; k != sys.Particles().SecondaryCount(); ++k) {
+            Particle* const sp = sys.Particles().SecondaryParticleAt(k);
+            UpdateParticle(*sp, sys, t);
+
+            // See if the particle has to move to the main population
+            if(!isSecondary(*sp)) {
+                sys.AddParticle(sp, 1.0 / sys.SecondarySampleVolume(), Sweep::irnd, Sweep::rnd);
+                sys.Particles().RemoveSecondaryParticle(k, false);
+
+                // A different particle will now be at position k so the
+                // check needs to be repeated (note the ++k at the end of the loop)
+                --k;
+            }
+        }
 
         // Now remove any invalid particles and update the ensemble.
         sys.Particles().RemoveInvalids();
@@ -833,7 +842,9 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
         pah->UpdatePAHs(t, *this);
         pah->UpdateCache();
         pah->CheckCoalescence();
-        sp.UpdateCache();
+        if (sp.IsValid())
+            sp.UpdateCache();
+
     }
     // If there are no deferred processes then stop right now.
     if (m_anydeferred) {
@@ -880,7 +891,8 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 
         // Check that the particle is still valid, only calculate
         // cache if it is.
-        if (sp.IsValid()) sp.UpdateCache();
+        if (sp.IsValid())
+            sp.UpdateCache();
     }
 }
 
@@ -1142,14 +1154,14 @@ void Mechanism::Serialize(std::ostream &out) const
             ProcessFactory::Write(*(*i), out);
         }
 
-        //TODO transport processes
+        //@TODO transport processes
 
-        // Write coagulation process.
-        if (m_coag != NULL) {
-            out.write((char*)&trueval, sizeof(trueval));
-            ProcessFactory::Write(*m_coag, out);
-        } else {
-            out.write((char*)&falseval, sizeof(falseval));
+        // Coagulation
+        n = m_coags.size();
+        out.write(reinterpret_cast<const char*>(&n), sizeof(n));
+        for (CoagPtrVector::const_iterator i = m_coags.begin();
+             i != m_coags.end(); ++i) {
+            ProcessFactory::Write(*(*i), out);
         }
 
         // Write index of first coag process.
@@ -1213,12 +1225,14 @@ void Mechanism::Deserialize(std::istream &in)
                     m_processes.push_back(p);
                 }
 
-                //TODO transport processes
+                //@TODO transport processes
 
                 // Read coagulation process.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                if (n == 1) {
-                    m_coag = ProcessFactory::ReadCoag(in, *this);
+                for(unsigned int i = 0; i != n; ++i) {
+                    Coagulation *pCoag = ProcessFactory::ReadCoag(in, *this);
+                    pCoag->SetMechanism(*this);
+                    m_coags.push_back(pCoag);
                 }
 
                 // Read index of first coag process.
@@ -1274,8 +1288,12 @@ void Mechanism::releaseMem(void)
     }
     m_transports.clear();
 
-    // Delete coagulation process.
-    delete m_coag; m_coag = NULL;
+    // Delete coagulation processes.
+    for (CoagPtrVector::iterator i = m_coags.begin();
+         i != m_coags.end(); ++i) {
+        delete *i;
+    }
+    m_coags.clear();
     m_icoag = -1;
 
     m_anydeferred = false;

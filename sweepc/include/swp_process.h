@@ -174,7 +174,7 @@ public:
     //   These routines return the individual rate terms for a 
     //   process, which may have multiple terms (e.g. condensation).
 
-    // Returns the number of rate terms for this process.
+    //! Returns the number of rate terms for this process.
     virtual unsigned int TermCount(void) const = 0;
 
     // Calculates the rate terms given an iterator to a real vector. The 
@@ -215,7 +215,7 @@ public:
     // FICTICIOUS EVENTS.
 
     //! See whether an event is fictitious
-    static bool Fictitious(real majk, real truek, real(*rand_u01)());
+    static bool Fictitious(real majr, real truer, real(*rand_u01)());
 
     // READ/WRITE/COPY.
 

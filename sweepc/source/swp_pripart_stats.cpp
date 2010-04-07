@@ -163,7 +163,7 @@ void PriPartStats::Calculate(const Particle &data)
 }
 
 // Calculates the model stats for a particle ensemble.
-void PriPartStats::Calculate(const Ensemble &e, real scale)
+void PriPartStats::Calculate(const Ensemble &e, real scale, real secondary_scale)
 {
     // Empty the stats array.
     fill(m_stats.begin(), m_stats.end(), 0.0);

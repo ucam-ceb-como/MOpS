@@ -79,7 +79,7 @@ public:
     //* Virtual destructor
     virtual ~AdditiveCoagulation() {};
     
-    virtual Process* const Clone() const {return new AdditiveCoagulation(*this);};
+    virtual AdditiveCoagulation* const Clone() const {return new AdditiveCoagulation(*this);};
 
     //* Returns the process type for identification during serialisation
     virtual ProcessType ID(void) const {return Additive_Coagulation_ID;};

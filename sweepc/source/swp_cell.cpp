@@ -93,6 +93,7 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_model      = rhs.m_model;
         m_smpvol     = rhs.m_smpvol;
         m_fixed_chem = rhs.m_fixed_chem;
+        m_secondaryVol = rhs.m_secondaryVol;
 
     }
     return *this;
@@ -198,10 +199,56 @@ unsigned int Cell::ParticleCount(void) const
     return m_ensemble.Count();
 }
 
+/*!
+ *@param[in,out]    sp              Pointer to particle to add to ensemble.
+ *@param[in]        stat_weight     Concentration of physical particles to be represented by added computational particles
+ *@param[in,out]    rand_int        Pointer to function that generates uniform integers on a range
+ *@param[in,out]    rand_u01        Pointer to function that generates U[0,1] deviates
+ *
+ * Ownership of the particle is taken by the ensemble, which will delete it when it is no
+ * longer required (which may be immediately).
+ *
+ * Exactly matching the caller specified statistical weight is only possible if it is an integer multiple
+ * of the statistical weight of one ensemble particle.  In general this condition will not be met and so
+ * probabilistic methods are used to add computational particles with the mean of their combined
+ * statistical weight equal to the value specified by the caller.
+ */
+void Cell::AddParticle(Particle* sp, real stat_weight,
+                       int (*rand_int)(int, int), real(*rand_u01)()) {
+    // Need to match caller specified weight with total weight of particles added to the ensemble
+    unsigned int safetyCounter = 0;
+    while(true) {
+        real destinationWeight = 1.0 / SampleVolume();
+
+        if(stat_weight >= destinationWeight) {
+            // Insert one copy of the particle into the destination cell
+            m_ensemble.Add(*(new Particle(*sp)), rand_int);
+            stat_weight -= destinationWeight;
+
+            // Avoid infinite loops
+            if(++safetyCounter > 100000) {
+                throw std::runtime_error("Failed to match particle weights in Sweep::Cell::AddParticle()");
+            }
+        }
+        else
+            break;
+    }
+
+     // Unfortunately we cannot quite conserve statistical weight, there will always be a bit
+     // left over after the loop above.  This can only be handled in an average sense.
+     if(rand_u01() < stat_weight * SampleVolume()) {
+         m_ensemble.Add(*sp, rand_int);
+     }
+     else {
+         // Ownership of the particle has not been passed on to an ensemble so the memory must be released
+         delete sp;
+     }
+}
+
 // Returns particle statistics.
 void Cell::GetVitalStats(Stats::EnsembleStats &stats) const
 {
-    stats.Calculate(m_ensemble, 1.0/SampleVolume());
+    stats.Calculate(m_ensemble, 1.0/SampleVolume(), 1.0/SecondarySampleVolume());
 }
 
 
@@ -213,40 +260,51 @@ real Cell::SampleVolume() const
     return m_smpvol * m_ensemble.Scaling();
 }
 
-/*
- * Set the number density which the ensemble represents.
- *
- *@param[in]    m0      Particle number density for full ensemble (units \f$\mathrm{m}^{-3}\f$)
- *
- *@return       Zero if value could be set
- */
-int Cell::SetM0(const real m0)
+//! Physical volume that would contain same number of secondary particles as the ensemble
+real Cell::SecondarySampleVolume() const
 {
-    if ((m_ensemble.Count() > 0) && (m0 > 0.0)) {
-        m_smpvol = m_ensemble.Count() / m0;
-        m_ensemble.ResetScaling();
-        return 0;
-    }
-    return 1;
+    return m_secondaryVol * m_ensemble.SecondaryScaling();
+}
+
+/*!
+ * Set the number density which the ensemble represents including the
+ * effects of ensemble doublings and contractions.
+ *
+ *@param[in]    scale_factor    Ratio of new to old sample volumes
+ *
+ *@pre      scale_factor > 0
+ */
+void Cell::AdjustSampleVolume(real scale_factor)
+{
+    assert(scale_factor > 0);
+    m_smpvol = SampleVolume() * scale_factor;
+    m_secondaryVol = SecondarySampleVolume() * scale_factor;
+
+    // The effects of ensemble rescalings are now incorporated in this sample
+    // volume.
+    m_ensemble.ResetScaling();
 }
 
 /**
  * Clear any particles and set the sample volume so that a full ensemble
  * (of m_ensemble.Capacity() particles) has the specified m0.
  *
- *@param[in]    m0      Particle number density for full ensemble (units \f$\mathrm{m}^{-3}\f$)
+ *@param[in]    m0              Particle number density for full ensemble (units \f$\mathrm{m}^{-3}\f$)
+ *@param[in]    secondary_m0    Secondary particle number density for m_ensemble.Capacity() secondary particles (units \f$\mathrm{m}^{-3}\f$)
  */
-void Cell::Reset(const real m0)
+void Cell::Reset(const real m0, const real secondary_m0)
 {
     m_ensemble.Clear();
     m_ensemble.ResetScaling();
 
     if ((m_ensemble.Capacity() > 0) && (m0 > 0.0)) {
         m_smpvol = m_ensemble.Capacity() / m0;
+        m_secondaryVol = m_ensemble.Capacity() / secondary_m0;
     }
     else {
         // The ensemble has not yet been initialised
         m_smpvol = 1.0;
+        m_secondaryVol = 1.0;
     }
 
 }
@@ -342,6 +400,8 @@ void Cell::Serialize(std::ostream &out) const
         double v = (double)m_smpvol;
         out.write((char*)&v, sizeof(v));
 
+        out.write(reinterpret_cast<const char*>(&m_secondaryVol), sizeof(m_secondaryVol));
+
         // Output if fixed chem.
         out.write((char*)&m_fixed_chem, sizeof(m_fixed_chem));
 
@@ -373,6 +433,8 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
                 // Read the sample volume.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_smpvol = (real)val;
+
+                in.read(reinterpret_cast<char*>(&m_secondaryVol), sizeof(m_secondaryVol));
 
                 // Read if fixed chem.
                 in.read(reinterpret_cast<char*>(&m_fixed_chem), sizeof(m_fixed_chem));

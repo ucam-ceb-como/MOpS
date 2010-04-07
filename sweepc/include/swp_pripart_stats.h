@@ -93,7 +93,8 @@ public:
     // Calculates the model stats for a particle ensemble.
     void Calculate(
         const Ensemble &e, // Ensemble from which to get stats.
-        real scale = 1.0   // Scaling factor to unit volume (summed stats).
+        real scale,        // Scaling factor to unit volume (summed stats).
+        real secondary_scale // Scaling factor to unti volume for the secondary population
         );
 
     // Returns a vector containing the stats.

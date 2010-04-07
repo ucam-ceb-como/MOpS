@@ -275,7 +275,9 @@ private:
     Processes::PartProcPtrVector m_processes; // Particle process list.
     //! List of transport processes
     Processes::TransportPtrVector m_transports;
-    Processes::Coagulation *m_coag;           // Coagulation process.
+
+    //! List of coagulation processes
+    Processes::CoagPtrVector m_coags;
 
     // Auxilliary information about the processes.
     int m_icoag;                 // Index of first coagulation process in mechanism.

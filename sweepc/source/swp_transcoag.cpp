@@ -58,7 +58,7 @@ Sweep::Processes::TransitionCoagulation::TransitionCoagulation(const Sweep::Mech
     m_name = "TransitionRegimeCoagulation";
 }
 
-Sweep::Processes::Process* const Sweep::Processes::TransitionCoagulation::Clone() const
+Sweep::Processes::TransitionCoagulation* const Sweep::Processes::TransitionCoagulation::Clone() const
 {
     return new TransitionCoagulation(*this);
 }
@@ -497,7 +497,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::FreeMolKernel(const Particl
                (sp1.InvSqrtMass() + sp2.InvSqrtMass()) *
                (sp1.CollDiamSquared() + sp2.CollDiamSquared());
     } else {
-        real dterm = sp1.CollDiameter()+sp2.CollDiameter();
+        const real dterm = sp1.CollDiameter()+sp2.CollDiameter();
         return m_efm * CFM * A() *
                sqrt(T * ((1.0/sp1.Mass())+(1.0/sp2.Mass()))) *
                dterm * dterm;

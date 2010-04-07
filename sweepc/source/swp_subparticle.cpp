@@ -1255,6 +1255,10 @@ void SubParticle::UpdateCache(void)
 		ParticleCache::SetCollDiameter((6*m_vol/m_surf)*pow(NumSubPart(),1/1.8));
 		}
 
+		// Update the aggregate details from the primary
+		if(m_aggcache != NULL)
+		    *m_aggcache = *m_primary;
+
     } else {
         // The cache is the sum of the left and right child caches.
         m_leftchild->UpdateCache();
@@ -1281,6 +1285,11 @@ void SubParticle::UpdateCache(void)
         m_time    = (m_leftchild->m_time + m_rightchild->m_time) / 2;
         m_createt    = (m_leftchild->m_createt + m_rightchild->m_createt) / 2;
 
+        // Update the aggregate details from the children
+        if(m_aggcache != NULL) {
+            *m_aggcache = *(m_leftchild->m_aggcache);
+            *m_aggcache += *(m_rightchild->m_aggcache);
+        }
     }
 }
 

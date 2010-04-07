@@ -143,7 +143,7 @@ void SurfVolStats::Calculate(const Particle &data)
 }
 
 // Calculates the model stats for a particle ensemble.
-void SurfVolStats::Calculate(const Ensemble &e, real scale)
+void SurfVolStats::Calculate(const Ensemble &e, real scale, real secondary_scale)
 {
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
