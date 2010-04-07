@@ -87,9 +87,6 @@ public:
         );
 
     // Returns a vector containing the stats.
-    //const fvector &Get(void) const;
-
-    // Returns a vector containing the stats.
     void Get(
         fvector &stats,        // Output vector.
         unsigned int start = 0 // Optional start index for the first stat.

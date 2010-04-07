@@ -132,14 +132,6 @@ void EnsembleStats::Calculate(const Ensemble &e, real scale, real secondary_scal
 }
 
 // Returns a vector containing the stats.
-/*const fvector &EnsembleStats::Get(void) const
-{
-    static fvector stats;
-    Get(stats);
-    return stats;
-}*/
-
-// Returns a vector containing the stats.
 void EnsembleStats::Get(fvector &stats, unsigned int start) const
 {
     // Get basic stats.
