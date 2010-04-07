@@ -19,9 +19,32 @@
 
     <particle id="[silica]" model="PAH" subtree="false">
       <description />
+      <secondaryparticle>
+        <limit id="m">
+          <min>3.18e-25</min>
+        </limit>
+
+        <limit id="d">
+          <max>8.77e-10</max>
+        </limit>
+      </secondaryparticle>
     </particle>
 
-    <pahinception />
+    <pahinception>
+      <usesecondary />
+    </pahinception>
+
+    <coagulation>
+      <kernel>transition</kernel>
+    </coagulation>
+
+    <coagulation>
+      <kernel>secondaryfreemol</kernel>
+    </coagulation>
+
+    <coagulation>
+      <kernel>secondaryprimary</kernel>
+    </coagulation>
 
     <pahfile path="PAH_data11.csv" time="0.0" />
     <pahfile path="PAH_data12.csv" time="0.005018" />

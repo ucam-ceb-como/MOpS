@@ -37,7 +37,7 @@ use strict;
 use warnings;
 
 # Clean up any outputs from previous simulations
-system("rm soot*");
+#system("rm pahtest2-*");
 
 # See if this is a windows system
 my $windows = ($ENV{'OS'} =~ /windows.*/i);
@@ -56,9 +56,10 @@ system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";
 
 # Parse the moments file
 my $momentFile;
-open($momentFile, "<sootv3-part.csv") or die "ERR: failed to open moment file: $!";
+open($momentFile, "<pahtest2-part.csv") or die "ERR: failed to open moment file: $!";
 
 my $m0 = 0;
+my $secondary_m0 = 0;
 my $m1 = 0;
 
 while(<$momentFile>) {
@@ -74,35 +75,46 @@ while(<$momentFile>) {
       $m1 = $fields[16];
       #print "16: $fields[16] \n";
 
-      last;
+  }
+  elsif (($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.0035) < 1e-6 )) {
+      $secondary_m0 = $fields[26];
+      #print "26: $fields[26] \n";
   }
 }
 
-# Original MS style code
-# Running the problem with 20 repetitions, but still only 1024 particles
-# gives M0 =(8.65+-0.22)e11 and (8.67+-0.25)e11 for two different random
-# number sequences.  The respective Fv values are (3.34+-0.06)e-8 and
-# (3.36+-0.05)e-8
 
-# riap code of 01 Feb 2010
-# Running the problem with 20 repetitions, but still only 1024 particles
-# gives M0 = (1.036+-0.029)e12 and Fv = (3.139+-0.0493)e-8
+print "$m0, $m1, $secondary_m0\n";
 
-print "$m0, $m1\n";
-if(abs($m0 -  1.036e12) > 1e11) {
-  print "Simulated mean M0 was $m0, when  1.036e12cm^-3 expected\n";
+# Using 10 runs with 1024 main computational particles get
+# mean m0 of 9.76e11, with 99% confidence interval for this mean of +-4.3e10
+if(abs($m0 -  9.76e11) > 4.3e10) {
+  print "Simulated mean M0 was $m0, when 9.76e11 cm^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($m1 - 3.139e-8) > 1e-9) {
-  print "Simulated mean M1 was $m1, when 3.139e-8 g cm^-3 expected\n";
+# Using 10 runs with 1024 main computational particles get
+# mean fv of 3.13e-8, with 99% confidence interval for this mean of +-5e-10
+if(abs($m1 - 3.13e-8) > 5e-10) {
+  print "Simulated mean M1 was $m1, when 3.13e-8 g cm^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 2;
+}
+
+# Using 10 runs with 1024 main computational particles get
+# mean secondary m0 of 2.85e11, with 99% confidence interval 
+# for this mean of +-8e9.  However, 2 runs with 512 particles
+# gives a much larger noise.
+if(abs($secondary_m0 -  2.85e11) > 1.5e10) {
+  print "Simulated mean secondary M0 was $secondary_m0, when 2.85e11 cm^-3 expected\n";
+  print "**************************\n";
+  print "****** TEST FAILURE ******\n";
+  print "**************************\n";
+  exit 3;
 }
 
 #print "All tests passed\n";
