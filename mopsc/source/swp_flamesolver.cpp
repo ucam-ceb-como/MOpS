@@ -227,6 +227,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
                     map<unsigned int,int>::iterator isp = spcols.find(i);
                     if (isp != spcols.end()) {
                         const real frac = cdble(subs[i]);
+                        assert(isp->second >= 0);
                         gpoint.Gas.RawData()[isp->second] = frac;
                         checkSum += frac;
                     }
@@ -327,8 +328,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         linInterpGas(t, m_gasprof, *r.Mixture());
 
         // Scale particle M0 according to gas-phase expansion.
-        real m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
-        r.Mixture()->SetM0(r.Mixture()->MassDensity() * m0 / old_dens);
+        r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->MassDensity());
 
         // Get the process jump rates (and the total rate).
         jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
@@ -362,7 +362,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
-
+        // Perhaps better to use t - 0.5 * dtg not just t
         mech.LPDA(t, *r.Mixture());
 
         r.SetTime(t);

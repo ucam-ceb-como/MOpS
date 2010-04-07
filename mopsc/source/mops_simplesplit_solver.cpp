@@ -87,7 +87,7 @@ void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
 
     // Variables required to ensure particle number density is correctly
     // scaled with gas-phase expansion.
-    real rho = 0.0, m0 = 0.0;
+    real rho = 0.0;
 
     /* m_cpu_mark = clock();
         // Solve first half-step of gas-phase chemistry.
@@ -113,10 +113,11 @@ void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
         m_chemtime += calcDeltaCT(m_cpu_mark);
 
         m_cpu_mark = clock();
-            // Solve whole step of population balance (Sweep).
-            m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
-            r.Mixture()->SetM0(r.Mixture()->MassDensity() * m0 / rho);
-            Run(t1, t2, *r.Mixture(), r.Mech()->ParticleMech());
+
+        // Solve whole step of population balance (Sweep).
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->MassDensity());
+        Run(t1, t2, *r.Mixture(), r.Mech()->ParticleMech());
+
         m_swp_ctime += calcDeltaCT(m_cpu_mark);        
     }
 
@@ -149,7 +150,7 @@ void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n, Mops::Reac
 
     // Variables required to ensure particle number density is correctly
     // scaled with gas-phase expansion.
-    real rho = 0.0, m0 = 0.0;
+    real rho = 0.0;
 
     /* m_cpu_mark = clock();
         // Solve first half-step of gas-phase chemistry.
@@ -176,8 +177,7 @@ void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n, Mops::Reac
 
         m_cpu_mark = clock();
             // Solve whole step of population balance (Sweep).
-            m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
-            r.Mixture()->SetM0(r.Mixture()->MassDensity() * m0 / rho);
+            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->MassDensity());
             Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech());
         m_swp_ctime += calcDeltaCT(m_cpu_mark);
         

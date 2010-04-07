@@ -103,11 +103,17 @@ public:
     // Sets the max. stochastic particle count.
     void SetMaxPartCount(unsigned int n);
 
-    // Returns the max. M0, for initial ensemble scaling.
+    //! Returns the max. M0, for initial ensemble scaling.
     real MaxM0(void) const;
 
-    // Sets max. M0.
+    //! Sets max. M0.
     void SetMaxM0(real m0);
+
+    //! Returns the max. expected secondary M0, for initial ensemble scaling.
+    real MaxSecondaryM0() const;
+
+    //! Sets maximum expected M0 for the secondary population
+    void SetMaxSecondaryM0(real m0);
 
     // CONSOLE OUTPUT.
 
@@ -209,9 +215,11 @@ private:
     // Max. number of stochastic particles in sweep.
     unsigned int m_pcount;
 
-    // Max. M0 value, for initial scaling of ensemble.
+    //! Max. M0 value, for initial scaling of ensemble.
     real m_maxm0;
 
+    //! Max. secondary M0 value, for initial scaling of ensemble.
+    real m_maxSecondaryM0;
 
     // COMPUTATION TIME.
 

@@ -372,9 +372,7 @@ void PredCorSolver::iteration(Reactor &r, real dt)
         Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech());
 
         // Scale M0 according to gas-phase expansion.
-        real m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
-        r.Mixture()->SetM0(r.Mixture()->MassDensity() * m0 / 
-                           m_reac_copy->Mixture()->MassDensity());
+        r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->MassDensity() / r.Mixture()->MassDensity());
     m_swp_ctime += calcDeltaCT(m_cpu_mark);
 
     // Now update the source terms at the end of the step.

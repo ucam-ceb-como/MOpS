@@ -213,6 +213,7 @@ int main(int argc, char *argv[])
             mech.WriteDiagnostics("ckmech.diag");
 
         if (soltype == FlamePP){
+            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
             dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gasphase, mech);
         }
     } catch (std::logic_error &le) {
