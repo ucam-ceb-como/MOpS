@@ -60,8 +60,21 @@ namespace Mops
 namespace LOIReduction
 {
 
-    //!Calculates a Level of Importance for each species in a mechanism by multiplying the Jacobian and sensitivity matrices
+    //!Calculates a Level of Importance for each species in a mechanism by multiplying the Jacobian and sensitivity matrices.
     std::vector<fvector> CalcLOI(double** J, double** Sensi, std::vector<fvector> LOI, int n_species, int n_sensi);
+
+    //! Compares LOI value to a given cutoff then makes lists of kept or rejected species
+    void RejectSpecies(std::vector<fvector> LOI, double LOICompVal, const Mechanism *const mech,
+                            std::vector<std::string>& RejectSpecies);
+
+    //! Creates an output file for each species' LOI at each timepoint.
+    void CreateLOIFile(std::ofstream &LOIFile, const Mechanism *const mech);
+
+    //! Build the name for the LOI file.
+    std::string buildLOIFileName();
+
+    //! Save the data from one run in the file created by the function above.
+    void SaveLOI(std::vector<fvector> LOI, double t, std::ofstream &out, const Mechanism *const mech);
 
 
 } //namespace LOIReduction

@@ -419,11 +419,12 @@ void ReadLOIStatus(const CamXML::Element &node, Solver &solver)
     //const CamXML::Element *subnode;
     const CamXML::Attribute *attr;
     std::string str;
+    double m_comp;
 
 
     // Read the relative error tolerance.
     attr = node.GetAttribute("enable");
-        if (attr != NULL) {
+    if (attr != NULL) {
         str = attr->GetValue();
         if (str.compare("true") == 0) {
             // LOI reduction should take place
@@ -431,7 +432,15 @@ void ReadLOIStatus(const CamXML::Element &node, Solver &solver)
             }
         else
             solver.SetLOIStatusFalse();
-        }
+    }
+    attr = node.GetAttribute("LOIComp");
+    if (attr!= NULL){
+        str = attr->GetValue();
+        //Set the LOI cutoff value
+        m_comp = Strings::cdble(str);
+        solver.SetLOICompValue(m_comp);
+        
+    }
 }
 
 // Reads simulation output parameters from given XML node.

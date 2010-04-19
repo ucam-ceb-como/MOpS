@@ -56,6 +56,7 @@
 #include "gpc_reaction_set.h"
 #include "loi_reduction.h"
 #include "mops_gpc_sensitivity.h"
+#include "gpc_species.h"
 using namespace Mops;
 using namespace std;
 using namespace Strings;
@@ -327,9 +328,17 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         unsigned int istep;
         double uround = 1.0e-7;
         double **J;
+
+        //Necessary variables for LOI reduction only.
+        std::string KeptMech("KeptMech.inp");
         vector<fvector> LOI(s.GetNumSens(), fvector(r.Mech()->SpeciesCount()));
+        std::ofstream LOIFile;
+        std::vector<std::string> rejectSpecies;
+        
         if (s.GetLOIStatus() == true){
+            LOIFile.open(LOIReduction::buildLOIFileName().c_str());
             s.InitialiseSensMatrix(s.GetNumSens(),r.Mech()->SpeciesCount());
+            LOIReduction::CreateLOIFile(LOIFile, r.Mech());  
         }
         // Loop over the time intervals.
         unsigned int global_step = 0;
@@ -356,7 +365,8 @@ void Simulator::RunSimulation(Mops::Reactor &r,
                         J = r.CreateJac(r.Mech()->SpeciesCount());
                     }
                     r.RateJacobian(t2, r.Mixture()->RawData(), J, uround);
-                    LOIReduction::CalcLOI(J, s.GetSensSolution(s.GetNumSens(), r.Mech()->SpeciesCount()), LOI, r.Mech()->SpeciesCount(), s.GetNumSens());
+                    LOI = LOIReduction::CalcLOI(J, s.GetSensSolution(s.GetNumSens(), r.Mech()->SpeciesCount()), LOI, r.Mech()->SpeciesCount(), s.GetNumSens());
+                    LOIReduction::SaveLOI(LOI, t2, LOIFile, r.Mech());
                 }
 
                 m_runtime += calcDeltaCT(m_cpu_mark);
@@ -382,6 +392,10 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             if (s.GetLOIStatus() == true){
                 r.DestroyJac(J, r.Mech()->SpeciesCount());
             }
+        }
+        if (s.GetLOIStatus() == true){
+            LOIReduction::RejectSpecies(LOI, s.ReturnCompValue(), r.Mech(), rejectSpecies);
+            r.Mech()->WriteReducedMech(KeptMech, rejectSpecies);
         }
 
         // Print run time to the console.

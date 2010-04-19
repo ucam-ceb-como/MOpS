@@ -138,6 +138,24 @@ bool Solver::GetLOIStatus() const
     return m_LOIEnable;
 }
 
+/*!
+Sets the LOI comparison value
+@param[in]      CompValue   Minimum value of a species LOI that will be kept in a reduced mechanism
+*/
+void Solver::SetLOICompValue(double CompValue)
+{
+    m_LOIComp = CompValue;
+}
+
+/*!
+Returns the LOI comparison value
+return      m_LOIComp       Minimum value of a species LOI that will be kept in a reduced mechanism
+*/
+double Solver::ReturnCompValue() const
+{
+    return m_LOIComp;
+}
+
 
 // UNDER-RELAXATION.
 

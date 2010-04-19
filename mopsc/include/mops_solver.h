@@ -106,7 +106,7 @@ public:
     // calculations.
     void SetRTOL(real rtol);
 
-    // SENSITIVITY STATUS FOR ODE SOLVER.
+    // LOI STATUS FOR ODE SOLVER.
 
     //! Enables LOI status to true.
     void SetLOIStatusTrue();
@@ -116,6 +116,12 @@ public:
 
     //! Retrieves the LOI status
     bool GetLOIStatus() const;
+
+    //! Sets the cutoff value for LOI comparison
+    void SetLOICompValue(double CompValue);
+
+    //! Returns the LOI comparison value
+    double ReturnCompValue() const;
     
     // UNDER-RELAXATION.
 
@@ -197,8 +203,11 @@ protected:
 
     // SENSITIVITY SETTINGS
 
-    //! Boolean variable for setting sensitivity status
+    //! Boolean variable for setting LOI status
     bool m_LOIEnable;
+
+    //! Minimum possible LOI value to keep a species in a mechanism.
+    double m_LOIComp;
 
     // Under-relaxation coefficient.
     real m_rlx_coeff;
