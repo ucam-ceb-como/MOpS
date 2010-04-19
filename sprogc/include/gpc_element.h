@@ -125,6 +125,9 @@ public:
     // element data.  This is used to debug.
     void WriteDiagnostics(std::ostream &out) const;
 
+    //! Writes the elements to a Chemkin output file.
+    void WriteElements(std::ostream &out) const;
+
 protected:
     // Element data.
     std::string m_name;       // Element name/symbol.

@@ -225,6 +225,9 @@ public:
     // Prints a diagnostic output file containing all the
     // mechanism data.  This is used to debug. 
     void WriteDiagnostics(const std::string &filename) const;
+    
+    //! Creates and writes out a Chemkin file containing the reduced mechanism as specified by LOI analysis
+    void WriteReducedMech(const std::string &filename, std::vector<std::string> RejectSpecies) const;
 
 	void setSpeciesTransport(std::map< std::string,std::vector<std::string> > &trMap,Sprog::Mechanism &mech) const;
 

@@ -192,7 +192,9 @@ public:
     // species data.  This is used to debug.
     void WriteDiagnostics(std::ostream &out) const;
 
-	
+    //! Writes out the kept species as decided by LOI analysis to the reduced mechanism output file.
+    void WriteSpecies(std::ostream &out) const;	
+
 	// TRANSPORT RELATED FUNCTIONS Added by vinod
 	
 	void setTransportData(std::vector<std::string> &data);

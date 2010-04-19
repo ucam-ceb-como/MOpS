@@ -1522,6 +1522,157 @@ void Reaction::WriteDiagnostics(std::ostream &out) const
     }
 }
 
+/*!
+@param[in]      out             Output stream for file creation.
+@param[in]      RejectSpecies   String vector containing the names of LOI rejected species.
+*/
+void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string> RejectSpecies) const {
+
+    if (out.good()) {
+
+        //Check to see if the reaction contains any of the rejected species.
+        //If so, return without writing anything.
+        for (unsigned int n = 0; n < RejectSpecies.size(); n++){
+            for (unsigned int j = 0; j < m_reac.size(); j++){
+                if (RejectSpecies[n] == m_mech->Species(m_reac[j].Index())->Name())
+                    return;
+            }
+            for (unsigned int k = 0; k < m_prod.size(); k++){
+                if (RejectSpecies[n] == m_mech->Species(m_prod[k].Index())->Name())
+                    return;
+            }
+            for (unsigned int l = 0; l < m_freac.size(); l++){
+                if (RejectSpecies[n] == m_mech->Species(m_freac[l].Index())->Name())
+                    return;
+            }
+            for (unsigned int m = 0; m < m_fprod.size(); m++){
+                if (RejectSpecies[n] == m_mech->Species(m_fprod[m].Index())->Name())
+                    return;
+            }
+        }
+
+        // Integer reactant stoichiometry.
+        if (m_reac.size() > 0 && m_prod.size() > 0){
+            for (unsigned int i = 0; i != m_reac.size(); ++i) {
+                // Species name.
+                for (int j = 0; j < m_reac[i].Mu(); j++) {
+                    out << m_mech->Species(m_reac[i].Index())->Name();
+                    if (i < m_reac.size() - 1 || j < m_reac[i].Mu() - 1)
+                        out << " + ";
+                }
+            }
+
+
+                if (m_usetb)
+                    out << " + M";
+
+                // Reaction reversibility.
+                if (m_reversible) {
+                    out << " =  ";
+                } else {
+                    out << " => ";
+                }
+        
+            // Integer product stoichiometry.
+            for (unsigned int i = 0; i != m_prod.size(); ++i) {
+                // Species name.
+                for (int j = 0; j < m_prod[i].Mu(); j++) {
+                    out << m_mech->Species(m_prod[i].Index())->Name();
+                    if (i < m_prod.size() - 1 || j < m_prod[i].Mu() - 1)
+                        out << " + ";
+                }
+            }
+            if (m_usetb)
+                out << " + M";
+        
+
+            // Forward Arrhenius coefficients.
+            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0 + m_usetb?1.0:0.0) << " " << m_arrf.n << " " << m_arrf.E / 4.184E7 / 1.0e-7 << "\n";
+
+            // Reverse Arrhenius coefficients.
+            if (m_arrr != NULL)
+                out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0 + m_usetb?1:0.0) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " /\n";
+        }
+
+        // Real reactant stoichiometry.
+        if (m_freac.size() > 0 && m_fprod.size() > 0){
+            for (unsigned int i = 0; i != m_freac.size(); ++i) {
+            // Species name.
+                for (unsigned int j = 0; j < m_freac[i].Mu(); j++){
+                    out << m_mech->Species(m_freac[i].Index())->Name();
+                    if (i < m_freac.size() - 1 || j < m_freac[i].Mu() - 1)
+                    out << " + ";
+                }
+            }
+
+            if (m_usetb)
+                out << " + M";
+
+            // Reaction reversibility.
+            if (m_reversible) {
+                out << " =  ";
+            } else {
+                out << " => ";
+            }
+
+            // Real product stoichiometry.
+            for (unsigned int i = 0; i != m_fprod.size(); ++i) {
+            // Species name.
+                for (int j = 0; j < m_fprod[i].Mu(); j++){
+                   out << m_mech->Species(m_fprod[i].Index())->Name();
+                    if (i < m_fprod.size() - 1 || j < m_fprod[i].Mu() - 1)
+                        out << " + ";
+                }
+            }
+
+            if (m_usetb)
+                out << " + M";
+
+            // Forward Arrhenius coefficients.
+            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0 + m_usetb?1.0:0.0) << " " << m_arrf.n << " " << m_arrf.E / 4.184E7 / 1.0e-7 << "\n";
+
+            // Reverse Arrhenius coefficients.
+            if (m_arrr != NULL)
+                out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0 + m_usetb?1:0.0) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " \n";
+        }
+
+        // Forward LT parameters.
+        if (m_lt != NULL) {
+            out << m_lt->B << " " << m_lt->C << " ";
+        }
+
+        // Reverse LT parameters.
+        if (m_revlt != NULL) {
+            out << m_revlt->B << " " << m_revlt->C << " ";
+        }
+        
+        // Third body flag.
+        if (m_usetb) {
+
+            // Write fall-off low pressure limit.
+            out << "LOW /" << cstr((m_foparams.LowP_Limit.A)/(pow(1.0e-6, ReactantStoich()))) << " " << m_foparams.LowP_Limit.n << " " << (m_foparams.LowP_Limit.E/ 4.184E7 / 1.0e-7) << " ";
+            out << " / " << "\n";
+
+            // Write fall-off third body.
+            if (m_foparams.ThirdBody >= 0) {
+                out << m_mech->Species(m_foparams.ThirdBody)->Name() << " ";
+            }
+
+            // Write fall-off parameters.
+            out << "TROE /";
+            for (unsigned int i = 0; i != (unsigned) FALLOFF_PARAMS::MAX_FALLOFF_PARAMS; ++i) {
+                out << m_foparams.Params[i] << " ";
+            }
+            out << " / " << "\n";
+        }
+
+        // New line.
+        out << "\n";
+ 
+    }
+    out.flush();
+}
+
 
 // MEMORY MANAGEMENT.
 

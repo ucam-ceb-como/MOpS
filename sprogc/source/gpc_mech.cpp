@@ -836,6 +836,43 @@ void Mechanism::WriteDiagnostics(const std::string &filename) const
     fout.close();
 }
 
+/*!
+@param[in]      filename            The name of the reduced mechanism output file.
+@param[in]      RejectSpecies       The rejected species as specified by LOI reduction.
+@param[in]      KeptSpecies         The kept species as specified by LOI reduction.
+*/
+void Mechanism::WriteReducedMech(const std::string &filename, std::vector<std::string> RejectSpecies) const {
+    
+    // Open the output file.
+    ofstream fout;
+    fout.open(filename.c_str());
+
+    // Write the Elements to the file.
+    fout << "ELEMENTS\n";
+    for (unsigned int i = 0; i != m_elements.size(); ++i) {
+        m_elements[i]->WriteElements(fout);
+    }
+    fout << "END\n\n";
+
+    // Write the Species to the file.
+    fout << "SPECIES\n";
+    for (unsigned int i = 0; i != m_species.size(); ++i) { 
+        if (m_species[i]->Name() != RejectSpecies[i])
+            m_species[i]->WriteSpecies(fout);
+    }
+    fout << "END\n\n";
+
+    // Write the reactions to the file.
+    fout << "REAC\n";
+    for (unsigned int i = 0; i != m_rxns.Count(); ++i) {
+        m_rxns.Reactions(i)->WriteReducedMechReacs(fout, RejectSpecies);
+    }
+    fout << "END\n\n";
+ 
+    // Close the output file.
+    fout.close();
+}
+
 void Mechanism::setSpeciesTransport(std::map< string,vector<string> > &trMap, Sprog::Mechanism &mech) const{
 
 	map< string,vector<string> >::iterator mi;

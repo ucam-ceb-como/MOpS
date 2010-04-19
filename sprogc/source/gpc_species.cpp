@@ -671,6 +671,18 @@ void Species::WriteDiagnostics(std::ostream &out) const
     }
 }
 
+/*!
+@param[in]      out             The ofstream that outputs to the reduced mechanism file.
+@param[in]      OneSpecies      A species; if it is kept by the LOI, the string contains a name. Else, it contains 'Null.'
+*/
+void Species::WriteSpecies(std::ostream &out) const {
+
+    if (out.good()) {
+        // Name.
+        out << m_name << "\n";       
+    }
+}
+
 // Following transport related routines added by vinod
 
 

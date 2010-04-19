@@ -296,3 +296,15 @@ void Element::WriteDiagnostics(std::ostream &out) const
         out.write(data.c_str(), data.length());
     }
 }
+
+/*!
+@param[in]      out         the ostream used to output the elements to the Chemkin mechanism file.
+*/
+void Element::WriteElements(std::ostream &out) const {
+
+    if (out.good()) {
+        // Name.
+        out << m_name << " ";
+        out << "\n";
+    }
+}

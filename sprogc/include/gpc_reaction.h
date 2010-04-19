@@ -325,6 +325,9 @@ public:
     // reaction data.  This is used to debug.
     void WriteDiagnostics(std::ostream &out) const;
 
+    //! Writes the reduced mechanism reactions to the output file
+    void WriteReducedMechReacs(std::ostream &out, std::vector<std::string> RejectSpecies) const;
+
 protected:
     // Reaction data.
     std::string m_name;                    // Reaction description.
