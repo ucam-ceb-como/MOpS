@@ -65,7 +65,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkLibraryDependencies="true"
-				AdditionalDependencies="..\Limex\Debug\limex.obj ..\Limex\Debug\Limex4_2_Dense.obj ..\Limex\Debug\Limex4_2_Auxiliaries.obj ..\AdditionalLibraries\lib\dformd.lib"
+				AdditionalDependencies="..\AdditionalLibraries\lib\limex.obj ..\AdditionalLibraries\lib\Limex4_2_Dense.obj ..\AdditionalLibraries\lib\Limex4_2_Auxiliaries.obj ..\AdditionalLibraries\lib\dformd.lib"
 				ShowProgress="0"
 				LinkIncremental="0"
 				AdditionalLibraryDirectories=""
