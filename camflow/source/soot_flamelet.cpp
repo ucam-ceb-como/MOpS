@@ -395,10 +395,12 @@ std::vector<real> SootFlamelet::getSootStatistics(const real position) const {
 
     // Collect the statistics
     stats.Calculate(mParticles->getCell(cellIndex).Mixture()->Particles(),
-                    1.0 / mParticles->getCell(cellIndex).Mixture()->SampleVolume());
+                    1.0 / mParticles->getCell(cellIndex).Mixture()->SampleVolume(),
+                    1.0 / mParticles->getCell(cellIndex).Mixture()->SecondarySampleVolume());
 
-    return stats.Get();
-
+    Sweep::fvector statvector;
+    stats.Get(statvector);
+    return statvector;
 }
 
 /*!
@@ -433,7 +435,7 @@ std::list<std::vector<real> > SootFlamelet::getSootParticleList(const real posit
     for(unsigned int particleIndex = 0; particleIndex < mix.ParticleCount(); ++particleIndex) {
         // Get a vector containing the particle details
         fvector particleListEntry;
-        stats.PSL(mix.Particles(), particleIndex, time,
+        stats.PSL(*(mix.Particles().At(particleIndex)), mParticles->getMechanism().ParticleMech(), time,
                   particleListEntry, 1.0 / mix.SampleVolume());
 
         particleList.push_back(particleListEntry);
