@@ -196,7 +196,15 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="limex.f"
+			RelativePath=".\Debug\limex.obj"
+			>
+		</File>
+		<File
+			RelativePath=".\Debug\LIMEX4_2_Auxiliaries.obj"
+			>
+		</File>
+		<File
+			RelativePath=".\Debug\LIMEX4_2_Dense.obj"
 			>
 		</File>
 	</Files>
