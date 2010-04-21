@@ -211,6 +211,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\swp_secondary_freecoag.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\swp_secondary_primary_coag.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\swp_solver.cpp"
 				>
 			</File>
@@ -502,6 +510,14 @@
 			</File>
 			<File
 				RelativePath=".\include\swp_primary.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_secondary_freecoag.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_secondary_primary_coag.h"
 				>
 			</File>
 			<File
