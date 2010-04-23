@@ -41,7 +41,6 @@
 
 #include "mops_timeinterval.h"
 #include "rng.h"
-#include "swp_model_stats.h"
 
 #include "reactor1d.h"
 #include "pred_corr_solver.h"
@@ -61,6 +60,7 @@ const size_t Brush::Simulator::sFirstSeed = 123;
  *@param[in]    initial_reactor             Initial condition
  *@param[in]    reset_chem                  Object to specify chemical conditions
  *@param[in]    output_file                 Base output file name
+ *@param[in]    stat_bound                  Decide which particles to ignore when calculating population statistics
  *@param[in]    split_diffusion             Activate split simulation of diffusion
  *@param[in]    split_advection             Activate split simulation of advection
  */
@@ -70,6 +70,7 @@ Brush::Simulator::Simulator(const size_t n_paths,
                             const Reactor1d &initial_reactor,
                             const ResetChemistry &reset_chem,
                             const std::string& output_file,
+                            const Sweep::Stats::IModelStats::StatBound &stat_bound,
                             const bool split_diffusion,
                             const bool split_advection)
         : mPaths(n_paths)
@@ -82,6 +83,7 @@ Brush::Simulator::Simulator(const size_t n_paths,
         , mInitialReactor(initial_reactor)
         , mResetChemistry(reset_chem)
         , mOutputFile(output_file)
+        , mStatBound(stat_bound)
 {
     for(size_t i = 0; i != initial_reactor.getNumCells(); ++i) {
         assert(initial_reactor.getCell(i).Mixture() != NULL);
@@ -235,13 +237,7 @@ void Brush::Simulator::saveParticleStats(const Reactor1d &reac, std::ostream &ou
     // Create a stats object to now so there are not a lot of string operations
     // each time one is needed below
     Sweep::Stats::EnsembleStats stats(mInitialReactor.getMechanism().ParticleMech());
-
-    // Reject particles with a collision diameter outside the range (0, 1.0e30)
-    Sweep::Stats::IModelStats::StatBound statsBound;
-    statsBound.Lower = 0;
-    statsBound.Upper = 1.0e30;
-    statsBound.PID = Sweep::ParticleCache::iDcol;
-    stats.SetStatBoundary(statsBound);
+    stats.SetStatBoundary(mStatBound);
 
     for(size_t i = 0; i < reac.getNumCells(); ++i) {
         // Collect the statistics

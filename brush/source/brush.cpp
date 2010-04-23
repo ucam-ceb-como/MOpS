@@ -180,6 +180,7 @@ int main(int argc, char* argv[])
     std::vector<std::pair<real, real> > maxPCounts, maxM0s;
     bool splitDiffusion = false;
     bool splitAdvection = false;
+    Sweep::Stats::IModelStats::StatBound statBound;
 
     try {
         // Load the XML
@@ -234,13 +235,30 @@ int main(int argc, char* argv[])
         // Output details
         node = root->GetFirstChild("output");
         if(node != NULL) {
-            node = node->GetFirstChild("filename");
-            if(node != NULL) {
-                outputFileBaseName = node->Data();
+            const CamXML::Element * const filenameNode = node->GetFirstChild("filename");
+            if(filenameNode != NULL) {
+                outputFileBaseName = filenameNode->Data();
             }
             else {
                 throw std::runtime_error("A <filename> element must be supplied in the output section");
             }
+
+            // See if the stats bounds were specified in the input file
+            const CamXML::Element * const statsBoundNode = node->GetFirstChild("statsbound");
+            if(statsBoundNode != NULL) {
+                // Read the data from the file
+                Sweep::ParticleCache::PropID statsboundPropertyID;
+                real statsLowerBound;
+                real statsUpperBound;
+                Mops::Settings_IO::ReadStatsBound(*statsBoundNode, statsboundPropertyID, statsLowerBound, statsUpperBound);
+
+                // Adjust statBound with the newly read data
+                statBound.PID = statsboundPropertyID;
+                statBound.Lower = statsLowerBound;
+                statBound.Upper = statsUpperBound;
+            }
+            // If no statsbound was specified in the input file, the default constructed value of
+            // statBound will be used.
         }
         else {
             throw std::runtime_error("A <output> element must be supplied with details for the required output");
@@ -248,7 +266,7 @@ int main(int argc, char* argv[])
 
     }
     catch (std::exception &e) {
-        std::cerr << "Failed to settings from " << settfile << ", because\n"
+        std::cerr << "Failed to read settings from " << settfile << ", because\n"
                   << e.what() << '\n';
         return 1;
     }
@@ -382,7 +400,7 @@ int main(int argc, char* argv[])
 
     //========= Now run the simulation ===========================
     Simulator sim(runs, iterations, timeIntervals, initialReactor, *pInitialChem,
-                  outputFileBaseName, splitDiffusion, splitAdvection);
+                  outputFileBaseName, statBound, splitDiffusion, splitAdvection);
     sim.runSimulation(randomSeedOffset);
 
     //========= Output ===========================================

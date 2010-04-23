@@ -44,9 +44,14 @@
 
 #include "reactor1d.h"
 #include "reset_chemistry.h"
+
 #include "mops_timeinterval.h"
 
+#include "swp_model_stats.h"
+
 #include <string>
+
+
 
 namespace Brush {
     class ResetChemistry;
@@ -60,6 +65,7 @@ public:
               const Reactor1d &initial_reactor,
               const ResetChemistry &reset_chem,
               const std::string& output_file,
+              const Sweep::Stats::IModelStats::StatBound &stat_bound,
               const bool split_diffusion, const bool split_advection);
 
     //! Run the simulation paths and store output
@@ -117,6 +123,9 @@ private:
 
     //! Base string for output file names
     std::string mOutputFile;
+
+    //! Statsbound decides which particles to ignore when calculating particle population statistics
+    Sweep::Stats::IModelStats::StatBound mStatBound;
 
     //! Default simulator is meaningless
     Simulator();
