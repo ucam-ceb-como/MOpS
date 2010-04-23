@@ -98,9 +98,14 @@ namespace Settings_IO
         std::vector<TimeInterval> &times // Vector of output time intervals.
         );
 
-    // Read initial particles from a file into a list
+    //! Read initial particles from a file into a list
     Sweep::PartPtrList ReadInitialParticles(const CamXML::Element &node,
                                             const Sweep::Mechanism & particle_mech);
+
+    //! Read limits that define extreme particles to be excluded from particle population statistics
+    void ReadStatsBound(const CamXML::Element &node, Sweep::ParticleCache::PropID &property_id,
+                        real &lower_bound, real &upper_bound);
+
 } //namespace Settings_IO
 } //namespace Mops
 
