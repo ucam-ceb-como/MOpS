@@ -52,6 +52,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <limits>
 
 namespace Sweep
 {
@@ -144,7 +145,9 @@ public:
         real Lower;
         real Upper;
         Sweep::ParticleCache::PropID PID;
-        void StatsBound(void) {Lower=0.0;Upper=1.0e30;PID=ParticleCache::iDcol;};
+
+        //! Default to something that should accept all particles
+        StatBound() : Lower(0.0), Upper(std::numeric_limits<real>::max()), PID(ParticleCache::iDcol) {}
     };
     // Set statbound to this abstract class
     void SetStatBoundary(const StatBound &sb) { m_statbound = sb; }
