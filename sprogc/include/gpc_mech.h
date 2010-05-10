@@ -239,6 +239,7 @@ protected:
     Kinetics::ReactionSet m_rxns;   // Set of reactions defined by mechanism.
     StoichXRefVector m_stoich_xref; // Reaction stoichiometry cross-referenced for each species.
     bool m_stoich_xref_valid;       // Flag which tells whether or not the stoich xref map is valid.
+    std::vector<std::string> m_nec_spec;    //String vector containing the species that must be present in the reduced mechanism.
 
 
     // COPYING ROUTINES.

@@ -1526,7 +1526,8 @@ void Reaction::WriteDiagnostics(std::ostream &out) const
 @param[in]      out             Output stream for file creation.
 @param[in]      RejectSpecies   String vector containing the names of LOI rejected species.
 */
-void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string> RejectSpecies) const {
+void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string> RejectSpecies) const 
+{
 
     if (out.good()) {
 
@@ -1563,8 +1564,9 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
             }
 
 
-                if (m_usetb)
-                    out << " + M";
+            if (m_usetb){
+                out << " + M";
+            }
 
                 // Reaction reversibility.
                 if (m_reversible) {
@@ -1582,8 +1584,10 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
                         out << " + ";
                 }
             }
-            if (m_usetb)
+            if (m_usetb){
                 out << " + M";
+            }
+
         
 
             // Forward Arrhenius coefficients.
@@ -1605,8 +1609,9 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
                 }
             }
 
-            if (m_usetb)
+            if (m_usetb){
                 out << " + M";
+            }
 
             // Reaction reversibility.
             if (m_reversible) {
@@ -1625,8 +1630,9 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
                 }
             }
 
-            if (m_usetb)
+            if (m_usetb){
                 out << " + M";
+            }
 
             // Forward Arrhenius coefficients.
             out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0 + m_usetb?1.0:0.0) << " " << m_arrf.n << " " << m_arrf.E / 4.184E7 / 1.0e-7 << "\n";
@@ -1650,20 +1656,22 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
         if (m_usetb) {
 
             // Write fall-off low pressure limit.
-            out << "LOW /" << cstr((m_foparams.LowP_Limit.A)/(pow(1.0e-6, ReactantStoich()))) << " " << m_foparams.LowP_Limit.n << " " << (m_foparams.LowP_Limit.E/ 4.184E7 / 1.0e-7) << " ";
-            out << " / " << "\n";
+            if (m_foparams.LowP_Limit.A != 0 &&  m_foparams.LowP_Limit.n != 0 && m_foparams.LowP_Limit.E != 0){
+                out << "LOW /" << cstr((m_foparams.LowP_Limit.A)/(pow(1.0e-6, ReactantStoich()))) << " " << m_foparams.LowP_Limit.n << " " << (m_foparams.LowP_Limit.E/ 4.184E7 / 1.0e-7) << " ";
+                out << " / " << "\n";
 
-            // Write fall-off third body.
-            if (m_foparams.ThirdBody >= 0) {
-                out << m_mech->Species(m_foparams.ThirdBody)->Name() << " ";
-            }
+                 //Write fall-off third body.
+                if (m_foparams.ThirdBody >= 0) {
+                    out << m_mech->Species(m_foparams.ThirdBody)->Name() << " ";
+                }
 
-            // Write fall-off parameters.
-            out << "TROE /";
-            for (unsigned int i = 0; i != (unsigned) FALLOFF_PARAMS::MAX_FALLOFF_PARAMS; ++i) {
-                out << m_foparams.Params[i] << " ";
+                // Write fall-off parameters.
+                out << "TROE /";
+                for (unsigned int i = 0; i != (unsigned) (FALLOFF_PARAMS::MAX_FALLOFF_PARAMS - 1); ++i) {
+                    out << m_foparams.Params[i] << " ";
+                }
+                out << "/ " << "\n";
             }
-            out << " / " << "\n";
         }
 
         // New line.
