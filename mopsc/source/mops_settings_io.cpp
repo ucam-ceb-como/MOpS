@@ -419,11 +419,13 @@ void ReadLOIStatus(const CamXML::Element &node, Solver &solver)
 {
     //const CamXML::Element *subnode;
     const CamXML::Attribute *attr;
+    std::vector<CamXML::Element*> nodes;
+    std::vector<CamXML::Element*>::const_iterator i;
     std::string str;
     double m_comp;
 
 
-    // Read the relative error tolerance.
+    // See if LOI is enabled or not.
     attr = node.GetAttribute("enable");
     if (attr != NULL) {
         str = attr->GetValue();
@@ -434,14 +436,28 @@ void ReadLOIStatus(const CamXML::Element &node, Solver &solver)
         else
             solver.SetLOIStatusFalse();
     }
+
+    //Read in the LOI cutoff value
     attr = node.GetAttribute("LOIComp");
     if (attr!= NULL){
         str = attr->GetValue();
         //Set the LOI cutoff value
         m_comp = Strings::cdble(str);
-        solver.SetLOICompValue(m_comp);
-        
+        solver.SetLOICompValue(m_comp);    
     }
+
+    //Need to read in the kept species here...
+    if (solver.GetLOIStatus() == true){
+        node.GetChildren("Kept_Spec", nodes);
+        for (i = nodes.begin(); i != nodes.end(); i++){
+            attr = (*i)->GetAttribute("id");
+            if (attr != NULL) {
+                str = attr->GetValue();
+                solver.AddKeptSpecies(str);
+            }
+        }
+    }
+
 }
 
 // Reads simulation output parameters from given XML node.

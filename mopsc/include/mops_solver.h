@@ -166,6 +166,14 @@ public:
     //! Retrieves the number of equations solved by the ode solver
     unsigned int GetNEquations() const;
 
+    //LOI KEPT SPECIES
+
+    //! Adds the name of a user-defined kept species to a string vector.
+    void AddKeptSpecies(std::string spec_name);
+
+    //!Returns the string vector of user-defined species that need to be kept in the reaction.
+    std::vector<std::string> ReturnKeptSpecies();
+
 
     // COMPUTATION TIME.
     
@@ -211,6 +219,11 @@ protected:
 
     // Under-relaxation coefficient.
     real m_rlx_coeff;
+
+    // LOI KEPT SPECIES
+
+    //! String vector containing the names of kept species
+    std::vector<std::string> Kept_Spec;
 
 /*
     // Number of runs to perform.

@@ -394,7 +394,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             }
         }
         if (s.GetLOIStatus() == true){
-            LOIReduction::RejectSpecies(LOI, s.ReturnCompValue(), r.Mech(), rejectSpecies);
+            LOIReduction::RejectSpecies(LOI, s.ReturnCompValue(), r.Mech(), rejectSpecies, s.ReturnKeptSpecies());
             r.Mech()->WriteReducedMech(KeptMech, rejectSpecies);
         }
 

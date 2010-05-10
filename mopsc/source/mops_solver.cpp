@@ -156,6 +156,21 @@ double Solver::ReturnCompValue() const
     return m_LOIComp;
 }
 
+/*!
+@param[in]      String name of a species to be kept by the LOI Method
+*/
+void Solver::AddKeptSpecies(std::string spec_name)
+{
+    Kept_Spec.push_back(spec_name);
+}
+
+/*!
+@return     Kept_Spec       The string vector of user-defined species to be kept in the mechanism.
+*/
+std::vector<std::string> Solver::ReturnKeptSpecies()
+{
+    return Kept_Spec;
+}
 
 // UNDER-RELAXATION.
 

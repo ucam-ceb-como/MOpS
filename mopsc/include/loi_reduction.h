@@ -65,7 +65,7 @@ namespace LOIReduction
 
     //! Compares LOI value to a given cutoff then makes lists of kept or rejected species
     void RejectSpecies(std::vector<fvector> LOI, double LOICompVal, const Mechanism *const mech,
-                            std::vector<std::string>& RejectSpecies);
+        std::vector<std::string>& RejectSpecies, std::vector<std::string> Kept_Spec);
 
     //! Creates an output file for each species' LOI at each timepoint.
     void CreateLOIFile(std::ofstream &LOIFile, const Mechanism *const mech);

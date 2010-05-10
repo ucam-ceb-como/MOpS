@@ -64,7 +64,12 @@ vector<fvector> Mops::LOIReduction::CalcLOI(double** J, double** Sensi, vector<f
             if (Sensi[i][j] < 0){
                 Sensi[i][j] = -Sensi[i][j];
             }
-            LOI[i][j] = LOI[i][j] - Sensi[i][j] / J[j][j]; 
+            if (J[j][j] == 0.0){
+                LOI[i][j] = LOI[i][j] + 0.0;
+            }
+            else{
+                LOI[i][j] = LOI[i][j] - Sensi[i][j] / J[j][j]; 
+            }
        }
     }
     return LOI;
@@ -75,15 +80,22 @@ vector<fvector> Mops::LOIReduction::CalcLOI(double** J, double** Sensi, vector<f
 @param[in]      LOI             fvector with LOI results
 @param[in]      LOICompVal      double against which to compare an LOI value
 @param[in]      mech            Reaction mechanism as defined in Sprog.
-@param[in, out] KeptSpecies     A string vector to store kept species' names
+@param[in]      Kept_Spec       User-defined species that must be kept in the reduced mechanism.
 @param[in, out] RejectSpecies   A string vector to store rejected species' names
 */
 void Mops::LOIReduction::RejectSpecies(vector<fvector> LOI, double LOICompVal, const Mechanism *const mech,
-                                           std::vector<std::string>& RejectSpecies)
+                                       std::vector<std::string>& RejectSpecies, std::vector<std::string> Kept_Spec)
 {
     for (unsigned int i = 0; i < mech->SpeciesCount(); i++){
         if (LOI[0][i] < LOICompVal){
-            RejectSpecies.push_back(mech->Species(i)->Name());
+            for (unsigned int j = 0; j < Kept_Spec.size(); j++){
+                if (mech->Species(i)->Name() == Kept_Spec[j]){
+                    RejectSpecies.push_back("NULL");
+                break;
+                }
+                else if (j == (Kept_Spec.size()-1) && Kept_Spec[j] != mech->Species(i)->Name())
+                    RejectSpecies.push_back(mech->Species(i)->Name());
+            }
         }
         else {
             RejectSpecies.push_back("NULL");
