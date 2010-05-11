@@ -752,10 +752,6 @@
 				Name="Aggregation Models"
 				>
 				<File
-					RelativePath="..\utils\include\first_of_pair_comparator.hpp"
-					>
-				</File>
-				<File
 					RelativePath=".\include\swp_aggmodel_cache.h"
 					>
 				</File>
