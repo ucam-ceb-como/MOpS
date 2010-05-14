@@ -62,6 +62,7 @@ namespace Sweep
 namespace Processes {
     class DiffusionProcess;
     class AdvectionProcess;
+    class ConstantInception;
 }
 
 class MechParser
@@ -123,6 +124,21 @@ private:
     @param[in,out] mech  Mechanism to which the processes will be added
     */
     static void readPAHInceptions(CamXML::Document &xml, Sweep::Mechanism &mech);
+
+    /*!
+    * reads a constant inception process
+    @param[in] xml      XML node of type constantinception
+    @param[in,out] icn      Inception process to initialise
+    */
+    static void readConstantInception(CamXML::Element &xml, Processes::ConstantInception &icn);
+
+    /*!
+    * reads a constant inception process
+    * node that do not contain constant will be ignored
+    @param[in] xml      XML node with one or more children of type constant
+    @param[in,out] mech  Mechanism to which the processes will be added
+    */
+    static void readConstantInceptions(CamXML::Document &xml, Sweep::Mechanism &mech);
 
     // SURFACE REACTIONS.
 

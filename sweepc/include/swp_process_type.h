@@ -58,6 +58,9 @@ namespace Processes
         Death_ID=2,             // Death process.
         Birth_ID=3,             // Birth process.
 
+        //! Form particles at a constant rate, independent of conditions
+        Constant_Inception_ID=4,
+
         // Surface reactions.
         SurfaceReaction_ID=100, // Surface reaction.
         ActSiteRxn_ID=101,      // Active-sites surface reaction.

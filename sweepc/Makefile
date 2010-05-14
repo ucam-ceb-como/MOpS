@@ -49,7 +49,8 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_submodel.o swp_submodel_cache.o swp_model_factory.o \
     swp_surfvol_cache.o swp_surfvol_primary.o swp_primary.o \
     swp_pripart_cache.o swp_pripart_primary.o swp_actsites_reaction.o \
-    swp_coagulation.o swp_transcoag.o swp_addcoag.o swp_condensation.o swp_inception.o \
+    swp_coagulation.o swp_transcoag.o swp_addcoag.o \
+    swp_condensation.o swp_inception.o swp_constant_inception.o\
     swp_particle_process.o swp_process.o swp_process_factory.o \
     swp_surface_reaction.o swp_particle_model.o swp_imgnode.o \
     swp_particle_image.o swp_ensemble_image.o swp_ensemble_imgnode.o swp_surfvol_stats.o swp_pripart_stats.o \
@@ -242,6 +243,10 @@ swp_dimer_inception.o: $(src)/swp_dimer_inception.cpp
 
 swp_pah_inception.o: $(src)/swp_pah_inception.cpp
 	$(cpp) $(flag) $(src)/swp_pah_inception.cpp
+
+swp_constant_inception.o: $(src)/swp_constant_inception.cpp $(inc)/swp_constant_inception.h \
+                          $(inc)/swp_inception.h $(inc)/swp_mechanism.h
+	$(cpp) $(flag) $(src)/swp_constant_inception.cpp
 
 swp_particle_process.o: $(src)/swp_particle_process.cpp
 	$(cpp) $(flag) $(src)/swp_particle_process.cpp

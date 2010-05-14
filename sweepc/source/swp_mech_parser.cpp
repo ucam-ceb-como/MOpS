@@ -44,6 +44,7 @@
 #include "swp_component.h"
 #include "swp_tracker.h"
 #include "swp_inception.h"
+#include "swp_constant_inception.h"
 #include "swp_surface_reaction.h"
 #include "swp_actsites_reaction.h"
 #include "swp_condensation.h"
@@ -72,6 +73,68 @@ using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
 using namespace Strings;
+
+//! Anonymous namespace for functions only used within this file
+namespace {
+
+/*!
+ * Read and set initial particle composition for an inception
+ *
+ *@param[in]		xml		XML node with component children
+ *@param[in,out]	icn		Inception instance for which to set composition of newly incepted particles
+ */
+void readInceptedComposition(const CamXML::Element &xml, Sweep::Processes::Inception &icn) {
+    // Get the component (= composition) XML
+	vector<CamXML::Element*> subitems;
+    xml.GetChildren("component", subitems);
+
+	for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); ++j) {
+		// Get component ID.
+		std::string str = (*j)->GetAttributeValue("id");
+		int id = icn.Mechanism()->ComponentIndex(str);
+
+		if (id >= 0) {
+			// Get component change.
+			str = (*j)->GetAttributeValue("dx");
+			Sweep::real dx = cdble(str);
+			// Set component change.
+			icn.SetParticleComp(id, dx);
+		} else {
+			// Unknown component in mechanism.
+			throw runtime_error(str + ": Component not found in mechanism (loadInceptedComposition)");
+		}
+	}
+}
+
+/*!
+ * Read and set initial particle tracker values for an inception
+ *
+ *@param[in]		xml		XML node with track children
+ *@param[in,out]	icn		Inception instance for which to set tracker values of newly incepted particles
+ */
+void readInceptedTrackers(const CamXML::Element &xml, Sweep::Processes::Inception &icn) {
+    // Get the component (= composition) XML
+	vector<CamXML::Element*> subitems;
+	xml.GetChildren("track", subitems);
+
+	for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); j++) {
+		// Get tracker ID.
+		std::string str = (*j)->GetAttributeValue("id");
+		int id = icn.Mechanism()->GetTrackerIndex(str);
+
+		if (id >= 0) {
+			// Get tracker change.
+			str = (*j)->GetAttributeValue("dx");
+			Sweep::real dx = cdble(str);
+			// Set tracker change.
+			icn.SetParticleTracker(id, dx);
+		} else {
+			// Unknown tracker variable in mechanism.
+			throw runtime_error(str + ": Tracker variable not found in mechanism (loadInceptedTrackers)");
+		}
+	}
+}
+} // anonymous namespace
 
 void MechParser::Read(const std::string &filename, Sweep::Mechanism &mech)
 {
@@ -421,6 +484,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     else
     {
         readInceptions(xml, mech);
+        readConstantInceptions(xml, mech);
         readSurfRxns(xml, mech);
         readCondensations(xml, mech);
     }
@@ -658,8 +722,6 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
     string str;
     vector<CamXML::Element*> items, subitems;
     vector<CamXML::Element*>::iterator j;
-    int id  = -1;
-    real dx = 0.0;
 
     // Read name.
     str = xml.GetAttributeValue("name");
@@ -683,44 +745,12 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
     readProducts(xml, icn);
 
     // Read initial particle composition.
-    xml.GetChildren("component", subitems);
-    for (j=subitems.begin(); j!=subitems.end(); ++j) {
-        // Get component ID.
-        str = (*j)->GetAttributeValue("id");
-        id = icn.Mechanism()->ComponentIndex(str);
-
-        if (id >= 0) {
-            // Get component change.
-            str = (*j)->GetAttributeValue("dx");
-            dx = cdble(str);
-            // Set component change.
-            icn.SetParticleComp(id, dx);
-        } else {
-            // Unknown component in mechanism.
-            throw runtime_error(str + ": Component not found in mechanism "
-                                "(Sweep, MechParser::readInception).");
-        }
-    }
+    readInceptedComposition(xml, icn);
 
     // Read initial tracker variable values.
-    xml.GetChildren("track", subitems);
-    for (j=subitems.begin(); j!=subitems.end(); j++) {
-        // Get tracker ID.
-        str = (*j)->GetAttributeValue("id");
-        id = icn.Mechanism()->GetTrackerIndex(str);
+    readInceptedTrackers(xml, icn);
 
-        if (id >= 0) {
-            // Get tracker change.
-            str = (*j)->GetAttributeValue("dx");
-            dx = cdble(str);
-            // Set tracker change.
-            icn.SetParticleTracker(id, dx);
-        } else {
-            // Unknown tracker variable in mechanism.
-            throw runtime_error(str + ": Tracker variable not found in mechanism. "
-                                "(Sweep, MechParser::readInception).");
-        }
-    }
+
 }
 
 
@@ -763,8 +793,6 @@ void MechParser::readPAHInception(CamXML::Element &xml, Processes::PAHInception 
     string str;
     vector<CamXML::Element*> items, subitems;
     vector<CamXML::Element*>::iterator j;
-    int id  = -1;
-    real dx = 0.0;
 
     // Read name.
     str = xml.GetAttributeValue("name");
@@ -776,25 +804,8 @@ void MechParser::readPAHInception(CamXML::Element &xml, Processes::PAHInception 
     // Read products.
     //readProducts(xml, icn);
 
-    // Read initial tracker variable values.
-    xml.GetChildren("track", subitems);
-    for (j=subitems.begin(); j!=subitems.end(); j++) {
-        // Get tracker ID.
-        str = (*j)->GetAttributeValue("id");
-        id = icn.Mechanism()->GetTrackerIndex(str);
-
-        if (id >= 0) {
-            // Get tracker change.
-            str = (*j)->GetAttributeValue("dx");
-            dx = cdble(str);
-            // Set tracker change.
-            icn.SetParticleTracker(id, dx);
-        } else {
-            // Unknown tracker variable in mechanism.
-            throw runtime_error(str + ": Tracker variable not found in mechanism. "
-                                "(Sweep, MechParser::readPAHInception).");
-        }
-    }
+    // Read initial tracker values
+    readInceptedTrackers(xml, icn);
 
     // See if particles are to be added to the secondary population where possible
     CamXML::Element* secondary = xml.GetFirstChild("usesecondary");
@@ -802,6 +813,84 @@ void MechParser::readPAHInception(CamXML::Element &xml, Processes::PAHInception 
         icn.SetUseSecondary(true);
 }
 
+/*!
+ * Read constant rate inception processes from a sweep mechanism XML file.
+ *
+ *@param[in]		xml		XML node with constantinception children
+ */
+void MechParser::readConstantInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
+{
+    vector<CamXML::Element*> items, subitems;
+    vector<CamXML::Element*>::iterator i, j;
+    string str;
+    unsigned int k = 0;
+
+    // Get list of inceptions from XML data.
+    xml.Root()->GetChildren("constantinception", items);
+
+    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
+        // Create new inception.
+        ConstantInception *icn = new ConstantInception(mech);
+        icn->SetMechanism(mech);
+        icn->SetName("ConstantInception " + cstr(k));
+
+        try {
+            readConstantInception(*(*i), *icn);
+        }
+        catch (std::exception &e) {
+            delete icn;
+            throw;
+        }
+
+        // Add inception to mechanism.  Once entered into mechanism, the mechanism
+        // takes control of the inception object for memory management.
+        mech.AddInception(*icn);
+    }
+}
+
+/*!
+ *@param[in]		xml		XML node of type constantinception
+ *@param[in,out]	icn		Instance of ConstantInception on which to set data
+ *
+ *@exception	std::runtime_error		No rate specified
+ */
+void MechParser::readConstantInception(CamXML::Element &xml, Processes::ConstantInception &icn)
+{
+    std::string str;
+    vector<CamXML::Element*> items, subitems;
+    vector<CamXML::Element*>::iterator j;
+
+    // Read name.
+    str = xml.GetAttributeValue("name");
+    if (str != "") icn.SetName(str);
+
+     // Read initial particle composition.
+    readInceptedComposition(xml, icn);
+
+    // Read initial tracker variable values.
+    readInceptedTrackers(xml, icn);
+
+    // Read the fixed rate (particles per cm^3 per s)
+    CamXML::Element *el = xml.GetFirstChild("rate");
+    if (el != NULL) {
+    	real rate = std::atof(el->Data().c_str());
+    	// But store with units of particles per m^3 per s
+    	icn.setConstantVolumetricInceptionRate(rate * 1000.0);
+    }
+    else {
+    	throw std::runtime_error("No rate provided for constant inception (Sweep::MechParser::readConstantInception)");
+    }
+
+    // Rate scaling now that a process has been created
+    real A = 0.0;
+    el = xml.GetFirstChild("A");
+    if (el != NULL) {
+        A = cdble(el->Data());
+    } else {
+        A = 1.0;
+    }
+    icn.SetA(A);
+}
 
 
 
