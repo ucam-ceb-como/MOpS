@@ -94,6 +94,13 @@ while(<$momentFile>) {
 $m0 /= $count;
 $m1 /= $count;
 
+# 20 simulations (3 separate cells in each simulation) giving a total
+# of 60 samples give a sample mean and 99% confidence interval for the
+# population mean of
+#m0: (3.010 +- 0.038) e11 cm^-3
+#m1: (1.919 +- 0.024) e-10 g cm^-3
+# svn r821
+
 #print "$m0, $m1\n";
 if(abs($m0 - 2.998e11) > 2e9) {
   print "Simulated mean M0 was $m0, when 2.998e11 cm^-3 expected\n";

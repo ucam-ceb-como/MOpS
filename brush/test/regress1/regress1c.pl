@@ -95,6 +95,13 @@ print "$m0, $m1\n";
 # Count number of failures
 my $failures = 0;
 
+# 20 simulations (3 separate cells in each simulation) giving a total
+# of 60 samples give a sample mean and 99% confidence interval for the
+# population mean of
+#m0: (4.450 +- 0.090) e10 cm^-3
+#m1: (4.662 +- 0.108) e-11 g cm^-3
+# svn r821
+
 if(abs($m0 - 4.431e10) > 3e8) {
   print "Simulated mean M0 was $m0, when 4.431e10 cm^-3 expected\n";
   print "**************************\n";
