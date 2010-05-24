@@ -402,6 +402,10 @@ protected:
 
 
 private:
+    //! Connect together two subparticle trees during coagulation
+    void joinSubParticleTrees(const SubParticle &rhs, SubParticle &left_sub_particle,
+                              SubParticle &right_sub_particle);
+
     //! Defining particle model.
     const Sweep::ParticleModel *m_pmodel;
 

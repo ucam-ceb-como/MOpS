@@ -675,12 +675,12 @@ void SubParticle::ChangeSphericalSurface(int disttonode, SubParticle *target, do
 // Combines this particle with another.
 SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
 {
-    // Add the compositions
+    // Add the compositions (appears to duplicate work done by UpdateCache further down).
     assert(m_comp.size() == rhs.m_comp.size());
     std::transform(m_comp.begin(), m_comp.end(), rhs.m_comp.begin(),
                    m_comp.begin(), std::plus<real>());
 
-    // Add the tracker values
+    // Add the tracker values (appears to duplicate work done by UpdateCache further down).
     assert(m_values.size() == rhs.m_values.size());
     std::transform(m_values.begin(), m_values.end(), rhs.m_values.begin(),
                    m_values.begin(), std::plus<real>());
@@ -711,127 +711,8 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
         lsp->m_parent = this;
         rsp->m_parent = this;
 
-		SubParticle *temp;
+        joinSubParticleTrees(rhs, *lsp, *rsp);
 
-
-		if (rnd()>0.5)
-		{
-			// Set left child.   The new sub-particle's children are
-			// the children of this particle.
-			lsp->m_primary    = m_primary;
-			lsp->m_leftchild  = m_leftchild;
-			lsp->m_rightchild = m_rightchild;
-			lsp->m_connect_time = m_connect_time;
-			lsp->m_sintered		= m_sintered;
-			lsp->m_real_surface = m_real_surface;
-			lsp->m_real_surface_init = m_real_surface_init;
-			lsp->m_sumvol_sinterpart = m_sumvol_sinterpart;
-			lsp->m_sph_surfacearea = m_sph_surfacearea;
-			lsp->m_avg_diam = m_avg_diam;
-			if(lsp->m_primary==NULL)
-			{
-				lsp->m_rightchild->m_parent=lsp;
-				lsp->m_leftchild->m_parent=lsp;
-			}
-			lsp->m_rightsinter = m_rightsinter;
-			lsp->m_leftsinter = m_leftsinter;
-			lsp->m_leftsinterdiam = m_leftsinterdiam;
-			lsp->m_rightsinterdiam = m_rightsinterdiam;
-			lsp->vol_sinter = vol_sinter;
-			lsp->m_sinter_level = m_sinter_level;
-			lsp->dV_left = dV_left;
-			lsp->dV_right = dV_right;
-
-//			UpdateTree_sinter(this);
-//			UpdateCache_sinter(this);
-
-			// Set right child.  The children are the children
-			// of the right-hand side.
-			rsp->m_primary    = rhs.m_primary;
-			rsp->m_leftchild  = rhs.m_leftchild;
-			rsp->m_rightchild = rhs.m_rightchild;
-			rsp->m_connect_time = rhs.m_connect_time;
-			rsp->m_sintered=rhs.m_sintered;
-			rsp->m_real_surface = rhs.m_real_surface;
-			rsp->m_real_surface_init = rhs.m_real_surface_init;
-			rsp->m_sumvol_sinterpart = rhs.m_sumvol_sinterpart;
-			rsp->m_sph_surfacearea = rhs.m_sph_surfacearea;
-			rsp->m_avg_diam = rhs.m_avg_diam;
-			if(rsp->m_primary==NULL)
-			{
-				rsp->m_rightchild->m_parent=rsp;
-				rsp->m_leftchild->m_parent=rsp;
-			}
-    		rsp->m_rightsinter = rhs.m_rightsinter;
-			rsp->m_leftsinter = rhs.m_leftsinter;
-			rsp->m_rightsinterdiam = rhs.m_rightsinterdiam;
-			rsp->m_leftsinterdiam = rhs.m_leftsinterdiam;
-			temp = &const_cast<SubParticle&>(rhs);
-			rsp->vol_sinter = rhs.vol_sinter;
-			rsp->m_sinter_level = rhs.m_sinter_level;
-			rsp->dV_left = rhs.dV_left;
-			rsp->dV_right = rhs.dV_right;
-//			UpdateTree_sinter(temp);
-//			rsp->UpdateCache_sinter(temp);
-		}
-
-		else
-		{
-			// Set right child.   The new sub-particle's children are
-			// the children of this particle.
-			rsp->m_primary    = m_primary;
-			rsp->m_leftchild  = m_leftchild;
-			rsp->m_rightchild = m_rightchild;
-			rsp->m_connect_time = m_connect_time;
-			rsp->m_sintered	= m_sintered;
-			rsp->m_real_surface = m_real_surface;
-			rsp->m_real_surface_init = m_real_surface_init;
-			rsp->m_sumvol_sinterpart = m_sumvol_sinterpart;
-			rsp->m_sph_surfacearea = m_sph_surfacearea;
-			rsp->m_avg_diam = m_avg_diam;
-			if(rsp->m_primary==NULL)
-			{
-				rsp->m_rightchild->m_parent=rsp;
-				rsp->m_leftchild->m_parent=rsp;
-			}
-			rsp->m_rightsinter = m_rightsinter;
-			rsp->m_leftsinter = m_leftsinter;
-			rsp->m_leftsinterdiam = m_leftsinterdiam;
-			rsp->m_rightsinterdiam = m_rightsinterdiam;
-			rsp->vol_sinter = vol_sinter;
-			rsp->m_sinter_level = m_sinter_level;
-			rsp->dV_left = dV_left;
-			rsp->dV_right = dV_right;
-//			UpdateTree_sinter(this);
-//			UpdateCache_sinter(this);
-
-			// Set left child.  The children are the children
-			// of the right-hand side.
-			lsp->m_primary    = rhs.m_primary;
-			lsp->m_leftchild  = rhs.m_leftchild;
-			lsp->m_rightchild = rhs.m_rightchild;
-			lsp->m_connect_time = rhs.m_connect_time;
-			lsp->m_sintered	= rhs.m_sintered;
-			lsp->m_real_surface = rhs.m_real_surface;
-			lsp->m_real_surface_init = rhs.m_real_surface_init;
-			lsp->m_sumvol_sinterpart = rhs.m_sumvol_sinterpart;
-			lsp->m_sph_surfacearea = rhs.m_sph_surfacearea;
-			lsp->m_avg_diam = rhs.m_avg_diam;
-			if(lsp->m_primary==NULL)
-			{
-				lsp->m_rightchild->m_parent=lsp;
-				lsp->m_leftchild->m_parent=lsp;
-			}
-			lsp->m_rightsinter = rhs.m_rightsinter;
-			lsp->m_leftsinter = rhs.m_leftsinter;
-			lsp->m_leftsinterdiam = rhs.m_leftsinterdiam;
-			lsp->m_rightsinterdiam = rhs.m_rightsinterdiam;
-			lsp->vol_sinter = rhs.vol_sinter;
-			lsp->m_sinter_level = rhs.m_sinter_level;
-			lsp->dV_left = rhs.dV_left;
-			lsp->dV_right = rhs.dV_right;
-			temp = &const_cast<SubParticle&>(rhs);
-		}
 		m_connect_time=0;
 		m_sintered=0;
         // Clear pointers in RHS (so that when it is deleted,
@@ -892,6 +773,140 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
     }
 
     return *this;
+}
+
+/*!
+ * This code was removed from the coagulate method to make it easier to read.
+ * Please add comments
+ *
+ *@param[in]        rhs
+ *@param[out]       left_sub_particle
+ *@param[out]       right_sub_particle
+ */
+void SubParticle::joinSubParticleTrees(const SubParticle &rhs,
+                                       SubParticle &left_sub_particle,
+                                       SubParticle &right_sub_particle) {
+    //SubParticle *temp;
+
+
+    if (rnd()>0.5)
+    {
+        // Set left child.   The new sub-particle's children are
+        // the children of this particle.
+        left_sub_particle.m_primary    = m_primary;
+        left_sub_particle.m_leftchild  = m_leftchild;
+        left_sub_particle.m_rightchild = m_rightchild;
+        left_sub_particle.m_connect_time = m_connect_time;
+        left_sub_particle.m_sintered     = m_sintered;
+        left_sub_particle.m_real_surface = m_real_surface;
+        left_sub_particle.m_real_surface_init = m_real_surface_init;
+        left_sub_particle.m_sumvol_sinterpart = m_sumvol_sinterpart;
+        left_sub_particle.m_sph_surfacearea = m_sph_surfacearea;
+        left_sub_particle.m_avg_diam = m_avg_diam;
+        if(left_sub_particle.m_primary==NULL)
+        {
+            left_sub_particle.m_rightchild->m_parent=&left_sub_particle;
+            left_sub_particle.m_leftchild->m_parent=&left_sub_particle;
+        }
+        left_sub_particle.m_rightsinter = m_rightsinter;
+        left_sub_particle.m_leftsinter = m_leftsinter;
+        left_sub_particle.m_leftsinterdiam = m_leftsinterdiam;
+        left_sub_particle.m_rightsinterdiam = m_rightsinterdiam;
+        left_sub_particle.vol_sinter = vol_sinter;
+        left_sub_particle.m_sinter_level = m_sinter_level;
+        left_sub_particle.dV_left = dV_left;
+        left_sub_particle.dV_right = dV_right;
+
+//          UpdateTree_sinter(this);
+//          UpdateCache_sinter(this);
+
+        // Set right child.  The children are the children
+        // of the right-hand side.
+        right_sub_particle.m_primary    = rhs.m_primary;
+        right_sub_particle.m_leftchild  = rhs.m_leftchild;
+        right_sub_particle.m_rightchild = rhs.m_rightchild;
+        right_sub_particle.m_connect_time = rhs.m_connect_time;
+        right_sub_particle.m_sintered=rhs.m_sintered;
+        right_sub_particle.m_real_surface = rhs.m_real_surface;
+        right_sub_particle.m_real_surface_init = rhs.m_real_surface_init;
+        right_sub_particle.m_sumvol_sinterpart = rhs.m_sumvol_sinterpart;
+        right_sub_particle.m_sph_surfacearea = rhs.m_sph_surfacearea;
+        right_sub_particle.m_avg_diam = rhs.m_avg_diam;
+        if(right_sub_particle.m_primary==NULL)
+        {
+            right_sub_particle.m_rightchild->m_parent=&right_sub_particle;
+            right_sub_particle.m_leftchild->m_parent=&right_sub_particle;
+        }
+        right_sub_particle.m_rightsinter = rhs.m_rightsinter;
+        right_sub_particle.m_leftsinter = rhs.m_leftsinter;
+        right_sub_particle.m_rightsinterdiam = rhs.m_rightsinterdiam;
+        right_sub_particle.m_leftsinterdiam = rhs.m_leftsinterdiam;
+        //temp = &const_cast<SubParticle&>(rhs);
+        right_sub_particle.vol_sinter = rhs.vol_sinter;
+        right_sub_particle.m_sinter_level = rhs.m_sinter_level;
+        right_sub_particle.dV_left = rhs.dV_left;
+        right_sub_particle.dV_right = rhs.dV_right;
+//          UpdateTree_sinter(temp);
+//          right_sub_particle.UpdateCache_sinter(temp);
+    }
+
+    else
+    {
+        // Set right child.   The new sub-particle's children are
+        // the children of this particle.
+        right_sub_particle.m_primary    = m_primary;
+        right_sub_particle.m_leftchild  = m_leftchild;
+        right_sub_particle.m_rightchild = m_rightchild;
+        right_sub_particle.m_connect_time = m_connect_time;
+        right_sub_particle.m_sintered = m_sintered;
+        right_sub_particle.m_real_surface = m_real_surface;
+        right_sub_particle.m_real_surface_init = m_real_surface_init;
+        right_sub_particle.m_sumvol_sinterpart = m_sumvol_sinterpart;
+        right_sub_particle.m_sph_surfacearea = m_sph_surfacearea;
+        right_sub_particle.m_avg_diam = m_avg_diam;
+        if(right_sub_particle.m_primary==NULL)
+        {
+            right_sub_particle.m_rightchild->m_parent=&right_sub_particle;
+            right_sub_particle.m_leftchild->m_parent=&right_sub_particle;
+        }
+        right_sub_particle.m_rightsinter = m_rightsinter;
+        right_sub_particle.m_leftsinter = m_leftsinter;
+        right_sub_particle.m_leftsinterdiam = m_leftsinterdiam;
+        right_sub_particle.m_rightsinterdiam = m_rightsinterdiam;
+        right_sub_particle.vol_sinter = vol_sinter;
+        right_sub_particle.m_sinter_level = m_sinter_level;
+        right_sub_particle.dV_left = dV_left;
+        right_sub_particle.dV_right = dV_right;
+//          UpdateTree_sinter(this);
+//          UpdateCache_sinter(this);
+
+        // Set left child.  The children are the children
+        // of the right-hand side.
+        left_sub_particle.m_primary    = rhs.m_primary;
+        left_sub_particle.m_leftchild  = rhs.m_leftchild;
+        left_sub_particle.m_rightchild = rhs.m_rightchild;
+        left_sub_particle.m_connect_time = rhs.m_connect_time;
+        left_sub_particle.m_sintered = rhs.m_sintered;
+        left_sub_particle.m_real_surface = rhs.m_real_surface;
+        left_sub_particle.m_real_surface_init = rhs.m_real_surface_init;
+        left_sub_particle.m_sumvol_sinterpart = rhs.m_sumvol_sinterpart;
+        left_sub_particle.m_sph_surfacearea = rhs.m_sph_surfacearea;
+        left_sub_particle.m_avg_diam = rhs.m_avg_diam;
+        if(left_sub_particle.m_primary==NULL)
+        {
+            left_sub_particle.m_rightchild->m_parent=&left_sub_particle;
+            left_sub_particle.m_leftchild->m_parent=&left_sub_particle;
+        }
+        left_sub_particle.m_rightsinter = rhs.m_rightsinter;
+        left_sub_particle.m_leftsinter = rhs.m_leftsinter;
+        left_sub_particle.m_leftsinterdiam = rhs.m_leftsinterdiam;
+        left_sub_particle.m_rightsinterdiam = rhs.m_rightsinterdiam;
+        left_sub_particle.vol_sinter = rhs.vol_sinter;
+        left_sub_particle.m_sinter_level = rhs.m_sinter_level;
+        left_sub_particle.dV_left = rhs.dV_left;
+        left_sub_particle.dV_right = rhs.dV_right;
+        //temp = &const_cast<SubParticle&>(rhs);
+    }
 }
 
 

@@ -256,9 +256,14 @@ public:
     // Reads the object from a binary stream.
     void Deserialize(std::istream &in);
 
-
+    //! Comment needed
 	void  output(Cell &sys, real t) const;
+
+	//! Comment needed
 	void  Mill(Cell &sys, real t) const;
+
+	//! Get the number of times each process has been performed
+	std::vector<unsigned int> GetProcessUsageCounts() const {return m_proccount;}
 
 
 private:

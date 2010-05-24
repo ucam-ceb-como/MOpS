@@ -521,6 +521,8 @@ Primary &Primary::Coagulate(const Primary &rhs)
     } else {
         // Different particle models!
         *this = rhs;
+        std::cerr << "Sweep::Primary::Coagulate called for particles with models " << m_pmodel
+                  << " and " << rhs.m_pmodel << std::endl;
     }
     Primary::UpdateCache();
     return *this;
