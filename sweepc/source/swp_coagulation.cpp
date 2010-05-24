@@ -119,6 +119,41 @@ real Coagulation::CalcRateTerms(real t, const Cell &sys, const CoagPtrVector &co
     return sum;
  }
 
+/*!
+ *@param[in]        t           Time at which coagulation is being performed
+ *@param[in]        ip1         Index of first particle in ensemble
+ *@param[in,out]    sp1         Pointer to first particle
+ *@param[in]        ip2         Index of second particle in ensemble
+ *@param[in,out]    sp2         Pointer to second particle
+ *@param[in]        sys         Cell containing particles that are coagulating
+ *@param[in,out]    rand_u01    Pointer to function that generates U[0,1] deviates *
+ *
+ *@return       Index of new, larger particle
+ */
+int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
+                               const int ip2, Particle *sp2,
+                               Cell &sys, real(*rand_u01)()) const {
+    // No obvious reason for these two cases.  The ensemble should work fine, provided that the
+    // call to Update precedes the call to Remove.
+    if (ip1 < ip2) {
+        // Add contents of particle 2 onto particle 1
+        *sp1 += *sp2;
+        sp1->SetTime(t);
+        // Tell the ensemble that particle 1 has changed
+        sys.Particles().Update(ip1);
+        // Particle 2 is now part of particle 1
+        sys.Particles().Remove(ip2, !m_mech->UseSubPartTree());
+        return ip1;
+    } else {
+        *sp2 += *sp1;
+        sp2->SetTime(t);
+        sys.Particles().Update(ip2);
+        sys.Particles().Remove(ip1, !m_mech->UseSubPartTree());
+    }
+    return ip2;
+}
+
+
 // Writes the object to a binary stream.
 void Coagulation::Serialize(std::ostream &out) const
 {

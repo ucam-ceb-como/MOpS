@@ -95,10 +95,17 @@ public:
 
 protected:
 
-    // Default constructor is protected to prevent coagulations being
-    // defined without knowledge of the parent mechanism.
+    /*!
+     * \@brief  Default constructor is protected to prevent coagulations being
+     *          defined without knowledge of the parent mechanism.
+     */
     Coagulation(void) {};
     
+    //! Actually stick two particles together
+    int JoinParticles(const real t, const int ip1, Particle *sp1,
+                      const int ip2, Particle *sp2,
+                      Cell &sys, real(*rand_u01)()) const;
+
 private:
     //! Scaling factor for rate
     real m_a;

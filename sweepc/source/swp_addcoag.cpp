@@ -145,27 +145,11 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
 
     // Choose and get first particle, then update it.
     Particle *sp1=NULL;
-    Particle *sp1old=NULL;
     if (ip1 >= 0) {
         sp1 = sys.Particles().At(ip1);
-
-        // Create a copy of the particle before updating.
-        sp1old = sp1->Clone();
-
-        m_mech->UpdateParticle(*sp1, sys, t);
     } else {
         // Failed to choose a particle.
         return -1;
-    }
-
-    // Check that particle is still valid.  If not,
-    // remove it and cease coagulating.
-    if (!sp1->IsValid()) {
-        // Must remove first particle now.
-        sys.Particles().Remove(ip1);
-
-        // Invalidating the index tells this routine not to perform coagulation.
-        ip1 = -1;
     }
 
     // Choose and get unique second particle, then update it.  Note, we are allowed to do
@@ -174,77 +158,58 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
     while ((ip2 == ip1) && (++guard<1000))
             ip2 = sys.Particles().Select(rand_int);
 
-    Particle *sp2=NULL, *sp2old=NULL;
+    Particle *sp2=NULL;
     if ((ip2>=0) && (ip2!=ip1)) {
         sp2 = sys.Particles().At(ip2);
-
-        // Create a copy of the particle before updating.
-        sp2old = sp2->Clone();
-
-        m_mech->UpdateParticle(*sp2, sys, t);
     } else {
         // Failed to select a unique particle.
-        delete sp1old;
         return -1;
     }
 
+    //Calculate the majorant rate before updating the particles
+    const real majk = CoagKernel(*sp1, *sp2, sys, FiftyPercentExtra);
+
+    //Update the particles
+    m_mech->UpdateParticle(*sp1, sys, t);
+    // Check that particle is still valid.  If not,
+    // remove it and cease coagulating.
+    if (!sp1->IsValid()) {
+        // Must remove first particle now.
+        sys.Particles().Remove(ip1);
+
+        // Invalidating the index tells this routine not to perform coagulation.
+        ip1 = -1;
+        return 0;
+    }
+
+    m_mech->UpdateParticle(*sp2, sys, t);
     // Check validity of particles after update.
     if (!sp2->IsValid()) {
+        // Tell the ensemble to update particle one before we confuse things
+        // by removing particle 2
+        sys.Particles().Update(ip1);
+
         // Must remove second particle now.
         sys.Particles().Remove(ip2);
 
         // Invalidating the index tells this routine not to perform coagulation.
         ip2 = -1;
+
+        return 0;
     }
 
     // Check that both the particles are still valid.
     if ((ip1>=0) && (ip2>=0)) {
-        // Must check for ficticious event now by calculate the original
+        // Must check for ficticious event now by comparing the original
         // majorant rate and the current (after updates) true rate.
-        real majk = CoagKernel(*sp1old, *sp2old, sys, FiftyPercentExtra);
+
         real truek = CoagKernel(*sp1, *sp2, sys, None);
 
-        //added by ms785 to include the collision efficiency in the calculation of the rate
-        if (sys.ParticleModel()->AggModel()==AggModels::PAH_ID)
-        {
-            double ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
-            truek*=ceff;
-        }
-
         if (!Fictitious(majk, truek, rand_u01)) {
-            assert(sys.Particles().Count() <= sys.Particles().Capacity());
-            //std::cout << "Coag #" << ++sCoagCount << ' ' << t << ' ' << numParticles
-            //          << ' ' << massParticles;
-            // We can now coagulate the particles, remember to
-            // remove second particle afterwards.
-            if (ip1 < ip2) {
-                *sp1 += *sp2;
-                sp1->SetTime(t);
-                //massParticles = sys.Particles().GetSums().Mass();
-                sys.Particles().Update(ip1);
-                //massParticles = sys.Particles().GetSums().Mass();
-                sys.Particles().Remove(ip2, !m_mech->UseSubPartTree());
-                //massParticles = sys.Particles().GetSums().Mass();
-            } else {
-                *sp2 += *sp1;
-                sp2->SetTime(t);
-                sys.Particles().Update(ip2);
-                sys.Particles().Remove(ip1, !m_mech->UseSubPartTree());
-            }
-
-            // riap debugging
-            //numParticles = sys.ParticleCount();
-            //massParticles = sys.Particles().GetSums().Mass();
-            //std::cout << " after coag " << numParticles<< ' ' << massParticles << ' '
-            //          << sp1old->Mass() << ' ' << sp1->Mass() << ' '
-            //          << sp2old->Mass() << ' ' << sp2->Mass() << ' '
-            //          << '\n';
-
+            JoinParticles(t, ip1, sp1, ip2, sp2, sys, rand_u01);
         } else {
             sys.Particles().Update(ip1);
             sys.Particles().Update(ip2);
-            delete sp1old;
-            delete sp2old;
             return 1; // Ficticious event.
         }
     } else {
@@ -259,8 +224,6 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
             sys.Particles().Update(ip2);
     }
 
-    assert(sys.Particles().Count() <= sys.Particles().Capacity());
-    delete sp1old; delete sp2old;
     return 0;
 }
 
