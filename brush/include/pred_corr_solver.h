@@ -120,7 +120,7 @@ protected:
             //! Recalculate rates for any cells listed in mInvalidCells
             void update();
         private:
-            //! Cannot contrstruct without knowing size of reactor
+            //! Cannot construct without knowing size of reactor
             JumpRateCache();
 
             //! Reactor with which instance is used

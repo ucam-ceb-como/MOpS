@@ -223,6 +223,14 @@ void Brush::Simulator::runOnePath(const int seed) {
 
         // write particle list to file
         saveParticleList(reac, particleListFile);
+
+//        // display the number of times each process was performed
+//        const std::vector<unsigned int> procCounts = reac.getMechanism().ParticleMech().GetProcessUsageCounts();
+//        for(std::vector<unsigned int>::const_iterator it = procCounts.begin();
+//            it != procCounts.end(); ++it) {
+//            std::cout << *it << ", ";
+//        }
+//        std::cout << std::endl;
     }
     std::cout << "finished path\n";
 }
