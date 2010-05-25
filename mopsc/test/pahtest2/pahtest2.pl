@@ -65,7 +65,7 @@ my $m1 = 0;
 while(<$momentFile>) {
   my @fields = split /,/;
 
-  # Look for a line that begina with a number and has the first entry (the time)
+  # Look for a line that begins with a number and has the first entry (the time)
   # equal (upto a small tolerance) to 0.04
   if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.02051) < 1e-6 )) {
       # Third field should be the zeroth moment
@@ -94,22 +94,22 @@ print "$m0, $m1, $secondary_m0\n";
 # Note that the noise in the test results will be considerably bigger than the 
 # confidence intervals reported above, because fewer samples and fewer computational
 # particles are used.
-# The standard deviations of the distributionsfrom which the regression test samples
+# The standard deviations of the distributions from which the regression test samples
 # twice (in that it does two runs) are approximately
 # m0: 3e10, Fv: 1e-9, secondary m0: 9e9
 # These values were estimated from 10 runs using ordinary test settings and svn r821,
 # they are standard deviations for one sample, not for the mean of a number of samples.
 
-if(abs($m0 -  9.76e11) > 4.3e10) {
-  print "Simulated mean M0 was $m0, when 9.76e11 cm^-3 expected\n";
+if(abs($m0 -  9.81e11) > 5.4e10) {
+  print "Simulated mean M0 was $m0, when 9.81e11 cm^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($m1 - 3.13e-8) > 5e-10) {
-  print "Simulated mean M1 was $m1, when 3.13e-8 g cm^-3 expected\n";
+if(abs($m1 - 3.12e-8) > 1e-9) {
+  print "Simulated mean M1 was $m1, when 3.12e-8 g cm^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
