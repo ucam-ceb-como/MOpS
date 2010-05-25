@@ -91,9 +91,14 @@ print "$m0, $m1, $secondary_m0\n";
 # For secondary particles get mean m0 2.851e11 with a confidence interval
 # of +-2.2e9
 # svn r821
-# Note that the standard error in the test results will be considerably
-# bigger than that reported above, because fewer samples and fewer computational
+# Note that the noise in the test results will be considerably bigger than the 
+# confidence intervals reported above, because fewer samples and fewer computational
 # particles are used.
+# The standard deviations of the distributionsfrom which the regression test samples
+# twice (in that it does two runs) are approximately
+# m0: 3e10, Fv: 1e-9, secondary m0: 9e9
+# These values were estimated from 10 runs using ordinary test settings and svn r821,
+# they are standard deviations for one sample, not for the mean of a number of samples.
 
 if(abs($m0 -  9.76e11) > 4.3e10) {
   print "Simulated mean M0 was $m0, when 9.76e11 cm^-3 expected\n";
