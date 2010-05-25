@@ -85,8 +85,16 @@ while(<$momentFile>) {
 
 print "$m0, $m1, $secondary_m0\n";
 
-# Using 10 runs with 1024 main computational particles get
-# mean m0 of 9.76e11, with 99% confidence interval for this mean of +-4.3e10
+# Using 20 runs with 2048 main computational particles get
+# mean m0 of 9.806e11, with 99% confidence interval for this mean of +-1.80e10
+# and Fv = 3.122e-8 +- 2.3e-10.
+# For secondary particles get mean m0 2.851e11 with a confidence interval
+# of +-2.2e9
+# svn r821
+# Note that the standard error in the test results will be considerably
+# bigger than that reported above, because fewer samples and fewer computational
+# particles are used.
+
 if(abs($m0 -  9.76e11) > 4.3e10) {
   print "Simulated mean M0 was $m0, when 9.76e11 cm^-3 expected\n";
   print "**************************\n";
@@ -95,8 +103,6 @@ if(abs($m0 -  9.76e11) > 4.3e10) {
   exit 1;
 }
 
-# Using 10 runs with 1024 main computational particles get
-# mean fv of 3.13e-8, with 99% confidence interval for this mean of +-5e-10
 if(abs($m1 - 3.13e-8) > 5e-10) {
   print "Simulated mean M1 was $m1, when 3.13e-8 g cm^-3 expected\n";
   print "**************************\n";
@@ -105,10 +111,6 @@ if(abs($m1 - 3.13e-8) > 5e-10) {
   exit 2;
 }
 
-# Using 10 runs with 1024 main computational particles get
-# mean secondary m0 of 2.85e11, with 99% confidence interval 
-# for this mean of +-8e9.  However, 2 runs with 512 particles
-# gives a much larger noise.
 if(abs($secondary_m0 -  2.85e11) > 1.5e10) {
   print "Simulated mean secondary M0 was $secondary_m0, when 2.85e11 cm^-3 expected\n";
   print "**************************\n";
