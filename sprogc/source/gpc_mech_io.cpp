@@ -284,6 +284,11 @@ void MechanismParser::parseCK(std::ifstream &fin,
         string thermo = "";
         ifstream tfin;
         tfin.open(status.ThermoFile.c_str(), ios::in);
+        //Throw error if the name for the therm.dat file is invalid
+        if (!tfin.good()){
+            throw invalid_argument("Failed to open thermo file \n" + status.ThermoFile +
+                "Sprog:gpc_mech_io::parseCK");
+        }
         loadCK_File(tfin, thermo);
         tfin.close();
         // Extract the thermo data.
@@ -666,19 +671,19 @@ void MechanismParser::extractCK_Thermo(const std::string &ckstr,
 {
     KEY_POS pos;
 
-    // Find the beginning and end of the elements.
+    // Find the beginning and end of the thermo data.
     pos = getCK_KeyPos("THERMO", ckstr);
 
     // Check for valid keyword positions.
     if ((pos.begin == std::string::npos) || (pos.begin >= ckstr.length())) {
         throw std::invalid_argument("THER/THERMO keyword not found in "
                                     "CHEMKIN input file.\n"
-                                    "Function: (Sprog, MechanismParser::extractCK_Species).");
+                                    "Function: (Sprog, MechanismParser::extractCK_Thermo).");
     }
     if ((pos.end == std::string::npos) || (pos.end >= ckstr.length())) {
         throw std::invalid_argument("END keyword missing after THER/THERMO "
                                     "keywords in CHEMKIN input file.\n"
-                                    "Function: (Sprog, MechanismParser::extractCK_Species).");
+                                    "Function: (Sprog, MechanismParser::extractCK_Thermo).");
     }
 
     // Unlike other CHEMKIN data, the thermo has a strict
