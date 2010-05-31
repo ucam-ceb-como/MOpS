@@ -83,6 +83,16 @@ while(<$momentFile>) {
   }
 }
 
+# 40 runs using 2048 computational particles gives the following estimates and
+# 99% confidence intervals for the estimates
+# m0 5.51+-0.08e10
+# fv 2.23+-0.04e-11
+
+# 50 runs using 512 particles (the test setting) gives an estimate for
+# the standard deviation of population from which each run is drawn of
+# m0 3.3e9
+# fv 1.3e-12
+
 
 #print "$m0, $m1\n";
 if(abs($m0 - 5.3e10) > 2e9) {
