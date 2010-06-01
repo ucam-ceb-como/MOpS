@@ -110,5 +110,11 @@ if(abs($m1 - 1.3e-8) > 3e-9) {
   exit 2;
 }
 
+# Clean up the intermediate output files
+system("rm regression2a-nuc-coag-pyr*.sav");
+system("rm regression2a-nuc-coag-pyr*.sen");
+system("rm regression2a-nuc-coag-pyr*.sim");
+system("rm regression2a-nuc-coag-pyr*.aux");
+
 #print "All tests passed\n";
 exit 0;

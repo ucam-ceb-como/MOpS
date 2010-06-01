@@ -37,7 +37,7 @@ use strict;
 use warnings;
 
 # Clean up any outputs from previous simulations
-#system("rm pahtest2-*");
+system("rm pahtest2-*");
 
 # See if this is a windows system
 my $windows = ($ENV{'OS'} =~ /windows.*/i);
@@ -125,5 +125,11 @@ if(abs($secondary_m0 -  2.85e11) > 1.5e10) {
 }
 
 #print "All tests passed\n";
+
+# Clean up output files, since the test passed
+system("rm pahtest2*.sav");
+system("rm pahtest2*.sen");
+system("rm pahtest2*.sim");
+system("rm pahtest2*.aux");
 
 exit 0;

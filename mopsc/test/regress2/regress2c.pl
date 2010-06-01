@@ -111,5 +111,11 @@ if(abs($m1 - 2.2e-11) > 1e-12) {
   exit 2;
 }
 
+# Clean up intermediate output files
+system("rm regression2c-nuc-coag-OH*.sav");
+system("rm regression2c-nuc-coag-OH*.sen");
+system("rm regression2c-nuc-coag-OH*.sim");
+system("rm regression2c-nuc-coag-OH*.aux");
+
 #print "All tests passed\n";
 exit 0;
