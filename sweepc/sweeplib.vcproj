@@ -183,6 +183,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\swp_constant_inception.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\swp_ensemble.cpp"
 				>
 			</File>
@@ -470,6 +474,10 @@
 			</File>
 			<File
 				RelativePath=".\include\swp_component_inl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_constant_inception.h"
 				>
 			</File>
 			<File

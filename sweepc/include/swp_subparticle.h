@@ -182,7 +182,7 @@ public:
 	void CheckTree();
 	SubParticle *FindRoot();
 	int Numneighbors(SubParticle *target);
-	void ChangeSphericalSurface(int disttonode, SubParticle *target, double dV);
+	void UpdateSinterSurfacegrowth(int disttonode, SubParticle *target, double dV);
 	//void UpdateSinterParticles();
 	int FindPath(bool &path, SubParticle *target, SubParticle *root, int &depth);
 	void UpdatethisSinterParticle(SubParticle *target, const SubParticle *original);

@@ -595,7 +595,7 @@ unsigned int SubParticle::adjustLoop(const fvector &dcomp,
 
 		Nneighbors=Numneighbors(this);
 		disttonode=(int)(1+Nneighbors*(rnd()*0.9999999999));				//avoid that rnd()=1
-		ChangeSphericalSurface(disttonode, this, dV);
+	//	UpdateSinterSurfacegrowth(disttonode, this, dV);
 
     } else {
         // This sub-particle is somewhere in the tree.  The adjustment
@@ -636,38 +636,46 @@ unsigned int SubParticle::adjustLoop(const fvector &dcomp,
 
 
 
-
-void SubParticle::ChangeSphericalSurface(int disttonode, SubParticle *target, double dV)
-{	double volbefore,volafter;
+//adjust the sintering level due to the surface growth event
+//disttonode: the distance from the primary particle to the node that connects this primary to another primary
+//target: the primary that has been grown
+//dV: volume addition
+void SubParticle::UpdateSinterSurfacegrowth(int disttonode, SubParticle *target, double dV)
+{	
+    double volbefore,volafter;
+    //check if we have reached the node connecting the target primary
     if(this->m_leftsinter==target || this->m_rightsinter==target)
 	{
 		disttonode--;
-		if (disttonode==0)
-		{
-			double radius=sqrt(m_sph_surfacearea/(4*PI));
-			volbefore=4/3*PI*radius*radius*radius;
-			volafter=volbefore+dV;
-			double dS=3*sqrt(3*PI/4)*(pow(volafter,(2/3))-pow(volbefore,(2/3)));
-			m_sph_surfacearea+=dS;
-			m_sinter_level=m_sph_surfacearea*((1./m_real_surface)-1./m_real_surface_init)/(1-(m_sph_surfacearea/m_real_surface_init));
-			if (m_sinter_level>0.95)
-			{
-				m_leftsinter->vol_sinter=m_leftsinter->vol_sinter-dV_left;      //added 20.01.09 ms785
-				m_rightsinter->vol_sinter=m_rightsinter->vol_sinter-dV_right;	  //added 20.01.09
-			   	SinterPart();
-			    UpdateCache();
-				UpdateTree();
-			}
-
-		}
-		else
-		{
-			m_parent->ChangeSphericalSurface(disttonode, target, dV);
-		}
-	}
-	else
+            //update the sintering level due to the addition of volume
+		    double radius=sqrt(m_sph_surfacearea/(4*PI));
+            //volume before the addition
+		    volbefore=4.0/3*PI*radius*radius*radius;
+            //vol after
+		    volafter=volbefore+dV;
+            //calculate the surface change due to the vol addition
+		    double dS=2.0/radius*(volafter-volbefore);
+		    m_real_surface+=dS;
+            m_sph_surfacearea=PI * pow(volafter  * 6.0 / PI, TWO_THIRDS);
+            //update the sintering level
+		    m_sinter_level=m_sph_surfacearea*((1./m_real_surface)-1./m_real_surface_init)/(1-(m_sph_surfacearea/m_real_surface_init));
+            //update the volume transfer due to sintering
+            dV_left=m_sinter_level*m_rightsinter->m_primary->Volume();
+			dV_right=m_sinter_level*m_leftsinter->m_primary->Volume();
+            //check that the threshold has not been reached
+       /*     if (m_sinter_level>0.95)
+		    {
+			    m_leftsinter->vol_sinter=m_leftsinter->vol_sinter-dV_left;      //added 20.01.09 ms785
+			    m_rightsinter->vol_sinter=m_rightsinter->vol_sinter-dV_right;	  //added 20.01.09
+		   	    SinterPart();
+		        UpdateCache();
+			    UpdateTree();
+		    }*/
+    }
+	
+	if(m_parent!=NULL) 
 	{
-		m_parent->ChangeSphericalSurface(disttonode, target, dV);
+		m_parent->UpdateSinterSurfacegrowth(disttonode, target, dV);
 	}
 
 }
@@ -1219,7 +1227,7 @@ void SubParticle::Sinter(real dt, const Cell &sys,
 
 				}
 
-			 if ( m_sinter_level>0.95 || Sintered()==1 || m_leftsinter->m_diam<1e-9 ||  m_rightsinter->m_diam<1e-9 )        //<1e-9 nm in order to avoid numerical problems, the sintering time is very small for these small particles and they sinter instantaneously
+			 if ( m_sinter_level>0.95 || Sintered()==1 || m_leftsinter->m_diam<1e-9 ||  m_rightsinter->m_diam<1e-9)        //<1e-9 nm in order to avoid numerical problems, the sintering time is very small for these small particles and they sinter instantaneously
 			   {	//cout <<"sinter dt="<<dt<<std::endl;
 				   	m_leftsinter->vol_sinter=m_leftsinter->vol_sinter-dV_left;      //added 20.01.09 ms785
 					m_rightsinter->vol_sinter=m_rightsinter->vol_sinter-dV_right;	  //added 20.01.09
@@ -1521,6 +1529,7 @@ SubParticle *SubParticle::FindRoot()
 	else return m_parent->FindRoot();
 }
 
+//returns the number of neighbours of the target particle
 int SubParticle::Numneighbors( SubParticle *target)
 {
 	if (m_parent==NULL)
