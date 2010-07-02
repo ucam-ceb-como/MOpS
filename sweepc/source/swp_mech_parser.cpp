@@ -875,7 +875,7 @@ void MechParser::readConstantInception(CamXML::Element &xml, Processes::Constant
     if (el != NULL) {
     	real rate = std::atof(el->Data().c_str());
     	// But store with units of particles per m^3 per s
-    	icn.setConstantVolumetricInceptionRate(rate * 1000.0);
+    	icn.setConstantVolumetricInceptionRate(rate * 1.0e6);
     }
     else {
     	throw std::runtime_error("No rate provided for constant inception (Sweep::MechParser::readConstantInception)");
