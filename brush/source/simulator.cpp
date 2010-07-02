@@ -63,6 +63,18 @@ const size_t Brush::Simulator::sFirstSeed = 123;
  *@param[in]    stat_bound                  Decide which particles to ignore when calculating population statistics
  *@param[in]    split_diffusion             Activate split simulation of diffusion
  *@param[in]    split_advection             Activate split simulation of advection
+ *
+ * The time discretisation and output for the simulations are specified on several levels:
+ * At the top level are Mops::TimeInterval instances, and at the end
+ * of each of these the particle population is written to a psl file, in
+ * addition to the other outputs listed below.
+ * Within each time interval, time is divided into a number of steps and
+ * at the end of each interval particle moments and process rates are
+ * saved to their respective files.
+ * To allow further control each step can be sub-divided by subsplits
+ * each of which generates a separate call to the solver.
+ * The Mops::TimeInterval also contains a count of splits, which are passed
+ * to the solver to control its internal time discretisation.
  */
 Brush::Simulator::Simulator(const size_t n_paths,
                             const size_t n_corrector_iterations,
