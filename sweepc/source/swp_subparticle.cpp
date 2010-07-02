@@ -1306,6 +1306,7 @@ void SubParticle::UpdateCache(void)
                        m_rightchild->m_values.begin(), m_values.begin(), std::plus<real>());
 
         m_time    = (m_leftchild->m_time + m_rightchild->m_time) / 2;
+        // The description of m_createt says that this should be a min, not a mean
         m_createt    = (m_leftchild->m_createt + m_rightchild->m_createt) / 2;
 
         // Update the aggregate details from the children
