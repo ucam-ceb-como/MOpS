@@ -310,6 +310,18 @@ int main(int argc, char* argv[])
         if(diag > 0) {
             std::cout << "Read particle mechanism with " << mech.ParticleMech().ProcessCount()
                       << " processes\n";
+            if(diag > 1) {
+                // Get names of the processes
+                std::vector<std::string> procNames;
+                mech.ParticleMech().GetProcessNames(procNames);
+            	
+                // Print the process names out one line at a time
+                std::vector<std::string>::const_iterator it = procNames.begin();
+                const std::vector<std::string>::const_iterator itEnd = procNames.end();
+                while(it != itEnd) {
+                    std::cout << ' ' << *it++ << '\n';
+                }
+            }
         }
     }
     catch (std::exception &e) {
