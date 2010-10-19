@@ -25,7 +25,7 @@ else
        -I../sprogc/include -I../cvode/include -I../radau/include -I../brush/include \
        -I../geometry/include  -I../mopsc/include \
        -I../sweepc/include -I../utils/include \
-       -I../cvode/source -I../radau/source -Wall -ggdb -D_GLIBCXX_DEBUG
+       -I../cvode/source -I../radau/source -Wall -ggdb -pg -D_GLIBCXX_DEBUG
   flink=-pg 
 endif
 
