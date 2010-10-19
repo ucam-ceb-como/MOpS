@@ -21,11 +21,11 @@ ifeq ($(debug),0)
     flink=-pg
   endif
 else
-  flag=-c  -Iinclude -I../comostrings/include -I../camxml/include \
+  flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
        -I../sprogc/include -I../cvode/include -I../radau/include -I../brush/include \
        -I../geometry/include  -I../mopsc/include \
        -I../sweepc/include -I../utils/include \
-       -I../cvode/source -I../radau/source -Wall -ggdb -pg
+       -I../cvode/source -I../radau/source -Wall -ggdb -D_GLIBCXX_DEBUG
   flink=-pg 
 endif
 
@@ -67,7 +67,7 @@ objlocal=	cam_kernel.o
 
 # TARGET binary: Compile to a  binary.
 
-binary: comostringslib camxmllib sproglib cvodelib radaulib $(objlocal) $(obj)
+binary: comostringslib camxmllib sproglib cvodelib radaulib $(obj) $(objlocal)
 	mkdir -p bin
 ifeq ($(debug),0)
   ifeq ($(profile),0)
@@ -100,6 +100,7 @@ cvodelib:
 	$(MAKE) -f ../cvode/Makefile -C ../cvode debug=$(debug) profile=$(profile)
 radaulib:
 	$(MAKE) -f ../radau/Makefile -C ../radau debug=$(debug) profile=$(profile)
+
 
 # Source code.
 
@@ -167,7 +168,7 @@ clean:
 cleanlibs:
 	$(MAKE) clean -f ../comostrings/Makefile -C ../comostrings
 	$(MAKE) clean -f ../camxml/Makefile -C ../camxml
-	$(MAKE) clean -f ../sprog/Makefile -C ../sprog
+	$(MAKE) clean -f ../sprogc/Makefile -C ../sprogc
 	$(MAKE) clean -f ../cvode/Makefile -C ../cvode
 	rm -rf *.o \#* *~
 
