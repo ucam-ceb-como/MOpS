@@ -15,9 +15,9 @@ namespace {
     /*! This function implements the copysign function from C99. It takes the sign
      *  of the argument y and assigns it to the argument x.
      */ 
-    double copysign(double x, double y){ 
-        return std::abs(x)* ( (y>=0.0)? 1 : -1);  
-    }
+    //double copysign(double x, double y){ 
+    //    return std::abs(x)* ( (y>=0.0)? 1 : -1);  
+    //}
 }
 
 
