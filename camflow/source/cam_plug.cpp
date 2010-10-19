@@ -43,7 +43,7 @@
 
 #include <sys/stat.h>
 #include "cam_admin.h"
-
+#include <stdexcept>
 #include <vector>
 //#include "RadauWrapper.h"
 #include "array.h"

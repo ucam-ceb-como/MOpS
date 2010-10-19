@@ -47,6 +47,7 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 using namespace Camflow;
 using namespace Gadgets;

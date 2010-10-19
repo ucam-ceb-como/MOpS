@@ -52,6 +52,7 @@
 #include "cam_boundary.h"
 #include "limex_wrapper.h"
 #include <vector>
+#include <stdexcept>
 
 using namespace Camflow;
 using namespace Gadgets;

@@ -41,6 +41,7 @@
 #include <map>
 #include <math.h>
 #include <cstring>
+#include <stdexcept>
 
 #include "array.h"
 #include "cam_soot.h"
