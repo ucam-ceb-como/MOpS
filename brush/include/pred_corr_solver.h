@@ -143,14 +143,14 @@ protected:
     void transportIn(Reactor1d & reac, const size_t destination_index, const Sweep::Transport::TransportOutflow &particle_details) const;
 
     //! Carry out split transport on all particles from all cells
-    void splitParticleTransport(Reactor1d &reac, const real t_stop) const;
+    void splitParticleTransport(Reactor1d &reac, const real t_start, const real t_stop) const;
 
 private:
     //! Not possible to have a solver of this type without a reset chemistry object
     PredCorrSolver();
 
     //! Calculate and set a new position on one particle
-    void updateParticlePosition(const real t_stop, const Mops::Mixture &mix,
+    void updateParticlePosition(const real t_start, const real t_stop, const Mops::Mixture &mix,
                                 const Sweep::Mechanism &mech,
                                 const Geometry::LocalGeometry1d & geom,
                                 const std::vector<const Sweep::Cell*> & neighbouring_cells,
@@ -165,7 +165,7 @@ private:
     typedef std::vector<std::list<Sweep::Transport::TransportOutflow> > inflow_lists_vector;
 
     //! Update the positions on a list of particles from one cell
-    inflow_lists_vector updateParticleListPositions(const real t_stop, const Mops::Mixture &mix,
+    inflow_lists_vector updateParticleListPositions(const real t_start, const real t_stop, const Mops::Mixture &mix,
                                                     const size_t cell_index, const Sweep::Mechanism &mech,
                                                     const Geometry::Geometry1d &geom,
                                                     const std::vector<const Sweep::Cell*> &neighbouring_cells,

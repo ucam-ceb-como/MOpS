@@ -181,6 +181,9 @@ void Brush::PredCorrSolver::solveParticles(Reactor1d &reac, const real t_stop) c
     const size_t numCells = reac.getNumCells();
     const Sweep::Mechanism &mech = reac.getMechanism().ParticleMech();
 
+    // Need to know the time for the split simulation of the transport processes
+    const real t_start = reac.getTime();
+
     // Carry out a repeated sequence of jump process simulation (with LPDA updates
     // for particles involved in jumps) followed by LPDA updates for the full
     // population.
@@ -242,7 +245,7 @@ void Brush::PredCorrSolver::solveParticles(Reactor1d &reac, const real t_stop) c
 
     // Now do the split particle transport, if there is any
     if(mSplitDiffusion || mSplitAdvection) {
-        splitParticleTransport(reac, t_stop);
+        splitParticleTransport(reac, t_start, t_stop);
     }
 }
 
@@ -418,9 +421,10 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
 
 /*!
  *@param[in]    reac    Reactor in which particles are being transported
+ *@param[in]    t_start             Time at which position was last calculated by splitting
  *@param[in]    t_stop  Time upto which transport is to be simulated
  */
-void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t_stop) const {
+void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t_start, const real t_stop) const {
     const size_t numCells = reac.getNumCells();
 
     // Element i of the outer vector will contain the outflow from cell i of the reactor.
@@ -466,11 +470,11 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
 
         // Remove particles that are moving to a new cell from partLists and add them
         // to the inflow list for the appropriate cell
-        inflowLists[i] = updateParticleListPositions(t_stop, mix, i,
+        inflowLists[i] = updateParticleListPositions(t_start, t_stop, mix, i,
                                                      reac.getMechanism().ParticleMech(),
                                                      reac.getGeometry(), neighbouringCells,
                                                      partList);
-        secondaryInflowLists[i] = updateParticleListPositions(t_stop, mix, i,
+        secondaryInflowLists[i] = updateParticleListPositions(t_start, t_stop, mix, i,
                                                               reac.getMechanism().ParticleMech(),
                                                               reac.getGeometry(), neighbouringCells,
                                                               secondaryPartList);
@@ -503,6 +507,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
 }
 
 /*!
+ *@param[in]        t_start             Time at which position was last calculated by splitting
  *@param[in]        t_stop              Time at which new position must be calculated
  *@param[in]        mix                 Mixture in which the particle is moving
  *@param[in]        mech                Mechanism specifying calculation of particle transport properties
@@ -510,7 +515,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
  *@param[in]        neighbouringCells   Pointers to the contents of surrounding cells
  *@param[in,out]    sp                  Particle requiring updated position
  */
-void Brush::PredCorrSolver::updateParticlePosition(const real t_stop, const Mops::Mixture &mix,
+void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const real t_stop, const Mops::Mixture &mix,
                                                    const Sweep::Mechanism &mech,
                                                    const Geometry::LocalGeometry1d & geom,
                                                    const std::vector<const Sweep::Cell*> & neighbouringCells,
@@ -518,7 +523,7 @@ void Brush::PredCorrSolver::updateParticlePosition(const real t_stop, const Mops
 {
     real newPosition = sp.getPosition();
     {
-        const real dt = t_stop - sp.getPositionTime();
+        const real dt = t_stop - t_start; //sp.getPositionTime();
         assert(dt >= 0.0);
         if(mSplitAdvection){
             real velocity = mech.AdvectionVelocity(mix, sp, neighbouringCells, geom);
@@ -534,6 +539,7 @@ void Brush::PredCorrSolver::updateParticlePosition(const real t_stop, const Mops
 
 
 /*!
+ *@param[in]        t_start             Time at which position was last calculated by splitting
  *@param[in]        t_stop              Time at which new position must be calculated
  *@param[in]        mix                 Mixture in which the particle is moving
  *@param[in]        cell_index          Index of cell containing the particles to be transported
@@ -545,7 +551,7 @@ void Brush::PredCorrSolver::updateParticlePosition(const real t_stop, const Mops
  *@return       Vector of lists of particles to be transported into other cells
  */
 Brush::PredCorrSolver::inflow_lists_vector
-  Brush::PredCorrSolver::updateParticleListPositions(const real t_stop, const Mops::Mixture &mix,
+  Brush::PredCorrSolver::updateParticleListPositions(const real t_start, const real t_stop, const Mops::Mixture &mix,
                                                      const size_t cell_index, const Sweep::Mechanism &mech,
                                                      const Geometry::Geometry1d & geom,
                                                      const std::vector<const Sweep::Cell*> & neighbouringCells,
@@ -561,7 +567,7 @@ Brush::PredCorrSolver::inflow_lists_vector
     const Sweep::PartPtrList::iterator itPartEnd = particle_list.end();
     while(itPart != itPartEnd ) {
 
-        updateParticlePosition(t_stop, mix, mech, localGeom, neighbouringCells, **itPart);
+        updateParticlePosition(t_start, t_stop, mix, mech, localGeom, neighbouringCells, **itPart);
 
         if(!geom.isInCell(cell_index, (*itPart)->getPosition())) {
             //particle is moving between cells
