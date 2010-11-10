@@ -17,7 +17,7 @@
     </component> 
     
 
-    <particle id="[silica]" model="PAH" subtree="false">
+    <particle id="[soot]" model="PAH" subtree="false">
       <description />
     </particle>
 
