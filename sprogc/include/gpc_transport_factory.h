@@ -92,6 +92,9 @@ namespace Sprog{
 		};
 
 		class MixtureTransport : public TransportFactory{
+
+            static const real oneByRootEight;
+
 		public:
 			MixtureTransport(){}
 			~MixtureTransport(){}

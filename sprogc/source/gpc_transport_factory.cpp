@@ -145,6 +145,8 @@ real TransportFactory::TStar[37] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
 						50.0, 75.0, 100.0
 	};
 
+const real MixtureTransport::oneByRootEight = 0.353553390593273762200422181052424;
+
 
 
 
@@ -173,8 +175,8 @@ real getChi(const int polar, const int nonPolar, const Sprog::Thermo::Mixture &m
 	real epsilonNonPolar = tdNonPolar.getWellDepth(); // LJ well depth
 	
 
-	real reducedAlpha = alphaNonPolar/pow(sigmaNonPolar,3);
-	real reducedMu = muPolar/(sqrt(epsilonPolar*pow(sigmaPolar,3)));
+	real reducedAlpha = alphaNonPolar/(sigmaNonPolar*sigmaNonPolar*sigmaNonPolar);
+	real reducedMu = muPolar/(sqrt(epsilonPolar*(sigmaPolar*sigmaPolar*sigmaPolar)));
 
 	return (1+0.25*reducedAlpha*reducedMu*sqrt(epsilonPolar/epsilonNonPolar));
 }
@@ -248,7 +250,15 @@ real TransportFactory::getReducedDipole(const Sprog::Species &sp) const {
 
 	Transport::TransportData td =  sp.getTransportData();
 
-	return (pow(td.getDipole(),2)/(8*PI*EPSILON0*td.getWellDepth()*pow(td.getCollisionDia(),3)));
+	//return (pow(td.getDipole(),2)/(8*PI*EPSILON0*td.getWellDepth()*pow(td.getCollisionDia(),3)));
+    return (td.getDipole())*(td.getDipole())
+           / 
+           (
+             8*PI*EPSILON0*td.getWellDepth()
+            *(td.getCollisionDia())
+            *(td.getCollisionDia())
+            *(td.getCollisionDia()) 
+           );
 }
 
 real TransportFactory::getOmega11(real rT, const real deltaStar) const{
@@ -334,7 +344,8 @@ real PureSpeciesTransport::getViscosity(const real T, const Sprog::Species &sp) 
 	real eta, omega22;
 	omega22 = getOmega22(T,sp);
 	Transport::TransportData td =  sp.getTransportData();
-	eta = 5.0/16.0*sqrt(PI*sp.MolWt()*kB*T/NA)/(PI*pow(td.getCollisionDia(),2)*omega22);		
+	//eta = 5.0/16.0*sqrt(PI*sp.MolWt()*kB*T/NA)/(PI*pow(td.getCollisionDia(),2)*omega22);	
+	eta = 5.0/16.0*sqrt(PI*sp.MolWt()*kB*T/NA)/(PI*td.getCollisionDia()*td.getCollisionDia()*omega22);	
 	return eta;
 }
 
@@ -346,7 +357,7 @@ real PureSpeciesTransport::getSlefDiffusionCoeff(const real T, real p, const Spr
                 
 
 	Transport::TransportData td = sp.getTransportData();
-	selfDiff = (3.0/8.0)*sqrt(PI*NA*pow((kB*T),3)/sp.MolWt())/(p*PI*pow(td.getCollisionDia(),2)*omega11);
+	selfDiff = (3.0/8.0)*sqrt(PI*NA*(kB*T)*(kB*T)*(kB*T)/sp.MolWt())/(p*PI*td.getCollisionDia()*td.getCollisionDia()*omega11);
 	return selfDiff;
 }
 
@@ -426,8 +437,8 @@ real MixtureTransport::getViscosity(const real T, const Sprog::Thermo::Mixture &
 			m_kj = (*spv)[k]->MolWt()/(*spv)[j]->MolWt();
                         m_jk = 1/m_kj;
 			eta_kj = nk / (*spv)[j]->getViscosity(T);
-			phi_kj = (1/sqrt(8.0)) * pow((1+m_kj),-0.5) * pow( (1+sqrt(eta_kj)*pow(m_jk,0.25)),2);
-                        
+			//phi_kj = (1/sqrt(8.0)) * pow((1+m_kj),-0.5) * pow( (1+sqrt(eta_kj)*pow(m_jk,0.25)),2.0);
+            phi_kj = oneByRootEight/sqrt((1+m_kj)) * (1+sqrt(eta_kj)*sqrt(sqrt(m_jk)) * (1+sqrt(eta_kj)*sqrt(sqrt(m_jk)) ));            
 			xTimesPhi += moleFrac[j]*phi_kj;
 		}
 		eta += xTimesEta/xTimesPhi;
@@ -487,6 +498,7 @@ real MixtureTransport::binaryDiffusionCoeff(const int j,
 	real omega11;
 
 	m_j = (*spv)[j]->MolWt();
+
 	m_k = (*spv)[k]->MolWt();
 	m_jk = m_j*m_k/(m_j+m_k);
 	
@@ -523,14 +535,15 @@ real MixtureTransport::binaryDiffusionCoeff(const int j,
 	sigma_jk = 0.5*(sigma_j+sigma_k) * pow(Chi,-(1/6));
 
 	rT = kB*T/epsilon_jk;
-	deltaStar = mu_j*mu_k /(8*PI*EPSILON0*epsilon_jk*pow(sigma_jk,3));
+	deltaStar = mu_j*mu_k /(8*PI*EPSILON0*epsilon_jk*sigma_jk*sigma_jk*sigma_jk);
 
 	omega11 = getOmega11(rT,deltaStar);
 
 
-	numer = sqrt(2*PI*NA*pow((kB*T),3)/m_jk);
+	//numer = sqrt(2*PI*NA*pow((kB*T),3)/m_jk);
+    numer = sqrt(2*PI*NA*(kB*T)*(kB*T)*(kB*T)/m_jk);
 
-	denom = p*PI*pow(sigma_jk,2)*omega11;
+	denom = p*PI*sigma_jk*sigma_jk*omega11;
 
 
 
