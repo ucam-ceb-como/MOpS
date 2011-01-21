@@ -154,7 +154,7 @@ const real MixtureTransport::oneByRootEight = 0.35355339059327376220042218105242
 // F(T) function for Z_rot calculation Eq. 33 SAND86-8246
 real rotFunctionFT(real T, real LJdepth){
 	real factor = LJdepth/(kB*T);
-	return (1+ 0.5*sqrt(PI)*PI * sqrt(factor) + (0.25*PI*PI+2)*factor + sqrt(PI)*PI*sqrt(factor)*factor);
+	return (1+ 0.5*sqrt(PI)*PI * sqrt(factor) + (0.25*fastMath::pow2(PI)+2)*factor + sqrt(PI)*PI*sqrt(factor)*factor);
 }
 
 // correction factor for polar non polar interaction
@@ -251,7 +251,7 @@ real TransportFactory::getReducedDipole(const Sprog::Species &sp) const {
 	Transport::TransportData td =  sp.getTransportData();
 
 	//return (pow(td.getDipole(),2)/(8*PI*EPSILON0*td.getWellDepth()*pow(td.getCollisionDia(),3)));
-    return (td.getDipole())*(td.getDipole())
+    return fastMath::pow2(td.getDipole())
            / 
            (
              8*PI*EPSILON0*td.getWellDepth()
@@ -344,8 +344,7 @@ real PureSpeciesTransport::getViscosity(const real T, const Sprog::Species &sp) 
 	real eta, omega22;
 	omega22 = getOmega22(T,sp);
 	Transport::TransportData td =  sp.getTransportData();
-	//eta = 5.0/16.0*sqrt(PI*sp.MolWt()*kB*T/NA)/(PI*pow(td.getCollisionDia(),2)*omega22);	
-	eta = 5.0/16.0*sqrt(PI*sp.MolWt()*kB*T/NA)/(PI*td.getCollisionDia()*td.getCollisionDia()*omega22);	
+    eta = 5.0/16.0*sqrt(PI*sp.MolWt()*kB*T/NA)/(PI*fastMath::pow2(td.getCollisionDia())*omega22);
 	return eta;
 }
 
@@ -357,7 +356,8 @@ real PureSpeciesTransport::getSlefDiffusionCoeff(const real T, real p, const Spr
                 
 
 	Transport::TransportData td = sp.getTransportData();
-	selfDiff = (3.0/8.0)*sqrt(PI*NA*(kB*T)*(kB*T)*(kB*T)/sp.MolWt())/(p*PI*td.getCollisionDia()*td.getCollisionDia()*omega11);
+	//selfDiff = (3.0/8.0)*sqrt(PI*NA*(kB*T)*(kB*T)*(kB*T)/sp.MolWt())/(p*PI*td.getCollisionDia()*td.getCollisionDia()*omega11);
+    selfDiff = (3.0/8.0)*sqrt(PI*NA*fastMath::pow3(kB*T)/sp.MolWt())/(p*PI*fastMath::pow2(td.getCollisionDia())*omega11);
 	return selfDiff;
 }
 
@@ -438,7 +438,7 @@ real MixtureTransport::getViscosity(const real T, const Sprog::Thermo::Mixture &
                         m_jk = 1/m_kj;
 			eta_kj = nk / (*spv)[j]->getViscosity(T);
 			//phi_kj = (1/sqrt(8.0)) * pow((1+m_kj),-0.5) * pow( (1+sqrt(eta_kj)*pow(m_jk,0.25)),2.0);
-            phi_kj = oneByRootEight/sqrt((1+m_kj)) * (1+sqrt(eta_kj)*sqrt(sqrt(m_jk)) * (1+sqrt(eta_kj)*sqrt(sqrt(m_jk)) ));            
+            phi_kj = oneByRootEight/sqrt((1+m_kj)) * fastMath::pow2(1+sqrt(eta_kj)*sqrt(sqrt(m_jk)));            
 			xTimesPhi += moleFrac[j]*phi_kj;
 		}
 		eta += xTimesEta/xTimesPhi;
@@ -535,13 +535,14 @@ real MixtureTransport::binaryDiffusionCoeff(const int j,
 	sigma_jk = 0.5*(sigma_j+sigma_k) * pow(Chi,-(1/6));
 
 	rT = kB*T/epsilon_jk;
-	deltaStar = mu_j*mu_k /(8*PI*EPSILON0*epsilon_jk*sigma_jk*sigma_jk*sigma_jk);
-
+	//deltaStar = mu_j*mu_k /(8*PI*EPSILON0*epsilon_jk*sigma_jk*sigma_jk*sigma_jk);
+    deltaStar = mu_j*mu_k /(8*PI*EPSILON0*epsilon_jk*fastMath::pow3(sigma_jk));
 	omega11 = getOmega11(rT,deltaStar);
 
 
 	//numer = sqrt(2*PI*NA*pow((kB*T),3)/m_jk);
-    numer = sqrt(2*PI*NA*(kB*T)*(kB*T)*(kB*T)/m_jk);
+    //numer = sqrt(2*PI*NA*(kB*T)*(kB*T)*(kB*T)/m_jk);
+    numer = sqrt(2*PI*NA*fastMath::pow3(kB*T)/m_jk);
 
 	denom = p*PI*sigma_jk*sigma_jk*omega11;
 

@@ -45,6 +45,9 @@
 #include "gpc_species.h"
 #include "gpc_mixture.h"
 #include "gpc_params.h"
+#include "fast_math_functions.hpp"
+
+
 namespace Sprog{
 
 	namespace Transport{
