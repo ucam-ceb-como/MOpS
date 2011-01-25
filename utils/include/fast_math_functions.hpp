@@ -6,6 +6,10 @@
  * pow(x,n) for when n is an integer.
  * halley_cbrt2d(x) for a faster cube root.
  *
+ * If you're going to use these functions, check that they help
+ * by using a profiler such as:
+ * valgrind --tool=callgrind EXECUTABLE
+ *
  Copyright (C) 2011 Laurence R McGlashan.
 
  Licence:
@@ -48,34 +52,6 @@ namespace fastMath {
     inline double pow2(const double& x) {return x*x;}
     inline double pow3(const double& x) {return x*pow2(x);}
     inline double pow4(const double& x) {return pow2(x)*pow2(x);}
-
-    //! Iterative cube root approximation using Halley's method (double)
-    inline double cbrta_halleyd(const double a, const double R)
-    {
-	    const double a3 = a*a*a;
-        const double b= a * (a3 + R + R) / (a3 + a3 + R);
-	    return b;
-    }
-
-    //! Cube root approximation using bit hack for 64-bit float adapted from Kahan's cbrt
-    inline double cbrt_5d(double d)
-    {
-	    const unsigned int B1 = 715094163;
-	    double t = 0.0;
-	    unsigned int* pt = (unsigned int*) &t;
-	    unsigned int* px = (unsigned int*) &d;
-	    pt[1]=px[1]/3+B1;
-	    return t;
-    }
-
-    //! Cube root approximation using 2 iterations of Halley's method (double)
-    inline double halley_cbrt2d(double d)
-    {
-	    double a = cbrt_5d(d);
-	    a = cbrta_halleyd(a, d);
-	    return cbrta_halleyd(a, d);
-    }
-
 
 } // End namespace fastMathFunctions
 
