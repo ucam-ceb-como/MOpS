@@ -47,6 +47,7 @@
 #include<map>
 #include<vector>
 #include "gpc_params.h"
+#include "fast_math_functions.hpp"
 
 namespace Sprog{
 	class Mechanism;
@@ -54,12 +55,13 @@ namespace Sprog{
 	namespace Transport{
 
 		class TransportData{				
-			int	   molIndex; // molecule index:- 0=atom, 1=linear molec, 2= non-linear molec
+			int	molIndex; // molecule index:- 0=atom, 1=linear molec, 2= non-linear molec
 			real LJwellDepth; // L-J potential well depth e/kb (K)
 			real LJcollisionDia; // L-J collistion dia
 			real dipol; // Dipole moment Debye
 			real polarity; // Polarizability
 			real rotRelaxNum; // Rotational relaxation number
+			real reducedDipol; // Reduced dipole moment. delta* = mu^2/(8 PI epsilon sigma^3)
 
 		public:
 			TransportData();
@@ -87,6 +89,9 @@ namespace Sprog{
 
 			void setDipole(real dipol);
 			real getDipole()const;
+
+			void setReducedDipole(real reducedDipol);
+			real getReducedDipole()const;
 
 			void setPolarity(real polarity);
 			real getPolarity()const;

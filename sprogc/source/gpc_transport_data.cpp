@@ -57,15 +57,19 @@ TransportData::TransportData(){
 	dipol = 0.;
 	polarity = 0.;
 	rotRelaxNum = 0.;
+	reducedDipol = 0.;
 }
 
-TransportData::TransportData(int mi, 
-							 real LJDepth, 
-							 real LJcd, 
-							 real dpol, 
-							 real polar, 
-							 real rotRelax){
-
+TransportData::TransportData
+(
+    int mi,
+	real LJDepth,
+	real LJcd,
+	real dpol,
+	real polar,
+	real rotRelax
+)
+{
 	
 	TransportData::molIndex = mi;	
 	TransportData::LJwellDepth = LJDepth;
@@ -73,6 +77,9 @@ TransportData::TransportData(int mi,
 	TransportData::dipol = dpol;
 	TransportData::polarity = polar;
 	TransportData::rotRelaxNum = rotRelax;
+	TransportData::reducedDipol = fastMath::pow2(dpol)
+	               /(8*PI*EPSILON0*LJDepth*fastMath::pow3(LJcd));
+
 }
 
 //TransportData::TransportData(const Sprog::Transport::TransportData &td){
@@ -86,6 +93,7 @@ TransportData TransportData::operator =(Sprog::Transport::TransportData td){
 	dipol = td.dipol;
 	polarity = td.polarity;
 	rotRelaxNum = td.rotRelaxNum;
+	reducedDipol = td.reducedDipol;
 
 	return *this;
 
@@ -99,6 +107,7 @@ void TransportData::setMolIndex(int mi){
 int TransportData::getMolIndex() const{
 	return this->molIndex;
 }
+
 // sets the lennard jones well depth
 void TransportData::setWellDepth(real wd){
 	this->LJwellDepth = wd;
@@ -107,6 +116,7 @@ void TransportData::setWellDepth(real wd){
 real TransportData::getWellDepth() const{
 	return this->LJwellDepth;
 }
+
 // sets the L-J collisiion dia
 void TransportData::setCollisionDia(real cd){
 	this->LJcollisionDia = cd;
@@ -125,6 +135,14 @@ real TransportData::getDipole() const{
 	return this->dipol;
 }
 
+// sets the reduced dipole
+void TransportData::setReducedDipole(real reducedDipol){
+    this->reducedDipol = reducedDipol;
+}
+// returns the reduced dipol
+real TransportData::getReducedDipole() const{
+    return this->reducedDipol;
+}
 
 // sets the Polarity of the species
 void TransportData::setPolarity(real p){
@@ -134,6 +152,7 @@ void TransportData::setPolarity(real p){
 real TransportData::getPolarity() const{
 	return this->polarity;
 }
+
 // sets the rotational relaxation number
 void TransportData::setRotRelaxNum(real rrn){
 	this->rotRelaxNum = rrn;
@@ -142,6 +161,7 @@ void TransportData::setRotRelaxNum(real rrn){
 real TransportData::getRotRelaxNum() const{
 	return this->rotRelaxNum;
 }
+
 // validate the transport data
 //void TransportData::validateTransport(std::map<string,vector<string> > &trMap,
 //									  Sprog::Mechanism &mech)
