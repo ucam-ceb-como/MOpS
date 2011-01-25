@@ -6,12 +6,12 @@ export profile=0
 cpp=g++
 ifeq ($(debug),0)
   ifeq ($(profile),0)
-    flag=-c -O2 -Iinclude -I../comostrings/include -Wall
+    flag=-c -O2 -Iinclude -I../comostrings/include -I../utils/include -Wall
   else
-    flag=-c -O2 -Iinclude -I../comostrings/include -Wall -pg
+    flag=-c -O2 -Iinclude -I../comostrings/include -I../utils/include  -Wall -pg
   endif
 else
-  flag=-c -O0 -Iinclude -I../comostrings/include -Wall -ggdb -pg \
+  flag=-c -O0 -Iinclude -I../comostrings/include -I../utils/include -Wall -ggdb -pg \
        -D_GLIBCXX_DEBUG
 endif
 
