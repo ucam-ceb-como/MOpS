@@ -63,7 +63,8 @@
 #include "swp_params.h"
 #include "swp_treenode.h"
 #include "swp_particle.h"
-#include "swp_particle_cache.h"
+#include "swp_tree_cache.h"
+
 
 #include "binary_tree.hpp"
 
@@ -105,14 +106,17 @@ class Ensemble
 public:
     // TYPEDEFS.
 
-    // The type of particle in the ensemble.
+    //! The type of particle in the ensemble.
     typedef Particle particle_type;
 
-    // Iterator for the particles.
+    //! Iterator for the particles.
     typedef PartPtrVector::iterator iterator;
 
-    // Constant iterator for the particles.
+    //! Constant iterator for the particles.
     typedef PartPtrVector::const_iterator const_iterator;
+
+    //! Particle value cache for specifying distributions on the particle list
+    typedef Sweep::TreeCache particle_cache_type;
 
     // Constructors.
     Ensemble(void); // Default constructor.
@@ -235,7 +239,7 @@ public:
     // property index.  The particle properties are those stored in
     // the ParticleData type. Returns particle index on success, otherwise
     // negative.
-    int Select(ParticleCache::PropID id, int (*rand_int)(int, int), real(*rand_u01)()) const;
+    int Select(particle_cache_type::PropID id, int (*rand_int)(int, int), real(*rand_u01)()) const;
 
     // ENSEMBLE CAPACITY AND PARTICLE COUNT.
 
@@ -270,12 +274,12 @@ public:
     // GET SUMS OF PROPERTIES.
 
     //! Returns the sums over all particles of all their cached properties.
-    const ParticleCache &GetSums(void) const;
+    const particle_cache_type &GetSums(void) const;
 
     // Returns the sum of one particle property with the given index
     // from the binary tree.
     real GetSum(
-        ParticleCache::PropID id // ID of the ParticleData property.
+        particle_cache_type::PropID id // ID of the ParticleData property.
         ) const;
 
     //! Inform the ensemble that the particle at index i has been changed
@@ -321,7 +325,7 @@ private:
     void rebuildTree();
 
     //! Type of weight tree for particle selection and property summation
-    typedef Utils::BinaryTree<ParticleCache, PartPtrVector::iterator> tree_type;
+    typedef Utils::BinaryTree<particle_cache_type, PartPtrVector::iterator> tree_type;
 
     //! Tree for inverting probability distributions on the particles and summing their properties
     tree_type m_tree;
@@ -354,18 +358,18 @@ private:
     void ClearSecondary();
 
     //! Functor to extract weights from nodes of the new binary tree
-    class WeightExtractor : public std::unary_function<const ParticleCache&, real>
+    class WeightExtractor : public std::unary_function<const particle_cache_type&, real>
     {
     public:
         //! Set up an extractor for an indexed property
-        WeightExtractor(const ParticleCache::PropID id);
+        WeightExtractor(const particle_cache_type::PropID id);
 
         //! Extract a weight from a cache
-        real operator()(const ParticleCache& cache) const;
+        real operator()(const particle_cache_type& cache) const;
 
     private:
         //! Id of property to extract
-        ParticleCache::PropID mId;
+        particle_cache_type::PropID mId;
 
         //! Not possible to have an extractor of this kind without specifying an id
         WeightExtractor();

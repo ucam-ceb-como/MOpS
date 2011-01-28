@@ -203,41 +203,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                 }
             }
         } else if (str == "particle") {
-            // Read particle model ID.
-            str = (*i)->GetAttributeValue("id");
-
-            if (str == "surfvol") {
-                // Surface-volume model.
-                mech.SetAggModel(AggModels::SurfVol_ID);
-            } else if (str == "pripartlist") {
-                // Basic primary particle model.
-                mech.SetAggModel(AggModels::PriPartList_ID);
-            } else if (str == "arssc") {
-                // ARS-SC model.  Read from XML file.
-                CamXML::Element *const ars = xml.Root()->GetFirstChild("arssc");
-                if (ars != NULL) {
-                    readARSSC_Model(*ars, mech);
-                } else {
-                    // ARS-SC model parameters not defined!
-                    throw runtime_error("ARS-SC model not defined in XML file "
-                                        "(Sweep, MechParser::readV1).");
-                }
-
-                // Set PAH count tracker.  First search for it in
-                // the already defined trackers.  If it doesn't yet
-                // exist then add it.
-                unsigned int ipah = 0;
-                for (ipah=0; ipah!=mech.TrackerCount(); ++ipah) {
-                    if (mech.Trackers()[ipah]->Name() == "pahs") {
-                        break;
-                    }
-                }
-                if (ipah >= mech.TrackerCount()) {
-                    ipah = mech.TrackerCount();
-                    mech.AddTracker(*(new Tracker("pahs")));
-                }
-                SubModels::ARSSC_Model::SetPAH_Tracker(ipah);
-            }
+            throw std::runtime_error("<model id=\"particle\" is not a valid tag (Sweep::MechParser::readV1");
         } else if (str == "drag") {
             // Read drag model ID.
             str = (*i)->GetAttributeValue("id");
@@ -358,6 +324,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     // Check if the sub-particle tree is active.
     string str = particleXML->GetAttributeValue("subtree");
     if (str == "true") {
+        throw std::runtime_error("Subtrees are no longer supported (Sweep::MechParser::readV1)");
         mech.EnableSubPartTree();
     } else {
         mech.DisableSubPartTree();

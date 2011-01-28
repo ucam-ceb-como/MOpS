@@ -48,6 +48,7 @@
 #include "swp_particle.h"
 #include "swp_ensemble.h"
 #include "swp_mechanism.h"
+#include "swp_tree_cache.h"
 #include "sprog.h"
 #include <map>
 
@@ -229,7 +230,7 @@ real ABFModel::alpha(real t, const Sprog::Thermo::IdealGas &gas,
     switch (m_aform) {
         case AlphaCorrelation:
             return alpha(gas.Temperature(),
-                         particles.GetSums().Property(ParticleCache::iNumCarbon) /
+                         particles.GetSums().Property(TreeCache::iNumCarbon) /
                          particles.Count());
         case AlphaProfile:
             return alpha(t);

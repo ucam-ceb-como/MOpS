@@ -25,13 +25,18 @@ namespace Sweep
 class Cell;
 
 /*!
- * \brief Node in a binary tree structure in which each sub-particle consists
- *  of either two further sub-particles or a primary particle.
+ * \brief Class that implements some of the Particle interface.
  *
- *  The SubParticle class is integral to the sub-particle tree paradigm.  It is
- *  the tree node in a binary tree structure in which each sub-particle consists
- *  of either two further sub-particles or a primary particle.  In this way
- *  advanced particle structure and processes (such as sintering) may be modelled.
+ * This class is now obsolete.  It was originally used to store the
+ * connectivity structure of primary particle aggregates, but this
+ * connectivity is now handled in the primary particle classes.
+ *
+ * This class will eventually removed so that Particle inherits
+ * directly from ParticleCache, without having SubParticle in the
+ * inheritance hierachy any more.
+ *
+ * DO NOT add methods or data to this class, since the whole
+ * class is due to be removed. (riap2 28 jan 2011)
  *
  */
 class SubParticle : public ParticleCache
@@ -60,16 +65,6 @@ public:
     SubParticle &operator+=(const Sweep::Primary &rhs);
     const SubParticle operator+(const SubParticle &rhs) const;
     const SubParticle operator+(const Sweep::Primary &rhs) const;
-	//Sintering tree
-	void setSintered(real sintered);
-	real Sintered();
-
-    // PARENT SUB-PARTICLE.
-
-    // Returns the sub-particle's parent.
-    SubParticle *const Parent(void);
-    const SubParticle *const Parent(void) const;
-
 
     // PRIMARY PARTICLE CHILD.
 
@@ -78,30 +73,30 @@ public:
     Sweep::Primary *const Primary(void);
     const Sweep::Primary *const Primary(void) const;
 
+    // BASIC PROPERTIES.
 
-    // CHILD SUB-PARTICLES IN SUB-PARTICLE TREE.
+    //! Returns the particle equivalent sphere diameter.
+    real SphDiameter(void) const;
 
-    // Returns a pointer to the left child.
-    SubParticle *const Left(void);
-    const SubParticle *const Left(void) const;
+    //! Returns the collision diameter.
+    real CollDiameter(void) const;
 
-    // Returns a pointer to the right child.
-    SubParticle *const Right(void);
-    const SubParticle *const Right(void) const;
+    //! Returns the mobility diameter.
+    real MobDiameter(void) const;
+
+    //! Returns the surface area.
+    real SurfaceArea(void) const;
+
+    //! Returns the equivalent sphere surface area, based on the volume.
+    real SphSurfaceArea(void) const;
+
+    //! Returns the volume.
+    real Volume(void) const;
+
+    //! Returns the mass.
+    real Mass(void) const;
 
 
-	// Selects a leaf from the sub-particle tree below this
-    // sub-particle using the given property ID to weight the
-    // primaries.
-    Sweep::SubParticle *const SelectLeaf(
-        SubModels::SubModelType model_id, // Sub-model ID for weighting parameter.
-        int id                            // Weighting property ID.
-        );
-
-
-
-
-	real Diamter();
 
 
     // PROPERTY SETTING OVERRIDES (FROM PARTICLE CACHE).
@@ -174,28 +169,6 @@ public:
     // Returns the last update time of the particle.
     real LastUpdateTime(void) const;
 
-
-	void UpdateTree_sinter(SubParticle *has_sintered);
-	void UpdateTree_sinter(SubParticle *has_sintered, SubParticle *newsinter);
-	void UpdateCache_sinter(SubParticle *has_sintered);
-	void UpdateCache_sinter(SubParticle *has_sintered, SubParticle *newsinter);
-	void CheckTree();
-	SubParticle *FindRoot();
-	int Numneighbors(SubParticle *target);
-	void UpdateSinterSurfacegrowth(int disttonode, SubParticle *target, double dV);
-	//void UpdateSinterParticles();
-	int FindPath(bool &path, SubParticle *target, SubParticle *root, int &depth);
-	void UpdatethisSinterParticle(SubParticle *target, const SubParticle *original);
-	//void UpdateFreeSurface();
-	//void ResetFreeSurface();
-	//void RecalcFreeSurface();
-
-
-void printSubtree(std::ostream &out, ParticleCache::PropID id) const;
-void printSubtreeLoop(std::ostream &out, ParticleCache::PropID id) const;
-void printSubtreepic(std::ostream &out) const;
-void printSubtreepicLoop(std::ostream &out,real x, real y, real z) const;
-
     // PARTICLE OPERATIONS.
 
     // Adjusts the particle with the given composition and
@@ -207,8 +180,6 @@ void printSubtreepicLoop(std::ostream &out,real x, real y, real z) const;
     unsigned int Adjust(
         const fvector &dcomp,             // Composition changes.
         const fvector &dvalues,           // Tracker variable changes.
-        SubModels::SubModelType model_id, // Sub-model ID for weighting parameter.
-        int id,                           // Weighting property ID.
         unsigned int n                    // Number of times to perform adjustment.
         );
 
@@ -225,24 +196,15 @@ void printSubtreepicLoop(std::ostream &out,real x, real y, real z) const;
         );
 
 	// Gets several distributions
-//	void Getprimarydistribution(double *distribution);
     void Getprimarydistribution(std::ofstream *file);
-    void Getsinteringleveldistribution(double *distribution, real binsize,const int numbins);
     void GetCollDiamDistrMill(double sintertresh, int *nparticles, double *distribution, const int numbins, double *averagecolldiam, double *Volume, double *Surface, int *nprimaries);
-	void CreateTestTree();
+
     // PARTICLE UPDATE AND CHECKING.
 
     // Recalculates the derived properties from the
     // unique properties.  This function moves down the tree
     // from the root to the leaves.
     void UpdateCache(void);
-    void UpdateCache_thispart(void);
-
-    // Tells the parent sub-particle to update its cache of
-    // derived properties.  This operation is passed up the
-    // sub-particle tree to the root particle.
-    void UpdateTree(void);
-
 
     // Check the that the particle is valid by querying the
     // validity conditions of the models and ensuring that it
@@ -267,47 +229,9 @@ void printSubtreepicLoop(std::ostream &out,real x, real y, real z) const;
         const Sweep::ParticleModel &model // Defining particle model.
         );
 
-    // CHILD SUB-PARTICLES IN SUB-PARTICLE TREE.
-
-    // Sets the pointer to the left child.
-    void setLeftPtr(SubParticle *const sub);
-
-    // Sets the pointer to the right child.
-    void setRightPtr(SubParticle *const sub);
-
-	void SinterPart();
-
 	real avgeomdiam(double oneovernumsubpart);
 
-	real SubPartSurfaceArea(void) const;
-
-	real SubPartSumVol(void) const;
-	real SubPartSphSurfaceArea(void) const;
-
-	int NumSubPart();
-
-	// The children on the left subtree that is involved in the sintering of this node
-	SubParticle *m_leftsinter;
-
-	// The children on the right subtree that is involved in the sintering of this node
-	SubParticle *m_rightsinter;
-
-	real vol_sinter;
-	//real surf_sinter;
-    real m_real_surface_init;
-	real m_sinter_level;
-	real m_sumsinterdiameter;
-	//Volume change of the left and right sinterparticle due to sintering
-	real dV_left;
-	real dV_right;
-
 protected:
-
-    // Parent sub-particle.
-    SubParticle *m_parent;
-
-    // Left and right children in the sub-particle tree structure.
-    SubParticle *m_leftchild, *m_rightchild;
 
     // Primary particle of which this sub-particle comprises.  A sub-particle
     // may contain one primary, or exactly two sub-particles (see above).
@@ -317,32 +241,6 @@ protected:
     // components and the values.
     SubParticle(void);
 
-	//stores the sintering level of the two children to the parent particle
-	real m_sintered;
-
-	//time the two subparticles are connected
-	real m_connect_time;
-
-	//average diameter of the childs
-	real m_avg_diam;
-
-	//the surface of the two particles that are sintering in this node
-	real m_real_surface;
-
-	// the volume of the two particles that are sintering in this node
-	real m_sumvol_sinterpart;
-
-	// the surface of a sphere that has the same volume as both sinter particles
-	real m_sph_surfacearea;
-
-	real m_leftsinterdiam;
-
-	real m_rightsinterdiam;
-
-
-
-
-
     // MEMORY MANAGEMENT.
 
     // Release all memory associated with the SubParticle object.
@@ -351,61 +249,12 @@ protected:
     // Initialisation routine.
     void init(void);
 
-
-    // PARENT SUB-PARTICLE.
-
-    // Sets the sub-particle's parent.
-    void setParent(SubParticle *const p);
-
-
     // PRIMARY PARTICLE CHILD.
 
     // Sets the pointer to the child primary particle.
     void setPrimaryPtr(Sweep::Primary *const pri);
 
-	// Selects a leaf from the sub-particle tree below this
-    // sub-particle using the given property ID to weight the
-    // primaries.  This particular function is used internally by the SubParticle class
-    // to reuse the random variable used to select the correct leaf which
-    // is generated by the root sub-particle.
-    Sweep::SubParticle *const selLeafLoop(
-        SubModels::SubModelType model_id, // Sub-model ID for weighting parameter.
-        int id,                           // Weighting property ID.
-        real r                            // Random leaf-selection number.
-       );
-
-
-
-
-
-
-
-    // OPERATIONS.
-
-    // Adjusts the particle with the given composition and
-    // values changes n times.  If the particle cannot be adjust
-    // n times, then this function returns the number of times
-    // it was adjusted. The function proceeds down the sub-particle tree
-    // until it reaches a primary particle leaf.  At this point
-    // that primary particle is adjusted using the given values.  This
-    // particular function is used internally by the SubParticle class
-    // to reuse the random variable used to select the correct leaf which
-    // is generated by the root sub-particle.
-    unsigned int adjustLoop(
-        const fvector &dcomp,             // Composition changes.
-        const fvector &dvalues,           // Tracker variable changes.
-        SubModels::SubModelType model_id, // Sub-model ID for weighting parameter.
-        int id,                           // Weighting property ID.
-        real r,                           // Random leaf-selection number.
-        unsigned int n                    // Number of times to perform adjustment.
-        );
-
-
 private:
-    //! Connect together two subparticle trees during coagulation
-    void joinSubParticleTrees(const SubParticle &rhs, SubParticle &left_sub_particle,
-                              SubParticle &right_sub_particle);
-
     //! Defining particle model.
     const Sweep::ParticleModel *m_pmodel;
 

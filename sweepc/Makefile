@@ -60,7 +60,8 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_PAH_primary.o swp_PAH_cache.o swp_PAH_stats.o swp_transport_process.o \
     swp_diffusion_process.o swp_advection_process.o \
     mt19937.o swp_dimer_inception.o swp_pah_inception.o \
-    swp_molecule_evolution.o swp_secondary_freecoag.o swp_secondary_primary_coag.o
+    swp_molecule_evolution.o swp_secondary_freecoag.o swp_secondary_primary_coag.o \
+    swp_tree_cache.o
 
 # TARGET all: Compile to a static library (*.a).
 
@@ -84,6 +85,10 @@ swp_tracker.o: $(src)/swp_tracker.cpp
 
 swp_particle_cache.o: $(src)/swp_particle_cache.cpp $(inc)/swp_particle_cache.h
 	$(cpp) $(flag) $(src)/swp_particle_cache.cpp
+
+swp_tree_cache.o: $(src)/swp_tree_cache.cpp $(inc)/swp_tree_cache.h \
+                  $(inc)/swp_params.h $(inc)/swp_particle.h 
+	$(cpp) $(flag) $(src)/swp_tree_cache.cpp
 
 swp_subparticle.o: $(src)/swp_subparticle.cpp $(inc)/swp_subparticle.h
 	$(cpp) $(flag) $(src)/swp_subparticle.cpp

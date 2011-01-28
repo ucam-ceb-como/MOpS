@@ -114,7 +114,7 @@ int ARSSC_Reaction::Perform(Sweep::real t, Sweep::Cell &sys,
                             Sweep::real(*rand_u01)(), 
                             Sweep::Transport::TransportOutflow *out) const
 {
-    int i = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid), rand_int, rand_u01);
+    int i = sys.Particles().Select(static_cast<TreeCache::PropID>(m_pid), rand_int, rand_u01);
 
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);
@@ -130,16 +130,15 @@ int ARSSC_Reaction::Perform(Sweep::real t, Sweep::Cell &sys,
                 real truer = Rate(t, sys, *sp);
 
                 if (!Fictitious(majr, truer, rand_u01)) {
-                    // Choose a primary particle to update.
-                    SubParticle *sub = sp->SelectLeaf(m_modelid, m_pid);
-                    Primary *pri = sub->Primary();
+                    // Get the primary particle to update.
+                    Primary *pri = sp->Primary();
 
                     // Do ARS-SC primary update.
                     unsigned int n = adjustPri(*pri);
 
                     // Update the sub-particle tree above this primary.
                     pri->UpdateCache();
-                    sub->UpdateTree();
+                    sp->UpdateCache();
 
                     // Update the particle ensemble.
                     sys.Particles().Update(i);
@@ -156,15 +155,14 @@ int ARSSC_Reaction::Perform(Sweep::real t, Sweep::Cell &sys,
             // reaction.
 
             // Choose a primary particle to update.
-            SubParticle *sub = sp->SelectLeaf(m_modelid, m_pid);
-            Primary *pri = sub->Primary();
+            Primary *pri = sp->Primary();
 
             // Do ARS-SC primary update.
             unsigned int n = adjustPri(*pri);
 
             // Update the sub-particle tree above this primary.
             pri->UpdateCache();
-            sub->UpdateTree();
+            sp->UpdateCache();
 
             // Update the particle ensemble.
             sys.Particles().Update(i);
@@ -184,16 +182,15 @@ int ARSSC_Reaction::Perform(Sweep::real t, Sweep::Cell &sys,
 // is given by index.  The process is performed n times.
 int ARSSC_Reaction::Perform(real t, Cell &sys, Particle &sp, unsigned int n) const
 {
-    // Choose a primary particle to update.
-    SubParticle *sub = sp.SelectLeaf(m_modelid, m_pid);
-    Primary *pri = sub->Primary();
+    // Get the primary particle to update.
+    Primary *pri = sp.Primary();
 
     // Do ARS-SC primary update.
     unsigned int m = adjustPri(*pri, n);
 
     // Update the sub-particle tree above this primary.
     pri->UpdateCache();
-    sub->UpdateTree();
+    sp.UpdateCache();
 
     // Apply changes to gas-phase chemistry.
     adjustGas(sys, m);

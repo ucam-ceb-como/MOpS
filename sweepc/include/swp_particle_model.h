@@ -81,8 +81,6 @@ public:
 
     // Operators.
     ParticleModel &operator=(const ParticleModel &rhs);
-    ParticleModel &operator+=(const ParticleModel &rhs);
-
 
 	// CHEMICAL SPECIES.
 

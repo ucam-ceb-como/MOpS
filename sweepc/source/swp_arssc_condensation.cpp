@@ -115,19 +115,19 @@ int ARSSC_Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
 {
     // Select particle based on which term was called.
     int i  = -1;
-    ParticleCache::PropID id = ParticleCache::iUniform;
+    TreeCache::PropID id = TreeCache::iUniform;
     switch(iterm) {
         case 1:
-            id = ParticleCache::iDcol;
+            id = TreeCache::iDcol;
             i  = sys.Particles().Select(id, rand_int, rand_u01);
             break;
         case 2:
-            id = ParticleCache::iD2;
+            id = TreeCache::iD2;
             i  = sys.Particles().Select(id, rand_int, rand_u01);
             break;
         case 0:
         default:
-            id = ParticleCache::iUniform;
+            id = TreeCache::iUniform;
             i  = sys.Particles().Select(rand_int);;
             break;
     }
@@ -151,18 +151,15 @@ int ARSSC_Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
             // Check that the event is not ficticious by comparing the
             // majorant rate with the true rate.
             if (!Fictitious(majr, truer, rand_u01) || !m_mech->AnyDeferred()) {
-                // Choose a primary particle to update.  Use surface
-                // area to weight in the first instance.
-                SubParticle *sub = sp->SelectLeaf(
-                    SubModels::BasicModel_ID, ParticleCache::iS);
-                Primary *pri = sub->Primary();
+                // Get the primary particle to update
+                Primary *pri = sp->Primary();
                 
                 // Do ARS-SC primary update.
                 unsigned int n = adjustPri(*pri);
 
                 // Update the sub-particle tree above this primary.
                 pri->UpdateCache();
-                sub->UpdateTree();
+                sp->UpdateCache();
 
                 // Update the particle ensemble.
                 sys.Particles().Update(i);
@@ -185,18 +182,15 @@ int ARSSC_Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
 // is given by index.  The process is performed n times.
 int ARSSC_Condensation::Perform(real t, Cell &sys, Particle &sp, unsigned int n) const
 {
-    // Choose a primary particle to update.  Use surface
-    // area to weight in the first instance.
-    SubParticle *sub = sp.SelectLeaf(
-        SubModels::BasicModel_ID, ParticleCache::iS);
-    Primary *pri = sub->Primary();
+    // Get the primary particle to update
+    Primary *pri = sp.Primary();
 
     // Do ARS-SC primary update.
     unsigned int m = adjustPri(*pri, n);
 
     // Update the sub-particle tree above this primary.
     pri->UpdateCache();
-    sub->UpdateTree();
+    sp.UpdateCache();
 
     // Apply changes to gas-phase chemistry.
     adjustGas(sys, m);

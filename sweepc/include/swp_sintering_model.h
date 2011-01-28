@@ -76,6 +76,9 @@ class PriPartPrimary;
 
 namespace Processes
 {
+/*! Model for rate at which primary particles merge with their
+ *  neighbours.
+ */
 class SinteringModel
 {
 public:
@@ -161,16 +164,10 @@ public:
         const Primary &p // Particle for which to calculate time.
         ) const;
 
-    // Returns the characteristic sintering time for the
-    // given subparticle.
-	real SintTimeSubPart(const Cell &sys, const SubParticle &sp) const;
     real SintTime(
         const Cell &sys,
         const AggModels::PriPartPrimary &p
         ) const;
-
-	real SintTime(const Cell &sys, const SubParticle &sp) const;
-
 
     // RATE CALCULATION.
 
@@ -194,10 +191,6 @@ public:
         const AggModels::PriPartPrimary &p
         ) const;
 	
-	 // Returns the rate of the process for the given subparticle.
-	real Rate(real t, const Cell &sys, const SubParticle &sp) const;
-
-
 
 
     // PERFORMING THE SINTERING.

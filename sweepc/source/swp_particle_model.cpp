@@ -853,7 +853,7 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
         case FlameletAdvection:
         {
             // Mass of soot per unit volume of gas [kg m^-3] is needed repeatedly
-            const real sootMassDensity = sys.Particles().GetSum(ParticleCache::iM)
+            const real sootMassDensity = sys.Particles().GetSum(TreeCache::iM)
                                          / sys.SampleVolume();
 
             // Thermophoretic drift term
@@ -889,10 +889,10 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
 
                 // Same process for product of soot mass per unit volume of gas
                 // and particule diffusion coefficient of this particle.
-                const real leftVal  = neighbours[0]->Particles().GetSum(ParticleCache::iM) /
+                const real leftVal  = neighbours[0]->Particles().GetSum(TreeCache::iM) /
                                       neighbours[0]->SampleVolume() *
                                       EinsteinDiffusionCoefficient(*neighbours[0], sp);
-                const real rightVal = neighbours[1]->Particles().GetSum(ParticleCache::iM) /
+                const real rightVal = neighbours[1]->Particles().GetSum(TreeCache::iM) /
                                       neighbours[1]->SampleVolume() *
                                       EinsteinDiffusionCoefficient(*neighbours[1], sp);
                 // Finish the gradient calculation

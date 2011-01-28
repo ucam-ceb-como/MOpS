@@ -59,6 +59,9 @@ friend class Ensemble;
 public:
 	// Constructors
 
+    //! Default to 0 node
+    //TreeNode();
+
 	TreeNode & operator+=(const TreeNode &rhs);
 	const TreeNode operator+(const TreeNode &rhs) const;
 

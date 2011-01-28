@@ -93,7 +93,7 @@ Sweep::real Sweep::Processes::DiffusionProcess::Rate(real t, const Cell &sys,
         rate += 0.5 * dx_1 * dx_1;
     }
 
-    rate *= sys.Particles().GetSum(static_cast<ParticleCache::PropID>(m_pid));
+    rate *= sys.Particles().GetSum(static_cast<TreeCache::PropID>(m_pid));
     rate *= std::pow(sys.Temperature(), m_TemperatureExponent);
     return  rate * A() * s_MajorantFactor;
 
@@ -177,7 +177,7 @@ int  Sweep::Processes::DiffusionProcess::Perform(Sweep::real t,
     }
 
     // Get the particle that will be transported
-    const int particleIndex = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid), rand_int, rand_u01);
+    const int particleIndex = sys.Particles().Select(static_cast<TreeCache::PropID>(m_pid), rand_int, rand_u01);
 
     // LPDA updates and fictitious events are dealt with in the function below
     return Outflow(t, sys, local_geom, particleIndex, direction, out);

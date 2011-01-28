@@ -235,6 +235,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\swp_tree_cache.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\swp_treenode.cpp"
 				>
 			</File>
@@ -542,6 +546,10 @@
 			</File>
 			<File
 				RelativePath=".\include\swp_tracker_inl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\swp_tree_cache.h"
 				>
 			</File>
 			<File

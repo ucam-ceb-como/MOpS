@@ -986,7 +986,6 @@ void  Mechanism::output(Cell &sys, real t) const
 							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
 								avcoldiam=(*(*i)).CollDiameter()+avcoldiam;
 								numpart++;
-								numsubpart+=(*(*i)).NumSubPart();
                                 file << (*(*i)).CollDiameter() <<endl;
 							}
                             file.close();

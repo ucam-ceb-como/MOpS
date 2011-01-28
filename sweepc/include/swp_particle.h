@@ -56,6 +56,15 @@ namespace Sweep
 {
 class Ensemble;
 
+/*!
+ * \brief Particle which can move around, coagulate and have internal structure
+ * 
+ * The interface that this class should offer is not entirely clear.  This class
+ * may eventually become a template parameter so that simulations can be compiled
+ * for different particle types.  Alternatively an interface may be defined and then
+ * subclassed.  This will require some thought. 
+ */
+
 class Particle : public SubParticle
 {
 public:
@@ -95,8 +104,11 @@ public:
 
     // READ/WRITE/COPY.
 
-    // Creates a clone of the particle.
+    //! Clone the particle.
     Particle *const Clone() const;
+    
+    //! Internal consistency check
+    bool IsValid() const;
 
     // Why is there no serialisation?
 

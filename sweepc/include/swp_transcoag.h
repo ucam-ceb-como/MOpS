@@ -51,6 +51,9 @@ namespace Sweep
 // Forward declare Mechanism class.
 class Mechanism;
 
+// Forward declare class used for sums in the binary tree
+class TreeCache;
+
 namespace Transport
 {
     // Forward declaration of unused argument type
@@ -148,7 +151,7 @@ private:
     // All parameters required to calculate rate passed 
     // as arguments.
     real Rate(
-        const ParticleCache &data, // Particle model data.
+        const TreeCache &data, // Particle model data.
         real n,     // Number of particles.
         real sqrtT, // Square root of the temperature.
         real T_mu,  // T / viscosity of air.
@@ -160,7 +163,7 @@ private:
     // All parameters required to calculate rate terms
     // passed as arguments.
     real RateTerms(
-        const ParticleCache &data, // Particle model data.
+        const TreeCache &data, // Particle model data.
         real n,     // Number of particles.
         real sqrtT, // Square root of the temperature./home/riap2/code/sweep/include/swp_coagulation.h:68: undefined reference to `vtable for Sweep::Processes::Coagulation'
         real T_mu,  // T / viscosity of air.

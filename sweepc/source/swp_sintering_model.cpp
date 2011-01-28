@@ -158,14 +158,6 @@ real SinteringModel::SintTime(const Cell &sys, const Particle &p) const
 }
 
 // Returns the characteristic sintering time for the
-// given subparticle.
-real SinteringModel::SintTime(const Cell &sys, const SubParticle &sp) const
-{
-	return SintTimeSubPart(sys, sp);
-}
-
-
-// Returns the characteristic sintering time for the
 // given primary.
 real SinteringModel::SintTime(const Cell &sys,const Primary &p) const
 {
@@ -196,28 +188,6 @@ real SinteringModel::SintTime(const Cell &sys,const Sweep::AggModels::PriPartPri
                    exp((m_E*(1-(m_dpmin/dp)))/sys.Temperature());
     }
 }
-// Returns the characteristic sintering time for the
-// given primary.
-real SinteringModel::SintTimeSubPart(const Cell &sys,const SubParticle &sp) const
-{
-	real temperature=sys.Temperature();
-   // real dp = 6.0 * sp.SubPartSumVol() / sp.SubPartSurfaceArea();
-  //	real dp =  sp.m_leftsinter->Diamter() +  sp.m_rightsinter->Diamter();
-	//real dp = min(sp.m_leftsinter->CollDiameter(),sp.m_rightsinter->CollDiameter());
-	real dp = sp.m_sumsinterdiameter;
-    real dpmin = m_dpmin;
-    switch (m_type) {
-	    case ViscousFlow:	  
-            return m_A * dp * exp(m_E*(1-dpmin/dp)/temperature);
-		//	return m_A * dp * exp(m_E/temperature);
-            break;
-        case GBD:
-        default:
-            return m_A * dp * dp * dp * dp * temperature *  
-                   exp(m_E/temperature);
-    }
-}
-
 
 // RATE CALCULATION.
 
@@ -240,15 +210,6 @@ real SinteringModel::Rate(real t, const Cell &sys, const AggModels::PriPartPrima
 {
     real tau = SintTime(sys, p);
     return max((p.SurfaceArea() - p.SphSurfaceArea()) / tau, 0.0);
-}
-
-// Returns the rate of the process for the given subparticle.
-real SinteringModel::Rate(real t, const Cell &sys, const SubParticle &sp) const
-{
-    real tau = SintTime(sys, sp);
-	//cout << "sintering time="<< tau<<endl;
-    if (tau<1e-300) return 1e300;       
-    return (sp.SubPartSurfaceArea() - sp.SubPartSphSurfaceArea()) / tau;
 }
 
 

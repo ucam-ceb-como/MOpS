@@ -155,7 +155,7 @@ real SurfaceReaction::Rate(real t, const Cell &sys) const
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
     // Particle dependence.
-    rate *= sys.Particles().GetSum(static_cast<ParticleCache::PropID>(m_pid));
+    rate *= sys.Particles().GetSum(static_cast<TreeCache::PropID>(m_pid));
 
     if (m_mech->AnyDeferred()) {
         return rate * m_majfactor;
@@ -238,7 +238,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
                              Sweep::real(*rand_u01)(), 
                              Sweep::Transport::TransportOutflow *out) const
 {
-    int i = sys.Particles().Select(static_cast<ParticleCache::PropID>(m_pid), rand_int, rand_u01);
+    int i = sys.Particles().Select(static_cast<TreeCache::PropID>(m_pid), rand_int, rand_u01);
 
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);
@@ -256,7 +256,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
 
                 if (!Fictitious(majr, truer, rand_u01)) {
                     // Adjust particle.
-                    sp->Adjust(m_dcomp, m_dvals, m_modelid, m_pid, 1);
+                    sp->Adjust(m_dcomp, m_dvals, 1);
                     sys.Particles().Update(i);
 
                     // Apply changes to gas-phase chemistry.
@@ -269,7 +269,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
         } else {
             // No particle update required, just perform the surface
             // reaction.
-            sp->Adjust(m_dcomp, m_dvals, m_modelid, m_pid, 1);
+            sp->Adjust(m_dcomp, m_dvals, 1);
 
             if (sp->IsValid()) {
                 // Tell the binary tree to recalculate
@@ -296,7 +296,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
 int SurfaceReaction::Perform(real t, Cell &sys, Particle &sp,
                              unsigned int n) const
 {
-    unsigned int m = sp.Adjust(m_dcomp, m_dvals, m_modelid, m_pid, n);
+    unsigned int m = sp.Adjust(m_dcomp, m_dvals, n);
     adjustGas(sys, m);
     return m;
 }

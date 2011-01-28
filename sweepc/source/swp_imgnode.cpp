@@ -100,29 +100,8 @@ void ImgNode::Clear(void)
 void ImgNode::CopySPT(const SubParticle *sp)
 {
 	Primary::PropID id=Primary::iD;
-
-    if (sp->Primary()== NULL) {
-
-            m_left = new ImgNode();
-            m_left->m_parent = this;
-			m_left->CopySPT(sp->Left());
-
-            m_right = new ImgNode();
-            m_right->m_parent = this;
-			m_right->CopySPT(sp->Right());
-
-
-           setRadius(0.0);
-
-
-           m_mindepth = 1;
-        
-    } else {
-        
-			setRadius( (sp->Primary()->Property(id))*0.5e9);       //convert to nm
-
-       
-    }
+	
+    setRadius( (sp->Primary()->Property(id))*0.5e9);       //convert to nm
 }
 
 

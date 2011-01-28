@@ -97,7 +97,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::Rate(real t, const Cell &sy
 // More efficient rate routine for coagulation only.
 // All parameters required to calculate rate passed
 // as arguments.
-Sweep::real Sweep::Processes::TransitionCoagulation::Rate(const ParticleCache &data, real n, real sqrtT,
+Sweep::real Sweep::Processes::TransitionCoagulation::Rate(const TreeCache &data, real n, real sqrtT,
                        real T_mu, real MFP, real vol) const
 {
     // Some prerequisites.
@@ -107,12 +107,12 @@ Sweep::real Sweep::Processes::TransitionCoagulation::Rate(const ParticleCache &d
     real c = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
-    real d       = data.CollDiameter();
-    real d2      = data.CollDiamSquared();
-    real d_1     = data.InvCollDiam();
-    real d_2     = data.InvCollDiamSquared();
-    real d2m_1_2 = data.CollDiamSqrdInvSqrtMass();
-    real m_1_2   = data.InvSqrtMass();
+    const real d       = data.CollDiameter();
+    const real d2      = data.Property(TreeCache::iD2);
+    const real d_1     = data.Property(TreeCache::iD_1);
+    const real d_2     = data.Property(TreeCache::iD_2);
+    const real m_1_2   = data.Property(TreeCache::iM_1_2);
+    const real d2m_1_2 = data.Property(TreeCache::iD2_M_1_2);
 
     // Get individual terms.
     real terms[TYPE_COUNT];
@@ -176,7 +176,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(real t, const Cel
 // More efficient rate routine for coagulation only.
 // All parameters required to calculate rate terms
 // passed as arguments.
-Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const ParticleCache &data, real n, real sqrtT,
+Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const TreeCache &data, real n, real sqrtT,
                             real T_mu, real MFP, real vol,
                             fvector::iterator &iterm) const
 {
@@ -187,12 +187,12 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const ParticleCac
     real c   = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
-    real d       = data.CollDiameter();
-    real d2      = data.CollDiamSquared();
-    real d_1     = data.InvCollDiam();
-    real d_2     = data.InvCollDiamSquared();
-    real d2m_1_2 = data.CollDiamSqrdInvSqrtMass();
-    real m_1_2   = data.InvSqrtMass();
+    const real d       = data.CollDiameter();
+    const real d2      = data.Property(TreeCache::iD2);
+    const real d_1     = data.Property(TreeCache::iD_1);
+    const real d_2     = data.Property(TreeCache::iD_2);
+    const real m_1_2   = data.Property(TreeCache::iM_1_2);
+    const real d2m_1_2 = data.Property(TreeCache::iD2_M_1_2);
 
     fvector::iterator isf = iterm;
     fvector::iterator ifm = iterm+4;
@@ -282,7 +282,7 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
             maj = SlipFlow;
             break;
         case SlipFlow2:
-            ip1 = sys.Particles().Select(ParticleCache::iDcol, rand_int, rand_u01);
+            ip1 = sys.Particles().Select(TreeCache::iDcol, rand_int, rand_u01);
             maj = SlipFlow;
             break;
         case SlipFlow3:
@@ -290,7 +290,7 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
             maj = SlipFlow;
             break;
         case SlipFlow4:
-            ip1 = sys.Particles().Select(ParticleCache::iDcol, rand_int, rand_u01);
+            ip1 = sys.Particles().Select(TreeCache::iDcol, rand_int, rand_u01);
             maj = SlipFlow;
             break;
         case FreeMol1:
@@ -298,7 +298,7 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
             maj = FreeMol;
             break;
         case FreeMol2:
-            ip1 = sys.Particles().Select(ParticleCache::iD2, rand_int, rand_u01);
+            ip1 = sys.Particles().Select(TreeCache::iD2, rand_int, rand_u01);
             maj = FreeMol;
             break;
         default :
@@ -333,23 +333,23 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
             break;
         case SlipFlow2:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iD_1, rand_int, rand_u01);
+                ip2 = sys.Particles().Select(TreeCache::iD_1, rand_int, rand_u01);
             break;
         case SlipFlow3:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iD_1, rand_int, rand_u01);
+                ip2 = sys.Particles().Select(TreeCache::iD_1, rand_int, rand_u01);
             break;
         case SlipFlow4:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iD_2, rand_int, rand_u01);
+                ip2 = sys.Particles().Select(TreeCache::iD_2, rand_int, rand_u01);
             break;
         case FreeMol1:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iD2_M_1_2, rand_int, rand_u01);
+                ip2 = sys.Particles().Select(TreeCache::iD2_M_1_2, rand_int, rand_u01);
             break;
         case FreeMol2:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(ParticleCache::iM_1_2, rand_int, rand_u01);
+                ip2 = sys.Particles().Select(TreeCache::iM_1_2, rand_int, rand_u01);
             break;
         default :
             while ((ip2 == ip1) && (++guard<1000))

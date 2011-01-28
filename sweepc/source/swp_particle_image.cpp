@@ -309,14 +309,7 @@ void ParticleImage::constructAgg_FM(const Particle &sp, const ParticleModel &mod
 
     // Need to determine the type of particle this is.
     if (model.UseSubPartTree()) {
-        // This particle uses the sub-particle tree, so
-        // we can usethat to construct the sphere-tree for
-        // image output.
-        // TODO:  Complete sub-particle tree TEM output.
-		constructSubParttree(&sp);
-
-	//	cout <<"use subparttree to create the image tree";
-
+        throw std::logic_error("Subtrees no longer supported");
     } else {
         const AggModels::SurfVolPrimary *svp = NULL;
         const AggModels::PriPartPrimary *ppp = NULL;
@@ -366,14 +359,9 @@ void ParticleImage::constructSubParttree(const SubParticle *sp)
 void ParticleImage::copysptinsert(const SubParticle *sp)
 {
 	Primary::PropID id=Primary::iD;
-	if (sp->Primary()== NULL) {
-		copysptinsert(sp->Left());
-		copysptinsert(sp->Right());
 
-		} else {
-
-				m_root.Insert(sp->Primary()->Property(id)*0.5e9);       //convert to nm, store the radius not the diameter
-		}
+    //convert to nm, store the radius not the diameter
+    m_root.Insert(sp->Primary()->Property(id)*0.5e9);
 }
 
 void ParticleImage::constructSubParttree(const Sweep::AggModels::PAHPrimary *p)

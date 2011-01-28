@@ -586,7 +586,7 @@ void Sweep::Ensemble::RemoveInvalids(void)
  * Particles must be heap allocated, because the ensemble takes the
  * address of sp and, by default, calls delete on the resulting pointer
  * when the particle is no longer needed.  It would probably make
- * sense to change the type of the first argument to Particle* to
+ * sense to change the type of the second argument to Particle* to
  * reflect the fact that the ensemble mainly deals with the pointer.
  *
  */
@@ -707,7 +707,7 @@ int Sweep::Ensemble::SelectSecondaryParticle(int (*rand_int)(int, int)) const
  *
  * id must refer to a basic property from the ParticleData class
  */
-int Sweep::Ensemble::Select(ParticleCache::PropID id,
+int Sweep::Ensemble::Select(particle_cache_type::PropID id,
                             int (*rand_int)(int, int),
                             real (*rand_u01)()) const
 {
@@ -717,7 +717,7 @@ int Sweep::Ensemble::Select(ParticleCache::PropID id,
     // by a given particle property (by index).
 
     // Do not try to use the tree for uniform selection
-    if(id == ParticleCache::iUniform)
+    if(id == particle_cache_type::iUniform)
         return Select(rand_int);
 
     // Calculate random number weighted by sum of desired property (wtid).
@@ -765,16 +765,16 @@ real Sweep::Ensemble::SecondaryScaling() const {
 
 // Returns a ParticleData object which contains property
 // sums for all particles in the ensemble.
-const ParticleCache & Sweep::Ensemble::GetSums(void) const
+const Sweep::Ensemble::particle_cache_type & Sweep::Ensemble::GetSums(void) const
 {
     return m_tree.head();
 }
 
 // Returns the sum of a property in the ParticleData class
 // over all particles.
-real Sweep::Ensemble::GetSum(ParticleCache::PropID id) const
+real Sweep::Ensemble::GetSum(particle_cache_type::PropID id) const
 {
-    if(id != ParticleCache::iUniform)
+    if(id != particle_cache_type::iUniform)
         return m_tree.head().Property(id);
     else
         return m_count;
@@ -1150,7 +1150,7 @@ void Sweep::Ensemble::init(void)
 /*!
  * @param[in]   id      Index of property which will be extracted
  */
-Ensemble::WeightExtractor::WeightExtractor(const ParticleCache::PropID id)
+Ensemble::WeightExtractor::WeightExtractor(const particle_cache_type::PropID id)
 : mId(id)
 {}
 
@@ -1159,6 +1159,6 @@ Ensemble::WeightExtractor::WeightExtractor(const ParticleCache::PropID id)
  *
  * @return      The weight extracted from the cache
  */
-real Ensemble::WeightExtractor::operator()(const ParticleCache& cache) const {
+real Ensemble::WeightExtractor::operator()(const particle_cache_type& cache) const {
     return cache.Property(mId);
 }

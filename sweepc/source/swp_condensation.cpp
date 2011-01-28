@@ -141,8 +141,8 @@ real Condensation::Rate(real t, const Cell &sys) const
 
     // Free molecular terms.
     cterm *= (m_kfm1 * sys.ParticleCount()) + 
-             (m_kfm2 * sys.Particles().GetSum(ParticleCache::iDcol)) +
-             (m_kfm3 * sys.Particles().GetSum(ParticleCache::iD2));
+             (m_kfm2 * sys.Particles().GetSum(TreeCache::iDcol)) +
+             (m_kfm3 * sys.Particles().GetSum(TreeCache::iD2));
 
     // If the mechanism contains any deferred processes then we must use the
     // majorant form of the rate, in order to account for any changes to
@@ -214,9 +214,9 @@ real Condensation::RateTerms(real t, const Cell &sys,
     // Free molecular terms.
     real sum = 0.0;
     sum += *(iterm++) = m_kfm1 * cterm * sys.ParticleCount();
-    sum += *(iterm++) = m_kfm2 * cterm * sys.Particles().GetSum(ParticleCache::iDcol);
+    sum += *(iterm++) = m_kfm2 * cterm * sys.Particles().GetSum(TreeCache::iDcol);
     sum += *(iterm++) = m_kfm3 * cterm * 
-                        sys.Particles().GetSum(ParticleCache::iD2);
+                        sys.Particles().GetSum(TreeCache::iD2);
     return sum;
 }
 
@@ -245,19 +245,19 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
 {
     // Select particle based on which term was called.
     int i  = -1;
-    ParticleCache::PropID id = ParticleCache::iUniform;
+    TreeCache::PropID id = TreeCache::iUniform;
     switch(iterm) {
         case 1:
-            id = ParticleCache::iDcol;
+            id = TreeCache::iDcol;
             i  = sys.Particles().Select(id, rand_int, rand_u01);
             break;
         case 2:
-            id = ParticleCache::iD2;
+            id = TreeCache::iD2;
             i  = sys.Particles().Select(id, rand_int, rand_u01);
             break;
         case 0:
         default:
-            id = ParticleCache::iUniform;
+            id = TreeCache::iUniform;
             i  = sys.Particles().Select(rand_int);;
             break;
     }
@@ -290,8 +290,7 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
             // events when there are no deferred processes.
             if (!Fictitious(majr, truer, rand_u01) || !m_mech->AnyDeferred()) {
                 // Adjust particle.
-                sp->Adjust(m_dcomp, m_dvals,SubModels::BasicModel_ID, 
-                           ParticleCache::iS, 1); // Use surface area to weight in first instance.
+                sp->Adjust(m_dcomp, m_dvals, 1);
                 sys.Particles().Update(i);
 
                 // Apply changes to gas-phase chemistry.
@@ -313,8 +312,7 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
 int Condensation::Perform(real t, Cell &sys, Particle &sp,
                           unsigned int n) const
 {
-    unsigned int m = sp.Adjust(m_dcomp, m_dvals, SubModels::BasicModel_ID, 
-                               ParticleCache::iS, n); // Use surface-area to weight.
+    unsigned int m = sp.Adjust(m_dcomp, m_dvals, n);
     adjustGas(sys, m);
     return 0;
 }

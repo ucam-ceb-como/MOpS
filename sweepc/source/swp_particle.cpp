@@ -211,3 +211,14 @@ Particle *const Particle::Clone() const
 {
     return new Particle(*this);
 }
+
+/*!
+ * Perform checks on the internal data structure.  This is mainly for
+ * testing and checking purposes; it should not be called from performance
+ * critical sections.
+ * 
+ * @return	true iff internal structures pass tests
+ */
+bool Particle::IsValid() const {
+	return SubParticle::IsValid();
+}
