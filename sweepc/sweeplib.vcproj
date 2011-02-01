@@ -246,14 +246,6 @@
 				Name="Sub-models"
 				>
 				<File
-					RelativePath=".\source\swp_arssc_cache.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_arssc_model.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\source\swp_submodel.cpp"
 					>
 				</File>
@@ -271,22 +263,6 @@
 				</File>
 				<File
 					RelativePath=".\source\swp_advection_process.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_arssc_condensation.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_arssc_inception.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_arssc_process.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_arssc_reaction.cpp"
 					>
 				</File>
 				<File
@@ -584,22 +560,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_arssc_condensation.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_arssc_inception.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_arssc_process.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_arssc_reaction.h"
-					>
-				</File>
-				<File
 					RelativePath=".\include\swp_birth_process.h"
 					>
 				</File>
@@ -667,14 +627,6 @@
 			<Filter
 				Name="Sub-models"
 				>
-				<File
-					RelativePath=".\include\swp_arssc_cache.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_arssc_model.h"
-					>
-				</File>
 				<File
 					RelativePath=".\include\swp_submodel.h"
 					>
