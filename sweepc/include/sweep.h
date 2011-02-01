@@ -66,8 +66,6 @@
 #include "swp_submodel_type.h"
 #include "swp_submodel_cache.h"
 #include "swp_submodel.h"
-#include "swp_arssc_model.h"
-#include "swp_arssc_cache.h"
 
 // Aggregation models.
 #include "swp_aggmodel_type.h"

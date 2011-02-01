@@ -47,9 +47,7 @@
 #include "swp_process.h"
 #include "swp_pah_inception.h"
 #include "swp_dimer_inception.h"
-#include "swp_arssc_inception.h"
 #include "swp_surface_reaction.h"
-#include "swp_arssc_reaction.h"
 #include "swp_condensation.h"
 #include "swp_maths_functional.h"
 #include "camxml.h"
@@ -240,40 +238,6 @@ private:
     // Reads a maths functional from XML and creates an object to contain it.
     static Sweep::Maths::Functional *const readFunctional(
         CamXML::Element &xml // CamXML element containing the functional def'n.
-        );
-
-
-    // ARS-SC MODEL.
-
-    // Reads ARS-SC model static parameters into a mechanism.
-    static void readARSSC_Model(
-        CamXML::Element &xml, // CamXML element containing the ARS-SC model def'n.
-        Mechanism &mech       // Mechanism into which to read ARS-SC model.
-        );
-
-    // Reads ARS-SC inception processes from a sweep mechanism XML file.
-    static void readARSSC_Inceptions(
-        CamXML::Document &xml, // CamXML document pre-constructed from file.
-        Mechanism &mech        // Mechanism to construct from XML.
-        );
-
-    // Reads ARS-SC surface reactions from a sweep mechanism XML file.
-    static void readARSSC_SurfRxns(
-        CamXML::Document &xml, // CamXML document pre-constructed from file.
-        Mechanism &mech              // Mechanism to construct from XML.
-        );
-
-    // Reads ARS-SC condensation processes from a sweep mechanism XML file.
-    static void readARSSC_Condensations(
-        CamXML::Document &xml, // CamXML document pre-constructed from file.
-        Mechanism &mech        // Mechanism to construct from XML.
-        );
-
-    // Reads ARS-SC site parameters for a process into
-    // the given ARSSC_Process object.
-    static void readARSSC_Sites(
-        CamXML::Element &xml,          // CamXML document pre-constructed from file.
-        Processes::ARSSC_Process &proc // Process to construct from XML.
         );
 
     //! Load PAH stories from files

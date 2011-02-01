@@ -50,8 +50,6 @@
 #include "swp_secondary_primary_coag.h"
 #include "swp_pah_inception.h"
 #include "swp_dimer_inception.h"
-#include "swp_arssc_inception.h"
-#include "swp_arssc_reaction.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -102,14 +100,6 @@ Process *const ProcessFactory::Read(std::istream &in, const Sweep::Mechanism &me
             case ActSiteRxn_ID:
                 //proc = new ActSiteReaction(in, mech);
                 //break;
-            case ARSSC_Inception_ID:
-                //proc = new ARSSC_Inception(in, mech);
-                //break;
-            case ARSSC_Reaction_ID:
-                //proc = new ARSSC_Reaction(in, mech);
-                //break;
-            case ARSSC_Condensation_ID:
-//                proc = new ARSSC_Condensation(in, mech);
             default:
                 throw runtime_error("Invalid process type read from "
                                     "input stream (Sweep, ProcessFactory::Read).");
@@ -144,8 +134,6 @@ Inception *const ProcessFactory::ReadInception(std::istream &in,
             case PAH_Inception_ID:
                 proc = new PAHInception(in, mech);
                 break;
-            case ARSSC_Inception_ID:
-                proc = new ARSSC_Inception(in, mech);
             default:
                 throw runtime_error("Invalid inception type read from "
                                     "input stream (Sweep, "
@@ -183,12 +171,6 @@ ParticleProcess *const ProcessFactory::ReadPartProcess(std::istream &in,
                 break;
             case ActSiteRxn_ID:
                 return new ActSiteReaction(in, mech);
-            case ARSSC_Reaction_ID:
-                proc = new ARSSC_Reaction(in, mech);
-                break;
-            case ARSSC_Condensation_ID:
-//                proc = new ARSSC_Condensation(in, mech);
-                break;
             default:
                 throw runtime_error("Invalid particle process type read from "
                                     "input stream (Sweep, "

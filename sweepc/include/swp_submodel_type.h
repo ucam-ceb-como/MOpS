@@ -69,7 +69,7 @@ namespace Sweep
             BasicModel_ID = -1, // Refers to the basic ParticleData properties.
 
             // PARTICLE MODELS.
-            ARSSC_Model_ID = 1, // Aromatic-site site-counting model (Celnik et al., Combust. Flame, 2008, in press (PP51)).
+            //ARSSC_Model_ID = 1, // Aromatic-site site-counting model (Celnik et al., Combust. Flame, 2008, in press (PP51)).
             CNT_Model_ID   = 2, // Simple carbon nanotube model (Celnik et al., Carbon, 46(3), 422-433, 2008).
 
         };

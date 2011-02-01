@@ -54,9 +54,7 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_particle_process.o swp_process.o swp_process_factory.o \
     swp_surface_reaction.o swp_particle_model.o swp_imgnode.o \
     swp_particle_image.o swp_ensemble_image.o swp_ensemble_imgnode.o swp_surfvol_stats.o swp_pripart_stats.o \
-    swp_sintering_model.o swp_arssc_model.o swp_arssc_inception.o \
-    swp_death_process.o swp_birth_process.o swp_arssc_cache.o \
-    swp_arssc_reaction.o swp_arssc_condensation.o swp_arssc_process.o \
+    swp_sintering_model.o swp_death_process.o swp_birth_process.o \
     swp_PAH_primary.o swp_PAH_cache.o swp_PAH_stats.o swp_transport_process.o \
     swp_diffusion_process.o swp_advection_process.o \
     mt19937.o swp_dimer_inception.o swp_pah_inception.o \
@@ -205,12 +203,6 @@ swp_submodel_cache.o: $(src)/swp_submodel_cache.cpp
 swp_model_factory.o: $(src)/swp_model_factory.cpp
 	$(cpp) $(flag) $(src)/swp_model_factory.cpp
 
-swp_arssc_model.o: $(src)/swp_arssc_model.cpp
-	$(cpp) $(flag) $(src)/swp_arssc_model.cpp
-
-swp_arssc_cache.o: $(src)/swp_arssc_cache.cpp
-	$(cpp) $(flag) $(src)/swp_arssc_cache.cpp
-
 # Processes.
 
 swp_actsites_reaction.o: $(src)/swp_actsites_reaction.cpp
@@ -265,18 +257,6 @@ swp_process_factory.o: $(src)/swp_process_factory.cpp $(inc)/swp_process_factory
 
 swp_surface_reaction.o: $(src)/swp_surface_reaction.cpp
 	$(cpp) $(flag) $(src)/swp_surface_reaction.cpp
-
-swp_arssc_inception.o: $(src)/swp_arssc_inception.cpp
-	$(cpp) $(flag) $(src)/swp_arssc_inception.cpp
-
-swp_arssc_reaction.o: $(src)/swp_arssc_reaction.cpp
-	$(cpp) $(flag) $(src)/swp_arssc_reaction.cpp
-
-swp_arssc_condensation.o: $(src)/swp_arssc_condensation.cpp
-	$(cpp) $(flag) $(src)/swp_arssc_condensation.cpp
-
-swp_arssc_process.o: $(src)/swp_arssc_process.cpp
-	$(cpp) $(flag) $(src)/swp_arssc_process.cpp
 
 swp_birth_process.o: $(src)/swp_birth_process.cpp
 	$(cpp) $(flag) $(src)/swp_birth_process.cpp
