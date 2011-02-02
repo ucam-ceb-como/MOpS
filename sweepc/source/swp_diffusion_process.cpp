@@ -180,5 +180,5 @@ int  Sweep::Processes::DiffusionProcess::Perform(Sweep::real t,
     const int particleIndex = sys.Particles().Select(static_cast<TreeCache::PropID>(m_pid), rand_int, rand_u01);
 
     // LPDA updates and fictitious events are dealt with in the function below
-    return Outflow(t, sys, local_geom, particleIndex, direction, out);
+    return Outflow(t, sys, local_geom, particleIndex, direction, rand_u01, out);
 }

@@ -135,6 +135,7 @@ public:
         const Geometry::LocalGeometry1d& local_geom,
         const int particle_index,
         const Geometry::Direction &direction,
+        real(*rand_u01)(),
         Transport::TransportOutflow *out
         ) const;
 

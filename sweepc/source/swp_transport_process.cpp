@@ -10,7 +10,6 @@
 #include "swp_cell.h"
 #include "swp_mechanism.h"
 #include "swp_transport_outflow.h"
-#include "rng.h"
 
 /*!
  * Calculate the rates of all the transport processes from a vector of pointers.
@@ -74,8 +73,9 @@ Sweep::real Sweep::Processes::TransportProcess::Rate(real t, const Cell &sys) co
 /*!
  * \param[in]       t               Time
  * \param[in]       local_geom      Details of geometry around current location
- * \param[in,out]   sys             System from which to remove particle
+ * \param[in,out]  sys             System from which to remove particle
  * \param[in]       particle_index  Index of particle to remove
+ * \param[in,out]  rand_u01        Pointer to function that generates U[0,1] deviates
  * \param[out]      out             Details of particle being transported out of system
  *
  * \return      0 on success, otherwise negative.
@@ -84,6 +84,7 @@ int Sweep::Processes::TransportProcess::Outflow(const real t, Cell &sys,
                                                 const Geometry::LocalGeometry1d& local_geom,
                                                 const int particle_index,
                                                 const Geometry::Direction &direction,
+                                                Sweep::real(*rand_u01)(),
                                                 Transport::TransportOutflow *out) const {
     // Check for a valid particle (particle_index>=0) before proceeding
     if (particle_index >= 0) {
@@ -104,7 +105,7 @@ int Sweep::Processes::TransportProcess::Outflow(const real t, Cell &sys,
             const real trueRate = Rate(t, sys, *(out->particle));
 
             // Check whether the event is  ficticious
-            if (Fictitious(majorantRate, trueRate, Sweep::rnd)) {
+            if (Fictitious(majorantRate, trueRate, rand_u01)) {
                 // Fictitious event so update the existing binary tree with the
                 // updated particle and leave the particle in its original
                 // location.

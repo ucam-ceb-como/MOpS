@@ -123,5 +123,5 @@ int AdvectionProcess::Perform(Sweep::real t, Sweep::Cell &sys,
     // Choose a particle uniformly
     const int particleIndex = sys.Particles().Select(rand_int);;
 
-    return Outflow(t, sys, local_geom, particleIndex, direction, out);
+    return Outflow(t, sys, local_geom, particleIndex, direction, rand_u01, out);
  }
