@@ -410,14 +410,6 @@
 				Name="Imaging"
 				>
 				<File
-					RelativePath=".\source\swp_ensemble_image.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_ensemble_imgnode.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\source\swp_imgnode.cpp"
 					>
 				</File>
@@ -687,14 +679,6 @@
 			<Filter
 				Name="Imaging"
 				>
-				<File
-					RelativePath=".\include\swp_ensemble_image.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_ensemble_imgnode.h"
-					>
-				</File>
 				<File
 					RelativePath=".\include\swp_imgnode.h"
 					>
