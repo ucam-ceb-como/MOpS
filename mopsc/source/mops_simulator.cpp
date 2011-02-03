@@ -57,6 +57,8 @@
 #include "loi_reduction.h"
 #include "mops_gpc_sensitivity.h"
 #include "gpc_species.h"
+#include "swp_particle_image.h"
+
 using namespace Mops;
 using namespace std;
 using namespace Strings;
