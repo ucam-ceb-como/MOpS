@@ -2,7 +2,6 @@
 #include "swp_particle_model.h"
 #include "swp_submodel.h"
 #include "swp_model_factory.h"
-#include "rng.h"
 #include "swp_cell.h"
 #include <cmath>
 #include <stdexcept>
@@ -328,19 +327,6 @@ void SubParticle::UpdateCache(void)
 	if(m_aggcache != NULL)
 	    *m_aggcache = *m_primary;
 
-}
-
-void SubParticle::Getprimarydistribution(std::ofstream *file)
-{
-    *file << CollDiameter()*1e9<< std::endl;
-}
-
-//This function breaks the particle if the sintering level is below a treshold and returns a distribution function
-void SubParticle::GetCollDiamDistrMill(double sintertresh, int *nparticles, double *distribution, const int numbins, double *averagecolldiam, double * new_volume, double *new_surface, int *nprimaries)
-{
-    (*nprimaries)++;
-    *new_volume=(*new_volume)+Volume();
-    *new_surface=(*new_surface)+SurfaceArea();
 }
 
 /*!

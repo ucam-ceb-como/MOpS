@@ -53,7 +53,7 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_condensation.o swp_inception.o swp_constant_inception.o\
     swp_particle_process.o swp_process.o swp_process_factory.o \
     swp_surface_reaction.o swp_particle_model.o swp_imgnode.o \
-    swp_particle_image.o swp_ensemble_image.o swp_ensemble_imgnode.o swp_surfvol_stats.o swp_pripart_stats.o \
+    swp_particle_image.o swp_surfvol_stats.o swp_pripart_stats.o \
     swp_sintering_model.o swp_death_process.o swp_birth_process.o \
     swp_PAH_primary.o swp_PAH_cache.o swp_PAH_stats.o swp_transport_process.o \
     swp_diffusion_process.o swp_advection_process.o \
@@ -128,13 +128,6 @@ swp_imgnode.o: $(src)/swp_imgnode.cpp
 swp_particle_image.o: $(src)/swp_particle_image.cpp
 	$(cpp) $(flag) $(src)/swp_particle_image.cpp
 
-swp_ensemble_imgnode.o: $(src)/swp_ensemble_imgnode.cpp
-	$(cpp) $(flag) $(src)/swp_ensemble_imgnode.cpp
-
-swp_ensemble_image.o: $(src)/swp_ensemble_image.cpp
-	$(cpp) $(flag) $(src)/swp_ensemble_image.cpp
-
-	
 # Mechanism.
 
 swp_particle_model.o: $(src)/swp_particle_model.cpp

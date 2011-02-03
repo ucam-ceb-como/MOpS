@@ -51,15 +51,13 @@
 #include <stdexcept>
 #include <cassert>
 
-#include "swp_particle_image.h"
-#include "swp_ensemble_image.h"
 #include "string_functions.h"
 #include "swp_particle.h"
+#include "swp_PAH_primary.h"
 
 
 using namespace Sweep;
 using namespace Sweep::Processes;
-using namespace Sweep::Imaging;
 using namespace std;
 using namespace Strings;
 
@@ -827,7 +825,9 @@ void Mechanism::LPDA(real t, Cell &sys) const
 }
 
 
-// Performs linear process updates on a particle in the given system.
+/*!
+ * Performs linear process updates on a particle in the given system.
+ */
 void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 {
     // Deal with the growth of the PAHs
@@ -895,214 +895,6 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
             sp.UpdateCache();
     }
 }
-
-
-void  Mechanism::Mill(Cell &sys, real t) const
-{/*
-				ofstream file;
-			    string fname;
-				double sintertresh=0.0;
-		  		Ensemble::iterator i;
-				cout << "milling particles";
-				last3dout=t;
-				fname = "millavcoldiam" + cstr(t) + ".3d";
-				file.open(fname.c_str());
-				i=sys.Particles().begin();
-				//string test;
-				//cin >> test;
-				for (sintertresh=0;sintertresh<1;sintertresh+=0.01)
-				{
-					double allavcoldiam=0;
-					double N=0;
-					for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
-						int nparticles=0;
-						double distribution=0;
-						double averagecolldiam=0;
-						double Volume=0;
-						double Surface=0;
-						int nprimaries=0;
-						int *nparticlesp=&nparticles;
-						double *distributionp=&distribution;
-						const int numbins=0;
-						double *averagecolldiamp=&averagecolldiam;
-						double *Volumep=&Volume;
-						double *Surfacep=&Surface;
-						int *nprimariesp=&nprimaries;
-						//cout<<"break";
-						//cin >> test;
-						(*(*i)).GetCollDiamDistrMill( sintertresh, nparticlesp, distributionp, numbins, averagecolldiamp, Volumep, Surfacep, nprimariesp);
-						N+=nparticles;
-						allavcoldiam+=averagecolldiam;
-					}
-					file << sintertresh << "     " << allavcoldiam/N << endl;
-				}
-				file.close();*/
-}
-
-//added by ms785 to print out the sintering properties.
-void  Mechanism::output(Cell &sys, real t) const
-{
-						 if (sys.ParticleCount() > 10 && t-last3dout>0.004)
-						//	 if (sys.ParticleCount() > 10 && t-last3dout>0.000004)
-						 {
-
-							ofstream file;
-						    string fname;
-				  			Ensemble::iterator i;
-							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
-								((*(*i))).UpdateCache();
-							}
-						//	Mill(sys, t);
-							cout << "creating subpart image...";
-							last3dout=t;
-							fname = "subpart1" + cstr(t) + ".3d";
-							file.open(fname.c_str());
-							i=sys.Particles().begin();
-							Sweep::Imaging::ParticleImage img;
-							img.Construct(*(*i), *(sys.ParticleModel()));
-							img.Write3dout(file,0,0,0);
-							file.close();
-							EnsembleImage *ensimg = new EnsembleImage;
-							fname = "subparttree" + cstr(t) + ".3d";
-						    file.open(fname.c_str());
-							ensimg->PrintEnsemble(sys,file,0.);
-							file.close();
-							delete ensimg;
-
-							ensimg = new EnsembleImage;
-							fname = "subparttreetemp.3d";
-							 file.open(fname.c_str(),ios::app);
-							ensimg->PrintEnsemble(sys,file,t/0.004);
-							file.close();
-							delete ensimg;
-
-							int numpart=0;
-							real numsubpart=0;
-							real avcoldiam=0.;
-							numpart=0;
-							numsubpart=0;
-							fname = "coldiamdistr" + cstr(t) + ".txt";
-							file.open(fname.c_str());
-							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
-								avcoldiam=(*(*i)).CollDiameter()+avcoldiam;
-								numpart++;
-                                file << (*(*i)).CollDiameter() <<endl;
-							}
-                            file.close();
-                            fname = "avcoldiam.txt";
-							file.open(fname.c_str(),ios::app);
-							if (numpart>0)
-							{
-								avcoldiam=avcoldiam/numpart;
-								file << t << "     " << avcoldiam << endl;
-							}
-							file.close();
-
-
-                            //old coll diam distr
-/*
-							fname = "coldiamdistr" + cstr(t) + ".txt";
-							file.open(fname.c_str());
-							for (int j=0;j<500;j++)
-							{
-//								file<<j<< "    "<<(coldiamdistr[j]+0.0000000001)/log10(float(j))<<endl;
-								file<<j<< "    "<<coldiamdistr[j]/numpart<<endl;
-							}
-							file.close();
-						*/
-
-							fname = "primdiamdistr" + cstr(t) + ".txt";
-							file.open(fname.c_str());
-							double primdistr[1000]={0};
-							double tempdistr[1000]={0};
-							for(int j=0;j<1000;j++)
-							{
-								primdistr[j]=0;
-								tempdistr[j]=0;
-							}
-
-							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
-							  // *(*i)).Getprimarydistribution(primdistr);
-            //                    *(*i)).Getprimarydistribution(&file);
-
-							}
-
-                            //old prim diam distr
-/*
-							for (int j=0;j<500;j++)
-							{
-	//							file<<j<< "    "<<(primdistr[j]+0.0000000001)/log10(float(j))<<endl;
-								file<<j<< "    "<<primdistr[j]/numsubpart<<endl;
-							}*/
-							file.close();
-
-/*
-
-							fname = "sinteringleveldistr" + cstr(t) + ".txt";
-							file.open(fname.c_str());
-
-							const int numbins=100;
-							double binsize=1.0/numbins;
-
-							double sinterdistr[numbins]={0};
-
-							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
-								(*(*i)).Getsinteringleveldistribution(sinterdistr,binsize,numbins);
-
-							}
-
-							for (int j=0;j<numbins;j++)
-							{
-								file<<j*binsize<< "    "<<sinterdistr[j]/numsubpart<<endl;
-							}
-							file.close();
-
-*/
-
-							fname = "numsubpart.txt";
-							file.open(fname.c_str(),ios::app);
-							if (numpart>0)
-							{
-								file << t << "     " << numsubpart*1.0/numpart << endl;
-							}
-
-							file.close();
-
-
-							real avsubpartdiam=0.;
-							real avsubpartdiam2=1.;
-							fname = "avdiam.txt";
-							file.open(fname.c_str(),ios::app);
-					//		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
-							for (i=sys.Particles().begin(); i!=sys.Particles().end() ; ++i) {
-								avsubpartdiam2=(*(*i)).avgeomdiam(1.0/numsubpart)*avsubpartdiam2;
-								avsubpartdiam=(*(*i)).Volume()/(*(*i)).SurfaceArea()+avsubpartdiam;
-
-							}
-							//avsubpartdiam=pow(6*avsubpartdiam/(PI*numsubpart),ONE_THIRD);
-							avsubpartdiam=6*avsubpartdiam/numpart;
-							if (numpart>0)
-							{
-								file << t << "     " << avsubpartdiam << endl;
-							}
-							file.close();
-
-
-
-							fname = "temperature.txt";
-							file.open(fname.c_str(),ios::app);
-					//		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
-
-							file << t << "     " << sys.Temperature() << endl;
-
-							file.close();
-
-							cout << "done"<<endl;
-
-						}
-}
-
-
 
 // READ/WRITE/COPY.
 

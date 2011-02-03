@@ -326,58 +326,6 @@ void PriPartPrimary::Sinter(real dt,const Cell &sys,
     // property.
     SurfVolPrimary::Sinter(dt, sys, model);
 
-    // Begin Sintering Process (Currently, it is the same as SurfVolPrimary::Sinter).
-    // Modification required for using primaries list infomation
-    //// Perform a first order integration method to sinter
-    //// the primary for the given time.
-    //
-    //// Declare time step variables.
-    //real t1=0.0, delt=0.0, tstop=dt;
-    //real r=0.0;
-
-    //// Define the maximum allowed change in surface
-    //// area in one internal time step (10% spherical surface).
-    //real dAmax = 0.1 * m_sphsurf;
-
-    //// The scale parameter discretises the delta-S when using
-    //// the Poisson distribution.  This allows a smoother change
-    //// (smaller scale = higher precision).
-    //real scale = 0.01;
-
-    //// Perform integration loop.
-    //while (t1 < tstop) {
-    //    // Calculate sintering rate.
-    //    r = model.Rate(m_time+t1, sys, *this);
-
-    //    // Calculate next time-step end point so that the
-    //    // surface area changes by no more than dAmax.
-    //    delt = dAmax / max(r, 1.0e-300);
-
-    //    // Approximate sintering by a poisson process.  Calculate
-    //    // number of poisson events.
-    //    int n;
-    //    if (tstop > (t1+delt)) {
-    //        // A sub-step, we have changed surface by dAmax, on average.
-    //        n = ignpoi(1.0 / scale);
-    //    } else {
-    //        // Step until end.  Calculate degree of sintering explicitly.
-    //        n = ignpoi(r * (tstop - t1) / (scale*dAmax));
-    //    }
-
-    //    // Adjust the surface area.
-    //    if (n > 0) {
-    //        m_surf -= (real)n * scale * dAmax;
-    //        // Check that primary is not completely sintered.
-    //        if (m_surf <= m_sphsurf) {
-    //            m_surf = m_sphsurf;
-    //            break;
-    //        }
-    //    }
-
-    //    // Set t1 for next time step.
-    //    t1 += delt;
-    //}
-
     // Now update the primary particle list to match the new 
     // surface area.
     updatePrimaries();

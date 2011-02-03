@@ -195,10 +195,6 @@ public:
         const Processes::SinteringModel &model // Sintering model to use.
         );
 
-	// Gets several distributions
-    void Getprimarydistribution(std::ofstream *file);
-    void GetCollDiamDistrMill(double sintertresh, int *nparticles, double *distribution, const int numbins, double *averagecolldiam, double *Volume, double *Surface, int *nprimaries);
-
     // PARTICLE UPDATE AND CHECKING.
 
     // Recalculates the derived properties from the

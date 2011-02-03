@@ -124,11 +124,7 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech)
         if (mech.AnyDeferred()) {
             mech.LPDA(t, sys);
         }
-		// print subtree properties   ms785
-		if (mech.UseSubPartTree()) {
-		mech.output(sys, t);
-		}
-	}
+    }
 
     return err;
 }

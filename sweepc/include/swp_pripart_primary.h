@@ -47,7 +47,6 @@
 
 #include "swp_params.h"
 #include "swp_surfvol_primary.h"
-//#include "swp_pripart_primary.h"
 #include "swp_particle_model.h"
 #include "swp_aggmodel_type.h"
 #include "swp_pripart_cache.h"
@@ -58,6 +57,10 @@ namespace Sweep
 {
 namespace AggModels 
 {
+/*!
+ * \brief Sub unit of aggregate
+ *
+ */
 class PriPartPrimary : public SurfVolPrimary
 {
 public:

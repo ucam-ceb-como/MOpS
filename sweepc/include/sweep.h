@@ -91,9 +91,5 @@
 #include "swp_ensemble_stats.h"
 #include "swp_surfvol_stats.h"
 #include "swp_pripart_stats.h"
-#include "swp_particle_image.h"
-#include "swp_ensemble_image.h"
-#include "swp_ensemble_imgnode.h"
-#include "swp_imgnode.h"
 
 #endif
