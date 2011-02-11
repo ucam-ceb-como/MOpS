@@ -45,7 +45,7 @@ endif
 obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_mech_parser.o swp_mechanism.o swp_subparticle.o swp_particle.o \
     swp_particle_cache.o swp_particle_stats.o swp_solver.o swp_tracker.o \
-    swp_treenode.o swp_abf_model.o swp_actsites_model.o swp_aggmodel_cache.o \
+    swp_abf_model.o swp_actsites_model.o swp_aggmodel_cache.o \
     swp_submodel.o swp_submodel_cache.o swp_model_factory.o \
     swp_surfvol_cache.o swp_surfvol_primary.o swp_primary.o \
     swp_pripart_cache.o swp_pripart_primary.o swp_actsites_reaction.o \
@@ -98,9 +98,6 @@ swp_particle.o: $(src)/swp_particle.cpp
 
 swp_cell.o: $(src)/swp_cell.cpp $(inc)/swp_mechanism.h
 	$(cpp) $(flag) $(src)/swp_cell.cpp
-
-swp_treenode.o: $(src)/swp_treenode.cpp $(inc)/swp_treenode.h
-	$(cpp) $(flag) $(src)/swp_treenode.cpp
 
 swp_ensemble.o: $(src)/swp_ensemble.cpp $(inc)/swp_ensemble.h $(inc)/swp_ensemble_inl.h ../utils/$(inc)/binary_tree.hpp
 	$(cpp) $(flag) $(src)/swp_ensemble.cpp

@@ -16,7 +16,7 @@
     thereby preventing the removal of all particles and hence statistically significant
     systematic error.
 
-    The emsemble also uses a contraction algorithm if the ensemble requires more space for
+    The ensemble also uses a contraction algorithm if the ensemble requires more space for
     particles than is available.  This algorithm uniformly removes a particle from the
     ensemble to provide more space.
 
@@ -61,7 +61,6 @@
 #define SWEEP_ENSEMBLE_H
 
 #include "swp_params.h"
-#include "swp_treenode.h"
 #include "swp_particle.h"
 #include "swp_tree_cache.h"
 
@@ -100,6 +99,10 @@ class ParticleModel;
     different properties.  The actual properties stored are not defined by the ensemble.
 
     The binary tree requires that the ensemble capacity must be a power of 2.
+
+    \todo It should not be necessary to #included "particle.h" in this header file
+    because it exposes too much detail of the implementation of particle, when all
+    we really need to know is what a vector of pointers to particles looks like.
  */
 class Ensemble
 {
