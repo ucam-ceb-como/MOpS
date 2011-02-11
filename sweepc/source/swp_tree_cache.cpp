@@ -41,6 +41,8 @@
 
 #include "swp_tree_cache.h"
 
+#include "swp_particle.h"
+
 // CONTRUCTORS AND DESTRUCTORS.
 
 /*!

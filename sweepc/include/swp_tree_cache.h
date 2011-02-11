@@ -43,10 +43,11 @@
 #define SWEEP_TREE_CACHE_H
 
 #include "swp_params.h"
-#include "swp_particle.h"
 
 namespace Sweep
 {
+    //forward declaration
+    class Particle;
 
 /*!
  * \brief   Summary properties that can be summed and used to calculate overall population rates
