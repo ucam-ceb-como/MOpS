@@ -267,16 +267,6 @@ unsigned int SubParticle::Adjust(const fvector &dcomp,
 // Combines this particle with another.
 SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
 {
-    // Add the compositions (appears to duplicate work done by UpdateCache further down).
-    assert(m_comp.size() == rhs.m_comp.size());
-    std::transform(m_comp.begin(), m_comp.end(), rhs.m_comp.begin(),
-                   m_comp.begin(), std::plus<real>());
-
-    // Add the tracker values (appears to duplicate work done by UpdateCache further down).
-    assert(m_values.size() == rhs.m_values.size());
-    std::transform(m_values.begin(), m_values.end(), rhs.m_values.begin(),
-                   m_values.begin(), std::plus<real>());
-
     if (rhs.m_aggcache != NULL) {
         if ((m_aggcache==NULL) || (m_aggcache->ID() != rhs.m_aggcache->ID())) {
             delete m_aggcache;
