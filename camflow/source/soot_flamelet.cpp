@@ -43,7 +43,7 @@
 #include "soot_flamelet.h"
 
 #include "pred_corr_solver.h"
-#include "swp_particle_cache.h"
+#include "swp_tree_cache.h"
 #include "settings_io.h"
 
 #include "swp_ensemble_stats.h"
@@ -237,7 +237,7 @@ void SootFlamelet::run(const std::vector<real>& data_times,
     // get a vector of soot volume fractions
     std::vector<real> sootFv(mParticles->getNumCells());
     for(size_t i = 0; i != mParticles->getNumCells(); ++i) {
-        sootFv[i] = mParticles->getCell(i).Mixture()->Particles().GetSum(Sweep::ParticleCache::iV) /
+        sootFv[i] = mParticles->getCell(i).Mixture()->Particles().GetSum(Sweep::TreeCache::iV) /
                     mParticles->getCell(i).Mixture()->SampleVolume();
     }
 
