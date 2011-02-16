@@ -264,10 +264,13 @@ namespace Camflow {
                     );
 
              //! Default destructor.
-            ~Interface(){}
+            ~Interface();
 
             //! Calling interface to solve flamelets with time-history scalar dissipation rates.
             void flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
+
+            //! Call to solve a flamelet for a given strain rate.
+            void flameletStrainRate(const doublereal& strainRate, bool lnone=true);
 
             //! Calling interface to solve flamelets with a profile of SDRs with a time history.
             void flameletSDRprofile(const std::vector< std::vector<doublereal> >& sdr,
@@ -295,10 +298,12 @@ namespace Camflow {
                        const doublereal sdr = 0);                                        //scalar dissipation rate in case of flamelets
 
             //! Return a vector of species names.
-            void getSpeciesNames(std::vector<std::string>& names);
+            std::vector<std::string> getSpeciesNames();
 
             //! Return the number of species.
-            int getNumberOfSpecies() const ;
+            int getNumberOfSpecies() const;
+            //! Return the number of reactions.
+            int getNumberOfReactions() const;
 
             //! Return the species mass fraction given the independent variable.
             doublereal getMassFrac(const int spIndex, const doublereal axpos);

@@ -54,7 +54,12 @@ using namespace Camflow;
  *here. Once the solution is complete, the interface object can be
  *queried to get the information on dependent variables
  */
-Interface::Interface(){
+Interface::Interface()
+:
+model(NULL),
+speciesPointerVector(NULL),
+flmlt(NULL)
+{
 
     std::string fChem("chem.inp");
     std::string fThermo("therm.dat");
@@ -84,7 +89,6 @@ Interface::Interface(){
         speciesNames.push_back((*speciesPointerVector)[l]->Name());
     }
 
-    flmlt = NULL;
 }
 
 /*
@@ -95,7 +99,12 @@ Interface::Interface(Mechanism& mech_in,
         std::vector<doublereal>& dz,
         std::vector<Thermo::Mixture>& cstrs,
         void* rModel, const doublereal sdr
-                                                                ){
+)
+:
+model(NULL),
+speciesPointerVector(NULL),
+flmlt(NULL)
+{
 
     std::string fCamFlow("camflow.xml");
     try{
@@ -126,6 +135,17 @@ Interface::Interface(Mechanism& mech_in,
 
 
 }
+
+
+//! Destructor.
+Interface::~Interface()
+{
+
+    if (flmlt != NULL) delete flmlt;
+    if (model != NULL) delete model;
+
+}
+
 
 /*
  *reset the mixtures with the newly evaluated rties
@@ -221,12 +241,19 @@ void Interface::solve(std::vector<Thermo::Mixture>& cstrs,
 int Interface::getNumberOfSpecies() const {
     return nSpecies;
 }
+
+/*
+ *return the number of reactions in the mechanism
+ */
+int Interface::getNumberOfReactions() const {
+    return mech.ReactionCount();
+}
+
 /*
  *return the argument vector with the species names
  */
-void Interface::getSpeciesNames(std::vector<std::string>& names){
-    names.clear();
-    names = speciesNames;
+std::vector<std::string> Interface::getSpeciesNames(){
+    return speciesNames;
 }
 
 /**
@@ -252,6 +279,44 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
         flamelet(sdr[len-1], intTime[len-1],continuation,lnone);
     }catch(CamError& ce){
         throw;
+    }
+
+}
+
+/*!
+ * This function is called externally to solve a flamelet for a given
+ * strain rate.
+ *
+ *\param[in]    strainRate           Value of strain rate to solve for.
+ *\param[in]    lnone				 If 'true', Le=1.
+ *
+ */
+void Interface::flameletStrainRate(const doublereal& strainRate, bool lnone) {
+
+    ca.setStrainRate(strainRate);
+    if(flmlt == NULL ) flmlt = new FlameLet();
+    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
+
+    try{
+        flmlt->solve(cc,ca,cg,cp,mech,false);
+        /*
+         *store the results for lookup
+         */
+        flmlt->getDensityVector(rhoVector);
+        flmlt->getSpeciesMassFracs(spMassFracs);
+        flmlt->getTemperatureVector(TVector);
+        flmlt->getIndepedantVar(indVar);
+        flmlt->getViscosityVector(muVector);
+        flmlt->getSpecificHeat(spHeat);
+        flmlt->getThermalConductivity(lambda);
+        flmlt->getDiffusionCoefficient(mDiff);
+        flmlt->getVelocity(mVelocity);
+        flmlt->getAverageMolarWeight(avgMolWtVector);
+        flmlt->getWdotA4(wdotA4);
+        stMixtureFrac = flmlt->stoichiometricMixtureFraction();
+        std::cout << "Size of thermal conductivity " << lambda.size() << std::endl;
+    }catch(CamError &ce){
+        throw ;
     }
 
 }
@@ -362,7 +427,7 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
     }
     try{
         if(!continuation){
-            flmlt->solve(cc,ca,cg,cp,mech,true);
+            flmlt->solve(cc,ca,cg,cp,mech,false);
         }else{
             flmlt->restart(cc);
         }
