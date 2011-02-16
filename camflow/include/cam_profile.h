@@ -55,6 +55,7 @@ using namespace Sprog;
 
 namespace Camflow{
     class CamProfile : public CamConc {
+
         std::vector<doublereal> u_pos, u_temp;         //user defined temp profile
         std::map<std::string, doublereal> list_prdt, list_intmd;
         std::vector<doublereal> m_prdt, m_intmd;
@@ -62,9 +63,12 @@ namespace Camflow{
         int fracType;
         Array2D start;
         CamGeometry *geom;
+
     public:
-        CamProfile(){}
-        ~CamProfile(){}
+
+        CamProfile();
+
+        virtual ~CamProfile();
 
         /*
          *set the geometry object
@@ -117,10 +121,6 @@ namespace Camflow{
 
         //return the position vector
         std::vector<doublereal>& getPosition();
-
-
-
-    protected:
 
 
     };

@@ -42,7 +42,7 @@
 
 #ifndef _CAM_REPORTER_H
 #define	_CAM_REPORTER_H
-#include "cam_residual.h"
+
 #include "cam_boundary.h"
 #include "cam_residual.h"
 #include "gpc.h"
@@ -52,13 +52,18 @@
 namespace Camflow{
 
     class CamReporter{
+
         DataIO *standard;
         DataIO *rates;
         DataIO *transport;
-        DataIO *custom;        
+        DataIO *custom;
+
     public:
-        CamReporter(){}
-        ~CamReporter(){}
+
+        CamReporter();
+
+        ~CamReporter();
+
         void header(std::string prog);
         void problemDescription(CamBoundary &cb, CamResidual &cr);
         //title for the consol output

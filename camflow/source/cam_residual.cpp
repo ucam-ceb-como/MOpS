@@ -11,6 +11,20 @@
 #include "cam_read.h"
 using namespace Camflow;
 
+
+CamResidual::CamResidual()
+:
+admin(NULL),
+reporter(NULL),
+reacGeom(NULL),
+sootMom(NULL),
+control(NULL)
+{}
+
+CamResidual::~CamResidual()
+{}
+
+
 void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doublereal* f){
 
 

@@ -49,6 +49,19 @@
 using namespace Camflow;
 using namespace Strings;
 
+CamProfile::CamProfile()
+:
+mWidth(0.0),
+mCenter(0.0),
+fracType(0),
+geom(NULL)
+{}
+
+CamProfile::~CamProfile()
+{
+    //if (geom != NULL) delete geom;
+}
+
 /*
  *set products
  */

@@ -47,7 +47,9 @@
 #include <map>
 
 namespace Camflow{
+
     class CamGeometry{
+
         doublereal length;                   //length of the model geometry
         doublereal dia;                      //rector diameter
 
@@ -65,14 +67,8 @@ namespace Camflow{
         std::map<int, int> z_loc, z_keep;
 
     public:
-        CamGeometry(){
-            length = 0;
-            nCell = 0;
-            a_slope = 0.8;
-            curve = 0.8;
-            minRange = 0.01;
-            mPrune = -0.001;
-        }
+        CamGeometry();
+
         ~CamGeometry(){}
 
 

@@ -9,6 +9,19 @@
 #include "cam_converter.h"
 using namespace Camflow;
 
+CamSetup::CamSetup()
+:
+profile(NULL)
+{}
+
+CamSetup::~CamSetup()
+{
+
+//    if (profile != NULL) delete profile;
+
+}
+
+
 void CamSetup::getInletMassFrac(CamBoundary& cb, std::vector<doublereal>& fracs){
 
      /*

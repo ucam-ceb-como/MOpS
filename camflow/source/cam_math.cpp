@@ -46,7 +46,7 @@ doublereal CamMath::interpolateLG(doublereal at, int size, Array2D& dPrime,
         prod *= (at-i);
 
     doublereal retVal = 1;
-    for( int i=0; i<size; i++){        
+    for( int i=0; i<size; i++){
         doublereal expnt = prod/((at-i)*dPrime(size,i+1));
         retVal *= pow(val[i],expnt);
 
@@ -62,23 +62,23 @@ void CamMath::binomCoeff(int n, Array2D& bCoeff){
         bCoeff(i,i) = 1.0;
         for(int j=1; j<=i; j++){
             bCoeff(j,i) = bCoeff(j-1,i-1) + bCoeff(j,i-1);
-            
+
         }
     }
 }
 
 void CamMath::prime(int size, Array2D& prime){
-    
-    
+
+
     prime.resize(size+1,size+1);
-    
+
     for (int n = 1; n < size+1; n++) {
         for(int m=1;m<=n;m++){
             prime(n,m) =1.0;
             for(int l=1; l<=n;l++){
                 if(l!=m) prime(n,m) *= (m-l);
             }
-            
+
         }
 
 
@@ -86,18 +86,19 @@ void CamMath::prime(int size, Array2D& prime){
 
 }
 
-/*
- *This is a Tridiagonal Matrix Algorith implementation to
- *solve equations of the following form
+/*!
+ *This is a Tridiagonal Matrix Algorithm implementation to
+ *solve equations of the following form:
  *
- * ---                         ----- --
- * | b0 c0 0 ....                  | | u0  |   |r0  |
- * | a1 b1 c1 0 ....               | | u1  |   |r1  |
- * | 0  a2 b2 c2 0 ....            | | .   |   |    |
- * |                               | | .   | = |    |
- * |                               | |     |   |    |
- * |             an-2   bn-2  cn-2 | |     |   |    |
- * |__                  an-1  bn-1_| | un-1|   |rn-1|
+ * \verbatim
+ | b0 c0 0 ....                  | | u0  |   |r0  |
+ | a1 b1 c1 0 ....               | | u1  |   |r1  |
+ | 0  a2 b2 c2 0 ....            | | .   |   |    |
+ |                               | | .   | = |    |
+ |                               | |     |   |    |
+ |             an-2   bn-2  cn-2 | |     |   |    |
+ |                    an-1  bn-1 | | un-1|   |rn-1|
+ \endverbatim
  *
  */
 void CamMath::TDMA(     std::vector<doublereal>& a,

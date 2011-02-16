@@ -80,9 +80,8 @@ extern "C"{
 
         CamResidual *residual = (CamResidual*)udata;
         doublereal resNorm = residual->getResidual();
-
         // Output time and residual to screen.
-        std::cout << "Time = " << x << "   Residual = " << resNorm << std::endl;
+        std::cout << x << "    " << resNorm << std::endl;
 
         // If the residual is below a certain value, stop RADAU.
         //if(resNorm < 1e-5){return 1;}
@@ -135,7 +134,7 @@ void RadauWrapper::initSolver(  int nEq,
    // Use default values (see header files) for these parameters:
    double hinit = 0.0;//solverControl->getIniStep();   //initial step size
    double hmax(0.0);                             //max step size
-   int nmax(1000000);                                  //max number of allowed steps (100000)
+   int nmax(100000);                                  //max number of allowed steps (100000)
    int nit(1000);                                   //max number of newton iteration in each step (7)
    double uround(1e-16), safe(0.0);                //safety factor for step size prediction
    double facl(0.0), facr(0.0);
@@ -143,7 +142,7 @@ void RadauWrapper::initSolver(  int nEq,
    bool startn(true);
    int nind1(nEq), nind2(0), nind3(0), npred(1), m1(0), m2(0);
    bool hess(true);
-   double fnewt(0.1), quot1(1.0), quot2(1.2);
+   double fnewt(0.1), quot1(1), quot2(1.2);
    double thet(0.001);                             // Jac evaluation decision (0.001) increase of eval is expensive
 
    solver = new StiffIntegratorT(

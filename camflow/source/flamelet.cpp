@@ -99,6 +99,7 @@ void FlameLet::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
         csolve(cc,interface);
     }
 
+    delete reporter;
 
 }
 
@@ -468,6 +469,13 @@ void FlameLet::residual(const doublereal& t, doublereal* y, doublereal* f){
             energyResidual(t,y,f);
         }
     }
+
+    // Refine Grid
+    //if(getResidual() < 1e-6)
+    //{
+    //    reacGeom->refine(y,nVar,nSpc,ptrT);
+    //}
+
 }
 
 doublereal FlameLet::getResidual() const {
@@ -1088,6 +1096,7 @@ void FlameLet::reportToFile(doublereal t, doublereal* soln){
         data.push_back(axpos[i]);
         data.push_back(scalarDissipationRate(axpos[i]));
         data.push_back(m_rho[i]);
+        data.push_back(m_mu[i]);
         data.push_back(soln[i*nVar+ptrT]);
         data.push_back(radiation[i]);
 
@@ -1118,6 +1127,8 @@ void FlameLet::reportToFile(doublereal t, doublereal* soln){
 
     reporter->closeFile();
 
+    //reacGeom->refine(soln,nVar,nSpc,ptrT);
+
 }
 /*
  *output file header
@@ -1128,6 +1139,7 @@ void FlameLet::header(){
     headerData.push_back("Z");
     headerData.push_back("SDR");
     headerData.push_back("rho");
+    headerData.push_back("mu");
     headerData.push_back("T");
     headerData.push_back("Radiation");
     for (int l = 0; l < nSpc; l++) {

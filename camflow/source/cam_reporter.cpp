@@ -38,7 +38,25 @@
  */
 
 #include "cam_reporter.h"
+
 using namespace Camflow;
+
+CamReporter::CamReporter()
+:
+standard(NULL),
+rates(NULL),
+transport(NULL),
+custom(NULL)
+{}
+
+CamReporter::~CamReporter()
+{
+    if (standard != NULL) delete standard;
+    if (rates != NULL) delete rates;
+    if (transport != NULL) delete transport;
+    if (custom != NULL) delete custom;
+}
+
 void CamReporter::header(std::string prog){
     std::cout << std::endl;
     std::cout << "!----------------------------------------------------------!\n";

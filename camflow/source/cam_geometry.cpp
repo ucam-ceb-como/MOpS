@@ -51,6 +51,17 @@ void CamGeometry::setGridFile(string name){
 
 }
 
+CamGeometry::CamGeometry()
+:
+length(0),
+nCell(0),
+a_slope(0.8),
+curve(0.8),
+minRange(0.01),
+mPrune(-0.001)
+{
+
+}
 
 /*void CamGeometry::discretize(){
     vector<doublereal> grid;
@@ -178,7 +189,16 @@ static doublereal mcPrec(){
  */
 void CamGeometry::refine(doublereal* y, const int nVar, const int nSpec, int ptrT){
 
-
+    std::cout << "Refining Grid" << endl;
+   /* std::cout << "Grid Size = " << axPos.size()
+              << " ,nCell = " << nCell
+              << " ,nVar = " << nVar
+              << " ,nSpec = " << nSpec
+              << endl;
+    for(unsigned int i =0; i<axPos.size(); ++i)
+    {
+        cout << axPos[i] << endl;
+    }*/
 
     vector<doublereal> v,slope;
     doublereal vmin, vmax, smin, smax;
@@ -221,7 +241,7 @@ void CamGeometry::refine(doublereal* y, const int nVar, const int nSpec, int ptr
             //adjucent points
 
             doublereal dmax = a_slope*(vmax-vmin)+thresh;
-            for(int i=0; i<nCell-1; i++){
+            for(int i=0; i<nCell-1; ++i){
                 doublereal r = fabs(v[i+1]-v[i])/dmax;
                 if(r>1.0){
                     z_loc[i] = 1;
@@ -244,7 +264,7 @@ void CamGeometry::refine(doublereal* y, const int nVar, const int nSpec, int ptr
 
             doublereal dmax = curve*(smax-smin);
 
-            for(int i=0; i<nCell-2; i++){
+            for(int i=0; i<nCell-2; ++i){
                 doublereal r = fabs(slope[i+1]-slope[i])/(dmax + thresh/dz[i]);
                 if( r>1.0){
                     z_loc[i] =1;
@@ -262,19 +282,25 @@ void CamGeometry::refine(doublereal* y, const int nVar, const int nSpec, int ptr
 
     }
 
-    nCell = 0;
+    int nCells = 0;
     vector<doublereal> temp = axPos;
     axPos.clear();
-    for(int j=0; j<nCell-1; j++){
-        nCell++;
+    for(int j=0; j<nCell-1; ++j){
+        nCells++;
         axPos.push_back(temp[j]);
         if(z_loc.find(j) != z_loc.end()) {
-            nCell++;
+            nCells++;
             axPos.push_back(0.5*(temp[j]+temp[j+1]));
 
         }
     }
+    nCell = nCells;
 
+    /*std::ofstream gridOut("gridNew.inp");
+
+    for(int j=0; j<nCell-1; ++j){
+        gridOut << axPos[j] << endl;
+    }*/
 
 }
 

@@ -74,8 +74,9 @@ namespace Camflow{
                 std::vector<doublereal> jk;
             } inletStruct;
 
-            CamSetup(){}
-            virtual ~CamSetup(){}
+            CamSetup();
+
+            virtual ~CamSetup();
 
             //! Return the inlet species mass fractions for the given boundary.
             void getInletMassFrac(CamBoundary &cb, std::vector<doublereal>& fracs);

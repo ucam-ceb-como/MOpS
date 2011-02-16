@@ -54,6 +54,7 @@
 #include "cam_profile.h"
 #include <map>
 #include <vector>
+#include <stdexcept>
 
 using namespace Sprog;
 
@@ -81,10 +82,10 @@ namespace Camflow{
             };
 
             //! Default constructor.
-            CamResidual(){};
+            CamResidual();
 
             //! Destructor.
-            virtual ~CamResidual(){}
+            virtual ~CamResidual();
 
 
 

@@ -1,4 +1,4 @@
-/* 
+/*!
  * File:   cam_help.h
  * Author: vj231
  *
@@ -15,6 +15,12 @@
 #include <cmath>
 
 namespace Camflow{
+
+	/*!
+	 *@brief    Math solver class.
+	 *
+	 * Include a more detailed description here.
+	 */
     class CamMath{
     public:
         template <class T> T sum(const std::vector<T>& data);
@@ -23,7 +29,7 @@ namespace Camflow{
         double sumVector(std::vector<double>& vec1, std::vector<double>& vec2);
         //double dydx(double nr1, double nr2, double dr);
         //lagrange interpolation
-        doublereal interpolateLG(doublereal at, int size, Array2D &prime, 
+        doublereal interpolateLG(doublereal at, int size, Array2D &prime,
                                  const std::vector<doublereal>& val);
 
         void binomCoeff(int n, Array2D &bCoeff);
@@ -46,7 +52,7 @@ namespace Camflow{
     private:
         static const int ncof=28;
         static const doublereal cof[28];
-        
+
 
     };
 }
