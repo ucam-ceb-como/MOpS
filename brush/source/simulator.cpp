@@ -40,7 +40,7 @@
 #include "simulator.h"
 
 #include "mops_timeinterval.h"
-#include "rng.h"
+#include "mt19937.h"
 
 #include "reactor1d.h"
 #include "pred_corr_solver.h"
@@ -127,7 +127,7 @@ void Brush::Simulator::runSimulation(const size_t seed_offset) {
  */
 void Brush::Simulator::runOnePath(const int seed) {
     // reset the random number generator
-    Sweep::srnd(seed);
+    Sweep::init_genrand(seed);
 
     // Create a reactor instance to be modified by the solver
     Reactor1d reac(mInitialReactor);

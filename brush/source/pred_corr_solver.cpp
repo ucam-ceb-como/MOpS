@@ -43,6 +43,7 @@
 #include "local_geometry1d.h"
 
 #include "rng.h"
+#include "mt19937.h"
 #include "swp_transport_outflow.h"
 #include "swp_cell.h"
 
@@ -238,7 +239,8 @@ void Brush::PredCorrSolver::solveParticles(Reactor1d &reac, const real t_stop) c
         // Perform all events from deferred processes.
         if (reac.getMechanism().ParticleMech().AnyDeferred()) {
             for(size_t i = 0; i < numCells; ++i) {
-                reac.getMechanism().ParticleMech().LPDA(maxDeferralEnd, *(reac.getCell(i).Mixture()));
+                reac.getMechanism().ParticleMech().LPDA(maxDeferralEnd, *(reac.getCell(i).Mixture()),
+                                                        Sweep::genrand_int, Sweep::genrand_real1);
             }
         }
     } while(reac.getTime() <= t_stop * (1.0 - std::numeric_limits<real>::epsilon()));
@@ -273,7 +275,7 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop,
     real dt;
     if(totRate > 0) {
         // Exponential random variable with mean 1/totRate
-        dt = Sweep::rnd();
+        dt = Sweep::genrand_real1();
         dt = -log(dt) / totRate;
     }
     else {
@@ -302,7 +304,7 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop,
         else {
             // This step is an actual event, choose between the cells with weights
             // proportional to their weights
-            activeCell = chooseIndex(rate_cache.mCellRates, Sweep::rnd);
+            activeCell = chooseIndex(rate_cache.mCellRates, Sweep::genrand_real1);
             //std::cout << "cell with active process is " << activeCell << '\n';
         }
     }
@@ -310,7 +312,7 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop,
     int activeProcess = -1;
     if(activeCell >= 0) {
         // Work out which process is responsible for the event in the activeCell
-        activeProcess = chooseIndex(rate_cache.mProcessRates[activeCell], Sweep::rnd);
+        activeProcess = chooseIndex(rate_cache.mProcessRates[activeCell], Sweep::genrand_real1);
         //std::cout << "active process is " << activeProcess << '\n';
 
         // Perform the event and find out if a particle was transported out of its cell
@@ -320,7 +322,8 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop,
         Geometry::LocalGeometry1d cellGeom(reac.getGeometry(), activeCell);
 
         reac.getMechanism().ParticleMech().DoProcess(activeProcess, reac.getTime() + dt,
-                                                     *(reac.getCell(activeCell).Mixture()), cellGeom, &out);
+                                                     *(reac.getCell(activeCell).Mixture()), cellGeom,
+                                                     Sweep::genrand_int, Sweep::genrand_real1, &out);
 
         // Contents of active cell has changed so mark it for update in the rate cache
         rate_cache.mInvalidCells.push(activeCell);
@@ -375,9 +378,9 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
 
             // Insert one copy of the particle into the destination cell
             if(secondary)
-                reac.getCell(destination_index).Mixture()->Particles().AddSecondaryParticle(*(new Sweep::Particle(*particle_details.particle)), Sweep::irnd);
+                reac.getCell(destination_index).Mixture()->Particles().AddSecondaryParticle(*(new Sweep::Particle(*particle_details.particle)), Sweep::genrand_int);
             else
-                reac.getCell(destination_index).Mixture()->Particles().Add(*(new Sweep::Particle(*particle_details.particle)), Sweep::irnd);
+                reac.getCell(destination_index).Mixture()->Particles().Add(*(new Sweep::Particle(*particle_details.particle)), Sweep::genrand_int);
 
             // One unit of destinationWeight has now been added to an ensemble
             incomingWeight -= destinationWeight;
@@ -393,11 +396,11 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
 
     // Unfortunately we cannot quite conserve statistical weight, there will always be a bit
     // left over after the loop above.  This can only be handled in an average sense.
-    if(secondary && Sweep::rnd() < incomingWeight * reac.getCell(destination_index).Mixture()->SecondarySampleVolume()) {
-        reac.getCell(destination_index).Mixture()->Particles().AddSecondaryParticle(*particle_details.particle, Sweep::irnd);
+    if(secondary && Sweep::genrand_real1() < incomingWeight * reac.getCell(destination_index).Mixture()->SecondarySampleVolume()) {
+        reac.getCell(destination_index).Mixture()->Particles().AddSecondaryParticle(*particle_details.particle, Sweep::genrand_int);
     }
-    else if(!secondary && Sweep::rnd() < incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume()) {
-        reac.getCell(destination_index).Mixture()->Particles().Add(*particle_details.particle, Sweep::irnd);
+    else if(!secondary && Sweep::genrand_real1() < incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume()) {
+        reac.getCell(destination_index).Mixture()->Particles().Add(*particle_details.particle, Sweep::genrand_int);
 
         // Testing output
         const real extraWeight = (1.0 / reac.getCell(destination_index).Mixture()->SampleVolume()) - incomingWeight;
@@ -531,7 +534,7 @@ void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const rea
         }
         if(mSplitDiffusion){
             const real diffusionCoeff = mech.DiffusionCoefficient(mix, sp);
-            newPosition += Sweep::randNorm(0.0, std::sqrt(diffusionCoeff * dt));
+            newPosition += Sweep::randNorm(0.0, std::sqrt(diffusionCoeff * dt), Sweep::genrand_real1);
         }
     }
     sp.setPositionAndTime(newPosition, t_stop);
