@@ -194,6 +194,7 @@ void Solver::SetUnderRelaxCoeff(real relax) {m_rlx_coeff = relax;}
 // output is provided after each step/iteration by passing
 // a function pointer.
 void Solver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
+                   int (*rand_int)(int, int), Sweep::real (*rand_u01)(),
                    OutFnPtr out, void *data)
 {
     // Mark the current time.

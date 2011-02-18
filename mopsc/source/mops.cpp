@@ -52,6 +52,8 @@ using namespace Strings;
 #include "mops_simulator.h"
 #include "sprog.h"
 #include "sweep.h"
+#include "mt19937.h"
+
 #include <vector>
 #include <string>
 #include <stdexcept>
@@ -160,6 +162,9 @@ int main(int argc, char *argv[])
         }
     }
 
+    // Seed the global random number generator.
+    Sweep::init_genrand(123);
+
     // Define all the objects required to run the simulation.
     Solver *solver   = NULL; // The solver.
     Reactor *reactor = NULL; // Reactor to solve.
@@ -258,7 +263,7 @@ int main(int argc, char *argv[])
             reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, sim, *solver, mech);
         } else {
             // New format.
-            reactor = Settings_IO::LoadFromXML(settfile, reactor, times, sim, *solver, mech);
+            reactor = Settings_IO::LoadFromXML(settfile, reactor, times, sim, *solver, mech, Sweep::genrand_int);
         }
     } catch (std::logic_error &le) {
         printf("mops: Failed to load settings file due to bad inputs.  Message:\n  ");
@@ -311,7 +316,7 @@ int main(int argc, char *argv[])
     try {
         if (fsolve) {
             sim.SetTimeVector(times);
-            sim.RunSimulation(*reactor, *solver);
+            sim.RunSimulation(*reactor, *solver, Sweep::genrand_int, Sweep::genrand_real1);
         }
     } catch (std::logic_error &le) {
         printf("mops: Failed to solve reactor due to bad inputs.  Message:\n  ");

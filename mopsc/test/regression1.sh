@@ -46,13 +46,17 @@ do
       echo "**************************"
       echo "****** TEST FAILURE ******"
       echo "**************************"
-      exit $i
   fi
   ((i+=1))
 done
 
-# All tests passed
-echo "All tests passed"
-rm regression1-128-10*
-exit 0
+if((i==5))
+then
+  # All tests passed
+  echo "All tests passed"
+  rm regression1-128-10*
+  exit 0
+else
+  exit 1
+fi
 

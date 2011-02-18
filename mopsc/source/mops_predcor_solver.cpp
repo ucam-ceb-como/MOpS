@@ -127,6 +127,7 @@ void PredCorSolver::Reset(Reactor &r)
 // algorithm up to the stop time.  Calls the output function after
 // each iteration of the last internal step.
 void PredCorSolver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
+                          int (*rand_int)(int, int), Sweep::real (*rand_u01)(),
                           OutFnPtr out, void *data)
 {
     int step=0, iter=0;
@@ -142,7 +143,7 @@ void PredCorSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
         // Iterate this step for the required number of runs.
         for (iter=0; iter<niter; ++iter) {
             if (m_ncalls==0) m_ode.ResetSolver(*m_reac_copy);
-            iteration(r, dt);
+            iteration(r, dt, rand_int, rand_u01);
         }
 
         // Wind up the iteration algorithm.
@@ -153,7 +154,7 @@ void PredCorSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
     beginIteration(r, step, dt);
     for (iter=0; iter!=niter; ++iter) {
         if (m_ncalls==0) m_ode.ResetSolver(*m_reac_copy);
-        iteration(r, dt);
+        iteration(r, dt, rand_int, rand_u01);
         out(step+1, iter+1, r, *this, data);
     }
     endIteration();
@@ -339,7 +340,7 @@ void PredCorSolver::beginIteration(Reactor &r, unsigned int step, real dt)
 
 // Performs a step-wise iteration on the reactor to recalculate
 // the source terms for the gas-phase effect on the particle model.
-void PredCorSolver::iteration(Reactor &r, real dt)
+void PredCorSolver::iteration(Reactor &r, real dt, int (*rand_int)(int, int), real (*rand_u01)())
 {
     // Reset reactor and solver for another iteration.
     r = *m_reac_copy;
@@ -369,7 +370,7 @@ void PredCorSolver::iteration(Reactor &r, real dt)
         real ts2 = ts1+dt;
 
         // Run Sweep for this time step.
-        Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech());
+        Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech(), rand_int, rand_u01);
 
         // Scale M0 according to gas-phase expansion.
         r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->MassDensity() / r.Mixture()->MassDensity());

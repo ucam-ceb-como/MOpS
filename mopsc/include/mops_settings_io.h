@@ -89,7 +89,8 @@ namespace Settings_IO
         std::vector<TimeInterval> &times, // Vector of output time intervals.
         Simulator &sim,                   // General settings incl. output settings. 
         Solver &solver,                   // The reactor solver (to set numerical params).
-        Mechanism &mech                   // Mechanism used to define reactor.
+        Mechanism &mech,                  // Mechanism used to define reactor.
+        int (*rand_int)(int, int)         // U[0,1] generator
         );
 
     // Reads time intervals from given XML node.
@@ -100,7 +101,8 @@ namespace Settings_IO
 
     //! Read initial particles from a file into a list
     Sweep::PartPtrList ReadInitialParticles(const CamXML::Element &node,
-                                            const Sweep::Mechanism & particle_mech);
+                                            const Sweep::Mechanism & particle_mech,
+                                            int (*rand_int)(int, int));
 
     //! Read limits that define extreme particles to be excluded from particle population statistics
     void ReadStatsBound(const CamXML::Element &node, Sweep::ParticleCache::PropID &property_id,

@@ -69,7 +69,8 @@ SimpleSplitSolver::~SimpleSplitSolver(void)
 // up to the stop time.  calls the output routine once at the
 // end of the function.  niter is ignored.
 void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
-                         OutFnPtr out, void *data)
+                              int (*rand_int)(int, int), Sweep::real (*rand_u01)(),
+                              OutFnPtr out, void *data)
 {
     // Mark the time at the start of the step, in order to
     // calculate total computation time.
@@ -116,7 +117,7 @@ void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
 
         // Solve whole step of population balance (Sweep).
         r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->MassDensity());
-        Run(t1, t2, *r.Mixture(), r.Mech()->ParticleMech());
+        Run(t1, t2, *r.Mixture(), r.Mech()->ParticleMech(), rand_int, rand_u01);
 
         m_swp_ctime += calcDeltaCT(m_cpu_mark);        
     }
@@ -138,7 +139,9 @@ void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
 
 // SOLUTION ROUTINES.
 
-void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n, Mops::Reactor &r)
+void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n,
+                                       Mops::Reactor &r,
+                                       int (*rand_int)(int, int),real (*rand_u01)())
 {
     // Time counters.
     real t2 = r.Time();
@@ -178,7 +181,7 @@ void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n, Mops::Reac
         m_cpu_mark = clock();
             // Solve whole step of population balance (Sweep).
             r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->MassDensity());
-            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech());
+            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rand_int, rand_u01);
         m_swp_ctime += calcDeltaCT(m_cpu_mark);
         
     }

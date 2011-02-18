@@ -243,7 +243,9 @@ void Simulator::SetParticleTrackCount(unsigned int ptcount) {
 // Solves the given reactor for the given time intervals.
 void Simulator::RunSimulation(Mops::Reactor &r,
                               //const timevector &times,
-                              Solver &s)
+                              Solver &s,
+                              int (*rand_int)(int, int),
+                              Sweep::real (*rand_u01)())
 {
     unsigned int icon;
     real dt, t2; // Stop time for each step.
@@ -357,8 +359,9 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             for (istep=0; istep<iint->StepCount(); ++istep, ++global_step) {
                 // Run the solver for this step (timed).
                 m_cpu_mark = clock();
-                s.Solve(r, t2+=dt, iint->SplittingStepCount(),
-                        m_niter, &fileOutput, (void*)this);
+                s.Solve(r, t2+=dt, iint->SplittingStepCount(), m_niter,
+                        rand_int, rand_u01,
+                        &fileOutput, (void*)this);
 
                 //Set up and solve Jacobian here
                 if (s.GetLOIStatus() == true)
@@ -1798,12 +1801,6 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
     vector<string> header;
     stats.PSL_Names(header);
 
-    // Build header row for primary-PSL CSV output files.
-    vector<string> priheader;
-    if (stats.GeneratesPPSL()) {
-        stats.PPSL_Names(priheader);
-    }
-
     // Open output files for all PSL save points.  Remember to
     // write the header row as well.
     vector<CSV_IO*> out(times.size(), NULL);
@@ -1813,19 +1810,6 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
         out[i]->Open(m_output_filename + "-psl(" +
                     cstr(t) + "s).csv", true);
         out[i]->Write(header);
-    }
-
-    // Open output files for all primary-PSL save points.  Remember to
-    // write the header row as well.
-    vector<CSV_IO*> priout(times.size(), NULL);
-    if (stats.GeneratesPPSL()) {
-        for (unsigned int i=0; i!=times.size(); ++i) {
-            real t = times[i].EndTime();
-            priout[i] = new CSV_IO();
-            priout[i]->Open(m_output_filename + "-pri-psl(" +
-                            cstr(t) + "s).csv", true);
-            priout[i]->Write(priheader);
-        }
     }
 
     // Loop over all time intervals.
@@ -1850,16 +1834,6 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                     		  1.0/(r->Mixture()->SampleVolume()*scale));
                     // Output particle PSL to CSV file.
                     out[i]->Write(psl);
-
-                    // Get primary-PSL.
-                    if (stats.GeneratesPPSL()) {
-                        stats.PPSL(r->Mixture()->Particles(), j, times[i].EndTime(),
-                                   ppsl, 1.0/(r->Mixture()->SampleVolume()*scale));
-                        // Output primary-PSL to CSV file.
-                        for (unsigned int k=0; k!=ppsl.size(); ++k) {
-                            priout[i]->Write(ppsl[k]);
-                        }
-                    }
                 }
 
                 // Get PSL for all particles.

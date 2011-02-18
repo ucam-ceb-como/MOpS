@@ -81,6 +81,8 @@ public:
         real tstop,                 // The end time for the step.
         int nsteps,                 // Number of internal steps to take.
         int niter,                  // Number of internal iterations to take.
+        int (*rand_int)(int, int), // Random integers sampled uniformly from range
+        Sweep::real (*rand_u01)(), // U[0,1] samples
         Mops::Solver::OutFnPtr out, // Output function pointer.
         void *data                  // Custom data object which will be passed as argument to out().
         );

@@ -177,8 +177,9 @@ public:
     void RunSimulation(
         Reactor &r,              // Reactor object to solve.
         //const timevector &times, // Vector of time intervals.
-        Solver &s                // Solver to use for simulation.
-        );
+        Solver &s,               // Solver to use for simulation.
+        int (*rand_int)(int, int), // Uniform random integers on interval
+        Sweep::real (*rand_u01)()); // U[0,1] samples
 
     // Post-processes binary output files with the given file name
     // into CSV files.

@@ -74,6 +74,8 @@ public:
             real tstop,   // The end time for the step.
             int nsteps,   // Number of internal steps to take.
             int niter,    // Number of internal iterations to take.
+            int (*rand_int)(int, int), // Random integers sampled uniformly from range
+            Sweep::real (*rand_u01)(), // U[0,1] samples
             OutFnPtr out, // Output function pointer.
             void *data    // Custom data object which will be passed as argument to out().
         );
@@ -85,8 +87,10 @@ private:
     void multiSplitStep(
         real dt,        // Splitting step size.
         unsigned int n, // Number of splitting steps.
-        Reactor &r      // Reactor to solve.
-        );
+        Reactor &r,     // Reactor to solve.
+        int (*rand_int)(int, int), // Random integers uniformly distributed on interval
+        real (*rand_u01)() // U[0,1] samples
+    );
 };
 };
 
