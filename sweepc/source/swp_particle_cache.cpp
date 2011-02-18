@@ -41,18 +41,16 @@
 */
 
 #include "swp_particle_cache.h"
-#include "swp_submodel.h"
 #include "swp_particle_model.h"
 #include "swp_model_factory.h"
 #include "swp_primary.h"
-#include "swp_submodel.h"
-#include "swp_submodel_cache.h"
+
 #include <vector>
 #include <stdexcept>
 #include <memory.h>
 
 using namespace Sweep;
-using namespace Sweep::SubModels;
+
 using namespace std;
 
 // CONTRUCTORS AND DESTRUCTORS.
@@ -92,33 +90,6 @@ ParticleCache::ParticleCache(std::istream &in, const Sweep::ParticleModel &model
 // Assignment operator (Primary RHS).
 ParticleCache &ParticleCache::operator=(const Sweep::Primary &rhs)
 {
-    // Delete sub-models not in RHS.
-    /*for (SubModelCacheMap::const_iterator i=m_submodels.begin();
-         i!=m_submodels.end(); ++i) {
-        // Try to find model data in RHS.
-        const SubModels::SubModel *mod = rhs.SubModel(i->first);
-        if (mod == NULL) {
-            // This RHS does not contain the model i,
-            // need to delete it.
-            delete i->second;
-            m_submodels.erase(i->first);
-        }
-    }
-
-    // Copy the data for other particle models.
-    for (SubModelMap::const_iterator i=rhs.SubModels().begin();
-         i!=rhs.SubModels().end(); ++i) {
-        // Try to find model data in this cache.
-        SubModelCacheMap::const_iterator k = m_submodels.find(i->first);
-        if (k != m_submodels.end()) {
-            // This ParticleCache contains the model i.
-            *(k->second) = *(i->second);
-        } else {
-            // This ParticleCache does not contain the model i.
-            m_submodels[i->first] = i->second->CreateCache(*this);
-        }
-    }*/
-
     // Copy the derived properties.
     m_diam = rhs.SphDiameter();
     m_dcol = rhs.CollDiameter();
@@ -149,27 +120,6 @@ ParticleCache &ParticleCache::operator=(const Sweep::Primary &rhs)
 // caches for different particle models.
 ParticleCache &ParticleCache::operator+=(const Sweep::ParticleCache &rhs)
 {
-    // Now allow the particle models to deal with the additions.
-    /*for (SubModelCacheMap::iterator j=m_submodels.begin();
-         j!=m_submodels.end(); ++j) {
-        // Try to find the model in RHS cache.
-        SubModelCacheMap::const_iterator k = rhs.m_submodels.find(j->first);
-        if (k != rhs.m_submodels.end()) {
-            *(j->second) += *(k->second);
-        }
-    }
-
-    // Now check for models which are in the RHS but not the LHS.
-    for (SubModelCacheMap::const_iterator j=rhs.m_submodels.begin();
-         j!=rhs.m_submodels.end(); ++j) {
-        // Try to find model in this cache.
-        SubModelCacheMap::const_iterator k = m_submodels.find(j->first);
-        if (k == m_submodels.end()) {
-            m_submodels[j->first] = j->second->Clone();
-            m_submodels[j->first]->SetParent(*this);
-        }
-    }*/
-
     // Sum cache variables.
     m_diam += rhs.m_diam;
     m_dcol += rhs.m_dcol;
@@ -196,29 +146,6 @@ ParticleCache &ParticleCache::operator+=(const Sweep::ParticleCache &rhs)
 //   it is used to sum up particle properties in the ensemble binary tree.
 ParticleCache &ParticleCache::operator+=(const Sweep::Primary &rhs)
 {
-    // Check that the particle caches subscribe to the same particle
-    // model.  If they don't then just use assignment operator; can't add.
-    /*
-        // Now allow the particle models to deal with the additions.
-        for (SubModelCacheMap::iterator j=m_submodels.begin();
-             j!=m_submodels.end(); ++j) {
-            // Try to find the model in RHS cache.
-            const SubModels::SubModel *mod = rhs.SubModel(j->first);
-            if (mod != NULL) {
-                *(j->second) += *mod;
-            }
-        }
-
-        // Now check for models which are in the RHS but not the LHS.
-        for (SubModelMap::const_iterator j=rhs.SubModels().begin();
-             j!=rhs.SubModels().end(); ++j) {
-            // Try to find model in this cache.
-            SubModelCacheMap::const_iterator k = m_submodels.find(j->first);
-            if (k == m_submodels.end()) {
-                m_submodels[j->first] = j->second->CreateCache(*this);
-            }
-        }*/
-
         // Get cache properties from primary.
         real diam = rhs.SphDiameter();
         real dcol = rhs.CollDiameter();
@@ -266,14 +193,6 @@ const ParticleCache ParticleCache::operator+(const Sweep::Primary &rhs) const {
 // Resets the particle cache to its "empty" condition.
 void ParticleCache::Clear(void)
 {
-
-    // Clear sub-model cache.
-    //for (SubModelCacheMap::iterator i=m_submodels.begin(); i!=m_submodels.end(); ++i) {
-    //    i->second->Clear();
-    //}
-
-
-
     // Clear derived properties.
     m_diam = 0.0;
     m_dcol = 0.0;
@@ -291,26 +210,6 @@ void ParticleCache::Clear(void)
     m_numsubpart = 0;
     m_numcarbon = 0;
 }
-
-
-
-// MODEL CACHE.
-
-// Returns the model data.
-//const SubModels::SubModelCacheMap &ParticleCache::SubModelCache() const {return m_submodels;}
-
-// Returns the data for the ith model.
-/*const SubModels::SubModelCache *const ParticleCache::SubModel(SubModels::SubModelType id) const
-{
-    SubModelCacheMap::const_iterator i = m_submodels.find(id);
-    if (i != m_submodels.end()) {
-        return i->second;
-    } else {
-        return NULL;
-    }
-}
-*/
-
 
 // BASIC DERIVED PARTICLE PROPERTIES.
 
@@ -448,12 +347,6 @@ void ParticleCache::Serialize(std::ostream &out) const
 
         double val = 0.0;
 
-         // Write the models.
-        /*for (SubModelCacheMap::const_iterator i=m_submodels.begin();
-             i!=m_submodels.end(); ++i) {
-            ModelFactory::WriteCache(*(*i).second, out);
-        }*/
-
         // Write equivalent sphere diameter.
         val = (double)m_diam;
         out.write((char*)&val, sizeof(val));
@@ -524,16 +417,6 @@ void ParticleCache::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
 
         switch (version) {
             case 0:
-
-                // Read the number of additional model data objects.
-                /*in.read(reinterpret_cast<char*>(&n), sizeof(n));
-
-                // Read the models.
-                for (unsigned int i=0; i!=n; ++i) {
-                    smod = ModelFactory::ReadCache(in, *this);
-                    m_submodels[smod->ID()] = smod;
-                }*/
-
                 // Read equivalent sphere diameter.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_diam = (real)val;
@@ -605,7 +488,7 @@ void ParticleCache::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
 // Release all memory associated with the ParticleData object.
 void ParticleCache::releaseMem(void)
 {
-    //m_submodels.clear();
+    //nothing to do
 }
 
 

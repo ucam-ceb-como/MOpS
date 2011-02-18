@@ -45,7 +45,6 @@
 
 #include "swp_params.h"
 #include "swp_particle_process.h"
-#include "swp_submodel_type.h"
 
 namespace Sweep
 {
@@ -70,9 +69,6 @@ public:
         std::istream &in,            //  - Input stream.
         const Sweep::Mechanism &mech //  - Parent mechanism
         );
-
-    // Destructor.
-    virtual ~SurfaceReaction(void);
 
     // Operators.
     SurfaceReaction &operator=(const SurfaceReaction &rhs);
@@ -102,9 +98,7 @@ public:
     // Sets the ID number of the particle property to which
     // the rate of this process is proportional.
     void SetPropertyID(
-        unsigned int i,   // ID number of particle property.
-        SubModels::SubModelType modelid // The model for which this ID is valid.
-          = SubModels::BasicModel_ID //  - Default model is basic particle properties.
+        unsigned int i   // ID number of particle property.
         );
 
 
@@ -205,10 +199,6 @@ protected:
     // proportional.
     unsigned int m_pid;
 
-    // Particle model for which the above particle property ID
-    // is valid.
-    SubModels::SubModelType m_modelid;
-
     // Default constructor is protected to prevent reactions being
     // defined without knowledge of the parent mechanism.
     SurfaceReaction(void);
@@ -220,6 +210,6 @@ protected:
         ) const;
 };
 };
-};
+}
 
 #endif

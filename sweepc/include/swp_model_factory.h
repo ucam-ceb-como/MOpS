@@ -48,9 +48,8 @@
 #include "swp_primary.h"
 #include "swp_particle_model.h"
 #include "swp_particle_cache.h"
-#include "swp_submodel.h"
+
 #include "swp_submodel_type.h"
-#include "swp_submodel_cache.h"
 #include "swp_model_stats.h"
 #include "swp_aggmodel_type.h"
 #include "swp_aggmodel_cache.h"
@@ -60,6 +59,13 @@
 
 namespace Sweep
 {
+
+// Forward declaration
+namespace SubModels
+{
+    class SubModel;
+}
+
 //! Factory class for particles, their statistics and sub-models
 class ModelFactory
 {
@@ -111,11 +117,6 @@ public:
         Primary &parent             // Parent object.
         );
 
-    // Creates a new sub-model cache object of the given type.
-    static SubModels::SubModelCache *const CreateCache(
-        SubModels::SubModelType id, // Model ID.
-        ParticleCache &parent       // Parent object.
-        );
 
     // Creates a new sub-model stats object of the given type.
     static Stats::IModelStats *const CreateStats(
@@ -134,13 +135,6 @@ public:
         Primary &parent   // Parent object.
         );
 
-    // Reads a sub-model cache from a binary stream.  The first item read
-    // is the model ID which tells the ModelFactory what type
-    // of model to read.
-    static SubModels::SubModelCache *const ReadCache(
-        std::istream &in,    // Input stream.
-        ParticleCache &parent // Parent object.
-        );
 
     // Reads sub-model stats from a binary stream.  The first item read
     // is the model ID which tells the ModelFactory what type
@@ -159,11 +153,6 @@ public:
         std::ostream &out                 // Output stream.
         );
 
-    // Writes a sub-model cache, along with its ID to an output stream.
-    static void WriteCache(
-        const SubModels::SubModelCache &model, // Model to write.
-        std::ostream &out                      // Output stream.
-        );
 
     // Writes a sub-model stats object, along with its ID, to an output stream.
     static void WriteStats(

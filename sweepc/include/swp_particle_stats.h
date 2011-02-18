@@ -49,7 +49,7 @@
 #include "swp_ensemble.h"
 #include "swp_particle_cache.h"
 #include "swp_particle_model.h"
-#include "swp_submodel_type.h"
+
 #include <vector>
 #include <string>
 #include <iostream>

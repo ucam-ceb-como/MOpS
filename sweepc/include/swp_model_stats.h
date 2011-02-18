@@ -162,8 +162,7 @@ protected:
     StatBound m_statbound;
 };
 
-typedef std::map<SubModels::SubModelType,IModelStats*> ModelStatsMap;
 };
-};
+}
 
 #endif

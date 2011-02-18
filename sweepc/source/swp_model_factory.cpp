@@ -44,7 +44,6 @@
 #include "swp_primary.h"
 #include "swp_submodel.h"
 #include "swp_submodel_type.h"
-#include "swp_submodel_cache.h"
 #include "swp_aggmodel_type.h"
 #include "swp_aggmodel_cache.h"
 #include "swp_surfvol_cache.h"
@@ -186,18 +185,6 @@ SubModels::SubModel *const ModelFactory::Create(SubModels::SubModelType id,
     }
 }
 
-// Creates a new sub-model cache object of the given type.
-SubModels::SubModelCache *const ModelFactory::CreateCache(SubModels::SubModelType id,
-                                                          ParticleCache &parent)
-{
-    switch (id) {
-        case SubModels::CNT_Model_ID:
-        default:
-            throw invalid_argument("Invalid model ID (Sweep, "
-                                   "ModelFactory::CreateCache).");
-    }
-}
-
 
 // SUB-MODEL STREAM INPUT.
 
@@ -227,35 +214,6 @@ SubModels::SubModel *const ModelFactory::Read(std::istream &in,
     } else {
         throw invalid_argument("Input stream not ready "
                                "(Sweep, ModelFactory::Read).");
-    }
-}
-
-// Reads a sub-model cache from a binary stream.  The first item read
-// is the model ID which tells the ModelFactory what type
-// of model to read.
-SubModels::SubModelCache *const ModelFactory::ReadCache(std::istream &in,
-                                                        ParticleCache &parent)
-{
-    if (in.good()) {
-        SubModels::SubModelCache *cache = NULL;
-
-        // Read the model type from the input stream.
-        unsigned int type;
-        in.read((char*)&type, sizeof(type));
-
-        // Read a model of this particular type.  This will throw
-        // an exception if the type is invalid.
-        switch ((SubModels::SubModelType)type) {
-            case SubModels::CNT_Model_ID:
-            default:
-                throw runtime_error("Invalid model type read from "
-                                    "input stream (Sweep, ModelFactory::ReadCache).");
-        }
-
-        return cache;
-    } else {
-        throw invalid_argument("Input stream not ready "
-                               "(Sweep, ModelFactory::ReadCache).");
     }
 }
 
@@ -308,22 +266,6 @@ void ModelFactory::Write(const SubModels::SubModel &model, std::ostream &out)
     }
 }
 
-// Writes a sub-model cache, along with its ID to an output stream.
-void ModelFactory::WriteCache(const SubModels::SubModelCache &cache,
-                              std::ostream &out)
-{
-    if (out.good()) {
-        // Write the model Serial signature type to the stream.
-        unsigned int type = (unsigned int)cache.ID();
-        out.write((char*)&type, sizeof(type));
-
-        // Serialize the model object.
-        cache.Serialize(out);
-    } else {
-        throw invalid_argument("Output stream not ready "
-                               "(Sweep, ModelFactory::Write).");
-    }
-}
 
 // Writes a model stats object, along with its ID, to an output stream.
 void ModelFactory::WriteStats(const Stats::IModelStats &stats, std::ostream &out)

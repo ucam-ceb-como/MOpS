@@ -48,7 +48,6 @@
 
 #include "swp_primary.h"
 #include "swp_PAH_primary.h"
-#include "swp_submodel_type.h"
 #include "swp_aggmodel_type.h"
 #include "swp_model_factory.h"
 #include "swp_PAH_cache.h"
@@ -59,7 +58,7 @@
 #include "string_functions.h"
 using namespace Sweep;
 using namespace Sweep::AggModels;
-using namespace Sweep::SubModels;
+
 using namespace std;
 using namespace Strings;
 /*

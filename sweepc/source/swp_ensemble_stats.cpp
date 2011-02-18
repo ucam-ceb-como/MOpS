@@ -95,12 +95,6 @@ EnsembleStats &EnsembleStats::operator=(const EnsembleStats &rhs)
         } else {
             m_aggstats = NULL;
         }
-
-        // Copy model stats.
-        for (ModelStatsMap::const_iterator i=rhs.m_modelstats.begin();
-             i!=rhs.m_modelstats.end(); ++i) {
-            m_modelstats[i->first] = i->second->Clone();
-        }
     }
     return *this;
 }
@@ -112,11 +106,9 @@ EnsembleStats &EnsembleStats::operator=(const EnsembleStats &rhs)
 unsigned int EnsembleStats::Count(void) const
 {
     unsigned int n = m_basicstats->Count();
-    if (m_aggstats!=NULL) n += m_aggstats->Count();
-    for (ModelStatsMap::const_iterator i=m_modelstats.begin();
-         i!=m_modelstats.end(); ++i) {
-        n += i->second->Count();
-    }
+    if (m_aggstats!=NULL)
+        n += m_aggstats->Count();
+
     return n;
 }
 
@@ -124,11 +116,8 @@ unsigned int EnsembleStats::Count(void) const
 void EnsembleStats::Calculate(const Ensemble &e, real scale, real secondary_scale)
 {
     m_basicstats->Calculate(e, scale, secondary_scale);
-    if (m_aggstats!=NULL) m_aggstats->Calculate(e, scale, secondary_scale);
-    for (ModelStatsMap::iterator i=m_modelstats.begin();
-         i!=m_modelstats.end(); ++i) {
-        i->second->Calculate(e, scale, secondary_scale);
-    }
+    if (m_aggstats!=NULL)
+        m_aggstats->Calculate(e, scale, secondary_scale);
 }
 
 // Returns a vector containing the stats.
@@ -142,13 +131,6 @@ void EnsembleStats::Get(fvector &stats, unsigned int start) const
     if (m_aggstats!=NULL) {
         m_aggstats->Get(stats, start);
         start += m_aggstats->Count();
-    }
-
-    // Get stats from particle sub-models.
-    for (ModelStatsMap::const_iterator i=m_modelstats.begin();
-         i!=m_modelstats.end(); ++i) {
-        i->second->Get(stats, start);
-        start += i->second->Count();
     }
 }
 
@@ -172,13 +154,6 @@ void EnsembleStats::Names(std::vector<std::string> &names, unsigned int start) c
         m_aggstats->Names(names, start);
         start += m_aggstats->Count();
     }
-
-    // Get stats from particle sub-models.
-    for (ModelStatsMap::const_iterator i=m_modelstats.begin();
-         i!=m_modelstats.end(); ++i) {
-        i->second->Names(names, start);
-        start += i->second->Count();
-    }
 }
 
 
@@ -197,11 +172,9 @@ const ParticleStats &EnsembleStats::BasicStats(void) const
 unsigned int EnsembleStats::PSL_Count(void) const
 {
     unsigned int n = 1 + m_basicstats->PSL_Count();
-    if (m_aggstats!=NULL) n += m_aggstats->PSL_Count();
-    for (ModelStatsMap::const_iterator i=m_modelstats.begin();
-         i!=m_modelstats.end(); ++i) {
-        n += i->second->PSL_Count();
-    }
+    if (m_aggstats!=NULL)
+        n += m_aggstats->PSL_Count();
+
     return n;
 }
 
@@ -225,13 +198,6 @@ void EnsembleStats::PSL_Names(std::vector<std::string> &names, unsigned int star
     if (m_aggstats!=NULL) {
         m_aggstats->PSL_Names(names, start);
         start += m_aggstats->PSL_Count();
-    }
-
-    // Get stats from particle sub-models.
-    for (ModelStatsMap::const_iterator i=m_modelstats.begin();
-         i!=m_modelstats.end(); ++i) {
-        i->second->PSL_Names(names, start);
-        start += i->second->PSL_Count();
     }
 }
 
@@ -257,13 +223,6 @@ void EnsembleStats::PSL(const Sweep::Particle &sp, const Sweep::ParticleModel& m
     if (m_aggstats!=NULL) {
         m_aggstats->PSL(sp, time, psl, start);
         start += m_aggstats->PSL_Count();
-    }
-
-    // Get stats from particle sub-models.
-    for (ModelStatsMap::const_iterator j=m_modelstats.begin();
-         j!=m_modelstats.end(); ++j) {
-        j->second->PSL(sp, time, psl, start);
-        start += j->second->PSL_Count();
     }
 }
 
@@ -291,17 +250,6 @@ void EnsembleStats::Serialize(std::ostream &out) const
 
             // Serialise the aggregation model stats.
             ModelFactory::WriteAggStats(*m_aggstats, out);
-        }
-
-
-        // Output the number of sub-models.
-        unsigned int n = (unsigned int)m_modelstats.size();
-        out.write((char*)&n, sizeof(n));
-
-        // Serialize the sub-model stats.
-        for (ModelStatsMap::const_iterator i=m_modelstats.begin();
-             i!=m_modelstats.end(); ++i) {
-            ModelFactory::WriteStats(*i->second, out);
         }
     } else {
         throw invalid_argument("Output stream not ready "
@@ -342,15 +290,6 @@ void EnsembleStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
                     m_aggstats = NULL;
                 }
 
-                // Read the number of sub-models.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-
-                // Deserialize the sub-model stats.
-                for (unsigned int i=0; i!=n; ++i) {
-                    IModelStats *stats = ModelFactory::ReadStats(in, model);
-                    m_modelstats[(SubModels::SubModelType)stats->ID()] = stats;
-                }
-
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -379,10 +318,4 @@ void EnsembleStats::releaseMem(void)
 
     delete m_aggstats;
     m_aggstats = NULL;
-
-    for (ModelStatsMap::iterator i=m_modelstats.begin();
-         i!=m_modelstats.end(); ++i) {
-        delete i->second;
-    }
-    m_modelstats.clear();
 }

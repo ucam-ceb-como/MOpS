@@ -1,6 +1,5 @@
 #include "swp_subparticle.h"
 #include "swp_particle_model.h"
-#include "swp_submodel.h"
 #include "swp_model_factory.h"
 #include "swp_cell.h"
 #include <cmath>

@@ -61,8 +61,6 @@
 #include "swp_component.h"
 #include "swp_tracker.h"
 #include "swp_particle_model.h"
-#include "swp_submodel.h"
-#include "swp_submodel_type.h"
 #include "swp_aggmodel_type.h"
 #include "swp_aggmodel_cache.h"
 #include "swp_sintering_model.h"
@@ -159,28 +157,6 @@ public:
 
     // Sets the last update time of the particle.
     void SetTime(real t);
-
-
-    // SUB-MODEL CACHE.
-
-    // Returns the model data.
-    const SubModels::SubModelMap &SubModels(void) const;
-
-    // Returns the data for the idth model.  Returns NULL if id is invalid.
-    SubModels::SubModel *const SubModel(SubModels::SubModelType id);
-    const SubModels::SubModel *const SubModel(SubModels::SubModelType id) const;
-
-    // NOTE TO SELF:  Should following functions be available if 
-    //                Primary always subscribes to a ParticleModel?
-
-    // Add a model to the particle definition.  This Primary object
-    // then takes control of the model for destruction purposes.  If the
-    // Primary already contains a sub-model of this type, then it is
-    // overwritten.
-    void AddSubModel(SubModels::SubModel &model);
-
-    // Adds an empty sub-model of the given type.
-    void AddSubModel(SubModels::SubModelType id);
 
 
     // AGGREGATION MODEL.
@@ -295,9 +271,6 @@ protected:
     fvector m_values; // Other primary values (defined at run time).
     real m_createt;   // Time at which primary was created.
     real m_time;      // Last time primary was updated.  Required for LPDA.
-
-    // Cache of sub-model data.
-    SubModels::SubModelMap m_submodels;
 
     // Basic derived properties (calculated from above properties).
     real m_diam; // Equivalent spherical diameter.

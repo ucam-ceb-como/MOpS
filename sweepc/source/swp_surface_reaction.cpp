@@ -44,7 +44,7 @@
 #include "swp_particle_process.h"
 #include "swp_mechanism.h"
 #include "swp_process_type.h"
-#include "swp_submodel_type.h"
+
 #include <cmath>
 #include <stdexcept>
 #include <iostream>
@@ -59,7 +59,7 @@ const real Processes::SurfaceReaction::m_majfactor = 2.0;
 
 // Default constructor.
 SurfaceReaction::SurfaceReaction(void)
-: ParticleProcess(), m_arr(0.0,0.0,0.0), m_pid(0), m_modelid(SubModels::BasicModel_ID)
+: ParticleProcess(), m_arr(0.0,0.0,0.0), m_pid(0)
 {
     m_defer = true;
     m_name = "Surface Reaction";
@@ -67,7 +67,7 @@ SurfaceReaction::SurfaceReaction(void)
 
 // Initialising constructor.
 SurfaceReaction::SurfaceReaction(const Sweep::Mechanism &mech)
-: ParticleProcess(mech), m_arr(0.0,0.0,0.0), m_pid(0), m_modelid(SubModels::BasicModel_ID)
+: ParticleProcess(mech), m_arr(0.0,0.0,0.0), m_pid(0)
 {
     m_defer = true;
     m_name = "Surface Reaction";
@@ -85,13 +85,6 @@ SurfaceReaction::SurfaceReaction(std::istream &in, const Sweep::Mechanism &mech)
     Deserialize(in, mech);
 }
 
-// Default destructor.
-SurfaceReaction::~SurfaceReaction(void)
-{
-    // Nothing special to destruct.
-}
-
-
 // OPERATOR OVERLOADS.
 
 // Assignment operator.
@@ -101,7 +94,6 @@ SurfaceReaction &SurfaceReaction::operator =(const SurfaceReaction &rhs)
         ParticleProcess::operator =(rhs);
         m_arr     = rhs.m_arr;
         m_pid     = rhs.m_pid;
-        m_modelid = rhs.m_modelid;
     }
     return *this;
 }
@@ -125,17 +117,11 @@ void SurfaceReaction::SetArrhenius(Sprog::Kinetics::ARRHENIUS &arr) {m_arr = arr
 // the rate of this process is proportional.
 unsigned int SurfaceReaction::PropertyID(void) const {return m_pid;}
 
-// Returns the ID number of the particle number for which the
-// PropertyID is valid.  The mechanism should check that this
-// model is enabled.
-SubModels::SubModelType SurfaceReaction::ModelID(void) const {return m_modelid;}
-
 // Sets the ID number of the particle property to which
 // the rate of this process is proportional.
-void SurfaceReaction::SetPropertyID(unsigned int i, SubModels::SubModelType modelid)
+void SurfaceReaction::SetPropertyID(unsigned int i)
 {
-    m_pid     = i;
-    m_modelid = modelid;
+    m_pid = i;
 }
 
 
@@ -182,11 +168,7 @@ real SurfaceReaction::Rate(real t, const Cell &sys, const Particle &sp) const
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
     // Paticle dependence.
-    if (m_modelid == SubModels::BasicModel_ID) {
-        rate *= sp.Property(static_cast<ParticleCache::PropID>(m_pid));
-    } else {
-        throw std::logic_error("Submodels no longer supported (Sweep, SurfaceReaction::Rate)");
-    }
+    rate *= sp.Property(static_cast<ParticleCache::PropID>(m_pid));
 
     return rate;
 }
@@ -342,10 +324,6 @@ void SurfaceReaction::Serialize(std::ostream &out) const
         // Write particle property ID.
         unsigned int n = (unsigned int)m_pid;
         out.write((char*)&n, sizeof(n));
-
-        // Write the model ID.
-        n = (unsigned int)m_modelid;
-        out.write((char*)&n, sizeof(n));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, SurfaceReaction::Serialize).");
@@ -381,11 +359,6 @@ void SurfaceReaction::Deserialize(std::istream &in, const Sweep::Mechanism &mech
                 // Read particle property ID.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_pid = n;
-
-                // Read the model ID.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                m_modelid = (SubModels::SubModelType)n;
-
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "

@@ -46,7 +46,7 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_mech_parser.o swp_mechanism.o swp_subparticle.o swp_particle.o \
     swp_particle_cache.o swp_particle_stats.o swp_solver.o swp_tracker.o \
     swp_abf_model.o swp_actsites_model.o swp_aggmodel_cache.o \
-    swp_submodel.o swp_submodel_cache.o swp_model_factory.o \
+    swp_submodel.o swp_model_factory.o \
     swp_surfvol_cache.o swp_surfvol_primary.o swp_primary.o \
     swp_actsites_reaction.o swp_coagulation.o swp_transcoag.o swp_addcoag.o \
     swp_condensation.o swp_inception.o swp_constant_inception.o\
@@ -179,9 +179,6 @@ swp_sintering_model.o: $(src)/swp_sintering_model.cpp
 
 swp_submodel.o: $(src)/swp_submodel.cpp
 	$(cpp) $(flag) $(src)/swp_submodel.cpp
-
-swp_submodel_cache.o: $(src)/swp_submodel_cache.cpp
-	$(cpp) $(flag) $(src)/swp_submodel_cache.cpp
 
 swp_model_factory.o: $(src)/swp_model_factory.cpp
 	$(cpp) $(flag) $(src)/swp_model_factory.cpp

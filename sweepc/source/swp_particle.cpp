@@ -42,7 +42,7 @@
 
 #include "swp_particle.h"
 #include "swp_particle_model.h"
-#include "swp_submodel.h"
+
 #include "string_functions.h"
 #include <cmath>
 #include <stdexcept>

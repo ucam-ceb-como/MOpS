@@ -45,7 +45,6 @@
 #define SWEEP_ENSEMBLESTATS_H
 
 #include "swp_params.h"
-#include "swp_model_stats.h"
 #include "swp_particle_stats.h"
 #include "swp_ensemble.h"
 #include "swp_particle_model.h"
@@ -149,9 +148,6 @@ private:
 
     // Aggregation model stats.
     IModelStats *m_aggstats;
-
-    // Map of model stats which are required to be collected.
-    ModelStatsMap m_modelstats;
 
     // Cannot instantiate this class without knowing how many
     // components and tracker variables there are for

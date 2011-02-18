@@ -41,7 +41,6 @@
 */
 
 #include "swp_primary.h"
-#include "swp_submodel_type.h"
 #include "swp_model_factory.h"
 #include "swp_particle_cache.h"
 #include "swp_cell.h"
@@ -50,7 +49,7 @@
 #include <memory.h>
 
 using namespace Sweep;
-using namespace Sweep::SubModels;
+
 using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
@@ -76,12 +75,6 @@ Primary::Primary(real time, const Sweep::ParticleModel &model)
     // each in the particle model.
     m_comp.resize(model.ComponentCount(), 0.0);
     m_values.resize(model.TrackerCount(), 0.0);
-
-    // Now add all sub-models required by the particle model.
-    for (SubModelTypeSet::const_iterator i=model.SubModels().begin();
-         i!=model.SubModels().end(); ++i) {
-        m_submodels[*i] = ModelFactory::Create(*i, *this);
-    }
 }
 
 // Copy constructor.
@@ -129,34 +122,6 @@ Primary &Primary::operator=(const Primary &rhs)
         // Copy primary time.
         m_createt = rhs.m_createt;
         m_time    = rhs.m_time;
-
-        // Delete sub-models not in RHS.
-        for (SubModelMap::const_iterator i=m_submodels.begin(); 
-             i!=m_submodels.end(); ++i) {
-            // Try to find model data in RHS primary.
-            SubModelMap::const_iterator k = rhs.m_submodels.find(i->first);
-            if (k == m_submodels.end()) {
-                // This RHS primary does not contain the model i, 
-                // need to delete it.
-                delete i->second;
-                m_submodels.erase(i->first);
-            }
-        }
-
-        // Copy sub-models from RHS.
-        for (SubModelMap::const_iterator i=rhs.m_submodels.begin(); 
-             i!=rhs.m_submodels.end(); ++i) {
-            // Try to find model data in this primary.
-            SubModelMap::const_iterator k = m_submodels.find(i->first);
-            if (k != m_submodels.end()) {
-                // This primary contains the model i.
-                *(k->second) = *(i->second);
-            } else {
-                // This primary does not contain the model i, 
-                // need to create it.
-                m_submodels[i->first] = i->second->Clone();
-            }
-        }
 
         // Copy the derived properties.
         m_diam = rhs.m_diam;
@@ -251,65 +216,6 @@ real Primary::LastUpdateTime() const {return m_time;}
 void Primary::SetTime(real t) {m_time = t;}
 
 
-// SUB-MODEL CACHE.
-
-// Returns the model data.
-const SubModels::SubModelMap &Primary::SubModels(void) const
-{
-    return m_submodels;
-}
-
-// Returns the data for the idth model.  Returns NULL if id is invalid.
-SubModels::SubModel *const Primary::SubModel(SubModels::SubModelType id)
-{
-    SubModelMap::const_iterator i = m_submodels.find(id);
-    if (i != m_submodels.end()) {
-        return i->second;
-    } else {
-        return NULL;
-    }
-}
-
-// Returns the data for the idth model.  Returns NULL if id is invalid.
-const SubModels::SubModel *const Primary::SubModel(SubModels::SubModelType id) const
-{
-    SubModelMap::const_iterator i = m_submodels.find(id);
-    if (i != m_submodels.end()) {
-        return i->second;
-    } else {
-        return NULL;
-    }
-}
-
-// Add a model to the particle definition.  This Primary object
-// then takes control of the model for destruction purposes.  If the
-// Primary already contains a sub-model of this type, then it is
-// overwritten.
-void Primary::AddSubModel(SubModels::SubModel &model)
-{
-    // Delete model if it exists already.
-    SubModelMap::const_iterator i = m_submodels.find(model.ID());
-    if (i != m_submodels.end()) {
-        delete i->second;
-    }
-    // Add model (take control).
-    m_submodels[model.ID()] = &model;
-    model.SetParent(*this);
-}
-
-// Adds an empty sub-model of the given type.
-void Primary::AddSubModel(SubModels::SubModelType id)
-{
-    // Delete model if it exists already.
-    SubModelMap::const_iterator i = m_submodels.find(id);
-    if (i != m_submodels.end()) {
-        delete i->second;
-    }
-    // Add new model.
-    m_submodels[id] = ModelFactory::Create(id, *this);
-}
-
-
 // AGGREGATION MODEL.
 
 // Returns the aggregation model which this primary describes.
@@ -343,11 +249,6 @@ void Primary::UpdateCache(void)
     m_dcol = m_diam;
     m_dmob = m_diam;
     m_surf = PI * m_diam * m_diam;
-
-    // Allow models to update themselves.
-    for (SubModelMap::iterator i=m_submodels.begin(); i!=m_submodels.end(); ++i) {
-        i->second->UpdateCache();
-    }
 }
 
 // Returns the particle equivalent sphere diameter.
@@ -460,12 +361,6 @@ unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, unsig
 		m_values[i] += dvalues[i] * (real)n;
 	}
 
-	// Now allow the sub-models to deal with the additions.
-    for (SubModelMap::iterator j=m_submodels.begin(); 
-         j!=m_submodels.end(); ++j) {
-        j->second->Update(dcomp, dvalues, n);
-	}
-
     // Update property cache.
     Primary::UpdateCache();
 
@@ -501,25 +396,6 @@ Primary &Primary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
         // Add the tracker values.
         for (unsigned int i=0; i!=min(m_values.size(),rhs.m_values.size()); ++i) {
             m_values[i] += rhs.m_values[i];
-        }
-
-        // Now allow the particle models to deal with the additions.
-        for (SubModelMap::iterator j=m_submodels.begin(); j!=m_submodels.end(); ++j) {
-            // Try to find the model in RHS.
-            SubModelMap::const_iterator k = rhs.m_submodels.find(j->first);
-            if (k != rhs.m_submodels.end()) {
-                j->second->Coagulate(*k->second);
-            }
-        }
-
-        // Now check for models which are in the RHS but not the LHS.
-        for (SubModelMap::const_iterator j=rhs.m_submodels.begin(); j!=rhs.m_submodels.end(); ++j) {
-            // Try to find model in this primary.
-            SubModelMap::const_iterator k = m_submodels.find(j->first);
-            if (k == m_submodels.end()) {
-                // Add model to this primary.
-                m_submodels[j->first] = j->second->Clone();
-            }
         }
 
         // Create time is the earliest time.
@@ -591,15 +467,6 @@ void Primary::Serialize(std::ostream &out) const
         val = (double)m_time;
         out.write((char*)&val, sizeof(val));
 
-        // Write sub-model count.
-        n = (unsigned int)m_submodels.size();
-        out.write((char*)&n, sizeof(n));
-
-        // Serialize sub-models.
-        for (SubModelMap::const_iterator i=m_submodels.begin(); i!=m_submodels.end(); ++i) {
-            ModelFactory::Write(*(i->second), out);
-        }
-
         // Write equivalent sphere diameter.
         val = (double)m_diam;
         out.write((char*)&val, sizeof(val));
@@ -644,7 +511,6 @@ void Primary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 
         unsigned int n = 0;
         double val = 0.0;
-        SubModels::SubModel *smod = NULL;
 
         switch (version) {
             case 0:
@@ -673,15 +539,6 @@ void Primary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
                 // Read last update time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_time = (real)val;
-
-                // Read sub-model count.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-
-                // Read sub-models.
-                for (unsigned int i=0; i!=n; ++i) {
-                    smod = ModelFactory::Read(in, *this);
-                    m_submodels[smod->ID()] = smod;
-                }
 
                 // Read equivalent sphere diameter.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
@@ -726,10 +583,6 @@ void Primary::releaseMem(void)
 {
     m_comp.clear();
     m_values.clear();
-    for (SubModelMap::iterator i=m_submodels.begin(); i!=m_submodels.end(); ++i) {
-        delete i->second;
-    }
-    m_submodels.clear();
 }
 
 // Initialisation routine.

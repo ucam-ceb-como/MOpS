@@ -62,11 +62,6 @@
 #include "swp_subparticle.h"
 #include "swp_particle.h"
 
-// Sub-models.
-#include "swp_submodel_type.h"
-#include "swp_submodel_cache.h"
-#include "swp_submodel.h"
-
 // Aggregation models.
 #include "swp_aggmodel_type.h"
 #include "swp_aggmodel_cache.h"

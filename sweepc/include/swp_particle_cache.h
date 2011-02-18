@@ -66,9 +66,7 @@
 #include "swp_params.h"
 #include "swp_particle_model.h"
 #include "swp_primary.h"
-#include "swp_submodel_type.h"
-#include "swp_submodel_cache.h"
-#include "swp_aggmodel_cache.h"
+
 #include <iostream>
 
 namespace Sweep
@@ -211,11 +209,6 @@ protected:
     const ParticleCache operator+(const ParticleCache &rhs) const;
     const ParticleCache operator+(const Primary &rhs) const;
 
-
-
-    // Additional particle models.
-    //SubModels::SubModelCacheMap m_submodels; // Cache of data required by different sub-models.
-
     // Basic properties (calculated from above properties).
     real m_diam; // Equivalent spherical diameter.
     real m_dcol; // Collision diameter.
@@ -233,13 +226,13 @@ protected:
 
 
 
-	// The free surface available for other particles to sinter
-	real m_freesurface;
-	//number of subparticles below this node
-	unsigned int m_numsubpart;
+    // The free surface available for other particles to sinter
+    real m_freesurface;
+    //number of subparticles below this node (no longer used, should be removed)
+    unsigned int m_numsubpart;
 
-	//! Number of Carbon atoms
-	unsigned int m_numcarbon;
+    //! Number of Carbon atoms
+    unsigned int m_numcarbon;
 
     // Release all memory associated with the object.
     void releaseMem(void);

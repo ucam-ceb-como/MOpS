@@ -245,10 +245,6 @@
 					RelativePath=".\source\swp_submodel.cpp"
 					>
 				</File>
-				<File
-					RelativePath=".\source\swp_submodel_cache.cpp"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="Processes"
@@ -605,10 +601,6 @@
 				>
 				<File
 					RelativePath=".\include\swp_submodel.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_submodel_cache.h"
 					>
 				</File>
 				<File

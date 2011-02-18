@@ -54,7 +54,7 @@
 #include "swp_model_stats.h"
 #include "swp_ensemble.h"
 #include "swp_particle_model.h"
-#include "swp_submodel_type.h"
+
 #include <vector>
 #include <string>
 #include <iostream>
