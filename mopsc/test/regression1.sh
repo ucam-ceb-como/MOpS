@@ -50,7 +50,7 @@ do
   ((i+=1))
 done
 
-if((i==5))
+if((i==6))
 then
   # All tests passed
   echo "All tests passed"
