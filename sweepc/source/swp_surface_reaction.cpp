@@ -248,7 +248,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
         if (m_mech->AnyDeferred()) {
             // Calculate majorant rate then update the particle.
             real majr = MajorantRate(t, sys, *sp);
-            m_mech->UpdateParticle(*sp, sys, t);
+            m_mech->UpdateParticle(*sp, sys, t, rand_u01);
 
             // Check that the particle is still valid.
             if (sp->IsValid()) {

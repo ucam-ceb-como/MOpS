@@ -110,8 +110,6 @@ public:
 
     // Operators.
     virtual Primary &operator=(const Primary &rhs);
-    virtual Primary &operator+=(const Primary &rhs);
-
 
     // DEFINING PARTICLE MODEL.
     
@@ -262,7 +260,9 @@ public:
 
     // Combines this primary with another.  This is also the
     // implementation of the + and += operators.
-    virtual Primary &Coagulate(const Primary &rhs);
+    virtual Primary &Coagulate(const Primary &rhs,
+                               int (*rand_int)(int, int),
+                               real(*rand_u01)());
 
     // This routine sinters the Primary for the given length of
     // time using the provided sintering model.

@@ -129,32 +129,6 @@ public:
         );
 
 
-    // PRIMARY-PARTICLE SIZE LISTS.
-
-    // Returns true if the current particle model allows
-    // primary-particle size lists to be generated.
-    bool GeneratesPPSL(void) const;
-
-    // Returns the number of primary-PSL output variables.
-    unsigned int PPSL_Count(void) const;
-
-    // Returns a vector of primary-PSL variable names.
-    void PPSL_Names(
-        std::vector<std::string> &names, // Output vector.
-        unsigned int start = 0           // Optional start index in vector.
-        ) const;
-
-    // Returns the primary-particle size list (PSL) entry for particle i
-    // in the given ensemble.
-    void PPSL(
-        const Ensemble &ens,        // Ensemble from which to get properties.
-        unsigned int i,             // Index of particle in ensemble to get.
-        real time,                  // Current time.
-        std::vector<fvector> &ppsl, // Output vector of vectors.
-        real scale = 1.0            // Scaling factor to unit volume.
-        ) const;
-
-
     // READ/WRITE/COPY.
 
     // Writes the object to a binary stream.

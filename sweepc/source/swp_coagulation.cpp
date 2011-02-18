@@ -126,15 +126,17 @@ real Coagulation::CalcRateTerms(real t, const Cell &sys, const CoagPtrVector &co
  *@param[in]        ip2         Index of second particle in ensemble
  *@param[in,out]    sp2         Pointer to second particle
  *@param[in]        sys         Cell containing particles that are coagulating
- *@param[in,out]    rand_u01    Pointer to function that generates U[0,1] deviates *
+ *@param[in,out]    rand_int    Pointer to function that generates integers uniformly on an interval
+ *@param[in,out]    rand_u01    Pointer to function that generates U[0,1] deviates
  *
  *@return       Index of new, larger particle
  */
 int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
                                const int ip2, Particle *sp2,
-                               Cell &sys, real(*rand_u01)()) const {
+                               Cell &sys, int (*rand_int)(int, int),
+                               real(*rand_u01)()) const {
     // Add contents of particle 2 onto particle 1
-    *sp1 += *sp2;
+    sp1->Coagulate(*sp2, rand_int, rand_u01);
     sp1->SetTime(t);
     // Tell the ensemble that particle 1 has changed
     sys.Particles().Update(ip1);

@@ -370,7 +370,7 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
     real majk = CoagKernel(*sp1, *sp2, T, P, maj);
 
     //Update the particles
-    m_mech->UpdateParticle(*sp1, sys, t);
+    m_mech->UpdateParticle(*sp1, sys, t, rand_u01);
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
     if (!sp1->IsValid()) {
@@ -382,7 +382,7 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
         return 0;
     }
 
-    m_mech->UpdateParticle(*sp2, sys, t);
+    m_mech->UpdateParticle(*sp2, sys, t, rand_u01);
     // Check validity of particles after update.
     if (!sp2->IsValid()) {
         // Tell the ensemble to update particle one before we confuse things
@@ -419,7 +419,7 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
 
 
         if (!Fictitious(majk, truek, rand_u01)) {
-            JoinParticles(t, ip1, sp1, ip2, sp2, sys, rand_u01);
+            JoinParticles(t, ip1, sp1, ip2, sp2, sys, rand_int, rand_u01);
         } else {
             sys.Particles().Update(ip1);
             sys.Particles().Update(ip2);

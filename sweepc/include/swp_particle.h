@@ -84,12 +84,11 @@ public:
     ~Particle(void);
     
     //! Create a new particle using the model according to the xml data
-    static Particle* createFromXMLNode(const CamXML::Element& xml, const Sweep::ParticleModel& model);
+    static Particle* createFromXMLNode(const CamXML::Element& xml, const Sweep::ParticleModel& model,
+                                       int (*rand_int)(int, int));
 
     // Operators.
     Particle &operator=(const Particle &rhs);
-    Particle &operator+=(const Particle &rhs);
-    const Particle operator+(const Particle &rhs) const;
 
     // POSITION DATA
     

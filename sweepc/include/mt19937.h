@@ -107,6 +107,8 @@ void init_genrand(unsigned long s);
 //! Generate a U[0,1] sample from the global static class instance
 double genrand_real1(void);
 
+//! Generate a uniform integer from the global static class instance
+int genrand_int(const int min, const int max);
 
 } // namespace Sweep
 

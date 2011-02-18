@@ -270,7 +270,7 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
 
         if (m_mech->AnyDeferred()) {
             // Update particle with deferred processes.
-            m_mech->UpdateParticle(*sp, sys, t);
+            m_mech->UpdateParticle(*sp, sys, t, rand_u01);
         }
 
         // Check that the particle is still valid.

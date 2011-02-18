@@ -61,10 +61,6 @@ public:
     // Operators.
     SubParticle &operator=(const SubParticle &rhs);
     SubParticle &operator=(const Sweep::Primary &rhs);
-    SubParticle &operator+=(const SubParticle &rhs);
-    SubParticle &operator+=(const Sweep::Primary &rhs);
-    const SubParticle operator+(const SubParticle &rhs) const;
-    const SubParticle operator+(const Sweep::Primary &rhs) const;
 
     // PRIMARY PARTICLE CHILD.
 
@@ -184,7 +180,9 @@ public:
         );
 
     // Combines this particle with another.
-    virtual SubParticle &Coagulate(const SubParticle &sp);
+    virtual SubParticle &Coagulate(const SubParticle &sp,
+                                   int (*rand_int)(int, int),
+                                   real(*rand_u01)());
 
 
     // Sinters the sub-particle for the given time using the given

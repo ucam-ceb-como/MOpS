@@ -47,6 +47,7 @@
 #include "swp_model_factory.h"
 #include "swp_surfvol_cache.h"
 #include "rng.h"
+
 #include <stdexcept>
 
 using namespace Sweep;
@@ -121,12 +122,6 @@ SurfVolPrimary &SurfVolPrimary::operator=(const SurfVolPrimary &rhs)
     m_sphsurf = rhs.m_sphsurf;
 
     return *this;
-}
-
-// Compound assignment (coagulation).
-SurfVolPrimary &SurfVolPrimary::operator+=(const Primary &rhs)
-{
-    return SurfVolPrimary::Coagulate(rhs);
 }
 
 
@@ -239,15 +234,24 @@ unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues
     return n;
 }
 
-// Combines this primary with another.  This is also the
-// implementation of the + and += operators.
-SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs)
+/*!
+ * Combines this primary with another.
+ *
+ * \param[in]       rhs         Particle to add to current instance
+ * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ *
+ * \return      Reference to the current instance after rhs has been added
+ */
+SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
+                                  Sweep::real(*rand_u01)())
+
 {
     // Store the resultant surface area.
     real s = m_surf + rhs.SurfaceArea();
 
     // Perform the coagulation.
-    Primary::Coagulate(rhs);
+    Primary::Coagulate(rhs, rand_int, rand_u01);
 
     // The spherical particle Coagulate() routine has set the
     // surface area incorrectly.  We now replace the surface area
@@ -267,7 +271,8 @@ SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs)
 // This routine sinters the Primary for the given length of
 // time using the provided sintering model.
 void SurfVolPrimary::Sinter(real dt, const Cell &sys,
-                            const Processes::SinteringModel &model)
+                            const Processes::SinteringModel &model,
+                            real (*rand_u01)())
 {
     // Perform a first order integration method to sinter
     // the primary for the given time.
@@ -299,10 +304,10 @@ void SurfVolPrimary::Sinter(real dt, const Cell &sys,
         int n;
         if (tstop > (t1+delt)) {
             // A sub-step, we have changed surface by dAmax, on average.
-            n = ignpoi(1.0 / scale);
+            n = ignpoi(1.0 / scale, rand_u01);
         } else {
             // Step until end.  Calculate degree of sintering explicitly.
-            n = ignpoi(r * (tstop - t1) / (scale*dAmax));
+            n = ignpoi(r * (tstop - t1) / (scale*dAmax), rand_u01);
         }
 
         // Adjust the surface area.

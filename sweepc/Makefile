@@ -48,16 +48,15 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_abf_model.o swp_actsites_model.o swp_aggmodel_cache.o \
     swp_submodel.o swp_submodel_cache.o swp_model_factory.o \
     swp_surfvol_cache.o swp_surfvol_primary.o swp_primary.o \
-    swp_pripart_cache.o swp_pripart_primary.o swp_actsites_reaction.o \
-    swp_coagulation.o swp_transcoag.o swp_addcoag.o \
+    swp_actsites_reaction.o swp_coagulation.o swp_transcoag.o swp_addcoag.o \
     swp_condensation.o swp_inception.o swp_constant_inception.o\
     swp_particle_process.o swp_process.o swp_process_factory.o \
     swp_surface_reaction.o swp_particle_model.o swp_imgnode.o \
-    swp_particle_image.o swp_surfvol_stats.o swp_pripart_stats.o \
+    swp_particle_image.o swp_surfvol_stats.o \
     swp_sintering_model.o swp_death_process.o swp_birth_process.o \
     swp_PAH_primary.o swp_PAH_cache.o swp_PAH_stats.o swp_transport_process.o \
     swp_diffusion_process.o swp_advection_process.o \
-    mt19937.o swp_dimer_inception.o swp_pah_inception.o \
+    mt19937.o rng.o swp_dimer_inception.o swp_pah_inception.o \
     swp_molecule_evolution.o swp_secondary_freecoag.o swp_secondary_primary_coag.o \
     swp_tree_cache.o
 
@@ -88,10 +87,12 @@ swp_tree_cache.o: $(src)/swp_tree_cache.cpp $(inc)/swp_tree_cache.h \
                   $(inc)/swp_params.h $(inc)/swp_particle.h 
 	$(cpp) $(flag) $(src)/swp_tree_cache.cpp
 
-swp_subparticle.o: $(src)/swp_subparticle.cpp $(inc)/swp_subparticle.h
+swp_subparticle.o: $(src)/swp_subparticle.cpp $(inc)/swp_subparticle.h \
+                   $(inc)/swp_particle_cache.h
 	$(cpp) $(flag) $(src)/swp_subparticle.cpp
 
-swp_particle.o: $(src)/swp_particle.cpp
+swp_particle.o: $(src)/swp_particle.cpp $(inc)/swp_particle.h \
+                $(inc)/swp_subparticle.h $(inc)/swp_particle_cache.h
 	$(cpp) $(flag) $(src)/swp_particle.cpp
 
 # Particle system & ensemble.
@@ -113,9 +114,6 @@ swp_ensemble_stats.o: $(src)/swp_ensemble_stats.cpp  $(inc)/swp_model_factory.h 
 
 swp_surfvol_stats.o: $(src)/swp_surfvol_stats.cpp
 	$(cpp) $(flag) $(src)/swp_surfvol_stats.cpp
-
-swp_pripart_stats.o: $(src)/swp_pripart_stats.cpp
-	$(cpp) $(flag) $(src)/swp_pripart_stats.cpp
 
 # Particle imaging.
 
@@ -153,17 +151,12 @@ swp_primary.o: $(src)/swp_primary.cpp
 swp_surfvol_primary.o: $(src)/swp_surfvol_primary.cpp
 	$(cpp) $(flag) $(src)/swp_surfvol_primary.cpp
 
-swp_pripart_primary.o: $(src)/swp_pripart_primary.cpp
-	$(cpp) $(flag) $(src)/swp_pripart_primary.cpp
 
 swp_aggmodel_cache.o: $(src)/swp_aggmodel_cache.cpp
 	$(cpp) $(flag) $(src)/swp_aggmodel_cache.cpp
 
 swp_surfvol_cache.o: $(src)/swp_surfvol_cache.cpp
 	$(cpp) $(flag) $(src)/swp_surfvol_cache.cpp
-
-swp_pripart_cache.o: $(src)/swp_pripart_cache.cpp
-	$(cpp) $(flag) $(src)/swp_pripart_cache.cpp
 
 swp_PAH_cache.o: $(src)/swp_PAH_cache.cpp
 	$(cpp) $(flag) $(src)/swp_PAH_cache.cpp
@@ -273,6 +266,8 @@ swp_solver.o: $(src)/swp_solver.cpp
 mt19937.o: $(src)/mt19937.cpp $(inc)/mt19937.h
 	$(cpp) $(flag) $(src)/mt19937.cpp
 	
+rng.o: $(src)/rng.cpp $(inc)/rng.h
+	$(cpp) $(flag) $(src)/rng.cpp
 
 # TARGET clean: leave just source code.
 

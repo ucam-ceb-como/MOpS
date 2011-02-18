@@ -53,7 +53,6 @@
 #include "swp_params.h"
 #include "swp_particle.h"
 #include "swp_surfvol_primary.h"
-#include "swp_pripart_primary.h"
 #include "swp_imgnode.h"
 #include "swp_PAH_primary.h"
 #include "swp_particle_model.h"
@@ -141,10 +140,6 @@ private:
     // Constructs a PNode sphere-tree aggregate from the given
     // particle using free-molecular collision dynamics.
     void constructAgg_FM(const Particle &sp, const ParticleModel& model);
-
-    // Constructs a PNode sphere-tree aggregate from the given
-    // pri-part list primary using free-molecular collision dynamics.
-    void constructAgg_FM(const AggModels::PriPartPrimary &pri);
 
     // Constructs a PNode sphere-tree aggregate with uniform
     // primaries (equal diameter).  The diameter and primary

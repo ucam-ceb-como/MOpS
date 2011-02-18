@@ -118,7 +118,7 @@ int Sweep::Processes::ConstantInception::Perform(const real t, Cell &sys,
 
     // Create a new particle of the type specified
     // by the system ensemble.
-    Particle * const sp = m_mech->CreateParticle(t);
+    Particle * const sp = m_mech->CreateParticle(t, rand_int);
 
     // Get the cell vertices
     fvector vertices = local_geom.cellVertices();

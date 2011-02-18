@@ -333,8 +333,6 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetAggModel(AggModels::Spherical_ID);
     } else if (str == "surfvol") {
         mech.SetAggModel(AggModels::SurfVol_ID);
-    } else if (str == "pripartlist") {
-        mech.SetAggModel(AggModels::PriPartList_ID);
     } else if (str == "PAH") {
         mech.SetAggModel(AggModels::PAH_ID);
         loadPAHStories(*(xml.Root()), mech);

@@ -104,7 +104,7 @@ protected:
     //! Actually stick two particles together
     int JoinParticles(const real t, const int ip1, Particle *sp1,
                       const int ip2, Particle *sp2,
-                      Cell &sys, real(*rand_u01)()) const;
+                      Cell &sys, int (*rand_int)(int, int), real(*rand_u01)()) const;
 
 private:
     //! Scaling factor for rate

@@ -694,10 +694,24 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
 
 // PERFORMING THE PROCESSES.
 
-// Performs the Process specified.  Process index could be
-// an inception, particle process or a coagulation event.
+/*!
+ * Performs the Process specified.  Process index could be
+ * an inception, particle process or a coagulation event.
+ *
+ * \param[in]       i           Index of process to perform
+ * \param[in]       t           Time at which event is to take place
+ * \param[in,out]   sys         System in which event is to take place
+ * \param[in]       local_geom  Information on surrounding cells for use with transport processes
+ * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[out]      out         Handle particles removed from the system by transport processes
+ *
+ * The support for transport processes may well no longer be needed, in that it is
+ * rarely efficient to simulate such phenomena with stochastic jumps.
+ */
 void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
                           const Geometry::LocalGeometry1d& local_geom,
+                          int (*rand_int)(int, int), real (*rand_u01)(),
                           Transport::TransportOutflow *out) const
 {
     // Test for now
@@ -708,14 +722,14 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
 
     if (j < 0) {
         // This is an inception process.
-        m_inceptions[i]->Perform(t, sys, local_geom, 0, Sweep::irnd, Sweep::rnd, out);
+        m_inceptions[i]->Perform(t, sys, local_geom, 0, rand_int, rand_u01, out);
         m_proccount[i] += 1;
     } else {
         // This is another process.
         for(PartProcPtrVector::const_iterator ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
             if (j < (int)(*ip)->TermCount()) {
                 // Do the process.
-                if ((*ip)->Perform(t, sys, local_geom, j, Sweep::irnd, Sweep::rnd, out) == 0) {
+                if ((*ip)->Perform(t, sys, local_geom, j, rand_int, rand_u01, out) == 0) {
                     m_proccount[i] += 1;
                 } else {
                     m_fictcount[i] += 1;
@@ -730,7 +744,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
         for(TransportPtrVector::const_iterator it = m_transports.begin(); it != m_transports.end(); ++it) {
             if (j < static_cast<int>((*it)->TermCount())) {
                 // Do the process.
-                if ((*it)->Perform(t, sys, local_geom, j, Sweep::irnd, Sweep::rnd, out) == 0) {
+                if ((*it)->Perform(t, sys, local_geom, j, rand_int, rand_u01, out) == 0) {
                     m_proccount[i] += 1;
                 } else {
                     m_fictcount[i] += 1;
@@ -748,7 +762,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
             // Check if coagulation process.
             if (j < static_cast<int>((*it)->TermCount())) {
                 // This is the coagulation process.
-                if ((*it)->Perform(t, sys, local_geom, j, Sweep::irnd, Sweep::rnd, out) == 0) {
+                if ((*it)->Perform(t, sys, local_geom, j, rand_int, rand_u01, out) == 0) {
                     m_proccount[i] += 1;
                 } else {
                     m_fictcount[i] += 1;
@@ -766,13 +780,13 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
         if ((j < (int)sys.InflowCount()) && (j>=0)) {
             // An inflow process.
             sys.Inflows(j)->SetMechanism(*this);
-            sys.Inflows(j)->Perform(t, sys, local_geom, 0, Sweep::irnd, Sweep::rnd, out);
+            sys.Inflows(j)->Perform(t, sys, local_geom, 0, rand_int, rand_u01, out);
         } else {
             j -= sys.InflowCount();
             if ((j < (int)sys.OutflowCount()) && (j>=0)) {
                 // An outflow process.
                 sys.Outflows(j)->SetMechanism(*this);
-                sys.Outflows(j)->Perform(t, sys, local_geom, 0, Sweep::irnd, Sweep::rnd, out);
+                sys.Outflows(j)->Perform(t, sys, local_geom, 0, rand_int, rand_u01, out);
             }
         }
     }
@@ -783,8 +797,15 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
 
 // Performs linear update algorithm on the
 // given system up to given time.
-
-void Mechanism::LPDA(real t, Cell &sys) const
+/*!
+ * Performs linear process updates on all particles in a system.
+ *
+ *@param[in,out]    sys         System containing particles to update
+ *@param[in]         t           Time upto which particles to be updated
+ *@param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ *@param[in,out]    rand_u01    Pointer to function that generates U[0,1] deviates
+ */
+void Mechanism::LPDA(real t, Cell &sys, int (*rand_int)(int, int), real(*rand_u01)()) const
 {
     // Check that there are particles to update and that there are
     // deferred processes to perform.
@@ -796,17 +817,17 @@ void Mechanism::LPDA(real t, Cell &sys) const
         // Perform deferred processes on all particles individually.
         Ensemble::iterator i;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
-            UpdateParticle(*(*i), sys, t);
+            UpdateParticle(*(*i), sys, t, rand_u01);
         }
 
         // Perform deferred processes on secondary particles
         for(unsigned int k=0; k != sys.Particles().SecondaryCount(); ++k) {
             Particle* const sp = sys.Particles().SecondaryParticleAt(k);
-            UpdateParticle(*sp, sys, t);
+            UpdateParticle(*sp, sys, t, rand_u01);
 
             // See if the particle has to move to the main population
             if(!isSecondary(*sp)) {
-                sys.AddParticle(sp, 1.0 / sys.SecondarySampleVolume(), Sweep::irnd, Sweep::rnd);
+                sys.AddParticle(sp, 1.0 / sys.SecondarySampleVolume(), rand_int, rand_u01);
                 sys.Particles().RemoveSecondaryParticle(k, false);
 
                 // A different particle will now be at position k so the
@@ -827,8 +848,13 @@ void Mechanism::LPDA(real t, Cell &sys) const
 
 /*!
  * Performs linear process updates on a particle in the given system.
+ *
+ *@param[in,out]    sp          Particle to update
+ *@param[in,out]    sys         System containing particle to update
+ *@param[in]         t           Time upto which particle to be updated
+ *@param[in,out]    rand_u01    Pointer to function that generates U[0,1] deviates
  */
-void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
+void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)()) const
 {
     // Deal with the growth of the PAHs
     if (AggModel() == AggModels::PAH_ID)
@@ -866,7 +892,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t) const
 
                     // Use a Poission deviate to calculate number of
                     // times to perform the process.
-                    num = ignpoi(rate);
+                    num = ignpoi(rate, rand_u01);
 
                     if (num > 0) {
                         // Do the process to the particle.

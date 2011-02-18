@@ -71,11 +71,12 @@ class PAHPrimary : public Primary
 {
 public:
     //! Build a new primary with one molecule
-    PAHPrimary(const real time, const Sweep::ParticleModel &model);
+    PAHPrimary(const real time, const Sweep::ParticleModel &model, int (*rand_int)(int, int));
 
     //! Build a new primary with one molecule
     PAHPrimary(const real time, const real position,
-               const Sweep::ParticleModel &model);
+               const Sweep::ParticleModel &model,
+               int (*rand_int)(int, int));
 
     PAHPrimary(const PAHPrimary &copy); // Copy constructor.
     PAHPrimary(                       // Stream-reading constructor.
@@ -95,7 +96,8 @@ public:
     virtual PAHPrimary *const Clone(void) const;
 
     //! coagulates this particle with rhs
-    PAHPrimary &Coagulate(const Primary &rhs);
+    PAHPrimary &Coagulate(const Primary &rhs, int (*rand_int)(int, int),
+                          real(*rand_u01)());
 
     //! prints the tree to a file that can be converted to a graph using graphviz
     void PrintTree(std::string filename);
@@ -178,7 +180,7 @@ protected:
     //! copies the subtree of a node
     void CopyTree( const PAHPrimary *source);
     //! returns a uniformly chosen primary particle
-    PAHPrimary *SelectRandomSubparticle();
+    PAHPrimary *SelectRandomSubparticle(Sweep::real(*rand_u01)());
     void ReleaseMem();
 
 

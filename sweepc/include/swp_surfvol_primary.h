@@ -78,8 +78,6 @@ public:
     // Operators.
     virtual SurfVolPrimary &operator=(const Primary &rhs);
     virtual SurfVolPrimary &operator=(const SurfVolPrimary &rhs);
-    virtual SurfVolPrimary &operator+=(const Primary &rhs);
-
 
     // AGGREGATION MODEL.
 
@@ -119,9 +117,10 @@ public:
         unsigned int n=1        // Number of times to perform adjustment.
         );
 
-    // Combines this primary with another.  This is also the
-    // implementation of the + and += operators.
-    virtual SurfVolPrimary &Coagulate(const Primary &rhs);
+    // Combines this primary with another.
+    virtual SurfVolPrimary &Coagulate(const Primary &rhs,
+                                      int (*rand_int)(int, int),
+                                      real(*rand_u01)());
 
     
     // This routine sinters the Primary for the given length of
@@ -129,7 +128,8 @@ public:
     virtual void Sinter(
         real dt, // Delta-t for sintering to occur.
         const Cell &sys, // System which defines primary's environment.
-        const Processes::SinteringModel &model // Sintering model to use.
+        const Processes::SinteringModel &model, // Sintering model to use.
+        real (*rand_u01)() // Uniform [0,1] sample generator
         );
 
 
@@ -184,5 +184,5 @@ protected:
     SurfVolPrimary(void);
 };
 };
-};
+}
 #endif

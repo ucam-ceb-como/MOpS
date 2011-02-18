@@ -129,19 +129,6 @@ SubParticle &SubParticle::operator=(const SubParticle &rhs)
 	return *this;
 }
 
-// Addition-assignment operator.  This implements coagulation.
-SubParticle &SubParticle::operator+=(const SubParticle &rhs)
-{
-    return Coagulate(rhs);
-}
-
-// Addition operator.  This also implements coagulation.
-const SubParticle SubParticle::operator+(const SubParticle &rhs) const
-{
-    return SubParticle(*this) += rhs;
-}
-
-
 real SubParticle::avgeomdiam(double oneovernumsubpart)
 {
 	Primary::PropID primid=Primary::iD;
@@ -264,8 +251,17 @@ unsigned int SubParticle::Adjust(const fvector &dcomp,
     return m;
 }
 
-// Combines this particle with another.
-SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
+/*!
+ * Combines this particle with another.
+ *
+ * \param[in]       rhs         Particle to add to current instance
+ * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ *
+ * \return      Reference to the current instance after rhs has been added
+ */
+SubParticle &SubParticle::Coagulate(const SubParticle &rhs, int (*rand_int)(int, int),
+                                  Sweep::real(*rand_u01)())
 {
     if (rhs.m_aggcache != NULL) {
         if ((m_aggcache==NULL) || (m_aggcache->ID() != rhs.m_aggcache->ID())) {
@@ -280,7 +276,7 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs)
         m_aggcache = NULL;
     }
 
-    m_primary->Coagulate(*rhs.Primary());
+    m_primary->Coagulate(*rhs.Primary(), rand_int, rand_u01);
     UpdateCache();
 
     return *this;

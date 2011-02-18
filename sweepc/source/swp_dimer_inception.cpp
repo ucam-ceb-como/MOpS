@@ -127,7 +127,7 @@ int DimerInception::Perform(const real t, Cell &sys,
 
     // Create a new particle of the type specified
     // by the system ensemble.
-    Particle *sp = m_mech->CreateParticle(t);
+    Particle *sp = m_mech->CreateParticle(t, rand_int);
 
     // Get the cell vertices
     fvector vertices = local_geom.cellVertices();

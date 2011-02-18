@@ -222,25 +222,29 @@ public:
         real t,         // Current time (s).
         Cell &sys,      // System to update (includes ensemble).
         const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
+        int (*rand_int)(int, int), // Integer random samples
+        real (*rand_u01)(), // U[0,1] samples
         Transport::TransportOutflow *out = 0 // Details of any particle transported out
         ) const;
 
 
     // LINEAR PROCESS DEFERMENT ALGORITHM.
 
-    // Performs linear update algorithm on the 
-    // given system up to given time.
+    //! LPDA for all particles
     void LPDA(
         real t,   // Time up to which to integrate.
-        Cell &sys // System to update.
+        Cell &sys,// System to update.
+        int (*rand_int)(int, int), // Integer random samples
+        real (*rand_u01)() // U[0,1] samples
         ) const;
 
 
-    // Performs linear process updates on a particle in the given system.
+    //! LPDA for one particle
     void UpdateParticle(
         Particle &sp, // Particle to update.
         Cell &sys,    // System to which the particle belongs.
-        real t        // Time up to which to integrate.
+        real t,       // Time up to which to integrate.
+        real(*rand_u01)()
         ) const;
 
     // READ/WRITE/COPY.

@@ -42,6 +42,7 @@
 
 #include "swp_particle_image.h"
 #include "rng.h"
+#include "mt19937.h"
 #include "string_functions.h"
 #include "swp_PAH_primary.h"
 #include <fstream>
@@ -93,7 +94,7 @@ void ParticleImage::ConstructRandom(real minrad, real maxrad, unsigned int n)
 
     // Generate the random primaries.
     for (unsigned int i=0; i!=n; ++i) {
-        real r = minrad + rnd()*(maxrad-minrad);
+        real r = minrad + Sweep::genrand_real1()*(maxrad-minrad);
         m_root.Insert(r);
     }
 
@@ -327,12 +328,6 @@ void ParticleImage::constructAgg_FM(const Particle &sp, const ParticleModel &mod
                 svp = dynamic_cast<const AggModels::SurfVolPrimary*>(sp.Primary());
                 if (svp != NULL) uniformAgg_FM(svp->PP_Count(), svp->PP_Diameter());
                 break;
-            case AggModels::PriPartList_ID:
-                // Primary-particle list is known.  Use that
-                // to construct the output sphere-tree.
-                ppp = dynamic_cast<const AggModels::PriPartPrimary*>(sp.Primary());
-                if (ppp != NULL) constructAgg_FM(*ppp);
-                break;
             // Other cases previously unhandled, added a default
             // case to avoid compiler warnings (riap 17 Jun 2009)
             default:
@@ -391,36 +386,6 @@ void ParticleImage::copysptinsert(const Sweep::AggModels::PAHPrimary *p)
 }
 
 
-
-
-// Constructs a PNode sphere-tree aggregate from the given
-// pri-part list primary using free-molecular collision dynamics.
-void ParticleImage::constructAgg_FM(const AggModels::PriPartPrimary &pri)
-{
-    // Get number of primary particles.
-    unsigned int n = pri.PriCount();
-
-    // Create a vector of primary radii.
-    fvector radii;
-    for (unsigned int i=0; i!=n; ++i) {
-        radii.push_back(pri.PriDiameter(i)*0.5e9); // Convert to nm.
-    }
-
-    // Randomly add the primaries to the image aggregate tree.
-    m_root.Clear();
-    while (radii.size() > 0) {
-        int j = irnd(0, radii.size()-1);
-        m_root.Insert(radii[j]);
-        radii.erase(radii.begin()+j);
-    }
-
-    // Use the free-molecular regime to calculate the
-    // aggregate structure.
-    calc_FM(m_root);
-    m_root.CentreCOM();
-
-}
-
 // Constructs a PNode sphere-tree aggregate with uniform
 // primaries (equal diameter).  The diameter and primary
 // count are passed as arguments.
@@ -458,13 +423,13 @@ void ParticleImage::calc_FM(ImgNode &node)
         // spheres are at the origin.
 
         // Rotate left node randomly about CoM.
-        real phi1   = rnd() * 2.0 * PI;
-        real theta1 = ((2.0*rnd())-1.0) * PI;
+        real phi1   = Sweep::genrand_real1() * 2.0 * PI;
+        real theta1 = ((2.0*Sweep::genrand_real1())-1.0) * PI;
         target->RotateCOM(theta1, phi1);
 
         // Rotate right node randomly about CoM.
-        real phi2   = rnd() * 2.0 * PI;
-        real theta2 = ((2.0*rnd())-1.0) * PI;
+        real phi2   = Sweep::genrand_real1() * 2.0 * PI;
+        real theta2 = ((2.0*Sweep::genrand_real1())-1.0) * PI;
         bullet->RotateCOM(theta2, phi2);
 
         // Move both spheres so that the bounding spheres
@@ -491,8 +456,8 @@ void ParticleImage::calc_FM(ImgNode &node)
             // in the x-y plane.  The displacement is never
             // greater than the sum of the radii, therefore they
             // should always touch.
-            D[0] = ((2.0 * rnd()) - 1.0) * sumr;
-            D[1] = ((2.0 * rnd()) - 1.0) * sumr;
+            D[0] = ((2.0 * Sweep::genrand_real1()) - 1.0) * sumr;
+            D[1] = ((2.0 * Sweep::genrand_real1()) - 1.0) * sumr;
 
             //// Calculate the z-position for the collision of the
             //// target and bullet.  We do this in case both the

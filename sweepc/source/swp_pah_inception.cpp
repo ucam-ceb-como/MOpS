@@ -134,11 +134,11 @@ int PAHInception::Perform(const real t, Cell &sys,
     if(width > 0) {
         // There is some real spatial detail
         posn += width * rand_u01();
-        sp = m_mech->CreateParticle(t, posn);
+        sp = m_mech->CreateParticle(t, posn, rand_int);
     }
     else {
         // Ignore all questions of position
-        sp = m_mech->CreateParticle(t);
+        sp = m_mech->CreateParticle(t, rand_int);
     }
 
     sp->UpdateCache();

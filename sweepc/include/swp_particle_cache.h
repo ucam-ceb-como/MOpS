@@ -119,10 +119,6 @@ public:
 
     // Operators.
     ParticleCache &operator=(const Primary &rhs);
-    ParticleCache &operator+=(const ParticleCache &rhs);
-    ParticleCache &operator+=(const Primary &rhs);
-    const ParticleCache operator+(const ParticleCache &rhs) const;
-    const ParticleCache operator+(const Primary &rhs) const;
 
     // Resets the particle cache to its "empty" condition.
     void Clear(void);
@@ -209,6 +205,13 @@ public:
         );
 
 protected:
+    // Operators.
+    ParticleCache &operator+=(const ParticleCache &rhs);
+    ParticleCache &operator+=(const Primary &rhs);
+    const ParticleCache operator+(const ParticleCache &rhs) const;
+    const ParticleCache operator+(const Primary &rhs) const;
+
+
 
     // Additional particle models.
     //SubModels::SubModelCacheMap m_submodels; // Cache of data required by different sub-models.

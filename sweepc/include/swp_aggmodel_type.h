@@ -56,8 +56,8 @@ namespace Sweep
         enum AggModelType {
             Spherical_ID   = 10000, // Spherical particle model.
             SurfVol_ID     = 10001, // Surface-volume model (Patterson et al., Combust. Flame, 151, 160-172, 2007).
-            PriPartList_ID = 10002,  // Primary-particle list (West et al., Ind. Eng. Chem. Res., 46, 6147-6156, 2007). 
-			PAH_ID		   = 10003  // A particle storing multiple PAHs     
+            //PriPartList_ID = 10002,  // Primary-particle list (West et al., Ind. Eng. Chem. Res., 46, 6147-6156, 2007). 
+            PAH_ID         = 10003  // A particle storing multiple PAHs     
 		};
 
         typedef std::set<AggModelType> AggModelTypeSet;

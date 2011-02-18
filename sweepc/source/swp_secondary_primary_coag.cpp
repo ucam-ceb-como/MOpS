@@ -211,7 +211,7 @@ int  Sweep::Processes::SecondaryPrimaryCoag::Perform(Sweep::real t,
 
     // Perform any deferred events on the first particle.  This changes the particle
     // in the ensemble, because we have a pointer to the particle, not a local copy.
-    m_mech->UpdateParticle(*sp1, sys, t);
+    m_mech->UpdateParticle(*sp1, sys, t, rand_u01);
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
     if (!sp1->IsValid()) {
@@ -227,7 +227,7 @@ int  Sweep::Processes::SecondaryPrimaryCoag::Perform(Sweep::real t,
     // Perform any deferred events on the second particle.  This changes the particle
     // in the ensemble, because we have a pointer to the particle, not a local copy.
     Particle* sp2 = sys.Particles().SecondaryParticleAt(static_cast<unsigned int>(index2));
-    m_mech->UpdateParticle(*sp2, sys, t);
+    m_mech->UpdateParticle(*sp2, sys, t, rand_u01);
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
     if (!sp2->IsValid()) {
@@ -259,7 +259,7 @@ int  Sweep::Processes::SecondaryPrimaryCoag::Perform(Sweep::real t,
 
         if(secondaryWeightGreater) {
             // Stick the secondary particle onto the particle that is in the main population
-            *sp1 += *sp2;
+            sp1->Coagulate(*sp2, rand_int, rand_u01);
 
             // The secondary particle is removed with the following probability.  There is a
             // probability that it will not be removed because it represents more physical
@@ -270,7 +270,7 @@ int  Sweep::Processes::SecondaryPrimaryCoag::Perform(Sweep::real t,
         }
         else {
             if(rand_u01() < secondaryWeight / primaryWeight)
-                *sp1 += *sp2;
+                sp1->Coagulate(*sp2, rand_int, rand_u01);
 
             sys.Particles().RemoveSecondaryParticle(index2);
         }

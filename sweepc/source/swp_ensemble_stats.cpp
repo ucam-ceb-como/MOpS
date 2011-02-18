@@ -43,7 +43,7 @@
 #include "swp_ensemble_stats.h"
 #include "swp_model_factory.h"
 #include "swp_mechanism.h"
-#include "swp_pripart_stats.h"
+
 #include <stdexcept>
 
 using namespace Sweep;
@@ -266,52 +266,6 @@ void EnsembleStats::PSL(const Sweep::Particle &sp, const Sweep::ParticleModel& m
         start += j->second->PSL_Count();
     }
 }
-
-
-// PRIMARY-PARTICLE SIZE LISTS.
-
-// Returns true if the current particle model allows
-// primary-particle size lists to be generated.
-bool EnsembleStats::GeneratesPPSL(void) const
-{
-    if (m_aggstats) {
-        return (m_aggstats->ID() == (unsigned int)AggModels::PriPartList_ID);
-    } else {
-        return false;
-    }
-}
-
-// Returns the number of primary-PSL output variables.
-unsigned int EnsembleStats::PPSL_Count(void) const
-{
-    if (m_aggstats->ID() == (unsigned int)AggModels::PriPartList_ID) {
-        return static_cast<const PriPartStats*>(m_aggstats)->PPSL_Count();
-    } else {
-        return 0;
-    }
-}
-
-// Returns a vector of primary-PSL variable names.
-void EnsembleStats::PPSL_Names(std::vector<std::string> &names,
-                               unsigned int start) const
-{
-    if (m_aggstats->ID() == (unsigned int)AggModels::PriPartList_ID) {
-        static_cast<const PriPartStats*>(m_aggstats)->PPSL_Names(names, start);
-    }
-}
-
-// Returns the primary-particle size list (PSL) entry for particle i
-// in the given ensemble.
-void EnsembleStats::PPSL(const Ensemble &ens, unsigned int i, real time,
-                         vector<fvector> &ppsl, real scale) const
-{
-    if (m_aggstats->ID() == (unsigned int)AggModels::PriPartList_ID) {
-        static_cast<const PriPartStats*>(m_aggstats)->PPSL(ens, i, time, ppsl);
-    } else {
-        ppsl.clear();
-    }
-}
-
 
 // READ/WRITE/COPY.
 

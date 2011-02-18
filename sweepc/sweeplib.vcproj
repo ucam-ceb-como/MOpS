@@ -358,14 +358,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\source\swp_pripart_cache.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\source\swp_pripart_primary.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\source\swp_surfvol_cache.cpp"
 					>
 				</File>
@@ -394,10 +386,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\source\swp_pripart_stats.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\source\swp_surfvol_stats.cpp"
 					>
 				</File>
@@ -419,6 +407,10 @@
 				>
 				<File
 					RelativePath=".\source\mt19937.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\source\rng.cpp"
 					>
 				</File>
 			</Filter>
@@ -660,10 +652,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\include\swp_pripart_stats.h"
-					>
-				</File>
-				<File
 					RelativePath=".\include\swp_surfvol_stats.h"
 					>
 				</File>
@@ -713,14 +701,6 @@
 				</File>
 				<File
 					RelativePath=".\include\swp_PAH_primary.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_pripart_cache.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\swp_pripart_primary.h"
 					>
 				</File>
 				<File

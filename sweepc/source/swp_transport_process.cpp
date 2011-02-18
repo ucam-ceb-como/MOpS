@@ -96,7 +96,7 @@ int Sweep::Processes::TransportProcess::Outflow(const real t, Cell &sys,
 
         if (m_mech->AnyDeferred()) {
             // Update particle with deferred processes.
-            m_mech->UpdateParticle(*(out->particle), sys, t);
+            m_mech->UpdateParticle(*(out->particle), sys, t, rand_u01);
         }
 
         // Check that the particle is still valid.

@@ -94,8 +94,11 @@ Particle::~Particle()
     // Nothing special to destruct.
 }
 
-
-Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::ParticleModel& model)
+/*!
+ * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ */
+Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::ParticleModel& model,
+                                      int (*rand_int)(int, int))
 {
     // Read initial particle composition.
     vector<CamXML::Element*> subitems; 
@@ -140,7 +143,7 @@ Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::P
     
     
     //Particle* const pNew = new Particle(0, model);
-    Particle* const pNew = model.CreateParticle(0.0);
+    Particle* const pNew = model.CreateParticle(0.0, rand_int);
     
     // Initialise the new particle.
     pNew->Primary()->SetComposition(components);
@@ -164,31 +167,6 @@ Particle &Particle::operator=(const Sweep::Particle &rhs)
         m_PositionTime = rhs.m_PositionTime;
     }
     return *this;
-}
-
-/*!
- * Addition-assignment operator.  This implements coagulation.
- *
- *@param[in]    rhs     Particle with which to coagulate
- *
- *@return       Newly coagulated particle
- */
-Particle &Particle::operator+=(const Sweep::Particle &rhs)
-{
-    SubParticle::operator+=(rhs);
-
-    //m_Position = (m_Position + rhs.m_Position) * 0.5;
-    //m_PositionTime = (m_PositionTime + rhs.m_PositionTime) * 0.5;
-
-    return *this;
-}
-
-
-// Addition operator.  This also implements coagulation.
-const Particle Particle::operator+(const Sweep::Particle &rhs) const
-{
-    // Make a new particle and then increment it.
-    return Particle(*this) += rhs;
 }
 
 /*!

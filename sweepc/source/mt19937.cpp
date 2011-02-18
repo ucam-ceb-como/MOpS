@@ -143,11 +143,28 @@ void Sweep::init_genrand(unsigned long s) {
 }
 
 /**
- * Global method for backward compatibility.  Uses on global instance of
+ * Global method for backward compatibility.  Uses global instance of
  * Mersenne Twister class defined above.
  *
  *\return       U[0,1] random sample
  */
 double Sweep::genrand_real1(void) {
     return generator.genrand_real1();
+}
+
+/**
+ * Global method for backward compatibility.  Uses global instance of
+ * Mersenne Twister class defined above.
+ * 
+ * This does not seem to be a particularly good algorithm to use,
+ * but it is carried over from older code in sweep.  Generating on
+ * [0, max] is easier and might be sufficient.
+ *
+ *\param[in]    min    Lower bound for sample
+ *\param[in]    max    Upper bound for sample
+ *
+ *\return       Integer uniformly distributed on [a, b]
+ */
+int Sweep::genrand_int(const int min, const int max) {
+	return (int)((genrand_real1() * (double)(max-min))+0.5) + min;
 }

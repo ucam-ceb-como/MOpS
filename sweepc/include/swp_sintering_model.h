@@ -164,11 +164,6 @@ public:
         const Primary &p // Particle for which to calculate time.
         ) const;
 
-    real SintTime(
-        const Cell &sys,
-        const AggModels::PriPartPrimary &p
-        ) const;
-
     // RATE CALCULATION.
 
     // Returns the rate of the process for the given particle.
@@ -184,14 +179,6 @@ public:
         const Cell &sys, // System to which the particle belongs (for T).
         const Primary &p // Particle for which to calculate rate.
         ) const;
-    
-    real Rate(
-        real t, 
-        const Cell &sys, 
-        const AggModels::PriPartPrimary &p
-        ) const;
-	
-
 
     // PERFORMING THE SINTERING.
 

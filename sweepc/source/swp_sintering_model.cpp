@@ -42,7 +42,6 @@
 
 #include "swp_sintering_model.h"
 #include "swp_primary.h"
-#include "swp_pripart_primary.h"
 #include "swp_particle.h"
 #include "swp_cell.h"
 #include "swp_subparticle.h"
@@ -174,21 +173,6 @@ real SinteringModel::SintTime(const Cell &sys,const Primary &p) const
     }
 }
 
-real SinteringModel::SintTime(const Cell &sys,const Sweep::AggModels::PriPartPrimary &p) const
-{
-    real dp = p.AvgPriDiameter();
-    switch (m_type) {
-        case ViscousFlow:
-            return m_A * dp * 
-                   exp((m_E*(1-(m_dpmin/dp)))/sys.Temperature());
-            break;
-        case GBD:
-        default:
-            return m_A * dp * dp * dp * dp * sys.Temperature() *  
-                   exp((m_E*(1-(m_dpmin/dp)))/sys.Temperature());
-    }
-}
-
 // RATE CALCULATION.
 
 // Returns the rate of the process for the given particle.
@@ -204,14 +188,6 @@ real SinteringModel::Rate(real t, const Cell &sys, const Primary &p) const
     real tau = SintTime(sys, p);
     return max((p.SurfaceArea() - p.SphSurfaceArea()) / tau, 0.0);
 }
-
-// Returns the rate of the process for the given primary.
-real SinteringModel::Rate(real t, const Cell &sys, const AggModels::PriPartPrimary &p) const
-{
-    real tau = SintTime(sys, p);
-    return max((p.SurfaceArea() - p.SphSurfaceArea()) / tau, 0.0);
-}
-
 
 // PERFORMING THE SINTERING.
 

@@ -45,6 +45,7 @@
 #include "swp_model_factory.h"
 #include "swp_particle_cache.h"
 #include "swp_cell.h"
+
 #include <stdexcept>
 #include <memory.h>
 
@@ -167,13 +168,6 @@ Primary &Primary::operator=(const Primary &rhs)
     }
     return *this;
 }
-
-// Compound assignment (coagulation).
-Primary &Primary::operator+=(const Primary &rhs)
-{
-    return Primary::Coagulate(rhs);
-}
-
 
 // DEFINING PARTICLE MODEL.
 
@@ -478,9 +472,22 @@ unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, unsig
     return n;
 }
 
-// Combines this primary with another.  This is also the
-// implementation of the + and += operators.
-Primary &Primary::Coagulate(const Primary &rhs)
+/*!
+ *  Combines this primary with another.
+ *
+ *  Note the very strange behaviour when the primaries do not
+ *  have equal particle model pointers.  Users should also
+ *  be very careful about not mixing different types that inherit
+ *  from PrimaryParticle.
+ *
+ * \param[in]       rhs         Primary particle to add to current instance
+ * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ *
+ * \return      Reference to the current instance after rhs has been added
+ */
+Primary &Primary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
+                            Sweep::real(*rand_u01)())
 {
     // Check if the RHS uses the same particle model.  If not, then
     // just use the assignment operator because you can't add apples 

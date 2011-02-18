@@ -72,8 +72,6 @@
 #include "swp_aggmodel_cache.h"
 #include "swp_surfvol_cache.h"
 #include "swp_surfvol_primary.h"
-#include "swp_pripart_cache.h"
-#include "swp_pripart_primary.h"
 
 // Particle system definition.
 #include "swp_cell.h"
@@ -90,6 +88,5 @@
 #include "swp_particle_stats.h"
 #include "swp_ensemble_stats.h"
 #include "swp_surfvol_stats.h"
-#include "swp_pripart_stats.h"
 
 #endif

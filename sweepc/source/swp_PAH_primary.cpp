@@ -52,8 +52,8 @@
 #include "swp_aggmodel_type.h"
 #include "swp_model_factory.h"
 #include "swp_PAH_cache.h"
-#include "rng.h"
 #include "swp_particle_image.h"
+
 #include <stdexcept>
 #include <cassert>
 #include "string_functions.h"
@@ -102,11 +102,13 @@ PAHPrimary::PAHPrimary() : Primary(),
 }
 
 /*!
- * @param[in]   time        Time at which particle is being created
- * @param[in]   model       Model which defines the meaning of the primary
+ * @param[in]       time        Time at which particle is being created
+ * @param[in]       model       Model which defines the meaning of the primary
+ * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  *
  */
-PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model)
+PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model,
+                       int (*rand_int)(int, int))
 : Primary(time, model),
     m_numcarbon(0),
     m_PAHmass(0),
@@ -137,7 +139,7 @@ PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model)
     m_comp[0]=1;
 
     // Select one particular life story uniformly at random from the family/trajectory.
-    const int newID = model.getMoleculeStories().selectMoleculeNearTime(time, Sweep::irnd);
+    const int newID = model.getMoleculeStories().selectMoleculeNearTime(time, rand_int);
 
     AddPAH(time,newID, model);
 
@@ -146,13 +148,15 @@ PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model)
 }
 
 /*!
- * @param[in]   time        Time at which particle is being created
- * @param[in]   position    Position at which particle is being created
- * @param[in]   model       Model which defines the meaning of the primary
+ * @param[in]       time        Time at which particle is being created
+ * @param[in]       position    Position at which particle is being created
+ * @param[in]       model       Model which defines the meaning of the primary
+ * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  *
  */
 PAHPrimary::PAHPrimary(const real time, const real position,
-                       const Sweep::ParticleModel &model)
+                       const Sweep::ParticleModel &model,
+                       int (*rand_int)(int, int))
 : Primary(time, model),
     m_numcarbon(0),
     m_PAHmass(0),
@@ -183,7 +187,7 @@ PAHPrimary::PAHPrimary(const real time, const real position,
     m_comp[0]=1;
 
     // Select one particular life story uniformly at random from the family/trajectory.
-    const int newID = model.getMoleculeStories().selectMoleculeNearPosition(position, Sweep::irnd);
+    const int newID = model.getMoleculeStories().selectMoleculeNearPosition(position, rand_int);
 
     AddPAH(time, newID, model);
 
@@ -387,11 +391,13 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
  * descend the tree to find a primary that really is a
  * primary.
  *
+ * @param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ *
  * @return      Pointer to an object representing a phsyical primary
  */
-PAHPrimary *PAHPrimary::SelectRandomSubparticle()
+PAHPrimary *PAHPrimary::SelectRandomSubparticle(Sweep::real(*rand_u01)())
 {
-    double ran=rnd();
+    double ran=rand_u01();
     int target=int(ran*(m_numprimary));
     return SelectRandomSubparticleLoop(target);
 
@@ -494,11 +500,17 @@ void PAHPrimary::UpdateAllPointers( const PAHPrimary *original)
 }
 
 
-// coagulates this particle and rhs
 /*!
- * @param[in] rhs Pointer to the particle to be coagulate with this particle
-*/
-PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
+ * Combines this primary with another.
+ *
+ * \param[in]       rhs         Particle to add to current instance
+ * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ *
+ * \return      Reference to the current instance after rhs has been added
+ */
+PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
+                                  Sweep::real(*rand_u01)())
 {
     vector<PAH>::const_iterator j;
 	const PAHPrimary *rhsparticle = NULL;
@@ -511,7 +523,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
         {
             // Get a copy of the rhs ready to add to the current particle
             PAHPrimary copy_rhs(*rhsparticle);
-            PAHPrimary *target = copy_rhs.SelectRandomSubparticle();
+            PAHPrimary *target = copy_rhs.SelectRandomSubparticle(rand_u01);
 
             target->m_PAH.insert(target->m_PAH.end(),m_PAH.begin(),m_PAH.end());
             target->UpdatePrimary();
@@ -524,7 +536,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
             // the PAH condenses to and add it to the list
 		    if (m_leftchild!=NULL)
 		    {
-			    PAHPrimary *target = SelectRandomSubparticle();
+			    PAHPrimary *target = SelectRandomSubparticle(rand_u01);
 
                 target->m_PAH.insert(target->m_PAH.end(),rhsparticle->m_PAH.begin(),rhsparticle->m_PAH.end());
                 target->UpdatePrimary();
@@ -560,7 +572,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
             //}
 
             //select where to add the second particle
-		    if (rnd()>0.5)
+		    if (rand_u01()>0.5)
 		    {
 			    newleft->CopyParts(this);
 			    newright->CopyParts(&copy_rhs);
@@ -589,8 +601,8 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs)
             m_children_coalescence=0;
 		    UpdateCache();
             //select the primaries that are touching
-		    this->m_leftparticle=m_leftchild->SelectRandomSubparticle();
-		    this->m_rightparticle=m_rightchild->SelectRandomSubparticle();
+		    this->m_leftparticle=m_leftchild->SelectRandomSubparticle(rand_u01);
+		    this->m_rightparticle=m_rightchild->SelectRandomSubparticle(rand_u01);
 
             //initialise the variables used to calculate the coalesence ratio
             m_children_vol=m_leftparticle->m_vol+m_rightparticle->m_vol;

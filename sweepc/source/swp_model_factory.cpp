@@ -49,13 +49,10 @@
 #include "swp_aggmodel_cache.h"
 #include "swp_surfvol_cache.h"
 #include "swp_surfvol_primary.h"
-#include "swp_pripart_cache.h"
-#include "swp_pripart_primary.h"
 #include "swp_PAH_primary.h"
 #include "swp_PAH_cache.h"
 #include "swp_particle_stats.h"
 #include "swp_surfvol_stats.h"
-#include "swp_pripart_stats.h"
 #include "swp_PAH_stats.h"
 #include "swp_abf_model.h"
 #include <stdexcept>
@@ -71,20 +68,20 @@ using namespace std;
  * @param[in]   time        Time at which particle is being created
  * @param[in]   position    Position at which particle is being created
  * @param[in]   model       Model which defines the meaning of the particles
+ * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  *
  * @return      Pointer to dynamically allocated primary (caller must delete)
  */
 Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
                                            const real time, const real position,
-                                           const ParticleModel &model)
+                                           const ParticleModel &model,
+                                           int (*rand_int)(int, int))
 {
     switch (id) {
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolPrimary(time, model);
-        case AggModels::PriPartList_ID:
-            return new AggModels::PriPartPrimary(time, model);
-		case AggModels::PAH_ID:
-            return new AggModels::PAHPrimary(time, position, model);
+        case AggModels::PAH_ID:
+            return new AggModels::PAHPrimary(time, position, model, rand_int);
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
@@ -96,19 +93,19 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
  * @param[in]   id          Model for the aggregate structure of the particle
  * @param[in]   time        Time at which particle is being created
  * @param[in]   model       Model which defines the meaning of the particles
+ * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  *
  * @return      Pointer to dynamically allocated primary (caller must delete)
  */
 Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
-                                           const real time, const ParticleModel &model)
+                                           const real time, const ParticleModel &model,
+                                           int (*rand_int)(int, int))
 {
     switch (id) {
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolPrimary(time, model);
-        case AggModels::PriPartList_ID:
-            return new AggModels::PriPartPrimary(time, model);
         case AggModels::PAH_ID:
-            return new AggModels::PAHPrimary(time, model);
+            return new AggModels::PAHPrimary(time, model, rand_int);
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
@@ -140,10 +137,7 @@ Primary *const ModelFactory::ReadPrimary(std::istream &in,
             case AggModels::SurfVol_ID:
                 pri = new AggModels::SurfVolPrimary(in, model);
                 break;
-            case AggModels::PriPartList_ID:
-                pri = new AggModels::PriPartPrimary(in, model);
-                break;
-		    case AggModels::PAH_ID:
+            case AggModels::PAH_ID:
                 pri = new AggModels::PAHPrimary(in, model);
                 break;
             default:
@@ -360,9 +354,7 @@ AggModels::AggModelCache *const ModelFactory::CreateAggCache(AggModels::AggModel
             return NULL;
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolCache(parent);
-        case AggModels::PriPartList_ID:
-            return new AggModels::PriPartCache(parent);
-		case AggModels::PAH_ID:
+        case AggModels::PAH_ID:
             return new AggModels::PAHCache(parent);
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
@@ -381,10 +373,8 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
             return NULL;
         case AggModels::SurfVol_ID:
             return new Stats::SurfVolStats();
-        case AggModels::PriPartList_ID:
-            return new Stats::PriPartStats();
-	   case AggModels::PAH_ID:
-		   return new Stats::PAHStats();							// ms785: postprocessing not yet implemented
+        case AggModels::PAH_ID:
+            return new Stats::PAHStats();	 	// ms785: postprocessing not yet implemented
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateAggStats).");
@@ -414,11 +404,7 @@ AggModels::AggModelCache *const ModelFactory::ReadAggCache(std::istream &in,
                 model = new AggModels::SurfVolCache(in, parent);
                 model->SetParent(parent);
                 break;
-            case AggModels::PriPartList_ID:
-                model = new AggModels::PriPartCache(in, parent);
-                model->SetParent(parent);
-                break;
-	        case AggModels::PAH_ID:
+            case AggModels::PAH_ID:
                 model = new AggModels::PAHCache(in, parent);
                 model->SetParent(parent);
                 break;
@@ -453,10 +439,7 @@ Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in,
             case AggModels::SurfVol_ID:
                 stats = new Stats::SurfVolStats(in, model);
                 break;
-            case AggModels::PriPartList_ID:
-                stats = new Stats::PriPartStats(in, model);
-                break;
-		    case AggModels::PAH_ID:
+            case AggModels::PAH_ID:
                 stats = new Stats::PAHStats(in, model);
                 break;
             default:
