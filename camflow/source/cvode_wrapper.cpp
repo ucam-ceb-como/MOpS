@@ -5,10 +5,20 @@ using namespace Camflow;
 extern "C"{
 
     int cvodeResid(doublereal time, N_Vector y, N_Vector ydot, void *udata){
-        CamResidual *residual = (CamResidual*)(udata);
-        residual->eval(time,NV_DATA_S(y),NV_DATA_S(ydot), false);
+        ((CamResidual*)(udata))->eval(time,NV_DATA_S(y),NV_DATA_S(ydot), false);
         return 0;
     }
+}
+
+CVodeWrapper::CVodeWrapper()
+:
+cvode_mem(NULL),
+reacPtr(NULL)
+{}
+
+CVodeWrapper::~CVodeWrapper()
+{
+    destroy();
 }
 
 void CVodeWrapper::init(int n, std::vector<doublereal>& solnVec, doublereal tol,
@@ -39,8 +49,6 @@ void CVodeWrapper::init(int n, std::vector<doublereal>& solnVec, doublereal tol,
     }
     CVodeSetFdata(cvode_mem,(void*)&cr);
     CVodeSetMaxNumSteps(cvode_mem,5000);
-
-
 
 }
 
@@ -117,8 +125,8 @@ void CVodeWrapper::solveDAE(int stopMode, doublereal resTol){
 
 void CVodeWrapper::destroy(){
     CVodeFree(&cvode_mem);
-    N_VDestroy(y);
-    N_VDestroy(yPrime);
+    //N_VDestroy(y);
+    //N_VDestroy(yPrime);
 }
 
 void CVodeWrapper::calcResNorm(){

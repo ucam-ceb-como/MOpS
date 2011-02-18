@@ -30,6 +30,9 @@ FlameLet::FlameLet() {
 	sdrAnalytic=false;
 }
 
+FlameLet::~FlameLet() {
+
+}
 /*
  *this is called by the model object. The boolean interface decides
  *if the call originates from the interface or from camflow kernel
@@ -303,7 +306,6 @@ void FlameLet::csolve(CamControl& cc, bool interface){
         if(!interface) {
             reportToFile(cc.getMaxTime(),&solvect[0]);
         }
-        cvw.destroy();
 
     } else if (solverID == cc.NEWTON) {
 
@@ -367,8 +369,8 @@ void FlameLet::restart(CamControl& cc){
     Thermo::Mixture mix(camMech->Species());
     camMixture = &mix;
 
+    int solverID = cc.getSolver();
 
- int solverID = cc.getSolver();
     if ( solverID == cc.CVODE){
         CVodeWrapper cvw;
         eqn_slvd = EQN_ALL;
@@ -377,11 +379,12 @@ void FlameLet::restart(CamControl& cc){
         cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
                             cc.getMaxTime(),band,*this,rstartTime);
         cvw.solve(CV_ONE_STEP,cc.getResTol());
-}
+    }
 
      else if (solverID == cc.LIMEX) {
          throw std::logic_error("Error -- Limex is not yet supported");
      }
+
 }
 
 /*
@@ -758,9 +761,9 @@ doublereal FlameLet::RadiativeLoss(const doublereal temperature,
  */
 void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f){
 
-    doublereal grad_e, grad_w;
-    doublereal zPE, zPW;
-    doublereal source;
+    doublereal grad_e=0, grad_w=0;
+    doublereal zPE=0, zPW=0;
+    doublereal source=0;
 
     /*
      *starting with mixture fraction zero: i.e oxidizer
