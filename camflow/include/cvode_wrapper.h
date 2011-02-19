@@ -27,8 +27,8 @@ namespace Camflow{
         CamResidual *reacPtr;
         doublereal resNorm;
     public:
-        CVodeWrapper(){}
-        ~CVodeWrapper(){}
+        CVodeWrapper();
+        ~CVodeWrapper();
         void init(int n, std::vector<doublereal> &solnVec, 
                                         doublereal atol,
                                         doublereal rtol,

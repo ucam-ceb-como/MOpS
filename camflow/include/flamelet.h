@@ -72,7 +72,7 @@ namespace Camflow {
             FlameLet();
 
             //! Destructor.
-            virtual ~FlameLet(){}
+            virtual ~FlameLet();
 
             //! Solve the flamelet. Call for coupling without solving population balance.
             void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg, CamProfile&cp,
