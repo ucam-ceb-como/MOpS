@@ -829,43 +829,50 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
 
         //======Radiative Heat Loss Term===============
 
-        doublereal mole_fracsH2O;
-        doublereal mole_fracsCO2;
-        doublereal mole_fracsCO;
-
-        //Get species indexes corresponding to H20, CO2, CO
-    	if(camMech->FindSpecies("H2O") == -1){
-    		mole_fracsH2O = 0.0;
-    	} else {
-    		const int iH2O = camMech->FindSpecies("H2O");
-    		const doublereal molwtH2O =   (*spv)[iH2O] -> MolWt();
-    		mole_fracsH2O = s_mf(i,iH2O)*avgMolWt[i]/molwtH2O;
-    	}
-    	if(camMech->FindSpecies("CO2") == -1){
-    		mole_fracsCO2 = 0.0;
-    	} else {
-    		const int iCO2 = camMech->FindSpecies("CO2");
-    		const doublereal molwtCO2 =   (*spv)[iCO2] -> MolWt();
-    		mole_fracsCO2 = s_mf(i,iCO2)*avgMolWt[i]/molwtCO2;
-    	}
-    	if(camMech->FindSpecies("CO") == -1){
-    		mole_fracsCO = 0.0;
-    	} else {
-    		const int iCO  = camMech->FindSpecies("CO");
-    		const doublereal molwtCO =    (*spv)[iCO] -> MolWt();
-    		mole_fracsCO = s_mf(i,iCO)*avgMolWt[i]/molwtCO;
-    	}
-
-        //Soot Volume Fraction is set to zero here
+        // Soot Volume Fraction is set to zero here.
+        // \todo Need to initialise these things in CamResidual.
         radiation.resize(mCord,0.0);
 
-        //This radiation term is sentt to as output to profile.h
-        radiation[i] = RadiativeLoss(m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
+        if(admin->getRadiationModel()) {
 
-        //std::cout << "Cell = " << i << " Residual = " <<  f[i] << " Radiation = " << RadiativeLoss(m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO)/(m_rho[i]*m_cp[i]) << " MfH2O = " << mole_fracsH2O << " MfCO2 = " << mole_fracsCO2 << " MfCO = " << mole_fracsCO << " sootFV = " << m_SootFv[i] << " T = " << m_T[i] << " rho = " << m_rho[i] << " cp = " << m_cp[i] << std::endl;
+            doublereal mole_fracsH2O;
+            doublereal mole_fracsCO2;
+            doublereal mole_fracsCO;
 
-        //This is the new energy residual term, accounting for radiation.
-        f[i] -= radiation[i]/(m_rho[i]*m_cp[i]);
+            //Get species indexes corresponding to H20, CO2, CO
+            if(camMech->FindSpecies("H2O") == -1){
+                mole_fracsH2O = 0.0;
+            } else {
+                const int iH2O = camMech->FindSpecies("H2O");
+                const doublereal molwtH2O =   (*spv)[iH2O] -> MolWt();
+                mole_fracsH2O = s_mf(i,iH2O)*avgMolWt[i]/molwtH2O;
+            }
+            if(camMech->FindSpecies("CO2") == -1){
+                mole_fracsCO2 = 0.0;
+            } else {
+                const int iCO2 = camMech->FindSpecies("CO2");
+                const doublereal molwtCO2 =   (*spv)[iCO2] -> MolWt();
+                mole_fracsCO2 = s_mf(i,iCO2)*avgMolWt[i]/molwtCO2;
+            }
+            if(camMech->FindSpecies("CO") == -1){
+                mole_fracsCO = 0.0;
+            } else {
+                const int iCO  = camMech->FindSpecies("CO");
+                const doublereal molwtCO =    (*spv)[iCO] -> MolWt();
+                mole_fracsCO = s_mf(i,iCO)*avgMolWt[i]/molwtCO;
+            }
+
+            //This radiation term is sentt to as output to profile.h
+            radiation[i] = RadiativeLoss(m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
+
+            //std::cout << "Cell = " << i << " Residual = " <<  f[i] << " Radiation = " << RadiativeLoss(m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO)/(m_rho[i]*m_cp[i]) << " MfH2O = " << mole_fracsH2O << " MfCO2 = " << mole_fracsCO2 << " MfCO = " << mole_fracsCO << " sootFV = " << m_SootFv[i] << " T = " << m_T[i] << " rho = " << m_rho[i] << " cp = " << m_cp[i] << std::endl;
+
+            //This is the new energy residual term, accounting for radiation.
+
+
+            f[i] -= radiation[i]/(m_rho[i]*m_cp[i]);
+
+        }
 
     }
 

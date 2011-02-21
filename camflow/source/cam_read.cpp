@@ -160,6 +160,8 @@ void CamRead::readProcessConditions(CamConverter& convert,
                                         const CamXML::Element& node){
 
     CamXML::Element *subnode, *opNode;
+    const CamXML::Attribute *atr;
+    std::string atrVal;
 
     opNode = node.GetFirstChild("op_condition");
     if(opNode == NULL){
@@ -205,6 +207,14 @@ void CamRead::readProcessConditions(CamConverter& convert,
             ca.setIgnitionStep(cdble(subnode->Data()));
         }else{
             ca.setIgnitionStep(0.0);
+        }
+
+        subnode = opNode->GetFirstChild("radiation");
+        atr = subnode->GetAttribute("activate");
+        if(atr != NULL){
+            atrVal = atr->GetValue();
+            if(!convertToCaps(atrVal).compare("ON")) {ca.setRadiationModel(true);}
+            else {ca.setRadiationModel(false);}
         }
 
     }

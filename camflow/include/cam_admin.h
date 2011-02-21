@@ -47,8 +47,13 @@
 #include "cam_boundary.h"
 #include "comostrings.h"
 
-namespace Camflow{
-    class CamAdmin : public CamConc {
+namespace Camflow {
+
+class CamAdmin
+:
+    public CamConc
+{
+
         doublereal T, T_wall;     //temperature in case of isothermal operation
         doublereal pre;   //constant pressure system
         doublereal strain; // strain rate
@@ -56,9 +61,12 @@ namespace Camflow{
         int energyModel;
         int speciesOut;  //identifier for species output mass/mole
         int repSch;     //report schedule
-        CamBoundary left; //fuel 
+        CamBoundary left; //fuel
         CamBoundary right;//oxidizer
+        static bool radiation;
+
     public:
+
         enum EnergyModel{
             ADIABATIC,
             ISOTHERMAL,
@@ -97,6 +105,9 @@ namespace Camflow{
         //set right boundary (normally for oxidizer inlet)
         void setRightBoundary(CamBoundary &cb);
 
+        //! Set radiation on/off.
+        void setRadiationModel(bool radiation);
+
         //set the species output
         void setSpeciesOut(int n);
 
@@ -107,7 +118,7 @@ namespace Camflow{
 
         //return the wall temperature
         doublereal getWallTemp() const;
-        
+
         //return the pressure
         doublereal getPressure()const;
 
@@ -128,6 +139,9 @@ namespace Camflow{
 
         //return oxidizer boundary
         void getLeftBoundary(CamBoundary &cb) ;
+
+        //! Is radiation model on or off.
+        bool getRadiationModel() const;
 
         //set the report schedule
         void setReportSchedule(std::string repo);
@@ -168,8 +182,9 @@ namespace Camflow{
                                         const doublereal& lambda,
                                         const doublereal& cp);
 
-    };
-}
+};
+
+} // End Camflow namespace
 
 
 #endif	/* _CAM_ADMIN_H */

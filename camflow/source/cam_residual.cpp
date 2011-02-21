@@ -22,7 +22,15 @@ control(NULL)
 {}
 
 CamResidual::~CamResidual()
-{}
+{
+    //if (camMixture != NULL) delete camMixture;
+   // if (camMech != NULL) delete camMech;
+   // if (control != NULL) delete control;
+   // if (sootMom != NULL) delete sootMom;
+   // if (reacGeom != NULL) delete reacGeom;
+   // if (reporter != NULL) delete reporter;
+
+}
 
 
 void CamResidual::speciesResidual(const doublereal& time, doublereal* y, doublereal* f){

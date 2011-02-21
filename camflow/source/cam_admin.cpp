@@ -48,6 +48,9 @@
 using namespace Strings;
 using namespace Camflow;
 
+
+bool CamAdmin::radiation = false;
+
 /*
  *set the reactor pressure
  */
@@ -130,6 +133,10 @@ void CamAdmin::setRightBoundary(CamBoundary &cb){
     this->right = cb;    
 }
 
+void CamAdmin::setRadiationModel(bool radiation_){
+    radiation = radiation_;
+}
+
 
 void CamAdmin::setSpeciesOut(int n){
     speciesOut = n;
@@ -165,6 +172,10 @@ void CamAdmin::getLeftBoundary(CamBoundary &cb){
 
 void CamAdmin::getRightBoundary(CamBoundary &cb){
     cb = right;    
+}
+
+bool CamAdmin::getRadiationModel() const{
+    return radiation;
 }
 
 doublereal CamAdmin::getNre(const doublereal& hd,
