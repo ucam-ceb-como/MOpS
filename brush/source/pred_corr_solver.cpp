@@ -91,7 +91,7 @@ Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
  *
  *\param[in,out]        reac        Reactor describing system state
  *\param[in]            t_stop      Time to which to advance solution
- *\param[in]            n_steps     Number of predictor corector steps
+ *\param[in]            n_steps     Number of predictor corrector steps (ie number of splits between transport and particle processes)
  *\param[in]            n_iter      Number of corrector iterations per step
  */
 void Brush::PredCorrSolver::solve(Reactor1d &reac, const real t_stop, const int n_steps, const int n_iter) const {
