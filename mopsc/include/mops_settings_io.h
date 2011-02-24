@@ -105,7 +105,7 @@ namespace Settings_IO
                                             int (*rand_int)(int, int));
 
     //! Read limits that define extreme particles to be excluded from particle population statistics
-    void ReadStatsBound(const CamXML::Element &node, Sweep::ParticleCache::PropID &property_id,
+    void ReadStatsBound(const CamXML::Element &node, Sweep::PropID &property_id,
                         real &lower_bound, real &upper_bound);
 
 } //namespace Settings_IO

@@ -225,7 +225,7 @@ void Simulator::SetOutputEveryIter(bool fout) {m_output_every_iter=fout;}
 
 // STATISTICAL BOUNDS OUTPUT
 
-void Simulator::SetOutputStatBoundary(Sweep::ParticleCache::PropID pid, double lower, double upper)
+void Simulator::SetOutputStatBoundary(Sweep::PropID pid, double lower, double upper)
 {
     m_statbound.Lower = lower;
     m_statbound.Upper = upper;

@@ -160,7 +160,7 @@ public:
 
     // Set simulator to output data of a given statistical range.
     void SetOutputStatBoundary(
-        const Sweep::ParticleCache::PropID pid,
+        const Sweep::PropID pid,
         real lower,
         real upper
         );

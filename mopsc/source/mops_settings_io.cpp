@@ -512,10 +512,10 @@ void readOutput(const CamXML::Element &node, Simulator &sim)
     // STATISTICAL BOUNDARIES OF OUTPUT
 
     // Bound parameters
-    Sweep::ParticleCache::PropID pid = Sweep::ParticleCache::iDcol;
+    Sweep::PropID pid = Sweep::iDcol;
     double lower = 0.0; // Default value of the lower bound
     double upper = 1e30; // Default value of the upper bound
-    pid = Sweep::ParticleCache::iDcol; // Default value of Property ID is iDcol
+    pid = Sweep::iDcol; // Default value of Property ID is iDcol
     // Read the statistical boundaries
     subnode = node.GetFirstChild("statsbound");
     if (subnode != NULL) {
@@ -1119,7 +1119,7 @@ Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& popu
  *@exception    std::runtime_error      No particle property specified in XML
  *@exception    std::runtime_error      Upper bound less than or equal to lower bound
  */
-void Settings_IO::ReadStatsBound(const CamXML::Element &node, Sweep::ParticleCache::PropID &property_id,
+void Settings_IO::ReadStatsBound(const CamXML::Element &node, Sweep::PropID &property_id,
                                  real &lower_bound, real &upper_bound) {
 
     const CamXML::Element *lobonode = node.GetFirstChild("lower");
@@ -1147,13 +1147,13 @@ void Settings_IO::ReadStatsBound(const CamXML::Element &node, Sweep::ParticleCac
     std::string prop_str = node.GetAttributeValue("property");
     if ((prop_str.compare("dcol") == 0) ||
         (prop_str.compare("Dcol") == 0)) {
-        property_id = Sweep::ParticleCache::iDcol;
+        property_id = Sweep::iDcol;
     } else if ((prop_str.compare("dmob") == 0) ||
                (prop_str.compare("Dmob") == 0)) {
-        property_id = Sweep::ParticleCache::iDmob;
+        property_id = Sweep::iDmob;
     } else if ((prop_str.compare("m") == 0) ||
                (prop_str.compare("M") == 0)) {
-        property_id = Sweep::ParticleCache::iM;
+        property_id = Sweep::iM;
     } else {
         throw std::runtime_error("No particle property specified in XML passed to (MOPS, Settings_IO::ReadStatsBound).");
     }
