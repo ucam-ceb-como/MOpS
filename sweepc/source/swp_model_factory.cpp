@@ -286,8 +286,7 @@ void ModelFactory::WriteStats(const Stats::IModelStats &stats, std::ostream &out
 // AGGREGATION MODEL CREATION.
 
 // Creates a new aggregation model cache of the given type.
-AggModels::AggModelCache *const ModelFactory::CreateAggCache(AggModels::AggModelType id,
-                                                             ParticleCache &parent)
+AggModels::AggModelCache *const ModelFactory::CreateAggCache(AggModels::AggModelType id)
 {
     switch (id) {
         case AggModels::Spherical_ID:
@@ -295,9 +294,9 @@ AggModels::AggModelCache *const ModelFactory::CreateAggCache(AggModels::AggModel
             // particle model.
             return NULL;
         case AggModels::SurfVol_ID:
-            return new AggModels::SurfVolCache(parent);
+            return new AggModels::SurfVolCache();
         case AggModels::PAH_ID:
-            return new AggModels::PAHCache(parent);
+            return new AggModels::PAHCache();
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateAggCache).");
@@ -329,8 +328,7 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
 // Reads an aggregation model cache from a binary stream.  The first item read
 // is the model ID which tells the ModelFactory what type
 // of model to read.
-AggModels::AggModelCache *const ModelFactory::ReadAggCache(std::istream &in,
-                                                           ParticleCache &parent)
+AggModels::AggModelCache *const ModelFactory::ReadAggCache(std::istream &in)
 {
     if (in.good()) {
         AggModels::AggModelCache *model = NULL;
@@ -343,12 +341,10 @@ AggModels::AggModelCache *const ModelFactory::ReadAggCache(std::istream &in,
         // an exception if the type is invalid.
         switch ((AggModels::AggModelType)type) {
             case AggModels::SurfVol_ID:
-                model = new AggModels::SurfVolCache(in, parent);
-                model->SetParent(parent);
+                model = new AggModels::SurfVolCache(in);
                 break;
             case AggModels::PAH_ID:
-                model = new AggModels::PAHCache(in, parent);
-                model->SetParent(parent);
+                model = new AggModels::PAHCache(in);
                 break;
             default:
                 throw invalid_argument("Invalid model ID (Sweep, "

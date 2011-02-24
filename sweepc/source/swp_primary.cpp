@@ -222,9 +222,9 @@ void Primary::SetTime(real t) {m_time = t;}
 AggModels::AggModelType Primary::AggID(void) const {return AggModels::Spherical_ID;}
 
 // Creates an aggregation data cache for this primary type.
-AggModels::AggModelCache *const Primary::CreateAggCache(ParticleCache &pcache) const
+AggModels::AggModelCache *const Primary::CreateAggCache() const
 {
-    return ModelFactory::CreateAggCache(AggModels::Spherical_ID, pcache);
+    return ModelFactory::CreateAggCache(AggModels::Spherical_ID);
 }
 
 

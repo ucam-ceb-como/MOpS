@@ -65,13 +65,10 @@ class SurfVolCache : public AggModelCache
 {
 public:
     // Constructors.
-    //    Note default constructor is protected to prevent creation
-    //    without knowledge of parent.
-    SurfVolCache(ParticleCache &parent);    // Initialising constructor.
+    SurfVolCache();
     SurfVolCache(const SurfVolCache &copy); // Copy constructor.
     SurfVolCache(             // Stream-reading constructor.
-        std::istream &in,     //  - Input stream.
-        ParticleCache &parent //  - Parent object.
+        std::istream &in      //  - Input stream.
         );
 
     // Destructors.
@@ -125,10 +122,6 @@ public:
 
     // READ/WRITE/COPY.
 
-    // Returns a correctly typed reference to the model cache object.
-//    virtual SurfVolCache &TypedRef(void);
-//    virtual const SurfVolCache &TypedRef(void) const;
-
     // Returns a copy of the data.
     virtual SurfVolCache *const Clone(void) const;
 
@@ -140,8 +133,7 @@ public:
 
     // Reads the object from a binary stream.
     virtual void Deserialize(
-        std::istream &in,     // Input stream.
-        ParticleCache &parent // Parent.
+        std::istream &in     // Input stream.
         );
 
 protected:
@@ -151,12 +143,8 @@ protected:
     unsigned int m_ppn; // Primary-particle count.
     real m_ppd;         // Average primary-particle diameter.
 
-    // Can't create a SurfVolCache without knowledge
-    // of the parent ParticleCache.
-    SurfVolCache(void);
-
 };
-};
-};
+}
+}
 
 #endif

@@ -1185,10 +1185,10 @@ void PAHPrimary::PrintTreeLoop(std::ostream &out)
 
 
 // Creates an aggregation data cache for this primary type.
-AggModels::PAHCache *const PAHPrimary::CreateAggCache(ParticleCache &pcache) const
+AggModels::PAHCache *const PAHPrimary::CreateAggCache() const
 {
     PAHCache *cache =
-        static_cast<PAHCache*>(ModelFactory::CreateAggCache(AggModels::PAH_ID, pcache));
+        static_cast<PAHCache*>(ModelFactory::CreateAggCache(AggModels::PAH_ID));
     if (cache != NULL) *cache = *this;
     return cache;
 }

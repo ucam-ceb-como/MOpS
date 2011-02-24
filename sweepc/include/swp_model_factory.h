@@ -165,8 +165,7 @@ public:
 
     // Creates a new aggregation model cache of the given type.
     static AggModels::AggModelCache *const CreateAggCache(
-        AggModels::AggModelType id, // Model ID.
-        ParticleCache &parent       // Parent object.
+        AggModels::AggModelType id // Model ID.
         );
 
     // Creates a new aggregation model stats object of the given type.
@@ -182,8 +181,7 @@ public:
     // item read is the model ID which tells the ModelFactory what type
     // of model to read.
     static AggModels::AggModelCache *const ReadAggCache(
-        std::istream &in,    // Input stream.
-        ParticleCache &parent // Parent object.
+        std::istream &in    // Input stream.
         );
 
     // Reads aggregation model stats from a binary stream.  The first

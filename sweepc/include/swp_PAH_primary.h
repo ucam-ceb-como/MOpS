@@ -125,7 +125,7 @@ public:
     //! Updates the fractal dimension
     void CalcFractalDimension();
 
-    AggModels::PAHCache *const CreateAggCache(ParticleCache &pcache) const;
+    AggModels::PAHCache *const CreateAggCache() const;
 
     //serialize
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);

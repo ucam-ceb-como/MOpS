@@ -59,13 +59,10 @@ class PAHCache : public AggModelCache
 {
 public:
     // Constructors.
-    //    Note default constructor is protected to prevent creation
-    //    without knowledge of parent.
-    PAHCache(ParticleCache &parent);    // Initialising constructor.
+    PAHCache();    // Initialising constructor.
     PAHCache(const PAHCache &copy); // Copy constructor.
     PAHCache(             // Stream-reading constructor.
-        std::istream &in,     //  - Input stream.
-        ParticleCache &parent //  - Parent object.
+        std::istream &in  //  - Input stream.
         );
 
     // Destructors.
@@ -113,8 +110,7 @@ public:
 
     // Reads the object from a binary stream.
     virtual void Deserialize(
-        std::istream &in,     // Input stream.
-        ParticleCache &parent // Parent.
+        std::istream &in     // Input stream.
         );
 	  int m_numPAH;
 	  real m_PAHDiameter;
@@ -126,13 +122,6 @@ public:
       double m_fdim;
       double m_Rg;
       double m_avg_coalesc;
-
-protected:
-  
-
-    // Can't create a PAHCache without knowledge
-    // of the parent ParticleCache.
-    PAHCache(void);
 
 };
 }//namespace Aggmodels

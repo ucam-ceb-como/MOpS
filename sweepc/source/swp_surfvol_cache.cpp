@@ -54,15 +54,9 @@ using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor (private).
-SurfVolCache::SurfVolCache(void)
-: m_sphsurf(0.0), m_surf(0.0), m_ppn(0), m_ppd(0.0)
-{
-}
-
 // Default constructor (public).
-SurfVolCache::SurfVolCache(ParticleCache &parent)
-: AggModelCache(parent), m_sphsurf(0.0), m_surf(0.0), m_ppn(0), m_ppd(0.0)
+SurfVolCache::SurfVolCache()
+: m_sphsurf(0.0), m_surf(0.0), m_ppn(0), m_ppd(0.0)
 {
 }
 
@@ -74,9 +68,9 @@ SurfVolCache::SurfVolCache(const SurfVolCache &copy)
 }
 
 // Stream-reading constructor.
-SurfVolCache::SurfVolCache(std::istream &in, ParticleCache &parent)
+SurfVolCache::SurfVolCache(std::istream &in)
 {
-    Deserialize(in, parent);
+    Deserialize(in);
 }
 
 // Default destructor.
@@ -265,10 +259,8 @@ void SurfVolCache::Serialize(std::ostream &out) const
 }
 
 // Reads the object from a binary stream.
-void SurfVolCache::Deserialize(std::istream &in, ParticleCache &parent)
+void SurfVolCache::Deserialize(std::istream &in)
 {
-    m_parent = &parent;
-
     if (in.good()) {
         // Read the output version.  Currently there is only one
         // output version, so we don't do anything with this variable.

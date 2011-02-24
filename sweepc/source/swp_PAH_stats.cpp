@@ -179,7 +179,7 @@ void PAHStats::Calculate(const Ensemble &e, real scale, real secondary_scale)
             dynamic_cast<const AggModels::PAHCache&>((*ip)->AggCache());
 		const AggModels::PAHPrimary *pah = NULL;
 			pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*ip)).Primary());
-        real sz = cache.Parent()->Property(m_statbound.PID);
+        real sz = (*ip)->Property(m_statbound.PID);
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.

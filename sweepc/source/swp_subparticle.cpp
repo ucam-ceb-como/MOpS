@@ -40,7 +40,7 @@ SubParticle::SubParticle(real t, const Sweep::ParticleModel &model)
   m_createt(0.0), m_time(0.0), m_comp(model.ComponentCount(), 0.0),
   m_values(model.TrackerCount(), 0.0)
 {
-	m_aggcache = ModelFactory::CreateAggCache(model.AggModel(), *this);
+	m_aggcache = ModelFactory::CreateAggCache(model.AggModel());
 
 }
 
@@ -55,7 +55,7 @@ SubParticle::SubParticle(Sweep::Primary &pri)
     m_time = pri.CreateTime();
     m_primary    = &pri;
 	m_freesurface=pri.SurfaceArea();
-	m_aggcache = pri.CreateAggCache(*this);
+	m_aggcache = pri.CreateAggCache();
 }
 
 // Copy constructor.
@@ -114,7 +114,6 @@ SubParticle &SubParticle::operator=(const SubParticle &rhs)
             if ((m_aggcache==NULL) || (m_aggcache->ID() != rhs.m_aggcache->ID())) {
                 delete m_aggcache;
                 m_aggcache = rhs.m_aggcache->Clone();
-                m_aggcache->SetParent(*this);
             } else {
                 *m_aggcache = *rhs.m_aggcache;
             }
@@ -266,7 +265,6 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs, int (*rand_int)(int,
         if ((m_aggcache==NULL) || (m_aggcache->ID() != rhs.m_aggcache->ID())) {
             delete m_aggcache;
             m_aggcache = rhs.m_aggcache->Clone();
-            m_aggcache->SetParent(*this);
         } else {
             *m_aggcache = *rhs.m_aggcache;
         }
@@ -468,7 +466,7 @@ void SubParticle::Deserialize(std::istream &in, const Sweep::ParticleModel &mode
                 // Read aggregation model.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n==1) {
-                    m_aggcache = ModelFactory::ReadAggCache(in, *this);
+                    m_aggcache = ModelFactory::ReadAggCache(in);
                 } else {
                     m_aggcache = NULL;
                 }

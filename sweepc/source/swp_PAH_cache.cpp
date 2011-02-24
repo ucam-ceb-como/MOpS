@@ -53,24 +53,8 @@ using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor (private).
+// Default constructor.
 PAHCache::PAHCache(void)
-{
-	m_numPAH=1;
-	m_PAHDiameter=0.;
-    m_numcarbon=0;
-    m_numprimary=0;
-    m_sqrtLW=0.0;
-    m_LdivW=0.0;
-    m_primarydiam=0.0;
-    m_fdim=0.0;
-    m_Rg=0.0;
-    m_avg_coalesc=0;
-}
-
-// Default constructor (public).
-PAHCache::PAHCache(ParticleCache &parent)
-: AggModelCache(parent)
 {
 	m_numPAH=1;
 	m_PAHDiameter=0.;
@@ -92,9 +76,9 @@ PAHCache::PAHCache(const PAHCache &copy)
 }
 
 // Stream-reading constructor.
-PAHCache::PAHCache(std::istream &in, ParticleCache &parent)
+PAHCache::PAHCache(std::istream &in)
 {
-    Deserialize(in, parent);
+    Deserialize(in);
 }
 
 // Default destructor.
@@ -303,10 +287,8 @@ void PAHCache::Serialize(std::ostream &out) const
 }
 
 // Reads the object from a binary stream.
-void PAHCache::Deserialize(std::istream &in, ParticleCache &parent)
+void PAHCache::Deserialize(std::istream &in)
 {
-    m_parent = &parent;
-
     if (in.good()) {
         // Read the output version.  Currently there is only one
         // output version, so we don't do anything with this variable.

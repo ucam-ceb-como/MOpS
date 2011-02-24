@@ -165,7 +165,7 @@ public:
     virtual AggModels::AggModelType AggID(void) const;
 
     // Creates an aggregation data cache for this primary type.
-    virtual AggModels::AggModelCache *const CreateAggCache(ParticleCache &pcache) const;
+    virtual AggModels::AggModelCache *const CreateAggCache() const;
 
 
     // BASIC DERIVED PROPERTIES.

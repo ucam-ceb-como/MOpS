@@ -81,11 +81,11 @@ public:
 
     // AGGREGATION MODEL.
 
-    // Returns the aggregation model which this primary describes.
+    //! Returns the aggregation model which this primary describes.
     virtual AggModels::AggModelType AggID(void) const;
 
-    // Creates an aggregation data cache for this primary type.
-    virtual AggModels::SurfVolCache *const CreateAggCache(ParticleCache &pcache) const;
+    //! Creates an aggregation data cache for this primary type.
+    virtual AggModels::SurfVolCache *const CreateAggCache() const;
 
 
     // BASIC DERIVED PROPERTIES.

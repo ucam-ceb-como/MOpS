@@ -130,9 +130,9 @@ SurfVolPrimary &SurfVolPrimary::operator=(const SurfVolPrimary &rhs)
 AggModels::AggModelType SurfVolPrimary::AggID(void) const {return AggModels::SurfVol_ID;}
 
 // Creates an aggregation data cache for this primary type.
-AggModels::SurfVolCache *const SurfVolPrimary::CreateAggCache(ParticleCache &pcache) const
+AggModels::SurfVolCache *const SurfVolPrimary::CreateAggCache() const
 {
-    SurfVolCache *cache = static_cast<SurfVolCache*>(ModelFactory::CreateAggCache(AggModels::SurfVol_ID, pcache));
+    SurfVolCache *cache = static_cast<SurfVolCache*>(ModelFactory::CreateAggCache(AggModels::SurfVol_ID));
     if (cache != NULL) *cache = *this;
     return cache;
 }
