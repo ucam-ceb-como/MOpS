@@ -121,6 +121,7 @@ int main() {
         cm.readInput(fCamFlow,cc,cg,convert,ca,cb,cp,config,cSoot);
     }catch(CamError &ce){
         cout << ce.errorMessge;
+        exit(1);
     }
     //CamBoundary *cb2 = &cb;
 
@@ -147,6 +148,7 @@ int main() {
         models.solve(ca,config,cc,cg,cp,cSoot,mech);
     }catch(CamError &ce){
         cout << ce.errorMessge;
+        exit(1);
     }
     cout << "\nCamflow end of execution..\n";
     return (EXIT_SUCCESS);

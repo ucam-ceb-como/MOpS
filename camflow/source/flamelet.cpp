@@ -869,7 +869,7 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
 
             //This is the new energy residual term, accounting for radiation.
 
-
+            // This is DEFINITELY NEGATIVE!
             f[i] -= radiation[i]/(m_rho[i]*m_cp[i]);
 
         }

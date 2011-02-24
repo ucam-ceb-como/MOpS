@@ -210,11 +210,21 @@ void CamRead::readProcessConditions(CamConverter& convert,
         }
 
         subnode = opNode->GetFirstChild("radiation");
-        atr = subnode->GetAttribute("activate");
-        if(atr != NULL){
-            atrVal = atr->GetValue();
-            if(!convertToCaps(atrVal).compare("ON")) {ca.setRadiationModel(true);}
-            else {ca.setRadiationModel(false);}
+        if(subnode == NULL){
+            throw CamError("op_condition::radiation is undefined\n");
+        }else{
+            atr = subnode->GetAttribute("activate");
+            if(atr != NULL){
+                atrVal = atr->GetValue();
+                if(!convertToCaps(atrVal).compare("ON"))
+                {
+                    ca.setRadiationModel(true);
+                }
+                else
+                {
+                    ca.setRadiationModel(false);
+                }
+            }
         }
 
     }

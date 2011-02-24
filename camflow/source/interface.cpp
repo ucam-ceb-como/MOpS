@@ -143,6 +143,8 @@ Interface::~Interface()
 
     if (flmlt != NULL) delete flmlt;
     if (model != NULL) delete model;
+    flmlt = NULL;
+    model = NULL;
 
 }
 
