@@ -93,6 +93,24 @@ public:
         const Sweep::Mechanism &mech // Parent mechanism.
         );
 
+    //! Instructions on how to choose position of coagulated particle in spatially resovled simulations
+    enum ParticlePositionChoice {
+        //! Do whatever was most convenient in the homogeneous case (may introduce bias)
+        NoPositionChoice,
+
+        //! Choose randomly with equal probabilities between the positions of the two particles
+        UniformPositionChoice,
+
+        //! Choose randomly between the positions of the incoming particles with probabilities proportional to their mass
+        MassPositionChoice,
+    };
+
+    //! Rule for choosing post coagulation position (not relevant to homogeneous sims)
+    ParticlePositionChoice PositionChoiceRule() const {return mPositionChoice;}
+
+    //! Set rule for choosing post coagulation position (not relevant to homogeneous sims)
+    void SetPositionChoiceRule(const ParticlePositionChoice rule) {mPositionChoice = rule;}
+
 protected:
 
     /*!
@@ -109,6 +127,9 @@ protected:
 private:
     //! Scaling factor for rate
     real m_a;
+
+    //! Rule for determining position of particle after coagulation (only relevant for spatial sims)
+    ParticlePositionChoice mPositionChoice;
 };
 
 } //namespace Processes

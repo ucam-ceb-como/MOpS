@@ -1217,6 +1217,24 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                 }
                 coag->SetA(A);
 
+                // Choice of position of newly coagulated particle
+                el = (*it)->GetFirstChild("positionchoice");
+
+                // This is an optional input
+                if (el != NULL) {
+                    const std::string choice = el->Data();
+                    if(choice == "none")
+                        coag->SetPositionChoiceRule(Processes::Coagulation::NoPositionChoice);
+                    else if (choice == "uniform")
+                        coag->SetPositionChoiceRule(Processes::Coagulation::UniformPositionChoice);
+                    else if (choice == "mass")
+                        coag->SetPositionChoiceRule(Processes::Coagulation::MassPositionChoice);
+                    else
+                        // Unrecognised option
+                        throw std::logic_error("Position choice rule " + choice + " not yet available \
+                                                (Sweep, MechParser::readCoagulation)");
+                }
+
                 mech.AddCoagulation(*coag);
 
                 // Get rid of the auto_ptr without deleting the coagulation object

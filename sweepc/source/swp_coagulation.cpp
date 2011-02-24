@@ -59,6 +59,7 @@ using namespace std;
  Coagulation::Coagulation(const Sweep::Mechanism &mech)
  : Process(mech)
  , m_a(1.0)
+ , mPositionChoice(NoPositionChoice)
  {}
 
 /*!
@@ -135,9 +136,31 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
                                const int ip2, Particle *sp2,
                                Cell &sys, int (*rand_int)(int, int),
                                real(*rand_u01)()) const {
+
+    // Position for particle after coagulation, default is to take whatever happens
+    // to be in sp1
+    real newPos = sp1->getPosition();
+    real newPosTime = sp1->getPositionTime();
+    if(mPositionChoice == UniformPositionChoice) {
+        // Change to position of sp2 with prob 0.5
+        if(rand_u01() < 0.5) {
+            newPos = sp2->getPosition();
+            newPosTime = sp2->getPositionTime();
+        }
+    }
+    else if (mPositionChoice == MassPositionChoice) {
+        // Change to position of sp2 with prob sp2->Mass()/(sp1->Mass() + sp2->Mass())
+        if(rand_u01() * (sp1->Mass() + sp2->Mass()) < sp2->Mass()) {
+            newPos = sp2->getPosition();
+            newPosTime = sp2->getPositionTime();
+        }
+    }
+
     // Add contents of particle 2 onto particle 1
     sp1->Coagulate(*sp2, rand_int, rand_u01);
+    sp1->setPositionAndTime(newPos, newPosTime);
     sp1->SetTime(t);
+
     // Tell the ensemble that particle 1 has changed
     sys.Particles().Update(ip1);
     // Particle 2 is now part of particle 1
@@ -156,6 +179,9 @@ void Coagulation::Serialize(std::ostream &out) const
 
         // Output rate scaling factor
         out.write(reinterpret_cast<const char*>(&m_a), sizeof(m_a));
+
+        // Output position choice rule
+        out.write(reinterpret_cast<const char*>(&mPositionChoice), sizeof(mPositionChoice));
 
         // Serialize base class.
         Process::Serialize(out);
@@ -181,6 +207,8 @@ void Coagulation::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
                 real a;
                 in.read(reinterpret_cast<char*>(&a), sizeof(a));
                 SetA(a);
+
+                in.read(reinterpret_cast<char*>(&mPositionChoice), sizeof(mPositionChoice));
 
                 // Deserialize base class.
                 Process::Deserialize(in, mech);
