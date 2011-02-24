@@ -93,7 +93,7 @@ Sweep::real Sweep::Processes::DiffusionProcess::Rate(real t, const Cell &sys,
         rate += 0.5 * dx_1 * dx_1;
     }
 
-    rate *= sys.Particles().GetSum(static_cast<TreeCache::PropID>(m_pid));
+    rate *= sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid));
     rate *= std::pow(sys.Temperature(), m_TemperatureExponent);
     return  rate * A() * s_MajorantFactor;
 
@@ -114,7 +114,7 @@ Sweep::real Sweep::Processes::DiffusionProcess::Rate(real t, const Cell &sys,
 Sweep::real Sweep::Processes::DiffusionProcess::Rate(real t, const Cell &sys,
                                                      const Particle &sp) const {
     // Static cast is copied from Sweep::Ensemble::Select
-    return sp.Property(static_cast<ParticleCache::PropID>(m_pid));
+    return sp.Property(static_cast<Sweep::PropID>(m_pid));
 }
 
 
@@ -139,7 +139,7 @@ Sweep::real Sweep::Processes::DiffusionProcess::Rate(real t, const Cell &sys,
  *
  * \param[in]       t           Time
  * \param[in,out]   sys         System to update
- * \param[in]       local_geom  Details of local phsyical layout
+ * \param[in]       local_geom  Details of local physical layout
  * \param[in]       iterm       Process term responsible for this event
  * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
@@ -177,7 +177,7 @@ int  Sweep::Processes::DiffusionProcess::Perform(Sweep::real t,
     }
 
     // Get the particle that will be transported
-    const int particleIndex = sys.Particles().Select(static_cast<TreeCache::PropID>(m_pid), rand_int, rand_u01);
+    const int particleIndex = sys.Particles().Select(static_cast<Sweep::PropID>(m_pid), rand_int, rand_u01);
 
     // LPDA updates and fictitious events are dealt with in the function below
     return Outflow(t, sys, local_geom, particleIndex, direction, rand_u01, out);

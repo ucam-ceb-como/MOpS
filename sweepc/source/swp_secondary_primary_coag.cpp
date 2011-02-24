@@ -144,17 +144,17 @@ Sweep::real Sweep::Processes::SecondaryPrimaryCoag::Rate(real t, const Cell &sys
      sum += *iterm++;
 
      // Calculate the second rate term
-     *iterm = r * numSecondaryParticles * invRootMinMass * sys.Particles().GetSum(TreeCache::iD2);
+     *iterm = r * numSecondaryParticles * invRootMinMass * sys.Particles().GetSum(Sweep::iD2);
      // Add it to the total and move the iterator on ready to receive the next rate term value
      sum += *iterm++;
 
      // Calculate the third rate term
-     *iterm = r * numSecondaryParticles * maxCollDiam2 * sys.Particles().GetSum(TreeCache::iM_1_2);
+     *iterm = r * numSecondaryParticles * maxCollDiam2 * sys.Particles().GetSum(Sweep::iM_1_2);
      // Add it to the total and move the iterator on ready to receive the next rate term value
      sum += *iterm++;
 
      // Calculate the fourth rate term
-     *iterm = r * numSecondaryParticles *  sys.Particles().GetSum(TreeCache::iD2_M_1_2);
+     *iterm = r * numSecondaryParticles *  sys.Particles().GetSum(Sweep::iD2_M_1_2);
      // Add it to the total and move the iterator on ready to receive the next rate term value
      sum += *iterm++;
 
@@ -192,15 +192,15 @@ int  Sweep::Processes::SecondaryPrimaryCoag::Perform(Sweep::real t,
             break;
         case 1:
             // Select by collision diameter squared
-            index1 = sys.Particles().Select(TreeCache::iD2, rand_int , rand_u01);
+            index1 = sys.Particles().Select(Sweep::iD2, rand_int , rand_u01);
             break;
         case 2:
             // Select by 1 over square root of mass
-            index1 = sys.Particles().Select(TreeCache::iM_1_2, rand_int , rand_u01);
+            index1 = sys.Particles().Select(Sweep::iM_1_2, rand_int , rand_u01);
             break;
         case 3:
             // Select by 1 over square root of mass times collision diameter squared
-            index1 = sys.Particles().Select(TreeCache::iD2_M_1_2, rand_int , rand_u01);
+            index1 = sys.Particles().Select(Sweep::iD2_M_1_2, rand_int , rand_u01);
             break;
         default:
             std::ostringstream msg;

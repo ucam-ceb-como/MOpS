@@ -313,7 +313,6 @@ void ParticleImage::constructAgg_FM(const Particle &sp, const ParticleModel &mod
         throw std::logic_error("Subtrees no longer supported");
     } else {
         const AggModels::SurfVolPrimary *svp = NULL;
-        const AggModels::PriPartPrimary *ppp = NULL;
 
         switch(model.AggModel()) {
             case AggModels::Spherical_ID:

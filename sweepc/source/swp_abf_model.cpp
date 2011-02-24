@@ -230,7 +230,7 @@ real ABFModel::alpha(real t, const Sprog::Thermo::IdealGas &gas,
     switch (m_aform) {
         case AlphaCorrelation:
             return alpha(gas.Temperature(),
-                         particles.GetSums().Property(TreeCache::iNumCarbon) /
+                         particles.GetSums().Property(Sweep::iNumCarbon) /
                          particles.Count());
         case AlphaProfile:
             return alpha(t);

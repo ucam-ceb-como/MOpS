@@ -46,7 +46,7 @@
 // CONTRUCTORS AND DESTRUCTORS.
 
 /*!
- * The cache is meant to be used to sum up quantites, so the natural
+ * The cache is meant to be used to sum up quantities, so the natural
  * initial state is zero.
  */
 Sweep::TreeCache::TreeCache()

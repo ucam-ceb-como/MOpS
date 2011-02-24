@@ -144,10 +144,10 @@ public:
     struct StatBound {
         real Lower;
         real Upper;
-        Sweep::ParticleCache::PropID PID;
+        Sweep::PropID PID;
 
         //! Default to something that should accept all particles
-        StatBound() : Lower(0.0), Upper(std::numeric_limits<real>::max()), PID(ParticleCache::iDcol) {}
+        StatBound() : Lower(0.0), Upper(std::numeric_limits<real>::max()), PID(Sweep::iDcol) {}
     };
     // Set statbound to this abstract class
     void SetStatBoundary(const StatBound &sb) { m_statbound = sb; }

@@ -59,7 +59,7 @@ const real Processes::SurfaceReaction::m_majfactor = 2.0;
 
 // Default constructor.
 SurfaceReaction::SurfaceReaction(void)
-: ParticleProcess(), m_arr(0.0,0.0,0.0), m_pid(0)
+: ParticleProcess(), m_arr(0.0,0.0,0.0)
 {
     m_defer = true;
     m_name = "Surface Reaction";
@@ -67,7 +67,7 @@ SurfaceReaction::SurfaceReaction(void)
 
 // Initialising constructor.
 SurfaceReaction::SurfaceReaction(const Sweep::Mechanism &mech)
-: ParticleProcess(mech), m_arr(0.0,0.0,0.0), m_pid(0)
+: ParticleProcess(mech), m_arr(0.0,0.0,0.0)
 {
     m_defer = true;
     m_name = "Surface Reaction";
@@ -115,13 +115,13 @@ void SurfaceReaction::SetArrhenius(Sprog::Kinetics::ARRHENIUS &arr) {m_arr = arr
 
 // Returns the ID number of the particle property to which
 // the rate of this process is proportional.
-unsigned int SurfaceReaction::PropertyID(void) const {return m_pid;}
+PropID SurfaceReaction::PropertyID(void) const {return m_pid;}
 
 // Sets the ID number of the particle property to which
 // the rate of this process is proportional.
-void SurfaceReaction::SetPropertyID(unsigned int i)
+void SurfaceReaction::SetPropertyID(PropID pid)
 {
-    m_pid = i;
+    m_pid = pid;
 }
 
 
@@ -141,7 +141,7 @@ real SurfaceReaction::Rate(real t, const Cell &sys) const
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
     // Particle dependence.
-    rate *= sys.Particles().GetSum(static_cast<TreeCache::PropID>(m_pid));
+    rate *= sys.Particles().GetSum(m_pid);
 
     if (m_mech->AnyDeferred()) {
         return rate * m_majfactor;
@@ -168,7 +168,7 @@ real SurfaceReaction::Rate(real t, const Cell &sys, const Particle &sp) const
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
     // Paticle dependence.
-    rate *= sp.Property(static_cast<ParticleCache::PropID>(m_pid));
+    rate *= sp.Property(static_cast<Sweep::PropID>(m_pid));
 
     return rate;
 }
@@ -220,7 +220,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
                              Sweep::real(*rand_u01)(), 
                              Sweep::Transport::TransportOutflow *out) const
 {
-    int i = sys.Particles().Select(static_cast<TreeCache::PropID>(m_pid), rand_int, rand_u01);
+    int i = sys.Particles().Select(static_cast<Sweep::PropID>(m_pid), rand_int, rand_u01);
 
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);
@@ -322,8 +322,7 @@ void SurfaceReaction::Serialize(std::ostream &out) const
         out.write((char*)&E, sizeof(E));
 
         // Write particle property ID.
-        unsigned int n = (unsigned int)m_pid;
-        out.write((char*)&n, sizeof(n));
+        out.write((char*)&m_pid, sizeof(m_pid));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, SurfaceReaction::Serialize).");
@@ -341,7 +340,6 @@ void SurfaceReaction::Deserialize(std::istream &in, const Sweep::Mechanism &mech
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
         double A = 0.0, nn = 0.0, E = 0.0;
-        unsigned int n = 0;
 
         switch (version) {
             case 0:
@@ -357,8 +355,7 @@ void SurfaceReaction::Deserialize(std::istream &in, const Sweep::Mechanism &mech
                 m_arr.E = (real)E;
 
                 // Read particle property ID.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                m_pid = n;
+                in.read(reinterpret_cast<char*>(&m_pid), sizeof(m_pid));
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "

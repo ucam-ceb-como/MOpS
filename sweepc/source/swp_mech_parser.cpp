@@ -1008,7 +1008,7 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
         if (str.compare("as")==0) {
             // This reaction depends on surface area.  Ignore power,
             // they must have meant 1.
-            rxn.SetPropertyID(ParticleCache::iS);
+            rxn.SetPropertyID(Sweep::iS);
 
             // Must scale rate constant from cm3 to m3, surface area
             // is multiplied by the site density so that it is a dimensionless
@@ -1018,26 +1018,26 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
         else if (str.compare("s")==0) {
             // This reaction depends on surface area.  Ignore power,
             // they must have meant 1.
-            rxn.SetPropertyID(ParticleCache::iS);
+            rxn.SetPropertyID(Sweep::iS);
             arr.A *= (1.0e-2);
         }
         else if (str.compare("d")==0) {
             // This reaction depends on some power of the diameter.
             switch (power) {
                 case 1:
-                    rxn.SetPropertyID(ParticleCache::iDcol);
+                    rxn.SetPropertyID(Sweep::iDcol);
                     arr.A *= (1.0e-4);
                     break;
                 case 2:
-                    rxn.SetPropertyID(ParticleCache::iD2);
+                    rxn.SetPropertyID(Sweep::iD2);
                     arr.A *= (1.0e-2);
                     break;
                 case -1:
-                    rxn.SetPropertyID(ParticleCache::iD_1);
+                    rxn.SetPropertyID(Sweep::iD_1);
                     arr.A *= (1.0e2);
                     break;
                 case -2:
-                    rxn.SetPropertyID(ParticleCache::iD_2);
+                    rxn.SetPropertyID(Sweep::iD_2);
                     arr.A *= (1.0e4);
                     break;
                 default:
@@ -1305,19 +1305,19 @@ void MechParser::readDiffusionProc(CamXML::Element &xml, Processes::DiffusionPro
             // This reaction depends on some power of the collision diameter.
             switch (id) {
                 case 0:
-                    tran.SetPropertyID(ParticleCache::iUniform);
+                    tran.SetPropertyID(Sweep::iUniform);
                     break;
                 case 1:
-                    tran.SetPropertyID(ParticleCache::iDcol);
+                    tran.SetPropertyID(Sweep::iDcol);
                     break;
                 case 2:
-                    tran.SetPropertyID(ParticleCache::iD2);
+                    tran.SetPropertyID(Sweep::iD2);
                     break;
                 case -1:
-                    tran.SetPropertyID(ParticleCache::iD_1);
+                    tran.SetPropertyID(Sweep::iD_1);
                     break;
                 case -2:
-                    tran.SetPropertyID(ParticleCache::iD_2);
+                    tran.SetPropertyID(Sweep::iD_2);
                     break;
                 default:
                     // Oh dear, can't have a zero power.

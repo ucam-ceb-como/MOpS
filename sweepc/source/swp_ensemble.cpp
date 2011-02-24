@@ -704,7 +704,7 @@ int Sweep::Ensemble::SelectSecondaryParticle(int (*rand_int)(int, int)) const
  *
  * id must refer to a basic property from the ParticleData class
  */
-int Sweep::Ensemble::Select(particle_cache_type::PropID id,
+int Sweep::Ensemble::Select(Sweep::PropID id,
                             int (*rand_int)(int, int),
                             real (*rand_u01)()) const
 {
@@ -714,7 +714,7 @@ int Sweep::Ensemble::Select(particle_cache_type::PropID id,
     // by a given particle property (by index).
 
     // Do not try to use the tree for uniform selection
-    if(id == particle_cache_type::iUniform)
+    if(id == Sweep::iUniform)
         return Select(rand_int);
 
     // Calculate random number weighted by sum of desired property (wtid).
@@ -769,9 +769,9 @@ const Sweep::Ensemble::particle_cache_type & Sweep::Ensemble::GetSums(void) cons
 
 // Returns the sum of a property in the ParticleData class
 // over all particles.
-real Sweep::Ensemble::GetSum(particle_cache_type::PropID id) const
+real Sweep::Ensemble::GetSum(Sweep::PropID id) const
 {
-    if(id != particle_cache_type::iUniform)
+    if(id != Sweep::iUniform)
         return m_tree.head().Property(id);
     else
         return m_count;
@@ -1147,7 +1147,7 @@ void Sweep::Ensemble::init(void)
 /*!
  * @param[in]   id      Index of property which will be extracted
  */
-Ensemble::WeightExtractor::WeightExtractor(const particle_cache_type::PropID id)
+Ensemble::WeightExtractor::WeightExtractor(const Sweep::PropID id)
 : mId(id)
 {}
 

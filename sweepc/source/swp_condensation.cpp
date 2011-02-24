@@ -141,8 +141,8 @@ real Condensation::Rate(real t, const Cell &sys) const
 
     // Free molecular terms.
     cterm *= (m_kfm1 * sys.ParticleCount()) + 
-             (m_kfm2 * sys.Particles().GetSum(TreeCache::iDcol)) +
-             (m_kfm3 * sys.Particles().GetSum(TreeCache::iD2));
+             (m_kfm2 * sys.Particles().GetSum(Sweep::iDcol)) +
+             (m_kfm3 * sys.Particles().GetSum(Sweep::iD2));
 
     // If the mechanism contains any deferred processes then we must use the
     // majorant form of the rate, in order to account for any changes to
@@ -214,9 +214,9 @@ real Condensation::RateTerms(real t, const Cell &sys,
     // Free molecular terms.
     real sum = 0.0;
     sum += *(iterm++) = m_kfm1 * cterm * sys.ParticleCount();
-    sum += *(iterm++) = m_kfm2 * cterm * sys.Particles().GetSum(TreeCache::iDcol);
+    sum += *(iterm++) = m_kfm2 * cterm * sys.Particles().GetSum(Sweep::iDcol);
     sum += *(iterm++) = m_kfm3 * cterm * 
-                        sys.Particles().GetSum(TreeCache::iD2);
+                        sys.Particles().GetSum(Sweep::iD2);
     return sum;
 }
 
@@ -245,19 +245,19 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
 {
     // Select particle based on which term was called.
     int i  = -1;
-    TreeCache::PropID id = TreeCache::iUniform;
+    Sweep::PropID id = Sweep::iUniform;
     switch(iterm) {
         case 1:
-            id = TreeCache::iDcol;
+            id = Sweep::iDcol;
             i  = sys.Particles().Select(id, rand_int, rand_u01);
             break;
         case 2:
-            id = TreeCache::iD2;
+            id = Sweep::iD2;
             i  = sys.Particles().Select(id, rand_int, rand_u01);
             break;
         case 0:
         default:
-            id = TreeCache::iUniform;
+            id = Sweep::iUniform;
             i  = sys.Particles().Select(rand_int);;
             break;
     }

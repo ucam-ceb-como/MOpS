@@ -45,6 +45,7 @@
 
 #include "swp_params.h"
 #include "swp_particle_process.h"
+#include "swp_property_indices.h"
 
 namespace Sweep
 {
@@ -88,7 +89,7 @@ public:
 
     // Returns the ID number of the particle property to which
     // the rate of this process is proportional.
-    unsigned int PropertyID(void) const;
+    Sweep::PropID PropertyID(void) const;
 
     // Returns the ID number of the particle number for which the
     // PropertyID is valid.  The mechanism should check that this
@@ -98,7 +99,7 @@ public:
     // Sets the ID number of the particle property to which
     // the rate of this process is proportional.
     void SetPropertyID(
-        unsigned int i   // ID number of particle property.
+        Sweep::PropID pid   // ID number of particle property.
         );
 
 
@@ -197,7 +198,7 @@ protected:
 
     // Particle property to which the rate of the process is
     // proportional.
-    unsigned int m_pid;
+    Sweep::PropID m_pid;
 
     // Default constructor is protected to prevent reactions being
     // defined without knowledge of the parent mechanism.

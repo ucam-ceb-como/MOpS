@@ -64,13 +64,15 @@
 #define SWEEP_PARTICLE_CACHE_H
 
 #include "swp_params.h"
-#include "swp_particle_model.h"
-#include "swp_primary.h"
+#include "swp_property_indices.h"
 
 #include <iostream>
 
 namespace Sweep
 {
+// forward declarations
+    class Primary;
+    class ParticleModel;
 
 /*!
  * \brief   Summary properties that can be summed and used to calculate overall population rates
@@ -78,32 +80,6 @@ namespace Sweep
 class ParticleCache
 {
 public:
-    // Enumeration of ParticleCache properties which can be accessed using
-    // the Property() function.
-    enum PropID {
-        iUniform=-1, // Special Case:  Always returns 1.0.  Used to select particles uniformly.
-        //iCTime,  // Create time.
-        //iLUTime, // Last update time.
-        iDsph,   // Equivalent sphere diameter.
-        iDcol,   // Collision diameter.
-        iDmob,   // Mobility diameter.
-        iS,      // Surface area.
-        iV,      // Volume.
-        iM,      // Mass.
-        // The next properties are provided for calculation of
-        // collision rates.
-        iD2,      // Collision diameter squared.
-        iD_1,     // Inverse collision diameter.
-        iD_2,     // Inverse of the diameter squared.
-        iM_1_2,   // Inverse of the square-root of the mass.
-        iD2_M_1_2, // D^2 * M^-1/2.
-		iFS,		// the free surface available for other particles to sinter
-
-		iNumCarbon, // Number of Carbon atoms
-
-
-    };
-
     //! Create cache of zeros
     ParticleCache();
 

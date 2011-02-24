@@ -63,6 +63,7 @@
 #include "swp_params.h"
 #include "swp_particle.h"
 #include "swp_tree_cache.h"
+#include "swp_property_indices.h"
 
 
 #include "binary_tree.hpp"
@@ -242,7 +243,7 @@ public:
     // property index.  The particle properties are those stored in
     // the ParticleData type. Returns particle index on success, otherwise
     // negative.
-    int Select(particle_cache_type::PropID id, int (*rand_int)(int, int), real(*rand_u01)()) const;
+    int Select(Sweep::PropID id, int (*rand_int)(int, int), real(*rand_u01)()) const;
 
     // ENSEMBLE CAPACITY AND PARTICLE COUNT.
 
@@ -282,7 +283,7 @@ public:
     // Returns the sum of one particle property with the given index
     // from the binary tree.
     real GetSum(
-        particle_cache_type::PropID id // ID of the ParticleData property.
+        Sweep::PropID id // ID of the ParticleData property.
         ) const;
 
     //! Inform the ensemble that the particle at index i has been changed
@@ -365,14 +366,14 @@ private:
     {
     public:
         //! Set up an extractor for an indexed property
-        WeightExtractor(const particle_cache_type::PropID id);
+        WeightExtractor(const Sweep::PropID id);
 
         //! Extract a weight from a cache
         real operator()(const particle_cache_type& cache) const;
 
     private:
         //! Id of property to extract
-        particle_cache_type::PropID mId;
+        Sweep::PropID mId;
 
         //! Not possible to have an extractor of this kind without specifying an id
         WeightExtractor();

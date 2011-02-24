@@ -140,7 +140,7 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
 
     int ip1=-1, ip2=-1;
 
-    ip1 = sys.Particles().Select(TreeCache::iM, rand_int, rand_u01);
+    ip1 = sys.Particles().Select(Sweep::iM, rand_int, rand_u01);
     ip2 = sys.Particles().Select(rand_int);
 
     // Choose and get first particle, then update it.
