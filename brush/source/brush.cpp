@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
             const CamXML::Element * const statsBoundNode = node->GetFirstChild("statsbound");
             if(statsBoundNode != NULL) {
                 // Read the data from the file
-                Sweep::ParticleCache::PropID statsboundPropertyID;
+                Sweep::PropID statsboundPropertyID;
                 real statsLowerBound;
                 real statsUpperBound;
                 Mops::Settings_IO::ReadStatsBound(*statsBoundNode, statsboundPropertyID, statsLowerBound, statsUpperBound);
