@@ -78,11 +78,7 @@ obj=mops_mechanism.o mops_mixture.o \
 # TARGET all: Compile to a static library (*.a).
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
 	ar rc $(lib)/libmops.a $(obj)
-else
-	ar rc $(lib)/libmops_d.a $(obj)
-endif
 
 # Source code.
 mops_settings_io.o: $(src)/mops_settings_io.cpp
@@ -172,4 +168,4 @@ clean:
 	rm -rf $(path)/*.o \#* *~
 
 cleanlibs:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libmops.a $(libdebug)/libmops_d.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libmops.a $(libdebug)/libmops.a

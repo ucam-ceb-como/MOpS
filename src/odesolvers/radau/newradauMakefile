@@ -30,11 +30,7 @@ obj=decsol.o StiffIntegratorT.o IntegratorT.o
 
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
 	ar rc $(lib)/libradau.a $(obj)
-else
-	ar rc $(lib)/libradau_d.a $(obj)
-endif
 
 # Source code.
 
@@ -56,4 +52,4 @@ clean:
 	rm -rf $(path)/*.o \#* *~
 
 cleanlibs:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libradau.a $(libdebug)/libradau_d.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libradau.a $(libdebug)/libradau.a

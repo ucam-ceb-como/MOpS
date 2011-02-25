@@ -32,20 +32,12 @@ endif
 # Target objects.
 obj=geometry1d.o local_geometry1d.o
 
-ifeq ($(debug),0)
-  geomlib=$(lib)/libgeometry.a
-else
-  geomlib=$(lib)/libgeometry_d.a
-endif
+geomlib=$(lib)/libgeometry.a
 
 # Bring everything  into a library
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
 	ar -rc $(lib)/libgeometry.a $(obj)
-else
-	ar -rc $(lib)/libgeometry_d.a $(obj)
-endif
 
 # Build the objects that contain the code for the real work
 
@@ -61,9 +53,9 @@ clean:
 	rm -rf $(path)/*.o \#* *~
 
 cleanlibs:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libgeometry.a $(libdebug)/libgeometry_d.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libgeometry.a $(libdebug)/libgeometry.a
 
 rebuild:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libgeometry.a $(libdebug)/libgeometry_d.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libgeometry.a $(libdebug)/libgeometry.a
 	make geomlib
 

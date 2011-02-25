@@ -69,8 +69,6 @@ fi
 
 echo "Make everything with debug set to $debug."
 
-rm -rf ./lib/release ./lib/debug
-
 echo "Make ODE solver libraries:"
 odesolvers=(cvode cvodes radau kinsol ida)
 for element in ${odesolvers[@]}

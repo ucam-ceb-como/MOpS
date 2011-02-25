@@ -87,11 +87,7 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
 # TARGET all: Compile to a static library (*.a).
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
 	ar rc $(lib)/libsweep.a $(obj)
-else
-	ar rc $(lib)/libsweep_d.a $(obj)
-endif
 
 # Source code.
 
@@ -293,4 +289,4 @@ clean:
 	rm -rf $(path)/*.o \#* *~
 
 cleanlibs:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libsweep.a $(libdebug)/libsweep_d.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libsweep.a $(libdebug)/libsweep.a

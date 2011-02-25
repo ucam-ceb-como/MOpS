@@ -32,11 +32,7 @@ obj=stringf.o unicodef.o xmlattribute.o xmlelement.o xmldocument.o
 # TARGET all: Compile to a static library (*.a).
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
 	ar rc $(lib)/libcamxml.a $(obj)
-else
-	ar rc $(lib)/libcamxml_d.a $(obj)
-endif
 
 # Source code.
 stringf.o: $(src)/stringf.cpp $(inc)/stringf.h
@@ -60,4 +56,4 @@ clean:
 	rm -rf $(path)/*.o \#* *~
 
 cleanlibs:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libcamxml.a $(libdebug)/libcamxml_d.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libcamxml.a $(libdebug)/libcamxml.a

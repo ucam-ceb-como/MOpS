@@ -72,11 +72,7 @@ obj=reactor1d.o pred_corr_solver.o reset_chemistry.o simulator.o settings_io.o
 # TARGET all: Compile to a static library (*.a).
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
 	ar rc $(lib)/libbrush.a $(obj)
-else
-	ar rc $(lib)/libbrush_d.a $(obj)
-endif
 
 # Source code.
 reactor1d.o: $(src)/reactor1d.cpp $(inc)/reactor1d.h $(inc)/brush_params.h
@@ -100,4 +96,4 @@ clean:
 	rm -rf $(path)/*.o \#* *~
 
 cleanlibs:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libbrush.a $(libdebug)/libbrush_d.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libbrush.a $(libdebug)/libbrush.a

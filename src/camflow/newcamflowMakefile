@@ -31,22 +31,6 @@ else
   lib=$(libdebug)
 endif
 
-# Additional libraries.
-ifeq ($(debug),0)
-  comostrings=$(lib)/libcomostrings.a
-  camxml=$(lib)/libcamxml.a
-  sprog=$(lib)/libsprog.a
-  cvode=$(lib)/libcvode.a
-  radau=$(lib)/libradau.a
-else
-  comostrings=$(lib)/libcomostrings_d.a
-  camxml=$(lib)/libcamxml_d.a
-  sprog=$(lib)/libsprog_d.a
-  cvode=$(lib)/libcvode_d.a
-  radau=$(lib)/libradau_d.a
-endif
-linklibs=$(comostrings) $(camxml) $(sprog) $(cvode) $(radau)
-
 # Target objects.
 obj=   cam_read.o cam_setup.o cam_geometry.o \
 		 cam_control.o cam_conveter.o cam_math.o cam_conc.o \
@@ -57,11 +41,7 @@ obj=   cam_read.o cam_setup.o cam_geometry.o \
 
 all: $(obj) 
 	mkdir -p $(lib)
-ifeq ($(debug),0)
-	ar rc $(lib)/libcamflow.a $(obj) $(linklibs)
-else
-	ar rc $(lib)/libcamflow_d.a $(obj) $(linklibs) 
-endif
+	ar rc $(lib)/libcamflow.a $(obj)
 
 # Source code.
 
@@ -123,4 +103,4 @@ clean:
 	rm -rf *.o \#* *~
 
 cleanlibs:
-	rm -rf *.o \#* *~ $(librelease)/libcamflow.a $(libdebug)/libcamflow_d.a
+	rm -rf *.o \#* *~ $(librelease)/libcamflow.a $(libdebug)/libcamflow.a

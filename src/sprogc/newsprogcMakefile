@@ -26,13 +26,6 @@ else
   lib=$(libdebug)
 endif
 
-# Additional libraries.
-ifeq ($(debug),0)
-  comostrings=$(lib)/libcomostrings.a
-else
-  comostrings=$(lib)/libcomostrings_d.a
-endif
-
 # Target objects.
 obj=gpc_el_comp.o gpc_element.o gpc_element_lib.o gpc_gasphase.o \
     gpc_idealgas.o gpc_mech.o gpc_mech_io.o gpc_mixture.o \
@@ -42,11 +35,7 @@ obj=gpc_el_comp.o gpc_element.o gpc_element_lib.o gpc_gasphase.o \
 # TARGET all: Compile to a static library (*.a).
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
-	ar rc $(lib)/libsprog.a $(obj) $(comostrings)
-else
-	ar rc $(lib)/libsprog_d.a $(obj) $(comostrings)
-endif
+	ar rc $(lib)/libsprog.a $(obj)
 
 # Source code.
 
@@ -119,4 +108,4 @@ clean:
 	rm -rf $(path)/*.o \#* *~
 
 cleanlibs:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libsprog.a $(libdebug)/libsprog_d.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libsprog.a $(libdebug)/libsprog.a

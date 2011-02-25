@@ -36,11 +36,7 @@ obj=cvodea.o cvodea_io.o cvodes.o cvodes_band.o cvodes_bandpre.o \
 
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
 	ar rc $(lib)/libcvodes.a $(obj)
-else
-	ar rc $(lib)/libcvodes_d.a $(obj)
-endif
 
 # Source code.
 
@@ -137,4 +133,4 @@ clean:
 	rm -rf $(path)/*.o \#* *~
 
 cleanlibs:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libcvodes.a $(libdebug)/libcvodes_d.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libcvodes.a $(libdebug)/libcvodes.a

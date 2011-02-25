@@ -32,11 +32,7 @@ obj=string_functions.o csv_io.o console_io.o data_io.o
 # TARGET all: Compile to a static library (*.a).
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
 	ar rc $(lib)/libcomostrings.a $(obj)
-else
-	ar rc $(lib)/libcomostrings_d.a $(obj)
-endif
 
 # Source code.
 
@@ -57,4 +53,4 @@ clean:
 	rm -rf $(path)/*.o \#* *~
 
 cleanlibs:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libcomostrings.a $(libdebug)/libcomostrings_d.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libcomostrings.a $(libdebug)/libcomostrings.a

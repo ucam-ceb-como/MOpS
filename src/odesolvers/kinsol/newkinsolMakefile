@@ -33,11 +33,7 @@ obj=kinsol.o kinsol_band.o kinsol_bbdpre.o kinsol_dense.o \
 # TARGET all: Compile to a static library (*.a).
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
 	ar rc $(lib)/libkinsol.a $(obj)
-else
-	ar rc $(lib)/libkinsol_d.a $(obj)
-endif
 
 # Source code.
 
@@ -121,4 +117,4 @@ clean:
 	rm -rf $(path)/*.o \#* *~
 
 cleanlibs:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libkinsol.a $(libdebug)/libkinsol_d.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libkinsol.a $(libdebug)/libkinsol.a

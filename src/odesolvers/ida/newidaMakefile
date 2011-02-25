@@ -33,11 +33,7 @@ obj=ida.o ida_band.o ida_bbdpre.o ida_dense.o ida_ic.o \
 # TARGET all: Compile to a static library (*.a).
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
 	ar rc $(lib)/libida.a $(obj)
-else
-	ar rc $(lib)/libida_d.a $(obj)
-endif
 
 # Source code.
 
@@ -118,4 +114,4 @@ clean:
 	rm -rf $(path)/*.o \#* *~
 
 cleanlibs:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libida.a $(libdebug)/libida_d.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libida.a $(libdebug)/libida.a
