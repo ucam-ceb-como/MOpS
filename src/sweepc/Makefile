@@ -1,47 +1,71 @@
+# newMakefile
+# Author: Robert I A Patterson <Robert.Patterson@wias-berlin.de>
+# Copyright (C) 2011 Robert I A Patterson.
+
+# Makefile for building the sweep library as part of larger population
+# balance solver projects 
+
+# Licence:
+#    This file is part of "sweep".
+#
+#    sweep is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU General Public License
+#    as published by the Free Software Foundation; either version 2
+#    of the License, or (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#  Contact:
+#    Prof Markus Kraft
+#    Dept of Chemical Engineering
+#    University of Cambridge
+#    New Museums Site
+#    Pembroke Street
+#    Cambridge
+#    CB2 3RA
+#    UK
+#
+#    Email:       mk306@cam.ac.uk
+#    Website:     http://como.cheng.cam.ac.uk
+
 # Compiler options.
-export debug=0
+export debug=1
 export profile=0
-
-# C++ compiler.
-cpp=g++
-#cpp=mpicxx -DUSE_MPI -DNONSPHERE
-ifeq ($(debug),0)
-  ifeq ($(profile),0)
-    flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -I../geometry/include -I../utils/include -Wall
-  else
-    flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -I../geometry/include -I../utils/include -Wall -pg
-  endif
-else
-  flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -I../geometry/include -I../utils/include -Wall \
-       -g -pg -D_GLIBCXX_DEBUG
-endif
-
-# Source directories.
 
 export path=.
 src=$(path)/source
 inc=$(path)/include
-lib=$(path)/lib
+librelease=../../lib/release
+libdebug=../../lib/debug
 
-# Additional libraries.
+# C++ compiler.
+cpp=g++
+# Includes.
+includes=-Iinclude -I../io/comostrings/include -I../utils/include -I../io/camxml/include \
+         -I../sprogc/include -I../geometry/include -I../utils/include
 
 ifeq ($(debug),0)
-  comostrings=../comostrings/lib/comostrings.a
-  camxml=../camxml/lib/camxml.a
-  sprog=../sprogc/lib/sprog.a
-  geom=../geom/lib/geom.a
+  ifeq ($(profile),0)
+    flag=-c -O2 $(includes) -Wall
+    lib=$(librelease)
+  else
+    flag=-c -O2 $(includes)  -Wall -pg
+    lib=$(librelease)
+  endif
 else
-  comostrings=../comostrings/lib/comostrings_d.a
-  camxml=../camxml/lib/camxml_d.a
-  sprog=../sprogc/lib/sprog_d.a
-  geom=../geom/lib/geom_d.a
+  flag=-c -O0 $(includes) -Wall -ggdb -pg -D_GLIBCXX_DEBUG
+  lib=$(libdebug)
 endif
 
-# Target objects.
 
+# Target objects.
 obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_mech_parser.o swp_mechanism.o swp_subparticle.o swp_particle.o \
     swp_particle_cache.o swp_particle_stats.o swp_solver.o swp_tracker.o \
@@ -61,18 +85,11 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_tree_cache.o
 
 # TARGET all: Compile to a static library (*.a).
-
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
-	ar rc $(lib)/sweep.a $(obj)
-else
-	ar rc $(lib)/sweep_d.a $(obj)
-endif
+	ar rc $(lib)/libsweep.a $(obj)
 
 # Source code.
-
-# Particle definition.
 
 swp_component.o: $(src)/swp_component.cpp
 	$(cpp) $(flag) $(src)/swp_component.cpp
@@ -270,3 +287,6 @@ rng.o: $(src)/rng.cpp $(inc)/rng.h
 
 clean:
 	rm -rf $(path)/*.o \#* *~
+
+cleanlibs:
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libsweep.a $(libdebug)/libsweep.a

@@ -2,50 +2,40 @@
 export debug=1
 export profile=0
 
-# C++ compiler.
-cpp=g++
-ifeq ($(debug),0)
-  ifeq ($(profile),0)
-    flag=-c -O2 -Iinclude -I../comostrings/include -I../utils/include -Wall
-  else
-    flag=-c -O2 -Iinclude -I../comostrings/include -I../utils/include  -Wall -pg
-  endif
-else
-  flag=-c -O0 -Iinclude -I../comostrings/include -I../utils/include -Wall -ggdb -pg \
-       -D_GLIBCXX_DEBUG
-endif
-
-# Source directories.
-
 export path=.
 src=$(path)/source
 inc=$(path)/include
-lib=$(path)/lib
+librelease=../../lib/release
+libdebug=../../lib/debug
 
-# Additional libraries.
+# C++ compiler.
+cpp=g++
+# Includes.
+includes=-Iinclude -I../io/comostrings/include -I../utils/include
 
 ifeq ($(debug),0)
-  comostrings=../comostrings/lib/comostrings.a
+  ifeq ($(profile),0)
+    flag=-c -O2 $(includes) -Wall
+    lib=$(librelease)
+  else
+    flag=-c -O2 $(includes)  -Wall -pg
+    lib=$(librelease)
+  endif
 else
-  comostrings=../comostrings/lib/comostrings_d.a
+  flag=-c -O0 $(includes) -Wall -ggdb -pg -D_GLIBCXX_DEBUG
+  lib=$(libdebug)
 endif
 
 # Target objects.
-
 obj=gpc_el_comp.o gpc_element.o gpc_element_lib.o gpc_gasphase.o \
     gpc_idealgas.o gpc_mech.o gpc_mech_io.o gpc_mixture.o \
     gpc_mixture_factory.o gpc_reaction.o gpc_reaction_set.o gpc_species.o \
     gpc_stoich.o gpc_thermo.o gpc_string.o gpc_transport_data.o gpc_transport_factory.o
 
 # TARGET all: Compile to a static library (*.a).
-
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
-	ar rc $(lib)/sprog.a $(obj) $(comostrings)
-else
-	ar rc $(lib)/sprog_d.a $(obj) $(comostrings)
-endif
+	ar rc $(lib)/libsprog.a $(obj)
 
 # Source code.
 
@@ -116,3 +106,6 @@ gpc_transport_factory.o: $(src)/gpc_transport_factory.cpp
 
 clean:
 	rm -rf $(path)/*.o \#* *~
+
+cleanlibs:
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libsprog.a $(libdebug)/libsprog.a

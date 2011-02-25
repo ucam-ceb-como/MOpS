@@ -2,26 +2,28 @@
 export debug=0
 export profile=0
 
+export path=.
+src=$(path)/source
+inc=$(path)/include
+librelease=../../../lib/release
+libdebug=../../../lib/debug
+
 # C++ compiler.
 cpp=g++
 ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -Wall
+    lib=$(librelease)
   else
     flag=-c -O2 -Iinclude -Wall -pg
+    lib=$(librelease)
   endif
 else
   flag=-c -O0 -Iinclude -Wall -ggdb -pg
+  lib=$(libdebug)
 endif
 
-# Source directories.
-
-export path=.
-src=$(path)/source
-inc=$(path)/include
-lib=$(path)/lib
 # Target objects.
-
 obj=kinsol.o kinsol_band.o kinsol_bbdpre.o kinsol_dense.o \
     kinsol_io.o kinsol_spbcgs.o kinsol_spgmr.o kinsol_spils.o \
     kinsol_sptfqmr.o fnvector_serial.o nvector_serial.o sundials_band.o \
@@ -29,14 +31,9 @@ obj=kinsol.o kinsol_band.o kinsol_bbdpre.o kinsol_dense.o \
     sundials_smalldense.o sundials_spbcgs.o sundials_spgmr.o sundials_sptfqmr.o
 
 # TARGET all: Compile to a static library (*.a).
-
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
-	ar rc $(lib)/kinsol.a $(obj)
-else
-	ar rc $(lib)/kinsol_d.a $(obj)
-endif
+	ar rc $(lib)/libkinsol.a $(obj)
 
 # Source code.
 
@@ -118,3 +115,6 @@ sundials_sptfqmr.o: $(src)/sundials/sundials_sptfqmr.c
 
 clean:
 	rm -rf $(path)/*.o \#* *~
+
+cleanlibs:
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libkinsol.a $(libdebug)/libkinsol.a

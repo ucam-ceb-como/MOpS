@@ -2,27 +2,28 @@
 export debug=1
 export profile=0
 
+export path=.
+src=$(path)/source
+inc=$(path)/include
+librelease=../../../lib/release
+libdebug=../../../lib/debug
+
 # C++ compiler.
 cpp=g++
 ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -Wall
+    lib=$(librelease)
   else
     flag=-c -O2 -Iinclude -Wall -pg
+    lib=$(librelease)
   endif
 else
   flag=-c -O0 -Iinclude -Wall -ggdb -pg -D_GLIBCXX_DEBUG
+  lib=$(libdebug)
 endif
 
-# Source directories.
-
-export path=.
-src=$(path)/source
-inc=$(path)/include
-lib=$(path)/lib
-
 # Target objects.
-
 obj=cvodea.o cvodea_io.o cvodes.o cvodes_band.o cvodes_bandpre.o \
     cvodes_bbdpre.o cvodes_dense.o cvodes_diag.o cvodes_direct.o \
     cvodes_io.o cvodes_lapack.o cvodes_spbcgs.o cvodes_spgmr.o \
@@ -35,11 +36,7 @@ obj=cvodea.o cvodea_io.o cvodes.o cvodes_band.o cvodes_bandpre.o \
 
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
-	ar rc $(lib)/cvodes.a $(obj)
-else
-	ar rc $(lib)/cvodes_d.a $(obj)
-endif
+	ar rc $(lib)/libcvodes.a $(obj)
 
 # Source code.
 
@@ -134,3 +131,6 @@ sundials_sptfqmr.o: $(src)/sundials/sundials_sptfqmr.c
 
 clean:
 	rm -rf $(path)/*.o \#* *~
+
+cleanlibs:
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libcvodes.a $(libdebug)/libcvodes.a

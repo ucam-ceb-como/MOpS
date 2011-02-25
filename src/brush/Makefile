@@ -1,83 +1,80 @@
+# newMakefile
+# Author: Robert I A Patterson <Robert.Patterson@wias-berlin.de>
+# Copyright (C) 2011 Robert I A Patterson.
+
+# Makefile for building the brush library as part of larger population
+# balance solver projects 
+
+# Licence:
+#    This file is part of "brush".
+#
+#    brush is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU General Public License
+#    as published by the Free Software Foundation; either version 2
+#    of the License, or (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#  Contact:
+#    Prof Markus Kraft
+#    Dept of Chemical Engineering
+#    University of Cambridge
+#    New Museums Site
+#    Pembroke Street
+#    Cambridge
+#    CB2 3RA
+#    UK
+#
+#    Email:       mk306@cam.ac.uk
+#    Website:     http://como.cheng.cam.ac.uk
+
 # Compiler options.
 export debug=1
 export profile=0
 
-# C++ compiler.
-cpp=g++
-ifeq ($(debug),0)
-  ifeq ($(profile),0)
-    flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../geometry/include -I../utils/include -I../sprogc/include \
-       -I../sweepc/include -I../mopsc/include -Wall
-    flink=
-  else
-    flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../geometry/include -I../utils/include -I../sprogc/include \
-       -I../sweepc/include -I../mopsc/include -Wall -pg
-    flink=-pg
-  endif
-else
-  flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../geometry/include -I../utils/include -I../sprogc/include \
-       -I../sweepc/include -I../mopsc/include -Wall -ggdb -D_GLIBCXX_DEBUG
-  flink=
-endif
-
-# Source directories.
-
 export path=.
 src=$(path)/source
 inc=$(path)/include
-lib=$(path)/lib
+librelease=../../lib/release
+libdebug=../../lib/debug
 
-# Additional libraries.
+# C++ compiler.
+cpp=g++
+# Includes.
+includes=-Iinclude -I../io/comostrings/include -I../utils/include -I../io/camxml/include \
+         -I../sprogc/include -I../geometry/include -I../utils/include -I../sweepc/include \
+         -I../mopsc/include
 
 ifeq ($(debug),0)
-  comostrings=../comostrings/lib/comostrings.a
-  camxml=../camxml/lib/camxml.a
-  sprog=../sprogc/lib/sprog.a
-  sweep=../sweepc/lib/sweep.a
-  mops=../mopsc/lib/mops.a
-  cvodes=../cvodes/lib/cvodes.a
-  geom=../geometry/lib/geometry.a
-  brushlib=./lib/brush.a
+  ifeq ($(profile),0)
+    flag=-c -O2 $(includes) -Wall
+    lib=$(librelease)
+  else
+    flag=-c -O2 $(includes)  -Wall -pg
+    lib=$(librelease)
+  endif
 else
-  comostrings=../comostrings/lib/comostrings_d.a
-  camxml=../camxml/lib/camxml_d.a
-  sprog=../sprogc/lib/sprog_d.a
-  sweep=../sweepc/lib/sweep_d.a
-  mops=../mopsc/lib/mops_d.a
-  cvodes=../cvodes/lib/cvodes_d.a
-  geom=../geometry/lib/geometry_d.a
-  brushlib=./lib/brush_d.a
+  flag=-c -O0 $(includes) -Wall -ggdb -pg -D_GLIBCXX_DEBUG
+  lib=$(libdebug)
 endif
-linklibs=$(mops) $(sweep) $(geom) $(sprog) $(camxml) $(comostrings) $(cvodes)
-# Target objects.
 
+# Target objects.
 obj=reactor1d.o pred_corr_solver.o reset_chemistry.o simulator.o settings_io.o
 
-# Default target - executable
-all: $(brushlib) brush.o
-	mkdir -p bin
-ifeq ($(debug),0)
-	$(cpp) $(flink) brush.o $(brushlib) $(linklibs) -o bin/brush.x
-else
-	$(cpp) $(flink) brush.o $(brushlib) $(linklibs) -o bin/brush_d.x
-endif
 
-# Bring everything except the main function into a library
-$(brushlib): $(obj)
-	mkdir -p lib
-ifeq ($(debug),0)
-	ar -rc lib/brush.a $(obj)
-else
-	ar -rc lib/brush_d.a $(obj)
-endif
+# TARGET all: Compile to a static library (*.a).
+all: $(obj)
+	mkdir -p $(lib)
+	ar rc $(lib)/libbrush.a $(obj)
 
-# Build the objects that contain the code for the real work
-brush.o: $(src)/brush.cpp
-	$(cpp) $(flag) $(src)/brush.cpp
-
+# Source code.
 reactor1d.o: $(src)/reactor1d.cpp $(inc)/reactor1d.h $(inc)/brush_params.h
 	$(cpp) $(flag) $(src)/reactor1d.cpp
 
@@ -93,28 +90,10 @@ simulator.o: $(src)/simulator.cpp $(inc)/simulator.h $(inc)/brush_params.h
 settings_io.o: $(src)/settings_io.cpp $(inc)/settings_io.h $(inc)/brush_params.h
 	$(cpp) $(flag) $(src)/settings_io.cpp
 
-# leave just source code.
+# TARGET clean: leave just source code.
+
 clean:
-	rm -rf $(path)/*.o \#* *~ $(lib)/*.a $(path)/bin/*.x
+	rm -rf $(path)/*.o \#* *~
 
-sweepclean:
-	$(MAKE) -f ../sweepc/Makefile -C ../sweepc clean
-	$(MAKE) -f ../sweepc/Makefile -C ../sweepc debug=$(debug) profile=$(profile)
-
-sweep:
-	$(MAKE) -f ../sweepc/Makefile -C ../sweepc debug=$(debug) profile=$(profile)
-
-mopsclean:
-	$(MAKE) -f ../mopsc/Makefile -C ../mopsc clean
-	$(MAKE) -f ../mopsc/Makefile -C ../mopsc debug=$(debug) profile=$(profile) mopslib
-
-mopslib:
-	$(MAKE) -f ../mopsc/Makefile -C ../mopsc debug=$(debug) profile=$(profile) mopslib
-
-geom:
-	$(MAKE) -f ../geometry/Makefile -C ../geometry debug=$(debug) profile=$(profile)
-
-geomclean:
-	$(MAKE) -f ../geometry/Makefile -C ../geometry clean
-	$(MAKE) -f ../geometry/Makefile -C ../geometry debug=$(debug) profile=$(profile)
-
+cleanlibs:
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libbrush.a $(libdebug)/libbrush.a

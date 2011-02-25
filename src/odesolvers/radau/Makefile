@@ -2,37 +2,35 @@
 export debug=1
 export profile=0
 
+export path=.
+src=$(path)/source
+inc=$(path)/include
+librelease=../../../lib/release
+libdebug=../../../lib/debug
+
 # C++ compiler.
 cpp=g++
 ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -Wall
+    lib=$(librelease)
   else
     flag=-c -O2 -Iinclude -Wall -pg
+    lib=$(librelease)
   endif
 else
   flag=-c -O0 -Iinclude -Wall -ggdb -pg
+  lib=$(libdebug)
 endif
 
-# Source directories.
-
-export path=.
-src=$(path)/source
-inc=$(path)/include
-lib=$(path)/lib
 # Target objects.
-
 obj=decsol.o StiffIntegratorT.o IntegratorT.o
 
 # TARGET all: Compile to a static library (*.a).
 
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
-	ar rc $(lib)/radau.a $(obj)
-else
-	ar rc $(lib)/radau_d.a $(obj)
-endif
+	ar rc $(lib)/libradau.a $(obj)
 
 # Source code.
 
@@ -51,4 +49,7 @@ StiffIntegratorT.o: $(src)/StiffIntegratorT.cpp
 # TARGET clean: leave just source code.
 
 clean:
-	rm -rf $(path)/*.o
+	rm -rf $(path)/*.o \#* *~
+
+cleanlibs:
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libradau.a $(libdebug)/libradau.a

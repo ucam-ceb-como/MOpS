@@ -2,26 +2,28 @@
 export debug=0
 export profile=0
 
+export path=.
+src=$(path)/source
+inc=$(path)/include
+librelease=../../../lib/release
+libdebug=../../../lib/debug
+
 # C++ compiler.
 cpp=g++
 ifeq ($(debug),0)
   ifeq ($(profile),0)
     flag=-c -O2 -Iinclude -Wall
+    lib=$(librelease)
   else
     flag=-c -O2 -Iinclude -Wall -pg
+    lib=$(librelease)
   endif
 else
   flag=-c -O0 -Iinclude -Wall -ggdb -pg
+  lib=$(libdebug)
 endif
 
-# Source directories.
-
-export path=.
-src=$(path)/source
-inc=$(path)/include
-lib=$(path)/lib
 # Target objects.
-
 obj=ida.o ida_band.o ida_bbdpre.o ida_dense.o ida_ic.o \
     ida_io.o ida_spbcgs.o ida_spgmr.o ida_spils.o \
     ida_sptfqmr.o fnvector_serial.o nvector_serial.o sundials_band.o \
@@ -29,14 +31,9 @@ obj=ida.o ida_band.o ida_bbdpre.o ida_dense.o ida_ic.o \
     sundials_smalldense.o sundials_spbcgs.o sundials_spgmr.o sundials_sptfqmr.o
 
 # TARGET all: Compile to a static library (*.a).
-
 all: $(obj)
 	mkdir -p $(lib)
-ifeq ($(debug),0)
-	ar rc $(lib)/ida.a $(obj)
-else
-	ar rc $(lib)/ida_d.a $(obj)
-endif
+	ar rc $(lib)/libida.a $(obj)
 
 # Source code.
 
@@ -115,3 +112,6 @@ sundials_sptfqmr.o: $(src)/sundials/sundials_sptfqmr.c
 
 clean:
 	rm -rf $(path)/*.o \#* *~
+
+cleanlibs:
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libida.a $(libdebug)/libida.a

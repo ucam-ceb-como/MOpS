@@ -1,58 +1,72 @@
+# newMakefile
+# Author: Robert I A Patterson <Robert.Patterson@wias-berlin.de>
+# Copyright (C) 2011 Robert I A Patterson.
+
+# Makefile for building the mops library as part of larger population
+# balance solver projects 
+
+# Licence:
+#    This file is part of "mops".
+#
+#    mops is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU General Public License
+#    as published by the Free Software Foundation; either version 2
+#    of the License, or (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#  Contact:
+#    Prof Markus Kraft
+#    Dept of Chemical Engineering
+#    University of Cambridge
+#    New Museums Site
+#    Pembroke Street
+#    Cambridge
+#    CB2 3RA
+#    UK
+#
+#    Email:       mk306@cam.ac.uk
+#    Website:     http://como.cheng.cam.ac.uk
+
 # Compiler options.
 export debug=1
 export profile=0
 
+export path=.
+src=$(path)/source
+inc=$(path)/include
+librelease=../../lib/release
+libdebug=../../lib/debug
+
 # C++ compiler.
 cpp=g++
-#cpp=mpicxx -DUSE_MPI -DNONSPHERE
+# Includes.
+includes=-Iinclude -I../io/comostrings/include -I../utils/include -I../io/camxml/include \
+         -I../sprogc/include -I../geometry/include -I../utils/include -I../sweepc/include \
+         -I../odesolvers/cvodes/include -I../odesolvers/cvodes/source/cvodes
 
 ifeq ($(debug),0)
   ifeq ($(profile),0)
-    flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-         -I../sprogc/include -I../sweepc/include -I../cvodes/include \
-         -I../cvodes/source/cvodes -I../geometry/include -I../utils/include -Wall 
-    flink= 
+    flag=-c -O2 $(includes) -Wall
+    lib=$(librelease)
   else
-    flag=-c -O2 -Iinclude -I../comostrings/include -I../camxml/include \
-         -I../sprogc/include -I../sweepc/include -I../cvodes/include \
-         -I../cvodes/source/cvodes -I../geometry/include -I../utils/include -Wall -pg
-    flink=-pg
+    flag=-c -O2 $(includes)  -Wall -pg
+    lib=$(librelease)
   endif
 else
-  flag=-c -O0 -Iinclude -I../comostrings/include -I../camxml/include \
-       -I../sprogc/include -I../sweepc/include -I../cvodes/include \
-       -I../cvodes/source/cvodes -I../geometry/include -I../utils/include \
-       -Wall -ggdb -pg -D_GLIBCXX_DEBUG
-  flink=-pg 
+  flag=-c -O0 $(includes) -Wall -ggdb -pg -D_GLIBCXX_DEBUG
+  lib=$(libdebug)
 endif
 
-# Source directories.
-
-src=source
-inc=include
-lib=lib
-
-# Additional libraries.
-
-ifeq ($(debug),0)
-  comostrings=../comostrings/lib/comostrings.a
-  camxml=../camxml/lib/camxml.a
-  sprog=../sprogc/lib/sprog.a
-  sweep=../sweepc/lib/sweep.a
-  cvodes=../cvodes/lib/cvodes.a
-  geom=../geometry/lib/geometry.a
-else
-  comostrings=../comostrings/lib/comostrings_d.a
-  camxml=../camxml/lib/camxml_d.a
-  sprog=../sprogc/lib/sprog_d.a
-  sweep=../sweepc/lib/sweep_d.a
-  cvodes=../cvodes/lib/cvodes_d.a
-  geom=../geometry/lib/geometry_d.a
-endif
-linklibs=$(comostrings) $(camxml) $(sprog) $(sweep) $(cvodes) $(geom)
 
 # Target objects.
-
 obj=mops_mechanism.o mops_mixture.o \
     mops_particle_solver.o mops_predcor_solver.o mops_psr.o mops_reactor.o \
     mops_reactor_factory.o  mops_ode_solver.o mops_settings_io.o mops_solver.o \
@@ -62,61 +76,11 @@ obj=mops_mechanism.o mops_mixture.o \
     cvodes_utils.o loi_reduction.o
 
 # TARGET all: Compile to a static library (*.a).
+all: $(obj)
+	mkdir -p $(lib)
+	ar rc $(lib)/libmops.a $(obj)
 
-all: comostringslib camxmllib sproglib sweeplib cvodeslib geomlib $(obj) mops.o
-	mkdir -p bin
-ifeq ($(debug),0)
-  ifeq ($(profile),0)
-		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops.x
-  else
-		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops_p.x
-  endif 
-else
-	$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops_d.x
-endif
-
-32bit: comostringslib camxmllib sproglib sweeplib cvodeslib $(obj)
-	mkdir -p bin
-ifeq ($(debug),0)
-  ifeq ($(profile),0)
-		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops32.x -static
-  else
-		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops32_p.x -static
-  endif
-else
-		$(cpp) $(flink) $(obj) mops.o $(linklibs) -o bin/mops32_d.x -static
-endif
-
-
-# Required libraries.
-comostringslib:
-	$(MAKE) -f ../comostrings/Makefile -C ../comostrings debug=$(debug) \
-  profile=$(profile)
-camxmllib:
-	$(MAKE) -f ../camxml/Makefile -C ../camxml debug=$(debug) profile=$(profile)
-sproglib:
-	$(MAKE) -f ../sprogc/Makefile -C ../sprogc debug=$(debug) profile=$(profile)
-sweeplib:
-	$(MAKE) -f ../sweepc/Makefile -C ../sweepc debug=$(debug) profile=$(profile)
-cvodeslib:
-	$(MAKE) -f ../cvodes/Makefile -C ../cvodes debug=$(debug) profile=$(profile)
-geomlib:
-	$(MAKE) -f ../geometry/Makefile -C ../geometry debug=$(debug) profile=$(profile)
-
-# Mops library
-mopslib: $(obj) comostringslib camxmllib sproglib sweeplib cvodeslib geomlib
-	mkdir -p lib
-ifeq ($(debug),0)
-	ar -rcs $(lib)/mops.a $(obj)
-else
-	ar -rcs $(lib)/mops_d.a $(obj)
-endif
-
-# Driver program.
-
-mops.o: $(src)/mops.cpp
-	$(cpp) $(flag) $(src)/mops.cpp
-
+# Source code.
 mops_settings_io.o: $(src)/mops_settings_io.cpp
 	$(cpp) $(flag) $(src)/mops_settings_io.cpp
 
@@ -200,19 +164,8 @@ cvodes_utils.o: $(src)/cvodes_utils.cpp
 
 # TARGET clean: leave just source code.
 
-cleanlibs:
-	$(MAKE) clean -f ../comostrings/Makefile -C ../comostrings
-	$(MAKE) clean -f ../camxml/Makefile -C ../camxml
-	$(MAKE) clean -f ../sprogc/Makefile -C ../sprogc
-	$(MAKE) clean -f ../sweepc/Makefile -C ../sweepc
-	$(MAKE) clean -f ../cvodes/Makefile -C ../cvodes
-	$(MAKE) clean -f ../geometry/Makefile -C ../geometry
-	rm -rf *.o \#* *~
-
-cleanparticles:
-	$(MAKE) clean -f ../sweepc/Makefile -C ../sweepc
-	rm -rf *.o \#* *~
-
 clean:
-	rm -rf *.o \#* *~ $(lib)/*.a
+	rm -rf $(path)/*.o \#* *~
 
+cleanlibs:
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libmops.a $(libdebug)/libmops.a
