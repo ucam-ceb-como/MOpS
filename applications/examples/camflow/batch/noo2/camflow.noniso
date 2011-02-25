@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<camflow>
+	<reactor model="plug">
+	 <diameter unit="m">0.015</diameter>
+	 <length unit="cm">5</length>
+  </reactor>
+  <op_condition>
+	  <temperature>nonisothermal</temperature>
+	  <twall unit="K">1073</twall>
+    <pressure unit="Pa">1e5</pressure>
+  </op_condition>
+  <inlet>
+     <fuel>
+       <velocity unit="m/s">0.1</velocity>
+       <temperature unit="C">800</temperature>
+       <!--flowrate unit="cgs">4.63e-3</flowrate-->
+       <massfrac>
+        <species name="NO2">0.1</species>
+        <species name="N2">*</species>
+       </massfrac>
+     </fuel>
+  </inlet>
+  <solver mode="adiabatic" solver="cvode">
+	  <tols>
+		  <species>
+			  <aTol>1.e-06</aTol>
+			  <rTol>1.e-06</rTol>	  
+		  </species>
+		  <temperature>
+			  <aTol>1.e-03</aTol>
+			  <rTol>1.e-03</rTol>	  
+		  </temperature>
+		  <flow>
+			  <aTol>1.e-03</aTol>
+			  <rTol>1.e-03</rTol>	  
+		  </flow>
+  	  </tols>
+  </solver>
+  <initialize>
+    <massfrac>
+      <species name="NO">0.1</species>
+      <species name="N2">*</species>
+    </massfrac>
+    <Tprofile unit_L="cm" unit_T="K">
+      <position x="0.0">373.7</position>
+      <position x="0.125">484.5</position>
+      <position x="0.25">583.7</position>
+      <position x="0.375">672.2</position>
+      <position x="0.5">753.5</position>
+      <position x="0.75">901.4</position>
+      <position x="1.0">1027.0</position>
+      <position x="1.25">1120.0</position>
+      <position x="1.5">1184.0</position>
+      <position x="2.0">1260.0</position>
+      <position x="3.0">1348.0</position>
+      <position x="6.0">1475</position>
+      <position x="10.0">1524.0</position>
+    </Tprofile>
+ </initialize>
+ <report species="mass">
+ </report>
+</camflow>

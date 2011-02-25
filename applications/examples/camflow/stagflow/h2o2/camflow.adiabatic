@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<camflow>
+	<reactor model="stagflow">
+	 <diameter unit="m">0.015</diameter>
+	 <length unit="cm">2</length>
+  </reactor>
+  <op_condition>
+	  <temperature>adiabatic</temperature>
+	  <twall unit="K">300.0</twall>
+     <pressure unit="bar">1.0</pressure>
+	  <strain>100</strain>
+  </op_condition>
+  <inlet>
+     <fuel>
+       <velocity unit="m/s">2.0</velocity>
+       <temperature unit="K">300.0</temperature>
+       <molefrac>
+        <species name="H2">0.5</species>
+        <species name="O2">*</species>
+       </molefrac>
+	 </fuel>
+  </inlet>
+  <solver mode="coupled" solver="cvode" residual="on">
+	  <maxTime>10000</maxTime>
+	  <iterations>1</iterations>
+	  <tols>
+		  <species>
+			  <aTol>1.e-10</aTol>
+			  <rTol>1.e-08</rTol>	  
+		  </species>
+		  <temperature>
+			  <aTol>1.e-03</aTol>
+			  <rTol>1.e-03</rTol>	  
+		  </temperature>
+		  <flow>
+			  <aTol>1.e-03</aTol>
+			  <rTol>1.e-03</rTol>	  
+		  </flow>
+  	  </tols>
+  </solver>
+  <initialize>
+	 <mCenter unit="cm">1</mCenter>
+	 <mWidth unit="cm">0.5</mWidth>
+	 <massfrac>
+	   <intrmdt name="H">0.1</intrmdt>
+	   <intrmdt name="OH">0.12</intrmdt>
+	   <intrmdt name="HO2">0.001</intrmdt>
+	   <intrmdt name="H2O">0.01</intrmdt>
+	 </massfrac>
+    <Tprofile unit_L="cm" unit_T="K">
+      <position x="0.00">300.</position>
+      <position x="0.10">350.0</position>
+      <position x="0.20">400.0</position>
+      <position x="0.30">500.0</position>
+      <position x="0.40">600.0</position>
+      <position x="0.50">700.0</position>
+      <position x="0.60">800.0</position>
+      <position x="0.70">900.0</position>
+      <position x="0.80">1000.0</position>
+      <position x="0.90">1100.0.</position>
+      <position x="1.00">1200.0</position>
+      <position x="1.10">1100.0.</position>
+      <position x="1.20">1000.0</position>
+      <position x="1.30">900.0</position>
+      <position x="1.40">800.0</position>
+      <position x="1.50">700.0</position>
+      <position x="1.60">600.0</position>
+      <position x="1.70">500.0</position>
+      <position x="1.80">400.0</position>
+      <position x="1.90">350.0</position>
+		<position x="2.00">300.0</position>
+    </Tprofile>
+ </initialize>
+ <report outfile="final" species="mole">
+ </report>
+ <grid>grid.inp</grid>
+</camflow>
