@@ -1,0 +1,10 @@
+*.cpp           eol=lf
+*.hpp           eol=lf
+*.h             eol=lf
+*.c             eol=lf
+*.sh            eol=lf
+*.pl            eol=lf
+
+*.txt           text
+
+*.vcproj        eol=crlf
