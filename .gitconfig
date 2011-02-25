@@ -4,6 +4,9 @@
 	bare = false
 	logallrefupdates = true
     autocrlf = true
+[remote]
+    origin.url = ssh://vienna.cheng.cam.ac.uk/home/userspace/CoMoCommon/Codes/mops-c-Git
+    origin.fetch = +refs/heads/*:refs/remotes/origin/*
 [alias]
     logf = log --follow
     lg = log --follow --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative

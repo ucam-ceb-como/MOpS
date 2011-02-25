@@ -10,7 +10,7 @@
 #define GPC_SRI_REACTION_H
 
 #include "gpc_params.h"
-#include "gpc_fall_off_reaction.h"
+#include "gpc_fall_off_reaction.h"
 namespace Sprog
 {
 namespace Kinetics
