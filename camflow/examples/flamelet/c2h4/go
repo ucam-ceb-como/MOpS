@@ -1,0 +1,2 @@
+cp $1 camflow.xml
+time ${CAMFLOW_DIR}/bin/camflow

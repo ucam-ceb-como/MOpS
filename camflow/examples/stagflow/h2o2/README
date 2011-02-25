@@ -1,0 +1,9 @@
+the go files are provided to run the binary.
+the go file requires an input file which will be copied into camflow.xml
+requirements
+	set the path to camflow directory by defining an environmental variables CAMFLOW_DIR
+	on linux machines you can use the export command.
+	export CAMFLOW_DIR=../../camflow [you can specify absolute or relative path here]
+
+usage
+	./go camflow.xxxx
