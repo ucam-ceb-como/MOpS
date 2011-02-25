@@ -1,6 +1,6 @@
 #!/bin/bash
 # Make all the libraries in src.
-# Written by lrm29@cam.ac.uk
+# Written by Laurence McGlashan lrm29@cam.ac.uk
 
 usage() 
 {
