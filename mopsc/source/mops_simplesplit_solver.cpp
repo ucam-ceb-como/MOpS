@@ -1,0 +1,196 @@
+/*
+  Project:        mopsc (gas-phase chemistry solver).
+  Sourceforge:    http://sourceforge.net/projects/mopssuite
+  
+  Copyright (C) 2008 Peter L W Man.
+
+  File purpose:
+    Implementation of the SimpleSplitSolver class declared in the
+    mops_simplesplit_solver.h header file.
+
+  Licence:
+    This file is part of "mops".
+
+    mops is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Dr Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
+*/
+
+#include "mops_simplesplit_solver.h"
+#include "mops_reactor_factory.h"
+#include "sweep.h"
+#include "string_functions.h"
+#include "csv_io.h"
+#include <stdexcept>
+
+using namespace Mops;
+using namespace std;
+using namespace Strings;
+
+// CONSTRUCTORS AND DESTRUCTORS.
+
+// Default constructor.
+SimpleSplitSolver::SimpleSplitSolver(void)
+{
+}
+
+// Default destructor.
+SimpleSplitSolver::~SimpleSplitSolver(void)
+{
+}
+
+
+// SOLVING REACTORS.
+
+// Solves the coupled reactor using a Strang splitting algorithm
+// up to the stop time.  calls the output routine once at the
+// end of the function.  niter is ignored.
+void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
+                              int (*rand_int)(int, int), Sweep::real (*rand_u01)(),
+                              OutFnPtr out, void *data)
+{
+    // Mark the time at the start of the step, in order to
+    // calculate total computation time.
+    clock_t totmark = clock();
+
+    // Time counters.
+	real t1 = r.Time();
+    real t2 = r.Time();
+    real dt = (tstop - t2) / (real)nsteps; // Step size.
+    //real h  = dt * 0.5; // Half step size.
+
+    // Sweep time counters.
+    //real ts1 = r.Time();
+    //real ts2 = ts1;
+
+    // Variables required to ensure particle number density is correctly
+    // scaled with gas-phase expansion.
+    real rho = 0.0;
+
+    /* m_cpu_mark = clock();
+        // Solve first half-step of gas-phase chemistry.
+        rho = r.Mixture()->Density();
+        m_ode.Solve(r, t2+=h);
+        r.SetTime(t2);
+    m_chemtime += calcDeltaCT(m_cpu_mark);
+
+    m_cpu_mark = clock();
+        // Solve one whole step of population balance (Sweep).
+        m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
+        r.Mixture()->SetM0(r.Mixture()->Density() * m0 / rho);
+        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech());
+    m_swp_ctime += calcDeltaCT(m_cpu_mark); */
+    
+    for (int i=1; i<=nsteps; ++i) {
+        m_cpu_mark = clock();
+            // Solve whole step of gas-phase chemistry.
+            rho = r.Mixture()->MassDensity();
+            m_ode.ResetSolver();
+            m_ode.Solve(r, t2+=dt);
+            r.SetTime(t2);
+        m_chemtime += calcDeltaCT(m_cpu_mark);
+
+        m_cpu_mark = clock();
+
+        // Solve whole step of population balance (Sweep).
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->MassDensity());
+        Run(t1, t2, *r.Mixture(), r.Mech()->ParticleMech(), rand_int, rand_u01);
+
+        m_swp_ctime += calcDeltaCT(m_cpu_mark);        
+    }
+
+    /* m_cpu_mark = clock();
+        // Solve last half-step of gas-phase chemistry.    
+        m_ode.ResetSolver();
+        m_ode.Solve(r, t2+=h);
+        r.SetTime(t2);
+    m_chemtime += calcDeltaCT(m_cpu_mark); */
+
+    // Calculate total computation time.
+    m_tottime += calcDeltaCT(totmark);
+
+    // Call the output function.
+    if (out) out(nsteps, niter, r, *this, data);
+}
+
+
+// SOLUTION ROUTINES.
+
+void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n,
+                                       Mops::Reactor &r,
+                                       int (*rand_int)(int, int),real (*rand_u01)())
+{
+    // Time counters.
+    real t2 = r.Time();
+    //real h  = dt * 0.5; // Half step size.
+
+    // Sweep time counters.
+    real ts1 = r.Time();
+    real ts2 = ts1;
+
+    // Variables required to ensure particle number density is correctly
+    // scaled with gas-phase expansion.
+    real rho = 0.0;
+
+    /* m_cpu_mark = clock();
+        // Solve first half-step of gas-phase chemistry.
+        rho = r.Mixture()->Density();
+        m_ode.Solve(r, t2+=h);
+        r.SetTime(t2);
+    m_chemtime += calcDeltaCT(m_cpu_mark);
+
+    m_cpu_mark = clock();
+        // Solve one whole step of population balance (Sweep).
+        m0 = r.Mixture()->ParticleCount()/r.Mixture()->SampleVolume();
+        r.Mixture()->SetM0(r.Mixture()->Density() * m0 / rho);
+        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech());
+    m_swp_ctime += calcDeltaCT(m_cpu_mark); */
+    
+    for (unsigned int i=1; i!=n; ++i) {
+        m_cpu_mark = clock();
+            // Solve whole step of gas-phase chemistry.
+            rho = r.Mixture()->MassDensity();
+            m_ode.ResetSolver();
+            m_ode.Solve(r, t2+=dt);
+            r.SetTime(t2);
+        m_chemtime += calcDeltaCT(m_cpu_mark);
+
+        m_cpu_mark = clock();
+            // Solve whole step of population balance (Sweep).
+            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->MassDensity());
+            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rand_int, rand_u01);
+        m_swp_ctime += calcDeltaCT(m_cpu_mark);
+        
+    }
+
+    /* m_cpu_mark = clock();
+        // Solve last half-step of gas-phase chemistry.    
+        m_ode.ResetSolver();
+        m_ode.Solve(r, t2+=h);
+        r.SetTime(t2);
+    m_chemtime += calcDeltaCT(m_cpu_mark); */
+}
+

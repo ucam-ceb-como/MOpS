@@ -1,0 +1,61 @@
+<mops version="2">
+  
+  <!-- Default parameters (can be overidden). --> 
+  <runs>5</runs>
+  <iter>2</iter>
+  <atol>1.0e-8</atol> 
+  <rtol>1.0e-6</rtol>
+  <pcount>512</pcount>
+  <maxm0>5.0e11</maxm0>
+  <relax>0.5</relax>
+  
+  <!-- Reactor definition (given initial conditions). -->
+  <reactor type="batch" constt="true" id="Test_System" units="mol/mol">
+    <component id="C2H2">7.43e-4</component>
+    <component id="C2H4">0.144</component>
+    <component id="O2">0.199</component>
+    <component id="OH">1.16e-10</component>
+    <component id="AR">0.574</component>
+    <component id="A4">2.38e-12</component>
+    <component id="H2">0.0266</component>
+    <component id="H">2.07e-4</component>
+    <component id="H2O">0.0276</component>
+    <temperature units="K">1730.0</temperature>
+    <pressure units="bar">1.0</pressure>
+
+    <!-- N2 is added just to make the mole fractions sum to 1, without including data for lots of trace species-->
+    <component id="N2">0.028</component>
+  </reactor>
+  
+  <!-- Output time sequence. -->
+  <timeintervals splits="1">
+    <start>0.0</start>
+    <time steps="5" splits="1">0.005</time>
+    <time steps="10" splits="1">0.007</time>
+    <time steps="15" splits="1">0.01</time>
+    <time steps="30" splits="1">0.04</time>
+
+  </timeintervals>
+
+  <!-- Simulation output settings. -->
+  <output>
+    <statsbound property="dcol">
+      <lower>0.0</lower>
+      <upper>1.0e30</upper>
+    </statsbound>
+    
+    <console interval="1" msgs="true">
+      <tabular>
+        <column fmt="sci">time</column>
+        <column fmt="sci">A4</column>
+        <column fmt="float">#sp</column>
+        <column fmt="sci">m0</column>
+        <column fmt="sci">fv</column>
+        <column fmt="sci">ct</column>
+      </tabular>
+    </console>
+    
+    <!-- File name for output (excluding extensions). -->
+    <filename>regression2a-nuc-coag-pyr</filename>
+  </output>
+</mops>

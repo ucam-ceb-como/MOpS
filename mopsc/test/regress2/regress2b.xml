@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="ABF soot mechanism" units="CGS">
+
+    <!-- Choose which models to use -->
+    
+    <model type="activesites" id="haca" alpha="profile" />
+    
+    <!-- Define particle components. -->
+    
+    <component id="C" type="bulk">
+      <description>
+        Carbon in graphite lattice.
+      </description>
+      <density units="g/cm3">1.8</density>
+      <molwt units="g/mol">12.011</molwt>
+      <min>31.9</min>
+    </component> 
+    
+
+    <!-- Define particle models. -->
+    
+    <particle id="[Soot]" model="spherical" subtree="false">
+      <description>
+        A soot particle.
+      </description>
+   </particle>
+
+    <includemech id="abfsoot" />
+    
+    <!-- Inceptions -->
+    
+    <inception name="Pyrene inception">
+        <formula>A4 + A4 to [X32]</formula>
+        <reactant id="A4" stoich="2" m="3.2e-22" d="7.11e-8"/>
+        <particleout id="[Soot]"/>
+        <component id="C" dx="32"/>
+    </inception>
+    
+    <!-- Surface reactions (single particle events) -->
+    
+    <reaction type="abf" name="C2H2 addition" defer="true">
+        <formula>[X] + C2H2 to [X+2] + H</formula>
+        <reactant id="C2H2" stoich="1"/>
+        <product id="H" stoich="1"/>
+        <particlein id="[Soot]"/>
+        <particleout id="[Soot]"/>
+        <A>8.0E7</A>
+        <n>1.56</n>
+        <E units="cal">3.8E0</E>
+        <particleterm id="as" power="1.0"/>
+        <component id="C" dx="+2"/>
+    </reaction>
+    
+    
+</mechanism>
