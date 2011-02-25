@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="Rob split transport test" units="CGS">
+
+    <model type="drag" id="StokesCunningham">
+        <A>4</A>
+        <B>5</B>
+        <E>100</E>
+    </model>
+    
+    <model type="diffusion" id="einstein" />
+    <model type="advection" id="physical" />
+    <model type="thermophoresis" id="waldmann" />
+
+    <!-- Define particle components. -->
+    
+    <component id="pah" type="bulk">
+      <description>
+        test
+      </description>
+      <density units="g/cm3">1</density>
+      <molwt units="g/mol">20</molwt>
+    </component> 
+    
+
+    <particle id="[soot]" model="spherical" subtree="false">
+      <description>
+        test
+      </description>
+    </particle>
+
+    <coagulation>
+        <!-- Turn off coagulation by setting prefactor to 0 -->
+        <kernel>additive</kernel>
+        <A>0.0</A>
+    </coagulation>
+
+</mechanism>

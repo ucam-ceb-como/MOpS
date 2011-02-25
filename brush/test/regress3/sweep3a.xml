@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="Rob split transport test" units="CGS">
+
+    <model type="drag" id="StokesCunningham">
+        <A>4</A>
+        <B>5</B>
+        <E>100</E>
+    </model>
+    
+    <model type="diffusion" id="einstein" />
+    <model type="advection" id="physical" />
+
+    <!-- Define particle components. -->
+    
+    <component id="pah" type="bulk">
+      <description>
+        test
+      </description>
+      <density units="g/cm3">1</density>
+      <molwt units="g/mol">20</molwt>
+    </component> 
+    
+
+    <particle id="[soot]" model="spherical" subtree="false">
+      <description>
+        test
+      </description>
+    </particle>
+
+    
+    <!-- Inceptions -->
+
+    <!--inception name="Dimer inception">
+        <formula>A4 + A4 to [X]</formula>
+        <reactant id="A4" stoich="2" m="9.981e-23" d="0.32e-8"/>
+        <particleout id="[X]"/>
+        <component id="pah" dx="32"/>
+        <A>1.0</A>
+    </inception-->
+ 
+    <coagulation>
+        <!-- Turn off coagulation by setting prefactor to 0 -->
+        <kernel>additive</kernel>
+        <A>0.0</A>
+    </coagulation>
+
+</mechanism>

@@ -1,0 +1,17 @@
+<populations>
+
+    <population x="0.015">
+      <particle count="1024">
+        <component id="pah" dx="10"/>
+      </particle>
+      <m0>1.0e3</m0>
+    </population>
+
+    <population x="0.007">
+      <particle count="1024">
+        <component id="pah" dx="15"/>
+      </particle>
+      <m0>1.0e3</m0>
+    </population>
+
+</populations>
