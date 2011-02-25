@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "comostrings", "comostrings.vcproj", "{667E4098-08F2-4C66-8B80-29643A05639B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "comostrings_test", "comostrings_test.vcproj", "{2D95F05D-0DD7-41D9-9D57-39EDC40AC6F7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug DLL|Win32 = Debug DLL|Win32
+		Debug|Win32 = Debug|Win32
+		Release DLL|Win32 = Release DLL|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{667E4098-08F2-4C66-8B80-29643A05639B}.Debug DLL|Win32.ActiveCfg = Debug DLL|Win32
+		{667E4098-08F2-4C66-8B80-29643A05639B}.Debug DLL|Win32.Build.0 = Debug DLL|Win32
+		{667E4098-08F2-4C66-8B80-29643A05639B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{667E4098-08F2-4C66-8B80-29643A05639B}.Debug|Win32.Build.0 = Debug|Win32
+		{667E4098-08F2-4C66-8B80-29643A05639B}.Release DLL|Win32.ActiveCfg = Release DLL|Win32
+		{667E4098-08F2-4C66-8B80-29643A05639B}.Release DLL|Win32.Build.0 = Release DLL|Win32
+		{667E4098-08F2-4C66-8B80-29643A05639B}.Release|Win32.ActiveCfg = Release|Win32
+		{667E4098-08F2-4C66-8B80-29643A05639B}.Release|Win32.Build.0 = Release|Win32
+		{2D95F05D-0DD7-41D9-9D57-39EDC40AC6F7}.Debug DLL|Win32.ActiveCfg = Debug DLL|Win32
+		{2D95F05D-0DD7-41D9-9D57-39EDC40AC6F7}.Debug DLL|Win32.Build.0 = Debug DLL|Win32
+		{2D95F05D-0DD7-41D9-9D57-39EDC40AC6F7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2D95F05D-0DD7-41D9-9D57-39EDC40AC6F7}.Debug|Win32.Build.0 = Debug|Win32
+		{2D95F05D-0DD7-41D9-9D57-39EDC40AC6F7}.Release DLL|Win32.ActiveCfg = Release DLL|Win32
+		{2D95F05D-0DD7-41D9-9D57-39EDC40AC6F7}.Release DLL|Win32.Build.0 = Release DLL|Win32
+		{2D95F05D-0DD7-41D9-9D57-39EDC40AC6F7}.Release|Win32.ActiveCfg = Release|Win32
+		{2D95F05D-0DD7-41D9-9D57-39EDC40AC6F7}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
