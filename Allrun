@@ -1,0 +1,58 @@
+#!/bin/bash
+# Run camflow as a test.
+usage() 
+{
+    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+    cat<<USAGE
+usage: ${0##*/} [OPTION]
+  
+options:
+  -cleanall    Clean all
+  -debug       Compile in debug mode
+  -help        This usage
+
+USAGE
+    exit 1
+}
+
+debug=0
+cleanall=0
+
+# parse options
+while [ "$#" -gt 0 ]
+do
+   case "$1" in
+   -h | -help)
+      usage
+      ;;
+   -debug)
+      debug=1
+      shift 1   
+      ;;
+   -cleanall)
+      cleanall=1
+      shift 1
+      ;;
+   --)
+      shift
+      break
+      ;;
+   -*)
+      usage "invalid option '$1'"
+      ;;
+   *)
+      break
+      ;;
+   esac
+done
+
+make --directory=applications/solvers/camflow -s --file="newcamflowSolverMakefile" clean all debug=$debug
+if [ $? -gt 0 ] ; then
+    echo make camflow solver failed
+    exit
+else
+    echo make camflow solver success
+fi
+
+cd applications/examples/camflow/flamelet/h2o2
+./go
