@@ -6,15 +6,15 @@
     Main test routine for comostrings library.
 */
 
-#include "csv_io.h"
-#include "string_functions.h"
+#include "../../../src/io/comostrings/include/csv_io.h"
+#include "../../../src/io/comostrings/include/string_functions.h"
 #include <string>
 #include <vector>
 #include <iostream>
 
 using namespace std;
 
-void main(void)
+int main(void)
 {
     // Open a csv file for writing.
     CSV_IO io;
@@ -53,4 +53,7 @@ void main(void)
             headin[1] << ' ' << headin[2] << '\n';
     cout << datain.size() << ' ' << datain[0] << ' ' << 
             datain[1] << ' ' << datain[2] << '\n';
+
+    return 0;
+
 }

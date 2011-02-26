@@ -1,0 +1,27 @@
+<sensi version="1.0">
+    <settings>
+        <sensitivity enable="true" method="1"/>
+        <errorControl enable="true"/>
+        <!-- atolB>1.0e-6</atol> 
+        <atolQ>1.0e-6</atol> 
+        <atolQB>1.0e-6</atol> 
+        <rtolB>1.0e-6</rtol>
+        <rtolQ>1.0e-6</rtol -->
+        <problemType type="Init_Conditions"/>
+        <!--problemType type="Reaction_Rates"/-->
+    </settings>
+    <parameters>
+        <A all="false" enable="false"/>
+        <n all="false" enable="false"/>
+        <E all="false" enable="false"/>
+        <additional>
+            <paramA rxnth="1"/>
+            <paramA rxnth="2"/>
+            <paramA rxnth="3"/>
+            <paramA rxnth="4"/>
+            <paramA rxnth="5"/>
+            <paramA rxnth="6"/>
+        </additional>
+		<init id="TIO2"/>
+    </parameters>
+</sensi>

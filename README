@@ -17,11 +17,16 @@ Viewing Documentation:
 
 Making libraries:
 
-1) Execute ./etc/Allmake to make the libraries. 
+1) Execute ./etc/makeAllLibs to make all of the libraries in src/. 
    Options: -debug      Compiles in debug mode.
             -cleanall   Cleans all the source and libraries
 
+###############################################################################
 
+Task List:
+
+1) Edit all the visual studio project files.
+2) Sort out flamelab.
 
 
 ###############################################################################

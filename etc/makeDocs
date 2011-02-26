@@ -57,6 +57,7 @@ if [ $cleanall -eq 1 ]; then
         echo "$element cleaned."
     done
     rm -rf doc/mopssuite
+    rm -rf doc/index.html
     echo "Documentation cleaned successfully."
     exit
 fi

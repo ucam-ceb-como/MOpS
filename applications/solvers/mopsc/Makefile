@@ -12,14 +12,16 @@ source=../../../src
 
 # C++ compiler.
 cpp=g++
+#cpp=mpicxx -DUSE_MPI -DNONSPHERE
+
 # Includes.
-includes=-I$(source)/io/comostrings/include -I$(source)/io/camxml/include \
-       -I$(source)/sprogc/include -I$(source)/odesolvers/cvode/include -I$(source)/odesolvers/radau/include \
-       -I$(source)/geometry/include -I$(source)/utils/include -I$(source)/camflow/include 
+includes=-I$(source)/mopsc/include -I$(source)/io/comostrings/include -I$(source)/io/camxml/include \
+         -I$(source)/sprogc/include -I$(source)/sweepc/include -I$(source)/odesolvers/cvodes/include \
+         -I$(source)/odesolvers/cvodes/source/cvodes -I$(source)/geometry/include -I$(source)/utils/include
 
 ifeq ($(debug),0)
   ifeq ($(profile),0)
-    flag=-c -O2 $(includes) -Wall
+    flag=-c -O2 $(includes) -Wall 
     flink= 
     lib=$(librelease)
     bin=$(binrelease)
@@ -31,32 +33,36 @@ ifeq ($(debug),0)
   endif
 else
   flag=-c -O0 $(includes) -Wall -ggdb -pg -D_GLIBCXX_DEBUG
-  flink=-pg
+  flink=-pg 
   lib=$(libdebug)
   bin=$(bindebug)
 endif
 
 # Additional libraries.
-
-camflow=$(lib)/libcamflow.a
+mops=$(lib)/libmops.a
 comostrings=$(lib)/libcomostrings.a
 camxml=$(lib)/libcamxml.a
 sprog=$(lib)/libsprog.a
-cvode=$(lib)/libcvode.a
-radau=$(lib)/libradau.a
+sweep=$(lib)/libsweep.a
+cvodes=$(lib)/libcvodes.a
+geom=$(lib)/libgeometry.a
 
-linklibs=$(camflow) $(comostrings) $(camxml) $(sprog) $(cvode) $(radau)
+linklibs= $(mops) $(comostrings) $(camxml) $(sprog) $(sweep) $(cvodes) $(geom)
 
 # TARGET binary: Compile to a  binary.
-objlocal=cam_kernel.o
+objlocal=mops.o
 
 all: $(objlocal)
 	mkdir -p $(bin)
-	$(cpp) $(flink) $(objlocal) $(linklibs) -o $(bin)/camflow
+	$(cpp) $(flink) $(objlocal) $(linklibs) -o $(bin)/mops
+
+32bit: $(objlocal)
+	mkdir -p $(bin)
+	$(cpp) $(flink) $(objlocal) $(linklibs) -o $(bin)/mops -static
 
 # Driver program.
-cam_kernel.o: cam_kernel.cpp
-	$(cpp) $(flag) cam_kernel.cpp
+mops.o: mops.cpp
+	$(cpp) $(flag) mops.cpp
 
 # TARGET clean: leave just source code.
 clean:

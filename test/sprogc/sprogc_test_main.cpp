@@ -6,15 +6,17 @@
     A test program for the sprogc library.
 */
 
-#include "gpc.h"
+#include "../../src/sprogc/include/gpc.h"
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+
+
 using namespace Sprog;
 using namespace std;
 
 
-void main()
+int main()
 {
     Mechanism mech;
 	int k;
@@ -89,8 +91,9 @@ void main()
 
     } catch (exception &e) {
         cout << e.what();
-        return;
+        return 1;
     }
 
+    return 0;
 
 }

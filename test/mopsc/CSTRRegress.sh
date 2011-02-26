@@ -39,9 +39,9 @@ cd cstrtest
 uname -s | grep --ignore-case CYGWIN 
 if(($?==0))
 then
-	program="../../bin/mops_d.exe"
+	program="../../../bin/release/mops.exe"
 else 
-	program="../../bin/mops_d.x" 
+	program="../../../bin/release/mops" 
 fi
 
 dos2unix chem.inp
