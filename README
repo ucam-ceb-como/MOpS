@@ -1,5 +1,31 @@
+###############################################################################
+MOPS: A suite of C++ libraries and solvers.
+###############################################################################
+
+Installation:
+
 1) Once cloned, copy .gitconfig over .git/config
 
+###############################################################################
+
+Viewing Documentation:
+
+1) Execute ./etc/makeDocs to make the documentation.
+   Options: -cleanall   Cleans all the source and libraries
+
+2) Open doc/index.html in a web browser. Edit doc/mainpage to add your name!
+
+Making libraries:
+
+1) Execute ./etc/Allmake to make the libraries. 
+   Options: -debug      Compiles in debug mode.
+            -cleanall   Cleans all the source and libraries
+
+
+
+
+###############################################################################
 Laurence McGlashan
 lrm29@cam.ac.uk
 25 February 2011
+###############################################################################

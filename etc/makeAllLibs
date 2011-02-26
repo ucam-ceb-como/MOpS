@@ -48,7 +48,7 @@ do
    esac
 done
 
-if [ $0 != "./etc/Allmake" ]; then 
+if [ $0 != "./etc/makeAllLibs" ]; then 
     echo "Error: Must run this script from mops-c-Git/"
     exit 1
 fi
@@ -116,4 +116,4 @@ do
     fi
 done
 
-echo "Allmake successful."
+echo "makeAllLibs successful."
