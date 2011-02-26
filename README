@@ -4,7 +4,12 @@ MOPS: A suite of C++ libraries and solvers.
 
 Installation:
 
-1) Once cloned, execute "INSTALL.sh -test". It should run successfully.
+1) Set the following variables (substitute for your name/email):
+
+    git config --global user.name "Laurence McGlashan"
+    git config --global user.email "lrm29@cam.ac.uk"
+
+2) Once cloned, execute "INSTALL.sh -test". It should run successfully.
 
 -------------------------------------------------------------------------------
 
