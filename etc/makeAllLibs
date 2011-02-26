@@ -9,9 +9,10 @@ usage()
 usage: ${0##*/} [OPTION]
   
 options:
-  -cleanall    Clean all
-  -debug       Compile in debug mode
-  -help        This usage
+  -cleanall       Clean all
+  -cleansource    Clean source code
+  -debug          Compile in debug mode
+  -help           This usage
 
 USAGE
     exit 1
@@ -19,6 +20,7 @@ USAGE
 
 debug=0
 cleanall=0
+cleansource=0
 
 # parse options
 while [ "$#" -gt 0 ]
@@ -33,6 +35,10 @@ do
       ;;
    -cleanall)
       cleanall=1
+      shift 1
+      ;;
+   -cleansource)
+      cleansource=1
       shift 1
       ;;
    --)
@@ -75,6 +81,27 @@ if [ $cleanall -eq 1 ]; then
         echo "$element cleaned."
     done
     echo "Libraries cleaned successfully."
+    exit
+fi
+
+if [ $cleansource -eq 1 ]; then
+    echo "Cleaning all library source."
+    for element in ${odesolvers[@]}
+    do
+        make --directory=src/odesolvers/$element -s --file="Makefile" clean
+        echo "$element cleaned."
+    done
+    for element in ${io[@]}
+    do
+        make --directory=src/io/$element -s --file="Makefile" clean
+        echo "$element cleaned."
+    done
+    for element in ${folders[@]}
+    do
+        make --directory=src/$element -s --file="Makefile" clean
+        echo "$element cleaned."
+    done
+    echo "Librarie source cleaned successfully."
     exit
 fi
 
