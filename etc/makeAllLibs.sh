@@ -60,7 +60,9 @@ do
    esac
 done
 
-if [ $0 != "./etc/makeAllLibs" ]; then 
+echo $0
+
+if [ $0 != "./etc/makeAllLibs.sh" ]; then 
     echo "Error: Must run this script from mops-c-Git/"
     exit 1
 fi

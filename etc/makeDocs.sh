@@ -42,7 +42,7 @@ do
    esac
 done
 
-if [ $0 != "./etc/makeDocs" ]; then 
+if [ $0 != "./etc/makeDocs.sh" ]; then 
     echo "Error: Must run this script from mops-c-Git/"
     exit 1
 fi

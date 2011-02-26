@@ -4,7 +4,7 @@ MOPS: A suite of C++ libraries and solvers.
 
 Installation:
 
-1) Once cloned, copy .gitconfig over .git/config
+1) Once cloned, execute "INSTALL.sh -test". It should run successfully.
 
 -------------------------------------------------------------------------------
 
@@ -40,6 +40,7 @@ Remaining Tasks:
 3) Rework brush tests.
 4) Integrate the documentation better.
 5) Sort out flamelab.
+6) More etc/ run scripts.
 
 ###############################################################################
 Laurence McGlashan

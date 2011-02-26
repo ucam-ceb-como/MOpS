@@ -10,6 +10,7 @@ options:
   -cleanall    Clean all
   -profile     Compile in profile mode
   -debug       Compile in debug mode
+  -solver      Name of the solver to compile
   -help        This usage
 
 USAGE
@@ -19,7 +20,8 @@ USAGE
 debug=0
 profile=0
 cleanall=0
-exedir=release
+exeDir=release
+solver=camflow
 
 # parse options
 while [ "$#" -gt 0 ]
@@ -40,6 +42,11 @@ do
       cleanall=1
       shift 1
       ;;
+   -solver)
+      [ "$#" -ge 2 ] || usage "'-solver' option requires an argument"
+      solver=$2
+      shift 2
+      ;;
    --)
       shift
       break
@@ -53,21 +60,24 @@ do
    esac
 done
 
-if [ $debug=="1" ]; then
+if [ $debug -eq "1" ]; then
     exeDir=debug
 fi
 
-if [ $profile=="1" ]; then
+if [ $profile -eq "1" ]; then
     exeDir=profile
 fi
 
-make --directory=applications/solvers/camflow -s --file="Makefile" clean all debug=$debug profile=$profile
+make --directory=applications/solvers/$solver -s --file="Makefile" clean all debug=$debug profile=$profile
 if [ $? -gt 0 ] ; then
-    echo make camflow solver failed
+    echo make $solver solver failed
     exit
 else
-    echo make camflow solver success
+    echo make $solver solver success
 fi
 
-cd applications/examples/camflow/flamelet/h2o2
-time ../../../../../bin/$exeDir/camflow
+cd applications/examples/camflow/plug/h2o2
+time ../../../../../bin/$exeDir/$solver
+
+
+
