@@ -1,0 +1,34 @@
+/*! \mainpage MOPS Documentation Index
+ *
+\image html group_logo_portrait.png
+
+ \authors M. Celnik
+ \authors R. I. A. Patterson
+ \authors M. Sander
+ \authors V. Janardhanan
+ \authors L. R. McGlashan (lrm29@cam.ac.uk)
+
+
+<A HREF="http://como.cheng.cam.ac.uk"> CoMo Group Website </A>
+
+ * \section intro_sec Introduction
+ *
+ * This is a CoMo project.
+
+ * \section install_sec Documentation
+ *
+ * \subsection step1 Libraries:
+ *  
+ * <a href="../../mopsc/html/index.html">Mops</a><br>
+ * <a href="../../sweepc/html/index.html">Sweep</a><br>
+ * <a href="../../sprogc/html/index.html">Sprog</a><br>
+ * <a href="../../brush/html/index.html">Brush</a><br>
+ * <a href="../../camflow/html/index.html">Camflow</a> <br><br>
+ * <a href="../../camxml/html/index.html">Camxml</a><br>
+ * <a href="../../geometry/html/index.html">Geometry</a><br>
+
+ * \subsection step1 Git Repository::
+
+<a href="http://vienna.cheng.cam.ac.uk/cgit" target="_blank">Browse the Git Repository</a>
+
+ */
