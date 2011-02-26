@@ -5,6 +5,7 @@ export profile=0
 export path=.
 librelease=../../../lib/release
 libdebug=../../../lib/debug
+libprofile=../../../lib/profile
 binrelease=../../../bin/release
 bindebug=../../../bin/debug
 binprofile=../../../bin/profile
@@ -28,7 +29,7 @@ ifeq ($(debug),0)
   else
     flag=-c -O2 $(includes) -Wall -pg
     flink=-pg
-    lib=$(librelease)
+    lib=$(libprofile)
     bin=$(binprofile)
   endif
 else

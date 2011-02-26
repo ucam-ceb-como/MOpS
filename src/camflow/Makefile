@@ -7,6 +7,7 @@ src=$(path)/source
 inc=$(path)/include
 librelease=../../lib/release
 libdebug=../../lib/debug
+libprofile=../../lib/profile
 
 # C++ compiler.
 cpp=g++
@@ -23,7 +24,7 @@ ifeq ($(debug),0)
   else
     flag=-c -O2 $(includes) -Wall -pg
     flink=-pg
-    lib=$(librelease)
+    lib=$(libprofile)
   endif
 else
   flag=-c -O0 $(includes) -Wall -ggdb -pg -D_GLIBCXX_DEBUG
@@ -103,4 +104,4 @@ clean:
 	rm -rf *.o \#* *~
 
 cleanlibs:
-	rm -rf *.o \#* *~ $(librelease)/libcamflow.a $(libdebug)/libcamflow.a
+	rm -rf *.o \#* *~ $(librelease)/libcamflow.a $(libdebug)/libcamflow.a $(libprofile)/libcamflow.a

@@ -7,6 +7,7 @@ src=$(path)/source
 inc=$(path)/include
 librelease=../../lib/release
 libdebug=../../lib/debug
+libprofile=../../lib/profile
 
 # C++ compiler.
 cpp=g++
@@ -21,7 +22,7 @@ ifeq ($(debug),0)
   else
     flag=-c -O2 $(includes) -Wall -pg
     flink=-pg
-    lib=$(librelease)
+    lib=$(libprofile)
   endif
 else
   flag=-c -O0 $(includes) -Wall -ggdb -D_GLIBCXX_DEBUG
@@ -53,9 +54,9 @@ clean:
 	rm -rf $(path)/*.o \#* *~
 
 cleanlibs:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libgeometry.a $(libdebug)/libgeometry.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libgeometry.a $(libdebug)/libgeometry.a $(libprofile)/libgeometry.a
 
 rebuild:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libgeometry.a $(libdebug)/libgeometry.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libgeometry.a $(libdebug)/libgeometry.a $(libprofile)/libgeometry.a
 	make geomlib
 

@@ -6,7 +6,7 @@ Installation:
 
 1) Once cloned, copy .gitconfig over .git/config
 
-###############################################################################
+-------------------------------------------------------------------------------
 
 Viewing Documentation:
 
@@ -15,22 +15,31 @@ Viewing Documentation:
 
 2) Open doc/index.html in a web browser. Edit doc/mainpage to add your name!
 
+-------------------------------------------------------------------------------
+
 Making libraries:
 
 1) Execute ./etc/makeAllLibs to make all of the libraries in src/. 
    Options: -debug         Compiles in debug mode.
+            -profile       Compiles in profile mode.  
             -cleanall      Cleans all the source and libraries
             -cleansource   Cleans all the source
 
-###############################################################################
+-------------------------------------------------------------------------------
 
-Task List:
+Making applications:
+
+1) Go to the relevant folders and execute make.
+
+-------------------------------------------------------------------------------
+
+Remaining Tasks:
 
 1) Edit all the visual studio project files.
-2) Sort out flamelab.
-3) Rework mops tests.
-4) Rework brush tests.
-
+2) Rework mops tests.
+3) Rework brush tests.
+4) Integrate the documentation better.
+5) Sort out flamelab.
 
 ###############################################################################
 Laurence McGlashan

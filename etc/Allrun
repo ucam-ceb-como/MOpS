@@ -8,6 +8,7 @@ usage: ${0##*/} [OPTION]
   
 options:
   -cleanall    Clean all
+  -profile     Compile in profile mode
   -debug       Compile in debug mode
   -help        This usage
 
@@ -16,7 +17,9 @@ USAGE
 }
 
 debug=0
+profile=0
 cleanall=0
+exedir=release
 
 # parse options
 while [ "$#" -gt 0 ]
@@ -27,6 +30,10 @@ do
       ;;
    -debug)
       debug=1
+      shift 1   
+      ;;
+   -profile)
+      profile=1
       shift 1   
       ;;
    -cleanall)
@@ -46,7 +53,15 @@ do
    esac
 done
 
-make --directory=applications/solvers/camflow -s --file="newcamflowSolverMakefile" clean all debug=$debug
+if [ $debug=="1" ]; then
+    exeDir=debug
+fi
+
+if [ $profile=="1" ]; then
+    exeDir=profile
+fi
+
+make --directory=applications/solvers/camflow -s --file="Makefile" clean all debug=$debug profile=$profile
 if [ $? -gt 0 ] ; then
     echo make camflow solver failed
     exit
@@ -55,4 +70,4 @@ else
 fi
 
 cd applications/examples/camflow/flamelet/h2o2
-./go
+time ../../../../../bin/$exeDir/camflow

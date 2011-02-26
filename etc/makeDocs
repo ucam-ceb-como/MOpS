@@ -83,7 +83,7 @@ else
     echo "Doxygen on docs/Doxyfile successful."
 fi
 
-ln -sf mopssuite/html/index.html doc/index.html
+ln -sf mopssuite/html/index.html doc/documentationIndex.html
 cp -f doc/group_logo_portrait.png doc/mopssuite/html
 
 echo "Documentation successfully created and stored in doc/"

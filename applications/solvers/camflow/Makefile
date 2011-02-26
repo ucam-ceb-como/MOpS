@@ -5,6 +5,7 @@ export profile=0
 export path=.
 librelease=../../../lib/release
 libdebug=../../../lib/debug
+libprofile=../../../lib/profile
 binrelease=../../../bin/release
 bindebug=../../../bin/debug
 binprofile=../../../bin/profile
@@ -26,7 +27,7 @@ ifeq ($(debug),0)
   else
     flag=-c -O2 $(includes) -Wall -pg
     flink=-pg
-    lib=$(librelease)
+    lib=$(libprofile)
     bin=$(binprofile)
   endif
 else
@@ -47,7 +48,7 @@ radau=$(lib)/libradau.a
 
 linklibs=$(camflow) $(comostrings) $(camxml) $(sprog) $(cvode) $(radau)
 
-# TARGET binary: Compile to a  binary.
+# TARGET binary: Compile to a binary.
 objlocal=cam_kernel.o
 
 all: $(objlocal)

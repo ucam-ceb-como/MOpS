@@ -7,6 +7,7 @@ src=$(path)/source
 inc=$(path)/include
 librelease=../../../lib/release
 libdebug=../../../lib/debug
+libprofile=../../../lib/profile
 
 # C++ compiler.
 cpp=g++
@@ -16,7 +17,7 @@ ifeq ($(debug),0)
     lib=$(librelease)
   else
     flag=-c -O2 -Iinclude -Wall -pg
-    lib=$(librelease)
+    lib=$(libprofile)
   endif
 else
   flag=-c -O0 -Iinclude -Wall -ggdb -pg
@@ -52,4 +53,4 @@ clean:
 	rm -rf $(path)/*.o \#* *~
 
 cleanlibs:
-	rm -rf $(path)/*.o \#* *~ $(librelease)/libradau.a $(libdebug)/libradau.a
+	rm -rf $(path)/*.o \#* *~ $(librelease)/libradau.a $(libdebug)/libradau.a $(libprofile)/libradau.a
