@@ -11,9 +11,9 @@ fi
 
 if((windows==1))
 then
-	program="../bin/mops_d.exe"
+	program="../../bin/debug/mops.exe"
 else 
-	program="../bin/mops_d.x" 
+	program="../../bin/debug/mops" 
 fi
 
 # run mops on a very simple problem
