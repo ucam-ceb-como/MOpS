@@ -47,7 +47,6 @@
 #include "swp_params.h"
 #include "swp_model_stats.h"
 #include "swp_ensemble.h"
-#include "swp_particle_cache.h"
 #include "swp_particle_model.h"
 
 #include <vector>

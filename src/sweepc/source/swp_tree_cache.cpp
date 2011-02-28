@@ -1,5 +1,5 @@
 /*!
- * \file   swp_secondary_primary_coag.cpp
+ * \file   swp_tree_cache.cpp
  * \author Robert I A Patterson
  *  Copyright (C) 2010 Robert I A Patterson.
  *

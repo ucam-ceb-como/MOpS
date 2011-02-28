@@ -68,6 +68,9 @@ namespace Processes
 class ParticleProcess;
 typedef std::vector<ParticleProcess*> PartProcPtrVector;
 
+/*!
+ * \brief Processes that change the internal state of particles without transport or interaction
+ */
 class ParticleProcess : public Process
 {
 public:

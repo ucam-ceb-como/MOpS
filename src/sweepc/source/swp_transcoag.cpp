@@ -479,15 +479,21 @@ Sweep::real Sweep::Processes::TransitionCoagulation::FreeMolKernel(const Particl
     // This routine calculate the free molecular coagulation kernel for two particles.
     // There are two forms of kernel; a majorant form and a non-majorant form.
 
+    // Collect the particle properties
+    const real d1 = sp1.CollDiameter();
+    const real d2 = sp2.CollDiameter();
+    const real invm1 = 1.0 / sp1.Mass();
+    const real invm2 = 1.0 / sp2.Mass();
+
     if (maj) {
         // The majorant form is always >= the non-majorant form.
         return CFMMAJ * m_efm * CFM * sqrt(T) * A() *
-               (sp1.InvSqrtMass() + sp2.InvSqrtMass()) *
-               (sp1.CollDiamSquared() + sp2.CollDiamSquared());
+               (std::sqrt(invm1) + std::sqrt(invm2)) *
+               (d1 * d1 + d2 * d2);
     } else {
-        const real dterm = sp1.CollDiameter()+sp2.CollDiameter();
+        const real dterm = d1 + d2;
         return m_efm * CFM * A() *
-               sqrt(T * ((1.0/sp1.Mass())+(1.0/sp2.Mass()))) *
+               sqrt(T * (invm1 + invm2)) *
                dterm * dterm;
     }
 }
@@ -499,11 +505,15 @@ Sweep::real Sweep::Processes::TransitionCoagulation::FreeMolKernel(const Particl
 Sweep::real Sweep::Processes::TransitionCoagulation::SlipFlowKernel(const Particle &sp1, const Particle &sp2,
                                  real T, real P, bool maj) const
 {
+    // Collect the particle properties
+    const real d1 = sp1.CollDiameter();
+    const real d2 = sp2.CollDiameter();
+
     // For the slip-flow kernel the majorant and non-majorant forms are identical.
     return ((1.257 * 2.0 * MeanFreePathAir(T,P) *
-             (sp1.InvCollDiamSquared() + sp2.InvCollDiamSquared())) +
-            (sp1.InvCollDiam() + sp2.InvCollDiam())) *
-           CSF * T * (sp1.CollDiameter()+sp2.CollDiameter())
+             (1.0 / d1 / d1 + 1.0 / d2 / d2)) +
+            (1.0 / d1 + 1.0 / d2)) *
+           CSF * T * (d1 + d2)
            * A() / ViscosityAir(T);
 }
 

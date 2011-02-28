@@ -49,12 +49,14 @@
 
 namespace Sweep
 {
-// Forward declare parent particle cache class.
-class ParticleCache;
+// Forward declaration
 class Primary;
 
 namespace AggModels
 {
+/*!
+ * \brief Interface for aggregation model specific properties
+ */
 class AggModelCache
 {
 public:

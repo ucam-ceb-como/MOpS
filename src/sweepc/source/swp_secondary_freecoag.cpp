@@ -93,7 +93,6 @@ unsigned int Sweep::Processes::SecondaryFreeCoag::TermCount() const {
  *
  *\param[in]        t                   Time at which rate should be calculated
  *\param[in]        sys                 System for which to calculate the process rate
- *\param[in]        local_geom          Details of geometry around current location
  *
  *\return           Rate of this process
  */
@@ -105,13 +104,11 @@ Sweep::real Sweep::Processes::SecondaryFreeCoag::Rate(real t, const Cell &sys) c
 /*!
  *\param[in]        t                   Time at which rate should be calculated
  *\param[in]        sys                 System for which to calculate the rate
- *\param[in]        local_geom          Details of geometry around current location
  *\param[in,out]    iterm               Position in vector at which to insert the rate
  *
  *\return       Total rate of process
  */
  Sweep::real Sweep::Processes::SecondaryFreeCoag::RateTerms(real t, const Cell &sys,
-                                                            //const Geometry::LocalGeometry1d& local_geom,
                                                             fvector::iterator &iterm) const {
      return (*iterm++ = Rate(t, sys));
 }

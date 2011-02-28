@@ -42,7 +42,6 @@
 #include "swp_PAH_cache.h"
 #include "swp_aggmodel_type.h"
 #include "swp_aggmodel_cache.h"
-#include "swp_particle_cache.h"
 #include "swp_PAH_primary.h"
 #include <stdexcept>
 #include <iostream>

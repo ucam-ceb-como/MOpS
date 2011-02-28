@@ -311,8 +311,12 @@ Sweep::real Sweep::Processes::SecondaryPrimaryCoag::FreeMolKernel(const Particle
  * @return      Coagulation kernel
  */
 Sweep::real Sweep::Processes::SecondaryPrimaryCoag::MajorantKernel(const Cell& sys, const Particle &sp1) const {
+    // Collect particle properties
+    const real d1 = sp1.CollDiameter();
+    const real invm1 = 1.0 / std::sqrt(sp1.Mass());
+
     return 2 * m_efm * CFM * std::sqrt(sys.Temperature()) * A()
-           * (sp1.InvSqrtMass() + 1.0 / std::sqrt(sys.ParticleModel()->minSecondaryMass()))
-           * (sp1.CollDiamSquared() + sys.ParticleModel()->maxSecondaryCollDiam()
+           * (invm1 + 1.0 / std::sqrt(sys.ParticleModel()->minSecondaryMass()))
+           * (d1 * d1 + sys.ParticleModel()->maxSecondaryCollDiam()
                                       * sys.ParticleModel()->maxSecondaryCollDiam());
 }

@@ -58,7 +58,6 @@
 #include "swp_tracker.h"
 #include "swp_particle_model.h"
 #include "swp_primary.h"
-#include "swp_particle_cache.h"
 #include "swp_subparticle.h"
 #include "swp_particle.h"
 

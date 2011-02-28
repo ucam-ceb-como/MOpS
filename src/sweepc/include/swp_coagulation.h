@@ -59,7 +59,9 @@ namespace Processes
     //! Vector of polymorphic coagulation processes
     typedef std::vector<Coagulation*> CoagPtrVector;
 
-//! Processes that stick two particles together to form one
+/*!
+ * \brief Processes that stick two particles together to form one
+ */
 class Coagulation : public Process
 {
 public:

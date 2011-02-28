@@ -14,12 +14,11 @@
  * connectivity structure of primary particle aggregates, but this
  * connectivity is now handled in the primary particle classes.
  *
- * This class will eventually removed so that Particle inherits
- * directly from ParticleCache, without having SubParticle in the
- * inheritance hierachy any more.
+ * This class will eventually removed so that Particle become self-contained.
  *
  * DO NOT add methods or data to this class, since the whole
- * class is due to be removed. (riap2 28 jan 2011)
+ * class is due to be removed. (riap2 28 jan 2011).  New functionality
+ * should be placed in Particle or Primary.
  *
  */
 
@@ -29,16 +28,15 @@ using namespace Sweep;
 
 // Default constructor (protected).
 SubParticle::SubParticle(void)
-: m_primary(NULL), m_pmodel(NULL),
+: m_primary(NULL),
   m_createt(0.0), m_time(0.0), m_aggcache(NULL)
 {
 }
 
 // Initialising constructor.
 SubParticle::SubParticle(real t, const Sweep::ParticleModel &model)
-: m_primary(NULL), m_pmodel(&model),
-  m_createt(0.0), m_time(0.0), m_comp(model.ComponentCount(), 0.0),
-  m_values(model.TrackerCount(), 0.0)
+: m_primary(NULL),
+  m_createt(0.0), m_time(0.0)
 {
 	m_aggcache = ModelFactory::CreateAggCache(model.AggModel());
 
@@ -46,15 +44,10 @@ SubParticle::SubParticle(real t, const Sweep::ParticleModel &model)
 
 // Initialising constructor (from Primary particle).
 SubParticle::SubParticle(Sweep::Primary &pri)
-: m_pmodel(pri.ParticleModel()),
-  m_comp(pri.Composition().begin(), pri.Composition().end()),
-  m_values(pri.Values().begin(), pri.Values().end())
-
 {
     m_createt = pri.CreateTime();
     m_time = pri.CreateTime();
     m_primary    = &pri;
-	m_freesurface=pri.SurfaceArea();
 	m_aggcache = pri.CreateAggCache();
 }
 
@@ -72,7 +65,7 @@ SubParticle::SubParticle(const SubParticle &copy)
 // Stream-reading constructor.
 SubParticle::SubParticle(std::istream &in, const Sweep::ParticleModel &model)
 : m_primary(NULL),
-  m_pmodel(&model), m_aggcache(NULL)
+  m_aggcache(NULL)
  {
     init();
     Deserialize(in, model);
@@ -90,9 +83,6 @@ SubParticle::~SubParticle()
 SubParticle &SubParticle::operator=(const SubParticle &rhs)
 {
     if (this != &rhs) {
-        m_pmodel = rhs.m_pmodel;
-        ParticleCache::operator=(rhs);
-
         // Copy primary.
         if (rhs.m_primary != NULL) {
             if (m_primary == NULL) {
@@ -104,9 +94,6 @@ SubParticle &SubParticle::operator=(const SubParticle &rhs)
             delete m_primary; m_primary = NULL;
         }
 
-        // Copy composition and tracker data
-        m_comp = rhs.m_comp;
-        m_values = rhs.m_values;
         m_createt = rhs.m_createt;
         m_time = rhs.m_time;
 
@@ -143,87 +130,11 @@ const Sweep::Primary *const SubParticle::Primary(void) const {return m_primary;}
 // Sets the pointer to the child primary particle.
 void SubParticle::setPrimaryPtr(Sweep::Primary *const pri) {m_primary = pri;}
 
-// Sets the composition vector.
-void SubParticle::SetComposition(const fvector &comp)
-{
-    // Can only set the composition if this is a leaf sub-particle,
-    // otherwise it makes no sense.
-    if (m_primary != NULL) {
-        m_primary->SetComposition(comp);
-        UpdateCache();
-    }
-}
-
-// Sets the values vector.
-void SubParticle::SetValues(const fvector &vals)
-{
-    // Can only set the values if this is a leaf sub-particle,
-    // otherwise it makes no sense.
-    if (m_primary != NULL) {
-        m_primary->SetValues(vals);
-        UpdateCache();
-    }
-}
-
 // Sets the last update time of the particle.
 void SubParticle::SetTime(real t)
 {
     m_primary->SetTime(t);
     m_time = t;
-}
-
-// Sets the spherical particle diameter
-void SubParticle::SetSphDiameter(real diam)
-{
-    if (m_primary != NULL) {
-        m_primary->SetSphDiameter(diam);
-        UpdateCache();
-    }
-}
-
-// Sets the collision diameter of the particle.
-void SubParticle::SetCollDiameter(real dcol)
-{
-    if (m_primary != NULL) {
-        m_primary->SetCollDiameter(dcol);
-        UpdateCache();
-    }
-}
-
-// Sets the mobility diameter.
-void SubParticle::SetMobDiameter(real dmob)
-{
-    if (m_primary != NULL) {
-        m_primary->SetMobDiameter(dmob);
-        UpdateCache();
-    }
-}
-
-// Sets the surface area, subject to minimum spherical area condition.
-void SubParticle::SetSurfaceArea(real surf)
-{
-    if (m_primary != NULL) {
-        m_primary->SetVolume(surf);
-        UpdateCache();
-    }
-}
-
-// Sets the volume.
-void SubParticle::SetVolume(real vol)
-{
-    if (m_primary != NULL) {
-        m_primary->SetVolume(vol);
-        UpdateCache();
-    }
-}
-
-// Sets the mass.
-void SubParticle::SetMass(real m)
-{
-    if (m_primary != NULL) {
-        m_primary->SetMass(m);
-        UpdateCache();
-    }
 }
 
 // PARTICLE ADJUSTMENT AND PROCESSES.
@@ -296,15 +207,9 @@ void SubParticle::UpdateCache(void)
 {
     // Get cache from primary particle.
     m_primary->UpdateCache();
-    ParticleCache::operator=(*m_primary);
 
-    // Also copy composition and tracking data from primary
-    m_comp = m_primary->Composition();
-    m_values = m_primary->Values();
     m_createt = m_primary->CreateTime();
     m_time    = m_primary->LastUpdateTime();
-
-	m_numsubpart=1;
 
 	// Update the aggregate details from the primary
 	if(m_aggcache != NULL)
@@ -349,29 +254,7 @@ void SubParticle::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
-        // Output the base class.
-        ParticleCache::Serialize(out);
-
-        // Write number of components.
-        unsigned int n = (unsigned int)m_comp.size();
-        out.write((char*)&n, sizeof(n));
-
-        // Write components.
-        real val = 0.0;
-        for (unsigned int i=0; i!=n; ++i) {
-            val = m_comp[i];
-            out.write((char*)&val, sizeof(val));
-        }
-
-        // Write number of tracker values.
-        n = (unsigned int)m_values.size();
-        out.write((char*)&n, sizeof(n));
-
-        // Write values.
-        for (unsigned int i=0; i!=n; ++i) {
-            val = m_values[i];
-            out.write((char*)&val, sizeof(val));
-        }
+        real val;
 
         // Write create time.
         val = (double)m_createt;
@@ -420,29 +303,6 @@ void SubParticle::Deserialize(std::istream &in, const Sweep::ParticleModel &mode
 
         switch (version) {
             case 0:
-                m_pmodel = &model;
-
-                // Read base class.
-                ParticleCache::Deserialize(in, model);
-
-                // Read number of components.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-
-                // Read components.
-                for (unsigned int i=0; i!=n; ++i) {
-                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_comp.push_back(val);
-                }
-
-                // Read number of tracker values.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-
-                // Read values.
-                for (unsigned int i=0; i!=n; ++i) {
-                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_values.push_back(val);
-                }
-
                 // Read create time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_createt = val;
@@ -490,9 +350,6 @@ void SubParticle::releaseMem(void)
 {
     delete m_primary;    	m_primary    = NULL;
 
-    m_comp.clear();
-    m_values.clear();
-
     // Clear aggregation model cache.
     delete m_aggcache;
 }
@@ -518,14 +375,14 @@ real SubParticle::LastUpdateTime() const {return m_time;}
 // Returns the composition vector.
 const fvector &SubParticle::Composition() const
 {
-    return m_comp;
+    return m_primary->Composition();
 }
 
 // Returns the ith component value.  Returns 0.0 if i is invalid.
 real SubParticle::Composition(unsigned int i) const
 {
-    if (i < m_comp.size()) {
-        return m_comp[i];
+    if (i < Composition().size()) {
+        return Composition()[i];
     } else {
         return 0.0;
     }
@@ -533,17 +390,19 @@ real SubParticle::Composition(unsigned int i) const
 
 // TRACKER VARIABLE VALUES.
 
-// Returns the tracker value vector.
+/*!
+ * Returns the tracker value vector.
+ */
 const fvector &SubParticle::Values() const
 {
-    return m_values;
+    return m_primary->Values();
 }
 
 // Returns the ith tracker variable value.  Returns 0.0 if i is invalid.
 real SubParticle::Values(unsigned int i) const
 {
-    if (i < m_values.size()) {
-        return m_values[i];
+    if (i < Values().size()) {
+        return Values()[i];
     } else {
         return 0.0;
     }
@@ -551,59 +410,111 @@ real SubParticle::Values(unsigned int i) const
 
 
 /*!
- * Pass through to ParticleCache
+ * Pass through to primary particle
  */
 Sweep::real SubParticle::SphDiameter() const
 {
-    return ParticleCache::SphDiameter();
+    return m_primary->SphDiameter();
 }
 
 /*!
- * Pass through to ParticleCache
+ * Pass through to primary particle
  */
 Sweep::real SubParticle::CollDiameter() const
 {
-    return ParticleCache::CollDiameter();
+    return m_primary->CollDiameter();
 }
 
 /*!
- * Pass through to ParticleCache
+ * Pass through to primary particle
  */
 Sweep::real SubParticle::MobDiameter() const
 {
-    return ParticleCache::MobDiameter();
+    return m_primary->MobDiameter();
 }
 
 /*!
- * Pass through to ParticleCache
+ * Pass through to primary particle
  */
 Sweep::real SubParticle::SurfaceArea() const
 {
-    return ParticleCache::SurfaceArea();
+    return m_primary->SurfaceArea();
 }
 
 /*!
- * Pass through to ParticleCache
+ * Pass through to primary particle
  */
 Sweep::real SubParticle::SphSurfaceArea() const
 {
-    return ParticleCache::SphSurfaceArea();
+    return m_primary->SphSurfaceArea();
 }
 
 /*!
- * Pass through to ParticleCache
+ * Pass through to primary particle
  */
 Sweep::real SubParticle::Volume() const
 {
-    return ParticleCache::Volume();
+    return m_primary->Volume();
 }
 
 /*!
- * Pass through to ParticleCache
+ * Pass through to primary particle
  */
 Sweep::real SubParticle::Mass(void) const
 {
-    return ParticleCache::Mass();
+    return m_primary->Mass();
 }
 
+/*!
+ * Provide an interface that allows run time specification of particle properties
+ * for use in process rate calculations.  It is currently used for some surface
+ * reactions.  Where possible, the use of specific accessors should be preferred.
+ *
+ *@param[in]    id      Symbolic index of property required
+ *
+ *@return       Requested particle property
+ *
+ *@pre          A valid primary particle is present (the data is not stored in SubParticle)
+ */
+real SubParticle::Property(PropID id) const
+{
+    switch (id) {
+        case iDsph:      // Equivalent sphere diameter.
+            return SphDiameter();
+        case iDcol:   // Collision diameter.
+            return CollDiameter();
+        case iDmob:   // Mobility diameter.
+            return MobDiameter();
+        case iS:      // Surface area.
+            return SurfaceArea();
+        case iV:      // Volume.
+            return Volume();
+        case iM:      // Mass.
+            return Mass();
+        // Collision rate properties:
+        case iD2:
+            return CollDiameter() * CollDiameter();
+        case iD_1:
+            return 1.0 / CollDiameter();
+        case iD_2:
+            return 1.0 / CollDiameter() / CollDiameter();
+        case iM_1_2:
+            return 1.0 / std::sqrt(Mass());
+        case iD2_M_1_2:
+            return CollDiameter() * CollDiameter() / std::sqrt(Mass());
+        case iFS:
+            throw std::logic_error("Free surface no longer supported (SubParticle::Property)");
+            return 0.0;
+        case iNumCarbon:
+            throw std::logic_error("Number of Carbon no longer supported (SubParticle::Property)");
+            return 0.0;
+        case -1:
+            // Special case property, used to select particles
+            // uniformly.
+            return 1.0;
+        default:
+            throw std::logic_error("Unrecognised property requested (SubParticle::Property)");
+            return 0.0;
+    }
+}
 

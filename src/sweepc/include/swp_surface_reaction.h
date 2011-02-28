@@ -60,6 +60,9 @@ namespace Transport
 
 namespace Processes
 {
+/*!
+ * \brief Arrhenius like reactions on the surface of particles
+ */
 class SurfaceReaction : public ParticleProcess
 {
 public:

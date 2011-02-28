@@ -758,7 +758,8 @@ real ParticleModel::KnudsenDragCoefficient(const Cell &sys, const Particle &sp) 
  *@return       Drag coefficient
  */
 real ParticleModel::FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const {
-    return 5.355264342e-24 * std::sqrt(sys.Temperature()) * sys.Density() * sp.CollDiamSquared();
+    const real d = sp.CollDiameter();
+    return 5.355264342e-24 * std::sqrt(sys.Temperature()) * sys.Density() * d * d;
 }
 
 /*!

@@ -55,6 +55,9 @@ namespace AggModels
 // Forward declare PAHPrimary class.
 class PAHPrimary;
 
+/*!
+ *\brief Summary properties for particles in the PAH-PP model
+ */
 class PAHCache : public AggModelCache
 {
 public:

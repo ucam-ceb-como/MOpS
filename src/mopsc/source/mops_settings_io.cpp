@@ -50,7 +50,6 @@
 
 #include "camxml.h"
 #include "string_functions.h"
-#include "swp_particle_cache.h"
 
 #include <memory>
 #include <cstdlib>

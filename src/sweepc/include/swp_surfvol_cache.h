@@ -61,6 +61,14 @@ namespace AggModels
 // Forward declare SurfVolPrimary class.
 class SurfVolPrimary;
 
+/*!
+ * \brief Implementation of the AggModelCache interface
+ *
+ * This class was probably intended for the old primary particle
+ * model that has now been removed.  (riap2 25 Feb 2011)
+ *
+ * \deprecated
+ */
 class SurfVolCache : public AggModelCache
 {
 public:

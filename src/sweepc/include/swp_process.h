@@ -50,7 +50,6 @@
 
 #include "swp_params.h"
 #include "swp_particle.h"
-#include "swp_particle_cache.h"
 #include "swp_process_type.h"
 #include "sprog.h"
 #include <map>
@@ -73,6 +72,11 @@ namespace Transport
 namespace Processes
 {
 class Process
+/*!
+ * \brief Define an interface for all processes
+ *
+ * Processes are the principal means for specifying simulation dynamics.
+ */
 {
 public:
 	/// Constructors.

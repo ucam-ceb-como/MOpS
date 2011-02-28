@@ -168,13 +168,15 @@ real Condensation::Rate(real t, const Cell &sys, const Particle &sp) const
     // Chemical species concentration dependence.
     cterm *= chemRatePart(sys.MoleFractions(), sys.Density());
 
+    // Get particle property
+    const real d = sp.CollDiameter();
     // Free molecular terms.
 //    trm[0] = cterm * m_kfm1;
 //    trm[1] = cterm * (m_kfm2 * sp.CollDiameter());
 //    trm[2] = cterm * (m_kfm3 * sp.CoagModelCache->CollDiamSquared());
     cterm *= m_kfm1 + 
-             (m_kfm2 * sp.CollDiameter()) +
-             (m_kfm3 * sp.CollDiamSquared());
+             (m_kfm2 * d) +
+             (m_kfm3 * d * d);
     return cterm; //trm[0] + trm[1] + trm[2];
 }
 

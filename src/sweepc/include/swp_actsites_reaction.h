@@ -55,6 +55,9 @@ class Mechanism;
 
 namespace Processes
 {
+/*!
+ * \brief Surface reactions that require an additional model for surface activity
+ */
 class ActSiteReaction : public SurfaceReaction
 {
 public:

@@ -49,15 +49,11 @@
 
 namespace Sweep
 {
-// Forward declare Primary, ParticleCache classes.
+// Forward declare Primary
 class Primary;
-class ParticleCache;
 
 namespace SubModels
 {
-// Forward declare SubModelCache class.
-class SubModelCache;
-
 class SubModel
 {
 public:
@@ -76,8 +72,6 @@ public:
 
     // Operators.
     virtual SubModel &operator=(const SubModel &rhs);
-//    virtual SubModel &operator+=(const SubModel &rhs)=0;
-//    virtual const SubModel operator+(const SubModel &rhs) const=0;
 
 
     // PARENT PRIMARY PARTICLE.
@@ -109,9 +103,6 @@ public:
 
     // Updates the sub-model cached variables.
     virtual void UpdateCache(void) = 0;
-
-    // Creates a model cache which subscribes to this particle model.
-    virtual SubModelCache *const CreateCache(ParticleCache &pcache) const = 0;
 
 
     // READ/WRITE/COPY.

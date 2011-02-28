@@ -42,7 +42,6 @@
 
 #include "swp_primary.h"
 #include "swp_model_factory.h"
-#include "swp_particle_cache.h"
 #include "swp_cell.h"
 
 #include <stdexcept>

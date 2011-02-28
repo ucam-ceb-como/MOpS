@@ -48,7 +48,8 @@
 
 #include "swp_params.h"
 #include "swp_submodel_type.h"
-#include "swp_particle_cache.h"
+#include "swp_property_indices.h"
+
 #include <vector>
 #include <string>
 #include <iostream>

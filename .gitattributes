@@ -6,5 +6,6 @@
 *.pl            eol=lf
 
 *.txt           text
+*.csv           text
 
 *.vcproj        eol=crlf

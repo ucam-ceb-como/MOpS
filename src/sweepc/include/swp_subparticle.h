@@ -15,8 +15,9 @@
 #include "swp_params.h"
 #include "swp_sintering_model.h"
 #include "swp_particle_model.h"
-#include "swp_particle_cache.h"
 #include "swp_primary.h"
+#include "swp_property_indices.h"
+
 #include <iostream>
 
 
@@ -39,7 +40,7 @@ class Cell;
  * class is due to be removed. (riap2 28 jan 2011)
  *
  */
-class SubParticle : public ParticleCache
+class SubParticle
 {
 public:
     // Constructors.
@@ -92,50 +93,21 @@ public:
     //! Returns the mass.
     real Mass(void) const;
 
+    //! Returns the property with the given ID.
+    real Property(Sweep::PropID id) const;
 
 
 
     // PROPERTY SETTING OVERRIDES (FROM PARTICLE CACHE).
 
-    // Sets the composition vector.
-    void SetComposition(const fvector &comp);
-
-    // Sets the values vector.
-    void SetValues(const fvector &vals);
-
     // Sets the last update time of the particle.
     void SetTime(real t);
-
-    // Sets the spherical particle diameter
-    void SetSphDiameter(real diam);
-
-    // Sets the collision diameter of the particle.
-    void SetCollDiameter(real dcol);
-
-    // Sets the mobility diameter.
-    void SetMobDiameter(real dmob);
-
-    // Sets the surface area, subject to minimum spherical area condition.
-    void SetSurfaceArea(real surf);
-
-    // Sets the volume.
-    void SetVolume(real vol);
-
-    // Sets the mass.
-    void SetMass(real m);
 
 	// Sets the sintering level of the children
     void SetSintering(real);
 
 	// Returns the sintering level of the childen
     real GetSintering();
-
-
-    // DEFINING PARTICLE MODEL.
-
-    // Returns the particle model used to define this particle cache.
-    const Sweep::ParticleModel *const ParticleModel(void) const;
-
 
     // COMPOSITION.
 
@@ -249,20 +221,11 @@ protected:
     void setPrimaryPtr(Sweep::Primary *const pri);
 
 private:
-    //! Defining particle model.
-    const Sweep::ParticleModel *m_pmodel;
-
     //! Time at which particle was created (earliest part).
     real m_createt;
 
     //! Last time particle was updated.  Required for LPDA.
     real m_time;
-
-    //! Composition of particle
-    fvector m_comp;
-
-    //! Quantities that do not define particle properties but that should be tracked
-    fvector m_values;
 
     //! The aggregation-model used by the particle.
     AggModels::AggModelCache *m_aggcache;

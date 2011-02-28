@@ -69,7 +69,7 @@ endif
 # Target objects.
 obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_mech_parser.o swp_mechanism.o swp_subparticle.o swp_particle.o \
-    swp_particle_cache.o swp_particle_stats.o swp_solver.o swp_tracker.o \
+    swp_particle_stats.o swp_solver.o swp_tracker.o \
     swp_abf_model.o swp_actsites_model.o swp_aggmodel_cache.o \
     swp_submodel.o swp_model_factory.o \
     swp_surfvol_cache.o swp_surfvol_primary.o swp_primary.o \
@@ -98,19 +98,16 @@ swp_component.o: $(src)/swp_component.cpp
 swp_tracker.o: $(src)/swp_tracker.cpp
 	$(cpp) $(flag) $(src)/swp_tracker.cpp
 
-swp_particle_cache.o: $(src)/swp_particle_cache.cpp $(inc)/swp_particle_cache.h
-	$(cpp) $(flag) $(src)/swp_particle_cache.cpp
 
 swp_tree_cache.o: $(src)/swp_tree_cache.cpp $(inc)/swp_tree_cache.h \
                   $(inc)/swp_params.h $(inc)/swp_particle.h 
 	$(cpp) $(flag) $(src)/swp_tree_cache.cpp
 
-swp_subparticle.o: $(src)/swp_subparticle.cpp $(inc)/swp_subparticle.h \
-                   $(inc)/swp_particle_cache.h
+swp_subparticle.o: $(src)/swp_subparticle.cpp $(inc)/swp_subparticle.h
 	$(cpp) $(flag) $(src)/swp_subparticle.cpp
 
 swp_particle.o: $(src)/swp_particle.cpp $(inc)/swp_particle.h \
-                $(inc)/swp_subparticle.h $(inc)/swp_particle_cache.h
+                $(inc)/swp_subparticle.h
 	$(cpp) $(flag) $(src)/swp_particle.cpp
 
 # Particle system & ensemble.

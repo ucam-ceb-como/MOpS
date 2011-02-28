@@ -68,8 +68,7 @@
 
 namespace Sweep
 {
-// Forward declare ParticleCache class.
-class ParticleCache;
+// Forward declaration
 class Cell;
 
 class Primary
