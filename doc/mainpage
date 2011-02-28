@@ -3,7 +3,7 @@
 \image html group_logo_portrait.png
 
  \authors M. Celnik
- \authors R. I. A. Patterson
+ \authors R. I. A. Patterson (Robert.Patterson@wias-berlin.de)
  \authors M. Sander
  \authors V. Janardhanan
  \authors L. R. McGlashan (lrm29@cam.ac.uk)
@@ -19,13 +19,13 @@
  *
  * \subsection step1 Libraries:
  *  
- * <a href="../../mopsc/html/index.html">Mops</a><br>
- * <a href="../../sweepc/html/index.html">Sweep</a><br>
- * <a href="../../sprogc/html/index.html">Sprog</a><br>
- * <a href="../../brush/html/index.html">Brush</a><br>
- * <a href="../../camflow/html/index.html">Camflow</a> <br><br>
- * <a href="../../camxml/html/index.html">Camxml</a><br>
- * <a href="../../geometry/html/index.html">Geometry</a><br>
+ * <a href="mopsc/html/index.html">Mops</a><br>
+ * <a href="sweepc/html/index.html">Sweep</a><br>
+ * <a href="sprogc/html/index.html">Sprog</a><br>
+ * <a href="brush/html/index.html">Brush</a><br>
+ * <a href="camflow/html/index.html">Camflow</a> <br><br>
+ * <a href="camxml/html/index.html">Camxml</a><br>
+ * <a href="geometry/html/index.html">Geometry</a><br>
 
  * \subsection step1 Git Repository::
 
