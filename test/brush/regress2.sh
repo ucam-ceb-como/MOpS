@@ -49,9 +49,9 @@ fi
 
 if((windows==1))
 then
-    program="../bin/brush_d.exe"
+    program="../../bin/debug/brush.exe"
 else 
-    program="../bin/brush_d.x" 
+    program="../../bin/debug/brush" 
 fi
 
 $program -v 2 -b ./regress2/brush2a.xml -c ./regress2/chem.inp -d ./regress2/chemsoln2a.dat -t ./regress2/therm.dat -s ./regress2/sweep2a.xml -g ./regress2/geometry.xml -a ./regress2/partsoln2a.xml

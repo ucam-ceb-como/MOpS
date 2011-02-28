@@ -42,9 +42,9 @@ print "Test 3b: Advection, diffusion and thermophoresis";
 my $windows = ($ENV{'OS'} =~ /windows.*/i);
 
 # Choose the windows executable name if appropriate
-my $program = "../bin/brush_d.x";
+my $program = "../../bin/debug/brush";
 if($windows) {
-    $program = "../bin/brush_d.exe";
+    $program = "../../bin/debug/brush_d.exe";
 }
 
 # Arguments for simulation
@@ -63,7 +63,7 @@ my @simulationCommand = ($program,
 system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";
 
 # Collect all the moment data together
-system("../bin/merge-partstats.sh regress3b-adv-diffn-thermoph") == 0 or die "ERR: failed to merge moment files: $!";
+system("../../applications/solvers/brush/bin/merge-partstats.sh regress3b-adv-diffn-thermoph") == 0 or die "ERR: failed to merge moment files: $!";
 
 # Parse the moments file
 my $momentFile;

@@ -45,9 +45,9 @@ print "Test 1b: Nucleation, coagulation and pyrene condensation without transpor
 my $windows = ($ENV{'OS'} =~ /windows.*/i);
 
 # Choose the windows executable name if appropriate
-my $program = "../bin/brush_d.x";
+my $program = "../../bin/debug/brush";
 if($windows) {
-    $program = "../bin/brush_d.exe";
+    $program = "../../bin/debug/brush.exe";
 }
 
 # Arguments for simulation
@@ -64,7 +64,7 @@ my @simulationCommand = ($program,
 system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";
 
 # Collect all the moment data together
-system("../bin/merge-partstats.sh regress1c-NucCondCoag") == 0 or die "ERR: failed to merge moment files: $!";
+system("../../applications/solvers/brush/bin/merge-partstats.sh regress1c-NucCondCoag") == 0 or die "ERR: failed to merge moment files: $!";
 
 # Parse the moments file
 my $momentFile;

@@ -43,9 +43,9 @@ system("rm regression2c-nuc-coag-OH*");
 my $windows = ($ENV{'OS'} =~ /windows.*/i);
 
 # Choose the windows executable name if appropriate
-my $program = "../bin/mops_d.x";
+my $program = "../../bin/debug/mops";
 if($windows) {
-    $program = "../bin/mops_d.exe";
+    $program = "../../bin/debug/mops.exe";
 }
 
 # Arguments for simulation

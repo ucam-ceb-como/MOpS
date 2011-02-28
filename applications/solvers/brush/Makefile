@@ -32,7 +32,7 @@ ifeq ($(debug),0)
     bin=$(binprofile)
   endif
 else
-  flag=-c -O0 (includes) -Wall -ggdb -D_GLIBCXX_DEBUG
+  flag=-c -O0 $(includes) -Wall -ggdb -D_GLIBCXX_DEBUG
   flink=
   lib=$(libdebug)
   bin=$(bindebug)

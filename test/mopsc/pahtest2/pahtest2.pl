@@ -43,9 +43,9 @@ system("rm pahtest2-*");
 my $windows = ($ENV{'OS'} =~ /windows.*/i);
 
 # Choose the windows executable name if appropriate
-my $program = "../../bin/mops_d.x";
+my $program = "../../../bin/debug/mops";
 if($windows) {
-    $program = "../../bin/mops_d.exe";
+    $program = "../../../bin/debug/mops_d.exe";
 }
 
 # Arguments for simulation
