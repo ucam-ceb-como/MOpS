@@ -6,7 +6,6 @@
  *  Project:        sweepc (population balance solver)
  *  Sourceforge:    http://sourceforge.net/projects/mopssuite
  *
- * \brief  Process for free molecular coagulation of small (secondary) particles with particles from the main population
 
  Licence:
     This file is part of "sweepc".
