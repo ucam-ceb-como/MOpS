@@ -116,8 +116,8 @@ public:
 protected:
 
     /*!
-     * \@brief  Default constructor is protected to prevent coagulations being
-     *          defined without knowledge of the parent mechanism.
+     * @brief  Default constructor is protected to prevent coagulations being
+     *         defined without knowledge of the parent mechanism.
      */
     Coagulation(void) {};
     
