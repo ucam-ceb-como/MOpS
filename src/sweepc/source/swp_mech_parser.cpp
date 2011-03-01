@@ -50,6 +50,8 @@
 #include "swp_condensation.h"
 #include "swp_transcoag.h"
 #include "swp_addcoag.h"
+#include "swp_weighted_addcoag.h"
+#include "swp_coag_weight_rules.h"
 #include "swp_secondary_freecoag.h"
 #include "swp_secondary_primary_coag.h"
 #include "swp_abf_model.h"
@@ -1156,6 +1158,10 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
  * @param[in]       xml     XML document containing zero or more top level <coagulation> nodes
  * @param[in,out]   mech    Mechanism to which to add coagulation processes
  *
+ * @exception   runtime_error   Kernel no specified
+ * @exception   runtime_error   Unrecongised/unsupported kernel
+ * @exception   runtime_error   Unrecongised/unsupported weight rule
+ *
  * By default a transition regime coagulation process is created and added to the mechanism,
  * this will happen if no coagulation nodes are found immediately below the root node of the
  * XML tree.
@@ -1190,22 +1196,53 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                 // Work out which kernel to use and create it
                 const string kernelName = kernel->Data();
 
+                // See if there is a weight rule, which would indicate the use
+                // of individual statistical weights for the particles
+                CamXML::Element *weightXML = (*it)->GetFirstChild("weightrule");
+
                 // Create a process of the appropriate type, but wrap it with an auto_ptr so
                 // that it gets deleted if an exception is thrown when reading in the value
                 // of A.
                 std::auto_ptr<Processes::Coagulation> coag;
-                if(kernelName == "transition")
-                    coag.reset(new Processes::TransitionCoagulation(mech));
-                else if(kernelName == "additive")
-                    coag.reset(new Processes::AdditiveCoagulation(mech));
-                else if(kernelName == "secondaryfreemol")
-                    coag.reset(new Processes::SecondaryFreeCoag(mech));
-                else if(kernelName == "secondaryprimary")
-                    coag.reset(new Processes::SecondaryFreeCoag(mech));
-                else
-                    // Unrecognised option
-                    throw std::logic_error("Coagulation kernel " + kernelName + "not yet available \
-                                            (Sweep, MechParser::readCoagulation)");
+
+                if(weightXML == NULL) {
+                    // Unweighted case
+                    if(kernelName == "transition")
+                        coag.reset(new Processes::TransitionCoagulation(mech));
+                    else if(kernelName == "additive")
+                        coag.reset(new Processes::AdditiveCoagulation(mech));
+                    else if(kernelName == "secondaryfreemol")
+                        coag.reset(new Processes::SecondaryFreeCoag(mech));
+                    else if(kernelName == "secondaryprimary")
+                        coag.reset(new Processes::SecondaryFreeCoag(mech));
+                    else
+                        // Unrecognised option
+                        throw std::runtime_error("Coagulation kernel " + kernelName + " not yet available in DSA \
+                                                (Sweep, MechParser::readCoagulation)");
+                }
+                else {
+                    // Must have a weighted kernel, need to find out what weight rule to use
+                    const std::string weightRuleName = weightXML->Data();
+                    Processes::CoagWeightRule weightRule;
+
+                    if(weightRuleName == "w1" || weightRuleName == "harmonic")
+                        weightRule = Processes::CoagWeightHarmonic;
+                    else if(weightRuleName == "w2" || weightRuleName == "half")
+                        weightRule = Processes::CoagWeightHalf;
+                    else if(weightRuleName == "w3" || weightRuleName == "mass")
+                        weightRule = Processes::CoagWeightMass;
+                    else
+                        throw std::runtime_error("Coagulation weight rule " + weightRuleName + " not supported \
+                                                 (Sweep, MechParser::readCoagulation)");
+
+                    // Now create the process
+                    if(kernelName == "weightedadditive")
+                         coag.reset(new Processes::WeightedAdditiveCoagulation(mech, weightRule));
+                    else
+                        // Unrecognised option
+                        throw std::runtime_error("Coagulation kernel " + kernelName + " not yet available with weights \
+                                                (Sweep, MechParser::readCoagulation)");
+                }
 
                 // Rate scaling now that a process has been created
                 real A = 0.0;

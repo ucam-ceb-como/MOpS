@@ -91,7 +91,8 @@ const std::string ParticleStats::m_const_pslnames[ParticleStats::PSL_COUNT] = {
     std::string("Surface Area (cm2)"),
     std::string("Volume (cm3)"),
     std::string("Mass (g)"),
-    std::string("Age (s)")
+    std::string("Age (s)"),
+    std::string("Stat. Weight (cm-3)")
 };
 
 
@@ -219,16 +220,18 @@ void ParticleStats::Calculate(const Ensemble &e, real scale, real secondary_scal
         real sz = (*ip)->Property(m_statbound.PID);
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
+            const real wt = (*ip)->getStatisticalWeight();
             // Sum stats from this particle.
-            m_stats[iD]    += (*ip)->SphDiameter() * 1.0e9;  // Convert from m to nm.
-            m_stats[iDcol] += (*ip)->CollDiameter() * 1.0e9; // Convert from m to nm.
-            m_stats[iDmob] += (*ip)->MobDiameter() * 1.0e9;  // Convert from m to nm.
-            m_stats[iS]    += (*ip)->SurfaceArea() * 1.0e4;  // Convert from m2 to cm2.
-            m_stats[iS+1]  += (*ip)->SurfaceArea() * 1.0e4;  // Convert from m2 to cm2.
-            m_stats[iV]    += (*ip)->Volume() * 1.0e6;       // Convert from m3 to cm3.
-            m_stats[iV+1]  += (*ip)->Volume() * 1.0e6;       // Convert from m3 to cm3.
-            m_stats[iM]    += (*ip)->Mass() * 1.0e3;         // Convert from kg to g.
-            m_stats[iM+1]  += (*ip)->Mass() * 1.0e3;         // Convert from kg to g.
+            m_stats[iM0]   += wt;
+            m_stats[iD]    += (*ip)->SphDiameter() * wt * 1.0e9;  // Convert from m to nm.
+            m_stats[iDcol] += (*ip)->CollDiameter() * wt * 1.0e9; // Convert from m to nm.
+            m_stats[iDmob] += (*ip)->MobDiameter() * wt * 1.0e9;  // Convert from m to nm.
+            m_stats[iS]    += (*ip)->SurfaceArea() * wt * 1.0e4;  // Convert from m2 to cm2.
+            m_stats[iS+1]  += (*ip)->SurfaceArea() * wt * 1.0e4;  // Convert from m2 to cm2.
+            m_stats[iV]    += (*ip)->Volume() * wt * 1.0e6;       // Convert from m3 to cm3.
+            m_stats[iV+1]  += (*ip)->Volume() * wt * 1.0e6;       // Convert from m3 to cm3.
+            m_stats[iM]    += (*ip)->Mass() * wt * 1.0e3;         // Convert from kg to g.
+            m_stats[iM+1]  += (*ip)->Mass() * wt * 1.0e3;         // Convert from kg to g.
 
             // Sum component and tracker values.
             fvector::iterator i = m_stats.begin()+STAT_COUNT;
@@ -246,7 +249,6 @@ void ParticleStats::Calculate(const Ensemble &e, real scale, real secondary_scal
 
     // Get the particle count.
     m_stats[iNP] = (real)e.Count();
-    m_stats[iM0] = (real)n;
     const real invNumPart = (n>0) ? 1.0 / n : 0.0;
 
     // Scale the summed stats and calculate the averages.
@@ -438,6 +440,7 @@ void ParticleStats::PSL(const Sweep::Particle &sp, real time,
     *(++j) = sp.Volume() * 1.0e6;       // m3 to cm3.
     *(++j) = sp.Mass() * 1.0e3;         // kg to g.
     *(++j) = time - sp.CreateTime();    // Particle age.
+    *(++j) = sp.getStatisticalWeight(); // Statistical weight
 
     // Get component and tracker stats.
     for (unsigned int k=0; k!=m_ncomp; ++k) {

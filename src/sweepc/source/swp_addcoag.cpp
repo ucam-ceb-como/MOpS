@@ -77,7 +77,7 @@ Sweep::real Sweep::Processes::AdditiveCoagulation::Rate(real t, const Cell &sys)
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
         // Get system properties required to calculate coagulation rate.
-        real massSum = sys.Particles().GetSums().Mass();
+        real massSum = sys.Particles().GetSums().Property(Sweep::iM);
 
         //real vol = sys.SampleVolume());
         return A() * (n - 1) * massSum * s_MajorantFactor / sys.SampleVolume();

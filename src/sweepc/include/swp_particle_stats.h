@@ -215,7 +215,7 @@ private:
                       iDmob=4, iS=5, iV=7, iM=9, i2NP=11, i2M0=12};
 
     // PSL count and indices.
-    static const unsigned int PSL_COUNT = 7;
+    static const unsigned int PSL_COUNT = 8;
 
     // Component and tracker counts.
     unsigned int m_ncomp, m_ntrack;

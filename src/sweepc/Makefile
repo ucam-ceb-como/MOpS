@@ -73,7 +73,8 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_abf_model.o swp_actsites_model.o swp_aggmodel_cache.o \
     swp_submodel.o swp_model_factory.o \
     swp_surfvol_cache.o swp_surfvol_primary.o swp_primary.o \
-    swp_actsites_reaction.o swp_coagulation.o swp_transcoag.o swp_addcoag.o \
+    swp_actsites_reaction.o swp_coagulation.o swp_transcoag.o \
+    swp_addcoag.o swp_weighted_addcoag.o\
     swp_condensation.o swp_inception.o swp_constant_inception.o\
     swp_particle_process.o swp_process.o swp_process_factory.o \
     swp_surface_reaction.o swp_particle_model.o swp_imgnode.o \
@@ -83,7 +84,7 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_diffusion_process.o swp_advection_process.o \
     mt19937.o rng.o swp_dimer_inception.o swp_pah_inception.o \
     swp_molecule_evolution.o swp_secondary_freecoag.o swp_secondary_primary_coag.o \
-    swp_tree_cache.o
+    swp_tree_cache.o swp_tree_weighted_cache.o
 
 # TARGET all: Compile to a static library (*.a).
 all: $(obj)
@@ -98,10 +99,13 @@ swp_component.o: $(src)/swp_component.cpp
 swp_tracker.o: $(src)/swp_tracker.cpp
 	$(cpp) $(flag) $(src)/swp_tracker.cpp
 
-
 swp_tree_cache.o: $(src)/swp_tree_cache.cpp $(inc)/swp_tree_cache.h \
                   $(inc)/swp_params.h $(inc)/swp_particle.h 
 	$(cpp) $(flag) $(src)/swp_tree_cache.cpp
+
+swp_tree_weighted_cache.o: $(src)/swp_tree_weighted_cache.cpp $(inc)/swp_tree_weighted_cache.h \
+                  $(inc)/swp_params.h $(inc)/swp_particle.h 
+	$(cpp) $(flag) $(src)/swp_tree_weighted_cache.cpp
 
 swp_subparticle.o: $(src)/swp_subparticle.cpp $(inc)/swp_subparticle.h
 	$(cpp) $(flag) $(src)/swp_subparticle.cpp
@@ -213,6 +217,11 @@ swp_transcoag.o: $(src)/swp_transcoag.cpp $(inc)/swp_coagulation.h $(inc)/swp_tr
 swp_addcoag.o: $(src)/swp_addcoag.cpp $(inc)/swp_coagulation.h $(inc)/swp_addcoag.h \
                $(inc)/swp_cell.h $(inc)/swp_mechanism.h $(inc)/swp_params.h
 	$(cpp) $(flag) $(src)/swp_addcoag.cpp
+
+swp_weighted_addcoag.o: $(src)/swp_weighted_addcoag.cpp $(inc)/swp_coagulation.h \
+                        $(inc)/swp_weighted_addcoag.h   $(inc)/swp_cell.h \
+                        $(inc)/swp_mechanism.h $(inc)/swp_params.h
+	$(cpp) $(flag) $(src)/swp_weighted_addcoag.cpp
 
 swp_secondary_freecoag.o: $(src)/swp_secondary_freecoag.cpp $(inc)/swp_coagulation.h \
                           $(inc)/swp_secondary_freecoag.h $(inc)/swp_cell.h \

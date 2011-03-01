@@ -327,10 +327,16 @@ Reactor *const readReactor(const CamXML::Element &node,
                                      (Mops, Settings_IO::readReactor)");
         }
 
-        // Now read in the list of particles
+        // Now read in the list of particles and sum up their statistical weights
         particleList = Settings_IO::ReadInitialParticles(*subnode, mech.ParticleMech(), rand_int);
+        Sweep::PartPtrList::const_iterator it = particleList.begin();
+        const Sweep::PartPtrList::const_iterator itEnd = particleList.end();
+        real weightSum = 0;
+        while(it != itEnd) {
+            weightSum += (*it++)->getStatisticalWeight();
+        }
 
-        mix->SetParticles(particleList.begin(), particleList.end(), initialM0 / particleList.size());
+        mix->SetParticles(particleList.begin(), particleList.end(), initialM0 / weightSum);
     }
 
 

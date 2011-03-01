@@ -210,9 +210,9 @@ void EnsembleStats::PSL(const Sweep::Particle &sp, const Sweep::ParticleModel& m
 
     // First PSL variable is the particle weight.
     if (psl.size() > 0) {
-        psl[0] = scale*1.0e-6;
+        psl[0] = sp.getStatisticalWeight() * scale*1.0e-6;
     } else {
-        psl.push_back(scale*1.0e-6); // m-3 to cm-3.
+        psl.push_back(sp.getStatisticalWeight() * scale*1.0e-6); // m-3 to cm-3.
     }
 
     // Get basic stats.

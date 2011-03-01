@@ -46,6 +46,7 @@
 #include "string_functions.h"
 #include <cmath>
 #include <stdexcept>
+#include <cassert>
 
 using namespace Sweep;
 using namespace std;
@@ -56,6 +57,7 @@ using namespace std;
 Particle::Particle(void)
 : m_Position(0.0)
 , m_PositionTime(0.0)
+, m_StatWeight(1.0)
 {
 }
 
@@ -64,6 +66,20 @@ Particle::Particle(real time, const Sweep::ParticleModel &model)
 : SubParticle(time, model)
 , m_Position(0.0)
 , m_PositionTime(0.0)
+, m_StatWeight(1.0)
+{
+}
+
+/*!
+ * @param[in]	time	Create time
+ * @param[in]	weight	Statistical weight of new particle
+ * @param[in]	model	Particle model that interprets contents of particle
+ */
+Particle::Particle(real time, real weight, const Sweep::ParticleModel &model)
+: SubParticle(time, model)
+, m_Position(0.0)
+, m_PositionTime(0.0)
+, m_StatWeight(weight)
 {
 }
 
@@ -72,6 +88,7 @@ Particle::Particle(Sweep::Primary &pri)
 : SubParticle(pri)
 , m_Position(0.0)
 , m_PositionTime(0.0)
+, m_StatWeight(1.0)
 {
 }
 
@@ -82,10 +99,30 @@ Particle::Particle(const Sweep::Particle &copy)
     *this = copy;
 }
 
-// Stream-reading constructor.
+/*!
+ * Read particle from binary stream.  This method must read the data in
+ * the same way in which it is written in Serialize.
+ *
+ * @param[in,out]		in		Stream from which to read
+ * @param[in]			model	Particle model defining interpretation of particle data
+ *
+ * @exception		invalid_argument	Stream not ready
+ */
 Particle::Particle(std::istream &in, const Sweep::ParticleModel &model)
 : SubParticle(in, model)
 {
+    if(in.good()) {
+        real val;
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_Position = val;
+
+        in.read(reinterpret_cast<char*>(&m_PositionTime), sizeof(m_PositionTime));
+        in.read(reinterpret_cast<char*>(&m_StatWeight), sizeof(m_StatWeight));
+    }
+    else {
+        throw std::invalid_argument("Input stream not ready \
+        (Sweep, Particle::Deserialize).");
+    }
 }
 
 // Default destructor.
@@ -95,7 +132,15 @@ Particle::~Particle()
 }
 
 /*!
+ * @param[in]		xml			XML node specifying the particle
+ * @param[in]		model		Particle model that defines the interpretation of the particle data
  * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ *
+ * @return		Pointer to new particle constructed on the heap (caller must delete).
+ *
+ * @exception	runtime_error	Unrecognised component
+ * @exception	runtime_error	Unrecognised tracker
+ * @exception	runtime_error	Non-positive statistical weight
  */
 Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::ParticleModel& model,
                                       int (*rand_int)(int, int))
@@ -140,10 +185,26 @@ Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::P
                                        (Sweep, Particle::createFromXMLNode).");
         }
     }
-    
-    
-    //Particle* const pNew = new Particle(0, model);
-    Particle* const pNew = model.CreateParticle(0.0, rand_int);
+
+    // Pointer to particle shortly to be created
+    Particle* pNew = NULL;
+
+    // Read any statistical weight
+    const CamXML::Element* const pWeightNode = xml.GetFirstChild("weight");
+    if(pWeightNode != NULL) {
+    	std::string str = pWeightNode->Data();
+    	const real wt = Strings::cdble(str);
+    	if(wt > 0) {
+    		pNew = model.CreateParticle(0.0, wt, rand_int);
+    	}
+    	else {
+    		throw std::runtime_error("Particle statistical weight must be >0, not " + str +
+    				                 "(Sweep, Particle::createFromXMLNode).");
+    	}
+    }
+    else {
+        pNew = model.CreateParticle(0.0, rand_int);
+    }
     
     // Initialise the new particle.
     pNew->Primary()->SetComposition(components);
@@ -165,6 +226,7 @@ Particle &Particle::operator=(const Sweep::Particle &rhs)
         SubParticle::operator=(rhs);
         m_Position = rhs.m_Position;
         m_PositionTime = rhs.m_PositionTime;
+        m_StatWeight = rhs.m_StatWeight;
     }
     return *this;
 }
@@ -198,5 +260,29 @@ Particle *const Particle::Clone() const
  * @return	true iff internal structures pass tests
  */
 bool Particle::IsValid() const {
-	return SubParticle::IsValid();
+	return SubParticle::IsValid() && (m_StatWeight > 0);
+}
+
+/*!
+ * @param[in,out]	out		Stream to which binary representation should be written
+ *
+ * @exception		invalid_argument	Output stream not ready
+ */
+void Particle::Serialize(std::ostream &out) const
+{
+	assert(IsValid());
+
+    if (out.good()) {
+        // First serialise the parent class
+        SubParticle::Serialize(out);
+
+        // Output the data members in this class
+        out.write((char*)&m_Position, sizeof(m_Position));
+        out.write((char*)&m_PositionTime, sizeof(m_PositionTime));
+        out.write((char*)&m_StatWeight, sizeof(m_StatWeight));
+    }
+    else {
+        throw std::invalid_argument("Output stream not ready \
+                                    (Sweep, Particle::Serialize).");
+    }
 }

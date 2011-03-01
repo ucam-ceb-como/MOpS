@@ -1,7 +1,7 @@
 /*!
- * \file   swp_property_indices.h
+ * \file   swp_coag_weight_rules.h
  * \author Robert I A Patterson
- *  Copyright (C) 2010 Robert I A Patterson.
+ *  Copyright (C) 2011 Robert I A Patterson.
  *
  *  Project:        sweepc (population balance solver)
  *  Sourceforge:    http://sourceforge.net/projects/mopssuite
@@ -39,39 +39,26 @@
     Website:     http://como.cheng.cam.ac.uk
  */
 
-#ifndef SWEEP_PROPERTY_INDICES_H
-#define SWEEP_PROPERTY_INDICES_H
+#ifndef SWEEP_COAG_WEIGHT_RULES_H
+#define SWEEP_COAG_WEIGHT_RULES_H
 
 
 namespace Sweep
 {
-    //! Symbolic indices for particle properties
-    enum PropID {
-        iUniform=-1, // Special Case:  Always returns 1.0.  Used to select particles uniformly.
-        iDsph,   // Equivalent sphere diameter.
-        iDcol,   // Collision diameter.
-        iDmob,   // Mobility diameter.
-        iS,      // Surface area.
-        iV,      // Volume.
-        iM,      // Mass.
-        // The next properties are provided for calculation of
-        // collision rates.
-        iD2,      // Collision diameter squared.
-        iD_1,     // Inverse collision diameter.
-        iD_2,     // Inverse of the diameter squared.
-        iM_1_2,   // Inverse of the square-root of the mass.
+namespace Processes
+{
+    //! Symbolic names for the different ways of choosing the weight of the new particle in weight coagulation events.
+    enum CoagWeightRule {
+        //! \f$ \left(\frac{1}{u} + \frac{1}{v} \right)^{-1}\f$
+        CoagWeightHarmonic,
 
-        //! Statistical weight
-        iW,
+        //! Divide by 2
+        CoagWeightHalf,
 
-        //! Statistical weight time physical mass
-        iWM,
-
-        iD2_M_1_2, // D^2 * M^-1/2.
-		iFS,		// the free surface available for other particles to sinter
-
-		iNumCarbon, // Number of Carbon atoms
+        //! Mass conserving
+        CoagWeightMass,
     };
+}
 }
 
 #endif

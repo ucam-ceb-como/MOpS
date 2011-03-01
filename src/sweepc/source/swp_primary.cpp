@@ -336,8 +336,9 @@ bool Primary::IsValid() const {
             return false;
     }
 
-    // All values were OK
-    return true;
+    // Check one of the cached values, all the m_??? could be added here
+    // if necessary.
+    return (m_mass > 0);
 }
 
 // OPERATIONS.

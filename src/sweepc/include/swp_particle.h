@@ -73,6 +73,14 @@ public:
         real time,                        // Create time.
         const Sweep::ParticleModel &model // Defining particle model.
         );
+
+    //! Create a particle with a specified statistical weight
+    Particle(
+        real time,
+        real weight,
+        const Sweep::ParticleModel &model
+        );
+
     Particle(Sweep::Primary &pri);        // Initialising constructor (from primary).
     Particle(const Particle &copy);       // Copy constructor.
     Particle(                             // Stream-reading constructor.
@@ -101,6 +109,13 @@ public:
     //! Set spatial position of particle and time at which it applied
     void setPositionAndTime(const real x, const real t);
 
+    // STATISTICAL WEIGHT
+    //! Get statistical weight
+    real getStatisticalWeight() const {return m_StatWeight;}
+
+    //! Set statistical weight
+    void setStatisticalWeight(real wt) {m_StatWeight = wt;}
+
     // READ/WRITE/COPY.
 
     //! Clone the particle.
@@ -109,7 +124,10 @@ public:
     //! Internal consistency check
     bool IsValid() const;
 
-    // Why is there no serialisation?
+    //! Write the object to a binary stream.
+    virtual void Serialize(std::ostream &out) const;
+
+    // Deserialisation is handled through the stream reading constructor
 
 private:
 
@@ -118,6 +136,9 @@ private:
 
     //! Time at which position was valid
     real m_PositionTime;
+
+    //! Statistical weight of particle units: \f$ m^{-3}f\$
+    real m_StatWeight;
 
     // Can't create a particle without knowledge of the components
     // and the tracker variables.

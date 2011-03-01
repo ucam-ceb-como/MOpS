@@ -46,6 +46,7 @@
 #include "swp_actsites_reaction.h"
 #include "swp_transcoag.h"
 #include "swp_addcoag.h"
+#include "swp_weighted_addcoag.h"
 #include "swp_secondary_freecoag.h"
 #include "swp_secondary_primary_coag.h"
 #include "swp_pah_inception.h"
@@ -90,6 +91,9 @@ Process *const ProcessFactory::Read(std::istream &in, const Sweep::Mechanism &me
                 break;
             case Additive_Coagulation_ID:
                 proc = new AdditiveCoagulation(in, mech);
+                break;
+            case Weighted_Additive_Coagulation_ID:
+                proc = new WeightedAdditiveCoagulation(in, mech);
                 break;
             case SurfaceReaction_ID:
                 proc = new SurfaceReaction(in, mech);
@@ -205,6 +209,9 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in,
                 break;
             case Additive_Coagulation_ID:
                 proc = new AdditiveCoagulation(in, mech);
+                break;
+            case Weighted_Additive_Coagulation_ID:
+                proc = new WeightedAdditiveCoagulation(in, mech);
                 break;
             case Secondary_FreeCoagulation_ID:
                 proc = new SecondaryFreeCoag(in, mech);

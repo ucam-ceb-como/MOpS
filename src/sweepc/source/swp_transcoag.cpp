@@ -97,7 +97,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::Rate(real t, const Cell &sy
 // More efficient rate routine for coagulation only.
 // All parameters required to calculate rate passed
 // as arguments.
-Sweep::real Sweep::Processes::TransitionCoagulation::Rate(const TreeCache &data, real n, real sqrtT,
+Sweep::real Sweep::Processes::TransitionCoagulation::Rate(const TreeWeightedCache &data, real n, real sqrtT,
                        real T_mu, real MFP, real vol) const
 {
     // Some prerequisites.
@@ -107,7 +107,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::Rate(const TreeCache &data,
     real c = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
-    const real d       = data.CollDiameter();
+    const real d       = data.Property(Sweep::iDcol);
     const real d2      = data.Property(Sweep::iD2);
     const real d_1     = data.Property(Sweep::iD_1);
     const real d_2     = data.Property(Sweep::iD_2);
@@ -176,7 +176,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(real t, const Cel
 // More efficient rate routine for coagulation only.
 // All parameters required to calculate rate terms
 // passed as arguments.
-Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const TreeCache &data, real n, real sqrtT,
+Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const TreeWeightedCache &data, real n, real sqrtT,
                             real T_mu, real MFP, real vol,
                             fvector::iterator &iterm) const
 {
@@ -187,7 +187,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const TreeCache &
     real c   = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
-    const real d       = data.CollDiameter();
+    const real d       = data.Property(Sweep::iDcol);
     const real d2      = data.Property(Sweep::iD2);
     const real d_1     = data.Property(Sweep::iD_1);
     const real d_2     = data.Property(Sweep::iD_2);

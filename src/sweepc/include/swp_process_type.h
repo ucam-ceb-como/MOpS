@@ -80,6 +80,8 @@ namespace Processes
         Secondary_FreeCoagulation_ID = 10002,
         //! Free molecular coagulation of secondary particles with particles from the main population
         Secondary_Primary_Coagulation_ID = 10003,
+        //! Additive coagulation with weighted particles
+        Weighted_Additive_Coagulation_ID = 10004,
 
         // Transport processes
         //! Particle diffusion
