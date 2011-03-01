@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="Rob test soot 1" units="CGS">
+    
+    
+    <!-- Define particle components. -->
+    
+    <component id="pah" type="bulk">
+      <description>
+        amorphous carbon
+      </description>
+      <density units="g/cm3">1</density>
+      <molwt units="g/mol">6.0221415e26</molwt>
+    </component> 
+    
+
+    <particle id="[soot]" model="spherical" subtree="false">
+      <description>
+        A soot particle.
+      </description>
+    </particle>
+
+    
+    <coagulation>
+        <kernel>weightedadditive</kernel>
+        <A>1.5</A>
+        <weightrule>harmonic</weightrule>
+    </coagulation>
+
+</mechanism>
