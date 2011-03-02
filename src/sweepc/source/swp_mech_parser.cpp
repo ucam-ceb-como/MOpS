@@ -1219,9 +1219,28 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                         // Unrecognised option
                         throw std::runtime_error("Coagulation kernel " + kernelName + " not yet available in DSA \
                                                 (Sweep, MechParser::readCoagulation)");
+
+                    // Choice of position of newly coagulated particle
+                    const CamXML::Element *positionChoiceXML = (*it)->GetFirstChild("positionchoice");
+
+                    // This is an optional input
+                    if (positionChoiceXML != NULL) {
+                        const std::string choice = positionChoiceXML->Data();
+                        if(choice == "none")
+                            coag->SetPositionChoiceRule(Processes::Coagulation::NoPositionChoice);
+                        else if (choice == "uniform")
+                            coag->SetPositionChoiceRule(Processes::Coagulation::UniformPositionChoice);
+                        else if (choice == "mass")
+                            coag->SetPositionChoiceRule(Processes::Coagulation::MassPositionChoice);
+                        else
+                            // Unrecognised option
+                            throw std::runtime_error("Position choice rule " + choice + " not yet available \
+                                                     (Sweep, MechParser::readCoagulation)");
+                    }
                 }
                 else {
-                    // Must have a weighted kernel, need to find out what weight rule to use
+                    // weightXML != NULL so must have a weighted kernel
+                    // need to find out what weight rule to use
                     const std::string weightRuleName = weightXML->Data();
                     Processes::CoagWeightRule weightRule;
 
@@ -1233,6 +1252,10 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                         weightRule = Processes::CoagWeightMass;
                     else
                         throw std::runtime_error("Coagulation weight rule " + weightRuleName + " not supported \
+                                                 (Sweep, MechParser::readCoagulation)");
+
+                    if(NULL != (*it)->GetFirstChild("positionchoice"))
+                        throw std::runtime_error("Position choice rule does not apply with weighted coagulation \
                                                  (Sweep, MechParser::readCoagulation)");
 
                     // Now create the process
@@ -1253,24 +1276,6 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                     A = 1.0;
                 }
                 coag->SetA(A);
-
-                // Choice of position of newly coagulated particle
-                el = (*it)->GetFirstChild("positionchoice");
-
-                // This is an optional input
-                if (el != NULL) {
-                    const std::string choice = el->Data();
-                    if(choice == "none")
-                        coag->SetPositionChoiceRule(Processes::Coagulation::NoPositionChoice);
-                    else if (choice == "uniform")
-                        coag->SetPositionChoiceRule(Processes::Coagulation::UniformPositionChoice);
-                    else if (choice == "mass")
-                        coag->SetPositionChoiceRule(Processes::Coagulation::MassPositionChoice);
-                    else
-                        // Unrecognised option
-                        throw std::logic_error("Position choice rule " + choice + " not yet available \
-                                                (Sweep, MechParser::readCoagulation)");
-                }
 
                 mech.AddCoagulation(*coag);
 

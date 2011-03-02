@@ -258,25 +258,6 @@ int Sweep::Processes::WeightedAdditiveCoagulation::Perform(
         real truek = CoagKernel(*sp1, *sp2, sys, None);
 
         if (!Fictitious(majk, truek, rand_u01)) {
-            // Position for particle after coagulation, default is to take whatever happens
-            // to be in sp1
-            real newPos = sp1->getPosition();
-            real newPosTime = sp1->getPositionTime();
-            if(PositionChoiceRule() == UniformPositionChoice) {
-                // Change to position of sp2 with prob 0.5
-                if(rand_u01() < 0.5) {
-                    newPos = sp2->getPosition();
-                    newPosTime = sp2->getPositionTime();
-                }
-            }
-            else if (PositionChoiceRule() == MassPositionChoice) {
-                // Change to position of sp2 with prob sp2->Mass()/(sp1->Mass() + sp2->Mass())
-                if(rand_u01() * (sp1->Mass() + sp2->Mass()) < sp2->Mass()) {
-                    newPos = sp2->getPosition();
-                    newPosTime = sp2->getPositionTime();
-                }
-            }
-
             //Adjust the statistical weight
             switch(m_CoagWeightRule) {
             case Sweep::Processes::CoagWeightHarmonic :
@@ -296,7 +277,6 @@ int Sweep::Processes::WeightedAdditiveCoagulation::Perform(
 
             // Add contents of particle 2 onto particle 1
             sp1->Coagulate(*sp2, rand_int, rand_u01);
-            sp1->setPositionAndTime(newPos, newPosTime);
             sp1->SetTime(t);
 
             assert(sp1->IsValid());
