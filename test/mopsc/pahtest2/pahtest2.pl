@@ -131,5 +131,6 @@ system("rm pahtest2*.sav");
 system("rm pahtest2*.sen");
 system("rm pahtest2*.sim");
 system("rm pahtest2*.aux");
+system("rm pahtest2-*.csv");
 
 exit 0;

@@ -106,5 +106,5 @@ if(abs($m1 - 3.139e-8) > 1e-9) {
 }
 
 #print "All tests passed\n";
-
+system("rm sootv3*");
 exit 0;
