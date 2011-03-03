@@ -26,7 +26,7 @@ ifeq ($(debug),0)
     lib=$(librelease)
     bin=$(binrelease)
   else
-    flag=-c -O2 (includes) -Wall -pg
+    flag=-c -O2 $(includes) -Wall -pg
     flink=-pg
     lib=$(libprofile)
     bin=$(binprofile)
