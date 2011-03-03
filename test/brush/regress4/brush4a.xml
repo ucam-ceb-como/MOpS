@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<brush version="2">
+  
+  <!-- Default parameters (can be overidden). --> 
+  <runs>1</runs>
+  <iter>2</iter>
+  <atol>1.0e-2</atol> 
+  <rtol>1.0e-4</rtol>
+  <pcount x="1.0">512</pcount>
+  <pcount x="0.2">512</pcount>
+  <maxm0 x="0.01">1.28e4</maxm0>
+  <relax>0.5</relax>
+  <advection>split</advection>
+
+
+  <!-- Output time sequence. -->
+  <timeintervals splits="1">
+    <start>0.0</start>
+    <time steps="5" splits="10">0.02</time>
+    <time steps="5" splits="10">0.04</time>
+    <time steps="5" splits="10">0.06</time>
+    <time steps="5" splits="10">0.08</time>
+    <time steps="5" splits="10">0.10</time>
+    <time steps="5" splits="10">0.12</time>
+    <time steps="5" splits="10">0.14</time>
+    <time steps="5" splits="10">0.16</time>
+    <time steps="5" splits="10">0.18</time>
+    <time steps="5" splits="10">0.20</time>
+    <time steps="5" splits="10">0.22</time>
+    <time steps="5" splits="10">0.24</time>
+    <time steps="5" splits="10">0.26</time>
+    <time steps="5" splits="10">0.28</time>
+    <time steps="5" splits="10">0.30</time>
+  </timeintervals>
+
+
+  <output>
+    <filename>regress4a</filename>
+  </output>
+  
+</brush>

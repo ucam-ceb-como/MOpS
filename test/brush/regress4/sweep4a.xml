@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="Rob split transport test" units="CGS">
+
+    <model type="advection" id="physical" />
+
+    <!-- Define particle components. -->
+    
+    <component id="pah" type="bulk">
+      <description>
+        test
+      </description>
+      <density units="g/cm3">1</density>
+      <molwt units="g/mol">20</molwt>
+    </component> 
+    
+
+    <particle id="[soot]" model="spherical" subtree="false">
+      <description>
+        test
+      </description>
+    </particle>
+
+    
+    <!-- Inceptions -->
+
+    <constantinception name="Constant inception">
+        <component id="pah" dx="32"/>
+        <!--Incepted particle mass will be 32 * 20 over N_A = 1.06e-21 g -->
+        <rate>0.1</rate>
+        <A>1.0</A>
+    </constantinception>
+ 
+    <coagulation>
+        <kernel>weightedadditive</kernel>
+        <weightrule>w1</weightrule>
+        <A>1.0e22</A>
+    </coagulation>
+
+</mechanism>
