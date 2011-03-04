@@ -47,7 +47,7 @@ if [ $0 != "./etc/makeDocs.sh" ]; then
     exit 1
 fi
 
-folders=(camxml sprogc geometry camflow sweepc mopsc brush)
+folders=(camxml sprogc geometry camflow sweepc mopsc brush utils)
 
 if [ $cleanall -eq 1 ]; then
     echo "Cleaning all documentation."
