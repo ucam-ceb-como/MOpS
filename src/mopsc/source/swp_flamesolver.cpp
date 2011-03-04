@@ -345,16 +345,6 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
             dt = timeStep(t, tsplit, *r.Mixture(), mech, rates, jrate, rand_int, rand_u01);
             if (dt >= 0.0) {
                 t += dt; 
-
-                // The following line is suspicious, it seems to be a mathematically
-                // inadmissible solution to the problem of stochastic time steps
-                // going past the end of the period under consideration.  The
-                // correct solution is to simulate the random time step, but
-                // only to perform the event if it falls within the interval
-                // being considered, otherwise one should just move the time 
-                // counter to the end of the period. (riap 25/05/2009)
-                t = std::min(t, tstop);
-
             } else {
                 return;
             }

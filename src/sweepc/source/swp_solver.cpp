@@ -110,7 +110,7 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech,
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
             dt = timeStep(t, tsplit, sys, mech, rates, jrate, rand_int, rand_u01);
             if (dt >= 0.0) {
-                t+=dt; t = min(t, tstop);
+                t+=dt;
             } else {
                 return -1;
             }
@@ -170,7 +170,7 @@ real Solver::timeStep(real t, real t_stop, Cell &sys, const Mechanism &mech,
     // Truncate if step is too long or select a process
     // to perform.
     if (dt > m_maxdt) {
-        dt = m_maxdt;
+        dt = std::min(m_maxdt, t_stop - t);
     } else {
         if (t+dt <= t_stop) {
             const int i = chooseProcess(rates, rand_u01);
