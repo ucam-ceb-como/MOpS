@@ -86,13 +86,6 @@ public:
     // Returns the number of stats for this model.
     unsigned int Count(void) const;
 
-    // Returns the stats mask which informs whether stats should
-    // be summed, averaged or both.
-//    const std::vector<StatType> &Mask(void) const;
-
-    // Calculates the model stats for a single particle.
-    void Calculate(const Particle &data);
-
     // Calculates the model stats for a particle ensemble.
     void Calculate(
         const Ensemble &e, // Ensemble from which to get stats.

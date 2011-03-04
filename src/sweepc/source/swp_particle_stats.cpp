@@ -64,6 +64,8 @@ const std::string ParticleStats::m_statnames[ParticleStats::STAT_COUNT] = {
     std::string("Avg. Volume (cm3)"),
     std::string("Mass (g/cm3)"),
     std::string("Avg. Mass (g)"),
+    std::string("Avg num coags"),
+    std::string("Max num coags"),
     std::string("Secondary Particle Count"),
     std::string("Secondary M0 (cm-3)")
 };
@@ -80,8 +82,11 @@ const IModelStats::StatType ParticleStats::m_mask[ParticleStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. volume.
     IModelStats::Sum,  // Mass.
     IModelStats::Avg,  // Avg. mass.
+    IModelStats::Avg,  // Average number of coagulations
+    IModelStats::None, // Max number of coagulations
     IModelStats::None, // Secondary particle count.
     IModelStats::Sum   // Secondary M0.
+
 };
 
 const std::string ParticleStats::m_const_pslnames[ParticleStats::PSL_COUNT] = {
@@ -92,7 +97,8 @@ const std::string ParticleStats::m_const_pslnames[ParticleStats::PSL_COUNT] = {
     std::string("Volume (cm3)"),
     std::string("Mass (g)"),
     std::string("Age (s)"),
-    std::string("Stat. Weight (cm-3)")
+    std::string("Stat. Weight (cm-3)"),
+    std::string("Num coags")
 };
 
 
@@ -179,43 +185,19 @@ unsigned int ParticleStats::Count() const
     return STAT_COUNT + 2*(m_ncomp + m_ntrack);
 }
 
-// Calculates the model stats for a single particle.
-void ParticleStats::Calculate(const Particle &data)
-{
-    m_stats[iNP]   = 1.0;
-    m_stats[iM0]   = 1.0;
-    m_stats[iD]    = data.SphDiameter() * 1.0e9;  // Convert from m to nm.
-    m_stats[iDcol] = data.CollDiameter() * 1.0e9; // Convert from m to nm.
-    m_stats[iDmob] = data.MobDiameter() * 1.0e9;  // Convert from m to nm.
-    m_stats[iS]    = data.SurfaceArea() * 1.0e4;  // Convert from m2 to cm2.
-    m_stats[iS+1]  = m_stats[iS];
-    m_stats[iV]    = data.Volume() * 1.0e6;       // Convert from m3 to cm3.
-    m_stats[iV+1]  = m_stats[iV];
-    m_stats[iM]    = data.Mass() * 1.0e3;         // Convert from kg to g.
-    m_stats[iM+1]  = m_stats[iM+1];
-    m_stats[i2NP]  = 0.0; // Not used here, because particle assumed not to be secondary
-    m_stats[i2M0]  = 0.0; // Not used here, because particle assumed not to be secondary
-
-    // Add component and tracker values to stats.
-    fvector::iterator i = m_stats.begin()+STAT_COUNT;
-    for (unsigned int j=0; j!=m_ncomp; ++j,++i) {
-        *i     = data.Composition(j);
-        *(++i) = data.Composition(j);
-    }
-    for (unsigned int j=0; j!=m_ncomp; ++j,++i) {
-        *i     = data.Values(j);
-        *(++i) = data.Values(j);
-    }
-}
-
 // Calculates the model stats for a particle ensemble.
 void ParticleStats::Calculate(const Ensemble &e, real scale, real secondary_scale)
 {
     m_stats.assign(m_stats.size(), 0.0);
 
+    // Find out the maximum number of coags that has been experienced
+    // by one of the particles in this ensemble.  Find the max
+    // using this int before copying into the stats array
+    unsigned int maxNumCoag = 0;
+
+
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
-    unsigned int n = 0;
     for (ip=e.begin(); ip!=e.end(); ++ip) {
         real sz = (*ip)->Property(m_statbound.PID);
         // Check if the value of the property is within the stats bound
@@ -233,6 +215,14 @@ void ParticleStats::Calculate(const Ensemble &e, real scale, real secondary_scal
             m_stats[iM]    += (*ip)->Mass() * wt * 1.0e3;         // Convert from kg to g.
             m_stats[iM+1]  += (*ip)->Mass() * wt * 1.0e3;         // Convert from kg to g.
 
+            // Coagulations experienced by this particle
+            const unsigned int coagCount = (*ip)->getCoagCount();
+            m_stats[iCoag] += coagCount * wt;
+
+            // Check if this the highest count so far
+            if(coagCount > maxNumCoag)
+                maxNumCoag = coagCount;
+
             // Sum component and tracker values.
             fvector::iterator i = m_stats.begin()+STAT_COUNT;
             for (unsigned int j=0; j!=m_ncomp; ++j,++i) {
@@ -243,20 +233,28 @@ void ParticleStats::Calculate(const Ensemble &e, real scale, real secondary_scal
                 *i     += (*ip)->Values(j);
                 *(++i) += (*ip)->Values(j);
             }
-            ++n;
         }
     }
 
     // Get the particle count.
     m_stats[iNP] = (real)e.Count();
-    const real invNumPart = (n>0) ? 1.0 / n : 0.0;
 
-    // Scale the summed stats and calculate the averages.
+    // also the maximum number of coag events that has occurred to one particle
+    m_stats[iMaxCoag] = static_cast<real>(maxNumCoag);
+
+    // Now calculate the denominator for the average per particle quantities.
+    // Note that m_stats[iM0] at this point does not in fact contain an M0 value,
+    // since it has not yet been scaled by sample volume.  This is intentional
+    // since here one should divide by the total statistical weight of all particles.
+    const real invWeight = (e.Count()>0) ? 1.0 / m_stats[iM0] : 0.0;
+
+    // Scale the summed stats and calculate the averages,
+    // skip the secondary particle stats (hence STAT_COUNT - 2)
     for (unsigned int i=1; i!=STAT_COUNT - 2; ++i) {
         if (m_mask[i] == Sum) {
             m_stats[i] *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
-        } else {
-            m_stats[i] *= invNumPart;
+        } else if(m_mask[i] == Avg){
+            m_stats[i] *= invWeight;
         }
     }
 
@@ -265,13 +263,13 @@ void ParticleStats::Calculate(const Ensemble &e, real scale, real secondary_scal
     m_stats[i2M0] = e.SecondaryCount() * (secondary_scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
 
 
-
     // Scale and calculate averages for components and tracker
     // variables.
     for (unsigned int i=STAT_COUNT; i!=Count(); ++i) {
         m_stats[i]   *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
-        m_stats[++i] *= invNumPart;
+        m_stats[++i] *= invWeight;
     }
+
 }
 
 // Returns a vector containing the stats.
@@ -441,6 +439,7 @@ void ParticleStats::PSL(const Sweep::Particle &sp, real time,
     *(++j) = sp.Mass() * 1.0e3;         // kg to g.
     *(++j) = time - sp.CreateTime();    // Particle age.
     *(++j) = sp.getStatisticalWeight(); // Statistical weight
+    *(++j) = sp.getCoagCount();         // Number of coag events for this particle in current cell
 
     // Get component and tracker stats.
     for (unsigned int k=0; k!=m_ncomp; ++k) {

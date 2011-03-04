@@ -278,6 +278,7 @@ int Sweep::Processes::WeightedAdditiveCoagulation::Perform(
             // Add contents of particle 2 onto particle 1
             sp1->Coagulate(*sp2, rand_int, rand_u01);
             sp1->SetTime(t);
+            sp1->incrementCoagCount();
 
             assert(sp1->IsValid());
             // Tell the ensemble that particles 1 and 2 have changed

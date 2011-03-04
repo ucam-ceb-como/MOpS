@@ -128,20 +128,6 @@ unsigned int SurfVolStats::Count() const
     return STAT_COUNT;
 }
 
-// Calculates the model stats for a single particle.
-void SurfVolStats::Calculate(const Particle &data)
-{
-    // Get surface-volume cache.
-    const AggModels::SurfVolCache& cache = dynamic_cast<const AggModels::SurfVolCache&>(data.AggCache());
-
-    // Get stats.
-    m_stats[iS]      = cache.SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
-    m_stats[iS+1]    = m_stats[iS];
-    m_stats[iPPN]    = cache.PP_Count();
-    m_stats[iPPN+1]  = m_stats[iPPN];
-    m_stats[iPPD]    = cache.PP_Diameter() * 1.0e9; // Convert from m to nm.
-}
-
 // Calculates the model stats for a particle ensemble.
 void SurfVolStats::Calculate(const Ensemble &e, real scale, real secondary_scale)
 {

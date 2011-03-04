@@ -632,12 +632,11 @@ void Brush::PredCorrSolver::moveParticlesToDifferentCells(Reactor1d & reac,
         for(std::list<Sweep::Transport::TransportOutflow>::const_iterator itPart = inflow_lists[i].begin();
             itPart != inflow_lists[i].end();
             ++itPart) {
+                // Reset the coagulation count now the particle is moving to a new cell
+                itPart->particle->resetCoagCount();
                 // At the moment particles have to be added one by one, a more
                 // efficient method could be devised.
                 transportIn(reac, i, *itPart);
-
-                // Ownership was taken by transportIn
-                //itPart->particle = NULL;
         }
 
         // Now the population of cell i has been updated doubling can be

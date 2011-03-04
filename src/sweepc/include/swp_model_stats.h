@@ -73,9 +73,6 @@ public:
     // Returns the number of stats for this model.
     virtual unsigned int Count(void) const = 0;
 
-    // Calculates the model stats for a single particle.
-    virtual void Calculate(const Particle &data) = 0;
-
     // Calculates the model stats for a particle ensemble.
     virtual void Calculate(
         const Ensemble &e, // Ensemble from which to get stats.

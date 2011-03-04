@@ -68,8 +68,9 @@ The stats stored in this class are:
 6/7.    Total and average particle surface area.
 8/9.    Total and average particle volume.
 10/11.  Total and average particle mass.
-12      Number of secondary computational particles
-13      Number density of secondary particles.
+12      Average number of coagulation events experienced
+13      Number of secondary computational particles
+14      Number density of secondary particles.
 
 Additionally the total and average values of all particle components
 and tracker values are appended to the end of the array.  For this
@@ -98,9 +99,6 @@ public:
 
     // Returns the number of stats for this model.
     unsigned int Count(void) const;
-
-    // Calculates the model stats for a single particle.
-    void Calculate(const Particle &data);
 
     // Calculates the model stats for a particle ensemble.
     void Calculate(
@@ -210,12 +208,14 @@ public:
 
 private:
     // Stats count and indices.
-    static const unsigned int STAT_COUNT = 13;
+    static const unsigned int STAT_COUNT = 15;
     enum StatIndices {iNP=0, iM0=1, iD=2, iDcol=3,
-                      iDmob=4, iS=5, iV=7, iM=9, i2NP=11, i2M0=12};
+                      iDmob=4, iS=5, iV=7, iM=9,
+                      iCoag=11, iMaxCoag=12,
+                      i2NP=13, i2M0=14};
 
     // PSL count and indices.
-    static const unsigned int PSL_COUNT = 8;
+    static const unsigned int PSL_COUNT = 9;
 
     // Component and tracker counts.
     unsigned int m_ncomp, m_ntrack;
@@ -240,6 +240,6 @@ private:
     ParticleStats(void); // Default constructor.
 };
 };
-};
+}
 
 #endif

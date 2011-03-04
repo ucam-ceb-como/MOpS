@@ -116,6 +116,17 @@ public:
     //! Set statistical weight
     void setStatisticalWeight(real wt) {m_StatWeight = wt;}
 
+    // COAG COUNT
+    //! Number of coagulations since count was reset
+    unsigned int getCoagCount() const;
+
+    //! Increment count of coagulation events
+    void incrementCoagCount() {++m_CoagCount;}
+
+    //! Reset count of coagulation events
+    void resetCoagCount() {m_CoagCount=0;}
+
+
     // READ/WRITE/COPY.
 
     //! Clone the particle.
@@ -139,6 +150,9 @@ private:
 
     //! Statistical weight of particle units: \f$ m^{-3}f\$
     real m_StatWeight;
+
+    //! Number of coagulations experienced by this particle
+    unsigned int m_CoagCount;
 
     // Can't create a particle without knowledge of the components
     // and the tracker variables.

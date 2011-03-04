@@ -58,6 +58,7 @@ Particle::Particle(void)
 : m_Position(0.0)
 , m_PositionTime(0.0)
 , m_StatWeight(1.0)
+, m_CoagCount(0)
 {
 }
 
@@ -67,6 +68,7 @@ Particle::Particle(real time, const Sweep::ParticleModel &model)
 , m_Position(0.0)
 , m_PositionTime(0.0)
 , m_StatWeight(1.0)
+, m_CoagCount(0)
 {
 }
 
@@ -80,6 +82,7 @@ Particle::Particle(real time, real weight, const Sweep::ParticleModel &model)
 , m_Position(0.0)
 , m_PositionTime(0.0)
 , m_StatWeight(weight)
+, m_CoagCount(0)
 {
 }
 
@@ -89,6 +92,7 @@ Particle::Particle(Sweep::Primary &pri)
 , m_Position(0.0)
 , m_PositionTime(0.0)
 , m_StatWeight(1.0)
+, m_CoagCount(0)
 {
 }
 
@@ -118,6 +122,7 @@ Particle::Particle(std::istream &in, const Sweep::ParticleModel &model)
 
         in.read(reinterpret_cast<char*>(&m_PositionTime), sizeof(m_PositionTime));
         in.read(reinterpret_cast<char*>(&m_StatWeight), sizeof(m_StatWeight));
+        in.read(reinterpret_cast<char*>(&m_CoagCount), sizeof(m_CoagCount));
     }
     else {
         throw std::invalid_argument("Input stream not ready \
@@ -227,6 +232,7 @@ Particle &Particle::operator=(const Sweep::Particle &rhs)
         m_Position = rhs.m_Position;
         m_PositionTime = rhs.m_PositionTime;
         m_StatWeight = rhs.m_StatWeight;
+        m_CoagCount = rhs.m_CoagCount;
     }
     return *this;
 }
@@ -242,6 +248,13 @@ Particle &Particle::operator=(const Sweep::Particle &rhs)
 void Particle::setPositionAndTime(const real x, const real t) {
     m_Position = x;
     m_PositionTime = t;
+}
+
+/*!
+ *@return   Number of coagulation events since counter was reset
+ */
+unsigned int Particle::getCoagCount() const {
+    return m_CoagCount;
 }
 
 // READ/WRITE/COPY.
@@ -280,6 +293,7 @@ void Particle::Serialize(std::ostream &out) const
         out.write((char*)&m_Position, sizeof(m_Position));
         out.write((char*)&m_PositionTime, sizeof(m_PositionTime));
         out.write((char*)&m_StatWeight, sizeof(m_StatWeight));
+        out.write((char*)&m_CoagCount, sizeof(m_CoagCount));
     }
     else {
         throw std::invalid_argument("Output stream not ready \

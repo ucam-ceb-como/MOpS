@@ -83,8 +83,6 @@ public:
     // Returns the number of stats for this model.
     unsigned int Count(void) const;
 
-    // Calculates the model stats for a single particle.
-    void Calculate(const Particle &data);
 
     // Calculates the model stats for a particle ensemble.
     void Calculate(

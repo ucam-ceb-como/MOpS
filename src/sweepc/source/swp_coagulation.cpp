@@ -160,6 +160,7 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
     sp1->Coagulate(*sp2, rand_int, rand_u01);
     sp1->setPositionAndTime(newPos, newPosTime);
     sp1->SetTime(t);
+    sp1->incrementCoagCount();
 
     // Tell the ensemble that particle 1 has changed
     sys.Particles().Update(ip1);

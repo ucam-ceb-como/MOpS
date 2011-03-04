@@ -45,7 +45,7 @@ my $windows = ($ENV{'OS'} =~ /windows.*/i);
 # Choose the windows executable name if appropriate
 my $program = "../../../bin/debug/mops";
 if($windows) {
-    $program = "../../../bin/debug/mops_d.exe";
+    $program = "../../../bin/debug/mops.exe";
 }
 
 # Arguments for simulation
@@ -77,8 +77,8 @@ while(<$momentFile>) {
 
   }
   elsif (($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.0035) < 1e-6 )) {
-      $secondary_m0 = $fields[26];
-      #print "26: $fields[26] \n";
+      $secondary_m0 = $fields[30];
+      #print "30: $fields[30] \n";
   }
 }
 

@@ -150,18 +150,6 @@ unsigned int PAHStats::Count() const
     return STAT_COUNT;
 }
 
-// Calculates the model stats for a single particle.
-void PAHStats::Calculate(const Particle &data)
-{
-    // Get surface-volume cache.
-    const AggModels::PAHCache& cache =
-        dynamic_cast<const AggModels::PAHCache&>(data.AggCache());
-
-	m_stats[iNPAH]    = cache.m_numPAH;
-    // Get stats.
-
-}
-
 // Calculates the model stats for a particle ensemble.
 void PAHStats::Calculate(const Ensemble &e, real scale, real secondary_scale)
 {
