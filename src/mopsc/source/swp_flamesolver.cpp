@@ -312,8 +312,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     // Global maximum time step.
     real t  = r.Time();
     dtg     = tstop - t;
-    m_maxdt = dtg / 3.0;
-    m_tstop = tstop;
+    setMaxTimeStep(dtg / 3.0);
 
     // Set the chemical conditions.
     linInterpGas(t, m_gasprof, *r.Mixture());
@@ -343,7 +342,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
             jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
             // Perform time step.
-            dt = timeStep(t, *r.Mixture(), mech, rates, jrate, rand_int, rand_u01);
+            dt = timeStep(t, tsplit, *r.Mixture(), mech, rates, jrate, rand_int, rand_u01);
             if (dt >= 0.0) {
                 t += dt; 
 

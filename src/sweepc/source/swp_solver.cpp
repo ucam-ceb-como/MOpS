@@ -88,7 +88,6 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech,
     // Global maximum time step.
     dtg     = tstop - t;
     m_maxdt = dtg / 3.0;
-    m_tstop = tstop;
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
@@ -109,7 +108,7 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech,
         while (t < tsplit) {
             // Sweep does not do transport
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
-            dt = timeStep(t, sys, mech, rates, jrate, rand_int, rand_u01);
+            dt = timeStep(t, tsplit, sys, mech, rates, jrate, rand_int, rand_u01);
             if (dt >= 0.0) {
                 t+=dt; t = min(t, tstop);
             } else {
@@ -145,18 +144,18 @@ real Solver::calcSplitTime(real t, real tstop, real jrate,
     return min(tsplit+t, tstop);
 }
 
-// Performs a single stochastic event on the ensemble from the given
-// mechanism.  Returns the length of the time step if successful,
-// otherwise returns negative.
-real Solver::timeStep(real t, Cell &sys, const Mechanism &mech,
+/*!
+ * Performs a single stochastic event on the ensemble from the given
+ * mechanism.  Returns the length of the time step if successful,
+ * otherwise returns negative.
+ */
+real Solver::timeStep(real t, real t_stop, Cell &sys, const Mechanism &mech,
                       const fvector &rates, real jrate,
                       int (*rand_int)(int, int), real (*rand_u01)())
 {
     // The purpose of this routine is to perform a single stochastic jump process.  This
     // involves summing the total rate of all processes, generating a waiting time,
     // selecting a process and performing that process.
-
-    int i;
     real dt;
 
     // Calculate exponentially distributed time step size.
@@ -172,19 +171,15 @@ real Solver::timeStep(real t, Cell &sys, const Mechanism &mech,
     // to perform.
     if (dt > m_maxdt) {
         dt = m_maxdt;
-        i = -1;
     } else {
-        if (t+dt <= m_tstop) {
-            i = chooseProcess(rates, rand_u01);
+        if (t+dt <= t_stop) {
+            const int i = chooseProcess(rates, rand_u01);
+            mech.DoProcess(i, t+dt, sys, Geometry::LocalGeometry1d(), rand_int, rand_u01);
         } else {
-            i = -1;
+            dt = t_stop - t;
         }
     }
 
-    // Perform process.
-    if (i >= 0) {
-        mech.DoProcess(i, t+dt, sys, Geometry::LocalGeometry1d(), rand_int, rand_u01);
-    }
 
     return dt;
 }

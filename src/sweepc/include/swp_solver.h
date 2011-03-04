@@ -72,12 +72,10 @@ public:
         real (*rand_u01)() // U[0,1] samples
         );
 
-protected:
-    // Numerical parameters.
-    real m_tstop;      // Simulation stop time.
-    real m_maxdt;      // Maximum allowed time step size.
-    real m_splitratio; // Parameter defining number of LPDA updates per particle events.
+    //! Upper limit for one stochastic time step
+    void setMaxTimeStep(real max_step) {m_maxdt = max_step;}
 
+protected:
     // TIME STEPPING ROUTINES.
 
     // Calculates the splitting end time after which all particles
@@ -95,6 +93,7 @@ protected:
     // otherwise returns negative.
     real timeStep(
         real t,                // Current solution time.
+        real t_stop,           // Steps may not go past this time
         Cell &sys,             // System to update.
         const Mechanism &mech, // Mechanism to use.
         const fvector &rates,  // Current process rates as an array.
@@ -106,7 +105,17 @@ protected:
     // Selects a process using a DIV algorithm and the process rates
     // as weights.
     int chooseProcess(const fvector &rates, real (*rand_u01)());
+
+private:
+    // Numerical parameters.
+
+    //! Maximum allowed time step size.
+    real m_maxdt;
+    //! Parameter defining number of LPDA updates per particle events.
+    real m_splitratio;
+
+
 };
-};
+}
 
 #endif
