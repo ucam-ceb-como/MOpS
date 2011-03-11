@@ -271,6 +271,14 @@ int Sweep::Processes::WeightedAdditiveCoagulation::Perform(
                 sp1->setStatisticalWeight(sp1->getStatisticalWeight() * sp1->Mass() /
                                           (sp1->Mass() + sp2->Mass()));
                 break;
+            case Sweep::Processes::CoagWeightRule4 : {
+                // This is an arbitrary weighting for illustrative purposes
+                const real x1 = sp1->Mass() / std::sqrt(sp1->getStatisticalWeight());
+                const real x2 = sp1->Mass() / std::sqrt(sp2->getStatisticalWeight());
+                sp1->setStatisticalWeight(sp1->getStatisticalWeight() * x1 /
+                                          (x1 + x2));
+                break;
+                }
             default:
                 throw std::logic_error("Unrecognised weight rule (WeightedAdditiveCoagulation::Perform)");
             }

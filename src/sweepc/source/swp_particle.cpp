@@ -191,24 +191,21 @@ Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::P
         }
     }
 
-    // Pointer to particle shortly to be created
-    Particle* pNew = NULL;
+    // Pointer to new particle
+    // \TODO wrap in an auto_ptr for exception safety
+    Particle* pNew = model.CreateParticle(0.0, rand_int);
 
     // Read any statistical weight
     const CamXML::Element* const pWeightNode = xml.GetFirstChild("weight");
     if(pWeightNode != NULL) {
     	std::string str = pWeightNode->Data();
     	const real wt = Strings::cdble(str);
-    	if(wt > 0) {
-    		pNew = model.CreateParticle(0.0, wt, rand_int);
-    	}
-    	else {
+    	if(wt <= 0) {
     		throw std::runtime_error("Particle statistical weight must be >0, not " + str +
     				                 "(Sweep, Particle::createFromXMLNode).");
     	}
-    }
-    else {
-        pNew = model.CreateParticle(0.0, rand_int);
+    	else
+            pNew->setStatisticalWeight(wt);
     }
     
     // Initialise the new particle.

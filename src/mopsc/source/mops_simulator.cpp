@@ -1335,7 +1335,8 @@ void Simulator::multVals(fvector &vals, real scale)
 }
 
 // Takes vectors of vectors of variable sums and sums of squares, which
-// are converted into the average values and the confidence intervals.
+// are converted into the average values and the CLT confidence intervals
+// for these averages.
 void Simulator::calcAvgConf(std::vector<fvector> &avg,
                             std::vector<fvector> &err,
                             unsigned int nruns)

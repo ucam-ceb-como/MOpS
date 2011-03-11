@@ -57,6 +57,9 @@ namespace Processes
 
         //! Mass conserving
         CoagWeightMass,
+
+        //! \f$ u \frac{f(x,u)}{f(x,u) + f(y,v)}\f$ where \f$ f(x,u) = m(x) / \sqrt{u} \f$
+        CoagWeightRule4,
     };
 }
 }

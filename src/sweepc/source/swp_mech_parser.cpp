@@ -1244,12 +1244,18 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                     const std::string weightRuleName = weightXML->Data();
                     Processes::CoagWeightRule weightRule;
 
-                    if(weightRuleName == "w1" || weightRuleName == "harmonic")
+                    if(weightRuleName == "w1" || weightRuleName == "harmonic") {
                         weightRule = Processes::CoagWeightHarmonic;
+                        std::cerr << "Found harmonic weight rule" << std::endl;
+                    }
                     else if(weightRuleName == "w2" || weightRuleName == "half")
                         weightRule = Processes::CoagWeightHalf;
-                    else if(weightRuleName == "w3" || weightRuleName == "mass")
+                    else if(weightRuleName == "w3" || weightRuleName == "mass") {
                         weightRule = Processes::CoagWeightMass;
+                        std::cerr << "Found mass weight rule" << std::endl;
+                    }
+                    else if(weightRuleName == "w4")
+                        weightRule = Processes::CoagWeightRule4;
                     else
                         throw std::runtime_error("Coagulation weight rule " + weightRuleName + " not supported \
                                                  (Sweep, MechParser::readCoagulation)");

@@ -54,7 +54,7 @@ includes=-Iinclude -I../io/comostrings/include -I../utils/include -I../io/camxml
 
 ifeq ($(debug),0)
   ifeq ($(profile),0)
-    flag=-c -O2 $(includes) -Wall
+    flag=-c -O2 $(includes) -Wall -DNDEBUG
     lib=$(librelease)
   else
     flag=-c -O2 $(includes)  -Wall -pg
