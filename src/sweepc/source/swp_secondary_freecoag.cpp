@@ -158,6 +158,7 @@ int  Sweep::Processes::SecondaryFreeCoag::Perform(Sweep::real t,
         return 0;
 
 
+
     // Perform any deferred events on the second particle.  This changes the particle
     // in the ensemble, because we have a pointer to the particle, not a local copy.
     Particle* sp2 = sys.Particles().SecondaryParticleAt(static_cast<unsigned int>(index2));
@@ -171,9 +172,12 @@ int  Sweep::Processes::SecondaryFreeCoag::Perform(Sweep::real t,
         return 0;
     }
 
-    // Now test if the event is fictitious
-    const real majK = MajorantKernel(sys);
-    const real trueK = FreeMolKernel(*sp1, *sp2, sys.Temperature());
+    // Now test if the event is fictitious, note that the majorant kernel in fact
+    // does not depend on the particles, if it did, it would be necessary to store
+    // its value before performing deferred process updates, see for example
+    // AdditiveCoagulation::Perform.
+    const real majK = MajorantKernel(*sp1, *sp2, sys, Default);
+    const real trueK = CoagKernel(*sp1, *sp2, sys);
     if(Fictitious(majK, trueK, rand_u01)) {
         //fictitious event
         return 0;
@@ -225,24 +229,44 @@ void Sweep::Processes::SecondaryFreeCoag::MoveToMainPopulation(Particle* sp, Cel
  *
  * @param[in]   sp1             First  particle for which to calculate kernel
  * @param[in]   sp2             Second particle for which to calculate kernel
- * @param[in]   temperature     Temperature of system in which coagulation rate is to be calculated
+ * @param[in]   sys     System temperature and extremal secondary particle properties
  *
  * @return      Coagulation kernel
  */
-Sweep::real Sweep::Processes::SecondaryFreeCoag::FreeMolKernel(const Particle &sp1, const Particle &sp2,
-                                                        real temperature) const {
+Sweep::real Sweep::Processes::SecondaryFreeCoag::CoagKernel(const Particle &sp1,
+                                                            const Particle &sp2,
+                                                            const Cell &sys) const {
     const real dterm = sp1.CollDiameter()+sp2.CollDiameter();
     return m_efm * CFM * A() *
-           sqrt(temperature * ((1.0/sp1.Mass())+(1.0/sp2.Mass()))) *
+           sqrt(sys.Temperature() * ((1.0/sp1.Mass())+(1.0/sp2.Mass()))) *
            dterm * dterm;
 }
 
 /*!
- * Evaluate the free molecular collision kernel between two particles
+ * Evaluate the majorant kernel between two secondary particles (details
+ * of the particles are not actually used, but rather a general upper bound.
  *
- * @param[in]   sys     System temperature and extremal secondary particle properties
+ * @param[in]   sp1         First  particle for which to calculate kernel
+ * @param[in]   sp2         Second particle for which to calculate kernel
+ * @param[in]   sys         System temperature and extremal secondary particle properties
+ * @param[in]   maj         Unused flag to indicate which majorant kernel is required
  *
- * @return      Coagulation kernel
+ * @return      Majorant kernel
+ */
+Sweep::real Sweep::Processes::SecondaryFreeCoag::MajorantKernel(const Particle &sp1,
+                                                                const Particle &sp2,
+                                                                const Cell& sys,
+                                                                const MajorantType maj) const {
+    return MajorantKernel(sys);
+}
+
+/*!
+ * Evaluate the majorant kernel between two secondary particles (details
+ * of the particles are not actually used, but rather a general upper bound.
+ *
+ * @param[in]   sys         System temperature and extremal secondary particle properties
+ *
+ * @return      Majorant kernel
  */
 Sweep::real Sweep::Processes::SecondaryFreeCoag::MajorantKernel(const Cell& sys) const {
     // 4 * sqrt(2) == 5.656854249

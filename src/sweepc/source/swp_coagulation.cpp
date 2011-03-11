@@ -169,6 +169,143 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
     return ip1;
 }
 
+/*!
+ *@param[in]        t           Time at which coagulation is being performed
+ *@param[in]        prop1       Rule for choosing first particle
+ *@param[in]        prop2       Rule for choosing second particle
+ *@param[in]        sys         Cell containing particles that are coagulating
+ *@param[in,out]    rand_int    Pointer to function that generates integers uniformly on an interval
+ *@param[in,out]    rand_u01    Pointer to function that generates U[0,1] deviates
+ *
+ *@return       Negative on failure, 0 on success
+ *
+ * Weighted coagulation is not symmetric, nothing happens to the second particle,
+ * it simply defined a size increment for the first particle.
+ */
+int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
+                                 const Sweep::PropID prop2,
+                                 const Sweep::Processes::CoagWeightRule weight_rule,
+                                 Cell &sys, int (*rand_int)(int, int),
+                                 real(*rand_u01)()) const {
+    int ip1 = sys.Particles().Select(prop1, rand_int, rand_u01);
+    int ip2 = sys.Particles().Select(prop2, rand_int, rand_u01);
+
+    // Choose and get first particle, then update it.
+    Particle *sp1=NULL;
+    if (ip1 >= 0) {
+        sp1 = sys.Particles().At(ip1);
+    } else {
+        // Failed to choose a particle.
+        return -1;
+    }
+
+    // Choose and get unique second particle, then update it.  Note, we are allowed to do
+    // this even if the first particle was invalidated.
+    unsigned int guard = 0;
+    while ((ip2 == ip1) && (++guard<1000))
+            ip2 = sys.Particles().Select(prop2, rand_int, rand_u01);
+
+    Particle *sp2=NULL;
+    if ((ip2>=0) && (ip2!=ip1)) {
+        sp2 = sys.Particles().At(ip2);
+    } else {
+        // Failed to select a unique particle.
+        return -1;
+    }
+
+    //Calculate the majorant rate before updating the particles
+    const real majk = MajorantKernel(*sp1, *sp2, sys, Default);
+
+    //Update the particles
+    m_mech->UpdateParticle(*sp1, sys, t, rand_u01);
+    // Check that particle is still valid.  If not,
+    // remove it and cease coagulating.
+    if (!sp1->IsValid()) {
+        // Must remove first particle now.
+        sys.Particles().Remove(ip1);
+
+        // Invalidating the index tells this routine not to perform coagulation.
+        ip1 = -1;
+        return 0;
+    }
+
+    m_mech->UpdateParticle(*sp2, sys, t, rand_u01);
+    // Check validity of particles after update.
+    if (!sp2->IsValid()) {
+        // Tell the ensemble to update particle one before we confuse things
+        // by removing particle 2
+        sys.Particles().Update(ip1);
+
+        // Must remove second particle now.
+        sys.Particles().Remove(ip2);
+
+        // Invalidating the index tells this routine not to perform coagulation.
+        ip2 = -1;
+
+        return 0;
+    }
+
+    // Check that both the particles are still valid.
+    if ((ip1>=0) && (ip2>=0)) {
+        // Must check for ficticious event now by comparing the original
+        // majorant rate and the current (after updates) true rate.
+
+        real truek = CoagKernel(*sp1, *sp2, sys);
+
+        if (!Fictitious(majk, truek, rand_u01)) {
+            //Adjust the statistical weight
+            switch(weight_rule) {
+            case Sweep::Processes::CoagWeightHarmonic :
+                sp1->setStatisticalWeight(1.0 / (1.0 / sp1->getStatisticalWeight() +
+                                                 1.0 / sp2->getStatisticalWeight()));
+                break;
+            case Sweep::Processes::CoagWeightHalf :
+                sp1->setStatisticalWeight(0.5 * sp1->getStatisticalWeight());
+                break;
+            case Sweep::Processes::CoagWeightMass :
+                sp1->setStatisticalWeight(sp1->getStatisticalWeight() * sp1->Mass() /
+                                          (sp1->Mass() + sp2->Mass()));
+                break;
+            case Sweep::Processes::CoagWeightRule4 : {
+                // This is an arbitrary weighting for illustrative purposes
+                const real x1 = sp1->Mass() / std::sqrt(sp1->getStatisticalWeight());
+                const real x2 = sp1->Mass() / std::sqrt(sp2->getStatisticalWeight());
+                sp1->setStatisticalWeight(sp1->getStatisticalWeight() * x1 /
+                                          (x1 + x2));
+                break;
+                }
+            default:
+                throw std::logic_error("Unrecognised weight rule (Coagulation::WeightedPerform)");
+            }
+
+            // Add contents of particle 2 onto particle 1
+            sp1->Coagulate(*sp2, rand_int, rand_u01);
+            sp1->SetTime(t);
+            sp1->incrementCoagCount();
+
+            assert(sp1->IsValid());
+            // Tell the ensemble that particles 1 and 2 have changed
+            sys.Particles().Update(ip1);
+            sys.Particles().Update(ip1);
+        } else {
+            sys.Particles().Update(ip1);
+            sys.Particles().Update(ip2);
+            return 1; // Ficticious event.
+        }
+    } else {
+        // One or both particles were invalidated on update,
+        // but that's not a problem.  Information on the update
+        // of valid particles must be propagated into the binary
+        // tree
+        if(ip1 >= 0)
+            sys.Particles().Update(ip1);
+
+        if(ip2 >= 0)
+            sys.Particles().Update(ip2);
+    }
+
+    return 0;
+}
 
 // Writes the object to a binary stream.
 void Coagulation::Serialize(std::ostream &out) const

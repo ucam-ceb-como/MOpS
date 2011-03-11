@@ -59,14 +59,6 @@ namespace Processes
 {
 class AdditiveCoagulation : public Coagulation
 {
-private:
-    // Different types of transition coagulation 
-    // kernel majorant types.
-    enum MajorantType {
-        None,    // Indicates true kernel (not majorant).
-        FiftyPercentExtra // Multiply by 1.5
-    };
-
 public:
     // Constructors.
     AdditiveCoagulation(const Sweep::Mechanism &mech); // Default constructor.
@@ -127,16 +119,20 @@ private:
     };
 
     //* Calculate kernel between two particles
-    real CoagKernel(const Particle &sp1, const Particle &sp2, 
-                    const Cell& sys, MajorantType maj) const;
+    virtual real CoagKernel(const Particle &sp1, const Particle &sp2,
+                            const Cell& sys) const;
+
+    //* Calculate majorant kernel between two particles
+    virtual real MajorantKernel(const Particle &sp1, const Particle &sp2,
+                                const Cell& sys, const MajorantType maj) const;
 
     //* Arbitrary factor to give some headroom for LPDA
     static const real s_MajorantFactor;
 };
 
-}; // namespace Processes
+} // namespace Processes
 
-}; // namespace Sweep
+} // namespace Sweep
 
 #endif	/* SWP_ADDCOAG_H */
 

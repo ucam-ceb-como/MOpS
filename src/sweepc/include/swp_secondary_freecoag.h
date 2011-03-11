@@ -97,11 +97,16 @@ public:
         Transport::TransportOutflow *out = 0
         ) const;
 
-private:
+protected:
     //! Free molecular kernel for two particles
-    real FreeMolKernel(const Particle &sp1, const Particle &sp2,
-                       real temperature) const;
+    virtual real CoagKernel(const Particle &sp1, const Particle &sp2,
+                       const Cell &sys) const;
 
+    //! Majorant kernel for any two secondary particles
+    virtual real MajorantKernel(const Particle &sp1, const Particle &sp2,
+                                const Cell &sys, const MajorantType maj) const;
+
+private:
     //! Majorant kernel for any two secondary particles
     real MajorantKernel(const Cell &sys) const;
 

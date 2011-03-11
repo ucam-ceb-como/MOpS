@@ -44,6 +44,8 @@
 #define SWEEP_COAGULATION_H
 
 #include "swp_process.h"
+#include "swp_coag_weight_rules.h"
+
 #include <iostream>
     
 namespace Sweep
@@ -117,15 +119,40 @@ protected:
 
     /*!
      * @brief  Default constructor is protected to prevent coagulations being
-     *         defined without knowledge of the parent mechanism.
+     *         defined without knowledge of the parent mechanism.  An architecture
+     *         that removed this restriction would be nice, so that there are
+     *         fewer pointers connecting apparently separate objects.
      */
     Coagulation(void) {};
     
-    //! Actually stick two particles together
+    //! Actually stick two particles together (intended for DSA use)
     int JoinParticles(const real t, const int ip1, Particle *sp1,
                       const int ip2, Particle *sp2,
                       Cell &sys, int (*rand_int)(int, int), real(*rand_u01)()) const;
 
+    //! Select two particles and stick them together in a weighted particle event
+    int WeightedPerform(const real t, const Sweep::PropID prop1,
+                        const Sweep::PropID prop2,
+                        const Sweep::Processes::CoagWeightRule weight_rule,
+                        Cell &sys, int (*rand_int)(int, int),
+                        real(*rand_u01)()) const;
+
+    //! Calculate kernel between two particles
+    virtual real CoagKernel(const Particle &sp1, const Particle &sp2,
+                    const Cell& sys) const = 0;
+
+    // Majorant types are important for the transition regime kernel,
+    // but additional kernels are free to add addition values to this
+    // enum.  Most kernels will ignore most enum values.
+    enum MajorantType {
+        Default, // Place holder value
+        FreeMol, // Free-molecular majorant.
+        SlipFlow // Slip-flow majorant.
+    };
+
+    //! Calculate majorant kernel between two particles
+    virtual real MajorantKernel(const Particle &sp1, const Particle &sp2,
+                                const Cell& sys, const MajorantType maj) const = 0;
 private:
     //! Scaling factor for rate
     real m_a;

@@ -65,15 +65,6 @@ namespace Processes
 
 class TransitionCoagulation : public Coagulation
 {
-private:
-    // Different types of transition coagulation 
-    // kernel majorant types.
-    enum MajorantType {
-        None,    // Indicates true kernel (not majorant).
-        FreeMol, // Free-molecular majorant.
-        SlipFlow // Slip-flow majorant.
-    };
-
 public:
     // Constructors.
     TransitionCoagulation(const Sweep::Mechanism &mech); // Default constructor.
@@ -128,7 +119,21 @@ public:
         Transport::TransportOutflow *out = 0
         ) const;
 
-    
+protected:
+    //! Transition coagulation kernel between two particles
+    virtual real CoagKernel(
+        const Particle &sp1, // First particle.
+        const Particle &sp2, // Second particle.
+        const Cell &sys
+        ) const;
+
+    //! Majorant coagulation kernel between two particles
+    virtual real MajorantKernel(
+        const Particle &sp1, // First particle.
+        const Particle &sp2, // Second particle.
+        const Cell &sys,
+        const MajorantType maj) const;
+
 private:
         // Coagulation rate types.  These define how the rate is 
     // calculated and how the particles are chosen.
@@ -174,16 +179,6 @@ private:
 
         // COAGULATION KERNEL ROUTINES.
 
-    // Returns the transition coagulation kernel value for the 
-    // two given particles.
-    real CoagKernel(
-        const Particle &sp1, // First particle.
-        const Particle &sp2, // Second particle.
-        real T,              // Temperature.
-        real P,              // Pressure.
-        MajorantType maj     // Type of majorant kernel to return (or true kernel).
-        ) const;
-
     // Returns the free-molecular coagulation kernel value for the 
     // two given particles.  Can return either the majorant or
     // true kernel.
@@ -208,9 +203,9 @@ private:
 
 }; //class TransitionCoagulation
 
-}; // namespace Processes
+} // namespace Processes
 
-}; // namespace Sweep
+} // namespace Sweep
 
 
 

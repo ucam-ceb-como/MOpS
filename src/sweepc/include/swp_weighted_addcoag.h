@@ -44,7 +44,6 @@
 #define	SWP_WEIGHTED_ADDCOAG_H
 
 #include "swp_coagulation.h"
-#include "swp_coag_weight_rules.h"
 #include "swp_process_type.h"
 
 namespace Sweep
@@ -61,14 +60,6 @@ namespace Processes
 {
 class WeightedAdditiveCoagulation : public Coagulation
 {
-private:
-    // Different types of transition coagulation 
-    // kernel majorant types.
-    enum MajorantType {
-        None,    // Indicates true kernel (not majorant).
-        FiftyPercentExtra // Multiply by 1.5
-    };
-
 public:
     //! Ordinary create method
     WeightedAdditiveCoagulation(const Sweep::Mechanism &mech, const CoagWeightRule weight_rule);
@@ -134,8 +125,12 @@ private:
     };
 
     //! Calculate kernel between two particles
-    real CoagKernel(const Particle &sp1, const Particle &sp2, 
-                    const Cell& sys, MajorantType maj) const;
+    virtual real CoagKernel(const Particle &sp1, const Particle &sp2,
+                            const Cell& sys) const;
+
+    //! Calculate majorant kernel between two particles
+    virtual real MajorantKernel(const Particle &sp1, const Particle &sp2,
+                                const Cell& sys, const MajorantType maj) const;
 
     //! Arbitrary factor to give some headroom for LPDA
     static const real s_MajorantFactor;

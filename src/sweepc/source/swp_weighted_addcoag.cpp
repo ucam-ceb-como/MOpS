@@ -12,16 +12,16 @@
     This file is part of "sweepc".
 
     sweepc is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public License
+    modify it under the terms of the GNU General Public License
     as published by the Free Software Foundation; either version 2
     of the License, or (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+    GNU General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
+    You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
@@ -174,8 +174,6 @@ int Sweep::Processes::WeightedAdditiveCoagulation::Perform(
         return 1;
     }
 
-    int ip1=-1, ip2=-1;
-
     // Properties to which the probabilities of particle selection will be proportional
     Sweep::PropID prop1, prop2;
     switch(static_cast<TermType>(iterm)) {
@@ -192,151 +190,42 @@ int Sweep::Processes::WeightedAdditiveCoagulation::Perform(
             throw std::logic_error("Unrecognised term, (Sweep, WeightedAdditiveCoagulation::Perform)");
     }
 
-    ip1 = sys.Particles().Select(prop1, rand_int, rand_u01);
-    ip2 = sys.Particles().Select(prop2, rand_int, rand_u01);
-
-    // Choose and get first particle, then update it.
-    Particle *sp1=NULL;
-    if (ip1 >= 0) {
-        sp1 = sys.Particles().At(ip1);
-    } else {
-        // Failed to choose a particle.
-        return -1;
-    }
-
-    // Choose and get unique second particle, then update it.  Note, we are allowed to do
-    // this even if the first particle was invalidated.
-    unsigned int guard = 0;
-    while ((ip2 == ip1) && (++guard<1000))
-            ip2 = sys.Particles().Select(prop2, rand_int, rand_u01);
-
-    Particle *sp2=NULL;
-    if ((ip2>=0) && (ip2!=ip1)) {
-        sp2 = sys.Particles().At(ip2);
-    } else {
-        // Failed to select a unique particle.
-        return -1;
-    }
-
-    //Calculate the majorant rate before updating the particles
-    const real majk = CoagKernel(*sp1, *sp2, sys, FiftyPercentExtra);
-
-    //Update the particles
-    m_mech->UpdateParticle(*sp1, sys, t, rand_u01);
-    // Check that particle is still valid.  If not,
-    // remove it and cease coagulating.
-    if (!sp1->IsValid()) {
-        // Must remove first particle now.
-        sys.Particles().Remove(ip1);
-
-        // Invalidating the index tells this routine not to perform coagulation.
-        ip1 = -1;
-        return 0;
-    }
-
-    m_mech->UpdateParticle(*sp2, sys, t, rand_u01);
-    // Check validity of particles after update.
-    if (!sp2->IsValid()) {
-        // Tell the ensemble to update particle one before we confuse things
-        // by removing particle 2
-        sys.Particles().Update(ip1);
-
-        // Must remove second particle now.
-        sys.Particles().Remove(ip2);
-
-        // Invalidating the index tells this routine not to perform coagulation.
-        ip2 = -1;
-
-        return 0;
-    }
-
-    // Check that both the particles are still valid.
-    if ((ip1>=0) && (ip2>=0)) {
-        // Must check for ficticious event now by comparing the original
-        // majorant rate and the current (after updates) true rate.
-
-        real truek = CoagKernel(*sp1, *sp2, sys, None);
-
-        if (!Fictitious(majk, truek, rand_u01)) {
-            //Adjust the statistical weight
-            switch(m_CoagWeightRule) {
-            case Sweep::Processes::CoagWeightHarmonic :
-                sp1->setStatisticalWeight(1.0 / (1.0 / sp1->getStatisticalWeight() +
-                                                 1.0 / sp2->getStatisticalWeight()));
-                break;
-            case Sweep::Processes::CoagWeightHalf :
-                sp1->setStatisticalWeight(0.5 * sp1->getStatisticalWeight());
-                break;
-            case Sweep::Processes::CoagWeightMass :
-                sp1->setStatisticalWeight(sp1->getStatisticalWeight() * sp1->Mass() /
-                                          (sp1->Mass() + sp2->Mass()));
-                break;
-            case Sweep::Processes::CoagWeightRule4 : {
-                // This is an arbitrary weighting for illustrative purposes
-                const real x1 = sp1->Mass() / std::sqrt(sp1->getStatisticalWeight());
-                const real x2 = sp1->Mass() / std::sqrt(sp2->getStatisticalWeight());
-                sp1->setStatisticalWeight(sp1->getStatisticalWeight() * x1 /
-                                          (x1 + x2));
-                break;
-                }
-            default:
-                throw std::logic_error("Unrecognised weight rule (WeightedAdditiveCoagulation::Perform)");
-            }
-
-            // Add contents of particle 2 onto particle 1
-            sp1->Coagulate(*sp2, rand_int, rand_u01);
-            sp1->SetTime(t);
-            sp1->incrementCoagCount();
-
-            assert(sp1->IsValid());
-            // Tell the ensemble that particles 1 and 2 have changed
-            sys.Particles().Update(ip1);
-            sys.Particles().Update(ip1);
-        } else {
-            sys.Particles().Update(ip1);
-            sys.Particles().Update(ip2);
-            return 1; // Ficticious event.
-        }
-    } else {
-        // One or both particles were invalidated on update,
-        // but that's not a problem.  Information on the update
-        // of valid particles must be propagated into the binary
-        // tree
-        if(ip1 >= 0)
-            sys.Particles().Update(ip1);
-
-        if(ip2 >= 0)
-            sys.Particles().Update(ip2);
-    }
-
-    return 0;
+    return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rand_int, rand_u01);
 }
 
 /**
- * Calculate the coagulation kernel between two particles in a given environment
- * and include support for majorant kernels.  Note that the details of the
- * environment are not currently used.
+ * Calculate the coagulation kernel between two particles in a given environment.
+ * Note that the details of the environment are not currently used.
  *
  *@param[in]    sp1         First particle
  *@param[in]    sp2         Second particle
  *@param[in]    sys         Details of the environment
- *@param[in]    maj         Flag to show which, if any, majorant to use
  *
  *@return       Value of kernel
  */
 Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::CoagKernel(const Particle &sp1, const Particle &sp2,
-                                     const Cell& sys, MajorantType maj) const
+                                     const Cell& sys) const
 {
-    real kernelValue = (sp1.Mass() + sp2.Mass()) * A() * sp2.getStatisticalWeight();
-    switch (maj) {
-        case None:
-            return kernelValue;
-        case FiftyPercentExtra:
-            return kernelValue * s_MajorantFactor;
-    }
+    return (sp1.Mass() + sp2.Mass()) * A() * sp2.getStatisticalWeight();
+}
 
-    // Invalid majorant, return zero.
-    return 0.0;
+/**
+ * Calculate the majorant kernel between two particles in a given environment.
+ * Note that the details of the environment are not currently used.
+ *
+ *@param[in]    sp1         First particle
+ *@param[in]    sp2         Second particle
+ *@param[in]    sys         Details of the environment
+ *@param[in]    maj         Unused flag to indicate which majorant kernel is required
+ *
+ *@return       Value of majorant kernel
+ */
+Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::MajorantKernel(const Particle &sp1,
+                                                                          const Particle &sp2,
+                                                                          const Cell& sys,
+                                                                          const MajorantType maj) const
+{
+    return CoagKernel(sp1, sp2, sys) * s_MajorantFactor;
 }
 
 /*!

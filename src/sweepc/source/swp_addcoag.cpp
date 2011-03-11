@@ -167,7 +167,7 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
     }
 
     //Calculate the majorant rate before updating the particles
-    const real majk = CoagKernel(*sp1, *sp2, sys, FiftyPercentExtra);
+    const real majk = MajorantKernel(*sp1, *sp2, sys, Default);
 
     //Update the particles
     m_mech->UpdateParticle(*sp1, sys, t, rand_u01);
@@ -203,7 +203,7 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
         // Must check for ficticious event now by comparing the original
         // majorant rate and the current (after updates) true rate.
 
-        real truek = CoagKernel(*sp1, *sp2, sys, None);
+        real truek = CoagKernel(*sp1, *sp2, sys);
 
         if (!Fictitious(majk, truek, rand_u01)) {
             JoinParticles(t, ip1, sp1, ip2, sp2, sys, rand_int, rand_u01);
@@ -228,29 +228,39 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
 }
 
 /**
- * Calculate the coagulation kernel between two particles in a given environment
- * and include support for majorant kernels.  Note that the details of the
- * environment are not currently used.
+ * Calculate the coagulation kernel between two particles in a given environment.
+ * Note that the details of the environment are not currently used.
  *
  *@param[in]    sp1         First particle
  *@param[in]    sp2         Second particle
  *@param[in]    sys         Details of the environment
- *@param[in]    maj         Flag to show which, if any, majorant to use
  *
  *@return       Value of kernel
  */
-Sweep::real Sweep::Processes::AdditiveCoagulation::CoagKernel(const Particle &sp1, const Particle &sp2,
-                                     const Cell& sys, MajorantType maj) const
+Sweep::real Sweep::Processes::AdditiveCoagulation::CoagKernel(const Particle &sp1,
+                                                              const Particle &sp2,
+                                                              const Cell& sys) const
 {
-    real kernelValue = (sp1.Mass() + sp2.Mass()) * A();
-    switch (maj) {
-        case None:
-            return kernelValue;
-        case FiftyPercentExtra:
-            return kernelValue * s_MajorantFactor;
-    }
+    return (sp1.Mass() + sp2.Mass()) * A();
+}
 
-    // Invalid majorant, return zero.
-    return 0.0;
+
+/**
+ * Calculate the majorant kernel between two particles in a given environment.
+ * Note that the details of the environment are not currently used.
+ *
+ *@param[in]    sp1         First particle
+ *@param[in]    sp2         Second particle
+ *@param[in]    sys         Details of the environment
+ *@param[in]    maj         Unused flag to indicate which majorant kernel is required
+ *
+ *@return       Value of majorant kernel
+ */
+Sweep::real Sweep::Processes::AdditiveCoagulation::MajorantKernel(const Particle &sp1,
+                                                                  const Particle &sp2,
+                                                                  const Cell& sys,
+                                                                  const MajorantType maj) const
+{
+    return CoagKernel(sp1, sp2, sys) * s_MajorantFactor;
 }
 

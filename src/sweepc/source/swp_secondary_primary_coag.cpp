@@ -209,6 +209,13 @@ int  Sweep::Processes::SecondaryPrimaryCoag::Perform(Sweep::real t,
     }
     Particle* sp1 = sys.Particles().At(static_cast<unsigned int>(index1));
 
+    // Choose second coagulation partner uniformly from the secondary population
+    const int index2 = sys.Particles().SelectSecondaryParticle(rand_int);
+    Particle* sp2 = sys.Particles().SecondaryParticleAt(static_cast<unsigned int>(index2));
+
+    // Store majorant kernel value before performing any deferred events
+    const real majK = MajorantKernel(*sp1, *sp2, sys, Default);
+
     // Perform any deferred events on the first particle.  This changes the particle
     // in the ensemble, because we have a pointer to the particle, not a local copy.
     m_mech->UpdateParticle(*sp1, sys, t, rand_u01);
@@ -221,12 +228,8 @@ int  Sweep::Processes::SecondaryPrimaryCoag::Perform(Sweep::real t,
         return 0;
     }
 
-    // Choose second coagulation partner uniformly from the secondary population
-    const int index2 = sys.Particles().SelectSecondaryParticle(rand_int);
-
     // Perform any deferred events on the second particle.  This changes the particle
     // in the ensemble, because we have a pointer to the particle, not a local copy.
-    Particle* sp2 = sys.Particles().SecondaryParticleAt(static_cast<unsigned int>(index2));
     m_mech->UpdateParticle(*sp2, sys, t, rand_u01);
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
@@ -241,8 +244,7 @@ int  Sweep::Processes::SecondaryPrimaryCoag::Perform(Sweep::real t,
     }
 
     // Now test if the event is fictitious
-    const real majK = MajorantKernel(sys, *sp1);
-    const real trueK = FreeMolKernel(*sp1, *sp2, sys.Temperature());
+    const real trueK = CoagKernel(*sp1, *sp2, sys);
     if(Fictitious(majK, trueK, rand_u01)) {
         //fictitious event
 
@@ -288,17 +290,18 @@ int  Sweep::Processes::SecondaryPrimaryCoag::Perform(Sweep::real t,
 /*!
  * Evaluate the free molecular collision kernel between two particles
  *
- * @param[in]   sp1             First  particle for which to calculate kernel
- * @param[in]   sp2             Second particle for which to calculate kernel
- * @param[in]   temperature     Temperature of system in which coagulation rate is to be calculated
+ * @param[in]   sp1     First  particle for which to calculate kernel
+ * @param[in]   sp2     Second particle for which to calculate kernel
+ * @param[in]   sys     System temperature and extremal secondary particle properties
  *
  * @return      Coagulation kernel
  */
-Sweep::real Sweep::Processes::SecondaryPrimaryCoag::FreeMolKernel(const Particle &sp1, const Particle &sp2,
-                                                        real temperature) const {
+Sweep::real Sweep::Processes::SecondaryPrimaryCoag::CoagKernel(const Particle &sp1,
+                                                               const Particle &sp2,
+                                                               const Cell &sys) const {
     const real dterm = sp1.CollDiameter()+sp2.CollDiameter();
     return m_efm * CFM * A() *
-           sqrt(temperature * ((1.0/sp1.Mass())+(1.0/sp2.Mass()))) *
+           sqrt(sys.Temperature() * ((1.0/sp1.Mass())+(1.0/sp2.Mass()))) *
            dterm * dterm;
 }
 
@@ -306,11 +309,16 @@ Sweep::real Sweep::Processes::SecondaryPrimaryCoag::FreeMolKernel(const Particle
  * Evaluate the free molecular collision kernel between two particles
  *
  * @param[in]   sp1         Particle from main population for which to calculate majorant kernel
+ * @param[in]   sp1         Secondary particle for which to calculate majorant kernel (not currently used)
  * @param[in]   sys         System temperature and extremal secondary particle properties
+ * @param[in]   maj         Unused flag to indicate which majorant kernel is required
  *
  * @return      Coagulation kernel
  */
-Sweep::real Sweep::Processes::SecondaryPrimaryCoag::MajorantKernel(const Cell& sys, const Particle &sp1) const {
+Sweep::real Sweep::Processes::SecondaryPrimaryCoag::MajorantKernel(const Particle &sp1,
+                                                                   const Particle &sp2,
+                                                                   const Cell &sys,
+                                                                   const MajorantType maj) const {
     // Collect particle properties
     const real d1 = sp1.CollDiameter();
     const real invm1 = 1.0 / std::sqrt(sp1.Mass());

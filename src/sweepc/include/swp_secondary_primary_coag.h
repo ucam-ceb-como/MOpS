@@ -97,13 +97,15 @@ public:
         Transport::TransportOutflow *out = 0
         ) const;
 
-private:
+protected:
     //! Free molecular kernel for two particles
-    real FreeMolKernel(const Particle &sp1, const Particle &sp2,
-                       real temperature) const;
+    virtual real CoagKernel(const Particle &sp1, const Particle &sp2,
+                            const Cell& sys) const;
 
     //! Majorant kernel for one secondary particle with a specified particle from the main population
-    real MajorantKernel(const Cell &sys, const Particle &sp1) const;
+    virtual real MajorantKernel(const Particle &main_part, const Particle &secondary_part,
+                                const Cell &sys, const MajorantType maj) const;
+private:
 
     //! Number of rate terms for secondary free molecular coagulation
     static const unsigned int mTermCount = 4;

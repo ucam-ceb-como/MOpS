@@ -307,10 +307,6 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
             break;
     }
 
-    // Save current T and P.
-    real T = sys.Temperature();
-    real P = sys.Pressure();
-
     // Choose and get first particle.
     Particle *sp1=NULL;
     if (ip1 >= 0) {
@@ -367,7 +363,7 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
     }
 
     //Calculate the majorant rate before updating the particles
-    real majk = CoagKernel(*sp1, *sp2, T, P, maj);
+    real majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
     //Update the particles
     m_mech->UpdateParticle(*sp1, sys, t, rand_u01);
@@ -404,7 +400,7 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
         // Must check for ficticious event now by comparing the original
         // majorant rate and the current (after updates) true rate.
 
-        real truek = CoagKernel(*sp1, *sp2, T, P, None);
+        real truek = CoagKernel(*sp1, *sp2, sys);
 		double ceff=0;
 		if (majk<truek)
 			std::cout << "maj< true"<< std::endl;
@@ -443,33 +439,59 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
 
 // COAGULATION KERNELS.
 
-// Returns the transition coagulation kernel value for the
-// two given particles.
-Sweep::real Sweep::Processes::TransitionCoagulation::CoagKernel(const Particle &sp1, const Particle &sp2,
-                             real T, real P, MajorantType maj) const
+/**
+ * Calculate the coagulation kernel between two particles in the given environment.
+ *
+ *@param[in]    sp1         First particle
+ *@param[in]    sp2         Second particle
+ *@param[in]    sys         Details of the environment, including temperature and pressure
+ *
+ *@return       Value of kernel
+ */
+Sweep::real Sweep::Processes::TransitionCoagulation::CoagKernel(const Particle &sp1,
+                                                                const Particle &sp2,
+                                                                const Cell &sys) const
+{
+    const real T = sys.Temperature();
+    const real P = sys.Pressure();
+    const real fm = FreeMolKernel(sp1, sp2, T, P, false);
+    const real sf = SlipFlowKernel(sp1, sp2, T, P, false);
+    return (fm*sf)/(fm+sf);
+}
+
+/**
+ * Calculate the majorant kernel between two particles in the given environment.
+ *
+ *@param[in]    sp1         First particle
+ *@param[in]    sp2         Second particle
+ *@param[in]    sys         Details of the environment, including temperature and pressure
+ *@param[in]    maj         Flag to indicate which majorant kernel is required
+ *
+ *@return       Value of kernel
+ */
+Sweep::real Sweep::Processes::TransitionCoagulation::MajorantKernel(const Particle &sp1,
+                                                                    const Particle &sp2,
+                                                                    const Cell &sys,
+                                                                    const MajorantType maj) const
 {
     // This routine calculates the coagulation kernel for two particles.  The kernel
     // type is chosen by the majorant type requested.
-    real fm=0.0, sf=0.0;
     switch (maj) {
-        case None:
-            // No majorant, so return half harmonic mean of free molecular and
-            // slip-flow kernels (non-majorant).
-            fm = FreeMolKernel(sp1, sp2, T, P, false);
-            sf = SlipFlowKernel(sp1, sp2, T, P, false);
-            return (fm*sf)/(fm+sf);
+        case Default:
+            // This should never happen for the transition coagulation kernel
+            assert(maj != Default);
+            break;
         case FreeMol:
             // Free molecular majorant.
-            return FreeMolKernel(sp1, sp2, T, P, true);
+            return FreeMolKernel(sp1, sp2, sys.Temperature(), sys.Pressure(), true);
         case SlipFlow:
             // Slip-flow majorant.
-            return SlipFlowKernel(sp1, sp2, T, P, true);
+            return SlipFlowKernel(sp1, sp2, sys.Temperature(), sys.Pressure(), true);
     }
 
     // Invalid majorant, return zero.
     return 0.0;
 }
-
 // Returns the free-molecular coagulation kernel value for the
 // two given particles.  Can return either the majorant or
 // true kernel.
