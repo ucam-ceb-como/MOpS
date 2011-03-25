@@ -60,12 +60,26 @@ do
    esac
 done
 
+if [ $0 != "./etc/runCamflow.sh" ]; then 
+    echo "Error: Must run this script from mops-c-Git/"
+    exit 1
+fi
+
 if [ $debug -eq "1" ]; then
     exeDir=debug
 fi
 
 if [ $profile -eq "1" ]; then
     exeDir=profile
+fi
+
+if [ $cleanall -eq "1" ]; then
+    echo "Cleaning the solver."
+    make --directory=applications/solvers/$solver -s --file="Makefile" clean
+    rm -f bin/debug/$solver
+    rm -f bin/release/$solver
+    echo "Solver cleaned."
+    exit
 fi
 
 make --directory=applications/solvers/$solver -s --file="Makefile" clean all debug=$debug profile=$profile
