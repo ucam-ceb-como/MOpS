@@ -99,9 +99,10 @@ print "$m0, $m1, $secondary_m0\n";
 # m0: 3e10, Fv: 1e-9, secondary m0: 9e9
 # These values were estimated from 10 runs using ordinary test settings and svn r821,
 # they are standard deviations for one sample, not for the mean of a number of samples.
+# All data quoted in this comment is in cgs units.
 
-if(abs($m0 -  9.81e11) > 5.4e10) {
-  print "Simulated mean M0 was $m0, when 9.81e11 cm^-3 expected\n";
+if(abs($m0 -  9.81e17) > 5.4e16) {
+  print "Simulated mean M0 was $m0, when 9.81e17 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
@@ -109,15 +110,15 @@ if(abs($m0 -  9.81e11) > 5.4e10) {
 }
 
 if(abs($m1 - 3.12e-8) > 1e-9) {
-  print "Simulated mean M1 was $m1, when 3.12e-8 g cm^-3 expected\n";
+  print "Simulated mean Fv was $m1, when 3.12e-8 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 2;
 }
 
-if(abs($secondary_m0 -  2.85e11) > 1.5e10) {
-  print "Simulated mean secondary M0 was $secondary_m0, when 2.85e11 cm^-3 expected\n";
+if(abs($secondary_m0 -  2.85e17) > 1.5e16) {
+  print "Simulated mean secondary M0 was $secondary_m0, when 2.85e17 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";

@@ -102,16 +102,16 @@ $m1 /= $count;
 # svn r821
 
 #print "$m0, $m1\n";
-if(abs($m0 - 2.998e11) > 2e9) {
-  print "Simulated mean M0 was $m0, when 2.998e11 cm^-3 expected\n";
+if(abs($m0 - 2.998e17) > 2e15) {
+  print "Simulated mean M0 was $m0, when 2.998e17 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($m1 - 1.9117e-10) > 1.33e-12) {
-  print "Simulated mean M1 was $m1, when 1.9129e-10 g cm^-3 expected\n";
+if(abs($m1 - 1.9117e-7) > 1.33e-9) {
+  print "Simulated mean M1 was $m1, when 1.9129e-7 kg m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";

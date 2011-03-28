@@ -68,9 +68,11 @@ The stats stored in this class are:
 6/7.    Total and average particle surface area.
 8/9.    Total and average particle volume.
 10/11.  Total and average particle mass.
-12      Average number of coagulation events experienced
-13      Number of secondary computational particles
-14      Number density of secondary particles.
+12.     Total of squared masses
+13.     Total of cubed masses
+14      Average number of coagulation events experienced
+15      Number of secondary computational particles
+16      Number density of secondary particles.
 
 Additionally the total and average values of all particle components
 and tracker values are appended to the end of the array.  For this
@@ -208,11 +210,12 @@ public:
 
 private:
     // Stats count and indices.
-    static const unsigned int STAT_COUNT = 15;
+    static const unsigned int STAT_COUNT = 17;
     enum StatIndices {iNP=0, iM0=1, iD=2, iDcol=3,
                       iDmob=4, iS=5, iV=7, iM=9,
-                      iCoag=11, iMaxCoag=12,
-                      i2NP=13, i2M0=14};
+                      iM2 = 11, iM3 = 12,
+                      iCoag=13, iMaxCoag=14,
+                      i2NP=15, i2M0=16};
 
     // PSL count and indices.
     static const unsigned int PSL_COUNT = 9;

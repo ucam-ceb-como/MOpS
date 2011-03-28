@@ -102,16 +102,16 @@ my $failures = 0;
 #m1: (3.818 +- 0.134) e-11 g cm^-3
 # svn r821
 
-if(abs($m0 - 4.465e10) > 8e8) {
-  print "Simulated mean M0 was $m0, when 4.465e10 cm^-3 expected\n";
+if(abs($m0 - 4.465e16) > 8e14) {
+  print "Simulated mean M0 was $m0, when 4.465e16 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   ++$failures;
 }
 
-if(abs($m1 - 3.823e-11) > 4e-13) {
-  print "Simulated mean M1 was $m1, when 3.823e-11 g cm^-3 expected\n";
+if(abs($m1 - 3.823e-8) > 4e-10) {
+  print "Simulated mean M1 was $m1, when 3.823e-8 kg m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";

@@ -54,16 +54,18 @@ using namespace Sweep::Stats;
 
 const std::string ParticleStats::m_statnames[ParticleStats::STAT_COUNT] = {
     std::string("Particle Count"),
-    std::string("M0 (cm-3)"),
-    std::string("Equiv. Sphere Diameter (nm)"),
-    std::string("Collision Diameter (nm)"),
-    std::string("Mobility Diameter (nm)"),
-    std::string("Surface Area (cm2/cm3)"),
-    std::string("Avg. Surface Area (cm2)"),
+    std::string("M0 (m-3)"),
+    std::string("Equiv. Sphere Diameter (m)"),
+    std::string("Collision Diameter (m)"),
+    std::string("Mobility Diameter (m)"),
+    std::string("Surface Area (m2/m3)"),
+    std::string("Avg. Surface Area (m2)"),
     std::string("Fv"),
-    std::string("Avg. Volume (cm3)"),
-    std::string("Mass (g/cm3)"),
-    std::string("Avg. Mass (g)"),
+    std::string("Avg. Volume (m3)"),
+    std::string("Mass (kg/m3)"),
+    std::string("Avg. Mass (kg)"),
+    std::string("Mass2 (kg2/m6)"),
+    std::string("Mass3 (kg3/m9)"),
     std::string("Avg num coags"),
     std::string("Max num coags"),
     std::string("Secondary Particle Count"),
@@ -82,6 +84,8 @@ const IModelStats::StatType ParticleStats::m_mask[ParticleStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. volume.
     IModelStats::Sum,  // Mass.
     IModelStats::Avg,  // Avg. mass.
+    IModelStats::Sum,  // Mass2.
+    IModelStats::Sum,  // Mass3.
     IModelStats::Avg,  // Average number of coagulations
     IModelStats::None, // Max number of coagulations
     IModelStats::None, // Secondary particle count.
@@ -205,15 +209,18 @@ void ParticleStats::Calculate(const Ensemble &e, real scale, real secondary_scal
             const real wt = (*ip)->getStatisticalWeight();
             // Sum stats from this particle.
             m_stats[iM0]   += wt;
-            m_stats[iD]    += (*ip)->SphDiameter() * wt * 1.0e9;  // Convert from m to nm.
-            m_stats[iDcol] += (*ip)->CollDiameter() * wt * 1.0e9; // Convert from m to nm.
-            m_stats[iDmob] += (*ip)->MobDiameter() * wt * 1.0e9;  // Convert from m to nm.
-            m_stats[iS]    += (*ip)->SurfaceArea() * wt * 1.0e4;  // Convert from m2 to cm2.
-            m_stats[iS+1]  += (*ip)->SurfaceArea() * wt * 1.0e4;  // Convert from m2 to cm2.
-            m_stats[iV]    += (*ip)->Volume() * wt * 1.0e6;       // Convert from m3 to cm3.
-            m_stats[iV+1]  += (*ip)->Volume() * wt * 1.0e6;       // Convert from m3 to cm3.
-            m_stats[iM]    += (*ip)->Mass() * wt * 1.0e3;         // Convert from kg to g.
-            m_stats[iM+1]  += (*ip)->Mass() * wt * 1.0e3;         // Convert from kg to g.
+            m_stats[iD]    += (*ip)->SphDiameter() * wt;
+            m_stats[iDcol] += (*ip)->CollDiameter() * wt;
+            m_stats[iDmob] += (*ip)->MobDiameter() * wt;
+            m_stats[iS]    += (*ip)->SurfaceArea() * wt;
+            m_stats[iS+1]  += (*ip)->SurfaceArea() * wt;
+            m_stats[iV]    += (*ip)->Volume() * wt;
+            m_stats[iV+1]  += (*ip)->Volume() * wt;
+            const real m = (*ip)->Mass();
+            m_stats[iM]    += m * wt;
+            m_stats[iM+1]  += m * wt;
+            m_stats[iM2]   += m * m * wt;
+            m_stats[iM3]   += m * m * m * wt;
 
             // Coagulations experienced by this particle
             const unsigned int coagCount = (*ip)->getCoagCount();
@@ -226,12 +233,12 @@ void ParticleStats::Calculate(const Ensemble &e, real scale, real secondary_scal
             // Sum component and tracker values.
             fvector::iterator i = m_stats.begin()+STAT_COUNT;
             for (unsigned int j=0; j!=m_ncomp; ++j,++i) {
-                *i     += (*ip)->Composition(j);
-                *(++i) += (*ip)->Composition(j);
+                *i     += (*ip)->Composition(j) * wt;
+                *(++i) += (*ip)->Composition(j) * wt;
             }
             for (unsigned int j=0; j!=m_ntrack; ++j,++i) {
-                *i     += (*ip)->Values(j);
-                *(++i) += (*ip)->Values(j);
+                *i     += (*ip)->Values(j) * wt;
+                *(++i) += (*ip)->Values(j) * wt;
             }
         }
     }
@@ -252,7 +259,7 @@ void ParticleStats::Calculate(const Ensemble &e, real scale, real secondary_scal
     // skip the secondary particle stats (hence STAT_COUNT - 2)
     for (unsigned int i=1; i!=STAT_COUNT - 2; ++i) {
         if (m_mask[i] == Sum) {
-            m_stats[i] *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
+            m_stats[i] *= scale;
         } else if(m_mask[i] == Avg){
             m_stats[i] *= invWeight;
         }
@@ -260,7 +267,7 @@ void ParticleStats::Calculate(const Ensemble &e, real scale, real secondary_scal
 
     // Secondary population quantities
     m_stats[i2NP] = e.SecondaryCount();
-    m_stats[i2M0] = e.SecondaryCount() * (secondary_scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
+    m_stats[i2M0] = e.SecondaryCount() * secondary_scale ;
 
 
     // Scale and calculate averages for components and tracker

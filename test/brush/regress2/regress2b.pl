@@ -79,8 +79,8 @@ while(<$momentFile>) {
 }
 
 print "$m0\n";
-if($m0 < 6.1e-7) {
-  print "Simulated M0 near x=1.35 was $m0, when at least 6.1e-7 cm^-3 expected\n";
+if($m0 < 6.1e-1) {
+  print "Simulated M0 near x=1.35 was $m0, when at least 6.1e-1 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";

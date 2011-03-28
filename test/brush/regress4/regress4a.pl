@@ -97,16 +97,16 @@ my $mean = $sum / 46;
 my $var  = $sumsq / 46 - $mean * $mean;
 
 print "$mean, $var\n";
-if(abs($mean - 8.374e-24) > 2e-25) {
-  print "Simulated mean M1 at x=0.079 was $mean, when analytic solution is 8.374e-24\n";
+if(abs($mean - 8.374e-21) > 2e-22) {
+  print "Simulated mean M1 at x=0.079 was $mean, when analytic solution is 8.374e-21 kg m^-3\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($var - 2.219e-49) > 3e-50) {
-  print "Simulated M1 variance at x=0.079 was $var, when analytic solution is 2.219e-49\n";
+if(abs($var - 2.219e-43) > 3e-44) {
+  print "Simulated M1 variance at x=0.079 was $var, when analytic solution is 2.219e-43 kg^2 m^-6\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
