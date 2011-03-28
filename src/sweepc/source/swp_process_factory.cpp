@@ -47,6 +47,7 @@
 #include "swp_transcoag.h"
 #include "swp_addcoag.h"
 #include "swp_weighted_addcoag.h"
+#include "swp_weighted_constcoag.h"
 #include "swp_secondary_freecoag.h"
 #include "swp_secondary_primary_coag.h"
 #include "swp_pah_inception.h"
@@ -59,62 +60,6 @@ using namespace std;
 
 // STREAM INPUT.
 
-// Reads a process from a binary stream.  The first item read
-// is the process ID which tells the ModelFactory what type
-// of process to read.
-Process *const ProcessFactory::Read(std::istream &in, const Sweep::Mechanism &mech)
-{
-    if (in.good()) {
-        Process *proc = NULL;
-
-        // Read the process type from the input stream.
-        unsigned int type;
-        in.read((char*)&type, sizeof(type));
-
-        // Read a process of this particular type.  This will throw
-        // an exception if the type is invalid.
-        switch ((ProcessType)type) {
-            case Dimer_Inception_ID:
-                proc = new DimerInception(in, mech);
-                break;
-            case PAH_Inception_ID:
-                proc = new PAHInception(in, mech);
-                break;
-            case Transition_Coagulation_ID:
-                proc = new TransitionCoagulation(in, mech);
-                break;
-            case Secondary_FreeCoagulation_ID:
-                proc = new SecondaryFreeCoag(in, mech);
-                break;
-            case Secondary_Primary_Coagulation_ID:
-                proc = new SecondaryPrimaryCoag(in, mech);
-                break;
-            case Additive_Coagulation_ID:
-                proc = new AdditiveCoagulation(in, mech);
-                break;
-            case Weighted_Additive_Coagulation_ID:
-                proc = new WeightedAdditiveCoagulation(in, mech);
-                break;
-            case SurfaceReaction_ID:
-                proc = new SurfaceReaction(in, mech);
-                break;
-            case Condensation_ID:
-                proc = new Condensation(in, mech);
-                break;
-            case ActSiteRxn_ID:
-                //proc = new ActSiteReaction(in, mech);
-                //break;
-            default:
-                throw runtime_error("Invalid process type read from "
-                                    "input stream (Sweep, ProcessFactory::Read).");
-        }
-
-        return proc;
-    } else {
-        throw invalid_argument("Input stream not ready "
-                               "(Sweep, ProcessFactory::Read).");
-    }
-}
 
 // Reads an inception from a binary stream.  The first item read
 // is the inception ID which tells the ModelFactory what type
@@ -212,6 +157,9 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in,
                 break;
             case Weighted_Additive_Coagulation_ID:
                 proc = new WeightedAdditiveCoagulation(in, mech);
+                break;
+            case Weighted_Constant_Coagulation_ID:
+                proc = new WeightedConstantCoagulation(in, mech);
                 break;
             case Secondary_FreeCoagulation_ID:
                 proc = new SecondaryFreeCoag(in, mech);

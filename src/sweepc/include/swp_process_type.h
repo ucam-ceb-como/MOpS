@@ -82,6 +82,8 @@ namespace Processes
         Secondary_Primary_Coagulation_ID = 10003,
         //! Additive coagulation with weighted particles
         Weighted_Additive_Coagulation_ID = 10004,
+        //! Constant coagulation with weighted particles
+        Weighted_Constant_Coagulation_ID = 10005,
 
         // Transport processes
         //! Particle diffusion

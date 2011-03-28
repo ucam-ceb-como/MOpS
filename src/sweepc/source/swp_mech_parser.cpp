@@ -51,6 +51,7 @@
 #include "swp_transcoag.h"
 #include "swp_addcoag.h"
 #include "swp_weighted_addcoag.h"
+#include "swp_weighted_constcoag.h"
 #include "swp_coag_weight_rules.h"
 #include "swp_secondary_freecoag.h"
 #include "swp_secondary_primary_coag.h"
@@ -1267,6 +1268,8 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                     // Now create the process
                     if(kernelName == "weightedadditive")
                          coag.reset(new Processes::WeightedAdditiveCoagulation(mech, weightRule));
+                    else if(kernelName == "weightedconstant")
+                         coag.reset(new Processes::WeightedConstantCoagulation(mech, weightRule));
                     else
                         // Unrecognised option
                         throw std::runtime_error("Coagulation kernel " + kernelName + " not yet available with weights \

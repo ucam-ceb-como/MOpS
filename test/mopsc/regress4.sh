@@ -16,28 +16,27 @@ else
 	program="../../bin/debug/mops" 
 fi
 
-# run mops on a very simple problem with weighted particles and additive kernel
-echo "Weighted particle simulation of additive coagulation kernel"
-$program -flamepp -p -gp ./regress3/regress3.inp -rr ./regress3/regress3.inx -s ./regress3/regress3.xml -c ./regress3/chem.inp -t ./regress3/therm.dat
+echo "Weighted particle simulation of constant coagulation kernel"
+$program -flamepp -p -gp ./regress4/regress4.inp -rr ./regress4/regress4.inx -s ./regress4/regress4.xml -c ./regress4/chem.inp -t ./regress4/therm.dat
 echo "Finished simulation"
 echo "========================"
 
 # Array of particle numbers - these should be the count of particles of sizes 1-5 in the psl file
 # Put a negative values at the start so that the number of particles of size 1 comes at index 1
 # These numbers are for a seed of 123 in the Mersenne Twister random number generator
-# Analytic solution is 1427 888 622 459 349
-testValues=(-1 1416 903 623 457 323)
+# Analytic solution is 3344 2866 1842 1053 564
+testValues=(-1 3349 2853 1839 1061 564)
 
 # Grep seems to require the file in unix format, even under cygwin
 if((windows==1))
 then
-    dos2unix "regression3a-psl(0.5s).csv"
+    dos2unix "regression4a-psl(3s).csv"
 fi
 
 i=1
 while ((i <= 5))
 do
-  count=`grep ",$i$" "regression3a-psl(0.5s).csv" | wc -l`
+  count=`grep ",$i$" "regression4a-psl(3s).csv" | wc -l`
   #echo "$i $count"
   if((count != testValues[i])) 
     then
@@ -56,7 +55,7 @@ if((i==6))
 then
   # All tests passed
   echo "All tests passed"
-  rm regression3a*
+  rm regression4a*
   exit 0
 else
   exit 1

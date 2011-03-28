@@ -74,7 +74,7 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_submodel.o swp_model_factory.o \
     swp_surfvol_cache.o swp_surfvol_primary.o swp_primary.o \
     swp_actsites_reaction.o swp_coagulation.o swp_transcoag.o \
-    swp_addcoag.o swp_weighted_addcoag.o\
+    swp_addcoag.o swp_weighted_addcoag.o swp_weighted_constcoag.o \
     swp_condensation.o swp_inception.o swp_constant_inception.o\
     swp_particle_process.o swp_process.o swp_process_factory.o \
     swp_surface_reaction.o swp_particle_model.o swp_imgnode.o \
@@ -222,6 +222,11 @@ swp_weighted_addcoag.o: $(src)/swp_weighted_addcoag.cpp $(inc)/swp_coagulation.h
                         $(inc)/swp_weighted_addcoag.h   $(inc)/swp_cell.h \
                         $(inc)/swp_mechanism.h $(inc)/swp_params.h
 	$(cpp) $(flag) $(src)/swp_weighted_addcoag.cpp
+
+swp_weighted_constcoag.o: $(src)/swp_weighted_constcoag.cpp $(inc)/swp_coagulation.h \
+                          $(inc)/swp_weighted_constcoag.h   $(inc)/swp_cell.h \
+                          $(inc)/swp_mechanism.h $(inc)/swp_params.h
+	$(cpp) $(flag) $(src)/swp_weighted_constcoag.cpp
 
 swp_secondary_freecoag.o: $(src)/swp_secondary_freecoag.cpp $(inc)/swp_coagulation.h \
                           $(inc)/swp_secondary_freecoag.h $(inc)/swp_cell.h \

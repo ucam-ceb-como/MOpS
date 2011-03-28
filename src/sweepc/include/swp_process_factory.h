@@ -61,16 +61,6 @@ namespace Processes
 class ProcessFactory
 {
 public:
-    // STREAM INPUT.
-
-    // Reads a process from a binary stream.  The first item read
-    // is the process ID which tells the ModelFactory what type
-    // of process to read.
-    static Process *const Read(
-        std::istream &in,            // Input stream.
-        const Sweep::Mechanism &mech // Parent mechanism.
-        );
-
     // Reads an inception from a binary stream.  The first item read
     // is the inception ID which tells the ModelFactory what type
     // of inception to read.
