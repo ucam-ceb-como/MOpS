@@ -63,6 +63,24 @@ namespace Sprog
 {
 namespace Thermo
 {
+
+/*!
+ *@brief Gas with thermodynamic properties, but no equation of state.
+ *
+ *  The GasPhase class is a child of the Mixture class that also has thermodynamic
+ *  functionality.  In addition to maintaining a description of the mixture composition
+ *  it also allows thermodynamic properties of the gas to be calculated.  This is intended
+ *  as a base class for other classes which will define the equation of state used
+ *  to define the mixture, and hence how the properties should be calculated.
+
+ *  In addition to the routines defined by the ThermoInterface class, the GasPhase
+ *  class defines routines to return the thermodynamic properties of the mixture,
+ *  as defined by the Mixture class.  These routines return a constant reference
+ *  to a vector of properties, which are stored in the GasPhase class.  In this
+ *  way, speed improvements can be gained if the mixture is unchanged between
+ *  calls to calculate the properties.  If the mixture is changed then the 
+ *  properties are recalculated the next time the relevant routines are called.
+ */
 class GasPhase : public ThermoInterface, public Mixture
 {
 public:

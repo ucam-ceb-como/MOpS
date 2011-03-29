@@ -60,6 +60,13 @@ namespace Sweep
 // Forward declare Mechanism class.
 class Mechanism;
 
+/*!
+ *@brief Population particles in an ideal gas
+ *
+ * Also contains a pointer to a particle model, which is needed to interpret
+ * the particles, but also brings in mechanism information, which should not
+ * be in a cell, which capture state not dynamics.
+ */
 class Cell : public Sprog::Thermo::IdealGas
 {
 public:
