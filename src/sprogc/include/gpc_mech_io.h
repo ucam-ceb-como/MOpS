@@ -103,14 +103,13 @@ private:
         unsigned int line;   // Line number of this keyword.
     };
 
-    // Reads a CHEMKIN file stream into a std::string.  Removes
-    // comments and fixes line endings as well.
+    //! Reads a CHEMKIN file stream into a std::string
     static void loadCK_File(
         std::ifstream &fin, // File stream to read.
         std::string &out    // Output string to hold file data.
         );
 
-    // Parses a file stream of a CHEMKIN input file.
+    //! Parses a file stream of a CHEMKIN input file.
     static void parseCK(
         std::ifstream &fin,     // File stream.
         Sprog::Mechanism &mech, // Mechanism into which to read file.
@@ -170,8 +169,7 @@ private:
         unsigned int &lineno      // The line number of the THER/THERMO keyword.
         );
 
-    // Parse the thermo data from a separate file (given by filename).
-    // Elements and species must already have been read.
+    //! Parse the thermo data from a separate file (given by filename).
     static unsigned int parseCK_Thermo(
         const std::string &thermo, // File name.
         Sprog::Mechanism &mech,    // Mechanism to receive thermo data.
