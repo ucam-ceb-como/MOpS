@@ -54,6 +54,11 @@ namespace Sprog
 {
 namespace Thermo
 {
+
+/*!
+ * The Mixture class is designed as a base class for all mixtures.  It maintains a group of species mole fractions, the temperature and the mixture density.
+ *
+ */
 class Mixture
 {
 public:

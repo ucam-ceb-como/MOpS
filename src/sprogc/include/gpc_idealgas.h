@@ -51,6 +51,10 @@ namespace Sprog
 {
 namespace Thermo
 {
+
+/*!
+ *@brief Gas mixture that obeys the ideal gas equations
+ */
 class IdealGas : public GasPhase
 {
 public:

@@ -621,8 +621,17 @@ real Mechanism::CalcDeferredRateTerms(real t, const Cell &sys, const Geometry::L
     return sum;
 }
 
-// Calculates the rates-of-change of the chemical species fractions,
-// gas-phase temperature and density due to particle processes.
+/*!
+ * Calculates the rates-of-change of the chemical species fractions,
+ * gas-phase temperature and density due to particle processes.
+ *
+ *@param[in]    t      Time at which rates are to be calculated
+ *@param[in]    sys    System for which rates are to be calculated
+ *@param[out]   rates  Vector of time rates of change of mole fractions, temperature and (?number) density
+ *
+ *@post  rates.size() == m_species.size() + 2
+ * There is no precondition on rates.size().
+ */
 void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) const
 {
     // Resize vector to hold all species and set all rates to zero.

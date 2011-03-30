@@ -74,6 +74,12 @@ namespace Geometry {
 
 namespace Sweep
 {
+
+/*!
+ *@brief The Mechanism collects together all of the processes which change the system
+ *
+ * It is not entirely clear why Mechanism must inherit from ParticleModel
+ */
 class Mechanism : public ParticleModel
 {
 public:

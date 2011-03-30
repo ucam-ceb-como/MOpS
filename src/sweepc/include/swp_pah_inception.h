@@ -67,6 +67,12 @@ namespace Transport
 namespace Processes
 {
 
+/*!
+ *@brief Inception by dimerisation of PAH molecules
+ *
+ * The rate is calculated from a special column of chemical data.  The
+ * class does not seem to be capable of very general application.
+ */
 class PAHInception : public Inception
 {
 public: 
