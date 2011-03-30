@@ -259,7 +259,8 @@ void Brush::PredCorrSolver::solveParticles(Reactor1d &reac, const real t_stop) c
  * rates.
  *
  *\param[in,out]        reac        Reactor describing system state
- *\param[in]            t_stop      Stop time
+ *\param[in]             t_stop      Stop time
+ *\param[in,out]        rate_cache  Cache of rates for each cell
  *
  *\return       Length of step taken
  */
