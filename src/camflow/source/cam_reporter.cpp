@@ -155,7 +155,7 @@ void CamReporter::writeTempProfiletoXML
 {
     CamXML::Document doc;
     CamConverter convert;
-    const CamXML::Element* node;
+    const CamXML::Element* node = NULL;
 
     if(doc.Load(fileName) == 0){
         node = doc.Root();
@@ -174,7 +174,7 @@ void CamReporter::writeTempProfiletoXML
             const CamXML::Attribute *length, *temp;
             length = subsubnode->GetAttribute("unit_L");
             temp = subsubnode->GetAttribute("unit_T");
-            doublereal convertL = convert.getConvertionFactor(length->GetValue());
+            //doublereal convertL = convert.getConvertionFactor(length->GetValue());
             doublereal convertT = convert.getConvertionFactor(temp->GetValue());
 
             subsubnode->GetChildren("position",subsubnodes);
@@ -182,11 +182,11 @@ void CamReporter::writeTempProfiletoXML
             int count=0;
             for(p=subsubnodes.begin(); p<subsubnodes.end(); ++p)
             {
-                (*p)->SetData(Strings::cstr(temperature[count]));
+                (*p)->SetData(Strings::cstr(temperature[count]+convertT));
                 ++count;
             }
         }
     }
-    doc.Save("newCamflow.xml");
+    doc.Save("new"+fileName);
 
 }
