@@ -2,4 +2,8 @@
 bin/
 lib/
 *~
-*/gmon.out
+*.sav
+*.aux
+*.sen
+*.sim
+*gmon.out
