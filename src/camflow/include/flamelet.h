@@ -50,7 +50,8 @@
 
 using namespace Sprog;
 
-namespace Camflow {
+namespace Camflow
+{
 
     /*!
      *@brief    Flamelet equation solver class.
@@ -58,7 +59,9 @@ namespace Camflow {
      * Include a more detailed description here.
      */
     class FlameLet
-    : public CamSetup {
+    :
+      public CamSetup
+    {
 
         public:
 
@@ -212,4 +215,3 @@ namespace Camflow {
 } // End Camflow namespace.
 
 #endif	/* _FLAMELET_H */
-

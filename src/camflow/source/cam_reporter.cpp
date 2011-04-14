@@ -146,3 +146,47 @@ void CamReporter::writeStdFileOut(std::vector<doublereal>& data){
 void CamReporter::writeCustomFileOut(std::vector<doublereal>& data){
     custom->write(data);
 }
+
+void CamReporter::writeTempProfiletoXML
+(
+    const std::string fileName,
+    const std::vector<doublereal>& temperature
+)
+{
+    CamXML::Document doc;
+    CamConverter convert;
+    const CamXML::Element* node;
+
+    if(doc.Load(fileName) == 0){
+        node = doc.Root();
+    }
+
+    CamXML::Element *initialize, *subsubnode;
+    std::vector<CamXML::Element*> subsubnodes;
+    std::vector<CamXML::Element*>::const_iterator p;
+    initialize = node->GetFirstChild("initialize");
+    if(initialize != NULL)
+    {
+        //temperature profile
+        subsubnode = initialize->GetFirstChild("Tprofile");
+        if(subsubnode != NULL)
+        {
+            const CamXML::Attribute *length, *temp;
+            length = subsubnode->GetAttribute("unit_L");
+            temp = subsubnode->GetAttribute("unit_T");
+            doublereal convertL = convert.getConvertionFactor(length->GetValue());
+            doublereal convertT = convert.getConvertionFactor(temp->GetValue());
+
+            subsubnode->GetChildren("position",subsubnodes);
+
+            int count=0;
+            for(p=subsubnodes.begin(); p<subsubnodes.end(); ++p)
+            {
+                (*p)->SetData(Strings::cstr(temperature[count]));
+                ++count;
+            }
+        }
+    }
+    doc.Save("newCamflow.xml");
+
+}

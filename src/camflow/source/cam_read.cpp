@@ -132,7 +132,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
             while(!inf.eof()){
                 getline(inf,position);
                 if(! isEmpty(position)){
-                    grid.push_back(cdble(position));
+                    grid.push_back(cdble(position)*factor);
                 }
             }
         }
@@ -470,17 +470,24 @@ void CamRead::readTol(const CamXML::Element& node, doublereal& atol, doublereal&
 }
 
 //function to read initial guess
-void CamRead::readInitialGuess(CamProfile& cp,
-                                    CamConverter& convert,
-                                    const CamXML::Element& node){
+void CamRead::readInitialGuess
+(
+    CamProfile& cp,
+    CamConverter& convert,
+    const CamXML::Element& node
+)
+{
+
     CamXML::Element *initialize, *subsubnode;
     std::vector<CamXML::Element*> subsubnodes;
     std::vector<CamXML::Element*>::const_iterator p;
     initialize = node.GetFirstChild("initialize");
-    if(initialize != NULL){
+    if(initialize != NULL)
+    {
         //mixing center
         subsubnode = initialize->GetFirstChild("mCenter");
-        if(subsubnode != NULL){
+        if(subsubnode != NULL)
+        {
             const CamXML::Attribute *length;
             length = subsubnode->GetAttribute("unit");
             doublereal convertL = convert.getConvertionFactor(length->GetValue());
@@ -488,7 +495,8 @@ void CamRead::readInitialGuess(CamProfile& cp,
         }
         //mixing width
         subsubnode = initialize->GetFirstChild("mWidth");
-        if(subsubnode != NULL){
+        if(subsubnode != NULL)
+        {
             const CamXML::Attribute *length;
             length = subsubnode->GetAttribute("unit");
             doublereal convertL = convert.getConvertionFactor(length->GetValue());
@@ -497,7 +505,8 @@ void CamRead::readInitialGuess(CamProfile& cp,
 
         //temperature profile
         subsubnode = initialize->GetFirstChild("Tprofile");
-        if(subsubnode != NULL){
+        if(subsubnode != NULL)
+        {
             const CamXML::Attribute *length, *temp;
             length = subsubnode->GetAttribute("unit_L");
             temp = subsubnode->GetAttribute("unit_T");
@@ -517,7 +526,8 @@ void CamRead::readInitialGuess(CamProfile& cp,
         std::string mem2 = "intrmdt";
         std::map<std::string,doublereal> fracs;
         subsubnode = initialize->GetFirstChild("massfrac");
-        if(subsubnode!=NULL){
+        if(subsubnode!=NULL)
+        {
             cp.setFracType(cp.MASS);
             readFrac(mem1,fracs,*subsubnode);
             cp.setProductSpecies(fracs);
@@ -526,7 +536,8 @@ void CamRead::readInitialGuess(CamProfile& cp,
         }
 
         subsubnode = initialize->GetFirstChild("molefrac");
-        if(subsubnode != NULL){
+        if(subsubnode != NULL)
+        {
             cp.setFracType(cp.MOLE);
             readFrac(mem1,fracs,*subsubnode);
             cp.setProductSpecies(fracs);

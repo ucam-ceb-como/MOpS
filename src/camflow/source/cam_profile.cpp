@@ -258,27 +258,34 @@ void CamProfile::getmassFracs(std::map<std::string,doublereal>& spec, Mechanism&
 
 }
 
-void CamProfile::setUserTemp(doublereal pos, doublereal temp){
+void CamProfile::setUserTemp(doublereal pos, doublereal temp)
+{
     u_pos.push_back(pos);
     u_temp.push_back(temp);
-    
-   
 }
 
 //return the user defined temperature
-doublereal CamProfile::getUserDefTemp(const doublereal& pos){
+doublereal CamProfile::getUserDefTemp(const doublereal& pos)
+{
 
-
-    doublereal tu, tl, xu, xl, temp=0.0;
+    doublereal tu, tl, xu, xl;
     int len = u_pos.size();
 
+    //std::cout << len << " "<< u_pos.size() << " " << u_pos[2]<< std::endl;
 
+    Utils::LinearInterpolator<doublereal, doublereal> mTempInterpolator(u_pos, u_temp);
+    //std::cout << u_pos.size() << " " << u_pos[2]<< std::endl;
+    //doublereal InterpolatedTemp = Interpolator.interpolate(u_pos);
 
-    for(int i=0; i<len; i++){
-        if(pos == u_pos[i]) {            
-            temp= u_temp[i];
-            break;
-        }else if( i>0 && (pos > u_pos[i-1]) && (pos < u_pos[i]) ){
+    for (int i=0; i<len; ++i)
+    {
+        //std::cout << i << " " << pos << " " << u_pos[i] << std::endl;
+        if(pos == u_pos[i])
+        {
+            return u_temp[i];
+        }
+        else if( i>0 && (pos > u_pos[i-1]) && (pos < u_pos[i]) )
+        {
             tu = u_temp[i];
             xu = u_pos[i];
             //std::cout << "location " << i << " pos " << pos << std::endl;
@@ -286,16 +293,16 @@ doublereal CamProfile::getUserDefTemp(const doublereal& pos){
             xl = u_pos[i-1];
             //std::cout << tu << "  " << xu << std::endl;
             //std::cout << tl << "  " << xl << std::endl;
-            doublereal slope = (tu-tl)/(xu-xl);
-            doublereal intersect = tu- (slope*xu);
+            doublereal slope = (tu-tl) / (xu-xl);
+            doublereal intersect = tu - (slope*xu);
             //std::cout << "slope " << slope << std::endl;
             //std::cout << "intersect " << intersect << std::endl;
-            temp= slope*pos + intersect;
-            break;
+            //return slope*pos + intersect;
+            //std::cout << u_pos[i] << " " << mTempInterpolator.interpolate(u_pos[i]) << std::endl;
+            return mTempInterpolator.interpolate(pos);
         }
     }
 
-    return temp;
 }
 
 std::vector<doublereal>& CamProfile::getPosition(){

@@ -50,6 +50,7 @@
 #include "cam_boundary.h"
 #include <string>
 #include <map>
+#include "linear_interpolator.hpp"
 
 using namespace Sprog;
 
@@ -63,6 +64,7 @@ namespace Camflow{
         int fracType;
         Array2D start;
         CamGeometry *geom;
+
 
     public:
 
