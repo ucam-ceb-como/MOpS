@@ -268,38 +268,24 @@ void CamProfile::setUserTemp(doublereal pos, doublereal temp)
 doublereal CamProfile::getUserDefTemp(const doublereal& pos)
 {
 
-    doublereal tu, tl, xu, xl;
     int len = u_pos.size();
-
-    //std::cout << len << " "<< u_pos.size() << " " << u_pos[2]<< std::endl;
-
     Utils::LinearInterpolator<doublereal, doublereal> mTempInterpolator(u_pos, u_temp);
-    //std::cout << u_pos.size() << " " << u_pos[2]<< std::endl;
-    //doublereal InterpolatedTemp = Interpolator.interpolate(u_pos);
 
     for (int i=0; i<len; ++i)
     {
-        //std::cout << i << " " << pos << " " << u_pos[i] << std::endl;
         if(pos == u_pos[i])
         {
             return u_temp[i];
         }
-        else if( i>0 && (pos > u_pos[i-1]) && (pos < u_pos[i]) )
+        else if( (pos > u_pos[i-1]) && (pos < u_pos[i]) )
         {
-            tu = u_temp[i];
-            xu = u_pos[i];
-            //std::cout << "location " << i << " pos " << pos << std::endl;
-            tl = u_temp[i-1];
-            xl = u_pos[i-1];
-            //std::cout << tu << "  " << xu << std::endl;
-            //std::cout << tl << "  " << xl << std::endl;
-            doublereal slope = (tu-tl) / (xu-xl);
-            doublereal intersect = tu - (slope*xu);
-            //std::cout << "slope " << slope << std::endl;
-            //std::cout << "intersect " << intersect << std::endl;
-            //return slope*pos + intersect;
-            //std::cout << u_pos[i] << " " << mTempInterpolator.interpolate(u_pos[i]) << std::endl;
             return mTempInterpolator.interpolate(pos);
+        }
+        else
+        {
+            throw std::runtime_error("Failed to set the user defined temperature.");
+            std::exit(-1);
+            return -1;
         }
     }
 
