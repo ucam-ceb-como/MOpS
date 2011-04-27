@@ -36,10 +36,13 @@
 cd pahtest
 dos2unix PAH_data*
 ./pahtest.pl
-if(($?!=0)) 
+
+#Capture the exit value
+testresult=$?
+if((testresult!=0)) 
   then
     cd ..
-    exit $?
+    exit $testresult
 fi
 cd ..
 
