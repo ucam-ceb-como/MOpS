@@ -77,8 +77,8 @@ while(<$momentFile>) {
 
   }
   elsif (($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.0035) < 1e-6 )) {
-      $secondary_m0 = $fields[30];
-      #print "30: $fields[30] \n";
+      $secondary_m0 = $fields[34];
+      #print "30: $fields[34] \n";
   }
 }
 
