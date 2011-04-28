@@ -752,8 +752,11 @@ void MechParser::readPAHInceptions(CamXML::Document &xml, Sweep::Mechanism &mech
         // Create new inception.
         PAHInception *icn = new PAHInception(mech);
         icn->SetMechanism(mech);
+
         // This inception only involves one molecule and not two as in the usual inception process
-        icn->SetA(1.0);
+        // icn->SetA(1.0); this is now done in the constructors, the old practice of defaulting
+        // to A=0.5 has now been removed. riap 28Apr2011
+
         icn->SetName("PAHInception " + cstr(k));
 
         try {
@@ -869,10 +872,8 @@ void MechParser::readConstantInception(CamXML::Element &xml, Processes::Constant
     el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
-    } else {
-        A = 1.0;
+        icn.SetA(A);
     }
-    icn.SetA(A);
 }
 
 

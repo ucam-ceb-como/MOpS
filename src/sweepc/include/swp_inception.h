@@ -77,11 +77,6 @@ typedef std::vector<Inception*> IcnPtrVector;
 /*!
  * \brief Base class for inception processes.
  *
- * Note that the scaling variable m_a (which is available in some other processes
- * to adjust the rate by a constant factor) is set to 0.5 in the constructors
- * of this base class.  This factor should really be included in the rate calculations
- * of dimerisation inceptions (where it is needed to avoid doubling counting of
- * possible pairs of inception molecules).
  */
 class Inception : public Process
 {

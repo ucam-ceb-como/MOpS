@@ -57,13 +57,13 @@ using namespace std;
 
 // Default constructor (protected).
 Inception::Inception(void)
-: Process(), m_a(0.5), m_UseSecondary(false)
+: Process(), m_a(1.0), m_UseSecondary(false)
 {
 }
 
 // Initialising constructor.
 Inception::Inception(const Sweep::Mechanism &mech)
-: Process(mech), m_a(0.5), m_UseSecondary(false)
+: Process(mech), m_a(1.0), m_UseSecondary(false)
 {
 }
 

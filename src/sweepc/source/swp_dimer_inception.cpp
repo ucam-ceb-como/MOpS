@@ -267,7 +267,9 @@ real DimerInception::Rate(const fvector &fracs, real density, real sqrtT,
  */
 real DimerInception::chemRatePart(const fvector &fracs, real density) const
 {
-    real rate = 1.0;
+    // Factor of 0.5 adjusts for doubling counting of pairs of molecules in the number
+    // of possible collisions.
+    real rate = 0.5;
 
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
