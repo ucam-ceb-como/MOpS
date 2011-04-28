@@ -35,7 +35,7 @@
 
 regress2/regress2a.pl
 result2a=$?
-if(($result2a!=0)) 
+if((result2a!=0)) 
   then
     exit $result2a
 fi
@@ -43,7 +43,7 @@ rm regression2a*
 
 regress2/regress2b.pl
 result2b=$?
-if(($result2b=0)) 
+if((result2b!=0)) 
   then
     exit $result2b
 fi
@@ -51,7 +51,7 @@ rm regression2b*
 
 regress2/regress2c.pl
 result2c=$?
-if(($result2c=0)) 
+if((result2c!=0)) 
   then
     exit $result2c
 fi
