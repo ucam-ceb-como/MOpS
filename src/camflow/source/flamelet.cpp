@@ -23,15 +23,17 @@ using namespace Camflow;
 using namespace std;
 using namespace Gadgets;
 
-FlameLet::FlameLet() {
+FlameLet::FlameLet()
+{
 	sdr_ext=0;
 	timeHistory=false;
 	sdrProfile=false;
 	sdrAnalytic=false;
 }
 
-FlameLet::~FlameLet() {
-
+FlameLet::~FlameLet()
+{
+    if (radiation != NULL) delete radiation;
 }
 /*
  *this is called by the model object. The boolean interface decides
@@ -41,17 +43,32 @@ void FlameLet::setRestartTime(doublereal t){
     rstartTime = t;
 }
 
-void FlameLet::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp,
-        CamConfiguration& config, CamSoot& cs, Mechanism& mech){
+void FlameLet::solve
+(
+    CamControl& cc,
+    CamAdmin& ca,
+    CamGeometry& cg,
+    CamProfile& cp,
+    CamConfiguration& config,
+    CamSoot& cs,
+    Mechanism& mech
+)
+{
 
     solve(cc,ca,cg,cp,mech,false);
 
 }
 
-void FlameLet::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
-                                CamProfile& cp, Mechanism& mech, bool interface){
-
-
+void FlameLet::solve
+(
+    CamControl& cc,
+    CamAdmin& ca,
+    CamGeometry& cg,
+    CamProfile& cp,
+    Mechanism& mech,
+    bool interface
+)
+{
     /*
      *check for mixture fraction bounds. In this case the input given in the
      * grid file is treated as mixture fraction coordinates. The reactor
@@ -95,9 +112,12 @@ void FlameLet::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
     initSolutionVector(cc);
     reporter->header("Flamelet");
     header();
-    if(cc.getSolutionMode() == cc.COUPLED)
+    if (cc.getSolutionMode() == cc.COUPLED)
+    {
         csolve(cc,interface);
-    else{
+    }
+    else
+    {
         ssolve(cc);
         csolve(cc,interface);
     }
@@ -109,17 +129,21 @@ void FlameLet::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg,
 /**
  */
 /**
- *contuation call from an external code that
+ *continuation call from an external code that
  *solves for population balance
  */
-void FlameLet::solve(vector<Thermo::Mixture>& cstrs,
-        const vector<vector<doublereal> >& iniSource,
-        const vector<vector<doublereal> >& fnlSource,
-        Mechanism& mech,
-        CamControl& cc,
-        CamAdmin& ca,
-        CamGeometry& cg,
-        CamProfile& cp){
+void FlameLet::solve
+(
+    vector<Thermo::Mixture>& cstrs,
+    const vector<vector<doublereal> >& iniSource,
+    const vector<vector<doublereal> >& fnlSource,
+    Mechanism& mech,
+    CamControl& cc,
+    CamAdmin& ca,
+    CamGeometry& cg,
+    CamProfile& cp
+)
+{
 
     CamBoundary cb;
     Thermo::Mixture mix(mech.Species());
@@ -201,9 +225,8 @@ void FlameLet::solve(vector<Thermo::Mixture>& cstrs,
 }
 
 
-void FlameLet::initSolutionVector(CamControl &cc){
-
-
+void FlameLet::initSolutionVector(CamControl &cc)
+{
     /*
      *initialize the geometry
      */
@@ -254,10 +277,16 @@ void FlameLet::initSolutionVector(CamControl &cc){
     vector<doublereal> position = reacGeom->getAxpos();
     int len = position.size();
     vT.resize(len,0.0);
-    for(unsigned int i=0; i<dz.size();i++){
-        if(position[i] < stoichZ){
+    for (unsigned int i=0; i<dz.size();i++)
+    {
+       // vT[i] = profile->getUserDefTemp(position[i]);
+
+        if (position[i] < stoichZ)
+        {
             vT[i] = slopeOx*position[i] + inrsctOx;
-        }else{
+        }
+        else
+        {
             vT[i] = slopeFl*position[i] + inrsctFl;
         }
     }
@@ -281,16 +310,24 @@ void FlameLet::initSolutionVector(CamControl &cc){
     mergeSpeciesVector(&vSpec[0]);
     mergeEnergyVector(&vT[0]);
 
-
     stoichiometricMixtureFraction();
+
 }
 
 /*
  *coupled solver
  */
-void FlameLet::csolve(CamControl& cc, bool interface){
+void FlameLet::csolve
+(
+    CamControl& cc,
+    bool interface
+)
+{
+
     int solverID = cc.getSolver();
-    if ( solverID == cc.CVODE){
+
+    if (solverID == cc.CVODE)
+    {
         CVodeWrapper cvw;
         eqn_slvd = EQN_ALL;
         int band = nVar*2;
@@ -303,15 +340,18 @@ void FlameLet::csolve(CamControl& cc, bool interface){
          *write the output to file only if the call is not
          *from the interface
          */
-        if(!interface) {
+        if(!interface)
+        {
             reportToFile(cc.getMaxTime(),&solvect[0]);
         }
 
-    } else if (solverID == cc.NEWTON) {
-
+    }
+    else if (solverID == cc.NEWTON)
+    {
         std::cout << "Not implemented\n";
-
-    } else if (solverID == cc.RADAU) {
+    }
+    else if (solverID == cc.RADAU)
+    {
 
         RadauWrapper radauWrapper;
 
@@ -344,9 +384,12 @@ void FlameLet::csolve(CamControl& cc, bool interface){
         }
        // radauWrapper.destroy();
 
-    } else if (solverID == cc.LIMEX) {
-          throw std::logic_error("Error -- Limex is not yet supported");
-      }
+    }
+    else if (solverID == cc.LIMEX)
+    {
+        throw std::logic_error("Error -- Limex is not yet supported");
+    }
+
 }
 
 /*
@@ -364,7 +407,8 @@ void FlameLet::massMatrix(doublereal** M){
  *restart the solution. This is normally called from the interface routine
  *The solver is reinitialized each time with the previous solution.
  */
-void FlameLet::restart(CamControl& cc){
+void FlameLet::restart(CamControl& cc)
+{
 
     Thermo::Mixture mix(camMech->Species());
     camMixture = &mix;
@@ -390,7 +434,8 @@ void FlameLet::restart(CamControl& cc){
 /*
  *segregated solver
  */
-void FlameLet::ssolve(CamControl& cc){
+void FlameLet::ssolve(CamControl& cc)
+{
 
     
     int seg_eqn, band;
@@ -441,10 +486,16 @@ void FlameLet::ssolve(CamControl& cc){
   }
 
   
-  /*
+/*
  *residual definitions
  */
-void FlameLet::residual(const doublereal& t, doublereal* y, doublereal* f){
+void FlameLet::residual
+(
+    const doublereal& t,
+    doublereal* y,
+    doublereal* f
+)
+{
 
     resSp.resize(nSpc*mCord,0.0);
     resT.resize(mCord,0.0);
@@ -481,7 +532,9 @@ void FlameLet::residual(const doublereal& t, doublereal* y, doublereal* f){
 
 }
 
-doublereal FlameLet::getResidual() const {
+doublereal FlameLet::getResidual()
+const
+{
 
 	doublereal resNorm=0;
     for(int i=0; i<nSpc*mCord; i++) {
@@ -498,8 +551,13 @@ doublereal FlameLet::getResidual() const {
 /*
  *species residual definitions
  */
-void FlameLet::speciesResidual(const doublereal& t, doublereal* y,
-                                                        doublereal* f){
+void FlameLet::speciesResidual
+(
+    const doublereal& t,
+    doublereal* y,
+    doublereal* f
+)
+{
 
     doublereal grad_e, grad_w;
     doublereal zPE, zPW;
@@ -598,172 +656,29 @@ void FlameLet::speciesResidual(const doublereal& t, doublereal* y,
         f[iMesh_e*nSpc+l] = 0.0;
     }
 
-
 }
-/* This code computes the spectral and soot related components or radiative heat loss.
-
-    References:
-    1.	Radiation Models, International Workshop on Measurement and Computation of Turbulent  Nonpremixed Flames,
-        www.sandia.gov/TNF/radiation.html.  This reference covers the details of implementing the spectral part of
-        the radiation term.
-
-    2.	Kim, S-K., Kim, Y., Assessment of the Eulerian particle flamelet model for nonpremixed turbulent jet flames,
-        Combustion and Flame 154 (2008) 232-247.  This article shows a modern implementation of the procedure used
-        in [1], for the spectral part of the radiation term.
-
-    3.	Carbonnel, D., Oliva, A., Perez-Segarra, C.D., Implementation of two-equation soot flamelet models for laminar
-        diffusion flames.  This paper includes a term, used here, for modelling soot radiative heat loss.
-
-    4.  Grosshandler, W.L., RADCAL: A Narrow-Band Model For Radiation Calculations in a Combustion Environment, NIST
-        technical note 1402, 1993.
-
-   */
-
-
-
 
 /*!
-    *Computes the Planck mean absorption coefficients
-
-    *@param[in]      Temperature      Temperature at a point of the grid, as obtained by the energy residual function.
-    *@param[out]     Absorption       An output array containing the computed Planck absorption coefficients.
-    *
-    * The coefficients are produced for H2O, CO2, and CO, because these are the species that tend to produce the
-    * greatest spectral radiative effect in mixtures commonly associated with combustion. Coefficients are known
-    * for CH4 as well, but they can lead to inaccurate results, and therefore are not included here.  The computation
-    * of these coefficients are based on data from the RADCAL model.  This data was for temperatures between 300K
-    * and 2500K.
-
-    */
-void FlameLet::PlanckAbsorption (const doublereal temperature, doublereal Absorption[3])const
-{
-
-
-    //This quantity is reused repeatedly in the equations below
-    const doublereal beta = 1000/temperature;
-
-    //This helps avoid repeated, costly calls to pow().  There is a modest tradeoff of speed vs. accuracy here.
-    const doublereal beta2 = beta * beta;
-    const doublereal beta3 = beta2 * beta;
-    const doublereal beta4 = beta3 * beta;
-    const doublereal beta5 = beta4 * beta;
-
-    // This code computes the Planck mean absorption coefficient for H2O, using an equation in reference [1].  The specific
-    // equation is based on fitted results from the RADCAL program. See reference [4].  Multiplication by AtmToPascal
-    // converts the absorption coefficients from units of 1/m * 1/atm  to 1/m * 1/pa.
-
-    const doublereal AtmToPascal = 101325.0;
-
-    // CHECK SECOND TERM COEFFICIENT!
-    Absorption[0] = (-0.23093 - 1.12390 * beta + 9.41530 * beta2 - 2.99880 * beta3 + 0.51382 * beta4
-                    - 1.86840e-5 * beta5)/AtmToPascal;
-
-
-    // This code computes the Planck mean absorption coefficient for CO2, using an equation in reference [1].  The specific
-    // equation is based on fitted results from the RADCAL program. See reference [4]. Multiplication by AtmToPascal
-    // converts the absorption coefficients from units of 1/m * 1/atm  to 1/m * 1/pa.
-
-
-    Absorption[1] = (18.7410 - 121.3100 * beta + 273.5000 * beta2 - 194.0500 * beta3 + 56.3100 * beta4
-                    - 5.8169 * beta5)/AtmToPascal;
-
-
-    // This code computes the Planck mean absorption coefficient for CO, using two equations in reference [1].  It uses a
-    // conditional statement on temperature to determine which of the two equations to use. The specific  equation is based
-    // on fitted results from the RADCAL program. See reference [4]. Multiplication by AtmToPascal converts the absorption
-    // coefficients from units of 1/m * 1/atm  to 1/m * 1/pa.
-
-
-    if (temperature <= 750) {
-        Absorption[2]  =  (4.7869 + temperature * (-0.06953 + temperature * (2.95775e-4 + temperature *
-                          (-4.25732e-7 + temperature * 2.02894e-10))))/AtmToPascal;
-    }
-    else {
-        Absorption[2]  = (10.0900 + temperature * (-0.01183 + temperature * (4.7753e-6 + temperature *
-                         (-5.87209e-10 + temperature * -2.5334e-14))))/AtmToPascal;
-    }
-
-
-    // After this function has been called the end result is a vector populated with absorption coefficients, to be used in
-    // the function RadiativeLoss.
-}
-
-//
-/*!
-      *Computes  the radiative heat loss term for radiative heat dissipation model
-
-      *@param[in]      rho                             Density of the mixture, as obtained by the energy residual function.
-      *@param[in]      cp                              Specific heat of the mixture, as obtained by the energy residual function.
-      *@param[in]      Temperature                     Temperature at a point of the grid, as obtained by the energy residual function.
-      *@param[in]      SootVolFrac                     The soot value fraction, as provided by the user or obtained from an external source.
-      *@return                                         A term equivalent to the total radiative heat loss.
-      *
-      *                                                This function will be called from the energy residual code in Camflow's Flamelet class,
-      *                                                which will provide such parameters as temperature, density, specific heat, mass fractions
-      *                                                and soot volume fractions.
-      *
-      *
-      */
-
-
-doublereal FlameLet::RadiativeLoss(const doublereal temperature,
-                                   const doublereal soot_vol_frac, const doublereal mole_frac_H2O,
-                                   const doublereal mole_frac_CO2, const doublereal mole_frac_CO) const {
-    // RadiativeLoss requires a background setting temperature.  It is usually assumed to be 300K, unless experimental conditions
-    // suggest another temperature. Used 300^4 which is 81e8 in temperaturePowers below.
-    //const doublereal BackgroundTemp = 300;
-
-	doublereal temperature4 = temperature*temperature*temperature*temperature;
-	doublereal temperature5 = temperature4*temperature;
-
-    // Absorption coefficients are for H2O, CO2, and CO, in that order.
-    doublereal AbsorptionVector[3] = {0,0,0};
-
-
-    // The function calls PlanckAbsorption to produce the absorption coefficients.
-    PlanckAbsorption(temperature, AbsorptionVector);
-
-
-    // Using a single equation in reference [1], the function computes a Radiative Heat Dissipation term.  It uses the Planck mean
-    // absorption coefficients for H2O, CO2 abd CO, as well as the density of each of these species, the specific heat of each species,
-    // the temperature, the partial pressure of each species, and the soot volume fraction.
-
-
-    // Partial pressures of species k.  0 corresponds to H2O, 1 corresponds to CO2, 2 corresponds to CO. Operating pressure
-    // must be expressed in Pascals in the camflow.xml file.
-
-    doublereal partialPress[3];
-    partialPress[0]  =  mole_frac_H2O * opPre;
-    partialPress[1]  =  mole_frac_CO2 * opPre;
-    partialPress[2]  =  mole_frac_CO * opPre;
-
-    doublereal spectralRadiation = 0;   //An intermediate result
-
-    //The following is used repeatedly in the loop below
-    const doublereal temperaturePowers = 4 * 5.669e-8 * (temperature4 - 81e8);
-
-
-    for (unsigned int j = 0; j < 3; ++j){
-        // 0 = H2O,  1 = CO2,  2 = CO
-        //Total spectral radiative heat loss.
-        spectralRadiation += partialPress[j] * AbsorptionVector[j];
-    }
-
-    //Total spectral radiative heat loss + radiative heat loss due to soot
-    return temperaturePowers * spectralRadiation + 3.3337e-4 * soot_vol_frac * temperature5;
-
-}
-
-
-
-/*
  *energy residual
+ *
+ * \todo Move all radiation calculations to the class Radiation.
  */
-void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f){
+void FlameLet::energyResidual
+(
+    const doublereal& t,
+    doublereal* y,
+    doublereal* f
+)
+{
 
     doublereal grad_e=0, grad_w=0;
     doublereal zPE=0, zPW=0;
     doublereal source=0;
+
+    if(admin->getRadiationModel())
+    {
+        radiation = new Radiation(mCord);
+    }
 
     /*
      *starting with mixture fraction zero: i.e oxidizer
@@ -829,10 +744,6 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
 
         //======Radiative Heat Loss Term===============
 
-        // Soot Volume Fraction is set to zero here.
-        // \todo Need to initialise these things in CamResidual.
-        radiation.resize(mCord,0.0);
-
         if(admin->getRadiationModel()) {
 
             doublereal mole_fracsH2O;
@@ -862,29 +773,35 @@ void FlameLet::energyResidual(const doublereal& t, doublereal* y, doublereal* f)
                 mole_fracsCO = s_mf(i,iCO)*avgMolWt[i]/molwtCO;
             }
 
-            //This radiation term is sentt to as output to profile.h
-            radiation[i] = RadiativeLoss(m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO);
+            //This radiation term is sent to as output to profile.h
+            radiation->RadiativeLoss
+            (
+               i,
+               m_T[i],
+               opPre,
+               m_SootFv[i],
+               mole_fracsH2O,
+               mole_fracsCO2,
+               mole_fracsCO
+            );
 
-            //std::cout << "Cell = " << i << " Residual = " <<  f[i] << " Radiation = " << RadiativeLoss(m_T[i], m_SootFv[i], mole_fracsH2O, mole_fracsCO2, mole_fracsCO)/(m_rho[i]*m_cp[i]) << " MfH2O = " << mole_fracsH2O << " MfCO2 = " << mole_fracsCO2 << " MfCO = " << mole_fracsCO << " sootFV = " << m_SootFv[i] << " T = " << m_T[i] << " rho = " << m_rho[i] << " cp = " << m_cp[i] << std::endl;
-
-            //This is the new energy residual term, accounting for radiation.
-
+            // This is the new energy residual term, accounting for radiation.
             // This is DEFINITELY NEGATIVE!
-            f[i] -= radiation[i]/(m_rho[i]*m_cp[i]);
+            f[i] -= radiation->getRadiation(i)/(m_rho[i]*m_cp[i]);
 
         }
 
     }
 
-
     f[iMesh_e] = 0.0;
-
 
 }
 /*
  *save the mixture property
  */
-void FlameLet::saveMixtureProp(doublereal* y){
+void FlameLet::saveMixtureProp(doublereal* y)
+{
+
     s_mf.resize(mCord,nSpc);
     s_Wdot.resize(mCord,nSpc);
     s_H.resize(mCord,nSpc);
@@ -902,11 +819,14 @@ void FlameLet::saveMixtureProp(doublereal* y){
 
     vector<doublereal> mf, htemp, temp, cptemp;
     htemp.resize(nSpc,0.0);
-    for(int i=0; i<mCord; i++){
+    for (int i=0; i<mCord; ++i)
+    {
         mf.clear();
-        for(int l=0; l<nSpc; l++){
+        for(int l=0; l<nSpc; l++)
+        {
             mf.push_back(y[i*nVar+l]);
         }
+
         m_T[i] = y[i*nVar+ptrT];                                   //temperature
         camMixture->SetMassFracs(mf);                              //mass fraction
         camMixture->SetTemperature(m_T[i]);                        //temperature
@@ -921,7 +841,8 @@ void FlameLet::saveMixtureProp(doublereal* y){
         m_mu[i] = camMixture->getViscosity();                      //mixture viscosity
         temp = camMixture->getMixtureDiffusionCoeff(opPre);
         cptemp = camMixture->getMolarSpecificHeat();
-        for(int l=0; l<nSpc; l++){
+        for(int l=0; l<nSpc; l++)
+        {
             s_mf(i,l) = mf[l];
             s_Wdot(i,l) = wdot[l];
             s_H(i,l) = htemp[l];
@@ -932,7 +853,8 @@ void FlameLet::saveMixtureProp(doublereal* y){
     }
 }
 
-doublereal FlameLet::stoichiometricMixtureFraction(){
+doublereal FlameLet::stoichiometricMixtureFraction()
+{
     /*
      *check for C and H atoms
      */
@@ -1020,7 +942,8 @@ doublereal FlameLet::stoichiometricMixtureFraction(){
 /*
  *calculate the scalar dissipation rate
  */
-doublereal FlameLet::scalarDissipationRate(const doublereal m_frac){
+doublereal FlameLet::scalarDissipationRate(const doublereal m_frac)
+{
     /*
      *Eq. 9.38 SummerSchool by N. Peters
      */
@@ -1036,7 +959,13 @@ doublereal FlameLet::scalarDissipationRate(const doublereal m_frac){
 /*
  *calculate the scalar dissipation rate profile. Method 1 in Carbonell(2009).
  */
-doublereal FlameLet::scalarDissipationRateProfile(const doublereal m_frac, const doublereal stoichSDR, const int cell){
+doublereal FlameLet::scalarDissipationRateProfile
+(
+    const doublereal m_frac,
+    const doublereal stoichSDR,
+    const int cell
+)
+{
 
 	CamMath cm;
 
@@ -1046,8 +975,16 @@ doublereal FlameLet::scalarDissipationRateProfile(const doublereal m_frac, const
 	Utils::LinearInterpolator<doublereal, doublereal> rhoInterpolate(reacGeom->getAxpos(),m_rho);
 	doublereal rhoStoich = rhoInterpolate.interpolate(stoichZ);
 
-	doublereal phi = 0.75 * ( cm.SQR(std::sqrt(m_rho[0]/m_rho[cell])+1.0) / (2.0*std::sqrt(m_rho[0]/m_rho[cell])+1.0) );
-	doublereal phist = 0.75 * ( cm.SQR(std::sqrt(m_rho[0]/rhoStoich)+1.0) / (2.0*std::sqrt(m_rho[0]/rhoStoich)+1.0) );
+	doublereal phi = 0.75 *
+	                 (
+	                     cm.SQR(std::sqrt(m_rho[0]/m_rho[cell])+1.0)
+	                   / (2.0*std::sqrt(m_rho[0]/m_rho[cell])+1.0)
+	                 );
+	doublereal phist = 0.75 *
+	                   (
+	                       cm.SQR(std::sqrt(m_rho[0]/rhoStoich)+1.0)
+	                     / (2.0*std::sqrt(m_rho[0]/rhoStoich)+1.0)
+	                   );
 
 	return stoichSDR * (fZ/fZst) * (phi/phist);
 
@@ -1056,7 +993,14 @@ doublereal FlameLet::scalarDissipationRateProfile(const doublereal m_frac, const
 /*
  *solver call for residual evaluation
  */
-int FlameLet::eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval){
+int FlameLet::eval
+(
+    doublereal x,
+    doublereal* y,
+    doublereal* ydot,
+    bool jacEval
+)
+{
 
 
     //Sets soot volume fraction vector to zeros
@@ -1066,14 +1010,17 @@ int FlameLet::eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval){
 
 }
 
-void FlameLet::report(doublereal x, doublereal* solution){
+void FlameLet::report(doublereal x, doublereal* solution)
+{
     cout << "Dummy function called\n";
 }
 
 /*
  *consol output function
  */
-void FlameLet::report(doublereal x, doublereal* solution, doublereal& res){
+void FlameLet::report(doublereal x, doublereal* solution, doublereal& res)
+{
+
     static int nStep=0;
     cout.width(5);
     cout.setf(ios::scientific);
@@ -1081,25 +1028,29 @@ void FlameLet::report(doublereal x, doublereal* solution, doublereal& res){
     cout << x <<"\t" << res << endl;
     nStep++;
 
-//    cout << "---------------------------------\n";
-//    for(int i=0; i<iMesh_e; i++){
-//        cout << solution[i*nVar+ptrT] << endl;
-//    }
-//    cout << "---------------------------------\n";
-    //int dd ; cin >> dd;
 }
 /*
  *output function for file output
  */
-void FlameLet::reportToFile(doublereal t, doublereal* soln){
+void FlameLet::reportToFile(doublereal t, doublereal* soln)
+{
+
+
 
     doublereal sum;
     reporter->openFile("profile.dat",false);
     reporter->writeCustomHeader(headerData);
     vector<doublereal> data, axpos;
-    vector<doublereal> molfrac, massfrac;
+    vector<doublereal> molfrac, massfrac, temperatureVec;
     axpos = reacGeom->getAxpos();
     int len = axpos.size();
+
+    for(int i=0; i<len; i++)
+    {
+        temperatureVec.push_back(soln[i*nVar+ptrT]);
+    }
+    reporter->writeTempProfiletoXML("camflow.xml",temperatureVec);
+
     for(int i=0; i<len; i++){
         data.clear();
         data.push_back(t);
@@ -1108,7 +1059,14 @@ void FlameLet::reportToFile(doublereal t, doublereal* soln){
         data.push_back(m_rho[i]);
         data.push_back(m_mu[i]);
         data.push_back(soln[i*nVar+ptrT]);
-        data.push_back(radiation[i]);
+        if (admin->getRadiationModel())
+        {
+            data.push_back(radiation->getRadiation(i));
+        }
+        else
+        {
+            data.push_back(0.0);
+        }
 
         massfrac.clear();
         molfrac.clear();
@@ -1143,7 +1101,9 @@ void FlameLet::reportToFile(doublereal t, doublereal* soln){
 /*
  *output file header
  */
-void FlameLet::header(){
+void FlameLet::header()
+{
+
     headerData.clear();
     headerData.push_back("time");
     headerData.push_back("Z");
@@ -1156,6 +1116,7 @@ void FlameLet::header(){
         headerData.push_back( (*spv)[l]->Name() );
     }
     headerData.push_back("sumfracs");
+
 }
 
 
@@ -1163,7 +1124,8 @@ void FlameLet::header(){
  *set the scalar dissipation rate provided by the external
  *calling program
  */
-void FlameLet::setExternalScalarDissipationRate(const doublereal sr){
+void FlameLet::setExternalScalarDissipationRate(const doublereal sr)
+{
     sdr_ext = sr;
 }
 
@@ -1171,7 +1133,14 @@ void FlameLet::setExternalScalarDissipationRate(const doublereal sr){
  *  When the scalar dissipation rate has a time history
  *  use that during intergration
  */
-void FlameLet::setExternalScalarDissipationRate(const std::vector<doublereal>& time, const std::vector<doublereal>& sdr, const bool analytic){
+void FlameLet::setExternalScalarDissipationRate
+(
+    const std::vector<doublereal>& time,
+    const std::vector<doublereal>& sdr,
+    const bool analytic
+)
+{
+
     v_sdr = sdr;
     v_time = time;
 
@@ -1184,9 +1153,14 @@ void FlameLet::setExternalScalarDissipationRate(const std::vector<doublereal>& t
  *  When the scalar dissipation rate has a time history
  *  and has a profile with mixture fraction from the CFD.
  */
-void FlameLet::setExternalScalarDissipationRate(const std::vector<doublereal>& time,
-												const std::vector< std::vector<doublereal> >& sdr,
-												const std::vector< std::vector<doublereal> >& Zcoords){
+void FlameLet::setExternalScalarDissipationRate
+(
+    const std::vector<doublereal>& time,
+	const std::vector< std::vector<doublereal> >& sdr,
+	const std::vector< std::vector<doublereal> >& Zcoords
+)
+{
+
     profile_sdr = sdr;
     v_time = time;
     cfdMixFracCoords = Zcoords;
@@ -1198,7 +1172,10 @@ void FlameLet::setExternalScalarDissipationRate(const std::vector<doublereal>& t
 /**
  *  Interpolate and return the scalar dissipation rate
  */
-doublereal FlameLet::getSDR(const doublereal time) const {
+doublereal
+FlameLet::getSDR(const doublereal time)
+const
+{
 
 	Utils::LinearInterpolator<doublereal, doublereal> timeInterpolate(v_time, v_sdr);
 
@@ -1209,7 +1186,14 @@ doublereal FlameLet::getSDR(const doublereal time) const {
 /**
  *  Interpolate and return the scalar dissipation rate from a profile that varies through time.
  */
-doublereal FlameLet::getSDRfromProfile(const doublereal time, const doublereal Z) const {
+doublereal
+FlameLet::getSDRfromProfile
+(
+    const doublereal time,
+    const doublereal Z
+)
+const
+{
 
 	std::vector<doublereal> sdrTime, sdrInterpolated;
 	std::vector<doublereal> cfdMixFracCoordsTime, cfdMixFracCoordsInterpolated;
@@ -1245,7 +1229,9 @@ doublereal FlameLet::getSDRfromProfile(const doublereal time, const doublereal Z
 /*!
  *@param[in]    soot_fv     Vector of soot volume fractions, one for each grid cell
  */
-void FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv) {
+void
+FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv)
+{
     m_SootFv = soot_fv;
 
     //Solver assumes one soot volume fraction for each cell; temperature is already initialized
@@ -1259,7 +1245,10 @@ void FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot
 /*
  *  Return the pyrene(A4) molar production rate term.
  */
-void FlameLet::getWdotA4(std::vector<doublereal>& wdotA4) const {
+void
+FlameLet::getWdotA4(std::vector<doublereal>& wdotA4)
+const
+{
 
 	wdotA4.clear();
 	// Check the species exists first (returns -1 if it does not).
@@ -1276,4 +1265,3 @@ void FlameLet::getWdotA4(std::vector<doublereal>& wdotA4) const {
 	}
 
 }
-

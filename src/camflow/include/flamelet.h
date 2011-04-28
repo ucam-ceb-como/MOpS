@@ -45,12 +45,14 @@
 #include "cam_control.h"
 #include "cam_admin.h"
 #include "cam_reporter.h"
+#include "cam_radiation.h"
 #include "gpc.h"
 #include "cam_setup.h"
 
 using namespace Sprog;
 
-namespace Camflow {
+namespace Camflow
+{
 
     /*!
      *@brief    Flamelet equation solver class.
@@ -58,7 +60,9 @@ namespace Camflow {
      * Include a more detailed description here.
      */
     class FlameLet
-    : public CamSetup {
+    :
+      public CamSetup
+    {
 
         public:
 
@@ -118,16 +122,6 @@ namespace Camflow {
 
             //! Energy residual calculation.
             void energyResidual(const doublereal& t, doublereal* y, doublereal* f);
-
-            //! Computes the Planck mean absorption constants, as input to the radiative heat loss dissipation model.
-            void PlanckAbsorption (const doublereal Temperature, doublereal Absorption[3]) const;
-
-            //! Computes the radiative heat loss term for the radiative heat dissipation model.
-            doublereal RadiativeLoss(const doublereal Temperature,
-                                     const doublereal soot_vol_frac,
-                                     const doublereal mole_frac_H2O,
-                                     const doublereal mole_frac_CO2,
-                                     const doublereal mole_frac_CO) const;
 
             //! Set the external scalar dissipation rate.
             void setExternalScalarDissipationRate(const doublereal sr);
@@ -207,9 +201,10 @@ namespace Camflow {
 
             Array2D Le, convection, CpSpec; //Lewis numbers
 
+            Radiation *radiation;
+
     }; // End FlameLet class declaration.
 
 } // End Camflow namespace.
 
 #endif	/* _FLAMELET_H */
-

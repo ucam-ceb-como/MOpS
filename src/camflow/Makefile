@@ -33,12 +33,12 @@ else
 endif
 
 # Target objects.
-obj=   cam_read.o cam_setup.o cam_geometry.o \
-		 cam_control.o cam_conveter.o cam_math.o cam_conc.o \
-		 cam_admin.o cam_boundary.o cam_configuration.o cam_profile.o\
-		 cam_reporter.o cam_models.o cam_plug.o cam_premix.o cam_residual.o \
-		 stagflow.o cam_soot.o batch.o flamelet.o interface.o\
-		 cvode_wrapper.o radau_wrapper.o
+obj=    cam_read.o cam_setup.o cam_geometry.o \
+		cam_control.o cam_conveter.o cam_math.o cam_conc.o cam_radiation.o\
+		cam_admin.o cam_boundary.o cam_configuration.o cam_profile.o\
+		cam_reporter.o cam_models.o cam_plug.o cam_premix.o cam_residual.o \
+		stagflow.o cam_soot.o batch.o flamelet.o interface.o\
+		cvode_wrapper.o radau_wrapper.o
 
 all: $(obj) 
 	mkdir -p $(lib)
@@ -73,6 +73,8 @@ cam_profile.o: $(src)/cam_profile.cpp
 	$(cpp) $(flag) $(src)/cam_profile.cpp
 cam_reporter.o: $(src)/cam_reporter.cpp
 	$(cpp) $(flag) $(src)/cam_reporter.cpp
+cam_radiation.o: $(src)/cam_radiation.cpp
+	$(cpp) $(flag) $(src)/cam_radiation.cpp
 cam_models.o: $(src)/cam_models.cpp
 	$(cpp) $(flag) $(src)/cam_models.cpp
 cam_plug.o: $(src)/cam_plug.cpp

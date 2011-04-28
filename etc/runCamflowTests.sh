@@ -90,8 +90,14 @@ else
     echo make $solver solver success
 fi
 
-cd applications/examples/camflow/plug/h2o2
-time ../../../../../bin/$exeDir/$solver
+cd test/camflow/hydrogenFlamelet
+time ../../../bin/$exeDir/$solver
 
-
-
+test=`diff profile.dat originalProfile.dat`
+if [ -z "$test" ] ; then
+    echo "Test success."
+else
+    echo "Test returns $test."
+    echo "Test has failed."
+    exit
+fi

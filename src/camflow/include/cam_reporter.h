@@ -48,6 +48,7 @@
 #include "gpc.h"
 #include "comostrings.h"
 #include <fstream>
+#include "camxml.h"
 
 namespace Camflow{
 
@@ -80,6 +81,13 @@ namespace Camflow{
         void writeStdFileOut(std::vector<doublereal>& data);
         void writeCustomHeader(std::vector<std::string>& header);
         void writeCustomFileOut(std::vector<doublereal>& data);
+
+        void writeTempProfiletoXML
+        (
+            const std::string fileName,
+            const std::vector<doublereal>& temperature
+        );
+
     };
 }
 

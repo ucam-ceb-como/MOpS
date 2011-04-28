@@ -133,24 +133,30 @@ void CamSetup::initMassFlow(CamBoundary& cb, CamControl& cc,
 /*
  *init temperature
  */
-void CamSetup::initTemperature(CamBoundary& cb, CamControl& cc,
-                        std::vector<doublereal>& soln){
+void CamSetup::initTemperature
+(
+    CamBoundary& cb,
+    CamControl& cc,
+    std::vector<doublereal>& soln
+)
+{
 
     soln.resize(cellEnd,0);
     std::vector<doublereal>  position;
     position = reacGeom->getAxpos();
     doublereal T = getInletTemperature(cb);
 
-
-
-    if(admin->getEnergyModel() == admin->ISOTHERMAL){
-        for(int i=cellBegin; i<cellEnd; i++)
+    if(admin->getEnergyModel() == admin->ISOTHERMAL)
+    {
+        for (int i=cellBegin; i<cellEnd; i++)
             soln[i] = T;
-    }else{
-        for(int i=cellBegin; i<cellEnd; i++){
+    }
+    else
+    {
+        for (int i=cellBegin; i<cellEnd; i++)
+        {
             T = profile->getUserDefTemp(position[i]);
             soln[i] = T;
-
         }
     }
 
