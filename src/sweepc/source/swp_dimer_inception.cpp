@@ -162,17 +162,48 @@ int DimerInception::Perform(const real t, Cell &sys,
 
 // INCEPTION KERNEL.
 
-// Sets the coagulation kernel constants given incepting species
-// masses and diameters.
+/*!
+ * The inception rate is based on a transition coagulation kernel that
+ * is calculated using a molecule diameter and mass.  These values do not
+ * have to correspond the the physical properties of the molecule, but they
+ * are fed into the transition regime kernel.
+ *
+ * @param[in]    m1    mass of first molecule
+ * @param[in]    m2    mass of second molecule
+ * @param[in]    d1    diameter of first molecule
+ * @param[in]    d2    diameter of second molecule
+ */
 void DimerInception::SetInceptingSpecies(real m1, real m2, real d1, real d2)
 {
-    // This routine sets the free-mol and slip flow kernel parameters given
-    // the mass and diameter of the incepting species.
+    // The free mol part can be handled by the free mol specific method
+    SetInceptingSpeciesFreeMol(m1, m2, d1, d2);
+
+    // Now the slip flow part
     real invd1=1.0/d1, invd2=1.0/d2;
-    m_kfm  = m_efm * CFM * sqrt((1.0/m1) + (1.0/m2)) * (d1+d2) * (d1+d2);
     m_ksf1 = CSF * (d1+d2);
     m_ksf2 = 2.0 * 1.257 * m_ksf1 * ((invd1*invd1) + (invd2*invd2));
     m_ksf1 = m_ksf1 * (invd1+invd2);
+}
+
+/*!
+ * The inception rate is based on a free molecular coagulation kernel only,
+ * contrast \ref SetInceptingSpecies that
+ * is calculated using a molecule diameter and mass.  These values do not
+ * have to correspond the the physical properties of the molecule, but they
+ * are fed into the transition regime kernel.
+ *
+ * @param[in]    m1    mass of first molecule
+ * @param[in]    m2    mass of second molecule
+ * @param[in]    d1    diameter of first molecule
+ * @param[in]    d2    diameter of second molecule
+ */
+void DimerInception::SetInceptingSpeciesFreeMol(real m1, real m2, real d1, real d2)
+{
+    // This routine sets the free-mol and slip flow kernel parameters given
+    // the mass and diameter of the incepting species.
+    m_kfm  = m_efm * CFM * sqrt((1.0/m1) + (1.0/m2)) * (d1+d2) * (d1+d2);
+    m_ksf1 = 0.0;
+    m_ksf2 = 0.0;
 }
 
 // TOTAL RATE CALCULATIONS.
@@ -192,26 +223,48 @@ real DimerInception::Rate(real t, const Cell &sys) const
 
 
 
-// A faster rate calculation routine for Inception events only.  Requires all the
-// parameters that would otherwise be calculated by the routine to be passed as
-// arguments.
+/*!
+ * Calculate inception rate using a the transition coagulation kernel
+ * with the values provided by the user.  The result is this value
+ * multiplied by the square of the number concentration of the gas
+ * phase species.
+ *
+ * @param[in]    fracs    species molefractions
+ * @param[in]    density  gas number density in \f$ \mathrm{mol}\ \mathrm{m}^{-3}\f$
+ * @param[in]    sqrtT    square root of temperature
+ * @param[in]    T_mu     temperature divided by air viscosity
+ * @param[in]    MFP      mean free path in gas
+ * @param[in]    vol      sample volume
+ *
+ * @return    Inception rate for a cell of size vol. (\f$ \mathrm{s}^{-1}\f$)
+ */
 real DimerInception::Rate(const fvector &fracs, real density, real sqrtT,
                      real T_mu, real MFP, real vol) const
 {
-    // Temperature and pressure dependence.
-    real fm   = sqrtT * m_kfm;
-    real sf   = T_mu  * (m_ksf1 + (MFP*m_ksf2));
-    real rate = m_a   * ((fm*sf) / (fm+sf)) * vol;
+    real rate = m_a * vol * chemRatePart(fracs, density);
 
-    // Chemical species concentration dependence.
-    rate *= chemRatePart(fracs, density);
+    const real fm   = sqrtT * m_kfm;
+    if((m_ksf1 > 0) || (m_ksf2 > 0))  {
+        // Transition regime
+        real sf   = T_mu  * (m_ksf1 + (MFP*m_ksf2));
+        rate *= ((fm*sf) / (fm+sf));
+    }
+    else {
+        // Free mol regime only
+        rate *= fm;
+    }
 
     return rate;
 }
 
-// Calculates the gas-phase chemistry contribution to the rate
-// expression.  This is overloaded as Avogadro's number must be
-// included in the terms for inception processes.
+/*!
+ * Calculates the gas-phase chemistry contribution to the rate
+ * expression.  This is overloaded as Avogadro's number must be
+ * included in the terms for inception processes.
+ *
+ * @param[in]    fracs    species molefractions
+ * @param[in]    density  gas number density in \f$ \mathrm{mol}\ \mathrm{m}^{-3}\f$
+ */
 real DimerInception::chemRatePart(const fvector &fracs, real density) const
 {
     real rate = 1.0;

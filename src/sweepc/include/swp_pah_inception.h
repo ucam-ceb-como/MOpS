@@ -70,8 +70,7 @@ namespace Processes
 /*!
  *@brief Inception by dimerisation of PAH molecules
  *
- * The rate is calculated from a special column of chemical data.  The
- * class does not seem to be capable of very general application.
+ * The rate is calculated from a special column of chemical data for use with the PAH-PP model.
  */
 class PAHInception : public Inception
 {

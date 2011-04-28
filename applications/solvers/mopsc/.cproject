@@ -134,7 +134,7 @@
 						<buildArguments>debug=1</buildArguments>
 						<buildTarget>all</buildTarget>
 						<stopOnError>true</stopOnError>
-						<useDefaultCommand>true</useDefaultCommand>
+						<useDefaultCommand>false</useDefaultCommand>
 						<runAllBuilders>true</runAllBuilders>
 					</target>
 					<target name="clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
@@ -142,7 +142,7 @@
 						<buildArguments>debug=1</buildArguments>
 						<buildTarget>clean</buildTarget>
 						<stopOnError>true</stopOnError>
-						<useDefaultCommand>true</useDefaultCommand>
+						<useDefaultCommand>false</useDefaultCommand>
 						<runAllBuilders>true</runAllBuilders>
 					</target>
 				</buildTargets>
