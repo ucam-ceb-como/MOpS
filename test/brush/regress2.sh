@@ -44,6 +44,11 @@ if test -z "$program"
     exit 255
 fi
 
+# An optional second argument may specify the working directory
+if test -n "$2"
+  then
+    cd $2
+fi
 
 echo "Test 2a: Diffusion jump process"
 
@@ -51,13 +56,14 @@ echo "Test 2a: Diffusion jump process"
 rm regress2a*
 
 $program -v 2 -b ./regress2/brush2a.xml -c ./regress2/chem.inp -d ./regress2/chemsoln2a.dat -t ./regress2/therm.dat -s ./regress2/sweep2a.xml -g ./regress2/geometry.xml -a ./regress2/partsoln2a.xml
-if(($? != 0))
+result=$?
+if((result!=0))
   then
     echo "Simulation failed"
     echo "**************************"
     echo "****** TEST FAILURE ******"
     echo "**************************"
-    exit $?
+    exit $result
 fi
 
 count123=`grep "^0.2,1\.45" "regress2adiffusion123_psl.csv" | wc -l`
@@ -82,14 +88,18 @@ if(($count124 != 12))
     echo "**************************"
     echo "****** TEST FAILURE ******"
     echo "**************************"
-    exit $i
+    exit $count124
 fi
 
 # Clean up the output now the test has passed
 rm regress2a*
 
 ./regress2/regress2b.pl $program
-
+result=$?
+if((result!=0)) 
+  then
+    exit $result
+fi
 
 # All tests passed if we get to here
 echo "All tests passed in $0"

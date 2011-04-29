@@ -33,7 +33,7 @@
 #    Email:       mk306@cam.ac.uk
 #    Website:     http://como.cheng.cam.ac.uk
 
-#Path to executable should be supplied as first argument to
+#Absolute path to executable should be supplied as first argument to
 #this script.  Script will fail and return a non-zero value
 #if no executable specified.
 program=$1
@@ -44,22 +44,32 @@ if test -z "$program"
     exit 255
 fi
 
-regress1/regress1a.pl $program
-if(($?!=0)) 
+# An optional second argument may specify the working directory
+if test -n "$2"
   then
-    exit $?
+    cd $2
+    echo "changed directory to $2"
+fi
+
+regress1/regress1a.pl $program
+result=$?
+if((result!=0)) 
+  then
+    exit $result
 fi
 
 regress1/regress1b.pl $program
-if(($?!=0)) 
+result=$?
+if((result!=0)) 
   then
-    exit $?
+    exit $result
 fi
 
 regress1/regress1c.pl $program
-if(($?!=0)) 
+result=$?
+if((result!=0)) 
   then
-    exit $?
+    exit $result
 fi
 
 # All tests passed

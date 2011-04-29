@@ -44,28 +44,37 @@ if test -z "$program"
     exit 255
 fi
 
+# An optional second argument may specify the working directory
+if test -n "$2"
+  then
+    cd $2
+    echo "changed directory to $2"
+fi
+
 # Run the test
 ./regress3/regress3a.pl $program
+result=$?
 
-if(($?!=0))
+if((result!=0))
   then
     echo "Simulation script 3a failed"
     echo "**************************"
     echo "****** TEST FAILURE ******"
     echo "**************************"
-    exit $?
+    exit $result
 fi
 
 # Run the test
 ./regress3/regress3b.pl $program
+result=$?
 
-if(($?!=0))
+if((result!=0))
   then
     echo "Simulation 3b script failed"
     echo "**************************"
     echo "****** TEST FAILURE ******"
     echo "**************************"
-    exit $?
+    exit $result
 fi
 
 # All tests passed if we get to here
