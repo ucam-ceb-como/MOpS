@@ -484,8 +484,11 @@ template<class Weight, class Selectee>
   return i;
 }
 
-/*!Return the value pointed to by an iterator.
- * \todo add bounds checking at present */
+/*!
+ * @return A copy of the value to which the iterator points
+ *
+ * @pre    The iterator must be dereferenceable (ie point to a valid element)
+ */
 template<class Weight, class Selectee>
   typename BinaryTree<Weight, Selectee>::value_type
   BinaryTree<Weight, Selectee>::iterator::operator*()

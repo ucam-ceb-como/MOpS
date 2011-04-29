@@ -60,7 +60,7 @@ do
    esac
 done
 
-if [ $0 != "./etc/runCamflow.sh" ]; then 
+if [ $0 != "./etc/runCamflowTests.sh" ]; then 
     echo "Error: Must run this script from mops-c-Git/"
     exit 1
 fi

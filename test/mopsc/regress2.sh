@@ -34,23 +34,26 @@
 #    Website:     http://como.cheng.cam.ac.uk
 
 regress2/regress2a.pl
-if(($?!=0)) 
+result2a=$?
+if((result2a!=0)) 
   then
-    exit $?
+    exit $result2a
 fi
 rm regression2a*
 
 regress2/regress2b.pl
-if(($?!=0)) 
+result2b=$?
+if((result2b!=0)) 
   then
-    exit $?
+    exit $result2b
 fi
 rm regression2b*
 
 regress2/regress2c.pl
-if(($?!=0)) 
+result2c=$?
+if((result2c!=0)) 
   then
-    exit $?
+    exit $result2c
 fi
 rm regression2c*
 

@@ -132,6 +132,9 @@ public:
         real d2  // Collision diameter of species 2.
         );
 
+    //! Inception only according to free mol kernel with these sizes
+    void SetInceptingSpeciesFreeMol(real m1, real m2, real d1, real d2);
+
     // READ/WRITE/COPY.
 
     // Creates a copy of the inception.

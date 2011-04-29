@@ -297,7 +297,7 @@ SYMBOL_CACHE_SIZE      = 0
 # Private class members and static file members will be hidden unless 
 # the EXTRACT_PRIVATE and EXTRACT_STATIC tags are set to YES
 
-EXTRACT_ALL            = NO
+EXTRACT_ALL            = YES
 
 # If the EXTRACT_PRIVATE tag is set to YES all private members of a class 
 # will be included in the documentation.
@@ -313,7 +313,7 @@ EXTRACT_STATIC         = YES
 # defined locally in source files will be included in the documentation. 
 # If set to NO only classes defined in header files are included.
 
-EXTRACT_LOCAL_CLASSES  = YES
+EXTRACT_LOCAL_CLASSES  = NO
 
 # This flag is only useful for Objective-C code. When set to YES local 
 # methods, which are defined in the implementation section but not in 
@@ -1283,12 +1283,12 @@ SKIP_FUNCTION_MACROS   = YES
 # If a tag file is not located in the directory in which doxygen 
 # is run, you must also specify the path to the tagfile here.
 
-TAGFILES               = 
+TAGFILES               = doc/sweepc/sweepc.tag=doc/sweepc/html
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create 
 # a tag file that is based on the input files it reads.
 
-GENERATE_TAGFILE       = 
+GENERATE_TAGFILE       = doc/mopsc/mopsc.tag
 
 # If the ALLEXTERNALS tag is set to YES all external classes will be listed 
 # in the class index. If set to NO only the inherited external classes 
