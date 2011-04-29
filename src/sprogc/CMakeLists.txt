@@ -28,7 +28,7 @@ add_library(sprog source/gpc_collision_int.cpp
                   source/gpc_transport_data.cpp
                   source/gpc_transport_factory.cpp
                   source/gpc_troe_reaction.cpp
-                  include/gpc_element_lib.cpp)
+                  source/gpc_element_lib.cpp)
 
 include_directories(include 
                     ../utils/include
