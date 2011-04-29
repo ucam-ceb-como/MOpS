@@ -1,20 +1,14 @@
 #!/bin/bash
 
-#Choose the windows or linux names for the executable
-uname -s | grep --ignore-case CYGWIN 
-if(($?==0))
-then
-    windows=1
-else
-    windows=0
-fi
 
-if((windows==1))
-then
-	program="../../bin/debug/mops.exe"
-else 
-	program="../../bin/debug/mops" 
-fi
+#Path to executable should be supplied as first argument to
+#this script.  Script will fail and return a non-zero value
+#if no executable specified.
+program=$1
+
+#Get rid of any results from earlier runs of this test
+rm regression4a*
+
 
 echo "Weighted particle simulation of constant coagulation kernel"
 $program -flamepp -p -gp ./regress4/regress4.inp -rr ./regress4/regress4.inx -s ./regress4/regress4.xml -c ./regress4/chem.inp -t ./regress4/therm.dat

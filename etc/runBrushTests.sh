@@ -91,6 +91,7 @@ else
 fi
 
 cd "test/brush"
+executable="../../bin/$exeDir/$solver"
 
 # Run the tests and store the return value that should indicate success or failure
 # Success is indicated by 0, so initialise all the values to 0
@@ -101,8 +102,8 @@ regress4=1
 
 # It is convenient to put the shortest tests first
 
-testregress1="./regress1.sh"
-echo testregress1
+testregress1="./regress1.sh $executable"
+echo "$testregress1"
 time $testregress1 > /dev/null
 regress1=$?
 if [ $regress1 -ne 0 ]; then
@@ -110,8 +111,8 @@ if [ $regress1 -ne 0 ]; then
     echo "continuing with other tests"
 fi
 
-testregress2="./regress2.sh"
-echo testregress2
+testregress2="./regress2.sh $executable"
+echo "$testregress2"
 time $testregress2 > /dev/null
 regress2=$?
 if [ $regress2 -ne 0 ]; then
@@ -119,8 +120,8 @@ if [ $regress2 -ne 0 ]; then
     echo "continuing with other tests"
 fi
 
-testregress3="./regress3.sh"
-echo testregress3
+testregress3="./regress3.sh $executable"
+echo "$testregress3"
 time $testregress3 > /dev/null
 regress3=$?
 if [ $regress3 -ne 0 ]; then
@@ -128,8 +129,8 @@ if [ $regress3 -ne 0 ]; then
     echo "continuing with other tests"
 fi
 
-testregress4="./regress4.sh"
-echo testregress4
+testregress4="./regress4.sh $executable"
+echo "$testregress4"
 time $testregress4 > /dev/null
 regress4=$?
 # No more tests, when adding extra tests add a warning message as for the preceding tests.

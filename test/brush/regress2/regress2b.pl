@@ -38,14 +38,15 @@ use warnings;
 
 print "Test 2b: Advection jump process (deprecated)\n";
 
-# See if this is a windows system
-my $windows = ($ENV{'OS'} =~ /windows.*/i);
 
-# Choose the windows executable name if appropriate
-my $program = "../../bin/debug/brush";
-if($windows) {
-    $program = "../../bin/debug/brush_d.exe";
+# Clean up any outputs from previous simulations
+my @outputFiles = glob("regress2b*");
+if($#outputFiles > 0) {
+  system("rm @outputFiles");
 }
+
+# Path of executable should be supplied as first argument to this script
+my $program = $ARGV[0];
 
 # Arguments for simulation
 my @simulationCommand = ($program,
@@ -86,6 +87,11 @@ if($m0 < 6.1e-1) {
   print "**************************\n";
   exit 1;
 }
+
+
+# Clean outputs, there should always be some files to delete.
+@outputFiles = glob("regress2b*");
+system("rm @outputFiles");
 
 
 #print "All tests passed\n";

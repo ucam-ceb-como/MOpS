@@ -33,8 +33,19 @@
 #    Email:       mk306@cam.ac.uk
 #    Website:     http://como.cheng.cam.ac.uk
 
+#Path to executable should be supplied as first argument to
+#this script.  Script will fail and return a non-zero value
+#if no executable specified.
+program=$1
+
+if test -z "$program"
+  then
+    echo "No executable supplied to $0"
+    exit 255
+fi
+
 # Run the test
-./regress4/regress4a.pl
+./regress4/regress4a.pl $program
 
 if(($?!=0))
   then
@@ -46,6 +57,6 @@ if(($?!=0))
 fi
 
 # All tests passed if we get to here
-echo "All tests passed"
+echo "All tests passed in $0"
 exit 0
 

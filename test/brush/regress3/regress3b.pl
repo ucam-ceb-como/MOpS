@@ -38,14 +38,15 @@ use warnings;
 
 print "Test 3b: Advection, diffusion and thermophoresis";
 
-# See if this is a windows system
-my $windows = ($ENV{'OS'} =~ /windows.*/i);
-
-# Choose the windows executable name if appropriate
-my $program = "../../bin/debug/brush";
-if($windows) {
-    $program = "../../bin/debug/brush_d.exe";
+# Clean up any outputs from previous simulations
+my @outputFiles = glob("regress3a*");
+if($#outputFiles > 0) {
+  system("rm @outputFiles");
 }
+
+# Path of executable should be supplied as first argument to this script
+my $program = $ARGV[0];
+
 
 # Arguments for simulation
 my @simulationCommand = ($program,
@@ -120,7 +121,11 @@ if(abs($m0b - 2.6e2) > 3e1) {
   exit 2;
 }
 
-system("rm regress3b*.csv");
+
+# Clean outputs, there should always be some files to delete.
+@outputFiles = glob("regress3b*");
+system("rm @outputFiles");
+
 
 #print "All tests passed\n";
 exit 0;

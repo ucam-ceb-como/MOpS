@@ -22,6 +22,7 @@ profile=0
 cleanall=0
 exeDir=debug
 solver=mopsc
+executable=mops
 
 # parse options
 while [ "$#" -gt 0 ]
@@ -113,7 +114,7 @@ if [ $regress1 -ne 0 ]; then
     echo "continuing with other tests"
 fi
 
-testregress3="./regress3.sh"
+testregress3="./regress3.sh ../../bin/$exeDir/$executable"
 echo testregress3
 time $testregress3 > /dev/null
 regress3=$?
@@ -122,7 +123,7 @@ if [ $regress3 -ne 0 ]; then
     echo "continuing with other tests"
 fi
 
-testregress4="./regress4.sh"
+testregress4="./regress4.sh ../../bin/$exeDir/$executable"
 echo testregress4
 time $testregress4 > /dev/null
 regress4=$?

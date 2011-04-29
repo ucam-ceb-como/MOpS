@@ -33,28 +33,37 @@
 #    Email:       mk306@cam.ac.uk
 #    Website:     http://como.cheng.cam.ac.uk
 
-regress1/regress1a.pl
+#Path to executable should be supplied as first argument to
+#this script.  Script will fail and return a non-zero value
+#if no executable specified.
+program=$1
+
+if test -z "$program"
+  then
+    echo "No executable supplied to $0"
+    exit 255
+fi
+
+regress1/regress1a.pl $program
 if(($?!=0)) 
   then
     exit $?
 fi
 
-regress1/regress1b.pl
+regress1/regress1b.pl $program
 if(($?!=0)) 
   then
     exit $?
 fi
 
-regress1/regress1c.pl
+regress1/regress1c.pl $program
 if(($?!=0)) 
   then
     exit $?
 fi
 
 # All tests passed
-echo "All tests passed"
-
-rm regress1*.csv
+echo "All tests passed in $0"
 
 exit 0
 

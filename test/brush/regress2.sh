@@ -33,26 +33,22 @@
 #    Email:       mk306@cam.ac.uk
 #    Website:     http://como.cheng.cam.ac.uk
 
-# Clean up any old files
-rm regress2*.csv
+#Path to executable should be supplied as first argument to
+#this script.  Script will fail and return a non-zero value
+#if no executable specified.
+program=$1
+
+if test -z "$program"
+  then
+    echo "No executable supplied to $0"
+    exit 255
+fi
+
 
 echo "Test 2a: Diffusion jump process"
 
-#Choose the windows or linux names for the executable
-uname -s | grep --ignore-case CYGWIN 
-if(($?==0))
-then
-    windows=1
-else
-    windows=0
-fi
-
-if((windows==1))
-then
-    program="../../bin/debug/brush.exe"
-else 
-    program="../../bin/debug/brush" 
-fi
+# Get rid of any output from previous runs
+rm regress2a*
 
 $program -v 2 -b ./regress2/brush2a.xml -c ./regress2/chem.inp -d ./regress2/chemsoln2a.dat -t ./regress2/therm.dat -s ./regress2/sweep2a.xml -g ./regress2/geometry.xml -a ./regress2/partsoln2a.xml
 if(($? != 0))
@@ -89,11 +85,13 @@ if(($count124 != 12))
     exit $i
 fi
 
-./regress2/regress2b.pl
+# Clean up the output now the test has passed
+rm regress2a*
 
-rm regress2*.csv
+./regress2/regress2b.pl $program
+
 
 # All tests passed if we get to here
-echo "All tests passed"
+echo "All tests passed in $0"
 exit 0
 

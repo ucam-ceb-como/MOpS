@@ -37,18 +37,15 @@ use strict;
 use warnings;
 
 # Clean up any outputs from previous simulations
-system("rm *stats.csv");
-
-print "Test 1b: Nucleation and coagulation without transport";
-
-# See if this is a windows system
-my $windows = ($ENV{'OS'} =~ /windows.*/i);
-
-# Choose the windows executable name if appropriate
-my $program = "../../bin/debug/brush";
-if($windows) {
-    $program = "../../bin/debug/brush.exe";
+my @outputFiles = glob("regress1b*");
+if($#outputFiles > 0) {
+  system("rm @outputFiles");
 }
+
+# Path of executable should be supplied as first argument to this script
+my $program = $ARGV[0];
+
+print "Test 1b: Nucleation and coagulation without transport\n";
 
 # Arguments for simulation
 my @simulationCommand = ($program,
@@ -117,6 +114,10 @@ if(abs($m1 - 3.823e-8) > 4e-10) {
   print "**************************\n";
   ++$failures;
 }
+
+# Clean outputs, there should always be some files to delete.
+@outputFiles = glob("regress1b*");
+system("rm @outputFiles");
 
 #print "All tests passed\n";
 exit $failures;

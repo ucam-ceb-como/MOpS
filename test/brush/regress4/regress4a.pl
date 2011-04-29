@@ -36,14 +36,15 @@
 use strict;
 use warnings;
 
-# See if this is a windows system
-my $windows = ($ENV{'OS'} =~ /windows.*/i);
 
-# Choose the windows executable name if appropriate
-my $program = "../../bin/debug/brush";
-if($windows) {
-    $program = "../../bin/debug/brush.exe";
+# Clean up any outputs from previous simulations
+my @outputFiles = glob("regress4a*");
+if($#outputFiles > 0) {
+  system("rm @outputFiles");
 }
+
+# Path of executable should be supplied as first argument to this script
+my $program = $ARGV[0];
 
 # Arguments for simulation
 my @simulationCommand = ($program,
@@ -113,7 +114,9 @@ if(abs($var - 2.219e-43) > 3e-44) {
   exit 2;
 }
 
-system("rm regress4a*.csv");
+# Clean outputs, there should always be some files to delete.
+@outputFiles = glob("regress4a*");
+system("rm @outputFiles");
 
 #print "All tests passed\n";
 exit 0;
