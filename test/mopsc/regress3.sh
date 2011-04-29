@@ -1,20 +1,13 @@
 #!/bin/bash
 
-#Choose the windows or linux names for the executable
-uname -s | grep --ignore-case CYGWIN 
-if(($?==0))
-then
-    windows=1
-else
-    windows=0
-fi
+#Path to executable should be supplied as first argument to
+#this script.  Script will fail and return a non-zero value
+#if no executable specified.
+program=$1
 
-if((windows==1))
-then
-	program="../../bin/debug/mops.exe"
-else 
-	program="../../bin/debug/mops" 
-fi
+#Get rid of any results from earlier runs of this test
+rm regression3a*
+
 
 # run mops on a very simple problem with weighted particles and additive kernel
 echo "Weighted particle simulation of additive coagulation kernel"
