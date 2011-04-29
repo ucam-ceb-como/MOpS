@@ -48,8 +48,8 @@ gpc_el_comp.o: $(src)/gpc_el_comp.cpp gpc_element.o
 gpc_element.o: $(src)/gpc_element.cpp
 	$(cpp) $(flag) $(src)/gpc_element.cpp
 
-gpc_element_lib.o: $(inc)/gpc_element_lib.cpp gpc_element.o
-	$(cpp) $(flag) $(inc)/gpc_element_lib.cpp
+gpc_element_lib.o: $(src)/gpc_element_lib.cpp gpc_element.o
+	$(cpp) $(flag) $(src)/gpc_element_lib.cpp
 
 # Chemical species.
 
