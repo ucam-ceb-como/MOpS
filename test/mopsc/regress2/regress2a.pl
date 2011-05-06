@@ -37,16 +37,13 @@ use strict;
 use warnings;
 
 # Clean up any outputs from previous simulations
-system("rm regression2a-nuc-coag-pyr*");
-
-# See if this is a windows system
-my $windows = ($ENV{'OS'} =~ /windows.*/i);
-
-# Choose the windows executable name if appropriate
-my $program = "../../bin/debug/mops";
-if($windows) {
-    $program = "../../bin/debug/mops.exe";
+my @outputFiles = glob("regression2a-nuc-coag-pyr*");
+if($#outputFiles > 0) {
+  system("rm " . '"' . join('" "', @outputFiles) . '"');
 }
+
+# Path of executable should be supplied as first argument to this script
+my $program = $ARGV[0];
 
 # Arguments for simulation
 my @simulationCommand = ($program, "-flamepp", "-p",
@@ -110,11 +107,9 @@ if(abs($m1 - 1.3e-8) > 3e-9) {
   exit 2;
 }
 
-# Clean up the intermediate output files
-system("rm regression2a-nuc-coag-pyr*.sav");
-system("rm regression2a-nuc-coag-pyr*.sen");
-system("rm regression2a-nuc-coag-pyr*.sim");
-system("rm regression2a-nuc-coag-pyr*.aux");
+# Clean outputs, there should always be some files to delete.
+@outputFiles = glob("regression2a-nuc-coag-pyr*");
+system("rm " . '"' . join('" "', @outputFiles) . '"');
 
 #print "All tests passed\n";
 exit 0;

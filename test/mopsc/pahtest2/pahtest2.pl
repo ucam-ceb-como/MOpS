@@ -37,26 +37,30 @@ use strict;
 use warnings;
 
 # Clean up any outputs from previous simulations
-system("rm pahtest2-*");
-
-# See if this is a windows system
-my $windows = ($ENV{'OS'} =~ /windows.*/i);
-
-# Choose the windows executable name if appropriate
-my $program = "../../../bin/debug/mops";
-if($windows) {
-    $program = "../../../bin/debug/mops.exe";
+my @outputFiles = glob("pahtest2output*");
+if($#outputFiles > 0) {
+  print "Cleaning up old output files\n";
+  system("rm " . '"' . join('" "', @outputFiles) . '"');
 }
 
+# Path of executable should be supplied as first argument to this script
+my $program = $ARGV[0];
+
 # Arguments for simulation
-my @simulationCommand = ($program, "-flamepp", "-p",);
+my @simulationCommand = ($program, "-flamepp", "-p",
+                         "-gp", "gasphase.inp",
+                         "-c",  "chem.inp",
+                         "-t",  "therm.dat",
+                         "-s",  "sweep.xml",
+                         "-rr", "mops.inx");
+
 
 # Run the simulation and wait for it to finish
 system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";
 
 # Parse the moments file
 my $momentFile;
-open($momentFile, "<pahtest2-part.csv") or die "ERR: failed to open moment file: $!";
+open($momentFile, "<pahtest2output-part.csv") or die "ERR: failed to open moment file: $!";
 
 my $m0 = 0;
 my $secondary_m0 = 0;
@@ -128,10 +132,7 @@ if(abs($secondary_m0 -  2.85e17) > 1.5e16) {
 #print "All tests passed\n";
 
 # Clean up output files, since the test passed
-system("rm pahtest2*.sav");
-system("rm pahtest2*.sen");
-system("rm pahtest2*.sim");
-system("rm pahtest2*.aux");
-system("rm pahtest2-*.csv");
+@outputFiles = glob("pahtest2output*");
+system("rm " . '"' . join('" "', @outputFiles) . '"');
 
 exit 0;

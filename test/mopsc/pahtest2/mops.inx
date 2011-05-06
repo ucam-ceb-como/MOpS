@@ -50,6 +50,6 @@
 
     
     <!-- File name for output (excluding extensions). -->
-    <filename>pahtest2</filename>
+    <filename>pahtest2output</filename>
   </output>
 </mops>

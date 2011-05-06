@@ -33,29 +33,44 @@
 #    Email:       mk306@cam.ac.uk
 #    Website:     http://como.cheng.cam.ac.uk
 
-regress2/regress2a.pl
+#Path to executable should be supplied as first argument to
+#this script.  Script will fail and return a non-zero value
+#if no executable specified.
+program=$1
+
+if test -z "$program"
+  then
+    echo "No executable supplied to $0"
+    exit 255
+fi
+
+# An optional second argument may specify the working directory
+if test -n "$2"
+  then
+    cd $2
+    echo "changed directory to $2"
+fi
+
+regress2/regress2a.pl $program
 result2a=$?
 if((result2a!=0)) 
   then
     exit $result2a
 fi
-rm regression2a*
 
-regress2/regress2b.pl
+regress2/regress2b.pl $program
 result2b=$?
 if((result2b!=0)) 
   then
     exit $result2b
 fi
-rm regression2b*
 
-regress2/regress2c.pl
+regress2/regress2c.pl $program
 result2c=$?
 if((result2c!=0)) 
   then
     exit $result2c
 fi
-rm regression2c*
 
 # All tests passed
 echo "All tests passed"

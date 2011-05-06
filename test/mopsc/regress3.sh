@@ -1,9 +1,24 @@
 #!/bin/bash
 
+
 #Path to executable should be supplied as first argument to
 #this script.  Script will fail and return a non-zero value
 #if no executable specified.
 program=$1
+
+if test -z "$program"
+  then
+    echo "No executable supplied to $0"
+    exit 255
+fi
+
+# An optional second argument may specify the working directory
+if test -n "$2"
+  then
+    cd $2
+    echo "changed directory to $2"
+fi
+
 
 #Get rid of any results from earlier runs of this test
 rm regression3a*

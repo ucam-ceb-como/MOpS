@@ -33,18 +33,33 @@
 #    Email:       mk306@cam.ac.uk
 #    Website:     http://como.cheng.cam.ac.uk
 
-cd pahtest
-dos2unix PAH_data*
-./pahtest.pl
+#Path to executable should be supplied as first argument to
+#this script.  Script will fail and return a non-zero value
+#if no executable specified.
+program=$1
+
+if test -z "$program"
+  then
+    echo "No executable supplied to $0"
+    exit 255
+fi
+
+# An optional second argument may specify the working directory
+if test -n "$2"
+  then
+    cd $2
+    echo "changed directory to $2"
+fi
+
+dos2unix ./pahtest/PAH_data*
+./pahtest/pahtest.pl $program
 
 #Capture the exit value
 testresult=$?
 if((testresult!=0)) 
   then
-    cd ..
     exit $testresult
 fi
-cd ..
 
 # All tests passed
 echo "All tests passed"

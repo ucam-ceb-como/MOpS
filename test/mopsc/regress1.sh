@@ -1,19 +1,21 @@
 #!/bin/bash
 
-#Choose the windows or linux names for the executable
-uname -s | grep --ignore-case CYGWIN 
-if(($?==0))
-then
-    windows=1
-else
-    windows=0
+
+#Absolute path to executable should be supplied as first argument to
+#this script.  Script will fail and return a non-zero value
+#if no executable specified.
+program=$1
+
+if test -z "$program"
+  then
+    echo "No executable supplied to $0"
+    exit 255
 fi
 
-if((windows==1))
-then
-	program="../../bin/debug/mops.exe"
-else 
-	program="../../bin/debug/mops" 
+# An optional second argument may specify the working directory
+if test -n "$2"
+  then
+    cd $2
 fi
 
 # run mops on a very simple problem

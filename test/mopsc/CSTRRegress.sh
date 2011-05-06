@@ -33,37 +33,49 @@
 #    Email:       mk306@cam.ac.uk
 #    Website:     http://como.cheng.cam.ac.uk
 
-cd cstrtest
+#Path to executable should be supplied as first argument to
+#this script.  Script will fail and return a non-zero value
+#if no executable specified.
+program=$1
 
-#Choose the windows or linux names for the executable
-uname -s | grep --ignore-case CYGWIN 
-if(($?==0))
-then
-	program="../../../bin/debug/mops.exe"
-else 
-	program="../../../bin/debug/mops" 
+if test -z "$program"
+  then
+    echo "No executable supplied to $0"
+    exit 255
 fi
+
+# An optional second argument may specify the working directory
+if test -n "$2"
+  then
+    cd $2
+    echo "changed directory to $2"
+fi
+
+cd cstrtest
 
 dos2unix chem.inp
 
 $program -gpc -p -diag4 -rr mops.inx -s sweep.xml -c chem.inp -t therm.dat
+simulationResult=$?
 
-if(($?==0)) 
+if((simulationResult==0)) 
 then
   echo "Finished simulation"
 else
   echo "Simulation failed"
-  exit $?
+  cd ..
+  exit $simulationResult
 fi
 echo "========================"
 
 dos2unix "J3-chem.csv"
 dos2unix "J3-sensi.csv"
 ./cstrtest.pl
-if(($?!=0)) 
+postprocessResult=$?
+if((postprocessResult!=0)) 
   then
     cd ..
-    exit $?
+    exit $postprocessResult
 fi
 
 
@@ -71,6 +83,7 @@ rm -f J3*
 # All tests passed
 #echo "All tests passed"
 
+cd ..
 
 
 exit 0

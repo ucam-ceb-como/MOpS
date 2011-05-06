@@ -23,9 +23,9 @@
 
     <pahinception />
 
-    <pahfile path="PAH_data11.csv" time="0.0" />
-    <pahfile path="PAH_data12.csv" time="0.005018" />
-    <pahfile path="PAH_data13.csv" time="0.010036" />
-    <pahfile path="PAH_data14.csv" time="0.015054" />
-    <pahfile path="PAH_data15.csv" time="0.020072" />
+    <pahfile path="pahtest/PAH_data11.csv" time="0.0" />
+    <pahfile path="pahtest/PAH_data12.csv" time="0.005018" />
+    <pahfile path="pahtest/PAH_data13.csv" time="0.010036" />
+    <pahfile path="pahtest/PAH_data14.csv" time="0.015054" />
+    <pahfile path="pahtest/PAH_data15.csv" time="0.020072" />
 </mechanism>

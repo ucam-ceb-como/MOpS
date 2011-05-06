@@ -37,19 +37,22 @@ use strict;
 use warnings;
 
 # Clean up any outputs from previous simulations
-system("rm soot*");
-
-# See if this is a windows system
-my $windows = ($ENV{'OS'} =~ /windows.*/i);
-
-# Choose the windows executable name if appropriate
-my $program = "../../../bin/debug/mops";
-if($windows) {
-    $program = "../../../bin/debug/mops.exe";
+my @outputFiles = glob("soot*");
+if($#outputFiles > 0) {
+  print "Cleaning up old output files\n";
+  system("rm " . '"' . join('" "', @outputFiles) . '"');
 }
 
+# Path of executable should be supplied as first argument to this script
+my $program = $ARGV[0];
+
 # Arguments for simulation
-my @simulationCommand = ($program, "-flamepp", "-p",);
+my @simulationCommand = ($program, "-flamepp", "-p",
+                         "-gp", "pahtest/gasphase.inp",
+                         "-c",  "pahtest/chem.inp",
+                         "-t",  "pahtest/therm.dat",
+                         "-s",  "pahtest/sweep.xml",
+                         "-rr", "pahtest/mops.inx");
 
 # Run the simulation and wait for it to finish
 system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";

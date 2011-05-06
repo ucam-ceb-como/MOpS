@@ -6,6 +6,13 @@
 #if no executable specified.
 program=$1
 
+# An optional second argument may specify the working directory
+if test -n "$2"
+  then
+    cd $2
+    echo "changed directory to $2"
+fi
+
 #Get rid of any results from earlier runs of this test
 rm regression4a*
 
