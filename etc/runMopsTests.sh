@@ -22,6 +22,8 @@ profile=0
 cleanall=0
 exeDir=debug
 solver=mopsc
+
+#Need some logic to set this to mops.exe for windows
 executable=mops
 
 # parse options
@@ -105,7 +107,7 @@ regress4=1
 
 # It is convenient to put the shortest tests first
 
-testregress1="./regress1.sh"
+testregress1="./regress1.sh ../../bin/$exeDir/$executable"
 echo testregress1
 time $testregress1 > /dev/null
 regress1=$?
@@ -132,7 +134,7 @@ if [ $regress4 -ne 0 ]; then
     echo "continuing with other tests"
 fi
 
-testscript="./CSTRRegress.sh"
+testscript="./CSTRRegress.sh ../../../bin/$exeDir/$executable"
 echo $testscript
 time $testscript > /dev/null
 regressCSTR=$?
@@ -141,7 +143,7 @@ if [ $regressCSTR -ne 0 ]; then
     echo "continuing with other tests"
 fi
 
-testpah="./pahtest.sh"
+testpah="./pahtest.sh ../../bin/$exeDir/$executable"
 echo testpah
 time $testpah > /dev/null
 regresspah=$?
@@ -150,7 +152,7 @@ if [ $regresspah -ne 0 ]; then
     echo "continuing with other tests"
 fi
 
-testpah2="./pahtest2.sh"
+testpah2="./pahtest2.sh ../../../bin/$exeDir/$executable"
 echo testpah2
 time $testpah2 > /dev/null
 regresspah2=$?
@@ -159,7 +161,7 @@ if [ $regresspah2 -ne 0 ]; then
     echo "continuing with other tests"
 fi
 
-testregress2="./regress2.sh"
+testregress2="./regress2.sh ../../bin/$exeDir/$executable"
 echo testregress2
 time $testregress2 > /dev/null
 regress2=$?
