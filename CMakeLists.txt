@@ -6,18 +6,19 @@ project (MOPSSUITE)
 
 enable_testing()
 
-# Mops and the libraries it requires, the order in which the link libraries is listed
-# is sensitive: the most basic libraries most come last.
+######### The Mops application ##########################
 add_executable(mops-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/mopsc/mops.cpp)
 target_link_libraries(mops-app mops)
 
+# Regression tests for Mops
 add_test(mops.runs mops-app)
 
-# Brush and the libraries it requires
+
+########## The Brush application #######################
 add_executable(brush-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/brush/brush.cpp)
 target_link_libraries(brush-app brush)
 
-add_test(brush.runs brush-app -h)
+# Regression tests for Brish
 add_test(brush.regress1 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress1.sh ${MOPSSUITE_BINARY_DIR}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
 add_test(brush.regress2 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress2.sh ${MOPSSUITE_BINARY_DIR}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
 add_test(brush.regress3 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress3.sh ${MOPSSUITE_BINARY_DIR}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)

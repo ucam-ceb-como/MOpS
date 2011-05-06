@@ -105,7 +105,7 @@ regress4=1
 
 # It is convenient to put the shortest tests first
 
-testregress1="./regression1.sh"
+testregress1="./regress1.sh"
 echo testregress1
 time $testregress1 > /dev/null
 regress1=$?

@@ -17,7 +17,7 @@ else
 fi
 
 # run mops on a very simple problem
-$program -flamepp -p -gp regress1.inp -rr regress1.inx -s regress1.xml -c chem.inp -t therm.dat
+$program -flamepp -p -gp regress1/regress1.inp -rr regress1/regress1.inx -s regress1/regress1.xml -c regress1/chem.inp -t regress1/therm.dat
 echo "Finished simulation"
 echo "========================"
 
