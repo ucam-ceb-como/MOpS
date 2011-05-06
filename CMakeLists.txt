@@ -18,10 +18,10 @@ add_executable(brush-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/brush/brus
 target_link_libraries(brush-app brush)
 
 add_test(brush.runs brush-app -h)
-add_test(brush.regress1 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress1.sh ${MOPSSUITE_SOURCE_DIR}/bin/debug/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
-add_test(brush.regress2 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress2.sh ${MOPSSUITE_SOURCE_DIR}/bin/debug/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
-add_test(brush.regress3 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress3.sh ${MOPSSUITE_SOURCE_DIR}/bin/debug/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
-add_test(brush.regress4 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress4.sh ${MOPSSUITE_SOURCE_DIR}/bin/debug/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
+add_test(brush.regress1 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress1.sh ${MOPSSUITE_BINARY_DIR}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
+add_test(brush.regress2 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress2.sh ${MOPSSUITE_BINARY_DIR}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
+add_test(brush.regress3 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress3.sh ${MOPSSUITE_BINARY_DIR}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
+add_test(brush.regress4 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress4.sh ${MOPSSUITE_BINARY_DIR}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/comostrings)
