@@ -20,8 +20,18 @@ fi
 
 # run mops on a very simple problem
 $program -flamepp -p -gp regress1/regress1.inp -rr regress1/regress1.inx -s regress1/regress1.xml -c regress1/chem.inp -t regress1/therm.dat
-echo "Finished simulation"
-echo "========================"
+
+# capture exit value of simulation
+simulationResult=$?
+
+if((simulationResult==0))
+  then
+    echo "Finished simulation"
+    echo "========================"
+else
+  echo "****** Simulation failed ******"
+  exit 255
+fi
 
 # Array of particle numbers - these should be the count of particles of sizes 1,2 and 3 in the psl file
 # Put a negative values at the start so that the number of particles of size 1 comes at index 1
@@ -48,6 +58,7 @@ do
       echo "**************************"
       echo "****** TEST FAILURE ******"
       echo "**************************"
+      exit $i
   fi
   ((i+=1))
 done
