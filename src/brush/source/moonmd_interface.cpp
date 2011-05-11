@@ -57,14 +57,18 @@
  *\param[in]    settfile     Path to file specifying control parameters for Brush
  *\param[in]    swpfile      Path to XML file specifying the particle mechanism
  *\param[in]    partsolnfile Path  to XML file specifying the initial particle population
+ *\param[in]    num_grid_nodes   Number of cell boundaries specified in grid_nodes
  *\param[in]    grid_nodes   Boundaries of cells to be used in Brush specified in meters.
+ *
+ *\pre [grid_nodes, grid_nodes + num_grid_nodes) must be a valid range
  *
  *\return    Pointer to new brush reactor object.   Client must call delete on this pointer.
  */
 Brush::MooNMDInterface::particle_reactor_pointer 
  Brush::MooNMDInterface::InitialiseBrush(
     const std::string& chemfile, const std::string& thermfile, const std::string& settfile,
-    const std::string& swpfile, const std::string& partsolnfile, const std::vector<double>& grid_nodes)
+    const std::string& swpfile, const std::string& partsolnfile,
+    const size_t num_grid_nodes, const double grid_nodes[])
 {
     std::cout << "Setting up Brush\n";
 
@@ -80,7 +84,8 @@ Brush::MooNMDInterface::particle_reactor_pointer
     // Geometry
     std::auto_ptr<Geometry::Geometry1d> pGeom;
     // Build the geometry object and hold a smart pointer to it
-    pGeom.reset(new Geometry::Geometry1d(grid_nodes, Geometry::dirichlet, Geometry::neumann));
+    pGeom.reset(new Geometry::Geometry1d(std::vector<double>(grid_nodes, grid_nodes + num_grid_nodes),
+                                          Geometry::dirichlet, Geometry::neumann));
 
     // Variables to hold data read from the input file
     Mops::timevector timeIntervals;
@@ -289,22 +294,25 @@ Brush::MooNMDInterface::particle_reactor_pointer
  *\param[out]        energy_souce        Energy release by particle processes in Jm^-3s^-1
  *\param[out]        mass_conc_souce     Release of ASA into solution by particle processes in kgm^-3s^-1
  *
+ *\pre  All the arrays supplied by the caller must have length at least solution_length, this includes
+ *       the output arrays.
+ *
  *\return    Pointer to updated brush reactor object.
  *
  * Sign convention for source terms: Positive source terms indicate release of energy or materical by the solid
  * phase.  Thus a positive energy source would indicate exothermic crystallisation and a positive mass source
  * would indicate that crystals were dissolving.
  */
-Brush::MooNMDInterface::particle_reactor_pointer Brush::MooNMDInterface::RunParticlePhase(particle_reactor& reac, const double t_stop,
-                                          const size_t solution_length,
-                                          const std::vector<double>& solution_nodes,
-                                          const std::vector<double>& temperature,
-                                          const std::vector<double>& mass_concentration,
-                                          const std::vector<double>& velocity,
-                                          std::vector<double>& energy_source,
-                                          std::vector<double>& mass_conc_source) {
-    energy_source.resize(solution_length);
-    mass_conc_source.resize(solution_length);
-    return NULL;
+Brush::MooNMDInterface::particle_reactor_pointer Brush::MooNMDInterface::RunParticlePhase(
+    particle_reactor& reac, const double t_stop,
+    const size_t solution_length,
+    const double solution_nodes[],
+    const double temperature[],
+    const double mass_concentration[],
+    const double velocity[],
+    double energy_source[],
+    double mass_conc_source[])
+{
+    return &reac;
 }
 

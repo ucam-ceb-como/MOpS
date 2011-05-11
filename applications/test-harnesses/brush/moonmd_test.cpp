@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
     const std::string settfile("brush.xml");
     const std::string swpfile("sweep.xml");
     const std::string partsolnfile("partsoln.xml");
-    std::vector<double> gridNodes(5);
+    double gridNodes[5];
     gridNodes[0] = 0.0;
     gridNodes[1] = 0.1;
     gridNodes[2] = 0.2;
@@ -67,9 +67,9 @@ int main(int argc, char* argv[])
     gridNodes[4] = 0.4;
 
     Brush::MooNMDInterface::particle_reactor_pointer pReac = NULL;
-    pReac = Brush::MooNMDInterface::InitialiseBrush(chemfile, thermfile, settfile, swpfile, partsolnfile, gridNodes);
+    pReac = Brush::MooNMDInterface::InitialiseBrush(chemfile, thermfile, settfile, swpfile, partsolnfile, 5, gridNodes);
     assert(pReac != NULL);
 
     // Return 0 (ie FALSE) if the reactor has the correct number of cells
-    return (pReac->getNumCells() + 1 != gridNodes.size());
+    return (pReac->getNumCells() != 4);
 }

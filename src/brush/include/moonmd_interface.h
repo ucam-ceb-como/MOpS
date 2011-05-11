@@ -55,7 +55,8 @@ typedef particle_reactor* particle_reactor_pointer;
 //! Create a reactor ready for simulation
 particle_reactor_pointer InitialiseBrush(
     const std::string& chemfile, const std::string& thermfile, const std::string& settfile,
-    const std::string& swpfile, const std::string& partsolnfile, const std::vector<double>& grid_nodes);
+    const std::string& swpfile, const std::string& partsolnfile,
+    const size_t num_grid_nodes, const double grid_nodes[]);
 
 /*!
  * Simulate the particle processes from the current reactor time until t_stop
@@ -78,12 +79,12 @@ particle_reactor_pointer InitialiseBrush(
  */
 particle_reactor_pointer RunParticlePhase(particle_reactor& reac, const double t_stop,
                                           const size_t solution_length,
-                                          const std::vector<double>& solution_nodes,
-                                          const std::vector<double>& temperature,
-                                          const std::vector<double>& mass_concentration,
-                                          const std::vector<double>& velocity,
-                                          std::vector<double>& energy_source,
-                                          std::vector<double>& mass_conc_source);
+                                          const double solution_nodes[],
+                                          const double temperature[],
+                                          const double mass_concentration[],
+                                          const double velocity[],
+                                          double energy_source[],
+                                          double mass_conc_source[]);
 
 
 } //MooNMDInterface
