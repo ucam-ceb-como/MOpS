@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="Rob test crystallisation" units="CGS">
+
+
+    
+    <!-- Define particle components. -->
+    
+    <component id="salt" type="bulk">
+      <description>
+        common salt
+      </description>
+      <density units="g/cm3">1</density>
+      <molwt units="g/mol">6.0221415e26</molwt>
+    </component> 
+    
+
+    <particle id="[salt]" model="spherical">
+      <description>
+        A salt crystal
+      </description>
+    </particle>
+
+    
+    <!-- Inceptions -->
+
+    <inception name="Precipitation">
+        <formula>NACL + NACL to [X]</formula>
+        <reactant id="NACL" stoich="2" m="2.0e3" d="0.5e2"/>
+        <particleout id="[X]"/>
+        <component id="salt" dx="a"/>
+        <!-- 9.761e10 gives an effective constant of 1.0 by cancelling out various constants
+             in the program.-->
+        <A>9.761e10</A>
+    </inception>
+ 
+    <coagulation>
+        <kernel>weightedconstant</kernel>
+        <weightrule>w1</weightrule>
+        <A>1.0</A>
+    </coagulation>
+
+</mechanism>

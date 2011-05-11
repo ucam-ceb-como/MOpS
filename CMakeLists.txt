@@ -6,6 +6,15 @@ project (MOPSSUITE)
 
 enable_testing()
 
+# Turn off line breaks in error messages so that IDEs can parse the errors properly
+IF(CMAKE_COMPILER_IS_GNUCC)
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
+ENDIF(CMAKE_COMPILER_IS_GNUCC)
+IF(CMAKE_COMPILER_IS_GNUCXX)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
+ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+
+
 ######### The Mops application ##########################
 add_executable(mops-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/mopsc/mops.cpp)
 target_link_libraries(mops-app mops)
@@ -38,6 +47,13 @@ add_test(brush.regress2 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress2.sh ${MOPSSUI
 add_test(brush.regress3 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress3.sh ${MOPSSUITE_BINARY_DIR}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
 add_test(brush.regress4 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress4.sh ${MOPSSUITE_BINARY_DIR}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
+
+########## A small program to exercise the Brush interface for moonmd #######################
+add_executable(brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/brush/moonmd_test.cpp)
+target_link_libraries(brush-moonmd-test brush)
+
+# Regression tests for Brush moon-md interface
+add_test(NAME brush.moonmd1 COMMAND ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${MOPSSUITE_BINARY_DIR}/brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1)
 
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/comostrings)

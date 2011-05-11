@@ -299,8 +299,8 @@ void MechanismParser::parseCK(std::ifstream &fin,
         tfin.open(status.ThermoFile.c_str(), ios::in);
         //Throw error if the name for the therm.dat file is invalid
         if (!tfin.good()){
-            throw invalid_argument("Failed to open thermo file \n" + status.ThermoFile +
-                "Sprog:gpc_mech_io::parseCK");
+            throw invalid_argument("Failed to open thermo file :" + status.ThermoFile +
+                ": Sprog:gpc_mech_io::parseCK");
         }
         loadCK_File(tfin, thermo);
         tfin.close();
