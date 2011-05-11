@@ -49,6 +49,8 @@
 
 #include "moonmd_interface.h"
 
+#include "reactor1d.h"
+
 //! Run brush
 int main(int argc, char* argv[])
 {
@@ -68,6 +70,6 @@ int main(int argc, char* argv[])
     pReac = Brush::MooNMDInterface::InitialiseBrush(chemfile, thermfile, settfile, swpfile, partsolnfile, gridNodes);
     assert(pReac != NULL);
 
-    // This will return 1 if pReac is NULL indicating failure
-    return (pReac == NULL);
+    // Return 0 (ie FALSE) if the reactor has the correct number of cells
+    return (pReac->getNumCells() + 1 != gridNodes.size());
 }
