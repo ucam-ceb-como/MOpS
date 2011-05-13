@@ -154,14 +154,6 @@ public:
         );
 
 protected:
-    // Rate parameters.
-    real m_kfm;          // Free-molecular kernel parameter.
-    real m_ksf1, m_ksf2; // Slip-flow kernel parameters.
-
-    // Free-molecular enhancement factor.  Currently hardcoded
-    // for soot particles (m_efm = 2.2).
-    static const real m_efm;
-
     // Default constructor is protected to prevent an inception being
     // defined without knowledge of the parent mechanism.
     DimerInception(void);
@@ -185,8 +177,17 @@ protected:
         const fvector &fracs, // Species mole fractions in gas phase.
         real density          // Gas phase molar density.
         ) const;
+
+private:
+    // Rate parameters.
+    real m_kfm;          // Free-molecular kernel parameter.
+    real m_ksf1, m_ksf2; // Slip-flow kernel parameters.
+
+    // Free-molecular enhancement factor.  Currently hardcoded
+    // for soot particles (m_efm = 2.2).
+    static const real m_efm;
 };
-};
-};
+}
+}
 
 #endif
