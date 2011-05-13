@@ -724,6 +724,14 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
         throw std::runtime_error("One or two inception species must be specified in Sweep::MechParser::readInception");
 
 
+    // Rate scaling now that a process has been created
+    real A = 0.0;
+    CamXML::Element *el = xml.GetFirstChild("A");
+    if (el != NULL) {
+        A = cdble(el->Data());
+        icn.SetA(A);
+    }
+
     // Read products.
     readProducts(xml, icn);
 
