@@ -198,7 +198,7 @@ void Brush::Simulator::runOnePath(const int seed) {
 
 
     // write initial moments to file
-    saveParticleStats(reac, momentsFile);
+    saveParticleStats(reac, mStatBound, momentsFile);
 
     // write initial particle list to file
     saveParticleList(reac, particleListFile);
@@ -225,7 +225,7 @@ void Brush::Simulator::runOnePath(const int seed) {
             //std::cout << "solved up to " << tInt.StartTime() + i * dt  + (j + 1) * dt2 << ' ' << reac.getTime() << '\n';
 
             // write moments to file
-            saveParticleStats(reac, momentsFile);
+            saveParticleStats(reac, mStatBound, momentsFile);
 
             // log process rates
             saveProcessRates(reac, ratesFile);
@@ -253,11 +253,13 @@ void Brush::Simulator::runOnePath(const int seed) {
  *\param[in]    reac        Reactor for which statistics are to be calculated
  *\param[in]    out         File handle into which to write the moment data
  */
-void Brush::Simulator::saveParticleStats(const Reactor1d &reac, std::ostream &out) {
+void Brush::Simulator::saveParticleStats(const Reactor1d &reac,
+                                         const Sweep::Stats::IModelStats::StatBound &stat_bound,
+                                         std::ostream &out) {
     // Create a stats object to now so there are not a lot of string operations
     // each time one is needed below
-    Sweep::Stats::EnsembleStats stats(mInitialReactor.getMechanism().ParticleMech());
-    stats.SetStatBoundary(mStatBound);
+    Sweep::Stats::EnsembleStats stats(reac.getMechanism().ParticleMech());
+    stats.SetStatBoundary(stat_bound);
 
     for(size_t i = 0; i < reac.getNumCells(); ++i) {
         // Collect the statistics
@@ -269,7 +271,6 @@ void Brush::Simulator::saveParticleStats(const Reactor1d &reac, std::ostream &ou
         out << reac.getTime() << ',' << reac.getCellCentre(i);
 
         // Put the stats data into the file
-        //BOOST_FOREACH(real r, stats.Get())
         {
             fvector statsVector;
             stats.Get(statsVector);

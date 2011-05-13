@@ -38,7 +38,7 @@
 
 #include <vector>
 #include <string>
-
+#include <iostream>
 
 namespace Brush {
 
@@ -58,10 +58,10 @@ typedef Brush::Reactor1d particle_reactor;
 typedef particle_reactor* particle_reactor_pointer;
 
 //! Create a reactor ready for simulation
-particle_reactor_pointer InitialiseBrush(
-    const std::string& chemfile, const std::string& thermfile, const std::string& settfile,
-    const std::string& swpfile, const std::string& partsolnfile,
-    const size_t num_grid_nodes, const double grid_nodes[]);
+particle_reactor_pointer InitialiseBrush(const std::string& chemfile, const std::string& thermfile,
+                                         const std::string& settfile, const std::string& swpfile,
+                                         const std::string& partsolnfile, const std::string& chemsolnfile,
+                                         const size_t num_grid_nodes, const double grid_nodes[]);
 
 //! Run the particle phase and calculate source terms for the reacting flow solver
 particle_reactor_pointer RunParticlePhase(particle_reactor& reac, const double t_stop,
@@ -72,7 +72,8 @@ particle_reactor_pointer RunParticlePhase(particle_reactor& reac, const double t
     const double velocity[],
     const double mass_concs[],
     double energy_source[],
-    double mass_conc_sources[]);
+    double mass_conc_sources[],
+    std::ostream &moment_output);
 
 
 } //MooNMDInterface

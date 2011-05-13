@@ -39,10 +39,13 @@
 #include "settings_io.h"
 #include "reactor1d.h"
 #include "reset_chemistry.h"
+#include "pred_corr_solver.h"
+#include "simulator.h"
 
 #include "mops_settings_io.h"
-#include "swp_model_stats.h"
 #include "mops_mechanism.h"
+
+#include "swp_model_stats.h"
 #include "mt19937.h"
 
 #include <memory>
@@ -57,7 +60,8 @@
  *\param[in]    thermfile    Path to thermodynamic data file
  *\param[in]    settfile     Path to file specifying control parameters for Brush
  *\param[in]    swpfile      Path to XML file specifying the particle mechanism
- *\param[in]    partsolnfile Path  to XML file specifying the initial particle population
+ *\param[in]    partsolnfile Path to XML file specifying the initial particle population
+ *\param[in]    chemsolnfile Path to file specifying the initial continuum phase composition
  *\param[in]    num_grid_nodes   Number of cell boundaries specified in grid_nodes
  *\param[in]    grid_nodes   Boundaries of cells to be used in Brush specified in meters.
  *
@@ -68,7 +72,7 @@
 Brush::MooNMDInterface::particle_reactor_pointer 
  Brush::MooNMDInterface::InitialiseBrush(
     const std::string& chemfile, const std::string& thermfile, const std::string& settfile,
-    const std::string& swpfile, const std::string& partsolnfile,
+    const std::string& swpfile, const std::string& partsolnfile, const std::string& chemsolnfile,
     const size_t num_grid_nodes, const double grid_nodes[])
 {
     std::cout << "Setting up Brush\n";
@@ -224,6 +228,15 @@ Brush::MooNMDInterface::particle_reactor_pointer
         }
     }
 
+    //======== Read the initial state of the continuum phase ================
+    if(diag > 0) {
+        std::cout << "Reading initial continuum solution...\n";
+    }
+    Brush::ResetChemistry initChem(chemsolnfile, Brush::ResetChemistry::Camflow, mech, diag);
+    if(diag > 0) {
+        std::cout << "Read initial continuum solution\n";
+    }
+
     //========= Read initial guess for particle solution ==================
     std::list<ParticlePopulationPoint1d> initialPopulationPoints;
     {
@@ -322,7 +335,8 @@ Brush::MooNMDInterface::particle_reactor_pointer Brush::MooNMDInterface::RunPart
     const double velocity[],
     const double mass_concs[],
     double energy_source[],
-    double mass_conc_sources[])
+    double mass_conc_sources[],
+    std::ostream &moment_output)
 {
     //========= Set the chemistry on the reactors ==========
     // First put the data in vectors, because this is what the interface to ResetChemistry expects
@@ -355,10 +369,14 @@ Brush::MooNMDInterface::particle_reactor_pointer Brush::MooNMDInterface::RunPart
 
     ResetChemistry chemInterpolator(solutionNodes, temperatureVector, density, velocityVector,
                                     vec, vec, vec, vec, vec, massFracs);
+
+    // Put the chemistry into the reactor
     reac.ReplaceChemistry(chemInterpolator, true);
 
     //======== Simulate to update the particle population =======
-
+    Brush::PredCorrSolver solver(chemInterpolator, 0, 0.0, 0.0, false, true);
+    solver.solve(reac, t_stop, 1, 0);
+    Brush::Simulator::saveParticleStats(reac, Sweep::Stats::IModelStats::StatBound(), moment_output);
 
     //======== Estimate the source terms to return to the client =====
 
