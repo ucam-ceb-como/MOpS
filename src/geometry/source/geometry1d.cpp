@@ -147,9 +147,9 @@ Geometry::Geometry1d::Geometry1d(const CamXML::Element &xml) {
 }
 
 /*!
- * Construct geometry according to a detailed specification 
+ * Construct geometry according to a detailed specification.
  * 
- *@param[in]    vertices        List of cell boundaries
+ *@param[in]    vertices        List of cell boundaries (not necessarily sorted)
  *@param[in]    left_boundary   Boundary condition at cell 0
  *@param[in]    right_boundary  Boundary condition at final cell
  * 
@@ -162,6 +162,9 @@ Geometry::Geometry1d::Geometry1d(const fvector& vertices,
     , mLeftBoundary(left_boundary)
     , mRightBoundary(right_boundary)
 {
+    // Sort the vertices into ascending order
+    std::sort(mCellEnds.begin(), mCellEnds.end());
+
     if(vertices.size() < 2u)
         throw std::invalid_argument("Geometry must have at least two vertices (Geometry1d::Geometry1d)");
 }

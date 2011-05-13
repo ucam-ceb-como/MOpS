@@ -1,10 +1,10 @@
-/*
+/*!
   \author      Robert I A Patterson
   \author      Sashikumaar Ganesan
 
   Copyright (C) 2011 Robert I A Patterson & Sashikumaar Ganesan
 
-  \file brush_interface.h
+  \file moonmd_interface.h
   \brief Interface between continuum flow solver and stochastic particle
          population balance solver
 
@@ -39,11 +39,16 @@
 #include <vector>
 #include <string>
 
+
 namespace Brush {
 
 // Forward declaration
 class Reactor1d;
 
+/*!
+ * \brief Interface to provide particle stepping to the MooNMD solver
+ *
+ */
 namespace MooNMDInterface {
 
 //! Alias for the particle system (will eventually be Brush::Reactor1d)
@@ -58,33 +63,16 @@ particle_reactor_pointer InitialiseBrush(
     const std::string& swpfile, const std::string& partsolnfile,
     const size_t num_grid_nodes, const double grid_nodes[]);
 
-/*!
- * Simulate the particle processes from the current reactor time until t_stop
- * and calculate mean energy and mass source terms.
- *
- *\param[in,out]    reac                The reactor specifying the initial condition and particle dynamics
- *\param[in]         solution_length     Communication is by vectors which must all be at least this long
- *\param[in]         solution_nodes      Distances from start of reactor (in m) at which solution values are specified
- *\param[in]         temperature         Reactor temperature in K
- *\param[in]         mass_conc           Concentration of ASA in kgm^-3
- *\param[in]         velocity            Flow velocity in ms^-1
- *\param[out]        energy_souce        Energy release by particle processes in Jm^-3s^-1
- *\param[out]        mass_conc_souce     Release of ASA into solution by particle processes in kgm^-3s^-1
- *
- *\return    Pointer to updated brush reactor object.
- *
- * Sign convention for source terms: Positive source terms indicate release of energy or materical by the solid
- * phase.  Thus a positive energy source would indicate exothermic crystallisation and a positive mass source
- * would indicate that crystals were dissolving.
- */
+//! Run the particle phase and calculate source terms for the reacting flow solver
 particle_reactor_pointer RunParticlePhase(particle_reactor& reac, const double t_stop,
-                                          const size_t solution_length,
-                                          const double solution_nodes[],
-                                          const double temperature[],
-                                          const double mass_concentration[],
-                                          const double velocity[],
-                                          double energy_source[],
-                                          double mass_conc_source[]);
+    const size_t solution_length,
+    const size_t num_species,
+    const double solution_nodes[],
+    const double temperature[],
+    const double velocity[],
+    const double mass_concs[],
+    double energy_source[],
+    double mass_conc_sources[]);
 
 
 } //MooNMDInterface

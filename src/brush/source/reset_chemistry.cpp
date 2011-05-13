@@ -380,6 +380,9 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
  * the length of the elements of massFracs.  This is because they are the
  * columns of a rectangular 2d array of data, where one data set is one row.
  *
+ * It might make sense to implement this constructor in terms of ranges rather than
+ * containers.
+ *
  *@exception     std::invalid_argument   Input vectors have differing lengths
  */
 ResetChemistry::ResetChemistry(const fvector &x, const fvector &Temp,

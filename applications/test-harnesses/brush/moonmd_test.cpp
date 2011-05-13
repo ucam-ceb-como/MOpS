@@ -54,21 +54,30 @@
 //! Run brush
 int main(int argc, char* argv[])
 {
+    std::cout << "Creating reactor\n";
     const std::string chemfile("chem.inp");
     const std::string thermfile("therm.dat");
     const std::string settfile("brush.xml");
     const std::string swpfile("sweep.xml");
     const std::string partsolnfile("partsoln.xml");
-    double gridNodes[5];
-    gridNodes[0] = 0.0;
-    gridNodes[1] = 0.1;
-    gridNodes[2] = 0.2;
-    gridNodes[3] = 0.3;
-    gridNodes[4] = 0.4;
+    const double gridNodes[5] = {0.0, 0.1, 0.2, 0.3, 0.4};
 
+    // Check we can create a reactor
     Brush::MooNMDInterface::particle_reactor_pointer pReac = NULL;
     pReac = Brush::MooNMDInterface::InitialiseBrush(chemfile, thermfile, settfile, swpfile, partsolnfile, 5, gridNodes);
     assert(pReac != NULL);
+    std::cout << "Reactor created successfully\n";
+
+    // Now see if the reactor is useable
+    std::cout << "Testing reactor\n";
+    const double solnGrid[3] = {0.05, 0.3, 0.5};
+    const double temperature[3] = {1000.0, 1200.0, 1100.0};
+    const double massConcentration[6] = {999.9, 1000.1, 999.7, 0.3, 0.2, 0.5};
+    const double velocity[3] = {2.0, 2.0, 2.0};
+    double energySource[3] = {-9.9, -8.9, -7.9};
+    double massConcSource[6] = {-19.9, -18.9, -17.9, -29.9, -28.9, -27.9};
+    pReac = Brush::MooNMDInterface::RunParticlePhase(*pReac, 1.0, 3, 2, solnGrid, temperature, velocity,
+                                                     massConcentration, energySource, massConcSource);
 
     // Return 0 (ie FALSE) if the reactor has the correct number of cells
     return (pReac->getNumCells() != 4);

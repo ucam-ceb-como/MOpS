@@ -1,4 +1,4 @@
-/*
+/*!
   \author      Robert I A Patterson
   \author      Sashikumaar Ganesan
 
@@ -38,6 +38,7 @@
 #include "geometry1d.h"
 #include "settings_io.h"
 #include "reactor1d.h"
+#include "reset_chemistry.h"
 
 #include "mops_settings_io.h"
 #include "swp_model_stats.h"
@@ -287,32 +288,80 @@ Brush::MooNMDInterface::particle_reactor_pointer
  *
  *\param[in,out]    reac                The reactor specifying the initial condition and particle dynamics
  *\param[in]         solution_length     Communication is by vectors which must all be at least this long
+ *\param[in]         num_species         Number of species for which mass concentrations are supplied
  *\param[in]         solution_nodes      Distances from start of reactor (in m) at which solution values are specified
  *\param[in]         temperature         Reactor temperature in K
- *\param[in]         mass_conc           Concentration of ASA in kgm^-3
- *\param[in]         velocity            Flow velocity in ms^-1
- *\param[out]        energy_souce        Energy release by particle processes in Jm^-3s^-1
- *\param[out]        mass_conc_souce     Release of ASA into solution by particle processes in kgm^-3s^-1
+ *\param[in]         velocity            Flow velocity in \f$\mathrm{ms}^{-1}\f$
+ *\param[in]         mass_concs          Concentrations of species in \f$\mathrm{kg m}^{-3}\f$
+ *\param[out]        energy_souce        Energy release by particle processes in \f$\mathrm{J m}^{-3} \mathrm{s}^{-1}\f$
+ *\param[out]        mass_conc_souces    Release of species into solution by particle processes in \f$\mathrm{kg m}^{-3}\mathrm{s}^{-1}\f$
  *
- *\pre  All the arrays supplied by the caller must have length at least solution_length, this includes
+ *\pre  All the 1d arrays supplied by the caller must have length at least solution_length, this includes
  *       the output arrays.
+ *
+ *\pre  The arrays mass_concs and mass_conc_sources are effectively 2d arrays and must have length at least 
+ *       solution_length * num_species
  *
  *\return    Pointer to updated brush reactor object.
  *
  * Sign convention for source terms: Positive source terms indicate release of energy or materical by the solid
  * phase.  Thus a positive energy source would indicate exothermic crystallisation and a positive mass source
  * would indicate that crystals were dissolving.
+ *
+ * The data in mass_concs shall be ordered such that data for species i begins at mass_concs + i * num_species,
+ * that is the fastest varying index shall be the index for spatial position.  This is fairly easy to change,
+ * but it is important to keep all comments and code consistent!  The data in mass_conc_sources shall be ordered
+ * in the same way as that in mass_concs.
  */
 Brush::MooNMDInterface::particle_reactor_pointer Brush::MooNMDInterface::RunParticlePhase(
     particle_reactor& reac, const double t_stop,
     const size_t solution_length,
+    const size_t num_species,
     const double solution_nodes[],
     const double temperature[],
-    const double mass_concentration[],
     const double velocity[],
+    const double mass_concs[],
     double energy_source[],
-    double mass_conc_source[])
+    double mass_conc_sources[])
 {
+    //========= Set the chemistry on the reactors ==========
+    // First put the data in vectors, because this is what the interface to ResetChemistry expects
+    const fvector solutionNodes(solution_nodes, solution_nodes + solution_length);
+    const fvector temperatureVector(temperature, temperature + solution_length);
+    const fvector velocityVector(velocity, velocity + solution_length);
+
+    // Work out the total density in kg m^-3
+    fvector density(solution_length, 0.0);
+    // Loop over the spatial positions
+    for (unsigned i = 0u; i < solution_length; ++i) {
+        // Add up the contribution of all the species at current position
+        for (unsigned j = 0u; j < num_species; ++j) {
+            density[i] += mass_concs[i + j * solution_length];
+        }
+    }
+
+    // Now calculate mass fractions (because this is what the ResetChemistry constructor requires)
+    std::vector<fvector> massFracs(num_species, fvector(solution_length));
+    // Loop over the species
+    for (unsigned i = 0u; i < num_species; ++i) {
+        // Scale by the total mass density at each point
+        for (unsigned j = 0u; j < solution_length; ++j) {
+            massFracs[i][j] = mass_concs[j + i * solution_length] / density[j];
+        }
+    }
+
+    // Dummy vector to fill unused argument positions
+    const fvector vec(solution_length);
+
+    ResetChemistry chemInterpolator(solutionNodes, temperatureVector, density, velocityVector,
+                                    vec, vec, vec, vec, vec, massFracs);
+    reac.ReplaceChemistry(chemInterpolator, true);
+
+    //======== Simulate to update the particle population =======
+
+
+    //======== Estimate the source terms to return to the client =====
+
     return &reac;
 }
 
