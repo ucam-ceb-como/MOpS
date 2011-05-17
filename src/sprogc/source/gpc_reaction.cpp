@@ -1588,14 +1588,12 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
                 out << " + M";
             }
 
-        
-
             // Forward Arrhenius coefficients.
-            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0 + m_usetb?1.0:0.0) << " " << m_arrf.n << " " << m_arrf.E / 4.184E7 / 1.0e-7 << "\n";
+            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0 + (m_usetb?1.0:0.0)) << " " << m_arrf.n << " " << m_arrf.E / 4.184E7 / 1.0e-7 << "\n";
 
             // Reverse Arrhenius coefficients.
             if (m_arrr != NULL)
-                out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0 + m_usetb?1:0.0) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " /\n";
+                out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0 + (m_usetb?1.0:0.0)) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " /\n";
         }
 
         // Real reactant stoichiometry.
@@ -1635,11 +1633,11 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
             }
 
             // Forward Arrhenius coefficients.
-            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0 + m_usetb?1.0:0.0) << " " << m_arrf.n << " " << m_arrf.E / 4.184E7 / 1.0e-7 << "\n";
+            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0 + (m_usetb?1.0:0.0)) << " " << m_arrf.n << " " << m_arrf.E / 4.184E7 / 1.0e-7 << "\n";
 
             // Reverse Arrhenius coefficients.
             if (m_arrr != NULL)
-                out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0 + m_usetb?1:0.0) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " \n";
+                out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0 + (m_usetb?1.0:0.0)) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " \n";
         }
 
         // Forward LT parameters.
