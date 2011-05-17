@@ -1678,6 +1678,13 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
                     out << m_foparams.Params[i] << " ";
                 }
                 out << "/ " << "\n";
+				
+				// Write third-body efficiencies.
+				for (int i=0; i<ThirdBodyCount(); i++) {
+					out << m_mech->Species(ThirdBody(i).Index())->Name();
+					out << "/" << ThirdBody(i).Mu() << "/";
+					if (i>=ThirdBodyCount()-1) {out << "\n";} else {out << " ";};
+				};
             }
         }
 
