@@ -1551,6 +1551,15 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
                     return;
             }
         }
+		
+		std::string tbstr;
+		if (m_usetb) {
+			if (m_foparams.LowP_Limit.A != 0 &&  m_foparams.LowP_Limit.n != 0 && m_foparams.LowP_Limit.E != 0){
+				tbstr = "(+M)";
+			} else {
+                tbstr = "+M";
+			};
+        }
 
         // Integer reactant stoichiometry.
         if (m_reac.size() > 0 && m_prod.size() > 0){
@@ -1565,7 +1574,7 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
 
 
             if (m_usetb){
-                out << " + M";
+                out << tbstr;
             }
 
                 // Reaction reversibility.
@@ -1585,7 +1594,7 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
                 }
             }
             if (m_usetb){
-                out << " + M";
+                out << tbstr;
             }
 
             // Forward Arrhenius coefficients.
@@ -1608,7 +1617,7 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
             }
 
             if (m_usetb){
-                out << " + M";
+                out << tbstr;
             }
 
             // Reaction reversibility.
@@ -1629,7 +1638,7 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
             }
 
             if (m_usetb){
-                out << " + M";
+                out << tbstr;
             }
 
             // Forward Arrhenius coefficients.
