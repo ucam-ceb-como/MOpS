@@ -1,25 +1,24 @@
-
-#include "cam_profile.h"
-
-
-#include <vector>
-
-
 #include "cam_setup.h"
-#include "cam_converter.h"
+
 using namespace Camflow;
 
-CamSetup::CamSetup()
+CamSetup::CamSetup
+(
+    CamAdmin& ca,
+    CamConfiguration& config,
+    CamControl& cc,
+    CamGeometry& cg,
+    CamProfile& cp,
+    CamSoot& cs,
+    Mechanism& mech
+)
 :
-profile(NULL)
+  CamResidual(ca, config, cc, cg, cp, cs, mech),
+  profile_(cp)
 {}
 
 CamSetup::~CamSetup()
-{
-
-//    if (profile != NULL) delete profile;
-
-}
+{}
 
 
 void CamSetup::getInletMassFrac(CamBoundary& cb, std::vector<doublereal>& fracs){
@@ -30,9 +29,9 @@ void CamSetup::getInletMassFrac(CamBoundary& cb, std::vector<doublereal>& fracs)
      */
 
     CamConverter converter;
-    std::vector<doublereal> initialFracs = cb.setInletfracs(*camMech);
+    std::vector<doublereal> initialFracs = cb.setInletfracs(*camMech_);
     if(cb.getFracType() == cb.MOLE){
-        converter.mole2mass(initialFracs,fracs,*camMech);
+        converter.mole2mass(initialFracs,fracs,*camMech_);
         cb.setInletMassfracs(fracs);
     }else{
         fracs = initialFracs;
@@ -44,10 +43,10 @@ void CamSetup::getInletMassFrac(CamBoundary& cb, std::vector<doublereal>& fracs)
 
 doublereal CamSetup::getInletTemperature(CamBoundary& cb){
     doublereal T=0;
-    if(admin->getEnergyModel() == admin->ISOTHERMAL ){
+    if(admin_.getEnergyModel() == admin_.ISOTHERMAL ){
         T = cb.getTemperature();
     }else{
-        T = profile->getUserDefTemp(0.0);
+        T = profile_.getUserDefTemp(0.0);
     }
     return T;
 }
@@ -58,10 +57,10 @@ doublereal CamSetup::getInletFlowRate(CamBoundary& cb){
     if(cb.getFlowRate() == 0){
         std::vector<doublereal> massfracs;
         getInletMassFrac(cb,massfracs);
-        camMixture->SetMassFracs(massfracs);
-        camMixture->SetTemperature(getInletTemperature(cb));
-        doublereal avgMolWt = camMixture->getAvgMolWt();
-        rho = opPre*avgMolWt/(R*camMixture->Temperature());
+        camMixture_->SetMassFracs(massfracs);
+        camMixture_->SetTemperature(getInletTemperature(cb));
+        doublereal avgMolWt = camMixture_->getAvgMolWt();
+        rho = opPre*avgMolWt/(R*camMixture_->Temperature());
         flow = rho*cb.getVelocity();
     }else{
         flow = cb.getFlowRate();
@@ -72,8 +71,8 @@ doublereal CamSetup::getInletFlowRate(CamBoundary& cb){
 
 doublereal CamSetup::getInletVelocity(CamBoundary& cb){
     doublereal vel;
-    doublereal avgMolWt = camMixture->getAvgMolWt();
-    rho = opPre*avgMolWt/(R*camMixture->Temperature());
+    doublereal avgMolWt = camMixture_->getAvgMolWt();
+    rho = opPre*avgMolWt/(R*camMixture_->Temperature());
     vel= (getInletFlowRate(cb)/rho);
     return vel;
 }
@@ -86,9 +85,9 @@ void CamSetup::initSpecies(CamBoundary& cb, CamControl& cc,
 
     soln.resize(nSpc*cellEnd,0);
     std::vector<doublereal>  position;
-    position = reacGeom->getAxpos();
-    profile->setStartProfile(cb,*camMech);
-    Array2D start = profile->getStartProfile();
+    position = reacGeom_.getAxpos();
+    profile_.setStartProfile(cb,*camMech_);
+    Array2D start = profile_.getStartProfile();
 
     for(int i=cellBegin; i<cellEnd; i++){
         for(int l=0; l<nSpc; l++){
@@ -103,11 +102,11 @@ void CamSetup::initSpecies(CamBoundary& cb, CamControl& cc,
 void CamSetup::initSpecies(CamBoundary& left, CamBoundary& right,
                     CamControl& cc, std::vector<doublereal>& soln){
 
-    soln.resize(nSpc*cellEnd,0);
+    soln.resize(nSpc*cellEnd,0.0);
     std::vector<doublereal>  position;
-    position = reacGeom->getAxpos();
-    profile->setStartprofile(left,right,*camMech);
-    Array2D start = profile->getStartProfile();
+    position = reacGeom_.getAxpos();
+    profile_.setStartprofile(left,right,*camMech_);
+    Array2D start = profile_.getStartProfile();
     for(int i=cellBegin; i<cellEnd; i++){
         for(int l=0; l<nSpc; l++){
             soln[i*nSpc+l] = start(i,l);
@@ -123,7 +122,7 @@ void CamSetup::initMassFlow(CamBoundary& cb, CamControl& cc,
 
     soln.resize(cellEnd,0);
     std::vector<doublereal>  position;
-    position = reacGeom->getAxpos();
+    position = reacGeom_.getAxpos();
     doublereal flow = getInletFlowRate(cb);
     for(int i=cellBegin; i<cellEnd; i++)
         soln[i] = flow;
@@ -143,10 +142,10 @@ void CamSetup::initTemperature
 
     soln.resize(cellEnd,0);
     std::vector<doublereal>  position;
-    position = reacGeom->getAxpos();
+    position = reacGeom_.getAxpos();
     doublereal T = getInletTemperature(cb);
 
-    if(admin->getEnergyModel() == admin->ISOTHERMAL)
+    if(admin_.getEnergyModel() == admin_.ISOTHERMAL)
     {
         for (int i=cellBegin; i<cellEnd; i++)
             soln[i] = T;
@@ -155,7 +154,7 @@ void CamSetup::initTemperature
     {
         for (int i=cellBegin; i<cellEnd; i++)
         {
-            T = profile->getUserDefTemp(position[i]);
+            T = profile_.getUserDefTemp(position[i]);
             soln[i] = T;
         }
     }
@@ -163,7 +162,7 @@ void CamSetup::initTemperature
 }
 
 void CamSetup::initTempGauss(std::vector<doublereal>& soln){
-    profile->setGaussTempProfile(soln);
+    profile_.setGaussTempProfile(soln);
 }
 
 
@@ -175,16 +174,16 @@ void CamSetup::storeInlet(CamBoundary& cb, inletStruct& ud_inlet){
      */
     std::vector<doublereal> temp;
     getInletMassFrac(cb,temp);
-    camMixture->SetMassFracs(temp);
+    camMixture_->SetMassFracs(temp);
     doublereal T = getInletTemperature(cb);
-    camMixture->SetTemperature(T);
+    camMixture_->SetTemperature(T);
     ud_inlet.T = T;
     ud_inlet.FlowRate = getInletFlowRate(cb);
     ud_inlet.Vel = getInletVelocity(cb);
     ud_inlet.rVelGrad = 0.0;
     ud_inlet.Dens = ud_inlet.FlowRate/ud_inlet.Vel;
     ud_inlet.Species = temp;
-    ud_inlet.Dk = camMixture->getMixtureDiffusionCoeff(opPre);
+    ud_inlet.Dk = camMixture_->getMixtureDiffusionCoeff(opPre);
 
 }
 
@@ -196,16 +195,16 @@ void CamSetup::storeObjects(CamControl& cc,
                             CamBoundary& cb,
                             Mechanism& mech){
 
-    camMech = &mech;
-    control = &cc;
-    spv = camMixture->Species();
-    profile = &cp;
-    admin = &ca;
-    reacGeom = &cg;
-    CamBoundary cblocal;
-    admin->getLeftBoundary(cblocal);
-    cb = cblocal;
-    opPre = ca.getPressure();
-    profile->setGeometryObj(cg);
+    //camMech = &mech;
+    //control = &cc;
+    //spv = camMixture->Species();
+    //profile_ = &cp;
+    //admin = &ca;
+    //reacGeom = &cg;
+    //CamBoundary cblocal;
+    //admin_.getLeftBoundary(cblocal);
+    //cb = cblocal;
+    //opPre = ca.getPressure();
+    //profile_.setGeometryObj(cg);
 }
 

@@ -52,6 +52,8 @@
 
 namespace Camflow{
 
+    class CamResidual;
+
     class CamReporter{
 
         DataIO *standard;

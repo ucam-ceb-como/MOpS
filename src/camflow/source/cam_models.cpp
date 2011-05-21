@@ -36,54 +36,62 @@
  *  Email   :   mk306@cam.ac.uk
  *  Website :   http://como.cheng.cam.ac.uk
  */
+
 #include "cam_models.h"
-#include "cam_plug.h"
-#include "batch.h"
-#include "cam_premix.h"
-#include "stagflow.h"
-#include "cam_error.h"
-#include <iostream>
+
 using namespace Camflow;
 using namespace std;
+
+CamModels::CamModels()
+:
+  rModel_(NULL)
+{}
+
+CamModels::~CamModels()
+{
+    if (rModel_ != NULL) delete rModel_;
+}
+
 /*
  *this member function chooses the reactor model based on the
  *configuration ID and calls the passes the control to the right
  * reactor object
  */
-void CamModels::solve(CamAdmin& ca, 
-        CamConfiguration& config,
-        CamControl& cc,
-        CamGeometry& cg,
-        CamProfile& cp,
-        CamSoot& cs,
-        Mechanism& mech){
+void CamModels::solve
+(
+    CamAdmin& ca,
+    CamConfiguration& config,
+    CamControl& cc,
+    CamGeometry& cg,
+    CamProfile& cp,
+    CamSoot& cs,
+    Mechanism& mech
+)
+{
 
     int configID;
     configID = config.getConfiguration();
 
-
-    CamResidual *rModel;
     if(configID == config.PLUG){
-        rModel = new CamPlug();
+        //rModel = new CamPlug();
     }else if(configID == config.PREMIX){
-        rModel = new CamPremix();
+        //rModel = new CamPremix();
     }else if(configID == config.BATCH_CV){
-        rModel = new Batch();
+        //rModel = new Batch();
     }else if(configID == config.STAGFLOW || configID == config.COUNTERFLOW){
-        rModel = new StagFlow();
+        //rModel = new StagFlow();
     }else if(configID==config.FLAMELET || configID == config.FLAMELET_NULN){
-        rModel = new FlameLet();
+        rModel_ = new FlameLet(ca, config, cc, cg, cp, cs, mech);
         if(configID == config.FLAMELET_NULN)
-            rModel->setLewisNumber(FlameLet::LNNONE);
+            rModel_->setLewisNumber(FlameLet::LNNONE);
     }else{
         throw CamError("Unknown reactor model\n");
     }
     try{
-        rModel->solve(cc,ca,cg,cp,config,cs,mech);
+        rModel_->solve();
     }catch(CamError &ce){
-        cout << ce.errorMessge << endl;
+        cout << ce.errorMessage << endl;
     }
 
 }
-
 

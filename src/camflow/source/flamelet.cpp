@@ -1,71 +1,48 @@
-
-#include "array.h"
-
-#include <cmath>
-#include "cam_setup.h"
-#include "cam_residual.h"
-#include <vector>
-#include "cam_reporter.h"
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include "cam_profile.h"
-#include "cam_admin.h"
 #include "flamelet.h"
-#include "cam_math.h"
-#include "cvode_wrapper.h"
-#include "radau_wrapper.h"
-#include "limex_wrapper.h"
-
-#include "linear_interpolator.hpp"
 
 using namespace Camflow;
 using namespace std;
 using namespace Gadgets;
 
-FlameLet::FlameLet()
-{
-	sdr_ext=0;
-	timeHistory=false;
-	sdrProfile=false;
-	sdrAnalytic=false;
-}
+FlameLet::FlameLet
+(
+    CamAdmin& ca,
+    CamConfiguration& config,
+    CamControl& cc,
+    CamGeometry& cg,
+    CamProfile& cp,
+    CamSoot& cs,
+    Mechanism& mech
+)
+:
+  CamSetup(ca, config, cc, cg, cp, cs, mech),
+  sdr_ext(0),
+  timeHistory(false),
+  sdrProfile(false),
+  sdrAnalytic(false),
+  scalarDissipationRate_(mCord, 1),
+  CpSpec(mCord,nSpc)
+{}
 
 FlameLet::~FlameLet()
 {
-    if (radiation != NULL) delete radiation;
+    //if (radiation != NULL) delete radiation;
 }
 /*
  *this is called by the model object. The boolean interface decides
  *if the call originates from the interface or from camflow kernel
  */
 void FlameLet::setRestartTime(doublereal t){
-    rstartTime = t;
+    restartTime = t;
 }
 
-void FlameLet::solve
-(
-    CamControl& cc,
-    CamAdmin& ca,
-    CamGeometry& cg,
-    CamProfile& cp,
-    CamConfiguration& config,
-    CamSoot& cs,
-    Mechanism& mech
-)
+void FlameLet::solve()
 {
-
-    solve(cc,ca,cg,cp,mech,false);
-
+    solve(false);
 }
 
 void FlameLet::solve
 (
-    CamControl& cc,
-    CamAdmin& ca,
-    CamGeometry& cg,
-    CamProfile& cp,
-    Mechanism& mech,
     bool interface
 )
 {
@@ -75,54 +52,33 @@ void FlameLet::solve
      * length specified in the reactor section is simply ignored.
      */
 
-    CamBoundary cb;
-    Thermo::Mixture mix(mech.Species());
-    camMixture = &mix;
-
-    storeObjects(cc,ca,cg,cp,cb,mech);
-
-    nSpc = camMech->SpeciesCount(); // number of species
-    ptrT = nSpc;                    // temperature offset
-    nVar = nSpc+1;                  // number of variables
-
+    //profile_.setGeometryObj(reacGeom_);
+    //storeObjects(cc,ca,cg,cp,cb,mech);
     //if(reacGeom->getnCells()==0) reacGeom->discretize();
 
-    reacGeom->addZeroWidthCells();
-
-    mCord = reacGeom->getnCells();
-
-    nEqn = nVar*mCord;              // number of equations
-    iMesh_s = 1;                    // internal grid starting
-    iMesh_e = mCord-1;              // internal grid ending
-
-    cellBegin = 0;
-    cellEnd = mCord;
+    reacGeom_.addZeroWidthCells();
 
     /*
      *get the strain rate
      */
-    strain = ca.getStrainRate();
     //profile->setGeometryObj(cg);
-    reporter = new CamReporter();
 
 
     /*
      *init the solution vector
      */
-    initSolutionVector(cc);
-    reporter->header("Flamelet");
+    initSolutionVector();
+    reporter_->header("Flamelet");
     header();
-    if (cc.getSolutionMode() == cc.COUPLED)
+    if (control_.getSolutionMode() == control_.COUPLED)
     {
-        csolve(cc,interface);
+        csolve(interface);
     }
     else
     {
-        ssolve(cc);
-        csolve(cc,interface);
+        ssolve();
+        csolve(interface);
     }
-
-    delete reporter;
 
 }
 
@@ -145,26 +101,7 @@ void FlameLet::solve
 )
 {
 
-    CamBoundary cb;
-    Thermo::Mixture mix(mech.Species());
-    camMixture = &mix;
-
-    storeObjects(cc,ca,cg,cp,cb,mech);
-
-    nSpc = camMech->SpeciesCount(); // number of species
-    ptrT = nSpc;                    // temperature offset
-    nVar = nSpc+1;
-
-    reacGeom->addZeroWidthCells();
-
-    mCord = reacGeom->getnCells();
-
-    nEqn = nVar*mCord;              // number of equations
-    iMesh_s = 1;                    // internal grid starting
-    iMesh_e = mCord-1;              // internal grid ending
-
-    cellBegin = 0;
-    cellEnd = mCord;
+    reacGeom_.addZeroWidthCells();
 
      /*
      *set the source terms for the particle process
@@ -177,8 +114,8 @@ void FlameLet::solve
      *  be taken care of.
      */
     CamBoundary left, right;
-    admin->getLeftBoundary(left);
-    admin->getRightBoundary(right);
+    admin_.getLeftBoundary(left);
+    admin_.getRightBoundary(right);
     storeInlet(left,fuel);
     storeInlet(right,oxid);
     fuel.T = left.getTemperature();
@@ -225,32 +162,29 @@ void FlameLet::solve
 }
 
 
-void FlameLet::initSolutionVector(CamControl &cc)
+void FlameLet::initSolutionVector()
 {
-    /*
-     *initialize the geometry
-     */
-    dz = reacGeom->getGeometry();
 
     /*
      *left boundary is for the fuel and right boundary is
      *for oxidizer
      */
     CamBoundary left, right;
-    admin->getLeftBoundary(left);
-    admin->getRightBoundary(right);
+    admin_.getLeftBoundary(left);
+    admin_.getRightBoundary(right);
     storeInlet(left,fuel);
     storeInlet(right,oxid);
     fuel.T = left.getTemperature();
     oxid.T = right.getTemperature();
 
-    stoichZ = stoichiometricMixtureFraction();
-    profile->setMixingCenter(stoichZ);
-    profile->setMixingWidth(0.5*stoichZ);
+    stoichiometricMixtureFraction();
+
+    profile_.setMixingCenter(stoichZ);
+    profile_.setMixingWidth(0.5*stoichZ);
     /*
      *initialize the ODE vector
      */
-    solvect.resize(nEqn,0);
+    solvect.resize(nEqn,0.0);
     vector<doublereal> vSpec, vT;
     /*
      * actual signature follows (left,right,cc,vSpec)
@@ -261,7 +195,7 @@ void FlameLet::initSolutionVector(CamControl &cc)
      * therefore the inlets are interchanged here to initialize
      * the species vector properly
      */
-    initSpecies(right,left,cc,vSpec);
+    initSpecies(right,left,control_,vSpec);
     /*
      *the following will initialize the temperature vecotor with
      *a linear profile
@@ -274,7 +208,7 @@ void FlameLet::initSolutionVector(CamControl &cc)
     slopeOx = (2000.0-oxid.T)/stoichZ;
     slopeFl = (2000.0-fuel.T)/(stoichZ-1.0);
     inrsctFl = fuel.T - slopeFl;
-    vector<doublereal> position = reacGeom->getAxpos();
+    vector<doublereal> position = reacGeom_.getAxpos();
     int len = position.size();
     vT.resize(len,0.0);
     for (unsigned int i=0; i<dz.size();i++)
@@ -310,8 +244,6 @@ void FlameLet::initSolutionVector(CamControl &cc)
     mergeSpeciesVector(&vSpec[0]);
     mergeEnergyVector(&vT[0]);
 
-    stoichiometricMixtureFraction();
-
 }
 
 /*
@@ -319,38 +251,35 @@ void FlameLet::initSolutionVector(CamControl &cc)
  */
 void FlameLet::csolve
 (
-    CamControl& cc,
     bool interface
 )
 {
 
-    int solverID = cc.getSolver();
-
-    if (solverID == cc.CVODE)
+    if (solverID == control_.CVODE)
     {
         CVodeWrapper cvw;
         eqn_slvd = EQN_ALL;
         int band = nVar*2;
 
-        cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
-                            cc.getMaxTime(),band,*this);
+        cvw.init(nEqn,solvect,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
+            control_.getMaxTime(),band,*this);
 
-        cvw.solve(CV_ONE_STEP,cc.getResTol());
+        cvw.solve(CV_ONE_STEP,control_.getResTol());
         /*
          *write the output to file only if the call is not
          *from the interface
          */
         if(!interface)
         {
-            reportToFile(cc.getMaxTime(),&solvect[0]);
+            reportToFile(control_.getMaxTime(),&solvect[0]);
         }
 
     }
-    else if (solverID == cc.NEWTON)
+    else if (solverID == control_.NEWTON)
     {
         std::cout << "Not implemented\n";
     }
-    else if (solverID == cc.RADAU)
+    else if (solverID == control_.RADAU)
     {
 
         RadauWrapper radauWrapper;
@@ -360,14 +289,14 @@ void FlameLet::csolve
         std::vector<doublereal> relTolVector;
         std::vector<doublereal> absTolVector;
 
-        relTolVector.push_back(cc.getSpeciesRelTol());
-        absTolVector.push_back(cc.getSpeciesAbsTol());
+        relTolVector.push_back(control_.getSpeciesRelTol());
+        absTolVector.push_back(control_.getSpeciesAbsTol());
 
         radauWrapper.setBandWidth(nVar);
 
     	radauWrapper.initSolver(nEqn,
                                 0.0,
-                                cc.getMaxTime(),
+                                control_.getMaxTime(),
                                 solvect,
                                 relTolVector,
                                 absTolVector,
@@ -380,12 +309,12 @@ void FlameLet::csolve
          *from the interface
          */
         if(!interface) {
-            reportToFile(cc.getMaxTime(),&solvect[0]);
+            reportToFile(control_.getMaxTime(),&solvect[0]);
         }
        // radauWrapper.destroy();
 
     }
-    else if (solverID == cc.LIMEX)
+    else if (solverID == control_.LIMEX)
     {
         throw std::logic_error("Error -- Limex is not yet supported");
     }
@@ -395,37 +324,27 @@ void FlameLet::csolve
 /*
  *mass matrix evaluation
  */
-
-void FlameLet::massMatrix(doublereal** M){
-
-    //for(int i=0; i< nEqn; i++)
-       // M[0][i] = 1.0;
-
-}
+void FlameLet::massMatrix(doublereal** M)
+{}
 
 /*
  *restart the solution. This is normally called from the interface routine
  *The solver is reinitialized each time with the previous solution.
  */
-void FlameLet::restart(CamControl& cc)
+void FlameLet::restart()
 {
 
-    Thermo::Mixture mix(camMech->Species());
-    camMixture = &mix;
-
-    int solverID = cc.getSolver();
-
-    if ( solverID == cc.CVODE){
+    if (solverID == control_.CVODE){
         CVodeWrapper cvw;
         eqn_slvd = EQN_ALL;
         int band = nVar*2;
 
-        cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
-                            cc.getMaxTime(),band,*this,rstartTime);
-        cvw.solve(CV_ONE_STEP,cc.getResTol());
+        cvw.init(nEqn,solvect,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
+            control_.getMaxTime(),band,*this,restartTime);
+        cvw.solve(CV_ONE_STEP,control_.getResTol());
     }
 
-     else if (solverID == cc.LIMEX) {
+     else if (solverID == control_.LIMEX) {
          throw std::logic_error("Error -- Limex is not yet supported");
      }
 
@@ -434,20 +353,17 @@ void FlameLet::restart(CamControl& cc)
 /*
  *segregated solver
  */
-void FlameLet::ssolve(CamControl& cc)
+void FlameLet::ssolve()
 {
-
     
     int seg_eqn, band;
-       vector<doublereal> seg_soln_vec;
+    vector<doublereal> seg_soln_vec;
 
-    
-    int solverID = cc.getSolver();
-    if ( solverID == cc.CVODE){
+    if ( solverID == control_.CVODE){
     
        CVodeWrapper cvw;
        
-       for(int i=0; i<cc.getNumIterations();i++){
+       for (int i=0; i<control_.getNumIterations();i++){
         /*
          *solve species equation
          */
@@ -457,8 +373,8 @@ void FlameLet::ssolve(CamControl& cc)
         seg_eqn = nSpc*mCord;
         band = nSpc*2;
         extractSpeciesVector(seg_soln_vec);
-        cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
-                            cc.getMaxTime(),band,*this);
+        cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
+            control_.getMaxTime(),band,*this);
         cvw.solve(CV_ONE_STEP,1e-03);
         mergeSpeciesVector(&seg_soln_vec[0]);
         cvw.destroy();
@@ -472,15 +388,15 @@ void FlameLet::ssolve(CamControl& cc)
         seg_eqn = mCord;
         band = 1;
         extractEnergyVector(seg_soln_vec);
-        cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
-                                    cc.getMaxTime(),band,*this);
+        cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
+            control_.getMaxTime(),band,*this);
         cvw.solve(CV_ONE_STEP,1e-03);
         mergeEnergyVector(&seg_soln_vec[0]);
         cvw.destroy();
       }
     }
 
-    else if (solverID == cc.LIMEX) {
+    else if (solverID == control_.LIMEX) {
         throw std::logic_error("Error -- Limex is not yet supported");
     }
   }
@@ -497,27 +413,31 @@ void FlameLet::residual
 )
 {
 
-    resSp.resize(nSpc*mCord,0.0);
-    resT.resize(mCord,0.0);
-
-    if(eqn_slvd == EQN_ALL){                         // coupled solver part
+    if (eqn_slvd == EQN_ALL) // coupled solver part
+    {
         saveMixtureProp(y);
         speciesResidual(t,y,&resSp[0]);
         energyResidual(t,y,&resT[0]);
 
-        for(int i=0;i<mCord;i++){
-            for(int l=0;l<nSpc;l++){
+        for (int i=0; i<mCord; ++i)
+        {
+            for (int l=0; l<nSpc; ++l)
+            {
                 f[i*nVar+l] = resSp[i*nSpc+l];
             }
             f[i*nVar+ptrT] = resT[i];
         }
-
-    }else{                                          // segregated solver part
-        if(eqn_slvd == EQN_SPECIES){
+    }
+    else // segregated solver part
+    {
+        if (eqn_slvd == EQN_SPECIES)
+        {
             mergeSpeciesVector(y);
             saveMixtureProp(&solvect[0]);
             speciesResidual(t,y,f);
-        }else if(eqn_slvd==EQN_ENERGY){
+        }
+        else if (eqn_slvd==EQN_ENERGY)
+        {
             mergeEnergyVector(y);
             saveMixtureProp(&solvect[0]);
             energyResidual(t,y,f);
@@ -537,14 +457,17 @@ const
 {
 
 	doublereal resNorm=0;
-    for(int i=0; i<nSpc*mCord; i++) {
+
+    for (int i=0; i<nSpc*mCord; ++i)
+    {
         resNorm += resSp[i]*resSp[i];
     }
-    for(int i=0; i<mCord; i++) {
+    for (int i=0; i<mCord; ++i)
+    {
         resNorm += resT[i]*resT[i];
     }
-    resNorm = std::sqrt(resNorm);
-    return resNorm;
+
+    return std::sqrt(resNorm);
 
 }
 
@@ -586,9 +509,9 @@ void FlameLet::speciesResidual
     }
 
     //sdr = scalarDissipationRate(dz[i]);
-    for(int l=0; l<nSpc; l++){
+    for (int l=0; l<nSpc; ++l)
+    {
         f[l] = 0.0;
-
     }
 
     /**
@@ -642,7 +565,7 @@ void FlameLet::speciesResidual
         for(int l=0; l<nSpc; l++){
             grad_e = (s_mf(i+1,l)-s_mf(i,l))/zPE;
             grad_w = (s_mf(i,l)-s_mf(i-1,l))/zPW;
-            source = s_Wdot(i,l)*(*spv)[l]->MolWt()/m_rho[i];
+            source = s_Wdot(i,l)*(*spv_)[l]->MolWt()/m_rho[i];
             f[i*nSpc+l] = sdr*(grad_e-grad_w)/(2*Le(i,l)*dz[i]) + source + convection(i,l)*sdr/(m_rho[i]*dz[i]*dz[i]);
         }
 
@@ -651,6 +574,7 @@ void FlameLet::speciesResidual
      *Mixture fraction 1. The fuel inlet. Concentrations are
      *held constant at the fuel composition
      */
+
 
     for(int l=0; l<nSpc; l++){
         f[iMesh_e*nSpc+l] = 0.0;
@@ -661,7 +585,6 @@ void FlameLet::speciesResidual
 /*!
  *energy residual
  *
- * \todo Move all radiation calculations to the class Radiation.
  */
 void FlameLet::energyResidual
 (
@@ -675,7 +598,7 @@ void FlameLet::energyResidual
     doublereal zPE=0, zPW=0;
     doublereal source=0;
 
-    if(admin->getRadiationModel())
+    if(admin_.getRadiationModel())
     {
         radiation = new Radiation(mCord);
     }
@@ -744,32 +667,32 @@ void FlameLet::energyResidual
 
         //======Radiative Heat Loss Term===============
 
-        if(admin->getRadiationModel()) {
+        if(admin_.getRadiationModel()) {
 
             doublereal mole_fracsH2O;
             doublereal mole_fracsCO2;
             doublereal mole_fracsCO;
 
             //Get species indexes corresponding to H20, CO2, CO
-            if(camMech->FindSpecies("H2O") == -1){
+            if(camMech_->FindSpecies("H2O") == -1){
                 mole_fracsH2O = 0.0;
             } else {
-                const int iH2O = camMech->FindSpecies("H2O");
-                const doublereal molwtH2O =   (*spv)[iH2O] -> MolWt();
+                const int iH2O = camMech_->FindSpecies("H2O");
+                const doublereal molwtH2O =   (*spv_)[iH2O] -> MolWt();
                 mole_fracsH2O = s_mf(i,iH2O)*avgMolWt[i]/molwtH2O;
             }
-            if(camMech->FindSpecies("CO2") == -1){
+            if(camMech_->FindSpecies("CO2") == -1){
                 mole_fracsCO2 = 0.0;
             } else {
-                const int iCO2 = camMech->FindSpecies("CO2");
-                const doublereal molwtCO2 =   (*spv)[iCO2] -> MolWt();
+                const int iCO2 = camMech_->FindSpecies("CO2");
+                const doublereal molwtCO2 =   (*spv_)[iCO2] -> MolWt();
                 mole_fracsCO2 = s_mf(i,iCO2)*avgMolWt[i]/molwtCO2;
             }
-            if(camMech->FindSpecies("CO") == -1){
+            if(camMech_->FindSpecies("CO") == -1){
                 mole_fracsCO = 0.0;
             } else {
-                const int iCO  = camMech->FindSpecies("CO");
-                const doublereal molwtCO =    (*spv)[iCO] -> MolWt();
+                const int iCO  = camMech_->FindSpecies("CO");
+                const doublereal molwtCO =    (*spv_)[iCO] -> MolWt();
                 mole_fracsCO = s_mf(i,iCO)*avgMolWt[i]/molwtCO;
             }
 
@@ -802,23 +725,8 @@ void FlameLet::energyResidual
 void FlameLet::saveMixtureProp(doublereal* y)
 {
 
-    s_mf.resize(mCord,nSpc);
-    s_Wdot.resize(mCord,nSpc);
-    s_H.resize(mCord,nSpc);
-    s_Diff.resize(mCord,nSpc);
-    CpSpec.resize(mCord,nSpc);
-    m_T.resize(mCord,0.0);
-    m_rho.resize(mCord,0.0);
-    m_cp.resize(mCord,0.0);
-    m_mu.resize(mCord,0.0);
-    m_u.resize(mCord,0.0);
-    m_k.resize(mCord,0.0);
-
-    avgMolWt.resize(mCord,0.0);
-
-
     vector<doublereal> mf, htemp, temp, cptemp;
-    htemp.resize(nSpc,0.0);
+
     for (int i=0; i<mCord; ++i)
     {
         mf.clear();
@@ -828,19 +736,19 @@ void FlameLet::saveMixtureProp(doublereal* y)
         }
 
         m_T[i] = y[i*nVar+ptrT];                                   //temperature
-        camMixture->SetMassFracs(mf);                              //mass fraction
-        camMixture->SetTemperature(m_T[i]);                        //temperature
+        camMixture_->SetMassFracs(mf);                              //mass fraction
+        camMixture_->SetTemperature(m_T[i]);                        //temperature
 
-        avgMolWt[i] = camMixture->getAvgMolWt();
+        avgMolWt[i] = camMixture_->getAvgMolWt();
         m_rho[i] = opPre*avgMolWt[i]/(R*m_T[i]);                   //density
-        camMixture->SetMassDensity(m_rho[i]);                      //density
-        camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
-        htemp = camMixture->getMolarEnthalpy();                    //enthalpy
-        m_cp[i] = camMixture->getSpecificHeatCapacity();           //specific heat
-        m_k[i] = camMixture->getThermalConductivity(opPre);        //thermal conductivity
-        m_mu[i] = camMixture->getViscosity();                      //mixture viscosity
-        temp = camMixture->getMixtureDiffusionCoeff(opPre);
-        cptemp = camMixture->getMolarSpecificHeat();
+        camMixture_->SetMassDensity(m_rho[i]);                      //density
+        camMech_->Reactions().GetMolarProdRates(*camMixture_,wdot);
+        htemp = camMixture_->getMolarEnthalpy();                    //enthalpy
+        m_cp[i] = camMixture_->getSpecificHeatCapacity();           //specific heat
+        m_k[i] = camMixture_->getThermalConductivity(opPre);        //thermal conductivity
+        m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
+        temp = camMixture_->getMixtureDiffusionCoeff(opPre);
+        cptemp = camMixture_->getMolarSpecificHeat();
         for(int l=0; l<nSpc; l++)
         {
             s_mf(i,l) = mf[l];
@@ -848,7 +756,7 @@ void FlameLet::saveMixtureProp(doublereal* y)
             s_H(i,l) = htemp[l];
             s_Diff(i,l) = temp[l];
             //Specific heat capacity of species in J/Kg K
-            CpSpec(i,l) =cptemp[l]/(*spv)[l]->MolWt();
+            CpSpec(i,l) =cptemp[l]/(*spv_)[l]->MolWt();
         }
     }
 }
@@ -861,8 +769,8 @@ doublereal FlameLet::stoichiometricMixtureFraction()
 
     vector<Sprog::Species*> fspecies, ospecies;
 
-    int indx_C = camMech->FindElement("C");
-    int indx_H = camMech->FindElement("H");
+    int indx_C = camMech_->FindElement("C");
+    int indx_H = camMech_->FindElement("H");
 
     /*
      *fuel inlet
@@ -870,20 +778,20 @@ doublereal FlameLet::stoichiometricMixtureFraction()
     CamBoundary fuelInlet, oxInlet;
     map<string, doublereal> species;
     map<string, doublereal>::iterator sIterator;
-    admin->getLeftBoundary(fuelInlet);
+    admin_.getLeftBoundary(fuelInlet);
     species = fuelInlet.getInletSpecies();
     sIterator = species.begin();
 
     while(sIterator != species.end()){
-        fspecies.push_back(camMech->GetSpecies(sIterator->first));
+        fspecies.push_back(camMech_->GetSpecies(sIterator->first));
         sIterator++;
     }
 
-    admin->getRightBoundary(oxInlet);
+    admin_.getRightBoundary(oxInlet);
     species = oxInlet.getInletSpecies();
     sIterator = species.begin();
     while(sIterator != species.end()){
-        ospecies.push_back(camMech->GetSpecies(sIterator->first));
+        ospecies.push_back(camMech_->GetSpecies(sIterator->first));
         sIterator++;
     }
 
@@ -895,10 +803,10 @@ doublereal FlameLet::stoichiometricMixtureFraction()
     vector<doublereal> temp;
     getInletMassFrac(fuelInlet,temp);
 
-    int iN2 = camMech->FindSpecies("N2");
-    int iAR = camMech->FindSpecies("AR");
-    int iHe = camMech->FindSpecies("HE");
-    int iO2 = camMech->FindSpecies("O2");
+    int iN2 = camMech_->FindSpecies("N2");
+    int iAR = camMech_->FindSpecies("AR");
+    int iHe = camMech_->FindSpecies("HE");
+    int iO2 = camMech_->FindSpecies("O2");
 
     for(i=0; i<fspecies.size();i++){
         int icAtoms = fspecies[i]->AtomCount(indx_C);
@@ -906,7 +814,7 @@ doublereal FlameLet::stoichiometricMixtureFraction()
         if (icAtoms != 0 || ihAtoms !=0) avgMolWt += fspecies[i]->MolWt();
         cAtoms += icAtoms; hAtoms += ihAtoms;
 
-        int spIndx = camMech->FindSpecies(fspecies[i]->Name());
+        int spIndx = camMech_->FindSpecies(fspecies[i]->Name());
         if(spIndx != iN2 && spIndx != iAR && spIndx != iHe){
             fuelMassFrac += temp[spIndx];
         }
@@ -919,6 +827,7 @@ doublereal FlameLet::stoichiometricMixtureFraction()
     cout << "Number of H Atoms in the fuel species  " << hAtoms << endl;
     cout << "Number of C Atoms in the fuel species  " << cAtoms << endl;
     cout << "avg mol wt of fuel " << avgMolWt << endl;
+    cout << "nEqn " << nEqn << endl;
     cout << "Total fuel mass fraction " << fuelMassFrac << endl;
     cout << "O2 mass frac " << temp[iO2] << endl;
 
@@ -927,7 +836,7 @@ doublereal FlameLet::stoichiometricMixtureFraction()
     /*
      *stoichiometric mass ratio
      */
-    smr = stO2*0.032/avgMolWt;
+    doublereal smr = stO2*0.032/avgMolWt;
     cout << "Avg mol wt " << avgMolWt << endl;
     /*
      *stoichiometric mixture fraction
@@ -950,8 +859,7 @@ doublereal FlameLet::scalarDissipationRate(const doublereal m_frac)
     CamMath cm;
     doublereal erterm = cm.inverfc(2*m_frac);
     doublereal arg = -2*cm.SQR(erterm);
-    strain = admin->getStrainRate();
-    sdr = strain*exp(arg)/pi;
+    sdr = admin_.getStrainRate()*exp(arg)/pi;
     return sdr;
     //return 0.88;
 }
@@ -972,7 +880,7 @@ doublereal FlameLet::scalarDissipationRateProfile
 	doublereal fZ = exp(-2*cm.SQR(cm.inverfc(2*m_frac)));
 	doublereal fZst = exp(-2*cm.SQR(cm.inverfc(2*stoichZ)));
 
-	Utils::LinearInterpolator<doublereal, doublereal> rhoInterpolate(reacGeom->getAxpos(),m_rho);
+	Utils::LinearInterpolator<doublereal, doublereal> rhoInterpolate(reacGeom_.getAxpos(),m_rho);
 	doublereal rhoStoich = rhoInterpolate.interpolate(stoichZ);
 
 	doublereal phi = 0.75 *
@@ -1038,18 +946,18 @@ void FlameLet::reportToFile(doublereal t, doublereal* soln)
 
 
     doublereal sum;
-    reporter->openFile("profile.dat",false);
-    reporter->writeCustomHeader(headerData);
+    reporter_->openFile("profile.dat",false);
+    reporter_->writeCustomHeader(headerData);
     vector<doublereal> data, axpos;
     vector<doublereal> molfrac, massfrac, temperatureVec;
-    axpos = reacGeom->getAxpos();
+    axpos = reacGeom_.getAxpos();
     int len = axpos.size();
 
     for(int i=0; i<len; i++)
     {
         temperatureVec.push_back(soln[i*nVar+ptrT]);
     }
-    reporter->writeTempProfiletoXML("camflow.xml",temperatureVec);
+    reporter_->writeTempProfiletoXML("camflow.xml",temperatureVec);
 
     for(int i=0; i<len; i++){
         data.clear();
@@ -1059,7 +967,7 @@ void FlameLet::reportToFile(doublereal t, doublereal* soln)
         data.push_back(m_rho[i]);
         data.push_back(m_mu[i]);
         data.push_back(soln[i*nVar+ptrT]);
-        if (admin->getRadiationModel())
+        if (admin_.getRadiationModel())
         {
             data.push_back(radiation->getRadiation(i));
         }
@@ -1073,7 +981,7 @@ void FlameLet::reportToFile(doublereal t, doublereal* soln)
         for(int l=0; l<nSpc; l++){
             massfrac.push_back(soln[i*nVar+l]);
         }
-        if(admin->getSpeciesOut() == admin->MASS){
+        if(admin_.getSpeciesOut() == admin_.MASS){
             sum = 0;
             for(int l=0; l<nSpc; l++){
                 data.push_back(fabs(massfrac[l]));
@@ -1081,7 +989,7 @@ void FlameLet::reportToFile(doublereal t, doublereal* soln)
             }
         }else{
             CamConverter cc;
-            cc.mass2mole(massfrac,molfrac,*camMech);
+            cc.mass2mole(massfrac,molfrac,*camMech_);
             sum = 0;
             for(int l=0; l<nSpc; l++){
                 data.push_back(fabs(molfrac[l]));
@@ -1089,11 +997,11 @@ void FlameLet::reportToFile(doublereal t, doublereal* soln)
             }
         }
         data.push_back(sum);
-        reporter->writeCustomFileOut(data);
+        reporter_->writeCustomFileOut(data);
 
     }
 
-    reporter->closeFile();
+    reporter_->closeFile();
 
     //reacGeom->refine(soln,nVar,nSpc,ptrT);
 
@@ -1113,7 +1021,7 @@ void FlameLet::header()
     headerData.push_back("T");
     headerData.push_back("Radiation");
     for (int l = 0; l < nSpc; l++) {
-        headerData.push_back( (*spv)[l]->Name() );
+        headerData.push_back( (*spv_)[l]->Name() );
     }
     headerData.push_back("sumfracs");
 
@@ -1252,13 +1160,13 @@ const
 
 	wdotA4.clear();
 	// Check the species exists first (returns -1 if it does not).
-	if(camMech->FindSpecies("A4") == -1){
+	if(camMech_->FindSpecies("A4") == -1){
 		std::cout << "Species A4 not found." << std::endl;
 		for(int i=iMesh_s; i<iMesh_e;i++){
 			wdotA4.push_back(0.0);
 		}
 	} else {
-		const int iA4 = camMech->FindSpecies("A4");
+		const int iA4 = camMech_->FindSpecies("A4");
 		for(int i=iMesh_s; i<iMesh_e;i++){
 			wdotA4.push_back(s_Wdot(i,iA4));
 		}

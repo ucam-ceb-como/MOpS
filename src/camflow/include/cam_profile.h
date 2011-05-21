@@ -63,12 +63,12 @@ namespace Camflow{
         doublereal mWidth, mCenter;
         int fracType;
         Array2D start;
-        CamGeometry *geom;
+        CamGeometry& geom;
 
 
     public:
 
-        CamProfile();
+        CamProfile(CamGeometry& cg);
 
         virtual ~CamProfile();
 

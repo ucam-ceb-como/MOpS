@@ -109,6 +109,7 @@ namespace Camflow{
     private:
         bool ignited;
         doublereal TStep;
+        doublereal Tignition;
 
 
     };

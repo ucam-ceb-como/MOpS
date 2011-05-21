@@ -137,6 +137,14 @@ namespace Camflow{
          *definition of boundary condition for the total continuity
          */
         void massFlowBoundary(const doublereal& t, doublereal *y, doublereal *f);
+
+        /*
+         * base class definition for mass flow. This function can be used for
+         * any boundary value problems. The boundary condition has to be implemented
+         * in the respective reactor models
+         */
+        void massFlowResidual(const doublereal& time, doublereal* y, doublereal* f);
+
         /*
          *definition of species boundary conditions
          */

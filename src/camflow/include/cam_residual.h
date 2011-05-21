@@ -41,6 +41,11 @@
 #ifndef _CAM_RESIDUAL_H
 #define	_CAM_RESIDUAL_H
 
+#include <map>
+#include <vector>
+#include <stdexcept>
+#include <cmath>
+
 #include "cam_params.h"
 #include "cam_converter.h"
 #include "cam_boundary.h"
@@ -52,13 +57,12 @@
 #include "gpc.h"
 #include "cam_soot.h"
 #include "cam_profile.h"
-#include <map>
-#include <vector>
-#include <stdexcept>
+#include "cam_math.h"
+#include "cam_read.h"
+#include "cam_reporter.h"
 
-using namespace Sprog;
-
-namespace Camflow{
+namespace Camflow
+{
 
     class CamReporter;
 
@@ -71,7 +75,8 @@ namespace Camflow{
 
         public:
 
-            enum EqnType{
+            enum EqnType
+            {
                 EQN_ALL,
                 EQN_SPECIES,
                 EQN_ENERGY,
@@ -82,41 +87,47 @@ namespace Camflow{
             };
 
             //! Default constructor.
-            CamResidual();
+            CamResidual
+            (
+                CamAdmin& ca,
+                CamConfiguration& config,
+                CamControl& cc,
+                CamGeometry& cg,
+                CamProfile& cp,
+                CamSoot& cs,
+                Sprog::Mechanism& mech
+            );
 
             //! Destructor.
             virtual ~CamResidual();
 
-
-
-            virtual void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
-                 CamConfiguration &config, CamSoot &cs,  Mechanism &mech )=0;
+            virtual void solve() = 0;
 
             /*
              * residual evaluation function for ODE and DAEs
              */
-            virtual int eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval)=0;
+            virtual int eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval) = 0;
 
             //mass matrix evaluation
-            virtual void massMatrix(doublereal **M);
+            virtual void massMatrix(doublereal **M) = 0;
 
             /*
              *console output for monitoring the integration process
              */
-            virtual void report(doublereal t, doublereal* solution)=0;
+            virtual void report(doublereal t, doublereal* solution) = 0;
             /*
              *console output for monitoring the integration process
              *with residual output
              */
-            virtual void report(doublereal t, doublereal* solutio, doublereal& res)=0;
+            virtual void report(doublereal t, doublereal* solutio, doublereal& res) = 0;
 
             /*
              *call to solve the reactor from the external interface
              */
-            virtual  void solve(std::vector<Thermo::Mixture>& cstrs,
+            virtual void solve(std::vector<Thermo::Mixture>& cstrs,
                     const std::vector< std::vector<doublereal> >& iniSource,
                     const std::vector< std::vector<doublereal> >& fnlSource,
-                    Mechanism& mech,
+                    Sprog::Mechanism& mech,
                     CamControl &cc,
                     CamAdmin &ca,
                     CamGeometry &cg,
@@ -133,21 +144,14 @@ namespace Camflow{
              * any boundary value problems. The boundary condition has to be implemented
              * in the respective reactor models
              */
-            virtual void speciesResidual(const doublereal& time, doublereal* y, doublereal* f);
+            virtual void speciesResidual(const doublereal& time, doublereal* y, doublereal* f) = 0;
 
             /*
              * base class definition for energy residuals. This function can be used for
              * any boundary value problems. The boundary condition has to be implemented
              * in the respective reactor models
              */
-            virtual void energyResidual(const doublereal& time, doublereal* y, doublereal* f, bool flxTrans=false);
-
-            /*
-             * base class definition for mass flow. This function can be used for
-             * any boundary value problems. The boundary condition has to be implemented
-             * in the respective reactor models
-             */
-            virtual void massFlowResidual(const doublereal& time, doublereal* y, doublereal* f);
+            virtual void energyResidual(const doublereal& time, doublereal* y, doublereal* f) = 0;
 
             /*
              * flow field evaluation (algebraic equation system)
@@ -157,7 +161,7 @@ namespace Camflow{
             /**
              *set the scalar dissipation rate in case of flamelet odel
              */
-            virtual void setExternalScalarDissipationRate(const doublereal sr);
+            virtual void setExternalScalarDissipationRate(const doublereal sr) = 0;
 
             /*
              * stores the mixture properties for the calculation of fluxes. This
@@ -241,7 +245,7 @@ namespace Camflow{
             virtual void getIndepedantVar(std::vector<doublereal>& indVar);
 
             //Get the species residual
-            virtual doublereal getResidual() const;
+            virtual doublereal getResidual() const = 0;
 
             /*
              *store the particle source terms for use in species residual
@@ -288,6 +292,7 @@ namespace Camflow{
 
             /**
              *  Set the lewis number to be used
+             *  \todo Move this stuff to flamelet.cpp and add xml input.
              */
             void setLewisNumber(int n){
                 Lewis = n;
@@ -303,75 +308,74 @@ namespace Camflow{
 
         protected:
 
+            CamAdmin& admin_;
+            CamReporter* reporter_;
+            CamGeometry& reacGeom_;
+            CamSoot& sootMom_;
+            CamControl& control_;
 
-            Array2D s_H;
-            Array2D s_mf;
-            Array2D s_Diff;
-            Array2D s_Wdot;
-            Array2D s_ParticleBegin, s_ParticleEnd;
-            Array2D s_jk;
-            Array2D s_cp;
+            Sprog::Mechanism* camMech_;
+            Sprog::Thermo::Mixture* camMixture_;
 
-            std::vector<doublereal> m_T;                  //mixture temperature
-            std::vector<doublereal> m_cp;                 //mixture specific heat
-            std::vector<doublereal> m_k;                  //mixture thermal conductivity
-            std::vector<doublereal> m_rho;                //mixture density
-            std::vector<doublereal> m_u;                  //axial velocity
-            std::vector<doublereal> m_v_grd;              //radial velocity gradient
-            std::vector<doublereal> m_q;                  //thermal conduction flux
-            std::vector<doublereal> m_flow;               //mass flow
-            std::vector<doublereal> m_G;                  //radial velocity gradient
-            std::vector<doublereal> m_mu;                 //viscosity
-            std::vector<doublereal> m_shear;              //shear rate
-            std::vector<doublereal> m_eigen;              //pressure gradient eigen value
-            std::vector<doublereal> wdot;                 //rate of production
-            std::vector<doublereal> dz;                   //grid spacting
-            std::vector<doublereal> axpos;                //axial position
-            std::vector<doublereal> avgMolWt;             //average molecular weight
-            std::vector<doublereal> slopes;               //slopes of piece-wise linear particle sources
-            std::vector<doublereal> radiation;            //radiative heat loss term for output to profile.h
-
-            std::vector<doublereal> resSp, resT, resFlow, resMoment, resAxVel;
-
+            const SpeciesPtrVector* spv_;
 
             doublereal opPre;                        //operating pressure
-            doublereal Tignition;                   //Ignition temperature
 
+            const int mCord;   // this is the mixture fraction coordinates
+            const int iMesh_s, cellBegin;//first cell
+            const int iMesh_e, cellEnd;//last cell
+            const int nMoments;//number of moments
+            const int nSpc;    //number of species
+            const int nVar;    //number of variables
+            const int ptrT;    //array offset to temperature
 
-
-
-
-            int nEqn;    //number of equations
-            int nVar;    //number of variables
-            int nMoments;//number of moments
-            int nSpc;    //number of species
-            int ptrT;    //array offset to temperature
             int ptrF;    //array offset to continuity
             int ptrG;    //array offset to momentum
-            int ptrH;    // 1/r (dp/dr)
-            int ptrS;    //array offset to species
             int ptrR;    //aray offset for residence time
-            int iMesh_s, cellBegin;//first cell
-            int iMesh_e, cellEnd;//last cell
             int eqn_slvd;
+            const int nEqn;    //number of equations
 
             int Lewis;
 
 
-            Sprog::Thermo::Mixture *camMixture;
-            Sprog::Mechanism *camMech;
-            const SpeciesPtrVector *spv;
-           // doublereal* yData;
+
 
             //members for the reactor models
             std::vector<doublereal> solvect, rTol, aTol;
             doublereal vel,rho, Ac, As;
             std::vector<std::string> headerData;
-            CamAdmin *admin;
-            CamReporter *reporter;
-            CamGeometry *reacGeom;
-            CamSoot *sootMom;
-            CamControl *control;
+
+            const int solverID;
+
+            std::vector<doublereal> resSp, resT, resFlow, resMoment, resAxVel;
+
+
+            Array2D s_mf;
+            Array2D s_Wdot;
+            Array2D s_H;
+            Array2D s_Diff;
+            Array2D s_ParticleBegin, s_ParticleEnd;
+            Array2D s_jk;
+            Array2D s_cp;
+
+            std::vector<doublereal> m_T;                  //mixture temperature
+            std::vector<doublereal> m_rho;                //mixture density
+            std::vector<doublereal> m_cp;                 //mixture specific heat
+            std::vector<doublereal> m_mu;                 //viscosity
+            std::vector<doublereal> m_u;                  //axial velocity
+            std::vector<doublereal> m_k;                  //mixture thermal conductivity
+            std::vector<doublereal> m_v_grd;              //radial velocity gradient
+            std::vector<doublereal> m_q;                  //thermal conduction flux
+            std::vector<doublereal> m_flow;               //mass flow
+            std::vector<doublereal> m_G;                  //radial velocity gradient
+            std::vector<doublereal> m_shear;              //shear rate
+            std::vector<doublereal> m_eigen;              //pressure gradient eigen value
+            std::vector<doublereal> wdot;                 //rate of production
+            const std::vector<doublereal>& dz;                   //grid spacting
+            std::vector<doublereal> axpos;                //axial position
+            std::vector<doublereal> avgMolWt;             //average molecular weight
+            std::vector<doublereal> slopes;               //slopes of piece-wise linear particle sources
+            std::vector<doublereal> radiation;            //radiative heat loss term for output to profile.h
 
 
     }; // End CamResidual class declaration.

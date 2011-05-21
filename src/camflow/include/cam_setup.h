@@ -41,24 +41,27 @@
 #ifndef _CAM_SETUP_H
 #define	_CAM_SETUP_H
 
+#include <vector>
+
 #include "cam_boundary.h"
 #include "gpc.h"
 #include "cam_params.h"
 #include "cam_residual.h"
 #include "cam_profile.h"
 #include "cam_control.h"
-#include <vector>
+#include "cam_converter.h"
 
-using namespace Sprog;
+namespace Camflow
+{
 
-namespace Camflow{
     /*!
      *@brief    Class to setup initial conditions.
      *
      * Include a more detailed description here.
      */
     class CamSetup
-    : public CamResidual {
+    : public CamResidual
+    {
 
         public:
 
@@ -74,7 +77,16 @@ namespace Camflow{
                 std::vector<doublereal> jk;
             } inletStruct;
 
-            CamSetup();
+            CamSetup
+            (
+                CamAdmin& ca,
+                CamConfiguration& config,
+                CamControl& cc,
+                CamGeometry& cg,
+                CamProfile& cp,
+                CamSoot& cs,
+                Sprog::Mechanism& mech
+            );
 
             virtual ~CamSetup();
 
@@ -111,12 +123,12 @@ namespace Camflow{
 
             //! Store the objects that are common across the reactor models.
             virtual void storeObjects(CamControl& cc,   CamAdmin& ca,    CamGeometry& cg,
-                        CamProfile& cp,   CamBoundary& cb,    Mechanism& mech);
+                        CamProfile& cp,   CamBoundary& cb,    Sprog::Mechanism& mech);
 
 
         protected:
 
-            CamProfile *profile;
+            CamProfile& profile_;
 
         }; // End CamSetup class declaration.
 

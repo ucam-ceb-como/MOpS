@@ -49,12 +49,12 @@
 using namespace Camflow;
 using namespace Strings;
 
-CamProfile::CamProfile()
+CamProfile::CamProfile(CamGeometry& cg)
 :
 mWidth(0.0),
 mCenter(0.0),
 fracType(0),
-geom(NULL)
+geom(cg)
 {}
 
 CamProfile::~CamProfile()
@@ -89,7 +89,7 @@ void CamProfile::populateIntermdts(Mechanism& mech){
  *set the geometry object
  */
 void CamProfile::setGeometryObj(CamGeometry& cg){
-    geom = &cg;
+    geom = cg;
 }
 /*
  *set mixing center
@@ -123,7 +123,7 @@ void CamProfile::setStartprofile(CamBoundary& left, CamBoundary& right,
 void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
 
     std::vector<doublereal> m_in = cb.getInletMassfracs();
-    std::vector<doublereal> position = geom->getAxpos();
+    std::vector<doublereal> position = geom.getAxpos();
     int len = position.size();
 
     start.resize(len,mech.SpeciesCount());
@@ -191,7 +191,7 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
  *set the gaussian
  */
 void CamProfile::setGaussian(Mechanism& mech){
-    std::vector<doublereal> position = geom->getAxpos();
+    std::vector<doublereal> position = geom.getAxpos();
     int len = position.size();
     std::map<std::string, doublereal>::iterator p;
     p = list_intmd.begin();
@@ -216,7 +216,7 @@ void CamProfile::setGaussTempProfile(std::vector<doublereal>& vTemp){
         throw CamError("Invalid mixing center and mixing width definition\n");
     }
     doublereal dmax = 1.0;
-    std::vector<doublereal> position = geom->getAxpos();
+    std::vector<doublereal> position = geom.getAxpos();
     int len = position.size();
     vTemp.resize(len,0.0);
     doublereal gWidth = -log(0.15*dmax)/pow(mWidth/2.0,2);

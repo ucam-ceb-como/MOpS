@@ -47,9 +47,9 @@
 namespace Camflow{
     class CamError{
     public:
-        std::string errorMessge;
+        std::string errorMessage;
         CamError(std::string str){
-            errorMessge = "\n"+Strings::convertToCaps(str);
+            errorMessage = "\n"+Strings::convertToCaps(str);
             
         }
 
