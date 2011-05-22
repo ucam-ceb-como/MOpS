@@ -190,7 +190,7 @@ void CamResidual::updateDiffusionFluxes(){
         jCorr = 0.0;
 
         for(int l=0; l<nSpc; l++){
-            grad = dydx(s_mf(i,l),s_mf(i-1,l),delta);
+            grad = (s_mf(i,l) - s_mf(i-1,l))/delta;
             avgD = (s_Diff(i-1,l)+s_Diff(i,l))/2.0;
             //if((i-1)==0)avgD = s_Diff(i-1,l);
             flx[l] = -avgD*avgRho*grad;

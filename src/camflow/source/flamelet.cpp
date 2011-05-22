@@ -28,6 +28,7 @@ FlameLet::~FlameLet()
 {
     //if (radiation != NULL) delete radiation;
 }
+
 /*
  *this is called by the model object. The boolean interface decides
  *if the call originates from the interface or from camflow kernel
@@ -46,30 +47,22 @@ void FlameLet::solve
     bool interface
 )
 {
-    /*
-     *check for mixture fraction bounds. In this case the input given in the
-     * grid file is treated as mixture fraction coordinates. The reactor
-     * length specified in the reactor section is simply ignored.
-     */
-
-    //profile_.setGeometryObj(reacGeom_);
-    //storeObjects(cc,ca,cg,cp,cb,mech);
-    //if(reacGeom->getnCells()==0) reacGeom->discretize();
 
     reacGeom_.addZeroWidthCells();
-
-    /*
-     *get the strain rate
-     */
-    //profile->setGeometryObj(cg);
-
 
     /*
      *init the solution vector
      */
     initSolutionVector();
+
     reporter_->header("Flamelet");
     header();
+
+    if(!interface)
+    {
+        reportToFile("initialProfile.dat",control_.getMaxTime(),&solvect[0]);
+    }
+
     if (control_.getSolutionMode() == control_.COUPLED)
     {
         csolve(interface);
@@ -82,8 +75,7 @@ void FlameLet::solve
 
 }
 
-/**
- */
+
 /**
  *continuation call from an external code that
  *solves for population balance
@@ -271,7 +263,7 @@ void FlameLet::csolve
          */
         if(!interface)
         {
-            reportToFile(control_.getMaxTime(),&solvect[0]);
+            reportToFile("profile.dat",control_.getMaxTime(),&solvect[0]);
         }
 
     }
@@ -309,7 +301,7 @@ void FlameLet::csolve
          *from the interface
          */
         if(!interface) {
-            reportToFile(control_.getMaxTime(),&solvect[0]);
+            reportToFile("profile.dat", control_.getMaxTime(),&solvect[0]);
         }
        // radauWrapper.destroy();
 
@@ -522,19 +514,21 @@ void FlameLet::speciesResidual
     convection.resize(mCord,nSpc,0);
     doublereal onebLe;
     doublereal oneby16 = 1.0/16;
-    if(Lewis == FlameLet::LNNONE){
-
+    if (Lewis == FlameLet::LNNONE)
+    {
         //Iterating over the interior points
-        for(int i=1; i<mCord-1; i++){
-            for(int l=0; l<nSpc; l++){
+        for (int i=1; i<mCord-1; ++i)
+        {
+            for (int l=0; l<nSpc; ++l)
+            {
                 Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*s_Diff(i,l));
                 onebLe = 1/Le(i,l);
 
                 convection(i,l) = oneby16*(onebLe-1)*(s_mf(i+1,l)-s_mf(i-1,l))*(m_rho[i+1]-m_rho[i-1]);
             }
-
         }
-        for(int l=0; l<nSpc; l++){
+        for (int l=0; l<nSpc; ++l)
+        {
             // Computation at the i = 0 end of the grid
             Le(0,l) = m_k[0]/(m_rho[0]*m_cp[0]*s_Diff(0,l));
             onebLe = 1/Le(0,l);
@@ -545,15 +539,15 @@ void FlameLet::speciesResidual
             Le(mCord-1,l) = m_k[mCord-1]/(m_rho[mCord -1]*m_cp[mCord-1]*s_Diff(mCord-1,l));
             onebLe = 1/Le(mCord-1,l);
             convection(mCord-1,l) = oneby16*(onebLe-1)*4*(s_mf(mCord-1,l)-s_mf(mCord-2,l))*(m_rho[mCord-1]-m_rho[mCord-2]);
-        }
 
+        }
 
     }
     /*
      *interior mixture fraction coordinates
      */
-
-    for(int i=iMesh_s; i<iMesh_e;i++){
+    for (int i=iMesh_s; i<iMesh_e; ++i)
+    {
 
         zPE = 0.5*(dz[i]+dz[i+1]);
         zPW = 0.5*(dz[i]+dz[i-1]);
@@ -562,21 +556,26 @@ void FlameLet::speciesResidual
         if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
         if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
 
-        for(int l=0; l<nSpc; l++){
+        doublereal diffusionConstant = sdr/(2.0*dz[i]);
+
+        for (int l=0; l<nSpc; ++l)
+        {
             grad_e = (s_mf(i+1,l)-s_mf(i,l))/zPE;
             grad_w = (s_mf(i,l)-s_mf(i-1,l))/zPW;
             source = s_Wdot(i,l)*(*spv_)[l]->MolWt()/m_rho[i];
-            f[i*nSpc+l] = sdr*(grad_e-grad_w)/(2*Le(i,l)*dz[i]) + source + convection(i,l)*sdr/(m_rho[i]*dz[i]*dz[i]);
+            f[i*nSpc+l] = diffusionConstant*(grad_e-grad_w)/Le(i,l)
+                          + source;
         }
 
     }
+
     /*
      *Mixture fraction 1. The fuel inlet. Concentrations are
      *held constant at the fuel composition
      */
 
-
-    for(int l=0; l<nSpc; l++){
+    for (int l=0; l<nSpc; ++l)
+    {
         f[iMesh_e*nSpc+l] = 0.0;
     }
 
@@ -626,12 +625,15 @@ void FlameLet::energyResidual
      *intermediate mixture fraction coordinates
      */
 
-    for(int i=iMesh_s; i<iMesh_e; i++){
+    for (int i=iMesh_s; i<iMesh_e; ++i)
+    {
+
         zPE = 0.5*(dz[i]+dz[i+1]);
         zPW = 0.5*(dz[i]+dz[i-1]);
         source = 0.0;
 
-        for(int l=0; l<nSpc; l++){
+        for (int l=0; l<nSpc; ++l)
+        {
             source += s_Wdot(i,l)*s_H(i,l);
         }
 
@@ -642,12 +644,15 @@ void FlameLet::energyResidual
         grad_e = (m_T[i+1]-m_T[i])/zPE;
         grad_w = (m_T[i]-m_T[i-1])/zPW;
 
-        f[i] = sdr*(grad_e-grad_w)/(2*dz[i])-(source/(m_rho[i]*m_cp[i]));
+        f[i] = sdr*(grad_e-grad_w)/(2.0*dz[i])
+               - source/(m_rho[i]*m_cp[i]);
 
         /**
          *  Accounting for non-unity Lewis number
          */
-        if(Lewis == FlameLet::LNNONE){
+        if (Lewis == FlameLet::LNNONE)
+        {
+
             doublereal conduction = 0;
             conduction = sdr*(m_cp[i+1]-m_cp[i-1])*(m_T[i+1]-m_T[i-1])/(8*m_cp[i]*dz[i]*dz[i]);
             doublereal enthFlux = 0;
@@ -660,14 +665,14 @@ void FlameLet::energyResidual
                 enthFlux += spGrad*cpterm/Le(i,l);
             }
 
-
             f[i] -= enthFlux*sdr*tGrad/8.0 ;
 
         }
 
         //======Radiative Heat Loss Term===============
 
-        if(admin_.getRadiationModel()) {
+        if (admin_.getRadiationModel())
+        {
 
             doublereal mole_fracsH2O;
             doublereal mole_fracsCO2;
@@ -940,13 +945,13 @@ void FlameLet::report(doublereal x, doublereal* solution, doublereal& res)
 /*
  *output function for file output
  */
-void FlameLet::reportToFile(doublereal t, doublereal* soln)
+void FlameLet::reportToFile(std::string fileName, doublereal t, doublereal* soln)
 {
 
 
 
     doublereal sum;
-    reporter_->openFile("profile.dat",false);
+    reporter_->openFile(fileName,false);
     reporter_->writeCustomHeader(headerData);
     vector<doublereal> data, axpos;
     vector<doublereal> molfrac, massfrac, temperatureVec;

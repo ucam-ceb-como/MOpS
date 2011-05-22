@@ -197,7 +197,7 @@ namespace Camflow
             void report(doublereal x, doublereal* solution, doublereal& res);
 
             //! File output.
-            void reportToFile(doublereal x, doublereal* solution);
+            void reportToFile(std::string fileName, doublereal x, doublereal* solution);
 
         private:
 

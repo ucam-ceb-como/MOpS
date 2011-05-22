@@ -49,7 +49,7 @@
  *
  * Include a more detailed description here.
  */
-namespace Camflow{
+namespace Camflow {
 
     //! Typedef for doublereal.
     typedef Sprog::real doublereal;

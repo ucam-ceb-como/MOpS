@@ -254,19 +254,6 @@ namespace Camflow
             virtual void setParticleSource(const std::vector< std::vector<doublereal> >& initial,
                    const  std::vector< std::vector<doublereal> >& final);
 
-
-            //derivative calculation
-            doublereal dydx(doublereal nr1, doublereal nr2, doublereal dr){
-                return ((nr1-nr2)/dr);
-            }
-
-            doublereal dydx(const int i, doublereal phi_E, doublereal phi_P, doublereal phi_W,
-                                                doublereal dr){
-                doublereal val = m_u[i] > 0 ? (phi_P-phi_W)/dr : (phi_E-phi_P)/dr;
-                return val;
-
-            }
-
             /*
              *extract various dependent variabes from the master
              *solution vector

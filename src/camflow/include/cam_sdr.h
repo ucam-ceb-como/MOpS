@@ -53,6 +53,16 @@ namespace Camflow
 class ScalarDissipationRate
 {
 
+        enum sdr
+        {
+            constant_fromStrainRate,
+            profile_fromStrainRate,
+            constant_fromCFD,
+            profile_fromCFD
+        };
+
+        int sdrType_;
+
         //! The first index is 'time coordinate'.
         //! The second index is 'mixture fraction coordinate'.
         Array2D scalarDissipationRate_;
@@ -81,7 +91,9 @@ class ScalarDissipationRate
         inline const doublereal getScalarDissipationRate(const int mixFracCoord)
         {
             return scalarDissipationRate_(0,mixFracCoord);
-        }
+        };
+
+        void setSdrType(const int sdrType) {sdrType_ = sdrType;};
 
         /*inline const std::vector<doublereal> getScalarDissipationRate()
         {

@@ -36,13 +36,8 @@
  *  Email   :   mk306@cam.ac.uk
  *  Website :   http://como.cheng.cam.ac.uk
  */
-#include <vector>
-#include <algorithm>
-#include <cmath>
-#include <fstream>
-#include <iostream>
+
 #include "cam_geometry.h"
-#include "comostrings.h"
 
 using namespace std;
 using namespace Camflow;
