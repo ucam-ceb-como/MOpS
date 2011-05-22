@@ -54,11 +54,8 @@ namespace Camflow{
     //! Typedef for doublereal.
     typedef Sprog::real doublereal;
 
-    //! Define \pi.
-    const doublereal pi = 3.1415;
-
     //! cgs units used in the soot model.
-    const doublereal kB_cgs = 1.3807e-16;
+    const doublereal kB_cgs = 1.380658e-16;
     
 }
 

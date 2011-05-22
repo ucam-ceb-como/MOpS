@@ -43,9 +43,12 @@
 #include <iostream>
 #include "cam_geometry.h"
 #include "comostrings.h"
+
 using namespace std;
 using namespace Camflow;
 using namespace Strings;
+using namespace Sprog;
+
 void CamGeometry::setGridFile(string name){
     gridFile = name;
 
@@ -133,16 +136,16 @@ doublereal CamGeometry::getDia() const{
 }
 
 doublereal CamGeometry::getArea() const{
-    return (pi*dia*dia/4.0);
+    return (PI*dia*dia/4.0);
 }
 
 doublereal CamGeometry::getSurfArea() {
     //if(length==0)discretize();
-    return (pi*dia*length);
+    return (PI*dia*length);
 } 
 
 doublereal CamGeometry::getSurfAres_l() const{
-    return (pi*dia);
+    return (PI*dia);
 }
 
 const vector<doublereal>& CamGeometry::getGeometry() const {

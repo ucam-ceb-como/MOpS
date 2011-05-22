@@ -859,7 +859,7 @@ doublereal FlameLet::scalarDissipationRate(const doublereal m_frac)
     CamMath cm;
     doublereal erterm = cm.inverfc(2*m_frac);
     doublereal arg = -2*cm.SQR(erterm);
-    sdr = admin_.getStrainRate()*exp(arg)/pi;
+    sdr = admin_.getStrainRate()*exp(arg)/PI;
     return sdr;
     //return 0.88;
 }
