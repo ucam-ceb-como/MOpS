@@ -653,12 +653,13 @@ void FlameLet::energyResidual
         /**
          * Add some extra terms so that we agree with FlameMaster?
          */
-        doublereal tGrad = (m_T[i+1]-m_T[i-1])/(2.0*dz[i]);
-        doublereal cpGrad = (m_cp[i+1]-m_cp[i-1])/(2.0*dz[i]);
+        doublereal deltax = 0.5*(dz[i+1]+dz[i]) + 0.5*(dz[i]+dz[i-1]);
+        doublereal tGrad = (m_T[i+1]-m_T[i-1])/(deltax);
+        doublereal cpGrad = (m_cp[i+1]-m_cp[i-1])/(deltax);
         doublereal sumYGrad = 0.0;
         for (int l=0; l<nSpc; ++l)
         {
-            sumYGrad += CpSpec(i,l) * (s_mf(i+1,l)-s_mf(i-1,l))/(2.0*dz[i]);
+            sumYGrad += CpSpec(i,l) * (s_mf(i+1,l)-s_mf(i-1,l))/(deltax);
         }
         f[i] += (sdr/(2.0*m_cp[i])) * tGrad * (cpGrad + sumYGrad);
 
