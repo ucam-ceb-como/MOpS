@@ -258,6 +258,13 @@ void FlameLet::csolve
             control_.getMaxTime(),band,*this);
 
         cvw.solve(CV_ONE_STEP,control_.getResTol());
+
+        // Calculate the mixture viscosity.
+        for (int i=0; i<mCord; ++i)
+        {
+            m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
+        }
+
         /*
          *write the output to file only if the call is not
          *from the interface
@@ -760,27 +767,22 @@ void FlameLet::saveMixtureProp(doublereal* y)
         {
             mf.push_back(y[i*nVar+l]);
         }
-
         m_T[i] = y[i*nVar+ptrT];                                   //temperature
         camMixture_->SetMassFracs(mf);                              //mass fraction
         camMixture_->SetTemperature(m_T[i]);                        //temperature
-
         avgMolWt[i] = camMixture_->getAvgMolWt();
         m_rho[i] = opPre*avgMolWt[i]/(R*m_T[i]);                   //density
-
         camMixture_->SetMassDensity(m_rho[i]);                      //density
-
         camMech_->Reactions().GetMolarProdRates(*camMixture_,wdot);
-
         htemp = camMixture_->getMolarEnthalpy();                    //enthalpy
         m_cp[i] = camMixture_->getSpecificHeatCapacity();           //specific heat
         m_k[i] = camMixture_->getThermalConductivity(opPre);        //thermal conductivity
 
-        // MOVE THIS OUTSIDE LOOP
-        m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
-
-        temp = camMixture_->getMixtureDiffusionCoeff(opPre);
+        // MOVE THIS OUTSIDE LOOP TO CSOLVE
+        //m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
+        if (Lewis == FlameLet::LNNONE) temp = camMixture_->getMixtureDiffusionCoeff(opPre);
         cptemp = camMixture_->getMolarSpecificHeat();
+
         for(int l=0; l<nSpc; l++)
         {
             s_mf(i,l) = mf[l];
