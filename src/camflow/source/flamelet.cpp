@@ -20,6 +20,7 @@ FlameLet::FlameLet
   timeHistory(false),
   sdrProfile(false),
   sdrAnalytic(false),
+  radiation(NULL),
   scalarDissipationRate_(mCord, 1),
   CpSpec(mCord,nSpc)
 {}
@@ -981,7 +982,7 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, doublereal* soln
         data.push_back(m_mu[i]);
         data.push_back(m_cp[i]);
         data.push_back(soln[i*nVar+ptrT]);
-        if (admin_.getRadiationModel())
+        if (radiation != NULL)
         {
             data.push_back(radiation->getRadiation(i));
         }
