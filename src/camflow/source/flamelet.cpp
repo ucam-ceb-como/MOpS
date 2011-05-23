@@ -563,7 +563,7 @@ void FlameLet::speciesResidual
         //if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
         //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
         //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
-        sdr = scalarDissipationRateProfile(dz[i],2.0,i);
+        sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],2.0,i);
 
         doublereal diffusionConstant = sdr/(2.0*dz[i]);
 
@@ -633,7 +633,6 @@ void FlameLet::energyResidual
     /*
      *intermediate mixture fraction coordinates
      */
-
     for (int i=iMesh_s; i<iMesh_e; ++i)
     {
 
@@ -649,7 +648,7 @@ void FlameLet::energyResidual
         //if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
         //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
         //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
-        sdr = scalarDissipationRateProfile(dz[i],2.0,i);
+        sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],2.0,i);
 
         grad_e = (m_T[i+1]-m_T[i])/zPE;
         grad_w = (m_T[i]-m_T[i-1])/zPW;
