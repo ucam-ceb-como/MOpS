@@ -985,7 +985,7 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, doublereal* soln
     {
         temperatureVec.push_back(soln[i*nVar+ptrT]);
     }
-    reporter_->writeTempProfiletoXML("camflow.xml",temperatureVec);
+    reporter_->writeTempProfiletoXML("camflow.xml",axpos,temperatureVec);
 
     for (int i=0; i<len; i++) {
 

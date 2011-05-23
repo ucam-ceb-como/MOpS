@@ -48,7 +48,9 @@
 #include "gpc.h"
 #include "comostrings.h"
 #include <fstream>
+#include "string_functions.h"
 #include "camxml.h"
+#include "linear_interpolator.hpp"
 
 namespace Camflow{
 
@@ -87,6 +89,7 @@ namespace Camflow{
         void writeTempProfiletoXML
         (
             const std::string fileName,
+            const std::vector<doublereal>& axPos,
             const std::vector<doublereal>& temperature
         );
 

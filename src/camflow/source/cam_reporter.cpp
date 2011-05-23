@@ -150,6 +150,7 @@ void CamReporter::writeCustomFileOut(std::vector<doublereal>& data){
 void CamReporter::writeTempProfiletoXML
 (
     const std::string fileName,
+    const std::vector<doublereal>& axPos,
     const std::vector<doublereal>& temperature
 )
 {
@@ -160,6 +161,8 @@ void CamReporter::writeTempProfiletoXML
     if(doc.Load(fileName) == 0){
         node = doc.Root();
     }
+
+    Utils::LinearInterpolator<doublereal, doublereal> mTempInterpolator(axPos, temperature);
 
     CamXML::Element *initialize, *subsubnode;
     std::vector<CamXML::Element*> subsubnodes;
@@ -182,7 +185,8 @@ void CamReporter::writeTempProfiletoXML
             int count=0;
             for(p=subsubnodes.begin(); p<subsubnodes.end(); ++p)
             {
-                (*p)->SetData(Strings::cstr(temperature[count]+convertT));
+                doublereal temp = mTempInterpolator.interpolate(Strings::cdble((*p)->GetAttributeValue("x")));
+                (*p)->SetData(Strings::cstr(temp));
                 ++count;
             }
         }
