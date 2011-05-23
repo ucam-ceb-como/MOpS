@@ -564,7 +564,7 @@ void FlameLet::speciesResidual
         {
             grad_e = (s_mf(i+1,l)-s_mf(i,l))/zPE;
             grad_w = (s_mf(i,l)-s_mf(i-1,l))/zPW;
-            source = s_Wdot(i,l)*(*spv_)[l]->MolWt()/m_rho[i];
+            source = s_Wdot(i,l)/m_rho[i];
             f[i*nSpc+l] = diffusionConstant*(grad_e-grad_w)/Le(i,l)
                           + source;
         }
@@ -649,6 +649,18 @@ void FlameLet::energyResidual
 
         f[i] = sdr*(grad_e-grad_w)/(2.0*dz[i])
                - source/(m_rho[i]*m_cp[i]);
+
+        /**
+         * Add some extra terms so that we agree with FlameMaster?
+         */
+        doublereal tGrad = (m_T[i+1]-m_T[i-1])/(2.0*dz[i]);
+        doublereal cpGrad = (m_cp[i+1]-m_cp[i-1])/(2.0*dz[i]);
+        doublereal sumYGrad = 0.0;
+        for (int l=0; l<nSpc; ++l)
+        {
+            sumYGrad += CpSpec(i,l) * (s_mf(i+1,l)-s_mf(i-1,l))/(2.0*dz[i]);
+        }
+        f[i] += (sdr/(2.0*m_cp[i])) * tGrad * (cpGrad + sumYGrad);
 
         /**
          *  Accounting for non-unity Lewis number
@@ -771,8 +783,8 @@ void FlameLet::saveMixtureProp(doublereal* y)
         for(int l=0; l<nSpc; l++)
         {
             s_mf(i,l) = mf[l];
-            s_Wdot(i,l) = wdot[l];
-            s_H(i,l) = htemp[l];
+            s_Wdot(i,l) = wdot[l]*(*spv_)[l]->MolWt();
+            s_H(i,l) = htemp[l]/(*spv_)[l]->MolWt();
             s_Diff(i,l) = temp[l];
             //Specific heat capacity of species in J/Kg K
             CpSpec(i,l) =cptemp[l]/(*spv_)[l]->MolWt();
