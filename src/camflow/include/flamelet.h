@@ -46,6 +46,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <pthread.h>
 
 #include "cam_control.h"
 #include "cam_radiation.h"
@@ -189,9 +190,6 @@ namespace Camflow
 
             //! Create header for file output.
             void header();
-
-            //! Console output.
-            void report(doublereal x, doublereal* solution);
 
             //! Console output with residuals.
             void report(doublereal x, doublereal* solution, doublereal& res);

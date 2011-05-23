@@ -4,9 +4,12 @@ using namespace Camflow;
 
 ScalarDissipationRate::ScalarDissipationRate
 (
-    const int n_TimePoints,
-    const int n_MixtureFractionPoints
+    const int n_MixtureFractionPoints,
+    const int n_TimePoints
 )
+:
+  scalarDissipationRate_(n_MixtureFractionPoints, n_TimePoints, 0.0),
+  scalarDissipationRateRef_(0.0)
 {}
 
 //! Destructor.
@@ -21,4 +24,21 @@ const doublereal ScalarDissipationRate::calculate
 )
 {
 
+    if (sdrType_ == ScalarDissipationRate::constant_fromStrainRate)
+    {
+        //scalarDissipationRateRef()
+    }
+
 }
+
+/*!
+ * Eq. 9.38 SummerSchool by N. Peters
+ */
+/*doublereal FlameLet::scalarDissipationRateRef(const doublereal m_frac)
+{
+    CamMath cm;
+    doublereal erterm = cm.inverfc(2*m_frac);
+    doublereal arg = -2*cm.SQR(erterm);
+    scalarDissipationRateRef_ = admin_.getStrainRate()*exp(arg)/PI;
+    return scalarDissipationRateRef_;
+}*/

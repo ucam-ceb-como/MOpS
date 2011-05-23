@@ -114,7 +114,7 @@ namespace Camflow
             /*
              *console output for monitoring the integration process
              */
-            virtual void report(doublereal t, doublereal* solution) = 0;
+            virtual void report(doublereal t, doublereal* solution){}
             /*
              *console output for monitoring the integration process
              *with residual output

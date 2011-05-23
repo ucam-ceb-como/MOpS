@@ -552,9 +552,10 @@ void FlameLet::speciesResidual
         zPE = 0.5*(dz[i]+dz[i+1]);
         zPW = 0.5*(dz[i]+dz[i-1]);
 
-        if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
-        if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
-        if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
+        //if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
+        //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
+        //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
+        sdr = scalarDissipationRateProfile(dz[i],2.0,i);
 
         doublereal diffusionConstant = sdr/(2.0*dz[i]);
 
@@ -637,9 +638,10 @@ void FlameLet::energyResidual
             source += s_Wdot(i,l)*s_H(i,l);
         }
 
-        if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
-        if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
-        if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
+        //if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
+        //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
+        //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
+        sdr = scalarDissipationRateProfile(dz[i],2.0,i);
 
         grad_e = (m_T[i+1]-m_T[i])/zPE;
         grad_w = (m_T[i]-m_T[i-1])/zPW;
@@ -724,16 +726,21 @@ void FlameLet::energyResidual
     f[iMesh_e] = 0.0;
 
 }
-/*
+/**
  *save the mixture property
+ * \todo This should be trivially parallelisable. A lot of time is spent here.
  */
 void FlameLet::saveMixtureProp(doublereal* y)
 {
 
-    vector<doublereal> mf, htemp, temp, cptemp;
+    vector<doublereal> mf;
+    vector<doublereal> htemp(nSpc,0.0);
+    vector<doublereal> temp(nSpc,0.0);
+    vector<doublereal> cptemp(nSpc,0.0);
 
     for (int i=0; i<mCord; ++i)
     {
+
         mf.clear();
         for(int l=0; l<nSpc; l++)
         {
@@ -746,12 +753,18 @@ void FlameLet::saveMixtureProp(doublereal* y)
 
         avgMolWt[i] = camMixture_->getAvgMolWt();
         m_rho[i] = opPre*avgMolWt[i]/(R*m_T[i]);                   //density
+
         camMixture_->SetMassDensity(m_rho[i]);                      //density
+
         camMech_->Reactions().GetMolarProdRates(*camMixture_,wdot);
+
         htemp = camMixture_->getMolarEnthalpy();                    //enthalpy
         m_cp[i] = camMixture_->getSpecificHeatCapacity();           //specific heat
         m_k[i] = camMixture_->getThermalConductivity(opPre);        //thermal conductivity
+
+        // MOVE THIS OUTSIDE LOOP
         m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
+
         temp = camMixture_->getMixtureDiffusionCoeff(opPre);
         cptemp = camMixture_->getMolarSpecificHeat();
         for(int l=0; l<nSpc; l++)
@@ -763,6 +776,7 @@ void FlameLet::saveMixtureProp(doublereal* y)
             //Specific heat capacity of species in J/Kg K
             CpSpec(i,l) =cptemp[l]/(*spv_)[l]->MolWt();
         }
+
     }
 }
 
@@ -899,7 +913,7 @@ doublereal FlameLet::scalarDissipationRateProfile
 	                     / (2.0*std::sqrt(m_rho[0]/rhoStoich)+1.0)
 	                   );
 
-	return stoichSDR * (fZ/fZst) * (phi/phist);
+	return stoichSDR * (fZ/fZst);// * (phi/phist);
 
 }
 
@@ -923,11 +937,6 @@ int FlameLet::eval
 
 }
 
-void FlameLet::report(doublereal x, doublereal* solution)
-{
-    cout << "Dummy function called\n";
-}
-
 /*
  *consol output function
  */
@@ -948,8 +957,6 @@ void FlameLet::report(doublereal x, doublereal* solution, doublereal& res)
 void FlameLet::reportToFile(std::string fileName, doublereal t, doublereal* soln)
 {
 
-
-
     doublereal sum;
     reporter_->openFile(fileName,false);
     reporter_->writeCustomHeader(headerData);
@@ -964,13 +971,15 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, doublereal* soln
     }
     reporter_->writeTempProfiletoXML("camflow.xml",temperatureVec);
 
-    for(int i=0; i<len; i++){
+    for (int i=0; i<len; i++) {
+
         data.clear();
         data.push_back(t);
         data.push_back(axpos[i]);
-        data.push_back(scalarDissipationRate(axpos[i]));
+        data.push_back(scalarDissipationRateProfile(axpos[i],2.0,i));
         data.push_back(m_rho[i]);
         data.push_back(m_mu[i]);
+        data.push_back(m_cp[i]);
         data.push_back(soln[i*nVar+ptrT]);
         if (admin_.getRadiationModel())
         {
@@ -1023,6 +1032,7 @@ void FlameLet::header()
     headerData.push_back("SDR");
     headerData.push_back("rho");
     headerData.push_back("mu");
+    headerData.push_back("cp");
     headerData.push_back("T");
     headerData.push_back("Radiation");
     for (int l = 0; l < nSpc; l++) {
