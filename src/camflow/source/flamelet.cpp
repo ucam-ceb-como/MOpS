@@ -57,11 +57,11 @@ void FlameLet::solve
     initSolutionVector();
 
     reporter_->header("Flamelet");
-    header();
 
     if(!interface)
     {
         reportToFile("initialProfile.dat",control_.getMaxTime(),&solvect[0]);
+        //writeXMLFile(scalarDissipationRate_.getRefSDR(), solvect);
     }
 
     if (control_.getSolutionMode() == control_.COUPLED)
@@ -206,18 +206,28 @@ void FlameLet::initSolutionVector()
     vT.resize(len,0.0);
     for (unsigned int i=0; i<dz.size();i++)
     {
-       // vT[i] = profile->getUserDefTemp(position[i]);
-
-        if (position[i] < stoichZ)
+        vT[i] = profile_.getUserDefTemp(position[i]);
+        /*if (position[i] < stoichZ)
         {
             vT[i] = slopeOx*position[i] + inrsctOx;
         }
         else
         {
             vT[i] = slopeFl*position[i] + inrsctFl;
-        }
+        }*/
     }
 
+
+    if(profile_.flagLoadFracs())
+    {
+        for (unsigned int i=0; i<dz.size();i++)
+        {
+            for (unsigned int l=0; l<nSpc; ++l)
+            {
+                vSpec[i*nSpc+l] = profile_.getUserDefFracs(position[i],(*spv_)[l]->Name());
+            }
+        }
+    }
     /*
      *fix the temperature for mixture fraction zero
      *i.e oxidizer inlet
@@ -262,6 +272,14 @@ void FlameLet::csolve
         // Calculate the mixture viscosity.
         for (int i=0; i<mCord; ++i)
         {
+            std::vector<doublereal> mf;
+            for(int l=0; l<nSpc; l++)
+            {
+                mf.push_back(solvect[i*nVar+l]);
+            }
+            camMixture_->SetMassFracs(mf);
+            camMixture_->SetTemperature(m_T[i]);
+            camMixture_->SetMassDensity(m_rho[i]);                      //density
             m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
         }
 
@@ -272,6 +290,7 @@ void FlameLet::csolve
         if(!interface)
         {
             reportToFile("profile.dat",control_.getMaxTime(),&solvect[0]);
+            writeXMLFile(scalarDissipationRate_.getRefSDR(), solvect);
         }
 
     }
@@ -974,7 +993,9 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, doublereal* soln
 
     doublereal sum;
     reporter_->openFile(fileName,false);
-    reporter_->writeCustomHeader(headerData);
+
+    reporter_->writeCustomHeader(header());
+
     vector<doublereal> data, axpos;
     vector<doublereal> molfrac, massfrac, temperatureVec;
     axpos = reacGeom_.getAxpos();
@@ -984,7 +1005,6 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, doublereal* soln
     {
         temperatureVec.push_back(soln[i*nVar+ptrT]);
     }
-    reporter_->writeTempProfiletoXML("camflow.xml",axpos,temperatureVec);
 
     for (int i=0; i<len; i++) {
 
@@ -1035,11 +1055,41 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, doublereal* soln
     //reacGeom->refine(soln,nVar,nSpc,ptrT);
 
 }
+
+void FlameLet::writeXMLFile
+(
+    const doublereal sdr,
+    const std::vector<doublereal>& solvect
+)
+{
+
+    std::vector<doublereal> temperatureVec, axpos, massfrac;
+    axpos = reacGeom_.getAxpos();
+    int len = axpos.size();
+
+    for (int i=0; i<len; ++i)
+    {
+        temperatureVec.push_back(solvect[i*nVar+ptrT]);
+    }
+
+    reporter_->writeTempProfiletoXML("camflow",sdr,axpos,temperatureVec);
+    for(int l=0; l<nSpc; l++){
+        massfrac.clear();
+        for (int i=0; i<len; i++) {
+            massfrac.push_back(solvect[i*nVar+l]);
+        }
+        reporter_->writeMassFracProfiletoXML("camflow",sdr,axpos,massfrac, (*spv_)[l]->Name() );
+    }
+
+}
+
 /*
  *output file header
  */
-void FlameLet::header()
+std::vector<std::string> FlameLet::header()
 {
+
+    std::vector<std::string> headerData;
 
     headerData.clear();
     headerData.push_back("time");
@@ -1054,6 +1104,8 @@ void FlameLet::header()
         headerData.push_back( (*spv_)[l]->Name() );
     }
     headerData.push_back("sumfracs");
+
+    return headerData;
 
 }
 
@@ -1139,7 +1191,9 @@ const
 	sdrInterpolated.clear();
 	cfdMixFracCoordsInterpolated.clear();
 
-	for (size_t i=0; i<cfdMixFracCoords[0].size(); ++i) {
+	for (size_t i=0; i<cfdMixFracCoords[0].size(); ++i)
+	{
+
 		sdrTime.clear();
 		sdrTime.push_back(profile_sdr[0][i]);
 		sdrTime.push_back(profile_sdr[1][i]);

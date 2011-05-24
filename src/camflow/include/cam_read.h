@@ -42,7 +42,10 @@
 
 #ifndef _CAM_READ_H
 #define	_CAM_READ_H
+
 #include <string>
+#include <vector>
+
 #include "cam_geometry.h"
 #include "cam_admin.h"
 #include "cam_configuration.h"
@@ -50,6 +53,10 @@
 #include "camxml.h"
 #include "cam_converter.h"
 #include "cam_soot.h"
+#include "cam_control.h"
+#include "cam_boundary.h"
+#include "string_functions.h"
+#include "cam_error.h"
 
 namespace Camflow{
 

@@ -83,14 +83,24 @@ namespace Camflow{
         void wrteHeader(std::vector<std::string>& stdHeader, std::vector<std::string>& ratesHeader, std::vector<std::string>& transHeader);
         void writeToFile(std::string fname,CamResidual &resid);
         void writeStdFileOut(std::vector<doublereal>& data);
-        void writeCustomHeader(std::vector<std::string>& header);
+        void writeCustomHeader(std::vector<std::string> header);
         void writeCustomFileOut(std::vector<doublereal>& data);
 
         void writeTempProfiletoXML
         (
             const std::string fileName,
+            const doublereal sdr,
             const std::vector<doublereal>& axPos,
             const std::vector<doublereal>& temperature
+        );
+
+        void writeMassFracProfiletoXML
+        (
+            const std::string fileName,
+            const doublereal sdr,
+            const std::vector<doublereal>& axPos,
+            const std::vector<doublereal>& massFrac,
+            const std::string speciesName
         );
 
     };

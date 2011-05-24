@@ -189,13 +189,19 @@ namespace Camflow
             void getWdotA4(std::vector<doublereal>& wdotA4) const;
 
             //! Create header for file output.
-            void header();
+            std::vector<std::string> header();
 
             //! Console output with residuals.
             void report(doublereal x, doublereal* solution, doublereal& res);
 
             //! File output.
             void reportToFile(std::string fileName, doublereal x, doublereal* solution);
+
+            void writeXMLFile
+            (
+                const doublereal,
+                const std::vector<doublereal>& solvect
+            );
 
         private:
 

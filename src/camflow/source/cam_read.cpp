@@ -480,7 +480,7 @@ void CamRead::readInitialGuess
 
     CamXML::Element *initialize, *subsubnode;
     std::vector<CamXML::Element*> subsubnodes;
-    std::vector<CamXML::Element*>::const_iterator p;
+    std::vector<CamXML::Element*>::const_iterator p,q,r;
     initialize = node.GetFirstChild("initialize");
     if(initialize != NULL)
     {
@@ -521,6 +521,7 @@ void CamRead::readInitialGuess
                 cp.setUserTemp(pos,temp);
             }
         }
+
         //intermediate and product species
         std::string mem1 = "product";
         std::string mem2 = "intrmdt";
@@ -535,14 +536,29 @@ void CamRead::readInitialGuess
             cp.setIntermediateSpecies(fracs);
         }
 
-        subsubnode = initialize->GetFirstChild("molefrac");
+        //mass frac profiles
+        std::vector<CamXML::Element*> massfracs;
+        initialize->GetChildren("massfracs",massfracs);
+        subsubnode = initialize->GetFirstChild("massfracs");
         if(subsubnode != NULL)
         {
-            cp.setFracType(cp.MOLE);
-            readFrac(mem1,fracs,*subsubnode);
-            cp.setProductSpecies(fracs);
-            readFrac(mem2,fracs,*subsubnode);
-            cp.setIntermediateSpecies(fracs);
+            for (q=massfracs.begin(); q<massfracs.end(); ++q)
+            {
+                if ((*q) != NULL)
+                {
+                    const CamXML::Attribute *species;
+                    species = (*q)->GetAttribute("species");
+
+                    (*q)->GetChildren("position",subsubnodes);
+
+                    for (r=subsubnodes.begin(); r<subsubnodes.end(); ++r)
+                    {
+                        doublereal pos = cdble((*r)->GetAttributeValue("x"));
+                        doublereal temp = cdble((*r)->Data());
+                        cp.setUserFrac(pos,temp,species->GetValue());
+                    }
+                }
+            }
         }
 
     }

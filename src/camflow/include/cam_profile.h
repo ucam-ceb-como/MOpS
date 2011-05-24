@@ -57,11 +57,13 @@ using namespace Sprog;
 namespace Camflow{
     class CamProfile : public CamConc {
 
-        std::vector<doublereal> u_pos, u_temp;         //user defined temp profile
+        std::vector<doublereal> u_pos, u_temp, u_species_pos, u_frac;
+        std::vector<std::string> u_species;
         std::map<std::string, doublereal> list_prdt, list_intmd;
         std::vector<doublereal> m_prdt, m_intmd;
         doublereal mWidth, mCenter;
         int fracType;
+        bool flag_loadFracs;
         Array2D start;
         CamGeometry& geom;
 
@@ -114,10 +116,16 @@ namespace Camflow{
         //set the user defined temp profile
         void setUserTemp(doublereal pos, doublereal temp);
 
+        void setUserFrac(doublereal pos, doublereal temp, std::string species);
+
+        const bool flagLoadFracs() const
+        {
+            return flag_loadFracs;
+        };
 
         //return the user defined temperature based on the interpolation
         doublereal getUserDefTemp(const doublereal& pos);
-
+        doublereal getUserDefFracs(const doublereal& pos, const std::string species);
         //set temperature based on a gaussian
         void setGaussTempProfile(std::vector<doublereal>& vTemp);
 

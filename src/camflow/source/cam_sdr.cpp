@@ -9,7 +9,7 @@ ScalarDissipationRate::ScalarDissipationRate
 )
 :
   scalarDissipationRate_(n_MixtureFractionPoints, n_TimePoints, 0.0),
-  scalarDissipationRateRef_(0.0)
+  scalarDissipationRateRef_(1.0)
 {}
 
 //! Destructor.

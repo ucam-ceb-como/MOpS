@@ -95,6 +95,11 @@ class ScalarDissipationRate
 
         void setSdrType(const int sdrType) {sdrType_ = sdrType;};
 
+        const doublereal getRefSDR() const
+        {
+            return scalarDissipationRateRef_;
+        }
+
         /*inline const std::vector<doublereal> getScalarDissipationRate()
         {
             return scalarDissipationRate_(0);

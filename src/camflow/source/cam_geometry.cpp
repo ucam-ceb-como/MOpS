@@ -151,7 +151,8 @@ const vector<doublereal>& CamGeometry::getAxpos() const {
     return axPos;
 }
 
-void CamGeometry::addZeroWidthCells(){
+void CamGeometry::addZeroWidthCells()
+{
     vector<doublereal> temp = dz;
     dz.clear();
     dz.push_back(1e-08);
