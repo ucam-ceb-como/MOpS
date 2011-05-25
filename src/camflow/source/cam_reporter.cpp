@@ -76,7 +76,7 @@ void CamReporter::problemDescription(CamBoundary& cb, CamResidual& cr){
 
     //initializing solution vector
     std::cout << "\t Initializing solution vector...\n";
-    std::cout << "\t Inlet valocity: "<<cb.getVelocity() <<  " m/s" << std::endl;
+    std::cout << "\t Inlet velocity: "<<cb.getVelocity() <<  " m/s" << std::endl;
     std::cout << "\t Inlet temperature "<< cb.getTemperature() << " K"<< std::endl;
     std::map<std::string, doublereal> species = cb.getInletSpecies();   
     std::map<std::string, doublereal>::iterator p = species.begin();
@@ -122,7 +122,7 @@ void CamReporter::writeCustomHeader(std::vector<std::string> header){
     custom->write(header);
 }
 //write the header for standard output data
-void CamReporter::writeHeader(std::vector<std::string>& stdHeader){
+void CamReporter::writeHeader(std::vector<std::string> stdHeader){
     if(stdHeader.size() == 0)throw CamError("header info missing\n");
     standard->write(stdHeader);
 }

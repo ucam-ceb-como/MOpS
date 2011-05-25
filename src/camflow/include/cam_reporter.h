@@ -78,7 +78,7 @@ namespace Camflow{
         void closeFile();
         void openFiles(bool stdrd = true, bool ratesOut = false, bool transOut = false);
         void closeFiles(bool stdrd = true, bool ratesOut = false, bool transOut = false);
-        void writeHeader(std::vector<std::string>& stdHeader);
+        void writeHeader(std::vector<std::string> stdHeader);
         void writeHeader(std::vector<std::string>& stdHeader, std::vector<std::string>& ratesHeader);
         void wrteHeader(std::vector<std::string>& stdHeader, std::vector<std::string>& ratesHeader, std::vector<std::string>& transHeader);
         void writeToFile(std::string fname,CamResidual &resid);

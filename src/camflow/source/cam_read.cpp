@@ -148,6 +148,11 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
         // and cell widths.
         cg.setGeometry(dz);
 
+        if(config.getConfiguration() == config.FLAMELET)
+        {
+            cg.addZeroWidthCells();
+        }
+
     }else{
         throw CamError("Reactor definition missing\n");
     }

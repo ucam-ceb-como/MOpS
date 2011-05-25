@@ -56,7 +56,7 @@
 #include "cam_residual.h"
 #include "flamelet.h"
 //#include "cam_plug.h"
-//#include "batch.h"
+#include "batch.h"
 //#include "cam_premix.h"
 //#include "stagflow.h"
 #include "cam_error.h"

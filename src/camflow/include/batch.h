@@ -130,6 +130,12 @@ namespace Camflow {
             //header information
             std::vector<std::string> header();
 
+            //! Get the residual for use in radauWrapper.
+            doublereal getResidual() const;
+
+            //! Mass matrix evaluation. Called by radauWrapper.
+            void massMatrix(doublereal **M);
+
         private:
 
             int batchType;

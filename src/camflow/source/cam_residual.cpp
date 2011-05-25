@@ -22,7 +22,7 @@ CamResidual::CamResidual
   camMixture_(new Sprog::Thermo::Mixture(mech.Species())),
   spv_(camMixture_->Species()),
   opPre(ca.getPressure()),
-  mCord(cg.getnCells()+2), // Need to add 2 due to the addition of 'ghost' cells in flamelet::solve
+  mCord(cg.getnCells()), // Need to add 2 due to the addition of 'ghost' cells in flamelet::solve
   iMesh_s(1),
   cellBegin(0),
   iMesh_e(mCord-1),

@@ -1,4 +1,3 @@
-
 /*
  * File:   batch.h
  * Author: vj231
@@ -128,8 +127,6 @@ void Batch::solve()
     reporter_->header("BATCH");
     reporter_->problemDescription(cb,*this);
     reporter_->openFiles();
-    header();
-    reporter_->writeCustomHeader(header());
     /*
      *report the values at the inlet
      */
@@ -349,6 +346,8 @@ void Batch::report(doublereal x, doublereal* soln, doublereal& res){
 
 void Batch::reportToFile(doublereal time, doublereal* soln){
     //prepare to report
+
+
     doublereal sum =0;
     std::vector<doublereal> data;
     data.clear();
@@ -385,6 +384,33 @@ void Batch::reportToFile(doublereal time, doublereal* soln){
 
 
 
+    reporter_->openFiles(true,false,false);
+    reporter_->writeHeader(header());
     reporter_->writeStdFileOut(data);
 
 }
+
+doublereal Batch::getResidual()
+const
+{
+
+    doublereal resNorm=0;
+
+    for (int i=0; i<nSpc*mCord; ++i)
+    {
+        resNorm += resSp[i]*resSp[i];
+    }
+    for (int i=0; i<mCord; ++i)
+    {
+        resNorm += resT[i]*resT[i];
+    }
+
+    return std::sqrt(resNorm);
+
+}
+
+/*
+ *mass matrix evaluation
+ */
+void Batch::massMatrix(doublereal** M)
+{}

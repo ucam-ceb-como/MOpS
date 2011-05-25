@@ -49,7 +49,7 @@ void FlameLet::solve
 )
 {
 
-    reacGeom_.addZeroWidthCells();
+    //reacGeom_.addZeroWidthCells();
 
     /*
      *init the solution vector
