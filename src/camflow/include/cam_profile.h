@@ -63,7 +63,7 @@ namespace Camflow{
         std::vector<doublereal> m_prdt, m_intmd;
         doublereal mWidth, mCenter;
         int fracType;
-        bool flag_loadFracs;
+        bool flag_loadFracs, flag_loadTemp;
         Array2D start;
         CamGeometry& geom;
 
@@ -121,6 +121,11 @@ namespace Camflow{
         const bool flagLoadFracs() const
         {
             return flag_loadFracs;
+        };
+
+        const bool flagLoadTemp() const
+        {
+            return flag_loadTemp;
         };
 
         //return the user defined temperature based on the interpolation

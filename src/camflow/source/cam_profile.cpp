@@ -55,7 +55,8 @@ mWidth(0.0),
 mCenter(0.0),
 fracType(0),
 geom(cg),
-flag_loadFracs(false)
+flag_loadFracs(false),
+flag_loadTemp(false)
 {}
 
 CamProfile::~CamProfile()
@@ -261,6 +262,7 @@ void CamProfile::getmassFracs(std::map<std::string,doublereal>& spec, Mechanism&
 
 void CamProfile::setUserTemp(doublereal pos, doublereal temp)
 {
+    flag_loadTemp = true;
     u_pos.push_back(pos);
     u_temp.push_back(temp);
 }

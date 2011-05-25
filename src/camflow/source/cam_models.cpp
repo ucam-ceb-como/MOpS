@@ -77,7 +77,7 @@ void CamModels::solve
     }else if(configID == config.PREMIX){
         //rModel = new CamPremix();
     }else if(configID == config.BATCH_CV){
-        //rModel = new Batch();
+        //rModel = new Batch(ca, config, cc, cg, cp, cs, mech);
     }else if(configID == config.STAGFLOW || configID == config.COUNTERFLOW){
         //rModel = new StagFlow();
     }else if(configID==config.FLAMELET || configID == config.FLAMELET_NULN){

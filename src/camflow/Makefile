@@ -37,7 +37,7 @@ obj=    cam_read.o cam_setup.o cam_geometry.o \
 		cam_control.o cam_conveter.o cam_math.o cam_conc.o cam_radiation.o\
 		cam_admin.o cam_boundary.o cam_configuration.o cam_profile.o\
 		cam_reporter.o cam_models.o cam_residual.o \
-		cam_soot.o cam_sdr.o flamelet.o \
+		cam_soot.o cam_sdr.o flamelet.o batch.o \
 		cvode_wrapper.o radau_wrapper.o
 
 all: $(obj) 
@@ -87,8 +87,9 @@ cam_sdr.o: $(src)/cam_sdr.cpp
 	$(cpp) $(flag) $(src)/cam_sdr.cpp
 flamelet.o: $(src)/flamelet.cpp
 	$(cpp) $(flag) $(src)/flamelet.cpp
-
-
+batch.o: $(src)/batch.cpp
+	$(cpp) $(flag) $(src)/batch.cpp
+	
 # Combined mechanisms.
 
 # TARGET clean: leave just source code.

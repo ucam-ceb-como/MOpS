@@ -176,10 +176,6 @@ void CamReporter::writeTempProfiletoXML
         subsubnode = initialize->GetFirstChild("Tprofile");
         if(subsubnode != NULL)
         {
-            const CamXML::Attribute *length, *temp;
-            length = subsubnode->GetAttribute("unit_L");
-            temp = subsubnode->GetAttribute("unit_T");
-
             subsubnode->GetChildren("position",subsubnodes);
 
             int count=0;
@@ -188,6 +184,21 @@ void CamReporter::writeTempProfiletoXML
                 doublereal temp = mTempInterpolator.interpolate(Strings::cdble((*p)->GetAttributeValue("x")));
                 (*p)->SetData(Strings::cstr(temp));
                 ++count;
+            }
+        }
+        else
+        {
+            initialize->AddChild("Tprofile");
+            subsubnode = initialize->GetFirstChild("Tprofile");
+            subsubnode->SetAttribute("unit_L","m");
+            subsubnode->SetAttribute("unit_K","K");
+            for(int q=0; q<axPos.size(); ++q)
+            {
+                subsubnode->AddChild("position");
+                subsubnode->GetChildren("position",subsubnodes);
+                subsubnodes[q]->SetAttribute("x",Strings::cstr(axPos[q]));
+                doublereal temp = mTempInterpolator.interpolate(Strings::cdble(subsubnodes[q]->GetAttributeValue("x")));
+                subsubnodes[q]->SetData(Strings::cstr(temp));
             }
         }
     }

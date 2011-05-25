@@ -206,15 +206,22 @@ void FlameLet::initSolutionVector()
     vT.resize(len,0.0);
     for (unsigned int i=0; i<dz.size();i++)
     {
-        vT[i] = profile_.getUserDefTemp(position[i]);
-        /*if (position[i] < stoichZ)
+        if (position[i] < stoichZ)
         {
             vT[i] = slopeOx*position[i] + inrsctOx;
         }
         else
         {
             vT[i] = slopeFl*position[i] + inrsctFl;
-        }*/
+        }
+    }
+
+    if(profile_.flagLoadTemp())
+    {
+        for (unsigned int i=0; i<dz.size();i++)
+        {
+            vT[i] = profile_.getUserDefTemp(position[i]);
+        }
     }
 
 
@@ -933,7 +940,7 @@ doublereal FlameLet::scalarDissipationRateProfile
 	doublereal fZ = exp(-2*cm.SQR(cm.inverfc(2*m_frac)));
 	doublereal fZst = exp(-2*cm.SQR(cm.inverfc(2*stoichZ)));
 
-	Utils::LinearInterpolator<doublereal, doublereal> rhoInterpolate(reacGeom_.getAxpos(),m_rho);
+	/*Utils::LinearInterpolator<doublereal, doublereal> rhoInterpolate(reacGeom_.getAxpos(),m_rho);
 	doublereal rhoStoich = rhoInterpolate.interpolate(stoichZ);
 
 	doublereal phi = 0.75 *
@@ -945,7 +952,7 @@ doublereal FlameLet::scalarDissipationRateProfile
 	                   (
 	                       cm.SQR(std::sqrt(m_rho[0]/rhoStoich)+1.0)
 	                     / (2.0*std::sqrt(m_rho[0]/rhoStoich)+1.0)
-	                   );
+	                   );*/
 
 	return stoichSDR * (fZ/fZst);// * (phi/phist);
 

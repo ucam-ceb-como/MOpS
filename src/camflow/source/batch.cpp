@@ -39,18 +39,26 @@
  * Created on 04 June 2009, 11:43
  */
 #include "batch.h"
-#include "cam_math.h"
-#include "cvode_wrapper.h"
-#include "radau_wrapper.h"
-#include "limex_wrapper.h"
-#include <vector>
-#include <cstring>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
 
 using namespace Camflow;
 using namespace Gadgets;
+
+Batch::Batch
+(
+    CamAdmin& ca,
+    CamConfiguration& config,
+    CamControl& cc,
+    CamGeometry& cg,
+    CamProfile& cp,
+    CamSoot& cs,
+    Mechanism& mech
+)
+:
+  CamSetup(ca, config, cc, cg, cp, cs, mech)
+{}
+
+Batch::~Batch()
+{}
 
 /*
  *set the reactor type const volume or const pressure
@@ -76,91 +84,81 @@ int Batch::getType(){
  * number of equations to be solved, the total number of variables in the
  * system etc.
  */
-void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp,
-                      CamConfiguration& config, CamSoot &cs, Mechanism& mech){
-//void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry &cg, CamProfile& cp,
-//                      CamSoot &cs, Mechanism &mech){
+void Batch::solve()
+{
 
-    camMech = &mech;
-    Thermo::Mixture mix(mech.Species());
-    camMixture = &mix;
-    spv = camMixture->Species();
-    profile = &cp;
     CamBoundary cb;
-    admin = &ca;
-    sootMom = &cs;
 
-    reporter = new CamReporter();
+    //reporter = new CamReporter();
 
-    nSpc = mech.SpeciesCount();
-    nVar = nSpc+1; //species + temperature
-    nEqn = nVar;
-    ptrT = nVar-1;
+
+
+
+    //nSpc = mech.SpeciesCount();
+   // nVar = nSpc+1; //species + temperature
+    //nEqn = nVar;
+    //ptrT = nVar-1;
 
 
     /*get the fuel inlet conditions and the fill the
      *solution vector with species mass fractions
      */
 
-    ca.getLeftBoundary(cb);
+    admin_.getLeftBoundary(cb);
     getInletMassFrac(cb,solvect);
-    //set the initial pressure
-    opPre = ca.getPressure();
 
 
     /*
      *initialize the solution vector with species
      *mass fractions
      */
-    camMixture->SetMassFracs(solvect);
+    camMixture_->SetMassFracs(solvect);
     //fill the temparature
     doublereal temp = cb.getTemperature();
-    camMixture->SetTemperature(temp);
+    camMixture_->SetTemperature(temp);
 
-    real avgMolWt = camMixture->getAvgMolWt();
+    real avgMolWt = camMixture_->getAvgMolWt();
     rho = avgMolWt*opPre/(R*temp);
-    camMixture->SetMassDensity(rho);
-    camMixture->GetConcs(solvect);
+    camMixture_->SetMassDensity(rho);
+    camMixture_->GetConcs(solvect);
     solvect.push_back(temp);
 
 
 
-    reporter->header("BATCH ");
-    reporter->problemDescription(cb,*this);
-    reporter->openFiles();
+    reporter_->header("BATCH");
+    reporter_->problemDescription(cb,*this);
+    reporter_->openFiles();
     header();
-    reporter->writeHeader(headerData);
+    reporter_->writeCustomHeader(header());
     /*
      *report the values at the inlet
      */
     report(0.0,&solvect[0]);
 
-    int solverID = cc.getSolver();
-
-    if (solverID == cc.CVODE) {
+    if (solverID == control_.CVODE) {
 
         CVodeWrapper cvw;
-        cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(), cc.getSpeciesRelTol(),
-                            cc.getMaxTime(),nEqn,*this);
+        cvw.init(nEqn,solvect,control_.getSpeciesAbsTol(), control_.getSpeciesRelTol(),
+            control_.getMaxTime(),nEqn,*this);
 
-        cvw.solve(CV_ONE_STEP,cc.getResTol());
-        reporter->closeFiles();
+        cvw.solve(CV_ONE_STEP,control_.getResTol());
+        reporter_->closeFiles();
 
-    } else if (solverID == cc.RADAU) {
+    } else if (solverID == control_.RADAU) {
 
       RadauWrapper radauWrapper;
 
         std::vector<doublereal> relTolVector;
         std::vector<doublereal> absTolVector;
 
-        relTolVector.push_back(cc.getSpeciesRelTol());
-        absTolVector.push_back(cc.getSpeciesAbsTol());
+        relTolVector.push_back(control_.getSpeciesRelTol());
+        absTolVector.push_back(control_.getSpeciesAbsTol());
 
         radauWrapper.setBandWidth(nEqn);
 
         radauWrapper.initSolver(nEqn,
                                 0.0,
-                                cc.getMaxTime(),
+                                control_.getMaxTime(),
                                 solvect,
                                 relTolVector,
                                 absTolVector,
@@ -177,9 +175,9 @@ void Batch::solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp,
       //}
       // radauWrapper.destroy();
 
-         reporter->closeFiles();
+         reporter_->closeFiles();
 
-    } else if (solverID == cc.LIMEX) {
+    } else if (solverID == control_.LIMEX) {
           throw std::logic_error("Error -- Limex is not yet supported");
       }
 }
@@ -205,7 +203,7 @@ void Batch::residual(const doublereal& time, doublereal* y, doublereal* f){
     /*
      *moment residuals
      */
-    if(sootMom->active()){
+    if(sootMom_.active()){
         std::vector<doublereal> mom;
         for(int m=0; m<nMoments; m++)
             mom.push_back(y[nSpc+m]);
@@ -214,7 +212,7 @@ void Batch::residual(const doublereal& time, doublereal* y, doublereal* f){
         /*
          *evaluate soot residual
          */
-        sootMom->residual(time,momRates,&mom[0],&resMoment[0]);
+        sootMom_.residual(time,momRates,&mom[0],&resMoment[0]);
 
         for(int m=0; m<nMoments; m++){
             f[nSpc+m] = resMoment[m];
@@ -240,12 +238,12 @@ void Batch::updateMixture(const doublereal& x, doublereal* y){
         molefracs[l] = y[l]/cb;
     }
     //camMixture->SetMassFracs(massfracs);
-    camMixture->SetFracs(molefracs);
-    if(admin->getEnergyModel() == admin->USERDEFINED)
-        tmptr = profile->getUserDefTemp(x);
+    camMixture_->SetFracs(molefracs);
+    if(admin_.getEnergyModel() == admin_.USERDEFINED)
+        tmptr = profile_.getUserDefTemp(x);
     else
         tmptr = y[ptrT];
-    camMixture->SetTemperature(tmptr);
+    camMixture_->SetTemperature(tmptr);
 
     opPre = cb*R*tmptr;
 
@@ -253,7 +251,7 @@ void Batch::updateMixture(const doublereal& x, doublereal* y){
 //species residual definition
 void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f){
 
-    camMech->Reactions().GetMolarProdRates(*camMixture,wdot);
+    camMech_->Reactions().GetMolarProdRates(*camMixture_,wdot);
 
     for (int l = 0; l < nSpc; l++) {
         f[l]= wdot[l];
@@ -265,14 +263,14 @@ void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f){
 
 //temperature residual
 void Batch::energyResidual(const doublereal& x, doublereal* y, doublereal* f){
-    int engModel = admin->getEnergyModel();
-    if(engModel == admin->ISOTHERMAL || engModel == admin->USERDEFINED){
+    int engModel = admin_.getEnergyModel();
+    if(engModel == admin_.ISOTHERMAL || engModel == admin_.USERDEFINED){
         f[ptrT]= 0.0;
     }else{
         //get the molar enthalpy
         CamMath cm;
-        std::vector<doublereal> eth = camMixture->getMolarEnthalpy();
-        doublereal cp = camMixture->getSpecificHeatCapacity();
+        std::vector<doublereal> eth = camMixture_->getMolarEnthalpy();
+        doublereal cp = camMixture_->getSpecificHeatCapacity();
         //heat release due to chemical reactions
         doublereal heat = cm.sumVector(eth,wdot);
         doublereal extSource = 0.0;
@@ -284,13 +282,13 @@ void Batch::energyResidual(const doublereal& x, doublereal* y, doublereal* f){
          * This is only an approximation. For exact results the user
          * need to specify the overall heat transfer coefficient
          */
-        if(engModel == admin->NONISOTHERMAL){
+        if(engModel == admin_.NONISOTHERMAL){
 
-            doublereal lambda = camMixture->getThermalConductivity(opPre);
-            doublereal eta = camMixture->getViscosity();
-            doublereal dia = reacGeom->getDia();
-            doublereal ht = admin->getHeatTransferCoeff(x,vel,dia,rho,eta,lambda,cp);
-            extSource = ht*reacGeom->getSurfAres_l()*(admin->getWallTemp() - y[ptrT]);
+            doublereal lambda = camMixture_->getThermalConductivity(opPre);
+            doublereal eta = camMixture_->getViscosity();
+            doublereal dia = reacGeom_.getDia();
+            doublereal ht = admin_.getHeatTransferCoeff(x,vel,dia,rho,eta,lambda,cp);
+            extSource = ht*reacGeom_.getSurfAres_l()*(admin_.getWallTemp() - y[ptrT]);
 
         }
 
@@ -300,19 +298,24 @@ void Batch::energyResidual(const doublereal& x, doublereal* y, doublereal* f){
 }
 
 //generate the header data
-void Batch::header(){
+std::vector<std::string> Batch::header(){
+
+
+    std::vector<std::string> headerData;
+
     headerData.clear();
     headerData.push_back("time");
     headerData.push_back("pre");
     headerData.push_back("rho");
     headerData.push_back("T");
     for (int l = 0; l < nSpc; l++) {
-        headerData.push_back( (*spv)[l]->Name() );
+        headerData.push_back( (*spv_)[l]->Name() );
     }
     headerData.push_back("sumfracs");
     /*
      *additional output if soot moment are active
      */
+    return headerData;
 
 }
 //report the solution
@@ -322,7 +325,7 @@ void Batch::report(doublereal x, doublereal* soln){
     std::cout.width(5);
     std::cout.setf(std::ios::scientific);
     updateMixture(x,soln);
-    if(nStep%20==0) reporter->consoleHead("time (s)");
+    if(nStep%20==0) reporter_->consoleHead("time (s)");
     std::cout << x << std::endl;
     reportToFile(x,soln);
     nStep++;
@@ -337,7 +340,7 @@ void Batch::report(doublereal x, doublereal* soln, doublereal& res){
     std::cout.width(5);
     std::cout.setf(std::ios::scientific);
     updateMixture(x,soln);
-    if(nStep%20==0) reporter->consoleHead("time(s) \t residual");
+    if(nStep%20==0) reporter_->consoleHead("time(s) \t residual");
     std::cout << x << "     " << res << std::endl;
     reportToFile(x,soln);
     nStep++;
@@ -354,9 +357,9 @@ void Batch::reportToFile(doublereal time, doublereal* soln){
     data.push_back(rho);
     data.push_back(soln[ptrT]);
 
-    if(admin->getSpeciesOut()==admin->MOLE){
+    if(admin_.getSpeciesOut()==admin_.MOLE){
         std::vector<doublereal> molefracs;
-        molefracs = camMixture->MoleFractions();
+        molefracs = camMixture_->MoleFractions();
         sum =0.0;
         for (int l = 0; l < nSpc; l++) {
             if(fabs(molefracs[l])> 1e-99)
@@ -368,7 +371,7 @@ void Batch::reportToFile(doublereal time, doublereal* soln){
 
     }else{
         std::vector<doublereal> massfracs;
-        camMixture->GetMassFractions(massfracs);
+        camMixture_->GetMassFractions(massfracs);
         sum =0.0;
         for (int l = 0; l < nSpc; l++) {
             if(fabs(massfracs[l])> 1e-99)
@@ -382,6 +385,6 @@ void Batch::reportToFile(doublereal time, doublereal* soln){
 
 
 
-    reporter->writeStdFileOut(data);
+    reporter_->writeStdFileOut(data);
 
 }
