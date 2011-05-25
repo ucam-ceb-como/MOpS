@@ -191,7 +191,7 @@ void CamReporter::writeTempProfiletoXML
             initialize->AddChild("Tprofile");
             subsubnode = initialize->GetFirstChild("Tprofile");
             subsubnode->SetAttribute("unit_L","m");
-            subsubnode->SetAttribute("unit_K","K");
+            subsubnode->SetAttribute("unit_T","K");
             for(int q=0; q<axPos.size(); ++q)
             {
                 subsubnode->AddChild("position");
