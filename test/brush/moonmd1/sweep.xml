@@ -24,20 +24,21 @@
     
     <!-- Inceptions -->
 
-    <inception name="Precipitation">
+    <inception name="Precipitation" rate="freemolecular">
         <formula>NACL + NACL to [X]</formula>
         <reactant id="NACL" stoich="2" m="2.0e3" d="0.5e2"/>
         <particleout id="[X]"/>
-        <component id="salt" dx="a"/>
-        <!-- 9.761e10 gives an effective constant of 1.0 by cancelling out various constants
-             in the program.-->
-        <A>9.761e10</A>
+        <component id="salt" dx="2"/>
+        <!-- 5.63527e9 cancels out the various constants in the free mol kernel
+          and a factor of sqrt(300) for the temperature.  The rate should now
+          be 1.0e-40 * 0.5 * [NaCl]^2 * NA^2-->
+        <A>5.63527e-31</A>
     </inception>
  
     <coagulation>
         <kernel>weightedconstant</kernel>
         <weightrule>w1</weightrule>
-        <A>1.0</A>
+        <A>1.0e-9</A>
     </coagulation>
 
 </mechanism>

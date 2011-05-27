@@ -48,12 +48,40 @@
 #include "swp_model_stats.h"
 #include "mt19937.h"
 
+#include "linear_interpolator.hpp"
+
 #include <memory>
 #include <iostream>
 #include <stdexcept>
+#include <limits>
 
-#include <unistd.h>
+/*!
+ * Function private to this file
+ *
+ * Work out how long a particle should take to travel through each cell and return the shortest residence
+ * time.  A mid point velocity integration is currently used.  This function is useful in determining the number of
+ * time splitting steps which the solver must make between particle processes such as coagulation and inception
+ * and particle transport.
+ *
+ *\param[in]         geom                Geometry defining the cells
+ *\param[in]         solution_length     Communication is by vectors which must all be at least this long
+ *\param[in]         solution_nodes      Distances from start of reactor (in m) at which velocity values are specified
+ *\param[in]         velocity            Flow velocity in \f$\mathrm{ms}^{-1}\f$
+ */
+Brush::real minimumResidenceTime(const Geometry::Geometry1d& geom, const size_t solution_length,
+                                 const double solution_nodes[], const double velocity[])
+{
+    const Utils::LinearInterpolator<double, double> velocityProfile(std::vector<double>(solution_nodes, solution_nodes + solution_length),
+                                                                    std::vector<double>(velocity,       velocity + solution_length ));
 
+    double minTime = std::numeric_limits<double>::max();
+    for(size_t i = 0; i < geom.numCells(); ++i) {
+        // In the 1d case cellVolume == length of cell
+        double residenceTime = std::abs(geom.cellVolume(i) / velocityProfile.interpolate(geom.cellCentre(i)));
+        minTime = residenceTime < minTime ? residenceTime : minTime;
+    }
+    return minTime;
+}
 
 /*!
  *\param[in]    chemfile     Path to file listing chemical species to consider
@@ -289,6 +317,8 @@ Brush::MooNMDInterface::particle_reactor_pointer
     //========= Build the initial reactor ========================
     Reactor1d *pReactor = new Reactor1d(*pGeom, mech, maxPCounts, maxM0s);
 
+    pReactor->ReplaceChemistry(initChem, true);
+
     // Put the initial particles into the reactor
     pReactor->ReplaceParticles(initialPopulationPoints.begin(), initialPopulationPoints.end());
 
@@ -375,7 +405,13 @@ Brush::MooNMDInterface::particle_reactor_pointer Brush::MooNMDInterface::RunPart
 
     //======== Simulate to update the particle population =======
     Brush::PredCorrSolver solver(chemInterpolator, 0, 0.0, 0.0, false, true);
-    solver.solve(reac, t_stop, 1, 0);
+
+    // Need to make sure that transport is simulated on intervals that do not
+    // always take particles over cell boundaries.
+    double minResidence = minimumResidenceTime(reac.getGeometry(), solution_length, solution_nodes, velocity);
+    unsigned numSplittings = std::ceil(10 * t_stop / minResidence);
+    std::cout << "Num splittings " << numSplittings << ", min residence " << minResidence << std::endl;
+    solver.solve(reac, t_stop, numSplittings, 0);
     Brush::Simulator::saveParticleStats(reac, Sweep::Stats::IModelStats::StatBound(), moment_output);
 
     //======== Estimate the source terms to return to the client =====

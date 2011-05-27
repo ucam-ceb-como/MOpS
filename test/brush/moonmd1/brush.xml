@@ -10,8 +10,8 @@
   <pcount x="0.2">128</pcount>
   <pcount x="2.0">128</pcount>
   <!--pcount>1024</pcount>-->
-  <maxm0 x="0.5">1.0</maxm0>
-  <maxm0 x="1.5">1.0</maxm0>
+  <maxm0 x="0.5">1.0e9</maxm0>
+  <maxm0 x="1.5">1.0e9</maxm0>
   <relax>0.5</relax>
   
 
@@ -33,7 +33,7 @@
 
 
   <output>
-    <filename>regress2adiffusion</filename>
+    <filename>moonmd1</filename>
   </output>
   
 </brush>
