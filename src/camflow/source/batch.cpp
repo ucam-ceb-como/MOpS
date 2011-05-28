@@ -72,6 +72,15 @@ int Batch::getType(){
     return batchType;
 }
 
+void Batch::checkSetup()
+{
+
+	if(mCord != 1) throw std::invalid_argument("Grid size does not equal one\n");
+	if(nVar != nSpc + 1) throw std::invalid_argument("nVar != nSpc + 1\n");
+	if(nEqn != nVar) throw std::invalid_argument("nEqn != nVar\n");
+
+}
+
 /*
  *Solve the batch reactor. This is called by CamModel.
  *Entering call to batch reactor model
@@ -88,45 +97,24 @@ void Batch::solve()
 
     CamBoundary cb;
 
-    //reporter = new CamReporter();
-
-
-
-
-    //nSpc = mech.SpeciesCount();
-   // nVar = nSpc+1; //species + temperature
-    //nEqn = nVar;
-    //ptrT = nVar-1;
-
+    // Check that the problem has been setup properly.
+    checkSetup();
 
     /*get the fuel inlet conditions and the fill the
      *solution vector with species mass fractions
      */
-
     admin_.getLeftBoundary(cb);
     getInletMassFrac(cb,solvect);
+    solvect.push_back(cb.getTemperature());
 
-
-    /*
-     *initialize the solution vector with species
-     *mass fractions
-     */
-    camMixture_->SetMassFracs(solvect);
-    //fill the temparature
-    doublereal temp = cb.getTemperature();
-    camMixture_->SetTemperature(temp);
-
-    real avgMolWt = camMixture_->getAvgMolWt();
-    rho = avgMolWt*opPre/(R*temp);
-    camMixture_->SetMassDensity(rho);
-    camMixture_->GetConcs(solvect);
-    solvect.push_back(temp);
-
-
+    // Update the mixture properties.
+    updateMixture(&solvect[0]);
 
     reporter_->header("BATCH");
     reporter_->problemDescription(cb,*this);
     reporter_->openFiles();
+    reporter_->writeHeader(header());
+
     /*
      *report the values at the inlet
      */
@@ -134,7 +122,7 @@ void Batch::solve()
 
     if (solverID == control_.CVODE) {
 
-        CVodeWrapper cvw;
+    	CVodeWrapper cvw;
         cvw.init(nEqn,solvect,control_.getSpeciesAbsTol(), control_.getSpeciesRelTol(),
             control_.getMaxTime(),nEqn,*this);
 
@@ -182,88 +170,71 @@ void Batch::solve()
 /*
  * function called by the ODE solver
  */
-int Batch::eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval){
-    /*
-     *this is called by the DAE wrapper object. Given y, ydot is returned
-     */
+int Batch::eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval)
+{
     residual(x,y,ydot);
     return 0;
 }
 
 
 //residual definitions
-void Batch::residual(const doublereal& time, doublereal* y, doublereal* f){
-
-    updateMixture(time,y);          //saves the dependent variables
+void Batch::residual(const doublereal& time, doublereal* y, doublereal* f)
+{
+    updateMixture(y);          // saves the dependent variables
     speciesResidual(time,y,f);      // solve species residual
     energyResidual(time,y,f);       // solve energy residual
-    /*
-     *moment residuals
-     */
-    if(sootMom_.active()){
-        std::vector<doublereal> mom;
-        for(int m=0; m<nMoments; m++)
-            mom.push_back(y[nSpc+m]);
-
-        resMoment.resize(nMoments,0.0);
-        /*
-         *evaluate soot residual
-         */
-        sootMom_.residual(time,momRates,&mom[0],&resMoment[0]);
-
-        for(int m=0; m<nMoments; m++){
-            f[nSpc+m] = resMoment[m];
-            //std::cout << f[nSpc+m] << std::endl;int dd; cin >> dd;
-        }
-
-    }
+    sootResidual(time,y,f);         // solve soot residual
 }
 
-void Batch::updateMixture(const doublereal& x, doublereal* y){
+void Batch::updateMixture(doublereal* y)
+{
     /*
-     *update the mixture with the current mass fraction
+     *update the mixture with the current mass fraction,
      *temperature and density
      */
-    doublereal tmptr;
-    std::vector<doublereal> molefracs;
-    molefracs.resize(nSpc,0.0);
-    doublereal cb = 0;
-    for (int l = 0; l < nSpc; l++) {
-        cb += y[l];
+    doublereal temperature = y[ptrT];
+    std::vector<doublereal> massfracs(nSpc,0.0);
+    for (int l=0; l< nSpc; ++l)
+    {
+        massfracs[l] = y[l];
     }
-    for(int l=0; l< nSpc; l++){
-        molefracs[l] = y[l]/cb;
-    }
-    //camMixture->SetMassFracs(massfracs);
-    camMixture_->SetFracs(molefracs);
-    if(admin_.getEnergyModel() == admin_.USERDEFINED)
-        tmptr = profile_.getUserDefTemp(x);
-    else
-        tmptr = y[ptrT];
-    camMixture_->SetTemperature(tmptr);
 
-    opPre = cb*R*tmptr;
+    camMixture_->SetMassFracs(massfracs);
+    camMixture_->SetTemperature(temperature);
 
-}
-//species residual definition
-void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f){
+    // This line MUST come after SetMassFracs/SetTemperature!!!!!
+    // Otherwise getAvgMolWt is wrong.
+    rho = camMixture_->getAvgMolWt() * opPre / (R * temperature);
+    camMixture_->SetMassDensity(rho);
 
+    // Put the molar production rate (mol per m3 per sec) in wdot.
     camMech_->Reactions().GetMolarProdRates(*camMixture_,wdot);
 
-    for (int l = 0; l < nSpc; l++) {
-        f[l]= wdot[l];
+}
 
+//species residual definition
+void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f)
+{
+
+    for (int l = 0; l < nSpc; ++l)
+    {
+        f[l] = (1.0/camMixture_->MassDensity()) * (*spv_)[l]->MolWt() * wdot[l];
     }
-
 
 }
 
 //temperature residual
-void Batch::energyResidual(const doublereal& x, doublereal* y, doublereal* f){
+void Batch::energyResidual(const doublereal& x, doublereal* y, doublereal* f)
+{
+
     int engModel = admin_.getEnergyModel();
-    if(engModel == admin_.ISOTHERMAL || engModel == admin_.USERDEFINED){
+
+    if (engModel == admin_.ISOTHERMAL)
+    {
         f[ptrT]= 0.0;
-    }else{
+    }
+    else
+    {
         //get the molar enthalpy
         CamMath cm;
         std::vector<doublereal> eth = camMixture_->getMolarEnthalpy();
@@ -279,19 +250,46 @@ void Batch::energyResidual(const doublereal& x, doublereal* y, doublereal* f){
          * This is only an approximation. For exact results the user
          * need to specify the overall heat transfer coefficient
          */
-        if(engModel == admin_.NONISOTHERMAL){
-
+        if(engModel == admin_.NONISOTHERMAL)
+        {
             doublereal lambda = camMixture_->getThermalConductivity(opPre);
             doublereal eta = camMixture_->getViscosity();
             doublereal dia = reacGeom_.getDia();
             doublereal ht = admin_.getHeatTransferCoeff(x,vel,dia,rho,eta,lambda,cp);
             extSource = ht*reacGeom_.getSurfAres_l()*(admin_.getWallTemp() - y[ptrT]);
-
         }
 
-        f[ptrT] = (-heat*Ac + extSource)/(y[ptrF]*cp*Ac);
+        //f[ptrT] = (-heat*Ac + extSource)/(y[ptrF]*cp*Ac);
+        f[ptrT] = -heat/(camMixture_->MassDensity()*cp);
 
     }
+
+}
+
+
+// soot residual definition
+void Batch::sootResidual(const doublereal& x, doublereal* y, doublereal* f)
+{
+    /*
+     *moment residuals
+     */
+    if (sootMom_.active())
+    {
+        std::vector<doublereal> mom;
+        for (int m=0; m<nMoments; ++m)
+            mom.push_back(y[nSpc+m]);
+
+        resMoment.resize(nMoments,0.0);
+        sootMom_.residual(x,momRates,&mom[0],&resMoment[0]);
+
+        for (int m=0; m<nMoments; ++m)
+        {
+            f[nSpc+m] = resMoment[m];
+            std::cout << f[nSpc+m] << std::endl;//int dd; cin >> dd;
+        }
+
+    }
+
 }
 
 //generate the header data
@@ -321,7 +319,7 @@ void Batch::report(doublereal x, doublereal* soln){
     static int nStep =0;
     std::cout.width(5);
     std::cout.setf(std::ios::scientific);
-    updateMixture(x,soln);
+    //updateMixture(soln);
     if(nStep%20==0) reporter_->consoleHead("time (s)");
     std::cout << x << std::endl;
     reportToFile(x,soln);
@@ -336,7 +334,7 @@ void Batch::report(doublereal x, doublereal* soln, doublereal& res){
     static int nStep = 0;
     std::cout.width(5);
     std::cout.setf(std::ios::scientific);
-    updateMixture(x,soln);
+    //updateMixture(soln);
     if(nStep%20==0) reporter_->consoleHead("time(s) \t residual");
     std::cout << x << "     " << res << std::endl;
     reportToFile(x,soln);
@@ -344,10 +342,10 @@ void Batch::report(doublereal x, doublereal* soln, doublereal& res){
 
 }
 
-void Batch::reportToFile(doublereal time, doublereal* soln){
+void Batch::reportToFile(doublereal time, doublereal* soln)
+{
+
     //prepare to report
-
-
     doublereal sum =0;
     std::vector<doublereal> data;
     data.clear();
@@ -382,10 +380,6 @@ void Batch::reportToFile(doublereal time, doublereal* soln){
     }
     data.push_back(sum);
 
-
-
-    reporter_->openFiles(true,false,false);
-    reporter_->writeHeader(header());
     reporter_->writeStdFileOut(data);
 
 }

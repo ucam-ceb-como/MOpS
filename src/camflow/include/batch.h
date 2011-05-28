@@ -71,8 +71,9 @@ namespace Camflow {
 
             enum type
             {
-                C_VOLUME,
-                C_PRES
+                ISOCHORIC,
+                ISOBARIC,
+                ISOTHERMAL
             };
 
             /*
@@ -101,6 +102,10 @@ namespace Camflow {
              *get the reactor type
              */
             int getType();
+
+            // Run some tests to check the setup.
+            void checkSetup();
+
             /*
              *function called by solver
              */
@@ -124,8 +129,11 @@ namespace Camflow {
             //temperature
             void energyResidual(const doublereal& time, doublereal *y, doublereal *f);
 
+            //soot residual
+            void sootResidual(const doublereal& time, doublereal *y, doublereal *f);
+
             //update the mixture properties
-            void updateMixture(const doublereal& time, doublereal *y);
+            void updateMixture(doublereal *y);
 
             //header information
             std::vector<std::string> header();
