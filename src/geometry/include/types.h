@@ -41,6 +41,7 @@
 #define GEOMETRY_TYPES_H
 
 #include <vector>
+#include <cstddef>
 
 namespace Geometry {
 

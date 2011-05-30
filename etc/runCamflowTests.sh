@@ -84,14 +84,15 @@ fi
 
 make --directory=applications/solvers/$solver -s --file="Makefile" clean all debug=$debug profile=$profile
 if [ $? -gt 0 ] ; then
-    echo make $solver solver failed
+    echo make $solver solver: failed
     exit
 else
-    echo make $solver solver success
+    echo make $solver solver: success
 fi
 
+echo "Running hydrogenFlamelet test . . ."
 cd test/camflow/hydrogenFlamelet
-time ../../../bin/$exeDir/$solver
+time ../../../bin/$exeDir/$solver > log
 
 test=`diff profile.dat originalProfile.dat`
 if [ -z "$test" ] ; then

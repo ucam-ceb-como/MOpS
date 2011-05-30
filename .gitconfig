@@ -4,6 +4,9 @@
 	bare = false
 	logallrefupdates = true
     autocrlf = true
+[branch "master"]
+    remote = origin
+    merge = refs/heads/master
 [remote "origin"]
     url = ssh://vienna.cheng.cam.ac.uk/home/userspace/CoMoCommon/Codes/mops-c-Git
     fetch = +refs/heads/*:refs/remotes/origin/*

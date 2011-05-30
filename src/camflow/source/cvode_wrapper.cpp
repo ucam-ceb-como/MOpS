@@ -87,6 +87,7 @@ void CVodeWrapper::solve(int stopMode, doublereal resTol){
 
     int flag;
     do{
+
         flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);
         if(flag < 0){
             std::cout << "Cvode Integration error\n";

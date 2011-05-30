@@ -20,7 +20,7 @@ includes=-I$(source)/io/comostrings/include -I$(source)/io/camxml/include \
 
 ifeq ($(debug),0)
   ifeq ($(profile),0)
-    flag=-c -O2 $(includes) -Wall
+    flag=-c -O3 $(includes) -Wall
     flink= 
     lib=$(librelease)
     bin=$(binrelease)

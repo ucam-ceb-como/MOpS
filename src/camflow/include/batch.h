@@ -41,6 +41,12 @@
 #ifndef _BATCH_H
 #define	_BATCH_H
 
+#include <vector>
+#include <cstring>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
+
 #include "cam_residual.h"
 #include "cam_control.h"
 #include "cam_admin.h"
@@ -48,76 +54,104 @@
 #include "gpc.h"
 #include "cam_setup.h"
 #include "cam_configuration.h"
-
-#include <vector>
+#include "cam_math.h"
+#include "cvode_wrapper.h"
+#include "radau_wrapper.h"
+#include "limex_wrapper.h"
 
 using namespace Sprog;
-namespace Camflow{
-    class Batch : public CamSetup{
 
-    public:
-        enum type{
-            C_VOLUME,
-            C_PRES
-        };
-        /*
-         *default constructor
-         */
-        Batch(){};
-        /*
-         *virtual destructor
-         */
-        virtual ~Batch(){};
-        /*
-         *set the reactor type
-         */
-        void setType(int n);
-        /*
-         *get the reactor type
-         */
-        int getType();
-        /*
-         *function called by solver
-         */
-        int eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval);
-        //console output
-        void report(doublereal x, doublereal* solution);
-        //console output with residuals
-        void report(doublereal x, doublereal* solution, doublereal& res);
-        void reportToFile(doublereal time, doublereal* solution);
+namespace Camflow {
 
+    class Batch
+    : public CamSetup
+    {
 
-        //solve
-//        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg, CamProfile&cp,
-//                     CamSoot &cs,Mechanism &mech);
-        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
-             CamConfiguration &config, CamSoot &cs,  Mechanism &mech );
+        public:
 
-        //return the initial solution vector
-        void getInitial(std::vector<doublereal>& initial);
+            enum type
+            {
+                ISOCHORIC,
+                ISOBARIC,
+                ISOTHERMAL
+            };
 
-        //residual function definition----------------
-        void residual(const doublereal& time, doublereal *y, doublereal *f);
-        //species residual
-        void speciesResidual(const doublereal& time, doublereal *y, doublereal *f);
-        
-        //temperature
-        void energyResidual(const doublereal& time, doublereal *y, doublereal *f);
-        
-        //update the mixture properties
-        void updateMixture(const doublereal& time, doublereal *y);
+            /*
+             *default constructor
+             */
+            Batch
+            (
+                CamAdmin& ca,
+                CamConfiguration& config,
+                CamControl& cc,
+                CamGeometry& cg,
+                CamProfile& cp,
+                CamSoot& cs,
+                Mechanism& mech
+            );
 
-        //header information
-        void header();
-        
-    private:
-        
+            /*
+             *virtual destructor
+             */
+            virtual ~Batch();
+            /*
+             *set the reactor type
+             */
+            void setType(int n);
+            /*
+             *get the reactor type
+             */
+            int getType();
 
-        int batchType;
-	std::vector<doublereal> momRates;
+            // Run some tests to check the setup.
+            void checkSetup();
 
-    };
-}
+            /*
+             *function called by solver
+             */
+            int eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval);
+            //console output
+            void report(doublereal x, doublereal* solution);
+            //console output with residuals
+            void report(doublereal x, doublereal* solution, doublereal& res);
+            void reportToFile(doublereal time, doublereal* solution);
+
+            void solve();
+
+            //return the initial solution vector
+            void getInitial(std::vector<doublereal>& initial);
+
+            //residual function definition----------------
+            void residual(const doublereal& time, doublereal *y, doublereal *f);
+            //species residual
+            void speciesResidual(const doublereal& time, doublereal *y, doublereal *f);
+
+            //temperature
+            void energyResidual(const doublereal& time, doublereal *y, doublereal *f);
+
+            //soot residual
+            void sootResidual(const doublereal& time, doublereal *y, doublereal *f);
+
+            //update the mixture properties
+            void updateMixture(doublereal *y);
+
+            //header information
+            std::vector<std::string> header();
+
+            //! Get the residual for use in radauWrapper.
+            doublereal getResidual() const;
+
+            //! Mass matrix evaluation. Called by radauWrapper.
+            void massMatrix(doublereal **M);
+
+        private:
+
+            int batchType;
+            std::vector<doublereal> momRates;
+
+    }; // End class Batch
+
+} // End namespace Camflow
 
 #endif	/* _BATCH_H */
 

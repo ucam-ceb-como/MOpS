@@ -76,7 +76,7 @@ void CamReporter::problemDescription(CamBoundary& cb, CamResidual& cr){
 
     //initializing solution vector
     std::cout << "\t Initializing solution vector...\n";
-    std::cout << "\t Inlet valocity: "<<cb.getVelocity() <<  " m/s" << std::endl;
+    std::cout << "\t Inlet velocity: "<<cb.getVelocity() <<  " m/s" << std::endl;
     std::cout << "\t Inlet temperature "<< cb.getTemperature() << " K"<< std::endl;
     std::map<std::string, doublereal> species = cb.getInletSpecies();   
     std::map<std::string, doublereal>::iterator p = species.begin();
@@ -117,12 +117,12 @@ void CamReporter::closeFiles(bool stdrd, bool ratesOut, bool transOut){
     if(ratesOut) rates->close();
 }
 //write a custom header
-void CamReporter::writeCustomHeader(std::vector<std::string>& header){
+void CamReporter::writeCustomHeader(std::vector<std::string> header){
     if(header.size() == 0)throw CamError("header info missing\n");
     custom->write(header);
 }
 //write the header for standard output data
-void CamReporter::writeHeader(std::vector<std::string>& stdHeader){
+void CamReporter::writeHeader(std::vector<std::string> stdHeader){
     if(stdHeader.size() == 0)throw CamError("header info missing\n");
     standard->write(stdHeader);
 }
@@ -150,18 +150,23 @@ void CamReporter::writeCustomFileOut(std::vector<doublereal>& data){
 void CamReporter::writeTempProfiletoXML
 (
     const std::string fileName,
+    const doublereal sdr,
+    const std::vector<doublereal>& axPos,
     const std::vector<doublereal>& temperature
 )
 {
+
     CamXML::Document doc;
-    CamConverter convert;
     const CamXML::Element* node = NULL;
 
-    if(doc.Load(fileName) == 0){
+    if(doc.Load(fileName + ".xml") == 0){
         node = doc.Root();
     }
 
-    CamXML::Element *initialize, *subsubnode;
+    Utils::LinearInterpolator<doublereal, doublereal> mTempInterpolator(axPos, temperature);
+
+    CamXML::Element *initialize;
+    CamXML::Element* subsubnode;
     std::vector<CamXML::Element*> subsubnodes;
     std::vector<CamXML::Element*>::const_iterator p;
     initialize = node->GetFirstChild("initialize");
@@ -171,22 +176,115 @@ void CamReporter::writeTempProfiletoXML
         subsubnode = initialize->GetFirstChild("Tprofile");
         if(subsubnode != NULL)
         {
-            const CamXML::Attribute *length, *temp;
-            length = subsubnode->GetAttribute("unit_L");
-            temp = subsubnode->GetAttribute("unit_T");
-            //doublereal convertL = convert.getConvertionFactor(length->GetValue());
-            doublereal convertT = convert.getConvertionFactor(temp->GetValue());
-
             subsubnode->GetChildren("position",subsubnodes);
 
             int count=0;
             for(p=subsubnodes.begin(); p<subsubnodes.end(); ++p)
             {
-                (*p)->SetData(Strings::cstr(temperature[count]+convertT));
+                doublereal temp = mTempInterpolator.interpolate(Strings::cdble((*p)->GetAttributeValue("x")));
+                (*p)->SetData(Strings::cstr(temp));
                 ++count;
             }
         }
+        else
+        {
+            initialize->AddChild("Tprofile");
+            subsubnode = initialize->GetFirstChild("Tprofile");
+            subsubnode->SetAttribute("unit_L","m");
+            subsubnode->SetAttribute("unit_T","K");
+            for(int q=0; q<axPos.size(); ++q)
+            {
+                subsubnode->AddChild("position");
+                subsubnode->GetChildren("position",subsubnodes);
+                subsubnodes[q]->SetAttribute("x",Strings::cstr(axPos[q]));
+                doublereal temp = mTempInterpolator.interpolate(Strings::cdble(subsubnodes[q]->GetAttributeValue("x")));
+                subsubnodes[q]->SetData(Strings::cstr(temp));
+            }
+        }
     }
-    doc.Save("new"+fileName);
+
+    std::string outputFile = "sdr_" + Strings::cstr(sdr) + ".xml";
+
+    doc.Save("camflow.xml");
+
+}
+
+void CamReporter::writeMassFracProfiletoXML
+(
+    const std::string fileName,
+    const doublereal sdr,
+    const std::vector<doublereal>& axPos,
+    const std::vector<doublereal>& massFrac,
+    const std::string speciesName
+)
+{
+    CamXML::Document doc;
+    CamConverter convert;
+    const CamXML::Element* node = NULL;
+
+    std::string outputFile = "sdr_" + Strings::cstr(sdr) + ".xml";
+
+    if(doc.Load(fileName + ".xml") == 0){
+        node = doc.Root();
+    }
+
+    Utils::LinearInterpolator<doublereal, doublereal> mMassFracInterpolator(axPos, massFrac);
+
+    CamXML::Element *initialize;
+    std::vector<CamXML::Element*> subsubnode;
+    std::vector<CamXML::Element*> subsubnodes;
+    std::vector<CamXML::Element*>::const_iterator p, q;
+    initialize = node->GetFirstChild("initialize");
+    if(initialize != NULL)
+    {
+
+        initialize->GetFirstChild("massfracs");
+        initialize->GetChildren("massfracs",subsubnode);
+
+        bool foundSpecies = false;
+
+        for(p=subsubnode.begin(); p<subsubnode.end(); ++p)
+        {
+            const CamXML::Attribute *species;
+            species = (*p)->GetAttribute("species");
+            if(species->GetValue() == speciesName)
+            {
+                foundSpecies = true;
+
+                (*p)->GetChildren("position",subsubnodes);
+                for (q=subsubnodes.begin(); q<subsubnodes.end(); ++q)
+                {
+                    doublereal temp = mMassFracInterpolator.interpolate(Strings::cdble((*q)->GetAttributeValue("x")));
+                    (*q)->SetData(Strings::cstr(temp));
+                }
+
+                doc.Save("camflow.xml");
+
+            }
+
+        }
+
+        if(!foundSpecies)
+        {
+            initialize->AddChild("massfracs");
+            initialize->GetChildren("massfracs",subsubnode);
+
+            int r = subsubnode.size()-1;
+
+            subsubnode[r]->SetAttribute("species",speciesName);
+            for(int q=0; q<axPos.size(); ++q)
+            {
+                subsubnode[r]->AddChild("position");
+                subsubnode[r]->GetChildren("position",subsubnodes);
+                subsubnodes[q]->SetAttribute("x",Strings::cstr(axPos[q]));
+                doublereal temp = mMassFracInterpolator.interpolate(Strings::cdble(subsubnodes[q]->GetAttributeValue("x")));
+                subsubnodes[q]->SetData(Strings::cstr(temp));
+            }
+
+            doc.Save("camflow.xml");
+
+        }
+
+    }
 
 }

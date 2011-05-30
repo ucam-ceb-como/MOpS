@@ -49,12 +49,14 @@
 using namespace Camflow;
 using namespace Strings;
 
-CamProfile::CamProfile()
+CamProfile::CamProfile(CamGeometry& cg)
 :
 mWidth(0.0),
 mCenter(0.0),
 fracType(0),
-geom(NULL)
+geom(cg),
+flag_loadFracs(false),
+flag_loadTemp(false)
 {}
 
 CamProfile::~CamProfile()
@@ -89,7 +91,7 @@ void CamProfile::populateIntermdts(Mechanism& mech){
  *set the geometry object
  */
 void CamProfile::setGeometryObj(CamGeometry& cg){
-    geom = &cg;
+    geom = cg;
 }
 /*
  *set mixing center
@@ -123,7 +125,7 @@ void CamProfile::setStartprofile(CamBoundary& left, CamBoundary& right,
 void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
 
     std::vector<doublereal> m_in = cb.getInletMassfracs();
-    std::vector<doublereal> position = geom->getAxpos();
+    std::vector<doublereal> position = geom.getAxpos();
     int len = position.size();
 
     start.resize(len,mech.SpeciesCount());
@@ -191,7 +193,7 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
  *set the gaussian
  */
 void CamProfile::setGaussian(Mechanism& mech){
-    std::vector<doublereal> position = geom->getAxpos();
+    std::vector<doublereal> position = geom.getAxpos();
     int len = position.size();
     std::map<std::string, doublereal>::iterator p;
     p = list_intmd.begin();
@@ -216,7 +218,7 @@ void CamProfile::setGaussTempProfile(std::vector<doublereal>& vTemp){
         throw CamError("Invalid mixing center and mixing width definition\n");
     }
     doublereal dmax = 1.0;
-    std::vector<doublereal> position = geom->getAxpos();
+    std::vector<doublereal> position = geom.getAxpos();
     int len = position.size();
     vTemp.resize(len,0.0);
     doublereal gWidth = -log(0.15*dmax)/pow(mWidth/2.0,2);
@@ -260,8 +262,17 @@ void CamProfile::getmassFracs(std::map<std::string,doublereal>& spec, Mechanism&
 
 void CamProfile::setUserTemp(doublereal pos, doublereal temp)
 {
+    flag_loadTemp = true;
     u_pos.push_back(pos);
     u_temp.push_back(temp);
+}
+
+void CamProfile::setUserFrac(doublereal pos, doublereal temp, std::string species)
+{
+    flag_loadFracs = true;
+    u_species_pos.push_back(pos);
+    u_frac.push_back(temp);
+    u_species.push_back(species);
 }
 
 //return the user defined temperature
@@ -277,20 +288,51 @@ doublereal CamProfile::getUserDefTemp(const doublereal& pos)
         {
             return u_temp[i];
         }
-        else if( (pos > u_pos[i-1]) && (pos < u_pos[i]) )
+        else if( (pos > u_pos[i]) && (pos < u_pos[i+1]) )
         {
             return mTempInterpolator.interpolate(pos);
-        }
-        else
-        {
-            throw std::runtime_error("Failed to set the user defined temperature.");
-            std::exit(-1);
-            return -1;
         }
     }
 
 }
 
+doublereal CamProfile::getUserDefFracs(const doublereal& pos, const std::string species)
+{
+
+    std::vector<doublereal> fracs,species_pos;
+    int speciesIndex;
+    int len = u_species_pos.size()/9;
+
+    for (int i=0; i<u_species.size(); ++i)
+    {
+        if (species == u_species[i])
+        {
+            speciesIndex = i;
+            break;
+        }
+    }
+
+    for (int i=0; i<len; ++i)
+    {
+        fracs.push_back(u_frac[i+speciesIndex]);
+        species_pos.push_back(u_species_pos[i]);
+    }
+
+    Utils::LinearInterpolator<doublereal, doublereal> mFracInterpolator(species_pos, fracs);
+
+    for (int i=0; i<len; ++i)
+    {
+        if(pos == u_species_pos[i])
+        {
+            return fracs[i];
+        }
+        else if( (pos > u_species_pos[i]) && (pos < u_species_pos[i+1]) )
+        {
+            return mFracInterpolator.interpolate(pos);
+        }
+    }
+
+}
 std::vector<doublereal>& CamProfile::getPosition(){
     return this->u_pos;
 }

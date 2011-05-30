@@ -36,16 +36,14 @@
  *  Email   :   mk306@cam.ac.uk
  *  Website :   http://como.cheng.cam.ac.uk
  */
-#include <vector>
-#include <algorithm>
-#include <cmath>
-#include <fstream>
-#include <iostream>
+
 #include "cam_geometry.h"
-#include "comostrings.h"
+
 using namespace std;
 using namespace Camflow;
 using namespace Strings;
+using namespace Sprog;
+
 void CamGeometry::setGridFile(string name){
     gridFile = name;
 
@@ -133,16 +131,16 @@ doublereal CamGeometry::getDia() const{
 }
 
 doublereal CamGeometry::getArea() const{
-    return (pi*dia*dia/4.0);
+    return (PI*dia*dia/4.0);
 }
 
 doublereal CamGeometry::getSurfArea() {
     //if(length==0)discretize();
-    return (pi*dia*length);
+    return (PI*dia*length);
 } 
 
 doublereal CamGeometry::getSurfAres_l() const{
-    return (pi*dia);
+    return (PI*dia);
 }
 
 const vector<doublereal>& CamGeometry::getGeometry() const {
@@ -153,7 +151,8 @@ const vector<doublereal>& CamGeometry::getAxpos() const {
     return axPos;
 }
 
-void CamGeometry::addZeroWidthCells(){
+void CamGeometry::addZeroWidthCells()
+{
     vector<doublereal> temp = dz;
     dz.clear();
     dz.push_back(1e-08);

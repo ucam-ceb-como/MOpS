@@ -48,9 +48,13 @@
 #include "gpc.h"
 #include "comostrings.h"
 #include <fstream>
+#include "string_functions.h"
 #include "camxml.h"
+#include "linear_interpolator.hpp"
 
 namespace Camflow{
+
+    class CamResidual;
 
     class CamReporter{
 
@@ -74,18 +78,29 @@ namespace Camflow{
         void closeFile();
         void openFiles(bool stdrd = true, bool ratesOut = false, bool transOut = false);
         void closeFiles(bool stdrd = true, bool ratesOut = false, bool transOut = false);
-        void writeHeader(std::vector<std::string>& stdHeader);
+        void writeHeader(std::vector<std::string> stdHeader);
         void writeHeader(std::vector<std::string>& stdHeader, std::vector<std::string>& ratesHeader);
         void wrteHeader(std::vector<std::string>& stdHeader, std::vector<std::string>& ratesHeader, std::vector<std::string>& transHeader);
         void writeToFile(std::string fname,CamResidual &resid);
         void writeStdFileOut(std::vector<doublereal>& data);
-        void writeCustomHeader(std::vector<std::string>& header);
+        void writeCustomHeader(std::vector<std::string> header);
         void writeCustomFileOut(std::vector<doublereal>& data);
 
         void writeTempProfiletoXML
         (
             const std::string fileName,
+            const doublereal sdr,
+            const std::vector<doublereal>& axPos,
             const std::vector<doublereal>& temperature
+        );
+
+        void writeMassFracProfiletoXML
+        (
+            const std::string fileName,
+            const doublereal sdr,
+            const std::vector<doublereal>& axPos,
+            const std::vector<doublereal>& massFrac,
+            const std::string speciesName
         );
 
     };

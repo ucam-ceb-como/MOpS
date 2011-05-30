@@ -53,7 +53,7 @@
 #include "cam_models.h"
 #include "cam_soot.h"
 #include "interface.h"
-#include "cam_premix.h"
+//#include "cam_premix.h"
 /*
  * 
  */
@@ -61,42 +61,8 @@ using namespace std;
 using namespace Sprog;
 using namespace Camflow;
 
-int main() {
-
-//    Interface inter;
-//    inter.flamelet(4.3e-05,0.00108,false,false);
-////    cout << "Thermal conductivity " << inter.getThermalConductivity(0.5) << endl;
-////    int dd ; cin >> dd;
-////    cout << "Continuation\n";
-//    vector<doublereal> v_t, v_sdr;
-//    v_t.resize(6);
-//    v_sdr.resize(6);
-//
-//
-//    v_t[0] = 0.00108808;
-//    v_t[1] = 0.00330956;
-//    v_t[2] = 0.00544139;
-//    v_t[3] = 0.00758519;
-//    v_t[4] = 0.00973953;
-//
-//
-//    v_sdr[0] =  4.30013e-05;
-//    v_sdr[1] =  4.66669e-05;
-//    v_sdr[2] =  8.14148e-05;
-//    v_sdr[3] = 0.000135507;
-//    v_sdr[4] = 0.000216977;
-//
-////    for(int i=0; i<10; i++){
-////        v_t[i] = i*0.1;
-////        v_sdr[i] = i;
-////    }
-//    cout << "Continuation \n";
-//    int dd; cin >> dd;
-//    inter.flamelet(v_sdr,v_t,true,false);
-//////    cout << "Thermal conductivity " << inter.getThermalConductivity(0.5) << endl;
-
-    
-
+int main()
+{
 
     string fChem("chem.inp");
     string fThermo("therm.dat");
@@ -112,18 +78,17 @@ int main() {
     CamConverter convert;
     CamAdmin ca;
     CamBoundary cb;
-    CamProfile cp;
+    CamProfile cp(cg);
     CamConfiguration config;
     CamRead cm;
     CamModels models;
     CamSoot cSoot;
-    try{
+    try {
         cm.readInput(fCamFlow,cc,cg,convert,ca,cb,cp,config,cSoot);
-    }catch(CamError &ce){
-        cout << ce.errorMessge;
+    } catch (CamError &ce) {
+        cout << ce.errorMessage;
         exit(1);
     }
-    //CamBoundary *cb2 = &cb;
 
 
     //read mechanism, thermo and trasnport data
@@ -144,13 +109,16 @@ int main() {
 //    cout << "Calculation finished\n";
 //    int dd; cin >> dd;
 //----------------------------------------------------------
-    try{
+    try {
         models.solve(ca,config,cc,cg,cp,cSoot,mech);
-    }catch(CamError &ce){
-        cout << ce.errorMessge;
+    } catch (CamError &ce) {
+        cout << ce.errorMessage;
         exit(1);
     }
-    cout << "\nCamflow end of execution..\n";
+
+    cout << "\nCamflow: End of execution.\n";
+
     return (EXIT_SUCCESS);
+
 }
 
