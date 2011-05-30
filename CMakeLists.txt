@@ -53,7 +53,7 @@ add_executable(brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harne
 target_link_libraries(brush-moonmd-test brush)
 
 # Regression tests for Brush moon-md interface
-add_test(NAME brush.moonmd1 COMMAND ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${MOPSSUITE_BINARY_DIR}/brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1)
+add_test(NAME brush.moonmd1 COMMAND ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${MOPSSUITE_BINARY_DIR}/brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/comostrings)

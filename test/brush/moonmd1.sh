@@ -52,14 +52,10 @@ if test -n "$2"
 fi
 
 # Run the test
-$program
+moonmd1/moonmd1.pl $program
 result=$?
 if((result!=0))
   then
-    echo "Simulation script moonmd1 failed"
-    echo "**************************"
-    echo "****** TEST FAILURE ******"
-    echo "**************************"
     exit $result
 fi
 

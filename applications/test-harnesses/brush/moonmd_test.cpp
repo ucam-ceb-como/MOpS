@@ -59,12 +59,16 @@ int main(int argc, char* argv[])
     Sweep::init_genrand(789);
 
     std::cout << "Creating reactor\n";
-    const std::string chemfile("chem.inp");
-    const std::string thermfile("therm.dat");
-    const std::string settfile("brush.xml");
-    const std::string swpfile("sweep.xml");
-    const std::string partsolnfile("partsoln.xml");
-    const std::string chemsolnfile("chemsoln.dat");
+
+    // Using arguments like this is rather ugly, but it saves writing full argument
+    // handling code in a test program.
+    const std::string chemfile(argv[1]);
+    const std::string thermfile(argv[2]);
+    const std::string settfile(argv[3]);
+    const std::string swpfile(argv[4]);
+    const std::string partsolnfile(argv[5]);
+    const std::string chemsolnfile(argv[6]);
+
     const size_t numGridNodes = 41;
     const double gridNodes[numGridNodes] = {0.00, 0.02, 0.04, 0.06, 0.08,
                                  0.10, 0.12, 0.14, 0.16, 0.18,
@@ -84,7 +88,7 @@ int main(int argc, char* argv[])
     std::cout << "Reactor created successfully\n";
 
     //==================== File to store the moments of the particle distribution
-    std::ofstream momentsFile("moonmd1-moments.csv");
+    std::ofstream momentsFile("moonmd1results-moments.csv");
 
     // Write the column headings to the file, with commas between names, but not after the last name
     momentsFile << "t,x";
@@ -106,13 +110,13 @@ int main(int argc, char* argv[])
     const double velocity[3] = {2.0, 2.0, 2.0};
     double energySource[3] = {-9.9, -8.9, -7.9};
     double massConcSource[6] = {-19.9, -18.9, -17.9, -29.9, -28.9, -27.9};
-    pReac = Brush::MooNMDInterface::RunParticlePhase(*pReac, 0.5, 3, 2, solnGrid, temperature, velocity,
-                                                     massConcentration, energySource, massConcSource, momentsFile);
-    pReac = Brush::MooNMDInterface::RunParticlePhase(*pReac, 1.0, 3, 2, solnGrid, temperature, velocity,
-                                                     massConcentration, energySource, massConcSource, momentsFile);
     pReac = Brush::MooNMDInterface::RunParticlePhase(*pReac, 1.5, 3, 2, solnGrid, temperature, velocity,
                                                      massConcentration, energySource, massConcSource, momentsFile);
     pReac = Brush::MooNMDInterface::RunParticlePhase(*pReac, 2.0, 3, 2, solnGrid, temperature, velocity,
+                                                     massConcentration, energySource, massConcSource, momentsFile);
+    pReac = Brush::MooNMDInterface::RunParticlePhase(*pReac, 2.5, 3, 2, solnGrid, temperature, velocity,
+                                                     massConcentration, energySource, massConcSource, momentsFile);
+    pReac = Brush::MooNMDInterface::RunParticlePhase(*pReac, 3.0, 3, 2, solnGrid, temperature, velocity,
                                                      massConcentration, energySource, massConcSource, momentsFile);
 
 

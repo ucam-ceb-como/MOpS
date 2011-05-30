@@ -16,7 +16,7 @@
   
 
 
-  <!-- Output time sequence. -->
+  <!-- Data not used, but required by parser -->
   <timeintervals splits="1">
     <start>0.0</start>
     <time steps="1" splits="1">0.1</time>
@@ -31,9 +31,9 @@
     <time steps="1" splits="1">1.0</time-->
   </timeintervals>
 
-
+  <!-- Data not used, but required by parser -->
   <output>
-    <filename>moonmd1</filename>
+    <filename>blah</filename>
   </output>
   
 </brush>
