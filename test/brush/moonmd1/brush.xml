@@ -7,11 +7,11 @@
   <atol>1.0e-2</atol> 
   <rtol>1.0e-4</rtol>
   <pcount x="1.0">128</pcount>
-  <pcount x="0.2">128</pcount>
   <pcount x="2.0">128</pcount>
   <!--pcount>1024</pcount>-->
-  <maxm0 x="0.5">1.0e9</maxm0>
-  <maxm0 x="1.5">1.0e9</maxm0>
+  <maxm0 x="0.05">4.0e8</maxm0>
+  <maxm0 x="0.25">1.1e9</maxm0>
+  <maxm0 x="0.40">1.4e9</maxm0>
   <relax>0.5</relax>
   
 

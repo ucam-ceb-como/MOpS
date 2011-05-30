@@ -21,6 +21,7 @@
       </description>
     </particle>
 
+    <model type="advection" id="physical"/>
     
     <!-- Inceptions -->
 
@@ -38,7 +39,7 @@
     <coagulation>
         <kernel>weightedconstant</kernel>
         <weightrule>w1</weightrule>
-        <A>1.0e-9</A>
+        <A>5.0e-9</A>
     </coagulation>
 
 </mechanism>
