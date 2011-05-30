@@ -128,7 +128,7 @@ public:
     //! Writes the elements to a Chemkin output file.
     void WriteElements(std::ostream &out) const;
 
-protected:
+private:
     // Element data.
     std::string m_name;       // Element name/symbol.
     real m_molwt;             // Molecular weight (kg/mol).
