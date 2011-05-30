@@ -41,15 +41,29 @@
 #ifndef _FLAMELET_H
 #define	_FLAMELET_H
 
-#include "cam_residual.h"
+#include <cmath>
+#include <vector>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <pthread.h>
+
 #include "cam_control.h"
-#include "cam_admin.h"
-#include "cam_reporter.h"
 #include "cam_radiation.h"
 #include "gpc.h"
+#include "array.h"
 #include "cam_setup.h"
-
-using namespace Sprog;
+#include "cam_residual.h"
+#include "cam_reporter.h"
+#include "cam_profile.h"
+#include "cam_admin.h"
+#include "flamelet.h"
+#include "cam_math.h"
+#include "cvode_wrapper.h"
+#include "radau_wrapper.h"
+#include "limex_wrapper.h"
+#include "linear_interpolator.hpp"
+#include "cam_sdr.h"
 
 namespace Camflow
 {
@@ -67,46 +81,54 @@ namespace Camflow
         public:
 
             //! Enumerator for Unity or Fixed Lewis number.
-            enum{
+            enum
+            {
                 LNONE,
                 LNNONE
             };
 
             //! Default constructor. Give boolean flags some default values.
-            FlameLet();
+            FlameLet
+            (
+                CamAdmin& ca,
+                CamConfiguration& config,
+                CamControl& cc,
+                CamGeometry& cg,
+                CamProfile& cp,
+                CamSoot& cs,
+                Sprog::Mechanism& mech
+            );
 
             //! Destructor.
             virtual ~FlameLet();
 
             //! Solve the flamelet. Call for coupling without solving population balance.
-            void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg, CamProfile&cp,
-                                Mechanism &mech, bool interface=false);
+            void solve(bool interface);
 
             //! Stand alone call as well as first call from an external code that solves the population balance
-            void solve(CamControl& cc, CamAdmin& ca, CamGeometry& cg, CamProfile& cp,
-                    CamConfiguration& config, CamSoot& cs, Mechanism& mech);
+            void solve();
 
             //! Continulation call from an external code that solves the population balance.
             void solve(std::vector<Thermo::Mixture>& cstrs,
                        const std::vector< std::vector<doublereal> >& iniSource,
                        const std::vector< std::vector<doublereal> >& fnlSource,
-                       Mechanism& mech,
+                       Sprog::Mechanism& mech,
                        CamControl& cc,
                        CamAdmin& ca,
                        CamGeometry& cg,
                        CamProfile& cp);
 
             //! Initialize the solution vector.
-            void initSolutionVector(CamControl &cc);
+            void initSolutionVector();
 
             //! Coupled solver.
-            void csolve(CamControl &cc, bool interface=false);
+            void csolve(bool interface=false);
 
             //! Segregated solver.
-            void ssolve(CamControl &cc);
+            void ssolve();
 
             //! Restart the solution with the converged solution.
-            void restart(CamControl &cc);
+            void restart();
 
             //! Save the solution vector.
             void saveMixtureProp(doublereal* y);
@@ -167,24 +189,26 @@ namespace Camflow
             void getWdotA4(std::vector<doublereal>& wdotA4) const;
 
             //! Create header for file output.
-            void header();
-
-            //! Console output.
-            void report(doublereal x, doublereal* solution);
+            std::vector<std::string> header();
 
             //! Console output with residuals.
             void report(doublereal x, doublereal* solution, doublereal& res);
 
             //! File output.
-            void reportToFile(doublereal x, doublereal* solution);
+            void reportToFile(std::string fileName, doublereal x, doublereal* solution);
+
+            void writeXMLFile
+            (
+                const doublereal,
+                const std::vector<doublereal>& solvect
+            );
 
         private:
 
             doublereal stoichZ; //stoichiometric mixture fraction
-            doublereal smr;     //stoichiometric mass ratio
             doublereal sdr;     // scalar dissipation rate
             doublereal sdr_ext; // scalar dissipation rate passed by exteranl program
-            doublereal rstartTime;
+            doublereal restartTime;
             std::vector<doublereal> v_sdr;   //scalar dissipation rate that has a time history
             std::vector<doublereal> v_time; //time profile of scalar dissipation rates
             std::vector< std::vector<doublereal> > profile_sdr; // SDR profile with a time history.
@@ -195,13 +219,12 @@ namespace Camflow
 
 
             bool timeHistory, sdrProfile, sdrAnalytic;
-            doublereal strain;  // strain rate
-            int mCord;          // this is the mixture fraction coordinates
             inletStruct fuel, oxid;
 
-            Array2D Le, convection, CpSpec; //Lewis numbers
-
             Radiation *radiation;
+            ScalarDissipationRate scalarDissipationRate_;
+
+            Array2D Le, convection, CpSpec; //Lewis numbers
 
     }; // End FlameLet class declaration.
 

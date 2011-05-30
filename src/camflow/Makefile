@@ -36,8 +36,8 @@ endif
 obj=    cam_read.o cam_setup.o cam_geometry.o \
 		cam_control.o cam_conveter.o cam_math.o cam_conc.o cam_radiation.o\
 		cam_admin.o cam_boundary.o cam_configuration.o cam_profile.o\
-		cam_reporter.o cam_models.o cam_plug.o cam_premix.o cam_residual.o \
-		stagflow.o cam_soot.o batch.o flamelet.o interface.o\
+		cam_reporter.o cam_models.o cam_residual.o \
+		cam_soot.o cam_sdr.o flamelet.o batch.o \
 		cvode_wrapper.o radau_wrapper.o
 
 all: $(obj) 
@@ -77,28 +77,19 @@ cam_radiation.o: $(src)/cam_radiation.cpp
 	$(cpp) $(flag) $(src)/cam_radiation.cpp
 cam_models.o: $(src)/cam_models.cpp
 	$(cpp) $(flag) $(src)/cam_models.cpp
-cam_plug.o: $(src)/cam_plug.cpp
-	$(cpp) $(flag) $(src)/cam_plug.cpp
-cam_premix.o: $(src)/cam_premix.cpp
-	$(cpp) $(flag) $(src)/cam_premix.cpp
-stagflow.o: $(src)/stagflow.cpp
-	$(cpp) $(flag) $(src)/stagflow.cpp
-batch.o: $(src)/batch.cpp
-	$(cpp) $(flag) $(src)/batch.cpp
 cam_soot.o: $(src)/cam_soot.cpp
 	$(cpp) $(flag) $(src)/cam_soot.cpp
-interface.o: $(src)/interface.cpp
-	$(cpp) $(flag) $(src)/interface.cpp
 cvode_wrapper.o: $(src)/cvode_wrapper.cpp
 	$(cpp) $(flag) $(src)/cvode_wrapper.cpp
 radau_wrapper.o: $(src)/radau_wrapper.cpp
 	$(cpp) $(flag) $(src)/radau_wrapper.cpp
+cam_sdr.o: $(src)/cam_sdr.cpp
+	$(cpp) $(flag) $(src)/cam_sdr.cpp
 flamelet.o: $(src)/flamelet.cpp
 	$(cpp) $(flag) $(src)/flamelet.cpp
-soot_flamelet.o: $(src)/soot_flamelet.cpp
-	$(cpp) $(flag) $(src)/soot_flamelet.cpp
-
-
+batch.o: $(src)/batch.cpp
+	$(cpp) $(flag) $(src)/batch.cpp
+	
 # Combined mechanisms.
 
 # TARGET clean: leave just source code.

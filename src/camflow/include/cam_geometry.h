@@ -41,14 +41,22 @@
 
 #ifndef _CAM_GEOMETRY_H
 #define	_CAM_GEOMETRY_H
-#include "cam_params.h"
-#include "cam_error.h"
+
 #include <vector>
 #include <map>
+#include <algorithm>
+#include <cmath>
+#include <fstream>
+#include <iostream>
+
+#include "cam_params.h"
+#include "cam_error.h"
+#include "comostrings.h"
 
 namespace Camflow{
 
-    class CamGeometry{
+    class CamGeometry
+    {
 
         doublereal length;                   //length of the model geometry
         doublereal dia;                      //rector diameter
@@ -67,6 +75,7 @@ namespace Camflow{
         std::map<int, int> z_loc, z_keep;
 
     public:
+
         CamGeometry();
 
         ~CamGeometry(){}
@@ -119,6 +128,7 @@ namespace Camflow{
 
         //refine the grid
         void refine(doublereal* y, const int nVar, const int nSpec, int ptrT=0);
+
     };
 }
 

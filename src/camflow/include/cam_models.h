@@ -42,6 +42,9 @@
 
 #ifndef _CAM_MODELS_H
 #define	_CAM_MODELS_H
+
+#include <iostream>
+
 #include "cam_admin.h"
 #include "cam_boundary.h"
 #include "cam_configuration.h"
@@ -52,57 +55,43 @@
 #include "cam_soot.h"
 #include "cam_residual.h"
 #include "flamelet.h"
-using namespace Sprog;
-namespace Camflow{
-    class CamModels{
+//#include "cam_plug.h"
+#include "batch.h"
+//#include "cam_premix.h"
+//#include "stagflow.h"
+#include "cam_error.h"
 
-    public:
-        CamModels(){};
-        ~CamModels(){};
-        /*
-         *this caling interface is for the kernel
-         */
-        void solve(CamAdmin &ca,                   
-                   CamConfiguration &config,
-                   CamControl &cc,
-                   CamGeometry &cg,
-                   CamProfile &cp,
-                   CamSoot &cs,
-                   Mechanism &mech
-                   );
+namespace Camflow
+{
 
-//        /*
-//         *calling interface for external programs
-//         */
-//        void solve(CamAdmin &ca,
-//                   CamConfiguration &config,
-//                   CamControl &cc,
-//                   CamGeometry &cg,
-//                   CamProfile &cp,
-//                   CamSoot &cs,
-//                   Mechanism &mech,
-//                   vector<Thermo::Mixture>& mixtures
-//                   );
-        /*
-         *flamelet interface. This is provided since the handle to the
-         *object call still remain with the interface object. That helps
-         *querying the reactor object in a much easier fashion
-         */
-//        void solve(CamAdmin &ca,
-//                   CamBoundary &cb,
-//                   CamConfiguration &config,
-//                   CamControl &cc,
-//                   CamGeometry &cg,
-//                   CamProfile &cp,
-//                   CamSoot &cs,
-//                   Mechanism &mech,
-//                   FlameLet &flmlt,
-//                   doublereal sdr
-//                   );
+    class CamModels
+    {
+
+            CamResidual* rModel_;
+
+        public:
+
+            CamModels();
+
+            ~CamModels();
+
+            /*
+             *this caling interface is for the kernel
+             */
+            void solve
+            (
+                CamAdmin &ca,
+                CamConfiguration &config,
+                CamControl &cc,
+                CamGeometry &cg,
+                CamProfile &cp,
+                CamSoot &cs,
+                Sprog::Mechanism &mech
+            );
 
     };
-}
+
+} // End Namespace Camflow
 
 
 #endif	/* _CAM_MODELS_H */
-

@@ -134,14 +134,14 @@ void CamSoot::initialize(int nCells, Mechanism &mech,
      *this is sizeMomentsltiplied by the concentraction of PAHs
      */
     doublereal rMass = numCAtomInception*cMass/NA;
-    constNucleation = 2.2*sqrt(4*pi*kB_cgs/rMass)*dia_PAH*1.0e2*dia_PAH*1.0e2*NA*NA;
+    constNucleation = 2.2*sqrt(4*PI*kB_cgs/rMass)*dia_PAH*1.0e2*dia_PAH*1.0e2*NA*NA;
 
 
     /*
      *Beta for free molecular coagulation, needs to be multiplied by
      *sqrt(T)
      */
-    Kf = 2.2*pow(((3*cMass/NA)/(4*pi*rhoSoot)),1.0/6.0)*sqrt(6*kB_cgs/rhoSoot);
+    Kf = 2.2*pow(((3*cMass/NA)/(4*PI*rhoSoot)),1.0/6.0)*sqrt(6*kB_cgs/rhoSoot);
 
 
     /*
@@ -149,7 +149,7 @@ void CamSoot::initialize(int nCells, Mechanism &mech,
      *free path
      */
     doublereal mass = cMass/NA;
-    doublereal CD1 = pow((6.0*mass/pi/rhoSoot),1.0/3.0); //unit [=] cm
+    doublereal CD1 = pow((6.0*mass/PI/rhoSoot),1.0/3.0); //unit [=] cm
 
 
     Kc_ = 2.514/CD1;
@@ -159,19 +159,19 @@ void CamSoot::initialize(int nCells, Mechanism &mech,
      *soot hydroxyl oxidation constant [=] cm^3/mol-s
      */
     doublereal oh = ohMass/NA;
-    kOH = CD1*CD1* sqrt(pi*kB_cgs/2.0/oh)*NA;
+    kOH = CD1*CD1* sqrt(PI*kB_cgs/2.0/oh)*NA;
 
 
     /*
      *constant for surface growth [=] --
      */
-    kSurf = CD1*CD1*lambda*pi;
+    kSurf = CD1*CD1*lambda*PI;
 
 
     /*
      *PAH condensation constant [=] cm/s-mol
      */
-    kPAH = 2.2*sqrt(pi*kB_cgs/2.0/mass)*NA;
+    kPAH = 2.2*sqrt(PI)*NA;
 
 
 
@@ -911,7 +911,7 @@ void CamSoot::initMoments(Mechanism &mech, std::vector<doublereal>& soln,int nCe
      *               | mu_ij
      *              \|
      */
-    Beta_nucl = 2.2*sqrt(16*pi*kB/mPAH)*dia_PAH*dia_PAH;
+    Beta_nucl = 2.2*sqrt(16*PI*kB/mPAH)*dia_PAH*dia_PAH;
     /*
      * Multiplication by NA is carried out to avoid it while
      * evaluating the rates
@@ -923,15 +923,15 @@ void CamSoot::initMoments(Mechanism &mech, std::vector<doublereal>& soln,int nCe
      *                constant for free molecular coagulation
      *-------------------------------------------------------------------------/
      */
-    Beta_fm = 2.2*sqrt(6*kB/rhoSoot)* pow(3*(cMass/NA)/(4*pi*rhoSoot),(1.0/6.0));
+    Beta_fm = 2.2*sqrt(6*kB/rhoSoot)* pow(3*(cMass/NA)/(4*PI*rhoSoot),(1.0/6.0));
     
     /*--------------------------------------------------------------------------
      *               constant fro condensation
      *-------------------------------------------------------------------------/
      */
-    Beta_cd = 2.2*sqrt(pi*kB/(2*cMass/NA))*NA;
+    Beta_cd = 2.2*sqrt(PI*kB/(2*cMass/NA))*NA;
     //diameter of one particle
-    doublereal CD1 = pow((6*(cMass/NA)/(pi*rhoSoot)),1.0/3.0);
+    doublereal CD1 = pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0);
     doublereal CD1_PAH = D1_PAH*sqrt(2.0/3.0);
     doublereal CH2 = Beta_cd*CD1_PAH*CD1_PAH;
     doublereal CHS = Beta_cd*CD1_PAH*CD1;
@@ -949,7 +949,7 @@ void CamSoot::initMoments(Mechanism &mech, std::vector<doublereal>& soln,int nCe
      *                  constants for surface growth
      *-------------------------------------------------------------------------/
      */
-    Beta_surf = lambda*1.0e+04*pi*CD1*CD1;
+    Beta_surf = lambda*1.0e+04*PI*CD1*CD1;
 
 }
 /*

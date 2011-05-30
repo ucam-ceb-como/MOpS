@@ -1551,6 +1551,15 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
                     return;
             }
         }
+		
+		std::string tbstr;
+		if (m_usetb) {
+			if (m_foparams.LowP_Limit.A != 0 &&  m_foparams.LowP_Limit.n != 0 && m_foparams.LowP_Limit.E != 0){
+				tbstr = "(+M)";
+			} else {
+                tbstr = "+M";
+			};
+        }
 
         // Integer reactant stoichiometry.
         if (m_reac.size() > 0 && m_prod.size() > 0){
@@ -1565,7 +1574,7 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
 
 
             if (m_usetb){
-                out << " + M";
+                out << tbstr;
             }
 
                 // Reaction reversibility.
@@ -1585,17 +1594,15 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
                 }
             }
             if (m_usetb){
-                out << " + M";
+                out << tbstr;
             }
 
-        
-
             // Forward Arrhenius coefficients.
-            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0 + m_usetb?1.0:0.0) << " " << m_arrf.n << " " << m_arrf.E / 4.184E7 / 1.0e-7 << "\n";
+            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0 + (m_usetb?1.0:0.0)) << " " << m_arrf.n << " " << m_arrf.E / 4.184E7 / 1.0e-7 << "\n";
 
             // Reverse Arrhenius coefficients.
             if (m_arrr != NULL)
-                out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0 + m_usetb?1:0.0) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " /\n";
+                out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0 + (m_usetb?1.0:0.0)) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " /\n";
         }
 
         // Real reactant stoichiometry.
@@ -1610,7 +1617,7 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
             }
 
             if (m_usetb){
-                out << " + M";
+                out << tbstr;
             }
 
             // Reaction reversibility.
@@ -1631,15 +1638,15 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
             }
 
             if (m_usetb){
-                out << " + M";
+                out << tbstr;
             }
 
             // Forward Arrhenius coefficients.
-            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0 + m_usetb?1.0:0.0) << " " << m_arrf.n << " " << m_arrf.E / 4.184E7 / 1.0e-7 << "\n";
+            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0 + (m_usetb?1.0:0.0)) << " " << m_arrf.n << " " << m_arrf.E / 4.184E7 / 1.0e-7 << "\n";
 
             // Reverse Arrhenius coefficients.
             if (m_arrr != NULL)
-                out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0 + m_usetb?1:0.0) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " \n";
+                out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0 + (m_usetb?1.0:0.0)) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " \n";
         }
 
         // Forward LT parameters.
@@ -1671,6 +1678,13 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
                     out << m_foparams.Params[i] << " ";
                 }
                 out << "/ " << "\n";
+				
+				// Write third-body efficiencies.
+				for (int i=0; i<ThirdBodyCount(); i++) {
+					out << m_mech->Species(ThirdBody(i).Index())->Name();
+					out << "/" << ThirdBody(i).Mu() << "/";
+					if (i>=ThirdBodyCount()-1) {out << "\n";} else {out << " ";};
+				};
             }
         }
 

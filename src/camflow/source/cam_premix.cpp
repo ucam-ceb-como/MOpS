@@ -139,6 +139,16 @@ void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f){
 
 }
 
+void CamPremix::massFlowResidual(const doublereal& time, doublereal* y, doublereal* f){
+
+
+    for(int i=iMesh_s; i<iMesh_e; i++){
+
+        f[i] = -m_u[i]*(m_flow[i]-m_flow[i-1])/dz[i];
+        //f[ptrCP] = y[ptrCW]-y[ptrCP];
+
+    }
+}
 
 void CamPremix::massFlowBoundary(const doublereal& t, doublereal* y, doublereal* f){
     //f[0] = ud_inlet.FlowRate - y[0]
