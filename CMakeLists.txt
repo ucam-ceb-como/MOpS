@@ -6,6 +6,11 @@ project (MOPSSUITE)
 
 enable_testing()
 
+######### The camflow application ##########################
+add_executable(camflow-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/camflow/cam_kernel.cpp)
+target_link_libraries(camflow-app camflow)
+
+
 ######### The Mops application ##########################
 add_executable(mops-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/mopsc/mops.cpp)
 target_link_libraries(mops-app mops)
@@ -46,6 +51,9 @@ add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/geometry)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/sprogc)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/sweepc)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/odesolvers/cvodes)
+add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/odesolvers/cvode)
+add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/odesolvers/radau)
+add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/camflow)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/mopsc)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/brush)
 
@@ -58,5 +66,8 @@ include_directories(${MOPSSUITE_SOURCE_DIR}/src/utils/include
                     ${MOPSSUITE_SOURCE_DIR}/src/sweepc/include
                     ${MOPSSUITE_SOURCE_DIR}/src/odesolvers/cvodes/include
                     ${MOPSSUITE_SOURCE_DIR}/src/odesolvers/cvodes/source/cvodes
+                    ${MOPSSUITE_SOURCE_DIR}/src/odesolvers/cvode/include
+                    ${MOPSSUITE_SOURCE_DIR}/src/odesolvers/radau/include
+                    ${MOPSSUITE_SOURCE_DIR}/src/camflow/include
                     ${MOPSSUITE_SOURCE_DIR}/src/mopsc/include
                     ${MOPSSUITE_SOURCE_DIR}/src/brush/include)
