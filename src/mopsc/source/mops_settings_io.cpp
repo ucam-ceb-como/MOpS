@@ -164,12 +164,6 @@ void readGlobalSettings(const CamXML::Element &node,
         sim.SetMaxM0(Strings::cdble(subnode->Data())*1.0e6); // Convert from #/cm3 to #/m3.
     }
 
-    // Read predicted maximum secondary M0 value.
-    subnode = node.GetFirstChild("maxsecondarym0");
-    if (subnode != NULL) {
-        sim.SetMaxSecondaryM0(Strings::cdble(subnode->Data())*1.0e6); // Convert from #/cm3 to #/m3.
-    }
-
     // Read predictor-corrector relaxation parameter.
     subnode = node.GetFirstChild("relax");
     if (subnode != NULL) {
@@ -181,7 +175,7 @@ void readGlobalSettings(const CamXML::Element &node,
 Reactor *const readReactor(const CamXML::Element &node,
                                         const Mechanism &mech,
                                         const unsigned int max_particle_count,
-										const real maxM0, const real maxSecondaryM0,
+										const real maxM0,
 										int (*rand_int)(int, int))
 {
     Reactor *reac = NULL;
@@ -304,7 +298,7 @@ Reactor *const readReactor(const CamXML::Element &node,
     // Assign the species mole fraction vector to the reactor mixture.
     mix->SetFracs(molefracs);
     mix->Particles().Initialise(max_particle_count);
-	mix->Reset(maxM0, maxSecondaryM0);
+	mix->Reset(maxM0);
     reac->Fill(*mix);
 
     // Particles
@@ -903,7 +897,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 
         node = root->GetFirstChild("reactor");
         if (node != NULL) {
-			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0(), sim.MaxSecondaryM0(), rand_int);
+			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0(), rand_int);
         } else {
             throw std::runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");

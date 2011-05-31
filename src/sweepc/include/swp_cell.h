@@ -118,12 +118,6 @@ public:
             ForwardIterator particle_list_end,
             real statistical_weight);
 
-    //! Initialise secondary particles
-    template<class ForwardIterator> void SetSecondaryParticles(
-            ForwardIterator particle_list_begin,
-            ForwardIterator particle_list_end,
-            real statistical_weight);
-
     //! Add particles to the ensemble with total statistical weight as specified
     void AddParticle(Particle* sp, real stat_weight,
                      int (*rand_int)(int, int), real(*rand_u01)());
@@ -140,14 +134,11 @@ public:
     //! Returns the real system to stochastic system scaling factor.
     real SampleVolume() const;
 
-    //! Statistical weight of secondary particles in the member ensemble
-    real SecondarySampleVolume() const;
-
     //! Multiply the sample volume by a scaling factor
     void AdjustSampleVolume(real scale_factor);
 
     //! Empty the cell and set the sample volume so a full particle ensemble would have the specified m0
-    void Reset(real m0, real secondary_m0 = 1.0);
+    void Reset(real m0);
 
     // FIXED/VARIABLE CHEMISTRY.
 
@@ -226,9 +217,6 @@ private:
     // the complete real system.
     real m_smpvol;
 
-    //! Physical volume that would initially contain same number of secondary particles as the ensemble
-    real m_secondaryVol;
-
     // Flag determining whether or not the chemistry in this system is fixed.
     // If the chemical conditions are fixed, then they cannot be altered by
     // any particle processes.  Default is false.
@@ -267,29 +255,6 @@ template<class ForwardIterator> void Cell::SetParticles(
     m_ensemble.SetParticles(particle_list_begin, particle_list_end);
 
     m_smpvol = 1.0 / statistical_weight;
-}
-
-/**
- * Initialise the secondary population to hold particles of the type specified
- * by the model and containing the particular particles contained
- * in the range [particle_list_begin, particle_list_end).
- *
- *@tparam   ForwardIterator     A model of a forward iterator
- *
- *@param[in]    particle_list_begin     Iterator to first in range of particle pointers to insert
- *@param[in]    particle_list_end       Iterator to one past end of range of particle pointers to insert
- *@param[in]    statistical_weight      Number of physical particles represented by each computational particle
- */
-template<class ForwardIterator> void Cell::SetSecondaryParticles(
-        ForwardIterator particle_list_begin,
-        ForwardIterator particle_list_end,
-        real statistical_weight)
-{
-    // This puts the particles into the ensemble and clears any scaling
-    // stored inside the ensemble
-    m_ensemble.SetSecondaryParticles(particle_list_begin, particle_list_end);
-
-    m_secondaryVol = 1.0 / statistical_weight;
 }
 
 } //namespace Sweep

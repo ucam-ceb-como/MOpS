@@ -151,7 +151,7 @@ unsigned int PAHStats::Count() const
 }
 
 // Calculates the model stats for a particle ensemble.
-void PAHStats::Calculate(const Ensemble &e, real scale, real secondary_scale)
+void PAHStats::Calculate(const Ensemble &e, real scale)
 {
     // Empty the stats array.
     fill(m_stats.begin(), m_stats.end(), 0.0);

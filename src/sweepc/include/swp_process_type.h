@@ -76,10 +76,9 @@ namespace Processes
         // Coagulation processes
         Transition_Coagulation_ID=10000,   // Transition regime coagulation
         Additive_Coagulation_ID=10001,     // Additive coagulation kernel
-        //! Free molecular coagulation of secondary particles
-        Secondary_FreeCoagulation_ID = 10002,
-        //! Free molecular coagulation of secondary particles with particles from the main population
-        Secondary_Primary_Coagulation_ID = 10003,
+
+        // 10002&3 previously used for coagulations involving secondary particles
+
         //! Additive coagulation with weighted particles
         Weighted_Additive_Coagulation_ID = 10004,
         //! Constant coagulation with weighted particles

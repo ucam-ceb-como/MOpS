@@ -43,8 +43,6 @@ add_library(sweep source/mt19937.cpp
                   source/swp_primary.cpp
                   source/swp_process.cpp
                   source/swp_process_factory.cpp
-                  source/swp_secondary_freecoag.cpp
-                  source/swp_secondary_primary_coag.cpp
                   source/swp_sintering_model.cpp
                   source/swp_solver.cpp
                   source/swp_submodel.cpp

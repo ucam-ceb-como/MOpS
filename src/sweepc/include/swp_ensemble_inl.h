@@ -137,27 +137,5 @@ template<class T> void Sweep::Ensemble::SetParticles(
     assert(m_tree.size() == m_count);
 }
 
-/**
- * Initialise the ensemble to hold particles of the type specified
- * by the model and containing the particular particles contained
- * in the range [particle_list_begin, particle_list_end).
- *@param[in]    particle_list_begin     Iterator to first in range of particle pointers to insert
- *@param[in]    particle_list_end       Iterator to one past end of range of particle pointers to insert
- */
-template<class T> void Sweep::Ensemble::SetSecondaryParticles(
-    T particle_list_begin,
-    T particle_list_end)
-{
-    // Clear any existing particles
-    for(iterator it = m_secondaryParticles.begin(); it != m_secondaryParticles.end(); ++it) {
-        delete *it;
-    }
-    // Read in the particles from the range
-    m_secondaryParticles.assign(particle_list_begin, particle_list_end);
-
-    m_secondaryRescaleExponent = 0;
-    m_secondaryDoublingActive = false;
-
-}
 
 #endif

@@ -107,9 +107,6 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
             m_submodels.insert(*i);
         }
 
-        // Copy sub-particle tree flag.
-        m_subpart_tree = rhs.m_subpart_tree;
-
         // Copy aggregation model.
         m_aggmodel = rhs.m_aggmodel;
 
@@ -125,13 +122,6 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
         m_ThermophoresisType = rhs.m_ThermophoresisType;
 
         m_MoleculeStories = rhs.m_MoleculeStories;
-
-        // Secondary particles
-        m_SecondaryParticles = rhs.m_SecondaryParticles;
-        m_MinSecondaryMass = rhs.m_MinSecondaryMass;
-        m_MaxSecondaryMass = rhs.m_MaxSecondaryMass;
-        m_MinSecondaryCollDiam = rhs.m_MinSecondaryCollDiam;
-        m_MaxSecondaryCollDiam = rhs.m_MaxSecondaryCollDiam;
 
     }
     return *this;
@@ -328,21 +318,6 @@ void ParticleModel::AddSubModel(SubModels::SubModelType id)
     }
 }
 
-
-
-// SUB-PARTICLE TREE.
-
-// Returns true if the sub-particle tree is used in subsequently
-// created particles, otherwise false.
-bool ParticleModel::UseSubPartTree(void) const {return m_subpart_tree;}
-
-// Enables the sub-particle tree in subsequently created particles.
-void ParticleModel::EnableSubPartTree(void) {m_subpart_tree = true;}
-
-// Disables the sub-particle tree in subsequently created particles.
-void ParticleModel::DisableSubPartTree(void) {m_subpart_tree = false;}
-
-
 // AGGREGATION MODEL TYPE.
 
 // Returns the ID of the aggregation model used by dependent particles.
@@ -525,13 +500,6 @@ void ParticleModel::Serialize(std::ostream &out) const
             out.write((char*)&n, sizeof(n));
         }
 
-        // Write if sub-particle tree is enabled.
-        if (m_subpart_tree) {
-            out.write((char*)&trueval, sizeof(trueval));
-        } else {
-            out.write((char*)&falseval, sizeof(falseval));
-        }
-
         // Write the aggregation model ID.
         n = (unsigned int)m_aggmodel;
         out.write((char*)&n, sizeof(n));
@@ -547,12 +515,6 @@ void ParticleModel::Serialize(std::ostream &out) const
         out.write(reinterpret_cast<const char *>(&m_AdvectionType), sizeof(m_AdvectionType));
         out.write(reinterpret_cast<const char *>(&m_ThermophoresisType), sizeof(m_ThermophoresisType));
 
-        // Secondary particle model details
-        out.write(reinterpret_cast<const char *>(&m_SecondaryParticles), sizeof(m_SecondaryParticles));
-        out.write(reinterpret_cast<const char *>(&m_MinSecondaryMass), sizeof(m_MinSecondaryMass));
-        out.write(reinterpret_cast<const char *>(&m_MaxSecondaryMass), sizeof(m_MaxSecondaryMass));
-        out.write(reinterpret_cast<const char *>(&m_MinSecondaryCollDiam), sizeof(m_MinSecondaryCollDiam));
-        out.write(reinterpret_cast<const char *>(&m_MaxSecondaryCollDiam), sizeof(m_MaxSecondaryCollDiam));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, ParticleModel::Serialize).");
@@ -600,10 +562,6 @@ void ParticleModel::Deserialize(std::istream &in)
                     m_submodels.insert((SubModels::SubModelType)id);
                 }
 
-                // Read if the sub-particle tree is enabled.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                m_subpart_tree = (n==1);
-
                 // Read the aggregation model ID.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_aggmodel = (AggModels::AggModelType)n;
@@ -618,13 +576,6 @@ void ParticleModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&m_DiffusionType), sizeof(m_DiffusionType));
                 in.read(reinterpret_cast<char*>(&m_AdvectionType), sizeof(m_AdvectionType));
                 in.read(reinterpret_cast<char*>(&m_ThermophoresisType), sizeof(m_ThermophoresisType));
-
-                // Secondary particvle details
-                in.read(reinterpret_cast<char*>(&m_SecondaryParticles), sizeof(m_SecondaryParticles));
-                in.read(reinterpret_cast<char*>(&m_MinSecondaryMass), sizeof(m_MinSecondaryMass));
-                in.read(reinterpret_cast<char*>(&m_MaxSecondaryMass), sizeof(m_MaxSecondaryMass));
-                in.read(reinterpret_cast<char*>(&m_MinSecondaryCollDiam), sizeof(m_MinSecondaryCollDiam));
-                in.read(reinterpret_cast<char*>(&m_MaxSecondaryCollDiam), sizeof(m_MaxSecondaryCollDiam));
 
                 break;
             default:
@@ -646,7 +597,6 @@ void ParticleModel::init(void)
 {
     releaseMem();
     m_species      = NULL;
-    m_subpart_tree = false;
     m_aggmodel     = AggModels::Spherical_ID;
 
     m_DragA = 0.0;
@@ -658,11 +608,6 @@ void ParticleModel::init(void)
 
     m_MoleculeStories.clear();
 
-    m_SecondaryParticles = false;
-    m_MinSecondaryMass = 0.0;
-    m_MaxSecondaryMass = std::numeric_limits<real>::max();
-    m_MinSecondaryCollDiam = 0.0;
-    m_MaxSecondaryCollDiam = std::numeric_limits<real>::max();
 }
 
 // Clears the current ParticleModel from memory.
@@ -688,15 +633,8 @@ void ParticleModel::releaseMem(void)
     // Clear sub-models.
     m_submodels.clear();
 
-    // Set sub-particle tree and aggregation models to default values.
-    m_subpart_tree = false;
+    // Set aggregation model to default value.
     m_aggmodel     = AggModels::Spherical_ID;
-
-    m_SecondaryParticles = false;
-    m_MinSecondaryMass = 0.0;
-    m_MaxSecondaryMass = std::numeric_limits<real>::max();
-    m_MinSecondaryCollDiam = 0.0;
-    m_MaxSecondaryCollDiam = std::numeric_limits<real>::max();
 }
 
 /*!
@@ -1161,33 +1099,4 @@ real ParticleModel::accomodationFunction(const Cell &sys, const Particle &sp) co
     const real knudsen = Sweep::KnudsenAir(sys.Temperature(), sys.Pressure(), sp.CollDiameter());
 
     return (1.0 + 0.9 * knudsen * switchTerm) / (1.0 + knudsen);
-}
-
-/*!
- * @param[in]   sp  Particle to check
- *
- * @return      True if sufficiently small and simple for a secondary population
- */
-bool ParticleModel::isSecondary(const Particle &sp) const {
-    if(m_SecondaryParticles){
-        if((sp.Mass() > m_MinSecondaryMass) && (sp.CollDiameter() < m_MaxSecondaryCollDiam)) {
-            if(m_aggmodel == AggModels::PAH_ID) {
-                const AggModels::PAHPrimary* pri = dynamic_cast<const AggModels::PAHPrimary*>(sp.Primary());
-
-                return (pri->Numprimary() == 1);
-            }
-            else
-                return true;
-        }
-    }
-
-    return false;
-
-}
-
-/*!
- * @param[in]   on_off      True iff some particles are to be treated as secondary particles
- */
-void ParticleModel::setSecondary(bool on_off) {
-    m_SecondaryParticles = on_off;
 }

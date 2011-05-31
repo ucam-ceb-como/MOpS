@@ -53,8 +53,6 @@
 #include "swp_weighted_addcoag.h"
 #include "swp_weighted_constcoag.h"
 #include "swp_coag_weight_rules.h"
-#include "swp_secondary_freecoag.h"
-#include "swp_secondary_primary_coag.h"
 #include "swp_abf_model.h"
 #include "swp_diffusion_process.h"
 #include "swp_advection_process.h"
@@ -325,9 +323,6 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     string str = particleXML->GetAttributeValue("subtree");
     if (str == "true") {
         throw std::runtime_error("Subtrees are no longer supported (Sweep::MechParser::readV1)");
-        mech.EnableSubPartTree();
-    } else {
-        mech.DisableSubPartTree();
     }
 
     // Check the aggregation model.
@@ -346,56 +341,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     // See if there are any secondary particle criteria
     const CamXML::Element* secondaryXML = particleXML->GetFirstChild("secondaryparticle");
     if(secondaryXML != NULL) {
-        mech.setSecondary(true);
-
-        // Get the limits on particle properties that define secondary particles
-        std::vector<CamXML::Element*> limitsXML;
-        secondaryXML->GetChildren("limit", limitsXML);
-
-        // Currently need to specify values for m_MinSecondaryMass and m_MaxSecondaryCollDiam
-        if(limitsXML.size() < 2)
-            throw std::runtime_error("Insufficient limits provided to specify secondary particles (Sweep, MechParser::readV1).");
-
-        std::vector<CamXML::Element*>::const_iterator it = limitsXML.begin();
-        const std::vector<CamXML::Element*>::const_iterator itEnd = limitsXML.end();
-        while(it != itEnd) {
-            // Get name of particle property used to define the limit
-            const CamXML::Attribute* idXML =  (*it)->GetAttribute("id");
-            const std::string id = idXML->GetValue();
-
-            // Look for an upper limit on the property value
-            const CamXML::Element* maxXML = (*it)->GetFirstChild("max");
-            if(maxXML != NULL) {
-                const real maxVal = std::atof((maxXML->Data()).c_str());
-                if(id == "d") {
-                    mech.setMaxSecondaryCollDiam(maxVal);
-                }
-                else if(id == "m") {
-                    mech.setMaxSecondaryMass(maxVal);
-                }
-                else {
-                    throw std::runtime_error("Unrecognised particle term for secondary max (Sweep, MechParser::readV1).");
-                }
-            }
-
-            // Look for a lower limit on the property value
-            const CamXML::Element* minXML = (*it)->GetFirstChild("min");
-            if(minXML != NULL) {
-                const real minVal = std::atof((minXML->Data()).c_str());
-                if(id == "d") {
-                    mech.setMinSecondaryCollDiam(minVal);
-                }
-                else if(id == "m") {
-                    mech.setMinSecondaryMass(minVal);
-                }
-                else {
-                    throw std::runtime_error("Unrecognised particle term for secondary min (Sweep, MechParser::readV1).");
-                }
-            }
-
-
-            ++it;
-        }
+        throw std::runtime_error("Secondary particles are no longer supported (Sweep::MechParser::readV1)");
     }
 
     // Get the sintering model.
@@ -801,10 +747,9 @@ void MechParser::readPAHInception(CamXML::Element &xml, Processes::PAHInception 
     // Read initial tracker values
     readInceptedTrackers(xml, icn);
 
-    // See if particles are to be added to the secondary population where possible
     CamXML::Element* secondary = xml.GetFirstChild("usesecondary");
     if(secondary != NULL)
-        icn.SetUseSecondary(true);
+        throw std::runtime_error("Secondary particles are no longer supported (MechParser::readPAHInception)");
 }
 
 /*!
@@ -1246,10 +1191,6 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                         coag.reset(new Processes::TransitionCoagulation(mech));
                     else if(kernelName == "additive")
                         coag.reset(new Processes::AdditiveCoagulation(mech));
-                    else if(kernelName == "secondaryfreemol")
-                        coag.reset(new Processes::SecondaryFreeCoag(mech));
-                    else if(kernelName == "secondaryprimary")
-                        coag.reset(new Processes::SecondaryFreeCoag(mech));
                     else
                         // Unrecognised option
                         throw std::runtime_error("Coagulation kernel " + kernelName + " not yet available in DSA \
