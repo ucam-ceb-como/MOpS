@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<camflow>
+	<reactor model="batch_cv">
+	 <diameter unit="m">0.015</diameter>
+	 <length unit="cm">5</length>
+  </reactor>
+  <op_condition>
+    <temperature>isothermal</temperature>
+    <twall unit="K">2000</twall>
+    <pressure unit="Pa">10132.5</pressure>
+    <radiation activate="off"/>
+  </op_condition>
+  <inlet>
+     <fuel>
+       <velocity unit="m/s">0.1</velocity>
+       <temperature unit="K">2000</temperature>
+       <!--flowrate unit="cgs">4.63e-3</flowrate-->
+       <molefrac>
+        <species name="H2">0.625</species>
+        <species name="O2">0.375</species>
+       </molefrac>
+     </fuel>
+  </inlet>
+  <solver mode="coupled" solver="cvode">
+	  <tols>
+		  <species>
+			  <aTol>1.e-18</aTol>
+			  <rTol>1.e-08</rTol>	  
+		  </species>
+		  <temperature>
+			  <aTol>1.e-03</aTol>
+			  <rTol>1.e-03</rTol>	  
+		  </temperature>
+		  <flow>
+			  <aTol>1.e-03</aTol>
+			  <rTol>1.e-03</rTol>	  
+		  </flow>
+  	  </tols>
+  </solver>
+ <report species="mass">
+ </report>
+ <grid>grid.inp</grid>
+</camflow>
