@@ -190,8 +190,12 @@ template<typename IteratorType> void Brush::Reactor1d::ReplaceParticles(const It
             // Note that this cell has now been visited for particle population replacement
             visitedCells.insert(cellIndex);
 
-            mReactors[cellIndex].Mixture()->SetParticles(it->particleList.begin(), it->particleList.end(),
-                                                         it->m0 / it->particleList.size());
+            // Put the new particles in the cell
+            if(it->particleList.size() > 0)
+                mReactors[cellIndex].Mixture()->SetParticles(it->particleList.begin(), it->particleList.end(),
+                                                             it->m0 / it->particleList.size());
+            else
+                mReactors[cellIndex].Mixture()->Reset(mReactors[cellIndex].Mixture()->SampleVolume());
         }
         ++it;
     }

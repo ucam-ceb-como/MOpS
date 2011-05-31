@@ -71,12 +71,14 @@ public:
     //! Run the simulation paths and store output
     void runSimulation(const size_t seed_offset);
 
+    //! Calculate and save statistics in a text file
+    static void saveParticleStats(const Reactor1d &reac,
+                           const Sweep::Stats::IModelStats::StatBound &stat_bound,
+                           std::ostream &out);
+
 protected:
     //! Run a single Monte Carlo path
     void runOnePath(const int seed);
-
-    //! Calculate and save statistics in a text file
-    void saveParticleStats(const Reactor1d &reac, std::ostream &out);
 
     //! Save list of particles in a text file
     void saveParticleList(const Reactor1d &reac, std::ostream &out);

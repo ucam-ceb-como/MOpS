@@ -10,7 +10,8 @@ add_library(brush source/pred_corr_solver.cpp
                   source/reactor1d.cpp
                   source/reset_chemistry.cpp
                   source/settings_io.cpp
-                  source/simulator.cpp)
+                  source/simulator.cpp
+                  source/moonmd_interface.cpp)
 
 include_directories(include 
                     ../utils/include

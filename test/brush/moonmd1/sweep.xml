@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="Rob test crystallisation" units="CGS">
+
+
+    
+    <!-- Define particle components. -->
+    
+    <component id="salt" type="bulk">
+      <description>
+        common salt
+      </description>
+      <density units="g/cm3">1</density>
+      <molwt units="g/mol">6.0221415e26</molwt>
+    </component> 
+    
+
+    <particle id="[salt]" model="spherical">
+      <description>
+        A salt crystal
+      </description>
+    </particle>
+
+    <model type="advection" id="physical"/>
+    
+    <!-- Inceptions -->
+
+    <inception name="Precipitation" rate="freemolecular">
+        <formula>NACL + NACL to [X]</formula>
+        <reactant id="NACL" stoich="2" m="2.0e3" d="0.5e2"/>
+        <particleout id="[X]"/>
+        <component id="salt" dx="2"/>
+        <!-- 5.63527e9 cancels out the various constants in the free mol kernel
+          and a factor of sqrt(300) for the temperature.  The rate should now
+          be 1.0e-40 * 0.5 * [NaCl]^2 * NA^2-->
+        <A>5.63527e-31</A>
+    </inception>
+ 
+    <coagulation>
+        <kernel>weightedconstant</kernel>
+        <weightrule>w1</weightrule>
+        <A>5.0e-9</A>
+    </coagulation>
+
+</mechanism>

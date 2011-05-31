@@ -126,6 +126,12 @@ void Brush::PredCorrSolver::predictorCorrectorStep(Reactor1d &reac, const real t
     reac.setTime(startTime);
     solveParticles(reac, t_stop);
 
+//    std::cout << "Particle counts at end of predictorCorrectorStep ";
+//    for(size_t i = 0; i < reac.getNumCells(); ++i) {
+//        std::cout << reac.getCell(i).Mixture()->ParticleCount() << ' ';
+//    }
+//    std::cout << std::endl;
+
     //=========== Corrector steps ====================
     for(int i = 0; i < n_iter; ++i) {
         ;
@@ -245,10 +251,23 @@ void Brush::PredCorrSolver::solveParticles(Reactor1d &reac, const real t_stop) c
         }
     } while(reac.getTime() <= t_stop * (1.0 - std::numeric_limits<real>::epsilon()));
 
+//    std::cout << "Particle counts in solveParticles before splitParticleTransport ";
+//    for(size_t i = 0; i < reac.getNumCells(); ++i) {
+//        std::cout << reac.getCell(i).Mixture()->ParticleCount() << ' ';
+//    }
+//    std::cout << std::endl;
+
     // Now do the split particle transport, if there is any
     if(mSplitDiffusion || mSplitAdvection) {
         splitParticleTransport(reac, t_start, t_stop);
     }
+
+//    std::cout << "Particle counts at end of solveParticles ";
+//    for(size_t i = 0; i < reac.getNumCells(); ++i) {
+//        std::cout << reac.getCell(i).Mixture()->ParticleCount() << ' ';
+//    }
+//    std::cout << std::endl;
+
 }
 
 /*!
@@ -343,7 +362,11 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop,
         }
     }
 
-    //std::cout << ", actual step " << dt << " with process " << activeProcess << " in cell " << activeCell << std::endl;
+//    std::cout << ", actual step " << dt << " with process " << activeProcess
+//              << " in cell " << activeCell;
+//    if(activeCell >= 0)
+//        std::cout << " with " << reac.getCell(activeCell).Mixture()->ParticleCount() << " particles";
+//    std::cout << std::endl;
 
     return dt;
 }

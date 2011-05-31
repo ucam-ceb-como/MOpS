@@ -1,4 +1,6 @@
-/*
+/**
+ * \file swp_submodel.h
+
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
