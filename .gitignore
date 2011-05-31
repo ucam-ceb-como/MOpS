@@ -6,4 +6,18 @@ lib/
 *.aux
 *.sen
 *.sim
+
+# Profiling output files
 *gmon.out
+*callgrind*
+
+# Cmake ignores
+*CMakeFiles
+*.cmake
+build/
+
+# log files
+*log*
+
+# Patches
+*.patch
