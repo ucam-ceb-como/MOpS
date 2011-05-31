@@ -931,8 +931,6 @@ void Simulator::consoleOutput(const Mops::Reactor &r) const
     out.push_back(stats.BasicStats().PCount());
     out.push_back(stats.BasicStats().M0());
     out.push_back(stats.BasicStats().Fv());
-    out.push_back(stats.BasicStats().SecondaryPCount());
-    out.push_back(stats.BasicStats().SecondaryM0());
 
     // Get output CPU time.
     double cputime = calcDeltaCT(m_cpu_start);

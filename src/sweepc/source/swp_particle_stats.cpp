@@ -67,9 +67,7 @@ const std::string ParticleStats::m_statnames[ParticleStats::STAT_COUNT] = {
     std::string("Mass2 (kg2/m6)"),
     std::string("Mass3 (kg3/m9)"),
     std::string("Avg num coags"),
-    std::string("Max num coags"),
-    std::string("Secondary Particle Count"),
-    std::string("Secondary M0 (cm-3)")
+    std::string("Max num coags")
 };
 
 const IModelStats::StatType ParticleStats::m_mask[ParticleStats::STAT_COUNT] = {
@@ -87,10 +85,7 @@ const IModelStats::StatType ParticleStats::m_mask[ParticleStats::STAT_COUNT] = {
     IModelStats::Sum,  // Mass2.
     IModelStats::Sum,  // Mass3.
     IModelStats::Avg,  // Average number of coagulations
-    IModelStats::None, // Max number of coagulations
-    IModelStats::None, // Secondary particle count.
-    IModelStats::Sum   // Secondary M0.
-
+    IModelStats::None  // Max number of coagulations
 };
 
 const std::string ParticleStats::m_const_pslnames[ParticleStats::PSL_COUNT] = {
@@ -256,19 +251,13 @@ void ParticleStats::Calculate(const Ensemble &e, real scale)
     const real invWeight = (e.Count()>0) ? 1.0 / m_stats[iM0] : 0.0;
 
     // Scale the summed stats and calculate the averages,
-    // skip the secondary particle stats (hence STAT_COUNT - 2)
-    for (unsigned int i=1; i!=STAT_COUNT - 2; ++i) {
+    for (unsigned int i=1; i!=STAT_COUNT; ++i) {
         if (m_mask[i] == Sum) {
             m_stats[i] *= scale;
         } else if(m_mask[i] == Avg){
             m_stats[i] *= invWeight;
         }
     }
-
-    // Secondary population quantities
-    m_stats[i2NP] = 0.0;
-    m_stats[i2M0] = 0.0;
-
 
     // Scale and calculate averages for components and tracker
     // variables.
@@ -351,14 +340,8 @@ void ParticleStats::Names(std::vector<std::string> &names,
 // Returns the particle count.
 real ParticleStats::PCount(void) const {return m_stats[iNP];}
 
-//! Returns the secondary particle count.
-real ParticleStats::SecondaryPCount(void) const {return m_stats[i2NP];}
-
 // Returns the number density.
 real ParticleStats::M0(void) const {return m_stats[iM0];}
-
-// Returns the secondary number density.
-real ParticleStats::SecondaryM0(void) const {return m_stats[i2M0];}
 
 // Returns the avg. equiv. sphere diameter.
 real ParticleStats::AvgDiam(void) const {return m_stats[iD];}
