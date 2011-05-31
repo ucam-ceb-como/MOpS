@@ -93,8 +93,6 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_model      = rhs.m_model;
         m_smpvol     = rhs.m_smpvol;
         m_fixed_chem = rhs.m_fixed_chem;
-        m_secondaryVol = rhs.m_secondaryVol;
-
     }
     return *this;
 }
@@ -248,7 +246,7 @@ void Cell::AddParticle(Particle* sp, real stat_weight,
 // Returns particle statistics.
 void Cell::GetVitalStats(Stats::EnsembleStats &stats) const
 {
-    stats.Calculate(m_ensemble, 1.0/SampleVolume(), 1.0/SecondarySampleVolume());
+    stats.Calculate(m_ensemble, 1.0/SampleVolume());
 }
 
 
@@ -258,12 +256,6 @@ void Cell::GetVitalStats(Stats::EnsembleStats &stats) const
 real Cell::SampleVolume() const
 {
     return m_smpvol * m_ensemble.Scaling();
-}
-
-//! Physical volume that would contain same number of secondary particles as the ensemble
-real Cell::SecondarySampleVolume() const
-{
-    return m_secondaryVol * m_ensemble.SecondaryScaling();
 }
 
 /*!
@@ -278,7 +270,6 @@ void Cell::AdjustSampleVolume(real scale_factor)
 {
     assert(scale_factor > 0);
     m_smpvol = SampleVolume() * scale_factor;
-    m_secondaryVol = SecondarySampleVolume() * scale_factor;
 
     // The effects of ensemble rescalings are now incorporated in this sample
     // volume.
@@ -290,21 +281,18 @@ void Cell::AdjustSampleVolume(real scale_factor)
  * (of m_ensemble.Capacity() particles) has the specified m0.
  *
  *@param[in]    m0              Particle number density for full ensemble (units \f$\mathrm{m}^{-3}\f$)
- *@param[in]    secondary_m0    Secondary particle number density for m_ensemble.Capacity() secondary particles (units \f$\mathrm{m}^{-3}\f$)
  */
-void Cell::Reset(const real m0, const real secondary_m0)
+void Cell::Reset(const real m0)
 {
     m_ensemble.Clear();
     m_ensemble.ResetScaling();
 
     if ((m_ensemble.Capacity() > 0) && (m0 > 0.0)) {
         m_smpvol = m_ensemble.Capacity() / m0;
-        m_secondaryVol = m_ensemble.Capacity() / secondary_m0;
     }
     else {
         // The ensemble has not yet been initialised
         m_smpvol = 1.0;
-        m_secondaryVol = 1.0;
     }
 
 }
@@ -400,8 +388,6 @@ void Cell::Serialize(std::ostream &out) const
         double v = (double)m_smpvol;
         out.write((char*)&v, sizeof(v));
 
-        out.write(reinterpret_cast<const char*>(&m_secondaryVol), sizeof(m_secondaryVol));
-
         // Output if fixed chem.
         out.write((char*)&m_fixed_chem, sizeof(m_fixed_chem));
 
@@ -433,8 +419,6 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
                 // Read the sample volume.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_smpvol = (real)val;
-
-                in.read(reinterpret_cast<char*>(&m_secondaryVol), sizeof(m_secondaryVol));
 
                 // Read if fixed chem.
                 in.read(reinterpret_cast<char*>(&m_fixed_chem), sizeof(m_fixed_chem));

@@ -152,17 +152,8 @@ public:
         T particle_list_begin,
         T particle_list_end);
 
-    //! Initialise with some secondary particles
-    template<class T> void SetSecondaryParticles(
-        T particle_list_begin,
-        T particle_list_end);
-
-
     //! Empty the tree and pass on ownership of the particles
     PartPtrList TakeParticles();
-
-    //! Remove the secondary particles and pass on ownership of them
-    PartPtrList TakeSecondaryParticles();
 
     // PARTICLE ADDITION AND REMOVAL.
 
@@ -170,31 +161,16 @@ public:
     Particle *const At(unsigned int i);
     const Particle *const At(unsigned int i) const;
 
-    //! Pointer to secondary particle at index i
-    Particle *const SecondaryParticleAt(unsigned int i);
-
-    //! Pointer to secondary particle at index i
-    const Particle *const SecondaryParticleAt(unsigned int i) const;
-
     // Adds the given particle to the ensemble.  Returns the new
     // particle's index in the ensemble.  The ensemble then takes
     // control of destruction of the particle.
     int Add(Particle &sp, int (*rand_int)(int, int));
-
-    //! Insert a secondary particle
-    int AddSecondaryParticle(Particle &sp, int (*rand_int)(int, int));
 
     //! Removes the particle at the given index from the ensemble.
     void Remove(
         unsigned int i, // Index of particle to remove.
         bool fdel=true  // Set true to delete particle from memory as well, otherwise false.
         );
-
-    //! Removes the secondary particle at the given index from the ensemble.
-    void RemoveSecondaryParticle(unsigned int i, bool fdel=true);
-
-    //! Remove two secondary particles from the ensemble, without deleteing them
-    void RemoveTwoSecondaryParticles(unsigned int i1, unsigned int i2);
 
     //! Removes invalid particles.
     void RemoveInvalids(void);
@@ -203,12 +179,6 @@ public:
     void Replace (
         unsigned int i, // Index of particle to replace.
         Particle &sp    // Particle to insert.
-        );
-
-    //! Replace the secondary particle at the given index with the given particle.
-    void ReplaceSecondaryParticle (
-        unsigned int i,
-        Particle &sp
         );
 
     // Removes all particles from the ensemble.
@@ -236,9 +206,6 @@ public:
     // its index. Returns negative on failure.
     int Select(int (*rand_int)(int, int)) const;
 
-    //! Select a secondary particle uniformly at random
-    int SelectSecondaryParticle(int (*rand_int)(int, int)) const;
-
     // Randomly selects a particle, weighted by the given particle
     // property index.  The particle properties are those stored in
     // the ParticleData type. Returns particle index on success, otherwise
@@ -250,9 +217,6 @@ public:
     //! Returns the particle count.
     unsigned int Count(void) const;
 
-    //! Secondary particle count.
-    unsigned int SecondaryCount() const;
-
     //!Returns the ensemble capacity.
     unsigned int Capacity(void) const;
 
@@ -261,9 +225,6 @@ public:
 
     //! Returns the scaling factor due to particle operations.
     real Scaling() const;
-
-    //! Scaling factor for secondary particle population
-    real SecondaryScaling() const;
 
     //! Resets the scaling parameters.
     void ResetScaling();
@@ -334,15 +295,6 @@ private:
     //! Tree for inverting probability distributions on the particles and summing their properties
     tree_type m_tree;
 
-    // SECONDARY PARTICLE POPULATION
-    //! Secondary particle population
-    PartPtrVector m_secondaryParticles;
-
-    //! Number of times secondary population has been doubled minus number of times it has been halved
-    int m_secondaryRescaleExponent;
-
-    //! Perform doubling on secondary population
-    bool m_secondaryDoublingActive;
 
     // MEMORY MANAGEMENT.
 
@@ -357,9 +309,6 @@ private:
 
     //! Empties the main population
     void ClearMain();
-
-    //! Empties the secondary population
-    void ClearSecondary();
 
     //! Functor to extract weights from nodes of the new binary tree
     class WeightExtractor : public std::unary_function<const particle_cache_type&, real>

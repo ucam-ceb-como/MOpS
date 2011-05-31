@@ -829,22 +829,6 @@ void Mechanism::LPDA(real t, Cell &sys, int (*rand_int)(int, int), real(*rand_u0
             UpdateParticle(*(*i), sys, t, rand_u01);
         }
 
-        // Perform deferred processes on secondary particles
-        for(unsigned int k=0; k != sys.Particles().SecondaryCount(); ++k) {
-            Particle* const sp = sys.Particles().SecondaryParticleAt(k);
-            UpdateParticle(*sp, sys, t, rand_u01);
-
-            // See if the particle has to move to the main population
-            if(!isSecondary(*sp)) {
-                sys.AddParticle(sp, 1.0 / sys.SecondarySampleVolume(), rand_int, rand_u01);
-                sys.Particles().RemoveSecondaryParticle(k, false);
-
-                // A different particle will now be at position k so the
-                // check needs to be repeated (note the ++k at the end of the loop)
-                --k;
-            }
-        }
-
         // Now remove any invalid particles and update the ensemble.
         sys.Particles().RemoveInvalids();
 

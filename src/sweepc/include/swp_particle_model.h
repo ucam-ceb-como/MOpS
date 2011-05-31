@@ -164,19 +164,6 @@ public:
     void AddSubModel(SubModels::SubModelType id);
 
 
-    // SUB-PARTICLE TREE.
-
-    // Returns true if the sub-particle tree is used in subsequently
-    // created particles, otherwise false.
-    bool UseSubPartTree(void) const;
-
-    // Enables the sub-particle tree in subsequently created particles.
-    void EnableSubPartTree(void);
-
-    // Disables the sub-particle tree in subsequently created particles.
-    void DisableSubPartTree(void);
-
-
     // AGGREGATION MODEL TYPE.
 
     // Returns the ID of the aggregation model used by dependent particles.
@@ -298,36 +285,6 @@ public:
     //! Set the contents of the database of molecule development histories
     void setMoleculeStories(const MoleculeEvolution::Database& db) {m_MoleculeStories = db;}
 
-    //! See if a particle is eligible for the secondary population
-    bool isSecondary(const Particle &sp) const;
-
-    //! Control the use of secondary particles
-    void setSecondary(bool on_off);
-
-    //! Minimum mass of secondary particles
-    real minSecondaryMass() const {return m_MinSecondaryMass;}
-
-    //! Set minimum mass of secondary particles
-    void setMinSecondaryMass(real min_val) {m_MinSecondaryMass = min_val;}
-
-    //! Maximum mass of secondary particles
-    real maxSecondaryMass() const {return m_MaxSecondaryMass;}
-
-    //! Set maximum mass of secondary particles
-    void setMaxSecondaryMass(real max_val) {m_MaxSecondaryMass = max_val;}
-
-    //! Minimum collision diameter of secondary particles
-    real minSecondaryCollDiam() const {return m_MinSecondaryCollDiam;}
-
-    //! Set minimum collision diameter of secondary particles
-    void setMinSecondaryCollDiam(real min_val) {m_MinSecondaryCollDiam = min_val;}
-
-    //! Maximum collision diameter of secondary particles
-    real maxSecondaryCollDiam() const {return m_MaxSecondaryCollDiam;}
-
-    //! Set maximum collision diameter of secondary particles
-    void setMaxSecondaryCollDiam(real max_val) {m_MaxSecondaryCollDiam = max_val;}
-
 protected:
     // The species used to define the processes and the particles.
     const Sprog::SpeciesPtrVector *m_species;
@@ -339,10 +296,6 @@ protected:
     // Set of models which all particles produced by this model
     // must use.
     SubModels::SubModelTypeSet m_submodels;
-
-    // Flag to enable/disable sub-particle tree in subsequently created
-    // particles.
-    bool m_subpart_tree;
 
     // The ID of the aggregation model used to create particles.
     AggModels::AggModelType m_aggmodel;
@@ -416,21 +369,6 @@ private:
 
     //! Database of stories of the development of molecules that make up particles
     MoleculeEvolution::Database m_MoleculeStories;
-
-    //! Is the secondary particle model in use
-    bool m_SecondaryParticles;
-
-    //! Minimum mass of a secondary particle / kg
-    real m_MinSecondaryMass;
-
-    //! Minimum mass of a secondary particle / kg
-    real m_MaxSecondaryMass;
-
-    //! Maximum collision diameter of a secondary particle / m
-    real m_MinSecondaryCollDiam;
-
-    //! Maximum collision diameter of a secondary particle / m
-    real m_MaxSecondaryCollDiam;
 };
 } //namespace Sweep
 #endif

@@ -264,8 +264,7 @@ void Brush::Simulator::saveParticleStats(const Reactor1d &reac,
     for(size_t i = 0; i < reac.getNumCells(); ++i) {
         // Collect the statistics
         stats.Calculate(reac.getCell(i).Mixture()->Particles(),
-                        1.0 / reac.getCell(i).Mixture()->SampleVolume(),
-                        1.0 / reac.getCell(i).Mixture()->SecondarySampleVolume());
+                        1.0 / reac.getCell(i).Mixture()->SampleVolume());
 
         // Output the time and place to which the statistics apply
         out << reac.getTime() << ',' << reac.getCellCentre(i);
@@ -311,26 +310,6 @@ void Brush::Simulator::saveParticleList(const Reactor1d &reac, std::ostream &out
 
             // Output the time and place at which the particle is found
             out << reac.getTime() << ',' << mix.Particles().At(particleIndex)->getPosition();
-
-            // Output the particle details
-            for(fvector::const_iterator it = particleListEntry.begin();
-                it != particleListEntry.end(); ++it) {
-                out << ',' << *it;
-            }
-
-            // New line ready for next particle
-            out << '\n';
-        }
-
-        // Loop over the secondary particles
-        for(unsigned int particleIndex = 0; particleIndex < mix.Particles().SecondaryCount(); ++particleIndex) {
-            // Get a vector containing the particle details
-            fvector particleListEntry;
-            stats.PSL(*mix.Particles().SecondaryParticleAt(particleIndex), reac.getMechanism().ParticleMech(),
-                      reac.getTime(), particleListEntry, 1.0 / mix.SecondarySampleVolume());
-
-            // Output the time and place at which the particle is found
-            out << reac.getTime() << ',' << mix.Particles().SecondaryParticleAt(particleIndex)->getPosition();
 
             // Output the particle details
             for(fvector::const_iterator it = particleListEntry.begin();

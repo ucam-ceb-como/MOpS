@@ -190,7 +190,7 @@ unsigned int ParticleStats::Count() const
 }
 
 // Calculates the model stats for a particle ensemble.
-void ParticleStats::Calculate(const Ensemble &e, real scale, real secondary_scale)
+void ParticleStats::Calculate(const Ensemble &e, real scale)
 {
     m_stats.assign(m_stats.size(), 0.0);
 
@@ -266,8 +266,8 @@ void ParticleStats::Calculate(const Ensemble &e, real scale, real secondary_scal
     }
 
     // Secondary population quantities
-    m_stats[i2NP] = e.SecondaryCount();
-    m_stats[i2M0] = e.SecondaryCount() * secondary_scale ;
+    m_stats[i2NP] = 0.0;
+    m_stats[i2M0] = 0.0;
 
 
     // Scale and calculate averages for components and tracker

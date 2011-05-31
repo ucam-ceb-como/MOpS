@@ -308,31 +308,27 @@ void ParticleImage::constructAgg_FM(const Particle &sp, const ParticleModel &mod
     // Clear the current image data structure.
     m_root.Clear();
 
-    // Need to determine the type of particle this is.
-    if (model.UseSubPartTree()) {
-        throw std::logic_error("Subtrees no longer supported");
-    } else {
-        const AggModels::SurfVolPrimary *svp = NULL;
 
-        switch(model.AggModel()) {
-            case AggModels::Spherical_ID:
-                // Spherical particle model, just draw
-                // a single sphere.
-                m_root.Insert(sp.SphDiameter() * 0.5e9); // Convert to nm.
-                return;
-            case AggModels::SurfVol_ID:
-                // Surface-volume model, construct a tree
-                // of identical primaries, estimating the primary
-                // count and diameter.
-                svp = dynamic_cast<const AggModels::SurfVolPrimary*>(sp.Primary());
-                if (svp != NULL) uniformAgg_FM(svp->PP_Count(), svp->PP_Diameter());
-                break;
-            // Other cases previously unhandled, added a default
-            // case to avoid compiler warnings (riap 17 Jun 2009)
-            default:
-                throw std::runtime_error("Unhandled case in switch statement (ParticleImage::constructAgg_FM)");
-                break;
-        }
+	const AggModels::SurfVolPrimary *svp = NULL;
+
+	switch(model.AggModel()) {
+		case AggModels::Spherical_ID:
+			// Spherical particle model, just draw
+			// a single sphere.
+			m_root.Insert(sp.SphDiameter() * 0.5e9); // Convert to nm.
+			return;
+		case AggModels::SurfVol_ID:
+			// Surface-volume model, construct a tree
+			// of identical primaries, estimating the primary
+			// count and diameter.
+			svp = dynamic_cast<const AggModels::SurfVolPrimary*>(sp.Primary());
+			if (svp != NULL) uniformAgg_FM(svp->PP_Count(), svp->PP_Diameter());
+			break;
+		// Other cases previously unhandled, added a default
+		// case to avoid compiler warnings (riap 17 Jun 2009)
+		default:
+			throw std::runtime_error("Unhandled case in switch statement (ParticleImage::constructAgg_FM)");
+			break;
     }
 }
 

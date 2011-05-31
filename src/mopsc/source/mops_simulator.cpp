@@ -67,7 +67,7 @@ using namespace Strings;
 
 // Default constructor.
 Simulator::Simulator(void)
-: m_nruns(1), m_niter(1), m_pcount(0), m_maxm0(0.0), m_maxSecondaryM0(0.0),
+: m_nruns(1), m_niter(1), m_pcount(0), m_maxm0(0.0),
   m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_runtime(0.0),
   m_console_interval(1), m_console_msgs(true),
   m_output_filename("mops-out"), m_output_every_iter(false),
@@ -130,16 +130,6 @@ real Simulator::MaxM0(void) const {return m_maxm0;}
  *@param[in]    m0      Value which particle number density is not expected to exceed \f$\mathrm{m}^{-3}\f$
  */
 void Simulator::SetMaxM0(real m0) {m_maxm0 = m0;}
-
-/*!
- *@return       Value which particle number density is not expected to exceed \f$\mathrm{m}^{-3}\f$
- */
-real Simulator::MaxSecondaryM0() const {return m_maxSecondaryM0;}
-
-/*!
- *@param[in]    m0      Value which secondary particle number density is not expected to exceed \f$\mathrm{m}^{-3}\f$
- */
-void Simulator::SetMaxSecondaryM0(real m0) {m_maxSecondaryM0 = m0;}
 
 // CONSOLE INTERVAL.
 
@@ -1837,15 +1827,6 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                     out[i]->Write(psl);
                 }
 
-                // Get PSL for all particles.
-                for (unsigned int j=0; j!=r->Mixture()->Particles().SecondaryCount(); ++j) {
-                    // Get PSL.
-                    stats.PSL(*(r->Mixture()->Particles().SecondaryParticleAt(j)), mech.ParticleMech(),
-                              times[i].EndTime(), psl, 1.0/(r->Mixture()->SecondarySampleVolume()*scale));
-                    // Output particle PSL to CSV file.
-                    out[i]->Write(psl);
-                }
-
                 // Draw particle images for tracked particles.
                 unsigned int n = min(m_ptrack_count,r->Mixture()->ParticleCount());
                 for (unsigned int j=0; j!=n; ++j) {
@@ -1961,7 +1942,6 @@ void Simulator::Serialize(std::ostream &out) const
         // Max. M0 value, for initial scaling of ensemble.
         double val = (double)m_maxm0;
         out.write((char*)&val, sizeof(val));
-        out.write(reinterpret_cast<const char*>(&m_maxSecondaryM0), sizeof(m_maxSecondaryM0));
 
         // Computation time.
         int i = (int)m_cpu_start;
@@ -2065,7 +2045,6 @@ void Simulator::Deserialize(std::istream &in)
                 // Max. M0 value, for initial scaling of ensemble.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_maxm0 = (real)val;
-                in.read(reinterpret_cast<char*>(&m_maxSecondaryM0), sizeof(m_maxSecondaryM0));
 
                 // Computation time.
                 in.read(reinterpret_cast<char*>(&i), sizeof(i));

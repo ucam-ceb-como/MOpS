@@ -32,9 +32,6 @@ add_test(mops.CSTRtest ${MOPSSUITE_SOURCE_DIR}/test/mopsc/CSTRRegress.sh ${MOPSS
 
 add_test(mops.pahtest ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest.sh ${MOPSSUITE_BINARY_DIR}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.pahtest2 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest2.sh ${MOPSSUITE_BINARY_DIR}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
-
-
 ########## The Brush application #######################
 add_executable(brush-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/brush/brush.cpp)
 target_link_libraries(brush-app brush)
