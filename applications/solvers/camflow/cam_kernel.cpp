@@ -92,7 +92,7 @@ int main()
 
 
     //read mechanism, thermo and trasnport data
-    IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,fTrans);
+    IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,fTrans,1.0);
 
     //Following is a test call to the interface
 //-----------------------------------------------------------
