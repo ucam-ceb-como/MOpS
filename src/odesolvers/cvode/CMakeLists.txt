@@ -7,10 +7,10 @@ cmake_minimum_required(VERSION 2.6)
 
 project (CVODE)
 
-add_library(cvode source/cvode_band.c
+add_library(cvode source/cvode.c
+                  source/cvode_band.c
                   source/cvode_bandpre.c
                   source/cvode_bbdpre.c
-                  source/cvode.c
                   source/cvode_dense.c
                   source/cvode_diag.c
                   source/cvode_io.c
@@ -30,4 +30,4 @@ add_library(cvode source/cvode_band.c
                   source/sundials/sundials_spgmr.c
                   source/sundials/sundials_sptfqmr.c)
 
-include_directories(include source)
+include_directories(include)

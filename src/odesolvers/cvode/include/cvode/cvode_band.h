@@ -22,8 +22,8 @@
 extern "C" {
 #endif
 
-#include <sundials/sundials_band.h>
-#include <sundials/sundials_nvector.h>
+#include "../sundials/sundials_band.h"
+#include "../sundials/sundials_nvector.h"
  
 /*
  * -----------------------------------------------------------------
