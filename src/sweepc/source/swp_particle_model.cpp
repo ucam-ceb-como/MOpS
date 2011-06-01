@@ -606,7 +606,7 @@ void ParticleModel::init(void)
     // Not sure what to put as default for m_DragType etc
     m_ThermophoresisType = NoThermophoresis;
 
-    m_MoleculeStories.clear();
+    //deleted by dongping 04 Apr,m_MoleculeStories.clear();
 
 }
 

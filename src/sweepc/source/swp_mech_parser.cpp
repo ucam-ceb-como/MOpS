@@ -333,7 +333,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetAggModel(AggModels::SurfVol_ID);
     } else if (str == "PAH") {
         mech.SetAggModel(AggModels::PAH_ID);
-        loadPAHStories(*(xml.Root()), mech);
+        //loadPAHStories(*(xml.Root()), mech);
     } else {
         mech.SetAggModel(AggModels::Spherical_ID);
     }
@@ -1629,7 +1629,7 @@ Sweep::Maths::Functional *const MechParser::readFunctional(CamXML::Element &xml)
  * @exception   std::runtime_error  No pahfile child elements found
  * @exception   std::runtime_error  Neither time nor position specified for a file
  */
-void MechParser::loadPAHStories(CamXML::Element &xml, Mechanism &mech) {
+/*void MechParser::loadPAHStories(CamXML::Element &xml, Mechanism &mech) {
     // Extract the details of the pah story files
     std::vector<CamXML::Element*> items;
     xml.GetChildren("pahfile", items);
@@ -1671,4 +1671,4 @@ void MechParser::loadPAHStories(CamXML::Element &xml, Mechanism &mech) {
     }
 
     mech.setMoleculeStories(db);
-}
+}*/

@@ -52,7 +52,6 @@
 #include "swp_model_factory.h"
 #include "swp_PAH_cache.h"
 #include "swp_particle_image.h"
-#include "swp_particle_cache.h"
 #include "swp_cell.h"
 #include "swp_kmc_pah_process.h"
 #include "swp_kmc_pah_structure.h"

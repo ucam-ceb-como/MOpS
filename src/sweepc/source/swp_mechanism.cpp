@@ -866,7 +866,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
 		}
 
         // Look up new size of PAHs in database
-        pah->UpdatePAHs(t, *this);
+        pah->UpdatePAHs(t, *this,sys);//sys has been inserted as an argument by dongping 26 April, since we would like Update() Fuction to call KMC code
         pah->UpdateCache();
         pah->CheckCoalescence();
         if (sp.IsValid())
