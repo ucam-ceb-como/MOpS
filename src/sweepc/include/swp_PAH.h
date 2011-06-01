@@ -52,9 +52,10 @@
 	
 namespace Sweep
 {
+//forward declaration 
 namespace KMC_ARS{
-	class PAHStructure;
-}
+class PAHStructure;}
+
 namespace AggModels
 {
 //! PAH primary particle class
@@ -69,6 +70,7 @@ public:
 	~PAH();
 	PAH &operator=(const PAH &rhs);
 	PAH *const Clone() const;
+	//returen ID of PAH
 	int ID() const;
 
 private:

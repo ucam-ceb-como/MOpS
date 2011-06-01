@@ -101,8 +101,8 @@ PAHStructure* PAHProcess::clonePAH() const {
 		assert(false);
 		abort();
 	}
-	if(m_pah->m_parent->ID() == 200609)
-		cout<<"";
+	//if(m_pah->m_parent->ID() == 200609)
+		//cout<<"";
 	// new PAHStructure
     PAHStructure* temp = new PAHStructure();
 	PAHProcess p = PAHProcess(*temp);
@@ -720,9 +720,9 @@ Cpointer PAHProcess::addC() {
     // Create new carbon atom at memory pointed by h
     cb = new Carbon;
     // Initialise all other details
-    cb->C1 = NULLC;
-    cb->C2 = NULLC;
-    cb->C3 = NULLC;
+    cb->C1 = NULL;
+    cb->C2 = NULL;
+    cb->C3 = NULL;
     cb->bondAngle1 = 0;
     cb->bondAngle2 = 0;
     cb->bridge = false;
@@ -746,7 +746,7 @@ Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2) {
     // Set details of new Carbon
     cb->C1 = C_1;
     cb->C2 = C_1->C2;
-    cb->C3 = NULLC;
+    cb->C3 = NULL;
     cb->bondAngle1 = normAngle(angle2); // convert angle to +ve/-ve form
     cb->bridge = false;
     cb->A = 0;
@@ -754,7 +754,7 @@ Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2) {
     cb->coords = jumpToPos(C_1->coords, angle1);
     m_pah->m_cpositions.insert(cb->coords);
     // Edit details of connected carbon(s)
-    if(C_1->C2 != NULLC) {
+    if(C_1->C2 != NULL) {
         // change member pointer of original neighbour of C_1
         C_1->C2->C1 = cb;
     }
@@ -788,8 +788,8 @@ Cpointer PAHProcess::bridgeC(Cpointer C_1) {
     // Create new carbon atom
     cb = new Carbon;
     // Set details of new Carbon
-    cb->C1 = NULLC;
-    cb->C2 = NULLC;
+    cb->C1 = NULL;
+    cb->C2 = NULL;
     cb->C3 = C_1;
     cb->bondAngle1 = 0;
     cb->bondAngle2 = normAngle(C_1->bondAngle2 - 180); // opposite direction of C_1->bondAngle2
@@ -864,15 +864,15 @@ void PAHProcess::removeC(Cpointer C_1, bool bulk) {
         saveDOT("COORD_PROB.dot");
     }
     // Change details of neighbouring Carbons
-    if(C_1->C1 != NULLC) { // check prev C atom
+    if(C_1->C1 != NULL) { // check prev C atom
         C_1->C1->C2 = C_1->C2; // connect prev C atom to next C atom
     }
-    if(C_1->C2 != NULLC) { // check next C atom
+    if(C_1->C2 != NULL) { // check next C atom
         C_1->C2->C1 = C_1->C1; // connect next C atom to prev C atom
     }
     if(C_1->bridge) { // change details of C atom bridging to it
         C_1->C3->bondAngle2;// = 0;
-        C_1->C3->C3 = NULLC;
+        C_1->C3->C3 = NULL;
         C_1->C3->bridge = false;
     }
     // Remove coordinates of C from m_pah->m_cpositions
@@ -1219,7 +1219,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
     if(m_pah == NULL) {
         PAHStructure* pah = new PAHStructure();
         m_pah = pah;
-    }else if(m_pah->m_cfirst != NULLC)
+    }else if(m_pah->m_cfirst != NULL)
         clearStructure();
     switch(ss) {
         Cpointer newC;
@@ -1314,8 +1314,8 @@ void PAHProcess::clearStructure() {
     // clear all data
     m_pah->m_siteMap.clear();
     m_pah->m_siteList.clear();
-    m_pah->m_cfirst = NULLC;
-    m_pah->m_clast = NULLC;
+    m_pah->m_cfirst = NULL;
+    m_pah->m_clast = NULL;
     setCount(0,0);
     m_pah->m_cpositions.clear();/*
     //cout << "Clearing Structure....\n";
@@ -1344,8 +1344,8 @@ void PAHProcess::clearStructure() {
     // clear all data
     m_pah->m_siteMap.clear();
     m_pah->m_siteList.clear();
-    m_pah->m_cfirst = NULLC;
-    m_pah->m_clast = NULLC;
+    m_pah->m_cfirst = NULL;
+    m_pah->m_clast = NULL;
     setCount(0,0);
     m_pah->m_cpositions.clear();
     //cout << "Structure Cleared!!\n";*/
@@ -1364,7 +1364,7 @@ bool PAHProcess::checkCoordinates() const{
 		Cpointer oldnext = next;
 		cpair corr_coords;
 		// first check if next is a valid Carbon pointer
-		if(next == NULLC) {
+		if(next == NULL) {
 			cout<<"checkCoordinates() failed at "<<count<<"th C atom..\n"
 				<<"Message: This atom is not a valid pointer to Carbon -- "
 				<<next<<"\n";
@@ -1490,8 +1490,8 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
         /*cout<<"Site hindered, process not performed.\n"*/ return;}
     if(!(C_1->C2->bridge) || !(C_2->C1->bridge)) { // check if bulk C in AC site is a bridge
         // Add and remove C
-        //if(C_1->C2->C3 != NULLC) C_1->C2->C3->C3 = NULLC;
-        //if(C_2->C1->C3 != NULLC) C_2->C1->C3->C3 = NULLC;
+        //if(C_1->C2->C3 != NULL) C_1->C2->C3->C3 = NULL;
+        //if(C_2->C1->C3 != NULL) C_2->C1->C3->C3 = NULL;
         removeC(C_1->C2, true);
         removeC(C_2->C1, true);
         newC1 = addC(C_1, normAngle(C_1->bondAngle1+120), 0);
@@ -1505,8 +1505,8 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
         angletype a = C_2->C1->bondAngle1;
         C_2->C1->bondAngle1 = C_2->C1->bondAngle2;
         C_2->C1->bondAngle2 = a;
-        //C_1->C2->C3 = NULLC;
-        //C_2->C1->C3 = NULLC;
+        //C_1->C2->C3 = NULL;
+        //C_2->C1->C3 = NULL;
         // connect C_1 and C_2
         connectToC(C_1, C_2);
         // Add C
@@ -1584,7 +1584,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
         Cpointer next;
         if(!now->bridge) {
             next = now->C2;
-            //if(now->C3 != NULLC) now->C3->C3 = NULLC;
+            //if(now->C3 != NULL) now->C3->C3 = NULL;
             removeC(now, true);
             now = next;
         }
@@ -1592,7 +1592,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
             next = now->C3->C2; //
             // bridged bulk C will not be removed from edge
             Cpointer b = now->C3; // C bridged to now
-            b->C3 = NULLC; now->C3 = NULLC;
+            b->C3 = NULL; now->C3 = NULL;
             b->bridge = false; now->bridge = false;
             b->bondAngle1 = b->bondAngle2;
             now->bondAngle2 = 0; b->bondAngle2 = 0;
@@ -2073,8 +2073,8 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
         Cpointer b1 = Cstart->C2;
         Cpointer b2 = b1->C3;
         connectToC(Cstart, b2->C2);
-        b1->C3 = NULLC;
-        b2->C3 = NULLC;
+        b1->C3 = NULL;
+        b2->C3 = NULL;
         b1->bridge = false;
         b2->bridge = false;
         b1->C1 = b2;

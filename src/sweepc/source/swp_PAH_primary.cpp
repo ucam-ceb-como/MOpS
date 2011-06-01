@@ -62,7 +62,7 @@
 #include "string_functions.h"
 using namespace Sweep;
 using namespace Sweep::AggModels;
-
+using namespace Sweep::KMC_ARS;
 
 using namespace std;
 using namespace Strings;

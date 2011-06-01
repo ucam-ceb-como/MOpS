@@ -59,7 +59,6 @@ namespace Sweep {
         // Pointer to a Carbon atom and a Site.
         typedef Carbon* Cpointer;
         typedef std::list<Site>::iterator Spointer;
-        static Cpointer NULLC = NULL;
 
         //! Carbon atom on PAH edges
         class Carbon {

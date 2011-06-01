@@ -64,8 +64,8 @@ using namespace std;
 // Constructors and Destructor
 //! Default Constructor
 PAHStructure::PAHStructure() {
-    m_cfirst = NULLC;
-    m_clast = NULLC;
+    m_cfirst = NULL;
+    m_clast = NULL;
     m_rings = 0;
     m_counts = intpair(2, 0);
 	m_parent = NULL;

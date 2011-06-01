@@ -57,10 +57,7 @@
 #include <map>
 #include <set>
 
-using namespace Sweep::KMC_ARS;
-
 namespace Sweep{
-	class AggModels::PAH;
     namespace KMC_ARS{
         class JumpProcess;
         typedef std::vector<Spointer> svector;
