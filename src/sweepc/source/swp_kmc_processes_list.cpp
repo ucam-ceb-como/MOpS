@@ -133,7 +133,7 @@ real JumpProcessList::calculateRates(const KMCGasPoint& gp,
             rateV[i] = (jp[i])->setRate0p12(gp, st/*, t*/);
             temp += rateV[i];
         }
-    }else cout<<"ERROR: No reaction mechanism for this pressure condition.\n";
+    }else std::cout<<"ERROR: No reaction mechanism for this pressure condition.\n";
     return temp;
 }
 

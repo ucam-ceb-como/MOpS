@@ -56,8 +56,6 @@
 #include "swp_params.h"
 #include "linear_interpolator.hpp"
 
-using namespace std;
-
 namespace Sweep {
     namespace KMC_ARS {
         class KMCGasph;

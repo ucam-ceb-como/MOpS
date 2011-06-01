@@ -175,7 +175,7 @@ namespace Sweep{
             //deleted by dongping 14.04
 			//! CSV reaction count filename//##
             //! Reaction Counter
-             vector<int> m_rxn_count;
+             std::vector<int> m_rxn_count;
         };
 
         // to write C-H data for PAHs after intervals
