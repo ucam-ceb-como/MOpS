@@ -76,7 +76,9 @@ namespace Sweep
 {
 class Mechanism;
 class ParticleModel;
-
+namespace KMC_ARS{
+class CSV_data;
+class KMCSimulator;}
 
 /*!
  * \brief Manages the particle population inside a cell
@@ -260,10 +262,14 @@ public:
         std::istream &in,                // Input stream.
         const Sweep::ParticleModel &mech // Model used to define particles.
         );
-
+		
+	Sweep::KMC_ARS::KMCSimulator* Simulator();
+	void SetSimulator();
+	
 private:
     //! Vector of particles in the ensemble.
     PartPtrVector m_particles;
+    Sweep::KMC_ARS::KMCSimulator *m_kmcsimulator;
 
     // ENSEMBLE CAPACITY VARIABLES.
     unsigned int m_levels;   // Number of levels in the binary tree.

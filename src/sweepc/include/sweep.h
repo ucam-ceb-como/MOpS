@@ -60,12 +60,26 @@
 #include "swp_primary.h"
 #include "swp_subparticle.h"
 #include "swp_particle.h"
+#include "swp_PAH.h"
 
 // Aggregation models.
 #include "swp_aggmodel_type.h"
 #include "swp_aggmodel_cache.h"
 #include "swp_surfvol_cache.h"
 #include "swp_surfvol_primary.h"
+
+// KMC PAH growth model.
+#include "swp_kmc_jump_process.h"
+#include "swp_kmc_gasph.h"
+#include "swp_kmc_pah_structure.h"
+#include "swp_kmc_pah_process.h"
+#include "swp_kmc_processes_list.h"
+#include "swp_kmc_reaction.h"
+#include "swp_kmc_simulator.h"
+//#include "swp_kmc_starting_struct.h"
+#include "swp_kmc_structure_comp.h"
+#include "swp_kmc_typedef.h"
+#include "swp_kmc_gaspoint.h"
 
 // Particle system definition.
 #include "swp_cell.h"

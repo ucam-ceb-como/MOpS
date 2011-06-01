@@ -42,6 +42,7 @@
 
 #include "swp_ensemble.h"
 #include "swp_particle_model.h"
+#include "swp_kmc_simulator.h"
 
 #include <cmath>
 #include <vector>
@@ -58,6 +59,7 @@ using namespace Sweep;
 // Default constructor.
 Sweep::Ensemble::Ensemble(void)
 {
+	m_kmcsimulator= NULL;
     init();
 }
 
@@ -93,6 +95,7 @@ Sweep::Ensemble::Ensemble(std::istream &in, const Sweep::ParticleModel &model)
 // Destructor.
 Sweep::Ensemble::~Ensemble(void)
 {
+	delete     m_kmcsimulator;
     // Clear the ensemble.
     Clear();
 }
@@ -193,9 +196,20 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_ndble      = 0;
     m_dbleon     = true;
     m_dbleactive = false;
-    m_dblecutoff = (int)(3.0 * (real)m_capacity / 4.0);
-    m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
+    m_dblecutoff = (int)(2.0 * (real)m_capacity / 4.0);//######modified by dongping 23 May for debugging cloning Function
+    //m_dblecutoff = (int)(3.0 * (real)m_capacity / 4.0);
+	m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
+}
+
+Sweep::KMC_ARS::KMCSimulator* Sweep::Ensemble::Simulator(void)
+{   //added by dongping 26 April
+	return m_kmcsimulator;
+}
+
+void Sweep::Ensemble::SetSimulator(void)
+{   //added by dongping 26 April
+	 m_kmcsimulator=new Sweep::KMC_ARS::KMCSimulator();
 }
 
 
