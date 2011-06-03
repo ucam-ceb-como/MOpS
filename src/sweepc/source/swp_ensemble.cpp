@@ -196,8 +196,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_ndble      = 0;
     m_dbleon     = true;
     m_dbleactive = false;
-    m_dblecutoff = (int)(2.0 * (real)m_capacity / 4.0);//######modified by dongping 23 May for debugging cloning Function
-    //m_dblecutoff = (int)(3.0 * (real)m_capacity / 4.0);
+    m_dblecutoff = (int)(3.0 * (real)m_capacity / 4.0);
 	m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
 }

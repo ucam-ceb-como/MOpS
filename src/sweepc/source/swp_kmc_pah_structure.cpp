@@ -116,10 +116,9 @@ bool PAHStructure::operator!=(PAHStructure &rhs) const{
 int PAHStructure::numofC(){
 	return m_counts.first;
 } 
-PAHStructure* PAHStructure::initialise(StartingStructure ss) {
+void PAHStructure::initialise(StartingStructure ss) {
 	PAHProcess p(*this);
 	p.initialise(ss);
-	return p.returnPAH();
 }
 PAHStructure*  PAHStructure::Clone() {
 	PAHProcess p(*this);

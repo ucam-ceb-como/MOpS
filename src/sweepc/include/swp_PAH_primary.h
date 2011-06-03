@@ -156,8 +156,7 @@ public:
     //! returns sqrt(L*W)
     double sqrtLW() const;
     double AvgCoalesc() const;
-	// clear rhsparticle->m_PAH after coagulation and codensation
-	void Clear(); 
+
 protected:
     //! Empty primary not meaningful
     PAHPrimary();
@@ -203,8 +202,10 @@ private:
 
 
     // Vector of PAHs.
-	// PAHStructure class don't have proper copy constructor, 
-	// so if we use vector <PAH>, pusk_bcak action will cause trouble.
+	// PAHStructure class now have proper copy constructor (under testing)
+	// , but it is still not worthy to copy PAH from one vector to another
+	// so we will use vector<PAH*> instead of  vector <PAH>
+	// Vector of PAH*.
     std::vector<PAH*> m_PAH;
     //some basic properties
     //derived from the PAHs by UpdataCache()

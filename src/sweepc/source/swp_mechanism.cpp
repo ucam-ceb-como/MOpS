@@ -861,12 +861,13 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
         if (sys.Particles().Simulator()==NULL)
 		{
 				sys.Particles().SetSimulator();
-				// for debugging, open a file to write time step for kmc loops, dongping 06 May
+		// for debugging, open a file to write time step for kmc loops, dongping 06 May
 				sys.Particles().Simulator()->m_timestep_csv.Open(sys.Particles().Simulator()->m_timestep_name, true);
 		}
 
         // Look up new size of PAHs in database
-        pah->UpdatePAHs(t, *this,sys);//sys has been inserted as an argument by dongping 26 April, since we would like Update() Fuction to call KMC code
+		// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
+        pah->UpdatePAHs(t, *this,sys);
         pah->UpdateCache();
         pah->CheckCoalescence();
         if (sp.IsValid())

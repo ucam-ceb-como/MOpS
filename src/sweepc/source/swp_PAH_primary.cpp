@@ -60,6 +60,7 @@
 #include <stdexcept>
 #include <cassert>
 #include "string_functions.h"
+
 using namespace Sweep;
 using namespace Sweep::AggModels;
 using namespace Sweep::KMC_ARS;
@@ -67,7 +68,8 @@ using namespace Sweep::KMC_ARS;
 using namespace std;
 using namespace Strings;
 
-static int ID=0;
+//used for debugging, testing clone function for PAHStructure.
+static unsigned int ID=0; 
 static bool m_clone=false;
 /*
 double PAHPrimary::pow(double a, double b) {
@@ -249,12 +251,12 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 
  * @param[in]   model       Particle model containing molecule database
 */
-void PAHPrimary::AddPAH(real time,const Sweep::ParticleModel &model)//??
+void PAHPrimary::AddPAH(real time,const Sweep::ParticleModel &model)
 {
-	PAH* new_PAH = new PAH();// be aware to delete object in the destructor
+	PAH* new_PAH = new PAH();
 	//deleted lastposPAHupdate 
 	//deleted freezetime 
-	new_PAH->m_numcarbon = 16;//start at pyrene??
+	new_PAH->m_numcarbon = PYRENE;//start at pyrene
 	new_PAH->PAH_ID=ID;
 	new_PAH->time_created=time;
 	new_PAH->lastupdated=time;
@@ -401,7 +403,8 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
 			//m_PAH.resize(m_PAH.size());
 	for (size_t i=0; i!=source->m_PAH.size();++i){
 		    m_PAH[i]=source->m_PAH[i]->Clone();
-			m_PAH[i]->PAH_ID=(-1)*source->m_PAH[i]->PAH_ID;
+			m_PAH[i]->PAH_ID=source->m_PAH[i]->PAH_ID+10000000;
+    //plus 10000000 to tell which pah is cloned and also according to Id, we could easily calculate how many times this pah duplicate
 		    //std::cout<<"PAH are cloned successfullly"<<std::endl;
 	}
 	//}
@@ -1002,9 +1005,8 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
             // in all the calls to getMoleculeState to shorten the search for
             // the appropriate time point.
             const unsigned int oldNumCarbon = (*it)->m_numcarbon;
-			//zak's code should insert here 08Apr.
-			//deleted model.getMoleculeStories().getMoleculeState 
-			//std::cout<<"this is PAH "<<(*it)->PAH_ID<<std::endl; 
+			//zak's code is inserted here.
+			//deleted model.getMoleculeStories().getMoleculeState  
 			sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct,(*it)->lastupdated,seektime, 5,Sweep::genrand_int, Sweep::genrand_real1, growthfact,(*it)->PAH_ID);
 			(*it)->m_numcarbon=(*it)->m_pahstruct->numofC();
             (*it)->lastupdated=t;

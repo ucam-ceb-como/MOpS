@@ -80,11 +80,11 @@ namespace Sweep{
 			//void CopyLoop(const PAHStructure* source);
             //! Stores coordinates of all Carbon atoms (not according to order)
             std::set<cpair> m_cpositions;
-							///*add by dongping 12.04. however, we should keep the PAHStructure
+							//add by dongping 12.04. however, we should keep the PAHStructure
 							//object to be small in case memory problem, so we should not put these member
 							//functions in this class, however, it seems that member functions
-							//in specified class do not take any extra memory*/
-			PAHStructure* initialise(StartingStructure ss);
+							//in specified class do not take any extra memory
+			void initialise(StartingStructure ss);
 			PAHStructure* Clone() ;
 							//void clearStructure();
 							//Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2);

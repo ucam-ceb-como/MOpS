@@ -350,11 +350,7 @@ real KMCSimulator::updatePAH(PAHStructure* pah,
 							real r_factor,
 							int PAH_ID) {
    
-	// Initialising output csv files
-    //initCSVIO();
-    //cout << "Initialisation complete!!\n________________________\n\n";
-	//std::string dotfile;
-	vector<int> m_rxn_count(18,0);//added by dongping 17/04
+	vector<int> m_rxn_count(18,0);
 	real m_t = tstart;
     real t_max = m_t + dt;
     targetPAH(*pah);
@@ -397,8 +393,8 @@ real KMCSimulator::updatePAH(PAHStructure* pah,
         t_next = m_t+t_step;
         if(t_next < t_max) {
 			//if (pah->numofC()>5000&&pah->numofC()<6000)//||pah->havebridgeC()
-			if (PAH_ID==224835||PAH_ID==1011604||PAH_ID==1111604)
-            saveDOTperLoop(100000*tstart,loopcount,PAH_ID);
+			//if (PAH_ID==224835||PAH_ID==1011604||PAH_ID==1111604)
+            // saveDOTperLoop(100000*tstart,loopcount,PAH_ID);
             // Choose reaction according to rates
             int chosen_proc = m_simGas.chooseReaction(jump_rates_vector, rand_u01);
             // Get site type and structure change process from the jump process class
@@ -671,7 +667,6 @@ CSV_data::CSV_data(KMCSimulator& st) {
     m_sim = &st;
 }
 CSV_data::~CSV_data() {}
-// initialise data storage
 void CSV_data::initData(int max_runs, int no_of_interv, real max_time, intpair N_CH_initial, KMCGasph& gasph) {
     cout<<"Initialising CH_data vector...\n";
     // vector of zeros for each run
