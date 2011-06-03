@@ -867,20 +867,10 @@ void Simulator::setupConsole(const Mops::Mechanism &mech)
             // Particle volume fraction.
             header.push_back("Fv");
             m_console_mask.push_back(mech.Species().size()+5);
-        } else if ((*i).compare("SecondarySP")==0 || (*i).compare("#2SP")==0 ||
-                   (*i).compare("secondarysp")==0 || (*i).compare("#2sp")==0 ) {
-            // Number of computational particles in secondary population.
-            header.push_back("# 2 SP");
-            m_console_mask.push_back(mech.Species().size()+6);
-        } else if ((*i).compare("SecondaryM0")==0 || (*i).compare("2m0")==0 ||
-                   (*i).compare("secondarym0")==0) {
-            // Number of computational particles in secondary population.
-            header.push_back("Sec M0");
-            m_console_mask.push_back(mech.Species().size()+7);
         } else if ((*i).compare("CT")==0 || (*i).compare("ct")==0) {
             // Computation time.
             header.push_back("CPU (s)");
-            m_console_mask.push_back(mech.Species().size()+8);
+            m_console_mask.push_back(mech.Species().size()+6);
         } else {
             // Check for a species name.
             int isp = mech.FindSpecies((*i));
