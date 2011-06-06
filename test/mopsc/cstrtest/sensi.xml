@@ -1,27 +1,51 @@
 <sensi version="1.0">
     <settings>
-        <sensitivity enable="true" method="1"/>
-        <errorControl enable="true"/>
-        <!-- atolB>1.0e-6</atol> 
-        <atolQ>1.0e-6</atol> 
-        <atolQB>1.0e-6</atol> 
-        <rtolB>1.0e-6</rtol>
-        <rtolQ>1.0e-6</rtol -->
-        <problemType type="Init_Conditions"/>
-        <!--problemType type="Reaction_Rates"/-->
+        <sensitivity enable="false" method="1"/>
+        <errorControl enable="false"/>
+        <atolB>1.0e-04</atol> 
+        <atolQ>1.0e-04</atol> 
+        <atolQB>1.0e-04</atol> 
+        <rtolB>1.0e-04</rtol>
+        <rtolQ>1.0e-04</rtol>
+        <!-- problemType type="Init_Concentrations"/ -->
+        <problemType type="Reaction_Rates"/>
     </settings>
     <parameters>
         <A all="false" enable="false"/>
         <n all="false" enable="false"/>
         <E all="false" enable="false"/>
         <additional>
+            <paramA rxnth="0"/>
             <paramA rxnth="1"/>
             <paramA rxnth="2"/>
             <paramA rxnth="3"/>
             <paramA rxnth="4"/>
             <paramA rxnth="5"/>
             <paramA rxnth="6"/>
+            <paramA rxnth="7"/>
+            <paramA rxnth="8"/>
+            <paramA rxnth="9"/>
+            <paramA rxnth="10"/>
+            <paramA rxnth="11"/>
+            <paramA rxnth="12"/>
+            <paramA rxnth="13"/>
+            <paramA rxnth="14"/>
+            <paramA rxnth="15"/>
+            <paramA rxnth="16"/>
+            <paramA rxnth="17"/>
+            <paramA rxnth="18"/>
+            <paramA rxnth="19"/>
+            <paramA rxnth="20"/>
+            <paramA rxnth="21"/>
+            <paramA rxnth="22"/>
+            <paramA rxnth="23"/>
+            <paramA rxnth="24"/>
+            <paramA rxnth="25"/>
+            <paramA rxnth="26"/>
+            <paramA rxnth="27"/>
+            <paramA rxnth="28"/>
+            <paramA rxnth="29"/>            
         </additional>
-		<init id="TIO2"/>
+        <init id="C8H20O4SI"/>
     </parameters>
 </sensi>

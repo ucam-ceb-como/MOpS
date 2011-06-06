@@ -55,7 +55,7 @@ cd cstrtest
 
 dos2unix chem.inp
 
-$program -gpc -p -diag4 -rr mops.inx -s sweep.xml -c chem.inp -t therm.dat
+$program -p
 simulationResult=$?
 
 if((simulationResult==0)) 
@@ -68,8 +68,8 @@ else
 fi
 echo "========================"
 
-dos2unix "J3-chem.csv"
-dos2unix "J3-sensi.csv"
+dos2unix "silane-chem.csv"
+dos2unix "silane-sensi.csv"
 ./cstrtest.pl
 postprocessResult=$?
 if((postprocessResult!=0)) 
@@ -79,7 +79,7 @@ if((postprocessResult!=0))
 fi
 
 
-rm -f J3*
+rm -f silane*
 # All tests passed
 #echo "All tests passed"
 
