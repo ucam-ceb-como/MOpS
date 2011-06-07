@@ -57,7 +57,10 @@
 #include "swp_aggmodel_type.h"
 #include "swp_surfvol_cache.h"
 #include "swp_PAH_cache.h"
-#include "swp_molecule_evolution.h"
+#include "swp_PAH.h"
+#include "swp_kmc_pah_structure.h"
+#include "swp_kmc_simulator.h"
+#include "swp_cell.h"
 
 #include <iostream>
 #include <stack>
@@ -94,6 +97,7 @@ public:
 
     //! Returns a copy of the primary.
     virtual PAHPrimary *const Clone(void) const;
+	
 
     //! coagulates this particle with rhs
     PAHPrimary &Coagulate(const Primary &rhs, int (*rand_int)(int, int),
@@ -106,10 +110,10 @@ public:
     void UpdateCache(void);
 
     //! updates the evolution of the PAHs using the database and the current time
-    void UpdatePAHs(double t, const Sweep::ParticleModel &model);
+	void UpdatePAHs(double t, const Sweep::ParticleModel &model, Cell &sys);
 
     //! adds a PAH to a particle
-    void AddPAH(real time, int ID, const Sweep::ParticleModel &model);
+    void AddPAH(real time, const Sweep::ParticleModel &model);
 
     //! returns the coalescence level
     double CoalescenceLevel();
@@ -182,7 +186,7 @@ protected:
     //! returns a uniformly chosen primary particle
     PAHPrimary *SelectRandomSubparticle(Sweep::real(*rand_u01)());
     void ReleaseMem();
-
+	
 
   //  double pow(double a, double b);
 
@@ -196,29 +200,13 @@ private:
     static PAHPrimary* descendPath(PAHPrimary *here,
                                    std::stack<bool> &takeLeftBranch);
 
-    struct PAH {
-        //! Number of Carbon atoms in the PAH
-        unsigned int m_numcarbon;
-
-        //! Index of the PAH story within its database
-        unsigned int ID;
-
-        //! Simulated time at point when molecule created
-        double time_created;
-
-        //! Simulated time when molecule size was last updated
-        double lastupdated;
-
-        //! Amount of growth time to ignore
-        real freezetime;
-
-        //! Last position in the database when the PAH has been updated
-        MoleculeEvolution::Database::state_lookup_hint lastposPAHupdate;
-
-    };
 
     // Vector of PAHs.
-    std::vector<PAH> m_PAH;
+	// PAHStructure class now have proper copy constructor (under testing)
+	// , but it is still not worthy to copy PAH from one vector to another
+	// so we will use vector<PAH*> instead of  vector <PAH>
+	// Vector of PAH*.
+    std::vector<PAH*> m_PAH;
     //some basic properties
     //derived from the PAHs by UpdataCache()
     int m_numcarbon;

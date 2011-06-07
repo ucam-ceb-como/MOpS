@@ -30,8 +30,8 @@ add_library(sweep source/mt19937.cpp
                   source/swp_mechanism.cpp
                   source/swp_mech_parser.cpp
                   source/swp_model_factory.cpp
-                  source/swp_molecule_evolution.cpp
                   source/swp_PAH_cache.cpp
+				  source/swp_PAH.cpp
                   source/swp_pah_inception.cpp
                   source/swp_PAH_primary.cpp
                   source/swp_PAH_stats.cpp
@@ -43,8 +43,6 @@ add_library(sweep source/mt19937.cpp
                   source/swp_primary.cpp
                   source/swp_process.cpp
                   source/swp_process_factory.cpp
-                  source/swp_secondary_freecoag.cpp
-                  source/swp_secondary_primary_coag.cpp
                   source/swp_sintering_model.cpp
                   source/swp_solver.cpp
                   source/swp_submodel.cpp
@@ -59,7 +57,16 @@ add_library(sweep source/mt19937.cpp
                   source/swp_tree_cache.cpp
                   source/swp_tree_weighted_cache.cpp
                   source/swp_weighted_addcoag.cpp
-                  source/swp_weighted_constcoag.cpp)
+                  source/swp_weighted_constcoag.cpp
+				  source/swp_kmc_gasph.cpp
+				  source/swp_kmc_gaspoint.cpp
+				  source/swp_kmc_jump_process.cpp
+				  source/swp_kmc_pah_process.cpp
+				  source/swp_kmc_pah_structure.cpp
+				  source/swp_kmc_processes_list.cpp
+				  source/swp_kmc_reaction.cpp
+				  source/swp_kmc_simulator.cpp
+				  source/swp_kmc_structure_comp.cpp)
 
 include_directories(include 
                     ../utils/include

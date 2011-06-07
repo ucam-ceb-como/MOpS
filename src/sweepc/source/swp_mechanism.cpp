@@ -829,22 +829,6 @@ void Mechanism::LPDA(real t, Cell &sys, int (*rand_int)(int, int), real(*rand_u0
             UpdateParticle(*(*i), sys, t, rand_u01);
         }
 
-        // Perform deferred processes on secondary particles
-        for(unsigned int k=0; k != sys.Particles().SecondaryCount(); ++k) {
-            Particle* const sp = sys.Particles().SecondaryParticleAt(k);
-            UpdateParticle(*sp, sys, t, rand_u01);
-
-            // See if the particle has to move to the main population
-            if(!isSecondary(*sp)) {
-                sys.AddParticle(sp, 1.0 / sys.SecondarySampleVolume(), rand_int, rand_u01);
-                sys.Particles().RemoveSecondaryParticle(k, false);
-
-                // A different particle will now be at position k so the
-                // check needs to be repeated (note the ++k at the end of the loop)
-                --k;
-            }
-        }
-
         // Now remove any invalid particles and update the ensemble.
         sys.Particles().RemoveInvalids();
 
@@ -872,9 +856,18 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
         // particles must be PAHPrimary.
         AggModels::PAHPrimary *pah =
                 dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
+        
+		//check that kmcsimulator in ensemble is initialized or not,  if not, start to initialize kmcsimulator
+        if (sys.Particles().Simulator()==NULL)
+		{
+				sys.Particles().SetSimulator();
+		// for debugging, open a file to write time step for kmc loops, dongping 06 May
+				sys.Particles().Simulator()->m_timestep_csv.Open(sys.Particles().Simulator()->m_timestep_name, true);
+		}
 
         // Look up new size of PAHs in database
-        pah->UpdatePAHs(t, *this);
+		// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
+        pah->UpdatePAHs(t, *this,sys);
         pah->UpdateCache();
         pah->CheckCoalescence();
         if (sp.IsValid())

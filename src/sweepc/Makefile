@@ -80,11 +80,14 @@ obj=swp_cell.o swp_component.o swp_ensemble.o swp_ensemble_stats.o \
     swp_surface_reaction.o swp_particle_model.o swp_imgnode.o \
     swp_particle_image.o swp_surfvol_stats.o \
     swp_sintering_model.o swp_death_process.o swp_birth_process.o \
+    swp_kmc_gasph.o swp_kmc_gaspoint.o swp_kmc_jump_process.o swp_kmc_pah_process.o \
+    swp_kmc_pah_structure.o swp_kmc_processes_list.o swp_kmc_reaction.o \
+    swp_kmc_simulator.o swp_kmc_structure_comp.o \
     swp_PAH_primary.o swp_PAH_cache.o swp_PAH_stats.o swp_transport_process.o \
     swp_diffusion_process.o swp_advection_process.o \
     mt19937.o rng.o swp_dimer_inception.o swp_pah_inception.o \
-    swp_molecule_evolution.o swp_secondary_freecoag.o swp_secondary_primary_coag.o \
-    swp_tree_cache.o swp_tree_weighted_cache.o
+    swp_tree_cache.o swp_tree_weighted_cache.o \
+	swp_PAH.o
 
 # TARGET all: Compile to a static library (*.a).
 all: $(obj)
@@ -113,7 +116,7 @@ swp_subparticle.o: $(src)/swp_subparticle.cpp $(inc)/swp_subparticle.h
 swp_particle.o: $(src)/swp_particle.cpp $(inc)/swp_particle.h \
                 $(inc)/swp_subparticle.h
 	$(cpp) $(flag) $(src)/swp_particle.cpp
-
+	
 # Particle system & ensemble.
 
 swp_cell.o: $(src)/swp_cell.cpp $(inc)/swp_mechanism.h
@@ -188,6 +191,10 @@ swp_PAH_stats.o: $(src)/swp_PAH_stats.cpp
 
 swp_molecule_evolution.o: $(src)/swp_molecule_evolution.cpp $(inc)/swp_molecule_evolution.h
 	$(cpp) $(flag) $(src)/swp_molecule_evolution.cpp
+	
+swp_PAH.o: $(src)/swp_PAH.cpp
+	$(cpp) $(flag) $(src)/swp_PAH.cpp
+	
 
 # Sintering model.
 
@@ -201,6 +208,35 @@ swp_submodel.o: $(src)/swp_submodel.cpp
 
 swp_model_factory.o: $(src)/swp_model_factory.cpp
 	$(cpp) $(flag) $(src)/swp_model_factory.cpp
+
+# KMC PAH Growth
+
+swp_kmc_gasph.o: $(src)/swp_kmc_gasph.cpp
+	$(cpp) $(flag) $(src)/swp_kmc_gasph.cpp
+
+swp_kmc_gaspoint.o: $(src)/swp_kmc_gaspoint.cpp
+	$(cpp) $(flag) $(src)/swp_kmc_gaspoint.cpp
+
+swp_kmc_jump_process.o: $(src)/swp_kmc_jump_process.cpp
+	$(cpp) $(flag) $(src)/swp_kmc_jump_process.cpp
+
+swp_kmc_pah_process.o: $(src)/swp_kmc_pah_process.cpp
+	$(cpp) $(flag) $(src)/swp_kmc_pah_process.cpp
+
+swp_kmc_pah_structure.o: $(src)/swp_kmc_pah_structure.cpp
+	$(cpp) $(flag) $(src)/swp_kmc_pah_structure.cpp
+
+swp_kmc_processes_list.o: $(src)/swp_kmc_processes_list.cpp
+	$(cpp) $(flag) $(src)/swp_kmc_processes_list.cpp
+
+swp_kmc_reaction.o: $(src)/swp_kmc_reaction.cpp
+	$(cpp) $(flag) $(src)/swp_kmc_reaction.cpp
+
+swp_kmc_simulator.o: $(src)/swp_kmc_simulator.cpp
+	$(cpp) $(flag) $(src)/swp_kmc_simulator.cpp
+
+swp_kmc_structure_comp.o: $(src)/swp_kmc_structure_comp.cpp
+	$(cpp) $(flag) $(src)/swp_kmc_structure_comp.cpp
 
 # Processes.
 
@@ -227,16 +263,6 @@ swp_weighted_constcoag.o: $(src)/swp_weighted_constcoag.cpp $(inc)/swp_coagulati
                           $(inc)/swp_weighted_constcoag.h   $(inc)/swp_cell.h \
                           $(inc)/swp_mechanism.h $(inc)/swp_params.h
 	$(cpp) $(flag) $(src)/swp_weighted_constcoag.cpp
-
-swp_secondary_freecoag.o: $(src)/swp_secondary_freecoag.cpp $(inc)/swp_coagulation.h \
-                          $(inc)/swp_secondary_freecoag.h $(inc)/swp_cell.h \
-                          $(inc)/swp_mechanism.h $(inc)/swp_params.h
-	$(cpp) $(flag) $(src)/swp_secondary_freecoag.cpp
-
-swp_secondary_primary_coag.o: $(src)/swp_secondary_primary_coag.cpp $(inc)/swp_coagulation.h \
-                              $(inc)/swp_secondary_primary_coag.h $(inc)/swp_cell.h \
-                             $(inc)/swp_mechanism.h $(inc)/swp_params.h
-	$(cpp) $(flag) $(src)/swp_secondary_primary_coag.cpp
 
 swp_condensation.o: $(src)/swp_condensation.cpp
 	$(cpp) $(flag) $(src)/swp_condensation.cpp

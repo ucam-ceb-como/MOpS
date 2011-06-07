@@ -198,7 +198,7 @@ void Brush::Simulator::runOnePath(const int seed) {
 
 
     // write initial moments to file
-    saveParticleStats(reac, momentsFile);
+    saveParticleStats(reac, mStatBound, momentsFile);
 
     // write initial particle list to file
     saveParticleList(reac, particleListFile);
@@ -225,7 +225,7 @@ void Brush::Simulator::runOnePath(const int seed) {
             //std::cout << "solved up to " << tInt.StartTime() + i * dt  + (j + 1) * dt2 << ' ' << reac.getTime() << '\n';
 
             // write moments to file
-            saveParticleStats(reac, momentsFile);
+            saveParticleStats(reac, mStatBound, momentsFile);
 
             // log process rates
             saveProcessRates(reac, ratesFile);
@@ -253,23 +253,23 @@ void Brush::Simulator::runOnePath(const int seed) {
  *\param[in]    reac        Reactor for which statistics are to be calculated
  *\param[in]    out         File handle into which to write the moment data
  */
-void Brush::Simulator::saveParticleStats(const Reactor1d &reac, std::ostream &out) {
+void Brush::Simulator::saveParticleStats(const Reactor1d &reac,
+                                         const Sweep::Stats::IModelStats::StatBound &stat_bound,
+                                         std::ostream &out) {
     // Create a stats object to now so there are not a lot of string operations
     // each time one is needed below
-    Sweep::Stats::EnsembleStats stats(mInitialReactor.getMechanism().ParticleMech());
-    stats.SetStatBoundary(mStatBound);
+    Sweep::Stats::EnsembleStats stats(reac.getMechanism().ParticleMech());
+    stats.SetStatBoundary(stat_bound);
 
     for(size_t i = 0; i < reac.getNumCells(); ++i) {
         // Collect the statistics
         stats.Calculate(reac.getCell(i).Mixture()->Particles(),
-                        1.0 / reac.getCell(i).Mixture()->SampleVolume(),
-                        1.0 / reac.getCell(i).Mixture()->SecondarySampleVolume());
+                        1.0 / reac.getCell(i).Mixture()->SampleVolume());
 
         // Output the time and place to which the statistics apply
         out << reac.getTime() << ',' << reac.getCellCentre(i);
 
         // Put the stats data into the file
-        //BOOST_FOREACH(real r, stats.Get())
         {
             fvector statsVector;
             stats.Get(statsVector);
@@ -310,26 +310,6 @@ void Brush::Simulator::saveParticleList(const Reactor1d &reac, std::ostream &out
 
             // Output the time and place at which the particle is found
             out << reac.getTime() << ',' << mix.Particles().At(particleIndex)->getPosition();
-
-            // Output the particle details
-            for(fvector::const_iterator it = particleListEntry.begin();
-                it != particleListEntry.end(); ++it) {
-                out << ',' << *it;
-            }
-
-            // New line ready for next particle
-            out << '\n';
-        }
-
-        // Loop over the secondary particles
-        for(unsigned int particleIndex = 0; particleIndex < mix.Particles().SecondaryCount(); ++particleIndex) {
-            // Get a vector containing the particle details
-            fvector particleListEntry;
-            stats.PSL(*mix.Particles().SecondaryParticleAt(particleIndex), reac.getMechanism().ParticleMech(),
-                      reac.getTime(), particleListEntry, 1.0 / mix.SecondarySampleVolume());
-
-            // Output the time and place at which the particle is found
-            out << reac.getTime() << ',' << mix.Particles().SecondaryParticleAt(particleIndex)->getPosition();
 
             // Output the particle details
             for(fvector::const_iterator it = particleListEntry.begin();

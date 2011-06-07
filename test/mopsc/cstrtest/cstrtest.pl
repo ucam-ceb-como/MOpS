@@ -1,12 +1,17 @@
 #!/usr/bin/perl
 
-#  Copyright (C) 2010 Rebecca C Riehl.
+#  Copyright (C) 2011 William Menz
 #
+#  cstrtest
+#  Tests the gas-phase chemistry for the CSTR (PSR) solver.
+#  The cantera source is also included in cantera-cstr.py
+#  Uses a test example for the decomposition of silane:
+#     SiH4 -> Si + 2 H2
 #
-# Licence:
-#    This file is part of "brush".
+#  Licence:
+#    This file is part of "mops".
 #
-#    brush is free software; you can redistribute it and/or
+#    mops is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU General Public License
 #    as published by the Free Software Foundation; either version 2
 #    of the License, or (at your option) any later version.
@@ -21,7 +26,7 @@
 #    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 #  Contact:
-#    Prof Markus Kraft
+#    Dr Markus Kraft
 #    Dept of Chemical Engineering
 #    University of Cambridge
 #    New Museums Site
@@ -38,77 +43,50 @@ use warnings;
 
 # Parse the moments file
 my $ChemFile;
-open($ChemFile, "<J3-chem.csv") or die "ERR: failed to open chemistry file: $!";
+open($ChemFile, "<silane-chem.csv") or die "ERR: failed to open chemistry file: $!";
 
-
-my $TiCl4 = 0;
-my $TiO2 = 0;
+my $SIH4 = 0;
+my $SI = 0;
+my $H2 = 0;
 
 while(<$ChemFile>) {
   my @fields = split /,/;
 
   # Look for a line that begins with a number and has the first entry (the time)
   # equal (upto a small tolerance) to 0.0001
-  if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.05) < 1e-6 )) {
-      # Second field should be TiCl4 composition
-      $TiCl4 = $fields[2];
-      #print "2: $fields[2], ";
-
-      $TiO2 = $fields[58];
-      #print "58: $fields[58] \n";
-
+  if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 20) < 1e-6 )) {
+      $SIH4 = $fields[6];
+      $SI = $fields[8];
+      $H2 = $fields[4];
       last;
   }
 }
 
-
-my $SensFile;
-open($SensFile, "<J3-sensi.csv") or die "ERR: failed to open sensitivity file: $!";
-
-my $TiCl4Sens = 2;
-
-while(<$SensFile>) {
-  my @fields2 = split /,/;
-
-  # Look for a line that begins with a number and has the first entry (the time)
-  # equal (upto a small tolerance) to 0.0001
-  if(($fields2[0] =~ /^\d+/) && (abs($fields2[0] - 0.05) < 1e-6 )) {
-      # Second field should be TiCl4 composition
-      $TiCl4Sens = $fields2[3];
-      #print "2: $fields[2], ";
-
-
-      last;
-  }
-}
-
-print "$TiCl4, $TiO2, $TiCl4Sens\n";
-if(abs($TiCl4 -  8.408e-7) > 1e-8) {
-  print "Final TiCl4 composition was $TiCl4, when  8.408e-7 mol/cm3 expected\n";
+print "$SIH4, $SI, $H2\n";
+if((abs($SIH4 -  3.80E-09) / 3.80E-09) > 0.5) {
+  print "Final SiH4 composition was $SIH4, when  3.80E-09 mol/cm3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($TiO2 - 3.265e-6) > 1e-7) {
-  print "Final TiO2 composition was $TiO2, when 3.265e-6 mol/cm3 expected\n";
+if((abs($SI -  4.60E-09) / 4.60E-09) > 0.5) {
+  print "Final Si composition was $SI, when  3.80E-09 mol/cm3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
-  exit 2;
-  }
-  
-  if(abs($TiCl4Sens - 0.0223) > 1e-3) {
-  print "Final TiCl4 Sensitivity was $TiCl4Sens, when 0.0223 expected\n";
+  exit 1;
+}
+if((abs($H2 -  9.19E-09) / 9.19E-09) > 0.5) {
+  print "Final H2 composition was $H2, when  3.80E-09 mol/cm3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
-  exit 3;
+  exit 1;
 }
 
 close $ChemFile;
-close $SensFile;
 print "All tests passed\n";
 
 exit 0;

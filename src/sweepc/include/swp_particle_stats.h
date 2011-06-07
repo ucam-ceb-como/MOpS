@@ -71,8 +71,6 @@ The stats stored in this class are:
 12.     Total of squared masses
 13.     Total of cubed masses
 14      Average number of coagulation events experienced
-15      Number of secondary computational particles
-16      Number density of secondary particles.
 
 Additionally the total and average values of all particle components
 and tracker values are appended to the end of the array.  For this
@@ -105,8 +103,7 @@ public:
     // Calculates the model stats for a particle ensemble.
     void Calculate(
         const Ensemble &e, // Ensemble from which to get stats.
-        real scale,        // Scaling factor to unit volume (summed stats).
-        real secondary_scale // Scaling factor to unit volume for secondary particles
+        real scale         // Scaling factor to unit volume (summed stats).
         );
 
     // Returns a vector containing the stats.
@@ -133,14 +130,8 @@ public:
     //! Returns the particle count.
     real PCount(void) const;
 
-    //! Returns the particle count.
-    real SecondaryPCount(void) const;
-
     //! Returns the number density.
     real M0(void) const;
-
-    //! Returns the number density.
-    real SecondaryM0(void) const;
 
     // Returns the avg. equiv. sphere diameter.
     real AvgDiam(void) const;
@@ -210,12 +201,11 @@ public:
 
 private:
     // Stats count and indices.
-    static const unsigned int STAT_COUNT = 17;
+    static const unsigned int STAT_COUNT = 15;
     enum StatIndices {iNP=0, iM0=1, iD=2, iDcol=3,
                       iDmob=4, iS=5, iV=7, iM=9,
                       iM2 = 11, iM3 = 12,
-                      iCoag=13, iMaxCoag=14,
-                      i2NP=15, i2M0=16};
+                      iCoag=13, iMaxCoag=14};
 
     // PSL count and indices.
     static const unsigned int PSL_COUNT = 9;

@@ -380,6 +380,9 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
  * the length of the elements of massFracs.  This is because they are the
  * columns of a rectangular 2d array of data, where one data set is one row.
  *
+ * It might make sense to implement this constructor in terms of ranges rather than
+ * containers.
+ *
  *@exception     std::invalid_argument   Input vectors have differing lengths
  */
 ResetChemistry::ResetChemistry(const fvector &x, const fvector &Temp,
@@ -495,10 +498,13 @@ ResetChemistry::ResetChemistry(const fvector &x, const fvector &Temp,
         // non species data has been copied above
         data_point::iterator itTarget = dataRow.begin() + sNumNonSpeciesData;
 
+        //std::cout << "Mass fracs from vector:";
         for(std::vector<fvector>::const_iterator itFrac = massFracs.begin();
             itFrac != itFracEnd; ++itFrac, ++itTarget) {
                 *itTarget = itFrac->operator[](i);
+                //std::cout << ' ' << *itTarget;
             }
+        //std::cout << std::endl;
 
         // Now store the row that has just been built up
         tempData.push_back(dataRow);
@@ -506,6 +512,7 @@ ResetChemistry::ResetChemistry(const fvector &x, const fvector &Temp,
 
     // Data read successfully so store it in the class member and finish
     mInputChemistryData.swap(tempData);
+    mMassFractionData = true;
 }
 
 /*!

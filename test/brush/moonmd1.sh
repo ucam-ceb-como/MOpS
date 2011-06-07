@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#  Copyright (C) 2010 Robert I A Patterson.
+#  Copyright (C) 2011 Robert I A Patterson.
 #
 #
 # Licence:
-#    This file is part of "mops".
+#    This file is part of "brush".
 #
 #    brush is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU General Public License
@@ -51,19 +51,15 @@ if test -n "$2"
     echo "changed directory to $2"
 fi
 
-cd pahtest2
-./pahtest2.pl $program
-
-#Capture the exit value
-testresult=$?
-if((testresult!=0)) 
+# Run the test
+moonmd1/moonmd1.pl $program
+result=$?
+if((result!=0))
   then
-    cd ..
-    exit $testresult
+    exit $result
 fi
-cd ..
 
-# All tests passed
-echo "All tests passed"
+# All tests passed if we get to here
+echo "All tests passed in $0"
 exit 0
 

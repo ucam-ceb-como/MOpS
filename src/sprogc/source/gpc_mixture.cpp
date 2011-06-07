@@ -281,21 +281,31 @@ void Mixture::SetMassFracs(const fvector &fracs)
         // Check that the fractions are normalised by summing up
         // the total fractions, and dividing the values by this
         // sum in the next step.
+        //std::cout << "Mass fractions:";
         for (unsigned int i=0; i!=m_species->size(); ++i) {
             totfrac += fracs[i];
+            //std::cout << ' ' << fracs[i];
         }
+        //std::cout << " tot " << totfrac << std::endl;
 
         // Convert to mole fractions:
         //   x = y / (wt * sum(y/wt))
+        //std::cout << "Mole fractions (1):";
         for (unsigned int i=0; i!=m_species->size(); ++i) {
             val = fracs[i] / (totfrac * (*m_species)[i]->MolWt());
             m_data[i] = val;
+            //std::cout << ' ' << val;
             tot += val;
         }
+        //std::cout << " tot " << tot << std::endl;
+
         tot = 1.0 / tot;
+        //std::cout << "Mole fractions (2):";
         for (unsigned int i=0; i!=m_species->size(); ++i) {
             m_data[i] *= tot;
+            //std::cout << ' ' << m_data[i];
         }
+        //std::cout << " tot " << 1.0 / tot << std::endl;
 
     }
 }

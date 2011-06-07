@@ -165,7 +165,7 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
     // Tell the ensemble that particle 1 has changed
     sys.Particles().Update(ip1);
     // Particle 2 is now part of particle 1
-    sys.Particles().Remove(ip2, !m_mech->UseSubPartTree());
+    sys.Particles().Remove(ip2, true);
     return ip1;
 }
 

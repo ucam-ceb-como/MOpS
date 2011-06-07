@@ -109,12 +109,6 @@ public:
     //! Sets max. M0.
     void SetMaxM0(real m0);
 
-    //! Returns the max. expected secondary M0, for initial ensemble scaling.
-    real MaxSecondaryM0() const;
-
-    //! Sets maximum expected M0 for the secondary population
-    void SetMaxSecondaryM0(real m0);
-
     // CONSOLE OUTPUT.
 
     // Returns the console output interval (in # of steps).
@@ -218,9 +212,6 @@ private:
 
     //! Max. M0 value, for initial scaling of ensemble.
     real m_maxm0;
-
-    //! Max. secondary M0 value, for initial scaling of ensemble.
-    real m_maxSecondaryM0;
 
     // COMPUTATION TIME.
 

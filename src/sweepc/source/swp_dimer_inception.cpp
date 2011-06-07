@@ -273,6 +273,7 @@ real DimerInception::chemRatePart(const fvector &fracs, real density) const
 
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
+        //std::cerr << "Mole frac to use " << fracs[i->first] << std::endl;
         real conc = density * fracs[i->first];
         for (int j=0; j!=i->second; ++j) {
             rate *= (NA * conc);

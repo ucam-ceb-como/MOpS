@@ -143,20 +143,8 @@ int PAHInception::Perform(const real t, Cell &sys,
 
     sp->UpdateCache();
 
-    if(UseSecondary()) {
-        if(m_mech->isSecondary(*sp)) {
-            // Particle can go in the secondary population
-            sys.Particles().AddSecondaryParticle(*sp, rand_int);
-        }
-        else {
-            // Add to primary population, which require adjusting the statistical weight
-            sys.AddParticle(sp, 1.0/sys.SecondarySampleVolume(), rand_int, rand_u01);
-        }
-    }
-    else {
-        // Add particle to main ensemble.
-        sys.Particles().Add(*sp, rand_int);
-    }
+    // Add particle to main ensemble.
+    sys.Particles().Add(*sp, rand_int);
 
     // Update gas-phase chemistry of system.
     adjustGas(sys);
@@ -175,7 +163,7 @@ real PAHInception::Rate(real t, const Cell &sys) const
     if(rate < 0.0)
         return 0.0;
 
-    return rate * (UseSecondary() ? sys.SecondarySampleVolume() : sys.SampleVolume());
+    return rate *  sys.SampleVolume();
 }
 
 

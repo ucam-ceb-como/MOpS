@@ -22,8 +22,8 @@
 extern "C" {
 #endif
 
-#include <sundials/sundials_dense.h>
-#include <sundials/sundials_nvector.h>
+#include "../sundials/sundials_dense.h"
+#include "../sundials/sundials_nvector.h"
 
 /*
  * -----------------------------------------------------------------

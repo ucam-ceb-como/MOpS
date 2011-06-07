@@ -126,6 +126,12 @@ void Brush::PredCorrSolver::predictorCorrectorStep(Reactor1d &reac, const real t
     reac.setTime(startTime);
     solveParticles(reac, t_stop);
 
+//    std::cout << "Particle counts at end of predictorCorrectorStep ";
+//    for(size_t i = 0; i < reac.getNumCells(); ++i) {
+//        std::cout << reac.getCell(i).Mixture()->ParticleCount() << ' ';
+//    }
+//    std::cout << std::endl;
+
     //=========== Corrector steps ====================
     for(int i = 0; i < n_iter; ++i) {
         ;
@@ -245,10 +251,23 @@ void Brush::PredCorrSolver::solveParticles(Reactor1d &reac, const real t_stop) c
         }
     } while(reac.getTime() <= t_stop * (1.0 - std::numeric_limits<real>::epsilon()));
 
+//    std::cout << "Particle counts in solveParticles before splitParticleTransport ";
+//    for(size_t i = 0; i < reac.getNumCells(); ++i) {
+//        std::cout << reac.getCell(i).Mixture()->ParticleCount() << ' ';
+//    }
+//    std::cout << std::endl;
+
     // Now do the split particle transport, if there is any
     if(mSplitDiffusion || mSplitAdvection) {
         splitParticleTransport(reac, t_start, t_stop);
     }
+
+//    std::cout << "Particle counts at end of solveParticles ";
+//    for(size_t i = 0; i < reac.getNumCells(); ++i) {
+//        std::cout << reac.getCell(i).Mixture()->ParticleCount() << ' ';
+//    }
+//    std::cout << std::endl;
+
 }
 
 /*!
@@ -343,7 +362,11 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop,
         }
     }
 
-    //std::cout << ", actual step " << dt << " with process " << activeProcess << " in cell " << activeCell << std::endl;
+//    std::cout << ", actual step " << dt << " with process " << activeProcess
+//              << " in cell " << activeCell;
+//    if(activeCell >= 0)
+//        std::cout << " with " << reac.getCell(activeCell).Mixture()->ParticleCount() << " particles";
+//    std::cout << std::endl;
 
     return dt;
 }
@@ -361,16 +384,10 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
                                         const Sweep::Transport::TransportOutflow &particle_details) const {
     real incomingWeight = particle_details.weight;
 
-    const bool secondary = reac.getMechanism().ParticleMech().isSecondary(*particle_details.particle);
-
     // Need to match weights of particle between source and destination
     unsigned int safetyCounter = 0;
     while(true) {
-        real destinationWeight;
-        if(secondary)
-            destinationWeight = 1.0 / reac.getCell(destination_index).Mixture()->SecondarySampleVolume();
-        else
-            destinationWeight = 1.0 / reac.getCell(destination_index).Mixture()->SampleVolume();
+        real destinationWeight = 1.0 / reac.getCell(destination_index).Mixture()->SampleVolume();
 
         if(incomingWeight >= destinationWeight) {
             // The important thing is that the statistical weight of particles added to the destination cell
@@ -378,10 +395,7 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
             // Otherwise mass will be lost.
 
             // Insert one copy of the particle into the destination cell
-            if(secondary)
-                reac.getCell(destination_index).Mixture()->Particles().AddSecondaryParticle(*(new Sweep::Particle(*particle_details.particle)), Sweep::genrand_int);
-            else
-                reac.getCell(destination_index).Mixture()->Particles().Add(*(new Sweep::Particle(*particle_details.particle)), Sweep::genrand_int);
+            reac.getCell(destination_index).Mixture()->Particles().Add(*(new Sweep::Particle(*particle_details.particle)), Sweep::genrand_int);
 
             // One unit of destinationWeight has now been added to an ensemble
             incomingWeight -= destinationWeight;
@@ -397,10 +411,7 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
 
     // Unfortunately we cannot quite conserve statistical weight, there will always be a bit
     // left over after the loop above.  This can only be handled in an average sense.
-    if(secondary && Sweep::genrand_real1() < incomingWeight * reac.getCell(destination_index).Mixture()->SecondarySampleVolume()) {
-        reac.getCell(destination_index).Mixture()->Particles().AddSecondaryParticle(*particle_details.particle, Sweep::genrand_int);
-    }
-    else if(!secondary && Sweep::genrand_real1() < incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume()) {
+    if(Sweep::genrand_real1() < incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume()) {
         reac.getCell(destination_index).Mixture()->Particles().Add(*particle_details.particle, Sweep::genrand_int);
 
         // Testing output
@@ -464,13 +475,11 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
 
         // The weight will be needed when the particles are put back into the cell
         const real statisticalWeight = 1.0 / mix.SampleVolume();
-        const real secondaryStatisticalWeight = 1.0 / mix.SecondarySampleVolume();
 
         // Get a list of the particles from the ensemble.  New instances of the
         // particles are required as the existing particles will be deleted
         // when a new list is set on the ensemble.
         Sweep::PartPtrList partList = particles.TakeParticles();
-        Sweep::PartPtrList secondaryPartList = particles.TakeSecondaryParticles();
 
         // Remove particles that are moving to a new cell from partLists and add them
         // to the inflow list for the appropriate cell
@@ -478,14 +487,9 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
                                                      reac.getMechanism().ParticleMech(),
                                                      reac.getGeometry(), neighbouringCells,
                                                      partList);
-        secondaryInflowLists[i] = updateParticleListPositions(t_start, t_stop, mix, i,
-                                                              reac.getMechanism().ParticleMech(),
-                                                              reac.getGeometry(), neighbouringCells,
-                                                              secondaryPartList);
 
         // Now put the particles that are staying in cell i back into that cell
         mix.SetParticles(partList.begin(), partList.end(), statisticalWeight);
-        mix.SetSecondaryParticles(secondaryPartList.begin(), secondaryPartList.end(), secondaryStatisticalWeight);
 
     }// loop over all cells and build up lists of particles that are moving cells
 
@@ -499,15 +503,10 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
             // Data is added to the list coming from the cell j=0
             inflowLists.front()[i].splice(inflowLists.front()[i].end(), inflowLists[j][i],
                                           inflowLists[j][i].begin(), inflowLists[j][i].end());
-            secondaryInflowLists.front()[i].splice(secondaryInflowLists.front()[i].end(),
-                                                   secondaryInflowLists[j][i],
-                                                   secondaryInflowLists[j][i].begin(),
-                                                   secondaryInflowLists[j][i].end());
         }
     }
     // Now put the particles in their destination cells
     moveParticlesToDifferentCells(reac, inflowLists.front());
-    moveParticlesToDifferentCells(reac, secondaryInflowLists.front());
 }
 
 /*!

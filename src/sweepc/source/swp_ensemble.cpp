@@ -42,6 +42,7 @@
 
 #include "swp_ensemble.h"
 #include "swp_particle_model.h"
+#include "swp_kmc_simulator.h"
 
 #include <cmath>
 #include <vector>
@@ -57,17 +58,14 @@ using namespace Sweep;
 
 // Default constructor.
 Sweep::Ensemble::Ensemble(void)
-: m_secondaryRescaleExponent(0)
-, m_secondaryDoublingActive(false)
 {
+	m_kmcsimulator= NULL;
     init();
 }
 
 // Initialising constructor.
 Sweep::Ensemble::Ensemble(unsigned int count)
 : m_tree(count)
-, m_secondaryRescaleExponent(0)
-, m_secondaryDoublingActive(false)
 {
     // Call initialisation routine.
     //If there are no particles, do not initialise binary tree
@@ -97,6 +95,7 @@ Sweep::Ensemble::Ensemble(std::istream &in, const Sweep::ParticleModel &model)
 // Destructor.
 Sweep::Ensemble::~Ensemble(void)
 {
+	delete     m_kmcsimulator;
     // Clear the ensemble.
     Clear();
 }
@@ -138,14 +137,6 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
             for (unsigned int i=0; i!=rhs.Count(); ++i) {
                 m_particles[i] = rhs.m_particles[i]->Clone();
             }
-
-            // Copy secondary particle vector
-            m_secondaryParticles.resize(rhs.m_secondaryParticles.size(), NULL);
-            for (unsigned int i=0; i!=rhs.m_secondaryParticles.size(); ++i) {
-                m_secondaryParticles[i] = rhs.m_secondaryParticles[i]->Clone();
-            }
-            m_secondaryRescaleExponent = rhs.m_secondaryRescaleExponent;
-            m_secondaryDoublingActive = rhs.m_secondaryDoublingActive;
 
             m_tree.resize(m_capacity);
             rebuildTree();
@@ -191,7 +182,6 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 
     // Reserve memory for ensemble.
     m_particles.resize(m_capacity, NULL);
-    m_secondaryParticles.clear();
 
     m_tree.resize(m_capacity);
 
@@ -200,8 +190,6 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_scale      = 1.0;
     m_contfactor = (real)(m_capacity-1) / (real)(m_capacity);
     m_contwarn   = false;
-    m_secondaryRescaleExponent = 0;
-    m_secondaryDoublingActive = false;
 
     // Initialise doubling.
     m_maxcount   = 0;
@@ -209,8 +197,18 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_dbleon     = true;
     m_dbleactive = false;
     m_dblecutoff = (int)(3.0 * (real)m_capacity / 4.0);
-    m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
+	m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
+}
+
+Sweep::KMC_ARS::KMCSimulator* Sweep::Ensemble::Simulator(void)
+{   //added by dongping 26 April
+	return m_kmcsimulator;
+}
+
+void Sweep::Ensemble::SetSimulator(void)
+{   //added by dongping 26 April
+	 m_kmcsimulator=new Sweep::KMC_ARS::KMCSimulator();
 }
 
 
@@ -234,36 +232,6 @@ const Particle *const Sweep::Ensemble::At(unsigned int i) const
     // Check that the index in within range, then return the particle.
     if (i < m_count) {
         return m_particles[i];
-    } else {
-        return NULL;
-    }
-}
-
-/*!
- * @param[in]   i   Index of secondary particle
- *
- * @return      Pointer to secondary particle i or NULL if i not valid
- */
-Particle *const Sweep::Ensemble::SecondaryParticleAt(unsigned int i)
-{
-    // Check that the index in within range, then return the particle.
-    if (i < m_secondaryParticles.size()) {
-        return m_secondaryParticles[i];
-    } else {
-        return NULL;
-    }
-}
-
-/*!
- * @param[in]   i   Index of secondary particle
- *
- * @return      Pointer to secondary particle i or NULL if i not valid
- */
-const Particle *const Sweep::Ensemble::SecondaryParticleAt(unsigned int i) const
-{
-    // Check that the index in within range, then return the particle.
-    if (i < m_secondaryParticles.size()) {
-        return m_secondaryParticles[i];
     } else {
         return NULL;
     }
@@ -329,71 +297,6 @@ int Sweep::Ensemble::Add(Particle &sp, int (*rand_int)(int, int))
     return i;
 }
 
-/*!
- * @param[in,out]   sp          Particle to add to the ensemble
- * @param[in,out]   rand_int    Generator of random integers on a range
- *
- * @return      Index of added particle
- *
- * Particles must be heap allocated, because the ensemble takes the
- * address of sp and, by default, calls delete on the resulting pointer
- * when the particle is no longer needed.  It would probably make
- * sense to change the type of the first argument to Particle* to
- * reflect the fact that the ensemble mainly deals with the pointer.
- *
- */
-int Sweep::Ensemble::AddSecondaryParticle(Particle &sp, int (*rand_int)(int, int))
-{
-    m_secondaryParticles.push_back(&sp);
-
-    // See if we have too many secondary particles
-    const unsigned int numSecondaries = m_secondaryParticles.size();
-
-    // Active doubling for the secondary particle population
-    m_secondaryDoublingActive |= (numSecondaries > m_capacity);
-
-    if(numSecondaries >= 2 * m_capacity) {
-        // Uniformly select half of the secondary particles to keep
-        std::set<int> indicesToKeep;
-        while(indicesToKeep.size() < numSecondaries / 2) {
-            indicesToKeep.insert(rand_int(0, numSecondaries - 1));
-        }
-
-        // Now copy the pointers to the particles that will be kept
-        PartPtrVector particlesToKeep;
-        particlesToKeep.reserve(numSecondaries / 2);
-
-        // Copy the pointers to the particles that are to be kept and
-        // set to null so that are not deleted along with the other particles
-        {
-            std::set<int>::const_iterator it = indicesToKeep.begin();
-            const std::set<int>::const_iterator itEnd = indicesToKeep.end();
-            while(it != itEnd) {
-                particlesToKeep.push_back(m_secondaryParticles[*it]);
-                m_secondaryParticles[*it] = NULL;
-                ++it;
-            }
-        }
-
-        // Delete the unwanted particles (the entries that pointed to
-        // particles that are being kept were set to NULL above and
-        // calling delete on NULL has no effect.
-        {
-            PartPtrVector::iterator it = m_secondaryParticles.begin();
-            const PartPtrVector::iterator itEnd = m_secondaryParticles.end();
-            while(it != itEnd) {
-                delete *it++;
-            }
-        }
-
-        // Finally put the pointers to the particles to keep into the
-        // proper vector
-        m_secondaryParticles.swap(particlesToKeep);
-        --m_secondaryRescaleExponent;
-    }
-
-    return m_secondaryParticles.size() - 1;
-}
 
 /*!
  * @param[in]   i       Index of particle to remove
@@ -437,90 +340,6 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
     assert(m_tree.size() == m_count);
 }
 
-/*!
- * @param[in]   i       Index of particle to remove
- * @param[in]   fdel    True if delete should be called on removed particle
- *
- * Calls to remove may invalidate some or all iterators and indices
- * referring to particles in the ensemble.
- */
-void Sweep::Ensemble::RemoveSecondaryParticle(unsigned int i, bool fdel)
-{
-    // Delete the particle if it is no longer needed
-    if(fdel)
-        delete m_secondaryParticles[i];
-
-    // Replace the particle at position i with the one from the end of the list,
-    // this will do nothing if i is the index of the last particle.
-    m_secondaryParticles[i] = m_secondaryParticles.back();
-    m_secondaryParticles.pop_back();
-
-    // Make a second copy of all the secondary particles
-    if((m_secondaryParticles.size() < m_capacity / 2) && m_secondaryDoublingActive) {
-        const unsigned int numSecondaries = m_secondaryParticles.size();
-        m_secondaryParticles.resize(2 * numSecondaries);
-        for(unsigned int i = 0; i < numSecondaries; ++i) {
-            m_secondaryParticles[numSecondaries + i] = m_secondaryParticles[i]->Clone();
-        }
-    }
-
-}
-
-/*!
- * @param[in]   i1      Index of first particle to remove
- * @param[in]   i2      Index of second particle to remove
- *
- * @pre     i1 != i2
- *
- * Calls to remove may invalidate some or all iterators and indices
- * referring to particles in the ensemble.  The caller is takes
- * ownership of both particles and is responsible for calling delete
- * on them.
- */
-void Sweep::Ensemble::RemoveTwoSecondaryParticles(unsigned int i1, unsigned int i2) {
-    assert(i1 != i2);
-
-    // Sort the indices which are to be removed
-    const unsigned int iMax = std::max(i1, i2);
-    const unsigned int iMin = std::min(i1, i2);
-
-    if((iMax + 1) == m_secondaryParticles.size()) {
-        // This branch will handle the case m_secondaryParticles.size() == 2
-        // because the first statement will copy the pointer at index 0 onto
-        // itself and then the only two elements in m_secondaryParticles will
-        // be removed.
-
-        // The last particle in the vector is being removed so replace the first
-        // of the removed particles with the last particle that is not being removed.
-        m_secondaryParticles[iMin] = m_secondaryParticles[m_secondaryParticles.size() - 2];
-
-        // Remove the last particle because that is what the caller requested
-        m_secondaryParticles.pop_back();
-
-        // Remove what was the penultimate particle, because it has been copied to positin iMin
-        m_secondaryParticles.pop_back();
-    }
-    else {
-        // Replace the first removed particle with the particle from the end of the array
-        m_secondaryParticles[iMin] = m_secondaryParticles.back();
-        m_secondaryParticles.pop_back();
-
-        // Replace second removed particle with the particle now at the end of the array
-        m_secondaryParticles[iMax] = m_secondaryParticles.back();
-        m_secondaryParticles.pop_back();
-    }
-
-    // Make a second copy of all the secondary particles
-    if((m_secondaryParticles.size() < m_capacity / 2) && m_secondaryDoublingActive) {
-        const unsigned int numSecondaries = m_secondaryParticles.size();
-        m_secondaryParticles.resize(2 * numSecondaries);
-        for(unsigned int i = 0; i < numSecondaries; ++i) {
-            m_secondaryParticles[numSecondaries + i] = m_secondaryParticles[i]->Clone();
-        }
-    }
-}
-
-
 // Removes invalid particles from the ensemble.
 void Sweep::Ensemble::RemoveInvalids(void)
 {
@@ -536,14 +355,9 @@ void Sweep::Ensemble::RemoveInvalids(void)
     iterator validEnd = std::partition(m_particles.begin(),
                                        m_particles.begin() + m_count,
                                        std::mem_fun(&Particle::IsValid));
-    iterator validSecondaryEnd = std::partition(m_secondaryParticles.begin(),
-                                                m_secondaryParticles.end(),
-                                                std::mem_fun(&Particle::IsValid));
 
     // Update the number of particles in the tree
     m_count = validEnd - m_particles.begin();
-    unsigned int numValidSecondaryParticles =
-            validSecondaryEnd - m_secondaryParticles.begin();
 
     // Now delete the invalid particles and nullify the corresponding pointers
     while(validEnd != m_particles.end()) {
@@ -551,13 +365,6 @@ void Sweep::Ensemble::RemoveInvalids(void)
         *validEnd = NULL;
         ++validEnd;
     }
-
-    // Now delete the invalid secondary particles
-    while(validSecondaryEnd != m_secondaryParticles.end()) {
-        delete *validSecondaryEnd;
-        ++validSecondaryEnd;
-    }
-    m_secondaryParticles.resize(numValidSecondaryParticles);
 
 
     // Rebuild the binary tree structure
@@ -569,7 +376,6 @@ void Sweep::Ensemble::RemoveInvalids(void)
     if(m_count < m_capacity - m_dblecutoff) {
         m_dbleactive = false;
     }
-    m_secondaryDoublingActive = (m_secondaryParticles.size() > m_capacity);
 
     // If we removed too many invalid particles then we'll have to double.
     dble();
@@ -602,28 +408,11 @@ void Sweep::Ensemble::Replace(unsigned int i, Particle &sp)
 }
 
 /*!
- * @param[in]       i       Index of particle to replace
- * @param[in,out]   sp      New particle to use
- *
- * Particles must be heap allocated, because the ensemble takes the
- * address of sp and, by default, calls delete on the resulting pointer
- * when the particle is no longer needed.  It would probably make
- * sense to change the type of the first argument to Particle* to
- * reflect the fact that the ensemble mainly deals with the pointer.
- *
- */
-void Sweep::Ensemble::ReplaceSecondaryParticle(unsigned int i, Particle &sp) {
-    delete m_secondaryParticles[i];
-    m_secondaryParticles[i] = &sp;
-}
-
-/*!
  *  Clears all particles from the ensemble, deleting them to release the
  *  memory and reseting all details of the ensemble except its capacity
  */
 void Sweep::Ensemble::Clear() {
     ClearMain();
-    ClearSecondary();
 }
 
 
@@ -650,24 +439,6 @@ void Sweep::Ensemble::ClearMain()
     m_dbleactive = false;
 }
 
-/*!
- *  Clears all secondary particles from the ensemble, deleting them to release the
- *  memory
- */
-void Sweep::Ensemble::ClearSecondary()
-{
-    // Loop through the particles deleting
-    PartPtrVector::iterator it = m_secondaryParticles.begin();
-    const PartPtrVector::iterator itEnd = m_secondaryParticles.end();
-    while(it != itEnd) {
-        delete *it++;
-    }
-
-    m_secondaryParticles.clear();
-    m_secondaryRescaleExponent = 0;
-    m_secondaryDoublingActive = false;
-}
-
 // SELECTING PARTICLES.
 
 /*!
@@ -683,17 +454,6 @@ int Sweep::Ensemble::Select(int (*rand_int)(int, int)) const
     return rand_int(0, m_count-1);
 }
 
-/*!
- * @param[in,out]   rand_int    Pointer to function that can generate uniform integers on a range
- *
- * @return      Index of a uniformly selected particle from the secondary population
- */
-int Sweep::Ensemble::SelectSecondaryParticle(int (*rand_int)(int, int)) const
-{
-
-    // Uniformly select a particle index.
-    return rand_int(0, m_secondaryParticles.size()-1);
-}
 
 /*!
  * @param[in]   id          Property by which to weight particle selection
@@ -742,21 +502,8 @@ void Sweep::Ensemble::ResetScaling()
     m_ncont = 0;
     m_ndble = 0;
     m_contwarn = false;
-    m_secondaryRescaleExponent = 0;
 }
 
-/*!
- * @return \f$ 2^{\mathrm{m_secondaryRescaleExponent}}\f$
- */
-real Sweep::Ensemble::SecondaryScaling() const {
-    if(m_secondaryRescaleExponent < 0)
-        // Calculate 2^-m_secondaryRescaleExponent, which is an easy integer calculation
-        // and then invert to get 2^m_secondaryRescaleExponent
-        return 1.0 / (1 << -m_secondaryRescaleExponent);
-
-    // exponent is positive
-    return 1 << m_secondaryRescaleExponent;
-}
 
 // GET SUMS OF PROPERTIES.
 
@@ -775,13 +522,6 @@ real Sweep::Ensemble::GetSum(Sweep::PropID id) const
         return m_tree.head().Property(id);
     else
         return m_count;
-}
-
-/*!
- * @return      Number of secondary particles in this computational ensemble
- */
-unsigned int Ensemble::SecondaryCount() const {
-    return m_secondaryParticles.size();
 }
 
 // UPDATE ENSEMBLE.
@@ -894,23 +634,6 @@ Sweep::PartPtrList Sweep::Ensemble::TakeParticles() {
     return listOfParticles;
 }
 
-/*!
- * Empty the tree and pass of list of pointers to the particles in
- * the tree to the caller, which must take ownership of them.
- */
-Sweep::PartPtrList Sweep::Ensemble::TakeSecondaryParticles() {
-    // Copy the pointers to particles
-    PartPtrList listOfParticles(m_secondaryParticles.begin(), m_secondaryParticles.end());
-
-    // Now get rid of the pointers that were stored in this ensemble
-    m_secondaryParticles.clear();
-
-    // Reset
-    ClearSecondary();
-
-    return listOfParticles;
-}
-
 
 // READ/WRITE/COPY.
 
@@ -974,18 +697,6 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
         } else {
             out.write((char*)&falseval, sizeof(falseval));
         }
-
-        // Secondary particles
-        n = m_secondaryParticles.size();
-        out.write(reinterpret_cast<const char*>(&n), sizeof(n));
-        for(PartPtrVector::const_iterator it = m_secondaryParticles.begin();
-            it != m_secondaryParticles.end(); ++it) {
-            (*it)->Serialize(out);
-        }
-
-        // Additional information for the secondary population
-        out.write(reinterpret_cast<const char*>(&m_secondaryRescaleExponent), sizeof(m_secondaryRescaleExponent));
-        out.write(reinterpret_cast<const char*>(&m_secondaryDoublingActive), sizeof(m_secondaryDoublingActive));
 
     } else {
         throw std::invalid_argument("Output stream not ready "
@@ -1066,19 +777,6 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                     m_contwarn = false;
                 }
 
-                // Read the secondary particle count.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                m_secondaryParticles.reserve(n);
-
-                // Read the secondary particles.
-                for (unsigned int i=0; i!=n; ++i) {
-                    m_secondaryParticles.push_back(new Particle(in, model));
-                }
-
-                // and the secondary particle scaling information
-                in.read(reinterpret_cast<char*>(&m_secondaryRescaleExponent), sizeof(m_secondaryRescaleExponent));
-                in.read(reinterpret_cast<char*>(&m_secondaryDoublingActive), sizeof(m_secondaryDoublingActive));
-
                 // Calculate binary tree.
                 rebuildTree();
 
@@ -1106,13 +804,6 @@ void Sweep::Ensemble::releaseMem(void)
     }
     m_particles.clear();
 
-    // Do the same for the secondary particle population
-    PartPtrVector::iterator it = m_secondaryParticles.begin();
-    PartPtrVector::iterator itEnd = m_secondaryParticles.end();
-    while(it != itEnd) {
-        delete *it;
-        *it++ = NULL;
-    }
 }
 
 // Sets the ensemble to its initial condition.  Used in constructors.
@@ -1141,7 +832,6 @@ void Sweep::Ensemble::init(void)
     m_dbleslack  = 0;
     m_dbleon     = true;
 
-    m_secondaryRescaleExponent = 0;
 }
 
 /*!
