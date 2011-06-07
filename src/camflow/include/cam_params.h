@@ -55,7 +55,7 @@ namespace Camflow {
     typedef Sprog::real doublereal;
 
     //! cgs units used in the soot model.
-    const doublereal kB_cgs = 1.380658e-16;
+    const doublereal kB_cgs = 1.3806504e-16;
     
 }
 

@@ -38,17 +38,7 @@
 
  */
 
-#include "cam_soot.h"
-#include "cam_profile.h"
-#include "cam_geometry.h"
-#include "cam_control.h"
-#include <string>
-#include "cam_boundary.h"
-#include "cam_admin.h"
 #include "cam_read.h"
-#include "string_functions.h"
-#include "cam_error.h"
-#include <vector>
 
 using namespace Camflow;
 using namespace Strings;
@@ -73,7 +63,6 @@ void CamRead::readInput(const std::string fileName,
         readControl(cc,*root);
         readInitialGuess(cp,convert,*root);
         readReport(ca,*root);
-        readSoot(cSoot,convert,*root);
     }
 }
 
@@ -602,73 +591,4 @@ void CamRead::readGrid(CamGeometry& cg, const CamXML::Element& node){
     }
 }
 
-void CamRead::readSoot(CamSoot& cSoot,CamConverter& convert,
-                                    const CamXML::Element& node){
 
-    CamXML::Element *soot;
-    CamXML::Element *subnode;
-    std::vector<CamXML::Element*> sootSpecies;
-    std::vector<CamXML::Element*>::const_iterator p;
-    const CamXML::Attribute *atr;
-    std::vector<std::string> species;
-    soot = node.GetFirstChild("soot");
-    if(soot != NULL){
-        cSoot.setSootMomentActive();
-        soot->GetChildren("species",sootSpecies);
-        for(p=sootSpecies.begin(); p<sootSpecies.end(); ++p){
-            atr = (*p)->GetAttribute("name");
-            if(atr!=NULL){
-                species.push_back(atr->GetValue());
-            }
-        }
-        cSoot.setSootSpecies(species);
-
-        subnode = soot->GetFirstChild("inception_species");
-        if(subnode!=NULL){
-            std::string atrVal = subnode->GetAttributeValue("name");
-            cSoot.setInceptionSpecies(atrVal);
-
-        }else{
-            throw CamError("Inception species not specified\n");
-        }
-
-        subnode = soot->GetFirstChild("nMoments");
-        if(subnode!=NULL){
-            cSoot.setNumMoments(int(cdble(subnode->Data())));
-        }else{
-            throw CamError("Number of moments not specified\n");
-        }
-
-        subnode = soot->GetFirstChild("M0");
-        if(subnode != NULL){
-            cSoot.setFirstMom(cdble(subnode->Data()));
-        }else{
-            throw CamError("First moment not specified\n");
-        }
-
-
-        subnode = soot->GetFirstChild("dPAH");
-        if(subnode!=NULL){
-            std::string atrVal = subnode->GetAttributeValue("unit");
-            doublereal convertL = convert.getConvertionFactor(atrVal);
-            cSoot.setPAHDia(cdble(subnode->Data())*convertL);
-        }
-        subnode = soot->GetFirstChild("cPAH");
-        if(subnode != NULL){
-            cSoot.setNumCAtomInception(int(cdble(subnode->Data())));
-        }
-
-        std::string atrVal = soot->GetAttributeValue("regime");
-
-        if(!convertToCaps(trim(atrVal)).compare("FREEMOL"))
-            cSoot.setRegime(cSoot.FM);
-        else if(!convertToCaps(trim(atrVal)).compare("TRANSITION"))
-            cSoot.setRegime(cSoot.TR);
-        else if(!convertToCaps(trim(atrVal)).compare("CONTINUUM"))
-            cSoot.setRegime(cSoot.CT);
-        else
-            throw CamError("Unknown transport regime\n");
-
-    }
-
-}

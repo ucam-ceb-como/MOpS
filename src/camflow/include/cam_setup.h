@@ -50,6 +50,7 @@
 #include "cam_profile.h"
 #include "cam_control.h"
 #include "cam_converter.h"
+#include "cam_soot.h"
 
 namespace Camflow
 {

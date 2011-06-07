@@ -76,7 +76,7 @@ void Batch::checkSetup()
 {
 
 	if(mCord != 1) throw std::invalid_argument("Grid size does not equal one\n");
-	if(nVar != nSpc + 1) throw std::invalid_argument("nVar != nSpc + 1\n");
+	if(nVar != nSpc + 1 + nMoments) throw std::invalid_argument("nVar != nSpc + 1\n");
 	if(nEqn != nVar) throw std::invalid_argument("nEqn != nVar\n");
 
 }
@@ -106,6 +106,16 @@ void Batch::solve()
     admin_.getLeftBoundary(cb);
     getInletMassFrac(cb,solvect);
     solvect.push_back(cb.getTemperature());
+
+
+    // Size the moments vector and
+    // initialize the soot moments (and other soot bits and pieces)
+    momRates.resize(nMoments,0.0);
+
+    sootMom_.initMoments(*camMech_,solvect,1.0);
+    //for (int l=nSpc+1; l< nSpc+nMoments; ++l){
+    //  std::cout << "Soot mom: " << solvect[l] << "\n";
+	//}
 
     // Update the mixture properties.
     updateMixture(&solvect[0]);
@@ -180,7 +190,7 @@ int Batch::eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval)
 //residual definitions
 void Batch::residual(const doublereal& time, doublereal* y, doublereal* f)
 {
-    updateMixture(y);          // saves the dependent variables
+    updateMixture(y);               // saves the dependent variables
     speciesResidual(time,y,f);      // solve species residual
     energyResidual(time,y,f);       // solve energy residual
     sootResidual(time,y,f);         // solve soot residual
@@ -194,10 +204,13 @@ void Batch::updateMixture(doublereal* y)
      */
     doublereal temperature = y[ptrT];
     std::vector<doublereal> massfracs(nSpc,0.0);
+    std::vector<doublereal> concentrations(nSpc,0.0);
+    std::vector<doublereal> moments(nMoments,0.0);
     for (int l=0; l< nSpc; ++l)
     {
         massfracs[l] = y[l];
     }
+
 
     camMixture_->SetMassFracs(massfracs);
     camMixture_->SetTemperature(temperature);
@@ -207,8 +220,36 @@ void Batch::updateMixture(doublereal* y)
     rho = camMixture_->getAvgMolWt() * opPre / (R * temperature);
     camMixture_->SetMassDensity(rho);
 
+
     // Put the molar production rate (mol per m3 per sec) in wdot.
     camMech_->Reactions().GetMolarProdRates(*camMixture_,wdot);
+
+    // Get species concentration to feed to soot model
+    // Here we are calling the non-cgs version of the soot code.
+    camMixture_->GetConcs(concentrations);
+    for (int l=0; l< nSpc; ++l)
+    {
+        concentrations[l] = concentrations[l];
+    }
+
+    // Pull the moments out of the solution vector for feeding to allRates
+    for (int l=0; l< nMoments; ++l){
+  //     std::cout << "y_l " <<  y[nSpc+l+1] << "\n";
+       moments[l] = y[nSpc+l+1];
+	}
+
+    // Calculate all moment rates as a function of moments and gas phase concentrations
+    // This version of the soot code uses mol/m3.
+    // Note that there is also an older cgs version of soot model present in the code.
+    // This function should be extended to modify wdot to take into account the
+    // consumption of gas phase carbon by soot growth
+    // (and contribution to gas phase by surface reactions)
+    if (sootMom_.active())
+    {
+    	    //for (int l=0; l< nMoments; ++l)
+    	    //     std::cout << "Moment: " << l << " : " <<  moments[l] << "\n";
+       	sootMom_.rateAll(concentrations, moments, temperature, opPre, momRates, 1);
+    }
 
 }
 
@@ -277,7 +318,9 @@ void Batch::sootResidual(const doublereal& x, doublereal* y, doublereal* f)
     {
         std::vector<doublereal> mom;
         for (int m=0; m<nMoments; ++m)
+        {
             mom.push_back(y[nSpc+m]);
+        }
 
         resMoment.resize(nMoments,0.0);
         sootMom_.residual(x,momRates,&mom[0],&resMoment[0]);
@@ -285,12 +328,11 @@ void Batch::sootResidual(const doublereal& x, doublereal* y, doublereal* f)
         for (int m=0; m<nMoments; ++m)
         {
             f[nSpc+m] = resMoment[m];
-            std::cout << f[nSpc+m] << std::endl;//int dd; cin >> dd;
         }
 
     }
-
 }
+
 
 //generate the header data
 std::vector<std::string> Batch::header(){
@@ -310,6 +352,16 @@ std::vector<std::string> Batch::header(){
     /*
      *additional output if soot moment are active
      */
+    if (sootMom_.active())
+    {
+       	headerData.push_back("M0");
+       	headerData.push_back("M1");
+       	headerData.push_back("M2");
+       	headerData.push_back("M3");
+       	headerData.push_back("M4");
+       	headerData.push_back("M5");
+    }
+
     return headerData;
 
 }
@@ -339,7 +391,6 @@ void Batch::report(doublereal x, doublereal* soln, doublereal& res){
     std::cout << x << "     " << res << std::endl;
     reportToFile(x,soln);
     nStep++;
-
 }
 
 void Batch::reportToFile(doublereal time, doublereal* soln)
@@ -380,6 +431,14 @@ void Batch::reportToFile(doublereal time, doublereal* soln)
     }
     data.push_back(sum);
 
+    // Append soot moments if applicable
+   // if (sootMom_.active())
+   // {
+   //     for (int m=0; m<nMoments; ++m)
+   //     {
+   //         data.push_back(moments[m]);
+   //     }
+   // }
     reporter_->writeStdFileOut(data);
 
 }

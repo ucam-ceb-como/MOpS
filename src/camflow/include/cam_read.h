@@ -113,11 +113,6 @@ namespace Camflow{
         //read the grid file
         void readGrid(CamGeometry& cg, const CamXML::Element &node);
 
-        //read the input to solve for soot moments
-        void readSoot(CamSoot &cSoot, CamConverter &convert,
-                               const CamXML::Element &node);
-
-
     private:
 
         //read tolerences

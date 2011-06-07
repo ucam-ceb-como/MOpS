@@ -27,9 +27,10 @@ CamResidual::CamResidual
   cellBegin(0),
   iMesh_e(mCord-1),
   cellEnd(mCord),
-  nMoments(0),
+  //nMoments(6),				// Should use getNumberMoments method to set this.
+  nMoments(cs.getNumMoments()),
   nSpc(mech.SpeciesCount()),
-  nVar(nSpc+1),
+  nVar(nSpc+1+nMoments),
   ptrT(nSpc),
   nEqn(nVar*mCord),
   solverID(cc.getSolver()),
@@ -160,7 +161,6 @@ void CamResidual::saveMixtureProp(const doublereal time,
             s_H(i,l) = htemp[l];
             s_cp(i,l) = cptemp[l];
         }
-
 
     }
 
@@ -302,7 +302,6 @@ void CamResidual::mergeSootMoments(doublereal* vec){
             solvect[i*nVar+l+nSpc] = vec[i*nMoments+l];
             //std::cout << i << "  " << solvect[i*nVar+l+nSpc] << std::endl;
         }
-        //int dd; cin >> dd;
     }
 
 }
