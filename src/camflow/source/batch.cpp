@@ -248,7 +248,7 @@ void Batch::updateMixture(doublereal* y)
     {
     	    //for (int l=0; l< nMoments; ++l)
     	    //     std::cout << "Moment: " << l << " : " <<  moments[l] << "\n";
-       	sootMom_.rateAll(concentrations, moments, temperature, opPre, momRates, 1);
+        momRates = sootMom_.rateAll(concentrations, moments, temperature, opPre, 1);
     }
 
 }
