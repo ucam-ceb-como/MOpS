@@ -82,6 +82,8 @@ public:
 	bool checkCoordinates() const;
 	// Check to see if all sites are connected to each other
 	bool checkSiteContinuity() const;
+	// Check to see if site neighbours has a valid combined site type
+	bool checkCombinedSiteType(Spointer& stt);
 
     //! Sets target PAH structure to perform processes on
     void setPAH(PAHStructure& pah);
