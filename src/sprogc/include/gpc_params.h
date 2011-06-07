@@ -64,7 +64,7 @@ namespace Sprog
 
     // PHYSICAL CONSTANTS.
 	// These numbers are added by Vinod
-	const real kB	= 1.380658e-23; // Boltzmann constant
+	const real kB	= 1.3806504e-23; // Boltzmann constant
 	const real EPSILON0 = 8.854187816e-12;
 	// conversion factors
 	const real Debye__ = 3.33564e-30; // 

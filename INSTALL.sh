@@ -9,14 +9,11 @@ usage()
 usage: ${0##*/} [OPTION]
   
 options:
-  -test        Run Make and test running
   -help        This usage
 
 USAGE
     exit 1
 }
-
-test=0
 
 # parse options
 while [ "$#" -gt 0 ]
@@ -24,10 +21,6 @@ do
    case "$1" in
    -h | -help)
       usage
-      ;;
-   -test)
-      test=1
-      shift 1   
       ;;
    --)
       shift
@@ -45,16 +38,7 @@ done
 echo "Configuring local git settings."
 cp -f .gitconfig .git/config
 
-if [ $test -eq "1" ]; then
-    echo "Make all libraries in release mode."
-    ./etc/makeAllLibs.sh
-    ./etc/makeDocs.sh
-    echo "Run camflow in release mode."
-    ./etc/runCamflow.sh
-    if [ $? -gt 0 ] ; then
-        echo "Running camflow failed."
-        exit
-    else
-        echo "Install Successful."
-    fi
-fi
+echo "Make all Documentation."
+./etc/makeDocs.sh
+
+echo "Install Successful."

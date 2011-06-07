@@ -9,7 +9,90 @@ Installation:
     git config --global user.name "Laurence McGlashan"
     git config --global user.email "lrm29@cam.ac.uk"
 
-2) Once cloned, execute "INSTALL.sh -test". It should run successfully.
+2) Once cloned, execute "./INSTALL.sh". It will copy the .gitconfig file into
+your .git folder and make all the Doxygen documentation which can be accessed 
+by opening doc/documentationIndex.html in a web browser.
+
+-------------------------------------------------------------------------------
+
+CMake:
+
+There is more than one way to use CMake to generate build files
+and to generate Eclipse (and Visual Studio) project files.  If
+you do not care about using an IDE and just want a clean tidy
+build, scroll down to the instructions on out-of-source builds.
+
+1) In-source build (for those who use an IDE):
+
+This is not as tidy as option two, but is the only way (I can find)
+to get proper Eclipse integration.
+
+Before starting (ie before you read this file) you should do
+mkdir workspace1
+#This is where eclipse will put its workspace, which must be distinct
+#from the location of the projects we are about to create.
+cd workspace1
+git clone ssh://riap2@vienna.cheng.cam.ac.uk/home/userspace/CoMoCommon/Codes/mops-c-Git proj
+cd proj
+#If you have not got this kind of set up with a dedicated directory
+#above the one containing this file, you should do a fresh clone
+#either from vienna as above, or from you modified code if necessary.
+
+cmake -G"Eclipse CDT4 - Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug .
+
+At this point you can run Eclipse and put a new workspace in workspace1.
+Once in Eclipse right click in the Project Explorer on the left and select
+Import.  Then choose General/Exisiting Projects into Workspace.  This will
+give a new pop-up, where you should click Browse..., then select proj (or
+whatever you called the directory containing this file) and click OK.
+Highlight proj in the list of possible projects (it should be the only
+entry) and click Finish.  Eclipse will kick off its parser and builder,
+which should not take too long, but then you are up and running.
+(Make sure you select the C++ perspective, eclipse generally defaults
+to java.) 
+
+To use EGit, right-click on the project and select Team > Share Project. 
+Choose Git.
+
+CMakeEd provides some useful tools for CMake integration into Eclipse.
+You can install it from within Eclipse using the following download site:
+http://cmakeed.sourceforge.net/eclipse/
+
+CTest can be run by double-clicking ": test" in the Make Target panel.
+
+With this set up you are limited to Debug builds (or Release if you specify
+that when you run cmake).  To have both build types one needs to use "out
+of source builds" with cmake, but that does not integrate well with eclipse.
+Assuming you have done your development with a debug build and now want to
+make a release build to run some big calcs, you are recommended to do the
+following (an out of source build as described in 2):
+
+Commit your changes to you local git repo (pushing to vienna is optional):
+git add myfile.c
+git commit -m "A ground breaking new algorithm"
+cd ..
+git clone proj release-tree
+cd release-tree
+mkdir release
+cd release
+cmake .. -D CMAKE_BUILD_TYPE=Release
+make -j 4 #for 4 threads of compilation (more if you can!)
+
+2) Out-source build (for those who don't use an IDE):
+
+mkdir debug
+cd debug
+cmake -D CMAKE_BUILD_TYPE=Debug ..
+make -j 4   #for 4 threads of compilation (more if you can!)
+ctest -j 4  #for 4 threads of testing
+
+AND/OR
+
+mkdir release
+cd release
+cmake -D CMAKE_BUILD_TYPE=Release ..
+make -j 4   #for 4 threads of compilation (more if you can!)
+ctest -j 4  #for 4 threads of testing
 
 -------------------------------------------------------------------------------
 
@@ -23,22 +106,6 @@ Viewing Documentation:
 
 -------------------------------------------------------------------------------
 
-Making libraries:
-
-1) Execute ./etc/makeAllLibs to make all of the libraries in src/. 
-   Options: -debug         Compiles in debug mode.
-            -profile       Compiles in profile mode.  
-            -cleanall      Cleans all the source and libraries
-            -cleansource   Cleans all the source
-
--------------------------------------------------------------------------------
-
-Making applications:
-
-1) Go to the relevant folders and execute make.
-
--------------------------------------------------------------------------------
-
 Remaining Tasks:
 
 1) Edit all the visual studio project files.
@@ -49,7 +116,9 @@ Remaining Tasks:
 6) More etc/ run scripts.
 
 ###############################################################################
-Laurence McGlashan
+Robert Patterson 07 June 2011
+Robert.Patterson@wias-berlin.de
+
+Laurence McGlashan 25 February 2011
 lrm29@cam.ac.uk
-25 February 2011
 ###############################################################################

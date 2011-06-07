@@ -43,13 +43,19 @@
 #ifndef _CAM_SOOT_H
 #define	_CAM_SOOT_H
 
-#include "cam_params.h"
-#include "gpc.h"
-#include "array.h"
-#include <cmath>
+#include <algorithm>
 #include <vector>
+#include <cmath>
+#include <map>
 
-using namespace Sprog;
+#include "array.h"
+
+#include "gpc.h"
+#include "cam_math.h"
+#include "comostrings.h"
+#include "cam_params.h"
+#include "cam_converter.h"
+#include "camxml.h"
 
 namespace Camflow{
     class CamSoot{
@@ -62,6 +68,8 @@ namespace Camflow{
         };
         CamSoot();
         ~CamSoot(){}
+        void readSoot(CamConverter& convert,
+                                            const CamXML::Element& node);
         void setSootSpecies(std::vector<std::string> species);
         void setNucCutoff(doublereal cutOff);
         void setPAHDia(doublereal dPAH);
@@ -71,7 +79,7 @@ namespace Camflow{
         void setRegime(int n);
         void setFirstMom(doublereal m0);
         int getRegime();
-        void initialize(int nCells, Mechanism &mech, std::vector<doublereal> &mSolnVec);
+        void initialize(int nCells, Sprog::Mechanism &mech, std::vector<doublereal> &mSolnVec);
         bool active();
         void setNumMoments(int n);
         int getNumMoments() const;
@@ -153,7 +161,7 @@ namespace Camflow{
         /*
          *Initialize the soot moments
          */
-        void initMoments(Mechanism &mech, std::vector<doublereal>& soln,int nCells=0);
+        void initMoments(Sprog::Mechanism &mech, std::vector<doublereal>& soln,int nCells=0);
         /*
          *calculate the residual functions for moments
          */
@@ -254,7 +262,7 @@ namespace Camflow{
          *New variables
          */
         doublereal Beta_nucl, Beta_fm, Beta_cd, Beta_surf;
-        int mmn2Calc;
+        //int mmn2Calc;
 
         void interpolateReducedMoments(std::vector<doublereal>& wom);
         doublereal gridFunction(int k, int n, int m);

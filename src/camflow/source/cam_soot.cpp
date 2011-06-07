@@ -38,21 +38,15 @@
  *
  * Created on 19 May 2009, 10:38
  */
-#include <algorithm>
-#include <vector>
-#include <cmath>
-#include <map>
 
-#include "array.h"
 #include "cam_soot.h"
 #include "cam_reporter.h"
-#include "gpc.h"
-#include "cam_math.h"
 #include "cam_setup.h"
-#include "comostrings.h"
+
 using namespace Camflow;
 using namespace Sprog;
 using namespace Strings;
+
 Array1D CamSoot::sizeMoments;
 Array1D CamSoot::reducedMoments;
 
@@ -61,18 +55,106 @@ CamSoot::CamSoot():cMass(0.012), //kg/mol
         ohMass(0.017),           //kg/mol
         lambda(2.3e15),          //cm^-2
         atomsPerDimer(32),
-        D1_PAH(2.42e-10)         //m
+        D1_PAH(2.42e-10),         //m
+        momentON(false),
+        lowFrac(-4)
 { 
-
-    momentON = false;    
-    lowFrac = -4;
     
+    CamConverter convert;
+    std::string fileName("camflow.xml");
+
+    CamXML::Document doc;
+    const CamXML::Element* root;
+    if(doc.Load(fileName) == 0){
+        root = doc.Root();
+        readSoot(convert,*root);
+    }
 }
 
+void CamSoot::readSoot(CamConverter& convert,
+                                    const CamXML::Element& node){
+
+    CamXML::Element *soot;
+    CamXML::Element *subnode;
+    std::vector<CamXML::Element*> sootSpecies;
+    std::vector<CamXML::Element*>::const_iterator p;
+    const CamXML::Attribute *atr;
+    std::vector<std::string> species;
+    soot = node.GetFirstChild("soot");
+    if(soot != NULL){
+        setSootMomentActive();
+        soot->GetChildren("species",sootSpecies);
+        for(p=sootSpecies.begin(); p<sootSpecies.end(); ++p){
+            atr = (*p)->GetAttribute("name");
+            if(atr!=NULL){
+                species.push_back(atr->GetValue());
+            }
+        }
+        setSootSpecies(species);
+
+        subnode = soot->GetFirstChild("inception_species");
+        if(subnode!=NULL){
+            std::string atrVal = subnode->GetAttributeValue("name");
+            setInceptionSpecies(atrVal);
+
+        }else{
+            throw CamError("Inception species not specified\n");
+        }
+
+        subnode = soot->GetFirstChild("nMoments");
+        if(subnode!=NULL){
+            setNumMoments(int(cdble(subnode->Data())));
+        }else{
+            throw CamError("Number of moments not specified\n");
+        }
+
+        subnode = soot->GetFirstChild("M0");
+        if(subnode != NULL){
+            setFirstMom(cdble(subnode->Data()));
+        }else{
+            throw CamError("First moment not specified\n");
+        }
+
+
+        subnode = soot->GetFirstChild("dPAH");
+        if(subnode!=NULL){
+            std::string atrVal = subnode->GetAttributeValue("unit");
+            doublereal convertL = convert.getConvertionFactor(atrVal);
+            setPAHDia(cdble(subnode->Data())*convertL);
+        }
+        subnode = soot->GetFirstChild("cPAH");
+        if(subnode != NULL){
+            setNumCAtomInception(int(cdble(subnode->Data())));
+        }
+
+        std::string atrVal = soot->GetAttributeValue("regime");
+
+        if(!convertToCaps(trim(atrVal)).compare("FREEMOL"))
+            setRegime(FM);
+        else if(!convertToCaps(trim(atrVal)).compare("TRANSITION"))
+            setRegime(TR);
+        else if(!convertToCaps(trim(atrVal)).compare("CONTINUUM"))
+            setRegime(CT);
+        else
+            throw CamError("Unknown transport regime\n");
+
+    }
+    else
+    {
+    	setNumMoments(0);
+    }
+
+
+}
+
+
+
+
 void CamSoot::setNumMoments(int n){
-    mmn2Calc = n;
-    nMoments = 6;
-    highFrac = 6*nMoments+1; //highet fractional moment
+	// This method is called by cam_read.
+    //mmn2Calc = n;
+    nMoments = n;
+    highFrac = 6*nMoments+1; //highest fractional moment
 }
 void CamSoot::setNucCutoff(doublereal cutOff){
     nucRateCutOff = cutOff;
@@ -116,7 +198,8 @@ bool CamSoot::active(){
 }
 
 int CamSoot::getNumMoments() const{
-    return mmn2Calc;
+    //return mmn2Calc;
+	return nMoments;
 }
 
 void CamSoot::setInceptionSpecies(std::string species){
@@ -249,7 +332,6 @@ void CamSoot::sootReactions(int cell, std::vector<doublereal>& conc, std::vector
         conc_cgs[i] = conc[i]*1e-06;
 
     /*
-     *store the concentrations for output
      */
     conc_received(cell,iC2H2) = conc_cgs[iC2H2];
     conc_received(cell,iCO) = conc_cgs[iCO];
@@ -328,7 +410,8 @@ void CamSoot::sootReactions(int cell, std::vector<doublereal>& conc, std::vector
      */
 
     for(int i=0; i<nMoments; i++){
-        wdot(cell,i) = (nucRate[i] + cgRate[i] + surfRates[i])/mom[i];
+    	// Need to include surface rate here
+        wdot(cell,i) = 0.0; // (nucRate[i] + cgRate[i] + surfRates[i])/mom[i];
        
     }
 
@@ -365,15 +448,13 @@ void CamSoot::coagulation(doublereal T, doublereal p, doublereal M0){
 
     doublereal kCoag = Kf*sqrt(T);
 
-
     std::vector<doublereal> f;
     CamMath cm;
+
     f.clear();
     for(int i=0; i<4; i++){
         f.push_back(grid(i,0,0));//    int dd; cin >> dd;
-        
     }
-
     doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);
     
     
@@ -911,8 +992,10 @@ void CamSoot::initMoments(Mechanism &mech, std::vector<doublereal>& soln,int nCe
      *               | mu_ij
      *              \|
      */
-    Beta_nucl = 2.2*sqrt(16*PI*kB/mPAH)*dia_PAH*dia_PAH;
-    /*
+
+
+    		   Beta_nucl = 2.2*sqrt(16*PI*kB/mPAH)*dia_PAH*dia_PAH;
+    /*·
      * Multiplication by NA is carried out to avoid it while
      * evaluating the rates
      */
@@ -972,22 +1055,29 @@ void CamSoot::rateAll(std::vector<doublereal>& conc,     //species concentration
                       doublereal& p,                //pressure
                       std::vector<doublereal>& rates,    //return rates
                       int cellID){  
-    
-        
+
     std::vector<doublereal> nucRates, coagRates,cdRates, prodRates, sRates;
     //Calculate nucleation rate
     rateNucleation(conc[iInception],T,nucRates);
-    
+
+
     //Calculate coagulation rates
     rateCoagulation(moments,T,coagRates);
+
+
+
 
 //    //condensation rates
 //    doublereal rA4 = rateCondensation(moments,T,conc[iInception],cdRates);
 //    surfProdRate(cellID,iInception) = rA4;
 
+
+    /*
+
     //surface rates : Always calculate this after coagulation
     rateSurface(conc,T,moments,prodRates,sRates);
     sRates[0] = 0.0;
+
 
     if(sRates[1] <= 0){
         std::vector<doublereal> f;
@@ -1010,7 +1100,6 @@ void CamSoot::rateAll(std::vector<doublereal>& conc,     //species concentration
         }
         sRates[0] = 0.0;
     }
-    
 
 //    for(int i=0; i<nMoments; i++){
 //        sRates[i] += cdRates[i];
@@ -1023,13 +1112,17 @@ void CamSoot::rateAll(std::vector<doublereal>& conc,     //species concentration
     surfProdRate(cellID,iH2) = prodRates[iH2];
     surfProdRate(cellID,iH2O) = prodRates[iH2O];
 
+*/
+
     for(int m=0; m<nMoments;m++){
-        rates[m] = (nucRates[m]+coagRates[m])/moments[m];
-        //std::cout << nucRates[m] << "  " << coagRates[m] << std::endl;
-        wdot(cellID,m) = rates[m];
-        
+       // std::cout << "[m] " << m << "\n";
+       // std::cout << "nucRates[m] " << nucRates[m] << "\n";
+       // std::cout << "coagRates[m] " << coagRates[m] << "\n";
+       // std::cout << "moments[m] " << moments[m] << "\n";
+    	rates[m] = (nucRates[m]+coagRates[m])/moments[m];
+    //   	rates[m] = (nucRates[m])/moments[m];
+        //wdot(cellID,m) = rates[m];
     }
-    
 
 }
 
@@ -1070,24 +1163,36 @@ void CamSoot::rateCoagulation(std::vector<doublereal>& mom, doublereal& T,
      *carried out on the log of reduced moments
      *store the exponents of the moments
      */
-    std::vector<doublereal> wholeOrderRedMom; //whole order reduced moments
-    wholeOrderRedMom.resize(mom.size(),0.0);
-    for(int r=0; r<nMoments; r++){
-        wholeOrderRedMom[r] = mom[r]/mom[0];
 
+    std::vector<doublereal> wholeOrderRedMom; //whole order reduced moments
+
+
+    wholeOrderRedMom.resize(mom.size(),0.0);
+
+
+    for(int r=0; r<nMoments; r++){
+    	wholeOrderRedMom[r] = mom[r]/mom[0];
     }
+
+
     interpolateReducedMoments(wholeOrderRedMom);
-//    /*
+
+
+ //    /*
 //     *evaluate the grid functions
 //     */
+
+
     std::vector<doublereal> f;
     for(int i=0; i<4; i++){
         f.push_back(gridFunction(i,0,0));
         
     }
-            
+
+
     doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);    
-    
+
+
 
     f.clear();
     for(int i=0; i<4; i++)
@@ -1105,6 +1210,7 @@ void CamSoot::rateCoagulation(std::vector<doublereal>& mom, doublereal& T,
     for(int i=0; i<3; i++)
         f.push_back(gridFunction(i,1,3));
     doublereal crk4a = kCoag*cm.interpolateLG(0.5,3,prime,f);
+
 
 
     f.clear();
@@ -1134,7 +1240,6 @@ void CamSoot::rateCoagulation(std::vector<doublereal>& mom, doublereal& T,
     coagRates[4] = (4*crk4a + 3*crk4b) * M02;
     coagRates[5] = (5* crk5a + 10*crk5b) * M02;
 
-    
 }
 
 /*
