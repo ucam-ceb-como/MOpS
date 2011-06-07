@@ -60,7 +60,7 @@ make -j 4 #for 4 threads of compilation (more if you can!)
 
 mkdir debug
 cd debug
-cmake .. -D CMAKE_BUILD_TYPE=Debug
+cmake -D CMAKE_BUILD_TYPE=Debug ..
 make -j 4 #for 4 threads of compilation (more if you can!)
 ctest -j 4 #for 4 threads of testing
 
@@ -68,7 +68,7 @@ AND/OR
 
 mkdir release
 cd release
-cmake .. -D CMAKE_BUILD_TYPE=Release
+cmake -D CMAKE_BUILD_TYPE=Release ..
 make -j 4 #for 4 threads of compilation (more if you can!)
 ctest -j 4 #for 4 threads of testing
 
