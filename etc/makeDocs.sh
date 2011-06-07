@@ -84,6 +84,7 @@ else
 fi
 
 ln -sf mopssuite/html/index.html doc/documentationIndex.html
+ln -sf mopssuite/html/doxygen.css doc/doxygen.css
 cp -f doc/group_logo_portrait.png doc/mopssuite/html
 
 echo "Documentation successfully created and stored in doc/"
