@@ -819,7 +819,7 @@ void Mechanism::LPDA(real t, Cell &sys, int (*rand_int)(int, int), real(*rand_u0
     // Check that there are particles to update and that there are
     // deferred processes to perform.
     if ((sys.ParticleCount() > 0) &&
-        (m_anydeferred || (AggModel() == AggModels::PAH_ID))) {
+        (m_anydeferred || (AggModel() == AggModels::PAH_ID)|| (AggModel() == AggModels::PAH_KMC_ID))) {
         // Stop ensemble from doubling while updating particles.
         sys.Particles().FreezeDoubling();
 
@@ -850,9 +850,9 @@ void Mechanism::LPDA(real t, Cell &sys, int (*rand_int)(int, int), real(*rand_u0
 void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)()) const
 {
     // Deal with the growth of the PAHs
-    if (AggModel() == AggModels::PAH_ID)
+    if (AggModel() == AggModels::PAH_KMC_ID)
     {
-        // If the agg model is PAH_ID then all the primary
+        // If the agg model is PAH_KMC_ID then all the primary
         // particles must be PAHPrimary.
         AggModels::PAHPrimary *pah =
                 dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());

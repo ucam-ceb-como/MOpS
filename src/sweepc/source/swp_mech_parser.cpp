@@ -332,9 +332,12 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     } else if (str == "surfvol") {
         mech.SetAggModel(AggModels::SurfVol_ID);
     } else if (str == "PAH") {
-        mech.SetAggModel(AggModels::PAH_ID);
+        //mech.SetAggModel(AggModels::PAH_ID);
+		throw std::runtime_error("PAH-PP MODEL are no longer supported (Sweep::MechParser::readV1), you can use NEW PAH_KMC model");
         //loadPAHStories(*(xml.Root()), mech);
-    } else {
+    } else if (str == "PAH_KMC") {
+        mech.SetAggModel(AggModels::PAH_KMC_ID);
+	}else {
         mech.SetAggModel(AggModels::Spherical_ID);
     }
 
@@ -388,7 +391,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     }
 
     // Read the processes (inceptions, surface reactions and condensations).
-    if (mech.AggModel()==AggModels::PAH_ID)
+    if (mech.AggModel()==AggModels::PAH_ID||mech.AggModel()==AggModels::PAH_KMC_ID)
     {
         readPAHInceptions(xml, mech);
     }
