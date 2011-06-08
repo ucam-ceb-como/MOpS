@@ -1,0 +1,60 @@
+<mops version="2">
+  
+  <!-- Default parameters (can be overidden). --> 
+  <runs>10</runs>
+  <iter>1</iter>
+  <atol>1.0e-14</atol> 
+  <rtol>1.0e-3</rtol>
+  <pcount>1024</pcount>
+  <maxm0>1e2</maxm0>
+  <relax>0.5</relax>
+  
+  <!-- Reactor definition (given initial conditions). -->
+  <reactor type="batch" constt="true" id="Test_System" units="mol/mol">
+    <component id="A4">0.0000005</component>
+    <component id="N2">0.9999995</component>
+    <component id="AR">0.00</component>
+    <!--component id="SIO2">0.00</component -->
+    <temperature units="K">1000.0</temperature>
+    <pressure units="bar">1.01325</pressure>
+    
+    <population>
+      <particle count="1024">
+        <component id="pah" dx="1"/>
+        <weight>1.0</weight>
+      </particle>
+      <m0>1.0</m0>
+    </population>
+
+  </reactor>
+  
+  <!-- Output time sequence. -->
+  <timeintervals splits="1">
+    <start>0.0</start>
+    <time steps="1" splits="1">1.0</time>
+    <time steps="5" splits="1">3.0</time>
+  </timeintervals>
+  
+  <!-- Simulation output settings. -->
+  <output>
+    <statsbound property="dcol">
+      <lower>0.0</lower>
+      <upper>1.0e30</upper>
+    </statsbound>
+
+    <console interval="1" msgs="true">
+      <tabular>
+        <column fmt="sci">time</column>
+        <column fmt="sci">A4</column>
+        <column fmt="float">#sp</column>
+        <!--column fmt="sci">T</column-->
+        <column fmt="sci">M0</column>
+        <column fmt="sci">fv</columns>
+        <column fmt="sci">ct</column>
+      </tabular>
+    </console>
+    
+    <!-- File name for output (excluding extensions). -->
+    <filename>regression5a</filename>
+  </output>
+</mops>
