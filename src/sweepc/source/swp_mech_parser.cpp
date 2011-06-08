@@ -50,6 +50,7 @@
 #include "swp_condensation.h"
 #include "swp_transcoag.h"
 #include "swp_addcoag.h"
+#include "swp_constcoag.h"
 #include "swp_weighted_addcoag.h"
 #include "swp_weighted_constcoag.h"
 #include "swp_coag_weight_rules.h"
@@ -1191,6 +1192,8 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                         coag.reset(new Processes::TransitionCoagulation(mech));
                     else if(kernelName == "additive")
                         coag.reset(new Processes::AdditiveCoagulation(mech));
+                    else if(kernelName == "constant")
+                        coag.reset(new Processes::ConstantCoagulation(mech));
                     else
                         // Unrecognised option
                         throw std::runtime_error("Coagulation kernel " + kernelName + " not yet available in DSA \
