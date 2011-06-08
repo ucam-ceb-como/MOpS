@@ -67,7 +67,7 @@ if((i==6))
 then
   # All tests passed
   echo "All tests passed"
-  rm regression1-128-10*
+  rm -f regression1-128-10*
   exit 0
 else
   exit 1

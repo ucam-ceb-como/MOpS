@@ -14,7 +14,7 @@ if test -n "$2"
 fi
 
 #Get rid of any results from earlier runs of this test
-rm regression5a*
+rm -f regression5a*
 
 
 echo "DSA for constant coagulation kernel"
@@ -56,7 +56,7 @@ if((i==6))
 then
   # All tests passed
   echo "All tests passed"
-  rm regression5a*
+  rm -f regression5a*
   exit 0
 else
   exit 1
