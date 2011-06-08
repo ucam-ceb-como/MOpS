@@ -17,6 +17,13 @@ lib/
 *.cmake
 build/
 Testing/
+*CMakeCache.txt
+
+# Executables built by cmake
+mops-app
+brush-app
+camflow-app
+brush-moonmd-test
 
 # log files
 *log*
