@@ -33,6 +33,8 @@ add_test(mops.regress3 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress3.sh ${MOPSSUIT
 
 add_test(mops.regress4 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress4.sh ${MOPSSUITE_BINARY_DIR}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
+add_test(mops.regress5 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress5.sh ${MOPSSUITE_BINARY_DIR}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+
 add_test(mops.CSTRtest ${MOPSSUITE_SOURCE_DIR}/test/mopsc/CSTRRegress.sh ${MOPSSUITE_BINARY_DIR}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
 add_test(mops.pahtest ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest.sh ${MOPSSUITE_BINARY_DIR}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
