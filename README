@@ -96,6 +96,19 @@ ctest -j 4  #for 4 threads of testing
 
 -------------------------------------------------------------------------------
 
+How to run a case (assuming debug build):
+
+1) Go to Run > Debug Configurations.
+
+2) Create a new Configuration and select your app (e.g. mops-app or camflow-app).
+
+3) You'll need to change Arguments > Working directory to the location of the
+   case that you are interested in, and also to add any arguments.
+   
+4) Hit debug.
+
+-------------------------------------------------------------------------------
+
 Viewing Documentation:
 
 1) Execute ./etc/makeDocs to make the documentation.
