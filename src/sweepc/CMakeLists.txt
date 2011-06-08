@@ -20,6 +20,7 @@ add_library(sweep source/mt19937.cpp
                   source/swp_component.cpp
                   source/swp_condensation.cpp
                   source/swp_constant_inception.cpp
+                  source/swp_constcoag.cpp
                   source/swp_death_process.cpp
                   source/swp_diffusion_process.cpp
                   source/swp_dimer_inception.cpp

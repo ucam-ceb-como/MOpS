@@ -46,6 +46,7 @@
 #include "swp_actsites_reaction.h"
 #include "swp_transcoag.h"
 #include "swp_addcoag.h"
+#include "swp_constcoag.h"
 #include "swp_weighted_addcoag.h"
 #include "swp_weighted_constcoag.h"
 #include "swp_pah_inception.h"
@@ -152,6 +153,9 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in,
                 break;
             case Additive_Coagulation_ID:
                 proc = new AdditiveCoagulation(in, mech);
+                break;
+            case Constant_Coagulation_ID:
+                proc = new ConstantCoagulation(in, mech);
                 break;
             case Weighted_Additive_Coagulation_ID:
                 proc = new WeightedAdditiveCoagulation(in, mech);

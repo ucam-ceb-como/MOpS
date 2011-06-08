@@ -76,6 +76,7 @@ namespace Processes
         // Coagulation processes
         Transition_Coagulation_ID=10000,   // Transition regime coagulation
         Additive_Coagulation_ID=10001,     // Additive coagulation kernel
+        Constant_Coagulation_ID=10002,     // Constant coagulation kernel
 
         // 10002&3 previously used for coagulations involving secondary particles
 
