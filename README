@@ -36,7 +36,7 @@ git clone ssh://riap2@vienna.cheng.cam.ac.uk/home/userspace/CoMoCommon/Codes/mop
 cd proj
 #If you have not got this kind of set up with a dedicated directory
 #above the one containing this file, you should do a fresh clone
-#either from vienna as above, or from you modified code if necessary.
+#either from vienna as above, or from your modified code if necessary.
 
 cmake -G"Eclipse CDT4 - Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug .
 

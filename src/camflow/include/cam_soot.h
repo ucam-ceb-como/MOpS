@@ -4,10 +4,13 @@
  * Copyright (C) 2008 Vinod M Janardhanan.
  *
  * File purpose:
+ *
  *  This class implements the soot moment (MOMIC) based on
  *  chemkin implementation. In this file everything is
  *  evaluated in cgs unit
+ *
  * Licence:
+ *
  *  This file is part of "Camflow".
  *
  *  Camflow is free software; you can redistribute it and/or
@@ -49,7 +52,6 @@
 #include <map>
 
 #include "array.h"
-
 #include "gpc.h"
 #include "cam_math.h"
 #include "comostrings.h"
@@ -57,96 +59,102 @@
 #include "cam_converter.h"
 #include "camxml.h"
 
-namespace Camflow{
-    class CamSoot{
+namespace Camflow {
+
+/*!
+ * CamSoot
+ *
+ * \brief Solves the MoMIC equations (Frenklach, 2002).
+ *
+ * \todo Get it working first of all!
+ * \todo Get rid of all these Set functions, probably by incorporating into
+ *       readSoot(). PARTIALLY DONE.
+ * \todo Put physical processes such as coagulation in their own classes.
+ * \todo e.g. coagulation and rateCoagulation seem to be duplicates?
+ * \todo Use abstract factory method instead of the enum regime.
+ */
+class CamSoot {
+
+    typedef std::vector<doublereal> realVector;
+    typedef std::vector<std::string> stringVector;
+    typedef std::vector<int> intVector;
+
     public:
 
-        enum regime{
-            FM,
-            CT,
-            TR
-        };
-        CamSoot();
-        ~CamSoot(){}
-        void readSoot(CamConverter& convert,
-                                            const CamXML::Element& node);
-        void setSootSpecies(std::vector<std::string> species);
-        void setNucCutoff(doublereal cutOff);
-        void setPAHDia(doublereal dPAH);
-        void setNumCAtomInception(int nCAtom);
-        void setSootMomentActive();
-        void setInceptionSpecies(std::string species);
-        void setRegime(int n);
-        void setFirstMom(doublereal m0);
-        int getRegime();
-        void initialize(int nCells, Sprog::Mechanism &mech, std::vector<doublereal> &mSolnVec);
-        bool active();
-        void setNumMoments(int n);
-        int getNumMoments() const;
-        doublereal nucleationConst(doublereal& T){
-            return constNucleation*std::sqrt(T);
-        }
-        doublereal const_coag_freeMol(doublereal& T){
-            return Kf*std::sqrt(T);
-        }
-        /*
-         *grid function
+        /*!
+         * Free Molecular (FM), Continuum (CT) or Transition (TR) Regime
          */
-        doublereal grid(int k, int n, int m);
-        doublereal betaC1(int i, int j);
-        doublereal betaC2(int i, int j);
-        void linear(int n, std::vector<doublereal>& y, doublereal& a, doublereal& b,
-                    doublereal& rsq);
-        void setSizeMoments(std::vector<doublereal>& conc);
+        enum regime {FM, CT, TR};
+
+        /*!
+         * Constructor.
+         */
+        CamSoot();
+
+        /*!
+         * Destructor.
+         */
+        ~CamSoot(){}
+
+        /*!
+         * Read in all the constants and settings.
+         */
+        void readSoot(CamConverter& convert, const CamXML::Element& node);
+
+        //! Get the Regime (Free Molecular / Continuum / Transition).
+        int getRegime() const;
+
+        //! Get the number of moments.
+        int getNumMoments() const;
+
+        //! Returns true if soot is going to be solved.
+        bool active() const;
+
+        void initialize(int nCells, Sprog::Mechanism &mech, realVector &mSolnVec);
+
+        doublereal betaC1(const int i, const int j);
+
+        doublereal betaC2(const int i, const int j);
+
+        void linear(int n, realVector& y,
+                    doublereal& a, doublereal& b, doublereal& rsq);
+
+        void setSizeMoments(realVector& conc);
+
         void sums(int hMoment, doublereal massAdded, doublereal coeff,
-                            std::vector<doublereal>& rates);
-        /*
+                  realVector& rates);
+
+        /*!
          *soot reaction processes
          */
-        void sootReactions(int cell, std::vector<doublereal>& conc, std::vector<doublereal>& mom,
+        void sootReactions(int cell, realVector& conc, realVector& mom,
                     int nSpec, doublereal T,   doublereal p);
-        /*
-         *nucleation rate
-         */
-        void nucleation(std::vector<doublereal> &conc,
-                                    doublereal T,
-                                    doublereal p);
-        void coagulation(doublereal T,
-                         doublereal p,
-                        doublereal M0);
 
-        void condensation(doublereal T,            //temperature
-                    doublereal M0,           //zeroth moment
-                    doublereal concPAH,      //concentration of PAH
-                    doublereal ratePAH);     //rate of PAH consumption due to condensation
-        void surface(int hMoment, int cell,
-                    doublereal T,
-                    doublereal M0,
-                    std::vector<doublereal>& conc,
-                    std::vector<doublereal>& totalRates);
+        //! These are probably to be called from the flamelet code.
+        void momentResidual(const doublereal& time,
+                            const int iMesh_s, const int iMesh_e,
+                            const realVector& dz,
+                            const realVector& u,
+                            const realVector& rho,
+                            const doublereal* y, doublereal* f,
+                            const int nVar, const int nSpec);
 
-
-        void momentResidual(const doublereal& time, int iMesh_s, int iMesh_e,
-                                        int nVar, int nSpec,
-                                        std::vector<doublereal>& dz,
-                                        std::vector<doublereal>& u,
-                                        std::vector<doublereal>& rho,
-                                        doublereal* y, doublereal* f);
-
-        void momentResidual(const doublereal& time, int iMesh_s, int iMesh_e,
-                                        std::vector<doublereal>& dz,
-                                        std::vector<doublereal>& u,
-                                        std::vector<doublereal>& rho,
-                                        doublereal* y, doublereal* f);
+        //! This just calls the other momentResidual function.
+        void momentResidual(const doublereal& time,
+                            const int iMesh_s, const int iMesh_e,
+                            const realVector& dz,
+                            const realVector& u,
+                            const realVector& rho,
+                            const doublereal* y, doublereal* f);
 
         void clearRates(int ncells);
 
-        /*
+        /*!
          *adjust the species production rates for soot formation
          */
         void addRates(int nCells, Array2D& wdot);
 
-        /*
+        /*!
          *report the results
          */
         void report(int nCells);
@@ -158,56 +166,29 @@ namespace Camflow{
          *---------------------------------------------/
          */
         
-        /*
-         *Initialize the soot moments
+        /*!
+         * Initialize the soot moments
          */
-        void initMoments(Sprog::Mechanism &mech, std::vector<doublereal>& soln,int nCells=0);
-        /*
-         *calculate the residual functions for moments
+        void initMoments(Sprog::Mechanism &mech, realVector& soln,int nCells=0);
+
+        /*!
+         * Calculate the residual functions for moments. There does not seem to
+         * be any point to this -> it just assigns wdot to f.
          */
-        void residual(const doublereal& time, std::vector<doublereal>& wdot,
+        void residual(const doublereal& time, realVector& wdot,
                                 doublereal* y, doublereal* f );
-        /*
-         *cauclate the all rates
+
+        /*!
+         * This calculates all of the moment rates and returns a vector of them.
          */
-        void rateAll(std::vector<doublereal>& conc,
-                     std::vector<doublereal>& moments,
-                     doublereal& T,
-                     doublereal& p,
-                     std::vector<doublereal>& rate,
-                     int cellID=0);
-        /*
-         *calculate nucleation rate
-         */
-        void rateNucleation(doublereal& concPAH,         //conc of PAH 4 nucln
-                            doublereal& T,               //temperature
-                            std::vector<doublereal>& nucRates //rates returned
-                            );
-        /*
-         *calculate coagulation rate
-         */
-        void rateCoagulation(std::vector<doublereal>& mom,     //vector of moments
-                            doublereal& T,                //temperature
-                            std::vector<doublereal>& coagRates //rates returned
-                            );
-        /*
-         *calculate condensation rate
-         */
-        doublereal rateCondensation(std::vector<doublereal>& mom, //vector of moments
-                            doublereal& T,                   //temperature
-                            doublereal& conc,                //PAH concentration
-                            std::vector<doublereal>& cdRates      //rates returned
-                            );
-        /*
-         *cauculate surface reaction rates
-         */
-        void rateSurface(std::vector<doublereal>& conc,          //concentration
-                            doublereal T,                   //temperature
-                            std::vector<doublereal>& mom,        //moment vector
-                            std::vector<doublereal>& prodRates,  //surf prod rates
-                            std::vector<doublereal>& totalRates);//rates returned
+        realVector rateAll(const realVector& conc,
+                const realVector& moments,
+                const doublereal& T,
+                const doublereal& p,
+                const int cellID=0);
 
     private:
+
         const doublereal cMass;
         const doublereal rhoSoot;
         const doublereal ohMass;
@@ -232,44 +213,91 @@ namespace Camflow{
         doublereal kSurf;
         doublereal kPAH;
         doublereal dia_PAH;
-        doublereal nucRateCutOff;
         doublereal D1_PAH;
         doublereal firstMom;
 
-        std::vector<std::string> sootSpecies;
-        std::vector<int> sootSpecIndex;
-        std::vector<doublereal> base;
+        stringVector sootSpecies;
 
         Array2D bnCoeff,powPAH, prime;
         Array2D wdot,surfProdRate;
         Array2D conc_received, momReceived;
 
         static Array1D sizeMoments, reducedMoments;
-
-
         /*
          *members for storing the rates
          */
         //rates for nucleation, coagulation and condensation
-        std::vector<doublereal> nucRate, cgRate, cdRate;
+        realVector nucRate, cgRate, cdRate;
         //map<string,doublereal> surfProdRate; //surface production rate
-        std::map<std::string, std::vector<doublereal> > smRates; //moment rates due to surface reactions
-
-        //CamReporter creport;
-
+        std::map<std::string, realVector > smRates; //moment rates due to surface reactions
 
         /*
          *New variables
          */
         doublereal Beta_nucl, Beta_fm, Beta_cd, Beta_surf;
-        //int mmn2Calc;
 
-        void interpolateReducedMoments(std::vector<doublereal>& wom);
-        doublereal gridFunction(int k, int n, int m);
+        /*!
+         *nucleation rate
+         */
+        void nucleation(realVector &conc,
+                                    doublereal T,
+                                    doublereal p);
+        void coagulation(doublereal T,
+                         doublereal p,
+                         doublereal M0);
 
+        void condensation(doublereal T,            //temperature
+                          doublereal M0,           //zeroth moment
+                          doublereal concPAH,      //concentration of PAH
+                          doublereal ratePAH);     //rate of PAH consumption due to condensation
+        void surface(int hMoment, int cell,
+                     doublereal T,
+                     doublereal M0,
+                     realVector& conc,
+                     realVector& totalRates);
 
-    };
-}
+        /*
+         *calculate nucleation rate
+         */
+        realVector rateNucleation(const doublereal& concPAH,  // conc of PAH 4 nucln
+                                  const doublereal& T);       // temperature
+
+        /*
+         * Calculate coagulation rate.
+         * Seems to follow Eq 19. in Frenklach (2002).
+         */
+        realVector rateCoagulation(const realVector& mom,     // vector of moments
+                                   const doublereal& T);      // temperature
+
+        /*
+         *calculate condensation rate
+         */
+        doublereal rateCondensation(realVector& mom, //vector of moments
+                            doublereal& T,                   //temperature
+                            doublereal& conc,                //PAH concentration
+                            realVector& cdRates      //rates returned
+                            );
+
+        /*
+         *cauculate surface reaction rates
+         */
+        void rateSurface(realVector& conc,          //concentration
+                            doublereal T,                   //temperature
+                            realVector& mom,        //moment vector
+                            realVector& prodRates,  //surf prod rates
+                            realVector& totalRates);//rates returned
+
+        void interpolateReducedMoments(realVector& wom);
+
+        /*!
+         * The grid function.
+         * k = , n = , m =
+         */
+        doublereal gridFunction(const int k, const int n, const int m);
+
+}; // End Class CamSoot
+
+} // End namespace Camflow
 
 #endif	/* _CAM_SOOT_H */
 
