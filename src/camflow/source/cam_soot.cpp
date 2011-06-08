@@ -50,11 +50,12 @@ using namespace Strings;
 Array1D CamSoot::sizeMoments;
 Array1D CamSoot::reducedMoments;
 
+const doublereal CamSoot::cMass = 0.012; //kg/mol
+const doublereal CamSoot::ohMass = 0.017; //kg/mol
+
 CamSoot::CamSoot()
 :
-    cMass(0.012),            //kg/mol
     rhoSoot(1.8e+03),        //kg/m^3
-    ohMass(0.017),           //kg/mol
     lambda(2.3e15),          //cm^-2
     atomsPerDimer(32),
     D1_PAH(2.42e-10),        //m
@@ -1070,12 +1071,13 @@ CamSoot::realVector CamSoot::rateAll
 
 */
 
+    rates.resize(nMoments,0.0);
     for (int m=0; m<nMoments; ++m)
     {
-       // std::cout << "[m] " << m << "\n";
-       // std::cout << "nucRates[m] " << nucRates[m] << "\n";
-       // std::cout << "coagRates[m] " << coagRates[m] << "\n";
-       // std::cout << "moments[m] " << moments[m] << "\n";
+        //std::cout << "[m] " << m << "\n";
+        //std::cout << "nucRates[m] " << nucRates[m] << "\n";
+        //std::cout << "coagRates[m] " << coagRates[m] << "\n";
+        //std::cout << "moments[m] " << moments[m] << "\n";
     	rates[m] = (nucRates[m]+coagRates[m])/moments[m];
     //   	rates[m] = (nucRates[m])/moments[m];
         //wdot(cellID,m) = rates[m];

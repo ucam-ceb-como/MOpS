@@ -79,6 +79,10 @@ class CamSoot {
     typedef std::vector<std::string> stringVector;
     typedef std::vector<int> intVector;
 
+    // Should get these from Sprog::Mechanism
+    static const doublereal cMass;
+    static const doublereal ohMass;
+
     public:
 
         /*!
@@ -189,9 +193,7 @@ class CamSoot {
 
     private:
 
-        const doublereal cMass;
         const doublereal rhoSoot;
-        const doublereal ohMass;
         const doublereal lambda;
         const int atomsPerDimer;
         int numCAtomInception;
