@@ -16,6 +16,7 @@ lib/
 *CMakeFiles
 *.cmake
 build/
+Testing/
 
 # log files
 *log*
