@@ -1,15 +1,9 @@
- /*\author Dongping Chen
- *  Copyright (C) 2011 Dongping Chen.
- *
- *  Project:        sweepc (population balance solver)
- *  Sourceforge:    http://sourceforge.net/projects/mopssuite
- *
- * \brief  Defines a primary including detailed PAH information
-  Author(s):      Dongping Chen (dc516)
-  Project:        sweep (population balance solver)
+ /*
+  Author(s):      Dongping Chen(dc516)
+  Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
 
-  Copyright (C) 2009 Markus Sander.
+  Copyright (C) 2011 Dongping Chen
 
   File purpose:
 
@@ -70,8 +64,7 @@ PAH &PAH::operator=(const PAH &rhs){
 		m_numcarbon=rhs.m_numcarbon;
 		time_created=rhs.time_created;
 	    lastupdated=rhs.lastupdated;
-		PAH_ID=rhs.PAH_ID;//should add a value to diff those two PAHs after cloning
-		//PAHStructure* m_pahstruct=new PAHStructure();
+		PAH_ID=rhs.PAH_ID;
 		m_pahstruct=rhs.m_pahstruct->Clone();
 		m_pahstruct->setParent(this);
 	}

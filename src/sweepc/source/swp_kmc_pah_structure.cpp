@@ -71,21 +71,8 @@ PAHStructure::PAHStructure() {
 	m_parent = NULL;
 }
 
-//! Copy Constructor
+//! Copy Constructor (private member)
 PAHStructure::PAHStructure(const PAHStructure& copy){
-		//*this = copy;
-	//CopyC(& copy);
-	/*m_cpositions = copy.m_cpositions;
-	m_cfirst = copy.m_cfirst;
-	m_siteList = copy.m_siteList;
-	// recreate siteMap
-	for(std::list<Site>::iterator i=m_siteList.begin(); i!= m_siteList.end(); i++) {
-		m_siteMap[i->type].push_back(i);
-		if(i->comb != None) m_siteMap[i->comb].push_back(i);
-	}
-	m_counts = copy.m_counts;
-	m_rings = copy.m_rings;*/
-	//*this = copy;
 }
 //! Default Destructor
 PAHStructure::~PAHStructure() {
