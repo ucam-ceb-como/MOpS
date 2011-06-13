@@ -819,7 +819,7 @@ void Mechanism::LPDA(real t, Cell &sys, int (*rand_int)(int, int), real(*rand_u0
     // Check that there are particles to update and that there are
     // deferred processes to perform.
     if ((sys.ParticleCount() > 0) &&
-        (m_anydeferred || (AggModel() == AggModels::PAH_ID)|| (AggModel() == AggModels::PAH_KMC_ID))) {
+        (m_anydeferred ||(AggModel() == AggModels::PAH_KMC_ID))) {
         // Stop ensemble from doubling while updating particles.
         sys.Particles().FreezeDoubling();
 
@@ -867,7 +867,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
 
         // Look up new size of PAHs in database
 		// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
-        pah->UpdatePAHs(t, *this,sys);
+        pah->UpdatePAHs(t, *this, sys);
         pah->UpdateCache();
         pah->CheckCoalescence();
         if (sp.IsValid())

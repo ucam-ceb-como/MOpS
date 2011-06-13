@@ -120,9 +120,6 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
         m_DiffusionType = rhs.m_DiffusionType;
         m_AdvectionType = rhs.m_AdvectionType;
         m_ThermophoresisType = rhs.m_ThermophoresisType;
-
-        m_MoleculeStories = rhs.m_MoleculeStories;
-
     }
     return *this;
 }
@@ -605,9 +602,6 @@ void ParticleModel::init(void)
 
     // Not sure what to put as default for m_DragType etc
     m_ThermophoresisType = NoThermophoresis;
-
-    //deleted by dongping 04 Apr,m_MoleculeStories.clear();
-
 }
 
 // Clears the current ParticleModel from memory.

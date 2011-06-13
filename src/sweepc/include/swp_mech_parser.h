@@ -239,9 +239,6 @@ private:
     static Sweep::Maths::Functional *const readFunctional(
         CamXML::Element &xml // CamXML element containing the functional def'n.
         );
-
-    //! Load PAH stories from files
-    static void loadPAHStories(CamXML::Element &xml, Mechanism &mech);
 };
 };
 

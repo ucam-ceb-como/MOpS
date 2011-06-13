@@ -79,8 +79,6 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
     switch (id) {
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolPrimary(time, model);
-        case AggModels::PAH_ID:
-            return new AggModels::PAHPrimary(time, position, model, rand_int);
 		case AggModels::PAH_KMC_ID:
             return new AggModels::PAHPrimary(time, position, model, rand_int);
         case AggModels::Spherical_ID:
@@ -105,8 +103,6 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
     switch (id) {
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolPrimary(time, model);
-        case AggModels::PAH_ID:
-            return new AggModels::PAHPrimary(time, model, rand_int);
 		case AggModels::PAH_KMC_ID:
             return new AggModels::PAHPrimary(time, model, rand_int);
         case AggModels::Spherical_ID:
@@ -139,9 +135,6 @@ Primary *const ModelFactory::ReadPrimary(std::istream &in,
                 break;
             case AggModels::SurfVol_ID:
                 pri = new AggModels::SurfVolPrimary(in, model);
-                break;
-            case AggModels::PAH_ID:
-                pri = new AggModels::PAHPrimary(in, model);
                 break;
 			case AggModels::PAH_KMC_ID:
                 pri = new AggModels::PAHPrimary(in, model);
@@ -302,8 +295,6 @@ AggModels::AggModelCache *const ModelFactory::CreateAggCache(AggModels::AggModel
             return NULL;
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolCache();
-        case AggModels::PAH_ID:
-            return new AggModels::PAHCache();
 	   case  AggModels::PAH_KMC_ID:
             return new AggModels::PAHCache();
         default:
@@ -323,10 +314,8 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
             return NULL;
         case AggModels::SurfVol_ID:
             return new Stats::SurfVolStats();
-        case AggModels::PAH_ID:
-            return new Stats::PAHStats();	 	// ms785: postprocessing not yet implemented
 		case AggModels::PAH_KMC_ID:
-            return new Stats::PAHStats();
+            return new Stats::PAHStats();       // ms785: postprocessing not yet implemented
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateAggStats).");
@@ -353,9 +342,6 @@ AggModels::AggModelCache *const ModelFactory::ReadAggCache(std::istream &in)
         switch ((AggModels::AggModelType)type) {
             case AggModels::SurfVol_ID:
                 model = new AggModels::SurfVolCache(in);
-                break;
-            case AggModels::PAH_ID:
-                model = new AggModels::PAHCache(in);
                 break;
 			case AggModels::PAH_KMC_ID:
                 model = new AggModels::PAHCache(in);
@@ -390,9 +376,6 @@ Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in,
         switch ((AggModels::AggModelType)type) {
             case AggModels::SurfVol_ID:
                 stats = new Stats::SurfVolStats(in, model);
-                break;
-            case AggModels::PAH_ID:
-                stats = new Stats::PAHStats(in, model);
                 break;
 			case AggModels::PAH_KMC_ID:
                 stats = new Stats::PAHStats(in, model);
