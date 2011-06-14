@@ -250,7 +250,7 @@ void CSV_IO::writeLine(const std::vector<T> &values)
 {
     // If this is not the first line, then output a newline
     // character.
-    streamoff i = m_file.tellp(); 
+    ios::streamoff i = m_file.tellp(); 
     if (i != 0) {
         m_file << '\n';
     }

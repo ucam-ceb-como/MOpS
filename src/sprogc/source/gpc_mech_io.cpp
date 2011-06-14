@@ -53,6 +53,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <cstdio>
 
 using namespace Sprog::IO;
 using namespace std;
