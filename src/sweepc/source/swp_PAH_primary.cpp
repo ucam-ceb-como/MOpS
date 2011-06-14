@@ -147,9 +147,6 @@ PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model,
     // Other parts of the code check for a non-zero composition
     m_comp[0]=1;
 
-    // Select one particular life story uniformly at random from the family/trajectory.
-    // deleted by dongping 30 Apr. const int newID = model.getMoleculeStories().selectMoleculeNearTime(time, rand_int);
-
     AddPAH(time, model);
 
     //Update the other properties
@@ -194,11 +191,8 @@ PAHPrimary::PAHPrimary(const real time, const real position,
 {
     // Other parts of the code check for a non-zero composition
     m_comp[0]=1;
-
-    // Select one particular life story uniformly at random from the family/trajectory.
-    // deleted by dongping 30 Apr. const int newID = model.getMoleculeStories().selectMoleculeNearTime(time, rand_int);
-
-    AddPAH(time, model);
+   
+	AddPAH(time, model);
 
     //Update the other properties
     UpdateCache();
@@ -254,9 +248,7 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 void PAHPrimary::AddPAH(real time,const Sweep::ParticleModel &model)
 {
 	PAH* new_PAH = new PAH();
-	//deleted lastposPAHupdate 
-	//deleted freezetime 
-	new_PAH->m_numcarbon = PYRENE;//start at pyrene
+	new_PAH->m_numcarbon = PYRENE;//start at pyrene (C=16)
 	new_PAH->PAH_ID=ID;
 	new_PAH->time_created=time;
 	new_PAH->lastupdated=time;
@@ -403,9 +395,8 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
 			//m_PAH.resize(m_PAH.size());
 	for (size_t i=0; i!=source->m_PAH.size();++i){
 		    m_PAH[i]=source->m_PAH[i]->Clone();
-			m_PAH[i]->PAH_ID=source->m_PAH[i]->PAH_ID+10000000;
-    //plus 10000000 to tell which pah is cloned and also according to Id, we could easily calculate how many times this pah duplicate
-		    //std::cout<<"PAH are cloned successfullly"<<std::endl;
+			m_PAH[i]->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+    //plus 100000 to tell which pah is cloned and also according to Id, we could easily calculate how many times this pah duplicate
 	}
 	}
 	else m_PAH.assign(source->m_PAH.begin(),source->m_PAH.end());
@@ -948,78 +939,8 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
         m_parent->ChangePointer(source,target);
     }
 
-}
+}   
 
-/*!
- * @param[in]   t   Time upto which to update
- *
- * The actual interval over which the update is carried out on a PAH is from
- * lastupdated to t - freezetime.
- */
-/*void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model)
-{
-    // Either the primary has two children or it is a leaf of the
-    // tree
-	if (m_leftchild!=NULL)
-	{
-        // Recurse down to the leaves
-		m_leftchild->UpdatePAHs(t, model);
-		m_rightchild->UpdatePAHs(t, model);
-	}
-    else
-    {
-        // There are PAHs in this primary so update them, if needed
-        // Flag to show if any PAH has been changed
-        bool PAHchanged = false;
-
-        // Loop over each PAH in this primary
-        const std::vector<PAH*>::iterator itEnd = m_PAH.end();
-        for (std::vector<PAH*>::iterator it = m_PAH.begin(); it != itEnd; ++it) {
-
-            // This is a model parameter that defines when primary particles
-            // contain too many PAHs for them all to have full access to the
-            // surrounding gas phase.  Once a primary contains more than minPAH
-            // PAHs the growth rate of each PAH is reduced according to the
-            // growth factor
-            const double minPAH = model.Components(0)->MinPAH();
-
-            if (m_numPAH>=minPAH)
-            {
-                // Increase in age is slowed down by this factor to reflect
-                // the slower growth of molecules that are closely surrounded
-                // by many other PAHs.
-                const real growthfact = model.Components(0)->GrowthFact();
-
-                // Increment freezetime to reduce the time upto which updates
-                // are carried out.
-                it->freezetime += (t - it->lastupdated) * (1.0 - growthfact);
-            }
-
-            // Time at which to find new size of PAH
-            const real seektime = t - it->time_created - it->freezetime;
-            assert(seektime >= 0.0);
-
-            // The update position encodes the position in the life story which
-            // the molecule had reached last time it was updated; it is passed
-            // in all the calls to getMoleculeState to shorten the search for
-            // the appropriate time point.
-            const unsigned int oldNumCarbon = it->m_numcarbon;
-            it->m_numcarbon = model.getMoleculeStories().getMoleculeState(it->ID, seektime, it->lastposPAHupdate);
-            it->lastupdated=t;
-
-            // See if anything changed, as this will required a call to UpdatePrimary() below
-            if(oldNumCarbon != it->m_numcarbon)
-                PAHchanged = true;
-        }
-
-        // Calculate derived quantities such as collision diameter and surface
-        // area by iterating through all the PAHs.  This call is rather expensive.
-        if(PAHchanged) {
-            UpdatePrimary();
-        }
-        // otherwise there is no need to update
-    }
-}*/
 /*!
  * @param[in]   t   Time upto which to update
  *
@@ -1056,28 +977,19 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
 			real growthfact = 1.0;
             if (m_numPAH>=minPAH)
             {
-                // Increase in age is slowed down by this factor to reflect
-                // the slower growth of molecules that are closely surrounded
+                // concentration of gasphase species is reduced by this factor to 
+                // reflect the slower growth of molecules that are closely surrounded
                 // by many other PAHs.
                 growthfact = model.Components(0)->GrowthFact();
-
-                // Increment freezetime to reduce the time upto which updates
-                // are carried out.
-                //(*it)->freezetime += (t - (*it)->lastupdated);// * (1.0 - growthfact);
             }
 
-            // Time at which to find new size of PAH
-            const real seektime = t - (*it)->lastupdated;// - (*it)->freezetime;
-            assert(seektime >= 0.0);
+            // Time for one particular PAH to grow
+            const real growtime = t - (*it)->lastupdated;
+            assert(growtime >= 0.0);
 
-            // The update position encodes the position in the life story which
-            // the molecule had reached last time it was updated; it is passed
-            // in all the calls to getMoleculeState to shorten the search for
-            // the appropriate time point.
-            const unsigned int oldNumCarbon = (*it)->m_numcarbon;
-			//zak's code is inserted here.
-			//deleted model.getMoleculeStories().getMoleculeState  
-			sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct,(*it)->lastupdated,seektime, 5,Sweep::genrand_int, Sweep::genrand_real1, growthfact,(*it)->PAH_ID);
+            // Here updatePAH function for KMC_ARS model is called.
+            const unsigned int oldNumCarbon = (*it)->m_numcarbon; 
+			sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 5, Sweep::genrand_int, Sweep::genrand_real1, growthfact, (*it)->PAH_ID);
 			(*it)->m_numcarbon=(*it)->m_pahstruct->numofC();
             (*it)->lastupdated=t;
 
@@ -1293,7 +1205,7 @@ void PAHPrimary::PrintTreeLoop(std::ostream &out)
 AggModels::PAHCache *const PAHPrimary::CreateAggCache() const
 {
     PAHCache *cache =
-        static_cast<PAHCache*>(ModelFactory::CreateAggCache(AggModels::PAH_KMC_ID));//CHANGE PAH_ID TO PAH_KMC_ID, mops currently use new method.
+        static_cast<PAHCache*>(ModelFactory::CreateAggCache(AggModels::PAH_KMC_ID));
     if (cache != NULL) *cache = *this;
     return cache;
 }
@@ -1372,8 +1284,7 @@ PAHPrimary *const PAHPrimary::Clone(void) const
 // AGGREGATION MODEL.
 
 // Returns the aggregation model which this primary describes.
-AggModels::AggModelType PAHPrimary::AggID(void) const {return AggModels::PAH_KMC_ID;}// change PAH_ID to PAH_KMC_ID, mops currently use new method.
-
+AggModels::AggModelType PAHPrimary::AggID(void) const {return AggModels::PAH_KMC_ID;}
 
 
 // Writes the object to a binary stream.

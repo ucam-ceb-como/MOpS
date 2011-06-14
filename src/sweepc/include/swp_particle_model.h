@@ -55,7 +55,6 @@
 #include "swp_aggmodel_type.h"
 #include "swp_sintering_model.h"
 #include "sprog.h"
-#include "swp_molecule_evolution.h"
 
 #include "local_geometry1d.h"
 
@@ -279,12 +278,6 @@ public:
     //! Choose the thermophoresis model
     void setThermophoresisType(const ThermophoresisType& therm) {m_ThermophoresisType = therm;}
 
-    //! Access molecule development histories
-    const MoleculeEvolution::Database& getMoleculeStories() const {return m_MoleculeStories;}
-
-    //! Set the contents of the database of molecule development histories
-    void setMoleculeStories(const MoleculeEvolution::Database& db) {m_MoleculeStories = db;}
-
 protected:
     // The species used to define the processes and the particles.
     const Sprog::SpeciesPtrVector *m_species;
@@ -366,9 +359,6 @@ private:
 
     //! Thermphoresis expression to use
     ThermophoresisType m_ThermophoresisType;
-
-    //! Database of stories of the development of molecules that make up particles
-    MoleculeEvolution::Database m_MoleculeStories;
 };
 } //namespace Sweep
 #endif

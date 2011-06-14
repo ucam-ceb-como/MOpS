@@ -77,40 +77,16 @@ namespace Sweep{
 			bool operator==(PAHStructure &rhs) const;
 			bool operator!=(PAHStructure &rhs) const;
 
-			//void CopyLoop(const PAHStructure* source);
             //! Stores coordinates of all Carbon atoms (not according to order)
             std::set<cpair> m_cpositions;
-							//add by dongping 12.04. however, we should keep the PAHStructure
-							//object to be small in case memory problem, so we should not put these member
-							//functions in this class, however, it seems that member functions
-							//in specified class do not take any extra memory
+			//! Initialise pah with pyrene (currently) or benzene
 			void initialise(StartingStructure ss);
 			PAHStructure* Clone() ;
-							//void clearStructure();
-							//Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2);
-							//Cpointer addC();
-							//void connectToC(Cpointer C_1, Cpointer C_2);
-							//void addCount(int C_in, int H_in);
-							//void setCount(int CCount, int HCount);
-							//void updateA(Cpointer C, char sp);
-							//void updateA(Cpointer C_1, Cpointer C_2, char spc);
-							//cpair jumpToPos(const cpair& starting, const angletype& direction) const;
-							//void updateSites();
-							//void updateSites(Spointer& st, // site to be updated
-				   //                            Cpointer Carb1, Cpointer Carb2, // new C members
-				   //                            int bulkCchange);
-							//void updateCombinedSites();
-							//void updateCombinedSites(Spointer& st);
-							//void delSiteFromMap(const std::vector<kmcSiteType>& v,const Spointer& si);
-							//void delSiteFromMap(const kmcSiteType& stype, const Spointer& si);
-				   //         Spointer moveIt(Spointer i, int x);
-							//Spointer addSite(kmcSiteType stype, Cpointer C_1, Cpointer C_2, Spointer& b4site);
-				   //         void printSites();
-							//void printSites(Spointer& stt);
-							//Cpointer moveCPointer(Cpointer &previous, Cpointer &current) const;
+			//! return number of carbon for particular PAH
 			int numofC();
+			//! check PAH have bridge or not
 			bool havebridgeC();
-							////Carbon* Carbon::Clone() const;//added by dongping14.04
+
 			Sweep::AggModels::PAH* m_parent; // pointer to parent PAH
 			
         protected:

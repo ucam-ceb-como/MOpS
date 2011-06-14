@@ -202,12 +202,12 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 }
 
 Sweep::KMC_ARS::KMCSimulator* Sweep::Ensemble::Simulator(void)
-{   //added by dongping 26 April
+{   
 	return m_kmcsimulator;
 }
 
 void Sweep::Ensemble::SetSimulator(void)
-{   //added by dongping 26 April
+{   
 	 m_kmcsimulator=new Sweep::KMC_ARS::KMCSimulator();
 }
 

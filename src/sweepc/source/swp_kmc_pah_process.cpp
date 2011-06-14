@@ -324,7 +324,7 @@ void PAHProcess::printStruct() const{
         Cpointer oldnow = now;
         now = moveCPointer(prev, now);
         prev = oldnow;
-    } while //modified by dongping 18/04
+    } while 
 	(!(count!=1&&prev->coords.first == m_pah->m_cfirst->coords.first
    &&prev->coords.second == m_pah->m_cfirst->coords.second));
     // displays C and H counts
