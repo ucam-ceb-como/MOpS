@@ -97,10 +97,10 @@ private:
 
     // Structure to locate keyworded sections in the CK file.
     struct KEY_POS{
-        unsigned int begin;  // First character in the keyword.
-        unsigned int end;    // First character in the END keyword.
-        unsigned int length; // Keyword length.
-        unsigned int line;   // Line number of this keyword.
+        size_t begin;  // First character in the keyword.
+        size_t end;    // First character in the END keyword.
+        size_t length; // Keyword length.
+        size_t line;   // Line number of this keyword.
     };
 
     //! Reads a CHEMKIN file stream into a std::string
