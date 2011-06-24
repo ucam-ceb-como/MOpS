@@ -180,25 +180,6 @@ public:
         const Primary &p // Particle for which to calculate rate.
         ) const;
 
-    // PERFORMING THE SINTERING.
-
-    // Performs the process on the given particle. Must return 0
-    // on success, otherwise negative.
-    int Perform(
-        real dt,    // Delta-Time.
-        Cell &sys,  // System containing particle.
-        Particle &p // Particle on which to perform sintering.
-        ) const;
-
-    // Performs the process on the given primary. Must return 0
-    // on success, otherwise negative.
-    int Perform(
-        real dt,   // Delta-Time.
-        Cell &sys, // System containing particle.
-        Primary &p // Particle on which to perform sintering.
-        ) const;
-
-
     // READ/WRITE/COPY.
 
     // Creates a copy of the sintering model.

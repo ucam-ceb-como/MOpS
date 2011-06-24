@@ -162,7 +162,8 @@ public:
     virtual void Sinter(
         real dt,         // Delta-t for sintering.
         const Cell &sys, // System which defines particle's environment.
-        const Processes::SinteringModel &model // Sintering model to use.
+        const Processes::SinteringModel &model, // Sintering model to use.
+        real (*rand_u01)() // Generate U[0,1] samples
         );
 
     // PARTICLE UPDATE AND CHECKING.
@@ -199,8 +200,8 @@ public:
 
 protected:
 
-    // Primary particle of which this sub-particle comprises.  A sub-particle
-    // may contain one primary, or exactly two sub-particles (see above).
+    // Primary particle of which this sub-particle comprises (since sub-particles
+    // must contain exactly one primary, it might be possible to make this a member)..
     Sweep::Primary *m_primary;
 
     // SubParticle class cannot be created without knowledge of the
