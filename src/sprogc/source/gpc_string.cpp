@@ -2,7 +2,7 @@
   Author(s):      Weerapong Phadungsukanan (wp214)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Weerapong Phadungsukanan.
 
   File purpose:
@@ -188,7 +188,7 @@ namespace Sprog {
             }
 
             void remove_CK_keyword(std::string &ckstr, const std::string &key) {
-                unsigned int pos = ckstr.find(key);
+                size_t pos = ckstr.find(key);
                 if (pos != std::string::npos) {
                     ckstr.erase(pos,key.length());
                 } else {

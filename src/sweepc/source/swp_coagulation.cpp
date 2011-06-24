@@ -155,6 +155,17 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
             newPosTime = sp2->getPositionTime();
         }
     }
+    else if (mPositionChoice == LargestMassPositionChoice) {
+        // Change to position of particle with largest mass (default to first particle if masses equal)
+        if(sp1->Mass() < sp2->Mass()) {
+            newPos = sp2->getPosition();
+            newPosTime = sp2->getPositionTime();
+        }
+        else {
+            newPos = sp1->getPosition();
+            newPosTime = sp1->getPositionTime();
+        }
+    }
 
     // Add contents of particle 2 onto particle 1
     sp1->Coagulate(*sp2, rand_int, rand_u01);
