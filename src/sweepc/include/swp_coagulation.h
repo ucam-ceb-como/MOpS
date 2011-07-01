@@ -107,6 +107,9 @@ public:
 
         //! Choose randomly between the positions of the incoming particles with probabilities proportional to their mass
         MassPositionChoice,
+
+        //! Always take the position of the largest particle
+        LargestMassPositionChoice,
     };
 
     //! Rule for choosing post coagulation position (not relevant to homogeneous sims)

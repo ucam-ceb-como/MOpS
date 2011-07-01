@@ -1,4 +1,7 @@
-/*
+/*!
+ * @file swp_surfvol_primary.cpp
+ * @author Matthew Celnik (msc37)
+ *
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
@@ -8,6 +11,7 @@
   File purpose:
     Implementation of the SurfVolPrimary class declared in the
     swp_surfvol_primary.h header file.
+    @brief Implementation of particle described by its volume and surface area.
 
   Licence:
     This file is part of "sweepc".

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?><mops version="2">
+  
+  <!-- Default parameters (can be overidden). --> 
+  <runs>1</runs>
+  <iter>2</iter>
+  <atol>1.0e-18</atol> 
+  <rtol>1.0e-4</rtol>
+  <pcount>1024</pcount>
+  <maxm0>1e10</maxm0>
+  <relax>0.5</relax>
+  
+
+  <!-- Reactor definition (given initial conditions). -->
+  <reactor constt="true" id="Test_System" type="batch" units="mol/mol">
+    <component id="SIH4">0.04</component>
+    <component id="AR">0.96</component>
+    <temperature units="K">1373</temperature>
+    <pressure units="bar">0.025</pressure>
+    <dTdt endt="0.1" startt="0.00000">+0.000e0</dTdt>
+   </reactor>
+
+  <!-- Output time sequence. -->
+  <timeintervals splits="30">
+    <start>0.0</start>
+    <time splits="15" steps="200">0.0008</time>
+    <time splits="15" steps="200">0.08</time>
+  </timeintervals>
+  
+  <!-- Simulation output settings. -->
+  <output>
+    
+    <console interval="1" msgs="true">
+      <tabular>
+        <column fmt="sci">time</column>
+        <!--column fmt="sci">A4</column-->
+        <column fmt="float">#sp</column>
+        <column fmt="sci">m0</column>
+        <column fmt="sci">T</column>
+        <column fmt="sci">SIH4</column>
+        <!--column fmt="sci">fv</column-->
+        <column fmt="sci">ct</column>
+      </tabular>
+    </console>
+    <ptrack enable="false" ptcount="50"/>
+
+
+    <!-- File name for output (excluding extensions). -->
+    <filename>silane-finite</filename>
+  </output>
+</mops>
