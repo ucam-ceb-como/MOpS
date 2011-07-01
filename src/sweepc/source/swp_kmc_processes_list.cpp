@@ -77,7 +77,7 @@ std::vector<JumpProcess*> JumpProcessList::obtainJumpProcess(const KMCGasPoint& 
     JumpProcess* j_M5R_RZZ = new M5R_RZZ; j_M5R_RZZ->initialise();
     JumpProcess* j_C6R_BY5_FE3 = new C6R_BY5_FE3; j_C6R_BY5_FE3->initialise();
     JumpProcess* j_C6R_BY5_FE3violi = new C6R_BY5_FE3violi; j_C6R_BY5_FE3violi->initialise();
-    JumpProcess* j_L5R_BY5 = new L5R_BY5; j_L5R_BY5->initialise();
+    //JumpProcess* j_L5R_BY5 = new L5R_BY5; j_L5R_BY5->initialise();
     JumpProcess* j_M6R_BY5_FE3 = new M6R_BY5_FE3; j_M6R_BY5_FE3->initialise();
     // Jump Processes included in the model
     // (Comment out any process to be omitted):
