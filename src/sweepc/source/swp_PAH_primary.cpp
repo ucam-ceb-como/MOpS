@@ -324,7 +324,6 @@ void PAHPrimary::CopyTree( const PAHPrimary *source)
 
     //set the leftparticle and rightparticle
 	UpdateAllPointers(source);
-	m_clone=false;
 }
 
 PAHPrimary &PAHPrimary::operator=(const Primary &rhs)
@@ -400,7 +399,6 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
 	}
 	}
 	else m_PAH.assign(source->m_PAH.begin(),source->m_PAH.end());
-	m_clone=false;
 }
 	
 
