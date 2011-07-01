@@ -63,6 +63,7 @@ const size_t Brush::Simulator::sFirstSeed = 123;
  *@param[in]    stat_bound                  Decide which particles to ignore when calculating population statistics
  *@param[in]    split_diffusion             Activate split simulation of diffusion
  *@param[in]    split_advection             Activate split simulation of advection
+ *@param[in]    weighted_transport          Adjust weights during inter-cell transport to avoid killing/cloning particles
  *
  * The time discretisation and output for the simulations are specified on several levels:
  * At the top level are Mops::TimeInterval instances, and at the end
@@ -84,13 +85,15 @@ Brush::Simulator::Simulator(const size_t n_paths,
                             const std::string& output_file,
                             const Sweep::Stats::IModelStats::StatBound &stat_bound,
                             const bool split_diffusion,
-                            const bool split_advection)
+                            const bool split_advection,
+                            const bool weighted_transport)
         : mPaths(n_paths)
         , mCorrectorIterations(n_corrector_iterations)
         , mRtol(0.0)
         , mAtol(0.0)
         , mSplitDiffusion(split_diffusion)
         , mSplitAdvection(split_advection)
+        , mWeightedTransport(weighted_transport)
         , mOutputTimeSteps(output_times)
         , mInitialReactor(initial_reactor)
         , mResetChemistry(reset_chem)
@@ -135,7 +138,7 @@ void Brush::Simulator::runOnePath(const int seed) {
     // It might be better to change the solver from a class
     // to a namespace
     PredCorrSolver solver(mResetChemistry, mCorrectorIterations, mRtol, mAtol,
-                          mSplitDiffusion, mSplitAdvection);
+                          mSplitDiffusion, mSplitAdvection, mWeightedTransport);
 
     //==================== File to store the moments for this run
     std::ofstream momentsFile(buildParticleStatsFileName(seed).c_str());

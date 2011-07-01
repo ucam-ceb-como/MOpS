@@ -70,6 +70,7 @@ using namespace Brush;
  *@param[in]                            Absolute tolerance for ODE solver used for gas phase
  *@param[in]    split_diffusion         True if diffusion is to be simulated via splitting
  *@param[in]    split_advection         True if advection is to be simulated via splitting
+ *@param[in]    weighted_transport      Adjust weights during inter-cell transport to avoid killing/cloning particles
  *
  *@todo     Need generalisation to move away from using ResetChemistry
  */
@@ -77,12 +78,14 @@ Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
                                       const size_t,
                                       const real , const real ,
                                       const bool split_diffusion,
-                                      const bool split_advection)
+                                      const bool split_advection,
+                                      const bool weighted_transport)
     : mResetChemistry(reset_chem)
     , mMaxDt(3.0e-4)
     , mDeferralRatio(10.0)
     , mSplitDiffusion(split_diffusion)
     , mSplitAdvection(split_advection)
+    , mWeightedTransport(weighted_transport)
 {}
 
 /*!
@@ -384,52 +387,64 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
                                         const Sweep::Transport::TransportOutflow &particle_details) const {
     real incomingWeight = particle_details.weight;
 
-    // Need to match weights of particle between source and destination
-    unsigned int safetyCounter = 0;
-    while(true) {
-        real destinationWeight = 1.0 / reac.getCell(destination_index).Mixture()->SampleVolume();
+    if(mWeightedTransport) {
+        // Exploit weights to ensure no particles are created or destroyed
 
-        if(incomingWeight >= destinationWeight) {
-            // The important thing is that the statistical weight of particles added to the destination cell
-            // is equal to the statistical weight of the particle that was removed from the originating cell.
-            // Otherwise mass will be lost.
+        // This will exactly preserve the physical contribution of the particle under consideration, because
+        // statistical weights are always divided by the sample volume.
+        particle_details.particle->setStatisticalWeight(incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume());
 
-            // Insert one copy of the particle into the destination cell
-            reac.getCell(destination_index).Mixture()->Particles().Add(*(new Sweep::Particle(*particle_details.particle)), Sweep::genrand_int);
-
-            // One unit of destinationWeight has now been added to an ensemble
-            incomingWeight -= destinationWeight;
-
-            // Avoid infinite loops
-            if(++safetyCounter > 100000) {
-                throw std::runtime_error("Failed to match particle weights in PredCorrSolver::transportIn()");
-            }
-        }
-        else
-            break;
-    }
-
-    // Unfortunately we cannot quite conserve statistical weight, there will always be a bit
-    // left over after the loop above.  This can only be handled in an average sense.
-    if(Sweep::genrand_real1() < incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume()) {
+        // Ownership of the particle is now taken by the ensemble
         reac.getCell(destination_index).Mixture()->Particles().Add(*particle_details.particle, Sweep::genrand_int);
-
-        // Testing output
-        const real extraWeight = (1.0 / reac.getCell(destination_index).Mixture()->SampleVolume()) - incomingWeight;
-        if(std::abs(extraWeight) > 100 * std::numeric_limits<real>::epsilon() / reac.getCell(destination_index).Mixture()->SampleVolume()) {
-            std::cerr << "Transport in added " << extraWeight << " of statistical weight to cell centred at "
-                      << reac.getCellCentre(destination_index) << std::endl;
-        }
     }
     else {
-        // Ownership of the particle has not been passed on to an ensemble so the memory must be released
-        delete particle_details.particle;
+        // Need to match weights of particle between source and destination in a DSA setting
+        unsigned int safetyCounter = 0;
+        while(true) {
+            real destinationWeight = 1.0 / reac.getCell(destination_index).Mixture()->SampleVolume();
 
-        // Testing output
-        if(std::abs(incomingWeight) > 100 * std::numeric_limits<real>::epsilon() / reac.getCell(destination_index).Mixture()->SampleVolume()) {
-            std::cerr << "Transport in dropped " << incomingWeight
-                      << " of statistical weight from cell centred at "
-                      << reac.getCellCentre(destination_index) << std::endl;
+            if(incomingWeight >= destinationWeight) {
+                // The important thing is that the statistical weight of particles added to the destination cell
+                // is equal to the statistical weight of the particle that was removed from the originating cell.
+                // Otherwise mass will be lost.
+
+                // Insert one copy of the particle into the destination cell
+                reac.getCell(destination_index).Mixture()->Particles().Add(*(new Sweep::Particle(*particle_details.particle)), Sweep::genrand_int);
+
+                // One unit of destinationWeight has now been added to an ensemble
+                incomingWeight -= destinationWeight;
+
+                // Avoid infinite loops
+                if(++safetyCounter > 100000) {
+                    throw std::runtime_error("Failed to match particle weights in PredCorrSolver::transportIn()");
+                }
+            }
+            else
+                break;
+        }
+
+        // Unfortunately we cannot quite conserve statistical weight, there will always be a bit
+        // left over after the loop above.  This can only be handled in an average sense.
+        if(Sweep::genrand_real1() < incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume()) {
+            reac.getCell(destination_index).Mixture()->Particles().Add(*particle_details.particle, Sweep::genrand_int);
+
+            // Testing output
+            const real extraWeight = (1.0 / reac.getCell(destination_index).Mixture()->SampleVolume()) - incomingWeight;
+            if(std::abs(extraWeight) > 100 * std::numeric_limits<real>::epsilon() / reac.getCell(destination_index).Mixture()->SampleVolume()) {
+                std::cerr << "Transport in added " << extraWeight << " of statistical weight to cell centred at "
+                          << reac.getCellCentre(destination_index) << std::endl;
+            }
+        }
+        else {
+            // Ownership of the particle has not been passed on to an ensemble so the memory must be released
+            delete particle_details.particle;
+
+            // Testing output
+            if(std::abs(incomingWeight) > 100 * std::numeric_limits<real>::epsilon() / reac.getCell(destination_index).Mixture()->SampleVolume()) {
+                std::cerr << "Transport in dropped " << incomingWeight
+                          << " of statistical weight from cell centred at "
+                          << reac.getCellCentre(destination_index) << std::endl;
+            }
         }
     }
 }
