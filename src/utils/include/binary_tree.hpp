@@ -1190,6 +1190,15 @@ template<class Weight, class Selectee> template<typename ScalarExtractorType>
             selectedIndex *= 2;
         }
         else {
+            // This is a special case to avoid descending a zero weighted part
+            // of the tree due to floating point imprecision.  This case implies
+            // that the rightmost entry should be selected
+            if(f(mNodes[selectedIndex].right) == 0.0) {
+                // Add mCapacity because it will be subtracted below
+                assert(mFirstSpace >= 1);
+                selectedIndex = mFirstSpace + mCapacity - 1;
+                break;
+            }
             // Take right branch
             d -= leftWeight;
             selectedIndex = 2 * selectedIndex + 1;
