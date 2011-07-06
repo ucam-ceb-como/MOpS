@@ -392,7 +392,8 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
 
         // This will exactly preserve the physical contribution of the particle under consideration, because
         // statistical weights are always divided by the sample volume.
-        particle_details.particle->setStatisticalWeight(incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume());
+        particle_details.particle->setStatisticalWeight(particle_details.particle->getStatisticalWeight() *
+                                                        incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume());
 
         // Ownership of the particle is now taken by the ensemble
         reac.getCell(destination_index).Mixture()->Particles().Add(*particle_details.particle, Sweep::genrand_int);
