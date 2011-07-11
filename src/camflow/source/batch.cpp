@@ -37,6 +37,8 @@
  *
  * Created on 04 June 2009, 11:43
  */
+// AK temp --- GIT TEST
+
 #include "batch.h"
 
 using namespace Camflow;
@@ -246,8 +248,8 @@ void Batch::updateMixture(doublereal* y)
     // (and contribution to gas phase by surface reactions)
     if (sootMom_.active())
     {
-    	    //for (int l=0; l< nMoments; ++l)
-    	    //     std::cout << "Moment: " << l << " : " <<  moments[l] << "\n";
+    	    for (int l=0; l< nMoments; ++l)
+    	         std::cout << "Moment: " << l << " : " <<  moments[l] << "\n";
         momRates = sootMom_.rateAll(concentrations, moments, temperature, opPre, 1);
     }
 
