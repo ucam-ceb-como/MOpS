@@ -1,54 +1,43 @@
 #!/bin/bash
 
 
-#Absolute path to executable should be supplied as first argument to
+#Path to executable should be supplied as first argument to
 #this script.  Script will fail and return a non-zero value
 #if no executable specified.
 program=$1
-
-if test -z "$program"
-  then
-    echo "No executable supplied to $0"
-    exit 255
-fi
 
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
     cd $2
+    echo "changed directory to $2"
 fi
 
-# run mops on a very simple problem
-$program -flamepp -p -gp regress1/regress1.inp -rr regress1/regress1.inx -s regress1/regress1.xml -c regress1/chem.inp -t regress1/therm.dat
+#Get rid of any results from earlier runs of this test
+rm -f regression5a*
 
-# capture exit value of simulation
-simulationResult=$?
 
-if((simulationResult==0))
-  then
-    echo "Finished simulation"
-    echo "========================"
-else
-  echo "****** Simulation failed ******"
-  exit 255
-fi
+echo "DSA for constant coagulation kernel"
+$program -flamepp -p -gp ./regress5/regress5.inp -rr ./regress5/regress5.inx -s ./regress5/regress5.xml -c ./regress5/chem.inp -t ./regress5/therm.dat
+echo "Finished simulation"
+echo "========================"
 
-# Array of particle numbers - these should be the count of particles of sizes 1,2 and 3 in the psl file
+# Array of particle numbers - these should be the count of particles of sizes 1-5 in the psl file
 # Put a negative values at the start so that the number of particles of size 1 comes at index 1
 # These numbers are for a seed of 123 in the Mersenne Twister random number generator
-# Analytic solution is 1053 91 12 2
-testValues=(-1 1031 105 9 3 0)
+# Analytic solution is 1458 908 565 352 219
+testValues=(-1 1428 849 563 343 234)
 
 # Grep seems to require the file in unix format, even under cygwin
 if((windows==1))
 then
-    dos2unix "regression1-128-10-psl(0.1s).csv"
+    dos2unix "regression5a-psl(3s).csv"
 fi
 
 i=1
 while ((i <= 5))
 do
-  count=`grep ",$i$" "regression1-128-10-psl(0.1s).csv" | wc -l`
+  count=`grep ",$i$" "regression5a-psl(3s).csv" | wc -l`
   #echo "$i $count"
   if((count != testValues[i])) 
     then
@@ -67,7 +56,7 @@ if((i==6))
 then
   # All tests passed
   echo "All tests passed"
-  rm -f regression1-128-10*
+  rm -f regression5a*
   exit 0
 else
   exit 1

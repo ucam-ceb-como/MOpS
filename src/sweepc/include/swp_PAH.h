@@ -1,15 +1,9 @@
- /*\author Markus Sander
- *  Copyright (C) 2011 Dongping Chen.
- *
- *  Project:        sweepc (population balance solver)
- *  Sourceforge:    http://sourceforge.net/projects/mopssuite
- *
- * \brief  Defines a primary including detailed PAH information
-  Author(s):      Dongping Chen (dc516)
-  Project:        sweep (population balance solver)
+ /*
+  Author(s):      Dongping Chen(dc516)
+  Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
 
-  Copyright (C) 2009 Markus Sander.
+  Copyright (C) 2011 Dongping Chen
 
   File purpose:
 
@@ -63,7 +57,7 @@ class PAH
 {
 	friend class PAHPrimary;
 public:
-    //! Build a new primary with one molecule
+    //! Build a new PAH
     PAH();
 
     PAH(const PAH &copy); // Copy constructor.
@@ -74,11 +68,8 @@ public:
 	int ID() const;
 
 private:
-	        //! Number of Carbon atoms in the PAH
+	    //! Number of Carbon atoms in the PAH
         unsigned int m_numcarbon;
-
-        //! Index of the PAH story within its database
-        //deleted by dongping 08 Apr. unsigned int ID;
 
         //! Simulated time at point when molecule created
         double time_created;
@@ -86,12 +77,11 @@ private:
         //! Simulated time when molecule size was last updated
         double lastupdated;
 
+		//! Index of the PAH, used to track specified PAH
 		int PAH_ID;
-        //! Amount of growth time to ignore (freezetime), deleted by dongping 02 May
 
-		//! PAH structure provide by KMC PAH growth part add by dongping 08 Apr.//??
+		//! PAH structure provide by KMC PAH growth part
 		Sweep::KMC_ARS::PAHStructure* m_pahstruct;
-		
 
 };
 } //namespace AggModels

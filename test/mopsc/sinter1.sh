@@ -1,7 +1,12 @@
 #!/bin/bash
 
-#  Copyright (C) 2009 Robert I A Patterson.
+#  Copyright (C) 2011 William J Menz.
 #
+#   This script tests the finite-rate sintering in the surfvol model
+#   All three cases use the viscous flow model with varying sintering parameters:
+#       1. finite sintering (26 nm particles)
+#       2. instantaneous sintering (42 nm particles)
+#       3. no sintering (0.49 nm particles)
 #
 # Licence:
 #    This file is part of "mops".
@@ -51,17 +56,36 @@ if test -n "$2"
     echo "changed directory to $2"
 fi
 
-dos2unix ./pahtest/PAH_data*
-./pahtest/pahtest.pl $program
+cd sinter1
 
-#Capture the exit value
-testresult=$?
-if((testresult!=0)) 
+$program -p -strang -rr mops-finite.inx -s sweep-finite.xml
+$program -p -strang -rr mops-spherical.inx -s sweep-spherical.xml
+$program -p -strang -rr mops-nosinter.inx -s sweep-nosinter.xml
+simulationResult=$?
+
+if((simulationResult==0)) 
+then
+  echo "Finished simulation"
+else
+  echo "Simulation failed"
+  cd ..
+  exit $simulationResult
+fi
+echo "========================"
+
+dos2unix "silane-finite-psl(0.08s).csv"
+dos2unix "silane-nosinter-psl(0.08s).csv"
+dos2unix "silane-spherical-psl(0.08s).csv"
+tclsh sintertest.tcl
+postprocessResult=$?
+if((postprocessResult!=0)) 
   then
-    exit $testresult
+    cd ..
+    exit $postprocessResult
 fi
 
-# All tests passed
-echo "All tests passed"
+rm -f silane*
+
+cd ..
 exit 0
 

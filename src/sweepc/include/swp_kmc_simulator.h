@@ -52,7 +52,6 @@
 #include "swp_kmc_typedef.h"
 #include "swp_kmc_processes_list.h"
 #include "swp_PAH_primary.h"
-//add by dongping 08.04
 
 #include "string_functions.h"
 #include "csv_io.h"
@@ -78,26 +77,12 @@ namespace Sweep{
             KMCSimulator(KMCSimulator& s);
             //! Destructor
             virtual ~KMCSimulator();
-            //deleted by dongping 26 April
             //! Initialise simulator from starting structure
             //void initialise(PAHStructure m_PAH);
 			//! Initialise simulator
             //void initialise();
             //! Set PAH to be simulated
             void targetPAH(PAHStructure& pah);
-            //! Run simulation for a set number of times until maxTime is reached.
-            //! If maxTime specified as 0, last time value from csv file is taken.
-			void runSimulation(const int& total_runs,
-									const real& startTime, 
-									const real& maxTime, 
-									const int& steps,
-									const bool CHcol,
-									const bool save_rates,
-									const bool save_dots,
-									const std::string& CHoutput,
-									const bool save_CH,
-									int (*rand_int)(int,int),
-									real (*rand_u01)());
             //! Calculate time step for KMC algorithm
             real timeStep(real totalRate, real (*rand_u01)()) const;
             //! Set csv filename for gas profiles
@@ -130,15 +115,23 @@ namespace Sweep{
             void writeCSVlabels();
             //! Save the structure DOT file after every X loops
             void saveDOTperXLoops(int X, int& loopcount, int& runcount);
-			void saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID);//PAHStructure* pah);
+			//! Save the structure DOT file for particular PAH (ID)
+			void saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID);
             //! Save the structure DOT file after every X simulation sec interval
             void saveDOTperXsec(const real& X, const int& seed, const real& time, const real &time_max, KMCGasph& copyMod, int& intervalcount);
             //! Update structure of PAH after time dt
-            real updatePAH(PAHStructure* pah, const real tstart, const real dt, const int waitingSteps,  int (*rand_int)(int,int), real (*rand_u01)(), real r_factor, int PAH_ID);
+            real updatePAH(PAHStructure* pah, // structure of pah
+				           const real tstart, // start time
+						   const real dt,     // growth time
+						   const int waitingSteps,  // waiting step used to calculate maximum time interval, currently use 5.
+						   int (*rand_int)(int,int), // random number
+						   real (*rand_u01)(),// random number
+						   real r_factor,     // growth factor g, one important parameter used in this model.
+						   int PAH_ID);       // ID of this pah, used for debugging.
             ////! A function to test validity of updatePAH compared to runSimulation
             //void testSimulation(PAHStructure& pah, const unsigned long seed, int totalruns);
-			void writetimestep(const std::vector<double>& timestep);//##
-			void setCSVtimestep(const std::string &filename);//deleted by dongping 14.04
+			void writetimestep(const std::vector<double>& timestep);
+			void setCSVtimestep(const std::string &filename);
             std::string	m_timestep_name;
 			//! CSV input filename
              std::string m_csv_in;
@@ -160,7 +153,7 @@ namespace Sweep{
              CSV_IO m_pah_csv;
             //! CSV io object for rates counts (for one run)
              CSV_IO m_rates_csv;
-			//! CSV io object for time step//##
+			//! CSV io object for time step
 			 CSV_IO m_timestep_csv;
 		private:
             //! The kMC Model
@@ -172,8 +165,6 @@ namespace Sweep{
             PAHProcess m_simPAHp;
             //! Current simulation time
             real m_t;//t_sim;
-            //deleted by dongping 14.04
-			//! CSV reaction count filename//##
             //! Reaction Counter
              std::vector<int> m_rxn_count;
         };

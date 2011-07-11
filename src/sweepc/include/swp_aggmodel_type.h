@@ -57,7 +57,8 @@ namespace Sweep
             Spherical_ID   = 10000, // Spherical particle model.
             SurfVol_ID     = 10001, // Surface-volume model (Patterson et al., Combust. Flame, 151, 160-172, 2007).
             //PriPartList_ID = 10002,  // Primary-particle list (West et al., Ind. Eng. Chem. Res., 46, 6147-6156, 2007). 
-            PAH_ID         = 10003  // A particle storing multiple PAHs     
+            //PAH_ID         = 10003,  // A particle storing multiple PAHs (Markus et al., Proceedings of the Combustion Institute, 33, 675-683, 2011)
+			PAH_KMC_ID         = 10004 // couple PAH-PP model (ms785) with KMC-ARS model (zz260 and ar447)
 		};
 
         typedef std::set<AggModelType> AggModelTypeSet;

@@ -50,13 +50,13 @@
 #include "swp_condensation.h"
 #include "swp_transcoag.h"
 #include "swp_addcoag.h"
+#include "swp_constcoag.h"
 #include "swp_weighted_addcoag.h"
 #include "swp_weighted_constcoag.h"
 #include "swp_coag_weight_rules.h"
 #include "swp_abf_model.h"
 #include "swp_diffusion_process.h"
 #include "swp_advection_process.h"
-#include "swp_molecule_evolution.h"
 
 #include "camxml.h"
 #include "string_functions.h"
@@ -332,9 +332,11 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     } else if (str == "surfvol") {
         mech.SetAggModel(AggModels::SurfVol_ID);
     } else if (str == "PAH") {
-        mech.SetAggModel(AggModels::PAH_ID);
-        //loadPAHStories(*(xml.Root()), mech);
-    } else {
+	// Reject all old style input files
+		throw std::runtime_error("PAH-PP MODEL are no longer supported (Sweep::MechParser::readV1), you can use NEW PAH_KMC model");
+    } else if (str == "PAH_KMC") {
+        mech.SetAggModel(AggModels::PAH_KMC_ID);
+	}else {
         mech.SetAggModel(AggModels::Spherical_ID);
     }
 
@@ -388,7 +390,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     }
 
     // Read the processes (inceptions, surface reactions and condensations).
-    if (mech.AggModel()==AggModels::PAH_ID)
+    if (mech.AggModel()==AggModels::PAH_KMC_ID)
     {
         readPAHInceptions(xml, mech);
     }
@@ -1191,6 +1193,8 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                         coag.reset(new Processes::TransitionCoagulation(mech));
                     else if(kernelName == "additive")
                         coag.reset(new Processes::AdditiveCoagulation(mech));
+                    else if(kernelName == "constant")
+                        coag.reset(new Processes::ConstantCoagulation(mech));
                     else
                         // Unrecognised option
                         throw std::runtime_error("Coagulation kernel " + kernelName + " not yet available in DSA \
@@ -1208,6 +1212,8 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                             coag->SetPositionChoiceRule(Processes::Coagulation::UniformPositionChoice);
                         else if (choice == "mass")
                             coag->SetPositionChoiceRule(Processes::Coagulation::MassPositionChoice);
+                        else if (choice == "largestmass")
+                            coag->SetPositionChoiceRule(Processes::Coagulation::LargestMassPositionChoice);
                         else
                             // Unrecognised option
                             throw std::runtime_error("Position choice rule " + choice + " not yet available \
@@ -1622,53 +1628,3 @@ Sweep::Maths::Functional *const MechParser::readFunctional(CamXML::Element &xml)
     // Return the new functional object.
     return fun;
 }
-
-/*!
- * @param[in]   xml     XML node with one or more <pahfile> children
- *
- * @exception   std::runtime_error  No pahfile child elements found
- * @exception   std::runtime_error  Neither time nor position specified for a file
- */
-/*void MechParser::loadPAHStories(CamXML::Element &xml, Mechanism &mech) {
-    // Extract the details of the pah story files
-    std::vector<CamXML::Element*> items;
-    xml.GetChildren("pahfile", items);
-
-    std::vector<CamXML::Element*>::iterator it = items.begin();
-    const std::vector<CamXML::Element*>::iterator itEnd = items.end();
-
-    if(it == itEnd)
-        throw std::runtime_error("No pahfile elements found in mechanism (MechParser::loadPAHStories)");
-
-    MoleculeEvolution::Database db;
-
-    while(it != itEnd) {
-        std::string fileName = (*it)->GetAttributeValue("path");
-
-        // See if a creation time has been specified for the molecules in this file
-        real time = 0.0;
-        const CamXML::Attribute *timeAttr = (*it)->GetAttribute("time");
-
-        if(timeAttr != NULL)
-            time = std::atof(timeAttr->GetValue().c_str());
-
-        // See if a creation position has been specified for the molecules in this file
-        real position = 0.0;
-        const CamXML::Attribute *posnAttr = (*it)->GetAttribute("position");
-
-        if(posnAttr != NULL)
-            position = std::atof(posnAttr->GetValue().c_str());
-
-        if((timeAttr == NULL) && (posnAttr == NULL)) {
-            throw std::runtime_error("At least one of time and position must be specified for " +
-                                      fileName + " (MechParser::loadPAHStories)");
-        }
-
-        db.addStoriesFromFile(fileName, time, position);
-
-        // Move on to next file
-        ++it;
-    }
-
-    mech.setMoleculeStories(db);
-}*/

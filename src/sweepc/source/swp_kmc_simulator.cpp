@@ -126,219 +126,6 @@ real KMCSimulator::timeStep(real totalRate, real (*rand_u01)()) const {
     real tau = -logrand/totalRate;
     return tau;
 }
-//! Run simulation for a set number of times until maxTime is reached.
-//! If maxTime specified as 0, last time value from csv file is taken.
-void KMCSimulator::runSimulation(const int& total_runs,
-									const real& startTime, 
-									const real& maxTime, 
-									const int& steps,
-									const bool CHcol,
-									const bool save_rates,
-									const bool save_dots,
-									const std::string& CHoutput,
-									const bool save_CH,
-									int (*rand_int)(int,int),
-									real (*rand_u01)()) {
-	assert(total_runs>0);
-	// Initialising output csv files
-    initCSVIO();
-    /*m_simGas.setCSVname(m_csv_in);
-    m_simGas.loadProfileCSV();
-    m_simGas.loadProcesses(JumpProcessList::obtainJumpProcess);*/
-	//targetPAH(pah);
-	KMCGasph gasph_copy(m_simGas);
-    // get t_max for simulation, if t_max not specified, set to final value in time profile
-    real t_max;
-	//const int run=1;
-    if(maxTime == 0) t_max = m_simGas.gett_stop();
-    else t_max = maxTime;
-    //bool save_rates = false;
-    m_simPAHp.m_rates_save = save_rates;
-	// set minimum number of steps
-    int min_steps = steps;
-    // waiting time
-    real t_step_max = t_max/min_steps;
-	//initialise structure
-	m_simPAH = new PAHStructure();
-	m_simPAHp.setPAH(*m_simPAH);
-	m_simPAHp.initialise(PYRENE);
-    //--------for C-H counts per interval----
-	CSV_data CHdata(*this);
-    int maxInterval = min_steps;
-	if(save_CH) {
-    CHdata.setName(CHoutput);
-    CHdata.initData(total_runs, maxInterval, t_max, m_simPAHp.getCHCount(), m_simGas);
-	}
-    //---------------------------------------
-	for(int run=1; run<= total_runs; run++) {
-		unsigned long sd = 103000+run;
-		Sweep::init_genrand(sd);
-		//initialise structure
-		m_simPAHp.initialise(PYRENE);
-        // Start timer
-        clock_t timerStart = clock();
-        // set current time to startTime
-        m_t = startTime;
-        // name for dot files
-        std::string dotfile; 
-        // interval number count
-        int interval_num = -1; // -1 - starting
-        // time of next iteration
-        real t_next = 0;
-        // loop counts
-        int count = 0;
-        // Store jump rates into a vector
-        rvector jump_rates_vector((int)m_simGas.jplist.size());
-        // find label for T
-        int T_label = m_simGas.m_gpoint.T;
-        // set reaction counts to 0
-        initReactionCount();
-        if(save_CH) CHdata.m_intervalcount = 0;
-        bool savedotperinterval = false;
-		vector<double> time_step_vector;//##
-		// for cloned PAH
-		bool copied = false;
-		PAHStructure* m_copyPAH;
-		real starttime = 0;
-
-        while (m_t < t_max) {
-            // simulator will not run if csv filename for gas profiles not specified
-            if (m_csv_in.length() == 0) {
-                cout << "ERROR: No CSV input file specified, stopping simulator.\n";
-                return;
-            }
-
-			if(m_t > (t_max/2) && !copied) {
-				m_copyPAH = m_simPAHp.clonePAH();
-				starttime = m_t;
-				copied = true;
-				if(save_dots) {
-					dotfile = m_dot_out+ Strings::cstr(run) + "_" + Strings::cstr(count)+ ".dot";
-					m_simPAHp.saveDOT(dotfile);//to obtain the PAH structure
-					PAHProcess p(*m_copyPAH);
-					p.saveDOT(std::string("DOT files/copiedstructure_start.dot"));
-				}
-			}
-            // Interpolate profile values at time m_t
-            m_simGas.interpolateProfiles(m_t, true, 1);
-
-            // Calculate rates of each jump process and store in vector & store total jump rate
-            real totalJumpRate = JumpProcessList::calculateRates(m_simGas.m_gpoint, m_simPAHp, m_t, m_simGas.jplist, jump_rates_vector);
-            rvector temp = jump_rates_vector;
-            
-            // Calculate time step, update time
-            real t_step;
-            if(!save_rates) t_step = timeStep(totalJumpRate, rand_u01);
-            else t_step = t_step_max;
-			time_step_vector.push_back(t_step);
-			//writetimestepCSV(time_step_vector);
-            t_next = m_t+t_step;
-
-            if(t_next < t_max && t_step < t_step_max) {
-                //saveDOTperXsec(t_step_max, sd, m_t, t_max, gasph_copy, interval_num);
-                // Choose reaction according to rates
-                int chosen_proc = m_simGas.chooseReaction(jump_rates_vector, rand_u01);
-                // Get site type and structure change process from the jump process class
-                JumpProcess* jp_perf = m_simGas.jplist[chosen_proc];
-                kmcSiteType jp_site = jp_perf->getSiteType();
-                int jp_id = jp_perf->getID();
-                
-
-                //--------for C-H counts per interval----
-                if(save_CH) CHdata.addData(m_simPAHp.getCHCount(), t_next, run, m_simPAHp, savedotperinterval);
-                //---------------------------------------
-                // Update data structure
-                if(!save_rates) {
-                    //cout<<m_simGas.jplist[chosen_proc]->getName()<<'\t'<<m_simPAHp.getCHCount().first << '\n';
-                    bool process_success = m_simPAHp.performProcess(jp_site, jp_id, rand_int);
-					/*if(!m_simPAHp.checkCoordinates()) {
-						cout<<"Coordinates of structure did not pass test. Aborting..\n";
-						std::ostringstream msg;
-						msg << "ERROR: Structure did not pass PAHProcess::checkCoordinates."
-							<< " (Sweep::KMC_ARS::KMCSimulator::runSimulation)";
-						throw std::runtime_error(msg.str());
-						assert(false);
-					}
-					if(!m_simPAHp.checkSiteContinuity()) {
-						cout<<"Structure has non-continuous sites. Aborting..\n";
-						std::ostringstream msg;
-						msg << "ERROR: Structure did not pass PAHProcess::checkSiteContinuity."
-							<< " (Sweep::KMC_ARS::KMCSimulator::runSimulation)";
-						throw std::runtime_error(msg.str());
-						assert(false);
-					}*/
-                    if(process_success) {
-                    m_rxn_count[chosen_proc]++;
-                    }
-                }
-            }else {
-                t_next = m_t+t_step_max;
-                //else m_t = t_max;
-            }
-            // For Rates
-            if(save_rates) writeRatesCSV(run, m_t, jump_rates_vector);
-            m_t = t_next;
-            
-            //if(run>1){
-                    //saveDOTperXLoops(1, count, run);
-            //}else saveDOTperXLoops(10, count, run);
-            count++;
-            // Save 1500th run into DOT file
-            /*if(count==1500) {
-            dotfile = m_dot_out+ Strings::cstr(run) + "_" + Strings::cstr(count)+ ".dot";
-            m_simPAH->saveDOT(dotfile);
-            }*/
-        }
-        //--------for C-H counts per interval----
-		if(save_CH) {
-			while(CHdata.m_intervalcount < maxInterval) {
-				CHdata.addData(m_simPAHp.getCHCount(), t_max, run, m_simPAHp, savedotperinterval);
-			}
-		}
-        //---------------------------------------
-        // calculate time elapsed
-        clock_t timerStop = clock();
-        double timerElapsed = double(timerStop-timerStart)/CLOCKS_PER_SEC;
-
-        // save structure into dot file
-        //dotfile = m_dot_out+ Strings::cstr((int)run) + "_" + Strings::cstr(count)+ ".dot";
-        if(save_dots) {
-			dotfile = m_dot_out+ Strings::cstr(run) + "_" + Strings::cstr(count)+ ".dot";
-			m_simPAHp.saveDOT(dotfile);//to obtain the PAH structure
-		}
-
-        // for gif animation:
-        //saveDOTperXsec(t_step_max, sd, t_max, t_max, gasph_copy, interval_num);
-
-        // show time elapsed on display
-        cout<<"\nSimulator ran for run "<<run<<" looping "<<count<<" number of times...\n";
-        cout<<"Ran for "<<timerElapsed<<" seconds.\n\n";
-        if(m_simPAHp.getCHCount().first < 12 && save_CH) { // omit benzene results
-            cout<<"C count out of range. Redoing run "<<run<<"\n\n";
-            CHdata.delData(run);
-			run--;
-        } else {
-        // save csv files for pah information
-        writeTimerCSV(count, timerElapsed);
-        writeRxnCountCSV(m_rxn_count);
-        writeCHSiteCountCSV();
-		//writetimestep(time_step_vector);
-		}
-		delete m_simPAH;
-		updatePAH(m_copyPAH, starttime, (t_max - starttime), steps/2, rand_int, rand_u01, 1,1);
-		if(save_dots) {
-			dotfile = "DOT files/copiedstructure_end.dot";
-			m_simPAHp.saveDOT(dotfile);//to obtain the PAH structure
-		}
-	}
-    if(save_CH) CHdata.writeCSV(CHcol, false);
-    // close csv files
-    m_timer_csv.Close();
-    m_rxn_csv.Close();
-    m_pah_csv.Close();
-    m_rates_csv.Close();
-	delete m_simPAH;
-}
 
 //! Update structure of PAH after time dt
 real KMCSimulator::updatePAH(PAHStructure* pah, 
@@ -381,7 +168,7 @@ real KMCSimulator::updatePAH(PAHStructure* pah,
 	int loopcount=0;
 
     while (m_t < t_max) {
-		//this->m_simPAHp.printStruct();//++++
+		//this->m_simPAHp.printStruct();// print out structure of this pah on the screen
         m_simGas.interpolateProfiles(m_t, true, r_factor);
 		loopcount++;
 
@@ -392,8 +179,10 @@ real KMCSimulator::updatePAH(PAHStructure* pah,
         real t_step = timeStep(totalJumpRate, rand_u01);
         t_next = m_t+t_step;
         if(t_next < t_max) {
-			//if (pah->numofC()>5000&&pah->numofC()<6000)//||pah->havebridgeC()
-			//if (PAH_ID==224835||PAH_ID==1011604||PAH_ID==1111604)
+
+			//if (pah->numofC()>5000&&pah->numofC()<6000)//||pah->havebridgeC()	//if (PAH_ID==224835)
+			//if we want to check a PAH with specified ID or number of Carbon, 
+			//its structure can be drawed by this function, used for tracking suspicious PAH.
             // saveDOTperLoop(100000*tstart,loopcount,PAH_ID);
             // Choose reaction according to rates
             int chosen_proc = m_simGas.chooseReaction(jump_rates_vector, rand_u01);
@@ -420,7 +209,6 @@ real KMCSimulator::updatePAH(PAHStructure* pah,
         }
 		m_t = t_next;
         //saveDOTperXLoops(1, count, run);
-       //count++;
     }
     return m_t;
 }
@@ -613,7 +401,7 @@ void KMCSimulator::saveDOTperXLoops(int X, int &loopcount, int& runcount) {
         m_simPAHp.saveDOT(filename);
     }
 }
-//added by dongping 18/04
+
 void KMCSimulator::saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID) {
         string filename = "KMC_DEBUG/ID_";
 		filename.append(Strings::cstr(PAH_ID));

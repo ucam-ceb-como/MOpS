@@ -2,7 +2,7 @@
   Author(s):      Weerapong Phadungsukanan (wp214)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Weerapong Phadungsukanan.
 
   File purpose:
@@ -60,8 +60,8 @@ namespace Sprog {
             const std::string SP_KEYWORD = "SPECIES";
             const std::string END_KEYWORD = "END";
             typedef struct {
-                unsigned int begin;
-                unsigned int end;
+                size_t begin;
+                size_t end;
             } ck_pos;
             // get positions of keywords
             ck_pos getKeyPos(const std::string &key, std::string &ckstr);

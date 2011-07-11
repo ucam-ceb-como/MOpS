@@ -238,7 +238,7 @@ void PAHCache::Clear()
 PAHCache *const PAHCache::Clone(void) const {return new PAHCache(*this);}
 
 // Returns the model ID.
-AggModelType PAHCache::ID(void) const {return PAH_ID;}
+AggModelType PAHCache::ID(void) const {return PAH_KMC_ID;}
 
 // Writes the object to a binary stream.
 void PAHCache::Serialize(std::ostream &out) const

@@ -406,7 +406,7 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
 			std::cout << "maj< true"<< std::endl;
 
 		//added by ms785 to include the collision efficiency in the calculation of the rate
-		if (sys.ParticleModel()->AggModel()==AggModels::PAH_ID)
+		if (sys.ParticleModel()->AggModel()==AggModels::PAH_KMC_ID)
 		{
 			 ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
 			 truek*=ceff;

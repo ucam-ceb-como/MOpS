@@ -93,6 +93,8 @@ PAHStructure* PAHProcess::returnPAH(){
 PAHStructure* PAHProcess::clonePAH() const {
 	if(!checkCoordinates()) {
 		std::cout<<"Source structure has invalid coordinates. Aborting..\n";
+		std::cout<<"Site List:\n";
+		printSites();
 		std::ostringstream msg;
 		msg << "ERROR: Structure to be cloned did not pass PAHProcess::checkCoordinates."
 			<< " PAH ID: "<<m_pah->m_parent->ID()
@@ -101,8 +103,11 @@ PAHStructure* PAHProcess::clonePAH() const {
 		assert(false);
 		abort();
 	}
-	//if(m_pah->m_parent->ID() == 200609)
-		//cout<<"";
+	/*if(m_pah->m_parent->ID() == 1722807){
+		saveDOT(std::string("KMC_DEBUG/1722807_before_cloning.dot"));
+		std::cout<<"Sites list of PAH 1722807 to be cloned:\n";
+		printSites();
+	};*/
 	// new PAHStructure
     PAHStructure* temp = new PAHStructure();
 	PAHProcess p = PAHProcess(*temp);
@@ -189,7 +194,7 @@ PAHStructure* PAHProcess::clonePAH() const {
 						now->A = ori_now->A;
 						now->bondAngle2 = ori_now->bondAngle2;
 					}
-				}else { // add C as usual
+				}else { // not a bridge, add C as usual
 					now = p.addC(now, ori_now->bondAngle1, 0);
 					ori_now = ori_now->C2;
 					now->A = ori_now->A;
@@ -216,11 +221,22 @@ PAHStructure* PAHProcess::clonePAH() const {
 			}
 			else if(Cbridges.find(ori_now) != Cbridges.end()){
 				// it is a previously copied bridge, we end up here after closing loop
-				// above. add C as usual
-				now = p.addC(now, ori_now->bondAngle1, 0);
-				ori_now = ori_now->C2;
-				now->A = ori_now->A;
-				now->bondAngle2 = ori_now->bondAngle2;
+				// above.
+				if(ori_now->C2->bridge && Cbridges.find(ori_now->C2) != Cbridges.end()) {// check if we have to close another loop
+					//close the loop and skip the bridge
+					p.connectToC(now, Cbridgecopies[ori_now->C2]);
+					now->bondAngle1 = ori_now->bondAngle1;
+					now = now->C2->C3;
+					ori_now = ori_now->C2->C3;
+					k++;
+				}else {
+					//add C as usual
+					now = p.addC(now, ori_now->bondAngle1, 0);
+					ori_now = ori_now->C2;
+					now->A = ori_now->A;
+					now->bondAngle2 = ori_now->bondAngle2;
+				}
+			
 			}
 		}
 		newSite.C2 = now;
@@ -246,10 +262,16 @@ PAHStructure* PAHProcess::clonePAH() const {
 			<< " Source PAH ID: "<<m_pah->m_parent->ID()
 			<< "\nNew PAH ID: "<<m_pah->m_parent->ID()+100000
 			<< " (Sweep::KMC_ARS::PAHProcess::clonePAH)";
+		saveDOT(std::string("KMC_DEBUG/source_"+Strings::cstr(m_pah->m_parent->ID())+".dot"));
 		throw std::runtime_error(msg.str());
 		assert(false);
 		abort();
 	}
+	/*if(m_pah->m_parent->ID() == 1722807){
+		p.saveDOT(std::string("KMC_DEBUG/1722807_after_cloning.dot"));
+		std::cout<<"Sites list of PAH 1722807 after cloned:\n";
+		p.printSites();
+	};*/
     return temp;
 }
 // Public Read Processes
@@ -302,7 +324,7 @@ void PAHProcess::printStruct() const{
         Cpointer oldnow = now;
         now = moveCPointer(prev, now);
         prev = oldnow;
-    } while //modified by dongping 18/04
+    } while 
 	(!(count!=1&&prev->coords.first == m_pah->m_cfirst->coords.first
    &&prev->coords.second == m_pah->m_cfirst->coords.second));
     // displays C and H counts
@@ -1160,21 +1182,17 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
         break;
     case AC:
         // Check for AC_FE3
-        if((moveIt(st,2)->comb==FE3 || moveIt(st,-2)->comb==FE3) && (moveIt(st,3)->comb!=FE3 || moveIt(st,-3)->comb!=FE3)) {
-            if(!st->C1->C2->bridge) {
+        if((moveIt(st,2)->comb==FE3 || moveIt(st,-2)->comb==FE3) && (moveIt(st,3)->comb!=FE3 || moveIt(st,-3)->comb!=FE3) && !st->C1->C2->bridge) {
             st->comb = AC_FE3;
             m_pah->m_siteMap[AC_FE3].push_back(st);
-            }
             break;
         }else st->comb = None;
         break;
     case BY5:
     // Check for BY5_FE3
-        if((moveIt(st,2)->comb==FE3 || moveIt(st,-2)->comb==FE3) && (moveIt(st,3)->comb!=FE3 || moveIt(st,-3)->comb!=FE3)) {
-            if(!st->C1->C2->bridge) {
+        if((moveIt(st,2)->comb==FE3 || moveIt(st,-2)->comb==FE3) && (moveIt(st,3)->comb!=FE3 || moveIt(st,-3)->comb!=FE3) && !st->C1->C2->bridge) {
             st->comb = BY5_FE3;
             m_pah->m_siteMap[BY5_FE3].push_back(st);
-            }
             break;
         }else st->comb = None;
         break;
@@ -1204,7 +1222,8 @@ Spointer PAHProcess::moveIt(Spointer i, int x) {
     } else {
         for(int a=0; a>x; a--) {
             if(temp == m_pah->m_siteList.begin()) {
-                temp = --m_pah->m_siteList.end();// if reach beginning of list go to end
+                temp = m_pah->m_siteList.end();// if reach beginning of list go to end
+				temp--;
             } else {
                  temp--; // moves backward x times if x<0
             }
@@ -1389,6 +1408,7 @@ bool PAHProcess::checkCoordinates() const{
 			cout<<"checkCoordinates() failed at "<<count<<"th C atom..\n"
 				<<"Coordinates: ("<<now->coords.first<<','<<now->coords.second<<")\n"
 				<<"Correct	  : ("<<corr_coords.first<<','<<corr_coords.second<<")\n";
+			saveDOT(std::string("KMC_DEBUG/error_struct.dot"));
 			return false;
 		}
 	}while(now != start);
@@ -1408,6 +1428,57 @@ bool PAHProcess::checkSiteContinuity() const {
 	}
 	return true;
 }
+
+// Check to see if site neighbours has a valid combined site type
+bool PAHProcess::checkCombinedSiteType(Spointer& stt) {
+	int k = 3;
+	if(m_pah->m_siteList.size() < 8) k = 1;
+	Spointer startSite = moveIt(stt, -k);
+	Spointer endSite = moveIt(stt, k+1);
+	bool error = false;
+	kmcSiteType error_stype_comb = Inv;
+	kmcSiteType error_stype = Inv;
+	for(Spointer i=startSite; i!=endSite; i = moveIt(i,1)) {
+		switch(i->comb) {
+		case FE3:
+			if(i->type != FE) {
+				error = true;
+				error_stype_comb = FE3;
+				error_stype = i->type;
+			}
+			break;
+		case AC_FE3:
+			if(i->type != AC) {
+				error = true;
+				error_stype_comb = AC_FE3;
+				error_stype = i->type;
+			}
+			break;
+		case FE_HACA:
+			if(i->type != FE) {
+				error = true;
+				error_stype_comb = FE_HACA;
+				error_stype = i->type;
+			}
+			break;
+		case BY5_FE3:
+			if(i->type != BY5) {
+				error = true;
+				error_stype_comb = BY5_FE3;
+				error_stype = i->type;
+			}
+			break;
+		}
+	}
+	if(error) {
+		std::cout<<"ERROR: Invalid combined site type -- Combined site type "
+			<<kmcSiteName(error_stype_comb)<<" on a principal site type "
+			<<kmcSiteName(error_stype)<<" (PAHProcess::checkCombinedSiteType)\n";
+		return false;
+	}
+	return true;
+}
+
 //! Structure processes: returns success or failure
 bool PAHProcess::performProcess(const kmcSiteType& stp, const int& id, int (*rand_int)(int,int)) 
 {
@@ -1415,7 +1486,6 @@ bool PAHProcess::performProcess(const kmcSiteType& stp, const int& id, int (*ran
     //cout << "Start Performing Process..\n";
     // choose random site of type stp to perform process
     Spointer site_perf = chooseRandomSite(stp, rand_int); //cout<<"[random site chosen..]\n";
-    //printSites(site_perf);//++++
     // stores pointers to site Carbon members
     Cpointer site_C1 = site_perf->C1;
     Cpointer site_C2 = site_perf->C2;
@@ -1470,8 +1540,20 @@ bool PAHProcess::performProcess(const kmcSiteType& stp, const int& id, int (*ran
 	if(m_pah->m_cfirst->A != 'H')
 		cout<<"WARNING: A of m_cfirst is not H..\n";
     //cout<<"----PROCESS PERFORMED!-----\n";*/
-    //printSites(site_perf);//++++
-    return true;
+	if(!checkCombinedSiteType(site_perf)) {
+		std::cout<<"Structure produced invalid combined site type after performing process "
+			<< "ID"<<id<<" on PAH ID: "<<m_pah->m_parent->ID()<<"...\n"
+			<<"*************\nAfter performing process --\n";
+		printSites(site_perf);
+		std::ostringstream msg;
+		msg << "ERROR: Structure produced invalid combined site type after performing process "
+			<< "ID"<<id<<" on PAH ID: "<<m_pah->m_parent->ID()<<"..."
+			<< " (Sweep::KMC_ARS::PAHProcess::performProcess)";
+		throw std::runtime_error(msg.str());
+		assert(false);
+		abort();
+	}
+	return true;
 }
 //--------------------------------------------------------------------
 //----------------- STRUCTURE CHANGE PROCESSES -----------------------

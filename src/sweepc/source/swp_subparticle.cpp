@@ -193,9 +193,10 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs, int (*rand_int)(int,
 // Sinters the sub-particle for the given time using the given
 // sintering model.
 void SubParticle::Sinter(real dt, const Cell &sys,
-                         const Processes::SinteringModel &model)
+                         const Processes::SinteringModel &model,
+                         real (*rand_u01)())
 {
-    m_primary->Sinter(dt, sys, model);
+    m_primary->Sinter(dt, sys, model, rand_u01);
 }
 // PARTICLE UPDATE AND CHECKING.
 

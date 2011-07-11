@@ -74,5 +74,6 @@ fi
 
 # All tests passed
 echo "All tests passed"
+  rm -f regression2a* regression2b* regression2c*
 exit 0
 

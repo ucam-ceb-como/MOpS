@@ -46,7 +46,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <pthread.h>
+#include "pthread.h"
 
 #include "cam_control.h"
 #include "cam_radiation.h"

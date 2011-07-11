@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -288,7 +288,7 @@ void ReactionSet::Clear()
 // Calculates the molar production rates of all species given the rate
 // of progress of each reaction.
 real ReactionSet::GetMolarProdRates(const fvector &rop,
-                                    fvector &wdot) const 
+                                    fvector &wdot) const
 {
     unsigned int k;
     const RxnStoichMap *mu;
@@ -330,9 +330,9 @@ real ReactionSet::GetMolarProdRates(const Sprog::Thermo::GasPhase &gas,
 }
 
 // Calculates the molar production rates of all species.
-real ReactionSet::GetMolarProdRates(real T, real density, const real *const x, 
-                                    unsigned int n, 
-                                    const Sprog::Thermo::ThermoInterface &thermo, 
+real ReactionSet::GetMolarProdRates(real T, real density, const real *const x,
+                                    unsigned int n,
+                                    const Sprog::Thermo::ThermoInterface &thermo,
                                     fvector &wdot) const
 {
     static fvector rop;
@@ -345,7 +345,7 @@ real ReactionSet::GetMolarProdRates(real T, real density, const real *const x,
 
 
 // returns the molar production rate given the species mixture
-void ReactionSet::GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) const{		
+void ReactionSet::GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) const{
 
    	fvector kfrwd,krev,rop,Gs;
 	Sprog::Thermo::IdealGas ig(*mix.Species());
@@ -353,9 +353,9 @@ void ReactionSet::GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) 
  	GetRateConstants(mix.Temperature(),mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),Gs,kfrwd,krev);
 	GetRatesOfProgress(mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),kfrwd,krev,rop);
 	GetMolarProdRates(rop,wdot);
- 
 
- 
+
+
 }
 
 
@@ -385,7 +385,7 @@ void ReactionSet::GetRatesOfProgress(real density,
 
         // Loop over all reactions.
         for (i=0; i!=m_rxns.size(); ++i) {
-            // Use rfwd to store forward rates of production, 
+            // Use rfwd to store forward rates of production,
             // and rrev to store reverse rates.
             rfwd[i] = kforward[i];
             rrev[i] = kreverse[i];
@@ -411,16 +411,16 @@ void ReactionSet::GetRatesOfProgress(real density,
             // Real reactants.
             for (k=0; k!=m_rxns[i]->FReactantCount(); ++k) {
                 // Now the stoichiometry is non-integer, we must use the pow() function.
-                rfwd[i] *= pow(density * x[m_rxns[i]->FReactants()[k].Index()], 
-                              m_rxns[i]->FReactants()[k].Mu()); 
+                rfwd[i] *= pow(density * x[m_rxns[i]->FReactants()[k].Index()],
+                              m_rxns[i]->FReactants()[k].Mu());
 
             }
 
             // Real products.
             for (k=0; k!=m_rxns[i]->FProductCount(); ++k) {
                 // Now the stoichiometry is non-integer, we must use the pow() function.
-                rrev[i] *= pow(density * x[m_rxns[i]->FProducts()[k].Index()], 
-                              m_rxns[i]->FProducts()[k].Mu()); 
+                rrev[i] *= pow(density * x[m_rxns[i]->FProducts()[k].Index()],
+                              m_rxns[i]->FProducts()[k].Mu());
 
             }
 
@@ -445,12 +445,12 @@ void ReactionSet::GetRatesOfProgress(real density,
 
 // Returns the rates of progress of all reactions given the mixture
 // object.
-void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &mix, 
-                                     const fvector &kforward, 
-                                     const fvector &kreverse, 
+void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &mix,
+                                     const fvector &kforward,
+                                     const fvector &kreverse,
                                      fvector &rop) const
 {
-    GetRatesOfProgress(mix.Density(), &(mix.MoleFractions()[0]), 
+    GetRatesOfProgress(mix.Density(), &(mix.MoleFractions()[0]),
                        m_mech->Species().size(),
                        kforward, kreverse, rop);
 }
@@ -479,9 +479,9 @@ void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &gas,
 }
 
 // Calculates the rate of progress of each reaction.
-void ReactionSet::GetRatesOfProgress(real T, real density, const real *const x, 
-                                     unsigned int n, 
-                                     const Sprog::Thermo::ThermoInterface &thermo, 
+void ReactionSet::GetRatesOfProgress(real T, real density, const real *const x,
+                                     unsigned int n,
+                                     const Sprog::Thermo::ThermoInterface &thermo,
                                      fvector &rop) const
 {
     static fvector kf, kr;
@@ -500,7 +500,7 @@ void ReactionSet::GetRateConstants(real T,
                                    unsigned int n,
                                    const fvector &Gs,
                                    fvector &kf,
-                                   fvector &kr) const 
+                                   fvector &kr) const
 {
     static fvector tbconcs;
     static bool fallocated = false;
@@ -549,14 +549,14 @@ void ReactionSet::GetRateConstants(real T,
     }
 }
 
-// Calculates the forward and reverse rate constants 
+// Calculates the forward and reverse rate constants
 // of all reactions given a mixture object.
-void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix, 
+void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
                                    const std::vector<real> &Gs,
-                                   std::vector<real> &kforward, 
+                                   std::vector<real> &kforward,
                                    std::vector<real> &kreverse) const
 {
-    GetRateConstants(mix.Temperature(), mix.Density(), &(mix.MoleFractions()[0]), 
+    GetRateConstants(mix.Temperature(), mix.Density(), &(mix.MoleFractions()[0]),
                      m_mech->Species().size(), Gs, kforward, kreverse);
 }
 
@@ -568,29 +568,29 @@ void ReactionSet::GetRateConstants(real T,
                                    unsigned int n,
                                    const Sprog::Thermo::ThermoInterface &thermo,
                                    fvector &kforward,
-                                   fvector &kreverse) const 
+                                   fvector &kreverse) const
 {
     static fvector Gs;
     thermo.CalcGs_RT(T, Gs);
     GetRateConstants(T, density, x, n, Gs, kforward, kreverse);
 }
 
-// Calculates the forward and reverse rate constants 
+// Calculates the forward and reverse rate constants
 // of all reactions given a mixture object.
-void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix, 
-                                   std::vector<real> &kforward, 
+void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
+                                   std::vector<real> &kforward,
                                    std::vector<real> &kreverse) const
 {
     static fvector Gs;
     mix.Gs_RT(Gs);
-    GetRateConstants(mix.Temperature(), mix.Density(), &(mix.MoleFractions()[0]), 
+    GetRateConstants(mix.Temperature(), mix.Density(), &(mix.MoleFractions()[0]),
                      m_mech->Species().size(), Gs, kforward, kreverse);
 }
 
 
 // Calculates the concentration-independent portions
 // of the rates constants.
-void ReactionSet::calcRateConstantsT(real T, const fvector &Gs, 
+void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
                                      fvector &kf, fvector &kr) const
 {
     real lnT=0.0, invRT=0.0, Patm_RT=0.0, T_1_3=0.0, T_2_3=0.0;
@@ -621,15 +621,15 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 
     // Calculate classic Arrhenius forward rate expression.
     for (i=m_rxns.begin(),j=0; i!=m_rxns.end(); ++i,++j) {
-        kf[j] = (*i)->Arrhenius().A * 
-                      exp(((*i)->Arrhenius().n * lnT) - 
+        kf[j] = (*i)->Arrhenius().A *
+                      exp(((*i)->Arrhenius().n * lnT) -
                           ((*i)->Arrhenius().E * invRT));
     }
 
     // Landau-Teller rate expressions.
     for (im=m_lt_rxns.begin(); im!=m_lt_rxns.end(); ++im) {
         j = (*im).first;
-        kf[j] *= exp(((*im).second->LTCoeffs()->B / T_1_3) + 
+        kf[j] *= exp(((*im).second->LTCoeffs()->B / T_1_3) +
                            ((*im).second->LTCoeffs()->C / T_2_3));
     }
 
@@ -637,8 +637,8 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
     for (i=m_rxns.begin(),j=0; i!=m_rxns.end(); ++i,++j) {
         if ((*i)->RevArrhenius() != NULL) {
             // This reaction has explicit reverse rate parameters.
-            kr[j] = (*i)->RevArrhenius()->A * 
-                          exp(((*i)->RevArrhenius()->n * lnT) - 
+            kr[j] = (*i)->RevArrhenius()->A *
+                          exp(((*i)->RevArrhenius()->n * lnT) -
                               ((*i)->RevArrhenius()->E * invRT));
         } else if ((*i)->IsReversible()) {
             // Must find the reverse rate constants by equilibrium.
@@ -660,7 +660,7 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
             }
             for (k=0; k!=(*i)->FProductCount(); ++k) {
                 // Real Products.
-                kr[j] -= (*i)->Products()[k].Mu() * Gs[(*i)->Products()[k].Index()];
+                kr[j] -= (*i)->FProducts()[k].Mu() * Gs[(*i)->FProducts()[k].Index()];
             }
 
             // Calculate the reverse rate constant.
@@ -673,7 +673,7 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
     // Explicit reverse Landau-Teller parameters.
     for (im=m_revlt_rxns.begin(); im!=m_revlt_rxns.end(); ++im) {
         j = (*im).first;
-        kr[j] *= exp(((*im).second->RevLTCoeffs()->B / T_1_3) + 
+        kr[j] *= exp(((*im).second->RevLTCoeffs()->B / T_1_3) +
                            ((*im).second->RevLTCoeffs()->C / T_2_3));
     }
 }
@@ -681,7 +681,7 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 // Calculates third-body concentrations for all reactions.  These
 // values will be multiplied by the rate constants, therefore if
 // a reaction does not have third-bodies the tbconcs is set to 1.0.
-void ReactionSet::calcTB_Concs(real density, const real *const x, 
+void ReactionSet::calcTB_Concs(real density, const real *const x,
                                unsigned int n, fvector &tbconcs) const
 {
     RxnPtrVector::const_iterator i;
@@ -695,7 +695,7 @@ void ReactionSet::calcTB_Concs(real density, const real *const x,
             // factors defined for this reaction.
             tbconcs[j] = 0.0;
             for (k=0; k<(*i)->ThirdBodyCount(); ++k) {
-                tbconcs[j] += ((*i)->ThirdBody(k).Mu() - 1.0) * 
+                tbconcs[j] += ((*i)->ThirdBody(k).Mu() - 1.0) *
                               x[(*i)->ThirdBody(k).Index()];
             }
             tbconcs[j] = density * (1.0 + tbconcs[j]);
@@ -710,8 +710,8 @@ void ReactionSet::calcTB_Concs(real density, const real *const x,
 // constant expressions.  This function multiplies the rate constants
 // by the fall-off terms.  This function may also change the values in
 // the tbconcs vector.
-void ReactionSet::calcFallOffTerms(real T, real density, const real *const x, 
-                                   unsigned int n, fvector &tbconcs, 
+void ReactionSet::calcFallOffTerms(real T, real density, const real *const x,
+                                   unsigned int n, fvector &tbconcs,
                                    fvector &kf, fvector &kr) const
 {
     real lowk=0.0, pr=0.0, logpr=0.0, lnT=log(T), invRT=0.0;
@@ -738,8 +738,8 @@ void ReactionSet::calcFallOffTerms(real T, real density, const real *const x,
         rxn = (*im).second;
 
         // Calculate low pressure limit.
-        lowk = rxn->FallOffParams().LowP_Limit.A * 
-               exp((rxn->FallOffParams().LowP_Limit.n * lnT) - 
+        lowk = rxn->FallOffParams().LowP_Limit.A *
+               exp((rxn->FallOffParams().LowP_Limit.n * lnT) -
                     (rxn->FallOffParams().LowP_Limit.E * invRT));
 
         // Calculate reduced pressure.
@@ -791,15 +791,15 @@ void ReactionSet::calcFallOffTerms(real T, real density, const real *const x,
 // matrix array J has already been allocated for NSP+2 variables
 // (all species, temperature and density).
 void ReactionSet::CalcJacobian(real T, real density, real *const x,
-                               unsigned int n, 
-                               const Sprog::Thermo::ThermoInterface &thermo, 
+                               unsigned int n,
+                               const Sprog::Thermo::ThermoInterface &thermo,
                                real pfac, real **J,
                                bool constV, bool constT) const
 {
     bool fallocated=false;
-    fvector tbconcs, kfT, krT, kf, kr, Gs, rop0, 
+    fvector tbconcs, kfT, krT, kf, kr, Gs, rop0,
                    rop1, wdot0, wdot1, Hs, xdot0, xdot1;
-    real wtot0=0.0, wtot1=0.0, //invrho=1.0 / density, 
+    real wtot0=0.0, wtot1=0.0, //invrho=1.0 / density,
          Tdot0=0.0, Tdot1=0.0, Cp=0.0, xsave=0.0, dx=0.0, invdx=0.0;
 
     // SETUP WORKSPACE.
@@ -833,7 +833,7 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
 
     // Calculate concentration-independent rate constants.
     calcRateConstantsT(T, Gs, kfT, krT);
-    
+
     // Copy conc-independent rate constants into total rate
     // constant vectors.  As the vectors are equal lengths we
     // can just use the memcpy function.
@@ -1121,7 +1121,7 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
 
 /*!
 The Jacobian matrix is originally calculated for [dOmegai/dxj]/rho
-For LOI it is needed to be [dOmegai/dCj], therefore a change of basis by 
+For LOI it is needed to be [dOmegai/dCj], therefore a change of basis by
 vector multiplication is needed and is implemented below. It is assumed that this
 will be deleted when the Jacobian is implemented in the correct manner.
 
@@ -1136,19 +1136,19 @@ will be deleted when the Jacobian is implemented in the correct manner.
 @param[in]      constT      Temperature (constant).
 */
 void ReactionSet::RateJacobian(
-        real T,            
-        real density,      
-        real *const x,    
-        unsigned int n,   
-        const Sprog::Thermo::ThermoInterface &thermo, 
-        real pfac,         
-        real **J,          
+        real T,
+        real density,
+        real *const x,
+        unsigned int n,
+        const Sprog::Thermo::ThermoInterface &thermo,
+        real pfac,
+        real **J,
         bool constV, bool constT
         ) const
 {
     bool fallocated=false;
     fvector tbconcs, kfT, krT, kf, kr, rop0, rop1, wdot0, wdot1, Gs, Hs;
-    real wtot0=0.0, wtot1=0.0, 
+    real wtot0=0.0, wtot1=0.0,
          Tdot0=0.0, Tdot1=0.0, Cp=0.0, xsave=0.0, dconc=0.0, invdconc=0.0;
 
     // SETUP WORKSPACE.
@@ -1180,7 +1180,7 @@ void ReactionSet::RateJacobian(
 
     // Calculate concentration-independent rate constants.
     calcRateConstantsT(T, Gs, kfT, krT);
-    
+
     // Copy conc-independent rate constants into total rate
     // constant vectors.  As the vectors are equal lengths we
     // can just use the memcpy function.
@@ -1467,7 +1467,7 @@ void ReactionSet::Serialize(std::ostream &out) const
         // Write the serialize version to the stream.
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
-        
+
         // Write the number of reactions to the stream.
         unsigned int n = m_rxns.size();
         out.write((char*)&n, sizeof(n));

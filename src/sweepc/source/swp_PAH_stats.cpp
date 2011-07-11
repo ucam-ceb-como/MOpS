@@ -365,7 +365,7 @@ PAHStats *const PAHStats::Clone(void) const
 // and for serialisation.
 unsigned int PAHStats::ID(void) const
 {
-    return (unsigned int)AggModels::PAH_ID;
+    return (unsigned int)AggModels::PAH_KMC_ID;
 }
 
 // Writes the object to a binary stream.
