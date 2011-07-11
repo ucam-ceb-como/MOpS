@@ -1014,7 +1014,7 @@ CamSoot::realVector CamSoot::rateAll
 )
 {
 
-    realVector rates (nMoments);
+    realVector ratesservice ;
     realVector nucRates, coagRates, cdRates, prodRates, sRates;
 
     //Calculate nucleation rate
@@ -1078,7 +1078,7 @@ CamSoot::realVector CamSoot::rateAll
         //std::cout << "nucRates[m] " << nucRates[m] << "\n";
         //std::cout << "coagRates[m] " << coagRates[m] << "\n";
         //std::cout << "moments[m] " << moments[m] << "\n";
-    	rates[m] = 1.0; //(nucRates[m]+coagRates[m])/moments[m];
+    	rates[m] = (nucRates[m]+coagRates[m])/moments[m];
       // 	rates[m] = (nucRates[m])/moments[m];
         //wdot(cellID,m) = rates[m];
     }
