@@ -1,3 +1,123 @@
+/*
+ * gridFunction() is is common to both old and new soot functions
+ * linear() seems to be used by both old and new. (See commented out part of new)
+ * sums() is used by both
+ *
+ */
+
+void CamSoot::initialize
+(
+    int nCells,
+    Mechanism &mech,
+    realVector &mSolnVec
+)
+{
+    /*
+     *reduced mass for nucleation for calculating
+     *constant part of nucleation. Needs to be sizeMomentsltiplied by sqrt(T)
+     *before using (final unit = m^3/(s mol^2). mol^2 is required since
+     *this is sizeMomentsltiplied by the concentraction of PAHs
+     */
+    doublereal rMass = numCAtomInception*cMass/NA;
+    constNucleation = 2.2*sqrt(4*PI*kB_cgs/rMass)*dia_PAH*1.0e2*dia_PAH*1.0e2*NA*NA;
+
+
+    /*
+     *Beta for free molecular coagulation, needs to be multiplied by
+     *sqrt(T)
+     */
+    Kf = 2.2*pow(((3*cMass/NA)/(4*PI*rhoSoot)),1.0/6.0)*sqrt(6*kB_cgs/rhoSoot);
+
+
+    /*
+     *constant for continuum coagulation, needs to be multiplied by
+     *free path
+     */
+    doublereal mass = cMass/NA;
+    doublereal CD1 = pow((6.0*mass/PI/rhoSoot),1.0/3.0); //unit [=] cm
+
+
+    Kc_ = 2.514/CD1;
+
+
+    /*
+     *soot hydroxyl oxidation constant [=] cm^3/mol-s
+     */
+    doublereal oh = ohMass/NA;
+    kOH = CD1*CD1* sqrt(PI*kB_cgs/2.0/oh)*NA;
+
+
+    /*
+     *constant for surface growth [=] --
+     */
+    kSurf = CD1*CD1*lambda*PI;
+
+
+    /*
+     *PAH condensation constant [=] cm/s-mol
+     */
+    kPAH = 2.2*sqrt(PI)*NA;
+
+
+
+    doublereal CD1_PAH = D1_PAH*sqrt(2.0/3.0); //[=] cm
+    doublereal CH2 = kPAH*CD1_PAH*CD1_PAH;           //[=]cm^3/mol-s
+    doublereal CHS = kPAH*2*CD1_PAH*CD1;             //[=]cm^3/mol-s
+    doublereal CS2 = kPAH*CD1*CD1;                   //[=]cm^3/mol-s
+
+
+    powPAH.resize(4,nMoments);
+
+
+    for(int i=1; i<nMoments; i++){
+        doublereal x = (2.0*i+1)/2.0;
+        powPAH(1,i) = CH2 * pow(doublereal(numCAtomInception),x);
+        powPAH(2,i) = CHS * pow(doublereal(numCAtomInception),i);
+        x  = (2.0*i-1)/2.0;
+        powPAH(3,i) = CS2 * pow(numCAtomInception,x);
+
+    }
+
+    /*
+     *populate the solution vector
+     */
+
+    mSolnVec.resize(nMoments,firstMom);
+    for(int i=1; i<nMoments; i++){
+        mSolnVec[i] = mSolnVec[i-1] + log(doublereal(atomsPerDimer));
+    }
+    realVector temp = mSolnVec;
+    mSolnVec.resize(nMoments*nCells,0.0);
+    for(int i=0; i<nCells; i++){
+        for(int l=0; l<nMoments; l++){
+            mSolnVec[i*nMoments+l] = temp[l];
+        }
+    }
+
+
+    CamMath cm;
+    cm.binomCoeff(nMoments,bnCoeff);
+    cm.prime(nMoments,prime);
+
+    /*
+     *species index initialization
+     */
+    iInception = mech.FindSpecies(convertToCaps(trim(iSpecies)));
+    iC2H2 = mech.FindSpecies("C2H2");
+    iCO = mech.FindSpecies("CO");
+    iH = mech.FindSpecies("H");
+    iH2 = mech.FindSpecies("H2");
+    iH2O = mech.FindSpecies("H2O");
+    iO2 = mech.FindSpecies("O2");
+    iOH = mech.FindSpecies("OH");
+    //rates
+    wdot.resize(nCells,nMoments);
+    surfProdRate.resize(nCells,mech.SpeciesCount());
+    conc_received.resize(nCells,mech.SpeciesCount());
+    momReceived.resize(nCells,nMoments);
+
+}
+
 
 void CamSoot::sootReactions
 (
@@ -36,7 +156,7 @@ void CamSoot::sootReactions
 
 
     /*
-     *nucleation rats
+     *nucleation rates
      */
     nucleation(conc_cgs,T,p);
     /*
@@ -422,3 +542,34 @@ void CamSoot::surface(int hMoment, int cell, doublereal T, doublereal M0,
 //----------------------------------------------------//
 
 
+//----------------------------------------------------//
+
+
+doublereal CamSoot::betaC1(const int i, const int j)
+{
+
+    int i6 = 6*i;
+    int j6 = 6*j;
+
+    return sizeMoments(-2+i6)*sizeMoments(2+j6)
+           + 2*sizeMoments(i6)*sizeMoments(j6)
+           + sizeMoments(2+i6)*sizeMoments(-2+j6);
+
+}
+
+//----------------------------------------------------//
+
+doublereal CamSoot::betaC2(const int i, const int j)
+{
+
+    int i6 = 6*i;
+    int j6 = 6*j;
+
+    return sizeMoments(-4+i6)*sizeMoments(2+j6)
+           + sizeMoments(-2+i6)*sizeMoments(j6)
+           + sizeMoments(i6)*sizeMoments(-2+j6)
+           + sizeMoments(2+i6)*sizeMoments(-4+j6);
+
+}
+
+//----------------------------------------------------//
