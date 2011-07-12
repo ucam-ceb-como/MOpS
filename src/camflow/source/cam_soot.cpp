@@ -183,7 +183,6 @@ void CamSoot::sums(int hMoment, doublereal massAdded, doublereal coeff,
 
 }
 
-
 //------ OLD SOOT FUNCTIONS CULLED FROM HERE ----
 
 
@@ -203,7 +202,6 @@ doublereal CamSoot::gridFunction(const int k, const int n, const int m)
     }
     return gfun;
 }
-
 
 
 
@@ -403,8 +401,16 @@ void CamSoot::initMoments(Mechanism &mech, realVector& soln,int nCells){
      *              \|
      */
 
+     // This looks wrong. Should not have molecular mass of PAH in the denominator
+     // Should be reduced mass
+     // Beta_nucl = 2.2*sqrt(16*PI*kB/mPAH)*dia_PAH*dia_PAH;
 
-    		   Beta_nucl = 2.2*sqrt(16*PI*kB/mPAH)*dia_PAH*dia_PAH;
+     // This equation matches the one in the original Fortran code. (Excluding sqrt(T) )
+    doublereal AMU = 1.67e-24 / 1e3;   // g---> kg
+    doublereal C_Mass = 12.0e0 * AMU;
+    Beta_nucl = 2.2 * sqrt(4*PI*kB / C_Mass / numCAtomInception ) *dia_PAH*dia_PAH;
+
+
     /*·
      * Multiplication by NA is carried out to avoid it while
      * evaluating the rates
