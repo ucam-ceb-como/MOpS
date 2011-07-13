@@ -906,7 +906,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
             // Perform sintering update.
             if (m_sint_model.IsEnabled()) {
 //				sp.UpdateFreeSurface();
-			    sp.Sinter(dt, sys, m_sint_model);
+			    sp.Sinter(dt, sys, m_sint_model, rand_u01);
 				//sp.CreateTestTree();
 				//	 sp.FindRoot()->CheckTree();
 			    // cout << "check before sinter passed\n";

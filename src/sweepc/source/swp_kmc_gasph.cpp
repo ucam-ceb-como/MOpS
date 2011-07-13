@@ -81,7 +81,15 @@ KMCGasph::KMCGasph(const std::string& filename) {
 //! Destructor
 KMCGasph::~KMCGasph() {
     m_gasProfile.clear();
+	if (jplist.size()!=0){
+		{
+			for (size_t i=0;i!=jplist.size();++i)
+			delete jplist[i];
+		}
+		jplist.clear();
+	}
 }
+
 
 //! Write Processes
 //! Set csv input file name

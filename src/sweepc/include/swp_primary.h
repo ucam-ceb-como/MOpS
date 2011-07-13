@@ -244,7 +244,8 @@ public:
     virtual void Sinter(
         real dt, // Delta-t for sintering to occur.
         const Cell &sys, // System which defines primary's environment.
-        const Processes::SinteringModel &model // Sintering model to use.
+        const Processes::SinteringModel &model, // Sintering model to use.
+        real (*rand_u01)() // Uniform [0,1] sample generator
         );
 
     // READ/WRITE/COPY.

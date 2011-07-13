@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="Silicon nanoparticle inception and growth model" units="CGS">
+    <component id="silicon" type="bulk">
+      <description>
+        Silicon
+      </description>
+      <density units="g/cm3">2.329</density>
+      <molwt units="g/mol">28.086</molwt>
+    </component> 
+    
+    <particle id="[silicon]" model="surfvol" subtree="false">
+      <description>
+        A silicon particle.
+      </description>
+      <sintering enable="true" model="viscous_flow">
+        <A units="s/m">2.02e-13</A>
+        <E units="K">500</E>
+        <Dpmin units="m">50</Dpmin>
+      </sintering>
+    </particle>
+
+
+	<!-- Combinations Si1 + Si1 -->
+
+		<!-- SIH4 -->
+	<inception name="SIH4 DIMER">
+		<formula>2SIH4  to [X+2]</formula>
+		<reactant id="SIH4" stoich="2" m="5.33344403853e-23" d="0.3e-7"/>
+		<particleout id="[X]"/>
+		<component id="silicon" dx="+2"/>
+		<A>1.0</A>
+	</inception>
+
+	<inception name="SIH4 + SIH2">
+		<formula>SIH4 + SIH2 to [X+2]</formula>
+		<reactant id="SIH4" stoich="1" m="5.33344403853e-23" d="0.3e-7"/>
+		<reactant id="SIH2" stoich="1" m="4.9986715377e-23" d="0.3e-7"/>
+		<particleout id="[X]"/>
+		<component id="silicon" dx="+2"/>
+		<A>1.0</A>
+	</inception>
+
+		<!-- SIH2 -->
+	<inception name="SIH2 DIMER">
+		<formula>2SIH2  to [X+2]</formula>
+		<reactant id="SIH2" stoich="2" m="4.9986715377e-23" d="0.3e-7"/>
+		<particleout id="[X]"/>
+		<component id="silicon" dx="+2"/>
+		<A>1.0</A>
+	</inception>
+
+	<condensation type="condensation" name="SIH4 COND" defer="true">
+		<formula>[X] + SIH4 to [X+1]</formula>
+		<reactant id="SIH4" stoich="1" m="5.33344403853e-23" d="0.3e-7"/>
+		<component id="silicon" dx="+1"/>
+	</condensation>
+	<condensation type="condensation" name="SIH2 COND" defer="true">
+		<formula>[X] + SIH2 to [X+1]</formula>
+		<reactant id="SIH2" stoich="1" m="4.9986715377e-23" d="0.3e-7"/>
+		<component id="silicon" dx="+1"/>
+	</condensation>
+
+
+
+	<!-- Number of inception reactions = 3 -->
+
+	<!-- Number of condensations = 2 -->
+
+
+</mechanism>
+

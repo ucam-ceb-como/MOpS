@@ -267,11 +267,11 @@ PAHStructure* PAHProcess::clonePAH() const {
 		assert(false);
 		abort();
 	}
-	if(m_pah->m_parent->ID() == 1722807){
+	/*if(m_pah->m_parent->ID() == 1722807){
 		p.saveDOT(std::string("KMC_DEBUG/1722807_after_cloning.dot"));
 		std::cout<<"Sites list of PAH 1722807 after cloned:\n";
 		p.printSites();
-	};
+	};*/
     return temp;
 }
 // Public Read Processes
