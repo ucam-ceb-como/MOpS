@@ -261,7 +261,7 @@ Reaction *const ReactionSet::AddReaction(const Sprog::Kinetics::Reaction &rxn)
     }
 
     // Check for third-bodies.
-    if (rxn.ThirdBodies().size() > 0) {
+    if (rxn.UseThirdBody()) {
         m_tb_rxns.insert(RxnMap::value_type(m_rxns.size()-1, pr));
     }
 
@@ -773,8 +773,9 @@ void ReactionSet::calcFallOffTerms(real T, real density, const real *const x,
             case Custom: // A custom function is defined to calculate the fall-off form.
                 rxn->FallOffFn()(*rxn, lowk, tbconcs[j], T, kf[j], kr[j]);
                 break;
-            case Lindemann:
-                // Need do nothing for Lindemann form.
+            case Lindemann: // F = 1
+                kf[j] *= pr;
+                kr[j] *= pr;
                 break;
             default:
                 break;
