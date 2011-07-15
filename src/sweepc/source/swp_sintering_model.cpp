@@ -189,25 +189,6 @@ real SinteringModel::Rate(real t, const Cell &sys, const Primary &p) const
     return max((p.SurfaceArea() - p.SphSurfaceArea()) / tau, 0.0);
 }
 
-// PERFORMING THE SINTERING.
-
-// Performs the process on the given particle. Must return 0
-// on success, otherwise negative.
-int SinteringModel::Perform(real dt, Cell &sys, Particle &p) const
-{
-    p.Sinter(dt, sys, *this);
-    return 0;
-}
-
-// Performs the process on the given primary. Must return 0
-// on success, otherwise negative.
-int SinteringModel::Perform(real dt, Cell &sys, Primary &p) const
-{
-    p.Sinter(dt, sys, *this);
-    return 0;
-}
-
-
 // READ/WRITE/COPY.
 
 // Creates a copy of the sintering model.

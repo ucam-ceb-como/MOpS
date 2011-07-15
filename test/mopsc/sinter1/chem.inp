@@ -1,0 +1,21 @@
+ELEMENTS 
+SI
+H
+AR
+END
+
+SPECIES
+AR
+H2
+SIH4
+SIH2
+END
+                                                             
+REACTIONS
+! Ho,  et. al. Mechanism
+!
+SIH4 (+M) = SIH2 + H2 (+M)       3.12E+09   1.7      54710.0    !1
+  LOW/5.21E+29  -3.54   57550.0/
+  TROE/-0.4984  888.3   209.4   2760.0/
+END
+
