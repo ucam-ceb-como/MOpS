@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -61,16 +61,16 @@ Element::Element(void)
     m_mech  = NULL;
 }
 
-// Copy constructor.
-Element::Element(const Element &e)
-{
-    *this = e;
-}
-
 // Stream-reading constructor.
 Element::Element(std::istream &in)
 {
     Deserialize(in);
+}
+
+// Copy constructor.
+Element::Element(const Element &e)
+{
+    *this = e;
 }
 
 // Initialising constructor.
@@ -135,7 +135,7 @@ bool Element::operator!=(const std::string &name) const
 // Sets the element name.  Also checks the parent mechanism
 // to see if an element with that name already exists.  If one does
 // then this function throws an exception.
-void Element::SetName(const std::string &name) 
+void Element::SetName(const std::string &name)
 {
     // If the element is part of a mechanism then we must check
     // that the mechanism does not already contain an element with
@@ -149,7 +149,7 @@ void Element::SetName(const std::string &name)
         }
     }
 
-    // Element is not in a mechanism or name is not defined 
+    // Element is not in a mechanism or name is not defined
     // in mechanism.  Can set name here in either case.
     m_name = name;
 }
@@ -169,7 +169,7 @@ void Element::SetMolWt(const real molwt)
             m_mech->CheckElementChanges(*this);
         }
     } else {
-        // Attempting to set zero or negative mol. wt.  This 
+        // Attempting to set zero or negative mol. wt.  This
         // is unphysical.
         throw out_of_range("Molecular weight must be positive "
                            "and non-zero! (Sprog, Element::SetMolWt).");
@@ -195,7 +195,7 @@ bool Element::SetMolWtFromLibrary()
 
 // PARENT MECHANISM.
 
-const Sprog::Mechanism *const Element::Mechanism() const 
+const Sprog::Mechanism *const Element::Mechanism() const
 {
     return m_mech;
 }
@@ -209,9 +209,36 @@ void Element::SetMechanism(Sprog::Mechanism &mech)
 
 // READ/WRITE FUNCTIONS.
 
-Element *const Element::Clone(void) const 
+Element *const Element::Clone(void) const
 {
     return new Element(*this);
+}
+
+// Prints a diagnostic output file containing all the
+// element data.  This is used to debug.
+void Element::WriteDiagnostics(std::ostream &out) const
+{
+    string data = "";
+
+    if (out.good()) {
+        // Name.
+        out.write(string(m_name+" ").c_str(), m_name.length());
+        // Mol. Wt.
+        data = cstr(m_molwt) + "\n";
+        out.write(data.c_str(), data.length());
+    }
+}
+
+/*!
+@param[in]      out         the ostream used to output the elements to the Chemkin mechanism file.
+*/
+void Element::WriteElements(std::ostream &out) const {
+
+    if (out.good()) {
+        // Name.
+        out << m_name << " ";
+        out << "\n";
+    }
 }
 
 // Writes the element to a binary data stream.
@@ -259,7 +286,7 @@ void Element::Deserialize(std::istream &in)
             case 0:
                 // Read the length of the element name.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                
+
                 // Read the element name.
                 name = new char[n];
                 in.read(name, n);
@@ -279,32 +306,5 @@ void Element::Deserialize(std::istream &in)
     } else {
         throw invalid_argument("Input stream not ready "
                                "(Sprog, Element::Deserialize).");
-    }
-}
-
-// Prints a diagnostic output file containing all the
-// element data.  This is used to debug.
-void Element::WriteDiagnostics(std::ostream &out) const
-{
-    string data = "";
-
-    if (out.good()) {
-        // Name.
-        out.write(string(m_name+" ").c_str(), m_name.length());
-        // Mol. Wt.
-        data = cstr(m_molwt) + "\n";
-        out.write(data.c_str(), data.length());
-    }
-}
-
-/*!
-@param[in]      out         the ostream used to output the elements to the Chemkin mechanism file.
-*/
-void Element::WriteElements(std::ostream &out) const {
-
-    if (out.good()) {
-        // Name.
-        out << m_name << " ";
-        out << "\n";
     }
 }

@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -70,7 +70,7 @@ public:
         std::istream &in,          //   - Stream from which to read.
         const SpeciesPtrVector &sp //   - Species list.
         );
-     
+
     // Destructors.
     virtual ~Mixture(void); // Default destructor.
 
@@ -85,7 +85,7 @@ public:
     // Set the temperature.
     void SetTemperature(const real T);
 
-    
+
     // Returns the PAH formation rate.
     real PAHFormationRate() const;
 
@@ -122,7 +122,7 @@ public:
 
     //! Return derivative of density times mixture fraction diffusion coefficient
     real GradientTemperature() const {return m_data[GradientTemperatureIndex()];}
-   
+
     //! Set derivative of density times mixture fraction diffusion coefficient
     void SetGradientTemperature (const real g) {m_data[GradientTemperatureIndex()] = g;}
 
@@ -208,11 +208,14 @@ public:
     // Creates a copy of the mixture object.
     virtual Mixture *const Clone() const;
 
-    // Writes the mixture to a binary data stream.
-    virtual void Serialize(std::ostream &out) const;
+    // Writes the element to a binary data stream.
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */)
+    {
+        ar & m_data & m_species;
+    }
 
-    // Reads the mixture data from a binary data stream.
-    virtual void Deserialize(std::istream &in);
 
     // Identifies the mixture type for serialisation.
     virtual Serial_MixtureType SerialType() const;
@@ -224,18 +227,18 @@ public:
     const std::vector<real> getMolarEnthalpy(real T);
         //return the molar enthalpy for th given mixture
         const std::vector<real> getMolarEnthalpy();
-    // routine to return the avg moleculat weight in Kg/mol.    
+    // routine to return the avg moleculat weight in Kg/mol.
     real getAvgMolWt(fvector &massFrac);
 
         real getAvgMolWt();
 
 
-    //TRANSPORT RELATED 
+    //TRANSPORT RELATED
 
     // returns the mixture viscosity in Kg/m-s.
-    real getViscosity() const; 
+    real getViscosity() const;
     // returns the mixture thermal conductivity in J/m-s-K    .
-    real getThermalConductivity(real pre) const; 
+    real getThermalConductivity(real pre) const;
     // returns the mixture specific heat capacity in J/Kg K.
     real getSpecificHeatCapacity(real T);
         //return the specifi heat capacity for a given temp in J/Kg K.
@@ -243,7 +246,7 @@ public:
         //return the molar specific heats
         const std::vector<real> getMolarSpecificHeat();
     // returns the vector of mixture diffusion coefficient in m^2/s.
-    const std::vector<real> getMixtureDiffusionCoeff(const real pre)const; 
+    const std::vector<real> getMixtureDiffusionCoeff(const real pre)const;
 
     //! Index of temperature in m_data
     size_t temperatureIndex() const {return m_species->size();}
@@ -271,6 +274,12 @@ public:
 
     //! Number of items of data that are not species concentrations that are stored at the end of m_data
     static const size_t sNumNonSpeciesData = 8;
+
+    // Writes the mixture to a binary data stream.
+    virtual void Serialize(std::ostream &out) const;
+
+    // Reads the mixture data from a binary data stream.
+    virtual void Deserialize(std::istream &in);
 
 protected:
     // The default constructor is protected to prevent mixture objects being

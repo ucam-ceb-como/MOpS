@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -52,7 +52,7 @@ namespace Sprog
     typedef double real;
 
     // Real number STL vector.
-    typedef std::vector<real> fvector; 
+    typedef std::vector<real> fvector;
 
 
     // MATHEMATICAL CONSTANTS.
@@ -64,10 +64,10 @@ namespace Sprog
 
     // PHYSICAL CONSTANTS.
 	// These numbers are added by Vinod
-	const real kB	= 1.3806504e-23; // Boltzmann constant
+	const real kB = 1.3806504e-23; // Boltzmann constant
 	const real EPSILON0 = 8.854187816e-12;
 	// conversion factors
-	const real Debye__ = 3.33564e-30; // 
+	const real Debye__ = 3.33564e-30; //
 	const real Angstroem__ = 1.0e-10;
     // Avogadro's number (source = NIST website, physics.nist.gov).
     // Error = 3.0e16 /mol.

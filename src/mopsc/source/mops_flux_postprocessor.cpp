@@ -2,7 +2,7 @@
   Author(s):      Weerapong Phadungsukanan (wp214)
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Weerapong Phadungsukanan.
 
   File purpose:
@@ -43,8 +43,8 @@
 #include "mops_flux_postprocessor.h"
 #include "string_functions.h"
 #include <stdexcept>
-FluxAnalyser::FluxAnalyser(const Mechanism &mech, 
-                           const timevector &times, 
+FluxAnalyser::FluxAnalyser(const Mechanism &mech,
+                           const timevector &times,
                            const std::vector<fvector> &agpfwdrates,
                            const std::vector<fvector> &agprevrates,
                            const fvector &atemperatures) {
@@ -140,7 +140,6 @@ void FluxAnalyser::calculateFluxAt(unsigned int index, unsigned int iel, Mops::F
     flux_network.clear();
 
     for (unsigned int i = 0; i < m_mech->ReactionCount(); i++) {
-        if (m_mech->Reactions(i)->ReactantCount() > 0) {
             // Integer Stoichiometry
             for (int j = 0; j < m_mech->Reactions(i)->ReactantCount(); j++) {
                 for (int k = 0; k < m_mech->Reactions(i)->ProductCount(); k++) {
@@ -173,39 +172,6 @@ void FluxAnalyser::calculateFluxAt(unsigned int index, unsigned int iel, Mops::F
                     }
                 }
             }
-        } else {
-            // Real Stoichiometry
-            for (int j = 0; j < m_mech->Reactions(i)->FReactantCount(); j++) {
-                for (int k = 0; k < m_mech->Reactions(i)->FProductCount(); k++) {
-                    real n_total_stoi = getTotalElementStoi(*m_mech->Reactions(i), iel);
-                    real n_A_elem     = getNumberOfElementAtom(m_mech->Reactions(i)->FReactant(j), iel);
-                    real n_B_elem     = getNumberOfElementAtom(m_mech->Reactions(i)->FProduct(k), iel);
-                    real flux_fraction = 0.0;
-                    if (n_total_stoi > 0) {
-                        flux_fraction = n_A_elem * n_B_elem / n_total_stoi;
-                    } else {
-                        flux_fraction = 0.0;
-                    }
-                    // A => B Flux
-                    FluxPath temp_fpath;
-                    temp_fpath.Rate = (m_agpfwdrates->at(index)).at(i) * flux_fraction;
-                    if (temp_fpath.Rate > 0.0) {
-                        temp_fpath.SourceSpecies = m_mech->Reactions(i)->FReactant(j).Index();
-                        temp_fpath.TargetSpecies = m_mech->Reactions(i)->FProduct(k).Index();
-                        temp_fpath.Rate          = (m_agpfwdrates->at(index)).at(i) * flux_fraction;
-                        addToFluxPathRate(temp_fpath, flux_network);
-                    }
-
-                    // B => A Flux, this is only if reaction is reversible.
-                    if (m_mech->Reactions(i)->IsReversible()) {
-                        temp_fpath.SourceSpecies = m_mech->Reactions(i)->FProduct(k).Index();
-                        temp_fpath.TargetSpecies = m_mech->Reactions(i)->FReactant(j).Index();
-                        temp_fpath.Rate          = (m_agprevrates->at(index)).at(i) * flux_fraction;
-                        addToFluxPathRate(temp_fpath, flux_network);
-                    }
-                }
-            }
-        }
     }
 
     // Sort current Flux Network
@@ -316,23 +282,10 @@ real FluxAnalyser::getTotalElementStoi(const Sprog::Kinetics::Reaction &rxn, uns
     for (int i = 0; i < rxn.ReactantCount(); i++) {
         n += getNumberOfElementAtom(rxn.Reactant(i), iel);
     }
-    for (int i = 0; i < rxn.FReactantCount(); i++) {
-        n += getNumberOfElementAtom(rxn.FReactant(i), iel);
-    }
     return n;
 }
 
 real FluxAnalyser::getNumberOfElementAtom(const Sprog::Stoich &sc, unsigned int iel) {
-    Sprog::Species * sp = m_mech->GetSpecies(sc.Index());
-    if (sp != NULL) {
-        real n = (real) sp->AtomCount(iel);
-        return n * ((real) sc.Mu());
-    } else {
-        return 0.0;
-    }
-}
-
-real FluxAnalyser::getNumberOfElementAtom(const Sprog::Stoichf &sc, unsigned int iel) {
     Sprog::Species * sp = m_mech->GetSpecies(sc.Index());
     if (sp != NULL) {
         real n = (real) sp->AtomCount(iel);

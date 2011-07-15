@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   cam_kernel.cpp
  * Author: vinod
  *
@@ -55,7 +55,7 @@
 #include "interface.h"
 //#include "cam_premix.h"
 /*
- * 
+ *
  */
 using namespace std;
 using namespace Sprog;
@@ -92,7 +92,7 @@ int main()
 
 
     //read mechanism, thermo and trasnport data
-    IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,fTrans,1.0);
+    Sprog::IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,1,fTrans);
 
     //Following is a test call to the interface
 //-----------------------------------------------------------
@@ -113,6 +113,7 @@ int main()
         models.solve(ca,config,cc,cg,cp,cSoot,mech);
     } catch (CamError &ce) {
         cout << ce.errorMessage;
+
         exit(1);
     }
 

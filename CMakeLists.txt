@@ -22,12 +22,12 @@ ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 ######### The camflow application ##########################
 add_executable(camflow-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/camflow/cam_kernel.cpp)
-target_link_libraries(camflow-app camflow)
+target_link_libraries(camflow-app camflow ${Boost_LIBRARIES})
 
 
 ######### The Mops application ##########################
 add_executable(mops-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/mopsc/mops.cpp)
-target_link_libraries(mops-app mops)
+target_link_libraries(mops-app mops ${Boost_LIBRARIES})
 
 # Regression tests for Mops
 add_test(mops.regress1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress1.sh ${MOPSSUITE_BINARY_DIR}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
@@ -46,7 +46,7 @@ add_test(mops.sinter1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/sinter1.sh ${MOPSSUITE_
 
 ########## The Brush application #######################
 add_executable(brush-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/brush/brush.cpp)
-target_link_libraries(brush-app brush)
+target_link_libraries(brush-app brush ${Boost_LIBRARIES})
 
 # Regression tests for Brush
 add_test(brush.regress1 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress1.sh ${MOPSSUITE_BINARY_DIR}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
@@ -59,10 +59,13 @@ add_test(brush.regress4 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress4.sh ${MOPSSUI
 
 ########## A small program to exercise the Brush interface for moonmd #######################
 add_executable(brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/brush/moonmd_test.cpp)
-target_link_libraries(brush-moonmd-test brush)
+target_link_libraries(brush-moonmd-test brush ${Boost_LIBRARIES})
 
 # Regression tests for Brush moon-md interface
 add_test(NAME brush.moonmd1 COMMAND ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${MOPSSUITE_BINARY_DIR}/brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/test/brush)
+
+add_executable(sprogc-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/sprogc/sprogc_test.cpp)
+target_link_libraries(sprogc-test sprog ${Boost_LIBRARIES})
 
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)

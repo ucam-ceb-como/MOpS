@@ -71,6 +71,7 @@ add_library(sweep source/mt19937.cpp
 
 include_directories(include 
                     ../utils/include
+                    ../io/chemkinReader/include
                     ../io/comostrings/include
                     ../io/camxml/include
                     ../geometry/include
@@ -78,4 +79,4 @@ include_directories(include
 
 # To link againast sweep the following libraries will also
 # be required to resolve references from within sweep.
-target_link_libraries(sweep sprog geometry camxml comostrings)
+target_link_libraries(sweep sprog geometry camxml comostrings chemkinReader)

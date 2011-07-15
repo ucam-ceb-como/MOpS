@@ -2,11 +2,11 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
-    This files contains the definition of a structure for a set of chemical reactions, 
+    This files contains the definition of a structure for a set of chemical reactions,
     including code to provide speed enhancements when working with many reactions.
 
   Licence:
@@ -64,7 +64,6 @@ public:
     // Constructors.
     ReactionSet(void);                   // Default constructor.
     ReactionSet(const ReactionSet &rxn); // Copy constructor.
-    ReactionSet(std::istream &in);       // Stream-reading constructor.
 
     // Destructor.
     ~ReactionSet(void);
@@ -75,7 +74,7 @@ public:
     const ReactionSet operator+(const ReactionSet &rxns) const;
     Reaction *const operator[](unsigned int i);
     const Reaction *const operator[](unsigned int i) const;
-   
+
 
     // REACTIONS.
 
@@ -190,7 +189,7 @@ public:
 
     // RATE CONSTANTS.
 
-    // Calculates the forward and reverse rate constants 
+    // Calculates the forward and reverse rate constants
     // of all reactions given a mixture object.
     void GetRateConstants(
         const Sprog::Thermo::GasPhase &mix, // The mixture for which to calculate the rate constants.
@@ -199,10 +198,10 @@ public:
         fvector &kreverse  // Return vector for reverse rate constants.
         ) const;
 
-    // Calculates the forward and reverse rate constants 
+    // Calculates the forward and reverse rate constants
     // of all reactions given mixture temperature, density
     // and species mole fractions.
-    void GetRateConstants( 
+    void GetRateConstants(
         real T,              // The mixture temperature.
         real density,        // Mixture molar density.
         const real *const x, // Species mole fractions.
@@ -212,7 +211,7 @@ public:
         fvector &kreverse    // Return vector for reverse rate constants.
         ) const;
 
-    // Calculates the forward and reverse rate constants 
+    // Calculates the forward and reverse rate constants
     // of all reactions given a mixture object.
     void GetRateConstants(
         const Sprog::Thermo::GasPhase &mix, // The mixture for which to calculate the rate constants.
@@ -220,10 +219,10 @@ public:
         fvector &kreverse  // Return vector for reverse rate constants.
         ) const;
 
-    // Calculates the forward and reverse rate constants 
+    // Calculates the forward and reverse rate constants
     // of all reactions given mixture temperature, density
     // and species mole fractions.
-    void GetRateConstants( 
+    void GetRateConstants(
         real T,              // The mixture temperature.
         real density,        // Mixture molar density.
         const real *const x, // Species mole fractions.
@@ -277,10 +276,23 @@ public:
 
     // READ/WRITE/COPY FUNCTIONS.
 
-    // Writes the reaction set to a binary data stream.
+    // Writes the element to a binary data stream.
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */)
+    {
+        //ar.register_type(static_cast<Reaction *>(NULL));
+
+        ar & m_rxns & m_rev_rxns
+           & m_tb_rxns & m_fo_rxns
+           & m_lt_rxns & m_revlt_rxns
+           & m_mech;
+    }
+
+    // Writes the element to a binary data stream.
     void Serialize(std::ostream &out) const;
 
-    // Reads the reaction set data from a binary data stream.
+    // Reads the element data from a binary data stream.
     void Deserialize(std::istream &in);
 
 protected:
