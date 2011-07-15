@@ -4,6 +4,10 @@
 cmake_minimum_required (VERSION 2.6)
 project (MOPSSUITE)
 
+SET(BOOST_ROOT /home/userspace/lrm29/boost_1_47_0)
+SET(Boost_USE_MULTITHREADED OFF)
+find_package(Boost 1.43.0 REQUIRED COMPONENTS regex serialization)
+
 enable_testing()
 
 # Turn off line breaks in error messages so that IDEs can parse the errors properly
@@ -11,7 +15,7 @@ IF(CMAKE_COMPILER_IS_GNUCC)
   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
@@ -61,6 +65,7 @@ target_link_libraries(brush-moonmd-test brush)
 add_test(NAME brush.moonmd1 COMMAND ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${MOPSSUITE_BINARY_DIR}/brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
 # Subsidiary libraries for the solvers
+add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/comostrings)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/camxml)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/geometry)
@@ -75,6 +80,7 @@ add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/brush)
 
 # All the header files we have written
 include_directories(${MOPSSUITE_SOURCE_DIR}/src/utils/include
+                    ${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader/include
                     ${MOPSSUITE_SOURCE_DIR}/src/io/comostrings/include
                     ${MOPSSUITE_SOURCE_DIR}/src/io/camxml/include
                     ${MOPSSUITE_SOURCE_DIR}/src/geometry/include
@@ -86,4 +92,5 @@ include_directories(${MOPSSUITE_SOURCE_DIR}/src/utils/include
                     ${MOPSSUITE_SOURCE_DIR}/src/odesolvers/radau/include
                     ${MOPSSUITE_SOURCE_DIR}/src/camflow/include
                     ${MOPSSUITE_SOURCE_DIR}/src/mopsc/include
-                    ${MOPSSUITE_SOURCE_DIR}/src/brush/include)
+                    ${MOPSSUITE_SOURCE_DIR}/src/brush/include
+                    ${Boost_INCLUDE_DIRS})
