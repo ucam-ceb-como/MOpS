@@ -382,7 +382,6 @@ void Cell::Serialize(std::ostream &out) const
         out.write((char*)&version, sizeof(version));
 
         // Output the base class.
-        // \todo Need to integrate with new serialize.
         Sprog::Thermo::IdealGas::Serialize(out);
 
         // Output the sample volume.
@@ -415,7 +414,6 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
         switch (version) {
             case 0:
                 // Read the base class.
-                // \todo Need to integrate with new serialize.
                 Sprog::Thermo::IdealGas::Deserialize(in);
 
                 // Read the sample volume.

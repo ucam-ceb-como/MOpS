@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-
+  
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -77,13 +77,13 @@ namespace Sweep
     const real CFM     = 4.65695224e-12; // Sqrt(KB * PI / 2) = sqrt(J/K).
     const real CFM_CGS = 1.47265760e-08; // = sqrt(erg/K).
 	const real CFMMAJ  = 2;  //ms785    1.41 can only be used if the particles are spherical
-   // const real CFMMAJ  = 1.4178;
+   // const real CFMMAJ  = 1.4178;	
 
     // Slip-flow coagulation kernel parameters.
     const real CSF     = 9.2046667e-24; // = KB * 2/3 (J/K).
     const real CSF_CGS = 9.2046667e-17; // = KB * 2/3 (erg/K).
 
-    // Returns the viscosity of air at 1 atm
+    // Returns the viscosity of air at 1 atm 
     // for the given temperature.
     inline real ViscosityAir(real T)
     {
