@@ -3,7 +3,7 @@
   \file         loi_reduction.h
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-
+  
   Copyright (C) 2010 Rebecca Riehl.
 
   \brief Namespace for mechanism reduction using the Level of Importance (LOI) technique.
@@ -58,9 +58,9 @@ using namespace Mops;
 @return           LOI         fvector with LOI results
 */
 vector<fvector> Mops::LOIReduction::CalcLOI(double** J, double** Sensi, vector<fvector> LOI, int n_species, int n_sensi)
-{
+{ 
     for (int i = 0; i < n_sensi; i++){
-        for (int j = 0; j < n_species; j++){
+        for (int j = 0; j < n_species; j++){ 
             if (Sensi[i][j] < 0){
                 Sensi[i][j] = -Sensi[i][j];
             }
@@ -68,7 +68,7 @@ vector<fvector> Mops::LOIReduction::CalcLOI(double** J, double** Sensi, vector<f
                 LOI[i][j] = LOI[i][j] + 0.0;
             }
             else{
-                LOI[i][j] = LOI[i][j] - Sensi[i][j] / J[j][j];
+                LOI[i][j] = LOI[i][j] - Sensi[i][j] / J[j][j]; 
             }
        }
     }
@@ -111,14 +111,14 @@ void Mops::LOIReduction::CreateLOIFile(std::ofstream &LOIFile, const Mechanism *
 {
     typedef std::vector<std::string> string_vector;
 
-    string_vector LOIHeadings;
+    string_vector LOIHeadings; 
     LOIHeadings.push_back("Time/ s");
 
     for (unsigned int isp=0; isp<mech->SpeciesCount(); ++isp) {
     LOIHeadings.push_back(mech->Species(isp)->Name() + " (LOI)");
     }
-
-
+    
+    
     // Write the column headings to the file, with commas between names, but not after the last name
     string_vector::const_iterator it = LOIHeadings.begin();
     const string_vector::const_iterator itStop = LOIHeadings.end() - 1;

@@ -328,11 +328,11 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         vector<fvector> LOI(s.GetNumSens(), fvector(r.Mech()->SpeciesCount()));
         std::ofstream LOIFile;
         std::vector<std::string> rejectSpecies;
-
+        
         if (s.GetLOIStatus() == true){
             LOIFile.open(LOIReduction::buildLOIFileName().c_str());
             s.InitialiseSensMatrix(s.GetNumSens(),r.Mech()->SpeciesCount());
-            LOIReduction::CreateLOIFile(LOIFile, r.Mech());
+            LOIReduction::CreateLOIFile(LOIFile, r.Mech());  
         }
         // Loop over the time intervals.
         unsigned int global_step = 0;

@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-
+  
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -76,12 +76,9 @@ void Mechanism::Serialize(std::ostream &out) const
         // Write the serialize version to the stream.
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
-
+        
         // Write the base class.
-        // \todo Need to integrate with new serialize.
         Sprog::Mechanism::Serialize(out);
-        //boost::archive::text_oarchive oa(out);
-        //oa <;
 
         // Write the particle mechanism.
         m_pmech.Serialize(out);
@@ -103,11 +100,7 @@ void Mechanism::Deserialize(std::istream &in)
         switch (version) {
             case 0:
                 // Read the base class.
-                // \todo Need to integrate with new serialize.
                 Sprog::Mechanism::Deserialize(in);
-
-                //boost::archive::text_iarchive oa(in);
-                //Sprog::Mechanism::serialize(in,0);
 
                 // Read the particle mechanism.
                 m_pmech.Deserialize(in);

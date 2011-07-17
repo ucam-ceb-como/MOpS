@@ -1,7 +1,7 @@
 /*
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -58,7 +58,7 @@ using namespace Strings;
 Solver::Solver(void)
 : m_atol(1.0e-3), m_rtol(6.0e-4), m_rlx_coeff(0.0),
   m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_tottime(0.0),
-  m_chemtime(0.0)
+  m_chemtime(0.0), m_LOIEnable(false)
 {
 }
 
@@ -193,7 +193,7 @@ void Solver::SetUnderRelaxCoeff(real relax) {m_rlx_coeff = relax;}
 // an adaptive method (NOT YET IMPLEMENTED).  Internal solver
 // output is provided after each step/iteration by passing
 // a function pointer.
-void Solver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
+void Solver::Solve(Reactor &r, real tstop, int nsteps, int niter,
                    int (*rand_int)(int, int), Sweep::real (*rand_u01)(),
                    OutFnPtr out, void *data)
 {
@@ -219,7 +219,7 @@ Retrieves the solution vector if the basic gpc ode solver is called
 @return    double**       Sensitivity solution array
 */
 double** Solver::GetSensSolution(int n_sensi, int n_species)
-{ 
+{
     return m_ode.GetSensSolution(n_sensi, n_species);
 
 }
@@ -296,7 +296,7 @@ void Solver::CT_Names(vector<string> &names, unsigned int start) const
     std::vector<std::string>::iterator i = names.begin()+start;
 
     // Add names to output array.
-    *(i++) = "Total Comput. Time (s)"; 
+    *(i++) = "Total Comput. Time (s)";
     *(i++) = "ODE (gas-phase) Comput. Time (s)";
 }
 
