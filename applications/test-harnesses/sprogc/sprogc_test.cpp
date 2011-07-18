@@ -20,7 +20,6 @@ using namespace std;
 int main()
 {
     Mechanism mechIN, mechOUT;
-	int k;
     // Load the test mechanism.
     try {
 
