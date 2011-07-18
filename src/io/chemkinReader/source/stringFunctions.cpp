@@ -47,12 +47,12 @@ IO::regex_escape(const string& string_to_escape)
 
 
 string
-IO::replaceComments(string stringToReplace)
+IO::replaceComments(const string& stringToReplace)
 {
     regex commentRegex("(!.*?)\\n|(!.*?)$");
     string format_string = " \n";
-    stringToReplace = regex_replace(stringToReplace, commentRegex, format_string, match_default | format_sed);
-    return stringToReplace;
+    string result = regex_replace(stringToReplace, commentRegex, format_string, match_default | format_sed);
+    return result;
 }
 
 string

@@ -19,7 +19,8 @@ IO::Species::Species
     name_(name),
     molecularWeight_(-1),
     transport_(),
-    thermo_(name)
+    thermo_(name),
+    speciesComposition_()
 {}
 
 IO::Species::~Species()

@@ -60,7 +60,7 @@ namespace IO
         const std::string& string_to_escape
     );
 
-    std::string replaceComments(std::string stringToReplace);
+    std::string replaceComments(const std::string& stringToReplace);
 
     std::string convertToCaps(const std::string &str);
 
