@@ -18,5 +18,6 @@ add_library(chemkinReader
             source/chemkinReader.cpp)
 
 include_directories(include
+					${Boost_INCLUDE_DIRS}
                     ../../sprogc/include
                     ../../utils/include)

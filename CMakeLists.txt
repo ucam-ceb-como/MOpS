@@ -12,11 +12,11 @@ enable_testing()
 
 # Turn off line breaks in error messages so that IDEs can parse the errors properly
 IF(CMAKE_COMPILER_IS_GNUCC)
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0 -g -O0")
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0 -g -O0")
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 
@@ -82,7 +82,8 @@ add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/mopsc)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/brush)
 
 # All the header files we have written
-include_directories(${MOPSSUITE_SOURCE_DIR}/src/utils/include
+include_directories(${Boost_INCLUDE_DIRS}
+					${MOPSSUITE_SOURCE_DIR}/src/utils/include
                     ${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader/include
                     ${MOPSSUITE_SOURCE_DIR}/src/io/comostrings/include
                     ${MOPSSUITE_SOURCE_DIR}/src/io/camxml/include
@@ -95,5 +96,4 @@ include_directories(${MOPSSUITE_SOURCE_DIR}/src/utils/include
                     ${MOPSSUITE_SOURCE_DIR}/src/odesolvers/radau/include
                     ${MOPSSUITE_SOURCE_DIR}/src/camflow/include
                     ${MOPSSUITE_SOURCE_DIR}/src/mopsc/include
-                    ${MOPSSUITE_SOURCE_DIR}/src/brush/include
-                    ${Boost_INCLUDE_DIRS})
+                    ${MOPSSUITE_SOURCE_DIR}/src/brush/include)
