@@ -20,12 +20,12 @@ IO::Reaction::Reaction()
    forwardArrhenius_(),
    reverseArrhenius_(),
    flagThirdBody_(false),
-   fallOffBody_(),
    flagLOW_(false),
    flagTROE_(false),
    flagSRI_(false),
    flagPressureDependent_(false),
-   thirdBodies_()
+   thirdBodies_(),
+   fallOffBody_()
 {}
 
 void IO::Reaction::setReversible(const bool flag)
