@@ -151,7 +151,8 @@ class CamSoot {
                             const realVector& rho,
                             const doublereal* y, doublereal* f);
 
-        void clearRates(int ncells);
+        //void clearRates(int ncells);
+        //void clearRates();
 
         /*!
          *adjust the species production rates for soot formation
@@ -191,6 +192,8 @@ class CamSoot {
                 const doublereal& p,
                 const int cellID=0);
 
+        realVector showGasPhaseRates(int nSpecies);
+
     private:
 
         const doublereal rhoSoot;
@@ -221,7 +224,8 @@ class CamSoot {
         stringVector sootSpecies;
 
         Array2D bnCoeff,powPAH, prime;
-        Array2D wdot,surfProdRate;
+        Array2D wdot; //,surfProdRate;
+        realVector surfProdRate;
         Array2D conc_received, momReceived;
 
         static Array1D sizeMoments, reducedMoments;
@@ -229,14 +233,18 @@ class CamSoot {
          *members for storing the rates
          */
         //rates for nucleation, coagulation and condensation
-        realVector nucRate, cgRate, cdRate;
+        // Better to have these as local to rates All.
+        // realVector nucRate, cgRate, cdRate;
+
         //map<string,doublereal> surfProdRate; //surface production rate
         std::map<std::string, realVector > smRates; //moment rates due to surface reactions
 
         /*
          *New variables
          */
-        doublereal Beta_nucl, Beta_fm, Beta_cd, Beta_surf;
+        // Beta_surf in CGS units. (as surface chem done in CGS)
+        doublereal Beta_nucl, Beta_fm, Beta_cd, Beta_surf_CGS, CBOHCGS;
+
 
         /*!
          *nucleation rate
@@ -252,6 +260,7 @@ class CamSoot {
                           doublereal M0,           //zeroth moment
                           doublereal concPAH,      //concentration of PAH
                           doublereal ratePAH);     //rate of PAH consumption due to condensation
+
         void surface(int hMoment, int cell,
                      doublereal T,
                      doublereal M0,
@@ -274,20 +283,19 @@ class CamSoot {
         /*
          *calculate condensation rate
          */
-        doublereal rateCondensation(realVector& mom, //vector of moments
-                            doublereal& T,                   //temperature
-                            doublereal& conc,                //PAH concentration
-                            realVector& cdRates      //rates returned
+        realVector rateCondensation(const realVector& mom, //vector of moments
+        		const doublereal& T,           //temperature
+        		const doublereal& concPAH     //PAH concentration
                             );
 
         /*
-         *cauculate surface reaction rates
+         *calculate surface reaction rates
          */
-        void rateSurface(realVector& conc,          //concentration
-                            doublereal T,                   //temperature
-                            realVector& mom,        //moment vector
+        void rateSurface(const realVector& conc,          //concentration
+                            const doublereal& T,           //temperature
+                            const realVector& mom,        //moment vector
                             realVector& prodRates,  //surf prod rates
-                            realVector& totalRates);//rates returned
+                            realVector& sRates);//rates returned
 
         void interpolateReducedMoments(realVector& wom);
 
@@ -296,6 +304,7 @@ class CamSoot {
          * k = , n = , m =
          */
         doublereal gridFunction(const int k, const int n, const int m);
+
 
 }; // End Class CamSoot
 
