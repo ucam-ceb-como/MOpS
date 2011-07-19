@@ -4,7 +4,7 @@
 cmake_minimum_required (VERSION 2.6)
 project (MOPSSUITE)
 
-SET(BOOST_ROOT /home/userspace/lrm29/boost_1_47_0)
+SET(BOOST_ROOT /home/userspace/$USER/boost)
 SET(Boost_USE_MULTITHREADED OFF)
 find_package(Boost 1.43.0 REQUIRED COMPONENTS regex serialization)
 
