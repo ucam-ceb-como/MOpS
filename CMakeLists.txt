@@ -20,6 +20,8 @@ ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 add_executable(camflow-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/camflow/cam_kernel.cpp)
 target_link_libraries(camflow-app camflow)
 
+# Regression tests for CamFlow
+add_test(camflow.hydrogenFlamelet ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet.sh ${MOPSSUITE_BINARY_DIR}/camflow-app)
 
 ######### The Mops application ##########################
 add_executable(mops-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/mopsc/mops.cpp)

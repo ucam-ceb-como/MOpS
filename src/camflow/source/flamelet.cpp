@@ -190,7 +190,7 @@ void FlameLet::initSolutionVector()
      */
     initSpecies(right,left,control_,vSpec);
     /*
-     *the following will initialize the temperature vecotor with
+     *the following will initialize the temperature vector with
      *a linear profile
      */
     //initTempGauss(vT);
