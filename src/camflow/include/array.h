@@ -39,10 +39,11 @@
  */
 
 #ifndef _ARRAY_H
-#define	_ARRAY_H
+#define _ARRAY_H
 
 #include "cam_params.h"
 #include <vector>
+#include <iomanip>
 
 namespace Camflow{
     /*!
@@ -51,6 +52,25 @@ namespace Camflow{
      * Include a more detailed description here.
      */
     class Array2D{
+
+            friend std::ostream& operator<<(std::ostream& output, const Array2D& array)
+            {
+                output << "Array ("
+                       << array.nRows << " rows x " << array.nCols
+                       << " columns):"
+                       <<  std::endl;
+                for (size_t i=0; i<array.nRows; ++i)
+                {
+                    for (size_t j=0; j<array.nCols; ++j)
+                    {
+                       output << std::scientific << std::setw(14) << array(i,j);
+                    }
+                    output << std::endl;
+                }
+                output << std::endl;
+
+                return output;
+            };
 
         public:
 
@@ -63,8 +83,8 @@ namespace Camflow{
 
             //! Create an m X n Array and initialize with zeros.
             Array2D(int m, int n, doublereal v=0.0){
-                nRows = n;
-                nCols = m;
+                nRows = m;
+                nCols = n;
                 aData.resize(m*n,v);
             }
 
@@ -90,8 +110,8 @@ namespace Camflow{
 
             //! Resize the array.
             void resize(int m, int n, doublereal v=0.0){
-                nRows = n;
-                nCols = m;
+                nRows = m;
+                nCols = n;
                 aData.resize(m*n,v);
             }
 
@@ -107,12 +127,12 @@ namespace Camflow{
 
             //! Access an element in the array.
             doublereal& value(int i, int j){
-                return aData[nRows*i + j];
+                return aData[nCols*i + j];
             }
 
             //! Access an element in the array.
             doublereal value(int i, int j) const{
-                return aData[nRows*i + j];
+                return aData[nCols*i + j];
             }
 
             //! Return the size m X n.
@@ -135,7 +155,7 @@ namespace Camflow{
     class Array1D{
 
         public:
-            
+
             //! Default constructor
             Array1D(){
                 minIndex = 0;
@@ -180,7 +200,7 @@ namespace Camflow{
             doublereal operator ()(int i) const{
                 return value(i);
             }
-            
+
             doublereal value(int i) const{
 
                 return aData[i-minIndex];
@@ -200,5 +220,4 @@ namespace Camflow{
 
 } // End Camflow namespace.
 
-#endif	/* _ARRAY_H */
-
+#endif  /* _ARRAY_H */
