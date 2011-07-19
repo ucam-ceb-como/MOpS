@@ -115,8 +115,6 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
             while (i < reactionStringLines_.size()-1)
             {
 
-                cout << reactionStringLines_[i] << endl;
-
                 start = reactionStringLines_[i+1].begin();
                 end = reactionStringLines_[i+1].end();
 
