@@ -68,6 +68,8 @@ add_test(NAME brush.moonmd1 COMMAND ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.s
 add_executable(sprogc-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/sprogc/sprogc_test.cpp)
 target_link_libraries(sprogc-test sprog ${Boost_LIBRARIES})
 
+add_test(sprogc.regress1 ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress1.sh ${MOPSSUITE_BINARY_DIR}/sprogc-test ${MOPSSUITE_SOURCE_DIR}/test/sprogc)
+
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/comostrings)
