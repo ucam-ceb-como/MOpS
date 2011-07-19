@@ -33,7 +33,9 @@ FlameLet::~FlameLet()
 void FlameLet::checkSetup()
 {
 
-    //if(mCord != 1) throw std::invalid_argument("Grid size does not equal one\n");
+    if(reacGeom_.getAxpos()[mCord-1] != 1)
+        throw std::invalid_argument("Mixture fraction does not go from 0 to 1. "
+                                    "Check <length unit=\"m\">1.0</length>\n");
 
 }
 
