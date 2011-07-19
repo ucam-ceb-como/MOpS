@@ -15,7 +15,7 @@ using namespace boost;
 
 IO::ThermoParser::ThermoParser(const string thermo_file)
 :
-thermo_file_(thermo_file),
+thermo_file_(convertToCaps(thermo_file)),
 lines_(fileToStrings(thermo_file)) {
 }
 
@@ -99,7 +99,7 @@ bool IO::ThermoParser::parseNASASection(string l1, string l2, string l3, string 
     thermo.setTLow(from_string<double>(trim(l1.substr(45, 10))));
     thermo.setTHigh(from_string<double>(trim(l1.substr(55, 10))));
     thermo.setTCommon(from_string<double>(trim(l1.substr(65, 8))));
-    string elements_string = l1.substr(24, 20);
+    string elements_string = convertToCaps(l1.substr(24, 20));
     thermo.setElements(parseElements(elements_string));
     // line 2, 3 4
     double al1, al2, al3, al4, al5, al6, al7;

@@ -61,6 +61,16 @@ IO::convertToCaps(const string& str)
     return boost::to_upper_copy(str);
 }
 
+vector<string>
+IO::convertToCaps(const vector<string>& str)
+{
+    for (size_t i=0; i<str.size(); ++i)
+    {
+        convertToCaps(str[i]);
+    }
+    return str;
+}
+
 string
 IO::trim(const string &str)
 {
