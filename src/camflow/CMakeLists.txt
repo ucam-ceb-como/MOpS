@@ -30,6 +30,7 @@ add_library(camflow source/cam_read.cpp
 
 include_directories(include 
                     ../utils/include
+                    ../io/chemkinReader/include
                     ../io/comostrings/include
                     ../io/camxml/include
                     ../sprogc/include
@@ -38,4 +39,4 @@ include_directories(include
 
 # To link againast camflow the following libraries will also
 # be required to resolve references from within camflow.
-target_link_libraries(camflow camxml comostrings sprog cvode radau)
+target_link_libraries(camflow camxml comostrings sprog cvode radau chemkinReader)

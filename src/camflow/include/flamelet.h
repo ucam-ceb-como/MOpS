@@ -102,6 +102,9 @@ namespace Camflow
             //! Destructor.
             virtual ~FlameLet();
 
+            // Run some tests to check the setup.
+            void checkSetup();
+
             //! Solve the flamelet. Call for coupling without solving population balance.
             void solve(bool interface);
 

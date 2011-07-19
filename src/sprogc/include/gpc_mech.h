@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -44,6 +44,11 @@
 
 #ifndef GPC_MECH_H
 #define GPC_MECH_H
+
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
 
 #include "gpc_params.h"
 #include "gpc_element.h"
@@ -87,7 +92,7 @@ public:
 
     // Returns the current unit system.
     UnitSystem Units(void) const;
-    
+
     // Converts the mechanism to a new units system.
     void SetUnits(UnitSystem u);
 
@@ -165,7 +170,7 @@ public:
 
     // Returns index of species.  Returns -1 if not found.
     int FindSpecies(const Sprog::Species &sp) const;
-    
+
     // Returns index of species.  Returns -1 if not found.
     int FindSpecies(const std::string &name) const;
 
@@ -214,22 +219,34 @@ public:
 
     // READ/WRITE/COPY FUNCTIONS.
 
-    // Writes the mechanism to a binary data stream.
+    // Writes the element to a binary data stream.
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */)
+    {
+          ar.register_type(static_cast<Sprog::Element *>(NULL));
+          ar.register_type(static_cast<Sprog::Species *>(NULL));
+          ar.template register_type<Sprog::StoichXRef>();
+
+          ar & m_units & m_elements & m_species & m_rxns & m_stoich_xref
+             & m_stoich_xref_valid & m_nec_spec;
+    }
+
+    friend class boost::serialization::access;
+
+    // Writes the mixture to a binary data stream.
     virtual void Serialize(std::ostream &out) const;
 
-    // Reads the mechanism data from a binary data stream.
+    // Reads the mixture data from a binary data stream.
     virtual void Deserialize(std::istream &in);
 
     // OUTPUT FUNCTIONS.
 
     // Prints a diagnostic output file containing all the
-    // mechanism data.  This is used to debug. 
+    // mechanism data.  This is used to debug.
     void WriteDiagnostics(const std::string &filename) const;
-    
+
     //! Creates and writes out a Chemkin file containing the reduced mechanism as specified by LOI analysis
     void WriteReducedMech(const std::string &filename, std::vector<std::string> RejectSpecies) const;
-
-	void setSpeciesTransport(std::map< std::string,std::vector<std::string> > &trMap,Sprog::Mechanism &mech) const;
 
 protected:
     // Mechanism data.
@@ -246,7 +263,7 @@ protected:
 
     // Copies elements from given array into this mechanism.
     void copyInElements(const ElementPtrVector &els);
-    
+
     // Copies species from given array into this mechanism.
     void copyInSpecies(const SpeciesPtrVector &els);
 

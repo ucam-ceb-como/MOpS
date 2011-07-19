@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -50,40 +50,47 @@
 namespace Sprog
 {
 // Structure to hold species stoichiometry for a reaction.
-template<class T>
 class Stoichiometry
 {
 public:
-    typedef T stoich_val; // Stoich value type.
 
     // Constructors.
     Stoichiometry(void); // Default constructor.
-    Stoichiometry(const Stoichiometry<T> &s); // Copy constructor.
-    Stoichiometry(unsigned int isp, const stoich_val &mu); // Initialising constructor.
+    Stoichiometry(const Stoichiometry &s); // Copy constructor.
+    Stoichiometry(unsigned int isp, const real &mu); // Initialising constructor.
 
     // Destructor.
-    ~Stoichiometry(void);
+    ~Stoichiometry(){}
 
     // Operator overloads.
-    Stoichiometry<T> &operator=(const Stoichiometry<T> &s);
+    Stoichiometry &operator=(const Stoichiometry &s);
 
     // Species data.
     int Index(void) const; // Returns index of species.
     void SetSpecies(const unsigned int &sp); // Sets the species associated with this stoichiometry.
 
     // Stoichiometry value.
-    const stoich_val &Mu(void) const; // Returns the stoichiometry value.
-    void SetMu(const stoich_val &mu); // Sets the stoichiometry value.
-    void IncMu(const stoich_val &mu); // Increments the stoichiometry value.
+    const real &Mu(void) const; // Returns the stoichiometry value.
+    void SetMu(const real &mu); // Sets the stoichiometry value.
+    void IncMu(const real &mu); // Increments the stoichiometry value.
+
+    // Writes the element to a binary data stream.
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */)
+    {
+        ar & m_species & m_stoich;
+    }
+
+    friend class boost::serialization::access;
+
 private:
     // Data.
     int m_species;
-    stoich_val m_stoich;
+    real m_stoich;
 };
 
 // Typedefs for basic stoichiometry types.
-typedef Stoichiometry<int> Stoich;   // Integer stoichiometry data.
-typedef Stoichiometry<real> Stoichf; // Real stoichiometry data.
+typedef Stoichiometry Stoich;   // Stoichiometry data.
 
 // Typedefs and structure for species/reaction stoichiometry cross-referencing.
 typedef std::map<unsigned int, real> RxnStoichMap;
@@ -92,16 +99,19 @@ struct StoichXRef
 {
     unsigned int Species;
     RxnStoichMap RxnStoich;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */)
+    {
+          ar & Species & RxnStoich;
+    }
+
 };
 typedef std::vector<StoichXRef> StoichXRefVector;
 
 // Alternative method of defining stoichiometry.
-typedef std::map<unsigned int, int> StoichMap;
-typedef std::map<unsigned int, real> StoichMapf;
-/*
-typedef std::pair<unsigned int, int> Stoich;
-typedef std::pair<unsigned int, real> Stoichf;
-*/
+typedef std::map<unsigned int, real> StoichMap;
+
 };
 
 #endif

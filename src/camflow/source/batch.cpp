@@ -96,16 +96,14 @@ void Batch::checkSetup()
 void Batch::solve()
 {
 
-    CamBoundary cb;
-
     // Check that the problem has been setup properly.
     checkSetup();
 
     /*get the fuel inlet conditions and the fill the
      *solution vector with species mass fractions
      */
-    admin_.getLeftBoundary(cb);
-    getInletMassFrac(cb,solvect);
+    CamBoundary cb = admin_.getLeftBoundary();
+    solvect = getInletMassFrac(cb);
     solvect.push_back(cb.getTemperature());
 
 

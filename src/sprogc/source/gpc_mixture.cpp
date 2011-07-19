@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -46,6 +46,7 @@
 #include "gpc_transport_factory.h"
 #include <vector>
 #include <stdexcept>
+#include <boost/serialization/vector.hpp>
 //#include <bits/stl_vector.h>
 
 using namespace Sprog;
@@ -362,7 +363,7 @@ void Mixture::SetDensity(Sprog::real dens)
 void Mixture::SetMassDensity(Sprog::real dens)
 {
     m_data[densityIndex()] = 0.0;
-    
+
     // Calcualate molar density:
     //   rho_mass = rho_mole * sum(x * wt)
     for (unsigned int i=0; i!=m_species->size(); ++i) {
@@ -408,65 +409,6 @@ Mixture *const Mixture::Clone() const
     return new Mixture(*this);
 }
 
-// Writes the mixture to a binary data stream.
-void Mixture::Serialize(std::ostream &out) const
-{
-    if (out.good()) {
-        // Output the version ID (=0 at the moment).
-        const unsigned int version = 0;
-        out.write((char*)&version, sizeof(version));
-
-        // Output the data vector size.
-        unsigned int sz = m_data.size();
-        out.write((char*)&sz, sizeof(sz));
-
-        // Output all elements in the data vector.
-        fvector::const_iterator i;
-        for (i=m_data.begin(); i!=m_data.end(); i++) {
-            out.write((char*)&(*i), sizeof(*i));
-        }
-    } else {
-        throw invalid_argument("Output stream not ready "
-                               "(Sprog, Mixture::Serialize).");
-    }
-}
-
-// Reads the mixture data from a binary data stream.
-void Mixture::Deserialize(std::istream &in)
-{
-    if (in.good()) {
-        // Read the output version.  Currently there is only one
-        // output version, so we don't do anything with this variable.
-        // Still needs to be read though.
-        unsigned int version = 0;
-        in.read(reinterpret_cast<char*>(&version), sizeof(version));
-
-        switch (version) {
-            case 0:
-                // Read the data vector size.
-                unsigned int sz;
-                in.read(reinterpret_cast<char*>(&sz), sizeof(sz));
-
-                // Fill the data vector.
-                real val;
-                m_data.reserve(sz);
-                for (unsigned int i=0; i<sz; i++) {
-                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_data.push_back(val);
-                }
-
-                // The mixture has no species associated it with right now.
-                m_species = NULL;
-                break;
-            default:
-                throw runtime_error("Mixture serialized version number "
-                                    "is invalid (Sprog, Mixture::Deserialize).");
-        }
-    } else {
-        throw invalid_argument("Input stream not ready (Sprog, Mixture::Deserialize).");
-    }
-}
-
 // Identifies the mixture type for serialisation.
 Serial_MixtureType Mixture::SerialType() const
 {
@@ -487,7 +429,7 @@ real Mixture::getAvgMolWt(){
     vector<real> moleFrac = MoleFractions();
     for(unsigned int i=0; i!= m_species->size(); i++)
         avgMolWt += moleFrac[i]*(*m_species)[i]->MolWt();
-    
+
     return avgMolWt;
 
 }
@@ -560,3 +502,73 @@ const vector<real> Mixture::getMixtureDiffusionCoeff(const real pre) const{
 	return mt.getMixtureDiffusionCoeff(Temperature(),pre,*this);
 }
 
+// Writes the mixture to a binary data stream.
+void Mixture::Serialize(std::ostream &out) const
+{
+
+    /*unsigned int size = m_data.size();
+
+    boost::archive::text_oarchive oa(out);
+    oa << size << m_data;*/
+
+    if (out.good()) {
+        // Output the version ID (=0 at the moment).
+        const unsigned int version = 0;
+        out.write((char*)&version, sizeof(version));
+
+        // Output the data vector size.
+        unsigned int sz = m_data.size();
+        out.write((char*)&sz, sizeof(sz));
+
+        // Output all elements in the data vector.
+        fvector::const_iterator i;
+        for (i=m_data.begin(); i!=m_data.end(); i++) {
+            out.write((char*)&(*i), sizeof(*i));
+        }
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sprog, Mixture::Serialize).");
+    }
+}
+
+// Reads the mixture data from a binary data stream.
+void Mixture::Deserialize(std::istream &in)
+{
+
+    /*unsigned int size = m_data.size();
+
+    boost::archive::text_iarchive oa(in);
+    oa >> size >> m_data;*/
+
+    if (in.good()) {
+        // Read the output version.  Currently there is only one
+        // output version, so we don't do anything with this variable.
+        // Still needs to be read though.
+        unsigned int version = 0;
+        in.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        switch (version) {
+            case 0:
+                // Read the data vector size.
+                unsigned int sz;
+                in.read(reinterpret_cast<char*>(&sz), sizeof(sz));
+
+                // Fill the data vector.
+                real val;
+                m_data.reserve(sz);
+                for (unsigned int i=0; i<sz; i++) {
+                    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                    m_data.push_back(val);
+                }
+
+                // The mixture has no species associated it with right now.
+                m_species = NULL;
+                break;
+            default:
+                throw runtime_error("Mixture serialized version number "
+                                    "is invalid (Sprog, Mixture::Deserialize).");
+        }
+    } else {
+        throw invalid_argument("Input stream not ready (Sprog, Mixture::Deserialize).");
+    }
+}

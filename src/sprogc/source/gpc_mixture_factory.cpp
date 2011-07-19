@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -56,7 +56,7 @@ using namespace std;
 // MIXTURE CREATION.
 
 // Creates a mixture of the given type.
-Mixture *const MixtureFactory::Create(Serial_MixtureType type, 
+Mixture *const MixtureFactory::Create(Serial_MixtureType type,
                                       const Sprog::SpeciesPtrVector &species)
 {
     Mixture *mix = NULL;
@@ -75,7 +75,7 @@ Mixture *const MixtureFactory::Create(Serial_MixtureType type,
 
 // Reads a mixture from the given input stream.  The first item
 // read from the file is the mixture type.
-Mixture *const MixtureFactory::Read(std::istream &s, 
+Mixture *const MixtureFactory::Read(std::istream &s,
                                     const Sprog::SpeciesPtrVector &species)
 {
     if (s.good()) {
@@ -107,7 +107,7 @@ Mixture *const MixtureFactory::Read(std::istream &s,
 // GAS-PHASE SPECIFIC CREATION.
 
 // Creates a GasPhase of the given type.
-GasPhase *const MixtureFactory::CreateGasPhase(Serial_MixtureType type, 
+GasPhase *const MixtureFactory::CreateGasPhase(Serial_MixtureType type,
                                                const Sprog::SpeciesPtrVector &species)
 {
     GasPhase *gas = NULL;
@@ -166,7 +166,7 @@ void MixtureFactory::Write(const Mixture &mix, std::ostream &out)
         out.write((char*)type, sizeof(type));
 
         // Serialize the mixture object.
-        mix.Serialize(out);
+        //mix.Serialize(out);
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sprog, MixtureFactory::Write).");

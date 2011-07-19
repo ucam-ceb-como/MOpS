@@ -69,12 +69,6 @@ ReactionSet::ReactionSet(const Sprog::Kinetics::ReactionSet &rxn)
     *this = rxn;
 }
 
-// Stream-reading constructor.
-ReactionSet::ReactionSet(std::istream &in)
-{
-    Deserialize(in);
-}
-
 // Destructor.
 ReactionSet::~ReactionSet()
 {
@@ -261,6 +255,7 @@ Reaction *const ReactionSet::AddReaction(const Sprog::Kinetics::Reaction &rxn)
     }
 
     // Check for third-bodies.
+    //if (rxn.ThirdBodies().size() > 0) {
     if (rxn.UseThirdBody()) {
         m_tb_rxns.insert(RxnMap::value_type(m_rxns.size()-1, pr));
     }
@@ -354,8 +349,6 @@ void ReactionSet::GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) 
 	GetRatesOfProgress(mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),kfrwd,krev,rop);
 	GetMolarProdRates(rop,wdot);
 
-
-
 }
 
 
@@ -406,22 +399,6 @@ void ReactionSet::GetRatesOfProgress(real density,
                 for (j=0; j!=m_rxns[i]->Products()[k].Mu(); ++j) {
                     rrev[i] *= density * x[m_rxns[i]->Products()[k].Index()];
                 }
-            }
-
-            // Real reactants.
-            for (k=0; k!=m_rxns[i]->FReactantCount(); ++k) {
-                // Now the stoichiometry is non-integer, we must use the pow() function.
-                rfwd[i] *= pow(density * x[m_rxns[i]->FReactants()[k].Index()],
-                              m_rxns[i]->FReactants()[k].Mu());
-
-            }
-
-            // Real products.
-            for (k=0; k!=m_rxns[i]->FProductCount(); ++k) {
-                // Now the stoichiometry is non-integer, we must use the pow() function.
-                rrev[i] *= pow(density * x[m_rxns[i]->FProducts()[k].Index()],
-                              m_rxns[i]->FProducts()[k].Mu());
-
             }
 
             // Calculate the net rates of production.
@@ -654,14 +631,6 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
                 // Integer Products.
                 kr[j] -= (*i)->Products()[k].Mu() * Gs[(*i)->Products()[k].Index()];
             }
-            for (k=0; k!=(*i)->FReactantCount(); ++k) {
-                // Real Reactants.
-                kr[j] += (*i)->FReactants()[k].Mu() * Gs[(*i)->FReactants()[k].Index()];
-            }
-            for (k=0; k!=(*i)->FProductCount(); ++k) {
-                // Real Products.
-                kr[j] -= (*i)->FProducts()[k].Mu() * Gs[(*i)->FProducts()[k].Index()];
-            }
 
             // Calculate the reverse rate constant.
             kr[j]  = exp(min(kr[j], log(1.0e250)));
@@ -689,17 +658,22 @@ void ReactionSet::calcTB_Concs(real density, const real *const x,
     int j, k;
 
     // Third body concentrations for each reaction.
-    for (i=m_rxns.begin(),j=0; i!=m_rxns.end(); ++i,++j) {
-        if ((*i)->UseThirdBody()) {
+    for (i=m_rxns.begin(),j=0; i!=m_rxns.end(); ++i,++j)
+    {
+        if ((*i)->UseThirdBody())
+        {
             // Calculate enhanced third body concentration using the enhancement
             // factors defined for this reaction.
             tbconcs[j] = 0.0;
-            for (k=0; k<(*i)->ThirdBodyCount(); ++k) {
+            for (k=0; k<(*i)->ThirdBodyCount(); ++k)
+            {
                 tbconcs[j] += ((*i)->ThirdBody(k).Mu() - 1.0) *
                               x[(*i)->ThirdBody(k).Index()];
             }
             tbconcs[j] = density * (1.0 + tbconcs[j]);
-        } else {
+        }
+        else
+        {
             // This reaction has no third body requirement.
             tbconcs[j] = 1.0;
         }
@@ -749,7 +723,8 @@ void ReactionSet::calcFallOffTerms(real T, real density, const real *const x,
         } else {
             // Use all species as third bodies.
             pr = lowk * tbconcs[j] / kf[j];
-            tbconcs[j] = 1.0;        }
+            tbconcs[j] = 1.0;
+        }
 
         // Calculate rate constants based on equation form.
         logpr = log10(pr);
@@ -771,7 +746,8 @@ void ReactionSet::calcFallOffTerms(real T, real density, const real *const x,
                 kr[j] *= pr;
                 break;
             case Custom: // A custom function is defined to calculate the fall-off form.
-                rxn->FallOffFn()(*rxn, lowk, tbconcs[j], T, kf[j], kr[j]);
+                //rxn->FallOffFn()(*rxn, lowk, tbconcs[j], T, kf[j], kr[j]);
+                throw std::runtime_error("Custom not supported yet.");
                 break;
             case Lindemann: // F = 1
                 kf[j] *= pr;
@@ -1458,8 +1434,25 @@ void ReactionSet::SetMechanism(Sprog::Mechanism &mech)
     }
 }
 
+// MEMORY MANAGEMENT.
 
-// READ/WRITE/COPY FUNCTIONS.
+// Clears all memory used by the reaction set.
+void ReactionSet::releaseMemory()
+{
+    // Wipe the cross-referencing maps.
+    m_rev_rxns.clear();
+    m_lt_rxns.clear();
+    m_revlt_rxns.clear();
+    m_tb_rxns.clear();
+    m_fo_rxns.clear();
+
+    // Delete the reactions.
+    RxnPtrVector::iterator i;
+    for (i=m_rxns.begin(); i!=m_rxns.end(); i++) {
+        delete *i; // Remember to delete memory!
+    }
+    m_rxns.clear();
+}
 
 // Writes the reaction set to a binary data stream.
 void ReactionSet::Serialize(std::ostream &out) const
@@ -1655,25 +1648,4 @@ void ReactionSet::Deserialize(std::istream &in)
     } else {
         throw invalid_argument("Input stream not ready (Sprog, ReactionSet::Deserialize).");
     }
-}
-
-
-// MEMORY MANAGEMENT.
-
-// Clears all memory used by the reaction set.
-void ReactionSet::releaseMemory()
-{
-    // Wipe the cross-referencing maps.
-    m_rev_rxns.clear();
-    m_lt_rxns.clear();
-    m_revlt_rxns.clear();
-    m_tb_rxns.clear();
-    m_fo_rxns.clear();
-
-    // Delete the reactions.
-    RxnPtrVector::iterator i;
-    for (i=m_rxns.begin(); i!=m_rxns.end(); i++) {
-        delete *i; // Remember to delete memory!
-    }
-    m_rxns.clear();
 }

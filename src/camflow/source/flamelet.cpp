@@ -30,6 +30,15 @@ FlameLet::~FlameLet()
     //if (radiation != NULL) delete radiation;
 }
 
+void FlameLet::checkSetup()
+{
+
+    if(reacGeom_.getAxpos()[mCord-1] != 1)
+        throw std::invalid_argument("Mixture fraction does not go from 0 to 1. "
+                                    "Check <length unit=\"m\">1.0</length>\n");
+
+}
+
 /*
  *this is called by the model object. The boolean interface decides
  *if the call originates from the interface or from camflow kernel
@@ -49,7 +58,8 @@ void FlameLet::solve
 )
 {
 
-    //reacGeom_.addZeroWidthCells();
+    // Check that the problem has been setup properly.
+    checkSetup();
 
     /*
      *init the solution vector
@@ -106,9 +116,8 @@ void FlameLet::solve
      *  the interor cells. The inlet condisions need to
      *  be taken care of.
      */
-    CamBoundary left, right;
-    admin_.getLeftBoundary(left);
-    admin_.getRightBoundary(right);
+    CamBoundary left = admin_.getLeftBoundary();
+    CamBoundary right = admin_.getRightBoundary();
     storeInlet(left,fuel);
     storeInlet(right,oxid);
     fuel.T = left.getTemperature();
@@ -162,13 +171,10 @@ void FlameLet::initSolutionVector()
      *left boundary is for the fuel and right boundary is
      *for oxidizer
      */
-    CamBoundary left, right;
-    admin_.getLeftBoundary(left);
-    admin_.getRightBoundary(right);
+    CamBoundary left = admin_.getLeftBoundary();
+    CamBoundary right = admin_.getRightBoundary();
     storeInlet(left,fuel);
     storeInlet(right,oxid);
-    fuel.T = left.getTemperature();
-    oxid.T = right.getTemperature();
 
     stoichiometricMixtureFraction();
 
@@ -188,7 +194,7 @@ void FlameLet::initSolutionVector()
      * therefore the inlets are interchanged here to initialize
      * the species vector properly
      */
-    initSpecies(right,left,control_,vSpec);
+    vSpec = initSpecies(right,left);
     /*
      *the following will initialize the temperature vector with
      *a linear profile
@@ -381,14 +387,14 @@ void FlameLet::restart()
  */
 void FlameLet::ssolve()
 {
-    
+
     int seg_eqn, band;
     vector<doublereal> seg_soln_vec;
 
     if ( solverID == control_.CVODE){
-    
+
        CVodeWrapper cvw;
-       
+
        for (int i=0; i<control_.getNumIterations();i++){
         /*
          *solve species equation
@@ -427,7 +433,7 @@ void FlameLet::ssolve()
     }
   }
 
-  
+
 /*
  *residual definitions
  */
@@ -835,10 +841,9 @@ doublereal FlameLet::stoichiometricMixtureFraction()
     /*
      *fuel inlet
      */
-    CamBoundary fuelInlet, oxInlet;
     map<string, doublereal> species;
     map<string, doublereal>::iterator sIterator;
-    admin_.getLeftBoundary(fuelInlet);
+    CamBoundary fuelInlet = admin_.getLeftBoundary();
     species = fuelInlet.getInletSpecies();
     sIterator = species.begin();
 
@@ -847,7 +852,7 @@ doublereal FlameLet::stoichiometricMixtureFraction()
         sIterator++;
     }
 
-    admin_.getRightBoundary(oxInlet);
+    CamBoundary oxInlet = admin_.getRightBoundary();
     species = oxInlet.getInletSpecies();
     sIterator = species.begin();
     while(sIterator != species.end()){
@@ -860,8 +865,8 @@ doublereal FlameLet::stoichiometricMixtureFraction()
     doublereal avgMolWt=0;
     doublereal fuelMassFrac=0;
     unsigned int i;
-    vector<doublereal> temp;
-    getInletMassFrac(fuelInlet,temp);
+
+    vector<doublereal> temp = getInletMassFrac(fuelInlet);
 
     int iN2 = camMech_->FindSpecies("N2");
     int iAR = camMech_->FindSpecies("AR");
@@ -880,7 +885,7 @@ doublereal FlameLet::stoichiometricMixtureFraction()
         }
     }
 
-    getInletMassFrac(oxInlet,temp);
+    temp = getInletMassFrac(oxInlet);
     doublereal o2MassFrac = temp[iO2];
 
 

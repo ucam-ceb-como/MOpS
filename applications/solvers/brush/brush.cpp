@@ -284,7 +284,7 @@ int main(int argc, char* argv[])
         // See if there is a transport data file (not needed for advection only)
         if(tranfile.length() > 0)
             // Read species transport data along with rest of mechanism
-            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, tranfile, diag);
+            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag, tranfile);
         else
             // Skip species transport data - properties such as thermal conductivity will not be available
             Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
@@ -315,7 +315,7 @@ int main(int argc, char* argv[])
                 // Get names of the processes
                 std::vector<std::string> procNames;
                 mech.ParticleMech().GetProcessNames(procNames);
-            	
+
                 // Print the process names out one line at a time
                 std::vector<std::string>::const_iterator it = procNames.begin();
                 const std::vector<std::string>::const_iterator itEnd = procNames.end();

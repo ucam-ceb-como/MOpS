@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -47,40 +47,29 @@ using namespace Sprog;
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor.
-template<class T>
-Stoichiometry<T>::Stoichiometry(void)
+Stoichiometry::Stoichiometry(void)
 {
     m_species = -1;
 }
 
 // Copy constructor.
-template<class T>
-Stoichiometry<T>::Stoichiometry(const Sprog::Stoichiometry<T> &s)
+Stoichiometry::Stoichiometry(const Sprog::Stoichiometry &s)
 {
     m_species = s.m_species;
     m_stoich = s.m_stoich;
 }
 
 // Initialising constructor.
-template<class T>
-Stoichiometry<T>::Stoichiometry(unsigned int isp, const typename Stoichiometry<T>::stoich_val &mu)
+Stoichiometry::Stoichiometry(unsigned int isp, const real &mu)
 {
     m_species = isp;
     m_stoich = mu;
 }
 
-// Destructor.
-template<class T>
-Stoichiometry<T>::~Stoichiometry()
-{
-}
-
-
 // OPERATOR OVERLOADING.
 
 // Assignment operator.
-template<class T>
-Stoichiometry<T> &Stoichiometry<T>::operator=(const Sprog::Stoichiometry<T> &s)
+Stoichiometry &Stoichiometry::operator=(const Sprog::Stoichiometry &s)
 {
     // Check for self-assignment!
     if (this != &s) {
@@ -95,15 +84,13 @@ Stoichiometry<T> &Stoichiometry<T>::operator=(const Sprog::Stoichiometry<T> &s)
 // SPECIES DATA.
 
 // Returns the index of the associated species.
-template<class T>
-int Stoichiometry<T>::Index() const
+int Stoichiometry::Index() const
 {
     return m_species;
 }
 
 // Sets the associated species.
-template<class T>
-void Stoichiometry<T>::SetSpecies(const unsigned int &sp)
+void Stoichiometry::SetSpecies(const unsigned int &sp)
 {
     m_species = sp;
 }
@@ -112,25 +99,18 @@ void Stoichiometry<T>::SetSpecies(const unsigned int &sp)
 // STOICHIOMETRY VALUE.
 
 // Returns the stoichiometry value.
-template<class T>
-const T &Stoichiometry<T>::Mu() const
+const real &Stoichiometry::Mu() const
 {
     return m_stoich;
 }
 
 // Sets the stoichiometry value.
-template<class T>
-void Stoichiometry<T>::SetMu(const T &mu)
+void Stoichiometry::SetMu(const real &mu)
 {
     m_stoich = mu;
 }
 
-template<class T>
-void Stoichiometry<T>::IncMu(const T &mu)
+void Stoichiometry::IncMu(const real &mu)
 {
     m_stoich += mu;
 }
-
-
-template class Stoichiometry<int>;
-template class Stoichiometry<real>;
