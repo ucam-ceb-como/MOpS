@@ -51,7 +51,7 @@ cd ~
 mkdir boost
 cd boost
 
-wget http://sourceforge.net/projects/boost/files/boost/1.47.0/boost_1_47_0.tar.gz/download
+wget http://sourceforge.net/projects/boost/files/boost/1.47.0/boost_1_47_0.tar.gz/download -O boost_1_47_0.tar.gz
 
 tar -zxvf boost_1_47_0.tar.gz
 
