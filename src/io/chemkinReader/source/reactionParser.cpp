@@ -19,7 +19,7 @@ const regex IO::ReactionParser::reactionSingleRegex
 (
     "(.*?)\\s*"
     "(<=>|=>|=)\\s*"
-    "(.*?)([0-9]+\\.[0-9]*E(?:|\\+|\\-)[0-9]+)\\s+(.*?)\\s+(.*?)$|\\n"
+    "(.*?)((?:\\.|[0-9]+\\.)[0-9]*E(?:|\\+|\\-)[0-9]+)\\s+(.*?)\\s+(.*?)$|\\n"
 );
 
 const regex IO::ReactionParser::blankLine
@@ -114,6 +114,8 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
 
             while (i < reactionStringLines_.size()-1)
             {
+
+                cout << reactionStringLines_[i] << endl;
 
                 start = reactionStringLines_[i+1].begin();
                 end = reactionStringLines_[i+1].end();
