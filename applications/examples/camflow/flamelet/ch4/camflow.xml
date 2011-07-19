@@ -9,6 +9,7 @@
 	  <twall unit="K">1073</twall>
      <pressure unit="bar">1</pressure>
 	  <strain>100</strain>
+	  <radiation activate="on"></radiation>
   </op_condition>
   <inlet>
      <fuel>
