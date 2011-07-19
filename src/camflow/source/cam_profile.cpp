@@ -133,7 +133,7 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
     populateIntermdts(mech);
     populateProducts(mech);
     setGaussian(mech);
-   
+
     if(mWidth != 0 && mCenter != 0 && m_prdt.size() != 0 && m_intmd.size() != 0){
 
         for(int i=0; i<len; i++){
@@ -150,7 +150,7 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
              */
             doublereal f_prdt, f_reac;
             if(position[i] <= (mCenter-mWidth/2.0)) {
-                f_prdt = 0.0;                                        
+                f_prdt = 0.0;
             }else{
                 if(position[i] < (mCenter+mWidth/2.0)){
                     f_prdt = (1.0/mWidth)*(position[i]-mCenter)+0.5;
@@ -164,19 +164,19 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
             std::map<std::string,doublereal> spec = cb.getInletSpecies();
             p = spec.begin();
             while(p!= spec.end()){
-                int index = mech.FindSpecies(convertToCaps(trim(p->first)));
-                start(i,index) = factor*(f_prdt*m_prdt[index]+f_reac*m_in[index]);             
+                int index = mech.FindSpecies(p->first);
+                start(i,index) = factor*(f_prdt*m_prdt[index]+f_reac*m_in[index]);
                 p++;
             }
             p=list_prdt.begin();
             while(p!=list_prdt.end()){
-                int index = mech.FindSpecies(convertToCaps(trim(p->first)));
+                int index = mech.FindSpecies(p->first);
                 if(m_in[index]==0){
-                    start(i,index) = factor*(f_prdt*m_prdt[index] + f_reac*m_in[index]);                   
+                    start(i,index) = factor*(f_prdt*m_prdt[index] + f_reac*m_in[index]);
                 }
                 p++;
             }
-            
+
         }
 
     }else{
@@ -187,7 +187,13 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
         }
 
     }
-    
+
+    // Overwrite the oxidiser inlet because otherwise we
+    // will have machine zeros for intermediates.
+    for(unsigned int l=0; l<mech.SpeciesCount(); l++){
+        start(0,l) = m_in[l];
+    }
+
 }
 /*
  *set the gaussian
@@ -223,7 +229,7 @@ void CamProfile::setGaussTempProfile(std::vector<doublereal>& vTemp){
     vTemp.resize(len,0.0);
     doublereal gWidth = -log(0.15*dmax)/pow(mWidth/2.0,2);
     for(int i=0; i<len; i++){
-        doublereal temp = exp(-gWidth*pow(position[i]-mCenter,2));        
+        doublereal temp = exp(-gWidth*pow(position[i]-mCenter,2));
         vTemp[i] = temp*2000+300;
     }
 }

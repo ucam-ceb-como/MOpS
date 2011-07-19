@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -63,7 +63,7 @@ public:
     // Constructors.
     Reaction(void);                // Default constructor.
     Reaction(const Reaction &rxn); // Copy constructor.
-    Reaction(std::istream &in);    // Stream-reading constructor.
+    Reaction(std::istream &in);
 
     // Destructor.
     ~Reaction(void);
@@ -92,37 +92,22 @@ public:
     // REACTANTS.
 
     // Returns the vector of integer stoichiometric reactant coefficients.
-    const std::vector<Stoich> &Reactants(void) const; 
+    const std::vector<Stoich> &Reactants(void) const;
 
-    // Returns the vector of real stoichiometric reactant coefficients.
-    const std::vector<Stoichf> &FReactants(void) const;
-
-    // Adds an integer reactant to the reaction.
+    // Adds a reactant to the reaction.
     void AddReactant(const Stoich &reac);
 
-    // Adds a real reactant to the reaction.
-    void AddReactant(const Stoichf &reac);
-
-    // Adds an integer reactant given the species name.
-    void AddReactant(const std::string &name, unsigned int stoich);
-
-    // Adds a real reactant given the species name.
+    // Adds a reactant given the species name.
     void AddReactant(const std::string &name, real stoich);
 
-    // Removes a reactant, given by name, from the reaction (integer or real).
+    // Removes a reactant, given by name, from the reaction.
     void RemoveReactant(const std::string &name);
 
-    // Returns the stoichiometry of the kth integer reactant.
+    // Returns the stoichiometry of the kth reactant.
     const Stoich Reactant(unsigned int k) const;
-
-    // Returns the stoichiometry of the kth real reactant.
-    const Stoichf FReactant(unsigned int k) const;
 
     // Returns the number of integer reactants.
     int ReactantCount() const;
-
-    // Returns the number of real reactants.
-    int FReactantCount() const;
 
 
     // PRODUCTS.
@@ -130,35 +115,20 @@ public:
     // Returns the vector of integer stoichiometric product coefficients.
     const std::vector<Stoich> &Products(void) const;
 
-    // Returns the vector of real stoichiometric product coefficients.
-    const std::vector<Stoichf> &FProducts(void) const;
-
-    // Adds an integer product to the reaction.
+    // Adds a product to the reaction.
     void AddProduct(const Stoich &prod);
 
-    // Adds a real product to the reaction.
-    void AddProduct(const Stoichf &prod);
-
-    // Adds an integer product given the species name.
-    void AddProduct(const std::string &name, unsigned int stoich);
-
-    // Adds a real product given the species name.
+    // Adds a product given the species name.
     void AddProduct(const std::string &name, real stoich);
 
-    // Removes a product, given by name, from the reaction (integer or real).
+    // Removes a product, given by name, from the reaction.
     void RemoveProduct(const std::string &name);
 
     // Returns the stoichiometry of the kth integer product.
     const Stoich Product(unsigned int k) const;
 
-    // Returns the stoichiometry of the kth real product.
-    const Stoichf FProduct(unsigned int k) const;
-
     // Returns the number of integer products.
     int ProductCount() const;
-
-    // Returns the number of real product.
-    int FProductCount() const;
 
 
     // STOICHIOMETRY.
@@ -201,7 +171,7 @@ public:
 
     // REVERSE LANDAU-TELLER PARAMETERS.
 
-    // Returns a pointer to the reverse Landau Teller coefficients.   
+    // Returns a pointer to the reverse Landau Teller coefficients.
     const LTCOEFFS *const RevLTCoeffs(void) const;
 
     // Sets the reverse Landau Teller coefficients.
@@ -217,17 +187,17 @@ public:
     void SetUseThirdBody(bool usetb);
 
     // Returns the vector of third-body coefficients.
-    const std::vector<Stoichf> &ThirdBodies(void) const;
+    const std::vector<Stoich> &ThirdBodies(void) const;
 
     // Returns the coefficient for the ith third body.
-    Stoichf ThirdBody(unsigned int i) const;
+    Stoich ThirdBody(unsigned int i) const;
 
-    // Returns the number of third body coefficients 
+    // Returns the number of third body coefficients
     // defined for this reaction.
     int ThirdBodyCount() const;
 
     // Adds a third body to the reaction.
-    void AddThirdBody(const Stoichf &tb);
+    void AddThirdBody(const Stoich &tb);
 
     // Adds a third body to the reaction.
     void AddThirdBody(unsigned int sp, real coeff);
@@ -247,23 +217,23 @@ public:
     // Sets the low pressure limit Arrhenius coefficients.
     void SetLowPressureLimit(const ARRHENIUS &lowp);
 
-    
+
     // FALL-OFF THIRD BODY.
 
-    // Returns a pointer to the species used as a third 
+    // Returns a pointer to the species used as a third
     // body for fall-off calculations.
     const Sprog::Species *const FallOffThirdBody(void) const;
 
     // Sets the species used as a third body for fall-off calculations.
-    void SetFallOffThirdBody(int sp);              
+    void SetFallOffThirdBody(int sp);
 
-    // Sets the species used as a third body for fall-off calculations 
+    // Sets the species used as a third body for fall-off calculations
     // given the species name.
     void SetFallOffThirdBody(const std::string &name);
 
 
     // FALL-OFF PARAMETERS.
-    
+
     // Returns the fall-off type.
     FALLOFF_FORM FallOffType() const;
 
@@ -282,7 +252,7 @@ public:
     real FTROE3(real T, real logpr) const; // 3-parameter Troe fall-off form.
     real FTROE4(real T, real logpr) const; // 4-parameter Troe fall-off form.
     real FSRI(real T, real logpr) const;   // SRI fall-off form.
-    FallOffFnPtr FallOffFn() const;        // Custom fall-off function.
+    //FallOffFnPtr FallOffFn() const;        // Custom fall-off function.
 
 
     // PARENT MECHANISM.
@@ -315,10 +285,25 @@ public:
     // Creates a copy of the species object.
     Reaction *Clone(void) const;
 
-    // Writes the reaction to a binary data stream.
+    // Writes the element to a binary data stream.
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */)
+    {
+        ar.template register_type<ARRHENIUS>();
+        ar.template register_type<Sprog::Stoichiometry>();
+        ar.register_type(static_cast<LTCOEFFS *>(NULL));
+
+        ar & m_name & m_reversible
+           & m_reac & m_prod & m_dstoich & m_dreac & m_dprod
+           & m_arrf & m_arrr & m_lt & m_revlt & m_usetb
+           & m_thirdbodies & m_fotype & m_foparams & m_mech;
+    }
+
+    // Writes the element to a binary data stream.
     void Serialize(std::ostream &out) const;
 
-    // Reads the reaction data from a binary data stream.
+    // Reads the element data from a binary data stream.
     void Deserialize(std::istream &in);
 
     // Prints a diagnostic output file containing all the
@@ -332,20 +317,19 @@ protected:
     // Reaction data.
     std::string m_name;                    // Reaction description.
     bool m_reversible;                     // Is the reaction reversible or not?
-    std::vector<Stoich> m_reac, m_prod;    // Integer reactant & product stoichiometry.
-    std::vector<Stoichf> m_freac, m_fprod; // Real reactant & product stoichiometry.
+    std::vector<Stoich> m_reac, m_prod;    // reactant & product stoichiometry.
     real m_dstoich, m_dreac, m_dprod;      // Total stoichiometry changes.
     ARRHENIUS m_arrf, *m_arrr;             // Forward and reverse Arrhenius parameters.
     LTCOEFFS *m_lt, *m_revlt;              // Landau-Teller forward and reverse coefficients.
 
     // Third bodies.
     bool m_usetb; // Set to true if this reaction requires third bodies.
-    std::vector<Stoichf> m_thirdbodies; // Reaction third bodies and their coefficients.
+    std::vector<Stoich> m_thirdbodies; // Reaction third bodies and their coefficients.
 
     // Fall-off data.
     FALLOFF_FORM m_fotype;     // The type of the fall-off reaction.
     FALLOFF_PARAMS m_foparams; // Fall-off parameters.
-    FallOffFnPtr m_fofn;       // Custom fall-off function, if required.
+    //FallOffFnPtr m_fofn;       // Custom fall-off function, if required.
 
     // Useful data to put reaction in context.
     Sprog::Mechanism *m_mech; // Parent mechanism.

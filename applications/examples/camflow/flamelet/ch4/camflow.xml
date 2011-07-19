@@ -1,106 +1,61 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <camflow>
-	<reactor model="flamelet">
-	 <diameter unit="m">0.015</diameter>
-	 <length unit="cm">1.0</length>
-  </reactor>
-  <op_condition>
-	  <temperature>adiabatic</temperature>
-	  <twall unit="K">1073</twall>
-     <pressure unit="bar">1</pressure>
-	  <strain>100</strain>
-  </op_condition>
-  <inlet>
-     <fuel>
-       <velocity unit="m/s">1.0</velocity>
-       <temperature unit="K">300.0</temperature>
-       <molefrac>
-        <species name="CH4">1.0</species>
-       </molefrac>
-     </fuel>
-     <oxidizer>
-       <velocity unit="m/s">1.0</velocity>
-       <temperature unit="K">300.0</temperature>
-       <molefrac>
-        <species name="O2">0.21</species>
-        <species name="N2">*</species>
-       </molefrac>
-     </oxidizer>
-  </inlet>
-  <solver mode="coupled" solver="cvode" residual="on">
-	  <maxTime>10000</maxTime>
-	  <iterations>1</iterations>
-	  <tols>
-		  <species>
-			  <aTol>1.e-18</aTol>
-			  <rTol>1.e-08</rTol>	  
-		  </species>
-		  <temperature>
-			  <aTol>1.e-03</aTol>
-			  <rTol>1.e-03</rTol>	  
-		  </temperature>
-		  <flow>
-			  <aTol>1.e-03</aTol>
-			  <rTol>1.e-03</rTol>	  
-		  </flow>
-  	  </tols>
-  </solver>
-  <initialize>
-	 <mCenter unit="cm">10</mCenter>
-	 <mWidth unit="cm">10</mWidth>
-	 <massfrac>
-	   <intrmdt name="H2">0.1</intrmdt>
-	   <intrmdt name="OH">0.12</intrmdt>
-	   <intrmdt name="HO2">0.001</intrmdt>
-	   <intrmdt name="H2O">0.01</intrmdt>
-	 </massfrac>
-    <Tprofile unit_L="cm" unit_T="K">
-      <position x="0.00">300.0</position>
-		<position x="0.05">300.2</position>
-		<position x="0.08">300.5</position>
-		<position x="0.10">301.3</position>
-		<position x="0.14">304.5</position>
-		<position x="0.17">313.6</position>
-		<position x="0.21">337.4</position>
-		<position x="0.25">390.6</position>
-		<position x="0.31">579.5</position>
-		<position x="0.38">887.8</position>
-		<position x="0.44">1259.0</position>
-		<position x="0.50">1631.0</position>
-		<position x="0.56">1964.0</position>
-		<position x="0.63">2221.0</position>
-		<position x="0.66">2290.0</position>
-		<position x="0.69">2283.0</position>
-		<position x="0.70">2233.0</position>
-		<position x="0.72">2146.0</position>
-		<position x="0.73">2019.0</position>
-		<position x="0.75">1850.0</position>
-		<position x="0.77">1592.0</position>
-		<position x="0.79">1283.0</position>
-		<position x="0.80">1118.0</position>
-		<position x="0.81">954.0</position>
-		<position x="0.82">729.8</position>
-		<position x="0.83">556.1</position>
-		<position x="0.84">472.5</position>
-		<position x="0.86">370.9</position>
-		<position x="0.88">325.4</position>
-		<position x="0.90">308.5</position>
-		<position x="0.93">301.9</position>
-		<position x="0.95">300.4</position>
-		<position x="0.97">300.1</position>
-		<position x="1.00">300.0</position>
-		<position x="1.05">300.0</position>
-		<position x="1.10">300.0</position>
-		<position x="1.18">300.0</position>
-		<position x="1.25">300.0</position>
-		<position x="1.50">300.0</position>
-		<position x="1.75">300.0</position>
-		<position x="1.90">300.0</position>
-		<position x="1.95">300.0</position>
-		<position x="2.00">300.0</position>
-    </Tprofile>
- </initialize>
- <report outfile="final" species="mole">
- </report>
- <grid>grid.inp</grid>
+    <reactor model="flamelet">
+        <diameter unit="m">0.015</diameter>
+        <length unit="m">1.0</length>
+    </reactor>
+    <op_condition>
+        <temperature>adiabatic</temperature>
+        <twall unit="K">1073</twall>
+        <pressure unit="bar">1</pressure>
+        <strain>100</strain>
+        <radiation activate="off"/>
+    </op_condition>
+    <inlet>
+        <fuel>
+            <velocity unit="m/s">1.0</velocity>
+            <temperature unit="K">300.0</temperature>
+            <molefrac>
+                <species name="CH4">1.0</species>
+            </molefrac>
+        </fuel>
+        <oxidizer>
+            <velocity unit="m/s">1.0</velocity>
+            <temperature unit="K">300.0</temperature>
+            <molefrac>
+                <species name="O2">0.21</species>
+                <species name="N2">*</species>
+            </molefrac>
+        </oxidizer>
+    </inlet>
+    <solver mode="coupled" solver="cvode" residual="on">
+        <maxTime>10000</maxTime>
+        <iterations>1</iterations>
+        <tols>
+            <species>
+                <aTol>1.e-18</aTol>
+                <rTol>1.e-08</rTol>
+            </species>
+            <temperature>
+                <aTol>1.e-03</aTol>
+                <rTol>1.e-03</rTol>
+            </temperature>
+            <flow>
+                <aTol>1.e-03</aTol>
+                <rTol>1.e-03</rTol>
+            </flow>
+        </tols>
+    </solver>
+    <initialize>
+        <mCenter unit="cm">10</mCenter>
+        <mWidth unit="cm">10</mWidth>
+        <massfrac>
+            <intrmdt name="H2">0.1</intrmdt>
+            <intrmdt name="OH">0.12</intrmdt>
+            <intrmdt name="HO2">0.001</intrmdt>
+            <intrmdt name="H2O">0.01</intrmdt>
+        </massfrac>
+    </initialize>
+    <report outfile="final" species="mass"/>
+    <grid>grid.inp</grid>
 </camflow>

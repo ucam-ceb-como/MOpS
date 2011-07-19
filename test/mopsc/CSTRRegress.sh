@@ -53,8 +53,6 @@ fi
 
 cd cstrtest
 
-dos2unix chem.inp
-
 $program -p
 simulationResult=$?
 
@@ -68,8 +66,6 @@ else
 fi
 echo "========================"
 
-dos2unix "silane-chem.csv"
-dos2unix "silane-sensi.csv"
 ./cstrtest.pl
 postprocessResult=$?
 if((postprocessResult!=0)) 

@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -42,7 +42,8 @@
 
 #ifndef GPC_EL_COMP_H
 #define GPC_EL_COMP_H
-
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 #include <vector>
 #include <map>
 
@@ -55,9 +56,9 @@ public:
     ElComp(void);             // Default constructor.
     ElComp(const ElComp &el); // Copy constructor.
     ElComp(                   // Initialising constructor.
-        unsigned int i, 
+        unsigned int i,
         unsigned int n
-        ); 
+        );
 
     // Destructor.
     ~ElComp(void);
@@ -73,7 +74,7 @@ public:
 
 
     // ELEMENT INDEX.
-    
+
     // Returns the element index.  A negative number indicates an
     // invalid index, which probably means that the ElComp has
     // not been initialise properly.
@@ -86,12 +87,21 @@ public:
 
 
     // ELEMENT COUNT.
-    
+
     // Returns number of the element in this composition.
     unsigned int Count(void) const;
-    
+
     // Sets the element count in this composition.
     void SetCount(unsigned int n);
+
+    // Writes the element to a binary data stream.
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */)
+    {
+        ar & m_index & m_count;
+    }
+
+    friend class boost::serialization::access;
 
 private:
     // Composition data.

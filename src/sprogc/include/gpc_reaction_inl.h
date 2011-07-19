@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -58,11 +58,9 @@ inline void Reaction::SetReversible(const bool isrev) {m_reversible=isrev;};
 
 // REACTANTS.
 inline const std::vector<Stoich> &Reaction::Reactants() const {return m_reac;};
-inline const std::vector<Stoichf> &Reaction::FReactants() const {return m_freac;};
 
 // PRODUCTS.
 inline const std::vector<Stoich> &Reaction::Products() const {return m_prod;};
-inline const std::vector<Stoichf> &Reaction::FProducts() const {return m_fprod;};
 
 // STOICHIOMETRY.
 inline real Reaction::TotalStoich() const {return m_dstoich;};

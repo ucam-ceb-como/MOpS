@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -61,6 +61,15 @@ namespace Thermo
     {
         unsigned int Count;
         real Params[S_PARAM_COUNT];
+
+        // Writes the element to a binary data stream.
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int /* file_version */)
+        {
+            ar & Count & Params;
+        }
+        friend class boost::serialization::access;
+
     };
 
     typedef std::map<real, THERMO_PARAMS> ThermoMap;

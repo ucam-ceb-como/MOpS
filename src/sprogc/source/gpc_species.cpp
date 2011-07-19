@@ -65,6 +65,13 @@ Species::Species(void)
     , m_transport(NULL)
 {}
 
+// Stream-reading constructor.
+Species::Species(istream &in)
+    : m_transport(NULL)
+{
+    Deserialize(in);
+}
+
 // Copy constructor.
 Species::Species(const Sprog::Species &sp)
     : m_name("")
@@ -74,13 +81,6 @@ Species::Species(const Sprog::Species &sp)
     , m_transport(NULL)
 {
     *this  = sp;
-}
-
-// Stream-reading constructor.
-Species::Species(istream &in)
-    : m_transport(NULL)
-{
-    Deserialize(in);
 }
 
 // Destructor.
@@ -120,7 +120,7 @@ Species &Species::operator=(const Sprog::Species &sp)
 
         // Copy the transport data, if it exists
         if(sp.m_transport != NULL)
-            m_transport = new Transport::TransportData(*sp.m_transport);
+            m_transport = new IO::Transport(*sp.m_transport);
     }
     return *this;
 }
@@ -464,8 +464,97 @@ void Species::SetMechanism(Sprog::Mechanism &mech)
     CalcMolWt();
 }
 
+// Prints a diagnostic output file containing all the
+// species data.  This is used to debug.
+void Species::WriteDiagnostics(std::ostream &out) const
+{
+    string data = "";
+    real val = 0.0;
+    int ival = 0;
 
-// READ/WRITE FUNCTIONS.
+    if (out.good()) {
+        // Name.
+        data = m_name + " ";
+        out.write(data.c_str(), data.length());
+        // Composition.
+        for (unsigned int j=0; j!=m_elcomp.size(); ++j) {
+            // Element name.
+            data = m_mech->Elements(m_elcomp[j].Index())->Name() + " ";
+            out.write(data.c_str(), data.length());
+            // Element count.
+            ival = m_elcomp[j].Count();
+            data = cstr(ival) + " ";
+            out.write(data.c_str(), data.length());
+        }
+        // Mol. Wt.
+        val = m_molwt;
+        data = cstr(val) + " ";
+        out.write(data.c_str(), data.length());
+        // Thermo params.
+        for (Thermo::ThermoMap::const_iterator i=m_thermoparams.begin();
+             i!=m_thermoparams.end(); ++i) {
+            // Temperature.
+            val = i->first;
+            data = cstr(val) + " ";
+            out.write(data.c_str(), data.length());
+            // Parameters.
+            for (int j=0; j!=7; ++j) {
+                val = i->second.Params[j];
+                data = cstr(val) + " ";
+                out.write(data.c_str(), data.length());
+            }
+        }
+        // Thermo start T.
+        val = m_T1;
+        data = cstr(val) + "\n";
+        out.write(data.c_str(), data.length());
+    }
+}
+
+/*!
+@param[in]      out             The ofstream that outputs to the reduced mechanism file.
+@param[in]      OneSpecies      A species; if it is kept by the LOI, the string contains a name. Else, it contains 'Null.'
+*/
+void Species::WriteSpecies(std::ostream &out) const {
+
+    if (out.good()) {
+        // Name.
+        out << m_name << "\n";
+    }
+}
+
+// Following transport related routines added by vinod
+
+
+void Species::setTransportData(const IO::Transport& transport){
+
+
+    if(m_transport != NULL) {
+        delete m_transport;
+        m_transport = NULL;
+    }
+
+    m_transport = new IO::Transport(transport);
+}
+
+IO::Transport& Species::getTransportData() const{
+	return *m_transport;
+}
+
+double Species::getViscosity(double T) const{
+	Sprog::Transport::PureSpeciesTransport pst;
+	return pst.getViscosity(T,*this);
+}
+
+double Species::getSelfDiffusion(double T, double p) const{
+	Sprog::Transport::PureSpeciesTransport pst;
+	return pst.getSlefDiffusionCoeff(T,p,*this);
+}
+
+double Species::getThermalConductivity(double T, double p, double cp) const{
+	Sprog::Transport::PureSpeciesTransport pst;
+	return pst.getThermalConductivity(T,p,cp, *this);
+}
 
 // Writes the species to a binary data stream.
 void Species::Serialize(std::ostream &out) const
@@ -622,103 +711,4 @@ void Species::Deserialize(std::istream &in)
     } else {
         throw invalid_argument("Input stream not ready (Sprog, Species::Deserialize).");
     }
-}
-
-// Prints a diagnostic output file containing all the
-// species data.  This is used to debug.
-void Species::WriteDiagnostics(std::ostream &out) const
-{
-    string data = "";
-    real val = 0.0;
-    int ival = 0;
-
-    if (out.good()) {
-        // Name.
-        data = m_name + " ";
-        out.write(data.c_str(), data.length());
-        // Composition.
-        for (unsigned int j=0; j!=m_elcomp.size(); ++j) {
-            // Element name.
-            data = m_mech->Elements(m_elcomp[j].Index())->Name() + " ";
-            out.write(data.c_str(), data.length());
-            // Element count.
-            ival = m_elcomp[j].Count();
-            data = cstr(ival) + " ";
-            out.write(data.c_str(), data.length());
-        }
-        // Mol. Wt.
-        val = m_molwt;
-        data = cstr(val) + " ";
-        out.write(data.c_str(), data.length());
-        // Thermo params.
-        for (Thermo::ThermoMap::const_iterator i=m_thermoparams.begin();
-             i!=m_thermoparams.end(); ++i) {
-            // Temperature.
-            val = i->first;
-            data = cstr(val) + " ";
-            out.write(data.c_str(), data.length());
-            // Parameters.
-            for (int j=0; j!=7; ++j) {
-                val = i->second.Params[j];
-                data = cstr(val) + " ";
-                out.write(data.c_str(), data.length());
-            }
-        }
-        // Thermo start T.
-        val = m_T1;
-        data = cstr(val) + "\n";
-        out.write(data.c_str(), data.length());
-    }
-}
-
-/*!
-@param[in]      out             The ofstream that outputs to the reduced mechanism file.
-@param[in]      OneSpecies      A species; if it is kept by the LOI, the string contains a name. Else, it contains 'Null.'
-*/
-void Species::WriteSpecies(std::ostream &out) const {
-
-    if (out.good()) {
-        // Name.
-        out << m_name << "\n";       
-    }
-}
-
-// Following transport related routines added by vinod
-
-
-void Species::setTransportData(vector<string> &data){
-
-
-    if(m_transport != NULL) {
-        delete m_transport;
-        m_transport = NULL;
-    }
-
-    m_transport = new Transport::TransportData(
-		(int)Strings::cdble(data[1]), // molecule index
-		Strings::cdble(data[2])*kB, // LJ well depth-
-		Strings::cdble(data[3])*Angstroem__, // LJ collision dia- convert to A
-		Strings::cdble(data[4])*Debye__, // dipole converting to C-m
-		Strings::cdble(data[5])*pow(Angstroem__,3), // polarity
-		Strings::cdble(data[6]) // rot relaxation at 298 K
-		);
-}
-
-Sprog::Transport::TransportData& Species::getTransportData() const{
-	return *m_transport;
-}
-
-double Species::getViscosity(double T) const{
-	Sprog::Transport::PureSpeciesTransport pst;
-	return pst.getViscosity(T,*this);
-}
-
-double Species::getSelfDiffusion(double T, double p) const{
-	Sprog::Transport::PureSpeciesTransport pst;
-	return pst.getSlefDiffusionCoeff(T,p,*this);
-}
-
-double Species::getThermalConductivity(double T, double p, double cp) const{
-	Sprog::Transport::PureSpeciesTransport pst;
-	return pst.getThermalConductivity(T,p,cp, *this);
 }

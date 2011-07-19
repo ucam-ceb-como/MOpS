@@ -2,7 +2,7 @@
   Author(s):      Weerapong Phadungsukanan (wp214)
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Weerapong Phadungsukanan.
 
   File purpose:
@@ -67,8 +67,8 @@ public:
     };
     typedef std::vector<FluxPath> FluxNetwork;
 
-    FluxAnalyser(const Mechanism &mech, 
-                 const timevector &times, 
+    FluxAnalyser(const Mechanism &mech,
+                 const timevector &times,
                  const std::vector<fvector> &agpfwdrates,
                  const std::vector<fvector> &agprevrates,
                  const fvector &atemperatures);
@@ -96,17 +96,16 @@ private:
     void calculateFluxAt(unsigned int index, unsigned int iel, Mops::FluxAnalyser::FluxNetwork &flux_network);
     // Integrated Flux methods.
     void calculateIntFluxAt(unsigned int index, Mops::FluxAnalyser::FluxNetwork &flux_network, Mops::FluxAnalyser::FluxNetwork &int_flux_network);
-    
+
     // Supplementary methods.
     int getFluxPathIndex(Mops::FluxAnalyser::FluxPath &fpath, Mops::FluxAnalyser::FluxNetwork &flux_network);
     void addToFluxPathRate(Mops::FluxAnalyser::FluxPath &fpath, Mops::FluxAnalyser::FluxNetwork &flux_network);
     void sortDecendingFluxNetwork(Mops::FluxAnalyser::FluxNetwork &flux_network);
     void writeFluxAt(unsigned int iel, std::ofstream &fout, Mops::FluxAnalyser::FluxNetwork &flux_network);
-    
+
     void writeHeader(std::ofstream &fout, unsigned int npoints);
     real getTotalElementStoi(const Sprog::Kinetics::Reaction &rxn, unsigned int iel);
     real getNumberOfElementAtom(const Sprog::Stoich &sc, unsigned int iel);
-    real getNumberOfElementAtom(const Sprog::Stoichf &sc, unsigned int iel);
     std::string formatWhiteSpace(std::string str, unsigned int len, bool isright = true);
 };
 }

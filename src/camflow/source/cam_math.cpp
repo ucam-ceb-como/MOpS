@@ -81,7 +81,6 @@ void CamMath::prime(int size, Array2D& prime){
 
         }
 
-
     }
 
 }

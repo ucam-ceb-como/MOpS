@@ -2,7 +2,7 @@
   Author(s):      Vinod Janardhanan (vj231)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Vinod M Janardhanan.
 
   File purpose:
@@ -59,7 +59,7 @@ namespace Sprog{
 		private:
 
 			static real Omega22Matrix[37*5];
-			static real Omega11Matrix[37*5];	
+			static real Omega11Matrix[37*5];
 			static real TStar[37];
 
 
@@ -76,7 +76,6 @@ namespace Sprog{
 
 
 			real getReducedTemp(const real T,  const Sprog::Species &sp) const;
-			real getReducedDipole(const Sprog::Species &sp) const;
 			real getOmega11( real rT, const real deltaStar) const;
 			real getOmega22(const real T, const Sprog::Species &sp) const;
 		};
@@ -110,11 +109,11 @@ namespace Sprog{
 				const real T, const real p, const Sprog::Thermo::Mixture &mix) const;
 			//returns the diffusion coefficeint in m^2/s
 			std::vector<double> getMixtureDiffusionCoeff(const real T, const real p, const Sprog::Thermo::Mixture &mix) const;
-			
+
 		};
 
 
 	};
 }
 #endif
-		
+

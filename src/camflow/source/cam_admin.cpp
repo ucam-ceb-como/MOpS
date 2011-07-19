@@ -3,7 +3,7 @@
  * Author: vinod (vj231@cam.ac.uk)
  *
  * Copyright (C) 2009 Vinod M Janardhanan
- * 
+ *
  * File purpose:
  *  This class contains the implementation of process conditions
  *  and the boundary conditions
@@ -125,12 +125,12 @@ doublereal CamAdmin::getIgnitionStep() const{
     return stepIgnition;
 }
 
-void CamAdmin::setLeftBoundary(CamBoundary &cb){    
+void CamAdmin::setLeftBoundary(CamBoundary &cb){
     this->left = cb;
 }
 
 void CamAdmin::setRightBoundary(CamBoundary &cb){
-    this->right = cb;    
+    this->right = cb;
 }
 
 void CamAdmin::setRadiationModel(bool radiation_){
@@ -166,12 +166,12 @@ int CamAdmin::getEnergyModel() const{
 }
 
 
-void CamAdmin::getLeftBoundary(CamBoundary &cb){    
-    cb = left;
+Camflow::CamBoundary& CamAdmin::getLeftBoundary(){
+    return left;
 }
 
-void CamAdmin::getRightBoundary(CamBoundary &cb){
-    cb = right;    
+Camflow::CamBoundary& CamAdmin::getRightBoundary(){
+    return right;
 }
 
 bool CamAdmin::getRadiationModel() const{
