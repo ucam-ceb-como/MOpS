@@ -4,8 +4,13 @@
 cmake_minimum_required (VERSION 2.6)
 project (MOPSSUITE)
 
-SET(BOOST_ROOT /home/userspace/$USER/boost)
-SET(Boost_USE_MULTITHREADED OFF)
+IF(WIN32 AND NOT UNIX)
+  SET(Boost_ADDITIONAL_VERSIONS "1_47" "1_47_0")
+  SET(BOOST_ROOT "C:/Program Files/boost/boost_1_47_0")#/home/userspace/$USER/boost)
+ELSE(WIN32 AND NOT UNIX)
+  SET(BOOST_ROOT home/userspace/$USER/boost)
+  SET(Boost_USE_MULTITHREADED OFF)
+ENDIF(WIN32 AND NOT UNIX)
 find_package(Boost 1.43.0 REQUIRED COMPONENTS regex serialization)
 
 enable_testing()
