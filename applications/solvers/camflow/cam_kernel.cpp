@@ -61,7 +61,7 @@ using namespace std;
 using namespace Sprog;
 using namespace Camflow;
 
-int main()
+int main(int argc, char *argv[])
 {
 
     string fChem("chem.inp");
@@ -90,9 +90,15 @@ int main()
         exit(1);
     }
 
-
     //read mechanism, thermo and trasnport data
-    Sprog::IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,1,fTrans);
+    if (config.getConfiguration() == config.BATCH_CV)
+    {
+        Sprog::IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,1);
+    }
+    else
+    {
+        Sprog::IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,1,fTrans);
+    }
 
     //Following is a test call to the interface
 //-----------------------------------------------------------
