@@ -95,16 +95,14 @@ void Batch::checkSetup()
 void Batch::solve()
 {
 
-    CamBoundary cb;
-
     // Check that the problem has been setup properly.
     checkSetup();
 
     /*get the fuel inlet conditions and the fill the
      *solution vector with species mass fractions
      */
-    admin_.getLeftBoundary(cb);
-    getInletMassFrac(cb,solvect);
+    CamBoundary cb = admin_.getLeftBoundary();
+    solvect = getInletMassFrac(cb);
     solvect.push_back(cb.getTemperature());
 
 
@@ -113,9 +111,6 @@ void Batch::solve()
     momRates.resize(nMoments,0.0);
 
     sootMom_.initMoments(*camMech_,solvect,1.0);
-    //for (int l=nSpc+1; l< nSpc+nMoments; ++l){
-    //  std::cout << "Soot mom: " << solvect[l] << "\n";
-	//}
 
     // Update the mixture properties.
     updateMixture(&solvect[0]);

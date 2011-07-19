@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   cam_admin.h
  * Author: vinod (vj231@cam.ac.uk)
  *
@@ -6,7 +6,7 @@
  *
  * File purpose:
  *  This class contains the implementation of process conditions
- *  
+ *
  * Licence:
  *  This file is part of "Camflow".
  *
@@ -135,10 +135,10 @@ class CamAdmin
         int getMonitor() const;
 
         //return fuel boundary
-        void getRightBoundary(CamBoundary &cb);
+        Camflow::CamBoundary& getRightBoundary();
 
         //return oxidizer boundary
-        void getLeftBoundary(CamBoundary &cb) ;
+        Camflow::CamBoundary& getLeftBoundary();
 
         //! Is radiation model on or off.
         bool getRadiationModel() const;
