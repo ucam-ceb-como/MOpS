@@ -9,6 +9,7 @@
 #include "thermoParser.h"
 #include "stringFunctions.h"
 #include <istream>
+#include "boost/algorithm/string/erase.hpp"
 
 using namespace std;
 using namespace boost;
@@ -93,6 +94,9 @@ void IO::ThermoParser::parseAllThermoData() {
 bool IO::ThermoParser::parseNASASection(string l1, string l2, string l3, string l4) {
     cout << l1 << endl;
     // line 1
+
+    const regex speciesName("(");
+
     Thermo thermo(trim(l1.substr(0, 16)));
     thermo.setNote(trim(l1.substr(16, 8)));
     thermo.setPhase(l1.substr(44, 1));
@@ -104,20 +108,20 @@ bool IO::ThermoParser::parseNASASection(string l1, string l2, string l3, string 
     // line 2, 3 4
     double al1, al2, al3, al4, al5, al6, al7;
     double ah1, ah2, ah3, ah4, ah5, ah6, ah7;
-    ah1 = from_string<double>(trim(l2.substr(0, 15)));
-    ah2 = from_string<double>(trim(l2.substr(15, 15)));
-    ah3 = from_string<double>(trim(l2.substr(30, 15)));
-    ah4 = from_string<double>(trim(l2.substr(45, 15)));
-    ah5 = from_string<double>(trim(l2.substr(60, 15)));
-    ah6 = from_string<double>(trim(l3.substr(0, 15)));
-    ah7 = from_string<double>(trim(l3.substr(15, 15)));
-    al1 = from_string<double>(trim(l3.substr(30, 15)));
-    al2 = from_string<double>(trim(l3.substr(45, 15)));
-    al3 = from_string<double>(trim(l3.substr(60, 15)));
-    al4 = from_string<double>(trim(l4.substr(0, 15)));
-    al5 = from_string<double>(trim(l4.substr(15, 15)));
-    al6 = from_string<double>(trim(l4.substr(30, 15)));
-    al7 = from_string<double>(trim(l4.substr(45, 15)));
+    ah1 = from_string<double>(boost::erase_all_copy(l2.substr(0, 15)," "));
+    ah2 = from_string<double>(boost::erase_all_copy(l2.substr(15, 15)," "));
+    ah3 = from_string<double>(boost::erase_all_copy(l2.substr(30, 15)," "));
+    ah4 = from_string<double>(boost::erase_all_copy(l2.substr(45, 15)," "));
+    ah5 = from_string<double>(boost::erase_all_copy(l2.substr(60, 15)," "));
+    ah6 = from_string<double>(boost::erase_all_copy(l3.substr(0, 15)," "));
+    ah7 = from_string<double>(boost::erase_all_copy(l3.substr(15, 15)," "));
+    al1 = from_string<double>(boost::erase_all_copy(l3.substr(30, 15)," "));
+    al2 = from_string<double>(boost::erase_all_copy(l3.substr(45, 15)," "));
+    al3 = from_string<double>(boost::erase_all_copy(l3.substr(60, 15)," "));
+    al4 = from_string<double>(boost::erase_all_copy(l4.substr(0, 15)," "));
+    al5 = from_string<double>(boost::erase_all_copy(l4.substr(15, 15)," "));
+    al6 = from_string<double>(boost::erase_all_copy(l4.substr(30, 15)," "));
+    al7 = from_string<double>(boost::erase_all_copy(l4.substr(45, 15)," "));
     thermo.setUpperTemperatureCoefficients(ah1, ah2, ah3, ah4, ah5, ah6, ah7);
     thermo.setLowerTemperatureCoefficients(al1, al2, al3, al4, al5, al6, al7);
     thermos_.push_back(thermo);
