@@ -330,7 +330,7 @@ namespace Camflow
 
             const int solverID;
 
-            std::vector<doublereal> resSp, resT, resFlow, resMoment, resAxVel;
+            std::vector<doublereal> resSp, resT, resFlow, resMoment, resAxVel, resMom;
 
 
             Array2D s_mf;
@@ -340,6 +340,8 @@ namespace Camflow
             Array2D s_ParticleBegin, s_ParticleEnd;
             Array2D s_jk;
             Array2D s_cp;
+            Array2D moments;		// ank25: moments analogous to s_mf
+            Array2D moments_dot;    // ank25: moments rate analogous to s_wdot
 
             std::vector<doublereal> m_T;                  //mixture temperature
             std::vector<doublereal> m_rho;                //mixture density
@@ -354,7 +356,7 @@ namespace Camflow
             std::vector<doublereal> m_shear;              //shear rate
             std::vector<doublereal> m_eigen;              //pressure gradient eigen value
             std::vector<doublereal> wdot;                 //rate of production
-            const std::vector<doublereal>& dz;                   //grid spacting
+            const std::vector<doublereal>& dz;            //grid spacting
             std::vector<doublereal> axpos;                //axial position
             std::vector<doublereal> avgMolWt;             //average molecular weight
             std::vector<doublereal> slopes;               //slopes of piece-wise linear particle sources

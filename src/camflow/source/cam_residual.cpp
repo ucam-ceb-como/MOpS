@@ -35,6 +35,7 @@ CamResidual::CamResidual
   nEqn(nVar*mCord),
   solverID(cc.getSolver()),
   resSp(nSpc*mCord,0.0),
+  resMom(nMoments*mCord,0.0),		// ank25: moments residual
   resT(mCord,0.0),
   s_mf(mCord,nSpc),
   s_Wdot(mCord,nSpc),
@@ -47,7 +48,9 @@ CamResidual::CamResidual
   m_u(mCord,0.0),
   m_k(mCord,0.0),
   dz(cg.getGeometry()),
-  avgMolWt(mCord,0.0)
+  avgMolWt(mCord,0.0),
+  moments(mCord,nMoments),			// ank25: moments analogous to s_mf
+  moments_dot(mCord,nMoments)       // ank25: moments rate analogous to s_wdot
 {}
 
 CamResidual::~CamResidual()
@@ -56,9 +59,6 @@ CamResidual::~CamResidual()
     //if (camMixture_ != NULL) delete camMixture_;
     //if (reporter_ != NULL) delete reporter_;
 }
-
-
-
 
 
 void CamResidual::saveMixtureProp(const doublereal time,
@@ -77,6 +77,9 @@ void CamResidual::saveMixtureProp(const doublereal time,
     s_mf.resize(cellEnd,nSpc);
     s_Diff.resize(cellEnd,nSpc);
     s_Wdot.resize(cellEnd, nSpc);
+    //moments.resize(cellEnd, nMoments);
+    //moments_dot.resize(cellEnd, nMoments);
+
     //first and the last cell are imaginary cells. This is done
     //in order to be able to calulate the inlet species composition
     //as they are hardly kept constant
