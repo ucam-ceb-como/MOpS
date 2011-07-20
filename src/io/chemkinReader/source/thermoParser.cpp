@@ -96,11 +96,11 @@ bool IO::ThermoParser::parseNASASection(string l1, string l2, string l3, string 
     cout << l1 << endl;
     // line 1
 
-    string speciesString = l1.substr(0, 16);
+    string speciesString = l1.substr(0, 18);
     string speciesName = extractSpeciesName(speciesString);
 
     Thermo thermo(speciesName);
-    thermo.setNote(trim(l1.substr(16, 8)));
+    thermo.setNote(trim(l1.substr(18, 6)));
     thermo.setPhase(l1.substr(44, 1));
     thermo.setTLow(from_string<double>(trim(l1.substr(45, 10))));
     thermo.setTHigh(from_string<double>(trim(l1.substr(55, 10))));
@@ -211,7 +211,7 @@ const
     } else
     {
         throw std::runtime_error("Can't find a species name. There is probably no"
-                                 "space between column 16 and 17.");
+                                 "space after column 18.");
     }
     return speciesName;
 }
