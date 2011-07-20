@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   cam_boundary.h
  * Author: vinod (vj231@cam.ac.uk)
  *
@@ -60,13 +60,16 @@ namespace Camflow{
         std::map<std::string, doublereal> species;
         std::vector<doublereal> inletFracs;
         int fracType;
+
+
+        // Disallow copy constructor
+        CamBoundary(const CamBoundary &cb);
+
     public:
 
         CamBoundary(){}
         ~CamBoundary(){}
 
-        //copy constructor
-        CamBoundary(const CamBoundary &cb);
 
         //set the inlet velocity
         void setVelocity(doublereal vel);

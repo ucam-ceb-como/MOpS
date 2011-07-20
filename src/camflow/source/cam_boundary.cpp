@@ -46,13 +46,13 @@
 using namespace Camflow;
 using namespace Strings;
 //copy cnstructor
-CamBoundary::CamBoundary(const CamBoundary &cb){
+/*CamBoundary::CamBoundary(const CamBoundary &cb){
 
-    /*std::cout << "Invoking copy constructor@@@@@@@@@@@@ \n" ;
+    std::cout << "Invoking copy constructor@@@@@@@@@@@@ \n" ;
     std::cout << cb.velocity << std::endl;
     std::cout << cb.flowRate << std::endl;
     std::cout << cb.fracType << getFracType() << std::endl;
-    std::cout << cb.T << std::endl;*/
+    std::cout << cb.T << std::endl;
 
     velocity = cb.velocity;
     flowRate = cb.flowRate;
@@ -60,7 +60,7 @@ CamBoundary::CamBoundary(const CamBoundary &cb){
     inletFracs = cb.inletFracs;
     species = cb.species;
     T = cb.T;
-}
+}*/
 
 void CamBoundary::setVelocity(doublereal vel){
     this->velocity = vel;

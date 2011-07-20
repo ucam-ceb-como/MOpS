@@ -191,7 +191,7 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
     // Overwrite the oxidiser inlet because otherwise we
     // will have machine zeros for intermediates.
     for(unsigned int l=0; l<mech.SpeciesCount(); l++){
-        start(0,l) = m_in[l];
+        //start(0,l) = m_in[l];
     }
 
 }
