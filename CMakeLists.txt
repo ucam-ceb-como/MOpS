@@ -4,8 +4,14 @@
 cmake_minimum_required (VERSION 2.6)
 project (MOPSSUITE)
 
-SET(BOOST_ROOT /home/userspace/$ENV{USER}/boost)
-SET(Boost_USE_MULTITHREADED OFF)
+IF(WIN32 AND NOT UNIX)
+  SET(Boost_ADDITIONAL_VERSIONS "1_47" "1_47_0")
+  SET(BOOST_ROOT "C:/Program Files/boost/boost_1_47_0")
+ELSE(WIN32 AND NOT UNIX)
+  SET(CMAKE_MODULE_PATH $ENV{HOME})
+  SET(BOOST_ROOT $ENV{HOME}/boost)
+  SET(Boost_USE_MULTITHREADED OFF)
+ENDIF(WIN32 AND NOT UNIX)
 find_package(Boost 1.43.0 REQUIRED COMPONENTS regex serialization)
 
 enable_testing()
@@ -27,6 +33,9 @@ target_link_libraries(camflow-app camflow ${Boost_LIBRARIES})
 
 # Regression tests for CamFlow
 add_test(camflow.hydrogenFlamelet ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet.sh ${MOPSSUITE_BINARY_DIR}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow)
+
+add_test(camflow.hydrogenBatchReactor ${MOPSSUITE_SOURCE_DIR}/test/camflow/batchReactorRegress.sh ${MOPSSUITE_BINARY_DIR}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenBatchReactor)
+
 
 ######### The Mops application ##########################
 add_executable(mops-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/mopsc/mops.cpp)
