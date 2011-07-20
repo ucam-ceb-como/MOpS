@@ -224,7 +224,8 @@ void FlameLet::initSolutionVector()
 
     if(profile_.flagLoadTemp())
     {
-        for (unsigned int i=0; i<dz.size();i++)
+        // Loop over all points, EXCLUDING boundaries
+        for (size_t i=1; i<dz.size()-1; i++)
         {
             vT[i] = profile_.getUserDefTemp(position[i]);
         }
@@ -233,9 +234,10 @@ void FlameLet::initSolutionVector()
 
     if(profile_.flagLoadFracs())
     {
-        for (unsigned int i=0; i<dz.size();i++)
+        // Loop over all points, EXCLUDING boundaries
+        for (size_t i=1; i<dz.size()-1; i++)
         {
-            for (unsigned int l=0; l<nSpc; ++l)
+            for (size_t l=0; l<nSpc; ++l)
             {
                 vSpec[i*nSpc+l] = profile_.getUserDefFracs(position[i],(*spv_)[l]->Name());
             }
