@@ -52,15 +52,16 @@
 
 using namespace Sprog;
 
-namespace Camflow{
-    class CamBoundary : public CamConc{
+namespace Camflow {
+
+    class CamBoundary : public CamConc {
+
         doublereal velocity;
         doublereal flowRate;
         doublereal T;
         std::map<std::string, doublereal> species;
         std::vector<doublereal> inletFracs;
         int fracType;
-
 
         // Disallow copy constructor
         CamBoundary(const CamBoundary &cb);
