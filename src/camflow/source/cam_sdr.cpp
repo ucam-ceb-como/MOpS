@@ -28,7 +28,7 @@ const doublereal ScalarDissipationRate::calculate
     {
         //scalarDissipationRateRef()
     }
-
+    return 0.0;
 }
 
 /*!

@@ -178,12 +178,10 @@ void CamReporter::writeTempProfiletoXML
         {
             subsubnode->GetChildren("position",subsubnodes);
 
-            int count=0;
             for(p=subsubnodes.begin(); p<subsubnodes.end(); ++p)
             {
                 doublereal temp = mTempInterpolator.interpolate(Strings::cdble((*p)->GetAttributeValue("x")));
                 (*p)->SetData(Strings::cstr(temp));
-                ++count;
             }
         }
         else
@@ -192,7 +190,7 @@ void CamReporter::writeTempProfiletoXML
             subsubnode = initialize->GetFirstChild("Tprofile");
             subsubnode->SetAttribute("unit_L","m");
             subsubnode->SetAttribute("unit_T","K");
-            for(int q=0; q<axPos.size(); ++q)
+            for(size_t q=0; q<axPos.size(); ++q)
             {
                 subsubnode->AddChild("position");
                 subsubnode->GetChildren("position",subsubnodes);
@@ -269,16 +267,16 @@ void CamReporter::writeMassFracProfiletoXML
             initialize->AddChild("massfracs");
             initialize->GetChildren("massfracs",subsubnode);
 
-            int r = subsubnode.size()-1;
+            size_t r = subsubnode.size()-1;
 
             subsubnode[r]->SetAttribute("species",speciesName);
-            for(int q=0; q<axPos.size(); ++q)
+            for(size_t s=0; s<axPos.size(); ++s)
             {
                 subsubnode[r]->AddChild("position");
                 subsubnode[r]->GetChildren("position",subsubnodes);
-                subsubnodes[q]->SetAttribute("x",Strings::cstr(axPos[q]));
-                doublereal temp = mMassFracInterpolator.interpolate(Strings::cdble(subsubnodes[q]->GetAttributeValue("x")));
-                subsubnodes[q]->SetData(Strings::cstr(temp));
+                subsubnodes[s]->SetAttribute("x",Strings::cstr(axPos[s]));
+                doublereal temp = mMassFracInterpolator.interpolate(Strings::cdble(subsubnodes[s]->GetAttributeValue("x")));
+                subsubnodes[s]->SetData(Strings::cstr(temp));
             }
 
             doc.Save("camflow.xml");

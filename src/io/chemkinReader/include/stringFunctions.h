@@ -8,6 +8,7 @@
 #ifndef STRINGFUNCTIONS_H_
 #define STRINGFUNCTIONS_H_
 
+#include "boost/regex.hpp"
 #include <string>
 #include <iostream>
 #include <vector>
@@ -30,6 +31,7 @@ namespace IO
         return output;
     }
 
+    void checkNumberFormat(std::string& t);
 
     template <class T>
     T from_string
@@ -38,14 +40,16 @@ namespace IO
         std::ios_base& (*f)(std::ios_base&) = std::dec
     )
     {
-      std::istringstream iss(s);
+      std::string check = s;
+      checkNumberFormat(check);
+      std::istringstream iss(check);
       T t;
       iss >> f >> t;
       return t;
     }
 
     //! Read a file into a std::string.
-    const std::string fileToString(const std::string& fileName);
+    std::string fileToString(const std::string& fileName);
 
     /**
      * Private self-contained function. It does exactly as it is named.
@@ -53,7 +57,7 @@ namespace IO
      * @param file
      * @return
      */
-    const std::vector<std::string> fileToStrings(const std::string file);
+    std::vector<std::string> fileToStrings(const std::string file);
 
     std::string regex_escape
     (
@@ -64,8 +68,6 @@ namespace IO
 
     std::string convertToCaps(const std::string &str);
     std::vector<std::string> convertToCaps(const std::vector<std::string>& str);
-
-    std::string trim(const std::string &str);
 
 } // namespace IO
 

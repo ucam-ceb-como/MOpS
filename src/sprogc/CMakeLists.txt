@@ -24,7 +24,7 @@ add_library(sprog source/gpc_el_comp.cpp
                   source/gpc_element_lib.cpp)
 
 include_directories(include 
-					${Boost_INCLUDE_DIRS}
+                    ${Boost_INCLUDE_DIRS}
                     ../utils/include
                     ../io/chemkinReader/include
                     ../io/comostrings/include

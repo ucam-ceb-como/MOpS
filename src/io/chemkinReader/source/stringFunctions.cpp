@@ -13,7 +13,7 @@
 using namespace std;
 using namespace boost;
 
-const string
+string
 IO::fileToString(const string& fileName)
 {
     ifstream fin(fileName.c_str(), ios::in);
@@ -21,17 +21,17 @@ IO::fileToString(const string& fileName)
     string fileInString((istreambuf_iterator<char>(fin)),
                          istreambuf_iterator<char>());
 
-    return fileInString;
+    return convertToCaps(fileInString);
 }
 
-const vector<string>
+vector<string>
 IO::fileToStrings(const string fileName)
 {
     vector<string> lines;
     ifstream fin(fileName.c_str(), ios::in);
     string line;
     while (getline(fin, line)) {
-        lines.push_back(line);
+        lines.push_back(convertToCaps(line));
     }
     return lines;
 }
@@ -71,13 +71,27 @@ IO::convertToCaps(const vector<string>& str)
     return str;
 }
 
-string
-IO::trim(const string &str)
+//! Check the format of the number.
+void
+IO::checkNumberFormat(std::string& t)
 {
-    int b = str.find_first_not_of(" \t");
-    if (b < 0)
-        return "";
-    int e = str.find_last_not_of(" \t");
+    const boost::regex numberFormatRegex("[A-CI-Z]");
+    boost::smatch what;
 
-    return str.substr(b, e - b + 1);
+    std::string::const_iterator start = t.begin();
+    std::string::const_iterator end = t.end();
+
+    if (boost::regex_search(start, end, what, numberFormatRegex))
+    {
+        throw std::runtime_error("from_string<> is complaining about the format"
+                                 " of a string you've given it.");
+    } else
+    {
+         // This is a bastard: Some numbers have D or G in them instead of E which
+         // from_string can't deal with.
+         boost::replace_all(t,"D","E");
+         boost::replace_all(t,"F","E");
+         boost::replace_all(t,"G","E");
+         boost::replace_all(t,"H","E");
+    }
 }
