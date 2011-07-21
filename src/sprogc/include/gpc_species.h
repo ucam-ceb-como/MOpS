@@ -188,7 +188,7 @@ public:
     void serialize(Archive & ar, const unsigned int /* file_version */)
     {
         ar.template register_type<Sprog::ElComp>();
-        ar.register_type(static_cast<::IO::Transport *>(NULL));
+        ar.register_type(static_cast< ::IO::Transport * >(NULL));
         ar & m_name & m_elcomp & m_molwt & m_mech & m_thermoparams & m_T1 & m_transport;
     }
 
