@@ -1,0 +1,371 @@
+[ Size = 3
+(H, 0)
+(O, 0)
+(N, 0)
+]
+[ Size = 13
+(
+    Species: 
+    (
+        Name      : "H2"
+        Mol. Mass : -1
+    )
+    Transport Data:
+    (
+        Mol. Index      : 1
+        Pot. Well Depth : 5.24647e-22
+        Collision Diam. : 2.92e-10
+        Dipole Moment   : 0
+        Polarizability  : 7.9e-31
+        Rot. Relax. No. : 280
+    )
+    Thermo Data:
+    (
+        Species  : H2
+        Elements : {H:2}
+        Note     : TPIS78
+        Phase    : G
+        T_low    : 200
+        T_common : 1000
+        T_high   : 3500
+        AHs      : {3.33728, -4.94025e-05, 4.99457e-07, -1.79566e-10, 2.00255e-14, -950.159, -3.20502}
+        ALs      : {2.34433, 0.00798052, -1.94782e-05, 2.01572e-08, -7.37612e-12, -917.935, 0.68301}
+    )
+)
+(
+    Species: 
+    (
+        Name      : "O2"
+        Mol. Mass : -1
+    )
+    Transport Data:
+    (
+        Mol. Index      : 1
+        Pot. Well Depth : 1.48282e-21
+        Collision Diam. : 3.458e-10
+        Dipole Moment   : 0
+        Polarizability  : 1.6e-30
+        Rot. Relax. No. : 3.8
+    )
+    Thermo Data:
+    (
+        Species  : O2
+        Elements : {O:2}
+        Note     : TPIS89
+        Phase    : G
+        T_low    : 200
+        T_common : 1000
+        T_high   : 3500
+        AHs      : {3.28254, 0.00148309, -7.57967e-07, 2.09471e-10, -2.16718e-14, -1088.46, 5.45323}
+        ALs      : {3.78246, -0.00299673, 9.8473e-06, -9.6813e-09, 3.24373e-12, -1063.94, 3.65768}
+    )
+)
+(
+    Species: 
+    (
+        Name      : "H2O"
+        Mol. Mass : -1
+    )
+    Transport Data:
+    (
+        Mol. Index      : 2
+        Pot. Well Depth : 7.90284e-21
+        Collision Diam. : 2.605e-10
+        Dipole Moment   : 6.15092e-30
+        Polarizability  : 0
+        Rot. Relax. No. : 4
+    )
+    Thermo Data:
+    (
+        Species  : H2O
+        Elements : {H:2, O:1}
+        Note     : L 8/89
+        Phase    : G
+        T_low    : 200
+        T_common : 1000
+        T_high   : 3500
+        AHs      : {3.03399, 0.00217692, -1.64073e-07, -9.7042e-11, 1.68201e-14, -30004.3, 4.96677}
+        ALs      : {4.19864, -0.00203643, 6.5204e-06, -5.48797e-09, 1.77198e-12, -30293.7, -0.849032}
+    )
+)
+(
+    Species: 
+    (
+        Name      : "H"
+        Mol. Mass : -1
+    )
+    Transport Data:
+    (
+        Mol. Index      : 0
+        Pot. Well Depth : 2.00194e-21
+        Collision Diam. : 2.05e-10
+        Dipole Moment   : 0
+        Polarizability  : 0
+        Rot. Relax. No. : 0
+    )
+    Thermo Data:
+    (
+        Species  : H
+        Elements : {H:1}
+        Note     : L 7/88
+        Phase    : G
+        T_low    : 200
+        T_common : 1000
+        T_high   : 3500
+        AHs      : {2.5, -2.30843e-11, 1.61562e-14, -4.73515e-18, 4.98197e-22, 25473.7, -0.446683}
+        ALs      : {2.5, 7.05333e-13, -1.99592e-15, 2.30082e-18, -9.27732e-22, 25473.7, -0.446683}
+    )
+)
+(
+    Species: 
+    (
+        Name      : "O"
+        Mol. Mass : -1
+    )
+    Transport Data:
+    (
+        Mol. Index      : 0
+        Pot. Well Depth : 1.10452e-21
+        Collision Diam. : 2.75e-10
+        Dipole Moment   : 0
+        Polarizability  : 0
+        Rot. Relax. No. : 0
+    )
+    Thermo Data:
+    (
+        Species  : O
+        Elements : {O:1}
+        Note     : L 1/90
+        Phase    : G
+        T_low    : 200
+        T_common : 1000
+        T_high   : 3500
+        AHs      : {2.56942, -8.59741e-05, 4.19485e-08, -1.00178e-11, 1.22834e-15, 29217.6, 4.78434}
+        ALs      : {3.16827, -0.00327932, 6.64306e-06, -6.12807e-09, 2.11266e-12, 29122.3, 2.05193}
+    )
+)
+(
+    Species: 
+    (
+        Name      : "OH"
+        Mol. Mass : -1
+    )
+    Transport Data:
+    (
+        Mol. Index      : 1
+        Pot. Well Depth : 1.10452e-21
+        Collision Diam. : 2.75e-10
+        Dipole Moment   : 0
+        Polarizability  : 0
+        Rot. Relax. No. : 0
+    )
+    Thermo Data:
+    (
+        Species  : OH
+        Elements : {H:1, O:1}
+        Note     : RUS 78
+        Phase    : G
+        T_low    : 200
+        T_common : 1000
+        T_high   : 3500
+        AHs      : {3.09289, 0.00054843, 1.26505e-07, -8.79462e-11, 1.17412e-14, 3858.66, 4.4767}
+        ALs      : {3.99202, -0.00240132, 4.61794e-06, -3.88113e-09, 1.36411e-12, 3615.08, -0.103925}
+    )
+)
+(
+    Species: 
+    (
+        Name      : "HO2"
+        Mol. Mass : -1
+    )
+    Transport Data:
+    (
+        Mol. Index      : 2
+        Pot. Well Depth : 1.48282e-21
+        Collision Diam. : 3.458e-10
+        Dipole Moment   : 0
+        Polarizability  : 0
+        Rot. Relax. No. : 1
+    )
+    Thermo Data:
+    (
+        Species  : HO2
+        Elements : {H:1, O:2}
+        Note     : L 5/89
+        Phase    : G
+        T_low    : 200
+        T_common : 1000
+        T_high   : 3500
+        AHs      : {4.01721, 0.00223982, -6.33658e-07, 1.14246e-10, -1.07909e-14, 111.857, 3.7851}
+        ALs      : {4.3018, -0.00474912, 2.11583e-05, -2.42764e-08, 9.29225e-12, 294.808, 3.71666}
+    )
+)
+(
+    Species: 
+    (
+        Name      : "H2O2"
+        Mol. Mass : -1
+    )
+    Transport Data:
+    (
+        Mol. Index      : 2
+        Pot. Well Depth : 1.48282e-21
+        Collision Diam. : 3.458e-10
+        Dipole Moment   : 0
+        Polarizability  : 0
+        Rot. Relax. No. : 3.8
+    )
+    Thermo Data:
+    (
+        Species  : H2O2
+        Elements : {H:2, O:2}
+        Note     : L 7/88
+        Phase    : G
+        T_low    : 200
+        T_common : 1000
+        T_high   : 3500
+        AHs      : {4.165, 0.00490832, -1.90139e-06, 3.71186e-10, -2.87908e-14, -17861.8, 2.91616}
+        ALs      : {4.27611, -0.000542822, 1.67336e-05, -2.15771e-08, 8.62454e-12, -17702.6, 3.43505}
+    )
+)
+(
+    Species: 
+    (
+        Name      : "N2"
+        Mol. Mass : -1
+    )
+    Transport Data:
+    (
+        Mol. Index      : 1
+        Pot. Well Depth : 1.34655e-21
+        Collision Diam. : 3.621e-10
+        Dipole Moment   : 0
+        Polarizability  : 1.76e-30
+        Rot. Relax. No. : 4
+    )
+    Thermo Data:
+    (
+        Species  : N2
+        Elements : {N:2}
+        Note     : 121286
+        Phase    : G
+        T_low    : 300
+        T_common : 1000
+        T_high   : 5000
+        AHs      : {2.92664, 0.00148798, -5.68476e-07, 1.0097e-10, -6.75335e-15, -922.798, 5.98053}
+        ALs      : {3.29868, 0.00140824, -3.96322e-06, 5.64152e-09, -2.44485e-12, -1020.9, 3.95037}
+    )
+)
+(
+    Species: 
+    (
+        Name      : "C5H9"
+        Mol. Mass : -1
+    )
+    Transport Data:
+    (
+        Mol. Index      : 2
+        Pot. Well Depth : 6.41726e-21
+        Collision Diam. : 5.29e-10
+        Dipole Moment   : 0
+        Polarizability  : 1.032e-29
+        Rot. Relax. No. : 1
+    )
+    Thermo Data:
+    (
+        Species  : C5H9
+        Elements : {C:5, H:9}
+        Note     : 
+        Phase    : G
+        T_low    : 300
+        T_common : 1383
+        T_high   : 5000
+        AHs      : {14.0841, 0.0208585, -7.2262e-06, 1.13154e-09, -6.60424e-14, 5421.95, -51.5387}
+        ALs      : {-0.69708, 0.0514355, -3.04501e-05, 8.80926e-09, -9.94458e-13, 11017.3, 29.3601}
+    )
+)
+(
+    Species: 
+    (
+        Name      : "HEXADIENE-1,5"
+        Mol. Mass : -1
+    )
+    Transport Data:
+    (
+        Mol. Index      : 2
+        Pot. Well Depth : 6.41726e-21
+        Collision Diam. : 5.29e-10
+        Dipole Moment   : 0
+        Polarizability  : 1.032e-29
+        Rot. Relax. No. : 1
+    )
+    Thermo Data:
+    (
+        Species  : HEXADIENE-1,5
+        Elements : {C:6, H:10}
+        Note     : 
+        Phase    : G
+        T_low    : 300
+        T_common : 1390
+        T_high   : 5000
+        AHs      : {16.7186, 0.0230179, -7.81866e-06, 1.20832e-09, -6.98826e-14, 1743.07, -61.9566}
+        ALs      : {-1.80014, 0.0671112, -4.84054e-05, 1.84056e-08, -2.89368e-12, 8102.5, 37.2242}
+    )
+)
+(
+    Species: 
+    (
+        Name      : "C3H7-3-TAX1C7H13"
+        Mol. Mass : -1
+    )
+    Transport Data:
+    (
+        Mol. Index      : 2
+        Pot. Well Depth : 6.41726e-21
+        Collision Diam. : 5.29e-10
+        Dipole Moment   : 0
+        Polarizability  : 1.032e-29
+        Rot. Relax. No. : 1
+    )
+    Thermo Data:
+    (
+        Species  : C3H7-3-TAX1C7H13
+        Elements : {C:10, H:19}
+        Note     : THERM
+        Phase    : G
+        T_low    : 300
+        T_common : 1390
+        T_high   : 5000
+        AHs      : {30.1, 0.0430491, -1.48175e-05, 2.3102e-09, -1.34427e-13, -15751.6, -129.134}
+        ALs      : {-2.25794, 0.113906, -7.30951e-05, 2.37879e-08, -3.13888e-12, -3980.52, 46.4279}
+    )
+)
+(
+    Species: 
+    (
+        Name      : "NE"
+        Mol. Mass : -1
+    )
+    Transport Data:
+    (
+        Mol. Index      : 2
+        Pot. Well Depth : 6.41726e-21
+        Collision Diam. : 5.29e-10
+        Dipole Moment   : 0
+        Polarizability  : 1.032e-29
+        Rot. Relax. No. : 1
+    )
+    Thermo Data:
+    (
+        Species  : NE
+        Elements : {NE:1}
+        Note     : L10/92
+        Phase    : G
+        T_low    : 200
+        T_common : 1000
+        T_high   : 6000
+        AHs      : {2.5, 0, 0, 0, 0, -745.375, 3.35532}
+        ALs      : {2.5, 0, 0, 0, 0, -745.375, 3.35532}
+    )
+)
+]
