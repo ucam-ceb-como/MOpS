@@ -10,6 +10,7 @@
 #include "stringFunctions.h"
 #include <istream>
 #include "boost/algorithm/string/erase.hpp"
+#include "boost/algorithm/string/replace.hpp"
 
 using namespace std;
 using namespace boost;
@@ -17,7 +18,7 @@ using namespace boost;
 IO::ThermoParser::ThermoParser(const string thermo_file)
 :
 thermo_file_(convertToCaps(thermo_file)),
-thermo_file_string_(fileToString(thermo_file)),
+thermo_file_string_(convertToCaps(fileToString(thermo_file))),
 lines_(fileToStrings(thermo_file)),
 globalLowT_(-1),
 globalCommonT_(-1),
@@ -122,6 +123,16 @@ bool IO::ThermoParser::parseNASASection(string l1, string l2, string l3, string 
     string elements_string = convertToCaps(l1.substr(24, 20));
     thermo.setElements(parseElements(elements_string));
     // line 2, 3 4
+
+    // This is a bastard: Some numbers have D or G in them instead of E which
+    // from_string can't deal with.
+    boost::replace_all(l2,"D","E");
+    boost::replace_all(l3,"D","E");
+    boost::replace_all(l4,"D","E");
+    boost::replace_all(l2,"G","E");
+    boost::replace_all(l3,"G","E");
+    boost::replace_all(l4,"G","E");
+
     double ah1 = from_string<double>(boost::erase_all_copy(l2.substr(0, 15)," "));
     double ah2 = from_string<double>(boost::erase_all_copy(l2.substr(15, 15)," "));
     double ah3 = from_string<double>(boost::erase_all_copy(l2.substr(30, 15)," "));

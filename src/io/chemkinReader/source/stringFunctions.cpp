@@ -31,7 +31,7 @@ IO::fileToStrings(const string fileName)
     ifstream fin(fileName.c_str(), ios::in);
     string line;
     while (getline(fin, line)) {
-        lines.push_back(line);
+        lines.push_back(convertToCaps(line));
     }
     return lines;
 }
