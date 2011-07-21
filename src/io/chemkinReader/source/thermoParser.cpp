@@ -233,7 +233,7 @@ const
 void
 IO::ThermoParser::getGlobalTemperatures()
 {
-    const regex globalTRegex("\\s*THER(?:|MO)\\s*([0-9\\.]+)\\s+([0-9\\.]+)\\s+([0-9\\.]+)\\s*");
+    const regex globalTRegex("\\s*THER(?:|MO)\\s+(?:|ALL)\\s*([0-9\\.]+)\\s+([0-9\\.]+)\\s+([0-9\\.]+)\\s*");
     string speciesName;
     smatch what;
 
