@@ -113,7 +113,7 @@ void Batch::solve()
     wdotSootGasPhase.resize(nSpc,0.0);
 
     // Push moments to the back of the solution vector
-    sootMom_.initMoments(*camMech_,solvect,1.0);
+    sootMom_.initMoments(*camMech_,solvect,1);
 
     // Update the mixture properties.
     updateMixture(&solvect[0]);

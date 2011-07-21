@@ -7,6 +7,10 @@ cmake_minimum_required(VERSION 2.6)
 
 project (CVODES)
 
+IF(WIN32)
+add_definitions(/D_CRT_SECURE_NO_WARNINGS)
+ENDIF(WIN32)
+
 add_library(cvodes source/cvodes/cvodea.c
                    source/cvodes/cvodea_io.c
                    source/cvodes/cvodes_band.c

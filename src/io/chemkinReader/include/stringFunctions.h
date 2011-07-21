@@ -45,7 +45,7 @@ namespace IO
     }
 
     //! Read a file into a std::string.
-    const std::string fileToString(const std::string& fileName);
+    std::string fileToString(const std::string& fileName);
 
     /**
      * Private self-contained function. It does exactly as it is named.
@@ -53,7 +53,7 @@ namespace IO
      * @param file
      * @return
      */
-    const std::vector<std::string> fileToStrings(const std::string file);
+    std::vector<std::string> fileToStrings(const std::string file);
 
     std::string regex_escape
     (
