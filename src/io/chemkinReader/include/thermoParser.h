@@ -64,6 +64,13 @@ namespace IO {
 
         bool parseNASASection(std::string l1, std::string l2, std::string l3, std::string l4);
 
+        /**
+         * This function is required because many therm.dat files do not
+         * conform to the chemkin standard and merely use a space as a
+         * delimiter between the species name and the rest of line 1.
+         */
+        std::string extractSpeciesName(const std::string& speciesString) const;
+
     };
 
 }

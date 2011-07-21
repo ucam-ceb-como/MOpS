@@ -76,10 +76,19 @@ target_link_libraries(brush-moonmd-test brush ${Boost_LIBRARIES})
 # Regression tests for Brush moon-md interface
 add_test(NAME brush.moonmd1 COMMAND ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${MOPSSUITE_BINARY_DIR}/brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
+
+########## Test Program for sprogc ######################
 add_executable(sprogc-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/sprogc/sprogc_test.cpp)
 target_link_libraries(sprogc-test sprog ${Boost_LIBRARIES})
 
 add_test(sprogc.regress1 ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress1.sh ${MOPSSUITE_BINARY_DIR}/sprogc-test ${MOPSSUITE_SOURCE_DIR}/test/sprogc)
+
+########## Test Program for chemkinReader ######################
+add_executable(chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp)
+target_link_libraries(chemkinReader-test chemkinReader ${Boost_LIBRARIES})
+
+add_test(chemkinReader.regress1 ${MOPSSUITE_SOURCE_DIR}/test/io/chemkinReaderRegress.sh ${MOPSSUITE_BINARY_DIR}/chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/test/io)
+
 
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)
