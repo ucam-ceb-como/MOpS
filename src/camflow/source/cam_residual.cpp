@@ -57,7 +57,7 @@ CamResidual::~CamResidual()
 {
     //if (camMech_ != NULL) delete camMech_;
     //if (camMixture_ != NULL) delete camMixture_;
-    //if (reporter_ != NULL) delete reporter_;
+    //if (reporter_ != NULL) delet reporter_;
 }
 
 

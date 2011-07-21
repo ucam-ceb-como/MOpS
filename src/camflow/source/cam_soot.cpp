@@ -919,6 +919,10 @@ void CamSoot::interpolateReducedMoments(realVector& wom){
     }
 }
 
+/*
+ * Don't use this moment residual for Flamelets.
+ * Flamlet code provides its own moment residual.
+ */
 void CamSoot::momentResidual
 (
     const doublereal& time,
@@ -948,6 +952,10 @@ void CamSoot::momentResidual
     }
 }
 
+/*
+ * Don't use this moment residual for Flamelets.
+ * Flamlet code provides its own moment residual.
+ */
 void CamSoot::momentResidual
 (
     const doublereal& time,

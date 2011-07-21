@@ -38,7 +38,8 @@ void CVodeWrapper::init(int n, std::vector<doublereal>& solnVec, doublereal tol,
     atol = tol;
     currentTime = iniTime;
     maxTime = maxIntTime;
-    cvode_mem = CVodeCreate(CV_BDF,CV_NEWTON);
+    cvode_mem = CVodeCreate(CV_BDF,CV_NEWTON); // ank25: original
+    //cvode_mem = CVodeCreate(CV_BDF, CV_FUNCTIONAL); // ank25: trying something different
     CVodeMalloc(cvode_mem,cvodeResid,currentTime,y,CV_SS,rtol,(void*)&atol);
 
 
@@ -87,13 +88,14 @@ void CVodeWrapper::solve(int stopMode, doublereal resTol){
 
     int flag;
     do{
-
+        //std::cout << "Calling CVODE" << std::endl;
         flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);
         if(flag < 0){
             std::cout << "Cvode Integration error\n";
         }else{
             CVodeGetDky(cvode_mem,currentTime,1,yPrime);
             calcResNorm();
+            //std::cout << "CvodeWrapper: ResNorm: " << resNorm << std::endl;
             reacPtr->report(currentTime,NV_DATA_S(y),resNorm);
         }
         if(currentTime > maxTime)

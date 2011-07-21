@@ -279,6 +279,12 @@ void FlameLet::csolve
         eqn_slvd = EQN_ALL;
         int band = nVar*2;
 
+        // Output the tolerances
+        // control_.setResTol(1.e-04);
+        cout << "Species Abs  Tol: " << control_.getSpeciesAbsTol() << endl;
+        cout << "Species Rel Tol: " << control_.getSpeciesRelTol() << endl;
+        cout << "Residual Tol: " << control_.getResTol() << endl;
+
         cvw.init(nEqn,solvect,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
             control_.getMaxTime(),band,*this);
 
@@ -1122,6 +1128,8 @@ void FlameLet::report(doublereal x, doublereal* solution, doublereal& res)
     cout.width(5);
     cout.setf(ios::scientific);
     //if(nStep%10==0) reporter->consoleHead("time(s) \t residual");
+
+    if(nStep%10==0) cout << "Time" <<"\t" << "Residual" << endl;
     cout << x <<"\t" << res << endl;
     nStep++;
 

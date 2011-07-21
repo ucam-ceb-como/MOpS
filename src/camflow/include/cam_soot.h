@@ -66,11 +66,9 @@ namespace Camflow {
  *
  * \brief Solves the MoMIC equations (Frenklach, 2002).
  *
- * \todo Get it working first of all!
  * \todo Get rid of all these Set functions, probably by incorporating into
  *       readSoot(). PARTIALLY DONE.
  * \todo Put physical processes such as coagulation in their own classes.
- * \todo e.g. coagulation and rateCoagulation seem to be duplicates?
  * \todo Use abstract factory method instead of the enum regime.
  */
 class CamSoot {
@@ -114,12 +112,6 @@ class CamSoot {
         //! Returns true if soot is going to be solved.
         bool active() const;
 
-        void initialize(int nCells, Sprog::Mechanism &mech, realVector &mSolnVec);
-
-        doublereal betaC1(const int i, const int j);
-
-        doublereal betaC2(const int i, const int j);
-
         void linear(int n, realVector& y,
                     doublereal& a, doublereal& b, doublereal& rsq);
 
@@ -128,13 +120,8 @@ class CamSoot {
         void sums(int hMoment, doublereal massAdded, doublereal coeff,
                   realVector& rates);
 
-        /*!
-         *soot reaction processes
-         */
-        void sootReactions(int cell, realVector& conc, realVector& mom,
-                    int nSpec, doublereal T,   doublereal p);
-
         //! These are probably to be called from the flamelet code.
+        // No longer needed. Flamelt code has its own residual
         void momentResidual(const doublereal& time,
                             const int iMesh_s, const int iMesh_e,
                             const realVector& dz,
@@ -244,28 +231,6 @@ class CamSoot {
          */
         // Beta_surf in CGS units. (as surface chem done in CGS)
         doublereal Beta_nucl, Beta_fm, Beta_cd, Beta_surf_CGS, CBOHCGS;
-
-
-        /*!
-         *nucleation rate
-         */
-        void nucleation(realVector &conc,
-                                    doublereal T,
-                                    doublereal p);
-        void coagulation(doublereal T,
-                         doublereal p,
-                         doublereal M0);
-
-        void condensation(doublereal T,            //temperature
-                          doublereal M0,           //zeroth moment
-                          doublereal concPAH,      //concentration of PAH
-                          doublereal ratePAH);     //rate of PAH consumption due to condensation
-
-        void surface(int hMoment, int cell,
-                     doublereal T,
-                     doublereal M0,
-                     realVector& conc,
-                     realVector& totalRates);
 
         /*
          *calculate nucleation rate
