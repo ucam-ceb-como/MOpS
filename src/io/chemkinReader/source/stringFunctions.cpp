@@ -13,7 +13,7 @@
 using namespace std;
 using namespace boost;
 
-const string
+string
 IO::fileToString(const string& fileName)
 {
     ifstream fin(fileName.c_str(), ios::in);
@@ -24,7 +24,7 @@ IO::fileToString(const string& fileName)
     return fileInString;
 }
 
-const vector<string>
+vector<string>
 IO::fileToStrings(const string fileName)
 {
     vector<string> lines;

@@ -4,15 +4,17 @@
 cmake_minimum_required (VERSION 2.6)
 project (MOPSSUITE)
 
-IF(WIN32 AND NOT UNIX)
-  SET(Boost_ADDITIONAL_VERSIONS "1_47" "1_47_0")
-  SET(BOOST_ROOT "C:/Program Files/boost/boost_1_47_0")
-ELSE(WIN32 AND NOT UNIX)
+IF(WIN32)
+  SET(Boost_ADDITIONAL_VERSIONS "1.47" "1.47.0")
+  SET(BOOST_ROOT "C:/Program Files/boost")
+  SET(Boost_USE_STATIC_LIBS TRUE)
+#  add_definitions(/DBOOST_ALL_DYN_LINK) 
+ELSE(WIN32)
   SET(BOOST_ROOT /home/userspace/$ENV{USER}/boost)
   SET(BOOST_ROOT /home/userspace/$USER/boost)
   SET(Boost_USE_MULTITHREADED OFF)
-ENDIF(WIN32 AND NOT UNIX)
-find_package(Boost 1.43.0 REQUIRED COMPONENTS regex serialization)
+ENDIF(WIN32)
+find_package(Boost 1.43.0 REQUIRED COMPONENTS regex serialization filesystem system)
 
 enable_testing()
 

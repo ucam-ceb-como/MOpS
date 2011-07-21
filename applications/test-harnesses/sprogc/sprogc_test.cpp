@@ -23,7 +23,7 @@ int main()
     // Load the test mechanism.
     try {
 
-        Sprog::IO::MechanismParser::ReadChemkin("chem.inp", mechOUT, "therm.dat",1.0,"tran.dat");
+        Sprog::IO::MechanismParser::ReadChemkin("chem.inp", mechOUT, "therm.dat",1,"tran.dat");
 
 	    std::ofstream ofs("serializeTest");
 	    boost::archive::text_oarchive oa(ofs);

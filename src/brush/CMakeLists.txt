@@ -14,6 +14,7 @@ add_library(brush source/pred_corr_solver.cpp
                   source/moonmd_interface.cpp)
 
 include_directories(include 
+                    ${Boost_INCLUDE_DIRS}
                     ../utils/include
                     ../io/chemkinReader/include
                     ../io/comostrings/include

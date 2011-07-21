@@ -70,6 +70,7 @@ add_library(sweep source/mt19937.cpp
 				  source/swp_kmc_structure_comp.cpp)
 
 include_directories(include 
+                    ${Boost_INCLUDE_DIRS} 
                     ../utils/include
                     ../io/chemkinReader/include
                     ../io/comostrings/include

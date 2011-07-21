@@ -50,6 +50,8 @@
 
 #include "linear_interpolator.hpp"
 
+#include "boost/filesystem.hpp"
+
 #include <memory>
 #include <iostream>
 #include <stdexcept>
@@ -106,10 +108,7 @@ Brush::MooNMDInterface::particle_reactor_pointer
     std::cout << "Setting up Brush\n";
 
     // Look at working directory (to help debug tests)
-    char *pString = NULL;
-    pString = get_current_dir_name();
-    std::cout << "Working directory is " << std::string(pString) << std::endl;
-    delete[] pString;
+    std::cout << "Working directory is " << boost::filesystem::current_path() << std::endl;
 
     // diagnostic level (could be a user input)
    const int diag = 1;

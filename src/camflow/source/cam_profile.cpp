@@ -200,13 +200,13 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
  */
 void CamProfile::setGaussian(Mechanism& mech){
     std::vector<doublereal> position = geom.getAxpos();
-    int len = position.size();
+    size_t len = position.size();
     std::map<std::string, doublereal>::iterator p;
     p = list_intmd.begin();
     while(p!=list_intmd.end()){
-        int index = mech.FindSpecies(convertToCaps(trim(p->first)));
+        size_t index = mech.FindSpecies(convertToCaps(trim(p->first)));
         doublereal gWidth = -log(0.15*m_intmd[index])/pow(mWidth/2.0,2);
-        for(int i=0; i<len; i++){
+        for(size_t i=0; i<len; i++){
             start(i,index) = m_intmd[index]*exp(-gWidth*pow(position[i]-mCenter,2));
         }
         p++;
@@ -225,10 +225,10 @@ void CamProfile::setGaussTempProfile(std::vector<doublereal>& vTemp){
     }
     doublereal dmax = 1.0;
     std::vector<doublereal> position = geom.getAxpos();
-    int len = position.size();
+    size_t len = position.size();
     vTemp.resize(len,0.0);
     doublereal gWidth = -log(0.15*dmax)/pow(mWidth/2.0,2);
-    for(int i=0; i<len; i++){
+    for(size_t i=0; i<len; i++){
         doublereal temp = exp(-gWidth*pow(position[i]-mCenter,2));
         vTemp[i] = temp*2000+300;
     }
@@ -285,10 +285,10 @@ void CamProfile::setUserFrac(doublereal pos, doublereal temp, std::string specie
 doublereal CamProfile::getUserDefTemp(const doublereal& pos)
 {
 
-    int len = u_pos.size();
+    size_t len = u_pos.size();
     Utils::LinearInterpolator<doublereal, doublereal> mTempInterpolator(u_pos, u_temp);
 
-    for (int i=0; i<len; ++i)
+    for (size_t i=0; i<len; ++i)
     {
         if(pos == u_pos[i])
         {
@@ -306,10 +306,10 @@ doublereal CamProfile::getUserDefFracs(const doublereal& pos, const std::string 
 {
 
     std::vector<doublereal> fracs,species_pos;
-    int speciesIndex;
-    int len = u_species_pos.size()/9;
+    size_t speciesIndex;
+    size_t len = u_species_pos.size()/9;
 
-    for (int i=0; i<u_species.size(); ++i)
+    for (size_t i=0; i<u_species.size(); ++i)
     {
         if (species == u_species[i])
         {
@@ -318,7 +318,7 @@ doublereal CamProfile::getUserDefFracs(const doublereal& pos, const std::string 
         }
     }
 
-    for (int i=0; i<len; ++i)
+    for (size_t i=0; i<len; ++i)
     {
         fracs.push_back(u_frac[i+speciesIndex]);
         species_pos.push_back(u_species_pos[i]);
@@ -326,7 +326,7 @@ doublereal CamProfile::getUserDefFracs(const doublereal& pos, const std::string 
 
     Utils::LinearInterpolator<doublereal, doublereal> mFracInterpolator(species_pos, fracs);
 
-    for (int i=0; i<len; ++i)
+    for (size_t i=0; i<len; ++i)
     {
         if(pos == u_species_pos[i])
         {

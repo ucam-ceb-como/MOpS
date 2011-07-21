@@ -31,6 +31,7 @@ add_library(mops source/cvodes_utils.cpp
                  source/swp_gas_profile.cpp)
 
 include_directories(include 
+                    ${Boost_INCLUDE_DIRS} 
                     ../utils/include
                     ../io/chemkinReader/include
                     ../io/comostrings/include
