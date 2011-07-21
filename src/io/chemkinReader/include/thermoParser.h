@@ -34,8 +34,12 @@ namespace IO {
     private:
 
         const std::string thermo_file_;
+        const std::string thermo_file_string_;
         const std::vector<std::string> lines_;
         std::vector<IO::Thermo> thermos_;
+
+        double globalLowT_, globalCommonT_, globalHighT_;
+
         /**
          * Actual parsing method.
          */
@@ -70,6 +74,8 @@ namespace IO {
          * delimiter between the species name and the rest of line 1.
          */
         std::string extractSpeciesName(const std::string& speciesString) const;
+
+        void getGlobalTemperatures();
 
     };
 

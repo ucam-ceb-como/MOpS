@@ -17,13 +17,19 @@ using namespace boost;
 IO::ThermoParser::ThermoParser(const string thermo_file)
 :
 thermo_file_(convertToCaps(thermo_file)),
-lines_(fileToStrings(thermo_file)) {
-}
+thermo_file_string_(fileToString(thermo_file)),
+lines_(fileToStrings(thermo_file)),
+globalLowT_(-1),
+globalCommonT_(-1),
+globalHighT_(-1)
+{}
 
 void IO::ThermoParser::parse(vector<Species>& species) {
 
     cout << "Parsing NASA thermo file: " << thermo_file_ << endl;
     parseAllThermoData();
+
+    getGlobalTemperatures();
 
     ensureSpeciesNamesAreValid();
     ensureNoDuplicates();
@@ -214,4 +220,26 @@ const
                                  "space after column 18.");
     }
     return speciesName;
+}
+
+void
+IO::ThermoParser::getGlobalTemperatures()
+{
+    const regex globalTRegex("\\s*THER(?:|MO)\\s*([0-9\\.]+)\\s+([0-9\\.]+)\\s+([0-9\\.]+)\\s*");
+    string speciesName;
+    smatch what;
+
+    string::const_iterator start = thermo_file_string_.begin();
+    string::const_iterator end = thermo_file_string_.end();
+
+    if(regex_search(start, end, what, globalTRegex))
+    {
+        globalLowT_ = from_string<double>(what[1]);
+        globalCommonT_ = from_string<double>(what[2]);
+        globalHighT_ = from_string<double>(what[3]);
+    } else
+    {
+        throw std::runtime_error("Could not find list of global temperatures.");
+    }
+    cout << globalLowT_ << " " << globalCommonT_ << " " << globalHighT_ << endl;
 }
