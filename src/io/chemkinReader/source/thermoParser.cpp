@@ -17,10 +17,16 @@ using namespace boost;
 IO::ThermoParser::ThermoParser(const string thermo_file)
 :
 thermo_file_(convertToCaps(thermo_file)),
-lines_(fileToStrings(thermo_file)) {
-}
+thermo_file_string_(fileToString(thermo_file)),
+lines_(fileToStrings(thermo_file)),
+globalLowT_(-1),
+globalCommonT_(-1),
+globalHighT_(-1)
+{}
 
 void IO::ThermoParser::parse(vector<Species>& species) {
+
+    getGlobalTemperatures();
 
     cout << "Parsing NASA thermo file: " << thermo_file_ << endl;
     parseAllThermoData();
@@ -104,7 +110,15 @@ bool IO::ThermoParser::parseNASASection(string l1, string l2, string l3, string 
     thermo.setPhase(l1.substr(44, 1));
     thermo.setTLow(from_string<double>(trim(l1.substr(45, 10))));
     thermo.setTHigh(from_string<double>(trim(l1.substr(55, 10))));
-    thermo.setTCommon(from_string<double>(trim(l1.substr(65, 8))));
+
+    if (trim(l1.substr(65, 8)) == "")
+    {
+        thermo.setTCommon(globalCommonT_);
+    }
+    else
+    {
+        thermo.setTCommon(from_string<double>(trim(l1.substr(65, 8))));
+    }
     string elements_string = convertToCaps(l1.substr(24, 20));
     thermo.setElements(parseElements(elements_string));
     // line 2, 3 4
@@ -214,4 +228,25 @@ const
                                  "space after column 18.");
     }
     return speciesName;
+}
+
+void
+IO::ThermoParser::getGlobalTemperatures()
+{
+    const regex globalTRegex("\\s*THER(?:|MO)\\s+(?:|ALL)\\s*([0-9\\.]+)\\s+([0-9\\.]+)\\s+([0-9\\.]+)\\s*");
+    string speciesName;
+    smatch what;
+
+    string::const_iterator start = thermo_file_string_.begin();
+    string::const_iterator end = thermo_file_string_.end();
+
+    if(regex_search(start, end, what, globalTRegex))
+    {
+        globalLowT_ = from_string<double>(what[1]);
+        globalCommonT_ = from_string<double>(what[2]);
+        globalHighT_ = from_string<double>(what[3]);
+    } else
+    {
+        throw std::runtime_error("Could not find list of global temperatures.");
+    }
 }
