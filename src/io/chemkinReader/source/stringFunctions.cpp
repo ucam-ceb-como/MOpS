@@ -21,7 +21,7 @@ IO::fileToString(const string& fileName)
     string fileInString((istreambuf_iterator<char>(fin)),
                          istreambuf_iterator<char>());
 
-    return fileInString;
+    return convertToCaps(fileInString);
 }
 
 vector<string>
@@ -80,4 +80,29 @@ IO::trim(const string &str)
     int e = str.find_last_not_of(" \t");
 
     return str.substr(b, e - b + 1);
+}
+
+//! Check the format of the number.
+void
+IO::checkNumberFormat(std::string& t)
+{
+    const boost::regex numberFormatRegex("[A-CI-Z]");
+    boost::smatch what;
+
+    std::string::const_iterator start = t.begin();
+    std::string::const_iterator end = t.end();
+
+    if (boost::regex_search(start, end, what, numberFormatRegex))
+    {
+        throw std::runtime_error("from_string<> is complaining about the format"
+                                 " of a string you've given it.");
+    } else
+    {
+         // This is a bastard: Some numbers have D or G in them instead of E which
+         // from_string can't deal with.
+         boost::replace_all(t,"D","E");
+         boost::replace_all(t,"F","E");
+         boost::replace_all(t,"G","E");
+         boost::replace_all(t,"H","E");
+    }
 }

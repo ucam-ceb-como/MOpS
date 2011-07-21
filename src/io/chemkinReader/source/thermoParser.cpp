@@ -124,15 +124,6 @@ bool IO::ThermoParser::parseNASASection(string l1, string l2, string l3, string 
     thermo.setElements(parseElements(elements_string));
     // line 2, 3 4
 
-    // This is a bastard: Some numbers have D or G in them instead of E which
-    // from_string can't deal with.
-    boost::replace_all(l2,"D","E");
-    boost::replace_all(l3,"D","E");
-    boost::replace_all(l4,"D","E");
-    boost::replace_all(l2,"G","E");
-    boost::replace_all(l3,"G","E");
-    boost::replace_all(l4,"G","E");
-
     double ah1 = from_string<double>(boost::erase_all_copy(l2.substr(0, 15)," "));
     double ah2 = from_string<double>(boost::erase_all_copy(l2.substr(15, 15)," "));
     double ah3 = from_string<double>(boost::erase_all_copy(l2.substr(30, 15)," "));

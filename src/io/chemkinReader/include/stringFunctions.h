@@ -8,6 +8,7 @@
 #ifndef STRINGFUNCTIONS_H_
 #define STRINGFUNCTIONS_H_
 
+#include "boost/regex.hpp"
 #include <string>
 #include <iostream>
 #include <vector>
@@ -30,6 +31,7 @@ namespace IO
         return output;
     }
 
+    void checkNumberFormat(std::string& t);
 
     template <class T>
     T from_string
@@ -38,7 +40,9 @@ namespace IO
         std::ios_base& (*f)(std::ios_base&) = std::dec
     )
     {
-      std::istringstream iss(s);
+      std::string check = s;
+      checkNumberFormat(check);
+      std::istringstream iss(check);
       T t;
       iss >> f >> t;
       return t;
