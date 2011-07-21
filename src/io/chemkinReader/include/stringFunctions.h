@@ -69,8 +69,6 @@ namespace IO
     std::string convertToCaps(const std::string &str);
     std::vector<std::string> convertToCaps(const std::vector<std::string>& str);
 
-    std::string trim(const std::string &str);
-
 } // namespace IO
 
 #endif /* STRINGFUNCTIONS_H_ */

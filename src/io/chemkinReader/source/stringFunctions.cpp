@@ -71,17 +71,6 @@ IO::convertToCaps(const vector<string>& str)
     return str;
 }
 
-string
-IO::trim(const string &str)
-{
-    int b = str.find_first_not_of(" \t");
-    if (b < 0)
-        return "";
-    int e = str.find_last_not_of(" \t");
-
-    return str.substr(b, e - b + 1);
-}
-
 //! Check the format of the number.
 void
 IO::checkNumberFormat(std::string& t)
