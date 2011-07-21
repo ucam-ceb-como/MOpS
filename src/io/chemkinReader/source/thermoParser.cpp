@@ -26,10 +26,10 @@ globalHighT_(-1)
 
 void IO::ThermoParser::parse(vector<Species>& species) {
 
+    getGlobalTemperatures();
+
     cout << "Parsing NASA thermo file: " << thermo_file_ << endl;
     parseAllThermoData();
-
-    getGlobalTemperatures();
 
     ensureSpeciesNamesAreValid();
     ensureNoDuplicates();
@@ -110,7 +110,15 @@ bool IO::ThermoParser::parseNASASection(string l1, string l2, string l3, string 
     thermo.setPhase(l1.substr(44, 1));
     thermo.setTLow(from_string<double>(trim(l1.substr(45, 10))));
     thermo.setTHigh(from_string<double>(trim(l1.substr(55, 10))));
-    thermo.setTCommon(from_string<double>(trim(l1.substr(65, 8))));
+
+    if (trim(l1.substr(65, 8)) == "")
+    {
+        thermo.setTCommon(globalCommonT_);
+    }
+    else
+    {
+        thermo.setTCommon(from_string<double>(trim(l1.substr(65, 8))));
+    }
     string elements_string = convertToCaps(l1.substr(24, 20));
     thermo.setElements(parseElements(elements_string));
     // line 2, 3 4
@@ -241,5 +249,4 @@ IO::ThermoParser::getGlobalTemperatures()
     {
         throw std::runtime_error("Could not find list of global temperatures.");
     }
-    cout << globalLowT_ << " " << globalCommonT_ << " " << globalHighT_ << endl;
 }
