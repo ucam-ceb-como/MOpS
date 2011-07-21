@@ -7,6 +7,11 @@ lib/
 *.aux
 *.sen
 *.sim
+*.vcxproj*
+*.sln
+*.opensdf
+*.sdf
+*.suo
 
 # Profiling output files
 *gmon.out
@@ -18,12 +23,16 @@ lib/
 build/
 Testing/
 *CMakeCache.txt
+Debug/
+Release/
+*.dir/
 
 # Executables built by cmake
 mops-app
 brush-app
 camflow-app
 brush-moonmd-test
+*.exe
 
 # log files
 *log*

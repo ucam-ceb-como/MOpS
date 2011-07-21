@@ -46,7 +46,9 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#ifndef WIN32
 #include "pthread.h"
+#endif
 
 #include "cam_control.h"
 #include "cam_radiation.h"

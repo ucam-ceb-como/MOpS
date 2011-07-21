@@ -55,7 +55,7 @@ namespace ComoUnicode {
         // Bom status
         bool is_bom = false;
         // Current position of get pointer in istream
-        int current_pos = is.tellg();
+        std::streamoff current_pos = is.tellg();
         // Reset position of get pointer
         is.seekg (0, std::ios::beg);
         // Read the first bufferSize bytes from file
@@ -289,14 +289,14 @@ namespace ComoUnicode {
 
     void is2str(std::string &dest, std::istream &is) {
         // Current position of get pointer in istream
-        int current_pos = is.tellg();
+        std::streamoff current_pos = is.tellg();
         // Reset position of get pointer to beginning of stream
         is.seekg (0, std::ios::beg);
         const int bufferSize = 1024;
         char buffer[bufferSize];
         while (is.good()) {
             is.read(buffer,bufferSize*sizeof(char));
-            int count = is.gcount();
+            size_t count = is.gcount();
             dest.append(buffer,count);
         }
         // Reset position of get pointer back to normal
@@ -305,7 +305,7 @@ namespace ComoUnicode {
 
     void StreamToWString(std::istream &is, std::wstring &wstr) {
         // Current position of get pointer in istream
-        int current_pos = is.tellg();
+        std::streamoff current_pos = is.tellg();
         // Reset position of get pointer to beginning of stream
         is.seekg (0, std::ios::beg);
             if (is_utf16BE(is)) {

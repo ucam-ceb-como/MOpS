@@ -29,6 +29,7 @@ add_library(camflow source/cam_read.cpp
                     source/batch.cpp)
 
 include_directories(include 
+                    ${Boost_INCLUDE_DIRS} 
                     ../utils/include
                     ../io/chemkinReader/include
                     ../io/comostrings/include

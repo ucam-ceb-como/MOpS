@@ -10,6 +10,9 @@
 #include "decsol.h"
 #include <cmath>
 
+#ifdef WIN32
+#define copysign _copysign
+#endif
 
 namespace {
     /*! This function implements the copysign function from C99. It takes the sign

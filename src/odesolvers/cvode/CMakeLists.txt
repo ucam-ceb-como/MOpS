@@ -7,6 +7,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project (CVODE)
 
+add_definitions( /D_CRT_SECURE_NO_WARNINGS )
+
 add_library(cvode source/cvode.c
                   source/cvode_band.c
                   source/cvode_bandpre.c
