@@ -102,7 +102,7 @@ void Batch::solve()
     /*get the fuel inlet conditions and the fill the
      *solution vector with species mass fractions
      */
-    CamBoundary cb = admin_.getLeftBoundary();
+    CamBoundary& cb = admin_.getLeftBoundary();
     solvect = getInletMassFrac(cb);
     solvect.push_back(cb.getTemperature());
 

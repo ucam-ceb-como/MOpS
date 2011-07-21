@@ -116,8 +116,8 @@ void FlameLet::solve
      *  the interor cells. The inlet condisions need to
      *  be taken care of.
      */
-    CamBoundary left = admin_.getLeftBoundary();
-    CamBoundary right = admin_.getRightBoundary();
+    CamBoundary& left = admin_.getLeftBoundary();
+    CamBoundary& right = admin_.getRightBoundary();
     storeInlet(left,fuel);
     storeInlet(right,oxid);
     fuel.T = left.getTemperature();
@@ -171,8 +171,8 @@ void FlameLet::initSolutionVector()
      *left boundary is for the fuel and right boundary is
      *for oxidizer
      */
-    CamBoundary left = admin_.getLeftBoundary();
-    CamBoundary right = admin_.getRightBoundary();
+    CamBoundary& left = admin_.getLeftBoundary();
+    CamBoundary& right = admin_.getRightBoundary();
     storeInlet(left,fuel);
     storeInlet(right,oxid);
 
@@ -224,7 +224,8 @@ void FlameLet::initSolutionVector()
 
     if(profile_.flagLoadTemp())
     {
-        for (unsigned int i=0; i<dz.size();i++)
+        // Loop over all points, EXCLUDING boundaries
+        for (size_t i=1; i<dz.size()-1; i++)
         {
             vT[i] = profile_.getUserDefTemp(position[i]);
         }
@@ -233,9 +234,10 @@ void FlameLet::initSolutionVector()
 
     if(profile_.flagLoadFracs())
     {
-        for (unsigned int i=0; i<dz.size();i++)
+        // Loop over all points, EXCLUDING boundaries
+        for (size_t i=1; i<dz.size()-1; i++)
         {
-            for (unsigned int l=0; l<nSpc; ++l)
+            for (size_t l=0; l<nSpc; ++l)
             {
                 vSpec[i*nSpc+l] = profile_.getUserDefFracs(position[i],(*spv_)[l]->Name());
             }
@@ -843,7 +845,7 @@ doublereal FlameLet::stoichiometricMixtureFraction()
      */
     map<string, doublereal> species;
     map<string, doublereal>::iterator sIterator;
-    CamBoundary fuelInlet = admin_.getLeftBoundary();
+    CamBoundary& fuelInlet = admin_.getLeftBoundary();
     species = fuelInlet.getInletSpecies();
     sIterator = species.begin();
 
@@ -852,7 +854,7 @@ doublereal FlameLet::stoichiometricMixtureFraction()
         sIterator++;
     }
 
-    CamBoundary oxInlet = admin_.getRightBoundary();
+    CamBoundary& oxInlet = admin_.getRightBoundary();
     species = oxInlet.getInletSpecies();
     sIterator = species.begin();
     while(sIterator != species.end()){

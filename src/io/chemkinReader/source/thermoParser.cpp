@@ -9,6 +9,7 @@
 #include "thermoParser.h"
 #include "stringFunctions.h"
 #include <istream>
+#include "boost/algorithm/string/erase.hpp"
 
 using namespace std;
 using namespace boost;
@@ -16,10 +17,16 @@ using namespace boost;
 IO::ThermoParser::ThermoParser(const string thermo_file)
 :
 thermo_file_(convertToCaps(thermo_file)),
-lines_(fileToStrings(thermo_file)) {
-}
+thermo_file_string_(fileToString(thermo_file)),
+lines_(fileToStrings(thermo_file)),
+globalLowT_(-1),
+globalCommonT_(-1),
+globalHighT_(-1)
+{}
 
 void IO::ThermoParser::parse(vector<Species>& species) {
+
+    getGlobalTemperatures();
 
     cout << "Parsing NASA thermo file: " << thermo_file_ << endl;
     parseAllThermoData();
@@ -91,33 +98,44 @@ void IO::ThermoParser::parseAllThermoData() {
 }
 
 bool IO::ThermoParser::parseNASASection(string l1, string l2, string l3, string l4) {
+
     cout << l1 << endl;
     // line 1
-    Thermo thermo(trim(l1.substr(0, 16)));
-    thermo.setNote(trim(l1.substr(16, 8)));
+
+    string speciesString = l1.substr(0, 18);
+    string speciesName = extractSpeciesName(speciesString);
+
+    Thermo thermo(speciesName);
+    thermo.setNote(trim(l1.substr(18, 6)));
     thermo.setPhase(l1.substr(44, 1));
     thermo.setTLow(from_string<double>(trim(l1.substr(45, 10))));
     thermo.setTHigh(from_string<double>(trim(l1.substr(55, 10))));
-    thermo.setTCommon(from_string<double>(trim(l1.substr(65, 8))));
+
+    if (trim(l1.substr(65, 8)) == "")
+    {
+        thermo.setTCommon(globalCommonT_);
+    }
+    else
+    {
+        thermo.setTCommon(from_string<double>(trim(l1.substr(65, 8))));
+    }
     string elements_string = convertToCaps(l1.substr(24, 20));
     thermo.setElements(parseElements(elements_string));
     // line 2, 3 4
-    double al1, al2, al3, al4, al5, al6, al7;
-    double ah1, ah2, ah3, ah4, ah5, ah6, ah7;
-    ah1 = from_string<double>(trim(l2.substr(0, 15)));
-    ah2 = from_string<double>(trim(l2.substr(15, 15)));
-    ah3 = from_string<double>(trim(l2.substr(30, 15)));
-    ah4 = from_string<double>(trim(l2.substr(45, 15)));
-    ah5 = from_string<double>(trim(l2.substr(60, 15)));
-    ah6 = from_string<double>(trim(l3.substr(0, 15)));
-    ah7 = from_string<double>(trim(l3.substr(15, 15)));
-    al1 = from_string<double>(trim(l3.substr(30, 15)));
-    al2 = from_string<double>(trim(l3.substr(45, 15)));
-    al3 = from_string<double>(trim(l3.substr(60, 15)));
-    al4 = from_string<double>(trim(l4.substr(0, 15)));
-    al5 = from_string<double>(trim(l4.substr(15, 15)));
-    al6 = from_string<double>(trim(l4.substr(30, 15)));
-    al7 = from_string<double>(trim(l4.substr(45, 15)));
+    double ah1 = from_string<double>(boost::erase_all_copy(l2.substr(0, 15)," "));
+    double ah2 = from_string<double>(boost::erase_all_copy(l2.substr(15, 15)," "));
+    double ah3 = from_string<double>(boost::erase_all_copy(l2.substr(30, 15)," "));
+    double ah4 = from_string<double>(boost::erase_all_copy(l2.substr(45, 15)," "));
+    double ah5 = from_string<double>(boost::erase_all_copy(l2.substr(60, 15)," "));
+    double ah6 = from_string<double>(boost::erase_all_copy(l3.substr(0, 15)," "));
+    double ah7 = from_string<double>(boost::erase_all_copy(l3.substr(15, 15)," "));
+    double al1 = from_string<double>(boost::erase_all_copy(l3.substr(30, 15)," "));
+    double al2 = from_string<double>(boost::erase_all_copy(l3.substr(45, 15)," "));
+    double al3 = from_string<double>(boost::erase_all_copy(l3.substr(60, 15)," "));
+    double al4 = from_string<double>(boost::erase_all_copy(l4.substr(0, 15)," "));
+    double al5 = from_string<double>(boost::erase_all_copy(l4.substr(15, 15)," "));
+    double al6 = from_string<double>(boost::erase_all_copy(l4.substr(30, 15)," "));
+    double al7 = from_string<double>(boost::erase_all_copy(l4.substr(45, 15)," "));
     thermo.setUpperTemperatureCoefficients(ah1, ah2, ah3, ah4, ah5, ah6, ah7);
     thermo.setLowerTemperatureCoefficients(al1, al2, al3, al4, al5, al6, al7);
     thermos_.push_back(thermo);
@@ -189,4 +207,46 @@ std::vector<std::string> IO::ThermoParser::getThermoSection(std::vector<std::str
     }
 
     return thermo_lines;
+}
+
+std::string
+IO::ThermoParser::extractSpeciesName(const string& speciesString)
+const
+{
+    const regex speciesNameRegex("^\\s*(.*?)\\s+");
+    string speciesName;
+    smatch what;
+    string::const_iterator start = speciesString.begin();
+    string::const_iterator end = speciesString.end();
+
+    if(regex_search(start, end, what, speciesNameRegex))
+    {
+        speciesName = what[1];
+    } else
+    {
+        throw std::runtime_error("Can't find a species name. There is probably no"
+                                 "space after column 18.");
+    }
+    return speciesName;
+}
+
+void
+IO::ThermoParser::getGlobalTemperatures()
+{
+    const regex globalTRegex("\\s*THER(?:|MO)\\s+(?:|ALL)\\s*([0-9\\.]+)\\s+([0-9\\.]+)\\s+([0-9\\.]+)\\s*");
+    string speciesName;
+    smatch what;
+
+    string::const_iterator start = thermo_file_string_.begin();
+    string::const_iterator end = thermo_file_string_.end();
+
+    if(regex_search(start, end, what, globalTRegex))
+    {
+        globalLowT_ = from_string<double>(what[1]);
+        globalCommonT_ = from_string<double>(what[2]);
+        globalHighT_ = from_string<double>(what[3]);
+    } else
+    {
+        throw std::runtime_error("Could not find list of global temperatures.");
+    }
 }

@@ -8,10 +8,9 @@ IF(WIN32)
   SET(Boost_ADDITIONAL_VERSIONS "1.47" "1.47.0")
   SET(BOOST_ROOT "C:/Program Files/boost")
   SET(Boost_USE_STATIC_LIBS TRUE)
-#  add_definitions(/DBOOST_ALL_DYN_LINK) 
 ELSE(WIN32)
-  SET(BOOST_ROOT /home/userspace/$ENV{USER}/boost)
-  SET(BOOST_ROOT /home/userspace/$USER/boost)
+  SET(CMAKE_MODULE_PATH $ENV{HOME})
+  SET(BOOST_ROOT $ENV{HOME}/boost)
   SET(Boost_USE_MULTITHREADED OFF)
 ENDIF(WIN32)
 find_package(Boost 1.43.0 REQUIRED COMPONENTS regex serialization filesystem system)
@@ -35,6 +34,9 @@ target_link_libraries(camflow-app camflow ${Boost_LIBRARIES})
 
 # Regression tests for CamFlow
 add_test(camflow.hydrogenFlamelet ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet.sh ${MOPSSUITE_BINARY_DIR}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow)
+
+add_test(camflow.hydrogenBatchReactor ${MOPSSUITE_SOURCE_DIR}/test/camflow/batchReactorRegress.sh ${MOPSSUITE_BINARY_DIR}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenBatchReactor)
+
 
 ######### The Mops application ##########################
 add_executable(mops-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/mopsc/mops.cpp)
@@ -75,10 +77,19 @@ target_link_libraries(brush-moonmd-test brush ${Boost_LIBRARIES})
 # Regression tests for Brush moon-md interface
 add_test(NAME brush.moonmd1 COMMAND ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${MOPSSUITE_BINARY_DIR}/brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
+
+########## Test Program for sprogc ######################
 add_executable(sprogc-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/sprogc/sprogc_test.cpp)
 target_link_libraries(sprogc-test sprog ${Boost_LIBRARIES})
 
 add_test(sprogc.regress1 ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress1.sh ${MOPSSUITE_BINARY_DIR}/sprogc-test ${MOPSSUITE_SOURCE_DIR}/test/sprogc)
+
+########## Test Program for chemkinReader ######################
+add_executable(chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp)
+target_link_libraries(chemkinReader-test chemkinReader ${Boost_LIBRARIES})
+
+add_test(chemkinReader.regress1 ${MOPSSUITE_SOURCE_DIR}/test/io/chemkinReaderRegress.sh ${MOPSSUITE_BINARY_DIR}/chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/test/io)
+
 
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)
