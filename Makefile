@@ -148,6 +148,19 @@ camflow-app/fast:
 .PHONY : camflow-app/fast
 
 #=============================================================================
+# Target rules for targets named chemkinReader-test
+
+# Build rule for target.
+chemkinReader-test: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 chemkinReader-test
+.PHONY : chemkinReader-test
+
+# fast build rule for target.
+chemkinReader-test/fast:
+	$(MAKE) -f CMakeFiles/chemkinReader-test.dir/build.make CMakeFiles/chemkinReader-test.dir/build
+.PHONY : chemkinReader-test/fast
+
+#=============================================================================
 # Target rules for targets named mops-app
 
 # Build rule for target.
@@ -425,6 +438,30 @@ applications/test-harnesses/brush/moonmd_test.cpp.s:
 	$(MAKE) -f CMakeFiles/brush-moonmd-test.dir/build.make CMakeFiles/brush-moonmd-test.dir/applications/test-harnesses/brush/moonmd_test.cpp.s
 .PHONY : applications/test-harnesses/brush/moonmd_test.cpp.s
 
+applications/test-harnesses/chemkinReader/chemkinReaderTest.o: applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp.o
+.PHONY : applications/test-harnesses/chemkinReader/chemkinReaderTest.o
+
+# target to build an object file
+applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp.o:
+	$(MAKE) -f CMakeFiles/chemkinReader-test.dir/build.make CMakeFiles/chemkinReader-test.dir/applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp.o
+.PHONY : applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp.o
+
+applications/test-harnesses/chemkinReader/chemkinReaderTest.i: applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp.i
+.PHONY : applications/test-harnesses/chemkinReader/chemkinReaderTest.i
+
+# target to preprocess a source file
+applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp.i:
+	$(MAKE) -f CMakeFiles/chemkinReader-test.dir/build.make CMakeFiles/chemkinReader-test.dir/applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp.i
+.PHONY : applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp.i
+
+applications/test-harnesses/chemkinReader/chemkinReaderTest.s: applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp.s
+.PHONY : applications/test-harnesses/chemkinReader/chemkinReaderTest.s
+
+# target to generate assembly for a file
+applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp.s:
+	$(MAKE) -f CMakeFiles/chemkinReader-test.dir/build.make CMakeFiles/chemkinReader-test.dir/applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp.s
+.PHONY : applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp.s
+
 applications/test-harnesses/sprogc/sprogc_test.o: applications/test-harnesses/sprogc/sprogc_test.cpp.o
 .PHONY : applications/test-harnesses/sprogc/sprogc_test.o
 
@@ -458,6 +495,7 @@ help:
 	@echo "... brush-app"
 	@echo "... brush-moonmd-test"
 	@echo "... camflow-app"
+	@echo "... chemkinReader-test"
 	@echo "... edit_cache"
 	@echo "... mops-app"
 	@echo "... rebuild_cache"
@@ -487,6 +525,9 @@ help:
 	@echo "... applications/test-harnesses/brush/moonmd_test.o"
 	@echo "... applications/test-harnesses/brush/moonmd_test.i"
 	@echo "... applications/test-harnesses/brush/moonmd_test.s"
+	@echo "... applications/test-harnesses/chemkinReader/chemkinReaderTest.o"
+	@echo "... applications/test-harnesses/chemkinReader/chemkinReaderTest.i"
+	@echo "... applications/test-harnesses/chemkinReader/chemkinReaderTest.s"
 	@echo "... applications/test-harnesses/sprogc/sprogc_test.o"
 	@echo "... applications/test-harnesses/sprogc/sprogc_test.i"
 	@echo "... applications/test-harnesses/sprogc/sprogc_test.s"
