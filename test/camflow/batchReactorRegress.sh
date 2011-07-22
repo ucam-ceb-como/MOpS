@@ -33,13 +33,15 @@ else
   exit 255
 fi
 
-if (diff profile.dat profileOriginal.dat >/dev/null);
+./checkOutput.pl
+result=$?
+if (($result!=0))
 then
+  exit 1
+else
   # All tests passed
   echo "All tests passed"
   rm -rf reactionsParsed speciesParsed
   exit 0
-else
-  exit 1
 fi
 
