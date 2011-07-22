@@ -287,6 +287,13 @@ void FlameLet::initSolutionVector()
 
             if (solvect.size() == solvect_temp.size())
                 solvect = solvect_temp;
+            else
+            {
+                throw std::runtime_error("The solution vector is not the same size"
+                        " as the old one you are trying to read on. The old solution"
+                        " should be interpolated onto the new grid but that function"
+                        " has not been written yet.");
+            }
         }
     }
     else if (admin_.getRestartType() == admin_.TEXT)
