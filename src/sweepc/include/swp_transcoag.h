@@ -52,7 +52,7 @@ namespace Sweep
 class Mechanism;
 
 // Forward declare class used for sums in the binary tree
-class TreeAddWeightedCache;
+class TreeWeightedCache;
 
 
 namespace Transport
@@ -157,7 +157,7 @@ private:
     // All parameters required to calculate rate passed 
     // as arguments.
     real Rate(
-        const TreeAddWeightedCache &data, // Particle model data.
+        const TreeWeightedCache &data, // Particle model data.
         real n,     // Number of particles.
         real sqrtT, // Square root of the temperature.
         real T_mu,  // T / viscosity of air.
@@ -169,7 +169,7 @@ private:
     // All parameters required to calculate rate terms
     // passed as arguments.
     real RateTerms(
-        const TreeAddWeightedCache &data, // Particle model data.
+        const TreeWeightedCache &data, // Particle model data.
         real n,     // Number of particles.
         real sqrtT, // Square root of the temperature
         real T_mu,  // T / viscosity of air.
