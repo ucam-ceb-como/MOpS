@@ -7,6 +7,7 @@
  */
 
 #include <boost/algorithm/string.hpp>
+#include "boost/algorithm/string/trim.hpp"
 
 #include "reactionParser.h"
 #include "stringFunctions.h"
@@ -217,7 +218,7 @@ IO::ReactionParser::parseReactionSpecies(string reactionSpecies)
             (
                 pair<string,double>
                 (
-                    trim(speciesName),
+                    trim_copy(speciesName),
                     1.0
                 )
             );
@@ -228,7 +229,7 @@ IO::ReactionParser::parseReactionSpecies(string reactionSpecies)
             (
                 pair<string,double>
                 (
-                trim(speciesName),
+                trim_copy(speciesName),
                 from_string<double>(splitStoic[1])
                 )
             );
@@ -243,15 +244,15 @@ multimap<string, double>
 IO::ReactionParser::parseThirdBodySpecies(const string& thirdBodies)
 {
 
-    string trimmed = trim(thirdBodies);
+    string trim_copymed = trim_copy(thirdBodies);
     multimap<string, double> thirdBodyMap;
     // Split the next line using / as delimiter.
     regex splitThirdBodies("\\/");
 
     sregex_token_iterator j
     (
-        trimmed.begin(),
-        trimmed.end(),
+        trim_copymed.begin(),
+        trim_copymed.end(),
         splitThirdBodies,
         -1
     );
@@ -260,9 +261,9 @@ IO::ReactionParser::parseThirdBodySpecies(const string& thirdBodies)
     while (j != k)
     {
         string name = *j++;
-        string trimName = trim(name);
+        string trim_copyName = trim_copy(name);
         double efficiencyFactor = from_string<double>(*j++);
-        thirdBodyMap.insert(pair<string,double>(trimName,efficiencyFactor));
+        thirdBodyMap.insert(pair<string,double>(trim_copyName,efficiencyFactor));
     }
 
     return thirdBodyMap;

@@ -10,6 +10,8 @@
 #include "stringFunctions.h"
 #include <istream>
 #include "boost/algorithm/string/erase.hpp"
+#include "boost/algorithm/string/replace.hpp"
+#include "boost/algorithm/string/trim.hpp"
 
 using namespace std;
 using namespace boost;
@@ -17,7 +19,7 @@ using namespace boost;
 IO::ThermoParser::ThermoParser(const string thermo_file)
 :
 thermo_file_(convertToCaps(thermo_file)),
-thermo_file_string_(fileToString(thermo_file)),
+thermo_file_string_(convertToCaps(fileToString(thermo_file))),
 lines_(fileToStrings(thermo_file)),
 globalLowT_(-1),
 globalCommonT_(-1),
@@ -106,22 +108,23 @@ bool IO::ThermoParser::parseNASASection(string l1, string l2, string l3, string 
     string speciesName = extractSpeciesName(speciesString);
 
     Thermo thermo(speciesName);
-    thermo.setNote(trim(l1.substr(18, 6)));
+    thermo.setNote(trim_copy(l1.substr(18, 6)));
     thermo.setPhase(l1.substr(44, 1));
-    thermo.setTLow(from_string<double>(trim(l1.substr(45, 10))));
-    thermo.setTHigh(from_string<double>(trim(l1.substr(55, 10))));
+    thermo.setTLow(from_string<double>(trim_copy(l1.substr(45, 10))));
+    thermo.setTHigh(from_string<double>(trim_copy(l1.substr(55, 10))));
 
-    if (trim(l1.substr(65, 8)) == "")
+    if (trim_copy(l1.substr(65, 8)) == "")
     {
         thermo.setTCommon(globalCommonT_);
     }
     else
     {
-        thermo.setTCommon(from_string<double>(trim(l1.substr(65, 8))));
+        thermo.setTCommon(from_string<double>(trim_copy(l1.substr(65, 8))));
     }
     string elements_string = convertToCaps(l1.substr(24, 20));
     thermo.setElements(parseElements(elements_string));
     // line 2, 3 4
+
     double ah1 = from_string<double>(boost::erase_all_copy(l2.substr(0, 15)," "));
     double ah2 = from_string<double>(boost::erase_all_copy(l2.substr(15, 15)," "));
     double ah3 = from_string<double>(boost::erase_all_copy(l2.substr(30, 15)," "));
@@ -147,8 +150,8 @@ map<string, int> IO::ThermoParser::parseElements(string elements_string) {
     std::map<std::string, int> elem_count_map;
     if (elements_string.length() % 5 == 0) {
         for (unsigned int i = 0; i < elements_string.length() / 5; i++) {
-            string elem = trim(elements_string.substr(i * 5, 3));
-            string count_str = trim(elements_string.substr(3 + i * 5, 2));
+            string elem = trim_copy(elements_string.substr(i * 5, 3));
+            string count_str = trim_copy(elements_string.substr(3 + i * 5, 2));
             if (count_str.length() == 0) continue;
             // check if count string is a number
             int count = from_string<int>(count_str);
