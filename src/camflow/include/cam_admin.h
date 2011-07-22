@@ -64,8 +64,16 @@ class CamAdmin
         CamBoundary left; //fuel
         CamBoundary right;//oxidizer
         static bool radiation;
+        int restartType_;
+        std::string restartFile_;
 
     public:
+
+        enum RestartType{
+            NONE,
+            TEXT,
+            BINARY
+        };
 
         enum EnergyModel{
             ADIABATIC,
@@ -111,6 +119,10 @@ class CamAdmin
         //set the species output
         void setSpeciesOut(int n);
 
+        void setRestartType(const std::string& restartType);
+
+        void setRestartFile(const std::string& restartFile);
+
         int getSpeciesOut() const;
 
         //return the temperature
@@ -149,6 +161,10 @@ class CamAdmin
 
         //return the report schedule
         int getReportSchedule();
+
+        int getRestartType() const;
+
+        const std::string& getRestartFile() const;
 
         //Evaluation of dimensionaless numbers
         doublereal getNre(const doublereal& hd, //hydraulic dia

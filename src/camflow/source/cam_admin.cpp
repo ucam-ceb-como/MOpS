@@ -142,6 +142,23 @@ void CamAdmin::setSpeciesOut(int n){
     speciesOut = n;
 }
 
+void CamAdmin::setRestartType(const std::string& restartType)
+{
+    if (!convertToCaps(restartType).compare("BINARY"))
+        restartType_ = BINARY;
+    else if (!convertToCaps(restartType).compare("TEXT"))
+        restartType_ = TEXT;
+    else if (!convertToCaps(restartType).compare("NONE"))
+        restartType_ = NONE;
+    else throw std::runtime_error("What restart file type?! Check:"
+                                  "<restart file=""></restart>.");
+}
+
+void CamAdmin::setRestartFile(const std::string& restartFile)
+{
+    restartFile_ = restartFile;
+}
+
 int CamAdmin::getSpeciesOut() const{
     return speciesOut;
 }
@@ -176,6 +193,16 @@ Camflow::CamBoundary& CamAdmin::getRightBoundary(){
 
 bool CamAdmin::getRadiationModel() const{
     return radiation;
+}
+
+int CamAdmin::getRestartType() const
+{
+    return restartType_;
+}
+
+const std::string& CamAdmin::getRestartFile() const
+{
+    return restartFile_;
 }
 
 doublereal CamAdmin::getNre(const doublereal& hd,

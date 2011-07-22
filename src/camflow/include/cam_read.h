@@ -103,7 +103,9 @@ namespace Camflow{
         void readControl(CamControl& cc, const CamXML::Element &node);
 
         //read initial guess
-        void readInitialGuess(CamProfile& cp,
+        void readInitialGuess(
+                CamAdmin& ca,
+                CamProfile& cp,
                 CamConverter& convert,
                 const CamXML::Element &node);
 

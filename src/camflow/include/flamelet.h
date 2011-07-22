@@ -46,9 +46,6 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
-#ifndef WIN32
-#include "pthread.h"
-#endif
 
 #include "cam_control.h"
 #include "cam_radiation.h"
@@ -200,7 +197,7 @@ namespace Camflow
             void report(doublereal x, doublereal* solution, doublereal& res);
 
             //! File output.
-            void reportToFile(std::string fileName, doublereal x, doublereal* solution);
+            void reportToFile(std::string fileName, doublereal x, std::vector<double>& solution);
 
             void writeXMLFile
             (

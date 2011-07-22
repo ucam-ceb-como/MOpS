@@ -1,5 +1,9 @@
 #include "flamelet.h"
 
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/vector.hpp>
+
 using namespace Camflow;
 using namespace std;
 using namespace Gadgets;
@@ -70,7 +74,7 @@ void FlameLet::solve
 
     if(!interface)
     {
-        reportToFile("initialProfile.dat",control_.getMaxTime(),&solvect[0]);
+        reportToFile("initialProfile.dat",control_.getMaxTime(),solvect);
         //writeXMLFile(scalarDissipationRate_.getRefSDR(), solvect);
     }
 
@@ -83,6 +87,15 @@ void FlameLet::solve
         ssolve();
         csolve(interface);
     }
+
+    if (admin_.getRestartType() == admin_.BINARY)
+    {
+        std::ofstream ofs(admin_.getRestartFile().c_str());
+        boost::archive::binary_oarchive oa(ofs);
+        oa << solvect;
+        ofs.close();
+    }
+
 
 }
 
@@ -210,7 +223,7 @@ void FlameLet::initSolutionVector()
     vector<doublereal> position = reacGeom_.getAxpos();
     int len = position.size();
     vT.resize(len,0.0);
-    for (unsigned int i=0; i<dz.size();i++)
+    for (size_t i=0; i<dz.size();i++)
     {
         if (position[i] < stoichZ)
         {
@@ -259,8 +272,27 @@ void FlameLet::initSolutionVector()
      *create the actual solution vector by merging the species
      *vector and the temperature vector
      */
+
     mergeSpeciesVector(&vSpec[0]);
     mergeEnergyVector(&vT[0]);
+
+    if (admin_.getRestartType() == admin_.BINARY)
+    {
+        std::vector<double> solvect_temp;
+        std::ifstream ifs(admin_.getRestartFile().c_str());
+        if (ifs.good())
+        {
+            boost::archive::binary_iarchive oi(ifs);
+            oi >> solvect_temp;
+
+            if (solvect.size() == solvect_temp.size())
+                solvect = solvect_temp;
+        }
+    }
+    else if (admin_.getRestartType() == admin_.TEXT)
+    {
+        throw std::runtime_error("Text restart files not used yet.");
+    }
 
 }
 
@@ -304,7 +336,7 @@ void FlameLet::csolve
          */
         if(!interface)
         {
-            reportToFile("profile.dat",control_.getMaxTime(),&solvect[0]);
+            reportToFile("profile.dat",control_.getMaxTime(), solvect);
             writeXMLFile(scalarDissipationRate_.getRefSDR(), solvect);
         }
 
@@ -343,9 +375,8 @@ void FlameLet::csolve
          *from the interface
          */
         if(!interface) {
-            reportToFile("profile.dat", control_.getMaxTime(),&solvect[0]);
+            reportToFile("profile.dat", control_.getMaxTime(), solvect);
         }
-       // radauWrapper.destroy();
 
     }
     else if (solverID == control_.LIMEX)
@@ -726,7 +757,8 @@ void FlameLet::energyResidual
         }
 
         //======Radiative Heat Loss Term===============
-
+        // \todo Specify the radiative species in camflow.xml and put all this
+        // in the radiation class.
         if (admin_.getRadiationModel())
         {
 
@@ -1002,7 +1034,7 @@ void FlameLet::report(doublereal x, doublereal* solution, doublereal& res)
 /*
  *output function for file output
  */
-void FlameLet::reportToFile(std::string fileName, doublereal t, doublereal* soln)
+void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<double>& soln)
 {
 
     doublereal sum;

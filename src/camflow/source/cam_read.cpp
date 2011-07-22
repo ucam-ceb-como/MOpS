@@ -61,7 +61,7 @@ void CamRead::readInput(const std::string fileName,
         readProcessConditions(convert,ca,*root);
         readBoundary(ca,cb,convert,*root);
         readControl(cc,*root);
-        readInitialGuess(cp,convert,*root);
+        readInitialGuess(ca,cp,convert,*root);
         readReport(ca,*root);
     }
 }
@@ -466,6 +466,7 @@ void CamRead::readTol(const CamXML::Element& node, doublereal& atol, doublereal&
 //function to read initial guess
 void CamRead::readInitialGuess
 (
+    CamAdmin& ca,
     CamProfile& cp,
     CamConverter& convert,
     const CamXML::Element& node
@@ -478,6 +479,20 @@ void CamRead::readInitialGuess
     initialize = node.GetFirstChild("initialize");
     if(initialize != NULL)
     {
+        //restart
+        subsubnode = initialize->GetFirstChild("restart");
+        if(subsubnode != NULL)
+        {
+            const CamXML::Attribute *file;
+            file = subsubnode->GetAttribute("file");
+            ca.setRestartType(subsubnode->Data());
+            ca.setRestartFile(file->GetValue());
+        }
+        else
+        {
+            ca.setRestartType("NONE");
+        }
+
         //mixing center
         subsubnode = initialize->GetFirstChild("mCenter");
         if(subsubnode != NULL)
