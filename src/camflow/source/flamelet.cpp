@@ -92,7 +92,7 @@ void FlameLet::solve
     {
         std::ofstream ofs(admin_.getRestartFile().c_str());
         boost::archive::binary_oarchive oa(ofs);
-        oa << solvect;
+        oa << reacGeom_.getAxpos() << solvect;
         ofs.close();
     }
 
@@ -278,14 +278,14 @@ void FlameLet::initSolutionVector()
 
     if (admin_.getRestartType() == admin_.BINARY)
     {
-        std::vector<double> solvect_temp;
+        std::vector<double> solvect_temp, mixFracCoords_temp;
         std::ifstream ifs(admin_.getRestartFile().c_str());
         if (ifs.good())
         {
             boost::archive::binary_iarchive oi(ifs);
-            oi >> solvect_temp;
+            oi >> mixFracCoords_temp >> solvect_temp;
 
-            if (solvect.size() == solvect_temp.size())
+            if (mixFracCoords_temp.size() == reacGeom_.getAxpos().size())
                 solvect = solvect_temp;
             else
             {
