@@ -167,6 +167,15 @@ bool CamSoot::active() const {
     return momentON;
 }
 
+doublereal CamSoot::getFirstMoment() const {
+	return firstMom;
+}
+
+int CamSoot::getAtomsPerDiamer() const {
+	return atomsPerDimer;
+}
+
+
 /*
  *calculate the sum of surface growth term
  */
@@ -338,12 +347,15 @@ void CamSoot::report(int nCells)
 
 }
 
+
+
 /*
  *Initialize the soot moments based on user defined
  *zeroth moments.
  */
-void CamSoot::initMoments(Mechanism &mech, realVector& soln,int nCells){
-   
+//void CamSoot::initMoments(Mechanism &mech, realVector& soln,int nCells){
+void CamSoot::initMoments(realVector& soln,int nCells){
+
     int st = soln.size();
     /*
      *zeroth moment based on user input
@@ -354,10 +366,13 @@ void CamSoot::initMoments(Mechanism &mech, realVector& soln,int nCells){
      */
     for(int i=1; i<nMoments; i++){
        
+    	// ank25: Do we need to multiply by 1e6 here?
         soln.push_back(soln[i-1+st]+ log(doublereal(atomsPerDimer)));
 
     }
+}
 
+void CamSoot::initMomentsConstants(Mechanism &mech){
     /*
      *preparation for interpolation
      */
@@ -562,7 +577,7 @@ CamSoot::realVector CamSoot::rateAll
     // todo: it would be better to include all this in rateSurface function
     if(sRates[1] <= 0){
 
-        std::cout << "In oxidation regime."  << std::endl;
+        //std::cout << "In oxidation regime."  << std::endl;
 
         realVector f;
         f.resize(nMoments,0.0);

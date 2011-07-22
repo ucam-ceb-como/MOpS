@@ -291,22 +291,16 @@ void CamResidual::mergeSpeciesVector(doublereal* vec){
             solvect[i*nVar+l] = vec[i*nSpc+l];
     }
 }
+
 /*
- *soot moments are arranged right below the species vector
+ *soot moments are arranged after species and temperature
  */
 void CamResidual::mergeSootMoments(doublereal* vec){
     for(int i=0; i<cellEnd; i++){
-//        for(int l=nSpc; l<(nSpc+nMomemts); l++){
-//            solvect[i*nVar+l] = vec[l-nSpc];
-//            //std::cout << i << "  " << solvect[i*nVar+l] << std::endl;
-//        }
-        //int dd; cin >> dd;
         for(int l=0; l<nMoments; l++){
-            solvect[i*nVar+l+nSpc] = vec[i*nMoments+l];
-            //std::cout << i << "  " << solvect[i*nVar+l+nSpc] << std::endl;
+            solvect[i*nVar+ptrT+1+l] = vec[i*nMoments+l];
         }
     }
-
 }
 
 void CamResidual::mergeMomentum(doublereal* vec){

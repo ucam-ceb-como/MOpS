@@ -184,7 +184,7 @@ void FlameLet::initSolutionVector()
      *initialize the ODE vector
      */
     solvect.resize(nEqn,0.0);
-    vector<doublereal> vSpec, vT;
+    vector<doublereal> vSpec, vT, vMom;
     /*
      * actual signature follows (left,right,cc,vSpec)
      * but in the case of flamelets the species mass fractions
@@ -256,11 +256,43 @@ void FlameLet::initSolutionVector()
     vT[iMesh_e] = fuel.T;
 
     /*
+     *
+     */
+
+    // Set the initial moment values (interior and boundary)
+    // Also initial constants
+    if (sootMom_.active())
+    vMom.resize(len*nMoments,0.0);
+    {
+        for (size_t i=0; i<dz.size(); i++)
+        {
+        	cout << "First Moment " << sootMom_.getFirstMoment() << endl;
+        	vMom[i*nMoments] = sootMom_.getFirstMoment();
+        	cout << "vMom[i*nMoments]  " << i*nMoments << vMom[i*nMoments] << endl;
+        	for (size_t l=1; l<nMoments; ++l)
+            {
+            	// ank25: Do we need to multiply by 1e6 here?
+        		vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + log(doublereal(sootMom_.getAtomsPerDiamer()));
+            	cout << "vMom[i*nMoments+l]  " << i*nMoments+l << vMom[i*nMoments+l] << endl;
+            }
+        }
+        // Call the soot constants function
+        sootMom_.initMomentsConstants(*camMech_);
+    }
+
+
+    /*
      *create the actual solution vector by merging the species
-     *vector and the temperature vector
+     *vector, the temperature vector, and soot vector (if present)
      */
     mergeSpeciesVector(&vSpec[0]);
     mergeEnergyVector(&vT[0]);
+    if (sootMom_.active())
+    {
+    	mergeSootMoments(&vMom[0]);
+    }
+
+
 
 }
 
@@ -544,7 +576,7 @@ void FlameLet::speciesResidual
     /*
      *starting with mixture fraction zero: i.e oxidizer
      *inlet. The fuel composition is zero. Left inlet is
-     *considered as the oxidizer inlet and the concentrationd
+     *considered as the oxidizer inlet and the concentrations
      *are held constant
      */
 
@@ -705,14 +737,12 @@ void FlameLet::sootMomentResidual
     }
 
     /*
-     *Mixture fraction 1. The fuel inlet. Set moments to
-     *initial levels here.
+     *Mixture fraction 1. The fuel inlet. Moments held constant here.
      */
 
     for (int l=0; l<nMoments; ++l)
     {
-        f[iMesh_e*nMoments+l] = 15.0e6;   // 15 #/cm^3.
-					  // Higher moments should be different.
+        f[iMesh_e*nMoments+l] = 0;
     }
 
 }
@@ -871,6 +901,7 @@ void FlameLet::energyResidual
 
     }
 
+    // Hold temperature constant at fuel inlet
     f[iMesh_e] = 0.0;
 
 }

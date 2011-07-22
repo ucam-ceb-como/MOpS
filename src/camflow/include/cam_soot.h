@@ -109,6 +109,12 @@ class CamSoot {
         //! Get the number of moments.
         int getNumMoments() const;
 
+        //! Get the user specified initial value of M0
+        doublereal getFirstMoment() const;
+
+        //! Get number of atoms per diamer
+        int getAtomsPerDiamer() const;
+
         //! Returns true if soot is going to be solved.
         bool active() const;
 
@@ -161,7 +167,10 @@ class CamSoot {
         /*!
          * Initialize the soot moments
          */
-        void initMoments(Sprog::Mechanism &mech, realVector& soln,int nCells=0);
+        //void initMoments(Sprog::Mechanism &mech, realVector& soln,int nCells=0);
+        void initMoments(realVector& soln,int nCells);
+
+        void initMomentsConstants(Mechanism &mech);
 
         /*!
          * Calculate the residual functions for moments. There does not seem to
