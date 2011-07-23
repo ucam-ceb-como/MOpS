@@ -72,62 +72,61 @@ namespace Camflow
 class Radiation
 {
 
-        //! Conversion factor.
-        static const doublereal AtmToPascal;
+    //! Conversion factor.
+    static const doublereal AtmToPascal;
 
-        const std::string& inputFileName_;
+    //! Names of the radiative species.
+    std::vector<std::string> radiativeSpecies_;
+    //! Indices of the species for looking up in Sprog::Mechanism.
+    std::vector<doublereal> speciesIndex_;
+    //! Molecular weights of each species.
+    std::vector<doublereal> speciesMolWt_;
 
-        std::vector<std::string> radiativeSpecies_;
-        std::vector<doublereal> speciesIndex_;
-        std::vector<doublereal> speciesMolWt_;
-        //! Absorption coefficients are for H2O, CO2, and CO, in that order.
-        std::vector<doublereal> absorption;
-        std::vector<doublereal> partialPress;
+    //! Absorption coefficients of each species.
+    std::vector<doublereal> absorption;
+    //! Partial pressures for each species.
+    std::vector<doublereal> partialPress;
 
-        std::vector<doublereal> radiation;
+    //! Stores the radiation sources.
+    std::vector<doublereal> radiation;
 
-        const Sprog::Mechanism *const mech_;
+    const Sprog::Mechanism *const mech_;
+    const std::vector<doublereal>& avgMolWt_;
+    const Array2D& speciesMassFracs_;
 
-        const std::vector<doublereal>& avgMolWt_;
+    //! Computes the Planck mean absorption constants,
+    //! as input to the radiative heat loss dissipation model.
+    void PlanckAbsorption(const doublereal Temperature);
 
-        const Array2D& speciesMassFracs_;
+public:
 
-        //! Computes the Planck mean absorption constants,
-        //! as input to the radiative heat loss dissipation model.
-        void PlanckAbsorption
-        (
-            const doublereal Temperature
-        );
+    //! Default constructor.
+    Radiation
+    (
+        const std::string& inputFileName,
+        const int totalCells,
+        const Sprog::Mechanism *const mech,
+        const std::vector<doublereal>& avgMolWt,
+        const Array2D& s_mf
+    );
 
-    public:
+    //! Destructor.
+    ~Radiation();
 
-        //! Default constructor.
-        Radiation
-        (
-            const std::string& inputFileName,
-            const int totalCells,
-            const Sprog::Mechanism *const mech,
-            const std::vector<doublereal>& avgMolWt,
-            const Array2D& s_mf
-        );
+    //! Computes the radiative heat loss term
+    //! for the radiative heat dissipation model.
+    void calculateRadiativeHeatLoss
+    (
+        const int i,
+        const doublereal& Temperature,
+        const doublereal& opPre,
+        const doublereal& soot_vol_frac
+    );
 
-        //! Destructor.
-        ~Radiation();
-
-        //! Computes the radiative heat loss term
-        //! for the radiative heat dissipation model.
-        void RadiativeLoss
-        (
-            const int i,
-            const doublereal& Temperature,
-            const doublereal& opPre,
-            const doublereal& soot_vol_frac
-        );
-
-        inline const doublereal getRadiation(const int i)
-        {
-            return radiation[i];
-        }
+    inline const doublereal getRadiation(const int i)
+    {
+        return radiation[i];
+    }
 
 }; // End Radiation class declaration.
 

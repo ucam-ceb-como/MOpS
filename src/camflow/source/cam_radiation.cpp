@@ -14,7 +14,6 @@ Radiation::Radiation
     const Array2D& s_mf
 )
 :
-  inputFileName_(inputFileName),
   radiativeSpecies_(),
   speciesIndex_(),
   speciesMolWt_(),
@@ -27,7 +26,7 @@ Radiation::Radiation
 {
 
     CamXML::Document doc;
-    doc.Load(inputFileName_);
+    doc.Load(inputFileName);
     const CamXML::Element* root = doc.Root();
     CamXML::Element *subnode, *opNode;
     std::vector<CamXML::Element*> radiativeSpecies;
@@ -75,17 +74,17 @@ Radiation::~Radiation()
 {}
 
 /*!
-    *Computes the Planck mean absorption coefficients
-    *
-    *@param[in]      Temperature      Temperature at a point of the grid, as obtained by the energy residual function.
-    *@param[out]     Absorption       An output array containing the computed Planck absorption coefficients.
-    *
-    * The coefficients are produced for H2O, CO2, and CO, because these are the species that tend to produce the
-    * greatest spectral radiative effect in mixtures commonly associated with combustion. Coefficients are known
-    * for CH4 as well, but they can lead to inaccurate results, and therefore are not included here.  The computation
-    * of these coefficients are based on data from the RADCAL model.  This data was for temperatures between 300K
-    * and 2500K.
-    */
+ * Computes the Planck mean absorption coefficients
+ *
+ * @param[in]   Temperature   Temperature at a point of the grid, as obtained by the energy residual function.
+ * @param[out]  Absorption    An output array containing the computed Planck absorption coefficients.
+ *
+ * The coefficients are produced for H2O, CO2, and CO, because these are the species that tend to produce the
+ * greatest spectral radiative effect in mixtures commonly associated with combustion. Coefficients are known
+ * for CH4 as well, but they can lead to inaccurate results, and therefore are not included here.  The computation
+ * of these coefficients are based on data from the RADCAL model.  This data was for temperatures between 300K
+ * and 2500K.
+ */
 void Radiation::PlanckAbsorption
 (
     const doublereal temperature
@@ -140,6 +139,14 @@ void Radiation::PlanckAbsorption
                                  (-5.87209e-10 + temperature * -2.5334e-14))))/AtmToPascal;
             }
         }
+        else
+        {
+            throw std::runtime_error
+            (
+                "There is no absorption coefficient model available for "
+                "species " + radiativeSpecies_[i]
+            );
+        }
     }
 
 }
@@ -147,18 +154,17 @@ void Radiation::PlanckAbsorption
 /*!
  * Computes  the radiative heat loss term for radiative heat dissipation model
  *
- *@param[in]    rho            Density of the mixture, as obtained by the energy residual function.
- *@param[in]    cp             Specific heat of the mixture, as obtained by the energy residual function.
- *@param[in]    Temperature    Temperature at a point of the grid, as obtained by the energy residual function.
- *@param[in]    SootVolFrac    The soot value fraction, as provided by the user or obtained from an external source.
- *@return                      A term equivalent to the total radiative heat loss.
+ * @param[in]  i            Grid cell.
+ * @param[in]  Temperature  Temperature at a point of the grid.
+ * @param[in]  Pressure     Pressure.
+ * @param[in]  SootVolFrac  The soot value fraction.
  *
  * This function will be called from the energy residual code in Camflow's Flamelet class,
  * which will provide such parameters as temperature, density, specific heat, mass fractions
  * and soot volume fractions.
-*/
+ */
 void
-Radiation::RadiativeLoss
+Radiation::calculateRadiativeHeatLoss
 (
     const int i,
     const doublereal& temperature,

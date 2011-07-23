@@ -88,9 +88,6 @@ class CamAdmin
         //set the operating pressure
         void setPressure(doublereal p_);
 
-        //set strain rate
-        void setStrainRate(doublereal sr);
-
         //set the step for ignition temp
         void setIgnitionStep(doublereal step);
 
@@ -132,9 +129,6 @@ class CamAdmin
 
         //return the pressure
         doublereal getPressure()const;
-
-        //return the strain rate
-        doublereal getStrainRate() const;
 
         //return the ignition step
         doublereal getIgnitionStep() const;

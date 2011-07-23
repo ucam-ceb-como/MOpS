@@ -147,33 +147,8 @@ namespace Camflow
             //! Energy residual calculation.
             void energyResidual(const doublereal& t, doublereal* y, doublereal* f);
 
-            //! Set the external scalar dissipation rate.
-            void setExternalScalarDissipationRate(const doublereal sr);
-
-            //! Set the time history of scalar dissipation rate.
-            void setExternalScalarDissipationRate(const std::vector<doublereal>& time,
-                                                  const std::vector<doublereal>& sdr,
-                                                  const bool analytic);
-
-            //! Set the time history of scalar dissipation rate with a profile from the CFD.
-            void setExternalScalarDissipationRate(const std::vector<doublereal>& time,
-                                                  const std::vector< std::vector<doublereal> >& sdr,
-                                                  const std::vector< std::vector<doublereal> >& Zcoords);
-
             //! Calculate the stoichiometric mixture fraction.
             doublereal stoichiometricMixtureFraction();
-
-            //! Calculate the scalar dissipation rate.
-            doublereal scalarDissipationRate(const doublereal m_frac);
-
-            //! Get the SDR at a given time.
-            doublereal getSDR(const doublereal time) const;
-
-            //! Get the SDR at a given time and mixture fraction coordinate.
-            doublereal getSDRfromProfile(const doublereal time, const doublereal Z) const;
-
-            //! Get the SDR at a given mixture fraction coordinate using an analytical profile.
-            doublereal scalarDissipationRateProfile(const doublereal m_frac, const doublereal stoichSDR, const int cell);
 
             //! Provide a soot volume fraction from an external calculation.
             void setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv);
@@ -209,11 +184,7 @@ namespace Camflow
 
             doublereal stoichZ; //stoichiometric mixture fraction
             doublereal sdr;     // scalar dissipation rate
-            doublereal sdr_ext; // scalar dissipation rate passed by exteranl program
             doublereal restartTime;
-            std::vector<doublereal> v_sdr;   //scalar dissipation rate that has a time history
-            std::vector<doublereal> v_time; //time profile of scalar dissipation rates
-            std::vector< std::vector<doublereal> > profile_sdr; // SDR profile with a time history.
             std::vector< std::vector<doublereal> > cfdMixFracCoords; // Mixture Fraction coords from CFD.
 
             //! Spatial profile of soot volume fraction

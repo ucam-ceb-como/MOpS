@@ -65,6 +65,7 @@ namespace Camflow{
 	 *
 	 * Include a more detailed description here.
 	 */
+
     class CamRead{
 
     public:
