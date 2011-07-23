@@ -19,7 +19,6 @@ ScalarDissipationRate::ScalarDissipationRate
 {
 
     readStrainRate(inputFileName);
-    stoichSDR_ = scalarDissipationRate(stoichZ_);
     for (size_t i=0; i<mixFracCoords.size(); ++i)
     {
         scalarDissipationRate_(i,0) = calculate(mixFracCoords[i]);
@@ -43,7 +42,34 @@ ScalarDissipationRate::readStrainRate(const std::string& inputFileName)
 
     opNode = root->GetFirstChild("op_condition");
     subnode = opNode->GetFirstChild("strain");
-    strainRate_ = IO::from_string<double>(subnode->Data());
+    if (subnode != NULL)
+    {
+        strainRate_ = IO::from_string<double>(subnode->Data());
+        stoichSDR_ = scalarDissipationRate(stoichZ_);
+    }
+    else
+    {
+        subnode = opNode->GetFirstChild("sdr");
+        if (subnode != NULL)
+        {
+            stoichSDR_ = IO::from_string<double>(subnode->Data());
+            strainRate_ = strainRate(stoichZ_);
+        }
+        else
+        {
+            throw std::runtime_error
+            (
+                "No strain rate or stoich SDR read. Specify either\n"
+                " <sdr>VALUE</sdr> or "
+                " <strain>VALUE</strain> in <op_condition>."
+            );
+        }
+    }
+
+    std::cout << "Strain Rate = " << strainRate_
+              << " | Stoich SDR = " << stoichSDR_
+              << " | Stoich Mix. Frac. = " << stoichZ_
+              << std::endl;
 }
 
 doublereal
@@ -66,6 +92,15 @@ const
     CamMath cm;
     doublereal fZ = exp(-2*cm.SQR(cm.inverfc(2*mixtureFraction)));
     return strainRate_*fZ/Sprog::PI;
+}
+
+doublereal
+ScalarDissipationRate::strainRate(const doublereal& mixtureFraction)
+const
+{
+    CamMath cm;
+    doublereal fZ = exp(-2*cm.SQR(cm.inverfc(2*mixtureFraction)));
+    return stoichSDR_*Sprog::PI/fZ;
 }
 
 /*

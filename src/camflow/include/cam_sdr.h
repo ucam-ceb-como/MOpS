@@ -80,7 +80,7 @@ class ScalarDissipationRate
     void readStrainRate(const std::string& inputFileName);
     doublereal calculate(const doublereal& mixtureFraction) const;
     doublereal scalarDissipationRate(const doublereal& mixtureFraction) const;
-
+    doublereal strainRate(const doublereal& mixtureFraction) const;
 
 public:
 
