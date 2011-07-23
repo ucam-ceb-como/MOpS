@@ -180,6 +180,19 @@ void FlameLet::solve
 void FlameLet::initSolutionVector()
 {
 
+    // Initialise the radiation class if necessary.
+    if(admin_.getRadiationModel())
+    {
+        radiation = new Radiation
+        (
+            admin_.getInputFile(),
+            mCord,
+            camMech_,
+            avgMolWt,
+            s_mf
+        );
+    }
+
     /*
      *left boundary is for the fuel and right boundary is
      *for oxidizer
@@ -289,10 +302,12 @@ void FlameLet::initSolutionVector()
                 solvect = solvect_temp;
             else
             {
-                throw std::runtime_error("The solution vector is not the same size"
-                        " as the old one you are trying to read on. The old solution"
-                        " should be interpolated onto the new grid but that function"
-                        " has not been written yet.");
+                throw std::runtime_error
+                (
+                    "The solution vector is not the same size "
+                    "as the old one you are trying to read in. The old solution "
+                    "should be interpolated onto the new grid but that function "
+                    "has not been written yet.\n");
             }
         }
     }
@@ -678,11 +693,6 @@ void FlameLet::energyResidual
     doublereal zPE=0, zPW=0;
     doublereal source=0;
 
-    if(admin_.getRadiationModel())
-    {
-        radiation = new Radiation(mCord);
-    }
-
     /*
      *starting with mixture fraction zero: i.e oxidizer
      *inlet. The temperature is fixed at the oxidizer
@@ -768,50 +778,18 @@ void FlameLet::energyResidual
         // in the radiation class.
         if (admin_.getRadiationModel())
         {
-
-            doublereal mole_fracsH2O;
-            doublereal mole_fracsCO2;
-            doublereal mole_fracsCO;
-
-            //Get species indexes corresponding to H20, CO2, CO
-            if(camMech_->FindSpecies("H2O") == -1){
-                mole_fracsH2O = 0.0;
-            } else {
-                const int iH2O = camMech_->FindSpecies("H2O");
-                const doublereal molwtH2O =   (*spv_)[iH2O] -> MolWt();
-                mole_fracsH2O = s_mf(i,iH2O)*avgMolWt[i]/molwtH2O;
-            }
-            if(camMech_->FindSpecies("CO2") == -1){
-                mole_fracsCO2 = 0.0;
-            } else {
-                const int iCO2 = camMech_->FindSpecies("CO2");
-                const doublereal molwtCO2 =   (*spv_)[iCO2] -> MolWt();
-                mole_fracsCO2 = s_mf(i,iCO2)*avgMolWt[i]/molwtCO2;
-            }
-            if(camMech_->FindSpecies("CO") == -1){
-                mole_fracsCO = 0.0;
-            } else {
-                const int iCO  = camMech_->FindSpecies("CO");
-                const doublereal molwtCO =    (*spv_)[iCO] -> MolWt();
-                mole_fracsCO = s_mf(i,iCO)*avgMolWt[i]/molwtCO;
-            }
-
             //This radiation term is sent to as output to profile.h
             radiation->RadiativeLoss
             (
                i,
                m_T[i],
                opPre,
-               m_SootFv[i],
-               mole_fracsH2O,
-               mole_fracsCO2,
-               mole_fracsCO
+               m_SootFv[i]
             );
 
             // This is the new energy residual term, accounting for radiation.
             // This is DEFINITELY NEGATIVE!
             f[i] -= radiation->getRadiation(i)/(m_rho[i]*m_cp[i]);
-
         }
 
     }

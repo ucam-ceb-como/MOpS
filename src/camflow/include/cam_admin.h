@@ -60,12 +60,12 @@ class CamAdmin
         doublereal stepIgnition;    //step change of temperature for ignition
         int energyModel;
         int speciesOut;  //identifier for species output mass/mole
-        int repSch;     //report schedule
         CamBoundary left; //fuel
         CamBoundary right;//oxidizer
         static bool radiation;
         int restartType_;
         std::string restartFile_;
+        std::string inputFileName_;
 
     public:
 
@@ -82,10 +82,6 @@ class CamAdmin
             NONISOTHERMAL
         };
 
-        enum Report{
-            FINAL,
-            INTER
-        };
         //set the temperature
         //void setTemperature(doublereal T_);
 
@@ -123,6 +119,9 @@ class CamAdmin
 
         void setRestartFile(const std::string& restartFile);
 
+        void setInputFile(std::string inputFileName);
+        const std::string& getInputFile() const;
+
         int getSpeciesOut() const;
 
         //return the temperature
@@ -154,13 +153,6 @@ class CamAdmin
 
         //! Is radiation model on or off.
         bool getRadiationModel() const;
-
-        //set the report schedule
-        void setReportSchedule(std::string repo);
-        void setReportSchedule(int n);
-
-        //return the report schedule
-        int getReportSchedule();
 
         int getRestartType() const;
 

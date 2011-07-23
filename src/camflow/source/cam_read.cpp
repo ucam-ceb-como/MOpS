@@ -54,6 +54,9 @@ void CamRead::readInput(const std::string fileName,
 
     CamXML::Document doc;
     const CamXML::Element* root;
+
+    ca.setInputFile(fileName);
+
     if(doc.Load(fileName) == 0){
         root = doc.Root();
         readGrid(cg,*root);
@@ -585,12 +588,6 @@ void CamRead::readReport(CamAdmin& ca, const CamXML::Element& node){
             ca.setSpeciesOut(ca.MOLE);
         }else{
             ca.setSpeciesOut(ca.MASS);
-        }
-        atrVal = subnode->GetAttributeValue("outfile");
-        if(!convertToCaps(atrVal).compare("INTER")){
-            ca.setReportSchedule(ca.INTER);
-        }else{
-            ca.setReportSchedule(ca.FINAL);
         }
     }else{
         throw CamError("Report information missing\n");

@@ -42,6 +42,10 @@
 #define	_RADIATION_H
 
 #include "cam_params.h"
+#include "gpc_mech.h"
+#include "array.h"
+
+#include <map>
 
 namespace Camflow
 {
@@ -71,10 +75,22 @@ class Radiation
         //! Conversion factor.
         static const doublereal AtmToPascal;
 
+        const std::string& inputFileName_;
+
+        std::vector<std::string> radiativeSpecies_;
+        std::vector<doublereal> speciesIndex_;
+        std::vector<doublereal> speciesMolWt_;
         //! Absorption coefficients are for H2O, CO2, and CO, in that order.
         std::vector<doublereal> absorption;
+        std::vector<doublereal> partialPress;
 
         std::vector<doublereal> radiation;
+
+        const Sprog::Mechanism *const mech_;
+
+        const std::vector<doublereal>& avgMolWt_;
+
+        const Array2D& speciesMassFracs_;
 
         //! Computes the Planck mean absorption constants,
         //! as input to the radiative heat loss dissipation model.
@@ -86,22 +102,26 @@ class Radiation
     public:
 
         //! Default constructor.
-        explicit Radiation(const int totalCells);
+        Radiation
+        (
+            const std::string& inputFileName,
+            const int totalCells,
+            const Sprog::Mechanism *const mech,
+            const std::vector<doublereal>& avgMolWt,
+            const Array2D& s_mf
+        );
 
         //! Destructor.
-        virtual ~Radiation();
+        ~Radiation();
 
         //! Computes the radiative heat loss term
         //! for the radiative heat dissipation model.
         void RadiativeLoss
         (
             const int i,
-            const doublereal Temperature,
-            const doublereal opPre,
-            const doublereal soot_vol_frac,
-            const doublereal mole_frac_H2O,
-            const doublereal mole_frac_CO2,
-            const doublereal mole_frac_CO
+            const doublereal& Temperature,
+            const doublereal& opPre,
+            const doublereal& soot_vol_frac
         );
 
         inline const doublereal getRadiation(const int i)

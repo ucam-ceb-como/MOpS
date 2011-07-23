@@ -103,24 +103,6 @@ void CamAdmin::setEnergyModel(std::string model){
 }
 
 
-void CamAdmin::setReportSchedule(std::string repo){
-    if(!convertToCaps(repo).compare("FINAL"))
-        setReportSchedule(FINAL);
-    if(!convertToCaps(repo).compare("INTER"))
-        setReportSchedule(INTER);
-}
-
-
-void CamAdmin::setReportSchedule(int n){
-    repSch = n;
-}
-
-
-int CamAdmin::getReportSchedule(){
-    return repSch;
-}
-
-
 doublereal CamAdmin::getIgnitionStep() const{
     return stepIgnition;
 }
@@ -157,6 +139,16 @@ void CamAdmin::setRestartType(const std::string& restartType)
 void CamAdmin::setRestartFile(const std::string& restartFile)
 {
     restartFile_ = restartFile;
+}
+
+void CamAdmin::setInputFile(std::string inputFileName)
+{
+    inputFileName_ = inputFileName;
+}
+
+const std::string& CamAdmin::getInputFile() const
+{
+    return inputFileName_;
 }
 
 int CamAdmin::getSpeciesOut() const{
