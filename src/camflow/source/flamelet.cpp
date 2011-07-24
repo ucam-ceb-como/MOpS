@@ -31,7 +31,7 @@ FlameLet::FlameLet
 
 FlameLet::~FlameLet()
 {
-    //if (radiation != NULL) delete radiation;
+    if (radiation != NULL) delete radiation;
 }
 
 void FlameLet::checkSetup()
@@ -921,6 +921,16 @@ doublereal FlameLet::stoichiometricMixtureFraction()
 
     return stoichZ;
 
+}
+
+void FlameLet::setExternalStrainRate(const doublereal strainRate)
+{
+    scalarDissipationRate_.setStrainRate(strainRate);
+}
+
+void FlameLet::setExternalSDR(const doublereal sdr)
+{
+    scalarDissipationRate_.setSDRRate(sdr);
 }
 
 /*

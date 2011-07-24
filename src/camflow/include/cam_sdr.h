@@ -96,6 +96,10 @@ public:
     //! Destructor.
     ~ScalarDissipationRate();
 
+    void setStrainRate(const doublereal strainRate);
+
+    void setSDRRate(const doublereal sdr);
+
     doublereal operator[](int i) const
     {
         return scalarDissipationRate_(i,0);

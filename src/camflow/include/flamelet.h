@@ -150,6 +150,10 @@ namespace Camflow
             //! Calculate the stoichiometric mixture fraction.
             doublereal stoichiometricMixtureFraction();
 
+            void setExternalStrainRate(const doublereal strainRate);
+
+            void setExternalSDR(const doublereal sdr);
+
             //! Provide a soot volume fraction from an external calculation.
             void setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv);
 

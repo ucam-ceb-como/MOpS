@@ -126,8 +126,8 @@ void CVodeWrapper::solveDAE(int stopMode, doublereal resTol){
 
 void CVodeWrapper::destroy(){
     CVodeFree(&cvode_mem);
-    //N_VDestroy(y);
-    //N_VDestroy(yPrime);
+    N_VDestroy(y);
+    N_VDestroy(yPrime);
 }
 
 void CVodeWrapper::calcResNorm(){

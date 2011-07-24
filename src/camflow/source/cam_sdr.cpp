@@ -72,6 +72,9 @@ ScalarDissipationRate::readStrainRate(const std::string& inputFileName)
               << std::endl;
 }
 
+/*
+ * Calculate the scalar dissipation rate profile. Method 1 in Carbonell(2009).
+ */
 doublereal
 ScalarDissipationRate::calculate(const doublereal& mixtureFraction)
 const
@@ -103,22 +106,27 @@ const
     return stoichSDR_*Sprog::PI/fZ;
 }
 
-/*
- *calculate the scalar dissipation rate
- */
-//doublereal ScalarDissipationRate::scalarDissipationRate(const doublereal m_frac)
-//{
-//    /*
-//     *Eq. 9.38 SummerSchool by N. Peters
-//     */
-//    CamMath cm;
-//    doublereal erterm = cm.inverfc(2*m_frac);
-//    doublereal arg = -2*cm.SQR(erterm);
-//    sdr = admin_.getStrainRate()*exp(arg)/PI;
-//    return sdr;
-//    //return 0.88;
-//}
-//
+void ScalarDissipationRate::setStrainRate(const doublereal strainRate)
+{
+    strainRate_ = strainRate;
+    stoichSDR_ = scalarDissipationRate(stoichZ_);
+    for (size_t i=0; i<mixFracCoords_.size(); ++i)
+    {
+        scalarDissipationRate_(i,0) = calculate(mixFracCoords_[i]);
+    }
+}
+
+void ScalarDissipationRate::setSDRRate(const doublereal sdr)
+{
+    stoichSDR_ = sdr;
+    strainRate_ = strainRate(stoichZ_);
+    for (size_t i=0; i<mixFracCoords_.size(); ++i)
+    {
+        scalarDissipationRate_(i,0) = calculate(mixFracCoords_[i]);
+    }
+}
+
+
 ///*
 // *calculate the scalar dissipation rate profile. Method 1 in Carbonell(2009).
 // */

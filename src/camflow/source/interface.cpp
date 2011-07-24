@@ -58,7 +58,8 @@ Interface::Interface()
 :
 model(NULL),
 speciesPointerVector(NULL),
-flmlt(NULL)
+flmlt(NULL),
+cp(cg)
 {
 
     std::string fChem("chem.inp");
@@ -69,12 +70,11 @@ flmlt(NULL)
     try{
         cm.readInput(fCamFlow,cc,cg,convert,ca,cb,cp,config,cSoot);
     }catch(CamError &ce){
-        std::cout << ce.errorMessge;
+        std::cout << ce.errorMessage;
     }
 
-
     //read mechanism, thermo and trasnport data
-    IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,fTrans);
+    Sprog::IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,1.0,fTrans);
 
     //get the number of species
     nSpecies = mech.SpeciesCount();
@@ -103,7 +103,8 @@ Interface::Interface(Mechanism& mech_in,
 :
 model(NULL),
 speciesPointerVector(NULL),
-flmlt(NULL)
+flmlt(NULL),
+cp(cg)
 {
 
     std::string fCamFlow("camflow.xml");
@@ -121,7 +122,7 @@ flmlt(NULL)
 
     model = (CamResidual*)rModel;
     if(sdr==0){
-        model->solve(cc,ca,cg,cp,config,cs,mech_in);
+       // model->solve(cc,ca,cg,cp,config,cs,mech_in);
         resetMixtures(cstrs);
     }else{
         /**
@@ -130,7 +131,7 @@ flmlt(NULL)
          * non-zero
          */
         model->setExternalScalarDissipationRate(sdr);
-        model->solve(cc,ca,cg,cp,config,cs,mech_in);
+       // model->solve(cc,ca,cg,cp,config,cs,mech_in);
     }
 
 
@@ -267,10 +268,10 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
     if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
 
-    if(flmlt == NULL ) flmlt = new FlameLet();
+    if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
     //Set the time history of the scalar dissipation rate
     flmlt->setRestartTime(intTime[0]);
-    flmlt->setExternalScalarDissipationRate(intTime,sdr,true);
+    //flmlt->setExternalScalarDissipationRate(intTime,sdr,true);
 
     // Build up a vector of zero soot volume fractions
     std::vector<doublereal> zeroSoot(cg.getnCells(), 0.0);
@@ -295,12 +296,13 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
  */
 void Interface::flameletStrainRate(const doublereal& strainRate, bool lnone) {
 
-    ca.setStrainRate(strainRate);
-    if(flmlt == NULL ) flmlt = new FlameLet();
+    if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
     if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
 
+    flmlt->setExternalStrainRate(strainRate);
+
     try{
-        flmlt->solve(cc,ca,cg,cp,mech,false);
+        flmlt->solve(false);
         /*
          *store the results for lookup
          */
@@ -335,7 +337,7 @@ void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >&
     if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
 
-    if(flmlt == NULL ) flmlt = new FlameLet();
+    if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
 
     flmlt->setRestartTime(intTime[0]);
     if(intTime[1]!=0)cc.setMaxTime(intTime[1]);
@@ -345,7 +347,8 @@ void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >&
     flmlt->setRestartTime(intTime[0]);
 
     // Set the scalar dissipation rate profile.
-    flmlt->setExternalScalarDissipationRate(intTime,sdr,Zcoords);
+    //flmlt->setExternalScalarDissipationRate(intTime,sdr,Zcoords);
+
 
     // Build up a vector of zero soot volume fractions
     std::vector<doublereal> zeroSoot(cg.getnCells(), 0.0);
@@ -353,9 +356,9 @@ void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >&
 
     try{
         if(!continuation){
-            flmlt->solve(cc,ca,cg,cp,mech,true);
+            flmlt->solve(true);
         }else{
-            flmlt->restart(cc);
+            flmlt->restart();
         }
         /*
          *store the results for lookup
@@ -390,10 +393,10 @@ void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const s
     if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
 
-    if(flmlt == NULL ) flmlt = new FlameLet();
+    if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
     //Set the time history of the scalar dissipation rate
     flmlt->setRestartTime(intTime[0]);
-    flmlt->setExternalScalarDissipationRate(intTime,sdr,true);
+    //flmlt->setExternalScalarDissipationRate(intTime,sdr,true);
 
     //@todo check length of the vector
     flmlt->setExternalSootVolumeFraction(soot_fv);
@@ -420,7 +423,7 @@ void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const s
 void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, bool lnone){
 
     if(intTime!=0)cc.setMaxTime(intTime);
-    if(flmlt == NULL ) flmlt = new FlameLet();
+    if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
     if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
     flmlt->setExternalScalarDissipationRate(sdr);
 
@@ -429,9 +432,9 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
     }
     try{
         if(!continuation){
-            flmlt->solve(cc,ca,cg,cp,mech,false);
+            flmlt->solve(false);
         }else{
-            flmlt->restart(cc);
+            flmlt->restart();
         }
         /*
          *store the results for lookup

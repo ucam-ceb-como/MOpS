@@ -123,7 +123,7 @@ public:
         const doublereal& soot_vol_frac
     );
 
-    inline const doublereal getRadiation(const int i)
+    inline const doublereal& getRadiation(const int i)
     {
         return radiation[i];
     }
