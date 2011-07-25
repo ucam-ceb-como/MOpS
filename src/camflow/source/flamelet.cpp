@@ -1226,6 +1226,17 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, doublereal* soln
             }
         }
         data.push_back(sum);
+
+        // Add the moments to to the data output
+        if (sootMom_.active())
+        {
+            for(int l=0; l<nMoments; l++)
+            {
+            	data.push_back(soln[i*nVar+ptrT+1+l]);
+            }
+        }
+
+
         reporter_->writeCustomFileOut(data);
 
     }
@@ -1284,6 +1295,17 @@ std::vector<std::string> FlameLet::header()
         headerData.push_back( (*spv_)[l]->Name() );
     }
     headerData.push_back("sumfracs");
+    if (sootMom_.active())
+    {
+        headerData.push_back("M0");
+        headerData.push_back("M1");
+        headerData.push_back("M2");
+        headerData.push_back("M3");
+        headerData.push_back("M4");
+        headerData.push_back("M5");
+    }
+
+
 
     return headerData;
 
