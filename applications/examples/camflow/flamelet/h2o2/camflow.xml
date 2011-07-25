@@ -47,66 +47,12 @@
         </tols>
     </solver>
     <initialize>
+        <restart file="restartBinary">binary</restart>
         <mCenter unit="cm">50</mCenter>
         <mWidth unit="cm">40</mWidth>
         <massfrac>
             <intrmdt name="H">0.1</intrmdt>
         </massfrac>
-        <Tprofile unit_L="m" unit_T="K">
-            <position x="0.00">300</position>
-            <position x="0.0050">844.691</position>
-            <position x="0.0105">1338.21</position>
-            <position x="0.0115">1419.12</position>
-            <position x="0.0125">1497.62</position>
-            <position x="0.0135">1573.82</position>
-            <position x="0.0145">1647.74</position>
-            <position x="0.0155">1719.37</position>
-            <position x="0.0165">1788.68</position>
-            <position x="0.0175">1855.62</position>
-            <position x="0.0185">1920.11</position>
-            <position x="0.0195">1982.05</position>
-            <position x="0.0225">2151.05</position>
-            <position x="0.0375">2313.8</position>
-            <position x="0.0625">1970.32</position>
-            <position x="0.0875">1707.07</position>
-            <position x="0.1125">1504.77</position>
-            <position x="0.1375">1345.01</position>
-            <position x="0.1625">1215.53</position>
-            <position x="0.1875">1108.39</position>
-            <position x="0.2125">1018.33</position>
-            <position x="0.2375">941.743</position>
-            <position x="0.2625">875.94</position>
-            <position x="0.2875">818.717</position>
-            <position x="0.3125">768.49</position>
-            <position x="0.3375">724.164</position>
-            <position x="0.3625">684.742</position>
-            <position x="0.3875">649.514</position>
-            <position x="0.4125">617.846</position>
-            <position x="0.4375">589.328</position>
-            <position x="0.4625">563.459</position>
-            <position x="0.4875">539.9</position>
-            <position x="0.5125">518.403</position>
-            <position x="0.5375">498.667</position>
-            <position x="0.5625">480.493</position>
-            <position x="0.5875">463.742</position>
-            <position x="0.6125">448.199</position>
-            <position x="0.6375">433.764</position>
-            <position x="0.6625">420.333</position>
-            <position x="0.6875">407.782</position>
-            <position x="0.7125">396.029</position>
-            <position x="0.7375">385.002</position>
-            <position x="0.7625">374.633</position>
-            <position x="0.7875">364.862</position>
-            <position x="0.8125">355.632</position>
-            <position x="0.8375">346.913</position>
-            <position x="0.8625">338.663</position>
-            <position x="0.8875">330.814</position>
-            <position x="0.9125">323.381</position>
-            <position x="0.9375">316.283</position>
-            <position x="0.9625">309.548</position>
-            <position x="0.9875">303.101</position>
-            <position x="1.00">300</position>
-        </Tprofile>
     </initialize>
     <report outfile="final" species="mass"/>
     <grid>grid.inp</grid>

@@ -37,6 +37,7 @@
  *
  * Created on 04 June 2009, 11:43
  */
+
 #include "batch.h"
 
 using namespace Camflow;
@@ -95,27 +96,24 @@ void Batch::checkSetup()
 void Batch::solve()
 {
 
-    CamBoundary cb;
-
     // Check that the problem has been setup properly.
     checkSetup();
 
     /*get the fuel inlet conditions and the fill the
      *solution vector with species mass fractions
      */
-    admin_.getLeftBoundary(cb);
-    getInletMassFrac(cb,solvect);
+    CamBoundary& cb = admin_.getLeftBoundary();
+    solvect = getInletMassFrac(cb);
     solvect.push_back(cb.getTemperature());
 
 
     // Size the moments vector and
     // initialize the soot moments (and other soot bits and pieces)
     momRates.resize(nMoments,0.0);
+    wdotSootGasPhase.resize(nSpc,0.0);
 
-    sootMom_.initMoments(*camMech_,solvect,1.0);
-    //for (int l=nSpc+1; l< nSpc+nMoments; ++l){
-    //  std::cout << "Soot mom: " << solvect[l] << "\n";
-	//}
+    // Push moments to the back of the solution vector
+    sootMom_.initMoments(*camMech_,solvect,1);
 
     // Update the mixture properties.
     updateMixture(&solvect[0]);
@@ -131,6 +129,11 @@ void Batch::solve()
     report(0.0,&solvect[0]);
 
     if (solverID == control_.CVODE) {
+
+    	// Check the tolerances
+        //std::cout << "control_.getSpeciesAbsTol()  " << control_.getSpeciesAbsTol() << std::endl;
+        //std::cout << "control_.getSpeciesRelTol()  " << control_.getSpeciesRelTol() << std::endl;
+        //std::cout << "control_.getResTol()  " << control_.getResTol() << std::endl;
 
     	CVodeWrapper cvw;
         cvw.init(nEqn,solvect,control_.getSpeciesAbsTol(), control_.getSpeciesRelTol(),
@@ -224,8 +227,8 @@ void Batch::updateMixture(doublereal* y)
     // Put the molar production rate (mol per m3 per sec) in wdot.
     camMech_->Reactions().GetMolarProdRates(*camMixture_,wdot);
 
+
     // Get species concentration to feed to soot model
-    // Here we are calling the non-cgs version of the soot code.
     camMixture_->GetConcs(concentrations);
     for (int l=0; l< nSpc; ++l)
     {
@@ -234,7 +237,6 @@ void Batch::updateMixture(doublereal* y)
 
     // Pull the moments out of the solution vector for feeding to allRates
     for (int l=0; l< nMoments; ++l){
-  //     std::cout << "y_l " <<  y[nSpc+l+1] << "\n";
        moments[l] = y[nSpc+l+1];
 	}
 
@@ -246,11 +248,17 @@ void Batch::updateMixture(doublereal* y)
     // (and contribution to gas phase by surface reactions)
     if (sootMom_.active())
     {
-    	    //for (int l=0; l< nMoments; ++l)
-    	    //     std::cout << "Moment: " << l << " : " <<  moments[l] << "\n";
+   	    for (int l=0; l< nMoments; ++l)
         momRates = sootMom_.rateAll(concentrations, moments, temperature, opPre, 1);
-    }
 
+        // Now get the corresponding gas phase rates and add them to wdot
+        wdotSootGasPhase = sootMom_.showGasPhaseRates(nSpc);
+	    for (int i=0; i< nSpc; ++i)
+	    {
+          wdot[i] = wdot[i] + wdotSootGasPhase[i];
+	    }
+
+    }
 }
 
 //species residual definition
@@ -261,7 +269,6 @@ void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f)
     {
         f[l] = (1.0/camMixture_->MassDensity()) * (*spv_)[l]->MolWt() * wdot[l];
     }
-
 }
 
 //temperature residual
@@ -302,9 +309,7 @@ void Batch::energyResidual(const doublereal& x, doublereal* y, doublereal* f)
 
         //f[ptrT] = (-heat*Ac + extSource)/(y[ptrF]*cp*Ac);
         f[ptrT] = -heat/(camMixture_->MassDensity()*cp);
-
     }
-
 }
 
 
@@ -316,7 +321,14 @@ void Batch::sootResidual(const doublereal& x, doublereal* y, doublereal* f)
      */
     if (sootMom_.active())
     {
-        std::vector<doublereal> mom;
+        for (int m=0; m<nMoments; ++m)
+        {
+            f[ptrT+1+m] = momRates[m];
+        }
+
+
+    	/*
+    	std::vector<doublereal> mom;
         for (int m=0; m<nMoments; ++m)
         {
             mom.push_back(y[nSpc+m]);
@@ -329,6 +341,7 @@ void Batch::sootResidual(const doublereal& x, doublereal* y, doublereal* f)
         {
             f[nSpc+m] = resMoment[m];
         }
+        */
 
     }
 }
@@ -432,13 +445,13 @@ void Batch::reportToFile(doublereal time, doublereal* soln)
     data.push_back(sum);
 
     // Append soot moments if applicable
-   // if (sootMom_.active())
-   // {
-   //     for (int m=0; m<nMoments; ++m)
-   //     {
-   //         data.push_back(moments[m]);
-   //     }
-   // }
+    if (sootMom_.active())
+    {
+        for (int l=ptrT+1; l< ptrT+nMoments+1; ++l)
+        {
+        	data.push_back(soln[l]);
+        }
+    }
     reporter_->writeStdFileOut(data);
 
 }

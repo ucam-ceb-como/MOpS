@@ -4,6 +4,17 @@
 cmake_minimum_required (VERSION 2.6)
 project (MOPSSUITE)
 
+IF(WIN32)
+  SET(Boost_ADDITIONAL_VERSIONS "1.47" "1.47.0")
+  SET(BOOST_ROOT "C:/Program Files/boost")
+  SET(Boost_USE_STATIC_LIBS TRUE)
+ELSE(WIN32)
+  SET(CMAKE_MODULE_PATH $ENV{HOME})
+  SET(BOOST_ROOT $ENV{HOME}/boost)
+  SET(Boost_USE_MULTITHREADED OFF)
+ENDIF(WIN32)
+find_package(Boost 1.42.0 REQUIRED COMPONENTS regex serialization filesystem system)
+
 enable_testing()
 
 # Turn off line breaks in error messages so that IDEs can parse the errors properly
@@ -11,19 +22,24 @@ IF(CMAKE_COMPILER_IS_GNUCC)
   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
+  #SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Wall -Wextra -Weffc++ -Wno-format-errors")
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 
 ######### The camflow application ##########################
 add_executable(camflow-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/camflow/cam_kernel.cpp)
-target_link_libraries(camflow-app camflow)
+target_link_libraries(camflow-app camflow ${Boost_LIBRARIES})
+
+# Regression tests for CamFlow
+
+add_test(camflow.hydrogenBatchReactor ${MOPSSUITE_SOURCE_DIR}/test/camflow/batchReactorRegress.sh ${MOPSSUITE_BINARY_DIR}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenBatchReactor)
 
 
 ######### The Mops application ##########################
 add_executable(mops-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/mopsc/mops.cpp)
-target_link_libraries(mops-app mops)
+target_link_libraries(mops-app mops ${Boost_LIBRARIES})
 
 # Regression tests for Mops
 add_test(mops.regress1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress1.sh ${MOPSSUITE_BINARY_DIR}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
@@ -40,9 +56,13 @@ add_test(mops.CSTRtest ${MOPSSUITE_SOURCE_DIR}/test/mopsc/CSTRRegress.sh ${MOPSS
 
 add_test(mops.sinter1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/sinter1.sh ${MOPSSUITE_BINARY_DIR}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
+########## The PAH-KMC Application ######################
+add_executable(PAHkmc-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/PAHkmc/kmc_model.cpp)
+target_link_libraries(PAHkmc-app sweep ${Boost_LIBRARIES})
+
 ########## The Brush application #######################
 add_executable(brush-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/brush/brush.cpp)
-target_link_libraries(brush-app brush)
+target_link_libraries(brush-app brush ${Boost_LIBRARIES})
 
 # Regression tests for Brush
 add_test(brush.regress1 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress1.sh ${MOPSSUITE_BINARY_DIR}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
@@ -55,12 +75,26 @@ add_test(brush.regress4 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress4.sh ${MOPSSUI
 
 ########## A small program to exercise the Brush interface for moonmd #######################
 add_executable(brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/brush/moonmd_test.cpp)
-target_link_libraries(brush-moonmd-test brush)
+target_link_libraries(brush-moonmd-test brush ${Boost_LIBRARIES})
 
 # Regression tests for Brush moon-md interface
 add_test(NAME brush.moonmd1 COMMAND ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${MOPSSUITE_BINARY_DIR}/brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
+
+########## Test Program for sprogc ######################
+add_executable(sprogc-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/sprogc/sprogc_test.cpp)
+target_link_libraries(sprogc-test sprog ${Boost_LIBRARIES})
+
+add_test(sprogc.regress1 ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress1.sh ${MOPSSUITE_BINARY_DIR}/sprogc-test ${MOPSSUITE_SOURCE_DIR}/test/sprogc)
+
+########## Test Program for chemkinReader ######################
+add_executable(chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp)
+target_link_libraries(chemkinReader-test chemkinReader ${Boost_LIBRARIES})
+
+add_test(chemkinReader.regress1 ${MOPSSUITE_SOURCE_DIR}/test/io/chemkinReaderRegress.sh ${MOPSSUITE_BINARY_DIR}/chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/test/io)
+
 # Subsidiary libraries for the solvers
+add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/comostrings)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/camxml)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/geometry)
@@ -74,7 +108,9 @@ add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/mopsc)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/brush)
 
 # All the header files we have written
-include_directories(${MOPSSUITE_SOURCE_DIR}/src/utils/include
+include_directories(${Boost_INCLUDE_DIRS}
+					${MOPSSUITE_SOURCE_DIR}/src/utils/include
+                    ${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader/include
                     ${MOPSSUITE_SOURCE_DIR}/src/io/comostrings/include
                     ${MOPSSUITE_SOURCE_DIR}/src/io/camxml/include
                     ${MOPSSUITE_SOURCE_DIR}/src/geometry/include

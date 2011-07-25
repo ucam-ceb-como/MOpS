@@ -324,9 +324,6 @@ namespace Camflow
 
             int Lewis;
 
-
-
-
             //members for the reactor models
             std::vector<doublereal> solvect, rTol, aTol;
             doublereal vel,rho, Ac, As;

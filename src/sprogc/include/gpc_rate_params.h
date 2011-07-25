@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -59,9 +59,18 @@ namespace Kinetics
 
         // Constructors.
         ARRHENIUS(void) // Default constructor.
-        {A=n=E=0.0;}; 
+        {A=n=E=0.0;};
         ARRHENIUS(real aA, real an, real aE) // Initialising constructor.
         {A=aA; n=an; E=aE;};
+
+        // Writes the element to a binary data stream.
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int /* file_version */)
+        {
+            ar & A & n & E;
+        }
+        friend class boost::serialization::access;
+
     };
 
     // Landau Teller reaction parameters.
@@ -72,6 +81,15 @@ namespace Kinetics
         // Constructors.
         LTCOEFFS(void) {B=C=0.0;}; // Default constructor.
         LTCOEFFS(real aB, real aC) {B=aB; C=aC;}; // Initialising constructor.
+
+        // Writes the element to a binary data stream.
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int /* file_version */)
+        {
+            ar & B & C;
+        }
+        friend class boost::serialization::access;
+
     };
 
     // Enumeration of possible fall-off reaction types.
@@ -87,7 +105,7 @@ namespace Kinetics
     // Fall-off parameters.
     struct FALLOFF_PARAMS
     {
-        // Maximum number of fall-off parameters stored in this structure. Remember to 
+        // Maximum number of fall-off parameters stored in this structure. Remember to
         // change constructor functions below if changed!
         static const int MAX_FALLOFF_PARAMS = 5;
 
@@ -102,22 +120,31 @@ namespace Kinetics
         FALLOFF_PARAMS(ARRHENIUS lowp, int tb, real a=0.0, real b=0.0, real c=0.0, real d=0.0, real e=0.0) {
             LowP_Limit=lowp; ThirdBody=tb; Params[0]=a; Params[1]=b; Params[2]=c; Params[3]=d; Params[4]=e;
         };
-        FALLOFF_PARAMS(real lpa, real lpn, real lpe, int tb, real a=0.0, real b=0.0, real c=0.0, 
+        FALLOFF_PARAMS(real lpa, real lpn, real lpe, int tb, real a=0.0, real b=0.0, real c=0.0,
                        real d=0.0, real e=0.0) {
-            LowP_Limit=ARRHENIUS(lpa,lpn,lpe); ThirdBody=tb; Params[0]=a; Params[1]=b; 
+            LowP_Limit=ARRHENIUS(lpa,lpn,lpe); ThirdBody=tb; Params[0]=a; Params[1]=b;
             Params[2]=c; Params[3]=d; Params[4]=e;
         };
+
+        // Writes the element to a binary data stream.
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int /* file_version */)
+        {
+            ar & LowP_Limit & ThirdBody & Params;
+        }
+        friend class boost::serialization::access;
+
     };
 
     // A function pointer type for a custom fall-off reaction.
-    typedef void (*FallOffFnPtr)(
+    /*typedef void (*FallOffFnPtr)(
         const Reaction &rxn, // The reaction for which the fall-off is defined.
         real lowk, // The pre-calculated low-pressure limit rate constant.
         real tbc,  // The pre-calculated third-body concentration.
         real T,    // Temperature.
         real &kf,  // Forward rate constant (will be adjusted).
         real &kr   // Reverse rate constant (will be adjusted).
-        );
+        );*/
 };
 };
 

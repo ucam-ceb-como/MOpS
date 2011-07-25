@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -46,7 +46,7 @@
 #include "gpc_element.h"
 #include "gpc_el_comp.h"
 #include "gpc_thermo_params.h"
-#include "gpc_transport_data.h"
+#include "transport.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -65,7 +65,7 @@ public:
     // Constructors.
     Species(void);              // Default constructor.
     Species(const Species &sp); // Copy constructor.
-    Species(std::istream &in);  // Stream-reading constructor.
+    Species(std::istream &in);
 
     // Default destructor.
     ~Species(void);
@@ -88,10 +88,10 @@ public:
 
 
     // ELEMENTAL COMPOSITION.
-    
+
     // Returns the elemental composition of the species.
     const ElCompVector &Composition(void) const;
-    
+
     // Returns the number of elements required to define the species.
     unsigned int ComponentCount(void) const;
 
@@ -109,13 +109,13 @@ public:
 
     // Adds an element given the name.  Element found using parent mechanism.
     void AddElement(const std::string &name, unsigned int n);
-    
+
     // Returns true if species contains the element (given by index).
     bool ContainsElement(unsigned int i) const;
 
     // Returns true if species contains the element (given by name).
     bool ContainsElement(const std::string &name) const;
-    
+
     // Returns true if species contains the element (given by object).
     bool ContainsElement(const Element &el) const;
 
@@ -125,7 +125,7 @@ public:
     // Returns the species molecular weight.
     real MolWt(void) const;
 
-    // Recalculates the molecular weight of the 
+    // Recalculates the molecular weight of the
     // species using the elements in the parent mechanism.
     real CalcMolWt(void);
 
@@ -142,7 +142,7 @@ public:
     // Returns the number of thermo parameter ranges.
     unsigned int ThermoRangeCount(void) const;
 
-    // Sets the start temperature for the thermo parameter range.  
+    // Sets the start temperature for the thermo parameter range.
     void SetThermoStartTemperature(const real T);
 
     // Returns the set of thermo parameters valid for the given temperature.
@@ -166,7 +166,7 @@ public:
     // Sets the parent mechanism.
     void SetMechanism(Sprog::Mechanism &mech);
 
-    
+
     // SPECIES LOOKUP.
 
     // Returns the index of a species with the given name in the list.
@@ -182,10 +182,20 @@ public:
     // Creates a copy of the species object.
     Species *const Clone(void) const;
 
-    // Writes the species to a binary data stream.
+    // Writes the element to a binary data stream.
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */)
+    {
+        ar.template register_type<Sprog::ElComp>();
+        ar.register_type(static_cast< ::IO::Transport * >(NULL));
+        ar & m_name & m_elcomp & m_molwt & m_mech & m_thermoparams & m_T1 & m_transport;
+    }
+
+    // Writes the element to a binary data stream.
     void Serialize(std::ostream &out) const;
 
-    // Reads the species data from a binary data stream.
+    // Reads the element data from a binary data stream.
     void Deserialize(std::istream &in);
 
     // Prints a diagnostic output file containing all the
@@ -193,12 +203,12 @@ public:
     void WriteDiagnostics(std::ostream &out) const;
 
     //! Writes out the kept species as decided by LOI analysis to the reduced mechanism output file.
-    void WriteSpecies(std::ostream &out) const;	
+    void WriteSpecies(std::ostream &out) const;
 
 	// TRANSPORT RELATED FUNCTIONS Added by vinod
-	
-	void setTransportData(std::vector<std::string> &data);
-	Sprog::Transport::TransportData& getTransportData() const;
+
+	void setTransportData(const IO::Transport& transport);
+	IO::Transport& getTransportData() const;
 	double getViscosity(double T) const; // returns the viscosity of the pure species in Kg/m-s
 	double getSelfDiffusion(double T, double p) const; // returns the self diffusion coefficient m^2/s
 	double getThermalConductivity(double T, double p, double cp) const; // returns the thermal conductivity in J/m-s-K
@@ -210,7 +220,7 @@ protected:
     ElCompVector m_elcomp;    // Elemental composition.
     real m_molwt;             // Molecular weight (kg/mol).
     Sprog::Mechanism *m_mech; // Parent mechanism.
-	
+
 
     //const ElementPtrVector *m_elements; // Elements used to define species.
 
@@ -221,8 +231,8 @@ protected:
 
 private:
     //! Data for calculating transport properties
-    Sprog::Transport::TransportData *m_transport;
-	
+    IO::Transport *m_transport;
+
 };
 
 // Inline function definitions.

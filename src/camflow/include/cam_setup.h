@@ -92,7 +92,7 @@ namespace Camflow
             virtual ~CamSetup();
 
             //! Return the inlet species mass fractions for the given boundary.
-            void getInletMassFrac(CamBoundary &cb, std::vector<doublereal>& fracs);
+            std::vector<doublereal> getInletMassFrac(CamBoundary &cb);
 
             //! Return the inlet temperature.
             doublereal getInletTemperature(CamBoundary &cb);
@@ -104,11 +104,10 @@ namespace Camflow
             doublereal getInletVelocity(CamBoundary &cb);
 
             //! Initialise the species vector.
-            void initSpecies(CamBoundary &cb, CamControl &cc, std::vector<doublereal>& soln);
+            std::vector<doublereal> initSpecies(CamBoundary &cb);
 
             //! Initialize the species vector for a counter flow flame.
-            void initSpecies(CamBoundary &left, CamBoundary &right,
-                                    CamControl &cc, std::vector<doublereal>& soln);
+            std::vector<doublereal> initSpecies(CamBoundary &left, CamBoundary &right);
 
             //! Initialise the mass flow rate.
             void initMassFlow(CamBoundary &cb, CamControl &cc, std::vector<doublereal> &soln);
@@ -121,10 +120,6 @@ namespace Camflow
 
             //! Store the inlet conditions.
             void storeInlet(CamBoundary &cb, inletStruct& ud_inlet);
-
-            //! Store the objects that are common across the reactor models.
-            virtual void storeObjects(CamControl& cc,   CamAdmin& ca,    CamGeometry& cg,
-                        CamProfile& cp,   CamBoundary& cb,    Sprog::Mechanism& mech);
 
 
         protected:

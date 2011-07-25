@@ -31,7 +31,9 @@ add_library(mops source/cvodes_utils.cpp
                  source/swp_gas_profile.cpp)
 
 include_directories(include 
+                    ${Boost_INCLUDE_DIRS} 
                     ../utils/include
+                    ../io/chemkinReader/include
                     ../io/comostrings/include
                     ../io/camxml/include
                     ../geometry/include
@@ -40,4 +42,4 @@ include_directories(include
                     ../odesolvers/cvodes/include
                     ../odesolvers/cvodes/source/cvodes)
 
-target_link_libraries(mops sweep sprog cvodes camxml comostrings)
+target_link_libraries(mops sweep sprog cvodes camxml comostrings chemkinReader)

@@ -148,6 +148,7 @@ namespace Camflow {
 
             int batchType;
             std::vector<doublereal> momRates;
+            std::vector<doublereal> wdotSootGasPhase;
 
     }; // End class Batch
 

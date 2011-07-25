@@ -1,1 +1,2 @@
-time ../../../../../bin/release/camflow
+cp $1 camflow.xml
+time ${CAMFLOW_DIR}/bin/camflow

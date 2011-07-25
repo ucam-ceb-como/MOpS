@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -70,7 +70,7 @@ IdealGas::IdealGas(const Sprog::Thermo::IdealGas &copy)
 // Stream-reading constructor.
 IdealGas::IdealGas(std::istream &in, const SpeciesPtrVector &sp)
 {
-    Deserialize(in);
+    //Deserialize(in);
     SetSpecies(sp);
 }
 
@@ -159,7 +159,7 @@ void IdealGas::CalcUs_RT(real T, fvector &U) const
 
 // Calculates the bulk internal energy as well as the internal
 // energies of each species.
-real IdealGas::CalcBulkU(Sprog::real T, 
+real IdealGas::CalcBulkU(Sprog::real T,
                          const Sprog::real *const x,
                          unsigned int n,
                          Sprog::fvector &U) const
@@ -181,9 +181,9 @@ real IdealGas::CalcBulkU(Sprog::real T,
     }
 }
 
-// Calculates the dimensionless bulk internal energy as well as 
+// Calculates the dimensionless bulk internal energy as well as
 // the internal energies of each species.
-real IdealGas::CalcBulkU_RT(Sprog::real T, 
+real IdealGas::CalcBulkU_RT(Sprog::real T,
                             const Sprog::real *const x,
                             unsigned int n,
                             Sprog::fvector &U) const
@@ -213,7 +213,7 @@ void IdealGas::CalcHs(real T, fvector &H) const
 {
     int i, n;
     real t[Thermo::H_PARAM_COUNT];
-    
+
     // Ensure output array has sufficient length.
     H.resize(Species()->size());
 
@@ -252,7 +252,7 @@ void IdealGas::CalcHs_RT(real T, fvector &H) const
 
 // Calculates the bulk enthalpy and the enthalpies
 // of each species at the given conditions.
-real IdealGas::CalcBulkH(Sprog::real T, 
+real IdealGas::CalcBulkH(Sprog::real T,
                          const Sprog::real *const x,
                          unsigned int n,
                          Sprog::fvector &H) const
@@ -260,7 +260,7 @@ real IdealGas::CalcBulkH(Sprog::real T,
     if (n >= Species()->size()) {
         // Get individual species enthalpies.
         CalcHs(T, H);
-        
+
         // Sum to get bulk enthalpy.
         real bulkH = 0.0;
         for(unsigned int i=0; i!=Species()->size(); ++i) {
@@ -275,7 +275,7 @@ real IdealGas::CalcBulkH(Sprog::real T,
 
 // Calculates the dimensionless bulk enthalpy and the enthalpies
 // of each species at the given conditions.
-real IdealGas::CalcBulkH_RT(Sprog::real T, 
+real IdealGas::CalcBulkH_RT(Sprog::real T,
                             const Sprog::real *const x,
                             unsigned int n,
                             Sprog::fvector &H) const
@@ -283,7 +283,7 @@ real IdealGas::CalcBulkH_RT(Sprog::real T,
     if (n >= Species()->size()) {
         // Get individual species enthalpies.
         CalcHs_RT(T, H);
-        
+
         // Sum to get bulk enthalpy.
         real bulkH = 0.0;
         for(unsigned int i=0; i!=Species()->size(); ++i) {
@@ -347,7 +347,7 @@ void IdealGas::CalcSs_R(real T, fvector &S) const
 
 // Calculates the bulk entropy and the entropies of
 // each species.
-real IdealGas::CalcBulkS(Sprog::real T, 
+real IdealGas::CalcBulkS(Sprog::real T,
                          const Sprog::real *const x,
                          unsigned int n,
                          Sprog::fvector &S) const
@@ -355,7 +355,7 @@ real IdealGas::CalcBulkS(Sprog::real T,
     if (n >= Species()->size()) {
         // Get individual species entropies.
         CalcSs(T, S);
-        
+
         // Sum to get bulk entropy.
         real bulkS = 0.0;
         for(unsigned int i=0; i!=Species()->size(); ++i) {
@@ -368,9 +368,9 @@ real IdealGas::CalcBulkS(Sprog::real T,
     }
 }
 
-// Calculates the dimensionless bulk entropy and the 
+// Calculates the dimensionless bulk entropy and the
 // entropies of each species.
-real IdealGas::CalcBulkS_R(Sprog::real T, 
+real IdealGas::CalcBulkS_R(Sprog::real T,
                            const Sprog::real *const x,
                            unsigned int n,
                            Sprog::fvector &S) const
@@ -378,7 +378,7 @@ real IdealGas::CalcBulkS_R(Sprog::real T,
     if (n >= Species()->size()) {
         // Get individual species entropies.
         CalcSs_R(T, S);
-        
+
         // Sum to get bulk entropy.
         real bulkS = 0.0;
         for(unsigned int i=0; i!=Species()->size(); ++i) {
@@ -443,9 +443,9 @@ void IdealGas::CalcGs_RT(real T, fvector &G) const
 
 // Calculates the species' Gibbs free energies given the temperature and
 // the species' enthalpies and entropies.
-void IdealGas::CalcGs(Sprog::real T, 
-                      const Sprog::fvector &H, 
-                      const Sprog::fvector &S, 
+void IdealGas::CalcGs(Sprog::real T,
+                      const Sprog::fvector &H,
+                      const Sprog::fvector &S,
                       Sprog::fvector &G) const
 {
     for (unsigned int i=0; i!=Species()->size(); ++i) {
@@ -453,11 +453,11 @@ void IdealGas::CalcGs(Sprog::real T,
     }
 }
 
-// Calculates the dimensionless species' Gibbs free energies given 
+// Calculates the dimensionless species' Gibbs free energies given
 // the temperature and the species' enthalpies and entropies.
-void IdealGas::CalcGs_RT(Sprog::real T, 
-                         const Sprog::fvector &H_RT, 
-                         const Sprog::fvector &S_R, 
+void IdealGas::CalcGs_RT(Sprog::real T,
+                         const Sprog::fvector &H_RT,
+                         const Sprog::fvector &S_R,
                          Sprog::fvector &G_RT) const
 {
     for (unsigned int i=0; i!=Species()->size(); ++i) {
@@ -467,9 +467,9 @@ void IdealGas::CalcGs_RT(Sprog::real T,
 
 // Calculates the bulk Gibbs free energy of the mixture and
 // the Gibbs free energies of each species.
-real IdealGas::CalcBulkG(Sprog::real T, 
-                         const Sprog::real *const x, 
-                         unsigned int n, 
+real IdealGas::CalcBulkG(Sprog::real T,
+                         const Sprog::real *const x,
+                         unsigned int n,
                          Sprog::fvector &G) const
 {
     // Check length of x array.
@@ -491,9 +491,9 @@ real IdealGas::CalcBulkG(Sprog::real T,
 
 // Calculates the dimensionless bulk Gibbs free energy of the mixture and
 // the Gibbs free energies of each species.
-real IdealGas::CalcBulkG_RT(Sprog::real T, 
-                            const Sprog::real *const x, 
-                            unsigned int n, 
+real IdealGas::CalcBulkG_RT(Sprog::real T,
+                            const Sprog::real *const x,
+                            unsigned int n,
                             Sprog::fvector &G) const
 {
     // Check length of x array.
@@ -557,15 +557,15 @@ void IdealGas::CalcCps_R(real T, fvector &Cp) const
 }
 
 // Calculates the mean molar heat capacity at const. P.
-real IdealGas::CalcBulkCp(Sprog::real T, 
-                          const Sprog::real *const x, 
-                          unsigned int n, 
+real IdealGas::CalcBulkCp(Sprog::real T,
+                          const Sprog::real *const x,
+                          unsigned int n,
                           Sprog::fvector &Cp) const
 {
     if (n >= Species()->size()) {
         // Get individual species heat capacities.
         CalcCps(T, Cp);
-        
+
         // Sum to get bulk heat capacity.
         real bulkCp = 0.0;
         for(unsigned int i=0; i!=Species()->size(); ++i) {
@@ -579,15 +579,15 @@ real IdealGas::CalcBulkCp(Sprog::real T,
 }
 
 // Calculates the dimensionless mean molar heat capacity at const. P.
-real IdealGas::CalcBulkCp_R(Sprog::real T, 
-                            const Sprog::real *const x, 
-                            unsigned int n, 
+real IdealGas::CalcBulkCp_R(Sprog::real T,
+                            const Sprog::real *const x,
+                            unsigned int n,
                             Sprog::fvector &Cp) const
 {
     if (n >= Species()->size()) {
         // Get individual species heat capacities.
         CalcCps_R(T, Cp);
-        
+
         // Sum to get bulk heat capacity.
         real bulkCp = 0.0;
         for(unsigned int i=0; i!=Species()->size(); ++i) {
@@ -632,15 +632,15 @@ void IdealGas::CalcCvs_R(real T, fvector &Cv) const
 }
 
 // Calculates the mean molar heat capacity at const. V.
-real IdealGas::CalcBulkCv(Sprog::real T, 
-                          const Sprog::real *const x, 
-                          unsigned int n, 
+real IdealGas::CalcBulkCv(Sprog::real T,
+                          const Sprog::real *const x,
+                          unsigned int n,
                           Sprog::fvector &Cv) const
 {
     if (n >= Species()->size()) {
         // Get individual species heat capacities.
         CalcCvs(T, Cv);
-        
+
         // Sum to get bulk heat capacity.
         real bulkCv = 0.0;
         for(unsigned int i=0; i!=Species()->size(); ++i) {
@@ -654,15 +654,15 @@ real IdealGas::CalcBulkCv(Sprog::real T,
 }
 
 // Calculates the dimensionless mean molar heat capacity at const. V.
-real IdealGas::CalcBulkCv_R(Sprog::real T, 
-                            const Sprog::real *const x, 
-                            unsigned int n, 
+real IdealGas::CalcBulkCv_R(Sprog::real T,
+                            const Sprog::real *const x,
+                            unsigned int n,
                             Sprog::fvector &Cv) const
 {
     if (n >= Species()->size()) {
         // Get individual species heat capacities.
         CalcCvs_R(T, Cv);
-        
+
         // Sum to get bulk heat capacity.
         real bulkCv = 0.0;
         for(unsigned int i=0; i!=Species()->size(); ++i) {
@@ -679,7 +679,7 @@ real IdealGas::CalcBulkCv_R(Sprog::real T,
 // MULTIPLE PROPERTIES.
 
 // Calculates the species' enthalpies, entropies and constant pressure
-// heat capacities using the given temperature.  This function can be 
+// heat capacities using the given temperature.  This function can be
 // more efficient than calculating the properties individually.
 void IdealGas::CalcCpHSs(real T,
                          fvector &Cp,
@@ -738,8 +738,8 @@ void IdealGas::CalcCpHSs(real T,
 }
 
 // Calculates the species' enthalpies (H/RT), entropies (S/R) and constant pressure
-// heat capacities (Cp/R) all in dimensionless units using the given 
-// temperature.  This function can be more efficient than calculating 
+// heat capacities (Cp/R) all in dimensionless units using the given
+// temperature.  This function can be more efficient than calculating
 // the properties individually.
 void IdealGas::CalcCpHSs_RT(real T,
                             fvector &Cp,
@@ -780,7 +780,7 @@ void IdealGas::CalcCpHSs_RT(real T,
     for (i=0; i!=Species()->size(); ++i) {
         // Set sums to 0 initially.
         Cp[i] = H[i] = S[i] = 0.0;
-        
+
         // Get the thermo fitting parameters for this species
         // at this temperature.
         a = &(*Species())[i]->ThermoParams(T);

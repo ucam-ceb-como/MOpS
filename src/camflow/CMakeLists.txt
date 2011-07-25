@@ -26,10 +26,13 @@ add_library(camflow source/cam_read.cpp
                     source/radau_wrapper.cpp
                     source/cam_sdr.cpp
                     source/flamelet.cpp
-                    source/batch.cpp)
+                    source/batch.cpp
+                    source/interface.cpp)
 
 include_directories(include 
+                    ${Boost_INCLUDE_DIRS} 
                     ../utils/include
+                    ../io/chemkinReader/include
                     ../io/comostrings/include
                     ../io/camxml/include
                     ../sprogc/include
@@ -38,4 +41,4 @@ include_directories(include
 
 # To link againast camflow the following libraries will also
 # be required to resolve references from within camflow.
-target_link_libraries(camflow camxml comostrings sprog cvode radau)
+target_link_libraries(camflow camxml comostrings sprog cvode radau chemkinReader)

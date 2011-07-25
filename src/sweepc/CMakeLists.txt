@@ -60,23 +60,26 @@ add_library(sweep source/mt19937.cpp
                   source/swp_tree_weighted_cache.cpp
                   source/swp_weighted_addcoag.cpp
                   source/swp_weighted_constcoag.cpp
-				  source/swp_kmc_gasph.cpp
 				  source/swp_kmc_gaspoint.cpp
 				  source/swp_kmc_jump_process.cpp
+				  source/swp_kmc_mech.cpp
 				  source/swp_kmc_pah_process.cpp
 				  source/swp_kmc_pah_structure.cpp
-				  source/swp_kmc_processes_list.cpp
 				  source/swp_kmc_reaction.cpp
 				  source/swp_kmc_simulator.cpp
-				  source/swp_kmc_structure_comp.cpp)
+				  source/swp_kmc_structure_comp.cpp
+				  ../mopsc/source/swp_gas_profile.cpp)
 
 include_directories(include 
+                    ${Boost_INCLUDE_DIRS} 
                     ../utils/include
+                    ../io/chemkinReader/include
                     ../io/comostrings/include
                     ../io/camxml/include
                     ../geometry/include
+					../mopsc/include
                     ../sprogc/include)
 
 # To link againast sweep the following libraries will also
 # be required to resolve references from within sweep.
-target_link_libraries(sweep sprog geometry camxml comostrings)
+target_link_libraries(sweep sprog geometry camxml comostrings chemkinReader)

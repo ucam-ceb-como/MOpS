@@ -206,9 +206,11 @@ Sweep::KMC_ARS::KMCSimulator* Sweep::Ensemble::Simulator(void)
 	return m_kmcsimulator;
 }
 
-void Sweep::Ensemble::SetSimulator(void)
+void Sweep::Ensemble::SetSimulator(Sweep::GasProfile& gp)
 {   
-	 m_kmcsimulator=new Sweep::KMC_ARS::KMCSimulator();
+    Sweep::KMC_ARS::KMCSimulator* kmc = new Sweep::KMC_ARS::KMCSimulator(gp);
+    m_kmcsimulator= kmc;
+    m_kmcsimulator->TestGP();
 }
 
 

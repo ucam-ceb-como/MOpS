@@ -3,7 +3,7 @@
  * Author: vinod (vj231@cam.ac.uk)
  *
  * Copyright (C) 2009 Vinod M Janardhanan
- * 
+ *
  * File purpose:
  *  This class contains the implementation of process conditions
  *  and the boundary conditions
@@ -66,13 +66,6 @@ void CamAdmin::setIgnitionStep(doublereal step){
 }
 
 /*
- *set the strain rate
- */
-void CamAdmin::setStrainRate(doublereal sr){
-    this->strain = sr;
-}
-
-/*
  *set the wall temperature
  */
 
@@ -103,34 +96,16 @@ void CamAdmin::setEnergyModel(std::string model){
 }
 
 
-void CamAdmin::setReportSchedule(std::string repo){
-    if(!convertToCaps(repo).compare("FINAL"))
-        setReportSchedule(FINAL);
-    if(!convertToCaps(repo).compare("INTER"))
-        setReportSchedule(INTER);
-}
-
-
-void CamAdmin::setReportSchedule(int n){
-    repSch = n;
-}
-
-
-int CamAdmin::getReportSchedule(){
-    return repSch;
-}
-
-
 doublereal CamAdmin::getIgnitionStep() const{
     return stepIgnition;
 }
 
-void CamAdmin::setLeftBoundary(CamBoundary &cb){    
+void CamAdmin::setLeftBoundary(CamBoundary &cb){
     this->left = cb;
 }
 
 void CamAdmin::setRightBoundary(CamBoundary &cb){
-    this->right = cb;    
+    this->right = cb;
 }
 
 void CamAdmin::setRadiationModel(bool radiation_){
@@ -142,6 +117,33 @@ void CamAdmin::setSpeciesOut(int n){
     speciesOut = n;
 }
 
+void CamAdmin::setRestartType(const std::string& restartType)
+{
+    if (!convertToCaps(restartType).compare("BINARY"))
+        restartType_ = BINARY;
+    else if (!convertToCaps(restartType).compare("TEXT"))
+        restartType_ = TEXT;
+    else if (!convertToCaps(restartType).compare("NONE"))
+        restartType_ = NONE;
+    else throw std::runtime_error("What restart file type?! Check:"
+                                  "<restart file=""></restart>.");
+}
+
+void CamAdmin::setRestartFile(const std::string& restartFile)
+{
+    restartFile_ = restartFile;
+}
+
+void CamAdmin::setInputFile(std::string inputFileName)
+{
+    inputFileName_ = inputFileName;
+}
+
+const std::string& CamAdmin::getInputFile() const
+{
+    return inputFileName_;
+}
+
 int CamAdmin::getSpeciesOut() const{
     return speciesOut;
 }
@@ -150,9 +152,6 @@ doublereal CamAdmin::getPressure() const{
     return this->pre;
 }
 
-doublereal CamAdmin::getStrainRate() const{
-    return this->strain;
-}
 //doublereal CamAdmin::getTemperature() const{
 //    return this->T;
 //}
@@ -166,16 +165,26 @@ int CamAdmin::getEnergyModel() const{
 }
 
 
-void CamAdmin::getLeftBoundary(CamBoundary &cb){    
-    cb = left;
+Camflow::CamBoundary& CamAdmin::getLeftBoundary(){
+    return left;
 }
 
-void CamAdmin::getRightBoundary(CamBoundary &cb){
-    cb = right;    
+Camflow::CamBoundary& CamAdmin::getRightBoundary(){
+    return right;
 }
 
 bool CamAdmin::getRadiationModel() const{
     return radiation;
+}
+
+int CamAdmin::getRestartType() const
+{
+    return restartType_;
+}
+
+const std::string& CamAdmin::getRestartFile() const
+{
+    return restartFile_;
 }
 
 doublereal CamAdmin::getNre(const doublereal& hd,

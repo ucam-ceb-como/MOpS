@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -11,7 +11,7 @@
     and a molecular weight.  They also belong to a mechanism, which is responsible
     for creating, destroying and manipulating elements.  In particular the
     mechanism provides a routine for checking if an element is already defined.  This
-    functionality is used when setting the element symbol/name to ensure duplicate 
+    functionality is used when setting the element symbol/name to ensure duplicate
     elements are not defined.
 
   Licence:
@@ -48,6 +48,9 @@
 #ifndef GPC_ELEMENT_H
 #define GPC_ELEMENT_H
 
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+
 #include "gpc_params.h"
 #include <vector>
 #include <string>
@@ -62,12 +65,12 @@ class Element
 public:
     // Constructors.
     Element(void);             // Default constructor.
-    Element(const Element &e); // Copy constructor.    
-    Element(std::istream &in); // Stream-reading constructor.
+    Element(const Element &e); // Copy constructor.
     Element(                   // Initialising constructor.
         const std::string &name,  // - Element name.
         const real molwt          // - Molecular weight.
-        ); 
+        );
+    Element(std::istream &in);
 
     // Destructor.
     ~Element(void);
@@ -78,7 +81,7 @@ public:
     bool operator==(const std::string &name) const;
     bool operator!=(const Element &el) const;
     bool operator!=(const std::string &name) const;
-    
+
 
     // ELEMENT NAME.
 
@@ -116,10 +119,13 @@ public:
     Element *const Clone(void) const;
 
     // Writes the element to a binary data stream.
-    void Serialize(std::ostream &out) const;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */)
+    {
+        ar & m_name & m_molwt & m_mech;
+    }
 
-    // Reads the element data from a binary data stream.
-    void Deserialize(std::istream &in);
+    friend class boost::serialization::access;
 
     // Prints a diagnostic output file containing all the
     // element data.  This is used to debug.
@@ -127,6 +133,12 @@ public:
 
     //! Writes the elements to a Chemkin output file.
     void WriteElements(std::ostream &out) const;
+
+    // Writes the element to a binary data stream.
+    void Serialize(std::ostream &out) const;
+
+    // Reads the element data from a binary data stream.
+    void Deserialize(std::istream &in);
 
 private:
     // Element data.
@@ -137,6 +149,8 @@ private:
     // Library of known elements.
     const static unsigned int m_nlib = 74;
     const static Element m_lib[m_nlib];
+
+
 };
 
 // Inline function definitions.

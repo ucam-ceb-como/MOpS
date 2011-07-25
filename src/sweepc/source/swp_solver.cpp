@@ -151,7 +151,7 @@ real Solver::calcSplitTime(real t, real tstop, real jrate,
  */
 real Solver::timeStep(real t, real t_stop, Cell &sys, const Mechanism &mech,
                       const fvector &rates, real jrate,
-                      int (*rand_int)(int, int), real (*rand_u01)())
+                      int (*rand_int)(int, int), real (*rand_u01)(), Sweep::GasProfile* gp)
 {
     // The purpose of this routine is to perform a single stochastic jump process.  This
     // involves summing the total rate of all processes, generating a waiting time,
@@ -174,7 +174,7 @@ real Solver::timeStep(real t, real t_stop, Cell &sys, const Mechanism &mech,
     } else {
         if (t+dt <= t_stop) {
             const int i = chooseProcess(rates, rand_u01);
-            mech.DoProcess(i, t+dt, sys, Geometry::LocalGeometry1d(), rand_int, rand_u01);
+            mech.DoProcess(i, t+dt, sys, Geometry::LocalGeometry1d(), rand_int, rand_u01, gp);
         } else {
             dt = t_stop - t;
         }
