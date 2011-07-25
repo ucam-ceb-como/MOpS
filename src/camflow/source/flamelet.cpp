@@ -744,11 +744,11 @@ void FlameLet::sootMomentResidual
      *set the externally specified scalar dissipation rate
      *to sdr
      */
-    if (timeHistory) {
-        sdr = getSDR(t);
-    } else if (sdr_ext!=0) {
-        sdr=sdr_ext;
-    }
+    //if (timeHistory) {
+    //    sdr = getSDR(t);
+    //} else if (sdr_ext!=0) {
+    //    sdr=sdr_ext;
+    //}
 
     //sdr = scalarDissipationRate(dz[i]);
     for (int l=0; l<nSpc; ++l)
@@ -768,7 +768,8 @@ void FlameLet::sootMomentResidual
         //if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
         //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
         //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
-        sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],2.0,i);
+        //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],2.0,i);
+        sdr = scalarDissipationRate_[i];
 
         doublereal diffusionConstant = sdr/(2.0*dz[i]);
 
