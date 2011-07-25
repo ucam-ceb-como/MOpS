@@ -50,11 +50,11 @@
 
 #include "swp_kmc_typedef.h"
 #include "swp_kmc_reaction.h"
-#include "swp_kmc_gasph.h"
+//#include "swp_kmc_mech.h"
 #include "swp_kmc_gaspoint.h"
-#include "swp_kmc_structure_comp.h"
-#include "swp_kmc_pah_structure.h"
-#include "swp_kmc_pah_process.h"
+//#include "swp_kmc_structure_comp.h"
+//#include "swp_kmc_pah_structure.h"
+//#include "swp_kmc_pah_process.h"
 #include <vector>
 #include <string>
 
@@ -62,9 +62,8 @@ namespace Sweep {
     namespace KMC_ARS {
         class PAHProcess;
         class Reaction;
-        class KMCGasph;
         // Pointer to member function in PAHProcess
-        typedef void(Sweep::KMC_ARS::PAHProcess::*pt2Proc)(Spointer&,Cpointer,Cpointer);
+        //typedef void(Sweep::KMC_ARS::PAHProcess::*pt2Proc)(Spointer&,Cpointer,Cpointer);
         class JumpProcess {
         public:
             //! Constructor

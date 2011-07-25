@@ -49,42 +49,63 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "swp_kmc_typedef.h"
+#include "swp_gas_profile.h"
 
 namespace Sweep {
 namespace KMC_ARS {
-    // Stores indexes to each property/species stored in a vector in the KMCGasph class
         class KMCGasPoint {
         public:
             //! Default Constructor
             KMCGasPoint();
+            //! Constructor from a GasProfile object
+            KMCGasPoint(Sweep::GasProfile& gasprof,
+                const Sprog::SpeciesPtrVector& sptrv);
             //! Copy Constructor
-            KMCGasPoint(KMCGasPoint& gp);
+            KMCGasPoint(const KMCGasPoint& gp);
             //! Default Destructor
             virtual ~KMCGasPoint();
             //! Initialise data point
             void initData();
-            //! Variables
-            const int Time;
-            const int T;
-            const int H2;
-            const int H;
-            const int O2;
-            const int OH;
-            const int C2H2;
-            const int C2H6;
-            const int C6H6;
-            const int H2O;
-            const int CH4;
-            const int CO;
-            const int CO2;
-            const int P;
-            //! None: for no species/variable
-            const int None;
-            //! Datapoint for each variable (arranged according to above order)
+            //! Interpolate data
+            void Interpolate(real t, real fact=1);
+            //! Convert Mole frac to Conc
+            void ConvertMoleFrac();
+            
+            //! Profile number and column index
+            const int    Time;
+            const int    T;
+            const int    H2;
+            const int    H;
+            const int    O2;
+            const int    OH;
+            const int    C2H2;
+            const int    C2H6;
+            const int    C6H6;
+            const int    H2O;
+            const int    CH4;
+            const int    CO;
+            const int    CO2;
+            const int    P;
+            const int    None;
+
+            const int    m_total;
+            //! Accessing data
+            real operator[](const int n) const;
+            KMCGasPoint& operator=(const KMCGasPoint& gp);
+            //! Get species names
+            std::vector<std::string> SpNames() const;
+
+        private:
+            //! Datapoint for each variable (arranged according to above const int order)
             std::vector<real> m_data;
-            const int total;
+            Sweep::GasProfile* m_gasprof;
+            std::vector<std::string> m_spnames;
+
+            //! Map profile number with column index
+            std::map<int, size_t> m_prof_in;
         };
 }
 }

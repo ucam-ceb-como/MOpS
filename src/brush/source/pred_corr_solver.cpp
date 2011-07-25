@@ -343,7 +343,7 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop,
 
         reac.getMechanism().ParticleMech().DoProcess(activeProcess, reac.getTime() + dt,
                                                      *(reac.getCell(activeCell).Mixture()), cellGeom,
-                                                     Sweep::genrand_int, Sweep::genrand_real1, &out);
+                                                     Sweep::genrand_int, Sweep::genrand_real1, NULL, &out);
 
         // Contents of active cell has changed so mark it for update in the rate cache
         rate_cache.mInvalidCells.push(activeCell);

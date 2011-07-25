@@ -62,30 +62,27 @@ namespace Sweep {
 
         //! Carbon atom on PAH edges
         class Carbon {
-		public:
-			Carbon();
-			//! Copy Constructor
-			Carbon(const Carbon& copy);
+        public:
+            Carbon();
+            //! Copy Constructor
+            Carbon(const Carbon& copy);
             //! Default Destructor
             ~Carbon();
-
-            angletype bondAngle1;
             //! Neighbouring carbon atoms
             Cpointer C1; // prev
             Cpointer C2; // next
-            //! Bulk or edge C atom
-            bool edge;
-			 //! For bridging carbon atoms
-            bool bridge;
-			//! Third species bonded to it, 0 if none [radical]
-			char A;
-            //! Sites of which the atom is a member of
-            //Spointer S1; // prev
-            //Spointer S2; // next
-            //! bond angle at bridge
-            angletype bondAngle2;
             //! 3rd carbon attached
             Cpointer C3;
+            //! Bulk or edge C atom
+            bool edge;
+             //! For bridging carbon atoms
+            bool bridge;
+            //! Third species bonded to it, 0 if none [radical]
+            char A;
+            //! Bond angle made with C2
+            angletype bondAngle1;
+            //! Bond angle at bridge
+            angletype bondAngle2;
             //! Coordinates of atom
             cpair coords;
         };

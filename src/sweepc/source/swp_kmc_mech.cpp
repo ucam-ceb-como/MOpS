@@ -1,15 +1,15 @@
 /*!
   * \Author     Zakwan Zainuddin (zz260)
-  * \file       swp_kmc_processes_list.cpp
+  * \file       swp_kmc_mech.cpp
   *
-  * \brief      implementation file for swp_kmc_processes_list.cpp
+  * \brief        Implementation of the KMCMechanism class declared in swp_kmc_gasph.h
   *
   Project:      sweep (gas-phase chemistry solver).
   Sourceforge:  http://sourceforge.net/projects/mopssuite
   Copyright (C) 2010 Zakwan Zainuddin.
 
   File purpose:
-    Defines namespace which contains all jump processes and related functions.
+    Stores the gas phase profiles (time, pressure, temperature, species concentrations)
 
   Licence:
     This file is part of "sweep".
@@ -42,22 +42,81 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#include "swp_kmc_processes_list.h"
-#include "swp_kmc_typedef.h"
-#include "swp_kmc_pah_structure.h"
-#include "swp_kmc_pah_process.h"
+#include "swp_kmc_mech.h"
 #include "swp_params.h"
-#include <list>
-#include <cmath>
 
+#include "choose_index.hpp"
+#include "string_functions.h"
+
+using namespace std;
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
-using namespace Sweep::KMC_ARS::JumpProcessList;
 
 typedef std::vector<Sweep::KMC_ARS::Reaction> rxnvector;
-KMCGasPoint sp;
-//! Returns a vector of jump processes
-std::vector<JumpProcess*> JumpProcessList::obtainJumpProcess(const KMCGasPoint& gp){
+typedef Sweep::KMC_ARS::KMCGasPoint ggg;
+
+// Constructors
+// Default
+KMCMechanism::KMCMechanism() {
+    m_jplist = obtainJumpProcess();
+    m_rates = std::vector<real>(m_jplist.size(),0);
+    m_totalrate = 0;
+    isACopy = false;
+}
+//! Copy Constructor
+KMCMechanism::KMCMechanism(KMCMechanism& m) {
+    m_jplist = m.m_jplist;
+    m_rates = m.m_rates;
+    m_totalrate = m.m_totalrate;
+    isACopy = true;
+}
+//! Destructor
+KMCMechanism::~KMCMechanism() {
+    if (m_jplist.size()!=0 && !isACopy){
+        {
+            for (size_t i=0;i!=m_jplist.size();++i)
+            delete m_jplist[i];
+        }
+        m_jplist.clear();
+    }
+}
+
+
+//! WRITE PROCESSES
+//! Load processes from process list
+void KMCMechanism::loadProcesses(std::vector<JumpProcess*> (*jp)()) {//how##
+    m_jplist = jp();
+}
+// KMC Algorithm and Read Processes
+////! Calculates each jump rates and stores in a vector
+//rvector KMCMechanism::calculateRates(std::vector<JumpProcess*>& p) const {
+//    // temporary vector to store rates of each JumpProcess
+//    rvector temp; 
+//    for(int i=0; i!= (int)p.size(); i++) {
+//        real a = p[i]->getRate(); // gets rate
+//        temp.push_back(a); // store in temporary vector
+//    }
+//    return temp;
+//}
+//! Calculates total jump rates
+//real KMCMechanism::getTotalRate(const rvector& jrate) {
+//    // calculates sum of all elements of jrate
+//    real sum=0;
+//    for(int i=0; i!=(int) jrate.size(); i++) {
+//        sum += jrate[i];
+//    }
+//    return sum;
+//}
+//! Choosing a reaction to be taken place, returns pointer to jump process
+ChosenProcess KMCMechanism::chooseReaction(real (*rand_u01)()) const {
+    // chooses index from a vector of weights (real number in this case) randomly
+    size_t ind = chooseIndex<real>(m_rates, rand_u01);
+    return ChosenProcess(m_jplist[ind], ind);
+}
+Sweep::KMC_ARS::KMCGasPoint sp;
+
+//! Returns a vector of jump processes implemented in model
+std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     std::vector<JumpProcess*> temp;
     // Initialise all jump processes
     JumpProcess* j_G6R_AC = new G6R_AC; j_G6R_AC->initialise();
@@ -104,39 +163,51 @@ std::vector<JumpProcess*> JumpProcessList::obtainJumpProcess(const KMCGasPoint& 
     //--------------------------------------
     return temp;
 }
-//std::vector<JumpProcess> process_vector = obtainJumpProcess();
 
-//! Calculates jump rate for each jump process, returns total rate
-real JumpProcessList::calculateRates(const KMCGasPoint& gp, 
+//! Calculates jump rate for each jump process
+void KMCMechanism::calculateRates(const KMCGasPoint& gp, 
                     PAHProcess& st, 
-                    const real& t, 
-                    std::vector<JumpProcess*>& jp,
-                    rvector& rateV) {
+                    const real& t) {
     real temp=0;
-    real pressure = gp.m_data[gp.P];
+    real pressure = gp[gp.P]/1e5;
     // Choose suitable mechanism according to P
     if(pressure > 0.5 && pressure <= 5) { // mechanism at 1 atm 
-        for(int i = 0; i!= (int) jp.size() ; i++) {
-            (jp[i])->calculateElemRxnRate((jp[i])->getVec1(), gp);
-            rateV[i] = (jp[i])->setRate1(gp, st/*, t*/);
-            temp += rateV[i];
+        for(int i = 0; i!= (int) m_jplist.size() ; i++) {
+            (m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp);
+            m_rates[i] = (m_jplist[i])->setRate1(gp, st/*, t*/);
+            temp += m_rates[i];
         }
     }else if(pressure > 0.01 && pressure <= 0.07) { // mechanism at 0.0267atm
-        for(int i = 0; i!= (int) jp.size() ; i++) {
-            (jp[i])->calculateElemRxnRate((jp[i])->getVec0p0267(), gp);
-            rateV[i] = (jp[i])->setRate0p0267(gp, st/*, t*/);
-            temp += rateV[i];
+        for(int i = 0; i!= (int) m_jplist.size() ; i++) {
+            (m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p0267(), gp);
+            m_rates[i] = (m_jplist[i])->setRate0p0267(gp, st/*, t*/);
+            temp += m_rates[i];
         }
     }else if(pressure > 0.07 && pressure <= 0.5) { // mechanism at 0.12atm
-        for(int i = 0; i!= (int) jp.size() ; i++) {
-            (jp[i])->calculateElemRxnRate((jp[i])->getVec0p12(), gp);
-            rateV[i] = (jp[i])->setRate0p12(gp, st/*, t*/);
-            temp += rateV[i];
+        for(int i = 0; i!= (int) m_jplist.size() ; i++) {
+            (m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p12(), gp);
+            m_rates[i] = (m_jplist[i])->setRate0p12(gp, st/*, t*/);
+            temp += m_rates[i];
         }
     }else std::cout<<"ERROR: No reaction mechanism for this pressure condition.\n";
-    return temp;
+    // update total rates
+    m_totalrate = temp;
 }
 
+//! Returns vector of jump processes
+std::vector<JumpProcess*> KMCMechanism::JPList() const {
+    return m_jplist;
+}
+
+//! Returns vector of jump rates
+std::vector<real> KMCMechanism::Rates() const {
+    return m_rates;
+}
+
+//! Returns total rates
+real KMCMechanism::TotalRate() const {
+    return m_totalrate;
+}
 
 //! Process list (rate calculations, energy units in kcal)
 // For C++ jump process ID X, search for IDX
@@ -796,7 +867,7 @@ real G5R_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real
     if(site_count==0) return m_rate=0;
     
     real r4f = m_r[5];
-    if(gp.m_data[gp.T] < 800) r4f = m_r[6];
+    if(gp[gp.T] < 800) r4f = m_r[6];
     real r_denom = (m_r[1]+m_r[3]+m_r[4]+r4f);
     real r_f; // radical fraction 
     if(r_denom>0) {
@@ -861,8 +932,8 @@ real D5R_R5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const re
     if(site_count==0) return m_rate=0;
 
     // Calculating r3f
-    real T = gp.m_data[gp.T];
-    real M = (2*gp.m_data[gp.H2])+(6*gp.m_data[gp.H2O])+(2*gp.m_data[gp.CH4])+(1.5*gp.m_data[gp.CO])+(2*gp.m_data[gp.CO2])+(3*gp.m_data[gp.C2H6]);
+    real T = gp[gp.T];
+    real M = (2*gp[gp.H2])+(6*gp[gp.H2O])+(2*gp[gp.CH4])+(1.5*gp[gp.CO])+(2*gp[gp.CO2])+(3*gp[gp.C2H6]);
     real k_o = m_r[5];
     real k_inf = m_r[6];
     real F_cent = 0.218 * exp(-T/207.5) + 0.782*exp(-T/2663) + exp(-6095/T);
@@ -873,7 +944,7 @@ real D5R_R5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const re
     real logP_r = log(k_o*M/k_inf);
     real F = exp(logF_cent/(1+ pow(((logP_r+C0)/(N0-0.14*(logP_r+C0))),2)));
     r_c *= F;
-    real r3f = r_c* gp.m_data[gp.H];
+    real r3f = r_c* gp[gp.H];
 
     real r_denom = (m_r[1]+m_r[3]+r3f+m_r[4]);
     real r_f; // radical fraction 
@@ -1086,7 +1157,7 @@ real C5R_RAC::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const r
     real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r3f = 7.297e8 * gp.m_data[gp.T] - 5.0641e11; 
+    real r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
     real r_denom = (m_r[1]+m_r[3]+r3f);
     real r_f; // radical fraction 
     if(r_denom>0) {
@@ -1101,7 +1172,7 @@ real C5R_RAC::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const rea
     real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r3f = 7.297e8 * gp.m_data[gp.T] - 5.0641e11; 
+    real r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
     real r_denom = (m_r[1]+m_r[3]+r3f);
     real r_f; // radical fraction 
     if(r_denom>0) {
@@ -1169,7 +1240,7 @@ real M5R_RZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const r
     real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r3f = 7.297e8 * gp.m_data[gp.T] - 5.0641e11; 
+    real r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
     real r_denom = (m_r[1]+m_r[3]+r3f);
     real r_f; // radical fraction 
     if(r_denom>0) {
@@ -1184,7 +1255,7 @@ real M5R_RZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const rea
     real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r3f = 7.297e8 * gp.m_data[gp.T] - 5.0641e11; 
+    real r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
     real r_denom = (m_r[1]+m_r[3]+r3f);
     real r_f; // radical fraction 
     if(r_denom>0) {

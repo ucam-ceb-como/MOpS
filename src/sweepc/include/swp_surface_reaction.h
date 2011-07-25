@@ -46,6 +46,7 @@
 #include "swp_params.h"
 #include "swp_particle_process.h"
 #include "swp_property_indices.h"
+#include "swp_gas_profile.h"
 
 namespace Sweep
 {
@@ -160,6 +161,7 @@ public:
         unsigned int iterm,
         int (*rand_int)(int, int), 
         real(*rand_u01)(),
+        Sweep::GasProfile* gp=NULL,
         Transport::TransportOutflow *out = 0
         ) const;
 

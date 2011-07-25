@@ -64,6 +64,7 @@
 #include "swp_particle.h"
 #include "swp_tree_weighted_cache.h"
 #include "swp_property_indices.h"
+#include "swp_gas_profile.h"
 
 
 #include "binary_tree.hpp"
@@ -262,9 +263,9 @@ public:
         std::istream &in,                // Input stream.
         const Sweep::ParticleModel &mech // Model used to define particles.
         );
-		
-	Sweep::KMC_ARS::KMCSimulator* Simulator();
-	void SetSimulator();
+        
+    Sweep::KMC_ARS::KMCSimulator* Simulator();
+    void SetSimulator(Sweep::GasProfile& gp);
 	
 private:
     //! Vector of particles in the ensemble.

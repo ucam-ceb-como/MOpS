@@ -44,54 +44,46 @@
 */
 
 #include "swp_kmc_gaspoint.h"
+#include "gpc_species.h"
+#include "comostrings.h"
 
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
-using namespace std;
 
 // Constructors and Destructor
 //! Default Constructor
-KMCGasPoint::KMCGasPoint() 
-:Time(0),
-    T(1),
-    H2(2),
-    H(3),
-    O2(4),
-    OH(5),
-    C2H2(6),
-    C2H6(7),
-    C6H6(8),
-    H2O(9),
-    CH4(10),
-    CO(11),
-    CO2(12),
-    P(13),
-    None(14),
-    total(15)
+KMCGasPoint::KMCGasPoint(): 
+        Time(0), T(1), H2(2), H(3), O2(4), OH(5), C2H2(6),
+            C2H6(7), C6H6(8), H2O(9), CH4(10), CO(11), CO2(12),
+            P(13), None(14), m_total(15)
 {
-    
-    initData();
+    m_gasprof = NULL;
 }
-//! Copy Constructor
-KMCGasPoint::KMCGasPoint(KMCGasPoint &gp) 
-: Time(0),
-    T(1),
-    H2(2),
-    H(3),
-    O2(4),
-    OH(5),
-    C2H2(6),
-    C2H6(7),
-    C6H6(8),
-    H2O(9),
-    CH4(10),
-    CO(11),
-    CO2(12),
-    P(13),
-    None(14),
-    total(15)
+
+//! Constructor from a GasProfile object
+KMCGasPoint::KMCGasPoint(Sweep::GasProfile& gasprof,
+    const Sprog::SpeciesPtrVector& sptrv): 
+        Time(0), T(1), H2(2), H(3), O2(4), OH(5), C2H2(6),
+            C2H6(7), C6H6(8), H2O(9), CH4(10), CO(11), CO2(12),
+            P(13), None(14), m_total(15)
 {
-    m_data = gp.m_data;
+    m_gasprof = &gasprof;
+    initData();
+    std::vector<std::string> spname;
+    for(size_t i=0; i<sptrv.size(); i++)
+        spname.push_back(sptrv[i]->Name());
+    for(int i=H2; i<=CO2; i++) {
+        m_prof_in[i] = Strings::findinlist(m_spnames[i], spname);
+    }
+}
+
+//! Copy Constructor
+KMCGasPoint::KMCGasPoint(const KMCGasPoint &gp): 
+        Time(0), T(1), H2(2), H(3), O2(4), OH(5), C2H2(6),
+            C2H6(7), C6H6(8), H2O(9), CH4(10), CO(11), CO2(12),
+            P(13), None(14), m_total(15)
+{
+    *this = gp;
 }
 // Default Destructor
 KMCGasPoint::~KMCGasPoint() {
@@ -99,10 +91,80 @@ KMCGasPoint::~KMCGasPoint() {
 //! Initialise data point
 void KMCGasPoint::initData() {
     m_data.clear();
+    m_spnames.clear();
+    m_spnames.push_back("Time");
+    m_spnames.push_back("T");
+    m_spnames.push_back("H2");
+    m_spnames.push_back("H");
+    m_spnames.push_back("O2");
+    m_spnames.push_back("OH");
+    m_spnames.push_back("C2H2");
+    m_spnames.push_back("C2H6");
+    m_spnames.push_back("A1");
+    m_spnames.push_back("H2O");
+    m_spnames.push_back("CH4");
+    m_spnames.push_back("CO");
+    m_spnames.push_back("CO2");
+    m_spnames.push_back("P");
+    m_spnames.push_back("None");
     // set all to zero
-    for(int i=0; i!=total-1; i++) {
+    for(int i=0; i!=m_total-1; i++) {
         m_data.push_back(0);
     }
     // set 1 for no variables
     m_data.push_back(1);
+}
+
+//! Interpolate data
+void KMCGasPoint::Interpolate(real t, real fact) {
+    // get time point after t
+    GasProfile::const_iterator j = LocateGasPoint(*m_gasprof, t);
+    if(j == m_gasprof->begin() || j == m_gasprof->end()) {
+        m_data[Time] = j->Time;
+        m_data[T] = j->Gas.Temperature();
+        m_data[P] = j->Gas.Pressure();
+        for(int i=H2; i<(m_total-2); i++) { // exclude P & None
+            m_data[i] = j->Gas.RawData()[m_prof_in[i]];
+            m_data[i] *= fact;
+        }
+    }else {
+        GasProfile::const_iterator i = j; --i;
+        real dt_ij = j->Time - i->Time;
+        real dt = t - i->Time;
+        real wx = dt/dt_ij;
+        real wy = 1-wx;
+        m_data[Time] = t;
+        m_data[T] = i->Gas.Temperature()*wy + j->Gas.Temperature()*wx;
+        m_data[P] = i->Gas.Pressure()*wy + j->Gas.Pressure()*wx;
+        for(int k=H2; k<(m_total-2); k++) { // exclude P & None
+            m_data[k] = i->Gas.RawData()[m_prof_in[k]]*wy + j->Gas.RawData()[m_prof_in[k]]*wx;
+            m_data[k] *= fact;
+        }
+    }
+    ConvertMoleFrac();
+}
+
+//! Convert Mole frac to Conc
+void KMCGasPoint::ConvertMoleFrac() {
+    real factor = m_data[P]/(R*m_data[T]*1e6); // convert to mol/cm^3
+    for(int k=H2; k<(m_total-2); k++)
+        m_data[k] *= factor;
+}
+
+//! Accessing data
+real KMCGasPoint::operator[](const int n) const {
+    return m_data[n];
+}
+KMCGasPoint& KMCGasPoint::operator=(const KMCGasPoint& gp) {
+    if(this != &gp) {
+    m_data = gp.m_data;
+    m_gasprof = gp.m_gasprof;
+    m_spnames = gp.m_spnames;
+    m_prof_in = gp.m_prof_in;
+    return *this;
+    } else return *this;
+}
+//! Get species names
+std::vector<std::string> KMCGasPoint::SpNames() const {
+    return m_spnames;
 }
