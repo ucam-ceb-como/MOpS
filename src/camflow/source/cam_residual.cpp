@@ -35,6 +35,7 @@ CamResidual::CamResidual
   nEqn(nVar*mCord),
   solverID(cc.getSolver()),
   resSp(nSpc*mCord,0.0),
+  resMom(nMoments*mCord,0.0),		// ank25: moments residual
   resT(mCord,0.0),
   s_mf(mCord,nSpc),
   s_Wdot(mCord,nSpc),
@@ -47,18 +48,17 @@ CamResidual::CamResidual
   m_u(mCord,0.0),
   m_k(mCord,0.0),
   dz(cg.getGeometry()),
-  avgMolWt(mCord,0.0)
+  avgMolWt(mCord,0.0),
+  moments(mCord,nMoments),			// ank25: moments analogous to s_mf
+  moments_dot(mCord,nMoments)       // ank25: moments rate analogous to s_wdot
 {}
 
 CamResidual::~CamResidual()
 {
     //if (camMech_ != NULL) delete camMech_;
     //if (camMixture_ != NULL) delete camMixture_;
-    //if (reporter_ != NULL) delete reporter_;
+    //if (reporter_ != NULL) delet reporter_;
 }
-
-
-
 
 
 void CamResidual::saveMixtureProp(const doublereal time,
@@ -77,6 +77,9 @@ void CamResidual::saveMixtureProp(const doublereal time,
     s_mf.resize(cellEnd,nSpc);
     s_Diff.resize(cellEnd,nSpc);
     s_Wdot.resize(cellEnd, nSpc);
+    //moments.resize(cellEnd, nMoments);
+    //moments_dot.resize(cellEnd, nMoments);
+
     //first and the last cell are imaginary cells. This is done
     //in order to be able to calulate the inlet species composition
     //as they are hardly kept constant
@@ -288,22 +291,16 @@ void CamResidual::mergeSpeciesVector(doublereal* vec){
             solvect[i*nVar+l] = vec[i*nSpc+l];
     }
 }
+
 /*
- *soot moments are arranged right below the species vector
+ *soot moments are arranged after species and temperature
  */
 void CamResidual::mergeSootMoments(doublereal* vec){
     for(int i=0; i<cellEnd; i++){
-//        for(int l=nSpc; l<(nSpc+nMomemts); l++){
-//            solvect[i*nVar+l] = vec[l-nSpc];
-//            //std::cout << i << "  " << solvect[i*nVar+l] << std::endl;
-//        }
-        //int dd; cin >> dd;
         for(int l=0; l<nMoments; l++){
-            solvect[i*nVar+l+nSpc] = vec[i*nMoments+l];
-            //std::cout << i << "  " << solvect[i*nVar+l+nSpc] << std::endl;
+            solvect[i*nVar+ptrT+1+l] = vec[i*nMoments+l];
         }
     }
-
 }
 
 void CamResidual::mergeMomentum(doublereal* vec){

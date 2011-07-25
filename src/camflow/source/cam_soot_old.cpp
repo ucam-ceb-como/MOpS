@@ -1,4 +1,43 @@
 /*
+ * ank25: Legacy soot function headers (public)
+
+
+       void initialize(int nCells, Sprog::Mechanism &mech, realVector &mSolnVec);
+
+         void sootReactions(int cell, realVector& conc, realVector& mom,
+                    int nSpec, doublereal T,   doublereal p);
+
+/*
+
+/*
+ * ank25:  Legacy soot function headers (private)
+
+        void nucleation(realVector &conc,
+                                    doublereal T,
+                                    doublereal p);
+        void coagulation(doublereal T,
+                         doublereal p,
+                         doublereal M0);
+
+        void condensation(doublereal T,            //temperature
+                          doublereal M0,           //zeroth moment
+                          doublereal concPAH,      //concentration of PAH
+                          doublereal ratePAH);     //rate of PAH consumption due to condensation
+
+        void surface(int hMoment, int cell,
+                     doublereal T,
+                     doublereal M0,
+                     realVector& conc,
+                     realVector& totalRates);
+
+ */
+
+
+
+
+//---- Legacy headers above this line -- Would need to be in own header file
+
+/*
  * gridFunction() is is common to both old and new soot functions
  * linear() seems to be used by both old and new. (See commented out part of new)
  * sums() is used by both

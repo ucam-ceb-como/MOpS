@@ -144,6 +144,9 @@ namespace Camflow
             //! Species residual calculation.
             void speciesResidual(const doublereal& t, doublereal* y, doublereal* f);
 
+            //! Soot moments residual calculation.
+            void sootMomentResidual(const doublereal& t,doublereal* y,doublereal* f);
+
             //! Energy residual calculation.
             void energyResidual(const doublereal& t, doublereal* y, doublereal* f);
 
