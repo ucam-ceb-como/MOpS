@@ -51,18 +51,20 @@ my @tempOld = ();
 
 while(<$profileFile>) {
     my @fields = split(" +");
-    push(@timeNew, "Time: $fields[0] \n");
-    push(@tempNew, "Time: $fields[3] \n");
+    push(@timeNew, $fields[0]);
+    push(@tempNew, $fields[3]);
 }
 while(<$originalProfileFile>) {
     my @fields = split(" +");
-    push(@timeOld, "Time: $fields[0] \n");
-    push(@tempOld, "Time: $fields[3] \n");
+    push(@timeOld, $fields[0]);
+    push(@tempOld, $fields[3]);
 }
 
-#Compare temperature in old and new output files.
-for(my $i=0;$i<@tempOld;++$i) {
-    if ($tempOld[$i] ne $tempNew[$i]) {
+#Compare temperature in old and new output files, skip the first line (line 0)
+# because it contains the column headings.
+for(my $i=1;$i<@tempOld;++$i) {
+    if (abs($tempOld[$i] - $tempNew[$i])/$tempOld[$i] > 1e-4) {
+      print "Old temp was $tempOld[$i], but new temp is $tempNew[$i] ($i)\n";
       print "**************************\n";
       print "****** TEST FAILURE ******\n";
       print "**************************\n";
@@ -70,9 +72,11 @@ for(my $i=0;$i<@tempOld;++$i) {
     }
 }
 
-#Compare time in old and new output files.
-for(my $i=0;$i<@timeOld;++$i) {
-    if ($timeOld[$i] ne $timeNew[$i]) {
+#Compare time in old and new output files, skip the title line and the first line
+#of data which should be zero.
+for(my $i=2;$i<@timeOld;++$i) {
+    if (abs($timeOld[$i] - $timeNew[$i])/$timeOld[$i] > 1e-4) {
+      print "Old time was $timeOld[$i], but new time is $timeNew[$i] ($i)\n";
       print "**************************\n";
       print "****** TEST FAILURE ******\n";
       print "**************************\n";
