@@ -33,7 +33,6 @@ add_executable(camflow-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/camflow/
 target_link_libraries(camflow-app camflow ${Boost_LIBRARIES})
 
 # Regression tests for CamFlow
-add_test(camflow.hydrogenFlamelet ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet.sh ${MOPSSUITE_BINARY_DIR}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow)
 
 add_test(camflow.hydrogenBatchReactor ${MOPSSUITE_SOURCE_DIR}/test/camflow/batchReactorRegress.sh ${MOPSSUITE_BINARY_DIR}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenBatchReactor)
 
