@@ -57,6 +57,10 @@ add_test(mops.CSTRtest ${MOPSSUITE_SOURCE_DIR}/test/mopsc/CSTRRegress.sh ${MOPSS
 
 add_test(mops.sinter1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/sinter1.sh ${MOPSSUITE_BINARY_DIR}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
+########## The PAH-KMC Application ######################
+add_executable(PAHkmc-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/PAHkmc/kmc_model.cpp)
+target_link_libraries(PAHkmc-app sweep ${Boost_LIBRARIES})
+
 ########## The Brush application #######################
 add_executable(brush-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/brush/brush.cpp)
 target_link_libraries(brush-app brush ${Boost_LIBRARIES})
@@ -89,7 +93,6 @@ add_executable(chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harn
 target_link_libraries(chemkinReader-test chemkinReader ${Boost_LIBRARIES})
 
 add_test(chemkinReader.regress1 ${MOPSSUITE_SOURCE_DIR}/test/io/chemkinReaderRegress.sh ${MOPSSUITE_BINARY_DIR}/chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/test/io)
-
 
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)
