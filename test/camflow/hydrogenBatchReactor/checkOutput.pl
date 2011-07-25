@@ -36,47 +36,36 @@
 use strict;
 use warnings;
 
-# Parse the moments file
+# Open the newly simulated solution file
 my $profileFile;
 open($profileFile, "<profile.dat") or die "ERR: failed to open profile.dat file: $!";
 
-# Parse the moments file
+# Open the file containing the reference solution
 my $originalProfileFile;
 open($originalProfileFile, "<profileOriginal.dat") or die "ERR: failed to open profileOriginal.dat file: $!";
 
-my @timeNew = ();
-my @timeOld = ();
-my @tempNew = ();
-my @tempOld = ();
+# Variable to hold the lines as they are read from the files
+my @fields;
 
+# Read the last line, which should be the converged solution
 while(<$profileFile>) {
-    my @fields = split(" +");
-    push(@timeNew, $fields[0]);
-    push(@tempNew, $fields[3]);
+    @fields = split(" +");
 }
+my @oldSolution = @fields[3..10];
+#print "Old solution @oldSolution\n";
+
+# Take the converged solution from the reference calculation too
 while(<$originalProfileFile>) {
-    my @fields = split(" +");
-    push(@timeOld, $fields[0]);
-    push(@tempOld, $fields[3]);
+    @fields = split(" +");
 }
+my @newSolution = @fields[3..10];
+#print "New solution @newSolution\n";
 
 #Compare temperature in old and new output files, skip the first line (line 0)
 # because it contains the column headings.
-for(my $i=1;$i<@tempOld;++$i) {
-    if (abs($tempOld[$i] - $tempNew[$i])/$tempOld[$i] > 1e-4) {
-      print "Old temp was $tempOld[$i], but new temp is $tempNew[$i] ($i)\n";
-      print "**************************\n";
-      print "****** TEST FAILURE ******\n";
-      print "**************************\n";
-      exit 1;
-    }
-}
-
-#Compare time in old and new output files, skip the title line and the first line
-#of data which should be zero.
-for(my $i=2;$i<@timeOld;++$i) {
-    if (abs($timeOld[$i] - $timeNew[$i])/$timeOld[$i] > 1e-4) {
-      print "Old time was $timeOld[$i], but new time is $timeNew[$i] ($i)\n";
+for(my $i=0;$i<=7;++$i) {
+    if (abs($oldSolution[$i] - $newSolution[$i])/$oldSolution[$i] > 1e-4) {
+      print "Old value was $oldSolution[$i], but new value is $newSolution[$i] ($i)\n";
       print "**************************\n";
       print "****** TEST FAILURE ******\n";
       print "**************************\n";
