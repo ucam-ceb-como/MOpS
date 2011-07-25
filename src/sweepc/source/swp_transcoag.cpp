@@ -97,7 +97,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::Rate(real t, const Cell &sy
 // More efficient rate routine for coagulation only.
 // All parameters required to calculate rate passed
 // as arguments.
-Sweep::real Sweep::Processes::TransitionCoagulation::Rate(const TreeWeightedCache &data, real n, real sqrtT,
+Sweep::real Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_cache_type &data, real n, real sqrtT,
                        real T_mu, real MFP, real vol) const
 {
     // Some prerequisites.
@@ -176,7 +176,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(real t, const Cel
 // More efficient rate routine for coagulation only.
 // All parameters required to calculate rate terms
 // passed as arguments.
-Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const TreeWeightedCache &data, real n, real sqrtT,
+Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::particle_cache_type &data, real n, real sqrtT,
                             real T_mu, real MFP, real vol,
                             fvector::iterator &iterm) const
 {

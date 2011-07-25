@@ -50,21 +50,19 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "swp_kmc_gasph.h"
 #include "swp_kmc_gaspoint.h"
 #include "swp_kmc_typedef.h"
 #include "swp_params.h"
-#include "linear_interpolator.hpp"
 
 namespace Sweep {
     namespace KMC_ARS {
-        class KMCGasph;
+        //class KMCGasph;
         class PAHStructure;
         class Reaction {
         public:
-            typedef Utils::LinearInterpolator<real, real> Interpolator;
+            //typedef Utils::LinearInterpolator<real, real> Interpolator;
             //! Default Constructor
-            Reaction(const KMCGasph& model);
+            Reaction();
             //! Constructor from Arrhenius constants
             Reaction(real A_c, real n_c, real E_c, int species_c);
             //! Destructors

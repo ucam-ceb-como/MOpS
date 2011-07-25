@@ -36,43 +36,36 @@
 use strict;
 use warnings;
 
-# Parse the moments file
+# Open the newly simulated solution file
 my $profileFile;
 open($profileFile, "<profile.dat") or die "ERR: failed to open profile.dat file: $!";
 
-# Parse the moments file
+# Open the file containing the reference solution
 my $originalProfileFile;
 open($originalProfileFile, "<profileOriginal.dat") or die "ERR: failed to open profileOriginal.dat file: $!";
 
-my @timeNew = ();
-my @timeOld = ();
-my @tempNew = ();
-my @tempOld = ();
+# Variable to hold the lines as they are read from the files
+my @fields;
 
+# Read the last line, which should be the converged solution
 while(<$profileFile>) {
-    my @fields = split(" +");
-    push(@timeNew, "Time: $fields[0] \n");
-    push(@tempNew, "Time: $fields[3] \n");
+    @fields = split(" +");
 }
+my @oldSolution = @fields[3..10];
+#print "Old solution @oldSolution\n";
+
+# Take the converged solution from the reference calculation too
 while(<$originalProfileFile>) {
-    my @fields = split(" +");
-    push(@timeOld, "Time: $fields[0] \n");
-    push(@tempOld, "Time: $fields[3] \n");
+    @fields = split(" +");
 }
+my @newSolution = @fields[3..10];
+#print "New solution @newSolution\n";
 
-#Compare temperature in old and new output files.
-for(my $i=0;$i<@tempOld;++$i) {
-    if ($tempOld[$i] ne $tempNew[$i]) {
-      print "**************************\n";
-      print "****** TEST FAILURE ******\n";
-      print "**************************\n";
-      exit 1;
-    }
-}
-
-#Compare time in old and new output files.
-for(my $i=0;$i<@timeOld;++$i) {
-    if ($timeOld[$i] ne $timeNew[$i]) {
+#Compare temperature in old and new output files, skip the first line (line 0)
+# because it contains the column headings.
+for(my $i=0;$i<=7;++$i) {
+    if (abs($oldSolution[$i] - $newSolution[$i])/$oldSolution[$i] > 1e-4) {
+      print "Old value was $oldSolution[$i], but new value is $newSolution[$i] ($i)\n";
       print "**************************\n";
       print "****** TEST FAILURE ******\n";
       print "**************************\n";

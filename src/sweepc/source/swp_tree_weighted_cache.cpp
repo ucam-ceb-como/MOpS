@@ -36,6 +36,15 @@
 
     Email:       mk306@cam.ac.uk
     Website:     http://como.cheng.cam.ac.uk
+
+ * This cache is one of a number of options that can be used in the binary tree
+ * for particle properties.  At the time of writing these is a version that does
+ * not include weights and a slimmed down cache which is only suitable for the
+ * additive and constant coagulation kernels, and thus not useful for engineering
+ * applications.  The memory consumed by the instances of the cache in the binary
+ * tree makes up a significant proportion of the total memory used by the program
+ * in the case of simple particle models, it is probably less significant when
+ * individual primary particles are stored.
  */
 
 #include "swp_tree_weighted_cache.h"

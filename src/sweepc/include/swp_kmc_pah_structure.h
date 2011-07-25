@@ -47,7 +47,7 @@
 #ifndef SWP_KMC_PAH_STRUCTURE_H
 #define SWP_KMC_PAH_STRUCTURE_H
 
-#include "swp_kmc_gasph.h"
+#include "swp_kmc_mech.h"
 #include "swp_kmc_structure_comp.h"
 #include "swp_kmc_typedef.h"
 #include "swp_kmc_jump_process.h" 
@@ -69,41 +69,41 @@ namespace Sweep{
             PAHStructure();
             //! Default Destructor
             ~PAHStructure();
-			
-			void setParent(Sweep::AggModels::PAH* parent);
+            
+            void setParent(Sweep::AggModels::PAH* parent);
 
-			//! Overloaded Operators
-			//PAHStructure &operator=(const PAHStructure &rhs);
-			bool operator==(PAHStructure &rhs) const;
-			bool operator!=(PAHStructure &rhs) const;
+            //! Overloaded Operators
+            //PAHStructure &operator=(const PAHStructure &rhs);
+            bool operator==(PAHStructure &rhs) const;
+            bool operator!=(PAHStructure &rhs) const;
 
             //! Stores coordinates of all Carbon atoms (not according to order)
             std::set<cpair> m_cpositions;
-			//! Initialise pah with pyrene (currently) or benzene
-			void initialise(StartingStructure ss);
-			PAHStructure* Clone() ;
-			//! return number of carbon for particular PAH
-			int numofC();
-			//! check PAH have bridge or not
-			bool havebridgeC();
+            //! Initialise pah with pyrene (currently) or benzene
+            void initialise(StartingStructure ss);
+            PAHStructure* Clone() ;
+            //! return number of carbon for particular PAH
+            int numofC();
+            //! check PAH have bridge or not
+            bool havebridgeC();
 
-			Sweep::AggModels::PAH* m_parent; // pointer to parent PAH
-			
+            Sweep::AggModels::PAH* m_parent; // pointer to parent PAH
+            
         protected:
             //! First and last Carbon atom in list
             Cpointer m_cfirst;
             Cpointer m_clast;
             //! Stores all principal PAH sites in order from m_cfirst-m_clast.
             std::list<Site> m_siteList;
-			//! Stores iterators to the PAH sites according to their site type
+            //! Stores iterators to the PAH sites according to their site type
             std::map<kmcSiteType, svector> m_siteMap;
-			//! Stores total counts of carbon and hydrogen
+            //! Stores total counts of carbon and hydrogen
             intpair m_counts;
             //! Stores number of rings
             int m_rings;
-		private:
-			//! Copy Constructor
-			PAHStructure(const PAHStructure& copy);
+        private:
+            //! Copy Constructor
+            PAHStructure(const PAHStructure& copy);
         };
     }
 }

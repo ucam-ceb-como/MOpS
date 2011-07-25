@@ -60,12 +60,20 @@ class CamAdmin
         doublereal stepIgnition;    //step change of temperature for ignition
         int energyModel;
         int speciesOut;  //identifier for species output mass/mole
-        int repSch;     //report schedule
         CamBoundary left; //fuel
         CamBoundary right;//oxidizer
         static bool radiation;
+        int restartType_;
+        std::string restartFile_;
+        std::string inputFileName_;
 
     public:
+
+        enum RestartType{
+            NONE,
+            TEXT,
+            BINARY
+        };
 
         enum EnergyModel{
             ADIABATIC,
@@ -74,18 +82,11 @@ class CamAdmin
             NONISOTHERMAL
         };
 
-        enum Report{
-            FINAL,
-            INTER
-        };
         //set the temperature
         //void setTemperature(doublereal T_);
 
         //set the operating pressure
         void setPressure(doublereal p_);
-
-        //set strain rate
-        void setStrainRate(doublereal sr);
 
         //set the step for ignition temp
         void setIgnitionStep(doublereal step);
@@ -111,6 +112,13 @@ class CamAdmin
         //set the species output
         void setSpeciesOut(int n);
 
+        void setRestartType(const std::string& restartType);
+
+        void setRestartFile(const std::string& restartFile);
+
+        void setInputFile(std::string inputFileName);
+        const std::string& getInputFile() const;
+
         int getSpeciesOut() const;
 
         //return the temperature
@@ -121,9 +129,6 @@ class CamAdmin
 
         //return the pressure
         doublereal getPressure()const;
-
-        //return the strain rate
-        doublereal getStrainRate() const;
 
         //return the ignition step
         doublereal getIgnitionStep() const;
@@ -143,12 +148,9 @@ class CamAdmin
         //! Is radiation model on or off.
         bool getRadiationModel() const;
 
-        //set the report schedule
-        void setReportSchedule(std::string repo);
-        void setReportSchedule(int n);
+        int getRestartType() const;
 
-        //return the report schedule
-        int getReportSchedule();
+        const std::string& getRestartFile() const;
 
         //Evaluation of dimensionaless numbers
         doublereal getNre(const doublereal& hd, //hydraulic dia

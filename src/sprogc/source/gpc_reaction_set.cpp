@@ -96,36 +96,20 @@ ReactionSet &ReactionSet::operator=(const ReactionSet &rxns)
         // Build reversible reaction map.  Loop over incoming map to
         // get the reaction indices, but remember to use the pointers
         // to the new reactions!
-        unsigned int j;
         RxnMap::const_iterator jrxn;
-        for (jrxn=rxns.m_rev_rxns.begin(); jrxn!=rxns.m_rev_rxns.end(); jrxn++) {
-            j = (*jrxn).first;
-            m_rev_rxns.insert(RxnMap::value_type(j, m_rxns[j]));
-        }
+        m_rev_rxns = rxns.m_rev_rxns;
 
         // Build forward Landau Teller reaction map.
-        for (jrxn=rxns.m_lt_rxns.begin(); jrxn!=rxns.m_lt_rxns.end(); jrxn++) {
-            j = (*jrxn).first;
-            m_lt_rxns.insert(RxnMap::value_type(j, m_rxns[j]));
-        }
+        m_lt_rxns = rxns.m_lt_rxns;
 
         // Build reverse Landau Teller reaction map.
-        for (jrxn=rxns.m_revlt_rxns.begin(); jrxn!=rxns.m_revlt_rxns.end(); jrxn++) {
-            j = (*jrxn).first;
-            m_revlt_rxns.insert(RxnMap::value_type(j, m_rxns[j]));
-        }
+        m_revlt_rxns = rxns.m_revlt_rxns;
 
         // Build third-body reaction map.
-        for (jrxn=rxns.m_tb_rxns.begin(); jrxn!=rxns.m_tb_rxns.end(); jrxn++) {
-            j = (*jrxn).first;
-            m_tb_rxns.insert(RxnMap::value_type(j, m_rxns[j]));
-        }
+        m_tb_rxns = rxns.m_tb_rxns;
 
         // Build fall-off reaction map.
-        for (jrxn=rxns.m_fo_rxns.begin(); jrxn!=rxns.m_fo_rxns.end(); jrxn++) {
-            j = (*jrxn).first;
-            m_fo_rxns.insert(RxnMap::value_type(j, m_rxns[j]));
-        }
+        m_fo_rxns = rxns.m_fo_rxns;
     }
 
     return *this;
@@ -138,9 +122,10 @@ ReactionSet &ReactionSet::operator+=(const ReactionSet &rxns)
     // It is currently easier to not allow self-compounding here.
     if (this != &rxns) {
         // Save the current number of reactions, we'll need it later.
-        int n = m_rxns.size();
+        const size_t n = m_rxns.size();
 
         // Loop over all incoming reactions and copy them to the vector.
+        m_rxns.reserve(n + rxns.m_rxns.size());
         RxnPtrVector::const_iterator i;
         for (i=rxns.m_rxns.begin(); i!= rxns.m_rxns.end(); i++) {
             m_rxns.push_back((*i)->Clone());
@@ -149,35 +134,34 @@ ReactionSet &ReactionSet::operator+=(const ReactionSet &rxns)
         // Build reversible reaction map.  Loop over incoming map to
         // get the reaction indices, but remember to use the pointers
         // to the new reactions!
-        unsigned int j;
+        m_rev_rxns.reserve(m_rev_rxns.size() + rxns.m_rev_rxns.size());
         RxnMap::const_iterator jrxn;
         for (jrxn=rxns.m_rev_rxns.begin(); jrxn!=rxns.m_rev_rxns.end(); jrxn++) {
-            j = n + (*jrxn).first; // Note n!
-            m_rev_rxns.insert(RxnMap::value_type(j, m_rxns[j]));
+            m_rev_rxns.push_back(n + (*jrxn)); // Note n!
         }
 
         // Build forward Landau Teller reaction map.
+        m_lt_rxns.reserve(m_lt_rxns.size() + rxns.m_lt_rxns.size());
         for (jrxn=rxns.m_lt_rxns.begin(); jrxn!=rxns.m_lt_rxns.end(); jrxn++) {
-            j = n + (*jrxn).first;
-            m_lt_rxns.insert(RxnMap::value_type(j, m_rxns[j]));
+            m_lt_rxns.push_back(n + *jrxn);
         }
 
         // Build reverse Landau Teller reaction map.
+        m_revlt_rxns.reserve(m_revlt_rxns.size() + rxns.m_revlt_rxns.size());
         for (jrxn=rxns.m_revlt_rxns.begin(); jrxn!=rxns.m_revlt_rxns.end(); jrxn++) {
-            j = n + (*jrxn).first;
-            m_revlt_rxns.insert(RxnMap::value_type(j, m_rxns[j]));
+            m_revlt_rxns.push_back(n + *jrxn);
         }
 
         // Build third-body reaction map.
+        m_tb_rxns.reserve(m_tb_rxns.size() + rxns.m_tb_rxns.size());
         for (jrxn=rxns.m_tb_rxns.begin(); jrxn!=rxns.m_tb_rxns.end(); jrxn++) {
-            j = n + (*jrxn).first;
-            m_tb_rxns.insert(RxnMap::value_type(j, m_rxns[j]));
+            m_tb_rxns.push_back(n + *jrxn);
         }
 
         // Build fall-off reaction map.
+        m_fo_rxns.reserve(m_fo_rxns.size() + rxns.m_fo_rxns.size());
         for (jrxn=rxns.m_fo_rxns.begin(); jrxn!=rxns.m_fo_rxns.end(); jrxn++) {
-            j = n + (*jrxn).first;
-            m_fo_rxns.insert(RxnMap::value_type(j, m_rxns[j]));
+            m_fo_rxns.push_back(n + *jrxn);
         }
     }
 
@@ -241,28 +225,28 @@ Reaction *const ReactionSet::AddReaction(const Sprog::Kinetics::Reaction &rxn)
 
     // Check for reverse parameters.
     if (rxn.RevArrhenius() != NULL) {
-        m_rev_rxns.insert(RxnMap::value_type(m_rxns.size()-1, pr));
+        m_rev_rxns.push_back(m_rxns.size()-1);
     }
 
     // Check for forward LT parameters.
     if (rxn.LTCoeffs() != NULL) {
-        m_lt_rxns.insert(RxnMap::value_type(m_rxns.size()-1, pr));
+        m_lt_rxns.push_back(m_rxns.size()-1);
     }
 
     // Check for reverse LT parameters.
     if (rxn.RevLTCoeffs() != NULL) {
-        m_revlt_rxns.insert(RxnMap::value_type(m_rxns.size()-1, pr));
+        m_revlt_rxns.push_back(m_rxns.size()-1);
     }
 
     // Check for third-bodies.
     //if (rxn.ThirdBodies().size() > 0) {
     if (rxn.UseThirdBody()) {
-        m_tb_rxns.insert(RxnMap::value_type(m_rxns.size()-1, pr));
+        m_tb_rxns.push_back(m_rxns.size()-1);
     }
 
     // Check for fall-off parameters.
     if (rxn.FallOffType() != None) {
-        m_fo_rxns.insert(RxnMap::value_type(m_rxns.size()-1, pr));
+        m_fo_rxns.push_back(m_rxns.size()-1);
     }
 
     return pr;
@@ -520,7 +504,7 @@ void ReactionSet::GetRateConstants(real T,
     // to apply the fall-off terms before doing this, as that routine may
     // change the values in the tbconcs vector.
     for (RxnMap::const_iterator im=m_tb_rxns.begin(); im!=m_tb_rxns.end(); ++im) {
-        unsigned int j = (*im).first;
+        unsigned int j = *im;
         kf[j] *= tbconcs[j];
         kr[j] *= tbconcs[j];
     }
@@ -605,9 +589,9 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 
     // Landau-Teller rate expressions.
     for (im=m_lt_rxns.begin(); im!=m_lt_rxns.end(); ++im) {
-        j = (*im).first;
-        kf[j] *= exp(((*im).second->LTCoeffs()->B / T_1_3) +
-                           ((*im).second->LTCoeffs()->C / T_2_3));
+        j = *im;
+        kf[j] *= exp((m_rxns[j]->LTCoeffs()->B / T_1_3) +
+                           (m_rxns[j]->LTCoeffs()->C / T_2_3));
     }
 
     // Reverse rate constants.
@@ -641,9 +625,9 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 
     // Explicit reverse Landau-Teller parameters.
     for (im=m_revlt_rxns.begin(); im!=m_revlt_rxns.end(); ++im) {
-        j = (*im).first;
-        kr[j] *= exp(((*im).second->RevLTCoeffs()->B / T_1_3) +
-                           ((*im).second->RevLTCoeffs()->C / T_2_3));
+        j = *im;
+        kr[j] *= exp((m_rxns[j]->RevLTCoeffs()->B / T_1_3) +
+                           (m_rxns[j]->RevLTCoeffs()->C / T_2_3));
     }
 }
 
@@ -708,8 +692,8 @@ void ReactionSet::calcFallOffTerms(real T, real density, const real *const x,
 
     // Pressure dependent fall-off reactions.
     for (im=m_fo_rxns.begin(); im!=m_fo_rxns.end(); ++im) {
-        j   = (*im).first;  // Reaction index of imth fall-off reaction.
-        rxn = (*im).second;
+        j   = *im;  // Reaction index of imth fall-off reaction.
+        rxn = m_rxns[j];
 
         // Calculate low pressure limit.
         lowk = rxn->FallOffParams().LowP_Limit.A *
@@ -832,7 +816,7 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     // to apply the fall-off terms before doing this, as that routine may
     // change the values in the tbconcs vector.
     for (RxnMap::const_iterator im=m_tb_rxns.begin(); im!=m_tb_rxns.end(); ++im) {
-        unsigned int j = (*im).first;
+        unsigned int j = *im;
         kf[j] *= tbconcs[j];
         kr[j] *= tbconcs[j];
     }
@@ -893,7 +877,7 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
         calcTB_Concs(density, x, n, tbconcs);
         calcFallOffTerms(T, density, x, n, tbconcs, kf, kr);
         for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
-            unsigned int j = i->first;
+            unsigned int j = *i;
             kf[j] *= tbconcs[j];
             kr[j] *= tbconcs[j];
         }
@@ -906,12 +890,12 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
 
         // Recalculate third-body and fall-off reaction rates-of-progress.
         for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
-            unsigned int j = i->first;
-            rop1[j] = (i->second)->RateOfProgress(density, x, n, kf[j], kr[j]);
+            unsigned int j = *i;
+            rop1[j] = m_rxns[j]->RateOfProgress(density, x, n, kf[j], kr[j]);
         }
         for (RxnMap::const_iterator i=m_fo_rxns.begin(); i!=m_fo_rxns.end(); ++i) {
-            unsigned int j = i->first;
-            rop1[j] = (i->second)->RateOfProgress(density, x, n, kf[j], kr[j]);
+            unsigned int j = *i;
+            rop1[j] = m_rxns[j]->RateOfProgress(density, x, n, kf[j], kr[j]);
         }
 
         // Recalculate other reaction rates-of-progress for which
@@ -987,7 +971,7 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     calcTB_Concs(Dpert, x, n, tbconcs);
     calcFallOffTerms(T, Dpert, x, n, tbconcs, kf, kr);
     for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
-        unsigned int j = i->first;
+        unsigned int j = *i;
         kf[j] *= tbconcs[j];
         kr[j] *= tbconcs[j];
     }
@@ -1045,7 +1029,7 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     calcTB_Concs(density, x, n, tbconcs);
     calcFallOffTerms(Tpert, density, x, n, tbconcs, kf, kr);
     for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
-        unsigned int j = i->first;
+        unsigned int j = *i;
         kf[j] *= tbconcs[j];
         kr[j] *= tbconcs[j];
     }
@@ -1179,7 +1163,7 @@ void ReactionSet::RateJacobian(
     // to apply the fall-off terms before doing this, as that routine may
     // change the values in the tbconcs vector.
     for (RxnMap::const_iterator im=m_tb_rxns.begin(); im!=m_tb_rxns.end(); ++im) {
-        unsigned int j = (*im).first;
+        unsigned int j = *im;
         kf[j] *= tbconcs[j];
         kr[j] *= tbconcs[j];
     }
@@ -1235,7 +1219,7 @@ void ReactionSet::RateJacobian(
         calcTB_Concs(density, x, n, tbconcs);
         calcFallOffTerms(T, density, x, n, tbconcs, kf, kr);
         for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
-            unsigned int j = i->first;
+            unsigned int j = *i;
             kf[j] *= tbconcs[j];
             kr[j] *= tbconcs[j];
         }
@@ -1248,12 +1232,12 @@ void ReactionSet::RateJacobian(
 
         // Recalculate third-body and fall-off reaction rates-of-progress.
         for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
-            unsigned int j = i->first;
-            rop1[j] = (i->second)->RateOfProgress(density, x, n, kf[j], kr[j]);
+            unsigned int j = *i;
+            rop1[j] = m_rxns[j]->RateOfProgress(density, x, n, kf[j], kr[j]);
         }
         for (RxnMap::const_iterator i=m_fo_rxns.begin(); i!=m_fo_rxns.end(); ++i) {
-            unsigned int j = i->first;
-            rop1[j] = (i->second)->RateOfProgress(density, x, n, kf[j], kr[j]);
+            unsigned int j = *i;
+            rop1[j] = m_rxns[j]->RateOfProgress(density, x, n, kf[j], kr[j]);
         }
 
         // Recalculate other reaction rates-of-progress for which
@@ -1324,7 +1308,7 @@ void ReactionSet::RateJacobian(
     calcTB_Concs(Dpert, x, n, tbconcs);
     calcFallOffTerms(T, Dpert, x, n, tbconcs, kf, kr);
     for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
-        unsigned int j = i->first;
+        unsigned int j = *i;
         kf[j] *= tbconcs[j];
         kr[j] *= tbconcs[j];
     }
@@ -1372,7 +1356,7 @@ void ReactionSet::RateJacobian(
     calcTB_Concs(density, x, n, tbconcs);
     calcFallOffTerms(Tpert, density, x, n, tbconcs, kf, kr);
     for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
-        unsigned int j = i->first;
+        unsigned int j = *i;
         kf[j] *= tbconcs[j];
         kr[j] *= tbconcs[j];
     }
@@ -1479,7 +1463,7 @@ void ReactionSet::Serialize(std::ostream &out) const
         for (RxnMap::const_iterator i=m_rev_rxns.begin(); i!=m_rev_rxns.end(); i++) {
             // Write the reaction index in the main vector.  The pointer doesn't
             // need to be written.
-            unsigned int ix = (*i).first;
+            unsigned int ix = *i;
             out.write((char*)&ix, sizeof(ix));
         }
 
@@ -1491,7 +1475,7 @@ void ReactionSet::Serialize(std::ostream &out) const
         for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); i++) {
             // Write the reaction index in the main vector.  The pointer doesn't
             // need to be written.
-            unsigned int ix = (*i).first;
+            unsigned int ix = *i;
             out.write((char*)&ix, sizeof(ix));
         }
 
@@ -1503,7 +1487,7 @@ void ReactionSet::Serialize(std::ostream &out) const
         for (RxnMap::const_iterator i=m_fo_rxns.begin(); i!=m_fo_rxns.end(); i++) {
             // Write the reaction index in the main vector.  The pointer doesn't
             // need to be written.
-            unsigned int ix = (*i).first;
+            unsigned int ix = *i;
             out.write((char*)&ix, sizeof(ix));
         }
 
@@ -1515,7 +1499,7 @@ void ReactionSet::Serialize(std::ostream &out) const
         for (RxnMap::const_iterator i=m_lt_rxns.begin(); i!=m_lt_rxns.end(); i++) {
             // Write the reaction index in the main vector.  The pointer doesn't
             // need to be written.
-            unsigned int ix = (*i).first;
+            unsigned int ix = *i;
             out.write((char*)&ix, sizeof(ix));
         }
 
@@ -1527,7 +1511,7 @@ void ReactionSet::Serialize(std::ostream &out) const
         for (RxnMap::const_iterator i=m_revlt_rxns.begin(); i!=m_revlt_rxns.end(); i++) {
             // Write the reaction index in the main vector.  The pointer doesn't
             // need to be written.
-            unsigned int ix = (*i).first;
+            unsigned int ix = *i;
             out.write((char*)&ix, sizeof(ix));
         }
 
@@ -1578,6 +1562,7 @@ void ReactionSet::Deserialize(std::istream &in)
 
                 // Read number of reactions with explicit reverse parameters.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_rev_rxns.resize(n);
 
                 // Read map of reactions with explicit reverse parameters.
                 for (unsigned int i=0; i<n; i++) {
@@ -1586,11 +1571,12 @@ void ReactionSet::Deserialize(std::istream &in)
                     in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
 
                     // Add the reaction to map.
-                    m_rev_rxns[ix] = m_rxns[ix];
+                    m_rev_rxns[i] = ix;
                 }
 
                 // Write number of third body reactions.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_tb_rxns.resize(n);
 
                 // Write map of third body reactions.
                 for (unsigned int i=0; i<n; i++) {
@@ -1599,11 +1585,12 @@ void ReactionSet::Deserialize(std::istream &in)
                     in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
 
                     // Add the reaction to map.
-                    m_tb_rxns[ix] = m_rxns[ix];
+                    m_tb_rxns[i] = ix;
                 }
 
                 // Write number of fall-off reactions.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_fo_rxns.resize(n);
 
                 // Write map of fall-off reactions.
                 for (unsigned int i=0; i<n; i++) {
@@ -1612,11 +1599,12 @@ void ReactionSet::Deserialize(std::istream &in)
                     in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
 
                     // Add the reaction to map.
-                    m_fo_rxns[ix] = m_rxns[ix];
+                    m_fo_rxns[i] = ix;
                 }
 
                 // Write number of reactions with Landau Teller parameters.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_lt_rxns.resize(n);
 
                 // Write map of Landau Teller reactions.
                 for (unsigned int i=0; i<n; i++) {
@@ -1625,11 +1613,12 @@ void ReactionSet::Deserialize(std::istream &in)
                     in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
 
                     // Add the reaction to map.
-                    m_lt_rxns[ix] = m_rxns[ix];
+                    m_lt_rxns[i] = ix;
                 }
 
                 // Write number of reactions with explicit reverse LT parameters.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_revlt_rxns.resize(n);
 
                 // Write map of reverse Landau Teller reactions.
                 for (unsigned int i=0; i<n; i++) {
@@ -1638,7 +1627,7 @@ void ReactionSet::Deserialize(std::istream &in)
                     in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
 
                     // Add the reaction to map.
-                    m_revlt_rxns[ix] = m_rxns[ix];
+                    m_revlt_rxns[i] = ix;
                 }
 
                 break;

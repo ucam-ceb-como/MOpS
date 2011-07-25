@@ -296,18 +296,6 @@ public:
     void Deserialize(std::istream &in);
 
 protected:
-    // In the following map the key is the index in the vector of all reactions.
-    typedef std::map<unsigned int,const Reaction*> RxnMap;
-
-    // Reaction set data.
-    RxnPtrVector m_rxns; // Vector of all reactions in the set.
-    RxnMap m_rev_rxns;   // Map of reactions which have explicit reverse Arrhenius parameters.
-    RxnMap m_tb_rxns;    // Map of third body reactions.
-    RxnMap m_fo_rxns;    // Map of fall-off reactions.
-    RxnMap m_lt_rxns;    // Map of reactions with Landau Teller parameters.
-    RxnMap m_revlt_rxns; // Map of reactions with reverse Landau Teller parameters.
-
-
     // RATE CALCULATION.
 
     // Calculates the concentration-independent portions
@@ -350,10 +338,22 @@ protected:
     void releaseMemory(void);
 
 private:
+    // In the following map the key is the index in the vector of all reactions.
+    typedef std::vector<unsigned int> RxnMap;
+
+    // Reaction set data.
+    RxnPtrVector m_rxns; // Vector of all reactions in the set.
+    RxnMap m_rev_rxns;   // Map of reactions which have explicit reverse Arrhenius parameters.
+    RxnMap m_tb_rxns;    // Map of third body reactions.
+    RxnMap m_fo_rxns;    // Map of fall-off reactions.
+    RxnMap m_lt_rxns;    // Map of reactions with Landau Teller parameters.
+    RxnMap m_revlt_rxns; // Map of reactions with reverse Landau Teller parameters.
+
+
     // Pointer to mechanism to which this ReactionSet belongs.
     Sprog::Mechanism *m_mech;
 };
-};
-};
+}
+}
 
 #endif

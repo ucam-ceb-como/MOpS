@@ -53,57 +53,62 @@ namespace Camflow
 class ScalarDissipationRate
 {
 
-        enum sdr
-        {
-            constant_fromStrainRate,
-            profile_fromStrainRate,
-            constant_fromCFD,
-            profile_fromCFD
-        };
+    enum sdr
+    {
+        NONE,
+        constant_fromStrainRate,
+        profile_fromStrainRate,
+        constant_fromCFD,
+        profile_fromCFD
+    };
+    int sdrType_;
 
-        int sdrType_;
+    const doublereal& stoichZ_;
+    doublereal strainRate_;
+    doublereal stoichSDR_;
 
-        //! The first index is 'time coordinate'.
-        //! The second index is 'mixture fraction coordinate'.
-        Array2D scalarDissipationRate_;
-        doublereal scalarDissipationRateRef_;
+    const std::vector<doublereal>& mixFracCoords_;
 
-    public:
+    //! The first index is 'time coordinate'.
+    //! The second index is 'mixture fraction coordinate'.
+    Array2D scalarDissipationRate_;
 
-        //! Default constructor.
-        ScalarDissipationRate
-        (
-            const int n_TimePoints,
-            const int n_MixtureFractionPoints
-        );
+    std::vector<doublereal> v_sdr;   //scalar dissipation rate that has a time history
+    std::vector<doublereal> v_time; //time profile of scalar dissipation rates
+    std::vector< std::vector<doublereal> > profile_sdr; // SDR profile with a time history.
 
-        //! Destructor.
-        ~ScalarDissipationRate();
+    void readStrainRate(const std::string& inputFileName);
+    doublereal calculate(const doublereal& mixtureFraction) const;
+    doublereal scalarDissipationRate(const doublereal& mixtureFraction) const;
+    doublereal strainRate(const doublereal& mixtureFraction) const;
 
+public:
 
-        const doublereal calculate
-        (
-            const doublereal mixtureFraction,
-            const doublereal strainRate
-        );
+    //! Default constructor.
+    ScalarDissipationRate
+    (
+        const std::string& inputFileName,
+        const doublereal& stoichZ,
+        const std::vector<doublereal>& mixFracCoords,
+        const int n_TimePoints
+    );
 
+    //! Destructor.
+    ~ScalarDissipationRate();
 
-        inline const doublereal getScalarDissipationRate(const int mixFracCoord)
-        {
-            return scalarDissipationRate_(0,mixFracCoord);
-        };
+    void setStrainRate(const doublereal strainRate);
 
-        void setSdrType(const int sdrType) {sdrType_ = sdrType;};
+    void setSDRRate(const doublereal sdr);
 
-        const doublereal getRefSDR() const
-        {
-            return scalarDissipationRateRef_;
-        }
+    doublereal operator[](int i) const
+    {
+        return scalarDissipationRate_(i,0);
+    }
 
-        /*inline const std::vector<doublereal> getScalarDissipationRate()
-        {
-            return scalarDissipationRate_(0);
-        }*/
+    inline const doublereal& getStoichSDR() const
+    {
+        return stoichSDR_;
+    }
 
 }; // End ScalarDissipationRate class declaration.
 

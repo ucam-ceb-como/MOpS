@@ -13,7 +13,7 @@ ELSE(WIN32)
   SET(BOOST_ROOT $ENV{HOME}/boost)
   SET(Boost_USE_MULTITHREADED OFF)
 ENDIF(WIN32)
-find_package(Boost 1.43.0 REQUIRED COMPONENTS regex serialization filesystem system)
+find_package(Boost 1.42.0 REQUIRED COMPONENTS regex serialization filesystem system)
 
 enable_testing()
 
@@ -33,7 +33,6 @@ add_executable(camflow-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/camflow/
 target_link_libraries(camflow-app camflow ${Boost_LIBRARIES})
 
 # Regression tests for CamFlow
-add_test(camflow.hydrogenFlamelet ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet.sh ${MOPSSUITE_BINARY_DIR}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow)
 
 add_test(camflow.hydrogenBatchReactor ${MOPSSUITE_SOURCE_DIR}/test/camflow/batchReactorRegress.sh ${MOPSSUITE_BINARY_DIR}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenBatchReactor)
 
@@ -56,6 +55,10 @@ add_test(mops.regress5 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress5.sh ${MOPSSUIT
 add_test(mops.CSTRtest ${MOPSSUITE_SOURCE_DIR}/test/mopsc/CSTRRegress.sh ${MOPSSUITE_BINARY_DIR}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
 add_test(mops.sinter1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/sinter1.sh ${MOPSSUITE_BINARY_DIR}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+
+########## The PAH-KMC Application ######################
+add_executable(PAHkmc-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/PAHkmc/kmc_model.cpp)
+target_link_libraries(PAHkmc-app sweep ${Boost_LIBRARIES})
 
 ########## The Brush application #######################
 add_executable(brush-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/brush/brush.cpp)
@@ -89,7 +92,6 @@ add_executable(chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harn
 target_link_libraries(chemkinReader-test chemkinReader ${Boost_LIBRARIES})
 
 add_test(chemkinReader.regress1 ${MOPSSUITE_SOURCE_DIR}/test/io/chemkinReaderRegress.sh ${MOPSSUITE_BINARY_DIR}/chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/test/io)
-
 
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)

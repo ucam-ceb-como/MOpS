@@ -54,6 +54,9 @@ void CamRead::readInput(const std::string fileName,
 
     CamXML::Document doc;
     const CamXML::Element* root;
+
+    ca.setInputFile(fileName);
+
     if(doc.Load(fileName) == 0){
         root = doc.Root();
         readGrid(cg,*root);
@@ -61,7 +64,7 @@ void CamRead::readInput(const std::string fileName,
         readProcessConditions(convert,ca,*root);
         readBoundary(ca,cb,convert,*root);
         readControl(cc,*root);
-        readInitialGuess(cp,convert,*root);
+        readInitialGuess(ca,cp,convert,*root);
         readReport(ca,*root);
     }
 }
@@ -185,14 +188,6 @@ void CamRead::readProcessConditions(CamConverter& convert,
             ca.setPressure(pre);
         }else{
             throw CamError("operating pressure not defined\n");
-        }
-
-        // read strain rate for strained flames
-        subnode = opNode->GetFirstChild("strain");
-        if(subnode != NULL){
-            ca.setStrainRate(cdble(subnode->Data()));
-        }else{
-            ca.setStrainRate(0.0);
         }
 
         //read the ignition step for temperature
@@ -466,6 +461,7 @@ void CamRead::readTol(const CamXML::Element& node, doublereal& atol, doublereal&
 //function to read initial guess
 void CamRead::readInitialGuess
 (
+    CamAdmin& ca,
     CamProfile& cp,
     CamConverter& convert,
     const CamXML::Element& node
@@ -478,6 +474,20 @@ void CamRead::readInitialGuess
     initialize = node.GetFirstChild("initialize");
     if(initialize != NULL)
     {
+        //restart
+        subsubnode = initialize->GetFirstChild("restart");
+        if(subsubnode != NULL)
+        {
+            const CamXML::Attribute *file;
+            file = subsubnode->GetAttribute("file");
+            ca.setRestartType(subsubnode->Data());
+            ca.setRestartFile(file->GetValue());
+        }
+        else
+        {
+            ca.setRestartType("NONE");
+        }
+
         //mixing center
         subsubnode = initialize->GetFirstChild("mCenter");
         if(subsubnode != NULL)
@@ -570,12 +580,6 @@ void CamRead::readReport(CamAdmin& ca, const CamXML::Element& node){
             ca.setSpeciesOut(ca.MOLE);
         }else{
             ca.setSpeciesOut(ca.MASS);
-        }
-        atrVal = subnode->GetAttributeValue("outfile");
-        if(!convertToCaps(atrVal).compare("INTER")){
-            ca.setReportSchedule(ca.INTER);
-        }else{
-            ca.setReportSchedule(ca.FINAL);
         }
     }else{
         throw CamError("Report information missing\n");
