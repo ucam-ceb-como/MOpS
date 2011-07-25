@@ -181,6 +181,7 @@ int main(int argc, char* argv[])
     std::vector<std::pair<real, real> > maxPCounts, maxM0s;
     bool splitDiffusion = false;
     bool splitAdvection = false;
+    bool weightTransport = false;
     Sweep::Stats::IModelStats::StatBound statBound;
 
     try {
@@ -225,6 +226,14 @@ int main(int argc, char* argv[])
         if ((node != NULL) && ("split" == node->Data())) {
             // simulate advection using spltting
             splitAdvection = true;
+        }
+
+        // Numerical method for moving weighted particles between cells
+        // should not be used with DSA
+        node = root->GetFirstChild("weighttransport");
+        if ((node != NULL) && ("weights" == node->Data())) {
+            // adjust statistical weights when moving between cells to avoid cloning/killing
+            weightTransport = true;
         }
 
         // Maximum number of computational particles per cell
@@ -414,7 +423,8 @@ int main(int argc, char* argv[])
 
     //========= Now run the simulation ===========================
     Simulator sim(runs, iterations, timeIntervals, initialReactor, *pInitialChem,
-                  outputFileBaseName, statBound, splitDiffusion, splitAdvection);
+                  outputFileBaseName, statBound, splitDiffusion, splitAdvection,
+                  weightTransport);
     sim.runSimulation(randomSeedOffset);
 
     //========= Output ===========================================

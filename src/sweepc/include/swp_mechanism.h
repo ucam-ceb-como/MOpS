@@ -60,6 +60,7 @@
 #include "swp_inception.h"
 #include "swp_particle_process.h"
 #include "swp_coagulation.h"
+#include "swp_gas_profile.h"
 #include "sprog.h"
 #include <vector>
 #include <string>
@@ -230,6 +231,7 @@ public:
         const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         int (*rand_int)(int, int), // Integer random samples
         real (*rand_u01)(), // U[0,1] samples
+        Sweep::GasProfile* gp=NULL,
         Transport::TransportOutflow *out = 0 // Details of any particle transported out
         ) const;
 
@@ -241,7 +243,8 @@ public:
         real t,   // Time up to which to integrate.
         Cell &sys,// System to update.
         int (*rand_int)(int, int), // Integer random samples
-        real (*rand_u01)() // U[0,1] samples
+        real (*rand_u01)(), // U[0,1] samples
+        Sweep::GasProfile* gp=NULL
         ) const;
 
 
@@ -250,7 +253,8 @@ public:
         Particle &sp, // Particle to update.
         Cell &sys,    // System to which the particle belongs.
         real t,       // Time up to which to integrate.
-        real(*rand_u01)()
+        real(*rand_u01)(),
+        Sweep::GasProfile* gp=NULL // Gas profiles
         ) const;
 
     // READ/WRITE/COPY.

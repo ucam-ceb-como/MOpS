@@ -51,6 +51,7 @@
 #include "swp_params.h"
 #include "swp_particle.h"
 #include "swp_process_type.h"
+#include "swp_gas_profile.h"
 #include "sprog.h"
 #include <map>
 #include <string>
@@ -212,6 +213,7 @@ public:
         unsigned int iterm,
         int (*rand_int)(int, int), 
         real(*rand_u01)(),
+		//Sweep::GasProfile* gp=NULL,
         Transport::TransportOutflow *out = 0
         ) const = 0;
 

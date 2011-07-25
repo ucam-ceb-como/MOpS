@@ -273,7 +273,7 @@ void ModelFactory::WriteStats(const Stats::IModelStats &stats, std::ostream &out
     if (out.good()) {
         // Write the model Serial signature type to the stream.
         unsigned int type = (unsigned int)stats.ID();
-        out.write((char*)type, sizeof(type));
+        out.write((char*)&type, sizeof(type));
 
         // Serialize the model object.
         stats.Serialize(out);

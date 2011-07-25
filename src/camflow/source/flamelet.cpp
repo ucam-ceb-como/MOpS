@@ -1,5 +1,9 @@
 #include "flamelet.h"
 
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/vector.hpp>
+
 using namespace Camflow;
 using namespace std;
 using namespace Gadgets;
@@ -16,18 +20,18 @@ FlameLet::FlameLet
 )
 :
   CamSetup(ca, config, cc, cg, cp, cs, mech),
-  sdr_ext(0),
+  stoichZ(stoichiometricMixtureFraction()),
   timeHistory(false),
   sdrProfile(false),
   sdrAnalytic(false),
   radiation(NULL),
-  scalarDissipationRate_(mCord, 1),
+  scalarDissipationRate_(admin_.getInputFile(), stoichZ, reacGeom_.getAxpos(), 1),
   CpSpec(mCord,nSpc)
 {}
 
 FlameLet::~FlameLet()
 {
-    //if (radiation != NULL) delete radiation;
+    if (radiation != NULL) delete radiation;
 }
 
 void FlameLet::checkSetup()
@@ -70,7 +74,7 @@ void FlameLet::solve
 
     if(!interface)
     {
-        reportToFile("initialProfile.dat",control_.getMaxTime(),&solvect[0]);
+        reportToFile("initialProfile.dat",control_.getMaxTime(),solvect);
         //writeXMLFile(scalarDissipationRate_.getRefSDR(), solvect);
     }
 
@@ -83,6 +87,15 @@ void FlameLet::solve
         ssolve();
         csolve(interface);
     }
+
+    if (admin_.getRestartType() == admin_.BINARY)
+    {
+        std::ofstream ofs(admin_.getRestartFile().c_str());
+        boost::archive::binary_oarchive oa(ofs);
+        oa << reacGeom_.getAxpos() << solvect;
+        ofs.close();
+    }
+
 
 }
 
@@ -167,6 +180,19 @@ void FlameLet::solve
 void FlameLet::initSolutionVector()
 {
 
+    // Initialise the radiation class if necessary.
+    if(admin_.getRadiationModel())
+    {
+        radiation = new Radiation
+        (
+            admin_.getInputFile(),
+            mCord,
+            camMech_,
+            avgMolWt,
+            s_mf
+        );
+    }
+
     /*
      *left boundary is for the fuel and right boundary is
      *for oxidizer
@@ -175,8 +201,6 @@ void FlameLet::initSolutionVector()
     CamBoundary& right = admin_.getRightBoundary();
     storeInlet(left,fuel);
     storeInlet(right,oxid);
-
-    stoichiometricMixtureFraction();
 
     profile_.setMixingCenter(stoichZ);
     profile_.setMixingWidth(0.5*stoichZ);
@@ -210,7 +234,7 @@ void FlameLet::initSolutionVector()
     vector<doublereal> position = reacGeom_.getAxpos();
     int len = position.size();
     vT.resize(len,0.0);
-    for (unsigned int i=0; i<dz.size();i++)
+    for (size_t i=0; i<dz.size();i++)
     {
         if (position[i] < stoichZ)
         {
@@ -231,11 +255,10 @@ void FlameLet::initSolutionVector()
         }
     }
 
-
     if(profile_.flagLoadFracs())
     {
         // Loop over all points, EXCLUDING boundaries
-        for (size_t i=1; i<dz.size()-1; i++)
+        for (size_t i=cellBegin+1; i<cellEnd-1; ++i)
         {
             for (size_t l=0; l<nSpc; ++l)
             {
@@ -259,8 +282,36 @@ void FlameLet::initSolutionVector()
      *create the actual solution vector by merging the species
      *vector and the temperature vector
      */
+
     mergeSpeciesVector(&vSpec[0]);
     mergeEnergyVector(&vT[0]);
+
+    if (admin_.getRestartType() == admin_.BINARY)
+    {
+        std::vector<double> solvect_temp, mixFracCoords_temp;
+        std::ifstream ifs(admin_.getRestartFile().c_str());
+        if (ifs.good())
+        {
+            boost::archive::binary_iarchive oi(ifs);
+            oi >> mixFracCoords_temp >> solvect_temp;
+
+            if (mixFracCoords_temp.size() == reacGeom_.getAxpos().size())
+                solvect = solvect_temp;
+            else
+            {
+                throw std::runtime_error
+                (
+                    "The solution vector is not the same size "
+                    "as the old one you are trying to read in. The old solution "
+                    "should be interpolated onto the new grid but that function "
+                    "has not been written yet.\n");
+            }
+        }
+    }
+    else if (admin_.getRestartType() == admin_.TEXT)
+    {
+        throw std::runtime_error("Text restart files not used yet.");
+    }
 
 }
 
@@ -304,8 +355,8 @@ void FlameLet::csolve
          */
         if(!interface)
         {
-            reportToFile("profile.dat",control_.getMaxTime(),&solvect[0]);
-            writeXMLFile(scalarDissipationRate_.getRefSDR(), solvect);
+            reportToFile("profile.dat",control_.getMaxTime(), solvect);
+            //writeXMLFile(scalarDissipationRate_.getStoichSDR(), solvect);
         }
 
     }
@@ -343,9 +394,8 @@ void FlameLet::csolve
          *from the interface
          */
         if(!interface) {
-            reportToFile("profile.dat", control_.getMaxTime(),&solvect[0]);
+            reportToFile("profile.dat", control_.getMaxTime(), solvect);
         }
-       // radauWrapper.destroy();
 
     }
     else if (solverID == control_.LIMEX)
@@ -534,11 +584,7 @@ void FlameLet::speciesResidual
      */
     if (timeHistory) {
 
-        sdr = getSDR(t);
-
-    } else if (sdr_ext!=0) {
-
-        sdr=sdr_ext;
+        //sdr = getSDR(t);
 
     }
 
@@ -597,7 +643,8 @@ void FlameLet::speciesResidual
         //if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
         //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
         //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
-        sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],2.0,i);
+        //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],5.0,i);
+        sdr = scalarDissipationRate_[i];
 
         doublereal diffusionConstant = sdr/(2.0*dz[i]);
 
@@ -640,11 +687,6 @@ void FlameLet::energyResidual
     doublereal zPE=0, zPW=0;
     doublereal source=0;
 
-    if(admin_.getRadiationModel())
-    {
-        radiation = new Radiation(mCord);
-    }
-
     /*
      *starting with mixture fraction zero: i.e oxidizer
      *inlet. The temperature is fixed at the oxidizer
@@ -658,10 +700,7 @@ void FlameLet::energyResidual
      *to sdr
      */
     if(timeHistory){
-        sdr = getSDR(t);
-
-    } else if(sdr_ext!=0){
-        sdr=sdr_ext;
+      //  sdr = getSDR(t);
     }
 
     /*
@@ -682,7 +721,8 @@ void FlameLet::energyResidual
         //if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
         //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
         //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
-        sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],2.0,i);
+        //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],5.0,i);
+        sdr = scalarDissipationRate_[i];
 
         grad_e = (m_T[i+1]-m_T[i])/zPE;
         grad_w = (m_T[i]-m_T[i-1])/zPW;
@@ -726,53 +766,20 @@ void FlameLet::energyResidual
         }
 
         //======Radiative Heat Loss Term===============
-
         if (admin_.getRadiationModel())
         {
-
-            doublereal mole_fracsH2O;
-            doublereal mole_fracsCO2;
-            doublereal mole_fracsCO;
-
-            //Get species indexes corresponding to H20, CO2, CO
-            if(camMech_->FindSpecies("H2O") == -1){
-                mole_fracsH2O = 0.0;
-            } else {
-                const int iH2O = camMech_->FindSpecies("H2O");
-                const doublereal molwtH2O =   (*spv_)[iH2O] -> MolWt();
-                mole_fracsH2O = s_mf(i,iH2O)*avgMolWt[i]/molwtH2O;
-            }
-            if(camMech_->FindSpecies("CO2") == -1){
-                mole_fracsCO2 = 0.0;
-            } else {
-                const int iCO2 = camMech_->FindSpecies("CO2");
-                const doublereal molwtCO2 =   (*spv_)[iCO2] -> MolWt();
-                mole_fracsCO2 = s_mf(i,iCO2)*avgMolWt[i]/molwtCO2;
-            }
-            if(camMech_->FindSpecies("CO") == -1){
-                mole_fracsCO = 0.0;
-            } else {
-                const int iCO  = camMech_->FindSpecies("CO");
-                const doublereal molwtCO =    (*spv_)[iCO] -> MolWt();
-                mole_fracsCO = s_mf(i,iCO)*avgMolWt[i]/molwtCO;
-            }
-
             //This radiation term is sent to as output to profile.h
-            radiation->RadiativeLoss
+            radiation->calculateRadiativeHeatLoss
             (
                i,
                m_T[i],
                opPre,
-               m_SootFv[i],
-               mole_fracsH2O,
-               mole_fracsCO2,
-               mole_fracsCO
+               m_SootFv[i]
             );
 
             // This is the new energy residual term, accounting for radiation.
             // This is DEFINITELY NEGATIVE!
             f[i] -= radiation->getRadiation(i)/(m_rho[i]*m_cp[i]);
-
         }
 
     }
@@ -915,54 +922,15 @@ doublereal FlameLet::stoichiometricMixtureFraction()
     return stoichZ;
 
 }
-/*
- *calculate the scalar dissipation rate
- */
-doublereal FlameLet::scalarDissipationRate(const doublereal m_frac)
+
+void FlameLet::setExternalStrainRate(const doublereal strainRate)
 {
-    /*
-     *Eq. 9.38 SummerSchool by N. Peters
-     */
-    CamMath cm;
-    doublereal erterm = cm.inverfc(2*m_frac);
-    doublereal arg = -2*cm.SQR(erterm);
-    sdr = admin_.getStrainRate()*exp(arg)/PI;
-    return sdr;
-    //return 0.88;
+    scalarDissipationRate_.setStrainRate(strainRate);
 }
 
-/*
- *calculate the scalar dissipation rate profile. Method 1 in Carbonell(2009).
- */
-doublereal FlameLet::scalarDissipationRateProfile
-(
-    const doublereal m_frac,
-    const doublereal stoichSDR,
-    const int cell
-)
+void FlameLet::setExternalSDR(const doublereal sdr)
 {
-
-	CamMath cm;
-
-	doublereal fZ = exp(-2*cm.SQR(cm.inverfc(2*m_frac)));
-	doublereal fZst = exp(-2*cm.SQR(cm.inverfc(2*stoichZ)));
-
-	/*Utils::LinearInterpolator<doublereal, doublereal> rhoInterpolate(reacGeom_.getAxpos(),m_rho);
-	doublereal rhoStoich = rhoInterpolate.interpolate(stoichZ);
-
-	doublereal phi = 0.75 *
-	                 (
-	                     cm.SQR(std::sqrt(m_rho[0]/m_rho[cell])+1.0)
-	                   / (2.0*std::sqrt(m_rho[0]/m_rho[cell])+1.0)
-	                 );
-	doublereal phist = 0.75 *
-	                   (
-	                       cm.SQR(std::sqrt(m_rho[0]/rhoStoich)+1.0)
-	                     / (2.0*std::sqrt(m_rho[0]/rhoStoich)+1.0)
-	                   );*/
-
-	return stoichSDR * (fZ/fZst);// * (phi/phist);
-
+    scalarDissipationRate_.setSDRRate(sdr);
 }
 
 /*
@@ -976,7 +944,6 @@ int FlameLet::eval
     bool jacEval
 )
 {
-
 
     //Sets soot volume fraction vector to zeros
     setExternalSootVolumeFraction(std::vector<doublereal>(mCord, 0.0));
@@ -1002,7 +969,7 @@ void FlameLet::report(doublereal x, doublereal* solution, doublereal& res)
 /*
  *output function for file output
  */
-void FlameLet::reportToFile(std::string fileName, doublereal t, doublereal* soln)
+void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<double>& soln)
 {
 
     doublereal sum;
@@ -1025,7 +992,7 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, doublereal* soln
         data.clear();
         data.push_back(t);
         data.push_back(axpos[i]);
-        data.push_back(scalarDissipationRateProfile(axpos[i],2.0,i));
+        data.push_back(scalarDissipationRate_[i]);
         data.push_back(m_rho[i]);
         data.push_back(m_mu[i]);
         data.push_back(m_cp[i]);
@@ -1120,115 +1087,6 @@ std::vector<std::string> FlameLet::header()
     headerData.push_back("sumfracs");
 
     return headerData;
-
-}
-
-
-/*
- *set the scalar dissipation rate provided by the external
- *calling program
- */
-void FlameLet::setExternalScalarDissipationRate(const doublereal sr)
-{
-    sdr_ext = sr;
-}
-
-/**
- *  When the scalar dissipation rate has a time history
- *  use that during intergration
- */
-void FlameLet::setExternalScalarDissipationRate
-(
-    const std::vector<doublereal>& time,
-    const std::vector<doublereal>& sdr,
-    const bool analytic
-)
-{
-
-    v_sdr = sdr;
-    v_time = time;
-
-    timeHistory = true;
-    sdrAnalytic = analytic;
-
-}
-
-/**
- *  When the scalar dissipation rate has a time history
- *  and has a profile with mixture fraction from the CFD.
- */
-void FlameLet::setExternalScalarDissipationRate
-(
-    const std::vector<doublereal>& time,
-	const std::vector< std::vector<doublereal> >& sdr,
-	const std::vector< std::vector<doublereal> >& Zcoords
-)
-{
-
-    profile_sdr = sdr;
-    v_time = time;
-    cfdMixFracCoords = Zcoords;
-
-    sdrProfile = true;
-
-}
-
-/**
- *  Interpolate and return the scalar dissipation rate
- */
-doublereal
-FlameLet::getSDR(const doublereal time)
-const
-{
-
-	Utils::LinearInterpolator<doublereal, doublereal> timeInterpolate(v_time, v_sdr);
-
-	return timeInterpolate.interpolate(time);
-
-}
-
-/**
- *  Interpolate and return the scalar dissipation rate from a profile that varies through time.
- */
-doublereal
-FlameLet::getSDRfromProfile
-(
-    const doublereal time,
-    const doublereal Z
-)
-const
-{
-
-	std::vector<doublereal> sdrTime, sdrInterpolated;
-	std::vector<doublereal> cfdMixFracCoordsTime, cfdMixFracCoordsInterpolated;
-
-	sdrInterpolated.clear();
-	cfdMixFracCoordsInterpolated.clear();
-
-	for (size_t i=0; i<cfdMixFracCoords[0].size(); ++i)
-	{
-
-		sdrTime.clear();
-		sdrTime.push_back(profile_sdr[0][i]);
-		sdrTime.push_back(profile_sdr[1][i]);
-
-		cfdMixFracCoordsTime.clear();
-		cfdMixFracCoordsTime.push_back(cfdMixFracCoords[0][i]);
-		cfdMixFracCoordsTime.push_back(cfdMixFracCoords[1][i]);
-
-		Utils::LinearInterpolator<doublereal, doublereal> timeInterpolate(v_time, sdrTime);
-		doublereal sdrInterpolatedTime = timeInterpolate.interpolate(time);
-
-		Utils::LinearInterpolator<doublereal, doublereal> time2Interpolate(v_time, cfdMixFracCoordsTime);
-		doublereal cfdMixFracCoordsInterpolatedTime = time2Interpolate.interpolate(time);
-
-		sdrInterpolated.push_back(sdrInterpolatedTime);
-		cfdMixFracCoordsInterpolated.push_back(cfdMixFracCoordsInterpolatedTime);
-	}
-
-	Utils::LinearInterpolator<doublereal, doublereal> spaceInterpolate(cfdMixFracCoordsInterpolated, sdrInterpolated);
-
-	return spaceInterpolate.interpolate(Z);
 
 }
 
