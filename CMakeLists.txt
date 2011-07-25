@@ -13,7 +13,7 @@ ELSE(WIN32)
   SET(BOOST_ROOT $ENV{HOME}/boost)
   SET(Boost_USE_MULTITHREADED OFF)
 ENDIF(WIN32)
-find_package(Boost 1.43.0 REQUIRED COMPONENTS regex serialization filesystem system)
+find_package(Boost 1.42.0 REQUIRED COMPONENTS regex serialization filesystem system)
 
 enable_testing()
 
