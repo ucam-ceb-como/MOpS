@@ -295,7 +295,7 @@ void FlameLet::initSolutionVector()
         	for (size_t l=1; l<nMoments; ++l)
             {
             	// ank25: Do we need to multiply by 1e6 here?
-        		vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + log(doublereal(sootMom_.getAtomsPerDiamer()));
+        		vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(doublereal(sootMom_.getAtomsPerDiamer()));
             	cout << "vMom[i*nMoments+l]  " << i*nMoments+l << vMom[i*nMoments+l] << endl;
             }
         }
@@ -603,6 +603,11 @@ const
     {
         resNorm += resT[i]*resT[i];
     }
+    for (int i=0; i<nMoments*mCord; ++i)
+    {
+    	resNorm += resMom[i]*resMom[i];
+    }
+
 
     return std::sqrt(resNorm);
 
