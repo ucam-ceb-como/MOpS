@@ -208,7 +208,7 @@ void FlameLet::initSolutionVector()
      *initialize the ODE vector
      */
     solvect.resize(nEqn,0.0);
-    vector<doublereal> vSpec, vT;
+    vector<doublereal> vSpec, vT, vMom;
     /*
      * actual signature follows (left,right,cc,vSpec)
      * but in the case of flamelets the species mass fractions
@@ -279,12 +279,44 @@ void FlameLet::initSolutionVector()
     vT[iMesh_e] = fuel.T;
 
     /*
+     *
+     */
+
+    // Set the initial moment values (interior and boundary)
+    // Also initial constants
+    if (sootMom_.active())
+    vMom.resize(len*nMoments,0.0);
+    {
+        for (size_t i=0; i<dz.size(); i++)
+        {
+        	cout << "First Moment " << sootMom_.getFirstMoment() << endl;
+        	vMom[i*nMoments] = sootMom_.getFirstMoment();
+        	cout << "vMom[i*nMoments]  " << i*nMoments << vMom[i*nMoments] << endl;
+        	for (size_t l=1; l<nMoments; ++l)
+            {
+            	// ank25: Do we need to multiply by 1e6 here?
+        		vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + log(doublereal(sootMom_.getAtomsPerDiamer()));
+            	cout << "vMom[i*nMoments+l]  " << i*nMoments+l << vMom[i*nMoments+l] << endl;
+            }
+        }
+        // Call the soot constants function
+        sootMom_.initMomentsConstants(*camMech_);
+    }
+
+
+    /*
      *create the actual solution vector by merging the species
-     *vector and the temperature vector
+     *vector, the temperature vector, and soot vector (if present)
      */
 
     mergeSpeciesVector(&vSpec[0]);
     mergeEnergyVector(&vT[0]);
+    if (sootMom_.active())
+    {
+    	mergeSootMoments(&vMom[0]);
+    }
+
+
 
     if (admin_.getRestartType() == admin_.BINARY)
     {
@@ -329,6 +361,12 @@ void FlameLet::csolve
         CVodeWrapper cvw;
         eqn_slvd = EQN_ALL;
         int band = nVar*2;
+
+        // Output the tolerances
+        // control_.setResTol(1.e-04);
+        cout << "Species Abs  Tol: " << control_.getSpeciesAbsTol() << endl;
+        cout << "Species Rel Tol: " << control_.getSpeciesRelTol() << endl;
+        cout << "Residual Tol: " << control_.getResTol() << endl;
 
         cvw.init(nEqn,solvect,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
             control_.getMaxTime(),band,*this);
@@ -502,17 +540,32 @@ void FlameLet::residual
         saveMixtureProp(y);
         speciesResidual(t,y,&resSp[0]);
         energyResidual(t,y,&resT[0]);
+        if (sootMom_.active())
+        {
+        	sootMomentResidual(t,y,&resMom[0]);
+        }
+
 
         for (int i=0; i<mCord; ++i)
         {
-            for (int l=0; l<nSpc; ++l)
+            // Put species residual into master residual
+        	for (int l=0; l<nSpc; ++l)
             {
                 f[i*nVar+l] = resSp[i*nSpc+l];
             }
+
+        	// Put temperature into master residual
             f[i*nVar+ptrT] = resT[i];
+
+            // Put moments into master residual
+        	for (int l=0; l<nMoments; ++l)
+            {
+                f[i*nVar+ptrT+1+l] = resMom[i*nMoments+l];
+            }
+
         }
     }
-    else // segregated solver part
+    else // segregated solver part   // Soot not implemented in segregated solver
     {
         if (eqn_slvd == EQN_SPECIES)
         {
@@ -573,8 +626,8 @@ void FlameLet::speciesResidual
     /*
      *starting with mixture fraction zero: i.e oxidizer
      *inlet. The fuel composition is zero. Left inlet is
-     *considered as the oxidizer inlet and the concentrationd
-     *are help constant
+     *considered as the oxidizer inlet and the concentrations
+     *are held constant
      */
 
 
@@ -670,6 +723,78 @@ void FlameLet::speciesResidual
     }
 
 }
+
+/*
+ * soot residual definitions
+ * This is written for the fully simplied soot flamelet equations
+ * See Mauss 2006
+ */
+void FlameLet::sootMomentResidual
+(
+    const doublereal& t,
+    doublereal* y,
+    doublereal* f
+)
+{
+    doublereal grad_e, grad_w;
+    doublereal zPE, zPW;
+    doublereal source;
+
+    /*
+     *set the externally specified scalar dissipation rate
+     *to sdr
+     */
+    //if (timeHistory) {
+    //    sdr = getSDR(t);
+    //} else if (sdr_ext!=0) {
+    //    sdr=sdr_ext;
+    //}
+
+    //sdr = scalarDissipationRate(dz[i]);
+    for (int l=0; l<nSpc; ++l)
+    {
+        f[l] = 0.0;
+    }
+
+    /*
+     *interior mixture fraction coordinates
+     */
+    for (int i=iMesh_s; i<iMesh_e; ++i)
+    {
+
+        zPE = 0.5*(dz[i]+dz[i+1]);
+        zPW = 0.5*(dz[i]+dz[i-1]);
+
+        //if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
+        //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
+        //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
+        //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],2.0,i);
+        sdr = scalarDissipationRate_[i];
+
+        doublereal diffusionConstant = sdr/(2.0*dz[i]);
+
+        for (int l=0; l<nMoments; ++l)
+        {
+            grad_e = (moments(i+1,l)-moments(i,l))/zPE;
+            grad_w = (moments(i,l)-moments(i-1,l))/zPW;
+            source = moments_dot(i,l)/m_rho[i];
+            f[i*nMoments+l] = diffusionConstant*(grad_e-grad_w)
+                          + source;								// LE = 1
+        }
+
+    }
+
+    /*
+     *Mixture fraction 1. The fuel inlet. Moments held constant here.
+     */
+
+    for (int l=0; l<nMoments; ++l)
+    {
+        f[iMesh_e*nMoments+l] = 0;
+    }
+
+}
+
 
 /*!
  *energy residual
@@ -784,6 +909,7 @@ void FlameLet::energyResidual
 
     }
 
+    // Hold temperature constant at fuel inlet
     f[iMesh_e] = 0.0;
 
 }
@@ -798,20 +924,38 @@ void FlameLet::saveMixtureProp(doublereal* y)
     vector<doublereal> htemp(nSpc,0.0);
     vector<doublereal> temp(nSpc,0.0);
     vector<doublereal> cptemp(nSpc,0.0);
+    vector<doublereal> moments_dot_temp(nMoments,0.0);
+    vector<doublereal> mom_temp(nMoments,0.0);
+    vector<doublereal> conc(nSpc,0.0);
+    vector<doublereal> wdotSootGasPhase(nMoments,0.0);
 
     for (int i=0; i<mCord; ++i)
     {
 
-        mf.clear();
+        // Extract the mass fractions from the solution vector
+    	mf.clear();
         for(int l=0; l<nSpc; l++)
         {
             mf.push_back(y[i*nVar+l]);
         }
-        m_T[i] = y[i*nVar+ptrT];                                   //temperature
+
+        // Extract temperature from the solution vector
+        m_T[i] = y[i*nVar+ptrT];
+
+        // Extract the moments from solution vector
+        mom_temp.clear();
+        for(int l=0; l<nSpc; l++)
+        {
+        	mom_temp.push_back(y[i*nVar+ptrT+1+l]);
+        }
+
+
         camMixture_->SetMassFracs(mf);                              //mass fraction
         camMixture_->SetTemperature(m_T[i]);                        //temperature
+        camMixture_->GetConcs(conc);								//molar conc used by soot
+
         avgMolWt[i] = camMixture_->getAvgMolWt();
-        m_rho[i] = opPre*avgMolWt[i]/(R*m_T[i]);                   //density
+        m_rho[i] = opPre*avgMolWt[i]/(R*m_T[i]);                    //density
         camMixture_->SetMassDensity(m_rho[i]);                      //density
         camMech_->Reactions().GetMolarProdRates(*camMixture_,wdot);
         htemp = camMixture_->getMolarEnthalpy();                    //enthalpy
@@ -831,6 +975,27 @@ void FlameLet::saveMixtureProp(doublereal* y)
             s_Diff(i,l) = temp[l];
             //Specific heat capacity of species in J/Kg K
             CpSpec(i,l) =cptemp[l]/(*spv_)[l]->MolWt();
+        }
+        if (sootMom_.active())
+        {
+          for(int l=0; l<nMoments; l++)
+          {
+        	  moments(i,l) = mom_temp[l];
+          }
+
+          moments_dot_temp = sootMom_.rateAll(conc, mom_temp, m_T[i], opPre, 1);
+          for(int l=0; l<nMoments; l++)
+          {
+        	  moments_dot(i,l) =  moments_dot_temp[l];
+          }
+
+          // Now get the corresponding gas phase rates and add them to s_Wdot
+          wdotSootGasPhase = sootMom_.showGasPhaseRates(nSpc);
+    	  for (int l=0; l< nSpc; l++)
+  	      {
+             s_Wdot(i,l) = s_Wdot(i,l) + wdotSootGasPhase[l] * (*spv_)[l]->MolWt();
+  	      }
+
         }
 
     }
@@ -962,6 +1127,8 @@ void FlameLet::report(doublereal x, doublereal* solution, doublereal& res)
     cout.width(5);
     cout.setf(ios::scientific);
     //if(nStep%10==0) reporter->consoleHead("time(s) \t residual");
+
+    if(nStep%10==0) cout << "Time" <<"\t" << "Residual" << endl;
     cout << x <<"\t" << res << endl;
     nStep++;
 
@@ -1027,6 +1194,17 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<doub
             }
         }
         data.push_back(sum);
+
+        // Add the moments to to the data output
+        if (sootMom_.active())
+        {
+            for(int l=0; l<nMoments; l++)
+            {
+            	data.push_back(soln[i*nVar+ptrT+1+l]);
+            }
+        }
+
+
         reporter_->writeCustomFileOut(data);
 
     }
@@ -1085,6 +1263,17 @@ std::vector<std::string> FlameLet::header()
         headerData.push_back( (*spv_)[l]->Name() );
     }
     headerData.push_back("sumfracs");
+    if (sootMom_.active())
+    {
+        headerData.push_back("M0");
+        headerData.push_back("M1");
+        headerData.push_back("M2");
+        headerData.push_back("M3");
+        headerData.push_back("M4");
+        headerData.push_back("M5");
+    }
+
+
 
     return headerData;
 
