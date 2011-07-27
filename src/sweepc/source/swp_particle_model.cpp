@@ -299,22 +299,6 @@ bool ParticleModel::ContainsSubModel(SubModels::SubModelType id) const
     return m_submodels.find(id) != m_submodels.end();
 }
 
-// Adds a model to the ParticleModel.  Any subsequent particles
-// created with this ParticleModel will use this model.
-void ParticleModel::AddSubModel(SubModels::SubModelType id)
-{
-    m_submodels.insert(id);
-
-    // Initialise the model as necessary.
-    switch(id) {
-        case ActSites::ABFSites_ID:
-            ActSites::ABFModel::Instance().Initialise(*this);
-            break;
-        default:
-            break;
-    }
-}
-
 // AGGREGATION MODEL TYPE.
 
 // Returns the ID of the aggregation model used by dependent particles.
