@@ -26,12 +26,17 @@ Testing/
 Debug/
 Release/
 *.dir/
+*.project
+*.cproject
 
 # Executables built by cmake
 mops-app
 brush-app
 camflow-app
 brush-moonmd-test
+sprogc-test
+PAHkmc-app
+chemkinReader-test
 *.exe
 
 # log files
