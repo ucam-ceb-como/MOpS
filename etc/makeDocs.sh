@@ -47,7 +47,7 @@ if [ $0 != "./etc/makeDocs.sh" ]; then
     exit 1
 fi
 
-folders=(camxml sprogc geometry camflow sweepc mopsc brush utils)
+folders=(utils camxml sprogc geometry camflow sweepc mopsc brush)
 
 if [ $cleanall -eq 1 ]; then
     echo "Cleaning all documentation."
@@ -63,6 +63,7 @@ if [ $cleanall -eq 1 ]; then
 fi
 
 echo "Create the documentation:"
+echo ${folders[@]}
 for element in ${folders[@]}
 do
     folderLocation=`find src -name $element`
