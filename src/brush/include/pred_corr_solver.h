@@ -134,6 +134,9 @@ protected:
     //! Advance particle population to specified time
     void solveParticles(Reactor1d &reac, const real t_stop) const;
 
+    //! Advance particle population to specified time
+    void solveParticlesByCell(Reactor1d &reac, const real t_stop) const;
+
     //! Perform one stochastic jump
     real particleTimeStep(Reactor1d &reac, const real t_stop, JumpRateCache &rate_cache) const;
 
