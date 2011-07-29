@@ -126,8 +126,7 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
                              const Geometry::LocalGeometry1d& local_geom,
                              unsigned int iterm,
                              int (*rand_int)(int, int), 
-                             Sweep::real(*rand_u01)(), 
-                             Sweep::Transport::TransportOutflow *out) const
+                             Sweep::real(*rand_u01)()) const
 {
     // Select properties by which to choose particles.
     // Note we need to choose 2 particles.  One particle must be chosen

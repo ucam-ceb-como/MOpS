@@ -363,7 +363,7 @@ void Brush::PredCorrSolver::solveParticlesInOneCell(Mops::Reactor &cell, const G
             else {
                 t +=dt;
                 const int process = chooseIndex(jumpRates, Sweep::genrand_real1);
-                mech.DoProcess(process, t, *(cell.Mixture()), geom, Sweep::genrand_int, Sweep::genrand_real1, NULL, NULL);
+                mech.DoProcess(process, t, *(cell.Mixture()), geom, Sweep::genrand_int, Sweep::genrand_real1, NULL);
                 // Update jumpRates now the particles have changed
                 jumpRate = mech.CalcJumpRateTerms(t, *(cell.Mixture()), geom, jumpRates);
             }
@@ -444,31 +444,16 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop,
         activeProcess = chooseIndex(rate_cache.mProcessRates[activeCell], Sweep::genrand_real1);
         //std::cout << "active process is " << activeProcess << '\n';
 
-        // Perform the event and find out if a particle was transported out of its cell
-        Sweep::Transport::TransportOutflow out;
-
         // Get the geometry information for the cell
         Geometry::LocalGeometry1d cellGeom(reac.getGeometry(), activeCell);
 
         reac.getMechanism().ParticleMech().DoProcess(activeProcess, reac.getTime() + dt,
                                                      *(reac.getCell(activeCell).Mixture()), cellGeom,
-                                                     Sweep::genrand_int, Sweep::genrand_real1, NULL, &out);
+                                                     Sweep::genrand_int, Sweep::genrand_real1, NULL);
 
         // Contents of active cell has changed so mark it for update in the rate cache
         rate_cache.mInvalidCells.push(activeCell);
 
-        if(out.particle) {
-            if(out.destination >= 0) {
-                // Particle has stayed in the system
-                transportIn(reac, out.destination, out);
-
-                // Contents of destination cell has changed so mark it for update in the rate cache
-                rate_cache.mInvalidCells.push(out.destination);
-            }
-
-            // Ownership of the transported particle was taken by transportIn
-            out.particle = NULL;
-        }
     }
 
 //    std::cout << ", actual step " << dt << " with process " << activeProcess

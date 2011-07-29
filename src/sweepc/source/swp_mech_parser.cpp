@@ -55,8 +55,6 @@
 #include "swp_weighted_constcoag.h"
 #include "swp_coag_weight_rules.h"
 #include "swp_abf_model.h"
-#include "swp_diffusion_process.h"
-#include "swp_advection_process.h"
 
 #include "camxml.h"
 #include "string_functions.h"
@@ -1295,96 +1293,8 @@ void MechParser::readDiffusionProcs(CamXML::Document &xml, Mechanism &mech)
     // Get all transport processes.
     xml.Root()->GetChildren("diffusion", items);
 
-    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
-        DiffusionProcess *tran = new DiffusionProcess();
-        // Set default name.
-        tran->SetName("Diffusion " + cstr(k));
-
-        // Read the reaction properties.
-        try {
-            readDiffusionProc(*(*i), *tran);
-        } catch (std::exception &e) {
-            delete tran;
-            throw;
-        }
-
-        // Add process to mechanism.
-        mech.AddTransport(*tran);
-    }
-}
-
-/*!
- *\param[in]        xml     XML node of type diffusion
- *\param[in]        rxn     mechanism to which to add the process
- */
-void MechParser::readDiffusionProc(CamXML::Element &xml, Processes::DiffusionProcess &tran)
-{
-    string str;
-    CamXML::Element *el = NULL;
-
-    // Read name.
-    str = xml.GetAttributeValue("name");
-    if (str != "")
-        tran.SetName(str);
-
-    // Particle dependency.
-    el = xml.GetFirstChild("particleterm");
-    if (el!=NULL) {
-        // Get property ID.
-        str = el->GetAttributeValue("id");
-
-        // Get power.
-        int id = atoi(el->GetAttributeValue("power").c_str());
-
-        if (str.compare("d")==0) {
-            // This reaction depends on some power of the collision diameter.
-            switch (id) {
-                case 0:
-                    tran.SetPropertyID(Sweep::iUniform);
-                    break;
-                case 1:
-                    tran.SetPropertyID(Sweep::iDcol);
-                    break;
-                case 2:
-                    tran.SetPropertyID(Sweep::iD2);
-                    break;
-                case -1:
-                    tran.SetPropertyID(Sweep::iD_1);
-                    break;
-                case -2:
-                    tran.SetPropertyID(Sweep::iD_2);
-                    break;
-                default:
-                    // Oh dear, can't have a zero power.
-                    throw runtime_error("particleterm"" tag found with \
-                                         invalid power attribute \
-                                        (Sweep, MechParser::readTransportProc)");
-            }
-        }
-        else {
-            throw runtime_error("Surface process defined without particleterm \
-                                 element (Sweep, MechParser::readTransportProc).");
-        }
-    }
-
-    // Temperature dependency.
-    el = xml.GetFirstChild("temperature");
-    real power = 0;
-    if (el!=NULL) {
-        // Get power.
-        power = atof(el->GetAttributeValue("power").c_str());
-    }
-    tran.SetTemperatureExponent(power);
-
-    // Read scaling factor
-    real A = 0.0;
-    el = xml.GetFirstChild("A");
-    if (el != NULL) {
-        A = atof(el->Data().c_str());
-    } else {
-        A = 1.0;
-    }
-    tran.SetA(A);
+    if(!items.empty())
+        throw std::runtime_error("Diffusion processes are no longer supported");
 }
 
 /*!
@@ -1401,49 +1311,9 @@ void MechParser::readAdvectionProcs(CamXML::Document &xml, Mechanism &mech)
     // Get all transport processes.
     xml.Root()->GetChildren("advection", items);
 
-    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
-        AdvectionProcess *tran = new AdvectionProcess();
-        // Set default name.
-        tran->SetName("Advection " + cstr(k));
-
-        // Read the reaction properties.
-        try {
-            readAdvectionProc(*(*i), *tran);
-        } catch (std::exception &e) {
-            delete tran;
-            throw;
-        }
-
-        // Add process to mechanism.
-        mech.AddTransport(*tran);
-    }
+    if(!items.empty())
+        throw std::runtime_error("Advection processes are no longer supported");
 }
-
-/*!
- *\param[in]        xml     XML node of type advection
- *\param[in]        rxn     mechanism to which to add the process
- */
-void MechParser::readAdvectionProc(CamXML::Element &xml, Processes::AdvectionProcess &tran)
-{
-    string str;
-    CamXML::Element *el = NULL;
-
-    // Read name.
-    str = xml.GetAttributeValue("name");
-    if (str != "")
-        tran.SetName(str);
-
-    // Read scaling factor
-    real A = 0.0;
-    el = xml.GetFirstChild("A");
-    if (el != NULL) {
-        A = atof(el->Data().c_str());
-    } else {
-        A = 1.0;
-    }
-    tran.SetA(A);
-}
-
 
 // REACTION SHARED COMPONENTS.
 

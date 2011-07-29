@@ -43,7 +43,6 @@
 #include "swp_dimer_inception.h"
 #include "swp_mechanism.h"
 
-#include "local_geometry1d.h"
 using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
@@ -112,7 +111,6 @@ DimerInception &DimerInception::operator =(const DimerInception &rhs)
  * \param[in]       iterm           Process term responsible for this event
  * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
- * \param[out]      out             Details of any particle being transported out of system
  *
  * \return      0 on success, otherwise negative.
  */
@@ -120,8 +118,7 @@ int DimerInception::Perform(const real t, Cell &sys,
                             const Geometry::LocalGeometry1d &local_geom,
                             const unsigned int iterm,
                             int (*rand_int)(int, int), 
-                            Sweep::real(*rand_u01)(), 
-                            Transport::TransportOutflow * const out) const {
+                            Sweep::real(*rand_u01)()) const {
 
     // This routine performs the inception on the given chemical system.
 

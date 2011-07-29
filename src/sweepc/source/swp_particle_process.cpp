@@ -307,8 +307,7 @@ int ParticleProcess::Perform(Sweep::real t, Sweep::Cell &sys,
                           const Geometry::LocalGeometry1d& local_geom,
                           unsigned int iterm,
                           int (*rand_int)(int, int), 
-                          Sweep::real(*rand_u01)(),
-                          Sweep::Transport::TransportOutflow *out) const
+                          Sweep::real(*rand_u01)()) const
 {
     return 0;
 }

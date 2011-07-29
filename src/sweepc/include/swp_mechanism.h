@@ -66,8 +66,6 @@
 #include <string>
 #include <iostream>
 
-#include "swp_transport_process.h"
-
 // Forward declaration
 namespace Geometry {
     class LocalGeometry1d;
@@ -129,18 +127,6 @@ public:
 
     // Adds a process to the mechanism.
     void AddProcess(Processes::ParticleProcess &p);
-
-    // TRANSPORT PROCESSES.
-
-    //! Returns the vector of transport processes.
-    const Processes::TransportPtrVector &Transports(void) const;
-
-    //! Returns the process with the given index.
-    const Processes::TransportProcess *const Transports(unsigned int i) const;
-
-    //! Adds a transport process to the mechanism.
-    void AddTransport(Processes::TransportProcess &p);
-
 
     // COAGULATIONS.
 
@@ -231,8 +217,7 @@ public:
         const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         int (*rand_int)(int, int), // Integer random samples
         real (*rand_u01)(), // U[0,1] samples
-        Sweep::GasProfile* gp=NULL,
-        Transport::TransportOutflow *out = 0 // Details of any particle transported out
+        Sweep::GasProfile* gp=NULL
         ) const;
 
 
@@ -284,8 +269,6 @@ private:
     // Processes in mechanism.
     Processes::IcnPtrVector m_inceptions;     // Inception process list.
     Processes::PartProcPtrVector m_processes; // Particle process list.
-    //! List of transport processes
-    Processes::TransportPtrVector m_transports;
 
     //! List of coagulation processes
     Processes::CoagPtrVector m_coags;
