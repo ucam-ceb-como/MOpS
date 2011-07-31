@@ -81,6 +81,8 @@ class ScalarDissipationRate
     //! The first index is 'mixture fraction coordinate'.
     std::vector< std::vector<doublereal> > scalarDissipationRate_;
 
+    Utils::LinearInterpolator<doublereal, doublereal>*  interpolator_;
+
     void readStrainRate(const std::string& inputFileName);
     doublereal calculate(const doublereal& mixtureFraction) const;
     doublereal scalarDissipationRate(const doublereal& mixtureFraction) const;

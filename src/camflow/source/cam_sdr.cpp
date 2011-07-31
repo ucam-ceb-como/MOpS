@@ -29,12 +29,16 @@ ScalarDissipationRate::ScalarDissipationRate
     {
         scalarDissipationRate_[0][i] = calculate(mixFracCoords[i]);
     }
+    interpolator_ = new
+    Utils::LinearInterpolator<doublereal, doublereal>(mixFracCoords_, scalarDissipationRate_[0]);
 
 }
 
 //! Destructor.
 ScalarDissipationRate::~ScalarDissipationRate()
-{}
+{
+    delete interpolator_;
+}
 
 void
 ScalarDissipationRate::readStrainRate(const std::string& inputFileName)
@@ -222,12 +226,13 @@ ScalarDissipationRate::operator()
 const
 {
 
+    // \todo This is slow. We already know mixFracCoords so could look up
+    // scalarDissipationRate_ directly.
     if (sdrType_ == notFromCFD)
     {
-        Utils::LinearInterpolator<doublereal, doublereal>
-            interpolator(mixFracCoords_, scalarDissipationRate_[0]);
-        return interpolator.interpolate(Z);
+        return interpolator_->interpolate(Z);
     }
+
     /*else if (sdrType_ == constant_fromCFD)
     {
         std::vector<doublereal> sdrTime, sdrInterpolated;
