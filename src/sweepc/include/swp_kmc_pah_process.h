@@ -90,6 +90,11 @@ public:
     //! Returns a copy of PAH structure
     PAHStructure* clonePAH() const;
 
+	size_t SiteListSize() const;
+	size_t CarbonListSize() const;
+	std::list<Site>& SiteList() const;
+
+
     // Structure change processes
     //! Initialisation of structure given a starting structure
     virtual PAHStructure& initialise(StartingStructure ss);
@@ -184,9 +189,7 @@ private:
     //! Creates a lone carbon atom
     Cpointer addC();
     //! Creates a new carbon atom attached next to C_1.
-    Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2);
-    //! Creates a bulk carbon atom between C_1 & C_2
-    Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2, bool bulk);
+    Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2, bool bulk=false);
     //! Creates a carbon atom bridging next to C_1. 
     Cpointer bridgeC(Cpointer C_1);
     /*//! Creates a bulk carbon atom connected to C_1
@@ -235,7 +238,8 @@ private:
     
     // PAH data structure to perform processes on
    PAHStructure* m_pah;
-    
+
+    //Cpointer NULLC;
 };
 
 }

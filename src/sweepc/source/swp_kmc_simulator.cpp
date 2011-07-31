@@ -137,8 +137,7 @@ real KMCSimulator::updatePAH(PAHStructure* pah,
                             real (*rand_u01)(), 
                             real r_factor,
                             int PAH_ID) {
-   
-    vector<int> m_rxn_count(m_kmcmech.JPList().size(),0);
+    std::vector<int> m_rxn_count(m_kmcmech.JPList().size(),0);
     m_t = tstart;
     real t_max = m_t + dt;
     targetPAH(*pah);
@@ -166,7 +165,6 @@ real KMCSimulator::updatePAH(PAHStructure* pah,
     real t_step_max = dt/waitingSteps;
     real oldtnext;
     int loopcount=0;
-
     while (m_t < t_max) {
         //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
         //m_simGas.interpolateProfiles(m_t, true, r_factor);
@@ -179,7 +177,7 @@ real KMCSimulator::updatePAH(PAHStructure* pah,
         // Calculate time step, update time
         real t_step = timeStep(m_kmcmech.TotalRate(), rand_u01);
         t_next = m_t+t_step;
-        if(t_next < t_max) {
+        if(t_next < t_max && t_step < t_step_max) {
 
             //if (pah->numofC()>5000&&pah->numofC()<6000)//||pah->havebridgeC()    //if (PAH_ID==224835)
             //if we want to check a PAH with specified ID or number of Carbon, 
@@ -187,7 +185,7 @@ real KMCSimulator::updatePAH(PAHStructure* pah,
             // saveDOTperLoop(100000*tstart,loopcount,PAH_ID);
             // Choose jump according to rates
             ChosenProcess jp_perf = m_kmcmech.chooseReaction(rand_u01);
-            //cout<<m_simGas.jplist[chosen_proc]->getName()<<'\n';//++++
+            //cout<<jp_perf.first->getName()<<'\n';//++++
 
             // Update data structure
             bool process_success = m_simPAHp.performProcess(*jp_perf.first, rand_int);
@@ -206,9 +204,52 @@ real KMCSimulator::updatePAH(PAHStructure* pah,
             t_next = m_t+t_step_max;
         }
         m_t = t_next;
-        //saveDOTperXLoops(1, count, run);
+		//int run=0;
+        //saveDOTperXLoops(1, loopcount, run);
     }
     return m_t;
+}
+
+//! Outputs rates into a csv file (assuming all site counts as 1)
+void KMCSimulator::TestRates(const real tstart, const real tstop, const int intervals) {
+	// set name of output file
+	//setCSVratesName(filename);
+	m_rates_csv.Open(m_rates_name, true);
+	rvector rates(m_kmcmech.JPList().size(), 0);
+	real dt = (tstop-tstart)/intervals;
+	m_simPAHp.m_rates_save = true;
+	// for each interval
+	for(real t=tstart; t<= tstop; t+=dt) {
+		// interpolate & calculate rates
+		m_gas->Interpolate(t);
+		m_kmcmech.calculateRates(*m_gas, m_simPAHp, t);
+		rates = m_kmcmech.Rates();
+		writeRatesCSV(t, rates);
+	}
+	m_simPAHp.m_rates_save = false;
+	std::cout<<"Finished calculating rates for kMC mechanism. Results are saved in "
+		<<m_rates_name<<"\n\n";
+}
+
+//! Outputs gas concentrations into a csv file
+void KMCSimulator::TestConc(const real& t_start, const real& t_stop, const int intervals, const std::string& filename) {
+	CSV_IO csvio(filename, true);
+	real dt = (t_stop-t_start)/intervals;
+	std::vector<string> species(m_gas->m_total-2);
+	rvector temp(m_gas->m_total-2); //exclude T & P
+	for(size_t i=1; i<(temp.size()); i++) {
+		species[i] = m_gas->SpNames()[i+1];
+	}
+	csvio.Write(species);
+	for(real t=t_start; t<=t_stop; t+=dt) {
+		temp[0] = t;
+		m_gas->Interpolate(t);
+		for(size_t i=1; i<(temp.size()-1); i++) {
+			temp[i] = (*m_gas)[i+1];
+		}
+		csvio.Write(temp);
+		
+	}
 }
 
 /*void KMCSimulator::testSimulation(PAHStructure& pah, const unsigned long seed, int totalruns) {
@@ -309,11 +350,11 @@ void KMCSimulator::writeCHSiteCountCSV() {
     m_pah_csv.Write(temp);
 }
 //! Writes data for rates count (csv)
-void KMCSimulator::writeRatesCSV(int runNo, real& time, rvector& v_rates) {
+void KMCSimulator::writeRatesCSV(real& time, rvector& v_rates) {
     //int convC[] = {1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19};
     int convM[] = {1, 2,14,15, 8,10,11,12,13, 3, 7, 9, 5, 4, 6,22,24,16,21};
     int ID;
-    if(runNo==1) {
+    //if(runNo==1) {
     std::vector<real> temp(25,0);
     temp[0] = time;
     for(int i=0; i!=(int)v_rates.size(); i++) {
@@ -321,7 +362,7 @@ void KMCSimulator::writeRatesCSV(int runNo, real& time, rvector& v_rates) {
         temp[convM[ID-1]] = v_rates[i];
     }
     m_rates_csv.Write(temp);
-    }
+    //}
 }
 //! Initialise CSV_IOs
 void KMCSimulator::initCSVIO() {

@@ -109,7 +109,7 @@ namespace Sweep{
             //! Writes data for CH_site_list.csv
             void writeCHSiteCountCSV();
             //! Writes data for rates count (csv)
-            void writeRatesCSV(int runNo, real& time, rvector& v_rates);
+            void writeRatesCSV(real& time, rvector& v_rates);
             //! Initialise CSV_IOs
             void initCSVIO();
             //! Initialise reaction count
@@ -133,7 +133,10 @@ namespace Sweep{
                            real (*rand_u01)(),// random number
                            real r_factor,     // growth factor g, one important parameter used in this model.
                            int PAH_ID);       // ID of this pah, used for debugging.
-            ////! A function to test validity of updatePAH compared to runSimulation
+            //! Outputs rates into a csv file (assuming all site counts as 1)
+			void TestRates(const real tstart, const real tstop, const int intervals);
+			//! Outputs gas concentrations into a csv file
+			void TestConc(const real& t_start, const real& t_stop, const int intervals, const std::string& filename);
             //void testSimulation(PAHStructure& pah, const unsigned long seed, int totalruns);
             void writetimestep(const std::vector<double>& timestep);
             void setCSVtimestep(const std::string &filename);

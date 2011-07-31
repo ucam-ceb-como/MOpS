@@ -27,8 +27,7 @@ add_library(mops source/cvodes_utils.cpp
                  source/mops_src_terms.cpp
                  source/mops_strang_solver.cpp
                  source/mops_timeinterval.cpp
-                 source/swp_flamesolver.cpp
-                 source/swp_gas_profile.cpp)
+                 source/swp_flamesolver.cpp)
 
 include_directories(include 
                     ${Boost_INCLUDE_DIRS} 

@@ -6,9 +6,9 @@
 using namespace Sweep::KMC_ARS;
 using namespace std;
 
-Carbon::Carbon(): C1(NULL),
-    C2(NULL),
-    C3(NULL),
+Carbon::Carbon(): C1(NULLC),
+    C2(NULLC),
+    C3(NULLC),
     edge(true),
     bridge(false),
     A(0),

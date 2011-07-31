@@ -104,6 +104,10 @@ namespace Sweep{
         private:
             //! Copy Constructor
             PAHStructure(const PAHStructure& copy);
+			//! Set storing carbon objects
+			Ccontainer m_carbonList;
+
+			//Cpointer NULLC;
         };
     }
 }

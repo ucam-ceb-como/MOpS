@@ -64,8 +64,9 @@ using namespace std;
 // Constructors and Destructor
 //! Default Constructor
 PAHStructure::PAHStructure() {
-    m_cfirst = NULL;
-    m_clast = NULL;
+	//NULLC = m_carbonList.insert(Carbon()).first;
+    m_cfirst = NULLC;
+    m_clast = NULLC;
     m_rings = 0;
     m_counts = intpair(2, 0);
     m_parent = NULL;
@@ -76,12 +77,12 @@ PAHStructure::PAHStructure(const PAHStructure& copy){
 }
 //! Default Destructor
 PAHStructure::~PAHStructure() {
-    //delete m_cfirst;
-    //delete m_clast;
-    //PAHProcess pp(*this);
-   // pp.clearStructure();
-     //m_siteMap.clear();
-    //m_siteList.clear();
+    delete m_cfirst;
+    delete m_clast;
+    PAHProcess pp(*this);
+	pp.clearStructure();
+    m_siteMap.clear();
+    m_siteList.clear();
 }
 
 void PAHStructure::setParent(Sweep::AggModels::PAH* parent) {
