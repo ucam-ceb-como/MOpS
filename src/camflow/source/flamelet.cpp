@@ -284,9 +284,9 @@ void FlameLet::initSolutionVector()
 
     // Set the initial moment values (interior and boundary)
     // Also initial constants
-    /*if (sootMom_.active())
-    vMom.resize(len*nMoments,0.0);
+    if (sootMom_.active())
     {
+        vMom.resize(len*nMoments,0.0);
         for (size_t i=0; i<dz.size(); i++)
         {
         	cout << "First Moment " << sootMom_.getFirstMoment() << endl;
@@ -301,7 +301,7 @@ void FlameLet::initSolutionVector()
         }
         // Call the soot constants function
         sootMom_.initMomentsConstants(*camMech_);
-    }*/
+    }
 
 
     /*
