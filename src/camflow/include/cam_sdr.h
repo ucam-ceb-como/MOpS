@@ -43,6 +43,7 @@
 
 #include "array.h"
 #include "cam_math.h"
+#include "linear_interpolator.hpp"
 
 namespace Camflow
 {
@@ -56,11 +57,11 @@ class ScalarDissipationRate
     enum sdr
     {
         NONE,
-        constant_fromStrainRate,
-        profile_fromStrainRate,
+        notFromCFD,
         constant_fromCFD,
         profile_fromCFD
     };
+
     int sdrType_;
 
     const doublereal& stoichZ_;
@@ -69,13 +70,16 @@ class ScalarDissipationRate
 
     const std::vector<doublereal>& mixFracCoords_;
 
-    //! The first index is 'time coordinate'.
-    //! The second index is 'mixture fraction coordinate'.
-    Array2D scalarDissipationRate_;
+    //! Stoichiometric scalar dissipation rate that has a time history.
+    std::vector<doublereal> v_stoichSDR;
 
-    std::vector<doublereal> v_sdr;   //scalar dissipation rate that has a time history
-    std::vector<doublereal> v_time; //time profile of scalar dissipation rates
-    std::vector< std::vector<doublereal> > profile_sdr; // SDR profile with a time history.
+    //! Time profile of the scalar dissipation rates.
+    std::vector<doublereal> v_time;
+
+    //! SDR profile with a time history.
+    //! The second index is 'time coordinate'.
+    //! The first index is 'mixture fraction coordinate'.
+    std::vector< std::vector<doublereal> > scalarDissipationRate_;
 
     void readStrainRate(const std::string& inputFileName);
     doublereal calculate(const doublereal& mixtureFraction) const;
@@ -100,10 +104,13 @@ public:
 
     void setSDRRate(const doublereal sdr);
 
-    doublereal operator[](int i) const
-    {
-        return scalarDissipationRate_(i,0);
-    }
+    void setExternalScalarDissipationRate
+    (
+        const std::vector<doublereal>& time,
+        const std::vector<doublereal>& sdr
+    );
+
+    doublereal operator()(const doublereal& Z, const doublereal& time) const;
 
     inline const doublereal& getStoichSDR() const
     {

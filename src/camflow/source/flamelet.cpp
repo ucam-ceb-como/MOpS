@@ -284,7 +284,7 @@ void FlameLet::initSolutionVector()
 
     // Set the initial moment values (interior and boundary)
     // Also initial constants
-    if (sootMom_.active())
+    /*if (sootMom_.active())
     vMom.resize(len*nMoments,0.0);
     {
         for (size_t i=0; i<dz.size(); i++)
@@ -301,7 +301,7 @@ void FlameLet::initSolutionVector()
         }
         // Call the soot constants function
         sootMom_.initMomentsConstants(*camMech_);
-    }
+    }*/
 
 
     /*
@@ -697,7 +697,7 @@ void FlameLet::speciesResidual
         //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
         //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
         //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],5.0,i);
-        sdr = scalarDissipationRate_[i];
+        sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
         doublereal diffusionConstant = sdr/(2.0*dz[i]);
 
@@ -769,7 +769,7 @@ void FlameLet::sootMomentResidual
         //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
         //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
         //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],2.0,i);
-        sdr = scalarDissipationRate_[i];
+        sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
         doublereal diffusionConstant = sdr/(2.0*dz[i]);
 
@@ -847,7 +847,7 @@ void FlameLet::energyResidual
         //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
         //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
         //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],5.0,i);
-        sdr = scalarDissipationRate_[i];
+        sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
         grad_e = (m_T[i+1]-m_T[i])/zPE;
         grad_w = (m_T[i]-m_T[i-1])/zPW;
@@ -948,7 +948,6 @@ void FlameLet::saveMixtureProp(doublereal* y)
         {
         	mom_temp.push_back(y[i*nVar+ptrT+1+l]);
         }
-
 
         camMixture_->SetMassFracs(mf);                              //mass fraction
         camMixture_->SetTemperature(m_T[i]);                        //temperature
@@ -1159,7 +1158,7 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<doub
         data.clear();
         data.push_back(t);
         data.push_back(axpos[i]);
-        data.push_back(scalarDissipationRate_[i]);
+        data.push_back(scalarDissipationRate_(axpos[i],0));
         data.push_back(m_rho[i]);
         data.push_back(m_mu[i]);
         data.push_back(m_cp[i]);
