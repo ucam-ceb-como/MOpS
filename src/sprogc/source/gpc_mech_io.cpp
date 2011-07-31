@@ -114,7 +114,7 @@ void MechanismParser::ReadChemkin
         Element *el = mech.AddElement();
         el->SetName(chemkinReader.elements()[i].getName());
         el->SetMolWtFromLibrary();
-        delete el;
+        el = NULL;
     }
 
     // Read Species.
@@ -141,7 +141,7 @@ void MechanismParser::ReadChemkin
         }
         sp->AddThermoParams(chemkinReader.species()[i].thermo().getTCommon(), lp);
         sp->AddThermoParams(chemkinReader.species()[i].thermo().getTHigh(), up);
-        delete sp;
+        sp = NULL;
     }
 
     // Read Reactions.
