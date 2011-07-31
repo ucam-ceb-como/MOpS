@@ -44,6 +44,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 #include "sweep.h"
 
 #include "swp_kmc_jump_process.h"
@@ -72,9 +73,9 @@ using namespace Strings;
 
 int main(int argc, char *argv[])
 {
-    KMCSimulator Simulator(std::string("gasphase.inp"),
+    KMCSimulator* Simulator = new KMCSimulator (std::string("gasphase.inp"),
 		std::string("chem.inp"), std::string("therm.dat"));
-	Simulator.TestGP();
+	Simulator->TestGP();
 	std::string input_name = "kmc.inx";
 
     clock_t timerStart = clock();
@@ -119,25 +120,25 @@ int main(int argc, char *argv[])
 
 		// get input file names
 		node = root->GetFirstChild("gasFile");
-		//KMC_Simulator.setCSVinputName(node->Data());
+		Simulator->setCSVinputName(node->Data());
 
 		// get output file names
 		node = root->GetFirstChild("dotFiles");
-		//KMC_Simulator.setDOToutputName(node->Data());
+		Simulator->setDOToutputName(node->Data());
 		attr = node->GetAttribute("mode");
 		if(attr->GetValue() == "ON") save_dots = true;
 
 		node = root->GetFirstChild("timer");
-		//KMC_Simulator.setCSVtimerName(node->Data());
+		Simulator->setCSVtimerName(node->Data());
 
 		node = root->GetFirstChild("rxncounts");
-		//KMC_Simulator.setCSVreactioncountName(node->Data());
+		Simulator->setCSVreactioncountName(node->Data());
 
 		node = root->GetFirstChild("pahlist");
-		//KMC_Simulator.setCSVpahlistName(node->Data());
+		Simulator->setCSVpahlistName(node->Data());
 
 		node = root->GetFirstChild("rates");
-		//KMC_Simulator.setCSVratesName(node->Data());
+		Simulator->setCSVratesName(node->Data());
 		attr = node->GetAttribute("mode");
 		if(attr->GetValue() == "ON") save_rates = true;
 
@@ -159,17 +160,80 @@ int main(int argc, char *argv[])
 	// Run simulation
 	
 	try{
-        PAHStructure pah;
-        PAHProcess pahp(pah);
-        pahp.initialise(PYRENE);
+		//Simulator->TestGP();
+		if(!save_rates) {
+		std::vector<PAHStructure*> pah(1);
+        PAHProcess pahp;
+		/*for(size_t i=0; i<pah.size(); ++i) {
+			pah[i] = new PAHStructure();
+			pahp.setPAH(*pah[i]);
+			pahp.initialise(startStruct);
+		}*/
+		pah[0] = new PAHStructure();
+		pahp.setPAH(*pah[0]);
+		
         int ID = 10000;
-        Simulator.updatePAH(&pah,
-            t_start, (t_end-t_start),
-            no_of_steps,
-            Sweep::genrand_int, Sweep::genrand_real1,
-            1,
-            ID);
-        pahp.saveDOT("DOT files/TestSimulator.dot");
+		for(size_t i=0; i<total_runs; i++) {
+			std::cout << "Starting growth on PAH "<<i<<"...\n";
+			pahp.initialise(startStruct);
+			//pahp.setPAH(*pah[0]);
+			std::cout << "Pointer to PAH:"<<pah[0]<<"\n";
+			Simulator->updatePAH(pah[0],
+				t_start, (t_end-t_start),
+				no_of_steps,
+				Sweep::genrand_int, Sweep::genrand_real1,
+				1,
+				ID+i);
+			std::cout<<"done!\n";
+			std::ostringstream dotname;
+			dotname << "KMC_DOT/PAH" << i <<".dot";
+			pahp.saveDOT(dotname.str());
+			std::cout<<"Done simulation for PAH "<<ID+i<<std::endl<<endl;;
+			pahp.clearStructure();
+		}
+		// delete all
+		std::cout << endl;
+		for(size_t i=0; i<pah.size(); i++) {
+			/*PAHProcess pahp(*pah[i]);
+			std::cout << "PAHpointer:" << pah[i] << endl;
+			std::cout << "\tm_cpositions: " << pah[i]->m_cpositions.size() << endl;
+			std::cout << "\tm_carbonList: " << pahp.CarbonListSize() << endl;
+			int sum_ = 0;
+			for(std::list<Site>::const_iterator k=pahp.SiteList().begin(); k!=pahp.SiteList().end(); k++) {
+				switch(k->type) {
+				case FE:
+				case R5:
+					sum_++;
+					break;
+				case ZZ:
+				case RFE:
+					sum_+=2; break;
+				case AC:
+				case RZZ:
+				case RFER:
+					sum_+=3; break;
+				case BY5:
+				case RAC:
+				case RZZR:
+					sum_+=4; break;
+				case BY6:
+				case RBY5:
+				case RACR:
+					sum_+=5; break;
+				default:
+					std::cout<<"ERROR: invalid SITE TYPE!\n";
+					break;
+				}
+			}
+			std::cout<< "\tnumber of site members: " << sum_ <<endl;
+			delete pah[i];*/
+		}
+		pah.clear();
+		}
+		else {
+			Simulator->TestRates(t_start, t_end, no_of_steps);
+			Simulator->TestConc(t_start, t_end, no_of_steps, std::string("Results/gasConcentrations.csv"));
+		}
 	}
 	catch(std::runtime_error &re) {
 		std::cout << re.what();
@@ -177,7 +241,7 @@ int main(int argc, char *argv[])
 	}
     //KMC_Simulator.m_simPAHp.initialise(PYRENE);
     //KMC_Simulator.testSimulation(*(KMC_Simulator.m_simPAH),1000UL, 3000);
-
+	delete Simulator;
 	// Stop timer
     clock_t timerStop = clock();
 	

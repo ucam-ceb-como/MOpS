@@ -46,6 +46,7 @@
 #define SWP_KMC_STRUCTURE_COMP_H
 
 #include "swp_kmc_typedef.h"
+#include "boost/shared_ptr.hpp"
 #include <list>
 #include <cmath>
 #include <cstdlib>
@@ -57,8 +58,10 @@ namespace Sweep {
         class Carbon;
 
         // Pointer to a Carbon atom and a Site.
-        typedef Carbon* Cpointer;
+		typedef std::set<Carbon*> Ccontainer;
+		typedef Carbon* Cpointer;
         typedef std::list<Site>::iterator Spointer;
+		
 
         //! Carbon atom on PAH edges
         class Carbon {
@@ -86,6 +89,10 @@ namespace Sweep {
             //! Coordinates of atom
             cpair coords;
         };
+
+		//static Ccontainer NULLSET(1, Carbon());
+		static Cpointer NULLC(new Carbon);//SET.begin();
+
         //! Active site on PAH edges
         struct Site {
             //! Type of site
