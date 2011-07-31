@@ -87,6 +87,7 @@ void MechanismParser::ReadChemkin
     {
         ReadTransport(chemkinReader, mech);
     }
+    if (verbose >= 1) mech.WriteDiagnostics("mech.log");
 
 }
 
@@ -113,6 +114,7 @@ void MechanismParser::ReadChemkin
         Element *el = mech.AddElement();
         el->SetName(chemkinReader.elements()[i].getName());
         el->SetMolWtFromLibrary();
+        delete el;
     }
 
     // Read Species.
@@ -139,6 +141,7 @@ void MechanismParser::ReadChemkin
         }
         sp->AddThermoParams(chemkinReader.species()[i].thermo().getTCommon(), lp);
         sp->AddThermoParams(chemkinReader.species()[i].thermo().getTHigh(), up);
+        delete sp;
     }
 
     // Read Reactions.
@@ -251,6 +254,7 @@ void MechanismParser::ReadChemkin
         //rxn->SetLTCoeffs(LTCOEFFS(cdble(params[0]), cdble(params[1])));
 
         mech.AddReaction(rxn);
+        delete rxn;
     }
 
     mech.BuildStoichXRef();
