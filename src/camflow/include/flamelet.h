@@ -187,12 +187,6 @@ namespace Camflow
             //! File output.
             void reportToFile(std::string fileName, doublereal x, std::vector<double>& solution);
 
-            void writeXMLFile
-            (
-                const doublereal,
-                const std::vector<doublereal>& solvect
-            );
-
         private:
 
             doublereal stoichZ; //stoichiometric mixture fraction
