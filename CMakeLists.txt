@@ -15,6 +15,9 @@ ELSE(WIN32)
 ENDIF(WIN32)
 find_package(Boost 1.43.0 REQUIRED COMPONENTS regex serialization filesystem system)
 
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+
 enable_testing()
 
 # Turn off line breaks in error messages so that IDEs can parse the errors properly
