@@ -640,9 +640,10 @@ CamSoot::realVector CamSoot::rateAll
     rates.resize(nMoments,0.0);
     for (int m=0; m<nMoments; ++m)
     {
-    	//rates[m] = (nucRates[m]+coagRates[m]);    // /moments[m];
-    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);   // /moments[m];
-    	//rates[m] = (nucRates[m]);   ///moments[m];
+    	//rates[m] = (nucRates[m]);
+    	//rates[m] = (nucRates[m]+coagRates[m]);
+    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);
+
     }
 
     // Note: This only returns the rate of change of moments.
