@@ -3,6 +3,7 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace Camflow;
 using namespace std;
@@ -278,10 +279,6 @@ void FlameLet::initSolutionVector()
      */
     vT[iMesh_e] = fuel.T;
 
-    /*
-     *
-     */
-
     // Set the initial moment values (interior and boundary)
     // Also initial constants
     if (sootMom_.active())
@@ -456,7 +453,7 @@ void FlameLet::massMatrix(doublereal** M)
 void FlameLet::restart()
 {
 
-    if (solverID == control_.CVODE){
+    if (solverID == control_.CVODE) {
         CVodeWrapper cvw;
         eqn_slvd = EQN_ALL;
         int band = nVar*2;
@@ -464,11 +461,34 @@ void FlameLet::restart()
         cvw.init(nEqn,solvect,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
             control_.getMaxTime(),band,*this,restartTime);
         cvw.solve(CV_ONE_STEP,control_.getResTol());
-    }
+        // Calculate the mixture viscosity.
+        for (int i=0; i<mCord; ++i)
+        {
+            std::vector<doublereal> mf;
+            for(int l=0; l<nSpc; l++)
+            {
+                mf.push_back(solvect[i*nVar+l]);
+            }
+            camMixture_->SetMassFracs(mf);
+            camMixture_->SetTemperature(m_T[i]);
+            camMixture_->SetMassDensity(m_rho[i]);                      //density
+            m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
+        }
 
-     else if (solverID == control_.LIMEX) {
-         throw std::logic_error("Error -- Limex is not yet supported");
-     }
+        /*
+         *write the output to file only if the call is not
+         *from the interface
+         */
+        //if(!interface)
+        //{
+        string filename = "profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
+            reportToFile(filename,control_.getMaxTime(), solvect);
+            //writeXMLFile(scalarDissipationRate_.getStoichSDR(), solvect);
+        //}
+    }
+    else if (solverID == control_.LIMEX) {
+        throw std::logic_error("Error -- Limex is not yet supported");
+    }
 
 }
 
