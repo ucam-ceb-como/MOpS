@@ -148,6 +148,12 @@ void ScalarDissipationRate::setStrainRate(const doublereal strainRate)
     {
         scalarDissipationRate_[0][i] = calculate(mixFracCoords_[i]);
     }
+    delete interpolator_;
+    interpolator_ = new Utils::LinearInterpolator<doublereal, doublereal>
+                        (
+                            mixFracCoords_,
+                            scalarDissipationRate_[0]
+                        );
 }
 
 void ScalarDissipationRate::setSDRRate(const doublereal sdr)
@@ -158,6 +164,12 @@ void ScalarDissipationRate::setSDRRate(const doublereal sdr)
     {
         scalarDissipationRate_[0][i] = calculate(mixFracCoords_[i]);
     }
+    delete interpolator_;
+    interpolator_ = new Utils::LinearInterpolator<doublereal, doublereal>
+                        (
+                            mixFracCoords_,
+                            scalarDissipationRate_[0]
+                        );
 }
 
 
