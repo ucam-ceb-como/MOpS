@@ -194,7 +194,7 @@ class CamSoot {
 
         const doublereal rhoSoot;
         const doublereal lambda;
-        const int atomsPerDimer;
+        int atomsPerDimer;
         int numCAtomInception;
         int nMoments;
         int lowFrac, highFrac;
