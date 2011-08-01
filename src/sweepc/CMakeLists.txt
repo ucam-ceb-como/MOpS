@@ -26,6 +26,7 @@ add_library(sweep source/mt19937.cpp
                   source/swp_dimer_inception.cpp
                   source/swp_ensemble.cpp
                   source/swp_ensemble_stats.cpp
+				  source/swp_gas_profile.cpp
                   source/swp_imgnode.cpp
                   source/swp_inception.cpp
                   source/swp_mechanism.cpp
@@ -55,16 +56,16 @@ add_library(sweep source/mt19937.cpp
                   source/swp_tracker.cpp
                   source/swp_transcoag.cpp
                   source/swp_transport_process.cpp
+                  source/swp_tree_add_weighted_cache.cpp
                   source/swp_tree_cache.cpp
                   source/swp_tree_weighted_cache.cpp
                   source/swp_weighted_addcoag.cpp
                   source/swp_weighted_constcoag.cpp
-				  source/swp_kmc_gasph.cpp
 				  source/swp_kmc_gaspoint.cpp
 				  source/swp_kmc_jump_process.cpp
+				  source/swp_kmc_mech.cpp
 				  source/swp_kmc_pah_process.cpp
 				  source/swp_kmc_pah_structure.cpp
-				  source/swp_kmc_processes_list.cpp
 				  source/swp_kmc_reaction.cpp
 				  source/swp_kmc_simulator.cpp
 				  source/swp_kmc_structure_comp.cpp)

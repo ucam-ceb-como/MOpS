@@ -66,51 +66,52 @@ std::string default_rxncount_csv = "KMC_Model/PAH_reaction_count.csv";
 std::string default_pahlist_csv = "KMC_Model/PAH_CH_site_list.csv";
 
 // Vector of all site types
-std::vector<kmcSiteType> allSiteType = vectSiteType();
+static std::vector<kmcSiteType> allSiteType = vectSiteType();
 
 //! Default Constructor
-KMCSimulator::KMCSimulator() {
-    m_t = 0;
-	//input format is kept unchanged. use C2H4_profiles_0p080.csv which is the same as gasphase.inp
-	std::string p = "0p080";//added by dongping 12.04
-	// Gas profile (csv)
-    std::string profileInputName = "C2H4_profiles_"+p+".csv";
-	// Name of dot file (PAH structure)
-    std::string DOToutputName = "DOT files/KMC_"+p+"_";
-	// Total actual times
-    std::string CSVtimerName = "Results/PAH_loop_timer_"+p+"_cpp.csv";
-	// Reactions counts
-    std::string CSVreactioncountName = "Results/Reaction_Count_"+p+"_cpp.csv";
-	// PAH details (N(C), N(H), N(sites))
-    std::string CSVpahlistName = "Results/PAH_CH_Site_List_"+p+"_cpp.csv";
-	// Rates of reactions for last run
-    std::string CSVrates = "Results/PAH_rates_cpp.csv";
-	std::string CSVtimestep="zztimestep.csv";
-	
+KMCSimulator::KMCSimulator():
+    m_t(), m_mech(), m_gasprof(), m_kmcmech(), m_gas(), m_fromfile(false)
+{
+}
 
-    setCSVinputName(profileInputName);
-    setDOToutputName(DOToutputName);
-    setCSVtimerName(CSVtimerName);
-    setCSVreactioncountName(CSVreactioncountName);
-    setCSVpahlistName(CSVpahlistName);
-    setCSVratesName(CSVrates);
-	setCSVtimestep(CSVtimestep);
-	m_simGas.setCSVname(m_csv_in);
-    m_simGas.loadProfileCSV();
-	m_simGas.loadProcesses(JumpProcessList::obtainJumpProcess);
+//! Constructor from chemkin and gasphase files
+KMCSimulator::KMCSimulator(const std::string gasphase, const std::string chemfile, const std::string thermfile)
+{
+    m_t=0;
+    m_gasprof = new Sweep::GasProfile();
+    LoadGasProfiles(gasphase, chemfile, thermfile);
+    m_fromfile = true;
+}
+//! Constructor from a GasProfile object
+KMCSimulator::KMCSimulator(Sweep::GasProfile& gprofile)
+{
+    std::cout << this << endl;
+    m_t = 0;
+    m_gasprof = &gprofile;
+    m_fromfile = false;
+    m_gas = new KMCGasPoint(gprofile, *gprofile[0].Gas.Species());
+    m_mech = NULL;
 }
 
 //! Copy Constructor
-KMCSimulator::KMCSimulator(KMCSimulator& s) {
+KMCSimulator::KMCSimulator(KMCSimulator& s): m_kmcmech(s.m_kmcmech)
+{
+    m_gasprof = s.m_gasprof;
     m_t = s.m_t;
-    KMCGasph m_simGas(s.m_simGas);
+    m_gas = new KMCGasPoint(*s.m_gas);
     //m_simPAH = new PAHStructure(*(s.m_simPAH));
     m_simPAHp = PAHProcess(*m_simPAH);
+    m_fromfile = false;
 }
 
 //! Default Destructor
 KMCSimulator::~KMCSimulator() {
     //delete m_simPAH;
+    if(m_fromfile) {
+        delete m_gasprof;
+        delete m_mech;
+    }
+    delete m_gas;
 }
 
 //! Set PAH to be simulated
@@ -129,88 +130,126 @@ real KMCSimulator::timeStep(real totalRate, real (*rand_u01)()) const {
 
 //! Update structure of PAH after time dt
 real KMCSimulator::updatePAH(PAHStructure* pah, 
-							const real tstart, 
-							const real dt,  
-							const int waitingSteps,  
-							int (*rand_int)(int,int), 
-							real (*rand_u01)(), 
-							real r_factor,
-							int PAH_ID) {
-   
-	vector<int> m_rxn_count(18,0);
-	real m_t = tstart;
+                            const real tstart, 
+                            const real dt,  
+                            const int waitingSteps,  
+                            int (*rand_int)(int,int), 
+                            real (*rand_u01)(), 
+                            real r_factor,
+                            int PAH_ID) {
+    std::vector<int> m_rxn_count(m_kmcmech.JPList().size(),0);
+    m_t = tstart;
     real t_max = m_t + dt;
     targetPAH(*pah);
-	/*if(m_simPAHp.checkCoordinates())
-		cout<<"Coordinates of structure OK. Commencing updatePAH..\n";
-	else {
-		cout<<"Coordinates of structure did not pass test. Aborting..\n";
-		std::ostringstream msg;
-		msg << "ERROR: Trying updatePAH on a structure which did not pass PAHProcess::checkCoordinates."
-			<< " (Sweep::KMC_ARS::KMCSimulator::updatePAH)";
-		throw std::runtime_error(msg.str());
-		assert(false);
-	}
-	if(m_simPAHp.checkSiteContinuity())
-		cout<<"Site continuity of structure OK. Commencing updatePAH..\n";
-	else {
-		cout<<"Structure has uncontinuous site. Aborting..\n";
-		std::ostringstream msg;
-		msg << "ERROR: Trying updatePAH on a structure which did not pass PAHProcess::checkSiteContinuity."
-			<< " (Sweep::KMC_ARS::KMCSimulator::updatePAH)";
-		throw std::runtime_error(msg.str());
-		assert(false);
-	}*/
-    rvector jump_rates_vector((int)m_simGas.jplist.size());
+    /*if(m_simPAHp.checkCoordinates())
+        cout<<"Coordinates of structure OK. Commencing updatePAH..\n";
+    else {
+        cout<<"Coordinates of structure did not pass test. Aborting..\n";
+        std::ostringstream msg;
+        msg << "ERROR: Trying updatePAH on a structure which did not pass PAHProcess::checkCoordinates."
+            << " (Sweep::KMC_ARS::KMCSimulator::updatePAH)";
+        throw std::runtime_error(msg.str());
+        assert(false);
+    }
+    if(m_simPAHp.checkSiteContinuity())
+        cout<<"Site continuity of structure OK. Commencing updatePAH..\n";
+    else {
+        cout<<"Structure has uncontinuous site. Aborting..\n";
+        std::ostringstream msg;
+        msg << "ERROR: Trying updatePAH on a structure which did not pass PAHProcess::checkSiteContinuity."
+            << " (Sweep::KMC_ARS::KMCSimulator::updatePAH)";
+        throw std::runtime_error(msg.str());
+        assert(false);
+    }*/
     real t_next = m_t;
     real t_step_max = dt/waitingSteps;
     real oldtnext;
-	int loopcount=0;
-
+    int loopcount=0;
     while (m_t < t_max) {
-		//this->m_simPAHp.printStruct();// print out structure of this pah on the screen
-        m_simGas.interpolateProfiles(m_t, true, r_factor);
-		loopcount++;
+        //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
+        //m_simGas.interpolateProfiles(m_t, true, r_factor);
+        m_gas->Interpolate(m_t, r_factor);
+        loopcount++;
 
-        // Calculate rates of each jump process and store in vector & store total jump rate
-        real totalJumpRate = JumpProcessList::calculateRates(m_simGas.m_gpoint, m_simPAHp, m_t, m_simGas.jplist, jump_rates_vector);
-        rvector temp = jump_rates_vector;
+        // Calculate rates of each jump process
+        m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
+
         // Calculate time step, update time
-        real t_step = timeStep(totalJumpRate, rand_u01);
+        real t_step = timeStep(m_kmcmech.TotalRate(), rand_u01);
         t_next = m_t+t_step;
-        if(t_next < t_max) {
+        if(t_next < t_max && t_step < t_step_max) {
 
-			//if (pah->numofC()>5000&&pah->numofC()<6000)//||pah->havebridgeC()	//if (PAH_ID==224835)
-			//if we want to check a PAH with specified ID or number of Carbon, 
-			//its structure can be drawed by this function, used for tracking suspicious PAH.
+            //if (pah->numofC()>5000&&pah->numofC()<6000)//||pah->havebridgeC()    //if (PAH_ID==224835)
+            //if we want to check a PAH with specified ID or number of Carbon, 
+            //its structure can be drawed by this function, used for tracking suspicious PAH.
             // saveDOTperLoop(100000*tstart,loopcount,PAH_ID);
-            // Choose reaction according to rates
-            int chosen_proc = m_simGas.chooseReaction(jump_rates_vector, rand_u01);
-            // Get site type and structure change process from the jump process class
-            JumpProcess* jp_perf = m_simGas.jplist[chosen_proc];
-            kmcSiteType jp_site = jp_perf->getSiteType();
-            int jp_id = jp_perf->getID();
-            //cout<<m_simGas.jplist[chosen_proc]->getName()<<'\n';//++++
+            // Choose jump according to rates
+            ChosenProcess jp_perf = m_kmcmech.chooseReaction(rand_u01);
+            //cout<<jp_perf.first->getName()<<'\n';//++++
 
             // Update data structure
-            bool process_success = m_simPAHp.performProcess(jp_site, jp_id, rand_int);
-			/*if(m_simPAH->m_parent->ID() % 100000 == 609) {
-			if(!m_simPAHp.checkCoordinates()) {
-				cout<<"ERROR: Invalid coordinates produced after performing process "
-					<<jp_perf->getName()<<" (ID" <<jp_id<<")\n";
-			}
-			}*/
-			if(process_success) {
-                m_rxn_count[chosen_proc]++;
+            bool process_success = m_simPAHp.performProcess(*jp_perf.first, rand_int);
+
+            /*if(m_simPAH->m_parent->ID() % 100000 == 609) {
+            if(!m_simPAHp.checkCoordinates()) {
+                cout<<"ERROR: Invalid coordinates produced after performing process "
+                    <<jp_perf->getName()<<" (ID" <<jp_id<<")\n";
+            }
+            }*/
+            if(process_success) {
+                m_rxn_count[jp_perf.second]++;
             }
         }else {
             oldtnext = t_next;
             t_next = m_t+t_step_max;
         }
-		m_t = t_next;
-        //saveDOTperXLoops(1, count, run);
+        m_t = t_next;
+		//int run=0;
+        //saveDOTperXLoops(1, loopcount, run);
     }
     return m_t;
+}
+
+//! Outputs rates into a csv file (assuming all site counts as 1)
+void KMCSimulator::TestRates(const real tstart, const real tstop, const int intervals) {
+	// set name of output file
+	//setCSVratesName(filename);
+	m_rates_csv.Open(m_rates_name, true);
+	rvector rates(m_kmcmech.JPList().size(), 0);
+	real dt = (tstop-tstart)/intervals;
+	m_simPAHp.m_rates_save = true;
+	// for each interval
+	for(real t=tstart; t<= tstop; t+=dt) {
+		// interpolate & calculate rates
+		m_gas->Interpolate(t);
+		m_kmcmech.calculateRates(*m_gas, m_simPAHp, t);
+		rates = m_kmcmech.Rates();
+		writeRatesCSV(t, rates);
+	}
+	m_simPAHp.m_rates_save = false;
+	std::cout<<"Finished calculating rates for kMC mechanism. Results are saved in "
+		<<m_rates_name<<"\n\n";
+}
+
+//! Outputs gas concentrations into a csv file
+void KMCSimulator::TestConc(const real& t_start, const real& t_stop, const int intervals, const std::string& filename) {
+	CSV_IO csvio(filename, true);
+	real dt = (t_stop-t_start)/intervals;
+	std::vector<string> species(m_gas->m_total-2);
+	rvector temp(m_gas->m_total-2); //exclude T & P
+	for(size_t i=1; i<(temp.size()); i++) {
+		species[i] = m_gas->SpNames()[i+1];
+	}
+	csvio.Write(species);
+	for(real t=t_start; t<=t_stop; t+=dt) {
+		temp[0] = t;
+		m_gas->Interpolate(t);
+		for(size_t i=1; i<(temp.size()-1); i++) {
+			temp[i] = (*m_gas)[i+1];
+		}
+		csvio.Write(temp);
+		
+	}
 }
 
 /*void KMCSimulator::testSimulation(PAHStructure& pah, const unsigned long seed, int totalruns) {
@@ -285,7 +324,7 @@ void KMCSimulator::writeTimerCSV(const int& loop, const double& elapsedTime) {
     m_timer_csv.Write(temp);
 }
 void KMCSimulator::writetimestep(const std::vector<double>& timestep){
-	m_timestep_csv.Write(timestep);
+    m_timestep_csv.Write(timestep);
 }
 //! Writes data for reaction_count.csv
 void KMCSimulator::writeRxnCountCSV(const std::vector<int>& rc) {
@@ -311,19 +350,19 @@ void KMCSimulator::writeCHSiteCountCSV() {
     m_pah_csv.Write(temp);
 }
 //! Writes data for rates count (csv)
-void KMCSimulator::writeRatesCSV(int runNo, real& time, rvector& v_rates) {
+void KMCSimulator::writeRatesCSV(real& time, rvector& v_rates) {
     //int convC[] = {1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19};
     int convM[] = {1, 2,14,15, 8,10,11,12,13, 3, 7, 9, 5, 4, 6,22,24,16,21};
     int ID;
-    if(runNo==1) {
+    //if(runNo==1) {
     std::vector<real> temp(25,0);
     temp[0] = time;
     for(int i=0; i!=(int)v_rates.size(); i++) {
-        ID = m_simGas.jplist[i]->getID();
+        ID = m_kmcmech.JPList()[i]->getID();
         temp[convM[ID-1]] = v_rates[i];
     }
     m_rates_csv.Write(temp);
-    }
+    //}
 }
 //! Initialise CSV_IOs
 void KMCSimulator::initCSVIO() {
@@ -345,22 +384,178 @@ void KMCSimulator::initCSVIO() {
     m_rxn_csv.Open(m_rxncount_name, true);
     m_pah_csv.Open(m_pahlist_name, true);
     m_rates_csv.Open(m_rates_name, true);
-	 m_timestep_csv.Open(m_timestep_name, true);//##
+     m_timestep_csv.Open(m_timestep_name, true);//##
     // Write column headings for CSV files
     writeCSVlabels();
 }
 //! Initialise reaction count
 void KMCSimulator::initReactionCount() {
     m_rxn_count.clear();
-    for(int i=0; i<(int)m_simGas.jplist.size(); i++) {
+    for(int i=0; i<(int)m_kmcmech.JPList().size(); i++) {
         m_rxn_count.push_back(0);
     }
 }
-//! Load gas profiles
-void KMCSimulator::loadGasProfiles() {
-	m_simGas.setCSVname(m_csv_in);
-    m_simGas.loadProfileCSV();
-    m_simGas.loadProcesses(JumpProcessList::obtainJumpProcess);
+//! Reads chemical mechanism / profile (if not obtained from Mops)
+//! Similar function as Sweep::Flamesolver::LoadGasProfile
+void KMCSimulator::LoadGasProfiles(const std::string gasphase, const std::string chemfile, const std::string thermfile) {
+    m_mech = new Sprog::Mechanism();
+    Sprog::IO::MechanismParser::ReadChemkin(chemfile, *m_mech, thermfile, 0);
+    map<real,real> alpha_prof;
+
+    // Clear the current gas-phase profile.
+    m_gasprof->clear();
+
+    // Open the file to read.
+    ifstream fin(gasphase.c_str(), ios::in);
+    if (!fin.good()) {
+        throw runtime_error("Unable to open gas profile input "
+                            "file (Sweep, KMCSimulator::LoadGasProfile).");
+    }
+
+    // Variables read from file.
+    vector<string> subs;
+    string delim = ",\t \r"; // Possible file delimiters (comma, tab and space).
+    string line;
+
+    // Get the first line (should be the header defining the columns).
+    if (!getline(fin, line).eof()) {
+
+        // Split the line to get the column headings.
+        split(line, subs, delim);
+
+        // Get important column indices (time, temperature and pressure).
+        int tcol=-1, Tcol=-1, Pcol=-1;
+        tcol = findinlist(string("Time"), subs);
+
+        Tcol = findinlist(string("T"), subs);
+        if(Tcol < 0)
+            Tcol = findinlist(string("T[K]"), subs);
+
+        Pcol = findinlist(string("P"), subs);
+
+        // Columns to ignore, but which are useful to have in files for brush compatibility
+        int Xcol = findinlist(string("X[cm]"), subs);
+        int Dcol = findinlist(string("RHO[g/cm3]"), subs);
+        int Vcol = findinlist(string("V[cm/s]"), subs);
+        int Gcol = findinlist(string("GradT"), subs);
+        int Acol = findinlist(string("Alpha"), subs);
+        int Rcol = findinlist(string("wdotA4"), subs);
+
+
+        // Check that the file contains required columns.
+        if (tcol < 0) {
+            fin.close();
+            throw runtime_error("Gas-phase profile contains no Time "
+                                "column (Sweep::KMCSimulator::LoadGasProfiles).");
+        }
+        if (Tcol < 0) {
+            fin.close();
+            throw runtime_error("Gas-phase profile contains no temperature "
+                                "column (Sweep::KMCSimulator::LoadGasProfiles).");
+        }
+        if (Pcol < 0) {
+            fin.close();
+            throw runtime_error("Gas-phase profile contains no pressure "
+                                "column (Sweep::KMCSimulator::LoadGasProfiles).");
+        }
+
+        // All other columns are chemical species.  Add them, and note
+        // their columns.
+        map<unsigned int,int> spcols;
+        for (int i=0; (unsigned)i!=subs.size(); ++i) {
+            if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol) && (i!=Rcol) &&
+                (i!=Xcol) && (i!=Dcol) && (i!=Vcol) && (i!=Gcol)) {
+                // Try to find this species in the mechanism
+                const int speciesMechIndex = m_mech->FindSpecies(subs[i]);
+
+                if(speciesMechIndex < 0) {
+                    std::ostringstream msg("Failed to find species ");
+                    msg << subs[i] << " in mechanism (Sweep::KMCSimulator::LoadGasProfiles).";
+                    throw std::runtime_error(msg.str());
+                }
+                // Found species
+                spcols[i] = speciesMechIndex;
+            }
+        }
+
+        // Now we can read the profile.
+        while(!getline(fin, line).eof()) {
+            // Set t=0 and create a new IdealGas object.
+            real t = 0.0;
+            real T = 0.0;
+            real P = 0.0;
+            real alpha = 0.0;
+            real PAHRate = 0.0;
+            GasPoint gpoint(m_mech->Species());
+
+            // Split the line by columns.
+            split(line, subs, delim);
+
+            // Check that the mole fractions sum to 1
+            real checkSum = 0.0;
+
+            // Loop over all the elements in the line and save them
+            // to the correct gas-phase variable.
+            for (int i=0; (unsigned)i!=subs.size(); ++i) {
+                if (i==tcol) {
+                    // This is the Time column.
+                    t = cdble(subs[i]);
+                    gpoint.Time = t;
+                } else if (i==Tcol) {
+                    // This is the temperature column.
+                    T = cdble(subs[i]);
+                } else if (i==Pcol) {
+                    // This is the pressure column.
+                    P = cdble(subs[i]);
+                } else if (i==Acol) {
+                    alpha = cdble(subs[i]);
+                } else if (i==Rcol) {
+                    PAHRate = cdble(subs[i]);
+                } else {
+                    // This is a gas-phase species column.
+                    map<unsigned int,int>::iterator isp = spcols.find(i);
+                    if (isp != spcols.end()) {
+                        const real frac = cdble(subs[i]);
+                        assert(isp->second >= 0);
+                        gpoint.Gas.RawData()[isp->second] = frac;
+                        checkSum += frac;
+                    }
+                }
+            }
+
+            if((checkSum < 0.997) || checkSum > 1.003) {
+                std::ostringstream msg;
+                msg << "Mole fractions sum to " << checkSum
+                    << ", but should sum to 1.000 (KMCSimulator::LoadGasProfiles)";
+                throw std::runtime_error(msg.str());
+            }
+
+            // Set up the gas-phase by setting temperature, pressure and
+            // normalising the mixture fractions.
+            // TODO:  This will give the wrong component densities
+            //        unless all species are specified!
+            gpoint.Gas.SetTemperature(T);
+            gpoint.Gas.SetPressure(P*1.0e5);
+            gpoint.Gas.Normalise();
+            gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);
+
+            // Add the profile point.
+            alpha_prof[t] = alpha;
+            m_gasprof->push_back(gpoint);
+        }
+
+        // Close the input file.
+        fin.close();
+
+        // Sort the profile by time.
+        SortGasProfile(*m_gasprof);
+        m_gas = new KMCGasPoint(*m_gasprof, m_mech->Species());
+    } else {
+        // There was no data in the file.
+        fin.close();
+        throw runtime_error("Input file contains no data "
+                            "(Sweep::KMCSimulator::LoadGasProfiles).");
+    }
 }
 //! Write column headings for CSV files
 void KMCSimulator::writeCSVlabels() {
@@ -370,9 +565,9 @@ void KMCSimulator::writeCSVlabels() {
     m_timer_csv.Write(timer_headings);
     // Write headings for reaction count
     std::vector<string> rxn_headings;
-    for(int i=0; i<(int)m_simGas.jplist.size(); i++) {
+    for(size_t i=0; i<m_kmcmech.JPList().size(); i++) {
         // gets name of each jump process and puts them in a row
-        rxn_headings.push_back(m_simGas.jplist[i]->getName());
+        rxn_headings.push_back(m_kmcmech.JPList()[i]->getName());
     }
     m_rxn_csv.Write(rxn_headings);
     // Write headings for CH and site list
@@ -404,8 +599,8 @@ void KMCSimulator::saveDOTperXLoops(int X, int &loopcount, int& runcount) {
 
 void KMCSimulator::saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID) {
         string filename = "KMC_DEBUG/ID_";
-		filename.append(Strings::cstr(PAH_ID));
-		filename.append("_Run_");
+        filename.append(Strings::cstr(PAH_ID));
+        filename.append("_Run_");
         filename.append(Strings::cstr(LOOPcount));
         filename.append("_Loop_");
         filename.append(Strings::cstr(loopcount));
@@ -413,12 +608,12 @@ void KMCSimulator::saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID) {
         m_simPAHp.saveDOT(filename);
 }
 //! Save the structure DOT file after every X simulation sec interval
-void KMCSimulator::saveDOTperXsec(const real& X, const int& seed, const real &time, const real &time_max, KMCGasph& copyMod, int& intervalcount) {
+void KMCSimulator::saveDOTperXsec(const real& X, const int& seed, const real &time, const real &time_max, KMCMechanism& copyMod, int& intervalcount) {
     int interval = (int) ceil(time/X);
     std::string graphTitle;
     if(intervalcount == -1) {
-        copyMod.interpolateProfiles(0, false, 1);
-        std::string temp = Strings::cstr((int)ceil(copyMod.m_gpoint.m_data[copyMod.m_gpoint.T]))+"K";
+        m_gas->Interpolate(0, 0);
+        std::string temp = Strings::cstr((int)ceil((*m_gas)[m_gas->T]))+"K";
         string filename = "KMC_DEBUG/";
         //filename.append(Strings::cstr(runcount));
         filename = filename+Strings::cstr(seed)+"-0.00000_s__"+temp+".dot";
@@ -440,8 +635,8 @@ void KMCSimulator::saveDOTperXsec(const real& X, const int& seed, const real &ti
         string filename = "KMC_DEBUG/";
         //filename.append(Strings::cstr(runcount));
         //filename.append("_");
-        copyMod.interpolateProfiles(timenow, false, 1);
-        std::string temp = Strings::cstr((int)ceil(copyMod.m_gpoint.m_data[copyMod.m_gpoint.T]))+"K";
+        m_gas->Interpolate(timenow, 0);
+        std::string temp = Strings::cstr((int)ceil((*m_gas)[m_gas->T]))+"K";
         filename = filename+Strings::cstr(seed)+"-"+Strings::cstr(sec)+"."+dec_str+"_s__"+temp+".dot";
         //graphTitle = Strings::cstr(sec)+"."+dec_str+"s";
         m_simPAHp.saveDOT(filename);
@@ -455,7 +650,7 @@ CSV_data::CSV_data(KMCSimulator& st) {
     m_sim = &st;
 }
 CSV_data::~CSV_data() {}
-void CSV_data::initData(int max_runs, int no_of_interv, real max_time, intpair N_CH_initial, KMCGasph& gasph) {
+void CSV_data::initData(int max_runs, int no_of_interv, real max_time, intpair N_CH_initial, KMCGasPoint& gp) {
     cout<<"Initialising CH_data vector...\n";
     // vector of zeros for each run
     intvector zeros(no_of_interv+1, 0);
@@ -465,14 +660,12 @@ void CSV_data::initData(int max_runs, int no_of_interv, real max_time, intpair N
     m_dataH.clear();
     // calculate length of an interval
     m_dt = max_time/no_of_interv;
-    // reference to gaspoint
-    KMCGasPoint& gp = gasph.m_gpoint;
     // initialising time values
     for(int i=0; i<=no_of_interv; i++){
         real timetemp = m_dt*i;
         m_time.push_back(timetemp);
-        gasph.interpolateProfiles(timetemp, false, 1);
-        real Ttemp = gp.m_data[gp.T];
+        gp.Interpolate(timetemp);
+        real Ttemp = gp[gp.T];
         m_T.push_back(Ttemp);
     }
     // setting all values to zero for all runs
@@ -636,3 +829,17 @@ void CSV_data::writeCSV(bool col, bool keep_data) {
     }
 }
 
+// Test KMCGasPoint object. Linear interpolates values at 5 points from t = 0 to 0.005s
+// and writes values of profile on console.
+void KMCSimulator::TestGP() {
+    cout<<endl<<"---(Sweep, KMC_ARS::KMCSimulator) Testing KMCGasPoint---"<<endl;
+    for(real t=0; t<0.005; t+=0.001) {
+        cout << "--At time "<<t <<"--"<<endl;
+        m_gas->Interpolate(t);
+        for(int i=0; i<m_gas->m_total; i++) {
+            cout<<m_gas->SpNames()[i]<<"\t"<<(*m_gas)[i]<<endl;
+        }
+        cout<<endl;
+    }
+    cout<<"---(Sweep, KMC_ARS::KMCSimulator) Finished testing..."<<endl<<endl;
+}

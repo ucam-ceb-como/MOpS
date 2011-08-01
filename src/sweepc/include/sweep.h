@@ -70,10 +70,9 @@
 
 // KMC PAH growth model.
 #include "swp_kmc_jump_process.h"
-#include "swp_kmc_gasph.h"
+#include "swp_kmc_mech.h"
 #include "swp_kmc_pah_structure.h"
 #include "swp_kmc_pah_process.h"
-#include "swp_kmc_processes_list.h"
 #include "swp_kmc_reaction.h"
 #include "swp_kmc_simulator.h"
 //#include "swp_kmc_starting_struct.h"

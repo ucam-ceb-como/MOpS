@@ -64,11 +64,12 @@ using namespace std;
 // Constructors and Destructor
 //! Default Constructor
 PAHStructure::PAHStructure() {
-    m_cfirst = NULL;
-    m_clast = NULL;
+	//NULLC = m_carbonList.insert(Carbon()).first;
+    m_cfirst = NULLC;
+    m_clast = NULLC;
     m_rings = 0;
     m_counts = intpair(2, 0);
-	m_parent = NULL;
+    m_parent = NULL;
 }
 
 //! Copy Constructor (private member)
@@ -76,16 +77,16 @@ PAHStructure::PAHStructure(const PAHStructure& copy){
 }
 //! Default Destructor
 PAHStructure::~PAHStructure() {
-    //delete m_cfirst;
-	//delete m_clast;
-	//PAHProcess pp(*this);
-   // pp.clearStructure();
-	 //m_siteMap.clear();
-    //m_siteList.clear();
+    delete m_cfirst;
+    delete m_clast;
+    PAHProcess pp(*this);
+	pp.clearStructure();
+    m_siteMap.clear();
+    m_siteList.clear();
 }
 
 void PAHStructure::setParent(Sweep::AggModels::PAH* parent) {
-	m_parent = parent;
+    m_parent = parent;
 }
 
 
@@ -97,22 +98,22 @@ bool PAHStructure::operator==(PAHStructure &rhs) const
 }
 
 bool PAHStructure::operator!=(PAHStructure &rhs) const{
-	return !(*this==rhs);
+    return !(*this==rhs);
 }
 
 int PAHStructure::numofC(){
-	return m_counts.first;
+    return m_counts.first;
 } 
 void PAHStructure::initialise(StartingStructure ss) {
-	PAHProcess p(*this);
-	p.initialise(ss);
+    PAHProcess p(*this);
+    p.initialise(ss);
 }
 PAHStructure*  PAHStructure::Clone() {
-	PAHProcess p(*this);
-	return p.clonePAH();
+    PAHProcess p(*this);
+    return p.clonePAH();
 }
 
 bool PAHStructure::havebridgeC(){
-	PAHProcess p(*this);
+    PAHProcess p(*this);
     return p.havebridgeC();
 }

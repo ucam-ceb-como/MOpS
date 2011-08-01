@@ -47,10 +47,10 @@
 #ifndef SWP_KMC_STRUCTURE_PROCESSES_H
 #define SWP_KMC_STRUCTURE_PROCESSES_H
 
-#include "swp_kmc_gasph.h"
+//#include "swp_kmc_mech.h"
 #include "swp_kmc_structure_comp.h"
 #include "swp_kmc_typedef.h"
-#include "swp_kmc_jump_process.h"
+//#include "swp_kmc_jump_process.h"
 #include "swp_kmc_pah_structure.h"
 #include <list>
 #include <vector>
@@ -75,28 +75,33 @@ public:
     //! Default Destructor
     virtual ~PAHProcess();
 
-	PAHStructure* returnPAH();
-	bool havebridgeC();
+    PAHStructure* returnPAH();
+    bool havebridgeC();
 
-	// Check to validate if coordinates of C matches bond angles
-	bool checkCoordinates() const;
-	// Check to see if all sites are connected to each other
-	bool checkSiteContinuity() const;
-	// Check to see if site neighbours has a valid combined site type
-	bool checkCombinedSiteType(Spointer& stt);
+    // Check to validate if coordinates of C matches bond angles
+    bool checkCoordinates() const;
+    // Check to see if all sites are connected to each other
+    bool checkSiteContinuity() const;
+    // Check to see if site neighbours has a valid combined site type
+    bool checkCombinedSiteType(Spointer& stt);
 
     //! Sets target PAH structure to perform processes on
     void setPAH(PAHStructure& pah);
     //! Returns a copy of PAH structure
     PAHStructure* clonePAH() const;
 
+	size_t SiteListSize() const;
+	size_t CarbonListSize() const;
+	std::list<Site>& SiteList() const;
+
+
     // Structure change processes
     //! Initialisation of structure given a starting structure
     virtual PAHStructure& initialise(StartingStructure ss);
     //! Clear Structure
-	void clearStructure();
-	//! Structure processes: returns success or failure
-    bool performProcess(const kmcSiteType& stp, const int& id, int (*rand_int)(int,int));
+    void clearStructure();
+    //! Structure processes: returns success or failure
+    bool performProcess(const JumpProcess& jp, int (*rand_int)(int,int));
 
     // Read Processes
     //! Get Counts
@@ -111,7 +116,7 @@ public:
     void printSites() const;
     //! Print sites & site members in console, with arrow pointing at site stt
     void printSitesMemb(Spointer& stt) const;
-	void printSitesMemb() const;
+    void printSitesMemb() const;
     //! Print sites in console, with an arrow pointing at site stt
     void printSites(Spointer& stt) const;
     //! Store structure results in external file, returns success/failure
@@ -182,11 +187,9 @@ private:
 
     // Write Process
     //! Creates a lone carbon atom
-	Cpointer addC();
+    Cpointer addC();
     //! Creates a new carbon atom attached next to C_1.
-    Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2);
-    //! Creates a bulk carbon atom between C_1 & C_2
-    Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2, bool bulk);
+    Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2, bool bulk=false);
     //! Creates a carbon atom bridging next to C_1. 
     Cpointer bridgeC(Cpointer C_1);
     /*//! Creates a bulk carbon atom connected to C_1
@@ -235,7 +238,8 @@ private:
     
     // PAH data structure to perform processes on
    PAHStructure* m_pah;
-    
+
+    //Cpointer NULLC;
 };
 
 }

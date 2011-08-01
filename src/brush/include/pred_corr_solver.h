@@ -87,7 +87,8 @@ public:
     PredCorrSolver(const ResetChemistry& reset_chem,
                    const size_t corrector_iterations,
                    const real rtol, const real atol,
-                   const bool split_diffusion, const bool split_advection);
+                   const bool split_diffusion, const bool split_advection,
+                   const bool weighted_transport);
 
     //! Advance solution to specified time
     void solve(Reactor1d &reac, const real t_stop, const int n_steps, const int n_iter) const;
@@ -188,6 +189,9 @@ private:
 
     //! Indicate if advection is to be split from the main particle processes
     bool mSplitAdvection;
+
+    //! Whether to adjust particle statistical weights during transport between cells
+    bool mWeightedTransport;
 
 }; //class PredCorrSolver
 } //namespace Brush

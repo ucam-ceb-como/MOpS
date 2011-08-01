@@ -1,15 +1,17 @@
 /*!
   * \Author     Zakwan Zainuddin (zz260)
-  * \file       swp_kmc_processes_list.h
+  * \file       swp_kmc_mech.h
   *
-  * \brief      defines namespace which contains all jump processes and related functions
+  * \brief        Defines mechanism for the KMC simulator
   *
   Project:      sweep (gas-phase chemistry solver).
   Sourceforge:  http://sourceforge.net/projects/mopssuite
   Copyright (C) 2010 Zakwan Zainuddin.
 
   File purpose:
-    Defines namespace which contains all jump processes and related functions
+    Defines the mechanism used in the KMC simulator. Includes
+    all elementary reactions and compound rate equation resulting
+    from steady-state assumptions.
 
   Licence:
     This file is part of "sweep".
@@ -41,175 +43,222 @@
     Email:       mk306@cam.ac.uk
     Website:     http://como.cheng.cam.ac.uk
 */
-#ifndef SWP_KMC_PROCESSES_LIST_H
-#define SWP_KMC_PROCESSES_LIST_H
 
-#include "swp_kmc_gasph.h"
-#include "swp_kmc_gaspoint.h"
+#ifndef SWEEP_KMC_MECH_H
+#define SWEEP_KMC_MECH_H
+
+//#include "swp_kmc_reaction.h"
 #include "swp_kmc_jump_process.h"
-#include "swp_kmc_pah_structure.h"
+//#include "swp_kmc_pah_structure.h"
 #include "swp_kmc_pah_process.h"
-#include "swp_kmc_structure_comp.h"
+#include "swp_kmc_typedef.h"
+//#include "swp_kmc_structure_comp.h"
+#include "swp_kmc_gaspoint.h"
+#include "rng.h"
+#include "csv_io.h"
 
+#include <iostream>
+#include <string>
 #include <vector>
+#include <list>
+#include <map>
+#include <cmath>
 
-/* To add a new jump process, additions should be made at FIVE places:
-    -swp_kmc_pah_structure.h: under protected: "Jump processes:", in the form of
-        proc_StructureProc_kmcSiteType
-    -swp_kmc_pah_structure.cpp: under protected function performProcess(..). Add
-        the new jump process accordingly.
-    -this file: in namespace JumpProcessList, under "Process list:", in the form of
-        StructureProc_kmcSiteType : public JumpProcess
-    -swp_kmc_processes_list.cpp: under "Process list (energy units in kcal)"
-        defines the functions NEW_PROCESS::initialise() [elementary reactions,
-        site type, structure change process and name], NEW_PROCESS::setRate(..)
-        [jump rate calculation] and PAHProcess::proc_NEW_PROCESS [information
-        for structure change].
-    -swp_kmc_processes_list.cpp: in JumpProcessList::obtainJumpProcess(), under
-        "Initialise all jump processes". The process can then be chosen to be included
-        or not by specifying it under "Jump Processes included in the model:" in the
-        same function
-*/
+
 namespace Sweep {
 namespace KMC_ARS {
-namespace JumpProcessList {
-    //! Returns a vector of jump processes
-    std::vector<JumpProcess*> obtainJumpProcess(const KMCGasPoint& gp);
-    //! Calculates jump rate for each jump process, returns total rate
-    real calculateRates(const KMCGasPoint& gp, 
-        PAHProcess& st, 
-        const real& t, 
-        std::vector<JumpProcess*>& jp,
-        rvector& rateV);
+    //! Forward declaration of classes
+    // JumpProcess: Class which contains information on a jump process
+    class JumpProcess;
+    class PAHProcess;
 
+    // PAHStructure: Class which contains the data structure of the model
+    //class PAHStructure;
+        
+    typedef std::pair<JumpProcess*, int> ChosenProcess;
+
+    //! The KMC model
+    /*!
+     * Timestep and reaction chosen calculated using a kinetic monte-carlo
+     * algorithm by Gillespie (1977).
+    */
+    class KMCMechanism {
+    public:
+        // Constructors
+        // Default
+        KMCMechanism();
+
+        //! Copy Constructor
+        KMCMechanism(KMCMechanism& m);
+
+        //! Destructor
+        virtual ~KMCMechanism();
+
+        // WRITE PROCESSES
+
+        //! Load processes from process list
+        void loadProcesses(std::vector<JumpProcess*> (*jp)());
+
+        //! Choosing a reaction to be taken place, returns pointer to jump process
+        //! and index of process in m_jplist
+        ChosenProcess chooseReaction(real (*rand_u01)()) const;
+
+        //! Calculates jump rate for each jump process
+        void calculateRates(const KMCGasPoint& gp, 
+            PAHProcess& st, 
+            const real& t);
+        
+        // DATA ACCESS
+
+        //! Returns vector of jump processes
+        std::vector<JumpProcess*> JPList() const;
+        
+        //! Returns vector of jump rates
+        std::vector<real> Rates() const;
+
+        //! Returns total rates
+        real TotalRate() const;
+    private:
+        //! Vector of jump processes
+        std::vector<JumpProcess*> m_jplist;
+        //! Returns a vector of jump processes implemented in model
+        std::vector<JumpProcess*> obtainJumpProcess();
+        //! Checks if this mechanism object is a copy
+        bool isACopy;
+        //! Vector of jump rates
+        std::vector<real> m_rates;
+        //! Total rate
+        real m_totalrate;
+    };
+        
     //! Process list:
-    class G6R_FE : public JumpProcess { //R6 growth on FE
+    class G6R_FE : public Sweep::KMC_ARS::JumpProcess { //R6 growth on FE
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class G6R_AC : public JumpProcess { //R6 growth on AC
+    class G6R_AC : public Sweep::KMC_ARS::JumpProcess { //R6 growth on AC
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class L6_BY6 : public JumpProcess { //BY6 closure
+    class L6_BY6 : public Sweep::KMC_ARS::JumpProcess { //BY6 closure
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class PH_benz : public JumpProcess { //phenyl addition
+    class PH_benz : public Sweep::KMC_ARS::JumpProcess { //phenyl addition
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class D6R_FE3 : public JumpProcess { //R6 desorption
+    class D6R_FE3 : public Sweep::KMC_ARS::JumpProcess { //R6 desorption
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class O6R_FE3_O2 : public JumpProcess { //R6 oxidation at FE by O2
+    class O6R_FE3_O2 : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at FE by O2
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class O6R_FE3_OH : public JumpProcess { //R6 oxidation at FE by OH
+    class O6R_FE3_OH : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at FE by OH
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class O6R_FE_HACA_O2 : public JumpProcess { //R6 oxidation at AC by O2
+    class O6R_FE_HACA_O2 : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at AC by O2
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class O6R_FE_HACA_OH : public JumpProcess { //R6 oxidation at AC by OH
+    class O6R_FE_HACA_OH : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at AC by OH
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class G5R_ZZ : public JumpProcess { //R5 growth on ZZ
+    class G5R_ZZ : public Sweep::KMC_ARS::JumpProcess { //R5 growth on ZZ
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class D5R_R5 : public JumpProcess { //R5 desorption
+    class D5R_R5 : public Sweep::KMC_ARS::JumpProcess { //R5 desorption
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class C6R_AC_FE3 : public JumpProcess { //R6 conversion to R5
+    class C6R_AC_FE3 : public Sweep::KMC_ARS::JumpProcess { //R6 conversion to R5
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class C5R_RFE : public JumpProcess { //R5 conversion to R6 on FE
+    class C5R_RFE : public Sweep::KMC_ARS::JumpProcess { //R5 conversion to R6 on FE
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class C5R_RAC : public JumpProcess { //R5 conversion to R6 on AC
+    class C5R_RAC : public Sweep::KMC_ARS::JumpProcess { //R5 conversion to R6 on AC
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class M5R_RZZ : public JumpProcess { //R5 migration to neighbouring ZZ
+    class M5R_RZZ : public Sweep::KMC_ARS::JumpProcess { //R5 migration to neighbouring ZZ
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class C6R_BY5_FE3 : public JumpProcess { //R6 migration & conversion to R5 at BY5 (pathway 1)
+    class C6R_BY5_FE3 : public Sweep::KMC_ARS::JumpProcess { //R6 migration & conversion to R5 at BY5 (pathway 1)
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class C6R_BY5_FE3violi : public JumpProcess { //R6 migration & conversion to R5 at BY5 (pathway 2; violi)
+    class C6R_BY5_FE3violi : public Sweep::KMC_ARS::JumpProcess { //R6 migration & conversion to R5 at BY5 (pathway 2; violi)
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class L5R_BY5 : public JumpProcess { //BY5 closure
+    class L5R_BY5 : public Sweep::KMC_ARS::JumpProcess { //BY5 closure
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         void initialise();
     };
-    class M6R_BY5_FE3 : public JumpProcess { //R6 desorption at bay -> pyrene
+    class M6R_BY5_FE3 : public Sweep::KMC_ARS::JumpProcess { //R6 desorption at bay -> pyrene
     public:
         real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
         real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
@@ -217,7 +266,7 @@ namespace JumpProcessList {
         void initialise();
     };
 }
-}
+
 }
 
 #endif

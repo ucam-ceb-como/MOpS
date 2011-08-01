@@ -46,6 +46,7 @@
 #define SWP_KMC_STRUCTURE_COMP_H
 
 #include "swp_kmc_typedef.h"
+#include "boost/shared_ptr.hpp"
 #include <list>
 #include <cmath>
 #include <cstdlib>
@@ -57,38 +58,41 @@ namespace Sweep {
         class Carbon;
 
         // Pointer to a Carbon atom and a Site.
-        typedef Carbon* Cpointer;
+		typedef std::set<Carbon*> Ccontainer;
+		typedef Carbon* Cpointer;
         typedef std::list<Site>::iterator Spointer;
+		
 
         //! Carbon atom on PAH edges
         class Carbon {
-		public:
-			Carbon();
-			//! Copy Constructor
-			Carbon(const Carbon& copy);
+        public:
+            Carbon();
+            //! Copy Constructor
+            Carbon(const Carbon& copy);
             //! Default Destructor
             ~Carbon();
-
-            angletype bondAngle1;
             //! Neighbouring carbon atoms
             Cpointer C1; // prev
             Cpointer C2; // next
-            //! Bulk or edge C atom
-            bool edge;
-			 //! For bridging carbon atoms
-            bool bridge;
-			//! Third species bonded to it, 0 if none [radical]
-			char A;
-            //! Sites of which the atom is a member of
-            //Spointer S1; // prev
-            //Spointer S2; // next
-            //! bond angle at bridge
-            angletype bondAngle2;
             //! 3rd carbon attached
             Cpointer C3;
+            //! Bulk or edge C atom
+            bool edge;
+             //! For bridging carbon atoms
+            bool bridge;
+            //! Third species bonded to it, 0 if none [radical]
+            char A;
+            //! Bond angle made with C2
+            angletype bondAngle1;
+            //! Bond angle at bridge
+            angletype bondAngle2;
             //! Coordinates of atom
             cpair coords;
         };
+
+		//static Ccontainer NULLSET(1, Carbon());
+		static Cpointer NULLC(new Carbon);//SET.begin();
+
         //! Active site on PAH edges
         struct Site {
             //! Type of site

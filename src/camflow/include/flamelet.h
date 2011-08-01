@@ -144,6 +144,9 @@ namespace Camflow
             //! Species residual calculation.
             void speciesResidual(const doublereal& t, doublereal* y, doublereal* f);
 
+            //! Soot moments residual calculation.
+            void sootMomentResidual(const doublereal& t,doublereal* y,doublereal* f);
+
             //! Energy residual calculation.
             void energyResidual(const doublereal& t, doublereal* y, doublereal* f);
 
@@ -153,6 +156,12 @@ namespace Camflow
             void setExternalStrainRate(const doublereal strainRate);
 
             void setExternalSDR(const doublereal sdr);
+
+            void setExternalTimeSDR
+            (
+                const std::vector<doublereal>& time,
+                const std::vector<doublereal>& sdr
+            );
 
             //! Provide a soot volume fraction from an external calculation.
             void setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv);

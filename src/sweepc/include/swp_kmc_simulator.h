@@ -45,13 +45,14 @@
 #ifndef SWP_KMC_SIMULATOR_H
 #define SWP_KMC_SIMULATOR_H
 
-#include "swp_kmc_gasph.h"
+#include "swp_kmc_mech.h"
 #include "swp_kmc_gaspoint.h"
 #include "swp_kmc_pah_structure.h"
 #include "swp_kmc_pah_process.h"
 #include "swp_kmc_typedef.h"
-#include "swp_kmc_processes_list.h"
 #include "swp_PAH_primary.h"
+#include "swp_gas_profile.h"
+#include "sprog.h"
 
 #include "string_functions.h"
 #include "csv_io.h"
@@ -71,16 +72,20 @@ namespace Sweep{
         class KMCSimulator {
         public:
             friend class CSV_data;
-            //! Default Constructor
-            KMCSimulator();
+            //! Constructor from a GasProfile object
+            KMCSimulator(Sweep::GasProfile &gprofile);
+            //! Constructor from chemkin and gasphase files
+            KMCSimulator(const std::string gasphase, const std::string chemfile, const std::string thermfile);
             //! Copy Constructor
             KMCSimulator(KMCSimulator& s);
             //! Destructor
             virtual ~KMCSimulator();
             //! Initialise simulator from starting structure
             //void initialise(PAHStructure m_PAH);
-			//! Initialise simulator
+            //! Initialise simulator
             //void initialise();
+            // test gas profile
+            void TestGP();
             //! Set PAH to be simulated
             void targetPAH(PAHStructure& pah);
             //! Calculate time step for KMC algorithm
@@ -104,36 +109,39 @@ namespace Sweep{
             //! Writes data for CH_site_list.csv
             void writeCHSiteCountCSV();
             //! Writes data for rates count (csv)
-            void writeRatesCSV(int runNo, real& time, rvector& v_rates);
+            void writeRatesCSV(real& time, rvector& v_rates);
             //! Initialise CSV_IOs
             void initCSVIO();
             //! Initialise reaction count
             void initReactionCount();
-			//! Loads gas profiles
-			void loadGasProfiles();
+            //! Reads chemical mechanism / profile (if not obtained from Mops)
+            void LoadGasProfiles(const std::string gasphase, const std::string chemfile, const std::string thermfile);
             //! Write column headings for CSV files
             void writeCSVlabels();
             //! Save the structure DOT file after every X loops
             void saveDOTperXLoops(int X, int& loopcount, int& runcount);
-			//! Save the structure DOT file for particular PAH (ID)
-			void saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID);
+            //! Save the structure DOT file for particular PAH (ID)
+            void saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID);
             //! Save the structure DOT file after every X simulation sec interval
-            void saveDOTperXsec(const real& X, const int& seed, const real& time, const real &time_max, KMCGasph& copyMod, int& intervalcount);
+            void saveDOTperXsec(const real& X, const int& seed, const real& time, const real &time_max, KMCMechanism& copyMod, int& intervalcount);
             //! Update structure of PAH after time dt
             real updatePAH(PAHStructure* pah, // structure of pah
-				           const real tstart, // start time
-						   const real dt,     // growth time
-						   const int waitingSteps,  // waiting step used to calculate maximum time interval, currently use 5.
-						   int (*rand_int)(int,int), // random number
-						   real (*rand_u01)(),// random number
-						   real r_factor,     // growth factor g, one important parameter used in this model.
-						   int PAH_ID);       // ID of this pah, used for debugging.
-            ////! A function to test validity of updatePAH compared to runSimulation
+                           const real tstart, // start time
+                           const real dt,     // growth time
+                           const int waitingSteps,  // waiting step used to calculate maximum time interval, currently use 5.
+                           int (*rand_int)(int,int), // random number
+                           real (*rand_u01)(),// random number
+                           real r_factor,     // growth factor g, one important parameter used in this model.
+                           int PAH_ID);       // ID of this pah, used for debugging.
+            //! Outputs rates into a csv file (assuming all site counts as 1)
+			void TestRates(const real tstart, const real tstop, const int intervals);
+			//! Outputs gas concentrations into a csv file
+			void TestConc(const real& t_start, const real& t_stop, const int intervals, const std::string& filename);
             //void testSimulation(PAHStructure& pah, const unsigned long seed, int totalruns);
-			void writetimestep(const std::vector<double>& timestep);
-			void setCSVtimestep(const std::string &filename);
-            std::string	m_timestep_name;
-			//! CSV input filename
+            void writetimestep(const std::vector<double>& timestep);
+            void setCSVtimestep(const std::string &filename);
+            std::string    m_timestep_name;
+            //! CSV input filename
              std::string m_csv_in;
             //! DOT output filename
              std::string m_dot_out;
@@ -153,12 +161,22 @@ namespace Sweep{
              CSV_IO m_pah_csv;
             //! CSV io object for rates counts (for one run)
              CSV_IO m_rates_csv;
-			//! CSV io object for time step
-			 CSV_IO m_timestep_csv;
-		private:
-            //! The kMC Model
-            KMCGasph m_simGas;
-			//static int LOOPcount;
+            //! CSV io object for time step
+             CSV_IO m_timestep_csv;
+        private:
+            //! Make default constructor private
+            KMCSimulator();
+            //! Pointer to gasprofile object
+            Sweep::GasProfile* m_gasprof;
+            //! Pointer to Sprog mechanism
+            Sprog::Mechanism* m_mech;
+            //! KMC Mechanism
+            KMCMechanism m_kmcmech;
+            //! Check if profile obtained from file rather than mops
+            bool m_fromfile;
+            //! Gaspoint object
+            KMCGasPoint* m_gas;
+            //static int LOOPcount;
             //! The PAH data structure
             PAHStructure* m_simPAH;
             //! PAH process
@@ -175,7 +193,7 @@ namespace Sweep{
             CSV_data(KMCSimulator& st);
             virtual ~CSV_data();
             // initialise data storage
-            void initData(int max_runs, int no_of_interv, real max_time, intpair N_CH_initial, KMCGasph& gasph);
+            void initData(int max_runs, int no_of_interv, real max_time, intpair N_CH_initial, KMCGasPoint& gp);
             // Compares time and adds data if interval reached
             void addData(intpair N_CH, real time, int runNo, PAHProcess& pp, bool savedot);
             // delete data of run

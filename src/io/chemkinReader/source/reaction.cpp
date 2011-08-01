@@ -98,6 +98,7 @@ void IO::Reaction::checkForThirdBody(multimap<string, double>& species)
         {
             flagThirdBody_ = true;
             species.erase(iter);
+            break;
         }
     }
 }

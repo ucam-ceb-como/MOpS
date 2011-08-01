@@ -48,6 +48,7 @@
 #include "swp_cell.h"
 #include "swp_particle.h"
 #include "swp_process_type.h"
+#include "swp_gas_profile.h"
 #include "sprog.h"
 #include <iostream>
 #include <vector>
@@ -159,6 +160,13 @@ public:
     //   process, which may have multiple terms (e.g. condensation).
 
 	// PERFORMING THE PROCESS.
+    //! Declared in parent class, implemented in dervied classes
+    virtual int Perform(Sweep::real t, Sweep::Cell &sys, 
+                          const Geometry::LocalGeometry1d& local_geom,
+                          unsigned int iterm,
+                          int (*rand_int)(int, int), 
+                          Sweep::real(*rand_u01)(),
+                          Sweep::Transport::TransportOutflow *out) const;
 
     //! Declared in parent class, implemented in dervied classes
     virtual int Perform(
@@ -168,6 +176,7 @@ public:
         unsigned int iterm,
         int (*rand_int)(int, int), 
         real(*rand_u01)(),
+        Sweep::GasProfile* gp=NULL,
         Transport::TransportOutflow *out = 0
         ) const = 0;
 

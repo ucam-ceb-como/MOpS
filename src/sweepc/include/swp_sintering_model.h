@@ -85,7 +85,8 @@ public:
     // Sintering model types.
     enum SintType {
         ViscousFlow, // Viscous flow model (e.g. silica).
-        GBD          // Grain-boundary diffusion (e.g. titania).
+        GBD,          // Grain-boundary diffusion (e.g. titania).
+        Rutile		 // Special MD fit for GBD sintering of rutile
     };
 
     // Constructors.
