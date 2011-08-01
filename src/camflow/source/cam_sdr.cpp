@@ -178,6 +178,12 @@ void ScalarDissipationRate::setExternalScalarDissipationRate
     v_stoichSDR = sdr;
     v_time = time;
 
+    scalarDissipationRate_.resize(time.size());
+    for (size_t t=0; t<time.size(); ++t)
+    {
+        scalarDissipationRate_[t].resize(mixFracCoords_.size());
+    }
+
     // Now calculate the analytic profile of sdr
     for (size_t t=0; t<sdr.size(); ++t)
     {
