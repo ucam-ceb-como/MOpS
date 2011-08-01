@@ -82,6 +82,8 @@ class ScalarDissipationRate
     std::vector< std::vector<doublereal> > scalarDissipationRate_;
 
     Utils::LinearInterpolator<doublereal, doublereal>*  interpolator_;
+    Utils::LinearInterpolator<doublereal, doublereal>*  interpolatorZeroTime_;
+    Utils::LinearInterpolator<doublereal, doublereal>*  interpolatorNextTime_;
 
     void readStrainRate(const std::string& inputFileName);
     doublereal calculate(const doublereal& mixtureFraction) const;

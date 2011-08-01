@@ -294,6 +294,7 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
     //Set the time history of the scalar dissipation rate
     flmlt->setRestartTime(intTime[0]);
     //flmlt->setExternalScalarDissipationRate(intTime,sdr,true);
+    flmlt->setExternalTimeSDR(intTime,sdr);
 
     // Build up a vector of zero soot volume fractions
     std::vector<doublereal> zeroSoot(cg.getnCells(), 0.0);
@@ -420,10 +421,9 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
     if(intTime!=0)cc.setMaxTime(intTime);
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
     if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
-    flmlt->setExternalScalarDissipationRate(sdr);
 
     if(sdr==0){
-        std::cout << "Passed in value of SDR is zero\n SDR automatic calculation activated\n" ;
+        throw std::logic_error("You passed a Scalar Dissipation Rate of zero! Wrong!");
     }
     try{
         if (!continuation)

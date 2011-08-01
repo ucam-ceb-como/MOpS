@@ -23,21 +23,30 @@ ScalarDissipationRate::ScalarDissipationRate
     {
         scalarDissipationRate_[t].resize(mixFracCoords.size());
     }
+
     sdrType_ = notFromCFD;
+
     readStrainRate(inputFileName);
+
     for (size_t i=0; i<mixFracCoords.size(); ++i)
     {
         scalarDissipationRate_[0][i] = calculate(mixFracCoords[i]);
     }
-    interpolator_ = new
-    Utils::LinearInterpolator<doublereal, doublereal>(mixFracCoords_, scalarDissipationRate_[0]);
+
+    interpolator_ = new Utils::LinearInterpolator<doublereal, doublereal>
+                        (
+                            mixFracCoords_,
+                            scalarDissipationRate_[0]
+                        );
 
 }
 
 //! Destructor.
 ScalarDissipationRate::~ScalarDissipationRate()
 {
-    delete interpolator_;
+    if (interpolator_ != NULL) delete interpolator_;
+    if (interpolatorZeroTime_ != NULL) delete interpolatorZeroTime_;
+    if (interpolatorNextTime_ != NULL) delete interpolatorNextTime_;
 }
 
 void
@@ -152,10 +161,12 @@ void ScalarDissipationRate::setSDRRate(const doublereal sdr)
 }
 
 
-///**
-// *  When the scalar dissipation rate has a time history
-// *  use that during intergration
-// */
+/*!
+ *  When the scalar dissipation rate has a time history
+ *  use that during integration. The spatial profile will
+ *  be set assuming that the sdr values are the stoichiometric
+ *  ones.
+ */
 void ScalarDissipationRate::setExternalScalarDissipationRate
 (
     const std::vector<doublereal>& time,
@@ -177,6 +188,17 @@ void ScalarDissipationRate::setExternalScalarDissipationRate
             scalarDissipationRate_[t][z] = calculate(mixFracCoords_[z]);
         }
     }
+
+    interpolatorZeroTime_ = new Utils::LinearInterpolator<doublereal, doublereal>
+                            (
+                                mixFracCoords_,
+                                scalarDissipationRate_[0]
+                            );
+    interpolatorNextTime_ = new Utils::LinearInterpolator<doublereal, doublereal>
+                            (
+                                mixFracCoords_,
+                                scalarDissipationRate_[1]
+                            );
 
 }
 
@@ -214,9 +236,9 @@ const
 
 }*/
 
-///**
-// *  Interpolate and return the scalar dissipation rate from a profile that varies through time.
-// */
+/*!
+ *  Interpolate and return the scalar dissipation rate from a profile that varies through time.
+ */
 doublereal
 ScalarDissipationRate::operator()
 (
@@ -226,46 +248,25 @@ ScalarDissipationRate::operator()
 const
 {
 
-    // \todo This is slow. We already know mixFracCoords so could look up
-    // scalarDissipationRate_ directly.
     if (sdrType_ == notFromCFD)
     {
         return interpolator_->interpolate(Z);
     }
-
-    /*else if (sdrType_ == constant_fromCFD)
+    else if (sdrType_ == constant_fromCFD)
     {
-        std::vector<doublereal> sdrTime, sdrInterpolated;
-        std::vector<doublereal> cfdMixFracCoordsTime, cfdMixFracCoordsInterpolated;
+        std::vector<doublereal> sdrAtTime_i;
+        sdrAtTime_i.push_back(interpolatorZeroTime_->interpolate(Z));
+        sdrAtTime_i.push_back(interpolatorNextTime_->interpolate(Z));
 
-        sdrInterpolated.clear();
-        cfdMixFracCoordsInterpolated.clear();
+        Utils::LinearInterpolator<doublereal, doublereal> interpolateOverTime
+        (v_time, sdrAtTime_i);
 
-        for (size_t i=0; i<mixFracCoords_.size(); ++i)
-        {
-
-            sdrTime.clear();
-            sdrTime.push_back(profile_sdr[0][i]);
-            sdrTime.push_back(profile_sdr[1][i]);
-
-            cfdMixFracCoordsTime.clear();
-            cfdMixFracCoordsTime.push_back(cfdMixFracCoords[0][i]);
-            cfdMixFracCoordsTime.push_back(cfdMixFracCoords[1][i]);
-
-            Utils::LinearInterpolator<doublereal, doublereal> timeInterpolate(v_time, sdrTime);
-            doublereal sdrInterpolatedTime = timeInterpolate.interpolate(time);
-
-            Utils::LinearInterpolator<doublereal, doublereal> time2Interpolate(v_time, cfdMixFracCoordsTime);
-            doublereal cfdMixFracCoordsInterpolatedTime = time2Interpolate.interpolate(time);
-
-            sdrInterpolated.push_back(sdrInterpolatedTime);
-            cfdMixFracCoordsInterpolated.push_back(cfdMixFracCoordsInterpolatedTime);
-        }
-
-        Utils::LinearInterpolator<doublereal, doublereal> spaceInterpolate(cfdMixFracCoordsInterpolated, sdrInterpolated);
-
-        return spaceInterpolate.interpolate(Z);
-    }*/
+        return interpolateOverTime.interpolate(Z);
+    }
+    else
+    {
+        throw std::logic_error("sdrType_ is not set to a valid value.");
+    }
 
 }
 

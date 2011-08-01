@@ -1097,6 +1097,15 @@ void FlameLet::setExternalSDR(const doublereal sdr)
     scalarDissipationRate_.setSDRRate(sdr);
 }
 
+void FlameLet::setExternalTimeSDR
+(
+    const std::vector<doublereal>& time,
+    const std::vector<doublereal>& sdr
+)
+{
+    scalarDissipationRate_.setExternalScalarDissipationRate(time,sdr);
+}
+
 /*
  *solver call for residual evaluation
  */
