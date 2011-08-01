@@ -158,11 +158,6 @@ public:
     // Returns true if the mechanism include the given model.
     bool ContainsSubModel(SubModels::SubModelType id) const;
 
-    // Adds a model to the mechanism.  Any subsequent particles
-    // created with this model will use that sub-model.
-    void AddSubModel(SubModels::SubModelType id);
-
-
     // AGGREGATION MODEL TYPE.
 
     // Returns the ID of the aggregation model used by dependent particles.

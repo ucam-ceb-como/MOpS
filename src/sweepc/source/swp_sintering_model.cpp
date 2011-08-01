@@ -170,6 +170,15 @@ real SinteringModel::SintTime(const Cell &sys,const Primary &p) const
         default:
             return m_A * dp * dp * dp * dp * sys.Temperature() *  
                    exp((m_E*(1-(m_dpmin/dp)))/sys.Temperature());
+        case Rutile:
+        	// Buesser et al., J. Phys. Chem. C, 2011, 115, 11030-11035
+        	// SintTime function from MD calculations
+        	// default: m_A = 3.7E16 s/m4K,
+        	//			m_E = 258 kJ/mol = 31032 K
+        	//			m_dpmin = 3.4 nm
+        	return m_A * dp * dp * dp * dp * sys.Temperature() *
+				   exp((m_E* (1 - pow( (m_dpmin/dp) - (sys.Temperature()/4100.0) , 3.76))
+				     /sys.Temperature()));
     }
 }
 

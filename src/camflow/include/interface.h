@@ -266,6 +266,8 @@ namespace Camflow {
              //! Default destructor.
             ~Interface();
 
+            void getFlameletVariables(FlameLet* const flmlt);
+
             //! Calling interface to solve flamelets with time-history scalar dissipation rates.
             void flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
 
