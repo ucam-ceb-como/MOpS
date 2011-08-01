@@ -482,7 +482,7 @@ void FlameLet::restart()
         //if(!interface)
         //{
         string filename = "profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
-            reportToFile(filename,control_.getMaxTime(), solvect);
+        reportToFile(filename,control_.getMaxTime(), solvect);
             //writeXMLFile(scalarDissipationRate_.getStoichSDR(), solvect);
         //}
     }
@@ -1240,33 +1240,6 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<doub
     reporter_->closeFile();
 
     //reacGeom->refine(soln,nVar,nSpc,ptrT);
-
-}
-
-void FlameLet::writeXMLFile
-(
-    const doublereal sdr,
-    const std::vector<doublereal>& solvect
-)
-{
-
-    std::vector<doublereal> temperatureVec, axpos, massfrac;
-    axpos = reacGeom_.getAxpos();
-    int len = axpos.size();
-
-    for (int i=0; i<len; ++i)
-    {
-        temperatureVec.push_back(solvect[i*nVar+ptrT]);
-    }
-
-    reporter_->writeTempProfiletoXML("camflow",sdr,axpos,temperatureVec);
-    for(int l=0; l<nSpc; l++){
-        massfrac.clear();
-        for (int i=0; i<len; i++) {
-            massfrac.push_back(solvect[i*nVar+l]);
-        }
-        reporter_->writeMassFracProfiletoXML("camflow",sdr,axpos,massfrac, (*spv_)[l]->Name() );
-    }
 
 }
 
