@@ -532,7 +532,7 @@ CamSoot::realVector CamSoot::rateAll
     surfProdRate[iInception]= -2 * nucRates[0] / NA;
 
 	// Check the nucleation rates
-    std::cout << "nucRates[0]  " << nucRates[0] << std::endl;
+    //std::cout << "nucRates[0]  " << nucRates[0] << std::endl;
     //std::cout << "nucRates[1]  " << nucRates[1] << std::endl;
     //std::cout << "nucRates[2]  " << nucRates[2] << std::endl;
     //std::cout << "nucRates[3]  " << nucRates[3] << std::endl;
