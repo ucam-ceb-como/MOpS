@@ -44,6 +44,7 @@
 #include "cam_control.h"
 #include "interface.h"
 #include "flamelet.h"
+#include "linear_interpolator.hpp"
 
 using namespace Camflow;
 
@@ -573,40 +574,28 @@ doublereal Interface::getWdotA4(const doublereal axpos){
 }
 
 /*!
- * Gets the value of var at a given pos by interpolation.
+ * Gets the value of var at a given pos by calling linear_interpolator.
  *
  *\param[in]    pos           Value of independent variable.
  *\param[in]    var           Variable to be interpolated.
  *
  *\return       Value of var at a given pos.
- * \todo replace this with the interpolator in utils.
  */
-doublereal Interface::getVariableAt(const doublereal& pos,
-                                    const std::vector<doublereal>& var) const{
+doublereal Interface::getVariableAt
+(
+    const doublereal& pos,
+    const std::vector<doublereal>& var
+)
+const
+{
 
-    doublereal vu, vl, xu, xl, temp=0.0;
-    size_t len = indVar.size();
+    Utils::LinearInterpolator<doublereal, doublereal> interpolator
+    (
+        indVar,
+        var
+    );
 
-    for(size_t i=0; i<len; i++){
-        if(pos == indVar[i]) {
-            temp= var[i];
-            break;
-        }else if( i>0 && (pos > indVar[i-1]) && (pos < indVar[i]) ){
-            vu = var[i];
-            xu = indVar[i];
-
-            vl = var[i-1];
-            xl = indVar[i-1];
-
-            doublereal slope = (vu-vl)/(xu-xl);
-            doublereal intersect = vu- (slope*xu);
-
-            temp= slope*pos + intersect;
-            break;
-        }
-    }
-
-    return temp;
+    return interpolator.interpolate(pos);
 
 }
 
