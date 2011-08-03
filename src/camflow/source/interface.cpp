@@ -346,7 +346,7 @@ void Interface::flameletSDR(const doublereal& SDR, bool lnone) {
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
     if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
 
-    flmlt->setExternalScalarDissipationRate(SDR);
+    flmlt->setExternalSDR(SDR);
 
     try{
         flmlt->solve(false);

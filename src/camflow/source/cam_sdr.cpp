@@ -144,6 +144,8 @@ const
 
 void ScalarDissipationRate::setStrainRate(const doublereal strainRate)
 {
+
+    sdrType_ = notFromCFD;
     strainRate_ = strainRate;
     stoichSDR_ = scalarDissipationRate(stoichZ_);
     for (size_t i=0; i<mixFracCoords_.size(); ++i)
@@ -160,6 +162,8 @@ void ScalarDissipationRate::setStrainRate(const doublereal strainRate)
 
 void ScalarDissipationRate::setSDRRate(const doublereal sdr)
 {
+
+    sdrType_ = notFromCFD;
     stoichSDR_ = sdr;
     strainRate_ = strainRate(stoichZ_);
     for (size_t i=0; i<mixFracCoords_.size(); ++i)
