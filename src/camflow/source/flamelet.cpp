@@ -281,12 +281,14 @@ void FlameLet::initSolutionVector()
 
     // Set the initial moment values (interior and boundary)
     // Also initial constants
+    cout << "Soot Active? " << sootMom_.active() << endl;
     if (sootMom_.active())
     {
         vMom.resize(len*nMoments,0.0);
         for (size_t i=0; i<dz.size(); i++)
         {
-        	cout << "First Moment " << sootMom_.getFirstMoment() << endl;
+            cout << "Soot Active? " << endl;
+        	cout << "First Moment... " << sootMom_.getFirstMoment() << endl;
         	vMom[i*nMoments] = sootMom_.getFirstMoment();
         	cout << "vMom[i*nMoments]  " << i*nMoments << vMom[i*nMoments] << endl;
         	for (size_t l=1; l<nMoments; ++l)
