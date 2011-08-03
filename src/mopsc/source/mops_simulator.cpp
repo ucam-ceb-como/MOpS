@@ -401,10 +401,6 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         // Print run time to the console.
         printf("mops: Run number %d completed in %.1f s.\n", irun+1, m_runtime);
 
-		r.Mech()->ParticleMech().Mass_spectra(mononer_vector, dimer_vector,r.Mixture()->Particles());
-		//r.Mech()->ParticleMech().Mass_pah(pah_vector,r.Mixture()->Particles());
-
-
 	#ifdef USE_MPI
 
 		 closeOutputFile();			//ms785
