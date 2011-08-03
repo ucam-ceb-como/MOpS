@@ -334,6 +334,29 @@ void Interface::flameletStrainRate(const doublereal& strainRate, bool lnone) {
 
 }
 
+/*!
+ * This function is called externally to solve a flamelet for a given SDR.
+ *
+ *\param[in]    SDR                 Value of SDR to solve for.
+ *\param[in]    lnone                If 'true', Le=1.
+ *
+ */
+void Interface::flameletSDR(const doublereal& SDR, bool lnone) {
+
+    if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
+    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
+
+    flmlt->setExternalScalarDissipationRate(SDR);
+
+    try{
+        flmlt->solve(false);
+        getFlameletVariables(flmlt);
+    }catch(CamError &ce){
+        throw ;
+    }
+
+}
+
 /**
  * This is called when an sdr profile is required instead of just a constant one.
  */
