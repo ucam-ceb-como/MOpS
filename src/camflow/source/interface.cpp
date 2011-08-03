@@ -131,7 +131,7 @@ cp(cg)
          * model if the scalar dissipation rate is
          * non-zero
          */
-        model->setExternalScalarDissipationRate(sdr);
+        model->setExternalSDR(sdr);
        // model->solve(cc,ca,cg,cp,config,cs,mech_in);
     }
 
