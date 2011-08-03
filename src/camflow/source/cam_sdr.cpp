@@ -44,9 +44,9 @@ ScalarDissipationRate::ScalarDissipationRate
 //! Destructor.
 ScalarDissipationRate::~ScalarDissipationRate()
 {
-    if (interpolator_ != NULL) delete interpolator_;
+    /*if (interpolator_ != NULL) delete interpolator_;
     if (interpolatorZeroTime_ != NULL) delete interpolatorZeroTime_;
-    if (interpolatorNextTime_ != NULL) delete interpolatorNextTime_;
+    if (interpolatorNextTime_ != NULL) delete interpolatorNextTime_;*/
 }
 
 void
