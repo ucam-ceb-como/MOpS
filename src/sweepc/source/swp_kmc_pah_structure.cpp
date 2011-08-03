@@ -49,6 +49,8 @@
 #include "swp_kmc_jump_process.h"
 #include "swp_kmc_pah_process.h"
 #include "rng.h"
+#include "string_functions.h"
+#include <string>
 #include <iostream>
 #include <fstream>
 #include <list>
@@ -58,7 +60,7 @@
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
 using namespace std;
-
+using namespace Strings;
 
 
 // Constructors and Destructor
@@ -104,6 +106,10 @@ bool PAHStructure::operator!=(PAHStructure &rhs) const{
 int PAHStructure::numofC(){
     return m_counts.first;
 } 
+
+int PAHStructure::numofH(){
+    return m_counts.second;
+} 
 void PAHStructure::initialise(StartingStructure ss) {
     PAHProcess p(*this);
     p.initialise(ss);
@@ -116,4 +122,15 @@ PAHStructure*  PAHStructure::Clone() {
 bool PAHStructure::havebridgeC(){
     PAHProcess p(*this);
     return p.havebridgeC();
+}
+
+void PAHStructure::saveDOTperLoop(int PAH_ID, int i)
+{
+	PAHProcess p(*this);
+    string filename = "KMC_DEBUG/ID_";
+	filename.append(Strings::cstr(PAH_ID));
+	filename.append("_");
+	filename.append(Strings::cstr(i));
+    filename.append(".dot");
+    p.saveDOT(filename);
 }

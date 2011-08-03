@@ -67,6 +67,7 @@ public:
 	//returen ID of PAH
 	int ID() const;
 
+	void saveDOTperLoop(int ID, int i) const;
 private:
 	    //! Number of Carbon atoms in the PAH
         unsigned int m_numcarbon;

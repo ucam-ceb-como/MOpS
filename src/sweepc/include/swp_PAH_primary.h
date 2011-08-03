@@ -67,6 +67,8 @@
 
 namespace Sweep
 {
+	enum Xmer{ MOMOMER=1,DIMER=2,TRIMER=3};
+
 namespace AggModels
 {
 //! PAH primary particle class
@@ -156,6 +158,15 @@ public:
     //! returns sqrt(L*W)
     double sqrtLW() const;
     double AvgCoalesc() const;
+
+	//! return a vector containing the mass of each xmer
+	void FindXmer(std::vector<double> &out, Xmer m_xmer) const;
+	
+	void FindXmer(std::vector<std::vector<double> > &out, int m_xmer) const;
+
+	void mass_PAH(std::vector<std::vector<double> > &out) const;
+
+	double MassforXmer() const;
 
 protected:
     //! Empty primary not meaningful
