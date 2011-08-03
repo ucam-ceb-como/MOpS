@@ -481,9 +481,8 @@ void FlameLet::restart()
          */
         //if(!interface)
         //{
-        string filename = "profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
-        reportToFile(filename,control_.getMaxTime(), solvect);
-            //writeXMLFile(scalarDissipationRate_.getStoichSDR(), solvect);
+        //    string filename = "profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
+        //    reportToFile(filename,control_.getMaxTime(), solvect);
         //}
     }
     else if (solverID == control_.LIMEX) {
