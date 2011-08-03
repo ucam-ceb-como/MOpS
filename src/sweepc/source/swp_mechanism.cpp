@@ -861,11 +861,11 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
 		//check that kmcsimulator in ensemble is initialized or not,  if not, start to initialize kmcsimulator
         if (sys.Particles().Simulator()==NULL)
 		{
-			if(gp == NULL) {
-				throw runtime_error("No Gas Profile provided! "
-                               "(Sweep, Mechanism::UpdateParticle).");
-			}
-				sys.Particles().SetSimulator(*gp);
+			//if(gp == NULL) {
+			//	throw runtime_error("No Gas Profile provided! "
+   //                            "(Sweep, Mechanism::UpdateParticle).");
+			//}
+			sys.Particles().SetSimulator(*(sys.Gasphase()));
 		// for debugging, open a file to write time step for kmc loops, dongping 06 May
 				sys.Particles().Simulator()->m_timestep_csv.Open(sys.Particles().Simulator()->m_timestep_name, true);
 		}
@@ -927,6 +927,36 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
         if (sp.IsValid())
             sp.UpdateCache();
     }
+}
+
+void Mechanism::Mass_spectra(std::vector<double> &out1, std::vector<double> &out2, Ensemble &m_ensemble) const
+{
+
+	for (size_t i=0;i!=m_ensemble.Capacity();++i)
+	{
+	if (m_ensemble.At(i)!=NULL)
+		{
+			const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+		    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_ensemble.At(i)->Primary());
+            //now enum Xmer{ MOMOMER=1,DIMER=2,TRIMER=3} is definded in swp_PAH_primary.h
+			rhsparticle->FindXmer(out1, MOMOMER);
+			rhsparticle->FindXmer(out2, DIMER);
+		}
+	}
+}
+
+void Mechanism::Mass_pah(vector<vector<double> > &out1, Ensemble &m_ensemble) const
+{
+
+	for (size_t i=0;i!=m_ensemble.Capacity();++i)
+	{
+	if (m_ensemble.At(i)!=NULL)
+		{
+			const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+		    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_ensemble.At(i)->Primary());
+			rhsparticle->FindXmer(out1,20);
+		}
+	}
 }
 
 // READ/WRITE/COPY.

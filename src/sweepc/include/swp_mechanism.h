@@ -270,7 +270,12 @@ public:
 
     //! Get the number of times each process has been performed
     std::vector<unsigned int> GetProcessUsageCounts() const {return m_proccount;}
-
+	
+	//! return two vectors contain the mass of monomers and dimers respectively
+	void Mass_spectra(std::vector<double> &out1, std::vector<double> &out2, Ensemble &m_ensemble) const;
+	
+	//! return a vector contain the information of particular primary particle with X molecules
+	void Mass_pah(std::vector<std::vector<double> > &out1, Ensemble &m_ensemble) const;
 
 private:
     // True if the mechanism contains deferred (LPDA)
