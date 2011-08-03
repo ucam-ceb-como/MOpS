@@ -116,6 +116,8 @@ void CamReporter::openFiles(bool stdrd, bool ratesOut, bool transOut){
 void CamReporter::closeFiles(bool stdrd, bool ratesOut, bool transOut){
     if(stdrd) standard->close();
     if(ratesOut) rates->close();
+    delete standard;
+    delete rates;
 }
 //write a custom header
 void CamReporter::writeCustomHeader(std::vector<std::string> header){
