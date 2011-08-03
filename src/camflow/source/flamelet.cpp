@@ -3,6 +3,7 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace Camflow;
 using namespace std;
@@ -278,15 +279,11 @@ void FlameLet::initSolutionVector()
      */
     vT[iMesh_e] = fuel.T;
 
-    /*
-     *
-     */
-
     // Set the initial moment values (interior and boundary)
     // Also initial constants
     if (sootMom_.active())
-    vMom.resize(len*nMoments,0.0);
     {
+        vMom.resize(len*nMoments,0.0);
         for (size_t i=0; i<dz.size(); i++)
         {
         	cout << "First Moment " << sootMom_.getFirstMoment() << endl;
@@ -295,7 +292,7 @@ void FlameLet::initSolutionVector()
         	for (size_t l=1; l<nMoments; ++l)
             {
             	// ank25: Do we need to multiply by 1e6 here?
-        		vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + log(doublereal(sootMom_.getAtomsPerDiamer()));
+        		vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(doublereal(sootMom_.getAtomsPerDiamer()));
             	cout << "vMom[i*nMoments+l]  " << i*nMoments+l << vMom[i*nMoments+l] << endl;
             }
         }
@@ -456,7 +453,7 @@ void FlameLet::massMatrix(doublereal** M)
 void FlameLet::restart()
 {
 
-    if (solverID == control_.CVODE){
+    if (solverID == control_.CVODE) {
         CVodeWrapper cvw;
         eqn_slvd = EQN_ALL;
         int band = nVar*2;
@@ -464,11 +461,33 @@ void FlameLet::restart()
         cvw.init(nEqn,solvect,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
             control_.getMaxTime(),band,*this,restartTime);
         cvw.solve(CV_ONE_STEP,control_.getResTol());
-    }
+        // Calculate the mixture viscosity.
+        for (int i=0; i<mCord; ++i)
+        {
+            std::vector<doublereal> mf;
+            for(int l=0; l<nSpc; l++)
+            {
+                mf.push_back(solvect[i*nVar+l]);
+            }
+            camMixture_->SetMassFracs(mf);
+            camMixture_->SetTemperature(m_T[i]);
+            camMixture_->SetMassDensity(m_rho[i]);                      //density
+            m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
+        }
 
-     else if (solverID == control_.LIMEX) {
-         throw std::logic_error("Error -- Limex is not yet supported");
-     }
+        /*
+         *write the output to file only if the call is not
+         *from the interface
+         */
+        //if(!interface)
+        //{
+        //    string filename = "profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
+        //    reportToFile(filename,control_.getMaxTime(), solvect);
+        //}
+    }
+    else if (solverID == control_.LIMEX) {
+        throw std::logic_error("Error -- Limex is not yet supported");
+    }
 
 }
 
@@ -603,6 +622,11 @@ const
     {
         resNorm += resT[i]*resT[i];
     }
+    for (int i=0; i<nMoments*mCord; ++i)
+    {
+    	resNorm += resMom[i]*resMom[i];
+    }
+
 
     return std::sqrt(resNorm);
 
@@ -697,7 +721,7 @@ void FlameLet::speciesResidual
         //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
         //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
         //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],5.0,i);
-        sdr = scalarDissipationRate_[i];
+        sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
         doublereal diffusionConstant = sdr/(2.0*dz[i]);
 
@@ -769,7 +793,7 @@ void FlameLet::sootMomentResidual
         //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
         //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
         //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],2.0,i);
-        sdr = scalarDissipationRate_[i];
+        sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
         doublereal diffusionConstant = sdr/(2.0*dz[i]);
 
@@ -847,7 +871,7 @@ void FlameLet::energyResidual
         //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
         //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
         //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],5.0,i);
-        sdr = scalarDissipationRate_[i];
+        sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
         grad_e = (m_T[i+1]-m_T[i])/zPE;
         grad_w = (m_T[i]-m_T[i-1])/zPW;
@@ -948,7 +972,6 @@ void FlameLet::saveMixtureProp(doublereal* y)
         {
         	mom_temp.push_back(y[i*nVar+ptrT+1+l]);
         }
-
 
         camMixture_->SetMassFracs(mf);                              //mass fraction
         camMixture_->SetTemperature(m_T[i]);                        //temperature
@@ -1098,6 +1121,15 @@ void FlameLet::setExternalSDR(const doublereal sdr)
     scalarDissipationRate_.setSDRRate(sdr);
 }
 
+void FlameLet::setExternalTimeSDR
+(
+    const std::vector<doublereal>& time,
+    const std::vector<doublereal>& sdr
+)
+{
+    scalarDissipationRate_.setExternalScalarDissipationRate(time,sdr);
+}
+
 /*
  *solver call for residual evaluation
  */
@@ -1159,7 +1191,7 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<doub
         data.clear();
         data.push_back(t);
         data.push_back(axpos[i]);
-        data.push_back(scalarDissipationRate_[i]);
+        data.push_back(scalarDissipationRate_(axpos[i],0));
         data.push_back(m_rho[i]);
         data.push_back(m_mu[i]);
         data.push_back(m_cp[i]);
@@ -1212,33 +1244,6 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<doub
     reporter_->closeFile();
 
     //reacGeom->refine(soln,nVar,nSpc,ptrT);
-
-}
-
-void FlameLet::writeXMLFile
-(
-    const doublereal sdr,
-    const std::vector<doublereal>& solvect
-)
-{
-
-    std::vector<doublereal> temperatureVec, axpos, massfrac;
-    axpos = reacGeom_.getAxpos();
-    int len = axpos.size();
-
-    for (int i=0; i<len; ++i)
-    {
-        temperatureVec.push_back(solvect[i*nVar+ptrT]);
-    }
-
-    reporter_->writeTempProfiletoXML("camflow",sdr,axpos,temperatureVec);
-    for(int l=0; l<nSpc; l++){
-        massfrac.clear();
-        for (int i=0; i<len; i++) {
-            massfrac.push_back(solvect[i*nVar+l]);
-        }
-        reporter_->writeMassFracProfiletoXML("camflow",sdr,axpos,massfrac, (*spv_)[l]->Name() );
-    }
 
 }
 

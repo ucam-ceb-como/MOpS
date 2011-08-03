@@ -24,6 +24,7 @@ add_library(sweep source/mt19937.cpp
                   source/swp_dimer_inception.cpp
                   source/swp_ensemble.cpp
                   source/swp_ensemble_stats.cpp
+				  source/swp_gas_profile.cpp
                   source/swp_imgnode.cpp
                   source/swp_inception.cpp
                   source/swp_mechanism.cpp
@@ -64,8 +65,7 @@ add_library(sweep source/mt19937.cpp
 				  source/swp_kmc_pah_structure.cpp
 				  source/swp_kmc_reaction.cpp
 				  source/swp_kmc_simulator.cpp
-				  source/swp_kmc_structure_comp.cpp
-				  ../mopsc/source/swp_gas_profile.cpp)
+				  source/swp_kmc_structure_comp.cpp)
 
 include_directories(include 
                     ${Boost_INCLUDE_DIRS} 
@@ -74,7 +74,6 @@ include_directories(include
                     ../io/comostrings/include
                     ../io/camxml/include
                     ../geometry/include
-					../mopsc/include
                     ../sprogc/include)
 
 # To link againast sweep the following libraries will also

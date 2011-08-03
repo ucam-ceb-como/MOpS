@@ -57,8 +57,9 @@ CamSoot::CamSoot()
 :
     rhoSoot(1.8e+03),        //kg/m^3
     lambda(2.3e15),          //cm^-2 (Keep this in cgs units. We do all surface chem calcs in cgs)
-    atomsPerDimer(32),
+    atomsPerDimer(32),    	 // Override this later as 2 x numCAtomInception
     D1_PAH(2.42e-10),        //m  (This is the size of a benzene ring, not the PAH diameter)
+							 // 2.42 = 1.395*sqrt(3), 1.395 A is the C-C in aromatics
     momentON(false),
     lowFrac(-4)
 { 
@@ -133,6 +134,8 @@ void CamSoot::readSoot
         subnode = soot->GetFirstChild("cPAH");
         if (subnode != NULL){
             numCAtomInception = int(cdble(subnode->Data()));
+            atomsPerDimer = 2.0 * numCAtomInception;
+
         }
 
         std::string atrVal = soot->GetAttributeValue("regime");
@@ -367,7 +370,7 @@ void CamSoot::initMoments(realVector& soln,int nCells){
     for(int i=1; i<nMoments; i++){
        
     	// ank25: Do we need to multiply by 1e6 here?
-        soln.push_back(soln[i-1+st]+ log(doublereal(atomsPerDimer)));
+        soln.push_back(soln[i-1+st] * log(doublereal(atomsPerDimer)));
 
     }
 }
@@ -421,13 +424,14 @@ void CamSoot::initMomentsConstants(Mechanism &mech){
      // when calculating reduced mass.
      // Units of mPAH are kg per molecule.
      // Units kB are m^2 kg s^-2 K^-1
-     Beta_nucl = 2.2*sqrt(16*PI*kB/mPAH)*dia_PAH*dia_PAH;
+     Beta_nucl = 2.2*sqrt(4*PI*kB/mPAH)*dia_PAH*dia_PAH;
 
     /*·
      * Multiplication by NA is carried out to avoid it while
      * evaluating the rates
      */
     Beta_nucl *= NA*NA;
+    //std::cout << "beta_nuc  " << Beta_nucl << std::endl;
 
 
     /*--------------------------------------------------------------------------
@@ -448,6 +452,8 @@ void CamSoot::initMomentsConstants(Mechanism &mech){
     Beta_cd = 2.2*sqrt(PI*kB/(2*cMass/NA))*NA;
     //diameter of one particle
     doublereal CD1 = pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0);
+    //cout << "D1_PAH after unit conv: " << D1_PAH << endl;
+
     doublereal CD1_PAH = D1_PAH*sqrt(2.0/3.0);
     doublereal CH2 = Beta_cd*CD1_PAH*CD1_PAH;
     doublereal CHS = Beta_cd* 2* CD1_PAH*CD1;
@@ -521,6 +527,7 @@ CamSoot::realVector CamSoot::rateAll
     // Calculate nucleation rate
     // nucRates is rate of change of moments due to nucleation
     nucRates = rateNucleation(conc[iInception],T);
+
     // Remove two PAH.
     surfProdRate[iInception]= -2 * nucRates[0] / NA;
 
@@ -535,7 +542,7 @@ CamSoot::realVector CamSoot::rateAll
 
 
     // Calculate coagulation rates
-    // coagRates is rate of change of moments due to coagulation
+    //coagRates is rate of change of moments due to coagulation
     coagRates = rateCoagulation(moments,T);
 
 	// Check the coagulation rates
@@ -551,6 +558,7 @@ CamSoot::realVector CamSoot::rateAll
     // cdRates is rate of change of moments due to condensation
     // prodRatePAHCond is rate of change in PAH due to condensation.
     //doublereal tempPAHConc = conc[iInception];
+
     cdRates = rateCondensation(moments, T,conc[iInception]);
     prodRatePAHCond = -cdRates[1]/numCAtomInception/NA;
     surfProdRate[iInception] += prodRatePAHCond;
@@ -632,9 +640,10 @@ CamSoot::realVector CamSoot::rateAll
     rates.resize(nMoments,0.0);
     for (int m=0; m<nMoments; ++m)
     {
-    	//rates[m] = (nucRates[m]+coagRates[m])/moments[m];
-    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m])/moments[m];
-    	// rates[m] = (nucRates[m])/moments[m];
+    	//rates[m] = (nucRates[m]);
+    	//rates[m] = (nucRates[m]+coagRates[m]);
+    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);
+
     }
 
     // Note: This only returns the rate of change of moments.
@@ -1022,7 +1031,7 @@ CamSoot::realVector CamSoot::showGasPhaseRates(int nSpecies)
 	return rates;
 }
 
-/////  ------- Functions relating to Flamelets go below this line -----
+
 
 
 

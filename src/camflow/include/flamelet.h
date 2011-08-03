@@ -157,6 +157,12 @@ namespace Camflow
 
             void setExternalSDR(const doublereal sdr);
 
+            void setExternalTimeSDR
+            (
+                const std::vector<doublereal>& time,
+                const std::vector<doublereal>& sdr
+            );
+
             //! Provide a soot volume fraction from an external calculation.
             void setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv);
 
@@ -180,12 +186,6 @@ namespace Camflow
 
             //! File output.
             void reportToFile(std::string fileName, doublereal x, std::vector<double>& solution);
-
-            void writeXMLFile
-            (
-                const doublereal,
-                const std::vector<doublereal>& solvect
-            );
 
         private:
 
