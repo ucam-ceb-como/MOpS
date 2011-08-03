@@ -774,7 +774,7 @@ Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2, bool
     }
     C_1->bondAngle1 = normAngle(angle1);
     C_1->C2 = cb;
-    if(bulk) addCount(1,0);
+    if(!bulk) addCount(1,0);
     if(C_1 == m_pah->m_clast) m_pah->m_clast = cb;
     return cb;
 }
