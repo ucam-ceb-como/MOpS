@@ -127,7 +127,7 @@ void Brush::PredCorrSolver::predictorCorrectorStep(Reactor1d &reac, const real t
 
     // reset the time and advance the particles
     reac.setTime(startTime);
-    solveParticlesByCell(reac, t_stop);
+    solveParticles(reac, t_stop);
 
 //    std::cout << "Particle counts at end of predictorCorrectorStep ";
 //    for(size_t i = 0; i < reac.getNumCells(); ++i) {
