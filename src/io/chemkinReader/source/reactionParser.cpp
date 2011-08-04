@@ -20,7 +20,10 @@ const regex IO::ReactionParser::reactionSingleRegex
 (
     "(.*?)\\s*"
     "(<=>|=>|=)\\s*"
-    "(.*?)((?:\\.|[0-9]+\\.)[0-9]*E(?:|\\+|\\-)[0-9]+)\\s+(.*?)\\s+(.*?)$|\\n"
+    "(.*?)"
+    "\\s+([0-9]*\\.*[0-9]*(?:[eEgG][-+]?[0-9]*)*)"
+    "\\s+(.*?)"
+    "\\s+(.*?)$|\\n"
 );
 
 const regex IO::ReactionParser::blankLine
@@ -85,6 +88,8 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
     for (size_t i=0; i<reactionStringLines_.size(); ++i)
     {
 
+        cout << reactionStringLines_[i] << endl;
+
         Reaction reaction;
 
         // Check for pressure dependency now as it screws up reactionSingleRegex.
@@ -115,6 +120,8 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
 
             while (i < reactionStringLines_.size()-1)
             {
+
+                cout << "Next = " << reactionStringLines_[i+1] << endl;
 
                 start = reactionStringLines_[i+1].begin();
                 end = reactionStringLines_[i+1].end();
