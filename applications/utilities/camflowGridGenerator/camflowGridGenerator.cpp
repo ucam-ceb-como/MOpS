@@ -3,13 +3,13 @@
  */
 
 #include "boost/program_options.hpp"
-#include <boost/math/distributions/normal.hpp> // for normal_distribution
-
+#include <boost/math/distributions/triangular.hpp>
+#include <boost/math/distributions/normal.hpp>
 #include <fstream>
 #include <iomanip>
 
 using namespace boost::program_options;
-using boost::math::normal;
+using namespace boost::math;
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -18,8 +18,9 @@ int main(int argc, char *argv[])
     cout << argv[0] << " by Laurence McGlashan\n" << endl;
 
     string outputFile = "grid.inp";
+    string distType;
     double stMixFrac = -1;
-    int numberOfCells = -1;
+    int numberOfCells, numberOfCellsLower, numberOfCellsUpper = -1;
 
     {
         // Parse arguments.
@@ -28,7 +29,8 @@ int main(int argc, char *argv[])
             ("help", "Show this help message.")
             ("stoich", value<double>(), "Stoichiometric mixture fraction.")
             ("outputFile", value<string>(), "Output file for grid.")
-            ("cells", value<int>(), "Number of cells.");
+            ("cells", value<int>(), "Number of cells.")
+            ("distribution", value<string>(), "Type of distribution to weight points against (triangular only at the moment).");
             
         variables_map vm;
         store(parse_command_line(argc, argv, desc), vm);
@@ -59,6 +61,15 @@ int main(int argc, char *argv[])
             throw std::logic_error("Number of cells was not provided.\n");
         }
         
+        if (vm.count("distribution")) {
+        	distType = vm["distribution"].as<string>();
+        	if (distType != "triangular")
+        		throw std::logic_error("Distribution " + distType + " not available.\n");
+            cout<< "Distribution used will be " << distType << ".\n";
+        } else {
+            throw std::logic_error("Distribution was not provided.\n");
+        }   
+                
         if (vm.count("outputFile")) {
             cout<< "Grid will be output to " 
                 << vm["outputFile"].as<string>() << ".\n";
@@ -72,19 +83,43 @@ int main(int argc, char *argv[])
     grid.push_back(0.0);
     grid.push_back(stMixFrac);
     grid.push_back(1.0);
-    
-    // We will add this many points to the grid.
-    int numberOfPoints = numberOfCells - 2;
-    
-
+   
+   	numberOfCellsLower = numberOfCells/2.0;
+   	numberOfCellsUpper = numberOfCells/2.0;
+   	   	
     //////////// Generate grid here ///////////
 
-    normal s(stMixFrac,2.0/3.0);
-    for (size_t i=0; i<=numberOfCells; ++i)
-    {
-        cout << cdf(s, i*2.0/numberOfCells) << endl;
+	// Construct uniform grid.		
+	for (size_t i=1; i<numberOfCellsLower; ++i)
+	{
+		grid.push_back(2.0*i*stMixFrac/numberOfCells);
+	}
+	for (size_t i=1; i<numberOfCellsUpper; ++i)
+	{
+		grid.push_back(stMixFrac + 2.0*i*(1.0-stMixFrac)/numberOfCells);
+	}    
+
+	if (distType == "triangular")
+	{
+		triangular s(0.0,stMixFrac,1.0);
+		double max = pdf(s,stMixFrac);
+		for (size_t i=3; i<=numberOfCells; ++i)
+		{
+		    grid[i] = stMixFrac + (grid[i]-stMixFrac)*(1.0-pdf(s,grid[i])/max);
+		}
     }
     
+	/*if (distType == "normal")
+	{
+		normal s(stMixFrac,1.0);
+		double max = pdf(s,stMixFrac);
+		for (size_t i=3; i<=numberOfCells; ++i)
+		{
+			cout << grid[i] << " " << pdf(s,grid[i])/max << endl;
+		    grid[i] = stMixFrac + (grid[i]-stMixFrac)*(1.0-pdf(s,grid[i])/max);
+		}
+    }*/
+        
     //////////// End Generate grid here ///////
     
     // Sort the values.
@@ -98,11 +133,8 @@ int main(int argc, char *argv[])
         for (size_t i=0; i<grid.size(); ++i)
         {
             out << setprecision(10) << grid[i] << endl;
-            //cout << grid[i] << endl;
         }
-    }
-    
-    
+    }  
     
     cout << "\nProgram End." << endl;
     
