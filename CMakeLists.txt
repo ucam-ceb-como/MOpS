@@ -13,7 +13,7 @@ ELSE(WIN32)
   SET(BOOST_ROOT $ENV{HOME}/boost)
   SET(Boost_USE_MULTITHREADED OFF)
 ENDIF(WIN32)
-find_package(Boost 1.42.0 REQUIRED COMPONENTS regex serialization filesystem system)
+find_package(Boost 1.42.0 REQUIRED COMPONENTS regex serialization filesystem system program_options)
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
@@ -34,6 +34,9 @@ ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 ######### The camflow application ##########################
 add_executable(camflow-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/camflow/cam_kernel.cpp)
 target_link_libraries(camflow-app camflow ${Boost_LIBRARIES})
+
+add_executable(camflowGridGenerator ${MOPSSUITE_SOURCE_DIR}/applications/utilities/camflowGridGenerator/camflowGridGenerator.cpp)
+target_link_libraries(camflowGridGenerator ${Boost_PROGRAM_OPTIONS_LIBRARY})
 
 # Regression tests for CamFlow
 
@@ -69,8 +72,6 @@ target_link_libraries(brush-app brush ${Boost_LIBRARIES})
 
 # Regression tests for Brush
 add_test(brush.regress1 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress1.sh ${EXECUTABLE_OUTPUT_PATH}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
-
-add_test(brush.regress2 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress2.sh ${EXECUTABLE_OUTPUT_PATH}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
 add_test(brush.regress3 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress3.sh ${EXECUTABLE_OUTPUT_PATH}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
 

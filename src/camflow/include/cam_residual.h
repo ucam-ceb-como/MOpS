@@ -161,7 +161,10 @@ namespace Camflow
             /**
              *set the scalar dissipation rate in case of flamelet odel
              */
-            virtual void setExternalScalarDissipationRate(const doublereal sr){};
+            virtual void setExternalSDR(const doublereal sr)
+            {
+                throw std::logic_error("Why are you calling this virtual function?!");
+            };
 
             /*
              * stores the mixture properties for the calculation of fluxes. This

@@ -15,7 +15,9 @@ ScalarDissipationRate::ScalarDissipationRate
 :
   sdrType_(NONE),
   stoichZ_(stoichZ),
-  mixFracCoords_(mixFracCoords)
+  mixFracCoords_(mixFracCoords),
+  interpolatorZeroTime_(NULL),
+  interpolatorNextTime_(NULL)
 {
 
     scalarDissipationRate_.resize(n_TimePoints);
@@ -44,9 +46,9 @@ ScalarDissipationRate::ScalarDissipationRate
 //! Destructor.
 ScalarDissipationRate::~ScalarDissipationRate()
 {
-    /*if (interpolator_ != NULL) delete interpolator_;
+    if (interpolator_ != NULL) delete interpolator_;
     if (interpolatorZeroTime_ != NULL) delete interpolatorZeroTime_;
-    if (interpolatorNextTime_ != NULL) delete interpolatorNextTime_;*/
+    if (interpolatorNextTime_ != NULL) delete interpolatorNextTime_;
 }
 
 void
@@ -142,6 +144,8 @@ const
 
 void ScalarDissipationRate::setStrainRate(const doublereal strainRate)
 {
+
+    sdrType_ = notFromCFD;
     strainRate_ = strainRate;
     stoichSDR_ = scalarDissipationRate(stoichZ_);
     for (size_t i=0; i<mixFracCoords_.size(); ++i)
@@ -158,6 +162,8 @@ void ScalarDissipationRate::setStrainRate(const doublereal strainRate)
 
 void ScalarDissipationRate::setSDRRate(const doublereal sdr)
 {
+
+    sdrType_ = notFromCFD;
     stoichSDR_ = sdr;
     strainRate_ = strainRate(stoichZ_);
     for (size_t i=0; i<mixFracCoords_.size(); ++i)

@@ -202,7 +202,6 @@ public:
      * \param[in]       iterm       Process term responsible for this event
      * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
      * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
-     * \param[out]      out         Details of any particle being transported out of system
      *
      * \return      0 on success, otherwise negative.
      */
@@ -212,9 +211,8 @@ public:
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
         int (*rand_int)(int, int), 
-        real(*rand_u01)(),
-		//Sweep::GasProfile* gp=NULL,
-        Transport::TransportOutflow *out = 0
+        real(*rand_u01)()
+		//Sweep::GasProfile* gp=NULL
         ) const = 0;
 
 

@@ -111,15 +111,6 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         }
 
         // Copy particle processes.
-        for (TransportPtrVector::const_iterator i=rhs.m_transports.begin();
-            i!=rhs.m_transports.end(); ++i) {
-            m_transports.push_back((*i)->Clone());
-
-            // Need to update the parent mechanism
-            m_transports.back()->SetMechanism(*this);
-        }
-
-        // Copy particle processes.
         for (PartProcPtrVector::const_iterator i=rhs.m_processes.begin();
             i!=rhs.m_processes.end(); ++i) {
             m_processes.push_back((*i)->Clone());
@@ -237,63 +228,6 @@ void Mechanism::AddProcess(ParticleProcess &p)
     p.SetMechanism(*this);
 }
 
-
-// TRANSPORT PROCESSES.
-
-/*!
- * Get the full list of transport processes, this is
- * a const function so the pointers in the vector should
- * not be used to modify the processes, even though this
- * is permitted by the language.
- *
- *\return   Vector of pointers to the transport processes
- */
-const TransportPtrVector &Mechanism::Transports() const
-{
-    return m_transports;
-}
-
-/*!
- * Return a pointer to the ith transport process in the
- * mechanism, or null if there are fewer than i transport
- * process.
- *
- *\param[in]    i   Index of requested transport process in transport process array
- *
- *\return   Pointer to ith transport process
- */
-const TransportProcess *const Mechanism::Transports(unsigned int i) const
-{
-    if (i < m_transports.size()) {
-        return m_transports[i];
-    } else {
-        return NULL;
-    }
-}
-
-/*!
- * Insert a transport process in the mechanism for use
- * in simulation.  The same transport process instance
- * cannot be added to another mechanism.
- *
- *\param[in]    p   Trnsport process to add to mechanism
- */
-void Mechanism::AddTransport(TransportProcess &p)
-{
-    // Add the process to the mechanism.
-    m_transports.push_back(&p);
-    m_termcount += p.TermCount();
-    ++m_processcount;
-    m_proccount.resize(m_termcount, 0);
-    m_fictcount.resize(m_termcount, 0);
-
-    // Check for any deferred.
-    m_anydeferred = m_anydeferred || p.IsDeferred();
-
-    // Set the process to belong to this mechanism.
-    p.SetMechanism(*this);
-}
-
 // COAGULATIONS.
 
 /*!
@@ -374,13 +308,6 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
         *i = m_processes[j]->Name(); ++i;
     }
 
-    // Add transport process names.
-    for (TransportPtrVector::const_iterator it = m_transports.begin();
-         it != m_transports.end(); ++it) {
-        *i = (*it)->Name();
-        ++i;
-    }
-
     // Add coagulation name.
     for (CoagPtrVector::const_iterator it = m_coags.begin();
          it != m_coags.end(); ++it) {
@@ -407,14 +334,11 @@ real Mechanism::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry
     // Query other processes for their rates.
     sum += ParticleProcess::CalcRates(t, sys, m_processes, rates, m_inceptions.size());
 
-    // Query transport processes for their rates.
-    sum += TransportProcess::CalcRates(t, sys, local_geom, m_transports, rates, m_inceptions.size() + m_processes.size());
-
     // Get coagulation rate.
-    sum += Coagulation::CalcRates(t, sys, m_coags, rates, m_inceptions.size() + m_processes.size() + m_transports.size());
+    sum += Coagulation::CalcRates(t, sys, m_coags, rates, m_inceptions.size() + m_processes.size());
 
     // Get birth and death rates from the Cell.
-    fvector::iterator i = rates.begin() + m_inceptions.size() + m_transports.size() + m_processes.size() + m_coags.size();
+    fvector::iterator i = rates.begin() + m_inceptions.size() + m_processes.size() + m_coags.size();
     const BirthPtrVector &inf = sys.Inflows();
     for (BirthPtrVector::const_iterator j=inf.begin(); j!=inf.end(); ++j) {
         *i = (*j)->Rate(t, sys);
@@ -465,18 +389,9 @@ real Mechanism::CalcRateTerms(real t, const Cell &sys, const Geometry::LocalGeom
             (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
             sum += (*i)->RateTerms(t, sys, iterm);
         }
-        for(TransportPtrVector::const_iterator i=m_transports.begin();
-            (i!=m_transports.end()) && (iterm!=terms.end()); ++i) {
-            sum += (*i)->RateTerms(t, sys, local_geom, iterm);
-        }
     } else {
         // Fill vector with zeros.
         for(PartProcPtrVector::const_iterator i=m_processes.begin(); (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
-            fill(iterm, iterm+(*i)->TermCount(), 0.0);
-            iterm += (*i)->TermCount();
-        }
-        for(TransportPtrVector::const_iterator i=m_transports.begin();
-            (i!=m_transports.end()) && (iterm!=terms.end()); ++i) {
             fill(iterm, iterm+(*i)->TermCount(), 0.0);
             iterm += (*i)->TermCount();
         }
@@ -530,26 +445,10 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, const Geometry::Local
                 for (unsigned int j=0; j!=(*i)->TermCount(); ++j) {*(iterm++)=0.0;}
             }
         }
-
-        for(TransportPtrVector::const_iterator i=m_transports.begin();
-            (i!=m_transports.end()) && (iterm!=terms.end()); ++i) {
-            if (!(*i)->IsDeferred()) {
-                // Calculate rate if not deferred.
-                sum += (*i)->RateTerms(t, sys, local_geom, iterm);
-            } else {
-                // If process is deferred, then set rate to zero.
-                for (unsigned int j=0; j!=(*i)->TermCount(); ++j) {*(iterm++)=0.0;}
-            }
-        }
     } else {
         // Fill vector with zeros.
         for(PartProcPtrVector::const_iterator i=m_processes.begin();
             (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
-            fill(iterm, iterm+(*i)->TermCount(), 0.0);
-            iterm += (*i)->TermCount();
-        }
-        for(TransportPtrVector::const_iterator i=m_transports.begin();
-            (i!=m_transports.end()) && (iterm!=terms.end()); ++i) {
             fill(iterm, iterm+(*i)->TermCount(), 0.0);
             iterm += (*i)->TermCount();
         }
@@ -606,14 +505,6 @@ real Mechanism::CalcDeferredRateTerms(real t, const Cell &sys, const Geometry::L
             if ((*i)->IsDeferred()) {
                 // Calculate rate if not deferred.
                 sum += (*i)->RateTerms(t, sys, iterm);
-            }
-        }
-
-        for(TransportPtrVector::const_iterator i=m_transports.begin();
-            (i!=m_transports.end()) && (iterm!=terms.end()); ++i) {
-            if ((*i)->IsDeferred()) {
-                // Calculate rate if not deferred.
-                sum += (*i)->RateTerms(t, sys, local_geom, iterm);
             }
         }
     }
@@ -713,7 +604,6 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
  * \param[in]       local_geom  Information on surrounding cells for use with transport processes
  * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
- * \param[out]      out         Handle particles removed from the system by transport processes
  *
  * The support for transport processes may well no longer be needed, in that it is
  * rarely efficient to simulate such phenomena with stochastic jumps.
@@ -721,8 +611,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
 void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
                           const Geometry::LocalGeometry1d& local_geom,
                           int (*rand_int)(int, int), real (*rand_u01)(),
-                          Sweep::GasProfile* gp,
-                          Transport::TransportOutflow *out) const
+                          Sweep::GasProfile* gp) const
 {
     // Test for now
     assert(sys.ParticleModel() != NULL);
@@ -732,14 +621,14 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
 
     if (j < 0) {
         // This is an inception process.
-        m_inceptions[i]->Perform(t, sys, local_geom, 0, rand_int, rand_u01, out);
+        m_inceptions[i]->Perform(t, sys, local_geom, 0, rand_int, rand_u01);
         m_proccount[i] += 1;
     } else {
         // This is another process.
         for(PartProcPtrVector::const_iterator ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
             if (j < (int)(*ip)->TermCount()) {
                 // Do the process.
-                if ((*ip)->Perform(t, sys, local_geom, j, rand_int, rand_u01, gp, out) == 0) {
+                if ((*ip)->Perform(t, sys, local_geom, j, rand_int, rand_u01, gp) == 0) {
                     m_proccount[i] += 1;
                 } else {
                     m_fictcount[i] += 1;
@@ -750,21 +639,6 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
             }
         }
 
-        // See if this is a transport process.
-        for(TransportPtrVector::const_iterator it = m_transports.begin(); it != m_transports.end(); ++it) {
-            if (j < static_cast<int>((*it)->TermCount())) {
-                // Do the process.
-                if ((*it)->Perform(t, sys, local_geom, j, rand_int, rand_u01, out) == 0) {
-                    m_proccount[i] += 1;
-                } else {
-                    m_fictcount[i] += 1;
-                }
-                return;
-            } else {
-                j -= (*it)->TermCount();
-            }
-        }
-
         // We are here because the process was neither an inception
         // nor a single particle process.  It is therefore either a
         // coagulation or a birth/death process.
@@ -772,7 +646,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
             // Check if coagulation process.
             if (j < static_cast<int>((*it)->TermCount())) {
                 // This is the coagulation process.
-                if ((*it)->Perform(t, sys, local_geom, j, rand_int, rand_u01, out) == 0) {
+                if ((*it)->Perform(t, sys, local_geom, j, rand_int, rand_u01) == 0) {
                     m_proccount[i] += 1;
                 } else {
                     m_fictcount[i] += 1;
@@ -790,13 +664,13 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
         if ((j < (int)sys.InflowCount()) && (j>=0)) {
             // An inflow process.
             sys.Inflows(j)->SetMechanism(*this);
-            sys.Inflows(j)->Perform(t, sys, local_geom, 0, rand_int, rand_u01, out);
+            sys.Inflows(j)->Perform(t, sys, local_geom, 0, rand_int, rand_u01);
         } else {
             j -= sys.InflowCount();
             if ((j < (int)sys.OutflowCount()) && (j>=0)) {
                 // An outflow process.
                 sys.Outflows(j)->SetMechanism(*this);
-                sys.Outflows(j)->Perform(t, sys, local_geom, 0, rand_int, rand_u01, out);
+                sys.Outflows(j)->Perform(t, sys, local_geom, 0, rand_int, rand_u01);
             }
         }
     }
@@ -861,11 +735,11 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
 		//check that kmcsimulator in ensemble is initialized or not,  if not, start to initialize kmcsimulator
         if (sys.Particles().Simulator()==NULL)
 		{
-			if(gp == NULL) {
-				throw runtime_error("No Gas Profile provided! "
-                               "(Sweep, Mechanism::UpdateParticle).");
-			}
-				sys.Particles().SetSimulator(*gp);
+			//if(gp == NULL) {
+			//	throw runtime_error("No Gas Profile provided! "
+   //                            "(Sweep, Mechanism::UpdateParticle).");
+			//}
+			sys.Particles().SetSimulator(*(sys.Gasphase()));
 		// for debugging, open a file to write time step for kmc loops, dongping 06 May
 				sys.Particles().Simulator()->m_timestep_csv.Open(sys.Particles().Simulator()->m_timestep_name, true);
 		}
@@ -929,6 +803,36 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
     }
 }
 
+void Mechanism::Mass_spectra(std::vector<double> &out1, std::vector<double> &out2, Ensemble &m_ensemble) const
+{
+
+	for (size_t i=0;i!=m_ensemble.Capacity();++i)
+	{
+	if (m_ensemble.At(i)!=NULL)
+		{
+			const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+		    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_ensemble.At(i)->Primary());
+            //now enum Xmer{ MOMOMER=1,DIMER=2,TRIMER=3} is definded in swp_PAH_primary.h
+			rhsparticle->FindXmer(out1, MOMOMER);
+			rhsparticle->FindXmer(out2, DIMER);
+		}
+	}
+}
+
+void Mechanism::Mass_pah(vector<vector<double> > &out1, Ensemble &m_ensemble) const
+{
+
+	for (size_t i=0;i!=m_ensemble.Capacity();++i)
+	{
+	if (m_ensemble.At(i)!=NULL)
+		{
+			const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+		    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_ensemble.At(i)->Primary());
+			rhsparticle->FindXmer(out1,20);
+		}
+	}
+}
+
 // READ/WRITE/COPY.
 
 // Creates a copy of the mechanism.
@@ -977,8 +881,6 @@ void Mechanism::Serialize(std::ostream &out) const
              i!=m_processes.end(); ++i) {
             ProcessFactory::Write(*(*i), out);
         }
-
-        //@TODO transport processes
 
         // Coagulation
         n = m_coags.size();
@@ -1049,8 +951,6 @@ void Mechanism::Deserialize(std::istream &in)
                     m_processes.push_back(p);
                 }
 
-                //@TODO transport processes
-
                 // Read coagulation process.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 for(unsigned int i = 0; i != n; ++i) {
@@ -1104,13 +1004,6 @@ void Mechanism::releaseMem(void)
         delete *i;
     }
     m_processes.clear();
-
-    // Delete transport processes.
-    for (TransportPtrVector::iterator i=m_transports.begin();
-         i!=m_transports.end(); ++i) {
-        delete *i;
-    }
-    m_transports.clear();
 
     // Delete coagulation processes.
     for (CoagPtrVector::iterator i = m_coags.begin();

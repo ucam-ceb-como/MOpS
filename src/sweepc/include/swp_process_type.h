@@ -85,12 +85,6 @@ namespace Processes
         //! Constant coagulation with weighted particles
         Weighted_Constant_Coagulation_ID = 10005,
 
-        // Transport processes
-        //! Particle diffusion
-        Diffusion_ID=100000,
-        //! Particle advection
-        Advection_ID=100001,
-
     };
 }
 }

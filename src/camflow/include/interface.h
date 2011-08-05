@@ -266,13 +266,14 @@ namespace Camflow {
              //! Default destructor.
             ~Interface();
 
-            void getFlameletVariables(FlameLet* const flmlt);
-
             //! Calling interface to solve flamelets with time-history scalar dissipation rates.
             void flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
 
             //! Call to solve a flamelet for a given strain rate.
             void flameletStrainRate(const doublereal& strainRate, bool lnone=true);
+
+            //! Call to solve a flamelet for a given SDR.
+            void flameletSDR(const doublereal& SDR, bool lnone=true);
 
             //! Calling interface to solve flamelets with a profile of SDRs with a time history.
             void flameletSDRprofile(const std::vector< std::vector<doublereal> >& sdr,
@@ -417,6 +418,8 @@ namespace Camflow {
 
             //! Function to return a variable's value given the independent variable.
             doublereal getVariableAt(const doublereal& pos, const std::vector<doublereal>& var) const;
+
+            void getFlameletVariables(FlameLet* const flmlt);
 
         }; // End Interface class declaration.
 

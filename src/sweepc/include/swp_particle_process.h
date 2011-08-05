@@ -165,8 +165,7 @@ public:
                           const Geometry::LocalGeometry1d& local_geom,
                           unsigned int iterm,
                           int (*rand_int)(int, int), 
-                          Sweep::real(*rand_u01)(),
-                          Sweep::Transport::TransportOutflow *out) const;
+                          Sweep::real(*rand_u01)()) const;
 
     //! Declared in parent class, implemented in dervied classes
     virtual int Perform(
@@ -176,8 +175,7 @@ public:
         unsigned int iterm,
         int (*rand_int)(int, int), 
         real(*rand_u01)(),
-        Sweep::GasProfile* gp=NULL,
-        Transport::TransportOutflow *out = 0
+        Sweep::GasProfile* gp=NULL
         ) const = 0;
 
     // Performs the process on a given particle in the system.  Particle

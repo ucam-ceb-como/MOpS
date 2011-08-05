@@ -47,13 +47,6 @@
 
 #include "swp_inception.h"
 
-
-namespace Geometry
-{
-    // Forward declaration
-    class LocalGeometry1d;
-}
-
 namespace Sweep
 {
 // Forward declare the Mechanism class.
@@ -103,8 +96,7 @@ public:
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
         int (*rand_int)(int, int), 
-        real(*rand_u01)(),
-        Transport::TransportOutflow *out = 0
+        real(*rand_u01)()
         ) const;
 
 
