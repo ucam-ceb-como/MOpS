@@ -805,30 +805,32 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
 
 void Mechanism::Mass_spectra(std::vector<double> &out1, std::vector<double> &out2, Ensemble &m_ensemble) const
 {
-
-	for (size_t i=0;i!=m_ensemble.Capacity();++i)
-	{
-	if (m_ensemble.At(i)!=NULL)
+	if (AggModel() == AggModels::PAH_KMC_ID) {
+		for (size_t i=0;i!=m_ensemble.Capacity();++i)
 		{
-			const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
-		    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_ensemble.At(i)->Primary());
-            //now enum Xmer{ MOMOMER=1,DIMER=2,TRIMER=3} is definded in swp_PAH_primary.h
-			rhsparticle->FindXmer(out1, MOMOMER);
-			rhsparticle->FindXmer(out2, DIMER);
+		if (m_ensemble.At(i)!=NULL)
+			{
+				const Sweep::Primary *rhsparticle = NULL;
+				rhsparticle = m_ensemble.At(i)->Primary();
+				//now enum Xmer{ MOMOMER=1,DIMER=2,TRIMER=3} is definded in swp_primary.h
+				rhsparticle->FindXmer(out1, MOMOMER);
+				rhsparticle->FindXmer(out2, DIMER);
+			}
 		}
 	}
 }
 
 void Mechanism::Mass_pah(vector<vector<double> > &out1, Ensemble &m_ensemble) const
 {
-
-	for (size_t i=0;i!=m_ensemble.Capacity();++i)
-	{
-	if (m_ensemble.At(i)!=NULL)
+	if (AggModel() == AggModels::PAH_KMC_ID) {
+		for (size_t i=0;i!=m_ensemble.Capacity();++i)
 		{
-			const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
-		    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_ensemble.At(i)->Primary());
-			rhsparticle->FindXmer(out1,20);
+		if (m_ensemble.At(i)!=NULL)
+			{
+				const Sweep::Primary *rhsparticle = NULL;
+				rhsparticle = m_ensemble.At(i)->Primary();
+				rhsparticle->FindXmer(out1,20);
+			}
 		}
 	}
 }
