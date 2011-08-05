@@ -69,6 +69,7 @@ void FlameLet::solve
     /*
      *init the solution vector
      */
+
     initSolutionVector();
 
     reporter_->header("Flamelet");
@@ -85,8 +86,8 @@ void FlameLet::solve
     }
     else
     {
-        ssolve();
-        csolve(interface);
+        ssolve(interface);
+        //csolve(interface);
     }
 
     if (admin_.getRestartType() == admin_.BINARY)
@@ -281,22 +282,29 @@ void FlameLet::initSolutionVector()
 
     // Set the initial moment values (interior and boundary)
     // Also initial constants
-    cout << "Soot Active? " << sootMom_.active() << endl;
+
     if (sootMom_.active())
     {
         vMom.resize(len*nMoments,0.0);
         for (size_t i=0; i<dz.size(); i++)
         {
-            cout << "Soot Active? " << endl;
-        	cout << "First Moment... " << sootMom_.getFirstMoment() << endl;
         	vMom[i*nMoments] = sootMom_.getFirstMoment();
-        	cout << "vMom[i*nMoments]  " << i*nMoments << vMom[i*nMoments] << endl;
+        	//cout << "vMom[i*nMoments]  " << i*nMoments <<"  "  << vMom[i*nMoments] << endl;
         	for (size_t l=1; l<nMoments; ++l)
             {
             	// ank25: Do we need to multiply by 1e6 here?
         		vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(doublereal(sootMom_.getAtomsPerDiamer()));
-            	cout << "vMom[i*nMoments+l]  " << i*nMoments+l << vMom[i*nMoments+l] << endl;
+            	//cout << "vMom[i*nMoments+l]  " << i*nMoments+l <<"  " << vMom[i*nMoments+l] << endl;
             }
+
+        	// Change of variable of the initial moments.
+        	// M=exp(M_hat -1)
+        	// M_hat = ln(M+1)
+        	for (size_t l=0; l<nMoments; ++l)
+        	{
+        		vMom[i*nMoments+l] = log(vMom[i*nMoments+l] + 1.0);
+        	}
+
         }
         // Call the soot constants function
         sootMom_.initMomentsConstants(*camMech_);
@@ -462,7 +470,11 @@ void FlameLet::restart()
 
         cvw.init(nEqn,solvect,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
             control_.getMaxTime(),band,*this,restartTime);
-        cvw.solve(CV_ONE_STEP,control_.getResTol());
+
+        // When restarting don't call cvw.solve with a global tolerance
+        // as a stop criteria.  We are solving dynamic flamelets and don't
+        // want to stop at steady state.
+        cvw.solve(CV_ONE_STEP);
         // Calculate the mixture viscosity.
         for (int i=0; i<mCord; ++i)
         {
@@ -496,7 +508,10 @@ void FlameLet::restart()
 /*
  *segregated solver
  */
-void FlameLet::ssolve()
+void FlameLet::ssolve
+(
+    bool interface
+)
 {
 
     int seg_eqn, band;
@@ -508,34 +523,74 @@ void FlameLet::ssolve()
 
        for (int i=0; i<control_.getNumIterations();i++){
         /*
-         *solve species equation
+         *solve species equations
          */
         cout << "Solving species equations  " << i << endl;
-        int dd; cin >> dd;
+        //int dd; cin >> dd;
         eqn_slvd = EQN_SPECIES;
         seg_eqn = nSpc*mCord;
         band = nSpc*2;
         extractSpeciesVector(seg_soln_vec);
         cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
-            control_.getMaxTime(),band,*this);
-        cvw.solve(CV_ONE_STEP,1e-03);
+            control_.getMaxTime(),band,*this,0.0);
+        cvw.solve(CV_ONE_STEP,control_.getResTol());
         mergeSpeciesVector(&seg_soln_vec[0]);
-        cvw.destroy();
 
         /*
          *solve energy equation
          */
         cout << "Solving energy equation  " << i << endl;
-        cin >> dd;
+        //cin >> dd;
         eqn_slvd = EQN_ENERGY;
         seg_eqn = mCord;
         band = 1;
         extractEnergyVector(seg_soln_vec);
         cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
-            control_.getMaxTime(),band,*this);
-        cvw.solve(CV_ONE_STEP,1e-03);
+            control_.getMaxTime(),band,*this,0.0);
+        cvw.solve(CV_ONE_STEP,control_.getResTol());
         mergeEnergyVector(&seg_soln_vec[0]);
-        cvw.destroy();
+
+        /*
+         *solve soot moment equations
+         */
+        if (sootMom_.active())
+        {
+          cout << "Solving moment equations  " << i << endl;
+          //int dd; cin >> dd;
+          eqn_slvd = EQN_MOMENTS;
+          seg_eqn = nMoments*mCord;
+          band = nMoments*2;
+          extractSootMoments(seg_soln_vec);
+          // Might need to change tolerances for moments
+          cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
+              control_.getMaxTime(),band,*this,0.0);
+          cvw.solve(CV_ONE_STEP,control_.getResTol());
+          mergeSootMoments(&seg_soln_vec[0]);
+        }
+      }
+
+       // Calculate the mixture viscosity.
+       for (int i=0; i<mCord; ++i)
+       {
+           std::vector<doublereal> mf;
+           for(int l=0; l<nSpc; l++)
+           {
+               mf.push_back(solvect[i*nVar+l]);
+           }
+           camMixture_->SetMassFracs(mf);
+           camMixture_->SetTemperature(m_T[i]);
+           camMixture_->SetMassDensity(m_rho[i]);                      //density
+           m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
+       }
+
+      /*
+       *write the output to file only if the call is not
+        *from the interface
+       */
+      if(!interface)
+      {
+          reportToFile("profile.dat",control_.getMaxTime(), solvect);
+           //writeXMLFile(scalarDissipationRate_.getStoichSDR(), solvect);
       }
     }
 
@@ -586,7 +641,7 @@ void FlameLet::residual
 
         }
     }
-    else // segregated solver part   // Soot not implemented in segregated solver
+    else // segregated solver part
     {
         if (eqn_slvd == EQN_SPECIES)
         {
@@ -599,6 +654,12 @@ void FlameLet::residual
             mergeEnergyVector(y);
             saveMixtureProp(&solvect[0]);
             energyResidual(t,y,f);
+        }
+        else if (eqn_slvd==EQN_MOMENTS)
+        {
+        	mergeSootMoments(y);
+            saveMixtureProp(&solvect[0]);
+            sootMomentResidual(t,y,f);
         }
     }
 
@@ -797,8 +858,8 @@ void FlameLet::sootMomentResidual
         //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],2.0,i);
         sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
+        /*
         doublereal diffusionConstant = sdr/(2.0*dz[i]);
-
         for (int l=0; l<nMoments; ++l)
         {
             grad_e = (moments(i+1,l)-moments(i,l))/zPE;
@@ -806,6 +867,24 @@ void FlameLet::sootMomentResidual
             source = moments_dot(i,l)/m_rho[i];
             f[i*nMoments+l] = diffusionConstant*(grad_e-grad_w)
                           + source;								// LE = 1
+        }
+		*/
+
+        // Code below is for soot flamelet equations after change of variable
+    	// M=exp(M_hat -1)
+    	// M_hat = ln(M+1)
+        doublereal diffusionConstant = sdr/(2.0);
+        for (int l=0; l<nMoments; ++l)
+        {
+            grad_e = (moments(i+1,l)-moments(i,l))/zPE;
+            grad_w = (moments(i,l)-moments(i-1,l))/zPW;
+
+            source = moments_dot(i,l)/ ( m_rho[i] * exp(moments(i,l)) ) ;
+
+            f[i*nMoments+l] = diffusionConstant
+            		         * ( (grad_e-grad_w)/dz[i] +
+            		        	pow((grad_e+grad_w)/2.0,2.0) )
+                          + source;
         }
 
     }
@@ -816,7 +895,7 @@ void FlameLet::sootMomentResidual
 
     for (int l=0; l<nMoments; ++l)
     {
-        f[iMesh_e*nMoments+l] = 0;
+        f[iMesh_e*nMoments+l] = 0.0;
     }
 
 }
@@ -952,6 +1031,7 @@ void FlameLet::saveMixtureProp(doublereal* y)
     vector<doublereal> cptemp(nSpc,0.0);
     vector<doublereal> moments_dot_temp(nMoments,0.0);
     vector<doublereal> mom_temp(nMoments,0.0);
+    vector<doublereal> exp_mom_temp(nMoments,0.0);
     vector<doublereal> conc(nSpc,0.0);
     vector<doublereal> wdotSootGasPhase(nMoments,0.0);
 
@@ -1006,9 +1086,14 @@ void FlameLet::saveMixtureProp(doublereal* y)
           for(int l=0; l<nMoments; l++)
           {
         	  moments(i,l) = mom_temp[l];
+        	  exp_mom_temp[l] = exp(mom_temp[l])-1.0;
           }
 
-          moments_dot_temp = sootMom_.rateAll(conc, mom_temp, m_T[i], opPre, 1);
+          // Change of varibale before calling moment rates:
+      	// M=exp(M_hat -1)
+      	// M_hat = ln(M+1)
+
+          moments_dot_temp = sootMom_.rateAll(conc, exp_mom_temp, m_T[i], opPre, 1);
           for(int l=0; l<nMoments; l++)
           {
         	  moments_dot(i,l) =  moments_dot_temp[l];
