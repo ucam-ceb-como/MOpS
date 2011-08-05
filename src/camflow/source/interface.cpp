@@ -466,9 +466,21 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
 /*
  *return the stoichiometric mixture fraction
  */
-doublereal Interface::getStMixtureFrac(){
+doublereal Interface::getStMixtureFrac()
+{
+    if (flmlt == NULL)
+    {
+        FlameLet* flmlt_temp = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
+        stMixtureFrac = flmlt->stoichiometricMixtureFraction();
+        delete flmlt_temp;
+    }
+    else
+    {
+        stMixtureFrac = flmlt->stoichiometricMixtureFraction();
+    }
     return stMixtureFrac;
 }
+
 /*
  *
  *return the density
