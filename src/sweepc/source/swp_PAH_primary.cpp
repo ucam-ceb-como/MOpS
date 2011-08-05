@@ -1012,23 +1012,23 @@ void PAHPrimary::FindXmer(std::vector<double> &out, Xmer m_xmer) const
 		out.push_back(this->MassforXmer());
 }
 
-void PAHPrimary::FindXmer(std::vector<std::vector<double> > &out, int m_xmer) const
+void PAHPrimary::FindXmer(std::vector<std::vector<double> > &out, int target_num_PAH) const
 {
-	if (this->m_leftchild!=NULL)
-		m_leftchild->FindXmer(out,m_xmer);
-	if (this->m_rightchild!=NULL)
-		m_rightchild->FindXmer(out,m_xmer);
-	if (this->m_PAH.size()<=(m_xmer+10)&&this->m_PAH.size()>=(m_xmer-10))	
+	if (m_leftchild != NULL)
+		m_leftchild->FindXmer(out,target_num_PAH);
+	if (m_rightchild != NULL)
+		m_rightchild->FindXmer(out,target_num_PAH);
+	if (m_PAH.size() <= (target_num_PAH+10) && m_PAH.size() >= (target_num_PAH-10))	
 		mass_PAH(out);
 }
 
 double PAHPrimary::MassforXmer() const
 { 
-	int sum =0;
-	for (size_t i=0; i!=m_PAH.size();++i)
+	int sum = 0;
+	for (size_t i = 0; i != m_PAH.size(); ++i)
 	{
-		sum+=this->m_PAH[i]->m_pahstruct->numofH();
-	    sum+=12*m_PAH[i]->m_numcarbon;
+		sum+=m_PAH[i]->m_pahstruct->numofH();
+	    sum+=12 * m_PAH[i]->m_numcarbon;
 	}
 	return sum;	
 }
@@ -1037,7 +1037,7 @@ void PAHPrimary::mass_PAH(std::vector<std::vector<double> > &out) const
 {
 	std::vector<double> temp;
 	std::vector<double> divider(2,0);
-	for (size_t i=0; i!=m_PAH.size();++i)
+	for (size_t i = 0; i != m_PAH.size(); ++i)
 	{
 		temp.push_back(m_PAH[i]->m_numcarbon);
 		temp.push_back(m_PAH[i]->m_pahstruct->numofH());
