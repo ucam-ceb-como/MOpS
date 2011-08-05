@@ -471,7 +471,7 @@ doublereal Interface::getStMixtureFrac()
     if (flmlt == NULL)
     {
         FlameLet* flmlt_temp = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
-        stMixtureFrac = flmlt->stoichiometricMixtureFraction();
+        stMixtureFrac = flmlt_temp->stoichiometricMixtureFraction();
         delete flmlt_temp;
     }
     else
