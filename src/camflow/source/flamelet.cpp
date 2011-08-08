@@ -522,6 +522,25 @@ void FlameLet::ssolve
        CVodeWrapper cvw;
 
        for (int i=0; i<control_.getNumIterations();i++){
+
+           /*
+            *solve soot moment equations
+            */
+           if (sootMom_.active())
+           {
+             cout << "Solving moment equations  " << i << endl;
+             //int dd; cin >> dd;
+             eqn_slvd = EQN_MOMENTS;
+             seg_eqn = nMoments*mCord;
+             band = nMoments*2;
+             extractSootMoments(seg_soln_vec);
+             // Might need to change tolerances for moments
+             cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
+                 control_.getMaxTime(),band,*this,0.0);
+             cvw.solve(CV_ONE_STEP,control_.getResTol());
+             mergeSootMoments(&seg_soln_vec[0]);
+           }
+
         /*
          *solve species equations
          */
@@ -550,23 +569,6 @@ void FlameLet::ssolve
         cvw.solve(CV_ONE_STEP,control_.getResTol());
         mergeEnergyVector(&seg_soln_vec[0]);
 
-        /*
-         *solve soot moment equations
-         */
-        if (sootMom_.active())
-        {
-          cout << "Solving moment equations  " << i << endl;
-          //int dd; cin >> dd;
-          eqn_slvd = EQN_MOMENTS;
-          seg_eqn = nMoments*mCord;
-          band = nMoments*2;
-          extractSootMoments(seg_soln_vec);
-          // Might need to change tolerances for moments
-          cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
-              control_.getMaxTime(),band,*this,0.0);
-          cvw.solve(CV_ONE_STEP,control_.getResTol());
-          mergeSootMoments(&seg_soln_vec[0]);
-        }
       }
 
        // Calculate the mixture viscosity.
@@ -878,13 +880,11 @@ void FlameLet::sootMomentResidual
         {
             grad_e = (moments(i+1,l)-moments(i,l))/zPE;
             grad_w = (moments(i,l)-moments(i-1,l))/zPW;
-
             source = moments_dot(i,l)/ ( m_rho[i] * exp(moments(i,l)) ) ;
-
             f[i*nMoments+l] = diffusionConstant
-            		         * ( (grad_e-grad_w)/dz[i] +
+            		        * ( (grad_e-grad_w)/dz[i] +
             		        	pow((grad_e+grad_w)/2.0,2.0) )
-                          + source;
+                            + source;
         }
 
     }
@@ -1089,9 +1089,9 @@ void FlameLet::saveMixtureProp(doublereal* y)
         	  exp_mom_temp[l] = exp(mom_temp[l])-1.0;
           }
 
-          // Change of varibale before calling moment rates:
-      	// M=exp(M_hat -1)
-      	// M_hat = ln(M+1)
+          // Change of variable before calling moment rates:
+      	  // M=exp(M_hat -1)
+      	  // M_hat = ln(M+1)
 
           moments_dot_temp = sootMom_.rateAll(conc, exp_mom_temp, m_T[i], opPre, 1);
           for(int l=0; l<nMoments; l++)
