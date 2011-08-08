@@ -96,7 +96,7 @@ void FlameLet::solve
 
     if (admin_.getRestartType() == admin_.BINARY)
     {
-        std::ofstream ofs(admin_.getRestartFile().c_str());
+    	std::ofstream ofs(admin_.getRestartFile().c_str());
         boost::archive::binary_oarchive oa(ofs);
         oa << reacGeom_.getAxpos() << solvect;
         ofs.close();
@@ -286,10 +286,9 @@ void FlameLet::initSolutionVector()
 
     // Set the initial moment values (interior and boundary)
     // Also initial constants
-
     if (sootMom_.active())
     {
-        vMom.resize(len*nMoments,0.0);
+    	vMom.resize(len*nMoments,0.0);
         for (size_t i=0; i<dz.size(); i++)
         {
         	vMom[i*nMoments] = sootMom_.getFirstMoment();
@@ -310,6 +309,8 @@ void FlameLet::initSolutionVector()
         	}
 
         }
+
+
         // Call the soot constants function
         sootMom_.initMomentsConstants(*camMech_);
     }
@@ -327,8 +328,6 @@ void FlameLet::initSolutionVector()
     	mergeSootMoments(&vMom[0]);
     }
 
-
-
     if (admin_.getRestartType() == admin_.BINARY)
     {
         std::vector<double> solvect_temp, mixFracCoords_temp;
@@ -339,7 +338,31 @@ void FlameLet::initSolutionVector()
             oi >> mixFracCoords_temp >> solvect_temp;
 
             if (mixFracCoords_temp.size() == reacGeom_.getAxpos().size())
-                solvect = solvect_temp;
+            {
+            	// If the size of solvect_temp is not equal to nVar*cellEnd
+            	// then we assume that the binary file was previously
+            	// generated with soot moments switched off.  In that case
+            	// load species and temperature from binary file, but don't
+            	// load up moments.
+
+            	if 	(solvect_temp.size() == nVar*cellEnd)
+                {
+                	std::cout << "Loading species, temperature and moments from bin file"
+										<< std::endl;
+            		solvect = solvect_temp;
+                }
+            	else
+                {
+                	std::cout << "Loading species and temperature from binary file" << std::endl;
+                	std::cout << "Not loading moments from binary file. " << std::endl;
+            		for(int i=0; i<cellEnd; i++)
+                    {
+                	   for(int l=0; l<nSpc; l++)
+                		   solvect[i*nVar+l] = solvect_temp[i*(nVar-nMoments)+l];
+                       solvect[i*nVar+ptrT] = solvect_temp[i*(nVar-nMoments)+ptrT];
+                    }
+                }
+            }
             else
             {
                 throw std::runtime_error
@@ -1414,3 +1437,4 @@ const
 	}
 
 }
+
