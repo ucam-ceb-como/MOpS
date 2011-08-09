@@ -349,7 +349,9 @@ void Interface::flameletSDR(const doublereal& SDR, bool lnone) {
     flmlt->setExternalSDR(SDR);
 
     try{
-        flmlt->solve(false);
+        // Solve flamelet at base of flame with soot residual set to zero.
+    	flmlt->solve(false,true);
+    	//flmlt->solve(false);
         getFlameletVariables(flmlt);
     }catch(CamError &ce){
         throw ;
