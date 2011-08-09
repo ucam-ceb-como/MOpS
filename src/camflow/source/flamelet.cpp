@@ -27,7 +27,8 @@ FlameLet::FlameLet
   sdrAnalytic(false),
   radiation(NULL),
   scalarDissipationRate_(admin_.getInputFile(), stoichZ, reacGeom_.getAxpos(), 1),
-  CpSpec(mCord,nSpc)
+  CpSpec(mCord,nSpc),
+  steadyStateAtFlameBase(false)
 {}
 
 FlameLet::~FlameLet()
@@ -60,6 +61,22 @@ void FlameLet::solve()
 {
     solve(false);
 }
+
+/*
+ * Use this call method when calling from openFoam.
+ * if steadyStateAtFlameBase is TRUE then, flamelet will
+ * be solved to steady state and with soot residual set to zero.
+ * (i.e. no soot present at base of flame)
+ *
+ * When calling the Lagrangian Flamelet (i.e. dynamic)
+ * do this via restart() and set steadyStateAtFlameBase to FALSE
+ */
+void FlameLet::solve(bool interface, bool steadyStateNoSoot)
+{
+	steadyStateAtFlameBase = steadyStateNoSoot;
+	solve(interface);
+}
+
 
 void FlameLet::solve
 (
@@ -310,7 +327,6 @@ void FlameLet::initSolutionVector()
 
         }
 
-
         // Call the soot constants function
         sootMom_.initMomentsConstants(*camMech_);
     }
@@ -490,6 +506,9 @@ void FlameLet::massMatrix(doublereal** M)
 void FlameLet::restart()
 {
 
+	// Assumption is that a restart is always a Lagrangian flamelet (i.e. not steady state)
+	steadyStateAtFlameBase = false;
+
     if (solverID == control_.CVODE) {
         CVodeWrapper cvw;
         eqn_slvd = EQN_ALL;
@@ -647,7 +666,14 @@ void FlameLet::residual
         energyResidual(t,y,&resT[0]);
         if (sootMom_.active())
         {
-        	sootMomentResidual(t,y,&resMom[0]);
+        	if (steadyStateAtFlameBase)
+        	{
+        		sootMomentResidualAtFlameBase(t,y,&resMom[0]);
+        	}
+        	else
+        	{
+        		sootMomentResidual(t,y,&resMom[0]);
+        	}
         }
 
 
@@ -688,7 +714,14 @@ void FlameLet::residual
         {
         	mergeSootMoments(y);
             saveMixtureProp(&solvect[0]);
-            sootMomentResidual(t,y,f);
+        	if (steadyStateAtFlameBase)
+        	{
+        		sootMomentResidualAtFlameBase(t,y,&resMom[0]);
+        	}
+        	else
+        	{
+        		sootMomentResidual(t,y,&resMom[0]);
+        	}
         }
     }
 
@@ -867,7 +900,7 @@ void FlameLet::sootMomentResidual
     //}
 
     //sdr = scalarDissipationRate(dz[i]);
-    for (int l=0; l<nSpc; ++l)
+    for (int l=0; l<nMoments; ++l)
     {
         f[l] = 0.0;
     }
@@ -925,6 +958,28 @@ void FlameLet::sootMomentResidual
         f[iMesh_e*nMoments+l] = 0.0;
     }
 
+}
+
+/*
+ * If we are solving a flamelet at the base of a flame then
+ * set the soot residual to zero.
+ * i.e. we solve a steady state flamelet with no soot present.
+ */
+
+void FlameLet::sootMomentResidualAtFlameBase
+(
+    const doublereal& t,
+    doublereal* y,
+    doublereal* f
+)
+{
+    for (int i=iMesh_s-1; i<iMesh_e+1; ++i)
+    {
+        for (int l=0; l<nMoments; ++l)
+        {
+        	f[i*nMoments+l] = 0.0;
+        }
+    }
 }
 
 
@@ -1127,12 +1182,15 @@ void FlameLet::saveMixtureProp(doublereal* y)
           }
 
           // Now get the corresponding gas phase rates and add them to s_Wdot
-          wdotSootGasPhase = sootMom_.showGasPhaseRates(nSpc);
-    	  for (int l=0; l< nSpc; l++)
-  	      {
-             s_Wdot(i,l) = s_Wdot(i,l) + wdotSootGasPhase[l] * (*spv_)[l]->MolWt();
-  	      }
-
+          // Only do this if we are solving a Lagrangian flamelet (not steady state)
+          if (steadyStateAtFlameBase == false)
+          {
+            wdotSootGasPhase = sootMom_.showGasPhaseRates(nSpc);
+    	    for (int l=0; l< nSpc; l++)
+  	        {
+               s_Wdot(i,l) = s_Wdot(i,l) + wdotSootGasPhase[l] * (*spv_)[l]->MolWt();
+  	        }
+          }
         }
 
     }
