@@ -452,7 +452,8 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
     try{
         if (!continuation)
         {
-            flmlt->solve(false);
+            // Solve flamelet at base of flame with soot residual set to zero.
+        	flmlt->solve(false,true);
         }
         else
         {
