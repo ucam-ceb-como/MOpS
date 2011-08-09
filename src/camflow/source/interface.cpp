@@ -356,7 +356,6 @@ void Interface::flameletSDR(const doublereal& SDR, bool lnone) {
     }catch(CamError &ce){
         throw ;
     }
-
 }
 
 /**
