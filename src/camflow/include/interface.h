@@ -305,6 +305,10 @@ namespace Camflow {
 
             //! Return the number of species.
             int getNumberOfSpecies() const;
+
+            //! Return the number of moments.
+            int getNumberOfMoments() const;
+
             //! Return the number of reactions.
             int getNumberOfReactions() const;
 
@@ -316,6 +320,9 @@ namespace Camflow {
 
             //! Get spatial profile of one species.
             std::vector<doublereal> getMassFracsBySpecies(const int spIndex) const;
+
+            //! Get spatial profile of one moment
+            std::vector<doublereal> getMomentsByIndex(const int momentIndex) const;
 
             //! Get mass fractions for all species at one point.
             std::vector<doublereal> getMassFracsByPoint(const int indVarIndex) const;
@@ -391,12 +398,15 @@ namespace Camflow {
             CamSoot cSoot;
             Sprog::Mechanism mech;
             int nSpecies;
+            int nMoments;
             std::vector<std::string> speciesNames;
+            std::vector<std::string> momentNames;
             const SpeciesPtrVector *speciesPointerVector;
             /*
              *memberes to hold dependent variabes
              */
             Array2D spMassFracs;            //species mass fractions
+            Array2D sootMoments;			// Soot moments
             std::vector<doublereal> TVector;     //temperature
             std::vector<doublereal> rhoVector;   //density
             std::vector<doublereal> muVector;    //viscosity

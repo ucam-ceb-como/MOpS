@@ -79,6 +79,10 @@ cp(cg)
 
     //get the number of species
     nSpecies = mech.SpeciesCount();
+
+    //get the number of moments
+    nMoments = cSoot.getNumMoments();
+
     //create the mixture
     Thermo::Mixture mix(mech.Species());
     speciesPointerVector = mix.Species();
@@ -88,6 +92,16 @@ cp(cg)
      */
     for(int l=0; l<nSpecies; l++){
         speciesNames.push_back((*speciesPointerVector)[l]->Name());
+    }
+
+    /*
+     * populate the moment names
+     */
+    std::stringstream tempMomentName;
+    for(int l=0; l<nMoments; l++)
+    {
+    	tempMomentName << "M" << l;
+    	momentNames.push_back(tempMomentName.str());
     }
 
 }
@@ -134,8 +148,6 @@ cp(cg)
         model->setExternalSDR(sdr);
        // model->solve(cc,ca,cg,cp,config,cs,mech_in);
     }
-
-
 }
 
 
@@ -247,6 +259,15 @@ int Interface::getNumberOfSpecies() const {
 }
 
 /*
+ *return the number of moments
+ */
+int Interface::getNumberOfMoments() const {
+    return nMoments;
+}
+
+
+
+/*
  *return the number of reactions in the mechanism
  */
 int Interface::getNumberOfReactions() const {
@@ -268,6 +289,7 @@ void Interface::getFlameletVariables(FlameLet* const flmlt)
 
     flmlt->getDensityVector(rhoVector);
     flmlt->getSpeciesMassFracs(spMassFracs);
+    // ank25:  Same for moments.
     flmlt->getTemperatureVector(TVector);
     flmlt->getIndepedantVar(indVar);
     flmlt->getViscosityVector(muVector);
@@ -510,6 +532,20 @@ std::vector<doublereal> Interface::getMassFracsBySpecies(const int spIndex) cons
 
     return mf;
 }
+
+std::vector<doublereal> Interface::getMomentsByIndex(const int momentIndex) const {
+    // Find the length of the moment profile and create an empty
+    // vector with this much space
+    const size_t len = indVar.size();
+    std::vector<doublereal> momentProfile(len);
+
+    for(size_t i=0; i<len; i++){
+        momentProfile[i] = sootMoments(i,momentIndex);
+    }
+
+    return momentProfile;
+}
+
 
 /*!
  *@param[in]    indVarIndex     Mass fractions requested at indVar[indVarIndex]
