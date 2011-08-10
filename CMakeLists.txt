@@ -82,7 +82,7 @@ add_executable(brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harne
 target_link_libraries(brush-moonmd-test brush ${Boost_LIBRARIES})
 
 # Regression tests for Brush moon-md interface
-add_test(NAME brush.moonmd1 COMMAND ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${EXECUTABLE_OUTPUT_PATH}/brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/test/brush)
+add_test(brush.moonmd1 ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${EXECUTABLE_OUTPUT_PATH}/brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
 
 ########## Test Program for sprogc ######################

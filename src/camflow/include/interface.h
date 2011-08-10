@@ -303,19 +303,32 @@ namespace Camflow {
             //! Return a vector of species names.
             std::vector<std::string> getSpeciesNames();
 
+            //! Return a vector of moment names.
+            std::vector<std::string> getMomentNames();
+
             //! Return the number of species.
             int getNumberOfSpecies() const;
+
+            //! Return the number of moments.
+            int getNumberOfMoments() const;
+
             //! Return the number of reactions.
             int getNumberOfReactions() const;
 
             //! Return the species mass fraction given the independent variable.
             doublereal getMassFrac(const int spIndex, const doublereal axpos);
 
+            //! Return the soot moment given the independent variable.
+            doublereal getMoment(const int momIndex, const doublereal axpos);
+
             //! Return the species mole fraction given the independent variable.
             doublereal getMoleFrac(const int spIndex, const doublereal axpos);
 
             //! Get spatial profile of one species.
             std::vector<doublereal> getMassFracsBySpecies(const int spIndex) const;
+
+            //! Get spatial profile of one moment
+            std::vector<doublereal> getMomentsByIndex(const int momentIndex) const;
 
             //! Get mass fractions for all species at one point.
             std::vector<doublereal> getMassFracsByPoint(const int indVarIndex) const;
@@ -391,12 +404,15 @@ namespace Camflow {
             CamSoot cSoot;
             Sprog::Mechanism mech;
             int nSpecies;
+            int nMoments;
             std::vector<std::string> speciesNames;
+            std::vector<std::string> momentNames;
             const SpeciesPtrVector *speciesPointerVector;
             /*
              *memberes to hold dependent variabes
              */
             Array2D spMassFracs;            //species mass fractions
+            Array2D sootMoments;			// Soot moments
             std::vector<doublereal> TVector;     //temperature
             std::vector<doublereal> rhoVector;   //density
             std::vector<doublereal> muVector;    //viscosity

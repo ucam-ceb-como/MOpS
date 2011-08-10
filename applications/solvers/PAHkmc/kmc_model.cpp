@@ -162,34 +162,37 @@ int main(int argc, char *argv[])
 	try{
 		//Simulator->TestGP();
 		if(!save_rates) {
-		std::vector<PAHStructure*> pah(1);
+		std::vector<PAHStructure*> pah(total_runs);
         PAHProcess pahp;
 		/*for(size_t i=0; i<pah.size(); ++i) {
 			pah[i] = new PAHStructure();
 			pahp.setPAH(*pah[i]);
 			pahp.initialise(startStruct);
 		}*/
-		pah[0] = new PAHStructure();
-		pahp.setPAH(*pah[0]);
-		
         int ID = 10000;
-		for(size_t i=0; i<total_runs; i++) {
+        Simulator->initCSVIO();
+        for(size_t i=0; i<pah.size(); i++) {
+            pah[i] = new PAHStructure;
+            pahp.setPAH(*pah[i]);
 			std::cout << "Starting growth on PAH "<<i<<"...\n";
 			pahp.initialise(startStruct);
 			//pahp.setPAH(*pah[0]);
-			std::cout << "Pointer to PAH:"<<pah[0]<<"\n";
-			Simulator->updatePAH(pah[0],
+			std::cout << "Pointer to PAH:"<<pah[i]<<"\n";
+			Simulator->updatePAH(pah[i],
 				t_start, (t_end-t_start),
 				no_of_steps,
 				Sweep::genrand_int, Sweep::genrand_real1,
 				1,
 				ID+i);
 			std::cout<<"done!\n";
+            Simulator->writeRxnCountCSV();
+            Simulator->writeCHSiteCountCSV();
 			std::ostringstream dotname;
 			dotname << "KMC_DOT/PAH" << i <<".dot";
 			pahp.saveDOT(dotname.str());
 			std::cout<<"Done simulation for PAH "<<ID+i<<std::endl<<endl;;
 			pahp.clearStructure();
+            
 		}
 		// delete all
 		std::cout << endl;
@@ -225,8 +228,8 @@ int main(int argc, char *argv[])
 					break;
 				}
 			}
-			std::cout<< "\tnumber of site members: " << sum_ <<endl;
-			delete pah[i];*/
+			std::cout<< "\tnumber of site members: " << sum_ <<endl;*/
+			delete pah[i];
 		}
 		pah.clear();
 		}

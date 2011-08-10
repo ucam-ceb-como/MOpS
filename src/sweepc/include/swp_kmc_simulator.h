@@ -105,7 +105,7 @@ namespace Sweep{
             //! Writes data for timeCount.csv
             void writeTimerCSV(const int& loop, const double& elapsedTime);
             //! Writes data for reaction_count.csv
-            void writeRxnCountCSV(const std::vector<int>& rc);
+            void writeRxnCountCSV();
             //! Writes data for CH_site_list.csv
             void writeCHSiteCountCSV();
             //! Writes data for rates count (csv)
