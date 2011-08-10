@@ -60,7 +60,7 @@ CamReporter::~CamReporter()
 void CamReporter::header(std::string prog){
     std::cout << std::endl;
     std::cout << "!----------------------------------------------------------!\n";
-    std::cout << "!               CamFlow  " << prog << " Version 1.0                !\n";
+    std::cout << "!               CamFlow " << prog << " Version 1.0               !\n";
     std::cout << "!        This program is distributed without any warranty  !\n";
     std::cout << "!            Author: Vinod M. J. (vj231@cam.ac.uk)         !\n";
     std::cout << "!----------------------------------------------------------!\n";

@@ -41,6 +41,7 @@ target_link_libraries(camflowGridGenerator ${Boost_PROGRAM_OPTIONS_LIBRARY})
 # Regression tests for CamFlow
 
 add_test(camflow.hydrogenBatchReactor ${MOPSSUITE_SOURCE_DIR}/test/camflow/batchReactorRegress.sh ${EXECUTABLE_OUTPUT_PATH}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenBatchReactor)
+add_test(camflow.hydrogenFlamelet ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet.sh ${EXECUTABLE_OUTPUT_PATH}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet)
 
 
 ######### The Mops application ##########################

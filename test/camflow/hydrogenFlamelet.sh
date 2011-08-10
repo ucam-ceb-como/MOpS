@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script regression tests the Camflow flamelet model. (H2-O2 flame)
+# This script regression tests the Camflow Flamelet model. (H2-O2 flame)
 
 #Absolute path to executable should be supplied as first argument to
 #this script.  Script will fail and return a non-zero value
@@ -19,31 +19,32 @@ if test -n "$2"
     cd $2
 fi
 
-# run Camflow on the H2-O2 Flamelet (no arguments needed - just have to be in the correct directory)
-cd hydrogenFlamelet
+# run camflow
 $program
 
-# Now do a diff between new profile.dat and originalProfile.dat
-# and output the results to file
-diff profile.dat profileOriginal.dat > diffResults.txt
+# capture exit value of simulation
+simulationResult=$?
 
-# Check to see if the diffResults file is empty
-if [-s diffResults.txt]
-then
-      echo "**************************"
-      echo "****** TEST FAILURE ******"
-      echo "*****Differences found****"
-      echo "**************************"
-      exit 1
+if((simulationResult==0))
+  then
+    echo "Finished simulation"
+    echo "========================"
 else
-      echo "Test passed"
-      exit 0
-fi 
+  echo "****** Simulation failed ******"
+  exit 255
+fi
 
 
-# Now change back up to original directory
-cd .. 
-
-
+./checkOutput.pl
+result=$?
+if (($result!=0))
+then
+  exit 1
+else
+  # All tests passed
+  echo "All tests passed"
+  rm -rf reactionsParsed speciesParsed
+  exit 0
+fi
 
 

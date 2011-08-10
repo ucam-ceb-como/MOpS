@@ -272,7 +272,7 @@ namespace Camflow {
             //! Call to solve a flamelet for a given strain rate.
             void flameletStrainRate(const doublereal& strainRate, bool lnone=true);
 
-            //! Call to solve a flamelet for a given SDR.
+            //! Call to solve a flamelet for a given SDR rate.
             void flameletSDR(const doublereal& SDR, bool lnone=true);
 
             //! Calling interface to solve flamelets with a profile of SDRs with a time history.
