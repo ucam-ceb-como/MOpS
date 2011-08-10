@@ -108,7 +108,7 @@ void FlameLet::solve
     else
     {
         ssolve(interface);
-        //csolve(interface);
+        csolve(interface);
     }
 
     if (admin_.getRestartType() == admin_.BINARY)
