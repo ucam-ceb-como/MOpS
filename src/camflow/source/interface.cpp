@@ -277,7 +277,6 @@ void Interface::getFlameletVariables(FlameLet* const flmlt)
     flmlt->getVelocity(mVelocity);
     flmlt->getAverageMolarWeight(avgMolWtVector);
     flmlt->getWdotA4(wdotA4);
-    stMixtureFrac = flmlt->stoichiometricMixtureFraction();
 
 }
 

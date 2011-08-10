@@ -79,6 +79,7 @@ doublereal& CVodeWrapper::solve(int stopMode){
 
     CVodeGetDky(cvode_mem,currentTime,1,yPrime);
     calcResNorm();
+    reacPtr->report(currentTime,NV_DATA_S(y),resNorm);
     return resNorm;
 
 }
