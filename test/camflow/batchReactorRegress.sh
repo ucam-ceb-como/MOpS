@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# This script regression tests the Camflow Batch Reactor model. (H2-O2 flame)
 
 #Absolute path to executable should be supplied as first argument to
 #this script.  Script will fail and return a non-zero value
