@@ -281,6 +281,14 @@ std::vector<std::string> Interface::getSpeciesNames(){
     return speciesNames;
 }
 
+/*
+ *return the argument vector with the species names
+ */
+std::vector<std::string> Interface::getMomentNames(){
+    return momentNames;
+}
+
+
 /*!
  * Stores the results for lookup by the CFD program.
  */
@@ -542,7 +550,6 @@ std::vector<doublereal> Interface::getMomentsByIndex(const int momentIndex) cons
     for(size_t i=0; i<len; i++){
         momentProfile[i] = sootMoments(i,momentIndex);
     }
-
     return momentProfile;
 }
 
@@ -568,6 +575,16 @@ doublereal Interface::getMassFrac(const int spIndex, const doublereal axpos){
     doublereal massfrac = getVariableAt(axpos, getMassFracsBySpecies(spIndex));
     return massfrac;
 }
+
+/*
+ *return the moments
+ */
+doublereal Interface::getMoment(const int momIndex, const doublereal axpos){
+    doublereal moment = getVariableAt(axpos, getMomentsByIndex(momIndex));
+    return moment;
+}
+
+
 /*
  *return the mole fractions
  */

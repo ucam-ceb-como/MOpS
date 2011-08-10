@@ -303,6 +303,9 @@ namespace Camflow {
             //! Return a vector of species names.
             std::vector<std::string> getSpeciesNames();
 
+            //! Return a vector of moment names.
+            std::vector<std::string> getMomentNames();
+
             //! Return the number of species.
             int getNumberOfSpecies() const;
 
@@ -314,6 +317,9 @@ namespace Camflow {
 
             //! Return the species mass fraction given the independent variable.
             doublereal getMassFrac(const int spIndex, const doublereal axpos);
+
+            //! Return the soot moment given the independent variable.
+            doublereal getMoment(const int momIndex, const doublereal axpos);
 
             //! Return the species mole fraction given the independent variable.
             doublereal getMoleFrac(const int spIndex, const doublereal axpos);
