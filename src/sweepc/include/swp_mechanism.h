@@ -55,6 +55,7 @@
 #include "swp_params.h"
 #include "swp_particle_model.h"
 #include "swp_cell.h"
+#include "swp_ensemble.h"
 #include "swp_actsites_type.h"
 #include "swp_process.h"
 #include "swp_inception.h"
@@ -257,10 +258,17 @@ public:
     std::vector<unsigned int> GetProcessUsageCounts() const {return m_proccount;}
 	
 	//! return two vectors contain the mass of monomers and dimers respectively
-	void Mass_spectra(std::vector<double> &out1, std::vector<double> &out2, Ensemble &m_ensemble) const;
+	void Mass_spectra(Ensemble &m_ensemble) const;
 	
 	//! return a vector contain the information of particular primary particle with X molecules
-	void Mass_pah(std::vector<std::vector<double> > &out1, Ensemble &m_ensemble) const;
+	void Mass_pah(Ensemble &m_ensemble) const;
+
+	//! write data in colunm for dimer and mononer
+	//void writeMononer(fvector &out) const;
+	//void writeDimer(fvector &out) const;
+	
+	//! write data in colum for particlar primary particle
+	//void writeParimary(std::vector<fvector > &out) const;
 
 private:
     // True if the mechanism contains deferred (LPDA)
