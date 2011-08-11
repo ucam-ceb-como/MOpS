@@ -209,6 +209,12 @@ namespace Camflow
              *return the species mass fractions to the calling program
              */
             virtual void getSpeciesMassFracs(Array2D& mf);
+
+            /*
+             *return the moments to the calling program
+             */
+            void getMoments(Array2D& moments_);
+
             /*
              *return the average molar weight of the mixture to the calling program
              */
