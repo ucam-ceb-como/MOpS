@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
     {
         triangular s(0.0,stMixFrac,1.0);
         double max = pdf(s,stMixFrac);
-        for (size_t i=3; i<=numberOfCells; ++i)
+        for (size_t i=1; i<=numberOfCells; ++i)
         {
             grid[i] = stMixFrac + (grid[i]-stMixFrac)*(1.0-pdf(s,grid[i])/max);
         }
