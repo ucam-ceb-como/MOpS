@@ -193,13 +193,6 @@ public:
     // Reads the simulator data from a binary data stream.
     void Deserialize(std::istream &in);
 
-	//write data in colunm for dimer and mononer
-	void writemononer(std::vector<double> &out);
-	void writedimer(std::vector<double> &out);
-	
-	//! write data in colum for particlar primary particle
-	void writeparimary(std::vector<std::vector<double> > &out);
-
 private:
     // SIMULATION SETTINGS.
 

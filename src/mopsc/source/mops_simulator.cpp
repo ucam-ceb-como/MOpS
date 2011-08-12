@@ -287,10 +287,6 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     setupConsole(*r.Mech());
 	string m_output_filename_base=m_output_filename;		//ms785
 
-	vector<double> mononer_vector;// used for containing the mass of independent mononers
-	vector<double> dimer_vector;// used for containing the mass of independent dimers
-	vector<vector<double> > pah_vector;  // used for storing primary particle with specified mass
-
 	// Loop over runs.
 	#ifdef USE_MPI
 	#else
@@ -401,8 +397,13 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         // Print run time to the console.
         printf("mops: Run number %d completed in %.1f s.\n", irun+1, m_runtime);
 
-		r.Mech()->ParticleMech().Mass_spectra(mononer_vector, dimer_vector,r.Mixture()->Particles());
-		r.Mech()->ParticleMech().Mass_pah(pah_vector,r.Mixture()->Particles());
+		// Produce two files named "MONONER" AND "DRIMER" which is used to create mass spectra, 
+		// currently this function is limited to PAH-PP model
+		r.Mech()->ParticleMech().Mass_spectra(r.Mixture()->Particles());
+
+		// Produce a file named "primary" which stores information of target (criteria are hard-coded) primary particle
+		r.Mech()->ParticleMech().Mass_pah(r.Mixture()->Particles());
+
 	#ifdef USE_MPI
 
 		 closeOutputFile();			//ms785
@@ -410,63 +411,11 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 	}
 	#endif
 
-		// create csv file for monomer and dimer
-		writemononer(mononer_vector);
-        writedimer(dimer_vector);
-		writeparimary(pah_vector);
-
-		mononer_vector.clear();
-		dimer_vector.clear();
-
 	#ifdef USE_MPI
 	#else
     // Close the output files.
     closeOutputFile();
 	#endif
-}
-
-void Simulator::writemononer(std::vector<double> &out)
-{
-	CSV_IO MONOMER("MONOMER.csv", true);
-
-	std::vector<std::string> tempLine;
-// writes data in columns
-
-    for(size_t i=0; i!=out.size(); i++) {
-        tempLine.clear();
-        tempLine.push_back(Strings::cstr(out[i]));
-        MONOMER.Write(tempLine);
-		}
-	MONOMER.Close();
-}
-
-void Simulator::writedimer(std::vector<double> &out)
-{
-	CSV_IO DIMER("DIMER.csv", true);
-
-	std::vector<std::string> tempLine;
-// writes data in columns
-
-    for(size_t i=0; i!=out.size(); i++) {
-        tempLine.clear();
-        tempLine.push_back(Strings::cstr(out[i]));
-        DIMER.Write(tempLine);
-		}
-	DIMER.Close();
-}
-
-void Simulator::writeparimary(vector<vector<double> > &out)
-{
-	CSV_IO parimary("parimary.csv", true);
-
-	std::vector<std::string> tempLine;
-// writes data in columns
-
-    for(size_t i=0; i!=out.size(); i++) {
-
-        parimary.Write(out[i]);
-		}
-	parimary.Close();
 }
 
 // POST-PROCESSING.

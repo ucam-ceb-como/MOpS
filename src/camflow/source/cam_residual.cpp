@@ -334,6 +334,14 @@ void CamResidual::solve(std::vector<Thermo::Mixture>& cstrs,
 void CamResidual::getSpeciesMassFracs(Array2D& mf){
     mf = s_mf;
 }
+
+/*
+ *return the soot moments array
+ */
+void CamResidual::getMoments(Array2D& moments_){
+    moments_ = moments;
+}
+
 /*
  *return the average molar weight of the mixture to the calling program
  */
