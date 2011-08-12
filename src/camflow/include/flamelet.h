@@ -110,6 +110,11 @@ namespace Camflow
             //! Stand alone call as well as first call from an external code that solves the population balance
             void solve();
 
+            // Call from openFoam with flag to indicate if we are solving a steady state
+            // flamelet (at the base of the flame) with no soot, or if we are solving a
+            // Lagrangian flamelet with soot (if soot mech is present)
+            void solve(bool interface, bool steadyStateNoSoot);
+
             //! Continulation call from an external code that solves the population balance.
             void solve(std::vector<Thermo::Mixture>& cstrs,
                        const std::vector< std::vector<doublereal> >& iniSource,
@@ -127,7 +132,7 @@ namespace Camflow
             void csolve(bool interface=false);
 
             //! Segregated solver.
-            void ssolve();
+            void ssolve(bool interface=false);
 
             //! Restart the solution with the converged solution.
             void restart();
@@ -146,6 +151,9 @@ namespace Camflow
 
             //! Soot moments residual calculation.
             void sootMomentResidual(const doublereal& t,doublereal* y,doublereal* f);
+
+            //! Soot moments residual calculation. (When SS at base of flame)
+            void sootMomentResidualAtFlameBase(const doublereal& t,doublereal* y,doublereal* f);
 
             //! Energy residual calculation.
             void energyResidual(const doublereal& t, doublereal* y, doublereal* f);
@@ -192,6 +200,7 @@ namespace Camflow
             doublereal stoichZ; //stoichiometric mixture fraction
             doublereal sdr;     // scalar dissipation rate
             doublereal restartTime;
+            bool steadyStateAtFlameBase;
             std::vector< std::vector<doublereal> > cfdMixFracCoords; // Mixture Fraction coords from CFD.
 
             //! Spatial profile of soot volume fraction

@@ -53,13 +53,13 @@ Mixture::Mixture(void)
 
 // Default constructor (public, requires species list).
 Mixture::Mixture(const Sweep::ParticleModel &model)
-: Sweep::Cell(model)
+: Sweep::Cell(model),gp(NULL)
 {
 }
 
 // Stream-reading constructor.
 Mixture::Mixture(std::istream &in, const Sweep::ParticleModel &model)
-: Sweep::Cell(in, model)
+: Sweep::Cell(in, model),gp(NULL)
 {
 }
 
@@ -68,7 +68,13 @@ Mixture::~Mixture(void)
 {
 }
 
+void Mixture::SetGasphaseProfile(Sweep::GasProfile* gasphase) {
+    gp=gasphase;
+}
 
+Sweep::GasProfile* Mixture::Gasphase(void) const{
+    return gp;
+}
 // OPERATORS.
 
 // Assignment operator.

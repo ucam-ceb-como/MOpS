@@ -13,7 +13,7 @@ ELSE(WIN32)
   SET(BOOST_ROOT $ENV{HOME}/boost)
   SET(Boost_USE_MULTITHREADED OFF)
 ENDIF(WIN32)
-find_package(Boost 1.42.0 REQUIRED COMPONENTS regex serialization filesystem system)
+find_package(Boost 1.42.0 REQUIRED COMPONENTS regex serialization filesystem system program_options)
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
@@ -35,9 +35,13 @@ ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 add_executable(camflow-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/camflow/cam_kernel.cpp)
 target_link_libraries(camflow-app camflow ${Boost_LIBRARIES})
 
+add_executable(camflowGridGenerator ${MOPSSUITE_SOURCE_DIR}/applications/utilities/camflowGridGenerator/camflowGridGenerator.cpp)
+target_link_libraries(camflowGridGenerator ${Boost_PROGRAM_OPTIONS_LIBRARY})
+
 # Regression tests for CamFlow
 
 add_test(camflow.hydrogenBatchReactor ${MOPSSUITE_SOURCE_DIR}/test/camflow/batchReactorRegress.sh ${EXECUTABLE_OUTPUT_PATH}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenBatchReactor)
+add_test(camflow.hydrogenFlamelet ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet.sh ${EXECUTABLE_OUTPUT_PATH}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet)
 
 
 ######### The Mops application ##########################
@@ -70,8 +74,6 @@ target_link_libraries(brush-app brush ${Boost_LIBRARIES})
 # Regression tests for Brush
 add_test(brush.regress1 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress1.sh ${EXECUTABLE_OUTPUT_PATH}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
-add_test(brush.regress2 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress2.sh ${EXECUTABLE_OUTPUT_PATH}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
-
 add_test(brush.regress3 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress3.sh ${EXECUTABLE_OUTPUT_PATH}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
 add_test(brush.regress4 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress4.sh ${EXECUTABLE_OUTPUT_PATH}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
@@ -81,7 +83,7 @@ add_executable(brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harne
 target_link_libraries(brush-moonmd-test brush ${Boost_LIBRARIES})
 
 # Regression tests for Brush moon-md interface
-add_test(NAME brush.moonmd1 COMMAND ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${EXECUTABLE_OUTPUT_PATH}/brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/test/brush)
+add_test(brush.moonmd1 ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${EXECUTABLE_OUTPUT_PATH}/brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
 
 ########## Test Program for sprogc ######################

@@ -40,16 +40,19 @@
 */
 
 #include "swp_kmc_pah_structure.h"
+#include "swp_kmc_typedef.h"
 #include "swp_PAH.h"
 
 using namespace Sweep;
 using namespace Sweep::AggModels;
-
+using namespace Sweep::KMC_ARS;
 
 using namespace std;
 
+
 PAH::PAH(){
 }
+
 
 PAH::PAH(const PAH &copy){
 	*this=copy;
@@ -70,10 +73,15 @@ PAH &PAH::operator=(const PAH &rhs){
 	}
 	return *this;
 }
+
 PAH *const PAH::Clone() const{
 	return new PAH(*this);
 }
 
 int PAH::ID() const {
 	return PAH_ID;
+}
+
+void PAH::saveDOTperLoop(int ID, int i) const{
+	m_pahstruct->saveDOTperLoop(ID,i);
 }

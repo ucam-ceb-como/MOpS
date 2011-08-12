@@ -161,8 +161,7 @@ public:
         unsigned int iterm,
         int (*rand_int)(int, int), 
         real(*rand_u01)(),
-        Sweep::GasProfile* gp=NULL,
-        Transport::TransportOutflow *out = 0
+        Sweep::GasProfile* gp=NULL
         ) const;
 
     // Performs the process on a given particle in the system.  Particle

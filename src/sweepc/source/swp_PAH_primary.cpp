@@ -1005,6 +1005,50 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
     }
 }
 
+void PAHPrimary::FindXmer(std::vector<double> &out, Xmer m_xmer) const
+{
+	// dimer: a partilce with one primary containing 2 PAHs
+	if (this->Numprimary()==1 && this->NumPAH()==m_xmer)
+		out.push_back(this->MassforXmer());
+}
+
+void PAHPrimary::FindXmer(std::vector<std::vector<double> > &out, int target_num_PAH) const
+{
+	if (m_leftchild != NULL)
+		m_leftchild->FindXmer(out,target_num_PAH);
+	if (m_rightchild != NULL)
+		m_rightchild->FindXmer(out,target_num_PAH);
+	if (m_PAH.size() <= (target_num_PAH+10) && m_PAH.size() >= (target_num_PAH-10))	
+		mass_PAH(out);
+}
+
+double PAHPrimary::MassforXmer() const
+{ 
+	int sum = 0;
+	for (size_t i = 0; i != m_PAH.size(); ++i)
+	{
+		sum+=m_PAH[i]->m_pahstruct->numofH();
+	    sum+=12 * m_PAH[i]->m_numcarbon;
+	}
+	return sum;	
+}
+
+void PAHPrimary::mass_PAH(std::vector<std::vector<double> > &out) const
+{
+	std::vector<double> temp;
+	std::vector<double> divider(2,0);
+	for (size_t i = 0; i != m_PAH.size(); ++i)
+	{
+		temp.push_back(m_PAH[i]->m_numcarbon);
+		temp.push_back(m_PAH[i]->m_pahstruct->numofH());
+		m_PAH[i]->saveDOTperLoop((int)ID,(int)i);
+		out.push_back(temp);
+		temp.clear();
+	}
+	divider.push_back(ID);
+	out.push_back(divider);
+	ID++;
+}
 
 void PAHPrimary::UpdateCache(void)
 {

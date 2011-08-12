@@ -84,11 +84,13 @@ namespace Sweep{
             PAHStructure* Clone() ;
             //! return number of carbon for particular PAH
             int numofC();
+			int numofH();
             //! check PAH have bridge or not
             bool havebridgeC();
 
             Sweep::AggModels::PAH* m_parent; // pointer to parent PAH
             
+			void saveDOTperLoop(int PAH_ID, int i);
         protected:
             //! First and last Carbon atom in list
             Cpointer m_cfirst;

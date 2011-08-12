@@ -137,7 +137,7 @@ real KMCSimulator::updatePAH(PAHStructure* pah,
                             real (*rand_u01)(), 
                             real r_factor,
                             int PAH_ID) {
-    std::vector<int> m_rxn_count(m_kmcmech.JPList().size(),0);
+    initReactionCount();
     m_t = tstart;
     real t_max = m_t + dt;
     targetPAH(*pah);
@@ -327,12 +327,11 @@ void KMCSimulator::writetimestep(const std::vector<double>& timestep){
     m_timestep_csv.Write(timestep);
 }
 //! Writes data for reaction_count.csv
-void KMCSimulator::writeRxnCountCSV(const std::vector<int>& rc) {
+void KMCSimulator::writeRxnCountCSV() {
     // change int vector to float
     std::vector<float> temp;
-    for(int i=0; i<(int) rc.size(); i++) {
-        temp.push_back((float)rc[i]);
-    }
+    for(size_t i=0; i<m_rxn_count.size(); i++)
+        temp.push_back(m_rxn_count[i]);
     m_rxn_csv.Write(temp);
 }
 //! Writes data for CH_site_list.csv

@@ -44,6 +44,7 @@
 #include "cam_control.h"
 #include "interface.h"
 #include "flamelet.h"
+#include "linear_interpolator.hpp"
 
 using namespace Camflow;
 
@@ -78,6 +79,10 @@ cp(cg)
 
     //get the number of species
     nSpecies = mech.SpeciesCount();
+
+    //get the number of moments
+    nMoments = cSoot.getNumMoments();
+
     //create the mixture
     Thermo::Mixture mix(mech.Species());
     speciesPointerVector = mix.Species();
@@ -87,6 +92,16 @@ cp(cg)
      */
     for(int l=0; l<nSpecies; l++){
         speciesNames.push_back((*speciesPointerVector)[l]->Name());
+    }
+
+    /*
+     * populate the moment names
+     */
+    std::stringstream tempMomentName;
+    for(int l=0; l<nMoments; l++)
+    {
+    	tempMomentName << "M" << l;
+    	momentNames.push_back(tempMomentName.str());
     }
 
 }
@@ -130,11 +145,9 @@ cp(cg)
          * model if the scalar dissipation rate is
          * non-zero
          */
-        model->setExternalScalarDissipationRate(sdr);
+        model->setExternalSDR(sdr);
        // model->solve(cc,ca,cg,cp,config,cs,mech_in);
     }
-
-
 }
 
 
@@ -246,6 +259,15 @@ int Interface::getNumberOfSpecies() const {
 }
 
 /*
+ *return the number of moments
+ */
+int Interface::getNumberOfMoments() const {
+    return nMoments;
+}
+
+
+
+/*
  *return the number of reactions in the mechanism
  */
 int Interface::getNumberOfReactions() const {
@@ -259,6 +281,14 @@ std::vector<std::string> Interface::getSpeciesNames(){
     return speciesNames;
 }
 
+/*
+ *return the argument vector with the species names
+ */
+std::vector<std::string> Interface::getMomentNames(){
+    return momentNames;
+}
+
+
 /*!
  * Stores the results for lookup by the CFD program.
  */
@@ -267,6 +297,7 @@ void Interface::getFlameletVariables(FlameLet* const flmlt)
 
     flmlt->getDensityVector(rhoVector);
     flmlt->getSpeciesMassFracs(spMassFracs);
+    flmlt->getMoments(sootMoments);		// ank25 added
     flmlt->getTemperatureVector(TVector);
     flmlt->getIndepedantVar(indVar);
     flmlt->getViscosityVector(muVector);
@@ -276,7 +307,6 @@ void Interface::getFlameletVariables(FlameLet* const flmlt)
     flmlt->getVelocity(mVelocity);
     flmlt->getAverageMolarWeight(avgMolWtVector);
     flmlt->getWdotA4(wdotA4);
-    stMixtureFrac = flmlt->stoichiometricMixtureFraction();
 
 }
 
@@ -331,6 +361,30 @@ void Interface::flameletStrainRate(const doublereal& strainRate, bool lnone) {
         throw ;
     }
 
+}
+
+/*!
+ * This function is called externally to solve a flamelet for a given SDR.
+ *
+ *\param[in]    SDR                 Value of SDR to solve for.
+ *\param[in]    lnone                If 'true', Le=1.
+ *
+ */
+void Interface::flameletSDR(const doublereal& SDR, bool lnone) {
+
+    if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
+    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
+
+    flmlt->setExternalSDR(SDR);
+
+    try{
+        // Solve flamelet at base of flame with soot residual set to zero.
+    	flmlt->solve(false,true);
+    	//flmlt->solve(false);
+        getFlameletVariables(flmlt);
+    }catch(CamError &ce){
+        throw ;
+    }
 }
 
 /**
@@ -428,7 +482,8 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
     try{
         if (!continuation)
         {
-            flmlt->solve(false);
+            // Solve flamelet at base of flame with soot residual set to zero.
+        	flmlt->solve(false,true);
         }
         else
         {
@@ -442,9 +497,21 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
 /*
  *return the stoichiometric mixture fraction
  */
-doublereal Interface::getStMixtureFrac(){
+doublereal Interface::getStMixtureFrac()
+{
+    if (flmlt == NULL)
+    {
+        FlameLet* flmlt_temp = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
+        stMixtureFrac = flmlt_temp->stoichiometricMixtureFraction();
+        delete flmlt_temp;
+    }
+    else
+    {
+        stMixtureFrac = flmlt->stoichiometricMixtureFraction();
+    }
     return stMixtureFrac;
 }
+
 /*
  *
  *return the density
@@ -473,6 +540,19 @@ std::vector<doublereal> Interface::getMassFracsBySpecies(const int spIndex) cons
     return mf;
 }
 
+std::vector<doublereal> Interface::getMomentsByIndex(const int momentIndex) const {
+    // Find the length of the moment profile and create an empty
+    // vector with this much space
+    const size_t len = indVar.size();
+    std::vector<doublereal> momentProfile(len);
+
+    for(size_t i=0; i<len; i++){
+        momentProfile[i] = sootMoments(i,momentIndex);
+    }
+    return momentProfile;
+}
+
+
 /*!
  *@param[in]    indVarIndex     Mass fractions requested at indVar[indVarIndex]
  *
@@ -494,6 +574,16 @@ doublereal Interface::getMassFrac(const int spIndex, const doublereal axpos){
     doublereal massfrac = getVariableAt(axpos, getMassFracsBySpecies(spIndex));
     return massfrac;
 }
+
+/*
+ *return the moments
+ */
+doublereal Interface::getMoment(const int momIndex, const doublereal axpos){
+    doublereal moment = getVariableAt(axpos, getMomentsByIndex(momIndex));
+    return moment;
+}
+
+
 /*
  *return the mole fractions
  */
@@ -573,40 +663,28 @@ doublereal Interface::getWdotA4(const doublereal axpos){
 }
 
 /*!
- * Gets the value of var at a given pos by interpolation.
+ * Gets the value of var at a given pos by calling linear_interpolator.
  *
  *\param[in]    pos           Value of independent variable.
  *\param[in]    var           Variable to be interpolated.
  *
  *\return       Value of var at a given pos.
- * \todo replace this with the interpolator in utils.
  */
-doublereal Interface::getVariableAt(const doublereal& pos,
-                                    const std::vector<doublereal>& var) const{
+doublereal Interface::getVariableAt
+(
+    const doublereal& pos,
+    const std::vector<doublereal>& var
+)
+const
+{
 
-    doublereal vu, vl, xu, xl, temp=0.0;
-    size_t len = indVar.size();
+    Utils::LinearInterpolator<doublereal, doublereal> interpolator
+    (
+        indVar,
+        var
+    );
 
-    for(size_t i=0; i<len; i++){
-        if(pos == indVar[i]) {
-            temp= var[i];
-            break;
-        }else if( i>0 && (pos > indVar[i-1]) && (pos < indVar[i]) ){
-            vu = var[i];
-            xu = indVar[i];
-
-            vl = var[i-1];
-            xl = indVar[i-1];
-
-            doublereal slope = (vu-vl)/(xu-xl);
-            doublereal intersect = vu- (slope*xu);
-
-            temp= slope*pos + intersect;
-            break;
-        }
-    }
-
-    return temp;
+    return interpolator.interpolate(pos);
 
 }
 

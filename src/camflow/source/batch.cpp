@@ -255,11 +255,11 @@ void Batch::updateMixture(doublereal* y)
         momRates = sootMom_.rateAll(concentrations, moments, temperature, opPre, 1);
 
         // Now get the corresponding gas phase rates and add them to wdot
-        wdotSootGasPhase = sootMom_.showGasPhaseRates(nSpc);
-	    for (int i=0; i< nSpc; ++i)
-	    {
-          wdot[i] = wdot[i] + wdotSootGasPhase[i];
-	    }
+     //   wdotSootGasPhase = sootMom_.showGasPhaseRates(nSpc);
+	 //   for (int i=0; i< nSpc; ++i)
+	 //   {
+     //     wdot[i] = wdot[i] + wdotSootGasPhase[i];
+	 //   }
 
     }
 }
@@ -328,7 +328,6 @@ void Batch::sootResidual(const doublereal& x, doublereal* y, doublereal* f)
         {
             f[ptrT+1+m] = momRates[m];
         }
-
 
     	/*
     	std::vector<doublereal> mom;

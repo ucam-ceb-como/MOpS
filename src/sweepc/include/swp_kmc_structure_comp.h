@@ -50,6 +50,7 @@
 #include <list>
 #include <cmath>
 #include <cstdlib>
+#include <set>
 
 namespace Sweep {
     namespace KMC_ARS {
@@ -58,9 +59,9 @@ namespace Sweep {
         class Carbon;
 
         // Pointer to a Carbon atom and a Site.
-		typedef std::set<Carbon*> Ccontainer;
+		typedef std::set< Carbon* > Ccontainer;
 		typedef Carbon* Cpointer;
-        typedef std::list<Site>::iterator Spointer;
+        typedef std::list< Site >::iterator Spointer;
 		
 
         //! Carbon atom on PAH edges

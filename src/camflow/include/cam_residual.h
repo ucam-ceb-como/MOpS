@@ -161,7 +161,10 @@ namespace Camflow
             /**
              *set the scalar dissipation rate in case of flamelet odel
              */
-            virtual void setExternalScalarDissipationRate(const doublereal sr){};
+            virtual void setExternalSDR(const doublereal sr)
+            {
+                throw std::logic_error("Why are you calling this virtual function?!");
+            };
 
             /*
              * stores the mixture properties for the calculation of fluxes. This
@@ -206,6 +209,12 @@ namespace Camflow
              *return the species mass fractions to the calling program
              */
             virtual void getSpeciesMassFracs(Array2D& mf);
+
+            /*
+             *return the moments to the calling program
+             */
+            void getMoments(Array2D& moments_);
+
             /*
              *return the average molar weight of the mixture to the calling program
              */

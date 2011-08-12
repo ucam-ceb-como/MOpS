@@ -84,7 +84,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 
     // Clear the current gas-phase profile.
     m_gasprof.clear();
-
+	
     // Open the file to read.
     ifstream fin(file.c_str(), ios::in);
     if (!fin.good()) {
@@ -248,7 +248,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gpoint.Gas.SetTemperature(T);
             gpoint.Gas.SetPressure(P*1.0e5);
             gpoint.Gas.Normalise();
-            gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);
+            gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(m3*s) to mol/(cm3*s)
 
             // Add the profile point.
             alpha_prof[t] = alpha;
@@ -414,4 +414,8 @@ void FlameSolver::linInterpGas(Sweep::real t,
         // Now set the gas density, calculated using the values above.
         gas.SetDensity(dens);
     }
+}
+
+GasProfile* FlameSolver::Gasphase(void){
+	return &m_gasprof;
 }
