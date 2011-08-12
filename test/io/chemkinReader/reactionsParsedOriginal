@@ -1,4 +1,4 @@
-[ Size = 18
+[ Size = 21
     Reaction Data
     (
         Reversible  : 1
@@ -512,6 +512,90 @@
             Forward A = 1e+13
                     n = 0
                     E = 1800
+            Reverse A = 0
+                    n = 0
+                    E = 0
+        )
+        Third Bodies
+        (
+            Third Body : 0
+        )
+    )
+    Reaction Data
+    (
+        Reversible  : 1
+        P Dependent : 0
+        Duplicate : 0
+        Reactants
+        (
+            Name :      C5H11 | Stoich : 1
+        )
+        Products
+        (
+            Name :       C2H4 | Stoich : 1
+            Name :       C3H7 | Stoich : 1
+        )
+        Arrhenius
+        (
+            Forward A = 1.138e+15
+                    n = -0.42
+                    E = 27010
+            Reverse A = 0
+                    n = 0
+                    E = 0
+        )
+        Third Bodies
+        (
+            Third Body : 0
+        )
+    )
+    Reaction Data
+    (
+        Reversible  : 1
+        P Dependent : 0
+        Duplicate : 0
+        Reactants
+        (
+            Name :      C5H11 | Stoich : 1
+        )
+        Products
+        (
+            Name :       C2H4 | Stoich : 1
+            Name :       C3H7 | Stoich : 1
+        )
+        Arrhenius
+        (
+            Forward A = 100
+                    n = -0.42
+                    E = 27010
+            Reverse A = 0
+                    n = 0
+                    E = 0
+        )
+        Third Bodies
+        (
+            Third Body : 0
+        )
+    )
+    Reaction Data
+    (
+        Reversible  : 1
+        P Dependent : 0
+        Duplicate : 0
+        Reactants
+        (
+            Name :      C5H11 | Stoich : 1
+        )
+        Products
+        (
+            Name :       C2H4 | Stoich : 5
+            Name :       C3H7 | Stoich : 1
+        )
+        Arrhenius
+        (
+            Forward A = 1
+                    n = -0.42
+                    E = 27010
             Reverse A = 0
                     n = 0
                     E = 0
