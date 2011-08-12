@@ -565,7 +565,7 @@
         )
         Arrhenius
         (
-            Forward A = 100
+            Forward A = 0.1
                     n = -0.42
                     E = 27010
             Reverse A = 0
@@ -593,7 +593,7 @@
         )
         Arrhenius
         (
-            Forward A = 1
+            Forward A = 1e+14
                     n = -0.42
                     E = 27010
             Reverse A = 0
