@@ -21,7 +21,7 @@ const regex IO::ReactionParser::reactionSingleRegex
     "(.*?)\\s*"
     "(<=>|=>|=)\\s*"
     "(.*?)"
-    "\\s+([0-9]+\\.*[0-9]*(?:[eEgG][-+]?[0-9]*)*)"
+    "\\s+((?:[0-9]+|\\.)\\.*[0-9]*(?:[eEgG][-+]?[0-9]*)*)"
     "\\s+(.*?)"
     "\\s+(.*?)$|\\n"
 );
@@ -111,8 +111,6 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
 
             reaction.setProducts(parseReactionSpecies(what[3]));
 
-            std::cout <<"here "<< what[4] << " " << what[5] << endl;
-
             reaction.setArrhenius
             (
                 from_string<double>(what[4]),
@@ -120,7 +118,6 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
                 from_string<double>(what[6])
             );
 
-            std::cout <<"here1"<<endl;
             while (i < reactionStringLines_.size()-1)
             {
 
@@ -185,7 +182,7 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
                 }
                 else
                 {
-                    throw std::logic_error("Reaction "+reactionStringLines_[i]+" not supported.");
+                    throw std::logic_error("Reaction "+reactionStringLines_[i+1]+" is not supported.");
                 }
 
             }
