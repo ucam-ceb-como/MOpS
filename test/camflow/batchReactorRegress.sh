@@ -34,7 +34,7 @@ else
   exit 255
 fi
 
-./checkOutput.pl
+./checkOutput.rb
 result=$?
 if (($result!=0))
 then
