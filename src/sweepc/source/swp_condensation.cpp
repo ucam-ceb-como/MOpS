@@ -237,13 +237,11 @@ real Condensation::RateTerms(real t, const Cell &sys,
  *
  * \return      0 on success, otherwise negative.
  */
-
 int Condensation::Perform(Sweep::real t, Sweep::Cell &sys, 
                           const Geometry::LocalGeometry1d& local_geom,
                           unsigned int iterm,
                           int (*rand_int)(int, int), 
-                          Sweep::real(*rand_u01)(), 
-                          Sweep::GasProfile* gp) const
+                          Sweep::real(*rand_u01)()) const
 {
     // Select particle based on which term was called.
     int i  = -1;
@@ -272,7 +270,7 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
 
         if (m_mech->AnyDeferred()) {
             // Update particle with deferred processes.
-            m_mech->UpdateParticle(*sp, sys, t, rand_u01, gp);
+            m_mech->UpdateParticle(*sp, sys, t, rand_u01);
         }
 
         // Check that the particle is still valid.

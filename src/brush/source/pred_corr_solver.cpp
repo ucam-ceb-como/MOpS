@@ -363,7 +363,7 @@ void Brush::PredCorrSolver::solveParticlesInOneCell(Mops::Reactor &cell, const G
             else {
                 t +=dt;
                 const int process = chooseIndex(jumpRates, Sweep::genrand_real1);
-                mech.DoProcess(process, t, *(cell.Mixture()), geom, Sweep::genrand_int, Sweep::genrand_real1, NULL);
+                mech.DoProcess(process, t, *(cell.Mixture()), geom, Sweep::genrand_int, Sweep::genrand_real1);
                 // Update jumpRates now the particles have changed
                 jumpRate = mech.CalcJumpRateTerms(t, *(cell.Mixture()), geom, jumpRates);
             }
@@ -449,7 +449,7 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop,
 
         reac.getMechanism().ParticleMech().DoProcess(activeProcess, reac.getTime() + dt,
                                                      *(reac.getCell(activeCell).Mixture()), cellGeom,
-                                                     Sweep::genrand_int, Sweep::genrand_real1, NULL);
+                                                     Sweep::genrand_int, Sweep::genrand_real1);
 
         // Contents of active cell has changed so mark it for update in the rate cache
         rate_cache.mInvalidCells.push(activeCell);

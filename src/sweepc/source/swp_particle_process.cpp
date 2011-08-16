@@ -301,13 +301,3 @@ void ParticleProcess::Deserialize(std::istream &in, const Sweep::Mechanism &mech
                                "(Sweep, ParticleProcess::Deserialize).");
     }
 }
-
-// Disable Perform function from base class.
-int ParticleProcess::Perform(Sweep::real t, Sweep::Cell &sys, 
-                          const Geometry::LocalGeometry1d& local_geom,
-                          unsigned int iterm,
-                          int (*rand_int)(int, int), 
-                          Sweep::real(*rand_u01)()) const
-{
-    return 0;
-}

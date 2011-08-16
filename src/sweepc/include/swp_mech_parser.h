@@ -239,6 +239,7 @@ private:
     static Sweep::Maths::Functional *const readFunctional(
         CamXML::Element &xml // CamXML element containing the functional def'n.
         );
+
 };
 };
 
