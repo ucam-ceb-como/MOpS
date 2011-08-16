@@ -247,14 +247,8 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 */
 void PAHPrimary::AddPAH(real time,const Sweep::ParticleModel &model)
 {
-	PAH* new_PAH = new PAH();
-	new_PAH->m_numcarbon = PYRENE;//start at pyrene (C=16)
+	PAH* new_PAH = new PAH(time);
 	new_PAH->PAH_ID=ID;
-	new_PAH->time_created=time;
-	new_PAH->lastupdated=time;
-	new_PAH->m_pahstruct= new PAHStructure();
-	new_PAH->m_pahstruct->initialise(PYRENE);
-	
 	m_PAH.push_back(new_PAH);
 	ID++;
 
