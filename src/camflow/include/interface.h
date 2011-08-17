@@ -303,9 +303,6 @@ namespace Camflow {
             //! Return a vector of species names.
             std::vector<std::string> getSpeciesNames();
 
-            //! Return a vector of moment names.
-            std::vector<std::string> getMomentNames();
-
             //! Return the number of species.
             int getNumberOfSpecies() const;
 

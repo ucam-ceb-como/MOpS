@@ -94,16 +94,6 @@ cp(cg)
         speciesNames.push_back((*speciesPointerVector)[l]->Name());
     }
 
-    /*
-     * populate the moment names
-     */
-    std::stringstream tempMomentName;
-    for(int l=0; l<nMoments; l++)
-    {
-    	tempMomentName << "M" << l;
-    	momentNames.push_back(tempMomentName.str());
-    }
-
 }
 
 /*
@@ -280,14 +270,6 @@ int Interface::getNumberOfReactions() const {
 std::vector<std::string> Interface::getSpeciesNames(){
     return speciesNames;
 }
-
-/*
- *return the argument vector with the species names
- */
-std::vector<std::string> Interface::getMomentNames(){
-    return momentNames;
-}
-
 
 /*!
  * Stores the results for lookup by the CFD program.
