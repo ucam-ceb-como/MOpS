@@ -1096,13 +1096,9 @@ void FlameLet::saveMixtureProp(doublereal* y)
         // Accounting for non-unity Lewis number
         if (Lewis == FlameLet::LNNONE)
         {
-            //Iterating over the interior points
-            for (int i=0; i<mCord; ++i)
+            for (int l=0; l<nSpc; ++l)
             {
-                for (int l=0; l<nSpc; ++l)
-                {
-                    if (s_Diff(i,l) != 0) Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*s_Diff(i,l));
-                }
+                if (s_Diff(i,l) != 0) Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*s_Diff(i,l));
             }
         }
 
