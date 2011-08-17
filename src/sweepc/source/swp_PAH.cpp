@@ -53,6 +53,14 @@ using namespace std;
 PAH::PAH(){
 }
 
+PAH::PAH(real time):m_numcarbon(PYRENE),//start at pyrene (C=16)
+time_created(time),
+lastupdated(time),
+PAH_ID(0),
+m_pahstruct(new PAHStructure())
+{
+ m_pahstruct->initialise(PYRENE);
+}
 
 PAH::PAH(const PAH &copy){
 	*this=copy;

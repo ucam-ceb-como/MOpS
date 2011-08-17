@@ -610,8 +610,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
  */
 void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
                           const Geometry::LocalGeometry1d& local_geom,
-                          int (*rand_int)(int, int), real (*rand_u01)(),
-                          Sweep::GasProfile* gp) const
+                          int (*rand_int)(int, int), real (*rand_u01)()) const
 {
     // Test for now
     assert(sys.ParticleModel() != NULL);
@@ -628,7 +627,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
         for(PartProcPtrVector::const_iterator ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
             if (j < (int)(*ip)->TermCount()) {
                 // Do the process.
-                if ((*ip)->Perform(t, sys, local_geom, j, rand_int, rand_u01, gp) == 0) {
+                if ((*ip)->Perform(t, sys, local_geom, j, rand_int, rand_u01) == 0) {
                     m_proccount[i] += 1;
                 } else {
                     m_fictcount[i] += 1;
@@ -689,7 +688,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
  *@param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  *@param[in,out]    rand_u01    Pointer to function that generates U[0,1] deviates
  */
-void Mechanism::LPDA(real t, Cell &sys, int (*rand_int)(int, int), real(*rand_u01)(), Sweep::GasProfile* gp) const
+void Mechanism::LPDA(real t, Cell &sys, int (*rand_int)(int, int), real(*rand_u01)()) const
 {
     // Check that there are particles to update and that there are
     // deferred processes to perform.
@@ -701,7 +700,7 @@ void Mechanism::LPDA(real t, Cell &sys, int (*rand_int)(int, int), real(*rand_u0
         // Perform deferred processes on all particles individually.
         Ensemble::iterator i;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
-            UpdateParticle(*(*i), sys, t, rand_u01, gp);
+            UpdateParticle(*(*i), sys, t, rand_u01);
         }
 
         // Now remove any invalid particles and update the ensemble.
@@ -722,7 +721,7 @@ void Mechanism::LPDA(real t, Cell &sys, int (*rand_int)(int, int), real(*rand_u0
  *@param[in]         t           Time upto which particle to be updated
  *@param[in,out]    rand_u01    Pointer to function that generates U[0,1] deviates
  */
-void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(), Sweep::GasProfile* gp) const
+void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)()) const
 {
     // Deal with the growth of the PAHs
     if (AggModel() == AggModels::PAH_KMC_ID)
@@ -735,13 +734,9 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
 		//check that kmcsimulator in ensemble is initialized or not,  if not, start to initialize kmcsimulator
         if (sys.Particles().Simulator()==NULL)
 		{
-			//if(gp == NULL) {
-			//	throw runtime_error("No Gas Profile provided! "
-   //                            "(Sweep, Mechanism::UpdateParticle).");
-			//}
 			sys.Particles().SetSimulator(*(sys.Gasphase()));
 		// for debugging, open a file to write time step for kmc loops, dongping 06 May
-				sys.Particles().Simulator()->m_timestep_csv.Open(sys.Particles().Simulator()->m_timestep_name, true);
+			//sys.Particles().Simulator()->m_timestep_csv.Open(sys.Particles().Simulator()->m_timestep_name, true);
 		}
 
         // Look up new size of PAHs in database
