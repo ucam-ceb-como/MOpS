@@ -30,6 +30,9 @@ namespace IO
             //! Is the reaction reversible or not?
             bool flagReversible_;
 
+            //! Are the Arrhenius parameters for the revers reaction explicitally given.
+            bool flagHasREV_;
+
             //! Is this reaction a duplicate?
             bool flagDuplicate_;
 
@@ -62,6 +65,7 @@ namespace IO
 
             void setReversible(const bool flag);
             const bool& isReversible() const;
+            const bool& hasREV() const;
 
             void setArrhenius(double A, double n, double E, bool reverse=false);
             const Arrhenius& getArrhenius(bool reverse=false) const;
