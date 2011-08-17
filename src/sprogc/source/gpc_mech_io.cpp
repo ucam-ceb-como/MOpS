@@ -1,43 +1,43 @@
 /*
-  Author(s):      Matthew Celnik (msc37),
-  Project:        sprog (gas-phase chemical kinetics).
-  Sourceforge:    http://sourceforge.net/projects/mopssuite
+Author(s):      Matthew Celnik (msc37),
+Project:        sprog (gas-phase chemical kinetics).
+Sourceforge:    http://sourceforge.net/projects/mopssuite
 
-  Copyright (C) 2008 Matthew S Celnik.
+Copyright (C) 2008 Matthew S Celnik.
 
-  File purpose:
-    Implementation of the MechanismParser class declared in the
-    gpc_mech_io.h header file.
+File purpose:
+Implementation of the MechanismParser class declared in the
+gpc_mech_io.h header file.
 
-  Licence:
-    This file is part of "sprog".
+Licence:
+This file is part of "sprog".
 
-    sprog is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
+sprog is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU Lesser General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-  Contact:
-    Dr Markus Kraft
-    Dept of Chemical Engineering
-    University of Cambridge
-    New Museums Site
-    Pembroke Street
-    Cambridge
-    CB2 3RA
-    UK
+Contact:
+Dr Markus Kraft
+Dept of Chemical Engineering
+University of Cambridge
+New Museums Site
+Pembroke Street
+Cambridge
+CB2 3RA
+UK
 
-    Email:       mk306@cam.ac.uk
-    Website:     http://como.cheng.cam.ac.uk
+Email:       mk306@cam.ac.uk
+Website:     http://como.cheng.cam.ac.uk
 */
 
 //#include "comostrings.h"
@@ -60,20 +60,20 @@ using namespace Sprog::Kinetics;
 
 
 /*!
- * @param[in]   filename        Path to main CHEMKIN mechanism file
- * @param[out]  mech            Mechanism into which to place newly read data
- * @param[in]   thermofile      Thermodynamic database file
- * @param[in]   transfile       Species transport properties
- * @param[in]   verbose         Level of informational output (higher is more, default is 0)
- */
+* @param[in]   filename        Path to main CHEMKIN mechanism file
+* @param[out]  mech            Mechanism into which to place newly read data
+* @param[in]   thermofile      Thermodynamic database file
+* @param[in]   transfile       Species transport properties
+* @param[in]   verbose         Level of informational output (higher is more, default is 0)
+*/
 void MechanismParser::ReadChemkin
-(
+    (
     const std::string &filename,
     Sprog::Mechanism &mech,
     const std::string &thermofile,
     const int verbose,
     const std::string &transFile
-)
+    )
 {
     // member function added by vniod to enable the reading of transport data.
     // This function utilizes the ReadChemkin function which was provided earlier.
@@ -93,10 +93,10 @@ void MechanismParser::ReadChemkin
 
 
 void MechanismParser::ReadChemkin
-(
+    (
     ::IO::ChemkinReader& chemkinReader,
     Sprog::Mechanism &mech
-)
+    )
 {
 
     size_t numElements = chemkinReader.elements().size();
@@ -163,22 +163,36 @@ void MechanismParser::ReadChemkin
         }
 
         rxn->SetArrhenius
-        (
+            (
             ARRHENIUS
             (
-                chemkinReader.reactions()[i].getArrhenius().A,
-                chemkinReader.reactions()[i].getArrhenius().n,
-                chemkinReader.reactions()[i].getArrhenius().E*4.184e7  // cal/mol to erg/mol
+            chemkinReader.reactions()[i].getArrhenius().A,
+            chemkinReader.reactions()[i].getArrhenius().n,
+            chemkinReader.reactions()[i].getArrhenius().E*4.184e7  // cal/mol to erg/mol
             )
-        );
+            );
         rxn->SetReversible(chemkinReader.reactions()[i].isReversible());
+
+        if (chemkinReader.reactions()[i].isReversible())
+        {
+            rxn->SetRevArrhenius
+                (
+                ARRHENIUS
+                (
+                chemkinReader.reactions()[i].getArrhenius(true).A,
+                chemkinReader.reactions()[i].getArrhenius(true).n,
+                chemkinReader.reactions()[i].getArrhenius(true).E*4.184e7  // cal/mol to erg/mol
+                )
+                );
+        }
+
         rxn->SetUseThirdBody(chemkinReader.reactions()[i].hasThirdBody());
 
         if
-        (
+            (
             chemkinReader.reactions()[i].hasThirdBody()
-         || chemkinReader.reactions()[i].isPressureDependent()
-        )
+            || chemkinReader.reactions()[i].isPressureDependent()
+            )
         {
 
             if (chemkinReader.reactions()[i].getFallOffBody() != "")
@@ -200,14 +214,14 @@ void MechanismParser::ReadChemkin
             {
                 cout << "Set LOW." << endl;
                 rxn->SetLowPressureLimit
-                (
+                    (
                     ARRHENIUS
                     (
-                        chemkinReader.reactions()[i].getLOW()[0],
-                        chemkinReader.reactions()[i].getLOW()[1],
-                        chemkinReader.reactions()[i].getLOW()[2]*4.184e7  // cal/mol to erg/mol
+                    chemkinReader.reactions()[i].getLOW()[0],
+                    chemkinReader.reactions()[i].getLOW()[1],
+                    chemkinReader.reactions()[i].getLOW()[2]*4.184e7  // cal/mol to erg/mol
                     )
-                );
+                    );
             }
 
             size_t sizeSRI = chemkinReader.reactions()[i].getSRI().size();
@@ -265,10 +279,10 @@ void MechanismParser::ReadChemkin
 
 
 void MechanismParser::ReadTransport
-(
+    (
     ::IO::ChemkinReader& chemkinReader,
     Sprog::Mechanism &mech
-)
+    )
 {
 
     for (size_t i=0; i!=mech.SpeciesCount(); ++i)
@@ -281,11 +295,11 @@ void MechanismParser::ReadTransport
         else
         {
             throw runtime_error
-            (
+                (
                 "Species : "
                 + mech.GetSpecies(i)->Name()
                 + " not found in transport data \n"
-            );
+                );
         }
     }
 
@@ -298,7 +312,7 @@ void MechanismParser::ReadTransport
 
 // Parses the units from the REACTION line of a CHEMKIN formatted file.
 void Sprog::IO::MechanismParser::parseCK_Units(const std::string &rxndef,
-                                               Sprog::Kinetics::ARRHENIUS &scale)
+    Sprog::Kinetics::ARRHENIUS &scale)
 {
 
     throw std::runtime_error("This doesn't work!");
