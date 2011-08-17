@@ -74,12 +74,12 @@ public:
     typedef SpeciesPtrVector::const_iterator const_sp_iterator;
 
     // Constructors.
-    Mechanism(void);                  // Default constructor.
+    Mechanism();                  // Default constructor.
     Mechanism(const Mechanism &mech); // Copy constructor.
     Mechanism(std::istream &in);      // Stream-reading constructor.
 
     // Destructors.
-    ~Mechanism(void);
+    ~Mechanism();
 
     // Operator overloads.
     Mechanism &operator=(const Mechanism &mech);
