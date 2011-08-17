@@ -541,8 +541,8 @@ void FlameLet::restart()
          */
         //if(!interface)
         //{
-        //    string filename = "profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
-        //    reportToFile(filename,control_.getMaxTime(), solvect);
+            string filename = "interfaceProfiles/profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
+            reportToFile(filename,control_.getMaxTime(), solvect);
         //}
     }
     else if (solverID == control_.LIMEX) {
