@@ -65,7 +65,7 @@ while(<$originalProfileFile>) {
 # because it contains the column headings.
 for(my $i=0;$i<18;++$i) 
 {
-    for(my $j=1;$j<201;++$j) 
+    for(my $j=2;$j<201;++$j) 
     {
         #print  " @oldSolution->[$j][$i] and @newSolution->[$j][$i] \n";
         if ($oldSolution[$j][$i] != $newSolution[$j][$i]) 
