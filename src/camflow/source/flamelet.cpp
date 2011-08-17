@@ -1097,20 +1097,13 @@ void FlameLet::saveMixtureProp(doublereal* y)
         if (Lewis == FlameLet::LNNONE)
         {
             //Iterating over the interior points
-            for (int i=iMesh_s; i<iMesh_e; ++i)
+            for (int i=0; i<mCord; ++i)
             {
                 for (int l=0; l<nSpc; ++l)
                 {
-                    if (m_rho[i] != 0) Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*s_Diff(i,l));
+                    if (s_Diff(i,l) != 0) Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*s_Diff(i,l));
                 }
             }
-            /*for (int l=0; l<nSpc; ++l)
-            {
-                // Computation at the i = 0 end of the grid
-                Le(0,l) = m_k[0]/(m_rho[0]*m_cp[0]*s_Diff(0,l));
-                // Computation at the i = mCord - 1 end of the grid
-                Le(mCord,l) = m_k[mCord]/(m_rho[mCord]*m_cp[mCord]*s_Diff(mCord,l));
-            }*/
         }
 
         if (sootMom_.active())
