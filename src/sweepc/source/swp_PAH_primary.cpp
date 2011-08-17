@@ -979,10 +979,11 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
             const real growtime = t - (*it)->lastupdated;
             assert(growtime >= 0.0);
 
-            // Here updatePAH function for KMC_ARS model is called.
             const unsigned int oldNumCarbon = (*it)->m_numcarbon; 
-			sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 5, Sweep::genrand_int, Sweep::genrand_real1, growthfact, (*it)->PAH_ID);
-			(*it)->m_numcarbon=(*it)->m_pahstruct->numofC();
+
+            // Here updatePAH function for KMC_ARS model is called.
+            sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1, Sweep::genrand_int, Sweep::genrand_real1, growthfact, (*it)->PAH_ID);
+            (*it)->m_numcarbon=(*it)->m_pahstruct->numofC();
             (*it)->lastupdated=t;
 
             // See if anything changed, as this will required a call to UpdatePrimary() below
