@@ -173,7 +173,7 @@ void MechanismParser::ReadChemkin
             );
         rxn->SetReversible(chemkinReader.reactions()[i].isReversible());
 
-        if (chemkinReader.reactions()[i].isReversible())
+        if (chemkinReader.reactions()[i].hasREV())
         {
             rxn->SetRevArrhenius
                 (
