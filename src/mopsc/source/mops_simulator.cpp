@@ -402,7 +402,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 		r.Mech()->ParticleMech().Mass_spectra(r.Mixture()->Particles());
 
 		// Produce a file named "primary" which stores information of target (criteria are hard-coded) primary particle
-		r.Mech()->ParticleMech().Mass_pah(r.Mixture()->Particles());
+		//r.Mech()->ParticleMech().Mass_pah(r.Mixture()->Particles());
 
 	#ifdef USE_MPI
 
