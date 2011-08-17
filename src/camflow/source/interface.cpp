@@ -302,6 +302,7 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
 
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
+    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
 
     //Set the time history of the scalar dissipation rate
     flmlt->setRestartTime(intTime[0]);
