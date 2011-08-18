@@ -61,7 +61,6 @@ namespace Sprog
     const real ONE_THIRD  = 3.3333334e-01;
     const real TWO_THIRDS = 6.6666667e-01;
 
-
     // PHYSICAL CONSTANTS.
 	// These numbers are added by Vinod
 
