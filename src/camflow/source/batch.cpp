@@ -255,11 +255,12 @@ void Batch::updateMixture(doublereal* y)
         momRates = sootMom_.rateAll(concentrations, moments, temperature, opPre, 1);
 
         // Now get the corresponding gas phase rates and add them to wdot
-     //   wdotSootGasPhase = sootMom_.showGasPhaseRates(nSpc);
-	 //   for (int i=0; i< nSpc; ++i)
-	 //   {
-     //     wdot[i] = wdot[i] + wdotSootGasPhase[i];
-	 //   }
+        wdotSootGasPhase = sootMom_.showGasPhaseRates(nSpc);
+	    for (int i=0; i< nSpc; ++i)
+	    {
+          wdot[i] = wdot[i] + wdotSootGasPhase[i];
+	    }
+	    //wdot[94] = wdotSootGasPhase[94];  ank25:  Temporary to hold PAH constant
 
     }
 }
@@ -272,6 +273,7 @@ void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f)
     {
         f[l] = (1.0/camMixture_->MassDensity()) * (*spv_)[l]->MolWt() * wdot[l];
     }
+    //f[94] = 0.0; // ank25:  Temporary to hold PAH constant
 }
 
 //temperature residual

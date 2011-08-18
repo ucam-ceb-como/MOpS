@@ -80,6 +80,7 @@ namespace Camflow
                 EQN_ALL,
                 EQN_SPECIES,
                 EQN_ENERGY,
+                EQN_SPECIES_ENERGY,
                 EQN_MOMENTUM,
                 EQN_CONTINUITY,
                 EQN_MOMENTS,
@@ -272,7 +273,7 @@ namespace Camflow
             void extractEnergyVector(std::vector<doublereal>& vec);
             void extractMomentum(std::vector<doublereal>& vec);
             void extractSootMoments(std::vector<doublereal>& vec);
-
+            void extractSpeciesAndEnergyVector(std::vector<doublereal>& vec);
             /*
              *merge the denepdent variables to the
              *master solution vector
@@ -282,7 +283,7 @@ namespace Camflow
             void mergeEnergyVector(doublereal* vec);
             void mergeMomentum(doublereal* vec);
             void mergeSootMoments(doublereal* vec);
-
+            void mergeSpeciesAndEnergyVector(doublereal* vec);
 
             //The following functions are specifically for flamelets
 

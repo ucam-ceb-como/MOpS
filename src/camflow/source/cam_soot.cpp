@@ -444,7 +444,6 @@ void CamSoot::initMomentsConstants(Mechanism &mech){
     // Also need to multiply by sqrt(T) later on.
     Beta_fm = 2.2*sqrt(6*kB/rhoSoot)* pow(3*(cMass/NA)/(4*PI*rhoSoot),(1.0/6.0));
 
-
     /*--------------------------------------------------------------------------
      *               constant for condensation
      *-------------------------------------------------------------------------/
@@ -529,7 +528,7 @@ CamSoot::realVector CamSoot::rateAll
     nucRates = rateNucleation(conc[iInception],T);
 
     // Remove two PAH.
-    surfProdRate[iInception]= -2 * nucRates[0] / NA;
+    surfProdRate[iInception]= -2.0 * nucRates[0] / NA;
 
 	// Check the nucleation rates
     //std::cout << "nucRates[0]  " << nucRates[0] << std::endl;
@@ -542,7 +541,7 @@ CamSoot::realVector CamSoot::rateAll
 
 
     // Calculate coagulation rates
-    //coagRates is rate of change of moments due to coagulation
+    // coagRates is rate of change of moments due to coagulation
     coagRates = rateCoagulation(moments,T);
 
 	// Check the coagulation rates
@@ -563,7 +562,7 @@ CamSoot::realVector CamSoot::rateAll
     prodRatePAHCond = -cdRates[1]/numCAtomInception/NA;
     surfProdRate[iInception] += prodRatePAHCond;
 
-	// Check the condenstation rates
+	// Check the condensation rates
     //std::cout << "cdRates[0]  " << cdRates[0] << std::endl;
     //std::cout << "cdRates[1]  " << cdRates[1] << std::endl;
     //std::cout << "cdRates[2]  " << cdRates[2] << std::endl;
@@ -580,12 +579,12 @@ CamSoot::realVector CamSoot::rateAll
     rateSurface(conc,T,moments,prodRates,sRates);
     sRates[0] = 0.0; // Surface chem should not affect M0.  (Why is this needed here?)
 
-
+/*
     // Oxidation regime.
     // todo: it would be better to include all this in rateSurface function
     if(sRates[1] <= 0){
 
-        //std::cout << "In oxidation regime."  << std::endl;
+        std::cout << "In oxidation regime."  << std::endl;
 
         realVector f;
         f.resize(nMoments,0.0);
@@ -607,8 +606,9 @@ CamSoot::realVector CamSoot::rateAll
         }
         sRates[0] = 0.0;
     }
+*/
 
-	// Check the surface rates rates
+	// Check the surface rates
     //std::cout << "sRates[0]  " << sRates[0] << std::endl;
     //std::cout << "sRates[1]  " << sRates[1] << std::endl;
     //std::cout << "sRates[2]  " << sRates[2] << std::endl;
@@ -642,14 +642,13 @@ CamSoot::realVector CamSoot::rateAll
     {
     	//rates[m] = (nucRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]);
-    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);
-
+    	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);
+    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
     }
 
     // Note: This only returns the rate of change of moments.
     // Does not return the rate of change of gas phase species.
     return rates;
-
 }
 
 
@@ -712,7 +711,7 @@ CamSoot::realVector CamSoot::rateCoagulation
     for(int r=0; r<nMoments; r++){
     	wholeOrderRedMom[r] = mom[r]/mom[0];
     }
-    interpolateReducedMoments(wholeOrderRedMom);
+    interpolateReducedMoments(wholeOrderRedMom);	/// ank25:  how does this work for 5 moments?
 
 
      /*
@@ -721,22 +720,21 @@ CamSoot::realVector CamSoot::rateCoagulation
 
     realVector f;
 
+    if (nMoments == 6){
+
     for(int i=0; i<4; i++)
         f.push_back(gridFunction(i,0,0));
     doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);    
-
 
     f.clear();
     for(int i=0; i<4; i++)
         f.push_back(gridFunction(i,1,1));
     doublereal crk2 = kCoag*cm.interpolateLG(0.5,4,prime,f);
 
-
     f.clear();
     for(int i=0; i<4; i++)
         f.push_back(gridFunction(i,1,2));
     doublereal crk3 = kCoag*cm.interpolateLG(0.5,4,prime,f);
-
 
     f.clear();
     for(int i=0; i<3; i++)
@@ -748,12 +746,10 @@ CamSoot::realVector CamSoot::rateCoagulation
         f.push_back(gridFunction(i,2,2));
     doublereal crk4b = kCoag*cm.interpolateLG(0.5,4,prime,f);
 
-
     f.clear();
     for(int i=0; i<2; i++)
         f.push_back(gridFunction(i,1,4));
     doublereal crk5a = kCoag*cm.interpolateLG(0.5,2,prime,f);
-
 
     f.clear();
     for(int i=0; i<3; i++)
@@ -770,6 +766,77 @@ CamSoot::realVector CamSoot::rateCoagulation
     coagRates[3] = 3*crk3 * M02;
     coagRates[4] = (4*crk4a + 3*crk4b) * M02;
     coagRates[5] = (5* crk5a + 10*crk5b) * M02;
+    }
+
+    ///-----
+
+    if (nMoments == 5){
+
+    for(int i=0; i<4; i++)
+        f.push_back(gridFunction(i,0,0));
+    doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);
+
+    f.clear();
+    for(int i=0; i<4; i++)
+        f.push_back(gridFunction(i,1,1));
+    doublereal crk2 = kCoag*cm.interpolateLG(0.5,4,prime,f);
+
+    f.clear();
+    for(int i=0; i<3; i++)
+        f.push_back(gridFunction(i,1,2));
+    doublereal crk3 = kCoag*cm.interpolateLG(0.5,3,prime,f);
+
+    f.clear();
+    for(int i=0; i<2; i++)
+        f.push_back(gridFunction(i,1,3));
+    doublereal crk4a = kCoag*cm.interpolateLG(0.5,2,prime,f);
+
+    f.clear();
+    for(int i=0; i<3; i++)
+        f.push_back(gridFunction(i,2,2));
+    doublereal crk4b = kCoag*cm.interpolateLG(0.5,3,prime,f);
+
+
+    doublereal M02 = mom[0]*mom[0];
+
+    coagRates.resize(nMoments,0.0);
+
+    coagRates[0] = -0.5*crk*M02;
+    coagRates[1] = 0.0;
+    coagRates[2] = crk2 * M02;
+    coagRates[3] = 3*crk3 * M02;
+    coagRates[4] = (4*crk4a + 3*crk4b) * M02;
+    }
+
+    ///-----
+
+      if (nMoments == 4){
+
+      for(int i=0; i<4; i++)
+          f.push_back(gridFunction(i,0,0));
+      doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);
+
+      f.clear();
+      for(int i=0; i<3; i++)
+          f.push_back(gridFunction(i,1,1));
+      doublereal crk2 = kCoag*cm.interpolateLG(0.5,3,prime,f);
+
+      f.clear();
+      for(int i=0; i<2; i++)
+          f.push_back(gridFunction(i,1,2));
+      doublereal crk3 = kCoag*cm.interpolateLG(0.5,2,prime,f);
+
+
+      doublereal M02 = mom[0]*mom[0];
+
+      coagRates.resize(nMoments,0.0);
+
+      coagRates[0] = -0.5*crk*M02;
+      coagRates[1] = 0.0;
+      coagRates[2] = crk2 * M02;
+      coagRates[3] = 3*crk3 * M02;
+      }
+
 
     return coagRates;
 
@@ -777,12 +844,6 @@ CamSoot::realVector CamSoot::rateCoagulation
 
 /*!
  * Condensation rates
- * Note: This function returns rate of change of PAH due
- * to condensation on the LHS.
- * It also modifies a pointer to cdRates which describes the rate
- * of change of moments due to condensation.
- * This format is different to nucleation and coagulation functions
- * in which moment rates are returned on the LHS.
  */
 CamSoot::realVector CamSoot::rateCondensation(const realVector& mom,
 									const doublereal& T,
@@ -801,11 +862,11 @@ CamSoot::realVector CamSoot::rateCondensation(const realVector& mom,
         }
         cdRates[r] *= k_coeff;
     }
-    //return the PAH consumption rate due to condensation
+
     // Do this calculation in the calling function
     //prodRatePAHCond = -cdRates[1]/numCAtomInception/NA;
 
-    //return prodRatePAHCond;
+    // Return moment rates
     return cdRates;
 }
 
@@ -1027,6 +1088,14 @@ CamSoot::realVector CamSoot::showGasPhaseRates(int nSpecies)
 	rates[iH2O] = surfProdRate[iH2O];
 	rates[iO2] = surfProdRate[iO2];
 	rates[iOH] = surfProdRate[iOH];
+    //std::cout << "rates[iInception]  " << rates[iInception] << std::endl;
+    //std::cout << "rates[iC2H2]  " << rates[iC2H2] << std::endl;
+    //std::cout << "rates[iCO]  " << rates[iCO] << std::endl;
+    //std::cout << "rates[iH]  " << rates[iH] << std::endl;
+    //std::cout << "rates[iH2]  " << rates[iH2] << std::endl;
+    //std::cout << "rates[iH2O]  " << rates[iH2O] << std::endl;
+    //std::cout << "rates[iO2]  " << rates[iO2] << std::endl;
+    //std::cout << "rates[iOH]  " << rates[iOH] << std::endl;
 
 	return rates;
 }

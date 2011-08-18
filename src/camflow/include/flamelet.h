@@ -134,6 +134,9 @@ namespace Camflow
             //! Segregated solver.
             void ssolve(bool interface=false);
 
+            //! Split solver.
+            void splitSolve(bool interface=false);
+
             //! Restart the solution with the converged solution.
             void restart();
 

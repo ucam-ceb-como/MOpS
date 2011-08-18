@@ -269,6 +269,16 @@ void CamResidual::extractSootMoments(std::vector<doublereal>& vec){
 
 }
 
+void CamResidual::extractSpeciesAndEnergyVector(std::vector<doublereal>& vec){
+    vec.resize(cellEnd*(nSpc+1),0);
+    for(int i=0; i<cellEnd; i++){
+        for(int l=0; l<nSpc; l++)
+            vec[i*nSpc+l] = solvect[i*nVar+l];
+        vec[i*nSpc+ptrT] = solvect[i*nVar+ptrT];
+    }
+}
+
+
 void CamResidual::extractMomentum(std::vector<doublereal>& vec){
     vec.resize(cellEnd,0);
     for(int i=0; i<cellEnd; i++)
@@ -291,6 +301,15 @@ void CamResidual::mergeSpeciesVector(doublereal* vec){
             solvect[i*nVar+l] = vec[i*nSpc+l];
     }
 }
+
+void CamResidual::mergeSpeciesAndEnergyVector(doublereal* vec){
+    for(int i=0; i<cellEnd; i++){
+        for(int l=0; l<nSpc; l++)
+            solvect[i*nVar+l] = vec[i*nSpc+l];
+        solvect[i*nVar+ptrT] = vec[i*nSpc+ptrT];
+    }
+}
+
 
 /*
  *soot moments are arranged after species and temperature

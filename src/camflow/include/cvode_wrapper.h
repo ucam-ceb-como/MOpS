@@ -21,7 +21,7 @@
 namespace Camflow{
     class CVodeWrapper{
         void *cvode_mem;
-        N_Vector y,yPrime;
+        N_Vector y,yPrime,  aTolVector;
         doublereal atol, currentTime, maxTime;
         int eqnSize;
         CamResidual *reacPtr;
@@ -36,6 +36,13 @@ namespace Camflow{
                                         int band,
                                         CamResidual &cr, doublereal iniTime=0);
         
+        void initVectorTol(int n, std::vector<doublereal>& solnVec,
+										doublereal aTolTemp[],
+										doublereal rtol,
+										doublereal maxIntTime ,
+										int band,
+										CamResidual &cr, doublereal iniTime=0);
+
         /*
          *additional solver control
          */
