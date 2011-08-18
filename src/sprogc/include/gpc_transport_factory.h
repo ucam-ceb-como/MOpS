@@ -74,7 +74,7 @@ public:
     real getReducedTemp (const real T, const Sprog::Species &sp) const;
     real getOmega11 (real rT, const real deltaStar) const;
     real getOmega22 (const real T, const Sprog::Species &sp) const;
-}
+};
 
 class PureSpeciesTransport
 :
@@ -103,7 +103,7 @@ public:
         const real cp,
         const Sprog::Species &sp
     ) const;
-}
+};
 
 class MixtureTransport
 :
@@ -147,7 +147,7 @@ public:
         const Sprog::Thermo::Mixture &mix
     ) const;
 
-}
+};
 
 } // End namespace Transport
 } // End namespace Sprog

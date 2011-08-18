@@ -453,7 +453,7 @@ real MixtureTransport::getViscosity
 {
 
     const SpeciesPtrVector *spv = mix.Species();
-    std::vector<real>& moleFrac = mix.MoleFractions();
+    const std::vector<real>& moleFrac = mix.MoleFractions();
 
     std::vector<real> nkVec;
     real xTimesEta, xTimesPhi;
@@ -462,7 +462,7 @@ real MixtureTransport::getViscosity
 
     // Precompute the viscosity of each species before the for loop
     // to save time.
-    for (k = 0; k != spv->size(); ++k)
+    for (size_t k = 0; k != spv->size(); ++k)
     {
         nkVec.push_back((*spv)[k]->getViscosity(T));
     }
@@ -517,7 +517,7 @@ real MixtureTransport::getThermalConductivity
     real tc = 0.0;
 
     std::vector<real> cp;
-    std::vector<real>& moleFrac = mix.MoleFractions();
+    const std::vector<real>& moleFrac = mix.MoleFractions();
 
     const SpeciesPtrVector *spv = mix.Species();
 
@@ -614,7 +614,7 @@ std::vector<double> MixtureTransport::getMixtureDiffusionCoeff
 
     const SpeciesPtrVector *spv = mix.Species();
     const int size = spv->size();
-    const std::vector<double > moleFracs = mix.MoleFractions();
+    const std::vector<double>& moleFracs = mix.MoleFractions();
 
     real bDiff;
     std::vector<double > Dmix(size);
