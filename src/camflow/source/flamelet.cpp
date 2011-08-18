@@ -725,7 +725,7 @@ void FlameLet::residual
         	}
         }
     }
-
+   
     // Refine Grid
     //if(getResidual() < 1e-6)
     //{
@@ -1082,26 +1082,22 @@ void FlameLet::saveMixtureProp(doublereal* y)
         //m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
         if (Lewis == FlameLet::LNNONE) temp = camMixture_->getMixtureDiffusionCoeff(opPre);
         cptemp = camMixture_->getMolarSpecificHeat();
-
+        
         for(int l=0; l<nSpc; l++)
         {
             s_mf(i,l) = mf[l];
             s_Wdot(i,l) = wdot[l]*(*spv_)[l]->MolWt();
             s_H(i,l) = htemp[l]/(*spv_)[l]->MolWt();
-            s_Diff(i,l) = temp[l];
             //Specific heat capacity of species in J/Kg K
             CpSpec(i,l) =cptemp[l]/(*spv_)[l]->MolWt();
-        }
-
-        // Accounting for non-unity Lewis number
-        if (Lewis == FlameLet::LNNONE)
-        {
-            for (int l=0; l<nSpc; ++l)
+            if (Lewis == FlameLet::LNNONE) s_Diff(i,l) = temp[l];
+            if (Lewis == FlameLet::LNNONE)
             {
-                if (s_Diff(i,l) != 0) Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*s_Diff(i,l));
+               if (temp[l] > 1e-10) Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*temp[l]);
+              // cout << i << " " << l << " "<<Le(i,l) << endl;
             }
         }
-
+        
         if (sootMom_.active())
         {
           for(int l=0; l<nMoments; l++)
