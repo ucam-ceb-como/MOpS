@@ -204,10 +204,8 @@ real KMCSimulator::updatePAH(PAHStructure* pah,
             t_next = m_t+t_step_max;
         }
         m_t = t_next;
-		//int run=0;
-        //saveDOTperXLoops(1, loopcount, run);
     }
-    return m_t;
+    return t_max;
 }
 
 //! Outputs rates into a csv file (assuming all site counts as 1)
