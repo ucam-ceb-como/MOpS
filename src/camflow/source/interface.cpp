@@ -94,16 +94,6 @@ cp(cg)
         speciesNames.push_back((*speciesPointerVector)[l]->Name());
     }
 
-    /*
-     * populate the moment names
-     */
-    std::stringstream tempMomentName;
-    for(int l=0; l<nMoments; l++)
-    {
-    	tempMomentName << "M" << l;
-    	momentNames.push_back(tempMomentName.str());
-    }
-
 }
 
 /*
@@ -281,14 +271,6 @@ std::vector<std::string> Interface::getSpeciesNames(){
     return speciesNames;
 }
 
-/*
- *return the argument vector with the species names
- */
-std::vector<std::string> Interface::getMomentNames(){
-    return momentNames;
-}
-
-
 /*!
  * Stores the results for lookup by the CFD program.
  */
@@ -320,6 +302,7 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
 
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
+    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
 
     //Set the time history of the scalar dissipation rate
     flmlt->setRestartTime(intTime[0]);

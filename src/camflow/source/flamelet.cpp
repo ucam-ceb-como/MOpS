@@ -28,7 +28,8 @@ FlameLet::FlameLet
   radiation(NULL),
   scalarDissipationRate_(admin_.getInputFile(), stoichZ, reacGeom_.getAxpos(), 1),
   CpSpec(mCord,nSpc),
-  steadyStateAtFlameBase(false)
+  steadyStateAtFlameBase(false),
+  Le(mCord,nSpc,1.0)
 {}
 
 FlameLet::~FlameLet()
@@ -561,8 +562,8 @@ void FlameLet::restart()
          */
         //if(!interface)
         //{
-        //    string filename = "profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
-        //    reportToFile(filename,control_.getMaxTime(), solvect);
+            string filename = "interfaceProfiles/profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
+            reportToFile(filename,control_.getMaxTime(), solvect);
         //}
     }
     else if (solverID == control_.LIMEX) {
@@ -905,7 +906,7 @@ void FlameLet::residual
         	}
         }
     }
-
+   
     // Refine Grid
     //if(getResidual() < 1e-6)
     //{
@@ -960,60 +961,41 @@ void FlameLet::speciesResidual
      *are held constant
      */
 
-
-    /*
-     *set the externally specified scalar dissipation rate
-     *to sdr
-     */
-    if (timeHistory) {
-
-        //sdr = getSDR(t);
-
-    }
-
-    //sdr = scalarDissipationRate(dz[i]);
     for (int l=0; l<nSpc; ++l)
     {
         f[l] = 0.0;
     }
 
-    /**
-     *  For non-unity Lewis numbers
-     */
-
-    Le.resize(mCord,nSpc,1.0);
     convection.resize(mCord,nSpc,0);
     doublereal onebLe;
-    doublereal oneby16 = 1.0/16;
-    if (Lewis == FlameLet::LNNONE)
+    doublereal oneby16 = 1.0/16.0;
+
+    /*if (Lewis == FlameLet::LNNONE)
     {
         //Iterating over the interior points
-        for (int i=1; i<mCord-1; ++i)
+        for (int i=iMesh_s; i<iMesh_e; ++i)
         {
             for (int l=0; l<nSpc; ++l)
             {
-                Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*s_Diff(i,l));
-                onebLe = 1/Le(i,l);
-
-                convection(i,l) = oneby16*(onebLe-1)*(s_mf(i+1,l)-s_mf(i-1,l))*(m_rho[i+1]-m_rho[i-1]);
+                convection(i,l) = oneby16
+                                  *((1.0/Le(i,l))-1.0)
+                                  *(s_mf(i+1,l)-s_mf(i-1,l))
+                                  *(m_rho[i+1]-m_rho[i-1]);
             }
         }
         for (int l=0; l<nSpc; ++l)
         {
             // Computation at the i = 0 end of the grid
-            Le(0,l) = m_k[0]/(m_rho[0]*m_cp[0]*s_Diff(0,l));
             onebLe = 1/Le(0,l);
             convection(0,l) = oneby16*(onebLe-1)*4*(s_mf(1,l)-s_mf(0,l))*(m_rho[1]-m_rho[0]);
 
-
             // Computation at the i = mCord - 1 end of the grid
-            Le(mCord-1,l) = m_k[mCord-1]/(m_rho[mCord -1]*m_cp[mCord-1]*s_Diff(mCord-1,l));
             onebLe = 1/Le(mCord-1,l);
             convection(mCord-1,l) = oneby16*(onebLe-1)*4*(s_mf(mCord-1,l)-s_mf(mCord-2,l))*(m_rho[mCord-1]-m_rho[mCord-2]);
-
         }
 
-    }
+    }*/
+
     /*
      *interior mixture fraction coordinates
      */
@@ -1023,10 +1005,6 @@ void FlameLet::speciesResidual
         zPE = 0.5*(dz[i]+dz[i+1]);
         zPW = 0.5*(dz[i]+dz[i-1]);
 
-        //if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
-        //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
-        //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
-        //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],5.0,i);
         sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
         doublereal diffusionConstant = sdr/(2.0*dz[i]);
@@ -1070,17 +1048,6 @@ void FlameLet::sootMomentResidual
     doublereal zPE, zPW;
     doublereal source;
 
-    /*
-     *set the externally specified scalar dissipation rate
-     *to sdr
-     */
-    //if (timeHistory) {
-    //    sdr = getSDR(t);
-    //} else if (sdr_ext!=0) {
-    //    sdr=sdr_ext;
-    //}
-
-    //sdr = scalarDissipationRate(dz[i]);
     for (int l=0; l<nMoments; ++l)
     {
         f[l] = 0.0;
@@ -1095,10 +1062,7 @@ void FlameLet::sootMomentResidual
         zPE = 0.5*(dz[i]+dz[i+1]);
         zPW = 0.5*(dz[i]+dz[i-1]);
 
-        //if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
-        //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
-        //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
-        //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],2.0,i);
+        // Get the scalar dissipation rate for the cell.
         sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
 
@@ -1163,7 +1127,6 @@ void FlameLet::sootMomentResidualAtFlameBase
     }
 }
 
-
 /*!
  *energy residual
  *
@@ -1179,22 +1142,13 @@ void FlameLet::energyResidual
     doublereal grad_e=0, grad_w=0;
     doublereal zPE=0, zPW=0;
     doublereal source=0;
-
+    doublereal deltax=0;
     /*
      *starting with mixture fraction zero: i.e oxidizer
      *inlet. The temperature is fixed at the oxidizer
      *inlet temperature
      */
-
     f[0] = 0.0;
-
-    /*
-     *set the externally specified scalar dissipation rate
-     *to sdr
-     */
-    if(timeHistory){
-      //  sdr = getSDR(t);
-    }
 
     /*
      *intermediate mixture fraction coordinates
@@ -1204,59 +1158,34 @@ void FlameLet::energyResidual
 
         zPE = 0.5*(dz[i]+dz[i+1]);
         zPW = 0.5*(dz[i]+dz[i-1]);
-        source = 0.0;
+        deltax = zPE + zPW;
 
+        source = 0.0;
         for (int l=0; l<nSpc; ++l)
         {
             source += s_Wdot(i,l)*s_H(i,l);
         }
 
-        //if(sdr_ext==0)sdr = scalarDissipationRate(dz[i]);
-        //if(sdrProfile)sdr = getSDRfromProfile(t,dz[i]);
-        //if(sdrAnalytic)sdr = scalarDissipationRateProfile(dz[i],getSDR(t),i);
-        //sdr = scalarDissipationRateProfile(reacGeom_.getAxpos()[i],5.0,i);
+        // Get the scalar dissipation rate.
         sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
         grad_e = (m_T[i+1]-m_T[i])/zPE;
         grad_w = (m_T[i]-m_T[i-1])/zPW;
 
-        f[i] = sdr*(grad_e-grad_w)/(2.0*dz[i])
+        f[i] = 0.5*sdr*(grad_e-grad_w)/dz[i]
                - source/(m_rho[i]*m_cp[i]);
 
         /**
          * Add some extra terms so that we agree with FlameMaster?
          */
-        doublereal deltax = 0.5*(dz[i+1]+dz[i]) + 0.5*(dz[i]+dz[i-1]);
-        doublereal tGrad = (m_T[i+1]-m_T[i-1])/(deltax);
-        doublereal cpGrad = (m_cp[i+1]-m_cp[i-1])/(deltax);
+        doublereal tGrad = (m_T[i+1]-m_T[i-1])/deltax;
+        doublereal cpGrad = (m_cp[i+1]-m_cp[i-1])/deltax;
         doublereal sumYGrad = 0.0;
         for (int l=0; l<nSpc; ++l)
         {
-            sumYGrad += CpSpec(i,l) * (s_mf(i+1,l)-s_mf(i-1,l))/(deltax);
+            sumYGrad += (1.0/Le(i,l)) * CpSpec(i,l) * (s_mf(i+1,l)-s_mf(i-1,l))/deltax;
         }
         f[i] += (sdr/(2.0*m_cp[i])) * tGrad * (cpGrad + sumYGrad);
-
-        /**
-         *  Accounting for non-unity Lewis number
-         */
-        if (Lewis == FlameLet::LNNONE)
-        {
-
-            doublereal conduction = 0;
-            conduction = sdr*(m_cp[i+1]-m_cp[i-1])*(m_T[i+1]-m_T[i-1])/(8*m_cp[i]*dz[i]*dz[i]);
-            doublereal enthFlux = 0;
-            doublereal tGrad = (m_T[i+1]-m_T[i-1])/dz[i];
-            doublereal cpterm=0;
-            doublereal spGrad =0;
-            for(int l=0; l<nSpc; l++){
-                cpterm = (1-CpSpec(i,l)/m_cp[i]);
-                spGrad = ((s_mf(i+1,l)-s_mf(i-1,l))/dz[i]) + (s_mf(i,l)*(avgMolWt[i+1]-avgMolWt[i-1])/(avgMolWt[i]*dz[i]));
-                enthFlux += spGrad*cpterm/Le(i,l);
-            }
-
-            f[i] -= enthFlux*sdr*tGrad/8.0 ;
-
-        }
 
         //======Radiative Heat Loss Term===============
         if (admin_.getRadiationModel())
@@ -1334,16 +1263,22 @@ void FlameLet::saveMixtureProp(doublereal* y)
         //m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
         if (Lewis == FlameLet::LNNONE) temp = camMixture_->getMixtureDiffusionCoeff(opPre);
         cptemp = camMixture_->getMolarSpecificHeat();
-
+        
         for(int l=0; l<nSpc; l++)
         {
             s_mf(i,l) = mf[l];
             s_Wdot(i,l) = wdot[l]*(*spv_)[l]->MolWt();
             s_H(i,l) = htemp[l]/(*spv_)[l]->MolWt();
-            s_Diff(i,l) = temp[l];
             //Specific heat capacity of species in J/Kg K
             CpSpec(i,l) =cptemp[l]/(*spv_)[l]->MolWt();
+            if (Lewis == FlameLet::LNNONE) s_Diff(i,l) = temp[l];
+            if (Lewis == FlameLet::LNNONE)
+            {
+               if (temp[l] > 1e-10) Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*temp[l]);
+              // cout << i << " " << l << " "<<Le(i,l) << endl;
+            }
         }
+        
         if (sootMom_.active())
         {
           for(int l=0; l<nMoments; l++)

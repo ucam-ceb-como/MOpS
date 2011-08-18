@@ -45,7 +45,6 @@
 
 #include "swp_mechanism.h"
 #include "swp_cell.h"
-#include "swp_gas_profile.h"
 #include "sprog.h"
 #include <vector>
 #include <map>
@@ -100,8 +99,7 @@ protected:
         const fvector &rates,  // Current process rates as an array.
         real jrate,            // The total jump rate (non-deferred processes).
         int (*rand_int)(int, int), // Uniform integer samples from a range
-        real (*rand_u01)(),     // U[0,1] samples
-        Sweep::GasProfile* gp=NULL // Gas Profiles
+        real (*rand_u01)()     // U[0,1] samples
         );
 
     // Selects a process using a DIV algorithm and the process rates

@@ -55,6 +55,7 @@
 #include "swp_weighted_constcoag.h"
 #include "swp_coag_weight_rules.h"
 #include "swp_abf_model.h"
+#include "swp_tempReadColliPara.h" //temporarily used to read collision efficiency parameters, including mode, NONE, MAX, MIN, COMBINED
 
 #include "camxml.h"
 #include "string_functions.h"
@@ -459,6 +460,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             throw runtime_error(msg);
         }
 
+        readColliPara(i,comp);
 
         // Get coalesc threshold.
         el = (*i)->GetFirstChild("coalthresh");

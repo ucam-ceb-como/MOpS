@@ -536,11 +536,12 @@ const
     real deltaStar = mu_j*mu_k /(8*PI*EPSILON0*epsilon_jk*fastMath::pow3(sigma_jk));
 	real omega11 = getOmega11(rT,deltaStar);
 
+
 	return (3.0/16.0)
 	        *(
 	            sqrt(2*PI*NA*fastMath::pow3(kB*T)/m_jk)
 	            /
-	            p*PI*fastMath::pow2(sigma_jk)*omega11
+	            (p*PI*fastMath::pow2(sigma_jk)*omega11)
 	         );
 
 }
@@ -573,6 +574,8 @@ std::vector<double> MixtureTransport::getMixtureDiffusionCoeff(const real T,
 		else
 			Dmix[k] = binaryDiffusionCoeff(k,k,T,p,mix);
 	}
+	
+	
 
 	return Dmix;
 

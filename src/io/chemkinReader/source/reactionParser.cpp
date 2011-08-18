@@ -21,7 +21,7 @@ const regex IO::ReactionParser::reactionSingleRegex
     "(.*?)\\s*"
     "(<=>|=>|=)\\s*"
     "(.*?)"
-    "\\s+([0-9]*\\.*[0-9]*(?:[eEgG][-+]?[0-9]*)*)"
+    "\\s+((?:[0-9]+|\\.)\\.*[0-9]*(?:[eEgG][-+]?[0-9]*)*)"
     "\\s+(.*?)"
     "\\s+(.*?)$|\\n"
 );
@@ -127,17 +127,17 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
                 end = reactionStringLines_[i+1].end();
 
                 if (regex_search(start, end, reactionSingleRegex))
+                {
                     break;
-
-                if (regex_search(start, end, DUPLICATE))
+                }
+                else if (regex_search(start, end, DUPLICATE))
                 {
                     reaction.setDuplicate();
                     // Skip one line when looking for the next reaction.
                     ++i;
                     //break;
                 }
-
-                if (regex_search(start, end, REV))
+                else if (regex_search(start, end, REV))
                 {
                     vector<double> reverseArrhenius = parseLOWTROEREV(reactionStringLines_[i+1], REV);
                     reaction.setArrhenius(reverseArrhenius[0],reverseArrhenius[1],reverseArrhenius[2],true);
@@ -145,8 +145,7 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
                     ++i;
                     //break;
                 }
-
-                if (reaction.hasThirdBody() || reaction.isPressureDependent())
+                else if (reaction.hasThirdBody() || reaction.isPressureDependent())
                 {
                     // Parse the next line. If it is a reaction then continue,
                     // otherwise look at the next lines. (Currently just look for third
@@ -181,7 +180,10 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
                         {break;}
                     }
                 }
-                //break;
+                else
+                {
+                    throw std::logic_error("Reaction "+reactionStringLines_[i+1]+" is not supported.");
+                }
 
             }
 
@@ -236,8 +238,8 @@ IO::ReactionParser::parseReactionSpecies(string reactionSpecies)
             (
                 pair<string,double>
                 (
-                trim_copy(speciesName),
-                from_string<double>(splitStoic[1])
+                    trim_copy(speciesName),
+                    from_string<double>(splitStoic[1])
                 )
             );
         }

@@ -247,14 +247,8 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 */
 void PAHPrimary::AddPAH(real time,const Sweep::ParticleModel &model)
 {
-	PAH* new_PAH = new PAH();
-	new_PAH->m_numcarbon = PYRENE;//start at pyrene (C=16)
+	PAH* new_PAH = new PAH(time);
 	new_PAH->PAH_ID=ID;
-	new_PAH->time_created=time;
-	new_PAH->lastupdated=time;
-	new_PAH->m_pahstruct= new PAHStructure();
-	new_PAH->m_pahstruct->initialise(PYRENE);
-	
 	m_PAH.push_back(new_PAH);
 	ID++;
 
@@ -985,10 +979,11 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
             const real growtime = t - (*it)->lastupdated;
             assert(growtime >= 0.0);
 
-            // Here updatePAH function for KMC_ARS model is called.
             const unsigned int oldNumCarbon = (*it)->m_numcarbon; 
-			sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 5, Sweep::genrand_int, Sweep::genrand_real1, growthfact, (*it)->PAH_ID);
-			(*it)->m_numcarbon=(*it)->m_pahstruct->numofC();
+
+            // Here updatePAH function for KMC_ARS model is called.
+            sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1, Sweep::genrand_int, Sweep::genrand_real1, growthfact, (*it)->PAH_ID);
+            (*it)->m_numcarbon=(*it)->m_pahstruct->numofC();
             (*it)->lastupdated=t;
 
             // See if anything changed, as this will required a call to UpdatePrimary() below
