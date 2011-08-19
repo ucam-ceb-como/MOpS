@@ -117,6 +117,13 @@ void CamSoot::readSoot
             throw CamError("Number of moments not specified\n");
         }
 
+        subnode = soot->GetFirstChild("M0threshold");
+        if (subnode!=NULL){
+            m0Threshold = cdble(subnode->Data());
+        }else{
+            throw CamError("M0 Threshold not specified\n");
+        }
+
         subnode = soot->GetFirstChild("M0");
         if (subnode != NULL){
             firstMom = cdble(subnode->Data());
@@ -542,7 +549,8 @@ CamSoot::realVector CamSoot::rateAll
 
     // Calculate coagulation rates
     // coagRates is rate of change of moments due to coagulation
-    coagRates = rateCoagulation(moments,T);
+    if (moments[0] > m0Threshold)			// Threshold check
+    	coagRates = rateCoagulation(moments,T);
 
 	// Check the coagulation rates
     //std::cout << "coagRates[0]  " << coagRates[0] << std::endl;
@@ -558,10 +566,12 @@ CamSoot::realVector CamSoot::rateAll
     // prodRatePAHCond is rate of change in PAH due to condensation.
     //doublereal tempPAHConc = conc[iInception];
 
-    cdRates = rateCondensation(moments, T,conc[iInception]);
-    prodRatePAHCond = -cdRates[1]/numCAtomInception/NA;
-    surfProdRate[iInception] += prodRatePAHCond;
-
+    if (moments[0] > m0Threshold)		// Threshold check
+    {
+    	cdRates = rateCondensation(moments, T,conc[iInception]);
+    	prodRatePAHCond = -cdRates[1]/numCAtomInception/NA;
+    	surfProdRate[iInception] += prodRatePAHCond;
+    }
 	// Check the condensation rates
     //std::cout << "cdRates[0]  " << cdRates[0] << std::endl;
     //std::cout << "cdRates[1]  " << cdRates[1] << std::endl;
@@ -576,8 +586,10 @@ CamSoot::realVector CamSoot::rateAll
     // prodRatesSurface is rate of change of gas phase species due to surface chemistry
     // sRates is rate of change of moments due to surface chemistry
 
-    rateSurface(conc,T,moments,prodRates,sRates);
-    sRates[0] = 0.0; // Surface chem should not affect M0.  (Why is this needed here?)
+    if (moments[0] > m0Threshold)		// Threshold check
+    {
+    	rateSurface(conc,T,moments,prodRates,sRates);
+    	sRates[0] = 0.0; // Surface chem should not affect M0.  (Why is this needed here?)
 
 /*
     // Oxidation regime.
@@ -607,7 +619,7 @@ CamSoot::realVector CamSoot::rateAll
         sRates[0] = 0.0;
     }
 */
-
+    }
 	// Check the surface rates
     //std::cout << "sRates[0]  " << sRates[0] << std::endl;
     //std::cout << "sRates[1]  " << sRates[1] << std::endl;

@@ -214,6 +214,7 @@ class CamSoot {
         doublereal kSurf;
         doublereal kPAH;
         doublereal dia_PAH;
+        doublereal m0Threshold;
         doublereal D1_PAH;
         doublereal firstMom;
 
