@@ -140,7 +140,8 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
         // and cell widths.
         cg.setGeometry(dz);
 
-        if(config.getConfiguration() == config.FLAMELET)
+        if (config.getConfiguration() == config.FLAMELET
+            || config.getConfiguration() == config.FLAMELET_NULN)
         {
             cg.addZeroWidthCells();
         }
