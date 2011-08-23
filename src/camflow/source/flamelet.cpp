@@ -1278,8 +1278,11 @@ void FlameLet::saveMixtureProp(doublereal* y)
             s_H(i,l) = htemp[l]/(*spv_)[l]->MolWt();
             //Specific heat capacity of species in J/Kg K
             CpSpec(i,l) =cptemp[l]/(*spv_)[l]->MolWt();
-            if (Lewis == FlameLet::LNNONE) s_Diff(i,l) = temp[l];
-            if (Lewis == FlameLet::LNNONE) Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*temp[l]);
+            if (Lewis == FlameLet::LNNONE)
+            {
+                s_Diff(i,l) = temp[l];
+                Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*temp[l]);
+            }
         }
 
         if (sootMom_.active())
@@ -1532,6 +1535,25 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<doub
     }
 
     reporter_->closeFile();
+
+    // Output Lewis Numbers to File.
+    std::ofstream file("LewisNumbers");
+    file << setw(5) << "Z" << " ";
+    for(int l=0; l<nSpc; l++)
+    {
+        file << setw(8) << (*spv_)[l]->Name() << " ";
+    }
+    file<<std::endl;
+    for (int i=0; i<mCord; ++i)
+    {
+        file << setw(5) << i << " ";
+        for(int l=0; l<nSpc; l++)
+        {
+            file << setprecision(5) << setw(8) << Le(i,l) << " ";
+        }
+        file << std::endl;
+    }
+    file.close();
 
     //reacGeom->refine(soln,nVar,nSpc,ptrT);
 
