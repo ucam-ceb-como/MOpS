@@ -10,6 +10,7 @@
         <pressure unit="bar">1</pressure>
         <sdr>2</sdr> <!-- This can be either 'sdr' or 'strain' -->
         <radiation activate="off"/> <!-- If on, specify the species -->
+        <flameletEquation>SIMPLE</flameletEquation>
     </op_condition>
     <inlet>
         <fuel>
