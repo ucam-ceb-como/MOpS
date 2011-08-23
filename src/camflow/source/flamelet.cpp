@@ -999,7 +999,8 @@ void FlameLet::speciesResidual
                           + source;
         }
 
-        if (admin_.getFlameletEquationType() == admin_.COMPLETE)
+        if (   admin_.getFlameletEquationType() == admin_.COMPLETE
+            && Lewis == FlameLet::LNNONE)
         {
             sdrPE = scalarDissipationRate_(reacGeom_.getAxpos()[i+1],t);
             sdrPW = scalarDissipationRate_(reacGeom_.getAxpos()[i-1],t);
