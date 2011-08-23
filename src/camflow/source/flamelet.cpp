@@ -989,29 +989,7 @@ void FlameLet::speciesResidual
 
         sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
-        if (admin_.getFlameletEquationType() == admin_.COMPLETE)
-        {
-            sdrPE = scalarDissipationRate_(reacGeom_.getAxpos()[i+1],t);
-            sdrPW = scalarDissipationRate_(reacGeom_.getAxpos()[i-1],t);
-
-            doublereal convectionConstant = 0.25/m_rho[i];
-
-            for (int l=0; l<nSpc; ++l)
-            {
-                f[i*nSpc+l] +=
-                  convectionConstant
-                *((1.0/Le(i,l))-1.0)
-                *(
-                   (m_rho[i+1]*sdrPE - m_rho[i-1]*sdrPW)/deltax
-                  +(m_rho[i]*sdr*m_cp[i]/m_k[i])
-                   *(m_k[i+1]/m_cp[i+1] - m_k[i-1]/m_cp[i-1])/deltax
-                )
-                *(s_mf(i+1,l)-s_mf(i-1,l))/deltax;
-            }
-        }
-
         doublereal diffusionConstant = sdr/(2.0*dz[i]);
-
         for (int l=0; l<nSpc; ++l)
         {
             grad_e = (s_mf(i+1,l)-s_mf(i,l))/zPE;
@@ -1019,6 +997,28 @@ void FlameLet::speciesResidual
             source = s_Wdot(i,l)/m_rho[i];
             f[i*nSpc+l] = diffusionConstant*(grad_e-grad_w)/Le(i,l)
                           + source;
+        }
+
+        if (admin_.getFlameletEquationType() == admin_.COMPLETE)
+        {
+            sdrPE = scalarDissipationRate_(reacGeom_.getAxpos()[i+1],t);
+            sdrPW = scalarDissipationRate_(reacGeom_.getAxpos()[i-1],t);
+
+            doublereal convectionConstant
+                       = 0.25/m_rho[i]
+                         *(
+                            (m_rho[i+1]*sdrPE - m_rho[i-1]*sdrPW)/deltax
+                           +(m_rho[i]*sdr*m_cp[i]/m_k[i])
+                            *(m_k[i+1]/m_cp[i+1] - m_k[i-1]/m_cp[i-1])/deltax
+                         );
+
+            for (int l=0; l<nSpc; ++l)
+            {
+                f[i*nSpc+l] +=
+                  convectionConstant
+                *((1.0/Le(i,l))-1.0)
+                *(s_mf(i+1,l)-s_mf(i-1,l))/deltax;
+            }
         }
 
     }
