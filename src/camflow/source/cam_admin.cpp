@@ -75,9 +75,20 @@ void CamAdmin::setWallTemp(doublereal Tw){
 
 void CamAdmin::setFlameletEquationType(const std::string type)
 {
-    if (type.compare("SIMPLE")) flameletEquationType_ = SIMPLE;
-    else if (type.compare("COMPLETE")) flameletEquationType_ = COMPLETE;
-    else throw std::invalid_argument(type+" is not a valid flameletEquation.");
+    if (type == "SIMPLE")
+    {
+        std::cout << "Flamelet Equation Type is " << type << std::endl;
+        flameletEquationType_ = SIMPLE;
+    }
+    else if (type == "COMPLETE")
+    {
+        std::cout << "Flamelet Equation Type is " << type << std::endl;
+        flameletEquationType_ = COMPLETE;
+    }
+    else
+    {
+        throw std::invalid_argument(type+" is not a valid flameletEquation.");
+    }
 }
 
 /*
