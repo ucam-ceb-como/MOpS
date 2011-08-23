@@ -87,7 +87,7 @@ namespace Camflow{
                           CamConverter& convert,
                           const CamXML::Element &node);
         //read process conditions
-        void readProcessConditions(CamConverter& convert,
+        void readProcessConditions(CamConfiguration& config, CamConverter& convert,
                                    CamAdmin& ca,
                                    const CamXML::Element &node);
         //read boundary condition

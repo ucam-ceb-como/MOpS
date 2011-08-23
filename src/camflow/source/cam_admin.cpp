@@ -73,6 +73,12 @@ void CamAdmin::setWallTemp(doublereal Tw){
     T_wall = Tw;
 }
 
+void CamAdmin::setFlameletEquationType(const std::string type)
+{
+    if (type.compare("SIMPLE")) flameletEquationType_ = SIMPLE;
+    else if (type.compare("COMPLETE")) flameletEquationType_ = COMPLETE;
+    else throw std::invalid_argument(type+" is not a valid flameletEquation.");
+}
 
 /*
  *set the energy model ISOTHERMAL, ADIABATIC, USERDEFINED
@@ -158,6 +164,11 @@ doublereal CamAdmin::getPressure() const{
 
 doublereal CamAdmin::getWallTemp() const{
     return this->T_wall;
+}
+
+int CamAdmin::getFlameletEquationType() const
+{
+    return flameletEquationType_;
 }
 
 int CamAdmin::getEnergyModel() const{

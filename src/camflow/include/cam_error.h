@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   cam_error.h
  * Author: vinod (vj231@cam.ac.uk)
  *
@@ -49,8 +49,8 @@ namespace Camflow{
     public:
         std::string errorMessage;
         CamError(std::string str){
-            errorMessage = "\n"+Strings::convertToCaps(str);
-            
+            errorMessage = "\n"+str;
+
         }
 
     };

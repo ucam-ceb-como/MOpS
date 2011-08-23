@@ -64,6 +64,7 @@ class CamAdmin
         CamBoundary right;//oxidizer
         static bool radiation;
         int restartType_;
+        int flameletEquationType_;
         std::string restartFile_;
         std::string inputFileName_;
 
@@ -82,6 +83,11 @@ class CamAdmin
             NONISOTHERMAL
         };
 
+        enum FlameletEquationType{
+            SIMPLE,
+            COMPLETE
+        };
+
         //set the temperature
         //void setTemperature(doublereal T_);
 
@@ -93,6 +99,9 @@ class CamAdmin
 
         //set the wall temperature
         void setWallTemp(doublereal Tw);
+
+        //set the flamelet equation type
+        void setFlameletEquationType(const std::string type);
 
         //set the energy model
         void setEnergyModel(int n);
@@ -132,6 +141,9 @@ class CamAdmin
 
         //return the ignition step
         doublereal getIgnitionStep() const;
+
+        //get the flamelet equation type
+        int getFlameletEquationType() const;
 
         //return the energy model
         int getEnergyModel() const;
