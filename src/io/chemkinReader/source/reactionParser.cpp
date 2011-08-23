@@ -147,37 +147,26 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
                 }
                 else if (reaction.hasThirdBody() || reaction.isPressureDependent())
                 {
-                    // Parse the next line. If it is a reaction then continue,
-                    // otherwise look at the next lines. (Currently just look for third
-                    // bodies. Will need to check for extra things).
-                    while(i<reactionStringLines_.size()-1)
+                    string lineType = findLineType(reactionStringLines_[i+1]);
+                    if (lineType == "THIRDBODY")
                     {
-                        start = reactionStringLines_[i+1].begin();
-                        end = reactionStringLines_[i+1].end();
-                        if (!regex_search(start, end, reactionSingleRegex))
-                        {
-                            string lineType = findLineType(reactionStringLines_[i+1]);
-                            if (lineType == "THIRDBODY")
-                            {
-                                reaction.setThirdBodies(parseThirdBodySpecies(reactionStringLines_[i+1]));
-                            }
-                            if (lineType == "LOW")
-                            {
-                                reaction.setLOW(parseLOWTROEREV(reactionStringLines_[i+1], LOW));
-                            }
-                            if (lineType == "TROE")
-                            {
-                                reaction.setTROE(parseLOWTROEREV(reactionStringLines_[i+1], TROE));
-                            }
-                            if (lineType == "SRI")
-                            {
-                                reaction.setSRI(parseLOWTROEREV(reactionStringLines_[i+1], SRI));
-                            }
-                            // Skip one line when looking for the next reaction.
-                            ++i;
-                        }
-                        else
-                        {break;}
+                        reaction.setThirdBodies(parseThirdBodySpecies(reactionStringLines_[i+1]));
+                        ++i;
+                    }
+                    if (lineType == "LOW")
+                    {
+                        reaction.setLOW(parseLOWTROEREV(reactionStringLines_[i+1], LOW));
+                        ++i;
+                    }
+                    if (lineType == "TROE")
+                    {
+                        reaction.setTROE(parseLOWTROEREV(reactionStringLines_[i+1], TROE));
+                        ++i;
+                    }
+                    if (lineType == "SRI")
+                    {
+                        reaction.setSRI(parseLOWTROEREV(reactionStringLines_[i+1], SRI));
+                        ++i;
                     }
                 }
                 else
