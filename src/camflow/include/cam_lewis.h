@@ -37,7 +37,7 @@ public:
 
     inline const int& type() const {return lewisType_;}
 
-    const doublereal& operator()(const int& Z, const int& species) const;
+    doublereal operator()(const int& Z, const int& species) const;
     doublereal& operator()(const int& Z, const int& species);
 
 };

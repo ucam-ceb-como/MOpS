@@ -70,7 +70,7 @@ void LewisNumber::calculateLe()
 
 }
 
-const doublereal&
+doublereal
 LewisNumber::operator()
 (
     const int& Z,
