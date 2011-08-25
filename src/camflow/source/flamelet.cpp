@@ -29,7 +29,7 @@ FlameLet::FlameLet
   scalarDissipationRate_(admin_.getInputFile(), stoichZ, reacGeom_.getAxpos(), 1),
   CpSpec(mCord,nSpc),
   steadyStateAtFlameBase(false),
-  Lewis(admin_.getInputFile(),mCord,nSpc)
+  Lewis(admin_.getInputFile(),camMech_,mCord,nSpc)
 {}
 
 FlameLet::~FlameLet()
@@ -1281,7 +1281,7 @@ void FlameLet::saveMixtureProp(doublereal* y)
             if (Lewis.type() == LewisNumber::CALCULATED)
             {
                 s_Diff(i,l) = temp[l];
-                Lewis(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*temp[l]);
+                Lewis.calcLewis(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*temp[l]);
             }
         }
 
