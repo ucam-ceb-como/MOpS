@@ -90,7 +90,6 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
             if(!convertToCaps(attrValue).compare("STAGFLOW"))config.setConfiguration(config.STAGFLOW);
             if(!convertToCaps(attrValue).compare("BATCH_CV"))config.setConfiguration(config.BATCH_CV);
             if(!convertToCaps(attrValue).compare("FLAMELET"))config.setConfiguration(config.FLAMELET);
-            if(!convertToCaps(attrValue).compare("FLAMELET_NULN"))config.setConfiguration(config.FLAMELET_NULN);
         }else{
             throw CamError("Model remains undefined\n");
         }
@@ -140,8 +139,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
         // and cell widths.
         cg.setGeometry(dz);
 
-        if (config.getConfiguration() == config.FLAMELET
-            || config.getConfiguration() == config.FLAMELET_NULN)
+        if (config.getConfiguration() == config.FLAMELET)
         {
             cg.addZeroWidthCells();
         }
@@ -222,8 +220,7 @@ void CamRead::readProcessConditions
             }
         }
 
-        if (config.getConfiguration() == config.FLAMELET
-            || config.getConfiguration() == config.FLAMELET_NULN)
+        if (config.getConfiguration() == config.FLAMELET)
         {
             subnode = opNode->GetFirstChild("flameletEquation");
             if(subnode == NULL){

@@ -24,6 +24,7 @@ add_library(camflow source/cam_read.cpp
                     source/cam_reporter.cpp
                     source/cam_radiation.cpp
                     source/cam_models.cpp
+                    source/cam_lewis.cpp
                     source/cam_soot.cpp
                     source/cvode_wrapper.cpp
                     source/radau_wrapper.cpp

@@ -29,7 +29,7 @@ FlameLet::FlameLet
   scalarDissipationRate_(admin_.getInputFile(), stoichZ, reacGeom_.getAxpos(), 1),
   CpSpec(mCord,nSpc),
   steadyStateAtFlameBase(false),
-  Le(mCord,nSpc,1.0)
+  Lewis(admin_.getInputFile(),mCord,nSpc)
 {}
 
 FlameLet::~FlameLet()
@@ -995,12 +995,12 @@ void FlameLet::speciesResidual
             grad_e = (s_mf(i+1,l)-s_mf(i,l))/zPE;
             grad_w = (s_mf(i,l)-s_mf(i-1,l))/zPW;
             source = s_Wdot(i,l)/m_rho[i];
-            f[i*nSpc+l] = diffusionConstant*(grad_e-grad_w)/Le(i,l)
+            f[i*nSpc+l] = diffusionConstant*(grad_e-grad_w)/Lewis(i,l)
                           + source;
         }
 
         if (   admin_.getFlameletEquationType() == admin_.COMPLETE
-            && Lewis == FlameLet::LNNONE)
+            && Lewis.type() != LewisNumber::UNITY)
         {
             sdrPE = scalarDissipationRate_(reacGeom_.getAxpos()[i+1],t);
             sdrPW = scalarDissipationRate_(reacGeom_.getAxpos()[i-1],t);
@@ -1017,7 +1017,7 @@ void FlameLet::speciesResidual
             {
                 f[i*nSpc+l] +=
                   convectionConstant
-                *((1.0/Le(i,l))-1.0)
+                *((1.0/Lewis(i,l))-1.0)
                 *(s_mf(i+1,l)-s_mf(i-1,l))/deltax;
             }
         }
@@ -1189,7 +1189,7 @@ void FlameLet::energyResidual
             doublereal sumYGrad = 0.0;
             for (int l=0; l<nSpc; ++l)
             {
-                sumYGrad += (1.0/Le(i,l)) * CpSpec(i,l) * (s_mf(i+1,l)-s_mf(i-1,l))/deltax;
+                sumYGrad += (1.0/Lewis(i,l)) * CpSpec(i,l) * (s_mf(i+1,l)-s_mf(i-1,l))/deltax;
             }
             f[i] += (sdr/(2.0*m_cp[i])) * tGrad * (cpGrad + sumYGrad);
         }
@@ -1268,7 +1268,7 @@ void FlameLet::saveMixtureProp(doublereal* y)
 
         // MOVE THIS OUTSIDE LOOP TO CSOLVE
         //m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
-        if (Lewis == FlameLet::LNNONE) temp = camMixture_->getMixtureDiffusionCoeff(opPre);
+        if (Lewis.type() == LewisNumber::CALCULATED) temp = camMixture_->getMixtureDiffusionCoeff(opPre);
         cptemp = camMixture_->getMolarSpecificHeat();
 
         for(int l=0; l<nSpc; l++)
@@ -1278,10 +1278,10 @@ void FlameLet::saveMixtureProp(doublereal* y)
             s_H(i,l) = htemp[l]/(*spv_)[l]->MolWt();
             //Specific heat capacity of species in J/Kg K
             CpSpec(i,l) =cptemp[l]/(*spv_)[l]->MolWt();
-            if (Lewis == FlameLet::LNNONE)
+            if (Lewis.type() == LewisNumber::CALCULATED)
             {
                 s_Diff(i,l) = temp[l];
-                Le(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*temp[l]);
+                Lewis(i,l) = m_k[i]/(m_rho[i]*m_cp[i]*temp[l]);
             }
         }
 
@@ -1539,7 +1539,7 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<doub
     // Output Lewis Numbers to File.
     std::ofstream file("LewisNumbers");
     file << setw(5) << "Z" << " ";
-    for(int l=0; l<nSpc; l++)
+    for (int l=0; l<nSpc; l++)
     {
         file << setw(8) << (*spv_)[l]->Name() << " ";
     }
@@ -1547,9 +1547,9 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<doub
     for (int i=0; i<mCord; ++i)
     {
         file << setw(5) << i << " ";
-        for(int l=0; l<nSpc; l++)
+        for (int l=0; l<nSpc; l++)
         {
-            file << setprecision(5) << setw(8) << Le(i,l) << " ";
+            file << setprecision(5) << setw(8) <<  Lewis(i,l) << " ";
         }
         file << std::endl;
     }
