@@ -241,7 +241,6 @@ real TransportFactory::getReducedTemp (const real T, const Sprog::Species &sp) c
 real TransportFactory::getOmega11 (real rT, const real deltaStar) const
 {
 
-    int i;
     int iMin, iMax;
     real Omega11;
     real o11[3];
@@ -249,7 +248,7 @@ real TransportFactory::getOmega11 (real rT, const real deltaStar) const
     // find the temperarature interval
     getTempInterval(rT, iMin, iMax);
 
-    for (i = 0; i < 3; i++)
+    for (size_t i = 0; i < 3; ++i)
     {
         int j = iMin + i - 1;
         if (deltaStar < 1.0e-02)
@@ -411,10 +410,11 @@ real PureSpeciesTransport::getThermalConductivity
         fVib = rho * selfDiff / eta_k;
 
         A = 2.5 - fVib;
-        Zrot
-                        = td.getRotRelaxationNumber()
-                                        + (rotFunctionFT(T0, td.getPotentialWellDepth())
-                                                        / rotFunctionFT(T, td.getPotentialWellDepth()));
+        Zrot = td.getRotRelaxationNumber()
+              +(
+                   rotFunctionFT(T0, td.getPotentialWellDepth())
+                 / rotFunctionFT(T, td.getPotentialWellDepth())
+               );
         B = Zrot + (2 / PI) * ((5 * CvRot / (3 * R)) + fVib);
 
         fTrans = 2.5 * (1 - (2 * CvRot * A / (PI * CvTrans * B)));
@@ -617,7 +617,7 @@ std::vector<double> MixtureTransport::getMixtureDiffusionCoeff
     const std::vector<double>& moleFracs = mix.MoleFractions();
 
     real bDiff;
-    std::vector<double > Dmix(size);
+    std::vector<double> Dmix(size);
 
     for (int k = 0; k != size; ++k)
     {

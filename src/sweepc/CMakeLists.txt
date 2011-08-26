@@ -6,6 +6,9 @@ cmake_minimum_required(VERSION 2.6)
 
 project (SWEEP)
 
+file(GLOB_RECURSE INCS "include/*.h")
+source_group("Header Files" FILES ${INCS})
+
 add_library(sweep source/mt19937.cpp
                   source/rng.cpp
                   source/swp_abf_model.cpp
@@ -65,7 +68,8 @@ add_library(sweep source/mt19937.cpp
 				  source/swp_kmc_pah_structure.cpp
 				  source/swp_kmc_reaction.cpp
 				  source/swp_kmc_simulator.cpp
-				  source/swp_kmc_structure_comp.cpp)
+				  source/swp_kmc_structure_comp.cpp
+				  ${INCS})
 
 include_directories(include 
                     ${Boost_INCLUDE_DIRS} 

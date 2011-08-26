@@ -80,10 +80,8 @@ void CamModels::solve
         rModel_ = new Batch(ca, config, cc, cg, cp, cs, mech);
     }else if(configID == config.STAGFLOW || configID == config.COUNTERFLOW){
         //rModel = new StagFlow();
-    }else if(configID==config.FLAMELET || configID == config.FLAMELET_NULN){
+    }else if(configID==config.FLAMELET){
         rModel_ = new FlameLet(ca, config, cc, cg, cp, cs, mech);
-        if(configID == config.FLAMELET_NULN)
-            rModel_->setLewisNumber(FlameLet::LNNONE);
     }else{
         throw CamError("Unknown reactor model\n");
     }

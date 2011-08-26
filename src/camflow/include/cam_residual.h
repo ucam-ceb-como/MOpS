@@ -285,23 +285,6 @@ namespace Camflow
             void mergeSootMoments(doublereal* vec);
             void mergeSpeciesAndEnergyVector(doublereal* vec);
 
-            //The following functions are specifically for flamelets
-
-            /**
-             *  Set the lewis number to be used
-             *  \todo Move this stuff to flamelet.cpp and add xml input.
-             */
-            void setLewisNumber(int n){
-                Lewis = n;
-            }
-
-            /**
-             *  Return the Lewis number flag
-             */
-            int getLewisNumber() const{
-                return Lewis;
-            }
-
 
         protected:
 
@@ -331,8 +314,6 @@ namespace Camflow
             int ptrR;    //aray offset for residence time
             int eqn_slvd;
             const int nEqn;    //number of equations
-
-            int Lewis;
 
             //members for the reactor models
             std::vector<doublereal> solvect, rTol, aTol;

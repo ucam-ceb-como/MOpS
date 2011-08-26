@@ -9,6 +9,9 @@ project (CVODE)
 
 add_definitions( /D_CRT_SECURE_NO_WARNINGS )
 
+file(GLOB_RECURSE INCS "include/*.h")
+source_group("Header Files" FILES ${INCS})
+
 add_library(cvode source/cvode.c
                   source/cvode_band.c
                   source/cvode_bandpre.c
@@ -30,6 +33,7 @@ add_library(cvode source/cvode.c
                   source/sundials/sundials_smalldense.c
                   source/sundials/sundials_spbcgs.c
                   source/sundials/sundials_spgmr.c
-                  source/sundials/sundials_sptfqmr.c)
+                  source/sundials/sundials_sptfqmr.c
+				  ${INCS})
 
 include_directories(include)

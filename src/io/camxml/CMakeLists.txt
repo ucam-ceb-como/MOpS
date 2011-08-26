@@ -2,11 +2,15 @@
 
 project (CAMXML)
 
+file(GLOB_RECURSE INCS "include/*.h")
+source_group("Header Files" FILES ${INCS})
+
 add_library(camxml source/stringf.cpp
                    source/unicodef.cpp
                    source/xmlattribute.cpp
                    source/xmldocument.cpp
-                   source/xmlelement.cpp)
+                   source/xmlelement.cpp
+				   ${INCS})
 
 include_directories (include ../comostrings/include)
 

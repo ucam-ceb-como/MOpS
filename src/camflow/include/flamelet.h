@@ -63,6 +63,7 @@
 #include "limex_wrapper.h"
 #include "linear_interpolator.hpp"
 #include "cam_sdr.h"
+#include "cam_lewis.h"
 
 namespace Camflow
 {
@@ -79,12 +80,6 @@ namespace Camflow
 
         public:
 
-            //! Enumerator for Unity or Fixed Lewis number.
-            enum
-            {
-                LNONE,
-                LNNONE
-            };
 
             //! Default constructor. Give boolean flags some default values.
             FlameLet
@@ -223,8 +218,9 @@ namespace Camflow
 
             Radiation *radiation;
             ScalarDissipationRate scalarDissipationRate_;
+            LewisNumber Lewis;
 
-            Array2D Le, convection, CpSpec; //Lewis numbers
+            Array2D convection, CpSpec;
 
     }; // End FlameLet class declaration.
 

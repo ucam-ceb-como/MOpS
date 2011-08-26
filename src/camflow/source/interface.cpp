@@ -302,7 +302,6 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
 
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
-    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
 
     //Set the time history of the scalar dissipation rate
     flmlt->setRestartTime(intTime[0]);
@@ -333,7 +332,6 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
 void Interface::flameletStrainRate(const doublereal& strainRate, bool lnone) {
 
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
-    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
 
     flmlt->setExternalStrainRate(strainRate);
 
@@ -356,7 +354,6 @@ void Interface::flameletStrainRate(const doublereal& strainRate, bool lnone) {
 void Interface::flameletSDR(const doublereal& SDR, bool lnone) {
 
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
-    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
 
     flmlt->setExternalSDR(SDR);
 
@@ -387,7 +384,6 @@ void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >&
 
     flmlt->setRestartTime(intTime[0]);
     if(intTime[1]!=0)cc.setMaxTime(intTime[1]);
-    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
 
     //Set the time history of the scalar dissipation rate
     flmlt->setRestartTime(intTime[0]);
@@ -458,7 +454,6 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
 
     if(intTime!=0)cc.setMaxTime(intTime);
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
-    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
 
     if(sdr==0){
         throw std::logic_error("You passed a Scalar Dissipation Rate of zero! Wrong!");

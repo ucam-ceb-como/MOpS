@@ -61,7 +61,7 @@ void CamRead::readInput(const std::string fileName,
         root = doc.Root();
         readGrid(cg,*root);
         readGeometry(cg,config,convert,*root);
-        readProcessConditions(convert,ca,*root);
+        readProcessConditions(config, convert,ca,*root);
         readBoundary(ca,cb,convert,*root);
         readControl(cc,*root);
         readInitialGuess(ca,cp,convert,*root);
@@ -90,7 +90,6 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
             if(!convertToCaps(attrValue).compare("STAGFLOW"))config.setConfiguration(config.STAGFLOW);
             if(!convertToCaps(attrValue).compare("BATCH_CV"))config.setConfiguration(config.BATCH_CV);
             if(!convertToCaps(attrValue).compare("FLAMELET"))config.setConfiguration(config.FLAMELET);
-            if(!convertToCaps(attrValue).compare("FLAMELET_NULN"))config.setConfiguration(config.FLAMELET_NULN);
         }else{
             throw CamError("Model remains undefined\n");
         }
@@ -140,8 +139,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
         // and cell widths.
         cg.setGeometry(dz);
 
-        if (config.getConfiguration() == config.FLAMELET
-            || config.getConfiguration() == config.FLAMELET_NULN)
+        if (config.getConfiguration() == config.FLAMELET)
         {
             cg.addZeroWidthCells();
         }
@@ -153,9 +151,14 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
 }
 
 //this function reads in the process conditions
-void CamRead::readProcessConditions(CamConverter& convert,
-                                        CamAdmin& ca,
-                                        const CamXML::Element& node){
+void CamRead::readProcessConditions
+(
+    CamConfiguration& config,
+    CamConverter& convert,
+    CamAdmin& ca,
+    const CamXML::Element& node
+)
+{
 
     CamXML::Element *subnode, *opNode;
     const CamXML::Attribute *atr;
@@ -214,6 +217,17 @@ void CamRead::readProcessConditions(CamConverter& convert,
                 {
                     ca.setRadiationModel(false);
                 }
+            }
+        }
+
+        if (config.getConfiguration() == config.FLAMELET)
+        {
+            subnode = opNode->GetFirstChild("flameletEquation");
+            if(subnode == NULL){
+                throw CamError("op_condition::flameletEquation is undefined\n");
+            }else{
+                std::string type = convertToCaps(subnode->Data());
+                ca.setFlameletEquationType(type);
             }
         }
 

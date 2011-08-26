@@ -11,6 +11,9 @@ IF(WIN32)
 add_definitions(/D_CRT_SECURE_NO_WARNINGS)
 ENDIF(WIN32)
 
+file(GLOB_RECURSE INCS "include/*.h")
+source_group("Header Files" FILES ${INCS})
+
 add_library(cvodes source/cvodes/cvodea.c
                    source/cvodes/cvodea_io.c
                    source/cvodes/cvodes_band.c
@@ -36,6 +39,7 @@ add_library(cvodes source/cvodes/cvodea.c
                    source/sundials/sundials_nvector.c
                    source/sundials/sundials_spbcgs.c
                    source/sundials/sundials_spgmr.c
-                   source/sundials/sundials_sptfqmr.c)
+                   source/sundials/sundials_sptfqmr.c
+				   ${INCS})
 
 include_directories(include)
