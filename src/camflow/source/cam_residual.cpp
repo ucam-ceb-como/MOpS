@@ -50,7 +50,8 @@ CamResidual::CamResidual
   dz(cg.getGeometry()),
   avgMolWt(mCord,0.0),
   moments(mCord,nMoments),			// ank25: moments analogous to s_mf
-  moments_dot(mCord,nMoments)       // ank25: moments rate analogous to s_wdot
+  moments_dot(mCord,nMoments),       // ank25: moments rate analogous to s_wdot
+  sootComponentRatesAllCells(mCord,nMoments*4)  // ank25: used to output soot rates
 {}
 
 CamResidual::~CamResidual()

@@ -345,6 +345,7 @@ namespace Camflow
 
             Array2D s_mf;
             Array2D s_Wdot;
+            Array2D sootComponentRatesAllCells;
             Array2D s_H;
             Array2D s_Diff;
             Array2D s_ParticleBegin, s_ParticleEnd;
@@ -366,7 +367,7 @@ namespace Camflow
             std::vector<doublereal> m_shear;              //shear rate
             std::vector<doublereal> m_eigen;              //pressure gradient eigen value
             std::vector<doublereal> wdot;                 //rate of production
-            const std::vector<doublereal>& dz;            //grid spacting
+            const std::vector<doublereal>& dz;            //grid spacing
             std::vector<doublereal> axpos;                //axial position
             std::vector<doublereal> avgMolWt;             //average molecular weight
             std::vector<doublereal> slopes;               //slopes of piece-wise linear particle sources

@@ -515,7 +515,7 @@ CamSoot::realVector CamSoot::rateAll
 {
 
     realVector rates;  // Total rate of change of moments
-    realVector nucRates, coagRates, cdRates, sRates;	// Rate of change of moments
+    //realVector nucRates, coagRates, cdRates, sRates;	// Rate of change of moments
     realVector prodRates; 	// Rate of change of has phase species due to surface chem
     doublereal prodRatePAHCond; 	// Rate of change of PAH due to condensation
 
@@ -656,6 +656,7 @@ CamSoot::realVector CamSoot::rateAll
     	//rates[m] = (nucRates[m]+coagRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);
     	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
+    	//rates[m] = (nucRates[m]+coagRates[m]+cdRates[m]);
     }
 
     // Note: This only returns the rate of change of moments.
@@ -849,6 +850,27 @@ CamSoot::realVector CamSoot::rateCoagulation
       coagRates[3] = 3*crk3 * M02;
       }
 
+      ///-----
+
+        if (nMoments == 3){
+
+        for(int i=0; i<3; i++)
+            f.push_back(gridFunction(i,0,0));
+        doublereal crk = kCoag*cm.interpolateLG(0.5,3,prime,f);
+
+        f.clear();
+        for(int i=0; i<2; i++)
+            f.push_back(gridFunction(i,1,1));
+        doublereal crk2 = kCoag*cm.interpolateLG(0.5,2,prime,f);
+
+        doublereal M02 = mom[0]*mom[0];
+
+        coagRates.resize(nMoments,0.0);
+
+        coagRates[0] = -0.5*crk*M02;
+        coagRates[1] = 0.0;
+        coagRates[2] = crk2 * M02;
+        }
 
     return coagRates;
 
@@ -1109,6 +1131,22 @@ CamSoot::realVector CamSoot::showGasPhaseRates(int nSpecies)
     //std::cout << "rates[iO2]  " << rates[iO2] << std::endl;
     //std::cout << "rates[iOH]  " << rates[iOH] << std::endl;
 
+	return rates;
+}
+
+
+CamSoot::realVector CamSoot::showSootComponentRates(int nMoments)
+{
+    // set rates to zero
+	realVector rates;
+	rates.resize(nMoments*4,0.0);
+
+    for (int l=0; l<nMoments; ++l){
+	rates[l] = 	nucRates[l];
+	rates[l+nMoments] = coagRates[l];
+	rates[l+2*nMoments] = cdRates[l];
+	rates[l+3*nMoments] = sRates[l];
+    }
 	return rates;
 }
 

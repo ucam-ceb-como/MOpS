@@ -192,11 +192,19 @@ namespace Camflow
             //! Create header for file output.
             std::vector<std::string> header();
 
+            //! Create header for soot rates file output.
+            std::vector<std::string> sootRatesHeader();
+
             //! Console output with residuals.
             void report(doublereal x, doublereal* solution, doublereal& res);
 
             //! File output.
             void reportToFile(std::string fileName, doublereal x, std::vector<double>& solution);
+
+            // Output soot compoent rates to file
+            void reportSootRatesToFile(std::string fileName, doublereal t, Array2D& rates);
+
+
 
         private:
 

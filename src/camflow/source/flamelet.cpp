@@ -526,7 +526,6 @@ void FlameLet::massMatrix(doublereal** M)
  */
 void FlameLet::restart()
 {
-
 	// Assumption is that a restart is always a Lagrangian flamelet (i.e. not steady state)
 	steadyStateAtFlameBase = false;
 
@@ -564,6 +563,10 @@ void FlameLet::restart()
         //{
             string filename = "interfaceProfiles/profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
             reportToFile(filename,control_.getMaxTime(), solvect);
+
+            string filenameSoot = "interfaceSootRates/sootRatesProfile"+boost::lexical_cast<std::string>(restartTime)+".dat";
+            reportSootRatesToFile(filenameSoot,control_.getMaxTime(), sootComponentRatesAllCells);
+
         //}
     }
     else if (solverID == control_.LIMEX) {
@@ -1064,6 +1067,7 @@ void FlameLet::sootMomentResidual
 
         // Get the scalar dissipation rate for the cell.
         sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
+        //sdr = std::max(sdr,1e-3);		// ank25 -- collar the sdr for soot
 
 
         doublereal diffusionConstant = sdr/(2.0*dz[i]);
@@ -1226,6 +1230,7 @@ void FlameLet::saveMixtureProp(doublereal* y)
     vector<doublereal> exp_mom_temp(nMoments,0.0);
     vector<doublereal> conc(nSpc,0.0);
     vector<doublereal> wdotSootGasPhase(nMoments,0.0);
+    vector<doublereal> sootComponentRatesTemp(nMoments*4,0.0);
 
     for (int i=0; i<mCord; ++i)
     {
@@ -1306,6 +1311,14 @@ void FlameLet::saveMixtureProp(doublereal* y)
   	        {
                s_Wdot(i,l) = s_Wdot(i,l) + wdotSootGasPhase[l] * (*spv_)[l]->MolWt();
   	        }
+
+    	    // Also get the component soot rates for output.
+            //sootComponentRatesTemp = sootMom_.showSootComponentRates(nMoments);
+    	    //for (int l=0; l< nMoments*4; l++)
+  	        //{
+            //   sootComponentRatesAllCells(i,l) = sootComponentRatesTemp[l];
+  	        //}
+
           }
         }
     }
@@ -1611,3 +1624,67 @@ const
 
 }
 
+
+/*
+ *output function for file output
+ */
+void FlameLet::reportSootRatesToFile(std::string fileName, doublereal t, Array2D& rates)
+{
+
+    doublereal sum;
+
+    std::cout << "Reporting Component Soot Rates to File" << std::endl;
+
+    reporter_->openFile(fileName,false);
+
+    reporter_->writeCustomHeader(sootRatesHeader());
+
+    vector<doublereal> data, axpos;
+
+    //vector<doublereal> molfrac, massfrac, temperatureVec;
+    axpos = reacGeom_.getAxpos();
+    int len = axpos.size();
+
+    for (int i=0; i<len; i++) {
+
+        data.clear();
+        data.push_back(t);
+        data.push_back(axpos[i]);
+        data.push_back(scalarDissipationRate_(axpos[i],0));
+
+        for(int l=0; l<nMoments*4; l++){
+            data.push_back(rates(i,l));
+        }
+
+        reporter_->writeCustomFileOut(data);
+
+    }
+    reporter_->closeFile();
+}
+
+/*
+ *output file header
+ */
+std::vector<std::string> FlameLet::sootRatesHeader()
+{
+    std::vector<std::string> headerData;
+
+    headerData.clear();
+    headerData.push_back("time");
+    headerData.push_back("Z");
+    headerData.push_back("SDR");
+
+    for(int l=0; l<nMoments; l++){
+    	headerData.push_back("Nuc_M"+boost::lexical_cast<std::string>(l));
+    }
+    for(int l=0; l<nMoments; l++){
+    	headerData.push_back("Coag_M"+boost::lexical_cast<std::string>(l));
+    }
+    for(int l=0; l<nMoments; l++){
+    	headerData.push_back("Cond_M"+boost::lexical_cast<std::string>(l));
+    }
+    for(int l=0; l<nMoments; l++){
+    	headerData.push_back("Surf_M"+boost::lexical_cast<std::string>(l));
+    }
+    return headerData;
+}

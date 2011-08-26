@@ -190,6 +190,8 @@ class CamSoot {
 
         realVector showGasPhaseRates(int nSpecies);
 
+        realVector showSootComponentRates(int nMoments);
+
     private:
 
         const doublereal rhoSoot;
@@ -219,6 +221,8 @@ class CamSoot {
         doublereal firstMom;
 
         stringVector sootSpecies;
+
+        realVector nucRates, coagRates, cdRates, sRates;	// Rate of change of moments
 
         Array2D bnCoeff,powPAH, prime;
         Array2D wdot; //,surfProdRate;
