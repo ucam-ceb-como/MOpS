@@ -51,7 +51,11 @@ CamResidual::CamResidual
   avgMolWt(mCord,0.0),
   moments(mCord,nMoments),			// ank25: moments analogous to s_mf
   moments_dot(mCord,nMoments),       // ank25: moments rate analogous to s_wdot
-  sootComponentRatesAllCells(mCord,nMoments*4)  // ank25: used to output soot rates
+  sootComponentRatesAllCells(mCord,nMoments*4),  // ank25: used to output soot rates
+  avgSootDiamMaster(mCord,0.0),	  // soot properties derived from moments.
+  dispersionMaster(mCord,0.0),
+  sootSurfaceAreaMaster(mCord,0.0),
+  sootVolumeFractionMaster(mCord,0.0)
 {}
 
 CamResidual::~CamResidual()

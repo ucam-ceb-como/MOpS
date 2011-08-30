@@ -1150,7 +1150,33 @@ CamSoot::realVector CamSoot::showSootComponentRates(int nMoments)
 	return rates;
 }
 
+doublereal CamSoot::avgSootDiam()
+{
+    doublereal CD1 = pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0);
+	doublereal sootDiam = CD1 * reducedMoments(2);
+	return sootDiam;
+}
 
+doublereal CamSoot::dispersion()
+{
+	doublereal disp = reducedMoments(12) * reducedMoments(6) * reducedMoments(6);
+	// doublereal disp = moments(2) * moments(2) * moment(1);
+	return disp;
+}
+
+doublereal CamSoot::sootSurfaceArea(doublereal M0)
+{
+    doublereal CD1 = pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0);
+    doublereal surfaceArea = PI * CD1 * CD1 * CD1 * reducedMoments(4) * M0;
+    return surfaceArea;
+}
+
+doublereal CamSoot::sootVolumeFraction(doublereal M0)
+{
+    doublereal CD1 = pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0);
+    doublereal volumeFraction = PI * CD1 * CD1 * CD1 * reducedMoments(6) * M0 / 6.0;
+    return volumeFraction;
+}
 
 
 

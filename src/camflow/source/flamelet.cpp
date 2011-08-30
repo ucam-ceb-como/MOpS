@@ -1319,12 +1319,22 @@ void FlameLet::saveMixtureProp(doublereal* y)
   	        }
 
     	    // Also get the component soot rates for output.
-            //sootComponentRatesTemp = sootMom_.showSootComponentRates(nMoments);
-    	    //for (int l=0; l< nMoments*4; l++)
-  	        //{
-            //   sootComponentRatesAllCells(i,l) = sootComponentRatesTemp[l];
-  	        //}
+            // Ideally we would only do this at the major output times rather than at each call
+    	    // of saveMixtureProp. (Inefficient)
+    	    // ToDo: Move this it a better place.
+    	    sootComponentRatesTemp = sootMom_.showSootComponentRates(nMoments);
+    	    for (int l=0; l< nMoments*4; l++)
+  	        {
+               sootComponentRatesAllCells(i,l) = sootComponentRatesTemp[l];
+  	        }
 
+    	    // Calculate soot properties at each Z point.
+            // Ideally we would only do this at the major output times rather than at each call
+    	    // of saveMixtureProp. (Inefficient)
+    	    avgSootDiamMaster[i] = sootMom_.avgSootDiam();
+    	    dispersionMaster[i] = sootMom_.dispersion();
+    	    sootSurfaceAreaMaster[i] = sootMom_.sootSurfaceArea(moments(i,0));
+    	    sootVolumeFractionMaster[i] = sootMom_.sootVolumeFraction(moments(i,0));
           }
         }
     }
@@ -1533,18 +1543,19 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<doub
         }
         data.push_back(sum);
 
-        // Add the moments to to the data output
+        // Add the moments and soot properties to the data output
         if (sootMom_.active())
         {
             for(int l=0; l<nMoments; l++)
             {
             	data.push_back(soln[i*nVar+ptrT+1+l]);
             }
+            data.push_back(avgSootDiamMaster[i]);
+            data.push_back(dispersionMaster[i]);
+            data.push_back(sootSurfaceAreaMaster[i]);
+            data.push_back(sootVolumeFractionMaster[i]);
         }
-
-
         reporter_->writeCustomFileOut(data);
-
     }
 
     reporter_->closeFile();
@@ -1601,9 +1612,11 @@ std::vector<std::string> FlameLet::header()
         headerData.push_back("M3");
         headerData.push_back("M4");
         headerData.push_back("M5");
+        headerData.push_back("SootAvDiam");
+        headerData.push_back("SootDisp");
+        headerData.push_back("SootSurfArea");
+        headerData.push_back("SootVolFrac");
     }
-
-
 
     return headerData;
 

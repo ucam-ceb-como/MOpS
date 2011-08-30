@@ -354,6 +354,10 @@ namespace Camflow
             std::vector<doublereal> slopes;               //slopes of piece-wise linear particle sources
             std::vector<doublereal> radiation;            //radiative heat loss term for output to profile.h
 
+            std::vector<doublereal> avgSootDiamMaster;	  // soot properties derived from moments.
+            std::vector<doublereal> dispersionMaster;
+            std::vector<doublereal> sootSurfaceAreaMaster;
+            std::vector<doublereal> sootVolumeFractionMaster;
 
     }; // End CamResidual class declaration.
 

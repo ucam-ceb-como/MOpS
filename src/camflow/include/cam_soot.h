@@ -192,6 +192,11 @@ class CamSoot {
 
         realVector showSootComponentRates(int nMoments);
 
+        doublereal avgSootDiam();
+        doublereal dispersion();
+        doublereal sootSurfaceArea(doublereal M0);
+        doublereal sootVolumeFraction(doublereal M0);
+
     private:
 
         const doublereal rhoSoot;
