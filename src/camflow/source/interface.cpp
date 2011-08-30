@@ -296,7 +296,7 @@ void Interface::getFlameletVariables(FlameLet* const flmlt)
  *  This function is called by the external code that
  *  passes a scalar dissipation rate with time history
  */
-void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation, bool lnone){
+void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation){
 
     if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
@@ -314,7 +314,7 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
 
     try{
         const size_t len = sdr.size();
-        flamelet(sdr[len-1], intTime[len-1],continuation,lnone);
+        flamelet(sdr[len-1], intTime[len-1],continuation);
     }catch(CamError& ce){
         throw;
     }
@@ -329,7 +329,7 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
  *\param[in]    lnone				 If 'true', Le=1.
  *
  */
-void Interface::flameletStrainRate(const doublereal& strainRate, bool lnone) {
+void Interface::flameletStrainRate(const doublereal& strainRate) {
 
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
 
@@ -351,7 +351,7 @@ void Interface::flameletStrainRate(const doublereal& strainRate, bool lnone) {
  *\param[in]    lnone                If 'true', Le=1.
  *
  */
-void Interface::flameletSDR(const doublereal& SDR, bool lnone) {
+void Interface::flameletSDR(const doublereal& SDR) {
 
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
 
@@ -374,8 +374,7 @@ void Interface::flameletSDR(const doublereal& SDR, bool lnone) {
 void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >& sdr,
 								   const std::vector< std::vector<doublereal> >& Zcoords,
 								   const std::vector<doublereal>& intTime,
-								   bool continuation,
-								   bool lnone) {
+								   bool continuation) {
 
     if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
@@ -418,7 +417,7 @@ void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >&
  *  and a spatial profile of soot volume fraction.
  */
 void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const std::vector<doublereal>& sdr,
-                                 const std::vector<doublereal>& intTime, bool continuation, bool lnone){
+                                 const std::vector<doublereal>& intTime, bool continuation){
 
     if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
@@ -433,7 +432,7 @@ void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const s
 
     try{
         const size_t len = sdr.size();
-        flamelet(sdr[len-1], intTime[len-1],continuation,lnone);
+        flamelet(sdr[len-1], intTime[len-1],continuation);
     }catch(CamError& ce){
         throw;
     }
@@ -450,7 +449,7 @@ void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const s
  *file/default value. If steady state is obtained before the specified
  *integration time, the program return with the converged solution.
  */
-void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, bool lnone){
+void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation){
 
     if(intTime!=0)cc.setMaxTime(intTime);
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
