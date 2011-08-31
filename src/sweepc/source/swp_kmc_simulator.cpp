@@ -1,5 +1,5 @@
 /*!
-  * \Author     Zakwan Zainuddin (zz260)
+  * \author     Zakwan Zainuddin (zz260)
   * \file       swp_kmc_simulator.cpp
   *
   * \brief      Implementation for swp_kmc_simulator.h
