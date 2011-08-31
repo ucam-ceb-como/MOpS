@@ -82,7 +82,7 @@ void readColliPara(std::vector<CamXML::Element*>::iterator i, Sweep::Component* 
 					// Density contains no data.
 					std::string msg("Component ");
 					msg += comp->Name();
-					msg += " one of collision parameter is left to be empty (Sweep, MechParser::readComponents).";
+					msg += " one of collision parameter is left to be empty (Sweep::readColliPara).";
 
 					delete comp;
 					throw std::runtime_error(msg);
@@ -90,7 +90,7 @@ void readColliPara(std::vector<CamXML::Element*>::iterator i, Sweep::Component* 
 			} else  {
 				std::string msg("Component ");
 				msg += comp->Name();
-				msg += " one of collision parameter (ColliParaA, ColliParaB,ColliParaC) is missing (Sweep, MechParser::readComponents).";
+				msg += " one of collision parameter (ColliParaA, ColliParaB,ColliParaC) is missing (Sweep::readColliPara).";
 
 				delete comp;
 				throw std::runtime_error(msg);
@@ -108,7 +108,7 @@ void readColliPara(std::vector<CamXML::Element*>::iterator i, Sweep::Component* 
 					// coalthresh contains no data.
 					std::string msg("Component ");
 					msg += comp->Name();
-					msg += " threshold contains no data (Sweep, MechParser::readComponents).";
+					msg += " threshold contains no data (Sweep::readColliPara).";
 
 					delete comp;
 					throw std::runtime_error(msg);
@@ -116,7 +116,7 @@ void readColliPara(std::vector<CamXML::Element*>::iterator i, Sweep::Component* 
 			} else {
 			std::string msg("Component ");
 			msg += comp->Name();
-			msg += " threshold is requried for collision efficiency model  (Sweep, MechParser::readComponents).";
+			msg += " threshold is requried for collision efficiency model (Sweep::readColliPara).";
 
 			delete comp;
 			throw std::runtime_error(msg);
@@ -127,7 +127,7 @@ void readColliPara(std::vector<CamXML::Element*>::iterator i, Sweep::Component* 
 			msg += comp->Name();
 			msg += " This type is not supported ";
 			msg += str;
-			msg += " at this moment  (Sweep, MechParser::readComponents).";
+			msg += " at this moment (Sweep::readColliPara).";
 
 			delete comp;
 			throw std::runtime_error(msg);

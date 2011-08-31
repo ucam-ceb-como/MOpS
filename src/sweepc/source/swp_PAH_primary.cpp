@@ -981,7 +981,8 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
 
             const unsigned int oldNumCarbon = (*it)->m_numcarbon; 
 
-            // Here updatePAH function for KMC_ARS model is called.
+            // Here updatePAH function in KMC_ARS model is called.
+            // waitingSteps is set to be 1 by dc516, details seeing KMCSimulator::updatePAH()
             sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1, Sweep::genrand_int, Sweep::genrand_real1, growthfact, (*it)->PAH_ID);
             (*it)->m_numcarbon=(*it)->m_pahstruct->numofC();
             (*it)->lastupdated=t;
