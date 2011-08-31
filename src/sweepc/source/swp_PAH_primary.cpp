@@ -1001,6 +1001,9 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
     }
 }
 
+// Find Xmer (monomer, dimer or trimer) and record its mass which will be used to create mass spectra
+// however, this function currently is only implenmented in PAHPrimary class
+// this means it is limited to PAH-PP model. 
 void PAHPrimary::FindXmer(std::vector<double> &out, Xmer m_xmer) const
 {
 	// dimer: a partilce with one primary containing 2 PAHs
@@ -1008,16 +1011,20 @@ void PAHPrimary::FindXmer(std::vector<double> &out, Xmer m_xmer) const
 		out.push_back(this->MassforXmer());
 }
 
+// Find particular primary particle with target number of PAHs ( this can be a range, details please see the implementation) 
+// and record num of C and H for each PAH, also push_back a divider (0,0,ID) at end to distinguish 
 void PAHPrimary::FindXmer(std::vector<std::vector<double> > &out, int target_num_PAH) const
 {
 	if (m_leftchild != NULL)
 		m_leftchild->FindXmer(out,target_num_PAH);
 	if (m_rightchild != NULL)
 		m_rightchild->FindXmer(out,target_num_PAH);
+    if (target_num_PAH-10<=0) std::cout<<"Warning: (target_num_PAH-10) return 0 or negative value in PAHPrimary::FindXmer()"<<std::endl;
 	if (m_PAH.size() <= (target_num_PAH+10) && m_PAH.size() >= (target_num_PAH-10))	
 		mass_PAH(out);
 }
 
+//calculate the mass of Xmer including C and H
 double PAHPrimary::MassforXmer() const
 { 
 	int sum = 0;
@@ -1029,6 +1036,7 @@ double PAHPrimary::MassforXmer() const
 	return sum;	
 }
 
+// dump information of this Xmer to a vector<vector<double> > 
 void PAHPrimary::mass_PAH(std::vector<std::vector<double> > &out) const
 {
 	std::vector<double> temp;

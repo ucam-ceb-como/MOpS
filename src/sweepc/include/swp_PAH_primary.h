@@ -157,18 +157,14 @@ public:
     double sqrtLW() const;
     double AvgCoalesc() const;
 
-	// Find Xmer (monomer, dimer or trimer) and record its mass which will be used to create mass spectra
-	// however, this function currently is only implenmented in PAHPrimary class
-	// this means it is limited to PAH-PP model. 
-	void FindXmer(std::vector<double> &out, Xmer m_xmer) const;
-	
-	// Find particular primary particle with target number of PAHs ( this can be a range, details please see the implementation) 
-	// and record num of C and H for each PAH, also push_back a divider (0,0,ID) at end to distinguish 
-	void FindXmer(std::vector<std::vector<double> > &out, int target_num_PAH) const;
-
-	void mass_PAH(std::vector<std::vector<double> > &out) const;
-
-	double MassforXmer() const;
+    //! Find Xmer, and store their information in a vector
+    void FindXmer(std::vector<double> &out, Xmer m_xmer) const;
+    //! Find Xmer which statisfy sort of condition, like target_num_PAH
+    void FindXmer(std::vector<std::vector<double> > &out, int target_num_PAH) const;
+    //! store PAH information in a vector
+    void mass_PAH(std::vector<std::vector<double> > &out) const;
+    //! return the mass of Xmer including C and H 
+    double MassforXmer() const;
 
 protected:
     //! Empty primary not meaningful
