@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+
+
+<mechanism name="soot model" units="CGS">
+    
+    
+    <!-- Define particle components. -->
+    
+    <component id="soot" type="bulk">
+      <description>soot</description>
+      <density units="g/cm3">1.47</density>
+      <molwt units="g/mol">0.0</molwt>
+      <coalthresh>0.98</coalthresh>
+      <growthfact>0.05</growthfact>
+      <minPAH>2</minPAH>
+    </component> 
+    
+
+    <particle id="[soot]" model="PAH_KMC" subtree="false">
+      <description />
+    </particle>
+
+    <pahinception />
+</mechanism>
