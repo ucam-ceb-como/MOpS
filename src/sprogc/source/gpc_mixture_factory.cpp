@@ -163,7 +163,7 @@ void MixtureFactory::Write(const Mixture &mix, std::ostream &out)
     if (out.good()) {
         // Write the Mixture Serial signature type to the stream.
         unsigned int type = (unsigned int)mix.SerialType();
-        out.write((char*)type, sizeof(type));
+        out.write((char*)&type, sizeof(type));
 
         // Serialize the mixture object.
         //mix.Serialize(out);
