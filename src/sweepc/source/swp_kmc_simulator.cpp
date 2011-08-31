@@ -129,6 +129,9 @@ real KMCSimulator::timeStep(real totalRate, real (*rand_u01)()) const {
 }
 
 //! Update structure of PAH after time dt
+// waiting step is set to be 1 by dc516, who did several tests to determine the impact of this parameter, 
+// the results of those tests turned out that it did not affect the results too much. 
+// Details can be find in Ongoing\Projects\c4e-dc516-Soot\Hard_coded_Parameters_mops\tests_for_waitingSteps_KMC
 void KMCSimulator::updatePAH(PAHStructure* pah, 
                             const real tstart, 
                             const real dt,  
