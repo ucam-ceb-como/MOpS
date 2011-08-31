@@ -129,7 +129,7 @@ real KMCSimulator::timeStep(real totalRate, real (*rand_u01)()) const {
 }
 
 //! Update structure of PAH after time dt
-real KMCSimulator::updatePAH(PAHStructure* pah, 
+void KMCSimulator::updatePAH(PAHStructure* pah, 
                             const real tstart, 
                             const real dt,  
                             const int waitingSteps,  
@@ -205,7 +205,6 @@ real KMCSimulator::updatePAH(PAHStructure* pah,
         }
         m_t = t_next;
     }
-    return t_max;
 }
 
 //! Outputs rates into a csv file (assuming all site counts as 1)
