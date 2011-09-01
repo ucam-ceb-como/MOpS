@@ -547,6 +547,15 @@ CamSoot::realVector CamSoot::rateAll
     //std::cout << "surfProdRate[iInception]  " << surfProdRate[iInception] << std::endl;
 
 
+    // Calculate the interpolated reduced moments
+    realVector wholeOrderRedMom;
+    wholeOrderRedMom.resize(moments.size(),0.0);
+    for(int r=0; r<nMoments; r++){
+    	wholeOrderRedMom[r] = moments[r]/moments[0];
+    }
+    interpolateReducedMoments(wholeOrderRedMom);
+
+
     // Calculate coagulation rates
     // coagRates is rate of change of moments due to coagulation
     if (moments[0] > m0Threshold)			// Threshold check
@@ -713,19 +722,16 @@ CamSoot::realVector CamSoot::rateCoagulation
     CamMath cm;
 
     /*
-     *since the lagrangian interpolations are
-     *carried out on the log of reduced moments
-     *store the exponents of the moments
-     */
-
+    *ank25:  Move the calculation of interpolated reduced moments
+    *out of coagulation and into ratesAll
     realVector wholeOrderRedMom;
     wholeOrderRedMom.resize(mom.size(),0.0);
 
     for(int r=0; r<nMoments; r++){
     	wholeOrderRedMom[r] = mom[r]/mom[0];
     }
-    interpolateReducedMoments(wholeOrderRedMom);	/// ank25:  how does this work for 5 moments?
-
+    interpolateReducedMoments(wholeOrderRedMom);
+     */
 
      /*
      *evaluate the grid functions

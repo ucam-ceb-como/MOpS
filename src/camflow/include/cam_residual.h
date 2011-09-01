@@ -225,6 +225,22 @@ namespace Camflow
              */
             virtual void getTemperatureVector(std::vector<doublereal>& temp);
             /*
+             *return the average soot diameter
+             */
+            virtual void getSootAverageDiameterVector(std::vector<doublereal>& temp);
+            /*
+             *return the soot dispersion
+             */
+            virtual void getSootDispersionVector(std::vector<doublereal>& temp);
+            /*
+             *return the soot surface area
+             */
+            virtual void getSootSurfaceAreaVector(std::vector<doublereal>& temp);
+            /*
+             *return the soot volume fraction
+             */
+            virtual void getSootVolumeFractionVector(std::vector<doublereal>& temp);
+            /*
              *return the density vecot
              */
             virtual void getDensityVector(std::vector<doublereal>& density);

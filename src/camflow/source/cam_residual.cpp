@@ -396,7 +396,30 @@ void CamResidual::getViscosityVector(std::vector<doublereal>& viscosity){
 void CamResidual::getTemperatureVector(std::vector<doublereal>& temp){
     temp = m_T;
 }
-
+/*
+ *return the average soot diameter
+ */
+void CamResidual::getSootAverageDiameterVector(std::vector<doublereal>& temp){
+    temp = avgSootDiamMaster;
+}
+/*
+ *return the soot dispersion
+ */
+void CamResidual::getSootDispersionVector(std::vector<doublereal>& temp){
+    temp = dispersionMaster;
+}
+/*
+ *return the soot surface area
+ */
+void CamResidual::getSootSurfaceAreaVector(std::vector<doublereal>& temp){
+    temp = sootSurfaceAreaMaster;
+}
+/*
+ *return the soot volume fraction
+ */
+void CamResidual::getSootVolumeFractionVector(std::vector<doublereal>& temp){
+    temp = sootVolumeFractionMaster;
+}
 /*
  *  Return the specific heat
  */

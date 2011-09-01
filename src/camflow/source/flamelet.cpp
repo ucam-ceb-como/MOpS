@@ -1207,7 +1207,7 @@ void FlameLet::energyResidual
                i,
                m_T[i],
                opPre,
-               m_SootFv[i]
+               sootVolumeFractionMaster[i]
             );
 
             // This is the new energy residual term, accounting for radiation.
@@ -1329,8 +1329,7 @@ void FlameLet::saveMixtureProp(doublereal* y)
   	        }
 
     	    // Calculate soot properties at each Z point.
-            // Ideally we would only do this at the major output times rather than at each call
-    	    // of saveMixtureProp. (Inefficient)
+    	    // We need volume fraction for radiation.
     	    avgSootDiamMaster[i] = sootMom_.avgSootDiam();
     	    dispersionMaster[i] = sootMom_.dispersion();
     	    sootSurfaceAreaMaster[i] = sootMom_.sootSurfaceArea(moments(i,0));
@@ -1546,14 +1545,14 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<doub
         // Add the moments and soot properties to the data output
         if (sootMom_.active())
         {
-            for(int l=0; l<nMoments; l++)
-            {
-            	data.push_back(soln[i*nVar+ptrT+1+l]);
-            }
             data.push_back(avgSootDiamMaster[i]);
             data.push_back(dispersionMaster[i]);
             data.push_back(sootSurfaceAreaMaster[i]);
             data.push_back(sootVolumeFractionMaster[i]);
+        	for(int l=0; l<nMoments; l++)
+            {
+            	data.push_back(soln[i*nVar+ptrT+1+l]);
+            }
         }
         reporter_->writeCustomFileOut(data);
     }
@@ -1606,16 +1605,16 @@ std::vector<std::string> FlameLet::header()
     headerData.push_back("sumfracs");
     if (sootMom_.active())
     {
+        headerData.push_back("SootAvDiam");
+        headerData.push_back("SootDisp");
+        headerData.push_back("SootArea");
+        headerData.push_back("SootVolFrac");
         headerData.push_back("M0");
         headerData.push_back("M1");
         headerData.push_back("M2");
         headerData.push_back("M3");
         headerData.push_back("M4");
         headerData.push_back("M5");
-        headerData.push_back("SootAvDiam");
-        headerData.push_back("SootDisp");
-        headerData.push_back("SootSurfArea");
-        headerData.push_back("SootVolFrac");
     }
 
     return headerData;
