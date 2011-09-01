@@ -1057,7 +1057,7 @@ real ParticleModel::collisionIntegralDiameter(const Cell &sys, const Particle &s
 
 
 /*!
- * Dimensionless temperature for use in formul\ae from
+ * Dimensionless temperature for use in formulae from
  * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
  * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
  *
@@ -1078,7 +1078,7 @@ real ParticleModel::collisionIntegralTemperature(const Cell &sys, const Particle
 }
 
 /*!
- * Proportion of diffuse scattering result to use in formul\ae from
+ * Proportion of diffuse scattering result to use in formulae from
  * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
  * of small particles. II. Application", Phys. Rev. E 68:061207 (2003).
  * This formula is most clearly presented in the follow on paper:

@@ -148,7 +148,7 @@ private:
     //! Time at which position was valid
     real m_PositionTime;
 
-    //! Statistical weight of particle units: \f$ m^{-3}f\$
+    //! Statistical weight of particle units: \f$ m^{-3}\f$
     real m_StatWeight;
 
     //! Number of coagulations experienced by this particle

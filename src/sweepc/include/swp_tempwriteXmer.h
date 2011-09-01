@@ -1,5 +1,5 @@
 /*!
-  * \Author     Dongping Chen (dc516)
+  * \author     Dongping Chen (dc516)
   * \file       swp_writeXmer.h
   *
   * \brief      Implementation for swp_kmc_simulator.h

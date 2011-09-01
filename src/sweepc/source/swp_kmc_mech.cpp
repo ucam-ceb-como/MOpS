@@ -1,5 +1,5 @@
 /*!
-  * \Author     Zakwan Zainuddin (zz260)
+  * \author     Zakwan Zainuddin (zz260)
   * \file       swp_kmc_mech.cpp
   *
   * \brief        Implementation of the KMCMechanism class declared in swp_kmc_gasph.h

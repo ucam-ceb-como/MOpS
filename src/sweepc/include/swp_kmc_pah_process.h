@@ -1,5 +1,5 @@
 /*!
-  * \Author     Zakwan Zainuddin (zz260)
+  * \author     Zakwan Zainuddin (zz260)
   * \file       swp_kmc_structure_processes.h
   *
   * \brief      Defines the data structure which holds information of PAH molecules

@@ -1,4 +1,4 @@
-/*! \file tree.h -*- C++ -*-
+/*! \file binary_tree.hpp -*- C++ -*-
  * \brief Declaration of a binary tree for particle selection and rate summation.
  * \author  Robert I A Patterson
 
@@ -81,6 +81,8 @@ template<class Weight, class Selectee> class BinaryTree
     /*! Binary tree provides structured sums of this type,
      * addition must be defined for this type. */
     typedef Weight weight_type;
+
+    //!Constant copy of sum of the values in the leaves of a (sub-)tree.
     typedef const weight_type const_weight_type; //extra to STL
 
     class iterator;
@@ -88,6 +90,8 @@ template<class Weight, class Selectee> class BinaryTree
 
     //!Difference between two iterators.
     typedef int difference_type;
+
+    //!Type for counting numbers of entries
     typedef unsigned size_type;
 
 
@@ -110,6 +114,11 @@ template<class Weight, class Selectee> class BinaryTree
      * like the key of a pair associative STL container.
      */
     typedef std::pair<const weight_type, return_pointer_type> value_type;
+
+    //!The user should view a binary tree as a container of these.
+    /*!
+     *See \ref value_type
+     */
     typedef const value_type const_value_type; //extra to STL
 
     //! Create an empty tree with no space for particles
@@ -250,7 +259,7 @@ template<class Weight, class Selectee> class BinaryTree<Weight, Selectee>::node_
     bool isEqual(const node_type& b);
 };
 
-//const_iterator class for BinaryTree
+//! Iterator to access BinaryTree without changing its contents
 template<class Weight, class Selectee> class BinaryTree<Weight, Selectee>::const_iterator {
   public:
     //default constructor
@@ -310,7 +319,7 @@ template<class Weight, class Selectee> class BinaryTree<Weight, Selectee>::const
 //    const size_type sentry_value;
 };
 
-//Iterator class for BinaryTree
+//! Iterator class for BinaryTree
 template<class Weight, class Selectee> class BinaryTree<Weight, Selectee>::iterator {
   public:
     //default constructor
