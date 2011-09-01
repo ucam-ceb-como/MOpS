@@ -56,6 +56,7 @@
 #include "swp_imgnode.h"
 #include "swp_PAH_primary.h"
 #include "swp_particle_model.h"
+#include "swp_silica_primary.h"
 #include <string>
 #include <fstream>
 #include <vector>
@@ -108,8 +109,10 @@ public:
 
 	void constructSubParttree(const Sweep::AggModels::PAHPrimary *p);
 	void constructSubParttree(const SubParticle *sp);
+	void constructSubParttree(const Sweep::AggModels::SilicaPrimary *p);
 	void copysptinsert(const SubParticle *sp);
 	void copysptinsert(const Sweep::AggModels::PAHPrimary *p);
+	void copysptinsert(const Sweep::AggModels::SilicaPrimary *p);
 	void Write3dout(std::ofstream &file, double x, double y, double z);
 	void LengthWidth(double &L, double &W);
     double RadiusofGyration();

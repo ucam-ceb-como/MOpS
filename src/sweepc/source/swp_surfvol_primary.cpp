@@ -273,7 +273,7 @@ SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs, int (*rand_int)(in
 
 // This routine sinters the Primary for the given length of
 // time using the provided sintering model.
-void SurfVolPrimary::Sinter(real dt, const Cell &sys,
+void SurfVolPrimary::Sinter(real dt, Cell &sys,
                             const Processes::SinteringModel &model,
                             real (*rand_u01)())
 {
