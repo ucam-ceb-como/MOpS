@@ -344,6 +344,18 @@ namespace Camflow {
             //! Return the specific heat given the independent variable.
             doublereal getSpecificHeat(const doublereal axPos);
 
+            //! return the sootAverageDiameter
+            doublereal getSootAverageDiameter(const doublereal axpos);
+
+            //!return the sootDispersion
+            doublereal getSootDispersion(const doublereal axpos);
+
+             //!return the sootSurfaceArea
+            doublereal getSootSurfaceArea(const doublereal axpos);
+
+             //!return the sootVolumeFraction
+            doublereal getSootVolumeFraction(const doublereal axpos);
+
             //! Return the thermal conductivity given the independent variable.
             doublereal getThermalConductivity(const doublereal axPos);
 
@@ -418,6 +430,11 @@ namespace Camflow {
             std::vector<doublereal> mVelocity;   //velocity
             std::vector<doublereal> avgMolWtVector;   // Average Molar Weight of the mixture
             std::vector<doublereal> wdotA4;   // rate of production of pyrene
+            std::vector<doublereal> sootAverageDiameterVector;
+            std::vector<doublereal> sootDispersionVector;
+            std::vector<doublereal> sootSurfaceAreaVector;
+            std::vector<doublereal> sootVolumeFractionVector;
+
             Array2D mDiff;                      //Diffusion coefficients
 
             doublereal stMixtureFrac;       //stoichiometric mixture fraction

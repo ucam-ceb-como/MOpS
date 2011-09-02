@@ -68,6 +68,9 @@ namespace Processes
         // Condensation processes.
         Condensation_ID=200,    // Condensation process.
 
+		// Interparticle processes.
+        InterParticle_ID=300,  // Silica interparticle reaction
+
         // ARSSC model processes. (no longer used)
         ARSSC_Inception_ID=1000,   // ARS-SC inception process.
         ARSSC_Reaction_ID=1001,    // ARS-SC reaction process.

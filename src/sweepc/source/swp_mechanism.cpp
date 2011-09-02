@@ -748,6 +748,24 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
             sp.UpdateCache();
 
     }
+
+    if (AggModel() == AggModels::Silica_ID) {
+    	// Calculate delta-t and update particle time.
+    	real dt;
+    	dt = t - sp.LastUpdateTime();
+    	sp.SetTime(t);
+
+    	// Sinter the particles for the silica model (as no deferred process)
+    	if (m_sint_model.IsEnabled()) {
+    		sp.Sinter(dt, sys, m_sint_model, rand_u01);
+    	}
+
+    	// Check particle is valid and recalculate cache.
+    	if (sp.IsValid()) {
+    		sp.UpdateCache();
+    	}
+    }
+
     // If there are no deferred processes then stop right now.
     if (m_anydeferred) {
         PartProcPtrVector::const_iterator i;

@@ -289,7 +289,10 @@ void Interface::getFlameletVariables(FlameLet* const flmlt)
     flmlt->getVelocity(mVelocity);
     flmlt->getAverageMolarWeight(avgMolWtVector);
     flmlt->getWdotA4(wdotA4);
-
+    flmlt->getSootAverageDiameterVector(sootAverageDiameterVector);
+    flmlt->getSootDispersionVector(sootDispersionVector);
+    flmlt->getSootSurfaceAreaVector(sootSurfaceAreaVector);
+    flmlt->getSootVolumeFractionVector(sootVolumeFractionVector);
 }
 
 /**
@@ -580,6 +583,38 @@ doublereal Interface::getMoleFrac(const int spIndex, const doublereal axpos){
 doublereal Interface::getTemperature(const doublereal axpos){
 
     doublereal temp = getVariableAt(axpos,TVector);
+    return temp;
+}
+/*
+ *return the sootAverageDiameter
+ */
+doublereal Interface::getSootAverageDiameter(const doublereal axpos){
+
+    doublereal temp = getVariableAt(axpos,sootAverageDiameterVector);
+    return temp;
+}
+/*
+ *return the sootDispersion
+ */
+doublereal Interface::getSootDispersion(const doublereal axpos){
+
+    doublereal temp = getVariableAt(axpos,sootDispersionVector);
+    return temp;
+}
+/*
+ *return the sootSurfaceArea
+ */
+doublereal Interface::getSootSurfaceArea(const doublereal axpos){
+
+    doublereal temp = getVariableAt(axpos,sootSurfaceAreaVector);
+    return temp;
+}
+/*
+ *return the sootVolumeFraction
+ */
+doublereal Interface::getSootVolumeFraction(const doublereal axpos){
+
+    doublereal temp = getVariableAt(axpos,sootVolumeFractionVector);
     return temp;
 }
 /*

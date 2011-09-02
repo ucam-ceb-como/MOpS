@@ -51,6 +51,7 @@
 #include "swp_weighted_constcoag.h"
 #include "swp_pah_inception.h"
 #include "swp_dimer_inception.h"
+#include "swp_silica_interparticle.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -116,6 +117,9 @@ ParticleProcess *const ProcessFactory::ReadPartProcess(std::istream &in,
                 break;
             case Condensation_ID:
                 proc = new Condensation(in, mech);
+                break;
+			case InterParticle_ID:
+                proc = new InterParticle(in, mech);
                 break;
             case ActSiteRxn_ID:
                 return new ActSiteReaction(in, mech);
