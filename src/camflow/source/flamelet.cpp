@@ -1569,7 +1569,7 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<doub
     file<<std::endl;
     for (int i=0; i<mCord; ++i)
     {
-        file << setw(5) << i << " ";
+        file << setw(5) << axpos[i] << " ";
         for (int l=0; l<nSpc; l++)
         {
             file << setprecision(5) << setw(8) <<  Lewis(i,l) << " ";
