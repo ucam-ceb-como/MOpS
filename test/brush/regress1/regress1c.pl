@@ -68,26 +68,35 @@ my $momentFile;
 open($momentFile, "<regress1c-NucCondCoagMerged_partstats.csv") or die "ERR: failed to open merged moment file: $!";
 
 my $m0 = 0;
+my $m0var = 0;
 my $m1 = 0;
+my $m1var = 0;
 my $count = 0;
 
 while(<$momentFile>) {
   my @fields = split /,/;
 
   if(($fields[0] =~ /^\d+/) && (abs($fields[0] - 0.02) < 1e-4 )) {
+      # Third field should be the zeroth moment
       $m0 += $fields[3];
+      $m0var += $fields[3] * $fields[3];
       #print "$fields[3], ";
+
       $m1 += $fields[11];
+      $m1var += $fields[11] * $fields[11];
       #print "$fields[11] \n";
       ++$count;
   }
 }
 
+# Estimate confidence intervals
+$m0var = 3.29*sqrt(($m0var - $m0 * $m0 / $count)/($count - 1)/$count);
+$m1var = 3.29*sqrt(($m1var - $m1 * $m1 / $count)/($count - 1)/$count);
+
 # Get mean values
 $m0 /= $count;
 $m1 /= $count;
 
-print "$m0, $m1\n";
 
 # Count number of failures
 my $failures = 0;
@@ -98,7 +107,11 @@ my $failures = 0;
 #m0: (4.450 +- 0.090) e10 cm^-3
 #m1: (4.662 +- 0.108) e-11 g cm^-3
 # svn r821
+# With 16384 max particles git 89649c7c84... gives
+#m0: (4.474 +- 0.035) e17 m^-3
+#m1: (3.830 +- 0.032) e-8 kg m^-3
 
+print "$m0, $m0var, $m1, $m1var\n";
 if(abs($m0 - 4.450e16) > 3e14) {
   print "Simulated mean M0 was $m0, when 4.450e16 m^-3 expected\n";
   print "**************************\n";
