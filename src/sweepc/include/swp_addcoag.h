@@ -44,7 +44,6 @@
 #define	SWP_ADDCOAG_H
 
 #include "swp_coagulation.h"
-//#include "swp_gas_profile.h"
 
 namespace Sweep
 {
@@ -107,9 +106,7 @@ public:
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
         int (*rand_int)(int, int), 
-        real(*rand_u01)(),
-		//Sweep::GasProfile* gp=NULL,
-        Transport::TransportOutflow *out = 0
+        real(*rand_u01)()
         ) const;
     
 private:

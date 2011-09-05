@@ -50,7 +50,12 @@ CamResidual::CamResidual
   dz(cg.getGeometry()),
   avgMolWt(mCord,0.0),
   moments(mCord,nMoments),			// ank25: moments analogous to s_mf
-  moments_dot(mCord,nMoments)       // ank25: moments rate analogous to s_wdot
+  moments_dot(mCord,nMoments),       // ank25: moments rate analogous to s_wdot
+  sootComponentRatesAllCells(mCord,nMoments*4),  // ank25: used to output soot rates
+  avgSootDiamMaster(mCord,0.0),	  // soot properties derived from moments.
+  dispersionMaster(mCord,0.0),
+  sootSurfaceAreaMaster(mCord,0.0),
+  sootVolumeFractionMaster(mCord,0.0)
 {}
 
 CamResidual::~CamResidual()
@@ -269,6 +274,16 @@ void CamResidual::extractSootMoments(std::vector<doublereal>& vec){
 
 }
 
+void CamResidual::extractSpeciesAndEnergyVector(std::vector<doublereal>& vec){
+    vec.resize(cellEnd*(nSpc+1),0);
+    for(int i=0; i<cellEnd; i++){
+        for(int l=0; l<nSpc; l++)
+            vec[i*nSpc+l] = solvect[i*nVar+l];
+        vec[i*nSpc+ptrT] = solvect[i*nVar+ptrT];
+    }
+}
+
+
 void CamResidual::extractMomentum(std::vector<doublereal>& vec){
     vec.resize(cellEnd,0);
     for(int i=0; i<cellEnd; i++)
@@ -291,6 +306,15 @@ void CamResidual::mergeSpeciesVector(doublereal* vec){
             solvect[i*nVar+l] = vec[i*nSpc+l];
     }
 }
+
+void CamResidual::mergeSpeciesAndEnergyVector(doublereal* vec){
+    for(int i=0; i<cellEnd; i++){
+        for(int l=0; l<nSpc; l++)
+            solvect[i*nVar+l] = vec[i*nSpc+l];
+        solvect[i*nVar+ptrT] = vec[i*nSpc+ptrT];
+    }
+}
+
 
 /*
  *soot moments are arranged after species and temperature
@@ -334,6 +358,14 @@ void CamResidual::solve(std::vector<Thermo::Mixture>& cstrs,
 void CamResidual::getSpeciesMassFracs(Array2D& mf){
     mf = s_mf;
 }
+
+/*
+ *return the soot moments array
+ */
+void CamResidual::getMoments(Array2D& moments_){
+    moments_ = moments;
+}
+
 /*
  *return the average molar weight of the mixture to the calling program
  */
@@ -364,7 +396,30 @@ void CamResidual::getViscosityVector(std::vector<doublereal>& viscosity){
 void CamResidual::getTemperatureVector(std::vector<doublereal>& temp){
     temp = m_T;
 }
-
+/*
+ *return the average soot diameter
+ */
+void CamResidual::getSootAverageDiameterVector(std::vector<doublereal>& temp){
+    temp = avgSootDiamMaster;
+}
+/*
+ *return the soot dispersion
+ */
+void CamResidual::getSootDispersionVector(std::vector<doublereal>& temp){
+    temp = dispersionMaster;
+}
+/*
+ *return the soot surface area
+ */
+void CamResidual::getSootSurfaceAreaVector(std::vector<doublereal>& temp){
+    temp = sootSurfaceAreaMaster;
+}
+/*
+ *return the soot volume fraction
+ */
+void CamResidual::getSootVolumeFractionVector(std::vector<doublereal>& temp){
+    temp = sootVolumeFractionMaster;
+}
 /*
  *  Return the specific heat
  */

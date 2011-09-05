@@ -157,13 +157,13 @@ class CamSoot {
          */
         void report(int nCells);
 
-        /*-------------------------------------------                           
+        /*-------------------------------------------
          *
          * NEW FUNCTIONS ADDED
-         *                  
+         *
          *---------------------------------------------/
          */
-        
+
         /*!
          * Initialize the soot moments
          */
@@ -190,11 +190,18 @@ class CamSoot {
 
         realVector showGasPhaseRates(int nSpecies);
 
+        realVector showSootComponentRates(int nMoments);
+
+        doublereal avgSootDiam();
+        doublereal dispersion();
+        doublereal sootSurfaceArea(doublereal M0);
+        doublereal sootVolumeFraction(doublereal M0);
+
     private:
 
         const doublereal rhoSoot;
         const doublereal lambda;
-        const int atomsPerDimer;
+        int atomsPerDimer;
         int numCAtomInception;
         int nMoments;
         int lowFrac, highFrac;
@@ -214,10 +221,14 @@ class CamSoot {
         doublereal kSurf;
         doublereal kPAH;
         doublereal dia_PAH;
+        doublereal m0Threshold;
         doublereal D1_PAH;
         doublereal firstMom;
+        doublereal CD1;
 
         stringVector sootSpecies;
+
+        realVector nucRates, coagRates, cdRates, sRates;	// Rate of change of moments
 
         Array2D bnCoeff,powPAH, prime;
         Array2D wdot; //,surfProdRate;

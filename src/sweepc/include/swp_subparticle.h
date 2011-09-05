@@ -161,7 +161,7 @@ public:
     // sintering model.
     virtual void Sinter(
         real dt,         // Delta-t for sintering.
-        const Cell &sys, // System which defines particle's environment.
+        Cell &sys, // System which defines particle's environment.
         const Processes::SinteringModel &model, // Sintering model to use.
         real (*rand_u01)() // Generate U[0,1] samples
         );

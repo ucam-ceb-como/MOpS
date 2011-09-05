@@ -209,7 +209,6 @@ real SurfaceReaction::RateTerms(real t, const Cell &sys,
  * \param[in]       iterm       Process term responsible for this event
  * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
- * \param[out]      out         Details of any particle being transported out of system
  *
  * \return      0 on success, otherwise negative.
  */
@@ -217,9 +216,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
                              const Geometry::LocalGeometry1d& local_geom,
                              unsigned int iterm,
                              int (*rand_int)(int, int), 
-                             Sweep::real(*rand_u01)(), 
-                             Sweep::GasProfile* gp,
-                             Sweep::Transport::TransportOutflow *out) const
+                             Sweep::real(*rand_u01)()) const
 {
     int i = sys.Particles().Select(static_cast<Sweep::PropID>(m_pid), rand_int, rand_u01);
 
@@ -231,7 +228,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
         if (m_mech->AnyDeferred()) {
             // Calculate majorant rate then update the particle.
             real majr = MajorantRate(t, sys, *sp);
-            m_mech->UpdateParticle(*sp, sys, t, rand_u01, gp);
+            m_mech->UpdateParticle(*sp, sys, t, rand_u01);
 
             // Check that the particle is still valid.
             if (sp->IsValid()) {

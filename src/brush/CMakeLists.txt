@@ -6,12 +6,16 @@ cmake_minimum_required(VERSION 2.6)
 
 project (BRUSH)
 
+file(GLOB_RECURSE INCS "include/*.h")
+source_group("Header Files" FILES ${INCS})
+
 add_library(brush source/pred_corr_solver.cpp
                   source/reactor1d.cpp
                   source/reset_chemistry.cpp
                   source/settings_io.cpp
                   source/simulator.cpp
-                  source/moonmd_interface.cpp)
+                  source/moonmd_interface.cpp
+				  ${INCS})
 
 include_directories(include 
                     ${Boost_INCLUDE_DIRS}

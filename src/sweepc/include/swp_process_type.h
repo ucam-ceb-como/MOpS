@@ -68,6 +68,9 @@ namespace Processes
         // Condensation processes.
         Condensation_ID=200,    // Condensation process.
 
+		// Interparticle processes.
+        InterParticle_ID=300,  // Silica interparticle reaction
+
         // ARSSC model processes. (no longer used)
         ARSSC_Inception_ID=1000,   // ARS-SC inception process.
         ARSSC_Reaction_ID=1001,    // ARS-SC reaction process.
@@ -84,12 +87,6 @@ namespace Processes
         Weighted_Additive_Coagulation_ID = 10004,
         //! Constant coagulation with weighted particles
         Weighted_Constant_Coagulation_ID = 10005,
-
-        // Transport processes
-        //! Particle diffusion
-        Diffusion_ID=100000,
-        //! Particle advection
-        Advection_ID=100001,
 
     };
 }

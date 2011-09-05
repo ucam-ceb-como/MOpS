@@ -260,6 +260,7 @@ void Batch::updateMixture(doublereal* y)
 	    {
           wdot[i] = wdot[i] + wdotSootGasPhase[i];
 	    }
+	    //wdot[94] = wdotSootGasPhase[94];  ank25:  Temporary to hold PAH constant
 
     }
 }
@@ -272,6 +273,7 @@ void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f)
     {
         f[l] = (1.0/camMixture_->MassDensity()) * (*spv_)[l]->MolWt() * wdot[l];
     }
+    //f[94] = 0.0; // ank25:  Temporary to hold PAH constant
 }
 
 //temperature residual
@@ -328,7 +330,6 @@ void Batch::sootResidual(const doublereal& x, doublereal* y, doublereal* f)
         {
             f[ptrT+1+m] = momRates[m];
         }
-
 
     	/*
     	std::vector<doublereal> mom;

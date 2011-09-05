@@ -57,12 +57,14 @@ CamSoot::CamSoot()
 :
     rhoSoot(1.8e+03),        //kg/m^3
     lambda(2.3e15),          //cm^-2 (Keep this in cgs units. We do all surface chem calcs in cgs)
-    atomsPerDimer(32),
+    atomsPerDimer(32),    	 // Override this later as 2 x numCAtomInception
     D1_PAH(2.42e-10),        //m  (This is the size of a benzene ring, not the PAH diameter)
+							 // 2.42 = 1.395*sqrt(3), 1.395 A is the C-C in aromatics
     momentON(false),
-    lowFrac(-4)
-{ 
-    
+    lowFrac(-4),
+    CD1(pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0))
+{
+
     CamConverter convert;
     std::string fileName("camflow.xml");
 
@@ -116,6 +118,13 @@ void CamSoot::readSoot
             throw CamError("Number of moments not specified\n");
         }
 
+        subnode = soot->GetFirstChild("M0threshold");
+        if (subnode!=NULL){
+            m0Threshold = cdble(subnode->Data());
+        }else{
+            throw CamError("M0 Threshold not specified\n");
+        }
+
         subnode = soot->GetFirstChild("M0");
         if (subnode != NULL){
             firstMom = cdble(subnode->Data());
@@ -133,6 +142,8 @@ void CamSoot::readSoot
         subnode = soot->GetFirstChild("cPAH");
         if (subnode != NULL){
             numCAtomInception = int(cdble(subnode->Data()));
+            atomsPerDimer = 2.0 * numCAtomInception;
+
         }
 
         std::string atrVal = soot->GetAttributeValue("regime");
@@ -365,9 +376,9 @@ void CamSoot::initMoments(realVector& soln,int nCells){
      *rest of the moments
      */
     for(int i=1; i<nMoments; i++){
-       
+
     	// ank25: Do we need to multiply by 1e6 here?
-        soln.push_back(soln[i-1+st]+ log(doublereal(atomsPerDimer)));
+        soln.push_back(soln[i-1+st] * log(doublereal(atomsPerDimer)));
 
     }
 }
@@ -421,25 +432,25 @@ void CamSoot::initMomentsConstants(Mechanism &mech){
      // when calculating reduced mass.
      // Units of mPAH are kg per molecule.
      // Units kB are m^2 kg s^-2 K^-1
-     Beta_nucl = 2.2*sqrt(16*PI*kB/mPAH)*dia_PAH*dia_PAH;
+     Beta_nucl = 2.2*sqrt(4*PI*kB/mPAH)*dia_PAH*dia_PAH;
 
     /*·
      * Multiplication by NA is carried out to avoid it while
      * evaluating the rates
      */
     Beta_nucl *= NA*NA;
+    //std::cout << "beta_nuc  " << Beta_nucl << std::endl;
 
 
     /*--------------------------------------------------------------------------
      *                constant for free molecular coagulation
      *-------------------------------------------------------------------------/
      */
-    
+
     // ank25:  This almost matches eqn 13 in Frenklach 2002.
     // However here we have the additional term cMass/NA
     // Also need to multiply by sqrt(T) later on.
     Beta_fm = 2.2*sqrt(6*kB/rhoSoot)* pow(3*(cMass/NA)/(4*PI*rhoSoot),(1.0/6.0));
-
 
     /*--------------------------------------------------------------------------
      *               constant for condensation
@@ -448,6 +459,8 @@ void CamSoot::initMomentsConstants(Mechanism &mech){
     Beta_cd = 2.2*sqrt(PI*kB/(2*cMass/NA))*NA;
     //diameter of one particle
     doublereal CD1 = pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0);
+    //cout << "D1_PAH after unit conv: " << D1_PAH << endl;
+
     doublereal CD1_PAH = D1_PAH*sqrt(2.0/3.0);
     doublereal CH2 = Beta_cd*CD1_PAH*CD1_PAH;
     doublereal CHS = Beta_cd* 2* CD1_PAH*CD1;
@@ -488,7 +501,7 @@ void CamSoot::residual
 {
     for (int r=0; r<nMoments; ++r)
     {
-        f[r] = wdot[r];        
+        f[r] = wdot[r];
     }
 }
 
@@ -503,7 +516,7 @@ CamSoot::realVector CamSoot::rateAll
 {
 
     realVector rates;  // Total rate of change of moments
-    realVector nucRates, coagRates, cdRates, sRates;	// Rate of change of moments
+    //realVector nucRates, coagRates, cdRates, sRates;	// Rate of change of moments
     realVector prodRates; 	// Rate of change of has phase species due to surface chem
     doublereal prodRatePAHCond; 	// Rate of change of PAH due to condensation
 
@@ -521,8 +534,9 @@ CamSoot::realVector CamSoot::rateAll
     // Calculate nucleation rate
     // nucRates is rate of change of moments due to nucleation
     nucRates = rateNucleation(conc[iInception],T);
+
     // Remove two PAH.
-    surfProdRate[iInception]= -2 * nucRates[0] / NA;
+    surfProdRate[iInception]= -2.0 * nucRates[0] / NA;
 
 	// Check the nucleation rates
     //std::cout << "nucRates[0]  " << nucRates[0] << std::endl;
@@ -534,9 +548,19 @@ CamSoot::realVector CamSoot::rateAll
     //std::cout << "surfProdRate[iInception]  " << surfProdRate[iInception] << std::endl;
 
 
+    // Calculate the interpolated reduced moments
+    realVector wholeOrderRedMom;
+    wholeOrderRedMom.resize(moments.size(),0.0);
+    for(int r=0; r<nMoments; r++){
+    	wholeOrderRedMom[r] = moments[r]/moments[0];
+    }
+    interpolateReducedMoments(wholeOrderRedMom);
+
+
     // Calculate coagulation rates
     // coagRates is rate of change of moments due to coagulation
-    coagRates = rateCoagulation(moments,T);
+    if (moments[0] > m0Threshold)			// Threshold check
+    	coagRates = rateCoagulation(moments,T);
 
 	// Check the coagulation rates
     //std::cout << "coagRates[0]  " << coagRates[0] << std::endl;
@@ -551,11 +575,14 @@ CamSoot::realVector CamSoot::rateAll
     // cdRates is rate of change of moments due to condensation
     // prodRatePAHCond is rate of change in PAH due to condensation.
     //doublereal tempPAHConc = conc[iInception];
-    cdRates = rateCondensation(moments, T,conc[iInception]);
-    prodRatePAHCond = -cdRates[1]/numCAtomInception/NA;
-    surfProdRate[iInception] += prodRatePAHCond;
 
-	// Check the condenstation rates
+    if (moments[0] > m0Threshold)		// Threshold check
+    {
+    	cdRates = rateCondensation(moments, T,conc[iInception]);
+    	prodRatePAHCond = -cdRates[1]/numCAtomInception/NA;
+    	surfProdRate[iInception] += prodRatePAHCond;
+    }
+	// Check the condensation rates
     //std::cout << "cdRates[0]  " << cdRates[0] << std::endl;
     //std::cout << "cdRates[1]  " << cdRates[1] << std::endl;
     //std::cout << "cdRates[2]  " << cdRates[2] << std::endl;
@@ -569,15 +596,17 @@ CamSoot::realVector CamSoot::rateAll
     // prodRatesSurface is rate of change of gas phase species due to surface chemistry
     // sRates is rate of change of moments due to surface chemistry
 
-    rateSurface(conc,T,moments,prodRates,sRates);
-    sRates[0] = 0.0; // Surface chem should not affect M0.  (Why is this needed here?)
+    if (moments[0] > m0Threshold)		// Threshold check
+    {
+    	rateSurface(conc,T,moments,prodRates,sRates);
+    	sRates[0] = 0.0; // Surface chem should not affect M0.  (Why is this needed here?)
 
-
+/*
     // Oxidation regime.
     // todo: it would be better to include all this in rateSurface function
     if(sRates[1] <= 0){
 
-        //std::cout << "In oxidation regime."  << std::endl;
+        std::cout << "In oxidation regime."  << std::endl;
 
         realVector f;
         f.resize(nMoments,0.0);
@@ -599,8 +628,9 @@ CamSoot::realVector CamSoot::rateAll
         }
         sRates[0] = 0.0;
     }
-
-	// Check the surface rates rates
+*/
+    }
+	// Check the surface rates
     //std::cout << "sRates[0]  " << sRates[0] << std::endl;
     //std::cout << "sRates[1]  " << sRates[1] << std::endl;
     //std::cout << "sRates[2]  " << sRates[2] << std::endl;
@@ -632,15 +662,16 @@ CamSoot::realVector CamSoot::rateAll
     rates.resize(nMoments,0.0);
     for (int m=0; m<nMoments; ++m)
     {
-    	//rates[m] = (nucRates[m]+coagRates[m])/moments[m];
-    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m])/moments[m];
-    	// rates[m] = (nucRates[m])/moments[m];
+    	//rates[m] = (nucRates[m]);
+    	//rates[m] = (nucRates[m]+coagRates[m]);
+    	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);
+    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
+    	//rates[m] = (nucRates[m]+coagRates[m]+cdRates[m]);
     }
 
     // Note: This only returns the rate of change of moments.
     // Does not return the rate of change of gas phase species.
     return rates;
-
 }
 
 
@@ -663,7 +694,7 @@ CamSoot::realVector CamSoot::rateNucleation
      *nucleation rate for the zeroth moment
      */
     nucRates[0] = kNucl* std::max(concPAH,0.0)*concPAH;
-    
+
     /*
      *number of carbon atoms per dimer
      */
@@ -692,11 +723,8 @@ CamSoot::realVector CamSoot::rateCoagulation
     CamMath cm;
 
     /*
-     *since the lagrangian interpolations are
-     *carried out on the log of reduced moments
-     *store the exponents of the moments
-     */
-
+    *ank25:  Move the calculation of interpolated reduced moments
+    *out of coagulation and into ratesAll
     realVector wholeOrderRedMom;
     wholeOrderRedMom.resize(mom.size(),0.0);
 
@@ -704,7 +732,7 @@ CamSoot::realVector CamSoot::rateCoagulation
     	wholeOrderRedMom[r] = mom[r]/mom[0];
     }
     interpolateReducedMoments(wholeOrderRedMom);
-
+     */
 
      /*
      *evaluate the grid functions
@@ -712,22 +740,21 @@ CamSoot::realVector CamSoot::rateCoagulation
 
     realVector f;
 
+    if (nMoments == 6){
+
     for(int i=0; i<4; i++)
         f.push_back(gridFunction(i,0,0));
-    doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);    
-
+    doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);
 
     f.clear();
     for(int i=0; i<4; i++)
         f.push_back(gridFunction(i,1,1));
     doublereal crk2 = kCoag*cm.interpolateLG(0.5,4,prime,f);
 
-
     f.clear();
     for(int i=0; i<4; i++)
         f.push_back(gridFunction(i,1,2));
     doublereal crk3 = kCoag*cm.interpolateLG(0.5,4,prime,f);
-
 
     f.clear();
     for(int i=0; i<3; i++)
@@ -739,12 +766,10 @@ CamSoot::realVector CamSoot::rateCoagulation
         f.push_back(gridFunction(i,2,2));
     doublereal crk4b = kCoag*cm.interpolateLG(0.5,4,prime,f);
 
-
     f.clear();
     for(int i=0; i<2; i++)
         f.push_back(gridFunction(i,1,4));
     doublereal crk5a = kCoag*cm.interpolateLG(0.5,2,prime,f);
-
 
     f.clear();
     for(int i=0; i<3; i++)
@@ -761,6 +786,98 @@ CamSoot::realVector CamSoot::rateCoagulation
     coagRates[3] = 3*crk3 * M02;
     coagRates[4] = (4*crk4a + 3*crk4b) * M02;
     coagRates[5] = (5* crk5a + 10*crk5b) * M02;
+    }
+
+    ///-----
+
+    if (nMoments == 5){
+
+    for(int i=0; i<4; i++)
+        f.push_back(gridFunction(i,0,0));
+    doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);
+
+    f.clear();
+    for(int i=0; i<4; i++)
+        f.push_back(gridFunction(i,1,1));
+    doublereal crk2 = kCoag*cm.interpolateLG(0.5,4,prime,f);
+
+    f.clear();
+    for(int i=0; i<3; i++)
+        f.push_back(gridFunction(i,1,2));
+    doublereal crk3 = kCoag*cm.interpolateLG(0.5,3,prime,f);
+
+    f.clear();
+    for(int i=0; i<2; i++)
+        f.push_back(gridFunction(i,1,3));
+    doublereal crk4a = kCoag*cm.interpolateLG(0.5,2,prime,f);
+
+    f.clear();
+    for(int i=0; i<3; i++)
+        f.push_back(gridFunction(i,2,2));
+    doublereal crk4b = kCoag*cm.interpolateLG(0.5,3,prime,f);
+
+
+    doublereal M02 = mom[0]*mom[0];
+
+    coagRates.resize(nMoments,0.0);
+
+    coagRates[0] = -0.5*crk*M02;
+    coagRates[1] = 0.0;
+    coagRates[2] = crk2 * M02;
+    coagRates[3] = 3*crk3 * M02;
+    coagRates[4] = (4*crk4a + 3*crk4b) * M02;
+    }
+
+    ///-----
+
+      if (nMoments == 4){
+
+      for(int i=0; i<4; i++)
+          f.push_back(gridFunction(i,0,0));
+      doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);
+
+      f.clear();
+      for(int i=0; i<3; i++)
+          f.push_back(gridFunction(i,1,1));
+      doublereal crk2 = kCoag*cm.interpolateLG(0.5,3,prime,f);
+
+      f.clear();
+      for(int i=0; i<2; i++)
+          f.push_back(gridFunction(i,1,2));
+      doublereal crk3 = kCoag*cm.interpolateLG(0.5,2,prime,f);
+
+
+      doublereal M02 = mom[0]*mom[0];
+
+      coagRates.resize(nMoments,0.0);
+
+      coagRates[0] = -0.5*crk*M02;
+      coagRates[1] = 0.0;
+      coagRates[2] = crk2 * M02;
+      coagRates[3] = 3*crk3 * M02;
+      }
+
+      ///-----
+
+        if (nMoments == 3){
+
+        for(int i=0; i<3; i++)
+            f.push_back(gridFunction(i,0,0));
+        doublereal crk = kCoag*cm.interpolateLG(0.5,3,prime,f);
+
+        f.clear();
+        for(int i=0; i<2; i++)
+            f.push_back(gridFunction(i,1,1));
+        doublereal crk2 = kCoag*cm.interpolateLG(0.5,2,prime,f);
+
+        doublereal M02 = mom[0]*mom[0];
+
+        coagRates.resize(nMoments,0.0);
+
+        coagRates[0] = -0.5*crk*M02;
+        coagRates[1] = 0.0;
+        coagRates[2] = crk2 * M02;
+        }
 
     return coagRates;
 
@@ -768,12 +885,6 @@ CamSoot::realVector CamSoot::rateCoagulation
 
 /*!
  * Condensation rates
- * Note: This function returns rate of change of PAH due
- * to condensation on the LHS.
- * It also modifies a pointer to cdRates which describes the rate
- * of change of moments due to condensation.
- * This format is different to nucleation and coagulation functions
- * in which moment rates are returned on the LHS.
  */
 CamSoot::realVector CamSoot::rateCondensation(const realVector& mom,
 									const doublereal& T,
@@ -792,11 +903,11 @@ CamSoot::realVector CamSoot::rateCondensation(const realVector& mom,
         }
         cdRates[r] *= k_coeff;
     }
-    //return the PAH consumption rate due to condensation
+
     // Do this calculation in the calling function
     //prodRatePAHCond = -cdRates[1]/numCAtomInception/NA;
 
-    //return prodRatePAHCond;
+    // Return moment rates
     return cdRates;
 }
 
@@ -827,7 +938,7 @@ void CamSoot::rateSurface(const realVector& conc,
     doublereal fr4 = 8.0e13*pow(T,1.56)*exp(-3.8/RT)*conc[iC2H2]/1e6;
     doublereal fr5 = 2.2e12*exp(-7.5/RT)*conc[iO2]/1e6;
     doublereal fr6 = 0.13*conc[iOH]/1e6;
- 
+
     // ank25: No unit change here
     doublereal par_a = 12.65 - 5.63e-03*T;
     doublereal par_b = -1.38 + 6.80e-04*T;
@@ -852,8 +963,8 @@ void CamSoot::rateSurface(const realVector& conc,
 
         // C2H2
         rateC2H2.resize(nMoments,0.0);
-        coef = fr4*cRad;        
-        sums(nMoments,2,coef,rateC2H2);        
+        coef = fr4*cRad;
+        sums(nMoments,2,coef,rateC2H2);
 
         // O2
         rateO2.resize(nMoments,0.0);
@@ -923,9 +1034,9 @@ void CamSoot::interpolateReducedMoments(realVector& wom){
     for(int i=0; i<= 6*hMoments+1; i++){
         if((i%6) != 0.0){
             reducedMoments(i) = cm.interpolateLG(i/6.0,nMoments,prime,wom);
-        }else{            
+        }else{
             reducedMoments(i) = wom[i/6];
-            
+
         }
     }
 
@@ -1018,11 +1129,58 @@ CamSoot::realVector CamSoot::showGasPhaseRates(int nSpecies)
 	rates[iH2O] = surfProdRate[iH2O];
 	rates[iO2] = surfProdRate[iO2];
 	rates[iOH] = surfProdRate[iOH];
+    //std::cout << "rates[iInception]  " << rates[iInception] << std::endl;
+    //std::cout << "rates[iC2H2]  " << rates[iC2H2] << std::endl;
+    //std::cout << "rates[iCO]  " << rates[iCO] << std::endl;
+    //std::cout << "rates[iH]  " << rates[iH] << std::endl;
+    //std::cout << "rates[iH2]  " << rates[iH2] << std::endl;
+    //std::cout << "rates[iH2O]  " << rates[iH2O] << std::endl;
+    //std::cout << "rates[iO2]  " << rates[iO2] << std::endl;
+    //std::cout << "rates[iOH]  " << rates[iOH] << std::endl;
 
 	return rates;
 }
 
-/////  ------- Functions relating to Flamelets go below this line -----
+
+CamSoot::realVector CamSoot::showSootComponentRates(int nMoments)
+{
+    // set rates to zero
+	realVector rates;
+	rates.resize(nMoments*4,0.0);
+
+    for (int l=0; l<nMoments; ++l){
+	rates[l] = 	nucRates[l];
+	rates[l+nMoments] = coagRates[l];
+	rates[l+2*nMoments] = cdRates[l];
+	rates[l+3*nMoments] = sRates[l];
+    }
+	return rates;
+}
+
+doublereal CamSoot::avgSootDiam()
+{
+	doublereal sootDiam = CD1 * reducedMoments(2);
+	return sootDiam;
+}
+
+doublereal CamSoot::dispersion()
+{
+	doublereal disp = reducedMoments(12) * reducedMoments(6) * reducedMoments(6);
+	// doublereal disp = moments(2) * moments(2) * moment(1);
+	return disp;
+}
+
+doublereal CamSoot::sootSurfaceArea(doublereal M0)
+{
+    doublereal surfaceArea = PI * CD1 * CD1 * CD1 * reducedMoments(4) * M0;
+    return surfaceArea;
+}
+
+doublereal CamSoot::sootVolumeFraction(doublereal M0)
+{
+    doublereal volumeFraction = PI * CD1 * CD1 * CD1 * reducedMoments(6) * M0 / 6.0;
+    return volumeFraction;
+}
 
 
 

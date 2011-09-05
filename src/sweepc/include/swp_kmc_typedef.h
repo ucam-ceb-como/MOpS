@@ -1,5 +1,5 @@
 /*!
-  * \Author     Zakwan Zainuddin (zz260)
+  * \author     Zakwan Zainuddin (zz260)
   * \file       swp_kmc_typedef.h
   *
   * \brief        Defines typedefs and types used by the kmc model.

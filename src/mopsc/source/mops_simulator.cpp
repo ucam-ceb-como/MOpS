@@ -240,6 +240,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     unsigned int icon;
     real dt, t2; // Stop time for each step.
 
+	r.Mixture()->SetGasphaseProfile(s.Gasphase());
     // Make a copy of the initial mixture and store in an auto pointer
     // so that it will be deleted when we leave this scope.
     std::auto_ptr<Mixture> initmix(r.Mixture()->Clone());
@@ -396,6 +397,13 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         // Print run time to the console.
         printf("mops: Run number %d completed in %.1f s.\n", irun+1, m_runtime);
 
+		// Produce two files named "MONONER" AND "DRIMER" which is used to create mass spectra, 
+		// currently this function is limited to PAH-PP model
+		r.Mech()->ParticleMech().Mass_spectra(r.Mixture()->Particles());
+
+		// Produce a file named "primary" which stores information of target (criteria are hard-coded) primary particle
+		//r.Mech()->ParticleMech().Mass_pah(r.Mixture()->Particles());
+
 	#ifdef USE_MPI
 
 		 closeOutputFile();			//ms785
@@ -409,7 +417,6 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     closeOutputFile();
 	#endif
 }
-
 
 // POST-PROCESSING.
 

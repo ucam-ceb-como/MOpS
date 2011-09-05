@@ -84,7 +84,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 
     // Clear the current gas-phase profile.
     m_gasprof.clear();
-
+	
     // Open the file to read.
     ifstream fin(file.c_str(), ios::in);
     if (!fin.good()) {
@@ -248,7 +248,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gpoint.Gas.SetTemperature(T);
             gpoint.Gas.SetPressure(P*1.0e5);
             gpoint.Gas.Normalise();
-            gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);
+            gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(m3*s) to mol/(cm3*s)
 
             // Add the profile point.
             alpha_prof[t] = alpha;
@@ -342,7 +342,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
             jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
             // Perform time step.
-            dt = timeStep(t, tsplit, *r.Mixture(), mech, rates, jrate, rand_int, rand_u01, &m_gasprof);
+            dt = timeStep(t, tsplit, *r.Mixture(), mech, rates, jrate, rand_int, rand_u01);
             if (dt >= 0.0) {
                 t += dt; 
             } else {
@@ -353,7 +353,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
         // Perhaps better to use t - 0.5 * dtg not just t
-        mech.LPDA(t, *r.Mixture(), rand_int, rand_u01, &m_gasprof);
+        mech.LPDA(t, *r.Mixture(), rand_int, rand_u01);
 
         r.SetTime(t);
     }
@@ -414,4 +414,8 @@ void FlameSolver::linInterpGas(Sweep::real t,
         // Now set the gas density, calculated using the values above.
         gas.SetDensity(dens);
     }
+}
+
+GasProfile* FlameSolver::Gasphase(void){
+	return &m_gasprof;
 }

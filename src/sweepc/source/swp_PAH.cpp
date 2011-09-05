@@ -40,15 +40,26 @@
 */
 
 #include "swp_kmc_pah_structure.h"
+#include "swp_kmc_typedef.h"
 #include "swp_PAH.h"
 
 using namespace Sweep;
 using namespace Sweep::AggModels;
-
+using namespace Sweep::KMC_ARS;
 
 using namespace std;
 
+
 PAH::PAH(){
+}
+
+PAH::PAH(real time):m_numcarbon(PYRENE),//start at pyrene (C=16)
+time_created(time),
+lastupdated(time),
+PAH_ID(0),
+m_pahstruct(new PAHStructure())
+{
+ m_pahstruct->initialise(PYRENE);
 }
 
 PAH::PAH(const PAH &copy){
@@ -70,10 +81,15 @@ PAH &PAH::operator=(const PAH &rhs){
 	}
 	return *this;
 }
+
 PAH *const PAH::Clone() const{
 	return new PAH(*this);
 }
 
 int PAH::ID() const {
 	return PAH_ID;
+}
+
+void PAH::saveDOTperLoop(int ID, int i) const{
+	m_pahstruct->saveDOTperLoop(ID,i);
 }

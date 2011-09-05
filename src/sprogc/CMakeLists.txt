@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project (SPROG)
 
+file(GLOB_RECURSE INCS "include/*.h")
+source_group("Header Files" FILES ${INCS})
 
 add_library(sprog source/gpc_el_comp.cpp
                   source/gpc_element.cpp
@@ -21,7 +23,8 @@ add_library(sprog source/gpc_el_comp.cpp
                   source/gpc_stoich.cpp
                   source/gpc_thermo.cpp
                   source/gpc_transport_factory.cpp
-                  source/gpc_element_lib.cpp)
+                  source/gpc_element_lib.cpp
+                  ${INCS})
 
 include_directories(include 
                     ${Boost_INCLUDE_DIRS}

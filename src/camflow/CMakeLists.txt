@@ -6,6 +6,9 @@ cmake_minimum_required(VERSION 2.6)
 
 project (CAMFLOW)
 
+file(GLOB_RECURSE INCS "include/*.h")
+source_group("Header Files" FILES ${INCS})
+
 add_library(camflow source/cam_read.cpp
                     source/cam_setup.cpp
                     source/cam_geometry.cpp
@@ -21,13 +24,15 @@ add_library(camflow source/cam_read.cpp
                     source/cam_reporter.cpp
                     source/cam_radiation.cpp
                     source/cam_models.cpp
+                    source/cam_lewis.cpp
                     source/cam_soot.cpp
                     source/cvode_wrapper.cpp
                     source/radau_wrapper.cpp
                     source/cam_sdr.cpp
                     source/flamelet.cpp
                     source/batch.cpp
-                    source/interface.cpp)
+                    source/interface.cpp
+				    ${INCS})
 
 include_directories(include 
                     ${Boost_INCLUDE_DIRS} 

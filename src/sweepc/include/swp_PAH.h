@@ -57,8 +57,8 @@ class PAH
 {
 	friend class PAHPrimary;
 public:
-    //! Build a new PAH
-    PAH();
+    //! Build a new PAH with time
+    PAH(real time);
 
     PAH(const PAH &copy); // Copy constructor.
 	~PAH();
@@ -67,21 +67,24 @@ public:
 	//returen ID of PAH
 	int ID() const;
 
+	void saveDOTperLoop(int ID, int i) const;
 private:
-	    //! Number of Carbon atoms in the PAH
-        unsigned int m_numcarbon;
+    //! not allow to build PAH without time
+    PAH();
+    //! Number of Carbon atoms in the PAH
+    unsigned int m_numcarbon;
 
-        //! Simulated time at point when molecule created
-        double time_created;
+    //! Simulated time at point when molecule created
+    double time_created;
 
-        //! Simulated time when molecule size was last updated
-        double lastupdated;
+    //! Simulated time when molecule size was last updated
+    double lastupdated;
 
-		//! Index of the PAH, used to track specified PAH
-		int PAH_ID;
+    //! Index of the PAH, used to track specified PAH
+    int PAH_ID;
 
-		//! PAH structure provide by KMC PAH growth part
-		Sweep::KMC_ARS::PAHStructure* m_pahstruct;
+    //! PAH structure provide by KMC PAH growth part
+    Sweep::KMC_ARS::PAHStructure* m_pahstruct;
 
 };
 } //namespace AggModels

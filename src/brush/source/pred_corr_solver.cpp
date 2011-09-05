@@ -201,7 +201,7 @@ void Brush::PredCorrSolver::solveParticles(Reactor1d &reac, const real t_stop) c
         // Add up the rate of all deferred process in the whole of the reactor,
         // the result is the expected number of simulated events per computational
         // particle per simulated second of physical time.
-        //@todo This is a very clumsy average that ignores spatial inhomogeneity
+        // This is a very clumsy average that ignores spatial inhomogeneity
         real deferredRate = 0.0;
         real jumpRate = 0.0;
         for(size_t i = 0; i < numCells; ++i) {
@@ -274,6 +274,112 @@ void Brush::PredCorrSolver::solveParticles(Reactor1d &reac, const real t_stop) c
 }
 
 /*!
+ * Advance the particle part of the solution, which may also affect the chemical
+ * species concentrations.
+ *
+ * Note that the flags activating split simulation of particle transport do not
+ * disable any diffusion processes that may have been specified in the particle
+ * mechanism.
+ *
+ *\param[in,out]        reac        Reactor describing system state
+ *\param[in]            t_stop      Time to which to advance solution
+ */
+void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_stop) const {
+
+    const size_t numCells = reac.getNumCells();
+    const Sweep::Mechanism &mech = reac.getMechanism().ParticleMech();
+
+    // Need to know the time for the split simulation of the transport processes
+    const real t_start = reac.getTime();
+
+    for(size_t i = 0; i < numCells; ++i) {
+        Mops::Reactor& cell = reac.getCell(i);
+        Geometry::LocalGeometry1d geom(reac.getGeometry(), i);
+        solveParticlesInOneCell(cell, geom, mech, t_stop);
+    }
+
+    // Now do the split particle transport, if there is any
+    if(mSplitDiffusion || mSplitAdvection) {
+        splitParticleTransport(reac, t_start, t_stop);
+    }
+}
+
+/*!
+ * Advance the particle part of the solution, which may also affect the chemical
+ * species concentrations.
+ *
+ *\param[in,out]        cell        Contents of one grid cell
+ *\param[in]            geom        Position information regarding adjoining cells
+ *\param[in]            mech        Mechanism defining the particle processes
+ *\param[in]            t_stop      Time to which to advance solution
+ */
+void Brush::PredCorrSolver::solveParticlesInOneCell(Mops::Reactor &cell, const Geometry::LocalGeometry1d &geom,
+                                                    const Sweep::Mechanism &mech, const real t_stop) const {
+    // Carry out a repeated sequence of jump process simulation (with LPDA updates
+    // for particles involved in jumps) followed by LPDA updates for the full
+    // population.
+    real t = cell.Time();
+    do {
+        // Ignore the individual rate term information in the final argument
+        fvector dummyVec;
+        // Add 1 to the denominator to avoid dividing by 0
+        const real deferredRate = mech.CalcDeferredRateTerms(t, *(cell.Mixture()) ,geom, dummyVec);
+
+        // Calculate both the rates of the individual jump processes and the total
+        fvector jumpRates;
+        real jumpRate = mech.CalcJumpRateTerms(t, *(cell.Mixture()), geom, jumpRates);
+
+        // Calculate the latest time at which all particles must be updated
+        // with deferred events.
+        real maxDeferralEnd = t_stop;
+        if(deferredRate / jumpRate > mDeferralRatio) {
+            // A large number of deferred events are expected between jump events
+            // so force updates to take place more frequently by shortening the
+            // time until the next update of all particles.
+            maxDeferralEnd = std::min(t_stop, mDeferralRatio * deferredRate);
+        }
+
+        // Simulate jumps upto maxDeferralEnd
+        // Put a very small tolerance on the comparison
+        while(t <= maxDeferralEnd * (1.0 - std::numeric_limits<real>::epsilon())) {
+            // Perform one non-deferred event
+
+            // Note that jumpRates must be initialised with the process rates and jumpRate with
+            // their sum before proceeding
+
+            // Taking a near infinite step if the rate is 0
+            real dt = std::numeric_limits<real>::max();
+            if(jumpRate > 0) {
+                // Exponential random variable with mean 1/jumpRate
+                dt = Sweep::genrand_real1();
+                dt = -log(dt) / jumpRate;
+            }
+
+            // If the event does not happen until after maxDeferralEnd, only jump to maxDeferralEnd
+            // and do not perform an event
+            if(t + dt > maxDeferralEnd) {
+                t = maxDeferralEnd;
+            }
+            else {
+                t +=dt;
+                const int process = chooseIndex(jumpRates, Sweep::genrand_real1);
+                mech.DoProcess(process, t, *(cell.Mixture()), geom, Sweep::genrand_int, Sweep::genrand_real1);
+                // Update jumpRates now the particles have changed
+                jumpRate = mech.CalcJumpRateTerms(t, *(cell.Mixture()), geom, jumpRates);
+            }
+        }
+
+        cell.SetTime(t);
+
+        // Perform all events from deferred processes.
+        if (mech.AnyDeferred()) {
+            mech.LPDA(maxDeferralEnd, *(cell.Mixture()), Sweep::genrand_int, Sweep::genrand_real1);
+        }
+    } while(t <= t_stop * (1.0 - std::numeric_limits<real>::epsilon()));
+
+ }
+
+/*!
  * Carry out one jump of the stochastic particle processes, if it occurs before
  * the stop time, otherwise do nothing and just advance time.  Only one stochastic
  * jump event will occur, the active process and active cell are chosen according
@@ -338,31 +444,16 @@ real Brush::PredCorrSolver::particleTimeStep(Reactor1d &reac, const real t_stop,
         activeProcess = chooseIndex(rate_cache.mProcessRates[activeCell], Sweep::genrand_real1);
         //std::cout << "active process is " << activeProcess << '\n';
 
-        // Perform the event and find out if a particle was transported out of its cell
-        Sweep::Transport::TransportOutflow out;
-
         // Get the geometry information for the cell
         Geometry::LocalGeometry1d cellGeom(reac.getGeometry(), activeCell);
 
         reac.getMechanism().ParticleMech().DoProcess(activeProcess, reac.getTime() + dt,
                                                      *(reac.getCell(activeCell).Mixture()), cellGeom,
-                                                     Sweep::genrand_int, Sweep::genrand_real1, NULL, &out);
+                                                     Sweep::genrand_int, Sweep::genrand_real1);
 
         // Contents of active cell has changed so mark it for update in the rate cache
         rate_cache.mInvalidCells.push(activeCell);
 
-        if(out.particle) {
-            if(out.destination >= 0) {
-                // Particle has stayed in the system
-                transportIn(reac, out.destination, out);
-
-                // Contents of destination cell has changed so mark it for update in the rate cache
-                rate_cache.mInvalidCells.push(out.destination);
-            }
-
-            // Ownership of the transported particle was taken by transportIn
-            out.particle = NULL;
-        }
     }
 
 //    std::cout << ", actual step " << dt << " with process " << activeProcess

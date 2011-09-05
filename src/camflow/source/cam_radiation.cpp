@@ -35,6 +35,12 @@ Radiation::Radiation
     opNode = root->GetFirstChild("op_condition");
     subnode = opNode->GetFirstChild("radiation");
     subnode->GetChildren("species",radiativeSpecies);
+    if (radiativeSpecies.empty())
+    {
+        throw std::runtime_error(
+            "You have specified no radiative species!"
+            "\n           e.g. Use the tag <species name=\"H2O\"></species>.");
+    }
     for ( p = radiativeSpecies.begin(); p < radiativeSpecies.end(); ++p)
     {
         std::string speciesName = (*p)->GetAttributeValue("name");

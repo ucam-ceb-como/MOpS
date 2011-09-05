@@ -44,6 +44,7 @@
 #include "cam_control.h"
 #include "interface.h"
 #include "flamelet.h"
+#include "linear_interpolator.hpp"
 
 using namespace Camflow;
 
@@ -78,6 +79,10 @@ cp(cg)
 
     //get the number of species
     nSpecies = mech.SpeciesCount();
+
+    //get the number of moments
+    nMoments = cSoot.getNumMoments();
+
     //create the mixture
     Thermo::Mixture mix(mech.Species());
     speciesPointerVector = mix.Species();
@@ -130,11 +135,9 @@ cp(cg)
          * model if the scalar dissipation rate is
          * non-zero
          */
-        model->setExternalScalarDissipationRate(sdr);
+        model->setExternalSDR(sdr);
        // model->solve(cc,ca,cg,cp,config,cs,mech_in);
     }
-
-
 }
 
 
@@ -246,6 +249,15 @@ int Interface::getNumberOfSpecies() const {
 }
 
 /*
+ *return the number of moments
+ */
+int Interface::getNumberOfMoments() const {
+    return nMoments;
+}
+
+
+
+/*
  *return the number of reactions in the mechanism
  */
 int Interface::getNumberOfReactions() const {
@@ -259,19 +271,45 @@ std::vector<std::string> Interface::getSpeciesNames(){
     return speciesNames;
 }
 
+/*!
+ * Stores the results for lookup by the CFD program.
+ */
+void Interface::getFlameletVariables(FlameLet* const flmlt)
+{
+
+    flmlt->getDensityVector(rhoVector);
+    flmlt->getSpeciesMassFracs(spMassFracs);
+    flmlt->getMoments(sootMoments);		// ank25 added
+    flmlt->getTemperatureVector(TVector);
+    flmlt->getIndepedantVar(indVar);
+    flmlt->getViscosityVector(muVector);
+    flmlt->getSpecificHeat(spHeat);
+    flmlt->getThermalConductivity(lambda);
+    flmlt->getDiffusionCoefficient(mDiff);
+    flmlt->getVelocity(mVelocity);
+    flmlt->getAverageMolarWeight(avgMolWtVector);
+    flmlt->getWdotA4(wdotA4);
+    flmlt->getSootAverageDiameterVector(sootAverageDiameterVector);
+    flmlt->getSootDispersionVector(sootDispersionVector);
+    flmlt->getSootSurfaceAreaVector(sootSurfaceAreaVector);
+    flmlt->getSootVolumeFractionVector(sootVolumeFractionVector);
+}
+
 /**
  *  This function is called by the external code that
  *  passes a scalar dissipation rate with time history
  */
-void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation, bool lnone){
+void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation){
 
     if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
 
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
+
     //Set the time history of the scalar dissipation rate
     flmlt->setRestartTime(intTime[0]);
     //flmlt->setExternalScalarDissipationRate(intTime,sdr,true);
+    flmlt->setExternalTimeSDR(intTime,sdr);
 
     // Build up a vector of zero soot volume fractions
     std::vector<doublereal> zeroSoot(cg.getnCells(), 0.0);
@@ -279,7 +317,7 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
 
     try{
         const size_t len = sdr.size();
-        flamelet(sdr[len-1], intTime[len-1],continuation,lnone);
+        flamelet(sdr[len-1], intTime[len-1],continuation);
     }catch(CamError& ce){
         throw;
     }
@@ -294,35 +332,43 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
  *\param[in]    lnone				 If 'true', Le=1.
  *
  */
-void Interface::flameletStrainRate(const doublereal& strainRate, bool lnone) {
+void Interface::flameletStrainRate(const doublereal& strainRate) {
 
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
-    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
 
     flmlt->setExternalStrainRate(strainRate);
 
     try{
         flmlt->solve(false);
-        /*
-         *store the results for lookup
-         */
-        flmlt->getDensityVector(rhoVector);
-        flmlt->getSpeciesMassFracs(spMassFracs);
-        flmlt->getTemperatureVector(TVector);
-        flmlt->getIndepedantVar(indVar);
-        flmlt->getViscosityVector(muVector);
-        flmlt->getSpecificHeat(spHeat);
-        flmlt->getThermalConductivity(lambda);
-        flmlt->getDiffusionCoefficient(mDiff);
-        flmlt->getVelocity(mVelocity);
-        flmlt->getAverageMolarWeight(avgMolWtVector);
-        flmlt->getWdotA4(wdotA4);
-        stMixtureFrac = flmlt->stoichiometricMixtureFraction();
-        std::cout << "Size of thermal conductivity " << lambda.size() << std::endl;
+        getFlameletVariables(flmlt);
     }catch(CamError &ce){
         throw ;
     }
 
+}
+
+/*!
+ * This function is called externally to solve a flamelet for a given SDR.
+ *
+ *\param[in]    SDR                 Value of SDR to solve for.
+ *\param[in]    lnone                If 'true', Le=1.
+ *
+ */
+void Interface::flameletSDR(const doublereal& SDR) {
+
+    if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
+
+    flmlt->setExternalSDR(SDR);
+
+    try{
+        // Solve flamelet at base of flame with soot residual set to zero.
+    	flmlt->solve(false,true);
+    	//flmlt->solve(false,false);
+    	//flmlt->solve(false);
+        getFlameletVariables(flmlt);
+    }catch(CamError &ce){
+        throw ;
+    }
 }
 
 /**
@@ -331,8 +377,7 @@ void Interface::flameletStrainRate(const doublereal& strainRate, bool lnone) {
 void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >& sdr,
 								   const std::vector< std::vector<doublereal> >& Zcoords,
 								   const std::vector<doublereal>& intTime,
-								   bool continuation,
-								   bool lnone) {
+								   bool continuation) {
 
     if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
@@ -341,7 +386,6 @@ void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >&
 
     flmlt->setRestartTime(intTime[0]);
     if(intTime[1]!=0)cc.setMaxTime(intTime[1]);
-    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
 
     //Set the time history of the scalar dissipation rate
     flmlt->setRestartTime(intTime[0]);
@@ -355,27 +399,15 @@ void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >&
     flmlt->setExternalSootVolumeFraction(zeroSoot);
 
     try{
-        if(!continuation){
+        if (!continuation)
+        {
             flmlt->solve(true);
-        }else{
+        }
+        else
+        {
             flmlt->restart();
         }
-        /*
-         *store the results for lookup
-         */
-        flmlt->getDensityVector(rhoVector);
-        flmlt->getSpeciesMassFracs(spMassFracs);
-        flmlt->getTemperatureVector(TVector);
-        flmlt->getIndepedantVar(indVar);
-        flmlt->getViscosityVector(muVector);
-        flmlt->getSpecificHeat(spHeat);
-        flmlt->getThermalConductivity(lambda);
-        flmlt->getDiffusionCoefficient(mDiff);
-        flmlt->getVelocity(mVelocity);
-        flmlt->getAverageMolarWeight(avgMolWtVector);
-        flmlt->getWdotA4(wdotA4);
-        stMixtureFrac = flmlt->stoichiometricMixtureFraction();
-        std::cout << "Size of thermal conductivity " << lambda.size() << std::endl;
+        getFlameletVariables(flmlt);
     }catch(CamError &ce){
         throw ;
     }
@@ -388,7 +420,7 @@ void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >&
  *  and a spatial profile of soot volume fraction.
  */
 void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const std::vector<doublereal>& sdr,
-                                 const std::vector<doublereal>& intTime, bool continuation, bool lnone){
+                                 const std::vector<doublereal>& intTime, bool continuation){
 
     if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
@@ -403,7 +435,7 @@ void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const s
 
     try{
         const size_t len = sdr.size();
-        flamelet(sdr[len-1], intTime[len-1],continuation,lnone);
+        flamelet(sdr[len-1], intTime[len-1],continuation);
     }catch(CamError& ce){
         throw;
     }
@@ -420,38 +452,25 @@ void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const s
  *file/default value. If steady state is obtained before the specified
  *integration time, the program return with the converged solution.
  */
-void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, bool lnone){
+void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation){
 
     if(intTime!=0)cc.setMaxTime(intTime);
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
-    if(!lnone) flmlt->setLewisNumber(FlameLet::LNNONE);
-    flmlt->setExternalScalarDissipationRate(sdr);
 
     if(sdr==0){
-        std::cout << "Passed in value of SDR is zero\n SDR automatic calculation activated\n" ;
+        throw std::logic_error("You passed a Scalar Dissipation Rate of zero! Wrong!");
     }
     try{
-        if(!continuation){
-            flmlt->solve(false);
-        }else{
+        if (!continuation)
+        {
+            // Solve flamelet at base of flame with soot residual set to zero.
+        	flmlt->solve(false,true);
+        }
+        else
+        {
             flmlt->restart();
         }
-        /*
-         *store the results for lookup
-         */
-        flmlt->getDensityVector(rhoVector);
-        flmlt->getSpeciesMassFracs(spMassFracs);
-        flmlt->getTemperatureVector(TVector);
-        flmlt->getIndepedantVar(indVar);
-        flmlt->getViscosityVector(muVector);
-        flmlt->getSpecificHeat(spHeat);
-        flmlt->getThermalConductivity(lambda);
-        flmlt->getDiffusionCoefficient(mDiff);
-        flmlt->getVelocity(mVelocity);
-        flmlt->getAverageMolarWeight(avgMolWtVector);
-        flmlt->getWdotA4(wdotA4);
-        stMixtureFrac = flmlt->stoichiometricMixtureFraction();
-        std::cout << "Size of thermal conductivity " << lambda.size() << std::endl;
+        getFlameletVariables(flmlt);
     }catch(CamError &ce){
         throw ;
     }
@@ -459,9 +478,21 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation, 
 /*
  *return the stoichiometric mixture fraction
  */
-doublereal Interface::getStMixtureFrac(){
+doublereal Interface::getStMixtureFrac()
+{
+    if (flmlt == NULL)
+    {
+        FlameLet* flmlt_temp = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
+        stMixtureFrac = flmlt_temp->stoichiometricMixtureFraction();
+        delete flmlt_temp;
+    }
+    else
+    {
+        stMixtureFrac = flmlt->stoichiometricMixtureFraction();
+    }
     return stMixtureFrac;
 }
+
 /*
  *
  *return the density
@@ -490,6 +521,19 @@ std::vector<doublereal> Interface::getMassFracsBySpecies(const int spIndex) cons
     return mf;
 }
 
+std::vector<doublereal> Interface::getMomentsByIndex(const int momentIndex) const {
+    // Find the length of the moment profile and create an empty
+    // vector with this much space
+    const size_t len = indVar.size();
+    std::vector<doublereal> momentProfile(len);
+
+    for(size_t i=0; i<len; i++){
+        momentProfile[i] = sootMoments(i,momentIndex);
+    }
+    return momentProfile;
+}
+
+
 /*!
  *@param[in]    indVarIndex     Mass fractions requested at indVar[indVarIndex]
  *
@@ -511,6 +555,16 @@ doublereal Interface::getMassFrac(const int spIndex, const doublereal axpos){
     doublereal massfrac = getVariableAt(axpos, getMassFracsBySpecies(spIndex));
     return massfrac;
 }
+
+/*
+ *return the moments
+ */
+doublereal Interface::getMoment(const int momIndex, const doublereal axpos){
+    doublereal moment = getVariableAt(axpos, getMomentsByIndex(momIndex));
+    return moment;
+}
+
+
 /*
  *return the mole fractions
  */
@@ -529,6 +583,38 @@ doublereal Interface::getMoleFrac(const int spIndex, const doublereal axpos){
 doublereal Interface::getTemperature(const doublereal axpos){
 
     doublereal temp = getVariableAt(axpos,TVector);
+    return temp;
+}
+/*
+ *return the sootAverageDiameter
+ */
+doublereal Interface::getSootAverageDiameter(const doublereal axpos){
+
+    doublereal temp = getVariableAt(axpos,sootAverageDiameterVector);
+    return temp;
+}
+/*
+ *return the sootDispersion
+ */
+doublereal Interface::getSootDispersion(const doublereal axpos){
+
+    doublereal temp = getVariableAt(axpos,sootDispersionVector);
+    return temp;
+}
+/*
+ *return the sootSurfaceArea
+ */
+doublereal Interface::getSootSurfaceArea(const doublereal axpos){
+
+    doublereal temp = getVariableAt(axpos,sootSurfaceAreaVector);
+    return temp;
+}
+/*
+ *return the sootVolumeFraction
+ */
+doublereal Interface::getSootVolumeFraction(const doublereal axpos){
+
+    doublereal temp = getVariableAt(axpos,sootVolumeFractionVector);
     return temp;
 }
 /*
@@ -590,39 +676,28 @@ doublereal Interface::getWdotA4(const doublereal axpos){
 }
 
 /*!
- * Gets the value of var at a given pos by interpolation.
+ * Gets the value of var at a given pos by calling linear_interpolator.
  *
  *\param[in]    pos           Value of independent variable.
  *\param[in]    var           Variable to be interpolated.
  *
  *\return       Value of var at a given pos.
  */
-doublereal Interface::getVariableAt(const doublereal& pos,
-                                    const std::vector<doublereal>& var) const{
+doublereal Interface::getVariableAt
+(
+    const doublereal& pos,
+    const std::vector<doublereal>& var
+)
+const
+{
 
-    doublereal vu, vl, xu, xl, temp=0.0;
-    size_t len = indVar.size();
+    Utils::LinearInterpolator<doublereal, doublereal> interpolator
+    (
+        indVar,
+        var
+    );
 
-    for(size_t i=0; i<len; i++){
-        if(pos == indVar[i]) {
-            temp= var[i];
-            break;
-        }else if( i>0 && (pos > indVar[i-1]) && (pos < indVar[i]) ){
-            vu = var[i];
-            xu = indVar[i];
-
-            vl = var[i-1];
-            xl = indVar[i-1];
-
-            doublereal slope = (vu-vl)/(xu-xl);
-            doublereal intersect = vu- (slope*xu);
-
-            temp= slope*pos + intersect;
-            break;
-        }
-    }
-
-    return temp;
+    return interpolator.interpolate(pos);
 
 }
 

@@ -1,5 +1,5 @@
 /*!
-  * \Author     Zakwan Zainuddin (zz260)
+  * \author     Zakwan Zainuddin (zz260)
   * \file       swp_kmc_simulator.h
   *
   * \brief       Simulator for the kMC Model
@@ -105,11 +105,11 @@ namespace Sweep{
             //! Writes data for timeCount.csv
             void writeTimerCSV(const int& loop, const double& elapsedTime);
             //! Writes data for reaction_count.csv
-            void writeRxnCountCSV(const std::vector<int>& rc);
+            void writeRxnCountCSV();
             //! Writes data for CH_site_list.csv
             void writeCHSiteCountCSV();
             //! Writes data for rates count (csv)
-            void writeRatesCSV(int runNo, real& time, rvector& v_rates);
+            void writeRatesCSV(real& time, rvector& v_rates);
             //! Initialise CSV_IOs
             void initCSVIO();
             //! Initialise reaction count
@@ -125,15 +125,18 @@ namespace Sweep{
             //! Save the structure DOT file after every X simulation sec interval
             void saveDOTperXsec(const real& X, const int& seed, const real& time, const real &time_max, KMCMechanism& copyMod, int& intervalcount);
             //! Update structure of PAH after time dt
-            real updatePAH(PAHStructure* pah, // structure of pah
+            void updatePAH(PAHStructure* pah, // structure of pah
                            const real tstart, // start time
                            const real dt,     // growth time
-                           const int waitingSteps,  // waiting step used to calculate maximum time interval, currently use 5.
+                           const int waitingSteps,  // waiting step used to calculate maximum time interval, currently use 1. 
                            int (*rand_int)(int,int), // random number
                            real (*rand_u01)(),// random number
                            real r_factor,     // growth factor g, one important parameter used in this model.
                            int PAH_ID);       // ID of this pah, used for debugging.
-            ////! A function to test validity of updatePAH compared to runSimulation
+            //! Outputs rates into a csv file (assuming all site counts as 1)
+			void TestRates(const real tstart, const real tstop, const int intervals);
+			//! Outputs gas concentrations into a csv file
+			void TestConc(const real& t_start, const real& t_stop, const int intervals, const std::string& filename);
             //void testSimulation(PAHStructure& pah, const unsigned long seed, int totalruns);
             void writetimestep(const std::vector<double>& timestep);
             void setCSVtimestep(const std::string &filename);

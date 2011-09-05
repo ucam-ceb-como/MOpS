@@ -6,6 +6,9 @@ cmake_minimum_required(VERSION 2.6)
 
 project (MOPS)
 
+file(GLOB_RECURSE INCS "include/*.h")
+source_group("Header Files" FILES ${INCS})
+
 add_library(mops source/cvodes_utils.cpp
                  source/loi_reduction.cpp
                  source/mops_flow_stream.cpp
@@ -28,7 +31,7 @@ add_library(mops source/cvodes_utils.cpp
                  source/mops_strang_solver.cpp
                  source/mops_timeinterval.cpp
                  source/swp_flamesolver.cpp
-                 source/swp_gas_profile.cpp)
+				 ${INCS})
 
 include_directories(include 
                     ${Boost_INCLUDE_DIRS} 

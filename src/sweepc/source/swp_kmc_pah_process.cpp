@@ -1,5 +1,5 @@
 /*!
-  * \Author     Zakwan Zainuddin (zz260)
+  * \author     Zakwan Zainuddin (zz260)
   * \file       swp_kmc_pah_process.cpp
   *
   * \brief        Implementation file for swp_kmc_pah_process.h.
@@ -742,6 +742,8 @@ Cpointer PAHProcess::addC() {
     Cpointer cb;
     // Create new carbon atom at memory pointed by h
     cb = new Carbon;
+	if(!m_pah->m_carbonList.insert(cb).second)
+		std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
     m_pah->m_cpositions.insert(cb->coords); // store coordinates
     addCount(1,0); // add a C count
     return cb;
@@ -752,7 +754,7 @@ Cpointer PAHProcess::addC() {
   !      C __ (C1->)C2
   !        angle 2
 */
-Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2) {
+Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2, bool bulk) {
     Cpointer cb;
     // Create new carbon atom
     cb = new Carbon;
@@ -762,6 +764,8 @@ Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2) {
     cb->bondAngle1 = normAngle(angle2); // convert angle to +ve/-ve form
     // set new coordinates and store
     cb->coords = jumpToPos(C_1->coords, angle1);
+	if(!m_pah->m_carbonList.insert(cb).second)
+		std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
     m_pah->m_cpositions.insert(cb->coords);
     // Edit details of connected carbon(s)
     if(C_1->C2 != NULL) {
@@ -770,20 +774,9 @@ Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2) {
     }
     C_1->bondAngle1 = normAngle(angle1);
     C_1->C2 = cb;
-    addCount(1,0);
+    if(!bulk) addCount(1,0);
     if(C_1 == m_pah->m_clast) m_pah->m_clast = cb;
     return cb;
-}
-/*! Create a bulkcarbon atom attached next to C1
-  ! C1
-  !    \ <----------- angle1
-  !      C __ (C1->)C2
-  !        angle 2
-*/
-Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2, bool bulk) {
-    Cpointer temp = addC(C_1, angle1, angle2);
-    if(bulk) addCount(-1,0);
-    return temp;
 }
 /*! Create a carbon atom bridging next to C_1
   !              newC
@@ -802,6 +795,8 @@ Cpointer PAHProcess::bridgeC(Cpointer C_1) {
     cb->bridge = true;
     // set new coordinates and store
     cb->coords = jumpToPos(C_1->coords, C_1->bondAngle2);
+	if(!m_pah->m_carbonList.insert(cb).second)
+		std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
     m_pah->m_cpositions.insert(cb->coords);
     // Set details of C_1
     C_1->bridge = true;
@@ -883,6 +878,8 @@ void PAHProcess::removeC(Cpointer C_1, bool bulk) {
     m_pah->m_cpositions.erase(m_pah->m_cpositions.find(C_1->coords));
     // delete Carbon object
     delete C_1;
+	if(m_pah->m_carbonList.erase(C_1) == 0)
+		std::cout<<"ERROR: removeC: NOT ERASING ANY POINTERS!\n";
     if(!bulk) { // if desorption, decrease C count accordingly
         addCount(-1, 0); 
     }
@@ -1294,25 +1291,26 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 void PAHProcess::clearStructure() {
     // Delete all Carbons starting from first to last
     // set iterator to starting point
-    Cpointer now= m_pah->m_cfirst;
-    Cpointer prev = m_pah->m_clast;
-    set<Cpointer> temp;
-    do {
-        // temporarily stores C iterator
-        Cpointer oldprev = prev;
-        Cpointer oldnow = now;
-        // move current iterator to next C
-        now = moveCPointer(prev, now);
-        prev = oldnow;
-        temp.insert(oldprev);
-        //delete oldprev;
-    }
-    while (prev != m_pah->m_clast);
+    //Cpointer now= m_pah->m_cfirst;
+    //Cpointer prev = m_pah->m_clast;
+    //set<Cpointer> temp;
+    //do {
+    //    // temporarily stores C iterator
+    //    Cpointer oldprev = prev;
+    //    Cpointer oldnow = now;
+    //    // move current iterator to next C
+    //    now = moveCPointer(prev, now);
+    //    prev = oldnow;
+    //    temp.insert(oldprev);
+    //    //delete oldprev;
+    //}
+    //while (prev != m_pah->m_clast);
     // iterator stops at last Carbon
     //delete m_pah->m_clast;
-    for(set<Cpointer>::iterator i=temp.begin(); i!=temp.end(); i++) 
+    for(set<Cpointer>::iterator i=m_pah->m_carbonList.begin(); i!=m_pah->m_carbonList.end(); i++) 
         delete *i;
     // clear all data
+	m_pah->m_carbonList.clear();
     m_pah->m_siteMap.clear();
     m_pah->m_siteList.clear();
     m_pah->m_cfirst = NULL;
@@ -2405,4 +2403,16 @@ void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, int
     addCount(0, -2);
     //printSites(stt);
    // cout<<sp.None;
+}
+
+size_t PAHProcess::SiteListSize() const {
+	return m_pah->m_siteList.size();
+}
+
+size_t PAHProcess::CarbonListSize() const {
+	return m_pah->m_carbonList.size();
+}
+
+std::list<Site>& PAHProcess::SiteList() const {
+	return m_pah->m_siteList;
 }

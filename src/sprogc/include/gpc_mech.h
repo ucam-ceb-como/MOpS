@@ -74,12 +74,12 @@ public:
     typedef SpeciesPtrVector::const_iterator const_sp_iterator;
 
     // Constructors.
-    Mechanism(void);                  // Default constructor.
+    Mechanism();                  // Default constructor.
     Mechanism(const Mechanism &mech); // Copy constructor.
     Mechanism(std::istream &in);      // Stream-reading constructor.
 
     // Destructors.
-    virtual ~Mechanism(void);
+    ~Mechanism();
 
     // Operator overloads.
     Mechanism &operator=(const Mechanism &mech);
@@ -234,10 +234,10 @@ public:
     friend class boost::serialization::access;
 
     // Writes the mixture to a binary data stream.
-    virtual void Serialize(std::ostream &out) const;
+    void Serialize(std::ostream &out) const;
 
     // Reads the mixture data from a binary data stream.
-    virtual void Deserialize(std::istream &in);
+    void Deserialize(std::istream &in);
 
     // OUTPUT FUNCTIONS.
 

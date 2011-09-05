@@ -50,6 +50,7 @@
 #include "swp_surface_reaction.h"
 #include "swp_condensation.h"
 #include "swp_maths_functional.h"
+#include "swp_silica_interparticle.h"
 #include "camxml.h"
 #include <string>
 
@@ -166,6 +167,21 @@ private:
         Processes::Condensation &cond // Condensation to construct from XML.
         );
 
+	// INTER PARTICLE REACTIONS.
+
+    // Reads inter particle reaction processes from a sweep mechanism XML file.
+    static void readInterParticles(
+        CamXML::Document &xml, // CamXML document pre-constructed from file.
+        Mechanism &mech        // Mechanism to construct from XML.
+        );
+
+    // Reads an inter particle process from a sweep mechanism XML file.
+    static void readInterParticle(
+        CamXML::Element &xml,         // CamXML document pre-constructed from file.
+        Processes::InterParticle &intpart // Interparticle reaction to construct from XML.
+        );
+
+
     // COAGULATION
     //! Allow user to choose coagulation kernel via a sweep mechanism XML file.
     static void readCoagulation(
@@ -239,6 +255,7 @@ private:
     static Sweep::Maths::Functional *const readFunctional(
         CamXML::Element &xml // CamXML element containing the functional def'n.
         );
+
 };
 };
 

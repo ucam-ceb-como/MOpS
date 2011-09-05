@@ -51,6 +51,7 @@
 #include "mops_mechanism.h"
 #include "sprog.h"
 #include "sweep.h"
+#include "swp_gas_profile.h"
 #include <iostream>
 
 namespace Mops
@@ -77,11 +78,17 @@ public:
     // Creates a clone of the mixture object.
     Mixture *const Clone() const;
 
+	void SetGasphaseProfile(Sweep::GasProfile* gasphase);
+
+	virtual Sweep::GasProfile* Gasphase(void) const;
 protected:
     // As in Sprog, it is meaningless to define a mixture without knowledge
     // of the constituent species, therefore the default constructor is 
     // declared as protected.
     Mixture(void);
+
+private:
+	Sweep::GasProfile* gp;
 };
 };
 

@@ -5,6 +5,9 @@
 
 project (CHEMKINREADER)
 
+file(GLOB_RECURSE INCS "include/*.h")
+source_group("Header Files" FILES ${INCS})
+
 add_library(chemkinReader 
             source/stringFunctions.cpp
             source/element.cpp 
@@ -15,7 +18,8 @@ add_library(chemkinReader
             source/thermoParser.cpp 
             source/transportParser.cpp
             source/reactionParser.cpp
-            source/chemkinReader.cpp)
+            source/chemkinReader.cpp
+			${INCS})
 
 include_directories(include
                     ${Boost_INCLUDE_DIRS}

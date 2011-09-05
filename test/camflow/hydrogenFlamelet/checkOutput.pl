@@ -4,7 +4,7 @@
 #
 #
 # Licence:
-#    This file is part of "brush".
+#    This file is part of "camflow".
 #
 #    brush is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU General Public License
@@ -46,30 +46,37 @@ open($originalProfileFile, "<profileOriginal.dat") or die "ERR: failed to open p
 
 # Variable to hold the lines as they are read from the files
 my @fields;
+my @oldSolution;
+my @newSolution;
 
 # Read the last line, which should be the converged solution
 while(<$profileFile>) {
-    @fields = split(" +");
+    push @newSolution, [split(" +")];
 }
-my @oldSolution = @fields[3..10];
-#print "Old solution @oldSolution\n";
+#print "New solution @newSolution->[0][1] \n";
 
 # Take the converged solution from the reference calculation too
 while(<$originalProfileFile>) {
-    @fields = split(" +");
+    push @oldSolution, [split(" +")];
 }
-my @newSolution = @fields[3..10];
-#print "New solution @newSolution\n";
+#print "Old solution @oldSolution\n";
 
 #Compare temperature in old and new output files, skip the first line (line 0)
 # because it contains the column headings.
-for(my $i=0;$i<=7;++$i) {
-    if (abs($oldSolution[$i] - $newSolution[$i])/$oldSolution[$i] > 1e-4) {
-      print "Old value was $oldSolution[$i], but new value is $newSolution[$i] ($i)\n";
-      print "**************************\n";
-      print "****** TEST FAILURE ******\n";
-      print "**************************\n";
-      exit 1;
+for(my $i=0;$i<18;++$i) 
+{
+    for(my $j=2;$j<201;++$j) 
+    {
+        #print  " @oldSolution->[$j][$i] and @newSolution->[$j][$i] \n";
+        if ($oldSolution[$j][$i] != $newSolution[$j][$i]) 
+        {
+          print "Old value was $oldSolution[$j][$i], but new value is $newSolution[$j][$i]\n";
+          print "This was in Old Column $oldSolution[0][$i] and New Column $newSolution[0][$i], in row $i.\n"; 
+          print "**************************\n";
+          print "****** TEST FAILURE ******\n";
+          print "**************************\n";
+          exit 1;
+        }
     }
 }
 exit 0;

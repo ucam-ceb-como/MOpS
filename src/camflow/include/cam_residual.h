@@ -80,6 +80,7 @@ namespace Camflow
                 EQN_ALL,
                 EQN_SPECIES,
                 EQN_ENERGY,
+                EQN_SPECIES_ENERGY,
                 EQN_MOMENTUM,
                 EQN_CONTINUITY,
                 EQN_MOMENTS,
@@ -161,7 +162,10 @@ namespace Camflow
             /**
              *set the scalar dissipation rate in case of flamelet odel
              */
-            virtual void setExternalScalarDissipationRate(const doublereal sr){};
+            virtual void setExternalSDR(const doublereal sr)
+            {
+                throw std::logic_error("Why are you calling this virtual function?!");
+            };
 
             /*
              * stores the mixture properties for the calculation of fluxes. This
@@ -206,6 +210,12 @@ namespace Camflow
              *return the species mass fractions to the calling program
              */
             virtual void getSpeciesMassFracs(Array2D& mf);
+
+            /*
+             *return the moments to the calling program
+             */
+            void getMoments(Array2D& moments_);
+
             /*
              *return the average molar weight of the mixture to the calling program
              */
@@ -214,6 +224,22 @@ namespace Camflow
              *return the temperature
              */
             virtual void getTemperatureVector(std::vector<doublereal>& temp);
+            /*
+             *return the average soot diameter
+             */
+            virtual void getSootAverageDiameterVector(std::vector<doublereal>& temp);
+            /*
+             *return the soot dispersion
+             */
+            virtual void getSootDispersionVector(std::vector<doublereal>& temp);
+            /*
+             *return the soot surface area
+             */
+            virtual void getSootSurfaceAreaVector(std::vector<doublereal>& temp);
+            /*
+             *return the soot volume fraction
+             */
+            virtual void getSootVolumeFractionVector(std::vector<doublereal>& temp);
             /*
              *return the density vecot
              */
@@ -263,7 +289,7 @@ namespace Camflow
             void extractEnergyVector(std::vector<doublereal>& vec);
             void extractMomentum(std::vector<doublereal>& vec);
             void extractSootMoments(std::vector<doublereal>& vec);
-
+            void extractSpeciesAndEnergyVector(std::vector<doublereal>& vec);
             /*
              *merge the denepdent variables to the
              *master solution vector
@@ -273,24 +299,7 @@ namespace Camflow
             void mergeEnergyVector(doublereal* vec);
             void mergeMomentum(doublereal* vec);
             void mergeSootMoments(doublereal* vec);
-
-
-            //The following functions are specifically for flamelets
-
-            /**
-             *  Set the lewis number to be used
-             *  \todo Move this stuff to flamelet.cpp and add xml input.
-             */
-            void setLewisNumber(int n){
-                Lewis = n;
-            }
-
-            /**
-             *  Return the Lewis number flag
-             */
-            int getLewisNumber() const{
-                return Lewis;
-            }
+            void mergeSpeciesAndEnergyVector(doublereal* vec);
 
 
         protected:
@@ -322,8 +331,6 @@ namespace Camflow
             int eqn_slvd;
             const int nEqn;    //number of equations
 
-            int Lewis;
-
             //members for the reactor models
             std::vector<doublereal> solvect, rTol, aTol;
             doublereal vel,rho, Ac, As;
@@ -335,6 +342,7 @@ namespace Camflow
 
             Array2D s_mf;
             Array2D s_Wdot;
+            Array2D sootComponentRatesAllCells;
             Array2D s_H;
             Array2D s_Diff;
             Array2D s_ParticleBegin, s_ParticleEnd;
@@ -356,12 +364,16 @@ namespace Camflow
             std::vector<doublereal> m_shear;              //shear rate
             std::vector<doublereal> m_eigen;              //pressure gradient eigen value
             std::vector<doublereal> wdot;                 //rate of production
-            const std::vector<doublereal>& dz;            //grid spacting
+            const std::vector<doublereal>& dz;            //grid spacing
             std::vector<doublereal> axpos;                //axial position
             std::vector<doublereal> avgMolWt;             //average molecular weight
             std::vector<doublereal> slopes;               //slopes of piece-wise linear particle sources
             std::vector<doublereal> radiation;            //radiative heat loss term for output to profile.h
 
+            std::vector<doublereal> avgSootDiamMaster;	  // soot properties derived from moments.
+            std::vector<doublereal> dispersionMaster;
+            std::vector<doublereal> sootSurfaceAreaMaster;
+            std::vector<doublereal> sootVolumeFractionMaster;
 
     }; // End CamResidual class declaration.
 

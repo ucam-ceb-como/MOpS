@@ -55,8 +55,8 @@
 #include "swp_weighted_constcoag.h"
 #include "swp_coag_weight_rules.h"
 #include "swp_abf_model.h"
-#include "swp_diffusion_process.h"
-#include "swp_advection_process.h"
+#include "swp_silica_interparticle.h"
+#include "swp_tempReadColliPara.h" //temporarily used to read collision efficiency parameters, including mode, NONE, MAX, MIN, COMBINED
 
 #include "camxml.h"
 #include "string_functions.h"
@@ -336,10 +336,11 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 		throw std::runtime_error("PAH-PP MODEL are no longer supported (Sweep::MechParser::readV1), you can use NEW PAH_KMC model");
     } else if (str == "PAH_KMC") {
         mech.SetAggModel(AggModels::PAH_KMC_ID);
-	}else {
+	} else if (str == "silica") {
+        mech.SetAggModel(AggModels::Silica_ID);
+    } else {
         mech.SetAggModel(AggModels::Spherical_ID);
     }
-
     // See if there are any secondary particle criteria
     const CamXML::Element* secondaryXML = particleXML->GetFirstChild("secondaryparticle");
     if(secondaryXML != NULL) {
@@ -402,6 +403,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         readInceptions(xml, mech);
         readConstantInceptions(xml, mech);
         readSurfRxns(xml, mech);
+        readInterParticles(xml, mech);
         readCondensations(xml, mech);
     }
     readDiffusionProcs(xml, mech);
@@ -461,6 +463,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             throw runtime_error(msg);
         }
 
+        readColliPara(i,comp);
 
         // Get coalesc threshold.
         el = (*i)->GetFirstChild("coalthresh");
@@ -1008,6 +1011,15 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
             rxn.SetPropertyID(Sweep::iS);
             arr.A *= (1.0e-2);
         }
+		else if (str.compare("asn")==0) {
+            rxn.SetPropertyID(Sweep::iASN);
+
+            // Must scale rate constant from cm3 to m3, surface area
+            // is multiplied by the site density so that it is a dimensionless
+            // quantity hence A has units cm^3 s^-1.
+            //arr.A *= (1.0e-6);
+			arr.A *= (1.0e-6);
+		}
         else if (str.compare("d")==0) {
             // This reaction depends on some power of the diameter.
             switch (power) {
@@ -1044,7 +1056,6 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
     rxn.SetArrhenius(arr);
 
 }
-
 
 // CONDENSATIONS.
 
@@ -1136,6 +1147,174 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
     }
     cond.SetA(A);
 }
+
+
+// INTER PARTICLE REACTIONS.
+
+// Reads interparticle reaction processes from a sweep mechanism XML file.
+void MechParser::readInterParticles(CamXML::Document &xml, Mechanism &mech)
+{
+    vector<CamXML::Element*> items, subitems;
+    vector<CamXML::Element*>::iterator i, j;
+    string str;
+    unsigned int k = 0;
+
+    // Get all surface reactions.
+    xml.Root()->GetChildren("interparticle", items);
+
+    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
+
+    	// Create a new interparticle object.
+    	InterParticle *intpar = NULL;
+    	intpar = new InterParticle(mech);
+
+        // Set default name.
+        intpar->SetName("Inter Particle " + cstr(k));
+
+        // Read the inter particle properties.
+        try {
+            readInterParticle(*(*i), *intpar);
+        } catch (std::exception &e) {
+            delete intpar;
+            throw;
+        }
+
+        // Add Inter particle to mechanism.
+        mech.AddProcess(*intpar);
+    }
+}
+
+// Reads a interparticle process from a sweep mechanism XML file.
+void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticle &intpar)
+{
+    string str;
+    CamXML::Element *el = NULL;
+
+    // Read name.
+    str = xml.GetAttributeValue("name");
+    if (str != "") intpar.SetName(str);
+
+    // Is reaction deferred.
+    str = xml.GetAttributeValue("defer");
+    if (str=="true") {
+    	intpar.SetDeferred(true);
+    } else {
+    	intpar.SetDeferred(false);
+    }
+
+    readReactants(xml, intpar);
+
+    // Read products.
+    readProducts(xml, intpar);
+
+    // Read particle composition change.
+    readCompChanges(xml, intpar);
+
+    // Read tracker variable changes.
+    readTrackChanges(xml, intpar);
+
+    // The interparticle reaction changes stuff
+    //assert((intpar.CompChange().size() > 0) || (intpar.TrackChange().size() > 0));
+
+    //========== Read Arrhenius rate parameters ======================
+    Sprog::Kinetics::ARRHENIUS arr;
+    el = xml.GetFirstChild("A");
+    if (el != NULL) {
+        arr.A = cdble(el->Data());
+    } else {
+        // Reaction must have constant.
+        throw runtime_error("Surface reaction found with no rate constant "
+                            "defined (Sweep, MechParser::readSurfRxns).");
+    }
+    el = xml.GetFirstChild("n");
+    if (el!=NULL) {
+        arr.n = cdble(el->Data());
+    } else {
+        // Default temperature power is 0.
+        arr.n = 0.0;
+    }
+    el = xml.GetFirstChild("E");
+    if (el!=NULL) {
+        arr.E = cdble(el->Data()) * R / RCAL;
+    } else {
+        // Default activation energy is zero.
+        arr.E = 0.0;
+    }
+
+
+    //========= Particle dependency ==================================
+    el = xml.GetFirstChild("particleterm");
+    if (el!=NULL) {
+        // Get property ID.
+        str = el->GetAttributeValue("id");
+
+        // Get power.
+        int power = (int)cdble(el->GetAttributeValue("power"));
+
+        if (str.compare("as")==0) {
+            // This reaction depends on surface area.  Ignore power,
+            // they must have meant 1.
+            intpar.SetPropertyID(Sweep::iS);
+
+            // Must scale rate constant from cm3 to m3, surface area
+            // is multiplied by the site density so that it is a dimensionless
+            // quantity hence A has units cm^3 s^-1.
+            arr.A *= (1.0e-6);
+        }
+        else if (str.compare("s")==0) {
+            // This reaction depends on surface area.  Ignore power,
+            // they must have meant 1.
+        	intpar.SetPropertyID(Sweep::iS);
+            arr.A *= (1.0e-2);
+        }
+		else if (str.compare("asn")==0) {
+            intpar.SetPropertyID(Sweep::iASN);
+
+            // Must scale rate constant from cm3 to m3, surface area
+            // is multiplied by the site density so that it is a dimensionless
+            // quantity hence A has units cm^3 s^-1.
+            //arr.A *= (1.0e-6);
+			arr.A *= (1.0e-6);
+        }
+        else if (str.compare("d")==0) {
+            // This reaction depends on some power of the diameter.
+            switch (power) {
+                case 1:
+                	intpar.SetPropertyID(Sweep::iDcol);
+                    arr.A *= (1.0e-4);
+                    break;
+                case 2:
+                	intpar.SetPropertyID(Sweep::iD2);
+                    arr.A *= (1.0e-2);
+                    break;
+                case -1:
+					intpar.SetPropertyID(Sweep::iD_1);
+                    arr.A *= (1.0e2);
+                    break;
+                case -2:
+					intpar.SetPropertyID(Sweep::iD_2);
+                    arr.A *= (1.0e4);
+                    break;
+                default:
+                    // Oh dear, can't have a zero power.
+                    throw runtime_error("""particleterm"" tag found with "
+                                        "invalid or zero power attribute "
+                                        "(Sweep, MechParser::readSurfRxn)");
+            }
+        } else {
+            arr.A *= (1.0e-6);
+        }
+    } else {
+        throw runtime_error("Surface process defined without ""particleterm"" "
+                            "element (Sweep, MechParser::readSurfRxn).");
+    }
+
+
+    intpar.SetArrhenius(arr);
+
+}
+
+
 
 //COAGULATION
 
@@ -1295,96 +1474,8 @@ void MechParser::readDiffusionProcs(CamXML::Document &xml, Mechanism &mech)
     // Get all transport processes.
     xml.Root()->GetChildren("diffusion", items);
 
-    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
-        DiffusionProcess *tran = new DiffusionProcess();
-        // Set default name.
-        tran->SetName("Diffusion " + cstr(k));
-
-        // Read the reaction properties.
-        try {
-            readDiffusionProc(*(*i), *tran);
-        } catch (std::exception &e) {
-            delete tran;
-            throw;
-        }
-
-        // Add process to mechanism.
-        mech.AddTransport(*tran);
-    }
-}
-
-/*!
- *\param[in]        xml     XML node of type diffusion
- *\param[in]        rxn     mechanism to which to add the process
- */
-void MechParser::readDiffusionProc(CamXML::Element &xml, Processes::DiffusionProcess &tran)
-{
-    string str;
-    CamXML::Element *el = NULL;
-
-    // Read name.
-    str = xml.GetAttributeValue("name");
-    if (str != "")
-        tran.SetName(str);
-
-    // Particle dependency.
-    el = xml.GetFirstChild("particleterm");
-    if (el!=NULL) {
-        // Get property ID.
-        str = el->GetAttributeValue("id");
-
-        // Get power.
-        int id = atoi(el->GetAttributeValue("power").c_str());
-
-        if (str.compare("d")==0) {
-            // This reaction depends on some power of the collision diameter.
-            switch (id) {
-                case 0:
-                    tran.SetPropertyID(Sweep::iUniform);
-                    break;
-                case 1:
-                    tran.SetPropertyID(Sweep::iDcol);
-                    break;
-                case 2:
-                    tran.SetPropertyID(Sweep::iD2);
-                    break;
-                case -1:
-                    tran.SetPropertyID(Sweep::iD_1);
-                    break;
-                case -2:
-                    tran.SetPropertyID(Sweep::iD_2);
-                    break;
-                default:
-                    // Oh dear, can't have a zero power.
-                    throw runtime_error("particleterm"" tag found with \
-                                         invalid power attribute \
-                                        (Sweep, MechParser::readTransportProc)");
-            }
-        }
-        else {
-            throw runtime_error("Surface process defined without particleterm \
-                                 element (Sweep, MechParser::readTransportProc).");
-        }
-    }
-
-    // Temperature dependency.
-    el = xml.GetFirstChild("temperature");
-    real power = 0;
-    if (el!=NULL) {
-        // Get power.
-        power = atof(el->GetAttributeValue("power").c_str());
-    }
-    tran.SetTemperatureExponent(power);
-
-    // Read scaling factor
-    real A = 0.0;
-    el = xml.GetFirstChild("A");
-    if (el != NULL) {
-        A = atof(el->Data().c_str());
-    } else {
-        A = 1.0;
-    }
-    tran.SetA(A);
+    if(!items.empty())
+        throw std::runtime_error("Diffusion processes are no longer supported");
 }
 
 /*!
@@ -1401,49 +1492,9 @@ void MechParser::readAdvectionProcs(CamXML::Document &xml, Mechanism &mech)
     // Get all transport processes.
     xml.Root()->GetChildren("advection", items);
 
-    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
-        AdvectionProcess *tran = new AdvectionProcess();
-        // Set default name.
-        tran->SetName("Advection " + cstr(k));
-
-        // Read the reaction properties.
-        try {
-            readAdvectionProc(*(*i), *tran);
-        } catch (std::exception &e) {
-            delete tran;
-            throw;
-        }
-
-        // Add process to mechanism.
-        mech.AddTransport(*tran);
-    }
+    if(!items.empty())
+        throw std::runtime_error("Advection processes are no longer supported");
 }
-
-/*!
- *\param[in]        xml     XML node of type advection
- *\param[in]        rxn     mechanism to which to add the process
- */
-void MechParser::readAdvectionProc(CamXML::Element &xml, Processes::AdvectionProcess &tran)
-{
-    string str;
-    CamXML::Element *el = NULL;
-
-    // Read name.
-    str = xml.GetAttributeValue("name");
-    if (str != "")
-        tran.SetName(str);
-
-    // Read scaling factor
-    real A = 0.0;
-    el = xml.GetFirstChild("A");
-    if (el != NULL) {
-        A = atof(el->Data().c_str());
-    } else {
-        A = 1.0;
-    }
-    tran.SetA(A);
-}
-
 
 // REACTION SHARED COMPONENTS.
 

@@ -1,5 +1,5 @@
 /*!
-  * \Author     Zakwan Zainuddin (zz260)
+  * \author     Zakwan Zainuddin (zz260)
   * \file       swp_kmc_pah_structure.cpp
   *
   * \brief        Implementation file for swp_kmc_pah_structure.h.
@@ -49,6 +49,8 @@
 #include "swp_kmc_jump_process.h"
 #include "swp_kmc_pah_process.h"
 #include "rng.h"
+#include "string_functions.h"
+#include <string>
 #include <iostream>
 #include <fstream>
 #include <list>
@@ -58,14 +60,15 @@
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
 using namespace std;
-
+using namespace Strings;
 
 
 // Constructors and Destructor
 //! Default Constructor
 PAHStructure::PAHStructure() {
-    m_cfirst = NULL;
-    m_clast = NULL;
+	//NULLC = m_carbonList.insert(Carbon()).first;
+    m_cfirst = NULLC;
+    m_clast = NULLC;
     m_rings = 0;
     m_counts = intpair(2, 0);
     m_parent = NULL;
@@ -76,12 +79,12 @@ PAHStructure::PAHStructure(const PAHStructure& copy){
 }
 //! Default Destructor
 PAHStructure::~PAHStructure() {
-    //delete m_cfirst;
-    //delete m_clast;
-    //PAHProcess pp(*this);
-   // pp.clearStructure();
-     //m_siteMap.clear();
-    //m_siteList.clear();
+    delete m_cfirst;
+    delete m_clast;
+    PAHProcess pp(*this);
+	pp.clearStructure();
+    m_siteMap.clear();
+    m_siteList.clear();
 }
 
 void PAHStructure::setParent(Sweep::AggModels::PAH* parent) {
@@ -103,6 +106,10 @@ bool PAHStructure::operator!=(PAHStructure &rhs) const{
 int PAHStructure::numofC(){
     return m_counts.first;
 } 
+
+int PAHStructure::numofH(){
+    return m_counts.second;
+} 
 void PAHStructure::initialise(StartingStructure ss) {
     PAHProcess p(*this);
     p.initialise(ss);
@@ -115,4 +122,15 @@ PAHStructure*  PAHStructure::Clone() {
 bool PAHStructure::havebridgeC(){
     PAHProcess p(*this);
     return p.havebridgeC();
+}
+
+void PAHStructure::saveDOTperLoop(int PAH_ID, int i)
+{
+	PAHProcess p(*this);
+    string filename = "KMC_DEBUG/ID_";
+	filename.append(Strings::cstr(PAH_ID));
+	filename.append("_");
+	filename.append(Strings::cstr(i));
+    filename.append(".dot");
+    p.saveDOT(filename);
 }

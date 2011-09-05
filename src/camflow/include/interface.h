@@ -267,21 +267,23 @@ namespace Camflow {
             ~Interface();
 
             //! Calling interface to solve flamelets with time-history scalar dissipation rates.
-            void flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
+            void flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation=false);
 
             //! Call to solve a flamelet for a given strain rate.
-            void flameletStrainRate(const doublereal& strainRate, bool lnone=true);
+            void flameletStrainRate(const doublereal& strainRate);
+
+            //! Call to solve a flamelet for a given SDR rate.
+            void flameletSDR(const doublereal& SDR);
 
             //! Calling interface to solve flamelets with a profile of SDRs with a time history.
             void flameletSDRprofile(const std::vector< std::vector<doublereal> >& sdr,
                                     const std::vector< std::vector<doublereal> >& Zcoords,
                                     const std::vector<doublereal>& intTime,
-                                    bool continuation=false,
-                                    bool lnone=true);
+                                    bool continuation=false);
 
             //! Interface for use when soot volume fraction is available.
             void flameletWithSoot(const std::vector<doublereal>& soot_fv, const std::vector<doublereal>& sdr,
-                                  const std::vector<doublereal>& intTime, bool continuation=false, bool lnone=true);
+                                  const std::vector<doublereal>& intTime, bool continuation=false);
 
             //! Assign the species mass fractions, temperature, density, and velocity into the vector of mixture objects.
             void resetMixtures(std::vector<Thermo::Mixture>& cstrs);
@@ -302,17 +304,27 @@ namespace Camflow {
 
             //! Return the number of species.
             int getNumberOfSpecies() const;
+
+            //! Return the number of moments.
+            int getNumberOfMoments() const;
+
             //! Return the number of reactions.
             int getNumberOfReactions() const;
 
             //! Return the species mass fraction given the independent variable.
             doublereal getMassFrac(const int spIndex, const doublereal axpos);
 
+            //! Return the soot moment given the independent variable.
+            doublereal getMoment(const int momIndex, const doublereal axpos);
+
             //! Return the species mole fraction given the independent variable.
             doublereal getMoleFrac(const int spIndex, const doublereal axpos);
 
             //! Get spatial profile of one species.
             std::vector<doublereal> getMassFracsBySpecies(const int spIndex) const;
+
+            //! Get spatial profile of one moment
+            std::vector<doublereal> getMomentsByIndex(const int momentIndex) const;
 
             //! Get mass fractions for all species at one point.
             std::vector<doublereal> getMassFracsByPoint(const int indVarIndex) const;
@@ -331,6 +343,18 @@ namespace Camflow {
 
             //! Return the specific heat given the independent variable.
             doublereal getSpecificHeat(const doublereal axPos);
+
+            //! return the sootAverageDiameter
+            doublereal getSootAverageDiameter(const doublereal axpos);
+
+            //!return the sootDispersion
+            doublereal getSootDispersion(const doublereal axpos);
+
+             //!return the sootSurfaceArea
+            doublereal getSootSurfaceArea(const doublereal axpos);
+
+             //!return the sootVolumeFraction
+            doublereal getSootVolumeFraction(const doublereal axpos);
 
             //! Return the thermal conductivity given the independent variable.
             doublereal getThermalConductivity(const doublereal axPos);
@@ -388,12 +412,15 @@ namespace Camflow {
             CamSoot cSoot;
             Sprog::Mechanism mech;
             int nSpecies;
+            int nMoments;
             std::vector<std::string> speciesNames;
+            std::vector<std::string> momentNames;
             const SpeciesPtrVector *speciesPointerVector;
             /*
              *memberes to hold dependent variabes
              */
             Array2D spMassFracs;            //species mass fractions
+            Array2D sootMoments;			// Soot moments
             std::vector<doublereal> TVector;     //temperature
             std::vector<doublereal> rhoVector;   //density
             std::vector<doublereal> muVector;    //viscosity
@@ -403,6 +430,11 @@ namespace Camflow {
             std::vector<doublereal> mVelocity;   //velocity
             std::vector<doublereal> avgMolWtVector;   // Average Molar Weight of the mixture
             std::vector<doublereal> wdotA4;   // rate of production of pyrene
+            std::vector<doublereal> sootAverageDiameterVector;
+            std::vector<doublereal> sootDispersionVector;
+            std::vector<doublereal> sootSurfaceAreaVector;
+            std::vector<doublereal> sootVolumeFractionVector;
+
             Array2D mDiff;                      //Diffusion coefficients
 
             doublereal stMixtureFrac;       //stoichiometric mixture fraction
@@ -411,10 +443,12 @@ namespace Camflow {
             FlameLet* flmlt;
 
             //! Calling interface to solve a flamelet with a given scalar dissipation rate.
-            void flamelet(doublereal sdr, doublereal intTime=0, bool continuation=false, bool lnone=true);
+            void flamelet(doublereal sdr, doublereal intTime=0, bool continuation=false);
 
             //! Function to return a variable's value given the independent variable.
             doublereal getVariableAt(const doublereal& pos, const std::vector<doublereal>& var) const;
+
+            void getFlameletVariables(FlameLet* const flmlt);
 
         }; // End Interface class declaration.
 

@@ -63,6 +63,7 @@
 #include "limex_wrapper.h"
 #include "linear_interpolator.hpp"
 #include "cam_sdr.h"
+#include "cam_lewis.h"
 
 namespace Camflow
 {
@@ -79,12 +80,6 @@ namespace Camflow
 
         public:
 
-            //! Enumerator for Unity or Fixed Lewis number.
-            enum
-            {
-                LNONE,
-                LNNONE
-            };
 
             //! Default constructor. Give boolean flags some default values.
             FlameLet
@@ -110,6 +105,11 @@ namespace Camflow
             //! Stand alone call as well as first call from an external code that solves the population balance
             void solve();
 
+            // Call from openFoam with flag to indicate if we are solving a steady state
+            // flamelet (at the base of the flame) with no soot, or if we are solving a
+            // Lagrangian flamelet with soot (if soot mech is present)
+            void solve(bool interface, bool steadyStateNoSoot);
+
             //! Continulation call from an external code that solves the population balance.
             void solve(std::vector<Thermo::Mixture>& cstrs,
                        const std::vector< std::vector<doublereal> >& iniSource,
@@ -127,7 +127,10 @@ namespace Camflow
             void csolve(bool interface=false);
 
             //! Segregated solver.
-            void ssolve();
+            void ssolve(bool interface=false);
+
+            //! Split solver.
+            void splitSolve(bool interface=false);
 
             //! Restart the solution with the converged solution.
             void restart();
@@ -147,6 +150,9 @@ namespace Camflow
             //! Soot moments residual calculation.
             void sootMomentResidual(const doublereal& t,doublereal* y,doublereal* f);
 
+            //! Soot moments residual calculation. (When SS at base of flame)
+            void sootMomentResidualAtFlameBase(const doublereal& t,doublereal* y,doublereal* f);
+
             //! Energy residual calculation.
             void energyResidual(const doublereal& t, doublereal* y, doublereal* f);
 
@@ -156,6 +162,12 @@ namespace Camflow
             void setExternalStrainRate(const doublereal strainRate);
 
             void setExternalSDR(const doublereal sdr);
+
+            void setExternalTimeSDR
+            (
+                const std::vector<doublereal>& time,
+                const std::vector<doublereal>& sdr
+            );
 
             //! Provide a soot volume fraction from an external calculation.
             void setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv);
@@ -175,23 +187,26 @@ namespace Camflow
             //! Create header for file output.
             std::vector<std::string> header();
 
+            //! Create header for soot rates file output.
+            std::vector<std::string> sootRatesHeader();
+
             //! Console output with residuals.
             void report(doublereal x, doublereal* solution, doublereal& res);
 
             //! File output.
             void reportToFile(std::string fileName, doublereal x, std::vector<double>& solution);
 
-            void writeXMLFile
-            (
-                const doublereal,
-                const std::vector<doublereal>& solvect
-            );
+            // Output soot compoent rates to file
+            void reportSootRatesToFile(std::string fileName, doublereal t, Array2D& rates);
+
+
 
         private:
 
             doublereal stoichZ; //stoichiometric mixture fraction
             doublereal sdr;     // scalar dissipation rate
             doublereal restartTime;
+            bool steadyStateAtFlameBase;
             std::vector< std::vector<doublereal> > cfdMixFracCoords; // Mixture Fraction coords from CFD.
 
             //! Spatial profile of soot volume fraction
@@ -203,8 +218,9 @@ namespace Camflow
 
             Radiation *radiation;
             ScalarDissipationRate scalarDissipationRate_;
+            LewisNumber Lewis;
 
-            Array2D Le, convection, CpSpec; //Lewis numbers
+            Array2D convection, CpSpec;
 
     }; // End FlameLet class declaration.
 

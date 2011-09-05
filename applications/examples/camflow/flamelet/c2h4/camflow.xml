@@ -10,6 +10,8 @@
      <pressure unit="bar">1</pressure>
 	  <strain>100</strain>
 	  <radiation activate="off"></radiation>
+	  <flameletEquation>complete</flameletEquation>
+	  <Lewis>fixedFromFile</Lewis>
   </op_condition>
   <inlet>
      <fuel>
@@ -34,7 +36,7 @@
 	  <tols>
 		  <species>
 			  <aTol>1.e-18</aTol>
-			  <rTol>1.e-08</rTol>	  
+			  <rTol>1.e-12</rTol>	  
 		  </species>
 		  <temperature>
 			  <aTol>1.e-03</aTol>
@@ -47,6 +49,7 @@
   	  </tols>
   </solver>
   <initialize>
+     <restart file="restartBinary">binary</restart>
 	 <mCenter unit="cm">10</mCenter>
 	 <mWidth unit="cm">10</mWidth>
 	 <massfrac>

@@ -1,5 +1,5 @@
 /*!
-  \Author       Rebecca Riehl (rcr33)
+  \author       Rebecca Riehl (rcr33)
   \file         loi_reduction.h
   Project:        mopsc (gas-phase chemistry solver).
   Sourceforge:    http://sourceforge.net/projects/mopssuite

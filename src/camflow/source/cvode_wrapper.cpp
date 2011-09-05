@@ -39,8 +39,8 @@ void CVodeWrapper::init(int n, std::vector<doublereal>& solnVec, doublereal tol,
     currentTime = iniTime;
     maxTime = maxIntTime;
     cvode_mem = CVodeCreate(CV_BDF,CV_NEWTON);
-    CVodeMalloc(cvode_mem,cvodeResid,currentTime,y,CV_SS,rtol,(void*)&atol);
 
+    CVodeMalloc(cvode_mem,cvodeResid,currentTime,y,CV_SS,rtol,(void*)&atol);
 
     if(band==n){
         CVDense(cvode_mem,n);
@@ -51,6 +51,44 @@ void CVodeWrapper::init(int n, std::vector<doublereal>& solnVec, doublereal tol,
     CVodeSetMaxNumSteps(cvode_mem,5000);
 
 }
+
+void CVodeWrapper::initVectorTol(int n, std::vector<doublereal>& solnVec, doublereal aTolTemp[],
+               doublereal rtol,doublereal maxIntTime ,int band, CamResidual& cr, doublereal iniTime){
+
+    reacPtr = &cr;
+
+    cvode_mem = NULL;
+    y=NULL;
+    yPrime = NULL;
+    /*
+     *create the soln vector
+     */
+    y = N_VMake_Serial(n,&solnVec[0]);
+    yPrime = N_VNew_Serial(n);
+    eqnSize = n;
+    ///atol = tol;					////  ank25
+    currentTime = iniTime;
+    maxTime = maxIntTime;
+    cvode_mem = CVodeCreate(CV_BDF,CV_NEWTON);
+
+    aTolVector = NULL;
+    aTolVector = N_VMake_Serial(n,aTolTemp);
+
+    CVodeMalloc(cvode_mem,cvodeResid,currentTime,y,CV_SV,rtol,aTolVector);
+
+    //-------------
+
+    if(band==n){
+        CVDense(cvode_mem,n);
+    }else{
+        CVBand(cvode_mem,n,band,band);
+    }
+    CVodeSetFdata(cvode_mem,(void*)&cr);
+    CVodeSetMaxNumSteps(cvode_mem,5000);
+
+}
+
+
 
 /*
  *additional solver control
@@ -74,11 +112,14 @@ doublereal& CVodeWrapper::solve(int stopMode){
             std::cout << "Cvode Integration error\n";
         }else{
             reacPtr->report(currentTime,NV_DATA_S(y));
+            calcResNorm();
+            reacPtr->report(currentTime,NV_DATA_S(y),resNorm);
         }
     }while(currentTime < maxTime);
 
     CVodeGetDky(cvode_mem,currentTime,1,yPrime);
     calcResNorm();
+    reacPtr->report(currentTime,NV_DATA_S(y),resNorm);
     return resNorm;
 
 }

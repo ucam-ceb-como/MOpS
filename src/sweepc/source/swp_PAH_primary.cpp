@@ -247,14 +247,8 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 */
 void PAHPrimary::AddPAH(real time,const Sweep::ParticleModel &model)
 {
-	PAH* new_PAH = new PAH();
-	new_PAH->m_numcarbon = PYRENE;//start at pyrene (C=16)
+	PAH* new_PAH = new PAH(time);
 	new_PAH->PAH_ID=ID;
-	new_PAH->time_created=time;
-	new_PAH->lastupdated=time;
-	new_PAH->m_pahstruct= new PAHStructure();
-	new_PAH->m_pahstruct->initialise(PYRENE);
-	
 	m_PAH.push_back(new_PAH);
 	ID++;
 
@@ -985,10 +979,12 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
             const real growtime = t - (*it)->lastupdated;
             assert(growtime >= 0.0);
 
-            // Here updatePAH function for KMC_ARS model is called.
             const unsigned int oldNumCarbon = (*it)->m_numcarbon; 
-			sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 5, Sweep::genrand_int, Sweep::genrand_real1, growthfact, (*it)->PAH_ID);
-			(*it)->m_numcarbon=(*it)->m_pahstruct->numofC();
+
+            // Here updatePAH function in KMC_ARS model is called.
+            // waitingSteps is set to be 1 by dc516, details seeing KMCSimulator::updatePAH()
+            sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1, Sweep::genrand_int, Sweep::genrand_real1, growthfact, (*it)->PAH_ID);
+            (*it)->m_numcarbon=(*it)->m_pahstruct->numofC();
             (*it)->lastupdated=t;
 
             // See if anything changed, as this will required a call to UpdatePrimary() below
@@ -1005,6 +1001,50 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
     }
 }
 
+void PAHPrimary::FindXmer(std::vector<double> &out, Xmer m_xmer) const
+{
+	// dimer: a partilce with one primary containing 2 PAHs
+	if (this->Numprimary()==1 && this->NumPAH()==m_xmer)
+		out.push_back(this->MassforXmer());
+}
+
+void PAHPrimary::FindXmer(std::vector<std::vector<double> > &out, int target_num_PAH) const
+{
+	if (m_leftchild != NULL)
+		m_leftchild->FindXmer(out,target_num_PAH);
+	if (m_rightchild != NULL)
+		m_rightchild->FindXmer(out,target_num_PAH);
+	if (m_PAH.size() <= (target_num_PAH+10) && m_PAH.size() >= (target_num_PAH-10))	
+		mass_PAH(out);
+}
+
+double PAHPrimary::MassforXmer() const
+{ 
+	int sum = 0;
+	for (size_t i = 0; i != m_PAH.size(); ++i)
+	{
+		sum+=m_PAH[i]->m_pahstruct->numofH();
+	    sum+=12 * m_PAH[i]->m_numcarbon;
+	}
+	return sum;	
+}
+
+void PAHPrimary::mass_PAH(std::vector<std::vector<double> > &out) const
+{
+	std::vector<double> temp;
+	std::vector<double> divider(2,0);
+	for (size_t i = 0; i != m_PAH.size(); ++i)
+	{
+		temp.push_back(m_PAH[i]->m_numcarbon);
+		temp.push_back(m_PAH[i]->m_pahstruct->numofH());
+		m_PAH[i]->saveDOTperLoop((int)ID,(int)i);
+		out.push_back(temp);
+		temp.clear();
+	}
+	divider.push_back(ID);
+	out.push_back(divider);
+	ID++;
+}
 
 void PAHPrimary::UpdateCache(void)
 {

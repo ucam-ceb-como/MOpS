@@ -46,7 +46,6 @@
 #include "swp_params.h"
 #include "swp_particle_process.h"
 #include "swp_property_indices.h"
-#include "swp_gas_profile.h"
 
 namespace Sweep
 {
@@ -160,9 +159,7 @@ public:
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
         int (*rand_int)(int, int), 
-        real(*rand_u01)(),
-        Sweep::GasProfile* gp=NULL,
-        Transport::TransportOutflow *out = 0
+        real(*rand_u01)()
         ) const;
 
     // Performs the process on a given particle in the system.  Particle

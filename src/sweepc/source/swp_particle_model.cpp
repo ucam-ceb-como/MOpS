@@ -377,27 +377,55 @@ Sweep::Particle *const ParticleModel::CreateParticle(const real time, const real
 //Collision Efficiency
 double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 {
-	double redmass=0;
-	int ncarbon1,ncarbon2;
-	const AggModels::PAHPrimary *pah1 = NULL;
-	const AggModels::PAHPrimary *pah2 = NULL;
-	pah1 = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
-	pah2 = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary());
-	ncarbon2=(int)(1.0*pah2->NumCarbon());
-	ncarbon1=(int)(1.0*pah1->NumCarbon());
-	double x;
-	double y;
-	x=1e10*pah1->CollDiameter();
-	y=1e10*pah2->CollDiameter();
-	double reddiam;
-	double ceffi;
-	reddiam=min(x,y);
-	redmass=12*min(ncarbon1,ncarbon2);
-	ceffi=1/(1+exp(-2.0* (reddiam*reddiam*reddiam/(redmass)+pow(redmass/1100,6.0)-5.0)));
-	if (pah1->NumPAH()>1 && pah2->NumPAH()>1)
-		ceffi=1;
-	return ceffi;
-
+		double ceffi;
+	if (Components(0)->Mode() == "NONE" || Components(0)->Mode() == "") {
+		double A = Components(0)->ColliParaA();
+		double B = Components(0)->ColliParaB();
+		double C = Components(0)->ColliParaC();
+		double redmass=0;
+		int ncarbon1,ncarbon2;
+		const AggModels::PAHPrimary *pah1 = NULL;
+		const AggModels::PAHPrimary *pah2 = NULL;
+		pah1 = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
+		pah2 = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary());
+		ncarbon2=(int)(1.0*pah2->NumCarbon());
+		ncarbon1=(int)(1.0*pah1->NumCarbon());
+		double x;
+		double y;
+		x=1e10*pah1->CollDiameter();
+		y=1e10*pah2->CollDiameter();
+		double reddiam;
+		reddiam=min(x,y);
+		redmass=12*min(ncarbon1,ncarbon2);
+		ceffi=1/(1+exp(-A* (reddiam*reddiam*reddiam/(redmass)+pow(redmass/B,6.0)-C)));
+		if (pah1->NumPAH()>1 && pah2->NumPAH()>1)
+			ceffi=1;
+		return ceffi;
+	}
+	else {
+		double target_C = Components(0)->Threshold();
+		int ncarbon1,ncarbon2;
+		const AggModels::PAHPrimary *pah1 = NULL;
+		const AggModels::PAHPrimary *pah2 = NULL;
+		pah1 = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
+		pah2 = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary());
+		if (pah1->NumPAH()>1 && pah2->NumPAH()>1) ceffi=1;
+		else {
+			ncarbon2=(int)(1.0*pah2->NumCarbon());
+			ncarbon1=(int)(1.0*pah1->NumCarbon());
+			double redmass;
+			if (Components(0)->Mode() == "MAX")
+			    redmass = max(ncarbon1,ncarbon2);
+            else if (Components(0)->Mode() == "MIN")
+			    redmass = min(ncarbon1,ncarbon2);
+            else if (Components(0)->Mode() == "COMBINED")
+			    redmass = ncarbon1 + ncarbon2;
+			if (redmass >= target_C) ceffi = 1;
+			else ceffi = 0;
+		}
+		return ceffi;
+	}
+}
 
 //  Used to read in the collision efficiency from a database instead from a formula
 /*
@@ -429,8 +457,8 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 	}
 	if (cefflarger==ceffsmaller) return cefflarger;
 	double a=(cefflarger-ceffsmaller)/(redmasslarger-redmasssmaller);
-	return ceffsmaller+(redmass-redmasssmaller)*a;*/
-}
+	return ceffsmaller+(redmass-redmasssmaller)*a;
+}*/
 
 // READ/WRITE/COPY.
 
@@ -1029,7 +1057,7 @@ real ParticleModel::collisionIntegralDiameter(const Cell &sys, const Particle &s
 
 
 /*!
- * Dimensionless temperature for use in formul\ae from
+ * Dimensionless temperature for use in formulae from
  * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
  * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
  *
@@ -1050,7 +1078,7 @@ real ParticleModel::collisionIntegralTemperature(const Cell &sys, const Particle
 }
 
 /*!
- * Proportion of diffuse scattering result to use in formul\ae from
+ * Proportion of diffuse scattering result to use in formulae from
  * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
  * of small particles. II. Application", Phys. Rev. E 68:061207 (2003).
  * This formula is most clearly presented in the follow on paper:
