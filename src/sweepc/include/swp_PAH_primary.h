@@ -151,6 +151,8 @@ public:
     int Numprimary() const;
     //! returns the number of carbon atoms in the particle
     int NumCarbon() const;
+    //! returns the number of hydrogen atoms in the particle
+    int NumHydrogen() const;
     //! returns the number of PAH in the particle
     int NumPAH() const;
     //! returns sqrt(L*W)
@@ -165,6 +167,8 @@ public:
     void mass_PAH(std::vector<std::vector<double> > &out) const;
     //! return the mass of Xmer including C and H 
     double MassforXmer() const;
+    //! set pah_structure=Null before destructor delete it
+    //void ReleasePAH(Primary &rhs);
 
 protected:
     //! Empty primary not meaningful
@@ -219,6 +223,7 @@ private:
     //some basic properties
     //derived from the PAHs by UpdataCache()
     int m_numcarbon;
+    int m_numH;
     double m_PAHmass;
     double m_PAHCollDiameter;
     int m_numPAH;

@@ -84,6 +84,7 @@ double PAHPrimary::pow(double a, double b) {
 // CONSTRUCTORS AND DESTRUCTORS.
 PAHPrimary::PAHPrimary() : Primary(),
     m_numcarbon(0),
+	m_numH(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -120,6 +121,7 @@ PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model,
                        int (*rand_int)(int, int))
 : Primary(time, model),
     m_numcarbon(0),
+	m_numH(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -165,6 +167,7 @@ PAHPrimary::PAHPrimary(const real time, const real position,
                        int (*rand_int)(int, int))
 : Primary(time, model),
     m_numcarbon(0),
+	m_numH(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -203,6 +206,7 @@ PAHPrimary::PAHPrimary(const real time, const real position,
 PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 : Primary(time, model),
     m_numcarbon(0),
+	m_numH(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -379,7 +383,7 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
     m_Rg=source->m_Rg;
     m_avg_coalesc=source->m_avg_coalesc;
     m_numcarbon = source->m_numcarbon;
-
+    m_numH = source->m_numH;
     // Replace the PAHs with those from the source
 	if (m_clone==true){
 	for (size_t i=0; i!=source->m_PAH.size();++i){
@@ -511,6 +515,13 @@ void PAHPrimary::UpdateAllPointers( const PAHPrimary *original)
 //        assert(m_rightparticle->m_rightchild == NULL);
 	}
 }
+//void PAHPrimary::ReleasePAH(Primary &rhs)
+//{
+//    PAHPrimary *rhsparticle = NULL;
+//    rhsparticle = dynamic_cast<AggModels::PAHPrimary*>(&rhs);
+//    rhsparticle->m_PAH.clear();
+//}
+
 
 /*!
  * Combines this primary with another.
@@ -556,7 +567,6 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
 		    }
 		    else
 		    {
-				//insert action cause bug,so we should clear m_PAH after inserting
                 m_PAH.insert(m_PAH.end(),rhsparticle->m_PAH.begin(),rhsparticle->m_PAH.end());
                 UpdatePrimary();
 		    }
@@ -980,15 +990,17 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
             assert(growtime >= 0.0);
 
             const unsigned int oldNumCarbon = (*it)->m_numcarbon; 
+			const unsigned int oldNumH = (*it)->m_numH;
 
             // Here updatePAH function in KMC_ARS model is called.
             // waitingSteps is set to be 1 by dc516, details seeing KMCSimulator::updatePAH()
             sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1, Sweep::genrand_int, Sweep::genrand_real1, growthfact, (*it)->PAH_ID);
             (*it)->m_numcarbon=(*it)->m_pahstruct->numofC();
+			(*it)->m_numH=(*it)->m_pahstruct->numofH();
             (*it)->lastupdated=t;
 
             // See if anything changed, as this will required a call to UpdatePrimary() below
-            if(oldNumCarbon != (*it)->m_numcarbon)
+            if(oldNumCarbon != (*it)->m_numcarbon || oldNumH != (*it)->m_numH)
                 PAHchanged = true;
         }
 
@@ -1087,6 +1099,7 @@ bool PAHPrimary::CheckCoalescence()
 void PAHPrimary::UpdatePrimary(void)
 {
 	m_numcarbon=0;
+	m_numH=0;
     m_PAHmass=0;
 	m_PAHCollDiameter=0;
 	m_numPAH= m_PAH.size();
@@ -1094,9 +1107,10 @@ void PAHPrimary::UpdatePrimary(void)
     unsigned int maxcarbon=0;
     for (vector<PAH*>::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
         m_numcarbon += (*i)->m_numcarbon;
-		maxcarbon=max(maxcarbon,(*i)->m_numcarbon);    // search for the largest PAH in the PRimary, in Angstrom
+		m_numH += (*i)->m_numH;
+		maxcarbon=max(maxcarbon, (*i)->m_numcarbon);    // search for the largest PAH in the PRimary, in Angstrom
     }
-	m_PAHmass=m_numcarbon*1.9945e-26;        //convert to kg, hydrogen atoms are not considered
+	m_PAHmass=m_numcarbon * 1.9945e-26 + m_numH * 1.6621e-27;     //convert to kg, hydrogen atoms are not considered
     m_PAHCollDiameter=sqrt(maxcarbon*2.0/3.);
 	m_PAHCollDiameter*=2.4162*1e-10;				 //convert from Angstrom to m
 
@@ -1104,14 +1118,14 @@ void PAHPrimary::UpdatePrimary(void)
     {
         throw std::runtime_error("Model contains more then one component. Only soot is supported. (PAHPrimary::UpdatePrimary)");
     }
-    m_vol = m_PAHmass / m_pmodel->Components(0)->Density();        //in m^3
-	m_mass=m_PAHmass;
+    m_vol  = m_PAHmass / m_pmodel->Components(0)->Density();        //in m^3
+	m_mass = m_PAHmass;
 	m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
     m_dmob = m_diam;
     m_dcol = max(m_diam,m_PAHCollDiameter);
     m_surf = PI * m_diam * m_diam;
     m_primarydiam = m_diam;
-    m_avg_coalesc=0;
+    m_avg_coalesc = 0;
 }
 
 
@@ -1119,6 +1133,7 @@ void PAHPrimary::UpdatePrimary(void)
 void PAHPrimary::Reset()
 {
 	m_numcarbon=0;
+	m_numH=0;
 	m_primarydiam=0.0;
     m_surf=0;
     m_vol=0;
@@ -1164,6 +1179,7 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
         m_mass=(m_leftchild->m_mass+m_rightchild->m_mass);
         m_PAHCollDiameter=max(m_leftchild->m_PAHCollDiameter,m_rightchild->m_PAHCollDiameter);
         m_numcarbon=m_leftchild->m_numcarbon+m_rightchild->m_numcarbon;
+		m_numH=m_leftchild->m_numH+m_rightchild->m_numH;
         // calculate the coalescence level of the two primaries connected by this node
         m_children_coalescence=CoalescenceLevel();
         if (m_children_coalescence>1)
@@ -1300,6 +1316,11 @@ int PAHPrimary::Numprimary() const
 int PAHPrimary::NumCarbon() const
 {
     return m_numcarbon;
+}
+
+int PAHPrimary::NumHydrogen() const
+{
+    return m_numH;
 }
 
 int PAHPrimary::NumPAH() const

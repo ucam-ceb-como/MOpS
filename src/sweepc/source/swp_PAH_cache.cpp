@@ -55,16 +55,17 @@ using namespace std;
 // Default constructor.
 PAHCache::PAHCache(void)
 {
-	m_numPAH=1;
-	m_PAHDiameter=0.;
-    m_numcarbon=0;
-    m_numprimary=0;
-    m_sqrtLW=0.0;
-    m_LdivW=0.0;
-    m_primarydiam=0.0;
-    m_fdim=0.0;
-    m_Rg=0.0;
-    m_avg_coalesc=0;
+	m_numPAH = 1;
+	m_PAHDiameter = 0.0;
+    m_numcarbon = 0;
+	m_numH = 0;
+    m_numprimary = 0;
+    m_sqrtLW = 0.0;
+    m_LdivW = 0.0;
+    m_primarydiam = 0.0;
+    m_fdim = 0.0;
+    m_Rg = 0.0;
+    m_avg_coalesc = 0;
 }
 
 // Copy constructor.
@@ -96,6 +97,7 @@ PAHCache &PAHCache::operator=(const PAHCache &rhs)
         m_numPAH = rhs.m_numPAH;
 		m_PAHDiameter = rhs.m_PAHDiameter;
 		m_numcarbon=rhs.m_numcarbon;
+		m_numH=rhs.m_numH;
         m_numprimary=rhs.m_numprimary;
         m_sqrtLW=rhs.m_sqrtLW;
         m_LdivW=rhs.m_LdivW;
@@ -113,6 +115,7 @@ PAHCache &PAHCache::operator=(const PAHPrimary &rhs)
     m_numPAH = rhs.NumPAH();
 	m_PAHDiameter = rhs.PAHCollDiameter();
 	m_numcarbon=rhs.NumCarbon();
+	m_numH=rhs.NumHydrogen();
     m_numprimary=rhs.Numprimary();
     m_sqrtLW=rhs.sqrtLW();
     m_LdivW=rhs.LdivW();
@@ -156,6 +159,7 @@ PAHCache &PAHCache::operator+=(const PAHCache &rhs)
     m_numPAH += rhs.m_numPAH;
 	m_PAHDiameter += rhs.m_PAHDiameter;
 	m_numcarbon += rhs.m_numcarbon;
+	m_numH += rhs.m_numH;
     m_numprimary+=rhs.m_numprimary;
     m_sqrtLW+=rhs.m_sqrtLW;
     m_LdivW+=rhs.m_LdivW;
@@ -172,6 +176,7 @@ PAHCache &PAHCache::operator+=(const PAHPrimary &rhs)
     m_numPAH += rhs.NumPAH();
 	m_PAHDiameter += rhs.PAHCollDiameter();
 	m_numcarbon+=rhs.NumCarbon();
+	m_numH+=rhs.NumHydrogen();
     m_numprimary+=rhs.Numprimary();
     m_sqrtLW+=rhs.sqrtLW();
     m_LdivW+=rhs.LdivW();
@@ -218,14 +223,15 @@ void PAHCache::Clear()
 {
     m_numPAH = 0;
 	m_PAHDiameter = 0.0;
-	m_numcarbon =0;
-    m_numprimary=0;
-    m_sqrtLW=0.0;
-    m_LdivW=0.0;
-    m_primarydiam=0.0;
-    m_fdim=0.0;
-    m_Rg=0.0;
-    m_avg_coalesc=0.0;
+	m_numcarbon = 0;
+	m_numH = 0;
+    m_numprimary = 0;
+    m_sqrtLW = 0.0;
+    m_LdivW = 0.0;
+    m_primarydiam = 0.0;
+    m_fdim = 0.0;
+    m_Rg = 0.0;
+    m_avg_coalesc = 0.0;
 }
 
 
@@ -256,7 +262,10 @@ void PAHCache::Serialize(std::ostream &out) const
 
         v = (int)m_numcarbon;
         out.write((char*)&v, sizeof(v));
-		
+
+        v = (int)m_numH;
+        out.write((char*)&v, sizeof(v));
+
         v = (int)m_numprimary;
         out.write((char*)&v, sizeof(v));
 
@@ -308,6 +317,9 @@ void PAHCache::Deserialize(std::istream &in)
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_numcarbon = (int)val;
+
+				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_numH = (int)val;
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_numprimary = (int)val;
