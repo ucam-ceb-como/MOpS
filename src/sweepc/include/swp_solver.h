@@ -72,9 +72,6 @@ public:
         real (*rand_u01)() // U[0,1] samples
         );
 
-    //! Upper limit for one stochastic time step
-    void setMaxTimeStep(real max_step) {m_maxdt = max_step;}
-
 protected:
     // TIME STEPPING ROUTINES.
 
@@ -84,8 +81,7 @@ protected:
         real t,         // Current time.
         real tstop,     // Stop time.
         real jrate,     // Sum of all jump process rates.
-        unsigned int n, // Number of particles.
-        real maxdt      // Maximum time step.
+        unsigned int n  // Number of particles.
         ) const;
     
     // Performs a single stochastic event on the ensemble from the given
@@ -109,8 +105,6 @@ protected:
 private:
     // Numerical parameters.
 
-    //! Maximum allowed time step size.
-    real m_maxdt;
     //! Parameter defining number of LPDA updates per particle events.
     real m_splitratio;
 
