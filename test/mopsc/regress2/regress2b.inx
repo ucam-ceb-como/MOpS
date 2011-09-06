@@ -1,7 +1,7 @@
 <mops version="2">
   
   <!-- Default parameters (can be overidden). --> 
-  <runs>10</runs>
+  <runs>5</runs>
   <iter>2</iter>
   <atol>1.0e-8</atol> 
   <rtol>1.0e-6</rtol>

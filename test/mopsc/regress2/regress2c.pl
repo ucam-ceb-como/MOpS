@@ -40,7 +40,7 @@ use warnings;
 my @outputFiles = glob("regression2c-nuc-coag-OH*");
 if($#outputFiles > 0) {
   print "Cleaning up old output files\n";
-  system("rm -f" . '"' . join('" "', @outputFiles) . '"');
+  system("rm", "-f", @outputFiles);
 }
 
 # Path of executable should be supplied as first argument to this script
@@ -111,7 +111,7 @@ if(abs($m1 - 2.2e-11) > 1e-12) {
 
 # Should always be some files to remove
 @outputFiles = glob("regression2c-nuc-coag-OH*");
-system("rm -f" . '"' . join('" "', @outputFiles) . '"');
+system("rm", "-f", @outputFiles);
 
 
 #print "All tests passed\n";

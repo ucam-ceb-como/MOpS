@@ -39,7 +39,7 @@ use warnings;
 # Clean up any outputs from previous simulations
 my @outputFiles = glob("regression2b-nuc-coag-acet*");
 if($#outputFiles > 0) {
-  system("rm -f" . '"' . join('" "', @outputFiles) . '"');
+  system("rm", "-f", @outputFiles);
 }
 
 # Path of executable should be supplied as first argument to this script
@@ -109,7 +109,7 @@ if(abs($m1 - 5.75e-7) > 3e-8) {
 
 # Should always be some files to remove
 @outputFiles = glob("regression2b-nuc-coag-acet*");
-system("rm -f" . '"' . join('" "', @outputFiles) . '"');
+system("rm", "-f", @outputFiles);
 
 #print "All tests passed\n";
 exit 0;
