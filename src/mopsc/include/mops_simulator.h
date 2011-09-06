@@ -577,6 +577,14 @@ private:
     // current time.
     double calcDeltaCT(double markt) const;
 };
+
+    void calculateM0(
+        fvector &m_xmer,
+        fvector &m_M0,
+        real Pcount,
+        real PM0
+        );
+
 };
 
 #endif

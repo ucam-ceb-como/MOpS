@@ -58,6 +58,7 @@
 #include "mops_gpc_sensitivity.h"
 #include "gpc_species.h"
 #include "swp_particle_image.h"
+#include <algorithm>
 
 using namespace Mops;
 using namespace std;
@@ -1863,7 +1864,8 @@ void Simulator::postProcessXmer(const Mechanism &mech,
 {
     Reactor *r = NULL;
     fvector temp;//use to hold all the psl information
-    fvector psl_xmer; //add here to store information of Xmer in ensemble and then dump them to a file
+    fvector psl_xmer; // store information of Xmer in ensemble and then dump them to a file
+    fvector m0_xmer;  // store number density of each Xmer
     // Get reference to the particle mechanism.
     const Sweep::Mechanism &pmech = mech.ParticleMech();
 
@@ -1897,33 +1899,35 @@ void Simulator::postProcessXmer(const Mechanism &mech,
                     // Read the save point for this step and run.
                     r = readSavePoint(step, irun, mech);
 
+                    //particle count and number density of ensemble
+                    real Pcount = r->Mixture()->ParticleCount();
+                    real PM0 = r->Mixture()->ParticleCount() / r->Mixture()->SampleVolume();
+
                     if (r != NULL) {
                         real scale = (real)m_nruns;
                         if (m_output_every_iter) scale *= (real)m_niter;
-
                         // Get PSL for all particles.
-                        for (unsigned int j=0; j!=r->Mixture()->ParticleCount(); ++j) {
-                            if ( 0==j ){
-                                psl_xmer.push_back(r->Mixture()->ParticleCount());
-                                psl_xmer.push_back(r->Mixture()->ParticleCount() / r->Mixture()->SampleVolume() );
-                            }
+                        for (unsigned int j = 0; j != Pcount; ++j) {
                             // Get PSL.
                             stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
                                         times[i].EndTime(), temp,
                                         1.0/(r->Mixture()->SampleVolume()*scale));
                             if ( (k+1) == temp[11])//temp[11]=>num of PAH
-                                psl_xmer.push_back(12*temp[13]+temp[14]);//temp[13]=>num of C
+                                psl_xmer.push_back(12 * temp[13] + temp[14]);//temp[13]=>num of C, temp[14]=>num of H
                         }
                         delete r;
+
+                        //calculateM0(psl_xmer,m0_xmer,Pcount,PM0);
                     } else {
                         // Throw error if the reactor was not read.
                         throw runtime_error("Unable to read reactor from save point "
                                             "(Mops, ParticleSolver::postProcessXmer).");
                     }
-
                       // Output particle PSL to CSV file.
                       out[i]->Write(psl_xmer);
+                      out[i]->Write(m0_xmer);
                       psl_xmer.clear();
+                      m0_xmer.clear();
                 }
             }
 
@@ -1935,6 +1939,20 @@ void Simulator::postProcessXmer(const Mechanism &mech,
         }
     }
 }
+
+void Mops::calculateM0(fvector &m_xmer, fvector &m_M0, real Pcount, real PM0) 
+{
+    fvector temp(m_xmer.begin(), m_xmer.end());
+
+    sort(m_xmer.begin(), m_xmer.end());
+    fvector::iterator it;
+    it = unique (m_xmer.begin(), m_xmer.end());
+    m_xmer.resize(it-m_xmer.begin());
+    
+    for (int i = 0 ; i != m_xmer.size() ; ++i)
+        m_M0.push_back(count(temp.begin(),temp.end(),m_xmer[i])* PM0 / Pcount);
+}
+
 // Writes element fluxes to FluxViewer format.
 void Simulator::writeElementFluxOutput(const std::string &filename,
                                const Mechanism &mech,

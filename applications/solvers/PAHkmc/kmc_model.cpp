@@ -115,8 +115,8 @@ int main(int argc, char *argv[])
 		t_end = Strings::cdble(node->Data());
 
 		node = root->GetFirstChild("startStruct");
-		if(node->Data() == "PYRENE") startStruct = PYRENE;
-		else if(node->Data() == "BENZENE") startStruct = BENZENE;
+		if(node->Data() == "PYRENE") startStruct = PYRENE_C;
+		else if(node->Data() == "BENZENE") startStruct = BENZENE_C;
 
 		// get input file names
 		node = root->GetFirstChild("gasFile");
