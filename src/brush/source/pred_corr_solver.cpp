@@ -46,6 +46,7 @@
 #include "mt19937.h"
 #include "swp_transport_outflow.h"
 #include "swp_cell.h"
+#include "swp_solver.h"
 
 #include "choose_index.hpp"
 
@@ -127,7 +128,7 @@ void Brush::PredCorrSolver::predictorCorrectorStep(Reactor1d &reac, const real t
 
     // reset the time and advance the particles
     reac.setTime(startTime);
-    solveParticles(reac, t_stop);
+    solveParticlesByCell(reac, t_stop);
 
 //    std::cout << "Particle counts at end of predictorCorrectorStep ";
 //    for(size_t i = 0; i < reac.getNumCells(); ++i) {
@@ -308,6 +309,9 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
  * Advance the particle part of the solution, which may also affect the chemical
  * species concentrations.
  *
+ * @TODO  The choice of deferral length should be integrated with Sweep::Solver
+ * with a view to using Sweep::Solver::Run()
+ *
  *\param[in,out]        cell        Contents of one grid cell
  *\param[in]            geom        Position information regarding adjoining cells
  *\param[in]            mech        Mechanism defining the particle processes
@@ -344,29 +348,10 @@ void Brush::PredCorrSolver::solveParticlesInOneCell(Mops::Reactor &cell, const G
         while(t <= maxDeferralEnd * (1.0 - std::numeric_limits<real>::epsilon())) {
             // Perform one non-deferred event
 
-            // Note that jumpRates must be initialised with the process rates and jumpRate with
-            // their sum before proceeding
-
-            // Taking a near infinite step if the rate is 0
-            real dt = std::numeric_limits<real>::max();
-            if(jumpRate > 0) {
-                // Exponential random variable with mean 1/jumpRate
-                dt = Sweep::genrand_real1();
-                dt = -log(dt) / jumpRate;
-            }
-
-            // If the event does not happen until after maxDeferralEnd, only jump to maxDeferralEnd
-            // and do not perform an event
-            if(t + dt > maxDeferralEnd) {
-                t = maxDeferralEnd;
-            }
-            else {
-                t +=dt;
-                const int process = chooseIndex(jumpRates, Sweep::genrand_real1);
-                mech.DoProcess(process, t, *(cell.Mixture()), geom, Sweep::genrand_int, Sweep::genrand_real1);
-                // Update jumpRates now the particles have changed
-                jumpRate = mech.CalcJumpRateTerms(t, *(cell.Mixture()), geom, jumpRates);
-            }
+            jumpRate = mech.CalcJumpRateTerms(t, *(cell.Mixture()), geom, jumpRates);
+            Sweep::Solver::timeStep(t, maxDeferralEnd, *(cell.Mixture()), geom, mech,
+                                    jumpRates, jumpRate, Sweep::genrand_int,
+                                    Sweep::genrand_real1);
         }
 
         cell.SetTime(t);

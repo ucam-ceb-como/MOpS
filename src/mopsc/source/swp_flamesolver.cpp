@@ -341,12 +341,8 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
             jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
             // Perform time step.
-            dt = timeStep(t, std::min(t + dtg / 3.0, tsplit), *r.Mixture(), mech, rates, jrate, rand_int, rand_u01);
-            if (dt >= 0.0) {
-                t += dt; 
-            } else {
-                return;
-            }
+            timeStep(t, std::min(t + dtg / 3.0, tsplit), *r.Mixture(), Geometry::LocalGeometry1d(),
+                     mech, rates, jrate, rand_int, rand_u01);
         }
 
         // Perform Linear Process Deferment Algorithm to
