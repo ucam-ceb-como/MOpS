@@ -43,11 +43,11 @@
 #include <algorithm>
 
 /*!
- *@tparam		T		Real number type
- *@param[in]		weights		Vector of weights (all >= 0)
- *@param[in]		rng		Function that returns U[0,1] deviates
+ *@tparam       T   		Real number type
+ *@param[in]    weights     Vector of weights (all >= 0)
+ *@param[in]    rng	        Function that returns U[0,1] deviates
  *
- *@return		Index of an entry in weights with probability proportional to that entry
+ *@return       Index of an entry in weights with probability proportional to that entry
  *
  * The return value is \f$ i \in \left[0, \mathrm{weights.size\left(\right)}\right), \mathrm{P}\left(i = j\right) \propto \mathrm{weights\left[i\right]}\f$
 

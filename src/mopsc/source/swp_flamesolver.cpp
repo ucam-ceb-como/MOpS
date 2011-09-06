@@ -312,7 +312,6 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     // Global maximum time step.
     real t  = r.Time();
     dtg     = tstop - t;
-    setMaxTimeStep(dtg / 3.0);
 
     // Set the chemical conditions.
     linInterpGas(t, m_gasprof, *r.Mixture());
@@ -334,7 +333,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
         // Calculate the splitting end time.
-        tsplit = calcSplitTime(t, tstop, jrate, r.Mixture()->ParticleCount(), dtg);
+        tsplit = calcSplitTime(t, std::min(t + dtg, tstop), jrate, r.Mixture()->ParticleCount());
 
         // Perform stochastic jump processes.
         while (t < tsplit) {
@@ -342,12 +341,8 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
             jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
             // Perform time step.
-            dt = timeStep(t, tsplit, *r.Mixture(), mech, rates, jrate, rand_int, rand_u01);
-            if (dt >= 0.0) {
-                t += dt; 
-            } else {
-                return;
-            }
+            timeStep(t, std::min(t + dtg / 3.0, tsplit), *r.Mixture(), Geometry::LocalGeometry1d(),
+                     mech, rates, jrate, rand_int, rand_u01);
         }
 
         // Perform Linear Process Deferment Algorithm to
