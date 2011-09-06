@@ -106,9 +106,9 @@ my $failures = 0;
 #m0: (4.469 +- 0.132) e10 cm^-3
 #m1: (3.818 +- 0.134) e-11 g cm^-3
 # svn r821
-# Repeating with 16384 max particles gives the following (riap 01 Aug 2011)
-#m0: (4.486+-0.027)e16 m^-3
-#m1: (3.865+-0.018)e-8 kg m^-3
+# Repeating with 16384 max particles and git 89649c7...
+#m0: 4.474e16 m^-3
+#m1: 3.830e-8 kg m^-3
 
 print "$m0, $m0var, $m1, $m1var\n";
 if(abs($m0 - 4.465e16) > 8e14) {
@@ -119,7 +119,7 @@ if(abs($m0 - 4.465e16) > 8e14) {
   ++$failures;
 }
 
-if(abs($m1 - 3.823e-8) > 4e-10) {
+if(abs($m1 - 3.823e-8) > 8e-10) {
   print "Simulated mean M1 was $m1, when 3.823e-8 kg m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
