@@ -409,8 +409,8 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 		const AggModels::PAHPrimary *pah2 = NULL;
 		pah1 = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
 		pah2 = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary());
-		if (pah1->NumPAH()>1 && pah2->NumPAH()>1) ceffi=1;
-		else {
+		if (1==pah1->NumPAH() && 1==pah2->NumPAH()) // monomer vs. monomer only 
+        {
 			ncarbon2=(int)(1.0*pah2->NumCarbon());
 			ncarbon1=(int)(1.0*pah1->NumCarbon());
 			double redmass;
@@ -423,6 +423,7 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 			if (redmass >= target_C) ceffi = 1;
 			else ceffi = 0;
 		}
+        else ceffi=1; //other conditions
 		return ceffi;
 	}
 }
@@ -1040,7 +1041,7 @@ real ParticleModel::Omega1_2_spec(const real t_star_1_4, const real sigma_prime)
 
 
 /*!
- * Dimensionless collision diameter for use in formul\ae from
+ * Dimensionless collision diameter for use in formula from
  * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
  * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
  *
@@ -1057,7 +1058,7 @@ real ParticleModel::collisionIntegralDiameter(const Cell &sys, const Particle &s
 
 
 /*!
- * Dimensionless temperature for use in formulae from
+ * Dimensionless temperature for use in formula from
  * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
  * of small particles. II. Application", Phys. Rev. E 68:061207 (2003)
  *
@@ -1078,7 +1079,7 @@ real ParticleModel::collisionIntegralTemperature(const Cell &sys, const Particle
 }
 
 /*!
- * Proportion of diffuse scattering result to use in formulae from
+ * Proportion of diffuse scattering result to use in formula from
  * Z Li and H Wang, "Drag force, diffusion coefficient, and eletric mobility
  * of small particles. II. Application", Phys. Rev. E 68:061207 (2003).
  * This formula is most clearly presented in the follow on paper:

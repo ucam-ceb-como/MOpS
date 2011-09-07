@@ -2,10 +2,12 @@
   Author(s):      Markus Sander (ms785)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Markus Sander.
+  Extended by Shraddha Shekar (ss663) and William Menz (wjm34)
 
   File purpose:
+	Implementation of SilicaCache class defined in swp_silica_cache.h
 
 
   Licence:
@@ -39,10 +41,10 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#include "swp_PAH_cache.h"
+#include "swp_silica_cache.h"
 #include "swp_aggmodel_type.h"
 #include "swp_aggmodel_cache.h"
-#include "swp_PAH_primary.h"
+#include "swp_silica_primary.h"
 #include <stdexcept>
 #include <iostream>
 
@@ -50,102 +52,101 @@ using namespace Sweep;
 using namespace Sweep::AggModels;
 using namespace std;
 
-// CONSTRUCTORS AND DESTRUCTORS.
+// CONSTRUCTORS AND DESTRUCTORS
 
-// Default constructor.
-PAHCache::PAHCache(void)
+// Default constructor (private).
+SilicaCache::SilicaCache(void)
 {
-	m_numPAH = 1;
-	m_PAHDiameter = 0.0;
-    m_numcarbon = 0;
-	m_numH = 0;
-    m_numprimary = 0;
-    m_sqrtLW = 0.0;
-    m_LdivW = 0.0;
-    m_primarydiam = 0.0;
-    m_fdim = 0.0;
-    m_Rg = 0.0;
-    m_avg_coalesc = 0;
+	m_numSi=2;
+	m_numO=1;
+	m_numOH=6;
+	m_silicaDiameter=0.0;
+    m_numprimary=0;
+    m_sqrtLW=0.0;
+    m_LdivW=0.0;
+    m_primarydiam=0.0;
+    m_fdim=0.0;
+    m_Rg=0.0;
+    m_avg_sinter=0;
 }
 
 // Copy constructor.
-PAHCache::PAHCache(const PAHCache &copy)
+SilicaCache::SilicaCache(const SilicaCache &copy)
 {
     // Use assignment operator.
     *this = copy;
 }
 
 // Stream-reading constructor.
-PAHCache::PAHCache(std::istream &in)
+SilicaCache::SilicaCache(std::istream &in)
 {
     Deserialize(in);
 }
 
 // Default destructor.
-PAHCache::~PAHCache()
+SilicaCache::~SilicaCache()
 {
     // Nothing special to destruct.
 }
 
-
 // ASSIGNMENT OPERATOR OVERLOADING.
 
-// Assignment operator (PAHCache RHS).
-PAHCache &PAHCache::operator=(const PAHCache &rhs)
+// Assignment operator (silicaCache RHS).
+SilicaCache &SilicaCache::operator=(const SilicaCache &rhs)
 {
     if (this != &rhs) {
-        m_numPAH = rhs.m_numPAH;
-		m_PAHDiameter = rhs.m_PAHDiameter;
-		m_numcarbon=rhs.m_numcarbon;
-		m_numH=rhs.m_numH;
-        m_numprimary=rhs.m_numprimary;
+        m_numSi = rhs.m_numSi;
+        m_numO = rhs.m_numO;
+		m_numOH = rhs.m_numOH;
+		m_silicaDiameter = rhs.m_silicaDiameter;
+		m_numprimary=rhs.m_numprimary;
         m_sqrtLW=rhs.m_sqrtLW;
         m_LdivW=rhs.m_LdivW;
         m_primarydiam=rhs.m_primarydiam;
         m_fdim=rhs.m_fdim;
         m_Rg=rhs.m_Rg;
-        m_avg_coalesc=rhs.m_avg_coalesc;
+        m_avg_sinter=rhs.m_avg_sinter;
     }
     return *this;
 }
 
-// Assignment operator (PAHPrimary RHS).
-PAHCache &PAHCache::operator=(const PAHPrimary &rhs)
+// Assignment operator (silicaPrimary RHS).
+SilicaCache &SilicaCache::operator=(const SilicaPrimary &rhs)
 {
-    m_numPAH = rhs.NumPAH();
-	m_PAHDiameter = rhs.PAHCollDiameter();
-	m_numcarbon=rhs.NumCarbon();
-	m_numH=rhs.NumHydrogen();
+	m_numSi = rhs.NumSi();
+    m_numO = rhs.NumO();
+    m_numOH = rhs.NumOH();
+	//m_silicaDiameter = rhs.silicaCollDiameter();
     m_numprimary=rhs.Numprimary();
     m_sqrtLW=rhs.sqrtLW();
     m_LdivW=rhs.LdivW();
     m_primarydiam=rhs.PrimaryDiam();
     m_fdim=rhs.Fdim();
     m_Rg=rhs.Rg();
-    m_avg_coalesc=rhs.AvgCoalesc();
+    m_avg_sinter=rhs.AvgSinter();
     return *this;
 }
 
 // Assignment operator (AggModelCache RHS).
-PAHCache &PAHCache::operator=(const AggModelCache &rhs)
+SilicaCache &SilicaCache::operator=(const AggModelCache &rhs)
 {
-    // Attempt to cast the RHS as a PAHCache.  This will throw
+    // Attempt to cast the RHS as a silicaCache.  This will throw
     // an exception if it isn't possible to cast.
-    return operator=(dynamic_cast<const PAHCache&>(rhs));
+    return operator=(dynamic_cast<const SilicaCache&>(rhs));
 }
 
 // Assignment operator (Primary RHS).
-PAHCache &PAHCache::operator=(const Primary &rhs)
+SilicaCache &SilicaCache::operator=(const Primary &rhs)
 {
     if (rhs.AggID() == Spherical_ID) {
         // If the RHS is actually a spherical primary then copy
         // the required data.
-       
+
 
     } else {
-        // Attempt to cast the RHS as a PAHPrimary.  This will throw
+        // Attempt to cast the RHS as a silicaPrimary.  This will throw
         // an exception if it isn't possible to cast.
-        operator=(dynamic_cast<const PAHPrimary&>(rhs));
+        operator=(dynamic_cast<const SilicaPrimary&>(rhs));
     }
     return *this;
 }
@@ -153,85 +154,93 @@ PAHCache &PAHCache::operator=(const Primary &rhs)
 
 // COMPOUND ASSIGNMENT OPERATOR OVERLOADING.
 
-// Compound assignment (PAHCache RHS).
-PAHCache &PAHCache::operator+=(const PAHCache &rhs)
+// Compound assignment (silicaCache RHS).
+SilicaCache &SilicaCache::operator+=(const SilicaCache &rhs)
 {
-    m_numPAH += rhs.m_numPAH;
-	m_PAHDiameter += rhs.m_PAHDiameter;
-	m_numcarbon += rhs.m_numcarbon;
-	m_numH += rhs.m_numH;
+    m_numSi += rhs.m_numSi;
+    m_numO += rhs.m_numO;
+    m_numOH += rhs.m_numOH;
+	m_silicaDiameter += rhs.m_silicaDiameter;
     m_numprimary+=rhs.m_numprimary;
     m_sqrtLW+=rhs.m_sqrtLW;
     m_LdivW+=rhs.m_LdivW;
     m_primarydiam+=rhs.m_primarydiam;
     m_fdim+=rhs.m_fdim;
     m_Rg+=rhs.m_Rg;
-    m_avg_coalesc+=rhs.m_avg_coalesc;
+    m_avg_sinter+=rhs.m_avg_sinter;
     return *this;
 }
 
-// Compound assignment (PAHPrimary RHS).
-PAHCache &PAHCache::operator+=(const PAHPrimary &rhs)
+// Compound assignment (silicaPrimary RHS).
+SilicaCache &SilicaCache::operator+=(const SilicaPrimary &rhs)
 {
-    m_numPAH += rhs.NumPAH();
-	m_PAHDiameter += rhs.PAHCollDiameter();
-	m_numcarbon+=rhs.NumCarbon();
-	m_numH+=rhs.NumHydrogen();
+	m_numSi += rhs.NumSi();
+    m_numO += rhs.NumO();
+    m_numOH += rhs.NumOH();
+	//m_silicaDiameter += rhs.silicaCollDiameter();
     m_numprimary+=rhs.Numprimary();
     m_sqrtLW+=rhs.sqrtLW();
     m_LdivW+=rhs.LdivW();
     m_primarydiam+=rhs.PrimaryDiam();
     m_fdim+=rhs.Fdim();
     m_Rg+=rhs.Rg();
-    m_avg_coalesc+=rhs.AvgCoalesc();
+    m_avg_sinter+=rhs.AvgSinter();
 
     return *this;
 }
 
 // Compound assignment (AggModelCache RHS).
-PAHCache &PAHCache::operator+=(const AggModelCache &rhs)
+SilicaCache &SilicaCache::operator+=(const AggModelCache &rhs)
 {
-    // Attempt to cast the RHS as a PAHCache.  This will throw
+    // Attempt to cast the RHS as a silicaCache.  This will throw
     // an exception if it isn't possible to cast.
-    return operator+=(dynamic_cast<const PAHCache&>(rhs));
+    return operator+=(dynamic_cast<const SilicaCache&>(rhs));
 }
 
 // Compound assignment (Primary RHS).
-PAHCache &PAHCache::operator+=(const Primary &rhs)
+SilicaCache &SilicaCache::operator+=(const Primary &rhs)
 {
     if (rhs.AggID() == Spherical_ID) {
-       
+
     } else {
-        // Attempt to cast the RHS as a PAHPrimary.  This will throw
+        // Attempt to cast the RHS as a silicaPrimary.  This will throw
         // an exception if it isn't possible to cast.
-        operator+=(dynamic_cast<const PAHPrimary&>(rhs));
+        operator+=(dynamic_cast<const SilicaPrimary&>(rhs));
     }
     return *this;
 }
 
-
-real PAHCache::NumPAH() const
+int SilicaCache::NumSi() const
 {
-    return m_numPAH;
+    return m_numSi;
 }
 
+int SilicaCache::NumO() const
+{
+    return m_numO;
+}
+
+int SilicaCache::NumOH() const
+{
+    return m_numOH;
+}
 
 // DATA MANAGEMENT.
 
 // Resets the model data to the default state.
-void PAHCache::Clear()
+void SilicaCache::Clear()
 {
-    m_numPAH = 0;
-	m_PAHDiameter = 0.0;
-	m_numcarbon = 0;
-	m_numH = 0;
-    m_numprimary = 0;
-    m_sqrtLW = 0.0;
-    m_LdivW = 0.0;
-    m_primarydiam = 0.0;
-    m_fdim = 0.0;
-    m_Rg = 0.0;
-    m_avg_coalesc = 0.0;
+    m_numSi = 0;
+	m_numO = 0;
+	m_numOH = 0;
+	m_silicaDiameter = 0.0;
+    m_numprimary=0;
+    m_sqrtLW=0.0;
+    m_LdivW=0.0;
+    m_primarydiam=0.0;
+    m_fdim=0.0;
+    m_Rg=0.0;
+    m_avg_sinter=0.0;
 }
 
 
@@ -241,29 +250,29 @@ void PAHCache::Clear()
 // READ/WRITE/COPY.
 
 // Returns a copy of the data.
-PAHCache *const PAHCache::Clone(void) const {return new PAHCache(*this);}
+SilicaCache *const SilicaCache::Clone(void) const {return new SilicaCache(*this);}
 
 // Returns the model ID.
-AggModelType PAHCache::ID(void) const {return PAH_KMC_ID;}
+AggModelType SilicaCache::ID(void) const {return Silica_ID;}
 
 // Writes the object to a binary stream.
-void PAHCache::Serialize(std::ostream &out) const
+void SilicaCache::Serialize(std::ostream &out) const
 {
     if (out.good()) {
         // Output the version ID (=0 at the moment).
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
-        double v = (int)m_numPAH;
+        double v = (int)m_numSi;
         out.write((char*)&v, sizeof(v));
 
-        v = (double)m_PAHDiameter;
+		v = (int)m_numO;
         out.write((char*)&v, sizeof(v));
 
-        v = (int)m_numcarbon;
+		v = (int)m_numOH;
         out.write((char*)&v, sizeof(v));
 
-        v = (int)m_numH;
+        v = (double)m_silicaDiameter;
         out.write((char*)&v, sizeof(v));
 
         v = (int)m_numprimary;
@@ -284,18 +293,17 @@ void PAHCache::Serialize(std::ostream &out) const
         v = (double)m_Rg;
         out.write((char*)&v, sizeof(v));
 
-        v = (double)m_avg_coalesc;
+        v = (double)m_avg_sinter;
         out.write((char*)&v, sizeof(v));
-
 
     } else {
         throw invalid_argument("Output stream not ready "
-                               "(Sweep, PAHCache::Serialize).");
+                               "(Sweep, SilicaCache::Serialize).");
     }
 }
 
 // Reads the object from a binary stream.
-void PAHCache::Deserialize(std::istream &in)
+void SilicaCache::Deserialize(std::istream &in)
 {
     if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -308,18 +316,18 @@ void PAHCache::Deserialize(std::istream &in)
 
         switch (version) {
             case 0:
-               //read the number of PAHs
+               //read the number of silicas
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_numPAH = (int)val;
-
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_PAHDiameter = (real)val;
+                m_numSi = (int)val;
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_numcarbon = (int)val;
+                m_numO = (int)val;
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_numH = (int)val;
+                m_numOH = (int)val;
+
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_silicaDiameter = (real)val;
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_numprimary = (int)val;
@@ -337,18 +345,18 @@ void PAHCache::Deserialize(std::istream &in)
                 m_fdim = (real)val;
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_Rg = (real)val;	
+                m_Rg = (real)val;
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_avg_coalesc = (real)val;
-                   
+                m_avg_sinter = (real)val;
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, PAHCache::Deserialize).");
+                                    "(Sweep, SilicaCache::Deserialize).");
         }
     } else {
         throw invalid_argument("Input stream not ready "
-                               "(Sweep, PAHCache::Deserialize).");
+                               "(Sweep, SilicaCache::Deserialize).");
     }
 }

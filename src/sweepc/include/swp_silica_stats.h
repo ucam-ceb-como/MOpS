@@ -6,7 +6,7 @@
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
-    The PAHStats class is a specialization of the IModelStats
+    The silicaStats class is a specialization of the IModelStats
     interface which produces stats from the basic properties of the
     simple primary-particle aggregation model.
 
@@ -44,14 +44,14 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#ifndef SWEEP_PAH_STATS_H
-#define SWEEP_PAH_STATS_H
+#ifndef SWEEP_SILICA_STATS_H
+#define SWEEP_SILICA_STATS_H
 
 #include "swp_params.h"
 #include "swp_model_stats.h"
 #include "swp_ensemble.h"
 #include "swp_particle_model.h"
-
+#include "swp_submodel_type.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -60,22 +60,22 @@ namespace Sweep
 {
 namespace Stats
 {
-class PAHStats : public IModelStats
+class SilicaStats : public IModelStats
 {
 public:
     // Constructors.
-    PAHStats(void);  // Default constructor.
-    PAHStats(const PAHStats &copy); // Copy constructor.
-    PAHStats(                         // Stream-reading constructor.
+    SilicaStats(void);  // Default constructor.
+    SilicaStats(const SilicaStats &copy); // Copy constructor.
+    SilicaStats(                         // Stream-reading constructor.
         std::istream &in,                 // Input stream.
         const Sweep::ParticleModel &model // Defining particle model.
         );
 
     // Destructor.
-    ~PAHStats(void);
+    ~SilicaStats(void);
 
     // Operators.
-    PAHStats &operator=(const PAHStats &rhs);
+    SilicaStats &operator=(const SilicaStats &rhs);
 
 
     // IMPLEMENTATION.
@@ -83,6 +83,8 @@ public:
     // Returns the number of stats for this model.
     unsigned int Count(void) const;
 
+    // Calculates the model stats for a single particle.
+    //void Calculate(const Particle &data);
 
     // Calculates the model stats for a particle ensemble.
     void Calculate(
@@ -132,7 +134,7 @@ public:
     // READ/WRITE/COPY.
 
     // Creates a copy of the object.
-    PAHStats *const Clone(void) const;
+    SilicaStats *const Clone(void) const;
 
     // Returns the model data type.  Used to identify different models
     // and for serialisation.
@@ -149,26 +151,13 @@ public:
 
 private:
     // Stats count and indices.
-    static const unsigned int STAT_COUNT = 10;
-	enum StatIndices {
-		iNPAH=0,      // m_numPAH
-		iPARTSURF=2,  // m_surf, the surface area for primary partilcle
-		iPARTMASS=3,  // m_mass, the mass for primary partilcle
-		iNAVGPAH=4,   // Avg. PAH real Part
-		iPAHD=5,      // m_PAHCollDiameter
-		iNCARB=6,     // m_numcarbon
-		iNHYDROGEN=7, // m_numH
-		iCOAL=8,      // m_avg_coalesc
-		iNPRIM=9,     // m_numprimary
-		iSQRTLW=10,    // sqrt(LW)
-		iLDIVW=11,    // LdivW
-		iavgdim=12,   // m_primarydiam/m_numprimary, Avg. primary diameter
-		irgyr=13,     // m_Rg, Radius of gyration
-		ifdim=14      // m_fdim
-	};
-
+    //static const unsigned int STAT_COUNT = 9;
+	//enum StatIndices {iNSi=0, iNO=1, iNOH=2, iPARTSURF=4, iPARTMASS=5, isilicaD=6, iCOAL=7, iNPRIM=8, iSQRTLW=9, iLDIVW=10, iavgdim=11, irgyr=12, ifdim=13};
+	static const unsigned int STAT_COUNT = 7;
+	//enum StatIndices {iNSi=0, iNO=1, iNOH=2, iPARTSURF=3, iPARTMASS=4, isilicaD=5, iCOAL=6, iNPRIM=7, iSQRTLW=8, iLDIVW=9, iavgdim=10, irgyr=11, ifdim=12};
+	enum StatIndices {iNSi=0, iNO=1, iNOH=2, iNPRIM=3, iPRIMDIAM=4, iCOAL=5, iPARTMASS=6};
     // PSL count and indices.
-    static const unsigned int PSL_COUNT  = 15;
+    static const unsigned int PSL_COUNT  = 6;
     static const unsigned int PPSL_COUNT = 0;
 
     // The stats.
@@ -185,8 +174,8 @@ private:
     static const std::string m_const_pslnames[PSL_COUNT];
     std::vector<std::string> m_pslnames;
 
-};
-};
-};
+}; // SilicaStats class
+}; // Stats namespace
+}; // Sweep namespace
 
 #endif

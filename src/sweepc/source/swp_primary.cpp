@@ -413,7 +413,7 @@ Primary &Primary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
 
 // This routine sinters the Primary for the given length of
 // time using the provided sintering model.
-void Primary::Sinter(real dt, const Cell &sys,
+void Primary::Sinter(real dt, Cell &sys,
                      const Processes::SinteringModel &model,
                      real (*rand_u01)())
 {

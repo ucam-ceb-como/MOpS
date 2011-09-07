@@ -54,6 +54,9 @@
 #include "swp_surfvol_stats.h"
 #include "swp_PAH_stats.h"
 #include "swp_abf_model.h"
+#include "swp_silica_cache.h"
+#include "swp_silica_stats.h"
+#include "swp_silica_primary.h"
 #include <stdexcept>
 #include <iostream>
 
@@ -81,6 +84,8 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
             return new AggModels::SurfVolPrimary(time, model);
 		case AggModels::PAH_KMC_ID:
             return new AggModels::PAHPrimary(time, position, model, rand_int);
+		case AggModels::Silica_ID:
+			return new AggModels::SilicaPrimary(time, model);
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
@@ -105,6 +110,8 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
             return new AggModels::SurfVolPrimary(time, model);
 		case AggModels::PAH_KMC_ID:
             return new AggModels::PAHPrimary(time, model, rand_int);
+		case AggModels::Silica_ID:
+            return new AggModels::SilicaPrimary(time, model);
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
@@ -138,6 +145,9 @@ Primary *const ModelFactory::ReadPrimary(std::istream &in,
                 break;
 			case AggModels::PAH_KMC_ID:
                 pri = new AggModels::PAHPrimary(in, model);
+                break;
+			case AggModels::Silica_ID:
+                pri = new AggModels::SilicaPrimary(in, model);
                 break;
             default:
                 throw invalid_argument("Invalid model ID (Sweep, "
@@ -295,8 +305,10 @@ AggModels::AggModelCache *const ModelFactory::CreateAggCache(AggModels::AggModel
             return NULL;
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolCache();
-	   case  AggModels::PAH_KMC_ID:
+	    case  AggModels::PAH_KMC_ID:
             return new AggModels::PAHCache();
+		case AggModels::Silica_ID:
+           return new AggModels::SilicaCache();
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateAggCache).");
@@ -316,6 +328,8 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
             return new Stats::SurfVolStats();
 		case AggModels::PAH_KMC_ID:
             return new Stats::PAHStats();       // ms785: postprocessing not yet implemented
+		case AggModels::Silica_ID:
+			return new Stats::SilicaStats();
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateAggStats).");
@@ -346,6 +360,9 @@ AggModels::AggModelCache *const ModelFactory::ReadAggCache(std::istream &in)
 			case AggModels::PAH_KMC_ID:
                 model = new AggModels::PAHCache(in);
                 break;
+			case AggModels::Silica_ID:
+				model = new AggModels::SilicaCache(in);
+				break;
             default:
                 throw invalid_argument("Invalid model ID (Sweep, "
                                        "ModelFactory::ReadAggCache).");
@@ -379,6 +396,9 @@ Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in,
                 break;
 			case AggModels::PAH_KMC_ID:
                 stats = new Stats::PAHStats(in, model);
+                break;
+			case AggModels::Silica_ID:
+                stats = new Stats::SilicaStats(in, model);
                 break;
             default:
                 throw invalid_argument("Invalid model ID (Sweep, "

@@ -45,6 +45,7 @@
 #include "mt19937.h"
 #include "string_functions.h"
 #include "swp_PAH_primary.h"
+#include "swp_silica_primary.h"
 #include <fstream>
 #include <vector>
 #include <stdexcept>
@@ -367,6 +368,19 @@ void ParticleImage::constructSubParttree(const Sweep::AggModels::PAHPrimary *p)
     //m_root.CalcCOM();
     m_root.CentreCOM();
 }
+void ParticleImage::constructSubParttree(const Sweep::AggModels::SilicaPrimary *p)
+{
+	//Copy the subparticle tree into the img tree
+	m_root.Clear();
+//	m_root.CopySPT(sp);
+	copysptinsert(p);
+
+	// Use the free-molecular regime to calculate the
+    // aggregate structure.
+    calc_FM(m_root);
+    //m_root.CalcCOM();
+    m_root.CentreCOM();
+}
 
 void ParticleImage::copysptinsert(const Sweep::AggModels::PAHPrimary *p)
 {
@@ -379,7 +393,17 @@ void ParticleImage::copysptinsert(const Sweep::AggModels::PAHPrimary *p)
             m_root.Insert(p->SphDiameter()*0.5e9);       //convert to nm, store the radius not the diameter
 		}
 }
+void ParticleImage::copysptinsert(const Sweep::AggModels::SilicaPrimary *p)
+{
+	if (p->LeftChild()!=NULL) {
+		copysptinsert(p->LeftChild());
+		copysptinsert(p->RightChild());
 
+		} else {
+
+            m_root.Insert(p->SphDiameter()*0.5e9);       //convert to nm, store the radius not the diameter
+		}
+}
 
 // Constructs a PNode sphere-tree aggregate with uniform
 // primaries (equal diameter).  The diameter and primary

@@ -1,13 +1,13 @@
 /*
-  Author(s):      Matthew Celnik (msc37)
+  Author(s):      Shraddha Shekar (ss663)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
 
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
-    Implementation of the PAHStats class declared in the
-    swp_PAH_stats.h header file.
+    Implementation of the silicaStats class declared in the
+    swp_silica_stats.h header file.
 
   Licence:
     This file is part of "sweepc".
@@ -40,11 +40,11 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#include "swp_PAH_stats.h"
+#include "swp_silica_stats.h"
 #include "swp_aggmodel_type.h"
 #include "swp_particle.h"
-#include "swp_PAH_cache.h"
-#include "swp_PAH_primary.h"
+#include "swp_silica_cache.h"
+#include "swp_silica_primary.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -53,43 +53,39 @@ using namespace std;
 
 // STATIC CONST MEMBER VARIABLES.
 
-const std::string PAHStats::m_statnames[PAHStats::STAT_COUNT] = {
-    std::string("Avg. Number of PAHs"),
-    std::string("Number of PAHs cm-3"),
-    std::string("Surface real Part"),
-    std::string("Avg. Mass real Part"),
-    std::string("Avg. PAH real Part"),
-    std::string("Avg. PAH Collision Diameter"),
-	std::string("Avg. Number of Carbon Atoms"),
-	std::string("Avg. Number of Hydrogen Atoms"),
-    std::string("Avg. Coalesc Threshold"),
-    std::string("Num Primaries real Part"),
-};
-
-const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
-    IModelStats::Avg,  // Avg. Number of PAHs.
-    IModelStats::Sum,  // Number of PAHs.
-    IModelStats::Sum,  // Surface real Part
-    IModelStats::Avg,  // Avg. Mass real Part
-    IModelStats::Avg,  // Avg. PAH real Part
-    IModelStats::Avg,  // Avg. PAH Collision Diameter
-	IModelStats::Avg,  // Avg. Number of Carbon atoms
-	IModelStats::Avg,  // Avg. Number of Hydrogen atoms
-    IModelStats::Avg,  // Avg. Coalesc Threshold
-    IModelStats::Avg,  // Num Primaries real Part
-};
-
-const std::string PAHStats::m_const_pslnames[PAHStats::PSL_COUNT] = {
-    std::string("Number of PAHs"),
-    std::string("PAH Diameter"),
-	std::string("Number of Carbon atoms"),
-    std::string("Number of Hydrogen atoms"),
-	std::string("Number primaries"),
-	std::string("sqrt(LW)"),
-	std::string("LdivW"),
+const std::string SilicaStats::m_statnames[SilicaStats::STAT_COUNT] = {
+    std::string("Number of Si atoms"),
+	std::string("Number of O atoms"),
+	std::string("Number of OH atoms"),
+    std::string("Number of Primaries"),
 	std::string("Avg. primary diameter"),
-    std::string("Radius of gyration"),
-    std::string("fdim"),
+    std::string("Avg. Sintering Level"),
+	std::string("Avg. Particle Mass"),
+
+};
+
+const IModelStats::StatType SilicaStats::m_mask[SilicaStats::STAT_COUNT] = {
+    IModelStats::Avg,  // Avg. Number of Si atoms.
+	IModelStats::Avg,  // Avg. Number of O atoms.
+	IModelStats::Avg,  // Avg. Number of OH atoms.
+    IModelStats::Avg,  // Number of primaries.
+    IModelStats::Avg,  // Avg. Primary Particle diameter.
+    IModelStats::Avg,  // Avg. Sintering level.
+	IModelStats::Avg,  // Avg particle mass,
+
+
+};
+
+const std::string SilicaStats::m_const_pslnames[SilicaStats::PSL_COUNT] = {
+    std::string("Number of Si atoms"),
+	std::string("Number of O atoms"),
+	std::string("Number of OH atoms"),
+    std::string("Number of primaries"),
+	std::string("Avg. primary diameter"),
+    //std::string("fdim"),
+	std::string("Avg. Sintering Level"),
+	//std::string("Avg. Particle Mass"),
+
 };
 
 
@@ -97,7 +93,7 @@ const std::string PAHStats::m_const_pslnames[PAHStats::PSL_COUNT] = {
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor.
-PAHStats::PAHStats()
+SilicaStats::SilicaStats()
 : m_stats(STAT_COUNT,0.0)
 {
     for (unsigned int i=0; i!=STAT_COUNT; ++i) {
@@ -112,19 +108,19 @@ PAHStats::PAHStats()
 }
 
 // Copy constructor.
-PAHStats::PAHStats(const Sweep::Stats::PAHStats &copy)
+SilicaStats::SilicaStats(const Sweep::Stats::SilicaStats &copy)
 {
     *this = copy;
 }
 
 // Stream-reading constructor.
-PAHStats::PAHStats(std::istream &in, const Sweep::ParticleModel &model)
+SilicaStats::SilicaStats(std::istream &in, const Sweep::ParticleModel &model)
 {
     Deserialize(in, model);
 }
 
 // Default destructor.
-PAHStats::~PAHStats()
+SilicaStats::~SilicaStats()
 {
     // Nothing special to destruct.
 }
@@ -132,7 +128,7 @@ PAHStats::~PAHStats()
 
 // OPERATOR OVERLOADS.
 
-PAHStats &PAHStats::operator=(const Sweep::Stats::PAHStats &rhs)
+SilicaStats &SilicaStats::operator=(const Sweep::Stats::SilicaStats &rhs)
 {
     if (this != &rhs) {
         m_stats.assign(rhs.m_stats.begin(), rhs.m_stats.end());
@@ -144,13 +140,29 @@ PAHStats &PAHStats::operator=(const Sweep::Stats::PAHStats &rhs)
 // IMPLEMENTATION.
 
 // Returns the number of basic particle stats.
-unsigned int PAHStats::Count() const
+unsigned int SilicaStats::Count() const
 {
     return STAT_COUNT;
 }
+/* TODO: remove? wjm34
+// Calculates the model stats for a single particle.
+void SilicaStats::Calculate(const Particle &data)
+{
+    // Get surface-volume cache.
+    const AggModels::SilicaCache& cache = dynamic_cast<const AggModels::SilicaCache&>(data.AggCache());
+
+	m_stats[iNSi] = cache.m_numSi;
+	m_stats[iNO] = cache.m_numO;
+	m_stats[iNOH] = cache.m_numOH;
+	m_stats[iPRIMDIAM] = cache.m_primarydiam*1e9;
+
+	m_stats[iCOAL] = cache.m_avg_sinter;
+	m_stats[iNPRIM] = cache.m_numprimary;
+
+} */
 
 // Calculates the model stats for a particle ensemble.
-void PAHStats::Calculate(const Ensemble &e, real scale)
+void SilicaStats::Calculate(const Ensemble &e, real scale)
 {
     // Empty the stats array.
     fill(m_stats.begin(), m_stats.end(), 0.0);
@@ -158,33 +170,50 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
     unsigned int n = 0;
-    // used to count particles with more then one PAH
-	// real part properties => particle only considered, sum of X / num of particle
+    //particles with more then one silica
     unsigned int nrealpart= 0;
     for (ip=e.begin(); ip!=e.end(); ++ip) {
-        // Get surface-volume cache.
-        const AggModels::PAHCache& cache =
-            dynamic_cast<const AggModels::PAHCache&>((*ip)->AggCache());
-		const AggModels::PAHPrimary *pah = NULL;
-			pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*ip)).Primary());
-        real sz = (*ip)->Property(m_statbound.PID);
+		//Update Cache
+		// Get surface-volume cache.
+        const AggModels::SilicaCache& cache =
+            dynamic_cast<const AggModels::SilicaCache&>((*ip)->AggCache());
+		const AggModels::SilicaPrimary *silica = NULL;
+			silica = dynamic_cast<const AggModels::SilicaPrimary*>((*(*ip)).Primary());
+		real sz = (*ip)->Property(m_statbound.PID);
+        //real sz = cache.Parent()->Property(m_statbound.PID);
+		//TODO: delete comment above? wjm34
+
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-			m_stats[iNPAH]    += cache.m_numPAH;
-			m_stats[iPAHD]    += pah->PAHCollDiameter()*1e9;
-			m_stats[iNCARB]	  += cache.m_numcarbon;
-			m_stats[iNHYDROGEN]	  += cache.m_numH;
-            m_stats[iNPAH+1]    += cache.m_numPAH; //used to calculate sum of Number of PAHs.
-            m_stats[iCOAL]    += cache.m_avg_coalesc;
+			m_stats[iNSi]   += cache.m_numSi;
+			m_stats[iNO]    += cache.m_numO;
+			m_stats[iNOH]   += cache.m_numOH;
+			//m_stats[iNSi]   += (cache.m_numSi/cache.m_numprimary);
+			//m_stats[iNO]    += (cache.m_numO/cache.m_numprimary);
+			//m_stats[iNOH]   += (cache.m_numOH/cache.m_numprimary);
+			//m_stats[isilicaD]  += silica->silicaCollDiameter()*1e9;
+			m_stats[iCOAL]    += cache.m_avg_sinter;
+			//m_stats[iPRIMDIAM] += cache.m_primarydiam;
+			m_stats[iPRIMDIAM] += (cache.m_primarydiam*1e9/cache.m_numprimary);
 			++n;
-            if (cache.m_numPAH>1)
+            if (cache.m_numSi>1)
             {
                 ++nrealpart;
-                m_stats[iPARTSURF]+=(*ip)->SurfaceArea();
+                //m_stats[iPARTSURF]+=(*ip)->SurfaceArea();
+				//m_stats[iPRIMDIAM] += (cache.m_primarydiam*1e9/cache.m_numprimary);
+				//m_stats[iPRIMDIAM] += (cache.m_primarydiam*1e9);
+				//m_stats[iPRIMDIAM] += (cache.m_primarydiam*1e9/cache.m_numprimary);
                 m_stats[iNPRIM]+=cache.m_numprimary;
+				if((*ip)->Primary()!=NULL)
+				{
                 m_stats[iPARTMASS]+=(*ip)->Primary()->Mass();
-                m_stats[iNAVGPAH]+=cache.m_numPAH;  //used to calculate Avg. PAH real Part
+				}
+				else
+				{
+					m_stats[iPARTMASS]+=0;
+				}
+
             }
         }
     }
@@ -199,7 +228,7 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
         if (m_mask[i] == Sum) {
             m_stats[i] *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
         } else {
-            if (i==iNPRIM || i==iPARTMASS || i==iNAVGPAH)
+            if (i==iNPRIM || i==iPARTMASS)
             {
                 if (nrealpart>0)
                     m_stats[i] *= 1.0/nrealpart;
@@ -212,13 +241,13 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
 }
 
 // Returns a vector containing the stats.
-const fvector &PAHStats::Get(void) const
+const fvector &SilicaStats::Get(void) const
 {
     return m_stats;
 }
 
 // Returns a vector containing the stats.
-void PAHStats::Get(fvector &stats, unsigned int start) const
+void SilicaStats::Get(fvector &stats, unsigned int start) const
 {
     // Get an iterator to the first point of insertion in the
     // output stats array.
@@ -244,13 +273,13 @@ void PAHStats::Get(fvector &stats, unsigned int start) const
 }
 
 // Returns a vector containing the stat names.
-const std::vector<std::string> &PAHStats::Names(void) const
+const std::vector<std::string> &SilicaStats::Names(void) const
 {
     return m_names;
 }
 
 // Adds to a vector containing stat names.
-void PAHStats::Names(std::vector<std::string> &names,
+void SilicaStats::Names(std::vector<std::string> &names,
                          unsigned int start) const
 {
     // Get an iterator to the first point of insertion in the
@@ -279,17 +308,16 @@ void PAHStats::Names(std::vector<std::string> &names,
 
 
 
-
 // PARTICLE SIZE LISTS.
 
 // Returns the number of PSL output variables.
-unsigned int PAHStats::PSL_Count(void) const
+unsigned int SilicaStats::PSL_Count(void) const
 {
     return PSL_COUNT;
 }
 
 // Returns a vector of PSL variable names.
-void PAHStats::PSL_Names(std::vector<std::string> &names,
+void SilicaStats::PSL_Names(std::vector<std::string> &names,
                              unsigned int start) const
 {
     // Get an iterator to the first point of insertion in the
@@ -317,7 +345,7 @@ void PAHStats::PSL_Names(std::vector<std::string> &names,
 }
 
 // Returns the PSL entry for the given particle.
-void PAHStats::PSL(const Sweep::Particle &sp, real time,
+void SilicaStats::PSL(const Sweep::Particle &sp, real time,
                        fvector &psl, unsigned int start) const
 {
     // Resize vector if too small.
@@ -330,21 +358,22 @@ void PAHStats::PSL(const Sweep::Particle &sp, real time,
     fvector::iterator j = psl.begin()+start-1;
 
     // Get surface-volume cache.
-    const AggModels::PAHCache* cache =
-        dynamic_cast<const AggModels::PAHCache*>(&sp.AggCache());
+    const AggModels::SilicaCache* cache =
+        dynamic_cast<const AggModels::SilicaCache*>(&sp.AggCache());
 
     // Get the PSL stats.
     if (cache != NULL) {
-		*(++j) = (real)(cache->m_numPAH);
-		*(++j) = (real)(cache->m_PAHDiameter)*1e9;			//convert to nm
-		*(++j) = (real) (cache->m_numcarbon);
-		*(++j) = (real) (cache->m_numH);
+		*(++j) = (real)(cache->m_numSi)/(real)(cache->m_numprimary);
+		*(++j) = (real)(cache->m_numO)/(real)(cache->m_numprimary);
+		*(++j) = (real)(cache->m_numOH)/(real)(cache->m_numprimary);
 		*(++j) = (real) (cache->m_numprimary);
-		*(++j) = (real) (cache->m_sqrtLW);
-		*(++j) = (real) (cache->m_LdivW);
+		//*(++j) = (real) (cache->m_sqrtLW);
+		//*(++j) = (real) (cache->m_LdivW);
 		*(++j) = (real) (cache->m_primarydiam)*1e9/(real)(cache->m_numprimary);//convert to nm
-        *(++j) = (real) (cache->m_Rg)*1e9;
-        *(++j) = (real) (cache->m_fdim);
+		*(++j) = (real) (cache->m_avg_sinter);
+        //*(++j) = (real) (cache->);
+        //*(++j) = (real) (cache->m_Rg)*1e9;
+        //*(++j) = (real) (cache->m_fdim);
 
     } else {
         fill (j+1, j+2, 0.0);
@@ -358,20 +387,21 @@ void PAHStats::PSL(const Sweep::Particle &sp, real time,
 // READ/WRITE/COPY.
 
 // Creates a copy of the object.
-PAHStats *const PAHStats::Clone(void) const
+SilicaStats *const SilicaStats::Clone(void) const
 {
-    return new PAHStats(*this);
+    return new SilicaStats(*this);
 }
+
 
 // Returns the model data type.  Used to identify different models
 // and for serialisation.
-unsigned int PAHStats::ID(void) const
+unsigned int SilicaStats::ID(void) const
 {
-    return (unsigned int)AggModels::PAH_KMC_ID;
+    return (unsigned int)AggModels::Silica_ID;
 }
 
 // Writes the object to a binary stream.
-void PAHStats::Serialize(std::ostream &out) const
+void SilicaStats::Serialize(std::ostream &out) const
 {
     if (out.good()) {
         // Output the version ID (=0 at the moment).
@@ -404,12 +434,12 @@ void PAHStats::Serialize(std::ostream &out) const
         }
     } else {
         throw invalid_argument("Output stream not ready "
-                               "(Sweep, PAHStats::Serialize).");
+                               "(Sweep, SilicaStats::Serialize).");
     }
 }
 
 // Reads the object from a binary stream.
-void PAHStats::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
+void SilicaStats::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
     // TODO:  Deserialize ParticleStats should reset to state with no components
     //        or tracker variables in the first instance.
@@ -458,10 +488,10 @@ void PAHStats::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, PAHStats::Deserialize).");
+                                    "(Sweep, SilicaStats::Deserialize).");
         }
     } else {
         throw invalid_argument("Input stream not ready "
-                               "(Sweep, PAHStats::Deserialize).");
+                               "(Sweep, SilicaStats::Deserialize).");
     }
 }

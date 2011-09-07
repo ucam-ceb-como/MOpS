@@ -41,13 +41,15 @@
 */
 
 #include "swp_solver.h"
-#include "geometry1d.h"
+#include "local_geometry1d.h"
 
 #include <stdlib.h>
 #include <cmath>
 #include "string_functions.h"
 #include <stdexcept>
 #include <ctime>
+#include <limits>
+
 using namespace Sweep;
 using namespace std;
 using namespace Strings;
@@ -56,7 +58,7 @@ using namespace Strings;
 
 // Default constructor.
 Solver::Solver(void)
-: m_maxdt(0.0), m_splitratio(1.0e9)
+: m_splitratio(1.0e9)
 {
 //  srnd(time(0));			//added by ms785
 //    srnd(getpid());
@@ -87,7 +89,6 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech,
     static fvector rates(mech.TermCount(), 0.0);
     // Global maximum time step.
     dtg     = tstop - t;
-    m_maxdt = dtg / 3.0;
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
@@ -97,7 +98,7 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech,
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
 
             // Calculate split end time.
-            tsplit = calcSplitTime(t, tstop, jrate, sys.ParticleCount(), dtg);
+            tsplit = calcSplitTime(t, std::min(t+dtg, tstop), jrate, sys.ParticleCount());
         } else {
             // There are no deferred processes, therefore there
             // is no need to perform LPDA splitting steps.
@@ -108,12 +109,7 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech,
         while (t < tsplit) {
             // Sweep does not do transport
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
-            dt = timeStep(t, tsplit, sys, mech, rates, jrate, rand_int, rand_u01);
-            if (dt >= 0.0) {
-                t+=dt;
-            } else {
-                return -1;
-            }
+            timeStep(t, std::min(t + dtg / 3.0, tsplit), sys, Geometry::LocalGeometry1d(), mech, rates, jrate, rand_int, rand_u01);
         }
 
         // Perform Linear Process Deferment Algorithm to
@@ -129,15 +125,23 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech,
 
 // TIME STEPPING ROUTINES.
 
-// Calculates the splitting end time after which all particles
-// shallbe updated using LPDA.
+/*!
+ * Calculates the splitting end time after which all particles
+ * shall be updated using LPDA.
+ *
+ *@param[in]	t		Current time
+ *@param[in]	tstop	Latest possible end for the splitting
+ *@param[in]	jrate	Computational jump rate
+ *@param[in]	n		Number of computational particles
+ *
+ *@return	End time for next splitting step
+ */
 real Solver::calcSplitTime(real t, real tstop, real jrate,
-                           unsigned int n, real maxdt) const
+                           unsigned int n) const
 {
     // Calculate the splitting time step, ensuring that it is
     // not longer than the maximum allowable time.
     real tsplit = (n + 1) * m_splitratio / (jrate + 1.0);
-    tsplit = min(tsplit, maxdt);
 
     // Now put the split end time into tsplit, again
     // checking that it is not beyond the stop time.
@@ -146,11 +150,23 @@ real Solver::calcSplitTime(real t, real tstop, real jrate,
 
 /*!
  * Performs a single stochastic event on the ensemble from the given
- * mechanism.  Returns the length of the time step if successful,
- * otherwise returns negative.
+ * mechanism or move to t_stop, whichever comes first.
+ *
+ *@param[in,out]    t           Current time, which will be updated
+ *@param[in]        t_stop      Time past which step may not go
+ *@param[in,out]    sys         System in which jump will take place
+ *@param[in]        geom        Specify size and neighbours of cell (use a default constructed object which will apply unit scaling when no geometry information present)
+ *@param[in]        mech        Mechanism specifying the jump
+ *@param[in]        rates       Vector of computational jump rates, one for each jump process
+ *@param[in]        jrate       Sum of entries in rates (total jump rate)
+ *@param[in,out]    rand_int    Generator of uniform random integers on a range
+ *@param[in,out]    rand_u01    Generator of uniform real numbers on
+ *
+ *@pre      t <= t_stop
+ *@post     t <= t_stop
  */
-real Solver::timeStep(real t, real t_stop, Cell &sys, const Mechanism &mech,
-                      const fvector &rates, real jrate,
+void Solver::timeStep(real &t, real t_stop, Cell &sys, const Geometry::LocalGeometry1d &geom,
+                      const Mechanism &mech, const fvector &rates, real jrate,
                       int (*rand_int)(int, int), real (*rand_u01)())
 {
     // The purpose of this routine is to perform a single stochastic jump process.  This
@@ -164,24 +180,18 @@ real Solver::timeStep(real t, real t_stop, Cell &sys, const Mechanism &mech,
         dt = - log(dt) / jrate;
     } else {
         // Avoid divide by zero.
-        dt = 1.0e+30;
+        dt = std::numeric_limits<real>::max();
     }
 
     // Truncate if step is too long or select a process
     // to perform.
-    if (dt > m_maxdt) {
-        dt = std::min(m_maxdt, t_stop - t);
+    if (t+dt <= t_stop) {
+        const int i = chooseProcess(rates, rand_u01);
+        mech.DoProcess(i, t+dt, sys, geom, rand_int, rand_u01);
+        t += dt;
     } else {
-        if (t+dt <= t_stop) {
-            const int i = chooseProcess(rates, rand_u01);
-            mech.DoProcess(i, t+dt, sys, Geometry::LocalGeometry1d(), rand_int, rand_u01);
-        } else {
-            dt = t_stop - t;
-        }
+        t = t_stop;
     }
-
-
-    return dt;
 }
 
 // Selects a process using a DIV algorithm and the process rates
