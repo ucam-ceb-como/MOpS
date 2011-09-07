@@ -39,7 +39,7 @@ Radiation::Radiation
     {
         throw std::runtime_error(
             "You have specified no radiative species!"
-            "\n           e.g. Use the tag <species name=\"H20\"></species>.");
+            "\n           e.g. Use the tag <species name=\"H2O\"></species>.");
     }
     for ( p = radiativeSpecies.begin(); p < radiativeSpecies.end(); ++p)
     {
