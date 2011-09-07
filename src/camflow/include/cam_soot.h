@@ -157,13 +157,13 @@ class CamSoot {
          */
         void report(int nCells);
 
-        /*-------------------------------------------                           
+        /*-------------------------------------------
          *
          * NEW FUNCTIONS ADDED
-         *                  
+         *
          *---------------------------------------------/
          */
-        
+
         /*!
          * Initialize the soot moments
          */
@@ -224,6 +224,7 @@ class CamSoot {
         doublereal m0Threshold;
         doublereal D1_PAH;
         doublereal firstMom;
+        doublereal CD1;
 
         stringVector sootSpecies;
 

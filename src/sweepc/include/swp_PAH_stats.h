@@ -149,11 +149,26 @@ public:
 
 private:
     // Stats count and indices.
-    static const unsigned int STAT_COUNT = 9;
-	enum StatIndices {iNPAH=0, iPARTSURF=2, iPARTMASS=3,iNAVGPAH=4, iPAHD=5,iNCARB=6, iCOAL=7 ,iNPRIM=8,iSQRTLW=9,iLDIVW=10, iavgdim=11, irgyr=12, ifdim=13};
+    static const unsigned int STAT_COUNT = 10;
+	enum StatIndices {
+		iNPAH=0,      // m_numPAH
+		iPARTSURF=2,  // m_surf, the surface area for primary partilcle
+		iPARTMASS=3,  // m_mass, the mass for primary partilcle
+		iNAVGPAH=4,   // Avg. PAH real Part
+		iPAHD=5,      // m_PAHCollDiameter
+		iNCARB=6,     // m_numcarbon
+		iNHYDROGEN=7, // m_numH
+		iCOAL=8,      // m_avg_coalesc
+		iNPRIM=9,     // m_numprimary
+		iSQRTLW=10,    // sqrt(LW)
+		iLDIVW=11,    // LdivW
+		iavgdim=12,   // m_primarydiam/m_numprimary, Avg. primary diameter
+		irgyr=13,     // m_Rg, Radius of gyration
+		ifdim=14      // m_fdim
+	};
 
     // PSL count and indices.
-    static const unsigned int PSL_COUNT  = 14;
+    static const unsigned int PSL_COUNT  = 15;
     static const unsigned int PPSL_COUNT = 0;
 
     // The stats.

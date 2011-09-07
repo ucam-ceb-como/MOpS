@@ -553,7 +553,13 @@ private:
         const Mechanism &mech,  // Mechanism use to solve system.
         const timevector &times // Simulation output time intervals.
         ) const;
-    
+
+    // post-process the ensemble to find interested information, in this case, mass of Xmer at the end of simulation
+    void postProcessXmer(
+        const Mechanism &mech,  // Mechanism use to solve system.
+        const timevector &times // Simulation output time intervals.
+        ) const;
+
     // FLUX VIEWER OUTPUT
     // Writes element fluxes to FluxViewer format.
     void writeElementFluxOutput(
@@ -571,6 +577,14 @@ private:
     // current time.
     double calcDeltaCT(double markt) const;
 };
+
+    void calculateM0(
+        fvector &m_xmer,
+        fvector &m_M0,
+        real Pcount,
+        real PM0
+        );
+
 };
 
 #endif

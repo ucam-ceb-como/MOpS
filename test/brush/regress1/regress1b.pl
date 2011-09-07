@@ -68,26 +68,34 @@ my $momentFile;
 open($momentFile, "<regress1b-NucCoagMerged_partstats.csv") or die "ERR: failed to open merged moment file: $!";
 
 my $m0 = 0;
+my $m0var = 0;
 my $m1 = 0;
+my $m1var = 0;
 my $count = 0;
 
 while(<$momentFile>) {
   my @fields = split /,/;
 
   if(($fields[0] =~ /^\d+/) && (abs($fields[0] - 0.02) < 1e-4 )) {
+      # Third field should be the zeroth moment
       $m0 += $fields[3];
+      $m0var += $fields[3] * $fields[3];
       #print "$fields[3], ";
+
       $m1 += $fields[11];
+      $m1var += $fields[11] * $fields[11];
       #print "$fields[11] \n";
       ++$count;
   }
 }
 
+# Estimate confidence intervals
+$m0var = 3.29*sqrt(($m0var - $m0 * $m0 / $count)/($count - 1)/$count);
+$m1var = 3.29*sqrt(($m1var - $m1 * $m1 / $count)/($count - 1)/$count);
+
 # Get mean values
 $m0 /= $count;
 $m1 /= $count;
-
-print "$m0, $m1\n";
 
 # Count number of failures
 my $failures = 0;
@@ -98,7 +106,11 @@ my $failures = 0;
 #m0: (4.469 +- 0.132) e10 cm^-3
 #m1: (3.818 +- 0.134) e-11 g cm^-3
 # svn r821
+# Repeating with 16384 max particles and git 89649c7...
+#m0: 4.474e16 m^-3
+#m1: 3.830e-8 kg m^-3
 
+print "$m0, $m0var, $m1, $m1var\n";
 if(abs($m0 - 4.465e16) > 8e14) {
   print "Simulated mean M0 was $m0, when 4.465e16 m^-3 expected\n";
   print "**************************\n";
@@ -107,7 +119,7 @@ if(abs($m0 - 4.465e16) > 8e14) {
   ++$failures;
 }
 
-if(abs($m1 - 3.823e-8) > 4e-10) {
+if(abs($m1 - 3.823e-8) > 8e-10) {
   print "Simulated mean M1 was $m1, when 3.823e-8 kg m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";

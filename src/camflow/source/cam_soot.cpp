@@ -61,9 +61,10 @@ CamSoot::CamSoot()
     D1_PAH(2.42e-10),        //m  (This is the size of a benzene ring, not the PAH diameter)
 							 // 2.42 = 1.395*sqrt(3), 1.395 A is the C-C in aromatics
     momentON(false),
-    lowFrac(-4)
-{ 
-    
+    lowFrac(-4),
+    CD1(pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0))
+{
+
     CamConverter convert;
     std::string fileName("camflow.xml");
 
@@ -375,7 +376,7 @@ void CamSoot::initMoments(realVector& soln,int nCells){
      *rest of the moments
      */
     for(int i=1; i<nMoments; i++){
-       
+
     	// ank25: Do we need to multiply by 1e6 here?
         soln.push_back(soln[i-1+st] * log(doublereal(atomsPerDimer)));
 
@@ -445,7 +446,7 @@ void CamSoot::initMomentsConstants(Mechanism &mech){
      *                constant for free molecular coagulation
      *-------------------------------------------------------------------------/
      */
-    
+
     // ank25:  This almost matches eqn 13 in Frenklach 2002.
     // However here we have the additional term cMass/NA
     // Also need to multiply by sqrt(T) later on.
@@ -500,7 +501,7 @@ void CamSoot::residual
 {
     for (int r=0; r<nMoments; ++r)
     {
-        f[r] = wdot[r];        
+        f[r] = wdot[r];
     }
 }
 
@@ -693,7 +694,7 @@ CamSoot::realVector CamSoot::rateNucleation
      *nucleation rate for the zeroth moment
      */
     nucRates[0] = kNucl* std::max(concPAH,0.0)*concPAH;
-    
+
     /*
      *number of carbon atoms per dimer
      */
@@ -743,7 +744,7 @@ CamSoot::realVector CamSoot::rateCoagulation
 
     for(int i=0; i<4; i++)
         f.push_back(gridFunction(i,0,0));
-    doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);    
+    doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);
 
     f.clear();
     for(int i=0; i<4; i++)
@@ -937,7 +938,7 @@ void CamSoot::rateSurface(const realVector& conc,
     doublereal fr4 = 8.0e13*pow(T,1.56)*exp(-3.8/RT)*conc[iC2H2]/1e6;
     doublereal fr5 = 2.2e12*exp(-7.5/RT)*conc[iO2]/1e6;
     doublereal fr6 = 0.13*conc[iOH]/1e6;
- 
+
     // ank25: No unit change here
     doublereal par_a = 12.65 - 5.63e-03*T;
     doublereal par_b = -1.38 + 6.80e-04*T;
@@ -962,8 +963,8 @@ void CamSoot::rateSurface(const realVector& conc,
 
         // C2H2
         rateC2H2.resize(nMoments,0.0);
-        coef = fr4*cRad;        
-        sums(nMoments,2,coef,rateC2H2);        
+        coef = fr4*cRad;
+        sums(nMoments,2,coef,rateC2H2);
 
         // O2
         rateO2.resize(nMoments,0.0);
@@ -1033,9 +1034,9 @@ void CamSoot::interpolateReducedMoments(realVector& wom){
     for(int i=0; i<= 6*hMoments+1; i++){
         if((i%6) != 0.0){
             reducedMoments(i) = cm.interpolateLG(i/6.0,nMoments,prime,wom);
-        }else{            
+        }else{
             reducedMoments(i) = wom[i/6];
-            
+
         }
     }
 
@@ -1158,7 +1159,6 @@ CamSoot::realVector CamSoot::showSootComponentRates(int nMoments)
 
 doublereal CamSoot::avgSootDiam()
 {
-    doublereal CD1 = pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0);
 	doublereal sootDiam = CD1 * reducedMoments(2);
 	return sootDiam;
 }
@@ -1172,14 +1172,12 @@ doublereal CamSoot::dispersion()
 
 doublereal CamSoot::sootSurfaceArea(doublereal M0)
 {
-    doublereal CD1 = pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0);
     doublereal surfaceArea = PI * CD1 * CD1 * CD1 * reducedMoments(4) * M0;
     return surfaceArea;
 }
 
 doublereal CamSoot::sootVolumeFraction(doublereal M0)
 {
-    doublereal CD1 = pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0);
     doublereal volumeFraction = PI * CD1 * CD1 * CD1 * reducedMoments(6) * M0 / 6.0;
     return volumeFraction;
 }

@@ -97,8 +97,12 @@ foreach $val (@m1samples) {
 my $mean = $sum / 46;
 my $var  = $sumsq / 46 - $mean * $mean;
 
+# git revision 89649c7... gives
+# mean 8.390e-21
+# var  2.07e-43
+
 print "$mean, $var\n";
-if(abs($mean - 8.374e-21) > 2e-22) {
+if(abs($mean - 8.374e-21) > 5e-23) {
   print "Simulated mean M1 at x=0.079 was $mean, when analytic solution is 8.374e-21 kg m^-3\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";

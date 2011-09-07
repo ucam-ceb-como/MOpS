@@ -49,6 +49,12 @@
 #include <vector>
 #include <map>
 
+// Forward declaration
+namespace Geometry
+{
+    class LocalGeometry1d;
+}
+
 namespace Sweep
 {
 class Solver
@@ -72,8 +78,18 @@ public:
         real (*rand_u01)() // U[0,1] samples
         );
 
-    //! Upper limit for one stochastic time step
-    void setMaxTimeStep(real max_step) {m_maxdt = max_step;}
+    //! Performs a single stochastic event on the ensemble
+    static void timeStep(
+        real &t,                // Current solution time.
+        real t_stop,            // Steps may not go past this time
+        Cell &sys,              // System to update.
+        const Geometry::LocalGeometry1d &geom, // Details of cell size
+        const Mechanism &mech,  // Mechanism to use.
+        const fvector &rates,   // Current process rates as an array.
+        real jrate,             // The total jump rate (non-deferred processes).
+        int (*rand_int)(int, int), // Uniform integer samples from a range
+        real (*rand_u01)()      // U[0,1] samples
+        );
 
 protected:
     // TIME STEPPING ROUTINES.
@@ -84,33 +100,16 @@ protected:
         real t,         // Current time.
         real tstop,     // Stop time.
         real jrate,     // Sum of all jump process rates.
-        unsigned int n, // Number of particles.
-        real maxdt      // Maximum time step.
+        unsigned int n  // Number of particles.
         ) const;
-    
-    // Performs a single stochastic event on the ensemble from the given
-    // mechanism.  Returns the length of the time step if successful,
-    // otherwise returns negative.
-    real timeStep(
-        real t,                // Current solution time.
-        real t_stop,           // Steps may not go past this time
-        Cell &sys,             // System to update.
-        const Mechanism &mech, // Mechanism to use.
-        const fvector &rates,  // Current process rates as an array.
-        real jrate,            // The total jump rate (non-deferred processes).
-        int (*rand_int)(int, int), // Uniform integer samples from a range
-        real (*rand_u01)()     // U[0,1] samples
-        );
 
     // Selects a process using a DIV algorithm and the process rates
     // as weights.
-    int chooseProcess(const fvector &rates, real (*rand_u01)());
+    static int chooseProcess(const fvector &rates, real (*rand_u01)());
 
 private:
     // Numerical parameters.
 
-    //! Maximum allowed time step size.
-    real m_maxdt;
     //! Parameter defining number of LPDA updates per particle events.
     real m_splitratio;
 
