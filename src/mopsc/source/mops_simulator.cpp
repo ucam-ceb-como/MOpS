@@ -1916,18 +1916,25 @@ void Simulator::postProcessXmer(const Mechanism &mech,
                                 psl_xmer.push_back(12 * temp[13] + temp[14]);//temp[13]=>num of C, temp[14]=>num of H
                         }
                         delete r;
-
-                        //calculateM0(psl_xmer,m0_xmer,Pcount,PM0);
+                        // calculate m0 for each xmer
+                        calculateM0(psl_xmer,m0_xmer,Pcount,PM0);
                     } else {
                         // Throw error if the reactor was not read.
                         throw runtime_error("Unable to read reactor from save point "
                                             "(Mops, ParticleSolver::postProcessXmer).");
                     }
+                    if (psl_xmer.size()  == m0_xmer.size()) {
                       // Output particle PSL to CSV file.
                       out[i]->Write(psl_xmer);
                       out[i]->Write(m0_xmer);
                       psl_xmer.clear();
                       m0_xmer.clear();
+                    } else {
+                        // Throw error if the size of vector differ.
+                        throw runtime_error("size of psl_xmer is different form that of m0_xmer, the analysis of xmer information fials"
+                                            "(Mops, ParticleSolver::postProcessXmer).");
+                    }
+
                 }
             }
 
