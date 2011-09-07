@@ -83,8 +83,8 @@ while(<$momentFile>) {
 
 
 print "$m0, $m1\n";
-if(abs($m0 -  837) > 0) {
-  print "Simulated sp was $m0, when  851m^-3 expected\n";
+if(abs($m0 -  855) > 0) {
+  print "Simulated sp was $m0, when  855 expected\n";
   print "if pahtest1 passes and this test fails, it will indicate that the doubling algorithm works in a wrong way.";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -92,8 +92,8 @@ if(abs($m0 -  837) > 0) {
   exit 1;
 }
 
-if(abs($m1 - 1.226e17) > 1e15) {
-  print "Simulated mean M0 was $m0, when  1.246e17m^-3 expected\n";
+if(abs($m1 - 1.25e17) > 1e15) {
+  print "Simulated mean M0 was $m0, when  1.25e17m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
