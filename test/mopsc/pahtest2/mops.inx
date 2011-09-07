@@ -6,7 +6,7 @@
   <atol>1.0e-22</atol> 
   <rtol>1.0e-4</rtol>
     <pcount>1024</pcount>
-  <maxm0>4e12</maxm0>
+  <maxm0>3e11</maxm0>
   <relax>0.5</relax>
   
 
@@ -21,7 +21,7 @@
   <!-- Output time sequence. -->
   <timeintervals splits="1">
     <start>0.0</start>
-	<time steps="100" splits="1">0.012</time>
+	<time steps="400" splits="1">0.0058</time>
   </timeintervals>
   
   <!-- Simulation output settings. -->
@@ -47,6 +47,6 @@
 
     
     <!-- File name for output (excluding extensions). -->
-    <filename>pahtest1-test-pah-kmc-only</filename>
+    <filename>pahtest2-test-doubling-algorithm</filename>
   </output>
 </mops>
