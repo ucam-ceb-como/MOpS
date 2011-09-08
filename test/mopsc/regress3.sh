@@ -34,7 +34,8 @@ echo "========================"
 # Put a negative values at the start so that the number of particles of size 1 comes at index 1
 # These numbers are for a seed of 123 in the Mersenne Twister random number generator
 # Analytic solution is 1427 888 622 459 349
-testValues=(-1 1416 903 623 457 323)
+referenceValues=(-1 1416 903 623 457 323)
+simulatedValues=(-1 -1   -1  -1 -1 -1)
 
 # Grep seems to require the file in unix format, even under cygwin
 if((windows==1))
@@ -45,13 +46,21 @@ fi
 i=1
 while ((i <= 5))
 do
-  count=`grep ",$i$" "regression3a-psl(0.5s).csv" | wc -l`
+  simulatedValues[i]=`grep ",$i$" "regression3a-psl(0.5s).csv" | wc -l`
   #echo "$i $count"
-  if((count != testValues[i])) 
+  ((i+=1))
+done
+echo "Analytic  solution is 1427 888 622 459 349"
+echo "Simulated solution is ${simulatedValues[1]} ${simulatedValues[2]} ${simulatedValues[3]} ${simulatedValues[4]} ${simulatedValues[5]}"
+
+i=1
+while ((i <= 5))
+do
+  if((simulatedValues[i] != referenceValues[i])) 
     then
       # Regression test has failed; print explanatory message and exit with non zero
       # value showing the size class of the first difference
-      echo "Found $count particles of size $i, when ${testValues[i]} expected"
+      echo "Found ${simulatedValues[i]} particles of size $i, when ${referenceValues[i]} expected"
       echo "**************************"
       echo "****** TEST FAILURE ******"
       echo "**************************"
