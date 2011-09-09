@@ -45,6 +45,7 @@
 #include "swp_birth_process.h"
 #include "swp_death_process.h"
 #include <stdexcept>
+#include <boost/random/uniform_01.hpp>
 
 using namespace Sweep;
 using namespace std;
@@ -200,8 +201,7 @@ unsigned int Cell::ParticleCount(void) const
 /*!
  *@param[in,out]    sp              Pointer to particle to add to ensemble.
  *@param[in]        stat_weight     Concentration of physical particles to be represented by added computational particles
- *@param[in,out]    rand_int        Pointer to function that generates uniform integers on a range
- *@param[in,out]    rand_u01        Pointer to function that generates U[0,1] deviates
+ *@param[in,out]    rng             Random number generator
  *
  * Ownership of the particle is taken by the ensemble, which will delete it when it is no
  * longer required (which may be immediately).
@@ -211,8 +211,7 @@ unsigned int Cell::ParticleCount(void) const
  * probabilistic methods are used to add computational particles with the mean of their combined
  * statistical weight equal to the value specified by the caller.
  */
-void Cell::AddParticle(Particle* sp, real stat_weight,
-                       int (*rand_int)(int, int), real(*rand_u01)()) {
+void Cell::AddParticle(Particle* sp, real stat_weight, rng_type &rng) {
     // Need to match caller specified weight with total weight of particles added to the ensemble
     unsigned int safetyCounter = 0;
     while(true) {
@@ -220,7 +219,7 @@ void Cell::AddParticle(Particle* sp, real stat_weight,
 
         if(stat_weight >= destinationWeight) {
             // Insert one copy of the particle into the destination cell
-            m_ensemble.Add(*(new Particle(*sp)), rand_int);
+            m_ensemble.Add(*(new Particle(*sp)), rng);
             stat_weight -= destinationWeight;
 
             // Avoid infinite loops
@@ -232,10 +231,12 @@ void Cell::AddParticle(Particle* sp, real stat_weight,
             break;
     }
 
-     // Unfortunately we cannot quite conserve statistical weight, there will always be a bit
-     // left over after the loop above.  This can only be handled in an average sense.
-     if(rand_u01() < stat_weight * SampleVolume()) {
-         m_ensemble.Add(*sp, rand_int);
+    // Unfortunately we cannot quite conserve statistical weight, there will always be a bit
+    // left over after the loop above.  This can only be handled in an average sense.
+    boost::uniform_01<rng_type&, real> unifDistrib(rng);
+
+     if(unifDistrib() < stat_weight * SampleVolume()) {
+         m_ensemble.Add(*sp, rng);
      }
      else {
          // Ownership of the particle has not been passed on to an ensemble so the memory must be released

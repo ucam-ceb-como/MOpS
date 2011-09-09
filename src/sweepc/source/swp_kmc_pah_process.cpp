@@ -42,19 +42,17 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-//#include "swp_kmc_pah_structure.h"
 #include "swp_kmc_pah_process.h"
-//#include "swp_kmc_structure_comp.h"
-//#include "swp_kmc_typedef.h"
 #include "swp_kmc_jump_process.h"
-#include "rng.h"
 #include "string_functions.h"
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
-//#include <list>
 #include <cmath>
-//#include <map>
+#include <boost/random/uniform_smallint.hpp>
+#include <boost/random/bernoulli_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
 
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
@@ -682,22 +680,33 @@ bool PAHProcess::checkHindrancePhenyl(const Cpointer C_1) const {
     return false;
 }
 //! Choose random site of a site type st, returns iterator to site
-Spointer PAHProcess::chooseRandomSite(kmcSiteType st, int (*ir)(int,int)) {
+Spointer PAHProcess::chooseRandomSite(kmcSiteType st, rng_type &rng) {
     // to choose any principal site
     if(st == any) {
         // choose any site index from m_pah->m_siteList
-        int sz = ((int) m_pah->m_siteList.size())-1; // size - 1
-        int r = ir(0,sz);
+        // There does not seem to be any handling of the case that there are no sites.
+
+        // Set up an object to generate an integer uniformly distributed on [0, size - 1]
+        typedef boost::uniform_smallint<unsigned int> site_index_distrib;
+        site_index_distrib siteIndexDistrib(0,  m_pah->m_siteList.size()-1);
+        boost::variate_generator<rng_type &, site_index_distrib> siteIndexGenerator(rng, siteIndexDistrib);
+
         // move iterator to site index and return iterator
-        return moveIt(m_pah->m_siteList.begin(), (unsigned int) r);
+        return moveIt(m_pah->m_siteList.begin(), siteIndexGenerator());
     } else if(st == benz) { //to choose sites for phenyl addition
-        return chooseRandomSite(PHsites, ir);
+        return chooseRandomSite(PHsites, rng);
     } else {
         //cout << "~~Choosing from " << m_pah->m_siteMap[st].size() << " sites...\n";
         // choose site index from site vector associated with site type st
         int sz = ((int) m_pah->m_siteMap[st].size())-1; // size - 1
         if(sz > 0) {
-            int r = ir(0, sz);
+            // Set up an object to generate an uniform integer on [0, sz] now that we
+            // know that sz > 0 (and can safely be cast to an unsigned type.
+            typedef boost::uniform_smallint<unsigned int> site_index_distrib;
+            site_index_distrib siteIndexDistrib(0, static_cast<unsigned int>(sz));
+            boost::variate_generator<rng_type &, site_index_distrib> siteIndexGenerator(rng, siteIndexDistrib);
+
+            const unsigned r = siteIndexGenerator();
             //cout<<"~~Chose "<<r<<"th site..\n";
             return m_pah->m_siteMap[st][r];
         }
@@ -705,7 +714,7 @@ Spointer PAHProcess::chooseRandomSite(kmcSiteType st, int (*ir)(int,int)) {
     }
 }
 //! Choose a random site of any site types in vtype
-Spointer PAHProcess::chooseRandomSite(std::vector<kmcSiteType> vtype, int (*irx)(int,int)) {
+Spointer PAHProcess::chooseRandomSite(std::vector<kmcSiteType> vtype, rng_type &rng) {
     // stores number of sites for each site type
     std::vector<unsigned int> noOfSites;
     // stores total number of sites
@@ -715,12 +724,22 @@ Spointer PAHProcess::chooseRandomSite(std::vector<kmcSiteType> vtype, int (*irx)
         sum_s+=getSiteCount(vtype[i]);
     }
     int sz = sum_s-1; // size - 1
-    int r; // random number between 0 to sz
+    unsigned r; // random number between 0 to sz
     if(sz > 0) {
-        r = irx(0, sz); // choosing random site
-    }else r=0;
+        // Set up an object to generate an uniform integer on [0, sz] now that we
+        // know that sz > 0 (and can safely be cast to an unsigned type.
+        typedef boost::uniform_smallint<unsigned int> site_index_distrib;
+        site_index_distrib siteIndexDistrib(0, static_cast<unsigned int>(sz));
+        boost::variate_generator<rng_type &, site_index_distrib> siteIndexGenerator(rng, siteIndexDistrib);
+
+        r = siteIndexGenerator();
+    }
+    else {
+        r=0;
+    }
+
     for(int i=0; i!=(int) noOfSites.size(); i++) {
-        if(r<(int)noOfSites[i]) return m_pah->m_siteMap[vtype[i]][r];
+        if(r < noOfSites[i]) return m_pah->m_siteMap[vtype[i]][r];
         else r -= noOfSites[i];
     }
     cout<<"ERROR: chooseRandomSite(vector): cannot choose proper site\n";
@@ -1460,14 +1479,14 @@ bool PAHProcess::checkCombinedSiteType(Spointer& stt) {
 }
 
 //! Structure processes: returns success or failure
-bool PAHProcess::performProcess(const JumpProcess& jp, int (*rand_int)(int,int)) 
+bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
 {
     //printStruct();
     //cout << "Start Performing Process..\n";
     kmcSiteType stp = jp.getSiteType();
     int id = jp.getID();
     // choose random site of type stp to perform process
-    Spointer site_perf = chooseRandomSite(stp, rand_int); //cout<<"[random site chosen..]\n";
+    Spointer site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
     // stores pointers to site Carbon members
     Cpointer site_C1 = site_perf->C1;
     Cpointer site_C2 = site_perf->C2;
@@ -1481,7 +1500,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, int (*rand_int)(int,int))
         case 3:
             proc_L6_BY6(site_perf, site_C1, site_C2); break;
         case 4:
-            proc_PH_benz(site_perf, site_C1, site_C2, rand_int); break;
+            proc_PH_benz(site_perf, site_C1, site_C2, rng); break;
         case 5:
             proc_D6R_FE3(site_perf, site_C1, site_C2); break;
         case 6:
@@ -1497,7 +1516,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, int (*rand_int)(int,int))
         case 11:
             proc_D5R_R5(site_perf, site_C1, site_C2); break;
         case 12:
-            proc_C6R_AC_FE3(site_perf, site_C1, site_C2, rand_int); break;
+            proc_C6R_AC_FE3(site_perf, site_C1, site_C2, rng); break;
         case 13:
             proc_C5R_RFE(site_perf, site_C1, site_C2); break;
         case 14:
@@ -1505,13 +1524,13 @@ bool PAHProcess::performProcess(const JumpProcess& jp, int (*rand_int)(int,int))
         case 15:
             proc_M5R_RZZ(site_perf, site_C1, site_C2); break;
         case 16:
-            proc_C6R_BY5_FE3(site_perf, site_C1, site_C2, rand_int); break;
+            proc_C6R_BY5_FE3(site_perf, site_C1, site_C2, rng); break;
         case 17:
-            proc_C6R_BY5_FE3violi(site_perf, site_C1, site_C2, rand_int); break;
+            proc_C6R_BY5_FE3violi(site_perf, site_C1, site_C2, rng); break;
         case 18:
             proc_L5R_BY5(site_perf, site_C1, site_C2); break;
         case 19:
-            proc_M6R_BY5_FE3(site_perf, site_C1, site_C2, rand_int); break;
+            proc_M6R_BY5_FE3(site_perf, site_C1, site_C2, rng); break;
         //case 20:
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
@@ -1728,17 +1747,34 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 // ID4- phenyl addition (AR15 in Matlab)
 // ************************************************************
-void PAHProcess::proc_PH_benz(Spointer& stt, Cpointer C_1, Cpointer C_2, int (*rand_int)(int,int)) {
+void PAHProcess::proc_PH_benz(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
     Cpointer chosen;
     bool before; // true if C1 of site is chosen, false if C2
     // choose one of the C atoms if site type is FE/AC/ZZ
     if(stt->type == FE || stt->type == AC || stt->type == ZZ) {
-        int r = rand_int(0,1);
-        if(r==0) {chosen = C_1; before=true;}
-        else {chosen = C_2; before=false;}
-    }else { //if not, choose the C which is not part of a 5-membered ring
-        if(moveIt(stt,-1)->type == R5) {chosen = C_2;before=false;}
-        else {chosen = C_1; before=true;}
+        // Define a distribution that has two equally probably outcomes
+        boost::bernoulli_distribution<> choiceDistrib;
+        // Now build an object that will generate a sample using rng
+        boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
+
+        if(choiceGenerator()) {
+            chosen = C_1;
+            before=true;
+        }
+        else {
+            chosen = C_2;
+            before=false;
+        }
+    }
+    else { //if not, choose the C which is not part of a 5-membered ring
+        if(moveIt(stt,-1)->type == R5) {
+            chosen = C_2;
+            before=false;
+        }
+        else {
+            chosen = C_1;
+            before=true;
+        }
     }
     // neighbouring site to be updated:
     Spointer neighbour;
@@ -1958,16 +1994,25 @@ void PAHProcess::proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 // ID12- R6 conversion to R5 (AR9 in Matlab)
 // ************************************************************
-void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, int (*rand_int)(int,int)) {
+void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
     //printSites(stt);
     if(checkHindrance(stt)) {
         /*cout<<"Site hinderzed, process not performed.\n"*/ return;}
     // check if FE3 is before or after AC
     bool b4 = false;
     if(moveIt(stt,-2)->comb == FE3 && moveIt(stt,2)->comb == FE3) {
-        if(rand_int(0,1)==0) b4 = true; // if FE3 on both sides, choose a random one
+        // Define a distribution that has two equally probably outcomes
+        boost::bernoulli_distribution<> choiceDistrib;
+        // Now build an object that will generate a sample using rng
+        boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
+
+        if(choiceGenerator())
+            b4 = true; // if FE3 on both sides, choose a random one
     }
-    else if(moveIt(stt,-2)->comb == FE3) b4 = true;
+    else {
+        if(moveIt(stt,-2)->comb == FE3)
+            b4 = true;
+    }
 
     Cpointer C1_res, C2_res, C1_R5, C2_R5;
     Spointer FE_res;
@@ -2246,7 +2291,7 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 // ID16- R6 migration & conversion to R5 at BY5 (pyrene+R5; pathway 1; AR22 in Matlab)
 // ************************************************************
-void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, int (*rand_int)(int,int)) {
+void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
     //printSites(stt);
     // check if there are any bridges in the BY5, cancel process is yes
     Cpointer now=C_1->C2;
@@ -2257,9 +2302,17 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, int
     // check if FE3 is before or after BY5
     bool b4 = false;
     if(moveIt(stt,-2)->comb == FE3 && moveIt(stt,2)->comb == FE3) {
-        if(rand_int(0,1)==0) b4 = true; // if FE3 on both sides, choose a random one
+        // Define a distribution that has two equally probably outcomes
+        boost::bernoulli_distribution<> choiceDistrib;
+        // Now build an object that will generate a sample using rng
+        boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
+
+        b4= choiceGenerator(); // if FE3 on both sides, choose a random one
     }
-    else if(moveIt(stt,-2)->comb == FE3) b4 = true;
+    else {
+        if(moveIt(stt,-2)->comb == FE3)
+            b4 = true;
+    }
     // first the R6 will be changed to R5 by removing a C. locate where the FE3 is and which
     // C is to be removed.
     Spointer sFE3;
@@ -2322,8 +2375,8 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, int
 // ************************************************************
 // ID17- R6 migration & conversion to R5 at BY5 (pyrene+R5; pathway 2-violi; AR24 in Matlab)
 // ************************************************************
-void PAHProcess::proc_C6R_BY5_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, int (*rand_int)(int,int)) {
-    proc_C6R_BY5_FE3(stt, C_1, C_2, rand_int);
+void PAHProcess::proc_C6R_BY5_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+    proc_C6R_BY5_FE3(stt, C_1, C_2, rng);
 }
 // ************************************************************
 // ID18- BY5 closure (AR16 in Matlab)
@@ -2334,7 +2387,7 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 // ID19- R6 desorption at bay -> pyrene (AR21 in Matlab)
 // ************************************************************
-void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, int (*rand_int)(int,int)) {
+void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
     //printSites(stt);
     // check if there are any bridges in the BY5, cancel process if yes
     Cpointer now=C_1->C2;
@@ -2345,7 +2398,12 @@ void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, int
     // check if FE3 is before or after BY5
     bool b4 = false;
     if(moveIt(stt,-2)->comb == FE3 && moveIt(stt,2)->comb == FE3) {
-        if(rand_int(0,1)==0) b4 = true; // if FE3 on both sides, choose a random one
+        // Define a distribution that has two equally probably outcomes
+        boost::bernoulli_distribution<> choiceDistrib;
+        // Now build an object that will generate a sample using rng
+        boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
+
+        b4 = choiceGenerator(); // if FE3 on both sides, choose a random one
     }
     else if(moveIt(stt,-2)->comb == FE3) b4 = true;
     // BY5 will be closed to form R6. firstly locate where the FE3 is

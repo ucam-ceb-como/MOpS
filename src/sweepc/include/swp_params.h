@@ -45,11 +45,15 @@
 #include "sprog.h"
 #include <cmath>
 #include <vector>
+#include <boost/random/mersenne_twister.hpp>
 
 namespace Sweep
 {
     typedef Sprog::real real;
     typedef Sprog::fvector fvector;
+
+    //! Type of random number generator to use throughout sweep
+    typedef boost::mt19937 rng_type;
 
     const real PI         = Sprog::PI;
     const real ONE_THIRD  = Sprog::ONE_THIRD;

@@ -199,8 +199,7 @@ public:
      * \param[in,out]   sys         System to update
      * \param[in]       local_geom  Details of local phsyical layout
      * \param[in]       iterm       Process term responsible for this event
-     * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
-     * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+     * \param[in,out]   rng         Random number generator
      *
      * \return      0 on success, otherwise negative.
      */
@@ -209,15 +208,14 @@ public:
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
-        int (*rand_int)(int, int), 
-        real(*rand_u01)()
+        rng_type &rng
         ) const = 0;
 
 
     // FICTICIOUS EVENTS.
 
     //! See whether an event is fictitious
-    static bool Fictitious(real majr, real truer, real(*rand_u01)());
+    static bool Fictitious(real majr, real truer, rng_type &rng);
 
     // READ/WRITE/COPY.
 

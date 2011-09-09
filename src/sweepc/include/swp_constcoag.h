@@ -105,9 +105,7 @@ public:
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
-        int (*rand_int)(int, int), 
-        real(*rand_u01)()
-        ) const;
+        rng_type &rng) const;
     
 private:
     // Coagulation rate types.  These define how the rate is 

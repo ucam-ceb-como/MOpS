@@ -56,8 +56,8 @@
 #include "swp_kmc_structure_comp.h"
 #include "swp_kmc_typedef.h"
 #include "swp_kmc_gaspoint.h"
+#include "swp_params.h"
 
-#include "mt19937.h"
 #include "linear_interpolator.hpp"
 #include <map>
 #include <vector>
@@ -171,6 +171,12 @@ int main(int argc, char *argv[])
 		}*/
         int ID = 10000;
         Simulator->initCSVIO();
+
+        // Create a random number generator object with a fixed seed,
+        // if this code is moved inside a loop, the seed will need to
+        // be made unique to the loop.
+        Sweep::rng_type rng(123);
+
         for(size_t i=0; i<pah.size(); i++) {
             pah[i] = new PAHStructure;
             pahp.setPAH(*pah[i]);
@@ -181,7 +187,7 @@ int main(int argc, char *argv[])
 			Simulator->updatePAH(pah[i],
 				t_start, (t_end-t_start),
 				no_of_steps,
-				Sweep::genrand_int, Sweep::genrand_real1,
+				rng,
 				1,
 				ID+i);
 			std::cout<<"done!\n";

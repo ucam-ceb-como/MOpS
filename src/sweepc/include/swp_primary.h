@@ -237,8 +237,7 @@ public:
     // Combines this primary with another.  This is also the
     // implementation of the + and += operators.
     virtual Primary &Coagulate(const Primary &rhs,
-                               int (*rand_int)(int, int),
-                               real(*rand_u01)());
+                               rng_type &rng);
 
     // This routine sinters the Primary for the given length of
     // time using the provided sintering model.
@@ -246,7 +245,7 @@ public:
         real dt, // Delta-t for sintering to occur.
         Cell &sys, // System which defines primary's environment.
         const Processes::SinteringModel &model, // Sintering model to use.
-        real (*rand_u01)() // Uniform [0,1] sample generator
+        rng_type &rng
         );
 
     // READ/WRITE/COPY.

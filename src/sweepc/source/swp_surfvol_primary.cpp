@@ -49,9 +49,10 @@
 #include "swp_aggmodel_type.h"
 #include "swp_model_factory.h"
 #include "swp_surfvol_cache.h"
-#include "rng.h"
 
 #include <stdexcept>
+#include <boost/random/poisson_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
 
 using namespace Sweep;
 using namespace Sweep::AggModels;
@@ -241,20 +242,18 @@ unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues
  * Combines this primary with another.
  *
  * \param[in]       rhs         Particle to add to current instance
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  *
  * \return      Reference to the current instance after rhs has been added
  */
-SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
-                                  Sweep::real(*rand_u01)())
+SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
 {
     // Store the resultant surface area.
     real s = m_surf + rhs.SurfaceArea();
 
     // Perform the coagulation.
-    Primary::Coagulate(rhs, rand_int, rand_u01);
+    Primary::Coagulate(rhs, rng);
 
     // The spherical particle Coagulate() routine has set the
     // surface area incorrectly.  We now replace the surface area
@@ -275,7 +274,7 @@ SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs, int (*rand_int)(in
 // time using the provided sintering model.
 void SurfVolPrimary::Sinter(real dt, Cell &sys,
                             const Processes::SinteringModel &model,
-                            real (*rand_u01)())
+                            rng_type &rng)
 {
     // Perform a first order integration method to sinter
     // the primary for the given time.
@@ -305,12 +304,17 @@ void SurfVolPrimary::Sinter(real dt, Cell &sys,
         // Approximate sintering by a poisson process.  Calculate
         // number of poisson events.
         int n;
+        typedef boost::poisson_distribution<int, real> poisson_distrib;
         if (tstop > (t1+delt)) {
-            // A sub-step, we have changed surface by dAmax, on average.
-            n = ignpoi(1.0 / scale, rand_u01);
+            // A sub-step, we have changed surface by dAmax, on average
+            poisson_distrib repeatCountDistrib(1.0 / scale);
+            boost::variate_generator<rng_type &, poisson_distrib> repeatCountGenerator(rng, repeatCountDistrib);
+            n = repeatCountGenerator();
         } else {
             // Step until end.  Calculate degree of sintering explicitly.
-            n = ignpoi(r * (tstop - t1) / (scale*dAmax), rand_u01);
+            poisson_distrib repeatCountDistrib(r * (tstop - t1) / (scale*dAmax));
+            boost::variate_generator<rng_type &, poisson_distrib> repeatCountGenerator(rng, repeatCountDistrib);
+            n = repeatCountGenerator();
         }
 
         // Adjust the surface area.

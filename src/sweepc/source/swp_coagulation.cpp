@@ -44,6 +44,8 @@
 #include "swp_mechanism.h"
 #include <stdexcept>
 #include <iostream>
+#include <boost/random/bernoulli_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
 
 using namespace Sweep;
 using namespace Sweep::Processes;
@@ -127,30 +129,33 @@ real Coagulation::CalcRateTerms(real t, const Cell &sys, const CoagPtrVector &co
  *@param[in]        ip2         Index of second particle in ensemble
  *@param[in,out]    sp2         Pointer to second particle
  *@param[in]        sys         Cell containing particles that are coagulating
- *@param[in,out]    rand_int    Pointer to function that generates integers uniformly on an interval
- *@param[in,out]    rand_u01    Pointer to function that generates U[0,1] deviates
+ *@param[in,out]    rng         Random number generator
  *
  *@return       Index of new, larger particle
  */
 int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
                                const int ip2, Particle *sp2,
-                               Cell &sys, int (*rand_int)(int, int),
-                               real(*rand_u01)()) const {
+                               Cell &sys, rng_type &rng) const {
 
     // Position for particle after coagulation, default is to take whatever happens
     // to be in sp1
     real newPos = sp1->getPosition();
     real newPosTime = sp1->getPositionTime();
     if(mPositionChoice == UniformPositionChoice) {
-        // Change to position of sp2 with prob 0.5
-        if(rand_u01() < 0.5) {
+        // Change to position of sp2 with prob 0.5 (bernoulli distribution defaults to prob 0.5)
+        boost::bernoulli_distribution<> bernoulliDistrib;
+        boost::variate_generator<rng_type &, boost::bernoulli_distribution<> > positionChooser(rng, bernoulliDistrib);
+        if(positionChooser()) {
             newPos = sp2->getPosition();
             newPosTime = sp2->getPositionTime();
         }
     }
     else if (mPositionChoice == MassPositionChoice) {
         // Change to position of sp2 with prob sp2->Mass()/(sp1->Mass() + sp2->Mass())
-        if(rand_u01() * (sp1->Mass() + sp2->Mass()) < sp2->Mass()) {
+        boost::bernoulli_distribution<real> bernoulliDistrib(sp2->Mass()/(sp1->Mass() + sp2->Mass()));
+        boost::variate_generator<rng_type &, boost::bernoulli_distribution<real> > positionChooser(rng, bernoulliDistrib);
+
+        if(positionChooser()) {
             newPos = sp2->getPosition();
             newPosTime = sp2->getPositionTime();
         }
@@ -168,7 +173,7 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
     }
 
     // Add contents of particle 2 onto particle 1
-    sp1->Coagulate(*sp2, rand_int, rand_u01);
+    sp1->Coagulate(*sp2, rng);
     sp1->setPositionAndTime(newPos, newPosTime);
     sp1->SetTime(t);
     sp1->incrementCoagCount();
@@ -184,9 +189,9 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
  *@param[in]        t           Time at which coagulation is being performed
  *@param[in]        prop1       Rule for choosing first particle
  *@param[in]        prop2       Rule for choosing second particle
- *@param[in]        sys         Cell containing particles that are coagulating
- *@param[in,out]    rand_int    Pointer to function that generates integers uniformly on an interval
- *@param[in,out]    rand_u01    Pointer to function that generates U[0,1] deviates
+ *@param[in]        weight_rule Specify how to combine particle weights
+ *@param[in,out]    sys         Cell containing particles that are coagulating
+ *@param[in,out]    rng         Random number generator
  *
  *@return       Negative on failure, 0 on success
  *
@@ -196,10 +201,9 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
 int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
                                  const Sweep::PropID prop2,
                                  const Sweep::Processes::CoagWeightRule weight_rule,
-                                 Cell &sys, int (*rand_int)(int, int),
-                                 real(*rand_u01)()) const {
-    int ip1 = sys.Particles().Select(prop1, rand_int, rand_u01);
-    int ip2 = sys.Particles().Select(prop2, rand_int, rand_u01);
+                                 Cell &sys, rng_type &rng) const {
+    int ip1 = sys.Particles().Select(prop1, rng);
+    int ip2 = sys.Particles().Select(prop2, rng);
 
     // Choose and get first particle, then update it.
     Particle *sp1=NULL;
@@ -214,7 +218,7 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
     // this even if the first particle was invalidated.
     unsigned int guard = 0;
     while ((ip2 == ip1) && (++guard<1000))
-            ip2 = sys.Particles().Select(prop2, rand_int, rand_u01);
+            ip2 = sys.Particles().Select(prop2, rng);
 
     Particle *sp2=NULL;
     if ((ip2>=0) && (ip2!=ip1)) {
@@ -228,7 +232,7 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
     const real majk = MajorantKernel(*sp1, *sp2, sys, Default);
 
     //Update the particles
-    m_mech->UpdateParticle(*sp1, sys, t, rand_u01);
+    m_mech->UpdateParticle(*sp1, sys, t, rng);
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
     if (!sp1->IsValid()) {
@@ -240,7 +244,7 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
         return 0;
     }
 
-    m_mech->UpdateParticle(*sp2, sys, t, rand_u01);
+    m_mech->UpdateParticle(*sp2, sys, t, rng);
     // Check validity of particles after update.
     if (!sp2->IsValid()) {
         // Tell the ensemble to update particle one before we confuse things
@@ -263,7 +267,7 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
 
         real truek = CoagKernel(*sp1, *sp2, sys);
 
-        if (!Fictitious(majk, truek, rand_u01)) {
+        if (!Fictitious(majk, truek, rng)) {
             //Adjust the statistical weight
             switch(weight_rule) {
             case Sweep::Processes::CoagWeightHarmonic :
@@ -290,7 +294,7 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
             }
 
             // Add contents of particle 2 onto particle 1
-            sp1->Coagulate(*sp2, rand_int, rand_u01);
+            sp1->Coagulate(*sp2, rng);
             sp1->SetTime(t);
             sp1->incrementCoagCount();
 

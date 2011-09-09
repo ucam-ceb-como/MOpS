@@ -153,8 +153,7 @@ public:
 
     // Combines this particle with another.
     virtual SubParticle &Coagulate(const SubParticle &sp,
-                                   int (*rand_int)(int, int),
-                                   real(*rand_u01)());
+                                   rng_type &rng);
 
 
     // Sinters the sub-particle for the given time using the given
@@ -163,7 +162,7 @@ public:
         real dt,         // Delta-t for sintering.
         Cell &sys, // System which defines particle's environment.
         const Processes::SinteringModel &model, // Sintering model to use.
-        real (*rand_u01)() // Generate U[0,1] samples
+        rng_type &rng
         );
 
     // PARTICLE UPDATE AND CHECKING.

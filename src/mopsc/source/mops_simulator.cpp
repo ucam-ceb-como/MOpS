@@ -59,6 +59,9 @@
 #include "gpc_species.h"
 #include "swp_particle_image.h"
 
+#include <boost/functional/hash.hpp>
+#include <boost/random/mersenne_twister.hpp>
+
 using namespace Mops;
 using namespace std;
 using namespace Strings;
@@ -232,10 +235,7 @@ void Simulator::SetParticleTrackCount(unsigned int ptcount) {
 
 // Solves the given reactor for the given time intervals.
 void Simulator::RunSimulation(Mops::Reactor &r,
-                              //const timevector &times,
-                              Solver &s,
-                              int (*rand_int)(int, int),
-                              Sweep::real (*rand_u01)())
+                              Solver &s, size_t seed)
 {
     unsigned int icon;
     real dt, t2; // Stop time for each step.
@@ -302,6 +302,10 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
 		#endif
 
+		size_t runSeed = seed;
+		boost::hash_combine(runSeed, irun);
+		boost::mt19937 rng(runSeed);
+
         // Start the CPU timing clock.
         m_cpu_start = clock();
         m_runtime  = 0.0;
@@ -351,8 +355,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
                 // Run the solver for this step (timed).
                 m_cpu_mark = clock();
                 s.Solve(r, t2+=dt, iint->SplittingStepCount(), m_niter,
-                        rand_int, rand_u01,
-                        &fileOutput, (void*)this);
+                        rng, &fileOutput, (void*)this);
 
                 //Set up and solve Jacobian here
                 if (s.GetLOIStatus() == true)
@@ -1823,7 +1826,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                 }
 
                 // Draw particle images for tracked particles.
-                unsigned int n = min(m_ptrack_count,r->Mixture()->ParticleCount());
+                /*unsigned int n = min(m_ptrack_count,r->Mixture()->ParticleCount());
                 for (unsigned int j=0; j!=n; ++j) {
                     Sweep::Particle *sp = r->Mixture()->Particles().At(j);
                     if (sp != NULL) {
@@ -1837,7 +1840,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                         img.WritePOVRAY(file);
                         file.close();
                     }
-                }
+                }*/
 
                 delete r;
             } else {

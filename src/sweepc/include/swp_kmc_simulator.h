@@ -63,11 +63,6 @@
 
 namespace Sweep{
     namespace KMC_ARS{
-        //! Returns the natural logarithm of a uniform random number (0,1)
-        real inline logrnd(Sweep::real (*rand_u01)()) {
-            real x = rand_u01();
-            return log(x);
-        }
         class CSV_data;
         class KMCSimulator {
         public:
@@ -88,8 +83,6 @@ namespace Sweep{
             void TestGP();
             //! Set PAH to be simulated
             void targetPAH(PAHStructure& pah);
-            //! Calculate time step for KMC algorithm
-            real timeStep(real totalRate, real (*rand_u01)()) const;
             //! Set csv filename for gas profiles
             void setCSVinputName(const std::string& filename);
             //! Set output DOT file name "filename"_runs_finalLoopNum.dot
@@ -129,8 +122,7 @@ namespace Sweep{
                            const real tstart, // start time
                            const real dt,     // growth time
                            const int waitingSteps,  // waiting step used to calculate maximum time interval, currently use 1. 
-                           int (*rand_int)(int,int), // random number
-                           real (*rand_u01)(),// random number
+                           rng_type &rng,
                            real r_factor,     // growth factor g, one important parameter used in this model.
                            int PAH_ID);       // ID of this pah, used for debugging.
             //! Outputs rates into a csv file (assuming all site counts as 1)

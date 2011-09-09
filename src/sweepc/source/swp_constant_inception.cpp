@@ -42,6 +42,8 @@
 
 #include "local_geometry1d.h"
 
+#include <boost/random/uniform_01.hpp>
+
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -103,20 +105,18 @@ Sweep::Processes::ConstantInception &Sweep::Processes::ConstantInception::operat
  * \param[in,out]   sys         System to update
  * \param[in]       local_geom  Details of local phsyical layout
  * \param[in]       iterm       Process term responsible for this event
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  *
  * \return      0 on success, otherwise negative.
  */
 int Sweep::Processes::ConstantInception::Perform(const real t, Cell &sys,
                           const Geometry::LocalGeometry1d &local_geom,
                           const unsigned int iterm,
-                          int (*rand_int)(int, int), 
-                          Sweep::real(*rand_u01)()) const {
+                          rng_type &rng) const {
 
     // Create a new particle of the type specified
     // by the system ensemble.
-    Particle * const sp = m_mech->CreateParticle(t, rand_int);
+    Particle * const sp = m_mech->CreateParticle(t);
 
     // Get the cell vertices
     fvector vertices = local_geom.cellVertices();
@@ -127,7 +127,8 @@ int Sweep::Processes::ConstantInception::Perform(const real t, Cell &sys,
     real posn = vertices.front();
 
     const real width = vertices.back() - posn;
-    posn += width * rand_u01();
+    boost::uniform_01<rng_type&, real> unifDistrib(rng);
+    posn += width * unifDistrib();
 
     sp->setPositionAndTime(posn, t);
 
@@ -138,7 +139,7 @@ int Sweep::Processes::ConstantInception::Perform(const real t, Cell &sys,
     sp->UpdateCache();
 
     // Add particle to system's ensemble.
-    sys.Particles().Add(*sp, rand_int);
+    sys.Particles().Add(*sp, rng);
 
     // Update gas-phase chemistry of system.
     adjustGas(sys);

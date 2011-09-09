@@ -41,8 +41,6 @@
 */
 
 #include "swp_particle_image.h"
-#include "rng.h"
-#include "mt19937.h"
 #include "string_functions.h"
 #include "swp_PAH_primary.h"
 #include "swp_silica_primary.h"
@@ -64,10 +62,10 @@ ParticleImage::ParticleImage(void)
 }
 
 // Initialising constructor.
-ParticleImage::ParticleImage(const Particle &sp, const ParticleModel &model)
+/*ParticleImage::ParticleImage(const Particle &sp, const ParticleModel &model)
 {
     Construct(sp, model);
-}
+}*/
 
 // Destructor.
 ParticleImage::~ParticleImage(void)
@@ -77,7 +75,7 @@ ParticleImage::~ParticleImage(void)
 // PARTICLE IMAGE DATA CONSTRUCTION.
 
 // Constructs the particle image from the given particle.
-void ParticleImage::Construct(const Particle &sp, const ParticleModel &model)
+/*void ParticleImage::Construct(const Particle &sp, const ParticleModel &model)
 {
     switch(m_creg) {
         case FreeMol:
@@ -85,10 +83,10 @@ void ParticleImage::Construct(const Particle &sp, const ParticleModel &model)
         default:
             constructAgg_FM(sp, model);
     }
-}
+}*/
 
 // Constructs a random particle image.
-void ParticleImage::ConstructRandom(real minrad, real maxrad, unsigned int n)
+/*void ParticleImage::ConstructRandom(real minrad, real maxrad, unsigned int n)
 {
     // Clear the current image data structure.
     m_root.Clear();
@@ -106,7 +104,7 @@ void ParticleImage::ConstructRandom(real minrad, real maxrad, unsigned int n)
         default:
             calc_FM(m_root);
     }
-}
+}*/
 
 
 void ParticleImage::Project()
@@ -304,7 +302,7 @@ void ParticleImage::WritePOVRAY(std::ofstream &file)
 
 // Constructs a PNode sphere-tree aggregate from the given
 // particle using free-molecular collision dynamics.
-void ParticleImage::constructAgg_FM(const Particle &sp, const ParticleModel &model)
+/*void ParticleImage::constructAgg_FM(const Particle &sp, const ParticleModel &model)
 {
     // Clear the current image data structure.
     m_root.Clear();
@@ -331,9 +329,9 @@ void ParticleImage::constructAgg_FM(const Particle &sp, const ParticleModel &mod
 			throw std::runtime_error("Unhandled case in switch statement (ParticleImage::constructAgg_FM)");
 			break;
     }
-}
+}*/
 
-void ParticleImage::constructSubParttree(const SubParticle *sp)
+/*void ParticleImage::constructSubParttree(const SubParticle *sp)
 {
 	//Copy the subparticle tree into the img tree
 	m_root.Clear();
@@ -344,7 +342,7 @@ void ParticleImage::constructSubParttree(const SubParticle *sp)
     // aggregate structure.
     calc_FM(m_root);
     m_root.CentreCOM();
-}
+}*/
 
 
 void ParticleImage::copysptinsert(const SubParticle *sp)
@@ -355,7 +353,7 @@ void ParticleImage::copysptinsert(const SubParticle *sp)
     m_root.Insert(sp->Primary()->Property(id)*0.5e9);
 }
 
-void ParticleImage::constructSubParttree(const Sweep::AggModels::PAHPrimary *p)
+/*void ParticleImage::constructSubParttree(const Sweep::AggModels::PAHPrimary *p)
 {
 	//Copy the subparticle tree into the img tree
 	m_root.Clear();
@@ -367,8 +365,8 @@ void ParticleImage::constructSubParttree(const Sweep::AggModels::PAHPrimary *p)
     calc_FM(m_root);
     //m_root.CalcCOM();
     m_root.CentreCOM();
-}
-void ParticleImage::constructSubParttree(const Sweep::AggModels::SilicaPrimary *p)
+}*/
+/*void ParticleImage::constructSubParttree(const Sweep::AggModels::SilicaPrimary *p)
 {
 	//Copy the subparticle tree into the img tree
 	m_root.Clear();
@@ -380,7 +378,7 @@ void ParticleImage::constructSubParttree(const Sweep::AggModels::SilicaPrimary *
     calc_FM(m_root);
     //m_root.CalcCOM();
     m_root.CentreCOM();
-}
+}*/
 
 void ParticleImage::copysptinsert(const Sweep::AggModels::PAHPrimary *p)
 {
@@ -408,7 +406,7 @@ void ParticleImage::copysptinsert(const Sweep::AggModels::SilicaPrimary *p)
 // Constructs a PNode sphere-tree aggregate with uniform
 // primaries (equal diameter).  The diameter and primary
 // count are passed as arguments.
-void ParticleImage::uniformAgg_FM(unsigned int n, real d)
+/*void ParticleImage::uniformAgg_FM(unsigned int n, real d)
 {
     real r = d * 0.5e9; // Convert to nm.
 
@@ -421,12 +419,12 @@ void ParticleImage::uniformAgg_FM(unsigned int n, real d)
     // Use the free-molecular regime to calculate the
     // aggregate structure.
     calc_FM(m_root);
-}
+}*/
 
 // Calculates the aggregate structure down from the given
 // node.  Assumes that the tree leaves have been initialised
 // with the correct radii, and recalculates their positions.
-void ParticleImage::calc_FM(ImgNode &node)
+/*void ParticleImage::calc_FM(ImgNode &node)
 {
     ImgNode *target = node.m_left;
     ImgNode *bullet = node.m_right;
@@ -509,7 +507,7 @@ void ParticleImage::calc_FM(ImgNode &node)
         node.CalcCOM();
         node.CentreBoundSph();
     }
-}
+}*/
 
 // Calculates the minimum collision distance between
 // a target and a bullet node by moving down the

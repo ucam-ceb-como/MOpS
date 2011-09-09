@@ -164,13 +164,10 @@ unsigned int SubParticle::Adjust(const fvector &dcomp,
  * Combines this particle with another.
  *
  * \param[in]       rhs         Particle to add to current instance
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
- *
+ * \param[in,out]   rng         Random number generator
  * \return      Reference to the current instance after rhs has been added
  */
-SubParticle &SubParticle::Coagulate(const SubParticle &rhs, int (*rand_int)(int, int),
-                                  Sweep::real(*rand_u01)())
+SubParticle &SubParticle::Coagulate(const SubParticle &rhs, rng_type &rng)
 {
     if (rhs.m_aggcache != NULL) {
         if ((m_aggcache==NULL) || (m_aggcache->ID() != rhs.m_aggcache->ID())) {
@@ -184,7 +181,7 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs, int (*rand_int)(int,
         m_aggcache = NULL;
     }
 
-    m_primary->Coagulate(*rhs.Primary(), rand_int, rand_u01);
+    m_primary->Coagulate(*rhs.Primary(), rng);
     UpdateCache();
 
     return *this;
@@ -194,9 +191,9 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs, int (*rand_int)(int,
 // sintering model.
 void SubParticle::Sinter(real dt, Cell &sys,
                          const Processes::SinteringModel &model,
-                         real (*rand_u01)())
+                         rng_type &rng)
 {
-    m_primary->Sinter(dt, sys, model, rand_u01);
+    m_primary->Sinter(dt, sys, model, rng);
 }
 // PARTICLE UPDATE AND CHECKING.
 

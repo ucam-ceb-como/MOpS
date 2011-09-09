@@ -43,9 +43,10 @@
 #include <algorithm>
 
 /*!
- *@tparam       T   		Real number type
- *@param[in]    weights     Vector of weights (all >= 0)
- *@param[in]    rng	        Function that returns U[0,1] deviates
+ *@tparam           T   		Real number type
+ *@tparam           U           Random generator type
+ *@param[in]        weights     Vector of weights (all >= 0)
+ *@param[in,out]    rng	        Object that returns U[0,1) deviates when operator() is applied
  *
  *@return       Index of an entry in weights with probability proportional to that entry
  *
@@ -53,13 +54,13 @@
 
  *
  */
-template<typename T> int chooseIndex(const std::vector<T> &weights, T (*rng)()) {
+template<typename T, typename U> int chooseIndex(const std::vector<T> &weights, U &rng) {
     // partialSums[i] will contain the sum of the first i+1 elements of weights
     std::vector<T> partialSums(weights.size());
     std::partial_sum(weights.begin(), weights.end(), partialSums.begin());
 
 
-    // Multiply a U[0,1] variable by the sum of the elements in weights
+    // Multiply a U[0,1) variable by the sum of the elements in weights
     T r = rng() * partialSums.back();
 
     // Perform an inverse transform to sample an index from weights with

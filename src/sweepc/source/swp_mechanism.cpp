@@ -44,12 +44,13 @@
 #include "swp_model_factory.h"
 #include "swp_process_factory.h"
 #include "swp_abf_model.h"
-#include "rng.h"
 #include "swp_tempwriteXmer.h"
 #include "geometry1d.h"
 
 #include <stdexcept>
 #include <cassert>
+#include <boost/random/poisson_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
 
 #include "string_functions.h"
 #include "swp_particle.h"
@@ -602,15 +603,14 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
  * \param[in]       t           Time at which event is to take place
  * \param[in,out]   sys         System in which event is to take place
  * \param[in]       local_geom  Information on surrounding cells for use with transport processes
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  *
  * The support for transport processes may well no longer be needed, in that it is
  * rarely efficient to simulate such phenomena with stochastic jumps.
  */
 void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
                           const Geometry::LocalGeometry1d& local_geom,
-                          int (*rand_int)(int, int), real (*rand_u01)()) const
+                          rng_type &rng) const
 {
     // Test for now
     assert(sys.ParticleModel() != NULL);
@@ -620,14 +620,14 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
 
     if (j < 0) {
         // This is an inception process.
-        m_inceptions[i]->Perform(t, sys, local_geom, 0, rand_int, rand_u01);
+        m_inceptions[i]->Perform(t, sys, local_geom, 0, rng);
         m_proccount[i] += 1;
     } else {
         // This is another process.
         for(PartProcPtrVector::const_iterator ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
             if (j < (int)(*ip)->TermCount()) {
                 // Do the process.
-                if ((*ip)->Perform(t, sys, local_geom, j, rand_int, rand_u01) == 0) {
+                if ((*ip)->Perform(t, sys, local_geom, j, rng) == 0) {
                     m_proccount[i] += 1;
                 } else {
                     m_fictcount[i] += 1;
@@ -645,7 +645,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
             // Check if coagulation process.
             if (j < static_cast<int>((*it)->TermCount())) {
                 // This is the coagulation process.
-                if ((*it)->Perform(t, sys, local_geom, j, rand_int, rand_u01) == 0) {
+                if ((*it)->Perform(t, sys, local_geom, j, rng) == 0) {
                     m_proccount[i] += 1;
                 } else {
                     m_fictcount[i] += 1;
@@ -663,13 +663,13 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
         if ((j < (int)sys.InflowCount()) && (j>=0)) {
             // An inflow process.
             sys.Inflows(j)->SetMechanism(*this);
-            sys.Inflows(j)->Perform(t, sys, local_geom, 0, rand_int, rand_u01);
+            sys.Inflows(j)->Perform(t, sys, local_geom, 0, rng);
         } else {
             j -= sys.InflowCount();
             if ((j < (int)sys.OutflowCount()) && (j>=0)) {
                 // An outflow process.
                 sys.Outflows(j)->SetMechanism(*this);
-                sys.Outflows(j)->Perform(t, sys, local_geom, 0, rand_int, rand_u01);
+                sys.Outflows(j)->Perform(t, sys, local_geom, 0, rng);
             }
         }
     }
@@ -678,17 +678,14 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
 
 // LINEAR PROCESS DEFERMENT ALGORITHM.
 
-// Performs linear update algorithm on the
-// given system up to given time.
 /*!
  * Performs linear process updates on all particles in a system.
  *
  *@param[in,out]    sys         System containing particles to update
- *@param[in]         t           Time upto which particles to be updated
- *@param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- *@param[in,out]    rand_u01    Pointer to function that generates U[0,1] deviates
+ *@param[in]        t           Time upto which particles to be updated
+ *@param[in,out]    rng         Random number generator
  */
-void Mechanism::LPDA(real t, Cell &sys, int (*rand_int)(int, int), real(*rand_u01)()) const
+void Mechanism::LPDA(real t, Cell &sys, rng_type &rng) const
 {
     // Check that there are particles to update and that there are
     // deferred processes to perform.
@@ -700,7 +697,7 @@ void Mechanism::LPDA(real t, Cell &sys, int (*rand_int)(int, int), real(*rand_u0
         // Perform deferred processes on all particles individually.
         Ensemble::iterator i;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
-            UpdateParticle(*(*i), sys, t, rand_u01);
+            UpdateParticle(*(*i), sys, t, rng);
         }
 
         // Now remove any invalid particles and update the ensemble.
@@ -718,10 +715,10 @@ void Mechanism::LPDA(real t, Cell &sys, int (*rand_int)(int, int), real(*rand_u0
  *
  *@param[in,out]    sp          Particle to update
  *@param[in,out]    sys         System containing particle to update
- *@param[in]         t           Time upto which particle to be updated
- *@param[in,out]    rand_u01    Pointer to function that generates U[0,1] deviates
+ *@param[in]        t           Time upto which particle to be updated
+ *@param[in,out]    rng         Random number generator
  */
-void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)()) const
+void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) const
 {
     // Deal with the growth of the PAHs
     if (AggModel() == AggModels::PAH_KMC_ID)
@@ -741,7 +738,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
 
         // Look up new size of PAHs in database
 		// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
-        pah->UpdatePAHs(t, *this, sys);
+        pah->UpdatePAHs(t, *this, sys, rng);
         pah->UpdateCache();
         pah->CheckCoalescence();
         if (sp.IsValid())
@@ -757,7 +754,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
 
     	// Sinter the particles for the silica model (as no deferred process)
     	if (m_sint_model.IsEnabled()) {
-    		sp.Sinter(dt, sys, m_sint_model, rand_u01);
+    		sp.Sinter(dt, sys, m_sint_model, rng);
     	}
 
     	// Check particle is valid and recalculate cache.
@@ -786,7 +783,11 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
 
                     // Use a Poission deviate to calculate number of
                     // times to perform the process.
-                    num = ignpoi(rate, rand_u01);
+                    typedef boost::poisson_distribution<unsigned int, real> poiss_distrib;
+                    poiss_distrib repeatCountDistrib(rate);
+                    boost::variate_generator<Sweep::rng_type&, poiss_distrib> repeatCountGenerator(rng, repeatCountDistrib);
+
+                    num = repeatCountGenerator();
 
                     if (num > 0) {
                         // Do the process to the particle.
@@ -798,7 +799,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, real(*rand_u01)(
             // Perform sintering update.
             if (m_sint_model.IsEnabled()) {
 //				sp.UpdateFreeSurface();
-			    sp.Sinter(dt, sys, m_sint_model, rand_u01);
+			    sp.Sinter(dt, sys, m_sint_model, rng);
 				//sp.CreateTestTree();
 				//	 sp.FindRoot()->CheckTree();
 			    // cout << "check before sinter passed\n";

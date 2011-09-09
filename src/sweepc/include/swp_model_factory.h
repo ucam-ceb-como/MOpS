@@ -74,8 +74,7 @@ public:
     static Primary *const CreatePrimary(
         const AggModels::AggModelType id, // Model ID.
         const real time,                  // Primary create time.
-        const ParticleModel &model,       // Defining particle model.
-        int (*rand_int)(int, int)
+        const ParticleModel &model        // Defining particle model.
         );
 
     //! Creates a new primary particle of the given type.
@@ -83,8 +82,7 @@ public:
         const AggModels::AggModelType id, // Model ID.
         const real time,                  // Primary create time.
         const real position,
-        const ParticleModel &model,       // Defining particle model.
-        int (*rand_int)(int, int)
+        const ParticleModel &model        // Defining particle model.
         );
 
     // PRIMARY PARTICLE STREAM INPUT.

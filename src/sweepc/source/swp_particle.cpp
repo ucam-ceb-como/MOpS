@@ -139,7 +139,6 @@ Particle::~Particle()
 /*!
  * @param[in]		xml			XML node specifying the particle
  * @param[in]		model		Particle model that defines the interpretation of the particle data
- * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  *
  * @return		Pointer to new particle constructed on the heap (caller must delete).
  *
@@ -147,8 +146,7 @@ Particle::~Particle()
  * @exception	runtime_error	Unrecognised tracker
  * @exception	runtime_error	Non-positive statistical weight
  */
-Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::ParticleModel& model,
-                                      int (*rand_int)(int, int))
+Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::ParticleModel& model)
 {
     // Read initial particle composition.
     vector<CamXML::Element*> subitems; 
@@ -193,7 +191,7 @@ Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::P
 
     // Pointer to new particle
     // \TODO wrap in an auto_ptr for exception safety
-    Particle* pNew = model.CreateParticle(0.0, rand_int);
+    Particle* pNew = model.CreateParticle(0.0);
 
     // Read any statistical weight
     const CamXML::Element* const pWeightNode = xml.GetFirstChild("weight");

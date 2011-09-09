@@ -101,7 +101,7 @@ public:
     //! Clear Structure
     void clearStructure();
     //! Structure processes: returns success or failure
-    bool performProcess(const JumpProcess& jp, int (*rand_int)(int,int));
+    bool performProcess(const JumpProcess& jp, rng_type &rng);
 
     // Read Processes
     //! Get Counts
@@ -132,7 +132,7 @@ public:
     void proc_G6R_FE(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_PH_benz(Spointer& stt, Cpointer C_1, Cpointer C_2, int (*rand_int)(int,int));
+    void proc_PH_benz(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);
     void proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_O6R_FE3_O2(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_O6R_FE3_OH(Spointer& stt, Cpointer C_1, Cpointer C_2);
@@ -140,15 +140,15 @@ public:
     void proc_O6R_FE_HACA_OH(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, int (*rand_int)(int,int));
+    void proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);
     void proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, int (*rand_int)(int,int));
-    void proc_C6R_BY5_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, int (*rand_int)(int,int));
+    void proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);
+    void proc_C6R_BY5_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);
 
     void proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, int (*rand_int)(int,int));
+    void proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);
     //void proc_M5R_eZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);
     
     // true: saves rates only, returns all site count as 1
@@ -169,9 +169,9 @@ private:
     //! Check if process is allowed
     bool allowed(const Spointer& st, StructureProc proc) const;
     //! Choose a random site of site type st
-    Spointer chooseRandomSite(kmcSiteType st, int (*ir)(int,int));
+    Spointer chooseRandomSite(kmcSiteType st, rng_type &rng);
     //! Choose a random site of any site types in vtype
-    Spointer chooseRandomSite(std::vector<kmcSiteType> vtype, int (*ir)(int,int));
+    Spointer chooseRandomSite(std::vector<kmcSiteType> vtype, rng_type &rng);
     //! Jump to a position coordinate given starting position and angle towards new position
     cpair jumpToPos(const cpair& starting, const angletype& direction) const;
     //! Search a particular site (si) from svector associated with stype and erases it from sitemap

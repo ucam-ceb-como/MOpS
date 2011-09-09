@@ -131,14 +131,13 @@ protected:
     //! Actually stick two particles together (intended for DSA use)
     int JoinParticles(const real t, const int ip1, Particle *sp1,
                       const int ip2, Particle *sp2,
-                      Cell &sys, int (*rand_int)(int, int), real(*rand_u01)()) const;
+                      Cell &sys, rng_type &rng) const;
 
     //! Select two particles and stick them together in a weighted particle event
     int WeightedPerform(const real t, const Sweep::PropID prop1,
                         const Sweep::PropID prop2,
                         const Sweep::Processes::CoagWeightRule weight_rule,
-                        Cell &sys, int (*rand_int)(int, int),
-                        real(*rand_u01)()) const;
+                        Cell &sys, rng_type &rng) const;
 
     //! Calculate kernel between two particles
     virtual real CoagKernel(const Particle &sp1, const Particle &sp2,
