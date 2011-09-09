@@ -68,7 +68,7 @@ PAH::PAH(const PAH &copy){
 }
 
 PAH::~PAH() {
-	//delete m_pahstruct;
+	delete m_pahstruct;
 }
 
 PAH &PAH::operator=(const PAH &rhs){
