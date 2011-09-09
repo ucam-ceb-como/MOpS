@@ -68,7 +68,7 @@ while(<$momentFile>) {
   my @fields = split /,/;
 
   # Look for a line that begina with a number and has the first entry (the time)
-  # equal (upto a small tolerance) to 0.04
+  # equal (upto a small tolerance) to 0.0058
   if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.0058) < 1e-6 )) {
       # Third field should be the zeroth moment
       $m0 = $fields[2];
@@ -81,6 +81,7 @@ while(<$momentFile>) {
   }
 }
 
+# Precalsulated value: num of particle=855, M0=71.25e17+-1e15
 
 print "$m0, $m1\n";
 if(abs($m0 -  855) > 0) {
