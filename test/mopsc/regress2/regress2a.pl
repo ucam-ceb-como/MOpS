@@ -90,7 +90,7 @@ while(<$momentFile>) {
 # m0 1.4e10 cm^-3
 # fv 1.2e-10
 
-#print "$m0, $m1\n";
+print "$m0, $m1\n";
 if(abs($m0 - 3.0e17) > 1e16) {
   print "Simulated mean M0 was $m0, when 3.0e17 cm^-3 expected\n";
   print "**************************\n";
