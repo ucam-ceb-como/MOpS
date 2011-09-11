@@ -82,6 +82,7 @@ while(<$momentFile>) {
 
 # 50 runs using 4096 computational particles gives the following estimates and
 # 99% confidence intervals for the estimates
+# same results with git 0d2944215...
 # m0 5.14+-0.06e10 g cm^-3
 # fv 5.72+-0.04e-7
 
@@ -109,7 +110,7 @@ if(abs($m1 - 5.75e-7) > 3e-8) {
 
 # Should always be some files to remove
 @outputFiles = glob("regression2b-nuc-coag-acet*");
-system("rm -f" . '"' . join('" "', @outputFiles) . '"');
+system("rm", "-f", @outputFiles);
 
 #print "All tests passed\n";
 exit 0;

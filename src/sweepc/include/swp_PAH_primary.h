@@ -61,6 +61,7 @@
 #include "swp_kmc_pah_structure.h"
 #include "swp_kmc_simulator.h"
 #include "swp_cell.h"
+#include <boost/shared_ptr.hpp>
 
 #include <iostream>
 #include <stack>
@@ -215,11 +216,11 @@ private:
 
 
     // Vector of PAHs.
-	// PAHStructure class now have proper copy constructor (under testing)
-	// , but it is still not worthy to copy PAH from one vector to another
-	// so we will use vector<PAH*> instead of  vector <PAH>
-	// Vector of PAH*.
-    std::vector<PAH*> m_PAH;
+    // PAHStructure class now have proper copy constructor (under testing)
+    // , but it is still not worthy to copy PAH from one vector to another
+    // so we will use vector<std::tr1::shared_ptr<PAH>> instead of  vector <PAH>
+    // Vector of std::tr1::shared_ptr<PAH>.
+    std::vector<boost::shared_ptr<PAH> > m_PAH;
     //some basic properties
     //derived from the PAHs by UpdataCache()
     int m_numcarbon;

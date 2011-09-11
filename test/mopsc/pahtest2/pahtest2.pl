@@ -68,7 +68,7 @@ while(<$momentFile>) {
   my @fields = split /,/;
 
   # Look for a line that begina with a number and has the first entry (the time)
-  # equal (upto a small tolerance) to 0.04
+  # equal (upto a small tolerance) to 0.0058
   if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.0058) < 1e-6 )) {
       # Third field should be the zeroth moment
       $m0 = $fields[2];
@@ -81,10 +81,11 @@ while(<$momentFile>) {
   }
 }
 
+# Precalsulated value: num of particle=855, M0=71.25e17+-1e15
 
 print "$m0, $m1\n";
-if(abs($m0 -  837) > 0) {
-  print "Simulated sp was $m0, when  851m^-3 expected\n";
+if(abs($m0 -  855) > 0) {
+  print "Simulated sp was $m0, when  855 expected\n";
   print "if pahtest1 passes and this test fails, it will indicate that the doubling algorithm works in a wrong way.";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -92,8 +93,8 @@ if(abs($m0 -  837) > 0) {
   exit 1;
 }
 
-if(abs($m1 - 1.226e17) > 1e15) {
-  print "Simulated mean M0 was $m0, when  1.246e17m^-3 expected\n";
+if(abs($m1 - 1.25e17) > 1e15) {
+  print "Simulated mean M0 was $m0, when  1.25e17m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
