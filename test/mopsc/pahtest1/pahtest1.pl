@@ -82,7 +82,12 @@ while(<$momentFile>) {
   }
 }
 
-# Precalsulated value: M0=2.26e18+-1e16, Fv=7.48e-9+-1e-7
+# Precalculated value: M0=2.26e18+-1e16, Fv=7.48e-9+-1e-7
+
+# 20 repetitions using git 00706668ed... gives the following
+# mean values and 99% confidence interval widths
+# m0 (2.370+-0.056)e18 m^-3
+# fv (7.519+-0.083)e-9 
 
 print "$m0, $m1\n";
 if(abs($m0 -  2.26e18) > 1e16) {
