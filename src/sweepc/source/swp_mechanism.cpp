@@ -781,17 +781,19 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
                     // Get the process rate x the time interval.
                     rate = (*i)->Rate(t, sys, sp) * dt;
 
-                    // Use a Poission deviate to calculate number of
-                    // times to perform the process.
-                    typedef boost::poisson_distribution<unsigned int, real> poiss_distrib;
-                    poiss_distrib repeatCountDistrib(rate);
-                    boost::variate_generator<Sweep::rng_type&, poiss_distrib> repeatCountGenerator(rng, repeatCountDistrib);
+                    if(rate > 0) {
+                        // Use a Poission deviate to calculate number of
+                        // times to perform the process.
+                        typedef boost::poisson_distribution<unsigned int, real> poiss_distrib;
+                        poiss_distrib repeatCountDistrib(rate);
+                        boost::variate_generator<Sweep::rng_type&, poiss_distrib> repeatCountGenerator(rng, repeatCountDistrib);
 
-                    num = repeatCountGenerator();
+                        num = repeatCountGenerator();
 
-                    if (num > 0) {
-                        // Do the process to the particle.
-                        (*i)->Perform(t, sys, sp, num);
+                        if (num > 0) {
+                            // Do the process to the particle.
+                            (*i)->Perform(t, sys, sp, num);
+                        }
                     }
                 }
             }

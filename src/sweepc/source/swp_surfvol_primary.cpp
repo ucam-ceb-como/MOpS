@@ -297,38 +297,46 @@ void SurfVolPrimary::Sinter(real dt, Cell &sys,
         // Calculate sintering rate.
         r = model.Rate(m_time+t1, sys, *this);
 
-        // Calculate next time-step end point so that the
-        // surface area changes by no more than dAmax.
-        delt = dAmax / max(r, 1.0e-300);
+        if(r > 0) {
+            // Calculate next time-step end point so that the
+            // surface area changes by no more than dAmax.
+            delt = dAmax / max(r, 1.0e-300);
 
-        // Approximate sintering by a poisson process.  Calculate
-        // number of poisson events.
-        int n;
-        typedef boost::poisson_distribution<int, real> poisson_distrib;
-        if (tstop > (t1+delt)) {
-            // A sub-step, we have changed surface by dAmax, on average
-            poisson_distrib repeatCountDistrib(1.0 / scale);
-            boost::variate_generator<rng_type &, poisson_distrib> repeatCountGenerator(rng, repeatCountDistrib);
-            n = repeatCountGenerator();
-        } else {
-            // Step until end.  Calculate degree of sintering explicitly.
-            poisson_distrib repeatCountDistrib(r * (tstop - t1) / (scale*dAmax));
-            boost::variate_generator<rng_type &, poisson_distrib> repeatCountGenerator(rng, repeatCountDistrib);
-            n = repeatCountGenerator();
-        }
-
-        // Adjust the surface area.
-        if (n > 0) {
-            m_surf -= (real)n * scale * dAmax;
-            // Check that primary is not completely sintered.
-            if (m_surf <= m_sphsurf) {
-                m_surf = m_sphsurf;
-                break;
+            // Approximate sintering by a poisson process.  Calculate
+            // number of poisson events.
+            int n;
+            typedef boost::poisson_distribution<int, real> poisson_distrib;
+            if (tstop > (t1+delt)) {
+                // A sub-step, we have changed surface by dAmax, on average
+                poisson_distrib repeatCountDistrib(1.0 / scale);
+                boost::variate_generator<rng_type &, poisson_distrib> repeatCountGenerator(rng, repeatCountDistrib);
+                n = repeatCountGenerator();
+            } else {
+                // Step until end.  Calculate degree of sintering explicitly.
+                poisson_distrib repeatCountDistrib(r * (tstop - t1) / (scale*dAmax));
+                boost::variate_generator<rng_type &, poisson_distrib> repeatCountGenerator(rng, repeatCountDistrib);
+                n = repeatCountGenerator();
             }
-        }
 
-        // Set t1 for next time step.
-        t1 += delt;
+            // Adjust the surface area.
+            if (n > 0) {
+                m_surf -= (real)n * scale * dAmax;
+                // Check that primary is not completely sintered.
+                if (m_surf <= m_sphsurf) {
+                    m_surf = m_sphsurf;
+                    break;
+                }
+            }
+
+            // Set t1 for next time step.
+            t1 += delt;
+        }
+        else {
+            // No sintering is happening.
+            // This may need refining so that a step in which nothing is happening
+            // cannot be too long.
+            break;
+        }
     }
 }
 

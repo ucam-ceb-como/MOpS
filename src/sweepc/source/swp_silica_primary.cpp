@@ -636,35 +636,38 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 			// Perform integration loop.
 			while (t1 < tstop)
 			{
-			// Calculate sintering rate.
-			r = model.Rate(m_time+t1, sys, *this);
-			// Calculate next time-step end point so that the surface area changes by no more than dAmax.
-			t2 = std::min(t1+(dAmax/ std::max(r,1.0e-300)), tstop); // 1.0e-300 catches DIV ZERO.
+                // Calculate sintering rate.
+                r = model.Rate(m_time+t1, sys, *this);
+                // Calculate next time-step end point so that the surface area changes by no more than dAmax.
+                t2 = std::min(t1+(dAmax/ std::max(r,1.0e-300)), tstop); // 1.0e-300 catches DIV ZERO.
 
-			// Approximate sintering by a poisson process.  Calculate number of poisson events.
-			typedef boost::poisson_distribution<unsigned, real> poiss_distrib;
-			poiss_distrib repeatCountDistrib(r * (t2 - t1) / (scale*dAmax));
-			boost::variate_generator<rng_type &, poiss_distrib> repeatCountGenerator(rng, repeatCountDistrib);
+                // Approximate sintering by a poisson process.  Calculate number of poisson events.
+                typedef boost::poisson_distribution<unsigned, real> poiss_distrib;
+                const real poissonMean = r * (t2 - t1) / (scale*dAmax);
 
-			unsigned n = repeatCountGenerator();
-			// Adjust the surface area.
-			if (n > 0)
-				  {
-						m_children_surf -= (real)n * scale * dAmax;
+                if(poissonMean > 0.0) {
+                    poiss_distrib repeatCountDistrib(poissonMean);
+                    boost::variate_generator<rng_type &, poiss_distrib> repeatCountGenerator(rng, repeatCountDistrib);
 
-						// Check that primary is not completely sintered.
-						//ss663:changed
-						if (m_children_surf <= spherical_surface)
-						{
-							m_children_surf = spherical_surface;
-							//hassintered=true;
-							break;
-						}
-					}
+                    unsigned n = repeatCountGenerator();
+                    // Adjust the surface area.
+                    if (n > 0) {
+                        m_children_surf -= (real)n * scale * dAmax;
 
-				// Set t1 for next time step.
-				t1 = t2;
-			}
+                        // Check that primary is not completely sintered.
+                        //ss663:changed
+                        if (m_children_surf <= spherical_surface) {
+                            m_children_surf = spherical_surface;
+                            //hassintered=true;
+                            break;
+                        }
+                    }
+                }
+
+                // Set t1 for next time step.
+                t1 = t2;
+            }
+
 
 			m_children_sintering=SinteringLevel();
 			m_sint_rate = r;
