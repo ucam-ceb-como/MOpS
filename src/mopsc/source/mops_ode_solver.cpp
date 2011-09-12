@@ -364,7 +364,8 @@ Method loads sensitivity values from N_Vector* into it
 double** ODE_Solver::GetSensSolution(int n_sensi, int n_species)
 {
     for (int i = 0; i < (n_sensi); i++){
-        double* test; 
+        //double* test; 
+		double* test = new double[n_sensi];
         test[i] = 0.0;
         test = NV_DATA_S(m_yS[i]);
         for (int j = 0; j < (n_species); j++){

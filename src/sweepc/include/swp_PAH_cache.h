@@ -118,6 +118,7 @@ public:
 	  int m_numPAH;
 	  real m_PAHDiameter;
 	  int m_numcarbon;
+	  int m_numH;
 	  int m_numprimary;
       double m_sqrtLW;
 	  double m_LdivW;

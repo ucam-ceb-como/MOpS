@@ -100,9 +100,10 @@ my $var  = $sumsq / 46 - $mean * $mean;
 # git revision 89649c7... gives
 # mean 8.390e-21
 # var  2.07e-43
+# which implies a 99% confidence interval for the sample mean of +-2.21e-22
 
 print "$mean, $var\n";
-if(abs($mean - 8.374e-21) > 5e-23) {
+if(abs($mean - 8.374e-21) > 1.2e-22) {
   print "Simulated mean M1 at x=0.079 was $mean, when analytic solution is 8.374e-21 kg m^-3\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";

@@ -61,9 +61,9 @@ const std::string PAHStats::m_statnames[PAHStats::STAT_COUNT] = {
     std::string("Avg. PAH real Part"),
     std::string("Avg. PAH Collision Diameter"),
 	std::string("Avg. Number of Carbon Atoms"),
+	std::string("Avg. Number of Hydrogen Atoms"),
     std::string("Avg. Coalesc Threshold"),
     std::string("Num Primaries real Part"),
-
 };
 
 const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
@@ -74,23 +74,22 @@ const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. PAH real Part
     IModelStats::Avg,  // Avg. PAH Collision Diameter
 	IModelStats::Avg,  // Avg. Number of Carbon atoms
+	IModelStats::Avg,  // Avg. Number of Hydrogen atoms
     IModelStats::Avg,  // Avg. Coalesc Threshold
     IModelStats::Avg,  // Num Primaries real Part
-
-
 };
 
 const std::string PAHStats::m_const_pslnames[PAHStats::PSL_COUNT] = {
     std::string("Number of PAHs"),
     std::string("PAH Diameter"),
 	std::string("Number of Carbon atoms"),
+    std::string("Number of Hydrogen atoms"),
 	std::string("Number primaries"),
 	std::string("sqrt(LW)"),
 	std::string("LdivW"),
 	std::string("Avg. primary diameter"),
     std::string("Radius of gyration"),
     std::string("fdim"),
-
 };
 
 
@@ -159,7 +158,8 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
     unsigned int n = 0;
-    //particles with more then one PAH
+    // used to count particles with more then one PAH
+	// real part properties => particle only considered, sum of X / num of particle
     unsigned int nrealpart= 0;
     for (ip=e.begin(); ip!=e.end(); ++ip) {
         // Get surface-volume cache.
@@ -174,7 +174,8 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
 			m_stats[iNPAH]    += cache.m_numPAH;
 			m_stats[iPAHD]    += pah->PAHCollDiameter()*1e9;
 			m_stats[iNCARB]	  += cache.m_numcarbon;
-            m_stats[iNPAH+1]    += cache.m_numPAH;
+			m_stats[iNHYDROGEN]	  += cache.m_numH;
+            m_stats[iNPAH+1]    += cache.m_numPAH; //used to calculate sum of Number of PAHs.
             m_stats[iCOAL]    += cache.m_avg_coalesc;
 			++n;
             if (cache.m_numPAH>1)
@@ -183,7 +184,7 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
                 m_stats[iPARTSURF]+=(*ip)->SurfaceArea();
                 m_stats[iNPRIM]+=cache.m_numprimary;
                 m_stats[iPARTMASS]+=(*ip)->Primary()->Mass();
-                m_stats[iNAVGPAH]+=cache.m_numPAH;
+                m_stats[iNAVGPAH]+=cache.m_numPAH;  //used to calculate Avg. PAH real Part
             }
         }
     }
@@ -337,6 +338,7 @@ void PAHStats::PSL(const Sweep::Particle &sp, real time,
 		*(++j) = (real)(cache->m_numPAH);
 		*(++j) = (real)(cache->m_PAHDiameter)*1e9;			//convert to nm
 		*(++j) = (real) (cache->m_numcarbon);
+		*(++j) = (real) (cache->m_numH);
 		*(++j) = (real) (cache->m_numprimary);
 		*(++j) = (real) (cache->m_sqrtLW);
 		*(++j) = (real) (cache->m_LdivW);

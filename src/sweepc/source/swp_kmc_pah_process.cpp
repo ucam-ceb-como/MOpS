@@ -1241,7 +1241,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
     switch(ss) {
         Cpointer newC;
         
-    case BENZENE:
+    case BENZENE_C:
         //cout << "newC pointer created\n";
         // add first C atom
         m_pah->m_cfirst = addC();
@@ -1264,7 +1264,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         // update H atoms
         updateA(m_pah->m_cfirst, m_pah->m_clast, 'H');
         // set C & H counts
-        setCount(6, 6);
+        setCount(BENZENE_C, BENZENE_H);
         // set ring counts
         m_pah->m_rings = 1;
         // update all sites and combined sites
@@ -1272,7 +1272,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         updateCombinedSites();
         cout << "Benzene Initialised!\n";
         break;
-    case PYRENE:
+    case PYRENE_C:
         // add first C atom
         m_pah->m_cfirst = addC();
         // adds next C atoms according to structure
@@ -1295,7 +1295,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         // update H atoms
         updateA(m_pah->m_cfirst, m_pah->m_clast, 'H');
         // set C & H counts
-        setCount(16, 10);
+        setCount(PYRENE_C, PYRENE_H);
         // set ring counts
         m_pah->m_rings = 4;
         // update all sites and combined sites

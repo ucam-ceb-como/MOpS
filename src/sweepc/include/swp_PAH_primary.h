@@ -61,6 +61,7 @@
 #include "swp_kmc_pah_structure.h"
 #include "swp_kmc_simulator.h"
 #include "swp_cell.h"
+#include <boost/shared_ptr.hpp>
 
 #include <iostream>
 #include <stack>
@@ -149,24 +150,24 @@ public:
     int Numprimary() const;
     //! returns the number of carbon atoms in the particle
     int NumCarbon() const;
+    //! returns the number of hydrogen atoms in the particle
+    int NumHydrogen() const;
     //! returns the number of PAH in the particle
     int NumPAH() const;
     //! returns sqrt(L*W)
     double sqrtLW() const;
     double AvgCoalesc() const;
 
-	// Find Xmer (monomer, dimer or trimer) and record its mass which will be used to create mass spectra
-	// however, this function currently is only implenmented in PAHPrimary class
-	// this means it is limited to PAH-PP model. 
-	void FindXmer(std::vector<double> &out, Xmer m_xmer) const;
-	
-	// Find particular primary particle with target number of PAHs ( this can be a range, details please see the implementation) 
-	// and record num of C and H for each PAH, also push_back a divider (0,0,ID) at end to distinguish 
-	void FindXmer(std::vector<std::vector<double> > &out, int target_num_PAH) const;
-
-	void mass_PAH(std::vector<std::vector<double> > &out) const;
-
-	double MassforXmer() const;
+    //! Find Xmer, and store their information in a vector
+    void FindXmer(std::vector<double> &out, Xmer m_xmer) const;
+    //! Find Xmer which statisfy sort of condition, like target_num_PAH
+    void FindXmer(std::vector<std::vector<double> > &out, int target_num_PAH) const;
+    //! store PAH information in a vector
+    void mass_PAH(std::vector<std::vector<double> > &out) const;
+    //! return the mass of Xmer including C and H 
+    double MassforXmer() const;
+    //! set pah_structure=Null before destructor delete it
+    //void ReleasePAH(Primary &rhs);
 
 protected:
     //! Empty primary not meaningful
@@ -213,14 +214,15 @@ private:
 
 
     // Vector of PAHs.
-	// PAHStructure class now have proper copy constructor (under testing)
-	// , but it is still not worthy to copy PAH from one vector to another
-	// so we will use vector<PAH*> instead of  vector <PAH>
-	// Vector of PAH*.
-    std::vector<PAH*> m_PAH;
+    // PAHStructure class now have proper copy constructor (under testing)
+    // , but it is still not worthy to copy PAH from one vector to another
+    // so we will use vector<std::tr1::shared_ptr<PAH>> instead of  vector <PAH>
+    // Vector of std::tr1::shared_ptr<PAH>.
+    std::vector<boost::shared_ptr<PAH> > m_PAH;
     //some basic properties
     //derived from the PAHs by UpdataCache()
     int m_numcarbon;
+    int m_numH;
     double m_PAHmass;
     double m_PAHCollDiameter;
     int m_numPAH;
