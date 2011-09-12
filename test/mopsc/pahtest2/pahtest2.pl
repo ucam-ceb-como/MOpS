@@ -84,7 +84,7 @@ while(<$momentFile>) {
 # Precalsulated value: num of particle=855, M0=71.25e17+-1e15
 
 print "$m0, $m1\n";
-if(abs($m0 -  855) > 0) {
+if(abs($m0 -  855) > 15) {
   print "Simulated sp was $m0, when  855 expected\n";
   print "if pahtest1 passes and this test fails, it will indicate that the doubling algorithm works in a wrong way.";
   print "**************************\n";
@@ -93,7 +93,7 @@ if(abs($m0 -  855) > 0) {
   exit 1;
 }
 
-if(abs($m1 - 1.25e17) > 1e15) {
+if(abs($m1 - 1.25e17) > 4e15) {
   print "Simulated mean M0 was $m0, when  1.25e17m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
