@@ -33,22 +33,37 @@ proc calc {inp} {
   
   #Calculate arithmetic and geometric means
   set sum 0
+  set sumsq 0
   set prod 1
   set p [expr 1.0/$l]
   for {set i 0} {$i < $l} {incr i} {
     set sum [expr $sum + [lindex $inp $i]]
-	set prod [expr $prod * pow([lindex $inp $i],$p)]
-	}
+    set sumsq [expr $sumsq + [lindex $inp $i] * [lindex $inp $i]]
+    set prod [expr $prod * pow([lindex $inp $i],$p)]
+  }
   set amean [expr $sum / $l]
+  set a2mean [expr $sumsq / $l]
   set gmean $prod
 
-  return $amean
+  return [list $amean $a2mean $l]
 } 
 
 # Calculate data from files
 set test_finite [psl-stats silane-finite-psl(0.08s).csv]
+set test_finite_mean [lindex $test_finite 0]
+set test_finite_conf [expr sqrt(([lindex $test_finite 1] \
+                                 - $test_finite_mean * $test_finite_mean) \
+                                / [lindex $test_finite 2]) * 3.29]
 set test_spherical [psl-stats silane-spherical-psl(0.08s).csv]
+set test_spherical_mean [lindex $test_spherical 0]
+set test_spherical_conf [expr sqrt(([lindex $test_spherical 1] \
+                                   - $test_spherical_mean * $test_spherical_mean) \
+                                  / [lindex $test_spherical 2]) * 3.29]
 set test_nosinter [psl-stats silane-nosinter-psl(0.08s).csv]
+set test_nosinter_mean [lindex $test_nosinter 0]
+set test_nosinter_conf [expr sqrt(([lindex $test_nosinter 1] \
+                                  - $test_nosinter_mean * $test_nosinter_mean) \
+                                 / [lindex $test_nosinter 2]) * 3.29]
 
 # Test if it is working!
 # allow 3% tolerance
@@ -59,25 +74,25 @@ set val_finite 26.3
 set val_spherical 42.6
 set val_nosinter 0.49
 
-if {$test_finite < $utol*$val_finite && $test_finite > $ltol*$val_finite} {
-    puts "Particle diameter $test_finite. Passed!"
+if {$test_finite_mean < $utol*$val_finite && $test_finite > $ltol*$val_finite} {
+    puts "Particle diameter $test_finite_mean. Passed! (conf: $test_finite_conf)"
 } else {
-    puts "TEST FAILED: diameter was $test_finite, $val_finite expected."
+    puts "TEST FAILED: diameter was $test_finite_mean, $val_finite expected.(conf: $test_finite_conf)"
     exit 1
 }
 
-if {$test_nosinter < $utol*$val_nosinter && $test_nosinter > $ltol*$val_nosinter} {
-    puts "Particle diameter $test_nosinter. Passed!"
+if {$test_nosinter_mean < $utol*$val_nosinter && $test_nosinter > $ltol*$val_nosinter} {
+    puts "Particle diameter $test_nosinter_mean. Passed! (conf: $test_nosinter_conf)" 
 } else {
-    puts "TEST FAILED: diameter was $test_nosinter, $val_nosinter expected."
+    puts "TEST FAILED: diameter was $test_nosinter, $val_nosinter_mean expected. (conf: $test_nosinter_conf)" 
     exit 1
 }
 
 
-if {$test_spherical < $utol*$val_spherical && $test_spherical > $ltol*$val_spherical} {
-    puts "Particle diameter $test_spherical. Passed!"
+if {$test_spherical_mean < $utol*$val_spherical && $test_spherical > $ltol*$val_spherical} {
+    puts "Particle diameter $test_spherical_mean. Passed! (conf: $test_spherical_conf)"
 } else {
-    puts "TEST FAILED: diameter was $test_spherical, $val_spherical expected."
+    puts "TEST FAILED: diameter was $test_spherical_mean, $val_spherical expected. (conf: $test_spherical_conf)"
     exit 1
 }
 
