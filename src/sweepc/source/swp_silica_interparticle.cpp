@@ -152,22 +152,33 @@ real InterParticle::Rate(real t, const Cell &sys) const
 
 	// First calculate surface reaction contribution:
 	real T = sys.Temperature();
+
+	// Get the total number of OH sites from cache
+	int numOH = sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid));
+	cout << "[total] numOH    = " << numOH << endl;
 	// Rate of surface reaction
 	real R_surf = m_arr.A*chemRatePart(sys.MoleFractions(), sys.Density())*pow(T, m_arr.n)
-			* exp(-m_arr.E / (R * T))*sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid));
+			* exp(-m_arr.E / (R * T)) * numOH;
 
+	// Forward-declare the total sintering rate
+	real total_sint_rate = 0;
 
-	//Calculate rate of sintering
-	// First calculate the sum of sintering rates of all particles in ensemble.
-	real total_sint_rate = sys.Particles().GetSum(static_cast<Sweep::PropID>(15));
-	// Calculate rho_s [surface density of active sites]
-	double surface = sys.Particles().GetSum(static_cast<Sweep::PropID>(3));
-	if(surface == 0)
-	{
+	// Get total surface area from cache
+	double surface = sys.Particles().GetSum(static_cast<Sweep::PropID>(Sweep::iS));
+	cout << "[total] surface  = " << surface << endl;
+	// Check if particle surface area exists. If not, set the sintering rate to zero.
+	if (surface == 0) {
 		surface = 1;
 		total_sint_rate = 0;
+	} else {
+		// Get total sintering rate from cache.
+		total_sint_rate = sys.Particles().GetSum(static_cast<Sweep::PropID>(Sweep::iSintRate));
 	}
-	real rho_s =  (sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid)))/surface;
+
+	cout << "[total] sintrate = " << total_sint_rate << endl;
+
+	// Calculate the total surface density of sites
+	real rho_s =  numOH/surface;
 	//Rate of sintering
 	real R_sint = (rho_s*total_sint_rate)/(2.0);
 
@@ -178,12 +189,12 @@ real InterParticle::Rate(real t, const Cell &sys) const
 
 	if (m_mech->AnyDeferred())
 	{
-		cout << "IntP rate: " << rate * m_majfactor << endl;
+    	cout << "[rate] ip =  " << rate * m_majfactor << endl;
         return rate * m_majfactor;
     }
 	else
 	{
-		cout << "IntP rate: " << rate << endl;
+    	cout << "[rate] ip =  " << rate << endl;
         return rate;
     }
 }
@@ -207,20 +218,31 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
     real T = sys.Temperature();
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
-	//Calculate sintering contribution
-	real total_sint_rate = (sp.Property(static_cast<Sweep::PropID>(15)));
-	double rho_s = (sp.Property(static_cast<Sweep::PropID>(14)));
-	if(rho_s == 0)
-	{
+    // Forward-declare some parameters
+    real sint_rate = 0;
+    double rho_s = 0;
+
+	// Get the number of OH sites from cache
+	int numOH = sp.Property(static_cast<Sweep::PropID>(m_pid));
+
+	// Get surface area from cache
+	double surface = sp.Property(static_cast<Sweep::PropID>(Sweep::iS));
+
+	if(surface == 0) {
 		rho_s = 1;
-		total_sint_rate = 0;
+		sint_rate = 0;
+	} else {
+		rho_s = numOH / surface;
+		//Calculate sintering contribution
+		sint_rate = (sp.Property(static_cast<Sweep::PropID>(Sweep::iSintRate)));
 	}
-	real sint_comp = (total_sint_rate*rho_s)/(2.0);
+
+	real sint_comp = (sint_rate*rho_s)/(2.0);
 
 	// Paticle dependence.
     if (m_modelid == SubModels::BasicModel_ID)
 	{
-        rate *= (sp.Property(static_cast<Sweep::PropID>(m_pid)));
+        rate *= numOH;
     }
 	else
 	{

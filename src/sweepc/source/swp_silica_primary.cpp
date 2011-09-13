@@ -1082,18 +1082,10 @@ unsigned int SilicaPrimary::AdjustIntPar(const fvector &dcomp,
 
 }
 
-int SilicaPrimary::GetSite() const
+int SilicaPrimary::GetSites() const
 
 {
 	return m_numOH;
-}
-
-double SilicaPrimary::GetSiteDens() const
-{
-	//return m_numOH/(m_surf*NA);
-	//return m_numOH/(m_surf*2*1.6e-12);
-	//return m_numOH/(m_surf*NA*1.6e-12);
-	return m_numOH/(m_surf);
 }
 
 real SilicaPrimary::GetSintRate() const

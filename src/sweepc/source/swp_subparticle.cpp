@@ -467,6 +467,22 @@ Sweep::real SubParticle::Mass(void) const
 }
 
 /*!
+ * Pass through to primary particle
+ */
+Sweep::real SubParticle::GetSites(void) const
+{
+    return m_primary->GetSites();
+}
+
+/*!
+ * Pass through to primary particle
+ */
+Sweep::real SubParticle::GetSintRate(void) const
+{
+    return m_primary->GetSintRate();
+}
+
+/*!
  * Provide an interface that allows run time specification of particle properties
  * for use in process rate calculations.  It is currently used for some surface
  * reactions.  Where possible, the use of specific accessors should be preferred.

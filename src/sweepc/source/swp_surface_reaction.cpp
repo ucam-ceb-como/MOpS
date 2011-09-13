@@ -144,8 +144,10 @@ real SurfaceReaction::Rate(real t, const Cell &sys) const
     rate *= sys.Particles().GetSum(m_pid);
 
     if (m_mech->AnyDeferred()) {
+
         return rate * m_majfactor;
     } else {
+
         return rate;
     }
 }

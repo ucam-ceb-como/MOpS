@@ -128,10 +128,7 @@ public:
 			);
 
 	// Gets the number of active sites for interparticle reaction
-	int GetSite() const;
-
-	// Gets the number of active sites for interparticle reaction
-	double GetSiteDens() const;
+	int GetSites() const;
 
 	// Gets the number of active sites for interparticle reaction
 	real GetSintRate() const;
