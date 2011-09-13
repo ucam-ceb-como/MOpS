@@ -112,21 +112,24 @@ my $failures = 0;
 #m0: 4.430e17 m^-3
 #m1: 4.610e-8 kg m^-3
 
-# With 16384 max particles git ?? gives
+# With 16384 max particles git 0d2944215... gives
 #m0: (4.433 +- 0.028)e17 m^-3
 #m1: (4.606 +- 0.034)e-8 kg m^-3
+# and for the test setting of 8192 particles it gives
+#m0: (4.429+-0.103)e16 m^-3
+#m1: (4.648+-0.100)e-8 kg m^-3
 
 print "$m0, $m0var, $m1, $m1var\n";
-if(abs($m0 - 4.450e16) > 3e14) {
-  print "Simulated mean M0 was $m0, when 4.450e16 m^-3 expected\n";
+if(abs($m0 - 4.43e16) > 3e14) {
+  print "Simulated mean M0 was $m0, when 4.43e16 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   ++$failures;
 }
 
-if(abs($m1 - 4.662e-8) > 8e-10) {
-  print "Simulated mean M1 was $m1, when 4.662e-8 kg m^-3 expected\n";
+if(abs($m1 - 4.61e-8) > 8e-10) {
+  print "Simulated mean M1 was $m1, when 4.61e-8 kg m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
@@ -135,7 +138,7 @@ if(abs($m1 - 4.662e-8) > 8e-10) {
 
 # Clean outputs, there should always be some files to delete.
 @outputFiles = glob("regress1c*");
-system("rm @outputFiles");
+#system("rm @outputFiles");
 
 #print "All tests passed\n";
 exit $failures;

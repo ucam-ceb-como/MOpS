@@ -36,6 +36,7 @@
 use strict;
 use warnings;
 
+# this test is designed for checking whether PAH-PP model work correctly by comparing to precalculated value
 # Clean up any outputs from previous simulations
 my @outputFiles = glob("pahtest1-test-pah-kmc-only*");
 if($#outputFiles > 0) {
@@ -68,7 +69,7 @@ while(<$momentFile>) {
   my @fields = split /,/;
 
   # Look for a line that begina with a number and has the first entry (the time)
-  # equal (upto a small tolerance) to 0.04
+  # equal (upto a small tolerance) to 0.012
   if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.012) < 1e-6 )) {
       # Third field should be the zeroth moment
       $m0 = $fields[4];
@@ -81,19 +82,16 @@ while(<$momentFile>) {
   }
 }
 
-# Original MS style code
-# Running the problem with 20 repetitions, but still only 1024 particles
-# gives M0 =(8.65+-0.22)e11 and (8.67+-0.25)e11 for two different random
-# number sequences.  The respective Fv values are (3.34+-0.06)e-8 and
-# (3.36+-0.05)e-8 (cgs units)
+# Precalculated value: M0=2.26e18+-1e16, Fv=7.48e-9+-1e-7
 
-# riap code of 01 Feb 2010
-# Running the problem with 20 repetitions, but still only 1024 particles
-# gives M0 = (1.036+-0.029)e12 and Fv = (3.139+-0.0493)e-8 (cgs units)
+# 20 repetitions using git 00706668ed... gives the following
+# mean values and 99% confidence interval widths
+# m0 (2.370+-0.056)e18 m^-3
+# fv (7.519+-0.083)e-9 
 
 print "$m0, $m1\n";
 if(abs($m0 -  2.26e18) > 1e16) {
-  print "Simulated mean M0 was $m0, when  2.4375e18m^-3 expected\n";
+  print "Simulated mean M0 was $m0, when  2.26e18m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
@@ -101,7 +99,7 @@ if(abs($m0 -  2.26e18) > 1e16) {
 }
 
 if(abs($m1 - 7.48e-9) > 1e-7) {
-  print "Simulated mean Fv was $m1, when 6.168e-9 expected\n";
+  print "Simulated mean Fv was $m1, when 7.48e-9 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";

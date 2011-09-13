@@ -79,8 +79,8 @@ PAHStructure::PAHStructure(const PAHStructure& copy){
 }
 //! Default Destructor
 PAHStructure::~PAHStructure() {
-    delete m_cfirst;
-    delete m_clast;
+    //delete m_cfirst;
+    //delete m_clast;
     PAHProcess pp(*this);
 	pp.clearStructure();
     m_siteMap.clear();

@@ -251,7 +251,7 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 */
 void PAHPrimary::AddPAH(real time,const Sweep::ParticleModel &model)
 {
-	PAH* new_PAH = new PAH(time);
+	boost::shared_ptr<PAH> new_PAH (new PAH(time));
 	new_PAH->PAH_ID=ID;
 	m_PAH.push_back(new_PAH);
 	ID++;
@@ -268,7 +268,7 @@ PAHPrimary::PAHPrimary(const PAHPrimary &copy)
     {
         CopyTree(&copy);
     }
-	m_clone=false;
+	//m_clone=false;
 }
 
 
@@ -276,15 +276,15 @@ PAHPrimary::PAHPrimary(const PAHPrimary &copy)
 PAHPrimary::~PAHPrimary()
 {   
 	
-	delete m_leftchild;
-	delete m_rightchild;
+    delete m_leftchild;
+    delete m_rightchild;
     // it is not necessary to delete m_leftparticle because
     // this is also m_leftchild somewhere down the tree
 	
-
+    if (m_PAH.size()!=0) m_PAH.clear();
     // delete the PAH list
     releaseMem();
-
+    m_clone=false;
 }
 
 /*!
@@ -351,23 +351,23 @@ PAHPrimary::PAHPrimary(std::istream &in, const Sweep::ParticleModel &model)
  */
 void PAHPrimary::CopyParts( const PAHPrimary *source)
 {
-	SetCollDiameter(source->CollDiameter());
-	SetMobDiameter(source->MobDiameter());
-	SetSphDiameter(source->SphDiameter());
-	m_PAHCollDiameter=source->m_PAHCollDiameter;
-	SetSurfaceArea(source->SurfaceArea());
-	m_time=source->m_time;
-	m_PAHmass=source->m_PAHmass;
+    SetCollDiameter(source->CollDiameter());
+    SetMobDiameter(source->MobDiameter());
+    SetSphDiameter(source->SphDiameter());
+    m_PAHCollDiameter=source->m_PAHCollDiameter;
+    SetSurfaceArea(source->SurfaceArea());
+    m_time=source->m_time;
+    m_PAHmass=source->m_PAHmass;
     m_leftchild=source->m_leftchild;
-	m_rightchild=source->m_rightchild;
-	m_leftparticle=source->m_leftparticle;
-	m_rightparticle=source->m_rightparticle;
-	m_parent=source->m_parent;
-	SetMass(source->Mass());
-	m_numPAH=source->m_numPAH;
-	m_primarydiam=source->m_primarydiam;
-	m_sqrtLW=source->m_sqrtLW;
-	m_LdivW=source->m_LdivW;
+    m_rightchild=source->m_rightchild;
+    m_leftparticle=source->m_leftparticle;
+    m_rightparticle=source->m_rightparticle;
+    m_parent=source->m_parent;
+    SetMass(source->Mass());
+    m_numPAH=source->m_numPAH;
+    m_primarydiam=source->m_primarydiam;
+    m_sqrtLW=source->m_sqrtLW;
+    m_LdivW=source->m_LdivW;
     m_pmodel=source->m_pmodel;
     m_surf=source->m_surf;
     m_vol=source->m_vol;
@@ -384,19 +384,20 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
     m_avg_coalesc=source->m_avg_coalesc;
     m_numcarbon = source->m_numcarbon;
     m_numH = source->m_numH;
+
     // Replace the PAHs with those from the source
-	if (m_clone==true){
-	for (size_t i=0; i!=source->m_PAH.size();++i){
-			m_PAH.push_back(NULL);
-		}
-			//m_PAH.resize(m_PAH.size());
-	for (size_t i=0; i!=source->m_PAH.size();++i){
-		    m_PAH[i]=source->m_PAH[i]->Clone();
-			m_PAH[i]->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+    if (m_clone==true){
+		    m_PAH.resize(source->m_PAH.size());
+            m_PAH.clear();
+    for (size_t i=0; i!=source->m_PAH.size();++i){
+            boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
+            //m_PAH[i]=source->m_PAH[i]->Clone();
+            new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+            m_PAH.push_back(new_m_PAH);
     //plus 100000 to tell which pah is cloned and also according to Id, we could easily calculate how many times this pah duplicate
-	}
-	}
-	else m_PAH.assign(source->m_PAH.begin(),source->m_PAH.end());
+        }
+    }
+    else m_PAH.assign(source->m_PAH.begin(),source->m_PAH.end());
 }
 	
 
@@ -966,8 +967,8 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
         bool PAHchanged = false;
 
         // Loop over each PAH in this primary
-        const std::vector<PAH*>::iterator itEnd = m_PAH.end();
-        for (std::vector<PAH*>::iterator it = m_PAH.begin(); it != itEnd; ++it) {
+        const std::vector<boost::shared_ptr<PAH> >::iterator itEnd = m_PAH.end();
+        for (std::vector<boost::shared_ptr<PAH> >::iterator it = m_PAH.begin(); it != itEnd; ++it) {
 
             // This is a model parameter that defines when primary particles
             // contain too many PAHs for them all to have full access to the
@@ -1105,7 +1106,7 @@ void PAHPrimary::UpdatePrimary(void)
 	m_numPAH= m_PAH.size();
 
     unsigned int maxcarbon=0;
-    for (vector<PAH*>::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
+    for (vector<boost::shared_ptr<PAH> >::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
         m_numcarbon += (*i)->m_numcarbon;
 		m_numH += (*i)->m_numH;
 		maxcarbon=max(maxcarbon, (*i)->m_numcarbon);    // search for the largest PAH in the PRimary, in Angstrom
@@ -1344,7 +1345,12 @@ double PAHPrimary::AvgCoalesc() const
 PAHPrimary *const PAHPrimary::Clone(void) const
 {
     m_clone=true;
-	return new PAHPrimary(*this);
+	PAHPrimary* newPAHPrimary=new PAHPrimary();
+	newPAHPrimary->CopyParts(this);
+	if (this->m_leftchild!=NULL)
+	newPAHPrimary->CopyTree(this);
+	m_clone=false;
+	return newPAHPrimary;
 }
 
 

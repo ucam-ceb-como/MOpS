@@ -61,6 +61,7 @@ system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";
 my $momentFile;
 open($momentFile, "<pahtest2-test-doubling-algorithm-part.csv") or die "ERR: failed to open moment file: $!";
 
+my $sp = 0;
 my $m0 = 0;
 my $m1 = 0;
 
@@ -68,23 +69,31 @@ while(<$momentFile>) {
   my @fields = split /,/;
 
   # Look for a line that begina with a number and has the first entry (the time)
-  # equal (upto a small tolerance) to 0.04
+  # equal (upto a small tolerance) to 0.0058
   if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.0058) < 1e-6 )) {
       # Third field should be the zeroth moment
-      $m0 = $fields[2];
+      $sp = $fields[2];
       #print "2: $fields[2], ";
 
-      $m1 = $fields[4];
+      $m0 = $fields[4];
       #print "4: $fields[4] \n";
 
+      $m1 = $fields[20];
       last;
   }
 }
 
+# Precalsulated value: num of computational particles (sp) =855, M0=71.25e17+-1e15
 
-print "$m0, $m1\n";
-if(abs($m0 -  837) > 0) {
-  print "Simulated sp was $m0, when  851m^-3 expected\n";
+# git 00706668ed.. gives the following values for the mean 
+# and 99% confidence interval for the mean, using 20 repeitions
+# sp = 854+-24.5
+# m0 = (1.251+-0.036)e17 m^-3
+# m1 = (3.846+-0.076)e-7 kg m^-3
+
+print "$sp, $m0, $m1\n";
+if(abs($sp -  855) > 0) {
+  print "Simulated sp was $sp, when  855 expected\n";
   print "if pahtest1 passes and this test fails, it will indicate that the doubling algorithm works in a wrong way.";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -92,8 +101,16 @@ if(abs($m0 -  837) > 0) {
   exit 1;
 }
 
-if(abs($m1 - 1.226e17) > 1e15) {
-  print "Simulated mean M0 was $m0, when  1.246e17m^-3 expected\n";
+if(abs($m0 - 1.25e17) > 1e15) {
+  print "Simulated mean M0 was $m0, when  1.25e17m^-3 expected\n";
+  print "**************************\n";
+  print "****** TEST FAILURE ******\n";
+  print "**************************\n";
+  exit 2;
+}
+
+if(abs($m1 - 3.85e-7) > 1e-8) {
+  print "Simulated mean M1 was $m1, when  3.85e-7 kg m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";

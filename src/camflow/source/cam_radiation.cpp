@@ -145,6 +145,15 @@ void Radiation::PlanckAbsorption
                                  (-5.87209e-10 + temperature * -2.5334e-14))))/AtmToPascal;
             }
         }
+        else if (radiativeSpecies_[i] == "CH4")
+        {
+            // This code computes the Planck mean absorption coefficient for CH4, using two equations in reference [1].  It uses a
+            // conditional statement on temperature to determine which of the two equations to use. The specific  equation is based
+            // on fitted results from the RADCAL program. See reference [4]. Multiplication by AtmToPascal converts the absorption
+            // coefficients from units of 1/m * 1/atm  to 1/m * 1/pa.
+                absorption[i]  =  (6.6334 + temperature * (-0.0035686 + temperature * (1.6682e-8 + temperature *
+                                  (2.5611e-10 + temperature * -2.6558e-14))))/AtmToPascal;
+        }
         else
         {
             throw std::runtime_error
