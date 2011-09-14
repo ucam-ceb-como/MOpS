@@ -101,7 +101,7 @@ if(abs($sp -  855) > 15) {
   exit 1;
 }
 
-if(abs($m1 - 1.25e17) > 4e15) {
+if(abs($m0 - 1.25e17) > 4e15) {
   print "Simulated mean M0 was $m0, when  1.25e17m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
