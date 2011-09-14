@@ -45,12 +45,13 @@
 #include "swp_process_factory.h"
 #include "swp_abf_model.h"
 #include "swp_tempwriteXmer.h"
+
 #include "geometry1d.h"
+#include "poisson.hpp"
 
 #include <stdexcept>
 #include <cassert>
-#include <boost/random/poisson_distribution.hpp>
-#include <boost/random/variate_generator.hpp>
+#include <boost/random/uniform_01.hpp>
 
 #include "string_functions.h"
 #include "swp_particle.h"
@@ -781,19 +782,14 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
                     // Get the process rate x the time interval.
                     rate = (*i)->Rate(t, sys, sp) * dt;
 
-                    if(rate > 0) {
-                        // Use a Poission deviate to calculate number of
-                        // times to perform the process.
-                        typedef boost::poisson_distribution<unsigned int, real> poiss_distrib;
-                        poiss_distrib repeatCountDistrib(rate);
-                        boost::variate_generator<Sweep::rng_type&, poiss_distrib> repeatCountGenerator(rng, repeatCountDistrib);
+                    // Use a Poission deviate to calculate number of
+                    // times to perform the process.
+                    boost::uniform_01<rng_type &> uniformGenerator(rng);
+                    num = Utils::ignpoi(rate, uniformGenerator);
 
-                        num = repeatCountGenerator();
-
-                        if (num > 0) {
-                            // Do the process to the particle.
-                            (*i)->Perform(t, sys, sp, num);
-                        }
+                    if (num > 0) {
+                        // Do the process to the particle.
+                        (*i)->Perform(t, sys, sp, num);
                     }
                 }
             }

@@ -52,11 +52,11 @@
 #include "swp_kmc_pah_process.h"
 #include "swp_kmc_pah_structure.h"
 #include "swp_PAH.h"
+#include "poisson.hpp"
 
 #include <stdexcept>
 #include <cassert>
-#include <boost/random/poisson_distribution.hpp>
-#include <boost/random/variate_generator.hpp>
+#include <boost/random/uniform_01.hpp>
 
 #include "string_functions.h"
 
@@ -632,6 +632,8 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 		// (smaller scale = higher precision).
 		real scale = 0.01;
 
+            // Need a U[0,1) generator for the poisson deviates
+		    boost::uniform_01<rng_type&> uniformGenerator(rng);
 
 			// Perform integration loop.
 			while (t1 < tstop)
@@ -642,14 +644,10 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
                 t2 = std::min(t1+(dAmax/ std::max(r,1.0e-300)), tstop); // 1.0e-300 catches DIV ZERO.
 
                 // Approximate sintering by a poisson process.  Calculate number of poisson events.
-                typedef boost::poisson_distribution<unsigned, real> poiss_distrib;
                 const real poissonMean = r * (t2 - t1) / (scale*dAmax);
 
                 if(poissonMean > 0.0) {
-                    poiss_distrib repeatCountDistrib(poissonMean);
-                    boost::variate_generator<rng_type &, poiss_distrib> repeatCountGenerator(rng, repeatCountDistrib);
-
-                    unsigned n = repeatCountGenerator();
+                    unsigned n = Utils::ignpoi(poissonMean, uniformGenerator);
                     // Adjust the surface area.
                     if (n > 0) {
                         m_children_surf -= (real)n * scale * dAmax;
