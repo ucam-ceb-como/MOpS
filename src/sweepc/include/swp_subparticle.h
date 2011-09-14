@@ -93,6 +93,12 @@ public:
     //! Returns the mass.
     real Mass(void) const;
 
+    //! Returns the number of surface reaction sites.
+    real GetSites(void) const;
+
+    //! Returns the sintering rate (silica).
+    real GetSintRate(void) const;
+
     //! Returns the property with the given ID.
     real Property(Sweep::PropID id) const;
 

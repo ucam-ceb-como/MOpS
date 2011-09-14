@@ -262,6 +262,14 @@ public:
         const Sweep::ParticleModel &model // Defining particle model.
         );
 
+	// Virtual functions for the SilicaPrimary class (wjm34)
+	// These return 0 for any other type of primary
+	// Return the number of OH sites for a SilicaPrimary
+	virtual int GetSites() const { return 0; }
+
+	// Return the sintering rate for a SilicaPrimary
+	virtual real GetSintRate() const { return 0.0; }
+
 protected:
     // Particle model used to define the Primary.
     const Sweep::ParticleModel *m_pmodel;

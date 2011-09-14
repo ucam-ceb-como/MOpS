@@ -71,7 +71,10 @@ namespace Sweep
 		iFS,		// the free surface available for other particles to sinter
 
 		iNumCarbon, // Number of Carbon atoms
-		iASN, // Number of active (OH) sites available. Silica model only.
+
+		// Silica model properties
+		iASN, // Number of active (OH) sites available
+		iSintRate, // Sintering rate of a particle
     };
 }
 
