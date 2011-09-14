@@ -663,9 +663,9 @@ CamSoot::realVector CamSoot::rateAll
     for (int m=0; m<nMoments; ++m)
     {
     	//rates[m] = (nucRates[m]);
-    	//rates[m] = (nucRates[m]+coagRates[m]);
+    	rates[m] = (nucRates[m]+coagRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);
-    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
+    	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]+cdRates[m]);
     }
 
@@ -1026,6 +1026,7 @@ void CamSoot::interpolateReducedMoments(realVector& wom){
      */
     for(int i=lowFrac; i<=-1; i++){
         reducedMoments(i) = cm.interpolateLG(i/6.0,3,prime,wom);
+        //std::cout << "reducedMoments " << i << " : " << reducedMoments(i) << std::endl;
     }
 
     /*
