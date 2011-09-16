@@ -605,7 +605,6 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
                             const Processes::SinteringModel &model,
                             rng_type &rng)
 {
-//	PrintTree("before");
 	//Do only if there is a particle to sinter
 	if (m_leftparticle!=NULL)
     {
@@ -669,9 +668,6 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 
 			m_children_sintering=SinteringLevel();
 			m_sint_rate = r;
-
-			//Shouldnt surf_old be m_surf???
-			//double rho_site = m_numOH/surf_old;
 			double rho_site = m_numOH/m_surf;
 
 			if(m_leftparticle!=NULL)
@@ -698,8 +694,6 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 					m_numOH = 0;
 				}
 			}
-
-			//UpdateCache();
 
 			if(m_children_sintering>0.95)
 			  {
@@ -835,9 +829,15 @@ SilicaPrimary &SilicaPrimary::Merge()
             //set the children properties to zero, this node has no more children
             ResetChildrenProperties();
             UpdatePrimary();
-			if(m_parent!=NULL)
-				m_parent->UpdateCache();
 
+            // Only update the cache on m_parent if the sintering level of m_parent if the sintering
+            // level won't call a merge on the parent node. Otherwise, the *this* memory address could
+            // be removed from the tree and segmentation faults will result!
+			if(m_parent!=NULL) {
+				if (m_parent->SinteringLevel() <= 0.95) {
+					m_parent->UpdateCache();
+				}
+			}
 		}
 
 
@@ -898,7 +898,7 @@ SilicaPrimary &SilicaPrimary::Merge()
 
 			else
 			{
-				//append to right subtree
+				// Append to right subtree
 				SilicaPrimary *oldrightparticle=m_rightparticle;
 				//Add all mass to leftparticle
 				m_leftparticle->m_numSi = m_leftparticle->m_numSi + m_rightparticle->m_numSi;
@@ -1149,18 +1149,14 @@ void SilicaPrimary::UpdateCache(void)
 
 bool SilicaPrimary::CheckSintering()
 {
-    //double total_mass = m_mass;
 	bool hassintered=false;
     if (m_children_sintering> 0.95 && m_leftparticle!=NULL)
         {
-           // PrintTree("before.inp");
-           // cout <<"merging"<<m_children_coalescence<<endl;
 
              Merge();
-
 			 UpdateCache();
-
              hassintered=true;
+
              //check again because this node has changed
              CheckSintering();
         }
@@ -1170,7 +1166,6 @@ bool SilicaPrimary::CheckSintering()
         hassintered=m_rightchild->CheckSintering();
 
     }
-    //UpdateCache();
 
 	if(hassintered)
 		ResetVol();
@@ -1276,9 +1271,7 @@ void SilicaPrimary::UpdateCache(SilicaPrimary *root)
 			{
 				m_children_sintering=1;
 			}
-			//PrintTree("before_sinter");
 			CheckSintering();
-			//PrintTree("after_sinter");
 		}
 
 		//sum up the avg sintering level
