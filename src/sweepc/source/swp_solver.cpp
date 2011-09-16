@@ -43,12 +43,17 @@
 #include "swp_solver.h"
 #include "local_geometry1d.h"
 
+#include "choose_index.hpp"
+
 #include <stdlib.h>
 #include <cmath>
 #include "string_functions.h"
 #include <stdexcept>
 #include <ctime>
 #include <limits>
+#include <boost/random/exponential_distribution.hpp>
+#include <boost/random/uniform_01.hpp>
+#include <boost/random/variate_generator.hpp>
 
 using namespace Sweep;
 using namespace std;
@@ -82,7 +87,7 @@ Solver::~Solver(void)
 // the given mechanism to define the stochastic processes.  Updates given
 // system accordingly.  On error returns <0, otherwise returns 0.
 int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech,
-                int (*rand_int)(int, int), real (*rand_u01)())
+                rng_type &rng)
 {
     int err = 0;
     real tsplit, dtg, dt, jrate;
@@ -109,13 +114,14 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech,
         while (t < tsplit) {
             // Sweep does not do transport
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
-            timeStep(t, std::min(t + dtg / 3.0, tsplit), sys, Geometry::LocalGeometry1d(), mech, rates, jrate, rand_int, rand_u01);
+            timeStep(t, std::min(t + dtg / 3.0, tsplit), sys, Geometry::LocalGeometry1d(),
+                     mech, rates, jrate, rng);
         }
 
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
         if (mech.AnyDeferred()) {
-            mech.LPDA(t, sys, rand_int, rand_u01);
+            mech.LPDA(t, sys, rng);
         }
     }
 
@@ -167,17 +173,21 @@ real Solver::calcSplitTime(real t, real tstop, real jrate,
  */
 void Solver::timeStep(real &t, real t_stop, Cell &sys, const Geometry::LocalGeometry1d &geom,
                       const Mechanism &mech, const fvector &rates, real jrate,
-                      int (*rand_int)(int, int), real (*rand_u01)())
+                      rng_type &rng)
 {
     // The purpose of this routine is to perform a single stochastic jump process.  This
     // involves summing the total rate of all processes, generating a waiting time,
     // selecting a process and performing that process.
     real dt;
 
+    //std::cout << "Solver::timeStep " << jrate;
+
     // Calculate exponentially distributed time step size.
     if (jrate > 0.0) {
-        dt = rand_u01();
-        dt = - log(dt) / jrate;
+        boost::exponential_distribution<real> waitDistrib(jrate);
+        boost::variate_generator<Sweep::rng_type&, boost::exponential_distribution<real> > waitGenerator(rng, waitDistrib);
+        dt = waitGenerator();
+        //std::cout << ' ' << dt;
     } else {
         // Avoid divide by zero.
         dt = std::numeric_limits<real>::max();
@@ -186,12 +196,16 @@ void Solver::timeStep(real &t, real t_stop, Cell &sys, const Geometry::LocalGeom
     // Truncate if step is too long or select a process
     // to perform.
     if (t+dt <= t_stop) {
-        const int i = chooseProcess(rates, rand_u01);
-        mech.DoProcess(i, t+dt, sys, geom, rand_int, rand_u01);
+        boost::uniform_01<rng_type &> uniformGenerator(rng);
+        const int i = chooseIndex(rates, uniformGenerator);
+        //std::cout << ' ' << i;
+        mech.DoProcess(i, t+dt, sys, geom, rng);
         t += dt;
     } else {
         t = t_stop;
+        //std:cout << " step truncated to end at " << t_stop;
     }
+    //std::cout << std::endl;
 }
 
 // Selects a process using a DIV algorithm and the process rates

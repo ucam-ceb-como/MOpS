@@ -87,12 +87,18 @@ while(<$momentFile>) {
 
 # git 00706668ed.. gives the following values for the mean 
 # and 99% confidence interval for the mean, using 20 repeitions
+# boost 1.42.0
 # sp = 854+-24.5
 # m0 = (1.251+-0.036)e17 m^-3
-# m1 = (3.846+-0.076)e-7 kg m^-3
+# fv = (3.846+-0.076)e-7 kg m^-3
+# with boost 1.47.0 git 58056fdbc (which should be the same as 00706668ed for
+# PAH-PP purposes) gives the following mean values
+# sp 861.7
+# m0 1.262e17 m^-3
+# fv 3.872e-7
 
 print "$sp, $m0, $m1\n";
-if(abs($sp -  855) > 0) {
+if(abs($sp -  855) > 20) {
   print "Simulated sp was $sp, when  855 expected\n";
   print "if pahtest1 passes and this test fails, it will indicate that the doubling algorithm works in a wrong way.";
   print "**************************\n";
@@ -101,7 +107,7 @@ if(abs($sp -  855) > 0) {
   exit 1;
 }
 
-if(abs($m0 - 1.25e17) > 1e15) {
+if(abs($m0 - 1.25e17) > 4e15) {
   print "Simulated mean M0 was $m0, when  1.25e17m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";

@@ -46,7 +46,6 @@
 #include "mops_mechanism.h"
 
 #include "swp_model_stats.h"
-#include "mt19937.h"
 
 #include "linear_interpolator.hpp"
 
@@ -307,7 +306,7 @@ Brush::MooNMDInterface::particle_reactor_pointer
 
             // Read in the population
             populationDetails.particleList =
-                    Mops::Settings_IO::ReadInitialParticles(**it, mech.ParticleMech(), Sweep::genrand_int);
+                    Mops::Settings_IO::ReadInitialParticles(**it, mech.ParticleMech());
 
             initialPopulationPoints.push_back(populationDetails);
         }
@@ -329,13 +328,14 @@ Brush::MooNMDInterface::particle_reactor_pointer
  * Simulate the particle processes from the current reactor time until t_stop
  * and calculate mean energy and mass source terms.
  *
- *\param[in,out]    reac                The reactor specifying the initial condition and particle dynamics
+ *\param[in,out]     reac                The reactor specifying the initial condition and particle dynamics
  *\param[in]         solution_length     Communication is by vectors which must all be at least this long
  *\param[in]         num_species         Number of species for which mass concentrations are supplied
  *\param[in]         solution_nodes      Distances from start of reactor (in m) at which solution values are specified
  *\param[in]         temperature         Reactor temperature in K
  *\param[in]         velocity            Flow velocity in \f$\mathrm{ms}^{-1}\f$
  *\param[in]         mass_concs          Concentrations of species in \f$\mathrm{kg m}^{-3}\f$
+ *\param[in]         path_id             Integer identifying the path so that different sequences of random numbers can be used for each path
  *\param[out]        energy_souce        Energy release by particle processes in \f$\mathrm{J m}^{-3} \mathrm{s}^{-1}\f$
  *\param[out]        mass_conc_souces    Release of species into solution by particle processes in \f$\mathrm{kg m}^{-3}\mathrm{s}^{-1}\f$
  *
@@ -364,6 +364,7 @@ Brush::MooNMDInterface::particle_reactor_pointer Brush::MooNMDInterface::RunPart
     const double temperature[],
     const double velocity[],
     const double mass_concs[],
+    const size_t path_id,
     double energy_source[],
     double mass_conc_sources[],
     std::ostream &moment_output)
@@ -411,7 +412,7 @@ Brush::MooNMDInterface::particle_reactor_pointer Brush::MooNMDInterface::RunPart
     double minResidence = minimumResidenceTime(reac.getGeometry(), solution_length, solution_nodes, velocity);
     unsigned numSplittings = std::ceil(10 * t_stop / minResidence);
     std::cout << "Num splittings " << numSplittings << ", min residence " << minResidence << std::endl;
-    solver.solve(reac, t_stop, numSplittings, 0);
+    solver.solve(reac, t_stop, numSplittings, 0, path_id);
     Brush::Simulator::saveParticleStats(reac, Sweep::Stats::IModelStats::StatBound(), moment_output);
 
     //======== Estimate the source terms to return to the client =====

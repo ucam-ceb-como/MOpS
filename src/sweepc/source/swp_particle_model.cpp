@@ -318,7 +318,6 @@ Processes::SinteringModel &ParticleModel::SintModel(void) const {return m_sint_m
 
 /*!
  * @param[in]       time        Time at which particle is being created
- * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  *
  * Creates a new particle and sets it up with all the models
  * required by the ParticleModel. A particle created here
@@ -327,12 +326,11 @@ Processes::SinteringModel &ParticleModel::SintModel(void) const {return m_sint_m
  * by the caller.
  *
  */
-Sweep::Particle *const ParticleModel::CreateParticle(const real time,
-                                                     int (*rand_int)(int, int)) const
+Sweep::Particle *const ParticleModel::CreateParticle(const real time) const
 {
     // Create new primary using the aggregation model currently
     // set in this model.
-    Primary *pri = ModelFactory::CreatePrimary(m_aggmodel, time, *this, rand_int);
+    Primary *pri = ModelFactory::CreatePrimary(m_aggmodel, time, *this);
 
     // Now create a particle from this primary.  This sets up the
     // sub-model cache within the particle automatically.
@@ -346,9 +344,8 @@ Sweep::Particle *const ParticleModel::CreateParticle(const real time,
 }
 
 /*!
- * @param[in]   time        Time at which particle is being created
- * @param[in]   position    Position at which particle is being created
- * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
+ * @param[in]       time        Time at which particle is being created
+ * @param[in]       position    Position at which particle is being created
  *
  * Creates a new particle and sets it up with all the models
  * required by the ParticleModel. A particle created here
@@ -357,12 +354,11 @@ Sweep::Particle *const ParticleModel::CreateParticle(const real time,
  * by the caller.
  *
  */
-Sweep::Particle *const ParticleModel::CreateParticle(const real time, const real position,
-                                                     int (*rand_int)(int, int)) const
+Sweep::Particle *const ParticleModel::CreateParticle(const real time, const real position) const
 {
     // Create new primary using the aggregation model currently
     // set in this model.
-    Primary *pri = ModelFactory::CreatePrimary(m_aggmodel, time, position, *this, rand_int);
+    Primary *pri = ModelFactory::CreatePrimary(m_aggmodel, time, position, *this);
 
     // Now create a particle from this primary.  This sets up the
     // sub-model cache within the particle automatically.

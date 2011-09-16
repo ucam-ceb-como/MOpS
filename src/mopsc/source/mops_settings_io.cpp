@@ -175,8 +175,7 @@ void readGlobalSettings(const CamXML::Element &node,
 Reactor *const readReactor(const CamXML::Element &node,
                                         const Mechanism &mech,
                                         const unsigned int max_particle_count,
-										const real maxM0,
-										int (*rand_int)(int, int))
+										const real maxM0)
 {
     Reactor *reac = NULL;
     const CamXML::Element *subnode, *subsubnode;
@@ -322,7 +321,7 @@ Reactor *const readReactor(const CamXML::Element &node,
         }
 
         // Now read in the list of particles and sum up their statistical weights
-        particleList = Settings_IO::ReadInitialParticles(*subnode, mech.ParticleMech(), rand_int);
+        particleList = Settings_IO::ReadInitialParticles(*subnode, mech.ParticleMech());
         Sweep::PartPtrList::const_iterator it = particleList.begin();
         const Sweep::PartPtrList::const_iterator itEnd = particleList.end();
         real weightSum = 0;
@@ -864,8 +863,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
                                         Mops::Reactor *reac,
                                         std::vector<TimeInterval> &times,
                                         Simulator &sim, Solver &solver,
-                                        Mechanism &mech,
-                                        int (*rand_int)(int, int))
+                                        Mechanism &mech)
 {
     CamXML::Document doc;
     const CamXML::Element *root, *node;
@@ -897,7 +895,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 
         node = root->GetFirstChild("reactor");
         if (node != NULL) {
-			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0(), rand_int);
+			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0());
         } else {
             throw std::runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");
@@ -1023,8 +1021,7 @@ void Settings_IO::readTimeIntervals(const CamXML::Element &node,
  *@exception    std::runtime_error  If particles are specified they must have strictly positive counts
  */
 Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& population_xml,
-                                                     const Sweep::Mechanism & particle_mech,
-                                                     int (*rand_int)(int, int))
+                                                     const Sweep::Mechanism & particle_mech)
 {
     // Accumulate in this container a collection of particles to be inserted into the ensemble
     Sweep::PartPtrList particleList;
@@ -1055,7 +1052,7 @@ Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& popu
         // instance will be deleted if an exception is thrown while processing
         // the rest of the input.
         const std::auto_ptr<Sweep::Particle>
-            pParticle(Sweep::Particle::createFromXMLNode(**it, particle_mech, rand_int));
+            pParticle(Sweep::Particle::createFromXMLNode(**it, particle_mech));
 
         // Assume particle population applies at time 0.
         pParticle->setPositionAndTime(position, 0.0);

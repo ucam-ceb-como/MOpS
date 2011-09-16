@@ -116,8 +116,7 @@ Sweep::real Sweep::Processes::AdditiveCoagulation::RateTerms(real t, const Cell 
  * \param[in,out]   sys         System to update
  * \param[in]       local_geom  Details of local phsyical layout
  * \param[in]       iterm       Process term responsible for this event
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  * \param[out]      out         Details of any particle being transported out of system
  *
  * \return      0 on success, otherwise negative.
@@ -125,8 +124,7 @@ Sweep::real Sweep::Processes::AdditiveCoagulation::RateTerms(real t, const Cell 
 int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys, 
                              const Geometry::LocalGeometry1d& local_geom,
                              unsigned int iterm,
-                             int (*rand_int)(int, int), 
-                             Sweep::real(*rand_u01)()) const
+                             rng_type &rng) const
 {
     // Select properties by which to choose particles.
     // Note we need to choose 2 particles.  One particle must be chosen
@@ -139,8 +137,8 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
 
     int ip1=-1, ip2=-1;
 
-    ip1 = sys.Particles().Select(Sweep::iM, rand_int, rand_u01);
-    ip2 = sys.Particles().Select(rand_int);
+    ip1 = sys.Particles().Select(Sweep::iM, rng);
+    ip2 = sys.Particles().Select(rng);
 
     // Choose and get first particle, then update it.
     Particle *sp1=NULL;
@@ -155,7 +153,7 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
     // this even if the first particle was invalidated.
     unsigned int guard = 0;
     while ((ip2 == ip1) && (++guard<1000))
-            ip2 = sys.Particles().Select(rand_int);
+            ip2 = sys.Particles().Select(rng);
 
     Particle *sp2=NULL;
     if ((ip2>=0) && (ip2!=ip1)) {
@@ -169,7 +167,7 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
     const real majk = MajorantKernel(*sp1, *sp2, sys, Default);
 
     //Update the particles
-    m_mech->UpdateParticle(*sp1, sys, t, rand_u01);
+    m_mech->UpdateParticle(*sp1, sys, t, rng);
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
     if (!sp1->IsValid()) {
@@ -181,7 +179,7 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
         return 0;
     }
 
-    m_mech->UpdateParticle(*sp2, sys, t, rand_u01);
+    m_mech->UpdateParticle(*sp2, sys, t, rng);
     // Check validity of particles after update.
     if (!sp2->IsValid()) {
         // Tell the ensemble to update particle one before we confuse things
@@ -204,8 +202,8 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
 
         real truek = CoagKernel(*sp1, *sp2, sys);
 
-        if (!Fictitious(majk, truek, rand_u01)) {
-            JoinParticles(t, ip1, sp1, ip2, sp2, sys, rand_int, rand_u01);
+        if (!Fictitious(majk, truek, rng)) {
+            JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
         } else {
             sys.Particles().Update(ip1);
             sys.Particles().Update(ip2);

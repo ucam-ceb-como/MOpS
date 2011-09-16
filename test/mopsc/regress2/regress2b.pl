@@ -39,7 +39,7 @@ use warnings;
 # Clean up any outputs from previous simulations
 my @outputFiles = glob("regression2b-nuc-coag-acet*");
 if($#outputFiles > 0) {
-  system("rm -f" . '"' . join('" "', @outputFiles) . '"');
+  system("rm", "-f", @outputFiles);
 }
 
 # Path of executable should be supplied as first argument to this script

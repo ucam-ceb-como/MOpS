@@ -44,6 +44,9 @@
 #include "swp_mechanism.h"
 
 #include "local_geometry1d.h"
+
+#include <boost/random/uniform_01.hpp>
+
 using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
@@ -106,16 +109,14 @@ PAHInception &PAHInception::operator =(const PAHInception &rhs)
  * \param[in,out]   sys         System to update
  * \param[in]       local_geom  Details of local phsyical layout
  * \param[in]       iterm       Process term responsible for this event
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  *
  * \return      0 on success, otherwise negative.
  */
 int PAHInception::Perform(const real t, Cell &sys,
                           const Geometry::LocalGeometry1d &local_geom,
                           const unsigned int iterm,
-                          int (*rand_int)(int, int), 
-                          Sweep::real(*rand_u01)()) const {
+                          rng_type &rng) const {
 
     Particle *sp = NULL;
 
@@ -130,19 +131,20 @@ int PAHInception::Perform(const real t, Cell &sys,
     const real width = vertices.back() - posn;
 
     if(width > 0) {
+        boost::uniform_01<rng_type&, real> uniformGenerator(rng);
         // There is some real spatial detail
-        posn += width * rand_u01();
-        sp = m_mech->CreateParticle(t, posn, rand_int);
+        posn += width * uniformGenerator();
+        sp = m_mech->CreateParticle(t, posn);
     }
     else {
         // Ignore all questions of position
-        sp = m_mech->CreateParticle(t, rand_int);
+        sp = m_mech->CreateParticle(t);
     }
 
     sp->UpdateCache();
 
     // Add particle to main ensemble.
-    sys.Particles().Add(*sp, rand_int);
+    sys.Particles().Add(*sp, rng);
 
     // Update gas-phase chemistry of system.
     adjustGas(sys);

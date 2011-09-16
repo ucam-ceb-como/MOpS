@@ -43,14 +43,16 @@
 */
 
 #include "swp_cell.h"
-#include "mt19937.h"
 #include "csv_io.h"
-#include "rng.h"
+
 #include <string>
 #include <iostream>
 #include <time.h>
 #include <math.h>
 #include <cstdlib>
+#include <boost/random/exponential_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
+
 #include "string_functions.h"
 #include "swp_kmc_simulator.h"
 
@@ -119,14 +121,6 @@ void KMCSimulator::targetPAH(PAHStructure& pah) {
     m_simPAH = &pah;
     m_simPAHp = PAHProcess(*m_simPAH);
 }
-//! KMC algorithm to calculate timestep
-real KMCSimulator::timeStep(real totalRate, real (*rand_u01)()) const {
-    // get an exponentially distributed random number
-    real logrand = logrnd(rand_u01);
-    // time step = -N(e) / R(total)
-    real tau = -logrand/totalRate;
-    return tau;
-}
 
 //! Update structure of PAH after time dt
 // waiting step is set to be 1 by dc516, who did several tests to determine the impact of this parameter, 
@@ -136,8 +130,7 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
                             const real tstart, 
                             const real dt,  
                             const int waitingSteps,  
-                            int (*rand_int)(int,int), 
-                            real (*rand_u01)(), 
+                            rng_type &rng,
                             real r_factor,
                             int PAH_ID) {
     initReactionCount();
@@ -178,7 +171,10 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
         m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
 
         // Calculate time step, update time
-        real t_step = timeStep(m_kmcmech.TotalRate(), rand_u01);
+        typedef boost::exponential_distribution<real> exponential_distrib;
+        exponential_distrib waitingTimeDistrib(m_kmcmech.TotalRate());
+        boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
+        real t_step = waitingTimeGenerator();
         t_next = m_t+t_step;
         if(t_next < t_max && t_step < t_step_max) {
 
@@ -187,11 +183,11 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
             //its structure can be drawed by this function, used for tracking suspicious PAH.
             // saveDOTperLoop(100000*tstart,loopcount,PAH_ID);
             // Choose jump according to rates
-            ChosenProcess jp_perf = m_kmcmech.chooseReaction(rand_u01);
+            ChosenProcess jp_perf = m_kmcmech.chooseReaction(rng);
             //cout<<jp_perf.first->getName()<<'\n';//++++
 
             // Update data structure
-            bool process_success = m_simPAHp.performProcess(*jp_perf.first, rand_int);
+            bool process_success = m_simPAHp.performProcess(*jp_perf.first, rng);
 
             /*if(m_simPAH->m_parent->ID() % 100000 == 609) {
             if(!m_simPAHp.checkCoordinates()) {

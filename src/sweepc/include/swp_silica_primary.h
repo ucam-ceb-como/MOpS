@@ -104,7 +104,7 @@ public:
             real dt, // Delta-t for sintering to occur.
             Cell &sys, // System which defines primary's environment.
             const Processes::SinteringModel &model, // Sintering model to use.
-            real (*rand_u01)() // Uniform [0,1] sample generator
+            rng_type &rng  // Random number generator
             );
 
 	// Updates Sintering level
@@ -128,10 +128,7 @@ public:
 			);
 
 	// Gets the number of active sites for interparticle reaction
-	int GetSite() const;
-
-	// Gets the number of active sites for interparticle reaction
-	double GetSiteDens() const;
+	int GetSites() const;
 
 	// Gets the number of active sites for interparticle reaction
 	real GetSintRate() const;

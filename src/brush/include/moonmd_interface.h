@@ -71,6 +71,7 @@ particle_reactor_pointer RunParticlePhase(particle_reactor& reac, const double t
     const double temperature[],
     const double velocity[],
     const double mass_concs[],
+    const size_t path_id,
     double energy_source[],
     double mass_conc_sources[],
     std::ostream &moment_output);

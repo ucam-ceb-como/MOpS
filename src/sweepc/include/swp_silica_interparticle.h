@@ -179,9 +179,7 @@ public:
          Cell &sys,
          const Geometry::LocalGeometry1d& local_geom,
          unsigned int iterm,
-         int (*rand_int)(int, int),
-         real(*rand_u01)()
-         ) const;
+         rng_type &rng) const;
 
      // Performs the process on a given particle in the system.  Particle
      // is given by index.  The process is performed n times.

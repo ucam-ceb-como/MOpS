@@ -39,7 +39,7 @@ use warnings;
 # Clean up any outputs from previous simulations
 my @outputFiles = glob("regression2a-nuc-coag-pyr*");
 if($#outputFiles > 0) {
-  system("rm -f" . '"' . join('" "', @outputFiles) . '"');
+  system("rm", "-f", @outputFiles);
 }
 
 # Path of executable should be supplied as first argument to this script
@@ -89,7 +89,7 @@ while(<$momentFile>) {
 # m0 (2.936+-0.037)e17 m^-3
 # fv (1.260+-0.007)e-8
 
-#print "$m0, $m1\n";
+print "$m0, $m1\n";
 if(abs($m0 - 2.93e17) > 1.5e16) {
   print "Simulated mean M0 was $m0, when 2.93e17 m^-3 expected\n";
   print "**************************\n";

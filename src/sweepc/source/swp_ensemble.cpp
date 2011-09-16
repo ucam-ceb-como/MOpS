@@ -51,6 +51,9 @@
 #include <limits>
 #include <functional>
 #include <algorithm>
+#include <boost/random/uniform_smallint.hpp>
+#include <boost/random/uniform_01.hpp>
+#include <boost/random/variate_generator.hpp>
 
 using namespace Sweep;
 
@@ -241,7 +244,7 @@ const Particle *const Sweep::Ensemble::At(unsigned int i) const
 
 /*!
  * @param[in,out]   sp          Particle to add to the ensemble
- * @param[in,out]   rand_int    Generator of random integers on a range
+ * @param[in,out]   rng         Random number generator
  *
  * @return      Index of added particle
  *
@@ -252,7 +255,7 @@ const Particle *const Sweep::Ensemble::At(unsigned int i) const
  * reflect the fact that the ensemble mainly deals with the pointer.
  *
  */
-int Sweep::Ensemble::Add(Particle &sp, int (*rand_int)(int, int))
+int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 {
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
@@ -268,7 +271,10 @@ int Sweep::Ensemble::Add(Particle &sp, int (*rand_int)(int, int))
         i = -1;
     } else {
         // We must contract the ensemble to accomodate a new particle.
-        i = rand_int(0, m_capacity);
+        boost::uniform_smallint<int> indexDistrib(0, m_capacity);
+        boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
+        i = indexGenerator();
+
 		++m_ncont;
         if (!m_contwarn && ((real)(m_ncont)/(real)m_capacity > 0.01)) {
             m_contwarn = true;
@@ -444,31 +450,32 @@ void Sweep::Ensemble::ClearMain()
 // SELECTING PARTICLES.
 
 /*!
- * @param[in,out]   rand_int    Pointer to function that can generate uniform integers on a range
+ * @param[in,out]   rng    Random number generator
  *
  * @return      Index of a uniformly selected particle from the ensemble
  */
-int Sweep::Ensemble::Select(int (*rand_int)(int, int)) const
+int Sweep::Ensemble::Select(rng_type &rng) const
 {
     assert(m_tree.size() == m_count);
 
-    // Uniformly select a particle index.
-    return rand_int(0, m_count-1);
+    // Set up the rng sample
+    boost::uniform_smallint<int> indexDistrib(0, m_count - 1);
+    boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
+
+    // Take one sample and return it
+    return indexGenerator();
 }
 
 
 /*!
- * @param[in]   id          Property by which to weight particle selection
- * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * @param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * @param[in]       id     Property by which to weight particle selection
+ * @param[in,out]   rng    Random number generator
  *
  * @return      Index of selected particle
  *
  * id must refer to a basic property from the ParticleData class
  */
-int Sweep::Ensemble::Select(Sweep::PropID id,
-                            int (*rand_int)(int, int),
-                            real (*rand_u01)()) const
+int Sweep::Ensemble::Select(Sweep::PropID id, rng_type &rng) const
 {
     assert(m_tree.size() == m_count);
 
@@ -477,10 +484,12 @@ int Sweep::Ensemble::Select(Sweep::PropID id,
 
     // Do not try to use the tree for uniform selection
     if(id == Sweep::iUniform)
-        return Select(rand_int);
+        return Select(rng);
 
     // Calculate random number weighted by sum of desired property (wtid).
-    real r = rand_u01() * m_tree.head().Property(id);
+    // Set up the rng sample
+    boost::uniform_01<rng_type&, real> unifDistrib(rng);
+    real r = unifDistrib() * m_tree.head().Property(id);
 
     WeightExtractor we(id);
     assert(abs((m_tree.head().Property(id) - we(m_tree.head()))/m_tree.head().Property(id)) < 1e-9);

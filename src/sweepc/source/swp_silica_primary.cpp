@@ -52,8 +52,12 @@
 #include "swp_kmc_pah_process.h"
 #include "swp_kmc_pah_structure.h"
 #include "swp_PAH.h"
+#include "poisson.hpp"
+
 #include <stdexcept>
 #include <cassert>
+#include <boost/random/uniform_01.hpp>
+
 #include "string_functions.h"
 
 using namespace Sweep;
@@ -599,7 +603,7 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int,
 //Sinters two particles
 void SilicaPrimary::Sinter(real dt, Cell &sys,
                             const Processes::SinteringModel &model,
-                            real (*rand_u01)())
+                            rng_type &rng)
 {
 //	PrintTree("before");
 	//Do only if there is a particle to sinter
@@ -628,35 +632,40 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 		// (smaller scale = higher precision).
 		real scale = 0.01;
 
+            // Need a U[0,1) generator for the poisson deviates
+		    boost::uniform_01<rng_type&> uniformGenerator(rng);
 
 			// Perform integration loop.
 			while (t1 < tstop)
 			{
-			// Calculate sintering rate.
-			r = model.Rate(m_time+t1, sys, *this);
-			// Calculate next time-step end point so that the surface area changes by no more than dAmax.
-			t2 = std::min(t1+(dAmax/ std::max(r,1.0e-300)), tstop); // 1.0e-300 catches DIV ZERO.
-			// Approximate sintering by a poisson process.  Calculate number of poisson events.
-			int n = ignpoi(r * (t2 - t1) / (scale*dAmax), rand_u01);
-			// Adjust the surface area.
-			if (n<0) break;
-			if (n > 0)
-				  {
-						m_children_surf -= (real)n * scale * dAmax;
+                // Calculate sintering rate.
+                r = model.Rate(m_time+t1, sys, *this);
+                // Calculate next time-step end point so that the surface area changes by no more than dAmax.
+                t2 = std::min(t1+(dAmax/ std::max(r,1.0e-300)), tstop); // 1.0e-300 catches DIV ZERO.
 
-						// Check that primary is not completely sintered.
-						//ss663:changed
-						if (m_children_surf <= spherical_surface)
-						{
-							m_children_surf = spherical_surface;
-							//hassintered=true;
-							break;
-						}
-					}
+                // Approximate sintering by a poisson process.  Calculate number of poisson events.
+                const real poissonMean = r * (t2 - t1) / (scale*dAmax);
 
-				// Set t1 for next time step.
-				t1 = t2;
-			}
+                if(poissonMean > 0.0) {
+                    unsigned n = Utils::ignpoi(poissonMean, uniformGenerator);
+                    // Adjust the surface area.
+                    if (n > 0) {
+                        m_children_surf -= (real)n * scale * dAmax;
+
+                        // Check that primary is not completely sintered.
+                        //ss663:changed
+                        if (m_children_surf <= spherical_surface) {
+                            m_children_surf = spherical_surface;
+                            //hassintered=true;
+                            break;
+                        }
+                    }
+                }
+
+                // Set t1 for next time step.
+                t1 = t2;
+            }
+
 
 			m_children_sintering=SinteringLevel();
 			m_sint_rate = r;
@@ -698,14 +707,14 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 				    UpdateCache();
 					if (m_leftchild!=NULL && m_rightchild!=NULL)
 					{
-						m_leftchild->Sinter(dt,sys,model,rand_u01);
-						m_rightchild->Sinter(dt,sys,model,rand_u01);
+						m_leftchild->Sinter(dt,sys,model,rng);
+						m_rightchild->Sinter(dt,sys,model,rng);
 					}
 			   }
 			 else
 			 {
-				 m_leftchild->Sinter(dt, sys, model,rand_u01);
-				 m_rightchild->Sinter(dt, sys, model,rand_u01);
+				 m_leftchild->Sinter(dt, sys, model,rng);
+				 m_rightchild->Sinter(dt, sys, model,rng);
 			 }
 
 
@@ -748,35 +757,35 @@ double SilicaPrimary::SinteringLevel()
 
 
 //calculates the fractal dimension of the particle and stores it in m_fdim
-void SilicaPrimary::CalcFractalDimension()
-{
-	double create_time=this->CreateTime();
-	Sweep::Imaging::ParticleImage img;
-    // construct the particle by colliding the primary particles
-
-	img.constructSubParttree(this);
-
-	double L,W;
-    // calculate the length and the width of the particle
-    img.LengthWidth(L,W);
-    // calculate the radius of gyration
-    m_Rg=img.RadiusofGyration();
-	m_sqrtLW=sqrt(L*W);
-	m_LdivW=L/W;
-    m_Rg=m_Rg*1e-9;
-    m_fdim=log((double)m_numprimary)/log(2*m_Rg/(m_primarydiam/m_numprimary));
-    /*if (m_fdim>0 && m_fdim<3)
-	{
-       string filename;
-	   //cout<<"Creating 3d file";
-       filename=cstr(m_fdim)+".3d";
-       ofstream out;
-       out.open(filename.c_str());
-       img.Write3dout(out,0,0,0);
-       out.close();
-    }*/
-
-}
+//void SilicaPrimary::CalcFractalDimension()
+//{
+//	double create_time=this->CreateTime();
+//	Sweep::Imaging::ParticleImage img;
+//    // construct the particle by colliding the primary particles
+//
+//	img.constructSubParttree(this);
+//
+//	double L,W;
+//    // calculate the length and the width of the particle
+//    img.LengthWidth(L,W);
+//    // calculate the radius of gyration
+//    m_Rg=img.RadiusofGyration();
+//	m_sqrtLW=sqrt(L*W);
+//	m_LdivW=L/W;
+//    m_Rg=m_Rg*1e-9;
+//    m_fdim=log((double)m_numprimary)/log(2*m_Rg/(m_primarydiam/m_numprimary));
+//    /*if (m_fdim>0 && m_fdim<3)
+//	{
+//       string filename;
+//	   //cout<<"Creating 3d file";
+//       filename=cstr(m_fdim)+".3d";
+//       ofstream out;
+//       out.open(filename.c_str());
+//       img.Write3dout(out,0,0,0);
+//       out.close();
+//    }*/
+//
+//}
 
 
 // sets all the childrenproperties to zero, this function is used after the children are coalesced
@@ -1082,18 +1091,10 @@ unsigned int SilicaPrimary::AdjustIntPar(const fvector &dcomp,
 
 }
 
-int SilicaPrimary::GetSite() const
+int SilicaPrimary::GetSites() const
 
 {
 	return m_numOH;
-}
-
-double SilicaPrimary::GetSiteDens() const
-{
-	//return m_numOH/(m_surf*NA);
-	//return m_numOH/(m_surf*2*1.6e-12);
-	//return m_numOH/(m_surf*NA*1.6e-12);
-	return m_numOH/(m_surf);
 }
 
 real SilicaPrimary::GetSintRate() const

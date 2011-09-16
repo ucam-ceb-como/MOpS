@@ -56,9 +56,13 @@
 #include "swp_kmc_pah_process.h"
 #include "swp_kmc_pah_structure.h"
 #include "swp_PAH.h"
-#include "mt19937.h"
+
 #include <stdexcept>
 #include <cassert>
+#include <boost/random/uniform_smallint.hpp>
+#include <boost/random/bernoulli_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
+
 #include "string_functions.h"
 
 using namespace Sweep;
@@ -114,11 +118,9 @@ PAHPrimary::PAHPrimary() : Primary(),
 /*!
  * @param[in]       time        Time at which particle is being created
  * @param[in]       model       Model which defines the meaning of the primary
- * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  *
  */
-PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model,
-                       int (*rand_int)(int, int))
+PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model)
 : Primary(time, model),
     m_numcarbon(0),
 	m_numH(0),
@@ -159,12 +161,10 @@ PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model,
  * @param[in]       time        Time at which particle is being created
  * @param[in]       position    Position at which particle is being created
  * @param[in]       model       Model which defines the meaning of the primary
- * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  *
  */
 PAHPrimary::PAHPrimary(const real time, const real position,
-                       const Sweep::ParticleModel &model,
-                       int (*rand_int)(int, int))
+                       const Sweep::ParticleModel &model)
 : Primary(time, model),
     m_numcarbon(0),
 	m_numH(0),
@@ -409,15 +409,19 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
  * descend the tree to find a primary that really is a
  * primary.
  *
- * @param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * @param[in,out]   rng     Random number generator
  *
  * @return      Pointer to an object representing a phsyical primary
  */
-PAHPrimary *PAHPrimary::SelectRandomSubparticle(Sweep::real(*rand_u01)())
+PAHPrimary *PAHPrimary::SelectRandomSubparticle(rng_type &rng)
 {
-    double ran=rand_u01();
-    int target=int(ran*(m_numprimary));
-    return SelectRandomSubparticleLoop(target);
+    // We want to choose an integer uniformly on the range [0, m_numprimary - 1]
+    typedef boost::uniform_smallint<int> uniform_integer;
+    uniform_integer uniformDistrib(0, m_numprimary - 1);
+
+    // Now build an object that can generate a sample and use it
+    boost::variate_generator<rng_type&, uniform_integer> uniformGenerator(rng, uniformDistrib);
+    return SelectRandomSubparticleLoop(uniformGenerator());
 
 }
 /*!
@@ -528,13 +532,11 @@ void PAHPrimary::UpdateAllPointers( const PAHPrimary *original)
  * Combines this primary with another.
  *
  * \param[in]       rhs         Particle to add to current instance
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  *
  * \return      Reference to the current instance after rhs has been added
  */
-PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
-                                  Sweep::real(*rand_u01)())
+PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 {
     vector<PAH>::const_iterator j;
 	const PAHPrimary *rhsparticle = NULL;
@@ -547,7 +549,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
         {
             // Get a copy of the rhs ready to add to the current particle
             PAHPrimary copy_rhs(*rhsparticle);
-            PAHPrimary *target = copy_rhs.SelectRandomSubparticle(rand_u01);
+            PAHPrimary *target = copy_rhs.SelectRandomSubparticle(rng);
 
             target->m_PAH.insert(target->m_PAH.end(),m_PAH.begin(),m_PAH.end());
 			target->UpdatePrimary();
@@ -560,7 +562,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
             // the PAH condenses to and add it to the list
 		    if (m_leftchild!=NULL)
 		    {
-			    PAHPrimary *target = SelectRandomSubparticle(rand_u01);
+			    PAHPrimary *target = SelectRandomSubparticle(rng);
 
                 target->m_PAH.insert(target->m_PAH.end(),rhsparticle->m_PAH.begin(),rhsparticle->m_PAH.end());
 				target->UpdatePrimary();
@@ -596,7 +598,9 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
             //}
 
             //select where to add the second particle
-		    if (rand_u01()>0.5)
+            boost::bernoulli_distribution<> bernoulliDistrib;
+            boost::variate_generator<rng_type &, boost::bernoulli_distribution<> > leftRightChooser(rng, bernoulliDistrib);
+		    if (leftRightChooser())
 		    {
 			    newleft->CopyParts(this);
 			    newright->CopyParts(&copy_rhs);
@@ -625,8 +629,8 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
             m_children_coalescence=0;
 		    UpdateCache();
             //select the primaries that are touching
-		    this->m_leftparticle=m_leftchild->SelectRandomSubparticle(rand_u01);
-		    this->m_rightparticle=m_rightchild->SelectRandomSubparticle(rand_u01);
+		    this->m_leftparticle=m_leftchild->SelectRandomSubparticle(rng);
+		    this->m_rightparticle=m_rightchild->SelectRandomSubparticle(rng);
 
             //initialise the variables used to calculate the coalesence ratio
             m_children_vol=m_leftparticle->m_vol+m_rightparticle->m_vol;
@@ -727,31 +731,31 @@ double PAHPrimary::CoalescenceLevel()
 }
 
 //calculates the fractal dimension of the particle and stores it in m_fdim
-void PAHPrimary::CalcFractalDimension()
-{
-	Sweep::Imaging::ParticleImage img;
-    // construct the particle by colliding the primary particles
-	img.constructSubParttree(this);
-	double L,W;
-    // calculate the length and the width of the particle
-    img.LengthWidth(L,W);
-    // calculate the radius of gyration
-    m_Rg=img.RadiusofGyration();
-	m_sqrtLW=sqrt(L*W);
-	m_LdivW=L/W;
-    m_Rg=m_Rg*1e-9;
-    m_fdim=log((double)m_numprimary)/log(2*m_Rg/(m_primarydiam/m_numprimary));
-  /*  if (m_fdim>0 && m_fdim<3)
-    {
-       string filename;
-       filename=cstr(m_fdim)+".3d";
-       ofstream out;
-       out.open(filename.c_str());
-       img.Write3dout(out,0,0,0);
-       out.close();
-    }*/
-
-}
+//void PAHPrimary::CalcFractalDimension()
+//{
+//	Sweep::Imaging::ParticleImage img;
+//    // construct the particle by colliding the primary particles
+//	img.constructSubParttree(this);
+//	double L,W;
+//    // calculate the length and the width of the particle
+//    img.LengthWidth(L,W);
+//    // calculate the radius of gyration
+//    m_Rg=img.RadiusofGyration();
+//	m_sqrtLW=sqrt(L*W);
+//	m_LdivW=L/W;
+//    m_Rg=m_Rg*1e-9;
+//    m_fdim=log((double)m_numprimary)/log(2*m_Rg/(m_primarydiam/m_numprimary));
+//  /*  if (m_fdim>0 && m_fdim<3)
+//    {
+//       string filename;
+//       filename=cstr(m_fdim)+".3d";
+//       ofstream out;
+//       out.open(filename.c_str());
+//       img.Write3dout(out,0,0,0);
+//       out.close();
+//    }*/
+//
+//}
 
 // sets all the childrenproperties to zero, this function is used after the children are coalesced
 void PAHPrimary::ResetChildrenProperties()
@@ -945,20 +949,21 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
 }   
 
 /*!
- * @param[in]   t   Time upto which to update
+ *@param[in]        t       Time upto which to update
+ *@param[in,out]    rng     Random number generator
  *
  * The actual interval over which the update is carried out on a PAH is from
  * lastupdated to t - freezetime.
  */
-void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell &sys)
+void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell &sys, rng_type &rng)
 {
     // Either the primary has two children or it is a leaf of the
     // tree
 	if (m_leftchild!=NULL)
 	{
         // Recurse down to the leaves
-		m_leftchild->UpdatePAHs(t, model,sys);
-		m_rightchild->UpdatePAHs(t, model,sys);
+		m_leftchild->UpdatePAHs(t, model,sys, rng);
+		m_rightchild->UpdatePAHs(t, model,sys, rng);
 	}
     else
     {
@@ -995,7 +1000,8 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
 
             // Here updatePAH function in KMC_ARS model is called.
             // waitingSteps is set to be 1 by dc516, details seeing KMCSimulator::updatePAH()
-            sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1, Sweep::genrand_int, Sweep::genrand_real1, growthfact, (*it)->PAH_ID);
+            sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1,
+                                                   rng, growthfact, (*it)->PAH_ID);
             (*it)->m_numcarbon=(*it)->m_pahstruct->numofC();
 			(*it)->m_numH=(*it)->m_pahstruct->numofH();
             (*it)->lastupdated=t;

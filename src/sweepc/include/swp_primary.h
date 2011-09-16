@@ -237,8 +237,7 @@ public:
     // Combines this primary with another.  This is also the
     // implementation of the + and += operators.
     virtual Primary &Coagulate(const Primary &rhs,
-                               int (*rand_int)(int, int),
-                               real(*rand_u01)());
+                               rng_type &rng);
 
     // This routine sinters the Primary for the given length of
     // time using the provided sintering model.
@@ -246,7 +245,7 @@ public:
         real dt, // Delta-t for sintering to occur.
         Cell &sys, // System which defines primary's environment.
         const Processes::SinteringModel &model, // Sintering model to use.
-        real (*rand_u01)() // Uniform [0,1] sample generator
+        rng_type &rng
         );
 
     // READ/WRITE/COPY.
@@ -262,6 +261,14 @@ public:
         std::istream &in,                 // Input stream.
         const Sweep::ParticleModel &model // Defining particle model.
         );
+
+	// Virtual functions for the SilicaPrimary class (wjm34)
+	// These return 0 for any other type of primary
+	// Return the number of OH sites for a SilicaPrimary
+	virtual int GetSites() const { return 0; }
+
+	// Return the sintering rate for a SilicaPrimary
+	virtual real GetSintRate() const { return 0.0; }
 
 protected:
     // Particle model used to define the Primary.

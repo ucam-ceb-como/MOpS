@@ -73,6 +73,8 @@ Sweep::TreeWeightedCache::TreeWeightedCache()
 , m_d2_m_1_2(0.0)
 , m_weight(0.0)
 , m_weight_mass(0.0)
+, m_sites(0)
+, m_sinterrate(0.0)
 {}
 
 /*!
@@ -104,6 +106,9 @@ Sweep::TreeWeightedCache::TreeWeightedCache(const Sweep::Particle &part)
 
     m_weight = part.getStatisticalWeight();
     m_weight_mass = m_weight * m_mass;
+
+    m_sites = 		part.GetSites();
+    m_sinterrate =  part.GetSintRate();
 }
 
 // OPERATOR OVERLOADS.
@@ -129,6 +134,8 @@ Sweep::TreeWeightedCache &Sweep::TreeWeightedCache::operator+=(const TreeWeighte
     m_d2_m_1_2     += rhs.m_d2_m_1_2;
     m_weight       += rhs.m_weight;
     m_weight_mass  += rhs.m_weight_mass;
+    m_sites        += rhs.m_sites;
+    m_sinterrate   += rhs.m_sinterrate;
 
     return *this;
 }
@@ -158,6 +165,8 @@ void Sweep::TreeWeightedCache::Clear(void)
     m_d2_m_1_2     = 0.0;
     m_weight       = 0.0;
     m_weight_mass  = 0.0;
+    m_sites   = 0;
+    m_sinterrate = 0.0;
 }
 
 /*!
@@ -193,6 +202,10 @@ Sweep::real Sweep::TreeWeightedCache::Property(PropID id) const
         	return m_weight;
         case iWM:
         	return m_weight_mass;
+        case iASN:
+        	return m_sites;
+        case iSintRate:
+        	return m_sinterrate;
 		case iFS:
 			throw std::logic_error("Free surface no longer cached (TreeWeightedCache::Property)");
 			return 0.0;

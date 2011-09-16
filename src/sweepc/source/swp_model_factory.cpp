@@ -70,20 +70,18 @@ using namespace std;
  * @param[in]   time        Time at which particle is being created
  * @param[in]   position    Position at which particle is being created
  * @param[in]   model       Model which defines the meaning of the particles
- * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  *
  * @return      Pointer to dynamically allocated primary (caller must delete)
  */
 Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
                                            const real time, const real position,
-                                           const ParticleModel &model,
-                                           int (*rand_int)(int, int))
+                                           const ParticleModel &model)
 {
     switch (id) {
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolPrimary(time, model);
 		case AggModels::PAH_KMC_ID:
-            return new AggModels::PAHPrimary(time, position, model, rand_int);
+            return new AggModels::PAHPrimary(time, position, model);
 		case AggModels::Silica_ID:
 			return new AggModels::SilicaPrimary(time, model);
         case AggModels::Spherical_ID:
@@ -97,19 +95,17 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
  * @param[in]   id          Model for the aggregate structure of the particle
  * @param[in]   time        Time at which particle is being created
  * @param[in]   model       Model which defines the meaning of the particles
- * @param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
  *
  * @return      Pointer to dynamically allocated primary (caller must delete)
  */
 Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
-                                           const real time, const ParticleModel &model,
-                                           int (*rand_int)(int, int))
+                                           const real time, const ParticleModel &model)
 {
     switch (id) {
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolPrimary(time, model);
 		case AggModels::PAH_KMC_ID:
-            return new AggModels::PAHPrimary(time, model, rand_int);
+            return new AggModels::PAHPrimary(time, model);
 		case AggModels::Silica_ID:
             return new AggModels::SilicaPrimary(time, model);
         case AggModels::Spherical_ID:

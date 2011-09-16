@@ -376,13 +376,11 @@ unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, unsig
  *  from PrimaryParticle.
  *
  * \param[in]       rhs         Primary particle to add to current instance
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  *
  * \return      Reference to the current instance after rhs has been added
  */
-Primary &Primary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
-                            Sweep::real(*rand_u01)())
+Primary &Primary::Coagulate(const Primary &rhs, rng_type &rng)
 {
     // Check if the RHS uses the same particle model.  If not, then
     // just use the assignment operator because you can't add apples 
@@ -415,7 +413,7 @@ Primary &Primary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
 // time using the provided sintering model.
 void Primary::Sinter(real dt, Cell &sys,
                      const Processes::SinteringModel &model,
-                     real (*rand_u01)())
+                     rng_type &rng)
 {
     // Spherical primaries don't sinter.
 	

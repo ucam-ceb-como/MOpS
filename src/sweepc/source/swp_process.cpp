@@ -44,6 +44,8 @@
 #include "swp_process.h"
 #include "swp_mechanism.h"
 #include <stdexcept>
+#include <boost/random/bernoulli_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
 
 using namespace Sweep;
 using namespace Sweep::Processes;
@@ -248,15 +250,19 @@ void Process::RemoveProduct(const std::string &name)
 /*!
  * @param[in]       majr        Majorant rate for event
  * @param[in]       truer       True rate for event
- * @param[in,out]   rand_u01    Pointer to U[0,1] generator
+ * @param[in,out]   rng         Random number generator
  *
  * @pre     truer <= majr
  *
- * @return      True with probability truek/majk, otherwise false
+ * @return      True with probability 1-truer/majr, otherwise false
  */
-bool Process::Fictitious(real majr, real truer, real(*rand_u01)())
+bool Process::Fictitious(real majr, real truer, rng_type &rng)
 {
-    return (majr * rand_u01() >= truer);
+    typedef boost::bernoulli_distribution<real> bernoulli_distrib;
+    bernoulli_distrib fictitiousDistrib(1.0 - truer/majr);
+    boost::variate_generator<rng_type&, bernoulli_distrib> fictitiousGenerator(rng, fictitiousDistrib);
+    const bool isFictitious = fictitiousGenerator();
+    return isFictitious;
 }
 
 

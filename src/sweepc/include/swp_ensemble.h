@@ -167,7 +167,7 @@ public:
     // Adds the given particle to the ensemble.  Returns the new
     // particle's index in the ensemble.  The ensemble then takes
     // control of destruction of the particle.
-    int Add(Particle &sp, int (*rand_int)(int, int));
+    int Add(Particle &sp, rng_type &rng);
 
     //! Removes the particle at the given index from the ensemble.
     void Remove(
@@ -207,13 +207,13 @@ public:
 
     // Select a particle uniformly from the ensemble and returns
     // its index. Returns negative on failure.
-    int Select(int (*rand_int)(int, int)) const;
+    int Select(rng_type &rng) const;
 
     // Randomly selects a particle, weighted by the given particle
     // property index.  The particle properties are those stored in
     // the ParticleData type. Returns particle index on success, otherwise
     // negative.
-    int Select(Sweep::PropID id, int (*rand_int)(int, int), real(*rand_u01)()) const;
+    int Select(Sweep::PropID id, rng_type &rng) const;
 
     // ENSEMBLE CAPACITY AND PARTICLE COUNT.
 

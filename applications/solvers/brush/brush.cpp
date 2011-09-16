@@ -54,7 +54,6 @@
 #include "swp_mech_parser.h"
 #include "mops_timeinterval.h"
 #include "mops_settings_io.h"
-#include "mt19937.h"
 
 #include "geometry1d.h"
 #include "reactor1d.h"
@@ -380,7 +379,7 @@ int main(int argc, char* argv[])
 
             // Read in the population
             populationDetails.particleList =
-                    Mops::Settings_IO::ReadInitialParticles(**it, mech.ParticleMech(), Sweep::genrand_int);
+                    Mops::Settings_IO::ReadInitialParticles(**it, mech.ParticleMech());
 
             initialPopulationPoints.push_back(populationDetails);
         }

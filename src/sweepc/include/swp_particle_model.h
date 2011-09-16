@@ -176,11 +176,10 @@ public:
     // PARTICLE FUNCTIONS.
 
     //! Create a new particle on the heap
-    Particle *const CreateParticle(const real time, int (*rand_int)(int, int)) const;
+    Particle *const CreateParticle(const real time) const;
 
     //! Create a new particle on the heap
-    Particle *const CreateParticle(const real time, const real position,
-                                   int (*rand_int)(int, int)) const;
+    Particle *const CreateParticle(const real time, const real position) const;
 
 
     // READ/WRITE/COPY.

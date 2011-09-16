@@ -26,7 +26,7 @@ echo "========================"
 # Put a negative values at the start so that the number of particles of size 1 comes at index 1
 # These numbers are for a seed of 123 in the Mersenne Twister random number generator
 # Analytic solution is 3344 2866 1842 1053 564
-referenceValues=(-1 3349 2853 1839 1061 564)
+referenceValues=(-1 3284 2869 1910 1032 551)
 simulatedValues=(-1 -1   -1  -1 -1 -1)
 
 # Grep seems to require the file in unix format, even under cygwin

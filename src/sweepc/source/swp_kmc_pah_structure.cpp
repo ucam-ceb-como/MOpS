@@ -48,7 +48,6 @@
 #include "swp_kmc_typedef.h"
 #include "swp_kmc_jump_process.h"
 #include "swp_kmc_pah_process.h"
-#include "rng.h"
 #include "string_functions.h"
 #include <string>
 #include <iostream>

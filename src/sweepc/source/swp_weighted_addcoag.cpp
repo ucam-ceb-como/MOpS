@@ -147,8 +147,7 @@ Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::RateTerms(real t, con
  * \param[in,out]   sys         System to update
  * \param[in]       local_geom  Details of local phsyical layout
  * \param[in]       iterm       Process term responsible for this event
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  *
  * \return      0 on success, otherwise negative.
  * \exception   logic_error     Unrecognised weight rule
@@ -158,8 +157,7 @@ int Sweep::Processes::WeightedAdditiveCoagulation::Perform(
         Sweep::real t, Sweep::Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
-        int (*rand_int)(int, int),
-        Sweep::real(*rand_u01)()) const
+        rng_type &rng) const
 {
     assert(iterm < TYPE_COUNT);
 
@@ -188,7 +186,7 @@ int Sweep::Processes::WeightedAdditiveCoagulation::Perform(
             throw std::logic_error("Unrecognised term, (Sweep, WeightedAdditiveCoagulation::Perform)");
     }
 
-    return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rand_int, rand_u01);
+    return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng);
 }
 
 /**

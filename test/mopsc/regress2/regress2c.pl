@@ -40,7 +40,7 @@ use warnings;
 my @outputFiles = glob("regression2c-nuc-coag-OH*");
 if($#outputFiles > 0) {
   print "Cleaning up old output files\n";
-  system("rm -f" . '"' . join('" "', @outputFiles) . '"');
+  system("rm", "-f", @outputFiles);
 }
 
 # Path of executable should be supplied as first argument to this script
@@ -92,8 +92,8 @@ while(<$momentFile>) {
 # fv 1.3e-12
 
 
-#print "$m0, $m1\n";
-if(abs($m0 - 5.3e16) > 2e15) {
+print "$m0, $m1\n";
+if(abs($m0 - 5.3e16) > 2.7e15) {
   print "Simulated mean M0 was $m0, when 5.3e16 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -101,7 +101,7 @@ if(abs($m0 - 5.3e16) > 2e15) {
   exit 1;
 }
 
-if(abs($m1 - 2.2e-11) > 1e-12) {
+if(abs($m1 - 2.2e-11) > 1.1e-12) {
   print "Simulated mean Fv was $m1, when 2.2e-11 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -111,7 +111,7 @@ if(abs($m1 - 2.2e-11) > 1e-12) {
 
 # Should always be some files to remove
 @outputFiles = glob("regression2c-nuc-coag-OH*");
-system("rm -f" . '"' . join('" "', @outputFiles) . '"');
+system("rm", "-f", @outputFiles);
 
 
 #print "All tests passed\n";

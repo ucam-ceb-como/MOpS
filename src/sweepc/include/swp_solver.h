@@ -74,8 +74,7 @@ public:
         real tstop,     // Stop time for simulation.
         Cell &sys,      // System to solve.
         const Mechanism &mech, // Mechanism to use to solve system.
-        int (*rand_int)(int, int), // Uniform integer samples from a range
-        real (*rand_u01)() // U[0,1] samples
+        rng_type &rng
         );
 
     //! Performs a single stochastic event on the ensemble
@@ -87,8 +86,7 @@ public:
         const Mechanism &mech,  // Mechanism to use.
         const fvector &rates,   // Current process rates as an array.
         real jrate,             // The total jump rate (non-deferred processes).
-        int (*rand_int)(int, int), // Uniform integer samples from a range
-        real (*rand_u01)()      // U[0,1] samples
+        rng_type &rng
         );
 
 protected:

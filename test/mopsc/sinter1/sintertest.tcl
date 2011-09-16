@@ -66,30 +66,27 @@ set test_nosinter_conf [expr sqrt(([lindex $test_nosinter 1] \
                                  / [lindex $test_nosinter 2]) * 3.29]
 
 # Test if it is working!
-# allow 3% tolerance
-set utol 1.03
-set ltol 0.97
 
 set val_finite 26.3
 set val_spherical 42.6
 set val_nosinter 0.49
 
-if {$test_finite_mean < $utol*$val_finite && $test_finite > $ltol*$val_finite} {
+if { abs($test_finite_mean - $val_finite) < 0.3 } {
     puts "Particle diameter $test_finite_mean. Passed! (conf: $test_finite_conf)"
 } else {
     puts "TEST FAILED: diameter was $test_finite_mean, $val_finite expected.(conf: $test_finite_conf)"
     exit 1
 }
 
-if {$test_nosinter_mean < $utol*$val_nosinter && $test_nosinter > $ltol*$val_nosinter} {
+if { abs($test_nosinter_mean - $val_nosinter) < 0.01 } {
     puts "Particle diameter $test_nosinter_mean. Passed! (conf: $test_nosinter_conf)" 
 } else {
-    puts "TEST FAILED: diameter was $test_nosinter, $val_nosinter_mean expected. (conf: $test_nosinter_conf)" 
+    puts "TEST FAILED: diameter was $test_nosinter_mean, $val_nosinter expected. (conf: $test_nosinter_conf)" 
     exit 1
 }
 
 
-if {$test_spherical_mean < $utol*$val_spherical && $test_spherical > $ltol*$val_spherical} {
+if { abs($test_spherical_mean - $val_spherical) < 1.5 } {
     puts "Particle diameter $test_spherical_mean. Passed! (conf: $test_spherical_conf)"
 } else {
     puts "TEST FAILED: diameter was $test_spherical_mean, $val_spherical expected. (conf: $test_spherical_conf)"
