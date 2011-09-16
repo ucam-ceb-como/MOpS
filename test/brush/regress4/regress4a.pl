@@ -111,7 +111,7 @@ if(abs($mean - 8.374e-21) > 1.2e-22) {
   exit 1;
 }
 
-if(abs($var - 2.219e-43) > 3e-44) {
+if(abs($var - 2.219e-43) > 1e-43) {
   print "Simulated M1 variance at x=0.079 was $var, when analytic solution is 2.219e-43 kg^2 m^-6\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
