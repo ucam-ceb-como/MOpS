@@ -114,7 +114,7 @@ Sweep::real Sweep::Processes::ConstantCoagulation::RateTerms(real t, const Cell 
 int ConstantCoagulation::Perform(Sweep::real t, Sweep::Cell &sys, 
                              const Geometry::LocalGeometry1d& local_geom,
                              unsigned int iterm,
-                             rng_type &rng) const
+                             Sweep::rng_type &rng) const
 {
     // Select properties by which to choose particles.
     // Note we need to choose 2 particles.  One particle must be chosen

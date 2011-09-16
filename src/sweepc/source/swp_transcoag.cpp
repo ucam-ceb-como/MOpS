@@ -257,7 +257,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::p
 int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys, 
                                    const Geometry::LocalGeometry1d& local_geom,
                                    unsigned int iterm,
-                                   rng_type &rng) const
+                                   Sweep::rng_type &rng) const
 {
     // Select properties by which to choose particles (-1 means
     // choose uniformly).  Note we need to choose 2 particles.  There
