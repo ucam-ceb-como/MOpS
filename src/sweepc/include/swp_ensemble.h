@@ -104,7 +104,7 @@ class KMCSimulator;}
 
     The binary tree requires that the ensemble capacity must be a power of 2.
 
-    \todo It should not be necessary to #included "particle.h" in this header file
+    \todo It should not be necessary to include "particle.h" in this header file
     because it exposes too much detail of the implementation of particle, when all
     we really need to know is what a vector of pointers to particles looks like.
  */

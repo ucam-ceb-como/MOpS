@@ -165,8 +165,7 @@ real Solver::calcSplitTime(real t, real tstop, real jrate,
  *@param[in]        mech        Mechanism specifying the jump
  *@param[in]        rates       Vector of computational jump rates, one for each jump process
  *@param[in]        jrate       Sum of entries in rates (total jump rate)
- *@param[in,out]    rand_int    Generator of uniform random integers on a range
- *@param[in,out]    rand_u01    Generator of uniform real numbers on
+ *@param[in,out]    rng         Random number generator
  *
  *@pre      t <= t_stop
  *@post     t <= t_stop

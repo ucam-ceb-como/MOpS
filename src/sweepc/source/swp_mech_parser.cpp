@@ -1480,7 +1480,7 @@ void MechParser::readDiffusionProcs(CamXML::Document &xml, Mechanism &mech)
 
 /*!
  *\param[in]        xml         XML document containing a mechanism description
- *\param[inout]     mech        Mechanism to which transport processes will be added
+ *\param[in,out]    mech        Mechanism to which transport processes will be added
  */
 void MechParser::readAdvectionProcs(CamXML::Document &xml, Mechanism &mech)
 {

@@ -48,9 +48,15 @@
 //! Namespace for fast math functions.
 namespace fastMath {
 
-    //! Faster pow functions for integer powers.
+    // Faster pow functions for integer powers.
+
+    //! Squaring by multiplication
     inline double pow2(const double& x) {return x*x;}
+
+    //! Cubing by multiplication
     inline double pow3(const double& x) {return x*pow2(x);}
+
+    //! Raise to fourth power by multiplication
     inline double pow4(const double& x) {return pow2(x)*pow2(x);}
 
 } // End namespace fastMathFunctions
