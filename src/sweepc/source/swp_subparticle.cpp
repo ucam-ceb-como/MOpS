@@ -143,6 +143,7 @@ void SubParticle::SetTime(real t)
 // values changes n times.
 unsigned int SubParticle::Adjust(const fvector &dcomp,
                                  const fvector &dvalues,
+                                 rng_type &rng,
                                  unsigned int n
                                  )
 {
@@ -151,7 +152,7 @@ unsigned int SubParticle::Adjust(const fvector &dcomp,
     // This is a leaf-node sub-particle as it contains a
     // primary particle.  The adjustment is applied to
     // the primary.
-    m = m_primary->Adjust(dcomp, dvalues, n);
+    m = m_primary->Adjust(dcomp, dvalues, rng, n);
 
     // Where-ever the adjustment has been applied this sub-particle must
     // now update its cache.

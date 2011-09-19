@@ -789,7 +789,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
 
                     if (num > 0) {
                         // Do the process to the particle.
-                        (*i)->Perform(t, sys, sp, num);
+                        (*i)->Perform(t, sys, sp, rng, num);
                     }
                 }
             }

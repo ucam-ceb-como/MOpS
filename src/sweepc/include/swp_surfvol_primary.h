@@ -114,6 +114,7 @@ public:
     virtual unsigned int Adjust(
         const fvector &dcomp,   // Composition changes.
         const fvector &dvalues, // Tracker variable changes.
+        rng_type &rng,			// Random number for leaf node
         unsigned int n=1        // Number of times to perform adjustment.
         );
 

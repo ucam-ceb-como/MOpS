@@ -969,7 +969,7 @@ SilicaPrimary &SilicaPrimary::Merge()
 
 
 unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
-		const fvector &dvalues, unsigned int n, rng_type &rng)
+		const fvector &dvalues, rng_type &rng, unsigned int n)
 
 {
     //cout<<"Performing Surface Reaction\n";
@@ -1044,9 +1044,9 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 
         // Select particle
 		if(leftRightChooser())
-			return m_leftparticle->Adjust(dcomp, dvalues, n, rng);
+			return m_leftparticle->Adjust(dcomp, dvalues, rng, n);
 		else
-			return m_rightparticle->Adjust(dcomp, dvalues, n, rng);
+			return m_rightparticle->Adjust(dcomp, dvalues, rng, n);
 	}
 
    	// Update property cache.
@@ -1057,7 +1057,7 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 
 
 unsigned int SilicaPrimary::AdjustIntPar(const fvector &dcomp,
-		const fvector &dvalues, unsigned int n, rng_type &rng)
+		const fvector &dvalues, rng_type &rng, unsigned int n)
 
 {
 	//cout<<"Performing Inter-particle Reaction\n";
@@ -1096,9 +1096,9 @@ unsigned int SilicaPrimary::AdjustIntPar(const fvector &dcomp,
 
         // Select particle
 		if(leftRightChooser())
-			return m_leftparticle->AdjustIntPar(dcomp, dvalues, n, rng);
+			return m_leftparticle->AdjustIntPar(dcomp, dvalues, rng, n);
 		else
-			return m_rightparticle->AdjustIntPar(dcomp, dvalues, n, rng);
+			return m_rightparticle->AdjustIntPar(dcomp, dvalues, rng, n);
 	}
 
 

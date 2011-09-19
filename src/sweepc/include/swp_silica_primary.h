@@ -113,17 +113,16 @@ public:
 	unsigned int Adjust(
 			const fvector &dcomp,
 			const fvector &dvalues,
-			unsigned int n,
-			rng_type &rng
+			rng_type &rng,			// Random number for leaf node
+			unsigned int n
 			);
 
 	// Adjusts the number of primaries for interparticle reaction
 	unsigned int AdjustIntPar(
-			const fvector
-			&dcomp,
+			const fvector &dcomp,
 			const fvector &dvalues,
-			unsigned int n,
-			rng_type &rng
+			rng_type &rng,
+			unsigned int n
 			);
 
 	// Gets the number of active sites for interparticle reaction

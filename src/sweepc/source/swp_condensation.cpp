@@ -288,7 +288,7 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
             // events when there are no deferred processes.
             if (!Fictitious(majr, truer, rng) || !m_mech->AnyDeferred()) {
                 // Adjust particle.
-                sp->Adjust(m_dcomp, m_dvals, 1);
+                sp->Adjust(m_dcomp, m_dvals, rng, 1);
                 sys.Particles().Update(i);
 
                 // Apply changes to gas-phase chemistry.
@@ -307,18 +307,18 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
 
 // Performs the process on a given particle in the system.  Particle
 // is given by index.  The process is performed n times.
-int Condensation::Perform(real t, Cell &sys, Particle &sp,
+int Condensation::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
                           unsigned int n) const
 {
-    unsigned int m = sp.Adjust(m_dcomp, m_dvals, n);
+    unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
     adjustGas(sys, m);
     return 0;
 }
 
 // Adjusts a primary particle according to the rules of the condensation.
-unsigned int Condensation::adjustPri(Sweep::Primary &pri, unsigned int n) const
+unsigned int Condensation::adjustPri(Sweep::Primary &pri, rng_type &rng, unsigned int n) const
 {
-    return pri.Adjust(m_dcomp, m_dvals, n);
+    return pri.Adjust(m_dcomp, m_dvals, rng, n);
 }
 
 
