@@ -367,6 +367,27 @@ unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_t
     return n;
 }
 
+// Adjusts the particle n times for IntParticle reaction
+unsigned int Primary::AdjustIntPar(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
+{
+	unsigned int i = 0;
+
+	// Add the components.
+	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+		m_comp[i] += dcomp[i] * (real)n;
+	}
+
+	// Add the tracker values.
+	for (i=0; i!=min(m_values.size(),dvalues.size()); ++i) {
+		m_values[i] += dvalues[i] * (real)n;
+	}
+
+    // Update property cache.
+    Primary::UpdateCache();
+
+    return n;
+}
+
 /*!
  *  Combines this primary with another.
  *

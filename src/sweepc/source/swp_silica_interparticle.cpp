@@ -315,7 +315,7 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
 
                 if (!Fictitious(majr, truer, rng)) {
                     // Adjust particle.
-                    sp->Adjust(m_dcomp, m_dvals, rng, 1);
+                    sp->AdjustIntPar(m_dcomp, m_dvals, rng, 1);
                     sys.Particles().Update(i);
 
                     // Apply changes to gas-phase chemistry.
@@ -328,7 +328,7 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
         } else {
             // No particle update required, just perform the surface
             // reaction.
-            sp->Adjust(m_dcomp, m_dvals, rng, 1);
+            sp->AdjustIntPar(m_dcomp, m_dvals, rng, 1);
 
             if (sp->IsValid()) {
                 // Tell the binary tree to recalculate
@@ -356,7 +356,7 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
 int InterParticle::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
                           unsigned int n) const
 {
-    unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
+    unsigned int m = sp.AdjustIntPar(m_dcomp, m_dvals, rng, n);
     adjustGas(sys, m);
     return m;
 }

@@ -154,7 +154,15 @@ public:
     unsigned int Adjust(
         const fvector &dcomp,             // Composition changes.
         const fvector &dvalues,           // Tracker variable changes.
-        rng_type &rng,			// Random number for leaf node
+        rng_type &rng,					  // Random number for leaf node
+        unsigned int n                    // Number of times to perform adjustment.
+        );
+
+    // Identical to the Adjust above, but for IntParticle
+    unsigned int AdjustIntPar(
+        const fvector &dcomp,             // Composition changes.
+        const fvector &dvalues,           // Tracker variable changes.
+        rng_type &rng,					  // Random number for leaf node
         unsigned int n                    // Number of times to perform adjustment.
         );
 

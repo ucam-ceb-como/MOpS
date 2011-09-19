@@ -161,6 +161,28 @@ unsigned int SubParticle::Adjust(const fvector &dcomp,
     return m;
 }
 
+// Adjusts the particle with the given composition and
+// values changes n times for IntParticle Reaction.
+unsigned int SubParticle::AdjustIntPar(const fvector &dcomp,
+                                 const fvector &dvalues,
+                                 rng_type &rng,
+                                 unsigned int n
+                                 )
+{
+    unsigned int m = n;
+
+    // This is a leaf-node sub-particle as it contains a
+    // primary particle.  The adjustment is applied to
+    // the primary.
+    m = m_primary->AdjustIntPar(dcomp, dvalues, rng, n);
+
+    // Where-ever the adjustment has been applied this sub-particle must
+    // now update its cache.
+    UpdateCache();
+
+    return m;
+}
+
 /*!
  * Combines this particle with another.
  *
