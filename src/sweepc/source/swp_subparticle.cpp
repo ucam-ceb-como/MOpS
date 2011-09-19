@@ -539,6 +539,10 @@ real SubParticle::Property(PropID id) const
             return 1.0 / std::sqrt(Mass());
         case iD2_M_1_2:
             return CollDiameter() * CollDiameter() / std::sqrt(Mass());
+        case iASN:
+        	return GetSites();
+        case iSintRate:
+        	return GetSintRate();
         case iFS:
             throw std::logic_error("Free surface no longer supported (SubParticle::Property)");
             return 0.0;
