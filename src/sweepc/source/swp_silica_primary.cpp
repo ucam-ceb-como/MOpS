@@ -56,7 +56,9 @@
 
 #include <stdexcept>
 #include <cassert>
-#include <boost/random/uniform_01.hpp>
+#include <boost/random/uniform_smallint.hpp>
+#include <boost/random/bernoulli_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
 
 #include "string_functions.h"
 
@@ -391,11 +393,15 @@ void SilicaPrimary::CopyParts(const SilicaPrimary *source)
  *
  * @return      Pointer to an object representing a physical primary
  */
-SilicaPrimary *SilicaPrimary::SelectRandomSubparticle(Sweep::real(*rand_u01)())
+SilicaPrimary *SilicaPrimary::SelectRandomSubparticle(rng_type &rng)
 {
-	double ran =rand_u01();
-    int target=int(ran*(m_numprimary));
-    return SelectRandomSubparticleLoop(target);
+    // We want to choose an integer uniformly on the range [0, m_numprimary - 1]
+    typedef boost::uniform_smallint<int> uniform_integer;
+    uniform_integer uniformDistrib(0, m_numprimary - 1);
+
+    // Now build an object that can generate a sample and use it
+    boost::variate_generator<rng_type&, uniform_integer> uniformGenerator(rng, uniformDistrib);
+    return SelectRandomSubparticleLoop(uniformGenerator());
 
 }
 /*!
@@ -532,8 +538,7 @@ void SilicaPrimary::AddParent(SilicaPrimary *source)
 /*!
  * @param[in] rhs Pointer to the particle to be coagulated with this particle
 */
-SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
-                                  Sweep::real(*rand_u01)())
+SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 {
 	const SilicaPrimary *rhsparticle = NULL;
 	rhsparticle = dynamic_cast<const AggModels::SilicaPrimary*>(&rhs);
@@ -545,15 +550,17 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int,
 
 
             //Randomly select where to add the second particle
-		    if (rand_u01()>0.5)
+            boost::bernoulli_distribution<> bernoulliDistrib;
+            boost::variate_generator<rng_type &, boost::bernoulli_distribution<> > leftRightChooser(rng, bernoulliDistrib);
+		    if (leftRightChooser())
 		    {
 			    newleft->CopyParts(this);
-				newright->CopyParts(&copy_rhs);
+			    newright->CopyParts(&copy_rhs);
 		    }
 		    else
 		    {
 			    newright->CopyParts(this);
-				newleft->CopyParts(&copy_rhs);
+			    newleft->CopyParts(&copy_rhs);
 		    }
             //set the pointers
 			m_leftchild=newleft;
@@ -576,8 +583,8 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int,
 			UpdateCache();
 
 			//select the primaries that are touching
-		    this->m_leftparticle=m_leftchild->SelectRandomSubparticle(rand_u01);
-		    this->m_rightparticle=m_rightchild->SelectRandomSubparticle(rand_u01);
+		    this->m_leftparticle=m_leftchild->SelectRandomSubparticle(rng);
+		    this->m_rightparticle=m_rightchild->SelectRandomSubparticle(rng);
 
 
 			//initialise the variables used to calculate the sintering level
@@ -962,7 +969,7 @@ SilicaPrimary &SilicaPrimary::Merge()
 
 
 unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
-		const fvector &dvalues, unsigned int n, Sweep::real(*rand_u01)())
+		const fvector &dvalues, unsigned int n, rng_type &rng)
 
 {
     //cout<<"Performing Surface Reaction\n";
@@ -1031,10 +1038,15 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 	//Else this a non-leaf node (not a primary)
 	else
 	{
-		if(rand_u01() < 0.5)
-			return m_leftparticle->Adjust(dcomp, dvalues, n, rand_u01);
+		// Generate random numbers
+        boost::bernoulli_distribution<> bernoulliDistrib;
+        boost::variate_generator<rng_type &, boost::bernoulli_distribution<> > leftRightChooser(rng, bernoulliDistrib);
+
+        // Select particle
+		if(leftRightChooser())
+			return m_leftparticle->Adjust(dcomp, dvalues, n, rng);
 		else
-			return m_rightparticle->Adjust(dcomp, dvalues, n, rand_u01);
+			return m_rightparticle->Adjust(dcomp, dvalues, n, rng);
 	}
 
    	// Update property cache.
@@ -1045,7 +1057,7 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 
 
 unsigned int SilicaPrimary::AdjustIntPar(const fvector &dcomp,
-		const fvector &dvalues, unsigned int n, Sweep::real(*rand_u01)())
+		const fvector &dvalues, unsigned int n, rng_type &rng)
 
 {
 	//cout<<"Performing Inter-particle Reaction\n";
@@ -1078,10 +1090,15 @@ unsigned int SilicaPrimary::AdjustIntPar(const fvector &dcomp,
 	}
 	else
 	{
-		if(rand_u01() < 0.5)
-			return m_leftparticle->AdjustIntPar(dcomp, dvalues, n, rand_u01);
+		// Generate random numbers
+        boost::bernoulli_distribution<> bernoulliDistrib;
+        boost::variate_generator<rng_type &, boost::bernoulli_distribution<> > leftRightChooser(rng, bernoulliDistrib);
+
+        // Select particle
+		if(leftRightChooser())
+			return m_leftparticle->AdjustIntPar(dcomp, dvalues, n, rng);
 		else
-			return m_rightparticle->AdjustIntPar(dcomp, dvalues, n, rand_u01);
+			return m_rightparticle->AdjustIntPar(dcomp, dvalues, n, rng);
 	}
 
 
@@ -1146,7 +1163,7 @@ void SilicaPrimary::UpdateCache(void)
     UpdateCache(this);
 }
 
-
+// Check if the sintering level is above 0.95, merge and update cache if true
 bool SilicaPrimary::CheckSintering()
 {
 	bool hassintered=false;
