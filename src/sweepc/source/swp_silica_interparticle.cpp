@@ -155,7 +155,7 @@ real InterParticle::Rate(real t, const Cell &sys) const
 
 	// Get the total number of OH sites from cache
 	int numOH = sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid));
-	cout << "[total] numOH    = " << numOH << endl;
+
 	// Rate of surface reaction
 	real R_surf = m_arr.A*chemRatePart(sys.MoleFractions(), sys.Density())*pow(T, m_arr.n)
 			* exp(-m_arr.E / (R * T)) * numOH;
@@ -165,7 +165,7 @@ real InterParticle::Rate(real t, const Cell &sys) const
 
 	// Get total surface area from cache
 	double surface = sys.Particles().GetSum(static_cast<Sweep::PropID>(Sweep::iS));
-	cout << "[total] surface  = " << surface << endl;
+
 	// Check if particle surface area exists. If not, set the sintering rate to zero.
 	if (surface == 0) {
 		surface = 1;
@@ -174,8 +174,6 @@ real InterParticle::Rate(real t, const Cell &sys) const
 		// Get total sintering rate from cache.
 		total_sint_rate = sys.Particles().GetSum(static_cast<Sweep::PropID>(Sweep::iSintRate));
 	}
-
-	cout << "[total] sintrate = " << total_sint_rate << endl;
 
 	// Calculate the total surface density of sites
 	real rho_s =  numOH/surface;
@@ -189,12 +187,10 @@ real InterParticle::Rate(real t, const Cell &sys) const
 
 	if (m_mech->AnyDeferred())
 	{
-    	cout << "[rate] ip =  " << rate * m_majfactor << endl;
         return rate * m_majfactor;
     }
 	else
 	{
-    	cout << "[rate] ip =  " << rate << endl;
         return rate;
     }
 }
@@ -319,7 +315,7 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
 
                 if (!Fictitious(majr, truer, rng)) {
                     // Adjust particle.
-                    sp->Adjust(m_dcomp, m_dvals, 1);
+                    sp->AdjustIntPar(m_dcomp, m_dvals, rng, 1);
                     sys.Particles().Update(i);
 
                     // Apply changes to gas-phase chemistry.
@@ -332,7 +328,7 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
         } else {
             // No particle update required, just perform the surface
             // reaction.
-            sp->Adjust(m_dcomp, m_dvals, 1);
+            sp->AdjustIntPar(m_dcomp, m_dvals, rng, 1);
 
             if (sp->IsValid()) {
                 // Tell the binary tree to recalculate
@@ -357,10 +353,10 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
 // Performs the process on a given particle in the system.  Particle
 // is given by index.  The process is performed n times.
 
-int InterParticle::Perform(real t, Cell &sys, Particle &sp,
+int InterParticle::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
                           unsigned int n) const
 {
-    unsigned int m = sp.Adjust(m_dcomp, m_dvals, n);
+    unsigned int m = sp.AdjustIntPar(m_dcomp, m_dvals, rng, n);
     adjustGas(sys, m);
     return m;
 }

@@ -143,6 +143,7 @@ void SubParticle::SetTime(real t)
 // values changes n times.
 unsigned int SubParticle::Adjust(const fvector &dcomp,
                                  const fvector &dvalues,
+                                 rng_type &rng,
                                  unsigned int n
                                  )
 {
@@ -151,7 +152,29 @@ unsigned int SubParticle::Adjust(const fvector &dcomp,
     // This is a leaf-node sub-particle as it contains a
     // primary particle.  The adjustment is applied to
     // the primary.
-    m = m_primary->Adjust(dcomp, dvalues, n);
+    m = m_primary->Adjust(dcomp, dvalues, rng, n);
+
+    // Where-ever the adjustment has been applied this sub-particle must
+    // now update its cache.
+    UpdateCache();
+
+    return m;
+}
+
+// Adjusts the particle with the given composition and
+// values changes n times for IntParticle Reaction.
+unsigned int SubParticle::AdjustIntPar(const fvector &dcomp,
+                                 const fvector &dvalues,
+                                 rng_type &rng,
+                                 unsigned int n
+                                 )
+{
+    unsigned int m = n;
+
+    // This is a leaf-node sub-particle as it contains a
+    // primary particle.  The adjustment is applied to
+    // the primary.
+    m = m_primary->AdjustIntPar(dcomp, dvalues, rng, n);
 
     // Where-ever the adjustment has been applied this sub-particle must
     // now update its cache.
@@ -516,6 +539,10 @@ real SubParticle::Property(PropID id) const
             return 1.0 / std::sqrt(Mass());
         case iD2_M_1_2:
             return CollDiameter() * CollDiameter() / std::sqrt(Mass());
+        case iASN:
+        	return GetSites();
+        case iSintRate:
+        	return GetSintRate();
         case iFS:
             throw std::logic_error("Free surface no longer supported (SubParticle::Property)");
             return 0.0;

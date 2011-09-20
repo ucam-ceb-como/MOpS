@@ -231,6 +231,15 @@ public:
     virtual unsigned int Adjust(
         const fvector &dcomp,   // Composition changes.
         const fvector &dvalues, // Tracker variable changes.
+        rng_type &rng,			// Random number for leaf node
+        unsigned int n=1        // Number of times to perform adjustment.
+        );
+
+    // As for Adjust, but applies to SilicaPrimary's IntParticle reaction
+    virtual unsigned int AdjustIntPar(
+        const fvector &dcomp,   // Composition changes.
+        const fvector &dvalues, // Tracker variable changes.
+        rng_type &rng,			// Random number for leaf node
         unsigned int n=1        // Number of times to perform adjustment.
         );
 

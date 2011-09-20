@@ -347,7 +347,28 @@ bool Primary::IsValid() const {
 // tracker values changes n times.  If the particle cannot be adjust
 // n times, then this function returns the number of times
 // it was adjusted.
-unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, unsigned int n)
+unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
+{
+	unsigned int i = 0;
+
+	// Add the components.
+	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+		m_comp[i] += dcomp[i] * (real)n;
+	}
+
+	// Add the tracker values.
+	for (i=0; i!=min(m_values.size(),dvalues.size()); ++i) {
+		m_values[i] += dvalues[i] * (real)n;
+	}
+
+    // Update property cache.
+    Primary::UpdateCache();
+
+    return n;
+}
+
+// Adjusts the particle n times for IntParticle reaction
+unsigned int Primary::AdjustIntPar(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
 {
 	unsigned int i = 0;
 

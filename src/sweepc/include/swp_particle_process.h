@@ -175,6 +175,7 @@ public:
         real t,        // Current time (s).
         Cell &sys,     // System to which the particle belongs.
         Particle &sp,  // Particle for which to perform process.
+        rng_type &rng,
         unsigned int n // Number of times to perform the process.
         ) const = 0;
 

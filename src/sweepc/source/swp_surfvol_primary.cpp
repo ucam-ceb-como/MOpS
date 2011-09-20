@@ -196,7 +196,7 @@ real SurfVolPrimary::PP_Diameter(void) const
 // tracker values changes n times.  If the particle cannot be adjust
 // n times, then this function returns the number of times
 // it was adjusted.
-unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues, 
+unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_type &rng,
                                     unsigned int n)
 {
     // Calculate change in volume.
@@ -221,7 +221,7 @@ unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues
     real s = m_surf + (2.0 * dvol * rad);
 
     // Adjust the particle assuming that it is spherical.
-    Primary::Adjust(dcomp, dvalues, n);
+    Primary::Adjust(dcomp, dvalues, rng, n);
 
     // Set correct surface area, which was incorrectly set by
     // Primary::Adjust.
