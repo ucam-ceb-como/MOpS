@@ -52,11 +52,10 @@
 #include "swp_kmc_pah_process.h"
 #include "swp_kmc_pah_structure.h"
 #include "swp_PAH.h"
-#include "poisson.hpp"
 
 #include <stdexcept>
 #include <cassert>
-#include <boost/random/uniform_01.hpp>
+#include <boost/random/poisson_distribution.hpp>
 
 #include "string_functions.h"
 
@@ -89,7 +88,7 @@ SilicaPrimary::SilicaPrimary() : Primary(),
     m_children_sintering(0),
 	//Parent node is the top node of the tree
 	m_parent(NULL),
-	m_allparents(NULL),
+	m_allparents(0),
 	//Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
@@ -135,7 +134,7 @@ SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
     m_children_sintering(0),
 	//Parent node is the top node of the tree
 	m_parent(NULL),
-	m_allparents(NULL),
+	m_allparents(0),
 	//Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
@@ -192,7 +191,7 @@ SilicaPrimary::SilicaPrimary(const real time, const real position,
     m_children_sintering(0),
 	//Parent node is the top node of the tree
 	m_parent(NULL),
-	m_allparents(NULL),
+	m_allparents(0),
 	//Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
@@ -238,7 +237,7 @@ SilicaPrimary::SilicaPrimary(real time, const Sweep::ParticleModel &model, bool 
     m_children_sintering(0),
 	//Parent node is the top node of the tree
 	m_parent(NULL),
-	m_allparents(NULL),
+	m_allparents(0),
 	//Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
@@ -631,9 +630,6 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 		// (smaller scale = higher precision).
 		real scale = 0.01;
 
-            // Need a U[0,1) generator for the poisson deviates
-		    boost::uniform_01<rng_type&> uniformGenerator(rng);
-
 			// Perform integration loop.
 			while (t1 < tstop)
 			{
@@ -646,7 +642,8 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
                 const real poissonMean = r * (t2 - t1) / (scale*dAmax);
 
                 if(poissonMean > 0.0) {
-                    unsigned n = Utils::ignpoi(poissonMean, uniformGenerator);
+                    boost::random::poisson_distribution<unsigned, real> repeatDistribution(poissonMean);
+                    unsigned n = repeatDistribution(rng);
                     // Adjust the surface area.
                     if (n > 0) {
                         m_children_surf -= (real)n * scale * dAmax;

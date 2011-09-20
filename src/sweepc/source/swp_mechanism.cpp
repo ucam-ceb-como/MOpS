@@ -47,11 +47,10 @@
 #include "swp_tempwriteXmer.h"
 
 #include "geometry1d.h"
-#include "poisson.hpp"
 
 #include <stdexcept>
 #include <cassert>
-#include <boost/random/uniform_01.hpp>
+#include <boost/random/poisson_distribution.hpp>
 
 #include "string_functions.h"
 #include "swp_particle.h"
@@ -767,7 +766,6 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
     // If there are no deferred processes then stop right now.
     if (m_anydeferred) {
         PartProcPtrVector::const_iterator i;
-        unsigned int num;
         real rate, dt;
 
         while ((sp.LastUpdateTime() < t) && sp.IsValid()) {
@@ -783,13 +781,15 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
                     rate = (*i)->Rate(t, sys, sp) * dt;
 
                     // Use a Poission deviate to calculate number of
-                    // times to perform the process.
-                    boost::uniform_01<rng_type &> uniformGenerator(rng);
-                    num = Utils::ignpoi(rate, uniformGenerator);
-
-                    if (num > 0) {
-                        // Do the process to the particle.
-                        (*i)->Perform(t, sys, sp, num);
+                    // times to perform the process.  If the rate is
+                    // 0 then the count is guaranteed to be 0
+                    if(rate > 0) {
+                         boost::random::poisson_distribution<unsigned, real> repeatDistrib(rate);
+                         unsigned num = repeatDistrib(rng);
+                         if (num > 0) {
+                             // Do the process to the particle.
+                             (*i)->Perform(t, sys, sp, num);
+                         }
                     }
                 }
             }

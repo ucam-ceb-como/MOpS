@@ -49,10 +49,9 @@
 #include "swp_aggmodel_type.h"
 #include "swp_model_factory.h"
 #include "swp_surfvol_cache.h"
-#include "poisson.hpp"
 
 #include <stdexcept>
-#include <boost/random/uniform_01.hpp>
+#include <boost/random/poisson_distribution.hpp>
 
 using namespace Sweep;
 using namespace Sweep::AggModels;
@@ -292,9 +291,6 @@ void SurfVolPrimary::Sinter(real dt, Cell &sys,
     // (smaller scale = higher precision).
     real scale = 0.01;
 
-    // Will need U[0,1) deviates for the Poisson deviates
-    boost::uniform_01<rng_type &> uniformGenerator(rng);
-
     // Perform integration loop.
     while (t1 < tstop) {
         // Calculate sintering rate.
@@ -307,18 +303,20 @@ void SurfVolPrimary::Sinter(real dt, Cell &sys,
 
             // Approximate sintering by a poisson process.  Calculate
             // number of poisson events.
-            int n;
+            real mean;
             if (tstop > (t1+delt)) {
                 // A sub-step, we have changed surface by dAmax, on average
-                n = Utils::ignpoi(1.0 / scale, uniformGenerator);
+                mean = 1.0 / scale;
             } else {
                 // Step until end.  Calculate degree of sintering explicitly.
-                n = Utils::ignpoi(r * (tstop - t1) / (scale*dAmax), uniformGenerator);
+                mean = r * (tstop - t1) / (scale*dAmax);
             }
+            boost::random::poisson_distribution<unsigned, real> repeatDistribution(mean);
+            const unsigned n = repeatDistribution(rng);
 
             // Adjust the surface area.
             if (n > 0) {
-                m_surf -= (real)n * scale * dAmax;
+                m_surf -= n * scale * dAmax;
                 // Check that primary is not completely sintered.
                 if (m_surf <= m_sphsurf) {
                     m_surf = m_sphsurf;
