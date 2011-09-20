@@ -37,7 +37,7 @@ def LoadPart (inpfile):
 			dpri_id = i
 		i=i+1
 	del i
-	print dcol_id
+	
 	# Initialise data storage arrays
 	m0 = []
 	n_si = []
@@ -101,7 +101,7 @@ data_comp = [74.5,7.27,2.15e14,0.545,0.103]
 # Errors list represents 1/2 distance to 99.9% CI
 # Found for running the test case 5 times
 # i.e. min bound = mean - err, max = mean + err for full 99.9% CI.
-data_errs = [2.65,1.12,1.5e13,0.027,0.022]
+data_errs = [2.65,1.12,1.5e13,0.027,0.030]
 data_fail = [0,0,0,0,0]
 
 # Check if the test results exceed error margins
