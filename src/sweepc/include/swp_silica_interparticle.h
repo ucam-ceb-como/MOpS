@@ -92,17 +92,10 @@ public:
     // the rate of this process is proportional.
     unsigned int PropertyID(void) const;
 
-    // Returns the ID number of the particle number for which the
-    // PropertyID is valid.  The mechanism should check that this
-    // model is enabled.
-    SubModels::SubModelType ModelID(void) const;
-
     // Sets the ID number of the particle property to which
     // the rate of this process is proportional.
     void SetPropertyID(
-        unsigned int i,   // ID number of particle property.
-        SubModels::SubModelType modelid // The model for which this ID is valid.
-          = SubModels::BasicModel_ID //  - Default model is basic particle properties.
+        Sweep::PropID pid   // ID number of particle property.
         );
 
 
@@ -112,14 +105,6 @@ public:
     // Returns the Arrhenius parameter.
     Sprog::Kinetics::ARRHENIUS &Arrhenius();
     const Sprog::Kinetics::ARRHENIUS &Arrhenius() const;
-
-	// Particle property to which the rate of the process is
-    // proportional.
-    unsigned int m_pid;
-
-	// Particle model for which the above particle property ID
-    // is valid.
-    SubModels::SubModelType m_modelid;
 
     // Sets the Arrhenius parameters.
     void SetArrhenius(Sprog::Kinetics::ARRHENIUS &arr);
@@ -210,15 +195,17 @@ public:
          const Sweep::Mechanism &mech // Parent mechanism.
          );
 
- protected:
-     // Number of terms in the InterParticle rate expression.
-     //static const unsigned int TERM_COUNT;
+protected:
+    // Surface reaction majorant parameter.  The true rate
+    // is multiplied by this parameter to get the majorised rate.
+    const static real m_majfactor;
 
-     // InterParticle majorant parameter.  The true rate
-     // is multiplied by this parameter to get the majorised rate.
-     static const real m_majfactor;
+    // Arrhenius rate parameters.
+    Sprog::Kinetics::ARRHENIUS m_arr;
 
-     Sprog::Kinetics::ARRHENIUS m_arr;; // Arrhenius Rate constant.
+    // Particle property to which the rate of the process is
+    // proportional.
+    Sweep::PropID m_pid;
 
      // Default constructor is protected to prevent InterParticles being
      // defined without knowledge of the parent mechanism.

@@ -70,7 +70,7 @@ echo "========================"
 
 
 dos2unix "silica-part.csv"
-python test-silica.py
+perl test-silica.pl
 postprocessResult=$?
 rm -f silica*
 if((postprocessResult!=0)) 
