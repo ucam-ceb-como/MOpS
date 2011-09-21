@@ -103,10 +103,6 @@ public:
     Sprog::Kinetics::ARRHENIUS &Arrhenius();
     const Sprog::Kinetics::ARRHENIUS &Arrhenius() const;
 
-	// Particle property to which the rate of the process is
-    // proportional.
-    unsigned int m_pid;
-
     // Sets the Arrhenius parameters.
     void SetArrhenius(Sprog::Kinetics::ARRHENIUS &arr);
 
@@ -196,15 +192,16 @@ public:
          const Sweep::Mechanism &mech // Parent mechanism.
          );
 
- protected:
-     // Number of terms in the InterParticle rate expression.
-     //static const unsigned int TERM_COUNT;
+protected:
+    // Surface reaction majorant parameter.  The true rate
+    // is multiplied by this parameter to get the majorised rate.
+    const static real m_majfactor;
 
-     // InterParticle majorant parameter.  The true rate
-     // is multiplied by this parameter to get the majorised rate.
-     static const real m_majfactor;
+    // Arrhenius rate parameters.
+    Sprog::Kinetics::ARRHENIUS m_arr;
 
-     Sprog::Kinetics::ARRHENIUS m_arr;; // Arrhenius Rate constant.
+    //! Particle property to which the rate of the process is proportional.
+    Sweep::PropID m_pid;
 
      // Default constructor is protected to prevent InterParticles being
      // defined without knowledge of the parent mechanism.

@@ -61,7 +61,7 @@ const real InterParticle::m_majfactor = 2.0;
 
 // Default constructor (protected).
 InterParticle::InterParticle(void)
-: ParticleProcess(), m_arr(0.0,0.0,0.0), m_pid(0)
+: ParticleProcess(), m_arr(0.0,0.0,0.0)
 {
     m_defer = true;
     m_name = "InterParticle";
@@ -69,7 +69,7 @@ InterParticle::InterParticle(void)
 
 // Initialising constructor.
 InterParticle::InterParticle(const Sweep::Mechanism &mech)
-: ParticleProcess(mech), m_arr(0.0,0.0,0.0), m_pid(0)
+: ParticleProcess(mech), m_arr(0.0,0.0,0.0)
 {
     // Assume the InterParticle is simulated as a deferred process (LPDA).
     m_defer = true;
@@ -127,11 +127,10 @@ unsigned int InterParticle::PropertyID(void) const {return m_pid;}
 
 // Sets the ID number of the particle property to which
 // the rate of this process is proportional.
-void InterParticle::SetPropertyID(Sweep::PropID pid)
+void InterParticle::SetPropertyID(PropID pid)
 {
     m_pid = pid;
 }
-
 
 
 // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
@@ -227,9 +226,6 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
 	}
 
 	real sint_comp = (sint_rate*rho_s)/(2.0);
-
-	// Paticle dependence.
-    rate *= numOH;
 
 	// Sintering rate dependency
 	rate -= sint_comp;
@@ -380,9 +376,6 @@ void InterParticle::Serialize(std::ostream &out) const
         unsigned int n = (unsigned int)m_pid;
         out.write((char*)&n, sizeof(n));
 
-        // Write the model ID.
-        //n = (unsigned int)m_modelid;
-        //out.write((char*)&n, sizeof(n));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, InterParticle::Serialize).");
