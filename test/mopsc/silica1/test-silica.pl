@@ -86,45 +86,45 @@ $si_to_o = $num_si / $num_o;
 ####################################################
 # Comparison with test values (Boost 1.47)
 ####################################################
-# L = 1 in mops.inx:     L = 5, 99.9% CI shown:
+# 99.9% CI shown for 10 runs
 ####################################################
-# m0 = 2.10e14           m0 = 2.11e14 +/- 8.08e12
-# dcol = 78.8 nm         dcol = 76.3 +/- 2.70
-# dpri = 7.90 nm         dpri = 8.05 +/- 0.78
-# sl = 0.079             sl = 0.100 +/- 0.025
-# si_to_o = 0.540        si_to_o = 0.544 +/- 0.050
+# m0 = 2.10e14 +/- 3.3e12
+# dcol = 78.8 +/- 1.26 nm
+# dpri = 7.90 +/- 0.3 nm
+# sl = 0.079 +/- 0.010
+# si_to_o = 0.549 =/- 0.020
 ####################################################
 
-if(abs($m0 -  2.11e14) > 8.08e12) {
-  print "Simulated mean M0 was $m0, when 2.11e14m^-3 expected\n";
+if(abs($m0 -  2.10e14) > 3.3e12) {
+  print "Simulated mean M0 was $m0, when 2.10e14m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
-if(abs($dcol -  76.3) > 2.70) {
-  print "Simulated mean dcol was $dcol, when 75.3 nm expected\n";
+if(abs($dcol -  78.8) > 1.26) {
+  print "Simulated mean dcol was $dcol, when 78.8 nm expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 2;
 }
-if(abs($dpri -  8.05) > 0.78) {
+if(abs($dpri -  7.90) > 0.30) {
   print "Simulated mean dpri was $dpri, when 7.90 nm expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 3;
 }
-if(abs($sl -  0.100) > 0.025) {
-  print "Simulated mean sl was $sl, when 0.100 expected\n";
+if(abs($sl -  0.079) > 0.010) {
+  print "Simulated mean sl was $sl, when 0.079 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 4;
 }
-if(abs($si_to_o -  0.544) > 0.050) {
-  print "Simulated mean si_to_o was $si_to_o, when 0.545 expected\n";
+if(abs($si_to_o -  0.549) > 0.020) {
+  print "Simulated mean si_to_o was $si_to_o, when 0.549 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
