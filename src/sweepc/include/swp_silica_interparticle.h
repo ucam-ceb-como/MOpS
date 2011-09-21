@@ -92,20 +92,10 @@ public:
     // the rate of this process is proportional.
     unsigned int PropertyID(void) const;
 
-    // Returns the ID number of the particle number for which the
-    // PropertyID is valid.  The mechanism should check that this
-    // model is enabled.
-    SubModels::SubModelType ModelID(void) const;
-
-    // Sets the ID number of the particle property to which
-    // the rate of this process is proportional.
+    //! ID number of the particle property to which the rate of this process is proportional.
     void SetPropertyID(
-        unsigned int i,   // ID number of particle property.
-        SubModels::SubModelType modelid // The model for which this ID is valid.
-          = SubModels::BasicModel_ID //  - Default model is basic particle properties.
+        Sweep::PropID pid
         );
-
-
 
 	// RATE CONSTANT AND PARAMETERS.
 
@@ -116,10 +106,6 @@ public:
 	// Particle property to which the rate of the process is
     // proportional.
     unsigned int m_pid;
-
-	// Particle model for which the above particle property ID
-    // is valid.
-    SubModels::SubModelType m_modelid;
 
     // Sets the Arrhenius parameters.
     void SetArrhenius(Sprog::Kinetics::ARRHENIUS &arr);
@@ -225,8 +211,8 @@ public:
      InterParticle(void);
 
 }; // InterParticle class
-}; // Process namespace
-}; // Sweep namespace
+}  // Process namespace
+}  // Sweep namespace
 
 #endif
 

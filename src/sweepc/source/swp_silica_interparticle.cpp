@@ -61,7 +61,7 @@ const real InterParticle::m_majfactor = 2.0;
 
 // Default constructor (protected).
 InterParticle::InterParticle(void)
-: ParticleProcess(), m_arr(0.0,0.0,0.0), m_pid(0), m_modelid(SubModels::BasicModel_ID)
+: ParticleProcess(), m_arr(0.0,0.0,0.0), m_pid(0)
 {
     m_defer = true;
     m_name = "InterParticle";
@@ -69,7 +69,7 @@ InterParticle::InterParticle(void)
 
 // Initialising constructor.
 InterParticle::InterParticle(const Sweep::Mechanism &mech)
-: ParticleProcess(mech), m_arr(0.0,0.0,0.0), m_pid(0), m_modelid(SubModels::BasicModel_ID)
+: ParticleProcess(mech), m_arr(0.0,0.0,0.0), m_pid(0)
 {
     // Assume the InterParticle is simulated as a deferred process (LPDA).
     m_defer = true;
@@ -104,7 +104,6 @@ InterParticle &InterParticle::operator=(const InterParticle &rhs)
         ParticleProcess::operator =(rhs);
         m_arr    = rhs.m_arr;
 		m_pid     = rhs.m_pid;
-        m_modelid = rhs.m_modelid;
     }
     return *this;
 }
@@ -126,17 +125,11 @@ void InterParticle::SetArrhenius(Sprog::Kinetics::ARRHENIUS &arr) {m_arr = arr;}
 // the rate of this process is proportional.
 unsigned int InterParticle::PropertyID(void) const {return m_pid;}
 
-// Returns the ID number of the particle number for which the
-// PropertyID is valid.  The mechanism should check that this
-// model is enabled.
-SubModels::SubModelType InterParticle::ModelID(void) const {return m_modelid;}
-
 // Sets the ID number of the particle property to which
 // the rate of this process is proportional.
-void InterParticle::SetPropertyID(unsigned int i, SubModels::SubModelType modelid)
+void InterParticle::SetPropertyID(Sweep::PropID pid)
 {
-    m_pid     = i;
-    m_modelid = modelid;
+    m_pid = pid;
 }
 
 
@@ -236,14 +229,7 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
 	real sint_comp = (sint_rate*rho_s)/(2.0);
 
 	// Paticle dependence.
-    if (m_modelid == SubModels::BasicModel_ID)
-	{
-        rate *= numOH;
-    }
-	else
-	{
-        throw std::logic_error("Submodels no longer supported (Sweep, InterParticle::Rate)");
-    }
+    rate *= numOH;
 
 	// Sintering rate dependency
 	rate -= sint_comp;

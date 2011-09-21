@@ -42,8 +42,6 @@
 
 #include "swp_model_factory.h"
 #include "swp_primary.h"
-#include "swp_submodel.h"
-#include "swp_submodel_type.h"
 #include "swp_aggmodel_type.h"
 #include "swp_aggmodel_cache.h"
 #include "swp_surfvol_cache.h"
@@ -176,53 +174,6 @@ void ModelFactory::WritePrimary(const Primary &pri, std::ostream &out)
     }
 }
 
-
-// SUB-MODEL DATA CREATION.
-
-// Creates a new sub-model data object of the given type.
-SubModels::SubModel *const ModelFactory::Create(SubModels::SubModelType id,
-                                                Primary &parent)
-{
-    switch (id) {
-        case SubModels::CNT_Model_ID:
-        default:
-            throw invalid_argument("Invalid model ID (Sweep, "
-                                   "ModelFactory::Create).");
-    }
-}
-
-
-// SUB-MODEL STREAM INPUT.
-
-// Reads a sub-model from a binary stream.  The first item read
-// is the model ID which tells the ModelFactory what type
-// of model to read.
-SubModels::SubModel *const ModelFactory::Read(std::istream &in,
-                                              Primary &parent)
-{
-    if (in.good()) {
-        SubModels::SubModel *model = NULL;
-
-        // Read the model type from the input stream.
-        unsigned int type;
-        in.read((char*)&type, sizeof(type));
-
-        // Read a model of this particular type.  This will throw
-        // an exception if the type is invalid.
-        switch ((SubModels::SubModelType)type) {
-            case SubModels::CNT_Model_ID:
-            default:
-                throw runtime_error("Invalid model type read from "
-                                    "input stream (Sweep, ModelFactory::Read).");
-        }
-
-        return model;
-    } else {
-        throw invalid_argument("Input stream not ready "
-                               "(Sweep, ModelFactory::Read).");
-    }
-}
-
 // Reads model stats from a binary stream.  The first item read
 // is the model ID which tells the ModelFactory what type
 // of model stats to read.
@@ -235,16 +186,7 @@ Stats::IModelStats *const ModelFactory::ReadStats(std::istream &in, const Partic
         unsigned int type;
         in.read((char*)&type, sizeof(type));
 
-        // Read a model of this particular type.  This will throw
-        // an exception if the type is invalid.
-        switch ((SubModels::SubModelType)type) {
-            case SubModels::BasicModel_ID:
-                stats = new Stats::ParticleStats(in, model);
-                break;
-            default:
-                throw runtime_error("Invalid model type read from "
-                                    "input stream (Sweep, ModelFactory::ReadStats).");
-        }
+        stats = new Stats::ParticleStats(in, model);
 
         return stats;
     } else {
@@ -255,23 +197,6 @@ Stats::IModelStats *const ModelFactory::ReadStats(std::istream &in, const Partic
 
 
 // STREAM OUTPUT.
-
-// Writes a model, along with its ID to an output stream.
-void ModelFactory::Write(const SubModels::SubModel &model, std::ostream &out)
-{
-    if (out.good()) {
-        // Write the model Serial signature type to the stream.
-        unsigned int type = (unsigned int)model.ID();
-        out.write((char*)&type, sizeof(type));
-
-        // Serialize the model object.
-        model.Serialize(out);
-    } else {
-        throw invalid_argument("Output stream not ready "
-                               "(Sweep, ModelFactory::Write).");
-    }
-}
-
 
 // Writes a model stats object, along with its ID, to an output stream.
 void ModelFactory::WriteStats(const Stats::IModelStats &stats, std::ostream &out)

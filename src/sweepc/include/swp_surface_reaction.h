@@ -94,15 +94,9 @@ public:
     // the rate of this process is proportional.
     Sweep::PropID PropertyID(void) const;
 
-    // Returns the ID number of the particle number for which the
-    // PropertyID is valid.  The mechanism should check that this
-    // model is enabled.
-    SubModels::SubModelType ModelID(void) const;
-
-    // Sets the ID number of the particle property to which
-    // the rate of this process is proportional.
+    //! ID number of the particle property to which the rate of this process is proportional.
     void SetPropertyID(
-        Sweep::PropID pid   // ID number of particle property.
+        Sweep::PropID pid
         );
 
 
@@ -213,7 +207,7 @@ protected:
         unsigned int n=1     // Number of times to perform adjustment.
         ) const;
 };
-};
+}
 }
 
 #endif
