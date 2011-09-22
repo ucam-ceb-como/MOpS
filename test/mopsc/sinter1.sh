@@ -59,17 +59,19 @@ fi
 cd sinter1
 
 $program -p -strang -rr mops-finite.inx -s sweep-finite.xml
+r1=$?
 $program -p -strang -rr mops-spherical.inx -s sweep-spherical.xml
+r2=$?
 $program -p -strang -rr mops-nosinter.inx -s sweep-nosinter.xml
-simulationResult=$?
+r3=$?
 
-if((simulationResult==0)) 
+if((r1==0 && r2==0 && r3==0))
 then
   echo "Finished simulation"
 else
   echo "Simulation failed"
   cd ..
-  exit $simulationResult
+  exit 2
 fi
 echo "========================"
 

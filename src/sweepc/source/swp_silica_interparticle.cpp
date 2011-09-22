@@ -199,6 +199,7 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
 	// Rate constant.
     real rate = m_arr.A;
 
+    // Do calculation for surface-reaction part of rate:
     // Chemical species concentration dependence.
     rate *= chemRatePart(sys.MoleFractions(), sys.Density());
 
@@ -206,12 +207,14 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
     real T = sys.Temperature();
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
+	// Get the number of OH sites from cache
+	int numOH = sp.Property(static_cast<Sweep::PropID>(m_pid));
+	rate *= numOH;
+
+	// Do calculation for sintering part of rate:
     // Forward-declare some parameters
     real sint_rate = 0;
     double rho_s = 0;
-
-	// Get the number of OH sites from cache
-	int numOH = sp.Property(static_cast<Sweep::PropID>(m_pid));
 
 	// Get surface area from cache
 	double surface = sp.Property(static_cast<Sweep::PropID>(Sweep::iS));
@@ -224,6 +227,7 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
 		//Calculate sintering contribution
 		sint_rate = (sp.Property(static_cast<Sweep::PropID>(Sweep::iSintRate)));
 	}
+
 
 	real sint_comp = (sint_rate*rho_s)/(2.0);
 
