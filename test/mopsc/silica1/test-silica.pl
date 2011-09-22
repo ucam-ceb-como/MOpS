@@ -82,6 +82,7 @@ while(<$momentFile>) {
 $dcol = 1.0e9 * $dcol;
 $si_to_o = $num_si / $num_o;
 #print "si/o: $si_to_o\n";
+print "$m0 $dcol $dpri $sl $si_to_o\n";
 
 ####################################################
 # Comparison with test values (Boost 1.47)
