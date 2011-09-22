@@ -50,14 +50,10 @@
 #include "moonmd_interface.h"
 
 #include "reactor1d.h"
-#include "mt19937.h"
 
 //! Run brush
 int main(int argc, char* argv[])
 {
-    // reset the random number generator
-    Sweep::init_genrand(789);
-
     std::cout << "Creating reactor\n";
 
     // Using arguments like this is rather ugly, but it saves writing full argument
@@ -108,16 +104,17 @@ int main(int argc, char* argv[])
     const double temperature[3] = {300.0, 300.0, 300.0};
     const double massConcentration[6] = {999.0, 999.0, 999.0, 1.0, 1.0, 1.0};
     const double velocity[3] = {2.0, 2.0, 2.0};
+    const size_t path = 123;
     double energySource[3] = {-9.9, -8.9, -7.9};
     double massConcSource[6] = {-19.9, -18.9, -17.9, -29.9, -28.9, -27.9};
     pReac = Brush::MooNMDInterface::RunParticlePhase(*pReac, 1.5, 3, 2, solnGrid, temperature, velocity,
-                                                     massConcentration, energySource, massConcSource, momentsFile);
+                                                     massConcentration, path, energySource, massConcSource, momentsFile);
     pReac = Brush::MooNMDInterface::RunParticlePhase(*pReac, 2.0, 3, 2, solnGrid, temperature, velocity,
-                                                     massConcentration, energySource, massConcSource, momentsFile);
+                                                     massConcentration, path, energySource, massConcSource, momentsFile);
     pReac = Brush::MooNMDInterface::RunParticlePhase(*pReac, 2.5, 3, 2, solnGrid, temperature, velocity,
-                                                     massConcentration, energySource, massConcSource, momentsFile);
+                                                     massConcentration, path, energySource, massConcSource, momentsFile);
     pReac = Brush::MooNMDInterface::RunParticlePhase(*pReac, 3.0, 3, 2, solnGrid, temperature, velocity,
-                                                     massConcentration, energySource, massConcSource, momentsFile);
+                                                     massConcentration, path, energySource, massConcSource, momentsFile);
 
 
     delete pReac;

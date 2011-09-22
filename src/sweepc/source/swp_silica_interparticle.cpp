@@ -61,7 +61,7 @@ const real InterParticle::m_majfactor = 2.0;
 
 // Default constructor (protected).
 InterParticle::InterParticle(void)
-: ParticleProcess(), m_arr(0.0,0.0,0.0), m_pid(0), m_modelid(SubModels::BasicModel_ID)
+: ParticleProcess(), m_arr(0.0,0.0,0.0)
 {
     m_defer = true;
     m_name = "InterParticle";
@@ -69,7 +69,7 @@ InterParticle::InterParticle(void)
 
 // Initialising constructor.
 InterParticle::InterParticle(const Sweep::Mechanism &mech)
-: ParticleProcess(mech), m_arr(0.0,0.0,0.0), m_pid(0), m_modelid(SubModels::BasicModel_ID)
+: ParticleProcess(mech), m_arr(0.0,0.0,0.0)
 {
     // Assume the InterParticle is simulated as a deferred process (LPDA).
     m_defer = true;
@@ -104,7 +104,6 @@ InterParticle &InterParticle::operator=(const InterParticle &rhs)
         ParticleProcess::operator =(rhs);
         m_arr    = rhs.m_arr;
 		m_pid     = rhs.m_pid;
-        m_modelid = rhs.m_modelid;
     }
     return *this;
 }
@@ -126,19 +125,13 @@ void InterParticle::SetArrhenius(Sprog::Kinetics::ARRHENIUS &arr) {m_arr = arr;}
 // the rate of this process is proportional.
 unsigned int InterParticle::PropertyID(void) const {return m_pid;}
 
-// Returns the ID number of the particle number for which the
-// PropertyID is valid.  The mechanism should check that this
-// model is enabled.
-SubModels::SubModelType InterParticle::ModelID(void) const {return m_modelid;}
 
 // Sets the ID number of the particle property to which
 // the rate of this process is proportional.
-void InterParticle::SetPropertyID(unsigned int i, SubModels::SubModelType modelid)
+void InterParticle::SetPropertyID(PropID pid)
 {
-    m_pid     = i;
-    m_modelid = modelid;
+    m_pid = pid;
 }
-
 
 
 // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
@@ -152,22 +145,31 @@ real InterParticle::Rate(real t, const Cell &sys) const
 
 	// First calculate surface reaction contribution:
 	real T = sys.Temperature();
+
+	// Get the total number of OH sites from cache
+	int numOH = sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid));
+
 	// Rate of surface reaction
 	real R_surf = m_arr.A*chemRatePart(sys.MoleFractions(), sys.Density())*pow(T, m_arr.n)
-			* exp(-m_arr.E / (R * T))*sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid));
+			* exp(-m_arr.E / (R * T)) * numOH;
 
+	// Forward-declare the total sintering rate
+	real total_sint_rate = 0;
 
-	//Calculate rate of sintering
-	// First calculate the sum of sintering rates of all particles in ensemble.
-	real total_sint_rate = sys.Particles().GetSum(static_cast<Sweep::PropID>(15));
-	// Calculate rho_s [surface density of active sites]
-	double surface = sys.Particles().GetSum(static_cast<Sweep::PropID>(3));
-	if(surface == 0)
-	{
+	// Get total surface area from cache
+	double surface = sys.Particles().GetSum(static_cast<Sweep::PropID>(Sweep::iS));
+
+	// Check if particle surface area exists. If not, set the sintering rate to zero.
+	if (surface == 0) {
 		surface = 1;
 		total_sint_rate = 0;
+	} else {
+		// Get total sintering rate from cache.
+		total_sint_rate = sys.Particles().GetSum(static_cast<Sweep::PropID>(Sweep::iSintRate));
 	}
-	real rho_s =  (sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid)))/surface;
+
+	// Calculate the total surface density of sites
+	real rho_s =  numOH/surface;
 	//Rate of sintering
 	real R_sint = (rho_s*total_sint_rate)/(2.0);
 
@@ -178,12 +180,10 @@ real InterParticle::Rate(real t, const Cell &sys) const
 
 	if (m_mech->AnyDeferred())
 	{
-		cout << "IntP rate: " << rate * m_majfactor << endl;
         return rate * m_majfactor;
     }
 	else
 	{
-		cout << "IntP rate: " << rate << endl;
         return rate;
     }
 }
@@ -200,6 +200,7 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
 	// Rate constant.
     real rate = m_arr.A;
 
+    // Do calculation for surface-reaction part of rate:
     // Chemical species concentration dependence.
     rate *= chemRatePart(sys.MoleFractions(), sys.Density());
 
@@ -207,25 +208,29 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
     real T = sys.Temperature();
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
-	//Calculate sintering contribution
-	real total_sint_rate = (sp.Property(static_cast<Sweep::PropID>(15)));
-	double rho_s = (sp.Property(static_cast<Sweep::PropID>(14)));
-	if(rho_s == 0)
-	{
-		rho_s = 1;
-		total_sint_rate = 0;
-	}
-	real sint_comp = (total_sint_rate*rho_s)/(2.0);
+	// Get the number of OH sites from cache
+	int numOH = sp.Property(static_cast<Sweep::PropID>(m_pid));
+	rate *= numOH;
 
-	// Paticle dependence.
-    if (m_modelid == SubModels::BasicModel_ID)
-	{
-        rate *= (sp.Property(static_cast<Sweep::PropID>(m_pid)));
-    }
-	else
-	{
-        throw std::logic_error("Submodels no longer supported (Sweep, InterParticle::Rate)");
-    }
+	// Do calculation for sintering part of rate:
+    // Forward-declare some parameters
+    real sint_rate = 0;
+    double rho_s = 0;
+
+	// Get surface area from cache
+	double surface = sp.Property(static_cast<Sweep::PropID>(Sweep::iS));
+
+	if(surface == 0) {
+		rho_s = 1;
+		sint_rate = 0;
+	} else {
+		rho_s = numOH / surface;
+		//Calculate sintering contribution
+		sint_rate = (sp.Property(static_cast<Sweep::PropID>(Sweep::iSintRate)));
+	}
+
+
+	real sint_comp = (sint_rate*rho_s)/(2.0);
 
 	// Sintering rate dependency
 	rate -= sint_comp;
@@ -270,18 +275,16 @@ real InterParticle::RateTerms(real t, const Cell &sys,
  * \param[in,out]   sys         System to update
  * \param[in]       local_geom  Details of local phsyical layout
  * \param[in]       iterm       Process term responsible for this event
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  *
  * \return      0 on success, otherwise negative.
  */
 int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
                              const Geometry::LocalGeometry1d& local_geom,
                              unsigned int iterm,
-                             int (*rand_int)(int, int),
-                             Sweep::real(*rand_u01)()) const
+                             rng_type &rng) const
 {
-    int i = sys.Particles().Select(static_cast<Sweep::PropID>(m_pid), rand_int, rand_u01);
+    int i = sys.Particles().Select(static_cast<Sweep::PropID>(m_pid), rng);
 
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);
@@ -291,15 +294,15 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
         if (m_mech->AnyDeferred()) {
             // Calculate majorant rate then update the particle.
             real majr = MajorantRate(t, sys, *sp);
-            m_mech->UpdateParticle(*sp, sys, t, rand_u01);
+            m_mech->UpdateParticle(*sp, sys, t, rng);
 
             // Check that the particle is still valid.
             if (sp->IsValid()) {
                 real truer = Rate(t, sys, *sp);
 
-                if (!Fictitious(majr, truer, rand_u01)) {
+                if (!Fictitious(majr, truer, rng)) {
                     // Adjust particle.
-                    sp->Adjust(m_dcomp, m_dvals, 1);
+                    sp->AdjustIntPar(m_dcomp, m_dvals, rng, 1);
                     sys.Particles().Update(i);
 
                     // Apply changes to gas-phase chemistry.
@@ -312,7 +315,7 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
         } else {
             // No particle update required, just perform the surface
             // reaction.
-            sp->Adjust(m_dcomp, m_dvals, 1);
+            sp->AdjustIntPar(m_dcomp, m_dvals, rng, 1);
 
             if (sp->IsValid()) {
                 // Tell the binary tree to recalculate
@@ -337,10 +340,10 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
 // Performs the process on a given particle in the system.  Particle
 // is given by index.  The process is performed n times.
 
-int InterParticle::Perform(real t, Cell &sys, Particle &sp,
+int InterParticle::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
                           unsigned int n) const
 {
-    unsigned int m = sp.Adjust(m_dcomp, m_dvals, n);
+    unsigned int m = sp.AdjustIntPar(m_dcomp, m_dvals, rng, n);
     adjustGas(sys, m);
     return m;
 }
@@ -378,9 +381,6 @@ void InterParticle::Serialize(std::ostream &out) const
         unsigned int n = (unsigned int)m_pid;
         out.write((char*)&n, sizeof(n));
 
-        // Write the model ID.
-        //n = (unsigned int)m_modelid;
-        //out.write((char*)&n, sizeof(n));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, InterParticle::Serialize).");

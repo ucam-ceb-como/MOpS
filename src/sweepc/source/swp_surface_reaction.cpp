@@ -144,8 +144,10 @@ real SurfaceReaction::Rate(real t, const Cell &sys) const
     rate *= sys.Particles().GetSum(m_pid);
 
     if (m_mech->AnyDeferred()) {
+
         return rate * m_majfactor;
     } else {
+
         return rate;
     }
 }
@@ -207,18 +209,16 @@ real SurfaceReaction::RateTerms(real t, const Cell &sys,
  * \param[in,out]   sys         System to update
  * \param[in]       local_geom  Details of local phsyical layout
  * \param[in]       iterm       Process term responsible for this event
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  *
  * \return      0 on success, otherwise negative.
  */
 int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys, 
                              const Geometry::LocalGeometry1d& local_geom,
                              unsigned int iterm,
-                             int (*rand_int)(int, int), 
-                             Sweep::real(*rand_u01)()) const
+                             rng_type &rng) const
 {
-    int i = sys.Particles().Select(static_cast<Sweep::PropID>(m_pid), rand_int, rand_u01);
+    int i = sys.Particles().Select(static_cast<Sweep::PropID>(m_pid), rng);
 
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);
@@ -228,15 +228,15 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
         if (m_mech->AnyDeferred()) {
             // Calculate majorant rate then update the particle.
             real majr = MajorantRate(t, sys, *sp);
-            m_mech->UpdateParticle(*sp, sys, t, rand_u01);
+            m_mech->UpdateParticle(*sp, sys, t, rng);
 
             // Check that the particle is still valid.
             if (sp->IsValid()) {
                 real truer = Rate(t, sys, *sp);
 
-                if (!Fictitious(majr, truer, rand_u01)) {
+                if (!Fictitious(majr, truer, rng)) {
                     // Adjust particle.
-                    sp->Adjust(m_dcomp, m_dvals, 1);
+                    sp->Adjust(m_dcomp, m_dvals, rng, 1);
                     sys.Particles().Update(i);
 
                     // Apply changes to gas-phase chemistry.
@@ -249,7 +249,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
         } else {
             // No particle update required, just perform the surface
             // reaction.
-            sp->Adjust(m_dcomp, m_dvals, 1);
+            sp->Adjust(m_dcomp, m_dvals, rng, 1);
 
             if (sp->IsValid()) {
                 // Tell the binary tree to recalculate
@@ -273,18 +273,18 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
 
 // Performs the process on a given particle in the system.  Particle
 // is given by index.  The process is performed n times.
-int SurfaceReaction::Perform(real t, Cell &sys, Particle &sp,
+int SurfaceReaction::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
                              unsigned int n) const
 {
-    unsigned int m = sp.Adjust(m_dcomp, m_dvals, n);
+    unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
     adjustGas(sys, m);
     return m;
 }
 
 // Adjusts a primary particle according to the rules of the reaction.
-unsigned int SurfaceReaction::adjustPri(Sweep::Primary &pri, unsigned int n) const
+unsigned int SurfaceReaction::adjustPri(Sweep::Primary &pri, rng_type &rng, unsigned int n) const
 {
-    return pri.Adjust(m_dcomp, m_dvals, n);
+    return pri.Adjust(m_dcomp, m_dvals, rng, n);
 }
 
 

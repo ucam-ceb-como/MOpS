@@ -292,14 +292,14 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 // IdealGas objects rather than being taken from the given system object.
 // However, the particles in the system object are updated accordingly.
 void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
-                        int (*rand_int)(int, int), Sweep::real (*rand_u01)(),
-                        Mops::Solver::OutFnPtr out, void *data)
+                        rng_type &rng, Mops::Solver::OutFnPtr out, void *data)
 {
-//    int err = 0;
+    //std::cout << "Start of FlameSolver::Solve\n";
+
     real tsplit, dtg, dt, jrate;
     const Sweep::Mechanism &mech = r.Mech()->ParticleMech();
     fvector rates(mech.TermCount(), 0.0);
-    
+
     // Save the initial chemical conditions in sys so that we
     // can restore them at the end of the run.
     const Sprog::Thermo::IdealGas chem = *r.Mixture();
@@ -342,13 +342,13 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
             // Perform time step.
             timeStep(t, std::min(t + dtg / 3.0, tsplit), *r.Mixture(), Geometry::LocalGeometry1d(),
-                     mech, rates, jrate, rand_int, rand_u01);
+                     mech, rates, jrate, rng);
         }
 
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
         // Perhaps better to use t - 0.5 * dtg not just t
-        mech.LPDA(t, *r.Mixture(), rand_int, rand_u01);
+        mech.LPDA(t, *r.Mixture(), rng);
 
         r.SetTime(t);
     }

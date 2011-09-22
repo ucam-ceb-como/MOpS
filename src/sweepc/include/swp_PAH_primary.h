@@ -61,6 +61,7 @@
 #include "swp_kmc_pah_structure.h"
 #include "swp_kmc_simulator.h"
 #include "swp_cell.h"
+#include <boost/shared_ptr.hpp>
 
 #include <iostream>
 #include <stack>
@@ -74,12 +75,11 @@ class PAHPrimary : public Primary
 {
 public:
     //! Build a new primary with one molecule
-    PAHPrimary(const real time, const Sweep::ParticleModel &model, int (*rand_int)(int, int));
+    PAHPrimary(const real time, const Sweep::ParticleModel &model);
 
     //! Build a new primary with one molecule
     PAHPrimary(const real time, const real position,
-               const Sweep::ParticleModel &model,
-               int (*rand_int)(int, int));
+               const Sweep::ParticleModel &model);
 
     PAHPrimary(const PAHPrimary &copy); // Copy constructor.
     PAHPrimary(                       // Stream-reading constructor.
@@ -100,8 +100,7 @@ public:
 	
 
     //! coagulates this particle with rhs
-    PAHPrimary &Coagulate(const Primary &rhs, int (*rand_int)(int, int),
-                          real(*rand_u01)());
+    PAHPrimary &Coagulate(const Primary &rhs, rng_type &rng);
 
     //! prints the tree to a file that can be converted to a graph using graphviz
     void PrintTree(std::string filename);
@@ -110,7 +109,7 @@ public:
     void UpdateCache(void);
 
     //! updates the evolution of the PAHs using the database and the current time
-	void UpdatePAHs(double t, const Sweep::ParticleModel &model, Cell &sys);
+	void UpdatePAHs(double t, const Sweep::ParticleModel &model, Cell &sys, rng_type &rng);
 
     //! adds a PAH to a particle
     void AddPAH(real time, const Sweep::ParticleModel &model);
@@ -197,7 +196,7 @@ protected:
     //! copies the subtree of a node
     void CopyTree( const PAHPrimary *source);
     //! returns a uniformly chosen primary particle
-    PAHPrimary *SelectRandomSubparticle(Sweep::real(*rand_u01)());
+    PAHPrimary *SelectRandomSubparticle(rng_type &rng);
     void ReleaseMem();
 	
 
@@ -215,11 +214,11 @@ private:
 
 
     // Vector of PAHs.
-	// PAHStructure class now have proper copy constructor (under testing)
-	// , but it is still not worthy to copy PAH from one vector to another
-	// so we will use vector<PAH*> instead of  vector <PAH>
-	// Vector of PAH*.
-    std::vector<PAH*> m_PAH;
+    // PAHStructure class now have proper copy constructor (under testing)
+    // , but it is still not worthy to copy PAH from one vector to another
+    // so we will use vector<std::tr1::shared_ptr<PAH>> instead of  vector <PAH>
+    // Vector of std::tr1::shared_ptr<PAH>.
+    std::vector<boost::shared_ptr<PAH> > m_PAH;
     //some basic properties
     //derived from the PAHs by UpdataCache()
     int m_numcarbon;

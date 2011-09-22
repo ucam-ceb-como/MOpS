@@ -111,7 +111,7 @@ doublereal& CVodeWrapper::solve(int stopMode){
         if(flag < 0){
             std::cout << "Cvode Integration error\n";
         }else{
-            reacPtr->report(currentTime,NV_DATA_S(y));
+            CVodeGetDky(cvode_mem,currentTime,1,yPrime);
             calcResNorm();
             reacPtr->report(currentTime,NV_DATA_S(y),resNorm);
         }

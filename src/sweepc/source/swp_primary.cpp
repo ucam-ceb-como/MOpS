@@ -347,7 +347,28 @@ bool Primary::IsValid() const {
 // tracker values changes n times.  If the particle cannot be adjust
 // n times, then this function returns the number of times
 // it was adjusted.
-unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, unsigned int n)
+unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
+{
+	unsigned int i = 0;
+
+	// Add the components.
+	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+		m_comp[i] += dcomp[i] * (real)n;
+	}
+
+	// Add the tracker values.
+	for (i=0; i!=min(m_values.size(),dvalues.size()); ++i) {
+		m_values[i] += dvalues[i] * (real)n;
+	}
+
+    // Update property cache.
+    Primary::UpdateCache();
+
+    return n;
+}
+
+// Adjusts the particle n times for IntParticle reaction
+unsigned int Primary::AdjustIntPar(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
 {
 	unsigned int i = 0;
 
@@ -376,13 +397,11 @@ unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, unsig
  *  from PrimaryParticle.
  *
  * \param[in]       rhs         Primary particle to add to current instance
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  *
  * \return      Reference to the current instance after rhs has been added
  */
-Primary &Primary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
-                            Sweep::real(*rand_u01)())
+Primary &Primary::Coagulate(const Primary &rhs, rng_type &rng)
 {
     // Check if the RHS uses the same particle model.  If not, then
     // just use the assignment operator because you can't add apples 
@@ -415,7 +434,7 @@ Primary &Primary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
 // time using the provided sintering model.
 void Primary::Sinter(real dt, Cell &sys,
                      const Processes::SinteringModel &model,
-                     real (*rand_u01)())
+                     rng_type &rng)
 {
     // Spherical primaries don't sinter.
 	

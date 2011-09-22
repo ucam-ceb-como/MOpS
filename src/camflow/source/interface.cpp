@@ -313,6 +313,7 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
 
     // Build up a vector of zero soot volume fractions
     std::vector<doublereal> zeroSoot(cg.getnCells(), 0.0);
+    // \todo Check if can get rid of this.
     flmlt->setExternalSootVolumeFraction(zeroSoot);
 
     try{

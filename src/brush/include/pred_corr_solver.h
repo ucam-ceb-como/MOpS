@@ -91,67 +91,32 @@ public:
                    const bool weighted_transport);
 
     //! Advance solution to specified time
-    void solve(Reactor1d &reac, const real t_stop, const int n_steps, const int n_iter) const;
+    void solve(Reactor1d &reac, const real t_stop, const int n_steps, const int n_iter, const size_t seed) const;
 
 protected:
-        /*!
-     *@brief Store jump rates to avoid recalculating rates for all cells
-     *
-     * Rates for cell i of the reactor used for construction will be stored in
-     * position i of the member vectors.
-     *
-     */
-    class JumpRateCache {
-        public:
-            //! Initialise vectors
-            JumpRateCache(const Reactor1d &reac);
-
-            //! Total jump rate by cell
-            fvector mCellRates;
-
-            //! Individual process rates by cell
-            std::vector<fvector> mProcessRates;
-
-            //! Cell indices for which rates  need recalculating
-            std::stack<size_t> mInvalidCells;
-
-            //! Sum up all cell rates
-            real totalRate() const;
-
-            //! Recalculate rates for any cells listed in mInvalidCells
-            void update();
-        private:
-            //! Cannot construct without knowing size of reactor
-            JumpRateCache();
-
-            //! Reactor with which instance is used
-            const Reactor1d& mReac;
-    };
-
     //! Perform one time step using a predictor followed by some corrector iterations
-    void predictorCorrectorStep(Reactor1d &reac, const real t_stop, const int n_iter) const;
+    void predictorCorrectorStep(Reactor1d &reac, const real t_stop, const int n_iter,
+                                std::vector<Sweep::rng_type>& cell_rngs) const;
 
     //! Advance particle population to specified time
-    void solveParticles(Reactor1d &reac, const real t_stop) const;
-
-    //! Advance particle population to specified time
-    void solveParticlesByCell(Reactor1d &reac, const real t_stop) const;
+    void solveParticlesByCell(Reactor1d &reac, const real t_stop,
+                              std::vector<Sweep::rng_type>& cell_rngs) const;
 
     //! Advance particle population to specified time
     void solveParticlesInOneCell(Mops::Reactor &cell, const Geometry::LocalGeometry1d &geom,
-                                 const Sweep::Mechanism &mech, const real t_stop) const;
-
-    //! Perform one stochastic jump
-    real particleTimeStep(Reactor1d &reac, const real t_stop, JumpRateCache &rate_cache) const;
+                                 const Sweep::Mechanism &mech, const real t_stop,
+                                 Sweep::rng_type &rng) const;
 
     //! Advance chemistry over specified time interval
     void solveChemistry(Reactor1d & reac, const real t_stop) const; //,?some kind of workspace for ODE solver);
 
     //! Put a particle that has left one cell into its destination
-    void transportIn(Reactor1d & reac, const size_t destination_index, const Sweep::Transport::TransportOutflow &particle_details) const;
+    void transportIn(Reactor1d & reac, const size_t destination_index,
+                     const Sweep::Transport::TransportOutflow &particle_details,
+                     Sweep::rng_type &rng) const;
 
     //! Carry out split transport on all particles from all cells
-    void splitParticleTransport(Reactor1d &reac, const real t_start, const real t_stop) const;
+    void splitParticleTransport(Reactor1d &reac, const real t_start, const real t_stop, Sweep::rng_type &rng) const;
 
 private:
     //! Not possible to have a solver of this type without a reset chemistry object
@@ -162,7 +127,7 @@ private:
                                 const Sweep::Mechanism &mech,
                                 const Geometry::LocalGeometry1d & geom,
                                 const std::vector<const Sweep::Cell*> & neighbouring_cells,
-                                Sweep::Particle& sp) const;
+                                Sweep::Particle& sp, Sweep::rng_type &rng) const;
     
     /*!
      *  \brief Lists of particles due to be added to cells and their statistical weights
@@ -177,16 +142,14 @@ private:
                                                     const size_t cell_index, const Sweep::Mechanism &mech,
                                                     const Geometry::Geometry1d &geom,
                                                     const std::vector<const Sweep::Cell*> &neighbouring_cells,
-                                                    Sweep::PartPtrList& particle_list) const;
+                                                    Sweep::PartPtrList& particle_list, Sweep::rng_type &rng) const;
 
     //! Put particles that are actually moving to new cells into their destination
-    void moveParticlesToDifferentCells(Reactor1d & reac, const inflow_lists_vector & inflow_lists) const;
+    void moveParticlesToDifferentCells(Reactor1d & reac, const inflow_lists_vector & inflow_lists,
+                                       Sweep::rng_type &rng) const;
 
     //! Object for setting reactor chemistry to fixed values (? just use pointer)
     ResetChemistry mResetChemistry;
-
-    //! Length of maximum permitted stochastic jump
-    real mMaxDt;
 
     //! Expected number of events deferred per particle between fixed updates
     real mDeferralRatio;

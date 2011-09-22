@@ -128,19 +128,32 @@ template<class Weight, class Selectee> class BinaryTree
     BinaryTree(size_type n);
 
     //Container operations, as for STL
+
+    //! Points to the first element
     iterator begin();
+    //! Points to the first element
     const_iterator begin() const;
+    //! Point to one past the end
     iterator end();
+    //! Point to one past the end
     const_iterator end() const;
-    iterator rbegin();
-    iterator rend();
+
+    //iterator rbegin();
+    //iterator rend();
+
+    //! Number of elements in the tree
     size_type size() const;
+
+    //! Maximum number of elements that the tree can extended to hold
     size_type max_size() const;
+
+    //! Maximum number of elements that the tree can hold without rebuilding
     size_type capacity() const {return mCapacity;}
 
     //! True if nothing is stored in a tree instance
     bool empty() const;
 
+    //! Exchange all contents
     void swap(BinaryTree& tree);
 
     //! Add element to end of container
@@ -149,7 +162,8 @@ template<class Weight, class Selectee> class BinaryTree
     //! Remove final element
     void pop_back();
 
-    void replace(iterator i, const_value_type& x);
+    //! Change a stored value
+    void replace(iterator i, const value_type& x);
 
     //! Remove the element referred to by i
     iterator erase(iterator i);
@@ -256,6 +270,10 @@ template<class Weight, class Selectee> class BinaryTree<Weight, Selectee>::node_
     //Equality tests, use of friend is superfluous.
     /*friend bool operator==(const node_type& a, const node_type& b);
     friend bool operator!=(const node_type& a, const node_type& b);*/
+    //! Compare the data in two nodes
+    /*! Note that comparing floating point values for equality is dangerous
+     *\param[in]    b   Value to which to compare
+     */
     bool isEqual(const node_type& b);
 };
 
@@ -295,7 +313,7 @@ template<class Weight, class Selectee> class BinaryTree<Weight, Selectee>::const
     //! Distance between iterators
     difference_type operator-(const iterator& it) const;
 
-    //comparison operators
+    //! Check if two iterators point to the same entry in the same tree
     bool operator==(const const_iterator& b) const
     {
       return (container == b.container &&
@@ -353,7 +371,9 @@ template<class Weight, class Selectee> class BinaryTree<Weight, Selectee>::itera
     //! Distance between iterators
     difference_type operator-(const iterator& it) const;
 
-    //comparison operators
+    /*! Equality means pointing to the same element in the same tree
+     * \param[in]   b   Iterator to which to compare
+     */
     bool operator==(const iterator& b) const
     {
       return (container == b.container &&
@@ -430,9 +450,12 @@ template<class Weight, class Selectee> BinaryTree<Weight, Selectee>::BinaryTree(
 /********* End of section 1 ******************************************/
 
 /****** 2 BinaryTree node implementation *****************************/
-
+/*! See if two nodes contain the same data, but note the dangers of
+ *  comparing floating point numbers for equality.
+ * \param[in]   b   Value to which to compare
+ */
 template<class Weight, class Selectee> bool
-  BinaryTree<Weight, Selectee>::node_type::isEqual(const typename BinaryTree<Weight, Selectee>::node_type& b) {
+  BinaryTree<Weight, Selectee>::node_type::isEqual(const BinaryTree<Weight, Selectee>::node_type& b) {
   return (left == b.left && right == b.right);
 }
 
@@ -528,6 +551,7 @@ template<class Weight, class Selectee>
   return *this;
 }
 
+//! Return the negation of the equality comparison
 template<class Weight, class Selectee>
   bool operator!=(const typename BinaryTree<Weight, Selectee>::iterator& a,
                   const typename BinaryTree<Weight, Selectee>::iterator& b)
@@ -564,7 +588,7 @@ template<class Weight, class Selectee>
     return element_index - it.element_index;
 }
 
-/*!
+/*
  * Calculate the distance between two iterators
  *
  * @pre     Both iterators refer to the same container
@@ -676,6 +700,7 @@ template<class Weight, class Selectee>
   return *this;
 }
 
+//! Negation of an equality comparison
 template<class Weight, class Selectee>
   bool operator!=(const typename BinaryTree<Weight, Selectee>::const_iterator& a,
                   const typename BinaryTree<Weight, Selectee>::const_iterator& b)
@@ -853,7 +878,7 @@ template<class Weight, class Selectee> void BinaryTree<Weight, Selectee>::pop_ba
  * \param[in] i Pointer to value to replace.
  * \param[in] x New value to go into tree.
  */
-template<class Weight, class Selectee> void BinaryTree<Weight, Selectee>::replace(const iterator i, const value_type& x) {
+template<class Weight, class Selectee> void BinaryTree<Weight, Selectee>::replace(iterator i, const value_type& x) {
   //first work out the tree leaf node the iterator refers to
   leaf_pos changed_leaf = place_entry(i);
 
@@ -1032,6 +1057,8 @@ template<class Weight, class Selectee>
   return a.size() == b.size() && \
                      std::equal(a.begin(), a.end(), b.begin());
 }
+
+//! Negative of equaltiy comparison
 template<class Weight, class Selectee>
   bool operator!=(const BinaryTree<Weight, Selectee>& a, const BinaryTree<Weight, Selectee>& b)
 {

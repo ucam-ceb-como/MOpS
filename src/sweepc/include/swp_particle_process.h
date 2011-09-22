@@ -166,8 +166,7 @@ public:
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
-        int (*rand_int)(int, int), 
-        real(*rand_u01)()
+        rng_type &rng
         ) const = 0;
 
     // Performs the process on a given particle in the system.  Particle
@@ -176,6 +175,7 @@ public:
         real t,        // Current time (s).
         Cell &sys,     // System to which the particle belongs.
         Particle &sp,  // Particle for which to perform process.
+        rng_type &rng,
         unsigned int n // Number of times to perform the process.
         ) const = 0;
 

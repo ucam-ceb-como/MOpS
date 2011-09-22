@@ -119,8 +119,7 @@ public:
             real statistical_weight);
 
     //! Add particles to the ensemble with total statistical weight as specified
-    void AddParticle(Particle* sp, real stat_weight,
-                     int (*rand_int)(int, int), real(*rand_u01)());
+    void AddParticle(Particle* sp, real stat_weight,rng_type &rng);
 
     // THE PARTICLE MODEL.
 

@@ -250,16 +250,14 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::p
  * \param[in,out]   sys         System to update
  * \param[in]       local_geom  Details of local phsyical layout
  * \param[in]       iterm       Process term responsible for this event
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  *
  * \return      0 on success, otherwise negative.
  */
 int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys, 
                                    const Geometry::LocalGeometry1d& local_geom,
                                    unsigned int iterm,
-                                   int (*rand_int)(int, int), 
-                                   Sweep::real(*rand_u01)()) const
+                                   Sweep::rng_type &rng) const
 {
     // Select properties by which to choose particles (-1 means
     // choose uniformly).  Note we need to choose 2 particles.  There
@@ -276,31 +274,31 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
     // Select the first particle and note the majorant type.
     switch (term) {
         case SlipFlow1:
-            ip1 = sys.Particles().Select(rand_int);
+            ip1 = sys.Particles().Select(rng);
             maj = SlipFlow;
             break;
         case SlipFlow2:
-            ip1 = sys.Particles().Select(Sweep::iDcol, rand_int, rand_u01);
+            ip1 = sys.Particles().Select(Sweep::iDcol, rng);
             maj = SlipFlow;
             break;
         case SlipFlow3:
-            ip1 = sys.Particles().Select(rand_int);
+            ip1 = sys.Particles().Select(rng);
             maj = SlipFlow;
             break;
         case SlipFlow4:
-            ip1 = sys.Particles().Select(Sweep::iDcol, rand_int, rand_u01);
+            ip1 = sys.Particles().Select(Sweep::iDcol, rng);
             maj = SlipFlow;
             break;
         case FreeMol1:
-            ip1 = sys.Particles().Select(rand_int);
+            ip1 = sys.Particles().Select(rng);
             maj = FreeMol;
             break;
         case FreeMol2:
-            ip1 = sys.Particles().Select(Sweep::iD2, rand_int, rand_u01);
+            ip1 = sys.Particles().Select(Sweep::iD2, rng);
             maj = FreeMol;
             break;
         default :
-            ip1 = sys.Particles().Select(rand_int);
+            ip1 = sys.Particles().Select(rng);
             maj = SlipFlow;
             break;
     }
@@ -323,31 +321,31 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
     switch (term) {
         case SlipFlow1:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(rand_int);
+                ip2 = sys.Particles().Select(rng);
             break;
         case SlipFlow2:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(Sweep::iD_1, rand_int, rand_u01);
+                ip2 = sys.Particles().Select(Sweep::iD_1, rng);
             break;
         case SlipFlow3:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(Sweep::iD_1, rand_int, rand_u01);
+                ip2 = sys.Particles().Select(Sweep::iD_1, rng);
             break;
         case SlipFlow4:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(Sweep::iD_2, rand_int, rand_u01);
+                ip2 = sys.Particles().Select(Sweep::iD_2, rng);
             break;
         case FreeMol1:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(Sweep::iD2_M_1_2, rand_int, rand_u01);
+                ip2 = sys.Particles().Select(Sweep::iD2_M_1_2, rng);
             break;
         case FreeMol2:
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(Sweep::iM_1_2, rand_int, rand_u01);
+                ip2 = sys.Particles().Select(Sweep::iM_1_2, rng);
             break;
         default :
             while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(rand_int);
+                ip2 = sys.Particles().Select(rng);
             break;
     }
 
@@ -364,7 +362,7 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
     real majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
     //Update the particles
-    m_mech->UpdateParticle(*sp1, sys, t, rand_u01);
+    m_mech->UpdateParticle(*sp1, sys, t, rng);
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
     if (!sp1->IsValid()) {
@@ -376,7 +374,7 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
         return 0;
     }
 
-    m_mech->UpdateParticle(*sp2, sys, t, rand_u01);
+    m_mech->UpdateParticle(*sp2, sys, t, rng);
     // Check validity of particles after update.
     if (!sp2->IsValid()) {
         // Tell the ensemble to update particle one before we confuse things
@@ -412,8 +410,8 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
 
 
 
-        if (!Fictitious(majk, truek, rand_u01)) {
-            JoinParticles(t, ip1, sp1, ip2, sp2, sys, rand_int, rand_u01);
+        if (!Fictitious(majk, truek, rng)) {
+            JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
         } else {
             sys.Particles().Update(ip1);
             sys.Particles().Update(ip2);

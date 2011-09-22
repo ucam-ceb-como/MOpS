@@ -52,7 +52,6 @@ using namespace Strings;
 #include "mops_simulator.h"
 #include "sprog.h"
 #include "sweep.h"
-#include "mt19937.h"
 
 #include <vector>
 #include <string>
@@ -162,9 +161,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    // Seed the global random number generator.
-    Sweep::init_genrand(123);
-
     // Define all the objects required to run the simulation.
     Solver *solver   = NULL; // The solver.
     Reactor *reactor = NULL; // Reactor to solve.
@@ -263,7 +259,7 @@ int main(int argc, char *argv[])
             reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, sim, *solver, mech);
         } else {
             // New format.
-            reactor = Settings_IO::LoadFromXML(settfile, reactor, times, sim, *solver, mech, Sweep::genrand_int);
+            reactor = Settings_IO::LoadFromXML(settfile, reactor, times, sim, *solver, mech);
         }
     } catch (std::logic_error &le) {
         printf("mops: Failed to load settings file due to bad inputs.  Message:\n  ");
@@ -316,7 +312,9 @@ int main(int argc, char *argv[])
     try {
         if (fsolve) {
             sim.SetTimeVector(times);
-            sim.RunSimulation(*reactor, *solver, Sweep::genrand_int, Sweep::genrand_real1);
+            // 456 is an arbitrary fixed seed.  One can change this to be the time, or allow the seed
+            // to be passed in as a program argument, more like in brush.
+            sim.RunSimulation(*reactor, *solver, 456);
         }
     } catch (std::logic_error &le) {
         printf("mops: Failed to solve reactor due to bad inputs.  Message:\n  ");

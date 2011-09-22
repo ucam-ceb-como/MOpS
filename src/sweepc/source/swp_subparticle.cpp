@@ -143,6 +143,7 @@ void SubParticle::SetTime(real t)
 // values changes n times.
 unsigned int SubParticle::Adjust(const fvector &dcomp,
                                  const fvector &dvalues,
+                                 rng_type &rng,
                                  unsigned int n
                                  )
 {
@@ -151,7 +152,29 @@ unsigned int SubParticle::Adjust(const fvector &dcomp,
     // This is a leaf-node sub-particle as it contains a
     // primary particle.  The adjustment is applied to
     // the primary.
-    m = m_primary->Adjust(dcomp, dvalues, n);
+    m = m_primary->Adjust(dcomp, dvalues, rng, n);
+
+    // Where-ever the adjustment has been applied this sub-particle must
+    // now update its cache.
+    UpdateCache();
+
+    return m;
+}
+
+// Adjusts the particle with the given composition and
+// values changes n times for IntParticle Reaction.
+unsigned int SubParticle::AdjustIntPar(const fvector &dcomp,
+                                 const fvector &dvalues,
+                                 rng_type &rng,
+                                 unsigned int n
+                                 )
+{
+    unsigned int m = n;
+
+    // This is a leaf-node sub-particle as it contains a
+    // primary particle.  The adjustment is applied to
+    // the primary.
+    m = m_primary->AdjustIntPar(dcomp, dvalues, rng, n);
 
     // Where-ever the adjustment has been applied this sub-particle must
     // now update its cache.
@@ -164,13 +187,10 @@ unsigned int SubParticle::Adjust(const fvector &dcomp,
  * Combines this particle with another.
  *
  * \param[in]       rhs         Particle to add to current instance
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
- *
+ * \param[in,out]   rng         Random number generator
  * \return      Reference to the current instance after rhs has been added
  */
-SubParticle &SubParticle::Coagulate(const SubParticle &rhs, int (*rand_int)(int, int),
-                                  Sweep::real(*rand_u01)())
+SubParticle &SubParticle::Coagulate(const SubParticle &rhs, rng_type &rng)
 {
     if (rhs.m_aggcache != NULL) {
         if ((m_aggcache==NULL) || (m_aggcache->ID() != rhs.m_aggcache->ID())) {
@@ -184,7 +204,7 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs, int (*rand_int)(int,
         m_aggcache = NULL;
     }
 
-    m_primary->Coagulate(*rhs.Primary(), rand_int, rand_u01);
+    m_primary->Coagulate(*rhs.Primary(), rng);
     UpdateCache();
 
     return *this;
@@ -194,9 +214,9 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs, int (*rand_int)(int,
 // sintering model.
 void SubParticle::Sinter(real dt, Cell &sys,
                          const Processes::SinteringModel &model,
-                         real (*rand_u01)())
+                         rng_type &rng)
 {
-    m_primary->Sinter(dt, sys, model, rand_u01);
+    m_primary->Sinter(dt, sys, model, rng);
 }
 // PARTICLE UPDATE AND CHECKING.
 
@@ -467,6 +487,22 @@ Sweep::real SubParticle::Mass(void) const
 }
 
 /*!
+ * Pass through to primary particle
+ */
+Sweep::real SubParticle::GetSites(void) const
+{
+    return m_primary->GetSites();
+}
+
+/*!
+ * Pass through to primary particle
+ */
+Sweep::real SubParticle::GetSintRate(void) const
+{
+    return m_primary->GetSintRate();
+}
+
+/*!
  * Provide an interface that allows run time specification of particle properties
  * for use in process rate calculations.  It is currently used for some surface
  * reactions.  Where possible, the use of specific accessors should be preferred.
@@ -503,6 +539,10 @@ real SubParticle::Property(PropID id) const
             return 1.0 / std::sqrt(Mass());
         case iD2_M_1_2:
             return CollDiameter() * CollDiameter() / std::sqrt(Mass());
+        case iASN:
+        	return GetSites();
+        case iSintRate:
+        	return GetSintRate();
         case iFS:
             throw std::logic_error("Free surface no longer supported (SubParticle::Property)");
             return 0.0;

@@ -114,13 +114,13 @@ public:
     virtual unsigned int Adjust(
         const fvector &dcomp,   // Composition changes.
         const fvector &dvalues, // Tracker variable changes.
+        rng_type &rng,			// Random number for leaf node
         unsigned int n=1        // Number of times to perform adjustment.
         );
 
     // Combines this primary with another.
     virtual SurfVolPrimary &Coagulate(const Primary &rhs,
-                                      int (*rand_int)(int, int),
-                                      real(*rand_u01)());
+                                      rng_type &rng);
 
     
     // This routine sinters the Primary for the given length of
@@ -129,7 +129,7 @@ public:
         real dt, // Delta-t for sintering to occur.
         Cell &sys, // System which defines primary's environment.
         const Processes::SinteringModel &model, // Sintering model to use.
-        real (*rand_u01)() // Uniform [0,1] sample generator
+        rng_type &rng
         );
 
 

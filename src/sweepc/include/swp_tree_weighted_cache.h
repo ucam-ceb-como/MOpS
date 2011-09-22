@@ -75,7 +75,7 @@ namespace Sweep
  * many physical particles are represented by one simulation particle
  * (SI unit m^-3).
  *
- * Currently has 13 data members
+ * Currently has 15 data members
  */
 class TreeWeightedCache
 {
@@ -131,6 +131,13 @@ private:
 
     //! Product of statistical weight and mass
     real m_weight_mass;
+
+    // SilicaPrimary properties
+    //! Number of sites to which reaction is proportional
+    int m_sites;
+
+    //! Sintering rate of a particle
+    real m_sinterrate;
 };
 }
 

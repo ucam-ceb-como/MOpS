@@ -561,10 +561,11 @@ void FlameLet::restart()
         //{
             string filename = "interfaceProfiles/profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
             reportToFile(filename,control_.getMaxTime(), solvect);
-
-            string filenameSoot = "interfaceSootRates/sootRatesProfile"+boost::lexical_cast<std::string>(restartTime)+".dat";
-            reportSootRatesToFile(filenameSoot,control_.getMaxTime(), sootComponentRatesAllCells);
-
+            if (sootMom_.active())
+            {
+                string filenameSoot = "interfaceSootRates/sootRatesProfile"+boost::lexical_cast<std::string>(restartTime)+".dat";
+                reportSootRatesToFile(filenameSoot,control_.getMaxTime(), sootComponentRatesAllCells);
+            }
         //}
     }
     else if (solverID == control_.LIMEX) {
@@ -853,10 +854,13 @@ void FlameLet::residual
         	// Put temperature into master residual
             f[i*nVar+ptrT] = resT[i];
 
-            // Put moments into master residual
-        	for (int l=0; l<nMoments; ++l)
+            if (sootMom_.active())
             {
-                f[i*nVar+ptrT+1+l] = resMom[i*nMoments+l];
+                // Put moments into master residual
+                for (int l=0; l<nMoments; ++l)
+                {
+                    f[i*nVar+ptrT+1+l] = resMom[i*nMoments+l];
+                }
             }
 
         }
@@ -930,11 +934,13 @@ const
     {
         resNorm += resT[i]*resT[i];
     }
-    for (int i=0; i<nMoments*mCord; ++i)
+    if (sootMom_.active())
     {
-    	resNorm += resMom[i]*resMom[i];
+        for (int i=0; i<nMoments*mCord; ++i)
+        {
+            resNorm += resMom[i]*resMom[i];
+        }
     }
-
 
     return std::sqrt(resNorm);
 

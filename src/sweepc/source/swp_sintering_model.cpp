@@ -185,16 +185,17 @@ real SinteringModel::SintTime(const Cell &sys,const Primary &p) const
 // RATE CALCULATION.
 
 // Returns the rate of the process for the given particle.
+// wjm34: include max() catch on tau to prevent getting stuck in infinite Sinter() loops
 real SinteringModel::Rate(real t, const Cell &sys, const Particle &p) const
 {
-    real tau = SintTime(sys, p);
+    real tau = max(1.0e-30, SintTime(sys, p));
     return (p.SurfaceArea() - p.SphSurfaceArea()) / tau;
 }
 
 // Returns the rate of the process for the given primary.
 real SinteringModel::Rate(real t, const Cell &sys, const Primary &p) const
 {
-    real tau = SintTime(sys, p);
+    real tau = max(1.0e-30, SintTime(sys, p));
     return max((p.SurfaceArea() - p.SphSurfaceArea()) / tau, 0.0);
 }
 

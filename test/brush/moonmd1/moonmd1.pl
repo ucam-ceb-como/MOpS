@@ -98,6 +98,12 @@ $m1 /= $count;
 # Analytical solutions at x=0.71 are:
 # m0(0.71) = 1.44e9
 # m1(0.71) = 3.77e9
+#
+# Ten repetitions with git a8fcecd2f...
+# gives the following mean and standard
+# deviations for the results:
+# m0: (1.26+-0.05)e9
+# m1: (3.77+-0.12)e9
 
 print "$m0, $m1\n";
 if(abs($m0 - 1.44e9) > 2e8) {

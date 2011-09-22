@@ -43,6 +43,7 @@ then
   rm -rf logIN logOUT reactionsParsed serializeTest speciesParsed
   exit 0
 else
+  echo "*** Test failure ***"
   exit 1
 fi
 

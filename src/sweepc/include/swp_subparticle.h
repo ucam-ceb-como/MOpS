@@ -93,6 +93,12 @@ public:
     //! Returns the mass.
     real Mass(void) const;
 
+    //! Returns the number of surface reaction sites.
+    real GetSites(void) const;
+
+    //! Returns the sintering rate (silica).
+    real GetSintRate(void) const;
+
     //! Returns the property with the given ID.
     real Property(Sweep::PropID id) const;
 
@@ -148,13 +154,21 @@ public:
     unsigned int Adjust(
         const fvector &dcomp,             // Composition changes.
         const fvector &dvalues,           // Tracker variable changes.
+        rng_type &rng,					  // Random number for leaf node
+        unsigned int n                    // Number of times to perform adjustment.
+        );
+
+    // Identical to the Adjust above, but for IntParticle
+    unsigned int AdjustIntPar(
+        const fvector &dcomp,             // Composition changes.
+        const fvector &dvalues,           // Tracker variable changes.
+        rng_type &rng,					  // Random number for leaf node
         unsigned int n                    // Number of times to perform adjustment.
         );
 
     // Combines this particle with another.
     virtual SubParticle &Coagulate(const SubParticle &sp,
-                                   int (*rand_int)(int, int),
-                                   real(*rand_u01)());
+                                   rng_type &rng);
 
 
     // Sinters the sub-particle for the given time using the given
@@ -163,7 +177,7 @@ public:
         real dt,         // Delta-t for sintering.
         Cell &sys, // System which defines particle's environment.
         const Processes::SinteringModel &model, // Sintering model to use.
-        real (*rand_u01)() // Generate U[0,1] samples
+        rng_type &rng
         );
 
     // PARTICLE UPDATE AND CHECKING.

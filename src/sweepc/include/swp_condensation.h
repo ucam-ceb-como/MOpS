@@ -153,8 +153,7 @@ public:
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
-        int (*rand_int)(int, int), 
-        real(*rand_u01)()
+        rng_type &rng
         ) const;
 
     // Performs the process on a given particle in the system.  Particle
@@ -163,6 +162,7 @@ public:
         real t,        // Current time (s).
         Cell &sys,     // System to which the particle belongs.
         Particle &sp,  // Particle for which to perform process.
+        rng_type &rng, // Random number for leaf node
         unsigned int n // Number of times to perform the process.
         ) const;
 
@@ -207,6 +207,7 @@ protected:
     // Adjusts a primary particle according to the rules of the condensation.
     unsigned int adjustPri(
         Sweep::Primary &pri, // Primary to adjust.
+        rng_type &rng,
         unsigned int n=1     // Number of times to perform adjustment.
         ) const;
 };

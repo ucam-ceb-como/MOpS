@@ -52,8 +52,12 @@
 #include "swp_kmc_pah_process.h"
 #include "swp_kmc_pah_structure.h"
 #include "swp_PAH.h"
+
 #include <stdexcept>
 #include <cassert>
+#include <boost/random/poisson_distribution.hpp>
+#include <boost/random/bernoulli_distribution.hpp>
+#include <boost/random/uniform_smallint.hpp>
 #include "string_functions.h"
 
 using namespace Sweep;
@@ -85,7 +89,7 @@ SilicaPrimary::SilicaPrimary() : Primary(),
     m_children_sintering(0),
 	//Parent node is the top node of the tree
 	m_parent(NULL),
-	m_allparents(NULL),
+	m_allparents(0),
 	//Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
@@ -131,7 +135,7 @@ SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
     m_children_sintering(0),
 	//Parent node is the top node of the tree
 	m_parent(NULL),
-	m_allparents(NULL),
+	m_allparents(0),
 	//Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
@@ -188,7 +192,7 @@ SilicaPrimary::SilicaPrimary(const real time, const real position,
     m_children_sintering(0),
 	//Parent node is the top node of the tree
 	m_parent(NULL),
-	m_allparents(NULL),
+	m_allparents(0),
 	//Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
@@ -234,7 +238,7 @@ SilicaPrimary::SilicaPrimary(real time, const Sweep::ParticleModel &model, bool 
     m_children_sintering(0),
 	//Parent node is the top node of the tree
 	m_parent(NULL),
-	m_allparents(NULL),
+	m_allparents(0),
 	//Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
@@ -387,11 +391,12 @@ void SilicaPrimary::CopyParts(const SilicaPrimary *source)
  *
  * @return      Pointer to an object representing a physical primary
  */
-SilicaPrimary *SilicaPrimary::SelectRandomSubparticle(Sweep::real(*rand_u01)())
+SilicaPrimary *SilicaPrimary::SelectRandomSubparticle(rng_type &rng)
 {
-	double ran =rand_u01();
-    int target=int(ran*(m_numprimary));
-    return SelectRandomSubparticleLoop(target);
+    // We want to choose an integer uniformly on the range [0, m_numprimary - 1]
+    boost::random::uniform_smallint<int> uniformDistrib(0, m_numprimary - 1);
+
+    return SelectRandomSubparticleLoop(uniformDistrib(rng));
 
 }
 /*!
@@ -528,8 +533,7 @@ void SilicaPrimary::AddParent(SilicaPrimary *source)
 /*!
  * @param[in] rhs Pointer to the particle to be coagulated with this particle
 */
-SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
-                                  Sweep::real(*rand_u01)())
+SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 {
 	const SilicaPrimary *rhsparticle = NULL;
 	rhsparticle = dynamic_cast<const AggModels::SilicaPrimary*>(&rhs);
@@ -541,15 +545,16 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int,
 
 
             //Randomly select where to add the second particle
-		    if (rand_u01()>0.5)
+            boost::bernoulli_distribution<> bernoulliDistrib;
+		    if (bernoulliDistrib(rng))
 		    {
 			    newleft->CopyParts(this);
-				newright->CopyParts(&copy_rhs);
+			    newright->CopyParts(&copy_rhs);
 		    }
 		    else
 		    {
 			    newright->CopyParts(this);
-				newleft->CopyParts(&copy_rhs);
+			    newleft->CopyParts(&copy_rhs);
 		    }
             //set the pointers
 			m_leftchild=newleft;
@@ -572,8 +577,8 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int,
 			UpdateCache();
 
 			//select the primaries that are touching
-		    this->m_leftparticle=m_leftchild->SelectRandomSubparticle(rand_u01);
-		    this->m_rightparticle=m_rightchild->SelectRandomSubparticle(rand_u01);
+		    this->m_leftparticle=m_leftchild->SelectRandomSubparticle(rng);
+		    this->m_rightparticle=m_rightchild->SelectRandomSubparticle(rng);
 
 
 			//initialise the variables used to calculate the sintering level
@@ -599,9 +604,8 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int,
 //Sinters two particles
 void SilicaPrimary::Sinter(real dt, Cell &sys,
                             const Processes::SinteringModel &model,
-                            real (*rand_u01)())
+                            rng_type &rng)
 {
-//	PrintTree("before");
 	//Do only if there is a particle to sinter
 	if (m_leftparticle!=NULL)
     {
@@ -628,41 +632,41 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 		// (smaller scale = higher precision).
 		real scale = 0.01;
 
-
 			// Perform integration loop.
 			while (t1 < tstop)
 			{
-			// Calculate sintering rate.
-			r = model.Rate(m_time+t1, sys, *this);
-			// Calculate next time-step end point so that the surface area changes by no more than dAmax.
-			t2 = std::min(t1+(dAmax/ std::max(r,1.0e-300)), tstop); // 1.0e-300 catches DIV ZERO.
-			// Approximate sintering by a poisson process.  Calculate number of poisson events.
-			int n = ignpoi(r * (t2 - t1) / (scale*dAmax), rand_u01);
-			// Adjust the surface area.
-			if (n<0) break;
-			if (n > 0)
-				  {
-						m_children_surf -= (real)n * scale * dAmax;
+                // Calculate sintering rate.
+                r = model.Rate(m_time+t1, sys, *this);
+                // Calculate next time-step end point so that the surface area changes by no more than dAmax.
+                t2 = std::min(t1+(dAmax/ std::max(r,1.0e-300)), tstop); // 1.0e-300 catches DIV ZERO.
 
-						// Check that primary is not completely sintered.
-						//ss663:changed
-						if (m_children_surf <= spherical_surface)
-						{
-							m_children_surf = spherical_surface;
-							//hassintered=true;
-							break;
-						}
-					}
+                // Approximate sintering by a poisson process.  Calculate number of poisson events.
+                const real poissonMean = r * (t2 - t1) / (scale*dAmax);
 
-				// Set t1 for next time step.
-				t1 = t2;
-			}
+                if(poissonMean > 0.0) {
+                    boost::random::poisson_distribution<unsigned, real> repeatDistribution(poissonMean);
+                    unsigned n = repeatDistribution(rng);
+                    // Adjust the surface area.
+                    if (n > 0) {
+                        m_children_surf -= (real)n * scale * dAmax;
+
+                        // Check that primary is not completely sintered.
+                        //ss663:changed
+                        if (m_children_surf <= spherical_surface) {
+                            m_children_surf = spherical_surface;
+                            //hassintered=true;
+                            break;
+                        }
+                    }
+                }
+
+                // Set t1 for next time step.
+                t1 = t2;
+            }
+
 
 			m_children_sintering=SinteringLevel();
 			m_sint_rate = r;
-
-			//Shouldnt surf_old be m_surf???
-			//double rho_site = m_numOH/surf_old;
 			double rho_site = m_numOH/m_surf;
 
 			if(m_leftparticle!=NULL)
@@ -690,22 +694,20 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 				}
 			}
 
-			//UpdateCache();
-
 			if(m_children_sintering>0.95)
 			  {
 			   	   	CheckSintering();
 				    UpdateCache();
 					if (m_leftchild!=NULL && m_rightchild!=NULL)
 					{
-						m_leftchild->Sinter(dt,sys,model,rand_u01);
-						m_rightchild->Sinter(dt,sys,model,rand_u01);
+						m_leftchild->Sinter(dt,sys,model,rng);
+						m_rightchild->Sinter(dt,sys,model,rng);
 					}
 			   }
 			 else
 			 {
-				 m_leftchild->Sinter(dt, sys, model,rand_u01);
-				 m_rightchild->Sinter(dt, sys, model,rand_u01);
+				 m_leftchild->Sinter(dt, sys, model,rng);
+				 m_rightchild->Sinter(dt, sys, model,rng);
 			 }
 
 
@@ -748,35 +750,35 @@ double SilicaPrimary::SinteringLevel()
 
 
 //calculates the fractal dimension of the particle and stores it in m_fdim
-void SilicaPrimary::CalcFractalDimension()
-{
-	double create_time=this->CreateTime();
-	Sweep::Imaging::ParticleImage img;
-    // construct the particle by colliding the primary particles
-
-	img.constructSubParttree(this);
-
-	double L,W;
-    // calculate the length and the width of the particle
-    img.LengthWidth(L,W);
-    // calculate the radius of gyration
-    m_Rg=img.RadiusofGyration();
-	m_sqrtLW=sqrt(L*W);
-	m_LdivW=L/W;
-    m_Rg=m_Rg*1e-9;
-    m_fdim=log((double)m_numprimary)/log(2*m_Rg/(m_primarydiam/m_numprimary));
-    /*if (m_fdim>0 && m_fdim<3)
-	{
-       string filename;
-	   //cout<<"Creating 3d file";
-       filename=cstr(m_fdim)+".3d";
-       ofstream out;
-       out.open(filename.c_str());
-       img.Write3dout(out,0,0,0);
-       out.close();
-    }*/
-
-}
+//void SilicaPrimary::CalcFractalDimension()
+//{
+//	double create_time=this->CreateTime();
+//	Sweep::Imaging::ParticleImage img;
+//    // construct the particle by colliding the primary particles
+//
+//	img.constructSubParttree(this);
+//
+//	double L,W;
+//    // calculate the length and the width of the particle
+//    img.LengthWidth(L,W);
+//    // calculate the radius of gyration
+//    m_Rg=img.RadiusofGyration();
+//	m_sqrtLW=sqrt(L*W);
+//	m_LdivW=L/W;
+//    m_Rg=m_Rg*1e-9;
+//    m_fdim=log((double)m_numprimary)/log(2*m_Rg/(m_primarydiam/m_numprimary));
+//    /*if (m_fdim>0 && m_fdim<3)
+//	{
+//       string filename;
+//	   //cout<<"Creating 3d file";
+//       filename=cstr(m_fdim)+".3d";
+//       ofstream out;
+//       out.open(filename.c_str());
+//       img.Write3dout(out,0,0,0);
+//       out.close();
+//    }*/
+//
+//}
 
 
 // sets all the childrenproperties to zero, this function is used after the children are coalesced
@@ -826,9 +828,15 @@ SilicaPrimary &SilicaPrimary::Merge()
             //set the children properties to zero, this node has no more children
             ResetChildrenProperties();
             UpdatePrimary();
-			if(m_parent!=NULL)
-				m_parent->UpdateCache();
 
+            // Only update the cache on m_parent if the sintering level of m_parent if the sintering
+            // level won't call a merge on the parent node. Otherwise, the *this* memory address could
+            // be removed from the tree and segmentation faults will result!
+			if(m_parent!=NULL) {
+				if (m_parent->SinteringLevel() <= 0.95) {
+					m_parent->UpdateCache();
+				}
+			}
 		}
 
 
@@ -889,7 +897,7 @@ SilicaPrimary &SilicaPrimary::Merge()
 
 			else
 			{
-				//append to right subtree
+				// Append to right subtree
 				SilicaPrimary *oldrightparticle=m_rightparticle;
 				//Add all mass to leftparticle
 				m_leftparticle->m_numSi = m_leftparticle->m_numSi + m_rightparticle->m_numSi;
@@ -953,7 +961,7 @@ SilicaPrimary &SilicaPrimary::Merge()
 
 
 unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
-		const fvector &dvalues, unsigned int n, Sweep::real(*rand_u01)())
+		const fvector &dvalues, rng_type &rng, unsigned int n)
 
 {
     //cout<<"Performing Surface Reaction\n";
@@ -1022,10 +1030,13 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 	//Else this a non-leaf node (not a primary)
 	else
 	{
-		if(rand_u01() < 0.5)
-			return m_leftparticle->Adjust(dcomp, dvalues, n, rand_u01);
+		// Generate random numbers
+        boost::bernoulli_distribution<> leftRightChooser;
+        // Select particle
+		if(leftRightChooser(rng))
+			return m_leftparticle->Adjust(dcomp, dvalues, rng, n);
 		else
-			return m_rightparticle->Adjust(dcomp, dvalues, n, rand_u01);
+			return m_rightparticle->Adjust(dcomp, dvalues, rng, n);
 	}
 
    	// Update property cache.
@@ -1036,7 +1047,7 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 
 
 unsigned int SilicaPrimary::AdjustIntPar(const fvector &dcomp,
-		const fvector &dvalues, unsigned int n, Sweep::real(*rand_u01)())
+		const fvector &dvalues, rng_type &rng, unsigned int n)
 
 {
 	//cout<<"Performing Inter-particle Reaction\n";
@@ -1069,10 +1080,14 @@ unsigned int SilicaPrimary::AdjustIntPar(const fvector &dcomp,
 	}
 	else
 	{
-		if(rand_u01() < 0.5)
-			return m_leftparticle->AdjustIntPar(dcomp, dvalues, n, rand_u01);
+		// Generate random numbers
+        boost::bernoulli_distribution<> leftRightChooser;
+
+        // Select particle
+		if(leftRightChooser(rng))
+			return m_leftparticle->AdjustIntPar(dcomp, dvalues, rng, n);
 		else
-			return m_rightparticle->AdjustIntPar(dcomp, dvalues, n, rand_u01);
+			return m_rightparticle->AdjustIntPar(dcomp, dvalues, rng, n);
 	}
 
 
@@ -1082,18 +1097,10 @@ unsigned int SilicaPrimary::AdjustIntPar(const fvector &dcomp,
 
 }
 
-int SilicaPrimary::GetSite() const
+int SilicaPrimary::GetSites() const
 
 {
 	return m_numOH;
-}
-
-double SilicaPrimary::GetSiteDens() const
-{
-	//return m_numOH/(m_surf*NA);
-	//return m_numOH/(m_surf*2*1.6e-12);
-	//return m_numOH/(m_surf*NA*1.6e-12);
-	return m_numOH/(m_surf);
 }
 
 real SilicaPrimary::GetSintRate() const
@@ -1145,21 +1152,17 @@ void SilicaPrimary::UpdateCache(void)
     UpdateCache(this);
 }
 
-
+// Check if the sintering level is above 0.95, merge and update cache if true
 bool SilicaPrimary::CheckSintering()
 {
-    //double total_mass = m_mass;
 	bool hassintered=false;
     if (m_children_sintering> 0.95 && m_leftparticle!=NULL)
         {
-           // PrintTree("before.inp");
-           // cout <<"merging"<<m_children_coalescence<<endl;
 
              Merge();
-
 			 UpdateCache();
-
              hassintered=true;
+
              //check again because this node has changed
              CheckSintering();
         }
@@ -1169,7 +1172,6 @@ bool SilicaPrimary::CheckSintering()
         hassintered=m_rightchild->CheckSintering();
 
     }
-    //UpdateCache();
 
 	if(hassintered)
 		ResetVol();
@@ -1275,9 +1277,7 @@ void SilicaPrimary::UpdateCache(SilicaPrimary *root)
 			{
 				m_children_sintering=1;
 			}
-			//PrintTree("before_sinter");
 			CheckSintering();
-			//PrintTree("after_sinter");
 		}
 
 		//sum up the avg sintering level

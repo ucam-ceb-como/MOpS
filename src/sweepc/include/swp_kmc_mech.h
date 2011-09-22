@@ -54,7 +54,6 @@
 #include "swp_kmc_typedef.h"
 //#include "swp_kmc_structure_comp.h"
 #include "swp_kmc_gaspoint.h"
-#include "rng.h"
 #include "csv_io.h"
 
 #include <iostream>
@@ -101,7 +100,7 @@ namespace KMC_ARS {
 
         //! Choosing a reaction to be taken place, returns pointer to jump process
         //! and index of process in m_jplist
-        ChosenProcess chooseReaction(real (*rand_u01)()) const;
+        ChosenProcess chooseReaction(rng_type &rng) const;
 
         //! Calculates jump rate for each jump process
         void calculateRates(const KMCGasPoint& gp, 

@@ -48,6 +48,8 @@
 #include "choose_index.hpp"
 #include "string_functions.h"
 
+#include <boost/random/uniform_01.hpp>
+
 using namespace std;
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
@@ -108,9 +110,10 @@ void KMCMechanism::loadProcesses(std::vector<JumpProcess*> (*jp)()) {//how##
 //    return sum;
 //}
 //! Choosing a reaction to be taken place, returns pointer to jump process
-ChosenProcess KMCMechanism::chooseReaction(real (*rand_u01)()) const {
+ChosenProcess KMCMechanism::chooseReaction(rng_type &rng) const {
     // chooses index from a vector of weights (real number in this case) randomly
-    size_t ind = chooseIndex<real>(m_rates, rand_u01);
+    boost::uniform_01<rng_type &, real> uniformGenerator(rng);
+    size_t ind = chooseIndex<real>(m_rates, uniformGenerator);
     return ChosenProcess(m_jplist[ind], ind);
 }
 Sweep::KMC_ARS::KMCGasPoint sp;

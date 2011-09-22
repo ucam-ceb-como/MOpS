@@ -69,8 +69,7 @@ SimpleSplitSolver::~SimpleSplitSolver(void)
 // up to the stop time.  calls the output routine once at the
 // end of the function.  niter is ignored.
 void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
-                              int (*rand_int)(int, int), Sweep::real (*rand_u01)(),
-                              OutFnPtr out, void *data)
+                              Sweep::rng_type &rng, OutFnPtr out, void *data)
 {
     // Mark the time at the start of the step, in order to
     // calculate total computation time.
@@ -103,7 +102,7 @@ void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
         r.Mixture()->SetM0(r.Mixture()->Density() * m0 / rho);
         Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech());
     m_swp_ctime += calcDeltaCT(m_cpu_mark); */
-    
+
     for (int i=1; i<=nsteps; ++i) {
         m_cpu_mark = clock();
             // Solve whole step of gas-phase chemistry.
@@ -117,7 +116,7 @@ void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
 
         // Solve whole step of population balance (Sweep).
         r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->MassDensity());
-        Run(t1, t2, *r.Mixture(), r.Mech()->ParticleMech(), rand_int, rand_u01);
+        Run(t1, t2, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
         m_swp_ctime += calcDeltaCT(m_cpu_mark);        
     }
@@ -140,8 +139,7 @@ void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
 // SOLUTION ROUTINES.
 
 void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n,
-                                       Mops::Reactor &r,
-                                       int (*rand_int)(int, int),real (*rand_u01)())
+                                       Mops::Reactor &r, Sweep::rng_type &rng)
 {
     // Time counters.
     real t2 = r.Time();
@@ -181,7 +179,7 @@ void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n,
         m_cpu_mark = clock();
             // Solve whole step of population balance (Sweep).
             r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->MassDensity());
-            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rand_int, rand_u01);
+            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
         m_swp_ctime += calcDeltaCT(m_cpu_mark);
         
     }

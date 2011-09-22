@@ -49,9 +49,9 @@
 #include "swp_aggmodel_type.h"
 #include "swp_model_factory.h"
 #include "swp_surfvol_cache.h"
-#include "rng.h"
 
 #include <stdexcept>
+#include <boost/random/poisson_distribution.hpp>
 
 using namespace Sweep;
 using namespace Sweep::AggModels;
@@ -196,7 +196,7 @@ real SurfVolPrimary::PP_Diameter(void) const
 // tracker values changes n times.  If the particle cannot be adjust
 // n times, then this function returns the number of times
 // it was adjusted.
-unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues, 
+unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_type &rng,
                                     unsigned int n)
 {
     // Calculate change in volume.
@@ -221,7 +221,7 @@ unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues
     real s = m_surf + (2.0 * dvol * rad);
 
     // Adjust the particle assuming that it is spherical.
-    Primary::Adjust(dcomp, dvalues, n);
+    Primary::Adjust(dcomp, dvalues, rng, n);
 
     // Set correct surface area, which was incorrectly set by
     // Primary::Adjust.
@@ -241,20 +241,18 @@ unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues
  * Combines this primary with another.
  *
  * \param[in]       rhs         Particle to add to current instance
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  *
  * \return      Reference to the current instance after rhs has been added
  */
-SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs, int (*rand_int)(int, int),
-                                  Sweep::real(*rand_u01)())
+SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
 {
     // Store the resultant surface area.
     real s = m_surf + rhs.SurfaceArea();
 
     // Perform the coagulation.
-    Primary::Coagulate(rhs, rand_int, rand_u01);
+    Primary::Coagulate(rhs, rng);
 
     // The spherical particle Coagulate() routine has set the
     // surface area incorrectly.  We now replace the surface area
@@ -275,7 +273,7 @@ SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs, int (*rand_int)(in
 // time using the provided sintering model.
 void SurfVolPrimary::Sinter(real dt, Cell &sys,
                             const Processes::SinteringModel &model,
-                            real (*rand_u01)())
+                            rng_type &rng)
 {
     // Perform a first order integration method to sinter
     // the primary for the given time.
@@ -298,33 +296,43 @@ void SurfVolPrimary::Sinter(real dt, Cell &sys,
         // Calculate sintering rate.
         r = model.Rate(m_time+t1, sys, *this);
 
-        // Calculate next time-step end point so that the
-        // surface area changes by no more than dAmax.
-        delt = dAmax / max(r, 1.0e-300);
+        if(r > 0) {
+            // Calculate next time-step end point so that the
+            // surface area changes by no more than dAmax.
+            delt = dAmax / max(r, 1.0e-300);
 
-        // Approximate sintering by a poisson process.  Calculate
-        // number of poisson events.
-        int n;
-        if (tstop > (t1+delt)) {
-            // A sub-step, we have changed surface by dAmax, on average.
-            n = ignpoi(1.0 / scale, rand_u01);
-        } else {
-            // Step until end.  Calculate degree of sintering explicitly.
-            n = ignpoi(r * (tstop - t1) / (scale*dAmax), rand_u01);
-        }
-
-        // Adjust the surface area.
-        if (n > 0) {
-            m_surf -= (real)n * scale * dAmax;
-            // Check that primary is not completely sintered.
-            if (m_surf <= m_sphsurf) {
-                m_surf = m_sphsurf;
-                break;
+            // Approximate sintering by a poisson process.  Calculate
+            // number of poisson events.
+            real mean;
+            if (tstop > (t1+delt)) {
+                // A sub-step, we have changed surface by dAmax, on average
+                mean = 1.0 / scale;
+            } else {
+                // Step until end.  Calculate degree of sintering explicitly.
+                mean = r * (tstop - t1) / (scale*dAmax);
             }
-        }
+            boost::random::poisson_distribution<unsigned, real> repeatDistribution(mean);
+            const unsigned n = repeatDistribution(rng);
 
-        // Set t1 for next time step.
-        t1 += delt;
+            // Adjust the surface area.
+            if (n > 0) {
+                m_surf -= n * scale * dAmax;
+                // Check that primary is not completely sintered.
+                if (m_surf <= m_sphsurf) {
+                    m_surf = m_sphsurf;
+                    break;
+                }
+            }
+
+            // Set t1 for next time step.
+            t1 += delt;
+        }
+        else {
+            // No sintering is happening.
+            // This may need refining so that a step in which nothing is happening
+            // cannot be too long.
+            break;
+        }
     }
 }
 

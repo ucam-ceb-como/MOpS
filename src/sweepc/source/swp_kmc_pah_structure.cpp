@@ -48,7 +48,6 @@
 #include "swp_kmc_typedef.h"
 #include "swp_kmc_jump_process.h"
 #include "swp_kmc_pah_process.h"
-#include "rng.h"
 #include "string_functions.h"
 #include <string>
 #include <iostream>
@@ -79,8 +78,8 @@ PAHStructure::PAHStructure(const PAHStructure& copy){
 }
 //! Default Destructor
 PAHStructure::~PAHStructure() {
-    delete m_cfirst;
-    delete m_clast;
+    //delete m_cfirst;
+    //delete m_clast;
     PAHProcess pp(*this);
 	pp.clearStructure();
     m_siteMap.clear();

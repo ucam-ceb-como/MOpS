@@ -232,16 +232,14 @@ real Condensation::RateTerms(real t, const Cell &sys,
  * \param[in,out]   sys         System to update
  * \param[in]       local_geom  Details of local phsyical layout
  * \param[in]       iterm       Process term responsible for this event
- * \param[in,out]   rand_int    Pointer to function that generates uniform integers on a range
- * \param[in,out]   rand_u01    Pointer to function that generates U[0,1] deviates
+ * \param[in,out]   rng         Random number generator
  *
  * \return      0 on success, otherwise negative.
  */
 int Condensation::Perform(Sweep::real t, Sweep::Cell &sys, 
                           const Geometry::LocalGeometry1d& local_geom,
                           unsigned int iterm,
-                          int (*rand_int)(int, int), 
-                          Sweep::real(*rand_u01)()) const
+                          rng_type &rng) const
 {
     // Select particle based on which term was called.
     int i  = -1;
@@ -249,16 +247,16 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
     switch(iterm) {
         case 1:
             id = Sweep::iDcol;
-            i  = sys.Particles().Select(id, rand_int, rand_u01);
+            i  = sys.Particles().Select(id, rng);
             break;
         case 2:
             id = Sweep::iD2;
-            i  = sys.Particles().Select(id, rand_int, rand_u01);
+            i  = sys.Particles().Select(id, rng);
             break;
         case 0:
         default:
             id = Sweep::iUniform;
-            i  = sys.Particles().Select(rand_int);;
+            i  = sys.Particles().Select(rng);;
             break;
     }
 
@@ -270,7 +268,7 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
 
         if (m_mech->AnyDeferred()) {
             // Update particle with deferred processes.
-            m_mech->UpdateParticle(*sp, sys, t, rand_u01);
+            m_mech->UpdateParticle(*sp, sys, t, rng);
         }
 
         // Check that the particle is still valid.
@@ -288,9 +286,9 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
             // some events would wrongly be treated as fictitious.  The ugly
             // solution used here is to ensure that there are no fictitious
             // events when there are no deferred processes.
-            if (!Fictitious(majr, truer, rand_u01) || !m_mech->AnyDeferred()) {
+            if (!Fictitious(majr, truer, rng) || !m_mech->AnyDeferred()) {
                 // Adjust particle.
-                sp->Adjust(m_dcomp, m_dvals, 1);
+                sp->Adjust(m_dcomp, m_dvals, rng, 1);
                 sys.Particles().Update(i);
 
                 // Apply changes to gas-phase chemistry.
@@ -309,18 +307,18 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
 
 // Performs the process on a given particle in the system.  Particle
 // is given by index.  The process is performed n times.
-int Condensation::Perform(real t, Cell &sys, Particle &sp,
+int Condensation::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
                           unsigned int n) const
 {
-    unsigned int m = sp.Adjust(m_dcomp, m_dvals, n);
+    unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
     adjustGas(sys, m);
     return 0;
 }
 
 // Adjusts a primary particle according to the rules of the condensation.
-unsigned int Condensation::adjustPri(Sweep::Primary &pri, unsigned int n) const
+unsigned int Condensation::adjustPri(Sweep::Primary &pri, rng_type &rng, unsigned int n) const
 {
-    return pri.Adjust(m_dcomp, m_dvals, n);
+    return pri.Adjust(m_dcomp, m_dvals, rng, n);
 }
 
 

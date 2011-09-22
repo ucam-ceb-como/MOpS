@@ -40,7 +40,6 @@
 #include "simulator.h"
 
 #include "mops_timeinterval.h"
-#include "mt19937.h"
 
 #include "reactor1d.h"
 #include "pred_corr_solver.h"
@@ -129,8 +128,6 @@ void Brush::Simulator::runSimulation(const size_t seed_offset) {
  *\param[in]    seed    Seed to set on random number generator
  */
 void Brush::Simulator::runOnePath(const int seed) {
-    // reset the random number generator
-    Sweep::init_genrand(seed);
 
     // Create a reactor instance to be modified by the solver
     Reactor1d reac(mInitialReactor);
@@ -219,10 +216,13 @@ void Brush::Simulator::runOnePath(const int seed) {
         for(unsigned int i = 0; i != tInt.StepCount(); ++i) {
             //std::cout << "solving from " << reac.getTime() << '\n';
 
+            // Time at the start of this loop
+            const real ti = i * dt;
+
             const real dt2 = dt / tInt.SubSplittingStepCount();
             for(unsigned int j = 0; j != tInt.SubSplittingStepCount(); ++j) {
-                solver.solve(reac, tInt.StartTime() + i * dt + (j + 1) * dt2,
-                             tInt.SplittingStepCount(), mCorrectorIterations);
+                solver.solve(reac, tInt.StartTime() + ti + (j + 1) * dt2,
+                             tInt.SplittingStepCount(), mCorrectorIterations, seed);
             }
 
             //std::cout << "solved up to " << tInt.StartTime() + i * dt  + (j + 1) * dt2 << ' ' << reac.getTime() << '\n';

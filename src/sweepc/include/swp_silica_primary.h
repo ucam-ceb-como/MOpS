@@ -90,8 +90,7 @@ public:
     virtual SilicaPrimary *const Clone(void) const;
 
     //! coagulates this particle with rhs
-    SilicaPrimary &Coagulate(const Primary &rhs, int (*rand_int)(int, int),
-                          real(*rand_u01)());
+    SilicaPrimary &Coagulate(const Primary &rhs, rng_type &rng);
 
     //! prints the tree to a file that can be converted to a graph using graphviz
     void PrintTree(std::string filename);
@@ -104,7 +103,7 @@ public:
             real dt, // Delta-t for sintering to occur.
             Cell &sys, // System which defines primary's environment.
             const Processes::SinteringModel &model, // Sintering model to use.
-            real (*rand_u01)() // Uniform [0,1] sample generator
+            rng_type &rng  // Random number generator
             );
 
 	// Updates Sintering level
@@ -114,24 +113,20 @@ public:
 	unsigned int Adjust(
 			const fvector &dcomp,
 			const fvector &dvalues,
-			unsigned int n,
-			real (*rand_u01)()
+			rng_type &rng,			// Random number for leaf node
+			unsigned int n
 			);
 
 	// Adjusts the number of primaries for interparticle reaction
 	unsigned int AdjustIntPar(
-			const fvector
-			&dcomp,
+			const fvector &dcomp,
 			const fvector &dvalues,
-			unsigned int n,
-			real (*rand_u01)()
+			rng_type &rng,
+			unsigned int n
 			);
 
 	// Gets the number of active sites for interparticle reaction
-	int GetSite() const;
-
-	// Gets the number of active sites for interparticle reaction
-	double GetSiteDens() const;
+	int GetSites() const;
 
 	// Gets the number of active sites for interparticle reaction
 	real GetSintRate() const;
@@ -216,7 +211,7 @@ protected:
     //! copies the subtree of a node
     void CopyTree( const SilicaPrimary *source);
     //! returns a uniformly chosen primary particle
-    SilicaPrimary *SelectRandomSubparticle(Sweep::real(*rand_u01)());
+    SilicaPrimary *SelectRandomSubparticle(rng_type &rng);
 	void ResetVol();
     void ReleaseMem();
 
