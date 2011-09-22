@@ -452,6 +452,7 @@ void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const s
  *file/default value. If steady state is obtained before the specified
  *integration time, the program return with the converged solution.
  */
+
 void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation){
 
     if(intTime!=0)cc.setMaxTime(intTime);
@@ -475,6 +476,8 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation){
         throw ;
     }
 }
+
+
 /*
  *return the stoichiometric mixture fraction
  */

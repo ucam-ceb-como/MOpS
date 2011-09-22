@@ -120,8 +120,6 @@ void FlameLet::solve
         oa << reacGeom_.getAxpos() << solvect;
         ofs.close();
     }
-
-
 }
 
 
@@ -1071,7 +1069,6 @@ void FlameLet::sootMomentResidual
 
         // Get the scalar dissipation rate for the cell.
         sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
-        //sdr = std::max(sdr,1e-3);		// ank25 -- collar the sdr for soot
 
 
         doublereal diffusionConstant = sdr/(2.0*dz[i]);
@@ -1082,6 +1079,35 @@ void FlameLet::sootMomentResidual
             source = moments_dot(i,l)/m_rho[i];
             f[i*nMoments+l] = diffusionConstant*(grad_e-grad_w)
                           + source;								// LE = 1
+
+            // DEBUG:  If residual is negative for any moment then output:
+            // a) The cell and moment indices
+            // b) source
+            // c) diffusionConstant*(grad_e-grad_w)
+            // d) grad_e
+            // e) grad_w
+            // f) The value of the moment in i-1,i,i+1
+            // g) m_rho
+            /*
+            if (f[i*nMoments+l] <= 0.0)
+            {
+            	std::cout << "Negative moment residual found" << std::endl;
+            	std::cout << "Moment index : " << l << std::endl;
+            	std::cout << "Cell index : " << i << std::endl;
+            	std::cout << "Source : " << source << std::endl;
+            	std::cout << "moments_dot : " << moments_dot(i,l) << std::endl;
+            	std::cout << "residual : " << f[i*nMoments+l] << std::endl;
+            	std::cout << "diffusionConstant*(grad_e-grad_w) : " << diffusionConstant*(grad_e-grad_w) << std::endl;
+            	std::cout << "grad_e : " << grad_e << std::endl;
+            	std::cout << "grad_w : " << grad_w << std::endl;
+            	std::cout << "Moment [i-1] : " << moments(i-1,l) << std::endl;
+            	std::cout << "Moment [i] : " << moments(i,l) << std::endl;
+            	std::cout << "Moment [i+1] : " << moments(i+1,l) << std::endl;
+            	std::cout << "m_rho : " << m_rho[i] << std::endl;
+            }
+            // End DEBUG
+			*/
+
         }
 
 /*
@@ -1296,11 +1322,27 @@ void FlameLet::saveMixtureProp(doublereal* y)
           {
         	  moments(i,l) = mom_temp[l];			// ank25:  This looks correct
         	//  exp_mom_temp[l] = exp(mom_temp[l])-1.0;
-          }
+          //}
 
           // Change of variable before calling moment rates:
       	  // M=exp(M_hat -1)
       	  // M_hat = ln(M+1)
+
+          // DEBUG:  Before calling rateAll check if any moments have gone negative.
+          // If so then:
+          // a) Output the cell number
+          // b) Output the moment
+          if (moments(i,l) <0.0)
+          {
+        	  std::cout << "Negative moment found before calling ratesAll" << std::endl;
+        	  std::cout << "Cell index : " << i << std::endl;
+        	  std::cout << "Moment index : " << l << std::endl;
+        	  std::cout << "Moment value : " << moments(i,l) << std::endl;
+          }
+		  // end DEBUG
+
+          }
+
 
           moments_dot_temp = sootMom_.rateAll(conc, mom_temp, m_T[i], opPre, 1);
           for(int l=0; l<nMoments; l++)
