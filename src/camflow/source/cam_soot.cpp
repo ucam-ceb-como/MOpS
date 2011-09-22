@@ -128,6 +128,7 @@ void CamSoot::readSoot
         subnode = soot->GetFirstChild("M0");
         if (subnode != NULL){
             firstMom = cdble(subnode->Data());
+            std::cout << "M0 read in " << firstMom << std::endl;
         }else{
             throw CamError("First moment not specified\n");
         }
@@ -576,7 +577,8 @@ CamSoot::realVector CamSoot::rateAll
     // prodRatePAHCond is rate of change in PAH due to condensation.
     //doublereal tempPAHConc = conc[iInception];
 
-    if (moments[0] > m0Threshold)		// Threshold check
+    //if (moments[0] > m0Threshold)		// Threshold check
+    if (false)  // turn off condensation for now.
     {
     	cdRates = rateCondensation(moments, T,conc[iInception]);
     	prodRatePAHCond = -cdRates[1]/numCAtomInception/NA;
@@ -596,7 +598,8 @@ CamSoot::realVector CamSoot::rateAll
     // prodRatesSurface is rate of change of gas phase species due to surface chemistry
     // sRates is rate of change of moments due to surface chemistry
 
-    if (moments[0] > m0Threshold)		// Threshold check
+    //if (moments[0] > m0Threshold)		// Threshold check
+    if(false) 	// Turn off surface chem for now.
     {
     	rateSurface(conc,T,moments,prodRates,sRates);
     	sRates[0] = 0.0; // Surface chem should not affect M0.  (Why is this needed here?)
@@ -663,9 +666,9 @@ CamSoot::realVector CamSoot::rateAll
     for (int m=0; m<nMoments; ++m)
     {
     	//rates[m] = (nucRates[m]);
-    	//rates[m] = (nucRates[m]+coagRates[m]);
+    	rates[m] = (nucRates[m]+coagRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);
-    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
+    	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]+cdRates[m]);
     }
 
@@ -1026,6 +1029,7 @@ void CamSoot::interpolateReducedMoments(realVector& wom){
      */
     for(int i=lowFrac; i<=-1; i++){
         reducedMoments(i) = cm.interpolateLG(i/6.0,3,prime,wom);
+        //std::cout << "reducedMoments " << i << " : " << reducedMoments(i) << std::endl;
     }
 
     /*
