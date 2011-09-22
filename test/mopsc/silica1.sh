@@ -76,7 +76,7 @@ postprocessResult=$?
 
 if((postprocessResult!=0)) 
   then
-    #rm -f silica*
+    rm -f silica*
     cd ..
     exit $postprocessResult
 fi
