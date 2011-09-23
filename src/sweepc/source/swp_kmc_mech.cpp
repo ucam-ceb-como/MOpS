@@ -116,7 +116,7 @@ ChosenProcess KMCMechanism::chooseReaction(rng_type &rng) const {
     size_t ind = chooseIndex<real>(m_rates, uniformGenerator);
     return ChosenProcess(m_jplist[ind], ind);
 }
-Sweep::KMC_ARS::KMCGasPoint sp;
+typedef Sweep::KMC_ARS::KMCGasPoint sp;
 
 //! Returns a vector of jump processes implemented in model
 std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
@@ -228,31 +228,31 @@ void G6R_AC::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(2.50e14, 0, 16.00, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(3.40e9, 0.88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.10e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.35468, sp.H));  //4 - r3f
-    addReaction(rxnV, Reaction(1.87e7, 1.787, 3.262, sp.C2H2));   //5 - r4f
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //6 - r5f
+    addReaction(rxnV, Reaction(2.50e14, 0, 16.00, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.40e9, 0.88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.10e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.35468, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(1.87e7, 1.787, 3.262, sp::C2H2));   //5 - r4f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(2.50e14, 0, 16.00, sp.H));      //0 - r1f
-    addReaction(rxnV2, Reaction(3.40e9, 0.88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.10e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp.H));  //4 - r3f
-    addReaction(rxnV2, Reaction(1.87e7, 1.787, 3.262, sp.C2H2));   //5 - r4f
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    addReaction(rxnV2, Reaction(2.50e14, 0, 16.00, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(3.40e9, 0.88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.10e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(1.87e7, 1.787, 3.262, sp::C2H2));   //5 - r4f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp.H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp.H));  //4 - r3f
-    addReaction(rxnV3, Reaction(8.0e7, 1.56, 3.8, sp.C2H2));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(8.0e7, 1.56, 3.8, sp::C2H2));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
 
     m_sType = AC; // sitetype
     m_name = "G6R at AC"; // name of process
@@ -289,34 +289,34 @@ void G6R_FE::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(2.50e14, 0, 16.00, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(3.40e9, 0.88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.10e13, 0, 4.569378, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(8.02e19, -2.011, 1.968, sp.H));  //4 - r3f
-    addReaction(rxnV, Reaction(7.50e26, -3.96, 17.10, sp.C2H2));   //5 - r4f1
-    addReaction(rxnV, Reaction(4.40e49, -11.6, 19.30, sp.C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //7 - r5f
+    addReaction(rxnV, Reaction(2.50e14, 0, 16.00, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.40e9, 0.88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.10e13, 0, 4.569378, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(7.50e26, -3.96, 17.10, sp::C2H2));   //5 - r4f1
+    addReaction(rxnV, Reaction(4.40e49, -11.6, 19.30, sp::C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //7 - r5f
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV2, Reaction(3.40e9, 0.88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.10e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp.H));  //4 - r3f
-    addReaction(rxnV2, Reaction(9.1e24, -3.39, 20.4, sp.C2H2));   //5 - r4f1
-    addReaction(rxnV2, Reaction(9.9e41, -9.26, 15.7, sp.C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //7 - r5f
+    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(3.40e9, 0.88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.10e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(9.1e24, -3.39, 20.4, sp::C2H2));   //5 - r4f1
+    addReaction(rxnV2, Reaction(9.9e41, -9.26, 15.7, sp::C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //7 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp.H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp.H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.1e7, 1.71, 3.9, sp.C2H2));   //5 - r4f1
-    addReaction(rxnV3, Reaction(3.3e33, -5.7, 25.5, sp.C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //7 - r5f
+    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(1.1e7, 1.71, 3.9, sp::C2H2));   //5 - r4f1
+    addReaction(rxnV3, Reaction(3.3e33, -5.7, 25.5, sp::C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //7 - r5f
     m_sType = FE; // sitetype
     m_name = "G6R at FE"; // name of process
     m_ID = 2;
@@ -353,31 +353,31 @@ void L6_BY6::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(9.24e7, 1.5, 9.646, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(9.6e4, 1.96, 9.021, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.35468, sp.H));  //4 - r3f
-    addReaction(rxnV, Reaction(1.11e11, .658, 23.99, sp.None));   //5 - r4f
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //6 - r5f
+    addReaction(rxnV, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.35468, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(9.24e7, 1.5, 9.646, sp.H));      //0 - r1f
-    addReaction(rxnV2, Reaction(9.6e4, 1.96, 9.021, sp.H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(8.02e19, -2.011, 1.968, sp.H));  //4 - r3f
-    addReaction(rxnV2, Reaction(2.22e11, .658, 23.99, sp.None));   //5 - r4f
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    addReaction(rxnV2, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(2.22e11, .658, 23.99, sp::None));   //5 - r4f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(9.6e4, 1.96, 9.021, sp.H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(8.02e19, -2.011, 1.968, sp.H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.11e11, .658, 23.99, sp.None));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = BY6; // sitetype
     m_name = "BY6 closure"; // name of process
     m_ID = 3;
@@ -414,31 +414,31 @@ void PH_benz::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(2.5e14, 0, 16.00, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(2.08e30, -4.98, 5.290, sp.H));  //4 - r3f
-    addReaction(rxnV, Reaction(2e76, -18.4456, 46.93, sp.C6H6));   //5 - r4f
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //6 - r5f
+    addReaction(rxnV, Reaction(2.5e14, 0, 16.00, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(2.08e30, -4.98, 5.290, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(2e76, -18.4456, 46.93, sp::C6H6));   //5 - r4f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp.H));  //4 - r3f
-    addReaction(rxnV2, Reaction(2.2e36, -8.21, 9.92, sp.C6H6));   //5 - r4f
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(2.2e36, -8.21, 9.92, sp::C6H6));   //5 - r4f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp.H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, .734, 1.43, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp.H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.9e76, -18.4043, 47.87, sp.C6H6));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, .734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(1.9e76, -18.4043, 47.87, sp::C6H6));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
 
     m_sType = benz; // sitetype
     m_name = "Phenyl addition"; // name of process
@@ -477,31 +477,31 @@ void D6R_FE3::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(3.23e7, 2.095, 15.84, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp.H));  //4 - r3f
-    addReaction(rxnV, Reaction(1.5e11, 0.2, 42.57, sp.None));   //5 - r4f
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //6 - r5f
+    addReaction(rxnV, Reaction(3.23e7, 2.095, 15.84, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(1.5e11, 0.2, 42.57, sp::None));   //5 - r4f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp.H));  //4 - r3f
-    addReaction(rxnV2, Reaction(2e11, 0.2, 42.57, sp.None));   //5 - r4f
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(2e11, 0.2, 42.57, sp::None));   //5 - r4f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp.H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp.H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.3e11, 1.08, 70.42, sp.None));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(1.3e11, 1.08, 70.42, sp::None));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = FE3; // sitetype
     m_name = "R6 (FE3) desorption"; // name of process
     m_ID = 5;
@@ -536,31 +536,31 @@ void O6R_FE3_O2::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(3.23e7, 2.095, 15.84, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp.H));  //4 - r3f
-    addReaction(rxnV, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));   //5 - r5f(1)
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //6 - r5f(2)
+    addReaction(rxnV, Reaction(3.23e7, 2.095, 15.84, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));   //5 - r5f(1)
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f(2)
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp.H));  //4 - r3f
-    addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));   //5 - r4f
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));          //6 - r5f(2)
+    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));   //5 - r4f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f(2)
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp.H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp.H));  //4 - r3f
-    addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = FE3; // sitetype
     m_name = "R6 (FE3) oxidation by O2"; // name of process
     m_ID = 6;
@@ -606,31 +606,31 @@ void O6R_FE3_OH::initialise() {
     // Adding elementary reactions
     // 0.0267atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(3.23e7, 2.095, 15.84, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp.H));  //4 - r3f
-    addReaction(rxnV, Reaction(1.3e11, 1.08, 70.42, sp.OH));   //5 - r4f
-    addReaction(rxnV, Reaction(1.3e13, 0, 10.62, sp.OH));          //6 - r5f
+    addReaction(rxnV, Reaction(3.23e7, 2.095, 15.84, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(1.3e11, 1.08, 70.42, sp::OH));   //5 - r4f
+    addReaction(rxnV, Reaction(1.3e13, 0, 10.62, sp::OH));          //6 - r5f
     // 0.12atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    //addReaction(rxnV2, Reaction(4.2e13, 0, 13, sp.H));      //0 - r1f
-    //addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    //addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    //addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    //addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp.H));  //4 - r3f
-    addReaction(rxnV2, Reaction(1.3e13, 0, 10.62, sp.OH));   //5 - r4f
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));          //6 - r5f
+    //addReaction(rxnV2, Reaction(4.2e13, 0, 13, sp::H));      //0 - r1f
+    //addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    //addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    //addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    //addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(1.3e13, 0, 10.62, sp::OH));   //5 - r4f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    //addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    //addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp.H2));   //1 - r1b
-    //addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp.OH));  //2 - r2f
-    //addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    //addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp.H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.3e13, 0, 10.62, sp.OH));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    //addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    //addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
+    //addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
+    //addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    //addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(1.3e13, 0, 10.62, sp::OH));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = FE3; // sitetype
     m_name = "R6 (FE3) oxidation by OH"; // name of process
     m_ID = 7;
@@ -677,31 +677,31 @@ void O6R_FE_HACA_O2::initialise() {
     // Adding elementary reactions
     // 0.0267atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(3.23e7, 2.095, 15.84, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp.H));  //4 - r3f
-    addReaction(rxnV, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));   //5 - r5f(1)
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //6 - r5f(2)
+    addReaction(rxnV, Reaction(3.23e7, 2.095, 15.84, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));   //5 - r5f(1)
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f(2)
     // 0.12atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp.H));  //4 - r3f
-    addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));   //5 - r4f
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));          //6 - r5f
+    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));   //5 - r4f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp.H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp.H));  //4 - r3f
-    addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = FE_HACA; // sitetype
     m_name = "R6 (FE_HACA) oxidation by O2"; // name of process
     m_ID = 8;
@@ -748,31 +748,31 @@ void O6R_FE_HACA_OH::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(3.23e7, 2.095, 15.84, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp.H));  //4 - r3f
-    addReaction(rxnV, Reaction(1.3e11, 1.08, 70.42, sp.OH));   //5 - r4f
-    addReaction(rxnV, Reaction(1.3e13, 0, 10.62, sp.OH));          //6 - r5f
+    addReaction(rxnV, Reaction(3.23e7, 2.095, 15.84, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(1.3e11, 1.08, 70.42, sp::OH));   //5 - r4f
+    addReaction(rxnV, Reaction(1.3e13, 0, 10.62, sp::OH));          //6 - r5f
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    //addReaction(rxnV2, Reaction(4.2e13, 0, 13, sp.H));      //0 - r1f
-    //addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    //addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    //addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    //addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp.H));  //4 - r3f
-    addReaction(rxnV2, Reaction(1.3e13, 0, 10.62, sp.OH));   //5 - r4f
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp.OH));          //6 - r5f
+    //addReaction(rxnV2, Reaction(4.2e13, 0, 13, sp::H));      //0 - r1f
+    //addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    //addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    //addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    //addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(1.3e13, 0, 10.62, sp::OH));   //5 - r4f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::OH));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    //addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    //addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp.H2));   //1 - r1b
-    //addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp.OH));  //2 - r2f
-    //addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    //addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp.H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.3e13, 0, 10.62, sp.OH));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    //addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    //addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
+    //addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
+    //addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    //addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(1.3e13, 0, 10.62, sp::OH));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = FE_HACA; // sitetype
     m_name = "R6 (FE_HACA) oxidation by OH"; // name of process
     m_ID = 9;
@@ -819,32 +819,32 @@ void G5R_ZZ::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(2.50e14, 0, 16.00, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp.H));  //4 - r3f
-    addReaction(rxnV, Reaction(3.57e24, -3.176, 14.86, sp.C2H2));   //5 - r4f
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //6 - r5f(2)
+    addReaction(rxnV, Reaction(2.50e14, 0, 16.00, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(3.57e24, -3.176, 14.86, sp::C2H2));   //5 - r4f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f(2)
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp.H));  //4 - r3f
-    addReaction(rxnV2, Reaction(1.8e33, -5.91, 19.7, sp.C2H2));   //5 - r4f
-    addReaction(rxnV2, Reaction(3.4e43, -9.56, 18.2, sp.C2H2));   //6 - r4f (T<800)
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));          //7 - r5f(2)
+    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(1.8e33, -5.91, 19.7, sp::C2H2));   //5 - r4f
+    addReaction(rxnV2, Reaction(3.4e43, -9.56, 18.2, sp::C2H2));   //6 - r4f (T<800)
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //7 - r5f(2)
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp.H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp.H));  //4 - r3f
-    addReaction(rxnV3, Reaction(6.8e11, 0, 22.0, sp.C2H2));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(6.8e11, 0, 22.0, sp::C2H2));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = ZZ; // sitetype
     m_name = "R5 growth on ZZ"; // name of process
     m_ID = 10;
@@ -894,36 +894,36 @@ void D5R_R5::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(5.07e7, 1.93, 12.95, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(9.45e3, 2.56, 5.007, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(5.07e7, 1.93, 12.95, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(9.45e3, 2.56, 5.007, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     //r3f to be calculated in setRate0p0267
-    addReaction(rxnV, Reaction(1.60e14, 0, 42.42, sp.None));   //4 - r4f
-    addReaction(rxnV, Reaction(1.4e30, -3.86, 3.320, sp.None)); // 5 - k_o: rate calculation
-    addReaction(rxnV, Reaction(6.08e12, .27, 0.280, sp.None)); // 6 - k_inf: rate calculation
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //7 - r5f(2)
+    addReaction(rxnV, Reaction(1.60e14, 0, 42.42, sp::None));   //4 - r4f
+    addReaction(rxnV, Reaction(1.4e30, -3.86, 3.320, sp::None)); // 5 - k_o: rate calculation
+    addReaction(rxnV, Reaction(6.08e12, .27, 0.280, sp::None)); // 6 - k_inf: rate calculation
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //7 - r5f(2)
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
     rxnV2 = rxnV;
-    //addReaction(rxnV2, Reaction(5.07e7, 1.93, 12.95, sp.H));      //0 - r1f
-    //addReaction(rxnV2, Reaction(9.45e3, 2.56, 5.007, sp.H2));   //1 - r1b
-    //addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    //addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
+    //addReaction(rxnV2, Reaction(5.07e7, 1.93, 12.95, sp::H));      //0 - r1f
+    //addReaction(rxnV2, Reaction(9.45e3, 2.56, 5.007, sp::H2));   //1 - r1b
+    //addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    //addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     ////r3f to be calculated in setRate0p0267
-    //addReaction(rxnV2, Reaction(1.60e14, 0, 42.42, sp.None));   //4 - r4f
-    //addReaction(rxnV2, Reaction(1.4e30, -3.86, 3.320, sp.None)); // 5 - k_o: rate calculation
-    //addReaction(rxnV2, Reaction(6.08e12, .27, 0.280, sp.None)); // 6 - k_inf: rate calculation
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));          //7 - r5f(2)
+    //addReaction(rxnV2, Reaction(1.60e14, 0, 42.42, sp::None));   //4 - r4f
+    //addReaction(rxnV2, Reaction(1.4e30, -3.86, 3.320, sp::None)); // 5 - k_o: rate calculation
+    //addReaction(rxnV2, Reaction(6.08e12, .27, 0.280, sp::None)); // 6 - k_inf: rate calculation
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //7 - r5f(2)
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(5.06e7, 1.93, 12.95, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(1.28e6, 1.93, 62.34, sp.H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(6.08e12, 0, 0, sp.H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.6e14, 0, 42.42, sp.None));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //6 - r5f
+    addReaction(rxnV3, Reaction(5.06e7, 1.93, 12.95, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(1.28e6, 1.93, 62.34, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(6.08e12, 0, 0, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(1.6e14, 0, 42.42, sp::None));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = R5; // sitetype
     m_name = "R5 desorption"; // name of process
     m_ID = 11;
@@ -984,31 +984,31 @@ void C6R_AC_FE3::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(3.23e7, 2.095, 15.84, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp.H));  //4 - r3f
-    addReaction(rxnV, Reaction(1.5e11, 0.2, 42.57, sp.None));   //5 - r4f
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //6 - r5f(2)
+    addReaction(rxnV, Reaction(3.23e7, 2.095, 15.84, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(1.5e11, 0.2, 42.57, sp::None));   //5 - r4f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f(2)
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(4.2e13, 00, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp.H));  //4 - r3f
-    addReaction(rxnV2, Reaction(2e11, 0.2, 42.57, sp.None));   //5 - r4f
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));          //6 - r5f(2)
+    addReaction(rxnV2, Reaction(4.2e13, 00, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(2e11, 0.2, 42.57, sp::None));   //5 - r4f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f(2)
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 00, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp.H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp.H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.3e11, 1.08, 70.42, sp.None));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));          //6 - r5f(2)
+    addReaction(rxnV3, Reaction(4.2e13, 00, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(1.3e11, 1.08, 70.42, sp::None));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f(2)
     m_sType = AC_FE3; // sitetype
     m_name = "R6 conversion to R5"; // name of process
     m_ID = 12;
@@ -1045,38 +1045,38 @@ void C5R_RFE::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(2.50e14, 0, 16.00, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp.H));  //4 - r3f
-    addReaction(rxnV, Reaction(7.50e26, -3.96, 17.10, sp.C2H2));   //5 - r4f1
-    addReaction(rxnV, Reaction(4.40e49, -11.6, 19.30, sp.C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
-    addReaction(rxnV, Reaction(8.42e8, 1.49, 0.990, sp.H));         //7 - for rate calc
-    addReaction(rxnV, Reaction(6.28e37, -8.24, 44.67, sp.None));       //8 - for rate calc
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //9 - r5f
+    addReaction(rxnV, Reaction(2.50e14, 0, 16.00, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(7.50e26, -3.96, 17.10, sp::C2H2));   //5 - r4f1
+    addReaction(rxnV, Reaction(4.40e49, -11.6, 19.30, sp::C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
+    addReaction(rxnV, Reaction(8.42e8, 1.49, 0.990, sp::H));         //7 - for rate calc
+    addReaction(rxnV, Reaction(6.28e37, -8.24, 44.67, sp::None));       //8 - for rate calc
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //9 - r5f
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp.H));  //4 - r3f
-    addReaction(rxnV2, Reaction(9.1e24, -3.39, 20.4, sp.C2H2));   //5 - r4f1
-    addReaction(rxnV2, Reaction(9.90e41, -9.26, 15.7, sp.C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
-    addReaction(rxnV2, Reaction(8.42e8, 1.49, 0.990, sp.H));         //7 - for rate calc
-    addReaction(rxnV2, Reaction(6.28e37, -8.24, 44.67, sp.None));       //8 - for rate calc
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));          //9 - r5f
+    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(9.1e24, -3.39, 20.4, sp::C2H2));   //5 - r4f1
+    addReaction(rxnV2, Reaction(9.90e41, -9.26, 15.7, sp::C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
+    addReaction(rxnV2, Reaction(8.42e8, 1.49, 0.990, sp::H));         //7 - for rate calc
+    addReaction(rxnV2, Reaction(6.28e37, -8.24, 44.67, sp::None));       //8 - for rate calc
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //9 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp.H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp.H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.1e7, 1.71, 3.9, sp.C2H2));   //5 - r4f1
-    addReaction(rxnV3, Reaction(3.3e33, -5.7, 25.5, sp.C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp.O2));          //7 - r5f
+    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(1.1e7, 1.71, 3.9, sp::C2H2));   //5 - r4f1
+    addReaction(rxnV3, Reaction(3.3e33, -5.7, 25.5, sp::C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //7 - r5f
     m_sType = RFE; // sitetype
     m_name = "R5 conversion to R6 on FE"; // name of process
     m_ID = 13;
@@ -1128,28 +1128,28 @@ void C5R_RAC::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(8.42e8, 1.49, 0.990, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(6.28e37, -8.24, 44.67, sp.None));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(8.42e8, 1.49, 0.990, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(6.28e37, -8.24, 44.67, sp::None));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     // r3f defined in setRate0p0267, r4f = 0
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //4 - r5f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //4 - r5f
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(8.42e8, 1.49, 0.990, sp.H));      //0 - r1f
-    addReaction(rxnV2, Reaction(1.25e38, -8.20, 45.31, sp.None));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(8.42e8, 1.49, 0.990, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(1.25e38, -8.20, 45.31, sp::None));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     // r3f defined in setRate0p12, r4f = 0
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));          //4 - r5f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //4 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(8.41e8, 1.49, 0.980, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.81e11, 0.49, 59.05, sp.None));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, .734, 1.43, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(8.41e8, 1.49, 0.980, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.81e11, 0.49, 59.05, sp::None));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, .734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     // r3f defined in setRate1, r4f = 0
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));          //4 - r5f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //4 - r5f
     m_sType = RAC; // sitetype
     m_name = "R5 conversion to R6 on AC"; // name of process
     m_ID = 14;
@@ -1211,28 +1211,28 @@ void M5R_RZZ::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(8.42e8, 1.49, 0.990, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(6.28e37, -8.24, 44.67, sp.None));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(8.42e8, 1.49, 0.990, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(6.28e37, -8.24, 44.67, sp::None));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     // r3f defined in setRate0p0267, r4f = 0
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //4 - r5f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //4 - r5f
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(8.42e8, 1.49, 0.990, sp.H));      //0 - r1f
-    addReaction(rxnV2, Reaction(1.25e38, -8.20, 45.31, sp.None));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(8.42e8, 1.49, 0.990, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(1.25e38, -8.20, 45.31, sp::None));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     // r3f defined in setRate0p12, r4f = 0
-    //addReaction(rxnV2, Reaction(2.20e12, 0, 7.5, sp.O2));          //4 - r5f
+    //addReaction(rxnV2, Reaction(2.20e12, 0, 7.5, sp::O2));          //4 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(8.41e8, 1.49, 0.980, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.81e11, .49, 59.05, sp.None));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(8.41e8, 1.49, 0.980, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.81e11, .49, 59.05, sp::None));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     // r3f defined in setRate1, r4f = 0
-    //addReaction(rxnV3, Reaction(2.20e12, 0, 7.5, sp.O2));          //4 - r5f
+    //addReaction(rxnV3, Reaction(2.20e12, 0, 7.5, sp::O2));          //4 - r5f
     m_sType = RZZ; // sitetype
     m_name = "R5 migration to neighbouring ZZ"; // name of process
     m_ID = 15;
@@ -1294,13 +1294,13 @@ void C6R_BY5_FE3::initialise() {
     // Adding elementary reactions
     // 0.0267atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(7.81e7, 1.772, 10.333, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(1.85e6, 1.86, 11.04, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp.H)); //4 - r3f
-    addReaction(rxnV, Reaction(2.3e9, 1.6031, 61.85, sp.None)); //5 - r4f
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //6 - r5f
+    addReaction(rxnV, Reaction(7.81e7, 1.772, 10.333, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(1.85e6, 1.86, 11.04, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H)); //4 - r3f
+    addReaction(rxnV, Reaction(2.3e9, 1.6031, 61.85, sp::None)); //5 - r4f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
     rxnV2 = rxnV;
@@ -1343,13 +1343,13 @@ void C6R_BY5_FE3violi::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(7.25e7, 1.76, 9.69, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(1.85e6, 1.86, 11.04, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp.H)); //4 - r3f
-    addReaction(rxnV, Reaction(1.23e10, 1.41, 85.2, sp.None)); //5 - r4f
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //6
+    addReaction(rxnV, Reaction(7.25e7, 1.76, 9.69, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(1.85e6, 1.86, 11.04, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H)); //4 - r3f
+    addReaction(rxnV, Reaction(1.23e10, 1.41, 85.2, sp::None)); //5 - r4f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
     rxnV2 = rxnV;
@@ -1392,50 +1392,50 @@ void L5R_BY5::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(1.73e7, 1.7453, 8.732, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(3.40e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp.H)); //4 - r3f
+    addReaction(rxnV, Reaction(1.73e7, 1.7453, 8.732, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.40e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H)); //4 - r3f
     if(violi) {
-        addReaction(rxnV, Reaction(3.86e11, .21, 17.4, sp.None)); //5 - r4f - violi(2005) mechanism, include reverse.
+        addReaction(rxnV, Reaction(3.86e11, .21, 17.4, sp::None)); //5 - r4f - violi(2005) mechanism, include reverse.
     }
     else {
-        addReaction(rxnV, Reaction(1.6451e12, .3239, 15.088227, sp.None)); // 5 - r4f - AR's work
-        addReaction(rxnV, Reaction(9.9866e13, 0, 22.57, sp.None)); //6
-        addReaction(rxnV, Reaction(5.75e10, .93, 30.4, sp.None));//7 - for rate calculation
+        addReaction(rxnV, Reaction(1.6451e12, .3239, 15.088227, sp::None)); // 5 - r4f - AR's work
+        addReaction(rxnV, Reaction(9.9866e13, 0, 22.57, sp::None)); //6
+        addReaction(rxnV, Reaction(5.75e10, .93, 30.4, sp::None));//7 - for rate calculation
     }
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //6
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6
     // 0.12 atm
     rxnvector rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(1.73e7, 1.7453, 8.732, sp.H));      //0 - r1f
-    addReaction(rxnV2, Reaction(3.40e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp.H)); //4 - r3f
+    addReaction(rxnV2, Reaction(1.73e7, 1.7453, 8.732, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(3.40e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H)); //4 - r3f
     if(violi)
-        addReaction(rxnV2, Reaction(7.72e11, .21, 17.4, sp.None)); //5 - r4f - violi(2005) mechanism, include reverse.
+        addReaction(rxnV2, Reaction(7.72e11, .21, 17.4, sp::None)); //5 - r4f - violi(2005) mechanism, include reverse.
     else {
-        addReaction(rxnV2, Reaction(3.2902e12, .3239, 15.088227, sp.None)); // 5 - r4f - AR's work
-        addReaction(rxnV2, Reaction(9.9866e13, 0, 22.560985, sp.None)); //6
-        addReaction(rxnV2, Reaction(5.75e10, .93, 30.4, sp.None));//7 - for rate calculation
+        addReaction(rxnV2, Reaction(3.2902e12, .3239, 15.088227, sp::None)); // 5 - r4f - AR's work
+        addReaction(rxnV2, Reaction(9.9866e13, 0, 22.560985, sp::None)); //6
+        addReaction(rxnV2, Reaction(5.75e10, .93, 30.4, sp::None));//7 - for rate calculation
     }
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));          //6
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6
     // 1 atm
     rxnvector rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(7.25e7, 1.76, 9.69, sp.H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.40e9, .88, 7.870, sp.H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(3.49e39, -7.77, 13.37320574, sp.H)); //4 - r3f
+    addReaction(rxnV3, Reaction(7.25e7, 1.76, 9.69, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.40e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(3.49e39, -7.77, 13.37320574, sp::H)); //4 - r3f
     if(violi)
-        addReaction(rxnV3, Reaction(3.86e11, .21, 17.4, sp.None)); //5 - r4f - violi(2005) mechanism, include reverse.
+        addReaction(rxnV3, Reaction(3.86e11, .21, 17.4, sp::None)); //5 - r4f - violi(2005) mechanism, include reverse.
     else {
-        addReaction(rxnV3, Reaction(1.6451e12, .3239, 15.088227, sp.None)); // 5 - r4f - AR's work
-        addReaction(rxnV3, Reaction(9.9866e13, 0, 22.560985, sp.None)); //6
-        addReaction(rxnV3, Reaction(5.75e10, .93, 30.4, sp.None));//7 - for rate calculation
+        addReaction(rxnV3, Reaction(1.6451e12, .3239, 15.088227, sp::None)); // 5 - r4f - AR's work
+        addReaction(rxnV3, Reaction(9.9866e13, 0, 22.560985, sp::None)); //6
+        addReaction(rxnV3, Reaction(5.75e10, .93, 30.4, sp::None));//7 - for rate calculation
     }
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.51674641, sp.O2));          //6
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6
 
     m_sType = BY5; // sitetype
     m_name = "BY5 closure"; // name of process
@@ -1474,13 +1474,13 @@ void M6R_BY5_FE3::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(7.81e7, 1.772, 10.333, sp.H));      //0 - r1f
-    addReaction(rxnV, Reaction(1.85e6, 1.86, 11.04, sp.H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp.OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp.H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp.H)); //4 - r3f
-    addReaction(rxnV, Reaction(2.3e9, 1.6031, 61.85, sp.None)); //5 - r4f
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp.O2));          //6 - r5f
+    addReaction(rxnV, Reaction(7.81e7, 1.772, 10.333, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(1.85e6, 1.86, 11.04, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H)); //4 - r3f
+    addReaction(rxnV, Reaction(2.3e9, 1.6031, 61.85, sp::None)); //5 - r4f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
     rxnV2 = rxnV;
