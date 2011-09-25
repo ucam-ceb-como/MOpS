@@ -576,12 +576,19 @@ private:
     // current time.
     double calcDeltaCT(double markt) const;
 };
-
+    // calculate M0 for one runs 
     void calculateM0(
         fvector &m_xmer,
         fvector &m_M0,
         real Pcount,
         real PM0
+        );
+    // calculate M0 for mutiple runs
+    void calculateM0(
+        fvector &m_mass,
+        fvector &m_m0,
+        std::vector<std::vector<real> > &m_allmass,
+        std::vector<std::vector<real> > &m_allm0
         );
 
 };
