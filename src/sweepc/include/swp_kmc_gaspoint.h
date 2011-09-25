@@ -75,23 +75,23 @@ namespace KMC_ARS {
             void ConvertMoleFrac();
             
             //! Profile number and column index
-            const int    Time;
-            const int    T;
-            const int    H2;
-            const int    H;
-            const int    O2;
-            const int    OH;
-            const int    C2H2;
-            const int    C2H6;
-            const int    C6H6;
-            const int    H2O;
-            const int    CH4;
-            const int    CO;
-            const int    CO2;
-            const int    P;
-            const int    None;
+            static const int    Time = 0;
+            static const int    T = 1;
+            static const int    H2 = 2;
+            static const int    H = 3;
+            static const int    O2 = 4;
+            static const int    OH = 5;
+            static const int    C2H2 = 6;
+            static const int    C2H6 = 7;
+            static const int    C6H6 = 8;
+            static const int    H2O = 9;
+            static const int    CH4 = 10;
+            static const int    CO = 11;
+            static const int    CO2 = 12;
+            static const int    P = 13;
+            static const int    None = 14;
 
-            const int    m_total;
+            static const int    m_total = 15;
             //! Accessing data
             real operator[](const int n) const;
             KMCGasPoint& operator=(const KMCGasPoint& gp);
