@@ -221,6 +221,7 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
     // Need to know the time for the split simulation of the transport processes
     const real t_start = reac.getTime();
 
+    #pragma omp parallel for
     for(size_t i = 0; i < numCells; ++i) {
         // Get details of cell i
         Mops::Reactor& cell = reac.getCell(i);
@@ -231,10 +232,7 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
 
     // Now do the split particle transport, if there is any
     if(mSplitDiffusion || mSplitAdvection) {
-        // Just use the RNG for the first cell for now.  The part of the transport
-        // calculation that needs a RNG should be separated out into a per cell
-        // operation anyway.
-        splitParticleTransport(reac, t_start, t_stop, cell_rngs.front());
+        splitParticleTransport(reac, t_start, t_stop, cell_rngs);
     }
 }
 
@@ -362,33 +360,33 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
 
             // Testing output
             const real extraWeight = (1.0 / reac.getCell(destination_index).Mixture()->SampleVolume()) - incomingWeight;
-            if(std::abs(extraWeight) > 100 * std::numeric_limits<real>::epsilon() / reac.getCell(destination_index).Mixture()->SampleVolume()) {
-                std::cerr << "Transport in added " << extraWeight << " of statistical weight to cell centred at "
-                          << reac.getCellCentre(destination_index) << std::endl;
-            }
+//            if(std::abs(extraWeight) > 100 * std::numeric_limits<real>::epsilon() / reac.getCell(destination_index).Mixture()->SampleVolume()) {
+//                std::cerr << "Transport in added " << extraWeight << " of statistical weight to cell centred at "
+//                          << reac.getCellCentre(destination_index) << std::endl;
+//            }
         }
         else {
             // Ownership of the particle has not been passed on to an ensemble so the memory must be released
             delete particle_details.particle;
 
             // Testing output
-            if(std::abs(incomingWeight) > 100 * std::numeric_limits<real>::epsilon() / reac.getCell(destination_index).Mixture()->SampleVolume()) {
-                std::cerr << "Transport in dropped " << incomingWeight
-                          << " of statistical weight from cell centred at "
-                          << reac.getCellCentre(destination_index) << std::endl;
-            }
+//            if(std::abs(incomingWeight) > 100 * std::numeric_limits<real>::epsilon() / reac.getCell(destination_index).Mixture()->SampleVolume()) {
+//                std::cerr << "Transport in dropped " << incomingWeight
+//                          << " of statistical weight from cell centred at "
+//                          << reac.getCellCentre(destination_index) << std::endl;
+//            }
         }
     }
 }
 
 /*!
- *@param[in,out]    reac    Reactor in which particles are being transported
- *@param[in]        t_start Time at which position was last calculated by splitting
- *@param[in]        t_stop  Time upto which transport is to be simulated
- *@param[in,out]    rng     Random number generator
+ *@param[in,out]    reac        Reactor in which particles are being transported
+ *@param[in]        t_start     Time at which position was last calculated by splitting
+ *@param[in]        t_stop      Time upto which transport is to be simulated
+ *@param[in,out]    cell_rngs   Random number generators, one per cell
  */
 void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t_start,
-                                                   const real t_stop, Sweep::rng_type &rng) const {
+                                                   const real t_stop, std::vector<Sweep::rng_type>& cell_rngs) const {
     const size_t numCells = reac.getNumCells();
 
     // Element i of the outer vector will contain the outflow from cell i of the reactor.
@@ -402,7 +400,8 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
 
     // Loop over each cell updating particles positions and removing any
     // particles that are moving to new cells.
-    for(unsigned int i = 0; i != numCells; ++i) {
+#pragma omp parallel for
+    for(unsigned int i = 0; i < numCells; ++i) {
         Mops::Mixture &mix = *(reac.getCell(i).Mixture());
         Sweep::Ensemble &particles = mix.Particles();
 
@@ -435,7 +434,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
         inflowLists[i] = updateParticleListPositions(t_start, t_stop, mix, i,
                                                      reac.getMechanism().ParticleMech(),
                                                      reac.getGeometry(), neighbouringCells,
-                                                     partList, rng);
+                                                     partList, cell_rngs[i]);
 
         // Now put the particles that are staying in cell i back into that cell
         mix.SetParticles(partList.begin(), partList.end(), statisticalWeight);
@@ -455,7 +454,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
         }
     }
     // Now put the particles in their destination cells
-    moveParticlesToDifferentCells(reac, inflowLists.front(), rng);
+    moveParticlesToDifferentCells(reac, inflowLists.front(), cell_rngs);
 }
 
 /*!
@@ -578,12 +577,13 @@ Brush::PredCorrSolver::inflow_lists_vector
 /*!
  *@param[in,out]    reac            Reactor in which transport is taking place
  *@param[in]        inflow_lists    Details of particles to be added to different cells
- *@param[in,out]    rng             Random number generator
+ *@param[in,out]    cell_rngs       Random number generators, one for each cell
  */
 void Brush::PredCorrSolver::moveParticlesToDifferentCells(Reactor1d & reac,
                                                           const inflow_lists_vector & inflow_lists,
-                                                          Sweep::rng_type &rng) const {
-    for(unsigned int i = 0; i != reac.getNumCells(); ++i) {
+                                                          std::vector<Sweep::rng_type>& cell_rngs) const {
+#pragma omp parallel for
+    for(unsigned int i = 0; i < reac.getNumCells(); ++i) {
         // Process the list waiting to be added to cell i
         for(std::list<Sweep::Transport::TransportOutflow>::const_iterator itPart = inflow_lists[i].begin();
             itPart != inflow_lists[i].end();
@@ -592,7 +592,7 @@ void Brush::PredCorrSolver::moveParticlesToDifferentCells(Reactor1d & reac,
                 itPart->particle->resetCoagCount();
                 // At the moment particles have to be added one by one, a more
                 // efficient method could be devised.
-                transportIn(reac, i, *itPart, rng);
+                transportIn(reac, i, *itPart, cell_rngs[i]);
         }
 
         // Now the population of cell i has been updated doubling can be
