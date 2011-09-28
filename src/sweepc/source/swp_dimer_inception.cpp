@@ -142,8 +142,8 @@ int DimerInception::Perform(const real t, Cell &sys,
 
 
     // Initialise the new particle.
-    sp->Primary()->SetComposition(m_newcomp);
-    sp->Primary()->SetValues(m_newvals);
+    sp->Primary()->SetComposition(ParticleComp());
+    sp->Primary()->SetValues(ParticleTrackers());
     sp->UpdateCache();
 
     // Add particle to system's ensemble.
@@ -239,7 +239,7 @@ real DimerInception::Rate(real t, const Cell &sys) const
 real DimerInception::Rate(const fvector &fracs, real density, real sqrtT,
                      real T_mu, real MFP, real vol) const
 {
-    real rate = m_a * vol * chemRatePart(fracs, density);
+    real rate = A() * vol * chemRatePart(fracs, density);
 
     const real fm   = sqrtT * m_kfm;
     if((m_ksf1 > 0) || (m_ksf2 > 0))  {

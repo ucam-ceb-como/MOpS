@@ -175,22 +175,19 @@ public:
         );
 
 protected:
-    //! Multiplicative rate adjustment factor
-    real m_a;
-
-    // Properties of newly incepted particles.
-    fvector m_newcomp; // Composition.
-    fvector m_newvals; // Tracker variable values.
-
-
-    // Default constructor is protected to prevent an inception being
-    // defined without knowledge of the parent mechanism.
+    /*! Default constructor is protected to prevent an inception being
+     * defined without knowledge of the parent mechanism.*/
     Inception(void);
 
 private:
-    //! Indicate if new particles should be added to secondary population if possible
-    bool m_UseSecondary;
+    //! Multiplicative rate adjustment factor
+    real m_a;
 
+    //! Composition of newly incepted particles.
+    fvector m_newcomp;
+
+    //! Initial tracker values for newly incepted particles
+    fvector m_newvals;
 };
 } // namespace Processes
 } // namespace Sweep

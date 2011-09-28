@@ -134,8 +134,8 @@ int Sweep::Processes::ConstantInception::Perform(const real t, Cell &sys,
 
 
     // Initialise the new particle.
-    sp->Primary()->SetComposition(m_newcomp);
-    sp->Primary()->SetValues(m_newvals);
+    sp->Primary()->SetComposition(ParticleComp());
+    sp->Primary()->SetValues(ParticleTrackers());
     sp->UpdateCache();
 
     // Add particle to system's ensemble.
