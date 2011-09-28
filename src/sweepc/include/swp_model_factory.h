@@ -47,7 +47,6 @@
 #include "swp_params.h"
 #include "swp_primary.h"
 #include "swp_particle_model.h"
-#include "swp_submodel_type.h"
 #include "swp_model_stats.h"
 #include "swp_aggmodel_type.h"
 #include "swp_aggmodel_cache.h"
@@ -105,34 +104,7 @@ public:
         );
 
 
-    // SUB-MODEL CREATION.
-
-    // Creates a new sub-model object of the given type.
-    static SubModels::SubModel *const Create(
-        SubModels::SubModelType id, // Model ID.
-        Primary &parent             // Parent object.
-        );
-
-
-    // Creates a new sub-model stats object of the given type.
-    static Stats::IModelStats *const CreateStats(
-        SubModels::SubModelType id, // Model ID.
-        const ParticleModel &model  // Defining particle model.
-        );
-
-
-    // SUB-MODEL STREAM INPUT.
-
-    // Reads a submodel from a binary stream.  The first item read
-    // is the model ID which tells the ModelFactory what type
-    // of sub-model to read.
-    static SubModels::SubModel *const Read(
-        std::istream &in, // Input stream.
-        Primary &parent   // Parent object.
-        );
-
-
-    // Reads sub-model stats from a binary stream.  The first item read
+    // Reads model stats from a binary stream.  The first item read
     // is the model ID which tells the ModelFactory what type
     // of model stats to read.
     static Stats::IModelStats *const ReadStats(
@@ -141,16 +113,7 @@ public:
         );
 
 
-    // SUB-MODEL STREAM OUTPUT.
-
-    // Writes a sub-model, along with its ID to an output stream.
-    static void Write(
-        const SubModels::SubModel &model, // Model to write.
-        std::ostream &out                 // Output stream.
-        );
-
-
-    // Writes a sub-model stats object, along with its ID, to an output stream.
+    // Writes a model stats object, along with its ID, to an output stream.
     static void WriteStats(
         const Stats::IModelStats &stats, // Stats to write.
         std::ostream &out                // Output stream.

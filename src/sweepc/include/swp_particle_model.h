@@ -51,7 +51,6 @@
 #include "swp_params.h"
 #include "swp_component.h"
 #include "swp_tracker.h"
-#include "swp_submodel_type.h"
 #include "swp_aggmodel_type.h"
 #include "swp_sintering_model.h"
 #include "sprog.h"
@@ -149,14 +148,6 @@ public:
     // Sets the vector of tracker variables.
     void SetTrackers(const TrackPtrVector &track);
 
-
-    // PARTICLE MODELS.
-
-    // Returns the set of particle model ID used by this mechanism
-    const SubModels::SubModelTypeSet &SubModels(void) const;
-
-    // Returns true if the mechanism include the given model.
-    bool ContainsSubModel(SubModels::SubModelType id) const;
 
     // AGGREGATION MODEL TYPE.
 
@@ -276,18 +267,16 @@ protected:
     // The species used to define the processes and the particles.
     const Sprog::SpeciesPtrVector *m_species;
 
-    // Particle component and tracker variable definitions.
-    CompPtrVector m_components; // The components used to build particles.
-    TrackPtrVector m_trackers;  // Tracker variables.
+    //! The value of each component is the amount of a particular kind of material in a particle
+    CompPtrVector m_components;
 
-    // Set of models which all particles produced by this model
-    // must use.
-    SubModels::SubModelTypeSet m_submodels;
+    //! Tracked quantities are excluded from mass calculations
+    TrackPtrVector m_trackers;
 
-    // The ID of the aggregation model used to create particles.
+    //! The ID of the aggregation model used to create particles.
     AggModels::AggModelType m_aggmodel;
 
-    // The sintering model.
+    //! The sintering model.
     mutable Processes::SinteringModel m_sint_model;
 
     //! Calculate a phsyical particle diffusion coefficient from its drag

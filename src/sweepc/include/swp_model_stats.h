@@ -47,7 +47,6 @@
 #define SWEEP_MODELSTATS_H
 
 #include "swp_params.h"
-#include "swp_submodel_type.h"
 #include "swp_property_indices.h"
 
 #include <vector>
