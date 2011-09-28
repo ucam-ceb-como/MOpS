@@ -406,7 +406,7 @@ void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >&
         }
         else
         {
-            flmlt->restart();
+            flmlt->restart(intTime[0]);
         }
         getFlameletVariables(flmlt);
     }catch(CamError &ce){
@@ -470,7 +470,7 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation){
         }
         else
         {
-            flmlt->restart();
+            flmlt->restart(intTime);
         }
         getFlameletVariables(flmlt);
     }catch(CamError &ce){

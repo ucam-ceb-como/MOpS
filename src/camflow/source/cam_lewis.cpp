@@ -58,6 +58,24 @@ void LewisNumber::loadSettings(const std::string& inputFileName)
             " <Lewis>calculated</Lewis> in <op_condition>."
         );
     }
+
+    // This might not be the best place for this.
+    // Put it here for now as Lewis number is tied in with Flamelet calcs.
+    subnode = opNode->GetFirstChild("sootFlameTimeCutoff");
+    if (subnode != NULL)
+    {
+    	sootFlameTimeThreshold = Strings::cdble(subnode->Data());
+    }
+    else
+    {
+        throw std::runtime_error
+        (
+            "Soot flametime cutoff not specified"
+            "e.g. <sootFlameTimeCutoff>1e-3</sootFlameTimeCutoff>"
+        	"Place in <op_condition>"
+        );
+    }
+
 }
 
 void LewisNumber::readFromFile(const std::string& fixedLewisFile)
