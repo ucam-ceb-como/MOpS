@@ -150,6 +150,7 @@ public:
     static real CalcRates(
         real t,                   // Time.
         const Cell &sys,          // System for which to calculate rates.
+        const Geometry::LocalGeometry1d &local_geom,
         const IcnPtrVector &icns, // Vector of inception processes.
         fvector &rates,           // Output rates vector.
         unsigned int start = 0    // Vector position to start at in vector rates.

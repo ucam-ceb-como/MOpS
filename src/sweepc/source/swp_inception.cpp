@@ -187,14 +187,16 @@ void Inception::SetParticleTracker(unsigned int i, real track)
 // Calculates the rate of multiple inceptions given a
 // vector of inceptions and an iterator to a vector of
 // reals for output.
-real Inception::CalcRates(real t, const Cell &sys, const IcnPtrVector &icns,
+real Inception::CalcRates(real t, const Cell &sys,
+                          const Geometry::LocalGeometry1d &local_geom,
+                          const IcnPtrVector &icns,
                           fvector &rates, unsigned int start)
 {
     IcnPtrVector::const_iterator p;
     fvector::iterator i = (rates.begin()+start);
     real sum = 0.0;
     for (p=icns.begin(); p!=icns.end(); ++p,++i) {
-        *i = (*p)->Rate(t, sys);
+        *i = (*p)->Rate(t, sys, local_geom);
         sum += *i;
     }
     return sum;

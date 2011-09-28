@@ -791,7 +791,7 @@ void Simulator::outputPartRxnRates(const Reactor &r) const
 
         // Calculate the molar production rates (mol/mol).
         static fvector wdot;
-        r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), wdot);
+        r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), wdot);
 
         // Now convert from mol/mol to mol/m3.
         fvector::iterator rhodot = wdot.begin()+r.Mech()->SpeciesCount()+1;

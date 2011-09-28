@@ -130,8 +130,15 @@ void Condensation::SetCondensingSpecies(const real m, const real d)
 
 // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
-// Returns rate of the process for the given system.
-real Condensation::Rate(real t, const Cell &sys) const
+/*!
+ *@param[in]            t           Time at which rate is being calculated
+ *@param[in]            sys         System for which rate is to be calculated
+ *@param[in]            local_geom  Spatial configuration information (ignored)
+ *
+ *@return   Process rate
+ */
+real Condensation::Rate(real t, const Cell &sys,
+                        const Geometry::LocalGeometry1d &local_geom) const
 {
     // Calculate temperature terms.
     real cterm = m_a * sqrt(sys.Temperature()) * NA;
@@ -199,7 +206,8 @@ unsigned int Condensation::TermCount(void) const {return TERM_COUNT;}
 // Calculates the rate terms given an iterator to a real vector. The 
 // iterator is advanced to the position after the last term for this
 // process.
-real Condensation::RateTerms(real t, const Cell &sys, 
+real Condensation::RateTerms(real t, const Cell &sys,
+                             const Geometry::LocalGeometry1d &local_geom,
                              fvector::iterator &iterm) const
 {
     // Calculate temperature terms.

@@ -128,7 +128,8 @@ void SurfaceReaction::SetPropertyID(PropID pid)
 // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
 // Returns rate of the process for the given system.
-real SurfaceReaction::Rate(real t, const Cell &sys) const
+real SurfaceReaction::Rate(real t, const Cell &sys,
+                           const Geometry::LocalGeometry1d &local_geom) const
 {
     // Rate constant.
     real rate = m_arr.A;
@@ -194,9 +195,10 @@ unsigned int SurfaceReaction::TermCount(void) const {return 1;}
 // iterator is advanced to the position after the last term for this
 // process.
 real SurfaceReaction::RateTerms(real t, const Cell &sys,
+                                const Geometry::LocalGeometry1d &local_geom,
                                 fvector::iterator &iterm) const
 {
-    return *(iterm++) = Rate(t, sys);
+    return *(iterm++) = Rate(t, sys, local_geom);
 }
 
 

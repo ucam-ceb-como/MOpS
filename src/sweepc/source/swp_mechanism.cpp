@@ -330,25 +330,25 @@ real Mechanism::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry
     real sum = 0.0;
 
     // Get rates of inception processes.
-    sum += Inception::CalcRates(t, sys, m_inceptions, rates);
+    sum += Inception::CalcRates(t, sys, local_geom, m_inceptions, rates);
 
     // Query other processes for their rates.
-    sum += ParticleProcess::CalcRates(t, sys, m_processes, rates, m_inceptions.size());
+    sum += ParticleProcess::CalcRates(t, sys, local_geom, m_processes, rates, m_inceptions.size());
 
     // Get coagulation rate.
-    sum += Coagulation::CalcRates(t, sys, m_coags, rates, m_inceptions.size() + m_processes.size());
+    sum += Coagulation::CalcRates(t, sys, local_geom, m_coags, rates, m_inceptions.size() + m_processes.size());
 
     // Get birth and death rates from the Cell.
     fvector::iterator i = rates.begin() + m_inceptions.size() + m_processes.size() + m_coags.size();
     const BirthPtrVector &inf = sys.Inflows();
     for (BirthPtrVector::const_iterator j=inf.begin(); j!=inf.end(); ++j) {
-        *i = (*j)->Rate(t, sys);
+        *i = (*j)->Rate(t, sys, local_geom);
         sum += *i;
         ++i;
     }
     const DeathPtrVector &out = sys.Outflows();
     for (DeathPtrVector::const_iterator j=out.begin(); j!=out.end(); ++j) {
-        *i = (*j)->Rate(t, sys);
+        *i = (*j)->Rate(t, sys, local_geom);
         sum += *i;
         ++i;
     }
@@ -381,14 +381,14 @@ real Mechanism::CalcRateTerms(real t, const Cell &sys, const Geometry::LocalGeom
     // Get rates of inception processes.
     IcnPtrVector::const_iterator ii;
     for (ii=m_inceptions.begin(); ii!=m_inceptions.end(); ++ii) {
-        sum += (*ii)->RateTerms(t, sys, iterm);
+        sum += (*ii)->RateTerms(t, sys, local_geom, iterm);
     }
 
     // Query other processes for their rates.
     if (sys.ParticleCount() > 0) {
         for(PartProcPtrVector::const_iterator i=m_processes.begin();
             (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
-            sum += (*i)->RateTerms(t, sys, iterm);
+            sum += (*i)->RateTerms(t, sys, local_geom, iterm);
         }
     } else {
         // Fill vector with zeros.
@@ -399,16 +399,16 @@ real Mechanism::CalcRateTerms(real t, const Cell &sys, const Geometry::LocalGeom
     }
 
     // Coagulation
-    sum += Coagulation::CalcRateTerms(t, sys, m_coags, iterm);
+    sum += Coagulation::CalcRateTerms(t, sys, local_geom, m_coags, iterm);
 
     // Get birth and death rates from the Cell.
     const BirthPtrVector &inf = sys.Inflows();
     for (BirthPtrVector::const_iterator j=inf.begin(); j!=inf.end(); ++j) {
-        sum += (*j)->RateTerms(t, sys, iterm);
+        sum += (*j)->RateTerms(t, sys, local_geom, iterm);
     }
     const DeathPtrVector &out = sys.Outflows();
     for (DeathPtrVector::const_iterator j=out.begin(); j!=out.end(); ++j) {
-        sum += (*j)->RateTerms(t, sys, iterm);
+        sum += (*j)->RateTerms(t, sys, local_geom, iterm);
     }
 
     return sum;
@@ -431,7 +431,7 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, const Geometry::Local
     // Get rates of inception processes.
     IcnPtrVector::const_iterator ii;
     for (ii=m_inceptions.begin(); ii!=m_inceptions.end(); ++ii) {
-        sum += (*ii)->RateTerms(t, sys, iterm);
+        sum += (*ii)->RateTerms(t, sys, local_geom, iterm);
     }
 
     // Query other processes for their rates.
@@ -440,7 +440,7 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, const Geometry::Local
             (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
             if (!(*i)->IsDeferred()) {
                 // Calculate rate if not deferred.
-                sum += (*i)->RateTerms(t, sys, iterm);
+                sum += (*i)->RateTerms(t, sys, local_geom, iterm);
             } else {
                 // If process is deferred, then set rate to zero.
                 for (unsigned int j=0; j!=(*i)->TermCount(); ++j) {*(iterm++)=0.0;}
@@ -456,16 +456,16 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, const Geometry::Local
     }
 
     // Get coagulation rate.
-    sum += Coagulation::CalcRateTerms(t, sys, m_coags, iterm);
+    sum += Coagulation::CalcRateTerms(t, sys, local_geom, m_coags, iterm);
 
     // Get birth and death rates from the Cell.
     const BirthPtrVector &inf = sys.Inflows();
     for (BirthPtrVector::const_iterator j=inf.begin(); j!=inf.end(); ++j) {
-        sum += (*j)->RateTerms(t, sys, iterm);
+        sum += (*j)->RateTerms(t, sys, local_geom, iterm);
     }
     const DeathPtrVector &out = sys.Outflows();
     for (DeathPtrVector::const_iterator j=out.begin(); j!=out.end(); ++j) {
-        sum += (*j)->RateTerms(t, sys, iterm);
+        sum += (*j)->RateTerms(t, sys, local_geom, iterm);
     }
 
     return sum;
@@ -505,7 +505,7 @@ real Mechanism::CalcDeferredRateTerms(real t, const Cell &sys, const Geometry::L
             (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
             if ((*i)->IsDeferred()) {
                 // Calculate rate if not deferred.
-                sum += (*i)->RateTerms(t, sys, iterm);
+                sum += (*i)->RateTerms(t, sys, local_geom, iterm);
             }
         }
     }
@@ -519,12 +519,15 @@ real Mechanism::CalcDeferredRateTerms(real t, const Cell &sys, const Geometry::L
  *
  *@param[in]    t      Time at which rates are to be calculated
  *@param[in]    sys    System for which rates are to be calculated
+ *@param[in]    local_geom  Position information
  *@param[out]   rates  Vector of time rates of change of mole fractions, temperature and (?number) density
  *
  *@post  rates.size() == m_species.size() + 2
  * There is no precondition on rates.size().
  */
-void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) const
+void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
+                                   const Geometry::LocalGeometry1d &local_geom,
+                                   fvector &rates) const
 {
     // Resize vector to hold all species and set all rates to zero.
     rates.resize(m_species->size()+2, 0.0);
@@ -542,7 +545,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
          i!=m_inceptions.end(); ++i) {
 
         // Calculate the inception rate.
-        real rate = (*i)->Rate(t, sys);
+        real rate = (*i)->Rate(t, sys, local_geom);
 
         // Loop over all reactants, subtracting their contributions.
         for (Sprog::StoichMap::const_iterator j=(*i)->Reactants().begin();
@@ -566,7 +569,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys, fvector &rates) cons
          i!=m_processes.end(); ++i) {
 
         // Calculate the process rate.
-        real rate = (*i)->Rate(t, sys);
+        real rate = (*i)->Rate(t, sys, local_geom);
 
         // Loop over all reactants, subtracting their contributions.
         for (Sprog::StoichMap::const_iterator j=(*i)->Reactants().begin();

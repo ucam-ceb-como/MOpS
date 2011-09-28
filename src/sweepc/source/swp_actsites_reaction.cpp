@@ -102,10 +102,17 @@ ActSiteReaction &ActSiteReaction::operator =(const ActSiteReaction &rhs)
 
 // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
-// Returns rate of the process for the given system.
-real ActSiteReaction::Rate(real t, const Cell &sys) const
+/*!
+ *@param[in]            t           Time at which rate is being calculated
+ *@param[in]            sys         System for which rate is to be calculated
+ *@param[in]            local_geom  Spatial configuration information (ignored)
+ *
+ *@return   Process rate
+ */
+real ActSiteReaction::Rate(real t, const Cell &sys,
+                           const Geometry::LocalGeometry1d &local_geom) const
 {
-    return SurfaceReaction::Rate(t, sys) * 
+    return SurfaceReaction::Rate(t, sys, local_geom) *
            m_asmodel->SiteDensity(t, sys, sys.Particles());
 }
 

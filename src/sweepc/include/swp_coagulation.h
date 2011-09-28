@@ -81,11 +81,15 @@ public:
     virtual Coagulation *const Clone(void) const = 0;
 
     //! Calculate rates for a sequence of coagulation processes
-    static real CalcRates(real t, const Cell &sys, const CoagPtrVector &coags,
+    static real CalcRates(real t, const Cell &sys,
+                          const Geometry::LocalGeometry1d &local_geom,
+                          const CoagPtrVector &coags,
                           fvector &rates, unsigned int start = 0);
 
     //! Calculate rate terms for a sequence of coagulation processes
-    static real CalcRateTerms(real t, const Cell &sys, const CoagPtrVector &coags,
+    static real CalcRateTerms(real t, const Cell &sys,
+                              const Geometry::LocalGeometry1d &local_geom,
+                              const CoagPtrVector &coags,
                               fvector::iterator &iterm);
 
     //! Writes the object to a binary stream.

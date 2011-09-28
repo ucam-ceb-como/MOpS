@@ -168,10 +168,11 @@ public:
 
 	// TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
-    // Returns rate of the process for the given system.
+    //! Rate of the process for the given system.
     virtual real Rate(
-        real t,         // Time.
-        const Cell &sys // System for which to calculate rate.
+        real t,          // Time.
+        const Cell &sys, // System for which to calculate rate.
+        const Geometry::LocalGeometry1d& local_geom
         ) const = 0;
 
 	// RATE TERM CALCULATIONS.
@@ -187,6 +188,7 @@ public:
     virtual real RateTerms(
         real t,                  // Time.
         const Cell &sys,         // System for which to calculate rate terms.
+        const Geometry::LocalGeometry1d& local_geom,
         fvector::iterator &iterm // Iterator to the first term.
         ) const = 0;
 

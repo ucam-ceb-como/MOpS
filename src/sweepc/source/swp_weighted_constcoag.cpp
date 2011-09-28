@@ -84,13 +84,22 @@ Sweep::Processes::WeightedConstantCoagulation::WeightedConstantCoagulation(std::
         throw std::runtime_error("Input stream not ready (WeightedConstantCoagulation::WeightedConstantCoagulation)");
 }
 
-// Returns the rate of the process for the given system.
-Sweep::real Sweep::Processes::WeightedConstantCoagulation::Rate(real t, const Cell &sys) const
-{
+/**
+ * Calculates sum of the majorant kernel over all particle
+ * pairs.
+ *
+ * @param[in] t         Time for which rates are requested
+ * @param[in] sys       Details of the particle population and environment
+ * @param[in] local_geom Details of spatial position and boundaries
+ *
+ * @return      Sum of all rate terms for this process
+ */
+Sweep::real Sweep::Processes::WeightedConstantCoagulation::Rate(real t, const Cell &sys,
+                            const Geometry::LocalGeometry1d &local_geom) const {
     // Create a vector so we can call through to RateTerms
     Sweep::fvector vec(TYPE_COUNT);
     fvector::iterator it = vec.begin();
-    return RateTerms(t, sys, it);
+    return RateTerms(t, sys, local_geom, it);
 }
 
 /**
@@ -98,7 +107,6 @@ Sweep::real Sweep::Processes::WeightedConstantCoagulation::Rate(real t, const Ce
  * kernel over all particle pairs.
  */
 unsigned int Sweep::Processes::WeightedConstantCoagulation::TermCount() const {return TYPE_COUNT;}
-
 
 /**
  * Calculate the terms in the sum of the majorant kernel over all particle
@@ -108,11 +116,13 @@ unsigned int Sweep::Processes::WeightedConstantCoagulation::TermCount() const {r
  *
  * @param[in] t         Time for which rates are requested
  * @param[in] sys       Details of the particle population and environment
+ * @param[in] local_geom Details of spatial position and boundaries
  * @param[inout] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
  *
  * @return      Sum of all rate terms for this process
  */
 Sweep::real Sweep::Processes::WeightedConstantCoagulation::RateTerms(real t, const Cell &sys,
+                            const Geometry::LocalGeometry1d &local_geom,
                             fvector::iterator &iterm) const
 {
     const unsigned int n = sys.ParticleCount();

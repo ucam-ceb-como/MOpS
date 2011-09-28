@@ -41,9 +41,12 @@
 
 #include "mops_predcor_solver.h"
 #include "mops_reactor_factory.h"
+
 #include "sweep.h"
 #include "string_functions.h"
 #include "csv_io.h"
+#include "local_geometry1d.h"
+
 #include <stdexcept>
 
 using namespace Mops;
@@ -418,7 +421,7 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
     // Get rates-of-change using Sweep mechanism.
     src.Time = r.Time();
     r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), 
-                                                src.Terms);
+                                                Geometry::LocalGeometry1d(), src.Terms);
 
     // Calculate the enthalpy-based temperature change 
     // rate using the species change rates and an adiabatic

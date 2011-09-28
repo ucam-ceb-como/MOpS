@@ -149,8 +149,15 @@ int Sweep::Processes::ConstantInception::Perform(const real t, Cell &sys,
 
 // TOTAL RATE CALCULATIONS.
 
-// Returns rate of the process for the given system.
-Sweep::real Sweep::Processes::ConstantInception::Rate(real t, const Cell &sys) const
+/*!
+ *@param[in]            t           Time at which rate is being calculated
+ *@param[in]            sys         System for which rate is to be calculated
+ *@param[in]            local_geom  Spatial configuration information (ignored)
+ *
+ *@return   Process rate
+ */
+Sweep::real Sweep::Processes::ConstantInception::Rate(real t, const Cell &sys,
+                                                      const Geometry::LocalGeometry1d &local_geom) const
 {
     return mRate * A() * sys.SampleVolume();
 }
@@ -165,10 +172,11 @@ unsigned int Sweep::Processes::ConstantInception::TermCount() const {return 1;}
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
 Sweep::real Sweep::Processes::ConstantInception::RateTerms(const real t, const Cell &sys,
-                          fvector::iterator &iterm) const
+                                                           const Geometry::LocalGeometry1d &local_geom,
+                                                           fvector::iterator &iterm) const
 {
     // Calculate the single rate term and advance iterator.
-    *iterm = Rate(t, sys);
+    *iterm = Rate(t, sys, local_geom);
     return *(iterm++);
 }
 
