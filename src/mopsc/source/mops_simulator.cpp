@@ -1869,6 +1869,10 @@ void Simulator::postProcessXmer(const Mechanism &mech,
     fvector temp;//use to hold all the psl information
     fvector psl_xmer; // store information of Xmer in ensemble and then dump them to a file
     fvector m0_xmer;  // store number density of each Xmer
+    fvector m_mass;
+    fvector m_m0;
+    std::vector<std::vector<real> > m_allmass;
+    std::vector<std::vector<real> > m_allm0;
     // Get reference to the particle mechanism.
     const Sweep::Mechanism &pmech = mech.ParticleMech();
 
@@ -1915,11 +1919,15 @@ void Simulator::postProcessXmer(const Mechanism &mech,
                             stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
                                         times[i].EndTime(), temp,
                                         1.0/(r->Mixture()->SampleVolume()*scale));
-                            if ( (k+1) == temp[11])//temp[11]=>num of PAH
-                                psl_xmer.push_back(12 * temp[13] + temp[14]);//temp[13]=>num of C, temp[14]=>num of H
+                            if ( (k+1) == temp[11]){//temp[11]=>num of PAH
+                                //temp[13]=>num of C, temp[14]=>num of H
+                                real mass = 12 * temp[13] + temp[14];
+                                // currently only mass <= 2000 are interested in mass spectra.
+                                if (mass<=2000) psl_xmer.push_back(mass);
+                            }
                         }
                         delete r;
-                        // calculate m0 for each xmer
+                        // calculate m0 for each xmer, used for single run
                         calculateM0(psl_xmer,m0_xmer,Pcount,PM0);
                     } else {
                         // Throw error if the reactor was not read.
@@ -1927,18 +1935,30 @@ void Simulator::postProcessXmer(const Mechanism &mech,
                                             "(Mops, ParticleSolver::postProcessXmer).");
                     }
                     if (psl_xmer.size()  == m0_xmer.size()) {
-                      // Output particle PSL to CSV file.
-                      out[i]->Write(psl_xmer);
-                      out[i]->Write(m0_xmer);
-                      psl_xmer.clear();
-                      m0_xmer.clear();
+                        m_mass.insert(m_mass.end(),psl_xmer.begin(), psl_xmer.end());
+                        m_allmass.push_back(psl_xmer);
+                        m_allm0.push_back(m0_xmer);
+                        psl_xmer.clear();
+                        m0_xmer.clear();
                     } else {
                         // Throw error if the size of vector differ.
-                        throw runtime_error("size of psl_xmer is different form that of m0_xmer, the analysis of xmer information fials"
+                        throw runtime_error("size of psl_xmer is different form that of m0_xmer, the analysis of xmer information fails"
                                             "(Mops, ParticleSolver::postProcessXmer).");
                     }
 
                 }
+                // calculate m0 for xmer, used for multiple runs
+                calculateM0(m_mass, m_m0, m_allmass, m_allm0);
+                // Output particle PSL to CSV file.
+                if (m_mass.size() != m_m0.size()) 
+                    throw runtime_error("size of m_mass is different form that of m_m0, the analysis of xmer information fails" 
+                                        "when trying to calculate mo for multiple runs (Mops, ParticleSolver::postProcessXmer).");
+                out[i]->Write(m_mass);
+                out[i]->Write(m_m0);
+                m_allm0.clear();
+                m_allmass.clear();
+                m_mass.clear();
+                m_m0.clear();
             }
 
             // Close output CSV files.
@@ -1961,6 +1981,25 @@ void Mops::calculateM0(fvector &m_xmer, fvector &m_M0, real Pcount, real PM0)
     
     for (int i = 0 ; i != m_xmer.size() ; ++i)
         m_M0.push_back(count(temp.begin(),temp.end(),m_xmer[i])* PM0 / Pcount);
+}
+
+void Mops::calculateM0(fvector &m_mass, fvector &m_m0, std::vector<std::vector<real> > &m_allmass, std::vector<std::vector<real> > &m_allm0)
+{
+    // remove redundant value, only unique ones are left
+    sort(m_mass.begin(), m_mass.end());
+    fvector::iterator it;
+    it = unique (m_mass.begin(), m_mass.end());
+    m_mass.resize(it-m_mass.begin());
+
+    for (size_t i = 0; i != m_mass.size(); ++i){
+        real sum = 0.0;
+        for (size_t j = 0; j !=m_allmass.size(); ++j){
+            it = find(m_allmass[j].begin(),m_allmass[j].end(),m_mass[i]);
+            size_t m_index = distance(m_allmass[j].begin(),it);
+            if (it != m_allmass[j].end()) sum+=m_allm0[j][m_index];
+        }
+        m_m0.push_back(sum/m_allmass.size());
+    }
 }
 
 // Writes element fluxes to FluxViewer format.

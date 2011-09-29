@@ -25,7 +25,7 @@ add_library(sweep source/swp_abf_model.cpp
                   source/swp_dimer_inception.cpp
                   source/swp_ensemble.cpp
                   source/swp_ensemble_stats.cpp
-				  source/swp_gas_profile.cpp
+                  source/swp_gas_profile.cpp
                   source/swp_imgnode.cpp
                   source/swp_inception.cpp
                   source/swp_mechanism.cpp
@@ -50,7 +50,6 @@ add_library(sweep source/swp_abf_model.cpp
                   source/swp_silica_stats.cpp
                   source/swp_sintering_model.cpp
                   source/swp_solver.cpp
-                  source/swp_submodel.cpp
                   source/swp_subparticle.cpp
                   source/swp_surface_reaction.cpp
                   source/swp_surfvol_cache.cpp

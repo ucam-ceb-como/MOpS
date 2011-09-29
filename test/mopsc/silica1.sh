@@ -54,6 +54,7 @@ if test -n "$2"
 fi
 
 cd silica1
+rm -f silica*
 
 $program -p -strang
 simulationResult=$?
@@ -72,9 +73,10 @@ echo "========================"
 dos2unix "silica-part.csv"
 perl test-silica.pl
 postprocessResult=$?
-rm -f silica*
+
 if((postprocessResult!=0)) 
   then
+    rm -f silica*
     cd ..
     exit $postprocessResult
 fi

@@ -455,7 +455,7 @@ template<class Weight, class Selectee> BinaryTree<Weight, Selectee>::BinaryTree(
  * \param[in]   b   Value to which to compare
  */
 template<class Weight, class Selectee> bool
-  BinaryTree<Weight, Selectee>::node_type::isEqual(const BinaryTree<Weight, Selectee>::node_type& b) {
+  BinaryTree<Weight, Selectee>::node_type::isEqual(const typename BinaryTree<Weight, Selectee>::node_type& b) {
   return (left == b.left && right == b.right);
 }
 

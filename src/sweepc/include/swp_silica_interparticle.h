@@ -92,13 +92,10 @@ public:
     // the rate of this process is proportional.
     unsigned int PropertyID(void) const;
 
-    // Sets the ID number of the particle property to which
-    // the rate of this process is proportional.
+    //! ID number of the particle property to which the rate of this process is proportional.
     void SetPropertyID(
-        Sweep::PropID pid   // ID number of particle property.
+        Sweep::PropID pid
         );
-
-
 
 	// RATE CONSTANT AND PARAMETERS.
 
@@ -203,8 +200,7 @@ protected:
     // Arrhenius rate parameters.
     Sprog::Kinetics::ARRHENIUS m_arr;
 
-    // Particle property to which the rate of the process is
-    // proportional.
+    //! Particle property to which the rate of the process is proportional.
     Sweep::PropID m_pid;
 
      // Default constructor is protected to prevent InterParticles being
@@ -212,8 +208,8 @@ protected:
      InterParticle(void);
 
 }; // InterParticle class
-}; // Process namespace
-}; // Sweep namespace
+}  // Process namespace
+}  // Sweep namespace
 
 #endif
 

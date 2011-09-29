@@ -41,9 +41,9 @@
 */
 
 #include "swp_particle_stats.h"
-#include "swp_submodel_type.h"
 #include "swp_particle.h"
 #include "swp_particle_model.h"
+
 #include <stdexcept>
 
 using namespace Sweep;
@@ -453,7 +453,7 @@ ParticleStats *const ParticleStats::Clone(void) const
 // and for serialisation.
 unsigned int ParticleStats::ID(void) const
 {
-    return (unsigned int)SubModels::BasicModel_ID;
+    return (unsigned int)AggModels::Spherical_ID;
 }
 
 // Writes the object to a binary stream.
