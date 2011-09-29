@@ -63,6 +63,7 @@
 #include "swp_params.h"
 #include "swp_particle.h"
 #include "swp_tree_weighted_cache.h"
+#include "swp_tree_transcoag_weighted_cache.h"
 #include "swp_property_indices.h"
 #include "swp_gas_profile.h"
 
@@ -123,7 +124,7 @@ public:
     typedef PartPtrVector::const_iterator const_iterator;
 
     //! Particle value cache for specifying distributions on the particle list
-    typedef Sweep::TreeWeightedCache particle_cache_type;
+    typedef Sweep::TreeTransCoagWeightedCache particle_cache_type;
 
     // Constructors.
     Ensemble(void); // Default constructor.
