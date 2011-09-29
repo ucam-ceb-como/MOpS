@@ -2,6 +2,7 @@
 #define _LEWIS_H
 
 #include "array.h"
+#include "comostrings.h"
 
 namespace Camflow
 {
@@ -13,6 +14,7 @@ class LewisNumber
     const Sprog::Mechanism *const mech_;
     Array2D Le;
     int lewisType_;
+
 
     void loadSettings(const std::string& inputFileName);
     void readFromFile(const std::string& fixedLewisFile);
@@ -27,6 +29,8 @@ public:
         FIXEDFROMFILE,
         CALCULATED
     };
+
+    doublereal sootFlameTimeThreshold;
 
     LewisNumber
     (

@@ -125,7 +125,6 @@ void InterParticle::SetArrhenius(Sprog::Kinetics::ARRHENIUS &arr) {m_arr = arr;}
 // the rate of this process is proportional.
 unsigned int InterParticle::PropertyID(void) const {return m_pid;}
 
-
 // Sets the ID number of the particle property to which
 // the rate of this process is proportional.
 void InterParticle::SetPropertyID(PropID pid)

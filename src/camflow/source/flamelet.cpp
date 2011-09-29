@@ -28,7 +28,7 @@ FlameLet::FlameLet
   radiation(NULL),
   scalarDissipationRate_(admin_.getInputFile(), stoichZ, reacGeom_.getAxpos(), 1),
   CpSpec(mCord,nSpc),
-  steadyStateAtFlameBase(false),
+  sootResidualZeroed(false),
   Lewis(admin_.getInputFile(),camMech_,mCord,nSpc)
 {}
 
@@ -65,7 +65,7 @@ void FlameLet::solve()
 
 /*
  * Use this call method when calling from openFoam.
- * if steadyStateAtFlameBase is TRUE then, flamelet will
+ * if sootResidualZeroed is TRUE then, flamelet will
  * be solved to steady state and with soot residual set to zero.
  * (i.e. no soot present at base of flame)
  *
@@ -74,7 +74,7 @@ void FlameLet::solve()
  */
 void FlameLet::solve(bool interface, bool steadyStateNoSoot)
 {
-	steadyStateAtFlameBase = steadyStateNoSoot;
+	sootResidualZeroed = steadyStateNoSoot;
 	solve(interface);
 }
 
@@ -418,22 +418,6 @@ void FlameLet::csolve
         cout << "Species Rel Tol: " << control_.getSpeciesRelTol() << endl;
         cout << "Residual Tol: " << control_.getResTol() << endl;
 
-    /*
-        // Build an array of absolute tolerances.  Set higher tolerances for moments
-        doublereal atolSpecies = control_.getSpeciesAbsTol();
-        doublereal atolVector[nVar*cellEnd];
-
-        for(int i=0; i<cellEnd; i++){
-            for(int l=0; l<nSpc; l++)
-                atolVector[i*nVar+l] = atolSpecies;       // Species aTol
-            atolVector[i*nVar+ptrT] = atolSpecies;		  // Temperature aTol
-            if (sootMom_.active())
-            {
-            	for(int l=0; l<nMoments; l++)
-            		atolVector[i*nVar+ptrT+1+l] = 1.0e6;  // Moments aTol
-            }
-        }
-     */
         cvw.init(nEqn,solvect,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
             control_.getMaxTime(),band,*this);
 
@@ -522,10 +506,28 @@ void FlameLet::massMatrix(doublereal** M)
  *restart the solution. This is normally called from the interface routine
  *The solver is reinitialized each time with the previous solution.
  */
-void FlameLet::restart()
+void FlameLet::restart(doublereal flameTime)
 {
 	// Assumption is that a restart is always a Lagrangian flamelet (i.e. not steady state)
-	steadyStateAtFlameBase = false;
+	//steadyStateAtFlameBase = false;
+
+	/// Change restart so that it takes in flameHeight ( or  flameTime or gridnumber?
+	// Then decide set steadyStateAtFlameBase to true if above a ceetain threshold.
+	// i.e. we stop calculating soot when high enough out of the flame.
+	// Rename "steadyStateAtFlameBase" to "sootResidualZeroed"
+
+	if (flameTime < Lewis.sootFlameTimeThreshold)
+	{
+		// Still below the time at which we stop calculating soot residual
+		sootResidualZeroed = false;
+	    std::cout << "Soot residual is active " << std::endl;
+	}
+	else
+	{
+		// Past the time, beyond which we no longer calculate soot.
+		sootResidualZeroed = true;
+	    std::cout << "Soot residual is zeroed out " << std::endl;
+	}
 
     if (solverID == control_.CVODE) {
         CVodeWrapper cvw;
@@ -832,7 +834,7 @@ void FlameLet::residual
         energyResidual(t,y,&resT[0]);
         if (sootMom_.active())
         {
-        	if (steadyStateAtFlameBase)
+        	if (sootResidualZeroed)
         	{
         		sootMomentResidualAtFlameBase(t,y,&resMom[0]);
         	}
@@ -901,7 +903,7 @@ void FlameLet::residual
         {
         	mergeSootMoments(y);
             saveMixtureProp(&solvect[0]);
-        	if (steadyStateAtFlameBase)
+        	if (sootResidualZeroed)
         	{
         		sootMomentResidualAtFlameBase(t,y,&resMom[0]);
         	}
@@ -1058,6 +1060,7 @@ void FlameLet::sootMomentResidual
     doublereal grad_e, grad_w;
     doublereal zPE, zPW;
     doublereal source;
+    doublereal sdr, sdrPE, sdrPW;
 
     for (int l=0; l<nMoments; ++l)
     {
@@ -1085,34 +1088,6 @@ void FlameLet::sootMomentResidual
             source = moments_dot(i,l)/m_rho[i];
             f[i*nMoments+l] = diffusionConstant*(grad_e-grad_w)
                           + source;								// LE = 1
-
-            // DEBUG:  If residual is negative for any moment then output:
-            // a) The cell and moment indices
-            // b) source
-            // c) diffusionConstant*(grad_e-grad_w)
-            // d) grad_e
-            // e) grad_w
-            // f) The value of the moment in i-1,i,i+1
-            // g) m_rho
-            /*
-            if (f[i*nMoments+l] <= 0.0)
-            {
-            	std::cout << "Negative moment residual found" << std::endl;
-            	std::cout << "Moment index : " << l << std::endl;
-            	std::cout << "Cell index : " << i << std::endl;
-            	std::cout << "Source : " << source << std::endl;
-            	std::cout << "moments_dot : " << moments_dot(i,l) << std::endl;
-            	std::cout << "residual : " << f[i*nMoments+l] << std::endl;
-            	std::cout << "diffusionConstant*(grad_e-grad_w) : " << diffusionConstant*(grad_e-grad_w) << std::endl;
-            	std::cout << "grad_e : " << grad_e << std::endl;
-            	std::cout << "grad_w : " << grad_w << std::endl;
-            	std::cout << "Moment [i-1] : " << moments(i-1,l) << std::endl;
-            	std::cout << "Moment [i] : " << moments(i,l) << std::endl;
-            	std::cout << "Moment [i+1] : " << moments(i+1,l) << std::endl;
-            	std::cout << "m_rho : " << m_rho[i] << std::endl;
-            }
-            // End DEBUG
-			*/
 
         }
 
@@ -1183,6 +1158,8 @@ void FlameLet::energyResidual
     doublereal zPE=0, zPW=0;
     doublereal source=0;
     doublereal deltax=0;
+    doublereal sdr, sdrPE, sdrPW;
+
     /*
      *starting with mixture fraction zero: i.e oxidizer
      *inlet. The temperature is fixed at the oxidizer
@@ -1358,7 +1335,7 @@ void FlameLet::saveMixtureProp(doublereal* y)
 
           // Now get the corresponding gas phase rates and add them to s_Wdot
           // Only do this if we are solving a Lagrangian flamelet (not steady state)
-          if (steadyStateAtFlameBase == false)
+          if (sootResidualZeroed == false)
           {
             wdotSootGasPhase = sootMom_.showGasPhaseRates(nSpc);
     	    for (int l=0; l< nSpc; l++)

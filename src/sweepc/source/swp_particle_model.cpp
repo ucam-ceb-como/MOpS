@@ -101,12 +101,6 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
             m_trackers.push_back((*i)->Clone());
         }
 
-        // Copy particle sub-model info.
-        for (SubModels::SubModelTypeSet::const_iterator i=rhs.m_submodels.begin();
-            i!=rhs.m_submodels.end(); ++i) {
-            m_submodels.insert(*i);
-        }
-
         // Copy aggregation model.
         m_aggmodel = rhs.m_aggmodel;
 
@@ -282,21 +276,6 @@ void ParticleModel::SetTrackers(const TrackPtrVector &track)
     for (ic=track.begin(); ic!=track.end(); ++i) {
         m_trackers.push_back((*ic)->Clone());
     }
-}
-
-
-// PARTICLE MODELS.
-
-// Returns the set of particle model ID used by this ParticleModel
-const SubModels::SubModelTypeSet &ParticleModel::SubModels(void) const
-{
-    return m_submodels;
-}
-
-// Returns true if the ParticleModel include the given model.
-bool ParticleModel::ContainsSubModel(SubModels::SubModelType id) const
-{
-    return m_submodels.find(id) != m_submodels.end();
 }
 
 // AGGREGATION MODEL TYPE.
@@ -496,16 +475,6 @@ void ParticleModel::Serialize(std::ostream &out) const
             (*i)->Serialize(out);
         }
 
-        // Write model count.
-        n = (unsigned int)m_submodels.size();
-        out.write((char*)&n, sizeof(n));
-
-        // Write model set.
-        for (SubModels::SubModelTypeSet::const_iterator i=m_submodels.begin(); i!=m_submodels.end(); ++i) {
-            n = (unsigned int)(*i);
-            out.write((char*)&n, sizeof(n));
-        }
-
         // Write the aggregation model ID.
         n = (unsigned int)m_aggmodel;
         out.write((char*)&n, sizeof(n));
@@ -557,15 +526,6 @@ void ParticleModel::Deserialize(std::istream &in)
                 // Read trackers.
                 for (unsigned int i=0; i!=n; ++i) {
                     m_trackers.push_back(new Tracker(in));
-                }
-
-                // Read model count.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-
-                // Read model set.
-                for (unsigned int i=0; i!=n; ++i) {
-                    in.read(reinterpret_cast<char*>(&id), sizeof(id));
-                    m_submodels.insert((SubModels::SubModelType)id);
                 }
 
                 // Read the aggregation model ID.
@@ -632,9 +592,6 @@ void ParticleModel::releaseMem(void)
         delete *i;
     }
     m_trackers.clear();
-
-    // Clear sub-models.
-    m_submodels.clear();
 
     // Set aggregation model to default value.
     m_aggmodel     = AggModels::Spherical_ID;

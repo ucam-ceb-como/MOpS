@@ -577,8 +577,7 @@ CamSoot::realVector CamSoot::rateAll
     // prodRatePAHCond is rate of change in PAH due to condensation.
     //doublereal tempPAHConc = conc[iInception];
 
-    //if (moments[0] > m0Threshold)		// Threshold check
-    if (false)  // turn off condensation for now.
+    if (moments[0] > m0Threshold)		// Threshold check
     {
     	cdRates = rateCondensation(moments, T,conc[iInception]);
     	prodRatePAHCond = -cdRates[1]/numCAtomInception/NA;
@@ -598,8 +597,7 @@ CamSoot::realVector CamSoot::rateAll
     // prodRatesSurface is rate of change of gas phase species due to surface chemistry
     // sRates is rate of change of moments due to surface chemistry
 
-    //if (moments[0] > m0Threshold)		// Threshold check
-    if(false) 	// Turn off surface chem for now.
+    if (moments[0] > m0Threshold)		// Threshold check
     {
     	rateSurface(conc,T,moments,prodRates,sRates);
     	sRates[0] = 0.0; // Surface chem should not affect M0.  (Why is this needed here?)
