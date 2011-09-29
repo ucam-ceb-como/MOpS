@@ -118,6 +118,15 @@ public:
     //! Set rule for choosing post coagulation position (not relevant to homogeneous sims)
     void SetPositionChoiceRule(const ParticlePositionChoice rule) {mPositionChoice = rule;}
 
+    // Majorant types are important for the transition regime kernel,
+    // but additional kernels are free to add addition values to this
+    // enum.  Most kernels will ignore most enum values.
+    enum MajorantType {
+        Default, // Place holder value
+        FreeMol, // Free-molecular majorant.
+        SlipFlow // Slip-flow majorant.
+    };
+
 protected:
 
     /*!
@@ -137,20 +146,14 @@ protected:
     int WeightedPerform(const real t, const Sweep::PropID prop1,
                         const Sweep::PropID prop2,
                         const Sweep::Processes::CoagWeightRule weight_rule,
-                        Cell &sys, rng_type &rng) const;
+                        Cell &sys, rng_type &rng,
+                        Sweep::Processes::Coagulation::MajorantType maj) const;
 
     //! Calculate kernel between two particles
     virtual real CoagKernel(const Particle &sp1, const Particle &sp2,
                     const Cell& sys) const = 0;
 
-    // Majorant types are important for the transition regime kernel,
-    // but additional kernels are free to add addition values to this
-    // enum.  Most kernels will ignore most enum values.
-    enum MajorantType {
-        Default, // Place holder value
-        FreeMol, // Free-molecular majorant.
-        SlipFlow // Slip-flow majorant.
-    };
+
 
     //! Calculate majorant kernel between two particles
     virtual real MajorantKernel(const Particle &sp1, const Particle &sp2,

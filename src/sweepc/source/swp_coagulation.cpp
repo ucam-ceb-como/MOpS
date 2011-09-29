@@ -201,7 +201,8 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
 int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
                                  const Sweep::PropID prop2,
                                  const Sweep::Processes::CoagWeightRule weight_rule,
-                                 Cell &sys, rng_type &rng) const {
+                                 Cell &sys, rng_type &rng,
+                                 MajorantType maj) const {
     int ip1 = sys.Particles().Select(prop1, rng);
     int ip2 = sys.Particles().Select(prop2, rng);
 
@@ -229,7 +230,7 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
     }
 
     //Calculate the majorant rate before updating the particles
-    const real majk = MajorantKernel(*sp1, *sp2, sys, Default);
+    const real majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
     //Update the particles
     m_mech->UpdateParticle(*sp1, sys, t, rng);
