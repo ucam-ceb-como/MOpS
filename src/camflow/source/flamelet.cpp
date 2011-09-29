@@ -515,15 +515,18 @@ void FlameLet::restart(doublereal flameTime)
 	// Then decide set steadyStateAtFlameBase to true if above a ceetain threshold.
 	// i.e. we stop calculating soot when high enough out of the flame.
 	// Rename "steadyStateAtFlameBase" to "sootResidualZeroed"
+
 	if (flameTime < Lewis.sootFlameTimeThreshold)
 	{
 		// Still below the time at which we stop calculating soot residual
 		sootResidualZeroed = false;
+	    std::cout << "Soot residual is active " << std::endl;
 	}
 	else
 	{
 		// Past the time, beyond which we no longer calculate soot.
 		sootResidualZeroed = true;
+	    std::cout << "Soot residual is zeroed out " << std::endl;
 	}
 
     if (solverID == control_.CVODE) {
