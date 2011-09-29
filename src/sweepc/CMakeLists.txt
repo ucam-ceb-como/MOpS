@@ -60,9 +60,11 @@ add_library(sweep source/swp_abf_model.cpp
                   source/swp_transcoag.cpp
                   source/swp_tree_add_weighted_cache.cpp
                   source/swp_tree_cache.cpp
+                  source/swp_tree_transcoag_weighted_cache.cpp
                   source/swp_tree_weighted_cache.cpp
                   source/swp_weighted_addcoag.cpp
                   source/swp_weighted_constcoag.cpp
+                  source/swp_weighted_transcoag.cpp
 				  source/swp_kmc_gaspoint.cpp
 				  source/swp_kmc_jump_process.cpp
 				  source/swp_kmc_mech.cpp
