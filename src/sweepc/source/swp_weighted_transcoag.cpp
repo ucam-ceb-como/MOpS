@@ -318,6 +318,7 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
             prop1 = iUniform;
             prop2 = iD2_M_1_2W;
             maj = FreeMol;
+            break;
         case FreeMol2:
             prop1 = iD2;
             prop2 = iM_1_2W;
