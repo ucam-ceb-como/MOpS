@@ -664,9 +664,9 @@ CamSoot::realVector CamSoot::rateAll
     for (int m=0; m<nMoments; ++m)
     {
     	//rates[m] = (nucRates[m]);
-    	rates[m] = (nucRates[m]+coagRates[m]);
+    	//rates[m] = (nucRates[m]+coagRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);
-    	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
+    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]+cdRates[m]);
     }
 
