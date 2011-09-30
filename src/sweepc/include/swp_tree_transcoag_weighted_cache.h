@@ -1,7 +1,7 @@
 /*!
- * \file   swp_tree_weighted_cache.h
- * \author Robert I A Patterson
- *  Copyright (C) 2011 Robert I A Patterson.
+ * \file   swp_tree_transcoag_weighted_cache.h
+ * \author William J Menz
+ *  Copyright (C) 2011 William J Menz.
  *
  *  Project:        sweepc (population balance solver)
  *  Sourceforge:    http://sourceforge.net/projects/mopssuite
@@ -75,7 +75,7 @@ namespace Sweep
  * many physical particles are represented by one simulation particle
  * (SI unit m^-3).
  *
- * Currently has 15 data members
+ * Currently has 21 data members
  */
 class TreeTransCoagWeightedCache
 {
@@ -95,12 +95,13 @@ public:
     //! Resets the cache to its "empty" condition.
     void Clear(void);
 
-    // Returns the property with the given ID.
+    //!Returns the property with the given ID.
     real Property(PropID id) const;
 
 private:
 
     // Basic properties
+    
     //! Equivalent spherical diameter.
     real m_sphdiam;
 
@@ -120,23 +121,24 @@ private:
     real m_mass;
 
     // Collision rate calculation particle properties.
-    real m_dcolsqr;      // Collision diameter squared.
-    real m_inv_dcol;     // Inverse collision diameter.
-    real m_inv_dcolsqr;  // Inverse of the diameter squared.
-    real m_inv_sqrtmass; // Inverse of the square-root of the mass.
-    real m_d2_m_1_2;     // D^2 * M^-1/2.
+    real m_dcolsqr;      //!< Collision diameter squared.
+    real m_inv_dcol;     //!< Inverse collision diameter.
+    real m_inv_dcolsqr;  //!< Inverse of the diameter squared.
+    real m_inv_sqrtmass; //!< Inverse of the square-root of the mass.
+    real m_d2_m_1_2;     //!< D^2 * M^-1/2.
 
-    //! Particle properties required for the weighted transition kernel (dcol used)
-    real m_weight;			// Statistical weight
-    real m_weight_mass;		// W * M
-    real m_d_w;				// D * M
-    real m_d2_w;			// D^2 * W
-    real m_d_1_w;			// D^-1 * W
-    real m_d_2_w;			// D^_2 * W
-    real m_m_1_2_w;			// M^-1/2 * W
-    real m_d2m_1_2_w;		// D^-2 * M^-1/2 * W
+    // Particle properties required for the weighted transition kernel (dcol used)
+    real m_weight;            //!< Statistical weight
+    real m_weight_mass;       //!< W * M
+    real m_d_w;               //!< D * M
+    real m_d2_w;              //!< D^2 * W
+    real m_d_1_w;             //!< D^-1 * W
+    real m_d_2_w;             //!< D^_2 * W
+    real m_m_1_2_w;           //!< M^-1/2 * W
+    real m_d2m_1_2_w;         //!< D^2 * M^-1/2 * W
 
     // SilicaPrimary properties
+    
     //! Number of sites to which reaction is proportional
     int m_sites;
 

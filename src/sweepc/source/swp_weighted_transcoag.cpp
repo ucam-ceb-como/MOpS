@@ -1,7 +1,58 @@
+/*!
+ * \file   swp_weighted_transcoag.cpp
+ * \author William J Menz 
+ *  Copyright (C) 2011 William J Menz.
+ *
+ *  Project:        sweepc (population balance solver)
+ *  Sourceforge:    http://sourceforge.net/projects/mopssuite
+ * 
+ * \brief Implementation of weighted transition regime coagulation kernel
+ * 
+  Author(s):      William J Menz
+  Project:        sweepc (population balance solver)
+  Sourceforge:    http://sourceforge.net/projects/mopssuite
+
+  Copyright (C) 2009 Robert I A Patterson.
+   updated from DSA transition regime to weighted by William J Menz 2011
+
+  File purpose:
+    Implementation of weighted transition regime coagulation kernel
+
+  Licence:
+    This file is part of "sweepc".
+
+    sweepc is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+  Contact:
+    Dr Markus Kraft
+    Dept of Chemical Engineering
+    University of Cambridge
+    New Museums Site
+    Pembroke Street
+    Cambridge
+    CB2 3RA
+    UK
+
+    Email:       mk306@cam.ac.uk
+    Website:     http://como.cheng.cam.ac.uk
+*/
 #include "swp_weighted_transcoag.h"
 #include "swp_params.h"
 #include "swp_cell.h"
 #include "swp_mechanism.h"
+#include <numeric>
 using namespace std;
 using namespace Sweep::Processes;
 
@@ -9,14 +60,15 @@ using namespace Sweep::Processes;
 const Sweep::real Sweep::Processes::WeightedTransitionCoagulation::m_efm = 2.2; // 2.2 is for soot.
 
 /**
- * Main way of building a new coagulation object
- * @param[in]   mech            Mechanism to which coagulation will belong
- * @param[in]   weight_rule     Specify how to calculate statistical weight of newly coagulation particles
+ * Main way of building a new coagulation object.
+ * 
+ * \param[in]   mech            Mechanism to which coagulation will belong
+ * \param[in]   weight_rule     Specify how to calculate statistical weight of newly coagulation particles
  *
  */
 Sweep::Processes::WeightedTransitionCoagulation::WeightedTransitionCoagulation(
-		const Sweep::Mechanism &mech,
-		const CoagWeightRule weight_rule)
+        const Sweep::Mechanism &mech,
+        const CoagWeightRule weight_rule)
 : Coagulation(mech)
 , m_CoagWeightRule(weight_rule)
 {
@@ -32,10 +84,10 @@ Sweep::Processes::WeightedTransitionCoagulation* const Sweep::Processes::Weighte
 /**
  * Load an instance of this process from a binary stream
  *
- * @param[in,out]   in      Input stream
- * @param[in]       mech    Mechanism to which process will belong
+ * \param[in,out]   in      Input stream
+ * \param[in]       mech    Mechanism to which process will belong
  *
- * @exception   runtime_error   Input stream not ready
+ * \exception   runtime_error   Input stream not ready
  */
 Sweep::Processes::WeightedTransitionCoagulation::WeightedTransitionCoagulation(std::istream &in, const Sweep::Mechanism &mech)
 : Coagulation(mech)
@@ -56,10 +108,10 @@ Sweep::Processes::WeightedTransitionCoagulation::WeightedTransitionCoagulation(s
  * helper function RateTerms to calculate the individual terms. Returns
  * the sum of all rate terms.
  *
- * @param[in] t         Time for which rates are requested
- * @param[in] sys       Details of the particle population and environment
+ * \param[in] t         Time for which rates are requested
+ * \param[in] sys       Details of the particle population and environment
  *
- * @return      Sum of all rate terms for this process
+ * \return      Sum of all rate terms for this process
  */
 Sweep::real Sweep::Processes::WeightedTransitionCoagulation::Rate(real t, const Cell &sys) const
 {
@@ -79,7 +131,7 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::Rate(real t, const 
         return RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/ViscosityAir(T),
                 MeanFreePathAir(T,P), sys.SampleVolume(), it);
     } else {
-    	// Not enough particles so return 0
+        // Not enough particles so return 0
         return 0.0;
     }
 }
@@ -91,16 +143,18 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::Rate(real t, const 
 unsigned int Sweep::Processes::WeightedTransitionCoagulation::TermCount() const {return TYPE_COUNT;}
 
 /**
+ * Publicly available calculation of weighted transition kernel rate terms.
+ * 
  * Calculate the terms in the sum of the majorant kernel over all particle
  * pairs, placing each term in successive positions of the sequence
  * beginning at iterm and return the sum of the terms added to that
  * vector.
  *
- * @param[in] t         Time for which rates are requested
- * @param[in] sys       Details of the particle population and environment
- * @param[inout] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
+ * \param[in] t         Time for which rates are requested
+ * \param[in] sys       Details of the particle population and environment
+ * \param[in,out] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
  *
- * @return      Sum of all rate terms for this process
+ * \return      Sum of all rate terms for this process
  */
 Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(real t, const Cell &sys,
                             fvector::iterator &iterm) const
@@ -120,38 +174,33 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(real t, c
 
     } else {
         // Free-molecular.
-    	*iterm++ = 0.0;
-    	*iterm++ = 0.0;
-    	*iterm++ = 0.0;
-    	*iterm++ = 0.0;
+    	fill(iterm, iterm+4, 0.0);
+    	iterm = iterm+4;
 
         // Slip-flow.
-    	*iterm++ = 0.0;
-    	*iterm++ = 0.0;
-    	*iterm++ = 0.0;
-    	*iterm++ = 0.0;
-    	*iterm++ = 0.0;
-    	*iterm++ = 0.0;
-    	*iterm++ = 0.0;
-    	return 0.0;
+        fill(iterm, iterm+7, 0.0);
+    	iterm = iterm+7;
+        return 0.0;
     }
 }
 
 /**
+ * Calculate the individual rate terms for weighted transition coagulation.
+ * 
  * Calculate the terms in the sum of the majorant kernel over all particle
  * pairs, placing each term in successive positions of the sequence
  * beginning at iterm and return the sum of the terms added to that
  * vector.
  *
- * @param[in] data      Particle data cache pointer
- * @param[in] n       	Number of particles
- * @param[in] sqrtT		Square-root of temperature
- * @param[in] T_mu		Temperature divided by viscosity
- * @param[in] MFP		Mean free path in air
- * @param[in] vol		Sample volume used for scaling
- * @param[inout] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
+ * \param[in] data      Particle data cache pointer
+ * \param[in] n       	Number of particles
+ * \param[in] sqrtT		Square-root of temperature
+ * \param[in] T_mu		Temperature divided by viscosity
+ * \param[in] MFP		Mean free path in air
+ * \param[in] vol		Sample volume used for scaling
+ * \param[in,out] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
  *
- * @return      Sum of all rate terms for this process
+ * \return      Sum of all rate terms for this process
  */
 Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
 		const Ensemble::particle_cache_type &data, real n, real sqrtT,
@@ -213,41 +262,25 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
         // There is some coagulation.
         if (sf > fm) {
             // Use free-mol majorant.
-            *(isf) = 0.0;
-            *(isf+1) = 0.0;
-            *(isf+2) = 0.0;
-            *(isf+3) = 0.0;
-            *(isf+4) = 0.0;
-            *(isf+5) = 0.0;
-            *(isf+6) = 0.0;
+        	fill(isf, isf+7, 0.0);
             return fm;
         } else {
             // Use slip-flow majorant.
-            *(ifm) = 0.0;
-            *(ifm+1) = 0.0;
-            *(ifm+2) = 0.0;
-            *(ifm+3) = 0.0;
+            fill(ifm, ifm+4, 0.0);
             return sf;
         }
     } else {
         // Something went wrong with the rate calculation.
-        *(isf) = 0.0;
-        *(isf+1) = 0.0;
-        *(isf+2) = 0.0;
-        *(isf+3) = 0.0;
-        *(isf+4) = 0.0;
-        *(isf+5) = 0.0;
-        *(isf+6) = 0.0;
-        *(ifm) = 0.0;
-        *(ifm+1) = 0.0;
-        *(ifm+2) = 0.0;
-        *(ifm+3) = 0.0;
+    	fill(isf, isf+7, 0.0);
+    	fill(ifm, ifm+4, 0.0);
         return 0.0;
     }
 }
 
 /*!
- *
+ * Perform coagulation process.
+ * Choose the properties of two particles for coagulation based on the index
+ * passed to the function. Then call WeightedPerform to conduct the process.
  *
  * \param[in]       t           Time
  * \param[in,out]   sys         System to update
@@ -281,18 +314,18 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
 
     // Properties to which the probabilities of particle selection will be proportional
     switch(static_cast<TermType>(iterm)) {
-		case FreeMol1:
-			prop1 = iUniform;
-			prop2 = iD2_M_1_2W;
-			maj = FreeMol;
+        case FreeMol1:
+            prop1 = iUniform;
+            prop2 = iD2_M_1_2W;
+            maj = FreeMol;
         case FreeMol2:
-        	prop1 = iD2;
-        	prop2 = iM_1_2W;
+            prop1 = iD2;
+            prop2 = iM_1_2W;
             maj = FreeMol;
             break;
         case FreeMol3:
-            prop1 = iD2W;
-            prop2 = iM_1_2;
+            prop1 = iM_1_2;
+            prop2 = iD2W;
             maj = FreeMol;
             break;
         case FreeMol4:
@@ -301,45 +334,42 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
             maj = FreeMol;
             break;
         case SlipFlow1:
-        	prop1 = iUniform;
-        	prop2 = iW;
+            prop1 = iUniform;
+            prop2 = iW;
             maj = SlipFlow;
             break;
         case SlipFlow2:
-        	prop1 = iDcol;
-        	prop2 = iD_1W;
+            prop1 = iDcol;
+            prop2 = iD_1W;
             maj = SlipFlow;
             break;
         case SlipFlow3:
-        	prop1 = iDW;
-        	prop2 = iD_1;
+            prop1 = iD_1;
+            prop2 = iDW;
             maj = SlipFlow;
             break;
         case SlipFlow4:
-        	prop1 = iUniform;
-        	prop2 = iD_1W;
+            prop1 = iUniform;
+            prop2 = iD_1W;
             maj = SlipFlow;
             break;
         case SlipFlow5:
-        	prop1 = iDcol;
-        	prop2 = iD_2W;
+            prop1 = iDcol;
+            prop2 = iD_2W;
             maj = SlipFlow;
             break;
         case SlipFlow6:
-        	prop1 = iDW;
-        	prop2 = iD_2;
+            prop1 = iD_2;
+            prop2 = iD_2;
             maj = SlipFlow;
             break;
         case SlipFlow7:
-        	prop1 = iD_1;
-        	prop2 = iW;
+            prop1 = iD_1;
+            prop2 = iW;
             maj = SlipFlow;
             break;
         default :
-        	prop1 = iUniform;
-        	prop2 = iUniform;
-            maj = SlipFlow;
-            break;
+        	throw std::logic_error("Unrecognised term, (Sweep, WeightedTransitionCoagulation::Perform)");
     }
 
     return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng, maj);
@@ -352,11 +382,11 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
  * Calculate the coagulation kernel between two particles in the given environment.
  * Note that the weights are included in FreeMolKernel and SlipFlowKernel rather than here.
  *
- *@param[in]    sp1         First particle
- *@param[in]    sp2         Second particle
- *@param[in]    sys         Details of the environment, including temperature and pressure
+ *\param[in]    sp1         First particle
+ *\param[in]    sp2         Second particle
+ *\param[in]    sys         Details of the environment, including temperature and pressure
  *
- *@return       Value of kernel
+ *\return       Value of kernel
  */
 Sweep::real Sweep::Processes::WeightedTransitionCoagulation::CoagKernel(const Particle &sp1,
                                                                 const Particle &sp2,
@@ -372,12 +402,12 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::CoagKernel(const Pa
 /**
  * Calculate the majorant kernel between two particles in the given environment.
  *
- *@param[in]    sp1         First particle
- *@param[in]    sp2         Second particle
- *@param[in]    sys         Details of the environment, including temperature and pressure
- *@param[in]    maj         Flag to indicate which majorant kernel is required
+ *\param[in]    sp1         First particle
+ *\param[in]    sp2         Second particle
+ *\param[in]    sys         Details of the environment, including temperature and pressure
+ *\param[in]    maj         Flag to indicate which majorant kernel is required
  *
- *@return       Value of kernel
+ *\return       Value of kernel
  */
 Sweep::real Sweep::Processes::WeightedTransitionCoagulation::MajorantKernel(const Particle &sp1,
                                                                     const Particle &sp2,
@@ -408,13 +438,13 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::MajorantKernel(cons
  * Either the majorant or non-majorant (true) kernel can be calculated.
  * The kernel is evaluated assuming that air is the surrounding gas (principally N2)
  *
- *@param[in]    sp1         First particle
- *@param[in]    sp2         Second particle
- *@param[in]    T        	Temperature
- *@param[in]    P        	Pressure
- *@param[in]    maj			Flag to indicate which majorant kernel is required
+ *\param[in]    sp1         First particle
+ *\param[in]    sp2         Second particle
+ *\param[in]    T        	Temperature
+ *\param[in]    P        	Pressure
+ *\param[in]    maj			Flag to indicate which majorant kernel is required
  *
- *@return       Value of kernel
+ *\return       Value of kernel
  */
 Sweep::real Sweep::Processes::WeightedTransitionCoagulation::FreeMolKernel(const Particle &sp1, const Particle &sp2,
                                 real T, real P, bool maj) const
@@ -447,13 +477,13 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::FreeMolKernel(const
  * Calculate the slip-flow kernel between two particles in the given environment.
  * The kernel is evaluated assuming that air is the surrounding gas (principally N2)
  *
- *@param[in]    sp1         First particle
- *@param[in]    sp2         Second particle
- *@param[in]    T        	Temperature
- *@param[in]    P        	Pressure
- *@param[in]    maj			Flag to indicate which majorant kernel is required
+ *\param[in]    sp1         First particle
+ *\param[in]    sp2         Second particle
+ *\param[in]    T        	Temperature
+ *\param[in]    P        	Pressure
+ *\param[in]    maj			Flag to indicate which majorant kernel is required
  *
- *@return       Value of kernel
+ *\return       Value of kernel
  */
 Sweep::real Sweep::Processes::WeightedTransitionCoagulation::SlipFlowKernel(const Particle &sp1, const Particle &sp2,
                                  real T, real P, bool maj) const
@@ -472,10 +502,12 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::SlipFlowKernel(cons
 }
 
 
-/*!
- * @param[in,out]   out     Binary output stream
+/**
+ * Write output to binary stream.
+ * 
+ * \param[in,out]   out     Binary output stream
  *
- * @exception   runtime_error   Output stream not ready
+ * \exception   runtime_error   Output stream not ready
  */
 void Sweep::Processes::WeightedTransitionCoagulation::Serialize(std::ostream &out) const
 {

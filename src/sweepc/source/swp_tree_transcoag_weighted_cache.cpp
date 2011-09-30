@@ -1,11 +1,14 @@
 /*!
  * \file   swp_tree_weighted_cache.cpp
- * \author Robert I A Patterson
- *  Copyright (C) 2010 Robert I A Patterson.
+ * \author William J Menz
+ *  Copyright (C) 2010 William J Menz
  *
  *  Project:        sweepc (population balance solver)
  *  Sourceforge:    http://sourceforge.net/projects/mopssuite
  *
+ * \brief Implementation of the binary tree structure for the storage
+ *        of particle properties for the weighted transition kernel.
+ * 
 
  Licence:
     This file is part of "sweepc".
@@ -84,7 +87,9 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache()
 {}
 
 /*!
- * @param[in]	part	Particle supplying physical data with which to initialise
+ * Calculation of basic and derived particle properties.
+ * 
+ * \param[in]   part    Particle supplying physical data with which to initialise
  *
  * This method queries the particle for basic quantities and then computes
  * derived quantities so that different caches can be written for different
@@ -110,28 +115,28 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
     m_inv_sqrtmass = 1.0 / std::sqrt(m_mass);
     m_d2_m_1_2     = m_dcolsqr * m_inv_sqrtmass;
 
-	// Quantities associated with statistical weighting
+    // Quantities associated with statistical weighting
     m_weight = part.getStatisticalWeight();
     m_weight_mass = m_weight * m_mass;
-    m_d_w		= m_dcol * m_weight;
-    m_d2_w		= m_dcolsqr * m_weight;
-    m_d_1_w		= m_inv_dcol * m_weight;
-    m_d_2_w		= m_inv_dcolsqr * m_weight;
-    m_m_1_2_w	= m_inv_sqrtmass * m_weight;
-    m_d2m_1_2_w	= m_d2_m_1_2 * m_weight;
+    m_d_w         = m_dcol * m_weight;
+    m_d2_w        = m_dcolsqr * m_weight;
+    m_d_1_w       = m_inv_dcol * m_weight;
+    m_d_2_w       = m_inv_dcolsqr * m_weight;
+    m_m_1_2_w     = m_inv_sqrtmass * m_weight;
+    m_d2m_1_2_w   = m_d2_m_1_2 * m_weight;
 
     // Silica parameters
-    m_sites = 		part.GetSites();
+    m_sites =       part.GetSites();
     m_sinterrate =  part.GetSintRate();
 }
 
 // OPERATOR OVERLOADS.
 
-
-// Addition-assignment operator (TreeWeightedCache RHS).
-//   This function is not used to coagulate particles, rather
-//   it is used to sum up particle properties in the ensemble binary tree.
-//
+/**
+ * Addition-assignment operator (TreeWeightedCache RHS).
+ * This function is not used to coagulate particles, rather
+ * it is used to sum up particle properties in the ensemble binary tree.
+ */
 Sweep::TreeTransCoagWeightedCache &Sweep::TreeTransCoagWeightedCache::operator+=(const TreeTransCoagWeightedCache &rhs)
 {
     // Sum cache variables.
@@ -148,19 +153,19 @@ Sweep::TreeTransCoagWeightedCache &Sweep::TreeTransCoagWeightedCache::operator+=
     m_d2_m_1_2     += rhs.m_d2_m_1_2;
     m_weight       += rhs.m_weight;
     m_weight_mass  += rhs.m_weight_mass;
-    m_d_w		+= rhs.m_d_w;
-    m_d2_w		+= rhs.m_d2_w;
-    m_d_1_w		+= rhs.m_d_1_w;
-    m_d_2_w		+= rhs.m_d_2_w;
-    m_m_1_2_w	+= rhs.m_m_1_2_w;
-    m_d2m_1_2_w	+= rhs.m_d2m_1_2_w;
+    m_d_w          += rhs.m_d_w;
+    m_d2_w         += rhs.m_d2_w;
+    m_d_1_w        += rhs.m_d_1_w;
+    m_d_2_w        += rhs.m_d_2_w;
+    m_m_1_2_w      += rhs.m_m_1_2_w;
+    m_d2m_1_2_w    += rhs.m_d2m_1_2_w;
     m_sites        += rhs.m_sites;
     m_sinterrate   += rhs.m_sinterrate;
 
     return *this;
 }
 
-// Addition operator (TreeWeightedCache RHS).
+//! Aaddition operator (TreeWeightedCache RHS).
 const Sweep::TreeTransCoagWeightedCache Sweep::TreeTransCoagWeightedCache::operator+(const TreeTransCoagWeightedCache &rhs) const {
     // Use copy constructor and += operator to define.
     return TreeTransCoagWeightedCache(*this) += rhs;
@@ -168,7 +173,7 @@ const Sweep::TreeTransCoagWeightedCache Sweep::TreeTransCoagWeightedCache::opera
 
 // CLEAR THE PARTICLE CACHE.
 
-// Resets the particle cache to its "empty" condition.
+//! Resets the particle cache to its "empty" condition.
 void Sweep::TreeTransCoagWeightedCache::Clear(void)
 {
     // Clear derived properties.
@@ -185,18 +190,21 @@ void Sweep::TreeTransCoagWeightedCache::Clear(void)
     m_d2_m_1_2     = 0.0;
     m_weight       = 0.0;
     m_weight_mass  = 0.0;
-    m_d_w		= 0.0;
-    m_d2_w		= 0.0;
-    m_d_1_w		= 0.0;
-    m_d_2_w		= 0.0;
-    m_m_1_2_w	= 0.0;
-    m_d2m_1_2_w	= 0.0;
+    m_d_w          = 0.0;
+    m_d2_w         = 0.0;
+    m_d_1_w        = 0.0;
+    m_d_2_w        = 0.0;
+    m_m_1_2_w      = 0.0;
+    m_d2m_1_2_w    = 0.0;
     m_sites   = 0;
     m_sinterrate = 0.0;
 }
 
-/*!
- *  Returns one of the values stored in the cache
+/**
+ * Returns one of the values stored in the cache.
+ * 
+ * \param[in]    id    PropID corresponding to particle property of interest.
+ * \return       value of the property requested.
  */
 Sweep::real Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
 {
@@ -225,31 +233,31 @@ Sweep::real Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
         case iD2_M_1_2:
             return m_d2_m_1_2;
         case iW:
-        	return m_weight;
+            return m_weight;
         case iWM:
-        	return m_weight_mass;
+            return m_weight_mass;
         case iDW:
-        	return m_d_w;
+            return m_d_w;
         case iD2W:
-        	return m_d2_w;
+            return m_d2_w;
         case iD_1W:
-        	return m_d_1_w;
+            return m_d_1_w;
         case iD_2W:
-        	return m_d_2_w;
+            return m_d_2_w;
         case iM_1_2W:
-        	return m_m_1_2_w;
+            return m_m_1_2_w;
         case iD2_M_1_2W:
-        	return m_d2m_1_2_w;
+            return m_d2m_1_2_w;
         case iASN:
-        	return m_sites;
+            return m_sites;
         case iSintRate:
-        	return m_sinterrate;
-		case iFS:
-			throw std::logic_error("Free surface no longer cached (TreeWeightedCache::Property)");
-			return 0.0;
-		case iNumCarbon:
-			throw std::logic_error("Number of carbons no longer cached (TreeWeightedCache::Property)");
-			return 0.0;
+            return m_sinterrate;
+        case iFS:
+            throw std::logic_error("Free surface no longer cached (TreeWeightedCache::Property)");
+            return 0.0;
+        case iNumCarbon:
+            throw std::logic_error("Number of carbons no longer cached (TreeWeightedCache::Property)");
+            return 0.0;
         case -1:
             // Special case property, used to select particles
             // uniformly.
