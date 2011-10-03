@@ -481,7 +481,7 @@ void CamSoot::initMomentsConstants(Mechanism &mech){
     // Be careful with the units of Beta_surf
     // In this code all surface reactions are done in cgs units
     // and then converted to m3 units at end.
-    doublereal CD1_CGS = pow((6*(cMass*1e3/NA)/(PI*rhoSoot*1e3)),1.0/3.0) ;
+    doublereal CD1_CGS = pow((6*(cMass*1e3/NA)/(PI*rhoSoot*1e-3)),1.0/3.0) ;
     Beta_surf_CGS = lambda*PI*CD1_CGS*CD1_CGS;
 
     // CBOH is OH+SOOT oxidation constant (again keep in cgs)
@@ -931,12 +931,12 @@ void CamSoot::rateSurface(const realVector& conc,
 
 	// Divide all concentration by 1e6 below. (SI --> cgs)
     doublereal RT = 1.987e-3*T;
-    doublereal fr1 = 4.2e13*exp(-13.0/RT)*conc[iH]/1e6;
+    doublereal fr1 = 4.17e11*exp(-13.0/RT)*conc[iH]/1e6;		 // ank25: was 4.2e12
     doublereal rr1 = 3.9e12*exp(-11.0/RT)*conc[iH2]/1e6;
     doublereal fr2 = 1.0e10 * pow(T,0.734) * exp(-1.43/RT)*conc[iOH]/1e6;
     doublereal rr2 = 3.68e08 * pow(T,1.139) * exp(-17.1/RT)*conc[iH2O]/1e6;
     doublereal fr3 = 2e13 * conc[iH]/1e6;
-    doublereal fr4 = 8.0e13*pow(T,1.56)*exp(-3.8/RT)*conc[iC2H2]/1e6;
+    doublereal fr4 = 8.0e7*pow(T,1.56)*exp(-3.8/RT)*conc[iC2H2]/1e6;     // ank25: Was 8.0e13
     doublereal fr5 = 2.2e12*exp(-7.5/RT)*conc[iO2]/1e6;
     doublereal fr6 = 0.13*conc[iOH]/1e6;
 
