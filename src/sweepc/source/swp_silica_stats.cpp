@@ -167,6 +167,9 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
     // Empty the stats array.
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
+    // Calculate total weight
+    real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
+
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
     unsigned int n = 0;
@@ -180,22 +183,23 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
 		const AggModels::SilicaPrimary *silica = NULL;
 			silica = dynamic_cast<const AggModels::SilicaPrimary*>((*(*ip)).Primary());
 		real sz = (*ip)->Property(m_statbound.PID);
+		real wt = (*ip)->getStatisticalWeight() * invTotalWeight;
         //real sz = cache.Parent()->Property(m_statbound.PID);
 		//TODO: delete comment above? wjm34
 
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-			m_stats[iNSi]   += cache.m_numSi;
-			m_stats[iNO]    += cache.m_numO;
-			m_stats[iNOH]   += cache.m_numOH;
+			m_stats[iNSi]   += cache.m_numSi * wt;
+			m_stats[iNO]    += cache.m_numO  * wt;
+			m_stats[iNOH]   += cache.m_numOH  * wt;
 			//m_stats[iNSi]   += (cache.m_numSi/cache.m_numprimary);
 			//m_stats[iNO]    += (cache.m_numO/cache.m_numprimary);
 			//m_stats[iNOH]   += (cache.m_numOH/cache.m_numprimary);
 			//m_stats[isilicaD]  += silica->silicaCollDiameter()*1e9;
-			m_stats[iCOAL]    += cache.m_avg_sinter;
+			m_stats[iCOAL]    += cache.m_avg_sinter  * wt;
 			//m_stats[iPRIMDIAM] += cache.m_primarydiam;
-			m_stats[iPRIMDIAM] += (cache.m_primarydiam*1e9/cache.m_numprimary);
+			m_stats[iPRIMDIAM] += (cache.m_primarydiam * 1e9  * wt /cache.m_numprimary);
 			++n;
             if (cache.m_numSi>1)
             {
@@ -204,7 +208,7 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
 				//m_stats[iPRIMDIAM] += (cache.m_primarydiam*1e9/cache.m_numprimary);
 				//m_stats[iPRIMDIAM] += (cache.m_primarydiam*1e9);
 				//m_stats[iPRIMDIAM] += (cache.m_primarydiam*1e9/cache.m_numprimary);
-                m_stats[iNPRIM]+=cache.m_numprimary;
+                m_stats[iNPRIM]+=cache.m_numprimary  * wt;
 				if((*ip)->Primary()!=NULL)
 				{
                 m_stats[iPARTMASS]+=(*ip)->Primary()->Mass();
