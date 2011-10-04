@@ -49,6 +49,7 @@
 #include "swp_constcoag.h"
 #include "swp_weighted_addcoag.h"
 #include "swp_weighted_constcoag.h"
+#include "swp_weighted_transcoag.h"
 #include "swp_pah_inception.h"
 #include "swp_dimer_inception.h"
 #include "swp_silica_interparticle.h"
@@ -166,6 +167,9 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in,
                 break;
             case Weighted_Constant_Coagulation_ID:
                 proc = new WeightedConstantCoagulation(in, mech);
+                break;
+            case Weighted_Transition_Coagulation_ID:
+                proc = new WeightedTransitionCoagulation(in, mech);
                 break;
             default:
                 throw runtime_error("Invalid coagulation type read from "

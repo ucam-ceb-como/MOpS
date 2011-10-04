@@ -1,9 +1,7 @@
 #!/bin/bash
 
-#  Copyright (C) 2011 William J Menz.
+#  Copyright (C) 2009 Robert I A Patterson.
 #
-#   This script tests the Silica model (developed by Shraddha and Markus
-#   Sander) against key metrics used in Preprint 105
 #
 # Licence:
 #    This file is part of "mops".
@@ -53,33 +51,22 @@ if test -n "$2"
     echo "changed directory to $2"
 fi
 
-cd silica1
-rm -f silica*
-
-$program -p -strang
-simulationResult=$?
-
-if((simulationResult==0)) 
-then
-  echo "Finished simulation"
-else
-  echo "Simulation failed"
-  cd ..
-  exit $simulationResult
-fi
-echo "========================"
-
-
-dos2unix "silica-part.csv"
-perl test-silica.pl
-postprocessResult=$?
-
-if((postprocessResult!=0)) 
+regress6/regress6a.pl $program
+result6a=$?
+if((result6a!=0)) 
   then
-    cd ..
-    exit $postprocessResult
+    exit $result6a
 fi
 
-rm -f silica*
-cd ..
+regress6/regress6c.pl $program
+result6c=$?
+if((result6c!=0)) 
+  then
+    exit $result6c
+fi
+
+# All tests passed
+echo "All tests passed"
+  rm -f regression6a* regression6b* regression6c*
 exit 0
+

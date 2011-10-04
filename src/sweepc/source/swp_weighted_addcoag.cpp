@@ -186,7 +186,7 @@ int Sweep::Processes::WeightedAdditiveCoagulation::Perform(
             throw std::logic_error("Unrecognised term, (Sweep, WeightedAdditiveCoagulation::Perform)");
     }
 
-    return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng);
+    return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default);
 }
 
 /**

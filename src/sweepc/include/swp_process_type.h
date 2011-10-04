@@ -87,6 +87,8 @@ namespace Processes
         Weighted_Additive_Coagulation_ID = 10004,
         //! Constant coagulation with weighted particles
         Weighted_Constant_Coagulation_ID = 10005,
+        //! Transition coagulation with weighted particles
+        Weighted_Transition_Coagulation_ID = 10006,
 
     };
 }
