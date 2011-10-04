@@ -151,7 +151,7 @@ namespace Camflow
             void sootMomentResidual(const doublereal& t,doublereal* y,doublereal* f);
 
             //! Soot moments residual calculation. (When SS at base of flame)
-            void sootMomentResidualAtFlameBase(const doublereal& t,doublereal* y,doublereal* f);
+            void sootMomentResidualZeroedOut(const doublereal& t,doublereal* y,doublereal* f);
 
             //! Energy residual calculation.
             void energyResidual(const doublereal& t, doublereal* y, doublereal* f);

@@ -515,15 +515,18 @@ void FlameLet::restart(doublereal flameTime)
 	// Then decide set steadyStateAtFlameBase to true if above a ceetain threshold.
 	// i.e. we stop calculating soot when high enough out of the flame.
 	// Rename "steadyStateAtFlameBase" to "sootResidualZeroed"
+
 	if (flameTime < Lewis.sootFlameTimeThreshold)
 	{
 		// Still below the time at which we stop calculating soot residual
 		sootResidualZeroed = false;
+	    std::cout << "Soot residual is active " << std::endl;
 	}
 	else
 	{
 		// Past the time, beyond which we no longer calculate soot.
 		sootResidualZeroed = true;
+	    std::cout << "Soot residual is zeroed out " << std::endl;
 	}
 
     if (solverID == control_.CVODE) {
@@ -833,7 +836,7 @@ void FlameLet::residual
         {
         	if (sootResidualZeroed)
         	{
-        		sootMomentResidualAtFlameBase(t,y,&resMom[0]);
+        		sootMomentResidualZeroedOut(t,y,&resMom[0]);
         	}
         	else
         	{
@@ -902,7 +905,7 @@ void FlameLet::residual
             saveMixtureProp(&solvect[0]);
         	if (sootResidualZeroed)
         	{
-        		sootMomentResidualAtFlameBase(t,y,&resMom[0]);
+        		sootMomentResidualZeroedOut(t,y,&resMom[0]);
         	}
         	else
         	{
@@ -1057,6 +1060,7 @@ void FlameLet::sootMomentResidual
     doublereal grad_e, grad_w;
     doublereal zPE, zPW;
     doublereal source;
+    doublereal deltax = 0;
     doublereal sdr, sdrPE, sdrPW;
 
     for (int l=0; l<nMoments; ++l)
@@ -1072,38 +1076,66 @@ void FlameLet::sootMomentResidual
 
         zPE = 0.5*(dz[i]+dz[i+1]);
         zPW = 0.5*(dz[i]+dz[i-1]);
+    	sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
-        // Get the scalar dissipation rate for the cell.
-        sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
-
-
-        doublereal diffusionConstant = sdr/(2.0*dz[i]);
-        for (int l=0; l<nMoments; ++l)
+        if (Lewis.sootFlameletType() == LewisNumber::MAUSS06)
         {
-            grad_e = (moments(i+1,l)-moments(i,l))/zPE;
-            grad_w = (moments(i,l)-moments(i-1,l))/zPW;
-            source = moments_dot(i,l)/m_rho[i];
-            f[i*nMoments+l] = diffusionConstant*(grad_e-grad_w)
-                          + source;								// LE = 1
+        	// Use the form of the soot flamelet equation given in Mauss et al 2006
+
+        	doublereal diffusionConstant = sdr/(2.0*dz[i]);
+        	for (int l=0; l<nMoments; ++l)
+        	{
+        		grad_e = (moments(i+1,l)-moments(i,l))/zPE;
+        		grad_w = (moments(i,l)-moments(i-1,l))/zPW;
+        		source = moments_dot(i,l)/m_rho[i];
+        		f[i*nMoments+l] = diffusionConstant*(grad_e-grad_w)
+                          + source;
+        	}
+        }
+        else if (Lewis.sootFlameletType() == LewisNumber::PITSCH00DD)
+        {
+        	// Use the form of the soot flamelet equation given in Pitsch et al 2000.
+        	// And assume differential diffusion. (i.e., neglect M_(r-d) terms per paper.
+
+        	/// NOT IMPLEMENTED YET  !!!!!!!!!!!!!
+            for (int l=0; l<nMoments; ++l)
+            {
+                f[iMesh_e*nMoments+l] = 0.0;
+            }
+        	/// NOT IMPLEMENTED YET  !!!!!!!!!!!!!
 
         }
-
-/*
-        // Code below is for soot flamelet equations after change of variable
-    	// M=exp(M_hat -1)
-    	// M_hat = ln(M+1)
-        doublereal diffusionConstant = sdr/(2.0);
-        for (int l=0; l<nMoments; ++l)
+        else if (Lewis.sootFlameletType() == LewisNumber::CARBONELL09)
         {
-            grad_e = (moments(i+1,l)-moments(i,l))/zPE;
-            grad_w = (moments(i,l)-moments(i-1,l))/zPW;
-            source = moments_dot(i,l)/ ( m_rho[i] * exp(moments(i,l)) ) ;
-            f[i*nMoments+l] = diffusionConstant
-            		        * ( (grad_e-grad_w)/dz[i] +
-            		        	pow((grad_e+grad_w)/2.0,2.0) )
-                            + source;
-       }
-*/
+        	// Use the form of the soot flamelet equation given in Carbonel et al 2009.
+
+            deltax = zPE + zPW;
+            sdrPE = scalarDissipationRate_(reacGeom_.getAxpos()[i+1],t);
+            sdrPW = scalarDissipationRate_(reacGeom_.getAxpos()[i-1],t);
+
+            // This bit same as for gas phase species
+            doublereal convectionConstant
+                       = 0.25/m_rho[i]
+                         *(
+                            (m_rho[i+1]*sdrPE - m_rho[i-1]*sdrPW)/deltax
+                           +(m_rho[i]*sdr*m_cp[i]/m_k[i])
+                            *(m_k[i+1]/m_cp[i+1] - m_k[i-1]/m_cp[i-1])/deltax
+                         );
+
+            //std::cout << "convectionConstant " << convectionConstant << std::endl;
+
+            for (int l=0; l<nMoments; ++l)
+            // Some differences to gas phase version (Le = inf here)
+            {
+        		source = moments_dot(i,l)/m_rho[i];
+
+            	f[i*nMoments+l] = -1.0 * convectionConstant
+							*(moments(i+1,l)-moments(i-1,l))/deltax + source;
+
+        		//f[i*nMoments+l] = source;
+            }
+
+        }
     }
 
     /*
@@ -1123,7 +1155,7 @@ void FlameLet::sootMomentResidual
  * i.e. we solve a steady state flamelet with no soot present.
  */
 
-void FlameLet::sootMomentResidualAtFlameBase
+void FlameLet::sootMomentResidualZeroedOut
 (
     const doublereal& t,
     doublereal* y,
