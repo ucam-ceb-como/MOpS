@@ -190,14 +190,14 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-			m_stats[iNSi]   += cache.m_numSi * wt;
-			m_stats[iNO]    += cache.m_numO  * wt;
-			m_stats[iNOH]   += cache.m_numOH  * wt;
+			m_stats[iNSi]   += (cache.m_numSi * wt);
+			m_stats[iNO]    += (cache.m_numO  * wt);
+			m_stats[iNOH]   += (cache.m_numOH  * wt);
 			//m_stats[iNSi]   += (cache.m_numSi/cache.m_numprimary);
 			//m_stats[iNO]    += (cache.m_numO/cache.m_numprimary);
 			//m_stats[iNOH]   += (cache.m_numOH/cache.m_numprimary);
 			//m_stats[isilicaD]  += silica->silicaCollDiameter()*1e9;
-			m_stats[iCOAL]    += cache.m_avg_sinter  * wt;
+			m_stats[iCOAL]    += (cache.m_avg_sinter  * wt);
 			//m_stats[iPRIMDIAM] += cache.m_primarydiam;
 			m_stats[iPRIMDIAM] += (cache.m_primarydiam * 1e9  * wt /cache.m_numprimary);
 			++n;
@@ -221,25 +221,13 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
             }
         }
     }
-
-    // Get the particle count.
-    //real np    = (real)e.Count();
-    real np    = (real) n;
-    real invnp = (np>0) ? 1.0 / np : 0.0;
-
     // Scale the summed stats and calculate the averages.
     for (unsigned int i=0; i!=STAT_COUNT; ++i) {
         if (m_mask[i] == Sum) {
             m_stats[i] *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
-        } else {
-            if (i==iNPRIM || i==iPARTMASS)
-            {
-                if (nrealpart>0)
-                    m_stats[i] *= 1.0/nrealpart;
-            }
-            else
-                m_stats[i] *= invnp;
         }
+    // Don't need to scale by number of particles as this is included
+    //     in the weighting scaling above.
     }
 
 }
