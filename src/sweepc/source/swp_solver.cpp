@@ -179,7 +179,7 @@ void Solver::timeStep(real &t, real t_stop, Cell &sys, const Geometry::LocalGeom
     // selecting a process and performing that process.
     real dt;
 
-    //std::cout << "Solver::timeStep " << jrate;
+    //std::cout << "Solver::timeStep in cell " << &sys << " from " << t << " with rate " << jrate;
 
     // Calculate exponentially distributed time step size.
     if (jrate > 0.0) {

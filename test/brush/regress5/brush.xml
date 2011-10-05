@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<brush version="2">
+  
+  <!-- Default parameters (can be overidden). --> 
+  <runs>2</runs>
+  <iter>2</iter>
+  <atol>1.0e-2</atol> 
+  <rtol>1.0e-4</rtol>
+  <pcount>1024</pcount>
+  <maxm0>1.3e0</maxm0>
+  <relax>0.5</relax>
+
+  <advection>split</advection>
+  <weighttransport>weights</weighttransport>
+
+  <!-- Output time sequence. -->
+  <timeintervals splits="1">
+    <start>0.0</start>
+    <time steps="20" splits="50">1.0</time>
+    <time steps="20" splits="50">2.0</time>
+  </timeintervals>
+
+
+  <output>
+    <filename>regress5-addw</filename>
+  </output>
+  
+</brush>

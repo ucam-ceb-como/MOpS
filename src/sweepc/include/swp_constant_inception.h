@@ -87,6 +87,12 @@ public:
     //! Set the constant inception rate per unit volume
     void setConstantVolumetricInceptionRate(const real r) {mRate = r;}
 
+    //! Turn fixed position inception on or off
+    void useFixedPosition(const bool b) {mUseFixedPosition = b;}
+
+    //! Specify location for fixed position inception
+    void setFixedPosition(const real r) {mFixedPosition = r;}
+
     // PERFORMING THE PROCESS.
 
     //! Perform a coagulation with particles chosen according to the additive kernel
@@ -140,6 +146,12 @@ protected:
 private:
     //! Rate units of \f$ \mathrm{m}^{-3}\mathrm{s}^{-1}\f$
     real mRate;
+
+    //! Indicate the all particles are to be incepted at exactly the same fixed position
+    bool mUseFixedPosition;
+
+    //! Locate for fixed position inception see mUseFixedPosition
+    real mFixedPosition;
 };
 }
 }
