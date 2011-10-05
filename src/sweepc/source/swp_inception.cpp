@@ -57,13 +57,13 @@ using namespace std;
 
 // Default constructor (protected).
 Inception::Inception(void)
-: Process(), m_a(1.0), m_UseSecondary(false)
+: Process(), m_a(1.0)
 {
 }
 
 // Initialising constructor.
 Inception::Inception(const Sweep::Mechanism &mech)
-: Process(mech), m_a(1.0), m_UseSecondary(false)
+: Process(mech), m_a(1.0)
 {
 }
 
@@ -94,7 +94,6 @@ Inception &Inception::operator =(const Inception &rhs)
         m_a    = rhs.m_a;
         m_newcomp = rhs.m_newcomp;
         m_newvals = rhs.m_newvals;
-        m_UseSecondary = rhs.m_UseSecondary;
     }
     return *this;
 }
@@ -181,20 +180,6 @@ void Inception::SetParticleTracker(unsigned int i, real track)
     }
 }
 
-/*!
- *@param[in]    True iff newly incepted should be added to secondary population whenever possible
- */
-void Inception::SetUseSecondary(bool use_secondary) {
-    m_UseSecondary = use_secondary;
-}
-
-/*!
- *@return    True iff newly incepted should be added to secondary population whenever possible
- */
-bool Inception::UseSecondary() const {
-    return m_UseSecondary;
-}
-
 
 // TOTAL RATE CALCULATIONS.
 
@@ -202,14 +187,16 @@ bool Inception::UseSecondary() const {
 // Calculates the rate of multiple inceptions given a
 // vector of inceptions and an iterator to a vector of
 // reals for output.
-real Inception::CalcRates(real t, const Cell &sys, const IcnPtrVector &icns,
+real Inception::CalcRates(real t, const Cell &sys,
+                          const Geometry::LocalGeometry1d &local_geom,
+                          const IcnPtrVector &icns,
                           fvector &rates, unsigned int start)
 {
     IcnPtrVector::const_iterator p;
     fvector::iterator i = (rates.begin()+start);
     real sum = 0.0;
     for (p=icns.begin(); p!=icns.end(); ++p,++i) {
-        *i = (*p)->Rate(t, sys);
+        *i = (*p)->Rate(t, sys, local_geom);
         sum += *i;
     }
     return sum;
@@ -256,9 +243,6 @@ void Inception::Serialize(std::ostream &out) const
             v = (double)*i;
             out.write((char*)&v, sizeof(v));
         }
-
-        // Use of secondary population
-        out.write(reinterpret_cast<const char*>(&m_UseSecondary), sizeof(m_UseSecondary));
 
     } else {
         throw invalid_argument("Output stream not ready "
@@ -308,9 +292,6 @@ void Inception::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
                     m_newvals.push_back((real)val);
                 }
-
-                // Use of secondary population
-                in.read(reinterpret_cast<char*>(&m_UseSecondary), sizeof(m_UseSecondary));
 
                 break;
             default:

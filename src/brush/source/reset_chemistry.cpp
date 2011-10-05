@@ -51,6 +51,7 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <cassert>
+#include <cctype>
 #include <iomanip>
 
 using namespace Brush;
@@ -287,7 +288,10 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
             Strings::split(lineText, lineEntries, delims);
 
             // Check if this row is empty and skip it if there is nothing to do
-            if(lineEntries.empty())
+            // Try to handle muddled line end sequences
+            if(lineEntries.empty() || 
+               ((lineEntries.size() == 1) &&
+                ((lineEntries.at(0) == "\r") || (lineEntries.at(0) == "\n"))))
                 continue;
 
             // Empty row of data for this line in the file, with one entry for

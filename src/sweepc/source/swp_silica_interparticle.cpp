@@ -136,7 +136,7 @@ void InterParticle::SetPropertyID(PropID pid)
 // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
 // Returns rate of the process for the given system.
-real InterParticle::Rate(real t, const Cell &sys) const
+real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom) const
 {
 
 	// From theoretical calculations: R_int = R_surf - sintering_contribution + R_inc
@@ -259,10 +259,10 @@ unsigned int InterParticle::TermCount(void) const {return 1;}
 // Calculates the rate terms given an iterator to a real vector. The
 // iterator is advanced to the position after the last term for this
 // process.
-real InterParticle::RateTerms(real t, const Cell &sys,
+real InterParticle::RateTerms(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
                              fvector::iterator &iterm) const
 {
-	 return *(iterm++) = Rate(t, sys);
+	 return *(iterm++) = Rate(t, sys, local_geom);
 }
 
 // PERFORMING THE PROCESS.

@@ -836,6 +836,16 @@ void MechParser::readConstantInception(CamXML::Element &xml, Processes::Constant
         A = cdble(el->Data());
         icn.SetA(A);
     }
+
+    // See if the inception is at a fixed position
+    el = xml.GetFirstChild("fixedposition");
+    if (el != NULL) {
+        // Read position in cm (for consistency with rest of input file ...
+        real posn = std::atof(el->Data().c_str());
+        // ..., but store position in m
+        icn.setFixedPosition(posn/100);
+        icn.useFixedPosition(true);
+    }
 }
 
 
