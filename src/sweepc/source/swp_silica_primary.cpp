@@ -734,18 +734,29 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 double SilicaPrimary::SinteringLevel()
 {
         // Calculate the spherical surface
-		const double spherical_surface=4*PI*m_children_radius*m_children_radius;
+        const double spherical_surface=4*PI*m_children_radius*m_children_radius;
         const double two_1_3=0.79370052231642452;
-		//Added by ss663
-		if (m_children_surf <= spherical_surface)
-				{
-					m_children_surf = spherical_surface ;
-				}
-        double slevel= ((spherical_surface/m_children_surf)-two_1_3)/(1-two_1_3);
-        if (slevel<0)
-            return 0;
-        else
+        double slevel;
+
+        //Added by ss663
+        if (m_children_surf <= spherical_surface) {
+            m_children_surf = spherical_surface;
+            return 1.0;
+        }
+
+        if (m_children_surf == 0.0) {
+            slevel = 0.0;
+        } else {
+            slevel= ((spherical_surface/m_children_surf)-two_1_3)/(1-two_1_3);
+        }
+
+        if (slevel < 0.0) {
+            return 0.0;
+        } else if (slevel > 1.0) {
+            return 1.0;
+        } else {
             return slevel;
+        }
 }
 
 
