@@ -401,10 +401,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         // Print run time to the console.
         printf("mops: Run number %d completed in %.1f s.\n", irun+1, m_runtime);
 
-		// Produce two files named "MONONER" AND "DRIMER" which is used to create mass spectra, 
 		// currently this function is limited to PAH-PP model
-		r.Mech()->ParticleMech().Mass_spectra(r.Mixture()->Particles());
-
 		// Produce a file named "primary" which stores information of target (criteria are hard-coded) primary particle
 		//r.Mech()->ParticleMech().Mass_pah(r.Mixture()->Particles());
 

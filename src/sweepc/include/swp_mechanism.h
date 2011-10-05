@@ -252,9 +252,6 @@ public:
     //! Get the number of times each process has been performed
     std::vector<unsigned int> GetProcessUsageCounts() const {return m_proccount;}
 	
-	//! return two vectors contain the mass of monomers and dimers respectively
-	void Mass_spectra(Ensemble &m_ensemble) const;
-	
 	//! return a vector contain the information of particular primary particle with X molecules
 	void Mass_pah(Ensemble &m_ensemble) const;
 

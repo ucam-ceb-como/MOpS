@@ -828,29 +828,6 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
     }
 }
 
-void Mechanism::Mass_spectra(Ensemble &m_ensemble) const
-{
-    if (AggModel() == AggModels::PAH_KMC_ID) {
-    fvector mononer_vector;// used for containing the mass of independent mononers
-    fvector dimer_vector;// used for containing the mass of independent dimers
-
-       for (size_t i=0;i!=m_ensemble.Capacity();++i){
-            if (m_ensemble.At(i)!=NULL)
-            {
-                const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
-                rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_ensemble.At(i)->Primary());
-                //rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_ensemble.At(i));
-                //now enum Xmer{ MOMOMER=1,DIMER=2,TRIMER=3} is definded in swp_primary.h
-                rhsparticle->FindXmer(mononer_vector, MOMOMER);
-                rhsparticle->FindXmer(dimer_vector, DIMER);
-            }
-        }
-    // create csv file for monomer and dimer
-    writeMononer(mononer_vector);
-    writeDimer(dimer_vector);
-    }
-}
-
 void Mechanism::Mass_pah(Ensemble &m_ensemble) const
 {
     if (AggModel() == AggModels::PAH_KMC_ID) {
