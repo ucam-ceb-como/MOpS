@@ -202,6 +202,7 @@ public:
     void CalcGasChangeRates(
         real t,          // Time at which to get rates.
         const Cell &sys, // System cell for which to get rates.
+        const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         fvector &rates   // Return vector for rates-of-change.
         ) const;
 

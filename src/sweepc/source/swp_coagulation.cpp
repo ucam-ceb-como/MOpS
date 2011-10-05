@@ -67,14 +67,15 @@ using namespace std;
 /*!
  * @param[in]       t       Time at which rates are to be calculated
  * @param[in]       sys     System for which rates are to be calculated
+ * @param[in]       local_geom  Spatial configuration information
  * @param[in]       coags   Coagulation processes defining the rates
  * @param[in,out]   rates   Vector to which to add the rates of the individual coagulations
  * @param[in]       start   Position in rates at which to start inserting rates
  *
  * @return      Total rate of all the coagulation processes
  */
-real Coagulation::CalcRates(real t, const Cell &sys, const CoagPtrVector &coags,
-                            fvector &rates, unsigned int start)
+real Coagulation::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
+                            const CoagPtrVector &coags, fvector &rates, unsigned int start)
 {
     // Iterators for the coagulation processes
     CoagPtrVector::const_iterator itCoag = coags.begin();
@@ -87,7 +88,7 @@ real Coagulation::CalcRates(real t, const Cell &sys, const CoagPtrVector &coags,
     real sum = 0.0;
     while(itCoag != itCoagEnd) {
         // Store the rate and move on to the next coagulation process
-        *it = (*itCoag++)->Rate(t, sys);
+        *it = (*itCoag++)->Rate(t, sys, local_geom);
 
         // Add the rate to the sum and move the rates vector iterator onto the next position
         sum += *it++;
@@ -98,13 +99,14 @@ real Coagulation::CalcRates(real t, const Cell &sys, const CoagPtrVector &coags,
 /*!
  * @param[in]       t       Time at which rates are to be calculated
  * @param[in]       sys     System for which rates are to be calculated
+ * @param[in]       local_geom  Spatial configuration information
  * @param[in]       coags   Coagulation processes defining the rates
  * @param[in,out]   iterm   Iterator to point at which to put rate terms of the individual coagulations
  *
  * @return      Total rate of all the coagulation processes
  */
-real Coagulation::CalcRateTerms(real t, const Cell &sys, const CoagPtrVector &coags,
-                                fvector::iterator &iterm) {
+real Coagulation::CalcRateTerms(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
+                                const CoagPtrVector &coags, fvector::iterator &iterm) {
     // Iterators for the coagulation processes
     CoagPtrVector::const_iterator itCoag = coags.begin();
     const CoagPtrVector::const_iterator itCoagEnd = coags.end();
@@ -117,7 +119,7 @@ real Coagulation::CalcRateTerms(real t, const Cell &sys, const CoagPtrVector &co
         // ii) Advances itCoag
         // iii) Adds the return value of RateTerms to sum
         // Note that the order of 2 and 3 could be reversed without having any effect
-        sum += (*itCoag++)->RateTerms(t, sys, iterm);
+        sum += (*itCoag++)->RateTerms(t, sys, local_geom, iterm);
     }
     return sum;
  }

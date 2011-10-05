@@ -83,8 +83,9 @@ public:
 
     // Returns rate of the process for the given system.
     real Rate(
-        real t,         // Time.
-        const Cell &sys // System for which to calculate rate.
+        real t,          // Time.
+        const Cell &sys, // System for which to calculate rate.
+        const Geometry::LocalGeometry1d& local_geom // Information regarding surrounding cells and boundaries
         ) const;
 
     // PERFORMING THE PROCESS.
@@ -109,6 +110,7 @@ public:
     real RateTerms(
         real t,                  // Time.
         const Cell &sys,         // System for which to calculate rate terms.
+        const Geometry::LocalGeometry1d &local_geom,                  // position information
         fvector::iterator &iterm // Iterator to the first term.
         ) const;
 

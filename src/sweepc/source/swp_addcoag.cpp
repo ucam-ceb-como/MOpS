@@ -69,7 +69,8 @@ Sweep::Processes::AdditiveCoagulation::AdditiveCoagulation(std::istream &in, con
 }
 
 // Returns the rate of the process for the given system.
-Sweep::real Sweep::Processes::AdditiveCoagulation::Rate(real t, const Cell &sys) const
+Sweep::real Sweep::Processes::AdditiveCoagulation::Rate(real t, const Cell &sys,
+                                                        const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the number of particles in the system.
     unsigned int n = sys.ParticleCount();
@@ -99,14 +100,16 @@ unsigned int Sweep::Processes::AdditiveCoagulation::TermCount() const {return TY
  * beginning at iterm and return the sum of the terms added to that
  * vector.
  *
- * @param[in] t         Time for which rates are requested
- * @param[in] sys       Details of the particle population and environment
- * @param[inout] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
+ * @param[in]       t           Time for which rates are requested
+ * @param[in]       sys         Details of the particle population and environment
+ * @param[in]       local_geom  Spatial configuration information (ignored)
+ * @param[inout]    iterm       Pointer to start of sequence to hold the rate terms, returned as one past the end.
  */
 Sweep::real Sweep::Processes::AdditiveCoagulation::RateTerms(real t, const Cell &sys,
+                            const Geometry::LocalGeometry1d &local_geom,
                             fvector::iterator &iterm) const
 {
-    return *(iterm++) = Rate(t, sys);
+    return *(iterm++) = Rate(t, sys, local_geom);
 }
 
 /*!

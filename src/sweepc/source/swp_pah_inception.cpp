@@ -155,7 +155,8 @@ int PAHInception::Perform(const real t, Cell &sys,
 // TOTAL RATE CALCULATIONS.
 
 // Returns rate of the process for the given system.
-real PAHInception::Rate(real t, const Cell &sys) const
+real PAHInception::Rate(real t, const Cell &sys,
+                        const Geometry::LocalGeometry1d &local_geom) const
 {
     const real rate = NA*sys.PAHFormationRate()*A();
 
@@ -176,10 +177,11 @@ unsigned int PAHInception::TermCount(void) const {return 1;}
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
 real PAHInception::RateTerms(const real t, const Cell &sys,
-                          fvector::iterator &iterm) const
+                             const Geometry::LocalGeometry1d &local_geom,
+                             fvector::iterator &iterm) const
 {
     // Calculate the single rate term and advance iterator.
-    *iterm = Rate(t, sys);
+    *iterm = Rate(t, sys, local_geom);
     return *(iterm++);
 }
 

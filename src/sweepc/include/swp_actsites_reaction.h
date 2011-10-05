@@ -81,7 +81,8 @@ public:
     // Returns rate of the process for the given system.
     virtual real Rate(
         real t,         // Time.
-        const Cell &sys // System for which to calculate rate.
+        const Cell &sys, // System for which to calculate rate.
+        const Geometry::LocalGeometry1d &local_geom // cell location information
         ) const;
 
 
