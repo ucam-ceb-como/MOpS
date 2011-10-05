@@ -53,6 +53,7 @@
 #include "swp_constcoag.h"
 #include "swp_weighted_addcoag.h"
 #include "swp_weighted_constcoag.h"
+#include "swp_weighted_transcoag.h"
 #include "swp_coag_weight_rules.h"
 #include "swp_abf_model.h"
 #include "swp_silica_interparticle.h"
@@ -1443,6 +1444,8 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                          coag.reset(new Processes::WeightedAdditiveCoagulation(mech, weightRule));
                     else if(kernelName == "weightedconstant")
                          coag.reset(new Processes::WeightedConstantCoagulation(mech, weightRule));
+                    else if(kernelName == "weightedtransition")
+                         coag.reset(new Processes::WeightedTransitionCoagulation(mech, weightRule));
                     else
                         // Unrecognised option
                         throw std::runtime_error("Coagulation kernel " + kernelName + " not yet available with weights \

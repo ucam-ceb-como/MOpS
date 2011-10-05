@@ -58,6 +58,55 @@ void LewisNumber::loadSettings(const std::string& inputFileName)
             " <Lewis>calculated</Lewis> in <op_condition>."
         );
     }
+
+    // Read in which soot Flamlet model to use
+    subnode = opNode->GetFirstChild("SootFlameletType");
+    if (subnode != NULL)
+    {
+        std::string sootFlameletOption = subnode->Data();
+        boost::to_upper(sootFlameletOption);
+        if (sootFlameletOption == "MAUSS06") sootFlameletType_ = MAUSS06;
+        else if (sootFlameletOption == "PITSCH00DD") sootFlameletType_ = PITSCH00DD;
+        else if (sootFlameletOption == "CARBONELL09") sootFlameletType_ = CARBONELL09;
+        else
+                {
+                    throw std::runtime_error
+                    (
+                    	sootFlameletOption+" does not exist."
+                        " Specify MAUSS06 / PITSCH00DD / CARBONELL09"
+                    );
+                }
+
+    }
+    else
+    {
+        throw std::runtime_error
+        (
+            "No soot flamelet model setting. Specify either\n"
+            " <SootFlameletType>MAUSS06</SootFlameletType> or "
+            " <SootFlameletType>PITSCH00DD</SootFlameletType> or "
+            " <SootFlameletType>CARBONELL09</SootFlameletType> in <op_condition>."
+        );
+    }
+
+
+    // This might not be the best place for this.
+    // Put it here for now as Lewis number is tied in with Flamelet calcs.
+    subnode = opNode->GetFirstChild("sootFlameTimeCutoff");
+    if (subnode != NULL)
+    {
+    	sootFlameTimeThreshold = Strings::cdble(subnode->Data());
+    }
+    else
+    {
+        throw std::runtime_error
+        (
+            "Soot flametime cutoff not specified"
+            "e.g. <sootFlameTimeCutoff>1e-3</sootFlameTimeCutoff>"
+        	"Place in <op_condition>"
+        );
+    }
+
 }
 
 void LewisNumber::readFromFile(const std::string& fixedLewisFile)

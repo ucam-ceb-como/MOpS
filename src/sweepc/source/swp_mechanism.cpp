@@ -471,6 +471,16 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, const Geometry::Local
     return sum;
 }
 
+void Mechanism::PrintTermsVector(fvector &terms, fvector::iterator &iterm) const {
+	fvector::iterator iterm_old = iterm;
+	int len = terms.size();
+	fvector::iterator iterm_beg = terms.begin();
+	for (int i=0; i<len; i++) {
+		cout << *iterm_beg++ << " ";
+	}
+	cout << endl;
+}
+
 /*!
  * LPDA allows some processes to be deferred and removed from the main simulation
  * loop in a kind of splitting.  This method calculates the combined rate of all

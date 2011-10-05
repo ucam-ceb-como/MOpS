@@ -181,7 +181,7 @@ int Sweep::Processes::WeightedConstantCoagulation::Perform(
             throw std::logic_error("Unrecognised term, (Sweep, WeightedConstantCoagulation::Perform)");
     }
 
-    return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng);
+    return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default);
 }
 
 /**

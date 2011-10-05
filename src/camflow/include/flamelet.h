@@ -133,7 +133,7 @@ namespace Camflow
             void splitSolve(bool interface=false);
 
             //! Restart the solution with the converged solution.
-            void restart();
+            void restart(doublereal flameTime);
 
             //! Save the solution vector.
             void saveMixtureProp(doublereal* y);
@@ -151,7 +151,7 @@ namespace Camflow
             void sootMomentResidual(const doublereal& t,doublereal* y,doublereal* f);
 
             //! Soot moments residual calculation. (When SS at base of flame)
-            void sootMomentResidualAtFlameBase(const doublereal& t,doublereal* y,doublereal* f);
+            void sootMomentResidualZeroedOut(const doublereal& t,doublereal* y,doublereal* f);
 
             //! Energy residual calculation.
             void energyResidual(const doublereal& t, doublereal* y, doublereal* f);
@@ -206,7 +206,8 @@ namespace Camflow
             doublereal stoichZ; //stoichiometric mixture fraction
             doublereal sdr;     // scalar dissipation rate
             doublereal restartTime;
-            bool steadyStateAtFlameBase;
+            bool sootResidualZeroed;
+            //doublereal sootFlameTimeThreshold;  // Flametime beyond which we switch off soot.
             std::vector< std::vector<doublereal> > cfdMixFracCoords; // Mixture Fraction coords from CFD.
 
             //! Spatial profile of soot volume fraction

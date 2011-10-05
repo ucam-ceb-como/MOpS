@@ -66,6 +66,12 @@ namespace Sweep
 
         //! Statistical weight time physical mass
         iWM,
+        iDW,		// dcol * weight
+        iD2W,		// dcol * dcol * weight
+        iD_1W,		// weight / dcol
+        iD_2W,		// weight / dcol ^ 2
+        iM_1_2W,	// mass ^ -1/2 * weight
+        iD2_M_1_2W, // dcol * dcol * mass ^ -1/2 * weight
 
         iD2_M_1_2, // D^2 * M^-1/2.
 		iFS,		// the free surface available for other particles to sinter
