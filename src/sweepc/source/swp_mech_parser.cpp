@@ -464,7 +464,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             throw runtime_error(msg);
         }
 
-        readColliPara(i,comp);
+        readColliPara(i,mech);
 
         // Get coalesc threshold.
         el = (*i)->GetFirstChild("coalthresh");

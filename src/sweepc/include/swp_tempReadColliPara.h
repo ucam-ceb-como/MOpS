@@ -57,7 +57,7 @@
 
 namespace Sweep
 {
-void readColliPara(std::vector<CamXML::Element*>::iterator i, Sweep::Component* comp)
+void readColliPara(std::vector<CamXML::Element*>::iterator i, Sweep::Mechanism &mech)
 {
     CamXML::Element *el;
 	CamXML::Element *el0;
@@ -77,63 +77,48 @@ void readColliPara(std::vector<CamXML::Element*>::iterator i, Sweep::Component* 
 				std::string str1 = el1->Data();
 				std::string str2 = el2->Data();
 				if (str0 != "" && str1 != "" && str2 != "") { 
-					comp->SetCollisionEffPara(Strings::cdble(str0), Strings::cdble(str1), Strings::cdble(str2));
+					mech.SetCollisionEffPara(Strings::cdble(str0), Strings::cdble(str1), Strings::cdble(str2));
 				} else {
-					// Density contains no data.
-					std::string msg("Component ");
-					msg += comp->Name();
-					msg += " one of collision parameter is left to be empty (Sweep::readColliPara).";
+					// collision parameter contains no data.
+					std::string msg("one of collision parameter is left to be empty (Sweep::readColliPara). ");
 
-					delete comp;
 					throw std::runtime_error(msg);
 				}
 			} else  {
-				std::string msg("Component ");
-				msg += comp->Name();
-				msg += " one of collision parameter (ColliParaA, ColliParaB,ColliParaC) is missing (Sweep::readColliPara).";
+				std::string msg("one of collision parameter (ColliParaA, ColliParaB,ColliParaC) is missing (Sweep::readColliPara). ");
 
-				delete comp;
 				throw std::runtime_error(msg);
 			}
 		}
 
-		else if (str == "MAX" || str == "MIN" || str == "COMBINED") {
-			comp->SetMode(str);
+		else if (str == "MAX" || str == "MIN" || str == "COMBINED" || str == "REDUCED") {
+			mech.SetMode(str);
 			el0 = (*i)->GetFirstChild("threshold");
 			if (el0!=NULL) {
 			str = el0->Data();
 				if (str != "") {
-					comp->SetThreshold(Strings::cdble(str)); // num of C
+					mech.SetThreshold(Strings::cdble(str)); // num of C
 				} else {
-					// coalthresh contains no data.
-					std::string msg("Component ");
-					msg += comp->Name();
-					msg += " threshold contains no data (Sweep::readColliPara).";
+					// threshold contains no data.
+					std::string msg("threshold contains no data (Sweep::readColliPara). ");
 
-					delete comp;
 					throw std::runtime_error(msg);
 				}
 			} else {
-			std::string msg("Component ");
-			msg += comp->Name();
-			msg += " threshold is requried for collision efficiency model (Sweep::readColliPara).";
+			std::string msg("threshold is requried for collision efficiency model (Sweep::readColliPara). ");
 
-			delete comp;
 			throw std::runtime_error(msg);
 			}
 		}
 		else {
-			std::string msg("Component ");
-			msg += comp->Name();
-			msg += " This type is not supported ";
+			std::string msg(" This type of collision efficiency model is not supported ");
 			msg += str;
 			msg += " at this moment (Sweep::readColliPara).";
 
-			delete comp;
 			throw std::runtime_error(msg);
 		}
 	}
-	else  comp->SetCollisionEffPara(2, 1100, 5); // set to the default one abhjeet's choice, this is use to pass the regression tests 
+	else  mech.SetCollisionEffPara(2, 1100, 5); // set to the default one abhjeet's choice, this is use to pass the regression tests 
 }
 };
 
