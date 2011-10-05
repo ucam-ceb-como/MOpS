@@ -310,9 +310,10 @@ void FlameLet::initSolutionVector()
         {
 
         	// ank25: Temp. Hard wire initial moment values.
-        	//vMom[i*nMoments] = 15e15;
-        	//vMom[i*nMoments+1] = 15e23;
-        	//vMom[i*nMoments+2] = 15e26;
+        	//vMom[i*nMoments] = 1.0e10;
+        	//vMom[i*nMoments+1] = 1.0e10;
+        	//vMom[i*nMoments+2] = 1.0e10;
+
 
         	vMom[i*nMoments] = sootMom_.getFirstMoment();
         	//cout << "vMom[i*nMoments]  " << i*nMoments <<"  "  << vMom[i*nMoments] << endl;
@@ -320,13 +321,12 @@ void FlameLet::initSolutionVector()
             {
             	// ank25: Do we need to multiply by 1e6 here?
         		//vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(doublereal(sootMom_.getAtomsPerDiamer()));
-        		vMom[i*nMoments+l] = vMom[i*nMoments+l-1] * 1e9;
+        		vMom[i*nMoments+l] = vMom[i*nMoments+l-1];
         		//cout << "vMom[i*nMoments+l]  " << i*nMoments+l <<"  " << vMom[i*nMoments+l] << endl;
             }
 
-
-
         }
+
 
         // Call the soot constants function
         sootMom_.initMomentsConstants(*camMech_);
