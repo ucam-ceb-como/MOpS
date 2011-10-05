@@ -115,8 +115,16 @@ void BirthProcess::SetA(real a) {m_a = a;}
 
 // TOTAL RATE CALCULATIONS.
 
-// Returns rate of the process for the given system.
-real BirthProcess::Rate(real t, const Cell &sys) const
+/*!
+ *@param[in]            t           Time at which rate is being calculated
+ *@param[in]            sys         System for which rate is to be calculated
+ *@param[in]            local_geom  Spatial configuration information (ignored)
+ *
+ *@return   Process rate
+ */
+real BirthProcess::Rate(real t, const Cell &sys,
+                        const Geometry::LocalGeometry1d &local_geom) const
+
 {
     if (m_cell) {
         return m_a * m_cell->ParticleCount(); // Rate depends on birth cell.
@@ -134,6 +142,7 @@ unsigned int BirthProcess::TermCount(void) const {return 1;}
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
 real BirthProcess::RateTerms(const real t, const Cell &sys,
+                             const Geometry::LocalGeometry1d &local_geom,
                              fvector::iterator &iterm) const
 {
     if (m_cell) {

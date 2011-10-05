@@ -263,6 +263,18 @@ public:
     //! Choose the thermophoresis model
     void setThermophoresisType(const ThermophoresisType& therm) {m_ThermophoresisType = therm;}
 
+	real ColliParaA() const;
+    real ColliParaB() const;
+    real ColliParaC() const;
+
+    void SetCollisionEffPara(real A, real B, real C);
+
+    void SetThreshold(int target) ;
+    real Threshold() const ;
+
+    void SetMode(const std::string &mode);
+    const std::string &Mode() const;
+	
 protected:
     // The species used to define the processes and the particles.
     const Sprog::SpeciesPtrVector *m_species;
@@ -342,6 +354,15 @@ private:
 
     //! Thermphoresis expression to use
     ThermophoresisType m_ThermophoresisType;
+	
+	//! Three parameter for Abhjeet's collision efficiency model
+    real colliParaA, colliParaB, colliParaC;
+
+    //! Threshould for particular mode
+    real m_threshold;
+
+    //! Define three modes, collision efficience depends on the smaller, the bigger, the combined mass or reduced mass
+    std::string m_mode;
 };
 } //namespace Sweep
 #endif

@@ -80,8 +80,9 @@ public:
     // TOTAL RATE CALCULATION.
 
     // Returns the rate of the process for the given system.
-    virtual real Rate(real t,         // Time.
-                      const Cell &sys // System for which to calculate rate.
+    virtual real Rate(real t,          // Time.
+                      const Cell &sys, // System for which to calculate rate.
+                      const Geometry::LocalGeometry1d &local_geom
                       ) const;
 
 
@@ -96,6 +97,7 @@ public:
     virtual real RateTerms(
         real t,                  // Time.
         const Cell &sys,       // Indicates true kernel (not majorant).
+        const Geometry::LocalGeometry1d &local_geom,
         fvector::iterator &iterm // Iterator to the first term.
         ) const;
 
