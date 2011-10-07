@@ -108,12 +108,14 @@ Sweep::Processes::WeightedTransitionCoagulation::WeightedTransitionCoagulation(s
  * helper function RateTerms to calculate the individual terms. Returns
  * the sum of all rate terms.
  *
- * \param[in] t         Time for which rates are requested
- * \param[in] sys       Details of the particle population and environment
+ * \param[in] t             Time for which rates are requested
+ * \param[in] sys           Details of the particle population and environment
+ * \param[in] local_geom    Cell physical size and position information
  *
  * \return      Sum of all rate terms for this process
  */
-Sweep::real Sweep::Processes::WeightedTransitionCoagulation::Rate(real t, const Cell &sys) const
+Sweep::real Sweep::Processes::WeightedTransitionCoagulation::Rate(real t, const Cell &sys,
+                                                                  const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the number of particles in the system.
     unsigned int n = sys.ParticleCount();
@@ -150,14 +152,16 @@ unsigned int Sweep::Processes::WeightedTransitionCoagulation::TermCount() const 
  * beginning at iterm and return the sum of the terms added to that
  * vector.
  *
- * \param[in] t         Time for which rates are requested
- * \param[in] sys       Details of the particle population and environment
- * \param[in,out] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
+ * \param[in]       t           Time for which rates are requested
+ * \param[in]       sys         Details of the particle population and environment
+ * \param[in]       local_geom  Cell physical size and position information
+ * \param[in,out]   iterm       Pointer to start of sequence to hold the rate terms, returned as one past the end.
  *
  * \return      Sum of all rate terms for this process
  */
 Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(real t, const Cell &sys,
-                            fvector::iterator &iterm) const
+                                                                       const Geometry::LocalGeometry1d &local_geom,
+                                                                       fvector::iterator &iterm) const
 {
     // Get the number of particles in the system.
     unsigned int n = sys.ParticleCount();

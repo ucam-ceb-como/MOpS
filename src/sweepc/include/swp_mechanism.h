@@ -202,6 +202,7 @@ public:
     void CalcGasChangeRates(
         real t,          // Time at which to get rates.
         const Cell &sys, // System cell for which to get rates.
+        const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         fvector &rates   // Return vector for rates-of-change.
         ) const;
 
@@ -250,9 +251,6 @@ public:
 
     //! Get the number of times each process has been performed
     std::vector<unsigned int> GetProcessUsageCounts() const {return m_proccount;}
-	
-	//! return two vectors contain the mass of monomers and dimers respectively
-	void Mass_spectra(Ensemble &m_ensemble) const;
 	
 	//! return a vector contain the information of particular primary particle with X molecules
 	void Mass_pah(Ensemble &m_ensemble) const;

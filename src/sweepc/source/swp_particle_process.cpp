@@ -184,7 +184,8 @@ void ParticleProcess::SetTrackChange(unsigned int i, real track)
 // RATE CALCULATION.
 
 // Calculates the rates of multiple particle processes.
-real ParticleProcess::CalcRates(real t, const Cell &sys, 
+real ParticleProcess::CalcRates(real t, const Cell &sys,
+                                const Geometry::LocalGeometry1d &local_geom,
                                 const PartProcPtrVector &proc,
                                 fvector &rates, unsigned int start)
 {
@@ -192,7 +193,7 @@ real ParticleProcess::CalcRates(real t, const Cell &sys,
     fvector::iterator i = (rates.begin()+start);
     real sum = 0.0;
     for (p=proc.begin(); p!=proc.end(); ++p,++i) {
-        *i = (*p)->Rate(t, sys);    
+        *i = (*p)->Rate(t, sys, local_geom);
         sum += *i;
     }
     return sum;

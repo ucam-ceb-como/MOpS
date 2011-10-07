@@ -80,23 +80,6 @@ inline void Sweep::Component::SetGrowthFact(const Sweep::real gf) {m_growthfact 
 //! Sets the minimum number of PAHs
 inline void Sweep::Component::SetMinPAH(const int mp) {m_minPAH = mp;};
 
-//! PARAMETER FOR COLLISION EFFICIENCY MODEL
-inline void Sweep::Component::SetCollisionEffPara(const real A, const real B, const real C) 
-{
-	colliParaA = A;
-	colliParaB = B;
-	colliParaC = C;
-};
-inline Sweep::real Sweep::Component::ColliParaA() const {return colliParaA;};
-inline Sweep::real Sweep::Component::ColliParaB() const {return colliParaB;};
-inline Sweep::real Sweep::Component::ColliParaC() const {return colliParaC;};
-
-inline void Sweep::Component::SetThreshold(const int target) {m_threshold = target;};
-inline Sweep::real Sweep::Component::Threshold() const {return m_threshold;};
-
-inline void Sweep::Component::SetMode(const std::string &mode) {m_mode = mode;};
-inline const std::string &Sweep::Component::Mode() const {return m_mode;};
-
 // COMPONENT NAME.
 
 // Returns component symbol or name.

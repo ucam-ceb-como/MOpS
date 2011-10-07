@@ -103,18 +103,6 @@ public:
 
     void SetMinPAH(int mp);
 
-    real ColliParaA() const;
-    real ColliParaB() const;
-    real ColliParaC() const;
-
-    void SetCollisionEffPara(real A, real B, real C);
-
-    void SetThreshold(int target) ;
-    real Threshold() const ;
-
-    void SetMode(const std::string &mode);
-    const std::string &Mode() const;
-
     // Returns component symbol or name.
     const std::string &Name() const;
 
@@ -159,15 +147,6 @@ private:
 
     //! minimum number of PAHs withinin the primary that are needed to apply m_growthfact
     int m_minPAH;
-
-    //! three parameter for Abhjeet's collision efficiency model
-    real colliParaA, colliParaB, colliParaC;
-
-    //! threshould for particular mode
-    real m_threshold;
-
-    //! define three modes, collision efficience depends on the smaller, the bigger or the combined mass
-    std::string m_mode;
 };
 
 // Typedef of a vector of pointers to Component objects.

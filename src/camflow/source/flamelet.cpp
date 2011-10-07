@@ -308,24 +308,25 @@ void FlameLet::initSolutionVector()
     	vMom.resize(len*nMoments,0.0);
         for (size_t i=0; i<dz.size(); i++)
         {
+
+        	// ank25: Temp. Hard wire initial moment values.
+        	//vMom[i*nMoments] = 1.0e10;
+        	//vMom[i*nMoments+1] = 1.0e10;
+        	//vMom[i*nMoments+2] = 1.0e10;
+
+
         	vMom[i*nMoments] = sootMom_.getFirstMoment();
         	//cout << "vMom[i*nMoments]  " << i*nMoments <<"  "  << vMom[i*nMoments] << endl;
         	for (size_t l=1; l<nMoments; ++l)
             {
             	// ank25: Do we need to multiply by 1e6 here?
-        		vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(doublereal(sootMom_.getAtomsPerDiamer()));
-            	//cout << "vMom[i*nMoments+l]  " << i*nMoments+l <<"  " << vMom[i*nMoments+l] << endl;
+        		//vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(doublereal(sootMom_.getAtomsPerDiamer()));
+        		vMom[i*nMoments+l] = vMom[i*nMoments+l-1];
+        		//cout << "vMom[i*nMoments+l]  " << i*nMoments+l <<"  " << vMom[i*nMoments+l] << endl;
             }
 
-        	// Change of variable of the initial moments.
-        	//M=exp(M_hat-1)
-        	//M_hat = ln(M+1)
-       // 	for (size_t l=0; l<nMoments; ++l)
-       // 	{
-       // 		vMom[i*nMoments+l] = log(vMom[i*nMoments+l] + 1.0);
-       // 	}
-
         }
+
 
         // Call the soot constants function
         sootMom_.initMomentsConstants(*camMech_);

@@ -69,7 +69,8 @@ Sweep::Processes::ConstantCoagulation::ConstantCoagulation(std::istream &in, con
 }
 
 // Returns the rate of the process for the given system.
-Sweep::real Sweep::Processes::ConstantCoagulation::Rate(real t, const Cell &sys) const
+Sweep::real Sweep::Processes::ConstantCoagulation::Rate(real t, const Cell &sys,
+                                                        const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the number of particles in the system.
     const unsigned int n = sys.ParticleCount();
@@ -92,12 +93,14 @@ unsigned int Sweep::Processes::ConstantCoagulation::TermCount() const {return TY
  *
  * @param[in] t         Time for which rates are requested
  * @param[in] sys       Details of the particle population and environment
+ * @param[in] local_geom Position information
  * @param[inout] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
  */
 Sweep::real Sweep::Processes::ConstantCoagulation::RateTerms(real t, const Cell &sys,
-                            fvector::iterator &iterm) const
+                                                             const Geometry::LocalGeometry1d &local_geom,
+                                                             fvector::iterator &iterm) const
 {
-    return *(iterm++) = Rate(t, sys);
+    return *(iterm++) = Rate(t, sys, local_geom);
 }
 
 /*!

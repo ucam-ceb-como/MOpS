@@ -49,8 +49,7 @@ using namespace Sweep;
 
 // Default constructor.
 Component::Component()
-: m_density(0.0), m_molwt(0.0), m_minValid(0.0), m_name(""),m_coalesc_thresh(1.0), m_growthfact(1.0), m_minPAH(0),
-colliParaA(0), colliParaB(0), colliParaC(0), m_threshold(0), m_mode("")
+: m_density(0.0), m_molwt(0.0), m_minValid(0.0), m_name(""),m_coalesc_thresh(1.0), m_growthfact(1.0), m_minPAH(0)
 {
 }
 
@@ -68,11 +67,6 @@ Component::Component(Sweep::real molwt,
     m_coalesc_thresh = 1.0;     //added by ms785, do not coalesce particles by default
     m_growthfact=1.0;           //added by ms785
     m_minPAH=0;                 //added by ms785
-    colliParaA = 0.0;           //added by dc516
-    colliParaB = 0.0;           //added by dc516
-    colliParaC = 0.0;           //added by dc516
-    m_threshold = 0.0;          //added by dc516
-    m_mode = "";                //added by dc516
 }
 
 // Copy constructor.
@@ -104,11 +98,6 @@ Component &Component::operator=(const Component &rhs)
         m_coalesc_thresh= rhs.m_coalesc_thresh;
         m_growthfact= rhs.m_growthfact;
         m_minPAH= rhs.m_minPAH;
-        colliParaA = rhs.colliParaA;
-        colliParaB = rhs.colliParaB;
-        colliParaC = rhs.colliParaC;
-        m_threshold = rhs.m_threshold;
-        m_mode = rhs.m_mode;
     }
     return *this;
 }
