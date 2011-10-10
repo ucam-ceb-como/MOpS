@@ -512,11 +512,8 @@ void FlameLet::restart(doublereal flameTime)
 	// Assumption is that a restart is always a Lagrangian flamelet (i.e. not steady state)
 	//steadyStateAtFlameBase = false;
 
-	/// Change restart so that it takes in flameHeight ( or  flameTime or gridnumber?
-	// Then decide set steadyStateAtFlameBase to true if above a ceetain threshold.
-	// i.e. we stop calculating soot when high enough out of the flame.
-	// Rename "steadyStateAtFlameBase" to "sootResidualZeroed"
 
+    // Stop calculating soot above a user specified flamelet time.
 	if (flameTime < Lewis.sootFlameTimeThreshold)
 	{
 		// Still below the time at which we stop calculating soot residual
