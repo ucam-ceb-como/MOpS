@@ -50,6 +50,7 @@
 // Default constructor (private).
 Sweep::Processes::ConstantInception::ConstantInception()
 : Inception()
+, mUseFixedPosition(false)
 {
     m_name = "ConstantInception";
 }
@@ -57,6 +58,7 @@ Sweep::Processes::ConstantInception::ConstantInception()
 // Initialising constructor.
 Sweep::Processes::ConstantInception::ConstantInception(const Sweep::Mechanism &mech)
 : Inception(mech)
+, mUseFixedPosition(false)
 {
     m_name = "ConstantInception";
 }
@@ -89,6 +91,8 @@ Sweep::Processes::ConstantInception &Sweep::Processes::ConstantInception::operat
     }
 
     mRate = rhs.mRate;
+    mUseFixedPosition = rhs.mUseFixedPosition;
+    mFixedPosition = rhs.mFixedPosition;
 
     return *this;
 }
@@ -118,41 +122,74 @@ int Sweep::Processes::ConstantInception::Perform(const real t, Cell &sys,
     // by the system ensemble.
     Particle * const sp = m_mech->CreateParticle(t);
 
-    // Get the cell vertices
-    fvector vertices = local_geom.cellVertices();
+    // Position of newly incepted particle
+    real posn;
 
-    // Sample a uniformly distributed position, note that this method
-    // works whether the vertices come in increasing or decreasing order,
-    // but 1d is assumed for now.
-    real posn = vertices.front();
+    if(mUseFixedPosition) {
+        // If there is a fixed position the rate should only be positive for the cell containing the fixed position
+        if(local_geom.isInCell(mFixedPosition))
+            posn = mFixedPosition;
+        else
+            return 0;
+    }
+    else {
+        // Get the cell vertices
+        fvector vertices = local_geom.cellVertices();
 
-    const real width = vertices.back() - posn;
-    boost::uniform_01<rng_type&, real> unifDistrib(rng);
-    posn += width * unifDistrib();
+        // Sample a uniformly distributed position, note that this method
+        // works whether the vertices come in increasing or decreasing order,
+        // but 1d is assumed for now.
+        posn = vertices.front();
+
+        const real width = vertices.back() - posn;
+        boost::uniform_01<rng_type&, real> unifDistrib(rng);
+        posn += width * unifDistrib();
+    }
 
     sp->setPositionAndTime(posn, t);
 
 
     // Initialise the new particle.
-    sp->Primary()->SetComposition(m_newcomp);
-    sp->Primary()->SetValues(m_newvals);
+    sp->Primary()->SetComposition(ParticleComp());
+    sp->Primary()->SetValues(ParticleTrackers());
     sp->UpdateCache();
 
     // Add particle to system's ensemble.
     sys.Particles().Add(*sp, rng);
 
     // Update gas-phase chemistry of system.
-    adjustGas(sys);
+    adjustGas(sys, sp->getStatisticalWeight());
 
     return 0;
 }
 
 // TOTAL RATE CALCULATIONS.
 
-// Returns rate of the process for the given system.
-Sweep::real Sweep::Processes::ConstantInception::Rate(real t, const Cell &sys) const
+/*!
+ *@param[in]            t           Time at which rate is being calculated
+ *@param[in]            sys         System for which rate is to be calculated
+ *@param[in]            local_geom  Spatial configuration information (ignored)
+ *
+ *@return   Process rate
+ */
+Sweep::real Sweep::Processes::ConstantInception::Rate(real t, const Cell &sys,
+                                                      const Geometry::LocalGeometry1d &local_geom) const
 {
-    return mRate * A() * sys.SampleVolume();
+    real rate =  mRate * A() * sys.SampleVolume();
+
+    if(mUseFixedPosition) {
+        if(local_geom.isInCell(mFixedPosition)) {
+            // Dividing by cell volume (which is distinct from the sample volume)
+            // seems to be the right thing to do, because the concentration
+            // is averaged over the whole cell and thus is proportional to the
+            // amount of reactor covered by the cell
+            rate /= local_geom.cellVolume();
+        }
+        else
+            rate = 0.0;
+    }
+
+    return rate;
 }
 
 
@@ -165,10 +202,11 @@ unsigned int Sweep::Processes::ConstantInception::TermCount() const {return 1;}
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
 Sweep::real Sweep::Processes::ConstantInception::RateTerms(const real t, const Cell &sys,
-                          fvector::iterator &iterm) const
+                                                           const Geometry::LocalGeometry1d &local_geom,
+                                                           fvector::iterator &iterm) const
 {
     // Calculate the single rate term and advance iterator.
-    *iterm = Rate(t, sys);
+    *iterm = Rate(t, sys, local_geom);
     return *(iterm++);
 }
 
@@ -202,6 +240,10 @@ void Sweep::Processes::ConstantInception::Serialize(std::ostream &out) const
         // Constant rate value
         out.write(reinterpret_cast<const char*>(&mRate), sizeof(mRate));
 
+        // Fixed position support
+        out.write(reinterpret_cast<const char*>(&mUseFixedPosition), sizeof(mUseFixedPosition));
+        out.write(reinterpret_cast<const char*>(&mFixedPosition), sizeof(mFixedPosition));
+
     } else {
         throw std::invalid_argument("Output stream not ready (Sweep, Sweep::Processes::ConstantInception::Serialize).");
     }
@@ -224,6 +266,10 @@ void Sweep::Processes::ConstantInception::Deserialize(std::istream &in, const Sw
 
                 // Constant rate
                 in.read(reinterpret_cast<char*>(&mRate), sizeof(mRate));
+
+                // Fixed position support
+                in.read(reinterpret_cast<char*>(&mUseFixedPosition), sizeof(mUseFixedPosition));
+                in.read(reinterpret_cast<char*>(&mFixedPosition), sizeof(mFixedPosition));
 
                  break;
             default:

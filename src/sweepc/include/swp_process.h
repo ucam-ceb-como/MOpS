@@ -168,10 +168,11 @@ public:
 
 	// TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
-    // Returns rate of the process for the given system.
+    //! Rate of the process for the given system.
     virtual real Rate(
-        real t,         // Time.
-        const Cell &sys // System for which to calculate rate.
+        real t,          // Time.
+        const Cell &sys, // System for which to calculate rate.
+        const Geometry::LocalGeometry1d& local_geom
         ) const = 0;
 
 	// RATE TERM CALCULATIONS.
@@ -187,6 +188,7 @@ public:
     virtual real RateTerms(
         real t,                  // Time.
         const Cell &sys,         // System for which to calculate rate terms.
+        const Geometry::LocalGeometry1d& local_geom,
         fvector::iterator &iterm // Iterator to the first term.
         ) const = 0;
 
@@ -259,6 +261,7 @@ protected:
     // products defined for this process.
     void adjustGas(
         Cell &sys,     // System to update.
+        real wt,       // Stochastic weight of particle
         unsigned int n // Number of times to apply process.
          = 1           //  - Default is one time.
          ) const;

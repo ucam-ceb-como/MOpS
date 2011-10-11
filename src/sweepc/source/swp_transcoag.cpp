@@ -74,7 +74,8 @@ Sweep::Processes::TransitionCoagulation::TransitionCoagulation(std::istream &in,
 // TOTAL RATE CALCULATION.
 
 // Returns the rate of the process for the given system.
-Sweep::real Sweep::Processes::TransitionCoagulation::Rate(real t, const Cell &sys) const
+Sweep::real Sweep::Processes::TransitionCoagulation::Rate(real t, const Cell &sys,
+                                                          const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the number of particles in the system.
     unsigned int n = sys.ParticleCount();
@@ -148,10 +149,21 @@ Sweep::real Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::partic
 // Returns the number of rate terms for this process.
 unsigned int Sweep::Processes::TransitionCoagulation::TermCount(void) const {return TYPE_COUNT;}
 
-// Calculates the rate terms given an iterator to a real vector. The
-// iterator is advanced to the position after the last term for this
-// process.  Returns the sum of all rate terms.
+/**
+ * Calculate the terms in the sum of the majorant kernel over all particle
+ * pairs, placing each term in successive positions of the sequence
+ * beginning at iterm and return the sum of the terms added to that
+ * vector.
+ *
+ * @param[in] t         Time for which rates are requested
+ * @param[in] sys       Details of the particle population and environment
+ * @param[in] local_geom Details of spatial position and boundaries
+ * @param[inout] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
+ *
+ * @return      Sum of all rate terms for this process
+ */
 Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(real t, const Cell &sys,
+                            const Geometry::LocalGeometry1d &local_geom,
                             fvector::iterator &iterm) const
 {
     // Get the number of particles in the system.

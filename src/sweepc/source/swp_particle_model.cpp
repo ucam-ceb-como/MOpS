@@ -108,6 +108,13 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
         m_DragA = rhs.m_DragA;
         m_DragB = rhs.m_DragB;
         m_DragE = rhs.m_DragE;
+		
+		// Collision efficiency model
+        colliParaA = rhs.colliParaA;
+        colliParaB = rhs.colliParaB;
+        colliParaC = rhs.colliParaC;
+        m_threshold = rhs.m_threshold;
+        m_mode = rhs.m_mode;
 
         // Choice of transport expressions
         m_DragType = rhs.m_DragType;
@@ -353,10 +360,10 @@ Sweep::Particle *const ParticleModel::CreateParticle(const real time, const real
 double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 {
 		double ceffi;
-	if (Components(0)->Mode() == "NONE" || Components(0)->Mode() == "") {
-		double A = Components(0)->ColliParaA();
-		double B = Components(0)->ColliParaB();
-		double C = Components(0)->ColliParaC();
+	if (Mode() == "NONE" || Mode() == "") {
+		double A = ColliParaA();
+		double B = ColliParaB();
+		double C = ColliParaC();
 		double redmass=0;
 		int ncarbon1,ncarbon2;
 		const AggModels::PAHPrimary *pah1 = NULL;
@@ -378,7 +385,7 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 		return ceffi;
 	}
 	else {
-		double target_C = Components(0)->Threshold();
+		double target_C = Threshold();
 		int ncarbon1,ncarbon2;
 		const AggModels::PAHPrimary *pah1 = NULL;
 		const AggModels::PAHPrimary *pah2 = NULL;
@@ -389,12 +396,15 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 			ncarbon2=(int)(1.0*pah2->NumCarbon());
 			ncarbon1=(int)(1.0*pah1->NumCarbon());
 			double redmass;
-			if (Components(0)->Mode() == "MAX")
+			if (Mode() == "MAX")
 			    redmass = max(ncarbon1,ncarbon2);
-            else if (Components(0)->Mode() == "MIN")
+            else if (Mode() == "MIN")
 			    redmass = min(ncarbon1,ncarbon2);
-            else if (Components(0)->Mode() == "COMBINED")
+            else if (Mode() == "COMBINED")
 			    redmass = ncarbon1 + ncarbon2;
+            else if (Mode() == "REDUCED")
+			    redmass = ncarbon1*ncarbon2/(ncarbon1 + ncarbon2);
+            else throw std::runtime_error("mode of collision efficiency is modified by unknown process, please check,Sweep::ParticleModel::CollisionEff()");
 			if (redmass >= target_C) ceffi = 1;
 			else ceffi = 0;
 		}
@@ -568,6 +578,13 @@ void ParticleModel::init(void)
     m_DragA = 0.0;
     m_DragB = 0.0;
     m_DragE = 0.0;
+	
+	//initial CE model
+    colliParaA = 0.0; 
+    colliParaB = 0.0;
+    colliParaC = 0.0;
+    m_threshold = 0.0;
+    m_mode = "";
 
     // Not sure what to put as default for m_DragType etc
     m_ThermophoresisType = NoThermophoresis;
@@ -614,6 +631,32 @@ void ParticleModel::SetKnudsenDragConstants(const real A, const real B, const re
     m_DragB = B;
     m_DragE = E;
 }
+
+
+//! SET PARAMETER FOR abhjeet's COLLISION EFFICIENCY MODEL
+void Sweep::ParticleModel::SetCollisionEffPara(const real A, const real B, const real C) {
+    colliParaA = A;
+    colliParaB = B;
+    colliParaC = C;
+}
+
+//! return parameters of abhjeet's collision efficiency model
+real ParticleModel::ColliParaA() const {return colliParaA;}
+real ParticleModel::ColliParaB() const {return colliParaB;}
+real ParticleModel::ColliParaC() const {return colliParaC;}
+
+//! set threshold for collision efficiency model
+void ParticleModel::SetThreshold(const int target) {m_threshold = target;}
+
+//! return threshold of collision efficency model
+real ParticleModel::Threshold() const {return m_threshold;}
+
+//! set mode for collision efficiency model, currently 4 modes are supported, min, max, combined and reduced
+void ParticleModel::SetMode(const std::string &mode) {m_mode = mode;}
+
+//! return mode of collision efficency model
+const std::string &ParticleModel::Mode() const {return m_mode;}
+
 
 /*!
  * The drag coefficient is calculated using the the Knudsen correction to the

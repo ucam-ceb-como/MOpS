@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#  Copyright (C) 2009 Robert I A Patterson.
+#  Copyright (C) 2011 Robert I A Patterson.
 #
 #
 # Licence:
@@ -48,56 +48,18 @@ fi
 if test -n "$2"
   then
     cd $2
+    echo "changed directory to $2"
 fi
 
-echo "Test 2a: Diffusion jump process"
-
-# Get rid of any output from previous runs
-rm regress2a*
-
-$program -v 2 -b ./regress2/brush2a.xml -c ./regress2/chem.inp -d ./regress2/chemsoln2a.dat -t ./regress2/therm.dat -s ./regress2/sweep2a.xml -g ./regress2/geometry.xml -a ./regress2/partsoln2a.xml
+# Run the test
+./regress5/regress5.pl $program
 result=$?
 if((result!=0))
   then
-    echo "Simulation failed"
+    echo "Simulation script 5 failed"
     echo "**************************"
     echo "****** TEST FAILURE ******"
     echo "**************************"
-    exit $result
-fi
-
-count123=`grep "^0.2,1\.45" "regress2adiffusion123_psl.csv" | wc -l`
-count124=`grep "^0.1,1\.35" "regress2adiffusion124_psl.csv" | wc -l`
-
-if(($count123 != 112)) 
-  then
-    # Regression test has failed; print summary message and exit with non zero
-    # value
-    echo "Found $count123 particles, when 112 expected"
-    echo "**************************"
-    echo "****** TEST FAILURE ******"
-    echo "**************************"
-    exit $count123
-fi
-
-if(($count124 != 12)) 
-  then
-    # Regression test has failed; print summary message and exit with non zero
-    # value
-    echo "Found $count124 particles, when 12 expected"
-    echo "**************************"
-    echo "****** TEST FAILURE ******"
-    echo "**************************"
-    exit $count124
-fi
-
-# Clean up the output now the test has passed
-rm regress2a*
-
-./regress2/regress2b.pl $program
-result=$?
-if((result!=0)) 
-  then
     exit $result
 fi
 

@@ -142,15 +142,15 @@ int DimerInception::Perform(const real t, Cell &sys,
 
 
     // Initialise the new particle.
-    sp->Primary()->SetComposition(m_newcomp);
-    sp->Primary()->SetValues(m_newvals);
+    sp->Primary()->SetComposition(ParticleComp());
+    sp->Primary()->SetValues(ParticleTrackers());
     sp->UpdateCache();
 
     // Add particle to system's ensemble.
     sys.Particles().Add(*sp, rng);
 
     // Update gas-phase chemistry of system.
-    adjustGas(sys);
+    adjustGas(sys, sp->getStatisticalWeight());
 
     return 0;
 }
@@ -207,7 +207,7 @@ void DimerInception::SetInceptingSpeciesFreeMol(real m1, real m2, real d1, real 
 // TOTAL RATE CALCULATIONS.
 
 // Returns rate of the process for the given system.
-real DimerInception::Rate(real t, const Cell &sys) const
+real DimerInception::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the current chemical conditions.
     real T = sys.Temperature();
@@ -239,7 +239,7 @@ real DimerInception::Rate(real t, const Cell &sys) const
 real DimerInception::Rate(const fvector &fracs, real density, real sqrtT,
                      real T_mu, real MFP, real vol) const
 {
-    real rate = m_a * vol * chemRatePart(fracs, density);
+    real rate = A() * vol * chemRatePart(fracs, density);
 
     const real fm   = sqrtT * m_kfm;
     if((m_ksf1 > 0) || (m_ksf2 > 0))  {
@@ -291,7 +291,8 @@ unsigned int DimerInception::TermCount(void) const {return 1;}
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
 real DimerInception::RateTerms(const real t, const Cell &sys,
-                          fvector::iterator &iterm) const
+                               const Geometry::LocalGeometry1d &local_geom,
+                               fvector::iterator &iterm) const
 {
     // Get the current chemical conditions.
     real T = sys.Temperature();

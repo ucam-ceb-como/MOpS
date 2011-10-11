@@ -48,10 +48,6 @@ doublereal CamMath::interpolateLG(doublereal at, int size, Array2D& dPrime,
     doublereal retVal = 1;
     for( int i=0; i<size; i++){
         doublereal expnt = prod/((at-i)*dPrime(size,i+1));
-        if ((val[i] > 1e30) or (val[i] <= 0.0))
-        {
-           std::cout << "val[i] " << i << " : " << val[i];
-        }
         retVal *= pow(val[i],expnt);
     }
 

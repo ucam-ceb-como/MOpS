@@ -128,7 +128,8 @@ void SurfaceReaction::SetPropertyID(PropID pid)
 // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
 // Returns rate of the process for the given system.
-real SurfaceReaction::Rate(real t, const Cell &sys) const
+real SurfaceReaction::Rate(real t, const Cell &sys,
+                           const Geometry::LocalGeometry1d &local_geom) const
 {
     // Rate constant.
     real rate = m_arr.A;
@@ -194,9 +195,10 @@ unsigned int SurfaceReaction::TermCount(void) const {return 1;}
 // iterator is advanced to the position after the last term for this
 // process.
 real SurfaceReaction::RateTerms(real t, const Cell &sys,
+                                const Geometry::LocalGeometry1d &local_geom,
                                 fvector::iterator &iterm) const
 {
-    return *(iterm++) = Rate(t, sys);
+    return *(iterm++) = Rate(t, sys, local_geom);
 }
 
 
@@ -240,7 +242,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
                     sys.Particles().Update(i);
 
                     // Apply changes to gas-phase chemistry.
-                    adjustGas(sys);
+                    adjustGas(sys, sp->getStatisticalWeight());
                 }
             } else {
                 // If not valid then remove the particle.
@@ -261,7 +263,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
             }
 
             // Apply changes to gas-phase chemistry.
-            adjustGas(sys);
+            adjustGas(sys, sp->getStatisticalWeight());
         }
     } else {
         // Failed to select a particle.
@@ -277,7 +279,7 @@ int SurfaceReaction::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
                              unsigned int n) const
 {
     unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
-    adjustGas(sys, m);
+    adjustGas(sys, sp.getStatisticalWeight(), m);
     return m;
 }
 

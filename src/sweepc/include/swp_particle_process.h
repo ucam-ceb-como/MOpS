@@ -132,12 +132,15 @@ public:
 
     // Returns rate of the process for the given system.
     virtual real Rate(
-        real t,         // Time.
-        const Cell &sys // System for which to calculate rate.
+        real t,          // Time.
+        const Cell &sys, // System for which to calculate rate.
+        const Geometry::LocalGeometry1d &local_geom
         ) const = 0;
+
     static real CalcRates(
         real t, // Time.
         const Cell &sys, // System for which to calculate rates.
+        const Geometry::LocalGeometry1d &local_geom, // Position information
         const PartProcPtrVector &proc, // Vector of processes to calculate.
         fvector &rates, // Return vector for rates.
         unsigned int start = 0 // Start index in output vector.

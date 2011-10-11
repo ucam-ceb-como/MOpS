@@ -116,7 +116,8 @@ protected:
                      Sweep::rng_type &rng) const;
 
     //! Carry out split transport on all particles from all cells
-    void splitParticleTransport(Reactor1d &reac, const real t_start, const real t_stop, Sweep::rng_type &rng) const;
+    void splitParticleTransport(Reactor1d &reac, const real t_start, const real t_stop,
+                                std::vector<Sweep::rng_type>& cell_rngs) const;
 
 private:
     //! Not possible to have a solver of this type without a reset chemistry object
@@ -146,7 +147,7 @@ private:
 
     //! Put particles that are actually moving to new cells into their destination
     void moveParticlesToDifferentCells(Reactor1d & reac, const inflow_lists_vector & inflow_lists,
-                                       Sweep::rng_type &rng) const;
+                                       std::vector<Sweep::rng_type>& cell_rngs) const;
 
     //! Object for setting reactor chemistry to fixed values (? just use pointer)
     ResetChemistry mResetChemistry;

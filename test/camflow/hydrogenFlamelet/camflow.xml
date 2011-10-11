@@ -12,6 +12,8 @@
         <radiation activate="off"/> <!-- If on, specify the species -->
         <flameletEquation>complete</flameletEquation> <!-- complete or simple-->
         <Lewis>unity</Lewis>
+        <SootFlameletType>MAUSS06</SootFlameletType>  <!-- MAUSS06 / PITSCH00DD / CARBONELL09  -->
+        <sootFlameTimeCutoff>0.0206213</sootFlameTimeCutoff>	
     </op_condition>
     <inlet>
         <fuel>

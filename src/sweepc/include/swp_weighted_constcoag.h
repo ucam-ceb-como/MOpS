@@ -81,23 +81,22 @@ public:
 
     // TOTAL RATE CALCULATION.
 
-    // Returns the rate of the process for the given system.
-    virtual real Rate(real t,         // Time.
-                      const Cell &sys // System for which to calculate rate.
+    //! Rate of the process
+    virtual real Rate(real t,          // Time.
+                      const Cell &sys, // System for which to calculate rate.
+                      const Geometry::LocalGeometry1d& local_geom // Information regarding surrounding cells and boundaries
                       ) const;
-
 
     // RATE TERM CALCULATION.
 
     // Returns the number of rate terms for this process.
     virtual unsigned int TermCount(void) const;
 
-    // Calculates the rate terms given an iterator to a real vector. The 
-    // iterator is advanced to the position after the last term for this
-    // process.  Returns the sum of all rate terms.
+    //! Put the different parts of the rate expression into the supplied vector
     virtual real RateTerms(
         real t,                  // Time.
         const Cell &sys,       // Indicates true kernel (not majorant).
+        const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells and boundaries
         fvector::iterator &iterm // Iterator to the first term.
         ) const;
 

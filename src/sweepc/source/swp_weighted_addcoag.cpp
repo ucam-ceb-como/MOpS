@@ -84,13 +84,22 @@ Sweep::Processes::WeightedAdditiveCoagulation::WeightedAdditiveCoagulation(std::
         throw std::runtime_error("Input stream not ready (WeightedAdditiveCoagulation::WeightedAdditiveCoagulation)");
 }
 
-// Returns the rate of the process for the given system.
-Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::Rate(real t, const Cell &sys) const
-{
+/**
+ * Calculates sum of the majorant kernel over all particle
+ * pairs.
+ *
+ * @param[in] t         Time for which rates are requested
+ * @param[in] sys       Details of the particle population and environment
+ * @param[in] local_geom Details of spatial position and boundaries
+ *
+ * @return      Sum of all rate terms for this process
+ */
+Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::Rate(real t, const Cell &sys,
+                            const Geometry::LocalGeometry1d &local_geom) const {
     // Create a vector so we can call through to RateTerms
     Sweep::fvector vec(TYPE_COUNT);
     fvector::iterator it = vec.begin();
-    return RateTerms(t, sys, it);
+    return RateTerms(t, sys, local_geom, it);
 }
 
 /**
@@ -108,11 +117,13 @@ unsigned int Sweep::Processes::WeightedAdditiveCoagulation::TermCount() const {r
  *
  * @param[in] t         Time for which rates are requested
  * @param[in] sys       Details of the particle population and environment
+ * @param[in] local_geom Details of spatial position and boundaries
  * @param[inout] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
  *
  * @return      Sum of all rate terms for this process
  */
 Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::RateTerms(real t, const Cell &sys,
+                            const Geometry::LocalGeometry1d &local_geom,
                             fvector::iterator &iterm) const
 {
     const unsigned int n = sys.ParticleCount();
