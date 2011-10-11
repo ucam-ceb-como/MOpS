@@ -759,7 +759,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
 
     }
 
-    if (AggModel() == AggModels::Silica_ID) {
+    if (AggModel() == AggModels::Silica_ID && !m_anydeferred) {
     	// Calculate delta-t and update particle time.
     	real dt;
     	dt = t - sp.LastUpdateTime();
