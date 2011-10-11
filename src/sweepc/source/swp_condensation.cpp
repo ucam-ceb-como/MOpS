@@ -300,7 +300,7 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
                 sys.Particles().Update(i);
 
                 // Apply changes to gas-phase chemistry.
-                adjustGas(sys);
+                adjustGas(sys, sp->getStatisticalWeight());
             }
         } else {
             // If not valid then remove the particle.
@@ -319,7 +319,7 @@ int Condensation::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
                           unsigned int n) const
 {
     unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
-    adjustGas(sys, m);
+    adjustGas(sys, sp.getStatisticalWeight(), m);
     return 0;
 }
 

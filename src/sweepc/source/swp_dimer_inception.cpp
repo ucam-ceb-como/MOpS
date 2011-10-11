@@ -150,7 +150,7 @@ int DimerInception::Perform(const real t, Cell &sys,
     sys.Particles().Add(*sp, rng);
 
     // Update gas-phase chemistry of system.
-    adjustGas(sys);
+    adjustGas(sys, sp->getStatisticalWeight());
 
     return 0;
 }

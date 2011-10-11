@@ -242,7 +242,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
                     sys.Particles().Update(i);
 
                     // Apply changes to gas-phase chemistry.
-                    adjustGas(sys);
+                    adjustGas(sys, sp->getStatisticalWeight());
                 }
             } else {
                 // If not valid then remove the particle.
@@ -263,7 +263,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
             }
 
             // Apply changes to gas-phase chemistry.
-            adjustGas(sys);
+            adjustGas(sys, sp->getStatisticalWeight());
         }
     } else {
         // Failed to select a particle.
@@ -279,7 +279,7 @@ int SurfaceReaction::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
                              unsigned int n) const
 {
     unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
-    adjustGas(sys, m);
+    adjustGas(sys, sp.getStatisticalWeight(), m);
     return m;
 }
 

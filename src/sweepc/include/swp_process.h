@@ -261,6 +261,7 @@ protected:
     // products defined for this process.
     void adjustGas(
         Cell &sys,     // System to update.
+        real wt,       // Stochastic weight of particle
         unsigned int n // Number of times to apply process.
          = 1           //  - Default is one time.
          ) const;
