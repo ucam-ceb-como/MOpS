@@ -133,6 +133,9 @@ void SurfVolStats::Calculate(const Ensemble &e, real scale)
 {
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
+    // Calculate total weight
+    real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
+
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
     // Number of particles in a given stats bound
@@ -142,29 +145,26 @@ void SurfVolStats::Calculate(const Ensemble &e, real scale)
         const AggModels::SurfVolCache& cache =
             dynamic_cast<const AggModels::SurfVolCache&>((*ip)->AggCache());
         real sz = (*ip)->Property(m_statbound.PID);
+        real wt = (*ip)->getStatisticalWeight();
+
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-            m_stats[iS]      += cache.SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
-            m_stats[iS+1]    += cache.SphSurfaceArea() * 1.0e4; // Convert from m2 to cm2.
-            m_stats[iPPN]    += cache.PP_Count();
-            m_stats[iPPN+1]  += cache.PP_Count();
-            m_stats[iPPD]    += cache.PP_Diameter() * 1.0e9; // Convert from m to nm.
+            m_stats[iS]      += cache.SphSurfaceArea() * 1.0e4 * wt; // Convert from m2 to cm2.
+            m_stats[iS+1]    += cache.SphSurfaceArea() * 1.0e4 * wt; // Convert from m2 to cm2.
+            m_stats[iPPN]    += cache.PP_Count() * wt;
+            m_stats[iPPN+1]  += cache.PP_Count() * wt;
+            m_stats[iPPD]    += cache.PP_Diameter() * 1.0e9 * wt; // Convert from m to nm.
             ++n;
         }
     }
-
-    // Get the particle count.
-    //real np    = (real)e.Count();
-    real np    = (real) n;
-    real invnp = (np>0) ? 1.0 / np : 0.0;
 
     // Scale the summed stats and calculate the averages.
     for (unsigned int i=1; i!=STAT_COUNT; ++i) {
         if (m_mask[i] == Sum) {
             m_stats[i] *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
         } else {
-            m_stats[i] *= invnp;
+            m_stats[i] *= invTotalWeight;
         }
     }
 }
