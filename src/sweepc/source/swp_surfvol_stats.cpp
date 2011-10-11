@@ -133,13 +133,9 @@ void SurfVolStats::Calculate(const Ensemble &e, real scale)
 {
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
-    // Calculate total weight
-    real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
-
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
-    // Number of particles in a given stats bound
-    unsigned int n = 0;
+
     for (ip=e.begin(); ip!=e.end(); ++ip) {
         // Get surface-volume cache.
         const AggModels::SurfVolCache& cache =
@@ -155,9 +151,11 @@ void SurfVolStats::Calculate(const Ensemble &e, real scale)
             m_stats[iPPN]    += cache.PP_Count() * wt;
             m_stats[iPPN+1]  += cache.PP_Count() * wt;
             m_stats[iPPD]    += cache.PP_Diameter() * 1.0e9 * wt; // Convert from m to nm.
-            ++n;
         }
     }
+
+    // Calculate total weight
+    real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
 
     // Scale the summed stats and calculate the averages.
     for (unsigned int i=1; i!=STAT_COUNT; ++i) {

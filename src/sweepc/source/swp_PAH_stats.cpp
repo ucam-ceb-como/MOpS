@@ -156,14 +156,13 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
     // Forward define sum of 'real particle' weights
+    // used to count particles with more then one PAH
+	// real part properties => particle only considered, sum of X / num of particle
     real wtreal = 0.0;
 
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
-    unsigned int n = 0;
-    // used to count particles with more then one PAH
-	// real part properties => particle only considered, sum of X / num of particle
-    unsigned int nrealpart= 0;
+
     for (ip=e.begin(); ip!=e.end(); ++ip) {
         // Get surface-volume cache.
         const AggModels::PAHCache& cache =
@@ -196,10 +195,6 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
     // Calculate total weight
     real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
     real invRealWeight = wtreal==0.0 ? 1.0/wtreal : 0.0;
-    // Get the particle count.
-    //real np    = (real)e.Count();
-    real np    = (real) n;
-    real invnp = (np>0) ? 1.0 / np : 0.0;
 
     // Scale the summed stats and calculate the averages.
     for (unsigned int i=0; i!=STAT_COUNT; ++i) {
