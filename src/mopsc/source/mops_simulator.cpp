@@ -249,7 +249,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     // Initialise the reactor with the start time.
     t2 = m_times[0].StartTime();
     r.SetTime(t2);
-    //r.Mixture()->SetMaxM0(m_maxm0);
+    //r.Mixture()->GasPhase().SetMaxM0(m_maxm0);
 
     // Set up the solver.
     s.Initialise(r);
@@ -364,7 +364,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
                     if (istep == 0){
                         J = r.CreateJac(r.Mech()->SpeciesCount());
                     }
-                    r.RateJacobian(t2, r.Mixture()->RawData(), J, uround);
+                    r.RateJacobian(t2, r.Mixture()->GasPhase().RawData(), J, uround);
                     LOI = LOIReduction::CalcLOI(J, s.GetSensSolution(s.GetNumSens(), r.Mech()->SpeciesCount()), LOI, r.Mech()->SpeciesCount(), s.GetNumSens());
                     LOIReduction::SaveLOI(LOI, t2, LOIFile, r.Mech());
                 }
@@ -712,14 +712,14 @@ void Simulator::closeOutputFile() const
 void Simulator::outputGasPhase(const Reactor &r) const
 {
     // Write gas-phase conditions to file.
-    m_file.write(reinterpret_cast<const char*>(&r.Mixture()->RawData()[0]),
-                 sizeof(r.Mixture()->RawData()[0]) *
+    m_file.write(reinterpret_cast<const char*>(&r.Mixture()->GasPhase().RawData()[0]),
+                 sizeof(r.Mixture()->GasPhase().RawData()[0]) *
                  r.Mech()->SpeciesCount());
-    real T = r.Mixture()->Temperature();
+    real T = r.Mixture()->GasPhase().Temperature();
     m_file.write((char*)&T, sizeof(T));
-    real D = r.Mixture()->Density();
+    real D = r.Mixture()->GasPhase().Density();
     m_file.write((char*)&D, sizeof(D));
-    real P = r.Mixture()->Pressure();
+    real P = r.Mixture()->GasPhase().Pressure();
     m_file.write((char*)&P, sizeof(P));
 }
 
@@ -763,7 +763,7 @@ void Simulator::outputGasRxnRates(const Reactor &r) const
     if(r.Mech()->ReactionCount() > 0) {
         // Calculate the rates-of-progress.
         static fvector rop, rfwd, rrev;
-        r.Mech()->Reactions().GetRatesOfProgress(*r.Mixture(), rop, rfwd, rrev);
+        r.Mech()->Reactions().GetRatesOfProgress(r.Mixture()->GasPhase(), rop, rfwd, rrev);
 
         // Calculate the molar production rates.
         static fvector wdot;
@@ -793,8 +793,8 @@ void Simulator::outputPartRxnRates(const Reactor &r) const
         // Now convert from mol/mol to mol/m3.
         fvector::iterator rhodot = wdot.begin()+r.Mech()->SpeciesCount()+1;
         for (unsigned int k=0; k!=r.Mech()->SpeciesCount(); ++k) {
-            wdot[k] = (r.Mixture()->Density() * wdot[k]) +
-                      (r.Mixture()->MoleFraction(k) * (*rhodot));
+            wdot[k] = (r.Mixture()->GasPhase().Density() * wdot[k]) +
+                      (r.Mixture()->GasPhase().MoleFraction(k) * (*rhodot));
         }
 
         // Write rates to the file.
@@ -920,9 +920,9 @@ void Simulator::consoleOutput(const Mops::Reactor &r) const
 {
     // Get output data from gas-phase.
     static vector<real> out;
-    r.Mixture()->GetConcs(out);
-    out.push_back(r.Mixture()->Temperature());
-    out.push_back(r.Mixture()->Density());
+    r.Mixture()->GasPhase().GetConcs(out);
+    out.push_back(r.Mixture()->GasPhase().Temperature());
+    out.push_back(r.Mixture()->GasPhase().Density());
     out.push_back(r.Time());
 
     // Get output data from particles.

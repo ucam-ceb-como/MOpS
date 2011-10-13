@@ -302,7 +302,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
     // Save the initial chemical conditions in sys so that we
     // can restore them at the end of the run.
-    const Sprog::Thermo::IdealGas chem = *r.Mixture();
+    const Sprog::Thermo::IdealGas chem = r.Mixture()->GasPhase();
 
     // Store if chemical conditions are fixed at present, because we
     // shall set them to be fixed during this run, to be restored afterwards.
@@ -314,20 +314,20 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     dtg     = tstop - t;
 
     // Set the chemical conditions.
-    linInterpGas(t, m_gasprof, *r.Mixture());
+    linInterpGas(t, m_gasprof, r.Mixture()->GasPhase());
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
 
         //save the old gas phase mass density
-        double old_dens = r.Mixture()->MassDensity();
+        double old_dens = r.Mixture()->GasPhase().MassDensity();
 
         // Update the chemical conditions.
-        linInterpGas(t, m_gasprof, *r.Mixture());
+        linInterpGas(t, m_gasprof, r.Mixture()->GasPhase());
 
         // Scale particle M0 according to gas-phase expansion.
-        r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->MassDensity());
+        r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
 
         // Get the process jump rates (and the total rate).
         jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);

@@ -713,7 +713,7 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 
 		UpdateCache();
 		/* Adjust the gas-phase composition */
-		fvector dc(sys.Species()->size(), 0.0);
+		fvector dc(sys.GasPhase().Species()->size(), 0.0);
 		int num_H2O = int(abs(numOH_old - m_numOH)/2);
 
 		real n_NAvol_sint = (real)num_H2O / (NA * sys.SampleVolume());

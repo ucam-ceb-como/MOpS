@@ -83,8 +83,8 @@ Sweep::real Sweep::Processes::TransitionCoagulation::Rate(real t, const Cell &sy
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
         // Get system properties required to calculate coagulation rate.
-        real T = sys.Temperature();
-        real P = sys.Pressure();
+        real T = sys.GasPhase().Temperature();
+        real P = sys.GasPhase().Pressure();
 
         // Calculate the rate.
         return Rate(sys.Particles().GetSums(), (real)n, sqrt(T),
@@ -172,8 +172,8 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(real t, const Cel
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
         // Get system properties required to calculate coagulation rate.
-        real T = sys.Temperature();
-        real P = sys.Pressure();
+        real T = sys.GasPhase().Temperature();
+        real P = sys.GasPhase().Pressure();
 
         // Calculate the rate terms.
         return RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/ViscosityAir(T),
@@ -460,8 +460,8 @@ Sweep::real Sweep::Processes::TransitionCoagulation::CoagKernel(const Particle &
                                                                 const Particle &sp2,
                                                                 const Cell &sys) const
 {
-    const real T = sys.Temperature();
-    const real P = sys.Pressure();
+    const real T = sys.GasPhase().Temperature();
+    const real P = sys.GasPhase().Pressure();
     const real fm = FreeMolKernel(sp1, sp2, T, P, false);
     const real sf = SlipFlowKernel(sp1, sp2, T, P, false);
     return (fm*sf)/(fm+sf);
@@ -491,10 +491,10 @@ Sweep::real Sweep::Processes::TransitionCoagulation::MajorantKernel(const Partic
             break;
         case FreeMol:
             // Free molecular majorant.
-            return FreeMolKernel(sp1, sp2, sys.Temperature(), sys.Pressure(), true);
+            return FreeMolKernel(sp1, sp2, sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), true);
         case SlipFlow:
             // Slip-flow majorant.
-            return SlipFlowKernel(sp1, sp2, sys.Temperature(), sys.Pressure(), true);
+            return SlipFlowKernel(sp1, sp2, sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), true);
     }
 
     // Invalid majorant, return zero.

@@ -210,11 +210,11 @@ void DimerInception::SetInceptingSpeciesFreeMol(real m1, real m2, real d1, real 
 real DimerInception::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the current chemical conditions.
-    real T = sys.Temperature();
-    real P = sys.Pressure();
+    real T = sys.GasPhase().Temperature();
+    real P = sys.GasPhase().Pressure();
 
     // Calculate the rate.
-    return Rate(sys.MoleFractions(), sys.Density(), sqrt(T),
+    return Rate(sys.GasPhase().MoleFractions(), sys.GasPhase().Density(), sqrt(T),
                 T/ViscosityAir(T), MeanFreePathAir(T,P),
                 sys.SampleVolume());
 }
@@ -295,11 +295,11 @@ real DimerInception::RateTerms(const real t, const Cell &sys,
                                fvector::iterator &iterm) const
 {
     // Get the current chemical conditions.
-    real T = sys.Temperature();
-    real P = sys.Pressure();
+    real T = sys.GasPhase().Temperature();
+    real P = sys.GasPhase().Pressure();
 
     // Calculate the single rate term and advance iterator.
-    *iterm = Rate(sys.MoleFractions(), sys.Density(), sqrt(T),
+    *iterm = Rate(sys.GasPhase().MoleFractions(), sys.GasPhase().Density(), sqrt(T),
                   T/ViscosityAir(T), MeanFreePathAir(T,P),
                   sys.SampleVolume());
     return *(iterm++);

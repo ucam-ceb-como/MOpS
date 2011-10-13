@@ -113,7 +113,7 @@ real ActSiteReaction::Rate(real t, const Cell &sys,
                            const Geometry::LocalGeometry1d &local_geom) const
 {
     return SurfaceReaction::Rate(t, sys, local_geom) *
-           m_asmodel->SiteDensity(t, sys, sys.Particles());
+           m_asmodel->SiteDensity(t, sys.GasPhase(), sys.Particles());
 }
 
 
@@ -124,7 +124,7 @@ real ActSiteReaction::Rate(real t, const Cell &sys,
 real ActSiteReaction::Rate(real t, const Cell &sys, const Particle &sp) const
 {
     return SurfaceReaction::Rate(t, sys, sp) *
-           m_asmodel->SiteDensity(t, sys, sp);
+           m_asmodel->SiteDensity(t, sys.GasPhase(), sp);
 }
 
 

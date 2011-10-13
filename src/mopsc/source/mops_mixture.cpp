@@ -47,9 +47,9 @@ using namespace Mops;
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (protected).
-Mixture::Mixture(void)
+/*Mixture::Mixture(void)
 {
-}
+}*/
 
 // Default constructor (public, requires species list).
 Mixture::Mixture(const Sweep::ParticleModel &model)

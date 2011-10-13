@@ -141,10 +141,10 @@ real Condensation::Rate(real t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 {
     // Calculate temperature terms.
-    real cterm = m_a * sqrt(sys.Temperature()) * NA;
+    real cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
 
      // Chemical species concentration dependence.
-    cterm *= chemRatePart(sys.MoleFractions(), sys.Density());
+    cterm *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
 
     // Free molecular terms.
     cterm *= (m_kfm1 * sys.ParticleCount()) + 
@@ -169,11 +169,11 @@ real Condensation::Rate(real t, const Cell &sys,
 real Condensation::Rate(real t, const Cell &sys, const Particle &sp) const
 {
     // Calculate temperature terms.
-    real cterm = m_a * sqrt(sys.Temperature()) * NA;
+    real cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
 //    real trm[3];
 
     // Chemical species concentration dependence.
-    cterm *= chemRatePart(sys.MoleFractions(), sys.Density());
+    cterm *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
 
     // Get particle property
     const real d = sp.CollDiameter();
@@ -211,10 +211,10 @@ real Condensation::RateTerms(real t, const Cell &sys,
                              fvector::iterator &iterm) const
 {
     // Calculate temperature terms.
-    real cterm = m_a * sqrt(sys.Temperature()) * NA;
+    real cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
 
      // Chemical species concentration dependence.
-    cterm *= chemRatePart(sys.MoleFractions(), sys.Density());
+    cterm *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
 
     // If the mechanism contains any deferred processes then we must use the
     // majorant form of the rate, in order to account for any changes to

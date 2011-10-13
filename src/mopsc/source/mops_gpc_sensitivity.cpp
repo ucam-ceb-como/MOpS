@@ -375,16 +375,16 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
             m_params     = new Mops::real[m_NS];
             m_parambars  = new Mops::real[m_NS];
             // Initializing allocated memories.
-            unsigned int i_temp = m_reactor->Mixture()->temperatureIndex();
-            unsigned int i_dens = m_reactor->Mixture()->densityIndex();
+            unsigned int i_temp = m_reactor->Mixture()->GasPhase().temperatureIndex();
+            unsigned int i_dens = m_reactor->Mixture()->GasPhase().densityIndex();
             for (unsigned int i = 0; i < m_sens_params.size(); i++) {
                 Mops::real val = 0.0;
                 if (m_sens_params.at(i).Type == INIT_T) {
-                    val = m_reactor->Mixture()->RawData()[i_temp];
+                    val = m_reactor->Mixture()->GasPhase().RawData()[i_temp];
                 } else if (m_sens_params.at(i).Type == INIT_D) {
-                    val = m_reactor->Mixture()->RawData()[i_dens];
+                    val = m_reactor->Mixture()->GasPhase().RawData()[i_dens];
                 } else {
-                    val = m_reactor->Mixture()->RawData()[m_sens_params.at(i).Index];
+                    val = m_reactor->Mixture()->GasPhase().RawData()[m_sens_params.at(i).Index];
                 }
                 m_org_params[i] = m_params[i] = m_parambars[i] = val;
                 if (val == 0.0) {
@@ -429,15 +429,15 @@ void SensitivityAnalyzer::ChangeMechParams()
             m_mech->GetReactions(i)->SetArrhenius(arr);
         }
     } else if (m_probType == Init_Conditions) {
-        unsigned int i_temp = m_reactor->Mixture()->temperatureIndex();
-        unsigned int i_dens = m_reactor->Mixture()->densityIndex();
+        unsigned int i_temp = m_reactor->Mixture()->GasPhase().temperatureIndex();
+        unsigned int i_dens = m_reactor->Mixture()->GasPhase().densityIndex();
         for(unsigned int i = 0; i < m_NS; i++) {
             if (m_sens_params.at(i).Type == INIT_T) {
-                m_reactor->Mixture()->RawData()[i_temp] = m_params[i];
+                m_reactor->Mixture()->GasPhase().RawData()[i_temp] = m_params[i];
             } else if (m_sens_params.at(i).Type == INIT_D) {
-                m_reactor->Mixture()->RawData()[i_dens] = m_params[i];
+                m_reactor->Mixture()->GasPhase().RawData()[i_dens] = m_params[i];
             } else {
-                m_reactor->Mixture()->RawData()[m_sens_params.at(i).Index] = m_params[i];
+                m_reactor->Mixture()->GasPhase().RawData()[m_sens_params.at(i).Index] = m_params[i];
             }
         }
     } else {
@@ -469,15 +469,15 @@ void SensitivityAnalyzer::ResetMechParams()
             m_mech->GetReactions(i)->SetArrhenius(arr);
         }
     } else if (m_probType == Init_Conditions) {
-        unsigned int i_temp = m_reactor->Mixture()->temperatureIndex();
-        unsigned int i_dens = m_reactor->Mixture()->densityIndex();
+        unsigned int i_temp = m_reactor->Mixture()->GasPhase().temperatureIndex();
+        unsigned int i_dens = m_reactor->Mixture()->GasPhase().densityIndex();
         for(unsigned int i = 0; i < m_NS; i++) {
             if (m_sens_params.at(i).Type == INIT_T) {
-                m_reactor->Mixture()->RawData()[i_temp] = m_org_params[i];
+                m_reactor->Mixture()->GasPhase().RawData()[i_temp] = m_org_params[i];
             } else if (m_sens_params.at(i).Type == INIT_D) {
-                m_reactor->Mixture()->RawData()[i_dens] = m_org_params[i];
+                m_reactor->Mixture()->GasPhase().RawData()[i_dens] = m_org_params[i];
             } else {
-                m_reactor->Mixture()->RawData()[m_sens_params.at(i).Index] = m_org_params[i];
+                m_reactor->Mixture()->GasPhase().RawData()[m_sens_params.at(i).Index] = m_org_params[i];
             }
         }
     } else {
@@ -776,8 +776,8 @@ void SensitivityAnalyzer::InitSensMatrix(N_Vector *sens_matrix)
     if (m_probType == Init_Conditions) {
         // number of variables (number of species + 2). // T and P
         unsigned int n_sp = m_mech->SpeciesCount();
-        unsigned int i_temp = m_reactor->Mixture()->temperatureIndex();
-        unsigned int i_dens = m_reactor->Mixture()->densityIndex();
+        unsigned int i_temp = m_reactor->Mixture()->GasPhase().temperatureIndex();
+        unsigned int i_dens = m_reactor->Mixture()->GasPhase().densityIndex();
         for (unsigned int i = 0; i < m_sens_params.size(); i++) {
             for (unsigned int j = 0; j < n_sp + 2; j++) {
                 if ((m_sens_params.at(i).Type == INIT_T) &&

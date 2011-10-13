@@ -599,9 +599,9 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
     }
 
     // Now convert to changes in mole fractions.
-    real invrho = 1.0 / sys.Density();
+    real invrho = 1.0 / sys.GasPhase().Density();
     for (unsigned int k=0; k!=m_species->size(); ++k) {
-        rates[k] = (invrho * rates[k]) - (invrho * sys.MoleFraction(k) * (*idrho));
+        rates[k] = (invrho * rates[k]) - (invrho * sys.GasPhase().MoleFraction(k) * (*idrho));
     }
 }
 

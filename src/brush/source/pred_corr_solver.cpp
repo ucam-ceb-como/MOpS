@@ -184,7 +184,7 @@ void Brush::PredCorrSolver::solveChemistry(Reactor1d &reac, const real t_stop) c
     const size_t numCells = reac.getNumCells();
     fvector oldDensity(numCells);
     for(size_t i = 0; i != numCells; ++i) {
-        oldDensity[i] = reac.getCell(i).Mixture()->MassDensity();
+        oldDensity[i] = reac.getCell(i).Mixture()->GasPhase().MassDensity();
     }
 
     // Update the chemistry to the new time
@@ -196,7 +196,7 @@ void Brush::PredCorrSolver::solveChemistry(Reactor1d &reac, const real t_stop) c
         Sweep::Cell * const pMix = reac.getCell(i).Mixture();
 
         // Collect data for calculating the new value
-        pMix->AdjustSampleVolume(oldDensity[i] / pMix->MassDensity());
+        pMix->AdjustSampleVolume(oldDensity[i] / pMix->GasPhase().MassDensity());
     }
 }
 

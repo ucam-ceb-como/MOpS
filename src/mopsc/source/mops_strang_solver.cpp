@@ -91,7 +91,7 @@ void StrangSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
 
     m_cpu_mark = clock();
         // Solve first half-step of gas-phase chemistry.
-        rho = r.Mixture()->MassDensity();
+        rho = r.Mixture()->GasPhase().MassDensity();
         m_ode.Solve(r, t2+=h);
         r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
@@ -99,7 +99,7 @@ void StrangSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
     m_cpu_mark = clock();
 
     // Solve one whole step of population balance (Sweep).
-        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->MassDensity());
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
         Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
         m_swp_ctime += calcDeltaCT(m_cpu_mark);
@@ -107,7 +107,7 @@ void StrangSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
     for (int i=1; i<nsteps; ++i) {
         m_cpu_mark = clock();
             // Solve whole step of gas-phase chemistry.
-            rho = r.Mixture()->MassDensity();
+            rho = r.Mixture()->GasPhase().MassDensity();
             m_ode.ResetSolver();
             m_ode.Solve(r, t2+=dt);
             r.SetTime(t2);
@@ -115,7 +115,7 @@ void StrangSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
 
         m_cpu_mark = clock();
             // Solve whole step of population balance (Sweep).
-            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->MassDensity());
+            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
             Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
         m_swp_ctime += calcDeltaCT(m_cpu_mark);        
     }
@@ -146,15 +146,15 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
 
     // Store the initial conditions.
     Mixture initmix(r.Mech()->ParticleMech());
-    initmix.SetFracs(r.Mixture()->MoleFractions());
-    initmix.SetTemperature(r.Mixture()->Temperature());
-    initmix.SetDensity(r.Mixture()->Density());
+    initmix.SetFracs(r.Mixture()->GasPhase().MoleFractions());
+    initmix.SetTemperature(r.Mixture()->GasPhase().Temperature());
+    initmix.SetDensity(r.Mixture()->GasPhase().Density());
 
     // Initialise the reactor with the start time.
     t1 = times[0].StartTime();
     t2 = t1;
-    r.Mixture()->Particles().Initialise(m_pcount, r.Mech()->ParticleMech());
-    r.Mixture()->SetMaxM0(m_maxm0);
+    r.Mixture()->GasPhase().Particles().Initialise(m_pcount, r.Mech()->ParticleMech());
+    r.Mixture()->GasPhase().SetMaxM0(m_maxm0);
 
     // Initialise the ODE solver.
     m_ode.Initialise(r);
@@ -174,10 +174,10 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
 
         // Initialise the reactor with the start time.
         t2 = times[0].StartTime();
-        r.Mixture()->SetFracs(initmix.MoleFractions());
-        r.Mixture()->SetTemperature(initmix.Temperature());
-        r.Mixture()->SetDensity(initmix.Density());
-        r.Mixture()->Reset(m_maxm0);
+        r.Mixture()->GasPhase().SetFracs(initmix.MoleFractions());
+        r.Mixture()->GasPhase().SetTemperature(initmix.Temperature());
+        r.Mixture()->GasPhase().SetDensity(initmix.Density());
+        r.Mixture()->GasPhase().Reset(m_maxm0);
         r.SetTime(t2);
 
         // Set up the ODE solver for this run.
@@ -245,7 +245,7 @@ void StrangSolver::multiStrangStep(Mops::real dt, unsigned int n, Mops::Reactor 
 
     m_cpu_mark = clock();
         // Solve first half-step of gas-phase chemistry.
-        rho = r.Mixture()->MassDensity();
+        rho = r.Mixture()->GasPhase().MassDensity();
         m_ode.Solve(r, t2+=h);
         r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
@@ -253,7 +253,7 @@ void StrangSolver::multiStrangStep(Mops::real dt, unsigned int n, Mops::Reactor 
     m_cpu_mark = clock();
 
     // Solve one whole step of population balance (Sweep).
-        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->MassDensity());
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
         Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
         m_swp_ctime += calcDeltaCT(m_cpu_mark);
@@ -261,7 +261,7 @@ void StrangSolver::multiStrangStep(Mops::real dt, unsigned int n, Mops::Reactor 
     for (unsigned int i=1; i!=n; ++i) {
         m_cpu_mark = clock();
             // Solve whole step of gas-phase chemistry.
-            rho = r.Mixture()->MassDensity();
+            rho = r.Mixture()->GasPhase().MassDensity();
             m_ode.ResetSolver();
             m_ode.Solve(r, t2+=dt);
             r.SetTime(t2);
@@ -269,7 +269,7 @@ void StrangSolver::multiStrangStep(Mops::real dt, unsigned int n, Mops::Reactor 
 
         m_cpu_mark = clock();
             // Solve whole step of population balance (Sweep).
-            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->MassDensity());
+            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
             Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
         m_swp_ctime += calcDeltaCT(m_cpu_mark);
         

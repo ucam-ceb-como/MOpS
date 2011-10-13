@@ -103,7 +103,7 @@ Reactor &Reactor::operator=(const Mops::Reactor &rhs)
 
         // Clone the mixture, if it exists in rhs
         if(rhs.m_mix)
-            m_mix     = rhs.m_mix->Clone(); // Need to clone mixture!
+            m_mix = rhs.m_mix->Clone(); // Need to clone mixture!
         else
             m_mix = NULL;
 
@@ -165,7 +165,7 @@ void Reactor::Fill(Mops::Mixture &mix, bool clearfirst)
 
     // Ensure that the reactor and mixture are using the same
     // mechanism.
-    m_mix->SetSpecies(m_mech->Species());
+    m_mix->GasPhase().SetSpecies(m_mech->Species());
 }
 
 
@@ -435,7 +435,7 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
 
     // Calculate molar production rates.
     wtot = m_mech->Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y, 
-                                                 m_nsp, *m_mix, wdot);
+                                                 m_nsp, m_mix->GasPhase(), wdot);
 
     // Calculate mole fraction derivatives.
     for (unsigned int i=0; i!=m_neq-2; ++i) {
@@ -466,12 +466,12 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
     real wtot = 0.0, Cp = 0.0;
 
     // Calculate mixture thermodynamic properties.
-    m_mix->CalcHs_RT(y[m_iT], Hs);
-    Cp = m_mix->ThermoInterface::CalcBulkCp_R(y[m_iT], y, m_nsp);
+    m_mix->GasPhase().CalcHs_RT(y[m_iT], Hs);
+    Cp = m_mix->GasPhase().ThermoInterface::CalcBulkCp_R(y[m_iT], y, m_nsp);
     
     // Calculate molar production rates.
     wtot = m_mech->Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y, 
-                                                 m_nsp, *m_mix, wdot);
+                                                 m_nsp, m_mix->GasPhase(), wdot);
 
 
     // Calculate mole fraction and temperature derivatives.
@@ -504,7 +504,7 @@ void Reactor::Jacobian(real t, real *const y,
                        real uround) const
 {
     m_mech->Reactions().CalcJacobian(y[m_iT], y[m_iDens], y, 
-                                     m_nsp, *m_mix, uround, J, 
+                                     m_nsp, m_mix->GasPhase(), uround, J,
                                      m_constv, m_emodel==ConstT);
 }
 
@@ -519,7 +519,7 @@ void Reactor::RateJacobian(real t, real *const y,
                        real uround) const
 {
     m_mech->Reactions().RateJacobian(y[m_iT], y[m_iDens], y, 
-                                     m_nsp, *m_mix, uround, J, 
+                                     m_nsp, m_mix->GasPhase(), uround, J,
                                      m_constv, m_emodel==ConstT);
 }
 
