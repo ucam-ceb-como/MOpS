@@ -62,7 +62,6 @@
 
 using namespace Sweep;
 using namespace Sweep::AggModels;
-using namespace Sweep::SubModels;
 using namespace std;
 using namespace Strings;
 

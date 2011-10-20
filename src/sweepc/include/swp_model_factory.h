@@ -57,12 +57,6 @@
 namespace Sweep
 {
 
-// Forward declaration
-namespace SubModels
-{
-    class SubModel;
-}
-
 //! Factory class for particles, their statistics and sub-models
 class ModelFactory
 {
