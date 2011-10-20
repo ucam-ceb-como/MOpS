@@ -43,10 +43,11 @@
 #include "brush_params.h"
 #include "geometry1d.h"
 
-#include "mops_reactor.h"
-#include "mops_mechanism.h"
-
+#include "swp_cell.h"
+#include "swp_mechanism.h"
 #include "swp_particle.h"
+
+#include "gpc_mech.h"
 
 #include "linear_interpolator.hpp"
 
@@ -96,10 +97,11 @@ struct ParticlePopulationPoint1d {
 class Reactor1d {
 public:
     //! Type of reactor in each grid cell
-    typedef Mops::Reactor ReactorType;
+    typedef Sweep::Cell ReactorType;
 
     //! Initialise all cells with the given mech and particle capacity
-    Reactor1d(const Geometry::Geometry1d &geom, const Mops::Mechanism &mech,
+    Reactor1d(const Geometry::Geometry1d &geom, const Sprog::Mechanism &g_mech,
+              const Sweep::Mechanism &p_mech,
               const Utils::LinearInterpolator<real, real> &max_particle_counts,
               const Utils::LinearInterpolator<real, real> &max_m0s);
 
@@ -111,20 +113,20 @@ public:
     //! Number of cells
     size_t getNumCells() const {return mGeometry.numCells();}
 
-    //! Read only access to the mechanism
-    const Mops::Mechanism& getMechanism() const {return mMech;}
+    //! Read only access to the particle mechanism
+    const Sweep::Mechanism& getParticleMechanism() const {return mParticleMech;}
+
+    //! Read only access to the gas mechanism
+    const Sprog::Mechanism& getGasMechanism() const {return mGasMech;}
 
     //! Read only access to the geometry
     const Geometry::Geometry1d& getGeometry() const {return mGeometry;}
 
     //! Look at the contents of cell i
-    const Mops::Reactor& getCell(const size_t i) const {return mReactors[i];}
+    const ReactorType& getCell(const size_t i) const {return mReactors[i];}
 
     //! Write access to the contents of cell i
-    Mops::Reactor& getCell(const size_t i) {return mReactors[i];}
-
-    //! Physical time of reactor. Could be refined
-    real getTime() const {return mReactors.front().Time();}
+    ReactorType& getCell(const size_t i) {return mReactors[i];}
 
     //! Replace chemical contents using supplied object
     void ReplaceChemistry(const ResetChemistry& chem_source, const bool fixed_chem);
@@ -137,10 +139,13 @@ public:
 
 private:
     //! Type in which to hold the reactors for the cells
-    typedef std::vector<Mops::Reactor> ReactorVector;
+    typedef std::vector<ReactorType> ReactorVector;
 
-    //! Mechanism shared between the reactors in all the cells
-    Mops::Mechanism mMech;
+    //! Mechanism for the gas phase shared between the reactors in all the cells
+    Sprog::Mechanism mGasMech;
+
+    //! Mechanism for particle reactions shared between the reactors in all the cells
+    Sweep::Mechanism mParticleMech;
 
     //! Spatial positions and relationships of the cells
     Geometry::Geometry1d mGeometry;
@@ -192,10 +197,10 @@ template<typename IteratorType> void Brush::Reactor1d::ReplaceParticles(const It
 
             // Put the new particles in the cell
             if(it->particleList.size() > 0)
-                mReactors[cellIndex].Mixture()->SetParticles(it->particleList.begin(), it->particleList.end(),
+                mReactors[cellIndex].SetParticles(it->particleList.begin(), it->particleList.end(),
                                                              it->m0 / it->particleList.size());
             else
-                mReactors[cellIndex].Mixture()->Reset(mReactors[cellIndex].Mixture()->SampleVolume());
+                mReactors[cellIndex].Reset(mReactors[cellIndex].SampleVolume());
         }
         ++it;
     }

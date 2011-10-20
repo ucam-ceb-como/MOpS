@@ -265,7 +265,7 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
             bool alln = false;
             bool allE = false;
 
-            const int nrxn = m_mech->ReactionCount();
+            const int nrxn = m_mech->GasMech().ReactionCount();
 
             AElem = paramsElem->GetFirstChild("A");
             nElem = paramsElem->GetFirstChild("n");
@@ -330,11 +330,11 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
             for (unsigned int i = 0; i < m_sens_params.size(); i++) {
                 Mops::real val = 0.0;
                 if (m_sens_params.at(i).Type == ARR_A) {
-                    val = m_mech->Reactions(m_sens_params.at(i).Index)->Arrhenius().A;
+                    val = m_mech->GasMech().Reactions(m_sens_params.at(i).Index)->Arrhenius().A;
                 } else if (m_sens_params.at(i).Type == ARR_n) {
-                    val = m_mech->Reactions(m_sens_params.at(i).Index)->Arrhenius().n;
+                    val = m_mech->GasMech().Reactions(m_sens_params.at(i).Index)->Arrhenius().n;
                 } else {
-                    val = m_mech->Reactions(m_sens_params.at(i).Index)->Arrhenius().E;
+                    val = m_mech->GasMech().Reactions(m_sens_params.at(i).Index)->Arrhenius().E;
                 }
                 m_org_params[i] = m_params[i] = m_parambars[i] = val;
                 if (val ==0.0){
@@ -358,7 +358,7 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
                     AddParam(arrp);
                 } else {
                     // initial concentration parameters.
-                    int sp_index = m_mech->FindSpecies(id);
+                    int sp_index = m_mech->GasMech().FindSpecies(id);
                     if (sp_index > -1) {
                         SENS_PARAM arrp(sp_index, INIT_C);
                         AddParam(arrp);
@@ -412,7 +412,7 @@ void SensitivityAnalyzer::ChangeMechParams()
 {
     if (m_probType == Reaction_Rates) {
         for(unsigned int i = 0; i < m_NS; i++) {
-            Sprog::Kinetics::ARRHENIUS arr = m_mech->Reactions(m_sens_params.at(i).Index)->Arrhenius();
+            Sprog::Kinetics::ARRHENIUS arr = m_mech->GasMech().Reactions(m_sens_params.at(i).Index)->Arrhenius();
             switch ( m_sens_params.at(i).Type ) {
                 case ARR_A :
                     arr.A = m_params[i];
@@ -426,7 +426,7 @@ void SensitivityAnalyzer::ChangeMechParams()
                 default :
                     break;
             }
-            m_mech->GetReactions(i)->SetArrhenius(arr);
+            m_mech->GasMech().GetReactions(i)->SetArrhenius(arr);
         }
     } else if (m_probType == Init_Conditions) {
         unsigned int i_temp = m_reactor->Mixture()->GasPhase().temperatureIndex();
@@ -452,7 +452,7 @@ void SensitivityAnalyzer::ResetMechParams()
 {
     if (m_probType == Reaction_Rates) {
         for(unsigned int i = 0; i < m_NS; i++) {
-            Sprog::Kinetics::ARRHENIUS arr = m_mech->Reactions(m_sens_params.at(i).Index)->Arrhenius();
+            Sprog::Kinetics::ARRHENIUS arr = m_mech->GasMech().Reactions(m_sens_params.at(i).Index)->Arrhenius();
             switch ( m_sens_params.at(i).Type ) {
                 case ARR_A :
                     arr.A = m_org_params[i];
@@ -466,7 +466,7 @@ void SensitivityAnalyzer::ResetMechParams()
                 default :
                     break;
             }
-            m_mech->GetReactions(i)->SetArrhenius(arr);
+            m_mech->GasMech().GetReactions(i)->SetArrhenius(arr);
         }
     } else if (m_probType == Init_Conditions) {
         unsigned int i_temp = m_reactor->Mixture()->GasPhase().temperatureIndex();
@@ -496,7 +496,7 @@ void SensitivityAnalyzer::OutputSens(std::fstream &fout, const Mops::Reactor &r,
                              "(Mops, SensitivityAnalyzer::OutputSens).");
     }
     // number of variables (number of species + 2). // T and P
-    unsigned int n_vars = r.Mech()->SpeciesCount() + 2;
+    unsigned int n_vars = r.Mech()->GasMech().SpeciesCount() + 2;
 
     // If file is empty then output the sensitivity information
     if (fout.tellg() <= 0) {
@@ -527,7 +527,7 @@ void SensitivityAnalyzer::OutputSens(std::fstream &fout, const Mops::Reactor &r,
 
             // output variable name list.
             for (unsigned int i = 0; i < n_vars - 2; ++i) {
-                std::string sname = r.Mech()->GetSpecies(i)->Name();
+                std::string sname = r.Mech()->GasMech().GetSpecies(i)->Name();
                 unsigned int len = sname.length();
                 fout.write((char*)&len, sizeof(len));
                 fout.write(sname.c_str(), len * sizeof(char));
@@ -775,7 +775,7 @@ void SensitivityAnalyzer::InitSensMatrix(N_Vector *sens_matrix)
     // initialise with 1 if parameter is the same as variable, else zero.
     if (m_probType == Init_Conditions) {
         // number of variables (number of species + 2). // T and P
-        unsigned int n_sp = m_mech->SpeciesCount();
+        unsigned int n_sp = m_mech->GasMech().SpeciesCount();
         unsigned int i_temp = m_reactor->Mixture()->GasPhase().temperatureIndex();
         unsigned int i_dens = m_reactor->Mixture()->GasPhase().densityIndex();
         for (unsigned int i = 0; i < m_sens_params.size(); i++) {

@@ -47,12 +47,14 @@
 #define MOPS_MECHANISM_H
 
 #include "mops_params.h"
-#include "sprog.h"
-#include "sweep.h"
+
+#include "gpc_mech.h"
+
+#include "swp_mechanism.h"
 
 namespace Mops
 {
-class Mechanism : public Sprog::Mechanism
+class Mechanism
 {
 public:
     // Constructors.
@@ -64,9 +66,13 @@ public:
     // PARTICLE MECHANISM.
 
     // Returns a reference (non-const) to the particle mechanism.
-    Sweep::Mechanism &ParticleMech(void);
-    const Sweep::Mechanism &ParticleMech(void) const;
+    Sweep::Mechanism &ParticleMech(void) {return m_pmech;}
+    const Sweep::Mechanism &ParticleMech(void) const {return m_pmech;}
 
+    //! Access the gas phase mechanism
+    Sprog::Mechanism &GasMech() {return m_gmech;}
+    //! Access the gas phase mechanism
+    const Sprog::Mechanism &GasMech() const {return m_gmech;}
 
     // READ/WRITE/COPY FUNCTIONS.
 
@@ -77,9 +83,12 @@ public:
     void Deserialize(std::istream &in);
 
 private:
-    // The particle mechanism.
+    //! Gas phase mechanism
+    Sprog::Mechanism m_gmech;
+
+    //! The particle mechanism.
     Sweep::Mechanism m_pmech;
 };
-};
+}
 
 #endif

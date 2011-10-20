@@ -257,7 +257,7 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot) const
     real wtot = 0.0;
 
     // Calculate molar production rates.
-    wtot = m_mech->Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y, 
+    wtot = m_mech->GasMech().Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y,
                                                  m_nsp, m_mix->GasPhase(), wdot);
 
     // Calculate mole fraction derivatives.
@@ -299,7 +299,7 @@ void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
     Cp = m_mix->GasPhase().CalcBulkCp_R(y[m_iT], y, m_nsp);
 
     // Calculate molar production rates of species (mol/m3s).
-    wtot = m_mech->Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y, 
+    wtot = m_mech->GasMech().Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y,
                                                  m_nsp, m_mix->GasPhase(), wdot);
 
     // Calculate mole fraction and temperature derivatives.

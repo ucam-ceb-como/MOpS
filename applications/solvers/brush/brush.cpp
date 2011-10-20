@@ -292,13 +292,13 @@ int main(int argc, char* argv[])
         // See if there is a transport data file (not needed for advection only)
         if(tranfile.length() > 0)
             // Read species transport data along with rest of mechanism
-            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag, tranfile);
+            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech.GasMech(), thermfile, diag, tranfile);
         else
             // Skip species transport data - properties such as thermal conductivity will not be available
-            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
+            Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech.GasMech(), thermfile, diag);
 
         if (diag>0)
-            mech.WriteDiagnostics("ckmech.diag");
+            mech.GasMech().WriteDiagnostics("ckmech.diag");
     }
     catch (std::exception &e) {
         std::cerr << "Failed to read chemical species from " << chemfile << ", because\n"
@@ -311,7 +311,7 @@ int main(int argc, char* argv[])
         if(diag > 0) {
             std::cout << "Setting species on particle mechanism...\n";
         }
-        mech.ParticleMech().SetSpecies(mech.Species());
+        mech.ParticleMech().SetSpecies(mech.GasMech().Species());
         if(diag > 0) {
             std::cout << "Reading particle mechanism...\n";
         }
@@ -397,7 +397,7 @@ int main(int argc, char* argv[])
         if(diag > 0) {
             std::cout << "Reading initial chemistry solution...\n";
         }
-        pInitialChem.reset(new ResetChemistry(chemsolnfile, chemFileType, mech, diag));
+        pInitialChem.reset(new ResetChemistry(chemsolnfile, chemFileType, mech.GasMech(), diag));
         if(diag > 0) {
             std::cout << "Read initial chemistry solution\n";
         }
@@ -409,7 +409,7 @@ int main(int argc, char* argv[])
     }
 
     //========= Build the initial reactor ========================
-    Reactor1d initialReactor(*pGeom, mech, maxPCounts, maxM0s);
+    Reactor1d initialReactor(*pGeom, mech.GasMech(), mech.ParticleMech(), maxPCounts, maxM0s);
 
     // Put the initial species concentrations into the reactor.
     // Second argument indicates chemical conditions are fixed and not updated

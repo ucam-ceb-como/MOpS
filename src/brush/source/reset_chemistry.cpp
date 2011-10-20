@@ -41,7 +41,7 @@
 
 #include "gpc_mech.h"
 #include "comostrings.h"
-#include "mops_reactor.h"
+#include "swp_cell.h"
 
 #include <fstream>
 #include <vector>
@@ -225,7 +225,7 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
 
     // Chemical species names
     while(spIt != spItEnd) {
-        // Dereference unicremented value
+        // Dereference unincremented value
         speciesNames.push_back((*spIt++)->Name());
     }
 
@@ -551,7 +551,7 @@ real Brush::ResetChemistry::endLocation() const {
  *\param[in]        x       Position to which to interpolate the data
  *\param[in,out]    reac    Reactor whose chemistry will be replaced
  */
-void Brush::ResetChemistry::apply(const real x, Mops::Reactor &reac) const {
+void Brush::ResetChemistry::apply(const real x, Sweep::Cell &reac) const {
     // Update the chemistry in each sub-reactor
     data_point dummyDataPoint(mInputChemistryData.front().size(), 0);
 
@@ -581,7 +581,7 @@ void Brush::ResetChemistry::apply(const real x, Mops::Reactor &reac) const {
     }
 
     // Build a chemical mixture object
-    Sprog::Thermo::IdealGas chemMixture(reac.Mech()->Species());
+    Sprog::Thermo::IdealGas chemMixture(*(reac.GasPhase().Species()));
 
     // Set the species data
     fvector speciesData(dataToUse.begin() + sNumNonSpeciesData, dataToUse.end());
@@ -608,10 +608,7 @@ void Brush::ResetChemistry::apply(const real x, Mops::Reactor &reac) const {
     chemMixture.SetLaplacianMixFrac(dataToUse[sLaplacianMixFracIndex]);
     chemMixture.SetGradientTemperature(dataToUse[sGradientTemperatureIndex]);
 
-    
-    if(reac.Mixture() == NULL)
-        reac.Fill(*(new Mops::Mixture(reac.Mech()->ParticleMech())));
-    reac.Mixture()->SetGasPhase(chemMixture);
+    reac.SetGasPhase(chemMixture);
 
     /* Uncomment this code to check molar concentrations
     unsigned int logIndices[14];

@@ -152,7 +152,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol) && (i!=Rcol) &&
                 (i!=Xcol) && (i!=Dcol) && (i!=Vcol) && (i!=Gcol)) {
                 // Try to find this species in the mechanism
-                const int speciesMechIndex = mech.FindSpecies(subs[i]);
+                const int speciesMechIndex = mech.GasMech().FindSpecies(subs[i]);
 
                 if(speciesMechIndex < 0) {
                     std::ostringstream msg("Failed to find species ");
@@ -197,7 +197,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             real P = 0.0;
             real alpha = 0.0;
             real PAHRate = 0.0;
-            GasPoint gpoint(mech.Species());
+            GasPoint gpoint(mech.GasMech().Species());
 
             // Split the line by columns.
             split(line, subs, delim);

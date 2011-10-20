@@ -45,8 +45,8 @@
 #include <vector>
 
 // Forward declaration
-namespace Mops {
-    class Reactor;
+namespace Sweep {
+    class Cell;
 }
 
 namespace Brush{
@@ -94,7 +94,7 @@ public:
                    const std::vector<fvector> &massFracs);
 
     //! Overwrite chemistry information with that stored in this object
-    void apply(const real x, Mops::Reactor &reac) const;
+    void apply(const real x, Sweep::Cell &reac) const;
     
     //! Position of first data point
     real startLocation() const;

@@ -84,11 +84,11 @@ void PredCorSolver::Initialise(Reactor &r)
     m_ncalls = 0;
 
     // Set up internal solver settings.
-    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->Species()));
+    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->GasMech().Species()));
 
     // Set up source terms.
-    m_srcterms.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
-    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
+    m_srcterms.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
+    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
     m_ode.SetExtSrcTerms(m_srcterms);
     m_ode_copy.SetExtSrcTerms(m_srcterms);
 
@@ -110,11 +110,11 @@ void PredCorSolver::Reset(Reactor &r)
     m_ncalls = 0;
 
     // Set up internal solver settings.
-    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->Species()));
+    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->GasMech().Species()));
 
     // Set up source terms.
-    m_srcterms.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
-    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
+    m_srcterms.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
+    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
     m_ode.SetExtSrcTerms(m_srcterms);
     m_ode_copy.SetExtSrcTerms(m_srcterms);
 
@@ -212,9 +212,9 @@ void PredCorSolver::SolveReactor(Mops::Reactor &r,
     consoleOutput(r);
 
     // Set up internal solver settings.
-    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->Species()));
-    m_srcterms.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
-    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
+    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->GasMech().Species()));
+    m_srcterms.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
+    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
     m_ode.SetExtSrcTerms(m_srcterms);
     m_ode_copy.SetExtSrcTerms(m_srcterms);
     m_reac_copy = r.Clone();
@@ -319,7 +319,7 @@ void PredCorSolver::beginIteration(Reactor &r, unsigned int step, real dt)
         // extrapolation.
         m_srcterms[1] = m_srcterms[0];
         m_srcterms[1].Time = m_srcterms[0].Time + dt;
-        //for (unsigned int i=0; i!=r.Mech()->SpeciesCount()+2; ++i) {
+        //for (unsigned int i=0; i!=r.Mech()->GasMech().SpeciesCount()+2; ++i) {
         //    m_srcterms[1].Terms[i] = m_srcterms[0].Terms[i];
         //}
     } else {
@@ -427,16 +427,16 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
     // rate using the species change rates and an adiabatic
     // assumption.
     if (r.EnergyEquation() == Reactor::ConstT) {
-        src.Terms[r.Mech()->SpeciesCount()] = 0.0;
+        src.Terms[r.Mech()->GasMech().SpeciesCount()] = 0.0;
     } else {
-        src.Terms[r.Mech()->SpeciesCount()] += energySrcTerm(r, src.Terms);
+        src.Terms[r.Mech()->GasMech().SpeciesCount()] += energySrcTerm(r, src.Terms);
     }
 
     // Calculate density change based on whether reactor is constant
     // volume or constant pressure.
     if (r.IsConstP()) {
         // Constant pressure: zero density derivative.
-        src.Terms[r.Mech()->SpeciesCount()+1] = 0.0;
+        src.Terms[r.Mech()->GasMech().SpeciesCount()+1] = 0.0;
     }
 }
 
@@ -463,7 +463,7 @@ real PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
 
         // Calculate and return temperature source term.
         real Tdot = 0.0;
-        for (unsigned int i=0; i!=r.Mech()->SpeciesCount(); ++i) {
+        for (unsigned int i=0; i!=r.Mech()->GasMech().SpeciesCount(); ++i) {
             Tdot -= Hs[i] * src[i];
         }
         return Tdot / (C * r.Mixture()->GasPhase().Density());

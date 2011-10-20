@@ -209,9 +209,10 @@ int main(int argc, char *argv[])
 
     // Read the chemical mechanism / profile.
     try {
-        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
+        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech.GasMech(), thermfile, diag);
+        mech.ParticleMech().SetSpecies(mech.GasMech().Species());
         if (diag>0) 
-            mech.WriteDiagnostics("ckmech.diag");
+            mech.GasMech().WriteDiagnostics("ckmech.diag");
 
         if (soltype == FlamePP){
             //Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
@@ -234,7 +235,7 @@ int main(int argc, char *argv[])
     // Read the particle mechanism.
     try {
         if (soltype != GPC) {
-            mech.ParticleMech().SetSpecies(mech.Species());
+            mech.ParticleMech().SetSpecies(mech.GasMech().Species());
             Sweep::MechParser::Read(swpfile, mech.ParticleMech());
 
         }

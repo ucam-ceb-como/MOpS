@@ -86,15 +86,15 @@ vector<fvector> Mops::LOIReduction::CalcLOI(double** J, double** Sensi, vector<f
 void Mops::LOIReduction::RejectSpecies(vector<fvector> LOI, double LOICompVal, const Mechanism *const mech,
                                        std::vector<std::string>& RejectSpecies, std::vector<std::string> Kept_Spec)
 {
-    for (unsigned int i = 0; i < mech->SpeciesCount(); i++){
+    for (unsigned int i = 0; i < mech->GasMech().SpeciesCount(); i++){
         if (LOI[0][i] < LOICompVal){
             for (unsigned int j = 0; j < Kept_Spec.size(); j++){
-                if (mech->Species(i)->Name() == Kept_Spec[j]){
+                if (mech->GasMech().Species(i)->Name() == Kept_Spec[j]){
                     RejectSpecies.push_back("NULL");
                 break;
                 }
-                else if (j == (Kept_Spec.size()-1) && Kept_Spec[j] != mech->Species(i)->Name())
-                    RejectSpecies.push_back(mech->Species(i)->Name());
+                else if (j == (Kept_Spec.size()-1) && Kept_Spec[j] != mech->GasMech().Species(i)->Name())
+                    RejectSpecies.push_back(mech->GasMech().Species(i)->Name());
             }
         }
         else {
@@ -114,8 +114,8 @@ void Mops::LOIReduction::CreateLOIFile(std::ofstream &LOIFile, const Mechanism *
     string_vector LOIHeadings; 
     LOIHeadings.push_back("Time/ s");
 
-    for (unsigned int isp=0; isp<mech->SpeciesCount(); ++isp) {
-    LOIHeadings.push_back(mech->Species(isp)->Name() + " (LOI)");
+    for (unsigned int isp=0; isp<mech->GasMech().SpeciesCount(); ++isp) {
+    LOIHeadings.push_back(mech->GasMech().Species(isp)->Name() + " (LOI)");
     }
     
     
@@ -153,7 +153,7 @@ void Mops::LOIReduction::SaveLOI(std::vector<fvector> LOI, double t, std::ofstre
     out << t;
 
     //Write out the LOI for each species
-    for (unsigned int i = 0; i < mech->SpeciesCount(); ++i){
+    for (unsigned int i = 0; i < mech->GasMech().SpeciesCount(); ++i){
         out << ',' << LOI[0][i];
     }
 

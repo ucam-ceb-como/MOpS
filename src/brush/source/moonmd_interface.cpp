@@ -46,6 +46,7 @@
 #include "mops_mechanism.h"
 
 #include "swp_model_stats.h"
+#include "swp_mech_parser.h"
 
 #include "linear_interpolator.hpp"
 
@@ -220,10 +221,10 @@ Brush::MooNMDInterface::particle_reactor_pointer
             std::cout << "Reading chemical mechanism...\n";
         }
 
-        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
+        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech.GasMech(), thermfile, diag);
 
         if (diag>0)
-            mech.WriteDiagnostics("ckmech.diag");
+            mech.GasMech().WriteDiagnostics("ckmech.diag");
     }
 
     //========= Load particle mechanism ==========================
@@ -231,8 +232,9 @@ Brush::MooNMDInterface::particle_reactor_pointer
         if(diag > 0) {
             std::cout << "Setting species on particle mechanism...\n";
         }
-        mech.ParticleMech().SetSpecies(mech.Species());
+        mech.ParticleMech().SetSpecies(mech.GasMech().Species());
         if(diag > 0) {
+            std::cout << "Species on particle mechanism are at " << mech.ParticleMech().Species() << '\n';
             std::cout << "Reading particle mechanism...\n";
         }
         Sweep::MechParser::Read(swpfile, mech.ParticleMech());
@@ -258,7 +260,7 @@ Brush::MooNMDInterface::particle_reactor_pointer
     if(diag > 0) {
         std::cout << "Reading initial continuum solution...\n";
     }
-    Brush::ResetChemistry initChem(chemsolnfile, Brush::ResetChemistry::Camflow, mech, diag);
+    Brush::ResetChemistry initChem(chemsolnfile, Brush::ResetChemistry::Camflow, mech.GasMech(), diag);
     if(diag > 0) {
         std::cout << "Read initial continuum solution\n";
     }
@@ -313,7 +315,7 @@ Brush::MooNMDInterface::particle_reactor_pointer
     }
 
     //========= Build the initial reactor ========================
-    Reactor1d *pReactor = new Reactor1d(*pGeom, mech, maxPCounts, maxM0s);
+    Reactor1d *pReactor = new Reactor1d(*pGeom, mech.GasMech(), mech.ParticleMech(), maxPCounts, maxM0s);
 
     std::cout << "Setting the initial continuum solution\n";
     pReactor->ReplaceChemistry(initChem, true);
@@ -412,8 +414,8 @@ Brush::MooNMDInterface::particle_reactor_pointer Brush::MooNMDInterface::RunPart
     double minResidence = minimumResidenceTime(reac.getGeometry(), solution_length, solution_nodes, velocity);
     unsigned numSplittings = std::ceil(10 * t_stop / minResidence);
     std::cout << "Num splittings " << numSplittings << ", min residence " << minResidence << std::endl;
-    solver.solve(reac, t_stop, numSplittings, 0, path_id);
-    Brush::Simulator::saveParticleStats(reac, Sweep::Stats::IModelStats::StatBound(), moment_output);
+    solver.solve(reac, 0.0, t_stop, numSplittings, 0, path_id);
+    Brush::Simulator::saveParticleStats(reac, t_stop, Sweep::Stats::IModelStats::StatBound(), moment_output);
 
     //======== Estimate the source terms to return to the client =====
 

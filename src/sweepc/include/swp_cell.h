@@ -51,7 +51,9 @@
 #include "swp_ensemble_stats.h"
 #include "swp_birth_process.h"
 #include "swp_death_process.h"
-#include "sprog.h"
+
+#include "gpc_idealgas.h"
+
 #include <string>
 #include <iostream>
 
