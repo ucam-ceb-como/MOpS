@@ -52,6 +52,9 @@
 
 #include "swp_particle_process.h"
 #include "swp_process_type.h"
+
+#include "gpc_rate_params.h"
+
 #include <iostream>
 
 

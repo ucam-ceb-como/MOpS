@@ -61,7 +61,7 @@
 #include "swp_inception.h"
 #include "swp_particle_process.h"
 #include "swp_coagulation.h"
-#include "sprog.h"
+
 #include <vector>
 #include <string>
 #include <iostream>

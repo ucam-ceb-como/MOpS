@@ -51,7 +51,13 @@
 #include "swp_ensemble.h"
 #include "swp_particle.h"
 #include "swp_actsites_type.h"
-#include "sprog.h"
+
+//Forward declaration
+namespace Sprog {
+namespace Thermo {
+    class IdealGas;
+}
+}
 
 namespace Sweep
 {

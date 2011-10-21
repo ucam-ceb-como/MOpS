@@ -49,7 +49,9 @@
 #include "swp_ensemble.h"
 #include "swp_mechanism.h"
 #include "swp_tree_cache.h"
-#include "sprog.h"
+
+#include "gpc_idealgas.h"
+
 #include <map>
 
 using namespace Sweep;
