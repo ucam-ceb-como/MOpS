@@ -50,15 +50,10 @@
 #include "swp_birth_process.h"
 #include "swp_death_process.h"
 
+#include "gpc_idealgas.h"
+
 #include <string>
 #include <iostream>
-
-// forward declaration
-namespace Sprog {
-namespace Thermo {
-    class IdealGas;
-}
-}
 
 namespace Sweep
 {
