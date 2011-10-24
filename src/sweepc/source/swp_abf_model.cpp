@@ -84,8 +84,6 @@ ABFModel::~ABFModel()
 // Assignment operator.
 ABFModel &ABFModel::operator =(const ABFModel &rhs)
 {
-    m_alpha_prof.clear();
-
     if (this != &rhs) {
         A4   = rhs.A4;
         C2H2 = rhs.C2H2;
@@ -98,10 +96,6 @@ ABFModel &ABFModel::operator =(const ABFModel &rhs)
         iC   = rhs.iC;
         m_aform  = rhs.m_aform;
         m_aconst = rhs.m_aconst;
-        for (map<real,real>::const_iterator i = rhs.m_alpha_prof.begin();
-             i!=rhs.m_alpha_prof.end(); ++i) {
-            m_alpha_prof[i->first] = i->second;
-        }
     }
     return *this;
 }
@@ -235,7 +229,7 @@ real ABFModel::alpha(real t, const Sprog::Thermo::IdealGas &gas,
                          particles.GetSums().Property(Sweep::iNumCarbon) /
                          particles.Count());
         case AlphaProfile:
-            return alpha(t);
+            return gas.Alpha();
         case AlphaConst:
         default:
             return m_aconst;
@@ -250,7 +244,7 @@ real ABFModel::alpha(real t, const Sprog::Thermo::IdealGas &gas,
         case AlphaCorrelation:
             return alpha(gas.Temperature(), part.Composition(iC));
         case AlphaProfile:
-            return alpha(t);
+            return gas.Alpha();
         case AlphaConst:
         default:
             return m_aconst;
@@ -269,49 +263,8 @@ real ABFModel::alpha(Sweep::real T, Sweep::real M1)
     }
 }
 
-// Returns alpha linearly interpolated from the profile.
-real ABFModel::alpha(real t) const
-{
-    // Get the time point after the required time.
-    map<real,real>::const_iterator j = m_alpha_prof.upper_bound(t);
-
-    if (j == m_alpha_prof.begin()) {
-        // This time is before the beginning of the profile.  Return
-        // the first time point.
-        return j->second;
-    } else {
-        // Get the time point before the required time.
-        map<real,real>::const_iterator i = j; --i;
-
-        // Get alpha at both points..
-        real a1 = i->second;
-        real a2 = j->second;
-
-        // Calculate time interval between points i and j.
-        real dt_pro = j->first - i->first;
-
-        // Calculate time interval between point i and current time.
-        real dt = t - i->first;
-
-        // Now use linear interpolation to calculate alpha.
-        return a1 + ((a2 - a1) * dt / dt_pro);
-    }
-}
-
-
 // ALPHA CORRELATION.
 
-// Loads a time profile for alpha into the model.  Also sets
-// the model to use this profile for calculations.
-void ABFModel::SetAlphaProfile(const std::map<real,real> &alphas)
-{
-    m_alpha_prof.clear();
-    for (map<real,real>::const_iterator i = alphas.begin();
-         i!=alphas.end(); ++i) {
-        m_alpha_prof[i->first] = i->second;
-    }
-    m_aform = AlphaProfile;
-}
 
 // Tells the model to use the alpha profile for calculations.
 void ABFModel::UseAlphaProfile(void)

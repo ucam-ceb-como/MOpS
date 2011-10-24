@@ -48,7 +48,6 @@
 #define SWEEP_ABF_MODEL_H
 
 #include "swp_params.h"
-#include "swp_actsites_model.h"
 #include "swp_particle_model.h"
 #include "swp_ensemble.h"
 #include "swp_particle.h"
@@ -67,7 +66,7 @@ namespace Sweep
 {
 namespace ActSites
 {
-class ABFModel : public ActSitesModel
+class ABFModel
 {
 public:
     // Enumeration of the allowable forms of the alpha function.
@@ -110,10 +109,6 @@ public:
 
     // ALPHA CORRELATION.
 
-    // Loads a time profile for alpha into the model.  Also sets 
-    // the model to use this profile for calculations.
-    void SetAlphaProfile(const std::map<real,real> &alphas);
-
     // Tells the model to use the alpha profile for calculations.
     void UseAlphaProfile(void);
 
@@ -152,10 +147,6 @@ private:
     // Constant alpha value.
     real m_aconst;
 
-    // Profile of Alpha values.  Coordinates are (time,alpha).  If this
-    // profile is empty then alpha is calculated using the ABF correlation.
-    std::map<real,real> m_alpha_prof;
-
     // Singleton implementation.
     ABFModel(void);
     ABFModel(const ABFModel &copy);
@@ -185,8 +176,6 @@ private:
         real M1 // Reduced 1st C atom moment.
         );
 
-    // Returns alpha linearly interpolated from the profile.
-    real alpha(real t) const;
 };
 };
 };

@@ -266,7 +266,7 @@ Reactor *const readReactor(const CamXML::Element &node,
         mix->GasPhase().SetPressure(readPressure(*subnode));
     }
     else {
-        throw std::runtime_error("No initial condition for presssure (Mops, Settings_IO::readReactor).");
+        throw std::runtime_error("No initial condition for pressure (Mops, Settings_IO::readReactor).");
     }
 
     // Fill the mixture object.

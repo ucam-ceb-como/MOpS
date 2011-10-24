@@ -44,7 +44,7 @@
 #include "swp_mechanism.h"
 #include "swp_process_type.h"
 #include "swp_model_factory.h"
-#include "swp_actsites_model.h"
+
 #include <stdexcept>
 
 using namespace Sweep;
@@ -131,13 +131,13 @@ real ActSiteReaction::Rate(real t, const Cell &sys, const Particle &sp) const
 // ACTIVE SITES MODEL.
 
 // Sets the active sites model.
-void ActSiteReaction::SetModel(ActSites::ActSitesModel &model)
+void ActSiteReaction::SetModel(ActSites::ABFModel &model)
 {
     m_asmodel = &model;
 }
 
 // Returns the active sites model.
-ActSites::ActSitesModel *const ActSiteReaction::Model(void) const
+ActSites::ABFModel *const ActSiteReaction::Model(void) const
 {
     return m_asmodel;
 }

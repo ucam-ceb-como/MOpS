@@ -65,7 +65,7 @@ using namespace Brush;
  * data applied, the other indices in the range should
  * have their own static constants.
  */
-const size_t ResetChemistry::sNumNonSpeciesData = 9;
+const size_t ResetChemistry::sNumNonSpeciesData = 10;
 
 /*!
  * Index of spatial position data in the elements of mInputChemistryData.
@@ -127,6 +127,12 @@ const size_t ResetChemistry::sGradientMixFracIndex = 7;
  */
 const size_t ResetChemistry::sLaplacianMixFracIndex = 8;
 
+/*!
+ * Factor used in ABF surface reaction rates for soot, but
+ * could potentially be used to scale other rates.
+ */
+const size_t ResetChemistry::sAlphaIndex = 9;
+
 /**
  * Construct an object from a data file and associate the concentration data
  * with the indices defined by the mechanism.
@@ -167,6 +173,10 @@ const size_t ResetChemistry::sLaplacianMixFracIndex = 8;
  *   mechanism and the column headings for these species must be identical to the
  *   strings specified as species names when the mechanism was constructed.
  *
+ * The PremixAlpha file format is the same as the premix format, except that
+ * the requirement for a wdotA4 column is replaced by the requirement for an
+ * Alpha column.
+ *
  *\param[in]    fname       Path of file from which to read the data
  *\param[in]    file_type   Style of data in file
  *\param[in]    mech        Mechanism defining species indexes
@@ -206,6 +216,15 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
             speciesNames.push_back("V[cm/s]");
             speciesNames.push_back("wdotA4");
             speciesNames.push_back("GradT");
+            mMassFractionData = false;
+            break;
+        case PremixAlpha:
+            speciesNames.push_back("X[cm]");
+            speciesNames.push_back("T[K]");
+            speciesNames.push_back("RHO[g/cm3]");
+            speciesNames.push_back("V[cm/s]");
+            speciesNames.push_back("GradT");
+            speciesNames.push_back("Alpha");
             mMassFractionData = false;
             break;
         case CamflowFlamelet:
@@ -607,6 +626,7 @@ void Brush::ResetChemistry::apply(const real x, Sweep::Cell &reac) const {
     chemMixture.SetGradientMixFrac(dataToUse[sGradientMixFracIndex]);
     chemMixture.SetLaplacianMixFrac(dataToUse[sLaplacianMixFracIndex]);
     chemMixture.SetGradientTemperature(dataToUse[sGradientTemperatureIndex]);
+    chemMixture.SetAlpha(dataToUse[sAlphaIndex]);
 
     reac.SetGasPhase(chemMixture);
 

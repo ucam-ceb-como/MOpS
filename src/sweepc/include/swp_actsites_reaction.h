@@ -46,7 +46,7 @@
 
 #include "swp_params.h"
 #include "swp_surface_reaction.h"
-#include "swp_actsites_model.h"
+#include "swp_abf_model.h"
 
 namespace Sweep
 {
@@ -100,10 +100,10 @@ public:
     // ACTIVE SITES MODEL.
 
     // Sets the active sites model.
-    void SetModel(ActSites::ActSitesModel &model);
+    void SetModel(ActSites::ABFModel &model);
 
     // Returns the active sites model.
-    ActSites::ActSitesModel *const Model(void) const;
+    ActSites::ABFModel *const Model(void) const;
 
 
     // READ/WRITE/COPY.
@@ -126,7 +126,7 @@ public:
 
 protected:
     // The active sites model instance.
-    ActSites::ActSitesModel *m_asmodel;
+    ActSites::ABFModel *m_asmodel;
 
     // Default constructor is protected to prevent reactions being
     // defined without knowledge of the parent mechanism.

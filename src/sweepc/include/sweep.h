@@ -86,11 +86,6 @@
 // Mechanism and process definitions.
 #include "swp_mechanism.h"
 
-// Chemical models.
-#include "swp_actsites_type.h"
-#include "swp_actsites_model.h"
-#include "swp_abf_model.h"
-
 // Statistics generation.
 #include "swp_particle_stats.h"
 #include "swp_ensemble_stats.h"

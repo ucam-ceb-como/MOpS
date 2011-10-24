@@ -374,7 +374,7 @@ void ModelFactory::WriteAggStats(const Stats::IModelStats &stats, std::ostream &
 
 // Returns the instance of the active-sites model with the given ID.
 // Note that active-sites models are singleton classes.
-ActSites::ActSitesModel *const ModelFactory::GetActSitesModel(ActSites::ActSitesType id)
+ActSites::ABFModel *const ModelFactory::GetActSitesModel(ActSites::ActSitesType id)
 {
     switch (id) {
         case ActSites::ABFSites_ID:

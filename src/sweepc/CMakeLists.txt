@@ -10,7 +10,6 @@ file(GLOB_RECURSE INCS "include/*.h")
 source_group("Header Files" FILES ${INCS})
 
 add_library(sweep source/swp_abf_model.cpp
-                  source/swp_actsites_model.cpp
                   source/swp_actsites_reaction.cpp
                   source/swp_addcoag.cpp
                   source/swp_aggmodel_cache.cpp
