@@ -43,7 +43,6 @@
 #include "swp_mechanism.h"
 #include "swp_model_factory.h"
 #include "swp_process_factory.h"
-#include "swp_abf_model.h"
 #include "swp_tempwriteXmer.h"
 
 #include "geometry1d.h"
@@ -135,27 +134,6 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         m_fictcount.assign(rhs.m_fictcount.begin(), rhs.m_fictcount.end());
     }
     return *this;
-}
-
-
-// ACTIVE-SITES MODELS.
-
-// Returns the set of particle model ID used by this mechanism
-const ActSites::ActSitesTypeSet &Mechanism::ActSiteModels(void) const
-{
-    return m_actsites;
-}
-
-// Returns true if the mechanism include the given model.
-bool Mechanism::ContainsActSiteModel(ActSites::ActSitesType id) const
-{
-    return m_actsites.find(id) != m_actsites.end();
-}
-
-// Adds an active-sites model to the mechanism.
-void Mechanism::AddActSitesModel(ActSites::ActSitesType id)
-{
-    m_actsites.insert(id);
 }
 
 

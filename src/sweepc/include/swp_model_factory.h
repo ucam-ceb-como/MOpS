@@ -50,17 +50,11 @@
 #include "swp_model_stats.h"
 #include "swp_aggmodel_type.h"
 #include "swp_aggmodel_cache.h"
-#include "swp_actsites_type.h"
+
 #include <iostream>
 
 namespace Sweep
 {
-
-// Forward declaration
-namespace ActSites {
-    class ABFModel;
-}
-
 //! Factory class for particles, their statistics and sub-models
 class ModelFactory
 {
@@ -165,15 +159,7 @@ public:
         std::ostream &out                // Output stream.
         );
 
-
-    // ACTIVE-SITES MODEL INSTANCE AQUISITION.
-
-    // Returns the instance of the active-sites model with the given ID.
-    // Note that active-sites models are singleton classes.
-    static ActSites::ABFModel *const GetActSitesModel(
-        ActSites::ActSitesType id // Model ID
-        );
 };
-};
+}
 
 #endif

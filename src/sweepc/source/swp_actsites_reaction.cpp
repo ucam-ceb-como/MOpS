@@ -56,22 +56,53 @@ using namespace std;
 // Default constructor is protected to prevent reactions being
 // defined without knowledge of the parent mechanism.
 ActSiteReaction::ActSiteReaction(void)
-: SurfaceReaction(), m_asmodel(NULL)
+: SurfaceReaction()
+, iC2H2(-1)
+, iO2(-1)
+, iOH(-1)
+, iCO(-1)
+, iH(-1)
+, iH2(-1)
+, iH2O(-1)
 {
     m_name = "Active-site Reaction";
 }
 
 // Default constructor.
 ActSiteReaction::ActSiteReaction(const Sweep::Mechanism &mech)
-: SurfaceReaction(mech), m_asmodel(NULL)
+: SurfaceReaction(mech)
+, iC2H2(-1)
+, iO2(-1)
+, iOH(-1)
+, iCO(-1)
+, iH(-1)
+, iH2(-1)
+, iH2O(-1)
 {
     m_name = "Active-site Reaction";
-}
 
-// Copy constructor.
-ActSiteReaction::ActSiteReaction(const ActSiteReaction &copy)
-{
-    *this = copy;
+    // Set up the species indices that will be needed to calculate active site density
+    Sprog::SpeciesPtrVector::const_iterator i;
+    int j = 0;
+    for (i=mech.Species()->begin(); i!=mech.Species()->end(); ++i, ++j) {
+        if  ((*i)->Name().compare("C2H2")==0) {
+            iC2H2 = j;
+        } else if  ((*i)->Name().compare("O2")==0) {
+            iO2 = j;
+        } else if  ((*i)->Name().compare("OH")==0) {
+            iOH = j;
+        } else if  ((*i)->Name().compare("CO")==0) {
+            iCO = j;
+        } else if  ((*i)->Name().compare("H")==0) {
+            iH = j;
+        } else if  ((*i)->Name().compare("H2")==0) {
+            iH2 = j;
+        } else if  ((*i)->Name().compare("H2O")==0) {
+            iH2O = j;
+        }
+    }
+
+    // Should really check that all the indices are now >= 0
 }
 
 // Stream-reading constructor.
@@ -79,26 +110,6 @@ ActSiteReaction::ActSiteReaction(std::istream &in, const Sweep::Mechanism &mech)
 {
     Deserialize(in, mech);
 }
-
-// Default destructor.
-ActSiteReaction::~ActSiteReaction(void)
-{
-    // Nothing special to destruct.
-}
-
-
-// OPERATOR OVERLOADS.
-
-// Assignment operator.
-ActSiteReaction &ActSiteReaction::operator =(const ActSiteReaction &rhs)
-{
-    if (this != &rhs) {
-        SurfaceReaction::operator =(rhs);
-        m_asmodel = rhs.m_asmodel;
-    }
-    return *this;
-}
-
 
 // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
@@ -112,8 +123,7 @@ ActSiteReaction &ActSiteReaction::operator =(const ActSiteReaction &rhs)
 real ActSiteReaction::Rate(real t, const Cell &sys,
                            const Geometry::LocalGeometry1d &local_geom) const
 {
-    return SurfaceReaction::Rate(t, sys, local_geom) *
-           m_asmodel->SiteDensity(t, sys.GasPhase(), sys.Particles());
+    return SurfaceReaction::Rate(t, sys, local_geom) * SiteDensity(sys.GasPhase());
 }
 
 
@@ -123,25 +133,55 @@ real ActSiteReaction::Rate(real t, const Cell &sys,
 // the system. Process must be linear in particle number.
 real ActSiteReaction::Rate(real t, const Cell &sys, const Particle &sp) const
 {
-    return SurfaceReaction::Rate(t, sys, sp) *
-           m_asmodel->SiteDensity(t, sys.GasPhase(), sp);
+    return SurfaceReaction::Rate(t, sys, sp) * SiteDensity(sys.GasPhase());
 }
 
-
-// ACTIVE SITES MODEL.
-
-// Sets the active sites model.
-void ActSiteReaction::SetModel(ActSites::ABFModel &model)
+/*!
+ *  This calculation is part of the ABF Hydrogen Abstraction - C2H2 Addtion (HACA) model
+ *  for soot particles as discussed by Appel et al., Proc. Combust. Inst. (2000).
+ *
+ *\param[in]    gas     Gas mixture containing the soot particles
+ *
+ *\return       Fraction of surface sites which are radicals.
+ *
+ */
+real ActSiteReaction::radicalSiteFraction(const Sprog::Thermo::IdealGas &gas) const
 {
-    m_asmodel = &model;
+    real r1f, r1b, r2f, r2b, r3f, r4f, r5f, rdenom;
+    real T  = gas.Temperature();
+    real RT = RCAL * T;
+
+    // Calculate the forward and back reaction rates.
+    r1f = 4.2e+07 * exp(-13.0/RT)                * gas.MolarConc(iH);
+    r1b = 3.9e+06 * exp(-11.0/RT)                * gas.MolarConc(iH2);
+    r2f = 1.0e+04 * exp(-1.43/RT) * pow(T,0.734) * gas.MolarConc(iOH);
+    r2b = 3.68e+2 * exp(-17.1/RT) * pow(T,1.139) * gas.MolarConc(iH2O);
+    r3f = 2.0e+07                                * gas.MolarConc(iH);
+    r4f = 8.0e+01 * exp( -3.8/RT) * pow(T,1.56)  * gas.MolarConc(iC2H2);
+    r5f = 2.1e+06 * exp( -7.47/RT)               * gas.MolarConc(iO2);
+    rdenom = r1b+r2b+r3f+r4f+r5f;
+
+    if (rdenom > 0.0) {
+        real f = (r1f+r2f) / rdenom;
+        return f / (f + 1.0);
+    } else {
+        return 0.0;
+    }
 }
 
-// Returns the active sites model.
-ActSites::ABFModel *const ActSiteReaction::Model(void) const
+/*!
+ *  This calculation is part of the ABF Hydrogen Abstraction - C2H2 Addtion (HACA) model
+ *  for soot particles as discussed by Appel et al., Proc. Combust. Inst. (2000).
+ *
+ *\param[in]    gas     Gas mixture containing the soot particles
+ *
+ *\return       Concentration of surface sites available for reaction
+ *
+ */
+real ActSiteReaction::SiteDensity(const Sprog::Thermo::IdealGas &gas) const
 {
-    return m_asmodel;
+    return 2.3e19 * radicalSiteFraction(gas) * gas.Alpha();
 }
-
 
 // READ/WRITE/COPY.
 
@@ -169,14 +209,6 @@ void ActSiteReaction::Serialize(std::ostream &out) const
         // Serialize base class.
         SurfaceReaction::Serialize(out);
 
-        // Output the active sites model ID.
-        if (m_asmodel != NULL) {
-            out.write((char*)&trueval, sizeof(trueval));
-            unsigned int n = (unsigned int)m_asmodel->ID();
-            out.write((char*)&n, sizeof(n));
-        } else {
-            out.write((char*)&falseval, sizeof(falseval));
-        }
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, ActSiteReaction::Serialize).");
@@ -199,15 +231,6 @@ void ActSiteReaction::Deserialize(std::istream &in, const Sweep::Mechanism &mech
             case 0:
                 // Deserialize base class.
                 SurfaceReaction::Deserialize(in, mech);
-
-                // Read the active sites model ID.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                if (n==1) {
-                    in.read(reinterpret_cast<char*>(&id), sizeof(id));
-                    m_asmodel = ModelFactory::GetActSitesModel((ActSites::ActSitesType)id);
-                } else {
-                    m_asmodel = NULL;
-                }
 
                 break;
             default:
