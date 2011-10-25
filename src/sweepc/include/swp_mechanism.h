@@ -56,12 +56,11 @@
 #include "swp_particle_model.h"
 #include "swp_cell.h"
 #include "swp_ensemble.h"
-#include "swp_actsites_type.h"
 #include "swp_process.h"
 #include "swp_inception.h"
 #include "swp_particle_process.h"
 #include "swp_coagulation.h"
-#include "sprog.h"
+
 #include <vector>
 #include <string>
 #include <iostream>
@@ -91,19 +90,6 @@ public:
 
     // Operators.
     Mechanism &operator=(const Mechanism &rhs);
-
-
-    // ACTIVE-SITES MODELS.
-
-    // Returns the set of particle model ID used by this mechanism
-    const ActSites::ActSitesTypeSet &ActSiteModels(void) const;
-
-    // Returns true if the mechanism include the given model.
-    bool ContainsActSiteModel(ActSites::ActSitesType id) const;
-
-    // Adds an active-sites model to the mechanism.
-    void AddActSitesModel(ActSites::ActSitesType id);
-
 
 	// INCEPTIONS.
 
@@ -266,10 +252,6 @@ private:
     // True if the mechanism contains deferred (LPDA)
     // processes, otherwise false. 
     mutable bool m_anydeferred;
-
-    // Set of active-sites models which are implemented in this
-    // mechanism.
-    ActSites::ActSitesTypeSet m_actsites;
 
     // Processes in mechanism.
     Processes::IcnPtrVector m_inceptions;     // Inception process list.

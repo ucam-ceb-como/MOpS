@@ -80,6 +80,9 @@ public:
 
         //! Mole fractions and cgs units
         Premix,
+
+        //! Mole fractions, with ABF alpha and cgs units
+        PremixAlpha,
     };
 
     //! Read in the data needed for the given mechanism
@@ -164,6 +167,9 @@ private:
 
     //! Index of velocity data in data_point
     static const size_t sLaplacianMixFracIndex;
+
+    //! Index of alpha factor data in data point
+    static const size_t sAlphaIndex;
 
 };
 

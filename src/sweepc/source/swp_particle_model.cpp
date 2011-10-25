@@ -46,9 +46,8 @@
 #include "swp_PAH_primary.h"
 #include "swp_surfvol_primary.h"
 #include "swp_model_factory.h"
-#include "swp_actsites_type.h"
-#include "swp_abf_model.h"
 #include "swp_PAH_primary.h"
+
 #include <stdexcept>
 #include <cmath>
 #include <limits>

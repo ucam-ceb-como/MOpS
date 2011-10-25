@@ -48,7 +48,7 @@
 #include "swp_cell.h"
 #include "swp_particle.h"
 #include "swp_process_type.h"
-#include "sprog.h"
+
 #include <iostream>
 #include <vector>
 

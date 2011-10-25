@@ -43,7 +43,9 @@
 #include "swp_gas_profile.h"
 #include "mops_timeinterval.h"
 #include "mops_reactor.h"
+
 #include "sweep.h"
+
 #include "string_functions.h"
 #include "csv_io.h"
 #include <fstream>
@@ -52,7 +54,6 @@
 #include <iomanip>
 
 using namespace Sweep;
-using namespace Sweep::ActSites;
 using namespace std;
 using namespace Strings;
 
@@ -80,8 +81,6 @@ FlameSolver::~FlameSolver()
 // remaining species will be overstated.
 void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 {
-    map<real,real> alpha_prof;
-
     // Clear the current gas-phase profile.
     m_gasprof.clear();
 	
@@ -249,9 +248,9 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gpoint.Gas.SetPressure(P*1.0e5);
             gpoint.Gas.Normalise();
             gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(m3*s) to mol/(cm3*s)
+            gpoint.Gas.SetAlpha(alpha);
 
             // Add the profile point.
-            alpha_prof[t] = alpha;
             m_gasprof.push_back(gpoint);
 
             // Output in PSDF_input.dat format
@@ -263,10 +262,6 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             //std::cout << alpha << '\t' << gpoint.Gas.Pressure() << '\t'
             //          << gpoint.Gas.Density() * 1e-6 << '\n';
         }
-
-        // Set up ABF model to use alpha profile.
-        ABFModel::Instance().Initialise(mech.ParticleMech());
-        ABFModel::Instance().SetAlphaProfile(alpha_prof);
 
         // Close the input file.
         fin.close();

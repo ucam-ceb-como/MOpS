@@ -7,9 +7,7 @@
 
   File purpose:
     A specialised ideal gas class for Sweep, which contains an ensemble
-    with particles of type Particle.  The Cell class inherits the
-    Sprog::IdealGas class and adds an additional layer of data to it
-    to describe the particles within the cell.
+    with particles of type Particle.
 
   Licence:
     This file is part of "sweepc".

@@ -51,7 +51,9 @@
 #include "swp_params.h"
 #include "swp_particle.h"
 #include "swp_process_type.h"
-#include "sprog.h"
+
+#include "gpc_stoich.h"
+
 #include <map>
 #include <string>
 #include <iostream>
