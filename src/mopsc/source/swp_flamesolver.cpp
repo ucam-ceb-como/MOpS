@@ -105,6 +105,8 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         // Get important column indices (time, temperature and pressure).
         int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1, Rcol=-1;
         tcol = findinlist(string("Time"), subs);
+        if(tcol < 0)
+            tcol = findinlist(string("Time[s]"),subs);
 
         Tcol = findinlist(string("T"), subs);
         if(Tcol < 0)
@@ -118,7 +120,10 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         int Xcol = findinlist(string("X[cm]"), subs);
         int Dcol = findinlist(string("RHO[g/cm3]"), subs);
         int Vcol = findinlist(string("V[cm/s]"), subs);
+
         int Gcol = findinlist(string("GradT"), subs);
+        if(Gcol < 0)
+            Gcol = findinlist(string("GradT[K/cm]"), subs);
 
 
         // Check that the file contains required columns.
