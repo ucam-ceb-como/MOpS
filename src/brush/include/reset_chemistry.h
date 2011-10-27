@@ -168,9 +168,6 @@ private:
     //! Index of velocity data in data_point
     static const size_t sLaplacianMixFracIndex;
 
-    //! Index of alpha factor data in data point
-    static const size_t sAlphaIndex;
-
 };
 
 }

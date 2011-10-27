@@ -65,7 +65,7 @@ using namespace Brush;
  * data applied, the other indices in the range should
  * have their own static constants.
  */
-const size_t ResetChemistry::sNumNonSpeciesData = 10;
+const size_t ResetChemistry::sNumNonSpeciesData = 9;
 
 /*!
  * Index of spatial position data in the elements of mInputChemistryData.
@@ -93,6 +93,9 @@ const size_t ResetChemistry::sVelocityIndex = 3;
 
 /*!
  * Rate of PAH formation for use with PAH-PP model
+ * OR
+ * Factor used in ABF surface reaction rates for soot, but
+ * could potentially be used to scale other rates
  */
 const size_t ResetChemistry::sPAHFormationIndex = 4;
 
@@ -131,7 +134,7 @@ const size_t ResetChemistry::sLaplacianMixFracIndex = 8;
  * Factor used in ABF surface reaction rates for soot, but
  * could potentially be used to scale other rates.
  */
-const size_t ResetChemistry::sAlphaIndex = 9;
+
 
 /**
  * Construct an object from a data file and associate the concentration data
@@ -189,10 +192,6 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
     // Delimeters to use when splitting lines of data from file into the individual column entries
     const std::string delims(" ,\t");
 
-    // Iterators to the species in the mechanism
-    Sprog::Mechanism::const_sp_iterator spIt = mech.SpBegin();
-    const Sprog::Mechanism::const_sp_iterator spItEnd = mech.SpEnd();
-
     // Vector of names of the species in the mechanism
     std::vector<std::string> speciesNames;
     // Also a vector that will hold the column numbers for these species in the data file
@@ -223,8 +222,8 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
             speciesNames.push_back("T[K]");
             speciesNames.push_back("RHO[g/cm3]");
             speciesNames.push_back("V[cm/s]");
-            speciesNames.push_back("GradT");
             speciesNames.push_back("Alpha");
+            speciesNames.push_back("GradT[K/cm]");
             mMassFractionData = false;
             break;
         case CamflowFlamelet:
@@ -242,7 +241,10 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
     }
             
 
-    // Chemical species names
+
+    // Iterators to the chemical species in the mechanism
+    Sprog::Mechanism::const_sp_iterator spIt = mech.SpBegin();
+    const Sprog::Mechanism::const_sp_iterator spItEnd = mech.SpEnd();
     while(spIt != spItEnd) {
         // Dereference unincremented value
         speciesNames.push_back((*spIt++)->Name());
@@ -328,7 +330,7 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
                 }
 
                 // Unit conversions, if file not in SI units
-                if(file_type == Premix) {
+                if((file_type == Premix) || (file_type == PremixAlpha)) {
                     if(i == sPositionIndex)
                         // convert cm to m
                         frac *= 1e-2;
@@ -341,7 +343,7 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
                         // convert cm s^-1 to m s^-1
                         frac *= 1e-2;
 
-                    if(i == sPAHFormationIndex)
+                    if((i == sPAHFormationIndex) && (file_type != PremixAlpha))
                         // convert cm^-3 to m^-3
                         frac *= 1e6;
 
@@ -357,7 +359,7 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
                 // input file.
                 if((i <= sVelocityIndex) ||
                     ((file_type == CamflowFlamelet) && (i < sNumNonSpeciesData)) ||
-                    ((file_type == Premix) && (i <= sGradientTemperatureIndex))) {
+                    (((file_type == Premix) || (file_type == PremixAlpha)) && (i <= sGradientTemperatureIndex))) {
                     dataRow[i] = frac;
                 }
                 else {
@@ -626,36 +628,54 @@ void Brush::ResetChemistry::apply(const real x, Sweep::Cell &reac) const {
     chemMixture.SetGradientMixFrac(dataToUse[sGradientMixFracIndex]);
     chemMixture.SetLaplacianMixFrac(dataToUse[sLaplacianMixFracIndex]);
     chemMixture.SetGradientTemperature(dataToUse[sGradientTemperatureIndex]);
-    chemMixture.SetAlpha(dataToUse[sAlphaIndex]);
+    // PAH formation is reused for ABF alpha since they can never appear together and
+    // saves re-engineering this function (riap2 27 Oct 2011)
+    chemMixture.SetAlpha(dataToUse[sPAHFormationIndex]);
 
     reac.SetGasPhase(chemMixture);
 
-    /* Uncomment this code to check molar concentrations
-    unsigned int logIndices[14];
-    logIndices[0]  = reac.Mech()->FindSpecies("H2");
-    logIndices[1]  = reac.Mech()->FindSpecies("H");
-    logIndices[2]  = reac.Mech()->FindSpecies("O");
-    logIndices[3]  = reac.Mech()->FindSpecies("O2");
-    logIndices[4]  = reac.Mech()->FindSpecies("OH");
-    logIndices[5]  = reac.Mech()->FindSpecies("H2O");
-    logIndices[6]  = reac.Mech()->FindSpecies("CH4");
-    logIndices[7]  = reac.Mech()->FindSpecies("CO");
-    logIndices[8]  = reac.Mech()->FindSpecies("CO2");
-    logIndices[9]  = reac.Mech()->FindSpecies("C2H2");
-    logIndices[10] = reac.Mech()->FindSpecies("C2H4");
-    logIndices[11] = reac.Mech()->FindSpecies("AR");
-    logIndices[12] = reac.Mech()->FindSpecies("N2");
-    logIndices[13] = reac.Mech()->FindSpecies("A4");
+    // Uncomment this code to check molar concentrations
+    /*unsigned int logIndices[14];
+    for(unsigned int i = 0; i < reac.ParticleModel()->Species()->size(); ++i) {
+        if(reac.ParticleModel()->Species()->at(i)->Name() == "H2")
+            logIndices[0] = i;
+        else if(reac.ParticleModel()->Species()->at(i)->Name() == "H")
+            logIndices[1] = i;
+        else if(reac.ParticleModel()->Species()->at(i)->Name() == "O")
+            logIndices[2] = i;
+        else if(reac.ParticleModel()->Species()->at(i)->Name() == "O2")
+            logIndices[3] = i;
+        else if(reac.ParticleModel()->Species()->at(i)->Name() == "OH")
+            logIndices[4] = i;
+        else if(reac.ParticleModel()->Species()->at(i)->Name() == "H2O")
+            logIndices[5] = i;
+        else if(reac.ParticleModel()->Species()->at(i)->Name() == "CH4")
+            logIndices[6] = i;
+        else if(reac.ParticleModel()->Species()->at(i)->Name() == "CO")
+            logIndices[7] = i;
+        else if(reac.ParticleModel()->Species()->at(i)->Name() == "CO2")
+            logIndices[8] = i;
+        else if(reac.ParticleModel()->Species()->at(i)->Name() == "C2H2")
+            logIndices[9] = i;
+        else if(reac.ParticleModel()->Species()->at(i)->Name() == "C2H4")
+            logIndices[10] = i;
+        else if(reac.ParticleModel()->Species()->at(i)->Name() == "AR")
+            logIndices[11] = i;
+        else if(reac.ParticleModel()->Species()->at(i)->Name() == "N2")
+            logIndices[12] = i;
+        else if(reac.ParticleModel()->Species()->at(i)->Name() == "A4")
+            logIndices[13] = i;
 
+    }
 
     // Output in PSDF_input.dat format
     std::cout << x << '\t' << std::scientific << std::setprecision(6)
-              << reac.Mixture()->Temperature() << '\t';
+              << reac.GasPhase().Temperature() << '\t';
     for(unsigned int j = 0; j != 14; ++j) {
-        std::cout <<  reac.Mixture()->GasPhase().MolarConc(logIndices[j]) << '\t';
+        std::cout <<  reac.GasPhase().MolarConc(logIndices[j]) << '\t';
     }
-    std::cout << reac.Mixture()->Pressure() << '\t'
-              << reac.Mixture()->Density() << '\n';*/
+    std::cout << reac.GasPhase().Pressure() << '\t'
+              << reac.GasPhase().Density() << '\n';*/
 }
 
 /*!
