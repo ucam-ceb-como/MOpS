@@ -304,7 +304,7 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
             assert(sp1->IsValid());
             // Tell the ensemble that particles 1 and 2 have changed
             sys.Particles().Update(ip1);
-            sys.Particles().Update(ip1);
+            sys.Particles().Update(ip2);
         } else {
             sys.Particles().Update(ip1);
             sys.Particles().Update(ip2);
