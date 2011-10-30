@@ -73,46 +73,49 @@ namespace Processes
 class InterParticle : public ParticleProcess
 {
 public:
-    // Constructors.
-    InterParticle(const Sweep::Mechanism &mech); // Default constructor.
-    InterParticle(const InterParticle &copy);     // Copy constructor.
+    //! Default constructor
+    InterParticle(const Sweep::Mechanism &mech);
+    
+    //! Copy constructor
+    InterParticle(const InterParticle &copy);\
+    
+    //! Stream-reading constructor
     InterParticle(                    // Stream-reading constructor.
         std::istream &in,            //  - Input stream.
         const Sweep::Mechanism &mech //  - Parent mechanism.
         );
 
-    // Destructor.
+    //! Destructor.
     ~InterParticle(void);
 
-    // Operators.
+    //! Equal operator definition
     InterParticle &operator=(const InterParticle &rhs);
 
 
 
 	// PARTICLE PROPERTY ID.
 
-    // Returns the ID number of the particle property to which
-    // the rate of this process is proportional.
+    //! Returns the PropID to which the rate is proportional
     unsigned int PropertyID(void) const;
 
-    //! ID number of the particle property to which the rate of this process is proportional.
+    //! Sets the PropID to which the rate is proportional
     void SetPropertyID(
         Sweep::PropID pid
         );
 
 	// RATE CONSTANT AND PARAMETERS.
 
-    // Returns the Arrhenius parameter.
+    //! Returns the Arrhenius parameter.
     Sprog::Kinetics::ARRHENIUS &Arrhenius();
     const Sprog::Kinetics::ARRHENIUS &Arrhenius() const;
 
-    // Sets the Arrhenius parameters.
+    //! Sets the Arrhenius parameters.
     void SetArrhenius(Sprog::Kinetics::ARRHENIUS &arr);
 
 
     // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
-     // Returns rate of the process for the given system.
+     //! Returns rate of the process for the given system.
      real Rate(
          real t,          // Time.
          const Cell &sys, // System for which to calculate rate.
@@ -122,8 +125,7 @@ public:
 
      // SINGLE PARTICLE RATE CALCULATIONS.
 
-     // Returns the rate of the process for the given particle in
-     // the system. Process must be linear in particle number.
+     //! Returns the rate of the process for the given particle.
      real Rate(
          real t,             // Current time (s).
          const Cell &sys,    // System to which the particle belongs.
@@ -131,7 +133,7 @@ public:
          ) const;
 
 
-     // Returns majorant rate of the process for the given system.
+     //! Returns majorant rate of the process for the given system.
      real MajorantRate(
          real t,             // Current time (s).
          const Cell &sys,    // System to which the particle belongs.
@@ -143,13 +145,11 @@ public:
      //   These routines return the individual rate terms for a
      //   process, which may have multiple terms (e.g. InterParticle).
 
-     // Returns the number of rate terms for this process.
+     //! Returns the number of rate terms for this process.
      unsigned int TermCount(void) const;
 
 
-     // Calculates the rate terms given an iterator to a real vector. The
-     // iterator is advanced to the position after the last term for this
-     // process.
+     //! Calculates the rate terms given an iterator to a real vector.
      real RateTerms(
          real t,                  // Time.
          const Cell &sys,         // System for which to calculate rate terms.
@@ -160,7 +160,7 @@ public:
 
      // PERFORMING THE PROCESS.
 
-     //! Perform one surface reaction event
+     //! Performs one interparticle reaction event
      virtual int Perform(
          real t,
          Cell &sys,
@@ -168,8 +168,7 @@ public:
          unsigned int iterm,
          rng_type &rng) const;
 
-     // Performs the process on a given particle in the system.  Particle
-     // is given by index.  The process is performed n times.
+     //! Performs n interparticle reaction events
      virtual int Perform(
          real t,        // Current time (s).
          Cell &sys,     // System to which the particle belongs.
@@ -181,28 +180,26 @@ public:
 
      // READ/WRITE/COPY.
 
-     // Creates a copy of the particle process.
+     //! Creates a copy of the particle process.
      virtual InterParticle *const Clone(void) const;
 
-     // Returns the process type.  Used to identify different
-     // processes and for serialisation.
+     //! Returns the process type.
      virtual ProcessType ID(void) const;
 
-     // Writes the object to a binary stream.
+     //! Writes the object to a binary stream.
      virtual void Serialize(std::ostream &out) const;
 
-     // Reads the object from a binary stream.
+     //! Reads the object from a binary stream.
      virtual void Deserialize(
          std::istream &in,            // Input stream.
          const Sweep::Mechanism &mech // Parent mechanism.
          );
 
 protected:
-    // Surface reaction majorant parameter.  The true rate
-    // is multiplied by this parameter to get the majorised rate.
+    //! Surface reaction majorant parameter. 
     const static real m_majfactor;
 
-    // Arrhenius rate parameters.
+    //! Arrhenius rate parameters.
     Sprog::Kinetics::ARRHENIUS m_arr;
 
     //! Particle property to which the rate of the process is proportional.
