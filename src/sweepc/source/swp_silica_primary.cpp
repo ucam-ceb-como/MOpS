@@ -1668,17 +1668,12 @@ void SilicaPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_Rg = (real)val;
 
-		// Read silicamass.
-  //      in.read(reinterpret_cast<char*>(&val), sizeof(val));
-  //      m_silicamass = (real)val;
-
 		m_leftchild=NULL;
 		m_rightchild=NULL;
 		m_parent=NULL;
 		m_leftparticle=NULL;
 		m_rightparticle=NULL;
 		//m_allparents.clear();
-		//m_particleparent=NULL;
 
 		switch (version) {
             case 0:
