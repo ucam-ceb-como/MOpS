@@ -1279,8 +1279,8 @@ bool SilicaPrimary::CheckSintering()
 
     }
 
-	if(hassintered)
-		ResetVol();
+//	if(hassintered)
+//		ResetVol();
     return hassintered;
 }
 

@@ -216,9 +216,6 @@ protected:
     //! Returns a uniformly chosen primary particle
     SilicaPrimary *SelectRandomSubparticle(rng_type &rng);
     
-    //! Resets the volume of a particle
-    void ResetVol();
-    
     //! Releases the memory associated with the object
     void ReleaseMem();
 
