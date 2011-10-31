@@ -745,7 +745,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
 
     	// Sinter the particles for the silica model (as no deferred process)
     	if (m_sint_model.IsEnabled()) {
-    		sp.Sinter(dt, sys, m_sint_model, rng);
+    		sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
     	}
 
     	// Check particle is valid and recalculate cache.
@@ -788,7 +788,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
             // Perform sintering update.
             if (m_sint_model.IsEnabled()) {
 //				sp.UpdateFreeSurface();
-			    sp.Sinter(dt, sys, m_sint_model, rng);
+			    sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
 				//sp.CreateTestTree();
 				//	 sp.FindRoot()->CheckTree();
 			    // cout << "check before sinter passed\n";

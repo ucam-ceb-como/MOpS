@@ -647,10 +647,12 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
  * @param[in]   sys     Environment for particles
  * @param[in]   model   Sintering model to apply
  * @param[in]   rng     Random number generator
+ * @param[in]   wt      Statistical weight
  */
 void SilicaPrimary::Sinter(real dt, Cell &sys,
                             const Processes::SinteringModel &model,
-                            rng_type &rng)
+                            rng_type &rng,
+                            real wt)
 {
 	//Do only if there is a particle to sinter
 	if (m_leftparticle!=NULL)
@@ -746,14 +748,14 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 				    UpdateCache();
 					if (m_leftchild!=NULL && m_rightchild!=NULL)
 					{
-						m_leftchild->Sinter(dt,sys,model,rng);
-						m_rightchild->Sinter(dt,sys,model,rng);
+						m_leftchild->Sinter(dt,sys,model,rng,wt);
+						m_rightchild->Sinter(dt,sys,model,rng,wt);
 					}
 			   }
 			 else
 			 {
-				 m_leftchild->Sinter(dt, sys, model,rng);
-				 m_rightchild->Sinter(dt, sys, model,rng);
+				 m_leftchild->Sinter(dt, sys, model,rng,wt);
+				 m_rightchild->Sinter(dt, sys, model,rng,wt);
 			 }
 
 
@@ -762,7 +764,7 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 		fvector dc(sys.GasPhase().Species()->size(), 0.0);
 		int num_H2O = int(abs(numOH_old - m_numOH)/2);
 
-		real n_NAvol_sint = (real)num_H2O / (NA * sys.SampleVolume());
+		real n_NAvol_sint = wt * (real)num_H2O / (NA * sys.SampleVolume());
 		dc[9] += n_NAvol_sint;
 		sys.AdjustConcs(dc);
 
