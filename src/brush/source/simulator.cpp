@@ -340,7 +340,7 @@ void Brush::Simulator::saveProcessRates(const Reactor1d &reac, const real t, std
         // Collect the rates
         fvector rates;
         const Geometry::LocalGeometry1d geom(reac.getGeometry(), i);
-        reac.getParticleMechanism().CalcRateTerms(t, reac.getCell(i), geom, rates);
+        reac.getParticleMechanism().CalcRates(t, reac.getCell(i), geom, rates);
 
         // Output the time and place to which the rates apply
         out << t << ',' << reac.getCellCentre(i);
