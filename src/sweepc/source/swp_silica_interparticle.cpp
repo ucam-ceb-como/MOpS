@@ -129,7 +129,7 @@ unsigned int InterParticle::PropertyID(void) const {return m_pid;}
 
 /*!
  * @brief       Sets the PropID to which the rate is proportional
- * @param[in]   ID of particle property
+ * @param[in]   pid    ID of particle property
  */
 void InterParticle::SetPropertyID(PropID pid)
 {
@@ -147,9 +147,9 @@ void InterParticle::SetPropertyID(PropID pid)
  * calcualtes the present value of SR rate, and gets the sintrate from 
  * the particle cache.
  * 
- * @param[in]   t       Time at which process occurs
- * @param[in]   sys     System for rate calculation
- * @param[in]   geom    Local geometry
+ * @param[in]   t             Time at which process occurs
+ * @param[in]   sys           System for rate calculation
+ * @param[in]   local_geom    Local geometry
  * 
  * @return      Rate of process
  */

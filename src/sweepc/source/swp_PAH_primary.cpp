@@ -457,7 +457,7 @@ PAHPrimary *PAHPrimary::SelectRandomSubparticleLoop(int target)
  *
  *@todo give this method a more accurate name
  *
- * @param[in] source Pointer to the primary to be copied
+ * @param[in] original    Pointer to the primary to be copied
 */
 void PAHPrimary::UpdateAllPointers( const PAHPrimary *original)
 {
@@ -950,6 +950,8 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
 
 /*!
  *@param[in]        t       Time upto which to update
+ *@param[in]        model   Particle model defining interpretation of particle data
+ *@param[in]        sys     Cell containing particle and providing gas phase
  *@param[in,out]    rng     Random number generator
  *
  * The actual interval over which the update is carried out on a PAH is from
