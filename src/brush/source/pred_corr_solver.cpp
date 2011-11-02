@@ -234,7 +234,7 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
  * Advance the particle part of the solution, which may also affect the chemical
  * species concentrations.
  *
- * @TODO  The choice of deferral length should be integrated with Sweep::Solver
+ * @todo  The choice of deferral length should be integrated with Sweep::Solver
  * with a view to using Sweep::Solver::Run()
  *
  *\param[in,out]        cell        Contents of one grid cell

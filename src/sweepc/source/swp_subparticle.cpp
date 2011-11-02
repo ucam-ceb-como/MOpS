@@ -214,9 +214,10 @@ SubParticle &SubParticle::Coagulate(const SubParticle &rhs, rng_type &rng)
 // sintering model.
 void SubParticle::Sinter(real dt, Cell &sys,
                          const Processes::SinteringModel &model,
-                         rng_type &rng)
+                         rng_type &rng,
+                         real wt)
 {
-    m_primary->Sinter(dt, sys, model, rng);
+    m_primary->Sinter(dt, sys, model, rng, wt);
 }
 // PARTICLE UPDATE AND CHECKING.
 

@@ -194,6 +194,7 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
  *@param[in]        weight_rule Specify how to combine particle weights
  *@param[in,out]    sys         Cell containing particles that are coagulating
  *@param[in,out]    rng         Random number generator
+ *@param[in]        maj         Specify which majorant to use
  *
  *@return       Negative on failure, 0 on success
  *

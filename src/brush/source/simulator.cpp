@@ -251,6 +251,7 @@ void Brush::Simulator::runOnePath(const int seed) {
  *
  *\param[in]    reac        Reactor for which statistics are to be calculated
  *\param[in]    t           Time to which stats apply
+ *\param[in]    stat_bound  Specify particles to exclude from statistics
  *\param[in]    out         File handle into which to write the moment data
  */
 void Brush::Simulator::saveParticleStats(const Reactor1d &reac, const real t,

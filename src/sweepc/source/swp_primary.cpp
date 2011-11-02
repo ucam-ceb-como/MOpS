@@ -434,7 +434,8 @@ Primary &Primary::Coagulate(const Primary &rhs, rng_type &rng)
 // time using the provided sintering model.
 void Primary::Sinter(real dt, Cell &sys,
                      const Processes::SinteringModel &model,
-                     rng_type &rng)
+                     rng_type &rng,
+                     real wt)
 {
     // Spherical primaries don't sinter.
 	

@@ -1,5 +1,5 @@
 /**
-  \file    doxygen.h
+  \file    brush_doxygen.h
   \author  Robert I A Patterson
   \email   Robert.Patterson@wias-berlin.de
   \brief   Front page for the brush library documentation.

@@ -254,7 +254,8 @@ public:
         real dt, // Delta-t for sintering to occur.
         Cell &sys, // System which defines primary's environment.
         const Processes::SinteringModel &model, // Sintering model to use.
-        rng_type &rng
+        rng_type &rng,  // Random number generator
+        real wt     // Statistical weight
         );
 
     // READ/WRITE/COPY.

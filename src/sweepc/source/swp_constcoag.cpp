@@ -51,7 +51,7 @@ const Sweep::real Sweep::Processes::ConstantCoagulation::s_MajorantFactor = 1.5;
 
 /**
  * Main way of building a new coagulation object
- * @param{in} mech      Mechanism to which coagulation will belong
+ * @param[in] mech      Mechanism to which coagulation will belong
  *
  */
 Sweep::Processes::ConstantCoagulation::ConstantCoagulation(const Sweep::Mechanism &mech)
@@ -91,10 +91,10 @@ unsigned int Sweep::Processes::ConstantCoagulation::TermCount() const {return TY
  * beginning at iterm and return the sum of the terms added to that
  * vector.
  *
- * @param[in] t         Time for which rates are requested
- * @param[in] sys       Details of the particle population and environment
- * @param[in] local_geom Position information
- * @param[inout] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
+ * @param[in]     t            Time for which rates are requested
+ * @param[in]     sys          Details of the particle population and environment
+ * @param[in]     local_geom   Position information
+ * @param[in,out] iterm        Pointer to start of sequence to hold the rate terms, returned as one past the end.
  */
 Sweep::real Sweep::Processes::ConstantCoagulation::RateTerms(real t, const Cell &sys,
                                                              const Geometry::LocalGeometry1d &local_geom,

@@ -155,10 +155,10 @@ unsigned int Sweep::Processes::TransitionCoagulation::TermCount(void) const {ret
  * beginning at iterm and return the sum of the terms added to that
  * vector.
  *
- * @param[in] t         Time for which rates are requested
- * @param[in] sys       Details of the particle population and environment
- * @param[in] local_geom Details of spatial position and boundaries
- * @param[inout] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
+ * @param[in]     t          Time for which rates are requested
+ * @param[in]     sys        Details of the particle population and environment
+ * @param[in]     local_geom Details of spatial position and boundaries
+ * @param[in,out] iterm      Pointer to start of sequence to hold the rate terms, returned as one past the end.
  *
  * @return      Sum of all rate terms for this process
  */
