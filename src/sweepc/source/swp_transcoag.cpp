@@ -83,8 +83,8 @@ Sweep::real Sweep::Processes::TransitionCoagulation::Rate(real t, const Cell &sy
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
         // Get system properties required to calculate coagulation rate.
-        real T = sys.Temperature();
-        real P = sys.Pressure();
+        real T = sys.GasPhase().Temperature();
+        real P = sys.GasPhase().Pressure();
 
         // Calculate the rate.
         return Rate(sys.Particles().GetSums(), (real)n, sqrt(T),
@@ -155,10 +155,10 @@ unsigned int Sweep::Processes::TransitionCoagulation::TermCount(void) const {ret
  * beginning at iterm and return the sum of the terms added to that
  * vector.
  *
- * @param[in] t         Time for which rates are requested
- * @param[in] sys       Details of the particle population and environment
- * @param[in] local_geom Details of spatial position and boundaries
- * @param[inout] iterm  Pointer to start of sequence to hold the rate terms, returned as one past the end.
+ * @param[in]     t          Time for which rates are requested
+ * @param[in]     sys        Details of the particle population and environment
+ * @param[in]     local_geom Details of spatial position and boundaries
+ * @param[in,out] iterm      Pointer to start of sequence to hold the rate terms, returned as one past the end.
  *
  * @return      Sum of all rate terms for this process
  */
@@ -172,8 +172,8 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(real t, const Cel
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
         // Get system properties required to calculate coagulation rate.
-        real T = sys.Temperature();
-        real P = sys.Pressure();
+        real T = sys.GasPhase().Temperature();
+        real P = sys.GasPhase().Pressure();
 
         // Calculate the rate terms.
         return RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/ViscosityAir(T),
@@ -460,8 +460,8 @@ Sweep::real Sweep::Processes::TransitionCoagulation::CoagKernel(const Particle &
                                                                 const Particle &sp2,
                                                                 const Cell &sys) const
 {
-    const real T = sys.Temperature();
-    const real P = sys.Pressure();
+    const real T = sys.GasPhase().Temperature();
+    const real P = sys.GasPhase().Pressure();
     const real fm = FreeMolKernel(sp1, sp2, T, P, false);
     const real sf = SlipFlowKernel(sp1, sp2, T, P, false);
     return (fm*sf)/(fm+sf);
@@ -491,10 +491,10 @@ Sweep::real Sweep::Processes::TransitionCoagulation::MajorantKernel(const Partic
             break;
         case FreeMol:
             // Free molecular majorant.
-            return FreeMolKernel(sp1, sp2, sys.Temperature(), sys.Pressure(), true);
+            return FreeMolKernel(sp1, sp2, sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), true);
         case SlipFlow:
             // Slip-flow majorant.
-            return SlipFlowKernel(sp1, sp2, sys.Temperature(), sys.Pressure(), true);
+            return SlipFlowKernel(sp1, sp2, sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), true);
     }
 
     // Invalid majorant, return zero.

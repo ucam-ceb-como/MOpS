@@ -84,11 +84,11 @@ void PredCorSolver::Initialise(Reactor &r)
     m_ncalls = 0;
 
     // Set up internal solver settings.
-    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->Species()));
+    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->GasMech().Species()));
 
     // Set up source terms.
-    m_srcterms.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
-    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
+    m_srcterms.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
+    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
     m_ode.SetExtSrcTerms(m_srcterms);
     m_ode_copy.SetExtSrcTerms(m_srcterms);
 
@@ -110,11 +110,11 @@ void PredCorSolver::Reset(Reactor &r)
     m_ncalls = 0;
 
     // Set up internal solver settings.
-    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->Species()));
+    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->GasMech().Species()));
 
     // Set up source terms.
-    m_srcterms.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
-    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
+    m_srcterms.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
+    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
     m_ode.SetExtSrcTerms(m_srcterms);
     m_ode_copy.SetExtSrcTerms(m_srcterms);
 
@@ -183,15 +183,15 @@ void PredCorSolver::SolveReactor(Mops::Reactor &r,
 
     // Store the initial conditions.
     Mixture initmix(r.Mech()->ParticleMech());
-    initmix.SetFracs(r.Mixture()->MoleFractions());
-    initmix.SetTemperature(r.Mixture()->Temperature());
-    initmix.SetDensity(r.Mixture()->Density());
+    initmix.SetFracs(r.Mixture()->GasPhase().MoleFractions());
+    initmix.SetTemperature(r.Mixture()->GasPhase().Temperature());
+    initmix.SetDensity(r.Mixture()->GasPhase().Density());
 
     // Initialise the reactor with the start time.
     t1 = times[0].StartTime();
     t2 = t1;
-    r.Mixture()->Particles().Initialise(m_pcount, r.Mech()->ParticleMech());
-    r.Mixture()->SetMaxM0(m_maxm0);
+    r.Mixture()->GasPhase().Particles().Initialise(m_pcount, r.Mech()->ParticleMech());
+    r.Mixture()->GasPhase().SetMaxM0(m_maxm0);
 
     // Initialise the ODE solver.
     m_ode.Initialise(r);
@@ -212,9 +212,9 @@ void PredCorSolver::SolveReactor(Mops::Reactor &r,
     consoleOutput(r);
 
     // Set up internal solver settings.
-    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->Species()));
-    m_srcterms.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
-    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->SpeciesCount()+2));
+    m_gas_prof.resize(2, Sweep::GasPoint(r.Mech()->GasMech().Species()));
+    m_srcterms.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
+    m_srcterms_copy.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
     m_ode.SetExtSrcTerms(m_srcterms);
     m_ode_copy.SetExtSrcTerms(m_srcterms);
     m_reac_copy = r.Clone();
@@ -319,7 +319,7 @@ void PredCorSolver::beginIteration(Reactor &r, unsigned int step, real dt)
         // extrapolation.
         m_srcterms[1] = m_srcterms[0];
         m_srcterms[1].Time = m_srcterms[0].Time + dt;
-        //for (unsigned int i=0; i!=r.Mech()->SpeciesCount()+2; ++i) {
+        //for (unsigned int i=0; i!=r.Mech()->GasMech().SpeciesCount()+2; ++i) {
         //    m_srcterms[1].Terms[i] = m_srcterms[0].Terms[i];
         //}
     } else {
@@ -375,7 +375,7 @@ void PredCorSolver::iteration(Reactor &r, real dt, Sweep::rng_type &rng)
         Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
         // Scale M0 according to gas-phase expansion.
-        r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->MassDensity() / r.Mixture()->MassDensity());
+        r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity() / r.Mixture()->GasPhase().MassDensity());
     m_swp_ctime += calcDeltaCT(m_cpu_mark);
 
     // Now update the source terms at the end of the step.
@@ -404,14 +404,14 @@ void PredCorSolver::generateChemProfile(Reactor &r, real dt)
 
     // Save initial profile point.
     m_gas_prof[0].Time = t1;
-    m_gas_prof[0].Gas = *r.Mixture();
+    m_gas_prof[0].Gas = r.Mixture()->GasPhase();
 
     // Solve the reactor for the remaining points.
     for (unsigned int i=1; i!=m_gas_prof.size(); ++i) {
         m_ode.Solve(r, t1+=h);
         r.SetTime(t1);
         m_gas_prof[i].Time = t1;
-        m_gas_prof[i].Gas = *r.Mixture();
+        m_gas_prof[i].Gas = r.Mixture()->GasPhase();
     }
 }
 
@@ -427,16 +427,16 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
     // rate using the species change rates and an adiabatic
     // assumption.
     if (r.EnergyEquation() == Reactor::ConstT) {
-        src.Terms[r.Mech()->SpeciesCount()] = 0.0;
+        src.Terms[r.Mech()->GasMech().SpeciesCount()] = 0.0;
     } else {
-        src.Terms[r.Mech()->SpeciesCount()] += energySrcTerm(r, src.Terms);
+        src.Terms[r.Mech()->GasMech().SpeciesCount()] += energySrcTerm(r, src.Terms);
     }
 
     // Calculate density change based on whether reactor is constant
     // volume or constant pressure.
     if (r.IsConstP()) {
         // Constant pressure: zero density derivative.
-        src.Terms[r.Mech()->SpeciesCount()+1] = 0.0;
+        src.Terms[r.Mech()->GasMech().SpeciesCount()+1] = 0.0;
     }
 }
 
@@ -450,23 +450,23 @@ real PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
         real C;
 
         // Calculate species enthalpies
-        r.Mixture()->Hs(Hs);
+        r.Mixture()->GasPhase().Hs(Hs);
 
         // Calculate heat capacity.
         if (r.IsConstV()) {
             // Constant volume reactor: Use Cv.
-            C = r.Mixture()->BulkCv();
+            C = r.Mixture()->GasPhase().BulkCv();
         } else {
             // Constant pressure reactor: Use Cp.
-            C = r.Mixture()->BulkCp();
+            C = r.Mixture()->GasPhase().BulkCp();
         }
 
         // Calculate and return temperature source term.
         real Tdot = 0.0;
-        for (unsigned int i=0; i!=r.Mech()->SpeciesCount(); ++i) {
+        for (unsigned int i=0; i!=r.Mech()->GasMech().SpeciesCount(); ++i) {
             Tdot -= Hs[i] * src[i];
         }
-        return Tdot / (C * r.Mixture()->Density());
+        return Tdot / (C * r.Mixture()->GasPhase().Density());
 
     } else if (r.EnergyEquation() == Reactor::ConstT) {
         // Constant temperature model.

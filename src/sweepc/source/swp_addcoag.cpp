@@ -51,7 +51,7 @@ const Sweep::real Sweep::Processes::AdditiveCoagulation::s_MajorantFactor = 1.5;
 
 /**
  * Main way of building a new coagulation object
- * @param{in} mech      Mechanism to which coagulation will belong
+ * @param[in] mech      Mechanism to which coagulation will belong
  *
  */
 Sweep::Processes::AdditiveCoagulation::AdditiveCoagulation(const Sweep::Mechanism &mech)
@@ -103,7 +103,7 @@ unsigned int Sweep::Processes::AdditiveCoagulation::TermCount() const {return TY
  * @param[in]       t           Time for which rates are requested
  * @param[in]       sys         Details of the particle population and environment
  * @param[in]       local_geom  Spatial configuration information (ignored)
- * @param[inout]    iterm       Pointer to start of sequence to hold the rate terms, returned as one past the end.
+ * @param[in,out]   iterm       Pointer to start of sequence to hold the rate terms, returned as one past the end.
  */
 Sweep::real Sweep::Processes::AdditiveCoagulation::RateTerms(real t, const Cell &sys,
                             const Geometry::LocalGeometry1d &local_geom,
@@ -120,7 +120,6 @@ Sweep::real Sweep::Processes::AdditiveCoagulation::RateTerms(real t, const Cell 
  * \param[in]       local_geom  Details of local phsyical layout
  * \param[in]       iterm       Process term responsible for this event
  * \param[in,out]   rng         Random number generator
- * \param[out]      out         Details of any particle being transported out of system
  *
  * \return      0 on success, otherwise negative.
  */

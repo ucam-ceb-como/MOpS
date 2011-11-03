@@ -71,7 +71,10 @@ public:
     SilicaPrimary(const real time, const real position,
                const Sweep::ParticleModel &model);
 
-    SilicaPrimary(const SilicaPrimary &copy); // Copy constructor.
+	//! Copy constructor
+    SilicaPrimary(const SilicaPrimary &copy);
+    
+    //! Stream-reading constructor
     SilicaPrimary(                            // Stream-reading constructor.
         std::istream &in,                     //  - Input stream.
         const Sweep::ParticleModel &model     //  - Defining particle model.
@@ -80,22 +83,22 @@ public:
 
     SilicaPrimary(real time, const Sweep::ParticleModel &model, bool nosilica);
 
-    // Destructors.
+    //! Destructors.
     virtual ~SilicaPrimary(void);
 
-    // Sets all the properties of two primaries to be equal by using the = operator
+    //! Sets all the properties of two primaries to be equal by using the = operator
 	SilicaPrimary &operator=(const Primary &rhs);
 
     //! Returns a copy of the primary.
     virtual SilicaPrimary *const Clone(void) const;
 
-    //! coagulates this particle with rhs
+    //! Coagulates this particle with rhs
     SilicaPrimary &Coagulate(const Primary &rhs, rng_type &rng);
 
-    //! prints the tree to a file that can be converted to a graph using graphviz
+    //! Prints the tree to a file that can be converted to a graph using graphviz
     void PrintTree(std::string filename);
 
-    //! updates the particle cache using the particle details
+    //! Updates the particle cache using the particle details
     void UpdateCache(void);
 
     //! Sinter particles
@@ -103,13 +106,14 @@ public:
             real dt, // Delta-t for sintering to occur.
             Cell &sys, // System which defines primary's environment.
             const Processes::SinteringModel &model, // Sintering model to use.
-            rng_type &rng  // Random number generator
+            rng_type &rng,  // Random number generator
+            real wt     // Statistical weight
             );
 
-	// Updates Sintering level
+	//! Updates Sintering level
 	double SinteringLevel();
 
-	// Adjusts the number of primaries for a surface reaction
+	//! Adjusts the number of primaries for a surface reaction
 	unsigned int Adjust(
 			const fvector &dcomp,
 			const fvector &dvalues,
@@ -117,7 +121,7 @@ public:
 			unsigned int n
 			);
 
-	// Adjusts the number of primaries for interparticle reaction
+	//! Adjusts the number of primaries for interparticle reaction
 	unsigned int AdjustIntPar(
 			const fvector &dcomp,
 			const fvector &dvalues,
@@ -125,16 +129,16 @@ public:
 			unsigned int n
 			);
 
-	// Gets the number of active sites for interparticle reaction
+	//! Gets the number of active sites for interparticle reaction
 	int GetSites() const;
 
-	// Gets the number of active sites for interparticle reaction
+	//! Gets the sintering rate for interparticle reaction
 	real GetSintRate() const;
 
-    //! returns the left child
+    //! Returns the left child
     const SilicaPrimary *LeftChild() const;
 
-    //! returns the right child
+    //! Returns the right child
     const SilicaPrimary *RightChild() const;
 
     //! Checks if the sintering level is higher then the treshold and merges the primaries if necessary
@@ -145,33 +149,33 @@ public:
 
     AggModels::SilicaCache *const CreateAggCache() const;
 
-    //serialize
+    //! Deserialize
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);
+    
+    //! Serialize
     void Serialize(std::ostream &out) const;
 
     AggModels::AggModelType AggID(void) const;
 
     //! returns L divided by W
     double LdivW() const;
-    //! sum of the diameter of the primaries under this treenode needed for stats
+    //! Sum of the diameter of the primaries under this treenode needed for stats
     double PrimaryDiam() const;
-    //! returns the fractal dimension
+    //! Returns the fractal dimension
     double Fdim() const;
-    //! returns the radius of gyration
+    //! Returns the radius of gyration
     double Rg() const;
-    //! returns the diameter of the largest silica
-    //double silicaCollDiameter() const;
-    //! returns the number of primary particles
+    //! Returns the number of primary particles
     int Numprimary() const;
-    //! returns the number of silicon atoms in the particle
+    //! Returns the number of silicon atoms in the particle
     int NumSi() const;
-	//! returns the number of oxygen atoms in the particle
+	//! Returns the number of oxygen atoms in the particle
     int NumO() const;
-	//! returns the number of hydroxyl units in the particle
+	//! Returns the number of hydroxyl units in the particle
     int NumOH() const;
-    //! returns sqrt(L*W)
+    //! Returns sqrt(L*W)
     double sqrtLW() const;
-	//! returns average coalescence level
+	//! Returns average coalescence level
     double AvgSinter() const;
 
 
@@ -180,46 +184,44 @@ protected:
     //! Empty primary not meaningful
     SilicaPrimary();
 
-    //! help function for printree
+    //! Help function for printree
     void PrintTreeLoop(std::ostream &out);
-    //! sets the children properties to 0
+    //! Sets the children properties to 0
     void ResetChildrenProperties();
-    //! updates the particle
+    //! Updates the particle
     void UpdateCache(SilicaPrimary *root);
-    //! help function
+    //! Help function
     SilicaPrimary *SelectRandomSubparticleLoop(int target);
-    //! sets the pointers to the primary particles correct after a copy event
+    //! Sets the pointers to the primary particles correct after a copy event
     void UpdateAllPointers( const SilicaPrimary *source);
-	//! Get All unique parents from source
+    //! Get All unique parents from source
     void GetAllParents(SilicaPrimary *source);
-	//! Get All unique parents from source
+    //! Get All unique parents from source
     void FindAllParents(SilicaPrimary *source);
-	//Delete target parent from m_allparents
-	void DeleteParent(SilicaPrimary *target);
-	//Adds source parent to m_allparents
-	void AddParent(SilicaPrimary *source);
-    //! updates the properties of a primary only, not the entire tree
+    //! Delete target parent from m_allparents
+    void DeleteParent(SilicaPrimary *target);
+    //! Adds source parent to m_allparents
+    void AddParent(SilicaPrimary *source);
+    //! Updates the properties of a primary only, not the entire tree
     void UpdatePrimary(void);
-    //! sets some properties to 0
+    //! Sets some properties to 0
     void Reset();
-    //! merges the two children primaries together
+    //! Merges the two children primaries together
     SilicaPrimary &Merge();
-    //! updates the pointers after a merge event
+    //! Updates the pointers after a merge event
     void ChangePointer(SilicaPrimary *source, SilicaPrimary *target);
-    //! copies the node without the children
+    //! Copies the node without the children
     void CopyParts( const SilicaPrimary *source);
-    //! copies the subtree of a node
+    //! Copies the subtree of a node
     void CopyTree( const SilicaPrimary *source);
-    //! returns a uniformly chosen primary particle
+    //! Returns a uniformly chosen primary particle
     SilicaPrimary *SelectRandomSubparticle(rng_type &rng);
-	void ResetVol();
+    
+    //! Releases the memory associated with the object
     void ReleaseMem();
 
-	//time the two subparticles are connected
-	real m_connect_time;
-
-
-
+    //! Time the two subparticles are connected
+    real m_connect_time;
 
 
 private:
@@ -232,47 +234,66 @@ private:
     static SilicaPrimary* descendPath(SilicaPrimary *here,
                                    std::stack<bool> &takeLeftBranch);
 
-    //some basic properties
-    //derived from the silicas by UpdateCache()
+    //! Number of silicon units in primary
     int m_numSi;
-	int m_numO;
-	int m_numOH;
-    //double m_silicamass;
-    //double m_silicaCollDiameter;
-
+    
+    //! Number of O units in primary
+    int m_numO;
+    
+    //! Number of OH units in primary
+    int m_numOH;
 
     //! Number of primaries below this node
     int m_numprimary;
 
-    //sum of the diameter of the primaries under this treenode needed for stats
+    //! Sum of the diameter of the primaries under this treenode
     double m_primarydiam;
 
-    //properties needed to calculate the coalesence level
-    //of the two primaries connected by this node
+    //! Equivalent spherical radius of sum of childrens' volume
     double m_children_radius;
 
+    //! Total volume of children under this node
     double m_children_vol;
 
-    //double m_leftparticle_vol_old;
-
-    //double m_rightparticle_vol_old;
-
+    //! Common surface area between two connected children
     double m_children_surf;
 
+    //! Sintering level of children connected by this node
     double m_children_sintering;
 
-
-    // radius of gyration and fractal dimension
-    // the values are only updated in CalcFractaldimension()
-    double m_Rg;
-    double m_fdim;
-    double m_sqrtLW;
-    double m_LdivW;
+    //! Average sintering level of primaries under this node
     double m_avg_sinter;
-	real m_sint_rate;
+    
+    //! Sintering rate of particle
+    real m_sint_rate;
 
+    /* Imaging properties
+     * These are presently unused, however may be useful if 
+     * one wishes to generate an image of the particle
+     */
+    
+    //! Radius of gyration (currently unused)
+    double m_Rg;
+    
+    //! Fractal dimension (currently unused)
+    double m_fdim;
+    
+    //! Square-root of the length times width (currently unused)
+    double m_sqrtLW;
+    
+    //! Length divided by width (currently unused)
+    double m_LdivW;
 
+    /*
+     * Definition of the silica primaries
+     * L/R child are the next nodes of the binary tree
+     * L/R particle are the actual particles which *this* connects
+     * Parent is the node above the current object in the bin. tree
+     * 
+     * Refer to Markus Sander's thesis for more detailed description
+     */    
     SilicaPrimary *m_leftchild, *m_rightchild, *m_parent, *m_leftparticle, *m_rightparticle;
+    //! Vector containing addresses of all parents of current primary
 	std::vector<SilicaPrimary*> m_allparents;
 
 };

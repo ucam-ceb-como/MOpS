@@ -52,7 +52,6 @@
 #include "swp_kmc_typedef.h"
 #include "swp_PAH_primary.h"
 #include "swp_gas_profile.h"
-#include "sprog.h"
 
 #include "string_functions.h"
 #include "csv_io.h"
@@ -60,6 +59,11 @@
 #include <time.h>
 #include <fstream>
 #include <iostream>
+
+//forward declaration
+namespace Sprog {
+    class Mechanism;
+}
 
 namespace Sweep{
     namespace KMC_ARS{

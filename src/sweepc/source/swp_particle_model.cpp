@@ -46,9 +46,8 @@
 #include "swp_PAH_primary.h"
 #include "swp_surfvol_primary.h"
 #include "swp_model_factory.h"
-#include "swp_actsites_type.h"
-#include "swp_abf_model.h"
 #include "swp_PAH_primary.h"
+
 #include <stdexcept>
 #include <cmath>
 #include <limits>
@@ -675,10 +674,10 @@ const std::string &ParticleModel::Mode() const {return m_mode;}
  *@return       Drag coefficient
  */
 real ParticleModel::KnudsenDragCoefficient(const Cell &sys, const Particle &sp) const {
-    const real Kn = Sweep::KnudsenAir(sys.Temperature(), sys.Pressure(), sp.CollDiameter());
+    const real Kn = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
 
     // 3 * pi = 9.424777962 and note that diameter not radius is used below
-    const real numerator = 9.424777962 * sp.CollDiameter() * Sweep::ViscosityAir(sys.Temperature());
+    const real numerator = 9.424777962 * sp.CollDiameter() * Sweep::ViscosityAir(sys.GasPhase().Temperature());
 
     return numerator / (1 + Kn * (m_DragA + m_DragB * std::exp(-m_DragE / Kn)));
 }
@@ -700,7 +699,7 @@ real ParticleModel::KnudsenDragCoefficient(const Cell &sys, const Particle &sp) 
  */
 real ParticleModel::FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const {
     const real d = sp.CollDiameter();
-    return 5.355264342e-24 * std::sqrt(sys.Temperature()) * sys.Density() * d * d;
+    return 5.355264342e-24 * std::sqrt(sys.GasPhase().Temperature()) * sys.GasPhase().Density() * d * d;
 }
 
 /*!
@@ -715,7 +714,7 @@ real ParticleModel::FreeMolDragCoefficient(const Cell &sys, const Particle &sp) 
  *@return       Drag coefficient
  */
 real ParticleModel::TemperatureDragCoefficient(const Cell &sys, const Particle &sp) const {
-    return m_DragA * sys.Temperature();
+    return m_DragA * sys.GasPhase().Temperature();
 }
 
 /*!
@@ -732,12 +731,12 @@ real ParticleModel::TemperatureDragCoefficient(const Cell &sys, const Particle &
 real ParticleModel::EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const {
     switch(m_DragType) {
         case KnudsenDrag:
-            return Sweep::KB * sys.Temperature() / KnudsenDragCoefficient(sys, sp);
+            return Sweep::KB * sys.GasPhase().Temperature() / KnudsenDragCoefficient(sys, sp);
             // Will not go any further because of return statement.
         case FreeMolDrag:
-            return Sweep::KB * sys.Temperature() / FreeMolDragCoefficient(sys, sp);
+            return Sweep::KB * sys.GasPhase().Temperature() / FreeMolDragCoefficient(sys, sp);
         case TemperatureDrag:
-            return Sweep::KB * sys.Temperature() / TemperatureDragCoefficient(sys, sp);
+            return Sweep::KB * sys.GasPhase().Temperature() / TemperatureDragCoefficient(sys, sp);
         default:
             throw std::runtime_error("Unrecognised drag type in Sweep::ParticleModel::EinsteinDiffusionCoefficient()");
     }
@@ -767,7 +766,7 @@ real ParticleModel::DiffusionCoefficient(const Cell &sys, const Particle &sp) co
             // Will not go any further because of return statement.
         case FlameletDiffusion:
             return EinsteinDiffusionCoefficient(sys, sp)
-                     * sys.GradientMixFrac() * sys.GradientMixFrac();
+                     * sys.GasPhase().GradientMixFrac() * sys.GasPhase().GradientMixFrac();
         default:
             throw std::runtime_error("Unrecognised diffusion type in Sweep::ParticleModel::DiffusionCoefficient()");
     }
@@ -794,7 +793,7 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
     switch(m_AdvectionType) {
         case BulkAdvection:
             // Particle moves with the gas flow, thermophoresis can be set to 0
-            return sys.Velocity() + ThermophoreticVelocity(sys, sp);
+            return sys.GasPhase().Velocity() + ThermophoreticVelocity(sys, sp);
         case FlameletAdvection:
         {
             // Mass of soot per unit volume of gas [kg m^-3] is needed repeatedly
@@ -802,12 +801,12 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
                                          / sys.SampleVolume();
 
             // Thermophoretic drift term
-            real v = sys.GradientMixFrac() * ThermophoreticVelocity(sys, sp)
+            real v = sys.GasPhase().GradientMixFrac() * ThermophoreticVelocity(sys, sp)
                      * sootMassDensity;
 
             // Difference in diffusion of soot and mixture fraction
-            v += sys.LaplacianMixFrac() * sootMassDensity
-                 * (sys.MixFracDiffCoeff() - EinsteinDiffusionCoefficient(sys, sp));
+            v += sys.GasPhase().LaplacianMixFrac() * sootMassDensity
+                 * (sys.GasPhase().MixFracDiffCoeff() - EinsteinDiffusionCoefficient(sys, sp));
 
             if((neighbours[0] != NULL) && (neighbours[1] != NULL))
             // Estimate two gradients in mixture fraction space using the
@@ -822,11 +821,11 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
                                 geom.calcSpacing(Geometry::right);
 
                 // rho D_Z at z_{i-1}
-                const real leftRhoDZ  = neighbours[0]->MassDensity() *
-                                        neighbours[0]->MixFracDiffCoeff();
+                const real leftRhoDZ  = neighbours[0]->GasPhase().MassDensity() *
+                                        neighbours[0]->GasPhase().MixFracDiffCoeff();
                 // rho D_Z at z_{i+1}
-                const real rightRhoDZ = neighbours[1]->MassDensity() *
-                                        neighbours[1]->MixFracDiffCoeff();
+                const real rightRhoDZ = neighbours[1]->GasPhase().MassDensity() *
+                                        neighbours[1]->GasPhase().MixFracDiffCoeff();
                 // Now calculate the gradient estimate for the produect
                 // of gas mass density and mixture fraction diffusion
                 // coefficient.
@@ -846,8 +845,8 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
 
                 // Put together this term in the equation and add it to the
                 // velocity.
-                v+= sys.GradientMixFrac() * sys.GradientMixFrac() *
-                    (sootMassDensity / sys.MassDensity() * gradRhoDZ - grad);
+                v+= sys.GasPhase().GradientMixFrac() * sys.GasPhase().GradientMixFrac() *
+                    (sootMassDensity / sys.GasPhase().MassDensity() * gradRhoDZ - grad);
             }
 
 
@@ -877,8 +876,8 @@ real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) 
 
     switch(m_ThermophoresisType) {
         case WaldmannThermophoresis:
-            tempFactor = sys.getThermalConductivity(sys.Pressure())
-                         * sys.GradientTemperature() / sys.Pressure();
+            tempFactor = sys.GasPhase().getThermalConductivity(sys.GasPhase().Pressure())
+                         * sys.GasPhase().GradientTemperature() / sys.GasPhase().Pressure();
 
             // Equation 2 of the Li & Wang paper with phi = 0.9
             // 1 / (5 * (1 + pi * phi / 8)) == 0.14777
@@ -1071,7 +1070,7 @@ real ParticleModel::collisionIntegralTemperature(const Cell &sys, const Particle
     const real collisionCubed = std::pow(collisionIntegralDiameter(sys, sp), 3);
 
     // 1.107e-29 is volume occupied by 1 Carbon atom assuming bulk density 1800 kg m^-3 (value for soot)
-    return 3.0 * Sprog::kB * sys.Temperature() * 1.107e-29 / (2.0 * Sprog::PI * wellDepth * collisionCubed);
+    return 3.0 * Sprog::kB * sys.GasPhase().Temperature() * 1.107e-29 / (2.0 * Sprog::PI * wellDepth * collisionCubed);
 }
 
 /*!
@@ -1099,7 +1098,7 @@ real ParticleModel::accomodationFunction(const Cell &sys, const Particle &sp) co
     switchTerm = 1.0 - 1.0 / switchTerm;
 
     // Knudsen number is used to interpolate between the specular and diffuse integrals
-    const real knudsen = Sweep::KnudsenAir(sys.Temperature(), sys.Pressure(), sp.CollDiameter());
+    const real knudsen = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
 
     return (1.0 + 0.9 * knudsen * switchTerm) / (1.0 + knudsen);
 }

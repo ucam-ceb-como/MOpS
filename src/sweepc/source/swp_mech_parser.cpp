@@ -55,7 +55,6 @@
 #include "swp_weighted_constcoag.h"
 #include "swp_weighted_transcoag.h"
 #include "swp_coag_weight_rules.h"
-#include "swp_abf_model.h"
 #include "swp_silica_interparticle.h"
 #include "swp_tempReadColliPara.h" //temporarily used to read collision efficiency parameters, including mode, NONE, MAX, MIN, COMBINED
 
@@ -171,37 +170,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         // Check the model type.
         string str = (*i)->GetAttributeValue("type");
 
-        if (str.compare("activesites")==0) {
-            // Read active sites model ID.
-            str = (*i)->GetAttributeValue("id");
-
-            if (str.compare("haca")==0) {
-                // Hydrogen-abstraction, Carbon-addition model.
-                mech.AddActSitesModel(ActSites::ABFSites_ID);
-
-                // Initialise the HACA model.
-                ActSites::ABFModel::Instance().Initialise(mech);
-
-                // Read the form of alpha.
-                str = (*i)->GetAttributeValue("alpha");
-
-                if (str.compare("abf")==0) {
-                    // The ABF correlation for alpha should be used.
-                    ActSites::ABFModel::Instance().UseAlphaCorrelation();
-                } else if (str.compare("profile")==0) {
-                    // The profile for alpha which should have been
-                    // loaded in the solver should be used.  (Nb, not
-                    // sure why alpha profiles are loaded in the solver,
-                    // but FlameSolver is definitely where it happens)
-                    ActSites::ABFModel::Instance().UseAlphaProfile();
-                } else {
-                    // Hopefully a numeric value has been supplied, which
-                    // shall be used as a constant value for alpha.
-                    real alpha = cdble(str);
-                    ActSites::ABFModel::Instance().SetAlphaConstant(alpha);
-                }
-            }
-        } else if (str == "particle") {
+        if (str == "particle") {
             throw std::runtime_error("<model id=\"particle\" is not a valid tag (Sweep::MechParser::readV1");
         } else if (str == "drag") {
             // Read drag model ID.
@@ -876,11 +845,7 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
             rxn = new SurfaceReaction(mech);
         } else if (str.compare("abf")==0) {
             // This is an ABF active-sites enabled reaction.
-            ActSiteReaction *asrxn = new ActSiteReaction(mech);
-            rxn = asrxn;
-
-            // Must also set the reaction to use to ABF model.
-            asrxn->SetModel(ActSites::ABFModel::Instance());
+            rxn = new ActSiteReaction(mech);
         } else {
             // Unrecognised reaction type.
             throw runtime_error("Unrecognised reaction type: " + str +

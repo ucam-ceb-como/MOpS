@@ -49,7 +49,10 @@
 #define SWEEP_GAS_PROFILE_H
 
 #include "swp_params.h"
-#include "sprog.h"
+
+#include "gpc_species.h"
+#include "gpc_idealgas.h"
+
 #include <vector>
 
 namespace Sweep

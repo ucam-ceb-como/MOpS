@@ -50,32 +50,36 @@
  * between the reactors in the cells.
  *
  *\param[in]    geom                    Geometry of new 1d reactor
- *\param[in]    mech                    Mechanism to use in all the reactors
+ *\param[in]    g_mech                  Gas phase mechanism to use in all the reactors
+ *\param[in]    p_mech                  Particle mechanism to use in all the reactors
  *\param[in]    max_particle_counts     Maximum number of computatioal particles per cell
  *\param[in]    max_m0s                 Maximum particle concentrations (units \f$\mathrm{m}^{-3}\f$)
  */
-Brush::Reactor1d::Reactor1d(const Geometry::Geometry1d &geom, const Mops::Mechanism &mech,
+Brush::Reactor1d::Reactor1d(const Geometry::Geometry1d &geom, const Sprog::Mechanism &g_mech,
+                            const Sweep::Mechanism &p_mech,
                             const Utils::LinearInterpolator<real, real> &max_particle_counts,
                             const Utils::LinearInterpolator<real, real> &max_m0s)
-    : mMech(mech)
+    : mGasMech(g_mech)
+    , mParticleMech(p_mech)
     , mGeometry(geom)
-    , mReactors(geom.numCells(), Mops::Reactor(mMech))
+    , mReactors(geom.numCells(), ReactorType(mParticleMech))
 {
+    // Make sure the particle mechanism references the correct gas phase mechanism instance.
+    mParticleMech.SetSpecies(mGasMech.Species());
+
     // Initialise the particle ensembles in each cell
     for(unsigned int i = 0; i < mReactors.size(); ++i) {
         // Create a reference to the reactor for syntactic convenience
-        Mops::Reactor &r = mReactors[i];
-        r.Fill(*(new Mops::Mixture(mMech.ParticleMech())));
+        ReactorType &r = mReactors[i];
+        r.GasPhase().SetSpecies(mGasMech.Species());
 
         // Interpolate particle count and max m0 to the cell centre
         real posn = getCellCentre(i);
         real maxM0 = max_m0s.interpolate(posn);
         const unsigned int particleCount = static_cast<unsigned int>(max_particle_counts.interpolate(posn) + 0.5);
 
-        r.Mixture()->Particles().Initialise(particleCount);
-        r.Mixture()->Reset(maxM0);
-
-        assert(r.Mixture() != NULL);
+        r.Particles().Initialise(particleCount);
+        r.Reset(maxM0);
     }
 }
 
@@ -84,15 +88,12 @@ Brush::Reactor1d::Reactor1d(const Geometry::Geometry1d &geom, const Mops::Mechan
  * Mechanism will be copied, so mechanism pointers must be updated
  */
 Brush::Reactor1d::Reactor1d(const Reactor1d &src)
-    : mMech(src.mMech)
+    : mGasMech(src.mGasMech)
+    , mParticleMech(src.mParticleMech)
     , mGeometry(src.mGeometry)
     , mReactors(src.mReactors) {
 
-    for(unsigned int i = 0; i < mReactors.size(); ++i) {
-        mReactors[i].SetMech(mMech);
-    }
-
-
+    mParticleMech.SetSpecies(mGasMech.Species());
 }
 
 /*!
@@ -110,20 +111,8 @@ void Brush::Reactor1d::ReplaceChemistry(const ResetChemistry& chem_source,
                                         const bool fixed_chem) {
     for(size_t i = 0; i < getNumCells(); ++i) {
         chem_source.apply(getCellCentre(i), mReactors[i]);
-        mReactors[i].Mixture()->SetFixedChem(fixed_chem);
+        mReactors[i].SetFixedChem(fixed_chem);
     }
 
 }
 
-/*!
- * Set the time on each of the sub-reactors contained
- * within this instance.
- *
- *\param[in]        t       Time to set
- */
-void Brush::Reactor1d::setTime(const real t) {
-    for(unsigned int i = 0; i < mReactors.size(); ++i) {
-        mReactors[i].SetTime(t);
-    }
-
-}

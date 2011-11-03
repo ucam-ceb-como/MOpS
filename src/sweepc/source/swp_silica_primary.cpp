@@ -62,28 +62,28 @@
 
 using namespace Sweep;
 using namespace Sweep::AggModels;
-using namespace Sweep::SubModels;
 using namespace std;
 using namespace Strings;
 
 
 // CONSTRUCTORS AND DESTRUCTORS.
-/* This constructor initialises a silica primary particle with the type space
-of number of chemical units (Si, O or OH) with no arguments. The derived properties also declared here. */
+/*!
+ * @brief       Initialising constructor with no arguments
+ * 
+ * Initialises a particle from no arguments. 
+ *
+ */
 SilicaPrimary::SilicaPrimary() : Primary(),
     //State Space:: number of Si, O and OH units
     m_numSi(0),
 	m_numO(0),
 	m_numOH(0),
-	//Derived properties
-    //m_silicamass(0),
-    //m_silicaCollDiameter(0),
     m_numprimary(0),
     m_primarydiam(0.0),
 	//Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
-	m_children_radius(0), //Sum of radii of children
+	m_children_radius(0),
     m_children_vol(0),
 	m_children_surf(0),
     m_children_sintering(0),
@@ -93,9 +93,7 @@ SilicaPrimary::SilicaPrimary() : Primary(),
 	//Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    //m_leftparticle_vol_old(0),
-    //m_rightparticle_vol_old(0),
-    //Derived properties
+    //Imaging properties
     m_Rg(0),
     m_fdim(0),
     m_sqrtLW(0),
@@ -107,29 +105,27 @@ SilicaPrimary::SilicaPrimary() : Primary(),
 }
 
 /*!
+ * @brief       Initialising constructor using time and model
+ * 
+ * Initialises a particle with the default chemical properties. Calls
+ * UpdateCache() to calculate the derived properties after creation.
+ * 
  * @param[in]   time        Time at which particle is being created
  * @param[in]   model       Model which defines the meaning of the primary
  *
  */
-/* This constructor initialises a silica primary particle with the type space
-of number of chemical units (Si, O or OH) with arguments time and particle model.
-The derived properties also declared here. */
-
 SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
 : Primary(time, model),
     //State Space:: number of Si, O and OH units
     m_numSi(0),
 	m_numO(0),
 	m_numOH(0),
-	//Derived properties
-    //m_silicamass(0),
-    //m_silicaCollDiameter(0),
     m_numprimary(0),
     m_primarydiam(0.0),
 	//Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
-	m_children_radius(0), //Sum of radii of children
+	m_children_radius(0),
     m_children_vol(0),
 	m_children_surf(0),
     m_children_sintering(0),
@@ -139,7 +135,7 @@ SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
 	//Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    //Derived properties
+    //Imaging properties
     m_Rg(0),
     m_fdim(0),
     m_sqrtLW(0),
@@ -151,7 +147,6 @@ SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
     // Other parts of the code check for a non-zero composition.
     m_comp[0]=1;
     // Create new particle with these specifications
-	//cout<<"Performing inception";
 	m_numSi = 2;
 	m_numO = 1;
 	m_numOH = 6;
@@ -161,16 +156,17 @@ SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
 }
 
 
-/*!Arguments
+/*!
+ * @brief       Initialising constructor using time, position and model
+ * 
+ * Initialises a particle with the default chemical properties. Calls
+ * UpdateCache() to calculate the derived properties after creation.
+ * 
  * @param[in]   time        Time at which particle is being created
  * @param[in]   position    Position at which particle is being created
  * @param[in]   model       Model which defines the meaning of the primary
  *
  */
-/* This constructor initialises a silica primary particle with the type space
-of number of chemical units (Si, O or OH) with arguments time, position and particle model.
-The derived properties also declared here. */
-
 SilicaPrimary::SilicaPrimary(const real time, const real position,
                        const Sweep::ParticleModel &model)
 : Primary(time, model),
@@ -178,15 +174,12 @@ SilicaPrimary::SilicaPrimary(const real time, const real position,
     m_numSi(0),
 	m_numO(0),
 	m_numOH(0),
-	//Derived properties
-    //m_silicamass(0),
-    //m_silicaCollDiameter(0),
     m_numprimary(0),
     m_primarydiam(0.0),
 	//Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
-	m_children_radius(0), //Sum of radii of children
+	m_children_radius(0),
     m_children_vol(0),
 	m_children_surf(0),
     m_children_sintering(0),
@@ -196,7 +189,7 @@ SilicaPrimary::SilicaPrimary(const real time, const real position,
 	//Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    //Derived properties
+    //Imaging properties
     m_Rg(0),
     m_fdim(0),
     m_sqrtLW(0),
@@ -217,22 +210,27 @@ SilicaPrimary::SilicaPrimary(const real time, const real position,
 }
 
 
-// Initialising constructor.
+/*!
+ * @brief       Initialising constructor using time, model and boolean
+ * 
+ * 
+ * @param[in]   time        Time at which particle is being created
+ * @param[in]   model       Model which defines the meaning of the primary
+ * @param[in]   nosilica    Boolean.. unsure of purpose?
+ *
+ */
 SilicaPrimary::SilicaPrimary(real time, const Sweep::ParticleModel &model, bool nosilica)
 : Primary(time, model),
     //State Space:: number of Si, O and OH units
     m_numSi(0),
 	m_numO(0),
 	m_numOH(0),
-	//Derived properties
-    //m_silicamass(0),
-    //m_silicaCollDiameter(0),
     m_numprimary(0),
     m_primarydiam(0.0),
 	//Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
-	m_children_radius(0), //Sum of radii of children
+	m_children_radius(0),
     m_children_vol(0),
 	m_children_surf(0),
     m_children_sintering(0),
@@ -242,7 +240,7 @@ SilicaPrimary::SilicaPrimary(real time, const Sweep::ParticleModel &model, bool 
 	//Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    //Derived properties
+    //Imaging properties
     m_Rg(0),
     m_fdim(0),
     m_sqrtLW(0),
@@ -256,7 +254,7 @@ SilicaPrimary::SilicaPrimary(real time, const Sweep::ParticleModel &model, bool 
 }
 
 
-// Copy constructor.
+//! Copy constructor.
 SilicaPrimary::SilicaPrimary(const SilicaPrimary &copy)
 {
     *this = copy;
@@ -267,7 +265,7 @@ SilicaPrimary::SilicaPrimary(const SilicaPrimary &copy)
 }
 
 
-// Default destructor.
+//! Default destructor.
 SilicaPrimary::~SilicaPrimary()
 {
 	delete m_leftchild;
@@ -279,7 +277,7 @@ SilicaPrimary::~SilicaPrimary()
 
 
 /*!
- * Recursively copy the tree for non-leaf nodes.
+ * @brief       Recursively copy the tree for non-leaf nodes.
  *
  * @param[in] source Pointer to the primary to be copied
 */
@@ -327,7 +325,7 @@ SilicaPrimary &SilicaPrimary::operator=(const Primary &rhs)
 
 
 
-// Stream-reading constructor.
+//! Stream-reading constructor.
 SilicaPrimary::SilicaPrimary(std::istream &in, const Sweep::ParticleModel &model)
 {
     Deserialize(in, model);
@@ -335,6 +333,8 @@ SilicaPrimary::SilicaPrimary(std::istream &in, const Sweep::ParticleModel &model
 
 
 /*!
+ * @brief       Copy state-space and derived properties from source
+ * 
  * This function is like a limited assignment operator, except that the
  * children are not copied and the pointers to the particles may need
  * adjusting after this method has finished.
@@ -370,18 +370,18 @@ void SilicaPrimary::CopyParts(const SilicaPrimary *source)
     m_children_vol=source->m_children_vol;
     m_children_radius=source->m_children_radius;
     m_children_sintering=source->m_children_sintering;
-    //m_leftparticle_vol_old=source->m_leftparticle_vol_old;
-    //m_rightparticle_vol_old=source->m_rightparticle_vol_old;
     m_fdim=source->m_fdim;
     m_Rg=source->m_Rg;
     m_avg_sinter=source->m_avg_sinter;
-	m_sint_rate=source->m_sint_rate;
-	m_connect_time=source->m_connect_time;
+    m_sint_rate=source->m_sint_rate;
+    m_connect_time=source->m_connect_time;
 
 }
 
 
 /*!
+ * @brief       Randomly selects a primary in the binary tree
+ * 
  * Select a primary uniformly at random from this particle
  * and descend the aggregate tree to find the primary.
  * Note that most silicaPrimarys are nodes in a tree representing
@@ -389,6 +389,8 @@ void SilicaPrimary::CopyParts(const SilicaPrimary *source)
  * descend the tree to find a primary that really is a
  * primary.
  *
+ * @param[in]   rng     Random number generator
+ * 
  * @return      Pointer to an object representing a physical primary
  */
 SilicaPrimary *SilicaPrimary::SelectRandomSubparticle(rng_type &rng)
@@ -400,6 +402,8 @@ SilicaPrimary *SilicaPrimary::SelectRandomSubparticle(rng_type &rng)
 
 }
 /*!
+ * @brief       Helper function for SelectRandomSubparticle
+ * 
  * @param[in] target The primary to be selected
  *
  * @return      Pointer to the next node down the tree on the path to target primary
@@ -417,6 +421,9 @@ SilicaPrimary *SilicaPrimary::SelectRandomSubparticleLoop(int target)
 	}
 }
 /*!
+ * @brief       Updates all pointers, ensuring the connectivity of the tree
+ *                 is preserved during copying.
+ * 
  * Each node contains two pointers (m_leftparticle and m_rightparticle)
  * to primary particles that are connected by this node
  * This function is used when the entire particle tree is duplicated.
@@ -427,7 +434,7 @@ SilicaPrimary *SilicaPrimary::SelectRandomSubparticleLoop(int target)
  * describing the aggregate structure is valid.  This can be re-enabled if
  * there is suspicion of a bug,
  *
- * @param[in] source Pointer to the primary to be copied
+ * @param[in] original Pointer to the primary to be copied
 */
 void SilicaPrimary::UpdateAllPointers(const SilicaPrimary *original)
 {
@@ -456,7 +463,14 @@ void SilicaPrimary::UpdateAllPointers(const SilicaPrimary *original)
 }
 
 
-// This function finds all parents of source and assigns it to m_allparents of the calling object
+/*!
+ * @brief   Locates all the parents and adds it to the m_allparents vector
+ * 
+ * This function finds all parents of source and assigns it to 
+ * m_allparents of the calling object
+ * 
+ * @param[in]   source  Pointer to object for finding parents
+ */
 void SilicaPrimary::FindAllParents(SilicaPrimary *source)
 {
    	SilicaPrimary *tempsource = source;
@@ -468,8 +482,14 @@ void SilicaPrimary::FindAllParents(SilicaPrimary *source)
 		}
 }
 
-//This function copies all unique parents from source to the calling object
-//This function is not used in the current implementation
+
+/*!
+ * @brief       Copies all unique parents from source to calling object
+ * 
+ * Unused in current implementation
+ * 
+ * @param[in]   source  Pointer to object for copying parents
+ */
 void SilicaPrimary::GetAllParents(SilicaPrimary *source)
 {
    	if(!(source->m_allparents.empty()))
@@ -498,9 +518,13 @@ void SilicaPrimary::GetAllParents(SilicaPrimary *source)
 }
 
 
-// This function deletes the target parent from the m_allparents of the calling function.
-//Not used in current implementation
-
+/*!
+ * @brief       Deletes target parent 
+ * 
+ * Unused in current implementation
+ * 
+ * @param[in]   target  Pointer to object for deleting
+ */
 void SilicaPrimary::DeleteParent(SilicaPrimary *target)
 {
 
@@ -512,7 +536,11 @@ void SilicaPrimary::DeleteParent(SilicaPrimary *target)
 
 }
 
-// This function adds 'source' to m_allparents of the calling function
+/*!
+ * @brief       Adds source to m_allparents vector of calling function
+ * 
+ * @param[in]   source  Pointer to parent to add
+ */
 void SilicaPrimary::AddParent(SilicaPrimary *source)
 {
 	bool isListed=false;
@@ -528,10 +556,14 @@ void SilicaPrimary::AddParent(SilicaPrimary *source)
 }
 
 
-
-// coagulates this particle and rhs
 /*!
- * @param[in] rhs Pointer to the particle to be coagulated with this particle
+ * @brief       Coagulates *this* and rhs particle
+ * 
+ * Called by coagulate, this function joins sp1 (this) and sp2 (rhs).
+ * Basic properties are first calculated, followed by derived.
+ * 
+ * @param[in] rhs   Pointer to the particle to be coagulated with this
+ * @param[in] rng   Random number generator
 */
 SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 {
@@ -600,11 +632,27 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 }
 
 
-
-//Sinters two particles
+/*!
+ * @brief       Sinters particles for time dt
+ * 
+ * This function only operates on non-leaf nodes. It begins at the root 
+ * node, which sinters for time dt. It then descends the tree to sinter
+ * nodes below the root. If the sintering level rises above 95%, Merge
+ * is called and the particles are combined. 
+ * 
+ * It concludes by adjusting the gas-phase for the number of OH units
+ * that would occur through the InterParticle reaction.
+ * 
+ * @param[in]   dt      Time for which to inster
+ * @param[in]   sys     Environment for particles
+ * @param[in]   model   Sintering model to apply
+ * @param[in]   rng     Random number generator
+ * @param[in]   wt      Statistical weight
+ */
 void SilicaPrimary::Sinter(real dt, Cell &sys,
                             const Processes::SinteringModel &model,
-                            rng_type &rng)
+                            rng_type &rng,
+                            real wt)
 {
 	//Do only if there is a particle to sinter
 	if (m_leftparticle!=NULL)
@@ -700,23 +748,23 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 				    UpdateCache();
 					if (m_leftchild!=NULL && m_rightchild!=NULL)
 					{
-						m_leftchild->Sinter(dt,sys,model,rng);
-						m_rightchild->Sinter(dt,sys,model,rng);
+						m_leftchild->Sinter(dt,sys,model,rng,wt);
+						m_rightchild->Sinter(dt,sys,model,rng,wt);
 					}
 			   }
 			 else
 			 {
-				 m_leftchild->Sinter(dt, sys, model,rng);
-				 m_rightchild->Sinter(dt, sys, model,rng);
+				 m_leftchild->Sinter(dt, sys, model,rng,wt);
+				 m_rightchild->Sinter(dt, sys, model,rng,wt);
 			 }
 
 
 		UpdateCache();
 		/* Adjust the gas-phase composition */
-		fvector dc(sys.Species()->size(), 0.0);
+		fvector dc(sys.GasPhase().Species()->size(), 0.0);
 		int num_H2O = int(abs(numOH_old - m_numOH)/2);
 
-		real n_NAvol_sint = (real)num_H2O / (NA * sys.SampleVolume());
+		real n_NAvol_sint = wt * (real)num_H2O / (NA * sys.SampleVolume());
 		dc[9] += n_NAvol_sint;
 		sys.AdjustConcs(dc);
 
@@ -730,22 +778,38 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 }
 
 
-//returns the Sintering Level of the two primaries that are connected by this node
+/*!
+ * @brief       Calculates the sintering level for particles connected
+ *                  by this node
+ * 
+ * @return      Sintering level
+ */
 double SilicaPrimary::SinteringLevel()
 {
         // Calculate the spherical surface
-		const double spherical_surface=4*PI*m_children_radius*m_children_radius;
+        const double spherical_surface=4*PI*m_children_radius*m_children_radius;
         const double two_1_3=0.79370052231642452;
-		//Added by ss663
-		if (m_children_surf <= spherical_surface)
-				{
-					m_children_surf = spherical_surface ;
-				}
-        double slevel= ((spherical_surface/m_children_surf)-two_1_3)/(1-two_1_3);
-        if (slevel<0)
-            return 0;
-        else
+        double slevel;
+
+        //Added by ss663
+        if (m_children_surf <= spherical_surface) {
+            m_children_surf = spherical_surface;
+            return 1.0;
+        }
+
+        if (m_children_surf == 0.0) {
+            slevel = 0.0;
+        } else {
+            slevel= ((spherical_surface/m_children_surf)-two_1_3)/(1-two_1_3);
+        }
+
+        if (slevel < 0.0) {
+            return 0.0;
+        } else if (slevel > 1.0) {
+            return 1.0;
+        } else {
             return slevel;
+        }
 }
 
 
@@ -781,20 +845,31 @@ double SilicaPrimary::SinteringLevel()
 //}
 
 
-// sets all the childrenproperties to zero, this function is used after the children are coalesced
+/*!
+ * @brief       Sets all of the properties of the children to zero
+ * 
+ * Used after the children are coalesced
+ */
 void SilicaPrimary::ResetChildrenProperties()
 {
             m_children_sintering=0.0;
             m_children_surf=0.0;
             m_children_vol=0.0;
-            //m_rightparticle_vol_old=0.0;
-            //m_leftparticle_vol_old=0.0;
             m_avg_sinter=0;
 			m_sint_rate=0;
 }
 
 
-//merges the left and the right primary particle to one primary particle
+/*!
+ * @brief       Merges the left and right particles
+ * 
+ * Considers two cases of particle structure. If the node only has two
+ * primaries in its subtree, they are simply deleted and *this* becomes
+ * the new primary. Otherwise, the subtrees are moved in the manner
+ * explained in Markus Sander's thesis.
+ * 
+ * @return      Pointer to new merged particle
+ */
 SilicaPrimary &SilicaPrimary::Merge()
 {
 
@@ -959,7 +1034,19 @@ SilicaPrimary &SilicaPrimary::Merge()
 
 }
 
-
+/*!
+ * @brief       Adjusts the particle after a surface rxn event
+ * 
+ * Analogous to the implementation in Primary. The function will 
+ * however descend the tree to find a primary adjust. The surface area
+ * and volume added to the particle is also rippled through the binary
+ * tree.
+ * 
+ * @param[in]   dcomp   Vector storing changes in particle composition
+ * @param[in]   dvalues Vector storing changes in gas-phase comp
+ * @param[in]   rng     Random number generator
+ * @param[in]   n       Number of times for adjustment
+ */
 unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 		const fvector &dvalues, rng_type &rng, unsigned int n)
 
@@ -1045,7 +1132,16 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 
 }
 
-
+/*!
+ * @brief       Adjusts the particle after an IntP event
+ * 
+ * Note that the gas-phase is actually adjusted in Sinter()
+ * 
+ * @param[in]   dcomp   Vector storing changes in particle composition
+ * @param[in]   dvalues Vector storing changes in gas-phase comp
+ * @param[in]   rng     Random number generator
+ * @param[in]   n       Number of times for adjustment
+ */
 unsigned int SilicaPrimary::AdjustIntPar(const fvector &dcomp,
 		const fvector &dvalues, rng_type &rng, unsigned int n)
 
@@ -1097,12 +1193,14 @@ unsigned int SilicaPrimary::AdjustIntPar(const fvector &dcomp,
 
 }
 
+//! Returns the number of OH sites
 int SilicaPrimary::GetSites() const
 
 {
 	return m_numOH;
 }
 
+//! Returns the sintering rate
 real SilicaPrimary::GetSintRate() const
 {
 	real sint_rate = m_sint_rate;
@@ -1115,13 +1213,16 @@ real SilicaPrimary::GetSintRate() const
 }
 
 
-
+//! Releases memory
 void SilicaPrimary::ReleaseMem()
 {
 }
-/*!//add explanation
+
+/*!
+ * @brief       Changes pointer from source to target
+ * 
  * @param[in] source Pointer to the original particle
- * @param[in,out] target Pointer to the new particle
+ * @param[in] target Pointer to the new particle
 */
 void SilicaPrimary::ChangePointer(SilicaPrimary *source, SilicaPrimary *target)
 {
@@ -1146,13 +1247,20 @@ void SilicaPrimary::ChangePointer(SilicaPrimary *source, SilicaPrimary *target)
 
 }
 
-
+//! UpdateCache helper function
 void SilicaPrimary::UpdateCache(void)
 {
     UpdateCache(this);
 }
 
-// Check if the sintering level is above 0.95, merge and update cache if true
+/*!
+ * @brief       Checks the sintering level of the particle
+ * 
+ * If the sintering level is above 95%, Merge is called and the cache
+ * is updated. 
+ * 
+ * @return      Boolean telling if the particle has sintered
+ */
 bool SilicaPrimary::CheckSintering()
 {
 	bool hassintered=false;
@@ -1173,29 +1281,15 @@ bool SilicaPrimary::CheckSintering()
 
     }
 
-	if(hassintered)
-		ResetVol();
+//	if(hassintered)
+//		ResetVol();
     return hassintered;
 }
 
 
-// set the volume added to the two primaries connected by this node to the actual volume
-// this function is used after a merge event in order to prevent that the volume added to
-// the primary is used to make the particle rounder
-
-void SilicaPrimary::ResetVol()
-{
-    if (m_leftchild!=NULL)
-    {
-        //m_leftparticle_vol_old=m_leftparticle->m_vol;
-        //m_rightparticle_vol_old=m_rightparticle->m_vol;
-        m_leftchild->ResetVol();
-        m_rightchild->ResetVol();
-    }
-}
-
-
-//this function updates a primary particle
+/*!
+ * @brief       Updates the properties of a primary
+ */
 void SilicaPrimary::UpdatePrimary(void)
 {
 
@@ -1205,7 +1299,6 @@ void SilicaPrimary::UpdatePrimary(void)
     m_vol = m_mass / silica_density;							//in m^3
 	m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
     m_dmob = m_diam;
-    //m_dcol = max(m_diam,m_silicaCollDiameter);
 	m_dcol=m_diam;
 	m_surf = PI * m_diam * m_diam;
     m_primarydiam = m_diam;
@@ -1215,7 +1308,7 @@ void SilicaPrimary::UpdatePrimary(void)
 }
 
 
-
+//! Set properties of particle to zero
 void SilicaPrimary::Reset()
 {
 	m_numSi=0;
@@ -1231,9 +1324,16 @@ void SilicaPrimary::Reset()
 
 
 /*!
+ * @brief       Updates the SilicaPrimary cache
+ * 
+ * Updates the whole particle, from root to the lowest leaf-node.
+ * Calculates the sintering level and merges particles (through Check
+ * Sintering) if necessary. Only accurately calculates collision 
+ * diameter and other properties used outside of SilicaPrimary for 
+ * the root node.
+ * 
  * @param[in] root The root node of this particle
 */
-
 void SilicaPrimary::UpdateCache(SilicaPrimary *root)
 {
     //Update the children
@@ -1333,6 +1433,10 @@ void SilicaPrimary::UpdateCache(SilicaPrimary *root)
 }
 
 /*!
+ * @brief       Prints a graphical output of the binary tree structure
+ * 
+ * Graph outputted in GraphViz format. Use command 'dot' to convert.
+ * 
  * @param[in] filename Output filename
 */
 void SilicaPrimary::PrintTree(string filename)
@@ -1347,6 +1451,8 @@ void SilicaPrimary::PrintTree(string filename)
 }
 
 /*!
+ * @brief       Helper function for printing tree.
+ * 
  * @param[in] out Output stream
 */
 void SilicaPrimary::PrintTreeLoop(std::ostream &out)
@@ -1372,9 +1478,6 @@ void SilicaPrimary::PrintTreeLoop(std::ostream &out)
     m_rightchild->PrintTreeLoop(out);
   }
 
-
-
-
   else
   {
       //out<<"\" "<<this<<"\" "<<" [label = \""<<2*pow((this->vol_sinter)*3/(4*PI),ONE_THIRD)<<"\"];"<<endl;
@@ -1383,7 +1486,7 @@ void SilicaPrimary::PrintTreeLoop(std::ostream &out)
 }
 
 
-// Creates an aggregation data cache for this primary type.
+//! Creates an aggregation data cache for this primary type.
 AggModels::SilicaCache *const SilicaPrimary::CreateAggCache() const
 {
 	SilicaCache *cache =
@@ -1392,21 +1495,23 @@ AggModels::SilicaCache *const SilicaPrimary::CreateAggCache() const
     return cache;
 }
 
-
+/*!
+ * @brief Returns the right child.
+ * @return  Right child pointer
+ */
 const SilicaPrimary *SilicaPrimary::RightChild() const
 {
    return m_rightchild;
 }
 
+/*!
+ * @brief Returns the left child.
+ * @return  Left child pointer
+ */
 const SilicaPrimary *SilicaPrimary::LeftChild() const
 {
    return m_leftchild;
 }
-
-/*double SilicaPrimary::SilicaCollDiameter() const
-{
-   return m_silicaCollDiameter;
-}*/
 
 double SilicaPrimary::Rg() const
 {
@@ -1495,10 +1600,6 @@ void SilicaPrimary::Serialize(std::ostream &out) const
         val = (int) m_numOH;
         out.write((char*)&val, sizeof(val));
 
-		// Write silicacollisiondiameter
-        //val = (double)m_silicaCollDiameter;
-        //out.write((char*)&val, sizeof(val));
-
 	    val = (int)m_numprimary;
         out.write((char*)&val, sizeof(val));
 
@@ -1516,10 +1617,6 @@ void SilicaPrimary::Serialize(std::ostream &out) const
 
         val = (double)m_Rg;
         out.write((char*)&val, sizeof(val));
-
-		// Write silicamass
- //       val = (double)m_silicamass;
- //       out.write((char*)&val, sizeof(val));
 
 
         // Output base class.
@@ -1555,10 +1652,6 @@ void SilicaPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_numOH = (int)val;
 
-		// Read silicacolldiamter.
-        //in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        //m_silicaCollDiameter = (real)val;
-
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_numprimary = (int)val;
 
@@ -1577,17 +1670,12 @@ void SilicaPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_Rg = (real)val;
 
-		// Read silicamass.
-  //      in.read(reinterpret_cast<char*>(&val), sizeof(val));
-  //      m_silicamass = (real)val;
-
 		m_leftchild=NULL;
 		m_rightchild=NULL;
 		m_parent=NULL;
 		m_leftparticle=NULL;
 		m_rightparticle=NULL;
 		//m_allparents.clear();
-		//m_particleparent=NULL;
 
 		switch (version) {
             case 0:

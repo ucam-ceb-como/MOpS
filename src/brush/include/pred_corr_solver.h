@@ -65,12 +65,9 @@ namespace Sweep {
 
 namespace Transport {
     struct TransportOutflow;
-}
-}
+} // namespace Transport
+} // namespace Sweep
 
-namespace Mops {
-    class Mixture;
-}
 
 namespace Geometry {
     class LocalGeometry1d;
@@ -91,20 +88,21 @@ public:
                    const bool weighted_transport);
 
     //! Advance solution to specified time
-    void solve(Reactor1d &reac, const real t_stop, const int n_steps, const int n_iter, const size_t seed) const;
+    void solve(Reactor1d &reac, const real t_start, const real t_stop, const int n_steps,
+               const int n_iter, const size_t seed) const;
 
 protected:
     //! Perform one time step using a predictor followed by some corrector iterations
-    void predictorCorrectorStep(Reactor1d &reac, const real t_stop, const int n_iter,
+    void predictorCorrectorStep(Reactor1d &reac, const real t_start, const real t_stop, const int n_iter,
                                 std::vector<Sweep::rng_type>& cell_rngs) const;
 
     //! Advance particle population to specified time
-    void solveParticlesByCell(Reactor1d &reac, const real t_stop,
+    void solveParticlesByCell(Reactor1d &reac, const real t_start, const real t_stop,
                               std::vector<Sweep::rng_type>& cell_rngs) const;
 
     //! Advance particle population to specified time
-    void solveParticlesInOneCell(Mops::Reactor &cell, const Geometry::LocalGeometry1d &geom,
-                                 const Sweep::Mechanism &mech, const real t_stop,
+    void solveParticlesInOneCell(Sweep::Cell &cell, const Geometry::LocalGeometry1d &geom,
+                                 const Sweep::Mechanism &mech, real t, real t_stop,
                                  Sweep::rng_type &rng) const;
 
     //! Advance chemistry over specified time interval
@@ -124,7 +122,7 @@ private:
     PredCorrSolver();
 
     //! Calculate and set a new position on one particle
-    void updateParticlePosition(const real t_start, const real t_stop, const Mops::Mixture &mix,
+    void updateParticlePosition(const real t_start, const real t_stop, const Sweep::Cell &mix,
                                 const Sweep::Mechanism &mech,
                                 const Geometry::LocalGeometry1d & geom,
                                 const std::vector<const Sweep::Cell*> & neighbouring_cells,
@@ -139,7 +137,7 @@ private:
     typedef std::vector<std::list<Sweep::Transport::TransportOutflow> > inflow_lists_vector;
 
     //! Update the positions on a list of particles from one cell
-    inflow_lists_vector updateParticleListPositions(const real t_start, const real t_stop, const Mops::Mixture &mix,
+    inflow_lists_vector updateParticleListPositions(const real t_start, const real t_stop, const Sweep::Cell &mix,
                                                     const size_t cell_index, const Sweep::Mechanism &mech,
                                                     const Geometry::Geometry1d &geom,
                                                     const std::vector<const Sweep::Cell*> &neighbouring_cells,

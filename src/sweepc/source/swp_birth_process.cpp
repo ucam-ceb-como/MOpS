@@ -163,7 +163,6 @@ real BirthProcess::RateTerms(const real t, const Cell &sys,
  * \param[in]       local_geom  Details of local phsyical layout
  * \param[in]       iterm       Process term responsible for this event
  * \param[in,out]   rng         Random number generator
- * \param[out]      out         Details of any particle being transported out of system
  *
  * \return      0 on success, otherwise negative.
  */

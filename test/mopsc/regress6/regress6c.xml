@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <mechanism name="ABF soot mechanism" units="CGS">
-
-    <!-- Choose which models to use -->
-    
-    <model type="activesites" id="haca" alpha="profile" />
     
     <!-- Define particle components. -->
     
@@ -25,8 +21,6 @@
         A soot particle.
       </description>
    </particle>
-
-    <includemech id="abfsoot" />
     
     <!-- Inceptions -->
     

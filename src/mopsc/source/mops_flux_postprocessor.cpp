@@ -65,7 +65,7 @@ FluxAnalyser::FluxAnalyser(const Mechanism &mech,
 }
 
 void FluxAnalyser::addElement(const Sprog::Element &elem) {
-    int iel = m_mech->FindElement(elem);
+    int iel = m_mech->GasMech().FindElement(elem);
     if (iel > -1) {
         // Check whether index already in the index list
         bool ExistIndex = false;
@@ -139,13 +139,13 @@ void FluxAnalyser::writeFluxes(const std::string &filenameprefix, bool doIntFlux
 void FluxAnalyser::calculateFluxAt(unsigned int index, unsigned int iel, Mops::FluxAnalyser::FluxNetwork &flux_network) {
     flux_network.clear();
 
-    for (unsigned int i = 0; i < m_mech->ReactionCount(); i++) {
+    for (unsigned int i = 0; i < m_mech->GasMech().ReactionCount(); i++) {
             // Integer Stoichiometry
-            for (int j = 0; j < m_mech->Reactions(i)->ReactantCount(); j++) {
-                for (int k = 0; k < m_mech->Reactions(i)->ProductCount(); k++) {
-                    real n_total_stoi = getTotalElementStoi(*m_mech->Reactions(i), iel);
-                    real n_A_elem     = getNumberOfElementAtom(m_mech->Reactions(i)->Reactant(j), iel);
-                    real n_B_elem     = getNumberOfElementAtom(m_mech->Reactions(i)->Product(k), iel);
+            for (int j = 0; j < m_mech->GasMech().Reactions(i)->ReactantCount(); j++) {
+                for (int k = 0; k < m_mech->GasMech().Reactions(i)->ProductCount(); k++) {
+                    real n_total_stoi = getTotalElementStoi(*m_mech->GasMech().Reactions(i), iel);
+                    real n_A_elem     = getNumberOfElementAtom(m_mech->GasMech().Reactions(i)->Reactant(j), iel);
+                    real n_B_elem     = getNumberOfElementAtom(m_mech->GasMech().Reactions(i)->Product(k), iel);
                     real flux_fraction = 0.0;
                     if (n_total_stoi > 0) {
                         flux_fraction = n_A_elem * n_B_elem / n_total_stoi;
@@ -156,17 +156,17 @@ void FluxAnalyser::calculateFluxAt(unsigned int index, unsigned int iel, Mops::F
                     FluxPath temp_fpath;
                     temp_fpath.Rate = (m_agpfwdrates->at(index)).at(i) * flux_fraction;
                     if (temp_fpath.Rate > 0.0) {
-                        temp_fpath.SourceSpecies = m_mech->Reactions(i)->Reactant(j).Index();
-                        temp_fpath.TargetSpecies = m_mech->Reactions(i)->Product(k).Index();
+                        temp_fpath.SourceSpecies = m_mech->GasMech().Reactions(i)->Reactant(j).Index();
+                        temp_fpath.TargetSpecies = m_mech->GasMech().Reactions(i)->Product(k).Index();
                         addToFluxPathRate(temp_fpath, flux_network);
                     }
 
                     // B => A Flux, this is only if reaction is reversible.
-                    if (m_mech->Reactions(i)->IsReversible()) {
+                    if (m_mech->GasMech().Reactions(i)->IsReversible()) {
                         temp_fpath.Rate = (m_agprevrates->at(index)).at(i) * flux_fraction;
                         if (temp_fpath.Rate > 0.0) {
-                            temp_fpath.SourceSpecies = m_mech->Reactions(i)->Product(k).Index();
-                            temp_fpath.TargetSpecies = m_mech->Reactions(i)->Reactant(j).Index();
+                            temp_fpath.SourceSpecies = m_mech->GasMech().Reactions(i)->Product(k).Index();
+                            temp_fpath.TargetSpecies = m_mech->GasMech().Reactions(i)->Reactant(j).Index();
                             addToFluxPathRate(temp_fpath, flux_network);
                         }
                     }
@@ -237,12 +237,12 @@ void FluxAnalyser::writeFluxAt(unsigned int iel, std::ofstream &fout, Mops::Flux
     if (fout.is_open()) {
         // Write flux network to file.
         if (flux_network.size() > 0) {
-            fout << "Fluxes of " << m_mech->Elements(iel)->Name() << std::endl;
+            fout << "Fluxes of " << m_mech->GasMech().Elements(iel)->Name() << std::endl;
             for (unsigned int i = 0; i < flux_network.size(); i++) {
                 fout << formatWhiteSpace(ComoString::int2string(i+1),5,false) << "  "
-                     << formatWhiteSpace(m_mech->GetSpecies(flux_network.at(i).SourceSpecies)->Name(), 17)
+                     << formatWhiteSpace(m_mech->GasMech().GetSpecies(flux_network.at(i).SourceSpecies)->Name(), 17)
                      << "=> "
-                     << formatWhiteSpace(m_mech->GetSpecies(flux_network.at(i).TargetSpecies)->Name(), 19)
+                     << formatWhiteSpace(m_mech->GasMech().GetSpecies(flux_network.at(i).TargetSpecies)->Name(), 19)
                      << formatWhiteSpace(Strings::cstr(flux_network.at(i).Rate), 12, false)
                      << std::endl;
             }
@@ -257,15 +257,15 @@ void FluxAnalyser::writeFluxAt(unsigned int iel, std::ofstream &fout, Mops::Flux
 void FluxAnalyser::writeHeader(std::ofstream &fout, unsigned int npoints) {
     if (fout.is_open()) {
         // Write header
-        fout << formatWhiteSpace(ComoString::int2string(m_mech->SpeciesCount()),5,false) << "/ Number of species" << std::endl;
-        fout << formatWhiteSpace(ComoString::int2string(m_mech->ReactionCount()),5,false) << "/ Number of reactions" << std::endl;
+        fout << formatWhiteSpace(ComoString::int2string(m_mech->GasMech().SpeciesCount()),5,false) << "/ Number of species" << std::endl;
+        fout << formatWhiteSpace(ComoString::int2string(m_mech->GasMech().ReactionCount()),5,false) << "/ Number of reactions" << std::endl;
         fout << formatWhiteSpace(ComoString::int2string(npoints),5,false) << "/ Number of points" << std::endl;
         for (unsigned int i = 0; i < m_ElementIndexes.size(); i++) {
-            fout << formatWhiteSpace(m_mech->Elements(m_ElementIndexes.at(i))->Name(), 4);
+            fout << formatWhiteSpace(m_mech->GasMech().Elements(m_ElementIndexes.at(i))->Name(), 4);
         }
         fout << std::endl;
-        for (unsigned int i = 0; i < m_mech->SpeciesCount(); i++) {
-            fout << formatWhiteSpace(m_mech->GetSpecies(i)->Name(), 16);
+        for (unsigned int i = 0; i < m_mech->GasMech().SpeciesCount(); i++) {
+            fout << formatWhiteSpace(m_mech->GasMech().GetSpecies(i)->Name(), 16);
         }
         fout << std::endl;
         fout << std::endl;
@@ -286,7 +286,7 @@ real FluxAnalyser::getTotalElementStoi(const Sprog::Kinetics::Reaction &rxn, uns
 }
 
 real FluxAnalyser::getNumberOfElementAtom(const Sprog::Stoich &sc, unsigned int iel) {
-    Sprog::Species * sp = m_mech->GetSpecies(sc.Index());
+    Sprog::Species * sp = m_mech->GasMech().GetSpecies(sc.Index());
     if (sp != NULL) {
         real n = (real) sp->AtomCount(iel);
         return n * ((real) sc.Mu());

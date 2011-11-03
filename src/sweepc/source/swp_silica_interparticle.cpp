@@ -59,7 +59,7 @@ const real InterParticle::m_majfactor = 2.0;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor (protected).
+//! Default constructor (protected).
 InterParticle::InterParticle(void)
 : ParticleProcess(), m_arr(0.0,0.0,0.0)
 {
@@ -67,7 +67,7 @@ InterParticle::InterParticle(void)
     m_name = "InterParticle";
 }
 
-// Initialising constructor.
+//! Initialising constructor.
 InterParticle::InterParticle(const Sweep::Mechanism &mech)
 : ParticleProcess(mech), m_arr(0.0,0.0,0.0)
 {
@@ -76,19 +76,19 @@ InterParticle::InterParticle(const Sweep::Mechanism &mech)
     m_name = "InterParticle";
 }
 
-// Copy constructor.
+//! Copy constructor.
 InterParticle::InterParticle(const InterParticle &copy)
 {
     *this = copy;
 }
 
-// Stream-reading constructor.
+//! Stream-reading constructor.
 InterParticle::InterParticle(std::istream &in, const Sweep::Mechanism &mech)
 {
     Deserialize(in, mech);
 }
 
-// Default destructor.
+//! Default destructor.
 InterParticle::~InterParticle(void)
 {
     // Nothing to destruct.
@@ -97,7 +97,7 @@ InterParticle::~InterParticle(void)
 
 // OPERATOR OVERLOADS.
 
-// Assignment operator.
+//! Assignment operator.
 InterParticle &InterParticle::operator=(const InterParticle &rhs)
 {
     if (this != &rhs) {
@@ -111,22 +111,26 @@ InterParticle &InterParticle::operator=(const InterParticle &rhs)
 
 // RATE CONSTANT AND PARAMETERS.
 
-// Returns the Arrhenius parameter.
+//! Returns the Arrhenius parameter.
 Sprog::Kinetics::ARRHENIUS &InterParticle::Arrhenius() {return m_arr;}
 const Sprog::Kinetics::ARRHENIUS &InterParticle::Arrhenius() const {return m_arr;}
 
-// Sets the fixed rate constant.
+//! Sets the fixed rate constant.
 void InterParticle::SetArrhenius(Sprog::Kinetics::ARRHENIUS &arr) {m_arr = arr;}
 
 
 // PARTICLE PROPERTY ID.
 
-// Returns the ID number of the particle property to which
-// the rate of this process is proportional.
+/*!
+ * @brief       Returns the PropID to which the rate is proportional
+ * @return      ID of particle property
+ */
 unsigned int InterParticle::PropertyID(void) const {return m_pid;}
 
-// Sets the ID number of the particle property to which
-// the rate of this process is proportional.
+/*!
+ * @brief       Sets the PropID to which the rate is proportional
+ * @param[in]   ID of particle property
+ */
 void InterParticle::SetPropertyID(PropID pid)
 {
     m_pid = pid;
@@ -135,7 +139,20 @@ void InterParticle::SetPropertyID(PropID pid)
 
 // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
-// Returns rate of the process for the given system.
+/*!
+ * @brief       Returns the rate of the process in a given system
+ * 
+ * The interparticle reaction rate is given by the difference between
+ * the surface reaction rate and the sintering rate. This function
+ * calcualtes the present value of SR rate, and gets the sintrate from 
+ * the particle cache.
+ * 
+ * @param[in]   t       Time at which process occurs
+ * @param[in]   sys     System for rate calculation
+ * @param[in]   geom    Local geometry
+ * 
+ * @return      Rate of process
+ */
 real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom) const
 {
 
@@ -143,13 +160,13 @@ real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1
     real rate = 0.0;
 
 	// First calculate surface reaction contribution:
-	real T = sys.Temperature();
+	real T = sys.GasPhase().Temperature();
 
 	// Get the total number of OH sites from cache
 	int numOH = sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid));
 
 	// Rate of surface reaction
-	real R_surf = m_arr.A*chemRatePart(sys.MoleFractions(), sys.Density())*pow(T, m_arr.n)
+	real R_surf = m_arr.A*chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density())*pow(T, m_arr.n)
 			* exp(-m_arr.E / (R * T)) * numOH;
 
 	// Forward-declare the total sintering rate
@@ -191,8 +208,20 @@ real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1
 
 // SINGLE PARTICLE RATE CALCULATIONS.
 
-// Returns the rate of the process for the given particle in
-// the system. Process must be linear in particle number.
+/*!
+ * @brief       Returns the rate of the process for a particle
+ * 
+ * The interparticle reaction rate is given by the difference between
+ * the surface reaction rate and the sintering rate. This function
+ * calcualtes the present value of SR rate, and gets the sintrate from 
+ * the particle cache.
+ * 
+ * @param[in]   t       Time at which process occurs
+ * @param[in]   sys     System for rate calculation
+ * @param[in]   sp      Particle for rate calculation
+ * 
+ * @return      Rate of process
+ */
 real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
 {
 
@@ -201,10 +230,10 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
 
     // Do calculation for surface-reaction part of rate:
     // Chemical species concentration dependence.
-    rate *= chemRatePart(sys.MoleFractions(), sys.Density());
+    rate *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
 
     // Temperature dependance.
-    real T = sys.Temperature();
+    real T = sys.GasPhase().Temperature();
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
 	// Get the number of OH sites from cache
@@ -240,7 +269,15 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
     return rate; //trm[0] + trm[1] + trm[2];
 }
 
-// Returns majorant rate of the process for the given system.
+/*!
+ * @brief       Returns the majorant rate.
+ * 
+ * @param[in]   t       Time at which process occurs
+ * @param[in]   sys     System for rate calculation
+ * @param[in]   sp      Particle for majorant rate calculation
+ * 
+ * @return      Rate of process
+ */
 real InterParticle::MajorantRate(real t, const Cell &sys, const Particle &sp) const
 {
     // Return the single particle rate multiplied by the
@@ -253,30 +290,40 @@ real InterParticle::MajorantRate(real t, const Cell &sys, const Particle &sp) co
 //   These routines return the individual rate terms for a
 //   process, which may have multiple terms (e.g. InterParticle).
 
-// Returns the number of rate terms for this process.
+//! Returns the number of rate terms for this process.
 unsigned int InterParticle::TermCount(void) const {return 1;}
 
-// Calculates the rate terms given an iterator to a real vector. The
-// iterator is advanced to the position after the last term for this
-// process.
+/*!
+ * @brief       Passes the system rate to an iterator
+ * 
+ * Calculates the rate terms given an iterator to a real vector. The
+ * iterator is advanced to the position after the last term for this
+ * process.
+ * 
+ * @return      Rate of process
+ */
 real InterParticle::RateTerms(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
                              fvector::iterator &iterm) const
 {
-	 return *(iterm++) = Rate(t, sys, local_geom);
+    return *(iterm++) = Rate(t, sys, local_geom);
 }
 
 // PERFORMING THE PROCESS.
 
 /*!
+ * @brief       Performs the interparticle process system-wide
+ * 
+ * Selects a particle, calculates the rate, and updates the system
+ * accordingly. Note that the gas-phase is actually adjusted in the
+ * Sinter() function of SilicaPrimary.
  *
+ * @param[in]       t           Time
+ * @param[in,out]   sys         System to update
+ * @param[in]       local_geom  Details of local physical layout
+ * @param[in]       iterm       Process term responsible for this event
+ * @param[in,out]   rng         Random number generator
  *
- * \param[in]       t           Time
- * \param[in,out]   sys         System to update
- * \param[in]       local_geom  Details of local phsyical layout
- * \param[in]       iterm       Process term responsible for this event
- * \param[in,out]   rng         Random number generator
- *
- * \return      0 on success, otherwise negative.
+ * @return      0 on success, otherwise negative.
  */
 int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
                              const Geometry::LocalGeometry1d& local_geom,
@@ -305,7 +352,7 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
                     sys.Particles().Update(i);
 
                     // Apply changes to gas-phase chemistry.
-                    adjustGas(sys);
+                    adjustGas(sys, sp->getStatisticalWeight());
                 }
             } else {
                 // If not valid then remove the particle.
@@ -326,7 +373,7 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
             }
 
             // Apply changes to gas-phase chemistry.
-            adjustGas(sys);
+            adjustGas(sys, sp->getStatisticalWeight());
         }
     } else {
         // Failed to select a particle.
@@ -336,28 +383,33 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
     return 0;
 }
 
-// Performs the process on a given particle in the system.  Particle
-// is given by index.  The process is performed n times.
-
+/*!
+ * @brief       Performs process on a given particle n times
+ * 
+ * @param[in]   t   Time for process
+ * @param[in]   sys System in which to act
+ * @param[in]   sp  Particle to adjust
+ * @param[in]   rng Random number generator
+ * @param[in]   n   Number of times to do process
+ */
 int InterParticle::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
                           unsigned int n) const
 {
     unsigned int m = sp.AdjustIntPar(m_dcomp, m_dvals, rng, n);
-    adjustGas(sys, m);
+    adjustGas(sys, sp.getStatisticalWeight(), m);
     return m;
 }
 
-// Returns the process type.  Used to identify different
-// processes and for serialisation.
+//! Returns the process type.
 ProcessType InterParticle::ID(void) const {return InterParticle_ID;}
 
-// Creates a copy of the particle process.
+//! Creates a copy of the particle process.
 InterParticle *const InterParticle::Clone(void) const
 {
     return new InterParticle(*this);
 }
 
-// Writes the object to a binary stream.
+//! Writes the object to a binary stream.
 void InterParticle::Serialize(std::ostream &out) const
 {
     if (out.good()) {
@@ -376,7 +428,7 @@ void InterParticle::Serialize(std::ostream &out) const
         out.write((char*)&nn, sizeof(nn));
         out.write((char*)&E, sizeof(E));
 
-		// Write particle property ID.
+        // Write particle property ID.
         unsigned int n = (unsigned int)m_pid;
         out.write((char*)&n, sizeof(n));
 
@@ -386,7 +438,7 @@ void InterParticle::Serialize(std::ostream &out) const
     }
 }
 
-// Reads the object from a binary stream.
+//! Reads the object from a binary stream.
 void InterParticle::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 {
     if (in.good()) {

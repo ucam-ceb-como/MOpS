@@ -45,8 +45,8 @@
 #include <vector>
 
 // Forward declaration
-namespace Mops {
-    class Reactor;
+namespace Sweep {
+    class Cell;
 }
 
 namespace Brush{
@@ -80,6 +80,9 @@ public:
 
         //! Mole fractions and cgs units
         Premix,
+
+        //! Mole fractions, with ABF alpha and cgs units
+        PremixAlpha,
     };
 
     //! Read in the data needed for the given mechanism
@@ -94,7 +97,7 @@ public:
                    const std::vector<fvector> &massFracs);
 
     //! Overwrite chemistry information with that stored in this object
-    void apply(const real x, Mops::Reactor &reac) const;
+    void apply(const real x, Sweep::Cell &reac) const;
     
     //! Position of first data point
     real startLocation() const;
@@ -164,6 +167,9 @@ private:
 
     //! Index of velocity data in data_point
     static const size_t sLaplacianMixFracIndex;
+
+    //! Index of alpha factor data in data point
+    static const size_t sAlphaIndex;
 
 };
 

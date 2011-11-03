@@ -249,12 +249,12 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     // Initialise the reactor with the start time.
     t2 = m_times[0].StartTime();
     r.SetTime(t2);
-    //r.Mixture()->SetMaxM0(m_maxm0);
+    //r.Mixture()->GasPhase().SetMaxM0(m_maxm0);
 
     // Set up the solver.
     s.Initialise(r);
 
-    if (r.Mech()->ReactionCount() == 0)
+    if (r.Mech()->GasMech().ReactionCount() == 0)
     {
         s.SetLOIStatusFalse();
     }
@@ -331,13 +331,13 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
         //Necessary variables for LOI reduction only.
         std::string KeptMech("KeptMech.inp");
-        vector<fvector> LOI(s.GetNumSens(), fvector(r.Mech()->SpeciesCount()));
+        vector<fvector> LOI(s.GetNumSens(), fvector(r.Mech()->GasMech().SpeciesCount()));
         std::ofstream LOIFile;
         std::vector<std::string> rejectSpecies;
         
         if (s.GetLOIStatus() == true){
             LOIFile.open(LOIReduction::buildLOIFileName().c_str());
-            s.InitialiseSensMatrix(s.GetNumSens(),r.Mech()->SpeciesCount());
+            s.InitialiseSensMatrix(s.GetNumSens(),r.Mech()->GasMech().SpeciesCount());
             LOIReduction::CreateLOIFile(LOIFile, r.Mech());  
         }
         // Loop over the time intervals.
@@ -362,10 +362,10 @@ void Simulator::RunSimulation(Mops::Reactor &r,
                 if (s.GetLOIStatus() == true)
                     {
                     if (istep == 0){
-                        J = r.CreateJac(r.Mech()->SpeciesCount());
+                        J = r.CreateJac(r.Mech()->GasMech().SpeciesCount());
                     }
-                    r.RateJacobian(t2, r.Mixture()->RawData(), J, uround);
-                    LOI = LOIReduction::CalcLOI(J, s.GetSensSolution(s.GetNumSens(), r.Mech()->SpeciesCount()), LOI, r.Mech()->SpeciesCount(), s.GetNumSens());
+                    r.RateJacobian(t2, r.Mixture()->GasPhase().RawData(), J, uround);
+                    LOI = LOIReduction::CalcLOI(J, s.GetSensSolution(s.GetNumSens(), r.Mech()->GasMech().SpeciesCount()), LOI, r.Mech()->GasMech().SpeciesCount(), s.GetNumSens());
                     LOIReduction::SaveLOI(LOI, t2, LOIFile, r.Mech());
                 }
 
@@ -390,12 +390,12 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
             createSavePoint(r, global_step, irun);
             if (s.GetLOIStatus() == true){
-                r.DestroyJac(J, r.Mech()->SpeciesCount());
+                r.DestroyJac(J, r.Mech()->GasMech().SpeciesCount());
             }
         }
         if (s.GetLOIStatus() == true){
             LOIReduction::RejectSpecies(LOI, s.ReturnCompValue(), r.Mech(), rejectSpecies, s.ReturnKeptSpecies());
-            r.Mech()->WriteReducedMech(KeptMech, rejectSpecies);
+            r.Mech()->GasMech().WriteReducedMech(KeptMech, rejectSpecies);
         }
 
         // Print run time to the console.
@@ -712,14 +712,14 @@ void Simulator::closeOutputFile() const
 void Simulator::outputGasPhase(const Reactor &r) const
 {
     // Write gas-phase conditions to file.
-    m_file.write(reinterpret_cast<const char*>(&r.Mixture()->RawData()[0]),
-                 sizeof(r.Mixture()->RawData()[0]) *
-                 r.Mech()->SpeciesCount());
-    real T = r.Mixture()->Temperature();
+    m_file.write(reinterpret_cast<const char*>(&r.Mixture()->GasPhase().RawData()[0]),
+                 sizeof(r.Mixture()->GasPhase().RawData()[0]) *
+                 r.Mech()->GasMech().SpeciesCount());
+    real T = r.Mixture()->GasPhase().Temperature();
     m_file.write((char*)&T, sizeof(T));
-    real D = r.Mixture()->Density();
+    real D = r.Mixture()->GasPhase().Density();
     m_file.write((char*)&D, sizeof(D));
-    real P = r.Mixture()->Pressure();
+    real P = r.Mixture()->GasPhase().Pressure();
     m_file.write((char*)&P, sizeof(P));
 }
 
@@ -760,20 +760,20 @@ void Simulator::outputSensitivity(const Reactor &r) const
 // species molar production rates to the binary output file.
 void Simulator::outputGasRxnRates(const Reactor &r) const
 {
-    if(r.Mech()->ReactionCount() > 0) {
+    if(r.Mech()->GasMech().ReactionCount() > 0) {
         // Calculate the rates-of-progress.
         static fvector rop, rfwd, rrev;
-        r.Mech()->Reactions().GetRatesOfProgress(*r.Mixture(), rop, rfwd, rrev);
+        r.Mech()->GasMech().Reactions().GetRatesOfProgress(r.Mixture()->GasPhase(), rop, rfwd, rrev);
 
         // Calculate the molar production rates.
         static fvector wdot;
-        r.Mech()->Reactions().GetMolarProdRates(rop, wdot);
+        r.Mech()->GasMech().Reactions().GetMolarProdRates(rop, wdot);
 
         // Write rates to the file.
-        m_file.write((char*)&rop[0], sizeof(rop[0]) * r.Mech()->ReactionCount());
-        m_file.write((char*)&rfwd[0], sizeof(rfwd[0]) * r.Mech()->ReactionCount());
-        m_file.write((char*)&rrev[0], sizeof(rrev[0]) * r.Mech()->ReactionCount());
-        m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->SpeciesCount());
+        m_file.write((char*)&rop[0], sizeof(rop[0]) * r.Mech()->GasMech().ReactionCount());
+        m_file.write((char*)&rfwd[0], sizeof(rfwd[0]) * r.Mech()->GasMech().ReactionCount());
+        m_file.write((char*)&rrev[0], sizeof(rrev[0]) * r.Mech()->GasMech().ReactionCount());
+        m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->GasMech().SpeciesCount());
     }
 }
 
@@ -791,15 +791,15 @@ void Simulator::outputPartRxnRates(const Reactor &r) const
         r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), wdot);
 
         // Now convert from mol/mol to mol/m3.
-        fvector::iterator rhodot = wdot.begin()+r.Mech()->SpeciesCount()+1;
-        for (unsigned int k=0; k!=r.Mech()->SpeciesCount(); ++k) {
-            wdot[k] = (r.Mixture()->Density() * wdot[k]) +
-                      (r.Mixture()->MoleFraction(k) * (*rhodot));
+        fvector::iterator rhodot = wdot.begin()+r.Mech()->GasMech().SpeciesCount()+1;
+        for (unsigned int k=0; k!=r.Mech()->GasMech().SpeciesCount(); ++k) {
+            wdot[k] = (r.Mixture()->GasPhase().Density() * wdot[k]) +
+                      (r.Mixture()->GasPhase().MoleFraction(k) * (*rhodot));
         }
 
         // Write rates to the file.
         m_file.write((char*)&rates[0], sizeof(rates[0]) * r.Mech()->ParticleMech().ProcessCount());
-        m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->SpeciesCount());
+        m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->GasMech().SpeciesCount());
     }
 }
 
@@ -855,43 +855,43 @@ void Simulator::setupConsole(const Mops::Mechanism &mech)
             (*i).compare("Rho")==0) {
             // This variable is the mixture density.
             header.push_back("Density");
-            m_console_mask.push_back(mech.Species().size()+1);
+            m_console_mask.push_back(mech.GasMech().Species().size()+1);
         } else if ((*i).compare("T")==0) {
             // This variable is the mixture temperature.
             header.push_back("T (K)");
-            m_console_mask.push_back(mech.Species().size());
+            m_console_mask.push_back(mech.GasMech().Species().size());
         } else if ((*i).compare("TIME")==0 || (*i).compare("time")==0 ||
                    (*i).compare("Time")==0) {
             // This variable is the flow time.
             header.push_back("Time (s)");
-            m_console_mask.push_back(mech.Species().size()+2);
+            m_console_mask.push_back(mech.GasMech().Species().size()+2);
         } else if ((*i).compare("#SP")==0 || (*i).compare("#sp")==0) {
             // Number of stochastic particles.
             header.push_back("#SP");
-            m_console_mask.push_back(mech.Species().size()+3);
+            m_console_mask.push_back(mech.GasMech().Species().size()+3);
         } else if ((*i).compare("M0")==0 || (*i).compare("m0")==0) {
             // Particle number density.
             header.push_back("M0 (cm-3)");
-            m_console_mask.push_back(mech.Species().size()+4);
+            m_console_mask.push_back(mech.GasMech().Species().size()+4);
         } else if ((*i).compare("FV")==0 || (*i).compare("fv")==0 ||
                    (*i).compare("Fv")==0) {
             // Particle volume fraction.
             header.push_back("Fv");
-            m_console_mask.push_back(mech.Species().size()+5);
+            m_console_mask.push_back(mech.GasMech().Species().size()+5);
         } else if ((*i).compare("CT")==0 || (*i).compare("ct")==0) {
             // Computation time.
             header.push_back("CPU (s)");
-            m_console_mask.push_back(mech.Species().size()+6);
+            m_console_mask.push_back(mech.GasMech().Species().size()+6);
         } else {
             // Check for a species name.
-            int isp = mech.FindSpecies((*i));
+            int isp = mech.GasMech().FindSpecies((*i));
             if (isp >= 0) {
                 // This is a valid species name.
                 header.push_back((*i) + " (mol/m3)");
                 m_console_mask.push_back(isp);
             } else {
                 // This is an invalid variable.  Just print the first species.
-                header.push_back(mech.Species()[0]->Name());
+                header.push_back(mech.GasMech().Species()[0]->Name());
                 m_console_mask.push_back(0);
             }
         }
@@ -920,9 +920,9 @@ void Simulator::consoleOutput(const Mops::Reactor &r) const
 {
     // Get output data from gas-phase.
     static vector<real> out;
-    r.Mixture()->GetConcs(out);
-    out.push_back(r.Mixture()->Temperature());
-    out.push_back(r.Mixture()->Density());
+    r.Mixture()->GasPhase().GetConcs(out);
+    out.push_back(r.Mixture()->GasPhase().Temperature());
+    out.push_back(r.Mixture()->GasPhase().Density());
     out.push_back(r.Time());
 
     // Get output data from particles.
@@ -1065,7 +1065,7 @@ void Simulator::readGasPhaseDataPoint(std::istream &in, const Mops::Mechanism &m
 {
     // Check for valid stream.
     if (in.good()) {
-        unsigned int N = mech.SpeciesCount();
+        unsigned int N = mech.GasMech().SpeciesCount();
 
         // Read the gas-phase conditions.
         fvector y(N, 0.0);
@@ -1178,11 +1178,11 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
     // Check for valid stream.
     if (in.good()) {
         // Create vectors into which to read the file data
-        const unsigned int rxnCount = mech.ReactionCount();
+        const unsigned int rxnCount = mech.GasMech().ReactionCount();
         fvector rop(rxnCount);
         fvector rfwd(rxnCount);
         fvector rrev(rxnCount);
-        fvector wdot(mech.SpeciesCount());
+        fvector wdot(mech.GasMech().SpeciesCount());
 
         // Resize vectors passed in as reference arguments.
         rates_sum.resize(rxnCount, 0.0);
@@ -1191,22 +1191,22 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
         fwd_rates_sumsqr.resize(rxnCount, 0.0);
         rev_rates_sum.resize(rxnCount, 0.0);
         rev_rates_sumsqr.resize(rxnCount, 0.0);
-        wdot_sum.resize(mech.SpeciesCount(), 0.0);
-        wdot_sumsqr.resize(mech.SpeciesCount(), 0.0);
+        wdot_sum.resize(mech.GasMech().SpeciesCount(), 0.0);
+        wdot_sumsqr.resize(mech.GasMech().SpeciesCount(), 0.0);
 
         // Nothing to read or calculate if there are no reactions
         if(rxnCount > 0) {
             // Get the reaction rates-of-progress vector.
-            in.read(reinterpret_cast<char*>(&rop[0]), sizeof(rop[0])*mech.ReactionCount());
+            in.read(reinterpret_cast<char*>(&rop[0]), sizeof(rop[0])*mech.GasMech().ReactionCount());
 
             // Get the forward reaction rates vector.
-            in.read(reinterpret_cast<char*>(&rfwd[0]), sizeof(rop[0])*mech.ReactionCount());
+            in.read(reinterpret_cast<char*>(&rfwd[0]), sizeof(rop[0])*mech.GasMech().ReactionCount());
 
             // Get the reverse reaction rates vector.
-            in.read(reinterpret_cast<char*>(&rrev[0]), sizeof(rop[0])*mech.ReactionCount());
+            in.read(reinterpret_cast<char*>(&rrev[0]), sizeof(rop[0])*mech.GasMech().ReactionCount());
 
             // Get the species molar production rates.
-            in.read(reinterpret_cast<char*>(&wdot[0]), sizeof(wdot[0])*mech.SpeciesCount());
+            in.read(reinterpret_cast<char*>(&wdot[0]), sizeof(wdot[0])*mech.GasMech().SpeciesCount());
 
             // Calculate sums and sums of squares (for average and
             // error calculation).
@@ -1392,8 +1392,8 @@ void Simulator::writeGasPhaseCSV(const std::string &filename,
     vector<string> head;
     head.push_back("Step");
     head.push_back("Time (s)");
-    for (unsigned int isp=0; isp<mech.SpeciesCount(); ++isp) {
-        head.push_back(mech.Species(isp)->Name() + " (mol/cm3)");
+    for (unsigned int isp=0; isp<mech.GasMech().SpeciesCount(); ++isp) {
+        head.push_back(mech.GasMech().Species(isp)->Name() + " (mol/cm3)");
     }
     head.push_back("T (K)");
     head.push_back("Density (mol/cm3)");
@@ -1519,7 +1519,7 @@ void Simulator::writeGasRxnCSV(const std::string &filename,
     vector<string> head;
     head.push_back("Step");
     head.push_back("Time (s)");
-    for (unsigned int i=0; i<mech.ReactionCount(); ++i) {
+    for (unsigned int i=0; i<mech.GasMech().ReactionCount(); ++i) {
         head.push_back("Rxn " + cstr(i) + " (mol/cm3s)");
     }
     for (unsigned int i=head.size(); i!=2; --i) {
@@ -1561,8 +1561,8 @@ void Simulator::writeProdRatesCSV(const std::string &filename,
     vector<string> head;
     head.push_back("Step");
     head.push_back("Time (s)");
-    for (unsigned int isp=0; isp<mech.SpeciesCount(); ++isp) {
-        head.push_back(mech.Species(isp)->Name() + " (mol/cm3s)");
+    for (unsigned int isp=0; isp<mech.GasMech().SpeciesCount(); ++isp) {
+        head.push_back(mech.GasMech().Species(isp)->Name() + " (mol/cm3s)");
     }
     for (unsigned int i=head.size(); i!=2; --i) {
         head.insert(head.begin()+i, "Err");
@@ -2007,16 +2007,16 @@ void Simulator::writeElementFluxOutput(const std::string &filename,
                                const std::vector<fvector> &agprevrates,
                                const std::vector<fvector> &achem)
 {
-    if(mech.ReactionCount() > 0) {
+    if(mech.GasMech().ReactionCount() > 0) {
         Mops::fvector atemperatures;
         for (unsigned int i = 0; i < achem.size(); i++) {
             atemperatures.push_back(achem.at(i).at(achem.at(i).size() - 3));
         }
         FluxAnalyser fa(mech, times, agpfwdrates, agprevrates, atemperatures);
-        for (unsigned int i = 0; i < mech.ElementCount(); i++) {
+        for (unsigned int i = 0; i < mech.GasMech().ElementCount(); i++) {
             for (unsigned int j = 0; j < m_flux_elements.size(); j++) {
-                if (mech.Elements(i)->Name().compare(Strings::convertToCaps(m_flux_elements.at(j))) == 0) {
-                    fa.addElement(*mech.Elements(i));
+                if (mech.GasMech().Elements(i)->Name().compare(Strings::convertToCaps(m_flux_elements.at(j))) == 0) {
+                    fa.addElement(*mech.GasMech().Elements(i));
                 }
             }
         }

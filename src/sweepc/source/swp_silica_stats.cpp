@@ -211,7 +211,7 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
                 m_stats[iNPRIM]+=cache.m_numprimary  * wt;
 				if((*ip)->Primary()!=NULL)
 				{
-                m_stats[iPARTMASS]+=(*ip)->Primary()->Mass();
+                m_stats[iPARTMASS]+=(*ip)->Primary()->Mass() * wt;
 				}
 				else
 				{

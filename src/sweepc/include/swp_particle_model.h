@@ -53,13 +53,15 @@
 #include "swp_tracker.h"
 #include "swp_aggmodel_type.h"
 #include "swp_sintering_model.h"
-#include "sprog.h"
 
 #include "local_geometry1d.h"
+
+#include "gpc_species.h"
 
 #include <vector>
 #include <string>
 #include <iostream>
+
 namespace Sweep
 {
 // Forward declare the Particle class.

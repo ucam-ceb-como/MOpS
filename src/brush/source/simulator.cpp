@@ -98,12 +98,7 @@ Brush::Simulator::Simulator(const size_t n_paths,
         , mResetChemistry(reset_chem)
         , mOutputFile(output_file)
         , mStatBound(stat_bound)
-{
-    for(size_t i = 0; i != initial_reactor.getNumCells(); ++i) {
-        assert(initial_reactor.getCell(i).Mixture() != NULL);
-        assert(mInitialReactor.getCell(i).Mixture() != NULL);
-    }
-}
+{}
 
 
 /*!
@@ -142,10 +137,10 @@ void Brush::Simulator::runOnePath(const int seed) {
 
     // Write the column headings to the file, with commas between names, but not after the last name
     momentsFile << "t,x";
-    //BOOST_FOREACH(const std::string &colName, Sweep::Stats::EnsembleStats(mInitialReactor.getMechanism().ParticleMech()).Names())
+    //BOOST_FOREACH(const std::string &colName, Sweep::Stats::EnsembleStats(mInitialReactor.getParticleMechanism().ParticleMech()).Names())
     typedef std::vector<std::string> string_vector;
     {
-        const string_vector &colNames = Sweep::Stats::EnsembleStats(mInitialReactor.getMechanism().ParticleMech()).Names();
+        const string_vector &colNames = Sweep::Stats::EnsembleStats(mInitialReactor.getParticleMechanism()).Names();
         const string_vector::const_iterator itEnd = colNames.end();
         for(string_vector::const_iterator it = colNames.begin(); it != itEnd; ++it) {
             momentsFile << ',' << *it;
@@ -165,7 +160,7 @@ void Brush::Simulator::runOnePath(const int seed) {
         particleListHeadings.push_back("x");
 
         // Append the remaining (model defined) headings
-        Sweep::Stats::EnsembleStats(mInitialReactor.getMechanism().ParticleMech()).PSL_Names(particleListHeadings, 2);
+        Sweep::Stats::EnsembleStats(mInitialReactor.getParticleMechanism()).PSL_Names(particleListHeadings, 2);
 
         // Write the column headings to the file, with commas between names, but not after the last name
         string_vector::const_iterator it = particleListHeadings.begin();
@@ -187,7 +182,7 @@ void Brush::Simulator::runOnePath(const int seed) {
     // Create a local scope to hide vector of process names
     {
         string_vector processNames;
-        mInitialReactor.getMechanism().ParticleMech().GetProcessNames(processNames);
+        mInitialReactor.getParticleMechanism().GetProcessNames(processNames);
         string_vector::const_iterator it = processNames.begin();
         const string_vector::const_iterator itEnd = processNames.end();
         while(it != itEnd) {
@@ -198,49 +193,50 @@ void Brush::Simulator::runOnePath(const int seed) {
 
 
     // write initial moments to file
-    saveParticleStats(reac, mStatBound, momentsFile);
+    saveParticleStats(reac, mOutputTimeSteps.front().StartTime(), mStatBound, momentsFile);
 
     // write initial particle list to file
-    saveParticleList(reac, particleListFile);
+    saveParticleList(reac, mOutputTimeSteps.front().StartTime(), particleListFile);
 
     // log initial process rates
-    saveProcessRates(reac, ratesFile);
+    saveProcessRates(reac, mOutputTimeSteps.front().StartTime(), ratesFile);
 
     // Now loop over the user specified time steps
     for(Mops::timevector::const_iterator it = mOutputTimeSteps.begin(); it != mOutputTimeSteps.end(); ++it) {
         const Mops::TimeInterval &tInt = *it;
         const real dt = tInt.StepSize();
 
-        std::cout << "stepping from " << tInt.StartTime() << ' ' << reac.getTime() << '\n';
+        std::cout << "stepping from " << tInt.StartTime() << '\n';
 
         for(unsigned int i = 0; i != tInt.StepCount(); ++i) {
             //std::cout << "solving from " << reac.getTime() << '\n';
 
-            // Time at the start of this loop
+            // Distance into this set of splittings
             const real ti = i * dt;
 
             const real dt2 = dt / tInt.SubSplittingStepCount();
             for(unsigned int j = 0; j != tInt.SubSplittingStepCount(); ++j) {
-                solver.solve(reac, tInt.StartTime() + ti + (j + 1) * dt2,
+                solver.solve(reac, tInt.StartTime() + ti +  j      * dt2,
+                                   tInt.StartTime() + ti + (j + 1) * dt2,
                              tInt.SplittingStepCount(), mCorrectorIterations, seed);
             }
 
             //std::cout << "solved up to " << tInt.StartTime() + i * dt  + (j + 1) * dt2 << ' ' << reac.getTime() << '\n';
 
             // write moments to file
-            saveParticleStats(reac, mStatBound, momentsFile);
+            saveParticleStats(reac, tInt.StartTime() + ti + dt, mStatBound, momentsFile);
 
             // log process rates
-            saveProcessRates(reac, ratesFile);
+            saveProcessRates(reac, tInt.StartTime() + ti + dt, ratesFile);
         }
 
         //std::cout << "stepped up to " << tInt.EndTime() << ' ' << reac.getTime() << '\n';
 
         // write particle list to file
-        saveParticleList(reac, particleListFile);
+        saveParticleList(reac, tInt.EndTime(), particleListFile);
 
 //        // display the number of times each process was performed
-//        const std::vector<unsigned int> procCounts = reac.getMechanism().ParticleMech().GetProcessUsageCounts();
+//        const std::vector<unsigned int> procCounts = reac.getParticleMechanism().ParticleMech().GetProcessUsageCounts();
 //        for(std::vector<unsigned int>::const_iterator it = procCounts.begin();
 //            it != procCounts.end(); ++it) {
 //            std::cout << *it << ", ";
@@ -254,23 +250,25 @@ void Brush::Simulator::runOnePath(const int seed) {
  * Calculate and serialise statistics for each cell in the reactor
  *
  *\param[in]    reac        Reactor for which statistics are to be calculated
+ *\param[in]    t           Time to which stats apply
+ *\param[in]    stat_bound  Specify particles to exclude from statistics
  *\param[in]    out         File handle into which to write the moment data
  */
-void Brush::Simulator::saveParticleStats(const Reactor1d &reac,
+void Brush::Simulator::saveParticleStats(const Reactor1d &reac, const real t,
                                          const Sweep::Stats::IModelStats::StatBound &stat_bound,
                                          std::ostream &out) {
     // Create a stats object to now so there are not a lot of string operations
     // each time one is needed below
-    Sweep::Stats::EnsembleStats stats(reac.getMechanism().ParticleMech());
+    Sweep::Stats::EnsembleStats stats(reac.getParticleMechanism());
     stats.SetStatBoundary(stat_bound);
 
     for(size_t i = 0; i < reac.getNumCells(); ++i) {
         // Collect the statistics
-        stats.Calculate(reac.getCell(i).Mixture()->Particles(),
-                        1.0 / reac.getCell(i).Mixture()->SampleVolume());
+        stats.Calculate(reac.getCell(i).Particles(),
+                        1.0 / reac.getCell(i).SampleVolume());
 
         // Output the time and place to which the statistics apply
-        out << reac.getTime() << ',' << reac.getCellCentre(i);
+        out << t << ',' << reac.getCellCentre(i);
 
         // Put the stats data into the file
         {
@@ -293,26 +291,27 @@ void Brush::Simulator::saveParticleStats(const Reactor1d &reac,
  * Calculate and serialise a list of particles from the cells in the reactor
  *
  *\param[in]    reac        Reactor for which statistics are to be calculated
+ *\param[in]    t           Time to which list applies
  *\param[in]    out         File handle into which to write the moment data
  */
-void Brush::Simulator::saveParticleList(const Reactor1d &reac, std::ostream &out) {
+void Brush::Simulator::saveParticleList(const Reactor1d &reac, const real t, std::ostream &out) {
     // Create a stats object to now so there are not a lot of string operations
     // each time one is needed below
-    Sweep::Stats::EnsembleStats stats(mInitialReactor.getMechanism().ParticleMech());
+    Sweep::Stats::EnsembleStats stats(mInitialReactor.getParticleMechanism());
 
     // Loop over the cells in the reactor
     for(size_t i = 0; i < reac.getNumCells(); ++i) {
-        const Mops::Mixture &mix = *reac.getCell(i).Mixture();
+        const Sweep::Cell &mix = reac.getCell(i);
 
         // Loop over the main particles
         for(unsigned int particleIndex = 0; particleIndex < mix.ParticleCount(); ++particleIndex) {
             // Get a vector containing the particle details
             fvector particleListEntry;
-            stats.PSL(*mix.Particles().At(particleIndex), reac.getMechanism().ParticleMech(),
-                      reac.getTime(), particleListEntry, 1.0 / mix.SampleVolume());
+            stats.PSL(*mix.Particles().At(particleIndex), reac.getParticleMechanism(),
+                      t, particleListEntry, 1.0 / mix.SampleVolume());
 
             // Output the time and place at which the particle is found
-            out << reac.getTime() << ',' << mix.Particles().At(particleIndex)->getPosition();
+            out << t << ',' << mix.Particles().At(particleIndex)->getPosition();
 
             // Output the particle details
             for(fvector::const_iterator it = particleListEntry.begin();
@@ -334,19 +333,18 @@ void Brush::Simulator::saveParticleList(const Reactor1d &reac, std::ostream &out
  * Calculate and log process rates for each cell in the reactor
  *
  *\param[in]    reac        Reactor for which rates are to be calculated
+ *\param[in]    t           Time to which rates apply
  *\param[in]    out         File handle into which to write the data
  */
-void Brush::Simulator::saveProcessRates(const Reactor1d &reac, std::ostream &out) {
+void Brush::Simulator::saveProcessRates(const Reactor1d &reac, const real t, std::ostream &out) {
     for(size_t i = 0; i < reac.getNumCells(); ++i) {
         // Collect the rates
         fvector rates;
         const Geometry::LocalGeometry1d geom(reac.getGeometry(), i);
-        reac.getMechanism().ParticleMech().CalcRateTerms(reac.getTime(),
-                                                         *reac.getCell(i).Mixture(),
-                                                         geom, rates);
+        reac.getParticleMechanism().CalcRateTerms(t, reac.getCell(i), geom, rates);
 
         // Output the time and place to which the rates apply
-        out << reac.getTime() << ',' << reac.getCellCentre(i);
+        out << t << ',' << reac.getCellCentre(i);
 
         // Put the data into the file
         {

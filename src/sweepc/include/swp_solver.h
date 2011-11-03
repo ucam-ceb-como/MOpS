@@ -45,7 +45,7 @@
 
 #include "swp_mechanism.h"
 #include "swp_cell.h"
-#include "sprog.h"
+
 #include <vector>
 #include <map>
 
