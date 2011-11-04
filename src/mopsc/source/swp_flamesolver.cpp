@@ -333,8 +333,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
         // Calculate the splitting end time.
-        //tsplit = calcSplitTime(t, std::min(t + std::min(dtg, gasTimeStep), tstop), jrate, r.Mixture()->ParticleCount());
-        tsplit = calcSplitTime(t, std::min(t + dtg, tstop), jrate, r.Mixture()->ParticleCount());
+        tsplit = calcSplitTime(t, std::min(t + std::min(dtg, gasTimeStep), tstop), jrate, r.Mixture()->ParticleCount());
 
         //std::cout << "At time " << t << " split time is " << tsplit << ", spacing of gas data is " << gasTimeStep << '\n';
 
