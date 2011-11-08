@@ -67,9 +67,9 @@
 #include "swp_property_indices.h"
 #include "swp_gas_profile.h"
 
-
 #include "binary_tree.hpp"
 
+#include <list>
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
@@ -151,10 +151,9 @@ public:
         unsigned int capacity             // Max. number of particles.
         );
 
-    //! Initialise with some particles
-    template<class T> void SetParticles(
-        T particle_list_begin,
-        T particle_list_end);
+    //! Initialise with some particles, downsampling as necessary
+    void SetParticles(std::list<Particle*>::iterator first, std::list<Particle*>::iterator last,
+                      rng_type &rng);
 
     //! Empty the tree and pass on ownership of the particles
     PartPtrList TakeParticles();

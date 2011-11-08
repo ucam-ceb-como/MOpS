@@ -204,6 +204,81 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
 }
 
+/**
+ * Initialise the ensemble to hold particles of the type specified
+ * by the model and containing the particular particles contained
+ * in the range [first, last).  This is equivalent to multiple applications
+ * of Add on an empty Ensemble instance.
+ *
+ *@param[in]        first      Iterator to first in range of particle pointers to insert
+ *@param[in]        last       Iterator to one past end of range of particle pointers to insert
+ *@param[in,out]    rng        Random number generator
+ */
+void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::list<Particle*>::iterator last,
+                                   rng_type &rng)
+{
+    // Clear any existing particles
+    for(iterator it = m_particles.begin(); it != m_particles.end(); ++it) {
+        delete *it;
+    }
+    m_particles.assign(m_capacity, NULL);
+
+    unsigned count = 0;
+    // Read up to m_capacity particles straight into the array
+    while((first != last) && (count < m_capacity)) {
+        m_particles[count++] = (*first++);
+    }
+
+    // Now we have to decide whether or not to accept particles
+    while(first != last) {
+        // Possible index in which to store this particle
+        boost::uniform_smallint<unsigned> indexGenerator(0, count);
+        const unsigned possibleIndex = indexGenerator(rng);
+
+        // Accept the index with probability m_capacity / count
+        if(possibleIndex < m_capacity) {
+            delete m_particles[possibleIndex];
+            m_particles[possibleIndex] = *first;
+        }
+        else {
+            delete *first;
+        }
+        ++count;
+        ++first;
+    }
+
+    if(count > m_capacity) {
+        // Some particles were thrown away and we must rescale
+        m_count = m_capacity;
+        m_scale = static_cast<real>(m_capacity) / count;
+    }
+    else {
+        m_count = count;
+        m_scale = 1.0;
+    }
+    m_maxcount = m_count;
+
+    // Initialise scaling.
+    m_ncont      = 0;
+    m_contfactor = (real)(m_capacity-1) / (real)(m_capacity);
+    m_contwarn   = false;
+
+    // Initialise doubling.
+    m_ndble      = 0;
+    m_dbleon     = true;
+    m_dbleactive = false;
+    m_dblecutoff = (3u * m_capacity) / 4u;
+
+    // This is 2^(m_levels - 5) provided m_levels > 5, otherwise 1
+    m_dbleslack  = 1u << ((m_levels > 5u) ? m_levels-5 : 0);
+    m_dblelimit  = m_halfcap - m_dbleslack;
+
+    // Build the tree with the weights for the new particles.
+    rebuildTree();
+
+    assert(m_tree.size() == m_count);
+}
+
 Sweep::KMC_ARS::KMCSimulator* Sweep::Ensemble::Simulator(void)
 {   
 	return m_kmcsimulator;
@@ -270,7 +345,7 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         // There is space in the tree for a new particle.
         i = -1;
     } else {
-        // We must contract the ensemble to accomodate a new particle.
+        // We must contract the ensemble to accommodate a new particle.
         boost::uniform_smallint<int> indexDistrib(0, m_capacity);
         boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
         i = indexGenerator();
