@@ -288,7 +288,7 @@ void Interface::getFlameletVariables(FlameLet* const flmlt)
     flmlt->getDiffusionCoefficient(mDiff);
     flmlt->getVelocity(mVelocity);
     flmlt->getAverageMolarWeight(avgMolWtVector);
-    flmlt->getWdotA4(wdotA4);
+    flmlt->getWdotA4interface(wdotA4);
     flmlt->getSootAverageDiameterVector(sootAverageDiameterVector);
     flmlt->getSootDispersionVector(sootDispersionVector);
     flmlt->getSootSurfaceAreaVector(sootSurfaceAreaVector);

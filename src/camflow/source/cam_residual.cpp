@@ -55,7 +55,8 @@ CamResidual::CamResidual
   avgSootDiamMaster(mCord,0.0),	  // soot properties derived from moments.
   dispersionMaster(mCord,0.0),
   sootSurfaceAreaMaster(mCord,0.0),
-  sootVolumeFractionMaster(mCord,0.0)
+  sootVolumeFractionMaster(mCord,0.0),
+  wdotA4Master(mCord,0.0)
 {}
 
 CamResidual::~CamResidual()
@@ -421,6 +422,12 @@ void CamResidual::getSootVolumeFractionVector(std::vector<doublereal>& temp){
     temp = sootVolumeFractionMaster;
 }
 /*
+ * return the rate of A4 production
+ */
+void CamResidual::getWdotA4interface(std::vector<doublereal>& temp){
+    temp = wdotA4Master;
+}
+/*
  *  Return the specific heat
  */
 void CamResidual::getSpecificHeat(std::vector<doublereal>& spHeat){
@@ -449,7 +456,7 @@ void CamResidual::getIndepedantVar(std::vector<doublereal>& indVar){
 
 
 void CamResidual::setParticleSource(const std::vector<std::vector<doublereal> >& initial,
-        const std::vector<std::vector<doublereal> >& final){
+    const std::vector<std::vector<doublereal> >& final){
     int n = initial.size();
     int m = final.size();
     if(m!=n) throw CamError("size mismatch : initial and final particle source terms\n");
@@ -476,6 +483,7 @@ void CamResidual::setParticleSource(const std::vector<std::vector<doublereal> >&
 
 
 }
+
 
 
 
