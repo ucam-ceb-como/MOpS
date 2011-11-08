@@ -64,7 +64,9 @@ my $momentFile;
 open($momentFile, "<moonmd1results-moments.csv") or die "ERR: failed to open moment file: $!";
 
 my $m0 = 0;
+my $m0sq = 0;
 my $m1 = 0;
+my $m1sq = 0;
 my $count = 0;
 
 while(<$momentFile>) {
@@ -75,9 +77,11 @@ while(<$momentFile>) {
   if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.71) < 1e-4 )) {
       # Third field should be the zeroth moment
       $m0 += $fields[3];
+      $m0sq += $fields[3] * $fields[3];
       #print "$fields[3], ";
 
       $m1 += $fields[11];
+      $m1sq += $fields[11] * $fields[11];
       #print "$fields[11] \n";
       ++$count;
   }
@@ -85,18 +89,22 @@ while(<$momentFile>) {
 
 # Get mean values
 $m0 /= $count;
+$m0sq = 1.96 * sqrt(($m0sq / $count - $m0 * $m0) / $count);
 $m1 /= $count;
+$m1sq = 1.96 * sqrt(($m1sq / $count - $m1 * $m1) / $count);
 
 # Analytic solns, const coag and inception
 # 0 initial and inflow conditions
 # velocity 1
 # Inception rate I = 5.31e9 m^-3 s^-1
 # Coagulation kernel K = 5e-9 m^3 s^-1
-# m0(x) = sqrt(2I/K)tanh(x*sqrt(IK/2))
-# m1(x) = Ix
+# Velocity u = 2 m s^-1
+# Mass of incepted particle m = 2 kg
+# m0(x) = sqrt(2I/K)tanh(sqrt(IK/2)*x/u)
+# m1(x) = Ixm/u
 #
 # Analytical solutions at x=0.71 are:
-# m0(0.71) = 1.44e9
+# m0(0.71) = 1.25e9
 # m1(0.71) = 3.77e9
 #
 # Ten repetitions with git a8fcecd2f...
@@ -105,9 +113,9 @@ $m1 /= $count;
 # m0: (1.26+-0.05)e9
 # m1: (3.77+-0.12)e9
 
-print "$m0, $m1\n";
-if(abs($m0 - 1.44e9) > 2e8) {
-  print "Simulated mean M0 was $m0, when 1.44e9 m^-3 expected\n";
+print "$m0 $m0sq, $m1 $m1sq\n";
+if(abs($m0 - 1.25e9) > 1e8) {
+  print "Simulated mean M0 was $m0, when 1.25e9 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
