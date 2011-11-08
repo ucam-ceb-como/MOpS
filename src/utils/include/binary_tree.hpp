@@ -792,21 +792,21 @@ template<class Weight, class Selectee> void BinaryTree<Weight, Selectee>::clear(
     assert(isValid());
 }
 
-//Iterator for the first entry
+//! Iterator for the first entry
 template<class Weight, class Selectee>
   typename BinaryTree<Weight, Selectee>::iterator BinaryTree<Weight, Selectee>::begin()
 {
   return iterator(0, this);
 }
 
-//const_iterator for the first entry
+//! const_iterator for the first entry
 template<class Weight, class Selectee>
   typename BinaryTree<Weight, Selectee>::const_iterator BinaryTree<Weight, Selectee>::begin() const
 {
   return const_iterator(0, this);
 }
 
-//One past the last entry
+//! One past the last entry
 template<class Weight, class Selectee>
   typename BinaryTree<Weight, Selectee>::iterator BinaryTree<Weight, Selectee>::end()
 {
