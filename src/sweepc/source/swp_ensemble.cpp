@@ -208,7 +208,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
  * Initialise the ensemble to hold particles of the type specified
  * by the model and containing the particular particles contained
  * in the range [first, last).  This is equivalent to multiple applications
- * of Add on an empty Ensemble instance.
+ * of Add on an Ensemble instance after a call to Initialise(m_capacity).
  *
  *@param[in]        first      Iterator to first in range of particle pointers to insert
  *@param[in]        last       Iterator to one past end of range of particle pointers to insert
@@ -257,6 +257,8 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
         m_scale = 1.0;
     }
     m_maxcount = m_count;
+
+    //std::cout << m_count << " particles set on ensemble of capacity " << m_capacity << '\n';
 
     // Initialise scaling.
     m_ncont      = 0;
@@ -513,6 +515,7 @@ void Sweep::Ensemble::ClearMain()
     m_count = 0;
 
     m_ncont = 0; // No contractions any more.
+    m_scale = 1.0;
 
     m_tree.clear();
 
@@ -585,6 +588,7 @@ real Sweep::Ensemble::Scaling() const
 // Resets the ensemble scaling.
 void Sweep::Ensemble::ResetScaling()
 {
+    m_scale = 1.0;
     m_ncont = 0;
     m_ndble = 0;
     m_contwarn = false;
@@ -700,7 +704,9 @@ void Sweep::Ensemble::dble()
 
 /*!
  * Empty the tree and pass of list of pointers to the particles in
- * the tree to the caller, which must take ownership of them.
+ * the tree to the caller, which must take ownership of them.  This
+ * clears all scaling information in the tree, but leaves all the
+ * storage allocated.
  */
 Sweep::PartPtrList Sweep::Ensemble::TakeParticles() {
     // Copy the pointers to particles

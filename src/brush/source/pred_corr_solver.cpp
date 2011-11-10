@@ -215,7 +215,7 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
     const size_t numCells = reac.getNumCells();
     const Sweep::Mechanism &mech = reac.getParticleMechanism();
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
     for(size_t i = 0; i < numCells; ++i) {
         // Get details of cell i
         Sweep::Cell& cell = reac.getCell(i);
@@ -308,7 +308,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
 
     // Loop over each cell updating particles positions and removing any
     // particles that are moving to new cells.
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
     for(unsigned int i = 0; i < numCells; ++i) {
         Sweep::Cell &mix = reac.getCell(i);
         Sweep::Ensemble &particles = mix.Particles();
@@ -349,7 +349,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
     // particles in cells cannot begin until the positions and cells of all particles
     // have been calculated.
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
     for(size_t i = 0; i < numCells; ++i) {
         // i is the index of the destination cell
 
@@ -365,7 +365,8 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
                 // Adjust the statistical weight using the information in the TransportOutflow structure
                 // so that all particles can be added to their destination cells with probability 1 (although
                 // the destination cells may still internally downsample).
-                it->particle->setStatisticalWeight(it->particle->getStatisticalWeight() * it->weight / statisticalWeights[i]);
+                it->particle->setStatisticalWeight(it->particle->getStatisticalWeight() * it->weight
+                                                   * reac.getCell(i).GasPhase().Velocity() / statisticalWeights[i]);
 
                 // We no longer need or want the full TransportOutflow information, just the particle
                 partList.push_back(it->particle);
@@ -454,16 +455,12 @@ Brush::PredCorrSolver::inflow_lists_vector
         out.destination = geom.containingCell((*itPart)->getPosition());
 
         if(out.destination >= 0) {
-            // Statistical weight is adjusted by the ratio of physical volumes
-            // of the cells so that the number of physical particles
-            // represented by the computational particle does not change
-            // during transport.  Recall that statistical weight is the
-            // concentration of physical particles represented by a computational
-            // particle and that the number of physical particles in a cell
-            // will be the concentration multiplied by the cell volume.
-            out.weight = geom.cellVolume(cell_index)
-                          / geom.cellVolume(out.destination)
-                          / mix.SampleVolume();
+            // I need to write up the fluid mechanics for the this calculation.
+            // Ultimately one must use the ratio of
+            // cellVolume / (SampleVolume * Velocity)
+            // in the source cell to that in the destination cell.
+            out.weight = geom.cellVolume(cell_index) / geom.cellVolume(out.destination)
+                          / mix.SampleVolume() / mix.GasPhase().Velocity();
 
             // Add the details of the particle to a list ready for inserting
             // into its destination cell
