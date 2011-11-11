@@ -185,6 +185,8 @@ private:
 
     //! Help function for printree
     void PrintTreeLoop(std::ostream &out);
+    //! Help function for printree
+    void PrintTreeNode(std::ostream &out);
     //! Sets the children properties to 0
     void ResetChildrenProperties();
     //! Updates the particle
