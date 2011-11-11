@@ -820,7 +820,9 @@ double SilicaPrimary::SinteringLevel()
         }
     } else {
         // Particle is a primary, should have 0 as default properties
-        m_children_surf = 0;
+        m_children_surf = 0.0;
+        m_children_radius = 0.0;
+        m_children_vol = 0.0;
         return 0.0;
     }
 }
