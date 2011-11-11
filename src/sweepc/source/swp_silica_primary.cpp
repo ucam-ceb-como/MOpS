@@ -52,7 +52,7 @@
 #include "swp_kmc_pah_process.h"
 #include "swp_kmc_pah_structure.h"
 #include "swp_PAH.h"
-
+#include "gpc_species.h"
 #include <stdexcept>
 #include <cassert>
 #include <boost/random/poisson_distribution.hpp>
@@ -775,18 +775,14 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 		int num_H2O = int(abs(numOH_old - m_numOH)/2);
 
 		real n_NAvol_sint = wt * (real)num_H2O / (NA * sys.SampleVolume());
-		dc[9] += n_NAvol_sint;
+		dc[Sprog::Species::Find(string("H2O"),*sys.GasPhase().Species())] += n_NAvol_sint;
 		sys.AdjustConcs(dc);
 
 		m_children_sintering=SinteringLevel();
 
-		if(m_children_sintering > 1)
-			cout<<"sweep:sintering level greater than one";
-
 	}
 
 }
-
 
 /*!
  * @brief       Calculates the sintering level for particles connected
