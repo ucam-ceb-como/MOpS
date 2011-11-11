@@ -1143,6 +1143,19 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 }
 
 /*!
+ * @brief       Updates the surface area and sintering level of all parents
+ *
+ * @param[in]   dS      Surface area increment to adjust area by
+ */
+void SilicaPrimary::UpdateParents(double dS) {
+    if (m_parent != NULL) {
+        m_parent->m_children_surf += dS;
+        m_parent->m_children_sintering = m_parent->SinteringLevel();
+        m_parent->UpdateCache();
+    }
+}
+
+/*!
  * @brief       Adjusts the particle after an IntP event
  * 
  * Note that the gas-phase is actually adjusted in Sinter()

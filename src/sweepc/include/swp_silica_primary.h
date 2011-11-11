@@ -225,6 +225,8 @@ protected:
 
 
 private:
+    //! Update the surface area and sintering level of all parents
+    void UpdateParents(double dS);
 
     //! Find the path through the tree from node top to node bottom
     static std::stack<bool> recordPath(const SilicaPrimary* bottom,
