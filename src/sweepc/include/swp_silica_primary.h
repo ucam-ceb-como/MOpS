@@ -135,15 +135,6 @@ public:
 	//! Gets the sintering rate for interparticle reaction
 	real GetSintRate() const;
 
-    //! Returns the left child
-    const SilicaPrimary *LeftChild() const;
-
-    //! Returns the right child
-    const SilicaPrimary *RightChild() const;
-
-    //! Checks if the sintering level is higher then the treshold and merges the primaries if necessary
-    bool CheckSintering();
-
     //! Updates the fractal dimension
     void CalcFractalDimension();
 
@@ -156,6 +147,13 @@ public:
     void Serialize(std::ostream &out) const;
 
     AggModels::AggModelType AggID(void) const;
+
+    //! Returns the left child
+    const SilicaPrimary *LeftChild() const;
+    //! Returns the right child
+    const SilicaPrimary *RightChild() const;
+
+    // Functions used to gather data for statistics
 
     //! returns L divided by W
     double LdivW() const;
@@ -178,11 +176,12 @@ public:
 	//! Returns average coalescence level
     double AvgSinter() const;
 
-
-
-protected:
+private:
     //! Empty primary not meaningful
     SilicaPrimary();
+
+    //! Checks if the sintering level is higher then the threshold and merges the primaries if necessary
+    bool CheckSintering();
 
     //! Help function for printree
     void PrintTreeLoop(std::ostream &out);
@@ -208,6 +207,10 @@ protected:
     void Reset();
     //! Merges the two children primaries together
     SilicaPrimary &Merge();
+
+    //! Releases the memory associated with the object
+    void ReleaseMem();
+
     //! Updates the pointers after a merge event
     void ChangePointer(SilicaPrimary *source, SilicaPrimary *target);
     //! Copies the node without the children
@@ -217,14 +220,6 @@ protected:
     //! Returns a uniformly chosen primary particle
     SilicaPrimary *SelectRandomSubparticle(rng_type &rng);
     
-    //! Releases the memory associated with the object
-    void ReleaseMem();
-
-    //! Time the two subparticles are connected
-    real m_connect_time;
-
-
-private:
     //! Update the surface area and sintering level of all parents
     void UpdateParents(double dS);
 
@@ -235,6 +230,9 @@ private:
     //! Follow a path down the tree
     static SilicaPrimary* descendPath(SilicaPrimary *here,
                                    std::stack<bool> &takeLeftBranch);
+
+    //! Time the two subparticles are connected
+    real m_connect_time;
 
     //! Number of silicon units in primary
     int m_numSi;
