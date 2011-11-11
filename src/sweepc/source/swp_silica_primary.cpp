@@ -567,8 +567,18 @@ void SilicaPrimary::AddParent(SilicaPrimary *source)
 */
 SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 {
-	const SilicaPrimary *rhsparticle = NULL;
-	rhsparticle = dynamic_cast<const AggModels::SilicaPrimary*>(&rhs);
+    const SilicaPrimary *rhsparticle = NULL;
+    rhsparticle = dynamic_cast<const AggModels::SilicaPrimary*>(&rhs);
+
+    // Add the components.
+    for (unsigned int i=0; i!=min(m_comp.size(),rhsparticle->m_comp.size()); ++i) {
+        m_comp[i] += rhsparticle->m_comp[i];
+    }
+
+    // Add the tracker values.
+    for (unsigned int i=0; i!=min(m_values.size(),rhsparticle->m_values.size()); ++i) {
+        m_values[i] += rhsparticle->m_values[i];
+    }
 
             //coagulation process
             SilicaPrimary *newleft = new SilicaPrimary;
