@@ -131,12 +131,12 @@ private:
      */
     typedef std::vector<std::list<Sweep::Transport::TransportOutflow> > inflow_lists_vector;
 
-    //! Update the positions on a list of particles from one cell
-    inflow_lists_vector updateParticleListPositions(const real t_start, const real t_stop, const Sweep::Cell &mix,
+    //! Take the particles from a cell and put them in lists according to their new positions
+    inflow_lists_vector updateParticleListPositions(const real t_start, const real t_stop, Sweep::Cell &mix,
                                                     const size_t cell_index, const Sweep::Mechanism &mech,
                                                     const Geometry::Geometry1d &geom,
                                                     const std::vector<const Sweep::Cell*> &neighbouring_cells,
-                                                    const Sweep::PartPtrList& particle_list, Sweep::rng_type &rng) const;
+                                                    Sweep::rng_type &rng) const;
 
 
     //! Object for setting reactor chemistry to fixed values (? just use pointer)

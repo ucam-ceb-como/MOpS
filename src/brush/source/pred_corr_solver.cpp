@@ -311,7 +311,6 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
 #pragma omp parallel for schedule(dynamic)
     for(unsigned int i = 0; i < numCells; ++i) {
         Sweep::Cell &mix = reac.getCell(i);
-        Sweep::Ensemble &particles = mix.Particles();
 
         // Flamelet advection needs some information on adjoining cells to calculate gradients
         const Geometry::LocalGeometry1d geom(reac.getGeometry(), i);
@@ -332,17 +331,12 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
         // The weight will be needed when the particles are put back into the cell
         statisticalWeights[i] = 1.0 / mix.SampleVolume();
 
-        // Get a list of the particles from the ensemble.  New instances of the
-        // particles are required as the existing particles will be deleted
-        // when a new list is set on the ensemble.
-        Sweep::PartPtrList partList = particles.TakeParticles();
-
-        // Remove particles that are moving to a new cell from partLists and add them
+        // Remove all particles from the cell and add them
         // to the inflow list for the appropriate cell
         inflowLists[i] = updateParticleListPositions(t_start, t_stop, mix, i,
                                                      reac.getParticleMechanism(),
                                                      reac.getGeometry(), neighbouringCells,
-                                                     partList, cell_rngs[i]);
+                                                     cell_rngs[i]);
     }// loop over all cells and build up lists of particles that are moving cells
 
     // There has to be a synchronisation point here, in that parallel replacement of
@@ -373,6 +367,9 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
                 ++it;
             }
         }
+        if(partList.size() > reac.getCell(i).Particles().Capacity())
+            std::cout << "Setting " << partList.size() << " particles on cell with center " << reac.getGeometry().cellCentre(i) << std::endl;
+
         reac.getCell(i).SetParticles(partList.begin(), partList.end(), statisticalWeights[i], cell_rngs[i]);
     }
 }
@@ -416,7 +413,7 @@ void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const rea
 /*!
  *@param[in]        t_start             Time at which position was last calculated by splitting
  *@param[in]        t_stop              Time at which new position must be calculated
- *@param[in]        mix                 Mixture in which the particle is moving
+ *@param[in,out]    mix                 Mixture from which the particles are moving
  *@param[in]        cell_index          Index of cell containing the particles to be transported
  *@param[in]        mech                Mechanism specifying calculation of particle transport properties
  *@param[in]        geom                Information on locations of surrounding cells
@@ -427,11 +424,11 @@ void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const rea
  *@return       Vector of lists of particles to be transported into other cells
  */
 Brush::PredCorrSolver::inflow_lists_vector
-  Brush::PredCorrSolver::updateParticleListPositions(const real t_start, const real t_stop, const Sweep::Cell &mix,
+  Brush::PredCorrSolver::updateParticleListPositions(const real t_start, const real t_stop, Sweep::Cell &mix,
                                                      const size_t cell_index, const Sweep::Mechanism &mech,
                                                      const Geometry::Geometry1d & geom,
                                                      const std::vector<const Sweep::Cell*> & neighbouringCells,
-                                                     const Sweep::PartPtrList& particle_list, Sweep::rng_type &rng) const {
+                                                     Sweep::rng_type &rng) const {
     // Build up the return value in this vector of lists
     inflow_lists_vector outflow(geom.numCells());
 
@@ -439,13 +436,13 @@ Brush::PredCorrSolver::inflow_lists_vector
     Geometry::LocalGeometry1d localGeom(geom, cell_index);
 
     // Now go through the particles updating their position
-    Sweep::PartPtrList::const_iterator itPart = particle_list.begin();
-    const Sweep::PartPtrList::const_iterator itPartEnd = particle_list.end();
+    Sweep::Ensemble::iterator itPart = mix.Particles().begin();
+    const Sweep::Ensemble::iterator itPartEnd = mix.Particles().end();
     while(itPart != itPartEnd ) {
-
+        // Actually calculate new position of particle
         updateParticlePosition(t_start, t_stop, mix, mech, localGeom, neighbouringCells, **itPart, rng);
 
-
+        // Store particle details in this object, ready for insertion into the appropriate cell
         Sweep::Transport::TransportOutflow out;
 
         // Dereference iterator to get raw pointer to particle
@@ -478,6 +475,9 @@ Brush::PredCorrSolver::inflow_lists_vector
         // to the next particle
         ++itPart;
     } // loop over all particles in cell i updating their position
+
+    // Empty the particle ensemble
+    mix.Particles().TakeParticles();
 
     return outflow;
 }

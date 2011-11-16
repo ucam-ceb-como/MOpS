@@ -250,30 +250,26 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
     if(count > m_capacity) {
         // Some particles were thrown away and we must rescale
         m_count = m_capacity;
-        m_scale = static_cast<real>(m_capacity) / count;
+        m_scale = static_cast<real>(m_capacity) / static_cast<real>(count);
+        m_ncont = 0;
     }
     else {
         m_count = count;
         m_scale = 1.0;
+        m_ncont = 0;
     }
     m_maxcount = m_count;
 
     //std::cout << m_count << " particles set on ensemble of capacity " << m_capacity << '\n';
 
     // Initialise scaling.
-    m_ncont      = 0;
-    m_contfactor = (real)(m_capacity-1) / (real)(m_capacity);
+
     m_contwarn   = false;
 
     // Initialise doubling.
     m_ndble      = 0;
     m_dbleon     = true;
     m_dbleactive = false;
-    m_dblecutoff = (3u * m_capacity) / 4u;
-
-    // This is 2^(m_levels - 5) provided m_levels > 5, otherwise 1
-    m_dbleslack  = 1u << ((m_levels > 5u) ? m_levels-5 : 0);
-    m_dblelimit  = m_halfcap - m_dbleslack;
 
     // Build the tree with the weights for the new particles.
     rebuildTree();
