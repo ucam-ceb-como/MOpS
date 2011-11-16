@@ -74,33 +74,35 @@ using namespace Strings;
  *
  */
 SilicaPrimary::SilicaPrimary() : Primary(),
+    m_connect_time(0),
     //State Space:: number of Si, O and OH units
     m_numSi(0),
-	m_numO(0),
-	m_numOH(0),
+    m_numO(0),
+    m_numOH(0),
     m_numprimary(0),
     m_primarydiam(0.0),
-	//Children are nodes holding pointers to other children and/or primary particles
+    //Properties of children
+    m_children_radius(0.0),
+    m_children_vol(0.0),
+    m_children_surf(0.0),
+    m_children_sintering(0.0),
+    //Sintering properties
+    m_avg_sinter(0.0),
+    m_sint_rate(0.0),
+    //Imaging properties
+    m_Rg(0.0),
+    m_fdim(0.0),
+    m_sqrtLW(0.0),
+    m_LdivW(0.0),
+    //Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
-	m_children_radius(0),
-    m_children_vol(0),
-	m_children_surf(0),
-    m_children_sintering(0),
-	//Parent node is the top node of the tree
-	m_parent(NULL),
-	m_allparents(0),
-	//Particles are leaf nodes containing primary particles
+    //Parent node is the top node of the tree
+    m_parent(NULL),
+    //Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    //Imaging properties
-    m_Rg(0),
-    m_fdim(0),
-    m_sqrtLW(0),
-    m_LdivW(0),
-    m_avg_sinter(0),
-	m_sint_rate(0),
-    m_connect_time(0)
+    m_allparents(0)
 {
 }
 
@@ -116,33 +118,35 @@ SilicaPrimary::SilicaPrimary() : Primary(),
  */
 SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
 : Primary(time, model),
+    m_connect_time(0),
     //State Space:: number of Si, O and OH units
     m_numSi(0),
-	m_numO(0),
-	m_numOH(0),
+    m_numO(0),
+    m_numOH(0),
     m_numprimary(0),
     m_primarydiam(0.0),
-	//Children are nodes holding pointers to other children and/or primary particles
+    //Properties of children
+    m_children_radius(0.0),
+    m_children_vol(0.0),
+    m_children_surf(0.0),
+    m_children_sintering(0.0),
+    //Sintering properties
+    m_avg_sinter(0.0),
+    m_sint_rate(0.0),
+    //Imaging properties
+    m_Rg(0.0),
+    m_fdim(0.0),
+    m_sqrtLW(0.0),
+    m_LdivW(0.0),
+    //Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
-	m_children_radius(0),
-    m_children_vol(0),
-	m_children_surf(0),
-    m_children_sintering(0),
-	//Parent node is the top node of the tree
-	m_parent(NULL),
-	m_allparents(0),
-	//Particles are leaf nodes containing primary particles
+    //Parent node is the top node of the tree
+    m_parent(NULL),
+    //Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    //Imaging properties
-    m_Rg(0),
-    m_fdim(0),
-    m_sqrtLW(0),
-    m_LdivW(0),
-    m_avg_sinter(0),
-	m_sint_rate(0),
-    m_connect_time(0)
+    m_allparents(0)
 {
     // Other parts of the code check for a non-zero composition.
     m_comp[0]=1;
@@ -170,33 +174,35 @@ SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
 SilicaPrimary::SilicaPrimary(const real time, const real position,
                        const Sweep::ParticleModel &model)
 : Primary(time, model),
+    m_connect_time(0),
     //State Space:: number of Si, O and OH units
     m_numSi(0),
-	m_numO(0),
-	m_numOH(0),
+    m_numO(0),
+    m_numOH(0),
     m_numprimary(0),
     m_primarydiam(0.0),
-	//Children are nodes holding pointers to other children and/or primary particles
+    //Properties of children
+    m_children_radius(0.0),
+    m_children_vol(0.0),
+    m_children_surf(0.0),
+    m_children_sintering(0.0),
+    //Sintering properties
+    m_avg_sinter(0.0),
+    m_sint_rate(0.0),
+    //Imaging properties
+    m_Rg(0.0),
+    m_fdim(0.0),
+    m_sqrtLW(0.0),
+    m_LdivW(0.0),
+    //Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
-	m_children_radius(0),
-    m_children_vol(0),
-	m_children_surf(0),
-    m_children_sintering(0),
-	//Parent node is the top node of the tree
-	m_parent(NULL),
-	m_allparents(0),
-	//Particles are leaf nodes containing primary particles
+    //Parent node is the top node of the tree
+    m_parent(NULL),
+    //Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    //Imaging properties
-    m_Rg(0),
-    m_fdim(0),
-    m_sqrtLW(0),
-    m_LdivW(0),
-    m_avg_sinter(0),
-	m_sint_rate(0),
-    m_connect_time(0)
+    m_allparents(0)
 {
     // Other parts of the code check for a non-zero composition
     m_comp[0]=1;
@@ -221,33 +227,35 @@ SilicaPrimary::SilicaPrimary(const real time, const real position,
  */
 SilicaPrimary::SilicaPrimary(real time, const Sweep::ParticleModel &model, bool nosilica)
 : Primary(time, model),
+    m_connect_time(0),
     //State Space:: number of Si, O and OH units
     m_numSi(0),
-	m_numO(0),
-	m_numOH(0),
+    m_numO(0),
+    m_numOH(0),
     m_numprimary(0),
     m_primarydiam(0.0),
-	//Children are nodes holding pointers to other children and/or primary particles
+    //Properties of children
+    m_children_radius(0.0),
+    m_children_vol(0.0),
+    m_children_surf(0.0),
+    m_children_sintering(0.0),
+    //Sintering properties
+    m_avg_sinter(0.0),
+    m_sint_rate(0.0),
+    //Imaging properties
+    m_Rg(0.0),
+    m_fdim(0.0),
+    m_sqrtLW(0.0),
+    m_LdivW(0.0),
+    //Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
-	m_children_radius(0),
-    m_children_vol(0),
-	m_children_surf(0),
-    m_children_sintering(0),
-	//Parent node is the top node of the tree
-	m_parent(NULL),
-	m_allparents(0),
-	//Particles are leaf nodes containing primary particles
+    //Parent node is the top node of the tree
+    m_parent(NULL),
+    //Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    //Imaging properties
-    m_Rg(0),
-    m_fdim(0),
-    m_sqrtLW(0),
-    m_LdivW(0),
-    m_avg_sinter(0),
-	m_sint_rate(0),
-    m_connect_time(0)
+    m_allparents(0)
 {
     m_comp[0]=1;
 
