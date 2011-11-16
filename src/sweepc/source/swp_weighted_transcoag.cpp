@@ -238,7 +238,6 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
     fvector::iterator isf = iterm+4;
 
     // Get individual terms
-    real terms[TYPE_COUNT];
 
     // Free-molecular.
     *(iterm) =  n_1 * d2m_1_2w * c / vol;

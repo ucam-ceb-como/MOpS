@@ -198,9 +198,6 @@ ProcessType ActSiteReaction::ID(void) const {return ActSiteRxn_ID;}
 // Writes the object to a binary stream.
 void ActSiteReaction::Serialize(std::ostream &out) const
 {
-    const unsigned int trueval  = 1;
-    const unsigned int falseval = 0;
-
     if (out.good()) {
         // Output the version ID (=0 at the moment).
         const unsigned int version = 0;
@@ -224,8 +221,6 @@ void ActSiteReaction::Deserialize(std::istream &in, const Sweep::Mechanism &mech
         // Still needs to be read though.
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
-
-        unsigned int n = 0, id = 0;
 
         switch (version) {
             case 0:

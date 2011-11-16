@@ -296,7 +296,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 {
     //std::cout << "Start of FlameSolver::Solve\n";
 
-    real tsplit, dtg, dt, jrate;
+    real tsplit, dtg, jrate;
     const Sweep::Mechanism &mech = r.Mech()->ParticleMech();
     fvector rates(mech.TermCount(), 0.0);
 

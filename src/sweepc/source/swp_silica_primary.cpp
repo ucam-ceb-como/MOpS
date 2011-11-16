@@ -52,7 +52,7 @@
 #include "swp_kmc_pah_process.h"
 #include "swp_kmc_pah_structure.h"
 #include "swp_PAH.h"
-
+#include "gpc_species.h"
 #include <stdexcept>
 #include <cassert>
 #include <boost/random/poisson_distribution.hpp>
@@ -567,8 +567,18 @@ void SilicaPrimary::AddParent(SilicaPrimary *source)
 */
 SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 {
-	const SilicaPrimary *rhsparticle = NULL;
-	rhsparticle = dynamic_cast<const AggModels::SilicaPrimary*>(&rhs);
+    const SilicaPrimary *rhsparticle = NULL;
+    rhsparticle = dynamic_cast<const AggModels::SilicaPrimary*>(&rhs);
+
+    // Add the components.
+    for (unsigned int i=0; i!=min(m_comp.size(),rhsparticle->m_comp.size()); ++i) {
+        m_comp[i] += rhsparticle->m_comp[i];
+    }
+
+    // Add the tracker values.
+    for (unsigned int i=0; i!=min(m_values.size(),rhsparticle->m_values.size()); ++i) {
+        m_values[i] += rhsparticle->m_values[i];
+    }
 
             //coagulation process
             SilicaPrimary *newleft = new SilicaPrimary;
@@ -765,18 +775,14 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 		int num_H2O = int(abs(numOH_old - m_numOH)/2);
 
 		real n_NAvol_sint = wt * (real)num_H2O / (NA * sys.SampleVolume());
-		dc[9] += n_NAvol_sint;
+		dc[Sprog::Species::Find(string("H2O"),*sys.GasPhase().Species())] += n_NAvol_sint;
 		sys.AdjustConcs(dc);
 
 		m_children_sintering=SinteringLevel();
 
-		if(m_children_sintering > 1)
-			cout<<"sweep:sintering level greater than one";
-
 	}
 
 }
-
 
 /*!
  * @brief       Calculates the sintering level for particles connected
@@ -786,6 +792,7 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
  */
 double SilicaPrimary::SinteringLevel()
 {
+    if (m_leftchild != NULL && m_rightchild != NULL) {
         // Calculate the spherical surface
         const double spherical_surface=4*PI*m_children_radius*m_children_radius;
         const double two_1_3=0.79370052231642452;
@@ -806,10 +813,18 @@ double SilicaPrimary::SinteringLevel()
         if (slevel < 0.0) {
             return 0.0;
         } else if (slevel > 1.0) {
+            cout << "sweep: SilicaPrimary::SinteringLevel() s.l. > 1.0";
             return 1.0;
         } else {
             return slevel;
         }
+    } else {
+        // Particle is a primary, should have 0 as default properties
+        m_children_surf = 0.0;
+        m_children_radius = 0.0;
+        m_children_vol = 0.0;
+        return 0.0;
+    }
 }
 
 
@@ -1133,6 +1148,19 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 }
 
 /*!
+ * @brief       Updates the surface area and sintering level of all parents
+ *
+ * @param[in]   dS      Surface area increment to adjust area by
+ */
+void SilicaPrimary::UpdateParents(double dS) {
+    if (m_parent != NULL) {
+        m_parent->m_children_surf += dS;
+        m_parent->m_children_sintering = m_parent->SinteringLevel();
+        m_parent->UpdateCache();
+    }
+}
+
+/*!
  * @brief       Adjusts the particle after an IntP event
  * 
  * Note that the gas-phase is actually adjusted in Sinter()
@@ -1436,6 +1464,8 @@ void SilicaPrimary::UpdateCache(SilicaPrimary *root)
  * @brief       Prints a graphical output of the binary tree structure
  * 
  * Graph outputted in GraphViz format. Use command 'dot' to convert.
+ * e.g. dot -Tpng -o name.png name.dat
+ * for PNG terminal, plotting output file name.dat
  * 
  * @param[in] filename Output filename
 */
@@ -1457,32 +1487,53 @@ void SilicaPrimary::PrintTree(string filename)
 */
 void SilicaPrimary::PrintTreeLoop(std::ostream &out)
 {
-  if (m_leftchild!=NULL)
-  { //out<<"leftchild "<<10E8*m_leftchild->SphDiameter()<<endl;
-	//out<<"rightchild "<<10E8*m_rightchild->SphDiameter()<<endl;
-    out<<"\" "<<this<<"\" "<<" [shape = \"record\" label = \"surf="<<this->m_surf<<"|m_children_surf="<<this->m_children_surf<<"|m_vol="<<this->m_vol<<"|"<<this->m_children_sintering<<"|m_numOH="<<this->m_numOH<<"|m_numprimary="<<this->m_numprimary<<"|m_spherical_radius="<<this->m_children_radius<<"|m_parent="<<this->m_parent<<"|"<<this;
-	/*
-	out << "| ";
-	for (unsigned int i=0;i<this->m_allparents.size();++i)
-		out << this->m_allparents.at(i) << endl;
-	out << " |";
-	*/
-	out<<"\"];"<<endl;
-	out<<"\" "<<this->m_leftchild<<"\" "<<" [shape = \"record\" label = \"surf="<<this->m_surf<<"|m_children_surf="<<this->m_children_surf<<"|m_vol="<<this->m_vol<<"|"<<this->m_children_sintering<<"|m_numOH="<<this->m_numOH<<"|m_numprimary="<<this->m_numprimary<<"|m_spherical_radius="<<this->m_children_radius<<"|m_parent="<<this->m_parent<<"|"<<this<<"|"<<this<<"\"];"<<endl;
-	out<<"\" "<<this->m_rightchild<<"\" "<<" [shape = \"record\" label = \"surf="<<this->m_surf<<"|m_children_surf="<<this->m_children_surf<<"|m_vol="<<this->m_vol<<"|"<<this->m_children_sintering<<"|m_numOH="<<this->m_numOH<<"|m_numprimary="<<this->m_numprimary<<"|m_spherical_radius="<<this->m_children_radius<<"|m_parent="<<this->m_parent<<"|"<<this<<"|"<<this<<"\"];"<<endl;
-	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_leftchild<<"\"; "<<endl;
-	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_rightchild<<"\"; "<<endl;
-	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_leftparticle<<"\"[label=\""<<this<<"\",color=\"blue\"]; "<<endl;
-	out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_rightparticle<<"\"[label=\""<<this<<"\",color=\"blue\"]; "<<endl;
-	m_leftchild->PrintTreeLoop(out);
-    m_rightchild->PrintTreeLoop(out);
-  }
+    // Non leaf-node case
+    if (m_leftchild!=NULL)
+    {
+        out << "\" " << this << "\" " << " [shape = \"record\" label = \"";
+        this->PrintTreeNode(out);
+        out <<"\"];"<<endl;
 
-  else
-  {
-      //out<<"\" "<<this<<"\" "<<" [label = \""<<2*pow((this->vol_sinter)*3/(4*PI),ONE_THIRD)<<"\"];"<<endl;
-      out<<"\" "<<this<<"\" "<<" [shape = \"record\" label = \"surf="<<this->m_surf<<"|m_children_surf="<<this->m_children_surf<<"|m_vol="<<this->m_vol<<"|"<<this->m_children_sintering<<"|m_numOH="<<this->m_numOH<<"|m_numprimary="<<this->m_numprimary<<"|m_spherical_radius="<<this->m_children_radius<<"|m_parent="<<this->m_parent<<"|"<<this<<"\"];"<<endl;
-  }
+        out << "\" " << this->m_leftchild << "\" " << " [shape = \"record\" label = \"";
+        this->PrintTreeNode(out);
+        out << "|" << this << "\"];"<<endl;
+
+        out << "\" " << this->m_rightchild << "\" " << " [shape = \"record\" label = \"";
+        this->PrintTreeNode(out);
+        out << "|" << this << "\"];"<<endl;
+
+        out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_leftchild<<"\"; "<<endl;
+        out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_rightchild<<"\"; "<<endl;
+        out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_leftparticle<<"\"[label=\""<<this<<"\",color=\"blue\"]; "<<endl;
+        out<<"\" "<<this<<"\" "<<"->"<<"\" "<<this->m_rightparticle<<"\"[label=\""<<this<<"\",color=\"blue\"]; "<<endl;
+        m_leftchild->PrintTreeLoop(out);
+        m_rightchild->PrintTreeLoop(out);
+    }
+
+    // Case when the node is a primary
+    else
+    {
+        out << "\" " << this << "\" " << " [shape = \"record\" color=\"blue\" label = \"";
+        this->PrintTreeNode(out);
+        out <<"\"];"<<endl;
+    }
+}
+
+/*!
+ * @brief       Prints out each node of the tree
+ *
+ * @param[in] out Output stream
+*/
+void SilicaPrimary::PrintTreeNode(std::ostream &out) {
+    out << "m_surf="             << this->m_surf
+            << "|m_child_surf="      << this->m_children_surf
+            << "|m_vol="             << this->m_vol
+            << "|m_child_sint="      << this->m_children_sintering
+            << "|m_numOH="           << this->m_numOH
+            << "|m_numprimary="      << this->m_numprimary
+            << "|m_child_rad="       << this->m_children_radius
+            << "|m_parent="          << this->m_parent
+            << "|this=" << this;
 }
 
 

@@ -456,9 +456,6 @@ ParticleModel *const ParticleModel::Clone(void) const
 // Writes the object to a binary stream.
 void ParticleModel::Serialize(std::ostream &out) const
 {
-    const unsigned int trueval  = 1;
-    const unsigned int falseval = 0;
-
     if (out.good()) {
         // Output the version ID (=0 at the moment).
         const unsigned int version = 0;
@@ -517,7 +514,7 @@ void ParticleModel::Deserialize(std::istream &in)
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-        unsigned int n=0, id=0;
+        unsigned int n=0;
 
         switch (version) {
             case 0:
