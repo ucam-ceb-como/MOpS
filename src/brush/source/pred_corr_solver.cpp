@@ -350,7 +350,7 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
             reac.getCell(destination_index).Particles().Add(*particle_details.particle, rng);
 
             // Testing output
-            const real extraWeight = (1.0 / reac.getCell(destination_index).SampleVolume()) - incomingWeight;
+//            const real extraWeight = (1.0 / reac.getCell(destination_index).SampleVolume()) - incomingWeight;
 //            if(std::abs(extraWeight) > 100 * std::numeric_limits<real>::epsilon() / reac.getCell(destination_index).SampleVolume()) {
 //                std::cerr << "Transport in added " << extraWeight << " of statistical weight to cell centred at "
 //                          << reac.getCellCentre(destination_index) << std::endl;

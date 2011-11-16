@@ -1976,7 +1976,7 @@ void Mops::calculateM0(fvector &m_xmer, fvector &m_M0, real Pcount, real PM0)
     it = unique (m_xmer.begin(), m_xmer.end());
     m_xmer.resize(it-m_xmer.begin());
     
-    for (int i = 0 ; i != m_xmer.size() ; ++i)
+    for (unsigned i = 0 ; i != m_xmer.size() ; ++i)
         m_M0.push_back(count(temp.begin(),temp.end(),m_xmer[i])* PM0 / Pcount);
 }
 

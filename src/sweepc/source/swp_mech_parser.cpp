@@ -1447,7 +1447,6 @@ void MechParser::readDiffusionProcs(CamXML::Document &xml, Mechanism &mech)
     vector<CamXML::Element*> items;
     vector<CamXML::Element*>::iterator i;
     string str;
-    unsigned int k = 0;
 
     // Get all transport processes.
     xml.Root()->GetChildren("diffusion", items);
@@ -1465,7 +1464,6 @@ void MechParser::readAdvectionProcs(CamXML::Document &xml, Mechanism &mech)
     vector<CamXML::Element*> items;
     vector<CamXML::Element*>::iterator i;
     string str;
-    unsigned int k = 0;
 
     // Get all transport processes.
     xml.Root()->GetChildren("advection", items);

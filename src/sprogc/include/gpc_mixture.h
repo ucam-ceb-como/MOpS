@@ -130,7 +130,7 @@ public:
     real Alpha() const {return m_data[AlphaIndex()];}
 
     //! Set alpha factor (used in ABF model to scale certain reaction rates)
-    real SetAlpha(const real a) {m_data[AlphaIndex()] = a;}
+    void SetAlpha(const real a) {m_data[AlphaIndex()] = a;}
 
 
     // SPECIES CONCENTRATIONS/FRACTIONS.
