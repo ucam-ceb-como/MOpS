@@ -183,6 +183,9 @@ private:
     //! Checks if the sintering level is higher then the threshold and merges the primaries if necessary
     bool CheckSintering();
 
+    //! Overload of Primary's SetTime function
+    void SetTime(real t);
+
     //! Help function for printree
     void PrintTreeLoop(std::ostream &out);
     //! Help function for printree

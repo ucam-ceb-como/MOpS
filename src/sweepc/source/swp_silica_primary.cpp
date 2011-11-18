@@ -835,6 +835,31 @@ double SilicaPrimary::SinteringLevel()
     }
 }
 
+/*!
+ * @brief       Overload of the SetTime function for SilicaPrimary
+ *
+ * Sets the LDPA update time throughout the binary tree. This is important
+ * as Merge can sometimes delete the originial root node, losing m_time
+ * stored in m_primary. This potentially leads to longer dt LDPA action
+ * times when UpdateParticle is called.
+ *
+ * @param t     LDPA update time
+ */
+void SilicaPrimary::SetTime(real t) {
+    m_time = t;
+
+    // Set LDPA time of children
+    if (m_leftchild != NULL) {
+        m_leftchild->SetTime(t);
+        m_rightchild->SetTime(t);
+    }
+
+    // Set LDPA time of particles
+    if (m_leftparticle != NULL) {
+        m_leftparticle->SetTime(t);
+        m_rightparticle->SetTime(t);
+    }
+}
 
 //calculates the fractal dimension of the particle and stores it in m_fdim
 //void SilicaPrimary::CalcFractalDimension()
