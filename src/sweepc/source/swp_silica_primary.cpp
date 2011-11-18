@@ -675,120 +675,120 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 	//Do only if there is a particle to sinter
 	if (m_leftparticle!=NULL)
     {
-		// Store the old surface area of particles
-		double surf_old = m_children_surf;
-		int numOH_old = m_numOH;
+        // Store the old surface area of particles
+        double surf_old = m_children_surf;
+        int numOH_old = m_numOH;
         // First calculate the sintering rate
 
-		// Calculate the spherical surface
-		const double spherical_surface=4*PI*m_children_radius*m_children_radius;
+        // Calculate the spherical surface
+        const double spherical_surface=4*PI*m_children_radius*m_children_radius;
 
-		// Perform a first order integration method to sinter the subparticle for the given time.
-		m_connect_time+=dt;
+        // Perform a first order integration method to sinter the subparticle for the given time.
+        m_connect_time+=dt;
 
-		// Declare time step variables.
-		real t1=0.0, t2=0.0, tstop=dt;
+        // Declare time step variables.
+        real t1=0.0, delt=0.0, tstop=dt;
+        real r=0.0;
 
-		// Define the maximum allowed change in surface area in one internal time step (10% spherical surface).
-		real dAmax = 0.1 * spherical_surface;
+        // Define the maximum allowed change in surface
+        // area in one internal time step (10% spherical surface).
+        real dAmax = 0.1 * spherical_surface;
 
-		real r;
+        // The scale parameter discretises the delta-S when using
+        // the Poisson distribution.  This allows a smoother change
+        // (smaller scale = higher precision).
+        real scale = 0.01;
 
-		// The scale parameter discretises the delta-S when using the Poisson distribution.This allows a smoother change
-		// (smaller scale = higher precision).
-		real scale = 0.01;
+        // Perform integration loop.
+        while (t1 < tstop)
+        {
+            // Calculate sintering rate.
+            r = model.Rate(m_time+t1, sys, *this);
 
-			// Perform integration loop.
-			while (t1 < tstop)
-			{
-                // Calculate sintering rate.
-                r = model.Rate(m_time+t1, sys, *this);
-                // Calculate next time-step end point so that the surface area changes by no more than dAmax.
-                t2 = std::min(t1+(dAmax/ std::max(r,1.0e-300)), tstop); // 1.0e-300 catches DIV ZERO.
+            if (r > 0) {
+                // Calculate next time-step end point so that the
+                // surface area changes by no more than dAmax.
+                delt = dAmax / max(r, 1.0e-300);
 
-                // Approximate sintering by a poisson process.  Calculate number of poisson events.
-                const real poissonMean = r * (t2 - t1) / (scale*dAmax);
+                // Approximate sintering by a poisson process.  Calculate
+                // number of poisson events.
+                real mean;
 
-                if(poissonMean > 0.0) {
-                    boost::random::poisson_distribution<unsigned, real> repeatDistribution(poissonMean);
-                    unsigned n = repeatDistribution(rng);
-                    // Adjust the surface area.
-                    if (n > 0) {
-                        m_children_surf -= (real)n * scale * dAmax;
+                if (tstop > (t1+delt)) {
+                    // A sub-step, we have changed surface by dAmax, on average
+                    mean = 1.0 / scale;
+                } else {
+                    // Step until end.  Calculate degree of sintering explicitly.
+                    mean = r * (tstop - t1) / (scale*dAmax);
+                }
+                boost::random::poisson_distribution<unsigned, real> repeatDistribution(mean);
+                const unsigned n = repeatDistribution(rng);
 
-                        // Check that primary is not completely sintered.
-                        //ss663:changed
-                        if (m_children_surf <= spherical_surface) {
-                            m_children_surf = spherical_surface;
-                            //hassintered=true;
-                            break;
-                        }
+                // Adjust the surface area.
+                if (n > 0) {
+                    m_children_surf -= (real)n * scale * dAmax;
+
+                    // Check that primary is not completely sintered.
+                    if (m_children_surf <= spherical_surface) {
+                        m_children_surf = spherical_surface;
+                        break;
                     }
                 }
 
                 // Set t1 for next time step.
-                t1 = t2;
+                t1 += delt;
             }
 
+        }
 
-			m_children_sintering=SinteringLevel();
-			m_sint_rate = r;
-			double rho_site = m_numOH/m_surf;
+        m_children_sintering=SinteringLevel();
+        m_sint_rate = r;
+        double rho_site = m_numOH/m_surf;
 
-			if(m_leftparticle!=NULL)
-			{
-				m_leftparticle->m_numOH -= int(0.5*rho_site*abs(m_children_surf - surf_old));
-				m_rightparticle->m_numOH -= int(0.5*rho_site*abs(m_children_surf - surf_old));
-				m_leftparticle->m_numO += int((0.5*rho_site*abs(m_children_surf - surf_old))/2);
-				m_rightparticle->m_numO += int((0.5*rho_site*abs(m_children_surf - surf_old))/2);
-				if(m_leftparticle->m_numOH < 0)
-				{
-					m_leftparticle->m_numOH = 0;
-				}
-				if(m_rightparticle->m_numOH < 0)
-				{
-					m_rightparticle->m_numOH = 0;
-				}
-			}
-			else
-			{
-				m_numOH -= int(rho_site*abs(m_children_surf - surf_old));
-				m_numO += int((rho_site*abs(m_children_surf - surf_old))/2);
-				if(m_numOH < 0)
-				{
-					m_numOH = 0;
-				}
-			}
+        // Adjust the units of OH and O due to release of water
+        m_leftparticle->m_numOH -= int(0.5*rho_site*abs(m_children_surf - surf_old));
+        m_rightparticle->m_numOH -= int(0.5*rho_site*abs(m_children_surf - surf_old));
+        m_leftparticle->m_numO += int((0.5*rho_site*abs(m_children_surf - surf_old))/2);
+        m_rightparticle->m_numO += int((0.5*rho_site*abs(m_children_surf - surf_old))/2);
+        if(m_leftparticle->m_numOH < 0)
+        {
+            m_leftparticle->m_numOH = 0;
+        }
+        if(m_rightparticle->m_numOH < 0)
+        {
+            m_rightparticle->m_numOH = 0;
+        }
 
-			if(m_children_sintering>0.95)
-			  {
-			   	   	CheckSintering();
-				    UpdateCache();
-					if (m_leftchild!=NULL && m_rightchild!=NULL)
-					{
-						m_leftchild->Sinter(dt,sys,model,rng,wt);
-						m_rightchild->Sinter(dt,sys,model,rng,wt);
-					}
-			   }
-			 else
-			 {
-				 m_leftchild->Sinter(dt, sys, model,rng,wt);
-				 m_rightchild->Sinter(dt, sys, model,rng,wt);
-			 }
+        // Check if the sintering level is above the threshold, and merge if true
+        if(m_children_sintering>0.95)
+          {
+                CheckSintering();
+                UpdateCache();
+                if (m_leftchild!=NULL && m_rightchild!=NULL)
+                {
+                    m_leftchild->Sinter(dt,sys,model,rng,wt);
+                    m_rightchild->Sinter(dt,sys,model,rng,wt);
+                }
+           }
+         else
+         {
+             m_leftchild->Sinter(dt, sys, model,rng,wt);
+             m_rightchild->Sinter(dt, sys, model,rng,wt);
+         }
 
+        UpdateCache();
 
-		UpdateCache();
-		/* Adjust the gas-phase composition */
-		fvector dc(sys.GasPhase().Species()->size(), 0.0);
-		int num_H2O = int(abs(numOH_old - m_numOH)/2);
+        // Adjust the gas-phase concentration
+        fvector dc(sys.GasPhase().Species()->size(), 0.0);
+        int num_H2O = int(abs(numOH_old - m_numOH)/2);
 
-		real n_NAvol_sint = wt * (real)num_H2O / (NA * sys.SampleVolume());
-		dc[Sprog::Species::Find(string("H2O"),*sys.GasPhase().Species())] += n_NAvol_sint;
-		sys.AdjustConcs(dc);
+        real n_NAvol_sint = wt * (real)num_H2O / (NA * sys.SampleVolume());
+        dc[Sprog::Species::Find(string("H2O"),*sys.GasPhase().Species())] += n_NAvol_sint;
+        sys.AdjustConcs(dc);
 
-		m_children_sintering=SinteringLevel();
+        m_children_sintering=SinteringLevel();
 
-	}
+    }  // endif m_leftparticle != NULL
 
 }
 
@@ -1377,7 +1377,6 @@ void SilicaPrimary::UpdateCache(SilicaPrimary *root)
 	{
 		m_leftchild->UpdateCache(root);
 		m_rightchild->UpdateCache(root);
-		//m_numprimary=m_leftchild->m_numprimary+m_rightchild->m_numprimary;
 	}
     //this is a primary and the number of primaries below this node is one (this node and no children)
 	else
@@ -1401,22 +1400,15 @@ void SilicaPrimary::UpdateCache(SilicaPrimary *root)
         m_vol=(m_leftchild->m_vol+m_rightchild->m_vol);
         m_mass=(m_leftchild->m_mass+m_rightchild->m_mass);
 
-		//m_silicaCollDiameter=max(m_leftchild->m_silicaCollDiameter,m_rightchild->m_silicaCollDiameter);
 
-		//Calculate the sintering level of the two primaries connected by this node
-
+		// Calculate the sintering level of the two primaries connected by this node
 		m_children_sintering=SinteringLevel();
-
 		if (m_children_sintering>.95)
 		{
-			if (m_children_sintering>1)
-			{
-				m_children_sintering=1;
-			}
 			CheckSintering();
 		}
 
-		//sum up the avg sintering level
+		// Sum up the avg sintering level
 		if((m_leftchild != NULL) && (m_rightchild != NULL))
 		{
 			m_avg_sinter=m_children_sintering+m_leftchild->m_avg_sinter+m_rightchild->m_avg_sinter;
@@ -1431,32 +1423,27 @@ void SilicaPrimary::UpdateCache(SilicaPrimary *root)
 
 		if (this==root)
         {
-             //spherical eqiv radius
+             // Get spherical equivalent radius and diameter
             double spherical_radius=pow(3*m_vol/(4*PI),ONE_THIRD);
             m_diam=2*spherical_radius;
 
 			// there are m_numprimary-1 connections between the primary particles
             m_avg_sinter=m_avg_sinter/(m_numprimary-1);
 
-			if (m_avg_sinter == 0)
+			/*if (m_avg_sinter == 0)
 			{
 				m_avg_sinter = 1e-5;
-			}
+			}*/
 
-			//approxmiate the surface of the particle
+			// Approxmiate the surface of the particle
             const real numprim_1_3=pow(m_numprimary,-0.333333);
             m_surf=4*PI*spherical_radius*spherical_radius/(m_avg_sinter*(1-numprim_1_3)+numprim_1_3);
 
-			//m_surf=4*PI*spherical_radius*spherical_radius;
-
-
+            // Calculate dcol based-on formula given in Lavvas et al. (2011)
+            // assume fractal dimension Df = 1.8
 			const double aggcolldiam=(6*m_vol/m_surf)*pow(pow(m_surf,3)/(36*PI*m_vol*m_vol),(1.0/1.8));
-
-			// the maximum of the largest silica diameter and the average between the surface and volume equiv diameter
-            //const double cdiam=max(aggcolldiam,m_silicaCollDiameter);
-			const double cdiam=aggcolldiam;
 			m_dmob = aggcolldiam;
-            SetCollDiameter(cdiam);
+            SetCollDiameter(aggcolldiam);
 
         }
         else
@@ -1537,6 +1524,8 @@ void SilicaPrimary::PrintTreeNode(std::ostream &out) {
             << "|m_child_surf="      << this->m_children_surf
             << "|m_vol="             << this->m_vol
             << "|m_child_sint="      << this->m_children_sintering
+            << "|m_numSi="           << this->m_numSi
+            << "|m_numO="            << this->m_numO
             << "|m_numOH="           << this->m_numOH
             << "|m_numprimary="      << this->m_numprimary
             << "|m_child_rad="       << this->m_children_radius
