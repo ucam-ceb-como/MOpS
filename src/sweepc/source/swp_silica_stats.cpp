@@ -61,7 +61,7 @@ const std::string SilicaStats::m_statnames[SilicaStats::STAT_COUNT] = {
 	std::string("Avg. Primary Diameter (nm)"),
     std::string("Avg. Sintering Level (-)"),
 	std::string("Avg. Particle Mass (kg)"),
-
+	std::string("Avg. Sintering Rate (m2/s)"),
 };
 
 const IModelStats::StatType SilicaStats::m_mask[SilicaStats::STAT_COUNT] = {
@@ -72,7 +72,7 @@ const IModelStats::StatType SilicaStats::m_mask[SilicaStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. Primary Particle diameter.
     IModelStats::Avg,  // Avg. Sintering level.
 	IModelStats::Avg,  // Avg particle mass,
-
+    IModelStats::Avg,  // Avg sint rate,
 
 };
 
@@ -82,7 +82,6 @@ const std::string SilicaStats::m_const_pslnames[SilicaStats::PSL_COUNT] = {
 	std::string("Number of OH atoms"),
     std::string("Number of primaries"),
 	std::string("Avg. primary diameter"),
-    //std::string("fdim"),
 	std::string("Avg. Sintering Level"),
 	//std::string("Avg. Particle Mass"),
 
@@ -181,8 +180,7 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
         // Get data from silica cache
         const AggModels::SilicaCache& cache =
             dynamic_cast<const AggModels::SilicaCache&>((*ip)->AggCache());
-        const AggModels::SilicaPrimary *silica = NULL;
-        silica = dynamic_cast<const AggModels::SilicaPrimary*>((*(*ip)).Primary());
+
         real sz = (*ip)->Property(m_statbound.PID);
         real wt = (*ip)->getStatisticalWeight() * invTotalWeight;
 
@@ -194,6 +192,7 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
             m_stats[iNOH]   += (cache.m_numOH  * wt);
             m_stats[iCOAL]    += (cache.m_avg_sinter  * wt);
             m_stats[iPRIMDIAM] += (cache.m_primarydiam * 1e9  * wt /cache.m_numprimary);
+            m_stats[iSintRate] += cache.m_sintrate * wt;
             ++n;
             if (cache.m_numSi>1)
             {

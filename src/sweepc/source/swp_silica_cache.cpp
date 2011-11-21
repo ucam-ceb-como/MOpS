@@ -67,7 +67,8 @@ SilicaCache::SilicaCache(void)
     m_primarydiam=0.0;
     m_fdim=0.0;
     m_Rg=0.0;
-    m_avg_sinter=0;
+    m_avg_sinter=0.0;
+    m_sintrate=0.0;
 }
 
 // Copy constructor.
@@ -106,6 +107,7 @@ SilicaCache &SilicaCache::operator=(const SilicaCache &rhs)
         m_fdim=rhs.m_fdim;
         m_Rg=rhs.m_Rg;
         m_avg_sinter=rhs.m_avg_sinter;
+        m_sintrate=rhs.m_sintrate;
     }
     return *this;
 }
@@ -124,6 +126,7 @@ SilicaCache &SilicaCache::operator=(const SilicaPrimary &rhs)
     m_fdim=rhs.Fdim();
     m_Rg=rhs.Rg();
     m_avg_sinter=rhs.AvgSinter();
+    m_sintrate=rhs.GetSintRate();
     return *this;
 }
 
@@ -168,6 +171,7 @@ SilicaCache &SilicaCache::operator+=(const SilicaCache &rhs)
     m_fdim+=rhs.m_fdim;
     m_Rg+=rhs.m_Rg;
     m_avg_sinter+=rhs.m_avg_sinter;
+    m_sintrate+=rhs.m_sintrate;
     return *this;
 }
 
@@ -185,6 +189,7 @@ SilicaCache &SilicaCache::operator+=(const SilicaPrimary &rhs)
     m_fdim+=rhs.Fdim();
     m_Rg+=rhs.Rg();
     m_avg_sinter+=rhs.AvgSinter();
+    m_sintrate+=rhs.GetSintRate();
 
     return *this;
 }
@@ -241,6 +246,7 @@ void SilicaCache::Clear()
     m_fdim=0.0;
     m_Rg=0.0;
     m_avg_sinter=0.0;
+    m_sintrate=0.0;
 }
 
 

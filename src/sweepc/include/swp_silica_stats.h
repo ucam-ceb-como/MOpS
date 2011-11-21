@@ -153,9 +153,9 @@ private:
     // Stats count and indices.
     //static const unsigned int STAT_COUNT = 9;
 	//enum StatIndices {iNSi=0, iNO=1, iNOH=2, iPARTSURF=4, iPARTMASS=5, isilicaD=6, iCOAL=7, iNPRIM=8, iSQRTLW=9, iLDIVW=10, iavgdim=11, irgyr=12, ifdim=13};
-	static const unsigned int STAT_COUNT = 7;
+	static const unsigned int STAT_COUNT = 8;
 	//enum StatIndices {iNSi=0, iNO=1, iNOH=2, iPARTSURF=3, iPARTMASS=4, isilicaD=5, iCOAL=6, iNPRIM=7, iSQRTLW=8, iLDIVW=9, iavgdim=10, irgyr=11, ifdim=12};
-	enum StatIndices {iNSi=0, iNO=1, iNOH=2, iNPRIM=3, iPRIMDIAM=4, iCOAL=5, iPARTMASS=6};
+	enum StatIndices {iNSi=0, iNO=1, iNOH=2, iNPRIM=3, iPRIMDIAM=4, iCOAL=5, iPARTMASS=6, iSintRate=7};
     // PSL count and indices.
     static const unsigned int PSL_COUNT  = 6;
     static const unsigned int PPSL_COUNT = 0;
