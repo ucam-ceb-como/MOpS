@@ -135,6 +135,9 @@ public:
 	//! Gets the sintering rate for interparticle reaction
 	real GetSintRate() const;
 
+	//! Gets the sintering time
+	real GetSintTime() const;
+
     //! Updates the fractal dimension
     void CalcFractalDimension();
 
@@ -236,6 +239,9 @@ private:
     static SilicaPrimary* descendPath(SilicaPrimary *here,
                                    std::stack<bool> &takeLeftBranch);
 
+    //! Update the sintering time of a particle tree
+    void UpdateSinteringTime(real dt);
+
     //! Time the two subparticles are connected
     real m_connect_time;
 
@@ -300,6 +306,9 @@ private:
     SilicaPrimary *m_leftchild, *m_rightchild, *m_parent, *m_leftparticle, *m_rightparticle;
     //! Vector containing addresses of all parents of current primary
 	std::vector<SilicaPrimary*> m_allparents;
+
+	//! Absolute amount of time for which particles are sintered
+	real m_sint_time;
 
 };
 } //namespace AggModels

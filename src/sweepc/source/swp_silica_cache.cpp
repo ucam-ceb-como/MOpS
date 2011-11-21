@@ -69,6 +69,8 @@ SilicaCache::SilicaCache(void)
     m_Rg=0.0;
     m_avg_sinter=0.0;
     m_sintrate=0.0;
+    m_sinttime=0.0;
+    m_createtime=0.0;
 }
 
 // Copy constructor.
@@ -108,6 +110,8 @@ SilicaCache &SilicaCache::operator=(const SilicaCache &rhs)
         m_Rg=rhs.m_Rg;
         m_avg_sinter=rhs.m_avg_sinter;
         m_sintrate=rhs.m_sintrate;
+        m_sinttime=rhs.m_sinttime;
+        m_createtime=rhs.m_createtime;
     }
     return *this;
 }
@@ -127,6 +131,8 @@ SilicaCache &SilicaCache::operator=(const SilicaPrimary &rhs)
     m_Rg=rhs.Rg();
     m_avg_sinter=rhs.AvgSinter();
     m_sintrate=rhs.GetSintRate();
+    m_sinttime=rhs.GetSintTime();
+    m_createtime=rhs.CreateTime();
     return *this;
 }
 
@@ -172,6 +178,8 @@ SilicaCache &SilicaCache::operator+=(const SilicaCache &rhs)
     m_Rg+=rhs.m_Rg;
     m_avg_sinter+=rhs.m_avg_sinter;
     m_sintrate+=rhs.m_sintrate;
+    m_sinttime+=rhs.m_sinttime;
+    m_createtime+=rhs.m_createtime;
     return *this;
 }
 
@@ -190,7 +198,8 @@ SilicaCache &SilicaCache::operator+=(const SilicaPrimary &rhs)
     m_Rg+=rhs.Rg();
     m_avg_sinter+=rhs.AvgSinter();
     m_sintrate+=rhs.GetSintRate();
-
+    m_sinttime+=rhs.GetSintTime();
+    m_createtime+=rhs.CreateTime();
     return *this;
 }
 
@@ -247,6 +256,8 @@ void SilicaCache::Clear()
     m_Rg=0.0;
     m_avg_sinter=0.0;
     m_sintrate=0.0;
+    m_sinttime=0.0;
+    m_createtime=0.0;
 }
 
 
@@ -302,6 +313,8 @@ void SilicaCache::Serialize(std::ostream &out) const
         v = (double)m_avg_sinter;
         out.write((char*)&v, sizeof(v));
 
+        v = (double)m_sintrate;
+        out.write((char*)&v, sizeof(v));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, SilicaCache::Serialize).");
@@ -355,6 +368,9 @@ void SilicaCache::Deserialize(std::istream &in)
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_avg_sinter = (real)val;
+
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_sintrate = (real)val;
 
                 break;
             default:

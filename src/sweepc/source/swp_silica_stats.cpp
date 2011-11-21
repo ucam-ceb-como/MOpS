@@ -62,6 +62,8 @@ const std::string SilicaStats::m_statnames[SilicaStats::STAT_COUNT] = {
     std::string("Avg. Sintering Level (-)"),
 	std::string("Avg. Particle Mass (kg)"),
 	std::string("Avg. Sintering Rate (m2/s)"),
+	std::string("Avg. Sintering Time (s)"),
+	std::string("Avg. Create Time (s)"),
 };
 
 const IModelStats::StatType SilicaStats::m_mask[SilicaStats::STAT_COUNT] = {
@@ -73,7 +75,8 @@ const IModelStats::StatType SilicaStats::m_mask[SilicaStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. Sintering level.
 	IModelStats::Avg,  // Avg particle mass,
     IModelStats::Avg,  // Avg sint rate,
-
+    IModelStats::Avg,  // Avg sint time,
+    IModelStats::Avg,  // Avg sint time,
 };
 
 const std::string SilicaStats::m_const_pslnames[SilicaStats::PSL_COUNT] = {
@@ -143,22 +146,6 @@ unsigned int SilicaStats::Count() const
 {
     return STAT_COUNT;
 }
-/* TODO: remove? wjm34
-// Calculates the model stats for a single particle.
-void SilicaStats::Calculate(const Particle &data)
-{
-    // Get surface-volume cache.
-    const AggModels::SilicaCache& cache = dynamic_cast<const AggModels::SilicaCache&>(data.AggCache());
-
-	m_stats[iNSi] = cache.m_numSi;
-	m_stats[iNO] = cache.m_numO;
-	m_stats[iNOH] = cache.m_numOH;
-	m_stats[iPRIMDIAM] = cache.m_primarydiam*1e9;
-
-	m_stats[iCOAL] = cache.m_avg_sinter;
-	m_stats[iNPRIM] = cache.m_numprimary;
-
-} */
 
 // Calculates the model stats for a particle ensemble.
 void SilicaStats::Calculate(const Ensemble &e, real scale)
@@ -193,6 +180,8 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
             m_stats[iCOAL]    += (cache.m_avg_sinter  * wt);
             m_stats[iPRIMDIAM] += (cache.m_primarydiam * 1e9  * wt /cache.m_numprimary);
             m_stats[iSintRate] += cache.m_sintrate * wt;
+            m_stats[iSintTime] += cache.m_sinttime * wt;
+            m_stats[iCreateTime] += cache.m_createtime * wt;
             ++n;
             if (cache.m_numSi>1)
             {

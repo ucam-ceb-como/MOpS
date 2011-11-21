@@ -102,7 +102,8 @@ SilicaPrimary::SilicaPrimary() : Primary(),
     //Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    m_allparents(0)
+    m_allparents(0),
+    m_sint_time(0.0)
 {
 }
 
@@ -146,7 +147,8 @@ SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
     //Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    m_allparents(0)
+    m_allparents(0),
+    m_sint_time(0.0)
 {
     // Other parts of the code check for a non-zero composition.
     m_comp[0]=1;
@@ -202,7 +204,8 @@ SilicaPrimary::SilicaPrimary(const real time, const real position,
     //Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    m_allparents(0)
+    m_allparents(0),
+    m_sint_time(0.0)
 {
     // Other parts of the code check for a non-zero composition
     m_comp[0]=1;
@@ -255,7 +258,8 @@ SilicaPrimary::SilicaPrimary(real time, const Sweep::ParticleModel &model, bool 
     //Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    m_allparents(0)
+    m_allparents(0),
+    m_sint_time(0.0)
 {
     m_comp[0]=1;
 
@@ -323,11 +327,12 @@ void SilicaPrimary::CopyTree(const SilicaPrimary *source)
 
 SilicaPrimary &SilicaPrimary::operator=(const Primary &rhs)
 {
-    if (this != &rhs) {
-		const AggModels::SilicaPrimary *Silicaprimary = NULL;
-		Silicaprimary = dynamic_cast<const AggModels::SilicaPrimary*>(&rhs);
-	//	UpdateAllPointers(silicaprimary,this);
-    }
+    /*if (this != &rhs) {
+       const AggModels::SilicaPrimary *Silicaprimary = NULL;
+       Silicaprimary = dynamic_cast<const AggModels::SilicaPrimary*>(&rhs);
+    //  UpdateAllPointers(silicaprimary,this);
+    }*/
+
     return *this;
 }
 
@@ -383,6 +388,7 @@ void SilicaPrimary::CopyParts(const SilicaPrimary *source)
     m_avg_sinter=source->m_avg_sinter;
     m_sint_rate=source->m_sint_rate;
     m_connect_time=source->m_connect_time;
+    m_sint_time=source->m_sint_time;
 
 }
 
@@ -672,6 +678,11 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
                             rng_type &rng,
                             real wt)
 {
+    //Only update the time on the root node
+    if (m_parent == NULL) {
+        this->UpdateSinteringTime(dt);
+    }
+
 	//Do only if there is a particle to sinter
 	if (m_leftparticle!=NULL)
     {
@@ -787,10 +798,26 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
         sys.AdjustConcs(dc);
 
         m_children_sintering=SinteringLevel();
-
     }  // endif m_leftparticle != NULL
 
 }
+
+void SilicaPrimary::UpdateSinteringTime(real dt) {
+    m_sint_time += dt;
+
+    // Update children
+    if (m_leftchild != NULL) {
+        m_leftchild->UpdateSinteringTime(dt);
+        m_rightchild->UpdateSinteringTime(dt);
+    }
+
+    // Update particles
+    if (m_leftparticle != NULL) {
+        m_leftparticle->UpdateSinteringTime(dt);
+        m_rightparticle->UpdateSinteringTime(dt);
+    }
+}
+
 
 /*!
  * @brief       Calculates the sintering level for particles connected
@@ -1273,6 +1300,10 @@ real SilicaPrimary::GetSintRate() const
 	return sint_rate;
 }
 
+//! Returns the sintering time
+real SilicaPrimary::GetSintTime() const {
+    return m_sint_time;
+}
 
 //! Releases memory
 void SilicaPrimary::ReleaseMem()
@@ -1552,6 +1583,7 @@ void SilicaPrimary::PrintTreeNode(std::ostream &out) {
             << "|m_numSi="           << this->m_numSi
             << "|m_numO="            << this->m_numO
             << "|m_numOH="           << this->m_numOH
+            << "|m_time="            << this->m_time
             << "|m_numprimary="      << this->m_numprimary
             << "|m_child_rad="       << this->m_children_radius
             << "|m_parent="          << this->m_parent
