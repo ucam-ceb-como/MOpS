@@ -239,8 +239,8 @@ private:
     static SilicaPrimary* descendPath(SilicaPrimary *here,
                                    std::stack<bool> &takeLeftBranch);
 
-    //! Update the sintering time of a particle tree
-    void UpdateSinteringTime(real dt);
+    //! Set the sintering time of a tree
+    void SetSinteringTime(real time);
 
     //! Time the two subparticles are connected
     real m_connect_time;

@@ -636,6 +636,8 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 		    this->m_leftparticle=m_leftchild->SelectRandomSubparticle(rng);
 		    this->m_rightparticle=m_rightchild->SelectRandomSubparticle(rng);
 
+		    // set the sintering times
+		    this->SetSinteringTime(std::max(this->m_sint_time, rhsparticle->m_sint_time));
 
 			//initialise the variables used to calculate the sintering level
             m_children_vol=(m_leftparticle->m_vol+m_rightparticle->m_vol);
@@ -680,7 +682,8 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 {
     //Only update the time on the root node
     if (m_parent == NULL) {
-        this->UpdateSinteringTime(dt);
+        m_sint_time += dt;
+        SetSinteringTime(m_sint_time);
     }
 
 	//Do only if there is a particle to sinter
@@ -802,22 +805,21 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 
 }
 
-void SilicaPrimary::UpdateSinteringTime(real dt) {
-    m_sint_time += dt;
+void SilicaPrimary::SetSinteringTime(real time) {
+    m_sint_time = time;
 
     // Update children
     if (m_leftchild != NULL) {
-        m_leftchild->UpdateSinteringTime(dt);
-        m_rightchild->UpdateSinteringTime(dt);
+        m_leftchild->SetSinteringTime(time);
+        m_rightchild->SetSinteringTime(time);
     }
 
     // Update particles
     if (m_leftparticle != NULL) {
-        m_leftparticle->UpdateSinteringTime(dt);
-        m_rightparticle->UpdateSinteringTime(dt);
+        m_leftparticle->SetSinteringTime(time);
+        m_rightparticle->SetSinteringTime(time);
     }
 }
-
 
 /*!
  * @brief       Calculates the sintering level for particles connected
