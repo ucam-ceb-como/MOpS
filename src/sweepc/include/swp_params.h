@@ -42,7 +42,7 @@
 #ifndef SWEEP_PARAMS_H
 #define SWEEP_PARAMS_H
 
-#include "sprog.h"
+#include "gpc_params.h"
 #include <cmath>
 #include <vector>
 #include <boost/random/mersenne_twister.hpp>

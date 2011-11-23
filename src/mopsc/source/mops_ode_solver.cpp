@@ -147,7 +147,7 @@ void ODE_Solver::Initialise(Reactor &reac)
     m_neq  = reac.ODE_Count();
     
     // Store solution vector.
-    m_soln = reac.Mixture()->RawData();
+    m_soln = reac.Mixture()->GasPhase().RawData();
 
     // Fill derivative vector.
     delete [] m_deriv;
@@ -252,7 +252,7 @@ void ODE_Solver::ResetSolver(Reactor &reac)
     // workspace, which is done by the Initialise() routine.
     if (reac.ODE_Count() == m_neq) {
         m_time = reac.Time();
-        m_soln = reac.Mixture()->RawData();
+        m_soln = reac.Mixture()->GasPhase().RawData();
         if (m_yvec != NULL) N_VDestroy_Serial(m_yvec);
         m_yvec = N_VMake_Serial(m_neq, m_soln);
         // m_yS cannot be reset since it need to know the previous values.
@@ -281,7 +281,7 @@ void ODE_Solver::Solve(Reactor &reac, real stop_time)
     } else {
         // Get the time and solution pointer from the reactor.
         m_time = reac.Time();
-        m_soln = reac.Mixture()->RawData();
+        m_soln = reac.Mixture()->GasPhase().RawData();
     }
 
     // Put the solution into an N_Vector data pointer.  This does not
@@ -305,7 +305,7 @@ void ODE_Solver::Solve(Reactor &reac, real stop_time)
             }
             //throw invalid_argument(" (Mops, ODE_Solver::Solve).");
         }
-        reac.Mixture()->Normalise(); // This should not be required if CVODE solves correctly.
+        reac.Mixture()->GasPhase().Normalise(); // This should not be required if CVODE solves correctly.
     }
     
 

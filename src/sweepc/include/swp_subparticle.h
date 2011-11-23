@@ -177,7 +177,8 @@ public:
         real dt,         // Delta-t for sintering.
         Cell &sys, // System which defines particle's environment.
         const Processes::SinteringModel &model, // Sintering model to use.
-        rng_type &rng
+        rng_type &rng,   // Random number generator
+        real wt     // Statistical weight
         );
 
     // PARTICLE UPDATE AND CHECKING.

@@ -155,12 +155,14 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
     // Empty the stats array.
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
-    // Loop over all particles, getting the stats from each.
-    Ensemble::const_iterator ip;
-    unsigned int n = 0;
+    // Forward define sum of 'real particle' weights
     // used to count particles with more then one PAH
 	// real part properties => particle only considered, sum of X / num of particle
-    unsigned int nrealpart= 0;
+    real wtreal = 0.0;
+
+    // Loop over all particles, getting the stats from each.
+    Ensemble::const_iterator ip;
+
     for (ip=e.begin(); ip!=e.end(); ++ip) {
         // Get surface-volume cache.
         const AggModels::PAHCache& cache =
@@ -168,31 +170,31 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
 		const AggModels::PAHPrimary *pah = NULL;
 			pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*ip)).Primary());
         real sz = (*ip)->Property(m_statbound.PID);
+        real wt = (*ip)->getStatisticalWeight();
+
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-			m_stats[iNPAH]    += cache.m_numPAH;
-			m_stats[iPAHD]    += pah->PAHCollDiameter()*1e9;
-			m_stats[iNCARB]	  += cache.m_numcarbon;
-			m_stats[iNHYDROGEN]	  += cache.m_numH;
-            m_stats[iNPAH+1]    += cache.m_numPAH; //used to calculate sum of Number of PAHs.
-            m_stats[iCOAL]    += cache.m_avg_coalesc;
-			++n;
+			m_stats[iNPAH]    		+= cache.m_numPAH * wt;
+			m_stats[iPAHD]    		+= pah->PAHCollDiameter()*1e9 * wt;
+			m_stats[iNCARB]	  		+= cache.m_numcarbon * wt;
+			m_stats[iNHYDROGEN]	  	+= cache.m_numH * wt;
+            m_stats[iNPAH+1]    	+= cache.m_numPAH * wt; //used to calculate sum of Number of PAHs.
+            m_stats[iCOAL]    		+= cache.m_avg_coalesc * wt;
             if (cache.m_numPAH>1)
             {
-                ++nrealpart;
-                m_stats[iPARTSURF]+=(*ip)->SurfaceArea();
-                m_stats[iNPRIM]+=cache.m_numprimary;
-                m_stats[iPARTMASS]+=(*ip)->Primary()->Mass();
-                m_stats[iNAVGPAH]+=cache.m_numPAH;  //used to calculate Avg. PAH real Part
+                wtreal += wt;
+                m_stats[iPARTSURF]+=(*ip)->SurfaceArea() * wt;
+                m_stats[iNPRIM]+=cache.m_numprimary * wt;
+                m_stats[iPARTMASS]+=(*ip)->Primary()->Mass() * wt;
+                m_stats[iNAVGPAH]+=cache.m_numPAH * wt;  //used to calculate Avg. PAH real Part
             }
         }
     }
 
-    // Get the particle count.
-    //real np    = (real)e.Count();
-    real np    = (real) n;
-    real invnp = (np>0) ? 1.0 / np : 0.0;
+    // Calculate total weight
+    real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
+    real invRealWeight = wtreal==0.0 ? 1.0/wtreal : 0.0;
 
     // Scale the summed stats and calculate the averages.
     for (unsigned int i=0; i!=STAT_COUNT; ++i) {
@@ -201,11 +203,11 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
         } else {
             if (i==iNPRIM || i==iPARTMASS || i==iNAVGPAH)
             {
-                if (nrealpart>0)
-                    m_stats[i] *= 1.0/nrealpart;
+                if (wtreal>0)
+                    m_stats[i] *= invRealWeight;
             }
             else
-                m_stats[i] *= invnp;
+                m_stats[i] *= invTotalWeight;
         }
     }
 

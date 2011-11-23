@@ -241,7 +241,11 @@ namespace Camflow
              */
             virtual void getSootVolumeFractionVector(std::vector<doublereal>& temp);
             /*
-             *return the density vecot
+             *return the rate of production of A4
+            */
+            virtual void getWdotA4interface(std::vector<doublereal>& temp);
+            /*
+             *return the density vector
              */
             virtual void getDensityVector(std::vector<doublereal>& density);
             /*
@@ -374,6 +378,7 @@ namespace Camflow
             std::vector<doublereal> dispersionMaster;
             std::vector<doublereal> sootSurfaceAreaMaster;
             std::vector<doublereal> sootVolumeFractionMaster;
+            std::vector<doublereal> wdotA4Master;
 
     }; // End CamResidual class declaration.
 

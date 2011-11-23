@@ -46,7 +46,6 @@
 
 #include "swp_params.h"
 #include "swp_surface_reaction.h"
-#include "swp_actsites_model.h"
 
 namespace Sweep
 {
@@ -63,18 +62,11 @@ class ActSiteReaction : public SurfaceReaction
 public:
     // Constructors.
     ActSiteReaction(const Sweep::Mechanism &mech); // Default constructor.
-    ActSiteReaction(const ActSiteReaction &copy);  // Copy constructor.
+
     ActSiteReaction(                 // Stream-reading constructor.
         std::istream &in,            //  - Input stream.
         const Sweep::Mechanism &mech //  - Parent mechanism.
         );
-
-    // Destructor.
-    virtual ~ActSiteReaction(void);
-
-    // Operators.
-    ActSiteReaction &operator=(const ActSiteReaction &rhs);
-
 
     // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
@@ -96,15 +88,11 @@ public:
         const Particle &sp  // Particle for which to calculate rate.
         ) const;
 
+    //! Fraction of surface sites, which are also radicals
+    real radicalSiteFraction(const Sprog::Thermo::IdealGas &gas) const;
 
-    // ACTIVE SITES MODEL.
-
-    // Sets the active sites model.
-    void SetModel(ActSites::ActSitesModel &model);
-
-    // Returns the active sites model.
-    ActSites::ActSitesModel *const Model(void) const;
-
+    //! Concentration of surface sites participating in this reaction (?units)
+    real SiteDensity(const Sprog::Thermo::IdealGas &gas) const;
 
     // READ/WRITE/COPY.
     
@@ -125,14 +113,34 @@ public:
         );
 
 protected:
-    // The active sites model instance.
-    ActSites::ActSitesModel *m_asmodel;
-
     // Default constructor is protected to prevent reactions being
     // defined without knowledge of the parent mechanism.
     ActSiteReaction(void);
+
+private:
+    //! Index of acetylene in mechanism and gas phase mixture data
+    int iC2H2;
+
+    //! Index of O2 in mechanism and gas phase mixture data
+    int iO2;
+
+    //! Index of OH in mechanism and gas phase mixture data
+    int iOH;
+
+    //! Index of CO in mechanism and gas phase mixture data
+    int iCO;
+
+    //! Index of H in mechanism and gas phase mixture data
+    int iH;
+
+    //! Index of H2 in mechanism and gas phase mixture data
+    int iH2;
+
+    //! Index of water in mechanism and gas phase mixture data
+    int iH2O;
+
 };
-};
-};
+}
+}
 
 #endif

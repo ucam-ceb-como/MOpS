@@ -194,6 +194,7 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
  *@param[in]        weight_rule Specify how to combine particle weights
  *@param[in,out]    sys         Cell containing particles that are coagulating
  *@param[in,out]    rng         Random number generator
+ *@param[in]        maj         Specify which majorant to use
  *
  *@return       Negative on failure, 0 on success
  *
@@ -304,7 +305,7 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
             assert(sp1->IsValid());
             // Tell the ensemble that particles 1 and 2 have changed
             sys.Particles().Update(ip1);
-            sys.Particles().Update(ip1);
+            sys.Particles().Update(ip2);
         } else {
             sys.Particles().Update(ip1);
             sys.Particles().Update(ip2);

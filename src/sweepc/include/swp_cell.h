@@ -7,9 +7,7 @@
 
   File purpose:
     A specialised ideal gas class for Sweep, which contains an ensemble
-    with particles of type Particle.  The Cell class inherits the
-    Sprog::IdealGas class and adds an additional layer of data to it
-    to describe the particles within the cell.
+    with particles of type Particle.
 
   Licence:
     This file is part of "sweepc".
@@ -51,7 +49,9 @@
 #include "swp_ensemble_stats.h"
 #include "swp_birth_process.h"
 #include "swp_death_process.h"
-#include "sprog.h"
+
+#include "gpc_idealgas.h"
+
 #include <string>
 #include <iostream>
 
@@ -67,7 +67,7 @@ class Mechanism;
  * the particles, but also brings in mechanism information, which should not
  * be in a cell, which capture state not dynamics.
  */
-class Cell : public Sprog::Thermo::IdealGas
+class Cell
 {
 public:
     // Constructors.
@@ -81,14 +81,15 @@ public:
     // Destructor.
     virtual ~Cell(void);
 
-    // Operators.
+    //! Overwrite contents
     Cell &operator=(const Cell &rhs);
-    Cell &operator=(const Sprog::Thermo::IdealGas &rhs);
 
     // THE GAS-PHASE INTERFACE.
 
-    // Returns the description of the gas-phase mixture.
-    const Sprog::Thermo::IdealGas &GasPhase(void) const;
+    //!Returns the description of the gas-phase mixture.
+    const Sprog::Thermo::IdealGas &GasPhase(void) const {return m_gas;};
+    //!Returns the description of the gas-phase mixture.
+    Sprog::Thermo::IdealGas &GasPhase(void) {return m_gas;};
 
     // Sets the gas-phase mixture.
     void SetGasPhase(const Sprog::Thermo::IdealGas &gas);
@@ -208,14 +209,16 @@ protected:
     Cell();
 
 private:
-    // Particle ensemble.
+    //! Gas mixture
+    Sprog::Thermo::IdealGas m_gas;
+
+    //! Particle ensemble.
     Sweep::Ensemble m_ensemble;
 
-    // Particle model.
+    //! Particle model.
     const Sweep::ParticleModel *m_model;
 
-    // The volume in which the ensemble represents
-    // the complete real system.
+    //! The volume in which the ensemble represents the complete real system.
     real m_smpvol;
 
     // Flag determining whether or not the chemistry in this system is fixed.

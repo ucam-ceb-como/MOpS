@@ -53,26 +53,28 @@ using namespace std;
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (private).
-Cell::Cell(void)
-: m_model(NULL), m_smpvol(1.0), m_fixed_chem(false)
+/*Cell::Cell(void)
+: m_gas(), m_model(NULL), m_smpvol(1.0), m_fixed_chem(false)
 {
-}
+}*/
 
 // Default constructor (public).
 Cell::Cell(const Sweep::ParticleModel &model)
-: Sprog::Thermo::IdealGas(*model.Species()), m_ensemble(), m_model(&model),
+: m_gas(*model.Species()), m_ensemble(), m_model(&model),
   m_smpvol(1.0), m_fixed_chem(false)
 {
 }
 
 // Copy constructor.
 Cell::Cell(const Cell &copy)
+: m_gas(copy.GasPhase())
 {
     *this = copy;
 }
 
 // Stream-reading constructor.
 Cell::Cell(std::istream &in, const Sweep::ParticleModel &model)
+: m_gas(*(model.Species()))
 {
     Deserialize(in, model);
 }
@@ -89,7 +91,7 @@ Cell::~Cell(void)
 Cell &Cell::operator=(const Sweep::Cell &rhs)
 {
     if (this != &rhs) {
-        Sprog::Thermo::IdealGas::operator=(rhs);
+        m_gas        = rhs.m_gas;
         m_ensemble   = rhs.m_ensemble;
         m_model      = rhs.m_model;
         m_smpvol     = rhs.m_smpvol;
@@ -98,27 +100,12 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
     return *this;
 }
 
-// Assignment operator - ideal gas.
-Cell &Cell::operator=(const Sprog::Thermo::IdealGas &rhs)
-{
-    if (this != &rhs) {
-        Sprog::Thermo::IdealGas::operator=(rhs);
-    }
-    return *this;
-}
-
 // THE GAS-PHASE INTERFACE.
-
-// Returns the description of the gas-phase mixture.
-const Sprog::Thermo::IdealGas &Cell::GasPhase(void) const
-{
-    return *this;
-}
 
 // Sets the gas-phase mixture.
 void Cell::SetGasPhase(const Sprog::Thermo::IdealGas &gas)
 {
-    Sprog::Thermo::IdealGas::operator=(gas);
+    m_gas = gas;
 }
 
 // Adjusts the concentration of the ith species.
@@ -128,10 +115,10 @@ void Cell::AdjustConc(unsigned int i, real dc)
        unsigned int k;
 
         // Precalculate DC / density.
-        real dc_rho = dc / Density();
+        real dc_rho = dc / m_gas.Density();
 
         // New concentrations will be calculated by adjusting a copy of the existing data
-        fvector newConcs = MoleFractions();
+        fvector newConcs = m_gas.MoleFractions();
 
         // Calculate change to all mole fractions k < i.
         for (k=0; k<i; ++k) {
@@ -142,12 +129,12 @@ void Cell::AdjustConc(unsigned int i, real dc)
         newConcs[i] += dc_rho * (1.0 - newConcs[i]);
 
         // Calculate change for all mole fractions k > i.
-        for (k=i+1; k < Species()->size(); ++k) {
+        for (k=i+1; k < m_gas.Species()->size(); ++k) {
             newConcs[k] -= dc_rho * newConcs[k];
         }
 
         // Set the new data
-        SetFracs(newConcs);
+        m_gas.SetFracs(newConcs);
     }
 }
 
@@ -158,30 +145,30 @@ void Cell::AdjustConcs(const fvector &dc)
         // Calculate total change in density.
         real drho = 0.0;
         unsigned int k;
-        for (k=0; k!=Species()->size(); ++k) {
+        for (k=0; k!=m_gas.Species()->size(); ++k) {
             drho += dc[k];
         }
 
         // New concentrations will be calculated by adjusting a copy of the existing data
-        fvector newConcs = MoleFractions();
+        fvector newConcs = m_gas.MoleFractions();
 
         real xtot=0.;
         // Calculate changes to the mole fractions.
-        const real invrho = 1.0 / Density();
-        for (k=0; k!=Species()->size(); ++k) {
+        const real invrho = 1.0 / m_gas.Density();
+        for (k=0; k!=m_gas.Species()->size(); ++k) {
             newConcs[k] += (invrho * dc[k]) - (invrho * newConcs[k] * drho);
             if (newConcs[k]<0.) newConcs[k]=0;
                 xtot+=newConcs[k];
         }
 
         if (xtot != 1.0) {
-            for (unsigned int i=0; i!=Species()->size(); ++i) {
+            for (unsigned int i=0; i!=m_gas.Species()->size(); ++i) {
                 newConcs[i] /= xtot;
             }
         }
 
         // Set the new data
-        SetFracs(newConcs);
+        m_gas.SetFracs(newConcs);
     }
 }
 
@@ -382,8 +369,8 @@ void Cell::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
-        // Output the base class.
-        Sprog::Thermo::IdealGas::Serialize(out);
+        // Output the gas mixture
+        m_gas.Serialize(out);
 
         // Output the sample volume.
         double v = (double)m_smpvol;
@@ -415,7 +402,7 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
         switch (version) {
             case 0:
                 // Read the base class.
-                Sprog::Thermo::IdealGas::Deserialize(in);
+                m_gas.Deserialize(in);
 
                 // Read the sample volume.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
@@ -428,7 +415,7 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
                 m_ensemble.Deserialize(in, model);
 
                 // Set the species.
-                SetSpecies(*model.Species());
+                m_gas.SetSpecies(*model.Species());
 
                 break;
             default:

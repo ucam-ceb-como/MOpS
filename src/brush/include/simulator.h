@@ -73,7 +73,7 @@ public:
     void runSimulation(const size_t seed_offset);
 
     //! Calculate and save statistics in a text file
-    static void saveParticleStats(const Reactor1d &reac,
+    static void saveParticleStats(const Reactor1d &reac, const real t,
                            const Sweep::Stats::IModelStats::StatBound &stat_bound,
                            std::ostream &out);
 
@@ -82,10 +82,10 @@ protected:
     void runOnePath(const int seed);
 
     //! Save list of particles in a text file
-    void saveParticleList(const Reactor1d &reac, std::ostream &out);
+    void saveParticleList(const Reactor1d &reac, const real t, std::ostream &out);
 
     //! Save process rates in a text file
-    void saveProcessRates(const Reactor1d &reac, std::ostream &out);
+    void saveProcessRates(const Reactor1d &reac, const real t, std::ostream &out);
 
     //! Build the name of the moments file for a path
     std::string buildParticleStatsFileName(const int seed) const;

@@ -51,7 +51,6 @@
 #include "swp_particle_stats.h"
 #include "swp_surfvol_stats.h"
 #include "swp_PAH_stats.h"
-#include "swp_abf_model.h"
 #include "swp_silica_cache.h"
 #include "swp_silica_stats.h"
 #include "swp_silica_primary.h"
@@ -366,21 +365,5 @@ void ModelFactory::WriteAggStats(const Stats::IModelStats &stats, std::ostream &
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, ModelFactory::WriteAggStats).");
-    }
-}
-
-
-    // ACTIVE-SITES MODEL INSTANCE AQUISITION.
-
-// Returns the instance of the active-sites model with the given ID.
-// Note that active-sites models are singleton classes.
-ActSites::ActSitesModel *const ModelFactory::GetActSitesModel(ActSites::ActSitesType id)
-{
-    switch (id) {
-        case ActSites::ABFSites_ID:
-            return &ActSites::ABFModel::Instance();
-        default:
-            throw invalid_argument("Invalid model ID (Sweep, "
-                                   "ModelFactory::GetActSitesModel).");
     }
 }

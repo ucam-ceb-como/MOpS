@@ -49,7 +49,7 @@
 #include "swp_process.h"
 #include "swp_process_type.h"
 #include "swp_particle.h"
-#include "sprog.h"
+
 #include <iostream>
 #include <vector>
 

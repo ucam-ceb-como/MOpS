@@ -54,26 +54,29 @@ using namespace std;
 // STATIC CONST MEMBER VARIABLES.
 
 const std::string SilicaStats::m_statnames[SilicaStats::STAT_COUNT] = {
-    std::string("Number of Si atoms"),
-	std::string("Number of O atoms"),
-	std::string("Number of OH atoms"),
-    std::string("Number of Primaries"),
-	std::string("Avg. primary diameter"),
-    std::string("Avg. Sintering Level"),
-	std::string("Avg. Particle Mass"),
-
+    std::string("Number of Si atoms (cm-3)"),
+	std::string("Number of O atoms (cm-3)"),
+	std::string("Number of OH atoms (cm-3)"),
+    std::string("Avg. Number of Primaries per Particle (-)"),
+	std::string("Avg. Primary Diameter (nm)"),
+    std::string("Avg. Sintering Level (-)"),
+	std::string("Avg. Particle Mass (kg)"),
+	std::string("Avg. Sintering Rate (m2/s)"),
+	std::string("Avg. Sintering Time (s)"),
+	std::string("Avg. Create Time (s)"),
 };
 
 const IModelStats::StatType SilicaStats::m_mask[SilicaStats::STAT_COUNT] = {
-    IModelStats::Avg,  // Avg. Number of Si atoms.
-	IModelStats::Avg,  // Avg. Number of O atoms.
-	IModelStats::Avg,  // Avg. Number of OH atoms.
-    IModelStats::Avg,  // Number of primaries.
+    IModelStats::Sum,  // Number of Si atoms.
+	IModelStats::Sum,  // Number of O atoms.
+	IModelStats::Sum,  // Number of OH atoms.
+    IModelStats::Avg,  // Avg.Number of primaries.
     IModelStats::Avg,  // Avg. Primary Particle diameter.
     IModelStats::Avg,  // Avg. Sintering level.
 	IModelStats::Avg,  // Avg particle mass,
-
-
+    IModelStats::Avg,  // Avg sint rate,
+    IModelStats::Avg,  // Avg sint time,
+    IModelStats::Avg,  // Avg sint time,
 };
 
 const std::string SilicaStats::m_const_pslnames[SilicaStats::PSL_COUNT] = {
@@ -82,7 +85,6 @@ const std::string SilicaStats::m_const_pslnames[SilicaStats::PSL_COUNT] = {
 	std::string("Number of OH atoms"),
     std::string("Number of primaries"),
 	std::string("Avg. primary diameter"),
-    //std::string("fdim"),
 	std::string("Avg. Sintering Level"),
 	//std::string("Avg. Particle Mass"),
 
@@ -144,22 +146,6 @@ unsigned int SilicaStats::Count() const
 {
     return STAT_COUNT;
 }
-/* TODO: remove? wjm34
-// Calculates the model stats for a single particle.
-void SilicaStats::Calculate(const Particle &data)
-{
-    // Get surface-volume cache.
-    const AggModels::SilicaCache& cache = dynamic_cast<const AggModels::SilicaCache&>(data.AggCache());
-
-	m_stats[iNSi] = cache.m_numSi;
-	m_stats[iNO] = cache.m_numO;
-	m_stats[iNOH] = cache.m_numOH;
-	m_stats[iPRIMDIAM] = cache.m_primarydiam*1e9;
-
-	m_stats[iCOAL] = cache.m_avg_sinter;
-	m_stats[iNPRIM] = cache.m_numprimary;
-
-} */
 
 // Calculates the model stats for a particle ensemble.
 void SilicaStats::Calculate(const Ensemble &e, real scale)
@@ -168,55 +154,47 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
     // Calculate total weight
+    real TotalWeight = e.Count()>0 ? e.GetSum(iW) : 0.0;
     real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
 
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
     unsigned int n = 0;
-    //particles with more then one silica
+    // particles with more then one silica
     unsigned int nrealpart= 0;
     for (ip=e.begin(); ip!=e.end(); ++ip) {
-		//Update Cache
-		// Get surface-volume cache.
+
+        // Get data from silica cache
         const AggModels::SilicaCache& cache =
             dynamic_cast<const AggModels::SilicaCache&>((*ip)->AggCache());
-		const AggModels::SilicaPrimary *silica = NULL;
-			silica = dynamic_cast<const AggModels::SilicaPrimary*>((*(*ip)).Primary());
-		real sz = (*ip)->Property(m_statbound.PID);
-		real wt = (*ip)->getStatisticalWeight() * invTotalWeight;
-        //real sz = cache.Parent()->Property(m_statbound.PID);
-		//TODO: delete comment above? wjm34
+
+        real sz = (*ip)->Property(m_statbound.PID);
+        real wt = (*ip)->getStatisticalWeight() * invTotalWeight;
 
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-			m_stats[iNSi]   += (cache.m_numSi * wt);
-			m_stats[iNO]    += (cache.m_numO  * wt);
-			m_stats[iNOH]   += (cache.m_numOH  * wt);
-			//m_stats[iNSi]   += (cache.m_numSi/cache.m_numprimary);
-			//m_stats[iNO]    += (cache.m_numO/cache.m_numprimary);
-			//m_stats[iNOH]   += (cache.m_numOH/cache.m_numprimary);
-			//m_stats[isilicaD]  += silica->silicaCollDiameter()*1e9;
-			m_stats[iCOAL]    += (cache.m_avg_sinter  * wt);
-			//m_stats[iPRIMDIAM] += cache.m_primarydiam;
-			m_stats[iPRIMDIAM] += (cache.m_primarydiam * 1e9  * wt /cache.m_numprimary);
-			++n;
+            m_stats[iNSi]   += (cache.m_numSi * wt);
+            m_stats[iNO]    += (cache.m_numO  * wt);
+            m_stats[iNOH]   += (cache.m_numOH  * wt);
+            m_stats[iCOAL]    += (cache.m_avg_sinter  * wt);
+            m_stats[iPRIMDIAM] += (cache.m_primarydiam * 1e9  * wt /cache.m_numprimary);
+            m_stats[iSintRate] += cache.m_sintrate * wt;
+            m_stats[iSintTime] += cache.m_sinttime * wt;
+            m_stats[iCreateTime] += cache.m_createtime * wt;
+            ++n;
             if (cache.m_numSi>1)
             {
                 ++nrealpart;
-                //m_stats[iPARTSURF]+=(*ip)->SurfaceArea();
-				//m_stats[iPRIMDIAM] += (cache.m_primarydiam*1e9/cache.m_numprimary);
-				//m_stats[iPRIMDIAM] += (cache.m_primarydiam*1e9);
-				//m_stats[iPRIMDIAM] += (cache.m_primarydiam*1e9/cache.m_numprimary);
                 m_stats[iNPRIM]+=cache.m_numprimary  * wt;
-				if((*ip)->Primary()!=NULL)
-				{
-                m_stats[iPARTMASS]+=(*ip)->Primary()->Mass();
-				}
-				else
-				{
-					m_stats[iPARTMASS]+=0;
-				}
+                if((*ip)->Primary()!=NULL)
+                {
+                m_stats[iPARTMASS]+=(*ip)->Primary()->Mass() * wt;
+                }
+                else
+                {
+                    m_stats[iPARTMASS]+=0;
+                }
 
             }
         }
@@ -224,7 +202,7 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
     // Scale the summed stats and calculate the averages.
     for (unsigned int i=0; i!=STAT_COUNT; ++i) {
         if (m_mask[i] == Sum) {
-            m_stats[i] *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
+            m_stats[i] *= (scale * 1.0e-6 * TotalWeight); // Convert scale from 1/m3 to 1/cm3.
         }
     // Don't need to scale by number of particles as this is included
     //     in the weighting scaling above.

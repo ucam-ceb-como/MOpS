@@ -43,7 +43,6 @@
 #include "swp_mechanism.h"
 #include "swp_model_factory.h"
 #include "swp_process_factory.h"
-#include "swp_abf_model.h"
 #include "swp_tempwriteXmer.h"
 
 #include "geometry1d.h"
@@ -135,27 +134,6 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         m_fictcount.assign(rhs.m_fictcount.begin(), rhs.m_fictcount.end());
     }
     return *this;
-}
-
-
-// ACTIVE-SITES MODELS.
-
-// Returns the set of particle model ID used by this mechanism
-const ActSites::ActSitesTypeSet &Mechanism::ActSiteModels(void) const
-{
-    return m_actsites;
-}
-
-// Returns true if the mechanism include the given model.
-bool Mechanism::ContainsActSiteModel(ActSites::ActSitesType id) const
-{
-    return m_actsites.find(id) != m_actsites.end();
-}
-
-// Adds an active-sites model to the mechanism.
-void Mechanism::AddActSitesModel(ActSites::ActSitesType id)
-{
-    m_actsites.insert(id);
 }
 
 
@@ -471,15 +449,6 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, const Geometry::Local
     return sum;
 }
 
-void Mechanism::PrintTermsVector(fvector &terms, fvector::iterator &iterm) const {
-	fvector::iterator iterm_old = iterm;
-	int len = terms.size();
-	fvector::iterator iterm_beg = terms.begin();
-	for (int i=0; i<len; i++) {
-		cout << *iterm_beg++ << " ";
-	}
-	cout << endl;
-}
 
 /*!
  * LPDA allows some processes to be deferred and removed from the main simulation
@@ -599,9 +568,9 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
     }
 
     // Now convert to changes in mole fractions.
-    real invrho = 1.0 / sys.Density();
+    real invrho = 1.0 / sys.GasPhase().Density();
     for (unsigned int k=0; k!=m_species->size(); ++k) {
-        rates[k] = (invrho * rates[k]) - (invrho * sys.MoleFraction(k) * (*idrho));
+        rates[k] = (invrho * rates[k]) - (invrho * sys.GasPhase().MoleFraction(k) * (*idrho));
     }
 }
 
@@ -759,7 +728,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
 
     }
 
-    if (AggModel() == AggModels::Silica_ID) {
+    if (AggModel() == AggModels::Silica_ID && !m_anydeferred) {
     	// Calculate delta-t and update particle time.
     	real dt;
     	dt = t - sp.LastUpdateTime();
@@ -767,7 +736,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
 
     	// Sinter the particles for the silica model (as no deferred process)
     	if (m_sint_model.IsEnabled()) {
-    		sp.Sinter(dt, sys, m_sint_model, rng);
+    		sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
     	}
 
     	// Check particle is valid and recalculate cache.
@@ -810,7 +779,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
             // Perform sintering update.
             if (m_sint_model.IsEnabled()) {
 //				sp.UpdateFreeSurface();
-			    sp.Sinter(dt, sys, m_sint_model, rng);
+			    sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
 				//sp.CreateTestTree();
 				//	 sp.FindRoot()->CheckTree();
 			    // cout << "check before sinter passed\n";

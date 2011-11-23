@@ -100,6 +100,16 @@ void FlameLet::solve
     {
         reportToFile("initialProfile.dat",control_.getMaxTime(),solvect);
         //writeXMLFile(scalarDissipationRate_.getRefSDR(), solvect);
+
+        // Write the molecular weights of species to file.
+        // (This file needed for streamline post processing)
+        std::ofstream file("SystemMWs.dat");
+        for (int l=0; l<nSpc; l++)
+        {
+        	file << (*spv_)[l]->Name() << "\t";
+        	file << (*spv_)[l]->MolWt() << std::endl;
+        }
+        file.close();
     }
 
     if (control_.getSolutionMode() == control_.COUPLED)
@@ -321,7 +331,7 @@ void FlameLet::initSolutionVector()
             {
             	// ank25: Do we need to multiply by 1e6 here?
         		//vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(doublereal(sootMom_.getAtomsPerDiamer()));
-        		vMom[i*nMoments+l] = vMom[i*nMoments+l-1];
+        		vMom[i*nMoments+l] = vMom[i*nMoments+l-1] * 1e3;
         		//cout << "vMom[i*nMoments+l]  " << i*nMoments+l <<"  " << vMom[i*nMoments+l] << endl;
             }
 
@@ -512,11 +522,8 @@ void FlameLet::restart(doublereal flameTime)
 	// Assumption is that a restart is always a Lagrangian flamelet (i.e. not steady state)
 	//steadyStateAtFlameBase = false;
 
-	/// Change restart so that it takes in flameHeight ( or  flameTime or gridnumber?
-	// Then decide set steadyStateAtFlameBase to true if above a ceetain threshold.
-	// i.e. we stop calculating soot when high enough out of the flame.
-	// Rename "steadyStateAtFlameBase" to "sootResidualZeroed"
 
+    // Stop calculating soot above a user specified flamelet time.
 	if (flameTime < Lewis.sootFlameTimeThreshold)
 	{
 		// Still below the time at which we stop calculating soot residual
@@ -1391,6 +1398,19 @@ void FlameLet::saveMixtureProp(doublereal* y)
     	    sootVolumeFractionMaster[i] = sootMom_.sootVolumeFraction(moments(i,0));
           }
         }
+    	// Check the A4 species exists first (returns -1 if it does not).
+    	if(camMech_->FindSpecies("A4") == -1)
+    	{
+            wdotA4Master[i] = 0.0;
+    	}
+    	else
+    	{
+    		const int iA4 = camMech_->FindSpecies("A4");
+            wdotA4Master[i] = s_Wdot(i,iA4);
+    	}
+
+
+
     }
 }
 
@@ -1694,6 +1714,7 @@ FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv)
 
 /*
  *  Return the pyrene(A4) molar production rate term.
+ *  Note:  This is not used to pass wdotA4 to interface.
  */
 void
 FlameLet::getWdotA4(std::vector<doublereal>& wdotA4)
@@ -1715,7 +1736,6 @@ const
 	}
 
 }
-
 
 /*
  *output function for file output

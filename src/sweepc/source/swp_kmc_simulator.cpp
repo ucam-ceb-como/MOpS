@@ -43,6 +43,10 @@
 */
 
 #include "swp_cell.h"
+
+#include "gpc_mech.h"
+#include "gpc_mech_io.h"
+
 #include "csv_io.h"
 
 #include <string>

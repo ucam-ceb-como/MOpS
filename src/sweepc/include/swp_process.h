@@ -51,7 +51,9 @@
 #include "swp_params.h"
 #include "swp_particle.h"
 #include "swp_process_type.h"
-#include "sprog.h"
+
+#include "gpc_stoich.h"
+
 #include <map>
 #include <string>
 #include <iostream>
@@ -261,6 +263,7 @@ protected:
     // products defined for this process.
     void adjustGas(
         Cell &sys,     // System to update.
+        real wt,       // Stochastic weight of particle
         unsigned int n // Number of times to apply process.
          = 1           //  - Default is one time.
          ) const;

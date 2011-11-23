@@ -84,6 +84,10 @@ int main(int argc, char *argv[])
     SolverType soltype = GPC;
     int diag = 0; // Diagnostics level.
 
+    // Offset for random number sequence so that independent realisations
+    // can be computed in separated program instances.
+    size_t randomSeedOffset = 0;
+
     // Read command line arguments.
     for (int i=1; i!=argc; ++i) {
         if (strcmp(argv[i], "-c") == 0) {
@@ -110,6 +114,9 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "-ss") == 0) {
             // Sensitivity setup file.
             sensifile = argv[++i];
+        } else if (strcmp(argv[i], "-e") == 0) {
+            // Random seed offset
+            randomSeedOffset = atoi(argv[++i]);
         } else if (strcmp(argv[i], "-p") == 0) {
             // Post-processing switch.  Used to turn PP on.
             fpostprocess = true;
@@ -209,9 +216,10 @@ int main(int argc, char *argv[])
 
     // Read the chemical mechanism / profile.
     try {
-        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
+        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech.GasMech(), thermfile, diag);
+        mech.ParticleMech().SetSpecies(mech.GasMech().Species());
         if (diag>0) 
-            mech.WriteDiagnostics("ckmech.diag");
+            mech.GasMech().WriteDiagnostics("ckmech.diag");
 
         if (soltype == FlamePP){
             //Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
@@ -234,7 +242,7 @@ int main(int argc, char *argv[])
     // Read the particle mechanism.
     try {
         if (soltype != GPC) {
-            mech.ParticleMech().SetSpecies(mech.Species());
+            mech.ParticleMech().SetSpecies(mech.GasMech().Species());
             Sweep::MechParser::Read(swpfile, mech.ParticleMech());
 
         }
@@ -314,7 +322,7 @@ int main(int argc, char *argv[])
             sim.SetTimeVector(times);
             // 456 is an arbitrary fixed seed.  One can change this to be the time, or allow the seed
             // to be passed in as a program argument, more like in brush.
-            sim.RunSimulation(*reactor, *solver, 456);
+            sim.RunSimulation(*reactor, *solver, 456 + randomSeedOffset);
         }
     } catch (std::logic_error &le) {
         printf("mops: Failed to solve reactor due to bad inputs.  Message:\n  ");

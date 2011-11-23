@@ -103,7 +103,7 @@ Reactor &Reactor::operator=(const Mops::Reactor &rhs)
 
         // Clone the mixture, if it exists in rhs
         if(rhs.m_mix)
-            m_mix     = rhs.m_mix->Clone(); // Need to clone mixture!
+            m_mix = rhs.m_mix->Clone(); // Need to clone mixture!
         else
             m_mix = NULL;
 
@@ -165,7 +165,7 @@ void Reactor::Fill(Mops::Mixture &mix, bool clearfirst)
 
     // Ensure that the reactor and mixture are using the same
     // mechanism.
-    m_mix->SetSpecies(m_mech->Species());
+    m_mix->GasPhase().SetSpecies(m_mech->GasMech().Species());
 }
 
 
@@ -183,7 +183,7 @@ void Reactor::SetMech(const Mops::Mechanism &mech)
     m_mech  = &mech;
 
     // Set up vector indices.
-    m_nsp   = m_mech->SpeciesCount();
+    m_nsp   = m_mech->GasMech().SpeciesCount();
     m_neq   = m_nsp + 2; // Equations of state; these are not differential equations. See gpc_mech.h m_rxns
     m_iT    = m_nsp;
     m_iDens = m_iT + 1;
@@ -434,8 +434,8 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
     real wtot = 0.0;
 
     // Calculate molar production rates.
-    wtot = m_mech->Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y, 
-                                                 m_nsp, *m_mix, wdot);
+    wtot = m_mech->GasMech().Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y,
+                                                 m_nsp, m_mix->GasPhase(), wdot);
 
     // Calculate mole fraction derivatives.
     for (unsigned int i=0; i!=m_neq-2; ++i) {
@@ -466,12 +466,12 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
     real wtot = 0.0, Cp = 0.0;
 
     // Calculate mixture thermodynamic properties.
-    m_mix->CalcHs_RT(y[m_iT], Hs);
-    Cp = m_mix->ThermoInterface::CalcBulkCp_R(y[m_iT], y, m_nsp);
+    m_mix->GasPhase().CalcHs_RT(y[m_iT], Hs);
+    Cp = m_mix->GasPhase().ThermoInterface::CalcBulkCp_R(y[m_iT], y, m_nsp);
     
     // Calculate molar production rates.
-    wtot = m_mech->Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y, 
-                                                 m_nsp, *m_mix, wdot);
+    wtot = m_mech->GasMech().Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y,
+                                                 m_nsp, m_mix->GasPhase(), wdot);
 
 
     // Calculate mole fraction and temperature derivatives.
@@ -503,8 +503,8 @@ void Reactor::Jacobian(real t, real *const y,
                        real **J,
                        real uround) const
 {
-    m_mech->Reactions().CalcJacobian(y[m_iT], y[m_iDens], y, 
-                                     m_nsp, *m_mix, uround, J, 
+    m_mech->GasMech().Reactions().CalcJacobian(y[m_iT], y[m_iDens], y,
+                                     m_nsp, m_mix->GasPhase(), uround, J,
                                      m_constv, m_emodel==ConstT);
 }
 
@@ -518,8 +518,8 @@ void Reactor::RateJacobian(real t, real *const y,
                        real **J,
                        real uround) const
 {
-    m_mech->Reactions().RateJacobian(y[m_iT], y[m_iDens], y, 
-                                     m_nsp, *m_mix, uround, J, 
+    m_mech->GasMech().Reactions().RateJacobian(y[m_iT], y[m_iDens], y,
+                                     m_nsp, m_mix->GasPhase(), uround, J,
                                      m_constv, m_emodel==ConstT);
 }
 

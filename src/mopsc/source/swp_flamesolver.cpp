@@ -43,7 +43,9 @@
 #include "swp_gas_profile.h"
 #include "mops_timeinterval.h"
 #include "mops_reactor.h"
+
 #include "sweep.h"
+
 #include "string_functions.h"
 #include "csv_io.h"
 #include <fstream>
@@ -52,7 +54,6 @@
 #include <iomanip>
 
 using namespace Sweep;
-using namespace Sweep::ActSites;
 using namespace std;
 using namespace Strings;
 
@@ -80,8 +81,6 @@ FlameSolver::~FlameSolver()
 // remaining species will be overstated.
 void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 {
-    map<real,real> alpha_prof;
-
     // Clear the current gas-phase profile.
     m_gasprof.clear();
 	
@@ -152,7 +151,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol) && (i!=Rcol) &&
                 (i!=Xcol) && (i!=Dcol) && (i!=Vcol) && (i!=Gcol)) {
                 // Try to find this species in the mechanism
-                const int speciesMechIndex = mech.FindSpecies(subs[i]);
+                const int speciesMechIndex = mech.GasMech().FindSpecies(subs[i]);
 
                 if(speciesMechIndex < 0) {
                     std::ostringstream msg("Failed to find species ");
@@ -197,7 +196,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             real P = 0.0;
             real alpha = 0.0;
             real PAHRate = 0.0;
-            GasPoint gpoint(mech.Species());
+            GasPoint gpoint(mech.GasMech().Species());
 
             // Split the line by columns.
             split(line, subs, delim);
@@ -249,9 +248,9 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gpoint.Gas.SetPressure(P*1.0e5);
             gpoint.Gas.Normalise();
             gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(m3*s) to mol/(cm3*s)
+            gpoint.Gas.SetAlpha(alpha);
 
             // Add the profile point.
-            alpha_prof[t] = alpha;
             m_gasprof.push_back(gpoint);
 
             // Output in PSDF_input.dat format
@@ -263,10 +262,6 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             //std::cout << alpha << '\t' << gpoint.Gas.Pressure() << '\t'
             //          << gpoint.Gas.Density() * 1e-6 << '\n';
         }
-
-        // Set up ABF model to use alpha profile.
-        ABFModel::Instance().Initialise(mech.ParticleMech());
-        ABFModel::Instance().SetAlphaProfile(alpha_prof);
 
         // Close the input file.
         fin.close();
@@ -296,13 +291,13 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 {
     //std::cout << "Start of FlameSolver::Solve\n";
 
-    real tsplit, dtg, dt, jrate;
+    real tsplit, dtg, jrate;
     const Sweep::Mechanism &mech = r.Mech()->ParticleMech();
     fvector rates(mech.TermCount(), 0.0);
 
     // Save the initial chemical conditions in sys so that we
     // can restore them at the end of the run.
-    const Sprog::Thermo::IdealGas chem = *r.Mixture();
+    const Sprog::Thermo::IdealGas chem = r.Mixture()->GasPhase();
 
     // Store if chemical conditions are fixed at present, because we
     // shall set them to be fixed during this run, to be restored afterwards.
@@ -314,20 +309,20 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     dtg     = tstop - t;
 
     // Set the chemical conditions.
-    linInterpGas(t, m_gasprof, *r.Mixture());
+    linInterpGas(t, m_gasprof, r.Mixture()->GasPhase());
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
 
         //save the old gas phase mass density
-        double old_dens = r.Mixture()->MassDensity();
+        double old_dens = r.Mixture()->GasPhase().MassDensity();
 
         // Update the chemical conditions.
-        linInterpGas(t, m_gasprof, *r.Mixture());
+        linInterpGas(t, m_gasprof, r.Mixture()->GasPhase());
 
         // Scale particle M0 according to gas-phase expansion.
-        r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->MassDensity());
+        r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
 
         // Get the process jump rates (and the total rate).
         jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);

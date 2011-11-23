@@ -95,20 +95,20 @@ Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
  * of the predictor corrector algorithm.
  *
  *\param[in,out]        reac        Reactor describing system state
+ *\param[in]            t_start     Time from which to advance solution
  *\param[in]            t_stop      Time to which to advance solution
  *\param[in]            n_steps     Number of predictor corrector steps (ie number of splits between transport and particle processes)
  *\param[in]            n_iter      Number of corrector iterations per step
  *\param[in]            seed        Value that is unique to this particular time interval and path to use in seeding the RNGs
  */
-void Brush::PredCorrSolver::solve(Reactor1d &reac, const real t_stop, const int n_steps,
+void Brush::PredCorrSolver::solve(Reactor1d &reac, const real t_start, const real t_stop, const int n_steps,
                                   const int n_iter, size_t seed) const {
-    const real startTime = reac.getTime();
-    const real dt = (t_stop - startTime) / n_steps;
+    const real dt = (t_stop - t_start) / n_steps;
 
     // Start building a RNG seed for this part of the calculation.  The
     // result should be different in each call, if this function is called
     // repeatedly in order to simulate forward in time.
-    boost::hash_combine(seed, reac.getTime());
+    boost::hash_combine(seed, t_start);
     boost::hash_combine(seed, t_stop);
 
     // Build one RNG for each cell, so that the cells can be simulated
@@ -122,7 +122,7 @@ void Brush::PredCorrSolver::solve(Reactor1d &reac, const real t_stop, const int 
     }
 
     for(int i = 1; i <= n_steps; ++i) {
-        predictorCorrectorStep(reac, startTime + i * dt, n_iter, cellRNGs);
+        predictorCorrectorStep(reac, t_start + (i - 1) * dt, t_start + i * dt, n_iter, cellRNGs);
     }
 }
 
@@ -131,32 +131,28 @@ void Brush::PredCorrSolver::solve(Reactor1d &reac, const real t_stop, const int 
  * by zero or more corrector iterations
  *
  *\param[in,out]        reac        Reactor describing system state
+ *\param[in]            t_start     Time from which to advance solution
  *\param[in]            t_stop      Time to which to advance solution
  *\param[in]            n_iter      Number of corrector iterations per step
  *\param[in]            cell_rngs   Vector of independent RNGs, one for each cell
  *
  *\pre  reac.getNumCells() == cell_rngs.size()
  */
-void Brush::PredCorrSolver::predictorCorrectorStep(Reactor1d &reac, const real t_stop,
-                                                   const int n_iter,
+void Brush::PredCorrSolver::predictorCorrectorStep(Reactor1d &reac, const real t_start,
+                                                   const real t_stop, const int n_iter,
                                                    std::vector<Sweep::rng_type>& cell_rngs) const {
-    const real startTime = reac.getTime();
-
-    for(size_t i = 0; i < reac.getNumCells(); ++i) {
-        assert(reac.getCell(i).Mixture() != NULL);
-    }
+    //std::cout << "Predictor corrector step from " << t_start << " to " << t_stop << '\n';
 
     //=========== Predictor step =====================
     // Advance the chemistry
     solveChemistry(reac, t_stop);
 
-    // reset the time and advance the particles
-    reac.setTime(startTime);
-    solveParticlesByCell(reac, t_stop, cell_rngs);
+
+    solveParticlesByCell(reac, t_start, t_stop, cell_rngs);
 
 //    std::cout << "Particle counts at end of predictorCorrectorStep ";
 //    for(size_t i = 0; i < reac.getNumCells(); ++i) {
-//        std::cout << reac.getCell(i).Mixture()->ParticleCount() << ' ';
+//        std::cout << reac.getCell(i).ParticleCount() << ' ';
 //    }
 //    std::cout << std::endl;
 
@@ -184,7 +180,7 @@ void Brush::PredCorrSolver::solveChemistry(Reactor1d &reac, const real t_stop) c
     const size_t numCells = reac.getNumCells();
     fvector oldDensity(numCells);
     for(size_t i = 0; i != numCells; ++i) {
-        oldDensity[i] = reac.getCell(i).Mixture()->MassDensity();
+        oldDensity[i] = reac.getCell(i).GasPhase().MassDensity();
     }
 
     // Update the chemistry to the new time
@@ -193,10 +189,10 @@ void Brush::PredCorrSolver::solveChemistry(Reactor1d &reac, const real t_stop) c
     // Update the soot particle concentration to account for the expansion /
     // contraction of the gas.
     for(size_t i = 0; i != numCells; ++i) {
-        Sweep::Cell * const pMix = reac.getCell(i).Mixture();
+        Sweep::Cell & mix = reac.getCell(i);
 
         // Collect data for calculating the new value
-        pMix->AdjustSampleVolume(oldDensity[i] / pMix->MassDensity());
+        mix.AdjustSampleVolume(oldDensity[i] / mix.GasPhase().MassDensity());
     }
 }
 
@@ -209,25 +205,23 @@ void Brush::PredCorrSolver::solveChemistry(Reactor1d &reac, const real t_stop) c
  * mechanism.
  *
  *\param[in,out]        reac        Reactor describing system state
+ *\param[in]            t_start     Time from which to advance solution
  *\param[in]            t_stop      Time to which to advance solution
  *\param[in]            cell_rngs   Vector of independent RNGs, one for each cell
  */
-void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_stop,
+void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_start, const real t_stop,
                                                  std::vector<Sweep::rng_type>& cell_rngs) const {
 
     const size_t numCells = reac.getNumCells();
-    const Sweep::Mechanism &mech = reac.getMechanism().ParticleMech();
+    const Sweep::Mechanism &mech = reac.getParticleMechanism();
 
-    // Need to know the time for the split simulation of the transport processes
-    const real t_start = reac.getTime();
-
-    #pragma omp parallel for
+#pragma omp parallel for
     for(size_t i = 0; i < numCells; ++i) {
         // Get details of cell i
-        Mops::Reactor& cell = reac.getCell(i);
+        Sweep::Cell& cell = reac.getCell(i);
         Geometry::LocalGeometry1d geom(reac.getGeometry(), i);
 
-        solveParticlesInOneCell(cell, geom, mech, t_stop, cell_rngs[i]);
+        solveParticlesInOneCell(cell, geom, mech, t_start, t_stop, cell_rngs[i]);
     }
 
     // Now do the split particle transport, if there is any
@@ -240,31 +234,30 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
  * Advance the particle part of the solution, which may also affect the chemical
  * species concentrations.
  *
- * @TODO  The choice of deferral length should be integrated with Sweep::Solver
+ * @todo  The choice of deferral length should be integrated with Sweep::Solver
  * with a view to using Sweep::Solver::Run()
  *
  *\param[in,out]        cell        Contents of one grid cell
  *\param[in]            geom        Position information regarding adjoining cells
  *\param[in]            mech        Mechanism defining the particle processes
+ *\param[in]            t           Time from which to advance solution
  *\param[in]            t_stop      Time to which to advance solution
  *\param[in,out]        rng         RNG to use for the simulation
  */
-void Brush::PredCorrSolver::solveParticlesInOneCell(Mops::Reactor &cell, const Geometry::LocalGeometry1d &geom,
-                                                    const Sweep::Mechanism &mech, const real t_stop,
+void Brush::PredCorrSolver::solveParticlesInOneCell(Sweep::Cell &cell, const Geometry::LocalGeometry1d &geom,
+                                                    const Sweep::Mechanism &mech, real t, real t_stop,
                                                     Sweep::rng_type &rng) const {
     // Carry out a repeated sequence of jump process simulation (with LPDA updates
     // for particles involved in jumps) followed by LPDA updates for the full
     // population.
-    real t = cell.Time();
     do {
         // Ignore the individual rate term information in the final argument
         fvector dummyVec;
-        // Add 1 to the denominator to avoid dividing by 0
-        const real deferredRate = mech.CalcDeferredRateTerms(t, *(cell.Mixture()) ,geom, dummyVec);
+        const real deferredRate = mech.CalcDeferredRateTerms(t, cell ,geom, dummyVec);
 
         // Calculate both the rates of the individual jump processes and the total
         fvector jumpRates;
-        real jumpRate = mech.CalcJumpRateTerms(t, *(cell.Mixture()), geom, jumpRates);
+        real jumpRate = mech.CalcJumpRateTerms(t, cell, geom, jumpRates);
 
         // Calculate the latest time at which all particles must be updated
         // with deferred events.
@@ -281,16 +274,14 @@ void Brush::PredCorrSolver::solveParticlesInOneCell(Mops::Reactor &cell, const G
         while(t <= maxDeferralEnd * (1.0 - std::numeric_limits<real>::epsilon())) {
             // Perform one non-deferred event
 
-            jumpRate = mech.CalcJumpRateTerms(t, *(cell.Mixture()), geom, jumpRates);
-            Sweep::Solver::timeStep(t, maxDeferralEnd, *(cell.Mixture()), geom, mech,
+            jumpRate = mech.CalcJumpRateTerms(t, cell, geom, jumpRates);
+            Sweep::Solver::timeStep(t, maxDeferralEnd, cell, geom, mech,
                                     jumpRates, jumpRate, rng);
         }
 
-        cell.SetTime(t);
-
         // Perform all events from deferred processes.
         if (mech.AnyDeferred()) {
-            mech.LPDA(maxDeferralEnd, *(cell.Mixture()), rng);
+            mech.LPDA(maxDeferralEnd, cell, rng);
         }
     } while(t <= t_stop * (1.0 - std::numeric_limits<real>::epsilon()));
 
@@ -317,16 +308,16 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
         // This will exactly preserve the physical contribution of the particle under consideration, because
         // statistical weights are always divided by the sample volume.
         particle_details.particle->setStatisticalWeight(particle_details.particle->getStatisticalWeight() *
-                                                        incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume());
+                                                        incomingWeight * reac.getCell(destination_index).SampleVolume());
 
         // Ownership of the particle is now taken by the ensemble
-        reac.getCell(destination_index).Mixture()->Particles().Add(*particle_details.particle, rng);
+        reac.getCell(destination_index).Particles().Add(*particle_details.particle, rng);
     }
     else {
         // Need to match weights of particle between source and destination in a DSA setting
         unsigned int safetyCounter = 0;
         while(true) {
-            real destinationWeight = 1.0 / reac.getCell(destination_index).Mixture()->SampleVolume();
+            real destinationWeight = 1.0 / reac.getCell(destination_index).SampleVolume();
 
             if(incomingWeight >= destinationWeight) {
                 // The important thing is that the statistical weight of particles added to the destination cell
@@ -334,7 +325,7 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
                 // Otherwise mass will be lost.
 
                 // Insert one copy of the particle into the destination cell
-                reac.getCell(destination_index).Mixture()->Particles().Add(*(new Sweep::Particle(*particle_details.particle)), rng);
+                reac.getCell(destination_index).Particles().Add(*(new Sweep::Particle(*particle_details.particle)), rng);
 
                 // One unit of destinationWeight has now been added to an ensemble
                 incomingWeight -= destinationWeight;
@@ -350,17 +341,17 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
 
         // Unfortunately we cannot quite conserve statistical weight, there will always be a bit
         // left over after the loop above.  This can only be handled in an average sense.
-        const real moveParticleProb = incomingWeight * reac.getCell(destination_index).Mixture()->SampleVolume();
+        const real moveParticleProb = incomingWeight * reac.getCell(destination_index).SampleVolume();
         typedef boost::bernoulli_distribution<real> bernoulli_distrib;
         bernoulli_distrib moveDistrib(moveParticleProb);
         boost::variate_generator<Sweep::rng_type&, bernoulli_distrib> moveDecider(rng, moveDistrib);
 
         if(moveDecider()) {
-            reac.getCell(destination_index).Mixture()->Particles().Add(*particle_details.particle, rng);
+            reac.getCell(destination_index).Particles().Add(*particle_details.particle, rng);
 
             // Testing output
-            const real extraWeight = (1.0 / reac.getCell(destination_index).Mixture()->SampleVolume()) - incomingWeight;
-//            if(std::abs(extraWeight) > 100 * std::numeric_limits<real>::epsilon() / reac.getCell(destination_index).Mixture()->SampleVolume()) {
+//            const real extraWeight = (1.0 / reac.getCell(destination_index).SampleVolume()) - incomingWeight;
+//            if(std::abs(extraWeight) > 100 * std::numeric_limits<real>::epsilon() / reac.getCell(destination_index).SampleVolume()) {
 //                std::cerr << "Transport in added " << extraWeight << " of statistical weight to cell centred at "
 //                          << reac.getCellCentre(destination_index) << std::endl;
 //            }
@@ -370,7 +361,7 @@ void Brush::PredCorrSolver::transportIn(Reactor1d & reac, const size_t destinati
             delete particle_details.particle;
 
             // Testing output
-//            if(std::abs(incomingWeight) > 100 * std::numeric_limits<real>::epsilon() / reac.getCell(destination_index).Mixture()->SampleVolume()) {
+//            if(std::abs(incomingWeight) > 100 * std::numeric_limits<real>::epsilon() / reac.getCell(destination_index).SampleVolume()) {
 //                std::cerr << "Transport in dropped " << incomingWeight
 //                          << " of statistical weight from cell centred at "
 //                          << reac.getCellCentre(destination_index) << std::endl;
@@ -402,7 +393,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
     // particles that are moving to new cells.
 #pragma omp parallel for
     for(unsigned int i = 0; i < numCells; ++i) {
-        Mops::Mixture &mix = *(reac.getCell(i).Mixture());
+        Sweep::Cell &mix = reac.getCell(i);
         Sweep::Ensemble &particles = mix.Particles();
 
         // Flamelet advection needs some information on adjoining cells to calculate gradients
@@ -414,12 +405,12 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
         // See if there is a left neighbour
         int neighbourIndex = geom.calcDestination(Geometry::left);
         if(neighbourIndex >= 0)
-            neighbouringCells[0] = reac.getCell(neighbourIndex).Mixture();
+            neighbouringCells[0] = &(reac.getCell(neighbourIndex));
 
         // See if there is a right neighbour
         neighbourIndex = geom.calcDestination(Geometry::right);
         if(neighbourIndex >= 0)
-            neighbouringCells[1] = reac.getCell(neighbourIndex).Mixture();
+            neighbouringCells[1] = &(reac.getCell(neighbourIndex));
 
         // The weight will be needed when the particles are put back into the cell
         const real statisticalWeight = 1.0 / mix.SampleVolume();
@@ -432,7 +423,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
         // Remove particles that are moving to a new cell from partLists and add them
         // to the inflow list for the appropriate cell
         inflowLists[i] = updateParticleListPositions(t_start, t_stop, mix, i,
-                                                     reac.getMechanism().ParticleMech(),
+                                                     reac.getParticleMechanism(),
                                                      reac.getGeometry(), neighbouringCells,
                                                      partList, cell_rngs[i]);
 
@@ -467,7 +458,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
  *@param[in,out]    sp                  Particle requiring updated position
  *@param[in,out]    rng                 Random number generator
  */
-void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const real t_stop, const Mops::Mixture &mix,
+void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const real t_stop, const Sweep::Cell &mix,
                                                    const Sweep::Mechanism &mech,
                                                    const Geometry::LocalGeometry1d & geom,
                                                    const std::vector<const Sweep::Cell*> & neighbouringCells,
@@ -507,7 +498,7 @@ void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const rea
  *@return       Vector of lists of particles to be transported into other cells
  */
 Brush::PredCorrSolver::inflow_lists_vector
-  Brush::PredCorrSolver::updateParticleListPositions(const real t_start, const real t_stop, const Mops::Mixture &mix,
+  Brush::PredCorrSolver::updateParticleListPositions(const real t_start, const real t_stop, const Sweep::Cell &mix,
                                                      const size_t cell_index, const Sweep::Mechanism &mech,
                                                      const Geometry::Geometry1d & geom,
                                                      const std::vector<const Sweep::Cell*> & neighbouringCells,
@@ -597,7 +588,7 @@ void Brush::PredCorrSolver::moveParticlesToDifferentCells(Reactor1d & reac,
 
         // Now the population of cell i has been updated doubling can be
         // reactivated.
-        reac.getCell(i).Mixture()->Particles().UnfreezeDoubling();
+        reac.getCell(i).Particles().UnfreezeDoubling();
     }
 }
 

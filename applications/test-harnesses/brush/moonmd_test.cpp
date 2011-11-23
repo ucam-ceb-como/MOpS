@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
     momentsFile << "t,x";
     typedef std::vector<std::string> string_vector;
     {
-        const string_vector &colNames = Sweep::Stats::EnsembleStats(pReac->getMechanism().ParticleMech()).Names();
+        const string_vector &colNames = Sweep::Stats::EnsembleStats(pReac->getParticleMechanism()).Names();
         const string_vector::const_iterator itEnd = colNames.end();
         for(string_vector::const_iterator it = colNames.begin(); it != itEnd; ++it) {
             momentsFile << ',' << *it;
@@ -107,6 +107,7 @@ int main(int argc, char* argv[])
     const size_t path = 123;
     double energySource[3] = {-9.9, -8.9, -7.9};
     double massConcSource[6] = {-19.9, -18.9, -17.9, -29.9, -28.9, -27.9};
+
     pReac = Brush::MooNMDInterface::RunParticlePhase(*pReac, 1.5, 3, 2, solnGrid, temperature, velocity,
                                                      massConcentration, path, energySource, massConcSource, momentsFile);
     pReac = Brush::MooNMDInterface::RunParticlePhase(*pReac, 2.0, 3, 2, solnGrid, temperature, velocity,

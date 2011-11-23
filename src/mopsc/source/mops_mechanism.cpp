@@ -51,7 +51,6 @@ using namespace Mops;
 // Default constructor.
 Mechanism::Mechanism(void)
 {
-    m_pmech.SetSpecies(m_species);
 }
 
 // Default destructor.
@@ -61,11 +60,6 @@ Mechanism::~Mechanism(void)
 
 
 // PARTICLE MECHANISM.
-
-// Returns a reference (non-const) to the particle mechanism.
-Sweep::Mechanism &Mechanism::ParticleMech(void) {return m_pmech;}
-const Sweep::Mechanism &Mechanism::ParticleMech(void) const {return m_pmech;}
-
 
 // READ/WRITE/COPY FUNCTIONS.
 
@@ -77,10 +71,9 @@ void Mechanism::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
         
-        // Write the base class.
-        Sprog::Mechanism::Serialize(out);
-
-        // Write the particle mechanism.
+        // Write the gas mechanism
+        m_gmech.Serialize(out);
+        // and the particle mechanism.
         m_pmech.Serialize(out);
 
     } else {
@@ -99,12 +92,10 @@ void Mechanism::Deserialize(std::istream &in)
 
         switch (version) {
             case 0:
-                // Read the base class.
-                Sprog::Mechanism::Deserialize(in);
-
+                m_gmech.Deserialize(in);
                 // Read the particle mechanism.
                 m_pmech.Deserialize(in);
-                m_pmech.SetSpecies(m_species);
+                m_pmech.SetSpecies(GasMech().Species());
 
                 break;
             default:

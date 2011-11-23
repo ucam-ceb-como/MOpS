@@ -126,6 +126,11 @@ public:
     //! Set derivative of density times mixture fraction diffusion coefficient
     void SetGradientTemperature (const real g) {m_data[GradientTemperatureIndex()] = g;}
 
+    //! Alpha factor (used in ABF model to scale certain reaction rates)
+    real Alpha() const {return m_data[AlphaIndex()];}
+
+    //! Set alpha factor (used in ABF model to scale certain reaction rates)
+    void SetAlpha(const real a) {m_data[AlphaIndex()] = a;}
 
 
     // SPECIES CONCENTRATIONS/FRACTIONS.
@@ -272,8 +277,11 @@ public:
     //!  Index of derivative of density times mixture fraction diffusion coefficient
     size_t GradientTemperatureIndex() const {return m_species->size() + 7;}
 
+    //!  Index of alpha (used in ABF model to scale certain reaction rates)
+    size_t AlphaIndex() const {return m_species->size() + 8;}
+
     //! Number of items of data that are not species concentrations that are stored at the end of m_data
-    static const size_t sNumNonSpeciesData = 8;
+    static const size_t sNumNonSpeciesData = 9;
 
     // Writes the mixture to a binary data stream.
     virtual void Serialize(std::ostream &out) const;

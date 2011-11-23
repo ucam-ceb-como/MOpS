@@ -147,7 +147,7 @@ int PAHInception::Perform(const real t, Cell &sys,
     sys.Particles().Add(*sp, rng);
 
     // Update gas-phase chemistry of system.
-    adjustGas(sys);
+    adjustGas(sys, sp->getStatisticalWeight());
 
     return 0;
 }
@@ -158,7 +158,7 @@ int PAHInception::Perform(const real t, Cell &sys,
 real PAHInception::Rate(real t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 {
-    const real rate = NA*sys.PAHFormationRate()*A();
+    const real rate = NA*sys.GasPhase().PAHFormationRate()*A();
 
     // PAHFormation rate may be negative which means no inception
     if(rate < 0.0)

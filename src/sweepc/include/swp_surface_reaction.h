@@ -47,6 +47,8 @@
 #include "swp_particle_process.h"
 #include "swp_property_indices.h"
 
+#include "gpc_rate_params.h"
+
 namespace Sweep
 {
 // Forward declare mechanism class.
