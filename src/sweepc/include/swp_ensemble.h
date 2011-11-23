@@ -279,7 +279,6 @@ private:
     unsigned int m_count;    // Number of particles currently in the ensemble.
 
     // ENSEMBLE SCALING VARIABLES.
-    real m_scale;            // Scaling factor due to internal operations (doubling etc.).
     real m_contfactor;       // Contraction scaling factor, precalculated for speed.
     unsigned int m_ncont;    // Number of ensemble contractions that have occurred.
     bool m_contwarn;         // Has a contraction warning msg been printed?
@@ -336,7 +335,8 @@ private:
     };
 }; // end of class Ensemble
 
-}; // end of namespace Sweep
+} // end of namespace Sweep
+
 // Include inline function definitions.
 #include "swp_ensemble_inl.h"
 

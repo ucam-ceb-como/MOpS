@@ -186,52 +186,6 @@ unsigned int Cell::ParticleCount(void) const
     return m_ensemble.Count();
 }
 
-/*!
- *@param[in,out]    sp              Pointer to particle to add to ensemble.
- *@param[in]        stat_weight     Concentration of physical particles to be represented by added computational particles
- *@param[in,out]    rng             Random number generator
- *
- * Ownership of the particle is taken by the ensemble, which will delete it when it is no
- * longer required (which may be immediately).
- *
- * Exactly matching the caller specified statistical weight is only possible if it is an integer multiple
- * of the statistical weight of one ensemble particle.  In general this condition will not be met and so
- * probabilistic methods are used to add computational particles with the mean of their combined
- * statistical weight equal to the value specified by the caller.
- */
-void Cell::AddParticle(Particle* sp, real stat_weight, rng_type &rng) {
-    // Need to match caller specified weight with total weight of particles added to the ensemble
-    unsigned int safetyCounter = 0;
-    while(true) {
-        real destinationWeight = 1.0 / SampleVolume();
-
-        if(stat_weight >= destinationWeight) {
-            // Insert one copy of the particle into the destination cell
-            m_ensemble.Add(*(new Particle(*sp)), rng);
-            stat_weight -= destinationWeight;
-
-            // Avoid infinite loops
-            if(++safetyCounter > 100000) {
-                throw std::runtime_error("Failed to match particle weights in Sweep::Cell::AddParticle()");
-            }
-        }
-        else
-            break;
-    }
-
-    // Unfortunately we cannot quite conserve statistical weight, there will always be a bit
-    // left over after the loop above.  This can only be handled in an average sense.
-    boost::uniform_01<rng_type&, real> unifDistrib(rng);
-
-     if(unifDistrib() < stat_weight * SampleVolume()) {
-         m_ensemble.Add(*sp, rng);
-     }
-     else {
-         // Ownership of the particle has not been passed on to an ensemble so the memory must be released
-         delete sp;
-     }
-}
-
 /**
  * Initialise the ensemble to hold particles of the type specified
  * by the model and containing the particular particles contained

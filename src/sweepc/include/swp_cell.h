@@ -125,9 +125,6 @@ public:
             std::list<Particle*>::iterator particle_list_end,
             real statistical_weight);
 
-    //! Add particles to the ensemble with total statistical weight as specified
-    void AddParticle(Particle* sp, real stat_weight,rng_type &rng);
-
     // THE PARTICLE MODEL.
 
     // Returns the particle model used to define particles in this

@@ -124,7 +124,6 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
             m_count    = rhs.m_count;
             // Scaling.
             m_ncont      = rhs.m_ncont;
-            m_scale      = rhs.m_scale;
             m_contfactor = rhs.m_contfactor;
             m_contwarn   = rhs.m_contwarn;
             // Doubling.
@@ -190,7 +189,6 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 
     // Initialise scaling.
     m_ncont      = 0;
-    m_scale      = 1.0;
     m_contfactor = (real)(m_capacity-1) / (real)(m_capacity);
     m_contwarn   = false;
 
@@ -250,12 +248,17 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
     if(count > m_capacity) {
         // Some particles were thrown away and we must rescale
         m_count = m_capacity;
-        m_scale = static_cast<real>(m_capacity) / static_cast<real>(count);
         m_ncont = 0;
+
+        iterator it = begin();
+        const iterator itEnd = end();
+        while(it != itEnd) {
+            (*it)->setStatisticalWeight((*it)->getStatisticalWeight() * static_cast<real>(count) / static_cast<real>(m_capacity));
+            ++it;
+        }
     }
     else {
         m_count = count;
-        m_scale = 1.0;
         m_ncont = 0;
     }
     m_maxcount = m_count;
@@ -511,7 +514,6 @@ void Sweep::Ensemble::ClearMain()
     m_count = 0;
 
     m_ncont = 0; // No contractions any more.
-    m_scale = 1.0;
 
     m_tree.clear();
 
@@ -578,13 +580,12 @@ int Sweep::Ensemble::Select(Sweep::PropID id, rng_type &rng) const
 real Sweep::Ensemble::Scaling() const
 {
     // The scaling factor includes the contraction term and the doubling term.
-    return m_scale * pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
+    return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
 }
 
 // Resets the ensemble scaling.
 void Sweep::Ensemble::ResetScaling()
 {
-    m_scale = 1.0;
     m_ncont = 0;
     m_ndble = 0;
     m_contwarn = false;
@@ -753,10 +754,6 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
             m_particles[i]->Serialize(out);
         }
 
-        // Output the scaling factor.
-        double val = (double)m_scale;
-        out.write((char*)&val, sizeof(val));
-
         // Output number of contractions.
         n = (unsigned int)m_ncont;
         out.write((char*)&n, sizeof(n));
@@ -805,7 +802,6 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
         unsigned int n = 0;
-        double val     = 0.0;
 
         switch (version) {
             case 0:
@@ -828,10 +824,6 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                     Particle *p = new Particle(in, model);
                     m_particles[i] = p;
                 }
-
-                // Read the scaling factor.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_scale = (real)val;
 
                 // Read number of contractions.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -906,7 +898,6 @@ void Sweep::Ensemble::init(void)
     m_count      = 0;
 
     // Scaling.
-    m_scale      = 1.0;
     m_contfactor = 0;
     m_ncont      = 0;
     m_contwarn   = false;
