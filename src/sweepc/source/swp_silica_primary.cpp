@@ -638,6 +638,7 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
 		    // set the sintering times
 		    this->SetSinteringTime(std::max(this->m_sint_time, rhsparticle->m_sint_time));
+		    m_createt = max(this->m_createt, rhsparticle->m_createt);
 
 			//initialise the variables used to calculate the sintering level
             m_children_vol=(m_leftparticle->m_vol+m_rightparticle->m_vol);
