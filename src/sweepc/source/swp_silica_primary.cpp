@@ -74,7 +74,6 @@ using namespace Strings;
  *
  */
 SilicaPrimary::SilicaPrimary() : Primary(),
-    m_connect_time(0),
     //State Space:: number of Si, O and OH units
     m_numSi(0),
     m_numO(0),
@@ -119,7 +118,6 @@ SilicaPrimary::SilicaPrimary() : Primary(),
  */
 SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
 : Primary(time, model),
-    m_connect_time(0),
     //State Space:: number of Si, O and OH units
     m_numSi(0),
     m_numO(0),
@@ -176,7 +174,6 @@ SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
 SilicaPrimary::SilicaPrimary(const real time, const real position,
                        const Sweep::ParticleModel &model)
 : Primary(time, model),
-    m_connect_time(0),
     //State Space:: number of Si, O and OH units
     m_numSi(0),
     m_numO(0),
@@ -230,7 +227,6 @@ SilicaPrimary::SilicaPrimary(const real time, const real position,
  */
 SilicaPrimary::SilicaPrimary(real time, const Sweep::ParticleModel &model, bool nosilica)
 : Primary(time, model),
-    m_connect_time(0),
     //State Space:: number of Si, O and OH units
     m_numSi(0),
     m_numO(0),
@@ -387,7 +383,6 @@ void SilicaPrimary::CopyParts(const SilicaPrimary *source)
     m_Rg=source->m_Rg;
     m_avg_sinter=source->m_avg_sinter;
     m_sint_rate=source->m_sint_rate;
-    m_connect_time=source->m_connect_time;
     m_sint_time=source->m_sint_time;
 
 }
@@ -697,9 +692,6 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 
         // Calculate the spherical surface
         const double spherical_surface=4*PI*m_children_radius*m_children_radius;
-
-        // Perform a first order integration method to sinter the subparticle for the given time.
-        m_connect_time+=dt;
 
         // Declare time step variables.
         real t1=0.0, delt=0.0, tstop=dt;
@@ -1398,7 +1390,6 @@ void SilicaPrimary::UpdatePrimary(void)
 	m_surf = PI * m_diam * m_diam;
     m_primarydiam = m_diam;
 	m_avg_sinter=0;
-	m_connect_time=0;
 	m_numprimary = 1;
 }
 
@@ -1414,7 +1405,6 @@ void SilicaPrimary::Reset()
     m_surf=0;
     m_vol=0;
     m_avg_sinter=0;
-	m_connect_time=0;
 }
 
 

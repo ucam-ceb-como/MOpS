@@ -242,9 +242,6 @@ private:
     //! Set the sintering time of a tree
     void SetSinteringTime(real time);
 
-    //! Time the two subparticles are connected
-    real m_connect_time;
-
     //! Number of silicon units in primary
     int m_numSi;
     
