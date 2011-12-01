@@ -1159,7 +1159,7 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 		// Surface change due to volume addition
 		double dS=dV*ct/(m_diam/2.0);
 
-		FindAllParents(this);
+		/*FindAllParents(this);
 
 		if(!(m_allparents.empty()) && dS>0)
 		{
@@ -1181,7 +1181,8 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 			}
 			m_allparents.clear();
 
-		}
+		}*/
+		this->UpdateParents(dS);
 
 	}
 	//Else this a non-leaf node (not a primary)
