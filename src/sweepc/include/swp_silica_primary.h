@@ -201,14 +201,6 @@ private:
     SilicaPrimary *SelectRandomSubparticleLoop(int target);
     //! Sets the pointers to the primary particles correct after a copy event
     void UpdateAllPointers( const SilicaPrimary *source);
-    //! Get All unique parents from source
-    void GetAllParents(SilicaPrimary *source);
-    //! Get All unique parents from source
-    void FindAllParents(SilicaPrimary *source);
-    //! Delete target parent from m_allparents
-    void DeleteParent(SilicaPrimary *target);
-    //! Adds source parent to m_allparents
-    void AddParent(SilicaPrimary *source);
     //! Updates the properties of a primary only, not the entire tree
     void UpdatePrimary(void);
     //! Sets some properties to 0
@@ -301,8 +293,6 @@ private:
      * Refer to Markus Sander's thesis for more detailed description
      */    
     SilicaPrimary *m_leftchild, *m_rightchild, *m_parent, *m_leftparticle, *m_rightparticle;
-    //! Vector containing addresses of all parents of current primary
-	std::vector<SilicaPrimary*> m_allparents;
 
 	//! Absolute amount of time for which particles are sintered
 	real m_sint_time;

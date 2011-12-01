@@ -101,7 +101,6 @@ SilicaPrimary::SilicaPrimary() : Primary(),
     //Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    m_allparents(0),
     m_sint_time(0.0)
 {
 }
@@ -145,7 +144,6 @@ SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
     //Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    m_allparents(0),
     m_sint_time(0.0)
 {
     // Other parts of the code check for a non-zero composition.
@@ -201,7 +199,6 @@ SilicaPrimary::SilicaPrimary(const real time, const real position,
     //Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    m_allparents(0),
     m_sint_time(0.0)
 {
     // Other parts of the code check for a non-zero composition
@@ -254,7 +251,6 @@ SilicaPrimary::SilicaPrimary(real time, const Sweep::ParticleModel &model, bool 
     //Particles are leaf nodes containing primary particles
     m_leftparticle(NULL),
     m_rightparticle(NULL),
-    m_allparents(0),
     m_sint_time(0.0)
 {
     m_comp[0]=1;
@@ -470,100 +466,6 @@ void SilicaPrimary::UpdateAllPointers(const SilicaPrimary *original)
 
 	}
 }
-
-
-/*!
- * @brief   Locates all the parents and adds it to the m_allparents vector
- * 
- * This function finds all parents of source and assigns it to 
- * m_allparents of the calling object
- * 
- * @param[in]   source  Pointer to object for finding parents
- */
-void SilicaPrimary::FindAllParents(SilicaPrimary *source)
-{
-   	SilicaPrimary *tempsource = source;
-	if(tempsource->m_parent!=NULL)
-		if(tempsource->m_parent->m_leftparticle==source || tempsource->m_parent->m_rightparticle==source)
-		{
-			source->AddParent(tempsource->m_parent);
-			tempsource = tempsource->m_parent;
-		}
-}
-
-
-/*!
- * @brief       Copies all unique parents from source to calling object
- * 
- * Unused in current implementation
- * 
- * @param[in]   source  Pointer to object for copying parents
- */
-void SilicaPrimary::GetAllParents(SilicaPrimary *source)
-{
-   	if(!(source->m_allparents.empty()))
-	{	//Check if source->m_allparents has unique values
-		bool Unique=true;
-		unsigned int k;
-		for(k=0; k<source->m_allparents.size(); ++k)
-		{	std::vector<SilicaPrimary*>::iterator begin=source->m_allparents.begin(), end=source->m_allparents.end();
-			if(count(begin,end,source->m_allparents.at(k))>1)
-			{
-				Unique=false;
-			}
-		}
-
-		if(Unique)
-		{
-			unsigned int i;
-			for(i=0; i<source->m_allparents.size(); ++i)
-			{	std::vector<SilicaPrimary*>::iterator beg=m_allparents.begin(), en=m_allparents.end();
-				if(!(count(beg,en,source->m_allparents.at(i))>0) && source->m_allparents.at(i)!=this)
-						m_allparents.push_back(source->m_allparents.at(i));
-			}
-		}
-	}
-
-}
-
-
-/*!
- * @brief       Deletes target parent 
- * 
- * Unused in current implementation
- * 
- * @param[in]   target  Pointer to object for deleting
- */
-void SilicaPrimary::DeleteParent(SilicaPrimary *target)
-{
-
-	std::vector<SilicaPrimary*>::iterator parToDel=find(m_allparents.begin(),m_allparents.end(),target);
-	if(parToDel!=m_allparents.end())
-	{
-		m_allparents.erase(parToDel);
-	}
-
-}
-
-/*!
- * @brief       Adds source to m_allparents vector of calling function
- * 
- * @param[in]   source  Pointer to parent to add
- */
-void SilicaPrimary::AddParent(SilicaPrimary *source)
-{
-	bool isListed=false;
-	std::vector<SilicaPrimary*>::iterator beg=this->m_allparents.begin(), en=this->m_allparents.end();
-	if(count(beg,en,source)>0)
-	{
-		isListed=true;
-	}
-	if(!isListed)
-	{
-		this->m_allparents.push_back(source);
-	}
-}
-
 
 /*!
  * @brief       Coagulates *this* and rhs particle
@@ -1159,29 +1061,8 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 		// Surface change due to volume addition
 		double dS=dV*ct/(m_diam/2.0);
 
-		/*FindAllParents(this);
-
-		if(!(m_allparents.empty()) && dS>0)
-		{
-
-			unsigned int j;
-		 	//for(iter=this->m_allparents.begin();iter!=this->m_allparents.end();++iter)
-            for(j=0; j<m_allparents.size(); ++j)
-			{
-				if(m_allparents.at(j)->m_numprimary>1)
-				{
-					m_allparents.at(j)->m_children_surf+=dS;
-					m_allparents.at(j)->m_children_sintering=m_allparents.at(j)->SinteringLevel();
-					m_allparents.at(j)->UpdateCache();
-				}
-				else
-				{
-					cout<<"Error!!!"<<endl;
-				}
-			}
-			m_allparents.clear();
-
-		}*/
+		// Climb back-up the tree and update the surface area and
+		// sintering of a particle
 		this->UpdateParents(dS);
 
 	}
