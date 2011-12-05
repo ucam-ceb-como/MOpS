@@ -120,6 +120,9 @@ public:
 	  double m_fdim;
 	  double m_Rg;
 	  double m_avg_sinter;
+	  real m_sintrate;
+	  real m_sinttime;
+	  real m_createtime;
 
 
 }; // class SilicaCache

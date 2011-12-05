@@ -156,7 +156,7 @@ public:
     real LastUpdateTime(void) const;
 
     // Sets the last update time of the particle.
-    void SetTime(real t);
+    virtual void SetTime(real t);
 
 
     // AGGREGATION MODEL.

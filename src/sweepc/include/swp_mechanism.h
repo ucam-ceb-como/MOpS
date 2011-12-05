@@ -274,7 +274,6 @@ private:
     //time when the last particle emsenble has been written to a file
     mutable real last3dout;
 
-    void PrintTermsVector(fvector &terms, fvector::iterator &iterm) const;
 };
 } // namespace Sweep
 #endif
