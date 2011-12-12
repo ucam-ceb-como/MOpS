@@ -1009,11 +1009,11 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
                     break;
                 case -1:
                     rxn.SetPropertyID(Sweep::iD_1);
-                    arr.A *= (1.0e2);
+                    arr.A *= (1.0e-8);
                     break;
                 case -2:
                     rxn.SetPropertyID(Sweep::iD_2);
-                    arr.A *= (1.0e4);
+                    arr.A *= (1.0e-10);
                     break;
                 default:
                     // Oh dear, can't have a zero power.
