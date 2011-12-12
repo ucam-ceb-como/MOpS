@@ -28,6 +28,15 @@ Release/
 *.dir/
 *.project
 *.cproject
+src/brush/Makefile
+src/camflow/Makefile
+src/io/camxml/Makefile
+src/io/comostrings/Makefile
+src/io/chemkinreader/Makefile
+src/geometry/Makefile
+src/mopsc/Makefile
+src/sprogc/Makefile
+src/sweepc/Makefile
 
 # Executables built by cmake
 mops-app
