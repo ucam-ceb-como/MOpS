@@ -873,8 +873,9 @@ real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) 
 
     switch(m_ThermophoresisType) {
         case WaldmannThermophoresis:
-            tempFactor = sys.GasPhase().getThermalConductivity(sys.GasPhase().Pressure())
-                         * sys.GasPhase().GradientTemperature() / sys.GasPhase().Pressure();
+            tempFactor = sys.GasPhase().getThermalConductivity(sys.GasPhase().Pressure());
+            tempFactor *= sys.GasPhase().GradientTemperature();
+            tempFactor /= sys.GasPhase().Pressure();
 
             // Equation 2 of the Li & Wang paper with phi = 0.9
             // 1 / (5 * (1 + pi * phi / 8)) == 0.14777

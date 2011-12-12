@@ -343,6 +343,8 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
                         // convert cm s^-1 to m s^-1
                         frac *= 1e-2;
 
+                    // The PAHFormation column is used for alpha values in the premix alpha input format
+                    // and because alpha values are dimensionless, they should not be rescaled
                     if((i == sPAHFormationIndex) && (file_type != PremixAlpha))
                         // convert cm^-3 to m^-3
                         frac *= 1e6;
