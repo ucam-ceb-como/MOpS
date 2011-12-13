@@ -66,9 +66,11 @@ my $momentFile;
 open($momentFile, "<regress3a-adv-diffnMerged_partstats.csv") or die "ERR: failed to open merged moment file: $!";
 
 my $m0a = 0;
+my $m0asq = 0;
 my $counta = 0;
 
 my $m0b = 0;
+my $m0bsq = 0;
 my $countb = 0;
 
 while(<$momentFile>) {
@@ -76,12 +78,14 @@ while(<$momentFile>) {
 
   if(($fields[0] =~ /^0\.2$/) && (abs($fields[1] - 0.017) < 1e-6)) {
       $m0a += $fields[3];
+      $m0asq += $fields[3] * $fields[3];
       #print "t=0.2 x=0.017 $fields[3]\n";
       $counta++;
   }
 
   if(($fields[0] =~ /^0\.3$/) && (abs($fields[1] - 0.0245) < 1e-6)) {
       $m0b += $fields[3];
+      $m0bsq += $fields[3] * $fields[3];
       #print "t=0.3 x=0.0245 $fields[3]\n";
       $countb++;
   }
@@ -89,9 +93,13 @@ while(<$momentFile>) {
 
 # take the mean of the m0 values
 $m0a = $m0a / $counta;
+$m0asq = sqrt(($m0asq / $counta - $m0a * $m0a) / $counta);
 $m0b = $m0b / $countb;
+$m0bsq = sqrt(($m0bsq / $countb - $m0b * $m0b) / $countb);
 
-print "$m0a\n";
+print "$m0a $m0asq\n";
+print "$m0b $m0bsq\n";
+
 if(abs($m0a - 1.7e2) > 2e1) {
   print "Simulated M0 at t=0.2 near x=0.017 was $m0a, when analytic solution is 1.7e2\n";
   print "**************************\n";
@@ -100,7 +108,6 @@ if(abs($m0a - 1.7e2) > 2e1) {
   exit 1;
 }
 
-print "$m0b\n";
 if(abs($m0b - 2.6e2) > 3e1) {
   print "Simulated M0 at t=0.3 near x=0.0245 was $m0b, when analytic solution is 2.6e2\n";
   print "**************************\n";

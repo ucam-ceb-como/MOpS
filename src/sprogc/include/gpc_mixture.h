@@ -303,7 +303,7 @@ private:
     const SpeciesPtrVector *m_species;
 
 };
-};
-};
+} //namespace Thermo
+} //namespace Sprog
 
 #endif

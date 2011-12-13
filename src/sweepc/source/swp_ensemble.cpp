@@ -124,7 +124,6 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
             m_count    = rhs.m_count;
             // Scaling.
             m_ncont      = rhs.m_ncont;
-            m_scale      = rhs.m_scale;
             m_contfactor = rhs.m_contfactor;
             m_contwarn   = rhs.m_contwarn;
             // Doubling.
@@ -190,7 +189,6 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 
     // Initialise scaling.
     m_ncont      = 0;
-    m_scale      = 1.0;
     m_contfactor = (real)(m_capacity-1) / (real)(m_capacity);
     m_contwarn   = false;
 
@@ -202,6 +200,84 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_dblecutoff = (int)(3.0 * (real)m_capacity / 4.0);
 	m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
+}
+
+/**
+ * Initialise the ensemble to hold particles of the type specified
+ * by the model and containing the particular particles contained
+ * in the range [first, last).  This is equivalent to multiple applications
+ * of Add on an Ensemble instance after a call to Initialise(m_capacity).
+ *
+ *@param[in]        first      Iterator to first in range of particle pointers to insert
+ *@param[in]        last       Iterator to one past end of range of particle pointers to insert
+ *@param[in,out]    rng        Random number generator
+ */
+void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::list<Particle*>::iterator last,
+                                   rng_type &rng)
+{
+    // Clear any existing particles
+    for(iterator it = m_particles.begin(); it != m_particles.end(); ++it) {
+        delete *it;
+    }
+    m_particles.assign(m_capacity, NULL);
+
+    unsigned count = 0;
+    // Read up to m_capacity particles straight into the array
+    while((first != last) && (count < m_capacity)) {
+        m_particles[count++] = (*first++);
+    }
+
+    // Now we have to decide whether or not to accept particles
+    while(first != last) {
+        // Possible index in which to store this particle
+        boost::uniform_smallint<unsigned> indexGenerator(0, count);
+        const unsigned possibleIndex = indexGenerator(rng);
+
+        // Accept the index with probability m_capacity / count
+        if(possibleIndex < m_capacity) {
+            delete m_particles[possibleIndex];
+            m_particles[possibleIndex] = *first;
+        }
+        else {
+            delete *first;
+        }
+        ++count;
+        ++first;
+    }
+
+    if(count > m_capacity) {
+        // Some particles were thrown away and we must rescale
+        m_count = m_capacity;
+        m_ncont = 0;
+
+        iterator it = begin();
+        const iterator itEnd = end();
+        while(it != itEnd) {
+            (*it)->setStatisticalWeight((*it)->getStatisticalWeight() * static_cast<real>(count) / static_cast<real>(m_capacity));
+            ++it;
+        }
+    }
+    else {
+        m_count = count;
+        m_ncont = 0;
+    }
+    m_maxcount = m_count;
+
+    //std::cout << m_count << " particles set on ensemble of capacity " << m_capacity << '\n';
+
+    // Initialise scaling.
+
+    m_contwarn   = false;
+
+    // Initialise doubling.
+    m_ndble      = 0;
+    m_dbleon     = true;
+    m_dbleactive = false;
+
+    // Build the tree with the weights for the new particles.
+    rebuildTree();
+
+    assert(m_tree.size() == m_count);
 }
 
 Sweep::KMC_ARS::KMCSimulator* Sweep::Ensemble::Simulator(void)
@@ -270,7 +346,7 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         // There is space in the tree for a new particle.
         i = -1;
     } else {
-        // We must contract the ensemble to accomodate a new particle.
+        // We must contract the ensemble to accommodate a new particle.
         boost::uniform_smallint<int> indexDistrib(0, m_capacity);
         boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
         i = indexGenerator();
@@ -504,7 +580,7 @@ int Sweep::Ensemble::Select(Sweep::PropID id, rng_type &rng) const
 real Sweep::Ensemble::Scaling() const
 {
     // The scaling factor includes the contraction term and the doubling term.
-    return m_scale * pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
+    return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
 }
 
 // Resets the ensemble scaling.
@@ -625,7 +701,9 @@ void Sweep::Ensemble::dble()
 
 /*!
  * Empty the tree and pass of list of pointers to the particles in
- * the tree to the caller, which must take ownership of them.
+ * the tree to the caller, which must take ownership of them.  This
+ * clears all scaling information in the tree, but leaves all the
+ * storage allocated.
  */
 Sweep::PartPtrList Sweep::Ensemble::TakeParticles() {
     // Copy the pointers to particles
@@ -676,10 +754,6 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
             m_particles[i]->Serialize(out);
         }
 
-        // Output the scaling factor.
-        double val = (double)m_scale;
-        out.write((char*)&val, sizeof(val));
-
         // Output number of contractions.
         n = (unsigned int)m_ncont;
         out.write((char*)&n, sizeof(n));
@@ -728,7 +802,6 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
         unsigned int n = 0;
-        double val     = 0.0;
 
         switch (version) {
             case 0:
@@ -751,10 +824,6 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                     Particle *p = new Particle(in, model);
                     m_particles[i] = p;
                 }
-
-                // Read the scaling factor.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_scale = (real)val;
 
                 // Read number of contractions.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -829,7 +898,6 @@ void Sweep::Ensemble::init(void)
     m_count      = 0;
 
     // Scaling.
-    m_scale      = 1.0;
     m_contfactor = 0;
     m_ncont      = 0;
     m_contwarn   = false;

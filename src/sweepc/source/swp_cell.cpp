@@ -46,6 +46,7 @@
 #include "swp_death_process.h"
 #include <stdexcept>
 #include <boost/random/uniform_01.hpp>
+#include <boost/random/mersenne_twister.hpp>
 
 using namespace Sweep;
 using namespace std;
@@ -185,50 +186,62 @@ unsigned int Cell::ParticleCount(void) const
     return m_ensemble.Count();
 }
 
-/*!
- *@param[in,out]    sp              Pointer to particle to add to ensemble.
- *@param[in]        stat_weight     Concentration of physical particles to be represented by added computational particles
- *@param[in,out]    rng             Random number generator
+/**
+ * Initialise the ensemble to hold particles of the type specified
+ * by the model and containing the particular particles contained
+ * in the range [particle_list_begin, particle_list_end) and set
+ * the sample volume to achieve the statistical weight.
  *
- * Ownership of the particle is taken by the ensemble, which will delete it when it is no
- * longer required (which may be immediately).
  *
- * Exactly matching the caller specified statistical weight is only possible if it is an integer multiple
- * of the statistical weight of one ensemble particle.  In general this condition will not be met and so
- * probabilistic methods are used to add computational particles with the mean of their combined
- * statistical weight equal to the value specified by the caller.
+ *@param[in]        particle_list_begin     Iterator to first in range of particle pointers to insert
+ *@param[in]        particle_list_end       Iterator to one past end of range of particle pointers to insert
+ *@param[in]        statistical_weight      Number of physical particles represented by each computational particle
+ *@param[in,out]    rng                     Random number generator
  */
-void Cell::AddParticle(Particle* sp, real stat_weight, rng_type &rng) {
-    // Need to match caller specified weight with total weight of particles added to the ensemble
-    unsigned int safetyCounter = 0;
-    while(true) {
-        real destinationWeight = 1.0 / SampleVolume();
+void Cell::SetParticles(
+        std::list<Particle*>::iterator particle_list_begin,
+        std::list<Particle*>::iterator particle_list_end,
+        real statistical_weight, rng_type &rng)
+{
+    assert(statistical_weight > 0);
+    // This puts the particles into the ensemble and clears any scaling
+    // stored inside the ensemble
+    m_ensemble.SetParticles(particle_list_begin, particle_list_end, rng);
 
-        if(stat_weight >= destinationWeight) {
-            // Insert one copy of the particle into the destination cell
-            m_ensemble.Add(*(new Particle(*sp)), rng);
-            stat_weight -= destinationWeight;
+    m_smpvol = 1.0 / statistical_weight;
+}
 
-            // Avoid infinite loops
-            if(++safetyCounter > 100000) {
-                throw std::runtime_error("Failed to match particle weights in Sweep::Cell::AddParticle()");
-            }
-        }
-        else
-            break;
-    }
+/**
+ * Initialise the ensemble to hold particles of the type specified
+ * by the model and containing the particular particles contained
+ * in the range [particle_list_begin, particle_list_end) and set
+ * the sample volume to achieve the statistical weight.
+ *
+ *
+ *@param[in]        particle_list_begin     Iterator to first in range of particle pointers to insert
+ *@param[in]        particle_list_end       Iterator to one past end of range of particle pointers to insert
+ *@param[in]        statistical_weight      Number of physical particles represented by each computational particle
+ *
+ *@pre  The length of the input sequence is at most m_ensemble.capacity()
+ */
+void Cell::SetParticles(
+        std::list<Particle*>::iterator particle_list_begin,
+        std::list<Particle*>::iterator particle_list_end,
+        real statistical_weight)
+{
+    assert(statistical_weight > 0);
+    // This puts the particles into the ensemble and clears any scaling
+    // stored inside the ensemble
+    if(std::distance(particle_list_begin, particle_list_end) > m_ensemble.Capacity())
+        throw std::runtime_error("Attempt to set too many particles in Sweep::Cell::SetParticles");
 
-    // Unfortunately we cannot quite conserve statistical weight, there will always be a bit
-    // left over after the loop above.  This can only be handled in an average sense.
-    boost::uniform_01<rng_type&, real> unifDistrib(rng);
+    // The rng will not be used, so just provide a default constructed object
+    rng_type rng;
+    const rng_type rngCopy(rng);
+    m_ensemble.SetParticles(particle_list_begin, particle_list_end, rng);
+    assert(rngCopy == rng);
 
-     if(unifDistrib() < stat_weight * SampleVolume()) {
-         m_ensemble.Add(*sp, rng);
-     }
-     else {
-         // Ownership of the particle has not been passed on to an ensemble so the memory must be released
-         delete sp;
-     }
+    m_smpvol = 1.0 / statistical_weight;
 }
 
 // Returns particle statistics.
@@ -257,6 +270,7 @@ real Cell::SampleVolume() const
 void Cell::AdjustSampleVolume(real scale_factor)
 {
     assert(scale_factor > 0);
+    assert(scale_factor <= std::numeric_limits<real>::max());
     m_smpvol = SampleVolume() * scale_factor;
 
     // The effects of ensemble rescalings are now incorporated in this sample
@@ -272,6 +286,7 @@ void Cell::AdjustSampleVolume(real scale_factor)
  */
 void Cell::Reset(const real m0)
 {
+    assert(m0 > 0.0);
     m_ensemble.Clear();
     m_ensemble.ResetScaling();
 

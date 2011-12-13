@@ -362,14 +362,14 @@ void Mixture::SetDensity(Sprog::real dens)
 // Sets the molar density using the supplied mass density.
 void Mixture::SetMassDensity(Sprog::real dens)
 {
-    m_data[densityIndex()] = 0.0;
+    real sum = 0.0;
 
     // Calcualate molar density:
     //   rho_mass = rho_mole * sum(x * wt)
     for (unsigned int i=0; i!=m_species->size(); ++i) {
-        m_data[densityIndex()] += m_data[i] * (*m_species)[i]->MolWt();
+        sum += m_data[i] * (*m_species)[i]->MolWt();
     }
-   m_data[densityIndex()] = dens / m_data[densityIndex()];
+   m_data[densityIndex()] = dens / sum;
 }
 
 

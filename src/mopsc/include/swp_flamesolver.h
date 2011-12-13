@@ -96,12 +96,11 @@ private:
 
     // Uses linear interpolation to return the chemical conditions
     // at a given time using a profile of Idealgas objects.
-    void linInterpGas(
+    real linInterpGas(
         real t,                      // Time.
-        const GasProfile &gasphase,  // Gas-phase profile.
         Sprog::Thermo::IdealGas &gas // Output gas conditions.
         ) const;
 };
-};
+}
 
 #endif
