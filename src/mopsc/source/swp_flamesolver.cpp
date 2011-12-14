@@ -252,7 +252,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gpoint.Gas.SetTemperature(T);
             gpoint.Gas.SetPressure(P*1.0e5);
             gpoint.Gas.Normalise();
-            gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(m3*s) to mol/(cm3*s)
+            gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(cm3*s) to mol/(m3*s)
             gpoint.Gas.SetAlpha(alpha);
 
             // Add the profile point.
