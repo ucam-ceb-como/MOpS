@@ -221,7 +221,7 @@ real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1
  * 
  * The interparticle reaction rate is given by the difference between
  * the surface reaction rate and the sintering rate. This function
- * calcualtes the present value of SR rate, and gets the sintrate from 
+ * calculates the present value of SR rate, and gets the sintrate from
  * the particle cache.
  * 
  * @param[in]   t       Time at which process occurs

@@ -565,9 +565,10 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
  * is called and the particles are combined. 
  * 
  * It concludes by adjusting the gas-phase for the number of OH units
- * that would occur through the InterParticle reaction.
+ * which are lost as H2O due to the change in surface area of the
+ * sintering mechansim.
  * 
- * @param[in]   dt      Time for which to inster
+ * @param[in]   dt      Time for which to sinter
  * @param[in]   sys     Environment for particles
  * @param[in]   model   Sintering model to apply
  * @param[in]   rng     Random number generator
@@ -1100,7 +1101,9 @@ void SilicaPrimary::UpdateParents(double dS) {
 /*!
  * @brief       Adjusts the particle after an IntP event
  * 
- * Note that the gas-phase is actually adjusted in Sinter()
+ * Interparticle reactions have two OH units combining to release
+ * a H2O molecule to the gas-phase. The leftover O atom is retained in
+ * the particle phase.
  * 
  * @param[in]   dcomp   Vector storing changes in particle composition
  * @param[in]   dvalues Vector storing changes in gas-phase comp
