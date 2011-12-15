@@ -236,9 +236,16 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
 	// Rate constant.
     real rate = m_arr.A;
 
+    // Calculate the concentration of SiOH4
+    // Note that the usual ParticleProcess interface can NOT be used, as this
+    // would erroneously remove H4O4SI from the gas-phase.
+    float frac = sys.GasPhase().MoleFractions()
+            [Sprog::Species::Find(string("H4O4SI"),*sys.GasPhase().Species())];
+    real conc = sys.GasPhase().Density() * (real)frac;
+
     // Do calculation for surface-reaction part of rate:
     // Chemical species concentration dependence.
-    rate *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
+    rate *= conc;
 
     // Temperature dependance.
     real T = sys.GasPhase().Temperature();
