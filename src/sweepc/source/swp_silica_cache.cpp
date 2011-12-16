@@ -60,7 +60,6 @@ SilicaCache::SilicaCache(void)
 	m_numSi=2;
 	m_numO=1;
 	m_numOH=6;
-	m_silicaDiameter=0.0;
     m_numprimary=0;
     m_sqrtLW=0.0;
     m_LdivW=0.0;
@@ -101,7 +100,6 @@ SilicaCache &SilicaCache::operator=(const SilicaCache &rhs)
         m_numSi = rhs.m_numSi;
         m_numO = rhs.m_numO;
 		m_numOH = rhs.m_numOH;
-		m_silicaDiameter = rhs.m_silicaDiameter;
 		m_numprimary=rhs.m_numprimary;
         m_sqrtLW=rhs.m_sqrtLW;
         m_LdivW=rhs.m_LdivW;
@@ -169,7 +167,6 @@ SilicaCache &SilicaCache::operator+=(const SilicaCache &rhs)
     m_numSi += rhs.m_numSi;
     m_numO += rhs.m_numO;
     m_numOH += rhs.m_numOH;
-	m_silicaDiameter += rhs.m_silicaDiameter;
     m_numprimary+=rhs.m_numprimary;
     m_sqrtLW+=rhs.m_sqrtLW;
     m_LdivW+=rhs.m_LdivW;
@@ -189,7 +186,6 @@ SilicaCache &SilicaCache::operator+=(const SilicaPrimary &rhs)
 	m_numSi += rhs.NumSi();
     m_numO += rhs.NumO();
     m_numOH += rhs.NumOH();
-	//m_silicaDiameter += rhs.silicaCollDiameter();
     m_numprimary+=rhs.Numprimary();
     m_sqrtLW+=rhs.sqrtLW();
     m_LdivW+=rhs.LdivW();
@@ -247,7 +243,6 @@ void SilicaCache::Clear()
     m_numSi = 0;
 	m_numO = 0;
 	m_numOH = 0;
-	m_silicaDiameter = 0.0;
     m_numprimary=0;
     m_sqrtLW=0.0;
     m_LdivW=0.0;
@@ -287,9 +282,6 @@ void SilicaCache::Serialize(std::ostream &out) const
         out.write((char*)&v, sizeof(v));
 
 		v = (int)m_numOH;
-        out.write((char*)&v, sizeof(v));
-
-        v = (double)m_silicaDiameter;
         out.write((char*)&v, sizeof(v));
 
         v = (int)m_numprimary;
@@ -344,9 +336,6 @@ void SilicaCache::Deserialize(std::istream &in)
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_numOH = (int)val;
-
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_silicaDiameter = (real)val;
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_numprimary = (int)val;

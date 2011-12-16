@@ -169,9 +169,9 @@ real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1
 	// Calculate the concentration of SiOH4
 	// Note that the usual ParticleProcess interface can NOT be used, as this
 	// would erroneously remove H4O4SI from the gas-phase.
-	float frac = sys.GasPhase().MoleFractions()
+	real frac = sys.GasPhase().MoleFractions()
 	        [Sprog::Species::Find(string("H4O4SI"),*sys.GasPhase().Species())];
-	real conc = sys.GasPhase().Density() * (real)frac;
+	real conc = sys.GasPhase().Density() * frac;
 
 	// Rate of surface reaction
 	real R_surf = m_arr.A * conc *pow(T, m_arr.n)
@@ -181,7 +181,7 @@ real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1
 	real total_sint_rate = 0;
 
 	// Get total surface area from cache
-	double surface = sys.Particles().GetSum(static_cast<Sweep::PropID>(Sweep::iS));
+	real surface = sys.Particles().GetSum(static_cast<Sweep::PropID>(Sweep::iS));
 
 	// Check if particle surface area exists. If not, set the sintering rate to zero.
 	if (surface == 0) {
@@ -239,9 +239,9 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
     // Calculate the concentration of SiOH4
     // Note that the usual ParticleProcess interface can NOT be used, as this
     // would erroneously remove H4O4SI from the gas-phase.
-    float frac = sys.GasPhase().MoleFractions()
+    real frac = sys.GasPhase().MoleFractions()
             [Sprog::Species::Find(string("H4O4SI"),*sys.GasPhase().Species())];
-    real conc = sys.GasPhase().Density() * (real)frac;
+    real conc = sys.GasPhase().Density() * frac;
 
     // Do calculation for surface-reaction part of rate:
     // Chemical species concentration dependence.
@@ -257,11 +257,11 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
 
 	// Do calculation for sintering part of rate:
     // Forward-declare some parameters
-    real sint_rate = 0;
-    double rho_s = 0;
+    real sint_rate = 0.0;
+    real rho_s = 0.0;
 
 	// Get surface area from cache
-	double surface = sp.Property(static_cast<Sweep::PropID>(Sweep::iS));
+    real surface = sp.Property(static_cast<Sweep::PropID>(Sweep::iS));
 
 	if(surface == 0) {
 		rho_s = 1;
