@@ -232,11 +232,15 @@ public:
     const std::vector<real> getMolarEnthalpy(real T);
         //return the molar enthalpy for th given mixture
         const std::vector<real> getMolarEnthalpy();
+
     // routine to return the avg moleculat weight in Kg/mol.
-    real getAvgMolWt(fvector &massFrac);
+    real getAvgMolWt(fvector &massFrac) const;
 
-        real getAvgMolWt();
+    //! Mixture fraction weighted average molecular weight
+    real getAvgMolWt() const;
 
+    //! RMS molecule collision diameter
+    real getMeanCollisionSection() const;
 
     //TRANSPORT RELATED
 

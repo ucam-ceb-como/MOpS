@@ -209,9 +209,18 @@ public:
 
 	void setTransportData(const IO::Transport& transport);
 	IO::Transport& getTransportData() const;
-	double getViscosity(double T) const; // returns the viscosity of the pure species in Kg/m-s
-	double getSelfDiffusion(double T, double p) const; // returns the self diffusion coefficient m^2/s
-	double getThermalConductivity(double T, double p, double cp) const; // returns the thermal conductivity in J/m-s-K
+
+	//! Viscosity of the pure species in Kg/m-s
+	double getViscosity(double T) const;
+
+	//! Self diffusion coefficient m^2/s
+	double getSelfDiffusion(double T, double p) const;
+
+	//! Thermal conductivity in J/m-s-K
+	double getThermalConductivity(double T, double p, double cp) const;
+
+	//! Collision diameter in m
+	real getCollisionDiameter() const;
 
 
 protected:

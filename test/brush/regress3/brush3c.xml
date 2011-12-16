@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<brush version="2">
+  
+  <!-- Default parameters (can be overidden). --> 
+  <runs>3</runs>
+  <iter>2</iter>
+  <atol>1.0e-2</atol> 
+  <rtol>1.0e-4</rtol>
+  <pcount x="1.0">2048</pcount>
+  <pcount x="0.2">2048</pcount>
+  <!--pcount>1024</pcount>-->
+  <maxm0 x="0.0">1e3</maxm0>
+  <maxm0 x="0.6">1e3</maxm0>
+  <relax>0.5</relax>
+  <diffusion>split</diffusion>
+  <advection>split</advection>
+
+
+  <!-- Output time sequence. -->
+  <timeintervals splits="1">
+    <start>0.0</start>
+    <time steps="10" splits="10" subsplits="2">2.0</time>
+    <time steps="10" splits="10">3.0</time>
+  </timeintervals>
+
+
+  <output>
+    <filename>regress3c-adv-diffn</filename>
+  </output>
+  
+</brush>
