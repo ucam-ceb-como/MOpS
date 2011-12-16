@@ -571,9 +571,13 @@ void ParticleModel::init(void)
     m_species      = NULL;
     m_aggmodel     = AggModels::Spherical_ID;
 
-    m_DragA = 0.0;
-    m_DragB = 0.0;
-    m_DragE = 0.0;
+    // Parameters of the Knudsen Ansatz for drag, only used for the Knudsen drag model,
+    // reasonable values are given in comments, but should be provided via the sweep.xml file.
+    // m_DragA is also used for the temperature drag model, which has no physical meaning, but
+    // may be useful for testing purposes.
+    m_DragA = 0.0; //1.155;
+    m_DragB = 0.0; //0.471;
+    m_DragE = 0.0; //0.596;
 	
 	//initial CE model
     colliParaA = 0.0; 
@@ -676,6 +680,11 @@ real ParticleModel::KnudsenDragCoefficient(const Cell &sys, const Particle &sp) 
     // 3 * pi = 9.424777962 and note that diameter not radius is used below
     const real numerator = 9.424777962 * sp.CollDiameter() * Sweep::ViscosityAir(sys.GasPhase().Temperature());
 
+//    std::cout << "Knudsen " << Kn << ", " << numerator
+//              << ", MFP " << Sweep::MeanFreePathAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure())
+//              << ", diam " << sp.CollDiameter() << '\n'
+//              << ", T " << sys.GasPhase().Temperature() << ", " << sys.GasPhase().Pressure() << '\n';
+
     return numerator / (1 + Kn * (m_DragA + m_DragB * std::exp(-m_DragE / Kn)));
 }
 
@@ -696,7 +705,8 @@ real ParticleModel::KnudsenDragCoefficient(const Cell &sys, const Particle &sp) 
  */
 real ParticleModel::FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const {
     const real d = sp.CollDiameter();
-    return 5.355264342e-24 * std::sqrt(sys.GasPhase().Temperature()) * sys.GasPhase().Density() * d * d;
+    // 4.818546232410640188 = sqrt(2 * pi * k * NA) * 2 / 3
+    return 4.818546232410640188 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().getAvgMolWt()) * sys.GasPhase().Density() * d * d;
 }
 
 /*!
@@ -714,6 +724,93 @@ real ParticleModel::TemperatureDragCoefficient(const Cell &sys, const Particle &
     return m_DragA * sys.GasPhase().Temperature();
 }
 
+/*!
+ * The drag coefficient for the free molecular regimes is calculated using a
+ * reduced collision integral of 1 following equation (25) of Li & Wang,
+ * Phys. Rev. E 68, 061207 (2003).
+ * The formula is
+ * \f[
+ *    \frac{8}{3}\left(1 + \alpha^{-1.143}\right)^{-0.875}
+ *    \sqrt{2 \pi m_{\mathrm{gas}} k T} N R^2
+ *    \Omega^{(1,1)\ast}_{avg},
+ * \f]
+ * where for the molecular weight \f$ m_{\mathrm{gas}}\f$ of the gas molecules, a mixture average is used.
+ *
+ *@param[in]    sys     System in which particle experiences drag
+ *@param[in]    sp      Particle for which to calculate drag coefficient
+ *
+ *@return       Drag coefficient
+ */
+real ParticleModel::LiWangDragCoefficient(const Cell &sys, const Particle &sp) const {
+    const real omega = Omega1_1_avg(sys, sp);
+
+    // 3.247911159372846712e-24 = sqrt((2*pi)/(k*NA)) * 9 / 4 / NA
+    real alpha = 3.24791159e-24 / sqrt(sys.GasPhase().Temperature() * sys.GasPhase().getAvgMolWt());
+    alpha *= Sweep::ViscosityAir(sys.GasPhase().Temperature()) / sys.GasPhase().Density() / sp.CollDiameter();
+    alpha /= omega;
+
+    // 4.818546232410640188 = sqrt(2 * pi * k * NA) * 2 / 3
+    real drag = 4.81854623 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().getAvgMolWt())
+                * sys.GasPhase().Density() * sp.CollDiameter() * sp.CollDiameter() * omega
+                * pow(pow(1 + alpha, -1.143),-0.875);
+
+    //std::cout << "Omega " << omega << ", Drag " << drag <<  '\n';
+
+    return drag;
+}
+
+/*!
+ * The drag coefficient for the free molecular regimes is calculated using a
+ * reduced collision integral of 1 following equation (25) of Li & Wang,
+ * Phys. Rev. E 68, 061207 (2003) and an alternative interpolation of my
+ * (Patterson) own devising in order to avoid calls to pow().
+ * The weights are
+ * \f[
+ *     \frac{1}{1 +\mathrm{Kn}}, \quad \frac{\mathrm{Kn}}{1 +\mathrm{Kn}},
+ * \f]
+ * where \f$\mathrm{Kn}\f$ is the Knudsen number.  The low Knudsen number
+ * (continuum regime) limit is
+ * \f[
+ *     3 \pi \mu D
+ * \f]
+ * where \f$\mu\f$ is the fluid viscosity and \f$D\f$ the particle collision
+ * diameter.  Interpolation is linear using the weights above and the large
+ * Knudsen number (free molecular regime) limit is
+ * \f[
+ *    \frac{2}{3} \sqrt{2 \pi m_{\mathrm{r}} k T} N D^2
+ *    \Omega^{(1,1)\ast}_{avg},
+ * \f]
+ * with the reduced mass given by
+ * \f[
+ *    m_{\mathrm{r}} = \frac{m_{\mathrm{p}}m_{\mathrm{g}}}{m_{\mathrm{p}} + m_{\mathrm{g}}}
+ * \f]
+ * where for the molecular weight \f$ m_{\mathrm{g}}\f$ of the gas molecules, a mixture average is used.
+ * On the assumption that \f$ m_{\mathrm{r}} \gg m_{\mathrm{g}} \f$, a two term Taylor series
+ * is used for the square root.
+ *
+ *@param[in]    sys     System in which particle experiences drag
+ *@param[in]    sp      Particle for which to calculate drag coefficient
+ *
+ *@return       Drag coefficient
+ */
+real ParticleModel::LiWangPatDragCoefficient(const Cell &sys, const Particle &sp) const {
+    const real omega = Omega1_1_avg(sys, sp);
+    const real knudsen = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(),
+                                           sp.CollDiameter());
+
+    // 4.818546232410640188 = sqrt(2 * pi * k * NA) * 2 / 3
+    // 1.2044286e+24 = 2 * NA
+    real drag = 4.818546232410640188 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().getAvgMolWt())
+                * sys.GasPhase().Density() * sp.CollDiameter() * omega * knudsen
+                * (1 - sys.GasPhase().getAvgMolWt() / sp.Mass() / 1.2044283e+24);
+
+    // 9.424777960769379348 = 3 * pi
+    drag += 9.424777960769379348 * Sweep::ViscosityAir(sys.GasPhase().Temperature());
+
+    drag *= sp.CollDiameter() / (1 + knudsen);
+
+    return drag;
+}
 /*!
  * Calculate diffusion co-efficient using Einstein's relation
  * \f[
@@ -734,6 +831,10 @@ real ParticleModel::EinsteinDiffusionCoefficient(const Cell &sys, const Particle
             return Sweep::KB * sys.GasPhase().Temperature() / FreeMolDragCoefficient(sys, sp);
         case TemperatureDrag:
             return Sweep::KB * sys.GasPhase().Temperature() / TemperatureDragCoefficient(sys, sp);
+        case LiWangDrag:
+            return Sweep::KB * sys.GasPhase().Temperature() / LiWangDragCoefficient(sys, sp);
+        case LiWangPatDrag:
+            return Sweep::KB * sys.GasPhase().Temperature() / LiWangPatDragCoefficient(sys, sp);
         default:
             throw std::runtime_error("Unrecognised drag type in Sweep::ParticleModel::EinsteinDiffusionCoefficient()");
     }
@@ -873,8 +974,9 @@ real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) 
 
     switch(m_ThermophoresisType) {
         case WaldmannThermophoresis:
-            tempFactor = sys.GasPhase().getThermalConductivity(sys.GasPhase().Pressure())
-                         * sys.GasPhase().GradientTemperature() / sys.GasPhase().Pressure();
+            tempFactor = sys.GasPhase().getThermalConductivity(sys.GasPhase().Pressure());
+            tempFactor *= sys.GasPhase().GradientTemperature();
+            tempFactor /= sys.GasPhase().Pressure();
 
             // Equation 2 of the Li & Wang paper with phi = 0.9
             // 1 / (5 * (1 + pi * phi / 8)) == 0.14777
@@ -909,10 +1011,17 @@ real ParticleModel::Omega1_1_avg(const Cell &sys, const Particle &sp) const {
     // Collision integrals calculated for pure specular and pure diffusion scattering
     const real specular = Omega1_1_spec(TStar, sigmaPrime);
     const real diffuse  = Omega1_1_diff(TStar, sigmaPrime);
+    const real Kn = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
 
-    // Interpolation via the accomodation function
-    const real phi = accomodationFunction(sys, sp);
-    return specular * (1.0 - phi) + diffuse * phi;
+    //std::cout << "Omega1_1_avg: " << specular << ", " << diffuse << ", " << Kn << '\n';
+
+    // Build up the return value in stages, so that one can debug the process
+    real omega = diffuse;
+    omega += Kn * (0.9 * diffuse + 0.1 * specular);
+    omega -= Kn * 0.9 * (diffuse - specular) / (1 + std::pow(sp.CollDiameter() / 5.0e-9, 15));
+    omega /= (1 + Kn);
+
+    return omega;
 }
 
 /*!
@@ -954,6 +1063,8 @@ real ParticleModel::Omega1_2_avg(const Cell &sys, const Particle &sp) const {
 real ParticleModel::Omega1_1_diff(const real t_star_1_4, const real sigma_prime) const {
     // 1 + pi/8
     real integral = 1.3926;
+
+    //std::cout << "Omega1_1_diff: " << t_star_1_4 << ", " << sigma_prime << '\n';
 
     integral += sigma_prime * (1.072 + 2.078 * t_star_1_4
                                + 1.261 * t_star_1_4 * t_star_1_4);
@@ -1045,7 +1156,8 @@ real ParticleModel::Omega1_2_spec(const real t_star_1_4, const real sigma_prime)
 real ParticleModel::collisionIntegralDiameter(const Cell &sys, const Particle &sp) const {
     // Value of Lennard Jones radius (m) taken from Table IV of above cited paper
     // using combination rules to combine values for gaseous and solid phases.
-    return 3.576e-10 / sp.CollDiameter();
+    //@TODO this assumes Carbon (as protein!) and nitrogen - need to use real material properties
+    return 7.152e-10 / sp.CollDiameter();
 }
 
 
@@ -1060,14 +1172,17 @@ real ParticleModel::collisionIntegralDiameter(const Cell &sys, const Particle &s
  *@return       Temperature divided by Lennard Jones well depth and collision cross-section cubed
  */
 real ParticleModel::collisionIntegralTemperature(const Cell &sys, const Particle &sp) const {
-    // Value of well depth (K) taken from Table IV of above cited paper
-    // using combination rules to combine values for gaseous and solid phases.
+    // Value of well depth (K, ie divided by k) taken from Table IV of above cited paper
+    // using combination rules to combine values for Carbon (as protein!) and N2 gas
+    // @TODO This needs to be based on inputs
     const real wellDepth = 57.24;
-
-    const real collisionCubed = std::pow(collisionIntegralDiameter(sys, sp), 3);
+    // Interaction diameter from same source as well depth: 3.576e-10 m
+    const real interactionDiameterCubed = 4.5729086976e-29;
 
     // 1.107e-29 is volume occupied by 1 Carbon atom assuming bulk density 1800 kg m^-3 (value for soot)
-    return 3.0 * Sprog::kB * sys.GasPhase().Temperature() * 1.107e-29 / (2.0 * Sprog::PI * wellDepth * collisionCubed);
+    //@TODO this needs to be calculated for the material in use
+    // 1.5 * 1.107e-29 / pi = 5.285535660081844307e-30
+    return 5.285535660081844307e-30 * sys.GasPhase().Temperature() / (wellDepth * interactionDiameterCubed);
 }
 
 /*!

@@ -221,7 +221,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                     coeff = atof(numberXML->Data().c_str());
                 }
                 else {
-                    throw std::runtime_error("Parameter A value must be given for drag proprtional to temperature (Sweep, MechParser::readV1)");
+                    throw std::runtime_error("Parameter A value must be given for drag proportional to temperature (Sweep, MechParser::readV1)");
                 }
 
                 // This option is just for testing so just reuse the support
@@ -229,6 +229,10 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                 mech.SetKnudsenDragConstants(coeff, 0.0, 0.0);
 
 
+            } else if (str == "LiWang") {
+                mech.SetDragType(Sweep::ParticleModel::LiWangDrag);
+            } else if (str == "LiWangPat") {
+                mech.SetDragType(Sweep::ParticleModel::LiWangPatDrag);
             } else {
                 throw std::runtime_error("Unrecognised drag model id (Sweep, MechParser::readV1).");
             }
@@ -1009,11 +1013,11 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
                     break;
                 case -1:
                     rxn.SetPropertyID(Sweep::iD_1);
-                    arr.A *= (1.0e2);
+                    arr.A *= (1.0e-8);
                     break;
                 case -2:
                     rxn.SetPropertyID(Sweep::iD_2);
-                    arr.A *= (1.0e4);
+                    arr.A *= (1.0e-10);
                     break;
                 default:
                     // Oh dear, can't have a zero power.

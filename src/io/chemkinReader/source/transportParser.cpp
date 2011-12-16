@@ -51,7 +51,7 @@ const smatch IO::TransportParser::findSpecies(const IO::Species& specie)
 {
 
     smatch what;
-    regex reg("\\b"+IO::regex_escape(specie.name())+transportRegex);
+    regex reg("(^|\\b)"+IO::regex_escape(specie.name())+transportRegex);
 
     string::const_iterator start = transportfilestring_.begin();
     string::const_iterator end = transportfilestring_.end();
@@ -61,7 +61,7 @@ const smatch IO::TransportParser::findSpecies(const IO::Species& specie)
         throw regex_error
         (
             "Species " + specie.name() + " not found in tran.dat. using "
-            "\\b"+IO::regex_escape(specie.name())+transportRegex
+            "(^|\\b)"+IO::regex_escape(specie.name())+transportRegex
         );
     }
 
@@ -75,13 +75,12 @@ void IO::TransportParser::setSpecieData
     const smatch& specieTransportData
 )
 {
-
-    specie.transport().setMoleculeIndex(from_string<int>(specieTransportData[1]));
-    specie.transport().setPotentialWellDepth(from_string<double>(specieTransportData[2]));
-    specie.transport().setCollisionDiameter(from_string<double>(specieTransportData[3]));
-    specie.transport().setDipoleMoment(from_string<double>(specieTransportData[4]));
-    specie.transport().setPolarizability(from_string<double>(specieTransportData[5]));
-    specie.transport().setRotRelaxationNumber(from_string<double>(specieTransportData[6]));
+    specie.transport().setMoleculeIndex(from_string<int>(specieTransportData[2]));
+    specie.transport().setPotentialWellDepth(from_string<double>(specieTransportData[3]));
+    specie.transport().setCollisionDiameter(from_string<double>(specieTransportData[4]));
+    specie.transport().setDipoleMoment(from_string<double>(specieTransportData[5]));
+    specie.transport().setPolarizability(from_string<double>(specieTransportData[6]));
+    specie.transport().setRotRelaxationNumber(from_string<double>(specieTransportData[7]));
 
 }
 

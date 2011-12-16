@@ -77,6 +77,19 @@ if((result!=0))
     exit $result
 fi
 
+# Run the test
+./regress3/regress3c.pl $program
+result=$?
+
+if((result!=0))
+  then
+    echo "Simulation 3c script failed"
+    echo "**************************"
+    echo "****** TEST FAILURE ******"
+    echo "**************************"
+    exit $result
+fi
+
 # All tests passed if we get to here
 echo "All tests passed in $0"
 exit 0
