@@ -982,6 +982,15 @@ real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) 
             // 1 / (5 * (1 + pi * phi / 8)) == 0.14777
             return tempFactor * -0.14777;
 
+        case LiWangThermophoresis:
+            // conductivity * temperature gradient / (NkT)
+            tempFactor = sys.GasPhase().getThermalConductivity(sys.GasPhase().Pressure());
+            tempFactor *= sys.GasPhase().GradientTemperature();
+            tempFactor /= sys.GasPhase().Pressure();
+
+            // Now bring in the collision integrals
+            return tempFactor * (1 - 6.0 * Omega1_2_avg(sys, sp) / 5.0 / Omega1_1_avg(sys, sp));
+
         case NoThermophoresis:
             return 0.0;
         default:
@@ -1044,10 +1053,17 @@ real ParticleModel::Omega1_2_avg(const Cell &sys, const Particle &sp) const {
     // Collision integrals calculated for pure specular and pure diffusion scattering
     const real specular = Omega1_2_spec(TStar, sigmaPrime);
     const real diffuse  = Omega1_2_diff(TStar, sigmaPrime);
+    const real Kn = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
 
-    // Interpolation via the accomodation function
-    const real phi = accomodationFunction(sys, sp);
-    return specular * (1.0 - phi) + diffuse * phi;
+    //std::cout << "Omega1_1_avg: " << specular << ", " << diffuse << ", " << Kn << '\n';
+
+    // Build up the return value in stages, so that one can debug the process
+    real omega = diffuse;
+    omega += Kn * (0.9 * diffuse + 0.1 * specular);
+    omega -= Kn * 0.9 * (diffuse - specular) / (1 + std::pow(sp.CollDiameter() / 5.0e-9, 15));
+    omega /= (1 + Kn);
+
+    return omega;
 }
 
 /*!

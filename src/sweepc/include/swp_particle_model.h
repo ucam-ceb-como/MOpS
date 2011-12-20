@@ -261,7 +261,8 @@ public:
         //! Thermphoresis turned off
         NoThermophoresis,
 
-        // wang
+        //! Fit proposed in Li & Wang, Phys. Rev. E 70, 021205 (2004).
+        LiWangThermophoresis,
 
     };
 
