@@ -241,11 +241,11 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             // Read diffusion model ID.
             str = (*i)->GetAttributeValue("id");
 
-            if(str == "flamelet") {
+            if((str == "Flamelet") || (str == "flamelet")) {
                 // Diffusion according to soot flamelet equation in flamelet space
                 mech.setDiffusionType(Sweep::ParticleModel::FlameletDiffusion);
             }
-            else if(str == "einstein") {
+            else if((str == "Einstein") || (str == "einstein")) {
                 // Diffusion to represent transport in physical space
                 // according to Einstein's work
                 mech.setDiffusionType(Sweep::ParticleModel::EinsteinDiffusion);
@@ -257,11 +257,11 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         } else if (str == "advection") {
             // Read advection model ID.
             str = (*i)->GetAttributeValue("id");
-            if(str == "flamelet") {
+            if((str == "Flamelet") || (str == "flamelet")) {
                 // Advection according to soot flamelet equation in flamelet space
                 mech.setAdvectionType(Sweep::ParticleModel::FlameletAdvection);
             }
-            else if(str == "physical") {
+            else if((str == "Physical") || (str == "physical")) {
                 // Advection at bulk gas velocity in physical space
                 mech.setAdvectionType(Sweep::ParticleModel::BulkAdvection);
             }
@@ -271,11 +271,15 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         }else if (str == "thermophoresis") {
             // Read advection model ID.
             str = (*i)->GetAttributeValue("id");
-            if(str == "waldmann") {
-                // Advection according to soot flamelet equation in flamelet space
+            if((str == "Waldmann") || (str == "waldmann")) {
+                // Thermophoretic velocity that is the same for all particles
                 mech.setThermophoresisType(Sweep::ParticleModel::WaldmannThermophoresis);
             }
-	    else if(str == "none") {
+            else if(str == "LiWang") {
+                // Particle dependence according to model of Li and Wang
+                mech.setThermophoresisType(Sweep::ParticleModel::LiWangThermophoresis);
+            }
+	    else if((str == "None") || (str == "none")) {
                 // No thermophoresis
                 mech.setThermophoresisType(Sweep::ParticleModel::NoThermophoresis);
             }
