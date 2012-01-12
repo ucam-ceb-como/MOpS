@@ -711,12 +711,12 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
                 dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
         
 		//check that kmcsimulator in ensemble is initialized or not,  if not, start to initialize kmcsimulator
-        if (sys.Particles().Simulator()==NULL)
-		{
-			sys.Particles().SetSimulator(*(sys.Gasphase()));
-		// for debugging, open a file to write time step for kmc loops, dongping 06 May
-			//sys.Particles().Simulator()->m_timestep_csv.Open(sys.Particles().Simulator()->m_timestep_name, true);
-		}
+        //      if (sys.Particles().Simulator()==NULL)
+        //{
+        //	sys.Particles().SetSimulator(*(sys.Gasphase()));
+        //// for debugging, open a file to write time step for kmc loops, dongping 06 May
+        //	//sys.Particles().Simulator()->m_timestep_csv.Open(sys.Particles().Simulator()->m_timestep_name, true);
+        //}
 
         // Look up new size of PAHs in database
 		// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code

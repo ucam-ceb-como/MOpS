@@ -203,7 +203,7 @@ public:
         const Sweep::ParticleModel &model // Model used to define particles.
         );
 
-	virtual Sweep::GasProfile* Gasphase(void) const{ return NULL;}
+	//virtual Sweep::GasProfile* Gasphase(void) const{ return NULL;}
 
 protected:
     // Default constructor is protected as it makes no
