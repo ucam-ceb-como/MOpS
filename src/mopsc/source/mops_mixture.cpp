@@ -53,13 +53,13 @@ using namespace Mops;
 
 // Default constructor (public, requires species list).
 Mixture::Mixture(const Sweep::ParticleModel &model)
-: Sweep::Cell(model)//,gp(NULL)
+: Sweep::Cell(model)
 {
 }
 
 // Stream-reading constructor.
 Mixture::Mixture(std::istream &in, const Sweep::ParticleModel &model)
-: Sweep::Cell(in, model)//,gp(NULL)
+: Sweep::Cell(in, model)
 {
 }
 
@@ -68,13 +68,6 @@ Mixture::~Mixture(void)
 {
 }
 
-//void Mixture::SetGasphaseProfile(Sweep::GasProfile* gasphase) {
-//    gp=gasphase;
-//}
-//
-//Sweep::GasProfile* Mixture::Gasphase(void) const{
-//    return gp;
-//}
 // OPERATORS.
 
 // Assignment operator.

@@ -294,9 +294,9 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
                         rng_type &rng, Mops::Solver::OutFnPtr out, void *data)
 {
-    //std::cout << "Start of FlameSolver::Solve\n";
-
     real tsplit, dtg, jrate;
+
+    // construct kmcsimulater and initialize gasphase info for kmcsimulater 
     if (r.Mixture()->Particles().Simulator()==NULL)
     {
         r.Mixture()->Particles().SetSimulator(*(Gasphase()));
