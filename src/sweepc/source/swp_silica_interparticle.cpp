@@ -164,7 +164,7 @@ real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1
 	real T = sys.GasPhase().Temperature();
 
 	// Get the total number of OH sites from cache
-	int numOH = sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid));
+	real numOH = sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid));
 
 	// Calculate the concentration of SiOH4
 	// Note that the usual ParticleProcess interface can NOT be used, as this
@@ -252,7 +252,7 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
 	// Get the number of OH sites from cache
-	int numOH = sp.Property(static_cast<Sweep::PropID>(m_pid));
+	real numOH = sp.Property(static_cast<Sweep::PropID>(m_pid));
 	rate *= numOH;
 
 	// Do calculation for sintering part of rate:

@@ -82,7 +82,7 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache()
 , m_d_2_w(0.0)
 , m_m_1_2_w(0.0)
 , m_d2m_1_2_w(0.0)
-, m_sites(0)
+, m_sites(0.0)
 , m_sinterrate(0.0)
 {}
 
@@ -126,7 +126,7 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
     m_d2m_1_2_w   = m_d2_m_1_2 * m_weight;
 
     // Silica parameters
-    m_sites =       part.GetSites();
+    m_sites =       (real)part.GetSites();
     m_sinterrate =  part.GetSintRate();
 }
 
@@ -196,7 +196,7 @@ void Sweep::TreeTransCoagWeightedCache::Clear(void)
     m_d_2_w        = 0.0;
     m_m_1_2_w      = 0.0;
     m_d2m_1_2_w    = 0.0;
-    m_sites   = 0;
+    m_sites   = 0.0,
     m_sinterrate = 0.0;
 }
 
