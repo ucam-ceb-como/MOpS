@@ -233,7 +233,7 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
     }
 
     //Calculate the majorant rate before updating the particles
-    const real majk = MajorantKernel(*sp1, *sp2, sys, maj);
+    real majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
     //Update the particles
     m_mech->UpdateParticle(*sp1, sys, t, rng);
@@ -270,6 +270,13 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
         // majorant rate and the current (after updates) true rate.
 
         real truek = CoagKernel(*sp1, *sp2, sys);
+
+        // Recalculate majorant with latest structures if
+        // the majorant is less than true rate (wjm34)
+        if (majk<truek) {
+            majk = MajorantKernel(*sp1, *sp2, sys, maj);
+            if (majk<truek) std::cout << "maj< true"<< std::endl;
+        }
 
         if (!Fictitious(majk, truek, rng)) {
             //Adjust the statistical weight

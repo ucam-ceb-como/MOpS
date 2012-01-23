@@ -410,8 +410,12 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
 
         real truek = CoagKernel(*sp1, *sp2, sys);
 		double ceff=0;
-		if (majk<truek)
-			std::cout << "maj< true"<< std::endl;
+        // Recalculate majorant with latest structures if
+        // the majorant is less than true rate (wjm34)
+        if (majk<truek) {
+            majk = MajorantKernel(*sp1, *sp2, sys, maj);
+            if (majk<truek) std::cout << "maj< true"<< std::endl;
+        }
 
 		//added by ms785 to include the collision efficiency in the calculation of the rate
 		if (sys.ParticleModel()->AggModel()==AggModels::PAH_KMC_ID)
