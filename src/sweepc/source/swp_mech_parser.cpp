@@ -221,7 +221,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                     coeff = atof(numberXML->Data().c_str());
                 }
                 else {
-                    throw std::runtime_error("Parameter A value must be given for drag proprtional to temperature (Sweep, MechParser::readV1)");
+                    throw std::runtime_error("Parameter A value must be given for drag proportional to temperature (Sweep, MechParser::readV1)");
                 }
 
                 // This option is just for testing so just reuse the support
@@ -229,6 +229,10 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                 mech.SetKnudsenDragConstants(coeff, 0.0, 0.0);
 
 
+            } else if (str == "LiWang") {
+                mech.SetDragType(Sweep::ParticleModel::LiWangDrag);
+            } else if (str == "LiWangPat") {
+                mech.SetDragType(Sweep::ParticleModel::LiWangPatDrag);
             } else {
                 throw std::runtime_error("Unrecognised drag model id (Sweep, MechParser::readV1).");
             }

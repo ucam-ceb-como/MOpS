@@ -199,7 +199,6 @@ public:
     // Outputs sensitivity results to given file stream.
     void OutputSensitivity(std::fstream &fout, const Mops::Reactor &r, void *sim) const;
     //const ODE_Solver &GetODE_Solver() const { return m_ode; };
-	virtual Sweep::GasProfile* Gasphase(void) { return NULL; }
 
 protected:
     // ODE SOLVER.

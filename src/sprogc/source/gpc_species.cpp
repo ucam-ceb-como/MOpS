@@ -556,6 +556,10 @@ double Species::getThermalConductivity(double T, double p, double cp) const{
 	return pst.getThermalConductivity(T,p,cp, *this);
 }
 
+real Species::getCollisionDiameter() const {
+    return m_transport->getCollisionDiameter();
+}
+
 // Writes the species to a binary data stream.
 void Species::Serialize(std::ostream &out) const
 {
