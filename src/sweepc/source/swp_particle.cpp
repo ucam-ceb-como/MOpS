@@ -206,6 +206,23 @@ Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::P
             pNew->setStatisticalWeight(wt);
     }
     
+    // Read SurfVol specific parameters
+    if (model.AggModel() == Sweep::AggModels::SurfVol_ID) {
+        const CamXML::Element* const pSurfNode = xml.GetFirstChild("surf");
+        if(pSurfNode != NULL) {
+            std::string str = pSurfNode->Data();
+            if (pSurfNode != NULL) {
+                const real surf = Strings::cdble(str);
+                if(surf <= 0) {
+                    throw std::runtime_error("Particle surface area must be >0, not " + str +
+                                             "(Sweep, Particle::createFromXMLNode).");
+                }
+                else
+                    pNew->m_primary->SetSurfaceArea(surf);
+            }
+        }
+    }
+
     // Initialise the new particle.
     pNew->Primary()->SetComposition(components);
     pNew->Primary()->SetValues(trackers);
