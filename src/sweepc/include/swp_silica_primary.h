@@ -92,6 +92,9 @@ public:
     //! Returns a copy of the primary.
     virtual SilicaPrimary *const Clone(void) const;
 
+    //! Sets the state space when initialising a primary from XML
+    void SetStateSpace(const int numSi, const int numO, const int numOH);
+
     //! Coagulates this particle with rhs
     SilicaPrimary &Coagulate(const Primary &rhs, rng_type &rng);
 

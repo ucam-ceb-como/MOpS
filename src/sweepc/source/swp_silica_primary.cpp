@@ -328,6 +328,23 @@ SilicaPrimary &SilicaPrimary::operator=(const Primary &rhs)
     return *this;
 }
 
+/*!
+ * @brief       Function to set the state space when initialising particles from XML
+ *
+ * @param[in] numSi     Number of silicon atoms in particle
+ * @param[in] numO      Number of oxygen atoms in particle
+ * @param[in] numOH     Number of hydroxyl units in particle
+ */
+void SilicaPrimary::SetStateSpace(const int numSi, const int numO, const int numOH) {
+    // Set the key parameters for the silica particle
+    m_numSi = numSi;
+    m_numO = numO;
+    m_numOH = numOH;
+
+    // Now update the particle's properties
+    UpdateCache();
+}
+
 
 
 //! Stream-reading constructor.
