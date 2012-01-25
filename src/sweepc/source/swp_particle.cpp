@@ -42,6 +42,7 @@
 
 #include "swp_particle.h"
 #include "swp_particle_model.h"
+#include "swp_silica_primary.h"
 
 #include "string_functions.h"
 #include <cmath>
@@ -209,18 +210,21 @@ Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::P
     // Read SurfVol specific parameters
     if (model.AggModel() == Sweep::AggModels::SurfVol_ID) {
         const CamXML::Element* const pSurfNode = xml.GetFirstChild("surf");
-        if(pSurfNode != NULL) {
+        if (pSurfNode != NULL) {
             std::string str = pSurfNode->Data();
-            if (pSurfNode != NULL) {
-                const real surf = Strings::cdble(str);
-                if(surf <= 0) {
-                    throw std::runtime_error("Particle surface area must be >0, not " + str +
-                                             "(Sweep, Particle::createFromXMLNode).");
-                }
-                else
-                    pNew->m_primary->SetSurfaceArea(surf);
+            const real surf = Strings::cdble(str);
+            if(surf <= 0) {
+                throw std::runtime_error("Particle surface area must be >0, not " + str +
+                                         "(Sweep, Particle::createFromXMLNode).");
             }
+            else
+                pNew->m_primary->SetSurfaceArea(surf);
         }
+    }
+
+    // Call helper function to build a silica particle
+    if (model.AggModel() == Sweep::AggModels::Silica_ID) {
+        createSilicaFromXML(xml, pNew);
     }
 
     // Initialise the new particle.
@@ -231,6 +235,74 @@ Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::P
     return pNew;
 }
 
+/*!
+ * @brief       Function to create particles defined by the silica model
+ *
+ * @param[in]       xml         XML node specifying the particle
+ * @param[in]       pNew        New particle to be created
+ *
+ */
+void Particle::createSilicaFromXML(const CamXML::Element& xml, Particle* pNew) {
+    // Get pointer to a silica m_primary
+    Sweep::AggModels::SilicaPrimary* pNewSilica;
+    pNewSilica =
+            static_cast<AggModels::SilicaPrimary*> (pNew->m_primary);
+
+    // First determine how many primaries this particle has
+    const CamXML::Element* const pNumPri = xml.GetFirstChild("numprimary");
+    if (pNumPri != NULL) {
+        std::string str = pNumPri->Data();
+        const int numpri = (int)Strings::cdble(str);
+        if (numpri < 0) {
+            throw std::runtime_error("Number of primaries must be >0, not " + str +
+                                     "(Sweep, Particle::createSilicaFromXML).");
+        } else if (numpri > 1) {
+            throw std::runtime_error("numprimary>1 unsupported (Sweep, Particle::createSilicaFromXML).");
+        } else {
+
+            // Now get the state space (nSi, nO, nOH)
+            int NumSi(0), NumO(0), NumOH(0);
+
+            const CamXML::Element* const pNumSi = xml.GetFirstChild("numSi");
+            if (pNumSi != NULL) {
+                std::string str = pNumSi->Data();
+                const int numsi = (int)Strings::cdble(str);
+                if (numsi < 0) {
+                    throw std::runtime_error("Number of Si must be >0, not " + str +
+                                             "(Sweep, Particle::createSilicaFromXML).");
+                } else
+                    NumSi = numsi;
+            }
+
+            const CamXML::Element* const pNumO = xml.GetFirstChild("numO");
+            if (pNumO != NULL) {
+                std::string str = pNumO->Data();
+                const int numo = (int)Strings::cdble(str);
+                if (numo < 0) {
+                    throw std::runtime_error("Number of O must be >0, not " + str +
+                                             "(Sweep, Particle::createSilicaFromXML).");
+                } else
+                    NumO = numo;
+            }
+
+            const CamXML::Element* const pNumOH = xml.GetFirstChild("numOH");
+            if (pNumOH != NULL) {
+                std::string str = pNumOH->Data();
+                const int numoh = (int)Strings::cdble(str);
+                if (numoh < 0) {
+                    throw std::runtime_error("Number of OH must be >0, not " + str +
+                                             "(Sweep, Particle::createSilicaFromXML).");
+                } else
+                    NumOH = numoh;
+            }
+
+            // Set state space
+            pNewSilica->SetStateSpace(NumSi, NumO, NumOH);
+        }
+    } else {
+        throw std::runtime_error("<numprimary> must be specified (Sweep, Particle::createSilicaFromXML).");
+    }
+}
 
 
 // Compound assignment (coagulation).
