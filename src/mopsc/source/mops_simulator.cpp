@@ -870,7 +870,7 @@ void Simulator::setupConsole(const Mops::Mechanism &mech)
             m_console_mask.push_back(mech.GasMech().Species().size()+3);
         } else if ((*i).compare("M0")==0 || (*i).compare("m0")==0) {
             // Particle number density.
-            header.push_back("M0 (cm-3)");
+            header.push_back("M0 (m-3)");
             m_console_mask.push_back(mech.GasMech().Species().size()+4);
         } else if ((*i).compare("FV")==0 || (*i).compare("fv")==0 ||
                    (*i).compare("Fv")==0) {
