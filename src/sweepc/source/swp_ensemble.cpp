@@ -189,7 +189,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 
     // Initialise scaling.
     m_ncont      = 0;
-    m_contfactor = (real)(m_capacity-1) / (real)(m_capacity);
+    m_contfactor = (real)(m_capacity) / (real)(m_capacity+1);
     m_contwarn   = false;
 
     // Initialise doubling.
