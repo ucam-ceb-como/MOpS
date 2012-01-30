@@ -39,13 +39,14 @@ use warnings;
 # this test is designed for checking the silica model under direct simulation
 
 # Path of executable should be supplied as first argument to this script
-my $program = $ARGV[0];
+#my $program = $ARGV[0];
 
 # Parse the moments file
 my $momentFile;
 open($momentFile, "<silica-part.csv") or die "ERR: failed to open moment file: $!";
 
 my $m0 = 0;
+my $fv = 0;
 my $dcol = 0;
 my $dpri = 0;
 my $sl = 0;
@@ -59,6 +60,8 @@ while(<$momentFile>) {
       # Third field should be the zeroth moment
       $m0 = $fields[4];
       #print "4: $fields[4], \n";
+      
+      $fv = $fields[16];
 
       $dcol = $fields[8];
       #print "8: $fields[8] \n";
@@ -73,43 +76,51 @@ while(<$momentFile>) {
   }
 }
 
-print "$m0 $dcol $dpri $sl\n";
+print "$m0 $fv $dcol $dpri $sl\n";
 
 ####################################################
 # Comparison with test values (Boost 1.47)
 ####################################################
-# 99.9% CI shown for Nsp = 128, L = 50
-# actual test uses Nsp = 128, L = 4 fo efficiency
-# Commit  08300f268c9127f1287b2f5f3d16675d0d02e60f
+# 99.9% CI shown for Nsp = 512, L = 10
+# actual test uses Nsp = 512, L = 4 fo efficiency
+# Commit  6ed6f4b5f4b3670ebe25f2344bb86c5900197b94
 ####################################################
-# m0 = 2.26e14 +/- 1.0e13 1/m3
-# dcol = 7.92e-8 +/- 1.94e-9 m
-# dpri = 8.47 +/- 0.66 nm
-# sl = 0.079 +/- 0.014
+# m0: 2.13E+014	7.00E+012
+# fv: 7.22E-009	1.38E-010
+# dc: 8.56E-008	2.74E-009
+# dp: 8.71433	0.464715
+# sl: 0.0601418	0.0144396
 ####################################################
 
-if(abs($m0 -  2.26e14) > 1e13) {
+if(abs($m0 -  2.13e14) > 7.00E+012) {
   print "Simulated mean M0 was $m0, when 2.26e14 1/m3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
-if(abs($dcol -  7.92e-8) > 1.94e-9) {
+if(abs($fv -  7.22E-009) > 1.38E-010) {
+  print "Simulated mean Fv was $fv, when 7.22e-09 expected\n";
+  print "**************************\n";
+  print "****** TEST FAILURE ******\n";
+  print "**************************\n";
+  exit 5;
+}
+if(abs($dcol -  8.56E-008) > 2.74E-009) {
   print "Simulated mean dcol was $dcol, when 7.92e-8 m expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 2;
 }
-if(abs($dpri -  8.47) > 0.66) {
+if(abs($dpri -  8.71433) > 0.464715) {
   print "Simulated mean dpri was $dpri, when 8.47 nm expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 3;
 }
-if(abs($sl -  0.079) > 0.014) {
+if(abs($sl -  0.0601418) > 0.0144396) {
   print "Simulated mean sl was $sl, when 0.079 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
