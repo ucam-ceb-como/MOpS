@@ -674,7 +674,8 @@ void Mechanism::LPDA(real t, Cell &sys, rng_type &rng) const
     if ((sys.ParticleCount() > 0) &&
         (m_anydeferred ||
                 (AggModel() == AggModels::PAH_KMC_ID) ||
-                (AggModel() == AggModels::Silica_ID))) {
+                (AggModel() == AggModels::Silica_ID) ||
+                (AggModel() == AggModels::SurfVol_ID))) {
         // Stop ensemble from doubling while updating particles.
         sys.Particles().FreezeDoubling();
 
@@ -737,6 +738,23 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
     	if (sp.IsValid()) {
     		sp.UpdateCache();
     	}
+    }
+
+    if (AggModel() == AggModels::SurfVol_ID && !m_anydeferred) {
+        // Calculate delta-t and update particle time.
+        real dt;
+        dt = t - sp.LastUpdateTime();
+        sp.SetTime(t);
+
+        // Sinter the particles for the silica model (as no deferred process)
+        if (m_sint_model.IsEnabled()) {
+            sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+        }
+
+        // Check particle is valid and recalculate cache.
+        if (sp.IsValid()) {
+            sp.UpdateCache();
+        }
     }
 
     // If there are no deferred processes then stop right now.
