@@ -231,7 +231,7 @@ unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues
     // This has a knock-on affect of changing the collision diameter.
     // Note, we can avoid recalling UpdateCache() here, because only
     // a couple of cached values will have changed.
-    m_dcol = 0.5 * (m_dcol * sqrt(m_surf));
+    m_dcol = (m_diam + sqrt(m_surf / PI)) * 0.5;
     m_dmob = m_dcol;
 
     return n;
@@ -263,7 +263,7 @@ SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs, rng_type &rng)
     // This has a knock-on affect of changing the collision diameter.
     // Note, we can avoid recalling UpdateCache() here, because only
     // a couple of cached values will have changed.
-    m_dcol = 0.5 * (m_dcol * sqrt(m_surf));
+    m_dcol = (m_diam + sqrt(m_surf / PI)) * 0.5;
     m_dmob = m_dcol;
 
     return *this;
