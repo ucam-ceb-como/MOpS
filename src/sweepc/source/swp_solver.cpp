@@ -120,7 +120,7 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech,
 
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
-        if (mech.AnyDeferred()) {
+        if (mech.AnyDeferred() || (mech.AggModel() == AggModels::Silica_ID) ) {
             mech.LPDA(t, sys, rng);
         }
     }

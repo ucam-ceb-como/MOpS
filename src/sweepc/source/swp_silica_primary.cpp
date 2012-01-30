@@ -328,6 +328,23 @@ SilicaPrimary &SilicaPrimary::operator=(const Primary &rhs)
     return *this;
 }
 
+/*!
+ * @brief       Function to set the state space when initialising particles from XML
+ *
+ * @param[in] numSi     Number of silicon atoms in particle
+ * @param[in] numO      Number of oxygen atoms in particle
+ * @param[in] numOH     Number of hydroxyl units in particle
+ */
+void SilicaPrimary::SetStateSpace(const int numSi, const int numO, const int numOH) {
+    // Set the key parameters for the silica particle
+    m_numSi = numSi;
+    m_numO = numO;
+    m_numOH = numOH;
+
+    // Now update the particle's properties
+    UpdateCache();
+}
+
 
 
 //! Stream-reading constructor.
@@ -565,9 +582,10 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
  * is called and the particles are combined. 
  * 
  * It concludes by adjusting the gas-phase for the number of OH units
- * that would occur through the InterParticle reaction.
+ * which are lost as H2O due to the change in surface area of the
+ * sintering mechansim.
  * 
- * @param[in]   dt      Time for which to inster
+ * @param[in]   dt      Time for which to sinter
  * @param[in]   sys     Environment for particles
  * @param[in]   model   Sintering model to apply
  * @param[in]   rng     Random number generator
@@ -588,12 +606,12 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 	if (m_leftparticle!=NULL)
     {
         // Store the old surface area of particles
-        double surf_old = m_children_surf;
+        real surf_old = m_children_surf;
         int numOH_old = m_numOH;
         // First calculate the sintering rate
 
         // Calculate the spherical surface
-        const double spherical_surface=4*PI*m_children_radius*m_children_radius;
+        const real spherical_surface=4*PI*m_children_radius*m_children_radius;
 
         // Declare time step variables.
         real t1=0.0, delt=0.0, tstop=dt;
@@ -652,7 +670,7 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 
         m_children_sintering=SinteringLevel();
         m_sint_rate = r;
-        double rho_site = m_numOH/m_surf;
+        real rho_site = m_numOH/m_surf;
 
         // Adjust the units of OH and O due to release of water
         m_leftparticle->m_numOH -= int(0.5*rho_site*abs(m_children_surf - surf_old));
@@ -722,13 +740,13 @@ void SilicaPrimary::SetSinteringTime(real time) {
  * 
  * @return      Sintering level
  */
-double SilicaPrimary::SinteringLevel()
+real SilicaPrimary::SinteringLevel()
 {
     if (m_leftchild != NULL && m_rightchild != NULL) {
         // Calculate the spherical surface
-        const double spherical_surface=4*PI*m_children_radius*m_children_radius;
-        const double two_1_3=0.79370052231642452;
-        double slevel;
+        const real spherical_surface=4*PI*m_children_radius*m_children_radius;
+        const real two_1_3=0.79370052231642452;
+        real slevel;
 
         //Added by ss663
         if (m_children_surf <= spherical_surface) {
@@ -788,13 +806,13 @@ void SilicaPrimary::SetTime(real t) {
 //calculates the fractal dimension of the particle and stores it in m_fdim
 //void SilicaPrimary::CalcFractalDimension()
 //{
-//	double create_time=this->CreateTime();
+//	real create_time=this->CreateTime();
 //	Sweep::Imaging::ParticleImage img;
 //    // construct the particle by colliding the primary particles
 //
 //	img.constructSubParttree(this);
 //
-//	double L,W;
+//	real L,W;
 //    // calculate the length and the width of the particle
 //    img.LengthWidth(L,W);
 //    // calculate the radius of gyration
@@ -802,7 +820,7 @@ void SilicaPrimary::SetTime(real t) {
 //	m_sqrtLW=sqrt(L*W);
 //	m_LdivW=L/W;
 //    m_Rg=m_Rg*1e-9;
-//    m_fdim=log((double)m_numprimary)/log(2*m_Rg/(m_primarydiam/m_numprimary));
+//    m_fdim=log((real)m_numprimary)/log(2*m_Rg/(m_primarydiam/m_numprimary));
 //    /*if (m_fdim>0 && m_fdim<3)
 //	{
 //       string filename;
@@ -1030,9 +1048,9 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 	{
 		unsigned int i = 0;
 
-		double dV;
-		double m_vol_old = m_vol;
-		//double m_surf_old = m_surf;
+		real dV;
+		real m_vol_old = m_vol;
+		//real m_surf_old = m_surf;
 
 		// Add the components.
 		for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i)
@@ -1056,10 +1074,10 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 
 		dV = m_vol - m_vol_old;
 
-		double ct=m_pmodel->Components(0)->CoalescThresh();
+		real ct=m_pmodel->Components(0)->CoalescThresh();
 
 		// Surface change due to volume addition
-		double dS=dV*ct/(m_diam/2.0);
+		real dS=dV*ct/(m_diam/2.0);
 
 		// Climb back-up the tree and update the surface area and
 		// sintering of a particle
@@ -1089,7 +1107,7 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
  *
  * @param[in]   dS      Surface area increment to adjust area by
  */
-void SilicaPrimary::UpdateParents(double dS) {
+void SilicaPrimary::UpdateParents(real dS) {
     if (m_parent != NULL) {
         m_parent->m_children_surf += dS;
         m_parent->m_children_sintering = m_parent->SinteringLevel();
@@ -1100,7 +1118,9 @@ void SilicaPrimary::UpdateParents(double dS) {
 /*!
  * @brief       Adjusts the particle after an IntP event
  * 
- * Note that the gas-phase is actually adjusted in Sinter()
+ * Interparticle reactions have two OH units combining to release
+ * a H2O molecule to the gas-phase. The leftover O atom is retained in
+ * the particle phase.
  * 
  * @param[in]   dcomp   Vector storing changes in particle composition
  * @param[in]   dvalues Vector storing changes in gas-phase comp
@@ -1197,13 +1217,13 @@ void SilicaPrimary::ChangePointer(SilicaPrimary *source, SilicaPrimary *target)
 {
 		if(m_rightparticle==source){
 			m_rightparticle=target;
-            double sphericalsurface=
+			real sphericalsurface=
                 4*PI*pow(3*(m_leftparticle->Volume()+m_rightparticle->Volume())/(4*PI),TWO_THIRDS);
             m_children_surf=sphericalsurface/(m_children_sintering*0.2063+0.7937);    //sphericalsurface/(m_children_coalescence*(1-2^(-1/3))+2^(-1/3))
 		}
 		if(m_leftparticle==source){
 			m_leftparticle=target;
-            double sphericalsurface=
+			real sphericalsurface=
                 4*PI*pow(3*(m_leftparticle->Volume()+m_rightparticle->Volume())/(4*PI),TWO_THIRDS);
             m_children_surf=sphericalsurface/(m_children_sintering*0.2063+0.7937);    //sphericalsurface/(m_children_coalescence*(1-2^(-1/3))+2^(-1/3))
 
@@ -1264,7 +1284,7 @@ void SilicaPrimary::UpdatePrimary(void)
 
     m_mass=(m_numSi*4.6621e-26 + m_numO*2.6565e-26 + m_numOH*2.8225e-26);  //convert to kg
 
-    double silica_density = m_pmodel->Components(0)->Density(); // get density
+    real silica_density = m_pmodel->Components(0)->Density(); // get density
     m_vol = m_mass / silica_density;							//in m^3
 	m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
     m_dmob = m_diam;
@@ -1355,7 +1375,7 @@ void SilicaPrimary::UpdateCache(SilicaPrimary *root)
 		if (this==root)
         {
              // Get spherical equivalent radius and diameter
-            double spherical_radius=pow(3*m_vol/(4*PI),ONE_THIRD);
+            real spherical_radius=pow(3*m_vol/(4*PI),ONE_THIRD);
             m_diam=2*spherical_radius;
 
 			// there are m_numprimary-1 connections between the primary particles
@@ -1372,7 +1392,7 @@ void SilicaPrimary::UpdateCache(SilicaPrimary *root)
 
             // Calculate dcol based-on formula given in Lavvas et al. (2011)
             // assume fractal dimension Df = 1.8
-			const double aggcolldiam=(6*m_vol/m_surf)*pow(pow(m_surf,3)/(36*PI*m_vol*m_vol),(1.0/1.8));
+			const real aggcolldiam=(6*m_vol/m_surf)*pow(pow(m_surf,3)/(36*PI*m_vol*m_vol),(1.0/1.8));
 			m_dmob = aggcolldiam;
             SetCollDiameter(aggcolldiam);
 
@@ -1493,22 +1513,22 @@ const SilicaPrimary *SilicaPrimary::LeftChild() const
    return m_leftchild;
 }
 
-double SilicaPrimary::Rg() const
+real SilicaPrimary::Rg() const
 {
    return m_Rg;
 }
 
-double SilicaPrimary::Fdim() const
+real SilicaPrimary::Fdim() const
 {
    return m_fdim;
 }
 
-double SilicaPrimary::PrimaryDiam() const
+real SilicaPrimary::PrimaryDiam() const
 {
    return m_primarydiam;
 }
 
-double SilicaPrimary::LdivW() const
+real SilicaPrimary::LdivW() const
 {
    return m_LdivW;
 }
@@ -1534,12 +1554,12 @@ int SilicaPrimary::NumOH() const
 }
 
 
-double SilicaPrimary::sqrtLW() const
+real SilicaPrimary::sqrtLW() const
 {
    return m_sqrtLW;
 }
 
-double SilicaPrimary::AvgSinter() const
+real SilicaPrimary::AvgSinter() const
 {
    return m_avg_sinter;
 }

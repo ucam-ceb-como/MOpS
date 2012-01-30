@@ -1,11 +1,11 @@
 <mops version="2">
   
   <!-- Default parameters (can be overidden). --> 
-  <runs>2</runs>
+  <runs>4</runs>
   <iter>2</iter>
   <atol>1.0e-22</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount>4096</pcount>
+  <pcount>128</pcount>
   <!--maxm0>8.72e11</maxm0-->
   <!--maxm0>2.2e12</maxm0-->
   <maxm0>1.4e12</maxm0>
@@ -29,9 +29,9 @@
   <!-- Output time sequence. -->
   <timeintervals splits="1">
     <start>0.0</start>
-    <time steps="100" splits="10">0.25</time>
-	<time steps="50" splits="5">0.35</time>
-    <time steps="50" splits="5">0.8</time-->
+    <time steps="150" splits="30">0.15</time>
+    <time steps="50" splits="5">0.35</time>
+    <time steps="30" splits="5">0.8</time>
   </timeintervals>
   
   <!-- Simulation output settings. -->

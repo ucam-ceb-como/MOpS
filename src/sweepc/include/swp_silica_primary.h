@@ -92,6 +92,9 @@ public:
     //! Returns a copy of the primary.
     virtual SilicaPrimary *const Clone(void) const;
 
+    //! Sets the state space when initialising a primary from XML
+    void SetStateSpace(const int numSi, const int numO, const int numOH);
+
     //! Coagulates this particle with rhs
     SilicaPrimary &Coagulate(const Primary &rhs, rng_type &rng);
 
@@ -111,7 +114,7 @@ public:
             );
 
 	//! Updates Sintering level
-	double SinteringLevel();
+	real SinteringLevel();
 
 	//! Adjusts the number of primaries for a surface reaction
 	unsigned int Adjust(
@@ -159,13 +162,13 @@ public:
     // Functions used to gather data for statistics
 
     //! returns L divided by W
-    double LdivW() const;
+    real LdivW() const;
     //! Sum of the diameter of the primaries under this treenode needed for stats
-    double PrimaryDiam() const;
+    real PrimaryDiam() const;
     //! Returns the fractal dimension
-    double Fdim() const;
+    real Fdim() const;
     //! Returns the radius of gyration
-    double Rg() const;
+    real Rg() const;
     //! Returns the number of primary particles
     int Numprimary() const;
     //! Returns the number of silicon atoms in the particle
@@ -175,9 +178,9 @@ public:
 	//! Returns the number of hydroxyl units in the particle
     int NumOH() const;
     //! Returns sqrt(L*W)
-    double sqrtLW() const;
+    real sqrtLW() const;
 	//! Returns average coalescence level
-    double AvgSinter() const;
+    real AvgSinter() const;
 
 private:
     //! Empty primary not meaningful
@@ -221,7 +224,7 @@ private:
     SilicaPrimary *SelectRandomSubparticle(rng_type &rng);
     
     //! Update the surface area and sintering level of all parents
-    void UpdateParents(double dS);
+    void UpdateParents(real dS);
 
     //! Find the path through the tree from node top to node bottom
     static std::stack<bool> recordPath(const SilicaPrimary* bottom,
@@ -247,22 +250,22 @@ private:
     int m_numprimary;
 
     //! Sum of the diameter of the primaries under this treenode
-    double m_primarydiam;
+    real m_primarydiam;
 
     //! Equivalent spherical radius of sum of childrens' volume
-    double m_children_radius;
+    real m_children_radius;
 
     //! Total volume of children under this node
-    double m_children_vol;
+    real m_children_vol;
 
     //! Common surface area between two connected children
-    double m_children_surf;
+    real m_children_surf;
 
     //! Sintering level of children connected by this node
-    double m_children_sintering;
+    real m_children_sintering;
 
     //! Average sintering level of primaries under this node
-    double m_avg_sinter;
+    real m_avg_sinter;
     
     //! Sintering rate of particle
     real m_sint_rate;
@@ -273,16 +276,16 @@ private:
      */
     
     //! Radius of gyration (currently unused)
-    double m_Rg;
+    real m_Rg;
     
     //! Fractal dimension (currently unused)
-    double m_fdim;
+    real m_fdim;
     
     //! Square-root of the length times width (currently unused)
-    double m_sqrtLW;
+    real m_sqrtLW;
     
     //! Length divided by width (currently unused)
-    double m_LdivW;
+    real m_LdivW;
 
     /*
      * Definition of the silica primaries
