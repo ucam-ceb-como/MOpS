@@ -89,10 +89,10 @@ SilicaPrimary::SilicaPrimary() : Primary(),
     m_avg_sinter(0.0),
     m_sint_rate(0.0),
     //Imaging properties
-    m_Rg(0.0),
-    m_fdim(0.0),
-    m_sqrtLW(0.0),
-    m_LdivW(0.0),
+    //m_Rg(0.0),
+    //m_fdim(0.0),
+    //m_sqrtLW(0.0),
+    //m_LdivW(0.0),
     //Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
@@ -132,10 +132,10 @@ SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
     m_avg_sinter(0.0),
     m_sint_rate(0.0),
     //Imaging properties
-    m_Rg(0.0),
-    m_fdim(0.0),
-    m_sqrtLW(0.0),
-    m_LdivW(0.0),
+    //m_Rg(0.0),
+    //m_fdim(0.0),
+    //m_sqrtLW(0.0),
+    //m_LdivW(0.0),
     //Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
@@ -187,10 +187,10 @@ SilicaPrimary::SilicaPrimary(const real time, const real position,
     m_avg_sinter(0.0),
     m_sint_rate(0.0),
     //Imaging properties
-    m_Rg(0.0),
-    m_fdim(0.0),
-    m_sqrtLW(0.0),
-    m_LdivW(0.0),
+    //m_Rg(0.0),
+    //m_fdim(0.0),
+    //m_sqrtLW(0.0),
+   // m_LdivW(0.0),
     //Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
@@ -239,10 +239,10 @@ SilicaPrimary::SilicaPrimary(real time, const Sweep::ParticleModel &model, bool 
     m_avg_sinter(0.0),
     m_sint_rate(0.0),
     //Imaging properties
-    m_Rg(0.0),
-    m_fdim(0.0),
-    m_sqrtLW(0.0),
-    m_LdivW(0.0),
+    //m_Rg(0.0),
+    //m_fdim(0.0),
+    //m_sqrtLW(0.0),
+    //m_LdivW(0.0),
     //Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
@@ -383,8 +383,8 @@ void SilicaPrimary::CopyParts(const SilicaPrimary *source)
 	m_numOH=source->m_numOH;
 	m_numprimary=source->m_numprimary;
 	m_primarydiam=source->m_primarydiam;
-	m_sqrtLW=source->m_sqrtLW;
-	m_LdivW=source->m_LdivW;
+	//m_sqrtLW=source->m_sqrtLW;
+	//m_LdivW=source->m_LdivW;
     m_pmodel=source->m_pmodel;
     m_surf=source->m_surf;
     m_vol=source->m_vol;
@@ -392,8 +392,8 @@ void SilicaPrimary::CopyParts(const SilicaPrimary *source)
     m_children_vol=source->m_children_vol;
     m_children_radius=source->m_children_radius;
     m_children_sintering=source->m_children_sintering;
-    m_fdim=source->m_fdim;
-    m_Rg=source->m_Rg;
+    //m_fdim=source->m_fdim;
+    //m_Rg=source->m_Rg;
     m_avg_sinter=source->m_avg_sinter;
     m_sint_rate=source->m_sint_rate;
     m_sint_time=source->m_sint_time;
@@ -1513,6 +1513,8 @@ const SilicaPrimary *SilicaPrimary::LeftChild() const
    return m_leftchild;
 }
 
+// Imaging properties
+/*
 real SilicaPrimary::Rg() const
 {
    return m_Rg;
@@ -1523,14 +1525,19 @@ real SilicaPrimary::Fdim() const
    return m_fdim;
 }
 
-real SilicaPrimary::PrimaryDiam() const
+real SilicaPrimary::sqrtLW() const
 {
-   return m_primarydiam;
+   return m_sqrtLW;
 }
 
 real SilicaPrimary::LdivW() const
 {
    return m_LdivW;
+}*/
+
+real SilicaPrimary::PrimaryDiam() const
+{
+   return m_primarydiam;
 }
 
 int SilicaPrimary::Numprimary() const
@@ -1553,11 +1560,6 @@ int SilicaPrimary::NumOH() const
    return m_numOH;
 }
 
-
-real SilicaPrimary::sqrtLW() const
-{
-   return m_sqrtLW;
-}
 
 real SilicaPrimary::AvgSinter() const
 {
@@ -1603,13 +1605,14 @@ void SilicaPrimary::Serialize(std::ostream &out) const
 	    val = (int)m_numprimary;
         out.write((char*)&val, sizeof(val));
 
+        val = (double)m_primarydiam;
+        out.write((char*)&val, sizeof(val));
+
+        /*
 	    val = (double)m_sqrtLW;
         out.write((char*)&val, sizeof(val));
 
 	    val = (double)m_LdivW;
-        out.write((char*)&val, sizeof(val));
-
-	    val = (double)m_primarydiam;
         out.write((char*)&val, sizeof(val));
 
         val = (double)m_fdim;
@@ -1617,7 +1620,7 @@ void SilicaPrimary::Serialize(std::ostream &out) const
 
         val = (double)m_Rg;
         out.write((char*)&val, sizeof(val));
-
+        */
 
         // Output base class.
         Primary::Serialize(out);
@@ -1655,6 +1658,10 @@ void SilicaPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_numprimary = (int)val;
 
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_primarydiam = (real)val;
+
+        /*
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_sqrtLW = (real)val;
 
@@ -1662,13 +1669,10 @@ void SilicaPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
         m_LdivW = (real)val;
 
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_primarydiam = (real)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_fdim = (real)val;
 
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_Rg = (real)val;
+        m_Rg = (real)val;*/
 
 		m_leftchild=NULL;
 		m_rightchild=NULL;

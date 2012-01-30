@@ -273,8 +273,6 @@ private:
     /* Imaging properties
      * These are presently unused, however may be useful if 
      * one wishes to generate an image of the particle
-     */
-    
     //! Radius of gyration (currently unused)
     real m_Rg;
     
@@ -285,7 +283,7 @@ private:
     real m_sqrtLW;
     
     //! Length divided by width (currently unused)
-    real m_LdivW;
+    real m_LdivW;*/
 
     /*
      * Definition of the silica primaries

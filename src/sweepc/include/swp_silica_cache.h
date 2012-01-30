@@ -113,11 +113,11 @@ public:
 	  int m_numO;
 	  int m_numOH;
 	  int m_numprimary;
-	  real m_sqrtLW;
-	  real m_LdivW;
-	  real m_primarydiam;
-	  real m_fdim;
-	  real m_Rg;
+	   real m_primarydiam;
+	  //real m_sqrtLW;
+	  //real m_LdivW;
+	  //real m_fdim;
+	  //real m_Rg;
 	  real m_avg_sinter;
 	  real m_sintrate;
 	  real m_sinttime;
