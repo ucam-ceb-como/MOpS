@@ -272,7 +272,12 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
     // Initialise doubling.
     m_ndble      = 0;
     m_dbleon     = true;
-    m_dbleactive = false;
+
+    // Check for doubling activation.
+    if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
+        m_dbleactive = true;
+    } else
+        m_dbleactive = false;
 
     // Build the tree with the weights for the new particles.
     rebuildTree();

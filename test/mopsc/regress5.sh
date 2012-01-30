@@ -26,7 +26,10 @@ echo "========================"
 # Put a negative values at the start so that the number of particles of size 1 comes at index 1
 # These numbers are for a seed of 123 in the Mersenne Twister random number generator
 # Analytic solution is 1458 908 565 352 219
+# Analytic solution x2 is 2888 1810 1170 704 438
 referenceValues=(-1 1444 905 585 360 235)
+# With doubling activated for initialised particled, need to double reference values.
+doubledReferenceValues=(-1 2925 1780 1156 735 390)
 simulatedValues=(-1 -1   -1  -1 -1 -1)
 
 # Grep seems to require the file in unix format, even under cygwin
@@ -43,17 +46,17 @@ do
   ((i+=1))
 done
 
-echo "Analytic  solution is 1458 908 565 352 219"
+echo "Analytic  solution is 2888 1810 1170 704 438"
 echo "Simulated solution is ${simulatedValues[1]} ${simulatedValues[2]} ${simulatedValues[3]} ${simulatedValues[4]} ${simulatedValues[5]}"
 
 i=1
 while ((i <= 5 ))
 do
-  if((simulatedValues[i] != referenceValues[i])) 
+  if((simulatedValues[i] != doubledReferenceValues[i]))
     then
       # Regression test has failed; print explanatory message and exit with non zero
       # value showing the size class of the first difference
-      echo "Found ${simulatedValues[i]} particles of size $i, when ${referenceValues[i]} expected"
+      echo "Found ${simulatedValues[i]} particles of size $i, when ${doubledReferenceValues[i]} expected"
       echo "**************************"
       echo "****** TEST FAILURE ******"
       echo "**************************"
