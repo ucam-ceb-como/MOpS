@@ -195,7 +195,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::p
     // Some prerequisites.
     real n_1 = n - 1.0;
     real a   = CSF * T_mu * A();
-    real b   = a * MFP * 1.257 * 2.0 * A();
+    real b   = a * MFP * 1.257 * 2.0;
     real c   = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
