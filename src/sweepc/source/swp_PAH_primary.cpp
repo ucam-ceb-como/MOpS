@@ -366,6 +366,7 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
     m_parent=source->m_parent;
     SetMass(source->Mass());
     m_numPAH=source->m_numPAH;
+    m_numprimary=source->m_numprimary;
     m_primarydiam=source->m_primarydiam;
     m_sqrtLW=source->m_sqrtLW;
     m_LdivW=source->m_LdivW;
