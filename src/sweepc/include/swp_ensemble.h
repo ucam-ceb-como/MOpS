@@ -263,7 +263,9 @@ public:
         std::istream &in,                // Input stream.
         const Sweep::ParticleModel &mech // Model used to define particles.
         );
-        
+
+    int NumnberOfPyrene() const;// return the number of pyrene in current state.
+    int IndexOfPyrene() const; //move backwards.
     Sweep::KMC_ARS::KMCSimulator* Simulator();
     void SetSimulator(Sweep::GasProfile& gp);
 	

@@ -168,6 +168,8 @@ public:
     double MassforXmer() const;
     //! set pah_structure=Null before destructor delete it
     //void ReleasePAH(Primary &rhs);
+    //find soot particle with only one Pyrene molecule (C16H10)
+    int Pyrene() const;
 
 protected:
     //! Empty primary not meaningful
@@ -198,7 +200,6 @@ protected:
     //! returns a uniformly chosen primary particle
     PAHPrimary *SelectRandomSubparticle(rng_type &rng);
     void ReleaseMem();
-	
 
   //  double pow(double a, double b);
 

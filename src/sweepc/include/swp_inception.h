@@ -160,9 +160,13 @@ public:
     // Creates a copy of the inception.
     Inception *const Clone(void) const=0;
 
-
-
-
+    //! Perform an event to transfer mass from gasphase to particle pahse. This function is only used for PAH-PP model
+    // so it will be implemented in the PAHInception class
+    int AddPyrene(
+    int i,
+    real t,
+    Cell &sys,
+    rng_type &rng) const;
 
     // READ/WRITE/COPY.
 

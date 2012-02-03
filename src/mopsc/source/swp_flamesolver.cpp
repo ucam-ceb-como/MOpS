@@ -250,9 +250,10 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             // TODO:  This will give the wrong component densities
             //        unless all species are specified!
             gpoint.Gas.SetTemperature(T);
-            gpoint.Gas.SetPressure(P*1.0e5);
+            gpoint.Gas.SetPressure(P*1.0e5);//also set the molar density of gas mixture
             gpoint.Gas.Normalise();
-            gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(cm3*s) to mol/(m3*s)
+            //gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(cm3*s) to mol/(m3*s)
+            gpoint.Gas.SetPAHFormationRate(0);
             gpoint.Gas.SetAlpha(alpha);
 
             // Add the profile point.
@@ -333,6 +334,14 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
         // Scale particle M0 according to gas-phase expansion.
         r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
+
+        if (mech.AggModel()== AggModels::PAH_KMC_ID)
+        {
+            const int index=r.Mech()->GasMech().FindSpecies("A4");
+            // calculate the amount of stochastic pyrene particles in the ensemble
+            int Pamount=r.Mixture()->NumOfStartingSpecies(index);
+            mech.MassTransfer(Pamount,t,*r.Mixture(),rng);
+        }
 
         // Get the process jump rates (and the total rate).
         jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);

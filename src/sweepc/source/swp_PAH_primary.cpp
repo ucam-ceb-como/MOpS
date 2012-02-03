@@ -56,6 +56,7 @@
 #include "swp_kmc_pah_process.h"
 #include "swp_kmc_pah_structure.h"
 #include "swp_PAH.h"
+#include "swp_ensemble.h"
 
 #include <stdexcept>
 #include <cassert>
@@ -1055,23 +1056,34 @@ double PAHPrimary::MassforXmer() const
 	return sum;	
 }
 
-// dump information of this Xmer to a vector<vector<double> > 
-void PAHPrimary::mass_PAH(std::vector<std::vector<double> > &out) const
+int PAHPrimary::Pyrene() const
 {
-	std::vector<double> temp;
-	std::vector<double> divider(2,0);
-	for (size_t i = 0; i != m_PAH.size(); ++i)
-	{
-		temp.push_back(m_PAH[i]->m_numcarbon);
-		temp.push_back(m_PAH[i]->m_pahstruct->numofH());
-		m_PAH[i]->saveDOTperLoop((int)ID,(int)i);
-		out.push_back(temp);
-		temp.clear();
-	}
-	divider.push_back(ID);
-	out.push_back(divider);
-	ID++;
+    if (Numprimary() == 1 && NumPAH() == 1){
+        //currently only Num of C and H is used to identify the Pyrene
+        if (NumCarbon() == 16 && NumHydrogen() ==10)
+            return 1;
+        else return 0;
+    }
+    else return 0;
 }
+
+// dump information of this Xmer to a vector<vector<double> > 
+    void PAHPrimary::mass_PAH(std::vector<std::vector<double> > &out) const
+    {
+    std::vector<double> temp;
+    std::vector<double> divider(2,0);
+    for (size_t i = 0; i != m_PAH.size(); ++i)
+    {
+        temp.push_back(m_PAH[i]->m_numcarbon);
+        temp.push_back(m_PAH[i]->m_pahstruct->numofH());
+        m_PAH[i]->saveDOTperLoop((int)ID,(int)i);
+        out.push_back(temp);
+        temp.clear();
+    }
+    divider.push_back(ID);
+    out.push_back(divider);
+    ID++;
+    }
 
 void PAHPrimary::UpdateCache(void)
 {

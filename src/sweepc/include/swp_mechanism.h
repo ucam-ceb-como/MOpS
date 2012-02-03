@@ -205,6 +205,14 @@ public:
         rng_type &rng
         ) const;
 
+    // transfer mass from gas-phase to particle ensemble used for PAH-PP model
+    void MassTransfer(
+        int i,          // the number of pyrene supposed in the emsemble
+        real t,         // Current time (s).
+        Cell &sys,      // System to update (includes ensemble).
+        rng_type &rng   // Random number generator
+        ) const;
+
 
     // LINEAR PROCESS DEFERMENT ALGORITHM.
 

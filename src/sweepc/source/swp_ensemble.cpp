@@ -918,6 +918,31 @@ void Sweep::Ensemble::init(void)
 
 }
 
+int Sweep::Ensemble::NumnberOfPyrene() const
+{
+    int numofpyrene = 0;
+    for (int i =0;i<m_count;i++){
+        const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+        rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+
+        //const Sweep::Primary *rhsparticle = NULL;
+        //rhsparticle = m_particles[i]->Primary();
+        numofpyrene += rhsparticle->Pyrene();
+        }
+    return numofpyrene;
+}
+
+int Sweep::Ensemble::IndexOfPyrene() const
+{
+    for (int i =m_count;i>0;i--){
+        const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+        rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+        if (rhsparticle->Pyrene() == 1)
+            return i;
+        }
+    return -1;
+}
+
 /*!
  * @param[in]   id      Index of property which will be extracted
  */

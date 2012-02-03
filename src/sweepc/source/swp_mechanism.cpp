@@ -44,6 +44,7 @@
 #include "swp_model_factory.h"
 #include "swp_process_factory.h"
 #include "swp_tempwriteXmer.h"
+#include "swp_pah_inception.h"
 
 #include "geometry1d.h"
 
@@ -657,6 +658,26 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
     }
 }
 
+/*!
+ * Performs the a specified process.
+ *
+ * \param[in]       i           the number of pyrene supposed in the emsemble
+ * \param[in]       t           Time at which event is to take place
+ * \param[in,out]   sys         System in which event is to take place
+ * \param[in,out]   rng         Random number generator
+ *
+ * The support for transport processes may well no longer be needed, in that it is
+ * rarely efficient to simulate such phenomena with stochastic jumps.
+ */
+void Mechanism::MassTransfer(int i, real t, Cell &sys, rng_type &rng) const
+{
+        // Test for now
+        assert(sys.ParticleModel() != NULL);
+        // This is an inception process.
+        const Sweep::Processes::PAHInception *m_pahinception = NULL;
+        m_pahinception = dynamic_cast<const Sweep::Processes::PAHInception*>(m_inceptions[0]);
+        m_pahinception->AddPyrene(i, t, sys, rng);
+}
 
 // LINEAR PROCESS DEFERMENT ALGORITHM.
 
