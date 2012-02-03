@@ -333,6 +333,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         const real gasTimeStep = linInterpGas(t, r.Mixture()->GasPhase());
 
         // Scale particle M0 according to gas-phase expansion.
+        // (considering mass const, V'smpvol*massdens' = Vsmpvol*massdens)
         r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
 
         if (mech.AggModel()== AggModels::PAH_KMC_ID)

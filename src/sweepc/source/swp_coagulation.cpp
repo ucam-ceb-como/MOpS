@@ -40,6 +40,7 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
+#include "swp_PAH_primary.h"
 #include "swp_coagulation.h"
 #include "swp_mechanism.h"
 #include <stdexcept>
@@ -172,6 +173,15 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
             newPos = sp1->getPosition();
             newPosTime = sp1->getPositionTime();
         }
+    }
+
+    if (sp1->Primary()->AggID() ==AggModels::PAH_KMC_ID)
+    {
+        const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+        rhsparticle = dynamic_cast<const Sweep::AggModels::PAHPrimary*>(sp1->Primary());
+
+        if (rhsparticle->Pyrene()!=0)
+            sys.Particles().SetNumOfStartingPAH(-1);
     }
 
     // Add contents of particle 2 onto particle 1

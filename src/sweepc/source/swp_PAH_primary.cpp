@@ -541,14 +541,16 @@ void PAHPrimary::UpdateAllPointers( const PAHPrimary *original)
 PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 {
     vector<PAH>::const_iterator j;
-	const PAHPrimary *rhsparticle = NULL;
-	rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
+    const PAHPrimary *rhsparticle = NULL;
+    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
 
-	//only one PAH in rhs or this particle -> condensation or inception process.
-	if ( (rhsparticle->m_numPAH==1) || (m_numPAH==1 ))
-	{
+    //only one PAH in rhs or this particle -> condensation or inception process.
+    if ( (rhsparticle->m_numPAH==1) || (m_numPAH==1 ))
+    {
         if (rhsparticle->Numprimary()>1)
         {
+            // rhsparticle is a soot particle but this paricle repesents a PAH
+            // this paricle will condense on this rhsparticle
             // Get a copy of the rhs ready to add to the current particle
             PAHPrimary copy_rhs(*rhsparticle);
             PAHPrimary *target = copy_rhs.SelectRandomSubparticle(rng);
@@ -560,21 +562,24 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
         }
         else
         {
+            // this paricle is a soot particle but rhsparticle repesents a PAH
+            // rhsparticle will condense on this particle
             // particle has more then one primary select the primary where
             // the PAH condenses to and add it to the list
-		    if (m_leftchild!=NULL)
-		    {
-			    PAHPrimary *target = SelectRandomSubparticle(rng);
+            if (m_leftchild!=NULL)
+            {
+                PAHPrimary *target = SelectRandomSubparticle(rng);
 
                 target->m_PAH.insert(target->m_PAH.end(),rhsparticle->m_PAH.begin(),rhsparticle->m_PAH.end());
-				target->UpdatePrimary();
+                target->UpdatePrimary();
 
-		    }
-		    else
-		    {
+            }
+            else
+            {
+                //this particle and rhsparticle are both PAHs, this process should be inception
                 m_PAH.insert(m_PAH.end(),rhsparticle->m_PAH.begin(),rhsparticle->m_PAH.end());
                 UpdatePrimary();
-		    }
+            }
         }
 		UpdateCache();
         //Check the coalescence ratio
@@ -961,17 +966,18 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
 {
     // Either the primary has two children or it is a leaf of the
     // tree
-	if (m_leftchild!=NULL)
-	{
+    if (m_leftchild!=NULL)
+    {
         // Recurse down to the leaves
-		m_leftchild->UpdatePAHs(t, model,sys, rng);
-		m_rightchild->UpdatePAHs(t, model,sys, rng);
-	}
+        m_leftchild->UpdatePAHs(t, model,sys, rng);
+        m_rightchild->UpdatePAHs(t, model,sys, rng);
+    }
     else
     {
         // There are PAHs in this primary so update them, if needed
         // Flag to show if any PAH has been changed
         bool PAHchanged = false;
+        const int startingPAH = Pyrene();
 
         // Loop over each PAH in this primary
         const std::vector<boost::shared_ptr<PAH> >::iterator itEnd = m_PAH.end();
@@ -984,7 +990,7 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
             // growth factor
             const double minPAH = model.Components(0)->MinPAH();
 
-			real growthfact = 1.0;
+            real growthfact = 1.0;
             if (m_numPAH>=minPAH)
             {
                 // concentration of gasphase species is reduced by this factor to 
@@ -998,14 +1004,14 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
             assert(growtime >= 0.0);
 
             const unsigned int oldNumCarbon = (*it)->m_numcarbon; 
-			const unsigned int oldNumH = (*it)->m_numH;
+            const unsigned int oldNumH = (*it)->m_numH;
 
             // Here updatePAH function in KMC_ARS model is called.
             // waitingSteps is set to be 1 by dc516, details seeing KMCSimulator::updatePAH()
             sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1,
                                                    rng, growthfact, (*it)->PAH_ID);
             (*it)->m_numcarbon=(*it)->m_pahstruct->numofC();
-			(*it)->m_numH=(*it)->m_pahstruct->numofH();
+            (*it)->m_numH=(*it)->m_pahstruct->numofH();
             (*it)->lastupdated=t;
 
             // See if anything changed, as this will required a call to UpdatePrimary() below
@@ -1017,6 +1023,10 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
         // area by iterating through all the PAHs.  This call is rather expensive.
         if(PAHchanged) {
             UpdatePrimary();
+                if (startingPAH!=0) 
+                    sys.Particles().SetNumOfStartingPAH(-1);
+            else if (startingPAH == 0 && Pyrene()==1)
+                    sys.Particles().SetNumOfStartingPAH(1);
         }
         // otherwise there is no need to update
     }
