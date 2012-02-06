@@ -175,14 +175,8 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
         }
     }
 
-    if (sp1->Primary()->AggID() ==AggModels::PAH_KMC_ID)
-    {
-        const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
-        rhsparticle = dynamic_cast<const Sweep::AggModels::PAHPrimary*>(sp1->Primary());
 
-        if (rhsparticle->Pyrene()!=0)
-            sys.Particles().SetNumOfStartingPAH(-1);
-    }
+    sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
 
     // Add contents of particle 2 onto particle 1
     sp1->Coagulate(*sp2, rng);

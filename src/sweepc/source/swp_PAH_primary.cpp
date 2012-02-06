@@ -76,6 +76,7 @@ using namespace Strings;
 //used for debugging, testing clone function for PAHStructure.
 static unsigned int ID=0; 
 static bool m_clone=false;
+static bool m_pyreneInception = true;
 /*
 double PAHPrimary::pow(double a, double b) {
     int tmp = (*(1 + (int *)&a));
@@ -252,7 +253,8 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 */
 void PAHPrimary::AddPAH(real time,const Sweep::ParticleModel &model)
 {
-    boost::shared_ptr<PAH> new_PAH (new PAH(time, model.IsPyreneInception()));
+    m_pyreneInception =  model.IsPyreneInception();
+    boost::shared_ptr<PAH> new_PAH (new PAH(time, m_pyreneInception));
     new_PAH->PAH_ID=ID;
     m_PAH.push_back(new_PAH);
     ID++;
@@ -976,7 +978,7 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
         // There are PAHs in this primary so update them, if needed
         // Flag to show if any PAH has been changed
         bool PAHchanged = false;
-        const int startingPAH = Pyrene();
+        const int m_InceptedPAH = InceptedPAH();
 
         // Loop over each PAH in this primary
         const std::vector<boost::shared_ptr<PAH> >::iterator itEnd = m_PAH.end();
@@ -1002,19 +1004,18 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
             const real growtime = t - (*it)->lastupdated;
             assert(growtime >= 0.0);
 
-            const unsigned int oldNumCarbon = (*it)->m_numcarbon; 
-            const unsigned int oldNumH = (*it)->m_numH;
+            const unsigned int oldNumCarbon = (*it)->m_pahstruct->numofC(); 
+            const unsigned int oldNumH = (*it)->m_pahstruct->numofH();
 
             // Here updatePAH function in KMC_ARS model is called.
             // waitingSteps is set to be 1 by dc516, details seeing KMCSimulator::updatePAH()
             sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1,
                                                    rng, growthfact, (*it)->PAH_ID);
-            (*it)->m_numcarbon=(*it)->m_pahstruct->numofC();
-            (*it)->m_numH=(*it)->m_pahstruct->numofH();
+
             (*it)->lastupdated=t;
 
             // See if anything changed, as this will required a call to UpdatePrimary() below
-            if(oldNumCarbon != (*it)->m_numcarbon || oldNumH != (*it)->m_numH)
+            if(oldNumCarbon != (*it)->m_pahstruct->numofC() || oldNumH != (*it)->m_pahstruct->numofH())
                 PAHchanged = true;
         }
 
@@ -1022,10 +1023,10 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
         // area by iterating through all the PAHs.  This call is rather expensive.
         if(PAHchanged) {
             UpdatePrimary();
-                if (startingPAH!=0) 
-                    sys.Particles().SetNumOfStartingPAH(-1);
-            else if (startingPAH == 0 && Pyrene()==1)
-                    sys.Particles().SetNumOfStartingPAH(1);
+                if (m_InceptedPAH!=0) 
+                    sys.Particles().SetNumOfInceptedPAH(-1);
+            else if (m_InceptedPAH == 0 && InceptedPAH()==1)
+                    sys.Particles().SetNumOfInceptedPAH(1);
         }
         // otherwise there is no need to update
     }
@@ -1061,16 +1062,18 @@ double PAHPrimary::MassforXmer() const
 	for (size_t i = 0; i != m_PAH.size(); ++i)
 	{
 		sum+=m_PAH[i]->m_pahstruct->numofH();
-	    sum+=12 * m_PAH[i]->m_numcarbon;
+	    sum+=12 * m_PAH[i]->m_pahstruct->numofC();
 	}
 	return sum;	
 }
 
-int PAHPrimary::Pyrene() const
+int PAHPrimary::InceptedPAH() const
 {
     if (Numprimary() == 1 && NumPAH() == 1){
-        //currently only Num of C and H is used to identify the Pyrene
-        if (NumCarbon() == 16 && NumHydrogen() ==10)
+        //currently only Num of C and H is used to identify the Pyrene and benzene
+        if (m_pyreneInception && NumCarbon() == 16 && NumHydrogen() ==10)
+            return 1;
+        else if (!m_pyreneInception && NumCarbon() == 6 && NumHydrogen() == 6)
             return 1;
         else return 0;
     }
@@ -1084,7 +1087,7 @@ int PAHPrimary::Pyrene() const
     std::vector<double> divider(2,0);
     for (size_t i = 0; i != m_PAH.size(); ++i)
     {
-        temp.push_back(m_PAH[i]->m_numcarbon);
+        temp.push_back(m_PAH[i]->m_pahstruct->numofC());
         temp.push_back(m_PAH[i]->m_pahstruct->numofH());
         m_PAH[i]->saveDOTperLoop((int)ID,(int)i);
         out.push_back(temp);
@@ -1133,11 +1136,11 @@ void PAHPrimary::UpdatePrimary(void)
 	m_PAHCollDiameter=0;
 	m_numPAH= m_PAH.size();
 
-    unsigned int maxcarbon=0;
+    int maxcarbon=0;
     for (vector<boost::shared_ptr<PAH> >::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
-        m_numcarbon += (*i)->m_numcarbon;
-		m_numH += (*i)->m_numH;
-		maxcarbon=max(maxcarbon, (*i)->m_numcarbon);    // search for the largest PAH in the PRimary, in Angstrom
+        m_numcarbon += (*i)->m_pahstruct->numofC();
+		m_numH += (*i)->m_pahstruct->numofH();
+		maxcarbon=max(maxcarbon, (*i)->m_pahstruct->numofC());    // search for the largest PAH in the PRimary, in Angstrom
     }
 	m_PAHmass=m_numcarbon * 1.9945e-26 + m_numH * 1.6621e-27;     //convert to kg, hydrogen atoms are not considered
     m_PAHCollDiameter=sqrt(maxcarbon*2.0/3.);

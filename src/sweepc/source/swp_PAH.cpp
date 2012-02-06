@@ -60,17 +60,9 @@ PAH_ID(0),
 m_pahstruct(new PAHStructure())
 {
     if (IsPyrene)
-    {
         m_pahstruct->initialise(PYRENE_C);
-        m_numcarbon = PYRENE_C;
-        m_numH = PYRENE_H;
-    }
     else
-    {
         m_pahstruct->initialise(BENZENE_C);
-        m_numcarbon = BENZENE_C;
-        m_numH = BENZENE_H;
-    }
 }
 
 PAH::PAH(const PAH &copy){
@@ -83,8 +75,6 @@ PAH::~PAH() {
 
 PAH &PAH::operator=(const PAH &rhs){
 	if (this != &rhs){
-		m_numcarbon=rhs.m_numcarbon;
-		m_numH=rhs.m_numH;
 		time_created=rhs.time_created;
 	    lastupdated=rhs.lastupdated;
 		PAH_ID=rhs.PAH_ID;
