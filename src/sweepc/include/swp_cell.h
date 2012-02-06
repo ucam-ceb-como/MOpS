@@ -192,6 +192,9 @@ public:
         const Sweep::Mechanism &mech // Mechanism which defines LPDA for outflow.
         );
 
+        // figure out how many starting species is supposed to be in the particle ensemble
+    int NumOfStartingSpecies(const int index) const;
+
     // READ/WRITE/COPY.
 
     // Writes the object to a binary stream.

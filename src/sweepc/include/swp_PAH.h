@@ -58,23 +58,23 @@ class PAH
 	friend class PAHPrimary;
 public:
     //! Build a new PAH with time
-    PAH(real time);
+    PAH(real time, bool IsPyrene);
 
     PAH(const PAH &copy); // Copy constructor.
-	~PAH();
-	PAH &operator=(const PAH &rhs);
-	PAH *const Clone() const;
-	//returen ID of PAH
-	int ID() const;
+    ~PAH();
+    PAH &operator=(const PAH &rhs);
+    PAH *const Clone() const;
+    //returen ID of PAH
+    int ID() const;
+    void saveDOTperLoop(int ID, int i) const;
 
-	void saveDOTperLoop(int ID, int i) const;
 private:
     //! not allow to build PAH without time
     PAH();
     //! Number of Carbon atoms in the PAH
     unsigned int m_numcarbon;
     //! Number of Hydrogen atoms in the PAH
-	unsigned int m_numH;
+    unsigned int m_numH;
     //! Simulated time at point when molecule created
     double time_created;
 

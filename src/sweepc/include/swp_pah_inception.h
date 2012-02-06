@@ -99,6 +99,13 @@ public:
         unsigned int iterm,
         rng_type &rng) const;
 
+    //! Perform an event to transfer mass from gasphase to particle pahse. This function is only used for PAH-PP model
+    virtual int AddPyrene(
+        int i,
+        real t,
+        Cell &sys,
+        rng_type &rng) const;
+
 	// TOTAL RATE CALCULATIONS.
 
     // Returns rate of the process for the given system.
