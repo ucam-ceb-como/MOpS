@@ -252,13 +252,12 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 */
 void PAHPrimary::AddPAH(real time,const Sweep::ParticleModel &model)
 {
-	boost::shared_ptr<PAH> new_PAH (new PAH(time));
-	new_PAH->PAH_ID=ID;
-	m_PAH.push_back(new_PAH);
-	ID++;
-
-	// Set the particle mass, diameter etc
-	UpdatePrimary();
+    boost::shared_ptr<PAH> new_PAH (new PAH(time, model.IsPyreneInception()));
+    new_PAH->PAH_ID=ID;
+    m_PAH.push_back(new_PAH);
+    ID++;
+    // Set the particle mass, diameter etc
+    UpdatePrimary();
 }
 
 // Copy constructor.

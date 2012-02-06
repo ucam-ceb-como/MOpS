@@ -338,9 +338,16 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
 
         if (mech.AggModel()== AggModels::PAH_KMC_ID)
         {
-            const int index=r.Mech()->GasMech().FindSpecies("A4");
+            int index;
+            if (mech.IsPyreneInception())
+                index=r.Mech()->GasMech().FindSpecies("A4");
+            else 
+                index=r.Mech()->GasMech().FindSpecies("A1");
             // calculate the amount of stochastic pyrene particles in the ensemble
             int Pamount=r.Mixture()->NumOfStartingSpecies(index);
+
+            if (t == 0 && Pamount >= r.Mixture()->Particles().Capacity())
+                throw std::runtime_error("increase the M0 in mops.inx please, current choice is too small (Sweep::FlameSolver::Solve)");
             mech.MassTransfer(Pamount,t,*r.Mixture(),rng);
         }
 

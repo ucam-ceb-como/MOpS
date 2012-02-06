@@ -288,7 +288,11 @@ public:
 
     void SetMode(const std::string &mode);
     const std::string &Mode() const;
-	
+
+    void SetInceptedPAH(const std::string &name);
+    const std::string &InceptedPAH() const;
+    bool IsPyreneInception() const;
+
 protected:
     // The species used to define the processes and the particles.
     const Sprog::SpeciesPtrVector *m_species;
@@ -377,6 +381,9 @@ private:
 
     //! Define three modes, collision efficience depends on the smaller, the bigger, the combined mass or reduced mass
     std::string m_mode;
+
+    //! define a species that it will be transfered between gas and particle phase
+    std::string m_InceptedPAH;
 };
 } //namespace Sweep
 #endif
