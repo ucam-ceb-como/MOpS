@@ -100,7 +100,7 @@ public:
         rng_type &rng) const;
 
     //! Perform an event to transfer mass from gasphase to particle pahse. This function is only used for PAH-PP model
-    virtual int AddPyrene(
+    int AddInceptedPAH(
         int i,
         real t,
         Cell &sys,

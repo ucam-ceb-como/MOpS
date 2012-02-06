@@ -169,7 +169,7 @@ public:
     //! set pah_structure=Null before destructor delete it
     //void ReleasePAH(Primary &rhs);
     //find soot particle with only one Pyrene molecule (C16H10)
-    int Pyrene() const;
+    int InceptedPAH() const;
 
 protected:
     //! Empty primary not meaningful

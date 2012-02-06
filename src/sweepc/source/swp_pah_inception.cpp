@@ -165,13 +165,13 @@ int PAHInception::Perform(const real t, Cell &sys,
  *
  * \return      0 on success, otherwise negative.
  */
-int PAHInception::AddPyrene(const int i, const real t, Cell &sys,rng_type &rng) const {
+int PAHInception::AddInceptedPAH(const int i, const real t, Cell &sys,rng_type &rng) const {
 
     Particle *sp = NULL;
 
     // return current number of pyrene in the emsemble
 
-    int j = sys.Particles().NumnberOfPyrene();
+    int j = sys.Particles().NumOfInceptedPAH();
     if (i>j)
     {
         while (i>j)
@@ -190,7 +190,7 @@ int PAHInception::AddPyrene(const int i, const real t, Cell &sys,rng_type &rng) 
     else if (i<j){
         while (i<j)
         {
-            int Pindex = sys.Particles().IndexOfPyrene();
+            int Pindex = sys.Particles().IndexOfInceptedPAH();
             if (Pindex<0)
                 throw runtime_error("There are no Pyrene in the ensemble, and all the pyrene molecules are consumed due to unknown reason(Mops, Sweep::PAHInception::Perform).");
             sys.Particles().Remove(Pindex);

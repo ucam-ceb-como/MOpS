@@ -76,6 +76,7 @@ using namespace Strings;
 //used for debugging, testing clone function for PAHStructure.
 static unsigned int ID=0; 
 static bool m_clone=false;
+static bool m_pyreneInception = true;
 /*
 double PAHPrimary::pow(double a, double b) {
     int tmp = (*(1 + (int *)&a));
@@ -252,7 +253,8 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 */
 void PAHPrimary::AddPAH(real time,const Sweep::ParticleModel &model)
 {
-    boost::shared_ptr<PAH> new_PAH (new PAH(time, model.IsPyreneInception()));
+    m_pyreneInception =  model.IsPyreneInception();
+    boost::shared_ptr<PAH> new_PAH (new PAH(time, m_pyreneInception));
     new_PAH->PAH_ID=ID;
     m_PAH.push_back(new_PAH);
     ID++;
@@ -976,7 +978,7 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
         // There are PAHs in this primary so update them, if needed
         // Flag to show if any PAH has been changed
         bool PAHchanged = false;
-        const int startingPAH = Pyrene();
+        const int m_InceptedPAH = InceptedPAH();
 
         // Loop over each PAH in this primary
         const std::vector<boost::shared_ptr<PAH> >::iterator itEnd = m_PAH.end();
@@ -1022,10 +1024,10 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
         // area by iterating through all the PAHs.  This call is rather expensive.
         if(PAHchanged) {
             UpdatePrimary();
-                if (startingPAH!=0) 
-                    sys.Particles().SetNumOfStartingPAH(-1);
-            else if (startingPAH == 0 && Pyrene()==1)
-                    sys.Particles().SetNumOfStartingPAH(1);
+                if (m_InceptedPAH!=0) 
+                    sys.Particles().SetNumOfInceptedPAH(-1);
+            else if (m_InceptedPAH == 0 && InceptedPAH()==1)
+                    sys.Particles().SetNumOfInceptedPAH(1);
         }
         // otherwise there is no need to update
     }
@@ -1066,11 +1068,13 @@ double PAHPrimary::MassforXmer() const
 	return sum;	
 }
 
-int PAHPrimary::Pyrene() const
+int PAHPrimary::InceptedPAH() const
 {
     if (Numprimary() == 1 && NumPAH() == 1){
-        //currently only Num of C and H is used to identify the Pyrene
-        if (NumCarbon() == 16 && NumHydrogen() ==10)
+        //currently only Num of C and H is used to identify the Pyrene and benzene
+        if (m_pyreneInception && NumCarbon() == 16 && NumHydrogen() ==10)
+            return 1;
+        else if (!m_pyreneInception && NumCarbon() == 6 && NumHydrogen() == 6)
             return 1;
         else return 0;
     }

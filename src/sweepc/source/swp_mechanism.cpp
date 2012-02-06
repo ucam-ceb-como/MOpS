@@ -676,7 +676,7 @@ void Mechanism::MassTransfer(int i, real t, Cell &sys, rng_type &rng) const
         // This is an inception process.
         const Sweep::Processes::PAHInception *m_pahinception = NULL;
         m_pahinception = dynamic_cast<const Sweep::Processes::PAHInception*>(m_inceptions[0]);
-        m_pahinception->AddPyrene(i, t, sys, rng);
+        m_pahinception->AddInceptedPAH(i, t, sys, rng);
 }
 
 // LINEAR PROCESS DEFERMENT ALGORITHM.
