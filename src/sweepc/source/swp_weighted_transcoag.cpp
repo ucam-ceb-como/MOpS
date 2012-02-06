@@ -363,7 +363,7 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
             maj = SlipFlow;
             break;
         case SlipFlow6:
-            prop1 = iDW;
+            prop1 = iD_2;
             prop2 = iD_2;
             maj = SlipFlow;
             break;
