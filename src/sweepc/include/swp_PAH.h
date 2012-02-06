@@ -71,10 +71,7 @@ public:
 private:
     //! not allow to build PAH without time
     PAH();
-    //! Number of Carbon atoms in the PAH
-    unsigned int m_numcarbon;
-    //! Number of Hydrogen atoms in the PAH
-    unsigned int m_numH;
+
     //! Simulated time at point when molecule created
     double time_created;
 
