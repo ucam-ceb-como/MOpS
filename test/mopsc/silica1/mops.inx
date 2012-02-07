@@ -5,10 +5,10 @@
   <iter>2</iter>
   <atol>1.0e-22</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount>128</pcount>
+  <pcount>512</pcount>
   <!--maxm0>8.72e11</maxm0-->
   <!--maxm0>2.2e12</maxm0-->
-  <maxm0>1.4e12</maxm0>
+  <maxm0>2.1e12</maxm0>
   <relax>0.5</relax>
   
 

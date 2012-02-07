@@ -1270,7 +1270,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
-        cout << "Benzene Initialised!\n";
+        //cout << "Benzene Initialised!\n";
         break;
     case PYRENE_C:
         // add first C atom

@@ -654,10 +654,22 @@ real ParticleModel::Threshold() const {return m_threshold;}
 //! set mode for collision efficiency model, currently 4 modes are supported, min, max, combined and reduced
 void ParticleModel::SetMode(const std::string &mode) {m_mode = mode;}
 
+//! specify the incepting pah, currently only pyrene and benzene is supported for PAH-PP model, details see the kmc
+void ParticleModel::SetInceptedPAH(const std::string &name) {m_InceptedPAH = name;}
+
 //! return mode of collision efficency model
 const std::string &ParticleModel::Mode() const {return m_mode;}
 
+const std::string &ParticleModel::InceptedPAH() const {return m_InceptedPAH;}
 
+bool ParticleModel::IsPyreneInception() const
+{
+    if (m_InceptedPAH == "A4" || m_InceptedPAH == "pyrene")
+        return true;
+    else if (m_InceptedPAH == "A1" || m_InceptedPAH == "benzene")
+        return false;
+    else throw std::runtime_error("no information about the incepted PAH is available (Sweep::ParticleModel::IsPyreneInception())");
+}
 /*!
  * The drag coefficient is calculated using the the Knudsen correction to the
  * Stokes formula for the drag coefficient, see table I of Li & Wang,

@@ -53,14 +53,16 @@ using namespace std;
 PAH::PAH(){
 }
 
-PAH::PAH(real time):m_numcarbon(PYRENE_C),//start at pyrene (C=16)
-m_numH(PYRENE_H),
+PAH::PAH(real time, bool IsPyrene):
 time_created(time),
 lastupdated(time),
 PAH_ID(0),
 m_pahstruct(new PAHStructure())
 {
- m_pahstruct->initialise(PYRENE_C);
+    if (IsPyrene)
+        m_pahstruct->initialise(PYRENE_C);
+    else
+        m_pahstruct->initialise(BENZENE_C);
 }
 
 PAH::PAH(const PAH &copy){
@@ -73,8 +75,6 @@ PAH::~PAH() {
 
 PAH &PAH::operator=(const PAH &rhs){
 	if (this != &rhs){
-		m_numcarbon=rhs.m_numcarbon;
-		m_numH=rhs.m_numH;
 		time_created=rhs.time_created;
 	    lastupdated=rhs.lastupdated;
 		PAH_ID=rhs.PAH_ID;

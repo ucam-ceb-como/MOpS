@@ -40,6 +40,7 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
+#include "swp_PAH_primary.h"
 #include "swp_coagulation.h"
 #include "swp_mechanism.h"
 #include <stdexcept>
@@ -174,6 +175,9 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
         }
     }
 
+
+    sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
+
     // Add contents of particle 2 onto particle 1
     sp1->Coagulate(*sp2, rng);
     sp1->setPositionAndTime(newPos, newPosTime);
@@ -233,7 +237,7 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
     }
 
     //Calculate the majorant rate before updating the particles
-    real majk = MajorantKernel(*sp1, *sp2, sys, maj);
+    const real majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
     //Update the particles
     m_mech->UpdateParticle(*sp1, sys, t, rng);
@@ -271,12 +275,8 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
 
         real truek = CoagKernel(*sp1, *sp2, sys);
 
-        // Recalculate majorant with latest structures if
-        // the majorant is less than true rate (wjm34)
-        if (majk<truek) {
-            majk = MajorantKernel(*sp1, *sp2, sys, maj);
-            if (majk<truek) std::cout << "maj< true"<< std::endl;
-        }
+        if (majk<truek)
+            std::cout << "maj< true"<< std::endl;
 
         if (!Fictitious(majk, truek, rng)) {
             //Adjust the statistical weight
