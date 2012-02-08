@@ -108,11 +108,6 @@ protected:
     //! Advance chemistry over specified time interval
     void solveChemistry(Reactor1d & reac, const real t_stop) const; //,?some kind of workspace for ODE solver);
 
-    //! Put a particle that has left one cell into its destination
-    void transportIn(Reactor1d & reac, const size_t destination_index,
-                     const Sweep::Transport::TransportOutflow &particle_details,
-                     Sweep::rng_type &rng) const;
-
     //! Carry out split transport on all particles from all cells
     void splitParticleTransport(Reactor1d &reac, const real t_start, const real t_stop,
                                 std::vector<Sweep::rng_type>& cell_rngs) const;
@@ -136,16 +131,13 @@ private:
      */
     typedef std::vector<std::list<Sweep::Transport::TransportOutflow> > inflow_lists_vector;
 
-    //! Update the positions on a list of particles from one cell
-    inflow_lists_vector updateParticleListPositions(const real t_start, const real t_stop, const Sweep::Cell &mix,
+    //! Take the particles from a cell and put them in lists according to their new positions
+    inflow_lists_vector updateParticleListPositions(const real t_start, const real t_stop, Sweep::Cell &mix,
                                                     const size_t cell_index, const Sweep::Mechanism &mech,
                                                     const Geometry::Geometry1d &geom,
                                                     const std::vector<const Sweep::Cell*> &neighbouring_cells,
-                                                    Sweep::PartPtrList& particle_list, Sweep::rng_type &rng) const;
+                                                    Sweep::rng_type &rng) const;
 
-    //! Put particles that are actually moving to new cells into their destination
-    void moveParticlesToDifferentCells(Reactor1d & reac, const inflow_lists_vector & inflow_lists,
-                                       std::vector<Sweep::rng_type>& cell_rngs) const;
 
     //! Object for setting reactor chemistry to fixed values (? just use pointer)
     ResetChemistry mResetChemistry;

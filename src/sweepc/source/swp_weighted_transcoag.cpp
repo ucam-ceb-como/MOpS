@@ -238,7 +238,6 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
     fvector::iterator isf = iterm+4;
 
     // Get individual terms
-    real terms[TYPE_COUNT];
 
     // Free-molecular.
     *(iterm) =  n_1 * d2m_1_2w * c / vol;
@@ -365,7 +364,7 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
             break;
         case SlipFlow6:
             prop1 = iD_2;
-            prop2 = iD_2;
+            prop2 = iDW;
             maj = SlipFlow;
             break;
         case SlipFlow7:

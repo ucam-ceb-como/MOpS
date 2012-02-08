@@ -602,12 +602,12 @@ CamSoot::realVector CamSoot::rateAll
     	rateSurface(conc,T,moments,prodRates,sRates);
     	sRates[0] = 0.0; // Surface chem should not affect M0.  (Why is this needed here?)
 
-/*
+
     // Oxidation regime.
     // todo: it would be better to include all this in rateSurface function
     if(sRates[1] <= 0){
 
-        std::cout << "In oxidation regime."  << std::endl;
+        //std::cout << "In oxidation regime."  << std::endl;
 
         realVector f;
         f.resize(nMoments,0.0);
@@ -629,7 +629,7 @@ CamSoot::realVector CamSoot::rateAll
         }
         sRates[0] = 0.0;
     }
-*/
+
     }
 	// Check the surface rates
     //std::cout << "sRates[0]  " << sRates[0] << std::endl;
@@ -1004,8 +1004,8 @@ void CamSoot::rateSurface(const realVector& conc,
     // to the moments (and convert from cgs to SI)
     sRates.resize(nMoments,0.0);
     for(int r=0; r<nMoments; r++){
-        //sRates[r] = (rateC2H2[r]+rateO2[r]+rateOH[r]) * 1e6;
-        sRates[r] = (rateC2H2[r]+rateOH[r])*1e6;  //+rateO2[r]) * 1e6;
+        sRates[r] = (rateC2H2[r]+rateO2[r]+rateOH[r]) * 1e6;
+        //sRates[r] = (rateC2H2[r]+rateOH[r])*1e6;  //+rateO2[r]) * 1e6;
     }
 }
 

@@ -200,6 +200,12 @@ public:
     //! Calculate the drag coefficient for a particle as constant times temperature
     real TemperatureDragCoefficient(const Cell &sys, const Particle &sp) const;
 
+    //! Calculate the drag coefficient for a particle using the Li & Wang expressions
+    real LiWangDragCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate the drag coefficient for a particle similar to the Li & Wang expressions
+    real LiWangPatDragCoefficient(const Cell &sys, const Particle &sp) const;
+
     //! Calculate a particle diffusion coefficient
     real DiffusionCoefficient(const Cell &sys, const Particle &sp) const;
 
@@ -219,8 +225,14 @@ public:
         //! Free molecular regime drag coefficient
         FreeMolDrag,
 
-        //! Drag coefficient proprtional to temperature
+        //! Drag coefficient proportional to temperature
         TemperatureDrag,
+
+        //! Fit proposed in Li & Wang, Phys. Rev. E 68, 061207 (2003).
+        LiWangDrag,
+
+        //! Modified version of fit proposed in Li & Wang, Phys. Rev. E 68, 061207 (2003).
+        LiWangPatDrag,
     };
 
     //! Select between possible diffusion terms
@@ -276,7 +288,11 @@ public:
 
     void SetMode(const std::string &mode);
     const std::string &Mode() const;
-	
+
+    void SetInceptedPAH(const std::string &name);
+    const std::string &InceptedPAH() const;
+    bool IsPyreneInception() const;
+
 protected:
     // The species used to define the processes and the particles.
     const Sprog::SpeciesPtrVector *m_species;
@@ -365,6 +381,9 @@ private:
 
     //! Define three modes, collision efficience depends on the smaller, the bigger, the combined mass or reduced mass
     std::string m_mode;
+
+    //! define a species that it will be transfered between gas and particle phase
+    std::string m_InceptedPAH;
 };
 } //namespace Sweep
 #endif

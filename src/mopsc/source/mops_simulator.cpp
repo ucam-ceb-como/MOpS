@@ -241,7 +241,6 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     unsigned int icon;
     real dt, t2; // Stop time for each step.
 
-	r.Mixture()->SetGasphaseProfile(s.Gasphase());
     // Make a copy of the initial mixture and store in an auto pointer
     // so that it will be deleted when we leave this scope.
     std::auto_ptr<Mixture> initmix(r.Mixture()->Clone());
@@ -871,7 +870,7 @@ void Simulator::setupConsole(const Mops::Mechanism &mech)
             m_console_mask.push_back(mech.GasMech().Species().size()+3);
         } else if ((*i).compare("M0")==0 || (*i).compare("m0")==0) {
             // Particle number density.
-            header.push_back("M0 (cm-3)");
+            header.push_back("M0 (m-3)");
             m_console_mask.push_back(mech.GasMech().Species().size()+4);
         } else if ((*i).compare("FV")==0 || (*i).compare("fv")==0 ||
                    (*i).compare("Fv")==0) {
@@ -1976,7 +1975,7 @@ void Mops::calculateM0(fvector &m_xmer, fvector &m_M0, real Pcount, real PM0)
     it = unique (m_xmer.begin(), m_xmer.end());
     m_xmer.resize(it-m_xmer.begin());
     
-    for (int i = 0 ; i != m_xmer.size() ; ++i)
+    for (unsigned i = 0 ; i != m_xmer.size() ; ++i)
         m_M0.push_back(count(temp.begin(),temp.end(),m_xmer[i])* PM0 / Pcount);
 }
 

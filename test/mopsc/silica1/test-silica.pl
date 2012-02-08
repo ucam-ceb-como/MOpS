@@ -36,22 +36,20 @@
 use strict;
 use warnings;
 
-# this test is designed for checking whether PAH-PP model work correctly by comparing to precalculated value
+# this test is designed for checking the silica model under direct simulation
 
 # Path of executable should be supplied as first argument to this script
-my $program = $ARGV[0];
+#my $program = $ARGV[0];
 
 # Parse the moments file
 my $momentFile;
 open($momentFile, "<silica-part.csv") or die "ERR: failed to open moment file: $!";
 
 my $m0 = 0;
+my $fv = 0;
 my $dcol = 0;
 my $dpri = 0;
 my $sl = 0;
-my $num_si = 0;
-my $num_o = 0;
-my $si_to_o = 0;
 
 while(<$momentFile>) {
   my @fields = split /,/;
@@ -62,6 +60,8 @@ while(<$momentFile>) {
       # Third field should be the zeroth moment
       $m0 = $fields[4];
       #print "4: $fields[4], \n";
+      
+      $fv = $fields[16];
 
       $dcol = $fields[8];
       #print "8: $fields[8] \n";
@@ -72,64 +72,60 @@ while(<$momentFile>) {
       $sl = $fields[46];
       #print "46: $fields[46] \n";
       
-      $num_si = $fields[36];
-      
-      $num_o = $fields[38];
       last;
   }
 }
 
-$dcol = 1.0e9 * $dcol;
-$si_to_o = $num_si / $num_o;
-#print "si/o: $si_to_o\n";
-print "$m0 $dcol $dpri $sl $si_to_o\n";
+print "$m0 $fv $dcol $dpri $sl\n";
 
 ####################################################
 # Comparison with test values (Boost 1.47)
 ####################################################
-# 99.9% CI shown for mean of 10 runs
+# 99.9% CI shown for Nsp = 512, L = 10
+# actual test uses Nsp = 512, L = 4 fo efficiency
+# Commit  6ed6f4b5f4b3670ebe25f2344bb86c5900197b94
 ####################################################
-# m0 = 2.10e14 +/- 3.3e12
-# dcol = 78.8 +/- 1.26 nm
-# dpri = 7.90 +/- 0.3 nm
-# sl = 0.079 +/- 0.010
-# si_to_o = 0.549 =/- 0.020
+# m0: 2.13E+014	7.00E+012
+# fv: 7.22E-009	1.38E-010
+# dc: 8.56E-008	2.74E-009
+# dp: 8.71433	0.464715
+# sl: 0.0601418	0.0144396
 ####################################################
 
-if(abs($m0 -  2.10e14) > 6e12) {
-  print "Simulated mean M0 was $m0, when 2.10e14m^-3 expected\n";
+if(abs($m0 -  2.13e14) > 7.00E+012) {
+  print "Simulated mean M0 was $m0, when 2.26e14 1/m3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
-if(abs($dcol -  78.8) > 4.0) {
-  print "Simulated mean dcol was $dcol, when 78.8 nm expected\n";
+if(abs($fv -  7.22E-009) > 1.38E-010) {
+  print "Simulated mean Fv was $fv, when 7.22e-09 expected\n";
+  print "**************************\n";
+  print "****** TEST FAILURE ******\n";
+  print "**************************\n";
+  exit 5;
+}
+if(abs($dcol -  8.56E-008) > 2.74E-009) {
+  print "Simulated mean dcol was $dcol, when 7.92e-8 m expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 2;
 }
-if(abs($dpri -  7.90) > 0.95) {
-  print "Simulated mean dpri was $dpri, when 7.90 nm expected\n";
+if(abs($dpri -  8.71433) > 0.464715) {
+  print "Simulated mean dpri was $dpri, when 8.47 nm expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 3;
 }
-if(abs($sl -  0.079) > 0.020) {
+if(abs($sl -  0.0601418) > 0.0144396) {
   print "Simulated mean sl was $sl, when 0.079 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 4;
-}
-if(abs($si_to_o -  0.549) > 0.040) {
-  print "Simulated mean si_to_o was $si_to_o, when 0.549 expected\n";
-  print "**************************\n";
-  print "****** TEST FAILURE ******\n";
-  print "**************************\n";
-  exit 5;
 }
 
 print "All tests passed\n";

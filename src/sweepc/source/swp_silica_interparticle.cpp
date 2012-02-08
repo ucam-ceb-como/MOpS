@@ -46,6 +46,7 @@
 #include "swp_particle_model.h"
 #include "swp_mechanism.h"
 #include "swp_process_type.h"
+#include "gpc_species.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -163,17 +164,24 @@ real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1
 	real T = sys.GasPhase().Temperature();
 
 	// Get the total number of OH sites from cache
-	int numOH = sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid));
+	real numOH = sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid));
+
+	// Calculate the concentration of SiOH4
+	// Note that the usual ParticleProcess interface can NOT be used, as this
+	// would erroneously remove H4O4SI from the gas-phase.
+	real frac = sys.GasPhase().MoleFractions()
+	        [Sprog::Species::Find(string("H4O4SI"),*sys.GasPhase().Species())];
+	real conc = sys.GasPhase().Density() * frac;
 
 	// Rate of surface reaction
-	real R_surf = m_arr.A*chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density())*pow(T, m_arr.n)
+	real R_surf = m_arr.A * conc *pow(T, m_arr.n)
 			* exp(-m_arr.E / (R * T)) * numOH;
 
 	// Forward-declare the total sintering rate
 	real total_sint_rate = 0;
 
 	// Get total surface area from cache
-	double surface = sys.Particles().GetSum(static_cast<Sweep::PropID>(Sweep::iS));
+	real surface = sys.Particles().GetSum(static_cast<Sweep::PropID>(Sweep::iS));
 
 	// Check if particle surface area exists. If not, set the sintering rate to zero.
 	if (surface == 0) {
@@ -213,7 +221,7 @@ real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1
  * 
  * The interparticle reaction rate is given by the difference between
  * the surface reaction rate and the sintering rate. This function
- * calcualtes the present value of SR rate, and gets the sintrate from 
+ * calculates the present value of SR rate, and gets the sintrate from
  * the particle cache.
  * 
  * @param[in]   t       Time at which process occurs
@@ -228,25 +236,32 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
 	// Rate constant.
     real rate = m_arr.A;
 
+    // Calculate the concentration of SiOH4
+    // Note that the usual ParticleProcess interface can NOT be used, as this
+    // would erroneously remove H4O4SI from the gas-phase.
+    real frac = sys.GasPhase().MoleFractions()
+            [Sprog::Species::Find(string("H4O4SI"),*sys.GasPhase().Species())];
+    real conc = sys.GasPhase().Density() * frac;
+
     // Do calculation for surface-reaction part of rate:
     // Chemical species concentration dependence.
-    rate *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
+    rate *= conc;
 
     // Temperature dependance.
     real T = sys.GasPhase().Temperature();
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
 	// Get the number of OH sites from cache
-	int numOH = sp.Property(static_cast<Sweep::PropID>(m_pid));
+	real numOH = sp.Property(static_cast<Sweep::PropID>(m_pid));
 	rate *= numOH;
 
 	// Do calculation for sintering part of rate:
     // Forward-declare some parameters
-    real sint_rate = 0;
-    double rho_s = 0;
+    real sint_rate = 0.0;
+    real rho_s = 0.0;
 
 	// Get surface area from cache
-	double surface = sp.Property(static_cast<Sweep::PropID>(Sweep::iS));
+    real surface = sp.Property(static_cast<Sweep::PropID>(Sweep::iS));
 
 	if(surface == 0) {
 		rho_s = 1;

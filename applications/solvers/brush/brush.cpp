@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
             geomfile = argv[++i];
         }
         else if (strcmp(argv[i], "-b") == 0) {
-            // Initial geometry file.
+            // Brush settings file.
             settfile = argv[++i];
         }
         else if (strcmp(argv[i], "-v") == 0) {
@@ -133,8 +133,10 @@ int main(int argc, char* argv[])
             diag = atoi(argv[++i]);
         }
         else if (strcmp(argv[i], "--premix-chem") == 0) {
-            // Verbosity
             chemFileType = ResetChemistry::Premix;
+        }
+        else if (strcmp(argv[i], "--premix-alpha") == 0) {
+            chemFileType = ResetChemistry::PremixAlpha;
         }
         else if (strcmp(argv[i], "-h") == 0) {
             // Print help message and exit

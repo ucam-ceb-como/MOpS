@@ -56,9 +56,10 @@ using namespace Strings;
 
 // Default constructor.
 Solver::Solver(void)
-: m_atol(1.0e-3), m_rtol(6.0e-4), m_rlx_coeff(0.0),
-  m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_tottime(0.0),
-  m_chemtime(0.0), m_LOIEnable(false)
+: m_atol(1.0e-3), m_rtol(6.0e-4),
+  m_LOIEnable(false), m_rlx_coeff(0.0),
+  m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0),
+  m_tottime(0.0), m_chemtime(0.0)
 {
 }
 

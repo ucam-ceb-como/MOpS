@@ -40,7 +40,9 @@
 */
 
 #include "swp_gas_profile.h"
+
 #include <algorithm>
+#include <stdexcept>
 
 using namespace Sweep;
 
@@ -127,20 +129,38 @@ bool GasPoint::IsAfterTime(const GasPoint &lhs, real t)
 
 // GLOBAL FUNCTIONS IN HEADER FILE.
 
-// Sort a gas-profile in order of ascending time.
-// Duplicate time entries are removed 
+/*!
+ * Sort a gas-profile in order of ascending time.
+ * Duplicate time entries are removed
+ *
+ *@param[in,out]    prof    Profile to sort
+ *
+ *@exception        std::logic_error    Failed to produce a sequence with strictly increasing times
+ */
+
 void Sweep::SortGasProfile(Sweep::GasProfile &prof)
 {   
-    //copy the original profile to temp
-    Sweep::GasProfile temp(prof);
-    //delete the original profile
-    prof.clear();
-    //sort the temp profile according to the time stamps
-    std::stable_sort(temp.begin(), temp.end(), GasPoint::IsBeforePoint);
-    //move duplicate entries at the end, new_end is the last entry before the duplicate entries
-    GasProfile::iterator new_end=std::unique(temp.begin(), temp.end(), GasPoint::IsEqualTime);
-    //copy the temp to prof without the duplicate entries
-    prof.insert(prof.begin(),temp.begin(),new_end);
+    if(!prof.empty()) {
+        //copy the original profile to temp
+        Sweep::GasProfile temp(prof);
+        //delete the original profile
+        prof.clear();
+        //sort the temp profile according to the time stamps
+        std::stable_sort(temp.begin(), temp.end(), GasPoint::IsBeforePoint);
+        //move duplicate entries at the end, new_end is the last entry before the duplicate entries
+        GasProfile::iterator new_end=std::unique(temp.begin(), temp.end(), GasPoint::IsEqualTime);
+        //copy the temp to prof without the duplicate entries
+        prof.insert(prof.begin(),temp.begin(),new_end);
+
+//        GasProfile::const_iterator it = prof.begin();
+//        const GasProfile::const_iterator itEnd = prof.end();
+//        while(++it != itEnd) {
+//            if(!((it-1)->Time < it->Time)) {
+//                std::cerr << (it-1)->Time << ", " << it->Time << '\n';
+//                throw std::logic_error("Failed to put gas profile points in strictly increasing time order (Sweep::SortGasProfile)");
+//            }
+//        }
+    }
 }
 
 // Returns the first GasPoint defined after the given time.  If the time

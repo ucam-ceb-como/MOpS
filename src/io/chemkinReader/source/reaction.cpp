@@ -13,12 +13,12 @@ using namespace std;
 
 IO::Reaction::Reaction()
 :flagReversible_(true)
+,flagHasREV_(false)
 ,flagDuplicate_(false)
 ,reactants_()
 ,products_()
 ,forwardArrhenius_()
 ,reverseArrhenius_()
-,flagHasREV_(false)
 ,flagThirdBody_(false)
 ,flagLOW_(false)
 ,flagTROE_(false)

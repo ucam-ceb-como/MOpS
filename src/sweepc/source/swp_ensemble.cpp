@@ -43,6 +43,7 @@
 #include "swp_ensemble.h"
 #include "swp_particle_model.h"
 #include "swp_kmc_simulator.h"
+#include "swp_PAH_primary.h"
 
 #include <cmath>
 #include <vector>
@@ -122,9 +123,9 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
             m_capacity = rhs.m_capacity;
             m_halfcap  = rhs.m_halfcap;
             m_count    = rhs.m_count;
+            m_numofInceptedPAH = rhs.m_numofInceptedPAH;
             // Scaling.
             m_ncont      = rhs.m_ncont;
-            m_scale      = rhs.m_scale;
             m_contfactor = rhs.m_contfactor;
             m_contwarn   = rhs.m_contwarn;
             // Doubling.
@@ -182,6 +183,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_halfcap  = m_capacity / 2;
 
     m_count    = 0;
+    m_numofInceptedPAH = 0;
 
     // Reserve memory for ensemble.
     m_particles.resize(m_capacity, NULL);
@@ -190,8 +192,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 
     // Initialise scaling.
     m_ncont      = 0;
-    m_scale      = 1.0;
-    m_contfactor = (real)(m_capacity-1) / (real)(m_capacity);
+    m_contfactor = (real)(m_capacity) / (real)(m_capacity+1);
     m_contwarn   = false;
 
     // Initialise doubling.
@@ -202,6 +203,89 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_dblecutoff = (int)(3.0 * (real)m_capacity / 4.0);
 	m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
+}
+
+/**
+ * Initialise the ensemble to hold particles of the type specified
+ * by the model and containing the particular particles contained
+ * in the range [first, last).  This is equivalent to multiple applications
+ * of Add on an Ensemble instance after a call to Initialise(m_capacity).
+ *
+ *@param[in]        first      Iterator to first in range of particle pointers to insert
+ *@param[in]        last       Iterator to one past end of range of particle pointers to insert
+ *@param[in,out]    rng        Random number generator
+ */
+void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::list<Particle*>::iterator last,
+                                   rng_type &rng)
+{
+    // Clear any existing particles
+    for(iterator it = m_particles.begin(); it != m_particles.end(); ++it) {
+        delete *it;
+    }
+    m_particles.assign(m_capacity, NULL);
+
+    unsigned count = 0;
+    // Read up to m_capacity particles straight into the array
+    while((first != last) && (count < m_capacity)) {
+        m_particles[count++] = (*first++);
+    }
+
+    // Now we have to decide whether or not to accept particles
+    while(first != last) {
+        // Possible index in which to store this particle
+        boost::uniform_smallint<unsigned> indexGenerator(0, count);
+        const unsigned possibleIndex = indexGenerator(rng);
+
+        // Accept the index with probability m_capacity / count
+        if(possibleIndex < m_capacity) {
+            delete m_particles[possibleIndex];
+            m_particles[possibleIndex] = *first;
+        }
+        else {
+            delete *first;
+        }
+        ++count;
+        ++first;
+    }
+
+    if(count > m_capacity) {
+        // Some particles were thrown away and we must rescale
+        m_count = m_capacity;
+        m_ncont = 0;
+
+        iterator it = begin();
+        const iterator itEnd = end();
+        while(it != itEnd) {
+            (*it)->setStatisticalWeight((*it)->getStatisticalWeight() * static_cast<real>(count) / static_cast<real>(m_capacity));
+            ++it;
+        }
+    }
+    else {
+        m_count = count;
+        m_ncont = 0;
+    }
+    m_maxcount = m_count;
+
+    //std::cout << m_count << " particles set on ensemble of capacity " << m_capacity << '\n';
+
+    // Initialise scaling.
+
+    m_contwarn   = false;
+
+    // Initialise doubling.
+    m_ndble      = 0;
+    m_dbleon     = true;
+
+    // Check for doubling activation.
+    if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
+        m_dbleactive = true;
+    } else
+        m_dbleactive = false;
+
+    // Build the tree with the weights for the new particles.
+    rebuildTree();
+
+    assert(m_tree.size() == m_count);
 }
 
 Sweep::KMC_ARS::KMCSimulator* Sweep::Ensemble::Simulator(void)
@@ -270,12 +354,12 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         // There is space in the tree for a new particle.
         i = -1;
     } else {
-        // We must contract the ensemble to accomodate a new particle.
+        // We must contract the ensemble to accommodate a new particle.
         boost::uniform_smallint<int> indexDistrib(0, m_capacity);
         boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
         i = indexGenerator();
 
-		++m_ncont;
+        ++m_ncont;
         if (!m_contwarn && ((real)(m_ncont)/(real)m_capacity > 0.01)) {
             m_contwarn = true;
             printf("sweep: Ensemble contracting too often; "
@@ -288,6 +372,7 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         i=m_count++;
         m_particles[i] = &sp;
         m_tree.push_back(tree_type::value_type(sp, m_particles.begin() + i));
+        m_numofInceptedPAH++;
     } else if ((unsigned)i < m_capacity) {
         // Replace an existing particle (if i=m_capacity) then
         // we are removing the new particle, so just ignore it.
@@ -315,6 +400,16 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
  */
 void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
 {
+    //if (m_particles[i]->Primary()->AggID() ==AggModels::PAH_KMC_ID)
+    //    {
+    //        const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+    //        rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+    //        if (rhsparticle->Pyrene()!=0)
+    //        {
+    //            --m_numofInceptedPAH;
+    //        }
+    //    }
+    SetNumOfInceptedPAH(-1,m_particles[i]->Primary());
     // Check that particle index is valid.
     if (i<m_count-1) {
         // First delete particle from memory, then
@@ -403,6 +498,19 @@ void Sweep::Ensemble::RemoveInvalids(void)
  */
 void Sweep::Ensemble::Replace(unsigned int i, Particle &sp)
 {
+    // if (m_particles[i]->Primary()->AggID() ==AggModels::PAH_KMC_ID)
+    //{
+    //    const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+    //    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+    //    if (rhsparticle->Pyrene()!=0)
+    //    {
+    //        m_numofInceptedPAH--;
+    //        std::cout<<"Warning: it removes a starting pah before adding a new one"<<std::endl;
+    //    }
+    //    m_numofInceptedPAH++;
+    //}
+    SetNumOfInceptedPAH(-1, m_particles[i]->Primary());
+    SetNumOfInceptedPAH(1);
     // Check index is within range.
     if (i<m_count) {
         // First delete current particle, then
@@ -436,6 +544,7 @@ void Sweep::Ensemble::ClearMain()
         m_particles[i] = NULL;
     }
     m_count = 0;
+    m_numofInceptedPAH = 0;
 
     m_ncont = 0; // No contractions any more.
 
@@ -504,7 +613,7 @@ int Sweep::Ensemble::Select(Sweep::PropID id, rng_type &rng) const
 real Sweep::Ensemble::Scaling() const
 {
     // The scaling factor includes the contraction term and the doubling term.
-    return m_scale * pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
+    return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
 }
 
 // Resets the ensemble scaling.
@@ -603,6 +712,15 @@ void Sweep::Ensemble::dble()
             const size_t prevCount = m_count;
             for (size_t i = 0; i != prevCount; ++i) {
 
+            //if (m_particles[i]->Primary()->AggID() ==AggModels::PAH_KMC_ID)
+            //{
+            //    const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+            //    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+            //    // if not 0, it is a pyrene
+            //    if (rhsparticle->Pyrene()!=0)
+            //        m_numofInceptedPAH++;
+            //}
+                SetNumOfInceptedPAH(1, m_particles[i]->Primary());
                 size_t iCopy = prevCount + i;
                 // Create a copy of a particle and add it to the ensemble.
                 m_particles[iCopy] = m_particles[i]->Clone();
@@ -625,7 +743,9 @@ void Sweep::Ensemble::dble()
 
 /*!
  * Empty the tree and pass of list of pointers to the particles in
- * the tree to the caller, which must take ownership of them.
+ * the tree to the caller, which must take ownership of them.  This
+ * clears all scaling information in the tree, but leaves all the
+ * storage allocated.
  */
 Sweep::PartPtrList Sweep::Ensemble::TakeParticles() {
     // Copy the pointers to particles
@@ -676,10 +796,6 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
             m_particles[i]->Serialize(out);
         }
 
-        // Output the scaling factor.
-        double val = (double)m_scale;
-        out.write((char*)&val, sizeof(val));
-
         // Output number of contractions.
         n = (unsigned int)m_ncont;
         out.write((char*)&n, sizeof(n));
@@ -728,7 +844,6 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
         unsigned int n = 0;
-        double val     = 0.0;
 
         switch (version) {
             case 0:
@@ -751,10 +866,6 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                     Particle *p = new Particle(in, model);
                     m_particles[i] = p;
                 }
-
-                // Read the scaling factor.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_scale = (real)val;
 
                 // Read number of contractions.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -827,9 +938,9 @@ void Sweep::Ensemble::init(void)
     m_capacity   = 0;
     m_halfcap    = 0;
     m_count      = 0;
+    m_numofInceptedPAH = 0;
 
     // Scaling.
-    m_scale      = 1.0;
     m_contfactor = 0;
     m_ncont      = 0;
     m_contwarn   = false;
@@ -845,6 +956,55 @@ void Sweep::Ensemble::init(void)
 
 }
 
+int Sweep::Ensemble::NumOfInceptedPAH() const
+{
+    //int numofpyrene = 0;
+    //for (int i =0;i<m_count;i++){
+    //    const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+    //    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+
+    //    //const Sweep::Primary *rhsparticle = NULL;
+    //    //rhsparticle = m_particles[i]->Primary();
+    //    numofpyrene += rhsparticle->Pyrene();
+    //    }
+    //if (numofpyrene!= m_numofInceptedPAH)
+    //{
+    //    //if (numofpyrene == m_numofInceptedPAH-1) 
+    //    //    return m_numofInceptedPAH;
+    //    std::cout<<"something goes wrong, the number ofPAH in ensemble is not consistent"<<std::endl;
+    //}
+    //return numofpyrene;
+    return m_numofInceptedPAH;
+}
+
+int Sweep::Ensemble::IndexOfInceptedPAH() const
+{
+    for (int i =m_count-1;i>=0;--i){
+        const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+        rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+        if (rhsparticle->InceptedPAH() == 1)
+            return i;
+        }
+    return -1;
+}
+
+void Sweep::Ensemble::SetNumOfInceptedPAH(int m_amount, Sweep::Primary *m_primary)
+{
+    if (m_primary->AggID() ==AggModels::PAH_KMC_ID)
+    {
+        const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+        rhsparticle = dynamic_cast<const Sweep::AggModels::PAHPrimary*>(m_primary);
+
+        if (rhsparticle->InceptedPAH()!=0)
+            // rhsparticle is pyrene
+            SetNumOfInceptedPAH(m_amount);
+    }
+
+}
+void Sweep::Ensemble::SetNumOfInceptedPAH(int m_amount)
+{
+    m_numofInceptedPAH += m_amount;
+}
 /*!
  * @param[in]   id      Index of property which will be extracted
  */

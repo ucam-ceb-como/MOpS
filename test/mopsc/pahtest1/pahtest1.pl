@@ -69,8 +69,8 @@ while(<$momentFile>) {
   my @fields = split /,/;
 
   # Look for a line that begina with a number and has the first entry (the time)
-  # equal (upto a small tolerance) to 0.012
-  if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.012) < 1e-6 )) {
+  # equal (upto a small tolerance) to 0.006
+  if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.006) < 1e-6 )) {
       # Third field should be the zeroth moment
       $m0 = $fields[4];
       #print "4: $fields[4], ";
@@ -96,16 +96,16 @@ while(<$momentFile>) {
 # fv (7.490+-0.102)e-9
 
 print "$m0, $m1\n";
-if(abs($m0 -  2.38e18) > 1e17) {
-  print "Simulated mean M0 was $m0, when  2.38e18m^-3 expected\n";
+if(abs($m0 -  1.4e19) > 5e17) {
+  print "Simulated mean M0 was $m0, when  1.4e19m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($m1 - 7.51e-9) > 1e-8) {
-  print "Simulated mean Fv was $m1, when 7.51e-9 expected\n";
+if(abs($m1 - 2.61e-8) > 5e-10) {
+  print "Simulated mean Fv was $m1, when 2.61e-8 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";

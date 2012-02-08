@@ -5,8 +5,8 @@
   <iter>2</iter>
   <atol>1.0e-22</atol> 
   <rtol>1.0e-4</rtol>
-    <pcount>1024</pcount>
-  <maxm0>4e12</maxm0>
+    <pcount>512</pcount>
+  <maxm0>7e13</maxm0>
   <relax>0.5</relax>
   
 
@@ -21,7 +21,7 @@
   <!-- Output time sequence. -->
   <timeintervals splits="1">
     <start>0.0</start>
-	<time steps="100" splits="1">0.012</time>
+	<time steps="50" splits="1">0.006</time>
   </timeintervals>
   
   <!-- Simulation output settings. -->

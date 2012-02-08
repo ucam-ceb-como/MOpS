@@ -130,7 +130,7 @@ public:
     real Alpha() const {return m_data[AlphaIndex()];}
 
     //! Set alpha factor (used in ABF model to scale certain reaction rates)
-    real SetAlpha(const real a) {m_data[AlphaIndex()] = a;}
+    void SetAlpha(const real a) {m_data[AlphaIndex()] = a;}
 
 
     // SPECIES CONCENTRATIONS/FRACTIONS.
@@ -232,11 +232,15 @@ public:
     const std::vector<real> getMolarEnthalpy(real T);
         //return the molar enthalpy for th given mixture
         const std::vector<real> getMolarEnthalpy();
+
     // routine to return the avg moleculat weight in Kg/mol.
-    real getAvgMolWt(fvector &massFrac);
+    real getAvgMolWt(fvector &massFrac) const;
 
-        real getAvgMolWt();
+    //! Mixture fraction weighted average molecular weight
+    real getAvgMolWt() const;
 
+    //! RMS molecule collision diameter
+    real getMeanCollisionSection() const;
 
     //TRANSPORT RELATED
 
@@ -303,7 +307,7 @@ private:
     const SpeciesPtrVector *m_species;
 
 };
-};
-};
+} //namespace Thermo
+} //namespace Sprog
 
 #endif

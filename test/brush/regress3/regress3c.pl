@@ -36,8 +36,14 @@
 use strict;
 use warnings;
 
+print "Diffusion using Li Wang drag coefficients\n";
+
+#This is diffusion and advection without any particle processes.
+#Diffusion coefficients are 2.833e-5 for particles of size 10
+# and 2.082e-5 for particles of size 15.
+
 # Clean up any outputs from previous simulations
-my @outputFiles = glob("moonmd1results*");
+my @outputFiles = glob("regress3c*");
 if($#outputFiles > 0) {
   system("rm @outputFiles");
 }
@@ -45,95 +51,82 @@ if($#outputFiles > 0) {
 # Path of executable should be supplied as first argument to this script
 my $program = $ARGV[0];
 
-print "Test moonmd1\n";
-
 # Arguments for simulation
 my @simulationCommand = ($program,
-                         "moonmd1/chem.inp",
-                         "moonmd1/therm.dat",
-                         "moonmd1/brush.xml",
-                         "moonmd1/sweep.xml",
-                         "moonmd1/partsoln.xml",
-                         "moonmd1/chemsoln.dat");
+                         "-g", "regress3/geometry.xml",
+                         "-c", "regress3/chem.inp",
+                         "-d", "regress3/chemsoln3c.dat",
+                         "-s", "regress3/sweep3c.xml",
+                         "-t", "regress3/therm.dat",
+                         "-b", "regress3/brush3c.xml",
+                         "-a", "regress3/partsoln3.xml");
 
 # Run the simulation and wait for it to finish
 system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";
 
+# Collect all the moment data together
+system("../../applications/solvers/brush/bin/merge-partstats.sh regress3c-adv-diffn") == 0 or die "ERR: failed to merge moment files: $!";
+
 # Parse the moments file
 my $momentFile;
-open($momentFile, "<moonmd1results-moments.csv") or die "ERR: failed to open moment file: $!";
+open($momentFile, "<regress3c-adv-diffnMerged_partstats.csv") or die "ERR: failed to open merged moment file: $!";
 
-my $m0 = 0;
-my $m0sq = 0;
-my $m1 = 0;
-my $m1sq = 0;
-my $count = 0;
+my $m0a = 0;
+my $m0asq = 0;
+my $counta = 0;
+
+my $m2b = 0;
+my $m2bsq = 0;
+my $countb = 0;
 
 while(<$momentFile>) {
   my @fields = split /,/;
 
-  # Look for lines that begin with a number and have the second entry (the position)
-  # equal (upto a small tolerance) to 0.71
-  if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.71) < 1e-4 )) {
-      # Third field should be the zeroth moment
-      $m0 += $fields[3];
-      $m0sq += $fields[3] * $fields[3];
-      #print "$fields[3], ";
+  if(($fields[0] =~ /^2(\.0)?$/) && (abs($fields[1] - 0.017) < 1e-6)) {
+      $m0a += $fields[3];
+      $m0asq += $fields[3] * $fields[3];
+      #print "t=2.0 x=0.017 $fields[3]\n";
+      $counta++;
+  }
 
-      $m1 += $fields[11];
-      $m1sq += $fields[11] * $fields[11];
-      #print "$fields[11] \n";
-      ++$count;
+  if(($fields[0] =~ /^3(\.0)?$/) && (abs($fields[1] - 0.0245) < 1e-6)) {
+      $m2b += $fields[13];
+      $m2bsq += $fields[13] * $fields[13];
+      #print "t=3.0 x=0.0245 $fields[3]\n";
+      $countb++;
   }
 }
 
-# Get mean values
-$m0 /= $count;
-$m0sq = 1.96 * sqrt(($m0sq / $count - $m0 * $m0) / $count);
-$m1 /= $count;
-$m1sq = 1.96 * sqrt(($m1sq / $count - $m1 * $m1) / $count);
+# take the mean of the m0 values
+$m0a = $m0a / $counta;
+$m0asq = sqrt(($m0asq / $counta - $m0a * $m0a) / $counta);
+$m2b = $m2b / $countb;
+$m2bsq = sqrt(($m2bsq / $countb - $m2b * $m2b) / $countb);
 
-# Analytic solns, const coag and inception
-# 0 initial and inflow conditions
-# velocity 1
-# Inception rate I = 5.31e9 m^-3 s^-1
-# Coagulation kernel K = 5e-9 m^3 s^-1
-# Velocity u = 2 m s^-1
-# Mass of incepted particle m = 2 kg
-# m0(x) = sqrt(2I/K)tanh(sqrt(IK/2)*x/u)
-# m1(x) = Ixm/u
-#
-# Analytical solutions at x=0.71 are:
-# m0(0.71) = 1.25e9
-# m1(0.71) = 3.77e9
-#
-# Ten repetitions with git a8fcecd2f...
-# gives the following mean and standard
-# deviations for the results:
-# m0: (1.26+-0.05)e9
-# m1: (3.77+-0.12)e9
+print "$m0a $m0asq\n";
+print "$m2b $m2bsq\n";
 
-print "$m0 $m0sq, $m1 $m1sq\n";
-if(abs($m0 - 1.25e9) > 1e8) {
-  print "Simulated mean M0 was $m0, when 1.25e9 m^-3 expected\n";
+if(abs($m0a - 198) > 1e1) {
+  print "Simulated M0 at t=2.0 near x=0.017 was $m0a, when analytic solution is 198\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($m1 - 3.77e9) > 2e8) {
-  print "Simulated mean M1 was $m1, when 3.77e9 kg m^-3 expected\n";
+if(abs($m2b - 3.03e-47) > 1e-48) {
+  print "Simulated M2 at t=3.0 near x=0.0245 was $m2b, when analytic solution is 3.03e-47\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 2;
 }
 
+
 # Clean outputs, there should always be some files to delete.
-@outputFiles = glob("moonmd1results*");
-#print "Files to remove: @outputFiles\n";
+@outputFiles = glob("regress3c*");
 system("rm @outputFiles");
+
 
 #print "All tests passed\n";
 exit 0;

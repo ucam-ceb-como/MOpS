@@ -105,6 +105,8 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         // Get important column indices (time, temperature and pressure).
         int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1, Rcol=-1;
         tcol = findinlist(string("Time"), subs);
+        if(tcol < 0)
+            tcol = findinlist(string("Time[s]"),subs);
 
         Tcol = findinlist(string("T"), subs);
         if(Tcol < 0)
@@ -118,7 +120,10 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         int Xcol = findinlist(string("X[cm]"), subs);
         int Dcol = findinlist(string("RHO[g/cm3]"), subs);
         int Vcol = findinlist(string("V[cm/s]"), subs);
+
         int Gcol = findinlist(string("GradT"), subs);
+        if(Gcol < 0)
+            Gcol = findinlist(string("GradT[K/cm]"), subs);
 
 
         // Check that the file contains required columns.
@@ -245,9 +250,10 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             // TODO:  This will give the wrong component densities
             //        unless all species are specified!
             gpoint.Gas.SetTemperature(T);
-            gpoint.Gas.SetPressure(P*1.0e5);
+            gpoint.Gas.SetPressure(P*1.0e5);//also set the molar density of gas mixture
             gpoint.Gas.Normalise();
-            gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(m3*s) to mol/(cm3*s)
+            //gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(cm3*s) to mol/(m3*s)
+            gpoint.Gas.SetPAHFormationRate(0);
             gpoint.Gas.SetAlpha(alpha);
 
             // Add the profile point.
@@ -289,9 +295,14 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
                         rng_type &rng, Mops::Solver::OutFnPtr out, void *data)
 {
-    //std::cout << "Start of FlameSolver::Solve\n";
+    real tsplit, dtg, jrate;
 
-    real tsplit, dtg, dt, jrate;
+    // construct kmcsimulater and initialize gasphase info for kmcsimulater 
+    if (r.Mixture()->Particles().Simulator()==NULL)
+    {
+        r.Mixture()->Particles().SetSimulator(*(Gasphase()));
+    }
+
     const Sweep::Mechanism &mech = r.Mech()->ParticleMech();
     fvector rates(mech.TermCount(), 0.0);
 
@@ -309,7 +320,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     dtg     = tstop - t;
 
     // Set the chemical conditions.
-    linInterpGas(t, m_gasprof, r.Mixture()->GasPhase());
+    linInterpGas(t, r.Mixture()->GasPhase());
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
@@ -319,16 +330,34 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         double old_dens = r.Mixture()->GasPhase().MassDensity();
 
         // Update the chemical conditions.
-        linInterpGas(t, m_gasprof, r.Mixture()->GasPhase());
+        const real gasTimeStep = linInterpGas(t, r.Mixture()->GasPhase());
 
         // Scale particle M0 according to gas-phase expansion.
+        // (considering mass const, V'smpvol*massdens' = Vsmpvol*massdens)
         r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
+
+        if (mech.AggModel()== AggModels::PAH_KMC_ID)
+        {
+            int index;
+            if (mech.IsPyreneInception())
+                index=r.Mech()->GasMech().FindSpecies("A4");
+            else 
+                index=r.Mech()->GasMech().FindSpecies("A1");
+            // calculate the amount of stochastic pyrene particles in the ensemble
+            int Pamount=r.Mixture()->NumOfStartingSpecies(index);
+
+            if (t == 0 && Pamount >= r.Mixture()->Particles().Capacity())
+                throw std::runtime_error("increase the M0 in mops.inx please, current choice is too small (Sweep::FlameSolver::Solve)");
+            mech.MassTransfer(Pamount,t,*r.Mixture(),rng);
+        }
 
         // Get the process jump rates (and the total rate).
         jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
         // Calculate the splitting end time.
-        tsplit = calcSplitTime(t, std::min(t + dtg, tstop), jrate, r.Mixture()->ParticleCount());
+        tsplit = calcSplitTime(t, std::min(t + std::min(dtg, gasTimeStep), tstop), jrate, r.Mixture()->ParticleCount());
+
+        //std::cout << "At time " << t << " split time is " << tsplit << ", spacing of gas data is " << gasTimeStep << '\n';
 
         // Perform stochastic jump processes.
         while (t < tsplit) {
@@ -356,20 +385,26 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     return;
 }
 
-// HELPER ROUTINES.
+/*!
+ * @param[in]   t       Time at which to interpolate gas profile
+ *
+ * @param[out]  gas     Mixture into which to insert the newly interpolated gas properties
+ *
+ * @return      An estimate of the time over which the data remains approximately constant,
+ *              that is for which it should be reasonable to use the gas object.
+ */
 
-void FlameSolver::linInterpGas(Sweep::real t, 
-                               const GasProfile &gasphase, 
+real FlameSolver::linInterpGas(Sweep::real t,
                                Sprog::Thermo::IdealGas &gas) const
 {
     // Get the time point after the required time.
-    GasProfile::const_iterator j = LocateGasPoint(gasphase, t); //gasphase.upper_bound(t);
+    GasProfile::const_iterator j = Sweep::LocateGasPoint(m_gasprof, t); //gasphase.upper_bound(t);
     
-    if (j == gasphase.begin()) {
+    if (j == m_gasprof.begin()) {
         // This time is before the beginning of the profile.  Return
         // the first time point.
         gas = j->Gas;
-    } else if (j == gasphase.end()) {
+    } else if (j == m_gasprof.end()) {
         // This time is after the profile.  Return the last time
         // point
         --j;
@@ -404,6 +439,13 @@ void FlameSolver::linInterpGas(Sweep::real t,
         // Now set the gas density, calculated using the values above.
         gas.SetDensity(dens);
     }
+
+    // Give some indication of the data spacing
+    if((j != m_gasprof.end()) && ((j+1) != m_gasprof.end()))
+        return ((j+1)->Time - j->Time);
+    else
+    // Past the end of the data there is no spacing
+        return std::numeric_limits<real>::max();
 }
 
 GasProfile* FlameSolver::Gasphase(void){

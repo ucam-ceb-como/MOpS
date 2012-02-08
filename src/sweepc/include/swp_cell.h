@@ -113,14 +113,17 @@ public:
     // Returns particle statistics.
     void GetVitalStats(Stats::EnsembleStats &stats) const;
 
-    //! Initialise with some particles
-    template<class ForwardIterator> void SetParticles(
-            ForwardIterator particle_list_begin,
-            ForwardIterator particle_list_end,
-            real statistical_weight);
+    //! Initialise with some particles, downsampling as required
+    void SetParticles(
+            std::list<Particle*>::iterator particle_list_begin,
+            std::list<Particle*>::iterator particle_list_end,
+            real statistical_weight, rng_type &rng);
 
-    //! Add particles to the ensemble with total statistical weight as specified
-    void AddParticle(Particle* sp, real stat_weight,rng_type &rng);
+    //! Initialise with some particles, which must not exceed the ensemble capacity
+    void SetParticles(
+            std::list<Particle*>::iterator particle_list_begin,
+            std::list<Particle*>::iterator particle_list_end,
+            real statistical_weight);
 
     // THE PARTICLE MODEL.
 
@@ -189,6 +192,9 @@ public:
         const Sweep::Mechanism &mech // Mechanism which defines LPDA for outflow.
         );
 
+        // figure out how many starting species is supposed to be in the particle ensemble
+    int NumOfStartingSpecies(const int index) const;
+
     // READ/WRITE/COPY.
 
     // Writes the object to a binary stream.
@@ -199,8 +205,6 @@ public:
         std::istream &in,                 // Input stream.
         const Sweep::ParticleModel &model // Model used to define particles.
         );
-
-	virtual Sweep::GasProfile* Gasphase(void) const{ return NULL;}
 
 protected:
     // Default constructor is protected as it makes no
@@ -236,30 +240,6 @@ private:
     // calculating rates.
     Processes::DeathPtrVector m_outflow;
 };
-
-/**
- * Initialise the ensemble to hold particles of the type specified
- * by the model and containing the particular particles contained
- * in the range [particle_list_begin, particle_list_end) and set
- * the sample volume to achieve the statistical weight.
- *
- *@tparam   ForwardIterator     A model of a forward iterator
- *
- *@param[in]    particle_list_begin     Iterator to first in range of particle pointers to insert
- *@param[in]    particle_list_end       Iterator to one past end of range of particle pointers to insert
- *@param[in]    statistical_weight      Number of physical particles represented by each computational particle
- */
-template<class ForwardIterator> void Cell::SetParticles(
-        ForwardIterator particle_list_begin,
-        ForwardIterator particle_list_end,
-        real statistical_weight)
-{
-    // This puts the particles into the ensemble and clears any scaling
-    // stored inside the ensemble
-    m_ensemble.SetParticles(particle_list_begin, particle_list_end);
-
-    m_smpvol = 1.0 / statistical_weight;
-}
 
 } //namespace Sweep
 

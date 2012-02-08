@@ -221,7 +221,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                     coeff = atof(numberXML->Data().c_str());
                 }
                 else {
-                    throw std::runtime_error("Parameter A value must be given for drag proprtional to temperature (Sweep, MechParser::readV1)");
+                    throw std::runtime_error("Parameter A value must be given for drag proportional to temperature (Sweep, MechParser::readV1)");
                 }
 
                 // This option is just for testing so just reuse the support
@@ -229,6 +229,10 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
                 mech.SetKnudsenDragConstants(coeff, 0.0, 0.0);
 
 
+            } else if (str == "LiWang") {
+                mech.SetDragType(Sweep::ParticleModel::LiWangDrag);
+            } else if (str == "LiWangPat") {
+                mech.SetDragType(Sweep::ParticleModel::LiWangPatDrag);
             } else {
                 throw std::runtime_error("Unrecognised drag model id (Sweep, MechParser::readV1).");
             }
@@ -435,6 +439,25 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
 
         readColliPara(i,mech);
 
+        // Get InceptedPAH, only pyrene and benzene are supported.
+        el = (*i)->GetFirstChild("InceptedPAH");
+        if (el!=NULL) {
+            str = el->Data();
+            if (str != "") {
+                mech.SetInceptedPAH(str);
+            } else {
+                // coalthresh contains no data.
+                std::string msg("Component ");
+                msg += comp->Name();
+                msg += " InceptedPAH contains no data (Sweep, MechParser::readComponents).";
+
+                delete comp;
+                throw runtime_error(msg);
+            }
+        } else {
+            mech.SetInceptedPAH("A4");
+        }
+
         // Get coalesc threshold.
         el = (*i)->GetFirstChild("coalthresh");
         if (el!=NULL) {
@@ -493,7 +516,6 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         } else {
             comp->SetMinPAH(0);
         }
-
 
         // Get component mol. wt.
         el = (*i)->GetFirstChild("molwt");
@@ -1009,11 +1031,11 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
                     break;
                 case -1:
                     rxn.SetPropertyID(Sweep::iD_1);
-                    arr.A *= (1.0e2);
+                    arr.A *= (1.0e-8);
                     break;
                 case -2:
                     rxn.SetPropertyID(Sweep::iD_2);
-                    arr.A *= (1.0e4);
+                    arr.A *= (1.0e-10);
                     break;
                 default:
                     // Oh dear, can't have a zero power.
@@ -1447,7 +1469,6 @@ void MechParser::readDiffusionProcs(CamXML::Document &xml, Mechanism &mech)
     vector<CamXML::Element*> items;
     vector<CamXML::Element*>::iterator i;
     string str;
-    unsigned int k = 0;
 
     // Get all transport processes.
     xml.Root()->GetChildren("diffusion", items);
@@ -1465,7 +1486,6 @@ void MechParser::readAdvectionProcs(CamXML::Document &xml, Mechanism &mech)
     vector<CamXML::Element*> items;
     vector<CamXML::Element*>::iterator i;
     string str;
-    unsigned int k = 0;
 
     // Get all transport processes.
     xml.Root()->GetChildren("advection", items);

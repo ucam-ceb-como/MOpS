@@ -362,14 +362,14 @@ void Mixture::SetDensity(Sprog::real dens)
 // Sets the molar density using the supplied mass density.
 void Mixture::SetMassDensity(Sprog::real dens)
 {
-    m_data[densityIndex()] = 0.0;
+    real sum = 0.0;
 
     // Calcualate molar density:
     //   rho_mass = rho_mole * sum(x * wt)
     for (unsigned int i=0; i!=m_species->size(); ++i) {
-        m_data[densityIndex()] += m_data[i] * (*m_species)[i]->MolWt();
+        sum += m_data[i] * (*m_species)[i]->MolWt();
     }
-   m_data[densityIndex()] = dens / m_data[densityIndex()];
+   m_data[densityIndex()] = dens / sum;
 }
 
 
@@ -416,7 +416,7 @@ Serial_MixtureType Mixture::SerialType() const
 }
 
 // returns the avg mol wt given the mass fractions added by Vinod
-real Mixture::getAvgMolWt(Sprog::fvector &massFrac){
+real Mixture::getAvgMolWt(Sprog::fvector &massFrac) const{
 	real avgMolWt = 0.0;
 	for(unsigned int i=0; i!= m_species->size(); i++)
 		avgMolWt += massFrac[i]/(*m_species)[i]->MolWt();
@@ -424,7 +424,7 @@ real Mixture::getAvgMolWt(Sprog::fvector &massFrac){
 	return 1.0/avgMolWt;
 }
 
-real Mixture::getAvgMolWt(){
+real Mixture::getAvgMolWt() const {
     real avgMolWt = 0.0;
     vector<real> moleFrac = MoleFractions();
     for(unsigned int i=0; i!= m_species->size(); i++)
@@ -432,6 +432,22 @@ real Mixture::getAvgMolWt(){
 
     return avgMolWt;
 
+}
+
+/*!
+ * Mean collision cross-section.  This is used, for example,
+ * in mean path calculations, although for historical reasons
+ * there may be some hard coded instances of related values in
+ * Mopssuite.
+ *
+ * @return Mean collision cross-sectional area in \f$m^2\f$.
+ */
+real Mixture::getMeanCollisionSection() const {
+    real avgColDiam2 = 0.0;
+    for (unsigned i = 0; i!= m_species->size(); ++i) {
+        avgColDiam2 += MoleFraction(i) * (*m_species)[i]->getCollisionDiameter() * (*m_species)[i]->getCollisionDiameter();
+    }
+    return avgColDiam2 * Sprog::PI;
 }
 
 // Following transport related routines are added by Vinod

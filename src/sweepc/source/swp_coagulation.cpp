@@ -40,6 +40,7 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
+#include "swp_PAH_primary.h"
 #include "swp_coagulation.h"
 #include "swp_mechanism.h"
 #include <stdexcept>
@@ -174,6 +175,9 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
         }
     }
 
+
+    sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
+
     // Add contents of particle 2 onto particle 1
     sp1->Coagulate(*sp2, rng);
     sp1->setPositionAndTime(newPos, newPosTime);
@@ -270,6 +274,9 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
         // majorant rate and the current (after updates) true rate.
 
         real truek = CoagKernel(*sp1, *sp2, sys);
+
+        if (majk<truek)
+            std::cout << "maj< true"<< std::endl;
 
         if (!Fictitious(majk, truek, rng)) {
             //Adjust the statistical weight

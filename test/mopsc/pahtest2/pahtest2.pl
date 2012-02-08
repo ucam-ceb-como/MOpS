@@ -98,7 +98,7 @@ while(<$momentFile>) {
 # fv 3.872e-7
 
 print "$sp, $m0, $m1\n";
-if(abs($sp -  855) > 20) {
+if(abs($sp -  910) > 49) {
   print "Simulated sp was $sp, when  855 expected\n";
   print "if pahtest1 passes and this test fails, it will indicate that the doubling algorithm works in a wrong way.";
   print "**************************\n";
@@ -107,7 +107,7 @@ if(abs($sp -  855) > 20) {
   exit 1;
 }
 
-if(abs($m0 - 1.25e17) > 4e15) {
+if(abs($m0 - 1.23e17) > 4e15) {
   print "Simulated mean M0 was $m0, when  1.25e17m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -115,7 +115,7 @@ if(abs($m0 - 1.25e17) > 4e15) {
   exit 2;
 }
 
-if(abs($m1 - 3.85e-7) > 1e-8) {
+if(abs($m1 - 3.83e-7) > 1e-8) {
   print "Simulated mean M1 was $m1, when  3.85e-7 kg m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";

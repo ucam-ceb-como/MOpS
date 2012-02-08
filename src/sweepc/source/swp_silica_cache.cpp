@@ -60,14 +60,16 @@ SilicaCache::SilicaCache(void)
 	m_numSi=2;
 	m_numO=1;
 	m_numOH=6;
-	m_silicaDiameter=0.0;
     m_numprimary=0;
-    m_sqrtLW=0.0;
-    m_LdivW=0.0;
     m_primarydiam=0.0;
-    m_fdim=0.0;
-    m_Rg=0.0;
-    m_avg_sinter=0;
+    //m_sqrtLW=0.0;
+    //m_LdivW=0.0;
+    //m_fdim=0.0;
+    //m_Rg=0.0;
+    m_avg_sinter=0.0;
+    m_sintrate=0.0;
+    m_sinttime=0.0;
+    m_createtime=0.0;
 }
 
 // Copy constructor.
@@ -98,14 +100,16 @@ SilicaCache &SilicaCache::operator=(const SilicaCache &rhs)
         m_numSi = rhs.m_numSi;
         m_numO = rhs.m_numO;
 		m_numOH = rhs.m_numOH;
-		m_silicaDiameter = rhs.m_silicaDiameter;
 		m_numprimary=rhs.m_numprimary;
-        m_sqrtLW=rhs.m_sqrtLW;
-        m_LdivW=rhs.m_LdivW;
         m_primarydiam=rhs.m_primarydiam;
-        m_fdim=rhs.m_fdim;
-        m_Rg=rhs.m_Rg;
+        //m_sqrtLW=rhs.m_sqrtLW;
+        //m_LdivW=rhs.m_LdivW;
+        //m_fdim=rhs.m_fdim;
+        //m_Rg=rhs.m_Rg;
         m_avg_sinter=rhs.m_avg_sinter;
+        m_sintrate=rhs.m_sintrate;
+        m_sinttime=rhs.m_sinttime;
+        m_createtime=rhs.m_createtime;
     }
     return *this;
 }
@@ -116,14 +120,16 @@ SilicaCache &SilicaCache::operator=(const SilicaPrimary &rhs)
 	m_numSi = rhs.NumSi();
     m_numO = rhs.NumO();
     m_numOH = rhs.NumOH();
-	//m_silicaDiameter = rhs.silicaCollDiameter();
     m_numprimary=rhs.Numprimary();
-    m_sqrtLW=rhs.sqrtLW();
-    m_LdivW=rhs.LdivW();
     m_primarydiam=rhs.PrimaryDiam();
-    m_fdim=rhs.Fdim();
-    m_Rg=rhs.Rg();
+    //m_sqrtLW=rhs.sqrtLW();
+    //m_LdivW=rhs.LdivW();
+    //m_fdim=rhs.Fdim();
+    //m_Rg=rhs.Rg();
     m_avg_sinter=rhs.AvgSinter();
+    m_sintrate=rhs.GetSintRate();
+    m_sinttime=rhs.GetSintTime();
+    m_createtime=rhs.CreateTime();
     return *this;
 }
 
@@ -160,14 +166,16 @@ SilicaCache &SilicaCache::operator+=(const SilicaCache &rhs)
     m_numSi += rhs.m_numSi;
     m_numO += rhs.m_numO;
     m_numOH += rhs.m_numOH;
-	m_silicaDiameter += rhs.m_silicaDiameter;
     m_numprimary+=rhs.m_numprimary;
-    m_sqrtLW+=rhs.m_sqrtLW;
-    m_LdivW+=rhs.m_LdivW;
     m_primarydiam+=rhs.m_primarydiam;
-    m_fdim+=rhs.m_fdim;
-    m_Rg+=rhs.m_Rg;
+    //m_sqrtLW+=rhs.m_sqrtLW;
+    //m_LdivW+=rhs.m_LdivW;
+    //m_fdim+=rhs.m_fdim;
+    //m_Rg+=rhs.m_Rg;
     m_avg_sinter+=rhs.m_avg_sinter;
+    m_sintrate+=rhs.m_sintrate;
+    m_sinttime+=rhs.m_sinttime;
+    m_createtime+=rhs.m_createtime;
     return *this;
 }
 
@@ -177,15 +185,16 @@ SilicaCache &SilicaCache::operator+=(const SilicaPrimary &rhs)
 	m_numSi += rhs.NumSi();
     m_numO += rhs.NumO();
     m_numOH += rhs.NumOH();
-	//m_silicaDiameter += rhs.silicaCollDiameter();
     m_numprimary+=rhs.Numprimary();
-    m_sqrtLW+=rhs.sqrtLW();
-    m_LdivW+=rhs.LdivW();
     m_primarydiam+=rhs.PrimaryDiam();
-    m_fdim+=rhs.Fdim();
-    m_Rg+=rhs.Rg();
+    //m_sqrtLW+=rhs.sqrtLW();
+    //m_LdivW+=rhs.LdivW();
+    //m_fdim+=rhs.Fdim();
+    //m_Rg+=rhs.Rg();
     m_avg_sinter+=rhs.AvgSinter();
-
+    m_sintrate+=rhs.GetSintRate();
+    m_sinttime+=rhs.GetSintTime();
+    m_createtime+=rhs.CreateTime();
     return *this;
 }
 
@@ -233,14 +242,16 @@ void SilicaCache::Clear()
     m_numSi = 0;
 	m_numO = 0;
 	m_numOH = 0;
-	m_silicaDiameter = 0.0;
     m_numprimary=0;
-    m_sqrtLW=0.0;
-    m_LdivW=0.0;
     m_primarydiam=0.0;
-    m_fdim=0.0;
-    m_Rg=0.0;
+    //m_sqrtLW=0.0;
+    //m_LdivW=0.0;
+    //m_fdim=0.0;
+    //m_Rg=0.0;
     m_avg_sinter=0.0;
+    m_sintrate=0.0;
+    m_sinttime=0.0;
+    m_createtime=0.0;
 }
 
 
@@ -272,30 +283,29 @@ void SilicaCache::Serialize(std::ostream &out) const
 		v = (int)m_numOH;
         out.write((char*)&v, sizeof(v));
 
-        v = (double)m_silicaDiameter;
-        out.write((char*)&v, sizeof(v));
-
         v = (int)m_numprimary;
         out.write((char*)&v, sizeof(v));
 
-        v = (double)m_sqrtLW;
+        v = (double)m_primarydiam;
+        out.write((char*)&v, sizeof(v));
+
+        /*v = (double)m_sqrtLW;
         out.write((char*)&v, sizeof(v));
 
         v = (double)m_LdivW;
-        out.write((char*)&v, sizeof(v));
-
-        v = (double)m_primarydiam;
         out.write((char*)&v, sizeof(v));
 
         v = (double)m_fdim;
         out.write((char*)&v, sizeof(v));
 
         v = (double)m_Rg;
-        out.write((char*)&v, sizeof(v));
+        out.write((char*)&v, sizeof(v));*/
 
         v = (double)m_avg_sinter;
         out.write((char*)&v, sizeof(v));
 
+        v = (double)m_sintrate;
+        out.write((char*)&v, sizeof(v));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, SilicaCache::Serialize).");
@@ -326,29 +336,29 @@ void SilicaCache::Deserialize(std::istream &in)
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_numOH = (int)val;
 
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_silicaDiameter = (real)val;
-
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_numprimary = (int)val;
 
-				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_primarydiam = (real)val;
+
+				/*in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_sqrtLW = (real)val;
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_LdivW = (real)val;
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_primarydiam = (real)val;
-
-				in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_fdim = (real)val;
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_Rg = (real)val;
+                m_Rg = (real)val;*/
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_avg_sinter = (real)val;
+
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_sintrate = (real)val;
 
                 break;
             default:
