@@ -992,6 +992,7 @@ void Sweep::Ensemble::SetNumOfInceptedPAH(int m_amount, Sweep::Primary *m_primar
 {
     if (m_primary->AggID() ==AggModels::PAH_KMC_ID)
     {
+        //m_primary->ParticleModel()->IsPyreneInception()
         const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
         rhsparticle = dynamic_cast<const Sweep::AggModels::PAHPrimary*>(m_primary);
 

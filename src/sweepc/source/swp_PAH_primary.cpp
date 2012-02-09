@@ -387,6 +387,8 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
     m_avg_coalesc=source->m_avg_coalesc;
     m_numcarbon = source->m_numcarbon;
     m_numH = source->m_numH;
+    m_values=source->m_values;
+    m_comp=source->m_comp;
 
     // Replace the PAHs with those from the source
     if (m_clone==true){
@@ -1023,7 +1025,7 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
         // area by iterating through all the PAHs.  This call is rather expensive.
         if(PAHchanged) {
             UpdatePrimary();
-                if (m_InceptedPAH!=0) 
+             if (m_InceptedPAH!=0) 
                     sys.Particles().SetNumOfInceptedPAH(-1);
             else if (m_InceptedPAH == 0 && InceptedPAH()==1)
                     sys.Particles().SetNumOfInceptedPAH(1);
