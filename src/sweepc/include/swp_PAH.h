@@ -67,6 +67,7 @@ public:
     //returen ID of PAH
     int ID() const;
     void saveDOTperLoop(int ID, int i) const;
+    Sweep::KMC_ARS::PAHStructure* Structure();
 
 private:
     //! not allow to build PAH without time

@@ -95,3 +95,8 @@ int PAH::ID() const {
 void PAH::saveDOTperLoop(int ID, int i) const{
 	m_pahstruct->saveDOTperLoop(ID,i);
 }
+
+Sweep::KMC_ARS::PAHStructure* PAH::Structure()
+{
+   return m_pahstruct;
+}

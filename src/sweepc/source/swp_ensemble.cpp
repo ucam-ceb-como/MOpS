@@ -963,16 +963,10 @@ int Sweep::Ensemble::NumOfInceptedPAH() const
     //    const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
     //    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
 
-    //    //const Sweep::Primary *rhsparticle = NULL;
-    //    //rhsparticle = m_particles[i]->Primary();
-    //    numofpyrene += rhsparticle->Pyrene();
+    //    numofpyrene += rhsparticle->InceptedPAH();
     //    }
     //if (numofpyrene!= m_numofInceptedPAH)
-    //{
-    //    //if (numofpyrene == m_numofInceptedPAH-1) 
-    //    //    return m_numofInceptedPAH;
     //    std::cout<<"something goes wrong, the number ofPAH in ensemble is not consistent"<<std::endl;
-    //}
     //return numofpyrene;
     return m_numofInceptedPAH;
 }

@@ -168,8 +168,10 @@ public:
     double MassforXmer() const;
     //! set pah_structure=Null before destructor delete it
     //void ReleasePAH(Primary &rhs);
-    //find soot particle with only one Pyrene molecule (C16H10)
+    //find soot particle with only one Incepted molecule (C16H10 or C6H6)
     int InceptedPAH() const;
+    bool CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const;
+    void RemoveInvalidPAHs();
 
 protected:
     //! Empty primary not meaningful
