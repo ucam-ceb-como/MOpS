@@ -95,7 +95,7 @@ namespace Sweep {
         
         //! Enumeration of starting structures
         enum StartingStructure {
-            BENZENE_C=6,BENZENE_H=6, PYRENE_C=16,PYRENE_H=10, NONE};
+            BENZENE_C=6,BENZENE_H=6, PYRENE_C=16,PYRENE_H=10, NAPHTHALENE, NONE};
 
         //! typedefs used in the model
         typedef std::vector<real> rvector;
