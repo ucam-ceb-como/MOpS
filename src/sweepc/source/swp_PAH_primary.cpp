@@ -57,6 +57,7 @@
 #include "swp_kmc_pah_structure.h"
 #include "swp_PAH.h"
 #include "swp_ensemble.h"
+#include "swp_particle_model.h"
 
 #include <stdexcept>
 #include <cassert>
@@ -78,7 +79,6 @@ using namespace Strings;
 //used for debugging, testing clone function for PAHStructure.
 static unsigned int ID=0; 
 static bool m_clone=false;
-static bool m_pyreneInception = true;
 /*
 double PAHPrimary::pow(double a, double b) {
     int tmp = (*(1 + (int *)&a));
@@ -255,8 +255,7 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 */
 void PAHPrimary::AddPAH(real time,const Sweep::ParticleModel &model)
 {
-    m_pyreneInception =  model.IsPyreneInception();
-    boost::shared_ptr<PAH> new_PAH (new PAH(time, m_pyreneInception));
+    boost::shared_ptr<PAH> new_PAH (new PAH(time, model.InceptedPAH()));
     new_PAH->PAH_ID=ID;
     m_PAH.push_back(new_PAH);
     ID++;
@@ -1055,17 +1054,22 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
 
 bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
 {
-    if (m_pyreneInception) 
-    {
-        if (it->m_pahstruct->numofC() < Sweep::KMC_ARS::PYRENE_C)
-            return true;
+    ParticleModel::PostProcessStartingStr str = this->ParticleModel()->InceptedPAH();
+    int m_control;
+    switch (str){
+    case ParticleModel::A1:
+        m_control=Sweep::KMC_ARS::BENZENE_C;
+        break;
+    case ParticleModel::A2:
+        m_control=10;
+        break;
+    case ParticleModel::A4:
+        m_control=Sweep::KMC_ARS::PYRENE_C;
+        break;
+    default:
+        throw std::runtime_error("no information about the incepted PAH is available (Sweep::PAHPrimary::CheckInvalidPAHs())");
     }
-    else 
-    {
-        if (it->m_pahstruct->numofC() < Sweep::KMC_ARS::BENZENE_C)
-            return true;
-    }
-    return false;
+    return (it->m_pahstruct->numofC() < m_control);
 }
 
 //struct compare_class
@@ -1137,12 +1141,27 @@ double PAHPrimary::MassforXmer() const
 int PAHPrimary::InceptedPAH() const
 {
     if (Numprimary() == 1 && NumPAH() == 1){
-        //currently only Num of C and H is used to identify the Pyrene and benzene
-        if (m_pyreneInception && NumCarbon() == 16 && NumHydrogen() ==10)
-            return 1;
-        else if (!m_pyreneInception && NumCarbon() == 6 && NumHydrogen() == 6)
-            return 1;
-        else return 0;
+        //currently only Num of C and H is used to identify the Pyrene, Naphthalene and benzene
+        ParticleModel::PostProcessStartingStr str = ParticleModel()->InceptedPAH();
+        switch (str){
+        case ParticleModel::A1:
+            if (NumCarbon() == 6 && NumHydrogen() == 6)
+                return 1;
+            else return 0;
+            break;
+        case ParticleModel::A2:
+            if (NumCarbon() == 12 && NumHydrogen() == 8)
+                return 1;
+            else return 0;
+            break;
+        case ParticleModel::A4:
+            if (NumCarbon() == 16 && NumHydrogen() == 10)
+                return 1;
+            else return 0;
+            break;
+        default:
+            return 0;
+        }
     }
     else return 0;
 }

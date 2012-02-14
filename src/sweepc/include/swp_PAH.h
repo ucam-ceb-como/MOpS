@@ -40,6 +40,7 @@
 */
 
 #include "swp_kmc_pah_structure.h"
+#include "swp_particle_model.h"
 
 #ifndef SWEEP_PAH_H
 #define SWEEP_PAH_H
@@ -58,7 +59,7 @@ class PAH
 	friend class PAHPrimary;
 public:
     //! Build a new PAH with time
-    PAH(real time, bool IsPyrene);
+    PAH(real time, Sweep::ParticleModel::PostProcessStartingStr str);
 
     PAH(const PAH &copy); // Copy constructor.
     ~PAH();

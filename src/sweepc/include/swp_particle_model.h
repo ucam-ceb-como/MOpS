@@ -265,6 +265,10 @@ public:
 
     };
 
+    enum PostProcessStartingStr {
+        A1, A2, A4
+    };
+
     //! Choose between drag models
     void SetDragType(const DragType& drag) {m_DragType = drag;}
 
@@ -290,8 +294,8 @@ public:
     const std::string &Mode() const;
 
     void SetInceptedPAH(const std::string &name);
-    const std::string &InceptedPAH() const;
-    bool IsPyreneInception() const;
+    const PostProcessStartingStr &InceptedPAH() const;
+    //bool IsPyreneInception() const;
 
 protected:
     // The species used to define the processes and the particles.
@@ -383,7 +387,7 @@ private:
     std::string m_mode;
 
     //! define a species that it will be transfered between gas and particle phase
-    std::string m_InceptedPAH;
+    PostProcessStartingStr m_InceptedPAH;
 };
 } //namespace Sweep
 #endif

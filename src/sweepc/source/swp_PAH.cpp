@@ -53,16 +53,23 @@ using namespace std;
 PAH::PAH(){
 }
 
-PAH::PAH(real time, bool IsPyrene):
+PAH::PAH(real time, Sweep::ParticleModel::PostProcessStartingStr str):
 time_created(time),
 lastupdated(time),
 PAH_ID(0),
 m_pahstruct(new PAHStructure())
 {
-    if (IsPyrene)
-        m_pahstruct->initialise(PYRENE_C);
-    else
+    switch (str){
+    case ParticleModel::A1:
         m_pahstruct->initialise(BENZENE_C);
+        break;
+    case ParticleModel::A2:
+        m_pahstruct->initialise(BENZENE_C);
+        break;
+    case ParticleModel::A4:
+        m_pahstruct->initialise(PYRENE_C);
+        break;
+    }
 }
 
 PAH::PAH(const PAH &copy){
