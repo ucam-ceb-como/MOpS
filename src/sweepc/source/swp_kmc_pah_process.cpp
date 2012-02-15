@@ -1303,7 +1303,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         updateCombinedSites();
         //cout << "Pyrene Initialised!\n";
         break;
-	case NAPHTHALENE:
+	case NAPHTHALENE_C:
 		// add first C atom
         m_pah->m_cfirst = addC();
         // adds next C atoms according to structure
