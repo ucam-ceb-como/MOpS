@@ -1145,17 +1145,17 @@ int PAHPrimary::InceptedPAH() const
         ParticleModel::PostProcessStartingStr str = ParticleModel()->InceptedPAH();
         switch (str){
         case ParticleModel::A1:
-            if (NumCarbon() == 6 && NumHydrogen() == 6)
+            if (NumCarbon() == BENZENE_C && NumHydrogen() == BENZENE_H)
                 return 1;
             else return 0;
             break;
         case ParticleModel::A2:
-            if (NumCarbon() == 12 && NumHydrogen() == 8)
+            if (NumCarbon() == NAPHTHALENE_C && NumHydrogen() == NAPHTHALENE_H)
                 return 1;
             else return 0;
             break;
         case ParticleModel::A4:
-            if (NumCarbon() == 16 && NumHydrogen() == 10)
+            if (NumCarbon() == PYRENE_C && NumHydrogen() == PYRENE_H)
                 return 1;
             else return 0;
             break;
