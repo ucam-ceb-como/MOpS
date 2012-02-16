@@ -782,7 +782,7 @@ void PAHPrimary::ResetChildrenProperties()
 }
 
 //merges the left and the right primary particle to one primary particle
-PAHPrimary &PAHPrimary::Merge()
+void PAHPrimary::Merge()
 {
 //    if(this->m_numprimary>5)
  //       cout<<"tset";
@@ -915,17 +915,12 @@ PAHPrimary &PAHPrimary::Merge()
 				    m_rightchild->m_parent=this;
 				    m_leftchild->m_parent=this;
                 }
-
                 delete oldrightparticle;
-
 			}
-
 		}
-
         UpdateCache();
   //      PrintTree("after.inp");
         }
-		return *this;
 }
 
 void PAHPrimary::ReleaseMem()
@@ -1092,14 +1087,19 @@ bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
 
 void PAHPrimary::RemoveInvalidPAHs()
 {
+    // if the num of PAH in this primary particle is smaller than 2 after removing the InvalidPAHs,
+    // Fakecoalescence() will return true and it will be merged with other part of the aggregate.
+    // TODO: thinking suitable solution for moving the InvalidPAH back to gasphase when coupling with the gasphase chemistry.
+    // current implementation is only suitable for post-pocessing due to mass loss.
     //remove_if(m_PAH.begin(),m_PAH.end(),compare_class());
     std::vector<boost::shared_ptr<PAH> >::iterator NewEnd = remove_if(m_PAH.begin(),m_PAH.end(),boost::bind(&PAHPrimary::CheckInvalidPAHs, this,_1));
     m_PAH.resize(NewEnd-m_PAH.begin());
-    if (m_numprimary>1&&m_PAH.size()<2)
-    {
-        m_parent->m_children_coalescence=1;
-        Merge();
-    }
+    //if (m_parent != NULL && m_PAH.size()<2)
+    //{
+    //    std::cout<<"False coalescence starts"<<std::endl;
+    ////    m_parent->m_children_coalescence=1;
+    ////    //m_parent->Merge();
+    //}
     //    remove_if(m_PAH.begin(),m_PAH.end(),compare_class());
 }
 
@@ -1140,7 +1140,8 @@ double PAHPrimary::MassforXmer() const
 
 int PAHPrimary::InceptedPAH() const
 {
-    if (Numprimary() == 1 && NumPAH() == 1){
+    // m_parent == NULL is to check whether this primary particle is part of an aggregate.
+    if (m_parent == NULL && Numprimary() == 1 && NumPAH() == 1){
         //currently only Num of C and H is used to identify the Pyrene, Naphthalene and benzene
         ParticleModel::PostProcessStartingStr str = ParticleModel()->InceptedPAH();
         switch (str){
@@ -1189,11 +1190,24 @@ void PAHPrimary::UpdateCache(void)
     UpdateCache(this);
 }
 
+bool PAHPrimary::Fakecoalescence()
+{
+    // there are two conditions that it should perform fakecoalescence, no PAH or only one PAH in this primary particle, thus it should be merged with other primary particle.
+    if (m_leftparticle!=NULL)
+    {
+        if (m_leftparticle->m_numPAH==1||(m_leftparticle->m_numPAH==0&&m_leftparticle->m_numcarbon==0))
+            return true;
+        else if (m_rightparticle->m_numPAH==1||(m_rightparticle->m_numPAH==0&&m_rightparticle->m_numcarbon==0))
+            return true;
+        else return false;
+    }
+    else return false;
+}
 
 bool PAHPrimary::CheckCoalescence()
 {
     bool hascoalesced=false;
-    if (m_children_coalescence> 0.99 && m_leftparticle!=NULL)
+    if ((m_children_coalescence> 0.99 && m_leftparticle!=NULL)||Fakecoalescence())
         {
            // PrintTree("before.inp");
            // cout <<"merging"<<m_children_coalescence<<endl;

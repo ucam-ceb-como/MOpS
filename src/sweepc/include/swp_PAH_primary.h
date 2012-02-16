@@ -191,8 +191,10 @@ protected:
     void UpdatePrimary(void);
     //! sets some properties to 0
     void Reset();
+    //! return ture if it is a false coalescence, false coalescence is used to merge primary particle containing only one or no PAH after the InvalidPAHs are removed.
+    bool Fakecoalescence();
     //! merges the two children primaries together
-    PAHPrimary &Merge();
+    void Merge();
     //! updates the pointers after a merge event
     void ChangePointer(PAHPrimary *source, PAHPrimary *target);
     //! copies the node withoud the children
