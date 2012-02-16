@@ -344,7 +344,7 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
         m_dbleactive = true;
-        //printf("sweep: Particle doubling activated.\n");
+        printf("sweep: Particle doubling activated.\n");
     }
 
     // Check ensemble for space, if there is not enough space then need
