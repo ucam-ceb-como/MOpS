@@ -258,6 +258,12 @@ void Process::RemoveProduct(const std::string &name)
  */
 bool Process::Fictitious(real majr, real truer, rng_type &rng)
 {
+    // ensure maj > truer, otherwise it will crash the program.
+    if (1.0 - truer/majr < 0)
+    {
+        std::cout<<"maj is still smaller than true"<<std::endl;
+        return true;
+    }
     typedef boost::bernoulli_distribution<real> bernoulli_distrib;
     bernoulli_distrib fictitiousDistrib(1.0 - truer/majr);
     boost::variate_generator<rng_type&, bernoulli_distrib> fictitiousGenerator(rng, fictitiousDistrib);
