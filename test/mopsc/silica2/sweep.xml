@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="Silica nanoparticle inception and growth model" units="CGS">
+    <!-- Define particle components. -->
+    <component id="silica" type="bulk">
+        <description>
+        Silica
+        </description>
+        <density units="g/cm3">2.2</density>
+        <molwt units="g/mol">60.084</molwt>
+        <coalthresh>1</coalthresh>
+    </component> 
+    
+
+    <particle id="[silica]" model="silica" subtree="false">
+      <description>
+        A silica particle.
+      </description>
+      <sintering enable="true" model="viscous_flow">
+        <A units="s/m">1.1e-16</A>
+        <E units="K">1.2e5</E>
+        <Dpmin units="m">4.4e-9</Dpmin>
+      </sintering>
+    </particle>
+    
+    <coagulation>
+        <A>1.0</A>
+        <weightrule>w1</weightrule>
+        <kernel>weightedtransition</kernel>
+    </coagulation>
+    
+</mechanism>
+
