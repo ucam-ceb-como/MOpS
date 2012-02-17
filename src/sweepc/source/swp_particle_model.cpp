@@ -655,21 +655,32 @@ real ParticleModel::Threshold() const {return m_threshold;}
 void ParticleModel::SetMode(const std::string &mode) {m_mode = mode;}
 
 //! specify the incepting pah, currently only pyrene and benzene is supported for PAH-PP model, details see the kmc
-void ParticleModel::SetInceptedPAH(const std::string &name) {m_InceptedPAH = name;}
+void ParticleModel::SetInceptedPAH(const std::string &name) 
+{
+    if (!name.compare("A1"))
+        m_InceptedPAH = A1;
+    else if (!name.compare("A2"))
+        m_InceptedPAH = A2;
+    else if (!name.compare("A3"))
+        throw std::runtime_error("A3 is not supported as InceptedPAH currently and please use A1, A2, or A4 (Sweep::ParticleModel::SetInceptedPAH())");
+    else if (!name.compare("A4"))
+            m_InceptedPAH = A4;
+    else throw std::runtime_error("no information about the incepted PAH is available, only A1 A2 and A4 are supported now (Sweep::ParticleModel::SetInceptedPAH())");
+}
 
 //! return mode of collision efficency model
 const std::string &ParticleModel::Mode() const {return m_mode;}
 
-const std::string &ParticleModel::InceptedPAH() const {return m_InceptedPAH;}
+const ParticleModel::PostProcessStartingStr &ParticleModel::InceptedPAH() const {return m_InceptedPAH;}
 
-bool ParticleModel::IsPyreneInception() const
-{
-    if (m_InceptedPAH == "A4" || m_InceptedPAH == "pyrene")
-        return true;
-    else if (m_InceptedPAH == "A1" || m_InceptedPAH == "benzene")
-        return false;
-    else throw std::runtime_error("no information about the incepted PAH is available (Sweep::ParticleModel::IsPyreneInception())");
-}
+//bool ParticleModel::IsPyreneInception() const
+//{
+//    if (m_InceptedPAH == "A4" || m_InceptedPAH == "pyrene")
+//        return true;
+//    else if (m_InceptedPAH == "A1" || m_InceptedPAH == "benzene")
+//        return false;
+//    else throw std::runtime_error("no information about the incepted PAH is available (Sweep::ParticleModel::IsPyreneInception())");
+//}
 /*!
  * The drag coefficient is calculated using the the Knudsen correction to the
  * Stokes formula for the drag coefficient, see table I of Li & Wang,

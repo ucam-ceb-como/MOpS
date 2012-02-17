@@ -339,10 +339,19 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         if (mech.AggModel()== AggModels::PAH_KMC_ID)
         {
             int index;
-            if (mech.IsPyreneInception())
-                index=r.Mech()->GasMech().FindSpecies("A4");
-            else 
-                index=r.Mech()->GasMech().FindSpecies("A1");
+            switch (mech.InceptedPAH()){
+                case ParticleModel::A1:
+                    index=r.Mech()->GasMech().FindSpecies("A1");
+                    break;
+                case ParticleModel::A2:
+                    index=r.Mech()->GasMech().FindSpecies("A2");
+                    break;
+                case ParticleModel::A4:
+                    index=r.Mech()->GasMech().FindSpecies("A4");
+                    break;
+                default:
+                    throw std::runtime_error("no information about the incepted PAH is available, only A1 A2 and A4 are supported now (Sweep::FlameSolver::Solve())");
+            }
             // calculate the amount of stochastic pyrene particles in the ensemble
             int Pamount=r.Mixture()->NumOfStartingSpecies(index);
 

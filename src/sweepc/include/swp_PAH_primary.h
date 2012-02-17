@@ -168,8 +168,10 @@ public:
     double MassforXmer() const;
     //! set pah_structure=Null before destructor delete it
     //void ReleasePAH(Primary &rhs);
-    //find soot particle with only one Pyrene molecule (C16H10)
+    //find soot particle with only one Incepted molecule (C16H10 or C6H6)
     int InceptedPAH() const;
+    bool CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const;
+    void RemoveInvalidPAHs();
 
 protected:
     //! Empty primary not meaningful
@@ -189,8 +191,10 @@ protected:
     void UpdatePrimary(void);
     //! sets some properties to 0
     void Reset();
+    //! return ture if it is a false coalescence, false coalescence is used to merge primary particle containing only one or no PAH after the InvalidPAHs are removed.
+    bool Fakecoalescence();
     //! merges the two children primaries together
-    PAHPrimary &Merge();
+    void Merge();
     //! updates the pointers after a merge event
     void ChangePointer(PAHPrimary *source, PAHPrimary *target);
     //! copies the node withoud the children
