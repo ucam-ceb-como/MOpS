@@ -70,9 +70,11 @@ public:
     void saveDOTperLoop(int ID, int i) const;
     Sweep::KMC_ARS::PAHStructure* Structure();
 
-private:
-    //! not allow to build PAH without time
+    //! this default conscustor is only used for serialization.
     PAH();
+    void Serialize(std::ostream &out) const;
+    void Deserialize(std::istream &in);
+private:
 
     //! Simulated time at point when molecule created
     double time_created;

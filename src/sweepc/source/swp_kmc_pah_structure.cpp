@@ -102,13 +102,23 @@ bool PAHStructure::operator!=(PAHStructure &rhs) const{
     return !(*this==rhs);
 }
 
-int PAHStructure::numofC(){
+int PAHStructure::numofC() const{
     return m_counts.first;
 } 
 
-int PAHStructure::numofH(){
+int PAHStructure::numofH() const{
     return m_counts.second;
 } 
+
+void PAHStructure::setnumofC(int val)
+{
+    m_counts.first=val;
+}
+
+void PAHStructure::setnumofH(int val)
+{
+    m_counts.second=val;
+}
 void PAHStructure::initialise(StartingStructure ss) {
     PAHProcess p(*this);
     p.initialise(ss);

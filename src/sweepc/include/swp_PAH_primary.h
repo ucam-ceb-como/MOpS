@@ -217,9 +217,11 @@ private:
     static PAHPrimary* descendPath(PAHPrimary *here,
                                    std::stack<bool> &takeLeftBranch);
 
+    void outputPAHPrimary(std::ostream &out) const;
+    void inputPAHPrimary(std::istream &in, PAHPrimary *m_input);
 
     // Vector of PAHs.
-    // PAHStructure class now have proper copy constructor (under testing)
+    // PAHStructure class now have proper copy constructor
     // , but it is still not worthy to copy PAH from one vector to another
     // so we will use vector<std::tr1::shared_ptr<PAH>> instead of  vector <PAH>
     // Vector of std::tr1::shared_ptr<PAH>.

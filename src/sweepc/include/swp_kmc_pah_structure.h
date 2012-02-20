@@ -82,9 +82,12 @@ namespace Sweep{
             //! Initialise pah with pyrene (currently) or benzene
             void initialise(StartingStructure ss);
             PAHStructure* Clone() ;
-            //! return number of carbon for particular PAH
-            int numofC();
-			int numofH();
+            //! return number of carbon and hydrogen for particular PAH
+            int numofC() const;
+			int numofH() const;
+            //! set number of cabon and hydrogen for particular PAH
+            void setnumofC(int val);
+            void setnumofH(int val);
             //! check PAH have bridge or not
             bool havebridgeC();
 

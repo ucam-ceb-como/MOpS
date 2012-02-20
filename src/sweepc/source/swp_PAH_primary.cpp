@@ -1546,11 +1546,10 @@ void PAHPrimary::Serialize(std::ostream &out) const
                         out.write((char*)&currPAH.m_numcarbon, sizeof(currPAH.m_numcarbon));
                 }
 */
-		// Write PAHmass
+        outputPAHPrimary(out);
+        // Write PAHmass
         val = (double) m_PAHmass;
         out.write((char*)&val, sizeof(val));
-
-
 
         // Output base class.
         Primary::Serialize(out);
@@ -1560,6 +1559,34 @@ void PAHPrimary::Serialize(std::ostream &out) const
                                "(Sweep, PAHPrimary::Serialize).");
     }
 }
+
+// not interesting the connectivity of each primary particle, but the xmer in the soot aggregate.
+void PAHPrimary::outputPAHPrimary(std::ostream &out) const
+{
+	if (m_leftchild != NULL)
+		m_leftchild->outputPAHPrimary(out);
+	if (m_rightchild != NULL)
+		m_rightchild->outputPAHPrimary(out);
+
+    //m_output=this;
+    if (m_numprimary==1) {
+        out.write((char*)&this->m_numPAH, sizeof(m_numPAH));
+        out.write((char*)&this->m_numcarbon, sizeof(m_numcarbon));
+        out.write((char*)&this->m_numH, sizeof(m_numH));
+        //count the number of PAH should be serialized
+        int m_count = 0;
+        while (m_count != m_numPAH)
+        {
+            m_PAH[m_count]->Serialize(out);
+            ++m_count;
+        }
+    }
+}
+
+//void PAHPrimary::inputPAHPrimary(std::istream &in, PAHPrimary *m_input)
+//{
+//    cout<<"Hi"<<endl;
+//}
 
 // Reads the object from a binary stream.
 void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
@@ -1610,6 +1637,20 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
 			m_PAH.push_back(currPAH);
 		}
 */
+        for (int i=0; i!=m_numprimary; ++i) {
+            in.read(reinterpret_cast<char*>(&m_numPAH), sizeof(m_numPAH));
+            in.read(reinterpret_cast<char*>(&m_numcarbon), sizeof(m_numcarbon));
+            in.read(reinterpret_cast<char*>(&m_numH), sizeof(m_numH));
+            int m_count=0;
+            while (m_count != m_numPAH)
+            {
+                boost::shared_ptr<PAH> new_PAH (new PAH());
+                new_PAH->Deserialize(in);
+                m_PAH.push_back(new_PAH);
+                ++m_count;
+            }
+        }
+
 		// Read PAHmass.
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_PAHmass = (real)val;
