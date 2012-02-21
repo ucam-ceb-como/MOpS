@@ -1537,6 +1537,15 @@ void PAHPrimary::Serialize(std::ostream &out) const
         val = (double)m_Rg;
         out.write((char*)&val, sizeof(val));
 
+        val = (double)m_numPAH;
+        out.write((char*)&val, sizeof(val));
+
+        val = (double)m_numcarbon;
+        out.write((char*)&val, sizeof(val));
+
+        val = (double)m_numH;
+        out.write((char*)&val, sizeof(val));
+
 		// write the PAH stack
 		/*PAH currPAH;
 		for (int i=0; i!=m_numPAH; ++i) {
@@ -1594,6 +1603,7 @@ PAHPrimary* PAHPrimary::inputPAHPrimary(std::istream &in)
     PAHPrimary* pri=new PAHPrimary();
     double val=0.0;
 
+    pri->m_numprimary=1;
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     pri->m_numPAH=(int)val;
 
@@ -1651,6 +1661,14 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_Rg = (real)val;
 
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_numPAH = (int)val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_numcarbon = (int)val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_numH = (int)val;
 
 	    // Read PAHs.
 	/*
@@ -1679,10 +1697,8 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
         {
             p->m_leftchild=pri[i];
             p->m_rightchild=NULL;
-            //p->m_rightchild->m_leftchild=NULL;
             p=p->m_leftchild;
         }
-        UpdateCache();
 		// Read PAHmass.
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_PAHmass = (real)val;
