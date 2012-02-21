@@ -1185,6 +1185,19 @@ int PAHPrimary::InceptedPAH() const
     ID++;
     }
 
+// this function is only used to create a vector containing all the mass of individual PAH(but currently only track the m_leftchild because of the implementation of serialization)
+void PAHPrimary::mass_PAH(std::vector<double> &out) const
+{
+    if (m_leftchild!=NULL)
+        m_leftchild->mass_PAH(out);
+
+    for (size_t i = 0; i != m_PAH.size(); ++i)
+    {
+        double temp_mass=0.0;
+        temp_mass=12*m_PAH[i]->m_pahstruct->numofC()+m_PAH[i]->m_pahstruct->numofH();
+        out.push_back(temp_mass);
+    }
+}
 void PAHPrimary::UpdateCache(void)
 {
     UpdateCache(this);
@@ -1577,8 +1590,6 @@ void PAHPrimary::outputPAHPrimary(std::ostream &out) const
 	if (m_rightchild != NULL)
 		m_rightchild->outputPAHPrimary(out);
 
-    if (this->m_parent!=0)
-        std::cout<<"debuging"<<std::endl;
     //m_output=this;
     if (m_numprimary==1) {
         double val=0.0;
@@ -1690,8 +1701,6 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
         }
         // relink the primary particles
         PAHPrimary* p=this;
-        if (pri.size()>1)
-            std::cout<<"DEBUGGING"<<std::endl;
 
         for (int i=0;i!=pri.size();++i)
         {

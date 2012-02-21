@@ -660,6 +660,9 @@ void Simulator::PostProcess()
 
     // Now post-process the ensemble to find interested information, in this case, mass of Xmer
     postProcessXmer(mech, times);
+
+    // Now post-process the ensemble to find interested information, in this case, PAH mass distribution of a soot aggregate
+    postProcessPAHinfo(mech, times);
 }
 
 
@@ -1855,6 +1858,93 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
     for (unsigned int i=0; i!=times.size(); ++i) {
         out[i]->Close();
         delete out[i];
+    }
+}
+
+void Simulator::postProcessPAHinfo(const Mechanism &mech,
+                                const timevector &times) const
+{
+    Reactor *r = NULL;
+    fvector temp;//use to hold all the psl information
+    vector<unsigned int> temp_max; 
+    fvector temp_PAH_mass;  // store number density of each Xmer
+    real max_mass=0.0;
+    // Get reference to the particle mechanism.
+    const Sweep::Mechanism &pmech = mech.ParticleMech();
+
+    // postProcessXmer is only designed for PAH-PP model
+    if (pmech.AggModel() == Sweep::AggModels::PAH_KMC_ID){
+
+        // Create an ensemble stats object.
+        Sweep::Stats::EnsembleStats stats(pmech);
+
+        // Open output files for all PSL save points.  Remember to
+        // write the header row as well.
+        vector<CSV_IO*> out(times.size(), NULL);
+
+
+        unsigned int step = 0;
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            real t = times[i].EndTime();
+            out[i] = new CSV_IO();
+            out[i]->Open(m_output_filename + "-PAH-mass-within-largest-agg(" +
+                        cstr(t) + "s).csv", true);
+        }
+
+        // Loop over all time intervals.
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            // Calculate the total step count after this interval.
+            step += times[i].StepCount();
+
+            // Loop over all runs.
+            for (unsigned int irun=0; irun!=m_nruns; ++irun) {
+                // Read the save point for this step and run.
+                r = readSavePoint(step, irun, mech);
+
+                if (r != NULL) {
+                    real scale = (real)m_nruns;
+                    if (m_output_every_iter) scale *= (real)m_niter;
+                    // Get PSL for all particles.
+                    for (unsigned int j = 0; j != r->Mixture()->ParticleCount(); ++j) 
+                    {
+                        // Get PSL.
+                        stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
+                                    times[i].EndTime(), temp,
+                                    1.0/(r->Mixture()->SampleVolume()*scale));
+                        //temp[11]=>num of PAH
+                        //temp[13]=>num of C, temp[14]=>num of H
+                        real mass = 12 * temp[13] + temp[14];
+                        // find the largest soot aggregate
+                        if (mass>max_mass)
+                        {
+                            max_mass=mass;
+                            temp_max.push_back(j);
+                        }
+                    }
+                    // the last element in the temp_max shoule be the index of the largest particle in the ensemble
+                    Sweep::Particle* sp=r->Mixture()->Particles().At(temp_max.back());
+                    Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
+                    // store the mass of individual PAH within the selected particle in the vector temp_PAH_mass
+                    pah->mass_PAH(temp_PAH_mass);
+                    // Output particle info to CSV file.
+                    out[i]->Write(temp_PAH_mass);
+                    // clear the temp varialbe
+                    max_mass=0;
+                    temp_PAH_mass.clear();
+                    temp_max.clear();
+                    delete r;
+                } else {
+                    // Throw error if the reactor was not read.
+                    throw runtime_error("Unable to read reactor from save point "
+                                        "(Mops, ParticleSolver::postProcessXmer).");
+                }
+            }
+        }
+        // Close output CSV files.
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            out[i]->Close();
+            delete out[i];
+        }
     }
 }
 

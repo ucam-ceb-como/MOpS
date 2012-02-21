@@ -166,6 +166,8 @@ public:
     void mass_PAH(std::vector<std::vector<double> > &out) const;
     //! return the mass of Xmer including C and H 
     double MassforXmer() const;
+    //! store the mass of individual PAH within this soot aggregate
+    void mass_PAH(std::vector<double> &out) const;
     //! set pah_structure=Null before destructor delete it
     //void ReleasePAH(Primary &rhs);
     //find soot particle with only one Incepted molecule (C16H10 or C6H6)
