@@ -1568,11 +1568,17 @@ void PAHPrimary::outputPAHPrimary(std::ostream &out) const
 	if (m_rightchild != NULL)
 		m_rightchild->outputPAHPrimary(out);
 
+    if (this->m_parent!=0)
+        std::cout<<"debuging"<<std::endl;
     //m_output=this;
     if (m_numprimary==1) {
-        out.write((char*)&this->m_numPAH, sizeof(m_numPAH));
-        out.write((char*)&this->m_numcarbon, sizeof(m_numcarbon));
-        out.write((char*)&this->m_numH, sizeof(m_numH));
+        double val=0.0;
+        val=m_numPAH;
+        out.write((char*)&val, sizeof(val));
+        val=m_numcarbon;
+        out.write((char*)&val, sizeof(val));
+        val=m_numH;
+        out.write((char*)&val, sizeof(val));
         //count the number of PAH should be serialized
         int m_count = 0;
         while (m_count != m_numPAH)
@@ -1583,10 +1589,30 @@ void PAHPrimary::outputPAHPrimary(std::ostream &out) const
     }
 }
 
-//void PAHPrimary::inputPAHPrimary(std::istream &in, PAHPrimary *m_input)
-//{
-//    cout<<"Hi"<<endl;
-//}
+PAHPrimary* PAHPrimary::inputPAHPrimary(std::istream &in)
+{
+    PAHPrimary* pri=new PAHPrimary();
+    double val=0.0;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    pri->m_numPAH=(int)val;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    pri->m_numcarbon=(int)val;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    pri->m_numH=(int)val;
+
+    int m_count=0;
+    while (m_count != pri->m_numPAH)
+    {
+        boost::shared_ptr<PAH> new_PAH (new PAH());
+        new_PAH->Deserialize(in);
+        pri->m_PAH.push_back(new_PAH);
+        ++m_count;
+    }
+    return pri;
+}
 
 // Reads the object from a binary stream.
 void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
@@ -1637,24 +1663,30 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
 			m_PAH.push_back(currPAH);
 		}
 */
-        for (int i=0; i!=m_numprimary; ++i) {
-            in.read(reinterpret_cast<char*>(&m_numPAH), sizeof(m_numPAH));
-            in.read(reinterpret_cast<char*>(&m_numcarbon), sizeof(m_numcarbon));
-            in.read(reinterpret_cast<char*>(&m_numH), sizeof(m_numH));
-            int m_count=0;
-            while (m_count != m_numPAH)
-            {
-                boost::shared_ptr<PAH> new_PAH (new PAH());
-                new_PAH->Deserialize(in);
-                m_PAH.push_back(new_PAH);
-                ++m_count;
-            }
+        // pick up all the primary particles and store them in a vector then relink them using m_leftchild, thus the connectivity is completely wrong but in this case we are only interested the PAHs within the particle
+        // TODO: output and input the correct connectivity, but it is difficult.
+        vector<PAHPrimary*> pri;
+        for (int i=0; i!=m_numprimary; ++i) 
+        {
+            pri.push_back(inputPAHPrimary(in));
         }
+        // relink the primary particles
+        PAHPrimary* p=this;
+        if (pri.size()>1)
+            std::cout<<"DEBUGGING"<<std::endl;
 
+        for (int i=0;i!=pri.size();++i)
+        {
+            p->m_leftchild=pri[i];
+            p->m_rightchild=NULL;
+            //p->m_rightchild->m_leftchild=NULL;
+            p=p->m_leftchild;
+        }
+        UpdateCache();
 		// Read PAHmass.
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_PAHmass = (real)val;
-		m_leftchild=NULL;
+		//m_leftchild=NULL;
 		m_rightchild=NULL;
 		m_parent=NULL;
 		m_leftparticle=NULL;

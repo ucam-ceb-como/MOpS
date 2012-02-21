@@ -218,7 +218,7 @@ private:
                                    std::stack<bool> &takeLeftBranch);
 
     void outputPAHPrimary(std::ostream &out) const;
-    void inputPAHPrimary(std::istream &in, PAHPrimary *m_input);
+    PAHPrimary* inputPAHPrimary(std::istream &in);
 
     // Vector of PAHs.
     // PAHStructure class now have proper copy constructor

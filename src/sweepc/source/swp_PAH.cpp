@@ -111,13 +111,17 @@ Sweep::KMC_ARS::PAHStructure* PAH::Structure()
 
 void PAH::Serialize(std::ostream &out) const
 {
-    int m_numC=this->m_pahstruct->numofC();
-    int m_numH=(this->m_pahstruct->numofH());
-    out.write((char*)&(m_numC), sizeof(m_numC));
-    out.write((char*)&(m_numH), sizeof(m_numH));
-    out.write((char*)&(time_created), sizeof(time_created));
-    out.write((char*)&(lastupdated), sizeof(lastupdated));
-    out.write((char*)&(PAH_ID), sizeof(PAH_ID));
+    double val=0.0;
+    val=this->m_pahstruct->numofC();
+    out.write((char*)&(val), sizeof(val));
+    val=this->m_pahstruct->numofH();
+    out.write((char*)&(val), sizeof(val));
+    val=time_created;
+    out.write((char*)&(val), sizeof(val));
+    val=lastupdated;
+    out.write((char*)&(val), sizeof(val));
+    val=PAH_ID;
+    out.write((char*)&(val), sizeof(val));
 }
 void PAH::Deserialize(std::istream &in)
 {
@@ -135,10 +139,10 @@ void PAH::Deserialize(std::istream &in)
     m_pahstruct->setnumofH((int)val);
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    time_created = (int)val;
+    time_created = (double)val;
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    lastupdated = (int)val;
+    lastupdated = (double)val;
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     PAH_ID = (int)val;
