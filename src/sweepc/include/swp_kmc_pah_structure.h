@@ -84,7 +84,11 @@ namespace Sweep{
             PAHStructure* Clone() ;
             //! return number of carbon and hydrogen for particular PAH
             int numofC() const;
-			int numofH() const;
+            int numofH() const;
+            //! return num of rings
+            int numofRings() const;
+            //! return num of edge carbon
+            int numofEdgeC() const;
             //! set number of cabon and hydrogen for particular PAH
             void setnumofC(int val);
             void setnumofH(int val);

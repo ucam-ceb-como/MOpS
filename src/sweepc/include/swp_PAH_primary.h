@@ -154,6 +154,10 @@ public:
     int NumHydrogen() const;
     //! returns the number of PAH in the particle
     int NumPAH() const;
+    //! returns the number of hydrogen atoms in the particle
+    int NumEdgeC() const;
+    //! returns the number of hydrogen atoms in the particle
+    int NumRings() const;
     //! returns sqrt(L*W)
     double sqrtLW() const;
     double AvgCoalesc() const;
@@ -259,7 +263,10 @@ private:
 
     double m_children_coalescence;
 
-
+    // total num of edge C in this soot particle
+    int m_numOfEdgeC;
+    // total num of rings (inculding 5, 6- menber rings) in this soot particle
+    int m_numOfRings;
 
     // radius of gyration and fractal dimension
     // the values are only update in CalcFractaldimension()

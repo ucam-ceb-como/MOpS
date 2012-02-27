@@ -92,7 +92,9 @@ double PAHPrimary::pow(double a, double b) {
 // CONSTRUCTORS AND DESTRUCTORS.
 PAHPrimary::PAHPrimary() : Primary(),
     m_numcarbon(0),
-	m_numH(0),
+    m_numH(0),
+    m_numOfEdgeC(0),
+    m_numOfRings(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -127,7 +129,9 @@ PAHPrimary::PAHPrimary() : Primary(),
 PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model)
 : Primary(time, model),
     m_numcarbon(0),
-	m_numH(0),
+    m_numH(0),
+    m_numOfEdgeC(0),
+    m_numOfRings(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -171,7 +175,9 @@ PAHPrimary::PAHPrimary(const real time, const real position,
                        const Sweep::ParticleModel &model)
 : Primary(time, model),
     m_numcarbon(0),
-	m_numH(0),
+    m_numH(0),
+    m_numOfEdgeC(0),
+    m_numOfRings(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -210,7 +216,9 @@ PAHPrimary::PAHPrimary(const real time, const real position,
 PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 : Primary(time, model),
     m_numcarbon(0),
-	m_numH(0),
+    m_numH(0),
+    m_numOfEdgeC(0),
+    m_numOfRings(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -388,6 +396,8 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
     m_avg_coalesc=source->m_avg_coalesc;
     m_numcarbon = source->m_numcarbon;
     m_numH = source->m_numH;
+    m_numOfEdgeC = source->m_numOfEdgeC;
+    m_numOfRings = source->m_numOfRings;
     m_values=source->m_values;
     m_comp=source->m_comp;
 
@@ -1255,6 +1265,8 @@ void PAHPrimary::UpdatePrimary(void)
     {
         m_numcarbon=0;
         m_numH=0;
+        m_numOfEdgeC=0;
+        m_numOfRings=0;
         m_PAHmass=0;
         m_PAHCollDiameter=0;
         m_numPAH= m_PAH.size();
@@ -1263,6 +1275,8 @@ void PAHPrimary::UpdatePrimary(void)
         for (vector<boost::shared_ptr<PAH> >::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
             m_numcarbon += (*i)->m_pahstruct->numofC();
             m_numH += (*i)->m_pahstruct->numofH();
+            m_numOfEdgeC += (*i)->m_pahstruct->numofEdgeC();
+            m_numOfRings += (*i)->m_pahstruct->numofRings();
             maxcarbon=max(maxcarbon, (*i)->m_pahstruct->numofC());    // search for the largest PAH in the PRimary, in Angstrom
         }
         m_PAHmass=m_numcarbon * 1.9945e-26 + m_numH * 1.6621e-27;     //convert to kg, hydrogen atoms are not considered
@@ -1288,9 +1302,11 @@ void PAHPrimary::UpdatePrimary(void)
 
 void PAHPrimary::Reset()
 {
-	m_numcarbon=0;
-	m_numH=0;
-	m_primarydiam=0.0;
+    m_numcarbon=0;
+    m_numH=0;
+    m_numOfEdgeC=0;
+    m_numOfRings=0;
+    m_primarydiam=0.0;
     m_surf=0;
     m_vol=0;
     m_PAH.clear();
@@ -1334,8 +1350,12 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
         m_primarydiam = (m_leftchild->m_primarydiam+m_rightchild->m_primarydiam);
         m_mass=(m_leftchild->m_mass+m_rightchild->m_mass);
         m_PAHCollDiameter=max(m_leftchild->m_PAHCollDiameter,m_rightchild->m_PAHCollDiameter);
-        m_numcarbon=m_leftchild->m_numcarbon+m_rightchild->m_numcarbon;
-		m_numH=m_leftchild->m_numH+m_rightchild->m_numH;
+
+        m_numcarbon=m_leftchild->m_numcarbon + m_rightchild->m_numcarbon;
+        m_numH=m_leftchild->m_numH + m_rightchild->m_numH;
+
+        m_numOfEdgeC=m_leftchild->m_numOfEdgeC + m_rightchild->m_numOfEdgeC;
+        m_numOfRings=m_leftchild->m_numOfRings + m_rightchild->m_numOfRings;
         // calculate the coalescence level of the two primaries connected by this node
         m_children_coalescence=CoalescenceLevel();
         if (m_children_coalescence>1)
@@ -1479,6 +1499,16 @@ int PAHPrimary::NumHydrogen() const
     return m_numH;
 }
 
+int PAHPrimary::NumEdgeC() const
+{
+    return m_numOfEdgeC;
+}
+
+int PAHPrimary::NumRings() const
+{
+    return m_numOfRings;
+}
+
 int PAHPrimary::NumPAH() const
 {
     return m_numPAH;
@@ -1559,6 +1589,11 @@ void PAHPrimary::Serialize(std::ostream &out) const
         val = (double)m_numH;
         out.write((char*)&val, sizeof(val));
 
+        val = (double)m_numOfEdgeC;
+        out.write((char*)&val, sizeof(val));
+
+        val = (double)m_numOfRings;
+        out.write((char*)&val, sizeof(val));
 		// write the PAH stack
 		/*PAH currPAH;
 		for (int i=0; i!=m_numPAH; ++i) {
@@ -1595,9 +1630,15 @@ void PAHPrimary::outputPAHPrimary(std::ostream &out) const
         double val=0.0;
         val=m_numPAH;
         out.write((char*)&val, sizeof(val));
+
         val=m_numcarbon;
         out.write((char*)&val, sizeof(val));
         val=m_numH;
+        out.write((char*)&val, sizeof(val));
+
+        val=m_numOfEdgeC;
+        out.write((char*)&val, sizeof(val));
+        val=m_numOfRings;
         out.write((char*)&val, sizeof(val));
         //count the number of PAH should be serialized
         int m_count = 0;
@@ -1623,6 +1664,12 @@ PAHPrimary* PAHPrimary::inputPAHPrimary(std::istream &in)
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     pri->m_numH=(int)val;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    pri->m_numOfEdgeC=(int)val;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    pri->m_numOfRings=(int)val;
 
     int m_count=0;
     while (m_count != pri->m_numPAH)
@@ -1681,6 +1728,11 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_numH = (int)val;
 
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_numOfEdgeC = (int)val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_numOfRings = (int)val;
 	    // Read PAHs.
 	/*
 		for (int i=0; i!=m_numPAH; ++i) {

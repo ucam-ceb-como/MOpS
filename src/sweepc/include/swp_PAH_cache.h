@@ -115,18 +115,20 @@ public:
     virtual void Deserialize(
         std::istream &in     // Input stream.
         );
-	  int m_numPAH;
-	  real m_PAHDiameter;
-	  int m_numcarbon;
-	  int m_numH;
-	  int m_numprimary;
-      double m_sqrtLW;
-	  double m_LdivW;
-	  double m_primarydiam;
-      double m_fdim;
-      double m_Rg;
-      double m_avg_coalesc;
 
+    int m_numPAH;
+    real m_PAHDiameter;
+    int m_numcarbon;
+    int m_numH;
+    int m_numprimary;
+    int m_numOfEdgeC;
+    int m_numOfRings;
+    double m_sqrtLW;
+    double m_LdivW;
+    double m_primarydiam;
+    double m_fdim;
+    double m_Rg;
+    double m_avg_coalesc;
 };
 }//namespace Aggmodels
 }//namespace Sweep
