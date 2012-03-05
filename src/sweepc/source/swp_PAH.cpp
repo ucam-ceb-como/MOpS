@@ -50,7 +50,7 @@ using namespace Sweep::KMC_ARS;
 using namespace std;
 
 
-PAH::PAH(){
+PAH::PAH():time_created(0),lastupdated(0),PAH_ID(0),m_pahstruct(new PAHStructure()){
 }
 
 PAH::PAH(real time, Sweep::ParticleModel::PostProcessStartingStr str):
@@ -106,4 +106,45 @@ void PAH::saveDOTperLoop(int ID, int i) const{
 Sweep::KMC_ARS::PAHStructure* PAH::Structure()
 {
    return m_pahstruct;
+}
+
+
+void PAH::Serialize(std::ostream &out) const
+{
+    double val=0.0;
+    val=this->m_pahstruct->numofC();
+    out.write((char*)&(val), sizeof(val));
+    val=this->m_pahstruct->numofH();
+    out.write((char*)&(val), sizeof(val));
+    val=time_created;
+    out.write((char*)&(val), sizeof(val));
+    val=lastupdated;
+    out.write((char*)&(val), sizeof(val));
+    val=PAH_ID;
+    out.write((char*)&(val), sizeof(val));
+}
+void PAH::Deserialize(std::istream &in)
+{
+    if (in.good()) {
+    // Read the output version.  Currently there is only one
+    // output version, so we don't do anything with this variable.
+    // Still needs to be read though.
+
+	double val = 0.0;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    m_pahstruct->setnumofC((int)val);
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    m_pahstruct->setnumofH((int)val);
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    time_created = (double)val;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    lastupdated = (double)val;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    PAH_ID = (int)val;
+    }
 }

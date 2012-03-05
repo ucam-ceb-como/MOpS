@@ -71,7 +71,8 @@ cp(cg)
     try{
         cm.readInput(fCamFlow,cc,cg,convert,ca,cb,cp,config,cSoot);
     }catch(CamError &ce){
-        std::cout << ce.errorMessage;
+        std::cout << "ERROR! " << ce.errorMessage;
+        std::exit(EXIT_FAILURE);
     }
 
     //read mechanism, thermo and trasnport data
