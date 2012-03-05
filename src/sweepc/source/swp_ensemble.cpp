@@ -344,7 +344,7 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
         m_dbleactive = true;
-        //printf("sweep: Particle doubling activated.\n");
+        printf("sweep: Particle doubling activated.\n");
     }
 
     // Check ensemble for space, if there is not enough space then need
@@ -963,16 +963,10 @@ int Sweep::Ensemble::NumOfInceptedPAH() const
     //    const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
     //    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
 
-    //    //const Sweep::Primary *rhsparticle = NULL;
-    //    //rhsparticle = m_particles[i]->Primary();
-    //    numofpyrene += rhsparticle->Pyrene();
+    //    numofpyrene += rhsparticle->InceptedPAH();
     //    }
     //if (numofpyrene!= m_numofInceptedPAH)
-    //{
-    //    //if (numofpyrene == m_numofInceptedPAH-1) 
-    //    //    return m_numofInceptedPAH;
     //    std::cout<<"something goes wrong, the number ofPAH in ensemble is not consistent"<<std::endl;
-    //}
     //return numofpyrene;
     return m_numofInceptedPAH;
 }
@@ -992,6 +986,7 @@ void Sweep::Ensemble::SetNumOfInceptedPAH(int m_amount, Sweep::Primary *m_primar
 {
     if (m_primary->AggID() ==AggModels::PAH_KMC_ID)
     {
+        //m_primary->ParticleModel()->IsPyreneInception()
         const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
         rhsparticle = dynamic_cast<const Sweep::AggModels::PAHPrimary*>(m_primary);
 

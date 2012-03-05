@@ -252,12 +252,19 @@ void Process::RemoveProduct(const std::string &name)
  * @param[in]       truer       True rate for event
  * @param[in,out]   rng         Random number generator
  *
- * @pre     truer <= majr
+ * @pre     truer <= majr, if truer > majr, cerr a warning and return false
  *
  * @return      True with probability 1-truer/majr, otherwise false
  */
 bool Process::Fictitious(real majr, real truer, rng_type &rng)
 {
+    // ensure truer <= maj, otherwise it will crash the program.
+    if (truer>majr)
+    {
+        // if the following warning msg show frequently, a better solution ensuring truer <= maj should be considered.
+        std::cerr<<"maj is still smaller than true"<<std::endl;
+        return false;
+    }
     typedef boost::bernoulli_distribution<real> bernoulli_distrib;
     bernoulli_distrib fictitiousDistrib(1.0 - truer/majr);
     boost::variate_generator<rng_type&, bernoulli_distrib> fictitiousGenerator(rng, fictitiousDistrib);

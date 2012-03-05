@@ -57,12 +57,15 @@
 #include "swp_kmc_pah_structure.h"
 #include "swp_PAH.h"
 #include "swp_ensemble.h"
+#include "swp_particle_model.h"
 
 #include <stdexcept>
 #include <cassert>
 #include <boost/random/uniform_smallint.hpp>
 #include <boost/random/bernoulli_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
+#include <boost/bind.hpp>
+#include <boost/bind/placeholders.hpp>
 
 #include "string_functions.h"
 
@@ -76,7 +79,6 @@ using namespace Strings;
 //used for debugging, testing clone function for PAHStructure.
 static unsigned int ID=0; 
 static bool m_clone=false;
-static bool m_pyreneInception = true;
 /*
 double PAHPrimary::pow(double a, double b) {
     int tmp = (*(1 + (int *)&a));
@@ -90,7 +92,9 @@ double PAHPrimary::pow(double a, double b) {
 // CONSTRUCTORS AND DESTRUCTORS.
 PAHPrimary::PAHPrimary() : Primary(),
     m_numcarbon(0),
-	m_numH(0),
+    m_numH(0),
+    m_numOfEdgeC(0),
+    m_numOfRings(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -125,7 +129,9 @@ PAHPrimary::PAHPrimary() : Primary(),
 PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model)
 : Primary(time, model),
     m_numcarbon(0),
-	m_numH(0),
+    m_numH(0),
+    m_numOfEdgeC(0),
+    m_numOfRings(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -169,7 +175,9 @@ PAHPrimary::PAHPrimary(const real time, const real position,
                        const Sweep::ParticleModel &model)
 : Primary(time, model),
     m_numcarbon(0),
-	m_numH(0),
+    m_numH(0),
+    m_numOfEdgeC(0),
+    m_numOfRings(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -208,7 +216,9 @@ PAHPrimary::PAHPrimary(const real time, const real position,
 PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 : Primary(time, model),
     m_numcarbon(0),
-	m_numH(0),
+    m_numH(0),
+    m_numOfEdgeC(0),
+    m_numOfRings(0),
     m_PAHmass(0),
     m_PAHCollDiameter(0),
     m_numPAH(0),
@@ -253,8 +263,7 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 */
 void PAHPrimary::AddPAH(real time,const Sweep::ParticleModel &model)
 {
-    m_pyreneInception =  model.IsPyreneInception();
-    boost::shared_ptr<PAH> new_PAH (new PAH(time, m_pyreneInception));
+    boost::shared_ptr<PAH> new_PAH (new PAH(time, model.InceptedPAH()));
     new_PAH->PAH_ID=ID;
     m_PAH.push_back(new_PAH);
     ID++;
@@ -387,6 +396,10 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
     m_avg_coalesc=source->m_avg_coalesc;
     m_numcarbon = source->m_numcarbon;
     m_numH = source->m_numH;
+    m_numOfEdgeC = source->m_numOfEdgeC;
+    m_numOfRings = source->m_numOfRings;
+    m_values=source->m_values;
+    m_comp=source->m_comp;
 
     // Replace the PAHs with those from the source
     if (m_clone==true){
@@ -779,7 +792,7 @@ void PAHPrimary::ResetChildrenProperties()
 }
 
 //merges the left and the right primary particle to one primary particle
-PAHPrimary &PAHPrimary::Merge()
+void PAHPrimary::Merge()
 {
 //    if(this->m_numprimary>5)
  //       cout<<"tset";
@@ -912,17 +925,12 @@ PAHPrimary &PAHPrimary::Merge()
 				    m_rightchild->m_parent=this;
 				    m_leftchild->m_parent=this;
                 }
-
                 delete oldrightparticle;
-
 			}
-
 		}
-
         UpdateCache();
   //      PrintTree("after.inp");
         }
-		return *this;
 }
 
 void PAHPrimary::ReleaseMem()
@@ -963,7 +971,7 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
  *@param[in,out]    rng     Random number generator
  *
  * The actual interval over which the update is carried out on a PAH is from
- * lastupdated to t - freezetime.
+ * lastupdated to t.
  */
 void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell &sys, rng_type &rng)
 {
@@ -979,7 +987,8 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
     {
         // There are PAHs in this primary so update them, if needed
         // Flag to show if any PAH has been changed
-        bool PAHchanged = false;
+        bool m_PAHclusterchanged = false;
+        bool m_InvalidPAH = false;
         const int m_InceptedPAH = InceptedPAH();
 
         // Loop over each PAH in this primary
@@ -991,6 +1000,7 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
             // surrounding gas phase.  Once a primary contains more than minPAH
             // PAHs the growth rate of each PAH is reduced according to the
             // growth factor
+            bool m_PAHchanged = false;
             const double minPAH = model.Components(0)->MinPAH();
 
             real growthfact = 1.0;
@@ -1018,20 +1028,91 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
 
             // See if anything changed, as this will required a call to UpdatePrimary() below
             if(oldNumCarbon != (*it)->m_pahstruct->numofC() || oldNumH != (*it)->m_pahstruct->numofH())
-                PAHchanged = true;
+            {
+                m_PAHclusterchanged = true; 
+                m_PAHchanged = true;
+            }
+            if (m_PAHchanged)
+                m_InvalidPAH = CheckInvalidPAHs(*it);
+        }
+        if (m_InvalidPAH)
+        {
+            RemoveInvalidPAHs();
         }
 
+        //sys.Particles().Add();
+        //this->ParticleModel()->Mode();
         // Calculate derived quantities such as collision diameter and surface
         // area by iterating through all the PAHs.  This call is rather expensive.
-        if(PAHchanged) {
+        if(m_PAHclusterchanged) {
             UpdatePrimary();
-                if (m_InceptedPAH!=0) 
+             if (m_InceptedPAH!=0) {
                     sys.Particles().SetNumOfInceptedPAH(-1);
-            else if (m_InceptedPAH == 0 && InceptedPAH()==1)
+                    //sys.Particles().NumOfInceptedPAH();
+             }
+            else if (m_InceptedPAH == 0 && InceptedPAH()==1){
                     sys.Particles().SetNumOfInceptedPAH(1);
+                    //sys.Particles().NumOfInceptedPAH();
+            }
         }
         // otherwise there is no need to update
     }
+}
+
+bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
+{
+    ParticleModel::PostProcessStartingStr str = this->ParticleModel()->InceptedPAH();
+    int m_control;
+    switch (str){
+    case ParticleModel::A1:
+        m_control=Sweep::KMC_ARS::BENZENE_C;
+        break;
+    case ParticleModel::A2:
+        m_control=10;
+        break;
+    case ParticleModel::A4:
+        m_control=Sweep::KMC_ARS::PYRENE_C;
+        break;
+    default:
+        throw std::runtime_error("no information about the incepted PAH is available (Sweep::PAHPrimary::CheckInvalidPAHs())");
+    }
+    return (it->m_pahstruct->numofC() < m_control);
+}
+
+//struct compare_class
+//{
+//    bool operator () (const boost::shared_ptr<PAH>  & it) const
+//    {
+//        if (m_pyreneInception) 
+//        {
+//            if (it->Structure()->numofC() < Sweep::KMC_ARS::PYRENE_C)
+//                return true;
+//        }
+//        else 
+//        {
+//            if (it->Structure()->numofC() < Sweep::KMC_ARS::BENZENE_C)
+//                return true;
+//        }
+//        return false;
+//    }
+//};
+
+void PAHPrimary::RemoveInvalidPAHs()
+{
+    // if the num of PAH in this primary particle is smaller than 2 after removing the InvalidPAHs,
+    // Fakecoalescence() will return true and it will be merged with other part of the aggregate.
+    // TODO: thinking suitable solution for moving the InvalidPAH back to gasphase when coupling with the gasphase chemistry.
+    // current implementation is only suitable for post-pocessing due to mass loss.
+    //remove_if(m_PAH.begin(),m_PAH.end(),compare_class());
+    std::vector<boost::shared_ptr<PAH> >::iterator NewEnd = remove_if(m_PAH.begin(),m_PAH.end(),boost::bind(&PAHPrimary::CheckInvalidPAHs, this,_1));
+    m_PAH.resize(NewEnd-m_PAH.begin());
+    //if (m_parent != NULL && m_PAH.size()<2)
+    //{
+    //    std::cout<<"False coalescence starts"<<std::endl;
+    ////    m_parent->m_children_coalescence=1;
+    ////    //m_parent->Merge();
+    //}
+    //    remove_if(m_PAH.begin(),m_PAH.end(),compare_class());
 }
 
 // Find Xmer (monomer, dimer or trimer) and record its mass which will be used to create mass spectra
@@ -1071,13 +1152,29 @@ double PAHPrimary::MassforXmer() const
 
 int PAHPrimary::InceptedPAH() const
 {
-    if (Numprimary() == 1 && NumPAH() == 1){
-        //currently only Num of C and H is used to identify the Pyrene and benzene
-        if (m_pyreneInception && NumCarbon() == 16 && NumHydrogen() ==10)
-            return 1;
-        else if (!m_pyreneInception && NumCarbon() == 6 && NumHydrogen() == 6)
-            return 1;
-        else return 0;
+    // m_parent == NULL is to check whether this primary particle is part of an aggregate.
+    if (m_parent == NULL && Numprimary() == 1 && NumPAH() == 1){
+        //currently only Num of C and H is used to identify the Pyrene, Naphthalene and benzene
+        ParticleModel::PostProcessStartingStr str = ParticleModel()->InceptedPAH();
+        switch (str){
+        case ParticleModel::A1:
+            if (NumCarbon() == BENZENE_C && NumHydrogen() == BENZENE_H)
+                return 1;
+            else return 0;
+            break;
+        case ParticleModel::A2:
+            if (NumCarbon() == NAPHTHALENE_C && NumHydrogen() == NAPHTHALENE_H)
+                return 1;
+            else return 0;
+            break;
+        case ParticleModel::A4:
+            if (NumCarbon() == PYRENE_C && NumHydrogen() == PYRENE_H)
+                return 1;
+            else return 0;
+            break;
+        default:
+            return 0;
+        }
     }
     else return 0;
 }
@@ -1100,16 +1197,42 @@ int PAHPrimary::InceptedPAH() const
     ID++;
     }
 
+// this function is only used to create a vector containing all the mass of individual PAH(but currently only track the m_leftchild because of the implementation of serialization)
+void PAHPrimary::mass_PAH(std::vector<double> &out) const
+{
+    if (m_leftchild!=NULL)
+        m_leftchild->mass_PAH(out);
+
+    for (size_t i = 0; i != m_PAH.size(); ++i)
+    {
+        double temp_mass=0.0;
+        temp_mass=12*m_PAH[i]->m_pahstruct->numofC()+m_PAH[i]->m_pahstruct->numofH();
+        out.push_back(temp_mass);
+    }
+}
 void PAHPrimary::UpdateCache(void)
 {
     UpdateCache(this);
 }
 
+bool PAHPrimary::Fakecoalescence()
+{
+    // there are two conditions that it should perform fakecoalescence, no PAH or only one PAH in this primary particle, thus it should be merged with other primary particle.
+    if (m_leftparticle!=NULL)
+    {
+        if (m_leftparticle->m_numPAH==1||(m_leftparticle->m_numPAH==0&&m_leftparticle->m_numcarbon==0))
+            return true;
+        else if (m_rightparticle->m_numPAH==1||(m_rightparticle->m_numPAH==0&&m_rightparticle->m_numcarbon==0))
+            return true;
+        else return false;
+    }
+    else return false;
+}
 
 bool PAHPrimary::CheckCoalescence()
 {
     bool hascoalesced=false;
-    if (m_children_coalescence> 0.99 && m_leftparticle!=NULL)
+    if ((m_children_coalescence> 0.99 && m_leftparticle!=NULL)||Fakecoalescence())
         {
            // PrintTree("before.inp");
            // cout <<"merging"<<m_children_coalescence<<endl;
@@ -1129,46 +1252,63 @@ bool PAHPrimary::CheckCoalescence()
 }
 
 
-//this function updates a primary particle
+//this function updates a primary particle (m_PAH.empty() is not true)
 void PAHPrimary::UpdatePrimary(void)
 {
-	m_numcarbon=0;
-	m_numH=0;
-    m_PAHmass=0;
-	m_PAHCollDiameter=0;
-	m_numPAH= m_PAH.size();
-
-    int maxcarbon=0;
-    for (vector<boost::shared_ptr<PAH> >::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
-        m_numcarbon += (*i)->m_pahstruct->numofC();
-		m_numH += (*i)->m_pahstruct->numofH();
-		maxcarbon=max(maxcarbon, (*i)->m_pahstruct->numofC());    // search for the largest PAH in the PRimary, in Angstrom
-    }
-	m_PAHmass=m_numcarbon * 1.9945e-26 + m_numH * 1.6621e-27;     //convert to kg, hydrogen atoms are not considered
-    m_PAHCollDiameter=sqrt(maxcarbon*2.0/3.);
-	m_PAHCollDiameter*=2.4162*1e-10;				 //convert from Angstrom to m
-
-    if(m_pmodel->ComponentCount()!=1)        //at the moment we have only one component: soot
+    if (m_PAH.empty())
     {
-        throw std::runtime_error("Model contains more then one component. Only soot is supported. (PAHPrimary::UpdatePrimary)");
+        // in this case this primary particle is invalid, so set the cached values, all the m_??? could be set to 0
+        // but currently only the mass is concerned in the Primary::IsValid()
+        m_mass = 0;
+        m_numcarbon=0;
+        m_numH=0;
     }
-    m_vol  = m_PAHmass / m_pmodel->Components(0)->Density();        //in m^3
-	m_mass = m_PAHmass;
-	m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
-    m_dmob = m_diam;
-    m_dcol = max(m_diam,m_PAHCollDiameter);
-    m_surf = PI * m_diam * m_diam;
-    m_primarydiam = m_diam;
-    m_avg_coalesc = 0;
+    else 
+    {
+        m_numcarbon=0;
+        m_numH=0;
+        m_numOfEdgeC=0;
+        m_numOfRings=0;
+        m_PAHmass=0;
+        m_PAHCollDiameter=0;
+        m_numPAH= m_PAH.size();
+
+        int maxcarbon=0;
+        for (vector<boost::shared_ptr<PAH> >::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
+            m_numcarbon += (*i)->m_pahstruct->numofC();
+            m_numH += (*i)->m_pahstruct->numofH();
+            m_numOfEdgeC += (*i)->m_pahstruct->numofEdgeC();
+            m_numOfRings += (*i)->m_pahstruct->numofRings();
+            maxcarbon=max(maxcarbon, (*i)->m_pahstruct->numofC());    // search for the largest PAH in the PRimary, in Angstrom
+        }
+        m_PAHmass=m_numcarbon * 1.9945e-26 + m_numH * 1.6621e-27;     //convert to kg, hydrogen atoms are not considered
+        m_PAHCollDiameter=sqrt(maxcarbon*2.0/3.);
+        m_PAHCollDiameter*=2.4162*1e-10;         //convert from Angstrom to m
+
+        if(m_pmodel->ComponentCount()!=1)        //at the moment we have only one component: soot
+        {
+            throw std::runtime_error("Model contains more then one component. Only soot is supported. (PAHPrimary::UpdatePrimary)");
+        }
+        m_vol  = m_PAHmass / m_pmodel->Components(0)->Density();        //in m^3
+        m_mass = m_PAHmass;
+        m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
+        m_dmob = m_diam;
+        m_dcol = max(m_diam,m_PAHCollDiameter);
+        m_surf = PI * m_diam * m_diam;
+        m_primarydiam = m_diam;
+        m_avg_coalesc = 0;
+    }
 }
 
 
 
 void PAHPrimary::Reset()
 {
-	m_numcarbon=0;
-	m_numH=0;
-	m_primarydiam=0.0;
+    m_numcarbon=0;
+    m_numH=0;
+    m_numOfEdgeC=0;
+    m_numOfRings=0;
+    m_primarydiam=0.0;
     m_surf=0;
     m_vol=0;
     m_PAH.clear();
@@ -1212,8 +1352,12 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
         m_primarydiam = (m_leftchild->m_primarydiam+m_rightchild->m_primarydiam);
         m_mass=(m_leftchild->m_mass+m_rightchild->m_mass);
         m_PAHCollDiameter=max(m_leftchild->m_PAHCollDiameter,m_rightchild->m_PAHCollDiameter);
-        m_numcarbon=m_leftchild->m_numcarbon+m_rightchild->m_numcarbon;
-		m_numH=m_leftchild->m_numH+m_rightchild->m_numH;
+
+        m_numcarbon=m_leftchild->m_numcarbon + m_rightchild->m_numcarbon;
+        m_numH=m_leftchild->m_numH + m_rightchild->m_numH;
+
+        m_numOfEdgeC=m_leftchild->m_numOfEdgeC + m_rightchild->m_numOfEdgeC;
+        m_numOfRings=m_leftchild->m_numOfRings + m_rightchild->m_numOfRings;
         // calculate the coalescence level of the two primaries connected by this node
         m_children_coalescence=CoalescenceLevel();
         if (m_children_coalescence>1)
@@ -1357,6 +1501,16 @@ int PAHPrimary::NumHydrogen() const
     return m_numH;
 }
 
+int PAHPrimary::NumEdgeC() const
+{
+    return m_numOfEdgeC;
+}
+
+int PAHPrimary::NumRings() const
+{
+    return m_numOfRings;
+}
+
 int PAHPrimary::NumPAH() const
 {
     return m_numPAH;
@@ -1428,6 +1582,20 @@ void PAHPrimary::Serialize(std::ostream &out) const
         val = (double)m_Rg;
         out.write((char*)&val, sizeof(val));
 
+        val = (double)m_numPAH;
+        out.write((char*)&val, sizeof(val));
+
+        val = (double)m_numcarbon;
+        out.write((char*)&val, sizeof(val));
+
+        val = (double)m_numH;
+        out.write((char*)&val, sizeof(val));
+
+        val = (double)m_numOfEdgeC;
+        out.write((char*)&val, sizeof(val));
+
+        val = (double)m_numOfRings;
+        out.write((char*)&val, sizeof(val));
 		// write the PAH stack
 		/*PAH currPAH;
 		for (int i=0; i!=m_numPAH; ++i) {
@@ -1437,11 +1605,10 @@ void PAHPrimary::Serialize(std::ostream &out) const
                         out.write((char*)&currPAH.m_numcarbon, sizeof(currPAH.m_numcarbon));
                 }
 */
-		// Write PAHmass
+        outputPAHPrimary(out);
+        // Write PAHmass
         val = (double) m_PAHmass;
         out.write((char*)&val, sizeof(val));
-
-
 
         // Output base class.
         Primary::Serialize(out);
@@ -1450,6 +1617,71 @@ void PAHPrimary::Serialize(std::ostream &out) const
         throw invalid_argument("Output stream not ready "
                                "(Sweep, PAHPrimary::Serialize).");
     }
+}
+
+// not interesting the connectivity of each primary particle, but the xmer in the soot aggregate.
+void PAHPrimary::outputPAHPrimary(std::ostream &out) const
+{
+	if (m_leftchild != NULL)
+		m_leftchild->outputPAHPrimary(out);
+	if (m_rightchild != NULL)
+		m_rightchild->outputPAHPrimary(out);
+
+    //m_output=this;
+    if (m_numprimary==1) {
+        double val=0.0;
+        val=m_numPAH;
+        out.write((char*)&val, sizeof(val));
+
+        val=m_numcarbon;
+        out.write((char*)&val, sizeof(val));
+        val=m_numH;
+        out.write((char*)&val, sizeof(val));
+
+        val=m_numOfEdgeC;
+        out.write((char*)&val, sizeof(val));
+        val=m_numOfRings;
+        out.write((char*)&val, sizeof(val));
+        //count the number of PAH should be serialized
+        int m_count = 0;
+        while (m_count != m_numPAH)
+        {
+            m_PAH[m_count]->Serialize(out);
+            ++m_count;
+        }
+    }
+}
+
+PAHPrimary* PAHPrimary::inputPAHPrimary(std::istream &in)
+{
+    PAHPrimary* pri=new PAHPrimary();
+    double val=0.0;
+
+    pri->m_numprimary=1;
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    pri->m_numPAH=(int)val;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    pri->m_numcarbon=(int)val;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    pri->m_numH=(int)val;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    pri->m_numOfEdgeC=(int)val;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    pri->m_numOfRings=(int)val;
+
+    int m_count=0;
+    while (m_count != pri->m_numPAH)
+    {
+        boost::shared_ptr<PAH> new_PAH (new PAH());
+        new_PAH->Deserialize(in);
+        pri->m_PAH.push_back(new_PAH);
+        ++m_count;
+    }
+    return pri;
 }
 
 // Reads the object from a binary stream.
@@ -1489,7 +1721,20 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_Rg = (real)val;
 
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_numPAH = (int)val;
 
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_numcarbon = (int)val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_numH = (int)val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_numOfEdgeC = (int)val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_numOfRings = (int)val;
 	    // Read PAHs.
 	/*
 		for (int i=0; i!=m_numPAH; ++i) {
@@ -1501,10 +1746,26 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
 			m_PAH.push_back(currPAH);
 		}
 */
+        // pick up all the primary particles and store them in a vector then relink them using m_leftchild, thus the connectivity is completely wrong but in this case we are only interested the PAHs within the particle
+        // TODO: output and input the correct connectivity, but it is difficult.
+        vector<PAHPrimary*> pri;
+        for (int i=0; i!=m_numprimary; ++i) 
+        {
+            pri.push_back(inputPAHPrimary(in));
+        }
+        // relink the primary particles
+        PAHPrimary* p=this;
+
+        for (int i=0;i!=pri.size();++i)
+        {
+            p->m_leftchild=pri[i];
+            p->m_rightchild=NULL;
+            p=p->m_leftchild;
+        }
 		// Read PAHmass.
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_PAHmass = (real)val;
-		m_leftchild=NULL;
+		//m_leftchild=NULL;
 		m_rightchild=NULL;
 		m_parent=NULL;
 		m_leftparticle=NULL;
