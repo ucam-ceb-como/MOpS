@@ -173,13 +173,13 @@ public:
     int Numprimary() const;
     //! Returns the number of silicon atoms in the particle
     int NumSi() const;
-	//! Returns the number of oxygen atoms in the particle
+    //! Returns the number of oxygen atoms in the particle
     int NumO() const;
-	//! Returns the number of hydroxyl units in the particle
+    //! Returns the number of hydroxyl units in the particle
     int NumOH() const;
     //! Returns sqrt(L*W)
     real sqrtLW() const;
-	//! Returns average coalescence level
+    //! Returns average coalescence level
     real AvgSinter() const;
 
 private:

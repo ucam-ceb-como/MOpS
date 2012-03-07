@@ -1560,7 +1560,6 @@ int SilicaPrimary::NumOH() const
    return m_numOH;
 }
 
-
 real SilicaPrimary::AvgSinter() const
 {
    return m_avg_sinter;

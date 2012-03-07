@@ -55,38 +55,41 @@ using namespace std;
 
 const std::string SilicaStats::m_statnames[SilicaStats::STAT_COUNT] = {
     std::string("Number of Si atoms (cm-3)"),
-	std::string("Number of O atoms (cm-3)"),
-	std::string("Number of OH atoms (cm-3)"),
+    std::string("Number of O atoms (cm-3)"),
+    std::string("Number of OH atoms (cm-3)"),
     std::string("Avg. Number of Primaries per Particle (-)"),
-	std::string("Avg. Primary Diameter (nm)"),
+    std::string("Avg. Primary Diameter (nm)"),
     std::string("Avg. Sintering Level (-)"),
-	std::string("Avg. Particle Mass (kg)"),
-	std::string("Avg. Sintering Rate (m2/s)"),
-	std::string("Avg. Sintering Time (s)"),
-	std::string("Avg. Create Time (s)"),
+    std::string("Avg. Particle Mass (kg)"),
+    std::string("Avg. Sintering Rate (m2/s)"),
+    std::string("Avg. Sintering Time (s)"),
+    std::string("Avg. Create Time (s)"),
+    std::string("Avg. Si:O ratio (-)"),
 };
 
 const IModelStats::StatType SilicaStats::m_mask[SilicaStats::STAT_COUNT] = {
     IModelStats::Sum,  // Number of Si atoms.
-	IModelStats::Sum,  // Number of O atoms.
-	IModelStats::Sum,  // Number of OH atoms.
+    IModelStats::Sum,  // Number of O atoms.
+    IModelStats::Sum,  // Number of OH atoms.
     IModelStats::Avg,  // Avg.Number of primaries.
     IModelStats::Avg,  // Avg. Primary Particle diameter.
     IModelStats::Avg,  // Avg. Sintering level.
-	IModelStats::Avg,  // Avg particle mass,
+    IModelStats::Avg,  // Avg particle mass,
     IModelStats::Avg,  // Avg sint rate,
     IModelStats::Avg,  // Avg sint time,
-    IModelStats::Avg,  // Avg sint time,
+    IModelStats::Avg,  // Avg create time,
+    IModelStats::Avg,  // Avg Si:O ratio
 };
 
 const std::string SilicaStats::m_const_pslnames[SilicaStats::PSL_COUNT] = {
-    std::string("Number of Si atoms"),
-	std::string("Number of O atoms"),
-	std::string("Number of OH atoms"),
-    std::string("Number of primaries"),
-	std::string("Avg. primary diameter"),
-	std::string("Avg. Sintering Level"),
-	//std::string("Avg. Particle Mass"),
+    std::string("Number of Si Atoms"),
+    std::string("Number of O Atoms"),
+    std::string("Number of OH Atoms"),
+    std::string("Number of Primaries"),
+    std::string("Avg. Primary Diameter"),
+    std::string("Avg. Sintering Level"),
+    std::string("Avg. Si:O Ratio"),
+    //std::string("Avg. Particle Mass"),
 
 };
 
@@ -182,6 +185,7 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
             m_stats[iSintRate] += cache.m_sintrate * wt;
             m_stats[iSintTime] += cache.m_sinttime * wt;
             m_stats[iCreateTime] += cache.m_createtime * wt;
+            m_stats[iSiORatio] += (real(cache.m_numSi) / real(cache.m_numO + cache.m_numOH)) * wt;
             ++n;
             if (cache.m_numSi>1)
             {
@@ -333,14 +337,15 @@ void SilicaStats::PSL(const Sweep::Particle &sp, real time,
 
     // Get the PSL stats.
     if (cache != NULL) {
-		*(++j) = (real)(cache->m_numSi)/(real)(cache->m_numprimary);
-		*(++j) = (real)(cache->m_numO)/(real)(cache->m_numprimary);
-		*(++j) = (real)(cache->m_numOH)/(real)(cache->m_numprimary);
-		*(++j) = (real) (cache->m_numprimary);
-		//*(++j) = (real) (cache->m_sqrtLW);
-		//*(++j) = (real) (cache->m_LdivW);
-		*(++j) = (real) (cache->m_primarydiam)*1e9/(real)(cache->m_numprimary);//convert to nm
-		*(++j) = (real) (cache->m_avg_sinter);
+        *(++j) = (real)(cache->m_numSi)/(real)(cache->m_numprimary);
+        *(++j) = (real)(cache->m_numO)/(real)(cache->m_numprimary);
+        *(++j) = (real)(cache->m_numOH)/(real)(cache->m_numprimary);
+        *(++j) = (real) (cache->m_numprimary);
+        //*(++j) = (real) (cache->m_sqrtLW);
+        //*(++j) = (real) (cache->m_LdivW);
+        *(++j) = (real) (cache->m_primarydiam)*1e9/(real)(cache->m_numprimary);//convert to nm
+        *(++j) = (real) (cache->m_avg_sinter);
+        *(++j) = (real(cache->m_numSi) / real(cache->m_numO + cache->m_numOH));
         //*(++j) = (real) (cache->);
         //*(++j) = (real) (cache->m_Rg)*1e9;
         //*(++j) = (real) (cache->m_fdim);
