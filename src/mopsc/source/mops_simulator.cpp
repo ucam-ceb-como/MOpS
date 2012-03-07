@@ -2224,6 +2224,13 @@ void Simulator::Serialize(std::ostream &out) const
         n = (unsigned int)m_output_iter;
         out.write((char*)&n, sizeof(n));
 
+        // Flag controlling jump file output.
+        if (m_write_jumps) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
         // Number of particles for which to produce tracking output.
         n = (unsigned int)m_ptrack_count;
         out.write((char*)&n, sizeof(n));
@@ -2320,6 +2327,10 @@ void Simulator::Deserialize(std::istream &in)
                 // Sub-step iteration number at which output will occur.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_output_iter = n;
+
+                // Flag controlling jump file output.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_write_jumps = (n==trueval);
 
                 // Number of particles for which to produce tracking output.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
