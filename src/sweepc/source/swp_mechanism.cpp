@@ -344,6 +344,55 @@ real Mechanism::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry
     return sum;
 }
 
+// Get total number of jump events
+real Mechanism::CalcJumps(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom, fvector &jumps, bool scale) const
+{
+    // Ensure jumps vector is the correct length, then set to zero.
+    jumps.resize(m_processcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
+    fill(jumps.begin(), jumps.end(), 0.0);
+
+    // Iterator for filling jumps vector
+    fvector::iterator iterm = jumps.begin();
+
+    real sum = 0.0;
+
+    // Get number of inception jumps
+    for (unsigned int j=0; j!=m_inceptions.size(); ++j) {
+        (*iterm++) = m_proccount[j];
+    }
+
+    // Get number of particle process jumps
+    for (unsigned int j=0; j!=m_processes.size(); ++j) {
+        (*iterm++) = m_proccount[j+m_inceptions.size()];
+    }
+
+    // Get number of coagulation jumps.
+    unsigned int coagterms(0);       // Number of terms already used
+    for (unsigned int j=0; j!=m_coags.size(); ++j) {
+        unsigned int coagsum(0);     // Sum of real and fictitious jumps
+        // Sum up all terms of this process
+        for (unsigned int k=0; k!=m_coags[j]->TermCount(); ++k) {
+            coagsum += m_proccount[k+m_inceptions.size()+m_processes.size()+coagterms];
+            coagsum += m_fictcount[k+m_inceptions.size()+m_processes.size()+coagterms];
+        }
+        (*iterm++) = coagsum;
+        coagterms += m_coags[j]->TermCount();
+    }
+    //jumps[3] = (m_proccount[3]+m_proccount[4]+m_proccount[5]+m_proccount[6]+m_proccount[7]+m_proccount[8]+m_fictcount[3]+m_fictcount[4]+m_fictcount[5]+m_fictcount[6]+m_fictcount[7]+m_fictcount[8]);
+
+    /*if (!scale) {
+        // Need to return the rates to per unit vol.
+        real invvol = 1.0 / sys.SampleVolume();
+        for(i=jumps.begin(); i!=jumps.end(); ++i) {
+            *i *= invvol;
+        }
+        sum *= invvol;
+    }*/
+
+    return sum;
+}
+
+
 // Get rates of all processes separated into different
 // terms.  Rate terms are useful for subsequent particle
 // selection by different properties for the same process.
