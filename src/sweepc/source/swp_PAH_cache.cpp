@@ -55,11 +55,13 @@ using namespace std;
 // Default constructor.
 PAHCache::PAHCache(void)
 {
-	m_numPAH = 1;
-	m_PAHDiameter = 0.0;
+    m_numPAH = 1;
+    m_PAHDiameter = 0.0;
     m_numcarbon = 0;
-	m_numH = 0;
+    m_numH = 0;
     m_numprimary = 0;
+    m_numOfEdgeC=0;
+    m_numOfRings=0;
     m_sqrtLW = 0.0;
     m_LdivW = 0.0;
     m_primarydiam = 0.0;
@@ -99,6 +101,8 @@ PAHCache &PAHCache::operator=(const PAHCache &rhs)
 		m_numcarbon=rhs.m_numcarbon;
 		m_numH=rhs.m_numH;
         m_numprimary=rhs.m_numprimary;
+        m_numOfEdgeC=rhs.m_numOfEdgeC;
+        m_numOfRings=rhs.m_numOfRings;
         m_sqrtLW=rhs.m_sqrtLW;
         m_LdivW=rhs.m_LdivW;
         m_primarydiam=rhs.m_primarydiam;
@@ -117,6 +121,8 @@ PAHCache &PAHCache::operator=(const PAHPrimary &rhs)
 	m_numcarbon=rhs.NumCarbon();
 	m_numH=rhs.NumHydrogen();
     m_numprimary=rhs.Numprimary();
+    m_numOfEdgeC=rhs.NumEdgeC();
+    m_numOfRings=rhs.NumRings();
     m_sqrtLW=rhs.sqrtLW();
     m_LdivW=rhs.LdivW();
     m_primarydiam=rhs.PrimaryDiam();
@@ -161,6 +167,8 @@ PAHCache &PAHCache::operator+=(const PAHCache &rhs)
 	m_numcarbon += rhs.m_numcarbon;
 	m_numH += rhs.m_numH;
     m_numprimary+=rhs.m_numprimary;
+    m_numOfEdgeC+=rhs.m_numOfEdgeC;
+    m_numOfRings+=rhs.m_numOfRings;
     m_sqrtLW+=rhs.m_sqrtLW;
     m_LdivW+=rhs.m_LdivW;
     m_primarydiam+=rhs.m_primarydiam;
@@ -178,6 +186,8 @@ PAHCache &PAHCache::operator+=(const PAHPrimary &rhs)
 	m_numcarbon+=rhs.NumCarbon();
 	m_numH+=rhs.NumHydrogen();
     m_numprimary+=rhs.Numprimary();
+    m_numOfEdgeC+=rhs.NumEdgeC();
+    m_numOfRings+=rhs.NumRings();
     m_sqrtLW+=rhs.sqrtLW();
     m_LdivW+=rhs.LdivW();
     m_primarydiam+=rhs.PrimaryDiam();
@@ -226,6 +236,8 @@ void PAHCache::Clear()
 	m_numcarbon = 0;
 	m_numH = 0;
     m_numprimary = 0;
+    m_numOfEdgeC = 0;
+    m_numOfRings = 0;
     m_sqrtLW = 0.0;
     m_LdivW = 0.0;
     m_primarydiam = 0.0;
@@ -267,6 +279,12 @@ void PAHCache::Serialize(std::ostream &out) const
         out.write((char*)&v, sizeof(v));
 
         v = (int)m_numprimary;
+        out.write((char*)&v, sizeof(v));
+
+        v = (int)m_numOfEdgeC;
+        out.write((char*)&v, sizeof(v));
+
+        v = (int)m_numOfRings;
         out.write((char*)&v, sizeof(v));
 
         v = (double)m_sqrtLW;
@@ -323,6 +341,12 @@ void PAHCache::Deserialize(std::istream &in)
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_numprimary = (int)val;
+
+				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_numOfEdgeC = (int)val;
+
+				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_numOfRings = (int)val;
 
 				in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_sqrtLW = (real)val;

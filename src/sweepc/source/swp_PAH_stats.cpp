@@ -62,6 +62,8 @@ const std::string PAHStats::m_statnames[PAHStats::STAT_COUNT] = {
     std::string("Avg. PAH Collision Diameter"),
 	std::string("Avg. Number of Carbon Atoms"),
 	std::string("Avg. Number of Hydrogen Atoms"),
+	std::string("Avg. Number of Edge Carbon Atoms"),
+	std::string("Avg. Number of Rings"),
     std::string("Avg. Coalesc Threshold"),
     std::string("Num Primaries real Part"),
 };
@@ -75,6 +77,8 @@ const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. PAH Collision Diameter
 	IModelStats::Avg,  // Avg. Number of Carbon atoms
 	IModelStats::Avg,  // Avg. Number of Hydrogen atoms
+	IModelStats::Avg,  // Avg. Number of Edge Carbon Atoms
+	IModelStats::Avg,  // Avg. Number of Rings
     IModelStats::Avg,  // Avg. Coalesc Threshold
     IModelStats::Avg,  // Num Primaries real Part
 };
@@ -85,6 +89,8 @@ const std::string PAHStats::m_const_pslnames[PAHStats::PSL_COUNT] = {
 	std::string("Number of Carbon atoms"),
     std::string("Number of Hydrogen atoms"),
 	std::string("Number primaries"),
+	std::string("Number of Edge Carbon Atoms"),
+	std::string("Number of Rings"),
 	std::string("sqrt(LW)"),
 	std::string("LdivW"),
 	std::string("Avg. primary diameter"),
@@ -156,7 +162,7 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
     // Forward define sum of 'real particle' weights
-    // used to count particles with more then one PAH
+    // used to count particles with more than one PAH
 	// real part properties => particle only considered, sum of X / num of particle
     real wtreal = 0.0;
 
@@ -179,6 +185,8 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
 			m_stats[iPAHD]    		+= pah->PAHCollDiameter()*1e9 * wt;
 			m_stats[iNCARB]	  		+= cache.m_numcarbon * wt;
 			m_stats[iNHYDROGEN]	  	+= cache.m_numH * wt;
+            m_stats[iNEDGEC]	  	+= cache.m_numOfEdgeC * wt;
+            m_stats[iNRINGS]	  	+= cache.m_numOfRings * wt;
             m_stats[iNPAH+1]    	+= cache.m_numPAH * wt; //used to calculate sum of Number of PAHs.
             m_stats[iCOAL]    		+= cache.m_avg_coalesc * wt;
             if (cache.m_numPAH>1)
@@ -342,7 +350,9 @@ void PAHStats::PSL(const Sweep::Particle &sp, real time,
 		*(++j) = (real) (cache->m_numcarbon);
 		*(++j) = (real) (cache->m_numH);
 		*(++j) = (real) (cache->m_numprimary);
-		*(++j) = (real) (cache->m_sqrtLW);
+        *(++j) = (real) (cache->m_numOfEdgeC);
+        *(++j) = (real) (cache->m_numOfRings);
+        *(++j) = (real) (cache->m_sqrtLW);
 		*(++j) = (real) (cache->m_LdivW);
 		*(++j) = (real) (cache->m_primarydiam)*1e9/(real)(cache->m_numprimary);//convert to nm
         *(++j) = (real) (cache->m_Rg)*1e9;

@@ -577,6 +577,11 @@ private:
         const timevector &times // Simulation output time intervals.
         ) const;
 
+    // post-process the ensemble to find interested information, in this case, info about PAH mass distribution of individual soot aggregate at certain time.
+    void postProcessPAHinfo(
+        const Mechanism &mech,  // Mechanism use to solve system.
+        const timevector &times // Simulation output time intervals.
+        ) const;
     // FLUX VIEWER OUTPUT
     // Writes element fluxes to FluxViewer format.
     void writeElementFluxOutput(

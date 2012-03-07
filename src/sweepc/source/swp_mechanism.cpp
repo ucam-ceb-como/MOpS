@@ -783,7 +783,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
         AggModels::PAHPrimary *pah =
                 dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
 
-        // Look up new size of PAHs in database
+        // Update individual PAHs within this particle by using KMC code
         // sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
         pah->UpdatePAHs(t, *this, sys, rng);
         pah->UpdateCache();
