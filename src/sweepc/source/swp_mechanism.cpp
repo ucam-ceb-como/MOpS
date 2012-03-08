@@ -344,8 +344,20 @@ real Mechanism::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry
     return sum;
 }
 
-// Get total number of jump events
-real Mechanism::CalcJumps(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom, fvector &jumps, bool scale) const
+/*!
+ * @brief               Calculates the number of jump events for each process
+ *
+ * Calculates the absolute number of jump events for each inception, particle
+ * process and coagulation event. Returns the sum of the jump events.
+ *
+ * @param t             Time
+ * @param sys           Particle population
+ * @param local_geom    Pointer to local geometry
+ * @param jumps         Vector containing the number of jumps
+ * @param scale         Boolean indicating if scaling should be applied
+ * @return              Sum of jump events
+ */
+real Mechanism::CalcJumps(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom, fvector &jumps) const
 {
     // Ensure jumps vector is the correct length, then set to zero.
     jumps.resize(m_processcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
@@ -359,11 +371,13 @@ real Mechanism::CalcJumps(real t, const Cell &sys, const Geometry::LocalGeometry
     // Get number of inception jumps
     for (unsigned int j=0; j!=m_inceptions.size(); ++j) {
         (*iterm++) = m_proccount[j];
+        sum += m_proccount[j];
     }
 
     // Get number of particle process jumps
     for (unsigned int j=0; j!=m_processes.size(); ++j) {
         (*iterm++) = m_proccount[j+m_inceptions.size()];
+        sum += m_proccount[j+m_inceptions.size()];
     }
 
     // Get number of coagulation jumps.
@@ -376,20 +390,24 @@ real Mechanism::CalcJumps(real t, const Cell &sys, const Geometry::LocalGeometry
             coagsum += m_fictcount[k+m_inceptions.size()+m_processes.size()+coagterms];
         }
         (*iterm++) = coagsum;
+        sum += coagsum;
         coagterms += m_coags[j]->TermCount();
     }
-    //jumps[3] = (m_proccount[3]+m_proccount[4]+m_proccount[5]+m_proccount[6]+m_proccount[7]+m_proccount[8]+m_fictcount[3]+m_fictcount[4]+m_fictcount[5]+m_fictcount[6]+m_fictcount[7]+m_fictcount[8]);
-
-    /*if (!scale) {
-        // Need to return the rates to per unit vol.
-        real invvol = 1.0 / sys.SampleVolume();
-        for(i=jumps.begin(); i!=jumps.end(); ++i) {
-            *i *= invvol;
-        }
-        sum *= invvol;
-    }*/
 
     return sum;
+}
+
+/*!
+ * @brief       Resets the counters which track the number of jumps
+ *
+ * This function is to only be called at the end of a run, to ensure
+ * accurate capturing of information from CalcJumps
+ */
+void Mechanism::ResetJumpCount() const {
+    // Do for number of real jumps
+    fill(m_proccount.begin(), m_proccount.end(), 0.0);
+    // Do for number of fictitious jumps
+    fill(m_fictcount.begin(), m_fictcount.end(), 0.0);
 }
 
 
