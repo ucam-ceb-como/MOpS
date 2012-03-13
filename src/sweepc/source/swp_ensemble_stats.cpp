@@ -183,10 +183,10 @@ void EnsembleStats::PSL_Names(std::vector<std::string> &names, unsigned int star
 {
     // First PSL variable is the particle weight.
     if (names.size() > start) {
-        names[start] = "Weight";
+        names[start] = "Weight (cm-3)";
     } else {
         names.resize(start+1);
-        names[start] = "Weight";
+        names[start] = "Weight (cm-3)";
     }
     ++start;
 

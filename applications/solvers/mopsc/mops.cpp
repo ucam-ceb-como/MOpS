@@ -81,6 +81,7 @@ int main(int argc, char *argv[])
     bool fsolve        = true;  // Default is to solve ..
     bool fpostprocess  = false; // .. but not post-process.
     bool foldfmt       = false;
+    bool fwritejumps   = false;
     SolverType soltype = GPC;
     int diag = 0; // Diagnostics level.
 
@@ -117,6 +118,9 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "-e") == 0) {
             // Random seed offset
             randomSeedOffset = atoi(argv[++i]);
+        } else if (strcmp(argv[i], "-jumps") == 0) {
+            // Flag to write number of jump events
+            fwritejumps = true;
         } else if (strcmp(argv[i], "-p") == 0) {
             // Post-processing switch.  Used to turn PP on.
             fpostprocess = true;
@@ -174,6 +178,9 @@ int main(int argc, char *argv[])
     Mechanism mech;          // Chemical and particle mechanism.
     timevector times;        // A list of output times and step counts.
     Simulator sim;           // The simulator.
+
+    // Activate jump writing output
+    sim.SetWriteJumpFile(fwritejumps);
 
     // Create the solver.
     try {

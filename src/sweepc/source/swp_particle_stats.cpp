@@ -60,14 +60,14 @@ const std::string ParticleStats::m_statnames[ParticleStats::STAT_COUNT] = {
     std::string("Mobility Diameter (m)"),
     std::string("Surface Area (m2/m3)"),
     std::string("Avg. Surface Area (m2)"),
-    std::string("Fv"),
+    std::string("Fv (-)"),
     std::string("Avg. Volume (m3)"),
     std::string("Mass (kg/m3)"),
     std::string("Avg. Mass (kg)"),
     std::string("Mass2 (kg2/m6)"),
     std::string("Mass3 (kg3/m9)"),
-    std::string("Avg num coags"),
-    std::string("Max num coags")
+    std::string("Avg num coags (-)"),
+    std::string("Max num coags (-)")
 };
 
 const IModelStats::StatType ParticleStats::m_mask[ParticleStats::STAT_COUNT] = {
@@ -96,8 +96,8 @@ const std::string ParticleStats::m_const_pslnames[ParticleStats::PSL_COUNT] = {
     std::string("Volume (cm3)"),
     std::string("Mass (g)"),
     std::string("Age (s)"),
-    std::string("Stat. Weight (cm-3)"),
-    std::string("Num coags")
+    std::string("Stat. Weight (-)"),
+    std::string("Num coags (-)")
 };
 
 

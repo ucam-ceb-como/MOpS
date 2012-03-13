@@ -75,7 +75,7 @@ Simulator::Simulator(void)
   m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_runtime(0.0),
   m_console_interval(1), m_console_msgs(true),
   m_output_filename("mops-out"), m_output_every_iter(false),
-  m_output_step(0), m_output_iter(0), m_ptrack_count(0)
+  m_output_step(0), m_output_iter(0), m_write_jumps(false), m_ptrack_count(0)
 {
 }
 
@@ -216,6 +216,9 @@ void Simulator::SetOutputFile(const std::string &name)
 
 // Set simulator to output every iteration.
 void Simulator::SetOutputEveryIter(bool fout) {m_output_every_iter=fout;}
+
+//! Set simulator to write the jumps CSV file.
+void Simulator::SetWriteJumpFile(bool writejumps) {m_write_jumps=writejumps;}
 
 // STATISTICAL BOUNDS OUTPUT
 
@@ -400,6 +403,9 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         // Print run time to the console.
         printf("mops: Run number %d completed in %.1f s.\n", irun+1, m_runtime);
 
+        // Reset the process jump count
+        r.Mech()->ParticleMech().ResetJumpCount();
+
 		// currently this function is limited to PAH-PP model
 		// Produce a file named "primary" which stores information of target (criteria are hard-coded) primary particle
 		//r.Mech()->ParticleMech().Mass_pah(r.Mixture()->Particles());
@@ -450,6 +456,9 @@ void Simulator::PostProcess()
     vector<fvector> astat(npoints), estat(npoints);
     Sweep::Stats::EnsembleStats stats(pmech);
 
+    // Declare particle-phase number of jumps output (averages and errors).
+    vector<fvector> appjumps(npoints), eppjumps(npoints);
+
     // Declare CPU time outputs (averages and errors).
     vector<vector<double> > acpu(npoints), ecpu(npoints);
 
@@ -499,6 +508,7 @@ void Simulator::PostProcess()
     readPartRxnDataPoint(fin, mech.ParticleMech(),
                          apprates[0], epprates[0],
                          appwdot[0], eppwdot[0],
+                         appjumps[0], eppjumps[0],
                          true);
     readCTDataPoint(fin, ncput, acpu[0], ecpu[0], true);
     for(unsigned int irun=0; irun!=m_nruns; ++irun) {
@@ -520,6 +530,7 @@ void Simulator::PostProcess()
         multVals(agprevrates[0], m_nruns*m_niter);
         multVals(agpwdot[0], m_nruns*m_niter);
         multVals(apprates[0], m_nruns*m_niter);
+        multVals(appjumps[0], m_nruns*m_niter);
         multVals(appwdot[0], m_nruns*m_niter);
         multVals(acpu[0], m_nruns*m_niter);
         multVals(echem[0], m_nruns*m_niter);
@@ -529,6 +540,7 @@ void Simulator::PostProcess()
         multVals(egprevrates[0], m_nruns*m_niter);
         multVals(egpwdot[0], m_nruns*m_niter);
         multVals(epprates[0], m_nruns*m_niter);
+        multVals(eppjumps[0], m_nruns*m_niter);
         multVals(eppwdot[0], m_nruns*m_niter);
         multVals(ecpu[0], m_nruns*m_niter);
     } else {
@@ -539,6 +551,7 @@ void Simulator::PostProcess()
         multVals(agprevrates[0], m_nruns);
         multVals(agpwdot[0], m_nruns);
         multVals(apprates[0], m_nruns);
+        multVals(appjumps[0], m_nruns);
         multVals(appwdot[0], m_nruns);
         multVals(acpu[0], m_nruns);
         multVals(echem[0], m_nruns);
@@ -548,6 +561,7 @@ void Simulator::PostProcess()
         multVals(egprevrates[0], m_nruns);
         multVals(egpwdot[0], m_nruns);
         multVals(epprates[0], m_nruns);
+        multVals(eppjumps[0], m_nruns);
         multVals(eppwdot[0], m_nruns);
         multVals(ecpu[0], m_nruns);
     }
@@ -578,7 +592,7 @@ void Simulator::PostProcess()
                                             agpwdot[step], egpwdot[step],
                                             true);
 
-                        readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], true);
+                        readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
                         readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                         readPartTrackPoint(fin, pmech, ptrack[irun][step]);
                     }
@@ -595,7 +609,7 @@ void Simulator::PostProcess()
                                         agpwdot[step], egpwdot[step],
                                         true);
 
-                    readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], true);
+                    readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
                     readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                     readPartTrackPoint(fin, pmech, ptrack[irun][step]);
                 }
@@ -616,6 +630,7 @@ void Simulator::PostProcess()
         calcAvgConf(agprevrates, egprevrates, m_nruns*m_niter);
         calcAvgConf(agpwdot, egpwdot, m_nruns*m_niter);
         calcAvgConf(apprates, epprates, m_nruns*m_niter);
+        calcAvgConf(appjumps, eppjumps, m_nruns*m_niter);
         calcAvgConf(appwdot, eppwdot, m_nruns*m_niter);
         calcAvgConf(acpu, ecpu, m_nruns*m_niter);
     } else {
@@ -626,6 +641,7 @@ void Simulator::PostProcess()
         calcAvgConf(agprevrates, egprevrates, m_nruns);
         calcAvgConf(agpwdot, egpwdot, m_nruns);
         calcAvgConf(apprates, epprates, m_nruns);
+        calcAvgConf(appjumps, eppjumps, m_nruns);
         calcAvgConf(appwdot, eppwdot, m_nruns);
         calcAvgConf(acpu, ecpu, m_nruns);
     }
@@ -651,6 +667,11 @@ void Simulator::PostProcess()
     for(unsigned int irun=0; irun!=m_nruns; ++irun) {
         writePartTrackCSV(m_output_filename+"("+cstr(irun)+")-track", mech,
                           times, ptrack[irun]);
+    }
+
+    // Only write jump file if the flag has been set.
+    if (m_write_jumps) {
+        writePartJumpCSV(m_output_filename+"-part-jumps.csv", mech.ParticleMech(), times, appjumps, eppjumps);
     }
 
     // POST-PROCESS PSLs.
@@ -792,6 +813,10 @@ void Simulator::outputPartRxnRates(const Reactor &r) const
         static fvector wdot;
         r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), wdot);
 
+        // Calculate the number of jumps (-).
+        static fvector jumps;
+        r.Mech()->ParticleMech().CalcJumps(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), jumps);
+
         // Now convert from mol/mol to mol/m3.
         fvector::iterator rhodot = wdot.begin()+r.Mech()->GasMech().SpeciesCount()+1;
         for (unsigned int k=0; k!=r.Mech()->GasMech().SpeciesCount(); ++k) {
@@ -802,6 +827,7 @@ void Simulator::outputPartRxnRates(const Reactor &r) const
         // Write rates to the file.
         m_file.write((char*)&rates[0], sizeof(rates[0]) * r.Mech()->ParticleMech().ProcessCount());
         m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->GasMech().SpeciesCount());
+        m_file.write((char*)&jumps[0], sizeof(jumps[0]) * r.Mech()->ParticleMech().ProcessCount());
     }
 }
 
@@ -1239,6 +1265,7 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
 void Simulator::readPartRxnDataPoint(std::istream &in, const Sweep::Mechanism &mech,
                                      fvector &rates_sum, fvector &rates_sumsqr,
                                      fvector &wdot_sum, fvector &wdot_sumsqr,
+                                     fvector &jumps_sum, fvector &jumps_sumsqr,
                                      bool calcsqrs)
 {
     // Check for valid stream.
@@ -1253,11 +1280,19 @@ void Simulator::readPartRxnDataPoint(std::istream &in, const Sweep::Mechanism &m
         in.read(reinterpret_cast<char*>(&wdot[0]),
                 sizeof(wdot[0])*mech.Species()->size());
 
+        // Get the number of jumps vector
+        fvector jumps(mech.ProcessCount());
+        in.read(reinterpret_cast<char*>(&jumps[0]),
+                sizeof(jumps[0])*mech.ProcessCount());
+
+
         // Resize vectors.
         rates_sum.resize(rates.size(), 0.0);
         rates_sumsqr.resize(rates.size(), 0.0);
         wdot_sum.resize(wdot.size(), 0.0);
         wdot_sumsqr.resize(wdot.size(), 0.0);
+        jumps_sum.resize(jumps.size(), 0.0);
+        jumps_sumsqr.resize(jumps.size(), 0.0);
 
         // Calculate sums and sums of squares (for average and
         // error calculation).
@@ -1268,6 +1303,10 @@ void Simulator::readPartRxnDataPoint(std::istream &in, const Sweep::Mechanism &m
         for (unsigned int i=0; i!=wdot.size(); ++i) {
             wdot_sum[i] += wdot[i];
             if (calcsqrs) wdot_sumsqr[i] += (wdot[i] * wdot[i]);
+        }
+        for (unsigned int i=0; i!=jumps.size(); ++i) {
+            jumps_sum[i] += jumps[i];
+            if (calcsqrs) jumps_sumsqr[i] += (jumps[i] * jumps[i]);
         }
     }
 }
@@ -1485,6 +1524,53 @@ void Simulator::writeParticleStatsCSV(const std::string &filename,
     for (unsigned int i=head.size(); i!=2; --i) {
         head.insert(head.begin()+i, "Err");
     }
+    csv.Write(head);
+
+    // Output initial conditions.
+    buildOutputVector(0, times[0].StartTime(), avg[0], err[0]);
+    csv.Write(avg[0]);
+
+    // Loop over all points, performing output.
+    unsigned int step = 1;
+    for (timevector::const_iterator iint=times.begin(); iint!=times.end(); ++iint) {
+        // Loop over all time steps in this interval.
+        real t = iint->StartTime();
+        for (unsigned int istep=0; istep<(*iint).StepCount(); ++istep, ++step) {
+            t += iint->StepSize();
+            buildOutputVector(step, t, avg[step], err[step]);
+            csv.Write(avg[step]);
+        }
+    }
+
+    // Close the CSV files.
+    csv.Close();
+}
+
+// Writes number of jump events to a CSV file.
+void Simulator::writePartJumpCSV(const std::string &filename,
+                                const Sweep::Mechanism &mech,
+                                const timevector &times,
+                                std::vector<fvector> &avg,
+                                const std::vector<fvector> &err)
+{
+    // Open file for the CSV results.
+    CSV_IO csv(filename, true);
+
+    // Write the header row to the gas-phase chemistry CSV file.
+    vector<string> head;
+    head.push_back("Step");
+    head.push_back("Time (s)");
+    mech.GetProcessNames(head, 2);
+    // Add units.
+    for (unsigned int i=2; i!=head.size(); ++i) {
+        head[i] = head[i] + " (-)";
+    }
+    // Add error columns.
+    for (unsigned int i=head.size(); i!=2; --i) {
+        head.insert(head.begin()+i, "Err");
+    }
+
+
     csv.Write(head);
 
     // Output initial conditions.
@@ -2340,6 +2426,13 @@ void Simulator::Serialize(std::ostream &out) const
         n = (unsigned int)m_output_iter;
         out.write((char*)&n, sizeof(n));
 
+        // Flag controlling jump file output.
+        if (m_write_jumps) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
         // Number of particles for which to produce tracking output.
         n = (unsigned int)m_ptrack_count;
         out.write((char*)&n, sizeof(n));
@@ -2436,6 +2529,10 @@ void Simulator::Deserialize(std::istream &in)
                 // Sub-step iteration number at which output will occur.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_output_iter = n;
+
+                // Flag controlling jump file output.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_write_jumps = (n==trueval);
 
                 // Number of particles for which to produce tracking output.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));

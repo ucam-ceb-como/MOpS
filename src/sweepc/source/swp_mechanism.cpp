@@ -344,6 +344,73 @@ real Mechanism::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry
     return sum;
 }
 
+/*!
+ * @brief               Calculates the number of jump events for each process
+ *
+ * Calculates the absolute number of jump events for each inception, particle
+ * process and coagulation event. Returns the sum of the jump events.
+ *
+ * @param t             Time
+ * @param sys           Particle population
+ * @param local_geom    Pointer to local geometry
+ * @param jumps         Vector containing the number of jumps
+ * @param scale         Boolean indicating if scaling should be applied
+ * @return              Sum of jump events
+ */
+real Mechanism::CalcJumps(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom, fvector &jumps) const
+{
+    // Ensure jumps vector is the correct length, then set to zero.
+    jumps.resize(m_processcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
+    fill(jumps.begin(), jumps.end(), 0.0);
+
+    // Iterator for filling jumps vector
+    fvector::iterator iterm = jumps.begin();
+
+    real sum = 0.0;
+
+    // Get number of inception jumps
+    for (unsigned int j=0; j!=m_inceptions.size(); ++j) {
+        (*iterm++) = m_proccount[j];
+        sum += m_proccount[j];
+    }
+
+    // Get number of particle process jumps
+    for (unsigned int j=0; j!=m_processes.size(); ++j) {
+        (*iterm++) = m_proccount[j+m_inceptions.size()];
+        sum += m_proccount[j+m_inceptions.size()];
+    }
+
+    // Get number of coagulation jumps.
+    unsigned int coagterms(0);       // Number of terms already used
+    for (unsigned int j=0; j!=m_coags.size(); ++j) {
+        unsigned int coagsum(0);     // Sum of real and fictitious jumps
+        // Sum up all terms of this process
+        for (unsigned int k=0; k!=m_coags[j]->TermCount(); ++k) {
+            coagsum += m_proccount[k+m_inceptions.size()+m_processes.size()+coagterms];
+            coagsum += m_fictcount[k+m_inceptions.size()+m_processes.size()+coagterms];
+        }
+        (*iterm++) = coagsum;
+        sum += coagsum;
+        coagterms += m_coags[j]->TermCount();
+    }
+
+    return sum;
+}
+
+/*!
+ * @brief       Resets the counters which track the number of jumps
+ *
+ * This function is to only be called at the end of a run, to ensure
+ * accurate capturing of information from CalcJumps
+ */
+void Mechanism::ResetJumpCount() const {
+    // Do for number of real jumps
+    fill(m_proccount.begin(), m_proccount.end(), 0.0);
+    // Do for number of fictitious jumps
+    fill(m_fictcount.begin(), m_fictcount.end(), 0.0);
+}
+
+
 // Get rates of all processes separated into different
 // terms.  Rate terms are useful for subsequent particle
 // selection by different properties for the same process.
