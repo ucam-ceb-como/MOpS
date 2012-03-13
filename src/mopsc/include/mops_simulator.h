@@ -150,6 +150,9 @@ public:
     // Set simulator to output every iteration.
     void SetOutputEveryIter(bool fout);
     
+    //! Set simulator to write the jumps CSV file.
+    void SetWriteJumpFile(bool writejumps);
+
     // STATISTICAL BOUNDS OUTPUT
 
     // Set simulator to output data of a given statistical range.
@@ -260,6 +263,10 @@ private:
     // unless m_output_every_iter==true, in which case all
     // iterations are output.
     unsigned int m_output_iter;
+
+    // Flag controlling whether the number of jump events should
+    // be written to CSV output. Default false.
+    bool m_write_jumps;
 
     // STATISTICAL OUTPUT PARAMETERS
 
@@ -421,6 +428,8 @@ private:
         fvector &rates_sumsqr,        // Sums of the squares of process rates.
         fvector &wdot_sum,            // Sums of species prod. rates.
         fvector &wdot_sumsqr,         // Sums of the squares of species prod. rates.
+        fvector &jumps_sum,           // Sums of the number of jumps
+        fvector &jumps_sumsqr,        // Sums of the squares of the number of jumps
         bool calcsqrs = false         // Set =true to also calculate sums of squares.
         );
 
@@ -494,6 +503,15 @@ private:
         const std::vector<fvector> &err  // Vector of confidence intervals.
         );
 
+    // Writes particle jump rate profile to a CSV file.
+    static void writePartJumpCSV(
+        const std::string &filename,     // Output file name (incl. extension).
+        const Sweep::Mechanism &mech,    // Mechanism defining particle processes.
+        const timevector &times,         // Output time profile.
+        std::vector<fvector> &avg,       // Vector of process rate time points.
+        const std::vector<fvector> &err  // Vector of confidence intervals.
+        );
+
     // Writes gas-phase reaction rates profile to a CSV file.
     static void writeGasRxnCSV(
         const std::string &filename,     // Output file name (incl. extension).
@@ -559,6 +577,11 @@ private:
         const timevector &times // Simulation output time intervals.
         ) const;
 
+    // post-process the ensemble to find interested information, in this case, info about PAH mass distribution of individual soot aggregate at certain time.
+    void postProcessPAHinfo(
+        const Mechanism &mech,  // Mechanism use to solve system.
+        const timevector &times // Simulation output time intervals.
+        ) const;
     // FLUX VIEWER OUTPUT
     // Writes element fluxes to FluxViewer format.
     void writeElementFluxOutput(

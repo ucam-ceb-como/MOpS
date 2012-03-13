@@ -1303,6 +1303,33 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         updateCombinedSites();
         //cout << "Pyrene Initialised!\n";
         break;
+	case NAPHTHALENE_C:
+		// add first C atom
+        m_pah->m_cfirst = addC();
+        // adds next C atoms according to structure
+        newC = addC(m_pah->m_cfirst, 0, 0);
+        newC = addC(newC, 60, 0);
+        newC = addC(newC, 0, 0);
+        newC = addC(newC, -60, 0);
+        newC = addC(newC, -120, 0);
+        newC = addC(newC, -180, 0);
+        newC = addC(newC, -120, 0);
+        newC = addC(newC, -180, 0);
+        // adds the last C atom, with bond angle towards m_cfirst
+        m_pah->m_clast = addC(newC, 120, 60);
+        // closes structure
+        connectToC(m_pah->m_clast, m_pah->m_cfirst);
+        // update H atoms
+        updateA(m_pah->m_cfirst, m_pah->m_clast, 'H');
+        // set C & H counts
+        setCount(10, 8);
+        // set ring counts
+        m_pah->m_rings = 2;
+        // update all sites and combined sites
+        updateSites();
+        updateCombinedSites();
+        //cout << "Naphthalene Initialised!\n";
+		break;
     }
     return *m_pah;
 }

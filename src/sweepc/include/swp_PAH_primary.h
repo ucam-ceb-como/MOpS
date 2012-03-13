@@ -154,6 +154,10 @@ public:
     int NumHydrogen() const;
     //! returns the number of PAH in the particle
     int NumPAH() const;
+    //! returns the number of hydrogen atoms in the particle
+    int NumEdgeC() const;
+    //! returns the number of hydrogen atoms in the particle
+    int NumRings() const;
     //! returns sqrt(L*W)
     double sqrtLW() const;
     double AvgCoalesc() const;
@@ -166,10 +170,14 @@ public:
     void mass_PAH(std::vector<std::vector<double> > &out) const;
     //! return the mass of Xmer including C and H 
     double MassforXmer() const;
+    //! store the mass of individual PAH within this soot aggregate
+    void mass_PAH(std::vector<double> &out) const;
     //! set pah_structure=Null before destructor delete it
     //void ReleasePAH(Primary &rhs);
-    //find soot particle with only one Pyrene molecule (C16H10)
+    //find soot particle with only one Incepted molecule (C16H10 or C6H6)
     int InceptedPAH() const;
+    bool CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const;
+    void RemoveInvalidPAHs();
 
 protected:
     //! Empty primary not meaningful
@@ -189,8 +197,10 @@ protected:
     void UpdatePrimary(void);
     //! sets some properties to 0
     void Reset();
+    //! return ture if it is a false coalescence, false coalescence is used to merge primary particle containing only one or no PAH after the InvalidPAHs are removed.
+    bool Fakecoalescence();
     //! merges the two children primaries together
-    PAHPrimary &Merge();
+    void Merge();
     //! updates the pointers after a merge event
     void ChangePointer(PAHPrimary *source, PAHPrimary *target);
     //! copies the node withoud the children
@@ -213,9 +223,11 @@ private:
     static PAHPrimary* descendPath(PAHPrimary *here,
                                    std::stack<bool> &takeLeftBranch);
 
+    void outputPAHPrimary(std::ostream &out) const;
+    PAHPrimary* inputPAHPrimary(std::istream &in);
 
     // Vector of PAHs.
-    // PAHStructure class now have proper copy constructor (under testing)
+    // PAHStructure class now have proper copy constructor
     // , but it is still not worthy to copy PAH from one vector to another
     // so we will use vector<std::tr1::shared_ptr<PAH>> instead of  vector <PAH>
     // Vector of std::tr1::shared_ptr<PAH>.
@@ -251,7 +263,10 @@ private:
 
     double m_children_coalescence;
 
-
+    // total num of edge C in this soot particle
+    int m_numOfEdgeC;
+    // total num of rings (inculding 5, 6- menber rings) in this soot particle
+    int m_numOfRings;
 
     // radius of gyration and fractal dimension
     // the values are only update in CalcFractaldimension()

@@ -75,7 +75,7 @@ Simulator::Simulator(void)
   m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_runtime(0.0),
   m_console_interval(1), m_console_msgs(true),
   m_output_filename("mops-out"), m_output_every_iter(false),
-  m_output_step(0), m_output_iter(0), m_ptrack_count(0)
+  m_output_step(0), m_output_iter(0), m_write_jumps(false), m_ptrack_count(0)
 {
 }
 
@@ -216,6 +216,9 @@ void Simulator::SetOutputFile(const std::string &name)
 
 // Set simulator to output every iteration.
 void Simulator::SetOutputEveryIter(bool fout) {m_output_every_iter=fout;}
+
+//! Set simulator to write the jumps CSV file.
+void Simulator::SetWriteJumpFile(bool writejumps) {m_write_jumps=writejumps;}
 
 // STATISTICAL BOUNDS OUTPUT
 
@@ -400,6 +403,9 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         // Print run time to the console.
         printf("mops: Run number %d completed in %.1f s.\n", irun+1, m_runtime);
 
+        // Reset the process jump count
+        r.Mech()->ParticleMech().ResetJumpCount();
+
 		// currently this function is limited to PAH-PP model
 		// Produce a file named "primary" which stores information of target (criteria are hard-coded) primary particle
 		//r.Mech()->ParticleMech().Mass_pah(r.Mixture()->Particles());
@@ -450,6 +456,9 @@ void Simulator::PostProcess()
     vector<fvector> astat(npoints), estat(npoints);
     Sweep::Stats::EnsembleStats stats(pmech);
 
+    // Declare particle-phase number of jumps output (averages and errors).
+    vector<fvector> appjumps(npoints), eppjumps(npoints);
+
     // Declare CPU time outputs (averages and errors).
     vector<vector<double> > acpu(npoints), ecpu(npoints);
 
@@ -499,6 +508,7 @@ void Simulator::PostProcess()
     readPartRxnDataPoint(fin, mech.ParticleMech(),
                          apprates[0], epprates[0],
                          appwdot[0], eppwdot[0],
+                         appjumps[0], eppjumps[0],
                          true);
     readCTDataPoint(fin, ncput, acpu[0], ecpu[0], true);
     for(unsigned int irun=0; irun!=m_nruns; ++irun) {
@@ -520,6 +530,7 @@ void Simulator::PostProcess()
         multVals(agprevrates[0], m_nruns*m_niter);
         multVals(agpwdot[0], m_nruns*m_niter);
         multVals(apprates[0], m_nruns*m_niter);
+        multVals(appjumps[0], m_nruns*m_niter);
         multVals(appwdot[0], m_nruns*m_niter);
         multVals(acpu[0], m_nruns*m_niter);
         multVals(echem[0], m_nruns*m_niter);
@@ -529,6 +540,7 @@ void Simulator::PostProcess()
         multVals(egprevrates[0], m_nruns*m_niter);
         multVals(egpwdot[0], m_nruns*m_niter);
         multVals(epprates[0], m_nruns*m_niter);
+        multVals(eppjumps[0], m_nruns*m_niter);
         multVals(eppwdot[0], m_nruns*m_niter);
         multVals(ecpu[0], m_nruns*m_niter);
     } else {
@@ -539,6 +551,7 @@ void Simulator::PostProcess()
         multVals(agprevrates[0], m_nruns);
         multVals(agpwdot[0], m_nruns);
         multVals(apprates[0], m_nruns);
+        multVals(appjumps[0], m_nruns);
         multVals(appwdot[0], m_nruns);
         multVals(acpu[0], m_nruns);
         multVals(echem[0], m_nruns);
@@ -548,6 +561,7 @@ void Simulator::PostProcess()
         multVals(egprevrates[0], m_nruns);
         multVals(egpwdot[0], m_nruns);
         multVals(epprates[0], m_nruns);
+        multVals(eppjumps[0], m_nruns);
         multVals(eppwdot[0], m_nruns);
         multVals(ecpu[0], m_nruns);
     }
@@ -578,7 +592,7 @@ void Simulator::PostProcess()
                                             agpwdot[step], egpwdot[step],
                                             true);
 
-                        readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], true);
+                        readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
                         readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                         readPartTrackPoint(fin, pmech, ptrack[irun][step]);
                     }
@@ -595,7 +609,7 @@ void Simulator::PostProcess()
                                         agpwdot[step], egpwdot[step],
                                         true);
 
-                    readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], true);
+                    readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
                     readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                     readPartTrackPoint(fin, pmech, ptrack[irun][step]);
                 }
@@ -616,6 +630,7 @@ void Simulator::PostProcess()
         calcAvgConf(agprevrates, egprevrates, m_nruns*m_niter);
         calcAvgConf(agpwdot, egpwdot, m_nruns*m_niter);
         calcAvgConf(apprates, epprates, m_nruns*m_niter);
+        calcAvgConf(appjumps, eppjumps, m_nruns*m_niter);
         calcAvgConf(appwdot, eppwdot, m_nruns*m_niter);
         calcAvgConf(acpu, ecpu, m_nruns*m_niter);
     } else {
@@ -626,6 +641,7 @@ void Simulator::PostProcess()
         calcAvgConf(agprevrates, egprevrates, m_nruns);
         calcAvgConf(agpwdot, egpwdot, m_nruns);
         calcAvgConf(apprates, epprates, m_nruns);
+        calcAvgConf(appjumps, eppjumps, m_nruns);
         calcAvgConf(appwdot, eppwdot, m_nruns);
         calcAvgConf(acpu, ecpu, m_nruns);
     }
@@ -653,6 +669,11 @@ void Simulator::PostProcess()
                           times, ptrack[irun]);
     }
 
+    // Only write jump file if the flag has been set.
+    if (m_write_jumps) {
+        writePartJumpCSV(m_output_filename+"-part-jumps.csv", mech.ParticleMech(), times, appjumps, eppjumps);
+    }
+
     // POST-PROCESS PSLs.
 
     // Now post-process the PSLs.
@@ -660,6 +681,9 @@ void Simulator::PostProcess()
 
     // Now post-process the ensemble to find interested information, in this case, mass of Xmer
     postProcessXmer(mech, times);
+
+    // Now post-process the ensemble to find interested information, in this case, PAH mass distribution of a soot aggregate
+    postProcessPAHinfo(mech, times);
 }
 
 
@@ -789,6 +813,10 @@ void Simulator::outputPartRxnRates(const Reactor &r) const
         static fvector wdot;
         r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), wdot);
 
+        // Calculate the number of jumps (-).
+        static fvector jumps;
+        r.Mech()->ParticleMech().CalcJumps(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), jumps);
+
         // Now convert from mol/mol to mol/m3.
         fvector::iterator rhodot = wdot.begin()+r.Mech()->GasMech().SpeciesCount()+1;
         for (unsigned int k=0; k!=r.Mech()->GasMech().SpeciesCount(); ++k) {
@@ -799,6 +827,7 @@ void Simulator::outputPartRxnRates(const Reactor &r) const
         // Write rates to the file.
         m_file.write((char*)&rates[0], sizeof(rates[0]) * r.Mech()->ParticleMech().ProcessCount());
         m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->GasMech().SpeciesCount());
+        m_file.write((char*)&jumps[0], sizeof(jumps[0]) * r.Mech()->ParticleMech().ProcessCount());
     }
 }
 
@@ -1236,6 +1265,7 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
 void Simulator::readPartRxnDataPoint(std::istream &in, const Sweep::Mechanism &mech,
                                      fvector &rates_sum, fvector &rates_sumsqr,
                                      fvector &wdot_sum, fvector &wdot_sumsqr,
+                                     fvector &jumps_sum, fvector &jumps_sumsqr,
                                      bool calcsqrs)
 {
     // Check for valid stream.
@@ -1250,11 +1280,19 @@ void Simulator::readPartRxnDataPoint(std::istream &in, const Sweep::Mechanism &m
         in.read(reinterpret_cast<char*>(&wdot[0]),
                 sizeof(wdot[0])*mech.Species()->size());
 
+        // Get the number of jumps vector
+        fvector jumps(mech.ProcessCount());
+        in.read(reinterpret_cast<char*>(&jumps[0]),
+                sizeof(jumps[0])*mech.ProcessCount());
+
+
         // Resize vectors.
         rates_sum.resize(rates.size(), 0.0);
         rates_sumsqr.resize(rates.size(), 0.0);
         wdot_sum.resize(wdot.size(), 0.0);
         wdot_sumsqr.resize(wdot.size(), 0.0);
+        jumps_sum.resize(jumps.size(), 0.0);
+        jumps_sumsqr.resize(jumps.size(), 0.0);
 
         // Calculate sums and sums of squares (for average and
         // error calculation).
@@ -1265,6 +1303,10 @@ void Simulator::readPartRxnDataPoint(std::istream &in, const Sweep::Mechanism &m
         for (unsigned int i=0; i!=wdot.size(); ++i) {
             wdot_sum[i] += wdot[i];
             if (calcsqrs) wdot_sumsqr[i] += (wdot[i] * wdot[i]);
+        }
+        for (unsigned int i=0; i!=jumps.size(); ++i) {
+            jumps_sum[i] += jumps[i];
+            if (calcsqrs) jumps_sumsqr[i] += (jumps[i] * jumps[i]);
         }
     }
 }
@@ -1482,6 +1524,53 @@ void Simulator::writeParticleStatsCSV(const std::string &filename,
     for (unsigned int i=head.size(); i!=2; --i) {
         head.insert(head.begin()+i, "Err");
     }
+    csv.Write(head);
+
+    // Output initial conditions.
+    buildOutputVector(0, times[0].StartTime(), avg[0], err[0]);
+    csv.Write(avg[0]);
+
+    // Loop over all points, performing output.
+    unsigned int step = 1;
+    for (timevector::const_iterator iint=times.begin(); iint!=times.end(); ++iint) {
+        // Loop over all time steps in this interval.
+        real t = iint->StartTime();
+        for (unsigned int istep=0; istep<(*iint).StepCount(); ++istep, ++step) {
+            t += iint->StepSize();
+            buildOutputVector(step, t, avg[step], err[step]);
+            csv.Write(avg[step]);
+        }
+    }
+
+    // Close the CSV files.
+    csv.Close();
+}
+
+// Writes number of jump events to a CSV file.
+void Simulator::writePartJumpCSV(const std::string &filename,
+                                const Sweep::Mechanism &mech,
+                                const timevector &times,
+                                std::vector<fvector> &avg,
+                                const std::vector<fvector> &err)
+{
+    // Open file for the CSV results.
+    CSV_IO csv(filename, true);
+
+    // Write the header row to the gas-phase chemistry CSV file.
+    vector<string> head;
+    head.push_back("Step");
+    head.push_back("Time (s)");
+    mech.GetProcessNames(head, 2);
+    // Add units.
+    for (unsigned int i=2; i!=head.size(); ++i) {
+        head[i] = head[i] + " (-)";
+    }
+    // Add error columns.
+    for (unsigned int i=head.size(); i!=2; --i) {
+        head.insert(head.begin()+i, "Err");
+    }
+
+
     csv.Write(head);
 
     // Output initial conditions.
@@ -1858,6 +1947,205 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
     }
 }
 
+void Simulator::postProcessPAHinfo(const Mechanism &mech,
+                                const timevector &times) const
+{
+    Reactor *r = NULL;
+    fvector temp;//use to hold all the psl information
+    vector<unsigned int> temp_max; 
+    fvector temp_PAH_mass;  // store number density of each Xmer
+    real max_mass=0.0;
+    // Get reference to the particle mechanism.
+    const Sweep::Mechanism &pmech = mech.ParticleMech();
+
+    // postProcessXmer is only designed for PAH-PP model
+    if (pmech.AggModel() == Sweep::AggModels::PAH_KMC_ID){
+
+        // Create an ensemble stats object.
+        Sweep::Stats::EnsembleStats stats(pmech);
+
+        // Open output files for all PSL save points.  Remember to
+        // write the header row as well.
+        vector<CSV_IO*> out(times.size(), NULL);
+
+
+        unsigned int step = 0;
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            real t = times[i].EndTime();
+            out[i] = new CSV_IO();
+            out[i]->Open(m_output_filename + "-PAH-mass-within-largest-agg(" +
+                        cstr(t) + "s).csv", true);
+        }
+
+        // Loop over all time intervals.
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            // Calculate the total step count after this interval.
+            step += times[i].StepCount();
+
+            // Loop over all runs.
+            for (unsigned int irun=0; irun!=m_nruns; ++irun) {
+                // Read the save point for this step and run.
+                r = readSavePoint(step, irun, mech);
+
+                if (r != NULL) {
+                    real scale = (real)m_nruns;
+                    if (m_output_every_iter) scale *= (real)m_niter;
+                    // Get PSL for all particles.
+                    for (unsigned int j = 0; j != r->Mixture()->ParticleCount(); ++j) 
+                    {
+                        // Get PSL.
+                        stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
+                                    times[i].EndTime(), temp,
+                                    1.0/(r->Mixture()->SampleVolume()*scale));
+                        //temp[11]=>num of PAH
+                        //temp[13]=>num of C, temp[14]=>num of H
+                        real mass = 12 * temp[13] + temp[14];
+                        // find the largest soot aggregate
+                        if (mass>max_mass)
+                        {
+                            max_mass=mass;
+                            temp_max.push_back(j);
+                        }
+                    }
+                    // the last element in the temp_max shoule be the index of the largest particle in the ensemble
+                    // before finding the largest particle, we have to make sure there are particles in the ensemble.
+                    if (temp_max.size()!=0)
+                    {
+                        Sweep::Particle* sp=r->Mixture()->Particles().At(temp_max.back());
+                        Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
+                        // store the mass of individual PAH within the selected particle in the vector temp_PAH_mass
+                        pah->mass_PAH(temp_PAH_mass);
+                    }
+                    // Output particle info to CSV file.
+                    out[i]->Write(temp_PAH_mass);
+                    // clear the temp varialbe
+                    max_mass=0;
+                    temp_PAH_mass.clear();
+                    temp_max.clear();
+                    delete r;
+                } else {
+                    // Throw error if the reactor was not read.
+                    throw runtime_error("Unable to read reactor from save point "
+                                        "(Mops, ParticleSolver::postProcessXmer).");
+                }
+            }
+        }
+        // Close output CSV files.
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            out[i]->Close();
+            delete out[i];
+        }
+    }
+}
+
+//void Simulator::postProcessXmer(const Mechanism &mech,
+//                                const timevector &times) const
+//{
+//    Reactor *r = NULL;
+//    fvector temp;//use to hold all the psl information
+//    fvector psl_xmer; // store information of Xmer in ensemble and then dump them to a file
+//    fvector m0_xmer;  // store number density of each Xmer
+//    fvector m_mass;
+//    fvector m_m0;
+//    std::vector<std::vector<real> > m_allmass;
+//    std::vector<std::vector<real> > m_allm0;
+//    // Get reference to the particle mechanism.
+//    const Sweep::Mechanism &pmech = mech.ParticleMech();
+//
+//    // postProcessXmer is only designed for PAH-PP model
+//    if (pmech.AggModel() == Sweep::AggModels::PAH_KMC_ID){
+//
+//        // Create an ensemble stats object.
+//        Sweep::Stats::EnsembleStats stats(pmech);
+//
+//        // Open output files for all PSL save points.  Remember to
+//        // write the header row as well.
+//        vector<CSV_IO*> out(times.size(), NULL);
+//
+//        // start with monomer and end with trimer currently
+//        for (int k = 0; k!=3 ;++k) {
+//            unsigned int step = 0;
+//            for (unsigned int i=0; i!=times.size(); ++i) {
+//                real t = times[i].EndTime();
+//                out[i] = new CSV_IO();
+//                out[i]->Open(m_output_filename + "-" + cstr(k+1) +"mer-(" +
+//                            cstr(t) + "s).csv", true);
+//            }
+//
+//            // Loop over all time intervals.
+//            for (unsigned int i=0; i!=times.size(); ++i) {
+//                // Calculate the total step count after this interval.
+//                step += times[i].StepCount();
+//
+//                // Loop over all runs.
+//                for (unsigned int irun=0; irun!=m_nruns; ++irun) {
+//                    // Read the save point for this step and run.
+//                    r = readSavePoint(step, irun, mech);
+//
+//                    //particle count and number density of ensemble
+//                    real Pcount = r->Mixture()->ParticleCount();
+//                    real PM0 = r->Mixture()->ParticleCount() / r->Mixture()->SampleVolume();
+//
+//                    if (r != NULL) {
+//                        real scale = (real)m_nruns;
+//                        if (m_output_every_iter) scale *= (real)m_niter;
+//                        // Get PSL for all particles.
+//                        for (unsigned int j = 0; j != Pcount; ++j) {
+//                            // Get PSL.
+//                            stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
+//                                        times[i].EndTime(), temp,
+//                                        1.0/(r->Mixture()->SampleVolume()*scale));
+//                            if ( (k+1) == temp[11]){//temp[11]=>num of PAH
+//                                //temp[13]=>num of C, temp[14]=>num of H
+//                                real mass = 12 * temp[13] + temp[14];
+//                                // currently only mass <= 2000 are interested in mass spectra.
+//                                if (mass<=2000) psl_xmer.push_back(mass);
+//                            }
+//                        }
+//                        delete r;
+//                        // calculate m0 for each xmer, used for single run
+//                        calculateM0(psl_xmer,m0_xmer,Pcount,PM0);
+//                    } else {
+//                        // Throw error if the reactor was not read.
+//                        throw runtime_error("Unable to read reactor from save point "
+//                                            "(Mops, ParticleSolver::postProcessXmer).");
+//                    }
+//                    if (psl_xmer.size()  == m0_xmer.size()) {
+//                        m_mass.insert(m_mass.end(),psl_xmer.begin(), psl_xmer.end());
+//                        m_allmass.push_back(psl_xmer);
+//                        m_allm0.push_back(m0_xmer);
+//                        psl_xmer.clear();
+//                        m0_xmer.clear();
+//                    } else {
+//                        // Throw error if the size of vector differ.
+//                        throw runtime_error("size of psl_xmer is different form that of m0_xmer, the analysis of xmer information fails"
+//                                            "(Mops, ParticleSolver::postProcessXmer).");
+//                    }
+//
+//                }
+//                // calculate m0 for xmer, used for multiple runs
+//                calculateM0(m_mass, m_m0, m_allmass, m_allm0);
+//                // Output particle PSL to CSV file.
+//                if (m_mass.size() != m_m0.size()) 
+//                    throw runtime_error("size of m_mass is different form that of m_m0, the analysis of xmer information fails" 
+//                                        "when trying to calculate mo for multiple runs (Mops, ParticleSolver::postProcessXmer).");
+//                out[i]->Write(m_mass);
+//                out[i]->Write(m_m0);
+//                m_allm0.clear();
+//                m_allmass.clear();
+//                m_mass.clear();
+//                m_m0.clear();
+//            }
+//
+//            // Close output CSV files.
+//            for (unsigned int i=0; i!=times.size(); ++i) {
+//                out[i]->Close();
+//                delete out[i];
+//            }
+//        }
+//    }
+//}
+
 void Simulator::postProcessXmer(const Mechanism &mech,
                                 const timevector &times) const
 {
@@ -1882,86 +2170,83 @@ void Simulator::postProcessXmer(const Mechanism &mech,
         // write the header row as well.
         vector<CSV_IO*> out(times.size(), NULL);
 
-        // start with monomer and end with trimer currently
-        for (int k = 0; k!=3 ;++k) {
-            unsigned int step = 0;
-            for (unsigned int i=0; i!=times.size(); ++i) {
-                real t = times[i].EndTime();
-                out[i] = new CSV_IO();
-                out[i]->Open(m_output_filename + "-" + cstr(k+1) +"mer-(" +
-                            cstr(t) + "s).csv", true);
-            }
 
-            // Loop over all time intervals.
-            for (unsigned int i=0; i!=times.size(); ++i) {
-                // Calculate the total step count after this interval.
-                step += times[i].StepCount();
+        unsigned int step = 0;
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            real t = times[i].EndTime();
+            out[i] = new CSV_IO();
+            out[i]->Open(m_output_filename + "-" + "mass spectra-(" +
+                        cstr(t) + "s).csv", true);
+        }
 
-                // Loop over all runs.
-                for (unsigned int irun=0; irun!=m_nruns; ++irun) {
-                    // Read the save point for this step and run.
-                    r = readSavePoint(step, irun, mech);
+        // Loop over all time intervals.
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            // Calculate the total step count after this interval.
+            step += times[i].StepCount();
 
-                    //particle count and number density of ensemble
-                    real Pcount = r->Mixture()->ParticleCount();
-                    real PM0 = r->Mixture()->ParticleCount() / r->Mixture()->SampleVolume();
+            // Loop over all runs.
+            for (unsigned int irun=0; irun!=m_nruns; ++irun) {
+                // Read the save point for this step and run.
+                r = readSavePoint(step, irun, mech);
 
-                    if (r != NULL) {
-                        real scale = (real)m_nruns;
-                        if (m_output_every_iter) scale *= (real)m_niter;
-                        // Get PSL for all particles.
-                        for (unsigned int j = 0; j != Pcount; ++j) {
-                            // Get PSL.
-                            stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
-                                        times[i].EndTime(), temp,
-                                        1.0/(r->Mixture()->SampleVolume()*scale));
-                            if ( (k+1) == temp[11]){//temp[11]=>num of PAH
-                                //temp[13]=>num of C, temp[14]=>num of H
-                                real mass = 12 * temp[13] + temp[14];
-                                // currently only mass <= 2000 are interested in mass spectra.
-                                if (mass<=2000) psl_xmer.push_back(mass);
-                            }
-                        }
-                        delete r;
-                        // calculate m0 for each xmer, used for single run
-                        calculateM0(psl_xmer,m0_xmer,Pcount,PM0);
-                    } else {
-                        // Throw error if the reactor was not read.
-                        throw runtime_error("Unable to read reactor from save point "
-                                            "(Mops, ParticleSolver::postProcessXmer).");
+                //particle count and number density of ensemble
+                real Pcount = r->Mixture()->ParticleCount();
+                real PM0 = r->Mixture()->ParticleCount() / r->Mixture()->SampleVolume();
+
+                if (r != NULL) {
+                    real scale = (real)m_nruns;
+                    if (m_output_every_iter) scale *= (real)m_niter;
+                    // Get PSL for all particles.
+                    for (unsigned int j = 0; j != Pcount; ++j) {
+                        // Get PSL.
+                        stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
+                                    times[i].EndTime(), temp,
+                                    1.0/(r->Mixture()->SampleVolume()*scale));
+                        //temp[11]=>num of PAH
+                        //temp[13]=>num of C, temp[14]=>num of H
+                        real mass = 12 * temp[13] + temp[14];
+                        // currently only mass <= 2000 are interested in mass spectra.
+                        psl_xmer.push_back(mass);
                     }
-                    if (psl_xmer.size()  == m0_xmer.size()) {
-                        m_mass.insert(m_mass.end(),psl_xmer.begin(), psl_xmer.end());
-                        m_allmass.push_back(psl_xmer);
-                        m_allm0.push_back(m0_xmer);
-                        psl_xmer.clear();
-                        m0_xmer.clear();
-                    } else {
-                        // Throw error if the size of vector differ.
-                        throw runtime_error("size of psl_xmer is different form that of m0_xmer, the analysis of xmer information fails"
-                                            "(Mops, ParticleSolver::postProcessXmer).");
-                    }
-
+                    delete r;
+                    // calculate m0 for each xmer, used for single run
+                    calculateM0(psl_xmer,m0_xmer,Pcount,PM0);
+                } else {
+                    // Throw error if the reactor was not read.
+                    throw runtime_error("Unable to read reactor from save point "
+                                        "(Mops, ParticleSolver::postProcessXmer).");
                 }
-                // calculate m0 for xmer, used for multiple runs
-                calculateM0(m_mass, m_m0, m_allmass, m_allm0);
-                // Output particle PSL to CSV file.
-                if (m_mass.size() != m_m0.size()) 
-                    throw runtime_error("size of m_mass is different form that of m_m0, the analysis of xmer information fails" 
-                                        "when trying to calculate mo for multiple runs (Mops, ParticleSolver::postProcessXmer).");
-                out[i]->Write(m_mass);
-                out[i]->Write(m_m0);
-                m_allm0.clear();
-                m_allmass.clear();
-                m_mass.clear();
-                m_m0.clear();
-            }
+                if (psl_xmer.size()  == m0_xmer.size()) {
+                    m_mass.insert(m_mass.end(),psl_xmer.begin(), psl_xmer.end());
+                    m_allmass.push_back(psl_xmer);
+                    m_allm0.push_back(m0_xmer);
+                    psl_xmer.clear();
+                    m0_xmer.clear();
+                } else {
+                    // Throw error if the size of vector differ.
+                    throw runtime_error("size of psl_xmer is different form that of m0_xmer, the analysis of xmer information fails"
+                                        "(Mops, ParticleSolver::postProcessXmer).");
+                }
 
-            // Close output CSV files.
-            for (unsigned int i=0; i!=times.size(); ++i) {
-                out[i]->Close();
-                delete out[i];
             }
+            // calculate m0 for xmer, used for multiple runs
+            calculateM0(m_mass, m_m0, m_allmass, m_allm0);
+            // Output particle PSL to CSV file.
+            if (m_mass.size() != m_m0.size()) 
+                throw runtime_error("size of m_mass is different form that of m_m0, the analysis of xmer information fails" 
+                                    "when trying to calculate mo for multiple runs (Mops, ParticleSolver::postProcessXmer).");
+            out[i]->Write(m_mass);
+            out[i]->Write(m_m0);
+            m_allm0.clear();
+            m_allmass.clear();
+            m_mass.clear();
+            m_m0.clear();
+        }
+
+        // Close output CSV files.
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            out[i]->Close();
+            delete out[i];
         }
     }
 }
@@ -2141,6 +2426,13 @@ void Simulator::Serialize(std::ostream &out) const
         n = (unsigned int)m_output_iter;
         out.write((char*)&n, sizeof(n));
 
+        // Flag controlling jump file output.
+        if (m_write_jumps) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
         // Number of particles for which to produce tracking output.
         n = (unsigned int)m_ptrack_count;
         out.write((char*)&n, sizeof(n));
@@ -2237,6 +2529,10 @@ void Simulator::Deserialize(std::istream &in)
                 // Sub-step iteration number at which output will occur.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_output_iter = n;
+
+                // Flag controlling jump file output.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_write_jumps = (n==trueval);
 
                 // Number of particles for which to produce tracking output.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));

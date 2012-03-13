@@ -102,13 +102,31 @@ bool PAHStructure::operator!=(PAHStructure &rhs) const{
     return !(*this==rhs);
 }
 
-int PAHStructure::numofC(){
+int PAHStructure::numofC() const{
     return m_counts.first;
 } 
 
-int PAHStructure::numofH(){
+int PAHStructure::numofH() const{
     return m_counts.second;
 } 
+
+int PAHStructure::numofRings() const{
+    return m_rings;
+}
+
+int PAHStructure::numofEdgeC() const{
+    // the m_cpositions stores the coordinates of PAH, which means the num of edge C equals the size of m_cpositions
+    return m_cpositions.size();
+}
+void PAHStructure::setnumofC(int val)
+{
+    m_counts.first=val;
+}
+
+void PAHStructure::setnumofH(int val)
+{
+    m_counts.second=val;
+}
 void PAHStructure::initialise(StartingStructure ss) {
     PAHProcess p(*this);
     p.initialise(ss);
