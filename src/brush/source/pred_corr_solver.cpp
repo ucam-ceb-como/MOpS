@@ -215,13 +215,13 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
     const size_t numCells = reac.getNumCells();
     const Sweep::Mechanism &mech = reac.getParticleMechanism();
 
-#pragma omp parallel for schedule(dynamic)
-    for(size_t i = 0; i < numCells; ++i) {
+#pragma omp parallel for schedule(dynamic) ordered
+    for(size_t i = numCells; i > 0; --i) {
         // Get details of cell i
-        Sweep::Cell& cell = reac.getCell(i);
-        Geometry::LocalGeometry1d geom(reac.getGeometry(), i);
+        Sweep::Cell& cell = reac.getCell(i - 1);
+        Geometry::LocalGeometry1d geom(reac.getGeometry(), i - 1);
 
-        solveParticlesInOneCell(cell, geom, mech, t_start, t_stop, cell_rngs[i]);
+        solveParticlesInOneCell(cell, geom, mech, t_start, t_stop, cell_rngs[i - 1]);
     }
 
     // Now do the split particle transport, if there is any
