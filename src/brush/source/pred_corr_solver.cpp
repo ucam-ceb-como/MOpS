@@ -459,6 +459,10 @@ Brush::PredCorrSolver::inflow_lists_vector
             out.weight = geom.cellVolume(cell_index) / geom.cellVolume(out.destination)
                           / mix.SampleVolume() / mix.GasPhase().Velocity();
 
+            // On moving to a new cell reset the coagulation count
+            if(out.destination != cell_index)
+               (out.particle)->resetCoagCount();
+
             // Add the details of the particle to a list ready for inserting
             // into its destination cell
             outflow[out.destination].push_back(out);
