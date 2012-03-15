@@ -118,6 +118,7 @@ int PAHStructure::numofEdgeC() const{
     // the m_cpositions stores the coordinates of PAH, which means the num of edge C equals the size of m_cpositions
     return m_cpositions.size();
 }
+
 void PAHStructure::setnumofC(int val)
 {
     m_counts.first=val;
@@ -127,6 +128,12 @@ void PAHStructure::setnumofH(int val)
 {
     m_counts.second=val;
 }
+
+void PAHStructure::setnumofRings(int val)
+{
+    m_rings=val;
+}
+
 void PAHStructure::initialise(StartingStructure ss) {
     PAHProcess p(*this);
     p.initialise(ss);
@@ -151,3 +158,83 @@ void PAHStructure::saveDOTperLoop(int PAH_ID, int i)
     filename.append(".dot");
     p.saveDOT(filename);
 }
+
+
+// currently the serialization is incomplete, and some info is lost during this process
+// for instance, m_carbonList, m_siteList, m_siteMap, m_cfirst, m_clast
+void PAHStructure::Serialize(std::ostream &out) const
+{
+    double val=0.0;
+
+    val=numofC();
+    out.write((char*)&(val), sizeof(val));
+    val=numofH();
+    out.write((char*)&(val), sizeof(val));
+
+    // use to construct m_cpositions in the deserialize section
+    val=numofEdgeC();
+    out.write((char*)&(val), sizeof(val));
+
+    // output info for m_cpositions.
+    WriteCposition(out);
+
+    val=numofRings();
+    out.write((char*)&(val), sizeof(val));
+}
+
+void PAHStructure::Deserialize(std::istream &in)
+{
+    double val = 0.0;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    setnumofC((int)val);
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    setnumofH((int)val);
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    const int size=val;
+
+    // read info to construct m_cpositions
+    ReadCposition(in, size);
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    setnumofRings((int)val);
+}
+
+void PAHStructure::WriteCposition(std::ostream &out) const
+{
+    double val=0.0;
+
+    std::set<cpair>::iterator itEnd=m_cpositions.end();
+    for (std::set<cpair>::iterator it=m_cpositions.begin();it!=itEnd;++it)
+    {
+        val=(*it).first;
+        out.write((char*)&val, sizeof(val));
+        val=(*it).second;
+        out.write((char*)&val, sizeof(val));
+    }
+}
+
+// the size for m_cpositions is required obviously, otherwise, the codes will not know when to stop
+void PAHStructure::ReadCposition(std::istream &in, const int size)
+{
+    double val=0.0;
+    m_cpositions.clear();
+    int m_first=0;
+    int m_second=0;
+
+    cpair position;
+    for (size_t i=0; i!=size;++i)
+    {
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_first = (int)val;
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_second = (int)val;
+
+        position = make_pair(m_first, m_second);
+        m_cpositions.insert(m_cpositions.end(), position);
+    }
+}
+
+

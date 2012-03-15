@@ -92,12 +92,21 @@ namespace Sweep{
             //! set number of cabon and hydrogen for particular PAH
             void setnumofC(int val);
             void setnumofH(int val);
+
+            //! set number of rings for particular PAH
+            void setnumofRings(int val);
+
             //! check PAH have bridge or not
             bool havebridgeC();
 
             Sweep::AggModels::PAH* m_parent; // pointer to parent PAH
             
-			void saveDOTperLoop(int PAH_ID, int i);
+            void saveDOTperLoop(int PAH_ID, int i);
+
+            //! serialization (incomplete)
+            void Serialize(std::ostream &out) const;
+            void Deserialize(std::istream &in);
+
         protected:
             //! First and last Carbon atom in list
             Cpointer m_cfirst;
@@ -111,12 +120,16 @@ namespace Sweep{
             //! Stores number of rings
             int m_rings;
         private:
+            //! write m_cpositions
+            void WriteCposition(std::ostream &out) const;
+            //! read in m_cpositions
+            void ReadCposition(std::istream &in, const int size);
             //! Copy Constructor
             PAHStructure(const PAHStructure& copy);
-			//! Set storing carbon objects
-			Ccontainer m_carbonList;
+            //! Set storing carbon objects
+            Ccontainer m_carbonList;
 
-			//Cpointer NULLC;
+            //Cpointer NULLC;
         };
     }
 }

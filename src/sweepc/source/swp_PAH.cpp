@@ -112,10 +112,9 @@ Sweep::KMC_ARS::PAHStructure* PAH::Structure()
 void PAH::Serialize(std::ostream &out) const
 {
     double val=0.0;
-    val=this->m_pahstruct->numofC();
-    out.write((char*)&(val), sizeof(val));
-    val=this->m_pahstruct->numofH();
-    out.write((char*)&(val), sizeof(val));
+
+    m_pahstruct->Serialize(out);
+
     val=time_created;
     out.write((char*)&(val), sizeof(val));
     val=lastupdated;
@@ -132,11 +131,8 @@ void PAH::Deserialize(std::istream &in)
 
 	double val = 0.0;
 
-    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    m_pahstruct->setnumofC((int)val);
-
-    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    m_pahstruct->setnumofH((int)val);
+    m_pahstruct=new PAHStructure();
+    m_pahstruct->Deserialize(in);
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     time_created = (double)val;
