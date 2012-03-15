@@ -75,7 +75,7 @@ Simulator::Simulator(void)
   m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_runtime(0.0),
   m_console_interval(1), m_console_msgs(true),
   m_output_filename("mops-out"), m_output_every_iter(false),
-  m_output_step(0), m_output_iter(0), m_write_jumps(false), m_ptrack_count(0)
+  m_output_step(0), m_output_iter(0), m_write_jumps(false), m_ptrack_count(0),m_write_PAH(false)
 {
 }
 
@@ -219,6 +219,9 @@ void Simulator::SetOutputEveryIter(bool fout) {m_output_every_iter=fout;}
 
 //! Set simulator to write the jumps CSV file.
 void Simulator::SetWriteJumpFile(bool writejumps) {m_write_jumps=writejumps;}
+
+//! Set simulator to write the detailed PAH info in the psl file.
+void Simulator::SetWritePAH(bool postpocessPAH) {m_write_PAH=postpocessPAH;}
 
 // STATISTICAL BOUNDS OUTPUT
 
@@ -676,14 +679,19 @@ void Simulator::PostProcess()
 
     // POST-PROCESS PSLs.
 
-    // Now post-process the PSLs.
-    postProcessPSLs(mech, times);
-
     // Now post-process the ensemble to find interested information, in this case, mass of Xmer
     postProcessXmer(mech, times);
 
     // Now post-process the ensemble to find interested information, in this case, PAH mass distribution of a soot aggregate
     postProcessPAHinfo(mech, times);
+
+    // Now post-process the PSLs.
+    if (m_write_PAH) {
+        postProcessPSLs(mech, times);
+        postProcessPAHPSLs(mech, times);
+    }
+    else
+        postProcessPSLs(mech, times);
 }
 
 
@@ -1944,6 +1952,105 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
     for (unsigned int i=0; i!=times.size(); ++i) {
         out[i]->Close();
         delete out[i];
+    }
+}
+
+// Processes the PAH-PSLs at each save point into single files.
+void Simulator::postProcessPAHPSLs(const Mechanism &mech,
+                                const timevector &times) const
+{
+    Reactor *r = NULL;
+    unsigned int step = 0;
+    std::vector<std::vector<double> > temp_PAH;
+
+    // Get reference to the particle mechanism.
+    const Sweep::Mechanism &pmech = mech.ParticleMech();
+    double den = pmech.Components(0)->Density();
+
+        // postProcessXmer is only designed for PAH-PP model
+    if (pmech.AggModel() == Sweep::AggModels::PAH_KMC_ID){
+        // Build header row for CSV output files.
+        vector<string> header;
+        vector<string> separator;
+
+        // add the name for the columns
+        header.push_back("Index");
+        header.push_back("#C");   // #C represent the num of Carbon
+        header.push_back("#H");
+        header.push_back("#Rings");
+        header.push_back("#EdgeC");
+        header.push_back("Mass(u)");
+        header.push_back("Mass(kg)");
+        header.push_back("PAHCollDiameter (m)");
+        header.push_back("PAH denbsity (kg/m3)");
+        header.push_back("PAH volume (m3)");
+        header.push_back("diameter (m)");
+        header.push_back("collision diameter (m)");
+        header.push_back("time created (s)");
+        header.push_back("PAH_ID");
+
+
+        // Open output files for all PSL save points.  Remember to
+        // write the header row as well.
+        vector<CSV_IO*> out(times.size(), NULL);
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            real t = times[i].EndTime();
+            out[i] = new CSV_IO();
+            out[i]->Open(m_output_filename + "-postprocess-PAH(" +
+                        cstr(t) + "s).csv", true);
+            out[i]->Write(header);
+        }
+
+        // Loop over all time intervals.
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            // Calculate the total step count after this interval.
+            step += times[i].StepCount();
+
+            // Loop over all runs.
+            for (unsigned int irun=0; irun!=m_nruns; ++irun) {
+                // Read the save point for this step and run.
+                r = readSavePoint(step, irun, mech);
+                //create separator to distinguish the results of independant runs
+                separator.push_back(cstr(irun+1)+"runs");
+                out[i]->Write(separator);
+                separator.clear();
+
+                if (r != NULL) {
+                    real scale = (real)m_nruns;
+                    if (m_output_every_iter) scale *= (real)m_niter;
+
+                    // Get PSL for all particles.
+                    for (unsigned int j=0; j!=r->Mixture()->ParticleCount(); ++j) {
+
+                        Sweep::Particle* sp=r->Mixture()->Particles().At(j);
+                        Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
+                        // store the mass of individual PAH within the selected particle in the vector temp_PAH
+                        pah->OutputPAHPSL(temp_PAH, j, den);
+                        // check whether it is a gasphase PAH, yes set index to -1
+                        if (pah->Numprimary()==1 && pah->NumPAH()==1)
+                            temp_PAH[0][0]=-1;
+
+                        // Output particle PSL to CSV file.
+                        for (size_t ii = 0; ii!=temp_PAH.size(); ++ii) 
+                            out[i]->Write(temp_PAH[ii]);
+                        // temp_PAH must be cleared before next output
+                        temp_PAH.clear();
+                    }
+
+                    delete r;
+                } else {
+                    // Throw error if the reactor was not read.
+                    throw runtime_error("Unable to read reactor from save point "
+                                        "(Mops, ParticleSolver::postProcessPSLs).");
+                }
+            }
+        }
+
+        // Close output CSV files.
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            out[i]->Close();
+            delete out[i];
+        }
     }
 }
 

@@ -153,6 +153,9 @@ public:
     //! Set simulator to write the jumps CSV file.
     void SetWriteJumpFile(bool writejumps);
 
+    //! Set simulator to write the jumps CSV file.
+    void SetWritePAH(bool postpocessPAH);
+
     // STATISTICAL BOUNDS OUTPUT
 
     // Set simulator to output data of a given statistical range.
@@ -267,6 +270,9 @@ private:
     // Flag controlling whether the number of jump events should
     // be written to CSV output. Default false.
     bool m_write_jumps;
+
+    // Flag controlling whether post-process the detailed info about every PAH in the particle ensemble. Default false.
+    bool m_write_PAH;
 
     // STATISTICAL OUTPUT PARAMETERS
 
@@ -567,6 +573,12 @@ private:
 
     // Processes the PSLs at each save point into single files.
     void postProcessPSLs(
+        const Mechanism &mech,  // Mechanism use to solve system.
+        const timevector &times // Simulation output time intervals.
+        ) const;
+
+    // Processes the PSLs at each save point into single files for PAHs.
+    void postProcessPAHPSLs(
         const Mechanism &mech,  // Mechanism use to solve system.
         const timevector &times // Simulation output time intervals.
         ) const;
