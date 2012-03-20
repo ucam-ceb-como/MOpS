@@ -52,6 +52,7 @@
 #include "swp_kmc_pah_process.h"
 #include "swp_kmc_pah_structure.h"
 #include "swp_PAH.h"
+#include "swp_bintree_serializer.h"
 #include "gpc_species.h"
 #include <stdexcept>
 #include <cassert>
@@ -1588,38 +1589,65 @@ void SilicaPrimary::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
-		double val = 0.0;
-		// Write number of Si atoms.
-        val = (int) m_numSi;
+        // Call the binary tree serialiser...
+        BinTreeSerializer <SilicaPrimary> tree;
+        tree.Serialize(out, this);
+
+
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, SilicaPrimary::Serialize).");
+    }
+}
+
+/*!
+ * @brief       Writes an individual primary to binary stream
+ * @param out   Output binary stream
+ */
+void SilicaPrimary::SerializePrimary(std::ostream &out) const
+{
+    if (out.good()) {
+
+        int  val_int(0);
+        real val(0.0);
+
+        // Serialise state space
+        val_int = m_numSi;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val_int = m_numO;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val_int = m_numOH;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val_int = m_numprimary;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val = m_primarydiam;
         out.write((char*)&val, sizeof(val));
 
-		// Write number of O atoms.
-        val = (int) m_numO;
+        val = m_avg_sinter;
         out.write((char*)&val, sizeof(val));
 
-		// Write number of OH atoms.
-        val = (int) m_numOH;
+        val = m_sint_rate;
         out.write((char*)&val, sizeof(val));
 
-	    val = (int)m_numprimary;
+        /*Imaging properties
+        val = m_Rg;
         out.write((char*)&val, sizeof(val));
 
-        val = (double)m_primarydiam;
+        val = m_fdim;
         out.write((char*)&val, sizeof(val));
 
-        /*
-	    val = (double)m_sqrtLW;
+        val = m_sqrtLW;
         out.write((char*)&val, sizeof(val));
 
-	    val = (double)m_LdivW;
-        out.write((char*)&val, sizeof(val));
+        val = m_LdivW;
+        out.write((char*)&val, sizeof(val));*/
 
-        val = (double)m_fdim;
+        val = m_sint_time;
         out.write((char*)&val, sizeof(val));
-
-        val = (double)m_Rg;
-        out.write((char*)&val, sizeof(val));
-        */
 
         // Output base class.
         Primary::Serialize(out);
@@ -1641,61 +1669,75 @@ void SilicaPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-		double val = 0.0;
-		// Read number of Si atoms.
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numSi = (int)val;
+        // Call the binary tree serialiser...
+        BinTreeSerializer <SilicaPrimary> tree;
+        tree.Deserialize(in, this, model);
 
-		// Read number of O atoms.
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numO = (int)val;
+        PrintTree("deserialised.dot");
 
-		// Read number of OH atoms.
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numOH = (int)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numprimary = (int)val;
-
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_primarydiam = (real)val;
-
-        /*
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_sqrtLW = (real)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_LdivW = (real)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_fdim = (real)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_Rg = (real)val;*/
-
-		m_leftchild=NULL;
-		m_rightchild=NULL;
-		m_parent=NULL;
-		m_leftparticle=NULL;
-		m_rightparticle=NULL;
-		//m_allparents.clear();
-
-		switch (version) {
-            case 0:
-                // Read base class.
-                Primary::Deserialize(in, model);
-
-                break;
-            default:
-                throw runtime_error("Serialized version number is invalid "
-                                  "(Sweep, SilicaPrimary::Deserialize).");
-        }
     } else {
         throw invalid_argument("Input stream not ready "
                                "(Sweep, SilicaPrimary::Deserialize).");
     }
 }
 
+/*!
+ * @brief       Reads an individual primary from the binary stream
+ * @param out   In binary stream
+ */
+void SilicaPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel &model)
+{
+    if (in.good()) {
+
+        int  val_int(0);
+        real val(0.0);
+
+        // Serialise state space
+        in.read(reinterpret_cast<char*>(&val), sizeof(val_int));
+        m_numSi = val_int;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val_int));
+        m_numO = val_int;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val_int));
+        m_numOH = val_int;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val_int));
+        m_numprimary = val_int;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_primarydiam = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_avg_sinter = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_sint_rate = val;
+
+        /*Imaging properties
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_Rg = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_fdim = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_sqrtLW = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_LdivW = val;*/
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_sint_time = val;
+
+        // Output base class.
+        Primary::Deserialize(in, model);
+
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, SilicaPrimary::Deserialize).");
+    }
+}
 
 /*!
  *
