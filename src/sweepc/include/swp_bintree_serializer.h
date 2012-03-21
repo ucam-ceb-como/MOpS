@@ -55,6 +55,11 @@
 // Namespaces
 using namespace std;
 
+namespace Sweep
+{
+namespace AggModels
+{
+
 template <class ParticleClass>
 class BinTreeSerializer
 {
@@ -133,7 +138,8 @@ public:
 
         // Check the particle was found..
         if (not status) {
-            cout << "Couldn't find particle with address " << target << endl;
+            throw runtime_error("Couldn't find particle index "
+                    "(Sweep::AggModels::BinTreeSerializer::GetParticleIndex).");
         }
 
         return sum;
@@ -188,7 +194,8 @@ public:
             if (version == 1) {
                 DeserializeLoop(in, root, root, model);
             } else {
-                throw;
+                throw runtime_error("Incorrect version number "
+                        "(Sweep::AggModels::BinTreeSerializer::Deserialize).");
             }
 
         }
@@ -286,5 +293,7 @@ public:
 
 };
 
+} // AggModels
+} // Sweep
 
 #endif

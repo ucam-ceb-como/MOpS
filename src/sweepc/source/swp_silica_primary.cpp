@@ -1713,8 +1713,6 @@ void SilicaPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
         BinTreeSerializer <SilicaPrimary> tree;
         tree.Deserialize(in, this, model);
 
-        PrintTree("deserialised.dot");
-
     } else {
         throw invalid_argument("Input stream not ready "
                                "(Sweep, SilicaPrimary::Deserialize).");
