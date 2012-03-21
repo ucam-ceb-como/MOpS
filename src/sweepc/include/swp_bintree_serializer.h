@@ -81,6 +81,7 @@ public:
 
             // Call the recursive Serializer!
             SerializeLoop(out, root, root);
+
         }
     }
 
@@ -132,7 +133,7 @@ public:
 
         // Check the particle was found..
         if (not status) {
-            cout << "couldn't find particle!" << endl;
+            cout << "Couldn't find particle with address " << target << endl;
         }
 
         return sum;

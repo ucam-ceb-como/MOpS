@@ -61,6 +61,7 @@
 #include "swp_kmc_pah_structure.h"
 #include "swp_kmc_simulator.h"
 #include "swp_cell.h"
+#include "swp_bintree_serializer.h"
 #include <boost/shared_ptr.hpp>
 
 #include <iostream>
@@ -74,6 +75,9 @@ namespace AggModels
 class PAHPrimary : public Primary
 {
 public:
+    // The binary tree serialiser needs full access to private attributes.
+    friend class BinTreeSerializer<class PAHPrimary>;
+
     //! Build a new primary with one molecule
     PAHPrimary(const real time, const Sweep::ParticleModel &model);
 

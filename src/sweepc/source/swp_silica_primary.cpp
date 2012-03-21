@@ -349,7 +349,35 @@ void SilicaPrimary::SetStateSpace(const int numSi, const int numO, const int num
 
 
 //! Stream-reading constructor.
-SilicaPrimary::SilicaPrimary(std::istream &in, const Sweep::ParticleModel &model)
+SilicaPrimary::SilicaPrimary(std::istream &in, const Sweep::ParticleModel &model) :
+            //State Space:: number of Si, O and OH units
+            m_numSi(0),
+            m_numO(0),
+            m_numOH(0),
+            m_numprimary(0),
+            m_primarydiam(0.0),
+            //Properties of children
+            m_children_radius(0.0),
+            m_children_vol(0.0),
+            m_children_surf(0.0),
+            m_children_sintering(0.0),
+            //Sintering properties
+            m_avg_sinter(0.0),
+            m_sint_rate(0.0),
+            //Imaging properties
+            //m_Rg(0.0),
+            //m_fdim(0.0),
+            //m_sqrtLW(0.0),
+            //m_LdivW(0.0),
+            //Children are nodes holding pointers to other children and/or primary particles
+            m_leftchild(NULL),
+            m_rightchild(NULL),
+            //Parent node is the top node of the tree
+            m_parent(NULL),
+            //Particles are leaf nodes containing primary particles
+            m_leftparticle(NULL),
+            m_rightparticle(NULL),
+            m_sint_time(0.0)
 {
     Deserialize(in, model);
 }
@@ -1627,6 +1655,18 @@ void SilicaPrimary::SerializePrimary(std::ostream &out) const
         val = m_primarydiam;
         out.write((char*)&val, sizeof(val));
 
+        val = m_children_radius;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val = m_children_vol;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val = m_children_surf;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val = m_children_sintering;
+        out.write((char*)&val_int, sizeof(val_int));
+
         val = m_avg_sinter;
         out.write((char*)&val, sizeof(val));
 
@@ -1693,20 +1733,32 @@ void SilicaPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleMo
         real val(0.0);
 
         // Serialise state space
-        in.read(reinterpret_cast<char*>(&val), sizeof(val_int));
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
         m_numSi = val_int;
 
-        in.read(reinterpret_cast<char*>(&val), sizeof(val_int));
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
         m_numO = val_int;
 
-        in.read(reinterpret_cast<char*>(&val), sizeof(val_int));
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
         m_numOH = val_int;
 
-        in.read(reinterpret_cast<char*>(&val), sizeof(val_int));
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
         m_numprimary = val_int;
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_primarydiam = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_children_radius = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_children_vol = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_children_surf = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_children_sintering = val;
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_avg_sinter = val;
