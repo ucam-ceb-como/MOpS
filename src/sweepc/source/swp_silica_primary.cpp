@@ -1656,16 +1656,16 @@ void SilicaPrimary::SerializePrimary(std::ostream &out) const
         out.write((char*)&val, sizeof(val));
 
         val = m_children_radius;
-        out.write((char*)&val_int, sizeof(val_int));
+        out.write((char*)&val, sizeof(val));
 
         val = m_children_vol;
-        out.write((char*)&val_int, sizeof(val_int));
+        out.write((char*)&val, sizeof(val));
 
         val = m_children_surf;
-        out.write((char*)&val_int, sizeof(val_int));
+        out.write((char*)&val, sizeof(val));
 
         val = m_children_sintering;
-        out.write((char*)&val_int, sizeof(val_int));
+        out.write((char*)&val, sizeof(val));
 
         val = m_avg_sinter;
         out.write((char*)&val, sizeof(val));
