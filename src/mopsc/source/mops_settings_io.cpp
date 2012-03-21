@@ -460,7 +460,7 @@ void ReadLOIStatus(const CamXML::Element &node, Solver &solver)
 }
 
 // Reads simulation output parameters from given XML node.
-void readOutput(const CamXML::Element &node, Simulator &sim)
+void readOutput(const CamXML::Element &node, Simulator &sim, Mechanism &mech)
 {
     const CamXML::Element *subnode;
     std::vector<CamXML::Element*> nodes;
@@ -506,6 +506,21 @@ void readOutput(const CamXML::Element &node, Simulator &sim)
                             "(Mops, Settings_IO::readOutput)");
     }
 
+
+    // Check if entire particle binary trees should be dumped (default off)
+    // Relevant for Silica and PAHPP models.
+    subnode = node.GetFirstChild("writebintree");
+    if (subnode != NULL) {
+        std::string str_enable = subnode->GetAttributeValue("enable");
+        if (str_enable.compare("true") == 0) {
+            std::cout << "sweep: Warning! Writing full particle binary trees.\n";
+            mech.ParticleMech().SetWriteBinaryTrees(true);
+        } else {
+            mech.ParticleMech().SetWriteBinaryTrees(false);
+        }
+    } else {
+        mech.ParticleMech().SetWriteBinaryTrees(false);
+    }
 
     // STATISTICAL BOUNDARIES OF OUTPUT
 
@@ -922,7 +937,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 
         node = root->GetFirstChild("output");
         if (node != NULL) {
-            readOutput(*node, sim);
+            readOutput(*node, sim, mech);
         } else {
             throw std::runtime_error("Settings file does not contain output"
                                 " information (Mops::Settings_IO::LoadFromXML).");

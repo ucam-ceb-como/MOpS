@@ -1617,10 +1617,14 @@ void SilicaPrimary::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
-        // Call the binary tree serialiser...
-        BinTreeSerializer <SilicaPrimary> tree;
-        tree.Serialize(out, this);
-
+        if (m_pmodel->WriteBinaryTrees()) {
+            // Call the binary tree serialiser...
+            BinTreeSerializer <SilicaPrimary> tree;
+            tree.Serialize(out, this);
+        } else {
+            // Just serialise the root node.
+            SerializePrimary(out);
+        }
 
     } else {
         throw invalid_argument("Output stream not ready "
@@ -1709,9 +1713,15 @@ void SilicaPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-        // Call the binary tree serialiser...
-        BinTreeSerializer <SilicaPrimary> tree;
-        tree.Deserialize(in, this, model);
+        if (model.WriteBinaryTrees()) {
+            // Call the binary tree serialiser...
+            BinTreeSerializer <SilicaPrimary> tree;
+            tree.Deserialize(in, this, model);
+        } else {
+            // Just deserialise the root node.
+            DeserializePrimary(in, model);
+        }
+
 
     } else {
         throw invalid_argument("Input stream not ready "
