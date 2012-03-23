@@ -594,7 +594,8 @@ private:
     //! Reads an ensemble save point and loads particles into the ensemble.
     void readEnsembleFile(
         Reactor &r,                 // Reactor
-        const string fname           // File name for loading
+        const string fname,         // File name for loading
+        Sweep::rng_type &rng               // Random number generator
         );
 
     //! Checks if coagulation kernels are compatible.

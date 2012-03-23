@@ -332,7 +332,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
         // Now load any existing particles into the reactor
         const string filename("silica-fm(0)-SP(100).ens");
-        readEnsembleFile(r, filename);
+        readEnsembleFile(r, filename, rng);
 
         // Set up the ODE solver for this run.
         s.Reset(r);
@@ -1937,7 +1937,8 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
 // Reads a save point file.
 void Simulator::readEnsembleFile(
         Reactor &r,
-        const string filename)
+        const string filename,
+        Sweep::rng_type &rng)
 {
     // Open the save point file.
     ifstream fin;
@@ -1971,6 +1972,20 @@ void Simulator::readEnsembleFile(
         }
 
         // Now it's time to load the particle ensemble.
+        Sweep::Ensemble fileensemble;
+        fileensemble.Deserialize(fin, *r.Mixture()->ParticleModel());
+
+        // Verify that N_{file} <= N_{max}
+        if (fileensemble.Count() <= r.Mixture()->Particles().Capacity()) {
+            // begin adding the particles of fileensemble to the simulation's ensemble
+            Sweep::Particle *sp;
+            for (unsigned int i(0); i != fileensemble.Count(); ++i) {
+                sp = fileensemble.At(i)->Clone();
+                r.Mixture()->Particles().Add(*sp, rng);
+            }
+        } else {
+            throw runtime_error("Too many particles in file's ensemble!");
+        }
 
         // Close the input file.
         fin.close();
