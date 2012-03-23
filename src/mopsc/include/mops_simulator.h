@@ -591,6 +591,15 @@ private:
         const Mechanism &mech // Mechanism used to define reactor.
         ) const;
 
+    //! Reads an ensemble save point and loads particles into the ensemble.
+    void readEnsembleFile(
+        Reactor &r,                 // Reactor
+        const string fname           // File name for loading
+        );
+
+    //! Checks if coagulation kernels are compatible.
+    bool checkCoagulationKernel(int old_id, int this_id) const;
+
     // Processes the PSLs at each save point into single files.
     void postProcessPSLs(
         const Mechanism &mech,  // Mechanism use to solve system.

@@ -330,6 +330,10 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         // also reset the contents of the reactor
         r.Fill(*(initmix->Clone()), true);
 
+        // Now load any existing particles into the reactor
+        const string filename("silica-fm(0)-SP(100).ens");
+        readEnsembleFile(r, filename);
+
         // Set up the ODE solver for this run.
         s.Reset(r);
 
@@ -1864,10 +1868,12 @@ void Simulator::createEnsembleFile(const Reactor &r, unsigned int step,
         // First write the particle model
         r.Mixture()->ParticleModel()->Serialize(fout);
 
-        // Now write the coagulation processes, assuming only one process
+        // Now write the coagulation process, assuming only one process
         Sweep::Processes::CoagPtrVector coaglist;
         coaglist = r.Mech()->ParticleMech().Coagulations();
-        coaglist[0]->Serialize(fout);
+        int id(0);
+        id = coaglist[0]->ID();     // Get the ID of the coag process
+        fout.write((char*)&id, sizeof(id));
 
         // Now write the ensemble
         r.Mixture()->Particles().Serialize(fout);
@@ -1926,6 +1932,93 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
                             "input (Mops, Simulator::readSavePoint).");
     }
     return NULL;
+}
+
+// Reads a save point file.
+void Simulator::readEnsembleFile(
+        Reactor &r,
+        const string filename)
+{
+    // Open the save point file.
+    ifstream fin;
+    fin.open(filename.c_str(), ios_base::in | ios_base::binary);
+
+    if (m_file.good()) {
+
+        // First read-in and check the particle model
+        Sweep::Mechanism::ParticleModel filemodel;      // model to be loaded
+        filemodel.Deserialize(fin);
+        if (filemodel.AggModel() == r.Mech()->ParticleMech().AggModel()) {
+            std::cout << "parser: correct particle model found!\n";
+        } else {
+            throw runtime_error("Wrong particle model specified in sweep.xml!");
+        }
+
+        // For binary-tree based particles, check that the tree status is the same.
+        if (filemodel.WriteBinaryTrees() == r.Mech()->ParticleMech().WriteBinaryTrees()) {
+            std::cout << "parser: binary tree status okay!\n";
+        } else {
+            throw runtime_error("Wrong binary tree output flag in mops.inx.");
+        }
+
+        // Now, check the coagulation kernel, assuming only one coagulation process
+        int id(0);
+        fin.read(reinterpret_cast<char*>(&id), sizeof(id));
+        if (checkCoagulationKernel(id, r.Mech()->ParticleMech().Coagulations()[0]->ID())) {
+            std::cout << "parser: coagulation process okay!\n";
+        } else {
+            throw runtime_error("Conflicting coagulation kernel specification!");
+        }
+
+        // Now it's time to load the particle ensemble.
+
+        // Close the input file.
+        fin.close();
+
+    } else {
+        // Throw error if the output file failed to open.
+        throw runtime_error("Failed to open ensemble file "
+                            "input (Mops, Simulator::readEnsembleFile).");
+    }
+}
+
+/*!
+ * @brief           Helper function to determine if coag kernels are compatible
+ *
+ * This is here to check if, upon loading an ensemble, that the old and new
+ * coagulation kernels are compatible. There are four cases:
+ * 1: WPM -> WPM
+ * 2: WPM -> DSA
+ * 3: DSA -> DSA
+ * 4: DSA -> WPM
+ * Of these, only number 2 doesn't work. This is because all of the DSA coag
+ * kernel calculations assume particles have equal weight.
+ *
+ * @param old_id    ProcessType ID of binary file's coagulation mechanism
+ * @param this_id   ProcessType ID of this simulation
+ * @return          Boolean indicating if kernels are compatible
+ */
+bool Simulator::checkCoagulationKernel(int old_id, int this_id) const {
+    bool ans(false);
+    if (old_id == Sweep::Processes::Weighted_Additive_Coagulation_ID
+            || old_id == Sweep::Processes::Weighted_Constant_Coagulation_ID
+            || old_id == Sweep::Processes::Weighted_Transition_Coagulation_ID) {
+        if (old_id == this_id) {
+            // This is fine, we've got the same kernel
+            ans = true;
+        } else {
+            if (this_id == Sweep::Processes::Additive_Coagulation_ID
+                    || this_id == Sweep::Processes::Constant_Coagulation_ID
+                    || this_id == Sweep::Processes::Transition_Coagulation_ID) {
+                // Uh oh.. we've gone WPM -> DSA
+                ans = false;
+            } else {
+                // This is fine, we've gone WPMi -> WPMj
+                ans = true;
+            }
+        }
+    }
+    return ans;
 }
 
 // Processes the PSLs at each save point into single files.
