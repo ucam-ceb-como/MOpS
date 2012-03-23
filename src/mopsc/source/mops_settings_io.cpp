@@ -175,7 +175,8 @@ void readGlobalSettings(const CamXML::Element &node,
 Reactor *const readReactor(const CamXML::Element &node,
                                         const Mechanism &mech,
                                         const unsigned int max_particle_count,
-										const real maxM0)
+										const real maxM0,
+										Mops::Simulator &sim)
 {
     Reactor *reac = NULL;
     const CamXML::Element *subnode, *subsubnode;
@@ -305,7 +306,9 @@ Reactor *const readReactor(const CamXML::Element &node,
 
     // List will be empty unless a population node is present
     if(subnode) {
-        Sweep::PartPtrList particleList;
+        Sweep::PartPtrList fileParticleList;
+        Sweep::PartPtrList inxParticleList;
+        Sweep::PartPtrList allParticleList;
         real initialM0 = 0;
 
         // Find the overall number density represented by the population
@@ -320,16 +323,31 @@ Reactor *const readReactor(const CamXML::Element &node,
                                      (Mops, Settings_IO::readReactor)");
         }
 
+        // Check if a binary file has been specified for particles..
+        CamXML::Element* fileNode = subnode->GetFirstChild("file");
+        if (fileNode) {
+            std::string filename;
+            filename = fileNode->Data();
+            std::cout << "parser: binary file " << filename << " specified for input.\n";
+            fileParticleList = sim.ReadEnsembleFile(*reac, filename);
+        }
+
         // Now read in the list of particles and sum up their statistical weights
-        particleList = Settings_IO::ReadInitialParticles(*subnode, mech.ParticleMech());
-        Sweep::PartPtrList::const_iterator it = particleList.begin();
-        const Sweep::PartPtrList::const_iterator itEnd = particleList.end();
+        inxParticleList = Settings_IO::ReadInitialParticles(*subnode, mech.ParticleMech());
+
+        // Join the particle lists
+        allParticleList.splice(allParticleList.end(), fileParticleList);
+        allParticleList.splice(allParticleList.end(), inxParticleList);
+        Sweep::PartPtrList::const_iterator it = allParticleList.begin();
+        const Sweep::PartPtrList::const_iterator itEnd = allParticleList.end();
+
+        // Get the total weights of *all* initialised particles
         real weightSum = 0;
         while(it != itEnd) {
             weightSum += (*it++)->getStatisticalWeight();
         }
 
-        mix->SetParticles(particleList.begin(), particleList.end(), initialM0 / weightSum);
+        mix->SetParticles(allParticleList.begin(), allParticleList.end(), initialM0 / weightSum);
     }
 
 
@@ -910,7 +928,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 
         node = root->GetFirstChild("reactor");
         if (node != NULL) {
-			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0());
+			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0(), sim);
         } else {
             throw std::runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");

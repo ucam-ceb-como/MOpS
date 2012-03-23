@@ -201,6 +201,12 @@ public:
     // Writes the simulator to a binary data stream.
     void Serialize(std::ostream &out) const;
 
+    //! Reads an ensemble file (public definition for IO access)
+    Sweep::PartPtrList ReadEnsembleFile(
+        Reactor &r,                 // Reactor
+        const string fname          // File name for loading
+        );
+
     // Reads the simulator data from a binary data stream.
     void Deserialize(std::istream &in);
 
