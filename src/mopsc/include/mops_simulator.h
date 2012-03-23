@@ -153,6 +153,12 @@ public:
     //! Set simulator to write the jumps CSV file.
     void SetWriteJumpFile(bool writejumps);
 
+    //! Set the simulator to write the particle binary file
+    void SetWriteParticleFile(bool writeparticles);
+
+    //! Set the simulator to write the gas-phase binary file
+    void SetWriteGasPhaseFile(bool writegasphase);
+
     //! Set simulator to write the jumps CSV file.
     void SetWritePAH(bool postpocessPAH);
 
@@ -270,6 +276,12 @@ private:
     // Flag controlling whether the number of jump events should
     // be written to CSV output. Default false.
     bool m_write_jumps;
+
+    //! Should the particles be written to a reusable binary file?
+    bool m_write_particle_file;
+
+    //! Should the gas-phase be written to a reusable binary file?
+    bool m_write_gasphase_file;
 
     // Flag controlling whether post-process the detailed info about every PAH in the particle ensemble. Default false.
     bool m_write_PAH;
