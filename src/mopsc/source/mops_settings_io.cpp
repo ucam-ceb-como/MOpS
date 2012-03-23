@@ -924,6 +924,18 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 
         readGlobalSettings(*root, sim, solver);
 
+        // OUTPUT SETTINGS.
+        // wjm34: read output settings before reactor, so we can check if ensemble/g.p.
+        // files are consistent with some more simulation settings.
+
+        node = root->GetFirstChild("output");
+        if (node != NULL) {
+            readOutput(*node, sim, mech);
+        } else {
+            throw std::runtime_error("Settings file does not contain output"
+                                " information (Mops::Settings_IO::LoadFromXML).");
+        }
+
         // REACTOR.
 
         node = root->GetFirstChild("reactor");
@@ -951,15 +963,6 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
                                 " (Mops::Settings_IO::LoadFromXML).");
         }
 
-        // OUTPUT SETTINGS.
-
-        node = root->GetFirstChild("output");
-        if (node != NULL) {
-            readOutput(*node, sim, mech);
-        } else {
-            throw std::runtime_error("Settings file does not contain output"
-                                " information (Mops::Settings_IO::LoadFromXML).");
-        }
     }
 
     return reac;
