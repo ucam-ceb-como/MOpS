@@ -405,6 +405,10 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             if (s.GetLOIStatus() == true){
                 r.DestroyJac(J, r.Mech()->GasMech().SpeciesCount());
             }
+
+            // Write the ensemble or gas-phase files
+            if (m_write_ensemble_file) createEnsembleFile(r, global_step, irun);
+            //if (m_write_gasphase_file)
         }
         if (s.GetLOIStatus() == true){
             LOIReduction::RejectSpecies(LOI, s.ReturnCompValue(), r.Mech(), rejectSpecies, s.ReturnKeptSpecies());
@@ -1828,7 +1832,22 @@ void Simulator::createSavePoint(const Reactor &r, unsigned int step,
     }
 }
 
-
+/*!
+ * @brief           Writes a binary file containing the ensemble
+ *
+ * This function is activated with the -ensemble argument when running MOPS.
+ * It is to be used to write a binary file containing the ensemble and other
+ * useful metadata; which may be re-used in other simulations as an input.
+ *
+ * The particle model MUST be written to ensure that particles are regenerated
+ * with the appropriate deserialisation function. The coagulation kernel is
+ * also written, as particles with non-unity weight should not be used in a
+ * simulation with DSA coagulation.
+ *
+ * @param r         Reactor pointer
+ * @param step      Step number
+ * @param run       Run number
+ */
 void Simulator::createEnsembleFile(const Reactor &r, unsigned int step,
                                 unsigned int run) const
 {
@@ -1841,16 +1860,22 @@ void Simulator::createEnsembleFile(const Reactor &r, unsigned int step,
     fout.open(fname.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
 
     if (fout.good()) {
-        fout.write((char*)&step, sizeof(step));
-        fout.write((char*)&run, sizeof(run));
+
         // First write the particle model
         r.Mixture()->ParticleModel()->Serialize(fout);
-        // Now write the coagulation kernel (ensure DSA and WPMs aren't mixed)
+
+        // Now write the coagulation processes, assuming only one process
+        Sweep::Processes::CoagPtrVector coaglist;
+        coaglist = r.Mech()->ParticleMech().Coagulations();
+        coaglist[0]->Serialize(fout);
+
+        // Now write the ensemble
+        r.Mixture()->Particles().Serialize(fout);
 
         fout.close();
     } else {
         // Throw error if the output file failed to open.
-        throw runtime_error("Failed to open file for save point "
+        throw runtime_error("Failed to open file for ensemble "
                             "output (Mops, Simulator::createEnsembleFile).");
     }
 }
