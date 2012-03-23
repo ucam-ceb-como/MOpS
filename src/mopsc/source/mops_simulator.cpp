@@ -1930,6 +1930,21 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
     return NULL;
 }
 
+/*!
+ * @brief           Reads an ensemble .ens file.
+ *
+ * This function is to be used when loading a *.ens file to initialise
+ * particles in the system at t=0. Files are specified in the <reactor> block
+ * of the mops.inx file in the following manner:
+ *     <population>
+ *          <file>silica-fm(0)-SP(100).ens</file>
+ *          <m0>3.0e15</m0>
+ *     </population>
+ *
+ * @param r         Reactor pointer
+ * @param fname     Filename to be loaded
+ * @return          Pointer list of new particles for the ensemble
+ */
 Sweep::PartPtrList Simulator::ReadEnsembleFile(Reactor &r, const string fname) {
     // Open the save point file.
     ifstream fin;
@@ -1993,71 +2008,6 @@ Sweep::PartPtrList Simulator::ReadEnsembleFile(Reactor &r, const string fname) {
     }
 
     return particles;
-}
-
-// Reads a save point file.
-void Simulator::readEnsembleFile(
-        Reactor &r,
-        const string filename,
-        Sweep::rng_type &rng)
-{
-    // Open the save point file.
-    ifstream fin;
-    fin.open(filename.c_str(), ios_base::in | ios_base::binary);
-
-    if (m_file.good()) {
-
-        // First read-in and check the particle model
-        Sweep::Mechanism::ParticleModel filemodel;      // model to be loaded
-        filemodel.Deserialize(fin);
-        if (filemodel.AggModel() == r.Mech()->ParticleMech().AggModel()) {
-            std::cout << "parser: correct particle model found!\n";
-        } else {
-            throw runtime_error("Wrong particle model specified in sweep.xml!");
-        }
-
-        // For binary-tree based particles, check that the tree status is the same.
-        if (filemodel.WriteBinaryTrees() == r.Mech()->ParticleMech().WriteBinaryTrees()) {
-            std::cout << "parser: binary tree status okay!\n";
-        } else {
-            throw runtime_error("Wrong binary tree output flag in mops.inx.");
-        }
-
-        // Now, check the coagulation kernel, assuming only one coagulation process
-        int id(0);
-        fin.read(reinterpret_cast<char*>(&id), sizeof(id));
-        if (checkCoagulationKernel(id, r.Mech()->ParticleMech().Coagulations()[0]->ID())) {
-            std::cout << "parser: coagulation process okay!\n";
-        } else {
-            throw runtime_error("Conflicting coagulation kernel specification!");
-        }
-
-        // Now it's time to load the particle ensemble.
-        Sweep::Ensemble fileensemble;
-        fileensemble.Deserialize(fin, *r.Mixture()->ParticleModel());
-
-        // Verify that N_{file} <= N_{max}
-        if (fileensemble.Count() <= r.Mixture()->Particles().Capacity()) {
-            // begin adding the particles of fileensemble to the simulation's ensemble
-            Sweep::Particle *sp;
-            for (unsigned int i(0); i != fileensemble.Count(); ++i) {
-                // note we need to use Clone because, fileensemble will be deleted once
-                // we leave the scope of this function.
-                sp = fileensemble.At(i)->Clone();
-                r.Mixture()->Particles().Add(*sp, rng);
-            }
-        } else {
-            throw runtime_error("Too many particles in file's ensemble!");
-        }
-
-        // Close the input file.
-        fin.close();
-
-    } else {
-        // Throw error if the output file failed to open.
-        throw runtime_error("Failed to open ensemble file "
-                            "input (Mops, Simulator::readEnsembleFile).");
-    }
 }
 
 /*!
