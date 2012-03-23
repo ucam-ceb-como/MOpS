@@ -76,7 +76,7 @@ Simulator::Simulator(void)
   m_console_interval(1), m_console_msgs(true),
   m_output_filename("mops-out"), m_output_every_iter(false),
   m_output_step(0), m_output_iter(0), m_write_jumps(false),
-  m_write_particle_file(false), m_write_gasphase_file(false),
+  m_write_ensemble_file(false), m_write_gasphase_file(false),
   m_write_PAH(false), m_ptrack_count(0)
 {
 }
@@ -223,7 +223,7 @@ void Simulator::SetOutputEveryIter(bool fout) {m_output_every_iter=fout;}
 void Simulator::SetWriteJumpFile(bool writejumps) {m_write_jumps=writejumps;}
 
 //! Set simulator to write the jumps CSV file.
-void Simulator::SetWriteParticleFile(bool writeparticles) {m_write_particle_file=writeparticles;}
+void Simulator::SetWriteEnsembleFile(bool writeensemble) {m_write_ensemble_file=writeensemble;}
 
 //! Set simulator to write the jumps CSV file.
 void Simulator::SetWriteGasPhaseFile(bool writegasphase) {m_write_gasphase_file=writegasphase;}
@@ -1825,6 +1825,33 @@ void Simulator::createSavePoint(const Reactor &r, unsigned int step,
         // Throw error if the output file failed to open.
         throw runtime_error("Failed to open file for save point "
                             "output (Mops, Simulator::createSavePoint).");
+    }
+}
+
+
+void Simulator::createEnsembleFile(const Reactor &r, unsigned int step,
+                                unsigned int run) const
+{
+    // Build the save point file name.
+    string fname = m_output_filename + "(" + cstr(run) + ")-SP(" +
+                   cstr(step) + ").ens";
+
+    // Open the save point file.
+    ofstream fout;
+    fout.open(fname.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
+
+    if (fout.good()) {
+        fout.write((char*)&step, sizeof(step));
+        fout.write((char*)&run, sizeof(run));
+        // First write the particle model
+        r.Mixture()->ParticleModel()->Serialize(fout);
+        // Now write the coagulation kernel (ensure DSA and WPMs aren't mixed)
+
+        fout.close();
+    } else {
+        // Throw error if the output file failed to open.
+        throw runtime_error("Failed to open file for save point "
+                            "output (Mops, Simulator::createEnsembleFile).");
     }
 }
 

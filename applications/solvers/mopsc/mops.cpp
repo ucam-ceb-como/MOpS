@@ -124,8 +124,8 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "-jumps") == 0) {
             // Flag to write number of jump events
             fwritejumps = true;
-        } else if (strcmp(argv[i], "-particles") == 0) {
-            // Flag to write a particles binary file
+        } else if (strcmp(argv[i], "-ensemble") == 0) {
+            // Flag to write the ensemble to a binary file
             fwriteparticles = true;
         } else if (strcmp(argv[i], "-gasphase") == 0) {
             // Flag to write a particles binary file
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
     sim.SetWriteJumpFile(fwritejumps);
 
     // Activate particle and/or gasphase binary output
-    sim.SetWriteParticleFile(fwriteparticles);
+    sim.SetWriteEnsembleFile(fwriteparticles);
     sim.SetWriteGasPhaseFile(fwritegasphase);
 
     // Active detailed PAHs output instead of original psl file

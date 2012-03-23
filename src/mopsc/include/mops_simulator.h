@@ -154,7 +154,7 @@ public:
     void SetWriteJumpFile(bool writejumps);
 
     //! Set the simulator to write the particle binary file
-    void SetWriteParticleFile(bool writeparticles);
+    void SetWriteEnsembleFile(bool writeparticles);
 
     //! Set the simulator to write the gas-phase binary file
     void SetWriteGasPhaseFile(bool writegasphase);
@@ -277,8 +277,8 @@ private:
     // be written to CSV output. Default false.
     bool m_write_jumps;
 
-    //! Should the particles be written to a reusable binary file?
-    bool m_write_particle_file;
+    //! Should the ensemble be written to a reusable binary file?
+    bool m_write_ensemble_file;
 
     //! Should the gas-phase be written to a reusable binary file?
     bool m_write_gasphase_file;
@@ -575,6 +575,14 @@ private:
         unsigned int step, // Step number.
         unsigned int run   // Run number.
         ) const;
+
+    //! Creates an ensemble binary file.
+    void createEnsembleFile(
+        const Reactor &r,  // Reactor to output.
+        unsigned int step, // Step number.
+        unsigned int run   // Run number.
+        ) const;
+
 
     // Reads a save point file.
     Reactor *const readSavePoint(
