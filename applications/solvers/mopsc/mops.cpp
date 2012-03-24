@@ -83,7 +83,6 @@ int main(int argc, char *argv[])
     bool foldfmt       = false;
     bool fwritejumps   = false;
     bool fwriteparticles = false;
-    bool fwritegasphase  = false;
     bool postpocessPAH   = false;
     SolverType soltype = GPC;
     int diag = 0; // Diagnostics level.
@@ -127,9 +126,6 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "-ensemble") == 0) {
             // Flag to write the ensemble to a binary file
             fwriteparticles = true;
-        } else if (strcmp(argv[i], "-gasphase") == 0) {
-            // Flag to write a particles binary file
-            fwritegasphase = true;
         } else if (strcmp(argv[i], "-p") == 0) {
             // Post-processing switch.  Used to turn PP on.
             fpostprocess = true;
@@ -196,7 +192,6 @@ int main(int argc, char *argv[])
 
     // Activate particle and/or gasphase binary output
     sim.SetWriteEnsembleFile(fwriteparticles);
-    sim.SetWriteGasPhaseFile(fwritegasphase);
 
     // Active detailed PAHs output instead of original psl file
     sim.SetWritePAH(postpocessPAH);

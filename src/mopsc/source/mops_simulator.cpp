@@ -76,7 +76,7 @@ Simulator::Simulator(void)
   m_console_interval(1), m_console_msgs(true),
   m_output_filename("mops-out"), m_output_every_iter(false),
   m_output_step(0), m_output_iter(0), m_write_jumps(false),
-  m_write_ensemble_file(false), m_write_gasphase_file(false),
+  m_write_ensemble_file(false),
   m_write_PAH(false), m_ptrack_count(0)
 {
 }
@@ -224,9 +224,6 @@ void Simulator::SetWriteJumpFile(bool writejumps) {m_write_jumps=writejumps;}
 
 //! Set simulator to write the jumps CSV file.
 void Simulator::SetWriteEnsembleFile(bool writeensemble) {m_write_ensemble_file=writeensemble;}
-
-//! Set simulator to write the jumps CSV file.
-void Simulator::SetWriteGasPhaseFile(bool writegasphase) {m_write_gasphase_file=writegasphase;}
 
 //! Set simulator to write the detailed PAH info in the psl file.
 void Simulator::SetWritePAH(bool postpocessPAH) {m_write_PAH=postpocessPAH;}

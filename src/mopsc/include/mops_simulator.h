@@ -156,9 +156,6 @@ public:
     //! Set the simulator to write the particle binary file
     void SetWriteEnsembleFile(bool writeparticles);
 
-    //! Set the simulator to write the gas-phase binary file
-    void SetWriteGasPhaseFile(bool writegasphase);
-
     //! Set simulator to write the jumps CSV file.
     void SetWritePAH(bool postpocessPAH);
 
@@ -285,9 +282,6 @@ private:
 
     //! Should the ensemble be written to a reusable binary file?
     bool m_write_ensemble_file;
-
-    //! Should the gas-phase be written to a reusable binary file?
-    bool m_write_gasphase_file;
 
     // Flag controlling whether post-process the detailed info about every PAH in the particle ensemble. Default false.
     bool m_write_PAH;
