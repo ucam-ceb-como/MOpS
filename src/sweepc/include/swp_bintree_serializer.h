@@ -137,7 +137,7 @@ public:
         GetParticleIndexLoop(node, target, &sum, &status);
 
         // Check the particle was found..
-        if (not status) {
+        if (! status) {
             throw runtime_error("Couldn't find particle index "
                     "(Sweep::AggModels::BinTreeSerializer::GetParticleIndex).");
         }
@@ -168,11 +168,11 @@ public:
         } else {
             // Jump to next node
             (*sum)++;
-            if (not *status) {
+            if (! *status) {
                 if (node->m_leftchild != NULL)
                 GetParticleIndexLoop(node->m_leftchild, target, sum, status);
             }
-            if (not *status) {
+            if (! *status) {
                 if (node->m_rightchild != NULL)
                 GetParticleIndexLoop(node->m_rightchild, target, sum, status);
             }
@@ -279,11 +279,11 @@ public:
             // Jump to next node
             (*sum)++;
             ParticleClass* ans;
-            if (not *status) {
+            if (! *status) {
                 if (node->m_leftchild != NULL)
                     ans = FindParticleFromIndexLoop(node->m_leftchild, index, sum, status);
             }
-            if (not *status) {
+            if (! *status) {
                 if (node->m_rightchild != NULL)
                     ans = FindParticleFromIndexLoop(node->m_rightchild, index, sum, status);
             }
