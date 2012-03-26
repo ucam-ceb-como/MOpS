@@ -71,6 +71,8 @@ add_test(mops.regress5 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress5.sh ${EXECUTAB
 
 add_test(mops.regress6 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress6.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
+add_test(mops.regress7 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress7.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+
 add_test(mops.CSTRtest ${MOPSSUITE_SOURCE_DIR}/test/mopsc/CSTRRegress.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
 add_test(mops.sinter1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/sinter1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)

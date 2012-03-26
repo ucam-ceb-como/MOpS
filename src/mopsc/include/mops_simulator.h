@@ -153,6 +153,12 @@ public:
     //! Set simulator to write the jumps CSV file.
     void SetWriteJumpFile(bool writejumps);
 
+    //! Set the simulator to write the particle binary file
+    void SetWriteEnsembleFile(bool writeparticles);
+
+    //! Set simulator to write the jumps CSV file.
+    void SetWritePAH(bool postpocessPAH);
+
     // STATISTICAL BOUNDS OUTPUT
 
     // Set simulator to output data of a given statistical range.
@@ -191,6 +197,12 @@ public:
 
     // Writes the simulator to a binary data stream.
     void Serialize(std::ostream &out) const;
+
+    //! Reads an ensemble file (public definition for IO access)
+    Sweep::PartPtrList ReadEnsembleFile(
+        Reactor &r,                 // Reactor
+        const string fname          // File name for loading
+        );
 
     // Reads the simulator data from a binary data stream.
     void Deserialize(std::istream &in);
@@ -267,6 +279,12 @@ private:
     // Flag controlling whether the number of jump events should
     // be written to CSV output. Default false.
     bool m_write_jumps;
+
+    //! Should the ensemble be written to a reusable binary file?
+    bool m_write_ensemble_file;
+
+    // Flag controlling whether post-process the detailed info about every PAH in the particle ensemble. Default false.
+    bool m_write_PAH;
 
     // STATISTICAL OUTPUT PARAMETERS
 
@@ -558,6 +576,14 @@ private:
         unsigned int run   // Run number.
         ) const;
 
+    //! Creates an ensemble binary file.
+    void createEnsembleFile(
+        const Reactor &r,  // Reactor to output.
+        unsigned int step, // Step number.
+        unsigned int run   // Run number.
+        ) const;
+
+
     // Reads a save point file.
     Reactor *const readSavePoint(
         unsigned int step,    // Step number.
@@ -565,8 +591,17 @@ private:
         const Mechanism &mech // Mechanism used to define reactor.
         ) const;
 
+    //! Checks if coagulation kernels are compatible.
+    bool checkCoagulationKernel(int old_id, int this_id) const;
+
     // Processes the PSLs at each save point into single files.
     void postProcessPSLs(
+        const Mechanism &mech,  // Mechanism use to solve system.
+        const timevector &times // Simulation output time intervals.
+        ) const;
+
+    // Processes the PSLs at each save point into single files for PAHs.
+    void postProcessPAHPSLs(
         const Mechanism &mech,  // Mechanism use to solve system.
         const timevector &times // Simulation output time intervals.
         ) const;

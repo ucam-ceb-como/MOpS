@@ -82,6 +82,8 @@ int main(int argc, char *argv[])
     bool fpostprocess  = false; // .. but not post-process.
     bool foldfmt       = false;
     bool fwritejumps   = false;
+    bool fwriteparticles = false;
+    bool postpocessPAH   = false;
     SolverType soltype = GPC;
     int diag = 0; // Diagnostics level.
 
@@ -121,6 +123,9 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "-jumps") == 0) {
             // Flag to write number of jump events
             fwritejumps = true;
+        } else if (strcmp(argv[i], "-ensemble") == 0) {
+            // Flag to write the ensemble to a binary file
+            fwriteparticles = true;
         } else if (strcmp(argv[i], "-p") == 0) {
             // Post-processing switch.  Used to turn PP on.
             fpostprocess = true;
@@ -134,7 +139,10 @@ int main(int argc, char *argv[])
         // The next statements select the type of solver to use.  The
         // default is to solve gas-phase only, with no particle system.
 
-        } else if (strcmp(argv[i], "-gpc") == 0) {
+        } else if (strcmp(argv[i], "-ppah") == 0) {
+            // post-process pah info from particle ensemble.
+            postpocessPAH = true;
+		}else if (strcmp(argv[i], "-gpc") == 0) {
             // Solver gas-phase chemistry only.
             soltype = GPC;
 		} else if (strcmp(argv[i], "-opsplit") == 0) {
@@ -181,6 +189,12 @@ int main(int argc, char *argv[])
 
     // Activate jump writing output
     sim.SetWriteJumpFile(fwritejumps);
+
+    // Activate particle and/or gasphase binary output
+    sim.SetWriteEnsembleFile(fwriteparticles);
+
+    // Active detailed PAHs output instead of original psl file
+    sim.SetWritePAH(postpocessPAH);
 
     // Create the solver.
     try {

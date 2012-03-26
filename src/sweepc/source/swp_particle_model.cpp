@@ -485,6 +485,11 @@ void ParticleModel::Serialize(std::ostream &out) const
         n = (unsigned int)m_aggmodel;
         out.write((char*)&n, sizeof(n));
 
+        // Write whether binary trees should be serialised.
+        bool flag(false);
+        flag = m_write_bintree;
+        out.write((char*)&flag, sizeof(flag));
+
         // Write Knudsen drag parameters
         out.write(reinterpret_cast<const char *>(&m_DragA), sizeof(m_DragA));
         out.write(reinterpret_cast<const char *>(&m_DragB), sizeof(m_DragB));
@@ -538,6 +543,12 @@ void ParticleModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_aggmodel = (AggModels::AggModelType)n;
 
+                // Read if binary trees should be read..
+                bool flag;
+                flag = false;
+                in.read(reinterpret_cast<char*>(&flag), sizeof(flag));
+                m_write_bintree = flag;
+
                 // Read in Knudsen drag parameters
                 in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
                 in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
@@ -588,6 +599,9 @@ void ParticleModel::init(void)
 
     // Not sure what to put as default for m_DragType etc
     m_ThermophoresisType = NoThermophoresis;
+
+    // Default writing of binary trees is false.
+    m_write_bintree = false;
 }
 
 // Clears the current ParticleModel from memory.

@@ -119,6 +119,9 @@ public:
     // Adds a coagulation process to the mechanism.
     void AddCoagulation(Processes::Coagulation &coag);
     
+    //! Returns the vector of coagulations.
+    const Processes::CoagPtrVector &Coagulations(void) const;
+
     // PROCESS INFORMATION.
 
     // Returns the number of processes (including 

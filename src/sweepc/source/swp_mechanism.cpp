@@ -232,6 +232,10 @@ void Mechanism::AddCoagulation(Coagulation& coag)
     coag.SetMechanism(*this);
 }
 
+const CoagPtrVector &Mechanism::Coagulations(void) const
+{
+    return m_coags;
+}
 
 // PROCESS INFORMATION.
 

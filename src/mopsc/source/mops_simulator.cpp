@@ -75,7 +75,9 @@ Simulator::Simulator(void)
   m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_runtime(0.0),
   m_console_interval(1), m_console_msgs(true),
   m_output_filename("mops-out"), m_output_every_iter(false),
-  m_output_step(0), m_output_iter(0), m_write_jumps(false), m_ptrack_count(0)
+  m_output_step(0), m_output_iter(0), m_write_jumps(false),
+  m_write_ensemble_file(false),
+  m_write_PAH(false), m_ptrack_count(0)
 {
 }
 
@@ -219,6 +221,12 @@ void Simulator::SetOutputEveryIter(bool fout) {m_output_every_iter=fout;}
 
 //! Set simulator to write the jumps CSV file.
 void Simulator::SetWriteJumpFile(bool writejumps) {m_write_jumps=writejumps;}
+
+//! Set simulator to write the jumps CSV file.
+void Simulator::SetWriteEnsembleFile(bool writeensemble) {m_write_ensemble_file=writeensemble;}
+
+//! Set simulator to write the detailed PAH info in the psl file.
+void Simulator::SetWritePAH(bool postpocessPAH) {m_write_PAH=postpocessPAH;}
 
 // STATISTICAL BOUNDS OUTPUT
 
@@ -394,6 +402,10 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             if (s.GetLOIStatus() == true){
                 r.DestroyJac(J, r.Mech()->GasMech().SpeciesCount());
             }
+
+            // Write the ensemble or gas-phase files
+            if (m_write_ensemble_file) createEnsembleFile(r, global_step, irun);
+            //if (m_write_gasphase_file)
         }
         if (s.GetLOIStatus() == true){
             LOIReduction::RejectSpecies(LOI, s.ReturnCompValue(), r.Mech(), rejectSpecies, s.ReturnKeptSpecies());
@@ -676,14 +688,19 @@ void Simulator::PostProcess()
 
     // POST-PROCESS PSLs.
 
-    // Now post-process the PSLs.
-    postProcessPSLs(mech, times);
-
     // Now post-process the ensemble to find interested information, in this case, mass of Xmer
     postProcessXmer(mech, times);
 
     // Now post-process the ensemble to find interested information, in this case, PAH mass distribution of a soot aggregate
     postProcessPAHinfo(mech, times);
+
+    // Now post-process the PSLs.
+    if (m_write_PAH) {
+        postProcessPSLs(mech, times);
+        postProcessPAHPSLs(mech, times);
+    }
+    else
+        postProcessPSLs(mech, times);
 }
 
 
@@ -1812,6 +1829,56 @@ void Simulator::createSavePoint(const Reactor &r, unsigned int step,
     }
 }
 
+/*!
+ * @brief           Writes a binary file containing the ensemble
+ *
+ * This function is activated with the -ensemble argument when running MOPS.
+ * It is to be used to write a binary file containing the ensemble and other
+ * useful metadata; which may be re-used in other simulations as an input.
+ *
+ * The particle model MUST be written to ensure that particles are regenerated
+ * with the appropriate deserialisation function. The coagulation kernel is
+ * also written, as particles with non-unity weight should not be used in a
+ * simulation with DSA coagulation.
+ *
+ * @param r         Reactor pointer
+ * @param step      Step number
+ * @param run       Run number
+ */
+void Simulator::createEnsembleFile(const Reactor &r, unsigned int step,
+                                unsigned int run) const
+{
+    // Build the save point file name.
+    string fname = m_output_filename + "(" + cstr(run) + ")-SP(" +
+                   cstr(step) + ").ens";
+
+    // Open the save point file.
+    ofstream fout;
+    fout.open(fname.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
+
+    if (fout.good()) {
+
+        // First write the particle model
+        r.Mixture()->ParticleModel()->Serialize(fout);
+
+        // Now write the coagulation process, assuming only one process
+        Sweep::Processes::CoagPtrVector coaglist;
+        coaglist = r.Mech()->ParticleMech().Coagulations();
+        int id(0);
+        id = coaglist[0]->ID();     // Get the ID of the coag process
+        fout.write((char*)&id, sizeof(id));
+
+        // Now write the ensemble
+        r.Mixture()->Particles().Serialize(fout);
+
+        fout.close();
+    } else {
+        // Throw error if the output file failed to open.
+        throw runtime_error("Failed to open file for ensemble "
+                            "output (Mops, Simulator::createEnsembleFile).");
+    }
+}
+
 // Reads a save point file.
 Reactor *const Simulator::readSavePoint(unsigned int step,
                                         unsigned int run,
@@ -1858,6 +1925,125 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
                             "input (Mops, Simulator::readSavePoint).");
     }
     return NULL;
+}
+
+/*!
+ * @brief           Reads an ensemble .ens file.
+ *
+ * This function is to be used when loading a *.ens file to initialise
+ * particles in the system at t=0. Files are specified in the <reactor> block
+ * of the mops.inx file in the following manner:
+ *     <population>
+ *          <file>silica-fm(0)-SP(100).ens</file>
+ *          <m0>3.0e15</m0>
+ *     </population>
+ *
+ * @param r         Reactor pointer
+ * @param fname     Filename to be loaded
+ * @return          Pointer list of new particles for the ensemble
+ */
+Sweep::PartPtrList Simulator::ReadEnsembleFile(Reactor &r, const string fname) {
+    // Open the save point file.
+    ifstream fin;
+    fin.open(fname.c_str(), ios_base::in | ios_base::binary);
+
+    // Create empty particle pointer list
+    Sweep::PartPtrList particles;
+
+    if (m_file.good()) {
+
+        // First read-in and check the particle model
+        Sweep::Mechanism::ParticleModel filemodel;      // model to be loaded
+        filemodel.Deserialize(fin);
+        if (filemodel.AggModel() == r.Mech()->ParticleMech().AggModel()) {
+            std::cout << "parser: correct particle model found!\n";
+        } else {
+            throw runtime_error("Wrong particle model specified in sweep.xml!");
+        }
+
+        // For binary-tree based particles, check that the tree status is the same.
+        if (filemodel.WriteBinaryTrees() == r.Mech()->ParticleMech().WriteBinaryTrees()) {
+            std::cout << "parser: binary tree status okay!\n";
+        } else {
+            throw runtime_error("Wrong binary tree output flag in mops.inx.");
+        }
+
+        // Now, check the coagulation kernel, assuming only one coagulation process
+        int id(0);
+        fin.read(reinterpret_cast<char*>(&id), sizeof(id));
+        if (checkCoagulationKernel(id, r.Mech()->ParticleMech().Coagulations()[0]->ID())) {
+            std::cout << "parser: coagulation process okay!\n";
+        } else {
+            throw runtime_error("Conflicting coagulation kernel specification!");
+        }
+
+        // Now it's time to load the particle ensemble.
+        Sweep::Ensemble fileensemble;
+        fileensemble.Deserialize(fin, *r.Mixture()->ParticleModel());
+
+        // Verify that N_{file} <= N_{max}
+        if (fileensemble.Count() <= r.Mixture()->Particles().Capacity()) {
+            // begin adding the particles of fileensemble to the simulation's ensemble
+            Sweep::Particle *sp;
+            for (unsigned int i(0); i != fileensemble.Count(); ++i) {
+                // note we need to use Clone, because fileensemble will be deleted once
+                // we leave the scope of this function.
+                sp = fileensemble.At(i)->Clone();
+                particles.push_back(sp);
+            }
+        } else {
+            throw runtime_error("Too many particles in file's ensemble!");
+        }
+
+        // Close the input file.
+        fin.close();
+
+    } else {
+        // Throw error if the output file failed to open.
+        throw runtime_error("Failed to open ensemble file "
+                            "input (Mops, Simulator::readEnsembleFile).");
+    }
+
+    return particles;
+}
+
+/*!
+ * @brief           Helper function to determine if coag kernels are compatible
+ *
+ * This is here to check if, upon loading an ensemble, that the old and new
+ * coagulation kernels are compatible. There are four cases:
+ * 1: WPM -> WPM
+ * 2: WPM -> DSA
+ * 3: DSA -> DSA
+ * 4: DSA -> WPM
+ * Of these, only number 2 doesn't work. This is because all of the DSA coag
+ * kernel calculations assume particles have equal weight.
+ *
+ * @param old_id    ProcessType ID of binary file's coagulation mechanism
+ * @param this_id   ProcessType ID of this simulation
+ * @return          Boolean indicating if kernels are compatible
+ */
+bool Simulator::checkCoagulationKernel(int old_id, int this_id) const {
+    bool ans(false);
+    if (old_id == Sweep::Processes::Weighted_Additive_Coagulation_ID
+            || old_id == Sweep::Processes::Weighted_Constant_Coagulation_ID
+            || old_id == Sweep::Processes::Weighted_Transition_Coagulation_ID) {
+        if (old_id == this_id) {
+            // This is fine, we've got the same kernel
+            ans = true;
+        } else {
+            if (this_id == Sweep::Processes::Additive_Coagulation_ID
+                    || this_id == Sweep::Processes::Constant_Coagulation_ID
+                    || this_id == Sweep::Processes::Transition_Coagulation_ID) {
+                // Uh oh.. we've gone WPM -> DSA
+                ans = false;
+            } else {
+                // This is fine, we've gone WPMi -> WPMj
+                ans = true;
+            }
+        }
+    }
+    return ans;
 }
 
 // Processes the PSLs at each save point into single files.
@@ -1944,6 +2130,105 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
     for (unsigned int i=0; i!=times.size(); ++i) {
         out[i]->Close();
         delete out[i];
+    }
+}
+
+// Processes the PAH-PSLs at each save point into single files.
+void Simulator::postProcessPAHPSLs(const Mechanism &mech,
+                                const timevector &times) const
+{
+    Reactor *r = NULL;
+    unsigned int step = 0;
+    std::vector<std::vector<double> > temp_PAH;
+
+    // Get reference to the particle mechanism.
+    const Sweep::Mechanism &pmech = mech.ParticleMech();
+    double den = pmech.Components(0)->Density();
+
+        // postProcessXmer is only designed for PAH-PP model
+    if (pmech.AggModel() == Sweep::AggModels::PAH_KMC_ID){
+        // Build header row for CSV output files.
+        vector<string> header;
+        vector<string> separator;
+
+        // add the name for the columns
+        header.push_back("Index");
+        header.push_back("#C");   // #C represent the num of Carbon
+        header.push_back("#H");
+        header.push_back("#Rings");
+        header.push_back("#EdgeC");
+        header.push_back("Mass(u)");
+        header.push_back("Mass(kg)");
+        header.push_back("PAHCollDiameter (m)");
+        header.push_back("PAH denbsity (kg/m3)");
+        header.push_back("PAH volume (m3)");
+        header.push_back("diameter (m)");
+        header.push_back("collision diameter (m)");
+        header.push_back("time created (s)");
+        header.push_back("PAH_ID");
+
+
+        // Open output files for all PSL save points.  Remember to
+        // write the header row as well.
+        vector<CSV_IO*> out(times.size(), NULL);
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            real t = times[i].EndTime();
+            out[i] = new CSV_IO();
+            out[i]->Open(m_output_filename + "-postprocess-PAH(" +
+                        cstr(t) + "s).csv", true);
+            out[i]->Write(header);
+        }
+
+        // Loop over all time intervals.
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            // Calculate the total step count after this interval.
+            step += times[i].StepCount();
+
+            // Loop over all runs.
+            for (unsigned int irun=0; irun!=m_nruns; ++irun) {
+                // Read the save point for this step and run.
+                r = readSavePoint(step, irun, mech);
+                //create separator to distinguish the results of independant runs
+                separator.push_back(cstr(irun+1)+"runs");
+                out[i]->Write(separator);
+                separator.clear();
+
+                if (r != NULL) {
+                    real scale = (real)m_nruns;
+                    if (m_output_every_iter) scale *= (real)m_niter;
+
+                    // Get PSL for all particles.
+                    for (unsigned int j=0; j!=r->Mixture()->ParticleCount(); ++j) {
+
+                        Sweep::Particle* sp=r->Mixture()->Particles().At(j);
+                        Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
+                        // store the mass of individual PAH within the selected particle in the vector temp_PAH
+                        pah->OutputPAHPSL(temp_PAH, j, den);
+                        // check whether it is a gasphase PAH, yes set index to -1
+                        if (pah->Numprimary()==1 && pah->NumPAH()==1)
+                            temp_PAH[0][0]=-1;
+
+                        // Output particle PSL to CSV file.
+                        for (size_t ii = 0; ii!=temp_PAH.size(); ++ii) 
+                            out[i]->Write(temp_PAH[ii]);
+                        // temp_PAH must be cleared before next output
+                        temp_PAH.clear();
+                    }
+
+                    delete r;
+                } else {
+                    // Throw error if the reactor was not read.
+                    throw runtime_error("Unable to read reactor from save point "
+                                        "(Mops, ParticleSolver::postProcessPSLs).");
+                }
+            }
+        }
+
+        // Close output CSV files.
+        for (unsigned int i=0; i!=times.size(); ++i) {
+            out[i]->Close();
+            delete out[i];
+        }
     }
 }
 

@@ -1195,6 +1195,70 @@ int PAHPrimary::InceptedPAH() const
     ID++;
     }
 
+// use to output detailed info about particular PAH
+void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int index, const double density) const
+{
+    if (m_leftchild!=NULL)
+        m_leftchild->OutputPAHPSL(out, index, density);
+
+    std::vector<double> temp;
+
+    for (size_t i = 0; i != m_PAH.size(); ++i)
+    {
+        int num_C=0;
+        int num_H=0;
+        double val=0.0;
+        double m_mass=0.0;
+        double PAHCollDiameter=0.0;
+        double diameter=0.0;
+        temp.push_back(index);
+
+        num_C=m_PAH[i]->m_pahstruct->numofC();
+        temp.push_back(num_C);
+        num_H=m_PAH[i]->m_pahstruct->numofH();
+        temp.push_back(num_H);
+        temp.push_back(m_PAH[i]->m_pahstruct->numofRings());
+        temp.push_back(m_PAH[i]->m_pahstruct->numofEdgeC());
+
+        // PAH mass (u)
+        val = 12*num_C + num_H;
+        temp.push_back(val);
+        // PAH mass (kg)
+        m_mass = num_C*1.9945e-26 + num_H*1.6621e-27;
+        temp.push_back(m_mass);
+
+        // PAHCollDiameter (Angstrom)
+        PAHCollDiameter = sqrt(num_C*2.0/3.);
+        PAHCollDiameter *= 2.4162*1e-10;         //convert from Angstrom to m
+        temp.push_back(PAHCollDiameter);
+
+        // PAH denbsity (kg/m3)
+        temp.push_back(density);
+
+        // PAH volume (m3)
+        val = m_mass / density;
+        temp.push_back(val);
+
+        // diameter (m)
+        diameter = pow(6.0 * val / PI, ONE_THIRD);
+        temp.push_back(diameter);
+
+        // collision diameter (m)
+        val = max(diameter, PAHCollDiameter);
+        temp.push_back(val);
+
+        // time created (s)
+        val = m_PAH[i]->time_created;
+        temp.push_back(val);
+
+        // index of PAH
+        val = m_PAH[i]->PAH_ID;
+        temp.push_back(val);
+
+        out.push_back(temp);
+        temp.clear();
+    }
+}
 // this function is only used to create a vector containing all the mass of individual PAH(but currently only track the m_leftchild because of the implementation of serialization)
 void PAHPrimary::mass_PAH(std::vector<double> &out) const
 {
