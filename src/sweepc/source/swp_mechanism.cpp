@@ -800,6 +800,11 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
     // Deal with the growth of the PAHs
     if (AggModel() == AggModels::PAH_KMC_ID)
     {
+        // Calculate delta-t and update particle time.
+        real dt;
+        dt = t - sp.LastUpdateTime();
+        sp.SetTime(t);
+
         // If the agg model is PAH_KMC_ID then all the primary
         // particles must be PAHPrimary.
         AggModels::PAHPrimary *pah =
@@ -808,8 +813,14 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
         // Update individual PAHs within this particle by using KMC code
         // sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
         pah->UpdatePAHs(t, *this, sys, rng);
+
+        // Sinter the particles for the silica model (as no deferred process)
+        if (m_sint_model.IsEnabled()) {
+            pah->Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+        }
+
         pah->UpdateCache();
-        pah->CheckCoalescence();
+        pah->CheckRounding();
         if (sp.IsValid())
             sp.UpdateCache();
 

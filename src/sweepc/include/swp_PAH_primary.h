@@ -106,6 +106,12 @@ public:
     //! coagulates this particle with rhs
     PAHPrimary &Coagulate(const Primary &rhs, rng_type &rng);
 
+    //! investigate the sintering of PAH cluster
+    void Sinter(real dt, Cell &sys,
+                const Processes::SinteringModel &model,
+                rng_type &rng,
+                real wt);
+
     //! prints the tree to a file that can be converted to a graph using graphviz
     void PrintTree(std::string filename);
 
@@ -118,16 +124,17 @@ public:
     //! adds a PAH to a particle
     void AddPAH(real time, const Sweep::ParticleModel &model);
 
-    //! returns the coalescence level
+    //! returns the rounding level due to mass addition
     double CoalescenceLevel();
-
+    //! returns the Rounding Level according the Eq 6.3 on the markus sander's thesis
+    double RoundingLevel();
     //! returns the left child
     const PAHPrimary *LeftChild() const;
     //! returns the right child
     const PAHPrimary *RightChild() const;
 
-    //! Checks if the coalescence level is higher then the treshold and merges the primaries if necessary
-    bool CheckCoalescence();
+    //! Checks if the Rounding level is higher then the treshold (0.95) and merges the primaries if necessary
+    bool CheckRounding();
 
     //! Updates the fractal dimension
     void CalcFractalDimension();
@@ -180,9 +187,11 @@ public:
     void OutputPAHPSL(std::vector<std::vector<double> > &out, const int index, const double density) const;
     //! set pah_structure=Null before destructor delete it
     //void ReleasePAH(Primary &rhs);
-    //find soot particle with only one Incepted molecule (C16H10 or C6H6)
+    //! find soot particle with only one Incepted molecule (A1,A2 or A4)
     int InceptedPAH() const;
+    //! check whether this PAH is invalid
     bool CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const;
+    //! remove invalid PAHs under this primary particle
     void RemoveInvalidPAHs();
 
 protected:
@@ -203,8 +212,8 @@ protected:
     void UpdatePrimary(void);
     //! sets some properties to 0
     void Reset();
-    //! return ture if it is a false coalescence, false coalescence is used to merge primary particle containing only one or no PAH after the InvalidPAHs are removed.
-    bool Fakecoalescence();
+    //! return ture if it is a false rounding, false rounding is used to merge primary particle containing only one or no PAH after the InvalidPAHs are removed.
+    bool FakeRounding();
     //! merges the two children primaries together
     void Merge();
     //! updates the pointers after a merge event
@@ -231,6 +240,9 @@ private:
 
     void outputPAHPrimary(std::ostream &out) const;
     PAHPrimary* inputPAHPrimary(std::istream &in);
+
+    //! Set the sintering time of a tree
+    void SetSinteringTime(real time);
 
     // Vector of PAHs.
     // PAHStructure class now have proper copy constructor
@@ -266,8 +278,8 @@ private:
     int m_leftparticle_numPAH;
 
     double m_children_surf;
-
-    double m_children_coalescence;
+    // store the RoundingLevel
+    double m_children_roundingLevel;
 
     // total num of edge C in this soot particle
     int m_numOfEdgeC;
@@ -282,6 +294,8 @@ private:
     double m_LdivW;
     double m_avg_coalesc;
 
+    //! Absolute amount of time for which particles are sintered
+    real m_sint_time;
 
     PAHPrimary *m_leftchild, *m_rightchild, *m_parent, *m_leftparticle, *m_rightparticle;
 };
