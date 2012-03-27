@@ -76,7 +76,7 @@ static std::vector<kmcSiteType> allSiteType = vectSiteType();
 
 //! Default Constructor
 KMCSimulator::KMCSimulator():
-    m_t(), m_mech(), m_gasprof(), m_kmcmech(), m_gas(), m_fromfile(false)
+     m_gasprof(), m_mech(), m_gas(), m_simPAH(), m_t(), m_fromfile(false), m_kmcmech(),m_simPAHp()
 {
 }
 
@@ -163,7 +163,7 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
     }*/
     real t_next = m_t;
     real t_step_max = dt/waitingSteps;
-    real oldtnext;
+    //real oldtnext;
     int loopcount=0;
     while (m_t < t_max) {
         //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
@@ -203,7 +203,7 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
                 m_rxn_count[jp_perf.second]++;
             }
         }else {
-            oldtnext = t_next;
+            //oldtnext = t_next;
             t_next = m_t+t_step_max;
         }
         m_t = t_next;

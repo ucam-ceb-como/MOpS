@@ -244,21 +244,22 @@ private:
     //! Set the sintering time of a tree
     void SetSinteringTime(real time);
 
-    // Vector of PAHs.
-    // PAHStructure class now have proper copy constructor
-    // , but it is still not worthy to copy PAH from one vector to another
-    // so we will use vector<std::tr1::shared_ptr<PAH>> instead of  vector <PAH>
-    // Vector of std::tr1::shared_ptr<PAH>.
-    std::vector<boost::shared_ptr<PAH> > m_PAH;
     //some basic properties
     //derived from the PAHs by UpdataCache()
     int m_numcarbon;
     int m_numH;
+
+    //! total num of edge C in this soot particle
+    int m_numOfEdgeC;
+    //! total num of rings (inculding 5, 6- menber rings) in this soot particle
+    int m_numOfRings;
+    //! Number of PAHs below this node
+    int m_numPAH;
+    //! Number of primaries below this node
+    int m_numprimary;
+
     double m_PAHmass;
     double m_PAHCollDiameter;
-    int m_numPAH;
-//! Number of primaries below this node
-    int m_numprimary;
 
     //sum of the diameter of the primaries under this treenode needed for stats
     double m_primarydiam;
@@ -281,11 +282,6 @@ private:
     // store the RoundingLevel
     double m_children_roundingLevel;
 
-    // total num of edge C in this soot particle
-    int m_numOfEdgeC;
-    // total num of rings (inculding 5, 6- menber rings) in this soot particle
-    int m_numOfRings;
-
     // radius of gyration and fractal dimension
     // the values are only update in CalcFractaldimension()
     double m_Rg;
@@ -295,9 +291,19 @@ private:
     double m_avg_coalesc;
 
     //! Absolute amount of time for which particles are sintered
-    real m_sint_time;
+    double m_sint_time;
 
+    //! pointers to construct the connectivity and the tree stuctures
     PAHPrimary *m_leftchild, *m_rightchild, *m_parent, *m_leftparticle, *m_rightparticle;
+
+    // Vector of PAHs.
+    // PAHStructure class now have proper copy constructor
+    // , but it is still not worthy to copy PAH from one vector to another
+    // so we will use vector<std::tr1::shared_ptr<PAH>> instead of  vector <PAH>
+    // Vector of std::tr1::shared_ptr<PAH>.
+    std::vector<boost::shared_ptr<PAH> > m_PAH;
+
+
 };
 } //namespace AggModels
 } //namespace Sweep

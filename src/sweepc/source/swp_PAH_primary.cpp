@@ -96,10 +96,10 @@ PAHPrimary::PAHPrimary() : Primary(),
     m_numH(0),
     m_numOfEdgeC(0),
     m_numOfRings(0),
-    m_PAHmass(0),
-    m_PAHCollDiameter(0),
     m_numPAH(0),
     m_numprimary(0),
+    m_PAHmass(0),
+    m_PAHCollDiameter(0),
     m_primarydiam(0.0),
     m_children_radius(0),
     m_children_vol(0),
@@ -114,12 +114,12 @@ PAHPrimary::PAHPrimary() : Primary(),
     m_sqrtLW(0),
     m_LdivW(0),
     m_avg_coalesc(0),
+    m_sint_time(0.0),
     m_leftchild(NULL),
     m_rightchild(NULL),
     m_parent(NULL),
     m_leftparticle(NULL),
-    m_rightparticle(NULL),
-    m_sint_time(0.0)
+    m_rightparticle(NULL)
 {
 }
 
@@ -134,10 +134,10 @@ PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model)
     m_numH(0),
     m_numOfEdgeC(0),
     m_numOfRings(0),
-    m_PAHmass(0),
-    m_PAHCollDiameter(0),
     m_numPAH(0),
     m_numprimary(0),
+    m_PAHmass(0),
+    m_PAHCollDiameter(0),
     m_primarydiam(0.0),
     m_children_radius(0),
     m_children_vol(0),
@@ -152,12 +152,12 @@ PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model)
     m_sqrtLW(0),
     m_LdivW(0),
     m_avg_coalesc(0),
+    m_sint_time(0.0),
     m_leftchild(NULL),
     m_rightchild(NULL),
     m_parent(NULL),
     m_leftparticle(NULL),
-    m_rightparticle(NULL),
-    m_sint_time(0.0)
+    m_rightparticle(NULL)
 {
     // Other parts of the code check for a non-zero composition
     m_comp[0]=1;
@@ -181,10 +181,10 @@ PAHPrimary::PAHPrimary(const real time, const real position,
     m_numH(0),
     m_numOfEdgeC(0),
     m_numOfRings(0),
-    m_PAHmass(0),
-    m_PAHCollDiameter(0),
     m_numPAH(0),
     m_numprimary(0),
+    m_PAHmass(0),
+    m_PAHCollDiameter(0),
     m_primarydiam(0.0),
     m_children_radius(0),
     m_children_vol(0),
@@ -199,12 +199,12 @@ PAHPrimary::PAHPrimary(const real time, const real position,
     m_sqrtLW(0),
     m_LdivW(0),
     m_avg_coalesc(0),
+    m_sint_time(0.0),
     m_leftchild(NULL),
     m_rightchild(NULL),
     m_parent(NULL),
     m_leftparticle(NULL),
-    m_rightparticle(NULL),
-    m_sint_time(0.0)
+    m_rightparticle(NULL)
 {
     // Other parts of the code check for a non-zero composition
     m_comp[0]=1;
@@ -223,10 +223,10 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
     m_numH(0),
     m_numOfEdgeC(0),
     m_numOfRings(0),
-    m_PAHmass(0),
-    m_PAHCollDiameter(0),
     m_numPAH(0),
     m_numprimary(0),
+    m_PAHmass(0),
+    m_PAHCollDiameter(0),
     m_primarydiam(0.0),
     m_children_radius(0),
     m_children_vol(0),
@@ -241,12 +241,12 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
     m_sqrtLW(0),
     m_LdivW(0),
     m_avg_coalesc(0),
+    m_sint_time(0.0),
     m_leftchild(NULL),
     m_rightchild(NULL),
     m_parent(NULL),
     m_leftparticle(NULL),
-    m_rightparticle(NULL),
-    m_sint_time(0.0)
+    m_rightparticle(NULL)
 {
     m_comp[0]=1;
 
@@ -343,9 +343,9 @@ void PAHPrimary::CopyTree( const PAHPrimary *source)
 PAHPrimary &PAHPrimary::operator=(const Primary &rhs)
 {
     if (this != &rhs) {
-		const AggModels::PAHPrimary *pahprimary = NULL;
-		pahprimary = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
-	//	UpdateAllPointers(pahprimary,this);
+        const AggModels::PAHPrimary *pahprimary = NULL;
+        pahprimary = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
+        UpdateAllPointers(pahprimary);
     }
     return *this;
 }
@@ -1026,8 +1026,8 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
             const real growtime = t - (*it)->lastupdated;
             assert(growtime >= 0.0);
 
-            const unsigned int oldNumCarbon = (*it)->m_pahstruct->numofC(); 
-            const unsigned int oldNumH = (*it)->m_pahstruct->numofH();
+            const int oldNumCarbon = (*it)->m_pahstruct->numofC(); 
+            const int oldNumH = (*it)->m_pahstruct->numofH();
 
             // Here updatePAH function in KMC_ARS model is called.
             // waitingSteps is set to be 1 by dc516, details seeing KMCSimulator::updatePAH()
@@ -1823,7 +1823,7 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
         // relink the primary particles
         PAHPrimary* p=this;
 
-        for (int i=0;i!=pri.size();++i)
+        for (size_t i=0;i!=pri.size();++i)
         {
             p->m_leftchild=pri[i];
             p->m_rightchild=NULL;
@@ -1935,8 +1935,7 @@ void PAHPrimary::Sinter(real dt, Cell &sys,
 	if (m_leftparticle!=NULL)
     {
         // Store the old surface area of particles
-        real surf_old = m_children_surf;
-        // First calculate the sintering rate
+        // real surf_old = m_children_surf;
 
         // Calculate the spherical surface
         const real spherical_surface=4*PI*m_children_radius*m_children_radius;

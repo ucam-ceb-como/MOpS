@@ -225,7 +225,7 @@ void PAHStructure::ReadCposition(std::istream &in, const int size)
     int m_second=0;
 
     cpair position;
-    for (size_t i=0; i!=size;++i)
+    for (int i=0; i!=size;++i)
     {
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_first = (int)val;

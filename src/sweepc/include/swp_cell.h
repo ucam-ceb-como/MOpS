@@ -193,7 +193,7 @@ public:
         );
 
         // figure out how many starting species is supposed to be in the particle ensemble
-    int NumOfStartingSpecies(const int index) const;
+    unsigned int NumOfStartingSpecies(const int index) const;
 
     // READ/WRITE/COPY.
 
