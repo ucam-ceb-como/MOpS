@@ -1,7 +1,6 @@
 /**
   \file    brush_doxygen.h
-  \author  Robert I A Patterson
-  \email   Robert.Patterson@wias-berlin.de
+  \author  Robert I A Patterson   Robert.Patterson@wias-berlin.de
   \brief   Front page for the brush library documentation.
 
   This file should not contain source code and should not be included in any
@@ -15,7 +14,8 @@
  * \section Outline
  * Brush is part of a larger suite of particle simulation software that
  * has its origins in the research group of Markus Kraft at the
- * University of Cambridge http://como.cheng.cam.ac.uk .
+ * University of Cambridge http://como.cheng.cam.ac.uk .  Brush is
+ * developed by Robert Patterson Robert.Patterson@wias-berlin.de .
  *
  * Brush provides support for the simulation of spatially inhomogeneous particle reactors.
  *

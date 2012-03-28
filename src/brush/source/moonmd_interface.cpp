@@ -331,6 +331,7 @@ Brush::MooNMDInterface::particle_reactor_pointer
  * and calculate mean energy and mass source terms.
  *
  *\param[in,out]     reac                The reactor specifying the initial condition and particle dynamics
+ *\param[in]         t_stop              Time upto which to simulate
  *\param[in]         solution_length     Communication is by vectors which must all be at least this long
  *\param[in]         num_species         Number of species for which mass concentrations are supplied
  *\param[in]         solution_nodes      Distances from start of reactor (in m) at which solution values are specified
@@ -338,8 +339,9 @@ Brush::MooNMDInterface::particle_reactor_pointer
  *\param[in]         velocity            Flow velocity in \f$\mathrm{ms}^{-1}\f$
  *\param[in]         mass_concs          Concentrations of species in \f$\mathrm{kg m}^{-3}\f$
  *\param[in]         path_id             Integer identifying the path so that different sequences of random numbers can be used for each path
- *\param[out]        energy_souce        Energy release by particle processes in \f$\mathrm{J m}^{-3} \mathrm{s}^{-1}\f$
- *\param[out]        mass_conc_souces    Release of species into solution by particle processes in \f$\mathrm{kg m}^{-3}\mathrm{s}^{-1}\f$
+ *\param[out]        energy_source       Energy release by particle processes in \f$\mathrm{J m}^{-3} \mathrm{s}^{-1}\f$
+ *\param[out]        mass_conc_sources   Release of species into solution by particle processes in \f$\mathrm{kg m}^{-3}\mathrm{s}^{-1}\f$
+ *\param[in,out]     moment_output       Stream to which textual moment data can be written during calculation.
  *
  *\pre  All the 1d arrays supplied by the caller must have length at least solution_length, this includes
  *       the output arrays.
@@ -349,7 +351,7 @@ Brush::MooNMDInterface::particle_reactor_pointer
  *
  *\return    Pointer to updated brush reactor object.
  *
- * Sign convention for source terms: Positive source terms indicate release of energy or materical by the solid
+ * Sign convention for source terms: Positive source terms indicate release of energy or material by the solid
  * phase.  Thus a positive energy source would indicate exothermic crystallisation and a positive mass source
  * would indicate that crystals were dissolving.
  *
