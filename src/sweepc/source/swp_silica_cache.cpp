@@ -219,20 +219,7 @@ SilicaCache &SilicaCache::operator+=(const Primary &rhs)
     return *this;
 }
 
-int SilicaCache::NumSi() const
-{
-    return m_numSi;
-}
 
-int SilicaCache::NumO() const
-{
-    return m_numO;
-}
-
-int SilicaCache::NumOH() const
-{
-    return m_numOH;
-}
 
 // DATA MANAGEMENT.
 

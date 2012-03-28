@@ -175,7 +175,8 @@ void readGlobalSettings(const CamXML::Element &node,
 Reactor *const readReactor(const CamXML::Element &node,
                                         const Mechanism &mech,
                                         const unsigned int max_particle_count,
-										const real maxM0)
+										const real maxM0,
+										Mops::Simulator &sim)
 {
     Reactor *reac = NULL;
     const CamXML::Element *subnode, *subsubnode;
@@ -305,7 +306,9 @@ Reactor *const readReactor(const CamXML::Element &node,
 
     // List will be empty unless a population node is present
     if(subnode) {
-        Sweep::PartPtrList particleList;
+        Sweep::PartPtrList fileParticleList;
+        Sweep::PartPtrList inxParticleList;
+        Sweep::PartPtrList allParticleList;
         real initialM0 = 0;
 
         // Find the overall number density represented by the population
@@ -320,16 +323,31 @@ Reactor *const readReactor(const CamXML::Element &node,
                                      (Mops, Settings_IO::readReactor)");
         }
 
+        // Check if a binary file has been specified for particles..
+        CamXML::Element* fileNode = subnode->GetFirstChild("file");
+        if (fileNode) {
+            std::string filename;
+            filename = fileNode->Data();
+            std::cout << "parser: binary file " << filename << " specified for input.\n";
+            fileParticleList = sim.ReadEnsembleFile(*reac, filename);
+        }
+
         // Now read in the list of particles and sum up their statistical weights
-        particleList = Settings_IO::ReadInitialParticles(*subnode, mech.ParticleMech());
-        Sweep::PartPtrList::const_iterator it = particleList.begin();
-        const Sweep::PartPtrList::const_iterator itEnd = particleList.end();
+        inxParticleList = Settings_IO::ReadInitialParticles(*subnode, mech.ParticleMech());
+
+        // Join the particle lists
+        allParticleList.splice(allParticleList.end(), fileParticleList);
+        allParticleList.splice(allParticleList.end(), inxParticleList);
+        Sweep::PartPtrList::const_iterator it = allParticleList.begin();
+        const Sweep::PartPtrList::const_iterator itEnd = allParticleList.end();
+
+        // Get the total weights of *all* initialised particles
         real weightSum = 0;
         while(it != itEnd) {
             weightSum += (*it++)->getStatisticalWeight();
         }
 
-        mix->SetParticles(particleList.begin(), particleList.end(), initialM0 / weightSum);
+        mix->SetParticles(allParticleList.begin(), allParticleList.end(), initialM0 / weightSum);
     }
 
 
@@ -460,7 +478,7 @@ void ReadLOIStatus(const CamXML::Element &node, Solver &solver)
 }
 
 // Reads simulation output parameters from given XML node.
-void readOutput(const CamXML::Element &node, Simulator &sim)
+void readOutput(const CamXML::Element &node, Simulator &sim, Mechanism &mech)
 {
     const CamXML::Element *subnode;
     std::vector<CamXML::Element*> nodes;
@@ -506,6 +524,21 @@ void readOutput(const CamXML::Element &node, Simulator &sim)
                             "(Mops, Settings_IO::readOutput)");
     }
 
+
+    // Check if entire particle binary trees should be dumped (default off)
+    // Relevant for Silica and PAHPP models.
+    subnode = node.GetFirstChild("writebintree");
+    if (subnode != NULL) {
+        std::string str_enable = subnode->GetAttributeValue("enable");
+        if (str_enable.compare("true") == 0) {
+            std::cout << "sweep: Warning! Writing full particle binary trees.\n";
+            mech.ParticleMech().SetWriteBinaryTrees(true);
+        } else {
+            mech.ParticleMech().SetWriteBinaryTrees(false);
+        }
+    } else {
+        mech.ParticleMech().SetWriteBinaryTrees(false);
+    }
 
     // STATISTICAL BOUNDARIES OF OUTPUT
 
@@ -891,11 +924,23 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 
         readGlobalSettings(*root, sim, solver);
 
+        // OUTPUT SETTINGS.
+        // wjm34: read output settings before reactor, so we can check if ensemble/g.p.
+        // files are consistent with some more simulation settings.
+
+        node = root->GetFirstChild("output");
+        if (node != NULL) {
+            readOutput(*node, sim, mech);
+        } else {
+            throw std::runtime_error("Settings file does not contain output"
+                                " information (Mops::Settings_IO::LoadFromXML).");
+        }
+
         // REACTOR.
 
         node = root->GetFirstChild("reactor");
         if (node != NULL) {
-			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0());
+			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0(), sim);
         } else {
             throw std::runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");
@@ -918,15 +963,6 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
                                 " (Mops::Settings_IO::LoadFromXML).");
         }
 
-        // OUTPUT SETTINGS.
-
-        node = root->GetFirstChild("output");
-        if (node != NULL) {
-            readOutput(*node, sim);
-        } else {
-            throw std::runtime_error("Settings file does not contain output"
-                                " information (Mops::Settings_IO::LoadFromXML).");
-        }
     }
 
     return reac;

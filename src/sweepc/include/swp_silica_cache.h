@@ -89,12 +89,8 @@ public:
     // Resets the model data to the default state.
     virtual void Clear();
 
-	int NumSi() const;
-	int NumO() const;
-	int NumOH() const;
+
     // AGGREGATION MODEL PARAMETERS.
-
-
     // Returns a copy of the data.
 	virtual SilicaCache *const Clone(void) const;
 

@@ -253,6 +253,8 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gpoint.Gas.SetPressure(P*1.0e5);//also set the molar density of gas mixture
             gpoint.Gas.Normalise();
             //gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(cm3*s) to mol/(m3*s)
+            // PAHRate*1E6 record the Inception rate of pyrene, but currently we use the method that transfer the mass from gasphase to kmc phase according to their concentrations not the rates
+            // so the PAHFormation rate is set to be 0, and PAHRate is not useful at all
             gpoint.Gas.SetPAHFormationRate(0);
             gpoint.Gas.SetAlpha(alpha);
 
@@ -353,9 +355,10 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
                     throw std::runtime_error("no information about the incepted PAH is available, only A1 A2 and A4 are supported now (Sweep::FlameSolver::Solve())");
             }
             // calculate the amount of stochastic pyrene particles in the ensemble
-            int Pamount=r.Mixture()->NumOfStartingSpecies(index);
-
-            if (t == 0 && Pamount >= r.Mixture()->Particles().Capacity())
+            unsigned int Pamount=r.Mixture()->NumOfStartingSpecies(index);
+            // if Pmount exceeds the capacity of the ensemble at the begining of the simulation,
+            // the process should be terminated since further running is meaningless.
+            if (t < 1.0e-20 && Pamount >= r.Mixture()->Particles().Capacity())
                 throw std::runtime_error("increase the M0 in mops.inx please, current choice is too small (Sweep::FlameSolver::Solve)");
             mech.MassTransfer(Pamount,t,*r.Mixture(),rng);
         }

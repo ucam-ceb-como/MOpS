@@ -297,6 +297,10 @@ public:
     const PostProcessStartingStr &InceptedPAH() const;
     //bool IsPyreneInception() const;
 
+    //! Activates writing of entire binary trees
+    void SetWriteBinaryTrees(bool flag) {m_write_bintree = flag;}
+    const bool WriteBinaryTrees() const {return m_write_bintree;}
+
 protected:
     // The species used to define the processes and the particles.
     const Sprog::SpeciesPtrVector *m_species;
@@ -388,6 +392,9 @@ private:
 
     //! define a species that it will be transfered between gas and particle phase
     PostProcessStartingStr m_InceptedPAH;
+
+    //! Add a flag to indicate reading/writing of full particle binary trees
+    bool m_write_bintree;
 };
 } //namespace Sweep
 #endif

@@ -232,6 +232,10 @@ void Mechanism::AddCoagulation(Coagulation& coag)
     coag.SetMechanism(*this);
 }
 
+const CoagPtrVector &Mechanism::Coagulations(void) const
+{
+    return m_coags;
+}
 
 // PROCESS INFORMATION.
 
@@ -343,6 +347,73 @@ real Mechanism::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry
 
     return sum;
 }
+
+/*!
+ * @brief               Calculates the number of jump events for each process
+ *
+ * Calculates the absolute number of jump events for each inception, particle
+ * process and coagulation event. Returns the sum of the jump events.
+ *
+ * @param t             Time
+ * @param sys           Particle population
+ * @param local_geom    Pointer to local geometry
+ * @param jumps         Vector containing the number of jumps
+ * @param scale         Boolean indicating if scaling should be applied
+ * @return              Sum of jump events
+ */
+real Mechanism::CalcJumps(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom, fvector &jumps) const
+{
+    // Ensure jumps vector is the correct length, then set to zero.
+    jumps.resize(m_processcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
+    fill(jumps.begin(), jumps.end(), 0.0);
+
+    // Iterator for filling jumps vector
+    fvector::iterator iterm = jumps.begin();
+
+    real sum = 0.0;
+
+    // Get number of inception jumps
+    for (unsigned int j=0; j!=m_inceptions.size(); ++j) {
+        (*iterm++) = m_proccount[j];
+        sum += m_proccount[j];
+    }
+
+    // Get number of particle process jumps
+    for (unsigned int j=0; j!=m_processes.size(); ++j) {
+        (*iterm++) = m_proccount[j+m_inceptions.size()];
+        sum += m_proccount[j+m_inceptions.size()];
+    }
+
+    // Get number of coagulation jumps.
+    unsigned int coagterms(0);       // Number of terms already used
+    for (unsigned int j=0; j!=m_coags.size(); ++j) {
+        unsigned int coagsum(0);     // Sum of real and fictitious jumps
+        // Sum up all terms of this process
+        for (unsigned int k=0; k!=m_coags[j]->TermCount(); ++k) {
+            coagsum += m_proccount[k+m_inceptions.size()+m_processes.size()+coagterms];
+            coagsum += m_fictcount[k+m_inceptions.size()+m_processes.size()+coagterms];
+        }
+        (*iterm++) = coagsum;
+        sum += coagsum;
+        coagterms += m_coags[j]->TermCount();
+    }
+
+    return sum;
+}
+
+/*!
+ * @brief       Resets the counters which track the number of jumps
+ *
+ * This function is to only be called at the end of a run, to ensure
+ * accurate capturing of information from CalcJumps
+ */
+void Mechanism::ResetJumpCount() const {
+    // Do for number of real jumps
+    fill(m_proccount.begin(), m_proccount.end(), 0.0);
+    // Do for number of fictitious jumps
+    fill(m_fictcount.begin(), m_fictcount.end(), 0.0);
+}
+
 
 // Get rates of all processes separated into different
 // terms.  Rate terms are useful for subsequent particle
@@ -729,6 +800,11 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
     // Deal with the growth of the PAHs
     if (AggModel() == AggModels::PAH_KMC_ID)
     {
+        // Calculate delta-t and update particle time.
+        real dt;
+        dt = t - sp.LastUpdateTime();
+        sp.SetTime(t);
+
         // If the agg model is PAH_KMC_ID then all the primary
         // particles must be PAHPrimary.
         AggModels::PAHPrimary *pah =
@@ -737,8 +813,14 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
         // Update individual PAHs within this particle by using KMC code
         // sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
         pah->UpdatePAHs(t, *this, sys, rng);
+
+        // Sinter the particles for the silica model (as no deferred process)
+        if (m_sint_model.IsEnabled()) {
+            pah->Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+        }
+
         pah->UpdateCache();
-        pah->CheckCoalescence();
+        pah->CheckRounding();
         if (sp.IsValid())
             sp.UpdateCache();
 

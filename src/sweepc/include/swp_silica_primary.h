@@ -52,6 +52,7 @@
 #include "swp_surfvol_cache.h"
 #include "swp_silica_cache.h"
 #include "swp_cell.h"
+#include "swp_bintree_serializer.h"
 
 #include <iostream>
 #include <stack>
@@ -64,6 +65,9 @@ namespace AggModels
 class SilicaPrimary : public Primary
 {
 public:
+    // The binary tree serialiser needs full access to private attributes.
+    friend class BinTreeSerializer<class SilicaPrimary>;
+
     //! Build a new primary with one molecule
     SilicaPrimary(const real time, const Sweep::ParticleModel &model);
 
@@ -149,8 +153,14 @@ public:
     //! Deserialize
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);
     
-    //! Serialize
+    //! Serialize a whole tree!
     void Serialize(std::ostream &out) const;
+
+    //! Serialise a single SilicaPrimary
+    void SerializePrimary(std::ostream &out) const;
+
+    //! Deserialise a single SilicaPrimary
+    void DeserializePrimary(std::istream &in, const Sweep::ParticleModel &model);
 
     AggModels::AggModelType AggID(void) const;
 
@@ -173,13 +183,13 @@ public:
     int Numprimary() const;
     //! Returns the number of silicon atoms in the particle
     int NumSi() const;
-	//! Returns the number of oxygen atoms in the particle
+    //! Returns the number of oxygen atoms in the particle
     int NumO() const;
-	//! Returns the number of hydroxyl units in the particle
+    //! Returns the number of hydroxyl units in the particle
     int NumOH() const;
     //! Returns sqrt(L*W)
     real sqrtLW() const;
-	//! Returns average coalescence level
+    //! Returns average coalescence level
     real AvgSinter() const;
 
 private:
