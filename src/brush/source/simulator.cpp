@@ -61,6 +61,7 @@ const size_t Brush::Simulator::sFirstSeed = 123;
  *@param[in]    output_file                 Base output file name
  *@param[in]    stat_bound                  Decide which particles to ignore when calculating population statistics
  *@param[in]    split_diffusion             Activate split simulation of diffusion
+ *@param[in]    drift_correction            Interpolate between different stochastic integrals, see \ref PredCorrSolver::mDiffusionDriftCorrection
  *@param[in]    split_advection             Activate split simulation of advection
  *@param[in]    weighted_transport          Adjust weights during inter-cell transport to avoid killing/cloning particles
  *
@@ -84,6 +85,7 @@ Brush::Simulator::Simulator(const size_t n_paths,
                             const std::string& output_file,
                             const Sweep::Stats::IModelStats::StatBound &stat_bound,
                             const bool split_diffusion,
+                            const real drift_correction,
                             const bool split_advection,
                             const bool weighted_transport)
         : mPaths(n_paths)
@@ -91,6 +93,7 @@ Brush::Simulator::Simulator(const size_t n_paths,
         , mRtol(0.0)
         , mAtol(0.0)
         , mSplitDiffusion(split_diffusion)
+        , mDiffusionDriftCorrection(drift_correction)
         , mSplitAdvection(split_advection)
         , mWeightedTransport(weighted_transport)
         , mOutputTimeSteps(output_times)
@@ -130,7 +133,8 @@ void Brush::Simulator::runOnePath(const int seed) {
     // It might be better to change the solver from a class
     // to a namespace
     PredCorrSolver solver(mResetChemistry, mCorrectorIterations, mRtol, mAtol,
-                          mSplitDiffusion, 0.0, mSplitAdvection, mWeightedTransport);
+                          mSplitDiffusion, mDiffusionDriftCorrection,
+                          mSplitAdvection, mWeightedTransport);
 
     //==================== File to store the moments for this run
     std::ofstream momentsFile(buildParticleStatsFileName(seed).c_str());
