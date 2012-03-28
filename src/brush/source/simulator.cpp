@@ -130,7 +130,7 @@ void Brush::Simulator::runOnePath(const int seed) {
     // It might be better to change the solver from a class
     // to a namespace
     PredCorrSolver solver(mResetChemistry, mCorrectorIterations, mRtol, mAtol,
-                          mSplitDiffusion, mSplitAdvection, mWeightedTransport);
+                          mSplitDiffusion, 0.0, mSplitAdvection, mWeightedTransport);
 
     //==================== File to store the moments for this run
     std::ofstream momentsFile(buildParticleStatsFileName(seed).c_str());

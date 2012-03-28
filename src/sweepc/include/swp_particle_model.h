@@ -191,23 +191,13 @@ public:
     //! Initialise the Knudsem drag coefficient  calculation
     void SetKnudsenDragConstants(const real A, const real B, const real E);
 
-    //! Calculate the drag coefficient for a particle using the Knudsen correction
-    real KnudsenDragCoefficient(const Cell &sys, const Particle &sp) const;
-
-    //! Calculate the drag coefficient for a particle using the Knudsen correction
-    real FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const;
-
-    //! Calculate the drag coefficient for a particle as constant times temperature
-    real TemperatureDragCoefficient(const Cell &sys, const Particle &sp) const;
-
-    //! Calculate the drag coefficient for a particle using the Li & Wang expressions
-    real LiWangDragCoefficient(const Cell &sys, const Particle &sp) const;
-
-    //! Calculate the drag coefficient for a particle similar to the Li & Wang expressions
-    real LiWangPatDragCoefficient(const Cell &sys, const Particle &sp) const;
-
-    //! Calculate a particle diffusion coefficient
+    //! Particle diffusion coefficient
     real DiffusionCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Gradient of particle diffusion coefficient
+    real GradDiffusionCoefficient(const Cell &sys, const Particle &sp,
+                                  const std::vector<const Cell*> &neighbours,
+                                  const Geometry::LocalGeometry1d &geom) const;
 
     //! Calculate the advection velocity
     real AdvectionVelocity(const Cell &sys, const Particle &sp,
@@ -320,6 +310,21 @@ protected:
 
     //! Calculate a phsyical particle diffusion coefficient from its drag
     real EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate the drag coefficient for a particle using the Knudsen correction
+    real KnudsenDragCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate the drag coefficient for a particle using the Knudsen correction
+    real FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate the drag coefficient for a particle as constant times temperature
+    real TemperatureDragCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate the drag coefficient for a particle using the Li & Wang expressions
+    real LiWangDragCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate the drag coefficient for a particle similar to the Li & Wang expressions
+    real LiWangPatDragCoefficient(const Cell &sys, const Particle &sp) const;
 
     //==== Collision integrals ==========================
 

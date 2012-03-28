@@ -880,6 +880,38 @@ real ParticleModel::EinsteinDiffusionCoefficient(const Cell &sys, const Particle
 }
 
 /*!
+ * Numerically calculate the gradient of the diffusion coefficient, \ref DiffusionCoefficient.
+ *
+ * Use the twosided approximation
+ * \f[
+ *     \nabla D(x) \approx \frac{D(x_{i+1} - D(x_{i-1}))}{x_{i+1} - x_{i-1}},
+ * \f]
+ * except at domain boundaries where 0 is assumed (\todo 1 sided approximation).
+ *
+ *@param[in]    sys     System in which particle experiences drag
+ *@param[in]    sp      Particle for which to calculate drag coefficient
+ *@param[in]    neighbours  Pointers to neighbouring cells
+ *@param[in]    geom        Information on layout of neighbouring cells
+ *
+ *@return       Diffusion coefficient gradient
+ */
+real ParticleModel::GradDiffusionCoefficient(const Cell &sys, const Particle &sp,
+                                             const std::vector<const Cell*> &neighbours,
+                                             const Geometry::LocalGeometry1d &geom) const {
+    if((neighbours[0] != NULL) && (neighbours[1] != NULL)) {
+        const real dx = geom.calcSpacing(Geometry::left) +
+                        geom.calcSpacing(Geometry::right);
+
+        const real leftD  = DiffusionCoefficient(*(neighbours[0]), sp);
+        const real rightD = DiffusionCoefficient(*(neighbours[1]), sp);
+
+        return (rightD - leftD) / dx;
+    }
+    else
+        return 0.0;
+}
+
+/*!
  * Calculate diffusion co-efficient using Einstein's relation
  * \f[
  *    D = \frac{k_B T}{k_d}.
@@ -961,13 +993,13 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
                 // rho D_Z at z_{i+1}
                 const real rightRhoDZ = neighbours[1]->GasPhase().MassDensity() *
                                         neighbours[1]->GasPhase().MixFracDiffCoeff();
-                // Now calculate the gradient estimate for the produect
+                // Now calculate the gradient estimate for the product
                 // of gas mass density and mixture fraction diffusion
                 // coefficient.
                 const real gradRhoDZ = (rightRhoDZ - leftRhoDZ) / dZ;
 
                 // Same process for product of soot mass per unit volume of gas
-                // and particule diffusion coefficient of this particle.
+                // and particle diffusion coefficient of this particle.
                 const real leftVal  = neighbours[0]->Particles().GetSum(Sweep::iM) /
                                       neighbours[0]->SampleVolume() *
                                       EinsteinDiffusionCoefficient(*neighbours[0], sp);
