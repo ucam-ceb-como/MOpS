@@ -1321,7 +1321,7 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
 //COAGULATION
 
 /**
- * @param[in]       xml     XML document containing zero or more top level <coagulation> nodes
+ * @param[in]       xml     XML document containing zero or more top level \<coagulation\> nodes
  * @param[in,out]   mech    Mechanism to which to add coagulation processes
  *
  * @exception   runtime_error   Kernel no specified

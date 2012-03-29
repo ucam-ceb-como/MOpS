@@ -358,7 +358,6 @@ real Mechanism::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry
  * @param sys           Particle population
  * @param local_geom    Pointer to local geometry
  * @param jumps         Vector containing the number of jumps
- * @param scale         Boolean indicating if scaling should be applied
  * @return              Sum of jump events
  */
 real Mechanism::CalcJumps(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom, fvector &jumps) const
