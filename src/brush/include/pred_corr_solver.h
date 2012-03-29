@@ -201,7 +201,7 @@ private:
      *
      * Note that the diffusion coefficient \f$D(x) = \frac{1}{2}\sigma(x)^2\f$.
      */
-    real mDiffusionDriftCorrection;
+    real mDiffusionDriftAdjustment;
 
     //! Indicate if advection is to be split from the main particle processes
     bool mSplitAdvection;

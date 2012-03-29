@@ -69,7 +69,7 @@ using namespace Brush;
  *
  *@param[in]    reset_chem              Chemical species concentrations as function of spatial position
  *@param[in]    split_diffusion         True if diffusion is to be simulated via splitting
- *@param[in]    drift_correction        Only relevant when split_diffusion is true, see \ref mDiffusionDriftCorrection
+ *@param[in]    drift_adjustment        Only relevant when split_diffusion is true, see \ref mDiffusionDriftAdjustment
  *@param[in]    split_advection         True if advection is to be simulated via splitting
  *@param[in]    weighted_transport      Adjust weights during inter-cell transport to avoid killing/cloning particles
  *
@@ -86,13 +86,13 @@ Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
                                       const size_t,
                                       const real , const real ,
                                       const bool split_diffusion,
-                                      const real drift_correction,
+                                      const real drift_adjustment,
                                       const bool split_advection,
                                       const bool weighted_transport)
     : mResetChemistry(reset_chem)
     , mDeferralRatio(10.0)
     , mSplitDiffusion(split_diffusion)
-    , mDiffusionDriftCorrection(0.0)
+    , mDiffusionDriftAdjustment(drift_adjustment)
     , mSplitAdvection(split_advection)
     , mWeightedTransport(weighted_transport)
 {}
@@ -425,9 +425,9 @@ void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const rea
             boost::variate_generator<Sweep::rng_type&, normal_distrib> diffusionGenerator(rng, diffusionDistrib);
             newPosition += diffusionGenerator();
 
-            if(mDiffusionDriftCorrection > 0.0) {
+            if(mDiffusionDriftAdjustment > 0.0) {
                 // Drift correction to allow for different forms of stochastic integral
-                const real drift = mDiffusionDriftCorrection * mech.GradDiffusionCoefficient(mix, sp, neighbouringCells, geom);
+                const real drift = mDiffusionDriftAdjustment * mech.GradDiffusionCoefficient(mix, sp, neighbouringCells, geom);
                 newPosition += dt * drift;
             }
         }

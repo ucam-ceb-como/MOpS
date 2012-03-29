@@ -225,8 +225,8 @@ int main(int argc, char* argv[])
                 splitDiffusion = true;
             }
             else {
-                const real driftCorrection = std::atof(node->Data().c_str());
-                if ((driftCorrection < 0.0) || (driftCorrection > 1.0)) {
+                diffusionCorrection = std::atof(node->Data().c_str());
+                if ((diffusionCorrection < 0.0) || (diffusionCorrection > 1.0)) {
                     throw std::runtime_error("Diffusion drift correction in <diffusion> element must be in the interval [0,1]");
                 }
             }
