@@ -139,12 +139,6 @@ public:
     // Returns a copy of the primary.
     virtual SurfVolPrimary *const Clone(void) const;
 
-    // Returns this object's instance.  This may seem rather circular, but
-    // it has an important purpose for getting the correct object type reference
-    // from a base class reference/pointer.
-    virtual SurfVolPrimary &Instance();
-    virtual const SurfVolPrimary &Instance() const;
-
     // Writes the object to a binary stream.
     virtual void Serialize(std::ostream &out) const;
 

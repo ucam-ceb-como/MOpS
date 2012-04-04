@@ -208,17 +208,17 @@ unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues
     dvol *= (real)n / NA;
 
     // Calculate change in surface area.
-    real rad = 0.0;
+    real invRadius = 0.0;
     if (dvol > 0.0) {
         // Inverse growth radius.
-        rad = sqrt(4.0 * PI / m_surf);
+        invRadius = sqrt(4.0 * PI / m_surf);
     } else {
         // Inverse oxidation radius.    
-        rad = m_surf / (3.0 * m_vol);
+        invRadius = m_surf / (3.0 * m_vol);
     }
 
     // Save new surface area.
-    real s = m_surf + (2.0 * dvol * rad);
+    real s = m_surf + (2.0 * dvol * invRadius);
 
     // Adjust the particle assuming that it is spherical.
     Primary::Adjust(dcomp, dvalues, rng, n);
@@ -345,12 +345,6 @@ SurfVolPrimary *const SurfVolPrimary::Clone(void) const
 {
     return new SurfVolPrimary(*this);
 }
-
-// Returns this object's instance.  This may seem rather circular, but
-// it has an important purpose for getting the correct object type reference
-// from a base class reference/pointer.
-SurfVolPrimary &SurfVolPrimary::Instance() {return *this;}
-const SurfVolPrimary &SurfVolPrimary::Instance() const {return *this;}
 
 // Writes the object to a binary stream.
 void SurfVolPrimary::Serialize(std::ostream &out) const
