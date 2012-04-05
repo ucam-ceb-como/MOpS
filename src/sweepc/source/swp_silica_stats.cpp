@@ -43,7 +43,6 @@
 #include "swp_silica_stats.h"
 #include "swp_aggmodel_type.h"
 #include "swp_particle.h"
-#include "swp_silica_cache.h"
 #include "swp_silica_primary.h"
 #include <stdexcept>
 
@@ -167,9 +166,8 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
     unsigned int nrealpart= 0;
     for (ip=e.begin(); ip!=e.end(); ++ip) {
 
-        // Get data from silica cache
-        const AggModels::SilicaCache& cache =
-            dynamic_cast<const AggModels::SilicaCache&>((*ip)->AggCache());
+        const AggModels::SilicaPrimary * const silica =
+                dynamic_cast<const AggModels::SilicaPrimary *>((*ip)->Primary());
 
         real sz = (*ip)->Property(m_statbound.PID);
         real wt = (*ip)->getStatisticalWeight() * invTotalWeight;
@@ -177,20 +175,20 @@ void SilicaStats::Calculate(const Ensemble &e, real scale)
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-            m_stats[iNSi]   += (cache.m_numSi * wt);
-            m_stats[iNO]    += (cache.m_numO  * wt);
-            m_stats[iNOH]   += (cache.m_numOH  * wt);
-            m_stats[iCOAL]    += (cache.m_avg_sinter  * wt);
-            m_stats[iPRIMDIAM] += (cache.m_primarydiam * 1e9  * wt /cache.m_numprimary);
-            m_stats[iSintRate] += cache.m_sintrate * wt;
-            m_stats[iSintTime] += cache.m_sinttime * wt;
-            m_stats[iCreateTime] += cache.m_createtime * wt;
-            m_stats[iSiORatio] += (real(cache.m_numSi) / real(cache.m_numO + cache.m_numOH)) * wt;
+            m_stats[iNSi]   += (silica->NumSi() * wt);
+            m_stats[iNO]    += (silica->NumO() * wt);
+            m_stats[iNOH]   += (silica->NumOH() * wt);
+            m_stats[iCOAL]    += (silica->AvgSinter() * wt);
+            m_stats[iPRIMDIAM] += (silica->PrimaryDiam() * 1e9  * wt / silica->Numprimary());
+            m_stats[iSintRate] += silica->GetSintRate() * wt;
+            m_stats[iSintTime] += silica->GetSintTime() * wt;
+            m_stats[iCreateTime] += silica->CreateTime() * wt;
+            m_stats[iSiORatio] += (real(silica->NumSi()) / real(silica->NumO() + silica->NumOH())) * wt;
             ++n;
-            if (cache.m_numSi>1)
+            if (silica->NumSi() > 1)
             {
                 ++nrealpart;
-                m_stats[iNPRIM]+=cache.m_numprimary  * wt;
+                m_stats[iNPRIM]+=silica->Numprimary()  * wt;
                 if((*ip)->Primary()!=NULL)
                 {
                 m_stats[iPARTMASS]+=(*ip)->Primary()->Mass() * wt;
@@ -332,23 +330,18 @@ void SilicaStats::PSL(const Sweep::Particle &sp, real time,
     fvector::iterator j = psl.begin()+start-1;
 
     // Get surface-volume cache.
-    const AggModels::SilicaCache* cache =
-        dynamic_cast<const AggModels::SilicaCache*>(&sp.AggCache());
+    const AggModels::SilicaPrimary* const silica =
+        dynamic_cast<const AggModels::SilicaPrimary *>(sp.Primary());
 
     // Get the PSL stats.
-    if (cache != NULL) {
-        *(++j) = (real)(cache->m_numSi)/(real)(cache->m_numprimary);
-        *(++j) = (real)(cache->m_numO)/(real)(cache->m_numprimary);
-        *(++j) = (real)(cache->m_numOH)/(real)(cache->m_numprimary);
-        *(++j) = (real) (cache->m_numprimary);
-        //*(++j) = (real) (cache->m_sqrtLW);
-        //*(++j) = (real) (cache->m_LdivW);
-        *(++j) = (real) (cache->m_primarydiam)*1e9/(real)(cache->m_numprimary);//convert to nm
-        *(++j) = (real) (cache->m_avg_sinter);
-        *(++j) = (real(cache->m_numSi) / real(cache->m_numO + cache->m_numOH));
-        //*(++j) = (real) (cache->);
-        //*(++j) = (real) (cache->m_Rg)*1e9;
-        //*(++j) = (real) (cache->m_fdim);
+    if (silica != NULL) {
+        *(++j) = (real)(silica->NumSi())/(real)(silica->Numprimary());
+        *(++j) = (real)(silica->NumO())/(real)(silica->Numprimary());
+        *(++j) = (real)(silica->NumOH())/(real)(silica->Numprimary());
+        *(++j) = (real) (silica->Numprimary());
+        *(++j) = (real) (silica->PrimaryDiam())*1e9/(real)(silica->Numprimary());//convert to nm
+        *(++j) = (real) (silica->AvgSinter());
+        *(++j) = (real(silica->NumSi()) / real(silica->NumO() + silica->NumOH()));
 
     } else {
         fill (j+1, j+2, 0.0);

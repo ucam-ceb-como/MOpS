@@ -220,13 +220,6 @@ void Primary::SetTime(real t) {m_time = t;}
 // Returns the aggregation model which this primary describes.
 AggModels::AggModelType Primary::AggID(void) const {return AggModels::Spherical_ID;}
 
-// Creates an aggregation data cache for this primary type.
-AggModels::AggModelCache *const Primary::CreateAggCache() const
-{
-    return ModelFactory::CreateAggCache(AggModels::Spherical_ID);
-}
-
-
 // BASIC DERIVED PARTICLE PROPERTIES.
 
 // Calculates the derived properties from the unique properties.

@@ -49,8 +49,6 @@
 #include "swp_particle_model.h"
 #include "swp_sintering_model.h"
 #include "swp_aggmodel_type.h"
-#include "swp_surfvol_cache.h"
-#include "swp_silica_cache.h"
 #include "swp_cell.h"
 #include "swp_bintree_serializer.h"
 
@@ -147,8 +145,6 @@ public:
 
     //! Updates the fractal dimension
     void CalcFractalDimension();
-
-    AggModels::SilicaCache *const CreateAggCache() const;
 
     //! Deserialize
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);

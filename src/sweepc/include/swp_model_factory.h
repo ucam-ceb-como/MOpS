@@ -49,7 +49,6 @@
 #include "swp_particle_model.h"
 #include "swp_model_stats.h"
 #include "swp_aggmodel_type.h"
-#include "swp_aggmodel_cache.h"
 
 #include <iostream>
 
@@ -114,11 +113,6 @@ public:
 
     // AGGREGATION MODEL CREATION.
 
-    // Creates a new aggregation model cache of the given type.
-    static AggModels::AggModelCache *const CreateAggCache(
-        AggModels::AggModelType id // Model ID.
-        );
-
     // Creates a new aggregation model stats object of the given type.
     static Stats::IModelStats *const CreateAggStats(
         AggModels::AggModelType id, // Model ID.
@@ -127,13 +121,6 @@ public:
 
 
     // AGGEGATION MODEL STREAM INPUT.
-
-    // Reads an aggregation model cache from a binary stream.  The first
-    // item read is the model ID which tells the ModelFactory what type
-    // of model to read.
-    static AggModels::AggModelCache *const ReadAggCache(
-        std::istream &in    // Input stream.
-        );
 
     // Reads aggregation model stats from a binary stream.  The first
     // item read is the model ID which tells the ModelFactory what type
@@ -145,12 +132,6 @@ public:
 
 
     // AGGREGATION MODEL STREAM OUTPUT.
-
-    // Writes an aggregation model cache, along with its ID to an output stream.
-    static void WriteCache(
-        const AggModels::AggModelCache &model, // Model to write.
-        std::ostream &out                      // Output stream.
-        );
 
     // Writes an aggregation model stats object, along with
     // its ID, to an output stream.

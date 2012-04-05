@@ -29,7 +29,7 @@ using namespace Sweep;
 // Default constructor (protected).
 SubParticle::SubParticle(void)
 : m_primary(NULL),
-  m_createt(0.0), m_time(0.0), m_aggcache(NULL)
+  m_createt(0.0), m_time(0.0)
 {
 }
 
@@ -38,8 +38,6 @@ SubParticle::SubParticle(real t, const Sweep::ParticleModel &model)
 : m_primary(NULL),
   m_createt(0.0), m_time(0.0)
 {
-	m_aggcache = ModelFactory::CreateAggCache(model.AggModel());
-
 }
 
 // Initialising constructor (from Primary particle).
@@ -48,12 +46,10 @@ SubParticle::SubParticle(Sweep::Primary &pri)
     m_createt = pri.CreateTime();
     m_time = pri.CreateTime();
     m_primary    = &pri;
-	m_aggcache = pri.CreateAggCache();
 }
 
 // Copy constructor.
 SubParticle::SubParticle(const SubParticle &copy)
-: m_aggcache(NULL)
 {
     // Use assignment operator.
     m_primary    = NULL;
@@ -64,8 +60,7 @@ SubParticle::SubParticle(const SubParticle &copy)
 
 // Stream-reading constructor.
 SubParticle::SubParticle(std::istream &in, const Sweep::ParticleModel &model)
-: m_primary(NULL),
-  m_aggcache(NULL)
+: m_primary(NULL)
  {
     init();
     Deserialize(in, model);
@@ -97,17 +92,6 @@ SubParticle &SubParticle::operator=(const SubParticle &rhs)
         m_createt = rhs.m_createt;
         m_time = rhs.m_time;
 
-        if (rhs.m_aggcache != NULL) {
-            if ((m_aggcache==NULL) || (m_aggcache->ID() != rhs.m_aggcache->ID())) {
-                delete m_aggcache;
-                m_aggcache = rhs.m_aggcache->Clone();
-            } else {
-                *m_aggcache = *rhs.m_aggcache;
-            }
-        } else {
-            delete m_aggcache;
-            m_aggcache = NULL;
-        }
     }
 
 
@@ -192,18 +176,6 @@ unsigned int SubParticle::AdjustIntPar(const fvector &dcomp,
  */
 SubParticle &SubParticle::Coagulate(const SubParticle &rhs, rng_type &rng)
 {
-    if (rhs.m_aggcache != NULL) {
-        if ((m_aggcache==NULL) || (m_aggcache->ID() != rhs.m_aggcache->ID())) {
-            delete m_aggcache;
-            m_aggcache = rhs.m_aggcache->Clone();
-        } else {
-            *m_aggcache = *rhs.m_aggcache;
-        }
-    } else {
-        delete m_aggcache;
-        m_aggcache = NULL;
-    }
-
     m_primary->Coagulate(*rhs.Primary(), rng);
     UpdateCache();
 
@@ -232,11 +204,6 @@ void SubParticle::UpdateCache(void)
 
     m_createt = m_primary->CreateTime();
     m_time    = m_primary->LastUpdateTime();
-
-	// Update the aggregate details from the primary
-	if(m_aggcache != NULL)
-	    *m_aggcache = *m_primary;
-
 }
 
 /*!
@@ -269,7 +236,6 @@ SubParticle *const SubParticle::Clone() const
 void SubParticle::Serialize(std::ostream &out) const
 {
     const unsigned int trueval  = 1;
-    const unsigned int falseval = 0;
 
     if (out.good()) {
         // Output the version ID (=0 at the moment).
@@ -292,13 +258,6 @@ void SubParticle::Serialize(std::ostream &out) const
             ModelFactory::WritePrimary(*m_primary, out);
         } else {
             throw std::logic_error("Subtrees no longer supported");
-        }
-
-        if (m_aggcache != NULL) {
-            out.write((char*)&trueval, sizeof(trueval));
-            ModelFactory::WriteCache(*m_aggcache, out);
-        } else {
-            out.write((char*)&falseval, sizeof(falseval));
         }
 
     } else {
@@ -345,14 +304,6 @@ void SubParticle::Deserialize(std::istream &in, const Sweep::ParticleModel &mode
                     throw std::logic_error("Subtrees no longer supported");
                 }
 
-                // Read aggregation model.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                if (n==1) {
-                    m_aggcache = ModelFactory::ReadAggCache(in);
-                } else {
-                    m_aggcache = NULL;
-                }
-
                 break;
             default:
                 throw std::runtime_error("Serialized version number is invalid "
@@ -370,10 +321,8 @@ void SubParticle::Deserialize(std::istream &in, const Sweep::ParticleModel &mode
 // Release all memory associated with the SubParticle object.
 void SubParticle::releaseMem(void)
 {
-    delete m_primary;    	m_primary    = NULL;
-
-    // Clear aggregation model cache.
-    delete m_aggcache;
+    delete m_primary;
+    m_primary    = NULL;
 }
 
 // Initialisation routine.

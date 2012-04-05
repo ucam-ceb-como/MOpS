@@ -50,7 +50,6 @@
 #include "swp_PAH_primary.h"
 #include "swp_aggmodel_type.h"
 #include "swp_model_factory.h"
-#include "swp_PAH_cache.h"
 #include "swp_particle_image.h"
 #include "swp_cell.h"
 #include "swp_kmc_pah_process.h"
@@ -1508,17 +1507,7 @@ void PAHPrimary::PrintTreeLoop(std::ostream &out)
 }
 
 
-// Creates an aggregation data cache for this primary type.
-AggModels::PAHCache *const PAHPrimary::CreateAggCache() const
-{
-    PAHCache *cache =
-        static_cast<PAHCache*>(ModelFactory::CreateAggCache(AggModels::PAH_KMC_ID));
-    if (cache != NULL) *cache = *this;
-    return cache;
-}
-
-
- const PAHPrimary *PAHPrimary::RightChild() const
+const PAHPrimary *PAHPrimary::RightChild() const
 {
     return m_rightchild;
 }
