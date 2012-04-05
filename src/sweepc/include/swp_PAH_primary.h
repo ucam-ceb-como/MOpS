@@ -61,6 +61,7 @@
 #include "swp_kmc_pah_structure.h"
 #include "swp_kmc_simulator.h"
 #include "swp_cell.h"
+#include "swp_bintree_serializer.h"
 #include <boost/shared_ptr.hpp>
 
 #include <iostream>
@@ -74,6 +75,9 @@ namespace AggModels
 class PAHPrimary : public Primary
 {
 public:
+    // The binary tree serialiser needs full access to private attributes.
+    friend class BinTreeSerializer<class PAHPrimary>;
+
     //! Build a new primary with one molecule
     PAHPrimary(const real time, const Sweep::ParticleModel &model);
 
@@ -102,6 +106,12 @@ public:
     //! coagulates this particle with rhs
     PAHPrimary &Coagulate(const Primary &rhs, rng_type &rng);
 
+    //! investigate the sintering of PAH cluster
+    void Sinter(real dt, Cell &sys,
+                const Processes::SinteringModel &model,
+                rng_type &rng,
+                real wt);
+
     //! prints the tree to a file that can be converted to a graph using graphviz
     void PrintTree(std::string filename);
 
@@ -114,16 +124,17 @@ public:
     //! adds a PAH to a particle
     void AddPAH(real time, const Sweep::ParticleModel &model);
 
-    //! returns the coalescence level
+    //! returns the rounding level due to mass addition
     double CoalescenceLevel();
-
+    //! returns the Rounding Level according the Eq 6.3 on the markus sander's thesis
+    double RoundingLevel();
     //! returns the left child
     const PAHPrimary *LeftChild() const;
     //! returns the right child
     const PAHPrimary *RightChild() const;
 
-    //! Checks if the coalescence level is higher then the treshold and merges the primaries if necessary
-    bool CheckCoalescence();
+    //! Checks if the Rounding level is higher then the treshold (0.95) and merges the primaries if necessary
+    bool CheckRounding();
 
     //! Updates the fractal dimension
     void CalcFractalDimension();
@@ -154,6 +165,10 @@ public:
     int NumHydrogen() const;
     //! returns the number of PAH in the particle
     int NumPAH() const;
+    //! returns the number of hydrogen atoms in the particle
+    int NumEdgeC() const;
+    //! returns the number of hydrogen atoms in the particle
+    int NumRings() const;
     //! returns sqrt(L*W)
     double sqrtLW() const;
     double AvgCoalesc() const;
@@ -166,8 +181,18 @@ public:
     void mass_PAH(std::vector<std::vector<double> > &out) const;
     //! return the mass of Xmer including C and H 
     double MassforXmer() const;
+    //! store the mass of individual PAH within this soot aggregate
+    void mass_PAH(std::vector<double> &out) const;
+    //! output PAH information in a vector of vector and then index the info
+    void OutputPAHPSL(std::vector<std::vector<double> > &out, const int index, const double density) const;
     //! set pah_structure=Null before destructor delete it
     //void ReleasePAH(Primary &rhs);
+    //! find soot particle with only one Incepted molecule (A1,A2 or A4)
+    int InceptedPAH() const;
+    //! check whether this PAH is invalid
+    bool CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const;
+    //! remove invalid PAHs under this primary particle
+    void RemoveInvalidPAHs();
 
 protected:
     //! Empty primary not meaningful
@@ -187,8 +212,10 @@ protected:
     void UpdatePrimary(void);
     //! sets some properties to 0
     void Reset();
+    //! return ture if it is a false rounding, false rounding is used to merge primary particle containing only one or no PAH after the InvalidPAHs are removed.
+    bool FakeRounding();
     //! merges the two children primaries together
-    PAHPrimary &Merge();
+    void Merge();
     //! updates the pointers after a merge event
     void ChangePointer(PAHPrimary *source, PAHPrimary *target);
     //! copies the node withoud the children
@@ -198,7 +225,6 @@ protected:
     //! returns a uniformly chosen primary particle
     PAHPrimary *SelectRandomSubparticle(rng_type &rng);
     void ReleaseMem();
-	
 
   //  double pow(double a, double b);
 
@@ -212,22 +238,28 @@ private:
     static PAHPrimary* descendPath(PAHPrimary *here,
                                    std::stack<bool> &takeLeftBranch);
 
+    void outputPAHPrimary(std::ostream &out) const;
+    PAHPrimary* inputPAHPrimary(std::istream &in);
 
-    // Vector of PAHs.
-    // PAHStructure class now have proper copy constructor (under testing)
-    // , but it is still not worthy to copy PAH from one vector to another
-    // so we will use vector<std::tr1::shared_ptr<PAH>> instead of  vector <PAH>
-    // Vector of std::tr1::shared_ptr<PAH>.
-    std::vector<boost::shared_ptr<PAH> > m_PAH;
+    //! Set the sintering time of a tree
+    void SetSinteringTime(real time);
+
     //some basic properties
     //derived from the PAHs by UpdataCache()
     int m_numcarbon;
     int m_numH;
+
+    //! total num of edge C in this soot particle
+    int m_numOfEdgeC;
+    //! total num of rings (inculding 5, 6- menber rings) in this soot particle
+    int m_numOfRings;
+    //! Number of PAHs below this node
+    int m_numPAH;
+    //! Number of primaries below this node
+    int m_numprimary;
+
     double m_PAHmass;
     double m_PAHCollDiameter;
-    int m_numPAH;
-//! Number of primaries below this node
-    int m_numprimary;
 
     //sum of the diameter of the primaries under this treenode needed for stats
     double m_primarydiam;
@@ -247,10 +279,8 @@ private:
     int m_leftparticle_numPAH;
 
     double m_children_surf;
-
-    double m_children_coalescence;
-
-
+    // store the RoundingLevel
+    double m_children_roundingLevel;
 
     // radius of gyration and fractal dimension
     // the values are only update in CalcFractaldimension()
@@ -260,8 +290,20 @@ private:
     double m_LdivW;
     double m_avg_coalesc;
 
+    //! Absolute amount of time for which particles are sintered
+    double m_sint_time;
 
+    //! pointers to construct the connectivity and the tree stuctures
     PAHPrimary *m_leftchild, *m_rightchild, *m_parent, *m_leftparticle, *m_rightparticle;
+
+    // Vector of PAHs.
+    // PAHStructure class now have proper copy constructor
+    // , but it is still not worthy to copy PAH from one vector to another
+    // so we will use vector<std::tr1::shared_ptr<PAH>> instead of  vector <PAH>
+    // Vector of std::tr1::shared_ptr<PAH>.
+    std::vector<boost::shared_ptr<PAH> > m_PAH;
+
+
 };
 } //namespace AggModels
 } //namespace Sweep

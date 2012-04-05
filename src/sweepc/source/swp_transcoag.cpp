@@ -195,7 +195,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::p
     // Some prerequisites.
     real n_1 = n - 1.0;
     real a   = CSF * T_mu * A();
-    real b   = a * MFP * 1.257 * 2.0 * A();
+    real b   = a * MFP * 1.257 * 2.0;
     real c   = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
@@ -411,7 +411,7 @@ int TransitionCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
         real truek = CoagKernel(*sp1, *sp2, sys);
 		double ceff=0;
 		if (majk<truek)
-			std::cout << "maj< true"<< std::endl;
+		    std::cout << "maj< true"<< std::endl;
 
 		//added by ms785 to include the collision efficiency in the calculation of the rate
 		if (sys.ParticleModel()->AggModel()==AggModels::PAH_KMC_ID)

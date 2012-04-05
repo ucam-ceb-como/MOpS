@@ -67,6 +67,8 @@ my $m0 = 0;
 my $m0sq = 0;
 my $m1 = 0;
 my $m1sq = 0;
+my $avgcoag = 0;
+my $maxcoag = 0;
 my $count = 0;
 
 while(<$momentFile>) {
@@ -83,6 +85,10 @@ while(<$momentFile>) {
       $m1 += $fields[11];
       $m1sq += $fields[11] * $fields[11];
       #print "$fields[11] \n";
+
+      $avgcoag += $fields[15];
+      $maxcoag = ($maxcoag > $fields[16]) ? $maxcoag : $fields[16];
+
       ++$count;
   }
 }
@@ -92,6 +98,7 @@ $m0 /= $count;
 $m0sq = 1.96 * sqrt(($m0sq / $count - $m0 * $m0) / $count);
 $m1 /= $count;
 $m1sq = 1.96 * sqrt(($m1sq / $count - $m1 * $m1) / $count);
+$avgcoag /= $count;
 
 # Analytic solns, const coag and inception
 # 0 initial and inflow conditions
@@ -112,6 +119,10 @@ $m1sq = 1.96 * sqrt(($m1sq / $count - $m1 * $m1) / $count);
 # deviations for the results:
 # m0: (1.26+-0.05)e9
 # m1: (3.77+-0.12)e9
+#
+# avg and max coag are very rough checks that the code does not
+# change unexpectedly.  Correct values are not known although maxcoag
+# should be an integer.
 
 print "$m0 $m0sq, $m1 $m1sq\n";
 if(abs($m0 - 1.25e9) > 1e8) {
@@ -130,10 +141,27 @@ if(abs($m1 - 3.77e9) > 2e8) {
   exit 2;
 }
 
+if(($avgcoag < 1e-4) || ($avgcoag > 0.1)) {
+  print "Average number of coagulations per cell has changed\n";
+  print "**************************\n";
+  print "****** TEST FAILURE ******\n";
+  print "**************************\n";
+  exit 3;
+}
+
+
+if(($maxcoag != 1) && ($maxcoag != 2)) {
+  print "Maximum number of coagulations per cell has changed\n";
+  print "**************************\n";
+  print "****** TEST FAILURE ******\n";
+  print "**************************\n";
+  exit 4;
+}
+
 # Clean outputs, there should always be some files to delete.
 @outputFiles = glob("moonmd1results*");
 #print "Files to remove: @outputFiles\n";
-system("rm @outputFiles");
+#system("rm @outputFiles");
 
 #print "All tests passed\n";
 exit 0;

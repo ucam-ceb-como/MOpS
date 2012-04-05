@@ -84,7 +84,8 @@ public:
     PredCorrSolver(const ResetChemistry& reset_chem,
                    const size_t corrector_iterations,
                    const real rtol, const real atol,
-                   const bool split_diffusion, const bool split_advection,
+                   const bool split_diffusion, const real drift_correction,
+                   const bool split_advection,
                    const bool weighted_transport);
 
     //! Advance solution to specified time
@@ -147,6 +148,60 @@ private:
 
     //! Indicate if diffusion is to be split from the main particle processes
     bool mSplitDiffusion;
+
+    //! This is a stochastic calculus technicality, a value of 1 is probably a safe choice
+    /*!
+     * The kind of stochastic integration to use when defining the diffusion processes followed by
+     * particle is not completely clear.  See for example section II of Schnitzer (93)
+     * http://dx.doi.org/10.1103/PhysRevE.48.2553 and also
+     * Bach & Duerr (78) http://dx.doi.org/10.1016/0375-9601(78)90001-4, where this parameter
+     * is the \f$\lambda\f$ that appears in equation (2).
+     *
+     * Diffusing particles have trajectories that are modelled by the SDE
+     * \f[
+     *    dY_t = \mu(Y_t)dt + \sigma(Y_t)dW_t
+     *  \f]
+     * where \f$W_t\f$ is a standard Brownian Motion.  The question arises as
+     * to whether to interpret the \f$\sigma(Y_t)dW_t\f$ in an Ito, Stratonovich
+     * or other sense.  This is significant, because the numerical method has to
+     * be chosen to match the model.  The different models lead to different
+     * equations for the particle concentrations.  The different interpretations
+     * of \f$\sigma(Y_t)dW_t\f$ can all be included in an SDE using the Ito
+     * interpretation by adjusting the drift \f$\mu\f$ and that is the approach
+     * currently taken in the code since Ito diffusion is easiest to simulate.
+     * The adjustment is \f$\mu(x) + \lambda \sigma^\prime(x)\sigma(x) \f$.
+     *
+     * The case \f$\lambda = 0\f$ is the Ito interpretation and gives rise to the
+     * following equation for particle concentration (\f$x\f$ is particle type,
+     * which can be ignored) during transport:
+     * \f[
+     *    \partial_t c(t,x,y) = \frac{1}{2} \partial^2_y \left(\sigma(x)^2 c(t,x,y) \right).
+     * \f]
+     * This is the form that would occur first to a mathematician with an interest
+     * in stochastic calculus.
+     *
+     * The case \f$\lambda = \frac{1}{2}\f$ is the Stratonovich interpretation and gives rise to the
+     * following equation for particle concentration (\f$x\f$ is particle type,
+     * which can be ignored) during transport:
+     * \f[
+     *    \partial_t c(t,x,y) = \frac{1}{2} \partial_y \left(\sigma(x) \partial_y\left(\sigma(y) c(t,x,y)\right) \right).
+     * \f]
+     * The books that I have read that come from the physics direction and do not
+     * focus on stochastic calculus as maths tend to claim Stratonovich is the way
+     * forward in many physical settings, although one should note that one does
+     * not recover Fick's law.
+     *
+     * The case \f$\lambda = \frac{1}{2}\f$ is the Isothermal interpretation and gives rise to the
+     * following equation for particle concentration (\f$x\f$ is particle type,
+     * which can be ignored) during transport:
+     * \f[
+     *    \partial_t c(t,x,y) = \frac{1}{2} \partial_y \left(\sigma(x)^2 \partial_y c(t,x,y) \right).
+     * \f]
+     * This does recover Fick's law.
+     *
+     * Note that the diffusion coefficient \f$D(x) = \frac{1}{2}\sigma(x)^2\f$.
+     */
+    real mDiffusionDriftAdjustment;
 
     //! Indicate if advection is to be split from the main particle processes
     bool mSplitAdvection;

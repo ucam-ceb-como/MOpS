@@ -40,6 +40,7 @@
 */
 
 #include "swp_kmc_pah_structure.h"
+#include "swp_particle_model.h"
 
 #ifndef SWEEP_PAH_H
 #define SWEEP_PAH_H
@@ -58,23 +59,23 @@ class PAH
 	friend class PAHPrimary;
 public:
     //! Build a new PAH with time
-    PAH(real time);
+    PAH(real time, Sweep::ParticleModel::PostProcessStartingStr str);
 
     PAH(const PAH &copy); // Copy constructor.
-	~PAH();
-	PAH &operator=(const PAH &rhs);
-	PAH *const Clone() const;
-	//returen ID of PAH
-	int ID() const;
+    ~PAH();
+    PAH &operator=(const PAH &rhs);
+    PAH *const Clone() const;
+    //returen ID of PAH
+    int ID() const;
+    void saveDOTperLoop(int ID, int i) const;
+    Sweep::KMC_ARS::PAHStructure* Structure();
 
-	void saveDOTperLoop(int ID, int i) const;
-private:
-    //! not allow to build PAH without time
+    //! this default conscustor is only used for serialization.
     PAH();
-    //! Number of Carbon atoms in the PAH
-    unsigned int m_numcarbon;
-    //! Number of Hydrogen atoms in the PAH
-	unsigned int m_numH;
+    void Serialize(std::ostream &out) const;
+    void Deserialize(std::istream &in);
+private:
+
     //! Simulated time at point when molecule created
     double time_created;
 

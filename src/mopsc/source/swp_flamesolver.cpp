@@ -250,9 +250,12 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             // TODO:  This will give the wrong component densities
             //        unless all species are specified!
             gpoint.Gas.SetTemperature(T);
-            gpoint.Gas.SetPressure(P*1.0e5);
+            gpoint.Gas.SetPressure(P*1.0e5);//also set the molar density of gas mixture
             gpoint.Gas.Normalise();
-            gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(cm3*s) to mol/(m3*s)
+            //gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(cm3*s) to mol/(m3*s)
+            // PAHRate*1E6 record the Inception rate of pyrene, but currently we use the method that transfer the mass from gasphase to kmc phase according to their concentrations not the rates
+            // so the PAHFormation rate is set to be 0, and PAHRate is not useful at all
+            gpoint.Gas.SetPAHFormationRate(0);
             gpoint.Gas.SetAlpha(alpha);
 
             // Add the profile point.
@@ -294,9 +297,14 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
                         rng_type &rng, Mops::Solver::OutFnPtr out, void *data)
 {
-    //std::cout << "Start of FlameSolver::Solve\n";
-
     real tsplit, dtg, jrate;
+
+    // construct kmcsimulater and initialize gasphase info for kmcsimulater 
+    if (r.Mixture()->Particles().Simulator()==NULL)
+    {
+        r.Mixture()->Particles().SetSimulator(*(Gasphase()));
+    }
+
     const Sweep::Mechanism &mech = r.Mech()->ParticleMech();
     fvector rates(mech.TermCount(), 0.0);
 
@@ -327,7 +335,33 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         const real gasTimeStep = linInterpGas(t, r.Mixture()->GasPhase());
 
         // Scale particle M0 according to gas-phase expansion.
+        // (considering mass const, V'smpvol*massdens' = Vsmpvol*massdens)
         r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
+
+        if (mech.AggModel()== AggModels::PAH_KMC_ID)
+        {
+            int index;
+            switch (mech.InceptedPAH()){
+                case ParticleModel::A1:
+                    index=r.Mech()->GasMech().FindSpecies("A1");
+                    break;
+                case ParticleModel::A2:
+                    index=r.Mech()->GasMech().FindSpecies("A2");
+                    break;
+                case ParticleModel::A4:
+                    index=r.Mech()->GasMech().FindSpecies("A4");
+                    break;
+                default:
+                    throw std::runtime_error("no information about the incepted PAH is available, only A1 A2 and A4 are supported now (Sweep::FlameSolver::Solve())");
+            }
+            // calculate the amount of stochastic pyrene particles in the ensemble
+            unsigned int Pamount=r.Mixture()->NumOfStartingSpecies(index);
+            // if Pmount exceeds the capacity of the ensemble at the begining of the simulation,
+            // the process should be terminated since further running is meaningless.
+            if (t < 1.0e-20 && Pamount >= r.Mixture()->Particles().Capacity())
+                throw std::runtime_error("increase the M0 in mops.inx please, current choice is too small (Sweep::FlameSolver::Solve)");
+            mech.MassTransfer(Pamount,t,*r.Mixture(),rng);
+        }
 
         // Get the process jump rates (and the total rate).
         jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);

@@ -140,7 +140,7 @@ private:
     // SilicaPrimary properties
     
     //! Number of sites to which reaction is proportional
-    int m_sites;
+    real m_sites;
 
     //! Sintering rate of a particle
     real m_sinterrate;

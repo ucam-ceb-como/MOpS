@@ -82,7 +82,6 @@ public:
         std::vector<std::string> &names, // Vector of CT names.
         unsigned int start=0 // Optional start index in vector.
         ) const;
-	virtual Sweep::GasProfile* Gasphase(void) { return NULL; }
 
 protected:
     // COMPUTATION TIME.

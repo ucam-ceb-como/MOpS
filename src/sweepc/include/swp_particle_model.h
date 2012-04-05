@@ -191,23 +191,13 @@ public:
     //! Initialise the Knudsem drag coefficient  calculation
     void SetKnudsenDragConstants(const real A, const real B, const real E);
 
-    //! Calculate the drag coefficient for a particle using the Knudsen correction
-    real KnudsenDragCoefficient(const Cell &sys, const Particle &sp) const;
-
-    //! Calculate the drag coefficient for a particle using the Knudsen correction
-    real FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const;
-
-    //! Calculate the drag coefficient for a particle as constant times temperature
-    real TemperatureDragCoefficient(const Cell &sys, const Particle &sp) const;
-
-    //! Calculate the drag coefficient for a particle using the Li & Wang expressions
-    real LiWangDragCoefficient(const Cell &sys, const Particle &sp) const;
-
-    //! Calculate the drag coefficient for a particle similar to the Li & Wang expressions
-    real LiWangPatDragCoefficient(const Cell &sys, const Particle &sp) const;
-
-    //! Calculate a particle diffusion coefficient
+    //! Particle diffusion coefficient
     real DiffusionCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Gradient of particle diffusion coefficient
+    real GradDiffusionCoefficient(const Cell &sys, const Particle &sp,
+                                  const std::vector<const Cell*> &neighbours,
+                                  const Geometry::LocalGeometry1d &geom) const;
 
     //! Calculate the advection velocity
     real AdvectionVelocity(const Cell &sys, const Particle &sp,
@@ -266,6 +256,10 @@ public:
 
     };
 
+    enum PostProcessStartingStr {
+        A1, A2, A4
+    };
+
     //! Choose between drag models
     void SetDragType(const DragType& drag) {m_DragType = drag;}
 
@@ -289,7 +283,15 @@ public:
 
     void SetMode(const std::string &mode);
     const std::string &Mode() const;
-	
+
+    void SetInceptedPAH(const std::string &name);
+    const PostProcessStartingStr &InceptedPAH() const;
+    //bool IsPyreneInception() const;
+
+    //! Activates writing of entire binary trees
+    void SetWriteBinaryTrees(bool flag) {m_write_bintree = flag;}
+    const bool WriteBinaryTrees() const {return m_write_bintree;}
+
 protected:
     // The species used to define the processes and the particles.
     const Sprog::SpeciesPtrVector *m_species;
@@ -308,6 +310,21 @@ protected:
 
     //! Calculate a phsyical particle diffusion coefficient from its drag
     real EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate the drag coefficient for a particle using the Knudsen correction
+    real KnudsenDragCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate the drag coefficient for a particle using the Knudsen correction
+    real FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate the drag coefficient for a particle as constant times temperature
+    real TemperatureDragCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate the drag coefficient for a particle using the Li & Wang expressions
+    real LiWangDragCoefficient(const Cell &sys, const Particle &sp) const;
+
+    //! Calculate the drag coefficient for a particle similar to the Li & Wang expressions
+    real LiWangPatDragCoefficient(const Cell &sys, const Particle &sp) const;
 
     //==== Collision integrals ==========================
 
@@ -378,6 +395,12 @@ private:
 
     //! Define three modes, collision efficience depends on the smaller, the bigger, the combined mass or reduced mass
     std::string m_mode;
+
+    //! define a species that it will be transfered between gas and particle phase
+    PostProcessStartingStr m_InceptedPAH;
+
+    //! Add a flag to indicate reading/writing of full particle binary trees
+    bool m_write_bintree;
 };
 } //namespace Sweep
 #endif

@@ -52,6 +52,7 @@
 #include "swp_kmc_pah_process.h"
 #include "swp_kmc_pah_structure.h"
 #include "swp_PAH.h"
+#include "swp_bintree_serializer.h"
 #include "gpc_species.h"
 #include <stdexcept>
 #include <cassert>
@@ -89,10 +90,10 @@ SilicaPrimary::SilicaPrimary() : Primary(),
     m_avg_sinter(0.0),
     m_sint_rate(0.0),
     //Imaging properties
-    m_Rg(0.0),
-    m_fdim(0.0),
-    m_sqrtLW(0.0),
-    m_LdivW(0.0),
+    //m_Rg(0.0),
+    //m_fdim(0.0),
+    //m_sqrtLW(0.0),
+    //m_LdivW(0.0),
     //Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
@@ -132,10 +133,10 @@ SilicaPrimary::SilicaPrimary(const real time, const Sweep::ParticleModel &model)
     m_avg_sinter(0.0),
     m_sint_rate(0.0),
     //Imaging properties
-    m_Rg(0.0),
-    m_fdim(0.0),
-    m_sqrtLW(0.0),
-    m_LdivW(0.0),
+    //m_Rg(0.0),
+    //m_fdim(0.0),
+    //m_sqrtLW(0.0),
+    //m_LdivW(0.0),
     //Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
@@ -187,10 +188,10 @@ SilicaPrimary::SilicaPrimary(const real time, const real position,
     m_avg_sinter(0.0),
     m_sint_rate(0.0),
     //Imaging properties
-    m_Rg(0.0),
-    m_fdim(0.0),
-    m_sqrtLW(0.0),
-    m_LdivW(0.0),
+    //m_Rg(0.0),
+    //m_fdim(0.0),
+    //m_sqrtLW(0.0),
+   // m_LdivW(0.0),
     //Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
@@ -239,10 +240,10 @@ SilicaPrimary::SilicaPrimary(real time, const Sweep::ParticleModel &model, bool 
     m_avg_sinter(0.0),
     m_sint_rate(0.0),
     //Imaging properties
-    m_Rg(0.0),
-    m_fdim(0.0),
-    m_sqrtLW(0.0),
-    m_LdivW(0.0),
+    //m_Rg(0.0),
+    //m_fdim(0.0),
+    //m_sqrtLW(0.0),
+    //m_LdivW(0.0),
     //Children are nodes holding pointers to other children and/or primary particles
     m_leftchild(NULL),
     m_rightchild(NULL),
@@ -328,10 +329,55 @@ SilicaPrimary &SilicaPrimary::operator=(const Primary &rhs)
     return *this;
 }
 
+/*!
+ * @brief       Function to set the state space when initialising particles from XML
+ *
+ * @param[in] numSi     Number of silicon atoms in particle
+ * @param[in] numO      Number of oxygen atoms in particle
+ * @param[in] numOH     Number of hydroxyl units in particle
+ */
+void SilicaPrimary::SetStateSpace(const int numSi, const int numO, const int numOH) {
+    // Set the key parameters for the silica particle
+    m_numSi = numSi;
+    m_numO = numO;
+    m_numOH = numOH;
+
+    // Now update the particle's properties
+    UpdateCache();
+}
+
 
 
 //! Stream-reading constructor.
-SilicaPrimary::SilicaPrimary(std::istream &in, const Sweep::ParticleModel &model)
+SilicaPrimary::SilicaPrimary(std::istream &in, const Sweep::ParticleModel &model) :
+            //State Space:: number of Si, O and OH units
+            m_numSi(0),
+            m_numO(0),
+            m_numOH(0),
+            m_numprimary(0),
+            m_primarydiam(0.0),
+            //Properties of children
+            m_children_radius(0.0),
+            m_children_vol(0.0),
+            m_children_surf(0.0),
+            m_children_sintering(0.0),
+            //Sintering properties
+            m_avg_sinter(0.0),
+            m_sint_rate(0.0),
+            //Imaging properties
+            //m_Rg(0.0),
+            //m_fdim(0.0),
+            //m_sqrtLW(0.0),
+            //m_LdivW(0.0),
+            //Children are nodes holding pointers to other children and/or primary particles
+            m_leftchild(NULL),
+            m_rightchild(NULL),
+            //Parent node is the top node of the tree
+            m_parent(NULL),
+            //Particles are leaf nodes containing primary particles
+            m_leftparticle(NULL),
+            m_rightparticle(NULL),
+            m_sint_time(0.0)
 {
     Deserialize(in, model);
 }
@@ -366,8 +412,8 @@ void SilicaPrimary::CopyParts(const SilicaPrimary *source)
 	m_numOH=source->m_numOH;
 	m_numprimary=source->m_numprimary;
 	m_primarydiam=source->m_primarydiam;
-	m_sqrtLW=source->m_sqrtLW;
-	m_LdivW=source->m_LdivW;
+	//m_sqrtLW=source->m_sqrtLW;
+	//m_LdivW=source->m_LdivW;
     m_pmodel=source->m_pmodel;
     m_surf=source->m_surf;
     m_vol=source->m_vol;
@@ -375,8 +421,8 @@ void SilicaPrimary::CopyParts(const SilicaPrimary *source)
     m_children_vol=source->m_children_vol;
     m_children_radius=source->m_children_radius;
     m_children_sintering=source->m_children_sintering;
-    m_fdim=source->m_fdim;
-    m_Rg=source->m_Rg;
+    //m_fdim=source->m_fdim;
+    //m_Rg=source->m_Rg;
     m_avg_sinter=source->m_avg_sinter;
     m_sint_rate=source->m_sint_rate;
     m_sint_time=source->m_sint_time;
@@ -565,9 +611,10 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
  * is called and the particles are combined. 
  * 
  * It concludes by adjusting the gas-phase for the number of OH units
- * that would occur through the InterParticle reaction.
+ * which are lost as H2O due to the change in surface area of the
+ * sintering mechansim.
  * 
- * @param[in]   dt      Time for which to inster
+ * @param[in]   dt      Time for which to sinter
  * @param[in]   sys     Environment for particles
  * @param[in]   model   Sintering model to apply
  * @param[in]   rng     Random number generator
@@ -588,12 +635,12 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 	if (m_leftparticle!=NULL)
     {
         // Store the old surface area of particles
-        double surf_old = m_children_surf;
+        real surf_old = m_children_surf;
         int numOH_old = m_numOH;
         // First calculate the sintering rate
 
         // Calculate the spherical surface
-        const double spherical_surface=4*PI*m_children_radius*m_children_radius;
+        const real spherical_surface=4*PI*m_children_radius*m_children_radius;
 
         // Declare time step variables.
         real t1=0.0, delt=0.0, tstop=dt;
@@ -652,7 +699,7 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 
         m_children_sintering=SinteringLevel();
         m_sint_rate = r;
-        double rho_site = m_numOH/m_surf;
+        real rho_site = m_numOH/m_surf;
 
         // Adjust the units of OH and O due to release of water
         m_leftparticle->m_numOH -= int(0.5*rho_site*abs(m_children_surf - surf_old));
@@ -722,13 +769,13 @@ void SilicaPrimary::SetSinteringTime(real time) {
  * 
  * @return      Sintering level
  */
-double SilicaPrimary::SinteringLevel()
+real SilicaPrimary::SinteringLevel()
 {
     if (m_leftchild != NULL && m_rightchild != NULL) {
         // Calculate the spherical surface
-        const double spherical_surface=4*PI*m_children_radius*m_children_radius;
-        const double two_1_3=0.79370052231642452;
-        double slevel;
+        const real spherical_surface=4*PI*m_children_radius*m_children_radius;
+        const real two_1_3=0.79370052231642452;
+        real slevel;
 
         //Added by ss663
         if (m_children_surf <= spherical_surface) {
@@ -788,13 +835,13 @@ void SilicaPrimary::SetTime(real t) {
 //calculates the fractal dimension of the particle and stores it in m_fdim
 //void SilicaPrimary::CalcFractalDimension()
 //{
-//	double create_time=this->CreateTime();
+//	real create_time=this->CreateTime();
 //	Sweep::Imaging::ParticleImage img;
 //    // construct the particle by colliding the primary particles
 //
 //	img.constructSubParttree(this);
 //
-//	double L,W;
+//	real L,W;
 //    // calculate the length and the width of the particle
 //    img.LengthWidth(L,W);
 //    // calculate the radius of gyration
@@ -802,7 +849,7 @@ void SilicaPrimary::SetTime(real t) {
 //	m_sqrtLW=sqrt(L*W);
 //	m_LdivW=L/W;
 //    m_Rg=m_Rg*1e-9;
-//    m_fdim=log((double)m_numprimary)/log(2*m_Rg/(m_primarydiam/m_numprimary));
+//    m_fdim=log((real)m_numprimary)/log(2*m_Rg/(m_primarydiam/m_numprimary));
 //    /*if (m_fdim>0 && m_fdim<3)
 //	{
 //       string filename;
@@ -1030,9 +1077,9 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 	{
 		unsigned int i = 0;
 
-		double dV;
-		double m_vol_old = m_vol;
-		//double m_surf_old = m_surf;
+		real dV;
+		real m_vol_old = m_vol;
+		//real m_surf_old = m_surf;
 
 		// Add the components.
 		for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i)
@@ -1056,10 +1103,10 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
 
 		dV = m_vol - m_vol_old;
 
-		double ct=m_pmodel->Components(0)->CoalescThresh();
+		real ct=m_pmodel->Components(0)->CoalescThresh();
 
 		// Surface change due to volume addition
-		double dS=dV*ct/(m_diam/2.0);
+		real dS=dV*ct/(m_diam/2.0);
 
 		// Climb back-up the tree and update the surface area and
 		// sintering of a particle
@@ -1089,7 +1136,7 @@ unsigned int SilicaPrimary::Adjust(const fvector &dcomp,
  *
  * @param[in]   dS      Surface area increment to adjust area by
  */
-void SilicaPrimary::UpdateParents(double dS) {
+void SilicaPrimary::UpdateParents(real dS) {
     if (m_parent != NULL) {
         m_parent->m_children_surf += dS;
         m_parent->m_children_sintering = m_parent->SinteringLevel();
@@ -1100,7 +1147,9 @@ void SilicaPrimary::UpdateParents(double dS) {
 /*!
  * @brief       Adjusts the particle after an IntP event
  * 
- * Note that the gas-phase is actually adjusted in Sinter()
+ * Interparticle reactions have two OH units combining to release
+ * a H2O molecule to the gas-phase. The leftover O atom is retained in
+ * the particle phase.
  * 
  * @param[in]   dcomp   Vector storing changes in particle composition
  * @param[in]   dvalues Vector storing changes in gas-phase comp
@@ -1197,13 +1246,13 @@ void SilicaPrimary::ChangePointer(SilicaPrimary *source, SilicaPrimary *target)
 {
 		if(m_rightparticle==source){
 			m_rightparticle=target;
-            double sphericalsurface=
+			real sphericalsurface=
                 4*PI*pow(3*(m_leftparticle->Volume()+m_rightparticle->Volume())/(4*PI),TWO_THIRDS);
             m_children_surf=sphericalsurface/(m_children_sintering*0.2063+0.7937);    //sphericalsurface/(m_children_coalescence*(1-2^(-1/3))+2^(-1/3))
 		}
 		if(m_leftparticle==source){
 			m_leftparticle=target;
-            double sphericalsurface=
+			real sphericalsurface=
                 4*PI*pow(3*(m_leftparticle->Volume()+m_rightparticle->Volume())/(4*PI),TWO_THIRDS);
             m_children_surf=sphericalsurface/(m_children_sintering*0.2063+0.7937);    //sphericalsurface/(m_children_coalescence*(1-2^(-1/3))+2^(-1/3))
 
@@ -1264,7 +1313,7 @@ void SilicaPrimary::UpdatePrimary(void)
 
     m_mass=(m_numSi*4.6621e-26 + m_numO*2.6565e-26 + m_numOH*2.8225e-26);  //convert to kg
 
-    double silica_density = m_pmodel->Components(0)->Density(); // get density
+    real silica_density = m_pmodel->Components(0)->Density(); // get density
     m_vol = m_mass / silica_density;							//in m^3
 	m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
     m_dmob = m_diam;
@@ -1355,7 +1404,7 @@ void SilicaPrimary::UpdateCache(SilicaPrimary *root)
 		if (this==root)
         {
              // Get spherical equivalent radius and diameter
-            double spherical_radius=pow(3*m_vol/(4*PI),ONE_THIRD);
+            real spherical_radius=pow(3*m_vol/(4*PI),ONE_THIRD);
             m_diam=2*spherical_radius;
 
 			// there are m_numprimary-1 connections between the primary particles
@@ -1372,7 +1421,7 @@ void SilicaPrimary::UpdateCache(SilicaPrimary *root)
 
             // Calculate dcol based-on formula given in Lavvas et al. (2011)
             // assume fractal dimension Df = 1.8
-			const double aggcolldiam=(6*m_vol/m_surf)*pow(pow(m_surf,3)/(36*PI*m_vol*m_vol),(1.0/1.8));
+			const real aggcolldiam=(6*m_vol/m_surf)*pow(pow(m_surf,3)/(36*PI*m_vol*m_vol),(1.0/1.8));
 			m_dmob = aggcolldiam;
             SetCollDiameter(aggcolldiam);
 
@@ -1493,24 +1542,31 @@ const SilicaPrimary *SilicaPrimary::LeftChild() const
    return m_leftchild;
 }
 
-double SilicaPrimary::Rg() const
+// Imaging properties
+/*
+real SilicaPrimary::Rg() const
 {
    return m_Rg;
 }
 
-double SilicaPrimary::Fdim() const
+real SilicaPrimary::Fdim() const
 {
    return m_fdim;
 }
 
-double SilicaPrimary::PrimaryDiam() const
+real SilicaPrimary::sqrtLW() const
 {
-   return m_primarydiam;
+   return m_sqrtLW;
 }
 
-double SilicaPrimary::LdivW() const
+real SilicaPrimary::LdivW() const
 {
    return m_LdivW;
+}*/
+
+real SilicaPrimary::PrimaryDiam() const
+{
+   return m_primarydiam;
 }
 
 int SilicaPrimary::Numprimary() const
@@ -1533,13 +1589,7 @@ int SilicaPrimary::NumOH() const
    return m_numOH;
 }
 
-
-double SilicaPrimary::sqrtLW() const
-{
-   return m_sqrtLW;
-}
-
-double SilicaPrimary::AvgSinter() const
+real SilicaPrimary::AvgSinter() const
 {
    return m_avg_sinter;
 }
@@ -1567,37 +1617,81 @@ void SilicaPrimary::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
-		double val = 0.0;
-		// Write number of Si atoms.
-        val = (int) m_numSi;
+        if (m_pmodel->WriteBinaryTrees()) {
+            // Call the binary tree serialiser...
+            BinTreeSerializer <SilicaPrimary> tree;
+            tree.Serialize(out, this);
+        } else {
+            // Just serialise the root node.
+            SerializePrimary(out);
+        }
+
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, SilicaPrimary::Serialize).");
+    }
+}
+
+/*!
+ * @brief       Writes an individual primary to binary stream
+ * @param out   Output binary stream
+ */
+void SilicaPrimary::SerializePrimary(std::ostream &out) const
+{
+    if (out.good()) {
+
+        int  val_int(0);
+        real val(0.0);
+
+        // Serialise state space
+        val_int = m_numSi;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val_int = m_numO;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val_int = m_numOH;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val_int = m_numprimary;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val = m_primarydiam;
         out.write((char*)&val, sizeof(val));
 
-		// Write number of O atoms.
-        val = (int) m_numO;
+        val = m_children_radius;
         out.write((char*)&val, sizeof(val));
 
-		// Write number of OH atoms.
-        val = (int) m_numOH;
+        val = m_children_vol;
         out.write((char*)&val, sizeof(val));
 
-	    val = (int)m_numprimary;
+        val = m_children_surf;
         out.write((char*)&val, sizeof(val));
 
-	    val = (double)m_sqrtLW;
+        val = m_children_sintering;
         out.write((char*)&val, sizeof(val));
 
-	    val = (double)m_LdivW;
+        val = m_avg_sinter;
         out.write((char*)&val, sizeof(val));
 
-	    val = (double)m_primarydiam;
+        val = m_sint_rate;
         out.write((char*)&val, sizeof(val));
 
-        val = (double)m_fdim;
+        /*Imaging properties
+        val = m_Rg;
         out.write((char*)&val, sizeof(val));
 
-        val = (double)m_Rg;
+        val = m_fdim;
         out.write((char*)&val, sizeof(val));
 
+        val = m_sqrtLW;
+        out.write((char*)&val, sizeof(val));
+
+        val = m_LdivW;
+        out.write((char*)&val, sizeof(val));*/
+
+        val = m_sint_time;
+        out.write((char*)&val, sizeof(val));
 
         // Output base class.
         Primary::Serialize(out);
@@ -1619,60 +1713,91 @@ void SilicaPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-		double val = 0.0;
-		// Read number of Si atoms.
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numSi = (int)val;
-
-		// Read number of O atoms.
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numO = (int)val;
-
-		// Read number of OH atoms.
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numOH = (int)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numprimary = (int)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_sqrtLW = (real)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_LdivW = (real)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_primarydiam = (real)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_fdim = (real)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_Rg = (real)val;
-
-		m_leftchild=NULL;
-		m_rightchild=NULL;
-		m_parent=NULL;
-		m_leftparticle=NULL;
-		m_rightparticle=NULL;
-		//m_allparents.clear();
-
-		switch (version) {
-            case 0:
-                // Read base class.
-                Primary::Deserialize(in, model);
-
-                break;
-            default:
-                throw runtime_error("Serialized version number is invalid "
-                                  "(Sweep, SilicaPrimary::Deserialize).");
+        if (model.WriteBinaryTrees()) {
+            // Call the binary tree serialiser...
+            BinTreeSerializer <SilicaPrimary> tree;
+            tree.Deserialize(in, this, model);
+        } else {
+            // Just deserialise the root node.
+            DeserializePrimary(in, model);
         }
+
+
     } else {
         throw invalid_argument("Input stream not ready "
                                "(Sweep, SilicaPrimary::Deserialize).");
     }
 }
 
+/*!
+ * @brief       Reads an individual primary from the binary stream
+ * @param out   In binary stream
+ */
+void SilicaPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel &model)
+{
+    if (in.good()) {
+
+        int  val_int(0);
+        real val(0.0);
+
+        // Serialise state space
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+        m_numSi = val_int;
+
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+        m_numO = val_int;
+
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+        m_numOH = val_int;
+
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+        m_numprimary = val_int;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_primarydiam = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_children_radius = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_children_vol = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_children_surf = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_children_sintering = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_avg_sinter = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_sint_rate = val;
+
+        /*Imaging properties
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_Rg = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_fdim = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_sqrtLW = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_LdivW = val;*/
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_sint_time = val;
+
+        // Output base class.
+        Primary::Deserialize(in, model);
+
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, SilicaPrimary::Deserialize).");
+    }
+}
 
 /*!
  *

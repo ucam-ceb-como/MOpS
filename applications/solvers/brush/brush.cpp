@@ -181,6 +181,7 @@ int main(int argc, char* argv[])
     std::string outputFileBaseName;
     std::vector<std::pair<real, real> > maxPCounts, maxM0s;
     bool splitDiffusion = false;
+    real diffusionCorrection = 0.0; // Ito version, Fick's law is 1.0
     bool splitAdvection = false;
     bool weightTransport = false;
     Sweep::Stats::IModelStats::StatBound statBound;
@@ -217,9 +218,18 @@ int main(int argc, char* argv[])
 
         // Numerical method for diffusion
         node = root->GetFirstChild("diffusion");
-        if ((node != NULL) && ("split" == node->Data())) {
-            // simulate diffusion using spltting
-            splitDiffusion = true;
+        if (node != NULL) {
+            // This was the original form of input
+            if ("split" == node->Data()) {
+                // simulate diffusion using spltting
+                splitDiffusion = true;
+            }
+            else {
+                diffusionCorrection = std::atof(node->Data().c_str());
+                if ((diffusionCorrection < 0.0) || (diffusionCorrection > 1.0)) {
+                    throw std::runtime_error("Diffusion drift correction in <diffusion> element must be in the interval [0,1]");
+                }
+            }
         }
 
         // Numerical method for advection
@@ -424,8 +434,8 @@ int main(int argc, char* argv[])
 
     //========= Now run the simulation ===========================
     Simulator sim(runs, iterations, timeIntervals, initialReactor, *pInitialChem,
-                  outputFileBaseName, statBound, splitDiffusion, splitAdvection,
-                  weightTransport);
+                  outputFileBaseName, statBound, splitDiffusion, diffusionCorrection,
+                  splitAdvection, weightTransport);
     sim.runSimulation(randomSeedOffset);
 
     //========= Output ===========================================

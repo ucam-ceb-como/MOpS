@@ -192,6 +192,9 @@ public:
         const Sweep::Mechanism &mech // Mechanism which defines LPDA for outflow.
         );
 
+        // figure out how many starting species is supposed to be in the particle ensemble
+    unsigned int NumOfStartingSpecies(const int index) const;
+
     // READ/WRITE/COPY.
 
     // Writes the object to a binary stream.
@@ -202,8 +205,6 @@ public:
         std::istream &in,                 // Input stream.
         const Sweep::ParticleModel &model // Model used to define particles.
         );
-
-	virtual Sweep::GasProfile* Gasphase(void) const{ return NULL;}
 
 protected:
     // Default constructor is protected as it makes no

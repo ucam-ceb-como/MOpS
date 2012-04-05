@@ -119,6 +119,9 @@ public:
     // Adds a coagulation process to the mechanism.
     void AddCoagulation(Processes::Coagulation &coag);
     
+    //! Returns the vector of coagulations.
+    const Processes::CoagPtrVector &Coagulations(void) const;
+
     // PROCESS INFORMATION.
 
     // Returns the number of processes (including 
@@ -153,6 +156,17 @@ public:
         fvector &rates,  // Return vector for process rates.
         bool scale=false // Scale the rates to the ensemble (=true), leave per unit vol (=false).
         ) const;
+
+    //! Get total number of jumps of all processes
+    real CalcJumps(
+        real t,          // Time at which to get rates.
+        const Cell &sys, // System cell for which to get rates.
+        const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
+        fvector &jumps  // Return vector for process rates.
+        ) const;
+
+    //! Reset the jump number vectors
+    void ResetJumpCount() const;
 
     // Get rates of all processes separated into different
     // terms.  Rate terms are useful for subsequent particle
@@ -203,6 +217,14 @@ public:
         Cell &sys,      // System to update (includes ensemble).
         const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         rng_type &rng
+        ) const;
+
+    // transfer mass from gas-phase to particle ensemble used for PAH-PP model
+    void MassTransfer(
+        int i,          // the number of pyrene supposed in the emsemble
+        real t,         // Current time (s).
+        Cell &sys,      // System to update (includes ensemble).
+        rng_type &rng   // Random number generator
         ) const;
 
 

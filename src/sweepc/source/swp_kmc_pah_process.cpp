@@ -127,7 +127,7 @@ PAHStructure* PAHProcess::clonePAH() const {
     now->bondAngle2 = ori_now->bondAngle2;
     temp->m_cfirst = now;
     // iterate through all sites in list
-    for(i; i!=m_pah->m_siteList.end(); i++) {
+    for(; i!=m_pah->m_siteList.end(); ++i) {
         ori_now = i->C1;
         Site newSite;
         newSite.type = i->type;
@@ -889,7 +889,7 @@ void PAHProcess::removeC(Cpointer C_1, bool bulk) {
         C_1->C2->C1 = C_1->C1; // connect next C atom to prev C atom
     }
     if(C_1->bridge) { // change details of C atom bridging to it
-        C_1->C3->bondAngle2;// = 0;
+        //C_1->C3->bondAngle2;// = 0;
         C_1->C3->C3 = NULL;
         C_1->C3->bridge = false;
     }
@@ -1270,7 +1270,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
-        cout << "Benzene Initialised!\n";
+        //cout << "Benzene Initialised!\n";
         break;
     case PYRENE_C:
         // add first C atom
@@ -1303,6 +1303,37 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         updateCombinedSites();
         //cout << "Pyrene Initialised!\n";
         break;
+    case NAPHTHALENE_C:
+        // add first C atom
+        m_pah->m_cfirst = addC();
+        // adds next C atoms according to structure
+        newC = addC(m_pah->m_cfirst, 0, 0);
+        newC = addC(newC, 60, 0);
+        newC = addC(newC, 0, 0);
+        newC = addC(newC, -60, 0);
+        newC = addC(newC, -120, 0);
+        newC = addC(newC, -180, 0);
+        newC = addC(newC, -120, 0);
+        newC = addC(newC, -180, 0);
+        // adds the last C atom, with bond angle towards m_cfirst
+        m_pah->m_clast = addC(newC, 120, 60);
+        // closes structure
+        connectToC(m_pah->m_clast, m_pah->m_cfirst);
+        // update H atoms
+        updateA(m_pah->m_cfirst, m_pah->m_clast, 'H');
+        // set C & H counts
+        setCount(10, 8);
+        // set ring counts
+        m_pah->m_rings = 2;
+        // update all sites and combined sites
+        updateSites();
+        updateCombinedSites();
+        //cout << "Naphthalene Initialised!\n";
+        break;
+     default: 
+            std::cout<<"ERROR: Starting Structure undefined.. (PAHProcess::initialise)\n\n";
+            assert(false);
+            abort();
     }
     return *m_pah;
 }
@@ -1378,7 +1409,6 @@ bool PAHProcess::checkCoordinates() const{
     unsigned int count=0;
     do{
         count++;
-        Cpointer oldnow = now;
         Cpointer oldnext = next;
         cpair corr_coords;
         // first check if next is a valid Carbon pointer
@@ -1416,7 +1446,6 @@ bool PAHProcess::checkCoordinates() const{
 
 // Check to see if all sites are connected to each other
 bool PAHProcess::checkSiteContinuity() const {
-    int c = 0;
     std::list<Site>::const_iterator i=m_pah->m_siteList.begin();
     for(unsigned int k = 0; k!=(unsigned int)m_pah->m_siteList.size();k++) {
         Cpointer lhs = i->C2; i++;
@@ -1439,36 +1468,37 @@ bool PAHProcess::checkCombinedSiteType(Spointer& stt) {
     kmcSiteType error_stype = Inv;
     for(Spointer i=startSite; i!=endSite; i = moveIt(i,1)) {
         switch(i->comb) {
-        case FE3:
-            if(i->type != FE) {
-                error = true;
-                error_stype_comb = FE3;
-                error_stype = i->type;
+            case FE3:
+                if(i->type != FE) {
+                    error = true;
+                    error_stype_comb = FE3;
+                    error_stype = i->type;
+                }
+                break;
+            case AC_FE3:
+                if(i->type != AC) {
+                    error = true;
+                    error_stype_comb = AC_FE3;
+                    error_stype = i->type;
+                }
+                break;
+            case FE_HACA:
+                if(i->type != FE) {
+                    error = true;
+                    error_stype_comb = FE_HACA;
+                    error_stype = i->type;
+                }
+                break;
+            case BY5_FE3:
+                if(i->type != BY5) {
+                    error = true;
+                    error_stype_comb = BY5_FE3;
+                    error_stype = i->type;
+                }
+                break;
+            default: break;
             }
-            break;
-        case AC_FE3:
-            if(i->type != AC) {
-                error = true;
-                error_stype_comb = AC_FE3;
-                error_stype = i->type;
-            }
-            break;
-        case FE_HACA:
-            if(i->type != FE) {
-                error = true;
-                error_stype_comb = FE_HACA;
-                error_stype = i->type;
-            }
-            break;
-        case BY5_FE3:
-            if(i->type != BY5) {
-                error = true;
-                error_stype_comb = BY5_FE3;
-                error_stype = i->type;
-            }
-            break;
         }
-    }
     if(error) {
         std::cout<<"ERROR: Invalid combined site type -- Combined site type "
             <<kmcSiteName(error_stype_comb)<<" on a principal site type "

@@ -50,17 +50,26 @@ using namespace Sweep::KMC_ARS;
 using namespace std;
 
 
-PAH::PAH(){
+PAH::PAH():time_created(0),lastupdated(0),PAH_ID(0),m_pahstruct(new PAHStructure()){
 }
 
-PAH::PAH(real time):m_numcarbon(PYRENE_C),//start at pyrene (C=16)
-m_numH(PYRENE_H),
+PAH::PAH(real time, Sweep::ParticleModel::PostProcessStartingStr str):
 time_created(time),
 lastupdated(time),
 PAH_ID(0),
 m_pahstruct(new PAHStructure())
 {
- m_pahstruct->initialise(PYRENE_C);
+    switch (str){
+    case ParticleModel::A1:
+        m_pahstruct->initialise(BENZENE_C);
+        break;
+    case ParticleModel::A2:
+        m_pahstruct->initialise(NAPHTHALENE_C);
+        break;
+    case ParticleModel::A4:
+        m_pahstruct->initialise(PYRENE_C);
+        break;
+    }
 }
 
 PAH::PAH(const PAH &copy){
@@ -73,8 +82,6 @@ PAH::~PAH() {
 
 PAH &PAH::operator=(const PAH &rhs){
 	if (this != &rhs){
-		m_numcarbon=rhs.m_numcarbon;
-		m_numH=rhs.m_numH;
 		time_created=rhs.time_created;
 	    lastupdated=rhs.lastupdated;
 		PAH_ID=rhs.PAH_ID;
@@ -94,4 +101,46 @@ int PAH::ID() const {
 
 void PAH::saveDOTperLoop(int ID, int i) const{
 	m_pahstruct->saveDOTperLoop(ID,i);
+}
+
+Sweep::KMC_ARS::PAHStructure* PAH::Structure()
+{
+   return m_pahstruct;
+}
+
+
+void PAH::Serialize(std::ostream &out) const
+{
+    double val=0.0;
+
+    m_pahstruct->Serialize(out);
+
+    val=time_created;
+    out.write((char*)&(val), sizeof(val));
+    val=lastupdated;
+    out.write((char*)&(val), sizeof(val));
+    val=PAH_ID;
+    out.write((char*)&(val), sizeof(val));
+}
+void PAH::Deserialize(std::istream &in)
+{
+    if (in.good()) {
+    // Read the output version.  Currently there is only one
+    // output version, so we don't do anything with this variable.
+    // Still needs to be read though.
+
+	double val = 0.0;
+
+    m_pahstruct=new PAHStructure();
+    m_pahstruct->Deserialize(in);
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    time_created = (double)val;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    lastupdated = (double)val;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    PAH_ID = (int)val;
+    }
 }

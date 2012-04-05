@@ -485,6 +485,11 @@ void ParticleModel::Serialize(std::ostream &out) const
         n = (unsigned int)m_aggmodel;
         out.write((char*)&n, sizeof(n));
 
+        // Write whether binary trees should be serialised.
+        bool flag(false);
+        flag = m_write_bintree;
+        out.write((char*)&flag, sizeof(flag));
+
         // Write Knudsen drag parameters
         out.write(reinterpret_cast<const char *>(&m_DragA), sizeof(m_DragA));
         out.write(reinterpret_cast<const char *>(&m_DragB), sizeof(m_DragB));
@@ -538,6 +543,12 @@ void ParticleModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_aggmodel = (AggModels::AggModelType)n;
 
+                // Read if binary trees should be read..
+                bool flag;
+                flag = false;
+                in.read(reinterpret_cast<char*>(&flag), sizeof(flag));
+                m_write_bintree = flag;
+
                 // Read in Knudsen drag parameters
                 in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
                 in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
@@ -588,6 +599,9 @@ void ParticleModel::init(void)
 
     // Not sure what to put as default for m_DragType etc
     m_ThermophoresisType = NoThermophoresis;
+
+    // Default writing of binary trees is false.
+    m_write_bintree = false;
 }
 
 // Clears the current ParticleModel from memory.
@@ -654,10 +668,33 @@ real ParticleModel::Threshold() const {return m_threshold;}
 //! set mode for collision efficiency model, currently 4 modes are supported, min, max, combined and reduced
 void ParticleModel::SetMode(const std::string &mode) {m_mode = mode;}
 
+//! specify the incepting pah, currently only pyrene and benzene is supported for PAH-PP model, details see the kmc
+void ParticleModel::SetInceptedPAH(const std::string &name) 
+{
+    if (!name.compare("A1"))
+        m_InceptedPAH = A1;
+    else if (!name.compare("A2"))
+        m_InceptedPAH = A2;
+    else if (!name.compare("A3"))
+        throw std::runtime_error("A3 is not supported as InceptedPAH currently and please use A1, A2, or A4 (Sweep::ParticleModel::SetInceptedPAH())");
+    else if (!name.compare("A4"))
+            m_InceptedPAH = A4;
+    else throw std::runtime_error("no information about the incepted PAH is available, only A1 A2 and A4 are supported now (Sweep::ParticleModel::SetInceptedPAH())");
+}
+
 //! return mode of collision efficency model
 const std::string &ParticleModel::Mode() const {return m_mode;}
 
+const ParticleModel::PostProcessStartingStr &ParticleModel::InceptedPAH() const {return m_InceptedPAH;}
 
+//bool ParticleModel::IsPyreneInception() const
+//{
+//    if (m_InceptedPAH == "A4" || m_InceptedPAH == "pyrene")
+//        return true;
+//    else if (m_InceptedPAH == "A1" || m_InceptedPAH == "benzene")
+//        return false;
+//    else throw std::runtime_error("no information about the incepted PAH is available (Sweep::ParticleModel::IsPyreneInception())");
+//}
 /*!
  * The drag coefficient is calculated using the the Knudsen correction to the
  * Stokes formula for the drag coefficient, see table I of Li & Wang,
@@ -843,6 +880,38 @@ real ParticleModel::EinsteinDiffusionCoefficient(const Cell &sys, const Particle
 }
 
 /*!
+ * Numerically calculate the gradient of the diffusion coefficient, \ref DiffusionCoefficient.
+ *
+ * Use the twosided approximation
+ * \f[
+ *     \nabla D(x) \approx \frac{D(x_{i+1} - D(x_{i-1}))}{x_{i+1} - x_{i-1}},
+ * \f]
+ * except at domain boundaries where 0 is assumed (\todo 1 sided approximation).
+ *
+ *@param[in]    sys     System in which particle experiences drag
+ *@param[in]    sp      Particle for which to calculate drag coefficient
+ *@param[in]    neighbours  Pointers to neighbouring cells
+ *@param[in]    geom        Information on layout of neighbouring cells
+ *
+ *@return       Diffusion coefficient gradient
+ */
+real ParticleModel::GradDiffusionCoefficient(const Cell &sys, const Particle &sp,
+                                             const std::vector<const Cell*> &neighbours,
+                                             const Geometry::LocalGeometry1d &geom) const {
+    if((neighbours[0] != NULL) && (neighbours[1] != NULL)) {
+        const real dx = geom.calcSpacing(Geometry::left) +
+                        geom.calcSpacing(Geometry::right);
+
+        const real leftD  = DiffusionCoefficient(*(neighbours[0]), sp);
+        const real rightD = DiffusionCoefficient(*(neighbours[1]), sp);
+
+        return (rightD - leftD) / dx;
+    }
+    else
+        return 0.0;
+}
+
+/*!
  * Calculate diffusion co-efficient using Einstein's relation
  * \f[
  *    D = \frac{k_B T}{k_d}.
@@ -924,13 +993,13 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
                 // rho D_Z at z_{i+1}
                 const real rightRhoDZ = neighbours[1]->GasPhase().MassDensity() *
                                         neighbours[1]->GasPhase().MixFracDiffCoeff();
-                // Now calculate the gradient estimate for the produect
+                // Now calculate the gradient estimate for the product
                 // of gas mass density and mixture fraction diffusion
                 // coefficient.
                 const real gradRhoDZ = (rightRhoDZ - leftRhoDZ) / dZ;
 
                 // Same process for product of soot mass per unit volume of gas
-                // and particule diffusion coefficient of this particle.
+                // and particle diffusion coefficient of this particle.
                 const real leftVal  = neighbours[0]->Particles().GetSum(Sweep::iM) /
                                       neighbours[0]->SampleVolume() *
                                       EinsteinDiffusionCoefficient(*neighbours[0], sp);

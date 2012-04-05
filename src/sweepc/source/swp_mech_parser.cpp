@@ -443,6 +443,25 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
 
         readColliPara(i,mech);
 
+        // Get InceptedPAH, only pyrene and benzene are supported.
+        el = (*i)->GetFirstChild("InceptedPAH");
+        if (el!=NULL) {
+            str = el->Data();
+            if (str != "") {
+                mech.SetInceptedPAH(str);
+            } else {
+                // coalthresh contains no data.
+                std::string msg("Component ");
+                msg += comp->Name();
+                msg += " InceptedPAH contains no data (Sweep, MechParser::readComponents).";
+
+                delete comp;
+                throw runtime_error(msg);
+            }
+        } else {
+            mech.SetInceptedPAH("A4");
+        }
+
         // Get coalesc threshold.
         el = (*i)->GetFirstChild("coalthresh");
         if (el!=NULL) {
@@ -501,7 +520,6 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         } else {
             comp->SetMinPAH(0);
         }
-
 
         // Get component mol. wt.
         el = (*i)->GetFirstChild("molwt");
@@ -1303,7 +1321,7 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
 //COAGULATION
 
 /**
- * @param[in]       xml     XML document containing zero or more top level <coagulation> nodes
+ * @param[in]       xml     XML document containing zero or more top level \<coagulation\> nodes
  * @param[in,out]   mech    Mechanism to which to add coagulation processes
  *
  * @exception   runtime_error   Kernel no specified

@@ -43,7 +43,9 @@
 	
 	<interparticle type="inter particle" name="SiO2 interparticle reaction" defer="false">
         <formula>[X] to [Y] + H2O</formula>        
-        <reactant id="H4O4SI" stoich="1"/>
+        <!--NOTE that H4O4SI must NOT be labelled as a reactant, as this
+        leads to the erroneous removal of reactants from the gasphase-->
+        <!--reactant id="H4O4SI" stoich="1"/-->
 		<product id="H2O" stoich="1"/>
 		<component id="silica" dx="0"/>
 		<A>1e13</A>

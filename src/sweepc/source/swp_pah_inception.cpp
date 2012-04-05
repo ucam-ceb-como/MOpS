@@ -152,6 +152,57 @@ int PAHInception::Perform(const real t, Cell &sys,
     return 0;
 }
 
+/*!
+ * Create a new particle and add it to the ensemble
+ * This function is only used for PAH-PP model currently
+ * The mass form gasphase will be transfered to particle ensemble by using this function
+ *
+ * \param[in]       i           number of pyrene supposed in the ensemble
+ * \param[in]       t           Time
+ * \param[in,out]   sys         System to update
+ * \param[in]       iterm       Process term responsible for this event
+ * \param[in,out]   rng         Random number generator
+ *
+ * \return      0 on success, otherwise negative.
+ */
+int PAHInception::AddInceptedPAH(const int i, const real t, Cell &sys,rng_type &rng) const {
+
+    Particle *sp = NULL;
+
+    // return current number of pyrene in the emsemble
+
+    int j = sys.Particles().NumOfInceptedPAH();
+    if (i>j)
+    {
+        while (i>j)
+        {
+            // Ignore all questions of position
+            sp = m_mech->CreateParticle(t);
+
+            sp->UpdateCache();
+
+            // Add particle to main ensemble.
+            sys.Particles().Add(*sp, rng);
+
+            j++;
+        }
+    }
+    else if (i<j){
+        while (i<j)
+        {
+            int Pindex = sys.Particles().IndexOfInceptedPAH();
+            if (Pindex<0)
+                throw runtime_error("There are no InceptedPAH in the ensemble, and all the InceptedPAH molecules are consumed due to unknown reason(Mops, Sweep::PAHInception::Perform).");
+            sys.Particles().Remove(Pindex);
+            std::cout<<"j-i is "<<j-i<<std::endl;
+            j--;
+        }
+    }
+    //i==j do nothong
+    else return 0;
+    return 0;
+}
+
 // TOTAL RATE CALCULATIONS.
 
 // Returns rate of the process for the given system.

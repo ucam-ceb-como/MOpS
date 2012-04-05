@@ -166,21 +166,21 @@ namespace Sweep{
             Sweep::GasProfile* m_gasprof;
             //! Pointer to Sprog mechanism
             Sprog::Mechanism* m_mech;
-            //! KMC Mechanism
-            KMCMechanism m_kmcmech;
-            //! Check if profile obtained from file rather than mops
-            bool m_fromfile;
             //! Gaspoint object
             KMCGasPoint* m_gas;
             //static int LOOPcount;
             //! The PAH data structure
             PAHStructure* m_simPAH;
+            //! Current simulation time
+            real m_t;
+            //! Check if profile obtained from file rather than mops
+            bool m_fromfile;
+            //! KMC Mechanism
+            KMCMechanism m_kmcmech;
             //! PAH process
             PAHProcess m_simPAHp;
-            //! Current simulation time
-            real m_t;//t_sim;
             //! Reaction Counter
-             std::vector<int> m_rxn_count;
+            std::vector<int> m_rxn_count;
         };
 
         // to write C-H data for PAHs after intervals

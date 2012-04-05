@@ -278,6 +278,14 @@ void Cell::AdjustSampleVolume(real scale_factor)
     m_ensemble.ResetScaling();
 }
 
+unsigned int Cell::NumOfStartingSpecies(const int index) const 
+{
+    // figure out how many starting PAHs are supposed in the particle ensemble
+    // N = NA*Vsmpl*molar density*volume fraction of starting PAH.
+    unsigned int m_amount=NA*SampleVolume()*GasPhase().Density()*GasPhase().MoleFraction(index);
+    return m_amount;
+}
+
 /**
  * Clear any particles and set the sample volume so that a full ensemble
  * (of m_ensemble.Capacity() particles) has the specified m0.

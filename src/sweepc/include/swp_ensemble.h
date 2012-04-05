@@ -263,10 +263,17 @@ public:
         std::istream &in,                // Input stream.
         const Sweep::ParticleModel &mech // Model used to define particles.
         );
-        
+
+    int NumOfInceptedPAH() const;// return the number of pyrene in current state.
+    int IndexOfInceptedPAH() const; //move backwards.
     Sweep::KMC_ARS::KMCSimulator* Simulator();
     void SetSimulator(Sweep::GasProfile& gp);
-	
+
+    // modify the m_numofInceptedPAH according to processes,
+    // there are two possible value for m_amount, 1 (increase by one ) and -1 (decrease by 1)
+    void SetNumOfInceptedPAH(int m_amount);
+    void SetNumOfInceptedPAH(int m_amount, Sweep::Primary *m_primary);
+
 private:
     //! Vector of particles in the ensemble.
     PartPtrVector m_particles;
@@ -277,6 +284,7 @@ private:
     unsigned int m_capacity; // The ensemble capacity (max. particle count).
     unsigned int m_halfcap;  // Half the ensemble capacity.
     unsigned int m_count;    // Number of particles currently in the ensemble.
+    unsigned int m_numofInceptedPAH;  // Number of starting PAH in the ensemble
 
     // ENSEMBLE SCALING VARIABLES.
     real m_contfactor;       // Contraction scaling factor, precalculated for speed.

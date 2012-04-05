@@ -86,7 +86,8 @@ public:
         void *data                  // Custom data object which will be passed as argument to out().
         );
 
-	virtual GasProfile* Gasphase(void);
+    GasProfile* Gasphase(void);
+
 private:
 
     //* The gas-phase chemistry profile.
