@@ -601,22 +601,50 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
     xml.Root()->GetChildren("inception", items);
 
     for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
-        // Create new inception.
-        DimerInception *icn = new DimerInception(mech);
-        icn->SetMechanism(mech);
-        icn->SetName("Inception " + cstr(k));
 
-        try {
-            readInception(*(*i), *icn);
-        }
-        catch (std::exception &e) {
-            delete icn;
-            throw;
-        }
+        string inceptype = (*(*i)).GetAttributeValue("type");
 
-        // Add inception to mechanism.  Once entered into mechanism, the mechanism
-        // takes control of the inception object for memory management.
-        mech.AddInception(*icn);
+        if (inceptype == "silicon") {
+            // Create new silicon inception.
+            SiliconInception *icn = new SiliconInception(mech);
+            icn->SetMechanism(mech);
+            icn->SetName("Inception " + cstr(k));
+
+            try {
+                readSiliconInception(*(*i), *icn);
+            }
+            catch (std::exception &e) {
+                delete icn;
+                throw;
+            }
+
+            // Set silicon-specific constants
+            icn->SetInceptingDiameter(mech);
+            icn->SetMonomerVolume(mech);
+
+            // Add inception to mechanism.  Once entered into mechanism, the mechanism
+            // takes control of the inception object for memory management.
+            mech.AddInception(*icn);
+
+        } else {
+
+            // Create new inception.
+            DimerInception *icn = new DimerInception(mech);
+            icn->SetMechanism(mech);
+            icn->SetName("Inception " + cstr(k));
+
+            try {
+                readInception(*(*i), *icn);
+            }
+            catch (std::exception &e) {
+                delete icn;
+                throw;
+            }
+
+            // Add inception to mechanism.  Once entered into mechanism, the mechanism
+            // takes control of the inception object for memory management.
+            mech.AddInception(*icn);
+        }
     }
 }
 
@@ -690,6 +718,81 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 
 }
 
+
+/*!
+ * @brief           Reads a silicon inception process from an XML element.
+ *
+ * @param xml       XML node to read in
+ * @param icn       Pointer to new inception process
+ */
+void MechParser::readSiliconInception(CamXML::Element &xml, Processes::SiliconInception &icn)
+{
+    string str;
+    vector<CamXML::Element*> items, subitems;
+    vector<CamXML::Element*>::iterator j;
+
+    // Read name.
+    str = xml.GetAttributeValue("name");
+    if (str != "") icn.SetName(str);
+
+    // Read reactants.
+    readReactants(xml, icn);
+
+    // Find the rate calculation method (a coagulation kernel)
+    // Currently the only possibilities are free molecular and transition
+    // regime kernels.  These are handled by a boolean flag.  An enum
+    // will be needed if more cases are introduced (or possibly a pointer
+    // to an appropriate member function of DimerInception.)
+    bool useFreeMolRegime = false;
+    str = xml.GetAttributeValue("rate");
+    if(!str.empty()) {
+        if(str ==  "freemolecular")
+            useFreeMolRegime = true;
+        else if(str == "transition")
+            useFreeMolRegime = false;
+        else
+            throw std::runtime_error("Unrecognised rate type " + str + " in Sweep::MechParser::readSiliconInception");
+    }
+
+    // Get reactant masses and diameters, and set inception
+    // parameters.
+    fvector mass, diam;
+    readReactantMDs(xml, mass, diam);
+    if (mass.size() == 2) {
+        if(useFreeMolRegime)
+            icn.SetInceptingSpeciesFreeMol(mass[0], mass[1], diam[0], diam[1]);
+        else
+            icn.SetInceptingSpecies(mass[0], mass[1], diam[0], diam[1]);
+    }
+    else if (mass.size() == 1) {
+        if(useFreeMolRegime)
+            icn.SetInceptingSpeciesFreeMol(mass[0], mass[0], diam[0], diam[0]);
+        else
+            icn.SetInceptingSpecies(mass[0], mass[0], diam[0], diam[0]);
+    }
+    else
+        throw std::runtime_error("One or two inception species must be specified in Sweep::MechParser::readSiliconInception");
+
+
+    // Rate scaling now that a process has been created
+    real A = 0.0;
+    CamXML::Element *el = xml.GetFirstChild("A");
+    if (el != NULL) {
+        A = cdble(el->Data());
+        icn.SetA(A);
+    }
+
+    // Read products.
+    readProducts(xml, icn);
+
+    // Read initial particle composition.
+    readInceptedComposition(xml, icn);
+
+    // Read initial tracker variable values.
+    readInceptedTrackers(xml, icn);
+
+
+}
 
 // Reads inception processes from a sweep mechanism XML file.
 void MechParser::readPAHInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
