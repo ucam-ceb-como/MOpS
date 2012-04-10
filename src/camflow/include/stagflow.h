@@ -1,13 +1,13 @@
 /*!
- * \file   stagflow.h
- * \author V. Janardhanan
- *
- * \brief This class implements the stagnation flow and twin flame model.
- *
- *  Copyright (C) 2009 Vinod Janardhanan.
- *
+* \file   stagflow.h
+* \author V. Janardhanan
+*
+* \brief This class implements the stagnation flow and twin flame model.
+*
+*  Copyright (C) 2009 Vinod Janardhanan.
+*
 
- Licence:
+Licence:
     This file is part of "camflow".
 
     brush is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-  Contact:
+Contact:
     Prof Markus Kraft
     Dept of Chemical Engineering
     University of Cambridge
@@ -36,10 +36,11 @@
 
     Email:       mk306@cam.ac.uk
     Website:     http://como.cheng.cam.ac.uk
- */
+*/
 
 #ifndef _STAGFLOW_H
-#define	_STAGFLOW_H
+#define _STAGFLOW_H
+
 #include "gpc.h"
 #include "cam_residual.h"
 #include "cam_control.h"
@@ -52,106 +53,171 @@
 
 #include <vector>
 
-namespace Camflow{
-
-	/*!
-	 *@brief    Stagnation flow / Counterflow equation solver class.
-	 *
-	 * Include a more detailed description here.
-	 */
+namespace Camflow
+{
+    /*!
+    *@brief    Stagnation flow / Counterflow equation solver class.
+    *
+    * Include a more detailed description here.
+    */
     class StagFlow
-    : public CamSetup {
+    :
+        public CamSetup
+    {
 
-		public:
+        public:
 
-			typedef struct {
-				std::vector<doublereal> a,b,c;
-			}tdma_coeff;
+            typedef struct
+            {
+                std::vector<doublereal> a, b, c;
+            } tdma_coeff;
 
-			StagFlow(){}
-			virtual ~StagFlow(){}
+            StagFlow
+            (
+                CamAdmin& ca,
+                CamConfiguration& config,
+                CamControl& cc,
+                CamGeometry& cg,
+                CamProfile& cp,
+                CamSoot& cs,
+                Mechanism& mech
+            );
 
-			/*
-			 *solve function
-			 */
-			void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
-				 CamConfiguration &config, CamSoot &cs,  Mechanism &mech );
+            virtual ~StagFlow(){}
 
-			/*
-			 *coupled solver
-			 */
-			void csolve(CamControl &cc);
-			/*
-			 *segregated solver
-			 */
-			void ssolve(CamControl &cc);
-			/*
-			 *function called by the solver (DAE and ODEs)
-			 */
-			int eval(doublereal t, doublereal* y, doublereal *ydot, bool jacEval);
-			void residual(const doublereal& t, doublereal* y, doublereal* f);
+            /*
+            *solve function
+            */
+            void solve();
 
-			/*
-			 *calculate flow field
-			 */
-			void calcFlowField(const doublereal& time, doublereal* y);
-			void calcVelocity(std::vector<doublereal>& flow);
-			void calcMomentum(std::vector<doublereal>& mom);
+            /*
+            *coupled solver
+            */
+            void csolve(CamControl &cc);
 
-			/*
-			 *species boundary condition
-			 */
-			void speciesBoundary(const doublereal& t, doublereal* y, doublereal* f);
-			/*
-			 *energy boundary
-			 */
-			void energyBoundary(const doublereal& t, doublereal* y, doublereal* f);
-			/*
-			 *initialize the solution vector
-			 */
-			void initSolutionVector(CamControl &cc);
-			/*
-			 *initialize the mass flow
-			 */
-			void initMassFlow();
-			/*
-			 *initialize momentum
-			 */
-			void initMomentum();
-			/*
-			 *update diffusion fluxes
-			 */
-			void updateDiffusionFluxes();
-			/*
-			 *report functions
-			 */
-			void report(doublereal t, doublereal* solution);
-			void report(doublereal t, doublereal* solutio, doublereal& res);
-			void header();
-			void reportToFile(doublereal t, doublereal* soln);
+            /*
+            *segregated solver
+            */
+            void ssolve(CamControl &cc);
 
-			//! Calculate the mixture fraction variable using Bilger's formula.
-	        doublereal getBilgerMixFrac(const int& cell);
+            /*
+            *function called by the solver (DAE and ODEs)
+            */
+            int eval
+            (
+                doublereal t,
+                doublereal* y,
+                doublereal *ydot,
+                bool jacEval
+            );
 
-		private:
+            void residual(const doublereal& t, doublereal* y, doublereal* f);
 
-			inletStruct fuel, oxid;
-			tdma_coeff tdmaFlow;
-			int nCells, configID;
-			/*
-			 *Newton solver variables
-			 */
-			int alg_nEqn, alg_nVar, alg_band;
-			std::vector<doublereal> alg_solvect;
-			std::vector<doublereal> vFlow;
-			//KinsolWrapper *newton;
-			doublereal tol_res, eigen;
-			doublereal strainRate;
-			CamConfiguration *camConfig;
+            doublereal getResidual() const;
+
+            void speciesResidual
+            (
+                const doublereal& time,
+                doublereal* y,
+                doublereal* f
+            );
+
+            void energyResidual
+            (
+                const doublereal& time,
+                doublereal* y,
+                doublereal* f
+            );
+
+            void massMatrix(doublereal** M);
+
+            double dydx(double nr1, double nr2, double dr) const;
+
+            double dydx(double nr1, double nr2, double nr3, double dr) const;
+
+            /*
+            *calculate flow field
+            */
+            void calcFlowField(const doublereal& time, doublereal* y);
+
+            void calcVelocity(std::vector<doublereal>& flow);
+
+            void calcMomentum(std::vector<doublereal>& mom);
+
+            /*
+            *species boundary condition
+            */
+            void speciesBoundary
+            (
+                const doublereal& t,
+                doublereal* y,
+                doublereal* f
+            );
+
+            /*
+            *energy boundary
+            */
+            void energyBoundary
+            (
+                const doublereal& t,
+                doublereal* y,
+                doublereal* f
+            );
+
+            /*
+            *initialize the solution vector
+            */
+            void initSolutionVector(CamControl &cc);
+
+            /*
+            *initialize the mass flow
+            */
+            void initMassFlow();
+
+            /*
+            *initialize momentum
+            */
+            void initMomentum();
+
+            /*
+            *update diffusion fluxes
+            */
+            void updateDiffusionFluxes();
+
+            /*
+            *report functions
+            */
+            void report(doublereal t, doublereal* solution);
+
+            void report(doublereal t, doublereal* solutio, doublereal& res);
+
+            void header(std::vector<std::string>& headerData);
+
+            void reportToFile(doublereal t, doublereal* soln);
+
+            //! Calculate the mixture fraction variable using Bilger's formula.
+            doublereal getBilgerMixFrac(const int& cell);
+
+
+        private:
+
+            inletStruct fuel, oxid;
+            tdma_coeff tdmaFlow;
+            int configID;
+
+            /*
+            *Newton solver variables
+            */
+            int alg_nEqn, alg_nVar, alg_band;
+            std::vector<doublereal> alg_solvect;
+            std::vector<doublereal> vFlow;
+            //KinsolWrapper *newton;
+            doublereal tol_res, eigen;
+            doublereal strainRate;
+            CamConfiguration *camConfig;
 
     }; // End StagFlow class declaration.
 
 } // End Camflow namespace.
 
-#endif	/* _STAGFLOW_H */
-
+#endif /* _STAGFLOW_H */

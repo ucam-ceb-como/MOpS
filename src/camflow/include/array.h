@@ -143,7 +143,7 @@ namespace Camflow{
         protected:
 
             std::vector<doublereal> aData;
-            int nRows, nCols;
+            size_t nRows, nCols;
 
     };
 
