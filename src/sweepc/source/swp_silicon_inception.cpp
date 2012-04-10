@@ -229,7 +229,7 @@ void SiliconInception::SetMonomerVolume(const Sweep::Mechanism &mech)
     real v1(0.0);
     CompPtrVector comp = mech.Components();
     for (unsigned int i=0; i!=comp.size(); i++) {
-        // returns in cm3, due to Density()
+        // returns in m3, due to Density()
         v1 += 1.0 * mech.Components(i)->MolWt() /
                 (Sweep::NA * mech.Components(i)->Density());
     }
