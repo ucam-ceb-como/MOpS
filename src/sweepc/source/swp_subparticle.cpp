@@ -100,8 +100,7 @@ SubParticle &SubParticle::operator=(const SubParticle &rhs)
 
 real SubParticle::avgeomdiam(double oneovernumsubpart)
 {
-	Primary::PropID primid=Primary::iD;
-	return std::pow(m_primary->Property(primid),oneovernumsubpart);
+	return std::pow(m_primary->Property(Sweep::iDsph),oneovernumsubpart);
 }
 
 // PRIMARY PARTICLE CHILD.

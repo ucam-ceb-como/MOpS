@@ -269,14 +269,10 @@ real Primary::Volume(void) const {return m_vol;}
 real Primary::Mass(void) const {return m_mass;}
 
 // Returns the property with the given ID.
-real Primary::Property(PropID id) const
+real Primary::Property(const Sweep::PropID id) const
 {
     switch (id) {
-        case iCTime:  // Create time.
-            return m_createt;
-        case iLUTime: // Last update time.
-            return m_time;
-        case iD:      // Equivalent sphere diameter.
+        case iDsph:      // Equivalent sphere diameter.
             return m_diam;
         case iDcol:   // Collision diameter.
             return m_dcol;
