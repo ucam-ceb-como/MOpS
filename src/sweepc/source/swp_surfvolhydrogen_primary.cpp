@@ -274,10 +274,11 @@ SurfVolHydrogenPrimary *const SurfVolHydrogenPrimary::Clone(void) const
 /*!
  * \return      Number of surface Hydrogens (active sites)
  */
-int SurfVolHydrogenPrimary::GetSites() const
+real SurfVolHydrogenPrimary::GetSites() const
 {
-    return static_cast<int>(Composition()[iH] + 0.5);
+    return Composition()[iH];
 }
+
 
 // Writes the object to a binary stream.
 void SurfVolHydrogenPrimary::Serialize(std::ostream &out) const

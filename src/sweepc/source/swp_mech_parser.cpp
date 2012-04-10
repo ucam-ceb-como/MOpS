@@ -1053,7 +1053,8 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
                                         "(Sweep, MechParser::readSurfRxn)");
             }
         } else {
-            arr.A *= (1.0e-6);
+            throw std::runtime_error("Surface process defined with unrecognised ""particleterm"" "
+                                        "(Sweep, MechParser::readSurfRxn).");
         }
     } else {
         throw runtime_error("Surface process defined without ""particleterm"" "

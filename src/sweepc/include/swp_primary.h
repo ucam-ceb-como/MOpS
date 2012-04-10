@@ -256,7 +256,7 @@ public:
         );
 
 	//! Number of active sites (only implemented for some particle models).
-	virtual int GetSites() const { return 0; }
+	virtual real GetSites() const { return 0; }
 
 	// Return the sintering rate for a SilicaPrimary
 	virtual real GetSintRate() const { return 0.0; }

@@ -171,7 +171,7 @@ real SurfaceReaction::Rate(real t, const Cell &sys, const Particle &sp) const
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
     // Paticle dependence.
-    rate *= sp.Property(static_cast<Sweep::PropID>(m_pid));
+    rate *= sp.Property(m_pid);
 
     return rate;
 }

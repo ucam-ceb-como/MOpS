@@ -184,7 +184,7 @@ real ActSiteReaction::radicalSiteFractionABF(const Sprog::Thermo::IdealGas &gas)
 real ActSiteReaction::radicalSiteFractionBP(const Sprog::Thermo::IdealGas &gas) const
 {
     const real T  = gas.Temperature();
-    const real RT = R * T;
+    const real RT = R * T / 1000;
 
     // Calculate the forward and back reaction rates.
     const real r1f = 1.0e+08  * std::exp(-68.42/RT)  * std::pow(T,1.8)   * gas.MolarConc(iH);

@@ -138,7 +138,7 @@ public:
     virtual SurfVolHydrogenPrimary *const Clone(void) const;
 
     //! Number of active sites (only implemented for some particle models).
-    virtual int GetSites() const;
+    virtual real GetSites() const;
 
     //! Writes the object to a binary stream.
     virtual void Serialize(std::ostream &out) const;

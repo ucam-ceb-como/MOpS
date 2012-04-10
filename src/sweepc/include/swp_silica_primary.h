@@ -135,7 +135,7 @@ public:
 			);
 
 	//! Gets the number of active sites for interparticle reaction
-	int GetSites() const;
+	real GetSites() const;
 
 	//! Gets the sintering rate for interparticle reaction
 	real GetSintRate() const;
