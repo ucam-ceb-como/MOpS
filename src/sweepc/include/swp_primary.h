@@ -85,6 +85,7 @@ public:
         iDcol,   // Collision diameter.
         iDmob,   // Mobility diameter.
         iS,      // Surface area.
+        iASN,    // Active surface sites
         iV,      // Volume.
         iM       // Mass.
     };
@@ -272,9 +273,7 @@ public:
         const Sweep::ParticleModel &model // Defining particle model.
         );
 
-	// Virtual functions for the SilicaPrimary class (wjm34)
-	// These return 0 for any other type of primary
-	// Return the number of OH sites for a SilicaPrimary
+	//! Number of active sites (only implemented for some particle models).
 	virtual int GetSites() const { return 0; }
 
 	// Return the sintering rate for a SilicaPrimary
@@ -319,6 +318,6 @@ protected:
 
 
 };
-};
+}
 
 #endif

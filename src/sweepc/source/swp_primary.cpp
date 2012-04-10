@@ -291,6 +291,8 @@ real Primary::Property(PropID id) const
             return m_dmob;
         case iS:      // Surface area.
             return m_surf;
+        case iASN:      // Surface area.
+            return GetSites();
         case iV:      // Volume.
             return m_vol;
         case iM:      // Mass.

@@ -309,6 +309,8 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetAggModel(AggModels::Spherical_ID);
     } else if (str == "surfvol") {
         mech.SetAggModel(AggModels::SurfVol_ID);
+    } else if (str == "surfvolhydrogen") {
+        mech.SetAggModel(AggModels::SurfVolHydrogen_ID);
     } else if (str == "PAH") {
 	// Reject all old style input files
 		throw std::runtime_error("PAH-PP MODEL are no longer supported (Sweep::MechParser::readV1), you can use NEW PAH_KMC model");
@@ -871,7 +873,10 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
             rxn = new SurfaceReaction(mech);
         } else if (str.compare("abf")==0) {
             // This is an ABF active-sites enabled reaction.
-            rxn = new ActSiteReaction(mech);
+            rxn = new ActSiteReaction(mech, ActSiteReaction::ABFRadicalSiteModel);
+        } else if (str.compare("bp")==0) {
+            // This is a Blanquart Pitsch active-sites enabled reaction.
+            rxn = new ActSiteReaction(mech, ActSiteReaction::BPRadicalSiteModel);
         } else {
             // Unrecognised reaction type.
             throw runtime_error("Unrecognised reaction type: " + str +

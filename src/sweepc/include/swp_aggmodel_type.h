@@ -59,7 +59,8 @@ namespace Sweep
             //PriPartList_ID = 10002,  // Primary-particle list (West et al., Ind. Eng. Chem. Res., 46, 6147-6156, 2007). 
             //PAH_ID         = 10003,  // A particle storing multiple PAHs (Markus et al., Proceedings of the Combustion Institute, 33, 675-683, 2011)
 			PAH_KMC_ID         = 10004, // coupled PAH-PP model (ms785) with KMC-ARS model (zz260 and ar447)
-			Silica_ID		= 10005  // Silica particle model (ms785 & ss663, integrated with git repository by wjm34)
+			Silica_ID		= 10005,  // Silica particle model (ms785 & ss663, integrated with git repository by wjm34)
+            SurfVolHydrogen_ID = 10006, //! (Blanquart & Pitsch., Combust. Flame, 156, 1614-1626, 2009).
 		};
 
         typedef std::set<AggModelType> AggModelTypeSet;

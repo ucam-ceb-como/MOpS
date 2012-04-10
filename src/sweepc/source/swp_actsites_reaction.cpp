@@ -64,12 +64,13 @@ ActSiteReaction::ActSiteReaction(void)
 , iH(-1)
 , iH2(-1)
 , iH2O(-1)
+, mRadicalSiteModel(static_cast<RadicalSiteFractionModel>(-1))
 {
     m_name = "Active-site Reaction";
 }
 
 // Default constructor.
-ActSiteReaction::ActSiteReaction(const Sweep::Mechanism &mech)
+ActSiteReaction::ActSiteReaction(const Sweep::Mechanism &mech, const RadicalSiteFractionModel rad_site_model)
 : SurfaceReaction(mech)
 , iC2H2(-1)
 , iO2(-1)
@@ -78,6 +79,7 @@ ActSiteReaction::ActSiteReaction(const Sweep::Mechanism &mech)
 , iH(-1)
 , iH2(-1)
 , iH2O(-1)
+, mRadicalSiteModel(rad_site_model)
 {
     m_name = "Active-site Reaction";
 
@@ -145,7 +147,7 @@ real ActSiteReaction::Rate(real t, const Cell &sys, const Particle &sp) const
  *\return       Fraction of surface sites which are radicals.
  *
  */
-real ActSiteReaction::radicalSiteFraction(const Sprog::Thermo::IdealGas &gas) const
+real ActSiteReaction::radicalSiteFractionABF(const Sprog::Thermo::IdealGas &gas) const
 {
     real r1f, r1b, r2f, r2b, r3f, r4f, r5f, rdenom;
     real T  = gas.Temperature();
@@ -170,8 +172,48 @@ real ActSiteReaction::radicalSiteFraction(const Sprog::Thermo::IdealGas &gas) co
 }
 
 /*!
+ *  This calculation is an alternative to the ABF Hydrogen Abstraction - C2H2 Addtion (HACA) model
+ *  for soot particles.  Constants are taken from Blanquart & Pitsch, Combustion & Flame 156 (2009)
+ *  1614-1626.
+ *
+ *\param[in]    gas     Gas mixture containing the soot particles
+ *
+ *\return       Fraction of surface hydrogens which are radicals.
+ *
+ */
+real ActSiteReaction::radicalSiteFractionBP(const Sprog::Thermo::IdealGas &gas) const
+{
+    const real T  = gas.Temperature();
+    const real RT = R * T;
+
+    // Calculate the forward and back reaction rates.
+    const real r1f = 1.0e+08  * std::exp(-68.42/RT)  * std::pow(T,1.8)   * gas.MolarConc(iH);
+    const real r1b = 8.68e+04 * std::exp(-25.46/RT)  * std::pow(T,2.36)  * gas.MolarConc(iH2);
+    const real r2f = 6.72e+01 * std::exp(-6.09/RT)   * std::pow(T,3.33)  * gas.MolarConc(iOH);
+    const real r2b = 6.44e-01 * std::exp(-27.96/RT)  * std::pow(T,3.79)  * gas.MolarConc(iH2O);
+    const real r3f = 1.13e+16 * std::exp(-476.05/RT) * std::pow(T,-0.06);
+    const real r3b = 4.17e+13 *                        std::pow(T,0.15)  * gas.MolarConc(iH);
+    const real r4f = 2.52e+09 * std::exp(-17.13/RT)  * std::pow(T,1.10)  * gas.MolarConc(iC2H2);
+
+    // This is a quasi-steady state calculation, the number of radical active sites is
+    // calculated by assuming that there is a steady state between radical and non-radical
+    // surface hydrogens.
+    const real radicalDepletion = r1b + r2b + r3b + r4f;
+    const real radicalProduction  = r1f + r2f + r3f;
+
+    if (radicalProduction > 0.0) {
+        return radicalProduction / (radicalProduction + radicalDepletion);
+    } else {
+        return 0.0;
+    }
+}
+
+/*!
  *  This calculation is part of the ABF Hydrogen Abstraction - C2H2 Addtion (HACA) model
- *  for soot particles as discussed by Appel et al., Proc. Combust. Inst. (2000).
+ *  for soot particles as discussed by Appel et al., Proc. Combust. Inst. (2000) or of
+ *  the alternative taken from  Blanquart & Pitsch, Combustion & Flame 156 (2009)
+ *  1614-1626, which requires the modelling of the number of surface hydrogen atoms
+ *  on a particle (surf vol hydrogen model).
  *
  *\param[in]    gas     Gas mixture containing the soot particles
  *
@@ -180,7 +222,15 @@ real ActSiteReaction::radicalSiteFraction(const Sprog::Thermo::IdealGas &gas) co
  */
 real ActSiteReaction::SiteDensity(const Sprog::Thermo::IdealGas &gas) const
 {
-    return 2.3e19 * radicalSiteFraction(gas) * gas.Alpha();
+    switch(mRadicalSiteModel) {
+    case ABFRadicalSiteModel:
+        return 2.3e19 * radicalSiteFractionABF(gas) * gas.Alpha();
+    case BPRadicalSiteModel:
+        return radicalSiteFractionBP(gas);
+    default:
+        throw std::runtime_error("Unrecognised radical site model in ActSiteReaction::radicalSiteFraction");
+        return 0.0;
+    }
 }
 
 // READ/WRITE/COPY.
@@ -195,6 +245,9 @@ ActSiteReaction *const ActSiteReaction::Clone(void) const
 // processes and for serialisation.
 ProcessType ActSiteReaction::ID(void) const {return ActSiteRxn_ID;}
 
+// It is not obvious why the serialisation/deserialisation does
+// not include the species index members. (Rob P 05.04.2012)
+
 // Writes the object to a binary stream.
 void ActSiteReaction::Serialize(std::ostream &out) const
 {
@@ -205,6 +258,8 @@ void ActSiteReaction::Serialize(std::ostream &out) const
 
         // Serialize base class.
         SurfaceReaction::Serialize(out);
+
+        out.write(reinterpret_cast<const char*>(&mRadicalSiteModel), sizeof(mRadicalSiteModel));
 
     } else {
         throw invalid_argument("Output stream not ready "
@@ -226,6 +281,8 @@ void ActSiteReaction::Deserialize(std::istream &in, const Sweep::Mechanism &mech
             case 0:
                 // Deserialize base class.
                 SurfaceReaction::Deserialize(in, mech);
+
+                in.read(reinterpret_cast<char*>(&mRadicalSiteModel), sizeof(mRadicalSiteModel));
 
                 break;
             default:

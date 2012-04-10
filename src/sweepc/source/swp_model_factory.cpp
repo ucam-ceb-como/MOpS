@@ -46,6 +46,7 @@
 #include "swp_aggmodel_cache.h"
 #include "swp_surfvol_cache.h"
 #include "swp_surfvol_primary.h"
+#include "swp_surfvolhydrogen_primary.h"
 #include "swp_PAH_primary.h"
 #include "swp_PAH_cache.h"
 #include "swp_particle_stats.h"
@@ -77,6 +78,8 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
     switch (id) {
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolPrimary(time, model);
+        case AggModels::SurfVolHydrogen_ID:
+            return new AggModels::SurfVolHydrogenPrimary(time, model);
 		case AggModels::PAH_KMC_ID:
             return new AggModels::PAHPrimary(time, position, model);
 		case AggModels::Silica_ID:
@@ -101,6 +104,8 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
     switch (id) {
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolPrimary(time, model);
+        case AggModels::SurfVolHydrogen_ID:
+            return new AggModels::SurfVolHydrogenPrimary(time, model);
 		case AggModels::PAH_KMC_ID:
             return new AggModels::PAHPrimary(time, model);
 		case AggModels::Silica_ID:
@@ -135,6 +140,9 @@ Primary *const ModelFactory::ReadPrimary(std::istream &in,
                 break;
             case AggModels::SurfVol_ID:
                 pri = new AggModels::SurfVolPrimary(in, model);
+                break;
+            case AggModels::SurfVolHydrogen_ID:
+                pri = new AggModels::SurfVolHydrogenPrimary(in, model);
                 break;
 			case AggModels::PAH_KMC_ID:
                 pri = new AggModels::PAHPrimary(in, model);
@@ -225,6 +233,9 @@ AggModels::AggModelCache *const ModelFactory::CreateAggCache(AggModels::AggModel
             return NULL;
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolCache();
+        case AggModels::SurfVolHydrogen_ID:
+            // use the ordinary surf vol cache
+            return new AggModels::SurfVolCache();
 	    case  AggModels::PAH_KMC_ID:
             return new AggModels::PAHCache();
 		case AggModels::Silica_ID:
@@ -245,6 +256,9 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
             // particle model.
             return NULL;
         case AggModels::SurfVol_ID:
+            return new Stats::SurfVolStats();
+        case AggModels::SurfVolHydrogen_ID:
+            // Use the ordinary surf vol stats
             return new Stats::SurfVolStats();
 		case AggModels::PAH_KMC_ID:
             return new Stats::PAHStats();       // ms785: postprocessing not yet implemented
@@ -275,6 +289,10 @@ AggModels::AggModelCache *const ModelFactory::ReadAggCache(std::istream &in)
         // an exception if the type is invalid.
         switch ((AggModels::AggModelType)type) {
             case AggModels::SurfVol_ID:
+                model = new AggModels::SurfVolCache(in);
+                break;
+            case AggModels::SurfVolHydrogen_ID:
+                // This model still uses the ordinary surf vol cache
                 model = new AggModels::SurfVolCache(in);
                 break;
 			case AggModels::PAH_KMC_ID:
@@ -312,6 +330,9 @@ Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in,
         // an exception if the type is invalid.
         switch ((AggModels::AggModelType)type) {
             case AggModels::SurfVol_ID:
+                stats = new Stats::SurfVolStats(in, model);
+                break;
+            case AggModels::SurfVolHydrogen_ID:
                 stats = new Stats::SurfVolStats(in, model);
                 break;
 			case AggModels::PAH_KMC_ID:
