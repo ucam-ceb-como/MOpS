@@ -11,7 +11,6 @@ source_group("Header Files" FILES ${INCS})
 
 add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_addcoag.cpp
-                  source/swp_aggmodel_cache.cpp
                   source/swp_birth_process.cpp
                   source/swp_cell.cpp
                   source/swp_coagulation.cpp
@@ -29,7 +28,6 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_mechanism.cpp
                   source/swp_mech_parser.cpp
                   source/swp_model_factory.cpp
-                  source/swp_PAH_cache.cpp
                   source/swp_PAH.cpp
                   source/swp_pah_inception.cpp
                   source/swp_PAH_primary.cpp
@@ -42,7 +40,6 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_primary.cpp
                   source/swp_process.cpp
                   source/swp_process_factory.cpp
-                  source/swp_silica_cache.cpp
                   source/swp_silica_interparticle.cpp
                   source/swp_silica_primary.cpp
                   source/swp_silica_stats.cpp
@@ -50,7 +47,6 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_solver.cpp
                   source/swp_subparticle.cpp
                   source/swp_surface_reaction.cpp
-                  source/swp_surfvol_cache.cpp
                   source/swp_surfvol_primary.cpp
                   source/swp_surfvolhydrogen_primary.cpp
                   source/swp_surfvol_stats.cpp

@@ -220,13 +220,6 @@ void Primary::SetTime(real t) {m_time = t;}
 // Returns the aggregation model which this primary describes.
 AggModels::AggModelType Primary::AggID(void) const {return AggModels::Spherical_ID;}
 
-// Creates an aggregation data cache for this primary type.
-AggModels::AggModelCache *const Primary::CreateAggCache() const
-{
-    return ModelFactory::CreateAggCache(AggModels::Spherical_ID);
-}
-
-
 // BASIC DERIVED PARTICLE PROPERTIES.
 
 // Calculates the derived properties from the unique properties.
@@ -276,14 +269,10 @@ real Primary::Volume(void) const {return m_vol;}
 real Primary::Mass(void) const {return m_mass;}
 
 // Returns the property with the given ID.
-real Primary::Property(PropID id) const
+real Primary::Property(const Sweep::PropID id) const
 {
     switch (id) {
-        case iCTime:  // Create time.
-            return m_createt;
-        case iLUTime: // Last update time.
-            return m_time;
-        case iD:      // Equivalent sphere diameter.
+        case iDsph:      // Equivalent sphere diameter.
             return m_diam;
         case iDcol:   // Collision diameter.
             return m_dcol;

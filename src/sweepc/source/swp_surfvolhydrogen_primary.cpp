@@ -45,7 +45,6 @@
 #include "swp_surfvolhydrogen_primary.h"
 #include "swp_aggmodel_type.h"
 #include "swp_model_factory.h"
-#include "swp_surfvol_cache.h"
 
 #include <stdexcept>
 #include <boost/random/poisson_distribution.hpp>
@@ -116,15 +115,6 @@ SurfVolHydrogenPrimary &SurfVolHydrogenPrimary::operator=(const SurfVolHydrogenP
 
 // Returns the aggregation model which this primary describes.
 AggModels::AggModelType SurfVolHydrogenPrimary::AggID(void) const {return AggModels::SurfVolHydrogen_ID;}
-
-// Creates an aggregation data cache for this primary type.
-AggModels::SurfVolCache *const SurfVolHydrogenPrimary::CreateAggCache() const
-{
-    SurfVolCache *cache = static_cast<SurfVolCache*>(ModelFactory::CreateAggCache(AggModels::SurfVolHydrogen_ID));
-    if (cache != NULL)
-        *cache = *this;
-    return cache;
-}
 
 
 // BASIC DERIVED PARTICLE PROPERTIES.

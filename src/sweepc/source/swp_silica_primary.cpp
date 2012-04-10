@@ -46,7 +46,6 @@
 #include "swp_aggmodel_type.h"
 #include "swp_model_factory.h"
 #include "swp_silica_primary.h"
-#include "swp_silica_cache.h"
 #include "swp_particle_image.h"
 #include "swp_cell.h"
 #include "swp_kmc_pah_process.h"
@@ -1512,16 +1511,6 @@ void SilicaPrimary::PrintTreeNode(std::ostream &out) {
             << "|m_child_rad="       << this->m_children_radius
             << "|m_parent="          << this->m_parent
             << "|this=" << this;
-}
-
-
-//! Creates an aggregation data cache for this primary type.
-AggModels::SilicaCache *const SilicaPrimary::CreateAggCache() const
-{
-	SilicaCache *cache =
-        static_cast<SilicaCache*>(ModelFactory::CreateAggCache(AggModels::Silica_ID));
-    if (cache != NULL) *cache = *this;
-    return cache;
 }
 
 /*!

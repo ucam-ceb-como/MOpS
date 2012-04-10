@@ -64,9 +64,6 @@
 
 // Aggregation models.
 #include "swp_aggmodel_type.h"
-#include "swp_aggmodel_cache.h"
-#include "swp_surfvol_cache.h"
-#include "swp_surfvol_primary.h"
 
 // KMC PAH growth model.
 #include "swp_kmc_jump_process.h"

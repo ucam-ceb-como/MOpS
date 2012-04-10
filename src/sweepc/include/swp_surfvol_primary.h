@@ -48,7 +48,7 @@
 #include "swp_particle_model.h"
 #include "swp_sintering_model.h"
 #include "swp_aggmodel_type.h"
-#include "swp_surfvol_cache.h"
+
 #include <iostream>
 
 namespace Sweep
@@ -83,10 +83,6 @@ public:
 
     //! Returns the aggregation model which this primary describes.
     virtual AggModels::AggModelType AggID(void) const;
-
-    //! Creates an aggregation data cache for this primary type.
-    virtual AggModels::SurfVolCache *const CreateAggCache() const;
-
 
     // BASIC DERIVED PROPERTIES.
 

@@ -43,7 +43,6 @@
 #include "swp_PAH_stats.h"
 #include "swp_aggmodel_type.h"
 #include "swp_particle.h"
-#include "swp_PAH_cache.h"
 #include "swp_PAH_primary.h"
 #include <stdexcept>
 
@@ -170,9 +169,6 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
     Ensemble::const_iterator ip;
 
     for (ip=e.begin(); ip!=e.end(); ++ip) {
-        // Get surface-volume cache.
-        const AggModels::PAHCache& cache =
-            dynamic_cast<const AggModels::PAHCache&>((*ip)->AggCache());
 		const AggModels::PAHPrimary *pah = NULL;
 			pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*ip)).Primary());
         real sz = (*ip)->Property(m_statbound.PID);
@@ -181,21 +177,21 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-			m_stats[iNPAH]    		+= cache.m_numPAH * wt;
+			m_stats[iNPAH]    		+= pah->NumPAH() * wt;
 			m_stats[iPAHD]    		+= pah->PAHCollDiameter()*1e9 * wt;
-			m_stats[iNCARB]	  		+= cache.m_numcarbon * wt;
-			m_stats[iNHYDROGEN]	  	+= cache.m_numH * wt;
-            m_stats[iNEDGEC]	  	+= cache.m_numOfEdgeC * wt;
-            m_stats[iNRINGS]	  	+= cache.m_numOfRings * wt;
-            m_stats[iNPAH+1]    	+= cache.m_numPAH * wt; //used to calculate sum of Number of PAHs.
-            m_stats[iCOAL]    		+= cache.m_avg_coalesc * wt;
-            if (cache.m_numPAH>1)
+			m_stats[iNCARB]	  		+= pah->NumCarbon() * wt;
+			m_stats[iNHYDROGEN]	  	+= pah->NumHydrogen() * wt;
+            m_stats[iNEDGEC]	  	+= pah->NumEdgeC() * wt;
+            m_stats[iNRINGS]	  	+= pah->NumRings() * wt;
+            m_stats[iNPAH+1]    	+= pah->NumPAH() * wt; //used to calculate sum of Number of PAHs.
+            m_stats[iCOAL]    		+= pah->AvgCoalesc() * wt;
+            if (pah->NumPAH() > 1)
             {
                 wtreal += wt;
                 m_stats[iPARTSURF]+=(*ip)->SurfaceArea() * wt;
-                m_stats[iNPRIM]+=cache.m_numprimary * wt;
+                m_stats[iNPRIM]+= pah->Numprimary() * wt;
                 m_stats[iPARTMASS]+=(*ip)->Primary()->Mass() * wt;
-                m_stats[iNAVGPAH]+=cache.m_numPAH * wt;  //used to calculate Avg. PAH real Part
+                m_stats[iNAVGPAH]+= pah->NumPAH() * wt;  //used to calculate Avg. PAH real Part
             }
         }
     }
@@ -339,24 +335,25 @@ void PAHStats::PSL(const Sweep::Particle &sp, real time,
     // output stats array.
     fvector::iterator j = psl.begin()+start-1;
 
-    // Get surface-volume cache.
-    const AggModels::PAHCache* cache =
-        dynamic_cast<const AggModels::PAHCache*>(&sp.AggCache());
+    // This should succeed, there is no way the PAH stats should be called
+    // unless we also have a PAHPrimary
+    const AggModels::PAHPrimary* const pah =
+            dynamic_cast<const AggModels::PAHPrimary*>(sp.Primary());
 
     // Get the PSL stats.
-    if (cache != NULL) {
-		*(++j) = (real)(cache->m_numPAH);
-		*(++j) = (real)(cache->m_PAHDiameter)*1e9;			//convert to nm
-		*(++j) = (real) (cache->m_numcarbon);
-		*(++j) = (real) (cache->m_numH);
-		*(++j) = (real) (cache->m_numprimary);
-        *(++j) = (real) (cache->m_numOfEdgeC);
-        *(++j) = (real) (cache->m_numOfRings);
-        *(++j) = (real) (cache->m_sqrtLW);
-		*(++j) = (real) (cache->m_LdivW);
-		*(++j) = (real) (cache->m_primarydiam)*1e9/(real)(cache->m_numprimary);//convert to nm
-        *(++j) = (real) (cache->m_Rg)*1e9;
-        *(++j) = (real) (cache->m_fdim);
+    if (pah != NULL) {
+		*(++j) = (real)(pah->NumPAH());
+		*(++j) = (real)(pah->PAHCollDiameter())*1e9;			//convert to nm
+		*(++j) = (real) (pah->NumCarbon());
+		*(++j) = (real) (pah->NumHydrogen());
+		*(++j) = (real) (pah->Numprimary());
+        *(++j) = (real) (pah->NumEdgeC());
+        *(++j) = (real) (pah->NumRings());
+        *(++j) = (real) (pah->sqrtLW());
+		*(++j) = (real) (pah->LdivW());
+		*(++j) = (real) (pah->PrimaryDiam())*1e9/(real)(pah->Numprimary());//convert to nm
+        *(++j) = (real) (pah->Rg())*1e9;
+        *(++j) = (real) (pah->Fdim());
 
     } else {
         fill (j+1, j+2, 0.0);

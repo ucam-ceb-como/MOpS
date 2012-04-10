@@ -43,16 +43,12 @@
 #include "swp_model_factory.h"
 #include "swp_primary.h"
 #include "swp_aggmodel_type.h"
-#include "swp_aggmodel_cache.h"
-#include "swp_surfvol_cache.h"
 #include "swp_surfvol_primary.h"
 #include "swp_surfvolhydrogen_primary.h"
 #include "swp_PAH_primary.h"
-#include "swp_PAH_cache.h"
 #include "swp_particle_stats.h"
 #include "swp_surfvol_stats.h"
 #include "swp_PAH_stats.h"
-#include "swp_silica_cache.h"
 #include "swp_silica_stats.h"
 #include "swp_silica_primary.h"
 #include <stdexcept>
@@ -223,29 +219,6 @@ void ModelFactory::WriteStats(const Stats::IModelStats &stats, std::ostream &out
 
 // AGGREGATION MODEL CREATION.
 
-// Creates a new aggregation model cache of the given type.
-AggModels::AggModelCache *const ModelFactory::CreateAggCache(AggModels::AggModelType id)
-{
-    switch (id) {
-        case AggModels::Spherical_ID:
-            // There is no cache associated with the spherical
-            // particle model.
-            return NULL;
-        case AggModels::SurfVol_ID:
-            return new AggModels::SurfVolCache();
-        case AggModels::SurfVolHydrogen_ID:
-            // use the ordinary surf vol cache
-            return new AggModels::SurfVolCache();
-	    case  AggModels::PAH_KMC_ID:
-            return new AggModels::PAHCache();
-		case AggModels::Silica_ID:
-           return new AggModels::SilicaCache();
-        default:
-            throw invalid_argument("Invalid model ID (Sweep, "
-                                   "ModelFactory::CreateAggCache).");
-    }
-}
-
 // Creates a new aggregation model stats object of the given type.
 Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType id,
                                                        const ParticleModel &model)
@@ -272,46 +245,6 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
 
 
 // AGGEGATION MODEL STREAM INPUT.
-
-// Reads an aggregation model cache from a binary stream.  The first item read
-// is the model ID which tells the ModelFactory what type
-// of model to read.
-AggModels::AggModelCache *const ModelFactory::ReadAggCache(std::istream &in)
-{
-    if (in.good()) {
-        AggModels::AggModelCache *model = NULL;
-
-        // Read the model type from the input stream.
-        unsigned int type;
-        in.read((char*)&type, sizeof(type));
-
-        // Read a model of this particular type.  This will throw
-        // an exception if the type is invalid.
-        switch ((AggModels::AggModelType)type) {
-            case AggModels::SurfVol_ID:
-                model = new AggModels::SurfVolCache(in);
-                break;
-            case AggModels::SurfVolHydrogen_ID:
-                // This model still uses the ordinary surf vol cache
-                model = new AggModels::SurfVolCache(in);
-                break;
-			case AggModels::PAH_KMC_ID:
-                model = new AggModels::PAHCache(in);
-                break;
-			case AggModels::Silica_ID:
-				model = new AggModels::SilicaCache(in);
-				break;
-            default:
-                throw invalid_argument("Invalid model ID (Sweep, "
-                                       "ModelFactory::ReadAggCache).");
-        }
-
-        return model;
-    } else {
-        throw invalid_argument("Input stream not ready "
-                               "(Sweep, ModelFactory::ReadAggCache).");
-    }
-}
 
 // Reads aggregation model stats from a binary stream.  The first
 // item read is the model ID which tells the ModelFactory what type
@@ -354,23 +287,6 @@ Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in,
 
 
 // AGGREGATION MODEL STREAM OUTPUT.
-
-// Writes an aggregation model cache, along with its ID to an output stream.
-void ModelFactory::WriteCache(const AggModels::AggModelCache &cache,
-                              std::ostream &out)
-{
-    if (out.good()) {
-        // Write the model Serial signature type to the stream.
-        unsigned int type = (unsigned int)cache.ID();
-        out.write((char*)&type, sizeof(type));
-
-        // Serialize the model object.
-        cache.Serialize(out);
-    } else {
-        throw invalid_argument("Output stream not ready "
-                               "(Sweep, ModelFactory::WriteCache[AggModelCache]).");
-    }
-}
 
 // Writes an aggregation model stats object, along with
 // its ID, to an output stream.
