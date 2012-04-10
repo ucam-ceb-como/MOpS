@@ -48,6 +48,7 @@
 #include "swp_PAH_primary.h"
 #include "swp_particle_stats.h"
 #include "swp_surfvol_stats.h"
+#include "swp_surfvolhydrogen_stats.h"
 #include "swp_PAH_stats.h"
 #include "swp_silica_stats.h"
 #include "swp_silica_primary.h"
@@ -231,8 +232,7 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
         case AggModels::SurfVol_ID:
             return new Stats::SurfVolStats();
         case AggModels::SurfVolHydrogen_ID:
-            // Use the ordinary surf vol stats
-            return new Stats::SurfVolStats();
+            return new Stats::SurfVolHydrogenStats();
 		case AggModels::PAH_KMC_ID:
             return new Stats::PAHStats();       // ms785: postprocessing not yet implemented
 		case AggModels::Silica_ID:
@@ -266,7 +266,7 @@ Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in,
                 stats = new Stats::SurfVolStats(in, model);
                 break;
             case AggModels::SurfVolHydrogen_ID:
-                stats = new Stats::SurfVolStats(in, model);
+                stats = new Stats::SurfVolHydrogenStats(in, model);
                 break;
 			case AggModels::PAH_KMC_ID:
                 stats = new Stats::PAHStats(in, model);
