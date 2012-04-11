@@ -149,6 +149,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
         (
             config.getConfiguration() == config.FLAMELET
          || config.getConfiguration() == config.STAGFLOW
+         || config.getConfiguration() == config.COUNTERFLOW
         )
         {
             cg.addZeroWidthCells();

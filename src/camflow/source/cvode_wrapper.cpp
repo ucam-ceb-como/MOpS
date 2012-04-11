@@ -146,22 +146,31 @@ void CVodeWrapper::solveDAE(int stopMode, doublereal resTol){
 
     int flag;
     static int iter = 0;
-    do{
-        if(iter%10 == 0){
-        //solve the algebraic equation system
-            reacPtr->calcFlowField(currentTime,NV_DATA_S(y));
+    
+    do
+    {
+        if (iter % 1 == 0)
+        {
+            //solve the algebraic equation system
+            reacPtr->calcFlowField(currentTime, NV_DATA_S(y));
         }
         //call Cvode to solve the ODE
-        flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);
-        if(flag < 0){
+        flag = CVode(cvode_mem, maxTime, y, &currentTime, stopMode);
+        
+        if (flag < 0)
+        {
             std::cout << "Cvode Integration error\n";
-        }else{
-            CVodeGetDky(cvode_mem,currentTime,1,yPrime);
-            calcResNorm();
-            reacPtr->report(currentTime,NV_DATA_S(y),resNorm);
         }
+        else
+        {
+            CVodeGetDky(cvode_mem, currentTime, 1, yPrime);
+            calcResNorm();
+            reacPtr->report(currentTime, NV_DATA_S(y), resNorm);
+        }
+        
         iter++;
-    }while(resNorm > resTol);
+        
+    } while (resNorm > resTol);
 }
 
 void CVodeWrapper::destroy(){
