@@ -79,7 +79,7 @@ void CamModels::solve
     }else if(configID == config.BATCH_CV){
         rModel_ = new Batch(ca, config, cc, cg, cp, cs, mech);
     }else if(configID == config.STAGFLOW || configID == config.COUNTERFLOW){
-        //rModel = new StagFlow();
+        rModel_ = new StagFlow(ca, config, cc, cg, cp, cs, mech);
     }else if(configID==config.FLAMELET){
         rModel_ = new FlameLet(ca, config, cc, cg, cp, cs, mech);
     }else{

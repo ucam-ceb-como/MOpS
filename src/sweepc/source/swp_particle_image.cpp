@@ -347,10 +347,8 @@ void ParticleImage::WritePOVRAY(std::ofstream &file)
 
 void ParticleImage::copysptinsert(const SubParticle *sp)
 {
-	Primary::PropID id=Primary::iD;
-
     //convert to nm, store the radius not the diameter
-    m_root.Insert(sp->Primary()->Property(id)*0.5e9);
+    m_root.Insert(sp->Primary()->Property(Sweep::iDsph)*0.5e9);
 }
 
 /*void ParticleImage::constructSubParttree(const Sweep::AggModels::PAHPrimary *p)

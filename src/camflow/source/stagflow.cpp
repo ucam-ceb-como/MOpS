@@ -1,13 +1,13 @@
 /*!
- * \file   stagflow.cpp
- * \author V. Janardhanan
- *
- * \brief This class implements the stagnation flow and twin flame model.
- *
- *  Copyright (C) 2009 Vinod Janardhanan.
- *
+* \file   stagflow.cpp
+* \author V. Janardhanan
+*
+* \brief This class implements the stagnation flow and twin flame model.
+*
+*  Copyright (C) 2009 Vinod Janardhanan.
+*
 
- Licence:
+Licence:
     This file is part of "camflow".
 
     brush is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-  Contact:
+Contact:
     Prof Markus Kraft
     Dept of Chemical Engineering
     University of Cambridge
@@ -36,7 +36,7 @@
 
     Email:       mk306@cam.ac.uk
     Website:     http://como.cheng.cam.ac.uk
- */
+*/
 
 #include "cam_reporter.h"
 #include "cam_residual.h"
@@ -57,253 +57,285 @@
 using namespace Camflow;
 using namespace Gadgets;
 
-/*
- *solve the stagnation/twinflame model
- */
-void StagFlow::solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
-             CamConfiguration &config, CamSoot &cs,  Mechanism &mech ){
+StagFlow::StagFlow
+(
+    CamAdmin& ca,
+    CamConfiguration& config,
+    CamControl& cc,
+    CamGeometry& cg,
+    CamProfile& cp,
+    CamSoot& cs,
+    Mechanism& mech
+)
+:
+    CamSetup(ca, config, cc, cg, cp, cs, mech)
+{}
+
+
+// Solve the stagnation/twinflame model
+void StagFlow::solve()
+{
     /*
-     *function to set up the solver.
-     *Initialisation of the solution vector is
-     *done here
-     */
+    *function to set up the solver.
+    *Initialisation of the solution vector is
+    *done here
+    */
 
-    camMech = &mech;
-    Thermo::Mixture mix(mech.Species());
-    camMixture = &mix;
-    spv = camMixture->Species();
-    profile = &cp;
-    camConfig = &config;
-
-
-    admin = &ca;
-    reacGeom = &cg;
     //reacGeom->discretize();
     /*
-     * 2 additional cells are padded to consider the
-     * inlet and the exhaust
-     */
+    * 2 additional cells are padded to consider the
+    * inlet and the exhaust
+    */
 
-    reacGeom->addZeroWidthCells();
-    nCells = reacGeom->getnCells();
-    configID = camConfig->getConfiguration();
+    //reacGeom_.addZeroWidthCells();
 
-    opPre = ca.getPressure();
-    strainRate = ca.getStrainRate();
-    profile->setGeometryObj(cg);
-    reporter = new CamReporter();
-    nSpc = camMech->SpeciesCount();
+    //strainRate = admin_.getStrainRate();
+    //profile_.setGeometryObj(reacGeom_);
     /*
-     *array offsets for ODE
-     */
-    ptrT = nSpc;
+    *array offsets for ODE
+    */
+
     //ptrG = ptrT+1;
 
-    /*
-     *number of finite volume cells and
-     *loop initializations
-     */
-
-    iMesh_s = 1;
-    iMesh_e = nCells-1;
-
-    cellBegin = 0;
-    cellEnd = nCells;
-
 
     /*
-     *number of equations and the number of variables to
-     *be slved by the ODE. (Species, Energy equations)
-     */
-    nVar = nSpc+1;
-    nEqn = nVar*nCells;
+    *number of equations and the number of variables to
+    *be slved by the ODE. (Species, Energy equations)
+    */
+
+    assert(nMoments == 0);
 
     /*
-     *init the solution vector
-     */
-    initSolutionVector(cc);
+    *init the solution vector
+    */
+    initSolutionVector(control_);
 
-    reporter->header("StagFlow");
-    header();
-    if(cc.getSolutionMode() == cc.COUPLED)
-        csolve(cc);
-    else{
-        ssolve(cc);
-        csolve(cc);
+    reporter_->header("StagFlow");
+
+    reportToFile(0.0, &solvect[0]);
+
+    if (control_.getSolutionMode() == CamControl::COUPLED)
+    {
+        csolve(control_);
     }
-
+    else
+    {
+        ssolve(control_);
+        csolve(control_);
+    }
 }
+
+
 /*
- *initialize the solution vector
- */
-void StagFlow::initSolutionVector(CamControl& cc){
+*initialize the solution vector
+*/
+void StagFlow::initSolutionVector(CamControl& cc)
+{
+    // Initialize the geometry
 
+    CamBoundary& left = admin_.getLeftBoundary();
+    CamBoundary& right = admin_.getRightBoundary();
+
+    storeInlet(left, fuel);
+    storeInlet(right, oxid);
+
+    right.setVelocity(-right.getVelocity());
+    right.setFlowRate(-right.getFlowRate());
     /*
-     *initialize the geometry
-     */
-    dz = reacGeom->getGeometry();
-
-    CamBoundary left, right;
-    admin->getLeftBoundary(left);
-    storeInlet(left,fuel);
-    if(configID == camConfig->COUNTERFLOW){
-        admin->getRightBoundary(right);
+    if(configID == camConfig->COUNTERFLOW)
+    {
+        CamBoundary right = admin_.getRightBoundary();
         storeInlet(right,oxid);
         oxid.Vel *= -1;
         oxid.FlowRate *= -1;
         right.setVelocity(-right.getVelocity());
         right.setFlowRate(-right.getFlowRate());
     }
+    */
 
     /*
-     *initialize the ODE vector
-     */
-    solvect.resize(nEqn,0);
-    std::vector<doublereal> vSpec, vT;
-    initSpecies(left,right,cc,vSpec);
-    initTemperature(left,cc,vT);
+    *initialize the ODE vector
+    */
+    solvect.resize(nEqn, 0.0);
+    
+    std::vector<doublereal> vSpec = initSpecies(left, right);
+    
+    std::vector<doublereal> vT;
+    initTemperature(left, cc, vT);
 
-    if(admin->getEnergyModel() == admin->ADIABATIC){
-        if(configID == camConfig->STAGFLOW)
-            vT[iMesh_e] = admin->getWallTemp();
+    if (admin_.getEnergyModel() == CamAdmin::ADIABATIC)
+    {
+        if (configID == CamConfiguration::STAGFLOW)
+        {
+            vT[iMesh_e] = admin_.getWallTemp();
+        }
     }
 
     initMomentum();
+
     initMassFlow();
 
     mergeEnergyVector(&vT[0]);
     mergeSpeciesVector(&vSpec[0]);
-
 }
+
+
 /*
- *initialize the mass flow
- */
-void StagFlow::initMassFlow(){
+*initialize the mass flow
+*/
+void StagFlow::initMassFlow()
+{
     //store the flow rates on the cell faces
-    m_u.resize(cellEnd,fuel.Vel);
-    m_u[0]=fuel.Vel;
+    m_u.resize(cellEnd, fuel.Vel);
+    m_u[0] = fuel.Vel;
     m_u[cellEnd-1] = 0.0;
-    m_flow.resize(cellEnd,0.001);
+    m_flow.resize(cellEnd, 0.001);
     m_flow[0] = fuel.FlowRate;
-    m_flow[cellEnd-1] = 0.0;
-    if(configID == camConfig->COUNTERFLOW) {
-        m_u[cellEnd-1] = oxid.Vel;
-        m_flow[cellEnd-1] = oxid.FlowRate;
-    }
+    m_flow[cellEnd - 1] = 0.0;
+
+    //if(configID == camConfig->COUNTERFLOW) {
+    //    m_u[cellEnd-1] = oxid.Vel;
+    //    m_flow[cellEnd-1] = oxid.FlowRate;
+    //}
 
 
     /*
-     *setting up TDMA coefficients
-     */
+    *setting up TDMA coefficients
+    */
     std::vector<doublereal> a, b,c;
-    a.resize(nCells-2,0);
+    a.resize(mCord - 2, 0);
     b = c = a;
 
     doublereal oneBydelEP, oneBydelPW;
     //1st cell
     int i = 1;
-    oneBydelEP = 1.0/(0.5*(dz[i]+dz[i+1]));
+    oneBydelEP = 1.0/(0.5*(dz[i] + dz[i+1]));
     oneBydelPW = 1.0/(0.5*dz[i]);
-    b[0] = oneBydelEP+oneBydelPW;
+
+    b[0] = oneBydelEP + oneBydelPW;
     c[0] = -oneBydelEP;
-    for(i=2; i<nCells-2; i++){
-        oneBydelEP = 1.0/(0.5*(dz[i]+dz[i+1]));
-        oneBydelPW = 1.0/(0.5*(dz[i]+dz[i-1]));
-        b[i-1] = oneBydelEP+oneBydelPW;
+
+    for (i = 2; i < mCord - 2; ++i)
+    {
+        oneBydelEP = 1.0/(0.5*(dz[i] + dz[i+1]));
+        oneBydelPW = 1.0/(0.5*(dz[i] + dz[i-1]));
+
+        b[i-1] = oneBydelEP + oneBydelPW;
         a[i-1] = -oneBydelPW;
         c[i-1] = -oneBydelEP;
     }
+
     //last cell
-    i = nCells-2;
+    i = mCord - 2;
     oneBydelEP = 1.0/(0.5*dz[i]);
-    oneBydelPW = 1.0/(0.5*(dz[i]+dz[i-1]));
-    b[i-1] = oneBydelEP+oneBydelPW;
+    oneBydelPW = 1.0/(0.5*(dz[i] + dz[i-1]));
+    b[i-1] = oneBydelEP + oneBydelPW;
     a[i-1] = -oneBydelPW;
 
     //store the vectors to TDMA struct
     tdmaFlow.a = a;
     tdmaFlow.b = b;
     tdmaFlow.c = c;
-
 }
-/*
- *initialize momentum
- */
-void StagFlow::initMomentum(){
 
+
+/*
+*initialize momentum
+*/
+void StagFlow::initMomentum()
+{
     /*
-     *Ref : G. Stahl and J. Warnatz
-     *Combustion and flame 85:285-299
-     */
-    m_G.resize(nCells,0.0);
-
+    *Ref : G. Stahl and J. Warnatz
+    *Combustion and flame 85:285-299
+    */
+    //m_G.resize(mCord, 0.0);
 }
 
+
 /*
- *coupled solver
- */
-void StagFlow::csolve(CamControl& cc){
+*coupled solver
+*/
+void StagFlow::csolve(CamControl& cc)
+{
+    int solverID = cc.getSolver();
 
+    if (solverID == CamControl::CVODE)
+    {
+        CVodeWrapper cvw;
+        eqn_slvd = EQN_ALL;
+        int band = nVar*2;
 
-int solverID = cc.getSolver();
+        cvw.init
+        (
+            nEqn,
+            solvect,
+            cc.getSpeciesAbsTol(),
+            cc.getSpeciesRelTol(),
+            cc.getMaxTime(),
+            band,
+            *this
+        );
 
-    if (solverID == cc.CVODE) {
+        cvw.solveDAE(CV_ONE_STEP, cc.getResTol());
 
-    CVodeWrapper cvw;
-    eqn_slvd = EQN_ALL;
-    int band = nVar*2;
+        reportToFile(cc.getMaxTime(), &solvect[0]);
 
-    cvw.init(nEqn,solvect,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
-                        cc.getMaxTime(),band,*this);
-    cvw.solveDAE(CV_ONE_STEP,cc.getResTol());
-
-    reportToFile(cc.getMaxTime(),&solvect[0]);
-    cvw.destroy();
-
-
-}   else if (solverID == cc.LIMEX) {
+        cvw.destroy();
+    }
+    else if (solverID == CamControl::LIMEX)
+    {
         throw std::logic_error("Error -- Limex is not yet supported");
     }
 
 }
 
 /*
- *segregated solver
- */
-
-void StagFlow::ssolve(CamControl& cc){
-
+*segregated solver
+*/
+void StagFlow::ssolve(CamControl& cc)
+{
     int seg_eqn, band;
     std::vector<doublereal> seg_soln_vec;
-        
+
     int solverID = cc.getSolver();
 
-    if (solverID == cc.CVODE) {
-    
+    if (solverID == CamControl::CVODE)
+    {
         CVodeWrapper cvw;
 
         //for(int i=0; i<cc.getNumIterations(); i++){
 
-        /*
-         *integrate species
-         */
-        //std::cout << "Solving species: " << i << std::endl;
+        // integrate species
         eqn_slvd = EQN_SPECIES;
-        seg_eqn = nSpc*nCells;
+        seg_eqn = nSpc*mCord;
         band = nSpc*2;
         extractSpeciesVector(seg_soln_vec);
 
-        cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
-                        cc.getMaxTime(),band,*this);
-        //cvw.setMaxStep(1e-04);
-        cvw.solveDAE(CV_ONE_STEP,1e-03);
-        mergeSpeciesVector(&seg_soln_vec[0]);
-        reportToFile(cc.getMaxTime(),&solvect[0]);
-        cvw.destroy();
+        cvw.init
+        (
+            seg_eqn,
+            seg_soln_vec,
+            cc.getSpeciesAbsTol(),
+            cc.getSpeciesRelTol(),
+            cc.getMaxTime(),
+            band,
+            *this
+        );
 
-      }   else if (solverID == cc.LIMEX) {
-              throw std::logic_error("Error -- Limex is not yet supported");
-          }        
+        //cvw.setMaxStep(1e-04);
+
+        cvw.solveDAE(CV_ONE_STEP, 1e-03);
+
+        mergeSpeciesVector(&seg_soln_vec[0]);
+
+        reportToFile(cc.getMaxTime(), &solvect[0]);
+
+        cvw.destroy();
+    }
+    else if (solverID ==  CamControl::LIMEX)
+    {
+        throw std::logic_error("Error -- Limex is not yet supported");
+    }
 }
 
 //         *Integrate energy
@@ -317,7 +349,7 @@ void StagFlow::ssolve(CamControl& cc){
 
 //            int solverID = cc.getSolver();
 
-//            if (solverID == cc.CVODE) { 
+//            if (solverID == cc.CVODE) {
 //            cvw.init(seg_eqn,seg_soln_vec,cc.getSpeciesAbsTol(),cc.getSpeciesRelTol(),
 //                    cc.getMaxTime(),band,*this);
 //            cvw.solveDAE(CV_ONE_STEP,1e-03);
@@ -330,35 +362,55 @@ void StagFlow::ssolve(CamControl& cc){
 //      else if (solverID == cc.LIMEX) {
 //          throw std::logic_error("Error -- Limex is not yet supported");
 //      }
-//}        
+//}
 
 
 /*
- *function called by the solver (DAEs and ODEs)
- */
-int StagFlow::eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval) {
+*mass matrix evaluation
+*/
+void StagFlow::massMatrix(doublereal** M)
+{}
 
+
+/*
+*function called by the solver (DAEs and ODEs)
+*/
+int StagFlow::eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval)
+{
     residual(t,y,ydot);
     return 0;
 }
+
+
+doublereal StagFlow::getResidual() const
+{
+    return 0;
+}
+
+
 /*
- *residual function
- */
-void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f){
+*residual function
+*/
+void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f)
+{
     resSp.resize(cellEnd*nSpc,0);
     resT.resize(cellEnd,0);
     resFlow.resize(cellEnd,0);
 
     /*
-     *residual evaluation function for Stagflow. Internal
-     *cell residuals are evaluated by calling the base class
-     *function
-     */
-    if(eqn_slvd == EQN_ALL){
-        if(admin->getEnergyModel() == admin->ADIABATIC){
+    *residual evaluation function for Stagflow. Internal
+    *cell residuals are evaluated by calling the base class
+    *function
+    */
+    if (eqn_slvd == EQN_ALL)
+    {
+        if (admin_.getEnergyModel() == CamAdmin::ADIABATIC)
+        {
             saveMixtureProp(t,y,true,true);
             updateThermo();
-        }else{
+        }
+        else
+        {
             saveMixtureProp(t,y,false,true);
         }
 
@@ -368,35 +420,39 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f){
         speciesBoundary(t,y,&resSp[0]);
         energyBoundary(t,y,&resT[0]);
 
-
         speciesResidual(t,y,&resSp[0]);
-        energyResidual(t,y,&resT[0],true);
+        //energyResidual(t,y,&resT[0],true);
+        energyResidual(t,y,&resT[0]);
 
-
-
-        for(int i=0; i<cellEnd; i++){
-            for(int l=0; l<nSpc; l++){
+        for (int i = 0; i < cellEnd; ++i)
+        {
+            for (int l = 0; l < nSpc; ++l)
+            {
                 f[i*nVar+l] = resSp[i*nSpc+l];
-
             }
-            f[i*nVar+ptrT] = resT[i];
 
+            f[i*nVar+ptrT] = resT[i];
         }
-    }else{
-        if(eqn_slvd == EQN_SPECIES){
+    }
+    else
+    {
+        if (eqn_slvd == EQN_SPECIES)
+        {
             mergeSpeciesVector(y);
-            saveMixtureProp(t,&solvect[0],false,true);
+            saveMixtureProp(t, &solvect[0], false, true);
             updateDiffusionFluxes();
-            speciesBoundary(t,y,f);
-            speciesResidual(t,y,f);
-        }else if(eqn_slvd==EQN_ENERGY){
+            speciesBoundary(t, y, f);
+            speciesResidual(t, y, f);
+        }
+        else if (eqn_slvd == EQN_ENERGY)
+        {
             mergeEnergyVector(y);
-            saveMixtureProp(t,&solvect[0],true,false);
+            saveMixtureProp(t, &solvect[0], true, false);
             updateDiffusionFluxes();
             updateThermo();
-            energyResidual(t,y,f,true);
-            energyBoundary(t,y,f);
-
+            //energyResidual(t,y,f,true);
+            energyResidual(t, y, f);
+            energyBoundary(t, y, f);
         }
     }
 
@@ -404,9 +460,118 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f){
 }
 
 
+void StagFlow::speciesResidual
+(
+    const doublereal& time,
+    doublereal* y,
+    doublereal* f
+)
+{
+    // prepare flux terms
+    doublereal convection, diffusion, source;
+
+    for (int i = iMesh_s; i < iMesh_e; ++i)
+    {
+        for (int l = 0; l < nSpc; ++l)
+        {
+
+            // convection term
+            convection =
+               -m_u[i]
+               *dydx(s_mf(i+1,l), s_mf(i,l), s_mf(i-1,l), dz[i]);
+
+            // diffusion term
+            diffusion = dydx(s_jk(i,l),s_jk(i+1,l),dz[i])/m_rho[i];
+
+            source = s_Wdot(i,l)   *(*spv_)[l]->MolWt()/m_rho[i];
+            f[i*nSpc+l] = convection + diffusion + source ;
+        }
+    }
+}
+
+
+void StagFlow::energyResidual
+(
+    const doublereal& time,
+    doublereal* y,
+    doublereal* f
+)
+{
+
+    bool fluxTrans = true;
+
+    if (admin_.getEnergyModel() == CamAdmin::ADIABATIC)
+    {
+        doublereal sumHSource, flxk, sumFlx;
+
+        for(int i=iMesh_s; i<iMesh_e; i++)
+        {
+            /*
+             *evaluate the summation terms
+             */
+            sumHSource = 0.0;
+            sumFlx = 0.0;
+            for (int l=0; l<nSpc; l++)
+            {
+                sumHSource += s_Wdot(i,l)*s_H(i,l);
+                flxk = 0.5*(s_jk(i-1,l)+s_jk(i,l));
+                sumFlx += flxk*s_cp(i,l)/(*spv_)[l]->MolWt();
+            }
+
+            /*
+             *convection
+             */
+            doublereal convection =  -m_u[i]*dydx(m_T[i+1],m_T[i],m_T[i-1],dz[i]);
+            /*
+             *conduction
+             */
+            doublereal conduction = dydx(m_q[i+1],m_q[i],dz[i]);
+            /*
+             *flux transport
+             */
+            sumFlx *= dydx(m_T[i],m_T[i-1],dz[i]);
+
+            /*
+             *residual
+             */
+            if (fluxTrans)
+            {
+                f[i] = convection
+                      +(conduction - sumHSource - sumFlx)/(m_rho[i]*m_cp[i]);
+            }
+            else
+            {
+                f[i] = convection
+                      +(conduction - sumHSource )/(m_rho[i]*m_cp[i]);
+            }
+        }
+    }
+    else
+    {
+        for (int i=iMesh_s; i< iMesh_e; i++)
+        {
+            f[i] = 0;
+            //f[ptrTP] = y[ptrTW]-y[ptrTP];
+        }
+    }
+}
+
+
+double StagFlow::dydx(double nr1, double nr2, double dr) const
+{
+    return (nr1 - nr2)/dr;
+}
+
+
+double StagFlow::dydx(double nr1, double nr2, double nr3, double dr) const
+{
+    return (nr1 - 2.0*nr2 + nr3)/(dr*dr);
+}
+
+
 /*
- *species boundary condition implementation
- */
+*species boundary condition implementation
+*/
 void StagFlow::speciesBoundary(const doublereal& t, doublereal* y, doublereal* f){
 
     //-------------------------------------------
@@ -417,140 +582,167 @@ void StagFlow::speciesBoundary(const doublereal& t, doublereal* y, doublereal* f
 
     doublereal convection, diffusion;
 
-    for(int l=0; l<nSpc ; l++){
+    for (int l=0; l<nSpc ; l++)
+    {
         convection = m_u[0]*dydx(fuel.Species[l],y[l],dz[0]);
         diffusion = dydx(0,s_jk(iMesh_s,l),dz[0])/m_rho[0];
         f[l] = convection + diffusion;
-
     }
 
-     //---------------------------------------------------
-     //
-     // Right Boundary Settings
-     //
-     //---------------------------------------------------
-    if(configID == camConfig->STAGFLOW){
-        for(int l=0; l<nSpc; l++){
-            f[iMesh_e*nSpc+l] = -m_u[iMesh_e-1]*dydx(s_mf(iMesh_e,l),s_mf(iMesh_e-1,l),dz[iMesh_e]);
+    //---------------------------------------------------
+    //
+    // Right Boundary Settings
+    //
+    //---------------------------------------------------
+    if(configID == camConfig->STAGFLOW)
+    {
+        for(int l=0; l<nSpc; l++)
+        {
+            f[iMesh_e*nSpc+l] =
+               -m_u[iMesh_e-1]
+               *dydx(s_mf(iMesh_e,l), s_mf(iMesh_e-1,l), dz[iMesh_e]);
         }
-    }else{
-        for(int l=0; l<nSpc; l++){
-
-            convection = m_u[iMesh_e]*dydx(s_mf(iMesh_e,l),oxid.Species[l],dz[iMesh_e]);
+    }
+    else
+    {
+        for (int l=0; l<nSpc; l++)
+        {
+            convection =
+                m_u[iMesh_e]
+               *dydx(s_mf(iMesh_e,l),oxid.Species[l],dz[iMesh_e]);
             diffusion = 0.0;//dydx(s_jk(iMesh_e,l),0,dz[iMesh_e])/m_rho[iMesh_e];
             f[iMesh_e*nSpc+l] = convection+diffusion;
         }
     }
-
 }
-/*
- *energy boundary
- */
-void StagFlow::energyBoundary(const doublereal& t, doublereal* y, doublereal* f){
 
+
+/*
+*energy boundary
+*/
+void StagFlow::energyBoundary(const doublereal& t, doublereal* y, doublereal* f)
+{
     /*--------------------------------------------------------------------------
-     * Left Boundary:
-     *--------------------------------------------------------------------------
-     * The temperature is fixed at the fuel inlet temperature
-     */
+    * Left Boundary:
+    *--------------------------------------------------------------------------
+    * The temperature is fixed at the fuel inlet temperature
+    */
     f[0] = 0.0;
 
     /*-------------------------------------------------------------------------
-     * Right Boundary:
-     *---------------------------------------------------------------------
-     * The temperature at the right boundary is  fixed at the surface
-     * temperature in case of stagnation flow, and oxidizer inlet temperature
-     * in case of counter flow flames
-     */
-
-     f[iMesh_e] = 0;
-
-
+    * Right Boundary:
+    *---------------------------------------------------------------------
+    * The temperature at the right boundary is  fixed at the surface
+    * temperature in case of stagnation flow, and oxidizer inlet temperature
+    * in case of counter flow flames
+    */
+    f[iMesh_e] = 0;
 }
 
+
 /*
- *calculate the axial velocity
- */
-void StagFlow::calcFlowField(const doublereal& time, doublereal* y){
-
-
+*calculate the axial velocity
+*/
+void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
+{
     /*
-     *prepare
-     */
-    if(eqn_slvd == EQN_ALL){
-        saveMixtureProp(time, y,true,true);
-    }else{
-        if(eqn_slvd == EQN_SPECIES){
+    *prepare
+    */
+    if (eqn_slvd == EQN_ALL)
+    {
+        saveMixtureProp(time, y, true, true);
+    }
+    else
+    {
+        if (eqn_slvd == EQN_SPECIES)
+        {
             mergeSpeciesVector(y);
-            saveMixtureProp(time, &solvect[0],false,true);
-        }else if(eqn_slvd == EQN_ENERGY){
+            saveMixtureProp(time, &solvect[0], false, true);
+        }
+        else if (eqn_slvd == EQN_ENERGY)
+        {
             mergeEnergyVector(y);
-            saveMixtureProp(time,&solvect[0],true,true);
+            saveMixtureProp(time, &solvect[0], true, true);
         }
     }
 
-    for(int i=0; i<10; i++){
+    for (int i=0; i<10; i++)
+    {
         //------------------------------------------------------------
         //           Inlet face
         //----------------------------------------------------------
         //m_flow[0] = fuel.FlowRate; // this is the vanishing cell
         m_flow[0] = fuel.Vel*m_rho[0];
         fuel.FlowRate = m_flow[0];
+
         //----------------------------------------------------------
         //           Exit face
         //------------------------------------------------------------
-           // this is the vanishing cell
-        if(configID == camConfig->STAGFLOW){
+        // this is the vanishing cell
+        if (configID == camConfig->STAGFLOW)
+        {
             m_flow[iMesh_e] = 0.0;
-        }else{
+        }
+        else
+        {
             m_flow[iMesh_e] = oxid.Vel*m_rho[iMesh_e];
             oxid.FlowRate = m_flow[iMesh_e];
         }
+
         std::vector<doublereal> flow;
         calcVelocity(flow);
-        for(int i=1; i<iMesh_e; i++){
+        for (int i=1; i<iMesh_e; i++)
+        {
             m_flow[i] = flow[i-1];
         }
 
 
         m_G[0] = sqrt(m_rho[iMesh_e]/m_rho[0]);
-        if(configID==camConfig->COUNTERFLOW){
+        if (configID == camConfig->COUNTERFLOW)
+        {
             m_G[iMesh_e] = 1.0;
         }
+
         std::vector<doublereal> mom;
         calcMomentum(mom);
-        for(int i=1; i<iMesh_e;i++){
+        for (int i=1; i<iMesh_e;i++)
+        {
             m_G[i] = mom[i-1];
         }
-        if(configID==camConfig->STAGFLOW){
+
+        if(configID == camConfig->STAGFLOW)
+        {
             m_G[iMesh_e] = m_G[iMesh_e-1];
-        }else{
+        }
+        else
+        {
             m_G[iMesh_e] = 1.0;
         }
     }
 
-    for(int i=0; i<iMesh_e+1; i++){
+    for (int i=0; i<iMesh_e+1; i++)
+    {
         m_u[i]=m_flow[i]/m_rho[i];
     }
-
-
 }
 
-/*!
- * Calculate the velocity.
- *
- *\param[in]    u           Velocity field (1D).
- *
- *\return       Value of var at a given pos.
- */
-void StagFlow::calcVelocity(std::vector<doublereal>& u){
 
+/*!
+* Calculate the velocity.
+*
+*\param[in]    u           Velocity field (1D).
+*
+*\return       Value of var at a given pos.
+*/
+void StagFlow::calcVelocity(std::vector<doublereal>& u)
+{
     std::vector<doublereal> r;
     u.resize(tdmaFlow.b.size(),0);
     r = u;
+
     /*
-     *right hand side for tridiagonal matrix
-     */
+    *right hand side for tridiagonal matrix
+    */
     //first cell
     int i = 1;
     doublereal rho_e = 0.5*(m_rho[i+1]+m_rho[i]);
@@ -570,11 +762,13 @@ void StagFlow::calcVelocity(std::vector<doublereal>& u){
     rhoGe = rho_e*Ge;
     rhoGw = rho_w*Gw;
     r[i-1] = 2*strainRate*(rhoGe-rhoGw);
-    if(configID == camConfig->COUNTERFLOW){
+    if (configID == camConfig->COUNTERFLOW)
+    {
         r[i-1] += 2*oxid.FlowRate/dz[i];
     }
     //other cells
-    for( i = 2; i<iMesh_e-1; i++){
+    for ( i = 2; i<iMesh_e-1; i++)
+    {
         rho_e = 0.5*(m_rho[i+1]+m_rho[i]);
         rho_w = 0.5*(m_rho[i]+m_rho[i-1]);
         Ge = 0.5*(m_G[i]+m_G[i+1]);
@@ -584,37 +778,36 @@ void StagFlow::calcVelocity(std::vector<doublereal>& u){
         r[i-1] = 2*strainRate*(rhoGe-rhoGw);
     }
 
-    CamMath cm;//
+    CamMath cm;
     cm.TDMA(tdmaFlow.a,tdmaFlow.b,tdmaFlow.c,r,u);
-
-
 }
 /*
- *calculate the momentum
- */
-void StagFlow::calcMomentum(std::vector<doublereal>& mom){
+*calculate the momentum
+*/
+void StagFlow::calcMomentum(std::vector<doublereal>& mom)
+{
     /*
-     *this evaluates the g equation using TDMA.
-     *At the stagnation plane the boundary zero gradient boundary
-     *condition is implemented. At the hot edge (fuel inlet) the boundary
-     * condition is g=sqrt(rho_ub/rho_b). At the cold edge the boundary
-     * condition is g=1
-     * (Ref: JG. Stahl and J. Warnatz Cobust. Flame 85 (1991) 285-299
-     */
+    *this evaluates the g equation using TDMA.
+    *At the stagnation plane the boundary zero gradient boundary
+    *condition is implemented. At the hot edge (fuel inlet) the boundary
+    * condition is g=sqrt(rho_ub/rho_b). At the cold edge the boundary
+    * condition is g=1
+    * (Ref: JG. Stahl and J. Warnatz Cobust. Flame 85 (1991) 285-299
+    */
     /*
-     *preparation
-     */
+    *preparation
+    */
     int i;
     doublereal De, fe, Dw, fw;
     doublereal delPW, delPE;
     doublereal mu_e, mu_w;
     std::vector<doublereal> a,b,c,r;
-    c.resize(nCells-2,0.0);
+    c.resize(mCord - 2,0.0);
     mom = a = b = r = c;
     /*---------------------------------------------------
-     *        First cell
-     *--------------------------------------------------/
-     */
+    *        First cell
+    *--------------------------------------------------/
+    */
 
     i = 1;
     delPE = 0.5*(dz[i]+dz[i+1]);
@@ -629,9 +822,9 @@ void StagFlow::calcMomentum(std::vector<doublereal>& mom){
 
 
     /*------------------------------------------------
-     * interior cells
-     *------------------------------------------------/
-     */
+    * interior cells
+    *------------------------------------------------/
+    */
     for(i=2; i<iMesh_e-1;i++){
         delPE = 0.5*(dz[i]+dz[i+1]);
         delPW = 0.5*(dz[i]+dz[i-1]);
@@ -649,9 +842,9 @@ void StagFlow::calcMomentum(std::vector<doublereal>& mom){
     }
 
     /*------------------------------------------------
-     * last cell
-     *------------------------------------------------/
-     */
+    * last cell
+    *------------------------------------------------/
+    */
     i = iMesh_e-1;
     mu_w = 0.5*(m_mu[i]+m_mu[i-1]);
     delPW = 0.5*(dz[i]+dz[i-1]);
@@ -672,23 +865,25 @@ void StagFlow::calcMomentum(std::vector<doublereal>& mom){
 
     }
 
-
     CamMath cm;
     cm.TDMA(a,b,c,r,mom);
-
 }
 
-/*
- *update diffusion fluxes
- */
-void StagFlow::updateDiffusionFluxes(){
 
+/*
+*update diffusion fluxes
+*/
+void StagFlow::updateDiffusionFluxes()
+{
     CamResidual::updateDiffusionFluxes();
     for(int l=0; l<nSpc; l++)
+    {
         s_jk(iMesh_e+1,l)=0.0;
+    }
+
     /*
-     *flux at the oxidizer inlet
-     */
+    *flux at the oxidizer inlet
+    */
 //    doublereal delta = 0.5*(dz[iMesh_e]+dz[iMesh_e-1]);
 //    std::vector<doublereal> flx;
 //    flx.resize(nSpc,0);
@@ -710,25 +905,28 @@ void StagFlow::updateDiffusionFluxes(){
 //    }
 
 }
+
 /*
- *report functions
- */
-void StagFlow::report(doublereal t, doublereal* solution){
+*report functions
+*/
+void StagFlow::report(doublereal t, doublereal* solution)
+{}
 
-}
-
-void StagFlow::report(doublereal t, doublereal* solutio, doublereal& res){
-    static int nStep=0;
+void StagFlow::report(doublereal t, doublereal* solutio, doublereal& res)
+{
+    static int nStep = 0;
     std::cout.width(5);
     std::cout.setf(std::ios::scientific);
-    if(nStep%10==0) reporter->consoleHead("time(s) \t residual");
-    std::cout << t <<"\t" << res << std::endl;
+    if (nStep % 10 == 0)
+    {
+        reporter_->consoleHead("time(s) \t residual");
+    }
+    std::cout << t << "\t" << res << std::endl;
     nStep++;
-
-
 }
 
-void StagFlow::header(){
+void StagFlow::header(std::vector<std::string>& headerData)
+{
     headerData.clear();
     headerData.push_back("int_time");
     headerData.push_back("x");
@@ -737,24 +935,28 @@ void StagFlow::header(){
     headerData.push_back("u");
     headerData.push_back("G");
     headerData.push_back("T");
-    for (int l = 0; l < nSpc; l++) {
-        headerData.push_back( (*spv)[l]->Name() );
+    for (int l = 0; l < nSpc; ++l)
+    {
+        headerData.push_back( (*spv_)[l]->Name() );
     }
     headerData.push_back("sumfracs");
-
 }
 
 void StagFlow::reportToFile(doublereal t, doublereal* soln){
 
-    saveMixtureProp(t,soln,false,true);
+    saveMixtureProp(t, soln, false, true);
     doublereal sum;
-    reporter->openFiles();
-    reporter->writeHeader(headerData);
+    reporter_->openFiles();
+    std::vector<std::string> headerData;
+    header(headerData);
+    reporter_->writeHeader(headerData);
     std::vector<doublereal> data, axpos;
     std::vector<doublereal> molfrac, massfrac;
-    axpos = reacGeom->getAxpos();
+    axpos = reacGeom_.getAxpos();
     int len = axpos.size();
-    for(int i=0; i<len; i++){
+
+    for (int i = 0; i < len; ++i)
+    {
         data.clear();
         data.push_back(t);
         data.push_back(axpos[i]);
@@ -766,93 +968,100 @@ void StagFlow::reportToFile(doublereal t, doublereal* soln){
 
         massfrac.clear();
         molfrac.clear();
-        for(int l=0; l<nSpc; l++){
+        for (int l = 0; l < nSpc; ++l)
+        {
             massfrac.push_back(soln[i*nVar+l]);
         }
-        if(admin->getSpeciesOut() == admin->MASS){
+
+        if (admin_.getSpeciesOut() == CamAdmin::MASS)
+        {
             sum = 0;
-            for(int l=0; l<nSpc; l++){
+            for (int l = 0; l < nSpc; ++l)
+            {
                 data.push_back(fabs(massfrac[l]));
                 sum += massfrac[l];
             }
-        }else{
+        }
+        else
+        {
             CamConverter cc;
-            cc.mass2mole(massfrac,molfrac,*camMech);
+            cc.mass2mole(massfrac,molfrac,*camMech_);
             sum = 0;
-            for(int l=0; l<nSpc; l++){
+            for (int l = 0; l < nSpc; ++l)
+            {
                 data.push_back(fabs(molfrac[l]));
                 sum += molfrac[l];
             }
         }
-        data.push_back(sum);
-        reporter->writeStdFileOut(data);
 
+        data.push_back(sum);
+        reporter_->writeStdFileOut(data);
     }
 
-    reporter->closeFiles();
-
+    reporter_->closeFiles();
 }
 
 /*!
- * Calculates the value of the mixture fraction variable for a given cell [1]. The mixture
- * fraction is given as follows [2]:
- *
- * \f[ \xi = \displaystyle\frac{ \displaystyle\frac{2(Z_C-Z_{C,ox})}{W_C} + \frac{(Z_H-Z_{H,ox})}{2 W_H} - \frac{2(Z_O-Z_{O,ox})}{W_O} }
- * { \displaystyle\frac{2(Z_{C,fu}-Z_{C,ox})}{W_C} + \frac{(Z_{H,fu}-Z_{H,ox})}{2 W_H} - \frac{2(Z_{O,fu}-Z_{O,ox})}{W_O} } \f]
- *
- * \f[ Z_j = \sum^{N}_{i=1} \frac{a_{ij} W_j}{MW_i} Y_i \f]
- *
- * [1] Bilger, R. (1988) The Structure of Turbulent Non-Premixed Flames.
- * Equation 24 page 483.
- *
- * [2] Versteeg and Malalasekera, An Introduction to
- * Computational Fluid Dynamics: The Finite Volume Method, page 395.
- *
- *\param[in]    cell           Grid cell index.
- *
- *\return       Mixture fraction \f$ (\xi) \f$ in the grid cell.
- */
+* Calculates the value of the mixture fraction variable for a given cell [1]. The mixture
+* fraction is given as follows [2]:
+*
+* \f[ \xi = \displaystyle\frac{ \displaystyle\frac{2(Z_C-Z_{C,ox})}{W_C} + \frac{(Z_H-Z_{H,ox})}{2 W_H} - \frac{2(Z_O-Z_{O,ox})}{W_O} }
+* { \displaystyle\frac{2(Z_{C,fu}-Z_{C,ox})}{W_C} + \frac{(Z_{H,fu}-Z_{H,ox})}{2 W_H} - \frac{2(Z_{O,fu}-Z_{O,ox})}{W_O} } \f]
+*
+* \f[ Z_j = \sum^{N}_{i=1} \frac{a_{ij} W_j}{MW_i} Y_i \f]
+*
+* [1] Bilger, R. (1988) The Structure of Turbulent Non-Premixed Flames.
+* Equation 24 page 483.
+*
+* [2] Versteeg and Malalasekera, An Introduction to
+* Computational Fluid Dynamics: The Finite Volume Method, page 395.
+*
+*\param[in]    cell           Grid cell index.
+*
+*\return       Mixture fraction \f$ (\xi) \f$ in the grid cell.
+*/
 doublereal StagFlow::getBilgerMixFrac(const int& cell) {
 
-	doublereal Z_C = 0.0, Z_Co = 0.0, Z_Cf = 0.0;
-	doublereal Z_H = 0.0, Z_Ho = 0.0, Z_Hf = 0.0;
-	doublereal Z_O = 0.0, Z_Oo = 0.0, Z_Of = 0.0;
-	doublereal W_C = 0.0, W_H = 0.0, W_O = 0.0;
-	doublereal carbonCell = 0.0, carbonBoundary = 0.0;
-	doublereal hydrogenCell = 0.0, hydrogenBoundary = 0.0;
-	doublereal oxygenCell = 0.0, oxygenBoundary = 0.0;
+    doublereal Z_C = 0.0, Z_Co = 0.0, Z_Cf = 0.0;
+    doublereal Z_H = 0.0, Z_Ho = 0.0, Z_Hf = 0.0;
+    doublereal Z_O = 0.0, Z_Oo = 0.0, Z_Of = 0.0;
+    doublereal W_C = 0.0, W_H = 0.0, W_O = 0.0;
+    doublereal carbonCell = 0.0, carbonBoundary = 0.0;
+    doublereal hydrogenCell = 0.0, hydrogenBoundary = 0.0;
+    doublereal oxygenCell = 0.0, oxygenBoundary = 0.0;
 
-	// Get the vector of species.
-	Sprog::SpeciesPtrVector species = camMech->Species();
+    // Get the vector of species.
+    Sprog::SpeciesPtrVector species = camMech_->Species();
 
-	CamBoundary fuelInlet, oxidiserInlet;
-    std::vector<doublereal> fuelInletMassFracs, oxidiserInletMassFracs;
+
 
     // Get the fuel and oxidiser boundary mass fractions.
-	admin->getLeftBoundary(fuelInlet);
-	admin->getRightBoundary(oxidiserInlet);
-    getInletMassFrac(fuelInlet,fuelInletMassFracs);
-    getInletMassFrac(oxidiserInlet,oxidiserInletMassFracs);
+    CamBoundary& fuelInlet = admin_.getLeftBoundary();
+    CamBoundary& oxidiserInlet = admin_.getRightBoundary();
 
-	// Get the element indices.
-    int index_C = camMech->FindElement("C");
-    int index_H = camMech->FindElement("H");
-    int index_O = camMech->FindElement("O");
+    std::vector<doublereal> fuelInletMassFracs = getInletMassFrac(fuelInlet);
+    std::vector<doublereal> oxidiserInletMassFracs =
+        getInletMassFrac(oxidiserInlet);
+
+    // Get the element indices.
+    int index_C = camMech_->FindElement("C");
+    int index_H = camMech_->FindElement("H");
+    int index_O = camMech_->FindElement("O");
 
     // Check the element exists.
     if (index_C != -1) {
 
         // Get the weight of the element carbon.
-    	W_C = camMech->Elements(index_C)->MolWt();
-    	// Get the mass fraction of carbon.
-    	for(size_t i=0; i<species.size(); ++i){
-    		int cAtoms = species[i]->AtomCount(index_C);
-    		Z_C += ( s_mf(cell,i) * cAtoms * W_C) / ( species[i]->MolWt() );
-    		Z_Co += ( oxidiserInletMassFracs[i] * cAtoms * W_C) / ( species[i]->MolWt() );
-    		Z_Cf += ( fuelInletMassFracs[i] * cAtoms * W_C) / ( species[i]->MolWt() );
-    	}
-    	carbonCell = (2.0/W_C)*(Z_C-Z_Co);
-    	carbonBoundary = (2.0/W_C)*(Z_Cf-Z_Co);
+        W_C = camMech_->Elements(index_C)->MolWt();
+        // Get the mass fraction of carbon.
+        for(size_t i=0; i<species.size(); ++i){
+            int cAtoms = species[i]->AtomCount(index_C);
+            Z_C += ( s_mf(cell,i) * cAtoms * W_C) / ( species[i]->MolWt() );
+            Z_Co += ( oxidiserInletMassFracs[i] * cAtoms * W_C) / ( species[i]->MolWt() );
+            Z_Cf += ( fuelInletMassFracs[i] * cAtoms * W_C) / ( species[i]->MolWt() );
+        }
+        carbonCell = (2.0/W_C)*(Z_C-Z_Co);
+        carbonBoundary = (2.0/W_C)*(Z_Cf-Z_Co);
 
     }
 
@@ -860,16 +1069,16 @@ doublereal StagFlow::getBilgerMixFrac(const int& cell) {
     if (index_H != -1) {
 
         // Get the weight of the element hydrogen.
-    	W_H = camMech->Elements(index_H)->MolWt();
-    	// Get the mass fraction of hydrogen.
-    	for(size_t i=0; i<species.size(); ++i){
-    		int hAtoms = species[i]->AtomCount(index_H);
-    		Z_H += ( s_mf(cell,i) * hAtoms * W_H) / ( species[i]->MolWt() );
-    		Z_Ho += ( oxidiserInletMassFracs[i] * hAtoms * W_H) / ( species[i]->MolWt() );
-    		Z_Hf += ( fuelInletMassFracs[i] * hAtoms * W_H) / ( species[i]->MolWt() );
-    	}
-    	hydrogenCell = (0.5/W_H)*(Z_H-Z_Ho);
-    	hydrogenBoundary = (0.5/W_H)*(Z_Hf-Z_Ho);
+        W_H = camMech_->Elements(index_H)->MolWt();
+        // Get the mass fraction of hydrogen.
+        for(size_t i=0; i<species.size(); ++i){
+            int hAtoms = species[i]->AtomCount(index_H);
+            Z_H += ( s_mf(cell,i) * hAtoms * W_H) / ( species[i]->MolWt() );
+            Z_Ho += ( oxidiserInletMassFracs[i] * hAtoms * W_H) / ( species[i]->MolWt() );
+            Z_Hf += ( fuelInletMassFracs[i] * hAtoms * W_H) / ( species[i]->MolWt() );
+        }
+        hydrogenCell = (0.5/W_H)*(Z_H-Z_Ho);
+        hydrogenBoundary = (0.5/W_H)*(Z_Hf-Z_Ho);
 
     }
 
@@ -877,21 +1086,21 @@ doublereal StagFlow::getBilgerMixFrac(const int& cell) {
     if (index_O != -1) {
 
         // Get the weight of the element oxygen.
-    	W_O = camMech->Elements(index_O)->MolWt();
-    	// Get the mass fraction of oxygen.
-    	for(size_t i=0; i<species.size(); ++i){
-    		int oAtoms = species[i]->AtomCount(index_O);
-    		Z_O += ( s_mf(cell,i) * oAtoms * W_O) / ( species[i]->MolWt() );
-    		Z_Oo += ( oxidiserInletMassFracs[i] * oAtoms * W_O) / ( species[i]->MolWt() );
-    		Z_Of += ( fuelInletMassFracs[i] * oAtoms * W_O) / ( species[i]->MolWt() );
-    	}
-    	oxygenCell = -(2.0/W_O)*(Z_O-Z_Oo);
-    	oxygenBoundary = -(2.0/W_O)*(Z_Of-Z_Oo);
+        W_O = camMech_->Elements(index_O)->MolWt();
+        // Get the mass fraction of oxygen.
+        for(size_t i=0; i<species.size(); ++i){
+            int oAtoms = species[i]->AtomCount(index_O);
+            Z_O += ( s_mf(cell,i) * oAtoms * W_O) / ( species[i]->MolWt() );
+            Z_Oo += ( oxidiserInletMassFracs[i] * oAtoms * W_O) / ( species[i]->MolWt() );
+            Z_Of += ( fuelInletMassFracs[i] * oAtoms * W_O) / ( species[i]->MolWt() );
+        }
+        oxygenCell = -(2.0/W_O)*(Z_O-Z_Oo);
+        oxygenBoundary = -(2.0/W_O)*(Z_Of-Z_Oo);
 
     }
 
-	// Equation (12.185) in Versteeg and Malalasekera.
+    // Equation (12.185) in Versteeg and Malalasekera.
     return (carbonCell + hydrogenCell + oxygenCell)
-         / (carbonBoundary + hydrogenBoundary + oxygenBoundary);
+        / (carbonBoundary + hydrogenBoundary + oxygenBoundary);
 
 }

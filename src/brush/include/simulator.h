@@ -66,7 +66,8 @@ public:
               const ResetChemistry &reset_chem,
               const std::string& output_file,
               const Sweep::Stats::IModelStats::StatBound &stat_bound,
-              const bool split_diffusion, const bool split_advection,
+              const bool split_diffusion, const real drift_adjustment,
+              const bool split_advection,
               const bool weighted_transport);
 
     //! Run the simulation paths and store output
@@ -111,6 +112,9 @@ private:
 
     //! Whether to perform split simulation of particle diffusion
     bool mSplitDiffusion;
+
+    //! Scaling factor that interpolates between different stochastic integrals, see \ref PredCorrSolver::mDiffusionDriftAdjustment
+    real mDiffusionDriftAdjustment;
 
     //! Whether to perform split simulation of particle advection
     bool mSplitAdvection;

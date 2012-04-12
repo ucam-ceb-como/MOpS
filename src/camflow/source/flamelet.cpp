@@ -20,16 +20,16 @@ FlameLet::FlameLet
     Mechanism& mech
 )
 :
-  CamSetup(ca, config, cc, cg, cp, cs, mech),
-  stoichZ(stoichiometricMixtureFraction()),
-  timeHistory(false),
-  sdrProfile(false),
-  sdrAnalytic(false),
-  radiation(NULL),
-  scalarDissipationRate_(admin_.getInputFile(), stoichZ, reacGeom_.getAxpos(), 1),
-  CpSpec(mCord,nSpc),
-  sootResidualZeroed(false),
-  Lewis(admin_.getInputFile(),camMech_,mCord,nSpc)
+CamSetup(ca, config, cc, cg, cp, cs, mech),
+stoichZ(stoichiometricMixtureFraction()),
+timeHistory(false),
+sdrProfile(false),
+sdrAnalytic(false),
+radiation(NULL),
+scalarDissipationRate_(admin_.getInputFile(), stoichZ, reacGeom_.getAxpos(), 1),
+CpSpec(mCord,nSpc),
+sootResidualZeroed(false),
+Lewis(admin_.getInputFile(),camMech_,mCord,nSpc)
 {}
 
 FlameLet::~FlameLet()
@@ -51,9 +51,9 @@ void FlameLet::checkSetup()
 }
 
 /*
- *this is called by the model object. The boolean interface decides
- *if the call originates from the interface or from camflow kernel
- */
+*this is called by the model object. The boolean interface decides
+*if the call originates from the interface or from camflow kernel
+*/
 void FlameLet::setRestartTime(doublereal t){
     restartTime = t;
 }
@@ -64,18 +64,18 @@ void FlameLet::solve()
 }
 
 /*
- * Use this call method when calling from openFoam.
- * if sootResidualZeroed is TRUE then, flamelet will
- * be solved to steady state and with soot residual set to zero.
- * (i.e. no soot present at base of flame)
- *
- * When calling the Lagrangian Flamelet (i.e. dynamic)
- * do this via restart() and set steadyStateAtFlameBase to FALSE
- */
+* Use this call method when calling from openFoam.
+* if sootResidualZeroed is TRUE then, flamelet will
+* be solved to steady state and with soot residual set to zero.
+* (i.e. no soot present at base of flame)
+*
+* When calling the Lagrangian Flamelet (i.e. dynamic)
+* do this via restart() and set steadyStateAtFlameBase to FALSE
+*/
 void FlameLet::solve(bool interface, bool steadyStateNoSoot)
 {
-	sootResidualZeroed = steadyStateNoSoot;
-	solve(interface);
+    sootResidualZeroed = steadyStateNoSoot;
+    solve(interface);
 }
 
 
@@ -89,8 +89,8 @@ void FlameLet::solve
     checkSetup();
 
     /*
-     *init the solution vector
-     */
+    *init the solution vector
+    */
 
     initSolutionVector();
 
@@ -106,8 +106,8 @@ void FlameLet::solve
         std::ofstream file("SystemMWs.dat");
         for (int l=0; l<nSpc; l++)
         {
-        	file << (*spv_)[l]->Name() << "\t";
-        	file << (*spv_)[l]->MolWt() << std::endl;
+            file << (*spv_)[l]->Name() << "\t";
+            file << (*spv_)[l]->MolWt() << std::endl;
         }
         file.close();
     }
@@ -115,7 +115,7 @@ void FlameLet::solve
     if (control_.getSolutionMode() == control_.COUPLED)
     {
         csolve(interface);   //ank25:temp while testing splitSolve
-    	//splitSolve(interface);
+        //splitSolve(interface);
     }
     else
     {
@@ -125,7 +125,7 @@ void FlameLet::solve
 
     if (admin_.getRestartType() == admin_.BINARY)
     {
-    	std::ofstream ofs(admin_.getRestartFile().c_str());
+        std::ofstream ofs(admin_.getRestartFile().c_str());
         boost::archive::binary_oarchive oa(ofs);
         oa << reacGeom_.getAxpos() << solvect;
         ofs.close();
@@ -134,9 +134,9 @@ void FlameLet::solve
 
 
 /**
- *continuation call from an external code that
- *solves for population balance
- */
+*continuation call from an external code that
+*solves for population balance
+*/
 void FlameLet::solve
 (
     vector<Thermo::Mixture>& cstrs,
@@ -152,16 +152,16 @@ void FlameLet::solve
 
     reacGeom_.addZeroWidthCells();
 
-     /*
-     *set the source terms for the particle process
-     */
+    /*
+    *set the source terms for the particle process
+    */
     setParticleSource(iniSource,fnlSource);
 
     /*
-     *  reset the solution vector. cstrs contain only
-     *  the interor cells. The inlet condisions need to
-     *  be taken care of.
-     */
+    *  reset the solution vector. cstrs contain only
+    *  the interor cells. The inlet condisions need to
+    *  be taken care of.
+    */
     CamBoundary& left = admin_.getLeftBoundary();
     CamBoundary& right = admin_.getRightBoundary();
     storeInlet(left,fuel);
@@ -173,9 +173,9 @@ void FlameLet::solve
     solvect.resize(nEqn,0.0);
 
     /**!
-     *  Inlet  boundary ie. z=0
-     *  this is the oxidizer
-     */
+    *  Inlet  boundary ie. z=0
+    *  this is the oxidizer
+    */
     //Species
     for(int l=0; l<nSpc; l++){
         solvect[l] = oxid.Species[l];
@@ -183,8 +183,8 @@ void FlameLet::solve
     solvect[ptrT] = oxid.T;
 
     /**!
-     *  Interior mesh points
-     */
+    *  Interior mesh points
+    */
     for(int i=iMesh_s; i<iMesh_e;i++){
         vector<doublereal> massFrac;
         cstrs[i-1].GetMassFractions(massFrac);
@@ -196,9 +196,9 @@ void FlameLet::solve
     }
 
     /**
-     *  outlet boundary
-     *  this is the fuel inlet
-     */
+    *  outlet boundary
+    *  this is the fuel inlet
+    */
     //Species
     for(int l=0; l<nSpc; l++){
         solvect[iMesh_e*nVar+l] = fuel.Species[l];
@@ -227,9 +227,9 @@ void FlameLet::initSolutionVector()
     }
 
     /*
-     *left boundary is for the fuel and right boundary is
-     *for oxidizer
-     */
+    *left boundary is for the fuel and right boundary is
+    *for oxidizer
+    */
     CamBoundary& left = admin_.getLeftBoundary();
     CamBoundary& right = admin_.getRightBoundary();
     storeInlet(left,fuel);
@@ -238,24 +238,24 @@ void FlameLet::initSolutionVector()
     profile_.setMixingCenter(stoichZ);
     profile_.setMixingWidth(0.5*stoichZ);
     /*
-     *initialize the ODE vector
-     */
+    *initialize the ODE vector
+    */
     solvect.resize(nEqn,0.0);
     vector<doublereal> vSpec, vT, vMom;
     /*
-     * actual signature follows (left,right,cc,vSpec)
-     * but in the case of flamelets the species mass fractions
-     * are solved for the mixture fraction coordinate, whose
-     * direction is taken the same as physical space.
-     * z=0 corresponds to oxidizer and z=1 corresponds to fuel
-     * therefore the inlets are interchanged here to initialize
-     * the species vector properly
-     */
+    * actual signature follows (left,right,cc,vSpec)
+    * but in the case of flamelets the species mass fractions
+    * are solved for the mixture fraction coordinate, whose
+    * direction is taken the same as physical space.
+    * z=0 corresponds to oxidizer and z=1 corresponds to fuel
+    * therefore the inlets are interchanged here to initialize
+    * the species vector properly
+    */
     vSpec = initSpecies(right,left);
     /*
-     *the following will initialize the temperature vector with
-     *a linear profile
-     */
+    *the following will initialize the temperature vector with
+    *a linear profile
+    */
     //initTempGauss(vT);
     doublereal inrsctOx, inrsctFl;
     doublereal slopeOx, slopeFl;
@@ -300,39 +300,39 @@ void FlameLet::initSolutionVector()
         }
     }
     /*
-     *fix the temperature for mixture fraction zero
-     *i.e oxidizer inlet
-     */
+    *fix the temperature for mixture fraction zero
+    *i.e oxidizer inlet
+    */
     vT[0] =oxid.T;
 
     /*
-     *fix the temperature for mixture fraction 1.
-     *i.e the fuel inlet
-     */
+    *fix the temperature for mixture fraction 1.
+    *i.e the fuel inlet
+    */
     vT[iMesh_e] = fuel.T;
 
     // Set the initial moment values (interior and boundary)
     // Also initial constants
     if (sootMom_.active())
     {
-    	vMom.resize(len*nMoments,0.0);
+        vMom.resize(len*nMoments,0.0);
         for (size_t i=0; i<dz.size(); i++)
         {
 
-        	// ank25: Temp. Hard wire initial moment values.
-        	//vMom[i*nMoments] = 1.0e10;
-        	//vMom[i*nMoments+1] = 1.0e10;
-        	//vMom[i*nMoments+2] = 1.0e10;
+            // ank25: Temp. Hard wire initial moment values.
+            //vMom[i*nMoments] = 1.0e10;
+            //vMom[i*nMoments+1] = 1.0e10;
+            //vMom[i*nMoments+2] = 1.0e10;
 
 
-        	vMom[i*nMoments] = sootMom_.getFirstMoment();
-        	//cout << "vMom[i*nMoments]  " << i*nMoments <<"  "  << vMom[i*nMoments] << endl;
-        	for (size_t l=1; l<nMoments; ++l)
+            vMom[i*nMoments] = sootMom_.getFirstMoment();
+            //cout << "vMom[i*nMoments]  " << i*nMoments <<"  "  << vMom[i*nMoments] << endl;
+            for (size_t l=1; l<nMoments; ++l)
             {
-            	// ank25: Do we need to multiply by 1e6 here?
-        		//vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(doublereal(sootMom_.getAtomsPerDiamer()));
-        		vMom[i*nMoments+l] = vMom[i*nMoments+l-1] * 1e3;
-        		//cout << "vMom[i*nMoments+l]  " << i*nMoments+l <<"  " << vMom[i*nMoments+l] << endl;
+                // ank25: Do we need to multiply by 1e6 here?
+                //vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(doublereal(sootMom_.getAtomsPerDiamer()));
+                vMom[i*nMoments+l] = vMom[i*nMoments+l-1] * 1e3;
+                //cout << "vMom[i*nMoments+l]  " << i*nMoments+l <<"  " << vMom[i*nMoments+l] << endl;
             }
 
         }
@@ -344,15 +344,15 @@ void FlameLet::initSolutionVector()
 
 
     /*
-     *create the actual solution vector by merging the species
-     *vector, the temperature vector, and soot vector (if present)
-     */
+    *create the actual solution vector by merging the species
+    *vector, the temperature vector, and soot vector (if present)
+    */
 
     mergeSpeciesVector(&vSpec[0]);
     mergeEnergyVector(&vT[0]);
     if (sootMom_.active())
     {
-    	mergeSootMoments(&vMom[0]);
+        mergeSootMoments(&vMom[0]);
     }
 
     if (admin_.getRestartType() == admin_.BINARY)
@@ -366,27 +366,27 @@ void FlameLet::initSolutionVector()
 
             if (mixFracCoords_temp.size() == reacGeom_.getAxpos().size())
             {
-            	// If the size of solvect_temp is not equal to nVar*cellEnd
-            	// then we assume that the binary file was previously
-            	// generated with soot moments switched off.  In that case
-            	// load species and temperature from binary file, but don't
-            	// load up moments.
+                // If the size of solvect_temp is not equal to nVar*cellEnd
+                // then we assume that the binary file was previously
+                // generated with soot moments switched off.  In that case
+                // load species and temperature from binary file, but don't
+                // load up moments.
 
-            	if 	(solvect_temp.size() == nVar*cellEnd)
+                if 	(solvect_temp.size() == nVar*cellEnd)
                 {
-                	std::cout << "Loading species, temperature and moments from bin file"
-										<< std::endl;
-            		solvect = solvect_temp;
+                    std::cout << "Loading species, temperature and moments from bin file"
+                                        << std::endl;
+                    solvect = solvect_temp;
                 }
-            	else
+                else
                 {
-                	std::cout << "Loading species and temperature from binary file" << std::endl;
-                	std::cout << "Not loading moments from binary file. " << std::endl;
-            		for(int i=0; i<cellEnd; i++)
+                    std::cout << "Loading species and temperature from binary file" << std::endl;
+                    std::cout << "Not loading moments from binary file. " << std::endl;
+                    for(int i=0; i<cellEnd; i++)
                     {
-                	   for(int l=0; l<nSpc; l++)
-                		   solvect[i*nVar+l] = solvect_temp[i*(nVar-nMoments)+l];
-                       solvect[i*nVar+ptrT] = solvect_temp[i*(nVar-nMoments)+ptrT];
+                    for(int l=0; l<nSpc; l++)
+                        solvect[i*nVar+l] = solvect_temp[i*(nVar-nMoments)+l];
+                    solvect[i*nVar+ptrT] = solvect_temp[i*(nVar-nMoments)+ptrT];
                     }
                 }
             }
@@ -409,8 +409,8 @@ void FlameLet::initSolutionVector()
 }
 
 /*
- *coupled solver
- */
+*coupled solver
+*/
 void FlameLet::csolve
 (
     bool interface
@@ -452,9 +452,9 @@ void FlameLet::csolve
         }
 
         /*
-         *write the output to file only if the call is not
-         *from the interface
-         */
+        *write the output to file only if the call is not
+        *from the interface
+        */
         if(!interface)
         {
             reportToFile("profile.dat",control_.getMaxTime(), solvect);
@@ -481,7 +481,7 @@ void FlameLet::csolve
 
         radauWrapper.setBandWidth(nVar);
 
-    	radauWrapper.initSolver(nEqn,
+        radauWrapper.initSolver(nEqn,
                                 0.0,
                                 control_.getMaxTime(),
                                 solvect,
@@ -492,9 +492,9 @@ void FlameLet::csolve
         radauWrapper.Integrate();
 
         /*
-         *write the output to file only if the call is not
-         *from the interface
-         */
+        *write the output to file only if the call is not
+        *from the interface
+        */
         if(!interface) {
             reportToFile("profile.dat", control_.getMaxTime(), solvect);
         }
@@ -508,34 +508,34 @@ void FlameLet::csolve
 }
 
 /*
- *mass matrix evaluation
- */
+*mass matrix evaluation
+*/
 void FlameLet::massMatrix(doublereal** M)
 {}
 
 /*
- *restart the solution. This is normally called from the interface routine
- *The solver is reinitialized each time with the previous solution.
- */
+*restart the solution. This is normally called from the interface routine
+*The solver is reinitialized each time with the previous solution.
+*/
 void FlameLet::restart(doublereal flameTime)
 {
-	// Assumption is that a restart is always a Lagrangian flamelet (i.e. not steady state)
-	//steadyStateAtFlameBase = false;
+    // Assumption is that a restart is always a Lagrangian flamelet (i.e. not steady state)
+    //steadyStateAtFlameBase = false;
 
 
     // Stop calculating soot above a user specified flamelet time.
-	if (flameTime < Lewis.sootFlameTimeThreshold)
-	{
-		// Still below the time at which we stop calculating soot residual
-		sootResidualZeroed = false;
-	    std::cout << "Soot residual is active " << std::endl;
-	}
-	else
-	{
-		// Past the time, beyond which we no longer calculate soot.
-		sootResidualZeroed = true;
-	    std::cout << "Soot residual is zeroed out " << std::endl;
-	}
+    if (flameTime < Lewis.sootFlameTimeThreshold)
+    {
+        // Still below the time at which we stop calculating soot residual
+        sootResidualZeroed = false;
+        std::cout << "Soot residual is active " << std::endl;
+    }
+    else
+    {
+        // Past the time, beyond which we no longer calculate soot.
+        sootResidualZeroed = true;
+        std::cout << "Soot residual is zeroed out " << std::endl;
+    }
 
     if (solverID == control_.CVODE) {
         CVodeWrapper cvw;
@@ -564,9 +564,9 @@ void FlameLet::restart(doublereal flameTime)
         }
 
         /*
-         *write the output to file only if the call is not
-         *from the interface
-         */
+        *write the output to file only if the call is not
+        *from the interface
+        */
         //if(!interface)
         //{
             string filename = "interfaceProfiles/profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
@@ -585,8 +585,8 @@ void FlameLet::restart(doublereal flameTime)
 }
 
 /*
- *segregated solver
- */
+*segregated solver
+*/
 void FlameLet::ssolve
 (
     bool interface
@@ -598,31 +598,31 @@ void FlameLet::ssolve
 
     if ( solverID == control_.CVODE){
 
-       CVodeWrapper cvw;
+    CVodeWrapper cvw;
 
-       for (int i=0; i<control_.getNumIterations();i++){
-
-           /*
-            *solve soot moment equations
-            */
-           if (sootMom_.active())
-           {
-             cout << "Solving moment equations  " << i << endl;
-             //int dd; cin >> dd;
-             eqn_slvd = EQN_MOMENTS;
-             seg_eqn = nMoments*mCord;
-             band = nMoments*2;
-             extractSootMoments(seg_soln_vec);
-             // Might need to change tolerances for moments
-             cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
-                 control_.getMaxTime(),band,*this,0.0);
-             cvw.solve(CV_ONE_STEP,control_.getResTol());
-             mergeSootMoments(&seg_soln_vec[0]);
-           }
+    for (int i=0; i<control_.getNumIterations();i++){
 
         /*
-         *solve species equations
-         */
+            *solve soot moment equations
+            */
+        if (sootMom_.active())
+        {
+            cout << "Solving moment equations  " << i << endl;
+            //int dd; cin >> dd;
+            eqn_slvd = EQN_MOMENTS;
+            seg_eqn = nMoments*mCord;
+            band = nMoments*2;
+            extractSootMoments(seg_soln_vec);
+            // Might need to change tolerances for moments
+            cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
+                control_.getMaxTime(),band,*this,0.0);
+            cvw.solve(CV_ONE_STEP,control_.getResTol());
+            mergeSootMoments(&seg_soln_vec[0]);
+        }
+
+        /*
+        *solve species equations
+        */
         cout << "Solving species equations  " << i << endl;
         //int dd; cin >> dd;
         eqn_slvd = EQN_SPECIES;
@@ -635,8 +635,8 @@ void FlameLet::ssolve
         mergeSpeciesVector(&seg_soln_vec[0]);
 
         /*
-         *solve energy equation
-         */
+        *solve energy equation
+        */
         cout << "Solving energy equation  " << i << endl;
         //cin >> dd;
         eqn_slvd = EQN_ENERGY;
@@ -648,42 +648,42 @@ void FlameLet::ssolve
         cvw.solve(CV_ONE_STEP,control_.getResTol());
         mergeEnergyVector(&seg_soln_vec[0]);
 
-      }
+    }
 
-       // Calculate the mixture viscosity.
-       for (int i=0; i<mCord; ++i)
-       {
-           std::vector<doublereal> mf;
-           for(int l=0; l<nSpc; l++)
-           {
-               mf.push_back(solvect[i*nVar+l]);
-           }
-           camMixture_->SetMassFracs(mf);
-           camMixture_->SetTemperature(m_T[i]);
-           camMixture_->SetMassDensity(m_rho[i]);                      //density
-           m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
-       }
+    // Calculate the mixture viscosity.
+    for (int i=0; i<mCord; ++i)
+    {
+        std::vector<doublereal> mf;
+        for(int l=0; l<nSpc; l++)
+        {
+            mf.push_back(solvect[i*nVar+l]);
+        }
+        camMixture_->SetMassFracs(mf);
+        camMixture_->SetTemperature(m_T[i]);
+        camMixture_->SetMassDensity(m_rho[i]);                      //density
+        m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
+    }
 
-      /*
-       *write the output to file only if the call is not
+    /*
+    *write the output to file only if the call is not
         *from the interface
-       */
-      if(!interface)
-      {
-          reportToFile("profile.dat",control_.getMaxTime(), solvect);
-           //writeXMLFile(scalarDissipationRate_.getStoichSDR(), solvect);
-      }
+    */
+    if(!interface)
+    {
+        reportToFile("profile.dat",control_.getMaxTime(), solvect);
+        //writeXMLFile(scalarDissipationRate_.getStoichSDR(), solvect);
+    }
     }
 
     else if (solverID == control_.LIMEX) {
         throw std::logic_error("Error -- Limex is not yet supported");
     }
-  }
+}
 //----------------------
 
 /*
- *splitting solver
- */
+*splitting solver
+*/
 void FlameLet::splitSolve
 (
     bool interface
@@ -711,13 +711,13 @@ void FlameLet::splitSolve
 
     if ( solverID == control_.CVODE){
 
-       CVodeWrapper cvw;
+    CVodeWrapper cvw;
 
-       //for (int i=0; i<control_.getNumIterations();i++){
-       for (int i=0; i<Nsteps;i++){
+    //for (int i=0; i<control_.getNumIterations();i++){
+    for (int i=0; i<Nsteps;i++){
 
-    	// Set the integration time
-    	nextTime = intermediateTime + deltaTime;
+        // Set the integration time
+        nextTime = intermediateTime + deltaTime;
 
 
         // solve species equations
@@ -729,14 +729,14 @@ void FlameLet::splitSolve
         extractSpeciesVector(seg_soln_vec);
 
         cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
-        		nextTime,band,*this,intermediateTime);
+                nextTime,band,*this,intermediateTime);
 
         cvw.solve(CV_ONE_STEP); //,control_.getResTol());
 
         mergeSpeciesVector(&seg_soln_vec[0]);
 
 
-         //solve energy equation
+        //solve energy equation
         cout << "Solving energy equation  " << i << endl;
         //cin >> dd;
         eqn_slvd = EQN_ENERGY;
@@ -745,7 +745,7 @@ void FlameLet::splitSolve
         extractEnergyVector(seg_soln_vec);
 
         cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
-        		nextTime,band,*this,intermediateTime);
+                nextTime,band,*this,intermediateTime);
 
         cvw.solve(CV_ONE_STEP); //,control_.getResTol());
 
@@ -761,7 +761,7 @@ void FlameLet::splitSolve
         extractSpeciesAndEnergyVector(seg_soln_vec);
 
         cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
-        		nextTime,band,*this,intermediateTime);
+                nextTime,band,*this,intermediateTime);
 
         cvw.solve(CV_ONE_STEP,control_.getResTol());
 
@@ -769,64 +769,64 @@ void FlameLet::splitSolve
 
 */
         /*
-         *solve soot moment equations
-         */
+        *solve soot moment equations
+        */
         if (sootMom_.active())
         {
-          cout << "Solving moment equations  " << i << endl;
-          //int dd; cin >> dd;
-          eqn_slvd = EQN_MOMENTS;
-          seg_eqn = nMoments*mCord;
-          band = nMoments*2;
-          extractSootMoments(seg_soln_vec);
-          // Might need to change tolerances for moments
-          cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
-        		  nextTime,band,*this,intermediateTime);
+        cout << "Solving moment equations  " << i << endl;
+        //int dd; cin >> dd;
+        eqn_slvd = EQN_MOMENTS;
+        seg_eqn = nMoments*mCord;
+        band = nMoments*2;
+        extractSootMoments(seg_soln_vec);
+        // Might need to change tolerances for moments
+        cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
+                nextTime,band,*this,intermediateTime);
 
-          cvw.solve(CV_ONE_STEP); //,control_.getResTol());
+        cvw.solve(CV_ONE_STEP); //,control_.getResTol());
 
-          mergeSootMoments(&seg_soln_vec[0]);
+        mergeSootMoments(&seg_soln_vec[0]);
         }
 
-    	// Increment time
-    	intermediateTime = intermediateTime + deltaTime;
+        // Increment time
+        intermediateTime = intermediateTime + deltaTime;
 
-      }
+    }
 
-       // Calculate the mixture viscosity.
-       for (int i=0; i<mCord; ++i)
-       {
-           std::vector<doublereal> mf;
-           for(int l=0; l<nSpc; l++)
-           {
-               mf.push_back(solvect[i*nVar+l]);
-           }
-           camMixture_->SetMassFracs(mf);
-           camMixture_->SetTemperature(m_T[i]);
-           camMixture_->SetMassDensity(m_rho[i]);                      //density
-           m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
-       }
+    // Calculate the mixture viscosity.
+    for (int i=0; i<mCord; ++i)
+    {
+        std::vector<doublereal> mf;
+        for(int l=0; l<nSpc; l++)
+        {
+            mf.push_back(solvect[i*nVar+l]);
+        }
+        camMixture_->SetMassFracs(mf);
+        camMixture_->SetTemperature(m_T[i]);
+        camMixture_->SetMassDensity(m_rho[i]);                      //density
+        m_mu[i] = camMixture_->getViscosity();                      //mixture viscosity
+    }
 
-      /*
-       *write the output to file only if the call is not
+    /*
+    *write the output to file only if the call is not
         *from the interface
-       */
-      if(!interface)
-      {
-          reportToFile("profile.dat",control_.getMaxTime(), solvect);
-           //writeXMLFile(scalarDissipationRate_.getStoichSDR(), solvect);
-      }
-	}
+    */
+    if(!interface)
+    {
+        reportToFile("profile.dat",control_.getMaxTime(), solvect);
+        //writeXMLFile(scalarDissipationRate_.getStoichSDR(), solvect);
+    }
+    }
     else if (solverID == control_.LIMEX) {
         throw std::logic_error("Error -- Limex is not yet supported");
     }
-  }
+}
 
 //----------------------
 
 /*
- *residual definitions
- */
+*residual definitions
+*/
 void FlameLet::residual
 (
     const doublereal& t,
@@ -842,26 +842,26 @@ void FlameLet::residual
         energyResidual(t,y,&resT[0]);
         if (sootMom_.active())
         {
-        	if (sootResidualZeroed)
-        	{
-        		sootMomentResidualZeroedOut(t,y,&resMom[0]);
-        	}
-        	else
-        	{
-        		sootMomentResidual(t,y,&resMom[0]);
-        	}
+            if (sootResidualZeroed)
+            {
+                sootMomentResidualZeroedOut(t,y,&resMom[0]);
+            }
+            else
+            {
+                sootMomentResidual(t,y,&resMom[0]);
+            }
         }
 
 
         for (int i=0; i<mCord; ++i)
         {
             // Put species residual into master residual
-        	for (int l=0; l<nSpc; ++l)
+            for (int l=0; l<nSpc; ++l)
             {
                 f[i*nVar+l] = resSp[i*nSpc+l];
             }
 
-        	// Put temperature into master residual
+            // Put temperature into master residual
             f[i*nVar+ptrT] = resT[i];
 
             if (sootMom_.active())
@@ -891,34 +891,34 @@ void FlameLet::residual
         }
         else if (eqn_slvd==EQN_SPECIES_ENERGY)
         {
-        	mergeSpeciesAndEnergyVector(y);
+            mergeSpeciesAndEnergyVector(y);
             saveMixtureProp(&solvect[0]);
             speciesResidual(t,y,&resSp[0]);
             energyResidual(t,y,&resT[0]);
             for (int i=0; i<mCord; ++i)
             {
                 // Put species residual into master residual
-            	for (int l=0; l<nSpc; ++l)
+                for (int l=0; l<nSpc; ++l)
                 {
                     f[i*nSpc+l] = resSp[i*nSpc+l];
                 }
-            	// Put temperature into master residual
+                // Put temperature into master residual
                 f[i*nSpc+ptrT] = resT[i];
             }
         }
 
         else if (eqn_slvd==EQN_MOMENTS)
         {
-        	mergeSootMoments(y);
+            mergeSootMoments(y);
             saveMixtureProp(&solvect[0]);
-        	if (sootResidualZeroed)
-        	{
-        		sootMomentResidualZeroedOut(t,y,&resMom[0]);
-        	}
-        	else
-        	{
-        		sootMomentResidual(t,y,&resMom[0]);
-        	}
+            if (sootResidualZeroed)
+            {
+                sootMomentResidualZeroedOut(t,y,&resMom[0]);
+            }
+            else
+            {
+                sootMomentResidual(t,y,&resMom[0]);
+            }
         }
     }
 
@@ -934,7 +934,7 @@ doublereal FlameLet::getResidual()
 const
 {
 
-	doublereal resNorm=0;
+    doublereal resNorm=0;
 
     for (int i=0; i<nSpc*mCord; ++i)
     {
@@ -957,8 +957,8 @@ const
 }
 
 /*
- *species residual definitions
- */
+*species residual definitions
+*/
 void FlameLet::speciesResidual
 (
     const doublereal& t,
@@ -974,11 +974,11 @@ void FlameLet::speciesResidual
     doublereal deltax = 0;
 
     /*
-     *starting with mixture fraction zero: i.e oxidizer
-     *inlet. The fuel composition is zero. Left inlet is
-     *considered as the oxidizer inlet and the concentrations
-     *are held constant
-     */
+    *starting with mixture fraction zero: i.e oxidizer
+    *inlet. The fuel composition is zero. Left inlet is
+    *considered as the oxidizer inlet and the concentrations
+    *are held constant
+    */
 
     for (int l=0; l<nSpc; ++l)
     {
@@ -995,8 +995,8 @@ void FlameLet::speciesResidual
     }*/
 
     /*
-     *interior mixture fraction coordinates
-     */
+    *interior mixture fraction coordinates
+    */
     for (int i=iMesh_s; i<iMesh_e; ++i)
     {
 
@@ -1013,7 +1013,7 @@ void FlameLet::speciesResidual
             grad_w = (s_mf(i,l)-s_mf(i-1,l))/zPW;
             source = s_Wdot(i,l)/m_rho[i];
             f[i*nSpc+l] = diffusionConstant*(grad_e-grad_w)/Lewis(i,l)
-                          + source;
+                        + source;
         }
 
         if (   admin_.getFlameletEquationType() == admin_.COMPLETE
@@ -1023,17 +1023,17 @@ void FlameLet::speciesResidual
             sdrPW = scalarDissipationRate_(reacGeom_.getAxpos()[i-1],t);
 
             doublereal convectionConstant
-                       = 0.25/m_rho[i]
-                         *(
+                    = 0.25/m_rho[i]
+                        *(
                             (m_rho[i+1]*sdrPE - m_rho[i-1]*sdrPW)/deltax
-                           +(m_rho[i]*sdr*m_cp[i]/m_k[i])
+                        +(m_rho[i]*sdr*m_cp[i]/m_k[i])
                             *(m_k[i+1]/m_cp[i+1] - m_k[i-1]/m_cp[i-1])/deltax
-                         );
+                        );
 
             for (int l=0; l<nSpc; ++l)
             {
                 f[i*nSpc+l] +=
-                  convectionConstant
+                convectionConstant
                 *((1.0/Lewis(i,l))-1.0)
                 *(s_mf(i+1,l)-s_mf(i-1,l))/deltax;
             }
@@ -1042,9 +1042,9 @@ void FlameLet::speciesResidual
     }
 
     /*
-     *Mixture fraction 1. The fuel inlet. Concentrations are
-     *held constant at the fuel composition
-     */
+    *Mixture fraction 1. The fuel inlet. Concentrations are
+    *held constant at the fuel composition
+    */
 
     for (int l=0; l<nSpc; ++l)
     {
@@ -1054,10 +1054,10 @@ void FlameLet::speciesResidual
 }
 
 /*
- * soot residual definitions
- * This is written for the fully simplied soot flamelet equations
- * See Mauss 2006
- */
+* soot residual definitions
+* This is written for the fully simplied soot flamelet equations
+* See Mauss 2006
+*/
 void FlameLet::sootMomentResidual
 (
     const doublereal& t,
@@ -1077,45 +1077,45 @@ void FlameLet::sootMomentResidual
     }
 
     /*
-     *interior mixture fraction coordinates
-     */
+    *interior mixture fraction coordinates
+    */
     for (int i=iMesh_s; i<iMesh_e; ++i)
     {
 
         zPE = 0.5*(dz[i]+dz[i+1]);
         zPW = 0.5*(dz[i]+dz[i-1]);
-    	sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
+        sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
         if (Lewis.sootFlameletType() == LewisNumber::MAUSS06)
         {
-        	// Use the form of the soot flamelet equation given in Mauss et al 2006
+            // Use the form of the soot flamelet equation given in Mauss et al 2006
 
-        	doublereal diffusionConstant = sdr/(2.0*dz[i]);
-        	for (int l=0; l<nMoments; ++l)
-        	{
-        		grad_e = (moments(i+1,l)-moments(i,l))/zPE;
-        		grad_w = (moments(i,l)-moments(i-1,l))/zPW;
-        		source = moments_dot(i,l)/m_rho[i];
-        		f[i*nMoments+l] = diffusionConstant*(grad_e-grad_w)
-                          + source;
-        	}
+            doublereal diffusionConstant = sdr/(2.0*dz[i]);
+            for (int l=0; l<nMoments; ++l)
+            {
+                grad_e = (moments(i+1,l)-moments(i,l))/zPE;
+                grad_w = (moments(i,l)-moments(i-1,l))/zPW;
+                source = moments_dot(i,l)/m_rho[i];
+                f[i*nMoments+l] = diffusionConstant*(grad_e-grad_w)
+                        + source;
+            }
         }
         else if (Lewis.sootFlameletType() == LewisNumber::PITSCH00DD)
         {
-        	// Use the form of the soot flamelet equation given in Pitsch et al 2000.
-        	// And assume differential diffusion. (i.e., neglect M_(r-d) terms per paper.
+            // Use the form of the soot flamelet equation given in Pitsch et al 2000.
+            // And assume differential diffusion. (i.e., neglect M_(r-d) terms per paper.
 
-        	/// NOT IMPLEMENTED YET  !!!!!!!!!!!!!
+            /// NOT IMPLEMENTED YET  !!!!!!!!!!!!!
             for (int l=0; l<nMoments; ++l)
             {
                 f[iMesh_e*nMoments+l] = 0.0;
             }
-        	/// NOT IMPLEMENTED YET  !!!!!!!!!!!!!
+            /// NOT IMPLEMENTED YET  !!!!!!!!!!!!!
 
         }
         else if (Lewis.sootFlameletType() == LewisNumber::CARBONELL09)
         {
-        	// Use the form of the soot flamelet equation given in Carbonel et al 2009.
+            // Use the form of the soot flamelet equation given in Carbonel et al 2009.
 
             deltax = zPE + zPW;
             sdrPE = scalarDissipationRate_(reacGeom_.getAxpos()[i+1],t);
@@ -1123,32 +1123,32 @@ void FlameLet::sootMomentResidual
 
             // This bit same as for gas phase species
             doublereal convectionConstant
-                       = 0.25/m_rho[i]
-                         *(
+                    = 0.25/m_rho[i]
+                        *(
                             (m_rho[i+1]*sdrPE - m_rho[i-1]*sdrPW)/deltax
-                           +(m_rho[i]*sdr*m_cp[i]/m_k[i])
+                        +(m_rho[i]*sdr*m_cp[i]/m_k[i])
                             *(m_k[i+1]/m_cp[i+1] - m_k[i-1]/m_cp[i-1])/deltax
-                         );
+                        );
 
             //std::cout << "convectionConstant " << convectionConstant << std::endl;
 
             for (int l=0; l<nMoments; ++l)
             // Some differences to gas phase version (Le = inf here)
             {
-        		source = moments_dot(i,l)/m_rho[i];
+                source = moments_dot(i,l)/m_rho[i];
 
-            	f[i*nMoments+l] = -1.0 * convectionConstant
-							*(moments(i+1,l)-moments(i-1,l))/deltax + source;
+                f[i*nMoments+l] = -1.0 * convectionConstant
+                            *(moments(i+1,l)-moments(i-1,l))/deltax + source;
 
-        		//f[i*nMoments+l] = source;
+                //f[i*nMoments+l] = source;
             }
 
         }
     }
 
     /*
-     *Mixture fraction 1. The fuel inlet. Moments held constant here.
-     */
+    *Mixture fraction 1. The fuel inlet. Moments held constant here.
+    */
 
     for (int l=0; l<nMoments; ++l)
     {
@@ -1158,10 +1158,10 @@ void FlameLet::sootMomentResidual
 }
 
 /*
- * If we are solving a flamelet at the base of a flame then
- * set the soot residual to zero.
- * i.e. we solve a steady state flamelet with no soot present.
- */
+* If we are solving a flamelet at the base of a flame then
+* set the soot residual to zero.
+* i.e. we solve a steady state flamelet with no soot present.
+*/
 
 void FlameLet::sootMomentResidualZeroedOut
 (
@@ -1174,15 +1174,15 @@ void FlameLet::sootMomentResidualZeroedOut
     {
         for (int l=0; l<nMoments; ++l)
         {
-        	f[i*nMoments+l] = 0.0;
+            f[i*nMoments+l] = 0.0;
         }
     }
 }
 
 /*!
- *energy residual
- *
- */
+*energy residual
+*
+*/
 void FlameLet::energyResidual
 (
     const doublereal& t,
@@ -1198,15 +1198,15 @@ void FlameLet::energyResidual
     doublereal sdr, sdrPE, sdrPW;
 
     /*
-     *starting with mixture fraction zero: i.e oxidizer
-     *inlet. The temperature is fixed at the oxidizer
-     *inlet temperature
-     */
+    *starting with mixture fraction zero: i.e oxidizer
+    *inlet. The temperature is fixed at the oxidizer
+    *inlet temperature
+    */
     f[0] = 0.0;
 
     /*
-     *intermediate mixture fraction coordinates
-     */
+    *intermediate mixture fraction coordinates
+    */
     for (int i=iMesh_s; i<iMesh_e; ++i)
     {
 
@@ -1227,11 +1227,11 @@ void FlameLet::energyResidual
         grad_w = (m_T[i]-m_T[i-1])/zPW;
 
         f[i] = 0.5*sdr*(grad_e-grad_w)/dz[i]
-               - source/(m_rho[i]*m_cp[i]);
+            - source/(m_rho[i]*m_cp[i]);
 
         /**
-         * Add some extra terms so that we agree with FlameMaster?
-         */
+        * Add some extra terms so that we agree with FlameMaster?
+        */
         if (admin_.getFlameletEquationType() == admin_.COMPLETE)
         {
             doublereal tGrad = (m_T[i+1]-m_T[i-1])/deltax;
@@ -1250,10 +1250,10 @@ void FlameLet::energyResidual
             //This radiation term is sent to as output to profile.h
             radiation->calculateRadiativeHeatLoss
             (
-               i,
-               m_T[i],
-               opPre,
-               sootVolumeFractionMaster[i]
+            i,
+            m_T[i],
+            opPre,
+            sootVolumeFractionMaster[i]
             );
 
             // This is the new energy residual term, accounting for radiation.
@@ -1268,9 +1268,9 @@ void FlameLet::energyResidual
 
 }
 /**
- *save the mixture property
- * \todo This should be trivially parallelisable. A lot of time is spent here.
- */
+*save the mixture property
+* \todo This should be trivially parallelisable. A lot of time is spent here.
+*/
 void FlameLet::saveMixtureProp(doublereal* y)
 {
 
@@ -1289,7 +1289,7 @@ void FlameLet::saveMixtureProp(doublereal* y)
     {
 
         // Extract the mass fractions from the solution vector
-    	mf.clear();
+        mf.clear();
         for(int l=0; l<nSpc; l++)
         {
             mf.push_back(y[i*nVar+l]);
@@ -1302,7 +1302,7 @@ void FlameLet::saveMixtureProp(doublereal* y)
         mom_temp.clear();
         for(int l=0; l<nSpc; l++)
         {
-        	mom_temp.push_back(y[i*nVar+ptrT+1+l]);
+            mom_temp.push_back(y[i*nVar+ptrT+1+l]);
         }
 
         camMixture_->SetMassFracs(mf);                              //mass fraction
@@ -1338,76 +1338,76 @@ void FlameLet::saveMixtureProp(doublereal* y)
 
         if (sootMom_.active())
         {
-          for(int l=0; l<nMoments; l++)
-          {
-        	  moments(i,l) = mom_temp[l];			// ank25:  This looks correct
-        	//  exp_mom_temp[l] = exp(mom_temp[l])-1.0;
-          //}
+        for(int l=0; l<nMoments; l++)
+        {
+            moments(i,l) = mom_temp[l];			// ank25:  This looks correct
+            //  exp_mom_temp[l] = exp(mom_temp[l])-1.0;
+        //}
 
-          // Change of variable before calling moment rates:
-      	  // M=exp(M_hat -1)
-      	  // M_hat = ln(M+1)
+        // Change of variable before calling moment rates:
+            // M=exp(M_hat -1)
+            // M_hat = ln(M+1)
 
-          // DEBUG:  Before calling rateAll check if any moments have gone negative.
-          // If so then:
-          // a) Output the cell number
-          // b) Output the moment
-          if (moments(i,l) <0.0)
-          {
-        	  std::cout << "Negative moment found before calling ratesAll" << std::endl;
-        	  std::cout << "Cell index : " << i << std::endl;
-        	  std::cout << "Moment index : " << l << std::endl;
-        	  std::cout << "Moment value : " << moments(i,l) << std::endl;
-          }
-		  // end DEBUG
-
-          }
-
-
-          moments_dot_temp = sootMom_.rateAll(conc, mom_temp, m_T[i], opPre, 1);
-          for(int l=0; l<nMoments; l++)
-          {
-        	  moments_dot(i,l) =  moments_dot_temp[l];
-          }
-
-          // Now get the corresponding gas phase rates and add them to s_Wdot
-          // Only do this if we are solving a Lagrangian flamelet (not steady state)
-          if (sootResidualZeroed == false)
-          {
-            wdotSootGasPhase = sootMom_.showGasPhaseRates(nSpc);
-    	    for (int l=0; l< nSpc; l++)
-  	        {
-               s_Wdot(i,l) = s_Wdot(i,l) + wdotSootGasPhase[l] * (*spv_)[l]->MolWt();
-  	        }
-
-    	    // Also get the component soot rates for output.
-            // Ideally we would only do this at the major output times rather than at each call
-    	    // of saveMixtureProp. (Inefficient)
-    	    // ToDo: Move this it a better place.
-    	    sootComponentRatesTemp = sootMom_.showSootComponentRates(nMoments);
-    	    for (int l=0; l< nMoments*4; l++)
-  	        {
-               sootComponentRatesAllCells(i,l) = sootComponentRatesTemp[l];
-  	        }
-
-    	    // Calculate soot properties at each Z point.
-    	    // We need volume fraction for radiation.
-    	    avgSootDiamMaster[i] = sootMom_.avgSootDiam();
-    	    dispersionMaster[i] = sootMom_.dispersion();
-    	    sootSurfaceAreaMaster[i] = sootMom_.sootSurfaceArea(moments(i,0));
-    	    sootVolumeFractionMaster[i] = sootMom_.sootVolumeFraction(moments(i,0));
-          }
+        // DEBUG:  Before calling rateAll check if any moments have gone negative.
+        // If so then:
+        // a) Output the cell number
+        // b) Output the moment
+        if (moments(i,l) <0.0)
+        {
+            std::cout << "Negative moment found before calling ratesAll" << std::endl;
+            std::cout << "Cell index : " << i << std::endl;
+            std::cout << "Moment index : " << l << std::endl;
+            std::cout << "Moment value : " << moments(i,l) << std::endl;
         }
-    	// Check the A4 species exists first (returns -1 if it does not).
-    	if(camMech_->FindSpecies("A4") == -1)
-    	{
+        // end DEBUG
+
+        }
+
+
+        moments_dot_temp = sootMom_.rateAll(conc, mom_temp, m_T[i], opPre, 1);
+        for(int l=0; l<nMoments; l++)
+        {
+            moments_dot(i,l) =  moments_dot_temp[l];
+        }
+
+        // Now get the corresponding gas phase rates and add them to s_Wdot
+        // Only do this if we are solving a Lagrangian flamelet (not steady state)
+        if (sootResidualZeroed == false)
+        {
+            wdotSootGasPhase = sootMom_.showGasPhaseRates(nSpc);
+            for (int l=0; l< nSpc; l++)
+            {
+            s_Wdot(i,l) = s_Wdot(i,l) + wdotSootGasPhase[l] * (*spv_)[l]->MolWt();
+            }
+
+            // Also get the component soot rates for output.
+            // Ideally we would only do this at the major output times rather than at each call
+            // of saveMixtureProp. (Inefficient)
+            // ToDo: Move this it a better place.
+            sootComponentRatesTemp = sootMom_.showSootComponentRates(nMoments);
+            for (int l=0; l< nMoments*4; l++)
+            {
+            sootComponentRatesAllCells(i,l) = sootComponentRatesTemp[l];
+            }
+
+            // Calculate soot properties at each Z point.
+            // We need volume fraction for radiation.
+            avgSootDiamMaster[i] = sootMom_.avgSootDiam();
+            dispersionMaster[i] = sootMom_.dispersion();
+            sootSurfaceAreaMaster[i] = sootMom_.sootSurfaceArea(moments(i,0));
+            sootVolumeFractionMaster[i] = sootMom_.sootVolumeFraction(moments(i,0));
+        }
+        }
+        // Check the A4 species exists first (returns -1 if it does not).
+        if(camMech_->FindSpecies("A4") == -1)
+        {
             wdotA4Master[i] = 0.0;
-    	}
-    	else
-    	{
-    		const int iA4 = camMech_->FindSpecies("A4");
+        }
+        else
+        {
+            const int iA4 = camMech_->FindSpecies("A4");
             wdotA4Master[i] = s_Wdot(i,iA4);
-    	}
+        }
 
 
 
@@ -1417,8 +1417,8 @@ void FlameLet::saveMixtureProp(doublereal* y)
 doublereal FlameLet::stoichiometricMixtureFraction()
 {
     /*
-     *check for C and H atoms
-     */
+    *check for C and H atoms
+    */
 
     vector<Sprog::Species*> fspecies, ospecies;
 
@@ -1426,8 +1426,8 @@ doublereal FlameLet::stoichiometricMixtureFraction()
     int indx_H = camMech_->FindElement("H");
 
     /*
-     *fuel inlet
-     */
+    *fuel inlet
+    */
     map<string, doublereal> species;
     map<string, doublereal>::iterator sIterator;
     CamBoundary& fuelInlet = admin_.getLeftBoundary();
@@ -1486,13 +1486,13 @@ doublereal FlameLet::stoichiometricMixtureFraction()
     doublereal stO2 = cAtoms + hAtoms/4.0;
 
     /*
-     *stoichiometric mass ratio
-     */
+    *stoichiometric mass ratio
+    */
     doublereal smr = stO2*0.032/avgMolWt;
     cout << "Avg mol wt " << avgMolWt << endl;
     /*
-     *stoichiometric mixture fraction
-     */
+    *stoichiometric mixture fraction
+    */
     stoichZ = 1.0/(1+ smr*fuelMassFrac/o2MassFrac);
 
     cout << "Stoichiometric mixture fraction " << stoichZ << endl;
@@ -1521,8 +1521,8 @@ void FlameLet::setExternalTimeSDR
 }
 
 /*
- *solver call for residual evaluation
- */
+*solver call for residual evaluation
+*/
 int FlameLet::eval
 (
     doublereal x,
@@ -1540,8 +1540,8 @@ int FlameLet::eval
 }
 
 /*
- *consol output function
- */
+*consol output function
+*/
 void FlameLet::report(doublereal x, doublereal* solution, doublereal& res)
 {
 
@@ -1556,8 +1556,8 @@ void FlameLet::report(doublereal x, doublereal* solution, doublereal& res)
 
 }
 /*
- *output function for file output
- */
+*output function for file output
+*/
 void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<double>& soln)
 {
 
@@ -1624,9 +1624,9 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<doub
             data.push_back(dispersionMaster[i]);
             data.push_back(sootSurfaceAreaMaster[i]);
             data.push_back(sootVolumeFractionMaster[i]);
-        	for(int l=0; l<nMoments; l++)
+            for(int l=0; l<nMoments; l++)
             {
-            	data.push_back(soln[i*nVar+ptrT+1+l]);
+                data.push_back(soln[i*nVar+ptrT+1+l]);
             }
         }
         reporter_->writeCustomFileOut(data);
@@ -1658,8 +1658,8 @@ void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<doub
 }
 
 /*
- *output file header
- */
+*output file header
+*/
 std::vector<std::string> FlameLet::header()
 {
 
@@ -1697,8 +1697,8 @@ std::vector<std::string> FlameLet::header()
 }
 
 /*!
- *@param[in]    soot_fv     Vector of soot volume fractions, one for each grid cell
- */
+*@param[in]    soot_fv     Vector of soot volume fractions, one for each grid cell
+*/
 void
 FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv)
 {
@@ -1713,33 +1713,33 @@ FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv)
 }
 
 /*
- *  Return the pyrene(A4) molar production rate term.
- *  Note:  This is not used to pass wdotA4 to interface.
- */
+*  Return the pyrene(A4) molar production rate term.
+*  Note:  This is not used to pass wdotA4 to interface.
+*/
 void
 FlameLet::getWdotA4(std::vector<doublereal>& wdotA4)
 const
 {
 
-	wdotA4.clear();
-	// Check the species exists first (returns -1 if it does not).
-	if(camMech_->FindSpecies("A4") == -1){
-		std::cout << "Species A4 not found." << std::endl;
-		for(int i=iMesh_s; i<iMesh_e;i++){
-			wdotA4.push_back(0.0);
-		}
-	} else {
-		const int iA4 = camMech_->FindSpecies("A4");
-		for(int i=iMesh_s; i<iMesh_e;i++){
-			wdotA4.push_back(s_Wdot(i,iA4));
-		}
-	}
+    wdotA4.clear();
+    // Check the species exists first (returns -1 if it does not).
+    if(camMech_->FindSpecies("A4") == -1){
+        std::cout << "Species A4 not found." << std::endl;
+        for(int i=iMesh_s; i<iMesh_e;i++){
+            wdotA4.push_back(0.0);
+        }
+    } else {
+        const int iA4 = camMech_->FindSpecies("A4");
+        for(int i=iMesh_s; i<iMesh_e;i++){
+            wdotA4.push_back(s_Wdot(i,iA4));
+        }
+    }
 
 }
 
 /*
- *output function for file output
- */
+*output function for file output
+*/
 void FlameLet::reportSootRatesToFile(std::string fileName, doublereal t, Array2D& rates)
 {
 
@@ -1775,8 +1775,8 @@ void FlameLet::reportSootRatesToFile(std::string fileName, doublereal t, Array2D
 }
 
 /*
- *output file header
- */
+*output file header
+*/
 std::vector<std::string> FlameLet::sootRatesHeader()
 {
     std::vector<std::string> headerData;
@@ -1787,16 +1787,16 @@ std::vector<std::string> FlameLet::sootRatesHeader()
     headerData.push_back("SDR");
 
     for(int l=0; l<nMoments; l++){
-    	headerData.push_back("Nuc_M"+boost::lexical_cast<std::string>(l));
+        headerData.push_back("Nuc_M"+boost::lexical_cast<std::string>(l));
     }
     for(int l=0; l<nMoments; l++){
-    	headerData.push_back("Coag_M"+boost::lexical_cast<std::string>(l));
+        headerData.push_back("Coag_M"+boost::lexical_cast<std::string>(l));
     }
     for(int l=0; l<nMoments; l++){
-    	headerData.push_back("Cond_M"+boost::lexical_cast<std::string>(l));
+        headerData.push_back("Cond_M"+boost::lexical_cast<std::string>(l));
     }
     for(int l=0; l<nMoments; l++){
-    	headerData.push_back("Surf_M"+boost::lexical_cast<std::string>(l));
+        headerData.push_back("Surf_M"+boost::lexical_cast<std::string>(l));
     }
     return headerData;
 }

@@ -27,7 +27,7 @@ CamResidual::CamResidual
   cellBegin(0),
   iMesh_e(mCord-1),
   cellEnd(mCord),
-  //nMoments(6),				// Should use getNumberMoments method to set this.
+  //nMoments(6),    // Should use getNumberMoments method to set this.
   nMoments(cs.getNumMoments()),
   nSpc(mech.SpeciesCount()),
   nVar(nSpc+1+nMoments),
@@ -35,7 +35,7 @@ CamResidual::CamResidual
   nEqn(nVar*mCord),
   solverID(cc.getSolver()),
   resSp(nSpc*mCord,0.0),
-  resMom(nMoments*mCord,0.0),		// ank25: moments residual
+  resMom(nMoments*mCord,0.0),   // ank25: moments residual
   resT(mCord,0.0),
   s_mf(mCord,nSpc),
   s_Wdot(mCord,nSpc),
@@ -47,12 +47,13 @@ CamResidual::CamResidual
   m_mu(mCord,0.0),
   m_u(mCord,0.0),
   m_k(mCord,0.0),
+  m_G(mCord,0.0),
   dz(cg.getGeometry()),
   avgMolWt(mCord,0.0),
-  moments(mCord,nMoments),			// ank25: moments analogous to s_mf
+  moments(mCord,nMoments),      // ank25: moments analogous to s_mf
   moments_dot(mCord,nMoments),       // ank25: moments rate analogous to s_wdot
   sootComponentRatesAllCells(mCord,nMoments*4),  // ank25: used to output soot rates
-  avgSootDiamMaster(mCord,0.0),	  // soot properties derived from moments.
+  avgSootDiamMaster(mCord,0.0),    // soot properties derived from moments.
   dispersionMaster(mCord,0.0),
   sootSurfaceAreaMaster(mCord,0.0),
   sootVolumeFractionMaster(mCord,0.0),

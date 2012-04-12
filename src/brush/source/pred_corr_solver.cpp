@@ -68,24 +68,31 @@ using namespace Brush;
  * the header file and should be copied here when they are needed.
  *
  *@param[in]    reset_chem              Chemical species concentrations as function of spatial position
- *@param[in]                            Number of corrector iterations to perform during full coupling
- *@param[in]                            Relative tolerance for ODE solver used for gas phase
- *@param[in]                            Absolute tolerance for ODE solver used for gas phase
  *@param[in]    split_diffusion         True if diffusion is to be simulated via splitting
+ *@param[in]    drift_adjustment        Only relevant when split_diffusion is true, see \ref mDiffusionDriftAdjustment
  *@param[in]    split_advection         True if advection is to be simulated via splitting
  *@param[in]    weighted_transport      Adjust weights during inter-cell transport to avoid killing/cloning particles
  *
  *@todo     Need generalisation to move away from using ResetChemistry
  */
+/*
+ * Following parameters are skipped from the doxygen documentation, becuase they are not
+ * names, which is because they are not yet used.
+ * param[in]                            Number of corrector iterations to perform during full coupling
+ * param[in]                            Relative tolerance for ODE solver used for gas phase
+ * param[in]                            Absolute tolerance for ODE solver used for gas phase
+ */
 Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
                                       const size_t,
                                       const real , const real ,
                                       const bool split_diffusion,
+                                      const real drift_adjustment,
                                       const bool split_advection,
                                       const bool weighted_transport)
     : mResetChemistry(reset_chem)
     , mDeferralRatio(10.0)
     , mSplitDiffusion(split_diffusion)
+    , mDiffusionDriftAdjustment(drift_adjustment)
     , mSplitAdvection(split_advection)
     , mWeightedTransport(weighted_transport)
 {}
@@ -215,19 +222,32 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
     const size_t numCells = reac.getNumCells();
     const Sweep::Mechanism &mech = reac.getParticleMechanism();
 
-#pragma omp parallel for schedule(dynamic)
-    for(size_t i = 0; i < numCells; ++i) {
-        // Get details of cell i
-        Sweep::Cell& cell = reac.getCell(i);
-        Geometry::LocalGeometry1d geom(reac.getGeometry(), i);
+    // Strang splitting
+    const real halfTime = (t_start + t_stop) / 2;
 
-        solveParticlesInOneCell(cell, geom, mech, t_start, t_stop, cell_rngs[i]);
+#pragma omp parallel for schedule(dynamic) ordered
+    for(size_t i = numCells; i > 0; --i) {
+        // Get details of cell i
+        Sweep::Cell& cell = reac.getCell(i - 1);
+        Geometry::LocalGeometry1d geom(reac.getGeometry(), i - 1);
+
+        solveParticlesInOneCell(cell, geom, mech, t_start, halfTime, cell_rngs[i - 1]);
     }
 
     // Now do the split particle transport, if there is any
     if(mSplitDiffusion || mSplitAdvection) {
         splitParticleTransport(reac, t_start, t_stop, cell_rngs);
     }
+
+#pragma omp parallel for schedule(dynamic) ordered
+    for(size_t i = numCells; i > 0; --i) {
+        // Get details of cell i
+        Sweep::Cell& cell = reac.getCell(i - 1);
+        Geometry::LocalGeometry1d geom(reac.getGeometry(), i - 1);
+
+        solveParticlesInOneCell(cell, geom, mech, halfTime, t_stop, cell_rngs[i - 1]);
+    }
+
 }
 
 /*!
@@ -395,7 +415,7 @@ void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const rea
         const real dt = t_stop - t_start; //sp.getPositionTime();
         assert(dt >= 0.0);
         if(mSplitAdvection){
-            real velocity = mech.AdvectionVelocity(mix, sp, neighbouringCells, geom);
+            const real velocity = mech.AdvectionVelocity(mix, sp, neighbouringCells, geom);
             newPosition += dt * velocity;
         }
         if(mSplitDiffusion){
@@ -404,6 +424,12 @@ void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const rea
             normal_distrib diffusionDistrib(0.0, std::sqrt(diffusionCoeff * dt));
             boost::variate_generator<Sweep::rng_type&, normal_distrib> diffusionGenerator(rng, diffusionDistrib);
             newPosition += diffusionGenerator();
+
+            if(mDiffusionDriftAdjustment > 0.0) {
+                // Drift correction to allow for different forms of stochastic integral
+                const real drift = mDiffusionDriftAdjustment * mech.GradDiffusionCoefficient(mix, sp, neighbouringCells, geom);
+                newPosition += dt * drift;
+            }
         }
     }
     sp.setPositionAndTime(newPosition, t_stop);
@@ -418,7 +444,6 @@ void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const rea
  *@param[in]        mech                Mechanism specifying calculation of particle transport properties
  *@param[in]        geom                Information on locations of surrounding cells
  *@param[in]        neighbouringCells   Pointers to the contents of surrounding cells
- *@param[in]        particle_list       List of pointers to the particles that belong in the cell
  *@param[in,out]    rng                 Random number generator
  *
  *@return       Vector of lists of particles to be transported into other cells
@@ -458,6 +483,10 @@ Brush::PredCorrSolver::inflow_lists_vector
             // in the source cell to that in the destination cell.
             out.weight = geom.cellVolume(cell_index) / geom.cellVolume(out.destination)
                           / mix.SampleVolume() / mix.GasPhase().Velocity();
+
+            // On moving to a new cell reset the coagulation count
+            if(static_cast<unsigned>(out.destination) != cell_index)
+               (out.particle)->resetCoagCount();
 
             // Add the details of the particle to a list ready for inserting
             // into its destination cell

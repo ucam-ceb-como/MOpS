@@ -48,10 +48,10 @@
 
 // MOLECULAR WEIGHT
 
-// Returns component molecular weight (g/mol).
+// Returns component molecular weight (kg/mol).
 inline Sweep::real Sweep::Component::MolWt() const {return m_molwt;};
 
-// Sets the molecular weight (g/mol).
+// Sets the molecular weight (kg/mol).
 inline void Sweep::Component::SetMolWt(const Sweep::real molwt) {m_molwt = molwt;};
 
 // DENSITY.
@@ -65,7 +65,7 @@ inline Sweep::real Sweep::Component::GrowthFact() const {return m_growthfact;};
 //! Returns the minpah 
 inline Sweep::real Sweep::Component::MinPAH() const {return m_minPAH;};
 
-//! Returns component density (g/cm3).
+//! Returns component density (kg/m3).
 inline Sweep::real Sweep::Component::Density() const {return m_density;};
 
 //! Sets the density (g/cm3).

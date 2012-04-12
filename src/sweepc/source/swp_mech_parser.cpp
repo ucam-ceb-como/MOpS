@@ -241,11 +241,11 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             // Read diffusion model ID.
             str = (*i)->GetAttributeValue("id");
 
-            if(str == "flamelet") {
+            if((str == "Flamelet") || (str == "flamelet")) {
                 // Diffusion according to soot flamelet equation in flamelet space
                 mech.setDiffusionType(Sweep::ParticleModel::FlameletDiffusion);
             }
-            else if(str == "einstein") {
+            else if((str == "Einstein") || (str == "einstein")) {
                 // Diffusion to represent transport in physical space
                 // according to Einstein's work
                 mech.setDiffusionType(Sweep::ParticleModel::EinsteinDiffusion);
@@ -257,11 +257,11 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         } else if (str == "advection") {
             // Read advection model ID.
             str = (*i)->GetAttributeValue("id");
-            if(str == "flamelet") {
+            if((str == "Flamelet") || (str == "flamelet")) {
                 // Advection according to soot flamelet equation in flamelet space
                 mech.setAdvectionType(Sweep::ParticleModel::FlameletAdvection);
             }
-            else if(str == "physical") {
+            else if((str == "Physical") || (str == "physical")) {
                 // Advection at bulk gas velocity in physical space
                 mech.setAdvectionType(Sweep::ParticleModel::BulkAdvection);
             }
@@ -271,11 +271,15 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         }else if (str == "thermophoresis") {
             // Read advection model ID.
             str = (*i)->GetAttributeValue("id");
-            if(str == "waldmann") {
-                // Advection according to soot flamelet equation in flamelet space
+            if((str == "Waldmann") || (str == "waldmann")) {
+                // Thermophoretic velocity that is the same for all particles
                 mech.setThermophoresisType(Sweep::ParticleModel::WaldmannThermophoresis);
             }
-	    else if(str == "none") {
+            else if(str == "LiWang") {
+                // Particle dependence according to model of Li and Wang
+                mech.setThermophoresisType(Sweep::ParticleModel::LiWangThermophoresis);
+            }
+	    else if((str == "None") || (str == "none")) {
                 // No thermophoresis
                 mech.setThermophoresisType(Sweep::ParticleModel::NoThermophoresis);
             }
@@ -601,22 +605,50 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
     xml.Root()->GetChildren("inception", items);
 
     for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
-        // Create new inception.
-        DimerInception *icn = new DimerInception(mech);
-        icn->SetMechanism(mech);
-        icn->SetName("Inception " + cstr(k));
 
-        try {
-            readInception(*(*i), *icn);
-        }
-        catch (std::exception &e) {
-            delete icn;
-            throw;
-        }
+        string inceptype = (*(*i)).GetAttributeValue("type");
 
-        // Add inception to mechanism.  Once entered into mechanism, the mechanism
-        // takes control of the inception object for memory management.
-        mech.AddInception(*icn);
+        if (inceptype == "silicon") {
+            // Create new silicon inception.
+            SiliconInception *icn = new SiliconInception(mech);
+            icn->SetMechanism(mech);
+            icn->SetName("Inception " + cstr(k));
+
+            try {
+                readSiliconInception(*(*i), *icn);
+            }
+            catch (std::exception &e) {
+                delete icn;
+                throw;
+            }
+
+            // Set silicon-specific constants
+            icn->SetInceptingDiameter(mech);
+            icn->SetMonomerVolume(mech);
+
+            // Add inception to mechanism.  Once entered into mechanism, the mechanism
+            // takes control of the inception object for memory management.
+            mech.AddInception(*icn);
+
+        } else {
+
+            // Create new inception.
+            DimerInception *icn = new DimerInception(mech);
+            icn->SetMechanism(mech);
+            icn->SetName("Inception " + cstr(k));
+
+            try {
+                readInception(*(*i), *icn);
+            }
+            catch (std::exception &e) {
+                delete icn;
+                throw;
+            }
+
+            // Add inception to mechanism.  Once entered into mechanism, the mechanism
+            // takes control of the inception object for memory management.
+            mech.AddInception(*icn);
+        }
     }
 }
 
@@ -690,6 +722,81 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 
 }
 
+
+/*!
+ * @brief           Reads a silicon inception process from an XML element.
+ *
+ * @param xml       XML node to read in
+ * @param icn       Pointer to new inception process
+ */
+void MechParser::readSiliconInception(CamXML::Element &xml, Processes::SiliconInception &icn)
+{
+    string str;
+    vector<CamXML::Element*> items, subitems;
+    vector<CamXML::Element*>::iterator j;
+
+    // Read name.
+    str = xml.GetAttributeValue("name");
+    if (str != "") icn.SetName(str);
+
+    // Read reactants.
+    readReactants(xml, icn);
+
+    // Find the rate calculation method (a coagulation kernel)
+    // Currently the only possibilities are free molecular and transition
+    // regime kernels.  These are handled by a boolean flag.  An enum
+    // will be needed if more cases are introduced (or possibly a pointer
+    // to an appropriate member function of DimerInception.)
+    bool useFreeMolRegime = false;
+    str = xml.GetAttributeValue("rate");
+    if(!str.empty()) {
+        if(str ==  "freemolecular")
+            useFreeMolRegime = true;
+        else if(str == "transition")
+            useFreeMolRegime = false;
+        else
+            throw std::runtime_error("Unrecognised rate type " + str + " in Sweep::MechParser::readSiliconInception");
+    }
+
+    // Get reactant masses and diameters, and set inception
+    // parameters.
+    fvector mass, diam;
+    readReactantMDs(xml, mass, diam);
+    if (mass.size() == 2) {
+        if(useFreeMolRegime)
+            icn.SetInceptingSpeciesFreeMol(mass[0], mass[1], diam[0], diam[1]);
+        else
+            icn.SetInceptingSpecies(mass[0], mass[1], diam[0], diam[1]);
+    }
+    else if (mass.size() == 1) {
+        if(useFreeMolRegime)
+            icn.SetInceptingSpeciesFreeMol(mass[0], mass[0], diam[0], diam[0]);
+        else
+            icn.SetInceptingSpecies(mass[0], mass[0], diam[0], diam[0]);
+    }
+    else
+        throw std::runtime_error("One or two inception species must be specified in Sweep::MechParser::readSiliconInception");
+
+
+    // Rate scaling now that a process has been created
+    real A = 0.0;
+    CamXML::Element *el = xml.GetFirstChild("A");
+    if (el != NULL) {
+        A = cdble(el->Data());
+        icn.SetA(A);
+    }
+
+    // Read products.
+    readProducts(xml, icn);
+
+    // Read initial particle composition.
+    readInceptedComposition(xml, icn);
+
+    // Read initial tracker variable values.
+    readInceptedTrackers(xml, icn);
+
+
+}
 
 // Reads inception processes from a sweep mechanism XML file.
 void MechParser::readPAHInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
@@ -1317,7 +1424,7 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
 //COAGULATION
 
 /**
- * @param[in]       xml     XML document containing zero or more top level <coagulation> nodes
+ * @param[in]       xml     XML document containing zero or more top level \<coagulation\> nodes
  * @param[in,out]   mech    Mechanism to which to add coagulation processes
  *
  * @exception   runtime_error   Kernel no specified

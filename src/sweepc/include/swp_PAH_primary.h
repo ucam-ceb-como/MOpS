@@ -55,8 +55,6 @@
 #include "swp_particle_model.h"
 #include "swp_sintering_model.h"
 #include "swp_aggmodel_type.h"
-#include "swp_surfvol_cache.h"
-#include "swp_PAH_cache.h"
 #include "swp_PAH.h"
 #include "swp_kmc_pah_structure.h"
 #include "swp_kmc_simulator.h"
@@ -138,8 +136,6 @@ public:
 
     //! Updates the fractal dimension
     void CalcFractalDimension();
-
-    AggModels::PAHCache *const CreateAggCache() const;
 
     //serialize
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);

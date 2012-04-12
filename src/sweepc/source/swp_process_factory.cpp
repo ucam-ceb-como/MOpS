@@ -52,6 +52,7 @@
 #include "swp_weighted_transcoag.h"
 #include "swp_pah_inception.h"
 #include "swp_dimer_inception.h"
+#include "swp_silicon_inception.h"
 #include "swp_silica_interparticle.h"
 #include <stdexcept>
 
@@ -80,6 +81,9 @@ Inception *const ProcessFactory::ReadInception(std::istream &in,
         switch ((ProcessType)type) {
             case Dimer_Inception_ID:
                 proc = new DimerInception(in, mech);
+                break;
+            case Silicon_Inception_ID:
+                proc = new SiliconInception(in, mech);
                 break;
             case PAH_Inception_ID:
                 proc = new PAHInception(in, mech);

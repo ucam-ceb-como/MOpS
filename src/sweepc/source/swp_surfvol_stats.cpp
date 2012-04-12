@@ -41,9 +41,10 @@
 */
 
 #include "swp_surfvol_stats.h"
+#include "swp_surfvol_primary.h"
 #include "swp_aggmodel_type.h"
 #include "swp_particle.h"
-#include "swp_surfvol_cache.h"
+
 #include <stdexcept>
 
 using namespace Sweep;
@@ -138,19 +139,19 @@ void SurfVolStats::Calculate(const Ensemble &e, real scale)
 
     for (ip=e.begin(); ip!=e.end(); ++ip) {
         // Get surface-volume cache.
-        const AggModels::SurfVolCache& cache =
-            dynamic_cast<const AggModels::SurfVolCache&>((*ip)->AggCache());
+        const AggModels::SurfVolPrimary * const primary =
+            dynamic_cast<const AggModels::SurfVolPrimary *>((*ip)->Primary());
         real sz = (*ip)->Property(m_statbound.PID);
         real wt = (*ip)->getStatisticalWeight();
 
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-            m_stats[iS]      += cache.SphSurfaceArea() * 1.0e4 * wt; // Convert from m2 to cm2.
-            m_stats[iS+1]    += cache.SphSurfaceArea() * 1.0e4 * wt; // Convert from m2 to cm2.
-            m_stats[iPPN]    += cache.PP_Count() * wt;
-            m_stats[iPPN+1]  += cache.PP_Count() * wt;
-            m_stats[iPPD]    += cache.PP_Diameter() * 1.0e9 * wt; // Convert from m to nm.
+            m_stats[iS]      += (*ip)->SphSurfaceArea() * 1.0e4 * wt; // Convert from m2 to cm2.
+            m_stats[iS+1]    += (*ip)->SphSurfaceArea() * 1.0e4 * wt; // Convert from m2 to cm2.
+            m_stats[iPPN]    += primary->PP_Count() * wt;
+            m_stats[iPPN+1]  += primary->PP_Count() * wt;
+            m_stats[iPPD]    += primary->PP_Diameter() * 1.0e9 * wt; // Convert from m to nm.
         }
     }
 
@@ -302,14 +303,14 @@ void SurfVolStats::PSL(const Sweep::Particle &sp, real time,
     fvector::iterator j = psl.begin()+start-1;
 
     // Get surface-volume cache.
-    const AggModels::SurfVolCache* cache =
-        dynamic_cast<const AggModels::SurfVolCache*>(&sp.AggCache());
+    const AggModels::SurfVolPrimary* const primary =
+        dynamic_cast<const AggModels::SurfVolPrimary *>(sp.Primary());
 
     // Get the PSL stats.
-    if (cache != NULL) {
-        *(++j) = cache->SphSurfaceArea() * 1.0e4; // m2 to cm2.
-        *(++j) = cache->PP_Count();
-        *(++j) = cache->PP_Diameter() * 1.0e9; // m to nm.
+    if (primary != NULL) {
+        *(++j) = sp.SphSurfaceArea() * 1.0e4; // m2 to cm2.
+        *(++j) = primary->PP_Count();
+        *(++j) = primary->PP_Diameter() * 1.0e9; // m to nm.
     } else {
         fill(j+1, j+3, 0.0);
     }

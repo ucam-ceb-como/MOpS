@@ -62,8 +62,9 @@
 #include "swp_tracker.h"
 #include "swp_particle_model.h"
 #include "swp_aggmodel_type.h"
-#include "swp_aggmodel_cache.h"
 #include "swp_sintering_model.h"
+#include "swp_property_indices.h"
+
 #include <iostream>
 
 namespace Sweep
@@ -75,19 +76,6 @@ class Cell;
 class Primary
 {
 public:
-    // Enumeration of properties which can be accessed using
-    // the Property() function.  These are fundamental properties
-    // which are not altered by sub-models.
-    enum PropID {
-        iCTime,  // Create time.
-        iLUTime, // Last update time.
-        iD,      // Equivalent sphere diameter.
-        iDcol,   // Collision diameter.
-        iDmob,   // Mobility diameter.
-        iS,      // Surface area.
-        iV,      // Volume.
-        iM       // Mass.
-    };
 
     // Constructors.
     //   Note:  Default constructor is protected to prevent a
@@ -164,10 +152,6 @@ public:
     // Returns the aggregation model which this primary describes.
     virtual AggModels::AggModelType AggID(void) const;
 
-    // Creates an aggregation data cache for this primary type.
-    virtual AggModels::AggModelCache *const CreateAggCache() const;
-
-
     // BASIC DERIVED PROPERTIES.
 
     // Calculates the derived properties from the unique properties.
@@ -195,8 +179,8 @@ public:
     // Returns the mass.
     real Mass(void) const;
 
-    // Returns the property with the given ID.
-    real Property(PropID id) const;
+    //! Returns the property with the given ID.
+    real Property(const Sweep::PropID id) const;
 
 
     // BASIC DERIVED PROPERTY OVERWRITES.

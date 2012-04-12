@@ -193,10 +193,6 @@ public:
     // contains any components.
     bool IsValid() const;
 
-    //! Aggregation model data
-    const AggModels::AggModelCache& AggCache(void) const {return *m_aggcache;}
-
-
     // READ/WRITE/COPY.
 
     // Creates a copy of the particle data object.
@@ -243,9 +239,7 @@ private:
     //! Last time particle was updated.  Required for LPDA.
     real m_time;
 
-    //! The aggregation-model used by the particle.
-    AggModels::AggModelCache *m_aggcache;
 };
-};
+}
 
 #endif

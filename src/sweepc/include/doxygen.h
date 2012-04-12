@@ -1,7 +1,6 @@
 /**
   \file    doxygen.h
-  \author  Robert I A Patterson
-  \email   Robert.Patterson@wias-berlin.de
+  \author  Robert I A Patterson Robert.Patterson@wias-berlin.de
   \brief   Front page for the sweep library documentation.
 
   This file should not contain source code and should not be included in any
@@ -13,7 +12,7 @@
  * Sweep is generally referred to as sweepc (to distinguish it from an earlier
  * and now independent Fortran version).
  *
- * \section History
+ * \section sweephistory History
  * Sweep is part of a larger suite of particle simulation software that
  * has its origins in the research group of Markus Kraft at the
  * University of Cambridge http://como.cheng.cam.ac.uk .
@@ -26,7 +25,7 @@
  * soot formation.  Matt Celnik developed Sweep into a library for use in larger
  * calculations (Mops) and forked the C++ family of which this code is a part.
  *
- * \section GPL License
+ * \section sweeplicense GPL License
 
     sweepc is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License

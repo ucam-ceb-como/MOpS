@@ -880,6 +880,38 @@ real ParticleModel::EinsteinDiffusionCoefficient(const Cell &sys, const Particle
 }
 
 /*!
+ * Numerically calculate the gradient of the diffusion coefficient, \ref DiffusionCoefficient.
+ *
+ * Use the twosided approximation
+ * \f[
+ *     \nabla D(x) \approx \frac{D(x_{i+1} - D(x_{i-1}))}{x_{i+1} - x_{i-1}},
+ * \f]
+ * except at domain boundaries where 0 is assumed (\todo 1 sided approximation).
+ *
+ *@param[in]    sys     System in which particle experiences drag
+ *@param[in]    sp      Particle for which to calculate drag coefficient
+ *@param[in]    neighbours  Pointers to neighbouring cells
+ *@param[in]    geom        Information on layout of neighbouring cells
+ *
+ *@return       Diffusion coefficient gradient
+ */
+real ParticleModel::GradDiffusionCoefficient(const Cell &sys, const Particle &sp,
+                                             const std::vector<const Cell*> &neighbours,
+                                             const Geometry::LocalGeometry1d &geom) const {
+    if((neighbours[0] != NULL) && (neighbours[1] != NULL)) {
+        const real dx = geom.calcSpacing(Geometry::left) +
+                        geom.calcSpacing(Geometry::right);
+
+        const real leftD  = DiffusionCoefficient(*(neighbours[0]), sp);
+        const real rightD = DiffusionCoefficient(*(neighbours[1]), sp);
+
+        return (rightD - leftD) / dx;
+    }
+    else
+        return 0.0;
+}
+
+/*!
  * Calculate diffusion co-efficient using Einstein's relation
  * \f[
  *    D = \frac{k_B T}{k_d}.
@@ -961,13 +993,13 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
                 // rho D_Z at z_{i+1}
                 const real rightRhoDZ = neighbours[1]->GasPhase().MassDensity() *
                                         neighbours[1]->GasPhase().MixFracDiffCoeff();
-                // Now calculate the gradient estimate for the produect
+                // Now calculate the gradient estimate for the product
                 // of gas mass density and mixture fraction diffusion
                 // coefficient.
                 const real gradRhoDZ = (rightRhoDZ - leftRhoDZ) / dZ;
 
                 // Same process for product of soot mass per unit volume of gas
-                // and particule diffusion coefficient of this particle.
+                // and particle diffusion coefficient of this particle.
                 const real leftVal  = neighbours[0]->Particles().GetSum(Sweep::iM) /
                                       neighbours[0]->SampleVolume() *
                                       EinsteinDiffusionCoefficient(*neighbours[0], sp);
@@ -1018,6 +1050,15 @@ real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) 
             // Equation 2 of the Li & Wang paper with phi = 0.9
             // 1 / (5 * (1 + pi * phi / 8)) == 0.14777
             return tempFactor * -0.14777;
+
+        case LiWangThermophoresis:
+            // conductivity * temperature gradient / (NkT)
+            tempFactor = sys.GasPhase().getThermalConductivity(sys.GasPhase().Pressure());
+            tempFactor *= sys.GasPhase().GradientTemperature();
+            tempFactor /= sys.GasPhase().Pressure();
+
+            // Now bring in the collision integrals
+            return tempFactor * (1 - 6.0 * Omega1_2_avg(sys, sp) / 5.0 / Omega1_1_avg(sys, sp));
 
         case NoThermophoresis:
             return 0.0;
@@ -1081,10 +1122,17 @@ real ParticleModel::Omega1_2_avg(const Cell &sys, const Particle &sp) const {
     // Collision integrals calculated for pure specular and pure diffusion scattering
     const real specular = Omega1_2_spec(TStar, sigmaPrime);
     const real diffuse  = Omega1_2_diff(TStar, sigmaPrime);
+    const real Kn = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
 
-    // Interpolation via the accomodation function
-    const real phi = accomodationFunction(sys, sp);
-    return specular * (1.0 - phi) + diffuse * phi;
+    //std::cout << "Omega1_1_avg: " << specular << ", " << diffuse << ", " << Kn << '\n';
+
+    // Build up the return value in stages, so that one can debug the process
+    real omega = diffuse;
+    omega += Kn * (0.9 * diffuse + 0.1 * specular);
+    omega -= Kn * 0.9 * (diffuse - specular) / (1 + std::pow(sp.CollDiameter() / 5.0e-9, 15));
+    omega /= (1 + Kn);
+
+    return omega;
 }
 
 /*!

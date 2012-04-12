@@ -47,6 +47,7 @@
 #include "swp_process.h"
 #include "swp_pah_inception.h"
 #include "swp_dimer_inception.h"
+#include "swp_silicon_inception.h"
 #include "swp_surface_reaction.h"
 #include "swp_condensation.h"
 #include "swp_maths_functional.h"
@@ -108,6 +109,13 @@ private:
         CamXML::Element &xml,     // CamXML document pre-constructed from file.
         Processes::DimerInception &icn // Inception to construct from XML.
         );
+
+    //! Reads a silicon inception process from an XML element.
+    static void readSiliconInception(
+        CamXML::Element &xml,     // CamXML document pre-constructed from file.
+        Processes::SiliconInception &icn // Inception to construct from XML.
+        );
+
 
     /*!
     * reads a PAH inception process
