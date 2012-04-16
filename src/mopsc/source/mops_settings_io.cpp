@@ -295,9 +295,21 @@ Reactor *const readReactor(const CamXML::Element &node,
         }
     }
 
+    bool doubling_activated;
+    subnode = node.GetFirstChild("DoublingAlgorithm");
+    if (subnode != NULL) {
+        std::string str_enable = subnode->GetAttributeValue("enable");
+        if (str_enable.compare("false") == 0) {
+            std::cout << "sweep: Warning! doubling is turned off by user.\n";
+            doubling_activated = false;
+        } 
+        else doubling_activated = true;
+
+    } else doubling_activated = true;
+
     // Assign the species mole fraction vector to the reactor mixture.
     mix->GasPhase().SetFracs(molefracs);
-    mix->Particles().Initialise(max_particle_count);
+    mix->Particles().Initialise(max_particle_count, doubling_activated);
 	mix->Reset(maxM0);
     reac->Fill(*mix);
 
