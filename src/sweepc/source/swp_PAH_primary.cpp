@@ -1121,10 +1121,13 @@ void PAHPrimary::RemoveInvalidPAHs()
 // Find Xmer (monomer, dimer or trimer) and record its mass which will be used to create mass spectra
 // however, this function currently is only implenmented in PAHPrimary class
 // this means it is limited to PAH-PP model. 
-void PAHPrimary::FindXmer(std::vector<double> &out, Xmer m_xmer) const
+void PAHPrimary::FindXmer(std::vector<double> &out, int m_xmer) const
 {
+    if (m_leftchild!=NULL)
+        m_leftchild->FindXmer(out, m_xmer);
+
 	// dimer: a partilce with one primary containing 2 PAHs
-	if (this->Numprimary()==1 && this->NumPAH()==m_xmer)
+	if (this->NumPAH()==m_xmer)
 		out.push_back(this->MassforXmer());
 }
 
@@ -1698,17 +1701,20 @@ void PAHPrimary::outputPAHPrimary(std::ostream &out) const
         out.write((char*)&val, sizeof(val));
         val=m_numOfRings;
         out.write((char*)&val, sizeof(val));
+
+        if (m_pmodel->WriteBinaryTrees()) {
         //count the number of PAH should be serialized
-        int m_count = 0;
-        while (m_count != m_numPAH)
-        {
-            m_PAH[m_count]->Serialize(out);
-            ++m_count;
+            int m_count = 0;
+            while (m_count != m_numPAH)
+            {
+                m_PAH[m_count]->Serialize(out);
+                ++m_count;
+            }
         }
     }
 }
 
-PAHPrimary* PAHPrimary::inputPAHPrimary(std::istream &in)
+PAHPrimary* PAHPrimary::inputPAHPrimary(std::istream &in, const Sweep::ParticleModel &model)
 {
     PAHPrimary* pri=new PAHPrimary();
     double val=0.0;
@@ -1729,13 +1735,15 @@ PAHPrimary* PAHPrimary::inputPAHPrimary(std::istream &in)
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     pri->m_numOfRings=(int)val;
 
-    int m_count=0;
-    while (m_count != pri->m_numPAH)
-    {
-        boost::shared_ptr<PAH> new_PAH (new PAH());
-        new_PAH->Deserialize(in);
-        pri->m_PAH.push_back(new_PAH);
-        ++m_count;
+    if (model.WriteBinaryTrees()) {
+        int m_count=0;
+        while (m_count != pri->m_numPAH)
+        {
+            boost::shared_ptr<PAH> new_PAH (new PAH());
+            new_PAH->Deserialize(in);
+            pri->m_PAH.push_back(new_PAH);
+            ++m_count;
+        }
     }
     return pri;
 }
@@ -1807,7 +1815,7 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
         vector<PAHPrimary*> pri;
         for (int i=0; i!=m_numprimary; ++i) 
         {
-            pri.push_back(inputPAHPrimary(in));
+            pri.push_back(inputPAHPrimary(in, model));
         }
         // relink the primary particles
         PAHPrimary* p=this;
