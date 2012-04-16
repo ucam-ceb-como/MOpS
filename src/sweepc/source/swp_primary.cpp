@@ -431,6 +431,24 @@ void Primary::Sinter(real dt, Cell &sys,
     return;
 }
 
+/*!
+ * @brief       Gets the ratio of second to first component number
+ *
+ * A coarse estimation of the coverage fraction; as the amount of the second
+ * component relative to the amount of the first. Returns 1.0 for single comp.
+ *
+ * @return      Ratio of number of second to first component
+ */
+real Primary::GetCoverageFraction() const
+{
+    real val = 1.0;
+
+    if (m_pmodel->ComponentCount() > 1 && m_comp[0] > 0.0) {
+        val = m_comp[1]/m_comp[0];
+    }
+
+    return val;
+}
 
 // READ/WRITE/COPY.
 

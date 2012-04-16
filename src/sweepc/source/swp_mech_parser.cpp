@@ -1116,6 +1116,11 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
             rxn.SetPropertyID(Sweep::iS);
             arr.A *= (1.0e-2);
         }
+        else if (str.compare("coverage")==0) {
+            // This reaction depends on fractional coverage (dimensionless),
+            // the constant does not require scaling as its units are s^-1.
+            rxn.SetPropertyID(Sweep::iCoverage);
+        }
 		else if (str.compare("asn")==0) {
             rxn.SetPropertyID(Sweep::iASN);
 
