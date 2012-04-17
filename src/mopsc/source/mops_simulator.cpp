@@ -691,12 +691,13 @@ void Simulator::PostProcess()
     // Now post-process the ensemble to find interested information, in this case, mass of Xmer
     postProcessXmer(mech, times);
 
-    // Now post-process the ensemble to find interested information, in this case, PAH mass distribution of a soot aggregate
-    postProcessPAHinfo(mech, times);
-
     // Now post-process the PSLs.
     if (m_write_PAH) {
         postProcessPSLs(mech, times);
+        // Now post-process the ensemble to find interested information, in this case, PAH mass distribution of the largest soot aggregate in the ensemnble
+        // more potential functionality can be added in the below function
+        postProcessPAHinfo(mech, times);
+        // then output details about the whole particle ensemble
         postProcessPAHPSLs(mech, times);
     }
     else
