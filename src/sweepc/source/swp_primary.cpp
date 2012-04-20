@@ -343,6 +343,8 @@ unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_t
 	// Add the components.
 	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
 		m_comp[i] += dcomp[i] * (real)n;
+		// Set component to zero if too many are removed.
+		if (m_comp[i] < 1.0) m_comp[i] = 0.0;
 	}
 
 	// Add the tracker values.
@@ -363,6 +365,8 @@ unsigned int Primary::AdjustIntPar(const fvector &dcomp, const fvector &dvalues,
 
 	// Add the components.
 	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+        // Set component to zero if too many are removed.
+        if (m_comp[i] < 1.0) m_comp[i] = 0.0;
 		m_comp[i] += dcomp[i] * (real)n;
 	}
 
