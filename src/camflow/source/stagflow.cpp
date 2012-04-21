@@ -157,11 +157,10 @@ void StagFlow::initSolutionVector(CamControl& cc)
     *initialize the ODE vector
     */
     solvect.resize(nEqn, 0.0);
-    
+
     std::vector<doublereal> vSpec = initSpecies(left, right);
-    
-    std::vector<doublereal> vT;
-    initTemperature(left, cc, vT);
+
+    std::vector<doublereal> vT = initTemperature(left);
 
     if (admin_.getEnergyModel() == CamAdmin::ADIABATIC)
     {

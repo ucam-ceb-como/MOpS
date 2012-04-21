@@ -305,6 +305,17 @@ namespace Camflow
             void mergeSootMoments(doublereal* vec);
             void mergeSpeciesAndEnergyVector(doublereal* vec);
 
+            // \todo Hack for cam_premix
+            void set_nVar(int n)
+            {
+                nVar = n;
+                nEqn = n*mCord;
+            }
+            void set_ptrF(int n)
+            {
+                ptrF = n;
+            }
+
 
         protected:
 
@@ -326,14 +337,16 @@ namespace Camflow
             const int iMesh_e, cellEnd;//last cell
             const int nMoments;//number of moments
             const int nSpc;    //number of species
-            const int nVar;    //number of variables
+            
+            // \todo Put this back to const
+            int nVar;    //number of variables
             const int ptrT;    //array offset to temperature
 
             int ptrF;    //array offset to continuity
             int ptrG;    //array offset to momentum
-            int ptrR;    //aray offset for residence time
+            int ptrR;    //array offset for residence time
             int eqn_slvd;
-            const int nEqn;    //number of equations
+            int nEqn;    //number of equations
 
             //members for the reactor models
             std::vector<doublereal> solvect, rTol, aTol;
