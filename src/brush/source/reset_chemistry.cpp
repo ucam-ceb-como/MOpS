@@ -54,6 +54,8 @@
 #include <cctype>
 #include <iomanip>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace Brush;
 
 /*!
@@ -259,11 +261,23 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
 
         // Split out the column names into a vector, one element for each entry in this title line
         std::vector<std::string> lineEntries;
-        Strings::split(lineText, lineEntries, delims); 
+        Strings::split(lineText, lineEntries, delims);
+        //boost::algorithm::split(lineEntries, lineText, boost::algorithm::is_any_of(","));
+
 
         // Find the column in the file which corresponds to each species from the mechanism
         const std::vector<std::string>::const_iterator columnNamesBegin = lineEntries.begin();
         const std::vector<std::string>::const_iterator columnNamesEnd   = lineEntries.end();
+
+        if(verbosity > 2) {
+            std::cerr << "Read following columns of chemistry data from " << fname << '\n';
+            std::vector<std::string>::const_iterator it = columnNamesBegin;
+            while(it != columnNamesEnd-1){
+                std::cerr << *it << ':';
+                ++it;
+            }
+            std::cerr << "\nEnd of chemistry data columns" << std::endl;
+        }
         
         //BOOST_FOREACH(std::string speciesName, speciesNames)
         const std::vector<std::string>::const_iterator speciesEnd = speciesNames.end();
@@ -286,9 +300,9 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
                 }
             }
             else {
-                std::string msg("no column of data for ");
+                std::string msg("no column of data for :");
                 msg += speciesName;
-                msg += " in " + fname;
+                msg += ": in " + fname;
                 throw std::runtime_error(msg);
             }
         }
