@@ -290,7 +290,15 @@ public:
 
     //! Activates writing of entire binary trees
     void SetWriteBinaryTrees(bool flag) {m_write_bintree = flag;}
+
+    //! Return the binary tree writing status
     const bool WriteBinaryTrees() const {return m_write_bintree;}
+
+    //! Sets the value of the binary tree coalescence threshold
+    void SetBintreeCoalThresh(real ct) {m_bintree_coalthresh = ct;}
+
+    //! Return the coalescence threshold for bintree particle models.
+    const real GetBintreeCoalThresh() const {return m_bintree_coalthresh;}
 
 protected:
     // The species used to define the processes and the particles.
@@ -401,6 +409,9 @@ private:
 
     //! Add a flag to indicate reading/writing of full particle binary trees
     bool m_write_bintree;
+
+    //! Coalescene threshold for multicomponent binary tree particle models
+    real m_bintree_coalthresh;
 };
 } //namespace Sweep
 #endif

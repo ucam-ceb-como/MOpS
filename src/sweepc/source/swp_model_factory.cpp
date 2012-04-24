@@ -50,6 +50,8 @@
 #include "swp_PAH_stats.h"
 #include "swp_silica_stats.h"
 #include "swp_silica_primary.h"
+#include "swp_bintree_primary.h"
+#include "swp_bintree_stats.h"
 #include <stdexcept>
 #include <iostream>
 
@@ -77,6 +79,8 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
             return new AggModels::PAHPrimary(time, position, model);
 		case AggModels::Silica_ID:
 			return new AggModels::SilicaPrimary(time, model);
+	    case AggModels::Bintree_ID:
+            return new AggModels::BintreePrimary(time, model);
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
@@ -101,6 +105,8 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
             return new AggModels::PAHPrimary(time, model);
 		case AggModels::Silica_ID:
             return new AggModels::SilicaPrimary(time, model);
+        case AggModels::Bintree_ID:
+            return new AggModels::BintreePrimary(time, model);
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
@@ -137,6 +143,9 @@ Primary *const ModelFactory::ReadPrimary(std::istream &in,
                 break;
 			case AggModels::Silica_ID:
                 pri = new AggModels::SilicaPrimary(in, model);
+                break;
+            case AggModels::Bintree_ID:
+                pri = new AggModels::BintreePrimary(in, model);
                 break;
             default:
                 throw invalid_argument("Invalid model ID (Sweep, "
@@ -226,6 +235,8 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
             return new Stats::PAHStats();       // ms785: postprocessing not yet implemented
 		case AggModels::Silica_ID:
 			return new Stats::SilicaStats();
+		case AggModels::Bintree_ID:
+		    return new Stats::BintreeStats();
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateAggStats).");
@@ -260,6 +271,9 @@ Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in,
                 break;
 			case AggModels::Silica_ID:
                 stats = new Stats::SilicaStats(in, model);
+                break;
+            case AggModels::Bintree_ID:
+                stats = new Stats::BintreeStats(in, model);
                 break;
             default:
                 throw invalid_argument("Invalid model ID (Sweep, "

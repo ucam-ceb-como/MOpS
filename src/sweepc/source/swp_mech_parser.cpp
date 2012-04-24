@@ -316,6 +316,8 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetAggModel(AggModels::PAH_KMC_ID);
 	} else if (str == "silica") {
         mech.SetAggModel(AggModels::Silica_ID);
+    } else if (str == "bintree") {
+        mech.SetAggModel(AggModels::Bintree_ID);
     } else {
         mech.SetAggModel(AggModels::Spherical_ID);
     }
@@ -323,6 +325,22 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     const CamXML::Element* secondaryXML = particleXML->GetFirstChild("secondaryparticle");
     if(secondaryXML != NULL) {
         throw std::runtime_error("Secondary particles are no longer supported (Sweep::MechParser::readV1)");
+    }
+
+    // Get the coalescence threshold for a multicomponent binary tree model
+    if (mech.AggModel() == AggModels::Bintree_ID) {
+        str = particleXML->GetFirstChild("coalthresh")->Data();
+        if (str != "") {
+            double ct = cdble(str);
+            if (ct < 0.0 || ct > 2.0) {
+                throw std::runtime_error("Coalescence threshold must be 0<ct<2.0. (Sweep::MechParser::readV1)");
+            } else {
+            mech.SetBintreeCoalThresh(ct);
+            }
+        } else {
+            throw std::runtime_error("Must specify coalescence threshold in <particle>"
+                    "block with tag <coalthresh> for bintree particle model. (Sweep::MechParser::readV1)");
+        }
     }
 
     // Get the sintering model.

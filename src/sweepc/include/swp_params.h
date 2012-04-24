@@ -58,6 +58,7 @@ namespace Sweep
     const real PI         = Sprog::PI;
     const real ONE_THIRD  = Sprog::ONE_THIRD;
     const real TWO_THIRDS = Sprog::TWO_THIRDS;
+    const real TWO_ONE_THIRD = 0.793700526;      // 2^(-1/3)
 
     // Avogadro's constant.
     const real NA = Sprog::NA;

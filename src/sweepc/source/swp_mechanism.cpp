@@ -766,6 +766,7 @@ void Mechanism::LPDA(real t, Cell &sys, rng_type &rng) const
         (m_anydeferred ||
                 (AggModel() == AggModels::PAH_KMC_ID) ||
                 (AggModel() == AggModels::Silica_ID) ||
+                (AggModel() == AggModels::Bintree_ID) ||
                 (AggModel() == AggModels::SurfVol_ID))) {
         // Stop ensemble from doubling while updating particles.
         sys.Particles().FreezeDoubling();
@@ -825,7 +826,9 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
 
     }
 
-    if (AggModel() == AggModels::Silica_ID && !m_anydeferred) {
+    if ((AggModel() == AggModels::Silica_ID ||
+            AggModel() == AggModels::Bintree_ID)
+            && !m_anydeferred) {
     	// Calculate delta-t and update particle time.
     	real dt;
     	dt = t - sp.LastUpdateTime();

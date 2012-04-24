@@ -11,6 +11,8 @@ source_group("Header Files" FILES ${INCS})
 
 add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_addcoag.cpp
+                  source/swp_bintree_primary.cpp
+                  source/swp_bintree_stats.cpp
                   source/swp_birth_process.cpp
                   source/swp_cell.cpp
                   source/swp_coagulation.cpp
