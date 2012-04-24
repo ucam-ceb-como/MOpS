@@ -261,8 +261,7 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
 
         // Split out the column names into a vector, one element for each entry in this title line
         std::vector<std::string> lineEntries;
-        Strings::split(lineText, lineEntries, delims);
-        //boost::algorithm::split(lineEntries, lineText, boost::algorithm::is_any_of(","));
+        boost::algorithm::split(lineEntries, lineText, boost::algorithm::is_any_of(delims), boost::algorithm::token_compress_on);
 
 
         // Find the column in the file which corresponds to each species from the mechanism
@@ -300,9 +299,9 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
                 }
             }
             else {
-                std::string msg("no column of data for :");
+                std::string msg("no column of data for ");
                 msg += speciesName;
-                msg += ": in " + fname;
+                msg += " in " + fname;
                 throw std::runtime_error(msg);
             }
         }
@@ -318,9 +317,13 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
             lineText.clear();
             std::getline(dataFile, lineText);
 
+            //skip lines that do not contain anything (other than perhaps some form of line end character
+            if(lineText.length() < 2)
+                continue;
+
             // Split the line into the values it contains, one per column
             lineEntries.clear();
-            Strings::split(lineText, lineEntries, delims);
+            boost::algorithm::split(lineEntries, lineText, boost::algorithm::is_any_of(delims), boost::algorithm::token_compress_on);
 
             // Check if this row is empty and skip it if there is nothing to do
             // Try to handle muddled line end sequences
@@ -336,6 +339,7 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
 
             for(size_t i = 0; i < speciesNames.size(); ++i) {
                 // Read the appropriate (mass or mole fraction) floating point number from text.
+                //std::cerr << i << ' ' << speciesFileIndices[i] << ' ' << speciesNames[i] << ' ' << lineEntries[speciesFileIndices[i]].length() << std::endl;
                 std::string fracText = lineEntries[speciesFileIndices[i]];
                 real frac = atof(fracText.c_str());
 
