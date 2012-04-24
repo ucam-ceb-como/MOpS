@@ -40,21 +40,21 @@
  * Created on January 17, 2009, 3:09 PM
  */
 
-
 #include "cam_configuration.h"
-/*
- *
- */
+
 using namespace Camflow;
 
-void CamConfiguration::setConfiguration(int n){
-    this->model = n;
+void CamConfiguration::setConfiguration(int n)
+{
+    model = n;
 }
 
-int CamConfiguration::getConfiguration() const{
-    return this->model;
+int CamConfiguration::getConfiguration() const
+{
+    return model;
 }
 
-void CamConfiguration::solve(){
-    std::cout << "Nothing implemented CamConfiguration::solve\n";
+void CamConfiguration::solve()
+{
+    std::cout<< "Nothing implemented CamConfiguration::solve" << std::endl;
 }

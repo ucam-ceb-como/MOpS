@@ -110,10 +110,10 @@ namespace Camflow
             std::vector<doublereal> initSpecies(CamBoundary &left, CamBoundary &right);
 
             //! Initialise the mass flow rate.
-            void initMassFlow(CamBoundary &cb, CamControl &cc, std::vector<doublereal> &soln);
+            std::vector<doublereal> initMassFlow(CamBoundary& cb);
 
             //! Initialise the temperature.
-            void initTemperature(CamBoundary &cb, CamControl &cc, std::vector<doublereal> &soln);
+            std::vector<doublereal> initTemperature(CamBoundary& cb);
 
             //! Initialise the temperature field with a Gaussian profile.
             void initTempGauss(std::vector<doublereal> &soln);
