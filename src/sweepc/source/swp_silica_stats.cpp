@@ -335,9 +335,9 @@ void SilicaStats::PSL(const Sweep::Particle &sp, real time,
 
     // Get the PSL stats.
     if (silica != NULL) {
-        *(++j) = (real)(silica->NumSi())/(real)(silica->Numprimary());
-        *(++j) = (real)(silica->NumO())/(real)(silica->Numprimary());
-        *(++j) = (real)(silica->NumOH())/(real)(silica->Numprimary());
+        *(++j) = (real)(silica->NumSi());
+        *(++j) = (real)(silica->NumO());
+        *(++j) = (real)(silica->NumOH());
         *(++j) = (real) (silica->Numprimary());
         *(++j) = (real) (silica->PrimaryDiam())*1e9/(real)(silica->Numprimary());//convert to nm
         *(++j) = (real) (silica->AvgSinter());
