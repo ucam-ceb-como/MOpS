@@ -161,24 +161,24 @@ public:
 
     // options for Postprocess (only for PAH-PP model)
     //! return the option whehter generate mass spectra
-    const bool Simulator::MassSpectra() const;
+    const bool MassSpectra() const;
     //! set the option whehter generate mass spectra
-    void Simulator::SetMassSpectra(const bool val);
+    void SetMassSpectra(const bool val);
 
     //! return the option whehter generate mass spectra for the whole ensemble
-    const bool Simulator::MassSpectraEnsemble() const;
+    const bool MassSpectraEnsemble() const;
     //! set the option whehter generate mass spectra for the whole ensemble
-    void Simulator::SetMassSpectraEnsemble(const bool val);
+    void SetMassSpectraEnsemble(const bool val);
 
     //! return the option whehter generate mass spectra for specified gasphase xmer
-    const int Simulator::MassSpectraXmer() const;
+    const int MassSpectraXmer() const;
     //! set the option whehter generate mass spectra for specified gasphase xmer
-    void Simulator::SetMassSpectraXmer(const int val);
+    void SetMassSpectraXmer(const int val);
 
     //! return the option whehter including the xmer in the large soot aggregate
-    const bool Simulator::MassSpectraFrag() const;
+    const bool MassSpectraFrag() const;
     //! set the option whehter including the xmer in the large soot aggregate
-    void Simulator::SetMassSpectraFrag(const bool val);
+    void SetMassSpectraFrag(const bool val);
 
 
     // STATISTICAL BOUNDS OUTPUT
