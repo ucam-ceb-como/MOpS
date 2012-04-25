@@ -1,0 +1,31 @@
+\newpage
+\chapter{Transport Data}
+\label{trans}
+A number of models that are part of Camflow expects a transport data input file tran.dat. The content of the transport data file is shown below
+{\scriptsize{
+ \begin{verbatim}
+			Example of transport data
+	=========================================================
+ AR                 0   136.500     3.330     0.000     0.000     0.000
+ C                  0    71.400     3.298     0.000     0.000     0.000 ! *
+ CH                 1    80.000     2.750     0.000     0.000     0.000
+ CH2                1   144.000     3.800     0.000     0.000     0.000
+ CH2*               1   144.000     3.800     0.000     0.000     0.000
+ CH3                1   144.000     3.800     0.000     0.000     0.000
+ CH4                2   141.400     3.746     0.000     2.600    13.000
+ \end{verbatim}}
+}
+
+The input file contains 5 columns, and the following describes the content of each column
+\begin{enumerate}
+ \item Chemical species.
+ \item An index indicating whether the molecule is monoatomic, linear or non-linear. An index 0 corresponds to single atom. If the index is 1 then the molecule is linear, and if the index is 2 its a non-linear molecule. 
+ \item Lennard-Jones potential well depth in Kelvin's.
+ \item Lennard-Jones collision diameter in Angstroms.
+ \item Dipole moment in Debye
+ \item Polarizability in cubic Angstroms
+ \item Rotatonal relaxation collision number at 298 K
+\end{enumerate}
+
+Any entry to the right of ! is considered as comments. The input file may contain empty lines and any number of comment statements. Camflow expects the transport data for all species present in the gas-phase chemistry mechanism file for models except batch reactor model.
+
