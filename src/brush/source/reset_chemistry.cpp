@@ -144,7 +144,12 @@ const size_t ResetChemistry::sLaplacianMixFracIndex = 8;
  *
  * The data file should contain one header row, which is case sensitive followed
  * by complete rows of numerical data, completely blank lines are permitted and
- * ignored.  The columns may be separated by spaces or tabs.
+ * ignored.  The columns may be separated by spaces, tabs or commas.  Multiple
+ * separators are treated as a single separator.  Mixing separators is not
+ * recommended since any separator leads to a new column being detected, which
+ * may lead to unexpected results.  For example with comma separated column headings
+ * any spaces within the column titles will lead to a (probably unwanted) column
+ * break.
  *
  * Mandatory columns in the file for the Camflow format (\ref InputFileType) are
  * - x Spatial position to which the row of data applies (\f$\mathrm{m}\f$)
@@ -337,9 +342,13 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
             // entries will be added to the end of the vector.
             data_point dataRow(sNumNonSpeciesData);
 
+//            std::cerr << '\n' << speciesFileIndices.size() << ' ' << lineEntries.size() << std::endl;
             for(size_t i = 0; i < speciesNames.size(); ++i) {
                 // Read the appropriate (mass or mole fraction) floating point number from text.
-                //std::cerr << i << ' ' << speciesFileIndices[i] << ' ' << speciesNames[i] << ' ' << lineEntries[speciesFileIndices[i]].length() << std::endl;
+//                std::cerr << i << ' ';
+//                std::cerr << speciesFileIndices[i] << ' ';
+//                std::cerr << speciesNames[i] << ' ';
+//                std::cerr << lineEntries[speciesFileIndices[i]].length() << std::endl;
                 std::string fracText = lineEntries[speciesFileIndices[i]];
                 real frac = atof(fracText.c_str());
 
