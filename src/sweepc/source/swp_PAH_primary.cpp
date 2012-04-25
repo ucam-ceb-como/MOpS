@@ -1041,7 +1041,10 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
                 m_PAHclusterchanged = true; 
                 m_PAHchanged = true;
             }
-            if (m_PAHchanged)
+			// the second condition ensures that the m_InvalidPAH is modified in the correct way
+			// consider 2 PAH, the first is invalid, the other is valid. If not using the 
+			// second condition, the m_InvalidPAH will be false enventually, but it should be true.
+            if (m_PAHchanged && !m_InvalidPAH)
                 m_InvalidPAH = CheckInvalidPAHs(*it);
         }
         if (m_InvalidPAH)
