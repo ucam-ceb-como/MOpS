@@ -113,6 +113,17 @@ public:
     // Sets the parent mechanism
     void SetMechanism(const Sweep::Mechanism &mech);
 
+    // VISCOSITY MODEL.
+
+    //! Returns the viscosity model
+    Sweep::ViscosityModel ViscosityModel() const;
+
+    //! Sets the process' viscosity model
+    void SetViscosityModel(Sweep::ViscosityModel vmodel);
+
+    //! Returns the viscosity for the given model
+    real GetViscosity(const Cell &sys) const;
+
 
     // REACTANTS.
 
@@ -247,6 +258,9 @@ protected:
     const Sweep::Mechanism *m_mech; // Pointer to the parent Mechanism.
     Sprog::StoichMap m_reac; // Reactant species stoichiometry.
     Sprog::StoichMap m_prod; // Product species stoichiometry.
+
+    // Model for the process' viscosity calculation
+    Sweep::ViscosityModel m_viscosity_model;
 
     // Default constructor is protected so that processes cannot
     // be defined without knowledge of the parent mechanism.

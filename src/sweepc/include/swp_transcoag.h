@@ -198,6 +198,7 @@ private:
         const Particle &sp2, // Second particle.
         real T,              // Temperature.
         real P,              // Pressure.
+        real mu,             // Viscosity
         const bool maj       // true=majorant kernel, false=true kernel.
         ) const;
 

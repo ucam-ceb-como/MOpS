@@ -132,6 +132,19 @@ void readInceptedTrackers(const CamXML::Element &xml, Sweep::Processes::Inceptio
 		}
 	}
 }
+
+void readViscosity(const CamXML::Element &xml, Sweep::Processes::Process &proc) {
+    std::string str = xml.GetAttributeValue("model");
+    if (str == "chapman-enskog") {
+        proc.SetViscosityModel(Sweep::iChampanEnskog);
+    } else if (str == "air") {
+        proc.SetViscosityModel(Sweep::iAir);
+    } else {
+        std::cout << "Unrecognised viscosity model. Using Air as default." << std::endl;
+        proc.SetViscosityModel(Sweep::iAir);
+    }
+}
+
 } // anonymous namespace
 
 void MechParser::Read(const std::string &filename, Sweep::Mechanism &mech)
@@ -681,6 +694,10 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
     str = xml.GetAttributeValue("name");
     if (str != "") icn.SetName(str);
 
+    // Read the viscosity model
+    CamXML::Element *el = xml.GetFirstChild("viscosity");
+    if (el != NULL) readViscosity(*el, icn);
+
     // Read reactants.
     readReactants(xml, icn);
 
@@ -722,7 +739,7 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 
     // Rate scaling now that a process has been created
     real A = 0.0;
-    CamXML::Element *el = xml.GetFirstChild("A");
+    el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
         icn.SetA(A);
@@ -759,6 +776,10 @@ void MechParser::readSiliconInception(CamXML::Element &xml, Processes::SiliconIn
 
     // Read reactants.
     readReactants(xml, icn);
+
+    // Read the viscosity model
+    CamXML::Element *el = xml.GetFirstChild("viscosity");
+    if (el != NULL) readViscosity(*el, icn);
 
     // Find the rate calculation method (a coagulation kernel)
     // Currently the only possibilities are free molecular and transition
@@ -798,7 +819,7 @@ void MechParser::readSiliconInception(CamXML::Element &xml, Processes::SiliconIn
 
     // Rate scaling now that a process has been created
     real A = 0.0;
-    CamXML::Element *el = xml.GetFirstChild("A");
+    el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
         icn.SetA(A);
@@ -1237,6 +1258,10 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
         cond.SetName(str);
     }
 
+    // Read the viscosity model
+    CamXML::Element *el = xml.GetFirstChild("viscosity");
+    if (el != NULL) readViscosity(*el, cond);
+
     // Read reactants.
     try {
         // Get reactant stoichiometry.
@@ -1267,7 +1292,7 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
 
     // Read Arrhenius rate parameters.
     real A = 0.0;
-    CamXML::Element *el = xml.GetFirstChild("A");
+    el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
     } else {
@@ -1497,6 +1522,7 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                 // of A.
                 std::auto_ptr<Processes::Coagulation> coag;
 
+
                 if(weightXML == NULL) {
                     // Unweighted case
                     if(kernelName == "transition")
@@ -1569,9 +1595,14 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                                                 (Sweep, MechParser::readCoagulation)");
                 }
 
+
+                // Read the viscosity model
+                CamXML::Element *el = (*it)->GetFirstChild("viscosity");
+                if (el != NULL) readViscosity(*el, *coag);
+
                 // Rate scaling now that a process has been created
                 real A = 0.0;
-                CamXML::Element *el = (*it)->GetFirstChild("A");
+                el = (*it)->GetFirstChild("A");
                 if (el != NULL) {
                     A = cdble(el->Data());
                 } else {

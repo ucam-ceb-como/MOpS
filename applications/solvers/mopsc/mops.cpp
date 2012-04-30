@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
     string swpfile("sweep.xml");
     string sensifile("sensi.xml");
     string gasphase("gasphase.inp");
+    string transfile("NOT READ");
     bool fsolve        = true;  // Default is to solve ..
     bool fpostprocess  = false; // .. but not post-process.
     bool foldfmt       = false;
@@ -103,6 +104,9 @@ int main(int argc, char *argv[])
         }   else if (strcmp(argv[i], "-t") == 0) {
             // Thermodynamic properties file (CK format).
             thermfile = argv[++i];
+        }   else if (strcmp(argv[i], "-tr") == 0) {
+            // Transport properties file.
+            transfile = argv[++i];
         } else if (strcmp(argv[i], "-r") == 0) {
             // Settings file (F90 mops format).
             settfile = argv[++i];
@@ -237,7 +241,7 @@ int main(int argc, char *argv[])
 
     // Read the chemical mechanism / profile.
     try {
-        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech.GasMech(), thermfile, diag);
+        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech.GasMech(), thermfile, diag, transfile);
         mech.ParticleMech().SetSpecies(mech.GasMech().Species());
         if (diag>0) 
             mech.GasMech().WriteDiagnostics("ckmech.diag");
