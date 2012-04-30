@@ -1,0 +1,26 @@
+\newpage
+\section*{Preface}
+Camflow is a software written in C++ for simulating various reactor models and flames. The models currently available in Camflow are the following
+\begin{itemize}
+ \item Constant Volume Batch Reactor
+ \item Plug flow reactor
+ \item Premix Laminar Flame
+ \item Counter Flow Diffusion Flame
+ \item Stagnation flame
+ \item Flamelets
+\end{itemize}
+
+All the models except the PLUG flow reactor model pertains to transient cases. A brief introduction to the fundamentals of Camflow is given below. The physical and chemical fundamentals of each reactor model is given in the respective chapters. \\
+
+For simulating any model, camflow expects the following input files
+\begin{itemize}
+ \item Chemistry definitions (chem.inp)
+\item Thermochemistry polynomials (therm.dat)
+\item Model specific input file (camflow.xml)
+\item Transport related data (tran.dat) for flame models
+\end{itemize}
+
+The chemistry input file for Camflow is essentially a chemkin style gas-phase mechanism description. The fromat of the mechanism input file strictly follows the chemkin input file structure. Additionally the thermochemical data for each species present in the gas-phase mechanism must be specified in the thermochemistry input file therm.dat. This file follows the format of  JANAF polynomials for gas-phase chemical species. Although higher order polynomials are currently available, the kinetics library on which Camflow is built, consideres only 7 coefficient fit for the polynomials. If any species present in the chemical mechanism is not present in the thermochemistry data, and exception will be generated. For all the flame models, a transport data file must be provided. This file contains the Lennard-Jones potential parameters, structure of the chemical species, dipole moment etc. The camflow input file has the same structure for all models, however, some models require fewever input data than others. \\
+
+This manual does not describe the format of chemical reaction mechanisms and the JANAF polynomials. However, a brief description about the transport data specification is given in the chapter~\ref{trans}
+

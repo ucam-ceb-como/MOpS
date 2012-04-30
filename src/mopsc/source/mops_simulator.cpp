@@ -77,7 +77,8 @@ Simulator::Simulator(void)
   m_output_filename("mops-out"), m_output_every_iter(false),
   m_output_step(0), m_output_iter(0), m_write_jumps(false),
   m_write_ensemble_file(false),
-  m_write_PAH(false), m_ptrack_count(0)
+  m_write_PAH(false), m_ptrack_count(0), m_mass_spectra(true),
+  m_mass_spectra_ensemble(true), m_mass_spectra_xmer(1), m_mass_spectra_frag(false)
 {
 }
 
@@ -241,6 +242,46 @@ void Simulator::SetOutputStatBoundary(Sweep::PropID pid, double lower, double up
 
 void Simulator::SetParticleTrackCount(unsigned int ptcount) {
     m_ptrack_count = ptcount;
+}
+// options for Postprocess (only for PAH-PP model)
+const bool Simulator::MassSpectra() const
+{
+    return m_mass_spectra;
+}
+
+void Simulator::SetMassSpectra(const bool val)
+{
+    m_mass_spectra = val;
+}
+
+const bool Simulator::MassSpectraEnsemble() const
+{
+    return m_mass_spectra_ensemble;
+}
+
+void Simulator::SetMassSpectraEnsemble(const bool val)
+{
+    m_mass_spectra_ensemble = val;
+}
+
+const int Simulator::MassSpectraXmer() const
+{
+    return m_mass_spectra_xmer;
+}
+
+void Simulator::SetMassSpectraXmer(const int val)
+{
+    m_mass_spectra_xmer = val;
+}
+
+const bool Simulator::MassSpectraFrag() const
+{
+    return m_mass_spectra_frag;
+}
+
+void Simulator::SetMassSpectraFrag(const bool val)
+{
+    m_mass_spectra_frag = val;
 }
 
 // SOLVING REACTORS.
@@ -689,7 +730,8 @@ void Simulator::PostProcess()
     // POST-PROCESS PSLs.
 
     // Now post-process the ensemble to find interested information, in this case, mass of Xmer
-    postProcessXmer(mech, times);
+    if (MassSpectra())
+        postProcessXmer(mech, times);
 
     // Now post-process the PSLs.
     if (m_write_PAH) {
@@ -2456,83 +2498,104 @@ void Simulator::postProcessXmer(const Mechanism &mech,
         // write the header row as well.
         vector<CSV_IO*> out(times.size(), NULL);
 
-
-        unsigned int step = 0;
-        for (unsigned int i=0; i!=times.size(); ++i) {
-            real t = times[i].EndTime();
-            out[i] = new CSV_IO();
-            out[i]->Open(m_output_filename + "-" + "mass spectra-(" +
-                        cstr(t) + "s).csv", true);
-        }
-
-        // Loop over all time intervals.
-        for (unsigned int i=0; i!=times.size(); ++i) {
-            // Calculate the total step count after this interval.
-            step += times[i].StepCount();
-
-            // Loop over all runs.
-            for (unsigned int irun=0; irun!=m_nruns; ++irun) {
-                // Read the save point for this step and run.
-                r = readSavePoint(step, irun, mech);
-
-                //particle count and number density of ensemble
-                real Pcount = r->Mixture()->ParticleCount();
-                real PM0 = r->Mixture()->ParticleCount() / r->Mixture()->SampleVolume();
-
-                if (r != NULL) {
-                    real scale = (real)m_nruns;
-                    if (m_output_every_iter) scale *= (real)m_niter;
-                    // Get PSL for all particles.
-                    for (unsigned int j = 0; j != Pcount; ++j) {
-                        // Get PSL.
-                        stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
-                                    times[i].EndTime(), temp,
-                                    1.0/(r->Mixture()->SampleVolume()*scale));
-                        //temp[11]=>num of PAH
-                        //temp[13]=>num of C, temp[14]=>num of H
-                        real mass = 12 * temp[13] + temp[14];
-                        // currently only mass <= 2000 are interested in mass spectra.
-                        psl_xmer.push_back(mass);
-                    }
-                    delete r;
-                    // calculate m0 for each xmer, used for single run
-                    calculateM0(psl_xmer,m0_xmer,Pcount,PM0);
-                } else {
-                    // Throw error if the reactor was not read.
-                    throw runtime_error("Unable to read reactor from save point "
-                                        "(Mops, ParticleSolver::postProcessXmer).");
+        // start with monomer and end with trimer currently
+        for (int k = 0; k!=MassSpectraXmer() ;++k) {
+            unsigned int step = 0;
+            if (MassSpectraEnsemble()){
+                for (unsigned int i=0; i!=times.size(); ++i) {
+                    real t = times[i].EndTime();
+                    out[i] = new CSV_IO();
+                    out[i]->Open(m_output_filename + "-mass-spectra-(" +
+                                cstr(t) + "s).csv", true);
                 }
-                if (psl_xmer.size()  == m0_xmer.size()) {
-                    m_mass.insert(m_mass.end(),psl_xmer.begin(), psl_xmer.end());
-                    m_allmass.push_back(psl_xmer);
-                    m_allm0.push_back(m0_xmer);
-                    psl_xmer.clear();
-                    m0_xmer.clear();
-                } else {
-                    // Throw error if the size of vector differ.
-                    throw runtime_error("size of psl_xmer is different form that of m0_xmer, the analysis of xmer information fails"
-                                        "(Mops, ParticleSolver::postProcessXmer).");
-                }
-
             }
-            // calculate m0 for xmer, used for multiple runs
-            calculateM0(m_mass, m_m0, m_allmass, m_allm0);
-            // Output particle PSL to CSV file.
-            if (m_mass.size() != m_m0.size()) 
-                throw runtime_error("size of m_mass is different form that of m_m0, the analysis of xmer information fails" 
-                                    "when trying to calculate mo for multiple runs (Mops, ParticleSolver::postProcessXmer).");
-            out[i]->Write(m_mass);
-            out[i]->Write(m_m0);
-            m_allm0.clear();
-            m_allmass.clear();
-            m_mass.clear();
-            m_m0.clear();
-        }
+            else {
+                for (unsigned int i=0; i!=times.size(); ++i) {
+                    real t = times[i].EndTime();
+                    out[i] = new CSV_IO();
+                    out[i]->Open(m_output_filename + "-" + cstr(k+1) +"mer-(" +
+                                cstr(t) + "s).csv", true);
+                }
+            }
+            // Loop over all time intervals.
+            for (unsigned int i=0; i!=times.size(); ++i) {
+                // Calculate the total step count after this interval.
+                step += times[i].StepCount();
 
-        // Close output CSV files.
-        for (unsigned int i=0; i!=times.size(); ++i) {
-            out[i]->Close();
-            delete out[i];
+                // Loop over all runs.
+                for (unsigned int irun=0; irun!=m_nruns; ++irun) {
+                    // Read the save point for this step and run.
+                    r = readSavePoint(step, irun, mech);
+
+                    //particle count and number density of ensemble
+                    real Pcount = r->Mixture()->ParticleCount();
+                    real PM0 = r->Mixture()->ParticleCount() / r->Mixture()->SampleVolume();
+
+                    if (r != NULL) {
+                        real scale = (real)m_nruns;
+                        if (m_output_every_iter) scale *= (real)m_niter;
+                        // Get PSL for all particles.
+                        for (unsigned int j = 0; j != Pcount; ++j) {
+                            // Get PSL.
+                            stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
+                                        times[i].EndTime(), temp,
+                                        1.0/(r->Mixture()->SampleVolume()*scale));
+                            //temp[11]=>num of PAH, temp[15]=>num of primary particles
+                            //temp[13]=>num of C, temp[14]=>num of H
+                            real mass = 12 * temp[13] + temp[14];
+                            // generate Mass spectra for the whole ensemble
+                            if (MassSpectraEnsemble())    psl_xmer.push_back(mass);
+                            else {
+                                if ((k+1) == temp[11] && 1 == temp[15])    psl_xmer.push_back(mass);
+                                else {
+                                    Sweep::Particle* sp=r->Mixture()->Particles().At(j);
+                                    Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
+                                    // if including the xmers in the soot aggregate
+                                    if (MassSpectraFrag())
+                                    pah->FindXmer(psl_xmer,k+1);
+                                }
+                            }
+                        }
+                        delete r;
+                        // calculate m0 for each xmer, used for single run
+                        calculateM0(psl_xmer,m0_xmer,Pcount,PM0);
+                    } else {
+                        // Throw error if the reactor was not read.
+                        throw runtime_error("Unable to read reactor from save point "
+                                            "(Mops, ParticleSolver::postProcessXmer).");
+                    }
+                    if (psl_xmer.size()  == m0_xmer.size()) {
+                        m_mass.insert(m_mass.end(),psl_xmer.begin(), psl_xmer.end());
+                        m_allmass.push_back(psl_xmer);
+                        m_allm0.push_back(m0_xmer);
+                        psl_xmer.clear();
+                        m0_xmer.clear();
+                    } else {
+                        // Throw error if the size of vector differ.
+                        throw runtime_error("size of psl_xmer is different form that of m0_xmer, the analysis of xmer information fails"
+                                            "(Mops, ParticleSolver::postProcessXmer).");
+                    }
+
+                }
+                // calculate m0 for xmer, used for multiple runs
+                calculateM0(m_mass, m_m0, m_allmass, m_allm0);
+                // Output particle PSL to CSV file.
+                if (m_mass.size() != m_m0.size()) 
+                    throw runtime_error("size of m_mass is different form that of m_m0, the analysis of xmer information fails" 
+                                        "when trying to calculate mo for multiple runs (Mops, ParticleSolver::postProcessXmer).");
+                out[i]->Write(m_mass);
+                out[i]->Write(m_m0);
+                m_allm0.clear();
+                m_allmass.clear();
+                m_mass.clear();
+                m_m0.clear();
+            }
+
+            // Close output CSV files.
+            for (unsigned int i=0; i!=times.size(); ++i) {
+                out[i]->Close();
+                delete out[i];
+            }
         }
     }
 }
