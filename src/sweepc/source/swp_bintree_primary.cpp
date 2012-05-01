@@ -868,9 +868,9 @@ void BintreePrimary::UpdateCache(BintreePrimary *root)
                     (m_avg_sinter * (1 - numprim_1_3) + numprim_1_3);
 
             // Calculate dcol based-on formula given in Lavvas et al. (2011)
-            // assume fractal dimension Df = 1.8
             const real aggcolldiam = (6* m_vol / m_surf) *
-                    pow(pow(m_surf, 3) / (36 * PI * m_vol * m_vol), (1.0/1.8));
+                    pow(pow(m_surf, 3) / (36 * PI * m_vol * m_vol),
+                            (1.0/m_pmodel->GetFractDim()));
             m_dmob = aggcolldiam;
             m_dcol = aggcolldiam;
 

@@ -341,10 +341,10 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     }
 
     // Get the coalescence threshold for a multicomponent binary tree model
+    const CamXML::Element* el = particleXML->GetFirstChild("coalthresh");
     if (mech.AggModel() == AggModels::Bintree_ID) {
-        str = particleXML->GetFirstChild("coalthresh")->Data();
-        if (str != "") {
-            double ct = cdble(str);
+        if (el != NULL) {
+            double ct = cdble(el->Data());
             if (ct < 0.0 || ct > 2.0) {
                 throw std::runtime_error("Coalescence threshold must be 0<ct<2.0. (Sweep::MechParser::readV1)");
             } else {
@@ -354,6 +354,22 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             throw std::runtime_error("Must specify coalescence threshold in <particle>"
                     "block with tag <coalthresh> for bintree particle model. (Sweep::MechParser::readV1)");
         }
+    }
+
+    el = particleXML->GetFirstChild("fractdim");
+    // Get the fractal dimension
+    if (el != NULL) {
+        double df = cdble(el->Data());
+        if (df < 1.0 || df > 3.0) {
+            throw std::runtime_error("Fract. dim must be 1<df<3.0. (Sweep::MechParser::readV1)");
+        } else {
+            mech.SetFractDim(df);
+        }
+    } else {
+        // Default fractal dimension is 1.8
+        // Schaefer & Hurd (1990) Aer. Sci. Tech. 12:876-890
+        // for synthesis of fumed silica nanoparticles.
+        mech.SetFractDim(1.8);
     }
 
     // Get the sintering model.
