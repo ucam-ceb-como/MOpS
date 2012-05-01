@@ -871,7 +871,7 @@ void BintreePrimary::UpdateCache(BintreePrimary *root)
             const real aggcolldiam = (6* m_vol / m_surf) *
                     pow(pow(m_surf, 3) / (36 * PI * m_vol * m_vol),
                             (1.0/m_pmodel->GetFractDim()));
-            m_dmob = aggcolldiam;
+            m_dmob = MobDiameter();
             m_dcol = aggcolldiam;
 
         }
@@ -880,6 +880,40 @@ void BintreePrimary::UpdateCache(BintreePrimary *root)
             m_dmob=0;
         }
     }
+}
+
+/*!
+ *@brief        Overload of MobDiameter to return correct dmob
+ *
+ * This calculation is based on the work of Rogak et al., 1993 Aer. Sci.
+ * Tech. 18:25-47, who give the calculation of dmob in the FM, SF and
+ * transition regime.
+ *
+ * Currently, only the SF calculation is used, as the majority of experimental
+ * systems which measure dmob run at continuum conditions.
+ *
+ * dmob,SF = 0.9 * dpri * sqrt(Df/(Df+2)) * npri^(1/Df)
+ * dmob,FM = dpri * sqrt(0.802 * (npri - 1) + 1)
+ *
+ */
+real BintreePrimary::MobDiameter() const
+{
+    real dmob(1.0);
+
+    // Is this a single particle?
+    if (m_leftchild == NULL && m_parent == NULL) {
+        dmob = m_diam;
+    } else {
+
+        // SF regime mobility diameter
+        dmob *= 0.9 * m_primarydiam / (real)m_numprimary;
+        dmob *= sqrt(m_pmodel->GetFractDim() / (m_pmodel->GetFractDim() + 2));
+        dmob *= pow(m_numprimary, (1.0/m_pmodel->GetFractDim()));
+
+        if (dmob < m_diam) dmob = m_diam;
+
+    }
+    return dmob;
 }
 
 

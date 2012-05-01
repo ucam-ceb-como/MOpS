@@ -117,6 +117,9 @@ public:
 
 
     // GENERAL DATA ACCESS METHODS
+    //! Overload of the Mobility Diameter
+    real MobDiameter() const;
+
     //! Get the number of primaries in the particle
     int  GetNumPrimary() const {return m_numprimary;}
 
