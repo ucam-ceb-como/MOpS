@@ -53,7 +53,7 @@ using namespace std;
 
 const std::string BintreeStats::m_statnames[BintreeStats::STAT_COUNT] = {
     std::string("Avg. Number of Primaries per Particle (-)"),
-    std::string("Avg. Primary Diameter (nm)"),
+    std::string("Avg. Primary Diameter (m)"),
     std::string("Avg. Sintering Level (-)"),
     std::string("Avg. Sintering Rate (m2/s)"),
     std::string("Avg. Sintering Time (s)")
@@ -145,7 +145,7 @@ void BintreeStats::Calculate(const Ensemble &e, real scale)
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
             m_stats[iNPrim]     += prim->GetNumPrimary()  * wt;
-            m_stats[iPrimDiam]  += prim->GetPrimaryDiam() * 1e9  * wt
+            m_stats[iPrimDiam]  += prim->GetPrimaryDiam() * wt
                     / prim->GetNumPrimary();
             m_stats[iSintLevel] += prim->GetAvgSinterLevel() * wt;
             m_stats[iSintRate]  += prim->GetSintRate() * wt;
