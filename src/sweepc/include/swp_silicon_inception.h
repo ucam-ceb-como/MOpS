@@ -141,20 +141,30 @@ public:
     //! Inception only according to free mol kernel with these sizes
     void SetInceptingSpeciesFreeMol(real m1, real m2, real d1, real d2);
 
-    //! Sets the volume of a monomer particle
-    void SetMonomerVolume(const Sweep::Mechanism &mech);
+    //! Sets the volume of an incepting particle
+    void SetInceptingVolume(const Sweep::Mechanism &mech);
 
     //! Sets the diameter of an incepting particle
     void SetInceptingDiameter(const Sweep::Mechanism &mech);
 
+
     //! Calculates the precursor concentration
     real GetPrecursorFraction(const Cell &sys) const;
+
+    //! Returns the supersaturation
+    real GetSupersaturation(const Sweep::Cell &sys) const;
 
     //! Calculates the critical nucleus size
     real GetCriticalNucleus(const Cell &sys) const;
 
     //! Checks whether inception should proceed, based on dcrit
     bool IsInceptionAllowed(const Cell &sys) const;
+
+    //! Enum for inception equation type
+    enum InceptionType {iCollisional, iVBDZ, iGirshick};
+
+    //! Sets the inception mechanism
+    void SetInceptionMechanism(InceptionType itype) {m_itype = itype;}
 
     // READ/WRITE/COPY.
 
@@ -199,6 +209,17 @@ protected:
         ) const;
 
 private:
+
+
+    //! Returns the surface energy of silicon
+    real GetSurfaceEnergy(real T) const;
+
+    //! Returns the saturation vapour pressure of silicon
+    real GetSatVapourPressure(real T) const;
+
+    //! Returns the saturated monomer number concentration
+    real GetMonomerConc(real T) const;
+
     // Rate parameters.
     //! Free-molecular kernel parameter.
     real m_kfm;
@@ -207,8 +228,20 @@ private:
     //! Free-molecular enhancement factor.  Currently hardcoded (m_efm = 2.2).
     static const real m_efm;
 
-    //! Volume of a newly-incepted monomer
-    real m_v1;
+    //! Inception equation type
+    InceptionType m_itype;
+
+    //! Volume of a monomer (Si atom), hardcoded
+    static const real m_v1;
+
+    //! Mass of a monomer (Si atom), hardcoded
+    static const real m_m1;
+
+    //! Diameter of a monomer (Si atom), hardcoded
+    static const real m_d1;
+
+    //! Volume of an incepting particle
+    real m_vi;
 
     //! Diameter of an incepting particle
     real m_di;

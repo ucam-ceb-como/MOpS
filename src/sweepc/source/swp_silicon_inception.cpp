@@ -53,21 +53,25 @@ using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
 
-//! Free-molecular enhancement factor.
+// Declaration of constants
 const real SiliconInception::m_efm = 2.2; // 2.2 is for soot.
+const real SiliconInception::m_m1  = 4.664e-26;     // kg (mass of Si atom)
+const real SiliconInception::m_v1  = 2.003e-29;     // m3 (vol of Si atom)
+const real SiliconInception::m_d1  = 3.369e-10;     // m  (sph. diam.)
+
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
 //! Default constructor (protected).
 SiliconInception::SiliconInception(void)
-: Inception(), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0), m_v1(0.0), m_di(0.0)
+: Inception(), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0), m_itype(iCollisional), m_vi(0.0), m_di(0.0)
 {
     m_name = "SiliconInception";
 }
 
 //! Initialising constructor.
 SiliconInception::SiliconInception(const Sweep::Mechanism &mech)
-: Inception(mech), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0), m_v1(0.0), m_di(0.0)
+: Inception(mech), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0), m_itype(iCollisional), m_vi(0.0), m_di(0.0)
 {
     m_name = "SiliconInception";
 }
@@ -104,7 +108,8 @@ SiliconInception &SiliconInception::operator =(const SiliconInception &rhs)
         m_kfm  = rhs.m_kfm;
         m_ksf1 = rhs.m_ksf1;
         m_ksf2 = rhs.m_ksf2;
-        m_v1   = rhs.m_v1;
+        m_itype = rhs.m_itype;
+        m_vi   = rhs.m_vi;
         m_di   = rhs.m_di;
     }
     return *this;
@@ -216,15 +221,14 @@ void SiliconInception::SetInceptingSpeciesFreeMol(real m1, real m2, real d1, rea
 }
 
 /*!
- * @brief           Sets the volume of a monomer particle
+ * @brief           Sets the incepting volume
  *
- * The volume of a monomer particle (1 of each component) is needed for the
- * critical nucleus calculation. This is determined upon initialisation, based
- * on the density of molwt of each component.
+ * The volume of the incepting particle is determined upon initialisation,
+ * based on the density of molwt of each component.
  *
  * @param mech      Particle mechanism
  */
-void SiliconInception::SetMonomerVolume(const Sweep::Mechanism &mech)
+void SiliconInception::SetInceptingVolume(const Sweep::Mechanism &mech)
 {
     real v1(0.0);
     CompPtrVector comp = mech.Components();
@@ -234,14 +238,14 @@ void SiliconInception::SetMonomerVolume(const Sweep::Mechanism &mech)
                 (Sweep::NA * mech.Components(i)->Density());
     }
 
-    m_v1 = v1;
+    m_vi = v1;
 }
 
 /*!
  * @brief       Calculates the diameter of an incepting particle
  *
  * Pre-calculates the incepting diameter of a particle for this inception
- * reaction. This is done using the molwt, density and inital number of
+ * reaction. This is done using the molwt, density and initial number of
  * each component in the new particle.
  *
  * @param mech  Particle mechanism
@@ -299,6 +303,71 @@ real SiliconInception::GetPrecursorFraction(const Sweep::Cell &sys) const
     return frac;
 }
 
+/*!
+ * @brief       Returns the supersaturation
+ *
+ * Supersaturation for this system is defined by the ratio of the
+ * monomer pressure to the saturation vapour pressure.
+ *
+ * @param sys   System for which to calculate
+ * @return      Supersaturation (-)
+ */
+real SiliconInception::GetSupersaturation(const Sweep::Cell &sys) const
+{
+    real s(1.0);
+
+    // First get the silicon pressure
+    s *= (GetPrecursorFraction(sys) * sys.GasPhase().Pressure());
+
+    // Now divide by the saturation vapour pressure
+    s /= GetSatVapourPressure(sys.GasPhase().Temperature());
+
+    return s;
+
+}
+
+/*!
+ * @brief       Returns the surface energy of silicon
+ *
+ * Koermer et al (2010) J. Aerosol Sci, 41, 1007-
+ *
+ * @param T     Temperature (K)
+ * @return      Surface energy (N/m)
+ */
+real SiliconInception::GetSurfaceEnergy(real T) const
+{
+    return 1.152 - 1.574e-4 * T;
+}
+
+/*!
+ * @brief       Returns the saturation vapour pressure of silicon
+ *
+ * Koermer et al (2010) J. Aerosol Sci, 41, 1007-
+ *
+ * @param T     Temperature (K)
+ * @return      Saturation vapour pressure (Pa)
+ */
+real SiliconInception::GetSatVapourPressure(real T) const
+{
+    return 101325.0 * pow(10, 7.534 - (23399 / T));
+}
+
+
+/*!
+ * @brief       Returns the saturated monomer number concentration
+ *
+ * Estimates the number concentration from the saturation vapour pressure
+ *
+ * @param T     Temperature (K)
+ * @return      Sat. monomer number concentration (#/m3)
+ */
+real SiliconInception::GetMonomerConc(real T) const
+{
+    real psat = GetSatVapourPressure(T);
+    psat *= (NA / (T * R));
+    return psat;
+}
+
 
 /*!
  * @brief       Calculates the critical nucleus size
@@ -318,31 +387,18 @@ real SiliconInception::GetPrecursorFraction(const Sweep::Cell &sys) const
 real SiliconInception::GetCriticalNucleus(const Sweep::Cell &sys) const
 {
     real d = 4.0/Sweep::KB;
+    real s = GetSupersaturation(sys);
 
     // Get chemical conditions
     real T = sys.GasPhase().Temperature();      // in K
-    real P = sys.GasPhase().Pressure();         // in Pa
-
-    // Calculate the surface energy of silicon
-    // Koermer et al (2010) J. Aerosol Sci, 41, 1007-
-    real gamma = 1.152 - 1.574e-4 * T;
-
-    // Calculate the supersaturation factor, S
-    // first get the saturation vapour pressure of silicon
-    real psat = pow(10, 7.534 - (23399 / T));       // in atm
-    psat *= 101325;                                 // in Pa
-    // now get the pressure of the contributing silicon hydride species
-    real psi = GetPrecursorFraction(sys) * P;
 
     // Set d to an arbitrarily high value if psi = 0 (i.e. no precursor)
-    // avoid getting log(0)
-    if (psi == 0.0) {
+    if (s <= 0.0) {
         d = 1.0;                            // in m
     } else {
-        // now calculate the supersaturation
-        real s = log(P / psat);
 
-        d *= (gamma * m_v1 / (T * s));      // in m
+        d *= (GetSurfaceEnergy(sys.GasPhase().Temperature())
+                * m_v1 / (T * log(s)));      // in m
     }
 
     return d;
@@ -397,20 +453,62 @@ real SiliconInception::Rate(const fvector &fracs, real density, real sqrtT,
                      real T_mu, real MFP, real vol, const Cell &sys) const
 {
     real rate(1.0);
+    real fm(0.0);
+    real sf(0.0);
+    real n(0.0);
+    real s(0.0);
+    real y(0.0);
+    real Theta(0.0);
+    real T = sys.GasPhase().Temperature();
 
     // Check if the rate is > 0 as found by homogeneous nucleation
     if (IsInceptionAllowed(sys)) {
-        real rate = A() * vol * chemRatePart(fracs, density);
+        switch (m_itype) {
+        case iCollisional:
+            // Use the 'normal' MOPS collisional rate
+            rate = A() * vol * chemRatePart(fracs, density);
 
-        const real fm   = sqrtT * m_kfm;
-        if((m_ksf1 > 0) || (m_ksf2 > 0))  {
-            // Transition regime
-            real sf   = T_mu  * (m_ksf1 + (MFP*m_ksf2));
-            rate *= ((fm*sf) / (fm+sf));
-        }
-        else {
-            // Free mol regime only
-            rate *= fm;
+            fm   = sqrtT * m_kfm;
+            if((m_ksf1 > 0) || (m_ksf2 > 0))  {
+                // Transition regime
+                sf   = T_mu  * (m_ksf1 + (MFP*m_ksf2));
+                rate *= ((fm*sf) / (fm+sf));
+            }
+            else {
+                // Free mol regime only
+                rate *= fm;
+            }
+
+            break;
+        case iVBDZ:
+            // Wu et al (1987) Langmuir 3:266-271
+            rate = A() * vol;
+
+            s = GetSupersaturation(sys);
+            y = GetSurfaceEnergy(T);
+            n = GetMonomerConc(T);
+
+            rate *= (s * s * m_v1 * n * n);
+            rate *= sqrt(2.0 * y / (PI * m_m1));
+            rate *= exp(-16.0 * PI * y * y * y * m_v1 * m_v1 * m_v1
+                    / (3.0 * KB * KB * KB * T * T * T * log(s) * log(s)));
+
+            break;
+        case iGirshick:
+            // Girshick & Chiu (1990) J. Chem. Phys. 93:1273-1277
+            rate = A() * vol;
+
+            s = GetSupersaturation(sys);
+            y = GetSurfaceEnergy(T);
+            n = GetMonomerConc(T);
+
+            Theta = PI * m_d1 * m_d1 * y / (KB * T);
+
+            rate *= (s * s * m_v1 * n * n);
+            rate *= sqrt(2.0 * y / (PI * m_m1));
+            rate *= exp(Theta - (4.0 * Theta * Theta * Theta / (27.0 * log(s) * log(s))));
+
+            break;
         }
     } else {
         // We have d < d_crit, return 0.
@@ -502,7 +600,9 @@ void SiliconInception::Serialize(std::ostream &out) const
         out.write((char*)&v, sizeof(v));
 
         // Write HNT parameters
-        v = (double)m_v1;
+        unsigned int num = (unsigned int)m_itype;
+        out.write((char*)&num, sizeof(num));
+        v = (double)m_vi;
         out.write((char*)&v, sizeof(v));
         v = (double)m_di;
         out.write((char*)&v, sizeof(v));
@@ -524,6 +624,7 @@ void SiliconInception::Deserialize(std::istream &in, const Sweep::Mechanism &mec
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
         double val = 0.0;
+        unsigned int num(0);
 
         switch (version) {
             case 0:
@@ -541,8 +642,10 @@ void SiliconInception::Deserialize(std::istream &in, const Sweep::Mechanism &mec
                 m_ksf2 = (real)val;
 
                 // Read HNT parameters
+                in.read(reinterpret_cast<char*>(&num), sizeof(num));
+                m_itype = (InceptionType)num;
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_v1 = (real)val;
+                m_vi = (real)val;
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_di = (real)val;
 
