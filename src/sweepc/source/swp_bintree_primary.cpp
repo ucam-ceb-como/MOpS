@@ -1033,15 +1033,19 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
     {
         unsigned int i = 0;
 
-        real dV;
+        real dV(0.0);
         real m_vol_old = m_vol;
+        real dc(0.0);
 
         // Add the components.
-        for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i)
-        {
+        for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+            dc = m_comp[i];
             m_comp[i] += dcomp[i] * (real)n;
             // Set component to zero if too many are removed.
-            if (m_comp[i] < 1.0) m_comp[i] = 0.0;
+            if (m_comp[i] < 1.0) {
+                m_comp[i] = 0.0;
+                n = (unsigned int) abs(dc/dcomp[i]);
+            }
         }
 
         // Add the tracker values.
@@ -1050,18 +1054,20 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
             m_values[i] += dvalues[i] * (real)n;
         }
 
-        // Update only the primary
-        UpdatePrimary();
+        // Stop doing the adjustment if n is 0.
+        if (n > 0) {
+            // Update only the primary
+            UpdatePrimary();
 
-        dV = m_vol - m_vol_old;
+            dV = m_vol - m_vol_old;
 
-        // Surface change due to volume addition
-        real dS = dV * 2.0 * m_pmodel->GetBintreeCoalThresh() / m_diam;
+            // Surface change due to volume addition
+            real dS = dV * 2.0 * m_pmodel->GetBintreeCoalThresh() / m_diam;
 
-        // Climb back-up the tree and update the surface area and
-        // sintering of a particle
-        UpdateParents(dS);
-
+            // Climb back-up the tree and update the surface area and
+            // sintering of a particle
+            UpdateParents(dS);
+        }
     }
 
     // Else this a non-leaf node (not a primary)
