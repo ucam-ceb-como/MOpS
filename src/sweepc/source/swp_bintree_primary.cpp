@@ -1036,7 +1036,6 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
 
         real dV(0.0);
         real volOld = m_vol;
-        real surfOld = m_surf;
         real dc(0.0);
 
         // Add the components.
@@ -1068,6 +1067,7 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
                 // Surface change due to volume addition
                 dS = dV * 2.0 * m_pmodel->GetBintreeCoalThresh() / m_diam;
             }
+            // TODO: Implement surface area reduction?
 
             // Climb back-up the tree and update the surface area and
             // sintering of a particle
