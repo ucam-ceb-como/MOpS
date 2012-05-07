@@ -1142,7 +1142,16 @@ void FlameLet::sootMomentResidual
 
                 //f[i*nMoments+l] = source;
             }
-
+         }
+        else if (Lewis.sootFlameletType() == LewisNumber::EXTENDEDLAGRANGIAN)
+        {
+            for (int l=0; l<nMoments; ++l)
+            {
+            	// ank25: Set all moment residuals to zero when solving ELFM
+            	// (Quick and dirst way of still generating soot moments,
+            	// but not solving a flamelet equation for soot)
+                f[i*nMoments+l] = 0.0;
+            }
         }
     }
 

@@ -215,6 +215,11 @@ namespace Camflow
              *return the moments to the calling program
              */
             void getMoments(Array2D& moments_);
+            /*
+             *return the rate of moments to the calling program
+             *ank25 added for ELFM
+             */
+            void getMomentsWdot(Array2D& momentsWdot_);
 
             /*
              *return the average molar weight of the mixture to the calling program
