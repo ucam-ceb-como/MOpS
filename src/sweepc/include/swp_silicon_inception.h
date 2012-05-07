@@ -300,10 +300,10 @@ private:
     std::vector <SiliconData> m_sidata;
 
     //! Counter of number of reaction events for SiliconData index
-    mutable std::vector<int> m_reacs;
+    mutable std::vector<unsigned int> m_reacs;
 
     //! Counter of amount of concentration lost to an inception
-    mutable std::vector<int> m_concs;
+    mutable std::vector<real> m_concs;
 };
 
 } // Processes

@@ -369,6 +369,10 @@ void SiliconInception::GenerateSpeciesData(const Sweep::Mechanism &mech)
     // Now generate other data
     SetInceptingDiameter(mech);
     SetInceptingVolume(mech);
+
+    // Resize the counter vectors
+    m_reacs.resize(spec->size(), 0.0);
+    m_concs.resize(spec->size(), 0.0);
 }
 
 const SiliconInception::SiliconData* SiliconInception::ChooseData(const Sweep::Cell &sys,
@@ -418,6 +422,10 @@ void SiliconInception::adjustGasPhase(Sweep::Cell &sys,
     dc.resize(sys.GasPhase().MoleFractions().size(), 0.0);
 
     real n_NAvol = wt / (NA * sys.SampleVolume());
+
+    // Update the internal counters
+    m_reacs[species._fracIndex] += 1;
+    m_concs[species._fracIndex] += n_NAvol;
 
     // Use the fracindex to calculate the amount of precursor to be
     // removed.
