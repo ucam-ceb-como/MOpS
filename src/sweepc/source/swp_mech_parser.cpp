@@ -670,8 +670,7 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
             }
 
             // Set silicon-specific constants
-            icn->SetInceptingDiameter(mech);
-            icn->SetInceptingVolume(mech);
+            icn->GenerateSpeciesData(mech);
 
             // Add inception to mechanism.  Once entered into mechanism, the mechanism
             // takes control of the inception object for memory management.

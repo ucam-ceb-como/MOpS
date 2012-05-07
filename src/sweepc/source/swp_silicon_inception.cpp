@@ -48,30 +48,38 @@
 #include "swp_mechanism.h"
 #include "swp_params.h"
 #include <boost/random/uniform_01.hpp>
+#include <boost/random/discrete_distribution.hpp>
 
 using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
 
-// Declaration of constants
-const real SiliconInception::m_efm = 2.2; // 2.2 is for soot.
-const real SiliconInception::m_m1  = 4.664e-26;     // kg (mass of Si atom)
-const real SiliconInception::m_v1  = 2.003e-29;     // m3 (vol of Si atom)
-const real SiliconInception::m_d1  = 3.369e-10;     // m  (sph. diam.)
+// FM enhancement factor (soot)
+const real SiliconInception::m_efm = 2.2;
+// Mass of a silicon monomer, kg
+const real SiliconInception::m_m1  = 4.664e-26;
+// Vol of a silicon atom, m3
+const real SiliconInception::m_v1  = 2.003e-29;
+// Spherical diameter of a bulk silicon atom, m
+const real SiliconInception::m_d1  = 3.369e-10;
 
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
 //! Default constructor (protected).
 SiliconInception::SiliconInception(void)
-: Inception(), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0), m_itype(iCollisional), m_vi(0.0), m_di(0.0)
+: Inception(), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0),
+  m_itype(iCollisional), m_vi(0.0), m_di(0.0),
+  m_sidata(0), m_reacs(0), m_concs(0)
 {
     m_name = "SiliconInception";
 }
 
 //! Initialising constructor.
 SiliconInception::SiliconInception(const Sweep::Mechanism &mech)
-: Inception(mech), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0), m_itype(iCollisional), m_vi(0.0), m_di(0.0)
+: Inception(mech), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0),
+  m_itype(iCollisional), m_vi(0.0), m_di(0.0),
+  m_sidata(0), m_reacs(0), m_concs(0)
 {
     m_name = "SiliconInception";
 }
@@ -111,6 +119,10 @@ SiliconInception &SiliconInception::operator =(const SiliconInception &rhs)
         m_itype = rhs.m_itype;
         m_vi   = rhs.m_vi;
         m_di   = rhs.m_di;
+
+        m_sidata = rhs.m_sidata;
+        m_reacs  = rhs.m_reacs;
+        m_concs  = rhs.m_concs;
     }
     return *this;
 }
@@ -156,22 +168,45 @@ int SiliconInception::Perform(const real t, Cell &sys,
 
     sp->setPositionAndTime(posn, t);
 
+    if (m_itype == iCollisional) {
 
-    // Initialise the new particle.
-    sp->Primary()->SetComposition(ParticleComp());
-    sp->Primary()->SetValues(ParticleTrackers());
-    sp->UpdateCache();
+        // If the normal collisional-type rate is used, create the particle
+        // and adjust the gas-phase as in normal Inception
 
-    // Add particle to system's ensemble.
-    sys.Particles().Add(*sp, rng);
+        // Initialise the new particle.
+        sp->Primary()->SetComposition(ParticleComp());
+        sp->Primary()->SetValues(ParticleTrackers());
+        sp->UpdateCache();
 
-    // Update gas-phase chemistry of system.
-    adjustGas(sys, sp->getStatisticalWeight());
+        // Add particle to system's ensemble.
+        sys.Particles().Add(*sp, rng);
+
+        // Update gas-phase chemistry of system.
+        adjustGas(sys, sp->getStatisticalWeight());
+
+    } else {
+
+        // Otherwise, use information from m_sidata to select a gas-phase
+        // species to transform into a new particle
+        const SiliconData* species = ChooseData(sys, rng);
+        if (species != NULL) {
+            sp->Primary()->SetComposition(species->_track);
+            sp->Primary()->SetValues(ParticleTrackers());
+            sp->UpdateCache();
+
+            // Add particle to system's ensemble.
+            sys.Particles().Add(*sp, rng);
+
+            // Update gas-phase chemistry of system.
+            adjustGasPhase(sys, (*species), sp->getStatisticalWeight());
+        } else {
+            std::cout << "Warning: silicon inception chosen with no precursor."
+                    << endl;
+        }
+    }
 
     return 0;
 }
-
-// PERFORMING THE PROCESS.
 
 
 // INCEPTION KERNEL.
@@ -244,28 +279,171 @@ void SiliconInception::SetInceptingVolume(const Sweep::Mechanism &mech)
 /*!
  * @brief       Calculates the diameter of an incepting particle
  *
- * Pre-calculates the incepting diameter of a particle for this inception
- * reaction. This is done using the molwt, density and initial number of
- * each component in the new particle.
+ * Pre-calculates the incepting diameter of a particle (when a collisional
+ * inception process is used) for this inception reaction. This is done
+ * using the molwt, density and initial number of each component in
+ * the new particle.
  *
  * @param mech  Particle mechanism
  */
 void SiliconInception::SetInceptingDiameter(const Sweep::Mechanism &mech)
 {
-    //Pre-define volume and diameters
-    real v(0.0), d(0.0);
+    if (m_itype != iCollisional) {
+        real dmin(1.0);
+        for (unsigned int i=0; i!=m_sidata.size(); i++) {
+            if (m_sidata[i]._diam < dmin) dmin = m_sidata[i]._diam;
+        }
+        m_di = dmin;
+    } else {
+        //Pre-define volume and diameters
+        real v(0.0), d(0.0);
 
-    // Loop over list of components in incepting particle to find initial vol
-    for (unsigned int i=0; i!=ParticleComp().size(); i++) {
+        // Loop over list of components in incepting particle to find initial vol
+        for (unsigned int i=0; i!=ParticleComp().size(); i++) {
 
-        // returns in m3, due to Density()
-        v += ParticleComp()[i] * mech.Components(i)->MolWt() /
-                (Sweep::NA * mech.Components(i)->Density());
+            // returns in m3, due to Density()
+            v += ParticleComp()[i] * mech.Components(i)->MolWt() /
+                    (Sweep::NA * mech.Components(i)->Density());
+        }
+
+        // Now calculate the equivalent spherical diameter
+        d = pow(6 * v / Sweep::PI, Sweep::ONE_THIRD);
+        m_di = d;
+    }
+}
+
+/*!
+ * @brief           Generates the silicon species data
+ *
+ * The silicon species data hold information on each species such as name,
+ * diameter and the incepting particle composition.
+ *
+ * @param mech      Particle mechanism
+ */
+void SiliconInception::GenerateSpeciesData(const Sweep::Mechanism &mech)
+{
+    // First scan the species to determine possible candidates for inception
+    // Loop over all gas-phase species
+    const Sprog::SpeciesPtrVector *spec = mech.Species();
+    for (unsigned int i=0; i!=spec->size(); i++) {
+
+        string name = spec->at(i)->Name();
+        CompPtrVector comp = mech.Components();
+
+        if (IsCandidate(name)) {
+            SiliconData *data;
+            data = new SiliconData();
+            data->_fracIndex = i;
+            data->_name      = name;
+
+            // Create a new component vector for storing new particle comp
+            data->_track.resize(comp.size(), 0.0);
+
+            // Initialise variable for volume
+            real v(0.0);
+
+            // Loop over particle components to work out how many the
+            // gas-phase species of interest will  contribute
+            for (unsigned int j=0; j!=comp.size(); j++) {
+
+                if (comp[j]->Name() == "silicon") {
+                    data->_track[j] = spec->at(i)->AtomCount("SI");
+                    v += data->_track[j] * comp[j]->MolWt() /
+                            (NA * comp[j]->Density());
+                } else if (comp[j]->Name() == "hydrogen") {
+                    data->_track[j] = spec->at(i)->AtomCount("H");
+                    v += data->_track[j] * comp[j]->MolWt() /
+                            (NA * comp[j]->Density());
+                } else {
+                    std::cout << "Warning! Unrecognised component name!" << std::endl;
+                }
+            }
+            data->_diam = pow(6.0 * v / Sweep::PI, Sweep::ONE_THIRD);
+            printSiliconData(*data);
+            m_sidata.push_back(*data);
+        }
+
     }
 
-    // Now calculate the equivalent spherical diameter
-    d = pow(6 * v / Sweep::PI, Sweep::ONE_THIRD);
-    m_di = d;
+
+    // Now generate other data
+    SetInceptingDiameter(mech);
+    SetInceptingVolume(mech);
+}
+
+const SiliconInception::SiliconData* SiliconInception::ChooseData(const Sweep::Cell &sys,
+        rng_type &rng) const
+{
+    // Choose a species which is ABOVE THE CRITICAL DIAMETER and
+    // weight the choice based on mole fractions.
+    const SiliconData* ans(NULL);
+
+    fvector fracs = sys.GasPhase().MoleFractions();
+    real dcrit = GetCriticalNucleus(sys);
+
+    // Hold fractions of available species in vector
+    fvector availFracs;
+    std::vector<const SiliconData*> availSpecies;
+    real sum(0.0);
+
+    // Loop over candidate species
+    for (unsigned int i=0; i != m_sidata.size(); i++) {
+        if (m_sidata[i]._diam >= dcrit) {
+            real frac = fracs[m_sidata[i]._fracIndex];
+            sum += frac;
+            availFracs.push_back(frac);
+            availSpecies.push_back(&(m_sidata[i]));
+        }
+    }
+
+    // Scale these to be probabilities
+    if (sum > 0.0) {
+        for (unsigned int i=0; i != availFracs.size(); i++) {
+            availFracs[i] /= sum;
+        }
+
+        // Select an index based on its mole fraction
+        boost::random::discrete_distribution<> dist(availFracs);
+        unsigned int j = dist(rng);
+        ans = availSpecies[j];
+    }
+    return ans;
+}
+
+void SiliconInception::adjustGasPhase(Sweep::Cell &sys,
+        const SiliconInception::SiliconData &species,
+        real wt) const
+{
+    fvector dc;
+    dc.resize(sys.GasPhase().MoleFractions().size(), 0.0);
+
+    real n_NAvol = wt / (NA * sys.SampleVolume());
+
+    // Use the fracindex to calculate the amount of precursor to be
+    // removed.
+    dc[species._fracIndex] = -1.0 * n_NAvol;
+
+    // Now adjust the gas-phase!
+    sys.AdjustConcs(dc);
+
+}
+
+/*!
+ * @brief       Does this species contribute to inception?
+ *
+ * @param name  Species name
+ * @return      True/false
+ */
+bool SiliconInception::IsCandidate(std::string name) const
+{
+    bool ans(false);
+    // Permit silylenes to incept
+    if (std::string::npos != name.find("B")) {
+        ans = true;
+    } else if (name == "SIH4") {
+        ans = true;
+    }
+    return ans;
 }
 
 
@@ -281,19 +459,8 @@ real SiliconInception::GetPrecursorFraction(const Sweep::Cell &sys) const
     real frac(0.0);
 
     // Loop over all gas-phase species
-    for (unsigned int i=0; i!=sys.GasPhase().Species()->size(); i++) {
-        if (sys.GasPhase().Species()->at(i)->ContainsElement("SI")) {
-            string name = sys.GasPhase().Species()->at(i)->Name();
-            // First check for 'B' string (silylene)
-            if (std::string::npos != name.find("B")) {
-                frac += sys.GasPhase().MoleFraction(i);
-            } else if (name == "SIH2") {
-                frac += sys.GasPhase().MoleFraction(i);
-            } else {
-                frac += 0.0;
-            }
-
-        }
+    for (unsigned int i=0; i!=m_sidata.size(); i++) {
+        frac += sys.GasPhase().MoleFraction(m_sidata[i]._fracIndex);
     }
 
     if (frac > 1.0) {
@@ -393,12 +560,10 @@ real SiliconInception::GetCriticalNucleus(const Sweep::Cell &sys) const
     real T = sys.GasPhase().Temperature();      // in K
 
     // Set d to an arbitrarily high value if psi = 0 (i.e. no precursor)
-    if (s <= 0.0) {
+    if (s <= 1.0) {
         d = 1.0;                            // in m
     } else {
-
-        d *= (GetSurfaceEnergy(sys.GasPhase().Temperature())
-                * m_v1 / (T * log(s)));      // in m
+        d *= (GetSurfaceEnergy(T) * m_v1 / (T * log(s)));      // in m
     }
 
     return d;
@@ -504,7 +669,7 @@ real SiliconInception::Rate(const fvector &fracs, real density, real sqrtT,
 
             Theta = PI * m_d1 * m_d1 * y / (KB * T);
 
-            rate *= (s * s * m_v1 * n * n);
+            rate *= (s  * m_v1 * n * n);
             rate *= sqrt(2.0 * y / (PI * m_m1));
             rate *= exp(Theta - (4.0 * Theta * Theta * Theta / (27.0 * log(s) * log(s))));
 

@@ -124,7 +124,6 @@ public:
     //! Returns the viscosity for the given model
     real GetViscosity(const Cell &sys) const;
 
-
     // REACTANTS.
 
     // Returns the number of reactants.

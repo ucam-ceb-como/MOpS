@@ -1029,12 +1029,14 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
         const fvector &dvalues, rng_type &rng, unsigned int n)
 
 {
-    if(m_numprimary == 1)
+
+    if(m_leftchild == NULL && m_rightchild == NULL)
     {
         unsigned int i = 0;
 
         real dV(0.0);
-        real m_vol_old = m_vol;
+        real volOld = m_vol;
+        real surfOld = m_surf;
         real dc(0.0);
 
         // Add the components.
@@ -1059,10 +1061,13 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
             // Update only the primary
             UpdatePrimary();
 
-            dV = m_vol - m_vol_old;
+            dV = m_vol - volOld;
+            real dS(0.0);
 
-            // Surface change due to volume addition
-            real dS = dV * 2.0 * m_pmodel->GetBintreeCoalThresh() / m_diam;
+            if (dV > 0.0) {
+                // Surface change due to volume addition
+                dS = dV * 2.0 * m_pmodel->GetBintreeCoalThresh() / m_diam;
+            }
 
             // Climb back-up the tree and update the surface area and
             // sintering of a particle
@@ -1083,7 +1088,7 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
     }
 
     // Update property cache.
-    UpdateCache();
+    UpdateCache(this);
     return n;
 
 }
