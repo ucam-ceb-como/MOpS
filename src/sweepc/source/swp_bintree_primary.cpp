@@ -1029,19 +1029,24 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
         const fvector &dvalues, rng_type &rng, unsigned int n)
 
 {
-    if(m_numprimary == 1)
+
+    if(m_leftchild == NULL && m_rightchild == NULL)
     {
         unsigned int i = 0;
 
-        real dV;
-        real m_vol_old = m_vol;
+        real dV(0.0);
+        real volOld = m_vol;
+        real dc(0.0);
 
         // Add the components.
-        for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i)
-        {
+        for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+            dc = m_comp[i];
             m_comp[i] += dcomp[i] * (real)n;
             // Set component to zero if too many are removed.
-            if (m_comp[i] < 1.0) m_comp[i] = 0.0;
+            if (m_comp[i] < 1.0) {
+                m_comp[i] = 0.0;
+                n = (unsigned int) abs(dc/dcomp[i]);
+            }
         }
 
         // Add the tracker values.
@@ -1050,18 +1055,24 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
             m_values[i] += dvalues[i] * (real)n;
         }
 
-        // Update only the primary
-        UpdatePrimary();
+        // Stop doing the adjustment if n is 0.
+        if (n > 0) {
+            // Update only the primary
+            UpdatePrimary();
 
-        dV = m_vol - m_vol_old;
+            dV = m_vol - volOld;
+            real dS(0.0);
 
-        // Surface change due to volume addition
-        real dS = dV * 2.0 * m_pmodel->GetBintreeCoalThresh() / m_diam;
+            if (dV > 0.0) {
+                // Surface change due to volume addition
+                dS = dV * 2.0 * m_pmodel->GetBintreeCoalThresh() / m_diam;
+            }
+            // TODO: Implement surface area reduction?
 
-        // Climb back-up the tree and update the surface area and
-        // sintering of a particle
-        UpdateParents(dS);
-
+            // Climb back-up the tree and update the surface area and
+            // sintering of a particle
+            UpdateParents(dS);
+        }
     }
 
     // Else this a non-leaf node (not a primary)
@@ -1077,7 +1088,7 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
     }
 
     // Update property cache.
-    UpdateCache();
+    UpdateCache(this);
     return n;
 
 }

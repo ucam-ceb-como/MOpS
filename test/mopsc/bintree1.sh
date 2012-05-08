@@ -50,9 +50,9 @@ perl << EOF
 # Comparison values, generated with N=4096, L=20 and rounded-up
 # Commit 9ed767caffafd143d81e8fbcc94b707ec840a4c8
 ##################################################################
-my @names = (  "M0",        "Fv",     "dcol",   "dpri", "sint level");
-my @true = (4.2903E+015, 1.7843E-09, 8.8883E-09, 7.0741,  0.7991);
-my @errs = (0.0822E+015, 0.0041E-09, 0.0675E-09, 0.0403,  0.0090);
+my @names = (  "M0",        "Fv",     "dcol",   "dpri",    "sint level");
+my @true = (4.2903E+015, 1.7843E-09, 8.8883E-09, 7.0741E-09,  0.7991);
+my @errs = (0.0822E+015, 0.0041E-09, 0.0675E-09, 0.0403E-09,  0.0090);
 
 # Open file and parse results
 my @results;

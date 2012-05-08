@@ -670,8 +670,7 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
             }
 
             // Set silicon-specific constants
-            icn->SetInceptingDiameter(mech);
-            icn->SetMonomerVolume(mech);
+            icn->GenerateSpeciesData(mech);
 
             // Add inception to mechanism.  Once entered into mechanism, the mechanism
             // takes control of the inception object for memory management.
@@ -789,6 +788,19 @@ void MechParser::readSiliconInception(CamXML::Element &xml, Processes::SiliconIn
     // Read name.
     str = xml.GetAttributeValue("name");
     if (str != "") icn.SetName(str);
+
+    // Read inception mechanism to use
+    str = xml.GetAttributeValue("mech");
+    if (str == "vbdz") {
+        icn.SetInceptionMechanism(Sweep::Processes::SiliconInception::iVBDZ);
+    } else if (str == "girshick") {
+        icn.SetInceptionMechanism(Sweep::Processes::SiliconInception::iGirshick);
+    } else if (str == "collisional") {
+        icn.SetInceptionMechanism(Sweep::Processes::SiliconInception::iCollisional);
+    } else {
+        throw std::runtime_error("Unrecognised mechanism " +
+                str + " in Sweep::MechParser::readSiliconInception");
+    }
 
     // Read reactants.
     readReactants(xml, icn);

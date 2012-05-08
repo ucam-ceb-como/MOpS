@@ -101,6 +101,9 @@ public:
     // Returns the number of the given element in the species.
     unsigned int AtomCount(unsigned int iel) const;
 
+    // Returns the number of the given element (by name) in the species.
+    unsigned int AtomCount(std::string name) const;
+
     // Adds an element to the species composition using an ElComp object.
     void AddElement(const ElComp &elcomp);
 
