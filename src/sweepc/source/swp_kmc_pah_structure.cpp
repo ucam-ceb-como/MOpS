@@ -176,6 +176,7 @@ void PAHStructure::Serialize(std::ostream &out) const
     out.write((char*)&(val), sizeof(val));
 
     // output info for m_cpositions.
+    // the purpose of outputting m_cpositions lies in the implementation of data structure which has no member storing the info of EdgeC.
     WriteCposition(out);
 
     val=numofRings();

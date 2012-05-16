@@ -140,8 +140,7 @@ void StagFlow::initSolutionVector(CamControl& cc)
 
     std::vector<doublereal> vSpec = initSpecies(left, right);
 
-    std::vector<doublereal> vT;
-    initTemperature(left, cc, vT);
+    std::vector<doublereal> vT = initTemperature(left);
 
     if (admin_.getEnergyModel() == CamAdmin::ADIABATIC)
     {

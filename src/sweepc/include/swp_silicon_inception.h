@@ -56,6 +56,7 @@
 #ifndef SWEEP_SILICON_INCEPTION_H
 #define SWEEP_SILICON_INCEPTION_H
 
+#include <iostream>
 #include "swp_inception.h"
 
 namespace Sweep {
@@ -141,20 +142,52 @@ public:
     //! Inception only according to free mol kernel with these sizes
     void SetInceptingSpeciesFreeMol(real m1, real m2, real d1, real d2);
 
-    //! Sets the volume of a monomer particle
-    void SetMonomerVolume(const Sweep::Mechanism &mech);
+    //! Sets the volume of an incepting particle
+    void SetInceptingVolume(const Sweep::Mechanism &mech);
 
     //! Sets the diameter of an incepting particle
     void SetInceptingDiameter(const Sweep::Mechanism &mech);
 
+    void GenerateSpeciesData(const Sweep::Mechanism &mech);
+
     //! Calculates the precursor concentration
     real GetPrecursorFraction(const Cell &sys) const;
+
+    //! Returns the supersaturation
+    real GetSupersaturation(const Sweep::Cell &sys) const;
 
     //! Calculates the critical nucleus size
     real GetCriticalNucleus(const Cell &sys) const;
 
     //! Checks whether inception should proceed, based on dcrit
     bool IsInceptionAllowed(const Cell &sys) const;
+
+    //! Enum for inception equation type
+    enum InceptionType {iCollisional, iVBDZ, iGirshick};
+
+    //! Sets the inception mechanism
+    void SetInceptionMechanism(InceptionType itype) {m_itype = itype;}
+
+
+    //! Definition of the Species Data struct
+    struct SiliconData
+    {
+        //! The index at which the silicon species is found in the gas-phase
+        unsigned int _fracIndex;
+
+        //! The name of the species
+        std::string _name;
+
+        //! The particle type-space if that species is selected
+        fvector _track;
+
+        //! The incepting diameter of the species
+        real _diam;
+
+        //! Default constructor
+        SiliconData() :
+            _fracIndex(0), _name(" "), _track(0.0), _diam(0.0) {}
+    };
 
     // READ/WRITE/COPY.
 
@@ -199,6 +232,44 @@ protected:
         ) const;
 
 private:
+
+    //! A debugging function to print objects
+    void printVector() const {
+        for (unsigned int i(0); i!=m_sidata.size(); i++) {
+            printSiliconData(m_sidata[i]);
+        }
+    }
+
+    //! A debugging function to print the silicon data structure
+    void printSiliconData(const SiliconData &data) const {
+        std::cout << "nam: " << data._name;
+        std::cout << " ind: " << data._fracIndex;
+        std::cout << " dim: " << data._diam;
+        for (unsigned int i(0); i!=data._track.size(); i++) {
+            std::cout << " c" << i << ": " << data._track[i];
+        }
+        std::cout << std::endl;
+    }
+
+    //! Given a species name, indicate if it can incept
+    bool IsCandidate(std::string name) const;
+
+    //! Choses a species from the gas-phase for inception
+    const SiliconData* ChooseData(const Sweep::Cell &sys, rng_type &rng) const;
+
+    //! Adjusts the gas-phase based on the silicon species data
+    void adjustGasPhase(Sweep::Cell &sys,
+            const SiliconData &species, real wt) const;
+
+    //! Returns the surface energy of silicon
+    real GetSurfaceEnergy(real T) const;
+
+    //! Returns the saturation vapour pressure of silicon
+    real GetSatVapourPressure(real T) const;
+
+    //! Returns the saturated monomer number concentration
+    real GetMonomerConc(real T) const;
+
     // Rate parameters.
     //! Free-molecular kernel parameter.
     real m_kfm;
@@ -207,11 +278,32 @@ private:
     //! Free-molecular enhancement factor.  Currently hardcoded (m_efm = 2.2).
     static const real m_efm;
 
-    //! Volume of a newly-incepted monomer
-    real m_v1;
+    //! Inception equation type
+    InceptionType m_itype;
+
+    //! Volume of a monomer (Si atom), hardcoded
+    static const real m_v1;
+
+    //! Mass of a monomer (Si atom), hardcoded
+    static const real m_m1;
+
+    //! Diameter of a monomer (Si atom), hardcoded
+    static const real m_d1;
+
+    //! Volume of an incepting particle
+    real m_vi;
 
     //! Diameter of an incepting particle
     real m_di;
+
+    //! A container for the silicon species data
+    std::vector <SiliconData> m_sidata;
+
+    //! Counter of number of reaction events for SiliconData index
+    mutable std::vector<unsigned int> m_reacs;
+
+    //! Counter of amount of concentration lost to an inception
+    mutable std::vector<real> m_concs;
 };
 
 } // Processes

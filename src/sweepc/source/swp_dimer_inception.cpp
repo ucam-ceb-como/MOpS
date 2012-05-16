@@ -215,7 +215,7 @@ real DimerInception::Rate(real t, const Cell &sys, const Geometry::LocalGeometry
 
     // Calculate the rate.
     return Rate(sys.GasPhase().MoleFractions(), sys.GasPhase().Density(), sqrt(T),
-                T/ViscosityAir(T), MeanFreePathAir(T,P),
+                T/GetViscosity(sys), MeanFreePathAir(T,P),
                 sys.SampleVolume());
 }
 
@@ -300,7 +300,7 @@ real DimerInception::RateTerms(const real t, const Cell &sys,
 
     // Calculate the single rate term and advance iterator.
     *iterm = Rate(sys.GasPhase().MoleFractions(), sys.GasPhase().Density(), sqrt(T),
-                  T/ViscosityAir(T), MeanFreePathAir(T,P),
+                  T/GetViscosity(sys), MeanFreePathAir(T,P),
                   sys.SampleVolume());
     return *(iterm++);
 }

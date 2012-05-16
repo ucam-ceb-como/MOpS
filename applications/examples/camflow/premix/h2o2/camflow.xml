@@ -5,9 +5,10 @@
 	 <length unit="m">0.1</length>
   </reactor>
   <op_condition>
-	  <temperature>adiabatic</temperature>
-	  <twall unit="K">1073</twall>
+	<temperature>adiabatic</temperature>
+	<twall unit="K">1073</twall>
     <pressure unit="atm">0.0329</pressure>
+    <radiation activate="off"/>
   </op_condition>
   <inlet>
      <fuel>
@@ -21,39 +22,39 @@
        </molefrac>
      </fuel>
   </inlet>
-  <solver mode="segrgated" solver="cvode" residual="on">
+  <solver mode="coupled" solver="cvode" residual="on">
 	  <maxTime>10000000</maxTime>
 	  <iterations>2</iterations>
 	  <tols>
 		  <species>
 			  <aTol>1.e-08</aTol>
-			  <rTol>1.e-06</rTol>	  
+			  <rTol>1.e-06</rTol>
 		  </species>
 		  <temperature>
 			  <aTol>1.e-03</aTol>
-			  <rTol>1.e-03</rTol>	  
+			  <rTol>1.e-03</rTol>
 		  </temperature>
 		  <flow>
 			  <aTol>1.e-03</aTol>
-			  <rTol>1.e-03</rTol>	  
+			  <rTol>1.e-03</rTol>
 		  </flow>
   	  </tols>
   </solver>
   <initialize>
-    <Tprofile unit_L="cm" unit_T="K">
+    <Tprofile unit_L="m" unit_T="K">
       <position x="0.0">373.7</position>
-      <position x="0.125">484.5</position>
-      <position x="0.25">583.7</position>
-      <position x="0.375">672.2</position>
-      <position x="0.5">753.5</position>
-      <position x="0.75">901.4</position>
-      <position x="1.0">1027.0</position>
-      <position x="1.25">1120.0</position>
-      <position x="1.5">1184.0</position>
-      <position x="2.0">1260.0</position>
-      <position x="3.0">1348.0</position>
-      <position x="6.0">1475</position>
-      <position x="10.0">1524.0</position>
+      <position x="0.00125">484.5</position>
+      <position x="0.0025">583.7</position>
+      <position x="0.00375">672.2</position>
+      <position x="0.005">753.5</position>
+      <position x="0.0075">901.4</position>
+      <position x="0.01">1027.0</position>
+      <position x="0.0125">1120.0</position>
+      <position x="0.015">1184.0</position>
+      <position x="0.02">1260.0</position>
+      <position x="0.03">1348.0</position>
+      <position x="0.06">1475</position>
+      <position x="0.1">1524.0</position>
     </Tprofile>
  </initialize>
  <report outfile="final" species="mole">

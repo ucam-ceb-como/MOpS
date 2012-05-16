@@ -170,7 +170,7 @@ public:
     double AvgCoalesc() const;
 
     //! Find Xmer, and store their information in a vector
-    void FindXmer(std::vector<double> &out, Xmer m_xmer) const;
+    void FindXmer(std::vector<double> &out, int m_xmer) const;
     //! Find Xmer which statisfy sort of condition, like target_num_PAH
     void FindXmer(std::vector<std::vector<double> > &out, int target_num_PAH) const;
     //! store PAH information in a vector
@@ -235,7 +235,7 @@ private:
                                    std::stack<bool> &takeLeftBranch);
 
     void outputPAHPrimary(std::ostream &out) const;
-    PAHPrimary* inputPAHPrimary(std::istream &in);
+    PAHPrimary* inputPAHPrimary(std::istream &in, const Sweep::ParticleModel &model);
 
     //! Set the sintering time of a tree
     void SetSinteringTime(real time);

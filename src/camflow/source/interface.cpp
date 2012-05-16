@@ -281,6 +281,7 @@ void Interface::getFlameletVariables(FlameLet* const flmlt)
     flmlt->getDensityVector(rhoVector);
     flmlt->getSpeciesMassFracs(spMassFracs);
     flmlt->getMoments(sootMoments);		// ank25 added
+    flmlt->getMomentsWdot(sootMomentsWdot);		// ank25 added for ELFM
     flmlt->getTemperatureVector(TVector);
     flmlt->getIndepedantVar(indVar);
     flmlt->getViscosityVector(muVector);
@@ -538,6 +539,20 @@ std::vector<doublereal> Interface::getMomentsByIndex(const int momentIndex) cons
     return momentProfile;
 }
 
+// ank25 added for ELFM
+std::vector<doublereal> Interface::getMomentsWdotByIndex(const int momentWdotIndex) const {
+    // Find the length of the moment profile and create an empty
+    // vector with this much space
+    const size_t len = indVar.size();
+    std::vector<doublereal> momentWdotProfile(len);
+
+    for(size_t i=0; i<len; i++){
+        momentWdotProfile[i] = sootMomentsWdot(i,momentWdotIndex);
+    }
+    return momentWdotProfile;
+}
+
+
 
 /*!
  *@param[in]    indVarIndex     Mass fractions requested at indVar[indVarIndex]
@@ -568,6 +583,17 @@ doublereal Interface::getMoment(const int momIndex, const doublereal axpos){
     doublereal moment = getVariableAt(axpos, getMomentsByIndex(momIndex));
     return moment;
 }
+
+
+/*
+ *return the moments rates
+ *ank25 added for ELFM
+ */
+doublereal Interface::getMomentWdot(const int momIndex, const doublereal axpos){
+    doublereal momentWdot = getVariableAt(axpos, getMomentsWdotByIndex(momIndex));
+    return momentWdot;
+}
+
 
 
 /*
