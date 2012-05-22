@@ -2551,8 +2551,10 @@ void Simulator::postProcessXmer(const Mechanism &mech,
                                     Sweep::Particle* sp=r->Mixture()->Particles().At(j);
                                     Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
                                     // if including the xmers in the soot aggregate
-                                    if (MassSpectraFrag())
-                                    pah->FindXmer(psl_xmer,k+1);
+                                    //if (MassSpectraFrag())
+                                    //pah->FindXmer(psl_xmer,k+1);
+                                    if (MassSpectraFrag()&& k<=1 && temp[11]>3 && 1 == temp[15])
+                                        pah->Fragtest(psl_xmer, k, pmech.Mode(),pmech.Threshold());
                                 }
                             }
                         }

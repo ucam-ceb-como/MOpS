@@ -189,6 +189,10 @@ public:
     bool CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const;
     //! remove invalid PAHs under this primary particle
     void RemoveInvalidPAHs();
+    //! test fragmentation assumption for the mass spectra
+    void Fragtest(std::vector<double> &out, const int k, std::string mode, double threshold) const;
+
+    double ReducedMass()const;
 
 protected:
     //! Empty primary not meaningful
