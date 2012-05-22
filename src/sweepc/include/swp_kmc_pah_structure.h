@@ -89,12 +89,13 @@ namespace Sweep{
             int numofRings() const;
             //! return num of edge carbon
             int numofEdgeC() const;
-            //! set number of cabon and hydrogen for particular PAH
+            //! set number of carbon and hydrogen for particular PAH
             void setnumofC(int val);
             void setnumofH(int val);
 
             //! set number of rings for particular PAH
-            void setnumofRings(int val);
+            void setnumofRings(int val); // 6-membered
+			void setnumofRings5(int val); // 5-membered
 
             //! check PAH have bridge or not
             bool havebridgeC();
@@ -118,7 +119,8 @@ namespace Sweep{
             //! Stores total counts of carbon and hydrogen
             intpair m_counts;
             //! Stores number of rings
-            int m_rings;
+            int m_rings; // 6-membered rings
+			int m_rings5; // 5-membered rings
         private:
             //! write m_cpositions
             void WriteCposition(std::ostream &out) const;

@@ -69,6 +69,7 @@ PAHStructure::PAHStructure() {
     m_cfirst = NULLC;
     m_clast = NULLC;
     m_rings = 0;
+	m_rings5 = 0;
     m_counts = intpair(2, 0);
     m_parent = NULL;
 }
@@ -132,6 +133,11 @@ void PAHStructure::setnumofH(int val)
 void PAHStructure::setnumofRings(int val)
 {
     m_rings=val;
+}
+
+void PAHStructure::setnumofRings5(int val)
+{
+    m_rings5=val;
 }
 
 void PAHStructure::initialise(StartingStructure ss) {
