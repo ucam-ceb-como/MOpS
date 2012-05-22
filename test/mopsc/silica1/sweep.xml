@@ -19,6 +19,7 @@
       <description>
         A silica particle.
       </description>
+      <fractdim>1.8</fractdim>
       <sintering enable="true" model="viscous_flow">
         <A units="s/m">1.1e-16</A>
         <E units="K">1.2e5</E>

@@ -300,6 +300,12 @@ public:
     //! Return the coalescence threshold for bintree particle models.
     const real GetBintreeCoalThresh() const {return m_bintree_coalthresh;}
 
+    //! Sets the value of the binary tree coalescence threshold
+    void SetFractDim(real df) {m_fract_dim = df;}
+
+    //! Return the coalescence threshold for bintree particle models.
+    const real GetFractDim() const {return m_fract_dim;}
+
 protected:
     // The species used to define the processes and the particles.
     const Sprog::SpeciesPtrVector *m_species;
@@ -412,6 +418,9 @@ private:
 
     //! Coalescene threshold for multicomponent binary tree particle models
     real m_bintree_coalthresh;
+
+    //! Fractal dimension (bintree particle model)
+    real m_fract_dim;
 };
 } //namespace Sweep
 #endif

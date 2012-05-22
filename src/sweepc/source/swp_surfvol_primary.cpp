@@ -189,6 +189,14 @@ real SurfVolPrimary::PP_Diameter(void) const
 unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_type &rng,
                                     unsigned int n)
 {
+    // Store initial surface and volume
+    real surfOld = m_surf;
+    real volOld  = m_vol;
+
+    // Adjust the particle assuming that it is spherical.
+    n = Primary::Adjust(dcomp, dvalues, rng, n);
+
+
     // Calculate change in volume.
     real dvol = 0.0;
     for (unsigned int i=0; i!=dcomp.size(); ++i) {
@@ -201,17 +209,14 @@ unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues
     real rad = 0.0;
     if (dvol > 0.0) {
         // Inverse growth radius.
-        rad = sqrt(4.0 * PI / m_surf);
+        rad = sqrt(4.0 * PI / surfOld);
     } else {
         // Inverse oxidation radius.    
-        rad = m_surf / (3.0 * m_vol);
+        rad = surfOld / (3.0 * volOld);
     }
 
     // Save new surface area.
-    real s = m_surf + (2.0 * dvol * rad);
-
-    // Adjust the particle assuming that it is spherical.
-    Primary::Adjust(dcomp, dvalues, rng, n);
+    real s = surfOld + (2.0 * dvol * rad);
 
     // Set correct surface area, which was incorrectly set by
     // Primary::Adjust.

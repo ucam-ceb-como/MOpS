@@ -88,7 +88,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::Rate(real t, const Cell &sy
 
         // Calculate the rate.
         return Rate(sys.Particles().GetSums(), (real)n, sqrt(T),
-                    T/ViscosityAir(T), MeanFreePathAir(T,P),
+                    T/GetViscosity(sys), MeanFreePathAir(T,P),
                     sys.SampleVolume());
     } else {
         return 0.0;
@@ -176,7 +176,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::RateTerms(real t, const Cel
         real P = sys.GasPhase().Pressure();
 
         // Calculate the rate terms.
-        return RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/ViscosityAir(T),
+        return RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/GetViscosity(sys),
                          MeanFreePathAir(T,P), sys.SampleVolume(), iterm);
     } else {
         // No coagulation as there are too few particles.
@@ -463,7 +463,7 @@ Sweep::real Sweep::Processes::TransitionCoagulation::CoagKernel(const Particle &
     const real T = sys.GasPhase().Temperature();
     const real P = sys.GasPhase().Pressure();
     const real fm = FreeMolKernel(sp1, sp2, T, P, false);
-    const real sf = SlipFlowKernel(sp1, sp2, T, P, false);
+    const real sf = SlipFlowKernel(sp1, sp2, T, P, GetViscosity(sys), false);
     return (fm*sf)/(fm+sf);
 }
 
@@ -491,10 +491,12 @@ Sweep::real Sweep::Processes::TransitionCoagulation::MajorantKernel(const Partic
             break;
         case FreeMol:
             // Free molecular majorant.
-            return FreeMolKernel(sp1, sp2, sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), true);
+            return FreeMolKernel(sp1, sp2, sys.GasPhase().Temperature(),
+                    sys.GasPhase().Pressure(), true);
         case SlipFlow:
             // Slip-flow majorant.
-            return SlipFlowKernel(sp1, sp2, sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), true);
+            return SlipFlowKernel(sp1, sp2, sys.GasPhase().Temperature(),
+                    sys.GasPhase().Pressure(), GetViscosity(sys), true);
     }
 
     // Invalid majorant, return zero.
@@ -530,10 +532,9 @@ Sweep::real Sweep::Processes::TransitionCoagulation::FreeMolKernel(const Particl
 
 // Returns the slip-flow coagulation kernel value for the
 // two given particles.  Can return either the majorant or
-// true kernel.  This kernel is currently evaluated assuming
-// that the surrounding gas is air, i.e. principally N2.
+// true kernel.
 Sweep::real Sweep::Processes::TransitionCoagulation::SlipFlowKernel(const Particle &sp1, const Particle &sp2,
-                                 real T, real P, bool maj) const
+                                 real T, real P, real mu, bool maj) const
 {
     // Collect the particle properties
     const real d1 = sp1.CollDiameter();
@@ -544,6 +545,6 @@ Sweep::real Sweep::Processes::TransitionCoagulation::SlipFlowKernel(const Partic
              (1.0 / d1 / d1 + 1.0 / d2 / d2)) +
             (1.0 / d1 + 1.0 / d2)) *
            CSF * T * (d1 + d2)
-           * A() / ViscosityAir(T);
+           * A() / mu;
 }
 

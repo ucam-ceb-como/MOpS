@@ -35,7 +35,8 @@ public:
     {
        MAUSS06,
        PITSCH00DD,
-       CARBONELL09
+       CARBONELL09,
+       EXTENDEDLAGRANGIAN
     };
 
     doublereal sootFlameTimeThreshold;

@@ -339,12 +339,17 @@ bool Primary::IsValid() const {
 unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
 {
 	unsigned int i = 0;
+	real dc(0.0);
 
 	// Add the components.
 	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+	    dc = m_comp[i];
 		m_comp[i] += dcomp[i] * (real)n;
 		// Set component to zero if too many are removed.
-		if (m_comp[i] < 1.0) m_comp[i] = 0.0;
+		if (m_comp[i] < 1.0) {
+            m_comp[i] = 0.0;
+            n = (unsigned int) abs(dc/dcomp[i]);
+		}
 	}
 
 	// Add the tracker values.

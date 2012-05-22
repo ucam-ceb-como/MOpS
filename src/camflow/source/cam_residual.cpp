@@ -373,6 +373,15 @@ void CamResidual::getMoments(Array2D& moments_){
 }
 
 /*
+ *return the rate of change of the soot moments array
+ *ank25 added for ELFM
+ */
+void CamResidual::getMomentsWdot(Array2D& momentsWdot_){
+    momentsWdot_ = moments_dot;
+}
+
+
+/*
  *return the average molar weight of the mixture to the calling program
  */
 void CamResidual::getAverageMolarWeight(std::vector<doublereal>& avgMolWt_){

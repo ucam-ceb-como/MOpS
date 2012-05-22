@@ -132,6 +132,19 @@ void readInceptedTrackers(const CamXML::Element &xml, Sweep::Processes::Inceptio
 		}
 	}
 }
+
+void readViscosity(const CamXML::Element &xml, Sweep::Processes::Process &proc) {
+    std::string str = xml.GetAttributeValue("model");
+    if (str == "chapman-enskog") {
+        proc.SetViscosityModel(Sweep::iChampanEnskog);
+    } else if (str == "air") {
+        proc.SetViscosityModel(Sweep::iAir);
+    } else {
+        std::cout << "Unrecognised viscosity model. Using Air as default." << std::endl;
+        proc.SetViscosityModel(Sweep::iAir);
+    }
+}
+
 } // anonymous namespace
 
 void MechParser::Read(const std::string &filename, Sweep::Mechanism &mech)
@@ -328,10 +341,10 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     }
 
     // Get the coalescence threshold for a multicomponent binary tree model
+    const CamXML::Element* el = particleXML->GetFirstChild("coalthresh");
     if (mech.AggModel() == AggModels::Bintree_ID) {
-        str = particleXML->GetFirstChild("coalthresh")->Data();
-        if (str != "") {
-            double ct = cdble(str);
+        if (el != NULL) {
+            double ct = cdble(el->Data());
             if (ct < 0.0 || ct > 2.0) {
                 throw std::runtime_error("Coalescence threshold must be 0<ct<2.0. (Sweep::MechParser::readV1)");
             } else {
@@ -341,6 +354,22 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             throw std::runtime_error("Must specify coalescence threshold in <particle>"
                     "block with tag <coalthresh> for bintree particle model. (Sweep::MechParser::readV1)");
         }
+    }
+
+    el = particleXML->GetFirstChild("fractdim");
+    // Get the fractal dimension
+    if (el != NULL) {
+        double df = cdble(el->Data());
+        if (df < 1.0 || df > 3.0) {
+            throw std::runtime_error("Fract. dim must be 1<df<3.0. (Sweep::MechParser::readV1)");
+        } else {
+            mech.SetFractDim(df);
+        }
+    } else {
+        // Default fractal dimension is 1.8
+        // Schaefer & Hurd (1990) Aer. Sci. Tech. 12:876-890
+        // for synthesis of fumed silica nanoparticles.
+        mech.SetFractDim(1.8);
     }
 
     // Get the sintering model.
@@ -641,8 +670,7 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
             }
 
             // Set silicon-specific constants
-            icn->SetInceptingDiameter(mech);
-            icn->SetMonomerVolume(mech);
+            icn->GenerateSpeciesData(mech);
 
             // Add inception to mechanism.  Once entered into mechanism, the mechanism
             // takes control of the inception object for memory management.
@@ -680,6 +708,10 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
     // Read name.
     str = xml.GetAttributeValue("name");
     if (str != "") icn.SetName(str);
+
+    // Read the viscosity model
+    CamXML::Element *el = xml.GetFirstChild("viscosity");
+    if (el != NULL) readViscosity(*el, icn);
 
     // Read reactants.
     readReactants(xml, icn);
@@ -722,7 +754,7 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 
     // Rate scaling now that a process has been created
     real A = 0.0;
-    CamXML::Element *el = xml.GetFirstChild("A");
+    el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
         icn.SetA(A);
@@ -757,8 +789,25 @@ void MechParser::readSiliconInception(CamXML::Element &xml, Processes::SiliconIn
     str = xml.GetAttributeValue("name");
     if (str != "") icn.SetName(str);
 
+    // Read inception mechanism to use
+    str = xml.GetAttributeValue("mech");
+    if (str == "vbdz") {
+        icn.SetInceptionMechanism(Sweep::Processes::SiliconInception::iVBDZ);
+    } else if (str == "girshick") {
+        icn.SetInceptionMechanism(Sweep::Processes::SiliconInception::iGirshick);
+    } else if (str == "collisional") {
+        icn.SetInceptionMechanism(Sweep::Processes::SiliconInception::iCollisional);
+    } else {
+        throw std::runtime_error("Unrecognised mechanism " +
+                str + " in Sweep::MechParser::readSiliconInception");
+    }
+
     // Read reactants.
     readReactants(xml, icn);
+
+    // Read the viscosity model
+    CamXML::Element *el = xml.GetFirstChild("viscosity");
+    if (el != NULL) readViscosity(*el, icn);
 
     // Find the rate calculation method (a coagulation kernel)
     // Currently the only possibilities are free molecular and transition
@@ -798,7 +847,7 @@ void MechParser::readSiliconInception(CamXML::Element &xml, Processes::SiliconIn
 
     // Rate scaling now that a process has been created
     real A = 0.0;
-    CamXML::Element *el = xml.GetFirstChild("A");
+    el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
         icn.SetA(A);
@@ -1237,6 +1286,10 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
         cond.SetName(str);
     }
 
+    // Read the viscosity model
+    CamXML::Element *el = xml.GetFirstChild("viscosity");
+    if (el != NULL) readViscosity(*el, cond);
+
     // Read reactants.
     try {
         // Get reactant stoichiometry.
@@ -1267,7 +1320,7 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
 
     // Read Arrhenius rate parameters.
     real A = 0.0;
-    CamXML::Element *el = xml.GetFirstChild("A");
+    el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
     } else {
@@ -1497,6 +1550,7 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                 // of A.
                 std::auto_ptr<Processes::Coagulation> coag;
 
+
                 if(weightXML == NULL) {
                     // Unweighted case
                     if(kernelName == "transition")
@@ -1569,9 +1623,14 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                                                 (Sweep, MechParser::readCoagulation)");
                 }
 
+
+                // Read the viscosity model
+                CamXML::Element *el = (*it)->GetFirstChild("viscosity");
+                if (el != NULL) readViscosity(*el, *coag);
+
                 // Rate scaling now that a process has been created
                 real A = 0.0;
-                CamXML::Element *el = (*it)->GetFirstChild("A");
+                el = (*it)->GetFirstChild("A");
                 if (el != NULL) {
                     A = cdble(el->Data());
                 } else {

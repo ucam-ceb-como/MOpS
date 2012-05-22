@@ -868,10 +868,10 @@ void BintreePrimary::UpdateCache(BintreePrimary *root)
                     (m_avg_sinter * (1 - numprim_1_3) + numprim_1_3);
 
             // Calculate dcol based-on formula given in Lavvas et al. (2011)
-            // assume fractal dimension Df = 1.8
             const real aggcolldiam = (6* m_vol / m_surf) *
-                    pow(pow(m_surf, 3) / (36 * PI * m_vol * m_vol), (1.0/1.8));
-            m_dmob = aggcolldiam;
+                    pow(pow(m_surf, 3) / (36 * PI * m_vol * m_vol),
+                            (1.0/m_pmodel->GetFractDim()));
+            m_dmob = MobDiameter();
             m_dcol = aggcolldiam;
 
         }
@@ -880,6 +880,40 @@ void BintreePrimary::UpdateCache(BintreePrimary *root)
             m_dmob=0;
         }
     }
+}
+
+/*!
+ *@brief        Overload of MobDiameter to return correct dmob
+ *
+ * This calculation is based on the work of Rogak et al., 1993 Aer. Sci.
+ * Tech. 18:25-47, who give the calculation of dmob in the FM, SF and
+ * transition regime.
+ *
+ * Currently, only the SF calculation is used, as the majority of experimental
+ * systems which measure dmob run at continuum conditions.
+ *
+ * dmob,SF = 0.9 * dpri * sqrt(Df/(Df+2)) * npri^(1/Df)
+ * dmob,FM = dpri * sqrt(0.802 * (npri - 1) + 1)
+ *
+ */
+real BintreePrimary::MobDiameter() const
+{
+    real dmob(1.0);
+
+    // Is this a single particle?
+    if (m_leftchild == NULL && m_parent == NULL) {
+        dmob = m_diam;
+    } else {
+
+        // SF regime mobility diameter
+        dmob *= 0.9 * m_primarydiam / (real)m_numprimary;
+        dmob *= sqrt(m_pmodel->GetFractDim() / (m_pmodel->GetFractDim() + 2));
+        dmob *= pow(m_numprimary, (1.0/m_pmodel->GetFractDim()));
+
+        if (dmob < m_diam) dmob = m_diam;
+
+    }
+    return dmob;
 }
 
 
@@ -995,19 +1029,24 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
         const fvector &dvalues, rng_type &rng, unsigned int n)
 
 {
-    if(m_numprimary == 1)
+
+    if(m_leftchild == NULL && m_rightchild == NULL)
     {
         unsigned int i = 0;
 
-        real dV;
-        real m_vol_old = m_vol;
+        real dV(0.0);
+        real volOld = m_vol;
+        real dc(0.0);
 
         // Add the components.
-        for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i)
-        {
+        for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+            dc = m_comp[i];
             m_comp[i] += dcomp[i] * (real)n;
             // Set component to zero if too many are removed.
-            if (m_comp[i] < 1.0) m_comp[i] = 0.0;
+            if (m_comp[i] < 1.0) {
+                m_comp[i] = 0.0;
+                n = (unsigned int) abs(dc/dcomp[i]);
+            }
         }
 
         // Add the tracker values.
@@ -1016,18 +1055,24 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
             m_values[i] += dvalues[i] * (real)n;
         }
 
-        // Update only the primary
-        UpdatePrimary();
+        // Stop doing the adjustment if n is 0.
+        if (n > 0) {
+            // Update only the primary
+            UpdatePrimary();
 
-        dV = m_vol - m_vol_old;
+            dV = m_vol - volOld;
+            real dS(0.0);
 
-        // Surface change due to volume addition
-        real dS = dV * 2.0 * m_pmodel->GetBintreeCoalThresh() / m_diam;
+            if (dV > 0.0) {
+                // Surface change due to volume addition
+                dS = dV * 2.0 * m_pmodel->GetBintreeCoalThresh() / m_diam;
+            }
+            // TODO: Implement surface area reduction?
 
-        // Climb back-up the tree and update the surface area and
-        // sintering of a particle
-        UpdateParents(dS);
-
+            // Climb back-up the tree and update the surface area and
+            // sintering of a particle
+            UpdateParents(dS);
+        }
     }
 
     // Else this a non-leaf node (not a primary)
@@ -1043,7 +1088,7 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
     }
 
     // Update property cache.
-    UpdateCache();
+    UpdateCache(this);
     return n;
 
 }
