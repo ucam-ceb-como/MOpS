@@ -85,8 +85,10 @@ namespace Sweep{
             //! return number of carbon and hydrogen for particular PAH
             int numofC() const;
             int numofH() const;
-            //! return num of rings
+            //! return num of 6-membered rings
             int numofRings() const;
+            //! return num of 5-membered rings
+            int numofRings5() const;
             //! return num of edge carbon
             int numofEdgeC() const;
             //! set number of carbon and hydrogen for particular PAH

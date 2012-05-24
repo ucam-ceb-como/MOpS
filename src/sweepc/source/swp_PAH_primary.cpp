@@ -1340,6 +1340,7 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
         num_H=m_PAH[i]->m_pahstruct->numofH();
         temp.push_back(num_H);
         temp.push_back(m_PAH[i]->m_pahstruct->numofRings());
+        temp.push_back(m_PAH[i]->m_pahstruct->numofRings5());
         temp.push_back(m_PAH[i]->m_pahstruct->numofEdgeC());
 
         // PAH mass (u)

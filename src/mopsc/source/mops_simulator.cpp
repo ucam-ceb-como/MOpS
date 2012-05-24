@@ -2198,7 +2198,8 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
         header.push_back("Index");
         header.push_back("#C");   // #C represent the num of Carbon
         header.push_back("#H");
-        header.push_back("#Rings");
+        header.push_back("#Rings6");
+        header.push_back("#Rings5");
         header.push_back("#EdgeC");
         header.push_back("Mass(u)");
         header.push_back("Mass(kg)");

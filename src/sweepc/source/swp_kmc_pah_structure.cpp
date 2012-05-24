@@ -115,6 +115,10 @@ int PAHStructure::numofRings() const{
     return m_rings;
 }
 
+int PAHStructure::numofRings5() const{
+    return m_rings5;
+}
+
 int PAHStructure::numofEdgeC() const{
     // the m_cpositions stores the coordinates of PAH, which means the num of edge C equals the size of m_cpositions
     return m_cpositions.size();
