@@ -63,9 +63,6 @@ namespace Sweep {
     class Particle;
     class Mechanism;
 
-namespace Transport {
-    struct TransportOutflow;
-} // namespace Transport
 } // namespace Sweep
 
 
@@ -125,12 +122,12 @@ private:
                                 Sweep::Particle& sp, Sweep::rng_type &rng) const;
     
     /*!
-     *  \brief Lists of particles due to be added to cells and their statistical weights
+     *  \brief Lists of particles due to be added to cells
      *
      *  Particles in the the lists at index i in the vector are destined to be added to
      *  cell i of a reactor.
      */
-    typedef std::vector<std::list<Sweep::Transport::TransportOutflow> > inflow_lists_vector;
+    typedef std::vector<std::list<Sweep::Particle*> > inflow_lists_vector;
 
     //! Take the particles from a cell and put them in lists according to their new positions
     inflow_lists_vector updateParticleListPositions(const real t_start, const real t_stop, Sweep::Cell &mix,

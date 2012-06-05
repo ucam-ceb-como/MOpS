@@ -11,7 +11,7 @@
   <!--pcount>1024</pcount>-->
   <maxm0 x="0.05">4.0e8</maxm0>
   <maxm0 x="0.25">2.5e9</maxm0>
-  <maxm0 x="0.40">3.2e9</maxm0>
+  <maxm0 x="0.40">5.0e9</maxm0>
   <relax>0.5</relax>
   
 
