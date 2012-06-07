@@ -158,7 +158,7 @@ real SinteringModel::SintTime(const Cell &sys, const Particle &p) const
 
 // Returns the characteristic sintering time for the
 // given primary.
-real SinteringModel::SintTime(const Cell &sys,const Primary &p) const
+real SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) const
 {
     real dp = 6.0 * p.Volume() / p.SurfaceArea();
     switch (m_type) {
@@ -193,7 +193,7 @@ real SinteringModel::Rate(real t, const Cell &sys, const Particle &p) const
 }
 
 // Returns the rate of the process for the given primary.
-real SinteringModel::Rate(real t, const Cell &sys, const Primary &p) const
+real SinteringModel::Rate(real t, const Cell &sys, const AggModels::Primary &p) const
 {
     real tau = max(1.0e-30, SintTime(sys, p));
     return max((p.SurfaceArea() - p.SphSurfaceArea()) / tau, 0.0);

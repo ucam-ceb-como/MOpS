@@ -61,14 +61,14 @@ public:
     // PRIMARY PARTICLE CREATION.
 
     //! Creates a new primary particle of the given type.
-    static Primary *const CreatePrimary(
+    static AggModels::Primary *const CreatePrimary(
         const AggModels::AggModelType id, // Model ID.
         const real time,                  // Primary create time.
         const ParticleModel &model        // Defining particle model.
         );
 
     //! Creates a new primary particle of the given type.
-    static Primary *const CreatePrimary(
+    static AggModels::Primary *const CreatePrimary(
         const AggModels::AggModelType id, // Model ID.
         const real time,                  // Primary create time.
         const real position,
@@ -80,7 +80,7 @@ public:
     // Reads a primary particle from a binary stream.  First reads
     // the primary type ID, in order to create a primary of the
     // correct type.
-    static Primary *const ReadPrimary(
+    static AggModels::Primary *const ReadPrimary(
         std::istream &in,          // Input stream.
         const ParticleModel &model // Defining particle model.
         );
@@ -90,7 +90,7 @@ public:
     // Writes a primary particle, along with its
     // ID, to an output stream.
     static void WritePrimary(
-        const Primary &pri, // Primary to write.
+        const AggModels::Primary &pri, // Primary to write.
         std::ostream &out   // Output stream.
         );
 

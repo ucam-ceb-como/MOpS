@@ -73,6 +73,21 @@ namespace Sweep
 // Forward declaration
 class Cell;
 
+namespace AggModels {
+
+/*!
+ *  \brief Base class for primary particles
+ *
+ *  Primary particles are the place in sweep where particle structure and composition
+ *  are stored.  Each computational particle contains one primary particle, which
+ *  in some cases serves as the head of a tree of further primary particles.  When the
+ *  computational particle needs to know about its own physical properties it queries
+ *  its (top-level) primary particle.
+ *
+ *  There are some weaknesses in the current design: Primary and its subclasses try to
+ *  satisfy two roles, one is to capture aggregate structure and the second is represent
+ *  the contents of a (piece of a) particle.
+ */
 class Primary
 {
 public:
@@ -300,6 +315,7 @@ protected:
 
 
 };
-}
+} //namespace AggModels
+} //namespace Sweep
 
 #endif

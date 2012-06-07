@@ -284,7 +284,7 @@ int SurfaceReaction::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
 }
 
 // Adjusts a primary particle according to the rules of the reaction.
-unsigned int SurfaceReaction::adjustPri(Sweep::Primary &pri, rng_type &rng, unsigned int n) const
+unsigned int SurfaceReaction::adjustPri(Sweep::AggModels::Primary &pri, rng_type &rng, unsigned int n) const
 {
     return pri.Adjust(m_dcomp, m_dvals, rng, n);
 }

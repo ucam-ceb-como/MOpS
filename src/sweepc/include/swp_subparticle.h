@@ -48,7 +48,7 @@ public:
         real time,                        //   - Create time.
         const Sweep::ParticleModel &model //   - Defining particle model.
         );
-    SubParticle(Sweep::Primary &pri);     // Initialising constructor (from primary particle).
+    SubParticle(Sweep::AggModels::Primary &pri);     // Initialising constructor (from primary particle).
     SubParticle(const SubParticle &copy); // Copy constructor.
     SubParticle(                          // Stream-reading constructor.
         std::istream &in,                 //  - Input stream.
@@ -61,14 +61,14 @@ public:
 
     // Operators.
     SubParticle &operator=(const SubParticle &rhs);
-    SubParticle &operator=(const Sweep::Primary &rhs);
+    SubParticle &operator=(const Sweep::AggModels::Primary &rhs);
 
     // PRIMARY PARTICLE CHILD.
 
     // Returns a pointer to the child primary particle, NULL if
     // this sub-particle has no primary.
-    Sweep::Primary *const Primary(void);
-    const Sweep::Primary *const Primary(void) const;
+    Sweep::AggModels::Primary *const Primary(void);
+    const Sweep::AggModels::Primary *const Primary(void) const;
 
     // BASIC PROPERTIES.
 
@@ -213,7 +213,7 @@ protected:
 
     // Primary particle of which this sub-particle comprises (since sub-particles
     // must contain exactly one primary, it might be possible to make this a member)..
-    Sweep::Primary *m_primary;
+    Sweep::AggModels::Primary *m_primary;
 
     // SubParticle class cannot be created without knowledge of the
     // components and the values.
@@ -230,7 +230,7 @@ protected:
     // PRIMARY PARTICLE CHILD.
 
     // Sets the pointer to the child primary particle.
-    void setPrimaryPtr(Sweep::Primary *const pri);
+    void setPrimaryPtr(Sweep::AggModels::Primary *const pri);
 
 private:
     //! Time at which particle was created (earliest part).

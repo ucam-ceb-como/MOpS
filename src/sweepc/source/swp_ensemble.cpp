@@ -982,7 +982,7 @@ int Sweep::Ensemble::IndexOfInceptedPAH() const
     return -1;
 }
 
-void Sweep::Ensemble::SetNumOfInceptedPAH(int m_amount, Sweep::Primary *m_primary)
+void Sweep::Ensemble::SetNumOfInceptedPAH(int m_amount, Sweep::AggModels::Primary *m_primary)
 {
     if (m_primary->AggID() ==AggModels::PAH_KMC_ID)
     {

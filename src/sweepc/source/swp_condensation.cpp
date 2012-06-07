@@ -324,7 +324,7 @@ int Condensation::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
 }
 
 // Adjusts a primary particle according to the rules of the condensation.
-unsigned int Condensation::adjustPri(Sweep::Primary &pri, rng_type &rng, unsigned int n) const
+unsigned int Condensation::adjustPri(Sweep::AggModels::Primary &pri, rng_type &rng, unsigned int n) const
 {
     return pri.Adjust(m_dcomp, m_dvals, rng, n);
 }

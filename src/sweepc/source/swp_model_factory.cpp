@@ -68,9 +68,9 @@ using namespace std;
  *
  * @return      Pointer to dynamically allocated primary (caller must delete)
  */
-Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
-                                           const real time, const real position,
-                                           const ParticleModel &model)
+AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
+                                                      const real time, const real position,
+                                                      const ParticleModel &model)
 {
     switch (id) {
         case AggModels::SurfVol_ID:
@@ -84,7 +84,7 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
-            return new Primary(time, model);
+            return new AggModels::Primary(time, model);
     }
 }
 
@@ -95,8 +95,8 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
  *
  * @return      Pointer to dynamically allocated primary (caller must delete)
  */
-Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
-                                           const real time, const ParticleModel &model)
+AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
+                                                      const real time, const ParticleModel &model)
 {
     switch (id) {
         case AggModels::SurfVol_ID:
@@ -110,7 +110,7 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
-            return new Primary(time, model);
+            return new AggModels::Primary(time, model);
     }
 }
 
@@ -119,11 +119,11 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
 // Reads a primary particle from a binary stream.  First reads
 // the primary type ID, in order to create a primary of the
 // correct type.
-Primary *const ModelFactory::ReadPrimary(std::istream &in,
-                                         const ParticleModel &model)
+AggModels::Primary *const ModelFactory::ReadPrimary(std::istream &in,
+                                                    const ParticleModel &model)
 {
     if (in.good()) {
-        Primary *pri = NULL;
+        AggModels::Primary *pri = NULL;
 
         // Read the model type from the input stream.
         unsigned int type;
@@ -133,7 +133,7 @@ Primary *const ModelFactory::ReadPrimary(std::istream &in,
         // an exception if the type is invalid.
         switch ((AggModels::AggModelType)type) {
             case AggModels::Spherical_ID:
-                pri = new Primary(in, model);
+                pri = new AggModels::Primary(in, model);
                 break;
             case AggModels::SurfVol_ID:
                 pri = new AggModels::SurfVolPrimary(in, model);
@@ -163,7 +163,7 @@ Primary *const ModelFactory::ReadPrimary(std::istream &in,
 
 // Writes a primary particle, along with its
 // ID, to an output stream.
-void ModelFactory::WritePrimary(const Primary &pri, std::ostream &out)
+void ModelFactory::WritePrimary(const AggModels::Primary &pri, std::ostream &out)
 {
     if (out.good()) {
         // Write the model Serial signature type to the stream.
