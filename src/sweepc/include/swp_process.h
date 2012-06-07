@@ -158,16 +158,6 @@ public:
         int mu            // Stoichiometry value.
         );
 
-    // Adds a reactant given the species name.
-    void AddProduct(
-        const std::string &name, // Species name.
-        int mu                   // Stoichiometry value.
-        );
-
-    // Removes a reactant, given by name, from the reaction.
-    void RemoveProduct(const std::string &name);
-
-
 	// TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
     //! Rate of the process for the given system.

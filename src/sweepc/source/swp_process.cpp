@@ -216,35 +216,6 @@ void Process::AddProduct(unsigned int isp, int mu)
     m_prod[isp] = mu;
 }
 
-// Adds a product given the species name.
-void Process::AddProduct(const std::string &name, int mu)
-{
-    // Locate the species.
-    unsigned int i;
-    for (i=0; i!=m_mech->Species()->size(); ++i) {
-        if (name.compare((*m_mech->Species())[i]->Name()) == 0) {
-            // Set product.
-            m_prod[i] = mu;
-            return;
-        }
-    }
-}
-
-// Removes a product, given by name, from the reaction.
-void Process::RemoveProduct(const std::string &name)
-{
-    // Locate the species.
-    unsigned int i;
-    for (i=0; i!=m_mech->Species()->size(); ++i) {
-        if (name.compare((*m_mech->Species())[i]->Name()) == 0) {
-            // Delete product.
-            m_prod.erase(i);
-            return;
-        }
-    }
-}
-
-
 // FICTICIOUS EVENTS.
 
 /*!
