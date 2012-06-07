@@ -87,13 +87,13 @@ Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
                                       const bool split_diffusion,
                                       const real drift_adjustment,
                                       const bool split_advection,
-                                      const bool weighted_transport)
+                                      const bool strang_splitting)
     : mResetChemistry(reset_chem)
     , mDeferralRatio(10.0)
     , mSplitDiffusion(split_diffusion)
     , mDiffusionDriftAdjustment(drift_adjustment)
     , mSplitAdvection(split_advection)
-    , mWeightedTransport(weighted_transport)
+    , mStrangTransportSplitting(strang_splitting)
 {}
 
 /*!
@@ -221,8 +221,8 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
     const size_t numCells = reac.getNumCells();
     const Sweep::Mechanism &mech = reac.getParticleMechanism();
 
-    // Strang splitting
-    const real halfTime = (t_start + t_stop) / 2;
+    // Select time step for Strang or first order splitting
+    const real firstStop = mStrangTransportSplitting ? (t_start + t_stop) / 2.0 : t_stop;
 
 #pragma omp parallel for schedule(dynamic) ordered
     for(size_t i = numCells; i > 0; --i) {
@@ -230,7 +230,7 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
         Sweep::Cell& cell = reac.getCell(i - 1);
         Geometry::LocalGeometry1d geom(reac.getGeometry(), i - 1);
 
-        solveParticlesInOneCell(cell, geom, mech, t_start, halfTime, cell_rngs[i - 1]);
+        solveParticlesInOneCell(cell, geom, mech, t_start, firstStop, cell_rngs[i - 1]);
     }
 
     // Now do the split particle transport, if there is any
@@ -238,13 +238,16 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
         splitParticleTransport(reac, t_start, t_stop, cell_rngs);
     }
 
+    if(mStrangTransportSplitting) {
+        // Do the second part of the particle simulation for the Strang splitting
 #pragma omp parallel for schedule(dynamic) ordered
-    for(size_t i = numCells; i > 0; --i) {
-        // Get details of cell i
-        Sweep::Cell& cell = reac.getCell(i - 1);
-        Geometry::LocalGeometry1d geom(reac.getGeometry(), i - 1);
+        for(size_t i = numCells; i > 0; --i) {
+            // Get details of cell i
+            Sweep::Cell& cell = reac.getCell(i - 1);
+            Geometry::LocalGeometry1d geom(reac.getGeometry(), i - 1);
 
-        solveParticlesInOneCell(cell, geom, mech, halfTime, t_stop, cell_rngs[i - 1]);
+            solveParticlesInOneCell(cell, geom, mech, firstStop, t_stop, cell_rngs[i - 1]);
+        }
     }
 
 }

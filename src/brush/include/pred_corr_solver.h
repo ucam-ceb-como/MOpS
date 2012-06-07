@@ -82,8 +82,7 @@ public:
                    const size_t corrector_iterations,
                    const real rtol, const real atol,
                    const bool split_diffusion, const real drift_correction,
-                   const bool split_advection,
-                   const bool weighted_transport);
+                   const bool split_advection, const bool strang_splitting);
 
     //! Advance solution to specified time
     void solve(Reactor1d &reac, const real t_start, const real t_stop, const int n_steps,
@@ -200,11 +199,11 @@ private:
      */
     real mDiffusionDriftAdjustment;
 
-    //! Indicate if advection is to be split from the main particle processes
+    //! Indicate if advection is to be split from the main particle processes or simply ignored
     bool mSplitAdvection;
 
-    //! Whether to adjust particle statistical weights during transport between cells
-    bool mWeightedTransport;
+    //! True if transport  splitting should be Strang (second order), otherwise first order splitting is used
+    bool mStrangTransportSplitting;
 
 }; //class PredCorrSolver
 } //namespace Brush

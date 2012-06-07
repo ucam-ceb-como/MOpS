@@ -87,7 +87,7 @@ Brush::Simulator::Simulator(const size_t n_paths,
                             const bool split_diffusion,
                             const real drift_adjustment,
                             const bool split_advection,
-                            const bool weighted_transport)
+                            const bool strang_splitting)
         : mPaths(n_paths)
         , mCorrectorIterations(n_corrector_iterations)
         , mRtol(0.0)
@@ -95,7 +95,7 @@ Brush::Simulator::Simulator(const size_t n_paths,
         , mSplitDiffusion(split_diffusion)
         , mDiffusionDriftAdjustment(drift_adjustment)
         , mSplitAdvection(split_advection)
-        , mWeightedTransport(weighted_transport)
+        , mStrangTransportSplitting(strang_splitting)
         , mOutputTimeSteps(output_times)
         , mInitialReactor(initial_reactor)
         , mResetChemistry(reset_chem)
@@ -134,7 +134,7 @@ void Brush::Simulator::runOnePath(const int seed) {
     // to a namespace
     PredCorrSolver solver(mResetChemistry, mCorrectorIterations, mRtol, mAtol,
                           mSplitDiffusion, mDiffusionDriftAdjustment,
-                          mSplitAdvection, mWeightedTransport);
+                          mSplitAdvection, mStrangTransportSplitting);
 
     //==================== File to store the moments for this run
     std::ofstream momentsFile(buildParticleStatsFileName(seed).c_str());
