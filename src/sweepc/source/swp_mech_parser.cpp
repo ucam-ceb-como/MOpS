@@ -392,6 +392,9 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         } else if (str == "rutile") {
         	// Special MD fit for GBD sintering of rutile
         	mech.SintModel().SetType(SinteringModel::Rutile);
+        } else if (str == "ssd") {
+            // Solid-state diffusion (d^3)
+            mech.SintModel().SetType(SinteringModel::SSD);
         } else {
             // Grain-boundary diffusion is the default.
             mech.SintModel().SetType(SinteringModel::GBD);
