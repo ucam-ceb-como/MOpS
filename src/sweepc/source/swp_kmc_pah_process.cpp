@@ -1267,6 +1267,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         setCount(BENZENE_C, BENZENE_H);
         // set ring counts
         m_pah->m_rings = 1;
+		m_pah->m_rings5 = 0;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -1298,6 +1299,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         setCount(PYRENE_C, PYRENE_H);
         // set ring counts
         m_pah->m_rings = 4;
+		m_pah->m_rings5 = 0;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -1325,6 +1327,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         setCount(10, 8);
         // set ring counts
         m_pah->m_rings = 2;
+		m_pah->m_rings5 = 0;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -1994,6 +1997,8 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(stt); // update resulting site
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
+	// add ring counts
+    m_pah->m_rings5++;
 }
 // ************************************************************
 // ID11- R5 desorption (AR7 in Matlab)
@@ -2020,6 +2025,8 @@ void PAHProcess::proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(stt); // update resulting site
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
+	// add ring counts
+    m_pah->m_rings5--;
 }
 // ************************************************************
 // ID12- R6 conversion to R5 (AR9 in Matlab)
@@ -2100,6 +2107,9 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     // update H count
     addCount(0, -2);
+	// add ring counts
+	m_pah->m_rings--;
+    m_pah->m_rings5++;
 }
 // ************************************************************
 // ID13- R5 conversion to R6 on FE (AR5 in Matlab)
@@ -2172,6 +2182,9 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
     // update H count
     addCount(0, 2);
+	// add ring counts
+	m_pah->m_rings++;
+    m_pah->m_rings5--;
 }
 // ************************************************************
 // ID14- R5 conversion to R6 on AC (AR4 in Matlab)
@@ -2251,6 +2264,9 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(stt); updateCombinedSites(sR5); // new FE and AC
     updateCombinedSites(S1); updateCombinedSites(S2); 
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
+	// add ring counts
+	m_pah->m_rings++;
+    m_pah->m_rings5--;
 }
 // ************************************************************
 // ID15- R5 migration to neighbouring ZZ (AR6 in Matlab)
@@ -2399,6 +2415,8 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
 
     addCount(0, -2);
+	// add ring counts
+    m_pah->m_rings5++;
     //printSites(stt);
    // cout<<sp.None;
 }

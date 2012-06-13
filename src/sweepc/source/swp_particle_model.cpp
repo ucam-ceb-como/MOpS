@@ -490,6 +490,16 @@ void ParticleModel::Serialize(std::ostream &out) const
         n = (unsigned int)m_aggmodel;
         out.write((char*)&n, sizeof(n));
 
+        // Write the mode.
+        n = (unsigned int)m_mode.length();
+        out.write((char*)&n, sizeof(n));
+        out.write(m_mode.c_str(), n);
+        // write the threshold
+        n = (unsigned int)m_threshold;
+        out.write((char*)&n, sizeof(n));
+        //write the postprocess species
+        n = (unsigned int)m_InceptedPAH;
+        out.write((char*)&n, sizeof(n));
         // Write whether binary trees should be serialised.
         bool flag(false);
         flag = m_write_bintree;
@@ -525,6 +535,7 @@ void ParticleModel::Serialize(std::ostream &out) const
 void ParticleModel::Deserialize(std::istream &in)
 {
     releaseMem();
+    char *name = NULL;
 
     if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -559,6 +570,17 @@ void ParticleModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_aggmodel = (AggModels::AggModelType)n;
 
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                name = new char[n];
+                in.read(name, n);
+                m_mode = string(name, n);
+                delete [] name;
+
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_threshold=(double)n;
+                
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_InceptedPAH = (PostProcessStartingStr)n;
                 // Read if binary trees should be read..
                 in.read(reinterpret_cast<char*>(&flag), sizeof(flag));
                 m_write_bintree = flag;
