@@ -214,6 +214,7 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
 void KMCSimulator::TestRates(const real tstart, const real tstop, const int intervals) {
 	// set name of output file
 	//setCSVratesName(filename);
+	std::cout << "Saving Rates...\n";
 	m_rates_csv.Open(m_rates_name, true);
 	rvector rates(m_kmcmech.JPList().size(), 0);
 	real dt = (tstop-tstart)/intervals;
@@ -231,6 +232,15 @@ void KMCSimulator::TestRates(const real tstart, const real tstop, const int inte
 		<<m_rates_name<<"\n\n";
 }
 
+//! Obtains rates of PAH reactions with the current structure
+rvector KMCSimulator::CurrentRates(PAHStructure* pah, real t) {
+	m_simPAHp.setPAH(*pah);
+	rvector rates(m_kmcmech.JPList().size(), 0);
+	m_gas->Interpolate(t);
+	m_kmcmech.calculateRates(*m_gas, m_simPAHp, t);
+	rates = m_kmcmech.Rates();
+	return rates;
+}
 //! Outputs gas concentrations into a csv file
 void KMCSimulator::TestConc(const real& t_start, const real& t_stop, const int intervals, const std::string& filename) {
 	CSV_IO csvio(filename, true);
@@ -350,15 +360,16 @@ void KMCSimulator::writeCHSiteCountCSV() {
 }
 //! Writes data for rates count (csv)
 void KMCSimulator::writeRatesCSV(real& time, rvector& v_rates) {
-    //int convC[] = {1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19};
-    int convM[] = {1, 2,14,15, 8,10,11,12,13, 3, 7, 9, 5, 4, 6,22,24,16,21};
+    int convC[] = {1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21};
+    //int convM[] = {1, 2,14,15, 8,10,11,12,13, 3, 7, 9, 5, 4, 6,22,24,16,21};
     int ID;
     //if(runNo==1) {
-    std::vector<real> temp(25,0);
+	int total_jp = 21;
+    std::vector<real> temp(total_jp+1,0);
     temp[0] = time;
     for(int i=0; i!=(int)v_rates.size(); i++) {
         ID = m_kmcmech.JPList()[i]->getID();
-        temp[convM[ID-1]] = v_rates[i];
+        temp[convC[ID-1]] = v_rates[i];
     }
     m_rates_csv.Write(temp);
     //}
@@ -582,6 +593,15 @@ void KMCSimulator::writeCSVlabels() {
         pah_headings.push_back(header);
     }
     m_pah_csv.Write(pah_headings);
+	// Write headings for rate file
+	std::vector<std::string> rates_header;
+	rates_header.push_back("Time");
+	for(int i=0; i<m_kmcmech.JPList().size()+1; i++) {
+		std::string ID_name = "ID";
+		ID_name += Strings::cstr(i+1);
+		rates_header.push_back(ID_name);
+	}
+	m_rates_csv.Write(rates_header);
 }
 //! Save the structure DOT file after every X loops
 void KMCSimulator::saveDOTperXLoops(int X, int &loopcount, int& runcount) {

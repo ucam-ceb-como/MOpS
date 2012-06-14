@@ -62,6 +62,8 @@ namespace Sweep {
             // Combined Sites: FE3:FE with 2 FEs on both sides, AC_FE3:AC next to FE3
             // FE_HACA:FE with non-FEs on both sides
             FE3=13, AC_FE3=14, FE_HACA=15, BY5_FE3=16,
+			// Combined Sites: FE2:FE with FE at one side, but not an FE3
+			FE2=17,
             // 
             // Combined Sites
             None,
@@ -126,6 +128,7 @@ namespace Sweep {
                 case AC_FE3: return "AC_FE3";
                 case FE_HACA: return "FE_HACA";
                 case BY5_FE3: return "BY5_FE3";
+				case FE2: return "FE2";
                 case None: return "None";
                 case Inv: return "Invalid";
                 case any: return "any";

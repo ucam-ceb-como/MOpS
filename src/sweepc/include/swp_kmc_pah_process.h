@@ -149,6 +149,8 @@ public:
 
     void proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);
+
+	void proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2);
     //void proc_M5R_eZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);
     
     // true: saves rates only, returns all site count as 1

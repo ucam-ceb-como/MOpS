@@ -245,6 +245,7 @@ PAHStructure* PAHProcess::clonePAH() const {
     }
     temp->m_counts = m_pah->m_counts;
     temp->m_rings = m_pah->m_rings;
+	temp->m_rings5 = m_pah->m_rings5;
     /*if(!p.checkCoordinates()) {
         std::cout<<"ERROR: ClonePAH did not pass checkCoordinates..\n";
         p.printStruct();
@@ -1163,20 +1164,44 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
     }
     switch(st->type) {
     case FE:
-        // Check for FE3
+        // Check for FE3 (if there's FE on each side of the FE)
         if(moveIt(st,1)->type == FE && moveIt(st,-1)->type == FE) {
             //if(st->C1->C1->C1->bridge || st->C2->C2->C2->bridge)
             st->comb = FE3;
             m_pah->m_siteMap[FE3].push_back(st);
+			Spointer n1, n2;
+			n1 = moveIt(st, -1);
+			n2 = moveIt(st, 1);
+			if(n1->comb != FE3) updateCombinedSites(n1);
+			if(n2->comb != FE3) updateCombinedSites(n2);
             break;
         }
-        // Check for FE_HACA
+        //Check for FE2 (if only one FE is beside this FE)
+		else if(moveIt(st,1)->type == FE || moveIt(st,-1)->type == FE){
+			Spointer S1,S2;
+			S1 = moveIt(st,-1); S2 = moveIt(st, 1);
+			// Check if that FE is not a FE3
+			if(S2->type == FE && moveIt(S2,1)->type != FE) {
+				st->comb = FE2;
+				m_pah->m_siteMap[FE2].push_back(st);
+				if(S2->comb != FE2) updateCombinedSites(S2);
+			} else if(S1->type == FE && moveIt(S1,-1)->type != FE) {
+				st->comb = FE2;
+				m_pah->m_siteMap[FE2].push_back(st);
+				delSiteFromMap(S1->comb, st);
+				if(S1->comb != FE2) updateCombinedSites(S1);
+			} else
+				st->comb = None;
+			break;
+		}
+		// Check for FE_HACA
         else if(moveIt(st,1)->type != FE && moveIt(st,-1)->type != FE && moveIt(st,1)->type != RFE && moveIt(st,-1)->type != RFE) {
             //if(st->C1->C1->bridge || st->C2->C2->bridge)
             st->comb = FE_HACA;
             m_pah->m_siteMap[FE_HACA].push_back(st);
             break;
-        }else st->comb = None;
+        }
+		else st->comb = None;
         break;
     case AC:
         // Check for AC_FE3
@@ -1478,6 +1503,13 @@ bool PAHProcess::checkCombinedSiteType(Spointer& stt) {
                     error_stype = i->type;
                 }
                 break;
+			case FE2:
+				if(i->type != FE) {
+                    error = true;
+                    error_stype_comb = FE2;
+                    error_stype = i->type;
+                }
+                break;
             case AC_FE3:
                 if(i->type != AC) {
                     error = true;
@@ -1518,20 +1550,29 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
     //cout << "Start Performing Process..\n";
     kmcSiteType stp = jp.getSiteType();
     int id = jp.getID();
+	
     // choose random site of type stp to perform process
     Spointer site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
     // stores pointers to site Carbon members
     Cpointer site_C1 = site_perf->C1;
     Cpointer site_C2 = site_perf->C2;
+	//cout << jp.getName() << '\n';
+	//printSites(site_perf);
     //cout<<'\t'<<kmcSiteName(site_perf->type)<<' '<<site_C1<<' '<<site_C2<<'\n';
     // find structure change function
+	std::ostringstream dotname, dotname2;
     switch(id) {
         case 1:
             proc_G6R_AC(site_perf, site_C1, site_C2); break;
         case 2:
             proc_G6R_FE(site_perf, site_C1, site_C2); break;
         case 3:
-            proc_L6_BY6(site_perf, site_C1, site_C2); break;
+			//dotname << "KMC_DEBUG/" << site_perf->C1 << "_1.dot";
+			//dotname2 << "KMC_DEBUG/" << site_perf->C1 << "_2.dot";
+			//saveDOT(dotname.str());
+            proc_L6_BY6(site_perf, site_C1, site_C2);
+			//saveDOT(dotname2.str());
+			break;
         case 4:
             proc_PH_benz(site_perf, site_C1, site_C2, rng); break;
         case 5:
@@ -1564,7 +1605,11 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
             proc_L5R_BY5(site_perf, site_C1, site_C2); break;
         case 19:
             proc_M6R_BY5_FE3(site_perf, site_C1, site_C2, rng); break;
-        //case 20:
+		case 20:
+			proc_O6R_FE2(site_perf, site_C1, site_C2);
+			break;
+		case 21:
+			proc_O6R_FE2(site_perf, site_C1, site_C2); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -1574,7 +1619,12 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
     if(m_pah->m_cfirst->A != 'H')
         cout<<"WARNING: A of m_cfirst is not H..\n";
     //cout<<"----PROCESS PERFORMED!-----\n";*/
-    if(!checkCombinedSiteType(site_perf)) {
+	Spointer S1,S2,S3,S4;
+	S1 = moveIt(site_perf, -1); S2 = moveIt(site_perf, 1);
+	S3 = moveIt(site_perf, -2); S4 = moveIt(site_perf, 2);
+    if(!checkCombinedSiteType(site_perf) || !checkCombinedSiteType(S1)
+		|| !checkCombinedSiteType(S2) || !checkCombinedSiteType(S3)
+		|| !checkCombinedSiteType(S4)) {
         std::cout<<"Structure produced invalid combined site type after performing process "
             << "ID"<<id<<" on PAH ID: "<<m_pah->m_parent->ID()<<"...\n"
             <<"*************\nAfter performing process --\n";
@@ -1587,6 +1637,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
         assert(false);
         abort();
     }
+	//printSites(site_perf);
     return true;
 }
 //--------------------------------------------------------------------
@@ -1766,9 +1817,10 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     removeSite(Srem2);
     // update combined sites and neighbours
     Spointer S1 = moveIt(stt,-1); Spointer S2 = moveIt(stt,1);
+	Spointer S3 = moveIt(S1,-1); Spointer S4 = moveIt(S2,1);
     updateCombinedSites(stt);
-    updateCombinedSites(S1);
-    updateCombinedSites(S2);
+    updateCombinedSites(S1); updateCombinedSites(S2);
+    updateCombinedSites(S3); updateCombinedSites(S4);
 
     //printSites(stt);
     // update H count
@@ -2509,6 +2561,79 @@ void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     addCount(0, -2);
     //printSites(stt);
    // cout<<sp.None;
+}
+// ************************************************************
+// ID20 & ID21- R6 oxidation at ZZ site
+// ************************************************************
+void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	//printSites(stt);
+	// identify if the other FE site is before or after this site
+	//std::ostringstream dotname, dotname2;
+	//dotname << "KMC_DEBUG/" << stt->C1 << "_1.dot";
+	//dotname2 << "KMC_DEBUG/" << stt->C1 << "_2.dot";
+	//saveDOT(dotname.str());
+	bool b4 = false; // <-- position of other FE site
+	Spointer other = moveIt(stt, -1);
+	Spointer S1, S2;
+	if(other->type == FE) {
+		b4 = true;
+		S1 = moveIt(other, -1);
+		S2 = moveIt(stt, 1);
+	}
+	else {
+		other = moveIt(stt, 1);
+		S1 = moveIt(other, 1);
+		S2 = moveIt(stt, -1);
+	}
+	// Check if there are any R5 nearby, if yes, don't perform process
+	// then check for nearby bridges
+	if(b4) {
+		if((int) moveIt(other, -1)->type > 4 || (int) moveIt(stt, 1)->type > 4)
+			return;
+	} else {
+		if((int) moveIt(other, 1)->type > 4 || (int) moveIt(stt, -1)->type > 4)
+			return;
+	}
+	Cpointer C_bulk;
+	for(C_bulk = S1->C1; C_bulk != S1->C2; C_bulk=C_bulk->C2) {
+		if(C_bulk->bridge) return;
+	}
+	for(C_bulk = S2->C1; C_bulk != S2->C2; C_bulk=C_bulk->C2) {
+		if(C_bulk->bridge) return;
+	}
+	// Identify C1 & C2 for new ZZ site
+	Cpointer C_start, C_end;
+	if(b4) {
+		C_start = stt->C1->C1->C1;
+		C_end = stt->C2->C2;
+	} else {
+		C_start = stt->C1->C1;
+		C_end = stt->C2->C2->C2;
+	}
+	// Remove the 3 C atoms after C_start
+	removeC(C_start->C2, false);
+	removeC(C_start->C2, false);
+	removeC(C_start->C2, false);
+	// add a C atom after C_start (bulk in ZZ)
+	addC(C_start, normAngle(C_start->bondAngle1-120), normAngle(C_start->bondAngle1-60), true);
+	// update H
+	updateA(C_start, C_end, 'H');
+	// Remove one of the FE in FE2
+	removeSite(other);
+	// Update Sites and neighbouring sites
+	Spointer S3, S4;
+	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
+	updateSites(stt, C_start, C_end, +1); // FE --> ZZ
+	updateSites(S1, S1->C1, C_start, -1); // S1 --> reduce 1
+	updateSites(S2, C_end, S2->C2, -1); // S2 --> reduce 1
+	// update combined sites for all sites and their neighbours
+	S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+	updateCombinedSites(stt);
+	updateCombinedSites(S1); updateCombinedSites(S2);
+	updateCombinedSites(S3); updateCombinedSites(S4);
+	addCount(0,-1);
+	m_pah->m_rings--;
+	//saveDOT(dotname2.str());
 }
 
 size_t PAHProcess::SiteListSize() const {
