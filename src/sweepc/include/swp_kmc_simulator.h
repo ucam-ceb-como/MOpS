@@ -131,12 +131,16 @@ namespace Sweep{
                            int PAH_ID);       // ID of this pah, used for debugging.
             //! Outputs rates into a csv file (assuming all site counts as 1)
 			void TestRates(const real tstart, const real tstop, const int intervals);
+			//! Obtains rates of PAH reactions with the current structure
+			rvector CurrentRates(PAHStructure* pah, real t);
 			//! Outputs gas concentrations into a csv file
 			void TestConc(const real& t_start, const real& t_stop, const int intervals, const std::string& filename);
             //void testSimulation(PAHStructure& pah, const unsigned long seed, int totalruns);
             void writetimestep(const std::vector<double>& timestep);
             void setCSVtimestep(const std::string &filename);
             std::string    m_timestep_name;
+			//! returns the reaction counts
+			std::vector<int> ReactionCounts() const; 
             //! CSV input filename
              std::string m_csv_in;
             //! DOT output filename

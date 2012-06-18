@@ -2198,7 +2198,8 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
         header.push_back("Index");
         header.push_back("#C");   // #C represent the num of Carbon
         header.push_back("#H");
-        header.push_back("#Rings");
+        header.push_back("#Rings6");
+        header.push_back("#Rings5");
         header.push_back("#EdgeC");
         header.push_back("Mass(u)");
         header.push_back("Mass(kg)");
@@ -2551,8 +2552,10 @@ void Simulator::postProcessXmer(const Mechanism &mech,
                                     Sweep::Particle* sp=r->Mixture()->Particles().At(j);
                                     Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
                                     // if including the xmers in the soot aggregate
-                                    if (MassSpectraFrag())
-                                    pah->FindXmer(psl_xmer,k+1);
+                                    //if (MassSpectraFrag())
+                                    //pah->FindXmer(psl_xmer,k+1);
+                                    if (MassSpectraFrag()&& k<=1 && temp[11]>3 && 1 == temp[15])
+                                        pah->Fragtest(psl_xmer, k, pmech.Mode(),pmech.Threshold());
                                 }
                             }
                         }

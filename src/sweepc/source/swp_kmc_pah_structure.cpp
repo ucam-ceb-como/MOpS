@@ -69,6 +69,7 @@ PAHStructure::PAHStructure() {
     m_cfirst = NULLC;
     m_clast = NULLC;
     m_rings = 0;
+	m_rings5 = 0;
     m_counts = intpair(2, 0);
     m_parent = NULL;
 }
@@ -114,6 +115,10 @@ int PAHStructure::numofRings() const{
     return m_rings;
 }
 
+int PAHStructure::numofRings5() const{
+    return m_rings5;
+}
+
 int PAHStructure::numofEdgeC() const{
     // the m_cpositions stores the coordinates of PAH, which means the num of edge C equals the size of m_cpositions
     return m_cpositions.size();
@@ -132,6 +137,11 @@ void PAHStructure::setnumofH(int val)
 void PAHStructure::setnumofRings(int val)
 {
     m_rings=val;
+}
+
+void PAHStructure::setnumofRings5(int val)
+{
+    m_rings5=val;
 }
 
 void PAHStructure::initialise(StartingStructure ss) {
