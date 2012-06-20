@@ -97,7 +97,9 @@ namespace Sweep {
         
         //! Enumeration of starting structures
         enum StartingStructure {
-            BENZENE_C=6,BENZENE_H=6, PYRENE_C=16,PYRENE_H=10, NAPHTHALENE_C=10,NAPHTHALENE_H=8, NONE};
+            BENZENE_C=6,BENZENE_H=6, PYRENE_C=16,PYRENE_H=10, NAPHTHALENE_C=10,NAPHTHALENE_H=8,
+            CORONENE_C=24,CORONENE_H=12,
+            TEST_STRUCT, NONE};
 
         //! typedefs used in the model
         typedef std::vector<real> rvector;
@@ -137,6 +139,24 @@ namespace Sweep {
             return "ERROR";
         }
 
+		//! Change site name to site type (only for principal site types).
+		//! Returns Inv if site type is invalid
+        kmcSiteType inline kmcSiteType_str(std::string str) {
+            if(str == "FE") return FE;
+			else if(str == "ZZ") return ZZ;
+			else if(str == "AC") return AC;
+			else if(str == "BY5") return BY5;
+			else if(str == "BY6") return BY6;
+			else if(str == "R5") return R5;
+			else if(str == "RFE") return RFE;
+			else if(str == "RZZ") return RZZ;
+			else if(str == "RAC") return RAC;
+			else if(str == "RBY5") return RBY5;
+			else if(str == "RFER") return RFER;
+			else if(str == "RZZR") return RZZR;
+			else if(str == "RACR") return RACR;
+			return Inv;
+        }
         //! Get a vector of all site types
         std::vector<kmcSiteType> inline vectSiteType() {
             std::vector<kmcSiteType> temp;
@@ -153,6 +173,7 @@ namespace Sweep {
             temp.push_back(RFER);
             temp.push_back(RZZR);
             temp.push_back(RACR);
+			temp.push_back(FE2);
             temp.push_back(FE3);
             temp.push_back(AC_FE3);
             temp.push_back(FE_HACA);

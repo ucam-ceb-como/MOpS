@@ -189,7 +189,9 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
             // Choose jump according to rates
             ChosenProcess jp_perf = m_kmcmech.chooseReaction(rng);
             //cout<<jp_perf.first->getName()<<'\n';//++++
-
+            //std::ostringstream dotname;
+            //dotname << "KMC_DEBUG/p_" << (t_next*1e8) << ".dot";
+            //m_simPAHp.saveDOT(dotname.str());
             // Update data structure
             bool process_success = m_simPAHp.performProcess(*jp_perf.first, rng);
 
@@ -339,9 +341,9 @@ void KMCSimulator::writetimestep(const std::vector<double>& timestep){
 //! Writes data for reaction_count.csv
 void KMCSimulator::writeRxnCountCSV() {
     // change int vector to float
-    std::vector<float> temp;
+    std::vector<std::string> temp;
     for(size_t i=0; i<m_rxn_count.size(); i++)
-        temp.push_back(m_rxn_count[i]);
+        temp.push_back(Strings::cstr(m_rxn_count[i]));
     m_rxn_csv.Write(temp);
 }
 //! Writes data for CH_site_list.csv
@@ -596,7 +598,7 @@ void KMCSimulator::writeCSVlabels() {
 	// Write headings for rate file
 	std::vector<std::string> rates_header;
 	rates_header.push_back("Time");
-	for(int i=0; i<m_kmcmech.JPList().size()+1; i++) {
+	for(size_t i=0; i<m_kmcmech.JPList().size()+1; i++) {
 		std::string ID_name = "ID";
 		ID_name += Strings::cstr(i+1);
 		rates_header.push_back(ID_name);

@@ -70,7 +70,7 @@ PAHStructure::PAHStructure() {
     m_clast = NULLC;
     m_rings = 0;
 	m_rings5 = 0;
-    m_counts = intpair(2, 0);
+    m_counts = intpair(0, 0);
     m_parent = NULL;
 }
 

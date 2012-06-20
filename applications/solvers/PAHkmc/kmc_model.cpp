@@ -73,11 +73,10 @@ using namespace Strings;
 
 int main(int argc, char *argv[])
 {
-    KMCSimulator* Simulator = new KMCSimulator (std::string("gasphase.inp"),
-		std::string("chem.inp"), std::string("therm.dat"));
-	//Simulator->TestGP();
+    //Simulator->TestGP();
 	std::string input_name = "kmc.inx";
 
+	std::string gasphase_filename = "gasphase.inp";
     clock_t timerStart = clock();
 	// read xml input file
 	CamXML::Document doc;
@@ -97,12 +96,23 @@ int main(int argc, char *argv[])
 	int no_of_steps = 100;
 	int no_of_rxnsteps = 500;
 	StartingStructure startStruct = NONE;
+	std::string startStruct_str = "";
+	int R6_num = 0;
+	int R5_num = 0;
+	std::string site_savemode = "END";
+
+	KMCSimulator* Simulator;
 
 	std::string rate_filename;
 
 	if (doc.Load(input_name) == 0) {
 		root = doc.Root();
 		// get simulation parameters
+		node = root->GetFirstChild("gasFile");
+		gasphase_filename = node->Data();
+		Simulator = new KMCSimulator (gasphase_filename,
+		std::string("chem.inp"), std::string("therm.dat"));
+
 		node = root->GetFirstChild("runs");
 		total_runs = (int) Strings::cdble(node->Data());
 		
@@ -122,6 +132,15 @@ int main(int argc, char *argv[])
 		if(node->Data() == "PYRENE") startStruct = PYRENE_C;
 		else if(node->Data() == "BENZENE") startStruct = BENZENE_C;
 		else if(node->Data() == "NAPHTHALENE") startStruct = NAPHTHALENE_C;
+        else if(node->Data() == "CORONENE") startStruct = CORONENE_C;
+        else if(node->Data() == "TEST") startStruct = TEST_STRUCT;
+		else {
+			startStruct_str = node->Data();
+			attr = node->GetAttribute("R6");
+			R6_num = (int) Strings::cdble(attr->GetValue());
+			attr = node->GetAttribute("R5");
+			R5_num = (int) Strings::cdble(attr->GetValue());
+		}
 
 		// get input file names
 		node = root->GetFirstChild("gasFile");
@@ -133,7 +152,7 @@ int main(int argc, char *argv[])
 		attr = node->GetAttribute("mode");
 		if(attr->GetValue() == "ON") save_dots = true;
 		attr = node->GetAttribute("save");
-		dot_mode = true;
+		dot_mode = attr->GetValue();
 
 		node = root->GetFirstChild("timer");
 		Simulator->setCSVtimerName(node->Data());
@@ -143,6 +162,8 @@ int main(int argc, char *argv[])
 
 		node = root->GetFirstChild("pahlist");
 		Simulator->setCSVpahlistName(node->Data());
+		attr = node->GetAttribute("save");
+		if(attr->GetValue() == "STEP") site_savemode = attr->GetValue();
 
 		node = root->GetFirstChild("rates");
 		rate_filename = node->Data();
@@ -193,7 +214,7 @@ int main(int argc, char *argv[])
 		// be made unique to the loop.
 		Sweep::rng_type rng(123);
 
-		Sweep::real step_size = (t_end-t_start)/no_of_steps;
+		Sweep::real step_size=(t_end-t_start)/no_of_steps;
 
 		std::vector< std::vector< pair<int,int> > > PAH_CH;
 		std::vector<Sweep::real> PAH_time;
@@ -209,10 +230,13 @@ int main(int argc, char *argv[])
 			pah[i] = new PAHStructure;
 			pahp.setPAH(*pah[i]);
 			std::cout << "Starting growth on PAH "<<i<<"...\n";
-			pahp.initialise(startStruct);
+			if(startStruct != NONE)
+				pahp.initialise(startStruct);
+			else
+				pahp.initialise(startStruct_str, R6_num, R5_num);
 			//pahp.setPAH(*pah[0]);
 			std::cout << "Pointer to PAH:"<<pah[i]<<"\n";
-			//Sweep::rng_type rng2(1+i);
+			Sweep::rng_type rng2(1+i);
 			std::vector< pair<int,int> > CH_counts;
 			// initialising CH counts
 			if(save_CH) {
@@ -242,6 +266,9 @@ int main(int argc, char *argv[])
 					dotname << "DOT files/PAH_" << i <<'_'<< j <<".dot";
 					pahp.saveDOT(dotname.str());
 				}
+				if(i == 0 && site_savemode == "STEP") {
+					Simulator->writeCHSiteCountCSV();
+				}
 			}
 			PAH_CH.push_back(CH_counts);
 			std::cout<<"done!\n";
@@ -252,8 +279,17 @@ int main(int argc, char *argv[])
 				dotname << "DOT files/PAH" << i <<".dot";
 				pahp.saveDOT(dotname.str());
 			}
-			std::cout<<"Done simulation for PAH "<<ID+i<<std::endl<<endl;;
-			pahp.clearStructure();
+			std::cout<<"Done simulation for PAH "<<ID+i<<std::endl<<endl;
+			std::cout<<"PAH Structure: "<<pahp.SiteString(',')<<std::endl;
+			std::cout<<"PAH Ring Counts ~ R6:"<<pahp.getRingsCount().first<<" -- R5:"
+				<<pahp.getRingsCount().second<<std::endl;
+            std::cout<<"PAH Atom Counts ~ C:"<<pahp.getCHCount().first<<" -- H:"
+                <<pahp.getCHCount().second<<std::endl;
+            std::cout<<"No of Edge C ~ "<<pahp.CarbonListSize()<<std::endl;
+            std::cout<<"No of Bridges ~ "<<pahp.numberOfBridges()<<std::endl;
+            std::cout<<"No of Sites ~ "<<pahp.SiteListSize()<<std::endl;
+
+			//pahp.clearStructure();
             
 		}
 		
@@ -261,7 +297,7 @@ int main(int argc, char *argv[])
 			CSV_IO file_CH(CHOutput, true);
 			std::vector<std::string> header;
 			header.push_back("Time");
-			for(int j=0; j<PAH_CH.size(); j++) {
+			for(size_t j=0; j<PAH_CH.size(); j++) {
 				if(CH_mode == "CH" || CH_mode == "C" || CH_mode == "MW" || CH_mode == "C_H") {
 					std::string headC = "PAH-";
 					headC += Strings::cstr(1+j);
@@ -277,7 +313,7 @@ int main(int argc, char *argv[])
 				}
 			}
 			if(CH_mode == "C_H") {
-				for(int j=0; j<PAH_CH.size(); j++) {
+				for(size_t j=0; j<PAH_CH.size(); j++) {
 					std::string headH = "PAH-";
 					headH += Strings::cstr(1+j);
 					headH += "_H";
@@ -285,11 +321,11 @@ int main(int argc, char *argv[])
 				}
 			}
 			file_CH.Write(header);
-			for(int t=0; t<PAH_time.size(); t++) {
+			for(size_t t=0; t<PAH_time.size(); t++) {
 				std::vector<std::string> CHline;
 				// first put in the time
 				CHline.push_back(Strings::cstr(PAH_time[t]));
-				for(int j=0; j<PAH_CH.size(); j++) {
+				for(size_t j=0; j<PAH_CH.size(); j++) {
 					if(CH_mode == "C" || CH_mode == "C_H" || CH_mode == "CH")
 						CHline.push_back(Strings::cstr(PAH_CH[j][t].first));
 					if(CH_mode == "CH")
@@ -298,7 +334,7 @@ int main(int argc, char *argv[])
 						CHline.push_back(Strings::cstr(PAH_CH[j][t].first*12 + PAH_CH[j][t].second));
 				}
 				if(CH_mode == "C_H")
-					for(int j=0; j<PAH_CH.size(); j++) {
+					for(size_t j=0; j<PAH_CH.size(); j++) {
 						CHline.push_back(Strings::cstr(PAH_CH[j][t].second));
 					}
 				file_CH.Write(CHline);
