@@ -54,12 +54,6 @@ namespace Sweep
 // Forward declare mechanism class.
 class Mechanism;
 
-namespace Transport
-{
-    // Forward declaration of unused argument type
-    struct TransportOutflow;
-}
-
 namespace Processes
 {
 /*!

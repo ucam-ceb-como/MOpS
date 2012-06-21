@@ -398,9 +398,6 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
                 // of a particle being added to destination.
                 real repeatCount = repeatCountConst;
 
-                // Adjust the statistical weight using the information in the TransportOutflow structure
-                // so that all particles can be added to their destination cells with probability 1 (although
-                // the destination cells may still internally downsample).
                 (*it)->setStatisticalWeight((*it)->getStatisticalWeight() * weightFactor);
 
                 while(repeatCount > 0) {

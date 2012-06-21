@@ -54,13 +54,6 @@ class Mechanism;
 // Forward declare class used for sums in the binary tree
 class TreeTransCoagWeightedCache;
 
-
-namespace Transport
-{
-    // Forward declaration of unused argument type
-    struct TransportOutflow;
-}
-
 namespace Processes
 {
 

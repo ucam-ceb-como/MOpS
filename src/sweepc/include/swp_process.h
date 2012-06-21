@@ -65,12 +65,6 @@ class Mechanism;
 // Forward declare the Cell class.
 class Cell;
 
-namespace Transport
-{
-    // Forward declaration of unused argument type
-    struct TransportOutflow;
-}
-
 namespace Processes
 {
 class Process

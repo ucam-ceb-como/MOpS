@@ -63,11 +63,6 @@ namespace Sweep
 // Forward declare Mechanism class.
 class Mechanism;
 
-namespace Transport
-{
-    struct TransportOutflow;
-}
-
 namespace Processes
 {
 class InterParticle : public ParticleProcess
