@@ -59,10 +59,10 @@ namespace Sweep {
         class Carbon;
 
         // Pointer to a Carbon atom and a Site.
-		typedef std::set< Carbon* > Ccontainer;
-		typedef Carbon* Cpointer;
+        typedef std::set< Carbon* > Ccontainer;
+        typedef Carbon* Cpointer;
         typedef std::list< Site >::iterator Spointer;
-		
+        
 
         //! Carbon atom on PAH edges
         class Carbon {
@@ -91,8 +91,8 @@ namespace Sweep {
             cpair coords;
         };
 
-		//static Ccontainer NULLSET(1, Carbon());
-		static Cpointer NULLC(new Carbon);//SET.begin();
+        //static Ccontainer NULLSET(1, Carbon());
+        static Cpointer NULLC(new Carbon);//SET.begin();
 
         //! Active site on PAH edges
         struct Site {

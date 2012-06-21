@@ -93,7 +93,7 @@ PAHStructure* PAHProcess::clonePAH() const {
     PAHStructure* temp = new PAHStructure();
     PAHProcess p(*temp);
     std::vector<kmcSiteType> sites = SiteVector();
-	p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5);
+    p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5);
     return temp;
 }
 //! Returns a copy of PAH structure (obsolete)
@@ -253,7 +253,7 @@ PAHStructure* PAHProcess::clonePAH_obs() const {
     }
     temp->m_counts = m_pah->m_counts;
     temp->m_rings = m_pah->m_rings;
-	temp->m_rings5 = m_pah->m_rings5;
+    temp->m_rings5 = m_pah->m_rings5;
     /*if(!p.checkCoordinates()) {
         std::cout<<"ERROR: ClonePAH did not pass checkCoordinates..\n";
         p.printStruct();
@@ -308,7 +308,7 @@ unsigned int PAHProcess::getSiteCount(const kmcSiteType& st) const {
 }
 //! Get Ring Counts
 intpair PAHProcess::getRingsCount() const {
-	return intpair(m_pah->m_rings, m_pah->m_rings5);
+    return intpair(m_pah->m_rings, m_pah->m_rings5);
 }
 //! Get number of bridges
 int PAHProcess::numberOfBridges() const {
@@ -775,8 +775,8 @@ Cpointer PAHProcess::addC() {
     Cpointer cb;
     // Create new carbon atom at memory pointed by h
     cb = new Carbon;
-	if(!m_pah->m_carbonList.insert(cb).second)
-		std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
+    if(!m_pah->m_carbonList.insert(cb).second)
+        std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
     m_pah->m_cpositions.insert(cb->coords); // store coordinates
     addCount(1,0); // add a C count
     return cb;
@@ -797,8 +797,8 @@ Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2, bool
     cb->bondAngle1 = normAngle(angle2); // convert angle to +ve/-ve form
     // set new coordinates and store
     cb->coords = jumpToPos(C_1->coords, angle1);
-	if(!m_pah->m_carbonList.insert(cb).second)
-		std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
+    if(!m_pah->m_carbonList.insert(cb).second)
+        std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
     m_pah->m_cpositions.insert(cb->coords);
     // Edit details of connected carbon(s)
     if(C_1->C2 != NULL) {
@@ -828,8 +828,8 @@ Cpointer PAHProcess::bridgeC(Cpointer C_1) {
     cb->bridge = true;
     // set new coordinates and store
     cb->coords = jumpToPos(C_1->coords, C_1->bondAngle2);
-	if(!m_pah->m_carbonList.insert(cb).second)
-		std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
+    if(!m_pah->m_carbonList.insert(cb).second)
+        std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
     m_pah->m_cpositions.insert(cb->coords);
     // Set details of C_1
     C_1->bridge = true;
@@ -911,8 +911,8 @@ void PAHProcess::removeC(Cpointer C_1, bool bulk) {
     m_pah->m_cpositions.erase(m_pah->m_cpositions.find(C_1->coords));
     // delete Carbon object
     delete C_1;
-	if(m_pah->m_carbonList.erase(C_1) == 0)
-		std::cout<<"ERROR: removeC: NOT ERASING ANY POINTERS!\n";
+    if(m_pah->m_carbonList.erase(C_1) == 0)
+        std::cout<<"ERROR: removeC: NOT ERASING ANY POINTERS!\n";
     if(!bulk) { // if desorption, decrease C count accordingly
         addCount(-1, 0); 
     }
@@ -1201,39 +1201,39 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
             //if(st->C1->C1->C1->bridge || st->C2->C2->C2->bridge)
             st->comb = FE3;
             m_pah->m_siteMap[FE3].push_back(st);
-			Spointer n1, n2;
-			n1 = moveIt(st, -1);
-			n2 = moveIt(st, 1);
-			if(n1->comb != FE3) updateCombinedSites(n1);
-			if(n2->comb != FE3) updateCombinedSites(n2);
+            Spointer n1, n2;
+            n1 = moveIt(st, -1);
+            n2 = moveIt(st, 1);
+            if(n1->comb != FE3) updateCombinedSites(n1);
+            if(n2->comb != FE3) updateCombinedSites(n2);
             break;
         }
         //Check for FE2 (if only one FE is beside this FE)
-		else if(moveIt(st,1)->type == FE || moveIt(st,-1)->type == FE){
-			Spointer S1,S2;
-			S1 = moveIt(st,-1); S2 = moveIt(st, 1);
-			// Check if that FE is not a FE3
-			if(S2->type == FE && moveIt(S2,1)->type != FE) {
-				st->comb = FE2;
-				m_pah->m_siteMap[FE2].push_back(st);
-				if(S2->comb != FE2) updateCombinedSites(S2);
-			} else if(S1->type == FE && moveIt(S1,-1)->type != FE) {
-				st->comb = FE2;
-				m_pah->m_siteMap[FE2].push_back(st);
-				delSiteFromMap(S1->comb, st);
-				if(S1->comb != FE2) updateCombinedSites(S1);
-			} else
-				st->comb = None;
-			break;
-		}
-		// Check for FE_HACA
+        else if(moveIt(st,1)->type == FE || moveIt(st,-1)->type == FE){
+            Spointer S1,S2;
+            S1 = moveIt(st,-1); S2 = moveIt(st, 1);
+            // Check if that FE is not a FE3
+            if(S2->type == FE && moveIt(S2,1)->type != FE) {
+                st->comb = FE2;
+                m_pah->m_siteMap[FE2].push_back(st);
+                if(S2->comb != FE2) updateCombinedSites(S2);
+            } else if(S1->type == FE && moveIt(S1,-1)->type != FE) {
+                st->comb = FE2;
+                m_pah->m_siteMap[FE2].push_back(st);
+                delSiteFromMap(S1->comb, st);
+                if(S1->comb != FE2) updateCombinedSites(S1);
+            } else
+                st->comb = None;
+            break;
+        }
+        // Check for FE_HACA
         else if(moveIt(st,1)->type != FE && moveIt(st,-1)->type != FE && moveIt(st,1)->type != RFE && moveIt(st,-1)->type != RFE) {
             //if(st->C1->C1->bridge || st->C2->C2->bridge)
             st->comb = FE_HACA;
             m_pah->m_siteMap[FE_HACA].push_back(st);
             break;
         }
-		else st->comb = None;
+        else st->comb = None;
         break;
     case AC:
         // Check for AC_FE3
@@ -1291,55 +1291,55 @@ Spointer PAHProcess::moveIt(Spointer i, int x) {
 //! Initialisation of structure, specified in derived classes (starting structures)
 PAHStructure& PAHProcess::initialise(StartingStructure ss){
     // Pair of ring counts (R6 & R5) & chosen site list string
-	std::string chosen;
+    std::string chosen;
     intpair rings;
-	intpair CH;
+    intpair CH;
     // Structure for Benzene
     std::string BENZENE_Sites = "FE,FE,FE,FE,FE,FE";
     intpair BENZENE_Rings(1,0);
-	intpair BENZENE_CH(6,6);
+    intpair BENZENE_CH(6,6);
     // Structure for Naphthalene
     std::string NAPHTHALENE_Sites = "FE,FE,FE,ZZ,FE,FE,FE,ZZ";
     intpair NAPHTHALENE_Rings(2,0);
-	intpair NAPHTHALENE_CH(10,0);
+    intpair NAPHTHALENE_CH(10,0);
     // Structure for Pyrene
     std::string PYRENE_Sites = "ZZ,FE,FE,ZZ,FE,ZZ,FE,FE,ZZ,FE";
     intpair PYRENE_Rings(4,0);
-	intpair PYRENE_CH(16,10);
+    intpair PYRENE_CH(16,10);
     // Structure for Coronene
-	std::string CORONENE_Sites = "FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ";
+    std::string CORONENE_Sites = "FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ";
     intpair CORONENE_Rings(7,0);
-	intpair CORONENE_CH(24,12);
+    intpair CORONENE_CH(24,12);
     // Test Structure
     std::string TEST_Sites = "FE,AC,FE,ZZ,RFE,R5,RAC,RFE,R5,RFE,FE,AC,FE,FE,FE,FE,BY5,AC,FE,BY5,FE,ZZ,FE,FE";
     intpair TEST_Rings(8,2);
-	intpair TEST_CH(18,10);
+    intpair TEST_CH(18,10);
     // Choose structure
     switch(ss) {
     case BENZENE_C:
         chosen = BENZENE_Sites;
         rings = BENZENE_Rings;
-		CH = BENZENE_CH;
+        CH = BENZENE_CH;
         break;
     case PYRENE_C:
         chosen = PYRENE_Sites;
         rings = PYRENE_Rings;
-		CH = PYRENE_CH;
+        CH = PYRENE_CH;
         break;
     case NAPHTHALENE_C:
         chosen = NAPHTHALENE_Sites;
         rings = NAPHTHALENE_Rings;
-		CH = NAPHTHALENE_CH;
+        CH = NAPHTHALENE_CH;
         break;
     case CORONENE_C:
         chosen = CORONENE_Sites;
         rings = CORONENE_Rings;
-		CH = CORONENE_CH;
+        CH = CORONENE_CH;
         break;
     case TEST_STRUCT:
         chosen = TEST_Sites;
         rings = TEST_Rings;
-		CH = TEST_CH;
+        CH = TEST_CH;
         break;
     default: 
             std::cout<<"ERROR: Starting Structure undefined.. (PAHProcess::initialise)\n\n";
@@ -1347,38 +1347,38 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
             abort();
     }
     // Create Structure
-	return initialise(chosen, rings.first, rings.second);
+    return initialise(chosen, rings.first, rings.second);
     //printSites(m_pah->m_siteList.begin());
 }
 
 //! Initialisation of structure given a string of site types (separated by ','),
 //! and number of 6- and 5-membered rings
 PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num){
-	if(m_pah == NULL) {
+    if(m_pah == NULL) {
         PAHStructure* pah = new PAHStructure();
         m_pah = pah;
     }else if(m_pah->m_cfirst != NULL)
         clearStructure();
-	// create a vector from the string
-	std::vector<std::string> siteList_strvec;
-	Strings::split(siteList_str, siteList_strvec, std::string(","));
-	// convert into vector of siteTypes
-	std::vector<kmcSiteType> siteList_vec;
-	for(size_t i=0; i<siteList_strvec.size(); i++) {
-		kmcSiteType temp = kmcSiteType_str(siteList_strvec[i]);
-		if(temp == Inv) {
-			std::cout<<"ERROR: Starting Structure site List contains invalid site type"
-				<<".. (PAHProcess::initialise)\n\n";
+    // create a vector from the string
+    std::vector<std::string> siteList_strvec;
+    Strings::split(siteList_str, siteList_strvec, std::string(","));
+    // convert into vector of siteTypes
+    std::vector<kmcSiteType> siteList_vec;
+    for(size_t i=0; i<siteList_strvec.size(); i++) {
+        kmcSiteType temp = kmcSiteType_str(siteList_strvec[i]);
+        if(temp == Inv) {
+            std::cout<<"ERROR: Starting Structure site List contains invalid site type"
+                <<".. (PAHProcess::initialise)\n\n";
             std::ostringstream msg;
             msg << "ERROR: Starting Structure site List contains invalid site type."
                 << " (Sweep::KMC_ARS::PAHProcess::initialise)";
                 throw std::runtime_error(msg.str());
                 assert(false);
-		}
-		siteList_vec.push_back(temp);
-	}
-	createPAH(siteList_vec, R6_num, R5_num);
-	return *m_pah;
+        }
+        siteList_vec.push_back(temp);
+    }
+    createPAH(siteList_vec, R6_num, R5_num);
+    return *m_pah;
 }
 //! Clear Structure
 void PAHProcess::clearStructure() {
@@ -1403,7 +1403,7 @@ void PAHProcess::clearStructure() {
     for(set<Cpointer>::iterator i=m_pah->m_carbonList.begin(); i!=m_pah->m_carbonList.end(); i++) 
         delete *i;
     // clear all data
-	m_pah->m_carbonList.clear();
+    m_pah->m_carbonList.clear();
     m_pah->m_siteMap.clear();
     m_pah->m_siteList.clear();
     m_pah->m_cfirst = NULL;
@@ -1451,7 +1451,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5) {
     // current C, bondangle and coordinates
     Cpointer newC=addC();
     m_pah->m_cfirst = newC;
-	m_pah->m_clast = NULLC;
+    m_pah->m_clast = NULLC;
     // number of bulk C to be added
     int bulkC;
     // type of site; if type 0, basic site types (FE - BY6); if type 1, R5 and basic sites with
@@ -1459,7 +1459,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5) {
     unsigned short int site_t;
     // start drawing..
     for(size_t i=0; i<vec.size(); i++) {
-		Cpointer S_C1 = newC;
+        Cpointer S_C1 = newC;
         // get number of bulk C to be added and site type
         if((int)vec[i] <= 4) {
             bulkC = (int) vec[i]; site_t = 0;
@@ -1498,11 +1498,11 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5) {
         }
         addSite(vec[i], S_C1, newC);
     }
-	// check if PAH closes correctly
-	if(m_pah->m_clast == NULLC || newC != m_pah->m_cfirst) {
-		// PAH did not close properly. invalid structure
-		cout << "createPAH: PAH did not close properly. Could be problem "
-			<<"with site list input...\n";
+    // check if PAH closes correctly
+    if(m_pah->m_clast == NULLC || newC != m_pah->m_cfirst) {
+        // PAH did not close properly. invalid structure
+        cout << "createPAH: PAH did not close properly. Could be problem "
+            <<"with site list input...\n";
         std::ostringstream msg;
         msg << "ERROR: PAH did not close properly.."
             << " (Sweep::KMC_ARS::PAHProcess::createPAH)";
@@ -1510,7 +1510,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5) {
         throw std::runtime_error(msg.str());
         assert(false);
         return;
-	}
+    }
     m_pah->m_rings = R6;
     m_pah->m_rings5 = R5;
     for(Ccontainer::iterator i = m_pah->m_carbonList.begin();
@@ -1563,15 +1563,15 @@ Cpointer PAHProcess::drawType1Site(Cpointer Cnow, int bulkC, kmcSiteType prevTyp
     angletype angle = Cnow->bondAngle1-60;
     if(bulkC == 0) {
         angle = normAngle(angle-30);
-		cpair pos = jumpToPos(Cnow->coords, angle);
-		if(m_pah->m_cpositions.count(pos)) { // reached end of PAH
-			Cpointer Cpos = findC(pos);
-			Cnow->bondAngle1 = angle;
+        cpair pos = jumpToPos(Cnow->coords, angle);
+        if(m_pah->m_cpositions.count(pos)) { // reached end of PAH
+            Cpointer Cpos = findC(pos);
+            Cnow->bondAngle1 = angle;
             connectToC(Cnow, Cpos);
             m_pah->m_clast = Cnow;
             return Cpos; // m_cfirst
-		}
-		else Cnow = addC(Cnow, angle, normAngle(angle-30), false);
+        }
+        else Cnow = addC(Cnow, angle, normAngle(angle-30), false);
         return Cnow;
     }else { //draw RXX site
             return drawType0Site(Cnow, bulkC);
@@ -1670,8 +1670,8 @@ bool PAHProcess::checkCombinedSiteType(Spointer& stt) {
                     error_stype = i->type;
                 }
                 break;
-			case FE2:
-				if(i->type != FE) {
+            case FE2:
+                if(i->type != FE) {
                     error = true;
                     error_stype_comb = FE2;
                     error_stype = i->type;
@@ -1717,29 +1717,29 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
     //cout << "Start Performing Process..\n";
     kmcSiteType stp = jp.getSiteType();
     int id = jp.getID();
-	
+    
     // choose random site of type stp to perform process
     Spointer site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
     // stores pointers to site Carbon members
     Cpointer site_C1 = site_perf->C1;
     Cpointer site_C2 = site_perf->C2;
-	//cout << jp.getName() << '\n';
-	//printSites(site_perf);
+    //cout << jp.getName() << '\n';
+    //printSites(site_perf);
     //cout<<'\t'<<kmcSiteName(site_perf->type)<<' '<<site_C1<<' '<<site_C2<<'\n';
     // find structure change function
-	std::ostringstream dotname, dotname2;
+    std::ostringstream dotname, dotname2;
     switch(id) {
         case 1:
             proc_G6R_AC(site_perf, site_C1, site_C2); break;
         case 2:
             proc_G6R_FE(site_perf, site_C1, site_C2); break;
         case 3:
-			//dotname << "KMC_DEBUG/" << site_perf->C1 << "_1.dot";
-			//dotname2 << "KMC_DEBUG/" << site_perf->C1 << "_2.dot";
-			//saveDOT(dotname.str());
+            //dotname << "KMC_DEBUG/" << site_perf->C1 << "_1.dot";
+            //dotname2 << "KMC_DEBUG/" << site_perf->C1 << "_2.dot";
+            //saveDOT(dotname.str());
             proc_L6_BY6(site_perf, site_C1, site_C2);
-			//saveDOT(dotname2.str());
-			break;
+            //saveDOT(dotname2.str());
+            break;
         case 4:
             proc_PH_benz(site_perf, site_C1, site_C2, rng); break;
         case 5:
@@ -1772,11 +1772,11 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
             proc_L5R_BY5(site_perf, site_C1, site_C2); break;
         case 19:
             proc_M6R_BY5_FE3(site_perf, site_C1, site_C2, rng); break;
-		case 20:
-			proc_O6R_FE2(site_perf, site_C1, site_C2);
-			break;
-		case 21:
-			proc_O6R_FE2(site_perf, site_C1, site_C2); break;
+        case 20:
+            proc_O6R_FE2(site_perf, site_C1, site_C2);
+            break;
+        case 21:
+            proc_O6R_FE2(site_perf, site_C1, site_C2); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -1786,12 +1786,12 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
     if(m_pah->m_cfirst->A != 'H')
         cout<<"WARNING: A of m_cfirst is not H..\n";
     //cout<<"----PROCESS PERFORMED!-----\n";*/
-	Spointer S1,S2,S3,S4;
-	S1 = moveIt(site_perf, -1); S2 = moveIt(site_perf, 1);
-	S3 = moveIt(site_perf, -2); S4 = moveIt(site_perf, 2);
+    Spointer S1,S2,S3,S4;
+    S1 = moveIt(site_perf, -1); S2 = moveIt(site_perf, 1);
+    S3 = moveIt(site_perf, -2); S4 = moveIt(site_perf, 2);
     if(!checkCombinedSiteType(site_perf) || !checkCombinedSiteType(S1)
-		|| !checkCombinedSiteType(S2) || !checkCombinedSiteType(S3)
-		|| !checkCombinedSiteType(S4)) {
+        || !checkCombinedSiteType(S2) || !checkCombinedSiteType(S3)
+        || !checkCombinedSiteType(S4)) {
         std::cout<<"Structure produced invalid combined site type after performing process "
             << "ID"<<id<<" on PAH ID: "<<m_pah->m_parent->ID()<<"...\n"
             <<"*************\nAfter performing process --\n";
@@ -1814,7 +1814,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
             << "Real total: " << getCHCount().first << '\n';
         throw std::runtime_error(msg.str());
     }
-	//printSites(site_perf);
+    //printSites(site_perf);
     return true;
 }
 //--------------------------------------------------------------------
@@ -1994,7 +1994,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     removeSite(Srem2);
     // update combined sites and neighbours
     Spointer S1 = moveIt(stt,-1); Spointer S2 = moveIt(stt,1);
-	Spointer S3 = moveIt(S1,-1); Spointer S4 = moveIt(S2,1);
+    Spointer S3 = moveIt(S1,-1); Spointer S4 = moveIt(S2,1);
     updateCombinedSites(stt);
     updateCombinedSites(S1); updateCombinedSites(S2);
     updateCombinedSites(S3); updateCombinedSites(S4);
@@ -2226,7 +2226,7 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(stt); // update resulting site
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
-	// add ring counts
+    // add ring counts
     m_pah->m_rings5++;
 }
 // ************************************************************
@@ -2254,7 +2254,7 @@ void PAHProcess::proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(stt); // update resulting site
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
-	// add ring counts
+    // add ring counts
     m_pah->m_rings5--;
 }
 // ************************************************************
@@ -2336,8 +2336,8 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     // update H count
     addCount(0, -2);
-	// add ring counts
-	m_pah->m_rings--;
+    // add ring counts
+    m_pah->m_rings--;
     m_pah->m_rings5++;
 }
 // ************************************************************
@@ -2411,8 +2411,8 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
     // update H count
     addCount(0, 2);
-	// add ring counts
-	m_pah->m_rings++;
+    // add ring counts
+    m_pah->m_rings++;
     m_pah->m_rings5--;
 }
 // ************************************************************
@@ -2493,8 +2493,8 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(stt); updateCombinedSites(sR5); // new FE and AC
     updateCombinedSites(S1); updateCombinedSites(S2); 
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
-	// add ring counts
-	m_pah->m_rings++;
+    // add ring counts
+    m_pah->m_rings++;
     m_pah->m_rings5--;
 }
 // ************************************************************
@@ -2644,7 +2644,7 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
 
     addCount(0, -2);
-	// add ring counts
+    // add ring counts
     m_pah->m_rings5++;
     //printSites(stt);
    // cout<<sp.None;
@@ -2743,86 +2743,86 @@ void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 // ID20 & ID21- R6 oxidation at ZZ site
 // ************************************************************
 void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	//printSites(stt);
-	// identify if the other FE site is before or after this site
-	//std::ostringstream dotname, dotname2;
-	//dotname << "KMC_DEBUG/" << stt->C1 << "_1.dot";
-	//dotname2 << "KMC_DEBUG/" << stt->C1 << "_2.dot";
-	//saveDOT(dotname.str());
-	bool b4 = false; // <-- position of other FE site
-	Spointer other = moveIt(stt, -1);
-	Spointer S1, S2;
-	if(other->type == FE) {
-		b4 = true;
-		S1 = moveIt(other, -1);
-		S2 = moveIt(stt, 1);
-	}
-	else {
-		other = moveIt(stt, 1);
-		S1 = moveIt(other, 1);
-		S2 = moveIt(stt, -1);
-	}
-	// Check if there are any R5 nearby, if yes, don't perform process
-	// then check for nearby bridges
-	if(b4) {
-		if((int) moveIt(other, -1)->type > 4 || (int) moveIt(stt, 1)->type > 4)
-			return;
-	} else {
-		if((int) moveIt(other, 1)->type > 4 || (int) moveIt(stt, -1)->type > 4)
-			return;
-	}
-	Cpointer C_bulk;
-	for(C_bulk = S1->C1; C_bulk != S1->C2; C_bulk=C_bulk->C2) {
-		if(C_bulk->bridge) return;
-	}
-	for(C_bulk = S2->C1; C_bulk != S2->C2; C_bulk=C_bulk->C2) {
-		if(C_bulk->bridge) return;
-	}
-	// Identify C1 & C2 for new ZZ site
-	Cpointer C_start, C_end;
-	if(b4) {
-		C_start = stt->C1->C1->C1;
-		C_end = stt->C2->C2;
-	} else {
-		C_start = stt->C1->C1;
-		C_end = stt->C2->C2->C2;
-	}
-	// Remove the 3 C atoms after C_start
-	removeC(C_start->C2, false);
-	removeC(C_start->C2, false);
-	removeC(C_start->C2, false);
-	// add a C atom after C_start (bulk in ZZ)
-	addC(C_start, normAngle(C_start->bondAngle1-120), normAngle(C_start->bondAngle1-60), true);
-	// update H
-	updateA(C_start, C_end, 'H');
-	// Remove one of the FE in FE2
-	removeSite(other);
-	// Update Sites and neighbouring sites
-	Spointer S3, S4;
-	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
-	updateSites(stt, C_start, C_end, +1); // FE --> ZZ
-	updateSites(S1, S1->C1, C_start, -1); // S1 --> reduce 1
-	updateSites(S2, C_end, S2->C2, -1); // S2 --> reduce 1
-	// update combined sites for all sites and their neighbours
-	S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
-	updateCombinedSites(stt);
-	updateCombinedSites(S1); updateCombinedSites(S2);
-	updateCombinedSites(S3); updateCombinedSites(S4);
-	addCount(0,-1);
-	m_pah->m_rings--;
-	//saveDOT(dotname2.str());
+    //printSites(stt);
+    // identify if the other FE site is before or after this site
+    //std::ostringstream dotname, dotname2;
+    //dotname << "KMC_DEBUG/" << stt->C1 << "_1.dot";
+    //dotname2 << "KMC_DEBUG/" << stt->C1 << "_2.dot";
+    //saveDOT(dotname.str());
+    bool b4 = false; // <-- position of other FE site
+    Spointer other = moveIt(stt, -1);
+    Spointer S1, S2;
+    if(other->type == FE) {
+        b4 = true;
+        S1 = moveIt(other, -1);
+        S2 = moveIt(stt, 1);
+    }
+    else {
+        other = moveIt(stt, 1);
+        S1 = moveIt(other, 1);
+        S2 = moveIt(stt, -1);
+    }
+    // Check if there are any R5 nearby, if yes, don't perform process
+    // then check for nearby bridges
+    if(b4) {
+        if((int) moveIt(other, -1)->type > 4 || (int) moveIt(stt, 1)->type > 4)
+            return;
+    } else {
+        if((int) moveIt(other, 1)->type > 4 || (int) moveIt(stt, -1)->type > 4)
+            return;
+    }
+    Cpointer C_bulk;
+    for(C_bulk = S1->C1; C_bulk != S1->C2; C_bulk=C_bulk->C2) {
+        if(C_bulk->bridge) return;
+    }
+    for(C_bulk = S2->C1; C_bulk != S2->C2; C_bulk=C_bulk->C2) {
+        if(C_bulk->bridge) return;
+    }
+    // Identify C1 & C2 for new ZZ site
+    Cpointer C_start, C_end;
+    if(b4) {
+        C_start = stt->C1->C1->C1;
+        C_end = stt->C2->C2;
+    } else {
+        C_start = stt->C1->C1;
+        C_end = stt->C2->C2->C2;
+    }
+    // Remove the 3 C atoms after C_start
+    removeC(C_start->C2, false);
+    removeC(C_start->C2, false);
+    removeC(C_start->C2, false);
+    // add a C atom after C_start (bulk in ZZ)
+    addC(C_start, normAngle(C_start->bondAngle1-120), normAngle(C_start->bondAngle1-60), true);
+    // update H
+    updateA(C_start, C_end, 'H');
+    // Remove one of the FE in FE2
+    removeSite(other);
+    // Update Sites and neighbouring sites
+    Spointer S3, S4;
+    S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
+    updateSites(stt, C_start, C_end, +1); // FE --> ZZ
+    updateSites(S1, S1->C1, C_start, -1); // S1 --> reduce 1
+    updateSites(S2, C_end, S2->C2, -1); // S2 --> reduce 1
+    // update combined sites for all sites and their neighbours
+    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+    updateCombinedSites(stt);
+    updateCombinedSites(S1); updateCombinedSites(S2);
+    updateCombinedSites(S3); updateCombinedSites(S4);
+    addCount(0,-1);
+    m_pah->m_rings--;
+    //saveDOT(dotname2.str());
 }
 
 size_t PAHProcess::SiteListSize() const {
-	return m_pah->m_siteList.size();
+    return m_pah->m_siteList.size();
 }
 
 size_t PAHProcess::CarbonListSize() const {
-	return m_pah->m_carbonList.size();
+    return m_pah->m_carbonList.size();
 }
 
 std::list<Site>& PAHProcess::SiteList() const {
-	return m_pah->m_siteList;
+    return m_pah->m_siteList;
 }
 
 //! obtains a vector of the PAH site list
@@ -2836,12 +2836,12 @@ std::vector<kmcSiteType> PAHProcess::SiteVector() const {
 
 //! obtains a string containing the PAH site list
 std::string PAHProcess::SiteString(char delimiter) const {
-	std::ostringstream temp;
-	std::vector<kmcSiteType> vec(SiteVector());
-	temp << kmcSiteName(vec[0]);
-	for(size_t i=1; i<vec.size(); i++) {
-		temp << delimiter;
-		temp << kmcSiteName(vec[i]);
-	}
-	return temp.str();
+    std::ostringstream temp;
+    std::vector<kmcSiteType> vec(SiteVector());
+    temp << kmcSiteName(vec[0]);
+    for(size_t i=1; i<vec.size(); i++) {
+        temp << delimiter;
+        temp << kmcSiteName(vec[i]);
+    }
+    return temp.str();
 };
