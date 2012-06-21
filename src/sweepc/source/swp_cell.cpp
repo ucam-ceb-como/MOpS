@@ -53,12 +53,6 @@ using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor (private).
-/*Cell::Cell(void)
-: m_gas(), m_model(NULL), m_smpvol(1.0), m_fixed_chem(false)
-{
-}*/
-
 // Default constructor (public).
 Cell::Cell(const Sweep::ParticleModel &model)
 : m_gas(*model.Species()), m_ensemble(), m_model(&model),
