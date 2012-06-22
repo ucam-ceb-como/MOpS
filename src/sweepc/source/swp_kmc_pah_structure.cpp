@@ -65,12 +65,12 @@ using namespace Strings;
 // Constructors and Destructor
 //! Default Constructor
 PAHStructure::PAHStructure() {
-    //NULLC = m_carbonList.insert(Carbon()).first;
+	//NULLC = m_carbonList.insert(Carbon()).first;
     m_cfirst = NULLC;
     m_clast = NULLC;
     m_rings = 0;
-    m_rings5 = 0;
-    m_counts = intpair(0, 0);
+	m_rings5 = 0;
+    m_counts = intpair(2, 0);
     m_parent = NULL;
 }
 
@@ -82,7 +82,7 @@ PAHStructure::~PAHStructure() {
     //delete m_cfirst;
     //delete m_clast;
     PAHProcess pp(*this);
-    pp.clearStructure();
+	pp.clearStructure();
     m_siteMap.clear();
     m_siteList.clear();
 }
@@ -160,11 +160,11 @@ bool PAHStructure::havebridgeC(){
 
 void PAHStructure::saveDOTperLoop(int PAH_ID, int i)
 {
-    PAHProcess p(*this);
+	PAHProcess p(*this);
     string filename = "KMC_DEBUG/ID_";
-    filename.append(Strings::cstr(PAH_ID));
-    filename.append("_");
-    filename.append(Strings::cstr(i));
+	filename.append(Strings::cstr(PAH_ID));
+	filename.append("_");
+	filename.append(Strings::cstr(i));
     filename.append(".dot");
     p.saveDOT(filename);
 }
