@@ -317,6 +317,10 @@ namespace Camflow {
             //! Return the soot moment given the independent variable.
             doublereal getMoment(const int momIndex, const doublereal axpos);
 
+            //! Return the soot moment rates given the independent variable.
+            // ank25 added for ELFM
+            doublereal getMomentWdot(const int momIndex, const doublereal axpos);
+
             //! Return the species mole fraction given the independent variable.
             doublereal getMoleFrac(const int spIndex, const doublereal axpos);
 
@@ -325,6 +329,10 @@ namespace Camflow {
 
             //! Get spatial profile of one moment
             std::vector<doublereal> getMomentsByIndex(const int momentIndex) const;
+
+            //! Get spatial profile of rate of change of one moment
+            // ank25 added for ELFM
+            std::vector<doublereal> getMomentsWdotByIndex(const int momentWdotIndex) const;
 
             //! Get mass fractions for all species at one point.
             std::vector<doublereal> getMassFracsByPoint(const int indVarIndex) const;
@@ -421,11 +429,12 @@ namespace Camflow {
              */
             Array2D spMassFracs;            //species mass fractions
             Array2D sootMoments;			// Soot moments
+            Array2D sootMomentsWdot;		// ank25 added for ELFM
             std::vector<doublereal> TVector;     //temperature
             std::vector<doublereal> rhoVector;   //density
             std::vector<doublereal> muVector;    //viscosity
             std::vector<doublereal> indVar;      //independant variable
-            std::vector<doublereal> spHeat;              //specific heats
+            std::vector<doublereal> spHeat;      //specific heats
             std::vector<doublereal> lambda;      //thermal conductivity
             std::vector<doublereal> mVelocity;   //velocity
             std::vector<doublereal> avgMolWtVector;   // Average Molar Weight of the mixture
@@ -435,7 +444,7 @@ namespace Camflow {
             std::vector<doublereal> sootSurfaceAreaVector;
             std::vector<doublereal> sootVolumeFractionVector;
 
-            Array2D mDiff;                      //Diffusion coefficients
+            Array2D mDiff;                  //Diffusion coefficients
 
             doublereal stMixtureFrac;       //stoichiometric mixture fraction
 

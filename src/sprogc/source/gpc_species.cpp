@@ -202,6 +202,19 @@ unsigned int Species::AtomCount(unsigned int iel) const
     return 0;
 }
 
+// Returns the number of the given element with symbol supplied
+unsigned int Species::AtomCount(string name) const
+{
+    for (unsigned int i=0; i<m_mech->ElementCount(); i++) {
+        if (*m_mech->Elements(i) == name) {
+            return AtomCount(i);
+        }
+    }
+
+    // Element not part of species.
+    return 0;
+}
+
 // Adds an element to the species composition vector.
 void Species::AddElement(const Sprog::ElComp &elcomp)
 {

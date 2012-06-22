@@ -98,13 +98,17 @@ void CamResidual::saveMixtureProp(const doublereal time,
      */
     int npSource = std::max( s_ParticleBegin.size(), s_ParticleEnd.size());
     doublereal slope, intersect;
-    for(int i=cellBegin; i< cellEnd;i++){
+    for (int i=cellBegin; i< cellEnd;i++)
+    {
         mf.clear();
-        for(int l=0; l<nSpc; l++){
+        for (int l=0; l<nSpc; l++)
+        {
             mf.push_back(y[i*nVar+l]);
         }
+
         temperature = y[i*nVar+ptrT];
-        if(temperature < 0 || temperature > 3500){
+        if (temperature < 0 || temperature > 3500)
+        {
             std::cout << "Invalid temperature " << temperature << std::endl;
             throw CamError("Invalid temperature");
         }
@@ -367,6 +371,15 @@ void CamResidual::getSpeciesMassFracs(Array2D& mf){
 void CamResidual::getMoments(Array2D& moments_){
     moments_ = moments;
 }
+
+/*
+ *return the rate of change of the soot moments array
+ *ank25 added for ELFM
+ */
+void CamResidual::getMomentsWdot(Array2D& momentsWdot_){
+    momentsWdot_ = moments_dot;
+}
+
 
 /*
  *return the average molar weight of the mixture to the calling program

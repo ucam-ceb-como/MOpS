@@ -1043,7 +1043,10 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
                 m_PAHclusterchanged = true; 
                 m_PAHchanged = true;
             }
-            if (m_PAHchanged)
+			// the second condition ensures that the m_InvalidPAH is modified in the correct way
+			// consider 2 PAH, the first is invalid, the other is valid. If not using the 
+			// second condition, the m_InvalidPAH will be false enventually, but it should be true.
+            if (m_PAHchanged && !m_InvalidPAH)
                 m_InvalidPAH = CheckInvalidPAHs(*it);
         }
         if (m_InvalidPAH)
@@ -1088,7 +1091,8 @@ bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
     default:
         throw std::runtime_error("no information about the incepted PAH is available (Sweep::PAHPrimary::CheckInvalidPAHs())");
     }
-    return (it->m_pahstruct->numofC() < m_control);
+    // if the PAH in the cluster is as the same size as the incepted PAH, it will be released but the current implementation is directly removed which causes mass loss, for a fully coupled model this part should be redesigned.
+    return (it->m_pahstruct->numofC() < m_control||(it->m_pahstruct->numofC() <= m_control && NumPAH()!=1));
 }
 
 //struct compare_class
@@ -1123,10 +1127,13 @@ void PAHPrimary::RemoveInvalidPAHs()
 // Find Xmer (monomer, dimer or trimer) and record its mass which will be used to create mass spectra
 // however, this function currently is only implenmented in PAHPrimary class
 // this means it is limited to PAH-PP model. 
-void PAHPrimary::FindXmer(std::vector<double> &out, Xmer m_xmer) const
+void PAHPrimary::FindXmer(std::vector<double> &out, int m_xmer) const
 {
+    if (m_leftchild!=NULL)
+        m_leftchild->FindXmer(out, m_xmer);
+
 	// dimer: a partilce with one primary containing 2 PAHs
-	if (this->Numprimary()==1 && this->NumPAH()==m_xmer)
+	if (this->NumPAH()==m_xmer)
 		out.push_back(this->MassforXmer());
 }
 
@@ -1201,6 +1208,116 @@ int PAHPrimary::InceptedPAH() const
     out.push_back(divider);
     ID++;
 }
+ // only for num of Primary == 1, carbon only
+double PAHPrimary::ReducedMass() const
+{
+    double val=0;
+    for (size_t i = 0; i != m_PAH.size(); ++i)
+    {
+        int num_C=0;
+        num_C=m_PAH[i]->m_pahstruct->numofC();
+        val+=1/num_C;
+    }
+    if (val==0) return 1;
+    else 
+    return 1/val;
+}
+bool IsSticked(double val)
+{
+    return val<2*(32*12+14);
+}
+bool NotValid(double val)
+{
+    return val==0;
+}
+
+void PAHPrimary::Fragtest(std::vector<double> &out, const int k, std::string mode, double threshold) const
+{
+    //test8 start
+    //int thres=0;
+    //if (mode =="MIN"||mode=="MAX")
+    //    thres = threshold/2;
+    //else if (mode =="COMBINED")
+    //    thres = threshold/4;
+    //else if (mode =="REDUCED")
+    //    thres = threshold;
+    //if (m_leftchild!=NULL)
+    //m_leftchild->Fragtest(out, k, mode, threshold);
+
+    //std::vector<double> temp;
+
+    ////if (k==0 && ReducedMass()<=thres) {
+    ////    for (size_t i = 0; i != m_PAH.size(); i+=1)
+    ////        {
+    ////            int num_C=0;
+    ////            int num_H=0;
+    ////            int val=0;
+    ////            int val1=0;
+    ////            num_C=m_PAH[i]->m_pahstruct->numofC();
+    ////            num_H=m_PAH[i]->m_pahstruct->numofH();
+    ////            // PAH mass (u)
+    ////            val = 12*num_C + num_H;
+    ////            temp.push_back(val);
+    ////        }
+    ////}
+    ////else if (k==1 && ReducedMass()>thres) {
+    
+    //if (k==1 && NumPAH()<=10) {
+    //    for (size_t i = 0; i != m_PAH.size(); i+=2)
+    //    {
+    //        if (i+1>=m_PAH.size())
+    //            break;
+    //        int num_C=0;
+    //        int num_H=0;
+    //        int val=0;
+    //        int val1=0;
+    //        num_C=m_PAH[i]->m_pahstruct->numofC();
+    //        num_H=m_PAH[i]->m_pahstruct->numofH();
+    //        // PAH mass (u)
+    //        val = 12*num_C + num_H;
+    //        num_C=m_PAH[i+1]->m_pahstruct->numofC();
+    //        num_H=m_PAH[i+1]->m_pahstruct->numofH();
+    //        // PAH mass (u)
+    //        val1 = 12*num_C + num_H;
+    //        val+=val1;
+    //        temp.push_back(val);
+    //    }
+    //}
+    //if (temp.size()!=0) {
+    //    std::vector<double>::iterator NewEnd = remove_if(temp.begin(),temp.end(),IsSticked);
+    //    temp.resize(NewEnd-temp.begin());
+    //    out.insert(out.end(),temp.begin(),temp.end());
+    //}
+    //test8 end
+    //test9 start
+    std::vector<double> temp;
+    if (k==1 && NumPAH()<=5) {
+        mass_PAH(temp);
+    }
+    if (temp.size()!=0)
+    {
+        for (size_t i = 0; i != NumPAH(); ++i){
+            //c32h14
+            if (temp[i]<=398)
+                temp[i]=0;
+        }
+        std::vector<double>::iterator NewEnd = remove_if(temp.begin(),temp.end(),NotValid);
+        temp.resize(NewEnd-temp.begin());
+        for (size_t i = 0; i !=temp.size(); i+=2) {
+            if (i+1>=temp.size()) {
+                temp[i]=0;
+                break;
+            }
+            temp[i]=temp[i]+temp[i+1];
+            temp[i+1]=0;
+        }
+        NewEnd = remove_if(temp.begin(),temp.end(),NotValid);
+        temp.resize(NewEnd-temp.begin());
+        out.insert(out.end(),temp.begin(),temp.end());
+    }
+    //test9 end
+
+}
 
 // use to output detailed info about particular PAH
 void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int index, const double density) const
@@ -1225,6 +1342,7 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
         num_H=m_PAH[i]->m_pahstruct->numofH();
         temp.push_back(num_H);
         temp.push_back(m_PAH[i]->m_pahstruct->numofRings());
+        temp.push_back(m_PAH[i]->m_pahstruct->numofRings5());
         temp.push_back(m_PAH[i]->m_pahstruct->numofEdgeC());
 
         // PAH mass (u)
@@ -1700,17 +1818,20 @@ void PAHPrimary::outputPAHPrimary(std::ostream &out) const
         out.write((char*)&val, sizeof(val));
         val=m_numOfRings;
         out.write((char*)&val, sizeof(val));
+
+        if (m_pmodel->WriteBinaryTrees()) {
         //count the number of PAH should be serialized
-        int m_count = 0;
-        while (m_count != m_numPAH)
-        {
-            m_PAH[m_count]->Serialize(out);
-            ++m_count;
+            int m_count = 0;
+            while (m_count != m_numPAH)
+            {
+                m_PAH[m_count]->Serialize(out);
+                ++m_count;
+            }
         }
     }
 }
 
-PAHPrimary* PAHPrimary::inputPAHPrimary(std::istream &in)
+PAHPrimary* PAHPrimary::inputPAHPrimary(std::istream &in, const Sweep::ParticleModel &model)
 {
     PAHPrimary* pri=new PAHPrimary();
     double val=0.0;
@@ -1731,13 +1852,15 @@ PAHPrimary* PAHPrimary::inputPAHPrimary(std::istream &in)
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     pri->m_numOfRings=(int)val;
 
-    int m_count=0;
-    while (m_count != pri->m_numPAH)
-    {
-        boost::shared_ptr<PAH> new_PAH (new PAH());
-        new_PAH->Deserialize(in);
-        pri->m_PAH.push_back(new_PAH);
-        ++m_count;
+    if (model.WriteBinaryTrees()) {
+        int m_count=0;
+        while (m_count != pri->m_numPAH)
+        {
+            boost::shared_ptr<PAH> new_PAH (new PAH());
+            new_PAH->Deserialize(in);
+            pri->m_PAH.push_back(new_PAH);
+            ++m_count;
+        }
     }
     return pri;
 }
@@ -1809,7 +1932,7 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
         vector<PAHPrimary*> pri;
         for (int i=0; i!=m_numprimary; ++i) 
         {
-            pri.push_back(inputPAHPrimary(in));
+            pri.push_back(inputPAHPrimary(in, model));
         }
         // relink the primary particles
         PAHPrimary* p=this;

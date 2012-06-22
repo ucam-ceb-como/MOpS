@@ -120,6 +120,11 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
         m_DiffusionType = rhs.m_DiffusionType;
         m_AdvectionType = rhs.m_AdvectionType;
         m_ThermophoresisType = rhs.m_ThermophoresisType;
+
+        // BinTree settings
+        m_write_bintree         = rhs.m_write_bintree;
+        m_bintree_coalthresh    = rhs.m_bintree_coalthresh;
+        m_fract_dim             = rhs.m_fract_dim;
     }
     return *this;
 }
@@ -485,10 +490,29 @@ void ParticleModel::Serialize(std::ostream &out) const
         n = (unsigned int)m_aggmodel;
         out.write((char*)&n, sizeof(n));
 
+        // Write the mode.
+        n = (unsigned int)m_mode.length();
+        out.write((char*)&n, sizeof(n));
+        out.write(m_mode.c_str(), n);
+        // write the threshold
+        n = (unsigned int)m_threshold;
+        out.write((char*)&n, sizeof(n));
+        //write the postprocess species
+        n = (unsigned int)m_InceptedPAH;
+        out.write((char*)&n, sizeof(n));
         // Write whether binary trees should be serialised.
         bool flag(false);
         flag = m_write_bintree;
         out.write((char*)&flag, sizeof(flag));
+
+        // Write the coalescence threshold
+        real var(0.0);
+        var = m_bintree_coalthresh;
+        out.write((char*)&var, sizeof(var));
+
+        // Write the fractal dimension
+        var = m_fract_dim;
+        out.write((char*)&var, sizeof(var));
 
         // Write Knudsen drag parameters
         out.write(reinterpret_cast<const char *>(&m_DragA), sizeof(m_DragA));
@@ -511,6 +535,7 @@ void ParticleModel::Serialize(std::ostream &out) const
 void ParticleModel::Deserialize(std::istream &in)
 {
     releaseMem();
+    char *name = NULL;
 
     if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -520,6 +545,8 @@ void ParticleModel::Deserialize(std::istream &in)
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
         unsigned int n=0;
+        real var(0.0);
+        bool flag(false);
 
         switch (version) {
             case 0:
@@ -543,11 +570,28 @@ void ParticleModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_aggmodel = (AggModels::AggModelType)n;
 
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                name = new char[n];
+                in.read(name, n);
+                m_mode = string(name, n);
+                delete [] name;
+
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_threshold=(double)n;
+                
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_InceptedPAH = (PostProcessStartingStr)n;
                 // Read if binary trees should be read..
-                bool flag;
-                flag = false;
                 in.read(reinterpret_cast<char*>(&flag), sizeof(flag));
                 m_write_bintree = flag;
+
+                // Read in the coalescence threshold
+                in.read(reinterpret_cast<char*>(&var), sizeof(var));
+                m_bintree_coalthresh    = var;
+
+                // Read in the fractal dimension
+                in.read(reinterpret_cast<char*>(&var), sizeof(var));
+                m_fract_dim             = var;
 
                 // Read in Knudsen drag parameters
                 in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
@@ -602,6 +646,8 @@ void ParticleModel::init(void)
 
     // Default writing of binary trees is false.
     m_write_bintree = false;
+    m_bintree_coalthresh    = 1.0;
+    m_fract_dim             = 1.8;
 }
 
 // Clears the current ParticleModel from memory.

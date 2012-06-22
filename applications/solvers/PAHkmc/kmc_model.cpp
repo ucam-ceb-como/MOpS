@@ -73,102 +73,139 @@ using namespace Strings;
 
 int main(int argc, char *argv[])
 {
-    KMCSimulator* Simulator = new KMCSimulator (std::string("gasphase.inp"),
-		std::string("chem.inp"), std::string("therm.dat"));
-	Simulator->TestGP();
-	std::string input_name = "kmc.inx";
+    //Simulator->TestGP();
+    std::string input_name = "kmc.inx";
 
+    std::string gasphase_filename = "gasphase.inp";
     clock_t timerStart = clock();
-	// read xml input file
-	CamXML::Document doc;
-	const CamXML::Element *root, *node;
-	const CamXML::Attribute *attr;
-	// output CH counts in columns
-	bool save_CH = false;
-	bool CH_col = false;
-	bool save_rates = false;
-	bool save_dots = false;
-	std::string CHOutput;
-	int total_runs=0;
-	Sweep::real t_start=0;
-	Sweep::real t_end=0;
-	int no_of_steps = 100;
-	int no_of_rxnsteps = 500;
-	StartingStructure startStruct = NONE;
+    // read xml input file
+    CamXML::Document doc;
+    const CamXML::Element *root, *node;
+    const CamXML::Attribute *attr;
+    // output CH counts in columns
+    bool save_CH = false;
+    std::string CH_mode = "C";
+    std::string dot_mode = "END";
+    std::string rates_mode = "1";
+    bool save_rates = false;
+    bool save_dots = false;
+    std::string CHOutput;
+    int total_runs=0;
+    Sweep::real t_start=0;
+    Sweep::real t_end=0;
+    int no_of_steps = 100;
+    int no_of_rxnsteps = 500;
+    StartingStructure startStruct = NONE;
+    std::string startStruct_str = "";
+    int R6_num = 0;
+    int R5_num = 0;
+    std::string site_savemode = "END";
 
-	if (doc.Load(input_name) == 0) {
-		root = doc.Root();
-		// get simulation parameters
-		node = root->GetFirstChild("runs");
-		total_runs = (int) Strings::cdble(node->Data());
-		
-		node = root->GetFirstChild("steps");
-		no_of_steps = (int) Strings::cdble(node->Data());
+    KMCSimulator* Simulator;
 
-		node = root->GetFirstChild("rxntimesteps");
-		no_of_rxnsteps = (int) Strings::cdble(node->Data());
+    std::string rate_filename;
 
-		node = root->GetFirstChild("mintime");
-		t_start = Strings::cdble(node->Data());
+    if (doc.Load(input_name) == 0) {
+        root = doc.Root();
+        // get simulation parameters
+        node = root->GetFirstChild("gasFile");
+        gasphase_filename = node->Data();
+        Simulator = new KMCSimulator (gasphase_filename,
+        std::string("chem.inp"), std::string("therm.dat"));
 
-		node = root->GetFirstChild("maxtime");
-		t_end = Strings::cdble(node->Data());
+        node = root->GetFirstChild("runs");
+        total_runs = (int) Strings::cdble(node->Data());
+        
+        node = root->GetFirstChild("steps");
+        no_of_steps = (int) Strings::cdble(node->Data());
 
-		node = root->GetFirstChild("startStruct");
-		if(node->Data() == "PYRENE") startStruct = PYRENE_C;
-		else if(node->Data() == "BENZENE") startStruct = BENZENE_C;
+        node = root->GetFirstChild("rxntimesteps");
+        no_of_rxnsteps = (int) Strings::cdble(node->Data());
 
-		// get input file names
-		node = root->GetFirstChild("gasFile");
-		Simulator->setCSVinputName(node->Data());
+        node = root->GetFirstChild("mintime");
+        t_start = Strings::cdble(node->Data());
 
-		// get output file names
-		node = root->GetFirstChild("dotFiles");
-		Simulator->setDOToutputName(node->Data());
-		attr = node->GetAttribute("mode");
-		if(attr->GetValue() == "ON") save_dots = true;
+        node = root->GetFirstChild("maxtime");
+        t_end = Strings::cdble(node->Data());
 
-		node = root->GetFirstChild("timer");
-		Simulator->setCSVtimerName(node->Data());
+        node = root->GetFirstChild("startStruct");
+        if(node->Data() == "PYRENE") startStruct = PYRENE_C;
+        else if(node->Data() == "BENZENE") startStruct = BENZENE_C;
+        else if(node->Data() == "NAPHTHALENE") startStruct = NAPHTHALENE_C;
+        else if(node->Data() == "CORONENE") startStruct = CORONENE_C;
+        else if(node->Data() == "TEST") startStruct = TEST_STRUCT;
+        else {
+            startStruct_str = node->Data();
+            attr = node->GetAttribute("R6");
+            R6_num = (int) Strings::cdble(attr->GetValue());
+            attr = node->GetAttribute("R5");
+            R5_num = (int) Strings::cdble(attr->GetValue());
+        }
 
-		node = root->GetFirstChild("rxncounts");
-		Simulator->setCSVreactioncountName(node->Data());
+        // get input file names
+        node = root->GetFirstChild("gasFile");
+        Simulator->setCSVinputName(node->Data());
 
-		node = root->GetFirstChild("pahlist");
-		Simulator->setCSVpahlistName(node->Data());
+        // get output file names
+        node = root->GetFirstChild("dotFiles");
+        Simulator->setDOToutputName(node->Data());
+        attr = node->GetAttribute("mode");
+        if(attr->GetValue() == "ON") save_dots = true;
+        attr = node->GetAttribute("save");
+        dot_mode = attr->GetValue();
 
-		node = root->GetFirstChild("rates");
-		Simulator->setCSVratesName(node->Data());
-		attr = node->GetAttribute("mode");
-		if(attr->GetValue() == "ON") save_rates = true;
+        node = root->GetFirstChild("timer");
+        Simulator->setCSVtimerName(node->Data());
 
-		node = root->GetFirstChild("chcounts");
-		CHOutput = node->Data();
-		attr = node->GetAttribute("col");
-		if(attr->GetValue() == "true") CH_col = true;
-		attr = node->GetAttribute("mode");
-		if(attr->GetValue() == "ON") save_CH = true;
+        node = root->GetFirstChild("rxncounts");
+        Simulator->setCSVreactioncountName(node->Data());
 
-		//KMC_Simulator.loadGasProfiles();
-	}else {
-		std::cout << "ERROR: Cannot open "<<input_name<<", aborting simulation...\n";
-		return -1;
-	}
+        node = root->GetFirstChild("pahlist");
+        Simulator->setCSVpahlistName(node->Data());
+        attr = node->GetAttribute("save");
+        if(attr->GetValue() == "STEP") site_savemode = attr->GetValue();
 
-	// Starting structure: Pyrene
+        node = root->GetFirstChild("rates");
+        rate_filename = node->Data();
+        Simulator->setCSVratesName(rate_filename);
+        attr = node->GetAttribute("mode");
+        if(attr->GetValue() == "ON") save_rates = true;
+        attr = node->GetAttribute("save");
+        rates_mode = attr->GetValue();
+
+        node = root->GetFirstChild("chcounts");
+        CHOutput = node->Data();
+        attr = node->GetAttribute("save");
+        if(attr->GetValue() == "CH" || attr->GetValue() == "C" || attr->GetValue() == "C_H" || attr->GetValue() == "MW") {
+            CH_mode = attr->GetValue();}
+        attr = node->GetAttribute("mode");
+        if(attr->GetValue() == "ON") save_CH = true;
+
+        //KMC_Simulator.loadGasProfiles();
+    }else {
+        std::cout << "ERROR: Cannot open "<<input_name<<", aborting simulation...\n";
+        return -1;
+    }
+
+    // Starting structure: Pyrene
     //KMC_Simulator.initialise(PYRENE);
-	// Run simulation
-	
-	try{
-		//Simulator->TestGP();
-		if(!save_rates) {
-		std::vector<PAHStructure*> pah(total_runs);
+    // Run simulation
+    
+    try{
+        //Simulator->TestGP();
+        
+        if(save_rates && rates_mode == "1") {
+            Simulator->TestRates(t_start, t_end, no_of_steps);
+            Simulator->TestConc(t_start, t_end, no_of_steps, std::string("Results/gasConcentrations.csv"));
+            return 0;
+        }
+        std::vector<PAHStructure*> pah(total_runs);
         PAHProcess pahp;
-		/*for(size_t i=0; i<pah.size(); ++i) {
-			pah[i] = new PAHStructure();
-			pahp.setPAH(*pah[i]);
-			pahp.initialise(startStruct);
-		}*/
+        /*for(size_t i=0; i<pah.size(); ++i) {
+            pah[i] = new PAHStructure();
+            pahp.setPAH(*pah[i]);
+            pahp.initialise(startStruct);
+        }*/
         int ID = 10000;
         Simulator->initCSVIO();
 
@@ -177,99 +214,206 @@ int main(int argc, char *argv[])
         // be made unique to the loop.
         Sweep::rng_type rng(123);
 
+        Sweep::real step_size=(t_end-t_start)/no_of_steps;
+
+        std::vector< std::vector< pair<int,int> > > PAH_CH;
+        std::vector<Sweep::real> PAH_time;
+        
+        if(save_CH) {
+            PAH_time.push_back(0);
+            for(int j=0; j<no_of_steps; j++) {
+                PAH_time.push_back(t_start+(j*step_size)+step_size);
+            }
+        }
+            
         for(size_t i=0; i<pah.size(); i++) {
             pah[i] = new PAHStructure;
             pahp.setPAH(*pah[i]);
-			std::cout << "Starting growth on PAH "<<i<<"...\n";
-			pahp.initialise(startStruct);
-			//pahp.setPAH(*pah[0]);
-			std::cout << "Pointer to PAH:"<<pah[i]<<"\n";
-			Simulator->updatePAH(pah[i],
-				t_start, (t_end-t_start),
-				no_of_steps,
-				rng,
-				1,
-				ID+i);
-			std::cout<<"done!\n";
+            std::cout << "Starting growth on PAH "<<i<<"...\n";
+            if(startStruct != NONE)
+                pahp.initialise(startStruct);
+            else
+                pahp.initialise(startStruct_str, R6_num, R5_num);
+            //pahp.setPAH(*pah[0]);
+            std::cout << "Pointer to PAH:"<<pah[i]<<"\n";
+            Sweep::rng_type rng2(1+i);
+            std::vector< pair<int,int> > CH_counts;
+            // initialising CH counts
+            if(save_CH) {
+                CH_counts.push_back(pahp.getCHCount());
+            }
+            // initialising PAH_rate file, write header files
+                
+
+            for(int j=0; j<no_of_steps; j++) {
+                Sweep::real t_now = t_start+(j*step_size);
+                if(save_rates && rates_mode == "R") {
+                    std::vector<Sweep::real> rates = Simulator->CurrentRates(pah[i],t_now);
+                    Simulator->writeRatesCSV(t_now,
+                        rates);
+                }
+                Simulator->updatePAH(pah[i],
+                    t_now, step_size,
+                    1,//no_of_steps,
+                    rng,
+                    1,
+                    ID+i);
+                if(save_CH) {
+                    CH_counts.push_back(pahp.getCHCount());
+                }
+                if(save_dots && dot_mode == "STEP") {
+                    std::ostringstream dotname;
+                    dotname << "DOT files/PAH_" << i <<'_'<< j <<".dot";
+                    pahp.saveDOT(dotname.str());
+                }
+                if(i == 0 && site_savemode == "STEP") {
+                    Simulator->writeCHSiteCountCSV();
+                }
+            }
+            PAH_CH.push_back(CH_counts);
+            std::cout<<"done!\n";
             Simulator->writeRxnCountCSV();
             Simulator->writeCHSiteCountCSV();
-			std::ostringstream dotname;
-			dotname << "KMC_DOT/PAH" << i <<".dot";
-			pahp.saveDOT(dotname.str());
-			std::cout<<"Done simulation for PAH "<<ID+i<<std::endl<<endl;;
-			pahp.clearStructure();
+            if(save_dots) {
+                std::ostringstream dotname;
+                dotname << "DOT files/PAH" << i <<".dot";
+                pahp.saveDOT(dotname.str());
+            }
+            std::cout<<"Done simulation for PAH "<<ID+i<<std::endl<<endl;
+            std::cout<<"PAH Structure: "<<pahp.SiteString(',')<<std::endl;
+            std::cout<<"PAH Ring Counts ~ R6:"<<pahp.getRingsCount().first<<" -- R5:"
+                <<pahp.getRingsCount().second<<std::endl;
+            std::cout<<"PAH Atom Counts ~ C:"<<pahp.getCHCount().first<<" -- H:"
+                <<pahp.getCHCount().second<<std::endl;
+            std::cout<<"No of Edge C ~ "<<pahp.CarbonListSize()<<std::endl;
+            std::cout<<"No of Bridges ~ "<<pahp.numberOfBridges()<<std::endl;
+            std::cout<<"No of Sites ~ "<<pahp.SiteListSize()<<std::endl;
+
+            //pahp.clearStructure();
             
-		}
-		// delete all
-		std::cout << endl;
-		for(size_t i=0; i<pah.size(); i++) {
-			/*PAHProcess pahp(*pah[i]);
-			std::cout << "PAHpointer:" << pah[i] << endl;
-			std::cout << "\tm_cpositions: " << pah[i]->m_cpositions.size() << endl;
-			std::cout << "\tm_carbonList: " << pahp.CarbonListSize() << endl;
-			int sum_ = 0;
-			for(std::list<Site>::const_iterator k=pahp.SiteList().begin(); k!=pahp.SiteList().end(); k++) {
-				switch(k->type) {
-				case FE:
-				case R5:
-					sum_++;
-					break;
-				case ZZ:
-				case RFE:
-					sum_+=2; break;
-				case AC:
-				case RZZ:
-				case RFER:
-					sum_+=3; break;
-				case BY5:
-				case RAC:
-				case RZZR:
-					sum_+=4; break;
-				case BY6:
-				case RBY5:
-				case RACR:
-					sum_+=5; break;
-				default:
-					std::cout<<"ERROR: invalid SITE TYPE!\n";
-					break;
-				}
-			}
-			std::cout<< "\tnumber of site members: " << sum_ <<endl;*/
-			delete pah[i];
-		}
-		pah.clear();
-		}
-		else {
-			Simulator->TestRates(t_start, t_end, no_of_steps);
-			Simulator->TestConc(t_start, t_end, no_of_steps, std::string("Results/gasConcentrations.csv"));
-		}
-	}
-	catch(std::runtime_error &re) {
-		std::cout << re.what();
-		return -1;
-	}
+        }
+        
+        if(save_CH) {
+            CSV_IO file_CH(CHOutput, true);
+            std::vector<std::string> header;
+            header.push_back("Time");
+            for(size_t j=0; j<PAH_CH.size(); j++) {
+                if(CH_mode == "CH" || CH_mode == "C" || CH_mode == "MW" || CH_mode == "C_H") {
+                    std::ostringstream headC("PAH-");
+                    headC << (1+j);
+                    if(CH_mode != "MW")
+                        headC << "_C";
+                        header.push_back(headC.str());
+                    if(CH_mode == "CH") {
+                        std::ostringstream headH("PAH-");
+                        headH << (1+j);
+                        headH << "_H";
+                        header.push_back(headH.str());
+                    }
+                }
+            }
+            if(CH_mode == "C_H") {
+                for(size_t j=0; j<PAH_CH.size(); j++) {
+                    std::ostringstream headH("PAH-");
+                    headH << (1+j);
+                    headH << "_H";
+                    header.push_back(headH.str());
+                }
+            }
+            file_CH.Write(header);
+            for(size_t t=0; t<PAH_time.size(); t++) {
+                std::vector<std::string> CHline;
+                std::ostringstream dat;
+                // first put in the time
+                dat << PAH_time[t];
+                CHline.push_back(dat.str());
+                for(size_t j=0; j<PAH_CH.size(); j++) {
+                    dat.str("");
+                    if(CH_mode == "C" || CH_mode == "C_H" || CH_mode == "CH")
+                        dat << PAH_CH[j][t].first;
+                    if(CH_mode == "CH")
+                        dat << PAH_CH[j][t].second;
+                    if(CH_mode == "MW")
+                        dat << (PAH_CH[j][t].first*12 + PAH_CH[j][t].second);
+                    if(dat.str() != "")
+                        CHline.push_back(dat.str());
+                }
+                dat.str("");
+                if(CH_mode == "C_H")
+                    for(size_t j=0; j<PAH_CH.size(); j++) {
+                        dat << PAH_CH[j][t].second;
+                        CHline.push_back(dat.str());
+                    }
+                file_CH.Write(CHline);
+            }
+            file_CH.Close();
+        }
+        // delete all
+        std::cout << endl;
+        for(size_t i=0; i<pah.size(); i++) {
+            /*PAHProcess pahp(*pah[i]);
+            std::cout << "PAHpointer:" << pah[i] << endl;
+            std::cout << "\tm_cpositions: " << pah[i]->m_cpositions.size() << endl;
+            std::cout << "\tm_carbonList: " << pahp.CarbonListSize() << endl;
+            int sum_ = 0;
+            for(std::list<Site>::const_iterator k=pahp.SiteList().begin(); k!=pahp.SiteList().end(); k++) {
+                switch(k->type) {
+                case FE:
+                case R5:
+                    sum_++;
+                    break;
+                case ZZ:
+                case RFE:
+                    sum_+=2; break;
+                case AC:
+                case RZZ:
+                case RFER:
+                    sum_+=3; break;
+                case BY5:
+                case RAC:
+                case RZZR:
+                    sum_+=4; break;
+                case BY6:
+                case RBY5:
+                case RACR:
+                    sum_+=5; break;
+                default:
+                    std::cout<<"ERROR: invalid SITE TYPE!\n";
+                    break;
+                }
+            }
+            std::cout<< "\tnumber of site members: " << sum_ <<endl;*/
+            delete pah[i];
+        }
+        pah.clear();
+        
+    }
+    catch(std::runtime_error &re) {
+        std::cout << re.what();
+        return -1;
+    }
     //KMC_Simulator.m_simPAHp.initialise(PYRENE);
     //KMC_Simulator.testSimulation(*(KMC_Simulator.m_simPAH),1000UL, 3000);
-	delete Simulator;
-	// Stop timer
+    delete Simulator;
+    // Stop timer
     clock_t timerStop = clock();
-	
-	// Calculate total time elapsed
+    
+    // Calculate total time elapsed
     double timerElapsed = double(timerStop-timerStart)/CLOCKS_PER_SEC;
 
     std::cout<<"\n\n\nEnding Program..\n";
     std::cout<<"Ran for "<<timerElapsed<<" seconds.\n\n";
 
-	//// Ends program in 5 seconds
-	//timerStart = clock();
-	//int secElapsed = 0;
-	//int countdown = 5;
-	//std::cout<<"Ending Program in "<<countdown<<" seconds..\n";
-	//while(secElapsed<countdown) {
-	//	timerStop = clock();
-	//	if(secElapsed < (int)double(timerStop-timerStart)/CLOCKS_PER_SEC) {
-	//		std::cout<<"Ending Program in "<<(countdown - ++secElapsed)<<" seconds..\n";
-	//	}
-	//}
+    //// Ends program in 5 seconds
+    //timerStart = clock();
+    //int secElapsed = 0;
+    //int countdown = 5;
+    //std::cout<<"Ending Program in "<<countdown<<" seconds..\n";
+    //while(secElapsed<countdown) {
+    //    timerStop = clock();
+    //    if(secElapsed < (int)double(timerStop-timerStart)/CLOCKS_PER_SEC) {
+    //        std::cout<<"Ending Program in "<<(countdown - ++secElapsed)<<" seconds..\n";
+    //    }
+    //}
     return 0;
 }

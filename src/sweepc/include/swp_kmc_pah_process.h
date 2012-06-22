@@ -89,17 +89,22 @@ public:
     void setPAH(PAHStructure& pah);
     //! Returns a copy of PAH structure
     PAHStructure* clonePAH() const;
+    PAHStructure* clonePAH_obs() const; // --> obsolete
 
-	size_t SiteListSize() const;
-	size_t CarbonListSize() const;
-	std::list<Site>& SiteList() const;
+    size_t SiteListSize() const;
+    size_t CarbonListSize() const;
+    std::list<Site>& SiteList() const;
 
 
     // Structure change processes
     //! Initialisation of structure given a starting structure
     virtual PAHStructure& initialise(StartingStructure ss);
+    //! Initialisation of structure given a string of site types (separated by ',')
+    virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num);
     //! Clear Structure
     void clearStructure();
+    //! Create Structure from vector of site types and number of rings
+    void createPAH(std::vector<kmcSiteType>& vec, int R6, int R5);
     //! Structure processes: returns success or failure
     bool performProcess(const JumpProcess& jp, rng_type &rng);
 
@@ -108,6 +113,10 @@ public:
     intpair getCHCount() const;
     //! Get Site Counts
     unsigned int getSiteCount(const kmcSiteType& st) const;
+    //! Get Ring Counts
+    intpair getRingsCount() const;
+    //! Get number of bridges
+    int numberOfBridges() const;
     //! Print structure in console
     void printStruct() const;
     //! Print Structure in console, with arrow pointing at current C
@@ -122,6 +131,10 @@ public:
     //! Store structure results in external file, returns success/failure
     bool saveDOT(const std::string &filename) const;
     bool saveDOT(const std::string &filename, const std::string &title) const;
+    //! obtains a vector of the PAH site list
+    std::vector<kmcSiteType> SiteVector() const;
+    //! obtains a string containing the PAH site list
+    std::string SiteString(char delimiter) const;
     
     // Update Processes
 
@@ -149,6 +162,8 @@ public:
 
     void proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);
+
+    void proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2);
     //void proc_M5R_eZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);
     
     // true: saves rates only, returns all site count as 1
@@ -184,6 +199,8 @@ private:
     bool checkHindrancePhenyl(const Cpointer C_1) const;
     //! Returns site iterator x steps after i
     Spointer moveIt(Spointer i, int x);
+    //! Finds C atom with specific coordinates
+    Cpointer findC(cpair coordinates);
 
     // Write Process
     //! Creates a lone carbon atom
@@ -205,6 +222,9 @@ private:
     //! Adds a site with members C_1 & C_2 before site sIt
     Spointer addSite(kmcSiteType stype, 
         Cpointer C_1, Cpointer C_2, Spointer& sIt);
+    //! Adds a site with members C_1 & C_2 at end of SiteList
+    Spointer addSite(kmcSiteType stype, 
+        Cpointer C_1, Cpointer C_2);
     //! Removes a site
     //void removeSite(Spointer st);
     //! Changes site type into combined site with R5 (e.g. FE -> RFE)
@@ -219,6 +239,12 @@ private:
     void setCount(int CCount, int HCount);
     //! Add counts
     void addCount(int C_in, int H_in);
+    //! For createPAH function: drawing type 0 sites
+    Cpointer drawType0Site(Cpointer Cnow, int bulkC);
+    //! For createPAH function: drawing type 1 sites
+    Cpointer drawType1Site(Cpointer Cnow, int bulkC, kmcSiteType prevType);
+    //! For createPAH function: drawing type 2 sites
+    Cpointer drawType2Site(Cpointer Cnow, int bulkC);
 
     //! Update Sites and its members in structure
     //! All principal sites

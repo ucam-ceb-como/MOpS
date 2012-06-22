@@ -144,6 +144,10 @@ private:
 
     //! Sintering rate of a particle
     real m_sinterrate;
+
+    // Silicon model properties
+    //! Coverage fraction of active sites (ratio of components)
+    real m_coverage;
 };
 }
 

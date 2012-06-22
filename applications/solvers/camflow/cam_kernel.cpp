@@ -53,17 +53,15 @@
 #include "cam_models.h"
 #include "cam_soot.h"
 #include "interface.h"
-//#include "cam_premix.h"
-/*
- *
- */
+
+
 using namespace std;
 using namespace Sprog;
 using namespace Camflow;
 
+
 int main(int argc, char *argv[])
 {
-
     string fChem("chem.inp");
     string fThermo("therm.dat");
     string fTrans("tran.dat");
@@ -83,21 +81,32 @@ int main(int argc, char *argv[])
     CamRead cm;
     CamModels models;
     CamSoot cSoot;
-    try {
-        cm.readInput(fCamFlow,cc,cg,convert,ca,cb,cp,config,cSoot);
-    } catch (CamError &ce) {
-        cout << ce.errorMessage;
-        exit(1);
+
+    try
+    {
+        cm.readInput(fCamFlow, cc, cg, convert, ca, cb, cp, config, cSoot);
+    }
+    catch (CamError &ce)
+    {
+        cout<< ce.errorMessage;
+        exit(EXIT_FAILURE);
     }
 
     //read mechanism, thermo and trasnport data
     if (config.getConfiguration() == config.BATCH_CV)
     {
-        Sprog::IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,1);
+        Sprog::IO::MechanismParser::ReadChemkin(fChem, mech, fThermo, 1);
     }
     else
     {
-        Sprog::IO::MechanismParser::ReadChemkin(fChem,mech,fThermo,1,fTrans);
+        Sprog::IO::MechanismParser::ReadChemkin
+        (
+            fChem,
+            mech,
+            fThermo,
+            1,
+            fTrans
+        );
     }
 
     //Following is a test call to the interface
@@ -115,17 +124,19 @@ int main(int argc, char *argv[])
 //    cout << "Calculation finished\n";
 //    int dd; cin >> dd;
 //----------------------------------------------------------
-    try {
-        models.solve(ca,config,cc,cg,cp,cSoot,mech);
-    } catch (CamError &ce) {
-        cout << ce.errorMessage;
 
-        exit(1);
+    try
+    {
+        models.solve(ca, config, cc, cg, cp, cSoot, mech);
+    }
+    catch (CamError &ce)
+    {
+        cout<< ce.errorMessage;
+        exit(EXIT_FAILURE);
     }
 
     cout << "\nCamflow: End of execution.\n";
 
     return (EXIT_SUCCESS);
-
 }
 

@@ -32,6 +32,7 @@ add_library(camflow source/cam_read.cpp
                     source/flamelet.cpp
                     source/batch.cpp
                     source/stagflow.cpp
+                    source/cam_premix.cpp
                     source/interface.cpp
                     ${INCS})
 

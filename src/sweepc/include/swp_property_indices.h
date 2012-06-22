@@ -81,6 +81,9 @@ namespace Sweep
 		// Silica model properties
 		iASN, // Number of active (OH) sites available
 		iSintRate, // Sintering rate of a particle
+
+		// Silicon properties
+		iCoverage     // Ratio of component 0 to component 1
     };
 }
 

@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   cam_configuration.h
  * Author: vinod (vj231@cam.ac.uk)
- * 
+ *
  * Copyright (C) 2009 Vinod M Janardhanan
  *
  * File purpose:
@@ -36,20 +36,27 @@
  *
  *  Email   :   mk306@cam.ac.uk
  *  Website :   http://como.cheng.cam.ac.uk
- * 
+ *
  * Created on January 17, 2009, 3:09 PM
  */
 
 #ifndef _CAM_CONFIGURATION_H
 #define	_CAM_CONFIGURATION_H
+
 #include "cam_geometry.h"
 #include "cam_control.h"
-namespace Camflow{
-    class CamConfiguration{
-        int  model;              //model to simulate
+
+namespace Camflow
+{
+
+    class CamConfiguration
+    {
+        int model;              //model to simulate
+
     public:
 
-        enum Connfiguration{
+        enum Configuration
+        {
             COUNTERFLOW,            //counter flow flame
             STAGFLOW,               //stagnation flow configuration
             PREMIX,                 //laminar premix reactor
@@ -60,8 +67,9 @@ namespace Camflow{
         };
 
         CamConfiguration(){}
+
         ~CamConfiguration(){}
-        
+
         //set the configuration
         void setConfiguration(int n);
 
@@ -72,7 +80,8 @@ namespace Camflow{
         void solve();
 
     };
-}
 
-#endif	/* _CAM_CONFIGURATION_H */
+} // End Camflow namespace
+
+#endif /* _CAM_CONFIGURATION_H */
 

@@ -84,6 +84,7 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache()
 , m_d2m_1_2_w(0.0)
 , m_sites(0.0)
 , m_sinterrate(0.0)
+, m_coverage(0.0)
 {}
 
 /*!
@@ -128,6 +129,9 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
     // Silica parameters
     m_sites =       (real)part.GetSites();
     m_sinterrate =  part.GetSintRate();
+
+    // Silicon parameters
+    m_coverage = part.GetCoverageFraction();
 }
 
 // OPERATOR OVERLOADS.
@@ -161,6 +165,7 @@ Sweep::TreeTransCoagWeightedCache &Sweep::TreeTransCoagWeightedCache::operator+=
     m_d2m_1_2_w    += rhs.m_d2m_1_2_w;
     m_sites        += rhs.m_sites;
     m_sinterrate   += rhs.m_sinterrate;
+    m_coverage     += rhs.m_coverage;
 
     return *this;
 }
@@ -198,6 +203,7 @@ void Sweep::TreeTransCoagWeightedCache::Clear(void)
     m_d2m_1_2_w    = 0.0;
     m_sites   = 0.0,
     m_sinterrate = 0.0;
+    m_coverage   = 0.0;
 }
 
 /**
@@ -252,6 +258,8 @@ Sweep::real Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
             return m_sites;
         case iSintRate:
             return m_sinterrate;
+        case iCoverage:
+            return m_coverage;
         case iFS:
             throw std::logic_error("Free surface no longer cached (TreeWeightedCache::Property)");
             return 0.0;

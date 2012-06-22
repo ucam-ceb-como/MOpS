@@ -159,6 +159,28 @@ public:
     //! Set simulator to write the jumps CSV file.
     void SetWritePAH(bool postpocessPAH);
 
+    // options for Postprocess (only for PAH-PP model)
+    //! return the option whehter generate mass spectra
+    const bool MassSpectra() const;
+    //! set the option whehter generate mass spectra
+    void SetMassSpectra(const bool val);
+
+    //! return the option whehter generate mass spectra for the whole ensemble
+    const bool MassSpectraEnsemble() const;
+    //! set the option whehter generate mass spectra for the whole ensemble
+    void SetMassSpectraEnsemble(const bool val);
+
+    //! return the option whehter generate mass spectra for specified gasphase xmer
+    const int MassSpectraXmer() const;
+    //! set the option whehter generate mass spectra for specified gasphase xmer
+    void SetMassSpectraXmer(const int val);
+
+    //! return the option whehter including the xmer in the large soot aggregate
+    const bool MassSpectraFrag() const;
+    //! set the option whehter including the xmer in the large soot aggregate
+    void SetMassSpectraFrag(const bool val);
+
+
     // STATISTICAL BOUNDS OUTPUT
 
     // Set simulator to output data of a given statistical range.
@@ -283,8 +305,21 @@ private:
     //! Should the ensemble be written to a reusable binary file?
     bool m_write_ensemble_file;
 
-    // Flag controlling whether post-process the detailed info about every PAH in the particle ensemble. Default false.
+    //! Flag controlling whether post-process the detailed info about every PAH in the particle ensemble. Default false.
     bool m_write_PAH;
+
+    //  the method of postprocessing, only for PAH-PP model 
+    //!Flag controlling the generation of Mass spectra
+    bool m_mass_spectra;
+
+    //! Flag specifying whether the user is interested in the whole ensemble or just the gasphase Xmer.
+    bool m_mass_spectra_ensemble;
+
+    //! specifying the largest xmer
+    int m_mass_spectra_xmer;
+
+    //! Flag controlling whether considering xmer in the large soot aggregate
+    bool m_mass_spectra_frag;
 
     // STATISTICAL OUTPUT PARAMETERS
 
@@ -356,7 +391,6 @@ private:
 
     // Writes current reactor state to the console.
     void consoleOutput(const Reactor &r) const;
-
 
     // POST-PROCESSING ROUTINES.
 
