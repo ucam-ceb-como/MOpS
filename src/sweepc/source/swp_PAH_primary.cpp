@@ -1450,6 +1450,11 @@ void PAHPrimary::UpdatePrimary(void)
         m_mass = 0;
         m_numcarbon=0;
         m_numH=0;
+        m_numOfEdgeC=0;
+        m_numOfRings=0;
+        m_PAHmass=0;
+        m_PAHCollDiameter=0;
+        m_numPAH= m_PAH.size();
     }
     else 
     {
