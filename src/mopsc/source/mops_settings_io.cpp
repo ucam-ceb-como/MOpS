@@ -295,9 +295,21 @@ Reactor *const readReactor(const CamXML::Element &node,
         }
     }
 
+    bool doubling_activated;
+    subnode = node.GetFirstChild("DoublingAlgorithm");
+    if (subnode != NULL) {
+        std::string str_enable = subnode->GetAttributeValue("enable");
+        if (str_enable.compare("false") == 0) {
+            std::cout << "sweep: Warning! doubling is turned off by user.\n";
+            doubling_activated = false;
+        } 
+        else doubling_activated = true;
+
+    } else doubling_activated = true;
+
     // Assign the species mole fraction vector to the reactor mixture.
     mix->GasPhase().SetFracs(molefracs);
-    mix->Particles().Initialise(max_particle_count);
+    mix->Particles().Initialise(max_particle_count, doubling_activated);
 	mix->Reset(maxM0);
     reac->Fill(*mix);
 
@@ -475,6 +487,52 @@ void ReadLOIStatus(const CamXML::Element &node, Solver &solver)
         }
     }
 
+}
+
+// Reads simulation postprocess parameters from given XML node.
+void readPostprocess(const CamXML::Element &node, Simulator &sim, Mechanism &mech)
+{
+    const CamXML::Element *subnode;
+    // Mass spectra
+    subnode = node.GetFirstChild("Mass_spectra");
+    if (subnode != NULL) {
+
+        std::string str_enable = subnode->GetAttributeValue("enable");
+        if (str_enable.compare("true") == 0) {
+            sim.SetMassSpectra(true);
+        } else {
+            sim.SetMassSpectra(false);
+        }
+
+        // Read tabular console output parameters.
+        subnode = subnode->GetFirstChild("ensemble");
+        if (subnode != NULL) {
+
+            str_enable = subnode->GetAttributeValue("enable");
+            if (str_enable.compare("true") == 0) {
+                sim.SetMassSpectraEnsemble(true);
+            } else {
+                sim.SetMassSpectraEnsemble(false);
+                const CamXML::Element *xmer = subnode->GetFirstChild("xmer");
+                const CamXML::Element *frag = subnode->GetFirstChild("fragment");
+                //set the xmer
+                sim.SetMassSpectraXmer((int)Strings::cdble(xmer->Data()));
+                //set wheter considering fragmentation
+                str_enable=(frag->Data());
+                if (str_enable.compare("true") == 0) {
+                    // By default, frag is turned off
+                    sim.SetMassSpectraFrag(true);
+                }
+            }
+        }
+        else {
+                std::cout << "sweep: Warning! no option for mass spectra has been specified, the default one will be used (Mass spectra for whole ensamble.\n";
+                sim.SetMassSpectraEnsemble(true);
+        }
+    } else {
+        throw std::runtime_error("please specify the options about Mass spectra"
+                                " (Mops, Settings_IO::readPostprocess()).");
+    }
 }
 
 // Reads simulation output parameters from given XML node.
@@ -936,6 +994,16 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
                                 " information (Mops::Settings_IO::LoadFromXML).");
         }
 
+        if (mech.ParticleMech().AggModel() == Sweep::AggModels::PAH_KMC_ID){
+            //currently only the data for mass spectra is provided, but the capacity will be extrend according to the purpose of the project
+            node = root->GetFirstChild("postprocess");
+            if (node != NULL) {
+                readPostprocess(*node, sim, mech);
+            } else {
+                // mass spectra data will not be generated, this should be only for the old test files
+                sim.SetMassSpectra(false);
+            }
+        }
         // REACTOR.
 
         node = root->GetFirstChild("reactor");

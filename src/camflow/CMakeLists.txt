@@ -31,11 +31,13 @@ add_library(camflow source/cam_read.cpp
                     source/cam_sdr.cpp
                     source/flamelet.cpp
                     source/batch.cpp
+                    source/stagflow.cpp
+                    source/cam_premix.cpp
                     source/interface.cpp
-				    ${INCS})
+                    ${INCS})
 
-include_directories(include 
-                    ${Boost_INCLUDE_DIRS} 
+include_directories(include
+                    ${Boost_INCLUDE_DIRS}
                     ../utils/include
                     ../io/chemkinReader/include
                     ../io/comostrings/include

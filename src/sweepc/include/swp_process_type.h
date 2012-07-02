@@ -60,6 +60,8 @@ namespace Processes
 
         //! Form particles at a constant rate, independent of conditions
         Constant_Inception_ID=4,
+        //! Inception by homogeneous nucleation for silicon
+        Silicon_Inception_ID=5,
 
         // Surface reactions.
         SurfaceReaction_ID=100, // Surface reaction.

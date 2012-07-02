@@ -68,12 +68,13 @@ void LewisNumber::loadSettings(const std::string& inputFileName)
         if (sootFlameletOption == "MAUSS06") sootFlameletType_ = MAUSS06;
         else if (sootFlameletOption == "PITSCH00DD") sootFlameletType_ = PITSCH00DD;
         else if (sootFlameletOption == "CARBONELL09") sootFlameletType_ = CARBONELL09;
+        else if (sootFlameletOption == "EXTENDEDLAGRANGIAN") sootFlameletType_ = EXTENDEDLAGRANGIAN;
         else
                 {
                     throw std::runtime_error
                     (
                     	sootFlameletOption+" does not exist."
-                        " Specify MAUSS06 / PITSCH00DD / CARBONELL09"
+                        " Specify MAUSS06 / PITSCH00DD / CARBONELL09 / EXTENDEDLAGRANGIAN"
                     );
                 }
 
@@ -85,6 +86,7 @@ void LewisNumber::loadSettings(const std::string& inputFileName)
             "No soot flamelet model setting. Specify either\n"
             " <SootFlameletType>MAUSS06</SootFlameletType> or "
             " <SootFlameletType>PITSCH00DD</SootFlameletType> or "
+            " <SootFlameletType>EXTENDEDLAGRANGIAN</SootFlameletType> or "
             " <SootFlameletType>CARBONELL09</SootFlameletType> in <op_condition>."
         );
     }

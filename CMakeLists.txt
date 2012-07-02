@@ -14,6 +14,10 @@ ELSE(WIN32)
   SET(Boost_USE_MULTITHREADED OFF)
 ENDIF(WIN32)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS regex serialization filesystem system program_options)
+IF(Boost_FOUND)
+    MESSAGE("Boost includes located in: ${Boost_INCLUDE_DIRS}")
+    MESSAGE("Boost libraries located in: ${Boost_LIBRARIES}")
+ENDIF(Boost_FOUND)
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
@@ -46,7 +50,7 @@ add_executable(camflow-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/camflow/
 target_link_libraries(camflow-app camflow ${Boost_LIBRARIES})
 
 add_executable(camflowGridGenerator ${MOPSSUITE_SOURCE_DIR}/applications/utilities/camflowGridGenerator/camflowGridGenerator.cpp)
-target_link_libraries(camflowGridGenerator ${Boost_PROGRAM_OPTIONS_LIBRARY})
+target_link_libraries(camflowGridGenerator ${Boost_LIBRARIES})
 
 # Regression tests for CamFlow
 
@@ -84,6 +88,8 @@ add_test(mops.pahtest1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest1.sh ${EXECUTAB
 add_test(mops.silica1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
 add_test(mops.silica2 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica2.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+
+add_test(mops.bintree1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/bintree1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
 ########## The PAH-KMC Application ######################
 add_executable(PAHkmc-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/PAHkmc/kmc_model.cpp)

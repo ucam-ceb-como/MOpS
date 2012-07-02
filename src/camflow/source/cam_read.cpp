@@ -117,12 +117,17 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
         std::vector<doublereal> grid;
         std::vector<doublereal> dz;
         std::ifstream inf;
-        inf.open(cg.getGridFileName().c_str(),std::ios::in);
-        if(inf.good()){
+        inf.open(cg.getGridFileName().c_str(), std::ios::in);
+        if (inf.good())
+        {
             std::string position;
-            while(!inf.eof()){
+
+            while(!inf.eof())
+            {
                 getline(inf,position);
-                if(! isEmpty(position)){
+
+                if(! isEmpty(position))
+                {
                     grid.push_back(cdble(position)*factor);
                 }
             }
@@ -130,16 +135,22 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
         inf.close();
 
         // Calculate cell widths.
-        int len = grid.size()-1;
+        int len = grid.size() - 1;
         cg.setLength(grid[len]);
-        for(int i=0; i<len; i++){
-            dz.push_back(grid[i+1]-grid[i]);
+        for (int i=0; i<len; i++)
+        {
+            dz.push_back(grid[i+1] - grid[i]);
         }
         // Call setGeometry in CamGeometry to assign length, axial positions
         // and cell widths.
         cg.setGeometry(dz);
 
-        if (config.getConfiguration() == config.FLAMELET)
+        if
+        (
+            config.getConfiguration() == config.FLAMELET
+         || config.getConfiguration() == config.STAGFLOW
+         || config.getConfiguration() == config.PREMIX
+        )
         {
             cg.addZeroWidthCells();
         }
@@ -203,6 +214,7 @@ void CamRead::readProcessConditions
         }
 
         subnode = opNode->GetFirstChild("radiation");
+
         if(subnode == NULL){
             throw CamError("op_condition::radiation is undefined\n");
         }else{
@@ -538,6 +550,7 @@ void CamRead::readInitialGuess
                 doublereal pos = cdble((*p)->GetAttributeValue("x"))*convertL;
                 doublereal temp = cdble((*p)->Data())+convertT;
                 cp.setUserTemp(pos,temp);
+                std::cout << pos << " " << temp << std::endl;
             }
         }
 

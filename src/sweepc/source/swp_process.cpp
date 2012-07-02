@@ -55,13 +55,13 @@ using namespace std;
 
 // Default constructor.
 Process::Process(void)
-: m_name(""), m_mech(NULL)
+: m_name(""), m_mech(NULL), m_viscosity_model(Sweep::iAir)
 {
 }
 
 // Initialising constructor.
 Process::Process(const Sweep::Mechanism &mech)
-: m_name(""), m_mech(&mech)
+: m_name(""), m_mech(&mech), m_viscosity_model(Sweep::iAir)
 {
 }
 
@@ -85,6 +85,7 @@ Process &Process::operator=(const Process &rhs)
     if (this != &rhs) {
         m_name = rhs.m_name;
         m_mech = rhs.m_mech;
+        m_viscosity_model = rhs.m_viscosity_model;
 
         // Copy reactants.
         Sprog::StoichMap::const_iterator i;
@@ -122,6 +123,43 @@ const Sweep::Mechanism *const Process::Mechanism() const
 void Process::SetMechanism(const Sweep::Mechanism &mech)
 {
     m_mech = &mech;
+}
+
+//! Returns the viscosity model
+Sweep::ViscosityModel Process::ViscosityModel() const
+{
+    return m_viscosity_model;
+}
+
+/*!
+ * @brief           Sets the process' viscosity model
+ * @param vmodel    Model type
+ */
+void Process::SetViscosityModel(Sweep::ViscosityModel vmodel)
+{
+    m_viscosity_model = vmodel;
+}
+
+/*!
+ * @brief       Returns the viscosity.
+ *
+ * @param sys   System for which to calculate viscosity
+ * @return      Viscosity (kg/ms)
+ */
+real Process::GetViscosity(const Cell &sys) const
+{
+    real mu(0.0);
+    // Return the viscosity for air
+    if (m_viscosity_model == Sweep::iAir) {
+        real T = sys.GasPhase().Temperature();
+        mu = Sweep::ViscosityAir(T);
+    } else if (m_viscosity_model == Sweep::iChampanEnskog) {
+        mu = sys.GasPhase().getViscosity();
+    } else {
+        throw runtime_error("Wrong viscosity identifier. "
+                                "(Sweep, Process::GetViscosity).");
+    }
+    return mu;
 }
 
 

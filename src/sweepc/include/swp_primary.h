@@ -276,6 +276,8 @@ public:
 	// Return the sintering rate for a SilicaPrimary
 	virtual real GetSintRate() const { return 0.0; }
 
+	virtual real GetCoverageFraction() const;
+
 protected:
     // Particle model used to define the Primary.
     const Sweep::ParticleModel *m_pmodel;

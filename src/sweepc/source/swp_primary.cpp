@@ -341,10 +341,17 @@ bool AggModels::Primary::IsValid() const {
 unsigned int AggModels::Primary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
 {
 	unsigned int i = 0;
+	real dc(0.0);
 
 	// Add the components.
 	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+	    dc = m_comp[i];
 		m_comp[i] += dcomp[i] * (real)n;
+		// Set component to zero if too many are removed.
+		if (m_comp[i] < 1.0) {
+            m_comp[i] = 0.0;
+            n = (unsigned int) abs(dc/dcomp[i]);
+		}
 	}
 
 	// Add the tracker values.
@@ -365,6 +372,8 @@ unsigned int AggModels::Primary::AdjustIntPar(const fvector &dcomp, const fvecto
 
 	// Add the components.
 	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+        // Set component to zero if too many are removed.
+        if (m_comp[i] < 1.0) m_comp[i] = 0.0;
 		m_comp[i] += dcomp[i] * (real)n;
 	}
 
@@ -433,6 +442,24 @@ void AggModels::Primary::Sinter(real dt, Cell &sys,
     return;
 }
 
+/*!
+ * @brief       Gets the ratio of second to first component number
+ *
+ * A coarse estimation of the coverage fraction; as the amount of the second
+ * component relative to the amount of the first. Returns 1.0 for single comp.
+ *
+ * @return      Ratio of number of second to first component
+ */
+real AggModels::Primary::GetCoverageFraction() const
+{
+    real val = 1.0;
+
+    if (m_pmodel->ComponentCount() > 1 && m_comp[0] > 0.0) {
+        val = m_comp[1]/m_comp[0];
+    }
+
+    return val;
+}
 
 // READ/WRITE/COPY.
 

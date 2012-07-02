@@ -452,6 +452,14 @@ Sweep::real SubParticle::GetSintRate(void) const
 }
 
 /*!
+ * Pass through to primary particle
+ */
+Sweep::real SubParticle::GetCoverageFraction(void) const
+{
+    return m_primary->GetCoverageFraction();
+}
+
+/*!
  * Provide an interface that allows run time specification of particle properties
  * for use in process rate calculations.  It is currently used for some surface
  * reactions.  Where possible, the use of specific accessors should be preferred.
@@ -492,6 +500,8 @@ real SubParticle::Property(PropID id) const
         	return GetSites();
         case iSintRate:
         	return GetSintRate();
+        case iCoverage:
+            return GetCoverageFraction();
         case iFS:
             throw std::logic_error("Free surface no longer supported (SubParticle::Property)");
             return 0.0;

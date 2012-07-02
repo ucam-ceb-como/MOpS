@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   cam_premix.h
  * Author: vinod (vj231@cam.ac.uk)
  *
@@ -41,6 +41,7 @@
 
 #ifndef _CAM_PREMIX_H
 #define	_CAM_PREMIX_H
+
 #include "gpc.h"
 #include "cam_residual.h"
 #include "cam_control.h"
@@ -51,68 +52,99 @@
 #include "cam_profile.h"
 #include "cam_configuration.h"
 #include "cam_soot.h"
-using namespace Sprog;
-namespace Camflow{
-    class CamPremix : public CamSetup {
 
-        
+using namespace Sprog;
+
+namespace Camflow
+{
+
+    class CamPremix
+    :
+        public CamSetup
+    {
+
+        inletStruct ud_inlet;
+
+        inletStruct soln_inlet;
+
+        doublereal resNorm;
+
+        std::vector<std::string> headerData;
+
+        double dydx(double nr1, double nr2, double dr) const;
+
+        double dydx(double nr1, double nr2, double nr3, double dr) const;
+
+
     public:
 
-        CamPremix(){};
-        //CamPremix(){}
-        virtual ~CamPremix(){};
+        CamPremix
+        (
+            CamAdmin& ca,
+            CamConfiguration& config,
+            CamControl& cc,
+            CamGeometry& cg,
+            CamProfile& cp,
+            CamSoot& cs,
+            Mechanism& mech
+        );
 
+        virtual ~CamPremix(){};
 
         /*
          *the following 3 functions are called by
          *the DAE solver
          */
-        int eval(doublereal x, doublereal* y, doublereal* ydot,bool jacEval);
+        int eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval);
+
         /*
          * report the results without residual monitoring
          */
         void report(doublereal t, doublereal* solution);
+
         /*
          * console output with resisual monitoring
          */
         void report(doublereal t, doublereal* solution, doublereal& res);
+
         /*
          * write the results to output file
          */
         void reportToFile(doublereal t, doublereal* soln);
-        
+
         /*
          *solve the premix reactor for the stand alone case
          */
-        void solve(CamControl &cc, CamAdmin &ca, CamGeometry &cg,CamProfile &cp,
-             CamConfiguration &config, CamSoot &cs,  Mechanism &mech );
-
+        void solve();
 
         /*
          *solve the premix reactor problem for continuation calls from the
          *external interface
          */
-        void solve(std::vector<Thermo::Mixture>& cstrs,
-                const std::vector< std::vector<doublereal> >& iniSource,
-                const std::vector< std::vector<doublereal> >& fnlSource,
-                Mechanism& mech,
-                CamControl &cc,
-                CamAdmin &ca,
-                CamGeometry &cg,
-                CamProfile& cp);
+        void solve
+        (
+            std::vector<Thermo::Mixture>& cstrs,
+            const std::vector< std::vector<doublereal> >& iniSource,
+            const std::vector< std::vector<doublereal> >& fnlSource,
+            Mechanism& mech,
+            CamControl& cc,
+            CamAdmin& ca,
+            CamGeometry& cg,
+            CamProfile& cp
+        );
 
-        /**
+        /*
          *  Save the inlet after solution for the
          *  next call from population balance solver
          */
         void saveInlet();
 
-  
         /*
          *coupled solver. In this case all the equations are solved
          *simultaneousl
          */
-        void csolve(CamControl &cc);
+        void csolve();
+
         /*
          *segregated solver. It is found that CVode failes to
          *handle the energy equation for large problems. In this case
@@ -121,7 +153,7 @@ namespace Camflow{
          *Once the specified number of iterations are completed, the control
          *is given back to the coupled solver to complete the intergration
          */
-        void ssolve(CamControl &cc);
+        void ssolve();
 
         /*
          * return the initial solution vector
@@ -136,23 +168,35 @@ namespace Camflow{
         /*
          *definition of boundary condition for the total continuity
          */
-        void massFlowBoundary(const doublereal& t, doublereal *y, doublereal *f);
+        void massFlowBoundary
+        (
+            const doublereal& t,
+            doublereal *y,
+            doublereal *f
+        );
 
         /*
          * base class definition for mass flow. This function can be used for
          * any boundary value problems. The boundary condition has to be implemented
          * in the respective reactor models
          */
-        void massFlowResidual(const doublereal& time, doublereal* y, doublereal* f);
+        void massFlowResidual
+        (
+            const doublereal& time,
+            doublereal* y,
+            doublereal* f
+        );
 
         /*
          *definition of species boundary conditions
          */
         void speciesBoundary(const doublereal& t, doublereal *y, doublereal *f);
+
         /*
          *definition of energy equation boundary conditions
          */
         void energyBoundary(const doublereal& t, doublereal *y, doublereal *f);
+
         /*
          *definition of moment conditions for soot model
          */
@@ -161,39 +205,50 @@ namespace Camflow{
         /*
          * set up the solution vector of dependent variables
          */
-        void initSolutionVector(CamBoundary &cb, CamControl &cc);
+        void initSolutionVector(CamBoundary& cb);
 
         /*
          * header information to write the file output
          */
         void header();
 
-        
         /*
          * update the species diffusion fluxes to solve the species
          * transport equations
          */
         void updateDiffusionFluxes();
+
         /*
          * update the thermal fluxes for solving the energy transport
          */
         void updateThermo();
+
         /*
          * save the flow variables. i.e. extract the bulk velocity
          * and store it for later use
          */
         void saveFlowVariables(doublereal* y);
 
-    protected:
-        inletStruct ud_inlet;
-        inletStruct soln_inlet;
-        doublereal resNorm;
-        
+        doublereal getResidual() const {};
 
-        
+        void speciesResidual
+        (
+            const doublereal& time,
+            doublereal* y,
+            doublereal* f
+        );
+
+        void energyResidual
+        (
+            const doublereal& time,
+            doublereal* y,
+            doublereal* f
+        );
+
+        void massMatrix(doublereal** M);
     };
-}
 
+} // End Camflow Namespace
 
-#endif	/* _CAM_PREMIX_H */
+#endif  /* _CAM_PREMIX_H */
 

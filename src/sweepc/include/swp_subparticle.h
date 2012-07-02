@@ -99,6 +99,9 @@ public:
     //! Returns the sintering rate (silica).
     real GetSintRate(void) const;
 
+    //! Returns the coverage fraction
+    real GetCoverageFraction(void) const;
+
     //! Returns the property with the given ID.
     real Property(Sweep::PropID id) const;
 

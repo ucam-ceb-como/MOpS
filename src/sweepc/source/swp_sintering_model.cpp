@@ -170,6 +170,11 @@ real SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) const
         default:
             return m_A * dp * dp * dp * dp * sys.GasPhase().Temperature() *
                    exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature());
+            break;
+        case SSD:
+            return m_A * dp * dp * dp * sys.GasPhase().Temperature() *
+                   exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature());
+            break;
         case Rutile:
         	// Buesser et al., J. Phys. Chem. C, 2011, 115, 11030-11035
         	// SintTime function from MD calculations
@@ -179,6 +184,7 @@ real SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) const
         	return m_A * dp * dp * dp * dp * sys.GasPhase().Temperature() *
 				   exp((m_E* (1 - pow( (m_dpmin/dp) - (sys.GasPhase().Temperature()/4100.0) , 3.76))
 				     /sys.GasPhase().Temperature()));
+        	break;
     }
 }
 

@@ -104,7 +104,7 @@ if(abs($m0 -  1.4e19) > 5e17) {
   exit 1;
 }
 
-if(abs($m1 - 2.61e-8) > 5e-10) {
+if(abs($m1 - 2.69e-8) > 5e-10) {
   print "Simulated mean Fv was $m1, when 2.61e-8 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";

@@ -157,7 +157,7 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
  *
  * Any particles in the ensemble will be destroyed
  */
-void Sweep::Ensemble::Initialise(unsigned int capacity)
+void Sweep::Ensemble::Initialise(unsigned int capacity, bool doubling_activated)
 {
     // Clear current ensemble.
     Clear();
@@ -200,8 +200,13 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_ndble      = 0;
     m_dbleon     = true;
     m_dbleactive = false;
-    m_dblecutoff = (int)(3.0 * (real)m_capacity / 4.0);
-	m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
+
+    // if doubling_activated is false, m_dblecutoff will be two times the capacity, it means that the doubling will be not activated anymore.
+    if (!doubling_activated) 
+        m_dblecutoff = (int)(2.0 * (real)m_capacity);
+    else m_dblecutoff = (int)(3.0 * (real)m_capacity / 4.0);
+
+    m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
 }
 

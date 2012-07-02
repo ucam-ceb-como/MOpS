@@ -148,7 +148,8 @@ public:
 
     // Initialises the ensemble with the given capacity.
     void Initialise(
-        unsigned int capacity             // Max. number of particles.
+        unsigned int capacity,             // Max. number of particles.
+        bool doubling_activated = true            // whether the doubling algorithm is activated, by default, it is activated
         );
 
     //! Initialise with some particles, downsampling as necessary

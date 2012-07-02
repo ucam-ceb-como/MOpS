@@ -68,28 +68,40 @@ void CamModels::solve
     Mechanism& mech
 )
 {
+    int configID = config.getConfiguration();
 
-    int configID;
-    configID = config.getConfiguration();
-
-    if(configID == config.PLUG){
-        //rModel = new CamPlug();
-    }else if(configID == config.PREMIX){
-        //rModel = new CamPremix();
-    }else if(configID == config.BATCH_CV){
+    if (configID == config.PLUG)
+    {
+        //rModel_ = new CamPlug();
+    }
+    else if (configID == config.PREMIX)
+    {
+        rModel_ = new CamPremix(ca, config, cc, cg, cp, cs, mech);
+    }
+    else if (configID == config.BATCH_CV)
+    {
         rModel_ = new Batch(ca, config, cc, cg, cp, cs, mech);
-    }else if(configID == config.STAGFLOW || configID == config.COUNTERFLOW){
-        //rModel = new StagFlow();
-    }else if(configID==config.FLAMELET){
+    }
+    else if (configID == config.STAGFLOW || configID == config.COUNTERFLOW)
+    {
+        rModel_ = new StagFlow(ca, config, cc, cg, cp, cs, mech);
+    }
+    else if (configID == config.FLAMELET)
+    {
         rModel_ = new FlameLet(ca, config, cc, cg, cp, cs, mech);
-    }else{
+    }
+    else
+    {
         throw CamError("Unknown reactor model\n");
     }
-    try{
-        rModel_->solve();
-    }catch(CamError &ce){
-        cout << ce.errorMessage << endl;
-    }
 
+    try
+    {
+        rModel_->solve();
+    }
+    catch (CamError &ce)
+    {
+        cout<< ce.errorMessage << endl;
+    }
 }
 

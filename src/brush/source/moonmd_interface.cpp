@@ -121,11 +121,8 @@ Brush::MooNMDInterface::particle_reactor_pointer
 
     // Variables to hold data read from the input file
     Mops::timevector timeIntervals;
-    int runs, iterations;
     std::string outputFileBaseName;
     std::vector<std::pair<real, real> > maxPCounts, maxM0s;
-    bool splitDiffusion = false;
-    bool splitAdvection = false;
     Sweep::Stats::IModelStats::StatBound statBound;
 
     {
@@ -140,36 +137,6 @@ Brush::MooNMDInterface::particle_reactor_pointer
             Mops::Settings_IO::readTimeIntervals(*node, timeIntervals);
         } else {
             throw std::runtime_error("No time intervals found");
-        }
-
-        // Number of paths
-        node = root->GetFirstChild("runs");
-        if (node != NULL) {
-            runs = atoi(node->Data().c_str());
-        } else {
-            throw std::runtime_error("A <runs> element must be supplied to indicate number of paths");
-        }
-
-        // Number of corrector iterations
-        node = root->GetFirstChild("iter");
-        if (node != NULL) {
-            iterations = atoi(node->Data().c_str());
-        } else {
-            throw std::runtime_error("An <iter> element must be supplied to specify number of corrector iterations");
-        }
-
-        // Numerical method for diffusion
-        node = root->GetFirstChild("diffusion");
-        if ((node != NULL) && ("split" == node->Data())) {
-            // simulate diffusion using spltting
-            splitDiffusion = true;
-        }
-
-        // Numerical method for advection
-        node = root->GetFirstChild("advection");
-        if ((node != NULL) && ("split" == node->Data())) {
-            // simulate advection using spltting
-            splitAdvection = true;
         }
 
         // Maximum number of computational particles per cell
