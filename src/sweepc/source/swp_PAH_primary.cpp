@@ -1296,7 +1296,7 @@ void PAHPrimary::Fragtest(std::vector<double> &out, const int k, std::string mod
     }
     if (temp.size()!=0)
     {
-        for (size_t i = 0; i != NumPAH(); ++i){
+        for (size_t i = 0; i != static_cast<size_t>(NumPAH()); ++i){
             //c32h14
             if (temp[i]<=398)
                 temp[i]=0;
