@@ -1207,7 +1207,7 @@ unsigned int SilicaPrimary::AdjustIntPar(const fvector &dcomp,
 }
 
 //! Returns the number of OH sites
-int SilicaPrimary::GetSites() const
+real SilicaPrimary::GetSites() const
 
 {
 	return m_numOH;

@@ -141,7 +141,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_C6R_BY5_FE3violi = new C6R_BY5_FE3violi; j_C6R_BY5_FE3violi->initialise();
     //JumpProcess* j_L5R_BY5 = new L5R_BY5; j_L5R_BY5->initialise();
     JumpProcess* j_M6R_BY5_FE3 = new M6R_BY5_FE3; j_M6R_BY5_FE3->initialise();
-	JumpProcess* j_O6R_FE2_OH = new O6R_FE2_OH; j_O6R_FE2_OH->initialise();
+    JumpProcess* j_O6R_FE2_OH = new O6R_FE2_OH; j_O6R_FE2_OH->initialise();
     // Jump Processes included in the model
     // (Comment out any process to be omitted):
     //--------------------------------------
@@ -163,8 +163,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_C6R_BY5_FE3); //   16- R6 migration & conversion to R5 at BY5 [AR22]
     temp.push_back(j_C6R_BY5_FE3violi); //17- R6 migration & conversion to R5 at BY5 (violi) [AR24]
     //temp.push_back(j_L5R_BY5); //     18- BY5 closure [AR16]
-    temp.push_back(j_M6R_BY5_FE3); //	19- R6 desorption at bay -> pyrene [AR21]
-	temp.push_back(j_O6R_FE2_OH); //	20- R6 Oxidation at ZZ by OH
+    temp.push_back(j_M6R_BY5_FE3); //    19- R6 desorption at bay -> pyrene [AR21]
+    //temp.push_back(j_O6R_FE2_OH); //    20- R6 Oxidation at ZZ by OH
     //--------------------------------------
     return temp;
 }
@@ -196,7 +196,7 @@ void KMCMechanism::calculateRates(const KMCGasPoint& gp,
         }
     }else std::cout<<"ERROR: No reaction mechanism for this pressure condition.\n";
     // update total rates
-	if (temp < 1e-20) temp = 1e-20;
+    if (temp < 1e-20) temp = 1e-20;
     m_totalrate = temp;
 }
 

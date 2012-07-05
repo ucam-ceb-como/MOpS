@@ -65,12 +65,6 @@ class Mechanism;
 // Forward declare the Cell class.
 class Cell;
 
-namespace Transport
-{
-    // Forward declaration of unused argument type
-    struct TransportOutflow;
-}
-
 namespace Processes
 {
 class Process
@@ -167,16 +161,6 @@ public:
         unsigned int isp, // Species index.
         int mu            // Stoichiometry value.
         );
-
-    // Adds a reactant given the species name.
-    void AddProduct(
-        const std::string &name, // Species name.
-        int mu                   // Stoichiometry value.
-        );
-
-    // Removes a reactant, given by name, from the reaction.
-    void RemoveProduct(const std::string &name);
-
 
 	// TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 

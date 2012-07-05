@@ -77,8 +77,9 @@ Simulator::Simulator(void)
   m_output_filename("mops-out"), m_output_every_iter(false),
   m_output_step(0), m_output_iter(0), m_write_jumps(false),
   m_write_ensemble_file(false),
-  m_write_PAH(false), m_ptrack_count(0), m_mass_spectra(true),
-  m_mass_spectra_ensemble(true), m_mass_spectra_xmer(1), m_mass_spectra_frag(false)
+  m_write_PAH(false), m_mass_spectra(true), m_mass_spectra_ensemble(true), 
+  m_mass_spectra_xmer(1), m_mass_spectra_frag(false), 
+  m_ptrack_count(0)
 {
 }
 

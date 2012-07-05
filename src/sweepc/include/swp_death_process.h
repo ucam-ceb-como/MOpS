@@ -58,12 +58,6 @@ class Mechanism;
 // Forward declare the Cell class.
 class Cell;
 
-namespace Transport
-{
-    // Forward declare structure to hold details of particle for onward transport
-    struct TransportOutflow;
-}
-
 namespace Processes
 {
 class DeathProcess : public Process

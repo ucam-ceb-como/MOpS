@@ -60,10 +60,6 @@ class Mechanism;
 // Forward declare the Cell class.
 class Cell;
 
-namespace Transport {
-    struct TransportOutflow;
-}
-
 namespace Processes
 {
 class BirthProcess : public Process

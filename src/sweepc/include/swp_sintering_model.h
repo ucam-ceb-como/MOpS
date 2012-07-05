@@ -67,12 +67,12 @@ namespace Sweep
 // Forward declare required classes.
 class Cell;
 class Particle;
-class Primary;
 class SubParticle;
 
 namespace AggModels {
+class Primary;
 class PriPartPrimary;
-};
+}
 
 namespace Processes
 {
@@ -163,7 +163,7 @@ public:
     // given primary.
     real SintTime(
         const Cell &sys, // System to which the particle belongs (for T).
-        const Primary &p // Particle for which to calculate time.
+        const AggModels::Primary &p // Particle for which to calculate time.
         ) const;
 
     // RATE CALCULATION.
@@ -179,7 +179,7 @@ public:
     real Rate(
         real t,          // Time.
         const Cell &sys, // System to which the particle belongs (for T).
-        const Primary &p // Particle for which to calculate rate.
+        const AggModels::Primary &p // Particle for which to calculate rate.
         ) const;
 
     // READ/WRITE/COPY.

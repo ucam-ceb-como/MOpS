@@ -44,9 +44,11 @@
 #include "swp_primary.h"
 #include "swp_aggmodel_type.h"
 #include "swp_surfvol_primary.h"
+#include "swp_surfvolhydrogen_primary.h"
 #include "swp_PAH_primary.h"
 #include "swp_particle_stats.h"
 #include "swp_surfvol_stats.h"
+#include "swp_surfvolhydrogen_stats.h"
 #include "swp_PAH_stats.h"
 #include "swp_silica_stats.h"
 #include "swp_silica_primary.h"
@@ -68,13 +70,15 @@ using namespace std;
  *
  * @return      Pointer to dynamically allocated primary (caller must delete)
  */
-Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
-                                           const real time, const real position,
-                                           const ParticleModel &model)
+AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
+                                                      const real time, const real position,
+                                                      const ParticleModel &model)
 {
     switch (id) {
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolPrimary(time, model);
+        case AggModels::SurfVolHydrogen_ID:
+            return new AggModels::SurfVolHydrogenPrimary(time, model);
 		case AggModels::PAH_KMC_ID:
             return new AggModels::PAHPrimary(time, position, model);
 		case AggModels::Silica_ID:
@@ -84,7 +88,7 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
-            return new Primary(time, model);
+            return new AggModels::Primary(time, model);
     }
 }
 
@@ -95,12 +99,14 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
  *
  * @return      Pointer to dynamically allocated primary (caller must delete)
  */
-Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
-                                           const real time, const ParticleModel &model)
+AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
+                                                      const real time, const ParticleModel &model)
 {
     switch (id) {
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolPrimary(time, model);
+        case AggModels::SurfVolHydrogen_ID:
+            return new AggModels::SurfVolHydrogenPrimary(time, model);
 		case AggModels::PAH_KMC_ID:
             return new AggModels::PAHPrimary(time, model);
 		case AggModels::Silica_ID:
@@ -110,7 +116,7 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
-            return new Primary(time, model);
+            return new AggModels::Primary(time, model);
     }
 }
 
@@ -119,11 +125,11 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
 // Reads a primary particle from a binary stream.  First reads
 // the primary type ID, in order to create a primary of the
 // correct type.
-Primary *const ModelFactory::ReadPrimary(std::istream &in,
-                                         const ParticleModel &model)
+AggModels::Primary *const ModelFactory::ReadPrimary(std::istream &in,
+                                                    const ParticleModel &model)
 {
     if (in.good()) {
-        Primary *pri = NULL;
+        AggModels::Primary *pri = NULL;
 
         // Read the model type from the input stream.
         unsigned int type;
@@ -133,10 +139,13 @@ Primary *const ModelFactory::ReadPrimary(std::istream &in,
         // an exception if the type is invalid.
         switch ((AggModels::AggModelType)type) {
             case AggModels::Spherical_ID:
-                pri = new Primary(in, model);
+                pri = new AggModels::Primary(in, model);
                 break;
             case AggModels::SurfVol_ID:
                 pri = new AggModels::SurfVolPrimary(in, model);
+                break;
+            case AggModels::SurfVolHydrogen_ID:
+                pri = new AggModels::SurfVolHydrogenPrimary(in, model);
                 break;
 			case AggModels::PAH_KMC_ID:
                 pri = new AggModels::PAHPrimary(in, model);
@@ -163,7 +172,7 @@ Primary *const ModelFactory::ReadPrimary(std::istream &in,
 
 // Writes a primary particle, along with its
 // ID, to an output stream.
-void ModelFactory::WritePrimary(const Primary &pri, std::ostream &out)
+void ModelFactory::WritePrimary(const AggModels::Primary &pri, std::ostream &out)
 {
     if (out.good()) {
         // Write the model Serial signature type to the stream.
@@ -231,6 +240,8 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
             return NULL;
         case AggModels::SurfVol_ID:
             return new Stats::SurfVolStats();
+        case AggModels::SurfVolHydrogen_ID:
+            return new Stats::SurfVolHydrogenStats();
 		case AggModels::PAH_KMC_ID:
             return new Stats::PAHStats();       // ms785: postprocessing not yet implemented
 		case AggModels::Silica_ID:
@@ -245,7 +256,6 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
 
 
 // AGGEGATION MODEL STREAM INPUT.
-
 
 // Reads aggregation model stats from a binary stream.  The first
 // item read is the model ID which tells the ModelFactory what type
@@ -265,6 +275,9 @@ Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in,
         switch ((AggModels::AggModelType)type) {
             case AggModels::SurfVol_ID:
                 stats = new Stats::SurfVolStats(in, model);
+                break;
+            case AggModels::SurfVolHydrogen_ID:
+                stats = new Stats::SurfVolHydrogenStats(in, model);
                 break;
 			case AggModels::PAH_KMC_ID:
                 stats = new Stats::PAHStats(in, model);

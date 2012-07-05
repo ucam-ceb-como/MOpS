@@ -59,7 +59,7 @@ namespace Sweep {
 
 namespace AggModels {
 
-class BintreePrimary: public Sweep::Primary {
+class BintreePrimary: public Primary {
 public:
 
     //! Build a new primary with one molecule
@@ -133,7 +133,7 @@ public:
     real GetSintRate() const;
 
     //! Gets the number of active sites (always component 0)
-    int GetSites() const {return m_comp[0];}
+    real GetSites() const {return m_comp[0];}
 
     //! Gets the sintering time
     real GetSintTime() const {return m_sint_time;}

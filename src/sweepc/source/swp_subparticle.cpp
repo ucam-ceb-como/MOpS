@@ -41,7 +41,7 @@ SubParticle::SubParticle(real t, const Sweep::ParticleModel &model)
 }
 
 // Initialising constructor (from Primary particle).
-SubParticle::SubParticle(Sweep::Primary &pri)
+SubParticle::SubParticle(Sweep::AggModels::Primary &pri)
 {
     m_createt = pri.CreateTime();
     m_time = pri.CreateTime();
@@ -107,11 +107,11 @@ real SubParticle::avgeomdiam(double oneovernumsubpart)
 
 // Returns a pointer to the child primary particle, NULL if
 // this sub-particle has no primary.
-Sweep::Primary *const SubParticle::Primary(void) {return m_primary;}
-const Sweep::Primary *const SubParticle::Primary(void) const {return m_primary;}
+Sweep::AggModels::Primary *const SubParticle::Primary(void) {return m_primary;}
+const Sweep::AggModels::Primary *const SubParticle::Primary(void) const {return m_primary;}
 
 // Sets the pointer to the child primary particle.
-void SubParticle::setPrimaryPtr(Sweep::Primary *const pri) {m_primary = pri;}
+void SubParticle::setPrimaryPtr(Sweep::AggModels::Primary *const pri) {m_primary = pri;}
 
 // Sets the last update time of the particle.
 void SubParticle::SetTime(real t)

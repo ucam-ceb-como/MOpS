@@ -88,7 +88,7 @@ Particle::Particle(real time, real weight, const Sweep::ParticleModel &model)
 }
 
 // Initialising constructor (from Primary particle).
-Particle::Particle(Sweep::Primary &pri)
+Particle::Particle(Sweep::AggModels::Primary &pri)
 : SubParticle(pri)
 , m_Position(0.0)
 , m_PositionTime(0.0)

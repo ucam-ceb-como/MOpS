@@ -54,6 +54,8 @@
 #include <cctype>
 #include <iomanip>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace Brush;
 
 /*!
@@ -142,7 +144,12 @@ const size_t ResetChemistry::sLaplacianMixFracIndex = 8;
  *
  * The data file should contain one header row, which is case sensitive followed
  * by complete rows of numerical data, completely blank lines are permitted and
- * ignored.  The columns may be separated by spaces or tabs.
+ * ignored.  The columns may be separated by spaces, tabs or commas.  Multiple
+ * separators are treated as a single separator.  Mixing separators is not
+ * recommended since any separator leads to a new column being detected, which
+ * may lead to unexpected results.  For example with comma separated column headings
+ * any spaces within the column titles will lead to a (probably unwanted) column
+ * break.
  *
  * Mandatory columns in the file for the Camflow format (\ref InputFileType) are
  * - x Spatial position to which the row of data applies (\f$\mathrm{m}\f$)
@@ -259,11 +266,22 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
 
         // Split out the column names into a vector, one element for each entry in this title line
         std::vector<std::string> lineEntries;
-        Strings::split(lineText, lineEntries, delims); 
+        boost::algorithm::split(lineEntries, lineText, boost::algorithm::is_any_of(delims), boost::algorithm::token_compress_on);
+
 
         // Find the column in the file which corresponds to each species from the mechanism
         const std::vector<std::string>::const_iterator columnNamesBegin = lineEntries.begin();
         const std::vector<std::string>::const_iterator columnNamesEnd   = lineEntries.end();
+
+        if(verbosity > 2) {
+            std::cerr << "Read following columns of chemistry data from " << fname << '\n';
+            std::vector<std::string>::const_iterator it = columnNamesBegin;
+            while(it != columnNamesEnd-1){
+                std::cerr << *it << ':';
+                ++it;
+            }
+            std::cerr << "\nEnd of chemistry data columns" << std::endl;
+        }
         
         //BOOST_FOREACH(std::string speciesName, speciesNames)
         const std::vector<std::string>::const_iterator speciesEnd = speciesNames.end();
@@ -304,9 +322,13 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
             lineText.clear();
             std::getline(dataFile, lineText);
 
+            //skip lines that do not contain anything (other than perhaps some form of line end character
+            if(lineText.length() < 2)
+                continue;
+
             // Split the line into the values it contains, one per column
             lineEntries.clear();
-            Strings::split(lineText, lineEntries, delims);
+            boost::algorithm::split(lineEntries, lineText, boost::algorithm::is_any_of(delims), boost::algorithm::token_compress_on);
 
             // Check if this row is empty and skip it if there is nothing to do
             // Try to handle muddled line end sequences
@@ -320,8 +342,13 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
             // entries will be added to the end of the vector.
             data_point dataRow(sNumNonSpeciesData);
 
+//            std::cerr << '\n' << speciesFileIndices.size() << ' ' << lineEntries.size() << std::endl;
             for(size_t i = 0; i < speciesNames.size(); ++i) {
                 // Read the appropriate (mass or mole fraction) floating point number from text.
+//                std::cerr << i << ' ';
+//                std::cerr << speciesFileIndices[i] << ' ';
+//                std::cerr << speciesNames[i] << ' ';
+//                std::cerr << lineEntries[speciesFileIndices[i]].length() << std::endl;
                 std::string fracText = lineEntries[speciesFileIndices[i]];
                 real frac = atof(fracText.c_str());
 

@@ -54,14 +54,14 @@ using namespace std;
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (protected).
-Primary::Primary(void)
+AggModels::Primary::Primary(void)
 : m_pmodel(NULL), m_createt(0.0), m_time(0.0), m_diam(0.0), m_dcol(0.0), 
   m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0)
 {
 }
 
 // Initialising constructor.
-Primary::Primary(real time, const Sweep::ParticleModel &model)
+AggModels::Primary::Primary(real time, const Sweep::ParticleModel &model)
 {
     init();
     m_pmodel  = &model;
@@ -77,20 +77,20 @@ Primary::Primary(real time, const Sweep::ParticleModel &model)
 }
 
 // Copy constructor.
-Primary::Primary(const Primary &copy) 
+AggModels::Primary::Primary(const Primary &copy)
 {
     init();
     *this = copy;
 }
 
 // Stream-reading constructor.
-Primary::Primary(std::istream &in, const Sweep::ParticleModel &model)
+AggModels::Primary::Primary(std::istream &in, const Sweep::ParticleModel &model)
 {
     Deserialize(in, model);
 }
 
 // Default destructor.
-Primary::~Primary()
+AggModels::Primary::~Primary()
 {
     releaseMem();
 }
@@ -99,7 +99,7 @@ Primary::~Primary()
 // OPERATOR OVERLOADS.
 
 // Assignment operator.
-Primary &Primary::operator=(const Primary &rhs)
+AggModels::Primary &AggModels::Primary::operator=(const Primary &rhs)
 {
     if (this != &rhs) {
         // Check if the RHS uses the same particle model before copying
@@ -136,7 +136,7 @@ Primary &Primary::operator=(const Primary &rhs)
 // DEFINING PARTICLE MODEL.
 
 // Returns the particle model used to create this primary.
-const Sweep::ParticleModel *const Primary::ParticleModel(void) const
+const Sweep::ParticleModel *const AggModels::Primary::ParticleModel(void) const
 {
     return m_pmodel;
 }
@@ -145,13 +145,13 @@ const Sweep::ParticleModel *const Primary::ParticleModel(void) const
 // PARTICLE COMPOSITION.
 
 // Returns the composition vector.
-const fvector &Primary::Composition() const 
+const fvector &AggModels::Primary::Composition() const
 {
 	return m_comp;
 }
 
 // Returns the ith component value.  Returns 0.0 if i is invalid.
-real Primary::Composition(unsigned int i) const
+real AggModels::Primary::Composition(unsigned int i) const
 {
 	if (i < m_comp.size()) {
 		return m_comp[i];
@@ -161,7 +161,7 @@ real Primary::Composition(unsigned int i) const
 }
 
 // Sets the composition vector.
-void Primary::SetComposition(const Sweep::fvector &comp)
+void AggModels::Primary::SetComposition(const Sweep::fvector &comp)
 {
 	m_comp.assign(comp.begin(), comp.end());
 }
@@ -170,13 +170,13 @@ void Primary::SetComposition(const Sweep::fvector &comp)
 // TRACKER VARIABLE VALUES.
 
 // Returns the tracker value vector.
-const fvector &Primary::Values() const
+const fvector &AggModels::Primary::Values() const
 {
 	return m_values;
 }
 
 // Returns the ith tracker variable value.  Returns 0.0 if i is invalid.
-real Primary::Values(unsigned int i) const
+real AggModels::Primary::Values(unsigned int i) const
 {
 	if (i < m_values.size()) {
 		return m_values[i];
@@ -186,13 +186,13 @@ real Primary::Values(unsigned int i) const
 }
 
 // Sets the values vector.
-void Primary::SetValues(const fvector &vals)
+void AggModels::Primary::SetValues(const fvector &vals)
 {
     m_values.assign(vals.begin(), vals.end());
 }
 
 // Sets the ith trackervalue.
-void Primary::SetValue(unsigned int i, real val)
+void AggModels::Primary::SetValue(unsigned int i, real val)
 {
 	if (i < m_values.size()) {
 		m_values[i] = val;
@@ -203,27 +203,27 @@ void Primary::SetValue(unsigned int i, real val)
 // PRIMARY CREATE TIME.
 
 // Returns the primary create time.
-real Primary::CreateTime() const {return m_createt;}
+real AggModels::Primary::CreateTime() const {return m_createt;}
 
 
 // LAST UPDATE TIME.
 
 // Returns the primary last update time.
-real Primary::LastUpdateTime() const {return m_time;}
+real AggModels::Primary::LastUpdateTime() const {return m_time;}
 
 // Sets the last update time of the primary.
-void Primary::SetTime(real t) {m_time = t;}
+void AggModels::Primary::SetTime(real t) {m_time = t;}
 
 
 // AGGREGATION MODEL.
 
 // Returns the aggregation model which this primary describes.
-AggModels::AggModelType Primary::AggID(void) const {return AggModels::Spherical_ID;}
+AggModels::AggModelType AggModels::Primary::AggID(void) const {return AggModels::Spherical_ID;}
 
 // BASIC DERIVED PARTICLE PROPERTIES.
 
 // Calculates the derived properties from the unique properties.
-void Primary::UpdateCache(void)
+void AggModels::Primary::UpdateCache(void)
 {
     real m = 0.0;
 
@@ -244,32 +244,32 @@ void Primary::UpdateCache(void)
 }
 
 // Returns the particle equivalent sphere diameter.
-real Primary::SphDiameter(void) const {return m_diam;}
+real AggModels::Primary::SphDiameter(void) const {return m_diam;}
 
 // Returns the collision diameter.
-real Primary::CollDiameter(void) const {return m_dcol;}
+real AggModels::Primary::CollDiameter(void) const {return m_dcol;}
 
 // Rethrns the mobility diameter.
-real Primary::MobDiameter(void) const {return m_dmob;}
+real AggModels::Primary::MobDiameter(void) const {return m_dmob;}
 
 // Returns the surface area.
-real Primary::SurfaceArea(void) const {return m_surf;}
+real AggModels::Primary::SurfaceArea(void) const {return m_surf;}
 
 // Returns the equivalent sphere surface area, based
 // on the volume.
-real Primary::SphSurfaceArea(void) const
+real AggModels::Primary::SphSurfaceArea(void) const
 {
     return PI * m_diam * m_diam;
 }
 
 // Returns the volume.
-real Primary::Volume(void) const {return m_vol;}
+real AggModels::Primary::Volume(void) const {return m_vol;}
 
 // Returns the mass.
-real Primary::Mass(void) const {return m_mass;}
+real AggModels::Primary::Mass(void) const {return m_mass;}
 
 // Returns the property with the given ID.
-real Primary::Property(const Sweep::PropID id) const
+real AggModels::Primary::Property(const Sweep::PropID id) const
 {
     switch (id) {
         case iDsph:      // Equivalent sphere diameter.
@@ -280,6 +280,8 @@ real Primary::Property(const Sweep::PropID id) const
             return m_dmob;
         case iS:      // Surface area.
             return m_surf;
+        case iASN:      // Surface area.
+            return GetSites();
         case iV:      // Volume.
             return m_vol;
         case iM:      // Mass.
@@ -293,22 +295,22 @@ real Primary::Property(const Sweep::PropID id) const
 // BASIC DERIVED PROPERTY OVERWRITES.
 
 // Sets the spherical particle diameter
-void Primary::SetSphDiameter(real diam) {m_diam = diam;}
+void AggModels::Primary::SetSphDiameter(real diam) {m_diam = diam;}
 
 // Sets the collision diameter of the particle.
-void Primary::SetCollDiameter(real dcol) {m_dcol = dcol;}
+void AggModels::Primary::SetCollDiameter(real dcol) {m_dcol = dcol;}
 
 // Sets the mobility diameter.
-void Primary::SetMobDiameter(real dmob) {m_dmob = dmob;}
+void AggModels::Primary::SetMobDiameter(real dmob) {m_dmob = dmob;}
 
 // Sets the surface area, subject to minimum spherical area condition.
-void Primary::SetSurfaceArea(real surf) {m_surf = surf;}
+void AggModels::Primary::SetSurfaceArea(real surf) {m_surf = surf;}
 
 // Sets the volume.
-void Primary::SetVolume(real vol) {m_vol = vol;}
+void AggModels::Primary::SetVolume(real vol) {m_vol = vol;}
 
 // Sets the mass.
-void Primary::SetMass(real m) {m_mass = m;}
+void AggModels::Primary::SetMass(real m) {m_mass = m;}
 
 /*!
  * Check that this primary is a physically valid particle.  This currently
@@ -317,7 +319,7 @@ void Primary::SetMass(real m) {m_mass = m;}
  *
  *@return   True iff primary particle is valid as a physical particle
  */
-bool Primary::IsValid() const {
+bool AggModels::Primary::IsValid() const {
     for(unsigned int i = 0; i < m_comp.size(); ++i) {
         // Check each component value, but stop as soon as an invalid value
         // is found
@@ -336,7 +338,7 @@ bool Primary::IsValid() const {
 // tracker values changes n times.  If the particle cannot be adjust
 // n times, then this function returns the number of times
 // it was adjusted.
-unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
+unsigned int AggModels::Primary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
 {
 	unsigned int i = 0;
 	real dc(0.0);
@@ -358,13 +360,13 @@ unsigned int Primary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_t
 	}
 
     // Update property cache.
-    Primary::UpdateCache();
+    AggModels::Primary::UpdateCache();
 
     return n;
 }
 
 // Adjusts the particle n times for IntParticle reaction
-unsigned int Primary::AdjustIntPar(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
+unsigned int AggModels::Primary::AdjustIntPar(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
 {
 	unsigned int i = 0;
 
@@ -381,7 +383,7 @@ unsigned int Primary::AdjustIntPar(const fvector &dcomp, const fvector &dvalues,
 	}
 
     // Update property cache.
-    Primary::UpdateCache();
+    AggModels::Primary::UpdateCache();
 
     return n;
 }
@@ -399,7 +401,7 @@ unsigned int Primary::AdjustIntPar(const fvector &dcomp, const fvector &dvalues,
  *
  * \return      Reference to the current instance after rhs has been added
  */
-Primary &Primary::Coagulate(const Primary &rhs, rng_type &rng)
+AggModels::Primary &AggModels::Primary::Coagulate(const Primary &rhs, rng_type &rng)
 {
     // Check if the RHS uses the same particle model.  If not, then
     // just use the assignment operator because you can't add apples 
@@ -421,16 +423,16 @@ Primary &Primary::Coagulate(const Primary &rhs, rng_type &rng)
     } else {
         // Different particle models!
         *this = rhs;
-        std::cerr << "Sweep::Primary::Coagulate called for particles with models " << m_pmodel
+        std::cerr << "Sweep::AggModels::Primary::Coagulate called for particles with models " << m_pmodel
                   << " and " << rhs.m_pmodel << std::endl;
     }
-    Primary::UpdateCache();
+    AggModels::Primary::UpdateCache();
     return *this;
 }
 
 // This routine sinters the Primary for the given length of
 // time using the provided sintering model.
-void Primary::Sinter(real dt, Cell &sys,
+void AggModels::Primary::Sinter(real dt, Cell &sys,
                      const Processes::SinteringModel &model,
                      rng_type &rng,
                      real wt)
@@ -448,7 +450,7 @@ void Primary::Sinter(real dt, Cell &sys,
  *
  * @return      Ratio of number of second to first component
  */
-real Primary::GetCoverageFraction() const
+real AggModels::Primary::GetCoverageFraction() const
 {
     real val = 1.0;
 
@@ -462,13 +464,13 @@ real Primary::GetCoverageFraction() const
 // READ/WRITE/COPY.
 
 // Returns a copy of the model data.
-Primary *const Primary::Clone(void) const
+AggModels::Primary *const AggModels::Primary::Clone(void) const
 {
     return new Primary(*this);
 }
 
 // Writes the object to a binary stream.
-void Primary::Serialize(std::ostream &out) const
+void AggModels::Primary::Serialize(std::ostream &out) const
 {
     if (out.good()) {
         // Output the version ID (=0 at the moment).
@@ -529,12 +531,12 @@ void Primary::Serialize(std::ostream &out) const
         out.write((char*)&val, sizeof(val));
     } else {
         throw invalid_argument("Output stream not ready "
-                               "(Sweep, Primary::Serialize).");
+                               "(Sweep, AggModels::Primary::Serialize).");
     }
 }
 
 // Reads the object from a binary stream.
-void Primary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
+void AggModels::Primary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
     releaseMem();
     m_pmodel = &model;
@@ -604,11 +606,11 @@ void Primary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, Primary::Deserialize).");
+                                    "(Sweep, AggModels::Primary::Deserialize).");
         }
     } else {
         throw invalid_argument("Input stream not ready "
-                               "(Sweep, Primary::Deserialize).");
+                               "(Sweep, AggModels::Primary::Deserialize).");
     }
 }
 
@@ -616,14 +618,14 @@ void Primary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 // DATA MANAGEMENT.
 
 // Release all memory associated with object.
-void Primary::releaseMem(void)
+void AggModels::Primary::releaseMem(void)
 {
     m_comp.clear();
     m_values.clear();
 }
 
 // Initialisation routine.
-void Primary::init(void)
+void AggModels::Primary::init(void)
 {
     m_pmodel = NULL;
     m_createt = 0.0;

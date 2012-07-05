@@ -42,7 +42,6 @@
 #include "reactor1d.h"
 #include "local_geometry1d.h"
 
-#include "swp_transport_outflow.h"
 #include "swp_cell.h"
 #include "swp_solver.h"
 
@@ -88,13 +87,13 @@ Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
                                       const bool split_diffusion,
                                       const real drift_adjustment,
                                       const bool split_advection,
-                                      const bool weighted_transport)
+                                      const bool strang_splitting)
     : mResetChemistry(reset_chem)
     , mDeferralRatio(10.0)
     , mSplitDiffusion(split_diffusion)
     , mDiffusionDriftAdjustment(drift_adjustment)
     , mSplitAdvection(split_advection)
-    , mWeightedTransport(weighted_transport)
+    , mStrangTransportSplitting(strang_splitting)
 {}
 
 /*!
@@ -222,8 +221,8 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
     const size_t numCells = reac.getNumCells();
     const Sweep::Mechanism &mech = reac.getParticleMechanism();
 
-    // Strang splitting
-    const real halfTime = (t_start + t_stop) / 2;
+    // Select time step for Strang or first order splitting
+    const real firstStop = mStrangTransportSplitting ? (t_start + t_stop) / 2.0 : t_stop;
 
 #pragma omp parallel for schedule(dynamic) ordered
     for(size_t i = numCells; i > 0; --i) {
@@ -231,7 +230,7 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
         Sweep::Cell& cell = reac.getCell(i - 1);
         Geometry::LocalGeometry1d geom(reac.getGeometry(), i - 1);
 
-        solveParticlesInOneCell(cell, geom, mech, t_start, halfTime, cell_rngs[i - 1]);
+        solveParticlesInOneCell(cell, geom, mech, t_start, firstStop, cell_rngs[i - 1]);
     }
 
     // Now do the split particle transport, if there is any
@@ -239,13 +238,16 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
         splitParticleTransport(reac, t_start, t_stop, cell_rngs);
     }
 
+    if(mStrangTransportSplitting) {
+        // Do the second part of the particle simulation for the Strang splitting
 #pragma omp parallel for schedule(dynamic) ordered
-    for(size_t i = numCells; i > 0; --i) {
-        // Get details of cell i
-        Sweep::Cell& cell = reac.getCell(i - 1);
-        Geometry::LocalGeometry1d geom(reac.getGeometry(), i - 1);
+        for(size_t i = numCells; i > 0; --i) {
+            // Get details of cell i
+            Sweep::Cell& cell = reac.getCell(i - 1);
+            Geometry::LocalGeometry1d geom(reac.getGeometry(), i - 1);
 
-        solveParticlesInOneCell(cell, geom, mech, halfTime, t_stop, cell_rngs[i - 1]);
+            solveParticlesInOneCell(cell, geom, mech, firstStop, t_stop, cell_rngs[i - 1]);
+        }
     }
 
 }
@@ -320,11 +322,12 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
     // Element i of the outer vector will contain the outflow from cell i of the reactor.
     // Element j of the inner vector will contain particles destined for cell j of the reactor.
     // After this vector of vectors of lists had been populated, it will be necessary to merge
-    // the lists of particles being transported into each cell of the reactor.  The sources
-    // of the particles will not matter, because statistical weight information is already in
-    // the list entries.
+    // the lists of particles being transported into each cell of the reactor.
     std::vector<inflow_lists_vector> inflowLists(numCells, inflow_lists_vector(numCells));
     std::vector<real> statisticalWeights(numCells);
+    std::vector<real> cellVolumes(numCells);
+    std::vector<real> maxCapacities(numCells);
+    std::vector<real> velocities(numCells);
 
     // Loop over each cell updating particles positions and removing any
     // particles that are moving to new cells.
@@ -350,6 +353,9 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
 
         // The weight will be needed when the particles are put back into the cell
         statisticalWeights[i] = 1.0 / mix.SampleVolume();
+        cellVolumes[i] = geom.cellVolume();
+        maxCapacities[i] = static_cast<real>(mix.Particles().Capacity());
+        velocities[i] = mix.GasPhase().Velocity();
 
         // Remove all particles from the cell and add them
         // to the inflow list for the appropriate cell
@@ -372,18 +378,44 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
         Sweep::PartPtrList partList;
 
         for(size_t j = 0; j != numCells; ++j) {
-            // Work through the particles coming from cell j
-            std::list<Sweep::Transport::TransportOutflow>::const_iterator it = inflowLists[j][i].begin();
-            const std::list<Sweep::Transport::TransportOutflow>::const_iterator itEnd = inflowLists[j][i].end();
-            while(it != itEnd) {
-                // Adjust the statistical weight using the information in the TransportOutflow structure
-                // so that all particles can be added to their destination cells with probability 1 (although
-                // the destination cells may still internally downsample).
-                it->particle->setStatisticalWeight(it->particle->getStatisticalWeight() * it->weight
-                                                   * reac.getCell(i).GasPhase().Velocity() / statisticalWeights[i]);
+            // Adjustment factor for particle statistical weight
+            const real weightFactor = (maxCapacities[j] * statisticalWeights[j]) /
+                                      (maxCapacities[i] * statisticalWeights[i]);
 
-                // We no longer need or want the full TransportOutflow information, just the particle
-                partList.push_back(it->particle);
+            const real repeatCountConst =  cellVolumes[j] * maxCapacities[i] * velocities[i]
+                                         / cellVolumes[i] / maxCapacities[j] / velocities[j];
+//            if(i == j + 1) {
+//                std::cout << j << ' ' << " max capac " << maxCapacities[j] << " inv sample vol " << statisticalWeights[j] << " cell volume " << cellVolumes[j] <<std::endl;
+//                std::cout << i << ' ' << " max capac " << maxCapacities[i] << " inv sample vol " << statisticalWeights[i] << " cell volume " << cellVolumes[i] <<std::endl;
+//                std::cout << j << ' ' << i << ' ' << " repeat count " << repeatCountConst << " weight factor " << weightFactor  << std::endl;
+//            }
+
+            // Work through the particles coming from cell j
+            std::list<Sweep::Particle*>::const_iterator it = inflowLists[j][i].begin();
+            const std::list<Sweep::Particle*>::const_iterator itEnd = inflowLists[j][i].end();
+            while(it != itEnd) {
+                // Repeat count in destination cell (may be less than one), fractional parts are probability
+                // of a particle being added to destination.
+                real repeatCount = repeatCountConst;
+
+                (*it)->setStatisticalWeight((*it)->getStatisticalWeight() * weightFactor);
+
+                while(repeatCount > 0) {
+                    if(repeatCount > 1) {
+                        partList.push_back((*it)->Clone());
+                    }
+                    else {
+                        // Final copy of the particle can be the original, but is only added with
+                        // probability repeatCount.
+                        boost::random::bernoulli_distribution<real> particleDecider(repeatCount);
+                        if(particleDecider(cell_rngs[i]))
+                            partList.push_back((*it));
+                        else {
+                            delete (*it);
+                        }
+                    }
+                    repeatCount -= 1.0;
+                }
                 ++it;
             }
         }
@@ -467,37 +499,23 @@ Brush::PredCorrSolver::inflow_lists_vector
         // Actually calculate new position of particle
         updateParticlePosition(t_start, t_stop, mix, mech, localGeom, neighbouringCells, **itPart, rng);
 
-        // Store particle details in this object, ready for insertion into the appropriate cell
-        Sweep::Transport::TransportOutflow out;
-
-        // Dereference iterator to get raw pointer to particle
-        out.particle = *itPart;
-
         // Find the index of the cell into which the particle is moving
-        out.destination = geom.containingCell((*itPart)->getPosition());
+        const int destination = geom.containingCell((*itPart)->getPosition());
 
-        if(out.destination >= 0) {
-            // I need to write up the fluid mechanics for the this calculation.
-            // Ultimately one must use the ratio of
-            // cellVolume / (SampleVolume * Velocity)
-            // in the source cell to that in the destination cell.
-            out.weight = geom.cellVolume(cell_index) / geom.cellVolume(out.destination)
-                          / mix.SampleVolume() / mix.GasPhase().Velocity();
-
+        if(destination >= 0) {
             // On moving to a new cell reset the coagulation count
-            if(static_cast<unsigned>(out.destination) != cell_index)
-               (out.particle)->resetCoagCount();
+            if(static_cast<unsigned>(destination) != cell_index)
+               (*itPart)->resetCoagCount();
 
             // Add the details of the particle to a list ready for inserting
             // into its destination cell
-            outflow[out.destination].push_back(out);
+            outflow[destination].push_back(*itPart);
 
         }
         else {
             // Particle has left simulation domain
-            delete out.particle;
-            out.particle = NULL;
-            out.weight = 0.0;
+            delete *itPart;
+            *itPart = NULL;
         }
 
         // Remove the particle from this cell and move the iterator on

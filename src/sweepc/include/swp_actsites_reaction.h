@@ -60,8 +60,15 @@ namespace Processes
 class ActSiteReaction : public SurfaceReaction
 {
 public:
+    //! Rule for calculating what fraction of surface Hydrogens are radicals
+    enum RadicalSiteFractionModel {
+        ABFRadicalSiteModel, //! ABF see radicalSiteFractionABF
+        BPRadicalSiteModel   //! Blanquart & Pitsch see radicalSiteFractionBP
+    };
+
     // Constructors.
-    ActSiteReaction(const Sweep::Mechanism &mech); // Default constructor.
+    ActSiteReaction(const Sweep::Mechanism &mech,
+                    const RadicalSiteFractionModel rad_site_model); // Default constructor.
 
     ActSiteReaction(                 // Stream-reading constructor.
         std::istream &in,            //  - Input stream.
@@ -87,9 +94,6 @@ public:
         const Cell &sys,    // System to which the particle belongs.
         const Particle &sp  // Particle for which to calculate rate.
         ) const;
-
-    //! Fraction of surface sites, which are also radicals
-    real radicalSiteFraction(const Sprog::Thermo::IdealGas &gas) const;
 
     //! Concentration of surface sites participating in this reaction (?units)
     real SiteDensity(const Sprog::Thermo::IdealGas &gas) const;
@@ -117,6 +121,12 @@ protected:
     // defined without knowledge of the parent mechanism.
     ActSiteReaction(void);
 
+    //! Fraction of surface hydrogen sites that are radicals in the ABF model
+    real radicalSiteFractionABF(const Sprog::Thermo::IdealGas &gas) const;
+
+    //! Fraction of surface hydrogen sites that are radicals according to Blanquart & Pitsch
+    real radicalSiteFractionBP(const Sprog::Thermo::IdealGas &gas) const;
+
 private:
     //! Index of acetylene in mechanism and gas phase mixture data
     int iC2H2;
@@ -139,6 +149,8 @@ private:
     //! Index of water in mechanism and gas phase mixture data
     int iH2O;
 
+    //! Specify how to calculate radical site fraction
+    RadicalSiteFractionModel mRadicalSiteModel;
 };
 }
 }

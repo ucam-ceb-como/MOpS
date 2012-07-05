@@ -478,7 +478,7 @@ PAHPrimary *PAHPrimary::SelectRandomSubparticleLoop(int target)
  *
  *@todo give this method a more accurate name
  *
- * @param[in] source Pointer to the primary to be copied
+ * @param[in] original    Pointer to the primary to be copied
 */
 void PAHPrimary::UpdateAllPointers( const PAHPrimary *original)
 {
@@ -974,6 +974,8 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
 
 /*!
  *@param[in]        t       Time upto which to update
+ *@param[in]        model   Particle model defining interpretation of particle data
+ *@param[in]        sys     Cell containing particle and providing gas phase
  *@param[in,out]    rng     Random number generator
  *
  * The actual interval over which the update is carried out on a PAH is from
@@ -1294,7 +1296,7 @@ void PAHPrimary::Fragtest(std::vector<double> &out, const int k, std::string mod
     }
     if (temp.size()!=0)
     {
-        for (size_t i = 0; i != NumPAH(); ++i){
+        for (size_t i = 0; i != static_cast<size_t>(NumPAH()); ++i){
             //c32h14
             if (temp[i]<=398)
                 temp[i]=0;
@@ -1448,6 +1450,11 @@ void PAHPrimary::UpdatePrimary(void)
         m_mass = 0;
         m_numcarbon=0;
         m_numH=0;
+        m_numOfEdgeC=0;
+        m_numOfRings=0;
+        m_PAHmass=0;
+        m_PAHCollDiameter=0;
+        m_numPAH= m_PAH.size();
     }
     else 
     {

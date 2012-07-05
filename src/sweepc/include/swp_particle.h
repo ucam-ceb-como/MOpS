@@ -81,7 +81,7 @@ public:
         const Sweep::ParticleModel &model
         );
 
-    Particle(Sweep::Primary &pri);        // Initialising constructor (from primary).
+    Particle(Sweep::AggModels::Primary &pri);        // Initialising constructor (from primary).
     Particle(const Particle &copy);       // Copy constructor.
     Particle(                             // Stream-reading constructor.
         std::istream &in,                 //  - Input stream.

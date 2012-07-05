@@ -320,7 +320,7 @@ Sweep::Particle *const ParticleModel::CreateParticle(const real time) const
 {
     // Create new primary using the aggregation model currently
     // set in this model.
-    Primary *pri = ModelFactory::CreatePrimary(m_aggmodel, time, *this);
+    AggModels::Primary *pri = ModelFactory::CreatePrimary(m_aggmodel, time, *this);
 
     // Now create a particle from this primary.  This sets up the
     // sub-model cache within the particle automatically.
@@ -348,7 +348,7 @@ Sweep::Particle *const ParticleModel::CreateParticle(const real time, const real
 {
     // Create new primary using the aggregation model currently
     // set in this model.
-    Primary *pri = ModelFactory::CreatePrimary(m_aggmodel, time, position, *this);
+    AggModels::Primary *pri = ModelFactory::CreatePrimary(m_aggmodel, time, position, *this);
 
     // Now create a particle from this primary.  This sets up the
     // sub-model cache within the particle automatically.
