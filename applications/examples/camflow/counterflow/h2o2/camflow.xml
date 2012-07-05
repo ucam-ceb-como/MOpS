@@ -5,7 +5,7 @@
     <length unit="m">0.02</length>
 </reactor>
 <op_condition>
-    <temperature>userdefined</temperature>
+    <temperature>adiabatic</temperature>
     <twall unit="K">1073</twall>
     <pressure unit="bar">1</pressure>
     <strain>10</strain>
@@ -33,15 +33,15 @@
     <tols>
         <resTol>1</resTol>
         <species>
-            <aTol>1.e-14</aTol>
-            <rTol>1.e-12</rTol>
+            <aTol>1.e-12</aTol>
+            <rTol>1.e-10</rTol>
         </species>
         <temperature>
             <aTol>1.e-03</aTol>
             <rTol>1.e-03</rTol>
         </temperature>
         <flow>
-            <aTol>1.e-06</aTol>
+            <aTol>1.e-04</aTol>
             <rTol>1.e-04</rTol>
         </flow>
         </tols>

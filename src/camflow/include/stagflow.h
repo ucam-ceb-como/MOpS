@@ -133,7 +133,14 @@ namespace Camflow
 
             double dydx(double nr1, double nr2, double dr) const;
 
-            double dydx(double nr1, double nr2, double nr3, double dr) const;
+            double dydx
+            (
+                const int i,
+                double nr1,
+                double nr2,
+                double nr3,
+                double dr
+            ) const;
 
             /*
             *calculate flow field

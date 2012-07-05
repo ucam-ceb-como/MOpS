@@ -457,7 +457,7 @@ void StagFlow::speciesResidual
             // convection term
             convection =
                -m_u[i]
-               *dydx(s_mf(i+1,l), s_mf(i,l), s_mf(i-1,l), dz[i]);
+               *dydx(i, s_mf(i+1,l), s_mf(i,l), s_mf(i-1,l), dz[i]);
 
             // diffusion term
             diffusion = dydx(s_jk(i,l), s_jk(i+1,l), dz[i])/m_rho[i];
@@ -497,7 +497,7 @@ void StagFlow::energyResidual
             /*
              *convection
              */
-            doublereal convection =  -m_u[i]*dydx(m_T[i+1],m_T[i],m_T[i-1],dz[i]);
+            doublereal convection =  -m_u[i]*dydx(i, m_T[i+1],m_T[i],m_T[i-1],dz[i]);
             /*
              *conduction
              */
@@ -539,9 +539,21 @@ double StagFlow::dydx(double nr1, double nr2, double dr) const
 }
 
 
-double StagFlow::dydx(double nr1, double nr2, double nr3, double dr) const
+double StagFlow::dydx
+(
+    const int i,
+    double nr1,
+    double nr2,
+    double nr3,
+    double dr
+) const
 {
-    return (nr1 - 2.0*nr2 + nr3)/(dr*dr);
+    doublereal val = m_u[i] > 0
+                   ? (nr2 - nr3)/dr
+                   : (nr1 - nr2)/dr;
+    return val;
+
+    //return (nr1 - 2.0*nr2 + nr3)/(dr*dr);
 }
 
 
@@ -903,9 +915,10 @@ void StagFlow::report(doublereal t, doublereal* solutio, doublereal& res)
     static int nStep = 0;
     std::cout.width(5);
     std::cout.setf(std::ios::scientific);
-    if (nStep % 10 == 0)
+    if (nStep % 100 == 0)
     {
         reporter_->consoleHead("time(s) \t residual");
+        reportToFile(nStep, &solvect[0]);
     }
     std::cout << t << "\t" << res << std::endl;
     nStep++;
