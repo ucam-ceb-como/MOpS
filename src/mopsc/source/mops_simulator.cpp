@@ -2368,6 +2368,7 @@ void Simulator::postProcessPAHinfo(const Mechanism &mech,
                         }
                     }
                     // clear the temp varialbe
+                    index_mass.clear();
                     max_mass=0;
                     temp_PAH_mass.clear();
                     temp_max.clear();
