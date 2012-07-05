@@ -56,6 +56,7 @@ dos2unix ./pahtest1/sweep.xml
 dos2unix ./pahtest1/mops.inx
 dos2unix ./pahtest1/gasphase.inp
 dos2unix ./pahtest1/therm.dat
+dos2unix ./pahtest1/pahtest1.pl
 
 ./pahtest1/pahtest1.pl $program
 
