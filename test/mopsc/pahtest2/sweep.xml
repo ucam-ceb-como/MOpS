@@ -9,12 +9,6 @@
     
     <component id="soot" type="bulk">
       <description>soot</description>
-	  <!-- MIN, MAX, COMBINED, NONE. -->
-	  <mode>MIN</mode>
-	  <threshold>24</threshold>
-	  <ColliParaA></ColliParaA>
-	  <ColliParaB></ColliParaB>
-	  <ColliParaC></ColliParaC>
       <density units="g/cm3">1.47</density>
       <molwt units="g/mol">0.0</molwt>
       <coalthresh>0.98</coalthresh>
