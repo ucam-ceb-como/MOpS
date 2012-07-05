@@ -735,16 +735,15 @@ void Simulator::PostProcess()
         postProcessXmer(mech, times);
 
     // Now post-process the PSLs.
-    if (m_write_PAH) {
-        postProcessPSLs(mech, times);
-        // Now post-process the ensemble to find interested information, in this case, PAH mass distribution of the largest soot aggregate in the ensemnble
+    postProcessPSLs(mech, times);
+
+    // Now post-process the ensemble to find interested information, in this case, PAH mass distribution of the largest soot aggregate in the ensemnble
+    if (m_write_PAH && pmech.WriteBinaryTrees()) {
         // more potential functionality can be added in the below function
         postProcessPAHinfo(mech, times);
         // then output details about the whole particle ensemble
         postProcessPAHPSLs(mech, times);
     }
-    else
-        postProcessPSLs(mech, times);
 }
 
 
@@ -2277,6 +2276,13 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
     }
 }
 
+template<template <typename> class P = std::greater >
+struct compare_pair_second {
+    template<class T1, class T2> bool operator()(const std::pair<T1, T2>& left, const std::pair<T1, T2>& right) {
+        return P<T2>()(left.second, right.second);
+    }
+};
+
 void Simulator::postProcessPAHinfo(const Mechanism &mech,
                                 const timevector &times) const
 {
@@ -2285,6 +2291,8 @@ void Simulator::postProcessPAHinfo(const Mechanism &mech,
     vector<unsigned int> temp_max; 
     fvector temp_PAH_mass;  // store number density of each Xmer
     real max_mass=0.0;
+    pair<unsigned int, real> m_index_mass;
+    vector<pair<unsigned int, real> > index_mass;
     // Get reference to the particle mechanism.
     const Sweep::Mechanism &pmech = mech.ParticleMech();
 
@@ -2330,24 +2338,35 @@ void Simulator::postProcessPAHinfo(const Mechanism &mech,
                         //temp[11]=>num of PAH
                         //temp[13]=>num of C, temp[14]=>num of H
                         real mass = 12 * temp[13] + temp[14];
-                        // find the largest soot aggregate
-                        if (mass>max_mass)
-                        {
-                            max_mass=mass;
-                            temp_max.push_back(j);
-                        }
+                        // store the index and the mass in a vector of pair
+                        m_index_mass = make_pair(j, mass);
+                        index_mass.push_back(m_index_mass);
+
                     }
+                    // find the largest soot aggregate by sorting the vecotr
+                    std::sort(index_mass.begin(), index_mass.end(), compare_pair_second<std::greater>());
                     // the last element in the temp_max shoule be the index of the largest particle in the ensemble
                     // before finding the largest particle, we have to make sure there are particles in the ensemble.
-                    if (temp_max.size()!=0)
+                    if (index_mass.size()!=0)
                     {
-                        Sweep::Particle* sp=r->Mixture()->Particles().At(temp_max.back());
+                        // count represents that the number of structures of particles (individual PAHs) will be serialized. 
+                        // By default, the 10 largest particle is selected. 
+                        // But if the num of particle in the ensemble is less than 10. count is modifed accordingly.
+                        unsigned int count(0);
+                        if (index_mass.size() > 10)
+                            count = 10;
+                        else count = index_mass.size();
+
+                        for (size_t pp = 0;pp != count; ++pp) {
+                            Sweep::Particle* sp=r->Mixture()->Particles().At(index_mass[pp].first);
                         Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
                         // store the mass of individual PAH within the selected particle in the vector temp_PAH_mass
                         pah->mass_PAH(temp_PAH_mass);
+                        // Output particle info to CSV file.
+                        out[i]->Write(temp_PAH_mass);
+                        temp_PAH_mass.clear();
+                        }
                     }
-                    // Output particle info to CSV file.
-                    out[i]->Write(temp_PAH_mass);
                     // clear the temp varialbe
                     max_mass=0;
                     temp_PAH_mass.clear();

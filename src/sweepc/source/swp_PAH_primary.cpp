@@ -1382,16 +1382,18 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
     }
 }
 
-// this function is only used to create a vector containing all the mass of individual PAH(but currently only track the m_leftchild because of the implementation of serialization)
+// this function is only used to create a vector containing all the mass of individual PAH within this soot particle
 void PAHPrimary::mass_PAH(std::vector<double> &out) const
 {
-    if (m_leftchild!=NULL)
+    if (m_leftchild != NULL)
         m_leftchild->mass_PAH(out);
+    if (m_rightchild != NULL)
+        m_rightchild->mass_PAH(out);
 
+    double temp_mass=0.0;
     for (size_t i = 0; i != m_PAH.size(); ++i)
     {
-        double temp_mass=0.0;
-        temp_mass=12*m_PAH[i]->m_pahstruct->numofC()+m_PAH[i]->m_pahstruct->numofH();
+        temp_mass = 12*m_PAH[i]->m_pahstruct->numofC() + m_PAH[i]->m_pahstruct->numofH();
         out.push_back(temp_mass);
     }
 }
