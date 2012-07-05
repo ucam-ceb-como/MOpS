@@ -2138,8 +2138,8 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                 for (unsigned int j=0; j!=r->Mixture()->ParticleCount(); ++j) {
                     // Get PSL.
                     stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
-                    		  times[i].EndTime(), psl,
-                    		  1.0/(r->Mixture()->SampleVolume()*scale));
+                              times[i].EndTime(), psl,
+                              1.0/(r->Mixture()->SampleVolume()*scale));
                     // Output particle PSL to CSV file.
                     out[i]->Write(psl);
                 }

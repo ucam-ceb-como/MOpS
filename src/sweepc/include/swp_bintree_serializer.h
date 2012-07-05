@@ -227,7 +227,6 @@ public:
             DeserializeLoop(in, root, node->m_rightchild, model);
             node->m_rightchild->m_parent = node;
         }
-
         /*
          * Now use the connectivity indices to reconnect particles
          * NOTE: we are able to do this because this section is not reached until
@@ -278,7 +277,7 @@ public:
         } else {
             // Jump to next node
             (*sum)++;
-            ParticleClass* ans;
+            ParticleClass* ans=NULL;
             if (! *status) {
                 if (node->m_leftchild != NULL)
                     ans = FindParticleFromIndexLoop(node->m_leftchild, index, sum, status);
