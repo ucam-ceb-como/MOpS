@@ -325,6 +325,7 @@ namespace Camflow
         protected:
 
             CamAdmin& admin_;
+            CamConfiguration& config_;
             CamReporter* reporter_;
             CamGeometry& reacGeom_;
             CamSoot& sootMom_;

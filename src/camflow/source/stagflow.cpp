@@ -75,27 +75,13 @@ StagFlow::StagFlow
 // Solve the stagnation/twinflame model
 void StagFlow::solve()
 {
-    /*
-    *function to set up the solver.
-    *Initialisation of the solution vector is
-    *done here
-    */
+    strainRate = 10; //admin_.getStrainRate();
 
-    //reacGeom->discretize();
-    /*
-    * 2 additional cells are padded to consider the
-    * inlet and the exhaust
-    */
-
-    //reacGeom_.addZeroWidthCells();
-
-    //strainRate = admin_.getStrainRate();
-    //profile_.setGeometryObj(reacGeom_);
     /*
     *array offsets for ODE
     */
 
-    //ptrG = ptrT+1;
+    ptrG = ptrT + 1;
 
 
     /*
@@ -137,21 +123,15 @@ void StagFlow::initSolutionVector(CamControl& cc)
     CamBoundary& right = admin_.getRightBoundary();
 
     storeInlet(left, fuel);
-    storeInlet(right, oxid);
 
-    right.setVelocity(-right.getVelocity());
-    right.setFlowRate(-right.getFlowRate());
-    /*
-    if(configID == camConfig->COUNTERFLOW)
+    if (config_.getConfiguration() == CamConfiguration::COUNTERFLOW)
     {
-        CamBoundary right = admin_.getRightBoundary();
-        storeInlet(right,oxid);
+        storeInlet(right, oxid);
         oxid.Vel *= -1;
         oxid.FlowRate *= -1;
         right.setVelocity(-right.getVelocity());
         right.setFlowRate(-right.getFlowRate());
     }
-    */
 
     /*
     *initialize the ODE vector
@@ -164,7 +144,7 @@ void StagFlow::initSolutionVector(CamControl& cc)
 
     if (admin_.getEnergyModel() == CamAdmin::ADIABATIC)
     {
-        if (configID == CamConfiguration::STAGFLOW)
+        if (config_.getConfiguration() == CamConfiguration::STAGFLOW)
         {
             vT[iMesh_e] = admin_.getWallTemp();
         }
@@ -192,11 +172,11 @@ void StagFlow::initMassFlow()
     m_flow[0] = fuel.FlowRate;
     m_flow[cellEnd - 1] = 0.0;
 
-    //if(configID == camConfig->COUNTERFLOW) {
-    //    m_u[cellEnd-1] = oxid.Vel;
-    //    m_flow[cellEnd-1] = oxid.FlowRate;
-    //}
-
+    if (config_.getConfiguration() == CamConfiguration::COUNTERFLOW)
+    {
+        m_u[cellEnd-1] = oxid.Vel;
+        m_flow[cellEnd-1] = oxid.FlowRate;
+    }
 
     /*
     *setting up TDMA coefficients
@@ -247,7 +227,7 @@ void StagFlow::initMomentum()
     *Ref : G. Stahl and J. Warnatz
     *Combustion and flame 85:285-299
     */
-    //m_G.resize(mCord, 0.0);
+    m_G.resize(mCord, 0.0);
 }
 
 
@@ -392,6 +372,8 @@ doublereal StagFlow::getResidual() const
 */
 void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f)
 {
+    reportToFile(1, &solvect[0]);
+
     resSp.resize(cellEnd*nSpc,0);
     resT.resize(cellEnd,0);
     resFlow.resize(cellEnd,0);
@@ -420,7 +402,6 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f)
         energyBoundary(t,y,&resT[0]);
 
         speciesResidual(t,y,&resSp[0]);
-        //energyResidual(t,y,&resT[0],true);
         energyResidual(t,y,&resT[0]);
 
         for (int i = 0; i < cellEnd; ++i)
@@ -473,17 +454,16 @@ void StagFlow::speciesResidual
     {
         for (int l = 0; l < nSpc; ++l)
         {
-
             // convection term
             convection =
                -m_u[i]
-               *dydx(s_mf(i+1,l), s_mf(i,l), s_mf(i-1,l), dz[i]);
+               *dydx(i, s_mf(i+1,l), s_mf(i,l), s_mf(i-1,l), dz[i]);
 
             // diffusion term
-            diffusion = dydx(s_jk(i,l),s_jk(i+1,l),dz[i])/m_rho[i];
+            diffusion = dydx(s_jk(i,l), s_jk(i+1,l), dz[i])/m_rho[i];
 
-            source = s_Wdot(i,l)   *(*spv_)[l]->MolWt()/m_rho[i];
-            f[i*nSpc+l] = convection + diffusion + source ;
+            source = s_Wdot(i,l)*(*spv_)[l]->MolWt()/m_rho[i];
+            f[i*nSpc+l] = convection + diffusion + source;
         }
     }
 }
@@ -496,31 +476,28 @@ void StagFlow::energyResidual
     doublereal* f
 )
 {
-
     bool fluxTrans = true;
 
     if (admin_.getEnergyModel() == CamAdmin::ADIABATIC)
     {
-        doublereal sumHSource, flxk, sumFlx;
-
-        for(int i=iMesh_s; i<iMesh_e; i++)
+        for (int i=iMesh_s; i<iMesh_e; i++)
         {
             /*
              *evaluate the summation terms
              */
-            sumHSource = 0.0;
-            sumFlx = 0.0;
+            doublereal sumHSource = 0.0;
+            doublereal sumFlx = 0.0;
             for (int l=0; l<nSpc; l++)
             {
                 sumHSource += s_Wdot(i,l)*s_H(i,l);
-                flxk = 0.5*(s_jk(i-1,l)+s_jk(i,l));
+                doublereal flxk = 0.5*(s_jk(i-1,l) + s_jk(i,l));
                 sumFlx += flxk*s_cp(i,l)/(*spv_)[l]->MolWt();
             }
 
             /*
              *convection
              */
-            doublereal convection =  -m_u[i]*dydx(m_T[i+1],m_T[i],m_T[i-1],dz[i]);
+            doublereal convection =  -m_u[i]*dydx(i, m_T[i+1],m_T[i],m_T[i-1],dz[i]);
             /*
              *conduction
              */
@@ -562,17 +539,34 @@ double StagFlow::dydx(double nr1, double nr2, double dr) const
 }
 
 
-double StagFlow::dydx(double nr1, double nr2, double nr3, double dr) const
+double StagFlow::dydx
+(
+    const int i,
+    double nr1,
+    double nr2,
+    double nr3,
+    double dr
+) const
 {
-    return (nr1 - 2.0*nr2 + nr3)/(dr*dr);
+    doublereal val = m_u[i] > 0
+                   ? (nr2 - nr3)/dr
+                   : (nr1 - nr2)/dr;
+    return val;
+
+    //return (nr1 - 2.0*nr2 + nr3)/(dr*dr);
 }
 
 
 /*
 *species boundary condition implementation
 */
-void StagFlow::speciesBoundary(const doublereal& t, doublereal* y, doublereal* f){
-
+void StagFlow::speciesBoundary
+(
+    const doublereal& t,
+    doublereal* y,
+    doublereal* f
+)
+{
     //-------------------------------------------
     //
     //  Left Boundary Settings
@@ -583,8 +577,8 @@ void StagFlow::speciesBoundary(const doublereal& t, doublereal* y, doublereal* f
 
     for (int l=0; l<nSpc ; l++)
     {
-        convection = m_u[0]*dydx(fuel.Species[l],y[l],dz[0]);
-        diffusion = dydx(0,s_jk(iMesh_s,l),dz[0])/m_rho[0];
+        convection = m_u[0]*dydx(fuel.Species[l], y[l], dz[0]);
+        diffusion = dydx(0, s_jk(iMesh_s,l), dz[0])/m_rho[0];
         f[l] = convection + diffusion;
     }
 
@@ -593,7 +587,7 @@ void StagFlow::speciesBoundary(const doublereal& t, doublereal* y, doublereal* f
     // Right Boundary Settings
     //
     //---------------------------------------------------
-    if(configID == camConfig->STAGFLOW)
+    if (config_.getConfiguration() == CamConfiguration::STAGFLOW)
     {
         for(int l=0; l<nSpc; l++)
         {
@@ -608,9 +602,9 @@ void StagFlow::speciesBoundary(const doublereal& t, doublereal* y, doublereal* f
         {
             convection =
                 m_u[iMesh_e]
-               *dydx(s_mf(iMesh_e,l),oxid.Species[l],dz[iMesh_e]);
-            diffusion = 0.0;//dydx(s_jk(iMesh_e,l),0,dz[iMesh_e])/m_rho[iMesh_e];
-            f[iMesh_e*nSpc+l] = convection+diffusion;
+               *dydx(s_mf(iMesh_e,l), oxid.Species[l], dz[iMesh_e]);
+            diffusion = dydx(s_jk(iMesh_e,l), 0, dz[iMesh_e])/m_rho[iMesh_e];
+            f[iMesh_e*nSpc+l] = convection + diffusion;
         }
     }
 }
@@ -635,7 +629,7 @@ void StagFlow::energyBoundary(const doublereal& t, doublereal* y, doublereal* f)
     * temperature in case of stagnation flow, and oxidizer inlet temperature
     * in case of counter flow flames
     */
-    f[iMesh_e] = 0;
+    f[iMesh_e] = 0.0;
 }
 
 
@@ -665,8 +659,8 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
         }
     }
 
-    for (int i=0; i<10; i++)
-    {
+    //for (int i=0; i<10; i++)
+    //{
         //------------------------------------------------------------
         //           Inlet face
         //----------------------------------------------------------
@@ -678,7 +672,7 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
         //           Exit face
         //------------------------------------------------------------
         // this is the vanishing cell
-        if (configID == camConfig->STAGFLOW)
+        if (config_.getConfiguration() == camConfig->STAGFLOW)
         {
             m_flow[iMesh_e] = 0.0;
         }
@@ -690,6 +684,7 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
 
         std::vector<doublereal> flow;
         calcVelocity(flow);
+
         for (int i=1; i<iMesh_e; i++)
         {
             m_flow[i] = flow[i-1];
@@ -697,7 +692,7 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
 
 
         m_G[0] = sqrt(m_rho[iMesh_e]/m_rho[0]);
-        if (configID == camConfig->COUNTERFLOW)
+        if (config_.getConfiguration() == camConfig->COUNTERFLOW)
         {
             m_G[iMesh_e] = 1.0;
         }
@@ -709,7 +704,7 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
             m_G[i] = mom[i-1];
         }
 
-        if(configID == camConfig->STAGFLOW)
+        if (config_.getConfiguration() == camConfig->STAGFLOW)
         {
             m_G[iMesh_e] = m_G[iMesh_e-1];
         }
@@ -717,11 +712,11 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
         {
             m_G[iMesh_e] = 1.0;
         }
-    }
+    //}
 
-    for (int i=0; i<iMesh_e+1; i++)
+    for (int i = 0; i < iMesh_e + 1; i++)
     {
-        m_u[i]=m_flow[i]/m_rho[i];
+        m_u[i] = m_flow[i]/m_rho[i];
     }
 }
 
@@ -752,6 +747,7 @@ void StagFlow::calcVelocity(std::vector<doublereal>& u)
     doublereal rhoGw = rho_w*Gw;
     r[i-1] = 2*strainRate*(rhoGe - rhoGw) +
             (2*fuel.FlowRate/dz[i]);
+
     //last cell
     i = iMesh_e-1;
     rho_e = m_rho[i+1];
@@ -761,10 +757,11 @@ void StagFlow::calcVelocity(std::vector<doublereal>& u)
     rhoGe = rho_e*Ge;
     rhoGw = rho_w*Gw;
     r[i-1] = 2*strainRate*(rhoGe-rhoGw);
-    if (configID == camConfig->COUNTERFLOW)
+    if (config_.getConfiguration() == camConfig->COUNTERFLOW)
     {
         r[i-1] += 2*oxid.FlowRate/dz[i];
     }
+
     //other cells
     for ( i = 2; i<iMesh_e-1; i++)
     {
@@ -786,13 +783,14 @@ void StagFlow::calcVelocity(std::vector<doublereal>& u)
 void StagFlow::calcMomentum(std::vector<doublereal>& mom)
 {
     /*
-    *this evaluates the g equation using TDMA.
-    *At the stagnation plane the boundary zero gradient boundary
-    *condition is implemented. At the hot edge (fuel inlet) the boundary
+    * This evaluates the g equation using TDMA.
+    * At the stagnation plane the zero gradient boundary
+    * condition is implemented. At the hot edge (fuel inlet) the boundary
     * condition is g=sqrt(rho_ub/rho_b). At the cold edge the boundary
     * condition is g=1
     * (Ref: JG. Stahl and J. Warnatz Cobust. Flame 85 (1991) 285-299
     */
+
     /*
     *preparation
     */
@@ -801,13 +799,13 @@ void StagFlow::calcMomentum(std::vector<doublereal>& mom)
     doublereal delPW, delPE;
     doublereal mu_e, mu_w;
     std::vector<doublereal> a,b,c,r;
-    c.resize(mCord - 2,0.0);
+    c.resize(mCord - 2, 0.0);
     mom = a = b = r = c;
+
     /*---------------------------------------------------
     *        First cell
     *--------------------------------------------------/
     */
-
     i = 1;
     delPE = 0.5*(dz[i]+dz[i+1]);
     delPW = 0.5*dz[i];
@@ -824,7 +822,8 @@ void StagFlow::calcMomentum(std::vector<doublereal>& mom)
     * interior cells
     *------------------------------------------------/
     */
-    for(i=2; i<iMesh_e-1;i++){
+    for (i=2; i<iMesh_e-1;i++)
+    {
         delPE = 0.5*(dz[i]+dz[i+1]);
         delPW = 0.5*(dz[i]+dz[i-1]);
         mu_e = 0.5*(m_mu[i]+m_mu[i+1]);
@@ -837,7 +836,6 @@ void StagFlow::calcMomentum(std::vector<doublereal>& mom)
         b[i-1] = De+Dw;
         c[i-1] = -(De-0.5*fe);
         r[i-1] = strainRate*m_rho[iMesh_e]*dz[i];
-
     }
 
     /*------------------------------------------------
@@ -854,14 +852,14 @@ void StagFlow::calcMomentum(std::vector<doublereal>& mom)
     a[i-1] = -(Dw+0.5*fw);
     r[i-1] = strainRate*m_rho[iMesh_e]*dz[i];
 
-    if(configID == camConfig->COUNTERFLOW){
+    if (config_.getConfiguration() == CamConfiguration::COUNTERFLOW)
+    {
         mu_e = m_mu[iMesh_e];
         delPE = 0.5*dz[i];
         fe = 0.5*oxid.FlowRate;
         De = mu_e/delPE;
         b[i-1] = Dw+De-fe;
         r[i-1] += (De-fe)*m_G[iMesh_e];
-
     }
 
     CamMath cm;
@@ -875,9 +873,10 @@ void StagFlow::calcMomentum(std::vector<doublereal>& mom)
 void StagFlow::updateDiffusionFluxes()
 {
     CamResidual::updateDiffusionFluxes();
-    for(int l=0; l<nSpc; l++)
+
+    for (int l = 0; l < nSpc; l++)
     {
-        s_jk(iMesh_e+1,l)=0.0;
+        s_jk(iMesh_e+1, l) = 0.0;
     }
 
     /*
@@ -916,9 +915,10 @@ void StagFlow::report(doublereal t, doublereal* solutio, doublereal& res)
     static int nStep = 0;
     std::cout.width(5);
     std::cout.setf(std::ios::scientific);
-    if (nStep % 10 == 0)
+    if (nStep % 100 == 0)
     {
         reporter_->consoleHead("time(s) \t residual");
+        reportToFile(nStep, &solvect[0]);
     }
     std::cout << t << "\t" << res << std::endl;
     nStep++;
@@ -941,8 +941,8 @@ void StagFlow::header(std::vector<std::string>& headerData)
     headerData.push_back("sumfracs");
 }
 
-void StagFlow::reportToFile(doublereal t, doublereal* soln){
-
+void StagFlow::reportToFile(doublereal t, doublereal* soln)
+{
     saveMixtureProp(t, soln, false, true);
     doublereal sum;
     reporter_->openFiles();
@@ -1019,8 +1019,8 @@ void StagFlow::reportToFile(doublereal t, doublereal* soln){
 *
 *\return       Mixture fraction \f$ (\xi) \f$ in the grid cell.
 */
-doublereal StagFlow::getBilgerMixFrac(const int& cell) {
-
+doublereal StagFlow::getBilgerMixFrac(const int& cell)
+{
     doublereal Z_C = 0.0, Z_Co = 0.0, Z_Cf = 0.0;
     doublereal Z_H = 0.0, Z_Ho = 0.0, Z_Hf = 0.0;
     doublereal Z_O = 0.0, Z_Oo = 0.0, Z_Of = 0.0;
@@ -1031,8 +1031,6 @@ doublereal StagFlow::getBilgerMixFrac(const int& cell) {
 
     // Get the vector of species.
     Sprog::SpeciesPtrVector species = camMech_->Species();
-
-
 
     // Get the fuel and oxidiser boundary mass fractions.
     CamBoundary& fuelInlet = admin_.getLeftBoundary();
@@ -1048,58 +1046,67 @@ doublereal StagFlow::getBilgerMixFrac(const int& cell) {
     int index_O = camMech_->FindElement("O");
 
     // Check the element exists.
-    if (index_C != -1) {
-
+    if (index_C != -1)
+    {
         // Get the weight of the element carbon.
         W_C = camMech_->Elements(index_C)->MolWt();
         // Get the mass fraction of carbon.
-        for(size_t i=0; i<species.size(); ++i){
+        for (size_t i=0; i<species.size(); ++i)
+        {
             int cAtoms = species[i]->AtomCount(index_C);
             Z_C += ( s_mf(cell,i) * cAtoms * W_C) / ( species[i]->MolWt() );
-            Z_Co += ( oxidiserInletMassFracs[i] * cAtoms * W_C) / ( species[i]->MolWt() );
-            Z_Cf += ( fuelInletMassFracs[i] * cAtoms * W_C) / ( species[i]->MolWt() );
+            Z_Co += oxidiserInletMassFracs[i] * cAtoms * W_C
+                   /species[i]->MolWt();
+            Z_Cf += fuelInletMassFracs[i] * cAtoms * W_C
+                   /species[i]->MolWt();
         }
+
         carbonCell = (2.0/W_C)*(Z_C-Z_Co);
         carbonBoundary = (2.0/W_C)*(Z_Cf-Z_Co);
-
     }
 
     // Check the element exists.
-    if (index_H != -1) {
-
+    if (index_H != -1)
+    {
         // Get the weight of the element hydrogen.
         W_H = camMech_->Elements(index_H)->MolWt();
         // Get the mass fraction of hydrogen.
-        for(size_t i=0; i<species.size(); ++i){
+        for (size_t i=0; i<species.size(); ++i)
+        {
             int hAtoms = species[i]->AtomCount(index_H);
             Z_H += ( s_mf(cell,i) * hAtoms * W_H) / ( species[i]->MolWt() );
-            Z_Ho += ( oxidiserInletMassFracs[i] * hAtoms * W_H) / ( species[i]->MolWt() );
-            Z_Hf += ( fuelInletMassFracs[i] * hAtoms * W_H) / ( species[i]->MolWt() );
+            Z_Ho += oxidiserInletMassFracs[i] * hAtoms * W_H
+                   /species[i]->MolWt();
+            Z_Hf += fuelInletMassFracs[i] * hAtoms * W_H
+                   /species[i]->MolWt();
         }
-        hydrogenCell = (0.5/W_H)*(Z_H-Z_Ho);
-        hydrogenBoundary = (0.5/W_H)*(Z_Hf-Z_Ho);
 
+        hydrogenCell = (0.5/W_H)*(Z_H - Z_Ho);
+        hydrogenBoundary = (0.5/W_H)*(Z_Hf - Z_Ho);
     }
 
     // Check the element exists.
-    if (index_O != -1) {
-
+    if (index_O != -1)
+    {
         // Get the weight of the element oxygen.
         W_O = camMech_->Elements(index_O)->MolWt();
         // Get the mass fraction of oxygen.
-        for(size_t i=0; i<species.size(); ++i){
+        for (size_t i=0; i<species.size(); ++i)
+        {
             int oAtoms = species[i]->AtomCount(index_O);
-            Z_O += ( s_mf(cell,i) * oAtoms * W_O) / ( species[i]->MolWt() );
-            Z_Oo += ( oxidiserInletMassFracs[i] * oAtoms * W_O) / ( species[i]->MolWt() );
-            Z_Of += ( fuelInletMassFracs[i] * oAtoms * W_O) / ( species[i]->MolWt() );
+            Z_O += s_mf(cell,i) * oAtoms * W_O
+                  /species[i]->MolWt();
+            Z_Oo += oxidiserInletMassFracs[i] * oAtoms * W_O
+                   /species[i]->MolWt();
+            Z_Of += fuelInletMassFracs[i] * oAtoms * W_O
+                   /species[i]->MolWt();
         }
+
         oxygenCell = -(2.0/W_O)*(Z_O-Z_Oo);
         oxygenBoundary = -(2.0/W_O)*(Z_Of-Z_Oo);
-
     }
 
     // Equation (12.185) in Versteeg and Malalasekera.
     return (carbonCell + hydrogenCell + oxygenCell)
-        / (carbonBoundary + hydrogenBoundary + oxygenBoundary);
-
+          /(carbonBoundary + hydrogenBoundary + oxygenBoundary);
 }

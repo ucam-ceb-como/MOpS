@@ -5,7 +5,7 @@
     <length unit="m">0.02</length>
 </reactor>
 <op_condition>
-    <temperature>userdefined</temperature>
+    <temperature>adiabatic</temperature>
     <twall unit="K">1073</twall>
     <pressure unit="bar">1</pressure>
     <strain>10</strain>
@@ -13,19 +13,19 @@
 </op_condition>
 <inlet>
     <fuel>
-    <velocity unit="m/s">1.0</velocity>
-    <temperature unit="K">300.0</temperature>
-    <molefrac>
-        <species name="H2">1.0</species>
-    </molefrac>
+        <velocity unit="m/s">1.0</velocity>
+        <temperature unit="K">300.0</temperature>
+        <molefrac>
+            <species name="H2">1.0</species>
+        </molefrac>
     </fuel>
     <oxidizer>
-    <velocity unit="m/s">1.0</velocity>
-    <temperature unit="K">300.0</temperature>
-    <molefrac>
-        <species name="O2">0.21</species>
-        <species name="N2">*</species>
-    </molefrac>
+        <velocity unit="m/s">1.0</velocity>
+        <temperature unit="K">300.0</temperature>
+        <molefrac>
+            <species name="O2">0.21</species>
+            <species name="N2">*</species>
+        </molefrac>
     </oxidizer>
 </inlet>
 <solver mode="coupled" solver="cvode" residual="on">
@@ -34,15 +34,15 @@
         <resTol>1</resTol>
         <species>
             <aTol>1.e-12</aTol>
-            <rTol>1.e-08</rTol>
+            <rTol>1.e-10</rTol>
         </species>
         <temperature>
             <aTol>1.e-03</aTol>
             <rTol>1.e-03</rTol>
         </temperature>
         <flow>
-            <aTol>1.e-03</aTol>
-            <rTol>1.e-03</rTol>
+            <aTol>1.e-04</aTol>
+            <rTol>1.e-04</rTol>
         </flow>
         </tols>
 </solver>
@@ -101,7 +101,7 @@
         <position x="2.00">300.0</position>
     </Tprofile>
 </initialize>
-<report outfile="final" species="mole">
+<report outfile="final" species="mass">
 </report>
 <grid>grid.inp</grid>
 </camflow>
