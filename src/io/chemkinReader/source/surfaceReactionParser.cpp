@@ -102,13 +102,13 @@ void IO::SurfaceReactionParser::parse(vector<IO::Reaction>& reactions)
 
         cout << reactionStringLines_[i] << endl;
 
-        Reaction reaction;
+        Reaction surfReaction;
 
         // Check for pressure dependency now as it screws up reactionSingleRegex.
         if (checkForPressureDependentReaction(reactionStringLines_[i]))
         {
             reactionStringLines_[i] = regex_replace(reactionStringLines_[i], pressureDependent, "");
-            reaction.setPressureDependent();
+            surfReaction.setPressureDependent();
         }
 
         smatch what;
@@ -117,13 +117,13 @@ void IO::SurfaceReactionParser::parse(vector<IO::Reaction>& reactions)
 
         if (regex_search(start, end, what, reactionSingleRegex))
         {
-            reaction.setReactants(parseReactionSpecies(what[1]));
+            surfReaction.setReactants(parseReactionSpecies(what[1]));
 
             if (what[2] == "=>") reaction.setReversible(false);
 
-            reaction.setProducts(parseReactionSpecies(what[3]));
+            surfReaction.setProducts(parseReactionSpecies(what[3]));
 
-            reaction.setArrhenius
+            surfReaction.setArrhenius
             (
                 from_string<double>(what[4]),
                 from_string<double>(what[5]),
@@ -144,7 +144,7 @@ void IO::SurfaceReactionParser::parse(vector<IO::Reaction>& reactions)
                 }
                 else if (regex_search(start, end, DUPLICATE))
                 {
-                    reaction.setDuplicate();
+                    surfReaction.setDuplicate();
                     // Skip one line when looking for the next reaction.
                     ++i;
                     //break;
@@ -152,7 +152,7 @@ void IO::SurfaceReactionParser::parse(vector<IO::Reaction>& reactions)
                 else if (regex_search(start, end, REV))
                 {
                     vector<double> reverseArrhenius = parseLOWTROEREV(reactionStringLines_[i+1], REV);
-                    reaction.setArrhenius(reverseArrhenius[0],reverseArrhenius[1],reverseArrhenius[2],true);
+                    surfReaction.setArrhenius(reverseArrhenius[0],reverseArrhenius[1],reverseArrhenius[2],true);
                     // Skip one line when looking for the next reaction.
                     ++i;
                     //break;
@@ -324,31 +324,4 @@ IO::SurfaceReactionParser::findLineType(const string& line)
 
 }
 
-/*vector<double>
-IO::SurfaceReactionParser::parseLOWTROEREV(const string& line, const regex& reg)
-{
 
-    vector<double> vec;
-    smatch result;
-
-    regex_search(line.begin(), line.end(), result, reg);
-
-    for (size_t i=2; i<result.size(); ++i)
-    {
-        if (result[i] != "") vec.push_back(from_string<double>(result[i]));
-    }
-
-    return vec;
-
-}
-
-bool
-IO::SurfaceReactionParser::checkForPressureDependentReaction(const string& line)
-{
-    if (!regex_search(line.begin(), line.end(), pressureDependent))
-    {
-        return false;
-    }
-    return true;
-}
-*/

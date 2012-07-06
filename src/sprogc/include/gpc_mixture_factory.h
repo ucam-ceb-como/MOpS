@@ -82,7 +82,7 @@ public:
     // Use these routines if the object is derived from GasPhase.
 
     // Creates a GasPhase object of the given type.  Throws an exception
-    // if the specified type is not a gas-phase
+    // if the specified type is not containing a gas-phase
     static GasPhase *const CreateGasPhase(
         Serial_MixtureType type,        // Type of mixture to create.
         const SpeciesPtrVector &species // List of species used to define the mixture.

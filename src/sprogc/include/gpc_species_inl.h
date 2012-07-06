@@ -42,8 +42,16 @@
 #ifndef GPC_SPECIES_INL_H
 #define GPC_SPECIES_INL_H
 
+/*
+ * These function frames have been defined in gpc_species.h  
+ */
+
 //  SPECIES NAME.
 inline const std::string &Species::Name() const {return m_name;};
+inline const int Species::SiteOccupancy(void) const {return site_occupancy;};
+
+// SPECIES PHASE NAME.
+inline const std::string &Species::PhaseName() const {return m_phaseName;};
 
 // SPECIES COMPOSITION.
 inline const ElCompVector &Species::Composition() const {return m_elcomp;};

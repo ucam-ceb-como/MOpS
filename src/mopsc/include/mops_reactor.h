@@ -51,6 +51,7 @@
 #include "mops_reactor_type.h"
 #include "mops_src_terms.h"
 #include "sweep.h"
+#include "gpc_mechanism.h"
 
 namespace Mops
 {
@@ -237,8 +238,8 @@ protected:
     real m_time;                   // The current reaction time.
     Mops::Mixture *m_mix;          // The mixture contained in the reactor.
     const Mops::Mechanism *m_mech; // The mechanism which defines 
-                                   // what happens in the reactor.
-
+									// what happens in the reactor.
+	Sprog::Mechanism *m_gpc_mech; 
     // Reactor model variables.
     EnergyModel m_emodel; // The energy model used to describe the reactor.
     bool m_constv;        // true=const. volume model, false=const. pressure model.

@@ -54,6 +54,7 @@
 namespace Sprog
 {
 class Mechanism; // Forward declaration of mechanism.
+class Phase; // Forward declaration of phase
 
 // A typedef for a STL vector of pointers to species.
 class Species;
@@ -80,13 +81,29 @@ public:
 
     // SPECIES NAME.
 
-    // Returns the species name.
+    // Returns the species name. (inline)
     const std::string &Name(void) const;
 
     // Sets the species name.
     void SetName(const std::string &name);
 
 
+    // SPECIES SITE OCCUPANCY
+
+    // Return the species site occupancy. (inline)
+    const int SiteOccupancy(void) const;
+
+    // Set the species site occupancy. 
+    void SetSiteOccupancy(const std::string &name, const int siteOccp); 
+
+	// SPECIES PHASE NAME 
+	
+	// Returns the species phase name. (inline)
+    const std::string &PhaseName(void) const;
+	
+	// Sets the species phase name.
+    void SetPhaseName(const std::string &phaseName, const std::string &name);
+	
     // ELEMENTAL COMPOSITION.
 
     // Returns the elemental composition of the species.
@@ -121,6 +138,9 @@ public:
 
     // Returns true if species contains the element (given by object).
     bool ContainsElement(const Element &el) const;
+
+    // SURFACE COVERAGE 
+    //    void setSurfaceCoverages(const double* theta) const;
 
 
     // MOLECULAR WEIGHT.
@@ -192,7 +212,7 @@ public:
     {
         ar.template register_type<Sprog::ElComp>();
         ar.register_type(static_cast< ::IO::Transport * >(NULL));
-        ar & m_name & m_elcomp & m_molwt & m_mech & m_thermoparams & m_T1 & m_transport;
+        ar & m_name & m_elcomp & m_molwt & m_mech & m_thermoparams & m_T1 & m_transport & site_occupancy & m_phaseName & m_phase; 
     }
 
     // Writes the element to a binary data stream.
@@ -228,11 +248,14 @@ public:
 
 protected:
     // Species data.
-    std::string m_name;       // Name/symbol.
-    ElCompVector m_elcomp;    // Elemental composition.
-    real m_molwt;             // Molecular weight (kg/mol).
-    Sprog::Mechanism *m_mech; // Parent mechanism.
-
+    std::string m_name;              // Name/symbol.
+	Sprog::Phase *m_phase;			 // Phase pointer for species
+    std::string m_phaseName; 	     // Phase Name for species
+    ElCompVector m_elcomp;           // Elemental composition.
+    real m_molwt;                    // Molecular weight (kg/mol).
+    Sprog::Mechanism *m_mech;        // Parent mechanism.
+    int site_occupancy;              // Site occupancy for surface species (sigma).
+    //double activity;                 // Bulk species activity (NOT YET).  
 
     //const ElementPtrVector *m_elements; // Elements used to define species.
 
@@ -244,7 +267,6 @@ protected:
 private:
     //! Data for calculating transport properties
     IO::Transport *m_transport;
-
 };
 
 // Inline function definitions.

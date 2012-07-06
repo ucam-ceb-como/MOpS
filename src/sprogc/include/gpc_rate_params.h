@@ -1,12 +1,12 @@
 /*
-  Author(s):      Matthew Celnik (msc37)
+  Author(s):      Matthew Celnik (msc37) && Martin Martin (mm864)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
 
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
-    This files contains structures which define reaction rate parameter sets.
+    This files contains structures which define reaction rate parameter sets and those for surface chemistry
 
   Licence:
     This file is part of "sprog".
@@ -41,8 +41,9 @@
 
 #ifndef GPC_RATE_PARAMS_H
 #define GPC_RATE_PARAMS_H
-
 #include "gpc_params.h"
+#include <string>
+using namespace std; 
 
 namespace Sprog
 {
@@ -73,6 +74,53 @@ namespace Kinetics
 
     };
 
+	// Surface Coverage parameters.
+    struct COVERAGE
+    {
+        real Eta; // Eta.
+        real Miu; // Miu.
+        real Epsilon; // e.
+		std::string spName; // species name associated with the coverage param. 
+		
+        // Constructors.
+        COVERAGE(void) // Default constructor.
+        {Eta=Miu=Epsilon=0.0;
+		spName = "";};
+      COVERAGE(real e, real m, real eps, std::string &name) // Initialising constructor.
+        {Eta=e; Miu=m; Epsilon=eps; spName=name;};
+
+        // Writes the element to a binary data stream.
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int /* file_version */)
+        {
+            ar & Eta & Miu & Epsilon & spName;
+        }
+        friend class boost::serialization::access;
+    };
+	
+	//  FORD parameters.
+    struct FORD
+    {
+        real F_k; // Forward reaction order.
+		std::string spName; // species name associated with the reaction order. 
+		
+        // Constructors.
+        FORD(void) // Default constructor.
+        {F_k=0.0;
+		spName = "";};
+      FORD(real f, std::string &name) // Initialising constructor.
+        {F_k = f; spName=name;};
+
+        // Writes the element to a binary data stream.
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int /* file_version */)
+        {
+            ar & F_k & spName;
+        }
+        friend class boost::serialization::access;
+    };
+	
+	
     // Landau Teller reaction parameters.
     struct LTCOEFFS
     {

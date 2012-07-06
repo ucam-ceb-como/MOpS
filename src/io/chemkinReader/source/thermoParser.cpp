@@ -15,7 +15,7 @@
 
 using namespace std;
 using namespace boost;
-
+/*
 IO::ThermoParser::ThermoParser(const string thermo_file)
 :
 thermo_file_(convertToCaps(thermo_file)),
@@ -25,12 +25,26 @@ globalLowT_(-1),
 globalCommonT_(-1),
 globalHighT_(-1)
 {}
+*/
+IO::ThermoParser::ThermoParser(const string thermo_file, const string thermoSurf_file)
+:
+thermo_file_(convertToCaps(thermo_file)),
+thermoSurf_file_(convertToCaps(thermoSurf_file)),
+thermo_file_string_(convertToCaps(fileToString(thermo_file))),
+thermoSurf_file_string_(convertToCaps(fileToString(thermoSurf_file))),
+lines_(fileToStrings(thermo_file)),
+linesSurf_(fileToStrings(thermoSurf_file)),
+globalLowT_(-1),
+globalCommonT_(-1),
+globalHighT_(-1)
+{}
 
 void IO::ThermoParser::parse(vector<Species>& species) {
 
-    getGlobalTemperatures();
+  //getGlobalTemperature has been moved! 
 
     cout << "Parsing NASA thermo file: " << thermo_file_ << endl;
+    cout << "Parsing NASA thermo file: " << thermoSurf_file_ << endl;
     parseAllThermoData();
 
     ensureSpeciesNamesAreValid();
@@ -79,7 +93,7 @@ bool IO::ThermoParser::setThermoDataFor(IO::Species& species) {
 void IO::ThermoParser::parseAllThermoData() {
 
     vector<string> thermo_lines = getThermoSection(lines_);
-
+    getGlobalTemperatures(thermo_file_string_); // moved to here by mm864
     const regex empty("\\s*");
 
     for (unsigned int i = 0; i < thermo_lines.size(); i++) {
@@ -92,10 +106,21 @@ void IO::ThermoParser::parseAllThermoData() {
         }
     }
 
-    //    // this is where it print out info at the moment
-    //    for (unsigned int i = 0; i < thermos_.size(); i++) {
-    //        cout << thermos_[i] << endl;
-    //    }
+     thermo_lines = getThermoSection(linesSurf_);
+     getGlobalTemperatures(thermoSurf_file_string_);// moved to here by mm864
+   
+
+    for (unsigned int i = 0; i < thermo_lines.size(); i++) {
+        if (isSectionMatchedNASA(thermo_lines, i)) {
+            parseNASASection(thermo_lines[i], thermo_lines[i + 1], thermo_lines[i + 2], thermo_lines[i + 3]);
+            i += 3;
+        } else if (!regex_match(thermo_lines[i], empty, regex_constants::match_single_line)) {
+            // Only print unmatched lines if it is not empty.
+            cout << "Unmatched : " << thermo_lines[i] << endl;
+        }
+    }
+
+
 
 }
 
@@ -234,14 +259,14 @@ const
 }
 
 void
-IO::ThermoParser::getGlobalTemperatures()
+IO::ThermoParser::getGlobalTemperatures(std::string Thermo_File_string_)
 {
     const regex globalTRegex("\\s*THER(?:|MO)\\s+(?:|ALL)\\s*([0-9\\.]+)\\s+([0-9\\.]+)\\s+([0-9\\.]+)\\s*");
     string speciesName;
     smatch what;
 
-    string::const_iterator start = thermo_file_string_.begin();
-    string::const_iterator end = thermo_file_string_.end();
+    string::const_iterator start = Thermo_File_string_.begin();
+    string::const_iterator end = Thermo_File_string_.end();
 
     if(regex_search(start, end, what, globalTRegex))
     {

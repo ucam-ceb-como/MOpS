@@ -164,7 +164,7 @@ void Reactor::Fill(Mops::Mixture &mix, bool clearfirst)
     m_mix = &mix;
 
     // Ensure that the reactor and mixture are using the same
-    // mechanism.
+    // mechanism. (see mops_mechanism.h)
     m_mix->GasPhase().SetSpecies(m_mech->GasMech().Species());
 }
 
@@ -438,9 +438,16 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
                                                  m_nsp, m_mix->GasPhase(), wdot);
 
     // Calculate mole fraction derivatives.
-    for (unsigned int i=0; i!=m_neq-2; ++i) {
+    
+		if (Area == 0){
+		for (unsigned int i=0; i!=m_neq-2; ++i) {
         ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]);
-    }
+		}
+		} else {
+		for (unsigned int i=0; i!=m_gpc_mech->GasSpeciesCount(); ++i) {
+		ydot[i] = 
+		}
+    
 
     // Temperature derivative.
     if (m_Tfunc) {
@@ -453,7 +460,7 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
 
     // Density derivative.
     if (m_constv) {
-        ydot[m_iDens] = wtot; // Constant volume.
+        ydot[m_iDens] = wtot + stot ; // Constant volume.
     } else {
         ydot[m_iDens] = 0.0;  // Constant pressure.
     }
@@ -477,12 +484,19 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
     // Calculate mole fraction and temperature derivatives.
     ydot[m_iT] = 0.0;
     for (unsigned int i=0; i!=m_nsp; ++i) {
+      if (Area == 0){
         ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]);
-        ydot[m_iT] += wdot[i] * Hs[i];
+      }
+      else{
+	  
+	ydot[i] = ...
+      }
+
+      ydot[m_iT] += Volume * wdot[i] * Hs[i] + Area * sdot[i] * Hs[i]; // addded the surface source term by mm864
     }
 
     // Complete temperature derivative.
-    ydot[m_iT] *= - y[m_iT] / (Cp * y[m_iDens]);
+    ydot[m_iT] *= - y[m_iT] / (Cp * y[m_iDens] * Volume);
 
     // Add imposed temperature gradient, if defined.
     if (m_Tfunc) ydot[m_iT] += m_Tfunc(t, y, ydot, *this);
@@ -490,7 +504,7 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
     // Calculate density derivative.
     if (m_constv) {
         // Constant volume.
-        ydot[m_iDens] = wtot;
+        ydot[m_iDens] = wtot + stot;
     } else {
         // Constant pressure (Use EoS to calculate).
         ydot[m_iDens] = - (y[m_iDens] * ydot[m_iT] / y[m_iT]);

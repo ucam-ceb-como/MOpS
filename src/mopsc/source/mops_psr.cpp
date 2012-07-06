@@ -280,7 +280,7 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot) const
     // Density derivative.
     if (m_constv) {
         // Constant volume.
-        ydot[m_iDens] = wtot + (m_invrt * (m_in->Mixture()->GasPhase().Density() - y[m_iDens]));
+        ydot[m_iDens] = wtot + stot + (m_invrt * (m_in->Mixture()->GasPhase().Density() - y[m_iDens]));
     } else {
         // Constant pressure.
         ydot[m_iDens] = 0.0;
@@ -312,11 +312,11 @@ void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
                    (m_in->Mixture()->GasPhase().MoleFraction(i) - y[i]))) / y[m_iDens];
 
         // Temperature derivative.
-        ydot[m_iT] += Hs[i] * wdot[i];
+        ydot[m_iT] += Volume * Hs[i] * wdot[i] + Area * sdot[i] * Hs[i];
     }
 
     // Complete temperature derivative (including inflow/outflow term).
-    ydot[m_iT] *= - y[m_iT] / (Cp * y[m_iDens]);
+    ydot[m_iT] *= - y[m_iT] / (Cp * y[m_iDens] * Volume);
     ydot[m_iT] += (m_in->Mixture()->GasPhase().Density() / (y[m_iDens] * Cp * m_restime)) *
                   ((H*y[m_iT]) - (m_infH * m_in->Mixture()->GasPhase().Temperature()));
 
@@ -326,7 +326,7 @@ void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
     // Calculate density derivative.
     if (m_constv) {
         // Constant volume.
-        ydot[m_iDens] = wtot + (m_invrt * (m_in->Mixture()->GasPhase().Density() - y[m_iDens]));
+        ydot[m_iDens] = wtot + stot + (m_invrt * (m_in->Mixture()->GasPhase().Density() - y[m_iDens]));
     } else {
         // Constant pressure (use EoS to evaluate).
         ydot[m_iDens] = - y[m_iDens] * ydot[m_iT] / y[m_iT];

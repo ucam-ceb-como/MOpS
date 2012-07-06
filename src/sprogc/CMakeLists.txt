@@ -24,6 +24,9 @@ add_library(sprog source/gpc_el_comp.cpp
                   source/gpc_thermo.cpp
                   source/gpc_transport_factory.cpp
                   source/gpc_element_lib.cpp
+                  source/gpc_species_comp.cpp
+				  source/gpc_phase.cpp
+				  source/gpc_delta_stoich.cpp
                   ${INCS})
 
 include_directories(include 

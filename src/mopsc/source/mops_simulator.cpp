@@ -1144,7 +1144,7 @@ void Simulator::readAux(Mops::Mechanism &mech,
     fin.close();
 }
 
-// Reads a gas-phase chemistry data point from the binary file.
+// Reads a gas-phase and surface chemistry data point from the binary file.
 // To allow the averages and confidence intervals to be calculated
 // the data point is added to a vector of sums, and the squares are
 // added to the vector sumsqr if necessary.

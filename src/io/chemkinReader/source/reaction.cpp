@@ -1,7 +1,7 @@
 /*
  * reaction.cpp
  *
- *  Created on: Jun 25, 2011
+ *  Created on: Jun 25, 2012
  *      Author: lrm29
  */
 
@@ -23,9 +23,15 @@ IO::Reaction::Reaction()
 ,flagLOW_(false)
 ,flagTROE_(false)
 ,flagSRI_(false)
+,flagFORD_(false)
+,flagSTICK_(false)
+,flagCOV_(false)
+,flagMWON_(false)
 ,flagPressureDependent_(false)
 ,thirdBodies_()
 ,fallOffBody_()
+,coverageParam_()
+,fordParam_()
 {}
 
 void IO::Reaction::setReversible(const bool flag)
@@ -194,6 +200,78 @@ const vector<double>& IO::Reaction::getSRI() const
     return SRI_;
 }
 
+void IO::Reaction::setCOV(double e, double m, double eps, std::string &name)
+{
+	coverageParam_.Eta = e;
+    coverageParam_.Miu = m;
+    coverageParam_.Epsilon = eps;
+	coverageParam_.spName = name; 
+	
+    COV_.push_back(coverageParam_);
+    
+    flagCOV_ = true;
+}
+
+unsigned int IO::Reaction::coverageParamCount() const
+{
+  return COV_.size();
+}
+
+
+const vector<IO::Cov>& IO::Reaction::getCOV() const
+{
+    return COV_;
+}
+/*
+const IO::Cov &Reaction::getCOVElement(unsigned int a) const
+{
+
+  if (a < COV_.size()){
+    return COV_[a];
+  }
+  else {return Cov();}
+}
+*/
+const bool& IO::Reaction::hasCOV() const
+{
+    return flagCOV_;
+}
+
+void IO::Reaction::setFORD(double F, std::string &name)
+{
+	fordParam_.F_k = F;
+	fordParam_.spName = name; 
+	
+    FORD_.push_back(fordParam_);
+    
+    flagFORD_ = true;
+}
+
+unsigned int IO::Reaction::fordParamCount() const
+{
+  return FORD_.size();
+}
+
+const vector<IO::Ford>& IO::Reaction::getFORD() const
+{
+    return FORD_;
+}
+
+/*
+const IO::Ford &IO::Reaction::getFORDElement(const int a) const
+{
+  if (a < FORD_.size)
+    { return FORD_[a];}
+
+  // else {return Ford();}
+}
+*/
+
+const bool& IO::Reaction::hasFORD() const
+{
+    return flagFORD_;
+}
+
 void IO::Reaction::setPressureDependent()
 {
     flagPressureDependent_ = true;
@@ -202,6 +280,26 @@ void IO::Reaction::setPressureDependent()
 const bool& IO::Reaction::isPressureDependent() const
 {
     return flagPressureDependent_;
+}
+
+void IO::Reaction::setSTICK()
+{
+    flagSTICK_ = true;
+}
+
+const bool& IO::Reaction::hasSTICK() const
+{
+    return flagSTICK_;
+}
+
+void IO::Reaction::setMWON()
+{
+    flagMWON_ = true;
+}
+
+const bool& IO::Reaction::hasMWON() const
+{
+    return flagMWON_;
 }
 
 void IO::Reaction::setDuplicate()
@@ -213,6 +311,8 @@ const bool& IO::Reaction::hasDuplicate() const
 {
     return flagDuplicate_;
 }
+
+
 
 namespace IO
 {
@@ -227,6 +327,10 @@ namespace IO
                << "        Reversible  : " << reaction.flagReversible_ << "\n"
                << "        P Dependent : " << reaction.flagPressureDependent_ << "\n"
                << "        Duplicate : " << reaction.flagDuplicate_ << "\n"
+	       << "        Stick : " << reaction.flagSTICK_ << "\n" 
+	       << "        MottWise : " << reaction.flagMWON_ << "\n"
+	       << "        COV : " << reaction.flagCOV_ << "\n"
+	       << "        FORD : " << reaction.flagFORD_ << "\n"
                << "        Reactants\n"
                << "        (\n";
        for (iter = reaction.reactants_.begin(); iter != reaction.reactants_.end(); ++iter)
@@ -269,8 +373,23 @@ namespace IO
        {
         output << "            SRI : " << *iterVec << "\n";
        }
-        output << "        )\n"
-               << "    )";
+       output << "        )\n";
+       output << "           Coverage : " << "\n";
+       for (int i = 0; i < reaction.COV_.size(); i++)
+       {
+	 output << "           COVERAGE : " << reaction.COV_[i].spName << "\n"
+	        << "           ETA = " << reaction.COV_[i].Eta << "\n"
+                << "           MIU = " << reaction.COV_[i].Miu << "\n"
+	        << "           EPSILON = " << reaction.COV_[i].Epsilon << "\n";
+       }
+       output << "           Ford : " << "\n";
+       for (int i = 0; i < reaction.FORD_.size(); i++)
+       {
+	 output << "           FORD : " << reaction.FORD_[i].spName << "\n"
+		<< "           COEFFICIENT = " << reaction.FORD_[i].F_k << "\n";
+       }
+        
+         output  << "    )";
         return output;
     }
 

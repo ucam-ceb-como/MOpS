@@ -75,8 +75,11 @@ void Mechanism::Serialize(std::ostream &out) const
         m_gmech.Serialize(out);
         // and the particle mechanism.
         m_pmech.Serialize(out);
-
-    } else {
+		/*
+		// added by mm864 (09 June 2012): the surface mechanism. 
+        m_smech.Serialize(out);
+		*/
+	} else {
         throw std::invalid_argument("Output stream not ready "
                                "(Mops, Mechanism::Serialize).");
     }
@@ -93,6 +96,13 @@ void Mechanism::Deserialize(std::istream &in)
         switch (version) {
             case 0:
                 m_gmech.Deserialize(in);
+				
+				/*
+				// Added by mm864 - read the surface mechanism
+				m_smech.Deserialize(in);
+				m_smech.SetSpecies(SurfMech().Species()); 
+				*/
+				
                 // Read the particle mechanism.
                 m_pmech.Deserialize(in);
                 m_pmech.SetSpecies(GasMech().Species());

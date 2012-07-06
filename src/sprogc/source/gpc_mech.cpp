@@ -89,6 +89,7 @@ Mechanism &Mechanism::operator=(const Sprog::Mechanism &mech)
         m_units = mech.m_units;
 
         // Copy new elements and species into mechanism.
+        copyInPhase(mech.m_phase); // Added by mm864
         copyInElements(mech.m_elements);
         copyInSpecies(mech.m_species);
 
@@ -103,6 +104,12 @@ Mechanism &Mechanism::operator=(const Sprog::Mechanism &mech)
             (*sp)->SetMechanism(*this);
         }
 
+       // Inform phase of new species vector and mechanism. 
+	PhasePtrVector::iterator ph;
+        for (ph=m_phase.begin(); ph!=m_phase.end(); ph++) {
+            (*ph)->SetMechanism(*this);
+        }
+		
         // Inform reactions of new species vector and mechanism.
         unsigned int i;
         for (i=0; i<m_rxns.Count(); i++) {
@@ -333,10 +340,27 @@ void Mechanism::CheckElementChanges(const Element &el)
 
 // SPECIES.
 
-// Returns the number of species in the mechanism.
+// Returns the total number of species in the mechanism.
 unsigned int Mechanism::SpeciesCount(void) const
 {
     return m_species.size();
+}
+
+// Returns the total number of gas species in the mechanism.
+unsigned int Mechanism::GasSpeciesCount(void) const
+{
+
+  unsigned int gas_sp = 0;
+  for (int j = 0; j < m_species.size(); ++j ){
+    std::string nm = FindPhaseName(m_species[j]->Name()); 
+    
+    if (FindID(nm).compare("g")==0){
+      gas_sp++; 			     
+    }
+ }
+  
+  return gas_sp;
+
 }
 
 // Returns the vector of chemical species.
@@ -462,6 +486,198 @@ Sprog::Species *const Mechanism::GetSpecies(const std::string &name) const
         return NULL;
     }
 }
+
+// Returns site occupancy of species.  Returns 0 if not found.
+int Mechanism::FindSiteOccup(const std::string &name) const
+
+{
+   int i = FindSpecies(name);
+    if (i >= 0) {
+      return m_species[i]->SiteOccupancy();
+    } else {
+        return 0;
+    }
+
+}
+
+// Returns phase Name of species.  Returns "" if not found.
+std::string Mechanism::FindPhaseName(const std::string &name) const
+
+{
+   int i = FindSpecies(name);
+    if (i >= 0) {
+      return m_species[i]->PhaseName();
+    } else {
+        return "";
+    }
+
+}
+
+
+
+// CHEMICAL PHASES.
+
+// Returns the number of phases.
+unsigned int Mechanism::PhaseCount(void) const
+{
+    return m_phase.size();
+}
+
+// Returns the vector of phases.
+const PhasePtrVector &Mechanism::Phase() const
+{
+    return m_phase;
+}
+
+// Returns a pointer to the ith phase.  NULL if i invalid.
+const Sprog::Phase *const Mechanism::Phase(unsigned int i) const
+{
+    if (i < m_phase.size()) {
+        return m_phase[i];
+    } else {
+        return NULL;
+    }
+}
+
+// Returns pointer to phase with given name.  NULL if not found.
+const Sprog::Phase *const Mechanism::Phase(const std::string &name) const
+{
+    int i = FindPhase(name);
+    if (i >= 0) {
+        return m_phase[i];
+    } else {
+        return NULL;
+    }
+}
+
+// Returns iterator to first phase.
+Mechanism::phase_iterator Mechanism::PhaseBegin() 
+{return m_phase.begin();}
+
+// Returns const iterator to first phase.
+Mechanism::const_phase_iterator Mechanism::PhaseBegin() const 
+{return m_phase.begin();}
+
+// Returns iterator to position after last phase.
+Mechanism::phase_iterator Mechanism::PhaseEnd() 
+{return m_phase.end();}
+
+// Returns const iterator to position after last phase.
+Mechanism::const_phase_iterator Mechanism::PhaseEnd() const 
+{return m_phase.end();}
+
+// Adds an empty phase to the mechansism and returns a reference to it.
+Phase *const Mechanism::AddPhase()
+{
+    // Adds species to vector.
+    Sprog::Phase ph;
+    return AddPhase(ph);
+}
+
+// Copies phase into mechanism and returns a reference to
+// the copy.
+Phase *const Mechanism::AddPhase(const Sprog::Phase &phase)
+{
+    // First check phase vector to see if a phase with the
+    // same name is already defined.  We can only have one phase
+    // per name.
+    int i = FindPhase(phase.Name());
+    if (i >= 0) {
+        // A phase with this name has been found.
+        return m_phase.at(i);
+    }
+
+    // Adds phase to vector.
+    Sprog::Phase *phasenew = phase.Clone();
+    m_phase.push_back(phasenew);
+
+    // Set up phase.
+    phasenew->SetMechanism(*this);
+
+    // Return phase reference.
+    return phasenew;
+}
+
+// Returns index of phase.  Returns -1 if not found.
+int Mechanism::FindPhase(const Sprog::Phase &phase) const
+{
+    // Loop over phases to find index.
+    unsigned int i;
+    for (i=0; i<m_phase.size(); i++) {
+        if (phase == *m_phase[i]) {
+            // Found phase!
+            return i;
+        }
+    }
+
+    // We are here because the phase wasn't found.
+    return -1;
+}
+
+
+
+// Returns index of phase.  Returns -1 if not found.
+int Mechanism::FindPhase(const std::string &name) const
+{
+    // Loop over phases to find index.
+    unsigned int i;
+    for (i=0; i<m_phase.size(); i++) {
+        if (*m_phase[i] == name) {
+            // Found phase!
+            return i;
+        }
+    }
+
+    // We are here because the phase wasn't found.
+    return -1;
+}
+
+
+// Returns the phase id given the phase name.  Returns NULL if not found.
+string Mechanism::FindID(const std::string &name) const
+{
+    int i = FindPhase(name);
+    if (i >= 0) {
+      return m_phase[i]->ID();
+    } else {
+        return "";
+    }
+}
+
+// Returns the phase site density given the phase name.  Returns NULL if not found.
+double Mechanism::FindSiteDensity(const std::string &name) const
+{
+    int i = FindPhase(name);
+    if (i >= 0) {
+      return m_phase[i]->SiteDen();
+    } else {
+        return 0.0;
+    }
+}
+
+
+// Returns a pointer to the phase at the given index.  Returns NULL if not found.
+Sprog::Phase *const Mechanism::GetPhase(const unsigned int i) const
+{
+    if (i < m_phase.size()) {
+        return m_phase[i];
+    } else {
+        return NULL;
+    }
+}
+
+// Returns a pointer to the phase with the given name.  Returns NULL if not found.
+Sprog::Phase *const Mechanism::GetPhase(const std::string &name) const
+{
+    int i = FindPhase(name);
+    if (i >= 0) {
+        return m_phase[i];
+    } else {
+        return NULL;
+    }
+}
+
+
 
 
 // REACTIONS.
@@ -601,6 +817,16 @@ void Mechanism::copyInSpecies(const Sprog::SpeciesPtrVector &sps)
     }
 }
 
+// Copies phase from given array into this mechanism.
+void Mechanism::copyInPhase(const Sprog::PhasePtrVector &phs)
+{
+    PhasePtrVector::const_iterator ph;
+    for (ph=phs.begin(); ph!=phs.end(); ph++) {
+        // Use Clone() function to create a copy of the phase object.
+        m_phase.push_back((*ph)->Clone());
+    }
+}
+
 
 // MEMORY MANAGEMENT.
 
@@ -621,6 +847,13 @@ void Mechanism::releaseMemory()
     }
     m_species.clear();
 
+	// Clear phases.
+    PhasePtrVector::iterator ph;
+    for (ph=m_phase.begin(); ph!=m_phase.end(); ph++) {
+        delete *ph;
+    }
+    m_phase.clear();
+	
     // Clear reactions.
     m_rxns.Clear();
 
@@ -659,6 +892,15 @@ void Mechanism::WriteDiagnostics(const std::string &filename) const
     data = "End of species.\n";
     fout.write(data.c_str(), data.length());
 
+    // Write the Phase to the file.
+    data = "Phase:\n";
+    fout.write(data.c_str(), data.length());
+    for (unsigned int i=0; i!=m_phase.size(); ++i) {
+        m_phase[i]->WriteDiagnostics(fout);
+    }
+    data = "End of phase.\n";
+    fout.write(data.c_str(), data.length());
+	
     // Write the reactions to the file.
     data = "Reactions:\n";
     fout.write(data.c_str(), data.length());
@@ -698,6 +940,16 @@ void Mechanism::WriteReducedMech(const std::string &filename, std::vector<std::s
     }
     fout << "END\n\n";
 
+	/*
+	// Write the Phase to the file.
+    fout << "PHASE\n";
+    for (unsigned int i = 0; i != m_phase.size(); ++i) {
+        if (m_phase[i]-> !(ContainsSpecies(RejectSpecies[i]))) // If the phase doesn't contain rejected species
+            m_phase[i]->WritePhase(fout);
+    }
+    fout << "END\n\n";
+	*/
+	
     // Write the reactions to the file.
     fout << "REAC\n";
     for (unsigned int i = 0; i != m_rxns.Count(); ++i) {
@@ -738,6 +990,15 @@ void Mechanism::Serialize(std::ostream &out) const
             (*isp)->Serialize(out);
         }
 
+	// Write the number of phase to the stream.
+        u = m_phase.size();
+        out.write((char*)&u, sizeof(u));
+
+        // Write the phase to the stream.
+        for (PhasePtrVector::const_iterator iph=m_phase.begin(); iph!=m_phase.end(); iph++) {
+            (*iph)->Serialize(out);
+        }
+		
         // Write the reaction set to the stream.
         m_rxns.Serialize(out);
 
@@ -814,6 +1075,29 @@ void Mechanism::Deserialize(std::istream &in)
                     releaseMemory();
                     throw;
                 }
+
+	       	// Read the number of phase and reserve memory.
+                in.read(reinterpret_cast<char*>(&u), sizeof(u));
+                m_phase.reserve(u);
+
+                // Read the phase.
+                try {
+                    for (unsigned int i=0; i<u; i++) {
+                        // Read the phase from the stream using the
+                        // appropriate constructor.
+                        Sprog::Phase *ph = new Sprog::Phase(in);
+                        ph->SetMechanism(*this);
+
+                        // Add the species to the vector.
+                        m_phase.push_back(ph);
+                    }
+                } catch (exception &e) {
+                    // Ensure the mechanism is cleared before throwing
+                    // the exception to the next layer up.
+                    releaseMemory();
+                    throw;
+                }
+			
 
                 // Read the reaction set.
                 try {

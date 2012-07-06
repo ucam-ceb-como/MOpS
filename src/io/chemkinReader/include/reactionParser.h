@@ -28,6 +28,11 @@ namespace IO {
             static const boost::regex SRI;
             static const boost::regex REV;
             static const boost::regex pressureDependent;
+			static const boost::regex STICK; // STICKING
+            static const boost::regex COV; // COVERAGE 
+            static const boost::regex FORD; // FORWARD
+			static const boost::regex MWON;  // Includes the Mott-Wise correction  
+			static const boost::regex MWOFF; // Excludes the Mott-Wise correction  
 
             const std::string reactionString_;
             std::vector<std::string> reactionStringLines_;

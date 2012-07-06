@@ -41,6 +41,7 @@
 */
 
 #include "gpc_species.h"
+#include "gpc_phase.h"
 #include "gpc_el_comp.h"
 #include "gpc_mech.h"
 #include "gpc_params.h"
@@ -63,6 +64,9 @@ Species::Species(void)
     , m_mech(NULL)
     , m_T1(0.0)
     , m_transport(NULL)
+    , m_phaseName("")  // Add few more member functions (mm864)
+    , m_phase(NULL)  
+    , site_occupancy(0)
 {}
 
 // Stream-reading constructor.
@@ -79,6 +83,9 @@ Species::Species(const Sprog::Species &sp)
     , m_mech(NULL)
     , m_T1(0.0)
     , m_transport(NULL)
+    , m_phaseName("")  // Add few more member functions (mm864)
+    , m_phase(NULL) 
+    , site_occupancy(0) 
 {
     *this  = sp;
 }
@@ -102,6 +109,10 @@ Species &Species::operator=(const Sprog::Species &sp)
         m_molwt = sp.m_molwt;
         m_mech  = sp.m_mech;
         m_T1    = sp.m_T1;
+		m_phaseName = sp.m_phaseName;  // Add few more member functions (mm864)
+		m_phase = sp.m_phase;
+        site_occupancy = sp.site_occupancy; 
+		//activity = sp.activity; 
 
         // Copy composition.
         m_elcomp.assign(sp.m_elcomp.begin(), sp.m_elcomp.end());
@@ -174,6 +185,67 @@ void Species::SetName(const std::string &name)
     m_name = name;
 }
 
+// Sets the species phase name.
+void Species::SetPhaseName(const std::string &phaseName, const std::string &name)
+{
+
+	
+    // If this species is part of a mechanism then we must check
+    // if a species within this phase name is already defined.
+  if (m_mech != NULL) {
+     	
+    if ( (m_mech->FindSpecies(name) >= 0) && (m_mech->FindPhaseName(name).compare(phaseName)== 0)) {
+            // Oh dear:  Species with this name already defined.  We'd
+            // better throw an error.
+            throw invalid_argument("Cannot have two species within the same phase " + phaseName +
+                                   "in the same mechanism (Sprog, Species::SetPhaseName).");
+    }
+  }
+
+    // It is ok to set the name now.
+    m_phaseName = phaseName;
+}
+
+
+// SPECIES SITE OCCUPANCY
+
+ // Set the species site occupancy. 
+void Species::SetSiteOccupancy(const std::string &name, const int siteOccp)
+{
+ // If this species is part of a mechanism then we must check
+    // if a species with this name is already defined.
+    if (m_mech != NULL) {
+        if ((m_mech->FindSiteOccup(name) == siteOccp) && (m_mech->FindPhaseName(name).compare("gas") != 0)) {
+            // Oh dear:  Site Occupancy with for this species has been already defined.  We'd
+            // better throw an error.
+            throw invalid_argument("Cannot have two site occupancy in the same mechanism (Sprog, Species::SetSiteOccupancy).");
+        }
+    }
+
+    // It is ok to set the site occupancy now.
+    site_occupancy = siteOccp;
+} 
+
+// SPECIES PHASE (SURFACE AND BULK)
+
+/*
+// Sets the species phase.
+void Species::SetPhase(const std::string &phase_name)
+{
+    // If this species is a surface/bulk species then we must check
+    // if a species with this phase has already been defined.
+  if (m_mech != NULL && (activity != 0.0 || site_occupancy != 0)) {
+        if (m_mech->FindPhase(name) >= 0) {
+            // Oh dear:  Species with this name already defined.  We'd
+            // better throw an error.
+            throw invalid_argument("Cannot have two species with exactly the same name " + name + "in the same phase (Sprog, Species::SetName).");
+        }
+    }
+
+    // It is ok to set the name now.
+    m_phase = phase_name;
+}
+*/
 
 // SPECIES COMPOSITION.
 
@@ -406,6 +478,77 @@ real Species::CalcMolWt()
     }
 }
 
+/*
+ void SurfPhase::setCoverages(const doublereal* theta) {
+    double sum = 0.0;
+    int k;
+    for (k = 0; k < m_kk; k++) {
+      sum += theta[k];
+    }
+    if (sum <= 0.0) {
+      for (k = 0; k < m_kk; k++) {
+	cout << "theta(" << k << ") = " << theta[k] << endl;
+      }
+      throw CanteraError("SurfPhase::setCoverages",
+			 "Sum of Coverage fractions is zero or negative");
+    }
+    for (k = 0; k < m_kk; k++) {
+      m_work[k] = m_n0*theta[k]/(sum*size(k));
+    }
+    /*
+     * Call the State:: class function
+     * setConcentrations.
+     */
+   /*
+setConcentrations(DATA_PTR(m_work));
+  }
+
+  void SurfPhase::
+  setCoveragesNoNorm(const doublereal* theta) {
+    for (int k = 0; k < m_kk; k++) {
+      m_work[k] = m_n0*theta[k]/(size(k));
+    }
+     /*
+     * Call the State:: class function
+     * setConcentrations.
+    
+
+    setConcentrations(DATA_PTR(m_work));
+  }
+
+  void SurfPhase::getCoverages(doublereal* theta) const {
+    getConcentrations(theta);
+    for (int k = 0; k < m_kk; k++) {
+      theta[k] *= size(k)/m_n0; 
+    }
+  }
+
+  void SurfPhase::setCoveragesByName(std::string cov) {
+    int kk = nSpecies();
+    int k;
+    compositionMap cc;
+    for (k = 0; k < kk; k++) { 
+      cc[speciesName(k)] = -1.0;
+    }
+    parseCompString(cov, cc);
+    doublereal c;
+    vector_fp cv(kk, 0.0);
+    bool ifound = false;
+    for (k = 0; k < kk; k++) { 
+      c = cc[speciesName(k)];
+      if (c > 0.0) {
+	ifound = true;
+	cv[k] = c;
+      }
+    }
+    if (!ifound) {
+      throw CanteraError("SurfPhase::setCoveragesByName",
+			 "Input coverages are all zero or negative");
+    }
+    setCoverages(DATA_PTR(cv));
+  }
+*/
+ 
 
 /*
 // ELEMENTS VECTOR.
@@ -474,7 +617,8 @@ void Species::RemoveThermoParams(const Sprog::real T)
 void Species::SetMechanism(Sprog::Mechanism &mech)
 {
     m_mech = &mech;
-    CalcMolWt();
+	m_phase = m_mech->GetPhase(m_phaseName);
+ CalcMolWt();
 }
 
 // Prints a diagnostic output file containing all the
@@ -499,10 +643,30 @@ void Species::WriteDiagnostics(std::ostream &out) const
             data = cstr(ival) + " ";
             out.write(data.c_str(), data.length());
         }
-        // Mol. Wt.
+
+	/*
+	 * Phase properties. - Added by mm864
+	 */
+
+	data = m_phaseName + " ";
+        out.write(data.c_str(), data.length());
+
+	/*
+	// Activity (Bulk species only) - Added by mm864
+        val = activity;
+        data = cstr(val) + " ";
+        out.write(data.c_str(), data.length());
+        */
+       // Site occupancy - Added by mm864
+        ival = site_occupancy;
+        data = cstr(val) + " ";
+        out.write(data.c_str(), data.length());
+
+       // Mol. Wt.
         val = m_molwt;
         data = cstr(val) + " ";
         out.write(data.c_str(), data.length());
+
         // Thermo params.
         for (Thermo::ThermoMap::const_iterator i=m_thermoparams.begin();
              i!=m_thermoparams.end(); ++i) {
@@ -593,15 +757,45 @@ void Species::Serialize(std::ostream &out) const
         out.write((char*)&n, sizeof(n));
 
         // Write the elemental composition to the stream.
+        // This is calling gpc_el_comp.h
         for (ElCompVector::const_iterator i=m_elcomp.begin(); i!=m_elcomp.end(); i++) {
             // Write the element index.
-            int ix = (*i).Index();
+	  int ix = (*i).Index(); 
             out.write((char*)&ix, sizeof(ix));
 
             // Write the element count.
             n = (*i).Count();
             out.write((char*)&n, sizeof(n));
         }
+	
+	/*
+	 * Write the phase info  - Added by mm864
+	 */
+
+	// Write the length of the phase name to the stream.
+        n = m_phaseName.length();
+        out.write((char*)&n, sizeof(n));
+        
+	
+        // Write the phase name to the stream.
+        out.write(m_phaseName.c_str(), n);
+        
+	/*	
+	// Write the length of the phase id to the stream.
+        n = m_phaseID.length();
+        out.write((char*)&n, sizeof(n));
+	// Write the phase id to the stream.
+        out.write(m_phaseID.c_str(), n);
+      
+       // Write the bulk acitivity to the stream. 
+        double act = (double)activity;
+        out.write((char*)&act, sizeof(act));
+	*/
+
+        // Write the site occupancy to the stream. - Added by mm864
+        int site_occ = (int)site_occupancy;
+        out.write((char*)&site_occ, sizeof(site_occ));
+
 
         // Write the molecular weight to the stream.
         double wt = (double)m_molwt;
@@ -645,8 +839,11 @@ void Species::Deserialize(std::istream &in)
     m_molwt = 0.0;
     m_mech  = NULL;
     m_T1    = 0.0;
+    m_phaseName = "";
+    site_occupancy = 0;
     m_elcomp.clear();
     m_thermoparams.clear();
+    //bulk_activity = 0.0; 
 
     if (in.good()) {
         // Read the serialized species version number.
@@ -655,7 +852,10 @@ void Species::Deserialize(std::istream &in)
 
         unsigned int n = 0; // Need for reading name length.
         char *name = NULL;
+        char *phase = NULL; 
+	char *phaseid = NULL;
         double T =0.0, wt=0.0;
+        int site_occ = 0;
 
         switch (version) {
             case 0:
@@ -685,6 +885,30 @@ void Species::Deserialize(std::istream &in)
                     // Add new ElComp object to vector.
                     m_elcomp.push_back(ElComp(ix, m));
                 }
+
+		// Read the species phaseName. - Added by mm864
+                phase = new char[n];
+                in.read(phase, n);
+                m_phaseName.assign(phase, n);
+                delete [] phase;
+
+
+		// Read the species phaseName. - Added by mm864
+                phaseid = new char[n];
+                in.read(phaseid, n);
+                m_phaseName.assign(phaseid, n);
+                delete [] phaseid;
+
+		/*
+                // Read the species bulk activity. - Added by mm864
+                in.read(reinterpret_cast<char*>(&act), sizeof(act));
+                activity = (real)act;
+		*/
+
+
+		// Read the species site occupancy. - Added by mm864
+                in.read(reinterpret_cast<char*>(&site_occ), sizeof(site_occ));
+		site_occupancy = (int)site_occ;
 
                 // Read the species mol. wt.
                 in.read(reinterpret_cast<char*>(&wt), sizeof(wt));

@@ -59,6 +59,8 @@ using namespace std;
 using namespace Sprog::Kinetics;
 
 
+
+
 /*!
 * @param[in]   filename        Path to main CHEMKIN mechanism file
 * @param[out]  mech            Mechanism into which to place newly read data
@@ -66,6 +68,43 @@ using namespace Sprog::Kinetics;
 * @param[in]   transfile       Species transport properties
 * @param[in]   verbose         Level of informational output (higher is more, default is 0)
 */
+
+/*
+* Added by mm864 to take into account surf chem.  
+*
+*/
+
+void MechanismParser::ReadChemkin
+    (
+    const std::string &filename,
+	const std::string &Surffilename,
+    Sprog::Mechanism &mech,
+    const std::string &thermofile,
+	const std::string &Surfthermofile,
+    const int verbose,
+    const std::string &transFile
+    )
+{
+    // member function added by vniod to enable the reading of transport data.
+    // This function utilizes the ReadChemkin function which was provided earlier.
+
+    ::IO::ChemkinReader chemkinReader(filename, Surffilename, thermofile, Surfthermofile, transFile);
+    chemkinReader.read();
+	cout << "chemkin Reader READ" << endl; // for debugging
+	
+    if (verbose >= 1) chemkinReader.check();
+	cout << "chemkin Reader CHECK " << endl; // for debugging
+	
+    ReadChemkin(chemkinReader, mech);
+	cout << "Read Chemkin of Mech_IO PASSED " << endl; // for debugging
+    if (transFile != "NOT READ")
+    {
+        ReadTransport(chemkinReader, mech);
+    }
+    if (verbose >= 1) mech.WriteDiagnostics("mech.log");
+
+}
+
 void MechanismParser::ReadChemkin
     (
     const std::string &filename,
@@ -91,17 +130,15 @@ void MechanismParser::ReadChemkin
 
 }
 
-
-void MechanismParser::ReadChemkin
-    (
-    ::IO::ChemkinReader& chemkinReader,
-    Sprog::Mechanism &mech
-    )
+void MechanismParser::ReadChemkin(
+::IO::ChemkinReader& chemkinReader, Sprog::Mechanism &mech)
 {
 
     size_t numElements = chemkinReader.elements().size();
     size_t numSpecies = chemkinReader.species().size();
     size_t numReactions = chemkinReader.reactions().size();
+	cout <<  "Number of reactions" << numReactions << endl;
+    size_t numPhases =  chemkinReader.phase().size(); // added by mm864
 
     // Clear current mechanism.
     mech.Clear();
@@ -117,19 +154,23 @@ void MechanismParser::ReadChemkin
         el = NULL;
     }
 
-    // Read Species.
+	cout << "Mech IO Element Parsed" << endl; 
+	// Read Species.
     for (size_t i=0; i<numSpecies; ++i)
     {
-        Species *sp = mech.AddSpecies();
-        sp->SetName(chemkinReader.species()[i].name());
-
+      Species *sp = mech.AddSpecies();
+    sp->SetName(chemkinReader.species()[i].name());
+	sp->SetPhaseName(chemkinReader.species()[i].phasename(), chemkinReader.species()[i].name()); 
+	sp->SetSiteOccupancy(chemkinReader.species()[i].name(), chemkinReader.species()[i].getSiteOccupancy());
+		
+		
         std::map<std::string, int> elementMap = chemkinReader.species()[i].thermo().getElements();
         std::map<std::string, int>::const_iterator iter;
         for (iter = elementMap.begin(); iter != elementMap.end(); ++iter)
         {
-            sp->AddElement(iter->first,iter->second);
+	  sp->AddElement(iter->first,iter->second);
         }
-
+	
         sp->SetThermoStartTemperature(chemkinReader.species()[i].thermo().getTLow());
         Sprog::Thermo::THERMO_PARAMS lp, up;
         lp.Count = 7;
@@ -144,6 +185,35 @@ void MechanismParser::ReadChemkin
         sp = NULL;
     }
 
+	cout << "Mech IO Species Parsed" << endl; 
+	
+	// Read Phase.
+    for (size_t i=0; i<numPhases; ++i)
+    {
+        Phase *ph = mech.AddPhase();
+        ph->SetName(chemkinReader.phase()[i].getPhaseName());
+	ph->SetID(chemkinReader.phase()[i].getSiteDensity(), chemkinReader.phase()[i].getPhaseName()); 
+	ph->SetSiteDensity(chemkinReader.phase()[i].getSiteDensity(), chemkinReader.phase()[i].getPhaseName());
+        
+	std::map<std::string, int> speciesMap = chemkinReader.phase()[i].getSpecies();
+        std::map<std::string, int>::const_iterator iter;
+        for (iter = speciesMap.begin(); iter != speciesMap.end(); ++iter)
+	  {
+            ph->AddSpecies(iter->first,iter->second);
+	  }
+        
+        ph = NULL;
+		
+		
+    }
+    
+	cout << "Mech IO Phase Parsed" << endl; 
+    
+	
+    
+
+    
+	int count = 0; //for debugging 
     // Read Reactions.
     for (size_t i=0; i<numReactions; ++i)
     {
@@ -153,6 +223,8 @@ void MechanismParser::ReadChemkin
         std::multimap<std::string, double> reactants = chemkinReader.reactions()[i].getReactants();
         std::multimap<std::string, double> products = chemkinReader.reactions()[i].getProducts();
         std::multimap<std::string, double>::const_iterator iter;
+		
+		
         for (iter = reactants.begin(); iter != reactants.end(); ++iter)
         {
             rxn->AddReactant(iter->first, iter->second);
@@ -162,6 +234,8 @@ void MechanismParser::ReadChemkin
             rxn->AddProduct(iter->first, iter->second);
         }
 
+		
+		
         rxn->SetArrhenius
             (
             ARRHENIUS
@@ -185,6 +259,8 @@ void MechanismParser::ReadChemkin
                 )
                 );
         }
+
+
 
         rxn->SetUseThirdBody(chemkinReader.reactions()[i].hasThirdBody());
 
@@ -262,19 +338,66 @@ void MechanismParser::ReadChemkin
                 }
             }
 
-        }
+	}    
 
-        //rxn->SetRevLTCoeffs(LTCOEFFS(cdble(params[0]), cdble(params[1])));
-        //rxn->SetLTCoeffs(LTCOEFFS(cdble(params[0]), cdble(params[1])));
+	rxn->SetUseFORD(chemkinReader.reactions()[i].hasFORD());
+	if (chemkinReader.reactions()[i].hasFORD()){
+	  
+	 
+	  // cout << "No of Ford " << chemkinReader.reactions()[i].fordParamCount()<< endl; // for checking
+	  for (int j = 0; j < chemkinReader.reactions()[i].fordParamCount(); j++){
+	    
+	    rxn->SetFord((chemkinReader.reactions()[i].getFORD())[j].F_k,(chemkinReader.reactions()[i].getFORD())[j].spName);
+	    
+	  }
 
-        mech.AddReaction(rxn);
-        delete rxn;
+	}
+	rxn->SetUseCOV(chemkinReader.reactions()[i].hasCOV());
+	if (chemkinReader.reactions()[i].hasCOV()){
+			
+	  for (int j = 0; j < chemkinReader.reactions()[i].coverageParamCount(); j++){
+			
+     
+	    rxn->SetCoverage((chemkinReader.reactions()[i].getCOV())[j].Eta,(chemkinReader.reactions()[i].getCOV())[j].Miu,(chemkinReader.reactions()[i].getCOV())[j].Epsilon,(chemkinReader.reactions()[i].getCOV())[j].spName);
+			
+	    
+	  }
+	
+	}
+	
+	rxn->SetUseMottWise(chemkinReader.reactions()[i].hasMWON());
+	
+	rxn->SetUseSTICK(chemkinReader.reactions()[i].hasSTICK());
+	if (chemkinReader.reactions()[i].hasSTICK()){
+		// If the reaction has both STICK and COVERAGE then split the two 
+		if (chemkinReader.reactions()[i].hasCOV()){
+	
+		rxn->SetUseCOV(false);
+		mech.AddReaction(rxn);
+		
+		count ++; 
+		
+		rxn->SetUseCOV(true);
+		rxn->SetUseSTICK(false);
+		}
+		
+	
+	}
+	
+	mech.AddReaction(rxn);
+    delete rxn;
+	count ++; 
+	cout << "Reaction passed so far" << count << endl;
     }
 
+	cout << "Mech IO Reaction Parsed" << endl;
+	
     mech.BuildStoichXRef();
-
+	cout << "Mech IO BuildStoichXRef Done" << endl; 
+	
     mech.SetUnits(SI);
-
+	cout << "Mech IO Set Units Done" << endl; 
+	
 }
 
 
@@ -303,6 +426,7 @@ void MechanismParser::ReadTransport
         }
     }
 
+	cout << "Mech IO Transport Parsed" << endl; 
 }
 
 
@@ -351,4 +475,5 @@ void Sprog::IO::MechanismParser::parseCK_Units(const std::string &rxndef,
         }
     }
 
+	cout << "Mech IO Unit Parsed" << endl; 
 }

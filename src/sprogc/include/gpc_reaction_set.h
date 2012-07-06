@@ -285,7 +285,7 @@ public:
 
         ar & m_rxns & m_rev_rxns
            & m_tb_rxns & m_fo_rxns
-           & m_lt_rxns & m_revlt_rxns
+           & m_lt_rxns & m_revlt_rxns & m_surface_rxns & m_ford_rxns & m_cov_rxns & m_stick_rxns & m_mottw_rxns  
            & m_mech;
     }
 
@@ -306,6 +306,13 @@ protected:
         fvector &kf,       // Return vector for forward rate constants.
         fvector &kr        // Return vector for reverse rate constants.
         ) const;
+
+    // Calculates the concentration dependent COVERAGE rate constant expression 
+    void calcCOVERAGE(
+		      const real *const x, // Species mole fractions.
+		      fvector &kf         // Return vector for forward rate constants.	      
+		      ) const;
+    
 
     // Calculates third-body concentrations for all reactions.  These
     // values will be multiplied by the rate constants, therefore if
@@ -347,8 +354,12 @@ private:
     RxnMap m_tb_rxns;    // Map of third body reactions.
     RxnMap m_fo_rxns;    // Map of fall-off reactions.
     RxnMap m_lt_rxns;    // Map of reactions with Landau Teller parameters.
-    RxnMap m_revlt_rxns; // Map of reactions with reverse Landau Teller parameters.
-
+    RxnMap m_revlt_rxns; // Map of reactions with reverse Landau Teller parameters. 
+    RxnMap m_surface_rxns; // Map of  surface reactions of any types. 
+    RxnMap m_ford_rxns;  // Map of reactions with FORD parameters.
+    RxnMap m_cov_rxns;   // Map of reactions with COV parameters.
+    RxnMap m_stick_rxns;  // Map of reactions with STICK 
+    RxnMap m_mottw_rxns;  // Map of reactions with Mott-Wise 
 
     // Pointer to mechanism to which this ReactionSet belongs.
     Sprog::Mechanism *m_mech;

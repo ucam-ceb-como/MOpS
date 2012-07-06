@@ -71,9 +71,23 @@ int main(int argc, char *argv[])
 	 MPI_Get_processor_name(processor_name, &namelen);
      printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
 #endif
+
+     /* 
+       surface Chemistry switch = 0 - OFF  
+                                = 1 - ON 
+      */ 	
+     int surfaceCapability  = 1; 
+	
+	 
+	 
 	// Command line arguments with default values.
     string chemfile("chem.inp");
     string thermfile("therm.dat");
+	
+   
+    string chemSurfFile("chemSurf.inp"); // added by mm864
+    string thermSurfFile("thermSurf.inp"); // added by mm864
+    
     string settfile("mops.inx");
     string swpfile("sweep.xml");
     string sensifile("sensi.xml");
@@ -240,11 +254,41 @@ int main(int argc, char *argv[])
     }
 
     // Read the chemical mechanism / profile.
+	
+	if (surfaceCapability  == 1){
+	
     try {
-        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech.GasMech(), thermfile, diag, transfile);
+        Sprog::IO::MechanismParser::ReadChemkin(chemfile, chemSurfFile, mech.GasMech(), thermfile, thermSurfFile, diag, transfile);
         mech.ParticleMech().SetSpecies(mech.GasMech().Species());
         if (diag>0) 
             mech.GasMech().WriteDiagnostics("ckmech.diag");
+
+        if (soltype == FlamePP){
+  
+            dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gasphase, mech);
+        }
+    } catch (std::logic_error &le) {
+        printf("mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n");
+        printf(le.what());
+        printf("\n\n");
+        delete solver; // Must clear memory now.
+        return -1;
+    } catch (std::runtime_error &re) {
+        printf("mops: Failed to read chemical mechanism/profile due to a program error.  Message:\n\n");
+        printf(re.what());
+        printf("\n\n");
+        delete solver; // Must clear memory now.
+        return -1;
+    }
+
+	
+	} else {
+	
+	try {
+        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech.GasMech(), thermfile, diag, transfile);
+        mech.ParticleMech().SetSpecies(mech.GasMech().Species());
+        if (diag>0) 
+	  { mech.GasMech().WriteDiagnostics("ckmech.diag");}
 
         if (soltype == FlamePP){
             //Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
@@ -263,7 +307,8 @@ int main(int argc, char *argv[])
         delete solver; // Must clear memory now.
         return -1;
     }
-
+	
+	}
     // Read the particle mechanism.
     try {
         if (soltype != GPC) {

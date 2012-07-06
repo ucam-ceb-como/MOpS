@@ -47,9 +47,7 @@
 #define MOPS_MECHANISM_H
 
 #include "mops_params.h"
-
 #include "gpc_mech.h"
-
 #include "swp_mechanism.h"
 
 namespace Mops
@@ -69,6 +67,12 @@ public:
     Sweep::Mechanism &ParticleMech(void) {return m_pmech;}
     const Sweep::Mechanism &ParticleMech(void) const {return m_pmech;}
 
+	/*
+	// Returns a reference (non-const) to the surface mechanism. (Added by mm864)
+    Sprog::SurfaceMechanism &SurfaceMech(void) {return m_smech;}
+    const Sprog::SurfaceMechanism &SurfaceMech(void) const {return m_smech;}
+	*/
+	
     //! Access the gas phase mechanism
     Sprog::Mechanism &GasMech() {return m_gmech;}
     //! Access the gas phase mechanism
@@ -86,6 +90,9 @@ private:
     //! Gas phase mechanism
     Sprog::Mechanism m_gmech;
 
+	//! Surface mechanism (Added by mm864)
+	// Sprog::SurfaceMechanism m_smech;
+	
     //! The particle mechanism.
     Sweep::Mechanism m_pmech;
 };

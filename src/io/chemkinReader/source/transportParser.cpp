@@ -20,7 +20,7 @@ const string IO::TransportParser::transportRegex
     "((?:[0-9]|\\.)+(?:\\.[0-9]*)?)\\s+"
     "((?:[0-9]|\\.)+(?:\\.[0-9]*)?)\\s+"
     "((?:[0-9]|\\.)+(?:\\.[0-9]*)?)\\s+"
-    "((?:[0-9]|\\.)+(?:\\.[0-9]*)?)"
+    "((?:[0-9]|\\.)+(?:\\.[0-9]*)?)\\s+"
 );
 
 // Empty default constructor, can be removed but leave it there just in case.

@@ -66,13 +66,19 @@ public:
     Stoichiometry &operator=(const Stoichiometry &s);
 
     // Species data.
-    int Index(void) const; // Returns index of species.
+    int Index(void) const; // Returns index of species. 
     void SetSpecies(const unsigned int &sp); // Sets the species associated with this stoichiometry.
+    //Species getSpeciesName()const; 
+    
+    // void SetSpeciesPhase(const Species &species);
+    
 
     // Stoichiometry value.
     const real &Mu(void) const; // Returns the stoichiometry value.
     void SetMu(const real &mu); // Sets the stoichiometry value.
     void IncMu(const real &mu); // Increments the stoichiometry value.
+
+
 
     // Writes the element to a binary data stream.
     template<class Archive>
@@ -87,6 +93,7 @@ private:
     // Data.
     int m_species;
     real m_stoich;
+    //std::string m_phaseName;
 };
 
 // Typedefs for basic stoichiometry types.

@@ -49,9 +49,11 @@
 #include "gpc_mixture_type.h"
 #include <vector>
 #include <iostream>
-
+#include "gpc_phase.h" //added by mm864 
 namespace Sprog
 {
+  class Mechanism; // added by mm864
+
 namespace Thermo
 {
 
@@ -77,7 +79,7 @@ public:
     // Operator overloads.
     Mixture &operator=(const Mixture &mix); // Assignment operator.
 
-    // TEMPERATURE.
+    // TEMPERATURE. (NO NEED CHANGING)
 
     // Returns temperature.
     real Temperature(void) const;
@@ -100,7 +102,7 @@ public:
 
 
 
-    //PARTICLE RELATED DATA
+    //PARTICLE RELATED DATA (NO NEED CHANGING)
 
     //! Return mixture fraction diffusion coefficient
     real MixFracDiffCoeff() const {return m_data[MixFracDiffCoeffIndex()];}
@@ -149,6 +151,15 @@ public:
 
     // Returns the molar concentration of species i.
     real MolarConc(unsigned int i) const;
+
+
+    /* Added by mm864
+     *
+     */ 
+
+    //Return the molar concentration of surface species i checking phase
+    real MolarSurfConc(unsigned int i) const; 
+
 
     // Returns the mass fraction of species i.
     real MassFraction(unsigned int i) const;
@@ -293,20 +304,31 @@ public:
     // Reads the mixture data from a binary data stream.
     virtual void Deserialize(std::istream &in);
 
+    
+
 protected:
     // The default constructor is protected to prevent mixture objects being
     // generated without knowledge of the defining species list.
     Mixture(void);
+    
+	 Sprog::Mechanism *m_mech;
+    //unsigned int GasSpCount = m_mech->GasSpeciesCount();
 
 private:
     // The data vector contains, in order, the species mole fractions,
     // the mixture temperature and the mixture density.
-    fvector m_data;
+    fvector m_data; // vector of real, i.e vector <real>
 
     // Vector of species for which this mixture is defined.
     const SpeciesPtrVector *m_species;
 
-};
+    // Mechanism for which this mixture is defined.
+    const PhasePtrVector *m_phase;
+
+   
+    
+
+}; 
 } //namespace Thermo
 } //namespace Sprog
 

@@ -69,7 +69,10 @@ Reaction::Reaction(void)
     m_arrr       = NULL;
     m_lt         = NULL;
     m_revlt      = NULL;
-
+    m_fo.F_k     = 0.0;
+    m_fo.spName  = "";
+    m_covr.Eta   = m_covr.Miu = m_covr.Epsilon =0.0;  
+    m_covr.spName = "";
     // Third-bodies.
     m_usetb = false;
     m_thirdbodies.clear();
@@ -78,6 +81,20 @@ Reaction::Reaction(void)
     m_fotype   = None;
     m_foparams = FALLOFF_PARAMS();
     //m_fofn     = NULL;
+    // Surface
+    m_isSurface = false; 
+    // Stick
+    m_sticking = false;
+    // Mottwise
+    m_mottwise = false; 
+
+    // Coverage data
+    m_isCoverage = false;
+    m_coverage.clear();
+
+    // Ford data 
+    m_isFord = false; 
+    m_ford.clear();
 
     // Reaction context.
     m_mech = NULL;
@@ -94,6 +111,10 @@ Reaction::Reaction(std::istream &in)
     m_arrr       = NULL;
     m_lt         = NULL;
     m_revlt      = NULL;
+    m_fo.F_k     = 0.0;
+    m_fo.spName  = "";
+    m_covr.Eta   = m_covr.Miu = m_covr.Epsilon =0.0;  
+    m_covr.spName = "";
 
     // Third-bodies.
     m_usetb = false;
@@ -103,6 +124,21 @@ Reaction::Reaction(std::istream &in)
     m_fotype   = None;
     m_foparams = FALLOFF_PARAMS();
     //m_fofn     = NULL;
+
+    // Surface
+    m_isSurface = false; 
+    // Stick
+    m_sticking = false;
+    // Mottwise
+    m_mottwise = false; 
+
+    // Coverage data
+    m_isCoverage = false;
+    m_coverage.clear();
+
+    // Ford data 
+    m_isFord = false; 
+    m_ford.clear();
 
     // Reaction context.
     m_mech = NULL;
@@ -161,6 +197,10 @@ Reaction &Reaction::operator=(const Sprog::Kinetics::Reaction &rxn)
         if (rxn.m_lt != NULL) m_lt = new LTCOEFFS(*rxn.m_lt);
         if (rxn.m_revlt != NULL) m_revlt = new LTCOEFFS(*rxn.m_revlt);
 
+	// Copy FORD and COVERAGE 
+        m_covr = rxn.m_covr;
+	m_fo = rxn.m_fo;
+
         // Copy third bodies.
         m_usetb = rxn.m_usetb;
         m_thirdbodies.assign(rxn.m_thirdbodies.begin(), rxn.m_thirdbodies.end());
@@ -169,7 +209,21 @@ Reaction &Reaction::operator=(const Sprog::Kinetics::Reaction &rxn)
         m_fotype = rxn.m_fotype;
         m_foparams = rxn.m_foparams;
         //m_fofn = rxn.m_fofn;
+	// All surface reactions
+	m_isSurface = rxn.m_isSurface;
+	 // Stick
+	m_sticking = rxn.m_sticking;
+	// Mottwise
+	m_mottwise = rxn.m_mottwise; 
 
+	// Coverage data
+	m_isCoverage = rxn.m_isCoverage;
+	m_coverage.assign(rxn.m_coverage.begin(), rxn.m_coverage.end());
+
+	// Ford data 
+	m_isFord = rxn.m_isFord; 
+	m_ford.assign(rxn.m_ford.begin(), rxn.m_ford.end());
+	
         // Copy pointer to mechanism.
         m_mech = rxn.m_mech;
     }
@@ -181,7 +235,7 @@ Reaction &Reaction::operator=(const Sprog::Kinetics::Reaction &rxn)
 // REACTANTS.
 
 // Adds an integer stoichiometry reactant to the reaction.
-void Reaction::AddReactant(const Sprog::Stoich &reac)
+void Reaction::AddReactant(const Sprog::Stoich &reac, const std::string &spName)
 {
     // We must check if the reactant is already defined in this reaction.  Need to
     // check both integer and real reactants.
@@ -189,6 +243,11 @@ void Reaction::AddReactant(const Sprog::Stoich &reac)
     // Add the new contribution to the total stoichiometry sums.
     m_dstoich -= reac.Mu();
     m_dreac += reac.Mu();
+    AddDeltaStoich(spName);
+    const real min_val = -(reac.Mu());
+    DeltaStoich(spName)->IncrementTotalStoich(min_val);
+    const real val = reac.Mu();
+    DeltaStoich(spName)->IncrementReacStoich(val);
 
     // reactants.
     vector<Stoich>::iterator i;
@@ -216,8 +275,10 @@ void Reaction::AddReactant(const std::string &name, real stoich)
         for (i=0; i<m_mech->SpeciesCount(); i++) {
             if (name.compare(m_mech->Species(i)->Name()) == 0) {
                 // Found species in the list, now add it as a reactant.
-                AddReactant(Stoich(i, stoich));
-                return;
+                AddReactant(Stoich(i, stoich), m_mech->Species(i)->Name());
+                AddPhaseName(m_mech->Species(i)->PhaseName());
+		SetIsSurface(m_mech->Species(i)->PhaseName()); 
+		return;
             }
         }
 
@@ -244,12 +305,18 @@ void Reaction::RemoveReactant(const std::string &name)
         if (i >= 0) {
             // Found the species:  Loop though integer stoichiometry
             // reactant to find that with this index.
+
             vector<Stoich>::iterator j;
             for (j=m_reac.begin(); j!=m_reac.end(); j++) {
                 if ((*j).Index() == i) {
                     // Remove contribution from the total stoichiometry sums.
                     m_dstoich += (*j).Mu();
                     m_dreac -= (*j).Mu();
+
+		    const real val = (*j).Mu();
+		    DeltaStoich(m_mech->Species(i)->Name())->IncrementTotalStoich(val);
+		    const real min_val = -((*j).Mu());
+		    DeltaStoich(m_mech->Species(i)->Name())->IncrementReacStoich(min_val);
 
                     // We have found the species in the list.
                     m_reac.erase(j);
@@ -283,7 +350,7 @@ int Reaction::ReactantCount() const
 // PRODUCTS.
 
 // Adds an integer stoichiometry product to the reaction.
-void Reaction::AddProduct(const Sprog::Stoich &prod)
+void Reaction::AddProduct(const Sprog::Stoich &prod, const std::string &spName)
 {
     // We must check if the product is already defined in this reaction.  Need to
     // check both integer and real products.
@@ -291,6 +358,10 @@ void Reaction::AddProduct(const Sprog::Stoich &prod)
     // Add the new contribution to the total stoichiometry sums.
     m_dstoich += prod.Mu();
     m_dprod += prod.Mu();
+    AddDeltaStoich(spName);
+    const real val = (prod.Mu());
+    DeltaStoich(spName)->IncrementTotalStoich(val);
+    DeltaStoich(spName)->IncrementProdStoich(val);
 
     // Integer products.
     vector<Stoich>::iterator i;
@@ -309,6 +380,7 @@ void Reaction::AddProduct(const Sprog::Stoich &prod)
 }
 
 
+
 // Adds an integer product to the reaction given the species name.
 void Reaction::AddProduct(const std::string &name, real stoich)
 {
@@ -318,7 +390,10 @@ void Reaction::AddProduct(const std::string &name, real stoich)
         for (i=0; i<m_mech->SpeciesCount(); i++) {
             if (name.compare(m_mech->Species(i)->Name()) == 0) {
                 // Found species in the list, now add it as a product.
-                AddProduct(Stoich(i, stoich));
+                // AddProduct(Stoich(i, stoich)); (changed to below by mm864)
+		AddProduct(Stoich(i, stoich), m_mech->Species(i)->Name());
+		AddPhaseName(m_mech->Species(i)->PhaseName()); 
+		SetIsSurface(m_mech->Species(i)->PhaseName()); 
                 return;
             }
         }
@@ -351,6 +426,9 @@ void Reaction::RemoveProduct(const std::string &name)
                     // Remove contribution from the total stoichiometry sums.
                     m_dstoich -= (*j).Mu();
                     m_dprod -= (*j).Mu();
+		    const real min_val = -((*j).Mu());
+		    DeltaStoich(m_mech->Species(i)->Name())->IncrementTotalStoich(min_val);
+		    DeltaStoich(m_mech->Species(i)->Name())->IncrementProdStoich(min_val);
 
                     // We have found the species in the list.
                     m_prod.erase(j);
@@ -380,6 +458,167 @@ int Reaction::ProductCount() const
     return m_prod.size();
 }
 
+	// STOICH CHANGES in each phase
+	/*
+	* Added by mm864
+	*
+	*/
+
+// Returns the number of delta stoich.
+unsigned int Reaction::PhaseCount() const
+{
+    return m_phaseVector.size();
+}
+
+ // Returns phase at index i.  NULL if not found.  This
+    // function returns a modifiable (non-const) delta stoich object.
+const std::string Reaction::GetPhaseName(const unsigned int i) const {
+  if (i < m_phaseVector.size()) {
+        return m_phaseVector[i];
+  } else {
+        return "";
+  }
+}
+
+// Adds an PHASE vector to the reaction.
+void Reaction::AddPhaseName(const std::string &phName)
+{
+    // We must check if the phase is already defined in this reaction. 
+  int i = FindPhaseName(phName);
+  
+     if (i < 0) {
+        // A phase with this name has been recorded. 
+
+        m_phaseVector.push_back(phName);
+    }  
+   
+}
+
+// Adds an PHASE vector to the reaction.
+int Reaction::FindPhaseName(const std::string &phName) const
+{
+  // Loop over phases to find index.
+    unsigned int i;
+    for (i=0; i<m_phaseVector.size(); i++) {
+      if (phName.compare(m_phaseVector[i])== 0) {
+            // Found phase!
+            return i;
+        }
+    }
+
+    // We are here because the phase wasn't found.
+    return -1;
+
+}
+
+
+// Returns the number of delta stoich.
+unsigned int Reaction::DeltaStoichCount() const
+{
+    return m_deltaStoich.size();
+}
+
+// Returns the vector of delta stoich.
+const DeltaStoichPtrVector &Reaction::DeltaStoich(void) const
+{
+return m_deltaStoich;
+}
+    // Returns a pointer to the ith delta stoich.  Returns NULL if i is invalid.
+const Sprog::Kinetics::DeltaStoich *const Reaction::DeltaStoich(unsigned int i) const
+{
+  if (i < m_deltaStoich.size()) {
+        return m_deltaStoich[i];
+    } else {
+        return NULL;
+    }
+}
+    // Returns pointer to delta stoich with given name.  NULL if not found.
+Sprog::Kinetics::DeltaStoich *const Reaction::DeltaStoich(const std::string &name) const
+{
+  int i = FindDeltaStoich(name);
+    if (i >= 0) {
+        return m_deltaStoich[i];
+    } else {
+        return NULL;
+    }
+}
+
+// Returns index of delta stoich.  Returns -1 if not found.
+int Reaction::FindDeltaStoich(const std::string &name) const
+{
+    // Loop over delta stoich to find index.
+    unsigned int i;
+    for (i=0; i<m_deltaStoich.size(); i++) {
+        if (*m_deltaStoich[i] == name) {
+            // Found delta stoich!
+            return i;
+        }
+    }
+	
+	// We are here because the phase wasn't found.
+    return -1;
+	
+	
+}
+
+    // Adds an empty delta stoich to the reaction.
+Sprog::Kinetics::DeltaStoich *const Reaction::AddDeltaStoich(const string &spName)
+    {
+    // Adds delta stoich to vector.
+      Sprog::Kinetics::DeltaStoich delta_st;
+    return AddDeltaStoich(delta_st, spName);
+    }
+
+    // Copies given delta stoich into the reaction.
+Sprog::Kinetics::DeltaStoich *const Reaction::AddDeltaStoich(const Sprog::Kinetics::DeltaStoich &delta_st, const string &spName)
+    {
+      // First check  delta stoich vector to see if a  delta stoich with the
+      // same name is already defined.  We can only have one delta stoich
+      // per name.
+    int i = FindDeltaStoich(delta_st.Name());
+    if (i >= 0) {
+        // A species with this name has been found.
+        return m_deltaStoich.at(i);
+    }
+
+    // Adds delta stoich to vector.
+    Sprog::Kinetics::DeltaStoich *delta_stoich_new = delta_st.Clone();
+    m_deltaStoich.push_back(delta_stoich_new);
+    delta_stoich_new->SetSpeciesName(spName);
+    // Set up delta stoich.
+    delta_stoich_new->SetReaction(*this); // You need a set reaction  function 
+    
+
+    // Return delta stoich reference.
+    return delta_stoich_new;
+
+    }
+    
+     
+
+	// Returns pointer to delta stoich at index i.  NULL if not found.  This
+    // function returns a modifiable (non-const) delta stoich object.
+Sprog::Kinetics::DeltaStoich *const Reaction::GetDeltaStoich(const unsigned int i) const {
+    if (i < m_deltaStoich.size()) {
+        return m_deltaStoich[i];
+    } else {
+        return NULL;
+    }
+    }
+
+    // Returns pointer to delta stoich with given name.  NULL if not found.  This
+    // function returns a modifiable (non-const) delta stoich object.
+Sprog::Kinetics::DeltaStoich *const Reaction::GetDeltaStoich(const std::string &name) const
+    {
+     int i = FindDeltaStoich(name);
+    if (i >= 0) {
+        return m_deltaStoich[i];
+    } else {
+        return NULL;
+    }
+    }
+
+
 // ARRHENIUS COEFFICIENTS.
 
 // Sets the forward Arrhenius parameters.
@@ -398,6 +637,7 @@ void Reaction::SetRevArrhenius(const Sprog::Kinetics::ARRHENIUS &arr)
         *m_arrr = arr;
     }
 }
+
 
 
 // LANDAU TELLER COEFFICIENTS.
@@ -420,6 +660,94 @@ void Reaction::SetRevLTCoeffs(const Sprog::Kinetics::LTCOEFFS &lt)
     } else {
         *m_revlt = lt;
     }
+}
+
+// SURFACE
+// Sets whether or not this reaction is surface types
+void Reaction::SetIsSurface(const std::string &phName)
+{
+  if (phName.compare("gas") != 0)
+    {
+      m_isSurface = true; 
+    }
+ 
+}   
+
+// COVERAGE
+
+// Returns a constant reference to the vector of coverage
+const vector<COVERAGE> &Reaction::CoverageReac() const
+{
+    return m_coverage;
+}
+
+// Returns the number of coverage params defined for this reaction.
+int Reaction::COVERAGECount() const
+{
+    return m_coverage.size();
+}
+
+// Returns the coefficient for the ith coverage.
+COVERAGE Reaction::CoverageElement(unsigned int i) const
+{
+    if (i < m_coverage.size()) {
+        return m_coverage[i];
+    } else {
+        // Invalid index.
+      return COVERAGE(); // Default constructor
+    }
+}
+
+// Sets the Coverage (always forward) parameters.
+void Reaction::SetCoverage(const real e, const real m, const real eps, const std::string &name)
+{
+    m_isCoverage = true;
+
+    COVERAGE m_cover; 
+    
+    m_cover.Eta = e;
+    m_cover.Miu = m;
+    m_cover.Epsilon = eps;
+    m_cover.spName = name;
+
+    m_coverage.push_back(m_cover);
+}
+
+// FORD
+// Returns a constant reference to the vector of Ford
+const vector<FORD> &Reaction::FordReac() const
+{
+    return m_ford;
+}
+
+// Returns the number of ford coefficients defined for this reaction.
+int Reaction::FORDCount() const
+{
+    return m_ford.size();
+}
+
+// Returns the coefficient for the ith ford of the reaction.
+FORD Reaction::FORDElement(unsigned int i) const
+{
+    if (i < m_ford.size()) {
+        return m_ford[i];
+    } else {
+        // Invalid index.
+      return FORD(); // Default constructor
+    }
+}
+
+// Sets the Ford (always forward) parameters.
+void Reaction::SetFord(const real c, const std::string &name)
+{
+    m_isFord = true;
+
+    FORD m_forw; 
+    
+    m_forw.F_k = c;
+    m_forw.spName = name;
+
+    m_ford.push_back(m_forw);
 }
 
 
@@ -806,6 +1134,71 @@ void Reaction::WriteDiagnostics(std::ostream &out) const
             out.write(data.c_str(), data.length());
         }
 
+
+	// Surface flag.
+        if (m_isSurface) {
+            data = "SURF ";
+        } else {
+            data = "-- ";
+        }
+        out.write(data.c_str(), data.length());
+
+	// STICK flag.
+        if (m_sticking) {
+            data = "ST ";
+        } else {
+            data = "-- ";
+        }
+        out.write(data.c_str(), data.length());
+
+	
+
+	// Mott-Wise flag.
+        if (m_mottwise) {
+            data = "MW ";
+        } else {
+            data = "-- ";
+        }
+        out.write(data.c_str(), data.length());
+
+
+	// Ford flag.
+        if (m_isFord) {
+            data = "FD ";
+        } else {
+            data = "-- ";
+        }
+        out.write(data.c_str(), data.length());
+
+
+	// Write ford.
+        for (unsigned int i=0; i!=m_ford.size(); ++i) {
+	data = cstr(m_ford[i].F_k) + " ";
+        out.write(data.c_str(), data.length());
+	out.write(string(m_ford[i].spName+" ").c_str(), m_ford[i].spName.length());
+	}
+	
+
+	// Coverage flag.
+        if (m_isCoverage) {
+            data = "CV ";
+        } else {
+            data = "-- ";
+        }
+        out.write(data.c_str(), data.length());
+
+
+	// Write coverage.
+        for (unsigned int i=0; i!=m_coverage.size(); ++i) {
+	data = cstr(m_coverage[i].Eta) + " ";
+        out.write(data.c_str(), data.length());
+	data = cstr(m_coverage[i].Miu) + " ";
+        out.write(data.c_str(), data.length());
+	data = cstr(m_coverage[i].Epsilon) + " ";
+        out.write(data.c_str(), data.length());
+	out.write(string(m_coverage[i].spName+" ").c_str(), m_coverage[i].spName.length());
+	}
+
         // Write fall-off type.
         ival = (int)m_fotype;
         data = cstr(ival) + " ";
@@ -974,12 +1367,28 @@ void Reaction::releaseMemory(void)
     m_lt = NULL;
     if (m_revlt != NULL) delete m_revlt;
     m_revlt = NULL;
+    m_fo.F_k     = 0.0;
+    m_fo.spName  = "";
+    m_covr.Eta   = m_covr.Miu = m_covr.Epsilon =0.0;  
+    m_covr.spName = "";
     m_usetb = false;
     m_thirdbodies.clear();
     m_fotype = None;
     m_foparams.LowP_Limit.A = m_foparams.LowP_Limit.n = m_foparams.LowP_Limit.E = 0.0;
     m_foparams.ThirdBody = -1;
     //m_fofn = NULL;
+    m_isSurface = false; 
+    // Stick
+    m_sticking = false;
+    // Mottwise
+    m_mottwise = false; 
+    // Coverage data
+    m_isCoverage = false;
+    m_coverage.clear();
+    // Ford data 
+    m_isFord = false; 
+    m_ford.clear();
+
     m_mech = NULL;
 }
 
@@ -1113,6 +1522,87 @@ void Reaction::Serialize(std::ostream &out) const
             out.write((char*)&mu, sizeof(mu));
         }
 
+	// Write SURFACE flag.
+        if (m_isSurface) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+
+	// Write STICK flag.
+        if (m_sticking) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+	 // Write Mott-Wise flag.
+        if (m_mottwise) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+
+	 // Write ford flag.
+        if (m_isFord) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+	// Write ford count.
+        n = m_ford.size();
+        out.write((char*)&n, sizeof(n));
+
+
+	// Write ford.
+        for (unsigned int i=0; i<n; i++) {
+	double coef  = (double)m_fo.F_k;
+        out.write((char*)&coef, sizeof(coef));
+	// Write the length of the species name to the stream.
+        unsigned int sp = m_fo.spName.length();
+        out.write((char*)&sp, sizeof(sp));
+
+        // Write the species name to the stream.
+        if (sp > 0) {
+            out.write(m_fo.spName.c_str(), sp);
+        }
+	
+        }
+
+
+	 // Write coverage flag.
+        if (m_isCoverage) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
+
+	// Write coverage count.
+        n = m_coverage.size();
+        out.write((char*)&n, sizeof(n)); 
+
+	// Write coverage.
+        for (unsigned int i=0; i<n; i++) {
+	double e  = (double)m_covr.Eta;
+        double m = (double)m_covr.Miu;
+        double epsil  = (double)m_covr.Epsilon;
+        out.write((char*)&e, sizeof(e));
+        out.write((char*)&m, sizeof(m));
+        out.write((char*)&epsil, sizeof(epsil));
+	// Write the length of the species name to the stream.
+        unsigned int sp = m_covr.spName.length();
+        out.write((char*)&sp, sizeof(sp));
+
+        // Write the speciesn name to the stream.
+        if (sp > 0) {
+	  out.write(m_covr.spName.c_str(), sp);
+        }
+	
+        }
+
         // Write fall-off type.
         n = (unsigned int)m_fotype;
         out.write((char*)&n, sizeof(n));
@@ -1158,7 +1648,7 @@ void Reaction::Deserialize(std::istream &in)
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-        unsigned int n = 0; // Need for reading name length.
+        unsigned int n, spN = 0; // Need for reading name length.
         char *name = NULL;
         double A = 0.0, nn = 0.0, E = 0.0;
         int itb = 0;
@@ -1298,6 +1788,113 @@ void Reaction::Deserialize(std::istream &in)
                    // Add third body to vector.
                    m_thirdbodies.push_back(Stoich(ix,mu));
                 }
+
+		// Read SURFACE flag (include all surface reactions) 
+		in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n == 1) {
+                    m_isSurface = true;
+                } else {
+                    m_isSurface = false;
+                }
+
+
+		// Read STICK flag 
+		in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n == 1) {
+                    m_sticking = true;
+                } else {
+                    m_sticking = false;
+                }
+
+		// Read Mott-Wise flag
+		in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n == 1) {
+                    m_mottwise = true;
+                } else {
+                    m_mottwise = false;
+                }
+		
+		// Read FORD flag
+		in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n == 1) {
+                    m_isFord = true;
+                } else {
+                    m_isFord = false;
+                }
+
+		// Read FORD count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_ford.reserve(n);
+
+
+		 // Read FORD.
+                for (unsigned int i=0; i<n; i++) {
+                    
+		  double coef = 0.0;
+		  std::string speciesName; 
+                    in.read(reinterpret_cast<char*>(&coef), sizeof(coef));
+		    in.read(reinterpret_cast<char*>(&spN), sizeof(spN));
+
+		    // Read the species name.
+		    if (spN > 0) {
+                    name = new char[spN];
+                    in.read(name, spN);
+                    speciesName.assign(name, spN);
+                    delete [] name;
+		    } else {
+                    speciesName = "";
+		    }
+
+                    m_fo.F_k = (real)coef;
+		    m_fo.spName = speciesName;
+		    
+		    // Add covr to vector.
+		    m_ford.push_back(m_fo);
+                }
+
+
+		// Read COVERAGE flag 
+		in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                if (n == 1) {
+                    m_isCoverage = true;
+                } else {
+                    m_isCoverage = false;
+                }
+
+		// Read COVERAGE count.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_coverage.reserve(n);
+
+		 // Read COVERAGE.
+                for (unsigned int i=0; i<n; i++) {
+                    
+		  double e, m, epsil = 0.0;
+		  std::string speciesName; 
+                    in.read(reinterpret_cast<char*>(&e), sizeof(e));
+                    in.read(reinterpret_cast<char*>(&m), sizeof(m));
+                    in.read(reinterpret_cast<char*>(&epsil), sizeof(epsil));
+		    
+		    in.read(reinterpret_cast<char*>(&spN), sizeof(spN));
+
+		    // Read the species name.
+		    if (spN > 0) {
+                    name = new char[spN];
+                    in.read(name, spN);
+                    speciesName.assign(name, spN);
+                    delete [] name;
+		    } else {
+                    speciesName = "";
+		    }
+
+                    m_covr.Eta = (real)e;
+                    m_covr.Miu = (real)m;
+                    m_covr.Epsilon = (real)epsil;
+		    m_covr.spName = speciesName;
+		    
+		    // Add covr to vector.
+		    m_coverage.push_back(m_covr);
+                }
+
 
                 // Read fall-off type.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));

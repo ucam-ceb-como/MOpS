@@ -131,15 +131,15 @@ void IdealGas::SetPressure(Sprog::real p)
 
 // INTERNAL ENERGY.
 
-// Calculates molar internal energies of each species.
-void IdealGas::CalcUs(real T, fvector &U) const
+// Calculates molar internal energies of each species. (unmodified)
+void IdealGas::CalcUs(real T, fvector &U) const 
 {
     // Calculate the enthalpies.
     CalcHs(T, U);
 
     // Convert to internal energies.
     fvector::iterator i;
-    for (i=U.begin(); i!=U.end(); i++) {
+    for (i=U.begin(); i!=U.end(); i++) { // The difference for surface species is in calculating Hs
         (*i) -= R * T;
     }
 }
@@ -158,20 +158,20 @@ void IdealGas::CalcUs_RT(real T, fvector &U) const
 }
 
 // Calculates the bulk internal energy as well as the internal
-// energies of each species.
+// energies of each species. (modified by mm864) - GAS PHASE ONLY
 real IdealGas::CalcBulkU(Sprog::real T,
                          const Sprog::real *const x,
                          unsigned int n,
                          Sprog::fvector &U) const
 {
     // Check that there are sufficient values in the x array.
-    if (n >= Species()->size()) {
+    if (n >= m_mech->GasSpeciesCount()) {
         // Calculate the species internal energies.
         CalcUs(T, U);
 
         // Calculate the bulk energy.
         real bulku = 0.0;
-        for (unsigned int i=0; i!=Species()->size(); ++i) {
+        for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
             bulku += U[i] * x[i];
         }
 
@@ -189,13 +189,13 @@ real IdealGas::CalcBulkU_RT(Sprog::real T,
                             Sprog::fvector &U) const
 {
     // Check that there are sufficient values in the x array.
-    if (n >= Species()->size()) {
+    if (n >= m_mech->GasSpeciesCount()) {
         // Calculate the species internal energies.
         CalcUs_RT(T, U);
 
         // Calculate the bulk energy.
         real bulku = 0.0;
-        for (unsigned int i=0; i!=Species()->size(); ++i) {
+        for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
             bulku += U[i] * x[i];
         }
 
@@ -257,13 +257,13 @@ real IdealGas::CalcBulkH(Sprog::real T,
                          unsigned int n,
                          Sprog::fvector &H) const
 {
-    if (n >= Species()->size()) {
+    if (n >= m_mech->GasSpeciesCount()) {
         // Get individual species enthalpies.
         CalcHs(T, H);
 
         // Sum to get bulk enthalpy.
         real bulkH = 0.0;
-        for(unsigned int i=0; i!=Species()->size(); ++i) {
+        for(unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
             bulkH += x[i] * H[i];
         }
 
@@ -280,13 +280,13 @@ real IdealGas::CalcBulkH_RT(Sprog::real T,
                             unsigned int n,
                             Sprog::fvector &H) const
 {
-    if (n >= Species()->size()) {
+    if (n >= m_mech->GasSpeciesCount()) {
         // Get individual species enthalpies.
         CalcHs_RT(T, H);
 
         // Sum to get bulk enthalpy.
         real bulkH = 0.0;
-        for(unsigned int i=0; i!=Species()->size(); ++i) {
+        for(unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
             bulkH += x[i] * H[i];
         }
 
@@ -352,13 +352,13 @@ real IdealGas::CalcBulkS(Sprog::real T,
                          unsigned int n,
                          Sprog::fvector &S) const
 {
-    if (n >= Species()->size()) {
+    if (n >= m_mech->GasSpeciesCount()) {
         // Get individual species entropies.
         CalcSs(T, S);
 
         // Sum to get bulk entropy.
         real bulkS = 0.0;
-        for(unsigned int i=0; i!=Species()->size(); ++i) {
+        for(unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
             bulkS += x[i] * S[i];
         }
 
@@ -375,13 +375,13 @@ real IdealGas::CalcBulkS_R(Sprog::real T,
                            unsigned int n,
                            Sprog::fvector &S) const
 {
-    if (n >= Species()->size()) {
+    if (n >= m_mech->GasSpeciesCount()) {
         // Get individual species entropies.
         CalcSs_R(T, S);
 
         // Sum to get bulk entropy.
         real bulkS = 0.0;
-        for(unsigned int i=0; i!=Species()->size(); ++i) {
+        for(unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
             bulkS += x[i] * S[i];
         }
 
@@ -473,13 +473,13 @@ real IdealGas::CalcBulkG(Sprog::real T,
                          Sprog::fvector &G) const
 {
     // Check length of x array.
-    if (n >= Species()->size()) {
+    if (n >= m_mech->GasSpeciesCount()) {
         // Calculate species Gibbs free energies.
         CalcGs(T, G);
 
         // Calculate bulk Gibbs free energy.
         real bulkG = 0.0;
-        for (unsigned int i=0; i!=Species()->size(); ++i) {
+        for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
             bulkG += G[i] * x[i];
         }
 
@@ -497,13 +497,13 @@ real IdealGas::CalcBulkG_RT(Sprog::real T,
                             Sprog::fvector &G) const
 {
     // Check length of x array.
-    if (n >= Species()->size()) {
+    if (n >= m_mech->GasSpeciesCount()) {
         // Calculate species Gibbs free energies.
         CalcGs_RT(T, G);
 
         // Calculate bulk Gibbs free energy.
         real bulkG = 0.0;
-        for (unsigned int i=0; i!=Species()->size(); ++i) {
+        for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
             bulkG += G[i] * x[i];
         }
 
@@ -562,13 +562,13 @@ real IdealGas::CalcBulkCp(Sprog::real T,
                           unsigned int n,
                           Sprog::fvector &Cp) const
 {
-    if (n >= Species()->size()) {
+    if (n >= m_mech->GasSpeciesCount()) {
         // Get individual species heat capacities.
         CalcCps(T, Cp);
 
         // Sum to get bulk heat capacity.
         real bulkCp = 0.0;
-        for(unsigned int i=0; i!=Species()->size(); ++i) {
+        for(unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
             bulkCp += x[i] * Cp[i];
         }
 
@@ -584,13 +584,13 @@ real IdealGas::CalcBulkCp_R(Sprog::real T,
                             unsigned int n,
                             Sprog::fvector &Cp) const
 {
-    if (n >= Species()->size()) {
+    if (n >= m_mech->GasSpeciesCount()) {
         // Get individual species heat capacities.
         CalcCps_R(T, Cp);
 
         // Sum to get bulk heat capacity.
         real bulkCp = 0.0;
-        for(unsigned int i=0; i!=Species()->size(); ++i) {
+        for(unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
             bulkCp += x[i] * Cp[i];
         }
 
@@ -637,13 +637,13 @@ real IdealGas::CalcBulkCv(Sprog::real T,
                           unsigned int n,
                           Sprog::fvector &Cv) const
 {
-    if (n >= Species()->size()) {
+    if (n >= m_mech->GasSpeciesCount()) {
         // Get individual species heat capacities.
         CalcCvs(T, Cv);
 
         // Sum to get bulk heat capacity.
         real bulkCv = 0.0;
-        for(unsigned int i=0; i!=Species()->size(); ++i) {
+        for(unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
             bulkCv += x[i] * Cv[i];
         }
 
@@ -659,13 +659,13 @@ real IdealGas::CalcBulkCv_R(Sprog::real T,
                             unsigned int n,
                             Sprog::fvector &Cv) const
 {
-    if (n >= Species()->size()) {
+    if (n >= m_mech->GasSpeciesCount()) {
         // Get individual species heat capacities.
         CalcCvs_R(T, Cv);
 
         // Sum to get bulk heat capacity.
         real bulkCv = 0.0;
-        for(unsigned int i=0; i!=Species()->size(); ++i) {
+        for(unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
             bulkCv += x[i] * Cv[i];
         }
 

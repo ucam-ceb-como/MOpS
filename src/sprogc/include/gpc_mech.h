@@ -49,9 +49,9 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
-
 #include "gpc_params.h"
 #include "gpc_element.h"
+#include "gpc_phase.h"
 #include "gpc_species.h"
 #include "gpc_reaction_set.h"
 #include "gpc_unit_systems.h"
@@ -59,6 +59,8 @@
 #include <vector>
 #include <string>
 #include <map>
+
+
 
 namespace Sprog
 {
@@ -72,6 +74,10 @@ public:
     // Species iterators.
     typedef SpeciesPtrVector::iterator sp_iterator;
     typedef SpeciesPtrVector::const_iterator const_sp_iterator;
+
+    // Phase iterators.
+    typedef PhasePtrVector::iterator phase_iterator;
+    typedef PhasePtrVector::const_iterator const_phase_iterator;
 
     // Constructors.
     Mechanism();                  // Default constructor.
@@ -136,10 +142,15 @@ public:
     void CheckElementChanges(const Sprog::Element &el);
 
 
+    // 
+
     // SPECIES.
 
     // Returns the number of species in the mechanism.
     unsigned int SpeciesCount(void) const;
+
+    // Returns the number of gas phase species in the mechanism. 
+    unsigned int GasSpeciesCount(void) const;
 
     // Returns the vector of species.
     const SpeciesPtrVector &Species(void) const;
@@ -156,7 +167,7 @@ public:
     // Returns const iterator to first species.
     const_sp_iterator SpBegin() const;
 
-        // Returns iterator to position after last species.
+    // Returns iterator to position after last species.
     sp_iterator SpEnd();
 
     // Returns const iterator to position after last species.
@@ -181,6 +192,66 @@ public:
     // Returns pointer to species with given name.  NULL if not found.  This
     // function returns a modifiable (non-const) species object.
     Sprog::Species *const GetSpecies(const std::string &name) const;
+
+
+    // Returns site occupancy of species.  Returns 0 if not found.
+    int FindSiteOccup(const std::string &name) const;
+
+    // Returns phase Name of species.  Returns "" if not found.
+    std::string FindPhaseName(const std::string &name) const;
+
+ // PHASE.
+
+    // Returns the number of phase in the mechanism.
+    unsigned int PhaseCount(void) const;
+
+    // Returns the vector of phase.
+    const PhasePtrVector &Phase(void) const;
+
+    // Returns a pointer to the ith phase.  Returns NULL if i is invalid.
+    const Sprog::Phase *const Phase(unsigned int i) const;
+
+    // Returns pointer to phase with given name.  NULL if not found.
+    const Sprog::Phase *const Phase(const std::string &name) const;
+
+    // Returns iterator to first phase.
+    phase_iterator PhaseBegin();
+
+    // Returns const iterator to first phase.
+    const_phase_iterator PhaseBegin() const;
+
+    // Returns iterator to position after last phase.
+    phase_iterator PhaseEnd();
+
+    // Returns const iterator to position after last phase.
+    const_phase_iterator PhaseEnd() const;
+
+    // Adds an empty phase to the mechanism.
+    Sprog::Phase *const AddPhase(void);
+
+    // Copies given phase into the mechanism.
+    Sprog::Phase *const AddPhase(const Sprog::Phase &phase);
+
+    // Returns index of phase.  Returns -1 if not found.
+    int FindPhase(const Sprog::Phase &phase) const;
+
+    // Returns index of phase.  Returns -1 if not found.
+    int FindPhase(const std::string &name) const;
+
+    // Returns phaseid given the name.  Returns NULL if not found.
+    std::string FindID(const std::string &name) const;
+
+	// Returns phase site density given the name.  Returns NULL if not found.
+    double FindSiteDensity(const std::string &name) const;
+
+	
+    // Returns pointer to phase at index i.  NULL if not found.  This
+    // function returns a modifiable (non-const) phase object.
+    Sprog::Phase *const GetPhase(const unsigned int i) const;
+
+    // Returns pointer to phase with given name.  NULL if not found.  This
+    // function returns a modifiable (non-const) phase object.
+    Sprog::Phase *const GetPhase(const std::string &name) const;
 
 
     // REACTIONS.
@@ -253,21 +324,25 @@ protected:
     UnitSystem m_units;             // The system of units used by this mechanism.
     ElementPtrVector m_elements;    // Vector of chemical elements defined by mechanism.
     SpeciesPtrVector m_species;     // Vector of chemical species defined by mechanism.
-    Kinetics::ReactionSet m_rxns;   // Set of reactions defined by mechanism.
+    PhasePtrVector m_phase;         // Vector of chemical phase defined by mechanism.
+	Kinetics::ReactionSet m_rxns;   // Set of reactions defined by mechanism.
     StoichXRefVector m_stoich_xref; // Reaction stoichiometry cross-referenced for each species.
     bool m_stoich_xref_valid;       // Flag which tells whether or not the stoich xref map is valid.
     std::vector<std::string> m_nec_spec;    //String vector containing the species that must be present in the reduced mechanism.
 
-
+ 
     // COPYING ROUTINES.
 
     // Copies elements from given array into this mechanism.
     void copyInElements(const ElementPtrVector &els);
 
     // Copies species from given array into this mechanism.
-    void copyInSpecies(const SpeciesPtrVector &els);
+    void copyInSpecies(const SpeciesPtrVector &sps);
 
-
+    // Copies phase from given array into this mechanism.
+    void copyInPhase(const PhasePtrVector &phs);
+	
+	
     // MEMORY MANAGEMENT.
 
     // Clears memory used by the mechanism object.

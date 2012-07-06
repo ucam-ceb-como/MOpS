@@ -222,7 +222,7 @@ void Element::WriteDiagnostics(std::ostream &out) const
 
     if (out.good()) {
         // Name.
-        out.write(string(m_name+" ").c_str(), m_name.length());
+        out.write(string(m_name+ "\n").c_str(), m_name.length());
         // Mol. Wt.
         data = cstr(m_molwt) + "\n";
         out.write(data.c_str(), data.length());

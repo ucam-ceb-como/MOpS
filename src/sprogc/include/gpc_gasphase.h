@@ -61,6 +61,7 @@
 
 namespace Sprog
 {
+class Mechanism; // added by mm864
 namespace Thermo
 {
 
@@ -185,7 +186,7 @@ protected:
     // As in the Mixture class, the default constructor is protected to prevent
     // mixtures being created with no knowledge of the defining species set.
     GasPhase(void);
-
+	Sprog::Mechanism *m_mech;
     /*
     // Flag to tell GasPhase class whether or not it should
     // store pre-calculated values or not.  This option may be
