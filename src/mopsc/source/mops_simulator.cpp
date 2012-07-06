@@ -2070,7 +2070,8 @@ bool Simulator::checkCoagulationKernel(int old_id, int this_id) const {
     bool ans(false);
     if (old_id == Sweep::Processes::Weighted_Additive_Coagulation_ID
             || old_id == Sweep::Processes::Weighted_Constant_Coagulation_ID
-            || old_id == Sweep::Processes::Weighted_Transition_Coagulation_ID) {
+            || old_id == Sweep::Processes::Weighted_Transition_Coagulation_ID
+            || old_id == Sweep::Processes::Transition_Coagulation_ID) {
         if (old_id == this_id) {
             // This is fine, we've got the same kernel
             ans = true;
