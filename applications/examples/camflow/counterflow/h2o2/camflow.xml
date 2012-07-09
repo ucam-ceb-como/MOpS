@@ -34,15 +34,15 @@
         <resTol>1</resTol>
         <species>
             <aTol>1.e-12</aTol>
-            <rTol>1.e-10</rTol>
+            <rTol>1.e-08</rTol>
         </species>
         <temperature>
             <aTol>1.e-03</aTol>
             <rTol>1.e-03</rTol>
         </temperature>
         <flow>
-            <aTol>1.e-04</aTol>
-            <rTol>1.e-04</rTol>
+            <aTol>1.e-03</aTol>
+            <rTol>1.e-03</rTol>
         </flow>
         </tols>
 </solver>

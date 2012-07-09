@@ -258,8 +258,6 @@ void StagFlow::csolve(CamControl& cc)
         cvw.solveDAE(CV_ONE_STEP, cc.getResTol());
 
         reportToFile(cc.getMaxTime(), &solvect[0]);
-
-        cvw.destroy();
     }
     else if (solverID == CamControl::LIMEX)
     {
@@ -308,8 +306,6 @@ void StagFlow::ssolve(CamControl& cc)
         mergeSpeciesVector(&seg_soln_vec[0]);
 
         reportToFile(cc.getMaxTime(), &solvect[0]);
-
-        cvw.destroy();
     }
     else if (solverID ==  CamControl::LIMEX)
     {
@@ -333,7 +329,6 @@ void StagFlow::ssolve(CamControl& cc)
 //                    cc.getMaxTime(),band,*this);
 //            cvw.solveDAE(CV_ONE_STEP,1e-03);
 //            mergeEnergyVector(&seg_soln_vec[0]);
-//            cvw.destroy();
 //
 //        }
 //
@@ -430,7 +425,6 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f)
             saveMixtureProp(t, &solvect[0], true, false);
             updateDiffusionFluxes();
             updateThermo();
-            //energyResidual(t,y,f,true);
             energyResidual(t, y, f);
             energyBoundary(t, y, f);
         }
@@ -452,18 +446,22 @@ void StagFlow::speciesResidual
 
     for (int i = iMesh_s; i < iMesh_e; ++i)
     {
+        doublereal density = m_rho[i];
+        doublereal velocity = -m_u[i];
+
         for (int l = 0; l < nSpc; ++l)
         {
             // convection term
             convection =
-               -m_u[i]
+                velocity
                *dydx(i, s_mf(i+1,l), s_mf(i,l), s_mf(i-1,l), dz[i]);
 
             // diffusion term
-            diffusion = dydx(s_jk(i,l), s_jk(i+1,l), dz[i])/m_rho[i];
+            diffusion = dydx(s_jk(i,l), s_jk(i+1,l), dz[i]);
 
-            source = s_Wdot(i,l)*(*spv_)[l]->MolWt()/m_rho[i];
-            f[i*nSpc+l] = convection + diffusion + source;
+            source = s_Wdot(i,l)*(*spv_)[l]->MolWt();
+
+            f[i*nSpc+l] = convection + (diffusion + source)/density;
         }
     }
 }
@@ -487,6 +485,7 @@ void StagFlow::energyResidual
              */
             doublereal sumHSource = 0.0;
             doublereal sumFlx = 0.0;
+
             for (int l=0; l<nSpc; l++)
             {
                 sumHSource += s_Wdot(i,l)*s_H(i,l);
@@ -497,11 +496,13 @@ void StagFlow::energyResidual
             /*
              *convection
              */
-            doublereal convection =  -m_u[i]*dydx(i, m_T[i+1],m_T[i],m_T[i-1],dz[i]);
+            doublereal convection = -m_u[i]
+                                    *dydx(i, m_T[i+1], m_T[i], m_T[i-1], dz[i]);
+
             /*
              *conduction
              */
-            doublereal conduction = dydx(m_q[i+1],m_q[i],dz[i]);
+            doublereal conduction = dydx(m_q[i+1], m_q[i], dz[i]);
             /*
              *flux transport
              */
@@ -513,12 +514,14 @@ void StagFlow::energyResidual
             if (fluxTrans)
             {
                 f[i] = convection
-                      +(conduction - sumHSource - sumFlx)/(m_rho[i]*m_cp[i]);
+                      +(conduction - sumHSource - sumFlx)
+                       /(m_rho[i]*m_cp[i]);
             }
             else
             {
                 f[i] = convection
-                      +(conduction - sumHSource )/(m_rho[i]*m_cp[i]);
+                      +(conduction - sumHSource)
+                       /(m_rho[i]*m_cp[i]);
             }
         }
     }
@@ -575,7 +578,7 @@ void StagFlow::speciesBoundary
 
     doublereal convection, diffusion;
 
-    for (int l=0; l<nSpc ; l++)
+    for (int l=0; l<nSpc; l++)
     {
         convection = m_u[0]*dydx(fuel.Species[l], y[l], dz[0]);
         diffusion = dydx(0, s_jk(iMesh_s,l), dz[0])/m_rho[0];
@@ -603,7 +606,7 @@ void StagFlow::speciesBoundary
             convection =
                 m_u[iMesh_e]
                *dydx(s_mf(iMesh_e,l), oxid.Species[l], dz[iMesh_e]);
-            diffusion = dydx(s_jk(iMesh_e,l), 0, dz[iMesh_e])/m_rho[iMesh_e];
+            diffusion = 0.0;//dydx(s_jk(iMesh_e,l), 0, dz[iMesh_e])/m_rho[iMesh_e];
             f[iMesh_e*nSpc+l] = convection + diffusion;
         }
     }
@@ -659,8 +662,8 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
         }
     }
 
-    //for (int i=0; i<10; i++)
-    //{
+    for (int i=0; i<10; i++)
+    {
         //------------------------------------------------------------
         //           Inlet face
         //----------------------------------------------------------
@@ -672,7 +675,7 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
         //           Exit face
         //------------------------------------------------------------
         // this is the vanishing cell
-        if (config_.getConfiguration() == camConfig->STAGFLOW)
+        if (config_.getConfiguration() == CamConfiguration::STAGFLOW)
         {
             m_flow[iMesh_e] = 0.0;
         }
@@ -692,7 +695,7 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
 
 
         m_G[0] = sqrt(m_rho[iMesh_e]/m_rho[0]);
-        if (config_.getConfiguration() == camConfig->COUNTERFLOW)
+        if (config_.getConfiguration() == CamConfiguration::COUNTERFLOW)
         {
             m_G[iMesh_e] = 1.0;
         }
@@ -704,7 +707,7 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
             m_G[i] = mom[i-1];
         }
 
-        if (config_.getConfiguration() == camConfig->STAGFLOW)
+        if (config_.getConfiguration() == CamConfiguration::STAGFLOW)
         {
             m_G[iMesh_e] = m_G[iMesh_e-1];
         }
@@ -712,7 +715,7 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
         {
             m_G[iMesh_e] = 1.0;
         }
-    //}
+    }
 
     for (int i = 0; i < iMesh_e + 1; i++)
     {
@@ -757,7 +760,7 @@ void StagFlow::calcVelocity(std::vector<doublereal>& u)
     rhoGe = rho_e*Ge;
     rhoGw = rho_w*Gw;
     r[i-1] = 2*strainRate*(rhoGe-rhoGw);
-    if (config_.getConfiguration() == camConfig->COUNTERFLOW)
+    if (config_.getConfiguration() == CamConfiguration::COUNTERFLOW)
     {
         r[i-1] += 2*oxid.FlowRate/dz[i];
     }
@@ -1110,3 +1113,4 @@ doublereal StagFlow::getBilgerMixFrac(const int& cell)
     return (carbonCell + hydrogenCell + oxygenCell)
           /(carbonBoundary + hydrogenBoundary + oxygenBoundary);
 }
+

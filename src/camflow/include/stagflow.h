@@ -212,16 +212,7 @@ namespace Camflow
             tdma_coeff tdmaFlow;
             int configID;
 
-            /*
-            *Newton solver variables
-            */
-            int alg_nEqn, alg_nVar, alg_band;
-            std::vector<doublereal> alg_solvect;
-            std::vector<doublereal> vFlow;
-            //KinsolWrapper *newton;
-            doublereal tol_res, eigen;
             doublereal strainRate;
-            CamConfiguration *camConfig;
 
     }; // End StagFlow class declaration.
 

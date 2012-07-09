@@ -149,7 +149,7 @@ void CVodeWrapper::solveDAE(int stopMode, doublereal resTol){
     
     do
     {
-        if (iter % 1 == 0)
+        if (iter % 10 == 0)
         {
             //solve the algebraic equation system
             reacPtr->calcFlowField(currentTime, NV_DATA_S(y));
