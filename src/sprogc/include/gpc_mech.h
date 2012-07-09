@@ -296,9 +296,10 @@ public:
     {
           ar.register_type(static_cast<Sprog::Element *>(NULL));
           ar.register_type(static_cast<Sprog::Species *>(NULL));
+	  ar.register_type(static_cast<Sprog::Phase *>(NULL));
           ar.template register_type<Sprog::StoichXRef>();
 
-          ar & m_units & m_elements & m_species & m_rxns & m_stoich_xref
+          ar & m_units & m_elements & m_species & m_phase & m_rxns & m_stoich_xref
              & m_stoich_xref_valid & m_nec_spec;
     }
 

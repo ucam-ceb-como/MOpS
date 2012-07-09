@@ -347,19 +347,19 @@ void ReactionSet::Clear()
 // GetMolarProdRates 1
 
 real ReactionSet::GetMolarProdRates(const fvector &rop,
-                                    fvector &wdot /*, fvector &sdot*/) const
+                                    fvector &wdot) const
 {
     unsigned int k;
     const RxnStoichMap *mu;
     RxnStoichMap::const_iterator i;
-    real wtot = 0.0, stot = 0.0;
+    real wtot = 0.0;
+	unsigned int size_gas_rxns = m_rxns.size() - m_surface_rxns.size();
 
     // Assign sufficient memory for output.
-    wdot.resize(m_mech->SpeciesCount());
-    // sdot.resize(m_mech->SpeciesCount());
-
+    wdot.resize(m_mech->SpeciesCount()); 
+ 
     // Loop over all species in mechanism.
-    for (k=0; k!=m_mech->SpeciesCount(); ++k) {
+    for (k=0; k!=m_mech->SpeciesCount(); ++k) { // if it is surface species, wdot (k) will be 0 
         // Reset prod. rate of this species to zero.
         wdot[k] = 0.0;
 
@@ -370,14 +370,74 @@ real ReactionSet::GetMolarProdRates(const fvector &rop,
         //   first  = index of reaction.
         //   second = stoichiometry of species in reaction.
         for (i=mu->begin(); i!= mu->end(); i++) {
-            wdot[k] += (*i).second * rop[(*i).first];
-        }
 
+	  if (((*i).first) < size_gas_rxns){
+            wdot[k] += (*i).second * rop[(*i).first];
+	    // unsigned int idx = (*i).first; // for debugging
+	    // cout << "is surface? " << m_rxns[idx]->IsSURF() << endl;
+	  }
+	}
+
+	// cout << m_mech->GetSpecies(k)->Name() << "" << wdot[k] << endl;
         // Sum up total production rate.
         wtot += wdot[k];
     }
-
+    // cout << "wtot " << wtot << endl;
     return wtot;
+}
+
+// MOLAR PRODUCTION RATES.
+
+// Calculates the molar production rates of all species given the rate
+// of progress of each reaction. 
+// GetMolarProdRates 1
+
+real ReactionSet::GetSurfaceMolarProdRates(const fvector &rop,
+                                    fvector &sdot) const
+{
+    unsigned int k;
+    const RxnStoichMap *mu;
+    RxnStoichMap::const_iterator i;
+    real stot = 0.0;
+	unsigned int size_gas_rxns = m_rxns.size() - m_surface_rxns.size();
+
+    // Assign sufficient memory for output.
+    sdot.resize(m_mech->SpeciesCount());
+    // sdot.resize(m_mech->SpeciesCount());
+
+    // Loop over all species in mechanism.
+    for (k=0; k!=m_mech->SpeciesCount(); ++k) {
+        // Reset prod. rate of this species to zero.
+        sdot[k] = 0.0;
+
+        // Get the map of reaction stoichiometry for this species.
+        mu = &m_mech->GetStoichXRef(k);
+
+        // Sum up the production rate of this species from all reactions.
+        //   first  = index of reaction.
+        //   second = stoichiometry of species in reaction.
+        for (i=mu->begin(); i!= mu->end(); i++) {
+
+	  if (((*i).first) >= size_gas_rxns){ // surface reaction only
+            sdot[k] += (*i).second * rop[(*i).first];
+	    //unsigned int idx = (*i).first; // for debugging
+	    //cout << "is surface? " << m_rxns[idx]->IsSURF() << endl;
+
+	  }
+
+			
+	}
+	//	cout << m_mech->GetSpecies(k)->Name() << " " << sdot[k] << endl;
+    }
+
+	for (k=0; k!=m_mech->GasSpeciesCount(); ++k) {
+	  // cout << "sp included in stot" << m_mech->GetSpecies(k)->Name() << endl;
+        // Sum up total production rate for gas species only 
+        stot += sdot[k];
+    }
+
+	//	std::cout << "stot " << stot << endl;
+    return stot;
 }
 
 // Calculates the molar production rates of all species. GetMolarProdRates 2
@@ -401,6 +461,17 @@ real ReactionSet::GetMolarProdRates(real T, real density, const real *const x,
 }
 
 
+// Calculates the molar production rates of surface and gas species.GetSurfaceMolarProdRates 2
+real ReactionSet::GetSurfaceMolarProdRates(real T, real density, const real *const x,
+                                    unsigned int n,
+                                    const Sprog::Thermo::ThermoInterface &thermo,
+                                    fvector &sdot) const
+{
+    static fvector rop;
+    GetRatesOfProgress(T, density, x, n, thermo, rop); //  Calling GetRatesofProgress6
+    return GetSurfaceMolarProdRates(rop, sdot); // Caling GetMolarProdRates 1
+}
+
 
 
 
@@ -413,7 +484,7 @@ void ReactionSet::GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) 
  	GetRateConstants(mix.Temperature(),mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),Gs,kfrwd,krev);// Caling GetRateConstant 1
 	GetRatesOfProgress(mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),kfrwd,krev,rop); // Calling GetRateofProgress 2
 	GetMolarProdRates(rop,wdot);// Caling GetMolarProdRates 1
-
+	// GetSurfaceMolarProdRates(rop,sdot);// Caling GetSurfaceMolarProdRates NOT INCLUDED DUE TO BEING USED IN residual, batch and flamelet
 }
 
 
@@ -459,7 +530,7 @@ void ReactionSet::GetRatesOfProgress(real density,
 	      if (m_rxns[i]->Reactants()[k].Index() == idx)
 		{
 		  real Ford_coeff = m_rxns[i]->FORDElement(l).F_k;
-		  m_rxns[i]->Reactants()[k].SetMu(Ford_coeff);
+		  //		  m_rxns[i]-> Reactants()[k].SetMu(Ford_coeff);
 		}
 
 	    }
@@ -498,6 +569,7 @@ void ReactionSet::GetRatesOfProgress(real density,
 
             // Calculate the net rates of production.
             rop[i] = rfwd[i] - rrev[i];
+	    //cout << "is surface? " << m_rxns[i]->IsSURF() << endl;
         }
 
 	
@@ -523,7 +595,8 @@ void ReactionSet::GetRatesOfProgress(real density,
                 }
 	      }
 	      else{
-		string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName();   
+		string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName(); 
+		//cout << spName << " phase "<< phName << endl;
 		double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
 		int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
 		 for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
@@ -547,7 +620,9 @@ void ReactionSet::GetRatesOfProgress(real density,
                 }
 	      }
 	      else{
-		string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName();   
+		string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName();
+
+		//cout << "phase "<< phName << endl;
 		double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
 		int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
 		 for (j=0; j!=m_rxns[i]->Products()[k].Mu(); ++j) {
@@ -558,7 +633,7 @@ void ReactionSet::GetRatesOfProgress(real density,
             }
 	    // Calculate the net rates of production.
             rop[i] = rfwd[i] - rrev[i];
-	    
+	    // cout << "is surface? " << m_rxns[i]->IsSURF() << endl;
 	}    
     }
 }
@@ -662,7 +737,7 @@ void ReactionSet::GetRateConstants(real T,
     calcRateConstantsT(T, Gs, kf, kr);
 
     // Calculate COVERAGE rate constants (concentration dependent)
-    calcCOVERAGE(x, kf);
+    calcCOVERAGE(T, x, kf);
 
     // Calculate third-body concentrations for all reactions.  These
     // values will be multiplied by the rate constants, therefore if
@@ -762,6 +837,8 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
         kf[j] = (*i)->Arrhenius().A *
                       exp(((*i)->Arrhenius().n * lnT) -
                           ((*i)->Arrhenius().E * invRT)); // This is equal to k_f = A_i T^{beta_i} exp(-Ei / RcT)
+
+	// cout << "classic Arrhenius " << kf[j] << endl; 
     }
 
     // Landau-Teller rate expressions.
@@ -769,6 +846,8 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
         j = *im;
         kf[j] *= exp((m_rxns[j]->LTCoeffs()->B / T_1_3) +
                            (m_rxns[j]->LTCoeffs()->C / T_2_3));
+
+	// cout << "Landau " << kf[j] << endl; 
     }
 
 
@@ -802,6 +881,8 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
             kr[j] *= pow(Patm_RT, (*i)->TotalStoich());
             kr[j]  = kf[j] / max(kr[j], 1.0e-250);
 	  }
+
+	  // cout << "classic reverse Arrhenius " << kr[j] << endl; 
 
     }
 	
@@ -894,6 +975,8 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 	      kr[j]  = kf[j] / max(kr[j], 1.0e-250);
 	    }
 
+	    // cout << "surface reverse Arrhenius " << kr[j] << endl; 
+
     }
 
 
@@ -920,27 +1003,30 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 	      (m_rxns[j]->Arrhenius().E * invRT));
 	const double val = kf[j]; 
 	double gamma = std::min(1.0, val); 
+	// cout << "gamma_i = " << gamma << std::endl; 
 	double W_k = 0.0;
 	unsigned int NumberOfSpecies = m_rxns[j]->DeltaStoichCount();
-
+	// cout << "DeltaStoichCount= " << NumberOfSpecies << endl; // for debugging
 	for (n=0; n!=NumberOfSpecies; ++n) {
 	  string spName = m_rxns[j]->DeltaStoich(n)->Name(); 
 	  string species_phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName();   
-	  if(species_phName.compare("gas") == 0 && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0)){
+	  if((species_phName.compare("gas") == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0)){
 	  
 	    W_k += m_rxns[j]->Mechanism()->GetSpecies(spName)->CalcMolWt(); 
 	  }
 	}
+	//cout << "Wk " << W_k << endl; // for debugging
 
 	unsigned int NumberOfPhase = m_rxns[j]->Mechanism()->PhaseCount();
 	double totalSiteDensity = 0.0;
 	for (n=0; n!=NumberOfPhase; ++n) {
-	  string phName = m_rxns[j]->GetPhaseName(n);
-	  
+	  string phName = m_rxns[j]->Mechanism()->Phase(n)->Name(); 
+	  // cout << "phname " << phName << endl; // for debugging
 	  if ((m_rxns[j]->Mechanism()->FindID(phName)).compare("s") ==0 ){
 	    totalSiteDensity += m_rxns[j]->Mechanism()->FindSiteDensity(phName);
 	  }
 	}
+	// cout << "GammaTot " << totalSiteDensity << endl; // for debugging
 	double m_val = 0.0; 
 	double sigma_pw_vk = 1.0;
 	for (n=0; n!=NumberOfSpecies; ++n) {
@@ -954,10 +1040,15 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 	    sigma_pw_vk *= pow (stocc, m_rxns[j]->DeltaStoich(n)->ReacStoich()); 
 	  }
 	}
+	// cout << "m= " << m_val << endl; // for debugging
+	// cout << "product sigma= " << sigma_pw_vk << endl; // for debugging
 
-
-	kf[j] = gamma*sigma_pw_vk*sqrt(double ((R*T)/ (2*M_PI*W_k)) )/(pow(totalSiteDensity ,m_val));
-				
+	kf[j] = gamma*sigma_pw_vk*sqrt(double ((R*T)/ (2*PI*W_k)) )/(pow(totalSiteDensity ,m_val));
+	// cout << "R= " << R << " ,T = " << T << endl; 
+	// cout << sqrt(double ((R*T)/ (2*PI*W_k)) ) << endl;
+	// cout << (pow(totalSiteDensity ,m_val)) << endl;
+	// cout << "sticking forward " << kf[j] << endl; 
+	
       }
 
 
@@ -986,7 +1077,7 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 	unsigned int NumberOfPhase = m_rxns[j]->Mechanism()->PhaseCount();
 	double totalSiteDensity = 0.0;
 	for (n=0; n!=NumberOfPhase; ++n) {
-	  string phName = m_rxns[j]->GetPhaseName(n);
+	  string phName =  m_rxns[j]->Mechanism()->Phase(n)->Name(); 
 	  
 	  if ((m_rxns[j]->Mechanism()->FindID(phName)).compare("s") ==0 ){
 	    totalSiteDensity += m_rxns[j]->Mechanism()->FindSiteDensity(phName);
@@ -1007,7 +1098,7 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 	}
 
 
-	kf[j] = gamma*sigma_pw_vk*sqrt(double ((R*T)/ (2*M_PI*W_k)) )/( (1-gamma/2) * pow(totalSiteDensity ,m_val) );
+	kf[j] = gamma*sigma_pw_vk*sqrt(double ((R*T)/ (2*PI*W_k)) )/( (1-gamma/2) * pow(totalSiteDensity ,m_val) );
 				
       }
 
@@ -1016,43 +1107,49 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 
 // Calculates the concentration dependent rate constant of type COVERAGE
 
-void ReactionSet::calcCOVERAGE(const real *const x, fvector &kf) const
+void ReactionSet::calcCOVERAGE(real T, const real *const x, fvector &kf) const
 {
   unsigned int i, n;
-  int j, k;
+  int k;
   double invRT = 1.0 / (R * T);
-  
-  for (im=m_cov_rxns.begin(),j=0; im!=m_cov_rxns.end(); ++im){
-     j = *im;
+  RxnMap::const_iterator im;
+  double lnT = log(T);
 
-     kf[j] = m_rxns[j]->Arrhenius().A *
-       exp((m_rxns[j]->Arrhenius().n * lnT) -
-	   (m_rxns[j]->Arrhenius().E * invRT));
-     
+  for (im=m_cov_rxns.begin(); im!=m_cov_rxns.end(); ++im){
+     i = *im;
+
+     kf[i] = m_rxns[i]->Arrhenius().A *
+       exp((m_rxns[i]->Arrhenius().n * lnT) -
+	   (m_rxns[i]->Arrhenius().E * invRT));
+  
+     //cout << "Arrhenius kf " << kf[i] << endl;
+     //cout << "COV count =" << m_rxns[i]->COVERAGECount() << endl; 
 
      double val = 1.0;
-      for (k=0; k!=m_rxns[i]->ReactantCount(); ++k) {
+      
 		
-	unsigned int idx = m_rxns[i]->Reactants()[k].Index(); 
-	string spName = m_rxns[i]->Mechanism()->GetSpecies(idx)->Name(); 
-	string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName(); 
-
-	for (n=0; n!=m_rxns[i].COVERAGECount(); ++n){ 
-
+	for (n=0; n!=m_rxns[i]->COVERAGECount(); ++n){ 
+	  
 	  string COVsp = m_rxns[i]->CoverageElement(n).spName;
-       
-	      if (spName.compare(COVsp) == 0){
+	  unsigned int idx = m_rxns[i]->Mechanism()->FindSpecies(COVsp);
+	  string specName = m_rxns[i]->Mechanism()->GetSpecies(idx)->Name(); // use this and if  to double check
+	      if (specName.compare(COVsp) == 0){
                 double Eta = m_rxns[i]->CoverageElement(n).Eta;
 		double Miu = m_rxns[i]->CoverageElement(n).Miu;
 		double Epsilon = m_rxns[i]->CoverageElement(n).Epsilon;
-		
+		//cout << "Eta= " << Eta << " Miu= " << Miu << " Eps= " << Epsilon << endl;
+                //cout << specName << " = " << x[idx] << endl;
+		//cout << "Z_k power miu = " << pow(x[idx], Miu) << endl;
+		//cout << "10 power Eta = " << pow(10,(Eta * x[idx])) << endl;
 		val *= pow(10,(Eta * x[idx])) * pow(x[idx], Miu)* exp (-Epsilon * x[idx] * invRT );
               
 	      }      
 	}
-      }
+      
 
-   kf[j] *= val;      
+   kf[i] *= val;  
+
+   //cout << "COV kf= " << kf[i] << endl; 
   }
 
 }
@@ -1230,7 +1327,7 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
 
     // Calculate COVERAGE
-    calcCOVERAGE(x, kf);
+    calcCOVERAGE(T, x, kf);
 
 
     // Calculate third-body concentrations for all reactions.  These

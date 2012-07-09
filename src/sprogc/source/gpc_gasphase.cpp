@@ -42,7 +42,6 @@
 
 #include "gpc_gasphase.h"
 #include<vector>
-#include "gpc_mech.h"
 using namespace Sprog;
 using namespace Sprog::Thermo;
 using namespace std;
@@ -70,7 +69,7 @@ GasPhase::GasPhase(void)
 }
 
 // Default constructor (public, requires species vector).
-GasPhase::GasPhase(const SpeciesPtrVector &sp) : Mixture(sp)
+GasPhase::GasPhase(const SpeciesPtrVector &sp): Mixture(sp)
 {
 }
 
@@ -150,35 +149,35 @@ void GasPhase::Cvs_R(Sprog::fvector &Cv) const
 // Calculates the bulk internal energies in current units.
 real GasPhase::BulkU() const
 {
-    return CalcBulkU(Temperature(), &MoleFractions().front(), m_mech->GasSpeciesCount());
+    return CalcBulkU(Temperature(), &MoleFractions().front(), gasSpeciesCount);
 }
 
 // Calculates the bulk enthalpy in current units.
 real GasPhase::BulkH() const
 {
-    return CalcBulkH(Temperature(), &MoleFractions().front(), m_mech->GasSpeciesCount());
+    return CalcBulkH(Temperature(), &MoleFractions().front(), gasSpeciesCount);
 }
 
 // Calculates the bulk entropy in current units.
 real GasPhase::BulkS() const
 {
-    return CalcBulkS(Temperature(), &MoleFractions().front(), m_mech->GasSpeciesCount());
+    return CalcBulkS(Temperature(), &MoleFractions().front(), gasSpeciesCount);
 }
 
 // Calculates the bulk Gibbs free energies in current units.
 real GasPhase::BulkG() const
 {
-    return CalcBulkG(Temperature(), &MoleFractions().front(), m_mech->GasSpeciesCount());
+    return CalcBulkG(Temperature(), &MoleFractions().front(), gasSpeciesCount);
 }
 
 // Calculates the mean molar heat capacity at const. P.
 real GasPhase::BulkCp() const
 {
-    return CalcBulkCp(Temperature(), &MoleFractions().front(), m_mech->GasSpeciesCount());
+    return CalcBulkCp(Temperature(), &MoleFractions().front(), gasSpeciesCount);
 }
 
 // Calculates the mean molar heat capacity at const. V.
 real GasPhase::BulkCv() const
 {
-    return CalcBulkCv(Temperature(), &MoleFractions().front(), m_mech->GasSpeciesCount());
+    return CalcBulkCv(Temperature(), &MoleFractions().front(), gasSpeciesCount);
 }

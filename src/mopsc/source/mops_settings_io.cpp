@@ -207,6 +207,8 @@ Reactor *const readReactor(const CamXML::Element &node,
             reac = ReactorFactory::Create(Serial_Batch, mech);
         }
     }
+    
+    std::cout << "ReadReactor: Reactor Type Read"<< endl;
 
     // Now check for constant temperature.  If not constant temperature
     // then the reactor is solved using the adiabatic energy equation.
@@ -225,7 +227,7 @@ Reactor *const readReactor(const CamXML::Element &node,
         // energy equation.
         reac->SetEnergyEquation(Reactor::Adiabatic);
     }
-
+    std::cout << "ReadReactor: Temperature Setting- const T or Adiabatic"<< endl;
 
     // Now check for constant volume.
     attr = node.GetAttribute("constv");
@@ -243,7 +245,7 @@ Reactor *const readReactor(const CamXML::Element &node,
         // pressure reactor.
         reac->SetConstP();
     }
-
+    std::cout << "ReadReactor: Volume Set"<< endl;
 
     // REACTOR INITIAL CONDITIONS.
 
@@ -270,6 +272,8 @@ Reactor *const readReactor(const CamXML::Element &node,
         throw std::runtime_error("No initial condition for pressure (Mops, Settings_IO::readReactor).");
     }
 
+    std::cout << "ReadReactor: Temperature and Pressure Read"<< endl;
+
     // Fill the mixture object.
     node.GetChildren("component", nodes);
     for (i=nodes.begin(); i!=nodes.end(); ++i) {
@@ -293,7 +297,10 @@ Reactor *const readReactor(const CamXML::Element &node,
             throw std::runtime_error("Initial condition must have ID "
                                 "(Mops, Settings_IO::readReactor)");
         }
+
     }
+
+    	cout << "Mixture object filled " << std::endl;
 
     bool doubling_activated;
     subnode = node.GetFirstChild("DoublingAlgorithm");
@@ -307,11 +314,15 @@ Reactor *const readReactor(const CamXML::Element &node,
 
     } else doubling_activated = true;
 
+    	cout << "Doubling algorithm " << std::endl;
     // Assign the species mole fraction vector to the reactor mixture.
     mix->GasPhase().SetFracs(molefracs);
+    std::cout << "ReadReactor: MoleFrac assigned"<< endl;
     mix->Particles().Initialise(max_particle_count, doubling_activated);
 	mix->Reset(maxM0);
     reac->Fill(*mix);
+
+    
 
     // Particles
     subnode = node.GetFirstChild("population");
@@ -361,7 +372,7 @@ Reactor *const readReactor(const CamXML::Element &node,
 
         mix->SetParticles(allParticleList.begin(), allParticleList.end(), initialM0 / weightSum);
     }
-
+    std::cout << "ReadReactor: Reactor Particle Read"<< endl;
 
     // TEMPERATURE GRADIENT PROFILE.
 
@@ -375,6 +386,8 @@ Reactor *const readReactor(const CamXML::Element &node,
             reac->Add_dTdt(Strings::cdble(attr->GetValue()), fun);
         }
     }
+
+    std::cout << "ReadReactor: dTdt Read"<< endl;
 
     // PSR SPECIFIC SETTINGS.
 
@@ -700,6 +713,8 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
                 reac = ReactorFactory::Create(Serial_Batch, mech);
             }
         }
+	
+	std::cout << "Load from old xml Reactor Type Passed"<< endl;
 
         // Now check for constant temperature.  If not constant temperature
         // then the reactor is solved using the adiabatic energy equation.
@@ -982,6 +997,8 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 
         readGlobalSettings(*root, sim, solver);
 
+	std::cout << "Load from NEW xml Global Setting Read"<< endl;
+
         // OUTPUT SETTINGS.
         // wjm34: read output settings before reactor, so we can check if ensemble/g.p.
         // files are consistent with some more simulation settings.
@@ -1009,11 +1026,13 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
         node = root->GetFirstChild("reactor");
         if (node != NULL) {
 			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0(), sim);
+			std::cout << "Load from NEW xml Reactor Read"<< endl;
         } else {
             throw std::runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");
         }
 
+	
         // MECHANISM REDUCTION.
 
         node = root->GetFirstChild("LOI");

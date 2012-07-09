@@ -105,7 +105,7 @@ void Mechanism::Deserialize(std::istream &in)
 				
                 // Read the particle mechanism.
                 m_pmech.Deserialize(in);
-                m_pmech.SetSpecies(GasMech().Species());
+                m_pmech.SetSpecies(GasMech().Species()); // takes all surface 
 
                 break;
             default:

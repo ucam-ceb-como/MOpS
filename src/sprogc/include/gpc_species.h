@@ -212,7 +212,7 @@ public:
     {
         ar.template register_type<Sprog::ElComp>();
         ar.register_type(static_cast< ::IO::Transport * >(NULL));
-        ar & m_name & m_elcomp & m_molwt & m_mech & m_thermoparams & m_T1 & m_transport & site_occupancy & m_phaseName & m_phase; 
+        ar & m_name & m_elcomp & m_molwt & m_mech & m_thermoparams & m_T1 & site_occupancy & m_phaseName & m_phase & m_transport; 
     }
 
     // Writes the element to a binary data stream.
@@ -249,21 +249,23 @@ public:
 protected:
     // Species data.
     std::string m_name;              // Name/symbol.
-	Sprog::Phase *m_phase;			 // Phase pointer for species
-    std::string m_phaseName; 	     // Phase Name for species
+
     ElCompVector m_elcomp;           // Elemental composition.
     real m_molwt;                    // Molecular weight (kg/mol).
     Sprog::Mechanism *m_mech;        // Parent mechanism.
-    int site_occupancy;              // Site occupancy for surface species (sigma).
+    
     //double activity;                 // Bulk species activity (NOT YET).  
 
-    //const ElementPtrVector *m_elements; // Elements used to define species.
-
+   
     // Thermo parameters for different temperature ranges.  The map key is the
     // end point temperature up to which the parameters are valid.
     Sprog::Thermo::ThermoMap m_thermoparams;
     real m_T1; // Start temperature for range.
-
+    
+    int site_occupancy;              // Site occupancy for surface species (sigma).
+   
+    std::string m_phaseName; 	     // Phase Name for species
+    Sprog::Phase *m_phase;			 // Phase pointer for species
 private:
     //! Data for calculating transport properties
     IO::Transport *m_transport;

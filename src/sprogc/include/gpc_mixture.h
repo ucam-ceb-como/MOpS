@@ -49,11 +49,9 @@
 #include "gpc_mixture_type.h"
 #include <vector>
 #include <iostream>
-#include "gpc_phase.h" //added by mm864 
+
 namespace Sprog
 {
-  class Mechanism; // added by mm864
-
 namespace Thermo
 {
 
@@ -66,7 +64,8 @@ class Mixture
 public:
     // Constructors.  It makes no sense to have a mixture without knowledge
     // of the species list, therefore the default constructor is protected.
-    Mixture(const SpeciesPtrVector &sp); // Default constructor (requires species list).
+	Mixture(const SpeciesPtrVector &sp); // Default constructor (requires species list).
+    //Mixture(const SpeciesPtrVector &sp, const int NumGasSp, const int NumSurfSp); // Default constructor (requires species list).
     Mixture(const Mixture &copy);        // Copy constructor.
     Mixture(                       // Stream-reading constructor.
         std::istream &in,          //   - Stream from which to read.
@@ -311,8 +310,14 @@ protected:
     // generated without knowledge of the defining species list.
     Mixture(void);
     
-	 Sprog::Mechanism *m_mech;
+	 
     //unsigned int GasSpCount = m_mech->GasSpeciesCount();
+
+
+	int gasSpeciesCount;
+
+	int surfSpeciesCount; 
+
 
 private:
     // The data vector contains, in order, the species mole fractions,
@@ -322,9 +327,9 @@ private:
     // Vector of species for which this mixture is defined.
     const SpeciesPtrVector *m_species;
 
-    // Mechanism for which this mixture is defined.
-    const PhasePtrVector *m_phase;
+   
 
+	
    
     
 

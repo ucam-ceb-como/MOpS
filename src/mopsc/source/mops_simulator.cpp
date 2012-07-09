@@ -481,6 +481,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
 void Simulator::PostProcess()
 {
+	cout << "Simulator::PostProcess() in here" << endl;
     // READ AUXILLIARY INFORMATION.
 
     // Read auxilliary information about the simulation (mechanism
@@ -489,13 +490,14 @@ void Simulator::PostProcess()
     Mops::timevector times;
     unsigned int ncput = 0;
     vector<string> cput_head; // CPU time headings.
+	cout << "Simulator::PostProcess() cput head" << endl;
     readAux(mech, times, ncput, cput_head);
-
+	cout << "Simulator::PostProcess() Aux Read" << endl;
     // SETUP OUTPUT DATA STRUCTURES.
 
     // Get reference to particle mechanism.
     Sweep::Mechanism &pmech = mech.ParticleMech();
-
+	
     // Calculate number of output points.
     unsigned int npoints = 1; // 1 for initial conditions.
     for(Mops::timevector::const_iterator i=times.begin(); i!=times.end(); ++i) {
@@ -546,18 +548,22 @@ void Simulator::PostProcess()
                                  "(Mops, Simulator::PostProcess).");
     }
 
+	cout << "Simulator::PostProcess() Simulator Input File Openned Read" << endl;
     // READ INITIAL CONDITIONS.
 
     // The initial conditions were only written to the file
     // once, as they are the same for all runs.
     readGasPhaseDataPoint(fin, mech, achem[0], echem[0], true);
     readParticleDataPoint(fin, pmech, astat[0], estat[0], true);
+
+	cout << "Simulator::PostProcess() GasParticleDataPoint Read" << endl;
     readGasRxnDataPoint(fin, mech,
                         agprates[0], egprates[0],
                         agpfwdrates[0], egpfwdrates[0],
                         agprevrates[0], egprevrates[0],
                         agpwdot[0], egpwdot[0],
                         true);
+	cout << "Simulator::PostProcess() GasRxnDataPoint Read" << endl;
     readPartRxnDataPoint(fin, mech.ParticleMech(),
                          apprates[0], epprates[0],
                          appwdot[0], eppwdot[0],
@@ -1106,10 +1112,10 @@ void Simulator::readAux(Mops::Mechanism &mech,
         throw runtime_error("Failed to open file for simulation "
                             "post-processing (Mops, Simulator::readAux).");
     }
-
+	cout << "Simulator::PostProcess() about to mech Deserialize" << endl;
     // Read the mechanism from the file.
     mech.Deserialize(fin);
-
+	cout << "Simulator::PostProcess() mech Deserialize" << endl;
     // Read the time intervals from the file.
     times.clear();
     unsigned int ntimes;
@@ -1117,7 +1123,7 @@ void Simulator::readAux(Mops::Mechanism &mech,
     for (unsigned int i=0; i<ntimes; i++) {
         times.push_back(Mops::TimeInterval(fin));
     }
-
+	cout << "Simulator::PostProcess() mech Time Interval " << endl;
     // Read simulator settings.
     Deserialize(fin);
 

@@ -99,12 +99,21 @@ public:
 
     // SPECIES MOLAR PRODUCTION RATES.
 
-    // Calculates the molar production rates of all species.  Returns
+    // Calculates the molar production rates of gas species.  Returns
     // the total molar production rate.
     real GetMolarProdRates(
-        const fvector &rop, // Rate of Progress of each reaction.
+        const fvector &rop, // Rate of Progress of each gas reaction.
         fvector &wdot       // Return vector for molar prod. rates.
         ) const;
+
+
+	// Calculates the molar production rates of surface and gas species.  Returns
+    // the total molar production rate.
+    real GetSurfaceMolarProdRates(
+        const fvector &rop, // Rate of Progress of each surface reaction.
+        fvector &sdot       // Return vector for molar prod. rates.
+        ) const;
+
 
     // Calculates the molar production rates of all species.  Returns
     // the total molar production rate.
@@ -112,6 +121,18 @@ public:
         const Sprog::Thermo::GasPhase &gas, // The gas for which to calculate the rates.
         fvector &wdot                       // Return vector for molar prod. rates.
         ) const;
+
+	// Calculates the surface molar production rates of all species.  Returns
+    // the total molar production rate.
+     real GetSurfaceMolarProdRates(
+        real T,              // The mixture temperature.
+        real density,        // Mixture molar density.
+        const real *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x array.
+        const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
+        fvector &sdot		  // Return vector for surface molar prod. rates.
+		) const;
+
 
     // Calculates the molar production rates of all species.  Returns
     // the total molar production rate.
@@ -122,7 +143,7 @@ public:
         unsigned int n,      // Number of values in x array.
         const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
         fvector &wdot        // Return vector for molar prod. rates.
-        ) const;
+		) const;
 
 	void GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) const;
 
@@ -309,6 +330,7 @@ protected:
 
     // Calculates the concentration dependent COVERAGE rate constant expression 
     void calcCOVERAGE(
+				real T,            // The mixture temperature. 
 		      const real *const x, // Species mole fractions.
 		      fvector &kf         // Return vector for forward rate constants.	      
 		      ) const;

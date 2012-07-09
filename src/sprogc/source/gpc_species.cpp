@@ -760,7 +760,7 @@ void Species::Serialize(std::ostream &out) const
         // This is calling gpc_el_comp.h
         for (ElCompVector::const_iterator i=m_elcomp.begin(); i!=m_elcomp.end(); i++) {
             // Write the element index.
-	  int ix = (*i).Index(); 
+		int ix = (*i).Index(); 
             out.write((char*)&ix, sizeof(ix));
 
             // Write the element count.
@@ -768,35 +768,6 @@ void Species::Serialize(std::ostream &out) const
             out.write((char*)&n, sizeof(n));
         }
 	
-	/*
-	 * Write the phase info  - Added by mm864
-	 */
-
-	// Write the length of the phase name to the stream.
-        n = m_phaseName.length();
-        out.write((char*)&n, sizeof(n));
-        
-	
-        // Write the phase name to the stream.
-        out.write(m_phaseName.c_str(), n);
-        
-	/*	
-	// Write the length of the phase id to the stream.
-        n = m_phaseID.length();
-        out.write((char*)&n, sizeof(n));
-	// Write the phase id to the stream.
-        out.write(m_phaseID.c_str(), n);
-      
-       // Write the bulk acitivity to the stream. 
-        double act = (double)activity;
-        out.write((char*)&act, sizeof(act));
-	*/
-
-        // Write the site occupancy to the stream. - Added by mm864
-        int site_occ = (int)site_occupancy;
-        out.write((char*)&site_occ, sizeof(site_occ));
-
-
         // Write the molecular weight to the stream.
         double wt = (double)m_molwt;
         out.write((char*)&wt, sizeof(wt));
@@ -825,6 +796,27 @@ void Species::Serialize(std::ostream &out) const
         // Output the start temperature for the thermo range.
         double T = (double)m_T1;
         out.write((char*)&T, sizeof(T));
+		
+		/*
+		* Write the phase info  - Added by mm864
+		*/
+
+		// Write the length of the phase name to the stream.
+        n = m_phaseName.length();
+        out.write((char*)&n, sizeof(n));
+        
+        // Write the phase name to the stream.
+        out.write(m_phaseName.c_str(), n);
+        
+		// Write the site occupancy to the stream. - Added by mm864
+        int site_occ = (int)site_occupancy;
+        out.write((char*)&site_occ, sizeof(site_occ));
+		
+		/*         
+		// Write the bulk acitivity to the stream. 
+        double act = (double)activity;
+        out.write((char*)&act, sizeof(act));
+		*/
 
     } else {
         throw invalid_argument("Output stream not ready (Sprog, Species::Serialize).");
@@ -843,20 +835,18 @@ void Species::Deserialize(std::istream &in)
     site_occupancy = 0;
     m_elcomp.clear();
     m_thermoparams.clear();
-    //bulk_activity = 0.0; 
+    m_phase = NULL;
 
     if (in.good()) {
         // Read the serialized species version number.
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
-
         unsigned int n = 0; // Need for reading name length.
         char *name = NULL;
         char *phase = NULL; 
-	char *phaseid = NULL;
         double T =0.0, wt=0.0;
         int site_occ = 0;
-
+		cout << "VERSION ="  << version << endl;
         switch (version) {
             case 0:
                 // Read the length of the species name.
@@ -886,30 +876,7 @@ void Species::Deserialize(std::istream &in)
                     m_elcomp.push_back(ElComp(ix, m));
                 }
 
-		// Read the species phaseName. - Added by mm864
-                phase = new char[n];
-                in.read(phase, n);
-                m_phaseName.assign(phase, n);
-                delete [] phase;
-
-
-		// Read the species phaseName. - Added by mm864
-                phaseid = new char[n];
-                in.read(phaseid, n);
-                m_phaseName.assign(phaseid, n);
-                delete [] phaseid;
-
-		/*
-                // Read the species bulk activity. - Added by mm864
-                in.read(reinterpret_cast<char*>(&act), sizeof(act));
-                activity = (real)act;
-		*/
-
-
-		// Read the species site occupancy. - Added by mm864
-                in.read(reinterpret_cast<char*>(&site_occ), sizeof(site_occ));
-		site_occupancy = (int)site_occ;
-
+				
                 // Read the species mol. wt.
                 in.read(reinterpret_cast<char*>(&wt), sizeof(wt));
                 m_molwt = (real)wt;
@@ -944,6 +911,22 @@ void Species::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&T), sizeof(T));
                 m_T1 = (real)T;
 
+				// Read the species phaseName. - Added by mm864
+                phase = new char[n];
+                in.read(phase, n);
+                m_phaseName.assign(phase, n);
+                delete [] phase;
+
+				// Read the species site occupancy. - Added by mm864
+                in.read(reinterpret_cast<char*>(&site_occ), sizeof(site_occ));
+				site_occupancy = (int)site_occ;
+
+				/*
+                // Read the species bulk activity. - Added by mm864
+                in.read(reinterpret_cast<char*>(&act), sizeof(act));
+                activity = (real)act;
+				*/
+				
                 break;
             default:
                 throw runtime_error("Species serialized version number "

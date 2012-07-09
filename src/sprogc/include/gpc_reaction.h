@@ -419,7 +419,7 @@ public:
         ar & m_name & m_reversible
            & m_reac & m_prod & m_dstoich & m_dreac & m_dprod
            & m_arrf & m_arrr & m_lt & m_revlt & m_fo & m_covr & m_usetb
-           & m_thirdbodies & m_fotype & m_foparams & m_isSurface & m_sticking & m_mottwise & m_isCoverage & m_coverage & m_isFord & m_ford & m_mech;
+	  & m_thirdbodies & m_fotype & m_foparams & m_isSurface & m_sticking & m_mottwise & m_isCoverage & m_coverage & m_isFord & m_ford & m_mech & m_deltaStoich & m_phaseVector;
     }
 
     // Writes the element to a binary data stream.
@@ -456,6 +456,8 @@ protected:
     // Third bodies.
     bool m_usetb; // Set to true if this reaction requires third bodies.
     std::vector<Stoich> m_thirdbodies; // Reaction third bodies and their coefficients.
+
+    
 
     // Ford reaction 
 

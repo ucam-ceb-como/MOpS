@@ -61,7 +61,6 @@
 
 namespace Sprog
 {
-class Mechanism; // added by mm864
 namespace Thermo
 {
 

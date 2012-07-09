@@ -85,8 +85,8 @@ int main(int argc, char *argv[])
     string thermfile("therm.dat");
 	
    
-    string chemSurfFile("chemSurf.inp"); // added by mm864
-    string thermSurfFile("thermSurf.inp"); // added by mm864
+    string chemSurfFile("surfchem.inp"); // added by mm864
+    string thermSurfFile("surftherm.dat"); // added by mm864
     
     string settfile("mops.inx");
     string swpfile("sweep.xml");
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     bool fwriteparticles = false;
     bool postpocessPAH   = false;
     SolverType soltype = GPC;
-    int diag = 0; // Diagnostics level.
+    int diag = 1; // Diagnostics level.
 
     // Offset for random number sequence so that independent realisations
     // can be computed in separated program instances.
@@ -253,6 +253,8 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    std::cout << "Solving Type" << soltype << endl; // for debugging
+
     // Read the chemical mechanism / profile.
 	
 	if (surfaceCapability  == 1){
@@ -262,6 +264,8 @@ int main(int argc, char *argv[])
         mech.ParticleMech().SetSpecies(mech.GasMech().Species());
         if (diag>0) 
             mech.GasMech().WriteDiagnostics("ckmech.diag");
+	
+	std::cout << "Particle Mech set species done - surface mode" << endl; // for debugging
 
         if (soltype == FlamePP){
   
@@ -290,6 +294,8 @@ int main(int argc, char *argv[])
         if (diag>0) 
 	  { mech.GasMech().WriteDiagnostics("ckmech.diag");}
 
+	std::cout << "Particle Mech set species done - gas only mode" << endl; // for debugging
+
         if (soltype == FlamePP){
             //Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
             dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gasphase, mech);
@@ -311,10 +317,12 @@ int main(int argc, char *argv[])
 	}
     // Read the particle mechanism.
     try {
-        if (soltype != GPC) {
+      if (soltype != GPC) { // If NOT GPC 
             mech.ParticleMech().SetSpecies(mech.GasMech().Species());
-            Sweep::MechParser::Read(swpfile, mech.ParticleMech());
+	    std::cout << "Sweep Mech Parser" << endl; // for debugging
 
+            Sweep::MechParser::Read(swpfile, mech.ParticleMech());
+	    
         }
     } catch (std::logic_error &le) {
         printf("mops: Failed to read particle mechanism due to bad inputs.  Message:\n  ");
@@ -337,7 +345,9 @@ int main(int argc, char *argv[])
             reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, sim, *solver, mech);
         } else {
             // New format.
+	  std::cout << "About to read the XML/INX" << endl; // for debugging
             reactor = Settings_IO::LoadFromXML(settfile, reactor, times, sim, *solver, mech);
+	    std::cout << "XML/INX read" << endl; // for debugging
         }
     } catch (std::logic_error &le) {
         printf("mops: Failed to load settings file due to bad inputs.  Message:\n  ");
@@ -376,6 +386,8 @@ int main(int argc, char *argv[])
 
         }
         delete sensi;
+
+	cout << "Sensitivity Analyser set" << endl;// for debugging
     } catch (std::runtime_error &re) {
         printf("mops: Failed to load sensitivity setting files due to a program error.  Message:\n  ");
         printf(re.what());

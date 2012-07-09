@@ -98,6 +98,8 @@ Reaction::Reaction(void)
 
     // Reaction context.
     m_mech = NULL;
+    m_deltaStoich.clear();
+    m_phaseVector.clear();
 }
 
 // Stream-reading constructor.
@@ -142,7 +144,8 @@ Reaction::Reaction(std::istream &in)
 
     // Reaction context.
     m_mech = NULL;
-
+    m_deltaStoich.clear();
+    m_phaseVector.clear();
     Deserialize(in);
 }
 
@@ -226,6 +229,8 @@ Reaction &Reaction::operator=(const Sprog::Kinetics::Reaction &rxn)
 	
         // Copy pointer to mechanism.
         m_mech = rxn.m_mech;
+	m_deltaStoich.assign(rxn.m_deltaStoich.begin(), rxn.m_deltaStoich.end());
+	m_phaseVector.assign(rxn.m_phaseVector.begin(), rxn.m_phaseVector.end());
     }
 
     return *this;
@@ -583,8 +588,9 @@ Sprog::Kinetics::DeltaStoich *const Reaction::AddDeltaStoich(const Sprog::Kineti
 
     // Adds delta stoich to vector.
     Sprog::Kinetics::DeltaStoich *delta_stoich_new = delta_st.Clone();
-    m_deltaStoich.push_back(delta_stoich_new);
     delta_stoich_new->SetSpeciesName(spName);
+    m_deltaStoich.push_back(delta_stoich_new);
+    
     // Set up delta stoich.
     delta_stoich_new->SetReaction(*this); // You need a set reaction  function 
     
@@ -1036,6 +1042,7 @@ Reaction *Reaction::Clone(void) const
 // reaction data.  This is used to debug.
 void Reaction::WriteDiagnostics(std::ostream &out) const
 {
+ 
     string data = "";
     real val = 0.0;
     int ival = 0;
@@ -1073,6 +1080,8 @@ void Reaction::WriteDiagnostics(std::ostream &out) const
             data = cstr(val) + " ";
             out.write(data.c_str(), data.length());
         }
+
+	
 
         // Stoichiometry changes.
         data = cstr(m_dstoich) + " ";
@@ -1223,6 +1232,22 @@ void Reaction::WriteDiagnostics(std::ostream &out) const
             data = cstr(m_foparams.Params[i]) + " ";
             out.write(data.c_str(), data.length());
         }
+
+	// Phase Involved.
+	data = "Phase involved:\n";
+	out.write(data.c_str(), data.length());
+        for (unsigned int i=0; i!=m_phaseVector.size(); ++i) {
+            // Phase name in this reaction.
+	  out.write(string(m_phaseVector[i]+"\t").c_str(), m_phaseVector[i].length());
+          
+        }
+
+	// Write the DeltaStoich to the file.
+	data = " DeltaStoich:\n";
+	out.write(data.c_str(), data.length());
+	for (unsigned int i=0; i!=m_deltaStoich.size(); ++i) {
+        m_deltaStoich[i]->WriteDiagnostics(out);
+	}
 
         // New line.
         data = "\n";
@@ -1390,6 +1415,8 @@ void Reaction::releaseMemory(void)
     m_ford.clear();
 
     m_mech = NULL;
+    m_deltaStoich.clear();
+    m_phaseVector.clear();
 }
 
 // Writes the reaction to a binary data stream.
@@ -1398,7 +1425,7 @@ void Reaction::Serialize(std::ostream &out) const
     if (out.good()) {
         const unsigned int trueval  = 1;
         const unsigned int falseval = 0;
-
+	unsigned int u;
         // Write the serialisation version number to the stream.
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
@@ -1447,6 +1474,25 @@ void Reaction::Serialize(std::ostream &out) const
             // Write mu.
             int mu = m_prod[i].Mu();
             out.write((char*)&mu, sizeof(mu));
+        }
+
+	 // Write the PhaseName involved.
+        u = m_phaseVector.size();
+        out.write((char*)&u, sizeof(u));
+	
+	for (unsigned int i=0; i<u; i++) {
+            // Write phase name.
+	  out.write(m_phaseVector[i].c_str(), m_phaseVector[i].length());
+
+        }
+
+	// Write the number of delta stoich to the stream.
+        u = m_deltaStoich.size();
+        out.write((char*)&u, sizeof(u));
+
+        // Write the delta stoich to the stream.
+        for (DeltaStoichPtrVector::const_iterator ids=m_deltaStoich.begin(); ids!=m_deltaStoich.end(); ids++) {
+            (*ids)->Serialize(out);
         }
 
         // Write stoichiometry changes.
@@ -1648,7 +1694,7 @@ void Reaction::Deserialize(std::istream &in)
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-        unsigned int n, spN = 0; // Need for reading name length.
+        unsigned int n = 0, u =0, spN = 0; // Need for reading name length.
         char *name = NULL;
         double A = 0.0, nn = 0.0, E = 0.0;
         int itb = 0;
@@ -1714,6 +1760,54 @@ void Reaction::Deserialize(std::istream &in)
                     m_prod.push_back(Stoich(ix, mu));
                 }
 
+		// Read PhaseName involved. 
+		in.read(reinterpret_cast<char*>(&n), sizeof(n));
+		m_phaseVector.reserve(n);
+
+		  for (unsigned int i=0; i<n; i++) {
+                    
+		    std::string NAME;
+		     // Read the length of the phase name.
+		    in.read(reinterpret_cast<char*>(&spN), sizeof(spN));
+
+                // Read the reaction name.
+		    if (spN > 0) {
+		      name = new char[spN];
+		      in.read(name, spN);
+		      NAME.assign(name, spN);
+		      delete [] name;
+		    } else {
+		      NAME = "";
+		    }
+                  
+
+                    // Push a new string into the vector.
+                    m_phaseVector.push_back(NAME);
+		  }
+
+		  // Read the number of delta stoich and reserve memory.
+                in.read(reinterpret_cast<char*>(&u), sizeof(u));
+                m_deltaStoich.reserve(u);
+
+                // Read the delta stoich.
+                try {
+                    for (unsigned int i=0; i<u; i++) {
+                        // Read the delta stoich from the stream using the
+                        // appropriate constructor.
+		      Sprog::Kinetics::DeltaStoich *ds = new Sprog::Kinetics::DeltaStoich(in);
+                        ds->SetReaction(*this);
+
+                        // Add the delta stoich to the vector.
+                        m_deltaStoich.push_back(ds);
+                    }
+                } catch (exception &e) {
+                    // Ensure the mechanism is cleared before throwing
+                    // the exception to the next layer up.
+                    releaseMemory();
+                    throw;
+                }
+			
+		
                 // Read stoichiometry changes.
                 in.read(reinterpret_cast<char*>(&A), sizeof(A));
                 m_dstoich = (real)A;

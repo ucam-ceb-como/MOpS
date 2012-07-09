@@ -69,6 +69,15 @@ Mixture::Mixture(const SpeciesPtrVector &sp)
     SetSpecies(sp);
 }
 
+/*
+Mixture::Mixture(const SpeciesPtrVector &sp, const int NumGasSp, const int NumSurfSp)
+{
+    SetSpecies(sp);
+	gasSpeciesCount =  NumGasSp; 
+	surfSpeciesCount = 	NumSurfSp; 
+}
+*/
+
 // Copy constructor.
 Mixture::Mixture(const Mixture &copy)
 {
@@ -99,6 +108,8 @@ Mixture &Mixture::operator=(const Mixture &mix)
     if (this != &mix) {
         m_data.assign(mix.m_data.begin(), mix.m_data.end());
         m_species = mix.m_species;
+		gasSpeciesCount = mix.gasSpeciesCount;
+		surfSpeciesCount = mix.surfSpeciesCount; 
     }
 
     return *this;
@@ -150,17 +161,17 @@ void Mixture::GetConcs(fvector &concs) const
 
     // Loop over all mole fractions and convert to concentrations.
     const real density = m_data[densityIndex()];
-    for (unsigned int i = 0; i != m_mech->GasSpeciesCount(); ++i) {
+    for (unsigned int i = 0; i != gasSpeciesCount; ++i) {
         concs[i] = m_data[i] * density;
     }
 
 	// Concentration for surface species	
-    for (unsigned int i =  m_mech->GasSpeciesCount(); i != m_species->size(); ++i) {
+    for (unsigned int i =  gasSpeciesCount; i != m_species->size(); ++i) {
 	
-	string spName = m_mech->GetSpecies(i)->Name(); 
-	string phName = m_mech->GetSpecies(spName)->PhaseName();
-	double site_d =  m_mech->FindSiteDensity(phName);
-	int sp_occ = m_mech->FindSiteOccup(spName);
+	string spName = (*m_species)[0]->Mechanism()->GetSpecies(i)->Name(); 
+	string phName = (*m_species)[0]->Mechanism()->GetSpecies(spName)->PhaseName();
+	double site_d =  (*m_species)[0]->Mechanism()->FindSiteDensity(phName);
+	int sp_occ = (*m_species)[0]->Mechanism()->FindSiteOccup(spName);
 	
         concs[i] = m_data[i] * site_d/sp_occ;
     }
@@ -175,13 +186,13 @@ void Mixture::GetMassFractions(fvector &fracs) const
     // Loop over all mole fractions and convert to mass fractions:
     //   y = x * wt / sum(x*wt)
     real val, tot = 0.0;
-    for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+    for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
         val = m_data[i] * (*m_species)[i]->MolWt();
         fracs[i] = val;
         tot += val;
     }
     tot = 1.0 / tot;
-    for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+    for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
         fracs[i] *= tot;
     }
 	
@@ -189,10 +200,10 @@ void Mixture::GetMassFractions(fvector &fracs) const
 	
 	std::vector<real> TOT; 
 	
-	for (unsigned int j = 0; j!=m_mech->PhaseCount(); ++j){
+	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 		val, tot = 0.0;
-		std::string phname =  m_mech->Phase(j)->Name();
-		for (unsigned int i=m_mech->GasSpeciesCount(); i!=m_species->size(); ++i) {
+		std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
+		for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
 			if (((*m_species)[i]->PhaseName()).compare(phname) == 0 ){
 			val = m_data[i] * (*m_species)[i]->MolWt();
 			fracs[i] = val;
@@ -204,10 +215,10 @@ void Mixture::GetMassFractions(fvector &fracs) const
 	}
 	
 	
-	for (unsigned int j = 0; j!=m_mech->PhaseCount(); ++j){
+	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 		TOT[j] = 1.0/ TOT[j];
-		std::string phname =  m_mech->Phase(j)->Name();
-		for (unsigned int i=m_mech->GasSpeciesCount(); i!=m_species->size(); ++i) {
+		std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
+		for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
 			if (((*m_species)[i]->PhaseName()).compare(phname) == 0 ){
 			fracs[i] *= TOT[j];
 			}
@@ -230,7 +241,7 @@ real Mixture::MoleFraction(unsigned int i) const
 // Returns the molar concentration of species i. (Modified by mm864)
 real Mixture::MolarConc(unsigned int i) const
 {
-    if (i < m_mech->GasSpeciesCount()) {
+    if (i < gasSpeciesCount) {
         return m_data[i] * m_data[densityIndex()];
     } 
 	else {
@@ -241,11 +252,11 @@ real Mixture::MolarConc(unsigned int i) const
 // Returns the molar surface concentration of species i. (Modified by mm864) 
 real Mixture::MolarSurfConc(unsigned int i) const
 {
-    if ((i >= m_mech->GasSpeciesCount()) && (i < m_species->size()) ) {
+    if ((i >= gasSpeciesCount) && (i < m_species->size()) ) {
       string phName = (*m_species)[i]->PhaseName();
       double siteDen = 0.0; 
       unsigned int n;
-      siteDen = m_mech->FindSiteDensity(phName);
+      siteDen = (*m_species)[0]->Mechanism()->FindSiteDensity(phName);
 
       return m_data[i] * siteDen / ((*m_species)[i]->SiteOccupancy()); // m_data should contains site fraction !! 
     } else {
@@ -256,10 +267,10 @@ real Mixture::MolarSurfConc(unsigned int i) const
 // Returns the mass fraction of species i. (modified by mm864)  
 real Mixture::MassFraction(unsigned int i) const
 {
-    if (i < m_mech->GasSpeciesCount()) {
+    if (i < gasSpeciesCount) {
         // Get total x * W.
         real tot = 0.0;
-        for (unsigned int j=0; j!=m_mech->GasSpeciesCount(); ++j) {
+        for (unsigned int j=0; j!=gasSpeciesCount; ++j) {
             tot += m_data[j] * (*m_species)[j]->MolWt();
         }
 
@@ -267,7 +278,7 @@ real Mixture::MassFraction(unsigned int i) const
         return m_data[i] * (*m_species)[i]->MolWt() / tot;
     } 
 	
-	else if((i >= m_mech->GasSpeciesCount()) && (i < m_species->size()) ) {
+	else if((i >= gasSpeciesCount) && (i < m_species->size()) ) {
 	
 	fvector massFrac;
 	GetMassFractions(massFrac); 
@@ -287,26 +298,28 @@ void Mixture::SetFracs(const fvector &fracs)
     real tot =0.0;
 
     // Set the mole fractions.
-    for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+    for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
         m_data[i] = fracs[i];
         tot += fracs[i];
     }
 
     // Ensure that the mole fractions are normalised.
     if (tot != 1.0) {
-        for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+        for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
             m_data[i] /= tot;
+            
         }
     }
+    
 	
 	// Surface species
 	std::vector<real> Z; 
-	
-	for (unsigned int j = 0; j!=m_mech->PhaseCount(); ++j){
+
+	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 	real ztot = 0.0;
-	std::string phname =  m_mech->Phase(j)->Name();
-	
-		for (unsigned int i=m_mech->GasSpeciesCount(); i!=m_species->size(); ++i) {
+	std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
+	cout << "phasename" << phname << endl;
+		for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
 			if (((*m_species)[i]->PhaseName()).compare(phname) == 0 ){
 			m_data[i] = fracs[i];
 			ztot += fracs[i];
@@ -315,15 +328,15 @@ void Mixture::SetFracs(const fvector &fracs)
 	    Z.push_back(ztot); 
 	
 	}
-	
+
 	// Ensure that the mole fractions are normalised. 
-	for (unsigned int j = 0; j!=m_mech->PhaseCount(); ++j){
+	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 	
-	if ((Z[j] != 1.0) && ( m_mech->Phase(j)->Name().compare("gas") != 0)) {
+	if ((Z[j] != 1.0) && ( (*m_species)[0]->Mechanism()->Phase(j)->Name().compare("gas") != 0)) {
 	
-			std::string phname =  m_mech->Phase(j)->Name();
+			std::string phname = (*m_species)[0]->Mechanism()->Phase(j)->Name();
 	
-			for (unsigned int i=m_mech->GasSpeciesCount(); i!=m_species->size(); ++i) {
+			for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
 				if (((*m_species)[i]->PhaseName()).compare(phname) == 0 ){
 				m_data[i] /= Z[j];
 				}
@@ -341,18 +354,18 @@ void Mixture::SetFracs(const Sprog::real fracs[], int n)
 
 	/*
     // Check that the array of of sufficient length.
-    if ((unsigned)n >= m_mech->GasSpeciesCount()) {
+    if ((unsigned)n >= gasSpeciesCount) {
         real tot = 0.0;
 
         // Set the fractions.
-        for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+        for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
             m_data[i] = fracs[i];
             tot += fracs[i];
         }
 
         // Ensure that the mole fractions are normalised.
         if (tot != 1.0) {
-            for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+            for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
                 m_data[i] /= tot;
             }
         }
@@ -366,11 +379,11 @@ void Mixture::SetFracs(const Sprog::real fracs[], int n)
         
 		// Surface and gas species
 		std::vector<real> Z; 
-	
-		for (unsigned int j = 0; j!=m_mech->PhaseCount(); ++j){
+		
+		for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 		real fractot = 0.0;
-		std::string phname =  m_mech->Phase(j)->Name();
-	
+		std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
+		cout << "phasename" << phname << endl;
 		for (unsigned int i=0; i!=m_species->size(); ++i) {
 			if (((*m_species)[i]->PhaseName()).compare(phname) == 0 ){
 			m_data[i] = fracs[i];
@@ -382,11 +395,11 @@ void Mixture::SetFracs(const Sprog::real fracs[], int n)
 	}
 	
 	// Ensure that the mole fractions are normalised.
-		for (unsigned int j = 0; j!=m_mech->PhaseCount(); ++j){
+		for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 	
 		if ((Z[j] != 1.0)) {
 	
-			std::string phname =  m_mech->Phase(j)->Name();
+			std::string phname = (*m_species)[0]->Mechanism()->Phase(j)->Name();
 	
 			for (unsigned int i=0; i!=m_species->size(); ++i) {
 				if (((*m_species)[i]->PhaseName()).compare(phname) == 0 ){
@@ -413,22 +426,22 @@ void Mixture::SetConcs(const fvector &concs)
 		
 		
         m_data[densityIndex()] = 0.0;
-        for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+        for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
             m_data[i] = concs[i];
             m_data[densityIndex()] += concs[i];
         }
 
         // Convert values to mole fractions.
         real invdens = 1.0 / m_data[densityIndex()];
-        for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+        for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
             m_data[i] *= invdens;
         }
 		
-	for (unsigned int i=m_mech->GasSpeciesCount(); i!=m_species->size(); ++i) {
+	for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
 		string phName = (*m_species)[i]->PhaseName();
 		double siteDen = 0.0; 
 		unsigned int n;
-		siteDen = m_mech->FindSiteDensity(phName);
+		siteDen = (*m_species)[0]->Mechanism()->FindSiteDensity(phName);
 		m_data[i] *= siteDen / ((*m_species)[i]->SiteOccupancy()); // m_data should contains site fraction !! 
 	}
 		
@@ -442,12 +455,12 @@ void Mixture::SetMassFracs(const fvector &fracs)
     // Check that the mass fraction vector is of sufficient length.
     if (fracs.size() >= m_species->size()) {
         real val = 0.0, tot = 0.0, totfrac = 0.0;
-
+	
         // Check that the fractions are normalised by summing up
         // the total fractions, and dividing the values by this
         // sum in the next step.
         //std::cout << "Mass fractions:";
-        for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+        for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
             totfrac += fracs[i];
             //std::cout << ' ' << fracs[i];
         }
@@ -456,7 +469,7 @@ void Mixture::SetMassFracs(const fvector &fracs)
         // Convert to mole fractions:
         //   x = y / (wt * sum(y/wt))
         //std::cout << "Mole fractions (1):";
-        for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+        for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
             val = fracs[i] / (totfrac * (*m_species)[i]->MolWt());
             m_data[i] = val;
             //std::cout << ' ' << val;
@@ -466,7 +479,7 @@ void Mixture::SetMassFracs(const fvector &fracs)
 
         tot = 1.0 / tot;
         //std::cout << "Mole fractions (2):";
-        for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+        for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
             m_data[i] *= tot;
             //std::cout << ' ' << m_data[i];
         }
@@ -477,10 +490,12 @@ void Mixture::SetMassFracs(const fvector &fracs)
 		
 		std::vector<real> TOT; 
 	
-	for (unsigned int j = 0; j!=m_mech->PhaseCount(); ++j){
+	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 		val = 0.0, tot = 0.0, totfrac = 0.0;
-		std::string phname =  m_mech->Phase(j)->Name();
-		for (unsigned int i=m_mech->GasSpeciesCount(); i!=m_species->size(); ++i) {
+		
+		std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
+		
+		for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
 			if (((*m_species)[i]->PhaseName()).compare(phname) == 0 ){
 			totfrac += fracs[i];
 			val = fracs[i] / (totfrac * (*m_species)[i]->MolWt());
@@ -493,10 +508,10 @@ void Mixture::SetMassFracs(const fvector &fracs)
 	}
 	
 	
-	for (unsigned int j = 0; j!=m_mech->PhaseCount(); ++j){
+	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 		TOT[j] = 1.0/ TOT[j];
-		std::string phname =  m_mech->Phase(j)->Name();
-		for (unsigned int i=m_mech->GasSpeciesCount(); i!=m_species->size(); ++i) {
+		std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
+		for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
 			if (((*m_species)[i]->PhaseName()).compare(phname) == 0 ){
 			m_data[i] *= TOT[j];
 			}
@@ -515,24 +530,24 @@ void Mixture::Normalise()
 {
     real xtot = 0.0;
 
-    for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+    for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
         if (m_data[i] < 0.0) m_data[i] = 0.0;
         xtot += m_data[i];
     }
 
     if (xtot != 1.0) {
-        for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+        for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
             m_data[i] /= xtot;
         }
     }
 	
 	std::vector<real> Z; 
 	
-	for (unsigned int j = 0; j!=m_mech->PhaseCount(); ++j){
+	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 	real ztot = 0.0;
-	std::string phname =  m_mech->Phase(j)->Name();
+	std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
 	
-	for (unsigned int i=m_mech->GasSpeciesCount(); i!=m_species->size(); ++i) {
+	for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
 	if (((*m_species)[i]->PhaseName()).compare(phname) == 0 ){
         if (m_data[i] < 0.0) m_data[i] = 0.0;
         ztot += m_data[i];
@@ -543,13 +558,13 @@ void Mixture::Normalise()
 	
 	}
 	
-	for (unsigned int j = 0; j!=m_mech->PhaseCount(); ++j){
+	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 	
-	if ((Z[j] != 1.0) && ( m_mech->Phase(j)->Name().compare("gas") != 0)) {
+	if ((Z[j] != 1.0) && ( (*m_species)[0]->Mechanism()->Phase(j)->Name().compare("gas") != 0)) {
 	
-        std::string phname =  m_mech->Phase(j)->Name();
+        std::string phname = (*m_species)[0]->Mechanism()->Phase(j)->Name();
 	
-		for (unsigned int i=m_mech->GasSpeciesCount(); i!=m_species->size(); ++i) {
+		for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
 		if (((*m_species)[i]->PhaseName()).compare(phname) == 0 ){
         m_data[i] /= Z[j];
         }
@@ -577,7 +592,7 @@ real Mixture::MassDensity() const
 
     // Calcualate mass density:
     //   rho_mass = rho_mole * sum(x * wt)
-    for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+    for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
         rho += m_data[i] * (*m_species)[i]->MolWt();
     }
     rho *= m_data[densityIndex()];
@@ -597,7 +612,7 @@ void Mixture::SetMassDensity(Sprog::real dens) // (include gas phase only)
 
     // Calcualate molar density:
     //   rho_mass = rho_mole * sum(x * wt)
-    for (unsigned int i=0; i!=m_mech->GasSpeciesCount(); ++i) {
+    for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
         sum += m_data[i] * (*m_species)[i]->MolWt();
     }
    m_data[densityIndex()] = dens / sum;
@@ -617,7 +632,20 @@ void Mixture::SetSpecies(const Sprog::SpeciesPtrVector &sp)
 {
     m_species = &sp;
     m_data.resize(m_species->size()+sNumNonSpeciesData);
+
+	gasSpeciesCount =0;
+
+
+	for (int j = 0; j != m_species->size(); j++){
+		if (((*m_species)[j]->PhaseName()).compare("gas") == 0){
+	
+			gasSpeciesCount++; 
+		}
+	}
+
+	surfSpeciesCount = m_species->size() - gasSpeciesCount;  
 }
+
 
 
 // RAW DATA. (NO NEED CHANGING)
@@ -649,7 +677,7 @@ Serial_MixtureType Mixture::SerialType() const
 // returns the avg mol wt given the mass fractions added by Vinod (modified by mm864)
 real Mixture::getAvgMolWt(Sprog::fvector &massFrac) const{
 	real avgMolWt = 0.0;
-	for(unsigned int i=0; i!= m_mech->GasSpeciesCount(); i++)
+	for(unsigned int i=0; i!= gasSpeciesCount; i++)
 		avgMolWt += massFrac[i]/(*m_species)[i]->MolWt();
 
 	return 1.0/avgMolWt;
@@ -658,7 +686,7 @@ real Mixture::getAvgMolWt(Sprog::fvector &massFrac) const{
 real Mixture::getAvgMolWt() const { // (modified by mm864)
     real avgMolWt = 0.0;
     vector<real> moleFrac = MoleFractions();
-    for(unsigned int i=0; i!= m_mech->GasSpeciesCount(); i++) 
+    for(unsigned int i=0; i!= gasSpeciesCount; i++) 
         avgMolWt += moleFrac[i]*(*m_species)[i]->MolWt();
 
     return avgMolWt;
@@ -675,7 +703,7 @@ real Mixture::getAvgMolWt() const { // (modified by mm864)
  */
 real Mixture::getMeanCollisionSection() const { // Restricted to gas phase (mm864)
     real avgColDiam2 = 0.0;
-    for (unsigned i = 0; i!= m_mech->GasSpeciesCount(); ++i) {
+    for (unsigned i = 0; i!= gasSpeciesCount; ++i) {
         avgColDiam2 += MoleFraction(i) * (*m_species)[i]->getCollisionDiameter() * (*m_species)[i]->getCollisionDiameter();
     }
     return avgColDiam2 * Sprog::PI;
@@ -724,7 +752,7 @@ real Mixture::getSpecificHeatCapacity(Sprog::real T){
 	Sprog::Thermo::IdealGas ig(*this->Species());
 	ig.CalcCps(T,cpMols);
 	GetMassFractions(massFrac);
-	for(unsigned int i=0; i !=m_mech->GasSpeciesCount(); i++)
+	for(unsigned int i=0; i !=gasSpeciesCount; i++)
 		cp += massFrac[i]*(cpMols[i])/(*m_species)[i]->MolWt();
 
 	return cp;
@@ -737,7 +765,7 @@ real Mixture::getSpecificHeatCapacity(){
 	Sprog::Thermo::IdealGas ig(*this->Species());
 	ig.CalcCps(Temperature(),cpMols);
 	GetMassFractions(massFrac);
-	for(unsigned int i=0; i != m_mech->GasSpeciesCount(); i++)
+	for(unsigned int i=0; i != gasSpeciesCount; i++)
 		cp += massFrac[i]*(cpMols[i])/(*m_species)[i]->MolWt();
 
 	return cp;

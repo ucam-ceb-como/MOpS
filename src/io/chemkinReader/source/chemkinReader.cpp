@@ -560,5 +560,5 @@ void IO::ChemkinReader::readGlobalUnits()
         start = units[0].second;
     }
 	cout << "units read" << endl; 
-	
+	cout << "Units " << globalUnits_ << endl;
 }

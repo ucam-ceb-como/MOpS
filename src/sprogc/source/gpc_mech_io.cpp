@@ -282,7 +282,7 @@ void MechanismParser::ReadChemkin(
             multimap<string, double>::const_iterator iter;
             for (iter = thirdBodies.begin(); iter != thirdBodies.end(); ++iter)
             {
-                cout << "Add third body " << iter->first << " " << iter->second << endl;
+                // cout << "Add third body " << iter->first << " " << iter->second << endl; // for debugging
                 rxn->AddThirdBody(iter->first,iter->second);
             }
 
@@ -387,7 +387,7 @@ void MechanismParser::ReadChemkin(
 	mech.AddReaction(rxn);
     delete rxn;
 	count ++; 
-	cout << "Reaction passed so far" << count << endl;
+	//cout << "Reaction passed so far" << count << endl;
     }
 
 	cout << "Mech IO Reaction Parsed" << endl;

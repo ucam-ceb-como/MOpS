@@ -430,12 +430,19 @@ unsigned int Reactor::ODE_Count() const
 // Definition of RHS form for constant temperature energy equation.
 void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
 {
-    static fvector wdot;
-    real wtot = 0.0;
+    static fvector wdot, sdot;
+    real wtot = 0.0, stot= 0.0;
+	// Currently direct input Volume and ARea 
+
+	double Volume = 1.4/1000; // m^3
+	double Area = 5.9; // m^2
 
     // Calculate molar production rates.
     wtot = m_mech->GasMech().Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y,
                                                  m_nsp, m_mix->GasPhase(), wdot);
+
+	stot = m_mech->GasMech().Reactions().GetSurfaceMolarProdRates(y[m_iT], y[m_iDens], y,
+                                                 m_nsp, m_mix->GasPhase(), sdot);
 
     // Calculate mole fraction derivatives.
     
@@ -444,11 +451,13 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
         ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]);
 		}
 		} else {
-		for (unsigned int i=0; i!=m_gpc_mech->GasSpeciesCount(); ++i) {
-		ydot[i] = 
+		for (unsigned int i=0; i!=m_mech->GasMech().GasSpeciesCount(); ++i) {
+		ydot[i] = ((wdot[i] * Volume + sdot[i] * Area - (y[i]*wtot) * Volume -  (y[i]*stot) * Area))/( y[m_iDens] * Volume);
 		}
-    
-
+		for (unsigned int i=m_mech->GasMech().GasSpeciesCount(); i!=m_neq-2; ++i) {
+		ydot[i] = sdot[i];
+		}
+		}
     // Temperature derivative.
     if (m_Tfunc) {
         // Add imposed temperature gradient, if defined.
@@ -460,17 +469,23 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
 
     // Density derivative.
     if (m_constv) {
-        ydot[m_iDens] = wtot + stot ; // Constant volume.
+        ydot[m_iDens] = (wtot * Volume + stot * Area) / Volume; // Constant volume.
     } else {
-        ydot[m_iDens] = 0.0;  // Constant pressure.
+        ydot[m_iDens] = 0.0 + (stot * Area)/y[m_iDens];  // Constant pressure.
     }
 }
 
 // Definition of RHS form for adiabatic energy equation.
 void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
 {
-    static fvector wdot, Hs;
-    real wtot = 0.0, Cp = 0.0;
+    static fvector wdot, sdot, Hs;
+    real wtot = 0.0, Cp = 0.0, stot =0.0;
+
+	// Currently direct input of  Volume and ARea 
+
+	double Volume = 1.4/1000; // m^3
+	double Area = 5.9; // m^2
+
 
     // Calculate mixture thermodynamic properties.
     m_mix->GasPhase().CalcHs_RT(y[m_iT], Hs);
@@ -480,19 +495,28 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
     wtot = m_mech->GasMech().Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y,
                                                  m_nsp, m_mix->GasPhase(), wdot);
 
+	stot = m_mech->GasMech().Reactions().GetSurfaceMolarProdRates(y[m_iT], y[m_iDens], y,
+                                                 m_nsp, m_mix->GasPhase(), sdot);
 
     // Calculate mole fraction and temperature derivatives.
     ydot[m_iT] = 0.0;
-    for (unsigned int i=0; i!=m_nsp; ++i) {
+    
       if (Area == 0){
+		for (unsigned int i=0; i!=m_nsp; ++i) {
         ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]);
-      }
+        }
+	  }
       else{
-	  
-	ydot[i] = ...
+	     for (unsigned int i=0; i!=m_mech->GasMech().GasSpeciesCount(); ++i) {
+		 ydot[i] = ((wdot[i] * Volume + sdot[i] * Area - (y[i]*wtot) * Volume -  (y[i]*stot) * Area))/( y[m_iDens] * Volume);
+		 }
+		 for (unsigned int i=m_mech->GasMech().GasSpeciesCount(); i!=m_neq-2; ++i) {
+		 ydot[i] = sdot[i];
+		 }
       }
 
-      ydot[m_iT] += Volume * wdot[i] * Hs[i] + Area * sdot[i] * Hs[i]; // addded the surface source term by mm864
+	for (unsigned int i=0; i!=m_nsp; ++i) {
+        ydot[m_iT] += Volume * wdot[i] * Hs[i] + Area * sdot[i] * Hs[i]; // addded the surface source term by mm864
     }
 
     // Complete temperature derivative.
@@ -504,9 +528,9 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
     // Calculate density derivative.
     if (m_constv) {
         // Constant volume.
-        ydot[m_iDens] = wtot + stot;
+        ydot[m_iDens] = (wtot * Volume + stot * Area) / Volume;
     } else {
-        // Constant pressure (Use EoS to calculate).
+        // Constant pressure (Use EoS to calculate). (THIS INCLUDES THE SURFACE SOURCE TERM in dT/dt) 
         ydot[m_iDens] = - (y[m_iDens] * ydot[m_iT] / y[m_iT]);
     }
 }
