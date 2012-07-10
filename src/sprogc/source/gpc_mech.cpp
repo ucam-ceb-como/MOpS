@@ -1112,7 +1112,7 @@ void Mechanism::Deserialize(std::istream &in)
                     releaseMemory();
                     throw;
                 }
-
+		  cout << "Mech::Deserialize reaction set" << endl;
                 // Rebuild the stoich xref.
                 BuildStoichXRef();
 

@@ -690,7 +690,17 @@ const vector<COVERAGE> &Reaction::CoverageReac() const
 // Returns the number of coverage params defined for this reaction.
 int Reaction::COVERAGECount() const
 {
-    return m_coverage.size();
+  // return m_coverage.size(); 
+
+    // Added new capability since coverage can be split from COV and STICK reaction then if this reaction is stick only count == 0
+
+    if (m_isCoverage == false){
+
+      return 0;
+    }
+    else{ 
+      return m_coverage.size();
+    }
 }
 
 // Returns the coefficient for the ith coverage.
@@ -752,7 +762,7 @@ void Reaction::SetFord(const real c, const std::string &name)
     
     m_forw.F_k = c;
     m_forw.spName = name;
-
+    cout << "Set Ford: " << m_forw.spName << endl;
     m_ford.push_back(m_forw);
 }
 
@@ -1482,6 +1492,8 @@ void Reaction::Serialize(std::ostream &out) const
 	
 	for (unsigned int i=0; i<u; i++) {
             // Write phase name.
+	  n = m_phaseVector[i].length();
+	  out.write((char*)&n, sizeof(n));
 	  out.write(m_phaseVector[i].c_str(), m_phaseVector[i].length());
 
         }
@@ -1583,6 +1595,8 @@ void Reaction::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
+	cout << "STICK ::Serialise Flag" << m_sticking << endl; 
+
 	 // Write Mott-Wise flag.
         if (m_mottwise) {
             out.write((char*)&trueval, sizeof(trueval));
@@ -1590,6 +1604,7 @@ void Reaction::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
+	cout << "MW ::Serialise Flag" << m_mottwise << endl; 
 
 	 // Write ford flag.
         if (m_isFord) {
@@ -1598,22 +1613,25 @@ void Reaction::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
+	cout << "FORD::Serialise Flag" << m_isFord << endl; 
+
 	// Write ford count.
         n = m_ford.size();
         out.write((char*)&n, sizeof(n));
 
+	cout << "FORD::Serialise Count" << n << endl; 
 
 	// Write ford.
         for (unsigned int i=0; i<n; i++) {
-	double coef  = (double)m_fo.F_k;
+	double coef  = (double)m_ford[i].F_k;
         out.write((char*)&coef, sizeof(coef));
 	// Write the length of the species name to the stream.
-        unsigned int sp = m_fo.spName.length();
+        unsigned int sp = m_ford[i].spName.length();
         out.write((char*)&sp, sizeof(sp));
-
+	cout << m_ford[i].spName << endl; // for debugging
         // Write the species name to the stream.
         if (sp > 0) {
-            out.write(m_fo.spName.c_str(), sp);
+            out.write(m_ford[i].spName.c_str(), sp);
         }
 	
         }
@@ -1626,25 +1644,29 @@ void Reaction::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
+	cout << "COV::Serialise Flag" << m_isCoverage << endl; 
+
 	// Write coverage count.
         n = m_coverage.size();
         out.write((char*)&n, sizeof(n)); 
 
+	cout << "COV::Serialise Count" << n << endl; 
+
 	// Write coverage.
         for (unsigned int i=0; i<n; i++) {
-	double e  = (double)m_covr.Eta;
-        double m = (double)m_covr.Miu;
-        double epsil  = (double)m_covr.Epsilon;
+	double e  = (double)m_coverage[i].Eta;
+        double m = (double)m_coverage[i].Miu;
+        double epsil  = (double)m_coverage[i].Epsilon;
         out.write((char*)&e, sizeof(e));
         out.write((char*)&m, sizeof(m));
         out.write((char*)&epsil, sizeof(epsil));
 	// Write the length of the species name to the stream.
-        unsigned int sp = m_covr.spName.length();
+        unsigned int sp = m_coverage[i].spName.length();
         out.write((char*)&sp, sizeof(sp));
 
         // Write the speciesn name to the stream.
         if (sp > 0) {
-	  out.write(m_covr.spName.c_str(), sp);
+	  out.write(m_coverage[i].spName.c_str(), sp);
         }
 	
         }
@@ -1891,6 +1913,7 @@ void Reaction::Deserialize(std::istream &in)
                     m_isSurface = false;
                 }
 
+		cout << "SURF::Deserialise " << m_isSurface << endl; 
 
 		// Read STICK flag 
 		in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -1900,6 +1923,8 @@ void Reaction::Deserialize(std::istream &in)
                     m_sticking = false;
                 }
 
+		cout << "STICK::Deserialise " << m_sticking << endl; 
+
 		// Read Mott-Wise flag
 		in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n == 1) {
@@ -1907,6 +1932,8 @@ void Reaction::Deserialize(std::istream &in)
                 } else {
                     m_mottwise = false;
                 }
+
+		cout << "MW::Deserialise " << m_mottwise << endl; 
 		
 		// Read FORD flag
 		in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -1915,11 +1942,14 @@ void Reaction::Deserialize(std::istream &in)
                 } else {
                     m_isFord = false;
                 }
+		cout << "FORD::Deserialise " << m_isFord << endl; 
 
 		// Read FORD count.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_ford.reserve(n);
 
+
+		cout << "FORD::Count " << n << endl; 
 
 		 // Read FORD.
                 for (unsigned int i=0; i<n; i++) {
@@ -1930,16 +1960,14 @@ void Reaction::Deserialize(std::istream &in)
 		    in.read(reinterpret_cast<char*>(&spN), sizeof(spN));
 
 		    // Read the species name.
-		    if (spN > 0) {
                     name = new char[spN];
                     in.read(name, spN);
                     speciesName.assign(name, spN);
                     delete [] name;
-		    } else {
-                    speciesName = "";
-		    }
-
+		    
+		    
                     m_fo.F_k = (real)coef;
+		    cout << (real)coef << endl; 
 		    m_fo.spName = speciesName;
 		    
 		    // Add covr to vector.
@@ -1955,9 +1983,13 @@ void Reaction::Deserialize(std::istream &in)
                     m_isCoverage = false;
                 }
 
+		cout << "Coverage " << m_isCoverage << endl;
+
 		// Read COVERAGE count.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_coverage.reserve(n);
+
+		cout << "covr count" << n << endl;
 
 		 // Read COVERAGE.
                 for (unsigned int i=0; i<n; i++) {
@@ -1971,14 +2003,11 @@ void Reaction::Deserialize(std::istream &in)
 		    in.read(reinterpret_cast<char*>(&spN), sizeof(spN));
 
 		    // Read the species name.
-		    if (spN > 0) {
                     name = new char[spN];
                     in.read(name, spN);
                     speciesName.assign(name, spN);
                     delete [] name;
-		    } else {
-                    speciesName = "";
-		    }
+		   
 
                     m_covr.Eta = (real)e;
                     m_covr.Miu = (real)m;

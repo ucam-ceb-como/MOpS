@@ -1043,7 +1043,7 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 	// cout << "m= " << m_val << endl; // for debugging
 	// cout << "product sigma= " << sigma_pw_vk << endl; // for debugging
 
-	kf[j] = gamma*sigma_pw_vk*sqrt(double ((R*T)/ (2*PI*W_k)) )/(pow(totalSiteDensity ,m_val));
+	kf[j] = gamma*sigma_pw_vk*sqrt(double ((R_CGS*T)/ (2*PI*W_k)) )/(pow(totalSiteDensity ,m_val));
 	// cout << "R= " << R << " ,T = " << T << endl; 
 	// cout << sqrt(double ((R*T)/ (2*PI*W_k)) ) << endl;
 	// cout << (pow(totalSiteDensity ,m_val)) << endl;
@@ -1098,7 +1098,7 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 	}
 
 
-	kf[j] = gamma*sigma_pw_vk*sqrt(double ((R*T)/ (2*PI*W_k)) )/( (1-gamma/2) * pow(totalSiteDensity ,m_val) );
+	kf[j] = gamma*sigma_pw_vk*sqrt(double ((R_CGS*T)/ (2*PI*W_k)) )/( (1-gamma/2) * pow(totalSiteDensity ,m_val) );
 				
       }
 
@@ -1111,7 +1111,20 @@ void ReactionSet::calcCOVERAGE(real T, const real *const x, fvector &kf) const
 {
   unsigned int i, n;
   int k;
-  double invRT = 1.0 / (R * T);
+  real invRT;
+    switch (m_mech->Units()) {
+        case SI :
+            invRT = 1.0 / (R * T);
+            break;
+        case CGS :
+            invRT = 1.0 / (R_CGS * T);
+            break;
+        default:
+            // Something has gone wrong to end up here.
+            invRT = 0.0;
+
+    }
+	
   RxnMap::const_iterator im;
   double lnT = log(T);
 

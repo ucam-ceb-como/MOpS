@@ -911,6 +911,10 @@ void Species::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&T), sizeof(T));
                 m_T1 = (real)T;
 
+
+		// Read the length of the phase name.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
 				// Read the species phaseName. - Added by mm864
                 phase = new char[n];
                 in.read(phase, n);

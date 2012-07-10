@@ -212,7 +212,7 @@ public:
     {
         ar.template register_type<Sprog::ElComp>();
         ar.register_type(static_cast< ::IO::Transport * >(NULL));
-        ar & m_name & m_elcomp & m_molwt & m_mech & m_thermoparams & m_T1 & site_occupancy & m_phaseName & m_phase & m_transport; 
+        ar & m_name & m_elcomp & m_molwt & m_mech & m_thermoparams & m_T1 & m_phaseName & site_occupancy & m_phase & m_transport; 
     }
 
     // Writes the element to a binary data stream.

@@ -116,7 +116,7 @@ namespace Kinetics
     template<class Archive>
     void serialize(Archive & ar, const unsigned int /* file_version */)
     {
-        ar & m_spName & total_stoich_sp & reac_stoich_sp & prod_stoich_sp;
+        ar & m_spName & total_stoich_sp & reac_stoich_sp & prod_stoich_sp & m_react;
     }
 	
 	friend class boost::serialization::access;
