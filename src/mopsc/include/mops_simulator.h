@@ -466,6 +466,8 @@ private:
         fvector &rev_rates_sumsqr,    // Sums of the squares of reverse reaction rates.
         fvector &wdot_sum,            // Sums of species prod. rates.
         fvector &wdot_sumsqr,         // Sums of the squares of species prod. rates.
+	fvector &sdot_sum,            // Sums of species prod. rates from surface .
+	fvector &sdot_sumsqr,         // Sums of the squares of species prod. rates from surface.
         bool calcsqrs = false         // Set =true to also calculate sums of squares.
         );
 
@@ -572,6 +574,16 @@ private:
         std::vector<fvector> &avg,       // Vector of gas-phase reaction time points.
         const std::vector<fvector> &err  // Vector of confidence intervals.
         );
+
+ 	// Writes molar prod. rates profile to a CSV file.
+    static void writeSurfaceProdRatesCSV(
+        const std::string &filename,     // Output file name (incl. extension).
+        const Mechanism &mech,           // Mechanism defining kinetics.
+        const timevector &times,         // Output time profile.
+        std::vector<fvector> &avg,       // Vector of molar prod. rate time points for surface.
+        const std::vector<fvector> &err  // Vector of confidence intervals.
+        );
+
 
     // Writes molar prod. rates profile to a CSV file.
     static void writeProdRatesCSV(

@@ -511,34 +511,7 @@ void ReactionSet::GetRatesOfProgress(real density,
     if (n >= m_mech->Species().size()) {
         // Assign temp memory.
         rfwd.resize(m_rxns.size(), 0.0);
-        rrev.resize(m_rxns.size(), 0.0);
-
-
-	// Loop over all FORD reactions to replace the value of Mu.
-        for (im=m_ford_rxns.begin(); im!=m_ford_rxns.end(); ++im) {
-	  i = *im;
-	
-	  // Integer reactants.
-
-	  for (l=0; l!=m_rxns[i]->FORDCount(); ++l) {
-	  
-	    string species_ford = m_rxns[i]->FORDElement(l).spName;  
-	    unsigned int idx =  m_rxns[i]->Mechanism()->FindSpecies(species_ford); 
-	      
-	    for (k=0; k!=m_rxns[i]->ReactantCount(); ++k) {
-	      
-	      if (m_rxns[i]->Reactants()[k].Index() == idx)
-		{
-		  real Ford_coeff = m_rxns[i]->FORDElement(l).F_k;
-		  //		  m_rxns[i]-> Reactants()[k].SetMu(Ford_coeff);
-		}
-
-	    }
-	  }
-	  
-	}
-
-
+        rrev.resize(m_rxns.size(), 0.0);
         // Loop over all reactions.
 
 	unsigned int size_gas_rxns = m_rxns.size() - m_surface_rxns.size();
@@ -635,6 +608,104 @@ void ReactionSet::GetRatesOfProgress(real density,
             rop[i] = rfwd[i] - rrev[i];
 	    // cout << "is surface? " << m_rxns[i]->IsSURF() << endl;
 	}    
+
+	// Loop over all FORD reactions, all ford species are in surface reactions and applied to reactants only
+        for (im=m_ford_rxns.begin(); im!=m_ford_rxns.end(); ++i) {
+        
+	i = *im;
+
+            // Use rfwd to store forward rates of production,
+            // and rrev to store reverse rates.
+            rfwd[i] = kforward[i];
+            rrev[i] = kreverse[i];
+
+	    // Integer reactants
+	 
+	    for (k=0; k!=m_rxns[i]->ReactantCount(); ++k) {
+                // As the stoichiometry is integer, it is more computationally efficient
+                // to multiply the values together than to use the pow() function.
+
+	      unsigned int idx = m_rxns[i]->Reactants()[k].Index(); 
+	      string spName = m_rxns[i]->Mechanism()->GetSpecies(idx)->Name(); 
+	      if ((m_rxns[i]->Mechanism()->FindPhaseName(spName)).compare("gas") == 0){
+
+		for (l=0; l!=m_rxns[i]->FORDCount(); ++l) {
+	  			
+	   	string species_ford = m_rxns[i]->FORDElement(l).spName;  
+	    	unsigned int idx =  m_rxns[i]->Mechanism()->FindSpecies(species_ford); 
+
+                	
+			if (m_rxns[i]->Reactants()[k].Index() == idx){
+				// FORD coefficient can be a decimal so cannot use for loop
+	                    	rfwd[i] *= pow(density * x[m_rxns[i]->Reactants()[k].Index()], m_rxns[i]->FORDElement(l).F_k);
+				cout << "gas species FORD " << spName;			
+			}
+			else{
+			        for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
+	                    	rfwd[i] *= density * x[m_rxns[i]->Reactants()[k].Index()];
+				cout << "gas species not FORD " << spName; 
+				}
+                	}
+
+		}
+	      }
+	      else{
+		string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName(); 
+		//cout << spName << " phase "<< phName << endl; // for debugging
+		double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
+		int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
+		 
+		for (l=0; l!=m_rxns[i]->FORDCount(); ++l) {
+	  			
+	   	string species_ford = m_rxns[i]->FORDElement(l).spName;  
+	    	unsigned int idx =  m_rxns[i]->Mechanism()->FindSpecies(species_ford); 
+
+                	
+			if (m_rxns[i]->Reactants()[k].Index() == idx){
+				
+	                    	rfwd[i] *= pow(site_d/sp_occ * x[m_rxns[i]->Reactants()[k].Index()], m_rxns[i]->FORDElement(l).F_k);
+				cout << "surface species FORD " << spName; 
+			}
+			else{
+			        for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
+	                    	rfwd[i] *= site_d/sp_occ * x[m_rxns[i]->Reactants()[k].Index()];
+				cout << "surface species not FORD " << spName; 
+				}
+                	}
+
+		}
+	      }
+	      
+            }
+
+	    // Integer products.
+
+	    for (k=0; k!=m_rxns[i]->ProductCount(); ++k) {
+                // As the stoichiometry is integer, it is more computationally efficient
+                // to multiply the values together than to use the pow() function.
+
+	      unsigned int idx = m_rxns[i]->Products()[k].Index(); 
+	      string spName = m_rxns[i]->Mechanism()->GetSpecies(idx)->Name(); 
+	      if ((m_rxns[i]->Mechanism()->FindPhaseName(spName)).compare("gas") == 0){
+                for (j=0; j!=m_rxns[i]->Products()[k].Mu(); ++j) {
+                    rrev[i] *= density * x[m_rxns[i]->Products()[k].Index()];
+                }
+	      }
+	      else{
+		string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName();
+		double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
+		int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
+		 for (j=0; j!=m_rxns[i]->Products()[k].Mu(); ++j) {
+		   rrev[i] *= site_d/sp_occ * x[m_rxns[i]->Products()[k].Index()];
+                }
+	      }
+	      
+            }
+	    // Calculate the net rates of production.
+            rop[i] = rfwd[i] - rrev[i];
+	     cout << "is FORD? " << m_rxns[i]->IsFORD() << endl;
+	}    
+
     }
 }
 

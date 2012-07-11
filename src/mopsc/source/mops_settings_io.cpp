@@ -288,7 +288,7 @@ Reactor *const readReactor(const CamXML::Element &node,
 
             // Set the species mole fraction.
             if (j >= 0) {
-                molefracs[j] = Strings::cdble((*i)->Data());
+                molefracs[j] = Strings::cdble((*i)->Data()); // from inx input
             } else {
                 throw std::runtime_error("No initial condition for species " + str +
                                     " (Mops, Settings_IO::readReactor).");

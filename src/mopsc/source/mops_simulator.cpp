@@ -522,8 +522,9 @@ void Simulator::PostProcess()
     vector<fvector> agpfwdrates(npoints), egpfwdrates(npoints);
     vector<fvector> agprevrates(npoints), egprevrates(npoints);
     vector<fvector> agpwdot(npoints), egpwdot(npoints);
+    vector<fvector> agpsdot(npoints), egpsdot(npoints); // Added by mm864 (already combined in wdot implicitly)
 
-    // Declare particle-phase rate outputs (averages and errors).
+    // Declare particle-phase rate outputs (averages and errors). (At the moment only gas species goes into particle mech)
     vector<fvector> apprates(npoints), epprates(npoints);
     vector<fvector> appwdot(npoints), eppwdot(npoints);
 
@@ -561,7 +562,7 @@ void Simulator::PostProcess()
                         agprates[0], egprates[0],
                         agpfwdrates[0], egpfwdrates[0],
                         agprevrates[0], egprevrates[0],
-                        agpwdot[0], egpwdot[0],
+                        agpwdot[0], egpwdot[0], agpsdot[0], egpsdot[0], // added by mm864
                         true);
 	cout << "Simulator::PostProcess() GasRxnDataPoint Read" << endl;
     readPartRxnDataPoint(fin, mech.ParticleMech(),
@@ -588,6 +589,7 @@ void Simulator::PostProcess()
         multVals(agpfwdrates[0], m_nruns*m_niter);
         multVals(agprevrates[0], m_nruns*m_niter);
         multVals(agpwdot[0], m_nruns*m_niter);
+	multVals(agpsdot[0], m_nruns*m_niter); // added by mm864
         multVals(apprates[0], m_nruns*m_niter);
         multVals(appjumps[0], m_nruns*m_niter);
         multVals(appwdot[0], m_nruns*m_niter);
@@ -598,6 +600,7 @@ void Simulator::PostProcess()
         multVals(egpfwdrates[0], m_nruns*m_niter);
         multVals(egprevrates[0], m_nruns*m_niter);
         multVals(egpwdot[0], m_nruns*m_niter);
+	multVals(egpsdot[0], m_nruns*m_niter); // added by mm864
         multVals(epprates[0], m_nruns*m_niter);
         multVals(eppjumps[0], m_nruns*m_niter);
         multVals(eppwdot[0], m_nruns*m_niter);
@@ -609,16 +612,18 @@ void Simulator::PostProcess()
         multVals(agpfwdrates[0], m_nruns);
         multVals(agprevrates[0], m_nruns);
         multVals(agpwdot[0], m_nruns);
+	multVals(agpsdot[0], m_nruns); // added by mm864
         multVals(apprates[0], m_nruns);
         multVals(appjumps[0], m_nruns);
         multVals(appwdot[0], m_nruns);
         multVals(acpu[0], m_nruns);
-        multVals(echem[0], m_nruns);
+        multVals(echem[0], m_nruns); 
         multVals(estat[0], m_nruns);
         multVals(egprates[0], m_nruns);
         multVals(egpfwdrates[0], m_nruns);
         multVals(egprevrates[0], m_nruns);
         multVals(egpwdot[0], m_nruns);
+	multVals(egpsdot[0], m_nruns); // added by mm864
         multVals(epprates[0], m_nruns);
         multVals(eppjumps[0], m_nruns);
         multVals(eppwdot[0], m_nruns);
@@ -648,7 +653,7 @@ void Simulator::PostProcess()
                                             agprates[step], egprates[step],
                                             agpfwdrates[step], egpfwdrates[step],
                                             agprevrates[step], egprevrates[step],
-                                            agpwdot[step], egpwdot[step],
+                                            agpwdot[step], egpwdot[step], agpsdot[step], egpsdot[step], // modified by mm864
                                             true);
 
                         readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
@@ -665,7 +670,7 @@ void Simulator::PostProcess()
                                         agprates[step], egprates[step],
                                         agpfwdrates[step], egpfwdrates[step],
                                         agprevrates[step], egprevrates[step],
-                                        agpwdot[step], egpwdot[step],
+                                        agpwdot[step], egpwdot[step], agpsdot[step], egpsdot[step], // modified by mm864
                                         true);
 
                     readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
@@ -688,6 +693,7 @@ void Simulator::PostProcess()
         calcAvgConf(agpfwdrates, egpfwdrates, m_nruns*m_niter);
         calcAvgConf(agprevrates, egprevrates, m_nruns*m_niter);
         calcAvgConf(agpwdot, egpwdot, m_nruns*m_niter);
+	calcAvgConf(agpsdot, egpsdot, m_nruns*m_niter); // added by mm864
         calcAvgConf(apprates, epprates, m_nruns*m_niter);
         calcAvgConf(appjumps, eppjumps, m_nruns*m_niter);
         calcAvgConf(appwdot, eppwdot, m_nruns*m_niter);
@@ -699,6 +705,7 @@ void Simulator::PostProcess()
         calcAvgConf(agpfwdrates, egpfwdrates, m_nruns);
         calcAvgConf(agprevrates, egprevrates, m_nruns);
         calcAvgConf(agpwdot, egpwdot, m_nruns);
+	calcAvgConf(agpsdot, egpsdot, m_nruns); // added by mm864
         calcAvgConf(apprates, epprates, m_nruns);
         calcAvgConf(appjumps, eppjumps, m_nruns);
         calcAvgConf(appwdot, eppwdot, m_nruns);
@@ -716,10 +723,11 @@ void Simulator::PostProcess()
 
     writeGasPhaseCSV(m_output_filename+"-chem.csv", mech, times, achem, echem);
     writeParticleStatsCSV(m_output_filename+"-part.csv", mech, times, astat, estat);
-    writeGasRxnCSV(m_output_filename+"-gp-rates.csv", mech, times, agprates, egprates);
+    writeGasRxnCSV(m_output_filename+"-gp-rates.csv", mech, times, agprates, egprates); // this is for q_i (rate of progress) 
     //writeGasRxnCSV(m_output_filename+"-gp-fwd-rates.csv", mech, times, agpfwdrates, egpfwdrates);
     //writeGasRxnCSV(m_output_filename+"-gp-rev-rates.csv", mech, times, agprevrates, egprevrates);
     writeProdRatesCSV(m_output_filename+"-gp-wdot.csv", mech, times, agpwdot, egpwdot);
+    writeSurfaceProdRatesCSV(m_output_filename+"-gp-sdot.csv", mech, times, agpsdot, egpsdot); // added by mm864
     writePartProcCSV(m_output_filename+"-part-rates.csv", mech.ParticleMech(), times, apprates, epprates);
     writeProdRatesCSV(m_output_filename+"-part-wdot.csv", mech, times, appwdot, eppwdot);
     writeCT_CSV(m_output_filename+"-cput.csv", times, acpu, ecpu, cput_head);
@@ -797,7 +805,7 @@ void Simulator::closeOutputFile() const
 }
 
 // Writes the gas-phase conditions of the given reactor to
-// the binary output file.
+// the binary output file. (No need modification, modification when read) 
 void Simulator::outputGasPhase(const Reactor &r) const
 {
     // Write gas-phase conditions to file.
@@ -852,17 +860,18 @@ void Simulator::outputGasRxnRates(const Reactor &r) const
     if(r.Mech()->GasMech().ReactionCount() > 0) {
         // Calculate the rates-of-progress.
         static fvector rop, rfwd, rrev;
-        r.Mech()->GasMech().Reactions().GetRatesOfProgress(r.Mixture()->GasPhase(), rop, rfwd, rrev);
+        r.Mech()->GasMech().Reactions().GetRatesOfProgress(r.Mixture()->GasPhase(), rop, rfwd, rrev); // GetRatesOfProgress 6
 
         // Calculate the molar production rates.
-        static fvector wdot;
+        static fvector wdot, sdot;
         r.Mech()->GasMech().Reactions().GetMolarProdRates(rop, wdot);
-
+	r.Mech()->GasMech().Reactions().GetSurfaceMolarProdRates(rop, sdot); // added by mm864
         // Write rates to the file.
         m_file.write((char*)&rop[0], sizeof(rop[0]) * r.Mech()->GasMech().ReactionCount());
         m_file.write((char*)&rfwd[0], sizeof(rfwd[0]) * r.Mech()->GasMech().ReactionCount());
         m_file.write((char*)&rrev[0], sizeof(rrev[0]) * r.Mech()->GasMech().ReactionCount());
         m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->GasMech().SpeciesCount());
+	m_file.write((char*)&sdot[0], sizeof(sdot[0]) * r.Mech()->GasMech().SpeciesCount());
     }
 }
 
@@ -1160,7 +1169,7 @@ void Simulator::readGasPhaseDataPoint(std::istream &in, const Mops::Mechanism &m
     // Check for valid stream.
     if (in.good()) {
         unsigned int N = mech.GasMech().SpeciesCount();
-
+	unsigned int N_gas = mech.GasMech().GasSpeciesCount();
         // Read the gas-phase conditions.
         fvector y(N, 0.0);
         real T=0.0, D=0.0, P=0.0;
@@ -1177,13 +1186,31 @@ void Simulator::readGasPhaseDataPoint(std::istream &in, const Mops::Mechanism &m
 
         // Calculate sums and sums of square (for average and
         // error calculation).
-        for (unsigned int i=0; i!=N; ++i) {
+
+	// Separated by mm864 
+
+	// Gas species 
+        for (unsigned int i=0; i!=N_gas; ++i) {
             // Note conversion to cm-3 from m-3.
             real conc = D * y[i];
             sum[i] += conc;
             if (calcsqrs) sumsqr[i] += conc * conc;
         }
 
+	// Surface species 
+	for (unsigned int i=N_gas; i!=N; ++i) {
+
+	string spName = mech.GasMech().GetSpecies(i)->Name(); 
+	string phName = mech.GasMech().GetSpecies(spName)->PhaseName();
+	double site_d =  mech.GasMech().FindSiteDensity(phName);
+	int sp_occ = mech.GasMech().FindSiteOccup(spName);
+	// Note conversion to cm-2 from m-2.
+            real conc = y[i] * site_d/sp_occ * 1.0e-4;	
+            sum[i] += conc;
+            if (calcsqrs) sumsqr[i] += conc * conc;
+        }
+
+	
         // Calculates sums and sums of squares of temperature, density
         // and pressure.
         sum[N]   += T;
@@ -1266,7 +1293,7 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
                                     fvector &rates_sum, fvector &rates_sumsqr,
                                     fvector &fwd_rates_sum, fvector &fwd_rates_sumsqr,
                                     fvector &rev_rates_sum, fvector &rev_rates_sumsqr,
-                                    fvector &wdot_sum, fvector &wdot_sumsqr,
+                                    fvector &wdot_sum, fvector &wdot_sumsqr, fvector &sdot_sum, fvector &sdot_sumsqr, 
                                     bool calcsqrs)
 {
     // Check for valid stream.
@@ -1277,6 +1304,7 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
         fvector rfwd(rxnCount);
         fvector rrev(rxnCount);
         fvector wdot(mech.GasMech().SpeciesCount());
+	fvector sdot(mech.GasMech().SpeciesCount());	
 
         // Resize vectors passed in as reference arguments.
         rates_sum.resize(rxnCount, 0.0);
@@ -1287,6 +1315,8 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
         rev_rates_sumsqr.resize(rxnCount, 0.0);
         wdot_sum.resize(mech.GasMech().SpeciesCount(), 0.0);
         wdot_sumsqr.resize(mech.GasMech().SpeciesCount(), 0.0);
+	sdot_sum.resize(mech.GasMech().SpeciesCount(), 0.0);
+        sdot_sumsqr.resize(mech.GasMech().SpeciesCount(), 0.0);
 
         // Nothing to read or calculate if there are no reactions
         if(rxnCount > 0) {
@@ -1301,6 +1331,9 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
 
             // Get the species molar production rates.
             in.read(reinterpret_cast<char*>(&wdot[0]), sizeof(wdot[0])*mech.GasMech().SpeciesCount());
+
+	     // Get the species surface molar production rates.
+            in.read(reinterpret_cast<char*>(&sdot[0]), sizeof(sdot[0])*mech.GasMech().SpeciesCount());
 
             // Calculate sums and sums of squares (for average and
             // error calculation).
@@ -1320,6 +1353,11 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
                 wdot_sum[i] += wdot[i];
                 if (calcsqrs) wdot_sumsqr[i] += (wdot[i] * wdot[i]);
             }
+            for (unsigned int i=0; i!=sdot.size(); ++i) {
+                wdot_sum[i] += sdot[i];
+                if (calcsqrs) sdot_sumsqr[i] += (sdot[i] * sdot[i]);
+            }
+		
         }
     }
 }
@@ -1499,9 +1537,12 @@ void Simulator::writeGasPhaseCSV(const std::string &filename,
     vector<string> head;
     head.push_back("Step");
     head.push_back("Time (s)");
-    for (unsigned int isp=0; isp<mech.GasMech().SpeciesCount(); ++isp) {
+    for (unsigned int isp=0; isp<mech.GasMech().GasSpeciesCount(); ++isp) {
         head.push_back(mech.GasMech().Species(isp)->Name() + " (mol/cm3)");
     }
+     for (unsigned int isp=mech.GasMech().GasSpeciesCount(); isp<mech.GasMech().SpeciesCount(); ++isp) {
+        head.push_back(mech.GasMech().Species(isp)->Name() + " (mol/cm2)"); // added by mm864
+    }	
     head.push_back("T (K)");
     head.push_back("Density (mol/cm3)");
     head.push_back("Pressure (Pa)");
@@ -1659,7 +1700,7 @@ void Simulator::writePartJumpCSV(const std::string &filename,
     csv.Close();
 }
 
-// Writes gas-phase reaction rates profile to a CSV file.
+// Writes gas-phase and surface phase reaction rates profile to a CSV file.
 void Simulator::writeGasRxnCSV(const std::string &filename,
                                const Mechanism &mech,
                                const timevector &times,
@@ -1673,8 +1714,75 @@ void Simulator::writeGasRxnCSV(const std::string &filename,
     vector<string> head;
     head.push_back("Step");
     head.push_back("Time (s)");
-    for (unsigned int i=0; i<mech.GasMech().ReactionCount(); ++i) {
+
+	// separated by mm864
+
+	unsigned int gas_react = 0;
+
+   for (unsigned int i =0; i < mech.GasMech().ReactionCount(); ++i){
+
+	if (mech.GasMech().Reactions(i)->IsSURF() == false) // if it is not a surface 
+        { gas_react = gas_react + 1; 
+        }
+    }
+
+    for (unsigned int i=0; i<gas_react; ++i) {
         head.push_back("Rxn " + cstr(i) + " (mol/cm3s)");
+    }
+
+   for (unsigned int i=gas_react; i<mech.GasMech().ReactionCount(); ++i) {
+        head.push_back("Rxn " + cstr(i) + " (mol/cm2s)");
+    }	
+	
+    for (unsigned int i=head.size(); i!=2; --i) {
+        head.insert(head.begin()+i, "Err");
+    }
+    csv.Write(head);
+
+    // Output initial conditions.
+    buildOutputVector(0, times[0].StartTime(), avg[0], err[0]);
+    csv.Write(avg[0]);
+
+    // Loop over all points, performing output.
+    unsigned int step = 1;
+    for (timevector::const_iterator iint=times.begin(); iint!=times.end(); ++iint) {
+        // Loop over all time steps in this interval.
+        real t = iint->StartTime();
+        for (unsigned int istep=0; istep<(*iint).StepCount(); ++istep, ++step) {
+            t += iint->StepSize();
+            buildOutputVector(step, t, avg[step], err[step]);
+            csv.Write(avg[step]);
+        }
+    }
+
+    // Close the CSV files.
+    csv.Close();
+}
+
+// Writes gas-phase reaction rates profile to a CSV file. // modified by mm864
+void Simulator::writeSurfaceProdRatesCSV(const std::string &filename,
+                                  const Mechanism &mech,
+                                  const timevector &times,
+                                  std::vector<fvector> &avg,
+                                  const std::vector<fvector> &err)
+{
+    // Open file for the CSV results.
+    CSV_IO csv(filename, true);
+
+    // Write the header row to the gas-phase chemistry CSV file.
+    vector<string> head;
+    head.push_back("Step");
+    head.push_back("Time (s)");
+	/*
+	* Separated by mm864
+	*/
+
+    for (unsigned int isp=0; isp<mech.GasMech().GasSpeciesCount(); ++isp) {
+        head.push_back(mech.GasMech().Species(isp)->Name() + " (mol/cm3s)");
+    }
+
+    for (unsigned int isp=mech.GasMech().GasSpeciesCount(); isp<mech.GasMech().SpeciesCount(); ++isp) {
+        head.push_back(mech.GasMech().Species(isp)->Name() + " (mol/cm2s)"); 
     }
     for (unsigned int i=head.size(); i!=2; --i) {
         head.insert(head.begin()+i, "Err");
@@ -1701,7 +1809,7 @@ void Simulator::writeGasRxnCSV(const std::string &filename,
     csv.Close();
 }
 
-// Writes gas-phase reaction rates profile to a CSV file.
+// Writes gas-phase reaction rates profile to a CSV file. 
 void Simulator::writeProdRatesCSV(const std::string &filename,
                                   const Mechanism &mech,
                                   const timevector &times,
@@ -1715,9 +1823,14 @@ void Simulator::writeProdRatesCSV(const std::string &filename,
     vector<string> head;
     head.push_back("Step");
     head.push_back("Time (s)");
+	/*
+	* Separated by mm864
+	*/
+
     for (unsigned int isp=0; isp<mech.GasMech().SpeciesCount(); ++isp) {
         head.push_back(mech.GasMech().Species(isp)->Name() + " (mol/cm3s)");
     }
+
     for (unsigned int i=head.size(); i!=2; --i) {
         head.insert(head.begin()+i, "Err");
     }
