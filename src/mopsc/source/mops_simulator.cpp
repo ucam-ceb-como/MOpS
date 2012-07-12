@@ -1700,7 +1700,7 @@ void Simulator::writePartJumpCSV(const std::string &filename,
     csv.Close();
 }
 
-// Writes gas-phase and surface phase reaction rates profile to a CSV file.
+// Writes gas-phase and surface phase reaction rates profile to a CSV file. (C)
 void Simulator::writeGasRxnCSV(const std::string &filename,
                                const Mechanism &mech,
                                const timevector &times,
@@ -1727,7 +1727,7 @@ void Simulator::writeGasRxnCSV(const std::string &filename,
     }
 
     for (unsigned int i=0; i<gas_react; ++i) {
-        head.push_back("Rxn " + cstr(i) + " (mol/cm3s)");
+        head.push_back("Rxn " + cstr(i) + " (mol/cm3s)"); // q will be in cm since readData point converts everything to cgs
     }
 
    for (unsigned int i=gas_react; i<mech.GasMech().ReactionCount(); ++i) {

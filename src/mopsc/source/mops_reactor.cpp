@@ -434,8 +434,8 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
     real wtot = 0.0, stot= 0.0;
 	// Currently direct input Volume and ARea 
 
-	double Volume = 1.4/1000; // m^3
-	double Area = 5.9; // m^2
+    double Volume = 1.0; /*1.4/1000;*/ // m^3
+    double Area = 68.796; // m^2 per unit volume 
 
     // Calculate molar production rates.
     wtot = m_mech->GasMech().Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y,

@@ -108,6 +108,11 @@ IO::ReactionParser::ReactionParser
     }
 }
 
+void IO::ReactionParser::setSurfaceReactionUnit(const std::string &units){
+
+surfaceUnits = units; 
+}
+
 void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
 {
 
@@ -136,13 +141,27 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
             if (what[2] == "=>") reaction.setReversible(false);
 
             reaction.setProducts(parseReactionSpecies(what[3]));
+		
+	    	if (surfaceUnits == "KJOULES/MOL"){	
+            	reaction.setArrhenius
+           	 (
+                from_string<double>(what[4]),
+                from_string<double>(what[5]),
+                from_string<double>(what[6])*239.005736 // KJOULES/mol to cal/mol
+            	);
+		}
 
-            reaction.setArrhenius
-            (
+		else {
+	    	reaction.setArrhenius
+            	(
                 from_string<double>(what[4]),
                 from_string<double>(what[5]),
                 from_string<double>(what[6])
-            );
+            	);
+
+
+		}
+
 
             while (i < reactionStringLines_.size()-1)
             {

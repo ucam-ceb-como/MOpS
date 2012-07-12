@@ -152,7 +152,7 @@ const fvector &Mixture::MoleFractions() const
     return m_data;
 }
 
-// Returns a vector of species concentrations. (Modified) (C)
+// Returns a vector of species concentrations. (Modified) (C, Debugged)
 void Mixture::GetConcs(fvector &concs) const
 {
     // Resize output vector.
@@ -177,7 +177,7 @@ void Mixture::GetConcs(fvector &concs) const
     }
 }
 
-// Returns a vector of species mass fractions. (Modified) (C)
+// Returns a vector of species mass fractions. (Modified) (C, Not used in mops, sprogc)
 void Mixture::GetMassFractions(fvector &fracs) const
 {
     // Clear output vector.
@@ -238,7 +238,7 @@ real Mixture::MoleFraction(unsigned int i) const
     }
 }
 
-// Returns the molar concentration of species i. (Modified by mm864) (C)
+// Returns the molar concentration of species i. (Modified by mm864, currently unused in mops-sprogc) (C)
 real Mixture::MolarConc(unsigned int i) const
 {
     if (i < gasSpeciesCount) {
@@ -249,7 +249,7 @@ real Mixture::MolarConc(unsigned int i) const
     }
 }
 
-// Returns the molar surface concentration of species i. (Modified by mm864) (C)
+// Returns the molar surface concentration of species i. (Modified by mm864) (C, currently unused in mops-sprogc)
 real Mixture::MolarSurfConc(unsigned int i) const
 {
     if ((i >= gasSpeciesCount) && (i < m_species->size()) ) {
@@ -264,7 +264,7 @@ real Mixture::MolarSurfConc(unsigned int i) const
     }
 }
 
-// Returns the mass fraction of species i. (modified by mm864)  (C)
+// Returns the mass fraction of species i. (modified by mm864)  (C, currently unused in mops-sprogc)
 real Mixture::MassFraction(unsigned int i) const
 {
     if (i < gasSpeciesCount) {
@@ -292,7 +292,7 @@ real Mixture::MassFraction(unsigned int i) const
     }
 }
 
-// Sets the vector of species mole fractions. (modified by mm864) (C)
+// Sets the vector of species mole fractions. (modified by mm864) (C, debugged)
 void Mixture::SetFracs(const fvector &fracs)
 {
     real tot =0.0;
@@ -325,7 +325,7 @@ void Mixture::SetFracs(const fvector &fracs)
 			ztot += fracs[i];
 			}	
 		}
-	    Z.push_back(ztot); 
+	    Z.push_back(ztot); // NOTE Z will allocate Z = 0.0 for gas phase but it won't mess up the next stage below
 	
 	}
 
@@ -348,7 +348,7 @@ void Mixture::SetFracs(const fvector &fracs)
 	
 }
 
-// Sets the species mole fractions from an array of values. (modified by mm864) (C)
+// Sets the species mole fractions from an array of values. (modified by mm864) (C, currently not used in mops-sprogc)
 void Mixture::SetFracs(const Sprog::real fracs[], int n)
 {
 
@@ -417,7 +417,7 @@ void Mixture::SetFracs(const Sprog::real fracs[], int n)
 	
 }
 
-// Sets the species mole fractions using the supplied molar concentrations?? (modified by mm864)
+// Sets the species mole fractions using the supplied molar concentrations?? (modified by mm864 , currently not used in mops-sprogc)
 void Mixture::SetConcs(const fvector &concs) // Is this correct?
 {
     // Check that the concentration vector is of sufficient length.
@@ -449,7 +449,7 @@ void Mixture::SetConcs(const fvector &concs) // Is this correct?
     }
 }
 
-// Sets the species mole fractions using the supplied mass fractions. (modified by mm864) (?) Can you have mass frac in surface
+// Sets the species mole fractions using the supplied mass fractions. (modified by mm864, currently not in used for mops-sprogc) (?) Can you have mass frac in surface
 void Mixture::SetMassFracs(const fvector &fracs)
 {
     // Check that the mass fraction vector is of sufficient length.
@@ -525,7 +525,7 @@ void Mixture::SetMassFracs(const fvector &fracs)
 
 // Checks the vector of mole fractions for validity by settings all negative
 // values to zero, and by normalising the values so that they sum
-// to one. (Modified by mm864) (C)
+// to one. (Modified by mm864) (C, Debugged)
 void Mixture::Normalise()
 {
     real xtot = 0.0;
@@ -554,7 +554,7 @@ void Mixture::Normalise()
     }
 	
 	}
-	    Z.push_back(ztot); 
+	Z.push_back(ztot); // NOTE Z will allocate Z = 0.0 for gas phase but it won't mess up the next stage below
 	
 	}
 	
@@ -585,7 +585,7 @@ real Mixture::Density() const
     return m_data[densityIndex()];
 }
 
-// Returns the mixture mass density. (include gas phase only) (C)
+// Returns the mixture mass density. (include gas phase only) (C, currently not in used for mops-sprogc)
 real Mixture::MassDensity() const
 {
     real rho = 0.0;
@@ -599,13 +599,13 @@ real Mixture::MassDensity() const
     return rho;
 }
 
-// Sets the mixture molar density. (C)
+// Sets the mixture molar density. (C, debugged)
 void Mixture::SetDensity(Sprog::real dens)
 {
     m_data[densityIndex()] = dens;
 }
 
-// Sets the molar density using the supplied mass density. (THIS SHOULD BE: SET MOLAR DENSITY) (C)
+// Sets the molar density using the supplied mass density. (THIS SHOULD BE: SET MOLAR DENSITY) (C, currently not in used for mops-sprogc)
 void Mixture::SetMassDensity(Sprog::real dens) // (include gas phase only)
 {
     real sum = 0.0;
@@ -674,7 +674,7 @@ Serial_MixtureType Mixture::SerialType() const
     return Serial_Mixture;
 }
 
-// returns the avg mol wt given the mass fractions added by Vinod (modified by mm864)
+// returns the avg mol wt given the mass fractions added by Vinod (modified by mm864, not in used for mops-sprogc)
 real Mixture::getAvgMolWt(Sprog::fvector &massFrac) const{
 	real avgMolWt = 0.0;
 	for(unsigned int i=0; i!= gasSpeciesCount; i++)
@@ -683,7 +683,7 @@ real Mixture::getAvgMolWt(Sprog::fvector &massFrac) const{
 	return 1.0/avgMolWt;
 }
 
-real Mixture::getAvgMolWt() const { // (modified by mm864)
+real Mixture::getAvgMolWt() const { // (modified by mm864, not in used for mops-sprogc)
     real avgMolWt = 0.0;
     vector<real> moleFrac = MoleFractions();
     for(unsigned int i=0; i!= gasSpeciesCount; i++) 

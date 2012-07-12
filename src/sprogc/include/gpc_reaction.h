@@ -411,15 +411,15 @@ public:
     void serialize(Archive & ar, const unsigned int /* file_version */)
     {
         ar.template register_type<ARRHENIUS>();
-	ar.template register_type<COVERAGE>();
-	ar.template register_type<FORD>();
+	//ar.template register_type<COVERAGE>();
+	//ar.template register_type<FORD>();
         ar.template register_type<Sprog::Stoichiometry>();
         ar.register_type(static_cast<LTCOEFFS *>(NULL));
 
         ar & m_name & m_reversible
            & m_reac & m_prod & m_dstoich & m_dreac & m_dprod
            & m_arrf & m_arrr & m_lt & m_revlt & m_fo & m_covr & m_usetb
-	  & m_thirdbodies & m_fotype & m_foparams & m_isSurface & m_sticking & m_mottwise & m_isCoverage & m_coverage & m_isFord & m_ford & m_mech & m_deltaStoich & m_phaseVector;
+	   & m_thirdbodies & m_fotype & m_foparams & m_isSurface & m_sticking & m_mottwise & m_isCoverage & m_coverage & m_isFord & m_ford & m_mech & m_deltaStoich & m_phaseVector;
     }
 
     // Writes the element to a binary data stream.

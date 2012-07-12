@@ -488,8 +488,6 @@ void ReactionSet::GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) 
 }
 
 
-// REACTION RATES OF PROGRESS.
-
 // Calculates the rate of progress of each reaction given the
 // precalculated rate constants. // GetRatesOfProgress 1
 void ReactionSet::GetRatesOfProgress(real density,
@@ -511,7 +509,10 @@ void ReactionSet::GetRatesOfProgress(real density,
     if (n >= m_mech->Species().size()) {
         // Assign temp memory.
         rfwd.resize(m_rxns.size(), 0.0);
-        rrev.resize(m_rxns.size(), 0.0);
+        rrev.resize(m_rxns.size(), 0.0);
+
+
+
         // Loop over all reactions.
 
 	unsigned int size_gas_rxns = m_rxns.size() - m_surface_rxns.size();
@@ -607,78 +608,77 @@ void ReactionSet::GetRatesOfProgress(real density,
 	    // Calculate the net rates of production.
             rop[i] = rfwd[i] - rrev[i];
 	    // cout << "is surface? " << m_rxns[i]->IsSURF() << endl;
-	}    
+	} 
 
-	// Loop over all FORD reactions, all ford species are in surface reactions and applied to reactants only
-        for (im=m_ford_rxns.begin(); im!=m_ford_rxns.end(); ++i) {
-        
-	i = *im;
+		// Loop over all FORD reactions to replace the value of Mu.
+        for (im=m_ford_rxns.begin(); im!=m_ford_rxns.end(); ++im) {
+	  i = *im;
 
-            // Use rfwd to store forward rates of production,
-            // and rrev to store reverse rates.
-            rfwd[i] = kforward[i];
-            rrev[i] = kreverse[i];
+	  // Use rfwd to store forward rates of production,
+	  // and rrev to store reverse rates.
+	  rfwd[i] = kforward[i];
+	  rrev[i] = kreverse[i];
+	
+	  // Integer reactants.
 
-	    // Integer reactants
-	 
-	    for (k=0; k!=m_rxns[i]->ReactantCount(); ++k) {
-                // As the stoichiometry is integer, it is more computationally efficient
-                // to multiply the values together than to use the pow() function.
-
-	      unsigned int idx = m_rxns[i]->Reactants()[k].Index(); 
-	      string spName = m_rxns[i]->Mechanism()->GetSpecies(idx)->Name(); 
-	      if ((m_rxns[i]->Mechanism()->FindPhaseName(spName)).compare("gas") == 0){
-
-		for (l=0; l!=m_rxns[i]->FORDCount(); ++l) {
-	  			
-	   	string species_ford = m_rxns[i]->FORDElement(l).spName;  
-	    	unsigned int idx =  m_rxns[i]->Mechanism()->FindSpecies(species_ford); 
-
-                	
-			if (m_rxns[i]->Reactants()[k].Index() == idx){
-				// FORD coefficient can be a decimal so cannot use for loop
-	                    	rfwd[i] *= pow(density * x[m_rxns[i]->Reactants()[k].Index()], m_rxns[i]->FORDElement(l).F_k);
-				cout << "gas species FORD " << spName;			
-			}
-			else{
-			        for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
-	                    	rfwd[i] *= density * x[m_rxns[i]->Reactants()[k].Index()];
-				cout << "gas species not FORD " << spName; 
-				}
-                	}
-
-		}
-	      }
-	      else{
-		string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName(); 
-		//cout << spName << " phase "<< phName << endl; // for debugging
-		double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
-		int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
-		 
-		for (l=0; l!=m_rxns[i]->FORDCount(); ++l) {
-	  			
-	   	string species_ford = m_rxns[i]->FORDElement(l).spName;  
-	    	unsigned int idx =  m_rxns[i]->Mechanism()->FindSpecies(species_ford); 
-
-                	
-			if (m_rxns[i]->Reactants()[k].Index() == idx){
-				
-	                    	rfwd[i] *= pow(site_d/sp_occ * x[m_rxns[i]->Reactants()[k].Index()], m_rxns[i]->FORDElement(l).F_k);
-				cout << "surface species FORD " << spName; 
-			}
-			else{
-			        for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
-	                    	rfwd[i] *= site_d/sp_occ * x[m_rxns[i]->Reactants()[k].Index()];
-				cout << "surface species not FORD " << spName; 
-				}
-                	}
-
-		}
-	      }
+	  
 	      
-            }
+	  for (k=0; k!=m_rxns[i]->ReactantCount(); ++k) {
+	    unsigned int idx = m_rxns[i]->Reactants()[k].Index();
+	    string spName = m_rxns[i]->Mechanism()->GetSpecies(idx)->Name();
+	    bool flag = false;
+	    string species_ford ="";
+	    double Fordcoeff = 0.0;
+	    for (l=0; l!=m_rxns[i]->FORDCount(); ++l) {
+	      species_ford = m_rxns[i]->FORDElement(l).spName;
+	      flag = spName.compare(species_ford) == 0;
+	      if (flag){ 
+		Fordcoeff = m_rxns[i]->FORDElement(l).F_k;
 
-	    // Integer products.
+	      } 
+	      if (flag) break;
+	    }
+
+	    if (flag)
+		{
+
+		  if ((m_rxns[i]->Mechanism()->FindPhaseName(spName)).compare("gas") == 0){ 
+		    // FORD coefficient can be a decimal so cannot use for loop
+		    rfwd[i] *= pow(density * x[m_rxns[i]->Reactants()[k].Index()], Fordcoeff);
+		    cout << "gas species FORD " << spName << endl;
+		  }
+		  else {
+		    	string phName = m_rxns[i]->Mechanism()->GetSpecies(species_ford)->PhaseName();
+			double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
+			int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
+			rfwd[i] *= pow(site_d/sp_occ * x[m_rxns[i]->Reactants()[k].Index()], Fordcoeff);
+			cout << "surf species FORD " << spName << " = " << rfwd[i] << endl;
+		  }
+		}
+
+	      else {
+		if ((m_rxns[i]->Mechanism()->FindPhaseName(spName)).compare("gas") == 0){ 
+		  for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
+		    rfwd[i] *= density * x[m_rxns[i]->Reactants()[k].Index()];
+		    cout << "gas species not FORD " << spName << " = " << rfwd[i] << endl; 
+		  }
+		}
+		else {
+		  string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName();
+		  double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
+		  int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
+		  for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
+		    rfwd[i] *= site_d/sp_occ * x[m_rxns[i]->Reactants()[k].Index()];
+		    cout << "surface species not FORD " << spName << " = " << rfwd[i] << endl; 
+		  }
+		}
+	      }
+
+	    }
+	
+	      
+	   
+	  // Integer products.
 
 	    for (k=0; k!=m_rxns[i]->ProductCount(); ++k) {
                 // As the stoichiometry is integer, it is more computationally efficient
@@ -703,11 +703,15 @@ void ReactionSet::GetRatesOfProgress(real density,
             }
 	    // Calculate the net rates of production.
             rop[i] = rfwd[i] - rrev[i];
-	     cout << "is FORD? " << m_rxns[i]->IsFORD() << endl;
-	}    
+	    cout << "is ford? " << m_rxns[i]->IsFORD() << endl;
 
+	}
+       
+   
     }
 }
+
+
 
 // Calculates the rate of progress of each reaction given the
 // precalculated rate constants. // GetRatesOfProgress 2
@@ -876,7 +880,7 @@ void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
 void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
                                      fvector &kf, fvector &kr) const
 {
-    real lnT=0.0, invRT=0.0, Patm_RT=0.0, T_1_3=0.0, T_2_3=0.0;
+    real lnT=0.0, invRT=0.0, RT=0.0, Patm_RT=0.0, T_1_3=0.0, T_2_3=0.0;
     RxnPtrVector::const_iterator i;
     RxnMap::const_iterator im;
     int j, k, m, n;
@@ -888,10 +892,12 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
         case SI :
             invRT = 1.0 / (R * T);
             Patm_RT = 101325.0 * invRT;
+	    RT= R*T; 
             break;
         case CGS :
             invRT = 1.0 / (R_CGS * T);
             Patm_RT = 1013250.0 * invRT;
+	    RT= R_CGS*T;
             break;
         default:
             // Something has gone wrong to end up here.
@@ -1114,7 +1120,7 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 	// cout << "m= " << m_val << endl; // for debugging
 	// cout << "product sigma= " << sigma_pw_vk << endl; // for debugging
 
-	kf[j] = gamma*sigma_pw_vk*sqrt(double ((R_CGS*T)/ (2*PI*W_k)) )/(pow(totalSiteDensity ,m_val));
+	kf[j] = gamma*sigma_pw_vk*sqrt(double ((RT)/ (2*PI*W_k)) )/(pow(totalSiteDensity ,m_val));
 	// cout << "R= " << R << " ,T = " << T << endl; 
 	// cout << sqrt(double ((R*T)/ (2*PI*W_k)) ) << endl;
 	// cout << (pow(totalSiteDensity ,m_val)) << endl;
@@ -1169,7 +1175,7 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 	}
 
 
-	kf[j] = gamma*sigma_pw_vk*sqrt(double ((R_CGS*T)/ (2*PI*W_k)) )/( (1-gamma/2) * pow(totalSiteDensity ,m_val) );
+	kf[j] = gamma*sigma_pw_vk*sqrt(double ((RT)/ (2*PI*W_k)) )/( (1-gamma/2) * pow(totalSiteDensity ,m_val) );
 				
       }
 

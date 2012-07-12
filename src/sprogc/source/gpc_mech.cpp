@@ -159,6 +159,16 @@ void Mechanism::SetUnits(Sprog::UnitSystem u)
                 (*isp)->CalcMolWt();
             }
 
+	     
+	     // Scale phase site density to mol/m2. (Added by mm864)
+            PhasePtrVector::iterator iph;
+            for (iph=m_phase.begin(); iph!=m_phase.end(); iph++) {
+		                 
+		// Recalculate site density.
+                (*iph)->SetSiteDensity((*iph)->SiteDen()*1.0e4, (*iph)->Name());
+            }	
+	     
+
             // Scale reaction coefficients.
             for (unsigned int irxn=0; irxn!=m_rxns.Count(); ++irxn) {
                 // Convert volumes from cm3 to m3, and convert energies from ergs/mol to

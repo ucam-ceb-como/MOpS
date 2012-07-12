@@ -45,6 +45,7 @@ namespace IO
 			static const boost::regex surfaceSpeciesSingleSubRegex; 
             static const boost::regex reactionListRegex;
             static const boost::regex unitsRegex;
+	    static const boost::regex surfaceUnitsRegex;
 
             const std::string chemfile_;
 			const std::string chemSurfFile_;
@@ -59,6 +60,7 @@ namespace IO
             std::vector<Species> species_;
             std::vector<Reaction> reactions_;
             std::string globalUnits_;
+	    std::string surfUnits_; // added by mm864	
 
             bool checkChemFile();
 			bool checkChemSurfFile();
@@ -69,6 +71,7 @@ namespace IO
             void readReactions();
 			void readSurfReactions();
             void readGlobalUnits();
+	    void readSurfaceUnits();
 
         public:
 

@@ -56,7 +56,11 @@ const regex IO::ChemkinReader::reactionListRegex
 ("REAC(?:|TION|TIONS)\\s+(.*?)\\s+END");
 
 const regex IO::ChemkinReader::unitsRegex
-("REAC(?:|TION|TIONS)\\s+\\b(CAL/MOLE|KCAL/MOLE|JOULES/MOLE|KJOULES/MOLE|KJOU/MOL|KJOU/MOLE|KELVINS|EVOLTS|MOLES|MOLECULES)\\b");
+("REAC(?:|TION|TIONS)\\s+\\b(CAL/MOLE|KCAL/MOLE|JOULES/MOL|KJOULES/MOLE|KJOU/MOL|KJOU/MOLE|KELVINS|EVOLTS|MOLES|MOLECULES)\\b");
+
+const regex IO::ChemkinReader::surfaceUnitsRegex
+("REAC(?:|TION|TIONS)\\s+(.*?)\\s+(CAL/MOLE|KCAL/MOL|JOULES/MOL|KJOULES/MOL|KJOU/MOL|KJOU/MOL|KELVINS|EVOLTS|MOLES|MOLECULES)");
+
 
 IO::ChemkinReader::ChemkinReader
 (
@@ -71,7 +75,8 @@ IO::ChemkinReader::ChemkinReader
     thermSurfFile_(""), // Added by mm864
     transfile_(transfile),
     chemfilestring_(convertToCaps(replaceComments(fileToString(chemfile_)))),
-    globalUnits_("NO GLOBAL UNITS")
+    globalUnits_("NO GLOBAL UNITS"), 
+    surfUnits_("NO GLOBAL UNITS") // Added by mm864	
 {
     checkChemFile();
 }
@@ -93,7 +98,8 @@ IO::ChemkinReader::ChemkinReader
 	transfile_(transfile),
     chemfilestring_(convertToCaps(replaceComments(fileToString(chemfile_)))),
 	chemSurfFilestring_(convertToCaps(replaceComments(fileToString(chemSurfFile_)))), // Added by mm864
-    globalUnits_("NO GLOBAL UNITS")
+    globalUnits_("NO GLOBAL UNITS"), 
+    surfUnits_("NO GLOBAL UNITS") // Added by mm864 	
 {
     checkChemSurfFile();
 }
@@ -290,12 +296,12 @@ void IO::ChemkinReader::read()
 
     ThermoParser thermoParser(thermfile_, thermSurfFile_);
     thermoParser.parse(species_);
-
-
-   
-
     readReactions();
-	readSurfReactions();
+    /* Read surface units must be placed after read gas reaction otherwise if the surface reaction unit is not default,
+     *  everything in gas reaction will be converted as well. 
+     */ 	
+    readSurfaceUnits();	
+    readSurfReactions();
 }
 
 /*
@@ -537,6 +543,7 @@ void IO::ChemkinReader::readSurfReactions() {
     string reactionString = result[1];
 
     ReactionParser reactionParser(reactionString);
+    reactionParser.setSurfaceReactionUnit(surfUnits_);
     reactionParser.parse(reactions_);
 	
 	
@@ -555,10 +562,27 @@ void IO::ChemkinReader::readGlobalUnits()
     {
         if (globalUnits_ != "NO GLOBAL UNITS")
             throw std::logic_error("Units are already specified as " + globalUnits_);
-        cout << units[1]<<endl;
+       
         globalUnits_ = units[1];
         start = units[0].second;
     }
-	cout << "units read" << endl; 
-	cout << "Units " << globalUnits_ << endl;
+
+	cout << "Global Units Read" << endl; 
+	cout << "Units for gas reaction " << globalUnits_ << endl;
+}
+
+void IO::ChemkinReader::readSurfaceUnits()
+{	
+
+    	smatch surf_units;
+	regex_search(chemSurfFilestring_, surf_units, surfaceUnitsRegex);
+      
+        surfUnits_ = surf_units[2];
+
+	if (surfUnits_.length() == 0)
+	{ surfUnits_ = "NO GLOBAL UNITS"; 
+	}
+	cout << "Surface Units Read" << endl; 
+	cout << "Units for surface reaction " << surfUnits_ << endl;
+
 }

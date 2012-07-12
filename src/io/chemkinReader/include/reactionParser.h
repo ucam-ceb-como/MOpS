@@ -45,6 +45,8 @@ namespace IO {
 
             void parse(std::vector<IO::Reaction>& reactions);
 
+	    void setSurfaceReactionUnit(const std::string &units);
+
             std::multimap<std::string, double> parseReactionSpecies(std::string reactants);
 
             std::multimap<std::string, double> parseThirdBodySpecies(const std::string& thirdBodies);
@@ -56,6 +58,10 @@ namespace IO {
             std::vector<double> parseLOWTROEREV(const std::string& line, const boost::regex& reg);
 
             bool checkForPressureDependentReaction(const std::string& line);
+
+	private:
+
+	    std::string surfaceUnits; // added by mm864 since surface reactions often have unit KJOULE/MOL
     };
 
 }
