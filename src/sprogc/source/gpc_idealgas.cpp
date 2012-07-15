@@ -837,7 +837,7 @@ void IdealGas::sumTerms(real T, real *t, int n, std::vector<real> &Xs) const
     const THERMO_PARAMS *a;
 
     for (i=0; i!=min(Species()->size(),Xs.size()); ++i) {
-        // Set sums to zero initially.
+        // Set sums to zero initially. // 	evaluated for each species, so can separate between gas and surf species later
         Xs[i] = 0.0;
 
         // Get the thermo fitting parameters for this species

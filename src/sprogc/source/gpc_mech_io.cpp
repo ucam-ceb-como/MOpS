@@ -288,7 +288,7 @@ void MechanismParser::ReadChemkin(
 
             if (chemkinReader.reactions()[i].hasLOW())
             {
-                cout << "Set LOW." << endl;
+                //cout << "Set LOW." << endl;
                 rxn->SetLowPressureLimit
                     (
                     ARRHENIUS
@@ -475,5 +475,5 @@ void Sprog::IO::MechanismParser::parseCK_Units(const std::string &rxndef,
         }
     }
 
-	cout << "Mech IO Unit Parsed" << endl; 
+	//cout << "Mech IO Unit Parsed" << endl; 
 }

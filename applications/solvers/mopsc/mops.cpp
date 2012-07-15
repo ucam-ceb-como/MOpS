@@ -74,9 +74,9 @@ int main(int argc, char *argv[])
 
      /* 
        surface Chemistry switch = 0 - OFF  
-                                = 1 - ON 
+                                = 1 - ON // controlled by arguments "-surf"
       */ 	
-     int surfaceCapability  = 1; 
+     int surfaceCapability = 0; 
 	
 	 
 	 
@@ -153,7 +153,9 @@ int main(int argc, char *argv[])
             // human-readable CSV formatted files with the results.
             fsolve       = false;
             fpostprocess = true;
-
+		} else if (strcmp(argv[i], "-surf") == 0) {
+            surfaceCapability = 1; // Surface on 
+			
         // The next statements select the type of solver to use.  The
         // default is to solve gas-phase only, with no particle system.
 
@@ -188,7 +190,7 @@ int main(int argc, char *argv[])
             diag = 3;
         } else if (strcmp(argv[i], "-diag4") == 0) {
             diag = 4; // Full diagnostics.
-
+		 
         } else {
             // Currently nothing else is implemented here.  However, in future
             // the settings file name will not be set with the -r switch and

@@ -70,9 +70,9 @@ IO::ChemkinReader::ChemkinReader
 )
 :
     chemfile_(chemfile),
-    chemSurfFile_(""), // Added by mm864
+    chemSurfFile_("NOT READ"), // Added by mm864
     thermfile_(thermfile),
-    thermSurfFile_(""), // Added by mm864
+    thermSurfFile_("NOT READ"), // Added by mm864
     transfile_(transfile),
     chemfilestring_(convertToCaps(replaceComments(fileToString(chemfile_)))),
     globalUnits_("NO GLOBAL UNITS"), 
@@ -271,21 +271,23 @@ void IO::ChemkinReader::read()
 {
 
     readGlobalUnits();
+    if (chemSurfFile_ != "NOT READ"){
 	readPhase();
+    }
     readElements();
     readSpecies();
     
 	
-     if (transfile_ != "NOT READ")
+     if (transfile_ != "NOT READ" )
     {
         TransportParser transportParser(transfile_);
         transportParser.parse(species_);
     }
     
      // Moved by mm864 to check only gas species, seems that the transport data for surface species is absent 
-
-    readSurfaceSpecies();
-
+     if (chemSurfFile_ != "NOT READ"){
+       readSurfaceSpecies();
+     }
     /*
     ThermoParser thermoParser(thermfile_ );
     thermoParser.parse(species_);
@@ -299,9 +301,12 @@ void IO::ChemkinReader::read()
     readReactions();
     /* Read surface units must be placed after read gas reaction otherwise if the surface reaction unit is not default,
      *  everything in gas reaction will be converted as well. 
-     */ 	
+     */ 
+
+    if (chemSurfFile_ != "NOT READ"){
     readSurfaceUnits();	
     readSurfReactions();
+    }
 }
 
 /*

@@ -97,6 +97,7 @@ public:
     void Clear(void);
 
 
+	
     // SPECIES MOLAR PRODUCTION RATES.
 
     // Calculates the molar production rates of gas species.  Returns
@@ -306,8 +307,7 @@ public:
 
         ar & m_rxns & m_rev_rxns
            & m_tb_rxns & m_fo_rxns
-           & m_lt_rxns & m_revlt_rxns & m_surface_rxns & m_ford_rxns & m_cov_rxns & m_stick_rxns & m_mottw_rxns  
-           & m_mech;
+           & m_lt_rxns & m_revlt_rxns & m_surface_rxns & m_ford_rxns & m_cov_rxns & m_stick_rxns & m_mottw_rxns & m_mech;
     }
 
     // Writes the element to a binary data stream.

@@ -106,6 +106,8 @@ void IO::ThermoParser::parseAllThermoData() {
         }
     }
 
+    if (thermoSurf_file_ != "NOT READ" ){ // only pass if surf therm not empty
+
      thermo_lines = getThermoSection(linesSurf_);
      getGlobalTemperatures(thermoSurf_file_string_);// moved to here by mm864
    
@@ -120,6 +122,7 @@ void IO::ThermoParser::parseAllThermoData() {
         }
     }
 
+    }
 
 
 }

@@ -522,7 +522,7 @@ void Simulator::PostProcess()
     vector<fvector> agpfwdrates(npoints), egpfwdrates(npoints);
     vector<fvector> agprevrates(npoints), egprevrates(npoints);
     vector<fvector> agpwdot(npoints), egpwdot(npoints);
-    vector<fvector> agpsdot(npoints), egpsdot(npoints); // Added by mm864 (already combined in wdot implicitly)
+    vector<fvector> agpsdot(npoints), egpsdot(npoints); // Added by mm864 
 
     // Declare particle-phase rate outputs (averages and errors). (At the moment only gas species goes into particle mech)
     vector<fvector> apprates(npoints), epprates(npoints);
@@ -1354,7 +1354,7 @@ void Simulator::readGasRxnDataPoint(std::istream &in, const Mops::Mechanism &mec
                 if (calcsqrs) wdot_sumsqr[i] += (wdot[i] * wdot[i]);
             }
             for (unsigned int i=0; i!=sdot.size(); ++i) {
-                wdot_sum[i] += sdot[i];
+                sdot_sum[i] += sdot[i];
                 if (calcsqrs) sdot_sumsqr[i] += (sdot[i] * sdot[i]);
             }
 		

@@ -340,6 +340,7 @@ void ReactionSet::Clear()
 }
 
 
+
 // MOLAR PRODUCTION RATES.
 
 // Calculates the molar production rates of all species given the rate
@@ -376,12 +377,20 @@ real ReactionSet::GetMolarProdRates(const fvector &rop,
 	    // unsigned int idx = (*i).first; // for debugging
 	    // cout << "is surface? " << m_rxns[idx]->IsSURF() << endl;
 	  }
+	  
+	  
 	}
 
-	// cout << m_mech->GetSpecies(k)->Name() << "" << wdot[k] << endl;
-        // Sum up total production rate.
+    
+    // Sum up total production rate.
         wtot += wdot[k];
     }
+	
+	/* FOR DEBUGGING
+	for (k=m_mech->GasSpeciesCount(); k!=m_mech->SpeciesCount(); ++k) {
+	cout << m_mech->GetSpecies(k)->Name() << " wdot= " << wdot[k] << endl;
+	}
+		*/
     // cout << "wtot " << wtot << endl;
     return wtot;
 }
@@ -422,7 +431,8 @@ real ReactionSet::GetSurfaceMolarProdRates(const fvector &rop,
             sdot[k] += (*i).second * rop[(*i).first];
 	    //unsigned int idx = (*i).first; // for debugging
 	    //cout << "is surface? " << m_rxns[idx]->IsSURF() << endl;
-
+	      //cout << "stoich " << (*i).second << endl;
+	      // cout << "ROP Surf " << rop [(*i).first] <<  "Surface s= " << sdot[k] << endl;
 	  }
 
 			
@@ -433,7 +443,7 @@ real ReactionSet::GetSurfaceMolarProdRates(const fvector &rop,
 	for (k=0; k!=m_mech->GasSpeciesCount(); ++k) {
 	  // cout << "sp included in stot" << m_mech->GetSpecies(k)->Name() << endl;
         // Sum up total production rate for gas species only 
-        stot += sdot[k];
+        stot += sdot[k] * m_mech->Species(k)->MolWt(); // Must time the molecular weight
     }
 
 	//	std::cout << "stot " << stot << endl;
@@ -543,6 +553,7 @@ void ReactionSet::GetRatesOfProgress(real density,
 
             // Calculate the net rates of production.
             rop[i] = rfwd[i] - rrev[i];
+	    //cout << "ROP Gas" << rop[i] << endl;
 	    //cout << "is surface? " << m_rxns[i]->IsSURF() << endl;
         }
 
@@ -607,6 +618,7 @@ void ReactionSet::GetRatesOfProgress(real density,
             }
 	    // Calculate the net rates of production.
             rop[i] = rfwd[i] - rrev[i];
+	    //cout << "ROP Surf" << rop[i] << endl; 
 	    // cout << "is surface? " << m_rxns[i]->IsSURF() << endl;
 	} 
 
@@ -645,14 +657,14 @@ void ReactionSet::GetRatesOfProgress(real density,
 		  if ((m_rxns[i]->Mechanism()->FindPhaseName(spName)).compare("gas") == 0){ 
 		    // FORD coefficient can be a decimal so cannot use for loop
 		    rfwd[i] *= pow(density * x[m_rxns[i]->Reactants()[k].Index()], Fordcoeff);
-		    cout << "gas species FORD " << spName << endl;
+		    // cout << "gas species FORD " << spName << endl;
 		  }
 		  else {
 		    	string phName = m_rxns[i]->Mechanism()->GetSpecies(species_ford)->PhaseName();
 			double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
 			int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
 			rfwd[i] *= pow(site_d/sp_occ * x[m_rxns[i]->Reactants()[k].Index()], Fordcoeff);
-			cout << "surf species FORD " << spName << " = " << rfwd[i] << endl;
+			// cout << "surf species FORD " << spName << " = " << rfwd[i] << endl;
 		  }
 		}
 
@@ -660,7 +672,7 @@ void ReactionSet::GetRatesOfProgress(real density,
 		if ((m_rxns[i]->Mechanism()->FindPhaseName(spName)).compare("gas") == 0){ 
 		  for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
 		    rfwd[i] *= density * x[m_rxns[i]->Reactants()[k].Index()];
-		    cout << "gas species not FORD " << spName << " = " << rfwd[i] << endl; 
+		    // cout << "gas species not FORD " << spName << " = " << rfwd[i] << endl; 
 		  }
 		}
 		else {
@@ -669,7 +681,7 @@ void ReactionSet::GetRatesOfProgress(real density,
 		  int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
 		  for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
 		    rfwd[i] *= site_d/sp_occ * x[m_rxns[i]->Reactants()[k].Index()];
-		    cout << "surface species not FORD " << spName << " = " << rfwd[i] << endl; 
+		    // cout << "surface species not FORD " << spName << " = " << rfwd[i] << endl; 
 		  }
 		}
 	      }
@@ -703,7 +715,7 @@ void ReactionSet::GetRatesOfProgress(real density,
             }
 	    // Calculate the net rates of production.
             rop[i] = rfwd[i] - rrev[i];
-	    cout << "is ford? " << m_rxns[i]->IsFORD() << endl;
+	    // cout << "is ford? " << m_rxns[i]->IsFORD() << endl;
 
 	}
        

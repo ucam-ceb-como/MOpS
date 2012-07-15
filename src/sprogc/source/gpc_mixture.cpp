@@ -752,7 +752,7 @@ real Mixture::getSpecificHeatCapacity(Sprog::real T){
 	Sprog::Thermo::IdealGas ig(*this->Species());
 	ig.CalcCps(T,cpMols);
 	GetMassFractions(massFrac);
-	for(unsigned int i=0; i !=gasSpeciesCount; i++)
+	for(unsigned int i=0; i !=gasSpeciesCount; i++) // OVER GAS PHASE ONLY
 		cp += massFrac[i]*(cpMols[i])/(*m_species)[i]->MolWt();
 
 	return cp;
@@ -765,7 +765,7 @@ real Mixture::getSpecificHeatCapacity(){
 	Sprog::Thermo::IdealGas ig(*this->Species());
 	ig.CalcCps(Temperature(),cpMols);
 	GetMassFractions(massFrac);
-	for(unsigned int i=0; i != gasSpeciesCount; i++)
+	for(unsigned int i=0; i != gasSpeciesCount; i++) // OVER GAS PHASE ONLY
 		cp += massFrac[i]*(cpMols[i])/(*m_species)[i]->MolWt();
 
 	return cp;
