@@ -150,8 +150,6 @@ real SinteringModel::SintTime(const Cell &sys, const Particle &p) const
     if (p.Primary() != NULL) {
         return SintTime(sys, *p.Primary());
     } else {
-        // TODO:  Complete SinteringModel::SintTime() function for sub-particle tree.    
-		// This is included in the function SinteringModel::SintTime(const Cell &sys, const SubParticle &p) const
         return 0.0;
     }
 }
@@ -174,6 +172,20 @@ real SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) const
         case SSD:
             return m_A * dp * dp * dp * sys.GasPhase().Temperature() *
                    exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature());
+            break;
+        case Silicon:
+            // Zachariah & Carrier, J. Aerosol Sci., 1999, 30, 1139-1151
+            // implementation of the SSD silicon sintering kinetic
+            // form: tau = A * d^3 * T / (gamma * diff)
+            //       gamma = surface energy = 1.152 - 1.574e-4*T(K)    N/m
+            //       diff. = SSD diffusivity = 4.69e-7 exp(-m_E / T)   m2/s
+            // default: m_A = 5396 J/K.m3
+            //          m_E = 7562 K
+            //          m_dpmin = 0 nm
+            return m_A * dp * dp * dp * sys.GasPhase().Temperature() / (
+                   (1.152 - 1.574e-4 * sys.GasPhase().Temperature()) *
+                   4.69e-7 * exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature())
+                   );
             break;
         case Rutile:
         	// Buesser et al., J. Phys. Chem. C, 2011, 115, 11030-11035

@@ -241,7 +241,7 @@ void FlameLet::initSolutionVector()
     *initialize the ODE vector
     */
     solvect.resize(nEqn,0.0);
-    vector<doublereal> vSpec, vT, vMom;
+    vector<doublereal> vSpec, vT, vMom_rho;		// ank25: Solve Mr/rho and not Mr in soot flamelet
     /*
     * actual signature follows (left,right,cc,vSpec)
     * but in the case of flamelets the species mass fractions
@@ -315,7 +315,7 @@ void FlameLet::initSolutionVector()
     // Also initial constants
     if (sootMom_.active())
     {
-        vMom.resize(len*nMoments,0.0);
+        vMom_rho.resize(len*nMoments,0.0);
         for (size_t i=0; i<dz.size(); i++)
         {
 
@@ -325,13 +325,13 @@ void FlameLet::initSolutionVector()
             //vMom[i*nMoments+2] = 1.0e10;
 
 
-            vMom[i*nMoments] = sootMom_.getFirstMoment();
+            vMom_rho[i*nMoments] = sootMom_.getFirstMoment();
             //cout << "vMom[i*nMoments]  " << i*nMoments <<"  "  << vMom[i*nMoments] << endl;
             for (size_t l=1; l<nMoments; ++l)
             {
                 // ank25: Do we need to multiply by 1e6 here?
                 //vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(doublereal(sootMom_.getAtomsPerDiamer()));
-                vMom[i*nMoments+l] = vMom[i*nMoments+l-1] * 1e3;
+                vMom_rho[i*nMoments+l] = vMom_rho[i*nMoments+l-1] * 1e3;
                 //cout << "vMom[i*nMoments+l]  " << i*nMoments+l <<"  " << vMom[i*nMoments+l] << endl;
             }
 
@@ -352,7 +352,7 @@ void FlameLet::initSolutionVector()
     mergeEnergyVector(&vT[0]);
     if (sootMom_.active())
     {
-        mergeSootMoments(&vMom[0]);
+        mergeSootMoments(&vMom_rho[0]);
     }
 
     if (admin_.getRestartType() == admin_.BINARY)
@@ -1089,16 +1089,20 @@ void FlameLet::sootMomentResidual
         if (Lewis.sootFlameletType() == LewisNumber::MAUSS06)
         {
             // Use the form of the soot flamelet equation given in Mauss et al 2006
+        	// Or see Knobel thesis
+        	// The independent variable is Mr/rho not Mr.
+        	// So divide moments by rho
 
             doublereal diffusionConstant = sdr/(2.0*dz[i]);
             for (int l=0; l<nMoments; ++l)
             {
-                grad_e = (moments(i+1,l)-moments(i,l))/zPE;
-                grad_w = (moments(i,l)-moments(i-1,l))/zPW;
+                grad_e = (moments(i+1,l)/m_rho[i+1]-moments(i,l)/m_rho[i])/zPE;
+                grad_w = (moments(i,l)/m_rho[i]-moments(i-1,l)/m_rho[i-1] )/zPW;
                 source = moments_dot(i,l)/m_rho[i];
                 f[i*nMoments+l] = diffusionConstant*(grad_e-grad_w)
                         + source;
             }
+
         }
         else if (Lewis.sootFlameletType() == LewisNumber::PITSCH00DD)
         {
@@ -1288,7 +1292,8 @@ void FlameLet::saveMixtureProp(doublereal* y)
     vector<doublereal> temp(nSpc,0.0);
     vector<doublereal> cptemp(nSpc,0.0);
     vector<doublereal> moments_dot_temp(nMoments,0.0);
-    vector<doublereal> mom_temp(nMoments,0.0);
+    vector<doublereal> mom_rho_temp(nMoments,0.0);		// ank25: This is Mr/rho
+    vector<doublereal> mom_temp(nMoments,0.0);			// ank25: This is Mr
     vector<doublereal> exp_mom_temp(nMoments,0.0);
     vector<doublereal> conc(nSpc,0.0);
     vector<doublereal> wdotSootGasPhase(nMoments,0.0);
@@ -1307,11 +1312,12 @@ void FlameLet::saveMixtureProp(doublereal* y)
         // Extract temperature from the solution vector
         m_T[i] = y[i*nVar+ptrT];
 
-        // Extract the moments from solution vector
-        mom_temp.clear();
-        for(int l=0; l<nSpc; l++)
+        // Extract moments/rho from solution vector
+        mom_rho_temp.clear();
+        //for(int l=0; l<nSpc; l++)
+        for(int l=0; l<nMoments; l++)
         {
-            mom_temp.push_back(y[i*nVar+ptrT+1+l]);
+            mom_rho_temp.push_back(y[i*nVar+ptrT+1+l]);
         }
 
         camMixture_->SetMassFracs(mf);                              //mass fraction
@@ -1349,13 +1355,9 @@ void FlameLet::saveMixtureProp(doublereal* y)
         {
         for(int l=0; l<nMoments; l++)
         {
-            moments(i,l) = mom_temp[l];			// ank25:  This looks correct
-            //  exp_mom_temp[l] = exp(mom_temp[l])-1.0;
-        //}
-
-        // Change of variable before calling moment rates:
-            // M=exp(M_hat -1)
-            // M_hat = ln(M+1)
+        	// ank25: Multiply by rho:  Mr/rho ---> Mr
+            moments(i,l) = mom_rho_temp[l] *  m_rho[i];
+            mom_temp[l] = mom_rho_temp[l] *  m_rho[i];
 
         // DEBUG:  Before calling rateAll check if any moments have gone negative.
         // If so then:
@@ -1371,7 +1373,6 @@ void FlameLet::saveMixtureProp(doublereal* y)
         // end DEBUG
 
         }
-
 
         moments_dot_temp = sootMom_.rateAll(conc, mom_temp, m_T[i], opPre, 1);
         for(int l=0; l<nMoments; l++)

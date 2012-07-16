@@ -87,7 +87,8 @@ public:
         ViscousFlow, // Viscous flow model (e.g. silica).
         GBD,          // Grain-boundary diffusion (e.g. titania).
         SSD,         // Solid state diffusion (d^3)
-        Rutile		 // Special MD fit for GBD sintering of rutile
+        Rutile,		 // Special MD fit for GBD sintering of rutile
+        Silicon      // Special MD fit for sintering of silicon
     };
 
     // Constructors.

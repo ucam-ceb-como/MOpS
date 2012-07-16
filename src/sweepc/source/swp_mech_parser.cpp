@@ -397,6 +397,9 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         } else if (str == "ssd") {
             // Solid-state diffusion (d^3)
             mech.SintModel().SetType(SinteringModel::SSD);
+        } else if (str == "silicon") {
+            // Solid-state diffusion (d^3)
+            mech.SintModel().SetType(SinteringModel::Silicon);
         } else {
             // Grain-boundary diffusion is the default.
             mech.SintModel().SetType(SinteringModel::GBD);
