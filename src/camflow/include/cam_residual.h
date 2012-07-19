@@ -325,6 +325,7 @@ namespace Camflow
         protected:
 
             CamAdmin& admin_;
+            CamConfiguration& config_;
             CamReporter* reporter_;
             CamGeometry& reacGeom_;
             CamSoot& sootMom_;
@@ -370,7 +371,7 @@ namespace Camflow
             Array2D s_ParticleBegin, s_ParticleEnd;
             Array2D s_jk;
             Array2D s_cp;
-            Array2D moments;		// ank25: moments analogous to s_mf
+            Array2D moments;	    // ank25: soot moments
             Array2D moments_dot;    // ank25: moments rate analogous to s_wdot
 
             std::vector<doublereal> m_T;                  //mixture temperature

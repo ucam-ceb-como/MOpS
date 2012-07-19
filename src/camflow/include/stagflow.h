@@ -133,7 +133,14 @@ namespace Camflow
 
             double dydx(double nr1, double nr2, double dr) const;
 
-            double dydx(double nr1, double nr2, double nr3, double dr) const;
+            double dydx
+            (
+                const int i,
+                double nr1,
+                double nr2,
+                double nr3,
+                double dr
+            ) const;
 
             /*
             *calculate flow field
@@ -205,16 +212,7 @@ namespace Camflow
             tdma_coeff tdmaFlow;
             int configID;
 
-            /*
-            *Newton solver variables
-            */
-            int alg_nEqn, alg_nVar, alg_band;
-            std::vector<doublereal> alg_solvect;
-            std::vector<doublereal> vFlow;
-            //KinsolWrapper *newton;
-            doublereal tol_res, eigen;
             doublereal strainRate;
-            CamConfiguration *camConfig;
 
     }; // End StagFlow class declaration.
 
