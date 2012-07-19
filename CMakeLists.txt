@@ -122,6 +122,8 @@ target_link_libraries(sprogc-test sprog ${Boost_LIBRARIES})
 
 add_test(sprogc.regress1 ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress1.sh ${EXECUTABLE_OUTPUT_PATH}/sprogc-test ${MOPSSUITE_SOURCE_DIR}/test/sprogc)
 
+add_test(sprogc.regress2 ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress2.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress2)
+
 ########## Test Program for chemkinReader ######################
 add_executable(chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp)
 target_link_libraries(chemkinReader-test chemkinReader ${Boost_LIBRARIES})

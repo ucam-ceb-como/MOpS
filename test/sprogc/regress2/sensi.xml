@@ -1,0 +1,23 @@
+<sensi version="1.0">
+    <settings>
+        <sensitivity enable="false" method="1"/>
+        <errorControl enable="false"/>
+        <atolB>1.0e-04</atol> 
+        <atolQ>1.0e-04</atol> 
+        <atolQB>1.0e-04</atol> 
+        <rtolB>1.0e-04</rtol>
+        <rtolQ>1.0e-04</rtol>
+        <!-- problemType type="Init_Concentrations"/ -->
+        <problemType type="Reaction_Rates"/>
+    </settings>
+    <parameters>
+        <A all="false" enable="false"/>
+        <n all="false" enable="false"/>
+        <E all="false" enable="false"/>
+        <additional>
+            <paramA rxnth="0"/>
+            <paramA rxnth="1"/>      
+        </additional>
+        <init id="SIH4"/>
+    </parameters>
+</sensi>
