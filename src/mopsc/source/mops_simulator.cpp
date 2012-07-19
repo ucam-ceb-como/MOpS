@@ -1669,7 +1669,7 @@ void Simulator::writeGasRxnCSV(const std::string &filename,
     head.push_back("Step");
     head.push_back("Time (s)");
     for (unsigned int i=0; i<mech.GasMech().ReactionCount(); ++i) {
-        head.push_back("Rxn " + cstr(i) + " (mol/cm3s)");
+        head.push_back("Rxn " + cstr(i) + " (mol/m3s)");
     }
     for (unsigned int i=head.size(); i!=2; --i) {
         head.insert(head.begin()+i, "Err");
