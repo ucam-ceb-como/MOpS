@@ -125,6 +125,14 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
         m_write_bintree         = rhs.m_write_bintree;
         m_bintree_coalthresh    = rhs.m_bintree_coalthresh;
         m_fract_dim             = rhs.m_fract_dim;
+
+        // Indices for various mixture properties
+         m_TemperatureGradientIndex = rhs.m_TemperatureGradientIndex;
+         m_MixFracGradientIndex = rhs.m_MixFracGradientIndex;
+         m_MixFracDiffusionIndex = rhs.m_MixFracDiffusionIndex;
+         m_MixFracLaplacianIndex = rhs.m_MixFracLaplacianIndex;
+         m_AvgMolWtIndex = rhs.m_AvgMolWtIndex;
+         m_ThermalConductivityIndex = rhs.m_ThermalConductivityIndex;
     }
     return *this;
 }
@@ -525,6 +533,14 @@ void ParticleModel::Serialize(std::ostream &out) const
         out.write(reinterpret_cast<const char *>(&m_AdvectionType), sizeof(m_AdvectionType));
         out.write(reinterpret_cast<const char *>(&m_ThermophoresisType), sizeof(m_ThermophoresisType));
 
+        // Indices for various mixture properties
+        out.write(reinterpret_cast<const char *>(&m_TemperatureGradientIndex), sizeof(m_TemperatureGradientIndex));
+        out.write(reinterpret_cast<const char *>(&m_MixFracGradientIndex),     sizeof(m_MixFracGradientIndex));
+        out.write(reinterpret_cast<const char *>(&m_MixFracDiffusionIndex),    sizeof(m_MixFracDiffusionIndex));
+        out.write(reinterpret_cast<const char *>(&m_MixFracLaplacianIndex),    sizeof(m_MixFracLaplacianIndex));
+        out.write(reinterpret_cast<const char *>(&m_AvgMolWtIndex),            sizeof(m_AvgMolWtIndex));
+        out.write(reinterpret_cast<const char *>(&m_ThermalConductivityIndex), sizeof(m_ThermalConductivityIndex));
+
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, ParticleModel::Serialize).");
@@ -595,8 +611,8 @@ void ParticleModel::Deserialize(std::istream &in)
 
                 // Read in Knudsen drag parameters
                 in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
-                in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
-                in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
+                in.read(reinterpret_cast<char*>(&m_DragB), sizeof(m_DragB));
+                in.read(reinterpret_cast<char*>(&m_DragE), sizeof(m_DragE));
 
                 // Transport model choices
                 in.read(reinterpret_cast<char*>(&m_DragType), sizeof(m_DragType));
@@ -604,6 +620,13 @@ void ParticleModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&m_AdvectionType), sizeof(m_AdvectionType));
                 in.read(reinterpret_cast<char*>(&m_ThermophoresisType), sizeof(m_ThermophoresisType));
 
+                // Indices for various mixture properties
+                in.read(reinterpret_cast<char*>(&m_TemperatureGradientIndex), sizeof(m_TemperatureGradientIndex));
+                in.read(reinterpret_cast<char*>(&m_MixFracGradientIndex),     sizeof(m_MixFracGradientIndex));
+                in.read(reinterpret_cast<char*>(&m_MixFracDiffusionIndex),    sizeof(m_MixFracDiffusionIndex));
+                in.read(reinterpret_cast<char*>(&m_MixFracLaplacianIndex),    sizeof(m_MixFracLaplacianIndex));
+                in.read(reinterpret_cast<char*>(&m_AvgMolWtIndex),            sizeof(m_AvgMolWtIndex));
+                in.read(reinterpret_cast<char*>(&m_ThermalConductivityIndex), sizeof(m_ThermalConductivityIndex));
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -789,7 +812,8 @@ real ParticleModel::KnudsenDragCoefficient(const Cell &sys, const Particle &sp) 
 real ParticleModel::FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const {
     const real d = sp.CollDiameter();
     // 4.818546232410640188 = sqrt(2 * pi * k * NA) * 2 / 3
-    return 4.818546232410640188 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().getAvgMolWt()) * sys.GasPhase().Density() * d * d;
+    return 4.818546232410640188 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().PropertyValue(m_AvgMolWtIndex))
+                                * sys.GasPhase().MolarDensity() * d * d;
 }
 
 /*!
@@ -828,13 +852,13 @@ real ParticleModel::LiWangDragCoefficient(const Cell &sys, const Particle &sp) c
     const real omega = Omega1_1_avg(sys, sp);
 
     // 3.247911159372846712e-24 = sqrt((2*pi)/(k*NA)) * 9 / 4 / NA
-    real alpha = 3.24791159e-24 / sqrt(sys.GasPhase().Temperature() * sys.GasPhase().getAvgMolWt());
-    alpha *= Sweep::ViscosityAir(sys.GasPhase().Temperature()) / sys.GasPhase().Density() / sp.CollDiameter();
+    real alpha = 3.24791159e-24 / sqrt(sys.GasPhase().Temperature() * sys.GasPhase().PropertyValue(m_AvgMolWtIndex));
+    alpha *= Sweep::ViscosityAir(sys.GasPhase().Temperature()) / sys.GasPhase().MolarDensity() / sp.CollDiameter();
     alpha /= omega;
 
     // 4.818546232410640188 = sqrt(2 * pi * k * NA) * 2 / 3
-    real drag = 4.81854623 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().getAvgMolWt())
-                * sys.GasPhase().Density() * sp.CollDiameter() * sp.CollDiameter() * omega
+    real drag = 4.81854623 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().PropertyValue(m_AvgMolWtIndex))
+                * sys.GasPhase().MolarDensity() * sp.CollDiameter() * sp.CollDiameter() * omega
                 * pow(pow(1 + alpha, -1.143),-0.875);
 
     //std::cout << "Omega " << omega << ", Drag " << drag <<  '\n';
@@ -883,9 +907,9 @@ real ParticleModel::LiWangPatDragCoefficient(const Cell &sys, const Particle &sp
 
     // 4.818546232410640188 = sqrt(2 * pi * k * NA) * 2 / 3
     // 1.2044286e+24 = 2 * NA
-    real drag = 4.818546232410640188 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().getAvgMolWt())
-                * sys.GasPhase().Density() * sp.CollDiameter() * omega * knudsen
-                * (1 - sys.GasPhase().getAvgMolWt() / sp.Mass() / 1.2044283e+24);
+    real drag = 4.818546232410640188 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().PropertyValue(m_AvgMolWtIndex))
+                * sys.GasPhase().MolarDensity() * sp.CollDiameter() * omega * knudsen
+                * (1 - sys.GasPhase().PropertyValue(m_AvgMolWtIndex) / sp.Mass() / 1.2044283e+24);
 
     // 9.424777960769379348 = 3 * pi
     drag += 9.424777960769379348 * Sweep::ViscosityAir(sys.GasPhase().Temperature());
@@ -971,6 +995,8 @@ real ParticleModel::GradDiffusionCoefficient(const Cell &sys, const Particle &sp
  *@param[in]    sp      Particle for which to calculate drag coefficient
  *
  *@return       Diffusion coefficient
+ *
+ *@exception    std::runtime_error      Unrecognised diffusion type
  */
 real ParticleModel::DiffusionCoefficient(const Cell &sys, const Particle &sp) const {
     switch(m_DiffusionType) {
@@ -979,7 +1005,7 @@ real ParticleModel::DiffusionCoefficient(const Cell &sys, const Particle &sp) co
             // Will not go any further because of return statement.
         case FlameletDiffusion:
             return EinsteinDiffusionCoefficient(sys, sp)
-                     * sys.GasPhase().GradientMixFrac() * sys.GasPhase().GradientMixFrac();
+                   * sys.GasPhase().PropertyValue(m_MixFracGradientIndex) * sys.GasPhase().PropertyValue(m_MixFracGradientIndex);
         default:
             throw std::runtime_error("Unrecognised diffusion type in Sweep::ParticleModel::DiffusionCoefficient()");
     }
@@ -1014,12 +1040,12 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
                                          / sys.SampleVolume();
 
             // Thermophoretic drift term
-            real v = sys.GasPhase().GradientMixFrac() * ThermophoreticVelocity(sys, sp)
+            real v = sys.GasPhase().PropertyValue(m_MixFracGradientIndex) * ThermophoreticVelocity(sys, sp)
                      * sootMassDensity;
 
             // Difference in diffusion of soot and mixture fraction
-            v += sys.GasPhase().LaplacianMixFrac() * sootMassDensity
-                 * (sys.GasPhase().MixFracDiffCoeff() - EinsteinDiffusionCoefficient(sys, sp));
+            v += sys.GasPhase().PropertyValue(m_MixFracLaplacianIndex) * sootMassDensity
+                 * (sys.GasPhase().PropertyValue(m_MixFracDiffusionIndex) - EinsteinDiffusionCoefficient(sys, sp));
 
             if((neighbours[0] != NULL) && (neighbours[1] != NULL))
             // Estimate two gradients in mixture fraction space using the
@@ -1035,10 +1061,10 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
 
                 // rho D_Z at z_{i-1}
                 const real leftRhoDZ  = neighbours[0]->GasPhase().MassDensity() *
-                                        neighbours[0]->GasPhase().MixFracDiffCoeff();
+                                        neighbours[0]->GasPhase().PropertyValue(m_MixFracDiffusionIndex);
                 // rho D_Z at z_{i+1}
                 const real rightRhoDZ = neighbours[1]->GasPhase().MassDensity() *
-                                        neighbours[1]->GasPhase().MixFracDiffCoeff();
+                                        neighbours[1]->GasPhase().PropertyValue(m_MixFracDiffusionIndex);
                 // Now calculate the gradient estimate for the product
                 // of gas mass density and mixture fraction diffusion
                 // coefficient.
@@ -1058,7 +1084,7 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
 
                 // Put together this term in the equation and add it to the
                 // velocity.
-                v+= sys.GasPhase().GradientMixFrac() * sys.GasPhase().GradientMixFrac() *
+                v+= sys.GasPhase().PropertyValue(m_MixFracGradientIndex) * sys.GasPhase().PropertyValue(m_MixFracGradientIndex) *
                     (sootMassDensity / sys.GasPhase().MassDensity() * gradRhoDZ - grad);
             }
 
@@ -1089,8 +1115,8 @@ real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) 
 
     switch(m_ThermophoresisType) {
         case WaldmannThermophoresis:
-            tempFactor = sys.GasPhase().getThermalConductivity(sys.GasPhase().Pressure());
-            tempFactor *= sys.GasPhase().GradientTemperature();
+            tempFactor = sys.GasPhase().PropertyValue(m_ThermalConductivityIndex);
+            tempFactor *= sys.GasPhase().PropertyValue(m_TemperatureGradientIndex);
             tempFactor /= sys.GasPhase().Pressure();
 
             // Equation 2 of the Li & Wang paper with phi = 0.9
@@ -1099,8 +1125,8 @@ real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) 
 
         case LiWangThermophoresis:
             // conductivity * temperature gradient / (NkT)
-            tempFactor = sys.GasPhase().getThermalConductivity(sys.GasPhase().Pressure());
-            tempFactor *= sys.GasPhase().GradientTemperature();
+            tempFactor = sys.GasPhase().PropertyValue(m_ThermalConductivityIndex);
+            tempFactor *= sys.GasPhase().PropertyValue(m_TemperatureGradientIndex);
             tempFactor /= sys.GasPhase().Pressure();
 
             // Now bring in the collision integrals

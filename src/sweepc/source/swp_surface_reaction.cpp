@@ -135,7 +135,7 @@ real SurfaceReaction::Rate(real t, const Cell &sys,
     real rate = m_arr.A;
 
     // Chemical species concentration dependence.
-    rate *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
+    rate *= chemRatePart(sys.GasPhase());
 
     // Temperature dependance.
     real T = sys.GasPhase().Temperature();
@@ -164,7 +164,7 @@ real SurfaceReaction::Rate(real t, const Cell &sys, const Particle &sp) const
     real rate = m_arr.A;
 
     // Chemical species concentration dependence.
-    rate *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
+    rate *= chemRatePart(sys.GasPhase());
 
     // Temperature dependance.
     real T = sys.GasPhase().Temperature();

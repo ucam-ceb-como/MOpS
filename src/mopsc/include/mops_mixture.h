@@ -72,11 +72,15 @@ public:
     // Operators.
     Mixture &operator=(const Mixture &rhs);
 
-
     // READ/WRITE/COPY.
 
     // Creates a clone of the mixture object.
     Mixture *const Clone() const;
+
+    //!Returns the description of the gas-phase mixture as a sprog object
+    const Sprog::Thermo::IdealGas &GasPhase(void) const;
+    //!Returns the description of the gas-phase mixture  as a sprog object
+    Sprog::Thermo::IdealGas &GasPhase(void);
 
 protected:
     // As in Sprog, it is meaningless to define a mixture without knowledge

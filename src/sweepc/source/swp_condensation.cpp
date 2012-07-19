@@ -144,7 +144,7 @@ real Condensation::Rate(real t, const Cell &sys,
     real cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
 
      // Chemical species concentration dependence.
-    cterm *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
+    cterm *= chemRatePart(sys.GasPhase());
 
     // Free molecular terms.
     cterm *= (m_kfm1 * sys.ParticleCount()) + 
@@ -173,7 +173,7 @@ real Condensation::Rate(real t, const Cell &sys, const Particle &sp) const
 //    real trm[3];
 
     // Chemical species concentration dependence.
-    cterm *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
+    cterm *= chemRatePart(sys.GasPhase());
 
     // Get particle property
     const real d = sp.CollDiameter();
@@ -214,7 +214,7 @@ real Condensation::RateTerms(real t, const Cell &sys,
     real cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
 
      // Chemical species concentration dependence.
-    cterm *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
+    cterm *= chemRatePart(sys.GasPhase());
 
     // If the mechanism contains any deferred processes then we must use the
     // majorant form of the rate, in order to account for any changes to

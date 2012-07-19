@@ -631,7 +631,7 @@ void Brush::ResetChemistry::apply(const real x, Sweep::Cell &reac) const {
     }
 
     // Build a chemical mixture object
-    Sprog::Thermo::IdealGas chemMixture(*(reac.GasPhase().Species()));
+    Sprog::Thermo::IdealGas chemMixture(*(reac.ParticleModel()->Species()));
 
     // Set the species data
     fvector speciesData(dataToUse.begin() + sNumNonSpeciesData, dataToUse.end());
@@ -661,7 +661,17 @@ void Brush::ResetChemistry::apply(const real x, Sweep::Cell &reac) const {
     // saves re-engineering this function (riap2 27 Oct 2011)
     chemMixture.SetAlpha(dataToUse[sPAHFormationIndex]);
 
-    reac.SetGasPhase(chemMixture);
+    //reac.SetGasPhase(chemMixture);
+
+    // This method requires write access to the gas phase, which is not
+    // standard in sweep.  This means it cannot use the generic gas
+    // phase interface
+    Sweep::SprogIdealGasWrapper *gasWrapper = dynamic_cast<Sweep::SprogIdealGasWrapper*>(&reac.GasPhase());
+    if(gasWrapper == NULL)
+        throw std::runtime_error("Could not cast gas phase to SprogIdealGasWrapper in Brush::ResetChemistry::apply");
+
+    // If execution reaches here, the cast must have been successful
+    *gasWrapper->Implementation() = chemMixture;
 
     // Uncomment this code to check molar concentrations
     /*unsigned int logIndices[14];

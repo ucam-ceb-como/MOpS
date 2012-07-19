@@ -68,9 +68,17 @@ InterParticle::InterParticle(void)
     m_name = "InterParticle";
 }
 
-//! Initialising constructor.
-InterParticle::InterParticle(const Sweep::Mechanism &mech)
-: ParticleProcess(mech), m_arr(0.0,0.0,0.0)
+/*!
+ * Initialising constructor
+ *
+ *@param[in]    mech        Mechanism of which this process is a part
+ *@param[in]
+ */
+InterParticle::InterParticle(const Sweep::Mechanism &mech,
+                             const EnvironmentInterface::SpeciesIndex h4o4si)
+: ParticleProcess(mech)
+, m_arr(0.0,0.0,0.0)
+, m_H4O4SI_Index(h4o4si)
 {
     // Assume the InterParticle is simulated as a deferred process (LPDA).
     m_defer = true;
@@ -105,6 +113,7 @@ InterParticle &InterParticle::operator=(const InterParticle &rhs)
         ParticleProcess::operator =(rhs);
         m_arr    = rhs.m_arr;
 		m_pid     = rhs.m_pid;
+		m_H4O4SI_Index = rhs.m_H4O4SI_Index;
     }
     return *this;
 }
@@ -169,9 +178,7 @@ real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1
 	// Calculate the concentration of SiOH4
 	// Note that the usual ParticleProcess interface can NOT be used, as this
 	// would erroneously remove H4O4SI from the gas-phase.
-	real frac = sys.GasPhase().MoleFractions()
-	        [Sprog::Species::Find(string("H4O4SI"),*sys.GasPhase().Species())];
-	real conc = sys.GasPhase().Density() * frac;
+	real conc = sys.GasPhase().SpeciesConcentration(m_H4O4SI_Index);
 
 	// Rate of surface reaction
 	real R_surf = m_arr.A * conc *pow(T, m_arr.n)
@@ -239,9 +246,7 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
     // Calculate the concentration of SiOH4
     // Note that the usual ParticleProcess interface can NOT be used, as this
     // would erroneously remove H4O4SI from the gas-phase.
-    real frac = sys.GasPhase().MoleFractions()
-            [Sprog::Species::Find(string("H4O4SI"),*sys.GasPhase().Species())];
-    real conc = sys.GasPhase().Density() * frac;
+    real conc = sys.GasPhase().SpeciesConcentration(m_H4O4SI_Index);
 
     // Do calculation for surface-reaction part of rate:
     // Chemical species concentration dependence.
@@ -447,6 +452,8 @@ void InterParticle::Serialize(std::ostream &out) const
         unsigned int n = (unsigned int)m_pid;
         out.write((char*)&n, sizeof(n));
 
+        out.write(reinterpret_cast<const char*>(&m_H4O4SI_Index), sizeof(m_H4O4SI_Index));
+
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, InterParticle::Serialize).");
@@ -480,6 +487,9 @@ void InterParticle::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 
                 // Read particle property ID.
                 in.read(reinterpret_cast<char*>(&m_pid), sizeof(m_pid));
+
+                in.read(reinterpret_cast<char*>(&m_H4O4SI_Index), sizeof(m_H4O4SI_Index));
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "

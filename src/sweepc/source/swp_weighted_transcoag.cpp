@@ -130,7 +130,7 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::Rate(real t, const 
         Sweep::fvector vec(TYPE_COUNT);
         fvector::iterator it = vec.begin();
 
-        return RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/GetViscosity(sys),
+        return RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/Sweep::ViscosityAir(T),
                 MeanFreePathAir(T,P), sys.SampleVolume(), it);
     } else {
         // Not enough particles so return 0
@@ -172,7 +172,7 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(real t, c
         real T = sys.GasPhase().Temperature();
         real P = sys.GasPhase().Pressure();
 
-        real r = RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/GetViscosity(sys),
+        real r = RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/Sweep::ViscosityAir(T),
                 MeanFreePathAir(T,P), sys.SampleVolume(), iterm);
         return r;
 
@@ -399,7 +399,7 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::CoagKernel(const Pa
     const real T = sys.GasPhase().Temperature();
     const real P = sys.GasPhase().Pressure();
     const real fm = FreeMolKernel(sp1, sp2, T, P, false);
-    const real sf = SlipFlowKernel(sp1, sp2, T, P, GetViscosity(sys), false);
+    const real sf = SlipFlowKernel(sp1, sp2, T, P, Sweep::ViscosityAir(T), false);
     return (fm*sf)/(fm+sf);
 }
 
@@ -432,7 +432,7 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::MajorantKernel(cons
         case SlipFlow:
             // Slip-flow majorant.
             return SlipFlowKernel(sp1, sp2, sys.GasPhase().Temperature(),
-                    sys.GasPhase().Pressure(), GetViscosity(sys), true);
+                    sys.GasPhase().Pressure(), Sweep::ViscosityAir(sys.GasPhase().Temperature()), true);
     }
 
     // Invalid majorant, return zero.

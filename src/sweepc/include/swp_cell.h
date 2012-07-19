@@ -49,8 +49,7 @@
 #include "swp_ensemble_stats.h"
 #include "swp_birth_process.h"
 #include "swp_death_process.h"
-
-#include "gpc_idealgas.h"
+#include "swp_sprog_idealgas_wrapper.h"
 
 #include <string>
 #include <iostream>
@@ -87,19 +86,9 @@ public:
     // THE GAS-PHASE INTERFACE.
 
     //!Returns the description of the gas-phase mixture.
-    const Sprog::Thermo::IdealGas &GasPhase(void) const {return m_gas;};
+    const EnvironmentInterface &GasPhase(void) const {return m_gas;};
     //!Returns the description of the gas-phase mixture.
-    Sprog::Thermo::IdealGas &GasPhase(void) {return m_gas;};
-
-    // Sets the gas-phase mixture.
-    void SetGasPhase(const Sprog::Thermo::IdealGas &gas);
-
-    // Adjusts the concentration of the ith species.
-    void AdjustConc(unsigned int i, real dc);
-
-    // Adjusts the concentration of all species.
-    void AdjustConcs(const fvector &dc);
-
+    EnvironmentInterface &GasPhase(void) {return m_gas;};
 
     // THE PARTICLE ENSEMBLE.
 
@@ -214,10 +203,10 @@ protected:
 
 private:
     //! Gas mixture
-    Sprog::Thermo::IdealGas m_gas;
+    SprogIdealGasWrapper m_gas;
 
     //! Particle ensemble.
-    Sweep::Ensemble m_ensemble;
+    Ensemble m_ensemble;
 
     //! Particle model.
     const Sweep::ParticleModel *m_model;

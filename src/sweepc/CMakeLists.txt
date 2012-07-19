@@ -11,6 +11,7 @@ source_group("Header Files" FILES ${INCS})
 
 add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_addcoag.cpp
+                  source/swp_sprog_idealgas_wrapper.cpp
                   source/swp_bintree_primary.cpp
                   source/swp_bintree_stats.cpp
                   source/swp_birth_process.cpp
@@ -63,15 +64,15 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_weighted_addcoag.cpp
                   source/swp_weighted_constcoag.cpp
                   source/swp_weighted_transcoag.cpp
-				  source/swp_kmc_gaspoint.cpp
-				  source/swp_kmc_jump_process.cpp
-				  source/swp_kmc_mech.cpp
-				  source/swp_kmc_pah_process.cpp
-				  source/swp_kmc_pah_structure.cpp
-				  source/swp_kmc_reaction.cpp
-				  source/swp_kmc_simulator.cpp
-				  source/swp_kmc_structure_comp.cpp
-				  ${INCS})
+                  source/swp_kmc_gaspoint.cpp
+                  source/swp_kmc_jump_process.cpp
+                  source/swp_kmc_mech.cpp
+                  source/swp_kmc_pah_process.cpp
+                  source/swp_kmc_pah_structure.cpp
+                  source/swp_kmc_reaction.cpp
+                  source/swp_kmc_simulator.cpp
+                  source/swp_kmc_structure_comp.cpp
+                  ${INCS})
 
 include_directories(include 
                     ${Boost_INCLUDE_DIRS} 

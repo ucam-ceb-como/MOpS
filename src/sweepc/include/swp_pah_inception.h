@@ -70,7 +70,11 @@ class PAHInception : public Inception
 {
 public: 
     // Constructors.
-    PAHInception(const Sweep::Mechanism &mech); // Initialising constructor.
+
+    //! Initialising constructor.
+    PAHInception(const Sweep::Mechanism &mech,
+                 const EnvironmentInterface::PropertyIndex pah_index);
+
     PAHInception(const PAHInception &copy);        // Copy constructor.
     PAHInception(                               // Stream-reading constructor.
         std::istream &in,                    //  - Input stream.
@@ -149,6 +153,10 @@ protected:
     // Default constructor is protected to prevent an inception being
     // defined without knowledge of the parent mechanism.
     PAHInception(void);
+
+private:
+    //! Index for PAH formation rate in gas phase data
+    EnvironmentInterface::PropertyIndex mPAHFormationIndex;
 
 };
 }

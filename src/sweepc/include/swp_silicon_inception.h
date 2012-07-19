@@ -64,6 +64,9 @@ namespace Sweep {
 // Forward declare the Mechanism class.
 class Mechanism;
 
+// Forward declare interface to gas phase data
+class EnvironmentInterface;
+
 namespace Transport
 {
     // Forward declaration of unused argument type
@@ -215,8 +218,7 @@ protected:
     // parameters that would otherwise be calculated by the routine to be passed as
     // arguments.
     real Rate(
-        const fvector &fracs, // Gas-phase species mole fractions.
-        real density,         // Gas-phase density.
+        const EnvironmentInterface &gas,
         real sqrtT,           // Square-root of temperature.
         real T_mu,            // T / viscosity of air.
         real MFP,             // Gas mean free path.
@@ -227,8 +229,7 @@ protected:
 
     //! Calculates the gas-phase chemistry contribution to the rate expression
     real chemRatePart(
-        const fvector &fracs, // Species mole fractions in gas phase.
-        real density          // Gas phase molar density.
+        const EnvironmentInterface &gas
         ) const;
 
 private:

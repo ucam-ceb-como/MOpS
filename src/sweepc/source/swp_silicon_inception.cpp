@@ -382,7 +382,6 @@ const SiliconInception::SiliconData* SiliconInception::ChooseData(const Sweep::C
     // weight the choice based on mole fractions.
     const SiliconData* ans(NULL);
 
-    fvector fracs = sys.GasPhase().MoleFractions();
     real dcrit = GetCriticalNucleus(sys);
 
     // Hold fractions of available species in vector
@@ -393,7 +392,7 @@ const SiliconInception::SiliconData* SiliconInception::ChooseData(const Sweep::C
     // Loop over candidate species
     for (unsigned int i=0; i != m_sidata.size(); i++) {
         if (m_sidata[i]._diam >= dcrit) {
-            real frac = fracs[m_sidata[i]._fracIndex];
+            real frac = sys.GasPhase().SpeciesConcentration(m_sidata[i]._fracIndex);
             sum += frac;
             availFracs.push_back(frac);
             availSpecies.push_back(&(m_sidata[i]));
@@ -414,12 +413,38 @@ const SiliconInception::SiliconData* SiliconInception::ChooseData(const Sweep::C
     return ans;
 }
 
+/*!
+ * Adjust the gas phase for the effects of this process.
+ *
+ *@deprecated   Gas phase should not be modified from within a jump process
+ *              instead calculate the rate of change and pass this to the
+ *              chemistry solver.
+ *
+ *@param[in]    sys         Cell in which the process is taking place
+ *@param[in]    species     ??
+ *@param[in]    wt          ??
+ *
+ *@pre      The gas phase in sys must be of type SprogIdealGasWrapper
+ *
+ *@exception    std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
+ */
 void SiliconInception::adjustGasPhase(Sweep::Cell &sys,
         const SiliconInception::SiliconData &species,
         real wt) const
 {
-    fvector dc;
-    dc.resize(sys.GasPhase().MoleFractions().size(), 0.0);
+    // This method requires write access to the gas phase, which is not
+    // standard in sweep.  This means it cannot use the generic gas
+    // phase interface
+    SprogIdealGasWrapper *gasWrapper = dynamic_cast<SprogIdealGasWrapper*>(&sys.GasPhase());
+    if(gasWrapper == NULL)
+        throw std::runtime_error("Coult not cast gas phase to SprogIdealGasWrapper in SiliconInception::adjustGasPhase");
+
+    // If excecution reaches here, the cast must have been successful
+    Sprog::Thermo::IdealGas *gas = gasWrapper->Implementation();
+
+    // Get the existing concentrations
+    fvector newConcs;
+    gas->GetConcs(newConcs);
 
     real n_NAvol = wt / (NA * sys.SampleVolume());
 
@@ -429,11 +454,10 @@ void SiliconInception::adjustGasPhase(Sweep::Cell &sys,
 
     // Use the fracindex to calculate the amount of precursor to be
     // removed.
-    dc[species._fracIndex] = -1.0 * n_NAvol;
+    newConcs[species._fracIndex] -= 1.0 * n_NAvol;
 
     // Now adjust the gas-phase!
-    sys.AdjustConcs(dc);
-
+    gas->SetConcs(newConcs);
 }
 
 /*!
@@ -472,7 +496,7 @@ real SiliconInception::GetPrecursorFraction(const Sweep::Cell &sys) const
 
     // Loop over all gas-phase species
     for (unsigned int i=0; i!=m_sidata.size(); i++) {
-        frac += sys.GasPhase().MoleFraction(m_sidata[i]._fracIndex);
+        frac += sys.GasPhase().SpeciesConcentration(m_sidata[i]._fracIndex);
     }
 
     if (frac > 1.0) {
@@ -604,8 +628,8 @@ real SiliconInception::Rate(real t, const Cell &sys, const Geometry::LocalGeomet
     real P = sys.GasPhase().Pressure();
 
     // Calculate the rate.
-    return Rate(sys.GasPhase().MoleFractions(), sys.GasPhase().Density(), sqrt(T),
-                T/GetViscosity(sys), MeanFreePathAir(T,P),
+    return Rate(sys.GasPhase(), sqrt(T),
+                T/Sweep::ViscosityAir(T), MeanFreePathAir(T,P),
                 sys.SampleVolume(), sys);
 }
 
@@ -617,8 +641,7 @@ real SiliconInception::Rate(real t, const Cell &sys, const Geometry::LocalGeomet
  * multiplied by the square of the number concentration of the gas
  * phase species.
  *
- * @param[in]    fracs    species molefractions
- * @param[in]    density  gas number density in \f$ \mathrm{mol}\ \mathrm{m}^{-3}\f$
+ * @param[in]    gas      interface to gas mixture
  * @param[in]    sqrtT    square root of temperature
  * @param[in]    T_mu     temperature divided by air viscosity
  * @param[in]    MFP      mean free path in gas
@@ -626,7 +649,7 @@ real SiliconInception::Rate(real t, const Cell &sys, const Geometry::LocalGeomet
  *
  * @return    Inception rate for a cell of size vol. (\f$ \mathrm{s}^{-1}\f$)
  */
-real SiliconInception::Rate(const fvector &fracs, real density, real sqrtT,
+real SiliconInception::Rate(const EnvironmentInterface &gas, real sqrtT,
                      real T_mu, real MFP, real vol, const Cell &sys) const
 {
     real rate(1.0);
@@ -643,7 +666,7 @@ real SiliconInception::Rate(const fvector &fracs, real density, real sqrtT,
         switch (m_itype) {
         case iCollisional:
             // Use the 'normal' MOPS collisional rate
-            rate = A() * vol * chemRatePart(fracs, density);
+            rate = A() * vol * chemRatePart(gas);
 
             fm   = sqrtT * m_kfm;
             if((m_ksf1 > 0) || (m_ksf2 > 0))  {
@@ -700,10 +723,9 @@ real SiliconInception::Rate(const fvector &fracs, real density, real sqrtT,
  * expression.  This is overloaded as Avogadro's number must be
  * included in the terms for inception processes.
  *
- * @param[in]    fracs    species molefractions
- * @param[in]    density  gas number density in \f$ \mathrm{mol}\ \mathrm{m}^{-3}\f$
+ * @param[in]    gas      interface to gas mixture
  */
-real SiliconInception::chemRatePart(const fvector &fracs, real density) const
+real SiliconInception::chemRatePart(const EnvironmentInterface &gas) const
 {
     // Factor of 0.5 adjusts for doubling counting of pairs of molecules in the number
     // of possible collisions.
@@ -712,7 +734,7 @@ real SiliconInception::chemRatePart(const fvector &fracs, real density) const
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
         //std::cerr << "Mole frac to use " << fracs[i->first] << std::endl;
-        real conc = density * fracs[i->first];
+        real conc = gas.SpeciesConcentration(i->first);
         for (int j=0; j!=i->second; ++j) {
             rate *= (NA * conc);
         }
@@ -739,8 +761,8 @@ real SiliconInception::RateTerms(const real t, const Cell &sys,
     real P = sys.GasPhase().Pressure();
 
     // Calculate the single rate term and advance iterator.
-    *iterm = Rate(sys.GasPhase().MoleFractions(), sys.GasPhase().Density(), sqrt(T),
-                  T/GetViscosity(sys), MeanFreePathAir(T,P),
+    *iterm = Rate(sys.GasPhase(), sqrt(T),
+                  T/Sweep::ViscosityAir(T), MeanFreePathAir(T,P),
                   sys.SampleVolume(), sys);
     return *(iterm++);
 }

@@ -106,7 +106,7 @@ public:
     //! Updates the particle cache using the particle details
     void UpdateCache(void);
 
-    //! Sinter particles
+    //! Sinter particles for time dt
     virtual void Sinter(
             real dt, // Delta-t for sintering to occur.
             Cell &sys, // System which defines primary's environment.

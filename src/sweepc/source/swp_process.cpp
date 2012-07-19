@@ -40,10 +40,14 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#include "swp_params.h"
 #include "swp_process.h"
+
+#include "swp_params.h"
 #include "swp_mechanism.h"
+#include "swp_environment_interface.h"
+
 #include <stdexcept>
+
 #include <boost/random/bernoulli_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
 
@@ -55,13 +59,13 @@ using namespace std;
 
 // Default constructor.
 Process::Process(void)
-: m_name(""), m_mech(NULL), m_viscosity_model(Sweep::iAir)
+: m_name(""), m_mech(NULL)
 {
 }
 
 // Initialising constructor.
 Process::Process(const Sweep::Mechanism &mech)
-: m_name(""), m_mech(&mech), m_viscosity_model(Sweep::iAir)
+: m_name(""), m_mech(&mech)
 {
 }
 
@@ -85,7 +89,6 @@ Process &Process::operator=(const Process &rhs)
     if (this != &rhs) {
         m_name = rhs.m_name;
         m_mech = rhs.m_mech;
-        m_viscosity_model = rhs.m_viscosity_model;
 
         // Copy reactants.
         Sprog::StoichMap::const_iterator i;
@@ -124,44 +127,6 @@ void Process::SetMechanism(const Sweep::Mechanism &mech)
 {
     m_mech = &mech;
 }
-
-//! Returns the viscosity model
-Sweep::ViscosityModel Process::ViscosityModel() const
-{
-    return m_viscosity_model;
-}
-
-/*!
- * @brief           Sets the process' viscosity model
- * @param vmodel    Model type
- */
-void Process::SetViscosityModel(Sweep::ViscosityModel vmodel)
-{
-    m_viscosity_model = vmodel;
-}
-
-/*!
- * @brief       Returns the viscosity.
- *
- * @param sys   System for which to calculate viscosity
- * @return      Viscosity (kg/ms)
- */
-real Process::GetViscosity(const Cell &sys) const
-{
-    real mu(0.0);
-    // Return the viscosity for air
-    if (m_viscosity_model == Sweep::iAir) {
-        real T = sys.GasPhase().Temperature();
-        mu = Sweep::ViscosityAir(T);
-    } else if (m_viscosity_model == Sweep::iChampanEnskog) {
-        mu = sys.GasPhase().getViscosity();
-    } else {
-        throw runtime_error("Wrong viscosity identifier. "
-                                "(Sweep, Process::GetViscosity).");
-    }
-    return mu;
-}
-
 
 // REACTANTS.
 
@@ -405,15 +370,18 @@ void Process::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 
 // PROTECTED HELPER FUNCTIONS.
 
-// Calculates the gas-phase chemistry contribution to the rate
-// expression.
-real Process::chemRatePart(const fvector &fracs, real density) const
+/*!
+ *@param[in]    gas     Gas phase mixture
+ *
+ *@return       Gas phase part of reaction rate
+ */
+real Process::chemRatePart(const EnvironmentInterface &gas) const
 {
     real rate = 1.0;
 
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
-        real conc = density * fracs[i->first];
+        real conc = gas.SpeciesConcentration(i->first) ;
         for (int j=0; j!=i->second; ++j) {
             rate *= conc;
         }
@@ -422,20 +390,48 @@ real Process::chemRatePart(const fvector &fracs, real density) const
     return rate;
 }
 
-// Adjusts the gas-phase composition using the reactants and
-// products defined for this process.
+/*!
+ * Adjusts the gas-phase composition using the reactants and
+ * products defined for this process.
+ *
+ * @deprecated  Gas phase should not be modified from within a jump process
+ *              instead calculate the rate of change and pass this to the
+ *              chemistry solver.
+ *
+ * @param[in,out]   sys     System in which the gas phase is changing
+ * @param[in]       wt      Statistical weight of reaction
+ * @param[in]       n       Repeat count of reaction
+ *
+ * @pre      The gas phase in sys must be of type SprogIdealGasWrapper
+ *
+ * @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
+ */
 void Process::adjustGas(Cell &sys, real wt, unsigned int n) const
 {
     if(!sys.FixedChem()) {
-        //riap 7 Sep 2009
-        // Only adjust the gas if the chemistry is not fixed.
-        fvector dc(m_mech->Species()->size(), 0.0);
+        // This method requires write access to the gas phase, which is not
+        // standard in sweep.  This means it cannot use the generic gas
+        // phase interface
+        SprogIdealGasWrapper *gasWrapper = dynamic_cast<SprogIdealGasWrapper*>(&sys.GasPhase());
+        if(gasWrapper == NULL)
+            throw std::runtime_error("Coult not cast gas phase to SprogIdealGasWrapper in SilicaPrimary::Sinter");
+
+        // If excecution reaches here, the cast must have been successful
+        Sprog::Thermo::IdealGas *gas = gasWrapper->Implementation();
+
+        // Get the existing concentrations
+        fvector newConcs;
+        gas->GetConcs(newConcs);
+
+        // Now adjust the concentrations
         Sprog::StoichMap::const_iterator i;
         real n_NAvol = wt * (real)n / (NA * sys.SampleVolume());
         for (i=m_reac.begin(); i!=m_reac.end(); ++i)
-            dc[i->first] -= (real)(i->second) * n_NAvol;
+            newConcs[i->first] -= (real)(i->second) * n_NAvol;
         for (i=m_prod.begin(); i!=m_prod.end(); ++i)
-            dc[i->first] +=(real)(i->second) * n_NAvol;
-        sys.AdjustConcs(dc);
+            newConcs[i->first] +=(real)(i->second) * n_NAvol;
+
+        // Set the new data
+        gas->SetConcs(newConcs);
     }
 }

@@ -58,6 +58,8 @@
 #include "swp_silica_interparticle.h"
 #include "swp_tempReadColliPara.h" //temporarily used to read collision efficiency parameters, including mode, NONE, MAX, MIN, COMBINED
 
+#include "gpc_species.h"
+
 #include "camxml.h"
 #include "string_functions.h"
 #include "csv_io.h"
@@ -131,18 +133,6 @@ void readInceptedTrackers(const CamXML::Element &xml, Sweep::Processes::Inceptio
 			throw runtime_error(str + ": Tracker variable not found in mechanism (loadInceptedTrackers)");
 		}
 	}
-}
-
-void readViscosity(const CamXML::Element &xml, Sweep::Processes::Process &proc) {
-    std::string str = xml.GetAttributeValue("model");
-    if (str == "chapman-enskog") {
-        proc.SetViscosityModel(Sweep::iChampanEnskog);
-    } else if (str == "air") {
-        proc.SetViscosityModel(Sweep::iAir);
-    } else {
-        std::cout << "Unrecognised viscosity model. Using Air as default." << std::endl;
-        proc.SetViscosityModel(Sweep::iAir);
-    }
 }
 
 } // anonymous namespace
@@ -254,9 +244,12 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             // Read diffusion model ID.
             str = (*i)->GetAttributeValue("id");
 
+            mech.setAvgMolWtIndex(SprogIdealGasWrapper::sAvgMolWtIndex);
+
             if((str == "Flamelet") || (str == "flamelet")) {
                 // Diffusion according to soot flamelet equation in flamelet space
                 mech.setDiffusionType(Sweep::ParticleModel::FlameletDiffusion);
+                mech.setMixFracGradIndex(SprogIdealGasWrapper::sMixFracGradientIndex);
             }
             else if((str == "Einstein") || (str == "einstein")) {
                 // Diffusion to represent transport in physical space
@@ -273,6 +266,12 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             if((str == "Flamelet") || (str == "flamelet")) {
                 // Advection according to soot flamelet equation in flamelet space
                 mech.setAdvectionType(Sweep::ParticleModel::FlameletAdvection);
+
+                // Indices to enable the model to find the quantities needed to calculate
+                // the advection in the flamelet model
+                mech.setMixFracDiffIndex(SprogIdealGasWrapper::sMixFracDiffusionIndex);
+                mech.setMixFracGradIndex(SprogIdealGasWrapper::sMixFracGradientIndex);
+                mech.setMixFracLaplIndex(SprogIdealGasWrapper::sMixFracLaplacianIndex);
             }
             else if((str == "Physical") || (str == "physical")) {
                 // Advection at bulk gas velocity in physical space
@@ -287,12 +286,16 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             if((str == "Waldmann") || (str == "waldmann")) {
                 // Thermophoretic velocity that is the same for all particles
                 mech.setThermophoresisType(Sweep::ParticleModel::WaldmannThermophoresis);
+                mech.setThermalConductIndex(SprogIdealGasWrapper::sThermalConductivityIndex);
+                mech.setTGradIndex(SprogIdealGasWrapper::sTemperatureGradientIndex);
             }
             else if(str == "LiWang") {
                 // Particle dependence according to model of Li and Wang
                 mech.setThermophoresisType(Sweep::ParticleModel::LiWangThermophoresis);
+                mech.setThermalConductIndex(SprogIdealGasWrapper::sThermalConductivityIndex);
+                mech.setTGradIndex(SprogIdealGasWrapper::sTemperatureGradientIndex);
             }
-	    else if((str == "None") || (str == "none")) {
+            else if((str == "None") || (str == "none")) {
                 // No thermophoresis
                 mech.setThermophoresisType(Sweep::ParticleModel::NoThermophoresis);
             }
@@ -714,10 +717,6 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
     str = xml.GetAttributeValue("name");
     if (str != "") icn.SetName(str);
 
-    // Read the viscosity model
-    CamXML::Element *el = xml.GetFirstChild("viscosity");
-    if (el != NULL) readViscosity(*el, icn);
-
     // Read reactants.
     readReactants(xml, icn);
 
@@ -759,7 +758,7 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 
     // Rate scaling now that a process has been created
     real A = 0.0;
-    el = xml.GetFirstChild("A");
+    const CamXML::Element *el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
         icn.SetA(A);
@@ -810,10 +809,6 @@ void MechParser::readSiliconInception(CamXML::Element &xml, Processes::SiliconIn
     // Read reactants.
     readReactants(xml, icn);
 
-    // Read the viscosity model
-    CamXML::Element *el = xml.GetFirstChild("viscosity");
-    if (el != NULL) readViscosity(*el, icn);
-
     // Find the rate calculation method (a coagulation kernel)
     // Currently the only possibilities are free molecular and transition
     // regime kernels.  These are handled by a boolean flag.  An enum
@@ -852,7 +847,7 @@ void MechParser::readSiliconInception(CamXML::Element &xml, Processes::SiliconIn
 
     // Rate scaling now that a process has been created
     real A = 0.0;
-    el = xml.GetFirstChild("A");
+    CamXML::Element *el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
         icn.SetA(A);
@@ -883,7 +878,7 @@ void MechParser::readPAHInceptions(CamXML::Document &xml, Sweep::Mechanism &mech
 
     for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
         // Create new inception.
-        PAHInception *icn = new PAHInception(mech);
+        PAHInception *icn = new PAHInception(mech, SprogIdealGasWrapper::sPAHFormationIndex);
         icn->SetMechanism(mech);
 
         // This inception only involves one molecule and not two as in the usual inception process
@@ -1046,10 +1041,10 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
             rxn = new SurfaceReaction(mech);
         } else if (str.compare("abf")==0) {
             // This is an ABF active-sites enabled reaction.
-            rxn = new ActSiteReaction(mech, ActSiteReaction::ABFRadicalSiteModel);
+            rxn = new ActSiteReaction(mech, ActSiteReaction::ABFRadicalSiteModel, SprogIdealGasWrapper::sAlphaIndex);
         } else if (str.compare("bp")==0) {
             // This is a Blanquart Pitsch active-sites enabled reaction.
-            rxn = new ActSiteReaction(mech, ActSiteReaction::BPRadicalSiteModel);
+            rxn = new ActSiteReaction(mech, ActSiteReaction::BPRadicalSiteModel, SprogIdealGasWrapper::sAlphaIndex);
         } else {
             // Unrecognised reaction type.
             throw runtime_error("Unrecognised reaction type: " + str +
@@ -1295,10 +1290,6 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
         cond.SetName(str);
     }
 
-    // Read the viscosity model
-    CamXML::Element *el = xml.GetFirstChild("viscosity");
-    if (el != NULL) readViscosity(*el, cond);
-
     // Read reactants.
     try {
         // Get reactant stoichiometry.
@@ -1329,7 +1320,7 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
 
     // Read Arrhenius rate parameters.
     real A = 0.0;
-    el = xml.GetFirstChild("A");
+    CamXML::Element *el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
     } else {
@@ -1341,7 +1332,11 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
 
 // INTER PARTICLE REACTIONS.
 
-// Reads interparticle reaction processes from a sweep mechanism XML file.
+/*!
+ *  Read interparticle reaction processes from a sweep mechanism XML file.
+ *
+ *@exception    std::runtime_error      Failed to find \f$\mathrm{H}_4\mathrm{O}_4\mathrm{Si}\f$ in mechanism
+ */
 void MechParser::readInterParticles(CamXML::Document &xml, Mechanism &mech)
 {
     vector<CamXML::Element*> items, subitems;
@@ -1353,10 +1348,13 @@ void MechParser::readInterParticles(CamXML::Document &xml, Mechanism &mech)
     xml.Root()->GetChildren("interparticle", items);
 
     for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
+        // Look up the index for H4O4SI
+        const int isp = Sprog::Species::Find("H4O4SI", *mech.Species());
+        if(isp < 0)
+            throw std::runtime_error("Could not find species H4O4SI in MechParser::ReadInterParticles");
 
-    	// Create a new interparticle object.
-    	InterParticle *intpar = NULL;
-    	intpar = new InterParticle(mech);
+        // Create a new interparticle object.
+    	InterParticle *intpar = new InterParticle(mech, isp);
 
         // Set default name.
         intpar->SetName("Inter Particle " + cstr(k));
@@ -1632,14 +1630,9 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                                                 (Sweep, MechParser::readCoagulation)");
                 }
 
-
-                // Read the viscosity model
-                CamXML::Element *el = (*it)->GetFirstChild("viscosity");
-                if (el != NULL) readViscosity(*el, *coag);
-
                 // Rate scaling now that a process has been created
                 real A = 0.0;
-                el = (*it)->GetFirstChild("A");
+                CamXML::Element *el = (*it)->GetFirstChild("A");
                 if (el != NULL) {
                     A = cdble(el->Data());
                 } else {

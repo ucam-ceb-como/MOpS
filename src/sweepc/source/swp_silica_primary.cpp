@@ -602,8 +602,6 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
 
 /*!
- * @brief       Sinters particles for time dt
- * 
  * This function only operates on non-leaf nodes. It begins at the root 
  * node, which sinters for time dt. It then descends the tree to sinter
  * nodes below the root. If the sintering level rises above 95%, Merge
@@ -618,6 +616,10 @@ SilicaPrimary &SilicaPrimary::Coagulate(const Primary &rhs, rng_type &rng)
  * @param[in]   model   Sintering model to apply
  * @param[in]   rng     Random number generator
  * @param[in]   wt      Statistical weight
+ *
+ * @pre      The gas phase in sys must be of type SprogIdealGasWrapper
+ *
+ * @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
  */
 void SilicaPrimary::Sinter(real dt, Cell &sys,
                             const Processes::SinteringModel &model,
@@ -733,13 +735,26 @@ void SilicaPrimary::Sinter(real dt, Cell &sys,
 
         UpdateCache();
 
-        // Adjust the gas-phase concentration
-        fvector dc(sys.GasPhase().Species()->size(), 0.0);
+        // This method requires write access to the gas phase, which is not
+        // standard in sweep.  This means it cannot use the generic gas
+        // phase interface
+        SprogIdealGasWrapper *gasWrapper = dynamic_cast<SprogIdealGasWrapper*>(&sys.GasPhase());
+        if(gasWrapper == NULL)
+            throw std::runtime_error("Coult not cast gas phase to SprogIdealGasWrapper in SilicaPrimary::Sinter");
+
+        // If excecution reaches here, the cast must have been successful
+        Sprog::Thermo::IdealGas *gas = gasWrapper->Implementation();
+
+        // Get the existing concentrations
+        fvector newConcs;
+        gas->GetConcs(newConcs);
+
         int num_H2O = int(abs(numOH_old - m_numOH)/2);
 
         real n_NAvol_sint = wt * (real)num_H2O / (NA * sys.SampleVolume());
-        dc[Sprog::Species::Find(string("H2O"),*sys.GasPhase().Species())] += n_NAvol_sint;
-        sys.AdjustConcs(dc);
+        newConcs[Sprog::Species::Find(string("H2O"),*(gas->Species()))] += n_NAvol_sint;
+
+        gas->SetConcs(newConcs);
 
         m_children_sintering=SinteringLevel();
     }  // endif m_leftparticle != NULL

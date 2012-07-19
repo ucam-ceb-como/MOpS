@@ -51,13 +51,15 @@ namespace Sweep
 {
 // Forward declare the Mechanism class.
 class Mechanism;
+// Forward declare the interface to the gas phase mixture
+class EnvironmentInterface;
 
 namespace Processes
 {
 
 class DimerInception : public Inception
 {
-public: 
+public:
     // Constructors.
     DimerInception(const Sweep::Mechanism &mech); // Initialising constructor.
     DimerInception(const DimerInception &copy);        // Copy constructor.
@@ -144,14 +146,10 @@ protected:
     // defined without knowledge of the parent mechanism.
     DimerInception(void);
 
-    // A faster rate calculation routine for Inception events only.  Requires all the
-    // parameters that would otherwise be calculated by the routine to be passed as
-    // arguments.
+    //! A faster rate calculation routine for Inception events only.
     real Rate(
-        const fvector &fracs, // Gas-phase species mole fractions.
-        real density,         // Gas-phase density.
+        const EnvironmentInterface &gas,
         real sqrtT,           // Square-root of temperature.
-        real T_mu,            // T / viscosity of air.
         real MFP,             // Gas mean free path.
         real vol              // Particle ensemble sample volume.
         ) const;
@@ -160,8 +158,7 @@ protected:
     // expression.  This is overloaded as Avogadro's number must be
     // included in the terms for inception processes.
     real chemRatePart(
-        const fvector &fracs, // Species mole fractions in gas phase.
-        real density          // Gas phase molar density.
+        const EnvironmentInterface &gas
         ) const;
 
 private:

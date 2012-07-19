@@ -44,7 +44,9 @@
 #include "swp_particle_model.h"
 #include "swp_birth_process.h"
 #include "swp_death_process.h"
+
 #include <stdexcept>
+
 #include <boost/random/uniform_01.hpp>
 #include <boost/random/mersenne_twister.hpp>
 
@@ -55,21 +57,21 @@ using namespace std;
 
 // Default constructor (public).
 Cell::Cell(const Sweep::ParticleModel &model)
-: m_gas(*model.Species()), m_ensemble(), m_model(&model),
+: m_gas(model), m_ensemble(), m_model(&model),
   m_smpvol(1.0), m_fixed_chem(false)
 {
 }
 
 // Copy constructor.
 Cell::Cell(const Cell &copy)
-: m_gas(copy.GasPhase())
+: m_gas(copy.m_gas)
 {
     *this = copy;
 }
 
 // Stream-reading constructor.
 Cell::Cell(std::istream &in, const Sweep::ParticleModel &model)
-: m_gas(*(model.Species()))
+: m_gas(model)
 {
     Deserialize(in, model);
 }
@@ -94,79 +96,6 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
     }
     return *this;
 }
-
-// THE GAS-PHASE INTERFACE.
-
-// Sets the gas-phase mixture.
-void Cell::SetGasPhase(const Sprog::Thermo::IdealGas &gas)
-{
-    m_gas = gas;
-}
-
-// Adjusts the concentration of the ith species.
-void Cell::AdjustConc(unsigned int i, real dc)
-{
-   if (!m_fixed_chem) {
-       unsigned int k;
-
-        // Precalculate DC / density.
-        real dc_rho = dc / m_gas.Density();
-
-        // New concentrations will be calculated by adjusting a copy of the existing data
-        fvector newConcs = m_gas.MoleFractions();
-
-        // Calculate change to all mole fractions k < i.
-        for (k=0; k<i; ++k) {
-            newConcs[k] -= dc_rho * newConcs[k];
-        }
-
-        // Calculate change for ith species.
-        newConcs[i] += dc_rho * (1.0 - newConcs[i]);
-
-        // Calculate change for all mole fractions k > i.
-        for (k=i+1; k < m_gas.Species()->size(); ++k) {
-            newConcs[k] -= dc_rho * newConcs[k];
-        }
-
-        // Set the new data
-        m_gas.SetFracs(newConcs);
-    }
-}
-
-// Adjusts the concentration of all species.
-void Cell::AdjustConcs(const fvector &dc)
-{
-    if (!m_fixed_chem) {
-        // Calculate total change in density.
-        real drho = 0.0;
-        unsigned int k;
-        for (k=0; k!=m_gas.Species()->size(); ++k) {
-            drho += dc[k];
-        }
-
-        // New concentrations will be calculated by adjusting a copy of the existing data
-        fvector newConcs = m_gas.MoleFractions();
-
-        real xtot=0.;
-        // Calculate changes to the mole fractions.
-        const real invrho = 1.0 / m_gas.Density();
-        for (k=0; k!=m_gas.Species()->size(); ++k) {
-            newConcs[k] += (invrho * dc[k]) - (invrho * newConcs[k] * drho);
-            if (newConcs[k]<0.) newConcs[k]=0;
-                xtot+=newConcs[k];
-        }
-
-        if (xtot != 1.0) {
-            for (unsigned int i=0; i!=m_gas.Species()->size(); ++i) {
-                newConcs[i] /= xtot;
-            }
-        }
-
-        // Set the new data
-        m_gas.SetFracs(newConcs);
-    }
-}
-
 
 // THE PARTICLE ENSEMBLE.
 
@@ -276,7 +205,7 @@ unsigned int Cell::NumOfStartingSpecies(const int index) const
 {
     // figure out how many starting PAHs are supposed in the particle ensemble
     // N = NA*Vsmpl*molar density*volume fraction of starting PAH.
-    unsigned int m_amount=NA*SampleVolume()*GasPhase().Density()*GasPhase().MoleFraction(index);
+    unsigned int m_amount = NA * SampleVolume() * GasPhase().SpeciesConcentration(index);
     return m_amount;
 }
 
@@ -419,7 +348,7 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
         switch (version) {
             case 0:
                 // Read the base class.
-                m_gas.Deserialize(in);
+                m_gas.Implementation()->Deserialize(in);
 
                 // Read the sample volume.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
@@ -432,7 +361,7 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
                 m_ensemble.Deserialize(in, model);
 
                 // Set the species.
-                m_gas.SetSpecies(*model.Species());
+                m_gas.Implementation()->SetSpecies(*model.Species());
 
                 break;
             default:
