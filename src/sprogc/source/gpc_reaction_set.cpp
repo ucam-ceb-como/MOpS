@@ -428,6 +428,7 @@ real ReactionSet::GetSurfaceMolarProdRates(const fvector &rop,
         for (i=mu->begin(); i!= mu->end(); i++) {
 
 	  if (((*i).first) >= size_gas_rxns){ // surface reaction only
+	  			
             sdot[k] += (*i).second * rop[(*i).first];
 	    //unsigned int idx = (*i).first; // for debugging
 	    //cout << "is surface? " << m_rxns[idx]->IsSURF() << endl;
@@ -443,7 +444,7 @@ real ReactionSet::GetSurfaceMolarProdRates(const fvector &rop,
 	for (k=0; k!=m_mech->GasSpeciesCount(); ++k) {
 	  // cout << "sp included in stot" << m_mech->GetSpecies(k)->Name() << endl;
         // Sum up total production rate for gas species only 
-        stot += sdot[k] * m_mech->Species(k)->MolWt(); // Must time the molecular weight
+        stot += sdot[k] /* * m_mech->Species(k)->MolWt()*/; // Must time the molecular weight
     }
 
 	//	std::cout << "stot " << stot << endl;
@@ -648,6 +649,9 @@ void ReactionSet::GetRatesOfProgress(real density,
 		Fordcoeff = m_rxns[i]->FORDElement(l).F_k;
 
 	      } 
+	      if (m_rxns[i]->Reactants()[k].Mu() == 0){ // Remember that the stoich if the are explicitly written as two identical reactant species, one will be set to 0. This can be the bug
+		flag = false; 
+	      }
 	      if (flag) break;
 	    }
 
@@ -660,7 +664,7 @@ void ReactionSet::GetRatesOfProgress(real density,
 		    // cout << "gas species FORD " << spName << endl;
 		  }
 		  else {
-		    	string phName = m_rxns[i]->Mechanism()->GetSpecies(species_ford)->PhaseName();
+		    	string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName();
 			double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
 			int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
 			rfwd[i] *= pow(site_d/sp_occ * x[m_rxns[i]->Reactants()[k].Index()], Fordcoeff);
@@ -896,7 +900,7 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
     RxnPtrVector::const_iterator i;
     RxnMap::const_iterator im;
     int j, k, m, n;
-    unsigned int l; 
+      //unsigned int l; 
 
     // Precalculate some temperature parameters. (p/RT)
     lnT = log(T);
@@ -1123,10 +1127,33 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 	  string phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName();   
 	  string species_id = m_rxns[j]->Mechanism()->FindID(phName);   
 	  if((species_id.compare("s") == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0)){
-	  
-	    m_val += m_rxns[j]->DeltaStoich(n)->ReacStoich(); 
+	     
 	    double stocc =  m_rxns[j]->Mechanism()->FindSiteOccup(spName);
-	    sigma_pw_vk *= pow (stocc, m_rxns[j]->DeltaStoich(n)->ReacStoich()); 
+		
+		if (m_rxns[j]->IsFORD()){ // If FORD TYPE 
+		 	
+		double ford_surf = 0.0;
+		double stoich_to_replace = 0.0;
+		double v = m_rxns[j]->DeltaStoich(n)->ReacStoich();
+						for (int count_Ford = 0; count_Ford!= m_rxns[j]->FORDCount();count_Ford++){
+						
+						string Fordspecies = m_rxns[j]->FORDElement(count_Ford).spName;
+								
+								if (Fordspecies.compare(spName) == 0){
+								ford_surf = m_rxns[j]->FORDElement(count_Ford).F_k;
+								v = ford_surf;
+								}				
+						}
+		m_val += v;
+		sigma_pw_vk *= pow (stocc, v); 
+		}
+		else // Not FORD type 
+		{
+		m_val += m_rxns[j]->DeltaStoich(n)->ReacStoich(); 	
+		sigma_pw_vk *= pow (stocc, m_rxns[j]->DeltaStoich(n)->ReacStoich()); 
+		}
+		
+		
 	  }
 	}
 	// cout << "m= " << m_val << endl; // for debugging
@@ -1179,10 +1206,32 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 	  string phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName();   
 	  string species_id = m_rxns[j]->Mechanism()->FindID(phName);   
 	  if((species_id.compare("s") == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0)){
-	  
-	    m_val += m_rxns[j]->DeltaStoich(n)->ReacStoich();
+	 
 	    double stocc =  m_rxns[j]->Mechanism()->FindSiteOccup(spName);
-	    sigma_pw_vk *= pow (stocc, m_rxns[j]->DeltaStoich(n)->ReacStoich()); 
+	   
+		if (m_rxns[j]->IsFORD()){ // If FORD TYPE 
+		 	
+		double ford_surf = 0.0;
+		double stoich_to_replace = 0.0;
+		double v = m_rxns[j]->DeltaStoich(n)->ReacStoich();
+						for (int count_Ford = 0; count_Ford!= m_rxns[j]->FORDCount();count_Ford++){
+						
+						string Fordspecies = m_rxns[j]->FORDElement(count_Ford).spName;
+								
+								if (Fordspecies.compare(spName) == 0){
+								ford_surf = m_rxns[j]->FORDElement(count_Ford).F_k;
+								v = ford_surf;
+								}				
+						}
+		m_val += v;
+		sigma_pw_vk *= pow (stocc, v); 
+		}
+		else // Not FORD type 
+		{
+		m_val += m_rxns[j]->DeltaStoich(n)->ReacStoich(); 	
+		sigma_pw_vk *= pow (stocc, m_rxns[j]->DeltaStoich(n)->ReacStoich()); 
+		}
+		
 	  }
 	}
 
@@ -1285,7 +1334,7 @@ void ReactionSet::calcTB_Concs(real density, const real *const x,
         else
         {
             // This reaction has no third body requirement.
-            tbconcs[j] = 1.0;
+            tbconcs[j] = density*1.0; // Changed as recommended by Will Menz
         }
     }
 }

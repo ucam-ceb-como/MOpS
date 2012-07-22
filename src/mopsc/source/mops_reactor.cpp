@@ -416,6 +416,17 @@ Serial_ReactorType Reactor::SerialType() const
     return Serial_Reactor;
 }
 
+// Set the reactor surface area
+void Reactor::SetArea(double ar) 
+{
+Area = ar; 
+}
+
+// Set the reactor volume 
+void Reactor::SetVolume(double vol) 
+{
+Volume = vol; 
+}
 
 // RHS FUNCTION AND GOVERNING EQUATIONS.
 
@@ -434,8 +445,8 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
     real wtot = 0.0, stot= 0.0, avrMW = 0.0;
 	// Currently direct input Volume and ARea 
 
-    double Volume = 1.0; /*1.4/1000;*/ // m^3
-    double Area = 68.796; // m^2 per unit volume 
+    //double Volume = 1.4/1000; // m^3
+    //double Area = 5.9; // m^2 
 
     // Calculate molar production rates.
     wtot = m_mech->GasMech().Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y,
@@ -457,7 +468,7 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
 		}
 		} else {
 		for (unsigned int i=0; i!=m_mech->GasMech().GasSpeciesCount(); ++i) {
-		ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) + (sdot[i] * Area /(Volume * avrMW))   -  ( y[i] * stot * Area/( y[m_iDens] * Volume * avrMW) );
+		ydot[i] = ((wdot[i] /*- (y[i]*wtot)*/) / y[m_iDens]) + (sdot[i] * Area /(Volume * y[m_iDens]))   -  ( y[i] * stot * Area /( y[m_iDens] * Volume) );
 		}
 		for (unsigned int i=m_mech->GasMech().GasSpeciesCount(); i!=m_neq-2; ++i) {
 		   string speciesName = m_mech->GasMech().Species(i)->Name();
@@ -478,7 +489,12 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
 
     // Density derivative.
     if (m_constv) {
-        ydot[m_iDens] = wtot  + stot * Area / (Volume*avrMW); // Constant volume.
+		if (Area != 0){
+        ydot[m_iDens] =   /*wtot +*/  stot * Area / (Volume); // Constant volume.
+		}
+		else {
+		ydot[m_iDens] = wtot ;
+		}
     } else {
         ydot[m_iDens] = 0.0;  // Constant pressure. (Volume is compensating the change in density , including that caused by surface reactions)
     }
@@ -492,8 +508,8 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
 
 	// Currently direct input of  Volume and ARea 
 
-	double Volume = 1.0; // m^3
-	double Area = 68.796; // m^2
+	// Volume = 1.4/1000; // m^3
+	//double Area = 5.9; // m^2 
 
 
     // Calculate mixture thermodynamic properties.
@@ -525,7 +541,7 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
 	  }
       else{
 	     for (unsigned int i=0; i!=m_mech->GasMech().GasSpeciesCount(); ++i) {
-		 ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) + (sdot[i] * Area /(Volume * avrMW))   -  ( y[i] * stot * Area/( y[m_iDens] * Volume * avrMW) );
+		 ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) + (sdot[i] * Area /(Volume * y[m_iDens]))   -  ( y[i] * stot * Area/( y[m_iDens] * Volume * avrMW) );
 		 }
 		 for (unsigned int i=m_mech->GasMech().GasSpeciesCount(); i!=m_neq-2; ++i) {
 		   string speciesName = m_mech->GasMech().Species(i)->Name();

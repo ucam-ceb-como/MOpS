@@ -7,7 +7,7 @@
 
   File purpose:
     Implementation of the Stoichiometry class declared in the
-    gpc_stoich.h header file.
+    gpc_Delta_stoich.h header file.
 
   Licence:
     This file is part of "sprog".

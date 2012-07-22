@@ -142,14 +142,23 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
 
             reaction.setProducts(parseReactionSpecies(what[3]));
 		
-	    	if (surfaceUnits == "KJOULES/MOL"){	
+	    	if ((surfaceUnits == "KJOULES/MOL") || (surfaceUnits == "KJOULES/MOLE")){	
             	reaction.setArrhenius
            	 (
                 from_string<double>(what[4]),
                 from_string<double>(what[5]),
                 from_string<double>(what[6])*239.005736 // KJOULES/mol to cal/mol
             	);
-		}
+			}
+			
+			else if ((surfaceUnits == "JOULES/MOL") || (surfaceUnits == "JOULES/MOLE")){	
+            	reaction.setArrhenius
+           	 (
+                from_string<double>(what[4]),
+                from_string<double>(what[5]),
+                from_string<double>(what[6])*239.005736/1000 // JOULES/mol to cal/mol
+            	);
+			}
 
 		else {
 	    	reaction.setArrhenius
@@ -225,7 +234,10 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
 		   double eta = from_string<double>(result[3]);
 		   double miu = from_string<double>(result[4]);
 		   double epsilon = from_string<double>(result[5]);
-
+		   
+			if ((surfaceUnits == "KJOULES/MOL") || (surfaceUnits == "KJOULES/MOLE")) {	
+			epsilon = from_string<double>(result[5])*1000; // Convert to Joules 
+			}
 		   
 		   reaction.setCOV(eta, miu, epsilon, speciesName);  
 		   // Skip one line when looking for the next reaction.

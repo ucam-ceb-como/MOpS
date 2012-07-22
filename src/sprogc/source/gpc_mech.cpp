@@ -167,23 +167,139 @@ void Mechanism::SetUnits(Sprog::UnitSystem u)
 		// Recalculate site density.
                 (*iph)->SetSiteDensity((*iph)->SiteDen()*1.0e4, (*iph)->Name());
             }	
-	     
-
+	     			
             // Scale reaction coefficients.
             for (unsigned int irxn=0; irxn!=m_rxns.Count(); ++irxn) {
                 // Convert volumes from cm3 to m3, and convert energies from ergs/mol to
                 // J/mol.
-
+				double gasReactantStoich = 0.0, surfReactantStoich = 0.0, gasProductStoich = 0.0, surfProductStoich = 0.0;
+				
+				for (unsigned int dS = 0; dS!= m_rxns[irxn]->DeltaStoichCount(); ++dS){
+					
+					string spName = m_rxns[irxn]->DeltaStoich(dS)->Name();
+					string phName = m_rxns[irxn]->Mechanism()->GetSpecies(spName)->PhaseName(); 
+					
+					if ((phName.compare("gas") == 0) && (m_rxns[irxn]->DeltaStoich(dS)->ReacStoich() > 0)){
+					gasReactantStoich += m_rxns[irxn]->DeltaStoich(dS)->ReacStoich();
+					}
+					else if ((phName.compare("gas") == 0) && (m_rxns[irxn]->DeltaStoich(dS)->ProdStoich() > 0)){
+					gasProductStoich += m_rxns[irxn]->DeltaStoich(dS)->ProdStoich();
+					}
+					else if ((phName.compare("gas") != 0) && (m_rxns[irxn]->DeltaStoich(dS)->ReacStoich() > 0)){
+					surfReactantStoich += m_rxns[irxn]->DeltaStoich(dS)->ReacStoich();
+					}
+					else{
+					surfProductStoich += m_rxns[irxn]->DeltaStoich(dS)->ProdStoich();
+					}
+				}
+				
                 // Forward rate coefficients.
                 arr = m_rxns[irxn]->Arrhenius();
-                arr.A *= pow(1.0e-6, m_rxns[irxn]->ReactantStoich()-1.0);
-                arr.E *= 1.0e-7;
+                if (m_rxns[irxn]->IsSURF()){
+					
+				
+					if (m_rxns[irxn]->IsFORD()) {
+						
+						double total_surf_Reactant_stoich_to_Replace = 0.0;
+						double total_gas_Reactant_stoich_to_Replace = 0.0;
+						double total_ford_surf = 0.0;
+						double total_ford_gas = 0.0;
+						
+						for (int count_Ford = 0; count_Ford!= m_rxns[irxn]->FORDCount();count_Ford++){
+						
+						string Fordspecies = m_rxns[irxn]->FORDElement(count_Ford).spName;
+						string FordSpeciesPhase =  FindPhaseName(Fordspecies);
+						
+							// calculate the total stoich of the reactants replaced by Ford	(this is if the COVERAGE with FORD or ONLY FORD )					
+							double single_sp_stoich_to_Replace = m_rxns[irxn]->DeltaStoich(Fordspecies)->ReacStoich();
+							
+								if (FordSpeciesPhase.compare("gas") == 0){
+								total_gas_Reactant_stoich_to_Replace += single_sp_stoich_to_Replace; 
+								total_ford_gas += m_rxns[irxn]->FORDElement(count_Ford).F_k;
+								}
+								else {
+								total_surf_Reactant_stoich_to_Replace += single_sp_stoich_to_Replace; 
+								total_ford_surf += m_rxns[irxn]->FORDElement(count_Ford).F_k;
+								}
+							
+						}
+						
+						if((m_rxns[irxn]->IsSTICK()) || (m_rxns[irxn]->IsMottWise())) {
+							
+							for (int count_Ford = 0; count_Ford!= m_rxns[irxn]->FORDCount();count_Ford++){
+							string Fordspecies = m_rxns[irxn]->FORDElement(count_Ford).spName;
+							string FordSpeciesPhase =  FindPhaseName(Fordspecies);
+							
+								if (FordSpeciesPhase.compare("gas") == 0){
+								throw runtime_error("FORD gas species modification cannot exist with STICK/MOTTWISE ");
+								}
+								else {
+								arr.A = arr.A ; // No Units
+								}
+								
+							}
+						}
+						
+						
+						else if (m_rxns[irxn]->IsCOVERAGE()) { // FORD and COVERAGE
+						// This assume that if FORD species should be all gas or all surface if they are more than one (just use the first ford species as a way to indicate the phase)
+						string FordSp = m_rxns[irxn]->FORDElement(0).spName; 
+						string FordPh = FindPhaseName(FordSp);
+						
+							if (FordPh.compare("gas") != 0){
+							arr.A *= pow(1.0e-6, gasReactantStoich) * pow (1.0e-4, (surfReactantStoich - total_surf_Reactant_stoich_to_Replace -1 +total_ford_surf ));
+							}
+							else{
+							arr.A *= pow(1.0e-4, surfReactantStoich) * pow (1.0e-6, (gasReactantStoich - total_gas_Reactant_stoich_to_Replace -1 +total_ford_gas ));
+							}
+						}
+						
+						else { // If it is FORD only reaction
+						
+						// This assume that if FORD species should be all gas or all surface if they are more than one (just use the first ford as a way to indicate the phase)
+						string FordSp = m_rxns[irxn]->FORDElement(0).spName; 
+						string FordPh = FindPhaseName(FordSp);
+						
+							if (FordPh.compare("gas") != 0){
+							arr.A *= pow(1.0e-6, gasReactantStoich) * pow (1.0e-4, (surfReactantStoich - total_surf_Reactant_stoich_to_Replace -1 +total_ford_surf ));
+							}
+							else{
+							arr.A *= pow(1.0e-4, surfReactantStoich) * pow (1.0e-6, (gasReactantStoich - total_gas_Reactant_stoich_to_Replace -1 +total_ford_gas ));
+							}
+						
+						}
+					
+					}
+					else if ((m_rxns[irxn]->IsSTICK()) || (m_rxns[irxn]->IsMottWise())){
+					arr.A = arr.A ; // No Units
+					}
+					else { // COV ONLY or NORMAL SURFACE REACTIONS 
+					arr.A *= pow(1.0e-6, gasReactantStoich) * pow(1.0e-4, surfReactantStoich-1.0); 
+					}
+				}
+				else{
+				arr.A *= pow(1.0e-6, m_rxns[irxn]->ReactantStoich()-1.0);
+                }
+				arr.E *= 1.0e-7; // Ergs to Joules
                 m_rxns[irxn]->SetArrhenius(arr);
 
                 // Reverse rate coefficients.
                 if (m_rxns[irxn]->RevArrhenius() != NULL) {
                     arr = *(m_rxns[irxn]->RevArrhenius());
-                    arr.A *= pow(1.0e-6, m_rxns[irxn]->ProductStoich()-1.0);
+					
+                    if (m_rxns[irxn]->IsSURF()){
+					
+						if ((m_rxns[irxn]->IsSTICK()) || (m_rxns[irxn]->IsMottWise())){
+						arr.A = arr.A ; // No Units
+						}
+						else { // FORD cannot be applied to Reversible (Unless Rord also specified)
+						arr.A *= pow(1.0e-6, gasProductStoich) * pow(1.0e-4, surfProductStoich-1.0); 
+						}
+					}
+					else{
+					arr.A *= pow(1.0e-6, m_rxns[irxn]->ProductStoich()-1.0);
+					}
+					
                     arr.E *= 1.0e-7;
                     m_rxns[irxn]->SetRevArrhenius(arr);
                 }

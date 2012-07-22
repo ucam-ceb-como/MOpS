@@ -11,7 +11,7 @@
   
 
   <!-- Reactor definition (given initial conditions). -->
-  <reactor type="psr" constt="true" constv="false" id="Test_System" units="mol/mol">
+  <reactor type="psr" constt="true" constv="false" id="Test_System" units="mol/mol" surfaceArea ="5.9" volume = "1.4E-3">
 	<component id="SIH4">0.04</component>
 	<component id="AR">0.96</component>
 	<inflow>

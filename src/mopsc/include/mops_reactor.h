@@ -148,7 +148,13 @@ public:
     // Sets the reactor solve using a constant volume assumption.
     void SetConstV(void);
 
-
+	// Sets the reactor volume (initialise volume).
+    void SetVolume(double vol);
+	
+	// Sets the reactor area (initialise volume).
+    void SetArea(double ar);
+	
+	
     // IMPOSED dT/dt PROFILE.
 
     // Sets the function used to calculate the dT/dt in the
@@ -239,6 +245,8 @@ protected:
     Mops::Mixture *m_mix;          // The mixture contained in the reactor.
     const Mops::Mechanism *m_mech; // The mechanism which defines 
 									// what happens in the reactor.
+	double Area; 
+	double Volume; 
 	
     // Reactor model variables.
     EnergyModel m_emodel; // The energy model used to describe the reactor.

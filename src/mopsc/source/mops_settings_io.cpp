@@ -50,7 +50,8 @@
 
 #include "camxml.h"
 #include "string_functions.h"
-
+#include <iostream>
+#include <sstream>
 #include <memory>
 #include <cstdlib>
 
@@ -245,7 +246,47 @@ Reactor *const readReactor(const CamXML::Element &node,
         // pressure reactor.
         reac->SetConstP();
     }
-    std::cout << "ReadReactor: Volume Set"<< endl;
+    
+	
+	 // Now initialise for surface area (surface kinetics purposes).
+    attr = node.GetAttribute("surfaceArea");
+    if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.length() > 0) {
+			stringstream AREA(str);
+			double ar;
+			AREA >> ar;
+            // This is a surface area.
+            reac->SetArea(ar);
+        } else {
+            // This is a default value for area. 
+            reac->SetArea(0.0);
+        }
+    } else {
+        // The area attribute is undefined, so set it to default
+        reac->SetArea(0.0);
+    }
+    
+	// Now initialise for volume.
+    attr = node.GetAttribute("volume");
+    if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.length() > 0) {
+			stringstream VOLUME(str);
+			double vol;
+			VOLUME >> vol;
+            // This is a volume. 
+            reac->SetVolume(vol);
+        } else {
+            // This is a a default value for volume. 
+            reac->SetVolume(1.0);
+        }
+    } else {
+        // The volume attribute is undefined, so set it to default
+        reac->SetVolume(1.0);
+    }
+	
+	std::cout << "ReadReactor: Volume and Area Set"<< endl;
 
     // REACTOR INITIAL CONDITIONS.
 
