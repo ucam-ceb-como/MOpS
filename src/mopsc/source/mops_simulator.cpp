@@ -829,7 +829,7 @@ void Simulator::outputPartTrack(const Reactor &r) const
     m_file.write((char*)&t, sizeof(t));
 
     if (n > 0) {
-        // Serialize the particles.
+        // Serialize the particles for tracking
         for (unsigned int i=0; i!=n; ++i) {
             r.Mixture()->Particles().At(i)->Serialize(m_file);
         }
@@ -2145,21 +2145,18 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                 }
 
                 // Draw particle images for tracked particles.
-                /*unsigned int n = min(m_ptrack_count,r->Mixture()->ParticleCount());
+                unsigned int n = min(m_ptrack_count,r->Mixture()->ParticleCount());
                 for (unsigned int j=0; j!=n; ++j) {
-                    Sweep::Particle *sp = r->Mixture()->Particles().At(j);
-                    if (sp != NULL) {
-                        real t = times[i].EndTime();
-                        string fname = m_output_filename + "-tem(" + cstr(t) +
-                                       "s, " + cstr(j) + ").pov";
-                        Sweep::Imaging::ParticleImage img;
-                        img.Construct(*sp, mech.ParticleMech());
-//                        img.ConstructRandom(1.0, 5.0, 10001);
-                        ofstream file; file.open(fname.c_str());
-                        img.WritePOVRAY(file);
-                        file.close();
-                    }
-                }*/
+                    real t = times[i].EndTime();
+                    string fname = m_output_filename + "-tem(" + cstr(t) +
+                                   "s, " + cstr(j) + ").pov";
+                    std::ofstream file;
+                    file.open(fname.c_str());
+
+                    r->Mixture()->Particles().At(j)->writeParticlePOVRAY(file);
+
+                    file.close();
+                }
 
                 delete r;
             } else {

@@ -41,9 +41,13 @@
 */
 
 #include "swp_particle_image.h"
-#include "string_functions.h"
-#include "swp_PAH_primary.h"
+#include "swp_bintree_primary.h"
 #include "swp_silica_primary.h"
+#include "swp_surfvol_primary.h"
+#include "swp_PAH_primary.h"
+#include "string_functions.h"
+#include <boost/random/uniform_01.hpp>
+#include <boost/random/mersenne_twister.hpp>
 #include <fstream>
 #include <vector>
 #include <stdexcept>
@@ -74,45 +78,87 @@ ParticleImage::~ParticleImage(void)
 
 // PARTICLE IMAGE DATA CONSTRUCTION.
 
-// Constructs the particle image from the given particle.
-/*void ParticleImage::Construct(const Particle &sp, const ParticleModel &model)
+/*!
+ * @brief           Construct a particle image
+ *
+ * @param sp        Particle object
+ * @param model     Particle model describing object
+ */
+void ParticleImage::Construct(const Particle &sp, const ParticleModel &model)
 {
-    switch(m_creg) {
-        case FreeMol:
-            // Free-molecular is the default regime.
-        default:
-            constructAgg_FM(sp, model);
-    }
-}*/
+    // Initialise new RNG here as the calling functions do not have access to
+    // the original one
+    rng_type rng(size_t(100));
 
-// Constructs a random particle image.
-/*void ParticleImage::ConstructRandom(real minrad, real maxrad, unsigned int n)
-{
     // Clear the current image data structure.
     m_root.Clear();
 
-    // Generate the random primaries.
-    for (unsigned int i=0; i!=n; ++i) {
-        real r = minrad + Sweep::genrand_real1()*(maxrad-minrad);
-        m_root.Insert(r);
+    if (model.AggModel() == AggModels::Spherical_ID) {
+        // Spherical particle model, just draw
+        // a single sphere.
+
+        m_root.Insert(sp.SphDiameter() * 0.5e9); // Convert to nm.
+
+    } else if (model.AggModel() == AggModels::SurfVol_ID) {
+        // Surface-volume model, construct a tree
+        // of identical primaries, estimating the primary
+        // count and diameter.
+
+        const AggModels::SurfVolPrimary *svp = NULL;
+        svp = dynamic_cast<const AggModels::SurfVolPrimary*>(sp.Primary());
+
+        m_root.Clear();
+        for (unsigned int i=0; i!=svp->PP_Count(); ++i) {
+            // Convert to radius in nm
+            m_root.Insert(svp->PP_Diameter() * 0.5e9);
+        }
+        calc_FM(m_root, *(&rng));
+
+    } else if (model.AggModel() == AggModels::Bintree_ID) {
+        // Binary Tree generic model
+
+        const AggModels::BintreePrimary *p;
+        p = dynamic_cast<const AggModels::BintreePrimary*>(sp.Primary());
+        ConstructTree(p, *(&rng));
+    } else if (model.AggModel() == AggModels::Silica_ID) {
+        // Silica (binary tree like) model
+
+        const AggModels::SilicaPrimary *p;
+        p = dynamic_cast<const AggModels::SilicaPrimary*>(sp.Primary());
+        ConstructTree(p, *(&rng));
+    } else if (model.AggModel() == AggModels::PAH_KMC_ID) {
+        // PAHPP (binary tree like) model
+
+        const AggModels::PAHPrimary *p;
+        p = dynamic_cast<const AggModels::PAHPrimary*>(sp.Primary());
+        ConstructTree(p, *(&rng));
+    } else {
+        throw std::runtime_error("Unknown particle model. (ParticleImage::Construct)");
     }
 
-    // Calculate aggregate structure
-    switch(m_creg) {
-        case FreeMol:
-            // Free-molecular is the default regime.
-        default:
-            calc_FM(m_root);
-    }
-}*/
-
-
-void ParticleImage::Project()
-{
-    m_root.Project();
+    // Set to TEM-style projection
+    //m_root.Project();
 }
 
 
+//! Generates a projection on the zx plane (set all y to 0)
+void ParticleImage::Project()
+{
+    // Call to ImgNode
+    m_root.Project();
+}
+
+/*!
+ * @brief       Writes a 3dout format file
+ *
+ * This made use of some custom-made OpenGL renderer by Markus Sander
+ * which has since been lost. (wjm34 27/07/2012)
+ *
+ * @param file  File output stream
+ * @param x     ?
+ * @param y     ?
+ * @param z     ?
+ */
 void ParticleImage::Write3dout(std::ofstream &file, double x, double y, double z)
 {
     if (file.good()) {
@@ -151,7 +197,7 @@ void ParticleImage::Write3dout(std::ofstream &file, double x, double y, double z
     }
 }
 
-
+/*
 void ParticleImage::LengthWidth(double &L, double &W)
 {
     //align the particle along the z axis
@@ -221,9 +267,9 @@ void ParticleImage::LengthWidth(double &L, double &W)
    // W=max(dy,dx);
     W=dx;
 
-}
+}*/
 
-
+//! Calculates the radius of gyration of a particle
 double ParticleImage::RadiusofGyration()
 {
     double sum=0;
@@ -287,10 +333,6 @@ void ParticleImage::WritePOVRAY(std::ofstream &file)
         line = "}\n";
         file.write(line.c_str(), line.length());
 
-        // Write include command for tem_single.pov, which defines TEM style
-        // for a single particle.
-        line = "#include \"particle.pov\"\n";
-        file.write(line.c_str(), line.length());
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, ParticleImage::WritePOVRAY).");
@@ -300,137 +342,26 @@ void ParticleImage::WritePOVRAY(std::ofstream &file)
 
 // AGGREGATE SPHERE-TREE CONSTRUCTORS (FREE-MOLECULAR).
 
-// Constructs a PNode sphere-tree aggregate from the given
-// particle using free-molecular collision dynamics.
-/*void ParticleImage::constructAgg_FM(const Particle &sp, const ParticleModel &model)
-{
-    // Clear the current image data structure.
-    m_root.Clear();
 
-
-	const AggModels::SurfVolPrimary *svp = NULL;
-
-	switch(model.AggModel()) {
-		case AggModels::Spherical_ID:
-			// Spherical particle model, just draw
-			// a single sphere.
-			m_root.Insert(sp.SphDiameter() * 0.5e9); // Convert to nm.
-			return;
-		case AggModels::SurfVol_ID:
-			// Surface-volume model, construct a tree
-			// of identical primaries, estimating the primary
-			// count and diameter.
-			svp = dynamic_cast<const AggModels::SurfVolPrimary*>(sp.Primary());
-			if (svp != NULL) uniformAgg_FM(svp->PP_Count(), svp->PP_Diameter());
-			break;
-		// Other cases previously unhandled, added a default
-		// case to avoid compiler warnings (riap 17 Jun 2009)
-		default:
-			throw std::runtime_error("Unhandled case in switch statement (ParticleImage::constructAgg_FM)");
-			break;
-    }
-}*/
-
-/*void ParticleImage::constructSubParttree(const SubParticle *sp)
-{
-	//Copy the subparticle tree into the img tree
-	m_root.Clear();
-//	m_root.CopySPT(sp);
-	copysptinsert(sp);
-
-	// Use the free-molecular regime to calculate the
-    // aggregate structure.
-    calc_FM(m_root);
-    m_root.CentreCOM();
-}*/
-
-
-void ParticleImage::copysptinsert(const SubParticle *sp)
-{
-    //convert to nm, store the radius not the diameter
-    m_root.Insert(sp->Primary()->Property(Sweep::iDsph)*0.5e9);
-}
-
-/*void ParticleImage::constructSubParttree(const Sweep::AggModels::PAHPrimary *p)
-{
-	//Copy the subparticle tree into the img tree
-	m_root.Clear();
-//	m_root.CopySPT(sp);
-	copysptinsert(p);
-
-	// Use the free-molecular regime to calculate the
-    // aggregate structure.
-    calc_FM(m_root);
-    //m_root.CalcCOM();
-    m_root.CentreCOM();
-}*/
-/*void ParticleImage::constructSubParttree(const Sweep::AggModels::SilicaPrimary *p)
-{
-	//Copy the subparticle tree into the img tree
-	m_root.Clear();
-//	m_root.CopySPT(sp);
-	copysptinsert(p);
-
-	// Use the free-molecular regime to calculate the
-    // aggregate structure.
-    calc_FM(m_root);
-    //m_root.CalcCOM();
-    m_root.CentreCOM();
-}*/
-
-void ParticleImage::copysptinsert(const Sweep::AggModels::PAHPrimary *p)
-{
-	if (p->LeftChild()!=NULL) {
-		copysptinsert(p->LeftChild());
-		copysptinsert(p->RightChild());
-
-		} else {
-
-            m_root.Insert(p->SphDiameter()*0.5e9);       //convert to nm, store the radius not the diameter
-		}
-}
-void ParticleImage::copysptinsert(const Sweep::AggModels::SilicaPrimary *p)
-{
-	if (p->LeftChild()!=NULL) {
-		copysptinsert(p->LeftChild());
-		copysptinsert(p->RightChild());
-
-		} else {
-
-            m_root.Insert(p->SphDiameter()*0.5e9);       //convert to nm, store the radius not the diameter
-		}
-}
-
-// Constructs a PNode sphere-tree aggregate with uniform
-// primaries (equal diameter).  The diameter and primary
-// count are passed as arguments.
-/*void ParticleImage::uniformAgg_FM(unsigned int n, real d)
-{
-    real r = d * 0.5e9; // Convert to nm.
-
-    // Add n identical primaries to the image data structure.
-    m_root.Clear();
-    for (unsigned int i=0; i!=n; ++i) {
-        m_root.Insert(r);
-    }
-
-    // Use the free-molecular regime to calculate the
-    // aggregate structure.
-    calc_FM(m_root);
-}*/
-
-// Calculates the aggregate structure down from the given
-// node.  Assumes that the tree leaves have been initialised
-// with the correct radii, and recalculates their positions.
-/*void ParticleImage::calc_FM(ImgNode &node)
+/*!
+ * @brief       Generate the free-molecular structure of a particle
+ *
+ * Calculates the aggregate structure down from the given
+ * node.  Assumes that the tree leaves have been initialised
+ * with the correct radii, and recalculates their positions.
+ *
+ * @param node  Pointer to node of ImgNode tree
+ * @param rng   Random number generator
+ */
+void ParticleImage::calc_FM(ImgNode &node, Sweep::rng_type &rng)
 {
     ImgNode *target = node.m_left;
     ImgNode *bullet = node.m_right;
 
     if ((target != NULL) && (bullet != NULL)) {
         // Pass calculation down binary tree left & right branches.
-        calc_FM(*target);
-        calc_FM(*bullet);
+        calc_FM(*target,  rng);
+        calc_FM(*bullet,  rng);
 
         // The first part of the collision algorithm is to
         // randomly orientate both left and right aggregates.
@@ -438,13 +369,15 @@ void ParticleImage::copysptinsert(const Sweep::AggModels::SilicaPrimary *p)
         // spheres are at the origin.
 
         // Rotate left node randomly about CoM.
-        real phi1   = Sweep::genrand_real1() * 2.0 * PI;
-        real theta1 = ((2.0*Sweep::genrand_real1())-1.0) * PI;
+        // Generate a random number on [0,1)-real-interval
+        boost::uniform_01<rng_type&, real> uniformGenerator(rng);
+        real phi1   = uniformGenerator() * 2.0 * PI;
+        real theta1 = ((2.0*uniformGenerator())-1.0) * PI;
         target->RotateCOM(theta1, phi1);
 
         // Rotate right node randomly about CoM.
-        real phi2   = Sweep::genrand_real1() * 2.0 * PI;
-        real theta2 = ((2.0*Sweep::genrand_real1())-1.0) * PI;
+        real phi2   = uniformGenerator() * 2.0 * PI;
+        real theta2 = ((2.0*uniformGenerator())-1.0) * PI;
         bullet->RotateCOM(theta2, phi2);
 
         // Move both spheres so that the bounding spheres
@@ -471,8 +404,8 @@ void ParticleImage::copysptinsert(const Sweep::AggModels::SilicaPrimary *p)
             // in the x-y plane.  The displacement is never
             // greater than the sum of the radii, therefore they
             // should always touch.
-            D[0] = ((2.0 * Sweep::genrand_real1()) - 1.0) * sumr;
-            D[1] = ((2.0 * Sweep::genrand_real1()) - 1.0) * sumr;
+            D[0] = ((2.0 * uniformGenerator()) - 1.0) * sumr;
+            D[1] = ((2.0 * uniformGenerator()) - 1.0) * sumr;
 
             //// Calculate the z-position for the collision of the
             //// target and bullet.  We do this in case both the
@@ -505,12 +438,27 @@ void ParticleImage::copysptinsert(const Sweep::AggModels::SilicaPrimary *p)
         node.CalcCOM();
         node.CentreBoundSph();
     }
-}*/
+}
 
 // Calculates the minimum collision distance between
 // a target and a bullet node by moving down the
 // binary tree.  If the nodes collide then returns
 // true, otherwise returns false.
+/*!
+ * @brief           Calculates the minimum collision distance
+ *
+ * Calculates the minimum collision distance between
+ * a target and a bullet node by moving down the
+ * binary tree.  If the nodes collide then returns
+ * true, otherwise returns false.
+ *
+ * @param target    Target node
+ * @param bullet    Bullet node
+ * @param dx        ?
+ * @param dy        ?
+ * @param dz        ?
+ * @return          Have the nodes collided?
+ */
 bool ParticleImage::minCollZ(const ImgNode &target,
                              const ImgNode &bullet,
                              real dx, real dy, real &dz)
@@ -588,9 +536,22 @@ bool ParticleImage::minCollZ(const ImgNode &target,
     }
 }
 
-// Calculates the z-displacement of a bullet sphere for a +ve
-// collision with a target sphere.  Returns true if the
-// spheres collide, otherwise false.
+/*!
+ * @brief       Calculates the z-displacement of a sphere
+ *
+ * Calculates the z-displacement of a bullet sphere for a +ve
+ * collision with a target sphere.  Returns true if the
+ * spheres collide, otherwise false.
+ *
+ * @param p1    Coordinates of sphere 1
+ * @param r1    Radius of sphere 1
+ * @param p2    Coordinates of sphere 2
+ * @param r2    Radius of sphere 2
+ * @param dx    ?
+ * @param dy    ?
+ * @param dz    ?
+ * @return      Have the nodes collided?
+ */
 bool ParticleImage::calcCollZ(const Coords::Vector &p1, real r1,
                               const Coords::Vector &p2, real r2,
                               real dx, real dy, real &dz)

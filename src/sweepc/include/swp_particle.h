@@ -138,6 +138,9 @@ public:
     //! Internal consistency check
     bool IsValid() const;
 
+    //! Write a POVRAY image of the particle
+    void writeParticlePOVRAY(std::ofstream &out) const;
+
     //! Write the object to a binary stream.
     virtual void Serialize(std::ostream &out) const;
 
