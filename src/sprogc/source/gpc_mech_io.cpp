@@ -273,6 +273,10 @@ void MechanismParser::ReadChemkin
 
     mech.BuildStoichXRef();
 
+    // Write mechanism (for MoDS debugging)
+    //mech.WriteReducedMech("chem-test.inp",
+    //        std::vector<std::string>( mech.SpeciesCount(), "" ));
+
     mech.SetUnits(SI);
 
 }

@@ -54,6 +54,7 @@
 #include "swp_primary.h"
 #include "swp_particle_model.h"
 #include "swp_bintree_serializer.h"
+#include "swp_particle_image.h"
 
 namespace Sweep {
 
@@ -141,6 +142,10 @@ public:
     // SERIALISATION/DESERIALISATION
     // The binary tree serialiser needs full access to private attributes.
     friend class BinTreeSerializer<class BintreePrimary>;
+
+    // The image writer needs full access to private attributes
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
 
     //! Serialise a BintreePrimary particle
     void Serialize(std::ostream &out) const;

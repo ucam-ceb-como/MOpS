@@ -838,6 +838,24 @@ void Reaction::WriteDiagnostics(std::ostream &out) const
 }
 
 /*!
+ * @brief       Should the pre-exponential factor be converted to cgs?
+ *
+ * Only three-body reactions include the [M] term explicitly in their rate
+ * expression, that is, falloff reactions DO NOT require conversion of the
+ * high-pressure pre-exponential's units $A_\infty$.
+ *
+ * @return
+ */
+bool Reaction::ConvertPreexponential(void) const {
+    bool ans(false);
+    if ((m_usetb) && (m_fotype == Sprog::Kinetics::None)) {
+        ans = true;
+    }
+    return ans;
+}
+
+
+/*!
 @param[in]      out             Output stream for file creation.
 @param[in]      RejectSpecies   String vector containing the names of LOI rejected species.
 */
@@ -860,13 +878,11 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
         }
 
 		std::string tbstr;
-		if (m_usetb) {
-			if (m_foparams.LowP_Limit.A != 0 &&  m_foparams.LowP_Limit.n != 0 && m_foparams.LowP_Limit.E != 0){
-				tbstr = "(+M)";
-			} else {
-                tbstr = "+M";
-			};
-        }
+        if (m_fotype != Sprog::Kinetics::None){
+            tbstr = "(+M)";
+        } else if (m_usetb) {
+            tbstr = "+M";
+        };
 
         // Integer reactant stoichiometry.
         if (m_reac.size() > 0 && m_prod.size() > 0){
@@ -880,7 +896,7 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
             }
 
 
-            if (m_usetb){
+            if (m_usetb || m_fotype != Sprog::Kinetics::None){
                 out << tbstr;
             }
 
@@ -900,16 +916,18 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
                         out << " + ";
                 }
             }
-            if (m_usetb){
+            if (m_usetb || m_fotype != Sprog::Kinetics::None){
                 out << tbstr;
             }
 
             // Forward Arrhenius coefficients.
-            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0 + (m_usetb?1.0:0.0)) << " " << m_arrf.n << " " << m_arrf.E / 4.184E7 / 1.0e-7 << "\n";
+            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0
+                    + (ConvertPreexponential()?1.0:0.0)) << " " << m_arrf.n  << " " << m_arrf.E  / 4.184E7 / 1.0e-7 << "\n";
 
             // Reverse Arrhenius coefficients.
             if (m_arrr != NULL)
-                out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0 + (m_usetb?1.0:0.0)) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " /\n";
+                out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0
+                    + (ConvertPreexponential()?1.0:0.0)) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " /\n";
         }
 
         // Forward LT parameters.
@@ -922,34 +940,33 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
             out << m_revlt->B << " " << m_revlt->C << " ";
         }
 
-        // Third body flag.
-        if (m_usetb) {
+        // Write fall-off low pressure limit.
+        if (m_fotype != Sprog::Kinetics::None){
+            out << "LOW /" << cstr((m_foparams.LowP_Limit.A)/(pow(1.0e-6, ReactantStoich()))) << " " << m_foparams.LowP_Limit.n << " " << (m_foparams.LowP_Limit.E/ 4.184E7 / 1.0e-7) << " ";
+            out << " / " << "\n";
 
-            // Write fall-off low pressure limit.
-            if (m_foparams.LowP_Limit.A != 0 &&  m_foparams.LowP_Limit.n != 0 && m_foparams.LowP_Limit.E != 0){
-                out << "LOW /" << cstr((m_foparams.LowP_Limit.A)/(pow(1.0e-6, ReactantStoich()))) << " " << m_foparams.LowP_Limit.n << " " << (m_foparams.LowP_Limit.E/ 4.184E7 / 1.0e-7) << " ";
-                out << " / " << "\n";
+             //Write fall-off third body.
+            if (m_foparams.ThirdBody >= 0) {
+                out << m_mech->Species(m_foparams.ThirdBody)->Name() << " ";
+            }
 
-                 //Write fall-off third body.
-                if (m_foparams.ThirdBody >= 0) {
-                    out << m_mech->Species(m_foparams.ThirdBody)->Name() << " ";
-                }
-
-                // Write fall-off parameters.
+            // Write fall-off parameters.
+            if (m_fotype == Sprog::Kinetics::Troe3 || m_fotype == Sprog::Kinetics::Troe4) {
                 out << "TROE /";
                 for (unsigned int i = 0; i != (unsigned) (FALLOFF_PARAMS::MAX_FALLOFF_PARAMS - 1); ++i) {
                     out << m_foparams.Params[i] << " ";
                 }
                 out << "/ " << "\n";
-
-				// Write third-body efficiencies.
-				for (int i=0; i<ThirdBodyCount(); i++) {
-					out << m_mech->Species(ThirdBody(i).Index())->Name();
-					out << "/" << ThirdBody(i).Mu() << "/";
-					if (i>=ThirdBodyCount()-1) {out << "\n";} else {out << " ";};
-				};
             }
+
         }
+
+        // Write third-body efficiencies.
+        for (int i=0; i<ThirdBodyCount(); i++) {
+            out << m_mech->Species(ThirdBody(i).Index())->Name();
+            out << "/" << ThirdBody(i).Mu() << "/";
+            if (i>=ThirdBodyCount()-1) {out << "\n";} else {out << " ";};
+        };
 
         // New line.
         out << "\n";

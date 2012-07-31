@@ -1,50 +1,51 @@
-/*
-  Author(s):      Matthew Celnik (msc37)
-  Project:        sweep (population balance solver)
-  Sourceforge:    http://sourceforge.net/projects/mopssuite
-
-  Copyright (C) 2008 Matthew S Celnik.
-
-  File purpose:
-    The Imager class draws particle images and saves them to file.  Currently
-    only POVRAY output files are generated, though it is expected that
-    other formats will be added later.
-
-    Particles are drawn as fractal aggregates using the primary-particle
-    information.  Different particle models generate different primary-particle
-    data structures, which are all catered for in this class.  The Draw
-    functions automatically detect what form of data is available and draw
-    the aggregate images accordingly.
-
-  Licence:
-    This file is part of "sweepc".
-
-    sweepc is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-  Contact:
-    Dr Markus Kraft
-    Dept of Chemical Engineering
-    University of Cambridge
-    New Museums Site
-    Pembroke Street
-    Cambridge
-    CB2 3RA
-    UK
-
-    Email:       mk306@cam.ac.uk
-    Website:     http://como.cheng.cam.ac.uk
+/*!
+ * @file    swp_particle_image.h
+ * @author  Matthew S Celnik.
+ * @brief   Draws TEM-style images of particles
+ *
+ *  Copyright (C) 2008 Matthew S Celnik.
+ *  re-integrated into Sweep by William J Menz 2012
+ *
+ *  File purpose:
+ *    The Imager class draws particle images and saves them to file.  Currently
+ *    only POVRAY output files are generated, though it is expected that
+ *    other formats will be added later.
+ *
+ *    Particles are drawn as fractal aggregates using the primary-particle
+ *    information.  Different particle models generate different primary-particle
+ *    data structures, which are all catered for in this class.  The Draw
+ *    functions automatically detect what form of data is available and draw
+ *    the aggregate images accordingly.
+ *
+ *   Licence:
+ *      This file is part of "sweepc".
+ *
+ *      sweepc is free software; you can redistribute it and/or
+ *      modify it under the terms of the GNU Lesser General Public License
+ *      as published by the Free Software Foundation; either version 2
+ *      of the License, or (at your option) any later version.
+ *
+ *      This program is distributed in the hope that it will be useful,
+ *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *      GNU Lesser General Public License for more details.
+ *
+ *      You should have received a copy of the GNU Lesser General Public
+ *      License along with this program; if not, write to the Free Software
+ *      Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+ *      02111-1307, USA.
+ *
+ *   Contact:
+ *      Prof Markus Kraft
+ *      Dept of Chemical Engineering
+ *      University of Cambridge
+ *      New Museums Site
+ *      Pembroke Street
+ *      Cambridge
+ *      CB2 3RA, UK
+ *
+ *      Email:       mk306@cam.ac.uk
+ *      Website:     http://como.cheng.cam.ac.uk
 */
 
 #ifndef SWEEP_IMAGER_H
@@ -52,11 +53,8 @@
 
 #include "swp_params.h"
 #include "swp_particle.h"
-#include "swp_surfvol_primary.h"
 #include "swp_imgnode.h"
-#include "swp_PAH_primary.h"
 #include "swp_particle_model.h"
-#include "swp_silica_primary.h"
 #include <string>
 #include <fstream>
 #include <vector>
@@ -68,31 +66,11 @@ namespace Imaging
 class ParticleImage
 {
 public:
-    // Enumeration of possible collision regimes.  Different regimes
-    // use different collision algorithms, so may produce differently
-    // shaped aggregates.
-    enum CollRegime{FreeMol=0};
-
     // Constructors.
     ParticleImage(void);               // Default constructor.
-    ParticleImage(const Particle &sp, const ParticleModel &model); // Initialising constructor.
 
     // Destructors.
     ~ParticleImage(void);
-
-
-    // COLLISION REGIME.
-
-    // Returns the collision regime used to calculate the
-    // particle image.
-    CollRegime CollisionRegime(void) const;
-
-    // Sets the collision regime used to calculate the
-    // particle image.  If the collision regime is being
-    // changed then this function also forces a recalculation
-    // of the image aggregate structure, assuming that it
-    // has already been initialised.
-    void SetCollRegime(CollRegime creg);
 
 
     // PARTICLE IMAGE DATA CONSTRUCTION.
@@ -100,37 +78,16 @@ public:
     // Constructs the particle image from the given particle.
     void Construct(const Particle &sp, const ParticleModel &model);
 
-    // Constructs a random particle image.
-    void ConstructRandom(
-        real minrad,   // Minimum primary radius.
-        real maxrad,   // Maximum primary radius.
-        unsigned int n // Number of primaries to generate.
-        );
-
-	void constructSubParttree(const Sweep::AggModels::PAHPrimary *p);
-	void constructSubParttree(const SubParticle *sp);
-	void constructSubParttree(const Sweep::AggModels::SilicaPrimary *p);
-	void copysptinsert(const SubParticle *sp);
-	void copysptinsert(const Sweep::AggModels::PAHPrimary *p);
-	void copysptinsert(const Sweep::AggModels::SilicaPrimary *p);
-	void Write3dout(std::ofstream &file, double x, double y, double z);
-	void LengthWidth(double &L, double &W);
-    double RadiusofGyration();
-    void Project();
-
-
-
     // RENDERING FUNCTIONS.
+    //! Writes 3dout file (Markus Sander), deprecated
+    void Write3dout(std::ofstream &file, double x, double y, double z);
 
-    // Draws the particle image to a POVRAY file.
+    //! Draws the particle image to a POVRAY file.
     void WritePOVRAY(
         std::ofstream &file // Output file stream.
         );
 
 private:
-    // The collision regime used to calculate the image
-    // aggregate structure.  The default is free-molecular.
-    CollRegime m_creg;
 
     // The image aggregate structure root node.
     ImgNode m_root;
@@ -140,26 +97,62 @@ private:
 
     // AGGREGATE SPHERE-TREE CONSTRUCTORS (FREE-MOLECULAR).
 
-    // Constructs a PNode sphere-tree aggregate from the given
-    // particle using free-molecular collision dynamics.
-    void constructAgg_FM(const Particle &sp, const ParticleModel& model);
+    //! Generate the free-molecular structure of a particle
+    static void calc_FM(ImgNode &node, Sweep::rng_type &rng);
 
-    // Constructs a PNode sphere-tree aggregate with uniform
-    // primaries (equal diameter).  The diameter and primary
-    // count are passed as arguments.
-    void uniformAgg_FM(
-        unsigned int n, // Primary particle count.
-        real d          // Primary particle diameter.
-        );
+    /*!
+     * @brief       Loop helper function to construct particle images
+     *
+     * Recursively loops though the binary tree structure to generate
+     * the required image
+     *
+     * @param p     Pointer to particle for which to construct tree
+     */
+    template <class ParticleClass>
+    void ConstructTreeLoop(const ParticleClass *p) {
+        // Loop through tree structure
+        if (p->m_leftchild != NULL && p->m_rightchild != NULL) {
+            ConstructTreeLoop(p->m_leftchild);
+            ConstructTreeLoop(p->m_rightchild);
+        } else {
+            //convert to nm, store the radius not the diameter
+            m_root.Insert(p->SphDiameter()*0.5e9);
+        }
+    };
 
-    // Calculates the aggregate structure down from the given
-    // node.  Assumes that the tree leaves have been initialised
-    // with the correct radii, and recalculates their positions.
-    static void calc_FM(ImgNode &node);
+    /*!
+     * @brief      Constructs a binary tree image
+     *
+     * Used for generating images of particles with a binary tree
+     * structure, e.g. PAHPrimary or SilicaPrimary
+     *
+     * @param p    Pointer to particle for which to construct tree
+     * @param rng  Random number generator
+     */
+    template <class ParticleClass>
+    void ConstructTree(const ParticleClass *p, Sweep::rng_type &rng) {
 
-    // Calculates the z-displacement of a bullet sphere for a +ve
-    // collision with a target sphere.  Returns true if the
-    // spheres collide, otherwise false.
+        m_root.Clear();
+
+        // Call the helper function to generate structure
+        ConstructTreeLoop(p);
+
+        // Use the free-molecular regime to calculate the
+        // aggregate structure.
+        calc_FM(m_root, rng);
+        m_root.CentreCOM();
+    };
+
+    //void LengthWidth(double &L, double &W);
+
+    //! Calculates the radius of gyration
+    double RadiusofGyration();
+
+    //! Generates a projection on the zx plane (set all y to 0)
+    void Project();
+
+
+    //! Calculates the z-displacement of a sphere
     static bool calcCollZ(
         const Coords::Vector &p1, // Positional vector of sphere 1.
         real r1,                  // Radius of sphere 1.
@@ -169,10 +162,7 @@ private:
         real &dz                  // The output z-axis displacement of the bullet (+ve).
         );
 
-    // Calculates the minimum collision distance between
-    // a target and a bullet node by moving down the
-    // binary tree.  If the nodes collide then returns
-    // true, otherwise returns false.
+    //! Calculates the minimum collision distance
     static bool minCollZ(
         const ImgNode &target, // Target node.
         const ImgNode &bullet, // Bullet node.

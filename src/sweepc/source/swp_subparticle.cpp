@@ -38,6 +38,7 @@ SubParticle::SubParticle(real t, const Sweep::ParticleModel &model)
 : m_primary(NULL),
   m_createt(0.0), m_time(0.0)
 {
+    m_primary = new AggModels::Primary(t, model);
 }
 
 // Initialising constructor (from Primary particle).

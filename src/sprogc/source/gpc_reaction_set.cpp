@@ -659,7 +659,7 @@ void ReactionSet::calcTB_Concs(real density, const real *const x,
         else
         {
             // This reaction has no third body requirement.
-            tbconcs[j] = 1.0;
+            tbconcs[j] = density;
         }
     }
 }

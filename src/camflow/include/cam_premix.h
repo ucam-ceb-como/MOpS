@@ -229,7 +229,7 @@ namespace Camflow
          */
         void saveFlowVariables(doublereal* y);
 
-        doublereal getResidual() const {};
+        doublereal getResidual() const { return 0.0; };
 
         void speciesResidual
         (

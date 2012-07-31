@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<mechanism name="silicon colloids" units="CGS">
+    <component id="silicon" type="bulk">
+      <description>silicon</description>
+      <density units="g/cm3">2.329</density>
+      <molwt units="g/mol">28.086</molwt>
+    </component>
+    
+    <particle id="[silicon]" model="surfvol" subtree="false">
+      <coalthresh>1.0</coalthresh>
+      <fractdim>1.56</fractdim>
+      <description>A silicon particle.</description>
+      <sintering enable="false" model="gbd">
+        <A units="s/m">1.15e18</A>
+        <E units="K">27664</E>
+        <Dpmin units="m">0.0</Dpmin>
+      </sintering>
+    </particle>
+
+    <coagulation>
+        <A>0.0</A>
+        <kernel>transition</kernel>
+    </coagulation>
+
+</mechanism>
