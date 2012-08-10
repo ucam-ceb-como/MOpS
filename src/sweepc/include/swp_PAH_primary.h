@@ -199,6 +199,12 @@ public:
 
     double ReducedMass()const;
 
+    //! Serialise a single PAHPrimary
+    void SerializePrimary(std::ostream &out) const;
+
+    //! Deserialise a single PAHPrimary
+    void DeserializePrimary(std::istream &in, const Sweep::ParticleModel &model);
+
 protected:
     //! Empty primary not meaningful
     PAHPrimary();
@@ -243,8 +249,8 @@ private:
     static PAHPrimary* descendPath(PAHPrimary *here,
                                    std::stack<bool> &takeLeftBranch);
 
-    void outputPAHPrimary(std::ostream &out) const;
-    PAHPrimary* inputPAHPrimary(std::istream &in, const Sweep::ParticleModel &model);
+    void outputPAHs(std::ostream &out) const;
+    void inputPAHs(std::istream &in, const Sweep::ParticleModel &model,  const int PAHcount);
 
     //! Set the sintering time of a tree
     void SetSinteringTime(real time);
