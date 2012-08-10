@@ -446,13 +446,19 @@ bool SiliconInception::IsCandidate(std::string name) const
 {
     bool ans(false);
     // Permit silylenes to incept
-    if (std::string::npos != name.find("B")) {
+    if (std::string::npos != name.find("B")
+            && std::string::npos != name.find("SI")) {
+        ans = true;
+    } else if (std::string::npos != name.find("A")
+            && std::string::npos != name.find("SI")) {
+        ans = true;
+    } else if (name == "SI2H2") {
         ans = true;
     } else if (name == "SIH2") {
         ans = true;
     } else if (name == "SIH") {
         ans = true;
-    } else  if (name == "SI") {
+    } else if (name == "SI") {
         ans = true;
     }
     return ans;
