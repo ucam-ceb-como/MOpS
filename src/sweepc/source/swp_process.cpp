@@ -149,12 +149,12 @@ void Process::SetViscosityModel(Sweep::ViscosityModel vmodel)
 real Process::GetViscosity(const Cell &sys) const
 {
     real mu(0.0);
+    real T = sys.GasPhase().Temperature();
     // Return the viscosity for air
     if (m_viscosity_model == Sweep::iAir) {
-        real T = sys.GasPhase().Temperature();
         mu = Sweep::ViscosityAir(T);
-    } else if (m_viscosity_model == Sweep::iChampanEnskog) {
-        mu = sys.GasPhase().getViscosity();
+    } else if (m_viscosity_model == Sweep::iArgon) {
+        mu = Sweep::ViscosityArgon(T);
     } else {
         throw runtime_error("Wrong viscosity identifier. "
                                 "(Sweep, Process::GetViscosity).");

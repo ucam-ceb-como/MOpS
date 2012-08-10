@@ -135,8 +135,8 @@ void readInceptedTrackers(const CamXML::Element &xml, Sweep::Processes::Inceptio
 
 void readViscosity(const CamXML::Element &xml, Sweep::Processes::Process &proc) {
     std::string str = xml.GetAttributeValue("model");
-    if (str == "chapman-enskog") {
-        proc.SetViscosityModel(Sweep::iChampanEnskog);
+    if (str == "argon") {
+        proc.SetViscosityModel(Sweep::iArgon);
     } else if (str == "air") {
         proc.SetViscosityModel(Sweep::iAir);
     } else {
