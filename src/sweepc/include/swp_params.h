@@ -91,7 +91,7 @@ namespace Sweep
     // Enum for listing the various viscosity models.
     enum ViscosityModel {
         iAir,                   //  Use viscosity of air (default)
-        iArgon                  //  Use Argon viscosity
+        iChampanEnskog          //  Use Champan-Enskog multicomponent viscosity
         };
 
     // Returns the viscosity of air at 1 atm 
@@ -101,13 +101,6 @@ namespace Sweep
         // Ref: Kazakov & Frenklach (1998), Combust. Flame 114, 484-501.
         return 1.458e-6 * T * sqrt(T) / (T + 110.4); // kg/m.s.
     };
-
-    //! Returns the viscosity of argon
-    inline real ViscosityArgon(real T)
-    {
-        // Perry's Handbook
-        return 9.2121e-7 * pow(T, 0.60529) / (1 + 83.24/T);
-    }
 
     // Returns the mean free path in air assuming ideal gas
     // law and a collision cross-section of molecules of 0.362nm.
