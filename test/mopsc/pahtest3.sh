@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#  Copyright (C) 2009 Robert I A Patterson.
+#  Copyright (C) 2012 Dongping Chen.
 #
 #
 # Licence:
 #    This file is part of "mops".
 #
-#    brush is free software; you can redistribute it and/or
+#    mops is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU General Public License
 #    as published by the Free Software Foundation; either version 2
 #    of the License, or (at your option) any later version.
@@ -51,15 +51,24 @@ if test -n "$2"
     echo "changed directory to $2"
 fi
 
-dos2unix ./pahtest1/chem.inp
-dos2unix ./pahtest1/sweep.xml
-dos2unix ./pahtest1/mops.inx
-dos2unix ./pahtest1/gasphase.inp
-dos2unix ./pahtest1/therm.dat
-dos2unix ./pahtest1/pahtest1.pl
+cd pahtest3
+dos2unix chem.inp
+dos2unix sweep.xml
+dos2unix mops.inx
+dos2unix gasphase.inp
+dos2unix therm.dat
+dos2unix pahtest3.pl
 
-./pahtest1/pahtest1.pl $program
+$program -p -flamepp -ppah -ensemble 
+#> /dev/null
+R CMD BATCH --no-save --no-restore stats.r Routput.txt &
+R2pid=$!
+wait $R2pid
+./pahtest3.pl 
 
+$program -p -flamepp -ppah -rr mops-ens.inx -gp gasphase-ens.inp 
+echo "Second run Finished"
+./pahtest3-ens.pl 
 #Capture the exit value
 testresult=$?
 if((testresult!=0)) 
@@ -67,6 +76,9 @@ if((testresult!=0))
     exit $testresult
 fi
 
+rm pahtest3-restart-capacity*
+rm stats.csv
+rm Routput.txt
 # All tests passed
 echo "All tests passed"
 exit 0

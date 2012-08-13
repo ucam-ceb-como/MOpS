@@ -42,8 +42,8 @@
 
 #include "swp_particle.h"
 #include "swp_particle_model.h"
+#include "swp_particle_image.h"
 #include "swp_silica_primary.h"
-
 #include "string_functions.h"
 #include <cmath>
 #include <stdexcept>
@@ -358,6 +358,18 @@ Particle *const Particle::Clone() const
  */
 bool Particle::IsValid() const {
 	return SubParticle::IsValid() && (m_StatWeight > 0);
+}
+
+void Particle::writeParticlePOVRAY(std::ofstream &out) const
+{
+    // First construct the image
+    Sweep::Imaging::ParticleImage image;
+    image.Construct(*(this), *(Primary()->ParticleModel()));
+
+    // Write it to file
+    image.WritePOVRAY(out);
+
+    // Now we can delete the image
 }
 
 /*!

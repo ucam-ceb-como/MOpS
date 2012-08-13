@@ -42,15 +42,8 @@
 */
 
 
-#include "swp_primary.h"
-#include "swp_aggmodel_type.h"
-#include "swp_model_factory.h"
 #include "swp_silica_primary.h"
-#include "swp_particle_image.h"
 #include "swp_cell.h"
-#include "swp_kmc_pah_process.h"
-#include "swp_kmc_pah_structure.h"
-#include "swp_PAH.h"
 #include "swp_bintree_serializer.h"
 #include "gpc_species.h"
 #include <stdexcept>

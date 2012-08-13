@@ -1,12 +1,12 @@
 <mops version="2">
   
   <!-- Default parameters (can be overidden). --> 
-  <runs>3</runs>
+  <runs>1</runs>
   <iter>20</iter>
   <atol>1.0e-22</atol> 
   <rtol>1.0e-4</rtol>
-    <pcount>256</pcount>
-  <maxm0>7e13</maxm0>
+    <pcount>64</pcount>
+  <maxm0>9e13</maxm0>
   <relax>0.5</relax>
   
 
@@ -21,7 +21,7 @@
   <!-- Output time sequence. -->
   <timeintervals splits="1">
     <start>0.0</start>
-	<time steps="50" splits="1">0.006</time>
+	<time steps="50" splits="1">0.049072</time>
   </timeintervals>
   
   <!-- Simulation output settings. -->
@@ -47,6 +47,6 @@
 
     <writebintree enable="true"/> 
     <!-- File name for output (excluding extensions). -->
-    <filename>pahtest2-bintree-serializer</filename>
+    <filename>pahtest3-restart-capacity</filename>
   </output>
 </mops>

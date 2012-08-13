@@ -248,7 +248,6 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
     m_rightparticle(NULL)
 {
     m_comp[0]=1;
-
 }
 
 
@@ -289,13 +288,11 @@ PAHPrimary::PAHPrimary(const PAHPrimary &copy)
 
 // Default destructor.
 PAHPrimary::~PAHPrimary()
-{   
-	
+{
     delete m_leftchild;
     delete m_rightchild;
     // it is not necessary to delete m_leftparticle because
     // this is also m_leftchild somewhere down the tree
-	
     if (m_PAH.size()!=0) m_PAH.clear();
     // delete the PAH list
     releaseMem();
@@ -1385,16 +1382,18 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
     }
 }
 
-// this function is only used to create a vector containing all the mass of individual PAH(but currently only track the m_leftchild because of the implementation of serialization)
+// this function is only used to create a vector containing all the mass of individual PAH within this soot particle
 void PAHPrimary::mass_PAH(std::vector<double> &out) const
 {
-    if (m_leftchild!=NULL)
+    if (m_leftchild != NULL)
         m_leftchild->mass_PAH(out);
+    if (m_rightchild != NULL)
+        m_rightchild->mass_PAH(out);
 
+    double temp_mass=0.0;
     for (size_t i = 0; i != m_PAH.size(); ++i)
     {
-        double temp_mass=0.0;
-        temp_mass=12*m_PAH[i]->m_pahstruct->numofC()+m_PAH[i]->m_pahstruct->numofH();
+        temp_mass = 12*m_PAH[i]->m_pahstruct->numofC() + m_PAH[i]->m_pahstruct->numofH();
         out.push_back(temp_mass);
     }
 }
@@ -1736,63 +1735,14 @@ void PAHPrimary::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
-		double val = 0.0;
-		// Write number of PAHs.
-        val = (double) m_numPAH;
-        out.write((char*)&val, sizeof(val));
-
-		// Write PAHcollisiondiameter
-        val = (double) m_PAHCollDiameter;
-        out.write((char*)&val, sizeof(val));
-
-	    val = (double)m_numprimary;
-        out.write((char*)&val, sizeof(val));
-
-	    val = (double)m_sqrtLW;
-        out.write((char*)&val, sizeof(val));
-
-	    val = (double)m_LdivW;
-        out.write((char*)&val, sizeof(val));
-
-	    val = (double)m_primarydiam;
-        out.write((char*)&val, sizeof(val));
-
-        val = (double)m_fdim;
-        out.write((char*)&val, sizeof(val));
-
-        val = (double)m_Rg;
-        out.write((char*)&val, sizeof(val));
-
-        val = (double)m_numPAH;
-        out.write((char*)&val, sizeof(val));
-
-        val = (double)m_numcarbon;
-        out.write((char*)&val, sizeof(val));
-
-        val = (double)m_numH;
-        out.write((char*)&val, sizeof(val));
-
-        val = (double)m_numOfEdgeC;
-        out.write((char*)&val, sizeof(val));
-
-        val = (double)m_numOfRings;
-        out.write((char*)&val, sizeof(val));
-		// write the PAH stack
-		/*PAH currPAH;
-		for (int i=0; i!=m_numPAH; ++i) {
-			currPAH = m_PAH[i];
-                        out.write((char*)&currPAH.ID, sizeof(currPAH.ID));
-                        out.write((char*)&currPAH.time_created, sizeof(currPAH.time_created));
-                        out.write((char*)&currPAH.m_numcarbon, sizeof(currPAH.m_numcarbon));
-                }
-*/
-        outputPAHPrimary(out);
-        // Write PAHmass
-        val = (double) m_PAHmass;
-        out.write((char*)&val, sizeof(val));
-
-        // Output base class.
-        Primary::Serialize(out);
+        if (m_pmodel->WriteBinaryTrees()) {
+            // Call the binary tree serialiser...
+            BinTreeSerializer <PAHPrimary> tree;
+            tree.Serialize(out, this);
+        } else {
+            // Just serialise the root node.
+            SerializePrimary(out);
+        }
 
     } else {
         throw invalid_argument("Output stream not ready "
@@ -1800,175 +1750,244 @@ void PAHPrimary::Serialize(std::ostream &out) const
     }
 }
 
-// not interesting the connectivity of each primary particle, but the xmer in the soot aggregate.
-void PAHPrimary::outputPAHPrimary(std::ostream &out) const
+/*!
+ * @brief       Writes an individual primary to binary stream
+ * @param out   Output binary stream
+ */
+void PAHPrimary::SerializePrimary(std::ostream &out) const
 {
-	if (m_leftchild != NULL)
-		m_leftchild->outputPAHPrimary(out);
-	if (m_rightchild != NULL)
-		m_rightchild->outputPAHPrimary(out);
+    if (out.good()) {
 
-    //m_output=this;
-    if (m_numprimary==1) {
-        double val=0.0;
-        val=m_numPAH;
+        int  val_int(0);
+        real val(0.0);
+        // Serialise state space
+        val_int = m_numcarbon;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val_int = m_numH;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val_int = m_numOfEdgeC;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val_int = m_numOfRings;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val_int =  m_numPAH;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val_int = m_numprimary;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val = m_PAHmass;
         out.write((char*)&val, sizeof(val));
 
-        val=m_numcarbon;
-        out.write((char*)&val, sizeof(val));
-        val=m_numH;
+        val = m_PAHCollDiameter;
         out.write((char*)&val, sizeof(val));
 
-        val=m_numOfEdgeC;
-        out.write((char*)&val, sizeof(val));
-        val=m_numOfRings;
+        val = m_primarydiam;
         out.write((char*)&val, sizeof(val));
 
-        if (m_pmodel->WriteBinaryTrees()) {
-        //count the number of PAH should be serialized
-            int m_count = 0;
-            while (m_count != m_numPAH)
-            {
-                m_PAH[m_count]->Serialize(out);
-                ++m_count;
-            }
-        }
+        val = m_children_radius;
+        out.write((char*)&val, sizeof(val));
+
+        val = m_children_vol;
+        out.write((char*)&val, sizeof(val));
+
+        val = m_leftparticle_vol_old;
+        out.write((char*)&val, sizeof(val));
+
+        val = m_rightparticle_vol_old;
+        out.write((char*)&val, sizeof(val));
+
+        val_int = m_rightparticle_numPAH;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val_int =  m_leftparticle_numPAH;
+        out.write((char*)&val_int, sizeof(val_int));
+
+        val = m_children_surf;
+        out.write((char*)&val, sizeof(val));
+
+        val = m_children_roundingLevel;
+        out.write((char*)&val, sizeof(val));
+
+        /*Imaging properties
+        val = (double)m_Rg;
+        out.write((char*)&val, sizeof(val));
+
+        val = (double)m_fdim;
+        out.write((char*)&val, sizeof(val));
+
+        val = (double)m_sqrtLW;
+        out.write((char*)&val, sizeof(val));
+
+        val = (double)m_LdivW;
+        out.write((char*)&val, sizeof(val));*/
+
+        val = m_avg_coalesc;
+        out.write((char*)&val, sizeof(val));
+
+        val = m_sint_time;
+        out.write((char*)&val, sizeof(val));
+
+        val_int = (int) m_PAH.size();
+        out.write((char*)&val_int, sizeof(val_int));
+
+        // write the PAH stack (m_PAH)
+        outputPAHs(out); 
+
+        // Output base class.
+        Primary::Serialize(out);
+
+    } else {
+        throw invalid_argument("Output stream not ready "
+                               "(Sweep, PAHPrimary::SerializePrimary).");
     }
 }
 
-PAHPrimary* PAHPrimary::inputPAHPrimary(std::istream &in, const Sweep::ParticleModel &model)
+void PAHPrimary::outputPAHs(std::ostream &out) const
 {
-    PAHPrimary* pri=new PAHPrimary();
-    double val=0.0;
-
-    pri->m_numprimary=1;
-    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    pri->m_numPAH=(int)val;
-
-    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    pri->m_numcarbon=(int)val;
-
-    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    pri->m_numH=(int)val;
-
-    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    pri->m_numOfEdgeC=(int)val;
-
-    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    pri->m_numOfRings=(int)val;
-
-    if (model.WriteBinaryTrees()) {
-        int m_count=0;
-        while (m_count != pri->m_numPAH)
+    if (m_PAH.size() != 0) {
+        //count the number of PAH should be serialized
+        int m_count = 0;
+        while (m_count != m_PAH.size())
         {
-            boost::shared_ptr<PAH> new_PAH (new PAH());
-            new_PAH->Deserialize(in);
-            pri->m_PAH.push_back(new_PAH);
+            m_PAH[m_count]->Serialize(out);
             ++m_count;
         }
     }
-    return pri;
 }
 
 // Reads the object from a binary stream.
 void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
-    if (in.good()) {
+	if (in.good()) {
         // Read the output version.  Currently there is only one
         // output version, so we don't do anything with this variable.
         // Still needs to be read though.
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-		double val = 0.0;
-		// Read number of PAHs.
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numPAH = (int)val;
-
-		// Read PAHcolldiamter.
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_PAHCollDiameter = (real)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numprimary = (int)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_sqrtLW = (real)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_LdivW = (real)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_primarydiam = (real)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_fdim = (real)val;
-
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_Rg = (real)val;
-
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numPAH = (int)val;
-
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numcarbon = (int)val;
-
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numH = (int)val;
-
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numOfEdgeC = (int)val;
-
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_numOfRings = (int)val;
-	    // Read PAHs.
-	/*
-		for (int i=0; i!=m_numPAH; ++i) {
-			PAH currPAH;
-			//currPAH = new PAH;
-			in.read(reinterpret_cast<char*>(&currPAH.ID), sizeof(currPAH.ID));
-			in.read(reinterpret_cast<char*>(&currPAH.time_created), sizeof(currPAH.time_created));
-			in.read(reinterpret_cast<char*>(&currPAH.m_numcarbon), sizeof(currPAH.m_numcarbon));
-			m_PAH.push_back(currPAH);
-		}
-*/
-        // pick up all the primary particles and store them in a vector then relink them using m_leftchild, thus the connectivity is completely wrong but in this case we are only interested the PAHs within the particle
-        // TODO: output and input the correct connectivity, but it is difficult.
-        vector<PAHPrimary*> pri;
-        for (int i=0; i!=m_numprimary; ++i) 
-        {
-            pri.push_back(inputPAHPrimary(in, model));
-        }
-        // relink the primary particles
-        PAHPrimary* p=this;
-
-        for (size_t i=0;i!=pri.size();++i)
-        {
-            p->m_leftchild=pri[i];
-            p->m_rightchild=NULL;
-            p=p->m_leftchild;
-        }
-		// Read PAHmass.
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_PAHmass = (real)val;
-		//m_leftchild=NULL;
-		m_rightchild=NULL;
-		m_parent=NULL;
-		m_leftparticle=NULL;
-		m_rightparticle=NULL;
-        switch (version) {
-            case 0:
-                // Read base class.
-                Primary::Deserialize(in, model);
-
-                break;
-            default:
-                throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, PAHPrimary::Deserialize).");
+        if (model.WriteBinaryTrees()) {
+            // Call the binary tree serialiser...
+            BinTreeSerializer <PAHPrimary> tree;
+            tree.Deserialize(in, this, model);
+        } else {
+            // Just deserialise the root node.
+            DeserializePrimary(in, model);
         }
     } else {
         throw invalid_argument("Input stream not ready "
                                "(Sweep, PAHPrimary::Deserialize).");
+    }
+}
+
+
+void PAHPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel &model)
+{
+    if (in.good()) {
+
+        int  val_int(0);
+        real val(0.0);
+
+        // Serialise state space
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+        m_numcarbon = val_int;
+
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+        m_numH = val_int;
+
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+        m_numOfEdgeC = val_int;
+
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+        m_numOfRings = val_int;
+
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+        m_numPAH = val_int;
+
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+        m_numprimary = val_int;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_PAHmass = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_PAHCollDiameter = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_primarydiam = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_children_radius = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_children_vol = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_leftparticle_vol_old = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_rightparticle_vol_old = val;
+
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+        m_rightparticle_numPAH = val_int;
+
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+        m_leftparticle_numPAH = val_int;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_children_surf = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_children_roundingLevel = val;
+        /* imaging properies
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_Rg = val;
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_fdim = val;
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_sqrtLW = val;
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_LdivW = val;*/
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_avg_coalesc = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_sint_time = val;
+
+        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+        // the size of m_PAH
+        const int PAHcount = val_int;
+        // read the PAH stack (m_PAH)
+        if (PAHcount != 0)
+            inputPAHs(in, model, PAHcount); 
+
+        m_leftchild = NULL;
+        m_rightchild = NULL;
+        m_leftparticle = NULL;
+        m_rightparticle = NULL;
+        m_parent = NULL;
+        // Output base class.
+        Primary::Deserialize(in, model);
+
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, PAHPrimary::DeserializePrimary).");
+    }
+}
+
+void PAHPrimary::inputPAHs(std::istream &in, const Sweep::ParticleModel &model, const int PAHcount)
+{
+    int m_count=0;
+    while (m_count != PAHcount)
+    {
+        boost::shared_ptr<PAH> new_PAH (new PAH());
+        new_PAH->Deserialize(in);
+        m_PAH.push_back(new_PAH);
+        ++m_count;
     }
 }
 

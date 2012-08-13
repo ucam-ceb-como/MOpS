@@ -52,6 +52,7 @@ if test -n "$2"
 fi
 
 # Run the test
+dos2unix ./moonmd1/moonmd1.pl
 moonmd1/moonmd1.pl $program
 result=$?
 if((result!=0))

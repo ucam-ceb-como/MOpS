@@ -52,6 +52,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <list>
 #include <cmath>
 #include <map>
@@ -76,6 +77,24 @@ PAHStructure::PAHStructure() {
 
 //! Copy Constructor (private member)
 PAHStructure::PAHStructure(const PAHStructure& copy){
+   *this = copy;
+}
+
+PAHStructure &PAHStructure::operator=(const PAHStructure &rhs)
+{
+    if (this != &rhs) {
+        m_siteList = rhs.m_siteList;
+        // the below variables are not interested now, and they has been commented out to save computation effort. If user wanna to actitave them, please be careful, particularly m_carbonList, since each element of m_carbonList will be destroied in the deconstructor. If you do wanna to copy the m_carbonList, make sure you locate new space for the objects instead of "simply copy". dc516
+        //m_cfirst   = rhs.m_cfirst;
+        //m_clast    = rhs.m_clast;
+        //m_siteMap  = rhs.m_siteMap;
+        //m_rings5   = rhs.m_rings5;
+        //m_rings    = rhs.m_rings;
+        //m_counts   = rhs.m_counts;
+        //m_carbonList = rhs.m_carbonList;
+        //m_cpositions = rhs.m_cpositions;
+    }
+    return *this;
 }
 //! Default Destructor
 PAHStructure::~PAHStructure() {
@@ -124,6 +143,10 @@ int PAHStructure::numofEdgeC() const{
     return m_cpositions.size();
 }
 
+int PAHStructure::numofSite() const
+{
+    return m_siteList.size();
+}
 void PAHStructure::setnumofC(int val)
 {
     m_counts.first=val;
@@ -174,43 +197,43 @@ void PAHStructure::saveDOTperLoop(int PAH_ID, int i)
 // for instance, m_carbonList, m_siteList, m_siteMap, m_cfirst, m_clast
 void PAHStructure::Serialize(std::ostream &out) const
 {
-    double val=0.0;
+    int val=0;
 
-    val=numofC();
-    out.write((char*)&(val), sizeof(val));
-    val=numofH();
-    out.write((char*)&(val), sizeof(val));
-
-    // use to construct m_cpositions in the deserialize section
-    val=numofEdgeC();
-    out.write((char*)&(val), sizeof(val));
-
-    // output info for m_cpositions.
-    // the purpose of outputting m_cpositions lies in the implementation of data structure which has no member storing the info of EdgeC.
-    WriteCposition(out);
-
+    // output info for PAHProcess::createPAH().
     val=numofRings();
     out.write((char*)&(val), sizeof(val));
+
+    val=numofRings5();
+    out.write((char*)&(val), sizeof(val));
+
+    PAHStructure m_copy (*this);
+    PAHProcess p(m_copy);
+    std::string m_SiteName = p.SiteString(',');
+
+    val = (unsigned int)m_SiteName.length();
+    out.write((char*)&val, sizeof(val));
+    out.write(m_SiteName.c_str(), val);
 }
 
 void PAHStructure::Deserialize(std::istream &in)
 {
-    double val = 0.0;
+    int val = 0;
+    char *name = NULL;
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    setnumofC((int)val);
+    int temp_numofRings = val;
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    setnumofH((int)val);
+    int temp_numofRings5 = val;
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    const int size=val;
+    name = new char[val];
+    in.read(name, val);
+    std::string m_SiteName = string(name, val);
+    delete [] name;
 
-    // read info to construct m_cpositions
-    ReadCposition(in, size);
-
-    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    setnumofRings((int)val);
+    PAHProcess p(*this);
+    p.initialise(m_SiteName, temp_numofRings, temp_numofRings5);
 }
 
 void PAHStructure::WriteCposition(std::ostream &out) const

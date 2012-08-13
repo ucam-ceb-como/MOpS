@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+<ctml>
+  <validate reactions="yes" species="yes"/>
+
+  <!-- phase gas     -->
+  <phase dim="3" id="gas">
+    <elementArray datasrc="elements.xml">Si  H  Ar  N </elementArray>
+    <speciesArray datasrc="#species_data">SIH4  SIH2  SI2H6  AR  H2 </speciesArray>
+    <reactionArray datasrc="#reaction_data"/>
+    <state>
+      <temperature units="K">300.0</temperature>
+      <pressure units="Pa">101325.0</pressure>
+    </state>
+    <thermo model="IdealGas"/>
+    <kinetics model="GasKinetics"/>
+    <transport model="None"/>
+  </phase>
+
+  <!-- species definitions     -->
+  <speciesData id="species_data">
+
+    <!-- species SIH4    -->
+    <species name="SIH4">
+      <atomArray>H:4 Si:1 </atomArray>
+      <thermo>
+        <NASA Tmax="1481.0" Tmin="300.0" P0="100000.0">
+           <floatArray name="coeffs" size="7">
+             1.292282580E+00,   1.544399410E-02,  -8.012116080E-06,   1.249572810E-09, 
+             1.284047520E-13,   3.133415230E+03,   1.296208880E+01</floatArray>
+        </NASA>
+        <NASA Tmax="5000.0" Tmin="1481.0" P0="100000.0">
+           <floatArray name="coeffs" size="7">
+             6.432667630E+00,   5.421693220E-03,  -1.842350990E-06,   2.851954840E-10, 
+             -1.652566210E-14,   1.197597590E+03,  -1.526985960E+01</floatArray>
+        </NASA>
+      </thermo>
+    </species>
+
+    <!-- species SIH2    -->
+    <species name="SIH2">
+      <atomArray>H:2 Si:1 </atomArray>
+      <thermo>
+        <NASA Tmax="1986.0" Tmin="300.0" P0="100000.0">
+           <floatArray name="coeffs" size="7">
+             3.946975750E+00,   7.997142170E-04,   2.483231630E-06,  -1.946907730E-09, 
+             4.153568950E-13,   3.159272880E+04,   2.096257570E+00</floatArray>
+        </NASA>
+        <NASA Tmax="5000.0" Tmin="1986.0" P0="100000.0">
+           <floatArray name="coeffs" size="7">
+             3.702355290E+00,   2.911833850E-03,  -1.037489060E-06,   1.660578250E-10, 
+             -9.852471160E-15,   3.151577700E+04,   2.839048760E+00</floatArray>
+        </NASA>
+      </thermo>
+    </species>
+
+    <!-- species SI2H6    -->
+    <species name="SI2H6">
+      <atomArray>H:6 Si:2 </atomArray>
+      <thermo>
+        <NASA Tmax="1511.0" Tmin="300.0" P0="100000.0">
+           <floatArray name="coeffs" size="7">
+             2.354248070E+00,   3.050714050E-02,  -2.088570140E-05,   6.352937840E-09, 
+             -6.387360140E-13,   7.721853320E+03,   1.230982450E+01</floatArray>
+        </NASA>
+        <NASA Tmax="5000.0" Tmin="1511.0" P0="100000.0">
+           <floatArray name="coeffs" size="7">
+             1.277045170E+01,   7.369177450E-03,  -2.542119630E-06,   3.976110680E-10, 
+             -2.320878000E-14,   4.093614020E+03,  -4.387503110E+01</floatArray>
+        </NASA>
+      </thermo>
+    </species>
+
+    <!-- species AR    -->
+    <species name="AR">
+      <atomArray>Ar:1 </atomArray>
+      <note>120186</note>
+      <thermo>
+        <NASA Tmax="1000.0" Tmin="300.0" P0="100000.0">
+           <floatArray name="coeffs" size="7">
+             2.500000000E+00,   0.000000000E+00,   0.000000000E+00,   0.000000000E+00, 
+             0.000000000E+00,  -7.453750000E+02,   4.366000000E+00</floatArray>
+        </NASA>
+        <NASA Tmax="5000.0" Tmin="1000.0" P0="100000.0">
+           <floatArray name="coeffs" size="7">
+             2.500000000E+00,   0.000000000E+00,   0.000000000E+00,   0.000000000E+00, 
+             0.000000000E+00,  -7.453750000E+02,   4.366000000E+00</floatArray>
+        </NASA>
+      </thermo>
+    </species>
+
+    <!-- species H2    -->
+    <species name="H2">
+      <atomArray>H:2 </atomArray>
+      <thermo>
+        <NASA Tmax="1407.0" Tmin="300.0" P0="100000.0">
+           <floatArray name="coeffs" size="7">
+             3.451812050E+00,   6.176416730E-05,   1.332414870E-07,  -2.442782870E-11, 
+             -4.063150970E-16,  -1.033031630E+03,  -3.984057210E+00</floatArray>
+        </NASA>
+        <NASA Tmax="5000.0" Tmin="1407.0" P0="100000.0">
+           <floatArray name="coeffs" size="7">
+             3.394674630E+00,   1.417967200E-04,   1.060644970E-07,  -2.835915160E-11, 
+             1.961667130E-15,  -1.005384550E+03,  -3.654231120E+00</floatArray>
+        </NASA>
+      </thermo>
+    </species>
+  </speciesData>
+  <reactionData id="reaction_data">
+
+    <!-- reaction 0001    -->
+    <reaction reversible="yes" type="falloff" id="0001">
+      <equation>SIH4 (+ M) [=] H2 + SIH2 (+ M)</equation>
+      <rateCoeff>
+        <Arrhenius>
+           <A>1e6</A>
+           <b>0</b>
+           <E units="cal/mol">45100.000000</E>
+        </Arrhenius>
+        <Arrhenius name="k0">
+           <A>5.210000E+26</A>
+           <b>-3.54</b>
+           <E units="cal/mol">57550.000000</E>
+        </Arrhenius>
+        <efficiencies default="1.0">SI2H6:4  SIH4:4 </efficiencies>
+        <falloff type="Troe">-0.4984 888.3 209.4 2760 </falloff>
+      </rateCoeff>
+      <reactants>SIH4:1.0</reactants>
+      <products>H2:1.0 SIH2:1</products>
+    </reaction>
+  </reactionData>
+</ctml>

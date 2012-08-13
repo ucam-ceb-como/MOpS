@@ -44,13 +44,10 @@
 #ifndef SWEEP_SILICA_PRIMARY_H
 #define SWEEP_SILICA_PRIMARY_H
 
-#include "swp_params.h"
 #include "swp_primary.h"
 #include "swp_particle_model.h"
-#include "swp_sintering_model.h"
-#include "swp_aggmodel_type.h"
-#include "swp_cell.h"
 #include "swp_bintree_serializer.h"
+#include "swp_particle_image.h"
 
 #include <iostream>
 #include <stack>
@@ -65,6 +62,10 @@ class SilicaPrimary : public Primary
 public:
     // The binary tree serialiser needs full access to private attributes.
     friend class BinTreeSerializer<class SilicaPrimary>;
+
+    // The image writer needs full access to private attributes
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
 
     //! Build a new primary with one molecule
     SilicaPrimary(const real time, const Sweep::ParticleModel &model);

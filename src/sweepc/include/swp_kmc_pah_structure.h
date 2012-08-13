@@ -73,7 +73,7 @@ namespace Sweep{
             void setParent(Sweep::AggModels::PAH* parent);
 
             //! Overloaded Operators
-            //PAHStructure &operator=(const PAHStructure &rhs);
+            PAHStructure &operator=(const PAHStructure &rhs);
             bool operator==(PAHStructure &rhs) const;
             bool operator!=(PAHStructure &rhs) const;
 
@@ -91,6 +91,8 @@ namespace Sweep{
             int numofRings5() const;
             //! return num of edge carbon
             int numofEdgeC() const;
+            //! return num of site
+            int numofSite() const;
             //! set number of carbon and hydrogen for particular PAH
             void setnumofC(int val);
             void setnumofH(int val);

@@ -1,7 +1,7 @@
 <mops version="2">
   
   <!-- Default parameters (can be overidden). --> 
-  <runs>3</runs>
+  <runs>1</runs>
   <iter>20</iter>
   <atol>1.0e-22</atol> 
   <rtol>1.0e-4</rtol>
@@ -14,14 +14,17 @@
   <reactor type="batch" constt="true" id="Test_System" units="mol/mol">
     <temperature units="K">1773.0</temperature>
     <pressure units="bar">1</pressure>
-    
+    <population>
+           <file>pahtest3-restart-capacity(0)-SP(50).ens</file>
+           <m0>1.2e19</m0>
+    </population>
     <!-- Temperature derivative as function of time. -->
   </reactor>
 
   <!-- Output time sequence. -->
   <timeintervals splits="1">
     <start>0.0</start>
-	<time steps="50" splits="1">0.006</time>
+	<time steps="50" splits="1">0.005</time>
   </timeintervals>
   
   <!-- Simulation output settings. -->
@@ -47,6 +50,6 @@
 
     <writebintree enable="true"/> 
     <!-- File name for output (excluding extensions). -->
-    <filename>pahtest2-bintree-serializer</filename>
+    <filename>pahtest3-restart-capacity-ens</filename>
   </output>
 </mops>

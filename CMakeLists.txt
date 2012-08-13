@@ -83,13 +83,17 @@ add_test(mops.sinter1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/sinter1.sh ${EXECUTABLE
 
 add_test(mops.pahtest1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-#add_test(mops.pahtest2 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest2.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.pahtest2 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest2.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+
+add_test(mops.pahtest2 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest3.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
 add_test(mops.silica1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
 add_test(mops.silica2 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica2.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
 add_test(mops.bintree1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/bintree1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+
+add_test(mops.imaging1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/imaging1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc/imaging1)
 
 ########## The PAH-KMC Application ######################
 add_executable(PAHkmc-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/PAHkmc/kmc_model.cpp)
@@ -121,6 +125,8 @@ add_executable(sprogc-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/s
 target_link_libraries(sprogc-test sprog ${Boost_LIBRARIES})
 
 add_test(sprogc.regress1 ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress1.sh ${EXECUTABLE_OUTPUT_PATH}/sprogc-test ${MOPSSUITE_SOURCE_DIR}/test/sprogc)
+
+add_test(sprogc.regress2 ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress2.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress2)
 
 ########## Test Program for chemkinReader ######################
 add_executable(chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp)
