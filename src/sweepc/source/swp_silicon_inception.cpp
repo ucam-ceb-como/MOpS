@@ -388,11 +388,13 @@ const SiliconInception::SiliconData* SiliconInception::ChooseData(const Sweep::C
     fvector availFracs;
     std::vector<const SiliconData*> availSpecies;
     real sum(0.0);
+    real frac(0.0);
 
     // Loop over candidate species
     for (unsigned int i=0; i != m_sidata.size(); i++) {
         if (m_sidata[i]._diam >= dcrit) {
-            real frac = sys.GasPhase().SpeciesConcentration(m_sidata[i]._fracIndex);
+            frac = sys.GasPhase().SpeciesConcentration(m_sidata[i]._fracIndex) /
+                    sys.GasPhase().MolarDensity();
             sum += frac;
             availFracs.push_back(frac);
             availSpecies.push_back(&(m_sidata[i]));
@@ -417,8 +419,8 @@ const SiliconInception::SiliconData* SiliconInception::ChooseData(const Sweep::C
  * Adjust the gas phase for the effects of this process.
  *
  *@param[in]    sys         Cell in which the process is taking place
- *@param[in]    species     ??
- *@param[in]    wt          ??
+ *@param[in]    species     Silicon hydride species to be incepted
+ *@param[in]    wt          Statistical weight of particle
  *
  *@pre      The gas phase in sys must be of type SprogIdealGasWrapper
  *
@@ -433,7 +435,7 @@ void SiliconInception::adjustGasPhase(Sweep::Cell &sys,
     // phase interface
     SprogIdealGasWrapper *gasWrapper = dynamic_cast<SprogIdealGasWrapper*>(&sys.GasPhase());
     if(gasWrapper == NULL)
-        throw std::runtime_error("Coult not cast gas phase to SprogIdealGasWrapper in SiliconInception::adjustGasPhase");
+        throw std::runtime_error("Could not cast gas phase to SprogIdealGasWrapper in SiliconInception::adjustGasPhase");
 
     // If excecution reaches here, the cast must have been successful
     Sprog::Thermo::IdealGas *gas = gasWrapper->Implementation();
@@ -498,7 +500,8 @@ real SiliconInception::GetPrecursorFraction(const Sweep::Cell &sys) const
 
     // Loop over all gas-phase species
     for (unsigned int i=0; i!=m_sidata.size(); i++) {
-        frac += sys.GasPhase().SpeciesConcentration(m_sidata[i]._fracIndex);
+        frac += sys.GasPhase().SpeciesConcentration(m_sidata[i]._fracIndex) /
+                sys.GasPhase().MolarDensity();
     }
 
     if (frac > 1.0) {
