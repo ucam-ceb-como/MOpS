@@ -54,8 +54,6 @@ using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
 
-// FM enhancement factor (soot)
-const real SiliconInception::m_efm = 2.2;
 // Mass of a silicon monomer, kg
 const real SiliconInception::m_m1  = 4.664e-26;
 // Vol of a silicon atom, m3
@@ -69,6 +67,7 @@ const real SiliconInception::m_d1  = 3.369e-10;
 //! Default constructor (protected).
 SiliconInception::SiliconInception(void)
 : Inception(), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0),
+  m_efm(2.2),
   m_itype(iCollisional), m_vi(0.0), m_di(0.0),
   m_sidata(0), m_reacs(0), m_concs(0)
 {
@@ -78,6 +77,7 @@ SiliconInception::SiliconInception(void)
 //! Initialising constructor.
 SiliconInception::SiliconInception(const Sweep::Mechanism &mech)
 : Inception(mech), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0),
+  m_efm(mech.GetEnhancementFM()),
   m_itype(iCollisional), m_vi(0.0), m_di(0.0),
   m_sidata(0), m_reacs(0), m_concs(0)
 {
@@ -86,12 +86,14 @@ SiliconInception::SiliconInception(const Sweep::Mechanism &mech)
 
 //! Copy constructor.
 SiliconInception::SiliconInception(const SiliconInception &copy)
+: m_efm(copy.m_efm)
 {
     *this = copy;
 }
 
 //! Stream-reading constructor.
 SiliconInception::SiliconInception(std::istream &in, const Sweep::Mechanism &mech)
+: m_efm(mech.GetEnhancementFM())
 {
     Deserialize(in, mech);
 }

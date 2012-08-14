@@ -276,8 +276,8 @@ private:
     real m_kfm;
     real m_ksf1, m_ksf2; //! Slip-flow kernel parameters.
 
-    //! Free-molecular enhancement factor.  Currently hardcoded (m_efm = 2.2).
-    static const real m_efm;
+    //! Free-molecular enhancement factor.
+    const real m_efm;
 
     //! Inception equation type
     InceptionType m_itype;
