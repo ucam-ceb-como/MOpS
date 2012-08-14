@@ -90,15 +90,6 @@ public:
     Inception &operator=(const Inception &rhs);
 
 
-    // RATE CONSTANT.
-
-    // Returns the rate constant.
-    real A(void) const;
-
-    // Sets the rate constant.
-    void SetA(real a);
-
-
     // INCEPTION KERNEL.
 
 
@@ -179,8 +170,6 @@ protected:
     Inception(void);
 
 private:
-    //! Multiplicative rate adjustment factor
-    real m_a;
 
     //! Composition of newly incepted particles.
     fvector m_newcomp;

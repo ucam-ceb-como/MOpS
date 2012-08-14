@@ -71,12 +71,6 @@ public:
     //! Ordinary method of construction just passes argument through.
     Coagulation(const Sweep::Mechanism &mech);
 
-    //! Scaling factor for rate.
-    real A(void) const {return m_a;}
-
-    //! Sets the rate constant.
-    void SetA(real a) {m_a = a;}
-
     //! Returns a copy of the coagulation process
     virtual Coagulation *const Clone(void) const = 0;
 
@@ -163,8 +157,6 @@ protected:
     virtual real MajorantKernel(const Particle &sp1, const Particle &sp2,
                                 const Cell& sys, const MajorantType maj) const = 0;
 private:
-    //! Scaling factor for rate
-    real m_a;
 
     //! Rule for determining position of particle after coagulation (only relevant for spatial sims)
     ParticlePositionChoice mPositionChoice;

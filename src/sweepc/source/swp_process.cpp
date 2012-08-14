@@ -59,13 +59,13 @@ using namespace std;
 
 // Default constructor.
 Process::Process(void)
-: m_name(""), m_mech(NULL)
+: m_name(""), m_mech(NULL), m_a(1.0)
 {
 }
 
 // Initialising constructor.
 Process::Process(const Sweep::Mechanism &mech)
-: m_name(""), m_mech(&mech)
+: m_name(""), m_mech(&mech), m_a(1.0)
 {
 }
 
@@ -89,6 +89,8 @@ Process &Process::operator=(const Process &rhs)
     if (this != &rhs) {
         m_name = rhs.m_name;
         m_mech = rhs.m_mech;
+
+        m_a = rhs.m_a;
 
         // Copy reactants.
         Sprog::StoichMap::const_iterator i;
@@ -295,6 +297,9 @@ void Process::Serialize(std::ostream &out) const
             m = (int)i->second;
             out.write((char*)&m, sizeof(m));
         }
+
+        // Write scaling factor
+        out.write(reinterpret_cast<const char*>(&m_a), sizeof(m_a));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, Process::Serialize).");
@@ -355,6 +360,11 @@ void Process::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
                     // Create product.
                     m_prod[id] = m;
                 }
+
+                // Read scaling factor
+                real a;
+                in.read(reinterpret_cast<char*>(&a), sizeof(a));
+                SetA(a);
 
                 break;
             default:

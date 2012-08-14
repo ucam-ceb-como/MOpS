@@ -109,6 +109,13 @@ public:
     // Sets the parent mechanism
     void SetMechanism(const Sweep::Mechanism &mech);
 
+    // SCALING FACTOR
+    //! Scaling factor for rate.
+    real A(void) const {return m_a;}
+
+    //! Sets the rate constant.
+    void SetA(real a) {m_a = a;}
+
     // REACTANTS.
 
     // Returns the number of reactants.
@@ -232,6 +239,9 @@ protected:
     const Sweep::Mechanism *m_mech; // Pointer to the parent Mechanism.
     Sprog::StoichMap m_reac; // Reactant species stoichiometry.
     Sprog::StoichMap m_prod; // Product species stoichiometry.
+
+    // Process rate scaling factor
+    real m_a;
 
     // Default constructor is protected so that processes cannot
     // be defined without knowledge of the parent mechanism.

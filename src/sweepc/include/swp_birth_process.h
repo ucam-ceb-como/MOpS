@@ -80,14 +80,6 @@ public:
     BirthProcess &operator=(const BirthProcess &rhs);
 
 
-    // RATE CONSTANT.
-
-    // Returns the rate constant.
-    real A(void) const;
-
-    // Sets the rate constant.
-    void SetA(real a);
-
     // DEFAULT PARTICLE.
 
     // Returns a pointer to the default particle used for
@@ -148,8 +140,6 @@ public:
         );
 
 protected:
-    // Rate parameters.
-    real m_a; // Rate constant.
 
     // Particle sampling.
     Particle *m_particle; // A uniform birth process particle.

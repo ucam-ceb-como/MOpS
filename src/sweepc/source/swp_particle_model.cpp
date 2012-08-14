@@ -679,6 +679,9 @@ void ParticleModel::init(void)
     m_write_bintree = false;
     m_bintree_coalthresh    = 1.0;
     m_fract_dim             = 1.8;
+
+    // Default FM enhancement factor is 2.2
+    m_efm = 2.2;
 }
 
 // Clears the current ParticleModel from memory.

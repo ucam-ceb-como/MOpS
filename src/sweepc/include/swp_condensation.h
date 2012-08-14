@@ -81,12 +81,6 @@ public:
 
     // RATE CONSTANT AND PARAMETERS.
 
-    // Returns the fixed rate constant.
-    real A() const;
-
-    // Sets the fixed rate constant.
-    void SetA(real a);
-
     // Sets the coagulation kernel parameters given the mass and
     // collision diameter of the condensing species.
     void SetCondensingSpecies(

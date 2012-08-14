@@ -1254,6 +1254,9 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
     }
 
     rxn.SetArrhenius(arr);
+    // Ensure the Process object has the same pre-exponential in case it
+    // is mistakenly used instead of the Arrhenius object.
+    rxn.SetA(arr.A);
 
 }
 
@@ -1420,9 +1423,6 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
     // Read tracker variable changes.
     readTrackChanges(xml, intpar);
 
-    // The interparticle reaction changes stuff
-    //assert((intpar.CompChange().size() > 0) || (intpar.TrackChange().size() > 0));
-
     //========== Read Arrhenius rate parameters ======================
     Sprog::Kinetics::ARRHENIUS arr;
     el = xml.GetFirstChild("A");
@@ -1430,7 +1430,7 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
         arr.A = cdble(el->Data());
     } else {
         // Reaction must have constant.
-        throw runtime_error("Surface reaction found with no rate constant "
+        throw runtime_error("InterParticle reaction found with no rate constant "
                             "defined (Sweep, MechParser::readSurfRxns).");
     }
     el = xml.GetFirstChild("n");
@@ -1518,6 +1518,9 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
 
 
     intpar.SetArrhenius(arr);
+    // Ensure the Process object has the same pre-exponential in case it
+    // is mistakenly used instead of the Arrhenius object.
+    intpar.SetA(arr.A);
 
 }
 

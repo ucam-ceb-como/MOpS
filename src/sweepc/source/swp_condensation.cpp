@@ -112,12 +112,6 @@ Condensation &Condensation::operator=(const Condensation &rhs)
 
 // RATE CONSTANT AND PARAMETERS.
 
-// Returns the fixed rate constant.
-real Condensation::A() const {return m_a;}
-
-// Sets the fixed rate constant.
-void Condensation::SetA(real a) {m_a = a;}
-
 // Sets the coagulation kernel parameters given the mass and
 // collision diameter of the condensing species.
 void Condensation::SetCondensingSpecies(const real m, const real d)
@@ -355,11 +349,8 @@ void Condensation::Serialize(std::ostream &out) const
         // Serialize base class.
         ParticleProcess::Serialize(out);
 
-        // Write rate constant.
-        double v = (double)m_a;
-        out.write((char*)&v, sizeof(v));
-
         // Write free-mol parameters.
+        double v(0.0);
         v = (double)m_kfm1;
         out.write((char*)&v, sizeof(v));
         v = (double)m_kfm2;
@@ -388,10 +379,6 @@ void Condensation::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
             case 0:
                 // Deserialize base class.
                 ParticleProcess::Deserialize(in, mech);
-
-                // Read rate constant.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_a = (real)val;
 
                 // Read free-mol parameter.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));

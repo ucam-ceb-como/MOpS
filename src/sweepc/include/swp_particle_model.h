@@ -467,6 +467,8 @@ private:
 
     //! Index for thermal conductivity of mixture
     EnvironmentInterface::PropertyIndex m_ThermalConductivityIndex;
+
+
 };
 } //namespace Sweep
 #endif
