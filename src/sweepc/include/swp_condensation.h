@@ -190,11 +190,9 @@ protected:
     // is multiplied by this parameter to get the majorised rate.
     static const real m_majfactor;
 
-    // Free-molecular enhancement factor.  Currently hardcoded
-    // for soot particles (m_efm = 2.2).
-    static const real m_efm;
+    // Free-molecular enhancement factor.
+    const real m_efm;
 
-    real m_a; // Rate constant.
     real m_kfm1, m_kfm2, m_kfm3; // Free-mol term parameters.
 
     // Default constructor is protected to prevent condensations being

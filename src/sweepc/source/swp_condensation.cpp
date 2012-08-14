@@ -52,13 +52,12 @@ using namespace std;
 
 const unsigned int Condensation::TERM_COUNT = 3;
 const real Condensation::m_majfactor       = 2.0;
-const real Condensation::m_efm             = 2.2;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (protected).
 Condensation::Condensation(void)
-: ParticleProcess(), m_a(1.0), m_kfm1(0.0), m_kfm2(0.0), m_kfm3(0.0)
+: ParticleProcess(), m_efm(2.2), m_kfm1(0.0), m_kfm2(0.0), m_kfm3(0.0)
 {
     m_defer = true;
     m_name = "Condensation";
@@ -66,7 +65,8 @@ Condensation::Condensation(void)
 
 // Initialising constructor.
 Condensation::Condensation(const Sweep::Mechanism &mech)
-: ParticleProcess(mech), m_a(1.0), m_kfm1(0.0), m_kfm2(0.0), m_kfm3(0.0)
+: ParticleProcess(mech), m_efm(mech.GetEnhancementFM()),
+ m_kfm1(0.0), m_kfm2(0.0), m_kfm3(0.0)
 {
     // Assume the condensation is simulated as a deferred process (LPDA).
     m_defer = true;
@@ -75,12 +75,14 @@ Condensation::Condensation(const Sweep::Mechanism &mech)
 
 // Copy constructor.
 Condensation::Condensation(const Condensation &copy)
+: m_efm(copy.m_efm)
 {
     *this = copy;
 }
 
 // Stream-reading constructor.
 Condensation::Condensation(std::istream &in, const Sweep::Mechanism &mech)
+: m_efm(mech.GetEnhancementFM())
 {
     Deserialize(in, mech);
 }

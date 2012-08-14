@@ -522,6 +522,10 @@ void ParticleModel::Serialize(std::ostream &out) const
         var = m_fract_dim;
         out.write((char*)&var, sizeof(var));
 
+        // Write the FM enhancement factor
+        var = m_efm;
+        out.write((char*)&var, sizeof(var));
+
         // Write Knudsen drag parameters
         out.write(reinterpret_cast<const char *>(&m_DragA), sizeof(m_DragA));
         out.write(reinterpret_cast<const char *>(&m_DragB), sizeof(m_DragB));
@@ -608,6 +612,10 @@ void ParticleModel::Deserialize(std::istream &in)
                 // Read in the fractal dimension
                 in.read(reinterpret_cast<char*>(&var), sizeof(var));
                 m_fract_dim             = var;
+
+                // Read in the FM enhancement factor
+                in.read(reinterpret_cast<char*>(&var), sizeof(var));
+                m_efm             = var;
 
                 // Read in Knudsen drag parameters
                 in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));

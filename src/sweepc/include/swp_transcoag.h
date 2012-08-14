@@ -141,9 +141,8 @@ private:
     };
     
 
-    // Free-molecular enhancement factor.  Currently hardcoded
-    // for soot particles (m_efm = 2.2).
-    static const real m_efm;
+    // Free-molecular enhancement factor.
+    const real m_efm;
 
         // More efficient rate routine for coagulation only.  
     // All parameters required to calculate rate passed 

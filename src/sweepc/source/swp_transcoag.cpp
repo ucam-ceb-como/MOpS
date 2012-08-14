@@ -47,13 +47,10 @@
 
 using namespace Sweep::Processes;
 
-//* Free-molecular enhancement factor.
-const Sweep::real Sweep::Processes::TransitionCoagulation::m_efm = 2.2; // 2.2 is for soot.
-
 
 // Default constructor.
 Sweep::Processes::TransitionCoagulation::TransitionCoagulation(const Sweep::Mechanism &mech)
-: Coagulation(mech)
+: Coagulation(mech), m_efm(mech.GetEnhancementFM())
 {
     m_name = "TransitionRegimeCoagulation";
 }
@@ -65,7 +62,7 @@ Sweep::Processes::TransitionCoagulation* const Sweep::Processes::TransitionCoagu
 
 // Stream-reading constructor.
 Sweep::Processes::TransitionCoagulation::TransitionCoagulation(std::istream &in, const Sweep::Mechanism &mech)
-: Coagulation(mech)
+: Coagulation(mech), m_efm(mech.GetEnhancementFM())
 {
     m_name = "TransitionRegimeCoagulation";
     Deserialize(in, mech);

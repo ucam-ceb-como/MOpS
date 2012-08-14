@@ -182,10 +182,8 @@ private:
         SlipFlow7
     };
 
-    /** Free-molecular enhancement factor.  Currently hardcoded
-     *  for soot particles (m_efm = 2.2).
-     */
-    static const real m_efm;
+    //! Free-molecular enhancement factor.
+    const real m_efm;
 
     //! Specify what to do with weights on coagulation
     CoagWeightRule m_CoagWeightRule;

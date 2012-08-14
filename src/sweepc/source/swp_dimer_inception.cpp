@@ -50,33 +50,34 @@ using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
 
-// Free-molecular enhancement factor.
-const real DimerInception::m_efm = 2.2; // 2.2 is for soot.
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (protected).
 DimerInception::DimerInception(void)
-: Inception(), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0)
+: Inception(), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0), m_efm(2.2)
 {
     m_name = "DimerInception";
 }
 
 // Initialising constructor.
 DimerInception::DimerInception(const Sweep::Mechanism &mech)
-: Inception(mech), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0)
+: Inception(mech), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0),
+  m_efm(mech.GetEnhancementFM())
 {
     m_name = "DimerInception";
 }
 
 // Copy constructor.
 DimerInception::DimerInception(const DimerInception &copy)
+: m_efm(copy.m_efm)
 {
     *this = copy;
 }
 
 // Stream-reading constructor.
 DimerInception::DimerInception(std::istream &in, const Sweep::Mechanism &mech)
+: m_efm(mech.GetEnhancementFM())
 {
     Deserialize(in, mech);
 }

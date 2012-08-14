@@ -56,8 +56,6 @@
 using namespace std;
 using namespace Sweep::Processes;
 
-//! Free-molecular enhancement factor.
-const Sweep::real Sweep::Processes::WeightedTransitionCoagulation::m_efm = 2.2; // 2.2 is for soot.
 
 /**
  * Main way of building a new coagulation object.
@@ -70,6 +68,7 @@ Sweep::Processes::WeightedTransitionCoagulation::WeightedTransitionCoagulation(
         const Sweep::Mechanism &mech,
         const CoagWeightRule weight_rule)
 : Coagulation(mech)
+, m_efm(mech.GetEnhancementFM())
 , m_CoagWeightRule(weight_rule)
 {
     m_name = "WeightedTransitionRegimeCoagulation";
@@ -91,6 +90,7 @@ Sweep::Processes::WeightedTransitionCoagulation* const Sweep::Processes::Weighte
  */
 Sweep::Processes::WeightedTransitionCoagulation::WeightedTransitionCoagulation(std::istream &in, const Sweep::Mechanism &mech)
 : Coagulation(mech)
+, m_efm(mech.GetEnhancementFM())
 {
     m_name = "WeightedTransitionCoagulation";
     Deserialize(in, mech);
@@ -520,6 +520,9 @@ void Sweep::Processes::WeightedTransitionCoagulation::Serialize(std::ostream &ou
 {
     // Serialise the parent class
     Coagulation::Serialize(out);
+
+    // Note that m_efm is not written out in serialize as it is always directly
+    // taken from the ParitcleModel. (allows const initialisation)
 
     // Now the data in this class
     if(out.good())

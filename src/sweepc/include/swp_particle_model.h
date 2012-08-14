@@ -307,6 +307,12 @@ public:
     //! Return the coalescence threshold for bintree particle models.
     const real GetFractDim() const {return m_fract_dim;}
 
+    //! Sets the value of the free-molecular enhancement factor.
+    void SetEnhancementFM(real efm) {m_efm = efm;}
+
+    //! Returns the value of the free-molecular enhancement factor.
+    const real GetEnhancementFM() const {return m_efm;}
+
     //! Index for temperature gradient in gas phase interface
     void setTGradIndex(const EnvironmentInterface::PropertyIndex index) {m_TemperatureGradientIndex = index;}
 
@@ -440,6 +446,9 @@ private:
 
     //! Fractal dimension (bintree particle model)
     real m_fract_dim;
+
+    //! Free molecular enhancement factor (coag., cond. & incep.)
+    real m_efm;
 
     //! Index for temperature gradient
     EnvironmentInterface::PropertyIndex m_TemperatureGradientIndex;

@@ -377,6 +377,22 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetFractDim(1.8);
     }
 
+    el = particleXML->GetFirstChild("efm");
+    // Get the free molecular enhancement factor
+    if (el != NULL) {
+        double efm = cdble(el->Data());
+        if (efm < 0.0) {
+            throw std::runtime_error("EFM must be >0. (Sweep::MechParser::readV1)");
+        } else {
+            mech.SetEnhancementFM(efm);
+        }
+    } else {
+        // Default enhancement factor is 2.2
+        // Kazakov & Frenklach, Combustion & Flame, 1998 113:484-501
+        // for coagulation of spherical non-polar soot particles
+        mech.SetEnhancementFM(2.2);
+    }
+
     // Get the sintering model.
     particleXML->GetChildren("sintering", items);
     if (items.size() > 0) {
