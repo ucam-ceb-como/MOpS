@@ -82,9 +82,10 @@ public:
     //! Value of some mixture property that is not a species concentration
     real PropertyValue(const PropertyIndex index) const;
 
-    //!Temporary interface, \deprecated
+    //! Access an older interface provided by sprog
     const Sprog::Thermo::IdealGas * Implementation() const {return &mGas;}
-    //!Temporary interface, \deprecated
+
+    //! Access an older style interface provided by sprog
     Sprog::Thermo::IdealGas * Implementation() {return &mGas;}
 
     //! Writes the object to a binary stream.

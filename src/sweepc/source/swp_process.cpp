@@ -394,9 +394,15 @@ real Process::chemRatePart(const EnvironmentInterface &gas) const
  * Adjusts the gas-phase composition using the reactants and
  * products defined for this process.
  *
- * @deprecated  Gas phase should not be modified from within a jump process
- *              instead calculate the rate of change and pass this to the
- *              chemistry solver.
+ * Think carefully about whether calling this function is a
+ * good idea:  The use of this method was found to be problematic
+ * in "A predictor-corrector algorithm for the coupling of stiff
+ * ODEs to a particle population balance", Celnik et al, Preprint 58.
+ * The requirement that the gas phase mixture be implemented via a
+ * SprogIdealGasWrapper will also restrict future applications of the
+ * code.  In situations where updating the gas phase during stochastic
+ * particle reactions is definitely required, this is the method
+ * to use.
  *
  * @param[in,out]   sys     System in which the gas phase is changing
  * @param[in]       wt      Statistical weight of reaction

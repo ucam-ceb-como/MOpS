@@ -416,10 +416,6 @@ const SiliconInception::SiliconData* SiliconInception::ChooseData(const Sweep::C
 /*!
  * Adjust the gas phase for the effects of this process.
  *
- *@deprecated   Gas phase should not be modified from within a jump process
- *              instead calculate the rate of change and pass this to the
- *              chemistry solver.
- *
  *@param[in]    sys         Cell in which the process is taking place
  *@param[in]    species     ??
  *@param[in]    wt          ??
