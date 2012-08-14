@@ -23,8 +23,8 @@
 
   <!-- Output time sequence. -->
   <timeintervals splits="1">
-    <start>0.0</start>
-	<time steps="50" splits="1">0.005</time>
+    <start>0.049072</start>
+	<time steps="50" splits="1">0.054072</time>
   </timeintervals>
   
   <!-- Simulation output settings. -->
