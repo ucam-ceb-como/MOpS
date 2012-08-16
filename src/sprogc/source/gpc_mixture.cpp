@@ -476,7 +476,7 @@ void Mixture::checkForTransportData() const
     std::cout << "Checking for transport data." << std::endl;
     // Loop over all species and check they have transport data
     for (size_t k = 0; k != spv->size(); ++k) {
-        if ( &((*spv)[k]->getTransportData()) == NULL) {
+        if (!(*spv)[k]->hasTransportData()) {
             throw runtime_error("No transport data supplied for species " +
                     (*spv)[k]->Name() + ".");
         }

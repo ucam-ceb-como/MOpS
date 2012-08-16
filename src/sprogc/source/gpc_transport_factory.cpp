@@ -507,7 +507,7 @@ real MixtureTransport::getViscosity
         eta = 9.2121e-7 * pow(T, 0.60529) / (1 + (83.24 / T));
 
     } else if (mix.GetViscosityModel() == Sprog::iHydrogen) {
-        // Use viscosity of argon
+        // Use viscosity of hydrogen
         // Ref: Perry's Chemical Engineers' Handbook, 8e
         eta = 1.797e-7 * pow(T, 0.685) / (1 - (0.59 / T) + (140/fastMath::pow2(T)));
     } else {

@@ -225,6 +225,8 @@ public:
 	//! Collision diameter in m
 	real getCollisionDiameter() const;
 
+	//! Check for transport data
+	bool hasTransportData() const;
 
 protected:
     // Species data.
