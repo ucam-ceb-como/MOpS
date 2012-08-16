@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="Silica nanoparticle inception and growth model" units="CGS">
+    <component id="silica" type="bulk">
+      <description>Silica</description>
+      <density units="g/cm3">2.2</density>
+      <molwt units="g/mol">60.084</molwt>
+      <coalthresh>1</coalthresh>
+    </component> 
+
+    <particle id="[silica]" model="silica" subtree="false">
+      <description>A silica particle.</description>
+      <fractdim>1.8</fractdim>
+      <sintering enable="false" model="viscous_flow">
+        <A units="s/m">1.1e-16</A>
+        <E units="K">1.2e5</E>
+        <Dpmin units="m">4.4e-9</Dpmin>
+      </sintering>
+    </particle>
+    
+    <coagulation>
+        <A>0.0</A>
+        <kernel>transition</kernel>
+    </coagulation>
+
+    <inception name="Dimer inception">
+        <formula>H4O4SI + H4O4SI to [X] + H2O</formula>
+        <reactant id="H4O4SI" stoich="2" m="9.981e-23" d="0.32e-7"/>
+        <product id="H2O" stoich="1"/>
+        <particleout id="[X]"/>
+        <component id="silica" dx="+2"/>
+        <A>1</A>
+    </inception>
+</mechanism>
+
