@@ -151,7 +151,7 @@ private:
         const TreeTransCoagWeightedCache &data, // Particle model data.
         real n,     // Number of particles.
         real sqrtT, // Square root of the temperature.
-        real T_mu,  // T / viscosity of air.
+        real T_mu,  // T / viscosity
         real MFP,   // Gas mean-free path.
         real vol    // System sample volume.
         ) const;
@@ -163,7 +163,7 @@ private:
         const TreeTransCoagWeightedCache &data, // Particle model data.
         real n,     // Number of particles.
         real sqrtT, // Square root of the temperature
-        real T_mu,  // T / viscosity of air.
+        real T_mu,  // T / viscosity
         real MFP,   // Gas mean-free path.
         real vol,   // System sample volume.
         fvector::iterator &iterm // Iterator to first coagulation term.

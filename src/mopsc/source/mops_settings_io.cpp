@@ -250,6 +250,31 @@ Reactor *const readReactor(const CamXML::Element &node,
     // Create a new Mixture object.
     Mixture *mix = new Mixture(mech.ParticleMech());
 
+    // VISCOSITY MODEL
+
+    subnode = node.GetFirstChild("viscosity");
+    if(subnode != NULL) {
+        std::string m = subnode->GetAttributeValue("model");
+        if (m.compare("air") == 0) {
+            mix->GasPhase().SetViscosityModel(Sprog::iAir);
+        } else if (m.compare("chapman-enskog") == 0) {
+            // Stop program if not enough transport data
+            mix->GasPhase().checkForTransportData();
+            mix->GasPhase().SetViscosityModel(Sprog::iChapmanEnskog);
+        } else if (m.compare("argon") == 0) {
+            mix->GasPhase().SetViscosityModel(Sprog::iArgon);
+        } else if (m.compare("hydrogen") == 0) {
+            mix->GasPhase().SetViscosityModel(Sprog::iHydrogen);
+        } else {
+            throw std::runtime_error("Unrecognised viscosity model. (Mops, Settings_IO::readReactor).");
+        }
+    }
+    else {
+        // Use air by default
+        mix->GasPhase().SetViscosityModel(Sprog::iAir);
+    }
+
+
     fvector molefracs(mech.GasMech().SpeciesCount(), 0.0);
 
     // Get the temperature.

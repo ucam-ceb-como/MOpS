@@ -220,7 +220,7 @@ protected:
     real Rate(
         const EnvironmentInterface &gas,
         real sqrtT,           // Square-root of temperature.
-        real T_mu,            // T / viscosity of air.
+        real T_mu,            // T / viscosity
         real MFP,             // Gas mean free path.
         real vol,             // Particle ensemble sample volume.
         const Cell &sys       // System for which to calculate rate terms.

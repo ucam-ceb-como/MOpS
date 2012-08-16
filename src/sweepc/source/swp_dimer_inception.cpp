@@ -248,7 +248,7 @@ real DimerInception::Rate(const EnvironmentInterface &gas, real sqrtT,
         const real Temperature = gas.Temperature();
 
         // Temperature divided by viscosity
-        real T_viscosity = Temperature / Sweep::ViscosityAir(Temperature);
+        real T_viscosity = Temperature / gas.Viscosity();
 
         // Transition regime
         real sf   = T_viscosity  * (m_ksf1 + (MFP*m_ksf2));

@@ -451,49 +451,72 @@ real MixtureTransport::getViscosity
     const Sprog::Thermo::Mixture &mix
 ) const
 {
-
-    const SpeciesPtrVector *spv = mix.Species();
-    const std::vector<real>& moleFrac = mix.MoleFractions();
-
-    std::vector<real> nkVec;
-    real xTimesEta, xTimesPhi;
     real eta = 0.0;
-    real m_kj, m_jk, eta_kj, phi_kj, nk;
 
-    // Precompute the viscosity of each species before the for loop
-    // to save time.
-    for (size_t k = 0; k != spv->size(); ++k)
-    {
-        nkVec.push_back((*spv)[k]->getViscosity(T));
-    }
+    if (mix.GetViscosityModel() == Sprog::iChapmanEnskog) {
+        // Use the Chapman Enskog viscosity model
+        // requires a 'tran.dat' with the relevant parameters for
+        // each species present in the 'chem.inp'
 
-    for (size_t k = 0; k != spv->size(); ++k)
-    {
+        const SpeciesPtrVector *spv = mix.Species();
+        const std::vector<real>& moleFrac = mix.MoleFractions();
 
-        nk = nkVec[k];
-        xTimesEta = moleFrac[k] * nk;
+        std::vector<real> nkVec;
+        real xTimesEta, xTimesPhi;
+        real m_kj, m_jk, eta_kj, phi_kj, nk;
 
-        xTimesPhi = 0.0;
-
-        for (size_t j = 0; j != spv->size(); ++j)
+        // Precompute the viscosity of each species before the for loop
+        // to save time.
+        for (size_t k = 0; k != spv->size(); ++k)
         {
-
-            m_kj = (*spv)[k]->MolWt() / (*spv)[j]->MolWt();
-            m_jk = 1.0 / m_kj;
-            eta_kj = nk / nkVec[j];
-            phi_kj = oneByRootEight
-                     / sqrt((1 + m_kj))
-                     * fastMath::pow2(1.0 + sqrt(eta_kj) * sqrt(sqrt(m_jk)) );
-            xTimesPhi += moleFrac[j] * phi_kj;
-
+            nkVec.push_back((*spv)[k]->getViscosity(T));
         }
 
-        eta += xTimesEta / xTimesPhi;
+        for (size_t k = 0; k != spv->size(); ++k)
+        {
 
+            nk = nkVec[k];
+            xTimesEta = moleFrac[k] * nk;
+
+            xTimesPhi = 0.0;
+
+            for (size_t j = 0; j != spv->size(); ++j)
+            {
+
+                m_kj = (*spv)[k]->MolWt() / (*spv)[j]->MolWt();
+                m_jk = 1.0 / m_kj;
+                eta_kj = nk / nkVec[j];
+                phi_kj = oneByRootEight
+                         / sqrt((1 + m_kj))
+                         * fastMath::pow2(1.0 + sqrt(eta_kj) * sqrt(sqrt(m_jk)) );
+                xTimesPhi += moleFrac[j] * phi_kj;
+
+            }
+
+            eta += xTimesEta / xTimesPhi;
+        }
+
+    } else if (mix.GetViscosityModel() == Sprog::iAir) {
+        // Use viscosity of air
+        // Ref: Kazakov & Frenklach (1998), Combust. Flame 114, 484-501.
+        eta = 1.458e-6 * T * sqrt(T) / (T + 110.4);
+
+    } else if (mix.GetViscosityModel() == Sprog::iArgon) {
+        // Use viscosity of argon
+        // Ref: Perry's Chemical Engineers' Handbook, 8e
+        eta = 9.2121e-7 * pow(T, 0.60529) / (1 + (83.24 / T));
+
+    } else if (mix.GetViscosityModel() == Sprog::iHydrogen) {
+        // Use viscosity of argon
+        // Ref: Perry's Chemical Engineers' Handbook, 8e
+        eta = 1.797e-7 * pow(T, 0.685) / (1 - (0.59 / T) + (140/fastMath::pow2(T)));
+    } else {
+        throw std::runtime_error("Unrecognised viscosity model"
+                "Sprog::MixtureTransport::getViscosity");
     }
-
     return eta;
 }
+
 
 /*!
  * \f[

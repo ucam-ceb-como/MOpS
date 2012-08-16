@@ -92,7 +92,14 @@ Sweep::real Sweep::SprogIdealGasWrapper::Velocity() const {
 }
 
 /*!
- *@return Density in \f$\mathrm{kg}\,\mathrm{m}^{-3}\f$
+ *@return Viscosity in \f$\mathrm{Pa.s}\f$
+ */
+Sweep::real Sweep::SprogIdealGasWrapper::Viscosity() const {
+    return mGas.getViscosity();
+}
+
+/*!
+ *@return Mass Density in \f$\mathrm{kg}\,\mathrm{m}^{-3}\f$
  */
 Sweep::real Sweep::SprogIdealGasWrapper::MassDensity() const {
     return mGas.MassDensity();

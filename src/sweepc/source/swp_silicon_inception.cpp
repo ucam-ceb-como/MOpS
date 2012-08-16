@@ -636,7 +636,7 @@ real SiliconInception::Rate(real t, const Cell &sys, const Geometry::LocalGeomet
 
     // Calculate the rate.
     return Rate(sys.GasPhase(), sqrt(T),
-                T/Sweep::ViscosityAir(T), MeanFreePathAir(T,P),
+                T/sys.GasPhase().Viscosity(), MeanFreePathAir(T,P),
                 sys.SampleVolume(), sys);
 }
 
@@ -769,7 +769,7 @@ real SiliconInception::RateTerms(const real t, const Cell &sys,
 
     // Calculate the single rate term and advance iterator.
     *iterm = Rate(sys.GasPhase(), sqrt(T),
-                  T/Sweep::ViscosityAir(T), MeanFreePathAir(T,P),
+                  T/sys.GasPhase().Viscosity(), MeanFreePathAir(T,P),
                   sys.SampleVolume(), sys);
     return *(iterm++);
 }

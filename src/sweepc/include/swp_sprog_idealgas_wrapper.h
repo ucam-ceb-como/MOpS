@@ -70,6 +70,9 @@ public:
     //! Velocity in
     real Velocity() const;
 
+    //! Viscosity in Pa.s
+    real Viscosity() const;
+
     //! Density in \f$\mathrm{kg}\,\mathrm{m}^{-3}\f$
     real MassDensity() const;
 

@@ -57,6 +57,7 @@ using namespace std;
 
 // Default constructor (private).
 Mixture::Mixture(void)
+: m_vmodel(Sprog::iAir)
 {
     m_data.clear();
     m_species = NULL;
@@ -64,12 +65,14 @@ Mixture::Mixture(void)
 
 // Default constructor (public, requires species list).
 Mixture::Mixture(const SpeciesPtrVector &sp)
+: m_vmodel(Sprog::iAir)
 {
     SetSpecies(sp);
 }
 
 // Copy constructor.
 Mixture::Mixture(const Mixture &copy)
+: m_vmodel(copy.m_vmodel)
 {
     *this = copy;
 }
@@ -457,6 +460,29 @@ real Mixture::getViscosity() const{
 	Sprog::Transport::MixtureTransport mt;
 	return mt.getViscosity(Temperature(),*this);
 }
+
+
+/*!
+ * This prevents segmentation faults when accessing the Champan Enksog viscosity
+ * model from Sweep.
+ *
+ * @param mix   Mixture for which to check integrity of transport data
+ *
+ * @exception   std::runtime_error      No transport data found for species
+ */
+void Mixture::checkForTransportData() const
+{
+    const SpeciesPtrVector *spv = Species();
+    std::cout << "Checking for transport data." << std::endl;
+    // Loop over all species and check they have transport data
+    for (size_t k = 0; k != spv->size(); ++k) {
+        if ( &((*spv)[k]->getTransportData()) == NULL) {
+            throw runtime_error("No transport data supplied for species " +
+                    (*spv)[k]->Name() + ".");
+        }
+    }
+}
+
 // returns the mixture thermal conductivity in J/m-s-K
 real Mixture::getThermalConductivity(real pre) const{
 	Sprog::Transport::MixtureTransport mt;
@@ -541,6 +567,10 @@ void Mixture::Serialize(std::ostream &out) const
         for (i=m_data.begin(); i!=m_data.end(); i++) {
             out.write((char*)&(*i), sizeof(*i));
         }
+
+        // Write the viscosity model
+        sz = m_vmodel;
+        out.write((char*)&sz, sizeof(sz));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sprog, Mixture::Serialize).");
@@ -579,6 +609,11 @@ void Mixture::Deserialize(std::istream &in)
 
                 // The mixture has no species associated it with right now.
                 m_species = NULL;
+
+                // Read the viscosity model
+                in.read(reinterpret_cast<char*>(&sz), sizeof(sz));
+                m_vmodel = (Sprog::ViscosityModel)sz;
+
                 break;
             default:
                 throw runtime_error("Mixture serialized version number "

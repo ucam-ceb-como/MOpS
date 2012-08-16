@@ -59,7 +59,9 @@ CamResidual::CamResidual
   sootSurfaceAreaMaster(mCord,0.0),
   sootVolumeFractionMaster(mCord,0.0),
   wdotA4Master(mCord,0.0)
-{}
+{
+    camMixture_->SetViscosityModel(Sprog::iChapmanEnskog);
+}
 
 
 CamResidual::~CamResidual()

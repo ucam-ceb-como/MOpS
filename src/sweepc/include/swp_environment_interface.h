@@ -80,6 +80,9 @@ public:
     //! Velocity in
     virtual real Velocity() const = 0;
 
+    //! Viscosity in Pa.s
+    virtual real Viscosity() const = 0;
+
     //! Density in \f$\mathrm{kg}\,\mathrm{m}^{-3}\f$
     virtual real MassDensity() const = 0;
 

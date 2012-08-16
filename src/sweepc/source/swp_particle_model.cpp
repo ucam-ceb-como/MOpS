@@ -795,7 +795,7 @@ real ParticleModel::KnudsenDragCoefficient(const Cell &sys, const Particle &sp) 
     const real Kn = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
 
     // 3 * pi = 9.424777962 and note that diameter not radius is used below
-    const real numerator = 9.424777962 * sp.CollDiameter() * Sweep::ViscosityAir(sys.GasPhase().Temperature());
+    const real numerator = 9.424777962 * sp.CollDiameter() * sys.GasPhase().Viscosity();
 
 //    std::cout << "Knudsen " << Kn << ", " << numerator
 //              << ", MFP " << Sweep::MeanFreePathAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure())
@@ -864,7 +864,7 @@ real ParticleModel::LiWangDragCoefficient(const Cell &sys, const Particle &sp) c
 
     // 3.247911159372846712e-24 = sqrt((2*pi)/(k*NA)) * 9 / 4 / NA
     real alpha = 3.24791159e-24 / sqrt(sys.GasPhase().Temperature() * sys.GasPhase().PropertyValue(m_AvgMolWtIndex));
-    alpha *= Sweep::ViscosityAir(sys.GasPhase().Temperature()) / sys.GasPhase().MolarDensity() / sp.CollDiameter();
+    alpha *= sys.GasPhase().Viscosity() / sys.GasPhase().MolarDensity() / sp.CollDiameter();
     alpha /= omega;
 
     // 4.818546232410640188 = sqrt(2 * pi * k * NA) * 2 / 3
@@ -923,7 +923,7 @@ real ParticleModel::LiWangPatDragCoefficient(const Cell &sys, const Particle &sp
                 * (1 - sys.GasPhase().PropertyValue(m_AvgMolWtIndex) / sp.Mass() / 1.2044283e+24);
 
     // 9.424777960769379348 = 3 * pi
-    drag += 9.424777960769379348 * Sweep::ViscosityAir(sys.GasPhase().Temperature());
+    drag += 9.424777960769379348 * sys.GasPhase().Viscosity();
 
     drag *= sp.CollDiameter() / (1 + knudsen);
 
