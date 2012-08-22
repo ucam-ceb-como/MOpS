@@ -134,6 +134,12 @@ target_link_libraries(chemkinReader-test chemkinReader ${Boost_LIBRARIES})
 
 add_test(chemkinReader.regress1 ${MOPSSUITE_SOURCE_DIR}/test/io/chemkinReaderRegress.sh ${EXECUTABLE_OUTPUT_PATH}/chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/test/io)
 
+########## Test program for Sweep::FixedChemistry ##############
+add_executable(sweepFixedMix-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/sweepc/fixedmix_test.cpp)
+target_link_libraries(sweepFixedMix-test brush ${Boost_LIBRARIES})
+
+add_test(NAME sweep.FixedMix COMMAND ${MOPSSUITE_SOURCE_DIR}/test/sweepc/fixedmix.sh $<TARGET_FILE:sweepFixedMix-test> ${MOPSSUITE_SOURCE_DIR}/test/sweepc/fixedmix)
+
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/comostrings)

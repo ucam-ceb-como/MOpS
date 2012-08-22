@@ -83,7 +83,13 @@ public:
 
         //! Mole fractions, with ABF alpha and cgs units
         PremixAlpha,
+
+        //! Fixed chemistry for interpolation without further processing
+        FixedChemistry,
     };
+
+    //! Type of one row of data
+    typedef fvector data_point;
 
     //! Read in the data needed for the given mechanism
     ResetChemistry(const std::string &fname, const InputFileType file_type, const Sprog::Mechanism& mech, const int verbosity);
@@ -99,6 +105,9 @@ public:
     //! Overwrite chemistry information with that stored in this object
     void apply(const real x, Sweep::Cell &reac) const;
     
+    //! Access interpolated raw data
+    data_point interpolateData(const real x) const;
+
     //! Position of first data point
     real startLocation() const;
 
@@ -106,9 +115,6 @@ public:
     real endLocation() const;
 
 private:
-    //! Type of one row of data
-    typedef fvector data_point;
-
     //! Type of full set of data
     typedef std::vector<data_point> data_collection;
 
@@ -135,8 +141,11 @@ private:
     data_point interpolate(const real x, const data_point &leftData,
                            const data_point &rightData) const;
 
-    //! Number of data items that are not species mass fractions
+    //! Number of data items that are not species mass or mol fractions or concentrations etc
     static const size_t sNumNonSpeciesData;
+
+    //! Number of data items that are not species mass or mol fractions or concentrations etc for FixedMixture input
+    static const size_t sNumNonSpeciesDataFixed;
 
     //! Is the data stored in this instance stored as mass fractions or molefractions
     bool mMassFractionData;
@@ -147,25 +156,34 @@ private:
     //! Index of temperature data in data_point
     static const size_t sTemperatureIndex;
 
-    //! Index of density data in data_point
+    //! Index of mass density data in data_point
     static const size_t sDensityIndex;
 
     //! Index of velocity data in data_point
     static const size_t sVelocityIndex;
 
-    //! Index of velocity data in data_point
+    //! Index of PAH formation rate in data_point
     static const size_t sPAHFormationIndex;
 
-    //! Index of velocity data in data_point
+    //! Index of overall molar concentration (FixedMixture only)
+    static const size_t sMolarDensityIndex;
+
+    //! Index of Temperature gradient in data_point
     static const size_t sGradientTemperatureIndex;
 
-    //! Index of velocity data in data_point
+    //! Index of pressure in data_point (FixedMixture only)
+    static const size_t sPressureIndex;
+
+    //! Index of mixture fraction diffusion coefficient (flamelet model) in data_point
     static const size_t sMixFracDiffCoeffIndex;
 
-    //! Index of velocity data in data_point
+    //! Index of viscosity in data_point (FixedMixture only)
+    static const size_t sViscosityIndex;
+
+    //! Index of mixture fraction gradient (flamelent model) in data_point
     static const size_t sGradientMixFracIndex;
 
-    //! Index of velocity data in data_point
+    //! Index of Laplacian of mixture fraction (flamelet model) in data_point
     static const size_t sLaplacianMixFracIndex;
 
 };
