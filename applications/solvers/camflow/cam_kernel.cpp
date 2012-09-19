@@ -82,6 +82,7 @@ int main(int argc, char *argv[])
     CamModels models;
     CamSoot cSoot;
 
+    //Prints out the temperature profile specified in the camflow.xml file
     try
     {
         cm.readInput(fCamFlow, cc, cg, convert, ca, cb, cp, config, cSoot);
@@ -93,6 +94,8 @@ int main(int argc, char *argv[])
     }
 
     //read mechanism, thermo and trasnport data
+    //For a batch reactor, transport properties do not have to be read in
+    //Prints out the chemistry, thermodynamic and transport data after being successfully parsed.
     if (config.getConfiguration() == config.BATCH_CV)
     {
         Sprog::IO::MechanismParser::ReadChemkin(fChem, mech, fThermo, 1);
