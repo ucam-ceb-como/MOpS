@@ -442,7 +442,7 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
 
 // Calculate the adiabatic temperature change rate due to the
 // species source terms.
-real PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
+Mops::real PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
 {
     if (r.EnergyEquation() == Reactor::Adiabatic) {
         // Adiabatic temperature model.

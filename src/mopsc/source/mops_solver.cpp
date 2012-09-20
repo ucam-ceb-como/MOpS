@@ -92,7 +92,7 @@ void Solver::Reset(Reactor &r)
 
 // ERROR TOLERANCES.
 
-real Solver::ATOL() const
+Mops::real Solver::ATOL() const
 {
     return m_atol;
 }
@@ -103,7 +103,7 @@ void Solver::SetATOL(real atol)
     m_ode.SetATOL(atol);
 }
 
-real Solver::RTOL() const
+Mops::real Solver::RTOL() const
 {
     return m_rtol;
 }
@@ -176,7 +176,7 @@ std::vector<std::string> Solver::ReturnKeptSpecies()
 // UNDER-RELAXATION.
 
 // Returns the under-relaxation coefficient.
-real Solver::UnderRelaxCoeff(void) const
+Mops::real Solver::UnderRelaxCoeff(void) const
 {
     return m_rlx_coeff;
 }
