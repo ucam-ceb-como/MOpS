@@ -67,18 +67,11 @@ int Geometry::LocalGeometry1d::calcDestination(const Direction direction) const 
     return mGeom->calcDestination(mIndex, direction);
 }
 
-/*
- * This method is mainly provided for use in diffusion process jump rate
- * calculations.  It checks whether a zero spatial gradient condition is imposed
- * on the solution at a particular point and direction, which would ensure no
- * diffusion.
- *
- *\param[in]    direction       Direction in which to look at gradient conditions
- *
- *\return       True iff there is a zero gradient condition
+/*!
+ *\return       Position of cell centre
  */
-bool Geometry::LocalGeometry1d::zeroGradient(const Direction direction) const {
-    return mGeom->zeroGradient(mIndex, direction);
+Geometry::real Geometry::LocalGeometry1d::cellCentre() const {
+    return mGeom->cellCentre(mIndex);
 }
 
 /*!

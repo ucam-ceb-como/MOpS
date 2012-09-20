@@ -71,7 +71,10 @@ public:
     LocalGeometry1d(const Geometry1d &geom, const size_t cell_index);
 
     //! True is solution is assumed to be spatially homogeneous in direction.
-    bool zeroGradient(const Direction direction) const;
+    //bool zeroGradient(const Direction direction) const;
+
+    //! Centre of current cell
+    real cellCentre() const;
 
     //! Find index of destination cell
     int calcDestination(const Direction direction) const;
