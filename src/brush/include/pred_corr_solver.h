@@ -82,7 +82,8 @@ public:
                    const size_t corrector_iterations,
                    const real rtol, const real atol,
                    const bool split_diffusion, const real drift_correction,
-                   const bool split_advection, const bool strang_splitting);
+                   const bool split_advection, const bool strang_splitting,
+                   const bool cstr_transport);
 
     //! Advance solution to specified time
     void solve(Reactor1d &reac, const real t_start, const real t_stop, const int n_steps,
@@ -120,6 +121,13 @@ private:
                                 const std::vector<const Sweep::Cell*> & neighbouring_cells,
                                 Sweep::Particle& sp, Sweep::rng_type &rng) const;
     
+    //! Move particle to centre of this or next cell according to CSTR probabilities
+    void updateParticlePositionCSTR(const real t_start, const real t_stop, const Sweep::Cell &mix,
+                                    const Sweep::Mechanism &mech,
+                                    const Geometry::LocalGeometry1d & geom,
+                                    const std::vector<const Sweep::Cell*> & neighbouring_cells,
+                                    Sweep::Particle& sp, Sweep::rng_type &rng) const;
+
     /*!
      *  \brief Lists of particles due to be added to cells
      *
@@ -204,6 +212,9 @@ private:
 
     //! True if transport  splitting should be Strang (second order), otherwise first order splitting is used
     bool mStrangTransportSplitting;
+
+    //! True if transport should be CSTR like random jumps between cell centres.
+    bool mCSTRTransport;
 
 }; //class PredCorrSolver
 } //namespace Brush

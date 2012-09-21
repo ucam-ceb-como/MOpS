@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-#  Copyright (C) 2011 Robert I A Patterson.
+#  Copyright (C) 2012 Robert I A Patterson.
 #
 #
 # Licence:
@@ -38,12 +38,12 @@ use warnings;
 
 
 # Clean up any outputs from previous simulations
-my @outputFiles = glob("regress4a*");
+my @outputFiles = glob("regress4b*");
 if($#outputFiles > 0) {
   system("rm @outputFiles");
 }
 
-print "Additive kernel test problem\n";
+print "CSTR transport for additive kernel test problem\n";
 
 # Path of executable should be supplied as first argument to this script
 my $program = $ARGV[0];
@@ -55,7 +55,7 @@ my @simulationCommand = ($program,
                          "-d", "regress4/chemsoln4.dat",
                          "-s", "regress4/sweep4.xml",
                          "-t", "regress4/therm.dat",
-                         "-b", "regress4/brush4a.xml",
+                         "-b", "regress4/brush4b.xml",
                          "-a", "regress4/partsoln4.xml",
                          "-e", "1066");
 
@@ -64,7 +64,7 @@ system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";
 
 # Parse the moments file
 my $momentFile;
-open($momentFile, "<regress4a1189_partstats.csv") or die "ERR: failed to open moment file: $!";
+open($momentFile, "<regress4b1189_partstats.csv") or die "ERR: failed to open moment file: $!";
 
 my @m1samples;
 
@@ -122,7 +122,7 @@ if(abs($var - 2.219e-43) > 1e-43) {
 }
 
 # Clean outputs, there should always be some files to delete.
-@outputFiles = glob("regress4a*");
+@outputFiles = glob("regress4b*");
 system("rm @outputFiles");
 
 #print "All tests passed\n";
