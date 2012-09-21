@@ -387,7 +387,7 @@ unsigned int ODE_Solver::GetNSensitivities() const
 
 // ERROR TOLERANCES.
 
-real ODE_Solver::ATOL() const
+Mops::real ODE_Solver::ATOL() const
 {
     return m_atol;
 }
@@ -397,7 +397,7 @@ void ODE_Solver::SetATOL(real atol)
     m_atol = atol;
 }
 
-real ODE_Solver::RTOL() const
+Mops::real ODE_Solver::RTOL() const
 {
     return m_rtol;
 }

@@ -754,7 +754,7 @@ void SensitivityAnalyzer::ReadSensMatrix(std::ifstream &fin, const unsigned int 
 
 // Parameter pointer to array of real. This is needed by CVODES.
 // CVODES will access and change these parameters.
-real * SensitivityAnalyzer::ParamsPtr()
+Mops::real * SensitivityAnalyzer::ParamsPtr()
 {
     return m_params;
 }
@@ -804,7 +804,7 @@ SensitivityAnalyzer::SensitivityType SensitivityAnalyzer::ProblemType()
 }
 
 // Parameter scaling factors. approx by original params.
-real * SensitivityAnalyzer::ParamBarsPtr()
+Mops::real * SensitivityAnalyzer::ParamBarsPtr()
 {
     return m_parambars;
 }

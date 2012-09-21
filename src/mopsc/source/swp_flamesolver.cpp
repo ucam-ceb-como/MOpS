@@ -406,7 +406,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
  *              that is for which it should be reasonable to use the gas object.
  */
 
-real FlameSolver::linInterpGas(Sweep::real t,
+Mops::real FlameSolver::linInterpGas(Sweep::real t,
                                Sprog::Thermo::IdealGas &gas) const
 {
     // Get the time point after the required time.
