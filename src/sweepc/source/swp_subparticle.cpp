@@ -28,15 +28,13 @@ using namespace Sweep;
 
 // Default constructor (protected).
 SubParticle::SubParticle(void)
-: m_primary(NULL),
-  m_createt(0.0), m_time(0.0)
+: m_primary(NULL)
 {
 }
 
 // Initialising constructor.
 SubParticle::SubParticle(real t, const Sweep::ParticleModel &model)
-: m_primary(NULL),
-  m_createt(0.0), m_time(0.0)
+: m_primary(NULL)
 {
     m_primary = new AggModels::Primary(t, model);
 }
@@ -44,8 +42,6 @@ SubParticle::SubParticle(real t, const Sweep::ParticleModel &model)
 // Initialising constructor (from Primary particle).
 SubParticle::SubParticle(Sweep::AggModels::Primary &pri)
 {
-    m_createt = pri.CreateTime();
-    m_time = pri.CreateTime();
     m_primary    = &pri;
 }
 
@@ -90,9 +86,6 @@ SubParticle &SubParticle::operator=(const SubParticle &rhs)
             delete m_primary; m_primary = NULL;
         }
 
-        m_createt = rhs.m_createt;
-        m_time = rhs.m_time;
-
     }
 
 
@@ -118,7 +111,6 @@ void SubParticle::setPrimaryPtr(Sweep::AggModels::Primary *const pri) {m_primary
 void SubParticle::SetTime(real t)
 {
     m_primary->SetTime(t);
-    m_time = t;
 }
 
 // PARTICLE ADJUSTMENT AND PROCESSES.
@@ -201,9 +193,6 @@ void SubParticle::UpdateCache(void)
 {
     // Get cache from primary particle.
     m_primary->UpdateCache();
-
-    m_createt = m_primary->CreateTime();
-    m_time    = m_primary->LastUpdateTime();
 }
 
 /*!
@@ -242,16 +231,6 @@ void SubParticle::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
-        real val;
-
-        // Write create time.
-        val = (double)m_createt;
-        out.write((char*)&val, sizeof(val));
-
-        // Write last update time.
-        val = (double)m_time;
-        out.write((char*)&val, sizeof(val));
-
         if (m_primary != NULL) {
             // Write primary particle to stream.
             out.write((char*)&trueval, sizeof(trueval));
@@ -280,19 +259,9 @@ void SubParticle::Deserialize(std::istream &in, const Sweep::ParticleModel &mode
 
         unsigned int n = 0;
         const unsigned int trueval  = 1;
-        real val;
 
         switch (version) {
             case 0:
-                // Read create time.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_createt = val;
-
-                // Read last update time.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_time = val;
-
-
                 // Read if this sub-particle had a primary particle
                 // or two sub-particle children.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -331,16 +300,6 @@ void SubParticle::init(void)
     releaseMem();
 }
 
-// PARTICLE CREATE TIME.
-
-// Returns the particle create time.
-real SubParticle::CreateTime() const {return m_createt;}
-
-
-// LAST UPDATE TIME.
-
-// Returns the particle last update time.
-real SubParticle::LastUpdateTime() const {return m_time;}
 // PARTICLE COMPOSITION.
 
 // Returns the composition vector.
