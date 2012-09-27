@@ -135,16 +135,6 @@ public:
     //! Returns the ith tracked value.  Returns 0.0 if i invalid.
     real Values(unsigned int i) const;
 
-    // PARTICLE CREATE TIME.
-
-    // Returns the particle create time.
-    real CreateTime(void) const;
-
-
-    // LAST UPDATE TIME.
-
-    // Returns the last update time of the particle.
-    real LastUpdateTime(void) const;
 
     // PARTICLE OPERATIONS.
 
@@ -236,11 +226,7 @@ protected:
     void setPrimaryPtr(Sweep::AggModels::Primary *const pri);
 
 private:
-    //! Time at which particle was created (earliest part).
-    real m_createt;
 
-    //! Last time particle was updated.  Required for LPDA.
-    real m_time;
 
 };
 }

@@ -119,6 +119,17 @@ public:
     //! Set statistical weight
     void setStatisticalWeight(real wt) {m_StatWeight = wt;}
 
+    // CREATE TIME
+    //! Time particle was created.
+    real CreateTime(void) const {return m_createt;}
+
+    // LAST UPDATE TIME FOR LPDA
+    //! Time at which LPDA was last performed on this particle.
+    void SetTime(real t);
+
+    //! Time at which LPDA was last performed on this particle.
+    real LastUpdateTime(void) const {return mLPDAtime;}
+
     // COAG COUNT
     //! Number of coagulations since count was reset
     unsigned int getCoagCount() const;
@@ -129,6 +140,9 @@ public:
     //! Reset count of coagulation events
     void resetCoagCount() {m_CoagCount=0;}
 
+
+    // Recalculate derived properties from the primary particle
+    void UpdateCache();
 
     // READ/WRITE/COPY.
 
@@ -159,6 +173,12 @@ private:
 
     //! Number of coagulations experienced by this particle
     unsigned int m_CoagCount;
+
+    //! Time at which particle was created (earliest part).
+    real m_createt;
+
+    //! Last time particle was updated.  Required for LPDA.
+    real mLPDAtime;
 
     // Can't create a particle without knowledge of the components
     // and the tracker variables.

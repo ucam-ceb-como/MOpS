@@ -60,6 +60,8 @@ Particle::Particle(void)
 , m_PositionTime(0.0)
 , m_StatWeight(1.0)
 , m_CoagCount(0)
+, m_createt(0.0)
+, mLPDAtime(0.0)
 {
 }
 
@@ -70,6 +72,8 @@ Particle::Particle(real time, const Sweep::ParticleModel &model)
 , m_PositionTime(0.0)
 , m_StatWeight(1.0)
 , m_CoagCount(0)
+, m_createt(0.0)
+, mLPDAtime(0.0)
 {
 }
 
@@ -84,6 +88,8 @@ Particle::Particle(real time, real weight, const Sweep::ParticleModel &model)
 , m_PositionTime(0.0)
 , m_StatWeight(weight)
 , m_CoagCount(0)
+, m_createt(0.0)
+, mLPDAtime(0.0)
 {
 }
 
@@ -95,6 +101,8 @@ Particle::Particle(Sweep::AggModels::Primary &pri)
 , m_StatWeight(1.0)
 , m_CoagCount(0)
 {
+    m_createt = pri.CreateTime();
+    mLPDAtime = pri.CreateTime();
 }
 
 // Copy constructor.
@@ -124,6 +132,8 @@ Particle::Particle(std::istream &in, const Sweep::ParticleModel &model)
         in.read(reinterpret_cast<char*>(&m_PositionTime), sizeof(m_PositionTime));
         in.read(reinterpret_cast<char*>(&m_StatWeight), sizeof(m_StatWeight));
         in.read(reinterpret_cast<char*>(&m_CoagCount), sizeof(m_CoagCount));
+        in.read(reinterpret_cast<char*>(&m_createt), sizeof(m_createt));
+        in.read(reinterpret_cast<char*>(&mLPDAtime), sizeof(mLPDAtime));
     }
     else {
         throw std::invalid_argument("Input stream not ready \
@@ -317,6 +327,8 @@ Particle &Particle::operator=(const Sweep::Particle &rhs)
         m_PositionTime = rhs.m_PositionTime;
         m_StatWeight = rhs.m_StatWeight;
         m_CoagCount = rhs.m_CoagCount;
+        m_createt = rhs.m_createt;
+        mLPDAtime = rhs.mLPDAtime;
     }
     return *this;
 }
@@ -332,6 +344,30 @@ Particle &Particle::operator=(const Sweep::Particle &rhs)
 void Particle::setPositionAndTime(const real x, const real t) {
     m_Position = x;
     m_PositionTime = t;
+}
+
+/*!
+ * Set last LPDA update time; function name is historical (and confusing).
+ *
+ *@param[in]    t   Time to which LPDA has just been performed
+ */
+void Particle::SetTime(real t)
+{
+    SubParticle::SetTime(t);
+    mLPDAtime = t;
+}
+
+/*!
+ *  Recalculates the derived properties from the unique properties.
+ *  This function moves down the tree of subparticles from the top to the bottom.
+ */
+void Particle::UpdateCache(void)
+{
+    // Get cache from primary particle.
+    SubParticle::UpdateCache();
+
+    m_createt = m_primary->CreateTime();
+    mLPDAtime    = m_primary->LastUpdateTime();
 }
 
 /*!
@@ -390,6 +426,8 @@ void Particle::Serialize(std::ostream &out) const
         out.write((char*)&m_PositionTime, sizeof(m_PositionTime));
         out.write((char*)&m_StatWeight, sizeof(m_StatWeight));
         out.write((char*)&m_CoagCount, sizeof(m_CoagCount));
+        out.write(reinterpret_cast<const char*>(&m_createt), sizeof(m_createt));
+        out.write(reinterpret_cast<const char*>(&mLPDAtime), sizeof(mLPDAtime));
     }
     else {
         throw std::invalid_argument("Output stream not ready \
