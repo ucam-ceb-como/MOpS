@@ -889,12 +889,13 @@ void BintreePrimary::UpdateCache(BintreePrimary *root)
  * Tech. 18:25-47, who give the calculation of dmob in the FM, SF and
  * transition regime.
  *
- * Currently, only the SF calculation is used, as the majority of experimental
+ * Currently, only the FM calculation is used, as the majority of experimental
  * systems which measure dmob run at continuum conditions.
  *
  * dmob,SF = 0.9 * dpri * sqrt(Df/(Df+2)) * npri^(1/Df)
  * dmob,FM = dpri * sqrt(0.802 * (npri - 1) + 1)
  *
+ *@return   Mobility diameter of particle
  */
 real BintreePrimary::MobDiameter() const
 {
@@ -904,11 +905,20 @@ real BintreePrimary::MobDiameter() const
     if (m_leftchild == NULL && m_parent == NULL) {
         dmob = m_diam;
     } else {
+        // Presently hard-coded as T, P are abstracted from this
+        // function's view
+        // @TODO: somehow give this function access to Kn(T, P, d)
 
-        // SF regime mobility diameter
-        dmob *= 0.9 * m_primarydiam / (real)m_numprimary;
-        dmob *= sqrt(m_pmodel->GetFractDim() / (m_pmodel->GetFractDim() + 2));
-        dmob *= pow(m_numprimary, (1.0/m_pmodel->GetFractDim()));
+        if (false) {
+            // SF regime mobility diameter
+            dmob *= 0.9 * m_primarydiam / (real)m_numprimary;
+            dmob *= sqrt(m_pmodel->GetFractDim() / (m_pmodel->GetFractDim() + 2));
+            dmob *= pow(m_numprimary, (1.0/m_pmodel->GetFractDim()));
+        } else {
+            // FM regime mobility diameter
+            dmob *= m_primarydiam / (real)m_numprimary;
+            dmob *= sqrt(0.802*(m_numprimary-1) + 1);
+        }
 
         if (dmob < m_diam) dmob = m_diam;
 

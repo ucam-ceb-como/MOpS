@@ -184,6 +184,7 @@ int main(int argc, char* argv[])
     real diffusionCorrection = 0.0; // Ito version, Fick's law is 1.0
     bool splitAdvection = false;
     bool strangTransport = false;
+    bool CSTRTransport = false; // Default to continuous transport
     Sweep::Stats::IModelStats::StatBound statBound;
 
     try {
@@ -207,6 +208,17 @@ int main(int argc, char* argv[])
         } else {
             throw std::runtime_error("A <runs> element must be supplied to indicate number of paths");
         }
+
+        // Transport type
+        node = root->GetFirstChild("transporttype");
+        if(node != NULL) {
+            if("continuous" == node->Data())
+                CSTRTransport = false;
+            else if (("cstr" == node->Data()) || ("CSTR" == node->Data()))
+                CSTRTransport = true;
+            else
+                throw std::runtime_error("Transport type in <transporttype> must be CSTR or continuous");
+        } // silently default to continuous transport if no input
 
         // Number of corrector iterations
         node = root->GetFirstChild("iter");
@@ -444,7 +456,7 @@ int main(int argc, char* argv[])
     //========= Now run the simulation ===========================
     Simulator sim(runs, iterations, timeIntervals, initialReactor, *pInitialChem,
                   outputFileBaseName, statBound, splitDiffusion, diffusionCorrection,
-                  splitAdvection, strangTransport);
+                  splitAdvection, strangTransport, CSTRTransport);
     sim.runSimulation(randomSeedOffset);
 
     //========= Output ===========================================
@@ -473,5 +485,6 @@ void printUsage() {
     std::cout << "-t THERMODYNAMICAL-DATA-FILE\n";
     std::cout << "-v verbosity (Integer indicating level of debug info, higher integers mean more output)\n";
     std::cout << "--premix-chem initial chemistry solution file is in Chemkin format\n";
+    std::cout << "--premix-alpha initial chemistry solution file as Chemkin format, but with alpha column instead of wDotA4\n";
 }
 

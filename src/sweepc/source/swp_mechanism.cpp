@@ -582,7 +582,9 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
     // Resize vector to hold all species and set all rates to zero.
     rates.resize(m_species->size()+2, 0.0);
     fill(rates.begin(), rates.end(), 0.0);
-    fvector::iterator idrho = rates.begin() + (rates.size()-1);
+
+    // Rate of change of total concentration
+    real idrho(0.0);
 
     // Precalculate parameters.
     real invVolNA = 1.0 / (sys.SampleVolume() * NA);
@@ -602,7 +604,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
              j!=(*i)->Reactants().end(); ++j) {
             real dc = rate * (real)j->second * invVolNA;
             rates[j->first] -= dc;
-            *idrho -= dc;
+            idrho -= dc;
         }
 
         // Loop over all products, adding their contributions.
@@ -610,7 +612,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
              j!=(*i)->Products().end(); ++j) {
             real dc = rate * (real)j->second * invVolNA;
             rates[j->first] += dc;
-            *idrho += dc;
+            idrho += dc;
         }
     }
 
@@ -626,7 +628,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
              j!=(*i)->Reactants().end(); ++j) {
             real dc = rate * (real)j->second * invVolNA;
             rates[j->first] -= dc;
-            *idrho -= dc;
+            idrho -= dc;
         }
 
         // Loop over all products, adding their contributions.
@@ -634,14 +636,15 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
              j!=(*i)->Products().end(); ++j) {
             real dc = rate * (real)j->second * invVolNA;
             rates[j->first] += dc;
-            *idrho += dc;
+            idrho += dc;
         }
     }
 
     // Now convert to changes in mole fractions.
     real invrho = 1.0 / sys.GasPhase().MolarDensity();
     for (unsigned int k=0; k!=m_species->size(); ++k) {
-        rates[k] = (invrho * rates[k]) - (invrho * invrho * sys.GasPhase().SpeciesConcentration(k) * (*idrho));
+        // Quotient rule for dXk/dt = d(Ck/CT)/dt
+        rates[k] = (invrho * rates[k]) - (invrho * invrho * sys.GasPhase().SpeciesConcentration(k) * idrho);
     }
 }
 

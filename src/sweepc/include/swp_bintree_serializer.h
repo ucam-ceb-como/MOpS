@@ -52,9 +52,6 @@
 #include <stack>
 
 
-// Namespaces
-using namespace std;
-
 namespace Sweep
 {
 namespace AggModels
@@ -76,7 +73,7 @@ public:
      * @param out   Output binary stream
      * @param root  Pointer to the root node of the tree
      */
-    void Serialize(ostream &out, const ParticleClass* root) const
+    void Serialize(std::ostream &out, const ParticleClass* root) const
     {
 
         if (out.good()) {
@@ -97,7 +94,7 @@ public:
      * @param root  Pointer to the root node of the tree
      * @param node  Pointer to the node to be investigated
      */
-    void SerializeLoop(ostream &out, const ParticleClass* root, const ParticleClass* node) const
+    void SerializeLoop(std::ostream &out, const ParticleClass* root, const ParticleClass* node) const
     {
         // Serialize the state space first
         node->SerializePrimary(out);
@@ -138,7 +135,7 @@ public:
 
         // Check the particle was found..
         if (! status) {
-            throw runtime_error("Couldn't find particle index "
+            throw std::runtime_error("Couldn't find particle index "
                     "(Sweep::AggModels::BinTreeSerializer::GetParticleIndex).");
         }
 
@@ -184,7 +181,7 @@ public:
      * @param in    Input binary stream
      * @param root  Pointer to the root node of the tree
      */
-    void Deserialize(istream &in, ParticleClass *root, const Sweep::ParticleModel &model)
+    void Deserialize(std::istream &in, ParticleClass *root, const Sweep::ParticleModel &model)
     {
         if (in.good()) {
             // Read version
@@ -194,7 +191,7 @@ public:
             if (version == 1) {
                 DeserializeLoop(in, root, root, model);
             } else {
-                throw runtime_error("Incorrect version number "
+                throw std::runtime_error("Incorrect version number "
                         "(Sweep::AggModels::BinTreeSerializer::Deserialize).");
             }
 
@@ -207,7 +204,7 @@ public:
      * @param root  Pointer to the root node of the tree
      * @param node  Pointer to the current node being investigated
      */
-    void DeserializeLoop(istream &in, ParticleClass* root, ParticleClass* node, const Sweep::ParticleModel &model)
+    void DeserializeLoop(std::istream &in, ParticleClass* root, ParticleClass* node, const Sweep::ParticleModel &model)
     {
         // Read in the state space first
         node->DeserializePrimary(in, model);

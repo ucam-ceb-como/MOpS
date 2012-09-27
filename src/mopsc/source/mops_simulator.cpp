@@ -59,6 +59,7 @@
 #include "gpc_species.h"
 #include "swp_particle_image.h"
 #include <algorithm>
+#include <time.h>
 
 #include <boost/functional/hash.hpp>
 #include <boost/random/mersenne_twister.hpp>
@@ -132,12 +133,12 @@ void Simulator::SetMaxPartCount(unsigned int n) {m_pcount = n;}
 /*!
  *@return       Value which particle number density is not expected to exceed \f$\mathrm{m}^{-3}\f$
  */
-real Simulator::MaxM0(void) const {return m_maxm0;}
+Mops::real Simulator::MaxM0(void) const {return m_maxm0;}
 
 /*!
  *@param[in]    m0      Value which particle number density is not expected to exceed \f$\mathrm{m}^{-3}\f$
  */
-void Simulator::SetMaxM0(real m0) {m_maxm0 = m0;}
+void Simulator::SetMaxM0(Mops::real m0) {m_maxm0 = m0;}
 
 // CONSOLE INTERVAL.
 

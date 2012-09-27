@@ -51,12 +51,24 @@ if test -n "$2"
     echo "changed directory to $2"
 fi
 
-# Run the test
+# Run the first test
 ./regress4/regress4a.pl $program
 result=$?
 if((result!=0))
   then
     echo "Simulation script 4a failed"
+    echo "**************************"
+    echo "****** TEST FAILURE ******"
+    echo "**************************"
+    exit $result
+fi
+
+# Run the second test
+./regress4/regress4b.pl $program
+result=$?
+if((result!=0))
+  then
+    echo "Simulation script 4b failed"
     echo "**************************"
     echo "****** TEST FAILURE ******"
     echo "**************************"

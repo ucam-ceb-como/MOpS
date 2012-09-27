@@ -376,7 +376,7 @@ Brush::MooNMDInterface::particle_reactor_pointer Brush::MooNMDInterface::RunPart
     reac.ReplaceChemistry(chemInterpolator, true);
 
     //======== Simulate to update the particle population =======
-    Brush::PredCorrSolver solver(chemInterpolator, 0, 0.0, 0.0, false, 0.0, true, true);
+    Brush::PredCorrSolver solver(chemInterpolator, 0, 0.0, 0.0, false, 0.0, true, true, false);
 
     // Need to make sure that transport is simulated on intervals that do not
     // always take particles over cell boundaries.

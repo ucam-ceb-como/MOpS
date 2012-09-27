@@ -70,7 +70,8 @@ using namespace Brush;
  *@param[in]    split_diffusion         True if diffusion is to be simulated via splitting
  *@param[in]    drift_adjustment        Only relevant when split_diffusion is true, see \ref mDiffusionDriftAdjustment
  *@param[in]    split_advection         True if advection is to be simulated via splitting
- *@param[in]    weighted_transport      Adjust weights during inter-cell transport to avoid killing/cloning particles
+ *@param[in]    strang_advection        Use Strang splitting between transport and particle processes
+ *@param[in]    cstr_transport          Transport between cell centres with CSTR random jumps
  *
  *@todo     Need generalisation to move away from using ResetChemistry
  */
@@ -87,13 +88,15 @@ Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
                                       const bool split_diffusion,
                                       const real drift_adjustment,
                                       const bool split_advection,
-                                      const bool strang_splitting)
+                                      const bool strang_splitting,
+                                      const bool cstr_transport)
     : mResetChemistry(reset_chem)
     , mDeferralRatio(10.0)
     , mSplitDiffusion(split_diffusion)
     , mDiffusionDriftAdjustment(drift_adjustment)
     , mSplitAdvection(split_advection)
     , mStrangTransportSplitting(strang_splitting)
+    , mCSTRTransport(cstr_transport)
 {}
 
 /*!
@@ -469,6 +472,52 @@ void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const rea
 
 
 /*!
+ * CSTR stands for Continuously Stirred Tank Reactor, a chemical engineering term
+ * referring to a perfectly mixed reactor.  Because it is perfectly mixed particles
+ * cannot be said to flow through the reactor, rather they have a residence time
+ * distribution.  In this case the expected residence time is taken as the length
+ * of the reactor divided by the velocity and each particle has a probability of
+ * leaving the reactor at each time step.  The probability is given by the ratio
+ * of the time step length to the expected residence time.
+ *
+ *@param[in]        t_start             Time at which position was last calculated by splitting
+ *@param[in]        t_stop              Time at which new position must be calculated
+ *@param[in]        mix                 Mixture in which the particle is moving
+ *@param[in]        mech                Mechanism specifying calculation of particle transport properties
+ *@param[in]        geom                Information on locations of surrounding cells
+ *@param[in]        neighbouringCells   Pointers to the contents of surrounding cells
+ *@param[in,out]    sp                  Particle requiring updated position
+ *@param[in,out]    rng                 Random number generator
+ *
+ *@pre      The expected residence time of the particle must be greater than the time step length.
+ */
+void Brush::PredCorrSolver::updateParticlePositionCSTR(const real t_start, const real t_stop, const Sweep::Cell &mix,
+                                                       const Sweep::Mechanism &mech,
+                                                       const Geometry::LocalGeometry1d & geom,
+                                                       const std::vector<const Sweep::Cell*> & neighbouringCells,
+                                                       Sweep::Particle& sp, Sweep::rng_type &rng) const
+{
+    // Time over which transport is occurring
+    const real dt = t_stop - t_start;
+
+    // Probability according to CSTR that particle leaves cell in this time step
+    const real p = mech.AdvectionVelocity(mix, sp, neighbouringCells, geom) * dt / geom.cellVolume();
+    assert(p <= 1);
+
+    // The particle will either end up at the centre of this cell or the next
+    real newPosition = geom.cellCentre();
+
+    // Generate a sample to decide if the particle leaves
+    boost::random::bernoulli_distribution<real> leaveCell(p);
+    if(leaveCell(rng))
+        // Add the distance to the next cell centre
+        newPosition += geom.calcSpacing(Geometry::right);
+
+    sp.setPositionAndTime(newPosition, t_stop);
+}
+
+
+/*!
  *@param[in]        t_start             Time at which position was last calculated by splitting
  *@param[in]        t_stop              Time at which new position must be calculated
  *@param[in,out]    mix                 Mixture from which the particles are moving
@@ -497,7 +546,10 @@ Brush::PredCorrSolver::inflow_lists_vector
     const Sweep::Ensemble::iterator itPartEnd = mix.Particles().end();
     while(itPart != itPartEnd ) {
         // Actually calculate new position of particle
-        updateParticlePosition(t_start, t_stop, mix, mech, localGeom, neighbouringCells, **itPart, rng);
+        if(mCSTRTransport)
+            updateParticlePositionCSTR(t_start, t_stop, mix, mech, localGeom, neighbouringCells, **itPart, rng);
+        else
+            updateParticlePosition(t_start, t_stop, mix, mech, localGeom, neighbouringCells, **itPart, rng);
 
         // Find the index of the cell into which the particle is moving
         const int destination = geom.containingCell((*itPart)->getPosition());

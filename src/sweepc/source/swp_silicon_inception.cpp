@@ -432,6 +432,7 @@ void SiliconInception::adjustGasPhase(Sweep::Cell &sys,
         const SiliconInception::SiliconData &species,
         real wt) const
 {
+    if(!sys.FixedChem()) {
     // This method requires write access to the gas phase, which is not
     // standard in sweep.  This means it cannot use the generic gas
     // phase interface
@@ -458,6 +459,7 @@ void SiliconInception::adjustGasPhase(Sweep::Cell &sys,
 
     // Now adjust the gas-phase!
     gas->SetConcs(newConcs);
+    }
 }
 
 /*!

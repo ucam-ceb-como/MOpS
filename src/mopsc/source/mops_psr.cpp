@@ -113,7 +113,7 @@ Mops::PSR &Mops::PSR::operator=(const Mops::PSR &rhs)
 // RESIDENCE TIME.
 
 // Returns the reactor residence time.
-real PSR::ResidenceTime(void) const
+Mops::real PSR::ResidenceTime(void) const
 {
     return m_restime;
 }

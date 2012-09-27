@@ -67,7 +67,8 @@ public:
               const std::string& output_file,
               const Sweep::Stats::IModelStats::StatBound &stat_bound,
               const bool split_diffusion, const real drift_adjustment,
-              const bool split_advection, const bool strang_splitting);
+              const bool split_advection, const bool strang_splitting,
+              const bool cstr_transport);
 
     //! Run the simulation paths and store output
     void runSimulation(const size_t seed_offset);
@@ -120,6 +121,9 @@ private:
 
     //! Whether to use Strang splitting for transport between cells
     bool mStrangTransportSplitting;
+
+    //! True if transport should be CSTR like random jumps between cell centres.
+    bool mCSTRTransport;
 
     //! Use specified output steps
     Mops::timevector mOutputTimeSteps;

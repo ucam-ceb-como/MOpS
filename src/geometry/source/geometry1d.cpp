@@ -343,35 +343,6 @@ Geometry::real Geometry::Geometry1d::calcSpacing(const size_t cell_index, const 
     return space;
 }
 
-/*
- * This method is mainly provided for use in diffusion process jump rate
- * calculations.  It checks whether a zero spatial gradient condition is imposed
- * on the solution at a particular point and direction, which would ensure no
- * diffusion.
- *
- *\param[in]    cell_index      Cell for which to look for gradient conditions
- *\param[in]    direction       Direction in which to look at gradient conditions
- *
- *\return       True iff there is a zero gradient condition
- */
-bool Geometry::Geometry1d::zeroGradient(const size_t cell_index,
-                                        const Direction direction) const {
-    // Start off assuming spatial solution gradients are possible
-    bool isZero = false;
-
-    // If the left hand end has a Neumann boundary there will be no leftwards
-    // gradient
-    if(cell_index == 0 && direction == left && mLeftBoundary == neumann)
-        isZero = true;
-
-    // If the right hand end has a Neumann boundary there will be no rightwards
-    // gradient
-    if(cell_index == (numCells() - 1) && direction == right && mRightBoundary == neumann)
-        isZero = true;
-
-    return isZero;
-}
-
 /*!
  * Note that cells are taken to be closed at their left or lower end and open
  * at their right or upper end.  This method need to be consistent with the
