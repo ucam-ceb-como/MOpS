@@ -47,10 +47,12 @@
 
 #include "swp_params.h"
 #include "swp_coords.h"
-#include "swp_subparticle.h"
 
 namespace Sweep
 {
+//forward delcarations
+class Particle;
+
 namespace Imaging
 {
 class ParticleImage;
@@ -77,7 +79,7 @@ public:
     // the minimum branch depth below node.
     void Insert(real radius);
 
-	void CopySPT(const SubParticle *sp);
+	void CopySPT(const Particle *sp);
 
     // Returns true if this node is a leaf (has no children).
     bool IsLeaf(void) const;

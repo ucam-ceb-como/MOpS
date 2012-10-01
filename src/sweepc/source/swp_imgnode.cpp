@@ -41,8 +41,8 @@
 */
 
 #include "swp_imgnode.h"
-#include "swp_subparticle.h"
-#include "swp_property_indices.h"
+#include "swp_particle.h"
+#include "swp_primary.h"
 
 
 using namespace Sweep;
@@ -98,7 +98,7 @@ void ImgNode::Clear(void)
 
 
 
-void ImgNode::CopySPT(const SubParticle *sp)
+void ImgNode::CopySPT(const Particle *sp)
 {
     setRadius( (sp->Primary()->Property(Sweep::iDsph))*0.5e9);       //convert to nm
 }

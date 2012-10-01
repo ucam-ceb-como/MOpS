@@ -46,15 +46,21 @@
 
 #include "swp_params.h"
 #include "swp_particle_model.h"
-#include "swp_subparticle.h"
+#include "swp_property_indices.h"
+
 #include "camxml.h"
+
 #include <vector>
 #include <list>
 #include <iostream>
 
 namespace Sweep
 {
-class Ensemble;
+
+namespace AggModels {
+    // Forward declaration
+    class Primary;
+}
 
 /*!
  * \brief Particle which can move around, coagulate and have internal structure
@@ -64,8 +70,7 @@ class Ensemble;
  * for different particle types.  Alternatively an interface may be defined and then
  * subclassed.  This will require some thought. 
  */
-
-class Particle : public SubParticle
+class Particle
 {
 public:
 	// Constructors.
@@ -89,7 +94,7 @@ public:
         );
 
 	// Destructor.
-    ~Particle(void);
+    virtual ~Particle(void);
     
     //! Create a new particle using the model according to the xml data
     static Particle* createFromXMLNode(const CamXML::Element& xml,
@@ -100,6 +105,73 @@ public:
 
     // Operators.
     Particle &operator=(const Particle &rhs);
+
+
+    // PRIMARY PARTICLE CHILD.
+
+    //! Pointer to the child primary particle
+    Sweep::AggModels::Primary *const Primary();
+    //! Pointer to the child primary particle
+    const Sweep::AggModels::Primary *const Primary() const;
+
+    // BASIC PROPERTIES.
+
+    //! Returns the particle equivalent sphere diameter.
+    real SphDiameter(void) const;
+
+    //! Returns the collision diameter.
+    real CollDiameter(void) const;
+
+    //! Returns the mobility diameter.
+    real MobDiameter(void) const;
+
+    //! Returns the surface area.
+    real SurfaceArea(void) const;
+
+    //! Returns the equivalent sphere surface area, based on the volume.
+    real SphSurfaceArea(void) const;
+
+    //! Returns the volume.
+    real Volume(void) const;
+
+    //! Returns the mass.
+    real Mass(void) const;
+
+    //! Returns the number of surface reaction sites.
+    real GetSites(void) const;
+
+    //! Returns the sintering rate (silica).
+    real GetSintRate(void) const;
+
+    //! Returns the coverage fraction
+    real GetCoverageFraction(void) const;
+
+    //! Geometric average diameter of aggregate sub-units
+    real avgeomdiam(double) const;
+
+
+    //! Returns the property with the given ID.
+    real Property(Sweep::PropID id) const;
+
+
+
+    // COMPOSITION.
+
+    //! Returns the composition vector.
+    const fvector &Composition(void) const;
+
+    //! Returns the ith component value.  Returns 0.0 if i invalid.
+    real Composition(unsigned int i) const;
+
+
+    // TRACKER VALUES.
+
+    //! Returns the tracked values vector.
+    const fvector &Values(void) const;
+
+    //! Returns the ith tracked value.  Returns 0.0 if i invalid.
+    real Values(unsigned int i) const;
+
 
     // POSITION DATA
     
@@ -140,6 +212,36 @@ public:
     //! Reset count of coagulation events
     void resetCoagCount() {m_CoagCount=0;}
 
+    // PARTICLE OPERATIONS.
+
+    //! Adjust particle composition as a result of surface reactions and other processes
+    unsigned int Adjust(
+        const fvector &dcomp,             // Composition changes.
+        const fvector &dvalues,           // Tracker variable changes.
+        rng_type &rng,                    // Random number for leaf node
+        unsigned int n                    // Number of times to perform adjustment.
+        );
+
+    //! Adjust particle composition as a result of IntParticle processes
+    unsigned int AdjustIntPar(
+        const fvector &dcomp,             // Composition changes.
+        const fvector &dvalues,           // Tracker variable changes.
+        rng_type &rng,                    // Random number for leaf node
+        unsigned int n                    // Number of times to perform adjustment.
+        );
+
+    //! Combines this particle with another.
+    Particle &Coagulate(const Particle &sp, rng_type &rng);
+
+    //! Sinter over a given time step
+    void Sinter(
+        real dt,         // Delta-t for sintering.
+        Cell &sys, // System which defines particle's environment.
+        const Processes::SinteringModel &model, // Sintering model to use.
+        real wt,     // Statistical weight
+        rng_type &rng   // Random number generator
+        );
+
 
     // Recalculate derived properties from the primary particle
     void UpdateCache();
@@ -170,6 +272,9 @@ private:
 
     //! Statistical weight of particle units: \f$ m^{-3}\f$
     real m_StatWeight;
+
+    //! Primary particle containing physical details of this particle
+    Sweep::AggModels::Primary *m_primary;
 
     //! Number of coagulations experienced by this particle
     unsigned int m_CoagCount;

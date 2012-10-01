@@ -49,7 +49,6 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_silicon_inception.cpp
                   source/swp_sintering_model.cpp
                   source/swp_solver.cpp
-                  source/swp_subparticle.cpp
                   source/swp_surface_reaction.cpp
                   source/swp_surfvol_primary.cpp
                   source/swp_surfvolhydrogen_primary.cpp

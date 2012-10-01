@@ -41,9 +41,11 @@
 */
 
 #include "swp_surface_reaction.h"
+
 #include "swp_particle_process.h"
 #include "swp_mechanism.h"
 #include "swp_process_type.h"
+#include "swp_primary.h"
 
 #include <cmath>
 #include <stdexcept>

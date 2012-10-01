@@ -43,6 +43,7 @@
 #include "swp_dimer_inception.h"
 
 #include "swp_mechanism.h"
+#include "swp_primary.h"
 
 #include <boost/random/uniform_01.hpp>
 
