@@ -84,9 +84,11 @@ int main(int argc, char *argv[])
     string chemfile("chem.inp");
     string thermfile("therm.dat");
 	
-   
-    string chemSurfFile("surfchem.inp"); // added by mm864
-    string thermSurfFile("surftherm.dat"); // added by mm864
+    /*
+	* To take the additional inputs of surface chemistry 
+	*/
+    string chemSurfFile("NOT READ"); // added by mm864
+    string thermSurfFile("NOT READ"); // added by mm864
     
     string settfile("mops.inx");
     string swpfile("sweep.xml");
@@ -200,6 +202,14 @@ int main(int argc, char *argv[])
         }
     }
 
+	if (surfaceCapability == 1)
+    {
+
+	// Now set the surface chemistry input and surface thermodynamics inputs
+			chemSurfFile.assign("surfchem.inp"); // added by mm864
+			thermSurfFile.assign("surftherm.dat"); // added by mm864
+		}
+	
     // Define all the objects required to run the simulation.
     Solver *solver   = NULL; // The solver.
     Reactor *reactor = NULL; // Reactor to solve.

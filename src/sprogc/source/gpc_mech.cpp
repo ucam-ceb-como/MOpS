@@ -250,7 +250,7 @@ void Mechanism::SetUnits(Sprog::UnitSystem u)
 							arr.A *= pow(1.0e-6, gasReactantStoich) * pow (1.0e-4, (surfReactantStoich - total_surf_Reactant_stoich_to_Replace -1 +total_ford_surf ));
 							}
 							else{
-							arr.A *= pow(1.0e-4, surfReactantStoich) * pow (1.0e-6, (gasReactantStoich - total_gas_Reactant_stoich_to_Replace -1 +total_ford_gas ));
+							arr.A *= pow(1.0e-4, surfReactantStoich - 1) * pow (1.0e-6, (gasReactantStoich - total_gas_Reactant_stoich_to_Replace +total_ford_gas ));
 							}
 						}
 						
@@ -264,8 +264,16 @@ void Mechanism::SetUnits(Sprog::UnitSystem u)
 							arr.A *= pow(1.0e-6, gasReactantStoich) * pow (1.0e-4, (surfReactantStoich - total_surf_Reactant_stoich_to_Replace -1 +total_ford_surf ));
 							}
 							else{
-							arr.A *= pow(1.0e-4, surfReactantStoich) * pow (1.0e-6, (gasReactantStoich - total_gas_Reactant_stoich_to_Replace -1 +total_ford_gas ));
+							arr.A *= pow(1.0e-4, surfReactantStoich - 1) * pow (1.0e-6, (gasReactantStoich - total_gas_Reactant_stoich_to_Replace +total_ford_gas ));
 							}
+							  /*
+
+							  if ( m_rxns[irxn]->IsSURF() == false){ // Gas phase reaction
+							  arr.A *= pow (1.0e-6, (gasReactantStoich - total_gas_Reactant_stoich_to_Replace +total_ford_gas ));  
+
+							  }
+							  */
+
 						
 						}
 					

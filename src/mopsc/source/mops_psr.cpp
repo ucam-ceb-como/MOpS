@@ -276,7 +276,7 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot) const
    
 	if (Area == 0){ 
 		for (unsigned int i=0; i!=m_nsp; ++i) {
-        ydot[i] = ((wdot[i] - (y[i]*wtot)) +
+		  ydot[i] = ((wdot[i] - (y[i]*wtot)) +
                   // Inflow/Outflow term:
                   (m_in->Mixture()->GasPhase().Density() * m_invrt *
                    (m_in->Mixture()->GasPhase().MoleFraction(i) - y[i]) )) / y[m_iDens];
@@ -286,10 +286,10 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot) const
 	else {
 
 		for (unsigned int i=0; i!=m_mech->GasMech().GasSpeciesCount(); ++i) {
-		ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) + (sdot[i] * Area /(Volume * y[m_iDens]))   -  ( y[i] * stot * Area/( y[m_iDens] * Volume * avrMW) ) +
+		  ydot[i] = ((wdot[i] - (y[i]*wtot))  + (sdot[i] * Area /(Volume))   -  ( y[i] * stot * Area/( Volume) ) +
                   // Inflow/Outflow term:
                   (m_in->Mixture()->GasPhase().Density() * m_invrt *
-                   (m_in->Mixture()->GasPhase().MoleFraction(i) - y[i]) ) / y[m_iDens];
+                   (m_in->Mixture()->GasPhase().MoleFraction(i) - y[i]) )) / y[m_iDens];
 		}
 
 		for (unsigned int i=m_mech->GasMech().GasSpeciesCount(); i!=m_nsp; ++i) {
@@ -316,8 +316,13 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot) const
     // Density derivative.
     if (m_constv) {
         // Constant volume.
-        ydot[m_iDens] =  wtot  + stot * Area / (Volume*avrMW) + (m_invrt * (m_in->Mixture()->GasPhase().Density() - y[m_iDens]));
-    } else {
+		if (Area != 0){
+        ydot[m_iDens] =  wtot  + stot * Area / (Volume) + (m_invrt * (m_in->Mixture()->GasPhase().Density() - y[m_iDens]));
+		}
+		else{
+		 ydot[m_iDens] =  wtot  + (m_invrt * (m_in->Mixture()->GasPhase().Density() - y[m_iDens]));
+		}
+	} else {
         // Constant pressure.
         ydot[m_iDens] = 0.0;
     }
@@ -328,11 +333,6 @@ void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
 {
     static fvector wdot, Hs, Cps, sdot;
     real wtot = 0.0, Cp = 0.0, H = 0.0, stot =0.0, avrMW = 0.0;
-
-	// Currently direct input of  Volume and ARea 
-
-	//double Volume = 1.4/1000; // m^3
-	//double Area = 5.9; // m^2
 
     // Calculate mixture thermodynamic properties.
     m_mix->GasPhase().CalcHs_RT(y[m_iT], Hs);
@@ -365,7 +365,7 @@ void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
 	}
 	} else{
 		for (unsigned int i=0; i!=m_mech->GasMech().GasSpeciesCount(); ++i) {
-		ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) + (sdot[i] * Area /(Volume * y[m_iDens]))   -  ( y[i] * stot * Area/( y[m_iDens] * Volume * avrMW) ) +
+		ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) + (sdot[i] * Area /(Volume * y[m_iDens]))   -  ( y[i] * stot * Area/( y[m_iDens] * Volume) ) +
                   // Inflow/Outflow term:
                   (m_in->Mixture()->GasPhase().Density() * m_invrt *
                    (m_in->Mixture()->GasPhase().MoleFraction(i) - y[i]) ) / y[m_iDens];
@@ -383,7 +383,7 @@ void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
 
 	for (unsigned int i=0; i!=m_nsp; ++i) {
         // Temperature derivative.
-        ydot[m_iT] += Volume * wdot[i] * Hs[i] + Area * sdot[i] * Hs[i] * m_mech->GasMech().Species(i)->MolWt();
+        ydot[m_iT] += Volume * wdot[i] * Hs[i] + Area * sdot[i] * Hs[i] /* * m_mech->GasMech().Species(i)->MolWt()*/;
     }
 
     // Complete temperature derivative (including inflow/outflow term).
@@ -396,9 +396,14 @@ void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
 
     // Calculate density derivative.
     if (m_constv) {
-        // Constant volume.
-        ydot[m_iDens] = wtot  + stot * Area / (Volume*avrMW) + (m_invrt * (m_in->Mixture()->GasPhase().Density() - y[m_iDens]));
-    } else {
+		// Constant volume.
+		if (Area != 0){
+        ydot[m_iDens] = wtot  + stot * Area / (Volume) + (m_invrt * (m_in->Mixture()->GasPhase().Density() - y[m_iDens]));
+		}
+		else{
+		 ydot[m_iDens] =  wtot  + (m_invrt * (m_in->Mixture()->GasPhase().Density() - y[m_iDens]));
+		}
+	} else {
         // Constant pressure (use EoS to evaluate).(THIS INCLUDES THE SURFACE SOURCE TERM in dT/dt) 
         ydot[m_iDens] = - y[m_iDens] * ydot[m_iT] / y[m_iT];
     }

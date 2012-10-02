@@ -402,6 +402,9 @@ public:
 
     // READ/WRITE/COPY FUNCTIONS.
 
+	 //! Indicates whether the pre-exponential should be converted to cgs
+    bool ConvertPreexponential(void) const;
+	
     // Creates a copy of the species object.
     Reaction *Clone(void) const;
 

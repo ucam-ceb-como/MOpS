@@ -82,7 +82,7 @@ IO::ChemkinReader::ChemkinReader
 }
 
 
-IO::ChemkinReader::ChemkinReader
+IO::ChemkinReader::ChemkinReader // Added by mm864
 (
     const string chemfile,
 	const string chemSurfFile, // Added by mm864
@@ -101,7 +101,7 @@ IO::ChemkinReader::ChemkinReader
     globalUnits_("NO GLOBAL UNITS"), 
     surfUnits_("NO GLOBAL UNITS") // Added by mm864 	
 {
-    checkChemSurfFile();
+	checkChemSurfFile();
 }
 
 bool IO::ChemkinReader::checkChemFile()
@@ -153,7 +153,7 @@ bool IO::ChemkinReader::checkChemFile()
 
 bool IO::ChemkinReader::checkChemSurfFile()
 {
-    cout << "Checking the format of the chem.inp file." << endl;
+    cout << "Checking the format of the surfchem.inp file." << endl;
 
     const regex fileStructure
     (
@@ -184,7 +184,7 @@ bool IO::ChemkinReader::checkChemSurfFile()
 
     smatch result;
     if(regex_search(chemfilestring_, result, unsupported))
-    {
+    { // List all the types of reactions in gas phase chemistry that SPROG cannot do 
         if (result[1] == "TDEP") throw regex_error("TDEP not supported yet.");
         if (result[2] == "EXCI") throw regex_error("EXCI not supported yet.");
         if (result[3] == "JAN") throw regex_error("JAN not supported yet.");
@@ -210,7 +210,7 @@ bool IO::ChemkinReader::checkChemSurfFile()
 
     smatch Surfresult;
     if(regex_search(chemSurfFilestring_, Surfresult, unsupported))
-    { // You need to modify later (leave it now)
+    { // List all the types of reactions in surface chemistry that SPROG cannot do 
         if (result[1] == "TDEP") throw regex_error("TDEP not supported yet.");
         if (result[2] == "EXCI") throw regex_error("EXCI not supported yet.");
         if (result[3] == "JAN") throw regex_error("JAN not supported yet.");
@@ -267,7 +267,7 @@ void IO::ChemkinReader::check()
     cout << "Data output to speciesParsed and reactionsParsed." << endl;
 }
 
-void IO::ChemkinReader::read()
+void IO::ChemkinReader::read() // added by mm864
 {
 
     readGlobalUnits();

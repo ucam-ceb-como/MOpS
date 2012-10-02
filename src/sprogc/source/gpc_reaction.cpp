@@ -1243,6 +1243,7 @@ void Reaction::WriteDiagnostics(std::ostream &out) const
             out.write(data.c_str(), data.length());
         }
 
+				
 	// Phase Involved.
 	data = "Phase involved:\n";
 	out.write(data.c_str(), data.length());
@@ -1264,6 +1265,23 @@ void Reaction::WriteDiagnostics(std::ostream &out) const
         out.write(data.c_str(), data.length());
     }
 }
+
+/* @brief       Should the pre-exponential factor be converted to cgs?
+ *
+ * Only three-body reactions include the [M] term explicitly in their rate
+ * expression, that is, falloff reactions DO NOT require conversion of the
+ * high-pressure pre-exponential's units $A_\infty$.
+ *
+ * @return
+ */
+bool Reaction::ConvertPreexponential(void) const {
+    bool ans(false);
+    if ((m_usetb) && (m_fotype == Sprog::Kinetics::None)) {
+        ans = true;
+    }
+    return ans;
+}
+
 
 /*!
 @param[in]      out             Output stream for file creation.
@@ -1333,11 +1351,13 @@ void Reaction::WriteReducedMechReacs(std::ostream &out, std::vector<std::string>
             }
 
             // Forward Arrhenius coefficients.
-            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0 + (m_usetb?1.0:0.0)) << " " << m_arrf.n << " " << m_arrf.E / 4.184E7 / 1.0e-7 << "\n";
+            out << " " << m_arrf.A / pow(1.0e-6, ReactantStoich() - 1.0
+                    + (ConvertPreexponential()?1.0:0.0)) << " " << m_arrf.n  << " " << m_arrf.E  / 4.184E7 / 1.0e-7 << "\n";
 
             // Reverse Arrhenius coefficients.
             if (m_arrr != NULL)
-                out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0 + (m_usetb?1.0:0.0)) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " /\n";
+                 out << "Rev / " << m_arrr->A / pow(1.0e-6, ProductStoich() - 1.0
+                    + (ConvertPreexponential()?1.0:0.0)) << " " << m_arrr->n << " " << m_arrr->E / 4.184E7 / 1.0e-7 << " /\n";
         }
 
         // Forward LT parameters.

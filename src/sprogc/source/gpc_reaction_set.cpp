@@ -404,7 +404,7 @@ real ReactionSet::GetMolarProdRates(const fvector &rop,
 real ReactionSet::GetSurfaceMolarProdRates(const fvector &rop,
                                     fvector &sdot) const
 {
-    unsigned int k;
+    unsigned int k, l, m;
     const RxnStoichMap *mu;
     RxnStoichMap::const_iterator i;
     real stot = 0.0;
@@ -427,24 +427,26 @@ real ReactionSet::GetSurfaceMolarProdRates(const fvector &rop,
         //   second = stoichiometry of species in reaction.
         for (i=mu->begin(); i!= mu->end(); i++) {
 
-	  if (((*i).first) >= size_gas_rxns){ // surface reaction only
-	  			
+			if (((*i).first) >= size_gas_rxns){ // surface reaction only
+
             sdot[k] += (*i).second * rop[(*i).first];
-	    //unsigned int idx = (*i).first; // for debugging
-	    //cout << "is surface? " << m_rxns[idx]->IsSURF() << endl;
-	      //cout << "stoich " << (*i).second << endl;
-	      // cout << "ROP Surf " << rop [(*i).first] <<  "Surface s= " << sdot[k] << endl;
+			//unsigned int idx = (*i).first; // for debugging
+			//cout << "is surface? " << m_rxns[idx]->IsSURF() << endl;
+			//cout << "stoich " << (*i).second << endl;
+			// cout << "ROP Surf " << rop [(*i).first] <<  "Surface s= " << sdot[k] << endl;
+			}
+	  
 	  }
 
 			
-	}
+	
 	//	cout << m_mech->GetSpecies(k)->Name() << " " << sdot[k] << endl;
     }
 
 	for (k=0; k!=m_mech->GasSpeciesCount(); ++k) {
 	  // cout << "sp included in stot" << m_mech->GetSpecies(k)->Name() << endl;
         // Sum up total production rate for gas species only 
-        stot += sdot[k] /* * m_mech->Species(k)->MolWt()*/; // Must time the molecular weight
+        stot += sdot[k] /* * m_mech->Species(k)->MolWt()*/; // Don't times the molecular weight
     }
 
 	//	std::cout << "stot " << stot << endl;
@@ -649,7 +651,7 @@ void ReactionSet::GetRatesOfProgress(real density,
 		Fordcoeff = m_rxns[i]->FORDElement(l).F_k;
 
 	      } 
-	      if (m_rxns[i]->Reactants()[k].Mu() == 0){ // Remember that the stoich if the are explicitly written as two identical reactant species, one will be set to 0. This can be the bug
+	      if (m_rxns[i]->Reactants()[k].Mu() == 0){ // Remember that the stoich if they are explicitly written as two identical reactant species, one will be set to 0. This can be a bug
 		flag = false; 
 	      }
 	      if (flag) break;
@@ -986,7 +988,7 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 	  unsigned int NumberOfPhase = m_rxns[j]->PhaseCount();
 	  unsigned int NumberOfSpecies = m_rxns[j]->DeltaStoichCount();
 	  double result_surf =1.0;
-	  double result_gas= 0.0; 
+	  double result_gas= 1.0; 
 	  double deltaSigma_n_i;
 	  double K_c_i = 0.0;
 	   
@@ -1003,10 +1005,12 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 		  string spName = m_rxns[j]->DeltaStoich(n)->Name();
 		  string species_phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName(); 
 
-		  if ( (species_phName.compare(phName) == 0) ) { 
+		  if ( (species_phName.compare(phName) == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0 || m_rxns[j]->DeltaStoich(n)->ProdStoich() > 0 ) ) { // This should be specific for each surf phase
+		  
+		  // The later is since if they are written as A + A -> B + C, then the first reactant ReacStoich will be 2 and the second will be 0. The same with the products if they are expressed in A + C -> B + B. Suppose that a reaction has O2 + Pt -> Pt + O + O, then the above will still hold provided that DeltaStoich object for 'Pt Reactant' and 'Pt Product' stored separately.   
 		    
 		    double v_k_i= m_rxns[j]->GetDeltaStoich(spName)->TotalStoich();
-		    deltaSigma_n_i += v_k_i;  
+		    deltaSigma_n_i += v_k_i*m_rxns[j]->Mechanism()->GetSpecies(spName)->SiteOccupancy();  
 		    v_k_i = -v_k_i; // take minus of it     
 		    result1 *= pow( m_rxns[j]->Mechanism()->GetSpecies(spName)->SiteOccupancy(), v_k_i );
 		  }
@@ -1027,7 +1031,7 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 		  string spName =  m_rxns[j]->DeltaStoich(n)->Name();
 		  string species_phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName(); 
 
-		  if ( ( species_phName.compare(phName) == 0) ) { 
+		  if ( ( species_phName.compare(phName) == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0 || m_rxns[j]->DeltaStoich(n)->ProdStoich() > 0 )) { 
 
 		    double v_k_i= m_rxns[j]->GetDeltaStoich(spName)->TotalStoich();
 		    sum_v_i_gas += v_k_i;  
@@ -1063,7 +1067,7 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 	      }
 
 	      // Calculate the reverse rate constant.
-	      kr[j]  = exp(min(kr[j], log(1.0e250)));
+	      kr[j]  = exp(min(kr[j], log(1.0e250))); // Calculating K_pi
 	      kr[j] *= K_c_i;
 	      kr[j]  = kf[j] / max(kr[j], 1.0e-250);
 	    }
@@ -1091,9 +1095,15 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
       //STICK parameters 
       for (im=m_stick_rxns.begin(); im!=m_stick_rxns.end(); ++im) {
         j = *im;
+		
+		
+	
 	kf[j] = m_rxns[j]->Arrhenius().A *
 	  exp((m_rxns[j]->Arrhenius().n * lnT) -
 	      (m_rxns[j]->Arrhenius().E * invRT));
+	
+	
+	
 	const double val = kf[j]; 
 	double gamma = std::min(1.0, val); 
 	// cout << "gamma_i = " << gamma << std::endl; 
@@ -1247,15 +1257,22 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 
 void ReactionSet::calcCOVERAGE(real T, const real *const x, fvector &kf) const
 {
-  unsigned int i, n;
+
+   RxnMap::const_iterator im;
+  unsigned int i, n, j;
   int k;
   real invRT;
+  double lnT = log(T);
+  real RT;
+  
     switch (m_mech->Units()) {
         case SI :
             invRT = 1.0 / (R * T);
+			RT= R*T; 
             break;
         case CGS :
             invRT = 1.0 / (R_CGS * T);
+			RT= R_CGS*T;
             break;
         default:
             // Something has gone wrong to end up here.
@@ -1263,12 +1280,116 @@ void ReactionSet::calcCOVERAGE(real T, const real *const x, fvector &kf) const
 
     }
 	
-  RxnMap::const_iterator im;
-  double lnT = log(T);
+	//STICK parameters 
+      for (im=m_stick_rxns.begin(); im!=m_stick_rxns.end(); ++im) {
+        j = *im;
+		
+	if (m_rxns[j]->CoverageElement(0).Epsilon != 0){ // ONLY VALID IF STICK FOLLOWED BY 1 COV 
+	
+	 // A_modification is always 0 (an assumption)
+	 double E_modification = m_rxns[j]->Arrhenius().E;
+	 
+	  
+	  string COVsp = m_rxns[j]->CoverageElement(0).spName;
+	  unsigned int idx = m_rxns[j]->Mechanism()->FindSpecies(COVsp);
+	  string specName = m_rxns[j]->Mechanism()->GetSpecies(idx)->Name(); // use this and if  to double check
+	      if (specName.compare(COVsp) == 0){
+         
+		double Epsilon = m_rxns[j]->CoverageElement(0).Epsilon;
+		E_modification += Epsilon * x[idx] ;
+              
+	      }      
+	
+	 
+	 
+	 
+	 kf[j] = m_rxns[j]->Arrhenius().A *
+       exp((m_rxns[j]->Arrhenius().n * lnT) -
+	   (E_modification * invRT));
+	
+
+	
+	
+	const double val = kf[j]; 
+	double gamma = std::min(1.0, val); 
+	// cout << "gamma_i = " << gamma << std::endl; 
+	double W_k = 0.0;
+	unsigned int NumberOfSpecies = m_rxns[j]->DeltaStoichCount();
+	// cout << "DeltaStoichCount= " << NumberOfSpecies << endl; // for debugging
+	for (n=0; n!=NumberOfSpecies; ++n) {
+	  string spName = m_rxns[j]->DeltaStoich(n)->Name(); 
+	  string species_phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName();   
+	  if((species_phName.compare("gas") == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0)){
+	  
+	    W_k += m_rxns[j]->Mechanism()->GetSpecies(spName)->CalcMolWt(); 
+	  }
+	}
+	//cout << "Wk " << W_k << endl; // for debugging
+
+	unsigned int NumberOfPhase = m_rxns[j]->Mechanism()->PhaseCount();
+	double totalSiteDensity = 0.0;
+	for (n=0; n!=NumberOfPhase; ++n) {
+	  string phName = m_rxns[j]->Mechanism()->Phase(n)->Name(); 
+	  // cout << "phname " << phName << endl; // for debugging
+	  if ((m_rxns[j]->Mechanism()->FindID(phName)).compare("s") ==0 ){
+	    totalSiteDensity += m_rxns[j]->Mechanism()->FindSiteDensity(phName);
+	  }
+	}
+	// cout << "GammaTot " << totalSiteDensity << endl; // for debugging
+	double m_val = 0.0; 
+	double sigma_pw_vk = 1.0;
+	for (n=0; n!=NumberOfSpecies; ++n) {
+	  string spName = m_rxns[j]->DeltaStoich(n)->Name();
+	  string phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName();   
+	  string species_id = m_rxns[j]->Mechanism()->FindID(phName);   
+	  if((species_id.compare("s") == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0)){
+	     
+	    double stocc =  m_rxns[j]->Mechanism()->FindSiteOccup(spName);
+		
+		if (m_rxns[j]->IsFORD()){ // If FORD TYPE 
+		 	
+		double ford_surf = 0.0;
+		double stoich_to_replace = 0.0;
+		double v = m_rxns[j]->DeltaStoich(n)->ReacStoich();
+						for (int count_Ford = 0; count_Ford!= m_rxns[j]->FORDCount();count_Ford++){
+						
+						string Fordspecies = m_rxns[j]->FORDElement(count_Ford).spName;
+								
+								if (Fordspecies.compare(spName) == 0){
+								ford_surf = m_rxns[j]->FORDElement(count_Ford).F_k;
+								v = ford_surf;
+								}				
+						}
+		m_val += v;
+		sigma_pw_vk *= pow (stocc, v); 
+		}
+		else // Not FORD type 
+		{
+		m_val += m_rxns[j]->DeltaStoich(n)->ReacStoich(); 	
+		sigma_pw_vk *= pow (stocc, m_rxns[j]->DeltaStoich(n)->ReacStoich()); 
+		}
+		
+		
+	  }
+	}
+	// cout << "m= " << m_val << endl; // for debugging
+	// cout << "product sigma= " << sigma_pw_vk << endl; // for debugging
+
+	kf[j] = gamma*sigma_pw_vk*sqrt(double ((RT)/ (2*PI*W_k)) )/(pow(totalSiteDensity ,m_val));
+
+	
+      }
+	 }
+	
+	
+ 
+  
 
   for (im=m_cov_rxns.begin(); im!=m_cov_rxns.end(); ++im){
      i = *im;
 
+	
+	 
      kf[i] = m_rxns[i]->Arrhenius().A *
        exp((m_rxns[i]->Arrhenius().n * lnT) -
 	   (m_rxns[i]->Arrhenius().E * invRT));
@@ -1277,7 +1398,7 @@ void ReactionSet::calcCOVERAGE(real T, const real *const x, fvector &kf) const
      //cout << "COV count =" << m_rxns[i]->COVERAGECount() << endl; 
 
      double val = 1.0;
-      
+
 		
 	for (n=0; n!=m_rxns[i]->COVERAGECount(); ++n){ 
 	  
@@ -1334,7 +1455,7 @@ void ReactionSet::calcTB_Concs(real density, const real *const x,
         else
         {
             // This reaction has no third body requirement.
-            tbconcs[j] = density*1.0; // Changed as recommended by Will Menz
+            tbconcs[j] = density; // Changed as recommended by Will Menz
         }
     }
 }
