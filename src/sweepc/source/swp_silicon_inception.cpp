@@ -373,7 +373,7 @@ void SiliconInception::GenerateSpeciesData(const Sweep::Mechanism &mech)
     SetInceptingVolume(mech);
 
     // Resize the counter vectors
-    m_reacs.resize(spec->size(), 0.0);
+    m_reacs.resize(spec->size(), 0);
     m_concs.resize(spec->size(), 0.0);
 }
 

@@ -46,6 +46,7 @@
 namespace Sprog
 {
     // Enumeration of different systems of units.
+    // Only SI should be used, the parsers should perform the convertion to SI.
     enum UnitSystem {SI,CGS};
 
     // Enumeration of different concentration units.
@@ -56,6 +57,6 @@ namespace Sprog
 
     // Enumeration of different pressure units.
     enum PressureUnits {Pascal, Bar, Atm};
-};
+}
 
 #endif

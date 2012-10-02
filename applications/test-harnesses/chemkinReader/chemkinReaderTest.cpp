@@ -63,9 +63,10 @@ int main(int argc, char* argv[])
     // handling code in a test program.
     const std::string chemfile(argv[1]);
     const std::string thermfile(argv[2]);
-    const std::string transfile(argv[3]);
+    const std::string transfile(4 == argc?argv[3]:"NOT READ");
 
     IO::ChemkinReader chemkinReader(chemfile,thermfile,transfile);
+    
     chemkinReader.read();
     chemkinReader.check();
 

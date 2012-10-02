@@ -189,7 +189,7 @@ public:
 
         //! Default constructor
         SiliconData() :
-            _fracIndex(0), _name(" "), _track(0.0), _diam(0.0) {}
+            _fracIndex(0), _name(" "), _track(0), _diam(0.0) {}
     };
 
     // READ/WRITE/COPY.
