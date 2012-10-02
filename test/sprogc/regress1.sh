@@ -15,11 +15,11 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
 fi
 
 # run sprogc on a very simple problem
-$program 
+"$program"
 
 # capture exit value of simulation
 simulationResult=$?

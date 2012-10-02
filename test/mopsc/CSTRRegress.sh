@@ -47,13 +47,13 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 
 cd cstrtest
 
-$program -p
+"$program" -p
 simulationResult=$?
 
 if((simulationResult==0)) 

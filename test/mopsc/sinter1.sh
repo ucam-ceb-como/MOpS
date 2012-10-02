@@ -52,17 +52,17 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 
 cd sinter1
 
-$program -p -strang -rr mops-finite.inx -s sweep-finite.xml
+"$program" -p -strang -rr mops-finite.inx -s sweep-finite.xml
 r1=$?
-$program -p -strang -rr mops-spherical.inx -s sweep-spherical.xml
+"$program" -p -strang -rr mops-spherical.inx -s sweep-spherical.xml
 r2=$?
-$program -p -strang -rr mops-nosinter.inx -s sweep-nosinter.xml
+"$program" -p -strang -rr mops-nosinter.inx -s sweep-nosinter.xml
 r3=$?
 
 if((r1==0 && r2==0 && r3==0))

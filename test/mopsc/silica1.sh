@@ -28,14 +28,13 @@ else
 fi
 
 # Second argument is working directory (required)
-cwd=`pwd`
 if [ -z "$2" ]; then
     echo "No working dir supplied to $0"
     exit 254
 else
-    wkdir=$2
+    wkdir="$2"
 fi
-cd $wkdir
+cd "$wkdir"
 
 ######################################################################
 # DEFINE FUNCTIONS
@@ -78,7 +77,7 @@ absErr="4.76906E+016"
 
 # Run calculation
 echo "Running MOPS for inception case."
-$program -p -strang -rr "mops-incep.inx" -s "sweep-incep.xml" -c "chem.inp" > /dev/null
+"$program" -p -strang -rr "mops-incep.inx" -s "sweep-incep.xml" -c "chem.inp" > /dev/null
 CheckErr $?
 
 # Parse CSV to check values.
@@ -104,7 +103,7 @@ errWater="0.01E-13"
 
 # Run calculation
 echo "Running MOPS for interparticle case."
-$program -p -strang -rr "mops-intp-sr.inx" -s "sweep-intp.xml" -c "chem-intp.inp" > /dev/null
+"$program" -p -strang -rr "mops-intp-sr.inx" -s "sweep-intp.xml" -c "chem-intp.inp" > /dev/null
 CheckErr $?
 
 # Parse CSV to check values.
@@ -139,7 +138,7 @@ errWater="0.01E-11"
 
 # Run calculation
 echo "Running MOPS for surface reaction case."
-$program -p -strang -rr "mops-intp-sr.inx" -s "sweep-sr.xml" -c "chem-intp.inp" > /dev/null
+"$program" -p -strang -rr "mops-intp-sr.inx" -s "sweep-sr.xml" -c "chem-intp.inp" > /dev/null
 CheckErr $?
 
 # Parse CSV to check values.
@@ -162,4 +161,3 @@ echo "SR passes."
 rm silica-intp-sr*
 
 echo "All tests passed! :D"
-cd $cwd

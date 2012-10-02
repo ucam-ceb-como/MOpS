@@ -21,7 +21,7 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 
@@ -62,7 +62,7 @@ cd $rundir
 
 # First run the executables:
 echo "Running 1-silica.."
-$exe -p -strang -ensemble -rr "mops-1-silica.inx" -s "sweep-1-silica.xml" > /dev/null
+"$exe" -p -strang -ensemble -rr "mops-1-silica.inx" -s "sweep-1-silica.xml" > /dev/null
 CheckErr $?
 
 # Get M0 from output file
@@ -94,7 +94,7 @@ rm $temp2
 
 # Run the calculation
 echo "Running second calculation..."
-$exe -p -strang -rr $temp1 -s "sweep-2-silica.xml" > /dev/null
+"$exe" -p -strang -rr $temp1 -s "sweep-2-silica.xml" > /dev/null
 CheckErr $?
 
 # Compare -part.csv files... they *should* be identical, except 

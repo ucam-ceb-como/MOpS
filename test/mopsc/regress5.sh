@@ -9,7 +9,7 @@ program=$1
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 
@@ -18,7 +18,7 @@ rm -f regression5a*
 
 
 echo "DSA for constant coagulation kernel"
-$program -flamepp -p -gp ./regress5/regress5.inp -rr ./regress5/regress5.inx -s ./regress5/regress5.xml -c ./regress5/chem.inp -t ./regress5/therm.dat
+"$program" -flamepp -p -gp ./regress5/regress5.inp -rr ./regress5/regress5.inx -s ./regress5/regress5.xml -c ./regress5/chem.inp -t ./regress5/therm.dat
 echo "Finished simulation"
 echo "========================"
 

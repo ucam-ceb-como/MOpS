@@ -23,11 +23,13 @@ end
 
 # Compare the strings of fields 3 to 10. They should match.
 (3..10).each do |i|
-    if (old[i] != new[i])
+    if (old[i].to_f != new[i].to_f)
       puts "Old value was #{old[i]}, but new value is #{new[i]}"
       puts "**************************"
       puts "****** TEST FAILURE ******"
       puts "**************************"
-      return 1
+      exit 1
     end
 end
+
+exit 0
