@@ -47,6 +47,8 @@
 #include "swp_silicon_inception.h"
 #include "swp_mechanism.h"
 #include "swp_params.h"
+#include "swp_primary.h"
+
 #include <boost/random/uniform_01.hpp>
 #include <boost/random/discrete_distribution.hpp>
 
@@ -432,6 +434,7 @@ void SiliconInception::adjustGasPhase(Sweep::Cell &sys,
         const SiliconInception::SiliconData &species,
         real wt) const
 {
+    if(!sys.FixedChem()) {
     // This method requires write access to the gas phase, which is not
     // standard in sweep.  This means it cannot use the generic gas
     // phase interface
@@ -458,6 +461,7 @@ void SiliconInception::adjustGasPhase(Sweep::Cell &sys,
 
     // Now adjust the gas-phase!
     gas->SetConcs(newConcs);
+    }
 }
 
 /*!

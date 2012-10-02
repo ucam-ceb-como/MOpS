@@ -909,7 +909,7 @@ real BintreePrimary::MobDiameter() const
         // function's view
         // @TODO: somehow give this function access to Kn(T, P, d)
 
-        if (true) {
+        if (false) {
             // SF regime mobility diameter
             dmob *= 0.9 * m_primarydiam / (real)m_numprimary;
             dmob *= sqrt(m_pmodel->GetFractDim() / (m_pmodel->GetFractDim() + 2));

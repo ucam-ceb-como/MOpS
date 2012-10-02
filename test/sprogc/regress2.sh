@@ -39,7 +39,7 @@ if [ -z "$2" ]; then
     echo "No working dir supplied to $0"
     exit 254
 else
-    wkdir=$2
+    wkdir="$2"
 fi
 
 # Define functions for collecting compare data
@@ -95,7 +95,7 @@ function CompareResults {
 #####################################################################
 ############# MAIN PROGRAM BODY #####################################
 #####################################################################
-cd $wkdir
+cd "$wkdir"
 
 # Define chem files for the test
 chemFiles="chem.3body.inp chem.lindemann.inp chem.troe.inp"
@@ -116,7 +116,7 @@ for f in $chemFiles; do
     echo "Running case $f."
     
     # Run calculation
-    $program -p -c "$f" > /dev/null
+    "$program" -p -c "$f" > /dev/null
     CheckErr $?
     
     # Use grep and cut to parse cSV

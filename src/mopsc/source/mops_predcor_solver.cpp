@@ -73,6 +73,9 @@ PredCorSolver::~PredCorSolver(void)
 // Initialises the solver to solve the given reactor.
 void PredCorSolver::Initialise(Reactor &r)
 {
+    // Ensure 'fixed-chemistry' is set so no stochastic adjustments are made
+    r.Mixture()->SetFixedChem(true);
+
     // Set up ODE solver.
     FlameSolver::Initialise(r);
     m_ode.Initialise(r);
@@ -117,6 +120,9 @@ void PredCorSolver::Reset(Reactor &r)
     m_srcterms_copy.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
     m_ode.SetExtSrcTerms(m_srcterms);
     m_ode_copy.SetExtSrcTerms(m_srcterms);
+
+    // Ensure 'fixed-chemistry' is set so no stochastic adjustments are made
+    r.Mixture()->SetFixedChem(true);
 
     // Clone the reactor.
     delete m_reac_copy;
@@ -352,10 +358,10 @@ void PredCorSolver::iteration(Reactor &r, real dt, Sweep::rng_type &rng)
 
     // Refresh from the copy of the ODE solver.
     m_ode = m_ode_copy;
-//    m_ode.ResetSolver();
+    //m_ode.ResetSolver();
 
     // Set source terms in ODE solver object.
-//    m_srcterms[0] = m_srcterms_copy[0];
+    //m_srcterms[0] = m_srcterms_copy[0];
     m_srcterms[1] = m_srcterms_copy[1];
     m_ode.SetExtSrcTerms(m_srcterms);
 
@@ -371,11 +377,12 @@ void PredCorSolver::iteration(Reactor &r, real dt, Sweep::rng_type &rng)
         // Set the stop time.    
         real ts2 = ts1+dt;
 
+        // Scale M0 according to gas-phase expansion.
+        r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity()
+                / r.Mixture()->GasPhase().MassDensity());
+
         // Run Sweep for this time step.
         Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech(), rng);
-
-        // Scale M0 according to gas-phase expansion.
-        r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity() / r.Mixture()->GasPhase().MassDensity());
     m_swp_ctime += calcDeltaCT(m_cpu_mark);
 
     // Now update the source terms at the end of the step.

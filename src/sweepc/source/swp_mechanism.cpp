@@ -582,7 +582,9 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
     // Resize vector to hold all species and set all rates to zero.
     rates.resize(m_species->size()+2, 0.0);
     fill(rates.begin(), rates.end(), 0.0);
-    fvector::iterator idrho = rates.begin() + (rates.size()-1);
+
+    // Rate of change of total concentration
+    real idrho(0.0);
 
     // Precalculate parameters.
     real invVolNA = 1.0 / (sys.SampleVolume() * NA);
@@ -602,7 +604,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
              j!=(*i)->Reactants().end(); ++j) {
             real dc = rate * (real)j->second * invVolNA;
             rates[j->first] -= dc;
-            *idrho -= dc;
+            idrho -= dc;
         }
 
         // Loop over all products, adding their contributions.
@@ -610,7 +612,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
              j!=(*i)->Products().end(); ++j) {
             real dc = rate * (real)j->second * invVolNA;
             rates[j->first] += dc;
-            *idrho += dc;
+            idrho += dc;
         }
     }
 
@@ -626,7 +628,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
              j!=(*i)->Reactants().end(); ++j) {
             real dc = rate * (real)j->second * invVolNA;
             rates[j->first] -= dc;
-            *idrho -= dc;
+            idrho -= dc;
         }
 
         // Loop over all products, adding their contributions.
@@ -634,14 +636,15 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
              j!=(*i)->Products().end(); ++j) {
             real dc = rate * (real)j->second * invVolNA;
             rates[j->first] += dc;
-            *idrho += dc;
+            idrho += dc;
         }
     }
 
     // Now convert to changes in mole fractions.
     real invrho = 1.0 / sys.GasPhase().MolarDensity();
     for (unsigned int k=0; k!=m_species->size(); ++k) {
-        rates[k] = (invrho * rates[k]) - (invrho * invrho * sys.GasPhase().SpeciesConcentration(k) * (*idrho));
+        // Quotient rule for dXk/dt = d(Ck/CT)/dt
+        rates[k] = (invrho * rates[k]) - (invrho * invrho * sys.GasPhase().SpeciesConcentration(k) * idrho);
     }
 }
 
@@ -837,7 +840,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
 
     	// Sinter the particles for the silica model (as no deferred process)
     	if (m_sint_model.IsEnabled()) {
-    		sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+    		sp.Sinter(dt, sys, m_sint_model, sp.getStatisticalWeight(), rng);
     	}
 
     	// Check particle is valid and recalculate cache.
@@ -854,7 +857,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
 
         // Sinter the particles for the silica model (as no deferred process)
         if (m_sint_model.IsEnabled()) {
-            sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+            sp.Sinter(dt, sys, m_sint_model, sp.getStatisticalWeight(), rng);
         }
 
         // Check particle is valid and recalculate cache.
@@ -897,7 +900,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
             // Perform sintering update.
             if (m_sint_model.IsEnabled()) {
 //				sp.UpdateFreeSurface();
-			    sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+			    sp.Sinter(dt, sys, m_sint_model, sp.getStatisticalWeight(), rng);
 				//sp.CreateTestTree();
 				//	 sp.FindRoot()->CheckTree();
 			    // cout << "check before sinter passed\n";

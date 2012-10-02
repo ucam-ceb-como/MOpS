@@ -47,25 +47,25 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 
-regress2/regress2a.pl $program
+regress2/regress2a.pl "$program"
 result2a=$?
 if((result2a!=0)) 
   then
     exit $result2a
 fi
 
-regress2/regress2b.pl $program
+regress2/regress2b.pl "$program"
 result2b=$?
 if((result2b!=0)) 
   then
     exit $result2b
 fi
 
-regress2/regress2c.pl $program
+regress2/regress2c.pl "$program"
 result2c=$?
 if((result2c!=0)) 
   then

@@ -49,36 +49,34 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 
 cd silica2
 rm -f silica*
 
-$program -p -strang -rr mops-fm.inx
+"$program" -p -strang -rr mops-fm.inx
 fmResult=$?
 
-$program -p -strang -rr mops-sf.inx
-sfResult=$?
-
-if((fmResult==0)) 
+if(($fmResult==0)) 
 then
   echo "Finished simulation"
 else
   echo "FM Simulation failed"
-  cd ..
-  exit $simulationResult
+  exit $fmResult
 fi
 echo "========================"
 
-if((fmResult==0)) 
+"$program" -p -strang -rr mops-sf.inx
+sfResult=$?
+
+if(($sfResult==0)) 
 then
   echo "Finished simulation"
 else
   echo "SF Simulation failed"
-  cd ..
-  exit $simulationResult
+  exit $sfResult
 fi
 echo "========================"
 
@@ -87,12 +85,11 @@ dos2unix "silica-sf-part.csv"
 perl test-silica2.pl
 postprocessResult=$?
 
-if((postprocessResult!=0)) 
+if(($postprocessResult!=0)) 
   then
-    cd ..
     exit $postprocessResult
 fi
 
 rm -f silica*
-cd ..
+
 exit 0

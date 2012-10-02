@@ -8,6 +8,7 @@ IF(WIN32)
   SET(Boost_ADDITIONAL_VERSIONS "1.47" "1.47.0")
   SET(BOOST_ROOT "C:/Program Files/boost")
   SET(Boost_USE_STATIC_LIBS TRUE)
+  SET(MSVC_BUILD_DIR "/Release")
 ELSE(WIN32)
   SET(CMAKE_MODULE_PATH $ENV{HOME})
   SET(BOOST_ROOT $ENV{HOME}/boost)
@@ -54,8 +55,8 @@ target_link_libraries(camflowGridGenerator ${Boost_LIBRARIES})
 
 # Regression tests for CamFlow
 
-add_test(camflow.hydrogenBatchReactor ${MOPSSUITE_SOURCE_DIR}/test/camflow/batchReactorRegress.sh ${EXECUTABLE_OUTPUT_PATH}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenBatchReactor)
-add_test(camflow.hydrogenFlamelet ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet.sh ${EXECUTABLE_OUTPUT_PATH}/camflow-app ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet)
+add_test(camflow.hydrogenBatchReactor sh ${MOPSSUITE_SOURCE_DIR}/test/camflow/batchReactorRegress.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/camflow-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenBatchReactor)
+add_test(camflow.hydrogenFlamelet sh ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/camflow-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet)
 
 
 ######### The Mops application ##########################
@@ -63,37 +64,37 @@ add_executable(mops-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/mopsc/mops.
 target_link_libraries(mops-app mops ${Boost_LIBRARIES})
 
 # Regression tests for Mops
-add_test(mops.regress1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.regress1 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.regress2 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress2.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.regress2 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress2.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.regress3 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress3.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.regress3 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress3.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.regress4 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress4.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.regress4 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress4.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.regress5 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress5.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.regress5 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress5.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.regress6 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress6.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.regress6 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress6.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.regress7 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress7.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.regress7 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress7.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.CSTRtest ${MOPSSUITE_SOURCE_DIR}/test/mopsc/CSTRRegress.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.CSTRtest sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/CSTRRegress.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.sinter1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/sinter1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.sinter1 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/sinter1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.pahtest1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.pahtest1 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.pahtest2 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest2.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.pahtest2 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest2.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.pahtest3 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest3.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.pahtest3 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest3.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.silica1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica1)
+add_test(mops.silica1 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica1)
 
-add_test(mops.silica2 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica2.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.silica2 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica2.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.bintree1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/bintree1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.bintree1 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/bintree1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
-add_test(mops.imaging1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/imaging1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc/imaging1)
+add_test(mops.imaging1 sh ${MOPSSUITE_SOURCE_DIR}/test/mopsc/imaging1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/imaging1)
 
 ########## The PAH-KMC Application ######################
 add_executable(PAHkmc-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/PAHkmc/kmc_model.cpp)
@@ -104,35 +105,35 @@ add_executable(brush-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/brush/brus
 target_link_libraries(brush-app brush ${Boost_LIBRARIES})
 
 # Regression tests for Brush
-add_test(brush.regress1 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress1.sh ${EXECUTABLE_OUTPUT_PATH}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
+add_test(brush.regress1 sh ${MOPSSUITE_SOURCE_DIR}/test/brush/regress1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} test/brush)
 
-add_test(brush.regress3 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress3.sh ${EXECUTABLE_OUTPUT_PATH}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
+add_test(brush.regress3 sh ${MOPSSUITE_SOURCE_DIR}/test/brush/regress3.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} test/brush)
 
-add_test(brush.regress4 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress4.sh ${EXECUTABLE_OUTPUT_PATH}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
+add_test(brush.regress4 sh ${MOPSSUITE_SOURCE_DIR}/test/brush/regress4.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} test/brush)
 
-add_test(brush.regress5 ${MOPSSUITE_SOURCE_DIR}/test/brush/regress5.sh ${EXECUTABLE_OUTPUT_PATH}/brush-app ${MOPSSUITE_SOURCE_DIR}/test/brush)
+add_test(brush.regress5 sh ${MOPSSUITE_SOURCE_DIR}/test/brush/regress5.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} test/brush)
 
 ########## A small program to exercise the Brush interface for moonmd #######################
 add_executable(brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/brush/moonmd_test.cpp)
 target_link_libraries(brush-moonmd-test brush ${Boost_LIBRARIES})
 
 # Regression tests for Brush moon-md interface
-add_test(brush.moonmd1 ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${EXECUTABLE_OUTPUT_PATH}/brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/test/brush)
+add_test(brush.moonmd1 sh ${MOPSSUITE_SOURCE_DIR}/test/brush/moonmd1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-moonmd-test${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
 
 ########## Test Program for sprogc ######################
 add_executable(sprogc-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/sprogc/sprogc_test.cpp)
 target_link_libraries(sprogc-test sprog ${Boost_LIBRARIES})
 
-add_test(sprogc.regress1 ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress1.sh ${EXECUTABLE_OUTPUT_PATH}/sprogc-test ${MOPSSUITE_SOURCE_DIR}/test/sprogc)
+add_test(sprogc.regress1 sh ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/sprogc-test${EXE_SUFFIX} test/sprogc)
 
-add_test(sprogc.regress2 ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress2.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress2)
+add_test(sprogc.regress2 sh ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress2.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} test/sprogc/regress2)
 
 ########## Test Program for chemkinReader ######################
 add_executable(chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp)
 target_link_libraries(chemkinReader-test chemkinReader ${Boost_LIBRARIES})
 
-add_test(chemkinReader.regress1 ${MOPSSUITE_SOURCE_DIR}/test/io/chemkinReaderRegress.sh ${EXECUTABLE_OUTPUT_PATH}/chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/test/io)
+add_test(chemkinReader.regress1 sh ${MOPSSUITE_SOURCE_DIR}/test/io/chemkinReaderRegress.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/chemkinReader-test${EXE_SUFFIX} test/io)
 
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)

@@ -1850,7 +1850,7 @@ void PAHPrimary::outputPAHs(std::ostream &out) const
 {
     if (m_PAH.size() != 0) {
         //count the number of PAH should be serialized
-        int m_count = 0;
+        unsigned m_count = 0;
         while (m_count != m_PAH.size())
         {
             m_PAH[m_count]->Serialize(out);
