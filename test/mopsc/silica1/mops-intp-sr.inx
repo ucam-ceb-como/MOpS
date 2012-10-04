@@ -22,11 +22,9 @@
         <m0>1.0e14</m0>
         <particle count="128">
             <weight>1.0</weight>
-            <component id="silica" dx="2000"/>
-            <numprimary>1</numprimary>
-            <numSi>2000</numSi>
-            <numO>8000</numO>
-            <numOH>2000</numOH>
+            <component id="silicon" dx="2000"/>
+            <component id="oxygen" dx="8000"/>
+            <component id="hydroxide" dx="2000"/>
         </particle>
     </population>
     

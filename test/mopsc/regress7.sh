@@ -87,9 +87,9 @@ filenames="2-silica"
 timesteps='<time steps="1" splits="1">0.00001<\/time>'
 eval "sed '21s/.*/        <m0>$m0<\/m0>/' $inp" > $temp1
 eval "sed '22s/.*/        <file>$ifile<\/file>/' $temp1" > $temp2
-eval "sed '37s/.*/    $timesteps/' $temp2" > $temp1
-eval "sed '64s/.*/    <filename>$filenames<\/filename>/' $temp1" > $temp2
-eval "sed '23,29d' $temp2" > "$temp1"
+eval "sed '35s/.*/    $timesteps/' $temp2" > $temp1
+eval "sed '62s/.*/    <filename>$filenames<\/filename>/' $temp1" > $temp2
+eval "sed '23,27d' $temp2" > "$temp1"
 rm $temp2
 
 # Run the calculation

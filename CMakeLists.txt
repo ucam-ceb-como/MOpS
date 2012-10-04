@@ -89,7 +89,7 @@ add_test(mops.pahtest3 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest3.sh ${EXECUTAB
 
 add_test(mops.silica1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica1)
 
-add_test(mops.silica2 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica2.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
+add_test(mops.silica2 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica2.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica2)
 
 add_test(mops.bintree1 ${MOPSSUITE_SOURCE_DIR}/test/mopsc/bintree1.sh ${EXECUTABLE_OUTPUT_PATH}/mops-app ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 

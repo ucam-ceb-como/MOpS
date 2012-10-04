@@ -2,13 +2,11 @@
 <mops version="2">
   
   <!-- Default parameters (can be overidden). --> 
-  <runs>4</runs>
-  <iter>2</iter>
+  <runs>6</runs>
   <atol>1.0e-22</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount>512</pcount>
+  <pcount>64</pcount>
   <maxm0>2.1e12</maxm0>
-  <relax>0.5</relax>
   
 
   <!-- Reactor definition (given initial conditions). -->
@@ -19,13 +17,11 @@
     
     <population>
         <m0>5.0e16</m0>
-        <particle count="512">
+        <particle count="64">
             <weight>1.0</weight>
-            <component id="silica" dx="2107"/>
-            <numprimary>1</numprimary>
-            <numSi>2107</numSi>
-            <numO>3960</numO>
-            <numOH>398</numOH>
+            <component id="silicon" dx="2107"/>
+            <component id="oxygen" dx="3960"/>
+            <component id="hydroxide" dx="398"/>
         </particle>
     </population>
     
