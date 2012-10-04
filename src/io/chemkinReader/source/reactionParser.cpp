@@ -78,8 +78,7 @@ reactionString_(reactionString),
     globalEaUnits_("NO GLOBAL UNITS"),
     globalAUnits_("NO GLOBAL UNITS"),
     scale_Ea(1.0),
-    scale_A(1.0),
-    ReactantStoich(0)
+    scale_A(1.0)
 {
     split(reactionStringLines_, reactionString, boost::is_any_of("\n|\r\n"));
 
@@ -129,7 +128,7 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
             // is not a 3rd body reaction, we will deail with that case later.
             reaction.setArrhenius
                 (
-                from_string<double>(what[4]) * pow(scale_A, ReactantStoich - 1),
+                from_string<double>(what[4]) * pow(scale_A, reaction.getReactantStoich() - 1.0),
                 from_string<double>(what[5]),
                 from_string<double>(what[6]) * scale_Ea
                 );
@@ -158,46 +157,66 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
                     vector<double> reverseArrhenius = parseLOWTROEREV(reactionStringLines_[i+1], REV);
                     // Do conversion to SI units here. Assume for the moment that it
                     // is not a 3rd body reaction, we will deail with that case later.
-                    reaction.setArrhenius(reverseArrhenius[0] * pow(scale_A, ReactantStoich - 1),reverseArrhenius[1],reverseArrhenius[2] * scale_Ea,true);
+                    reaction.setArrhenius(reverseArrhenius[0] * pow(scale_A, reaction.getReactantStoich() - 1.0),reverseArrhenius[1],reverseArrhenius[2] * scale_Ea,true);
                     // Skip one line when looking for the next reaction.
                     ++i;
                     //break;
                 }
                 else if (reaction.hasThirdBody() || reaction.isPressureDependent())
                 {
+                    // It could be a third body or Lindemann reaction so need to scale the forward
+                    IO::Arrhenius arr( reaction.getArrhenius() );
+                    reaction.setArrhenius( arr.A * scale_A, arr.n, arr.E );
+                    // and reverse A's, if present, a bit more.
+                    if( reaction.hasREV() )
+                    {
+                        arr = reaction.getArrhenius(true);
+                        reaction.setArrhenius( arr.A * scale_A, arr.n, arr.E, true );
+                    }
+
                     string lineType = findLineType(reactionStringLines_[i+1]);
                     if (lineType == "THIRDBODY")
                     {
                         reaction.setThirdBodies(parseThirdBodySpecies(reactionStringLines_[i+1]));
                         ++i;
-                    }
-                    if (lineType == "LOW")
+                    } else if (lineType == "LOW")
                     {
                         vector<double> lowParams = parseLOWTROEREV(reactionStringLines_[i+1], LOW);
                         // Convert to SI units.
-                        lowParams[0] *= pow(scale_A, ReactantStoich);
+                        lowParams[0] *= pow(scale_A, reaction.getReactantStoich());
                         lowParams[2] *= scale_Ea;
                         reaction.setLOW(lowParams);
 
                         ++i;
 
-                        if (lineType == "TROE")
-                        {
-                            reaction.setTROE(parseLOWTROEREV(reactionStringLines_[i+1], TROE));
-                            ++i;
-                        } else if (lineType == "SRI")
-                        {
-                            reaction.setSRI(parseLOWTROEREV(reactionStringLines_[i+1], SRI));
-                            ++i;
-                        } else {
-                            // It's a Lindemann reaction so need to scale the forward
-                            IO::Arrhenius arr( reaction.getArrhenius() );
-                            reaction.setArrhenius( arr.A * scale_A, arr.n, arr.E );
-                            // and reverse A's a bit more.
-                            arr = reaction.getArrhenius(true);
-                            reaction.setArrhenius( arr.A * scale_A, arr.n, arr.E, true );
+                    }else if (lineType == "TROE")
+                    {
+                        reaction.setTROE(parseLOWTROEREV(reactionStringLines_[i+1], TROE));
 
+                        // It's not a Lindemann reaction so need to scale the forward
+                        IO::Arrhenius arr( reaction.getArrhenius() );
+                        reaction.setArrhenius( arr.A / scale_A, arr.n, arr.E );
+                        // and reverse A's, if present, back again.
+                        if( reaction.hasREV() )
+                        {
+                            arr = reaction.getArrhenius(true);
+                            reaction.setArrhenius( arr.A / scale_A, arr.n, arr.E, true );
                         }
+                        ++i;
+                    } else if (lineType == "SRI")
+                    {
+                        reaction.setSRI(parseLOWTROEREV(reactionStringLines_[i+1], SRI));
+
+                        // It's not a Lindemann reaction so need to scale the forward
+                        IO::Arrhenius arr( reaction.getArrhenius() );
+                        reaction.setArrhenius( arr.A / scale_A, arr.n, arr.E );
+                        // and reverse A's, if present, back again.
+                        if( reaction.hasREV() )
+                        {
+                            arr = reaction.getArrhenius(true);
+                            reaction.setArrhenius( arr.A / scale_A, arr.n, arr.E, true );
+                        }
+                        ++i;
                     }
                 }
                 else
@@ -251,7 +270,6 @@ multimap<string, double>
                 1.0
                 )
                 );
-            ++ReactantStoich;
         }
         else
         {
@@ -263,7 +281,6 @@ multimap<string, double>
                 from_string<double>(splitStoic[1])
                 )
                 );
-            ReactantStoich += from_string<int>(splitStoic[1]);
         }
 
     }
@@ -395,6 +412,8 @@ void IO::ReactionParser::readGlobalUnits()
         globalEaUnits_ = "CAL/MOLE";
         scale_Ea = 4.184e7;
     }
+
+    scale_Ea *= 1e-7;
 
     cout << "Global Units for Ea are " << globalEaUnits_ << endl;
 

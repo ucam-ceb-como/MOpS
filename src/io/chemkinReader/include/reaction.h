@@ -57,6 +57,8 @@ namespace IO
 
             std::vector<double> LOW_, TROE_, SRI_;
 
+            double ReactantStoich; // Total reactant stoichiometry.
+
         public:
 
             Reaction();
@@ -72,6 +74,7 @@ namespace IO
 
             void setReactants(std::multimap<std::string, double> reactants);
             const std::multimap<std::string, double>& getReactants() const;
+            double getReactantStoich() const;
 
             void setProducts(std::multimap<std::string, double> products);
             const std::multimap<std::string, double>& getProducts() const;

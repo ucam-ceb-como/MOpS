@@ -112,14 +112,15 @@ void MechanismParser::ReadChemkin
         Element *el = mech.AddElement();
         el->SetName(chemkinReader.elements()[i].getName());
         // Get molecular weight from chemkinReader in SI units.
-        el->SetMolWt(chemkinReader.elements()[i].getAtomicWeight());
+        double molWt = chemkinReader.elements()[i].getAtomicWeight();
         // If molecular weight was not defined in the Chemkin file then
         // get it from the library also in SI units.
-        if(0.0 == el->MolWt())
+        if(-1.0 == molWt)
         {
             el->SetMolWtFromLibrary();
+        } else {
+            el->SetMolWt(molWt);
         }
-        el = NULL;
     }
 
     // Read Species.
@@ -279,8 +280,8 @@ void MechanismParser::ReadChemkin
     mech.BuildStoichXRef();
 
     // Write mechanism (for MoDS debugging)
-    //mech.WriteReducedMech("chem-test.inp",
-    //        std::vector<std::string>( mech.SpeciesCount(), "" ));
+//    mech.WriteReducedMech("chem-test.inp",
+//            std::vector<std::string>( mech.SpeciesCount(), "" ));
 
 }
 

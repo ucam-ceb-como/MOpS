@@ -8,7 +8,7 @@ IF(WIN32)
   SET(Boost_ADDITIONAL_VERSIONS "1.47" "1.47.0")
   SET(BOOST_ROOT "C:/Program Files/boost")
   SET(Boost_USE_STATIC_LIBS TRUE)
-  SET(MSVC_BUILD_DIR "/Release")
+  SET(MSVC_BUILD_DIR "/\${CTEST_CONFIGURATION_TYPE}")
 ELSE(WIN32)
   SET(CMAKE_MODULE_PATH $ENV{HOME})
   SET(BOOST_ROOT $ENV{HOME}/boost)
@@ -54,7 +54,6 @@ add_executable(camflowGridGenerator ${MOPSSUITE_SOURCE_DIR}/applications/utiliti
 target_link_libraries(camflowGridGenerator ${Boost_LIBRARIES})
 
 # Regression tests for CamFlow
-
 add_test(camflow.hydrogenBatchReactor sh ${MOPSSUITE_SOURCE_DIR}/test/camflow/batchReactorRegress.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/camflow-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenBatchReactor)
 add_test(camflow.hydrogenFlamelet sh ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/camflow-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet)
 

@@ -39,8 +39,6 @@ namespace IO {
         double scale_Ea;
         double scale_A;
 
-        int ReactantStoich; // Total reactant stoichiometry.
-
         void readGlobalUnits();
 
     public:

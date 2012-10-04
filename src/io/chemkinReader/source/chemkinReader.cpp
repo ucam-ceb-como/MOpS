@@ -139,7 +139,7 @@ void IO::ChemkinReader::readElements() {
     while (regex_search(start, end, what, elementSingleRegex)) {
         // Read in the Elements' names and their atomic weights, if specified.
         // Atomic weights are converted from g/mol to kg/mol here.
-        elements_.push_back(Element(what[1], what[2].matched?from_string<double>(what[2])/1000.0:0.0));
+        elements_.push_back(Element(what[1], what[2].matched?from_string<double>(what[2])/1000.0:-1.0));
         start = what[0].second;
     }
 
