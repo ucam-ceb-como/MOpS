@@ -45,8 +45,6 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_process.cpp
                   source/swp_process_factory.cpp
                   source/swp_silica_interparticle.cpp
-                  source/swp_silica_primary.cpp
-                  source/swp_silica_stats.cpp
                   source/swp_silicon_inception.cpp
                   source/swp_sintering_model.cpp
                   source/swp_solver.cpp

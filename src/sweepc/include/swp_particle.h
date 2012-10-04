@@ -95,9 +95,6 @@ public:
     static Particle* createFromXMLNode(const CamXML::Element& xml,
                                        const Sweep::ParticleModel& model);
 
-    //! Function to create silica particles from XML
-    static void createSilicaFromXML(const CamXML::Element& xml, Particle* pNew);
-
     // Operators.
     Particle &operator=(const Particle &rhs);
 

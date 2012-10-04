@@ -768,7 +768,6 @@ void Mechanism::LPDA(real t, Cell &sys, rng_type &rng) const
     if ((sys.ParticleCount() > 0) &&
         (m_anydeferred ||
                 (AggModel() == AggModels::PAH_KMC_ID) ||
-                (AggModel() == AggModels::Silica_ID) ||
                 (AggModel() == AggModels::BinTree_ID) ||
                 (AggModel() == AggModels::BinTreeSilica_ID) ||
                 (AggModel() == AggModels::SurfVolSilica_ID) ||
@@ -833,7 +832,8 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
     }
 
     // Sinter the particles if no deferred processes
-    if (m_sint_model.IsEnabled() && !m_anydeferred) {
+    if (m_sint_model.IsEnabled() && !m_anydeferred
+            && AggModel() != AggModels::PAH_KMC_ID) {
 
         // Calculate delta-t and update particle time.
         real dt;

@@ -335,7 +335,8 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     } else if (str == "PAH_KMC") {
         mech.SetAggModel(AggModels::PAH_KMC_ID);
 	} else if (str == "silica") {
-        mech.SetAggModel(AggModels::Silica_ID);
+        throw std::runtime_error("Old silica model is deprecated. Use bintreesilica or surfvolsilica."
+                " in Sweep::MechParser::readV1");
     } else if (str == "bintree") {
         mech.SetAggModel(AggModels::BinTree_ID);
     } else if (str == "bintreesilica") {

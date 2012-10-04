@@ -51,8 +51,6 @@
 #include "swp_surfvol_stats.h"
 #include "swp_surfvolhydrogen_stats.h"
 #include "swp_PAH_stats.h"
-#include "swp_silica_stats.h"
-#include "swp_silica_primary.h"
 #include "swp_bintree_primary.h"
 #include "swp_bintree_silica_primary.h"
 #include "swp_bintree_stats.h"
@@ -85,8 +83,6 @@ AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelT
             return new AggModels::SurfVolSilicaPrimary(time, model);
 		case AggModels::PAH_KMC_ID:
             return new AggModels::PAHPrimary(time, position, model);
-		case AggModels::Silica_ID:
-			return new AggModels::SilicaPrimary(time, model);
 	    case AggModels::BinTree_ID:
             return new AggModels::BinTreePrimary(time, model);
         case AggModels::BinTreeSilica_ID:
@@ -117,8 +113,6 @@ AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelT
             return new AggModels::SurfVolSilicaPrimary(time, model);
 		case AggModels::PAH_KMC_ID:
             return new AggModels::PAHPrimary(time, model);
-		case AggModels::Silica_ID:
-            return new AggModels::SilicaPrimary(time, model);
         case AggModels::BinTree_ID:
             return new AggModels::BinTreePrimary(time, model);
         case AggModels::BinTreeSilica_ID:
@@ -162,9 +156,6 @@ AggModels::Primary *const ModelFactory::ReadPrimary(std::istream &in,
                 break;
 			case AggModels::PAH_KMC_ID:
                 pri = new AggModels::PAHPrimary(in, model);
-                break;
-			case AggModels::Silica_ID:
-                pri = new AggModels::SilicaPrimary(in, model);
                 break;
             case AggModels::BinTree_ID:
                 pri = new AggModels::BinTreePrimary(in, model);
@@ -262,8 +253,6 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
             return new Stats::SurfVolStats();
 		case AggModels::PAH_KMC_ID:
             return new Stats::PAHStats();       // ms785: postprocessing not yet implemented
-		case AggModels::Silica_ID:
-			return new Stats::SilicaStats();
 		case AggModels::BinTree_ID:
 		    return new Stats::BinTreeStats();
 	      case AggModels::BinTreeSilica_ID:
@@ -304,9 +293,6 @@ Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in,
                 break;
 			case AggModels::PAH_KMC_ID:
                 stats = new Stats::PAHStats(in, model);
-                break;
-			case AggModels::Silica_ID:
-                stats = new Stats::SilicaStats(in, model);
                 break;
             case AggModels::BinTree_ID:
                 stats = new Stats::BinTreeStats(in, model);
