@@ -61,8 +61,10 @@ namespace Sweep
 			PAH_KMC_ID         = 10004, // coupled PAH-PP model (ms785) with KMC-ARS model (zz260 and ar447)
 			Silica_ID		= 10005,  // Silica particle model (ms785 & ss663, integrated with git repository by wjm34)
             SurfVolHydrogen_ID = 10006, //! (Blanquart & Pitsch., Combust. Flame, 156, 1614-1626, 2009).
-			Bintree_ID      = 10007,  // Generalised form of silica and PAH-PP models for multicomponent systems (wjm34)
-		};
+			BinTree_ID      = 10007,  // Generalised form of silica and PAH-PP models for multicomponent systems (wjm34)
+			SurfVolSilica_ID = 10008, // Surfvol implementation of the silica model
+			BinTreeSilica_ID = 10009, // Binary tree implementation of the silica model
+        };
 
         typedef std::set<AggModelType> AggModelTypeSet;
     };

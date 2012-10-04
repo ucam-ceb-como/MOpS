@@ -114,11 +114,11 @@ void ParticleImage::Construct(const Particle &sp, const ParticleModel &model)
         }
         calc_FM(m_root, *(&rng));
 
-    } else if (model.AggModel() == AggModels::Bintree_ID) {
+    } else if (model.AggModel() == AggModels::BinTree_ID) {
         // Binary Tree generic model
 
-        const AggModels::BintreePrimary *p;
-        p = dynamic_cast<const AggModels::BintreePrimary*>(sp.Primary());
+        const AggModels::BinTreePrimary *p;
+        p = dynamic_cast<const AggModels::BinTreePrimary*>(sp.Primary());
         ConstructTree(p, *(&rng));
     } else if (model.AggModel() == AggModels::Silica_ID) {
         // Silica (binary tree like) model

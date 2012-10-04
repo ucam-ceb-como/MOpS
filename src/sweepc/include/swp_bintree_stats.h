@@ -1,14 +1,14 @@
 /*!
  * @file    swp_bintree_stats.h
  * @author  William J Menz
- * @brief   Calculates statistics for BintreePrimary model
+ * @brief   Calculates statistics for BinTreePrimary model
  *
  *   Author(s):      William J Menz
  *   Project:        sweepc (population balance solver)
  *   Copyright (C) 2012 William J Menz
  *
  *   File purpose:
- *      Calculates statistics for BintreePrimary model
+ *      Calculates statistics for BinTreePrimary model
  *
  *   Licence:
  *      This file is part of "sweepc".
@@ -54,22 +54,22 @@
 namespace Sweep {
 
 namespace Stats {
-class BintreeStats : public IModelStats {
+class BinTreeStats : public IModelStats {
 public:
     //! Default constructor
-    BintreeStats();
+    BinTreeStats();
 
     //! Copy constructor
-    BintreeStats(const BintreeStats &copy) {*this = copy;}
+    BinTreeStats(const BinTreeStats &copy) {*this = copy;}
 
     //! Stream-reading constructor
-    BintreeStats(std::istream &in, const Sweep::ParticleModel &model);
+    BinTreeStats(std::istream &in, const Sweep::ParticleModel &model);
 
     //! Default destructor
-    virtual ~BintreeStats();
+    virtual ~BinTreeStats();
 
     //! Equate operator
-    BintreeStats &operator=(const BintreeStats &rhs);
+    BinTreeStats &operator=(const BinTreeStats &rhs);
 
 
     // IMPLEMENTATION
@@ -109,10 +109,10 @@ public:
 
     // READ/WRITE/COPY
     //! Creates a copy of the object.
-    BintreeStats *const Clone(void) const;
+    BinTreeStats *const Clone(void) const;
 
     //! Returns the model data type
-    unsigned int ID() const {return (unsigned int)AggModels::Bintree_ID;}
+    unsigned int ID() const {return (unsigned int)AggModels::BinTree_ID;}
 
     //! Writes the object to a binary stream.
     void Serialize(std::ostream &out) const;

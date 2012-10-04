@@ -341,17 +341,12 @@ bool AggModels::Primary::IsValid() const {
 unsigned int AggModels::Primary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
 {
 	unsigned int i = 0;
-	real dc(0.0);
+
+	n = CalculateMaxAdjustments(dcomp, n);
 
 	// Add the components.
 	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
-	    dc = m_comp[i];
 		m_comp[i] += dcomp[i] * (real)n;
-		// Set component to zero if too many are removed.
-		if (m_comp[i] < 1.0) {
-            m_comp[i] = 0.0;
-            n = (unsigned int) abs(dc/dcomp[i]);
-		}
 	}
 
 	// Add the tracker values.
@@ -365,25 +360,44 @@ unsigned int AggModels::Primary::Adjust(const fvector &dcomp, const fvector &dva
     return n;
 }
 
+/*!
+ * Calculates the maximum number of LPDA adjustments allowed.
+ *
+ * This is relevant for Processes which remove components from a Primary,
+ * particularly where multiple components are present in a particle.
+ *
+ * @param dcomp     The component changes for the Process
+ * @param n         Number of times requested
+ * @return          Actual number of times allowed
+ */
+unsigned int AggModels::Primary::CalculateMaxAdjustments(
+        const fvector &dcomp,
+        unsigned int n) const
+{
+    unsigned int i;
+
+    // First check if there is a negative in dcomp
+    bool neg_change(false);
+    for (i=0; i!=dcomp.size(); ++i) {
+        if (dcomp[i] < 0.0) neg_change = true;
+    }
+
+    // Calculate the actual number of events only if there is a negative
+    // change in the component amount
+    if (neg_change) {
+        for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+            if (dcomp[i] < 0.0)
+                n = std::min(n, (unsigned int) abs(m_comp[i]/dcomp[i]));
+        }
+    }
+
+    return n;
+}
+
 // Adjusts the particle n times for IntParticle reaction
 unsigned int AggModels::Primary::AdjustIntPar(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
 {
-	unsigned int i = 0;
-
-	// Add the components.
-	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
-        // Set component to zero if too many are removed.
-        if (m_comp[i] < 1.0) m_comp[i] = 0.0;
-		m_comp[i] += dcomp[i] * (real)n;
-	}
-
-	// Add the tracker values.
-	for (i=0; i!=min(m_values.size(),dvalues.size()); ++i) {
-		m_values[i] += dvalues[i] * (real)n;
-	}
-
-    // Update property cache.
-    AggModels::Primary::UpdateCache();
+    n = AggModels::Primary::Adjust(dcomp, dvalues, rng, n);
 
     return n;
 }
