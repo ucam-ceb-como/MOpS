@@ -105,13 +105,13 @@ add_executable(brush-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/brush/brus
 target_link_libraries(brush-app brush ${Boost_LIBRARIES})
 
 # Regression tests for Brush
-add_test(brush.regress1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/brush/regress1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} test/brush)
+add_test(brush.regress1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/brush/regress1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
-add_test(brush.regress3 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/brush/regress3.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} test/brush)
+add_test(brush.regress3 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/brush/regress3.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
-add_test(brush.regress4 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/brush/regress4.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} test/brush)
+add_test(brush.regress4 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/brush/regress4.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
-add_test(brush.regress5 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/brush/regress5.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} test/brush)
+add_test(brush.regress5 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/brush/regress5.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
 ########## A small program to exercise the Brush interface for moonmd #######################
 add_executable(brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/brush/moonmd_test.cpp)
@@ -125,15 +125,15 @@ add_test(brush.moonmd1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/brush/m
 add_executable(sprogc-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/sprogc/sprogc_test.cpp)
 target_link_libraries(sprogc-test sprog ${Boost_LIBRARIES})
 
-add_test(sprogc.regress1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/sprogc-test${EXE_SUFFIX} test/sprogc)
+add_test(sprogc.regress1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/sprogc-test${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/sprogc)
 
-add_test(sprogc.regress2 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress2.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} test/sprogc/regress2)
+add_test(sprogc.regress2 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress2.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/sprogc/regress2)
 
 ########## Test Program for chemkinReader ######################
 add_executable(chemkinReader-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/chemkinReader/chemkinReaderTest.cpp)
 target_link_libraries(chemkinReader-test chemkinReader ${Boost_LIBRARIES})
 
-add_test(chemkinReader.regress1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/io/chemkinReaderRegress.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/chemkinReader-test${EXE_SUFFIX} test/io)
+add_test(chemkinReader.regress1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/io/chemkinReaderRegress.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/chemkinReader-test${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/io)
 
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)
