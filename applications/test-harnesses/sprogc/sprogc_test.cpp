@@ -22,12 +22,12 @@ int main()
     Mechanism mechIN, mechOUT;
     // Load the test mechanism.
  
- int surf_switch = 1; // change this for including / excluding surface chemistry files
+ int surf_switch = 0; // change this for including / excluding surface chemistry files
  
  std::string NOT_READ = "NOT READ";
  
  
-if (surf_switch = 1){
+if (surf_switch == 1){
 
 	try {
 
@@ -62,7 +62,7 @@ if (surf_switch = 1){
 
 	try {
 
-        Sprog::IO::MechanismParser::ReadChemkin("chem.inp", mechOUT, "therm.dat",1, NOT_READ);
+        Sprog::IO::MechanismParser::ReadChemkin("chem.inp", mechOUT, "therm.dat",1, "tran.dat");
 
 	    std::ofstream ofs("serializeTest");
 	    boost::archive::text_oarchive oa(ofs);

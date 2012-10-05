@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-#  Copyright (C) 2011 Dongping Chen
+#  Copyright (C) 2012 Dongping Chen.
 #
 #
 # Licence:
@@ -35,96 +35,83 @@
 
 use strict;
 use warnings;
-# this test is designed for testing doubling algorithm after coupled with KMC model
-# Clean up any outputs from previous simulations
-my @outputFiles = glob("pahtest2-test-doubling-algorithm*");
-if($#outputFiles > 0) {
-  print "Cleaning up old output files\n";
-  system("rm " . '"' . join('" "', @outputFiles) . '"');
-}
 
-# Path of executable should be supplied as first argument to this script
-my $program = $ARGV[0];
-
-# Arguments for simulation
-my @simulationCommand = ($program, "-flamepp", "-p",
-                         "-gp", "pahtest2/gasphase.inp",
-                         "-c",  "pahtest2/chem.inp",
-                         "-t",  "pahtest2/therm.dat",
-                         "-s",  "pahtest2/sweep.xml",
-                         "-rr", "pahtest2/mops.inx");
-
-# Run the simulation and wait for it to finish
-system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";
+# this test is designed for checking whether bintree_serializer works correctly with the PAHPrimary Class by comparing to precalculated value
 
 # Parse the moments file
 my $momentFile;
-open($momentFile, "<pahtest2-test-doubling-algorithm-part.csv") or die "ERR: failed to open moment file: $!";
+open($momentFile, "<pahtest2-bintree-serializer-part.csv") or die "ERR: failed to open moment file: $!";
 
-my $sp = 0;
 my $m0 = 0;
 my $m1 = 0;
 
 while(<$momentFile>) {
   my @fields = split /,/;
 
-  # Look for a line that begina with a number and has the first entry (the time)
-  # equal (upto a small tolerance) to 0.0058
-  if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.0058) < 1e-6 )) {
+  # Look for a line that begin with a number and has the first entry (the time)
+  # equal (upto a small tolerance) to 0.006
+  if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.006) < 1e-6 )) {
       # Third field should be the zeroth moment
-      $sp = $fields[2];
-      #print "2: $fields[2], ";
-
       $m0 = $fields[4];
-      #print "4: $fields[4] \n";
+      #print "4: $fields[4], ";
 
-      $m1 = $fields[20];
+      $m1 = $fields[16];
+      #print "16: $fields[16] \n";
+
       last;
   }
 }
 
-# Precalsulated value: num of computational particles (sp) =855, M0=71.25e17+-1e15
+# Precalculated value: M0=2.26e18+-1e16, Fv=7.48e-9+-1e-7
 
-# git 00706668ed.. gives the following values for the mean 
-# and 99% confidence interval for the mean, using 20 repeitions
-# boost 1.42.0
-# sp = 854+-24.5
-# m0 = (1.251+-0.036)e17 m^-3
-# fv = (3.846+-0.076)e-7 kg m^-3
-# with boost 1.47.0 git 58056fdbc (which should be the same as 00706668ed for
-# PAH-PP purposes) gives the following mean values
-# sp 861.7
-# m0 1.262e17 m^-3
-# fv 3.872e-7
+# 20 repetitions
+# mean values and 99% confidence interval widths
+# m0 (1.41+-0.052)e19 m^-3
+# fv (2.57+-0.0556)e-8 
 
-print "$sp, $m0, $m1\n";
-if(abs($sp -  910) > 49) {
-  print "Simulated sp was $sp, when  855 expected\n";
-  print "if pahtest1 passes and this test fails, it will indicate that the doubling algorithm works in a wrong way.";
+print "$m0, $m1\n";
+if(abs($m0 -  1.41e19) > 5.2e17) {
+  print "Simulated mean M0 was $m0, when  1.41e19m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($m0 - 1.23e17) > 4e15) {
-  print "Simulated mean M0 was $m0, when  1.25e17m^-3 expected\n";
+if(abs($m1 - 2.57e-8) > 5.56e-10) {
+  print "Simulated mean Fv was $m1, when 2.57e-8 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 2;
 }
 
-if(abs($m1 - 3.83e-7) > 1e-8) {
-  print "Simulated mean M1 was $m1, when  3.85e-7 kg m^-3 expected\n";
+my $statsFile;
+open($statsFile, "<stats.csv") or die "ERR: failed to open stats file: $statsFile";
+
+my $mea = 0;
+while(<$statsFile>) {
+  my @fields = split /,/;
+
+  # Look for a line that begin with a number and has the first entry (the time)
+  # equal (upto a small tolerance) to 0.006
+  if($fields[0] =~ /^\d+/) {
+      $mea = $fields[0];
+      print "$mea\n";
+      last;
+  }
+}
+
+# Precalculated value: 314.18
+# 20 repetitions, stats=318.1
+
+if(abs($mea -  318) > 10) {
+  print "Stats was $mea, when 314 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
-  exit 2;
+  exit 3;
 }
 
 #print "All tests passed\n";
-system("rm pahtest2-test-doubling-algorithm*");
-system("rm DIMER.csv");
-system("rm MONOMER.csv");
 exit 0;
