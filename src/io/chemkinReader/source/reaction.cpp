@@ -26,7 +26,6 @@ IO::Reaction::Reaction()
 ,flagPressureDependent_(false)
 ,thirdBodies_()
 ,fallOffBody_()
-,ReactantStoich(0)
 {}
 
 void IO::Reaction::setReversible(const bool flag)
@@ -69,12 +68,7 @@ const IO::Arrhenius& IO::Reaction::getArrhenius(bool reverse) const
 {
     if (reverse)
     {
-        if(flagHasREV_)
-        {
-            return reverseArrhenius_;
-        } else {
-            throw runtime_error("Requested explicit reverse Arrhenius parameters when none are present.");
-        }
+        return reverseArrhenius_;
     }
     return forwardArrhenius_;
 }
@@ -82,21 +76,12 @@ const IO::Arrhenius& IO::Reaction::getArrhenius(bool reverse) const
 void IO::Reaction::setReactants(multimap<string, double> reactants)
 {
     checkForThirdBody(reactants);
-    for( multimap<string, double>::const_iterator it = reactants.begin(); reactants.end() != it; ++it )
-    {
-        ReactantStoich += it->second;
-    }
     reactants_ = reactants;
 }
 
 const multimap<string, double>& IO::Reaction::getReactants() const
 {
     return reactants_;
-}
-
-double IO::Reaction::getReactantStoich() const
-{
-    return ReactantStoich;
 }
 
 void IO::Reaction::setProducts(multimap<string, double> products)

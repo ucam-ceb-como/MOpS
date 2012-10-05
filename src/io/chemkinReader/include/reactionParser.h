@@ -1,10 +1,10 @@
 /*
-* reactionParser.h
-*
-*  Created on: Jun 23, 2011
-*      Author: Laurence R. McGlashan
-*     License: GPL
-*/
+ * reactionParser.h
+ *
+ *  Created on: Jun 23, 2011
+ *      Author: Laurence R. McGlashan
+ *     License: GPL
+ */
 
 #ifndef REACTIONPARSER_H_
 #define REACTIONPARSER_H_
@@ -20,46 +20,37 @@ namespace IO {
     class ReactionParser
     {
 
-        static const boost::regex reactionSingleRegex;
-        static const boost::regex blankLine;
-        static const boost::regex DUPLICATE;
-        static const boost::regex LOW;
-        static const boost::regex TROE;
-        static const boost::regex SRI;
-        static const boost::regex REV;
-        static const boost::regex pressureDependent;
-        static const boost::regex EaUnitsRegex;
-        static const boost::regex AUnitsRegex;
+            static const boost::regex reactionSingleRegex;
+            static const boost::regex blankLine;
+            static const boost::regex DUPLICATE;
+            static const boost::regex LOW;
+            static const boost::regex TROE;
+            static const boost::regex SRI;
+            static const boost::regex REV;
+            static const boost::regex pressureDependent;
 
-        const std::string reactionString_;
-        std::vector<std::string> reactionStringLines_;
+            const std::string reactionString_;
+            std::vector<std::string> reactionStringLines_;
 
-        std::string globalEaUnits_;
-        std::string globalAUnits_;
-        double scale_Ea;
-        double scale_A;
+        public:
 
-        void readGlobalUnits();
+            ReactionParser(const std::string reactionString);
 
-    public:
+            ~ReactionParser(){}
 
-        ReactionParser(const std::string reactionString);
+            void parse(std::vector<IO::Reaction>& reactions);
 
-        ~ReactionParser(){}
+            std::multimap<std::string, double> parseReactionSpecies(std::string reactants);
 
-        void parse(std::vector<IO::Reaction>& reactions);
+            std::multimap<std::string, double> parseThirdBodySpecies(const std::string& thirdBodies);
 
-        std::multimap<std::string, double> parseReactionSpecies(std::string reactants);
+            bool isBlankLine(const std::string& line);
 
-        std::multimap<std::string, double> parseThirdBodySpecies(const std::string& thirdBodies);
+            std::string findLineType(const std::string& line);
 
-        bool isBlankLine(const std::string& line);
+            std::vector<double> parseLOWTROEREV(const std::string& line, const boost::regex& reg);
 
-        std::string findLineType(const std::string& line);
-
-        std::vector<double> parseLOWTROEREV(const std::string& line, const boost::regex& reg);
-
-        bool checkForPressureDependentReaction(const std::string& line);
+            bool checkForPressureDependentReaction(const std::string& line);
     };
 
 }

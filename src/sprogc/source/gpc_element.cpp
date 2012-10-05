@@ -183,8 +183,7 @@ bool Element::SetMolWtFromLibrary()
     for (unsigned int i=0; i<m_nlib; i++) {
         if (m_name.compare(m_lib[i].Name()) == 0) {
             // We have found a matching element in the library.
-            // Weights are stored in g/mol and converted to kg/mol here.
-            m_molwt = m_lib[i].MolWt()/1000.0;
+            m_molwt = m_lib[i].MolWt();
             return true;
         }
     }

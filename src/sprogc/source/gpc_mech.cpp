@@ -128,6 +128,86 @@ UnitSystem Mechanism::Units() const
     return m_units;
 }
 
+// Sets the system of units used by this mechanism by converting all
+// element, species and reaction properties.
+void Mechanism::SetUnits(Sprog::UnitSystem u)
+{
+    Kinetics::ARRHENIUS arr;
+
+    // Is new system SI?
+    if (u == SI) {
+        // Is current system CGS?
+        if (m_units == CGS) {
+            // Convert elements' mol. weights.
+            ElementPtrVector::iterator iel;
+            for (iel=m_elements.begin(); iel!=m_elements.end(); iel++) {
+                // Convert from g/mol to kg/mol.
+                (*iel)->SetMolWt((*iel)->MolWt()*1.0e-3);
+            }
+
+            // Scale species' mol. weights.
+            SpeciesPtrVector::iterator isp;
+            for (isp=m_species.begin(); isp!=m_species.end(); isp++) {
+                // Recalculate mol. weight.
+                (*isp)->CalcMolWt();
+            }
+
+            // Scale reaction coefficients.
+            for (unsigned int irxn=0; irxn!=m_rxns.Count(); ++irxn) {
+                // Convert volumes from cm3 to m3, and convert energies from ergs/mol to
+                // J/mol.
+
+                // Forward rate coefficients.
+                arr = m_rxns[irxn]->Arrhenius();
+                arr.A *= pow(1.0e-6, m_rxns[irxn]->ReactantStoich()-1.0);
+                arr.E *= 1.0e-7;
+                m_rxns[irxn]->SetArrhenius(arr);
+
+                // Reverse rate coefficients.
+                if (m_rxns[irxn]->RevArrhenius() != NULL) {
+                    arr = *(m_rxns[irxn]->RevArrhenius());
+                    arr.A *= pow(1.0e-6, m_rxns[irxn]->ProductStoich()-1.0);
+                    arr.E *= 1.0e-7;
+                    m_rxns[irxn]->SetRevArrhenius(arr);
+                }
+
+                // Fall-off parameters.
+                if (m_rxns[irxn]->FallOffType() != Kinetics::None) {
+                    // Low-pressure limit.
+                    arr = m_rxns[irxn]->LowPressureLimit();
+                    // Note there is no -1 term here because there is also
+                    // a third-body concentration.
+                    arr.A *= pow(1.0e-6, m_rxns[irxn]->ReactantStoich());
+                    arr.E *= 1.0e-7;
+                    m_rxns[irxn]->SetLowPressureLimit(arr);
+                } else {
+                    // Third-body concentrations also need scaling.
+                    if (m_rxns[irxn]->UseThirdBody()) {
+                        // Forward rate coefficients.
+                        arr = m_rxns[irxn]->Arrhenius();
+                        arr.A *= 1.0e-6;
+                        m_rxns[irxn]->SetArrhenius(arr);
+
+                        // Reverse rate coefficients.
+                        if (m_rxns[irxn]->RevArrhenius() != NULL) {
+                            arr = *(m_rxns[irxn]->RevArrhenius());
+                            arr.A *= 1.0e-6;
+                            m_rxns[irxn]->SetRevArrhenius(arr);
+                        }
+                    }
+                }
+            }
+
+            m_units = SI;
+        }
+    } else if (u == CGS) {
+//        throw invalid_argument("Cannot currently convert mechanism to "
+//                               "CGS units.  Consult your programmer.");
+        m_units = CGS;
+    }
+}
+
+
 // CHEMICAL ELEMENTS.
 
 // Returns the number of chemical elements.

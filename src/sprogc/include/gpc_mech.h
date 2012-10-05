@@ -93,6 +93,10 @@ public:
     // Returns the current unit system.
     UnitSystem Units(void) const;
 
+    // Converts the mechanism to a new units system.
+    void SetUnits(UnitSystem u);
+
+
     // CHEMICAL ELEMENTS.
 
     // Returns the number of elements in the mechanism.

@@ -36,6 +36,7 @@ namespace IO
             static const boost::regex speciesListRegex;
             static const boost::regex speciesSingleRegex;
             static const boost::regex reactionListRegex;
+            static const boost::regex unitsRegex;
 
             const std::string chemfile_;
             const std::string thermfile_;
@@ -47,11 +48,15 @@ namespace IO
             std::vector<Species> species_;
             std::vector<Reaction> reactions_;
 
+            std::string globalUnits_;
+
             bool checkChemFile();
 
             void readElements();
             void readSpecies();
             void readReactions();
+
+            void readGlobalUnits();
 
         public:
 

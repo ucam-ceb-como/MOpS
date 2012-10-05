@@ -105,22 +105,16 @@ void MechanismParser::ReadChemkin
 
     // Clear current mechanism.
     mech.Clear();
+    // CHEMKIN files are read in CGS units.
+    mech.SetUnits(CGS);
 
     // Read Elements.
     for (size_t i=0; i<numElements; ++i)
     {
         Element *el = mech.AddElement();
         el->SetName(chemkinReader.elements()[i].getName());
-        // Get molecular weight from chemkinReader in SI units.
-        double molWt = chemkinReader.elements()[i].getAtomicWeight();
-        // If molecular weight was not defined in the Chemkin file then
-        // get it from the library also in SI units.
-        if(-1.0 == molWt)
-        {
-            el->SetMolWtFromLibrary();
-        } else {
-            el->SetMolWt(molWt);
-        }
+        el->SetMolWtFromLibrary();
+        el = NULL;
     }
 
     // Read Species.
@@ -174,7 +168,7 @@ void MechanismParser::ReadChemkin
             (
             chemkinReader.reactions()[i].getArrhenius().A,
             chemkinReader.reactions()[i].getArrhenius().n,
-            chemkinReader.reactions()[i].getArrhenius().E
+            chemkinReader.reactions()[i].getArrhenius().E*4.184e7  // cal/mol to erg/mol
             )
             );
         rxn->SetReversible(chemkinReader.reactions()[i].isReversible());
@@ -187,7 +181,7 @@ void MechanismParser::ReadChemkin
                 (
                 chemkinReader.reactions()[i].getArrhenius(true).A,
                 chemkinReader.reactions()[i].getArrhenius(true).n,
-                chemkinReader.reactions()[i].getArrhenius(true).E
+                chemkinReader.reactions()[i].getArrhenius(true).E*4.184e7  // cal/mol to erg/mol
                 )
                 );
         }
@@ -225,7 +219,7 @@ void MechanismParser::ReadChemkin
                     (
                     chemkinReader.reactions()[i].getLOW()[0],
                     chemkinReader.reactions()[i].getLOW()[1],
-                    chemkinReader.reactions()[i].getLOW()[2]
+                    chemkinReader.reactions()[i].getLOW()[2]*4.184e7  // cal/mol to erg/mol
                     )
                     );
             }
@@ -280,8 +274,10 @@ void MechanismParser::ReadChemkin
     mech.BuildStoichXRef();
 
     // Write mechanism (for MoDS debugging)
-//    mech.WriteReducedMech("chem-test.inp",
-//            std::vector<std::string>( mech.SpeciesCount(), "" ));
+    //mech.WriteReducedMech("chem-test.inp",
+    //        std::vector<std::string>( mech.SpeciesCount(), "" ));
+
+    mech.SetUnits(SI);
 
 }
 
@@ -313,3 +309,50 @@ void MechanismParser::ReadTransport
 
 }
 
+
+
+// CHEMKIN PARSING ROUTINES.
+
+
+// Parses the units from the REACTION line of a CHEMKIN formatted file.
+void Sprog::IO::MechanismParser::parseCK_Units(const std::string &rxndef,
+    Sprog::Kinetics::ARRHENIUS &scale)
+{
+
+    throw std::runtime_error("This doesn't work!");
+
+    // Split the string into parts.
+    vector<string> parts;
+    //split(rxndef, parts, " ");
+
+    // Default scaling.
+    scale.A = 1.0;
+    scale.n = 1.0;
+    scale.E = 4.184e7; // Convert cal/mol -> erg/mol.
+
+    vector<string>::iterator i;
+    for (i=parts.begin(); i!=parts.end(); ++i) {
+        if ((*i).compare("CAL/MOLE")==0) {
+            // Default scaling.
+        } else if ((*i).compare("KCAL/MOLE")==0) {
+            scale.E = 4184.0e7;
+        } else if ((*i).compare("JOULES/MOLE")==0) {
+            scale.E = 1.0e7;
+        } else if ((*i).compare("KJOULES/MOLE")==0) {
+            scale.E = 1.0e10;
+        } else if ((*i).compare("KJOU/MOLE")==0) {
+            scale.E = 1.0e10;
+        } else if ((*i).compare("KJOU/MOL")==0) {
+            scale.E = 1.0e10;
+        } else if ((*i).compare("KELVINS")==0) {
+            scale.E = R;
+        } else if ((*i).compare("EVOLTS")==0) {
+            scale.E = 1.60217646e-12;
+        } else if ((*i).compare("MOLES")==0) {
+            // Default scaling.
+        } else if ((*i).compare("MOLECULES")==0) {
+            scale.A = 1.0 / NA;
+        }
+    }
+
+}

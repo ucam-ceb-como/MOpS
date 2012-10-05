@@ -18,7 +18,7 @@ const regex IO::ChemkinReader::elementListRegex
 ("ELEM(?:|ENT|ENTS)\\s+(.*?)\\s+END");
 
 const regex IO::ChemkinReader::elementSingleRegex
-("(\\w+)\\s*/?\\s*(\\d+\\.?\\d*E?\\d*)?([^\\w\\n\\r/]*)(/?)([^\\w\\n\\r]*)");//\\s*/?\\s*\\!.*
+("(\\w+)");
 
 const regex IO::ChemkinReader::speciesListRegex
 ("SPEC(?:|IE|IES)\\s+(.*?)\\s+END");
@@ -28,6 +28,9 @@ const regex IO::ChemkinReader::speciesSingleRegex
 
 const regex IO::ChemkinReader::reactionListRegex
 ("REAC(?:|TION|TIONS)\\s+(.*?)\\s+END");
+
+const regex IO::ChemkinReader::unitsRegex
+("REAC(?:|TION|TIONS)\\s+\\b(CAL/MOLE|KCAL/MOLE|JOULES/MOLE|KJOULES/MOLE|KJOU/MOL|KJOU/MOLE|KELVINS|EVOLTS|MOLES|MOLECULES)\\b");
 
 IO::ChemkinReader::ChemkinReader
 (
@@ -39,7 +42,8 @@ IO::ChemkinReader::ChemkinReader
     chemfile_(chemfile),
     thermfile_(thermfile),
     transfile_(transfile),
-    chemfilestring_(convertToCaps(replaceComments(fileToString(chemfile_))))
+    chemfilestring_(convertToCaps(replaceComments(fileToString(chemfile_)))),
+    globalUnits_("NO GLOBAL UNITS")
 {
     checkChemFile();
 }
@@ -98,6 +102,12 @@ void IO::ChemkinReader::check()
     cout << "Thermo file: " << thermfile_ << endl;
     cout << "Trans file: " << transfile_ << endl;
 
+    if (globalUnits_ != "NO GLOBAL UNITS" && globalUnits_ != "CAL/MOLE")
+    {
+        throw std::logic_error(globalUnits_+" are not supported yet.");
+    }
+    cout << "Global Units are " << globalUnits_ << endl;
+
     ofstream outputSpecies("speciesParsed");
     ofstream outputReactions("reactionsParsed");
     outputSpecies << elements_ << endl;
@@ -109,6 +119,8 @@ void IO::ChemkinReader::check()
 
 void IO::ChemkinReader::read()
 {
+
+    readGlobalUnits();
 
     readElements();
     readSpecies();
@@ -137,9 +149,7 @@ void IO::ChemkinReader::readElements() {
     match_results<string::const_iterator> what;
 
     while (regex_search(start, end, what, elementSingleRegex)) {
-        // Read in the Elements' names and their atomic weights, if specified.
-        // Atomic weights are converted from g/mol to kg/mol here.
-        elements_.push_back(Element(what[1], what[2].matched?from_string<double>(what[2])/1000.0:-1.0));
+        elements_.push_back(Element(what[1], 0.0));
         start = what[0].second;
     }
 
@@ -171,5 +181,23 @@ void IO::ChemkinReader::readReactions() {
 
     ReactionParser reactionParser(reactionString);
     reactionParser.parse(reactions_);
+
+}
+
+void IO::ChemkinReader::readGlobalUnits()
+{
+
+    smatch units;
+    string::const_iterator start = chemfilestring_.begin();
+    string::const_iterator end = chemfilestring_.end();
+
+    while (regex_search(start, end, units, unitsRegex))
+    {
+        if (globalUnits_ != "NO GLOBAL UNITS")
+            throw std::logic_error("Units are already specified as " + globalUnits_);
+        cout << units[1]<<endl;
+        globalUnits_ = units[1];
+        start = units[0].second;
+    }
 
 }

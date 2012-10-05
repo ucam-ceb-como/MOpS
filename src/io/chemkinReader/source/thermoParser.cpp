@@ -115,14 +115,7 @@ bool IO::ThermoParser::parseNASASection(string l1, string l2, string l3, string 
 
     if (trim_copy(l1.substr(65, 8)) == "")
     {
-        if( -1 != globalCommonT_ )
-        {
-            thermo.setTCommon(globalCommonT_);
-        }
-        else
-        {
-            throw std::runtime_error("Global value for common temperature was not defined.");
-        }
+        thermo.setTCommon(globalCommonT_);
     }
     else
     {
@@ -201,8 +194,7 @@ std::vector<std::string> IO::ThermoParser::getThermoSection(std::vector<std::str
     for (unsigned int i = 0; i < lines.size(); i++) {
         if ((begin < 0) && regex_match(lines.at(i), thermoTag, regex_constants::match_single_line)) {
             begin = (int) i;
-        }
-        if ((begin >= 0) && (end < 0) && regex_match(lines.at(i), endTag, regex_constants::match_single_line)) {
+        } else if ((end < 0) && regex_match(lines.at(i), endTag, regex_constants::match_single_line)) {
             end = (int) i;
             break;
         }
@@ -258,9 +250,6 @@ IO::ThermoParser::getGlobalTemperatures()
         globalHighT_ = from_string<double>(what[3]);
     } else
     {
-        // Don't throw an error here because the global temperatures aren't required.
-        // An error will be thrown later if globalCommonT_ is required but not set.
-        // globalLowT_ and globalHighT_ are not currently used anywhere in this code.
-//        throw std::runtime_error("Could not find list of global temperatures.");
+        throw std::runtime_error("Could not find list of global temperatures.");
     }
 }
