@@ -164,16 +164,6 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
                 }
                 else if (reaction.hasThirdBody() || reaction.isPressureDependent())
                 {
-                    // It could be a third body or Lindemann reaction so need to scale the forward
-                    IO::Arrhenius arr( reaction.getArrhenius() );
-                    reaction.setArrhenius( arr.A * scale_A, arr.n, arr.E );
-                    // and reverse A's, if present, a bit more.
-                    if( reaction.hasREV() )
-                    {
-                        arr = reaction.getArrhenius(true);
-                        reaction.setArrhenius( arr.A * scale_A, arr.n, arr.E, true );
-                    }
-
                     string lineType = findLineType(reactionStringLines_[i+1]);
                     if (lineType == "THIRDBODY")
                     {
@@ -187,35 +177,27 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
                         lowParams[2] *= scale_Ea;
                         reaction.setLOW(lowParams);
 
+                        // Third body reaction so need to scale the forward
+                        IO::Arrhenius arr( reaction.getArrhenius() );
+                        reaction.setArrhenius( arr.A * scale_A, arr.n, arr.E );
+                        // and reverse A's, if present, a bit more.
+                        if( reaction.hasREV() )
+                        {
+                            arr = reaction.getArrhenius(true);
+                            reaction.setArrhenius( arr.A * scale_A, arr.n, arr.E, true );
+                        }
+
                         ++i;
 
                     }else if (lineType == "TROE")
                     {
                         reaction.setTROE(parseLOWTROEREV(reactionStringLines_[i+1], TROE));
 
-                        // It's not a Lindemann reaction so need to scale the forward
-                        IO::Arrhenius arr( reaction.getArrhenius() );
-                        reaction.setArrhenius( arr.A / scale_A, arr.n, arr.E );
-                        // and reverse A's, if present, back again.
-                        if( reaction.hasREV() )
-                        {
-                            arr = reaction.getArrhenius(true);
-                            reaction.setArrhenius( arr.A / scale_A, arr.n, arr.E, true );
-                        }
                         ++i;
                     } else if (lineType == "SRI")
                     {
                         reaction.setSRI(parseLOWTROEREV(reactionStringLines_[i+1], SRI));
 
-                        // It's not a Lindemann reaction so need to scale the forward
-                        IO::Arrhenius arr( reaction.getArrhenius() );
-                        reaction.setArrhenius( arr.A / scale_A, arr.n, arr.E );
-                        // and reverse A's, if present, back again.
-                        if( reaction.hasREV() )
-                        {
-                            arr = reaction.getArrhenius(true);
-                            reaction.setArrhenius( arr.A / scale_A, arr.n, arr.E, true );
-                        }
                         ++i;
                     }
                 }
