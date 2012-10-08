@@ -1320,6 +1320,103 @@ void BinTreePrimary::SetComponent(std::string name, Sweep::real val)
     }
 }
 
+/*!
+ * @return  Arithmetic standard dev. of primary diameter
+ */
+Sweep::real BinTreePrimary::GetPrimaryAStdDev() const
+{
+    // Get a list of all primary diameters first
+    fvector diams;
+    GetAllPrimaryDiameters(diams);
+    Sweep::real dpri = GetPrimaryDiam() / ((real) GetNumPrimary());
+
+    // If binary tree writing hasn't been enabled, an erroneous
+    // value will be returned. So just give zero.
+    if (!m_pmodel->WriteBinaryTrees())
+        return 0.0;
+
+    // Loop over diameters to get stdev
+    unsigned int i(0);
+    Sweep::real stdev(0.0), dev(0.0);
+    for (i = 0; i != diams.size(); i++) {
+        dev = (diams[i] - dpri);
+        stdev += dev * dev;
+    }
+
+    stdev = sqrt(stdev / diams.size());
+    return stdev;
+}
+
+/*!
+ * @return  Geometric mean primary diameter
+ */
+Sweep::real BinTreePrimary::GetPrimaryGMean() const
+{
+    // Get a list of all primary diameters first
+    fvector diams;
+    GetAllPrimaryDiameters(diams);
+
+    // If binary tree writing hasn't been enabled, an erroneous
+    // value will be returned. So just give zero.
+    if (!m_pmodel->WriteBinaryTrees())
+        return 0.0;
+
+    // Calculate the geometric mean diameter
+    real dpri(1.0);
+    real inv_n = 1.0 / (real) diams.size();
+    unsigned int i(0);
+    for (i = 0; i != diams.size(); i++) {
+        dpri *= pow(diams[i], inv_n);
+    }
+
+    return dpri;
+}
+
+/*!
+ *
+ * @return  Geometric stdev of primary diameter
+ */
+Sweep::real BinTreePrimary::GetPrimaryGStdDev() const
+{
+    // Get a list of all primary diameters first
+    fvector diams;
+    GetAllPrimaryDiameters(diams);
+    real dpri = GetPrimaryGMean();
+
+    // If binary tree writing hasn't been enabled, an erroneous
+    // value will be returned. So just give zero.
+    if (!m_pmodel->WriteBinaryTrees())
+        return 0.0;
+
+    // Loop over diameters to get stdev
+    unsigned int i(0);
+    Sweep::real stdev(0.0), dev(0.0);
+    for (i = 0; i != diams.size(); i++) {
+        dev = log(diams[i] / dpri); // (natural log)
+        stdev += dev * dev;
+    }
+
+    stdev = exp(sqrt(stdev / diams.size()));
+    return stdev;
+}
+
+/*!
+ * Loop through the particles and collect a list of primary
+ * particle diameters.
+ *
+ * @param diams     Vector of diameters
+ */
+void BinTreePrimary::GetAllPrimaryDiameters(fvector &diams) const
+{
+    // Only add diameter to list if it's a primary
+    if (m_leftchild == NULL && m_rightchild == NULL)
+        diams.push_back(m_diam);
+
+    if (m_leftchild != NULL && m_rightchild != NULL) {
+        m_leftchild->GetAllPrimaryDiameters(diams);
+        m_rightchild->GetAllPrimaryDiameters(diams);
+    }
+}
 
 /*!
  * @brief       Writes a particle to the binary stream

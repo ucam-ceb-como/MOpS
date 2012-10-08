@@ -141,6 +141,15 @@ public:
     //! Gets the sintering time
     real GetSintTime() const {return m_sint_time;}
 
+    //! Gets the arithmetic standard deviation of primary diameter
+    real GetPrimaryAStdDev() const;
+
+    //! Get the geometric mean primary diameter
+    real GetPrimaryGMean() const;
+
+    //! Gets the geometric standard deviation of primary diameter
+    real GetPrimaryGStdDev() const;
+
     //! Gets the value of one of the chemical components
     Sweep::real GetComponent(std::string name) const;
 
@@ -260,6 +269,9 @@ private:
 
     //! Update the tree structure's surface area by increment dS
     void UpdateParents(real dS);
+
+    //! Helper function to get a list of all primary diameters
+    void GetAllPrimaryDiameters(fvector &diams) const;
 
 
     // COPYING PARTICLES AND MAINTAINING TREE STRUCTURE

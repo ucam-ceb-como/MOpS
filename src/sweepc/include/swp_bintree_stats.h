@@ -124,12 +124,18 @@ public:
         );
 
 private:
+    //! Get geometric standard deviation of a list of diameters
+    fvector GetGeometricStdev(
+            std::vector<fvector> diams,
+            fvector weights
+            ) const;
+
     //! Number of statistics entries
-    static const unsigned int STAT_COUNT = 5;
+    static const unsigned int STAT_COUNT = 8;
 
     //! Indices for stats headers
     enum StatIndices {iNPrim=0, iPrimDiam=1, iSintLevel=2, iSintRate=3,
-        iSintTime=4};
+        iSintTime=4, iCollGStdev=5, iPrimGStdev=6, iGStdevMean=7};
 
     //! The stats
     fvector m_stats;
@@ -142,7 +148,7 @@ private:
     static const IModelStats::StatType m_mask[STAT_COUNT];
 
     //! PSL count
-    static const unsigned int PSL_COUNT  = 4;
+    static const unsigned int PSL_COUNT  = 7;
 
     // The PSL names.
     static const std::string m_const_pslnames[PSL_COUNT];
