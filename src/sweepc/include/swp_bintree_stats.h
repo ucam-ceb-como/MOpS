@@ -126,6 +126,7 @@ public:
 private:
     //! Get geometric standard deviation of a list of diameters
     fvector GetGeometricStdev(
+            const unsigned int num,
             std::vector<fvector> diams,
             fvector weights
             ) const;

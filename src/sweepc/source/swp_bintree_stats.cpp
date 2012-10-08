@@ -178,8 +178,10 @@ void BinTreeStats::Calculate(const Ensemble &e, real scale)
         }
     }
 
-    // Now get the geometric standard devs
-    fvector gstdevs = GetGeometricStdev(diams, weights);
+    // Now get the geometric standard devs, using [0] for dcol, [1] for dpri
+    // Default to 1.0 GSTDEV (Can't have GSTDEV=0)
+    fvector gstdevs;
+    gstdevs = GetGeometricStdev(2u, diams, weights);
     m_stats[iCollGStdev] = gstdevs[0];
     m_stats[iPrimGStdev] = gstdevs[1];
 
@@ -199,17 +201,22 @@ void BinTreeStats::Calculate(const Ensemble &e, real scale)
  * diameters. Currently does so for collision and primary diameters.
  * Also assumes here that the weights sum up to 1.0.
  *
+ * @param num           Number of diameter types to calculate gstdev for
  * @param diams         Vector of length number of particles, containing
  *                          a fvector of diameters for that particle.
  * @param weights       Vector of length number of particles storing weights
- * @param totalweight   Total statistical weight
  * @return              Vector with geo stdevs for diameter types
  */
 fvector BinTreeStats::GetGeometricStdev(
+        const unsigned int num,
         std::vector<fvector> diams,
         fvector weights) const {
 
     // Some checks first
+    if (diams.size() < size_t(1u)) {
+        // Return a default of 1.0 gstdev if no particles
+        return fvector(num,1.0);
+    }
     if (diams.size() != weights.size())
         throw std::runtime_error("Failed getting weights and diameters "
                 "in BinTreeStats::GetGeometricStdev()");
@@ -218,7 +225,7 @@ fvector BinTreeStats::GetGeometricStdev(
 
     // Then we must calculate the geometric means
     fvector means;
-    means.resize(diams[0].size(), 1.0);
+    means.resize(num, 1.0);
 
     for (i = 0; i != diams.size(); i++) {
         // Loop over diameter types
@@ -229,18 +236,18 @@ fvector BinTreeStats::GetGeometricStdev(
 
     // Now we can get the geometric stdevs
     fvector stdevs;
-    stdevs.resize(means.size(), 0.0);
+    stdevs.resize(num, 0.0);
     real dev(0.0);
     for (i = 0; i != diams.size(); i++) {
         // Loop over diameter types
-        for (j = 0; j != diams[i].size(); j++) {
+        for (j = 0; j != num; j++) {
             dev = log(diams[i].at(j) / means[j]);
             stdevs[j] += weights[i] * dev * dev;
         }
     }
 
     // Just need to do a bit more to the sums...
-    for (j = 0; j != stdevs.size(); j++) {
+    for (j = 0; j != num; j++) {
         stdevs[j] = exp(sqrt(stdevs[j]));
     }
 
