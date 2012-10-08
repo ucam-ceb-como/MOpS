@@ -306,6 +306,8 @@ protected:
     // Sets the particle cache to that of a spherical particle.
     void setSphereCache(void);
 
+    //! Calculate the number of allowable adjustments for a LPDA process
+    unsigned int CalculateMaxAdjustments(const fvector &dcomp, unsigned int n) const;
 
     // MEMORY MANAGEMENT.
 

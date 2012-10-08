@@ -1,95 +1,154 @@
 #!/bin/bash
 
-#  Copyright (C) 2011 William J Menz.
-#
-#   This script tests the Silica model (developed by Shraddha and Markus
-#   Sander) with the weighted transition kernl (w1 weightrule)
-#
-# Licence:
-#    This file is part of "mops".
-#
-#    brush is free software; you can redistribute it and/or
-#    modify it under the terms of the GNU General Public License
-#    as published by the Free Software Foundation; either version 2
-#    of the License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program; if not, write to the Free Software
-#    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-#
-#  Contact:
-#    Prof Markus Kraft
-#    Dept of Chemical Engineering
-#    University of Cambridge
-#    New Museums Site
-#    Pembroke Street
-#    Cambridge
-#    CB2 3RA
-#    UK
-#
-#    Email:       mk306@cam.ac.uk
-#    Website:     http://como.cheng.cam.ac.uk
+# SILICA 2 TEST FOR SWEEP
+# (C) WILLIAM J MENZ (WJM34) 2012
 
-#Path to executable should be supplied as first argument to
-#this script.  Script will fail and return a non-zero value
-#if no executable specified.
-program=$1
+# TESTS SILICA MODEL + TRANSITION KERNEL WITH WEIGHTS
+# CASE 1: FREE-MOLECULAR KERNEL
+#   M0 checked
+#
+# CASE 2: INTERPARTICLE REACTION ONLY
+#   Mass, Si:O ratio and water concentration checked
 
-if test -z "$program"
-  then
+######################################################################
+# GET ARGUMENTS
+
+# First argument is executable
+if [ -z "$1" ]; then
     echo "No executable supplied to $0"
     exit 255
-fi
-
-# An optional second argument may specify the working directory
-if test -n "$2"
-  then
-    cd "$2"
-    echo "changed directory to $2"
-fi
-
-cd silica2
-rm -f silica*
-
-"$program" -p -strang -rr mops-fm.inx
-fmResult=$?
-
-if(($fmResult==0)) 
-then
-  echo "Finished simulation"
 else
-  echo "FM Simulation failed"
-  exit $fmResult
+    program="$1"
 fi
-echo "========================"
 
-"$program" -p -strang -rr mops-sf.inx
-sfResult=$?
-
-if(($sfResult==0)) 
-then
-  echo "Finished simulation"
+# Second argument is working directory (required)
+cwd=`pwd`
+if [ -z "$2" ]; then
+    echo "No working dir supplied to $0"
+    exit 254
 else
-  echo "SF Simulation failed"
-  exit $sfResult
+    wkdir="$2"
 fi
-echo "========================"
+cd "$wkdir"
 
-dos2unix "silica-fm-part.csv"
-dos2unix "silica-sf-part.csv"
-perl test-silica2.pl
-postprocessResult=$?
 
-if(($postprocessResult!=0)) 
-  then
-    exit $postprocessResult
-fi
+######################################################################
+# DEFINE FUNCTIONS
 
-rm -f silica*
+# Checks for failed calculations
+function CheckErr {
+    if [ "$1" -gt "0" ]; then
+        echo "FAILED CALCULATION WITH ERR $1."
+        exit $1
+    fi
+}
 
-exit 0
+# Uses perl to compare two floats.
+function CheckValues {
+perl << EOF
+my \$oldval=$1;
+my \$newval=$2;
+my \$abserr=$3;
+my \$err=0;
+my \$retval=0;
+if(\$oldval != 0) {
+    \$err=abs(\$oldval-\$newval);
+    if (\$err > \$abserr) {
+            print "TEST FAILURE!!! GOT \$newval, wanted \$oldval (err \$err).\n";
+            \$retval=2
+    }
+} 
+exit \$retval
+EOF
+
+CheckErr $?
+}
+
+######################################################################
+# 1: FREE-MOLECULAR KERNEL
+# Rebased 3 Oct 2012, migration to BinTreeSilicaPrimary
+# on commit ca583a307d2c3f5c72f940c7ebb3bab9861cf7ac, 512 SPs & 20 runs
+
+# Define true vales
+name="M0 Fv dcol dpri sintlevel"
+true="2.86E+013 9.66E-012 8.24E-009 7.66E-009 0.919267"
+errs="5.86E+011 9.71E-016 6.94E-011 5.38E-011 0.003847"
+
+# Run calculation
+echo "Running MOPS for free-molecular kernel case."
+"$program" -p -strang -rr "mops-fm.inx" > /dev/null
+CheckErr $?
+
+# Parse CSV to check values.
+csvline1=`tail -1 silica-fm-part.csv`
+line1=(`echo $csvline1 | tr ',' '\n'`)
+m0=${line1[4]}
+fv=${line1[16]}
+dc=${line1[8]}
+dp=${line1[46]}
+sl=${line1[48]}
+results="$m0 $fv $dc $dp $sl"
+
+# Check values
+array0=($name)
+array1=($true)
+array2=($errs)
+array3=($results)
+count=${#array1[@]}
+for i in `seq 1 $count`
+do
+    echo "Checking for ${array0[$i-1]}."
+    CheckValues ${array1[$i-1]} ${array3[$i-1]} ${array2[$i-1]}
+    echo "    ..passed"
+done
+
+# Clean files
+echo "Free-molecular passes."
+rm silica-fm*
+
+######################################################################
+# 2: SLIP-FLOW (CONTINUUM) KERNEL
+# Rebased 3 Oct 2012, migration to BinTreeSilicaPrimary
+# on commit ca583a307d2c3f5c72f940c7ebb3bab9861cf7ac, 512 SPs & 20 runs
+
+# Define true vales
+name="M0 Fv dcol dpri sintlevel"
+true="1.62E+014 4.80E-009 7.50E-008 1.02E-008 0.0790885"
+errs="1.09E+013 7.64E-012 3.11E-009 5.97E-011 0.0077061"
+
+# Run calculation
+echo "Running MOPS for slip flow kernel case."
+"$program" -p -strang -rr "mops-sf.inx" > /dev/null
+CheckErr $?
+
+# Parse CSV to check values.
+csvline1=`tail -1 silica-sf-part.csv`
+line1=(`echo $csvline1 | tr ',' '\n'`)
+m0=${line1[4]}
+fv=${line1[16]}
+dc=${line1[8]}
+dp=${line1[46]}
+sl=${line1[48]}
+results="$m0 $fv $dc $dp $sl"
+
+# Check values
+array0=($name)
+array1=($true)
+array2=($errs)
+array3=($results)
+count=${#array1[@]}
+for i in `seq 1 $count`
+do
+    echo "Checking for ${array0[$i-1]}."
+    CheckValues ${array1[$i-1]} ${array3[$i-1]} ${array2[$i-1]}
+    echo "    ..passed"
+done
+
+# Clean files
+echo "Free-molecular passes."
+rm silica-sf*
+
+######################################################################
+# FINISH UP
+echo "All tests passed! :D"
+cd "$cwd"

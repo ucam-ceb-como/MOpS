@@ -67,7 +67,6 @@ namespace Sweep
 // Forward declare required classes.
 class Cell;
 class Particle;
-class SubParticle;
 
 namespace AggModels {
 class Primary;

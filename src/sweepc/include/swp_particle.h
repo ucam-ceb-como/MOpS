@@ -47,6 +47,7 @@
 #include "swp_params.h"
 #include "swp_particle_model.h"
 #include "swp_property_indices.h"
+#include "swp_model_factory.h"
 
 #include "camxml.h"
 
@@ -99,9 +100,6 @@ public:
     //! Create a new particle using the model according to the xml data
     static Particle* createFromXMLNode(const CamXML::Element& xml,
                                        const Sweep::ParticleModel& model);
-
-    //! Function to create silica particles from XML
-    static void createSilicaFromXML(const CamXML::Element& xml, Particle* pNew);
 
     // Operators.
     Particle &operator=(const Particle &rhs);
@@ -238,8 +236,8 @@ public:
         real dt,         // Delta-t for sintering.
         Cell &sys, // System which defines particle's environment.
         const Processes::SinteringModel &model, // Sintering model to use.
-        real wt,     // Statistical weight
-        rng_type &rng   // Random number generator
+        rng_type &rng,   // Random number generator
+        real wt     // Statistical weight
         );
 
 

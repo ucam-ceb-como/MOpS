@@ -1,14 +1,23 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <mechanism name="Silica nanoparticle inception and growth model" units="CGS">
-    <component id="silica" type="bulk">
-      <description>Silica</description>
+    <component id="silicon" type="bulk">
+      <description>silicon</description>
       <density units="g/cm3">2.2</density>
-      <molwt units="g/mol">60.084</molwt>
-      <coalthresh>1</coalthresh>
-    </component> 
+      <molwt units="g/mol">28.08</molwt>
+    </component>
+    <component id="oxygen" type="bulk">
+      <description>silicon</description>
+      <density units="g/cm3">2.2</density>
+      <molwt units="g/mol">16.00</molwt>
+    </component>
+    <component id="hydroxide" type="bulk">
+      <description>silicon</description>
+      <density units="g/cm3">2.2</density>
+      <molwt units="g/mol">17.01</molwt>
+    </component>
 
-    <particle id="[silica]" model="silica" subtree="false">
+    <particle id="[silica]" model="bintreesilica" subtree="false">
       <description>A silica particle.</description>
       <fractdim>1.8</fractdim>
       <sintering enable="false" model="viscous_flow">
@@ -17,18 +26,20 @@
         <Dpmin units="m">4.4e-9</Dpmin>
       </sintering>
     </particle>
-    
+
     <coagulation>
         <A>0.0</A>
         <kernel>transition</kernel>
     </coagulation>
-    
+
     <reaction type="surface" name="Surface Reaction" defer="true">
         <formula>[X] + H4O4SI to [X+1] + H2O</formula>
         <reactant id="H4O4SI" stoich="1"/>
         <product id="H2O" stoich="1"/>
-        <component id="silica" dx="+1"/>
-        <A>1e13</A> 
+        <component id="silicon" dx="+1"/>
+        <component id="oxygen" dx="+1"/>
+        <component id="hydroxide" dx="+2"/>
+        <A>1e13</A>
         <n>0.0</n>
         <E units="cal">0</E>
         <particleterm id="asn" power="1"/>
