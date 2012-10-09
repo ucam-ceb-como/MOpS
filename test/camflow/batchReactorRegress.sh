@@ -34,7 +34,7 @@ else
   exit 255
 fi
 
-ruby checkOutput.rb
+./checkOutput.pl
 result=$?
 if (($result!=0))
 then
