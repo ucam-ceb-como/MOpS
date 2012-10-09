@@ -42,6 +42,8 @@
 
 #include "swp_condensation.h"
 #include "swp_mechanism.h"
+#include "swp_primary.h"
+
 #include <cmath>
 #include <stdexcept>
 #include <cassert>

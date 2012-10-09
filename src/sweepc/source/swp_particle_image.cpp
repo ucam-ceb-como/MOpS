@@ -42,7 +42,6 @@
 
 #include "swp_particle_image.h"
 #include "swp_bintree_primary.h"
-#include "swp_silica_primary.h"
 #include "swp_surfvol_primary.h"
 #include "swp_PAH_primary.h"
 #include "string_functions.h"
@@ -114,18 +113,14 @@ void ParticleImage::Construct(const Particle &sp, const ParticleModel &model)
         }
         calc_FM(m_root, *(&rng));
 
-    } else if (model.AggModel() == AggModels::Bintree_ID) {
+    } else if (model.AggModel() == AggModels::BinTree_ID ||
+            model.AggModel() == AggModels::BinTreeSilica_ID) {
         // Binary Tree generic model
 
-        const AggModels::BintreePrimary *p;
-        p = dynamic_cast<const AggModels::BintreePrimary*>(sp.Primary());
+        const AggModels::BinTreePrimary *p;
+        p = dynamic_cast<const AggModels::BinTreePrimary*>(sp.Primary());
         ConstructTree(p, *(&rng));
-    } else if (model.AggModel() == AggModels::Silica_ID) {
-        // Silica (binary tree like) model
 
-        const AggModels::SilicaPrimary *p;
-        p = dynamic_cast<const AggModels::SilicaPrimary*>(sp.Primary());
-        ConstructTree(p, *(&rng));
     } else if (model.AggModel() == AggModels::PAH_KMC_ID) {
         // PAHPP (binary tree like) model
 

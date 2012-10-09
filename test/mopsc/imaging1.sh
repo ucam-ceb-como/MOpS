@@ -33,14 +33,13 @@ else
 fi
 
 # Second argument is working directory (required)
-cwd=`pwd`
 if [ -z "$2" ]; then
     echo "No working dir supplied to $0"
     exit 254
 else
-    wkdir=$2
+    wkdir="$2"
 fi
-cd $wkdir
+cd "$wkdir"
 
 ######################################################################
 # DEFINE FUNCTIONS
@@ -59,7 +58,7 @@ true="sphere {<0, 0, 0>, 16.8459, 1.0}"
 
 # Run calculation
 echo "Running MOPS for spherical primary case."
-$program -p -strang -rr "mops.spherical.inx" -s "sweep.spherical.xml" > /dev/null
+"$program" -p -strang -rr "mops.spherical.inx" -s "sweep.spherical.xml" > /dev/null
 CheckErr $?
 
 # Check that the particle given by $true is exactly the same.
@@ -78,7 +77,7 @@ true="22"   # 22 particles obtained with specified surface area & diam
 
 # Run calculation
 echo "Running MOPS for spherical primary case."
-$program -p -strang -rr "mops.surfvol.inx" -s "sweep.surfvol.xml" > /dev/null
+"$program" -p -strang -rr "mops.surfvol.inx" -s "sweep.surfvol.xml" > /dev/null
 CheckErr $?
 
 # Check that the particle given by $true is exactly the same.
@@ -98,14 +97,14 @@ fi
 
 # Run calculation
 echo "Running MOPS for bintree primary case."
-$program -p -strang -rr "mops.bintree.inx" -s "sweep.bintree.xml" > /dev/null
+"$program" -p -strang -rr "mops.bintree.inx" -s "sweep.bintree.xml" > /dev/null
 CheckErr $?
 
 # Check that there are four POV and -track CSV files.
-numPovFiles=`find -name "bintree*.pov" | wc -l`
-numCsvFiles=`find -name "bintree(0)-track*.csv" | wc -l`
+numPovFiles=`ls bintree*.pov -l | wc -l`
+numCsvFiles=`ls bintree\(0\)-track*.csv -l | wc -l`
 if [ $numPovFiles -eq 4 ] && [ $numCsvFiles -eq 4 ]; then
-    echo "Correct files found for bintree primary."
+    echo "Correct number of files found for bintree primary."
 else
     echo "ERROR: COULDN'T FIND REQUIRED FILES FROM BINTREE PRIMARY."
     exit 3
@@ -126,4 +125,3 @@ fi
 rm bintree*
 
 echo "All tests passed! :D"
-cd $cwd

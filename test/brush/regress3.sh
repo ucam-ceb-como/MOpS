@@ -47,12 +47,12 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 
 # Run the test
-./regress3/regress3a.pl $program
+perl ./regress3/regress3a.pl "$program"
 result=$?
 
 if((result!=0))
@@ -65,7 +65,7 @@ if((result!=0))
 fi
 
 # Run the test
-./regress3/regress3b.pl $program
+perl ./regress3/regress3b.pl "$program"
 result=$?
 
 if((result!=0))
@@ -78,7 +78,7 @@ if((result!=0))
 fi
 
 # Run the test
-./regress3/regress3c.pl $program
+perl ./regress3/regress3c.pl "$program"
 result=$?
 
 if((result!=0))

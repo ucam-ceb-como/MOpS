@@ -47,12 +47,12 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 
 # Run the first test
-./regress4/regress4a.pl $program
+perl ./regress4/regress4a.pl "$program"
 result=$?
 if((result!=0))
   then
@@ -64,7 +64,7 @@ if((result!=0))
 fi
 
 # Run the second test
-./regress4/regress4b.pl $program
+perl ./regress4/regress4b.pl "$program"
 result=$?
 if((result!=0))
   then

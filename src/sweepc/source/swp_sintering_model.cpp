@@ -44,7 +44,7 @@
 #include "swp_primary.h"
 #include "swp_particle.h"
 #include "swp_cell.h"
-#include "swp_subparticle.h"
+
 #include <cmath>
 #include <stdexcept>
 

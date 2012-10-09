@@ -8,10 +8,10 @@
 #   M0 checked
 #
 # CASE 2: INTERPARTICLE REACTION ONLY
-#   Mass, Si:O ratio and water concentration checked
+#   Mass, number of oxygen and water concentration checked
 #
 # CASE 3: SURFACE REACTION ONLY
-#   Dcol, Mass, Si:O ratio and water concentration checked
+#   Dcol, Mass, number of oxygen and water concentration checked
 #
 # Note that coagulation and sintering are taken care of by the test
 # mops.silica2
@@ -28,14 +28,13 @@ else
 fi
 
 # Second argument is working directory (required)
-cwd=`pwd`
 if [ -z "$2" ]; then
     echo "No working dir supplied to $0"
     exit 254
 else
-    wkdir=$2
+    wkdir="$2"
 fi
-cd $wkdir
+cd "$wkdir"
 
 ######################################################################
 # DEFINE FUNCTIONS
@@ -78,7 +77,7 @@ absErr="4.76906E+016"
 
 # Run calculation
 echo "Running MOPS for inception case."
-$program -p -strang -rr "mops-incep.inx" -s "sweep-incep.xml" -c "chem.inp" > /dev/null
+"$program" -p -strang -rr "mops-incep.inx" -s "sweep-incep.xml" -c "chem.inp" > /dev/null
 CheckErr $?
 
 # Parse CSV to check values.
@@ -97,14 +96,14 @@ rm silica-incep*
 # hash 76f42c72b130ea0dccd1ff6d7abbd37ca7b37686
 trueM="3.32E-008"
 errM="0.01E-008"
-trueRatio="0.222222"
-errRatio="0.00001"
+trueOxygen="9.00E11"
+errOxygen="0.009E11"
 trueWater="1.66E-013"
 errWater="0.01E-13"
 
 # Run calculation
 echo "Running MOPS for interparticle case."
-$program -p -strang -rr "mops-intp-sr.inx" -s "sweep-intp.xml" -c "chem-intp.inp" > /dev/null
+"$program" -p -strang -rr "mops-intp-sr.inx" -s "sweep-intp.xml" -c "chem-intp.inp" > /dev/null
 CheckErr $?
 
 # Parse CSV to check values.
@@ -112,8 +111,8 @@ csvline1=`tail -1 silica-intp-sr-part.csv`
 line1=(`echo $csvline1 | tr ',' '\n'`)
 mass=${line1[20]}
 CheckValues $trueM $mass $errM
-ratio=${line1[56]}
-CheckValues $trueRatio $ratio $errRatio
+oxygen=${line1[36]}
+CheckValues $trueOxygen $oxygen $errOxygen
 
 csvline1=`tail -1 silica-intp-sr-chem.csv`
 line1=(`echo $csvline1 | tr ',' '\n'`)
@@ -132,14 +131,14 @@ trueDcol="2.05E-008"
 errDcol="0.01E-8"
 trueM="9.88E-007"
 errM="0.01E-007"
-trueRatio="0.327529"
-errRatio="0.00001"
+trueOxygen="8.14E12"
+errOxygen="0.01E12"
 trueWater="1.22E-011"
 errWater="0.01E-11"
 
 # Run calculation
 echo "Running MOPS for surface reaction case."
-$program -p -strang -rr "mops-intp-sr.inx" -s "sweep-sr.xml" -c "chem-intp.inp" > /dev/null
+"$program" -p -strang -rr "mops-intp-sr.inx" -s "sweep-sr.xml" -c "chem-intp.inp" > /dev/null
 CheckErr $?
 
 # Parse CSV to check values.
@@ -149,8 +148,8 @@ dcol=${line1[8]}
 CheckValues $trueDcol $dcol $errDcol
 mass=${line1[20]}
 CheckValues $trueM $mass $errM
-ratio=${line1[56]}
-CheckValues $trueRatio $ratio $errRatio
+oxygen=${line1[36]}
+CheckValues $trueOxygen $oxygen $errOxygen
 
 csvline1=`tail -1 silica-intp-sr-chem.csv`
 line1=(`echo $csvline1 | tr ',' '\n'`)
@@ -162,4 +161,3 @@ echo "SR passes."
 rm silica-intp-sr*
 
 echo "All tests passed! :D"
-cd $cwd

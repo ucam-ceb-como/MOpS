@@ -13,6 +13,7 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_addcoag.cpp
                   source/swp_sprog_idealgas_wrapper.cpp
                   source/swp_bintree_primary.cpp
+                  source/swp_bintree_silica_primary.cpp
                   source/swp_bintree_stats.cpp
                   source/swp_birth_process.cpp
                   source/swp_cell.cpp
@@ -45,17 +46,15 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_process.cpp
                   source/swp_process_factory.cpp
                   source/swp_silica_interparticle.cpp
-                  source/swp_silica_primary.cpp
-                  source/swp_silica_stats.cpp
                   source/swp_silicon_inception.cpp
                   source/swp_sintering_model.cpp
                   source/swp_solver.cpp
-                  source/swp_subparticle.cpp
                   source/swp_surface_reaction.cpp
                   source/swp_surfvol_primary.cpp
                   source/swp_surfvolhydrogen_primary.cpp
                   source/swp_surfvol_stats.cpp
                   source/swp_surfvolhydrogen_stats.cpp
+                  source/swp_surfvol_silica_primary.cpp
                   source/swp_tracker.cpp
                   source/swp_transcoag.cpp
                   source/swp_tree_add_weighted_cache.cpp

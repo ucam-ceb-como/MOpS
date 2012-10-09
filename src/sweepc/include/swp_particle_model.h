@@ -296,10 +296,10 @@ public:
     const bool WriteBinaryTrees() const {return m_write_bintree;}
 
     //! Sets the value of the binary tree coalescence threshold
-    void SetBintreeCoalThresh(real ct) {m_bintree_coalthresh = ct;}
+    void SetBinTreeCoalThresh(real ct) {m_bintree_coalthresh = ct;}
 
     //! Return the coalescence threshold for bintree particle models.
-    const real GetBintreeCoalThresh() const {return m_bintree_coalthresh;}
+    const real GetBinTreeCoalThresh() const {return m_bintree_coalthresh;}
 
     //! Sets the value of the binary tree coalescence threshold
     void SetFractDim(real df) {m_fract_dim = df;}

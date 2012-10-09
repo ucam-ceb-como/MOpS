@@ -24,7 +24,7 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 cd bintree1
@@ -41,7 +41,7 @@ function CheckErr {
 }
 
 # Run the executable
-$program -p -strang -ensemble  > /dev/null
+"$program" -p -strang -ensemble  > /dev/null
 CheckErr $?
 
 # Run the perl script as a here document (laziness)

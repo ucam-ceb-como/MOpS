@@ -8,7 +8,7 @@
  *   Copyright (C) 2012 William J Menz
  *
  *   File purpose:
- *      Implementation of the BintreePrimary class.
+ *      Implementation of the BinTreePrimary class.
  *
  *   Licence:
  *      This file is part of "sweepc".
@@ -63,7 +63,7 @@ using namespace std;
  * Initialises a particle from no arguments.
  *
  */
-BintreePrimary::BintreePrimary() : Primary(),
+BinTreePrimary::BinTreePrimary() : Primary(),
     m_numprimary(0),
     m_primarydiam(0.0),
     m_children_radius(0.0),
@@ -90,7 +90,7 @@ BintreePrimary::BintreePrimary() : Primary(),
  * @param[in]   model       Model which defines the meaning of the primary
  *
  */
-BintreePrimary::BintreePrimary(const real time,
+BinTreePrimary::BinTreePrimary(const real time,
         const Sweep::ParticleModel &model)
 : Primary(time, model),
     m_numprimary(0),
@@ -111,7 +111,7 @@ BintreePrimary::BintreePrimary(const real time,
 {}
 
 //! Copy constructor.
-BintreePrimary::BintreePrimary(const BintreePrimary &copy)
+BinTreePrimary::BinTreePrimary(const BinTreePrimary &copy)
 {
     *this = copy;
     if (copy.m_leftchild!=NULL)
@@ -121,7 +121,7 @@ BintreePrimary::BintreePrimary(const BintreePrimary &copy)
 }
 
 //! Stream-reading constructor.
-BintreePrimary::BintreePrimary(std::istream &in,
+BinTreePrimary::BinTreePrimary(std::istream &in,
         const Sweep::ParticleModel &model) :
 m_numprimary(0),
 m_primarydiam(0.0),
@@ -142,23 +142,27 @@ m_rightparticle(NULL)
 }
 
 //! Default destructor.
-BintreePrimary::~BintreePrimary()
+BinTreePrimary::~BinTreePrimary()
 {
     delete m_leftchild;
     delete m_rightchild;
+
+    releaseMem();
 }
 
 
-//! Operator definition
-BintreePrimary &BintreePrimary::operator=(const Primary &rhs)
+// Primary operator
+BinTreePrimary &BinTreePrimary::operator=(const Primary &rhs)
 {
+    operator=(dynamic_cast<const BinTreePrimary&>(rhs));
+
     return *this;
 }
 
 //! Return a copy of the model data
-BintreePrimary *const BintreePrimary::Clone(void) const
+BinTreePrimary *const BinTreePrimary::Clone(void) const
 {
-   return new BintreePrimary(*this);
+   return new BinTreePrimary(*this);
 }
 
 
@@ -167,11 +171,11 @@ BintreePrimary *const BintreePrimary::Clone(void) const
  *
  * @param[in] source Pointer to the primary to be copied
 */
-void BintreePrimary::CopyTree(const BintreePrimary *source)
+void BinTreePrimary::CopyTree(const BinTreePrimary *source)
 {
     // Create the new left and right children with nothing in them
-    m_leftchild     = new BintreePrimary(source->CreateTime(),*m_pmodel);
-    m_rightchild    = new BintreePrimary(source->CreateTime(),*m_pmodel);
+    m_leftchild     = new BinTreePrimary(source->CreateTime(),*m_pmodel);
+    m_rightchild    = new BinTreePrimary(source->CreateTime(),*m_pmodel);
 
     // Copy the properties such as the volume,
     // surface area and list of constituent chemical units
@@ -212,7 +216,7 @@ void BintreePrimary::CopyTree(const BintreePrimary *source)
  *
  * @param[in] original Pointer to the primary to be copied
 */
-void BintreePrimary::UpdateAllPointers(const BintreePrimary *original)
+void BinTreePrimary::UpdateAllPointers(const BinTreePrimary *original)
 {
     // The primary has no children => there are no left and right particles
     if (original->m_leftchild == NULL) {
@@ -250,8 +254,8 @@ void BintreePrimary::UpdateAllPointers(const BintreePrimary *original)
  *@return   Stack that can be used to descend the same path by moving to the
  *          left child each time the top of the stack is true.
  */
-std::stack<bool> BintreePrimary::recordPath(const BintreePrimary* bottom,
-                                        const BintreePrimary* const top)
+std::stack<bool> BinTreePrimary::recordPath(const BinTreePrimary* bottom,
+                                        const BinTreePrimary* const top)
 {
     std::stack<bool> wasLeftChild;
 
@@ -275,7 +279,7 @@ std::stack<bool> BintreePrimary::recordPath(const BintreePrimary* bottom,
  *@pre  here must be a node of tree in which takeLeftBranch is a valid path
  *@post takeLeftBranch.empty() == true
  */
-BintreePrimary* BintreePrimary::descendPath(BintreePrimary *here,
+BinTreePrimary* BinTreePrimary::descendPath(BinTreePrimary *here,
                                     std::stack<bool> &takeLeftBranch) {
     while(!takeLeftBranch.empty()) {
         // Move one step down the tree in the instructed direction
@@ -300,18 +304,18 @@ BintreePrimary* BintreePrimary::descendPath(BintreePrimary *here,
  * @param[in] rhs   Pointer to the particle to be coagulated with this
  * @param[in] rng   Random number generator
 */
-BintreePrimary &BintreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
+BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 {
-    const BintreePrimary *rhsparticle = NULL;
-    rhsparticle = dynamic_cast<const AggModels::BintreePrimary*>(&rhs);
+    const BinTreePrimary *rhsparticle = NULL;
+    rhsparticle = dynamic_cast<const AggModels::BinTreePrimary*>(&rhs);
 
     // Don't sum-up components now. Wait for UpdateCache so as to not
     // double-count the values.
 
     // Create the new particles
-    BintreePrimary *newleft = new BintreePrimary(m_time, *m_pmodel);
-    BintreePrimary *newright = new BintreePrimary(m_time, *m_pmodel);
-    BintreePrimary copy_rhs(*rhsparticle);
+    BinTreePrimary *newleft = new BinTreePrimary(m_time, *m_pmodel);
+    BinTreePrimary *newright = new BinTreePrimary(m_time, *m_pmodel);
+    BinTreePrimary copy_rhs(*rhsparticle);
 
 
     //Randomly select where to add the second particle
@@ -378,7 +382,7 @@ BintreePrimary &BintreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
  *
  * @param[in] source Pointer to the primary to be copied
  */
-void BintreePrimary::CopyParts(const BintreePrimary *source)
+void BinTreePrimary::CopyParts(const BinTreePrimary *source)
 {
     // Set primary characteristics
     SetComposition(source->Composition());
@@ -391,7 +395,7 @@ void BintreePrimary::CopyParts(const BintreePrimary *source)
     SetVolume(source->Volume());
     SetMass(source->Mass());
 
-    // Set BintreePrimary model characteristics
+    // Set BinTreePrimary model characteristics
     m_numprimary        = source->m_numprimary;
     m_primarydiam       = source->m_primarydiam;
     m_children_radius   = source->m_children_radius;
@@ -419,7 +423,7 @@ void BintreePrimary::CopyParts(const BintreePrimary *source)
  *
  * @param time      Total time for which particles have been sintered
  */
-void BintreePrimary::SetSinteringTime(real time) {
+void BinTreePrimary::SetSinteringTime(real time) {
     m_sint_time = time;
 
     // Update children
@@ -435,13 +439,38 @@ void BintreePrimary::SetSinteringTime(real time) {
     }
 }
 
+/*!
+ * @brief       Overload of the SetTime function for BinTreePrimary
+ *
+ * Sets the LDPA update time throughout the binary tree. This is important
+ * as Merge can sometimes delete the originial root node, losing m_time
+ * stored in m_primary. This potentially leads to longer dt LDPA action
+ * times when UpdateParticle is called.
+ *
+ * @param t     LDPA update time
+ */
+void BinTreePrimary::SetTime(real t) {
+    m_time = t;
+
+    // Set LDPA time of children
+    if (m_leftchild != NULL) {
+        m_leftchild->SetTime(t);
+        m_rightchild->SetTime(t);
+    }
+
+    // Set LDPA time of particles
+    if (m_leftparticle != NULL) {
+        m_leftparticle->SetTime(t);
+        m_rightparticle->SetTime(t);
+    }
+}
 
 /*!
  * @brief       Randomly selects a primary in the binary tree
  *
  * Select a primary uniformly at random from this particle
  * and descend the aggregate tree to find the primary.
- * Note that most BintreePrimaries are nodes in a tree representing
+ * Note that most BinTreePrimaries are nodes in a tree representing
  * connectivity within an aggregate, so it is necessary to
  * descend the tree to find a primary that really is a
  * primary.
@@ -450,7 +479,7 @@ void BintreePrimary::SetSinteringTime(real time) {
  *
  * @return      Pointer to an object representing a physical primary
  */
-BintreePrimary *BintreePrimary::SelectRandomSubparticle(rng_type &rng)
+BinTreePrimary *BinTreePrimary::SelectRandomSubparticle(rng_type &rng)
 {
     // We want to choose an integer uniformly on the range [0, m_numprimary - 1]
     boost::random::uniform_smallint<int> uniformDistrib(0, m_numprimary - 1);
@@ -465,7 +494,7 @@ BintreePrimary *BintreePrimary::SelectRandomSubparticle(rng_type &rng)
  *
  * @return      Pointer to the next node down the tree on the path
 */
-BintreePrimary *BintreePrimary::SelectRandomSubparticleLoop(int target)
+BinTreePrimary *BinTreePrimary::SelectRandomSubparticleLoop(int target)
 {
     if (m_leftchild==NULL) return this;
     if (target<=m_leftchild->m_numprimary)
@@ -489,18 +518,13 @@ BintreePrimary *BintreePrimary::SelectRandomSubparticleLoop(int target)
  *
  * @return   Sintering level
  */
-real BintreePrimary::SinteringLevel()
+real BinTreePrimary::SinteringLevel()
 {
     if (m_leftchild != NULL && m_rightchild != NULL) {
         // Calculate the spherical surface
         const real spherical_surface =
                 4 * PI * m_children_radius * m_children_radius;
         real slevel(0.0);
-
-        if (m_children_surf <= spherical_surface) {
-            m_children_surf = spherical_surface;
-            return 1.0;
-        }
 
         if (m_children_surf == 0.0) {
             slevel = 0.0;
@@ -512,11 +536,8 @@ real BintreePrimary::SinteringLevel()
         if (slevel < 0.0) {
             return 0.0;
         } else if (slevel > 1.0) {
-            cout << "sweep: BintreePrimary::SinteringLevel() s.l. > 1.0";
             return 1.0;
-        } else {
-            return slevel;
-        }
+        } else return slevel;
     } else {
         // Particle is a primary
         m_children_surf = 0.0;
@@ -535,7 +556,7 @@ real BintreePrimary::SinteringLevel()
  *
  * @return      Boolean telling if the particle has sintered
  */
-bool BintreePrimary::CheckSintering()
+bool BinTreePrimary::CheckSintering()
 {
     bool hassintered=false;
     if (m_children_sintering > 0.95 && m_leftparticle != NULL) {
@@ -565,7 +586,7 @@ bool BintreePrimary::CheckSintering()
  *
  * @return      Pointer to new merged particle
  */
-BintreePrimary &BintreePrimary::Merge()
+BinTreePrimary &BinTreePrimary::Merge()
 {
 
     // Make sure this primary has children to merge
@@ -618,7 +639,7 @@ BintreePrimary &BintreePrimary::Merge()
             {
                 // Append to left subtree because there are fewer primaries
                 // (this is only to keep the tree balanced)
-                BintreePrimary *oldleftparticle = m_leftparticle;
+                BinTreePrimary *oldleftparticle = m_leftparticle;
                 for (unsigned int i=0; i != m_comp.size(); i++) {
                     m_rightparticle->m_comp[i] =
                             m_leftparticle->Composition(i) +
@@ -641,8 +662,8 @@ BintreePrimary &BintreePrimary::Merge()
                 }
                 m_rightchild->m_parent=oldleftparticle->m_parent;
 
-                BintreePrimary *oldleftchild    = m_leftchild;
-                BintreePrimary *oldparent       = m_parent;
+                BinTreePrimary *oldleftchild    = m_leftchild;
+                BinTreePrimary *oldparent       = m_parent;
 
                 // Copy the properties of the former leftchild to this node
                 // so that it can be removed from the aggregate tree structure
@@ -668,7 +689,7 @@ BintreePrimary &BintreePrimary::Merge()
             else
             {
                 // Append to right subtree
-                BintreePrimary *oldrightparticle = m_rightparticle;
+                BinTreePrimary *oldrightparticle = m_rightparticle;
                 for (unsigned int i=0; i != m_comp.size(); i++) {
                     m_leftparticle->m_comp[i] =
                             m_leftparticle->Composition(i) +
@@ -689,8 +710,8 @@ BintreePrimary &BintreePrimary::Merge()
                 }
                 m_leftchild->m_parent=oldrightparticle->m_parent;
 
-                BintreePrimary *oldrightchild=m_rightchild;
-                BintreePrimary *oldparent=m_parent;
+                BinTreePrimary *oldrightchild=m_rightchild;
+                BinTreePrimary *oldparent=m_parent;
 
                 // Copy the properties of the former leftchild to this node
                 // so that it can be removed from the aggregate tree structure
@@ -731,7 +752,7 @@ BintreePrimary &BintreePrimary::Merge()
  * @param[in] source Pointer to the original particle
  * @param[in] target Pointer to the new particle
 */
-void BintreePrimary::ChangePointer(BintreePrimary *source, BintreePrimary *target)
+void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *target)
 {
     if(m_rightparticle == source) {
         m_rightparticle = target;
@@ -762,7 +783,7 @@ void BintreePrimary::ChangePointer(BintreePrimary *source, BintreePrimary *targe
  *
  * Used after the children are coalesced
  */
-void BintreePrimary::ResetChildrenProperties()
+void BinTreePrimary::ResetChildrenProperties()
 {
     m_children_radius   = 0.0;
     m_children_vol      = 0.0;
@@ -775,7 +796,7 @@ void BintreePrimary::ResetChildrenProperties()
 /*!
  * @brief       Updates the properties of a primary
  */
-void BintreePrimary::UpdatePrimary(void)
+void BinTreePrimary::UpdatePrimary(void)
 {
     // Call parent class UpdateCache
     Primary::UpdateCache();
@@ -786,23 +807,23 @@ void BintreePrimary::UpdatePrimary(void)
 }
 
 //! UpdateCache helper function
-void BintreePrimary::UpdateCache(void)
+void BinTreePrimary::UpdateCache(void)
 {
     UpdateCache(this);
 }
 
 /*!
- * @brief       Updates the BintreePrimary cache
+ * @brief       Updates the BinTreePrimary cache
  *
  * Updates the whole particle, from root to the lowest leaf-node.
  * Calculates the sintering level and merges particles (through Check
  * Sintering) if necessary. Only accurately calculates collision
- * diameter and other properties used outside of BintreePrimary for
+ * diameter and other properties used outside of BinTreePrimary for
  * the root node.
  *
  * @param[in] root The root node of this particle
 */
-void BintreePrimary::UpdateCache(BintreePrimary *root)
+void BinTreePrimary::UpdateCache(BinTreePrimary *root)
 {
     // Update the children
     if (m_leftchild!=NULL) {
@@ -859,7 +880,8 @@ void BintreePrimary::UpdateCache(BintreePrimary *root)
 
             // There are m_numprimary-1 connections between the primary
             // particles
-            m_avg_sinter = m_avg_sinter / (m_numprimary - 1);
+            if (m_numprimary > 1)
+                m_avg_sinter = m_avg_sinter / (m_numprimary - 1);
 
             // Approxmiate the surface of the particle
             // (same as in ChangePointer)
@@ -897,7 +919,7 @@ void BintreePrimary::UpdateCache(BintreePrimary *root)
  *
  *@return   Mobility diameter of particle
  */
-real BintreePrimary::MobDiameter() const
+real BinTreePrimary::MobDiameter() const
 {
     real dmob(1.0);
 
@@ -936,7 +958,7 @@ real BintreePrimary::MobDiameter() const
  *
  * @param[in] filename Output filename
 */
-void BintreePrimary::PrintTree(string filename) const
+void BinTreePrimary::PrintTree(string filename) const
 {
     std::ofstream out;
     out.open(filename.c_str());
@@ -952,7 +974,7 @@ void BintreePrimary::PrintTree(string filename) const
  *
  * @param[in] out Output stream
 */
-void BintreePrimary::PrintTreeLoop(std::ostream &out)const
+void BinTreePrimary::PrintTreeLoop(std::ostream &out)const
 {
     // Non leaf-node case
     if (m_leftchild!=NULL)
@@ -996,7 +1018,7 @@ void BintreePrimary::PrintTreeLoop(std::ostream &out)const
  *
  * @param[in] out Output stream
 */
-void BintreePrimary::PrintTreeNode(std::ostream &out) const
+void BinTreePrimary::PrintTreeNode(std::ostream &out) const
 {
     out
         << "|m_surf="             << this->m_surf
@@ -1014,7 +1036,7 @@ void BintreePrimary::PrintTreeNode(std::ostream &out) const
         << "|this=" << this;
 }
 
-void BintreePrimary::PrintComponents() const
+void BinTreePrimary::PrintComponents() const
 {
     for (unsigned int i=0; i != m_comp.size(); i++) {
         cout << m_pmodel->Components(i)->Name() << " " << m_comp[i] << " ";
@@ -1035,35 +1057,17 @@ void BintreePrimary::PrintComponents() const
  * @param[in]   rng     Random number generator
  * @param[in]   n       Number of times for adjustment
  */
-unsigned int BintreePrimary::Adjust(const fvector &dcomp,
+unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
         const fvector &dvalues, rng_type &rng, unsigned int n)
 
 {
 
-    if(m_leftchild == NULL && m_rightchild == NULL)
-    {
-        unsigned int i = 0;
-
+    if (m_leftchild == NULL && m_rightchild == NULL) {
         real dV(0.0);
         real volOld = m_vol;
-        real dc(0.0);
 
-        // Add the components.
-        for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
-            dc = m_comp[i];
-            m_comp[i] += dcomp[i] * (real)n;
-            // Set component to zero if too many are removed.
-            if (m_comp[i] < 1.0) {
-                m_comp[i] = 0.0;
-                n = (unsigned int) abs(dc/dcomp[i]);
-            }
-        }
-
-        // Add the tracker values.
-        for (i=0; i!=min(m_values.size(),dvalues.size()); ++i)
-        {
-            m_values[i] += dvalues[i] * (real)n;
-        }
+        // Call to Primary to adjust the state space
+        n = Primary::Adjust(dcomp, dvalues, rng, n);
 
         // Stop doing the adjustment if n is 0.
         if (n > 0) {
@@ -1075,7 +1079,7 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
 
             if (dV > 0.0) {
                 // Surface change due to volume addition
-                dS = dV * 2.0 * m_pmodel->GetBintreeCoalThresh() / m_diam;
+                dS = dV * 2.0 * m_pmodel->GetBinTreeCoalThresh() / m_diam;
             }
             // TODO: Implement surface area reduction?
 
@@ -1108,7 +1112,7 @@ unsigned int BintreePrimary::Adjust(const fvector &dcomp,
  *
  * @param[in]   dS      Surface area increment to adjust area by
  */
-void BintreePrimary::UpdateParents(real dS) {
+void BinTreePrimary::UpdateParents(real dS) {
     if (m_parent != NULL) {
         m_parent->m_children_surf += dS;
         m_parent->m_children_sintering = m_parent->SinteringLevel();
@@ -1124,30 +1128,14 @@ void BintreePrimary::UpdateParents(real dS) {
  * @param[in]   rng     Random number generator
  * @param[in]   n       Number of times for adjustment
  */
-unsigned int BintreePrimary::AdjustIntPar(const fvector &dcomp,
+unsigned int BinTreePrimary::AdjustIntPar(const fvector &dcomp,
         const fvector &dvalues, rng_type &rng, unsigned int n)
 
 {
-    if(m_numprimary == 1)
-    {
-        unsigned int i = 0;
-
-        // Add the components.
-        for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i)
-        {
-            m_comp[i] += dcomp[i] * (real)n;
-            // Set component to zero if too many are removed.
-            if (m_comp[i] < 1.0) m_comp[i] = 0.0;
-        }
-
-        // Add the tracker values.
-        for (i=0; i!=min(m_values.size(),dvalues.size()); ++i)
-        {
-            m_values[i] += dvalues[i] * (real)n;
-        }
-    }
-    else
-    {
+    if(m_numprimary == 1) {
+        // Call to Primary to adjust the state space
+        n = Primary::AdjustIntPar(dcomp, dvalues, rng, n);
+    } else {
         // Generate random numbers
         boost::bernoulli_distribution<> leftRightChooser;
 
@@ -1157,9 +1145,9 @@ unsigned int BintreePrimary::AdjustIntPar(const fvector &dcomp,
         else
             return m_rightparticle->AdjustIntPar(dcomp, dvalues, rng, n);
     }
-        // Update property cache.
-        UpdateCache();
-        return n;
+    // Update property cache.
+    UpdateCache();
+    return n;
 
 }
 
@@ -1177,109 +1165,40 @@ unsigned int BintreePrimary::AdjustIntPar(const fvector &dcomp,
  * @param[in]   rng     Random number generator
  * @param[in]   wt      Statistical weight
  */
-void BintreePrimary::Sinter(real dt, Cell &sys,
+void BinTreePrimary::Sinter(real dt, Cell &sys,
                             const Processes::SinteringModel &model,
                             rng_type &rng,
                             real wt)
 {
-    //Only update the time on the root node
+    // Only update the time on the root node
     if (m_parent == NULL) {
         m_sint_time += dt;
         SetSinteringTime(m_sint_time);
     }
 
-    //Do only if there is a particle to sinter
-    if (m_leftparticle!=NULL)
-    {
-        // Store the old surface area of particles
-        //real surf_old = m_children_surf;
+    // Do only if there is a particle to sinter
+    if (m_leftparticle!=NULL && m_rightparticle!=NULL) {
 
-        // Calculate the spherical surface
-        const real spherical_surface=4*PI*m_children_radius*m_children_radius;
-
-        // Declare time step variables.
-        real t1=0.0, delt=0.0, tstop=dt;
-        real r=0.0;
-
-        // Define the maximum allowed change in surface
-        // area in one internal time step (10% spherical surface).
-        real dAmax = 0.1 * spherical_surface;
-
-        // The scale parameter discretises the delta-S when using
-        // the Poisson distribution.  This allows a smoother change
-        // (smaller scale = higher precision).
-        real scale = 0.01;
-
-        // Perform integration loop.
-        while (t1 < tstop)
-        {
-            // Calculate sintering rate.
-            r = model.Rate(m_time+t1, sys, *this);
-
-            if (r > 0) {
-                // Calculate next time-step end point so that the
-                // surface area changes by no more than dAmax.
-                delt = dAmax / max(r, 1.0e-300);
-
-                // Approximate sintering by a poisson process.  Calculate
-                // number of poisson events.
-                real mean;
-
-                if (tstop > (t1+delt)) {
-                    // A sub-step, we have changed surface by dAmax, on average
-                    mean = 1.0 / scale;
-                } else {
-                    // Step until end.  Calculate degree of sintering explicitly.
-                    mean = r * (tstop - t1) / (scale*dAmax);
-                }
-                boost::random::poisson_distribution<unsigned, real> repeatDistribution(mean);
-                const unsigned n = repeatDistribution(rng);
-
-                // Adjust the surface area.
-                if (n > 0) {
-                    m_children_surf -= (real)n * scale * dAmax;
-
-                    // Check that primary is not completely sintered.
-                    if (m_children_surf <= spherical_surface) {
-                        m_children_surf = spherical_surface;
-                        break;
-                    }
-                }
-
-                // Set t1 for next time step.
-                t1 += delt;
-            }
-
-        }
-
-        m_children_sintering = SinteringLevel();
-        m_sint_rate = r;
+        SinterNode(dt, sys, model, rng, wt);
 
         // Check if the sintering level is above the threshold, and merge
-        if(m_children_sintering > 0.95)
-          {
-                CheckSintering();
-                UpdateCache();
-                if (m_leftchild!=NULL && m_rightchild!=NULL)
-                {
-                    m_leftchild->Sinter(dt,sys,model,rng,wt);
-                    m_rightchild->Sinter(dt,sys,model,rng,wt);
-                }
-           }
-         else {
-             m_leftchild->Sinter(dt, sys, model,rng,wt);
-             m_rightchild->Sinter(dt, sys, model,rng,wt);
-         }
+        if(m_children_sintering > 0.95) CheckSintering();
+
+        // Now sinter any children this node has (if not merged after CheckSintering)
+        if (m_leftparticle!=NULL && m_rightparticle!=NULL) {
+            m_leftchild->Sinter(dt, sys, model,rng,wt);
+            m_rightchild->Sinter(dt, sys, model,rng,wt);
+        }
 
         UpdateCache();
 
         m_children_sintering = SinteringLevel();
-    }  // endif m_leftparticle != NULL
+    }
 
 }
 
 //! Returns the sintering rate
-real BintreePrimary::GetSintRate() const
+real BinTreePrimary::GetSintRate() const
 {
     real sint_rate = m_sint_rate;
     if(m_leftchild!=NULL)
@@ -1291,15 +1210,220 @@ real BintreePrimary::GetSintRate() const
     return sint_rate;
 }
 
+/*!
+ *
+ * Sinters the node in the binary tree for time dt
+ *
+ * @param[in]   dt      Time for which to sinter
+ * @param[in]   sys     Environment for particles
+ * @param[in]   model   Sintering model to apply
+ * @param[in]   rng     Random number generator
+ * @param[in]   wt      Statistical weight
+ */
+void BinTreePrimary::SinterNode(
+        real dt,
+        Cell &sys,
+        const Processes::SinteringModel &model,
+        rng_type &rng,
+        real wt
+        ) {
+    // Calculate the spherical surface
+    const real spherical_surface=4*PI*m_children_radius*m_children_radius;
+
+    // Declare time step variables.
+    real t1=0.0, delt=0.0, tstop=dt;
+    real r=0.0;
+
+    // Define the maximum allowed change in surface
+    // area in one internal time step (10% spherical surface).
+    real dAmax = 0.1 * spherical_surface;
+
+    // The scale parameter discretises the delta-S when using
+    // the Poisson distribution.  This allows a smoother change
+    // (smaller scale = higher precision).
+    real scale = 0.01;
+
+    // Perform integration loop.
+    while (t1 < tstop)
+    {
+        // Calculate sintering rate.
+        r = model.Rate(m_time+t1, sys, *this);
+
+        if (r > 0) {
+            // Calculate next time-step end point so that the
+            // surface area changes by no more than dAmax.
+            delt = dAmax / max(r, 1.0e-300);
+
+            // Approximate sintering by a poisson process.  Calculate
+            // number of poisson events.
+            real mean;
+
+            if (tstop > (t1+delt)) {
+                // A sub-step, we have changed surface by dAmax, on average
+                mean = 1.0 / scale;
+            } else {
+                // Step until end.  Calculate degree of sintering explicitly.
+                mean = r * (tstop - t1) / (scale*dAmax);
+            }
+            boost::random::poisson_distribution<unsigned, real> repeatDistribution(mean);
+            const unsigned n = repeatDistribution(rng);
+
+            // Adjust the surface area.
+            if (n > 0) {
+                m_children_surf -= (real)n * scale * dAmax;
+
+                // Check that primary is not completely sintered.
+                if (m_children_surf <= spherical_surface) {
+                    m_children_surf = spherical_surface;
+                    break;
+                }
+            }
+
+            // Set t1 for next time step.
+            t1 += delt;
+        }
+
+    }
+
+    m_children_sintering = SinteringLevel();
+    m_sint_rate = r;
+}
 
 
+/*!
+ * Get the number of units of a component
+ *
+ * @param name  Name of component
+ * @return      Number of units of a component
+ */
+Sweep::real BinTreePrimary::GetComponent(std::string name) const
+{
+    try {
+        return m_comp[m_pmodel->ComponentIndex(name)];
+    } catch(std::exception& e) {
+        throw e.what();
+    }
+}
+
+/*!
+ * Set the number of units of a component
+ *
+ * @param name  Name of component
+ * @param val   Value to set
+ */
+void BinTreePrimary::SetComponent(std::string name, Sweep::real val)
+{
+    try {
+        m_comp[m_pmodel->ComponentIndex(name)] = val;
+    } catch(std::exception& e) {
+        throw e.what();
+    }
+}
+
+/*!
+ * @return  Arithmetic standard dev. of primary diameter
+ */
+Sweep::real BinTreePrimary::GetPrimaryAStdDev() const
+{
+    // Get a list of all primary diameters first
+    fvector diams;
+    GetAllPrimaryDiameters(diams);
+    Sweep::real dpri = GetPrimaryDiam() / ((real) GetNumPrimary());
+
+    // If binary tree writing hasn't been enabled, an erroneous
+    // value will be returned. So just give zero.
+    if (!m_pmodel->WriteBinaryTrees())
+        return 0.0;
+
+    // Loop over diameters to get stdev
+    unsigned int i(0);
+    Sweep::real stdev(0.0), dev(0.0);
+    for (i = 0; i != diams.size(); i++) {
+        dev = (diams[i] - dpri);
+        stdev += dev * dev;
+    }
+
+    stdev = sqrt(stdev / diams.size());
+    return stdev;
+}
+
+/*!
+ * @return  Geometric mean primary diameter
+ */
+Sweep::real BinTreePrimary::GetPrimaryGMean() const
+{
+    // Get a list of all primary diameters first
+    fvector diams;
+    GetAllPrimaryDiameters(diams);
+
+    // If binary tree writing hasn't been enabled, an erroneous
+    // value will be returned. So just give zero.
+    if (!m_pmodel->WriteBinaryTrees())
+        return 0.0;
+
+    // Calculate the geometric mean diameter
+    real dpri(1.0);
+    real inv_n = 1.0 / (real) diams.size();
+    unsigned int i(0);
+    for (i = 0; i != diams.size(); i++) {
+        dpri *= pow(diams[i], inv_n);
+    }
+
+    return dpri;
+}
+
+/*!
+ *
+ * @return  Geometric stdev of primary diameter
+ */
+Sweep::real BinTreePrimary::GetPrimaryGStdDev() const
+{
+    // Get a list of all primary diameters first
+    fvector diams;
+    GetAllPrimaryDiameters(diams);
+    real dpri = GetPrimaryGMean();
+
+    // If binary tree writing hasn't been enabled, an erroneous
+    // value will be returned. So just give zero.
+    if (!m_pmodel->WriteBinaryTrees())
+        return 0.0;
+
+    // Loop over diameters to get stdev
+    unsigned int i(0);
+    Sweep::real stdev(0.0), dev(0.0);
+    for (i = 0; i != diams.size(); i++) {
+        dev = log(diams[i] / dpri); // (natural log)
+        stdev += dev * dev;
+    }
+
+    stdev = exp(sqrt(stdev / diams.size()));
+    return stdev;
+}
+
+/*!
+ * Loop through the particles and collect a list of primary
+ * particle diameters.
+ *
+ * @param diams     Vector of diameters
+ */
+void BinTreePrimary::GetAllPrimaryDiameters(fvector &diams) const
+{
+    // Only add diameter to list if it's a primary
+    if (m_leftchild == NULL && m_rightchild == NULL)
+        diams.push_back(m_diam);
+
+    if (m_leftchild != NULL && m_rightchild != NULL) {
+        m_leftchild->GetAllPrimaryDiameters(diams);
+        m_rightchild->GetAllPrimaryDiameters(diams);
+    }
+}
 
 /*!
  * @brief       Writes a particle to the binary stream
  *
  * @param out   Output stream
  */
-void BintreePrimary::Serialize(std::ostream &out) const
+void BinTreePrimary::Serialize(std::ostream &out) const
 {
     if (out.good()) {
         // Output the version ID (=0 at the moment).
@@ -1308,7 +1432,7 @@ void BintreePrimary::Serialize(std::ostream &out) const
 
         if (m_pmodel->WriteBinaryTrees()) {
             // Call the binary tree serialiser...
-            BinTreeSerializer <BintreePrimary> tree;
+            BinTreeSerializer <BinTreePrimary> tree;
             tree.Serialize(out, this);
         } else {
             // Just serialise the root node.
@@ -1317,7 +1441,7 @@ void BintreePrimary::Serialize(std::ostream &out) const
 
     } else {
         throw invalid_argument("Output stream not ready "
-                               "(Sweep, BintreePrimary::Serialize).");
+                               "(Sweep, BinTreePrimary::Serialize).");
     }
 }
 
@@ -1326,7 +1450,7 @@ void BintreePrimary::Serialize(std::ostream &out) const
  *
  * @param out   Output binary stream
  */
-void BintreePrimary::SerializePrimary(std::ostream &out) const
+void BinTreePrimary::SerializePrimary(std::ostream &out) const
 {
     if (out.good()) {
 
@@ -1365,7 +1489,7 @@ void BintreePrimary::SerializePrimary(std::ostream &out) const
 
     } else {
         throw invalid_argument("Output stream not ready "
-                               "(Sweep, BintreePrimary::SerializePrimary).");
+                               "(Sweep, BinTreePrimary::SerializePrimary).");
     }
 }
 
@@ -1381,7 +1505,7 @@ void BintreePrimary::SerializePrimary(std::ostream &out) const
  * @param in        Input binary stream
  * @param model     Particle model being used
  */
-void BintreePrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
+void BinTreePrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
     //UpdateCache();
     if (in.good()) {
@@ -1393,7 +1517,7 @@ void BintreePrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &m
 
         if (model.WriteBinaryTrees()) {
             // Call the binary tree serialiser...
-            BinTreeSerializer <BintreePrimary> tree;
+            BinTreeSerializer <BinTreePrimary> tree;
             tree.Deserialize(in, this, model);
         } else {
             // Just deserialise the root node.
@@ -1403,7 +1527,7 @@ void BintreePrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &m
 
     } else {
         throw invalid_argument("Input stream not ready "
-                               "(Sweep, BintreePrimary::Deserialize).");
+                               "(Sweep, BinTreePrimary::Deserialize).");
     }
 }
 
@@ -1413,7 +1537,7 @@ void BintreePrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &m
  * @param in        Input binary stream
  * @param model     Particle model being used
  */
-void BintreePrimary::DeserializePrimary(std::istream &in,
+void BinTreePrimary::DeserializePrimary(std::istream &in,
         const Sweep::ParticleModel &model)
 {
     if (in.good()) {
@@ -1453,6 +1577,6 @@ void BintreePrimary::DeserializePrimary(std::istream &in,
 
     } else {
         throw invalid_argument("Input stream not ready "
-                               "(Sweep, BintreePrimary::DeserializePrimary).");
+                               "(Sweep, BinTreePrimary::DeserializePrimary).");
     }
 }

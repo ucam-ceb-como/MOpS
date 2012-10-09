@@ -1,14 +1,23 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <mechanism name="Silica nanoparticle inception and growth model" units="CGS">
-    <component id="silica" type="bulk">
-      <description>Silica</description>
+    <component id="silicon" type="bulk">
+      <description>silicon</description>
       <density units="g/cm3">2.2</density>
-      <molwt units="g/mol">60.084</molwt>
-      <coalthresh>1</coalthresh>
-    </component> 
+      <molwt units="g/mol">28.08</molwt>
+    </component>
+    <component id="oxygen" type="bulk">
+      <description>silicon</description>
+      <density units="g/cm3">2.2</density>
+      <molwt units="g/mol">16.00</molwt>
+    </component>
+    <component id="hydroxide" type="bulk">
+      <description>silicon</description>
+      <density units="g/cm3">2.2</density>
+      <molwt units="g/mol">17.01</molwt>
+    </component>
 
-    <particle id="[silica]" model="silica" subtree="false">
+    <particle id="[silica]" model="bintreesilica" subtree="false">
       <description>A silica particle.</description>
       <fractdim>1.8</fractdim>
       <sintering enable="false" model="viscous_flow">
@@ -17,7 +26,7 @@
         <Dpmin units="m">4.4e-9</Dpmin>
       </sintering>
     </particle>
-    
+
     <coagulation>
         <A>0.0</A>
         <kernel>transition</kernel>
@@ -27,9 +36,10 @@
         <formula>H4O4SI + H4O4SI to [X] + H2O</formula>
         <reactant id="H4O4SI" stoich="2" m="9.981e-23" d="0.32e-7"/>
         <product id="H2O" stoich="1"/>
-        <particleout id="[X]"/>
-        <component id="silica" dx="+2"/>
-        <A>1</A>
+        <component id="silicon" dx="+2"/>
+        <component id="oxygen" dx="+1"/>
+        <component id="hydroxide" dx="+6"/>
+        <A>1.0</A>
     </inception>
 </mechanism>
 

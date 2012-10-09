@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <mechanism name="Silica nanoparticle inception and growth model" units="CGS">
-    <!-- Define particle components. -->
-    <component id="silica" type="bulk">
-        <description>
-        Silica
-        </description>
-        <density units="g/cm3">2.2</density>
-        <molwt units="g/mol">60.084</molwt>
-        <coalthresh>1</coalthresh>
+    <component id="silicon" type="bulk">
+      <description>silicon</description>
+      <density units="g/cm3">2.2</density>
+      <molwt units="g/mol">28.08</molwt>
+    </component> 
+    <component id="oxygen" type="bulk">
+      <description>silicon</description>
+      <density units="g/cm3">2.2</density>
+      <molwt units="g/mol">16.00</molwt>
+    </component> 
+    <component id="hydroxide" type="bulk">
+      <description>silicon</description>
+      <density units="g/cm3">2.2</density>
+      <molwt units="g/mol">17.01</molwt>
     </component> 
     
 
-    <particle id="[silica]" model="silica" subtree="false">
+    <particle id="[silica]" model="bintreesilica" subtree="false">
       <description>
         A silica particle.
       </description>
