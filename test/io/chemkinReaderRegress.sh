@@ -32,10 +32,11 @@ else
   exit 255
 fi
 
-#Compare the output files to the reference output
-diff --brief speciesParsed chemkinReader/speciesParsedOriginal
+#Compare the output files to the reference output while ignoring
+#whitespace differences.
+diff --brief -b speciesParsed chemkinReader/speciesParsedOriginal
 speciesCompResult=$?
-diff --brief reactionsParsed chemkinReader/reactionsParsedOriginal
+diff --brief -b reactionsParsed chemkinReader/reactionsParsedOriginal
 reactionsCompResult=$?
 
 if((speciesCompResult != 0))
