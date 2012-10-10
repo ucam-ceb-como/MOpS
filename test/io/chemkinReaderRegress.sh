@@ -32,13 +32,24 @@ else
   exit 255
 fi
 
-if (diff speciesParsed chemkinReader/speciesParsedOriginal >/dev/null && \
-    diff reactionsParsed chemkinReader/reactionsParsedOriginal >/dev/null);
-then
-  # All tests passed
-  echo "All tests passed"
-  rm -rf reactionsParsed speciesParsed
-  exit 0
-else
-  exit 1
+#Compare the output files to the reference output while ignoring
+#whitespace differences.
+diff --brief -b speciesParsed chemkinReader/speciesParsedOriginal
+speciesCompResult=$?
+diff --brief -b reactionsParsed chemkinReader/reactionsParsedOriginal
+reactionsCompResult=$?
+
+if((speciesCompResult != 0))
+  then
+    exit 1
 fi
+
+if((reactionsCompResult != 0))
+  then
+    exit 2
+fi
+
+# All tests passed if we get this far
+echo "All tests passed"
+rm -rf reactionsParsed speciesParsed
+exit 0

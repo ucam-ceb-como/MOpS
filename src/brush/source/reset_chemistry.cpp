@@ -225,7 +225,7 @@ const size_t ResetChemistry::sLaplacianMixFracIndex = 8;
 Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileType file_type,
                                       const Sprog::Mechanism& mech, const int verbosity) {
     // Delimeters to use when splitting lines of data from file into the individual column entries
-    const std::string delims(" ,\t");
+    const std::string delims(" ,\t\r");
 
     // Vector of names of the species in the mechanism
     std::vector<std::string> speciesNames;
