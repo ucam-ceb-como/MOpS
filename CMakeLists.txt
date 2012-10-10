@@ -135,6 +135,11 @@ target_link_libraries(chemkinReader-test chemkinReader ${Boost_LIBRARIES})
 
 add_test(chemkinReader.regress1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/io/chemkinReaderRegress.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/chemkinReader-test${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/io)
 
+########## Test Program for linear interpolator ######################
+add_executable(linInterp-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/utils/test_linear_interpolator.cpp)
+
+add_test(NAME utils.lininterp1 COMMAND linInterp-test)
+
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/comostrings)
