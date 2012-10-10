@@ -140,6 +140,12 @@ add_executable(linInterp-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesse
 
 add_test(NAME utils.lininterp1 COMMAND linInterp-test)
 
+########## Test program for Sweep::FixedChemistry ##############
+add_executable(sweepFixedMix-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/sweepc/fixedmix_test.cpp)
+target_link_libraries(sweepFixedMix-test brush ${Boost_LIBRARIES})
+
+add_test(NAME sweep.FixedMix COMMAND ${MOPSSUITE_SOURCE_DIR}/test/sweepc/fixedmix.sh $<TARGET_FILE:sweepFixedMix-test> ${MOPSSUITE_SOURCE_DIR}/test/sweepc/fixedmix)
+
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/comostrings)

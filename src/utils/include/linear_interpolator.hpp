@@ -51,7 +51,7 @@ namespace Utils {
 /*!
  * \brief Simple linear interpolation class
  *
- *@tparam	X 	Floating point type.
+ *@tparam       X 	Floating point type.
  *@tparam       Y	Type supporting multiplication by type X and addition of another instance of Y, effectively a vector field over X
  *
  * Data is stored internally as pair<X, Y> where X represents the position of
