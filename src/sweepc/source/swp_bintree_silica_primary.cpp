@@ -46,6 +46,7 @@
 #include "swp_aggmodel_type.h"
 #include "swp_primary.h"
 #include "swp_cell.h"
+#include "swp_sprog_idealgas_wrapper.h"
 
 
 using namespace Sweep::AggModels;

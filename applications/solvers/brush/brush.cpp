@@ -138,6 +138,9 @@ int main(int argc, char* argv[])
         else if (strcmp(argv[i], "--premix-alpha") == 0) {
             chemFileType = ResetChemistry::PremixAlpha;
         }
+        else if (strcmp(argv[i], "--fixed-chem") == 0) {
+            chemFileType = ResetChemistry::FixedChemistry;
+        }
         else if (strcmp(argv[i], "-h") == 0) {
             // Print help message and exit
             printUsage();

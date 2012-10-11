@@ -90,6 +90,13 @@ Sweep::FixedMixture::FixedMixture(const fvector& data,
 }
 
 /*!
+ *@return   Pointer to a deep copy
+ */
+Sweep::EnvironmentInterface* Sweep::FixedMixture::Clone() const {
+    return new FixedMixture(*this);
+}
+
+/*!
  * @param[in]    index    Index of species in chemical mechanism
  *
  * @return        Concentration of species
@@ -107,3 +114,5 @@ Sweep::real Sweep::FixedMixture::PropertyValue(const PropertyIndex index) const 
     throw std::runtime_error("PropertyValue not yet supported in Sweep::FixedMixture::PropertyValue");
     return 0.0;
 }
+
+

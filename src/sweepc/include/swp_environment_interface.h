@@ -65,6 +65,9 @@ public:
     //! Virtual destructor, to call through to implementation
     virtual ~EnvironmentInterface() {}
 
+    //! Virtual equivalent of copy constructor
+    virtual EnvironmentInterface* Clone() const = 0;
+
     //! Indices to identify species
     typedef unsigned SpeciesIndex;
 

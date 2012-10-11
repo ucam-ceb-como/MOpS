@@ -61,6 +61,9 @@ public:
     //! Construct from a mechanism
     SprogIdealGasWrapper(const Sweep::ParticleModel &model);
 
+    //! Virtual equivalent of copy constructor
+    EnvironmentInterface* Clone() const;
+
     //! Pressure in
     real Pressure() const;
 

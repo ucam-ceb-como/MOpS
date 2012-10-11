@@ -41,6 +41,7 @@
 
 #include "gpc_mech.h"
 #include "swp_cell.h"
+#include "swp_sprog_idealgas_wrapper.h"
 
 #include <fstream>
 #include <vector>
@@ -213,6 +214,18 @@ const size_t ResetChemistry::sLaplacianMixFracIndex = 8;
  * The PremixAlpha file format is the same as the premix format, except that
  * the requirement for a wdotA4 column is replaced by the requirement for an
  * Alpha column.
+ *
+ * Mandatory columns in the file for the Fixed Chemistry format are (\ref InputFileType),
+ * the unit specifications in square brackets are part of the required column headings
+ * - x[m] Spatial position to which the row of data applies
+ * - T[K] Temperature
+ * - rho[kg/m3] Mass density of the mixture
+ * - u[m/s] Velocity of the mixture
+ * - n[mol/m3] Total molar concentration
+ * - P[Pa] Pressure in mixture
+ * - mu[Pa.s] Viscosity of mixture
+ * - One column of concentration data for each species in the mechanism (\f$\mathrm{mol\,m^{-3}}\f$).
+ *
  *
  *\param[in]    fname       Path of file from which to read the data
  *\param[in]    file_type   Style of data in file

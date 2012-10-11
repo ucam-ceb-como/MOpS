@@ -71,6 +71,13 @@ Sweep::SprogIdealGasWrapper::SprogIdealGasWrapper(const ParticleModel& model)
 {}
 
 /*!
+ *@return   Pointer to a deep copy
+ */
+Sweep::EnvironmentInterface* Sweep::SprogIdealGasWrapper::Clone() const {
+    return new SprogIdealGasWrapper(*this);
+}
+
+/*!
  * @return    Pressure in \f$\mathrm{Pa}\f$
  */
 Sweep::real Sweep::SprogIdealGasWrapper::Pressure() const {

@@ -64,6 +64,9 @@ public:
     FixedMixture(const fvector& data, const Sprog::Mechanism& mech);
 
     //==== Methods implementing the EnvironmentInterface interface ====//
+    //! Virtual equivalent of copy constructor
+    virtual EnvironmentInterface* Clone() const;
+
     //! Pressure in Pa
     virtual real Pressure() const {return mPressure;}
 
@@ -87,6 +90,7 @@ public:
 
     //! Value of some mixture property that is not a species concentration
     virtual real PropertyValue(const PropertyIndex index) const;
+
     //===== End of EnvironmentInterface implementation ================//
 
 private:

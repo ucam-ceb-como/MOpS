@@ -48,6 +48,7 @@
 #include "swp_mechanism.h"
 #include "swp_params.h"
 #include "swp_primary.h"
+#include "swp_sprog_idealgas_wrapper.h"
 
 #include <boost/random/uniform_01.hpp>
 #include <boost/random/discrete_distribution.hpp>
