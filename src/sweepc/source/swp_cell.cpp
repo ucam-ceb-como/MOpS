@@ -93,6 +93,8 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_model      = rhs.m_model;
         m_smpvol     = rhs.m_smpvol;
         m_fixed_chem = rhs.m_fixed_chem;
+        m_inflow     = rhs.m_inflow;
+        m_outflow    = rhs.m_outflow;
     }
     return *this;
 }
