@@ -84,8 +84,10 @@ else
     echo "Doxygen on docs/Doxyfile successful."
 fi
 
-ln -sf mopssuite/html/index.html doc/documentationIndex.html
-ln -sf mopssuite/html/doxygen.css doc/doxygen.css
-cp -f doc/group_logo_portrait.png doc/mopssuite/html
+rm -f doc/documentationIndex.html
+cp -f doc/mopssuite/html/index.html doc/documentationIndex.html
+cp -f doc/mopssuite/html/doxygen.css doc/doxygen.css
+cp -f doc/mopssuite/html/tabs.css doc/tabs.css
+cp -f doc/mopssuite/html/*.png doc/
 
 echo "Documentation successfully created and stored in doc/"

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# This script regression tests the Camflow Batch Reactor model. (H2-O2 flame)
 
 #Absolute path to executable should be supplied as first argument to
 #this script.  Script will fail and return a non-zero value
@@ -16,33 +15,21 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd "$2"
+    cd $2
 fi
 
-# run camflow
-"$program"
+echo "sweep.FixedChem"
+# run the test
+$program
 
 # capture exit value of simulation
 simulationResult=$?
 
 if((simulationResult==0))
   then
-    echo "Finished simulation"
+    echo "Finished sweep.FixedChem"
     echo "========================"
 else
-  echo "****** Simulation failed ******"
-  exit 255
+  echo "****** sweep.FixedChem failed ******"
+  exit $simulationResult
 fi
-
-./checkOutput.pl
-result=$?
-if (($result!=0))
-then
-  exit 1
-else
-  # All tests passed
-  echo "All tests passed"
-  rm -rf reactionsParsed speciesParsed
-  exit 0
-fi
-

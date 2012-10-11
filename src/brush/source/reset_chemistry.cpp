@@ -40,21 +40,18 @@
 #include "reset_chemistry.h"
 
 #include "gpc_mech.h"
-#include "comostrings.h"
 #include "swp_cell.h"
 
 #include <fstream>
 #include <vector>
 #include <string>
-#include <ostream>
 #include <algorithm>
 #include <stdexcept>
 #include <cstdlib>
 #include <cassert>
-#include <cctype>
-#include <iomanip>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 
 using namespace Brush;
 
@@ -68,6 +65,18 @@ using namespace Brush;
  * have their own static constants.
  */
 const size_t ResetChemistry::sNumNonSpeciesData = 9;
+
+/*!
+ * For any element of mInputChemistryData the range
+ * [0, sNumNonSpeciesDataFixed) will contain all of the data that
+ * is not species concentrations.  This is only for the
+ * FixedMixture input file type.
+ *
+ * Index 0 is the spatial position to which the
+ * data applied, the other indices in the range should
+ * have their own static constants.
+ */
+const size_t ResetChemistry::sNumNonSpeciesDataFixed = 7;
 
 /*!
  * Index of spatial position data in the elements of mInputChemistryData.
@@ -102,11 +111,23 @@ const size_t ResetChemistry::sVelocityIndex = 3;
 const size_t ResetChemistry::sPAHFormationIndex = 4;
 
 /*!
+ * Total species concentration in  \f$\mathrm{mol\,m^{-3}}\f$.
+ * This only applies when file_type is FixedChemistry.
+ */
+const size_t ResetChemistry::sMolarDensityIndex = 4;
+
+/*!
  * Index of
  * \f[ \frac{\partial T}{\partial x}, \f]
  * for use in flamelet calculations.
  */
 const size_t ResetChemistry::sGradientTemperatureIndex = 5;
+
+/*!
+ * Index of pressure in Pa.
+ * This only applies when file_type is FixedChemistry.
+ */
+const size_t ResetChemistry::sPressureIndex = 5;
 
 /*!
  * Index of mixture fraction diffusion coefficient (only for use
@@ -115,6 +136,12 @@ const size_t ResetChemistry::sGradientTemperatureIndex = 5;
  * \f$\mathrm{m^2\,s^{-1}}\f$
  */
 const size_t ResetChemistry::sMixFracDiffCoeffIndex = 6;
+
+/*!
+ * Index of viscosity \f$\mathrm{Pa\,s}\f$.
+ * This only applies when file_type is FixedChemistry.
+ */
+const size_t ResetChemistry::sViscosityIndex = 6;
 
 /*!
  * Index of spatial gradient (in physical space) of mixture
@@ -193,11 +220,12 @@ const size_t ResetChemistry::sLaplacianMixFracIndex = 8;
  *\param[in]    verbosity   Level of debugging information sent to standard out (higher is more)
  *
  *\exception    std::runtime_error  No data for a species present in the mechanism
+ *\exception    std::runtime_error  Could not open file
  */
 Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileType file_type,
                                       const Sprog::Mechanism& mech, const int verbosity) {
     // Delimeters to use when splitting lines of data from file into the individual column entries
-    const std::string delims(" ,\t");
+    const std::string delims(" ,\t\r");
 
     // Vector of names of the species in the mechanism
     std::vector<std::string> speciesNames;
@@ -245,6 +273,16 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
             speciesNames.push_back("LaplZ");
             mMassFractionData = true;
             break;
+        case FixedChemistry:
+            speciesNames.push_back("x[m]");
+            speciesNames.push_back("T[K]");
+            speciesNames.push_back("rho[kg/m3]");
+            speciesNames.push_back("u[m/s]");
+            speciesNames.push_back("n[mol/m3]");
+            speciesNames.push_back("P[Pa]");
+            speciesNames.push_back("mu[Pa.s]"); // Note the dot between Pa and s.
+            // mMassFractionData not relevant, data is neither mass fraction nor mole fraction
+            break;
     }
             
 
@@ -283,14 +321,7 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
             std::cerr << "\nEnd of chemistry data columns" << std::endl;
         }
         
-        //BOOST_FOREACH(std::string speciesName, speciesNames)
-        const std::vector<std::string>::const_iterator speciesEnd = speciesNames.end();
-        for(std::vector<std::string>::const_iterator speciesIt = speciesNames.begin();
-            speciesIt != speciesEnd;
-            ++speciesIt) {
-
-            const std::string &speciesName = *speciesIt;
-
+        BOOST_FOREACH(std::string speciesName, speciesNames) {
             // Get an iterator to the occurrence of the name in the column headings vector
             const std::vector<std::string>::const_iterator foundIt = std::find(columnNamesBegin, columnNamesEnd, speciesName);
 
@@ -340,7 +371,11 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
             // Empty row of data for this line in the file, with one entry for
             // each item of non-species data.  The unknown number of species
             // entries will be added to the end of the vector.
-            data_point dataRow(sNumNonSpeciesData);
+            data_point dataRow;
+            if(file_type == FixedChemistry)
+                dataRow.resize(sNumNonSpeciesDataFixed);
+            else
+                dataRow.resize(sNumNonSpeciesData);
 
 //            std::cerr << '\n' << speciesFileIndices.size() << ' ' << lineEntries.size() << std::endl;
             for(size_t i = 0; i < speciesNames.size(); ++i) {
@@ -388,7 +423,8 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
                 // input file.
                 if((i <= sVelocityIndex) ||
                     ((file_type == CamflowFlamelet) && (i < sNumNonSpeciesData)) ||
-                    (((file_type == Premix) || (file_type == PremixAlpha)) && (i <= sGradientTemperatureIndex))) {
+                    (((file_type == Premix) || (file_type == PremixAlpha)) && (i <= sGradientTemperatureIndex)) ||
+                    ((file_type == FixedChemistry) && (i <= sViscosityIndex))) {
                     dataRow[i] = frac;
                 }
                 else {
@@ -411,7 +447,7 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
     else {
         std::string msg("failed to open ");
         msg += fname;
-        msg += " in PredCorrSolver::readChemistry()\n";
+        msg += " in ResetChemistry::ResetChemistry\n";
         throw std::runtime_error(msg);
      }
 }
@@ -602,33 +638,7 @@ real Brush::ResetChemistry::endLocation() const {
  *\param[in,out]    reac    Reactor whose chemistry will be replaced
  */
 void Brush::ResetChemistry::apply(const real x, Sweep::Cell &reac) const {
-    // Update the chemistry in each sub-reactor
-    data_point dummyDataPoint(mInputChemistryData.front().size(), 0);
-
-    // Set the position on a vector of the same type as the data points
-    // so that it can be passed to the comparison function in the
-    // call to lower_bound
-    dummyDataPoint.front() = x;
-
-    data_collection::const_iterator itData =
-            std::lower_bound(mInputChemistryData.begin(),
-                             mInputChemistryData.end(),
-                             dummyDataPoint,
-                             DataPointPositionComparator());
-
-    data_point dataToUse;
-    if(itData == mInputChemistryData.end()) {
-        // Cell is past the end of the data so use the last data point
-        dataToUse = mInputChemistryData.back();
-    }
-    else if(itData == mInputChemistryData.begin()) {
-        // Cell is before the start of the data so use the first data point
-        dataToUse = mInputChemistryData.front();
-    }
-    else {
-        // Interpolate the data
-        dataToUse = interpolate(x, *(itData - 1), *itData);
-    }
+    data_point dataToUse(interpolateData(x));
 
     // Build a chemical mixture object
     Sprog::Thermo::IdealGas chemMixture(*(reac.ParticleModel()->Species()));
@@ -750,3 +760,35 @@ void Brush::ResetChemistry::apply(const real x, Sweep::Cell &reac) const {
 
      return result;
  }
+
+Brush::ResetChemistry::data_point Brush::ResetChemistry::interpolateData(const real x) const {
+    // Create an empty entry to use in the seach
+    data_point dummyDataPoint(mInputChemistryData.front().size(), 0);
+
+    // Set the position on a vector of the same type as the data points
+    // so that it can be passed to the comparison function in the
+    // call to lower_bound
+    dummyDataPoint.front() = x;
+
+    data_collection::const_iterator itData =
+            std::lower_bound(mInputChemistryData.begin(),
+                             mInputChemistryData.end(),
+                             dummyDataPoint,
+                             DataPointPositionComparator());
+
+    data_point dataToUse;
+    if(itData == mInputChemistryData.end()) {
+        // Cell is past the end of the data so use the last data point
+        dataToUse = mInputChemistryData.back();
+    }
+    else if(itData == mInputChemistryData.begin()) {
+        // Cell is before the start of the data so use the first data point
+        dataToUse = mInputChemistryData.front();
+    }
+    else {
+        // Interpolate the data
+        dataToUse = interpolate(x, *(itData - 1), *itData);
+    }
+
+    return dataToUse;
+}

@@ -1,4 +1,4 @@
-/*! \mainpage MOPS Documentation Index
+/*! \mainpage MOPSSuite Documentation Index
  *
 \image html group_logo_portrait.png
 
@@ -17,7 +17,7 @@
 
  * \section install_sec Documentation
  *
- * \subsection step1 Libraries:
+ * \subsection Libraries:
  *  
  * <a href="mopsc/html/index.html">Mops</a><br>
  * <a href="sweepc/html/index.html">Sweep</a><br>
@@ -28,7 +28,7 @@
  * <a href="geometry/html/index.html">Geometry</a><br>
  * <a href="utils/html/index.html">Utils</a><br>
 
- * \subsection step1 Git Repository::
+ * \subsection Git Repository
 
 <a href="http://vienna.cheng.cam.ac.uk/cgit" target="_blank">Browse the Git Repository</a>
 
