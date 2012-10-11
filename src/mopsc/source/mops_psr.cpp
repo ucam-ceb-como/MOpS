@@ -324,7 +324,7 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot) const
 		}
 	} else {
         // Constant pressure.
-        ydot[m_iDens] = 0.0;
+        ydot[m_iDens] = 0.0; // NOT SURE
     }
 }
 
