@@ -254,6 +254,9 @@ public:
     //! Inform the ensemble that the particle at index i has been changed
     void Update(unsigned int i);
 
+    //! Get alpha for the ensemble (ABF model)
+    real Alpha(real T) const;
+
     // READ/WRITE/COPY.
 
     //! Writes the object to a binary stream.

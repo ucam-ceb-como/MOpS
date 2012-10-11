@@ -129,7 +129,7 @@ ActSiteReaction::ActSiteReaction(std::istream &in, const Sweep::Mechanism &mech)
 real ActSiteReaction::Rate(real t, const Cell &sys,
                            const Geometry::LocalGeometry1d &local_geom) const
 {
-    return SurfaceReaction::Rate(t, sys, local_geom) * SiteDensity(sys.GasPhase());
+    return SurfaceReaction::Rate(t, sys, local_geom) * SiteDensity(sys);
 }
 
 
@@ -139,7 +139,7 @@ real ActSiteReaction::Rate(real t, const Cell &sys,
 // the system. Process must be linear in particle number.
 real ActSiteReaction::Rate(real t, const Cell &sys, const Particle &sp) const
 {
-    return SurfaceReaction::Rate(t, sys, sp) * SiteDensity(sys.GasPhase());
+    return SurfaceReaction::Rate(t, sys, sp) * SiteDensity(sys);
 }
 
 /*!
@@ -219,22 +219,29 @@ real ActSiteReaction::radicalSiteFractionBP(const EnvironmentInterface &gas) con
  *  1614-1626, which requires the modelling of the number of surface hydrogen atoms
  *  on a particle (surf vol hydrogen model).
  *
- *\param[in]    gas     Gas mixture containing the soot particles
+ *\param[in]    sys     System for which rate is to be calculated
  *
  *\return       Concentration of surface sites available for reaction
  *
  */
-real ActSiteReaction::SiteDensity(const EnvironmentInterface &gas) const
+real ActSiteReaction::SiteDensity(const Cell &sys) const
 {
+    real alpha(0.0);
+
+    if (!sys.FixedChem())
+        alpha = sys.Particles().Alpha(sys.GasPhase().Temperature());
+    else
+        alpha = sys.GasPhase().PropertyValue(mAlphaIndex);
+
     switch(mRadicalSiteModel) {
     case ABFRadicalSiteModel:
         // This value of 2.3e19m^-2 is the density of H sites (whether active or not)
         // on the surface of a soot particle.  It can be found on p179 of the article
         // by Frenklach & Wang in "Soot Formation in Combustion", ed Bockhorn,
         // pub Springer 1994.
-        return 2.3e19 * radicalSiteFractionABF(gas) * gas.PropertyValue(mAlphaIndex);
+        return 2.3e19 * radicalSiteFractionABF(sys.GasPhase()) * alpha;
     case BPRadicalSiteModel:
-        return radicalSiteFractionBP(gas);
+        return radicalSiteFractionBP(sys.GasPhase());
     default:
         throw std::runtime_error("Unrecognised radical site model in ActSiteReaction::radicalSiteFraction");
         return 0.0;

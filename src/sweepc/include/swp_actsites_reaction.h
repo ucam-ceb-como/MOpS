@@ -98,7 +98,7 @@ public:
         ) const;
 
     //! Concentration of surface sites participating in this reaction (?units)
-    real SiteDensity(const EnvironmentInterface &gas) const;
+    real SiteDensity(const Cell &sys) const;
 
     //! Index for looking up an active sites factor in the gas phase
     void setActiveSitesIndex(const EnvironmentInterface::PropertyIndex index) {mAlphaIndex = index;}
