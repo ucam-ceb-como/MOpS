@@ -1,14 +1,14 @@
 /*!
  * @file    swp_bintree_stats.h
  * @author  William J Menz
- * @brief   Calculates statistics for BintreePrimary model
+ * @brief   Calculates statistics for BinTreePrimary model
  *
  *   Author(s):      William J Menz
  *   Project:        sweepc (population balance solver)
  *   Copyright (C) 2012 William J Menz
  *
  *   File purpose:
- *      Calculates statistics for BintreePrimary model
+ *      Calculates statistics for BinTreePrimary model
  *
  *   Licence:
  *      This file is part of "sweepc".
@@ -54,22 +54,22 @@
 namespace Sweep {
 
 namespace Stats {
-class BintreeStats : public IModelStats {
+class BinTreeStats : public IModelStats {
 public:
     //! Default constructor
-    BintreeStats();
+    BinTreeStats();
 
     //! Copy constructor
-    BintreeStats(const BintreeStats &copy) {*this = copy;}
+    BinTreeStats(const BinTreeStats &copy) {*this = copy;}
 
     //! Stream-reading constructor
-    BintreeStats(std::istream &in, const Sweep::ParticleModel &model);
+    BinTreeStats(std::istream &in, const Sweep::ParticleModel &model);
 
     //! Default destructor
-    virtual ~BintreeStats();
+    virtual ~BinTreeStats();
 
     //! Equate operator
-    BintreeStats &operator=(const BintreeStats &rhs);
+    BinTreeStats &operator=(const BinTreeStats &rhs);
 
 
     // IMPLEMENTATION
@@ -109,10 +109,10 @@ public:
 
     // READ/WRITE/COPY
     //! Creates a copy of the object.
-    BintreeStats *const Clone(void) const;
+    BinTreeStats *const Clone(void) const;
 
     //! Returns the model data type
-    unsigned int ID() const {return (unsigned int)AggModels::Bintree_ID;}
+    unsigned int ID() const {return (unsigned int)AggModels::BinTree_ID;}
 
     //! Writes the object to a binary stream.
     void Serialize(std::ostream &out) const;
@@ -124,12 +124,19 @@ public:
         );
 
 private:
+    //! Get geometric standard deviation of a list of diameters
+    fvector GetGeometricStdev(
+            const unsigned int num,
+            std::vector<fvector> diams,
+            fvector weights
+            ) const;
+
     //! Number of statistics entries
-    static const unsigned int STAT_COUNT = 5;
+    static const unsigned int STAT_COUNT = 8;
 
     //! Indices for stats headers
     enum StatIndices {iNPrim=0, iPrimDiam=1, iSintLevel=2, iSintRate=3,
-        iSintTime=4};
+        iSintTime=4, iCollGStdev=5, iPrimGStdev=6, iGStdevMean=7};
 
     //! The stats
     fvector m_stats;
@@ -142,7 +149,7 @@ private:
     static const IModelStats::StatType m_mask[STAT_COUNT];
 
     //! PSL count
-    static const unsigned int PSL_COUNT  = 4;
+    static const unsigned int PSL_COUNT  = 7;
 
     // The PSL names.
     static const std::string m_const_pslnames[PSL_COUNT];

@@ -44,13 +44,15 @@
 #include "swp_primary.h"
 #include "swp_aggmodel_type.h"
 #include "swp_surfvol_primary.h"
+#include "swp_surfvolhydrogen_primary.h"
+#include "swp_surfvol_silica_primary.h"
 #include "swp_PAH_primary.h"
 #include "swp_particle_stats.h"
 #include "swp_surfvol_stats.h"
+#include "swp_surfvolhydrogen_stats.h"
 #include "swp_PAH_stats.h"
-#include "swp_silica_stats.h"
-#include "swp_silica_primary.h"
 #include "swp_bintree_primary.h"
+#include "swp_bintree_silica_primary.h"
 #include "swp_bintree_stats.h"
 #include <stdexcept>
 #include <iostream>
@@ -68,23 +70,27 @@ using namespace std;
  *
  * @return      Pointer to dynamically allocated primary (caller must delete)
  */
-Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
-                                           const real time, const real position,
-                                           const ParticleModel &model)
+AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
+                                                      const real time, const real position,
+                                                      const ParticleModel &model)
 {
     switch (id) {
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolPrimary(time, model);
+        case AggModels::SurfVolHydrogen_ID:
+            return new AggModels::SurfVolHydrogenPrimary(time, model);
+        case AggModels::SurfVolSilica_ID:
+            return new AggModels::SurfVolSilicaPrimary(time, model);
 		case AggModels::PAH_KMC_ID:
             return new AggModels::PAHPrimary(time, position, model);
-		case AggModels::Silica_ID:
-			return new AggModels::SilicaPrimary(time, model);
-	    case AggModels::Bintree_ID:
-            return new AggModels::BintreePrimary(time, model);
+	    case AggModels::BinTree_ID:
+            return new AggModels::BinTreePrimary(time, model);
+        case AggModels::BinTreeSilica_ID:
+            return new AggModels::BinTreeSilicaPrimary(time, model);
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
-            return new Primary(time, model);
+            return new AggModels::Primary(time, model);
     }
 }
 
@@ -95,22 +101,26 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
  *
  * @return      Pointer to dynamically allocated primary (caller must delete)
  */
-Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
-                                           const real time, const ParticleModel &model)
+AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
+                                                      const real time, const ParticleModel &model)
 {
     switch (id) {
         case AggModels::SurfVol_ID:
             return new AggModels::SurfVolPrimary(time, model);
+        case AggModels::SurfVolHydrogen_ID:
+            return new AggModels::SurfVolHydrogenPrimary(time, model);
+        case AggModels::SurfVolSilica_ID:
+            return new AggModels::SurfVolSilicaPrimary(time, model);
 		case AggModels::PAH_KMC_ID:
             return new AggModels::PAHPrimary(time, model);
-		case AggModels::Silica_ID:
-            return new AggModels::SilicaPrimary(time, model);
-        case AggModels::Bintree_ID:
-            return new AggModels::BintreePrimary(time, model);
+        case AggModels::BinTree_ID:
+            return new AggModels::BinTreePrimary(time, model);
+        case AggModels::BinTreeSilica_ID:
+            return new AggModels::BinTreeSilicaPrimary(time, model);
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
-            return new Primary(time, model);
+            return new AggModels::Primary(time, model);
     }
 }
 
@@ -119,11 +129,11 @@ Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
 // Reads a primary particle from a binary stream.  First reads
 // the primary type ID, in order to create a primary of the
 // correct type.
-Primary *const ModelFactory::ReadPrimary(std::istream &in,
-                                         const ParticleModel &model)
+AggModels::Primary *const ModelFactory::ReadPrimary(std::istream &in,
+                                                    const ParticleModel &model)
 {
     if (in.good()) {
-        Primary *pri = NULL;
+        AggModels::Primary *pri = NULL;
 
         // Read the model type from the input stream.
         unsigned int type;
@@ -133,19 +143,25 @@ Primary *const ModelFactory::ReadPrimary(std::istream &in,
         // an exception if the type is invalid.
         switch ((AggModels::AggModelType)type) {
             case AggModels::Spherical_ID:
-                pri = new Primary(in, model);
+                pri = new AggModels::Primary(in, model);
                 break;
             case AggModels::SurfVol_ID:
                 pri = new AggModels::SurfVolPrimary(in, model);
                 break;
+            case AggModels::SurfVolHydrogen_ID:
+                pri = new AggModels::SurfVolHydrogenPrimary(in, model);
+                break;
+            case AggModels::SurfVolSilica_ID:
+                pri = new AggModels::SurfVolSilicaPrimary(in, model);
+                break;
 			case AggModels::PAH_KMC_ID:
                 pri = new AggModels::PAHPrimary(in, model);
                 break;
-			case AggModels::Silica_ID:
-                pri = new AggModels::SilicaPrimary(in, model);
+            case AggModels::BinTree_ID:
+                pri = new AggModels::BinTreePrimary(in, model);
                 break;
-            case AggModels::Bintree_ID:
-                pri = new AggModels::BintreePrimary(in, model);
+            case AggModels::BinTreeSilica_ID:
+                pri = new AggModels::BinTreeSilicaPrimary(in, model);
                 break;
             default:
                 throw invalid_argument("Invalid model ID (Sweep, "
@@ -163,7 +179,7 @@ Primary *const ModelFactory::ReadPrimary(std::istream &in,
 
 // Writes a primary particle, along with its
 // ID, to an output stream.
-void ModelFactory::WritePrimary(const Primary &pri, std::ostream &out)
+void ModelFactory::WritePrimary(const AggModels::Primary &pri, std::ostream &out)
 {
     if (out.good()) {
         // Write the model Serial signature type to the stream.
@@ -231,12 +247,16 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
             return NULL;
         case AggModels::SurfVol_ID:
             return new Stats::SurfVolStats();
+        case AggModels::SurfVolHydrogen_ID:
+            return new Stats::SurfVolHydrogenStats();
+        case AggModels::SurfVolSilica_ID:
+            return new Stats::SurfVolStats();
 		case AggModels::PAH_KMC_ID:
             return new Stats::PAHStats();       // ms785: postprocessing not yet implemented
-		case AggModels::Silica_ID:
-			return new Stats::SilicaStats();
-		case AggModels::Bintree_ID:
-		    return new Stats::BintreeStats();
+		case AggModels::BinTree_ID:
+		    return new Stats::BinTreeStats();
+	      case AggModels::BinTreeSilica_ID:
+	            return new Stats::BinTreeStats();
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateAggStats).");
@@ -245,7 +265,6 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
 
 
 // AGGEGATION MODEL STREAM INPUT.
-
 
 // Reads aggregation model stats from a binary stream.  The first
 // item read is the model ID which tells the ModelFactory what type
@@ -266,14 +285,20 @@ Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in,
             case AggModels::SurfVol_ID:
                 stats = new Stats::SurfVolStats(in, model);
                 break;
+            case AggModels::SurfVolHydrogen_ID:
+                stats = new Stats::SurfVolHydrogenStats(in, model);
+                break;
+            case AggModels::SurfVolSilica_ID:
+                stats = new Stats::SurfVolStats(in, model);
+                break;
 			case AggModels::PAH_KMC_ID:
                 stats = new Stats::PAHStats(in, model);
                 break;
-			case AggModels::Silica_ID:
-                stats = new Stats::SilicaStats(in, model);
+            case AggModels::BinTree_ID:
+                stats = new Stats::BinTreeStats(in, model);
                 break;
-            case AggModels::Bintree_ID:
-                stats = new Stats::BintreeStats(in, model);
+            case AggModels::BinTreeSilica_ID:
+                stats = new Stats::BinTreeStats(in, model);
                 break;
             default:
                 throw invalid_argument("Invalid model ID (Sweep, "

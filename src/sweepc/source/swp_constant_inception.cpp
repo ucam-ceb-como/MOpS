@@ -39,6 +39,7 @@
 
 #include "swp_constant_inception.h"
 #include "swp_mechanism.h"
+#include "swp_primary.h"
 
 #include "local_geometry1d.h"
 

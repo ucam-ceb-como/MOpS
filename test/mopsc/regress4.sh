@@ -9,7 +9,7 @@ program=$1
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 
@@ -18,7 +18,7 @@ rm regression4a*
 
 
 echo "Weighted particle simulation of constant coagulation kernel"
-$program -flamepp -p -gp ./regress4/regress4.inp -rr ./regress4/regress4.inx -s ./regress4/regress4.xml -c ./regress4/chem.inp -t ./regress4/therm.dat
+"$program" -flamepp -p -gp ./regress4/regress4.inp -rr ./regress4/regress4.inx -s ./regress4/regress4.xml -c ./regress4/chem.inp -t ./regress4/therm.dat
 echo "Finished simulation"
 echo "========================"
 

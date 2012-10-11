@@ -15,7 +15,7 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 
@@ -26,7 +26,7 @@ rm regression3a*
 
 # run mops on a very simple problem with weighted particles and additive kernel
 echo "Weighted particle simulation of additive coagulation kernel"
-$program -flamepp -p -gp ./regress3/regress3.inp -rr ./regress3/regress3.inx -s ./regress3/regress3.xml -c ./regress3/chem.inp -t ./regress3/therm.dat
+"$program" -flamepp -p -gp ./regress3/regress3.inp -rr ./regress3/regress3.inx -s ./regress3/regress3.xml -c ./regress3/chem.inp -t ./regress3/therm.dat
 echo "Finished simulation"
 echo "========================"
 

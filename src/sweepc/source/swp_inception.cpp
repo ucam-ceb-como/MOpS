@@ -57,13 +57,13 @@ using namespace std;
 
 // Default constructor (protected).
 Inception::Inception(void)
-: Process(), m_a(1.0)
+: Process()
 {
 }
 
 // Initialising constructor.
 Inception::Inception(const Sweep::Mechanism &mech)
-: Process(mech), m_a(1.0)
+: Process(mech)
 {
 }
 
@@ -97,15 +97,6 @@ Inception &Inception::operator =(const Inception &rhs)
     }
     return *this;
 }
-
-
-// RATE CONSTANT.
-
-// Returns the rate constant.
-real Inception::A(void) const {return m_a;}
-
-// Sets the rate constant.
-void Inception::SetA(real a) {m_a = a;}
 
 
 // PROPERTIES OF INCEPTED PARTICLES.
@@ -219,16 +210,12 @@ void Inception::Serialize(std::ostream &out) const
         // Serialize base class.
         Process::Serialize(out);
 
-        // Write rate constant.
-        double v = (double)m_a;
-        out.write((char*)&v, sizeof(v));
-
-
         // Write new component count.
         unsigned int n = (unsigned int)m_newcomp.size();
         out.write((char*)&n, sizeof(n));
 
         // Write component values.
+        double v(0.0);
         for (fvector::const_iterator i=m_newcomp.begin(); i!=m_newcomp.end(); ++i) {
             v = (double)*i;
             out.write((char*)&v, sizeof(v));
@@ -270,10 +257,6 @@ void Inception::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
             case 0:
                 // Deserialize base class.
                 Process::Deserialize(in, mech);
-
-                // Read rate constant.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_a = (real)val;
 
                 // Read new component count.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));

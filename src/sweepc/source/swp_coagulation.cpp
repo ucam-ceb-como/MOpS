@@ -61,7 +61,6 @@ using namespace std;
  */
  Coagulation::Coagulation(const Sweep::Mechanism &mech)
  : Process(mech)
- , m_a(1.0)
  , mPositionChoice(NoPositionChoice)
  {}
 
@@ -341,9 +340,6 @@ void Coagulation::Serialize(std::ostream &out) const
         const unsigned int version = 0;
         out.write((char*)&version, sizeof(version));
 
-        // Output rate scaling factor
-        out.write(reinterpret_cast<const char*>(&m_a), sizeof(m_a));
-
         // Output position choice rule
         out.write(reinterpret_cast<const char*>(&mPositionChoice), sizeof(mPositionChoice));
 
@@ -368,10 +364,6 @@ void Coagulation::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 
         switch (version) {
             case 0:
-                real a;
-                in.read(reinterpret_cast<char*>(&a), sizeof(a));
-                SetA(a);
-
                 in.read(reinterpret_cast<char*>(&mPositionChoice), sizeof(mPositionChoice));
 
                 // Deserialize base class.

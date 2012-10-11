@@ -47,16 +47,28 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 
-# Run the test
-./regress4/regress4a.pl $program
+# Run the first test
+perl ./regress4/regress4a.pl "$program"
 result=$?
 if((result!=0))
   then
     echo "Simulation script 4a failed"
+    echo "**************************"
+    echo "****** TEST FAILURE ******"
+    echo "**************************"
+    exit $result
+fi
+
+# Run the second test
+perl ./regress4/regress4b.pl "$program"
+result=$?
+if((result!=0))
+  then
+    echo "Simulation script 4b failed"
     echo "**************************"
     echo "****** TEST FAILURE ******"
     echo "**************************"

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?><mops version="2">
+  
+  <!-- Default parameters (can be overidden). --> 
+  <runs>1</runs>
+  <iter>2</iter>
+  <atol>1.0e-18</atol> 
+  <rtol>1.0e-4</rtol>
+  <pcount>4096</pcount>
+  <maxm0>1.0e9</maxm0>
+  <relax>0.5</relax>
+  
+
+  <!-- Reactor definition (given initial conditions). -->
+  <reactor constt="true" constv="true" id="Test_System" type="batch" units="mol/mol">
+    <component id="SIH4">0.1</component>
+    <component id="AR">0.90</component>
+    <temperature units="K">1400</temperature>
+    <pressure units="bar">0.025</pressure>
+   </reactor>
+
+  <!-- Output time sequence. -->
+  <timeintervals splits="15">
+    <start>0.0</start>
+    <time splits="100" steps="50">100</time>
+  </timeintervals>
+  
+  <!-- Simulation output settings. -->
+  <output>
+    
+    <console interval="1" msgs="true">
+      <tabular>
+        <column fmt="sci">time</column>
+        <!--column fmt="sci">A4</column-->
+        <column fmt="float">#sp</column>
+        <column fmt="sci">m0</column>
+        <column fmt="sci">T</column>
+        <column fmt="sci">SIH4</column>
+        <!--column fmt="sci">fv</column-->
+        <column fmt="sci">ct</column>
+      </tabular>
+    </console>
+    <ptrack enable="false" ptcount="50"/>
+
+
+    <!-- File name for output (excluding extensions). -->
+    <filename>silicon</filename>
+  </output>
+</mops>

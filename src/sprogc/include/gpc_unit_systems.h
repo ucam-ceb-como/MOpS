@@ -56,6 +56,6 @@ namespace Sprog
 
     // Enumeration of different pressure units.
     enum PressureUnits {Pascal, Bar, Atm};
-};
+}
 
 #endif

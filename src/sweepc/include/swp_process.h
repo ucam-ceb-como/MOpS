@@ -64,12 +64,8 @@ namespace Sweep
 class Mechanism;
 // Forward declare the Cell class.
 class Cell;
-
-namespace Transport
-{
-    // Forward declaration of unused argument type
-    struct TransportOutflow;
-}
+// Forward declare the gas phase interface
+class EnvironmentInterface;
 
 namespace Processes
 {
@@ -113,16 +109,12 @@ public:
     // Sets the parent mechanism
     void SetMechanism(const Sweep::Mechanism &mech);
 
-    // VISCOSITY MODEL.
+    // SCALING FACTOR
+    //! Scaling factor for rate.
+    real A(void) const {return m_a;}
 
-    //! Returns the viscosity model
-    Sweep::ViscosityModel ViscosityModel() const;
-
-    //! Sets the process' viscosity model
-    void SetViscosityModel(Sweep::ViscosityModel vmodel);
-
-    //! Returns the viscosity for the given model
-    real GetViscosity(const Cell &sys) const;
+    //! Sets the rate constant.
+    void SetA(real a) {m_a = a;}
 
     // REACTANTS.
 
@@ -168,16 +160,6 @@ public:
         int mu            // Stoichiometry value.
         );
 
-    // Adds a reactant given the species name.
-    void AddProduct(
-        const std::string &name, // Species name.
-        int mu                   // Stoichiometry value.
-        );
-
-    // Removes a reactant, given by name, from the reaction.
-    void RemoveProduct(const std::string &name);
-
-
 	// TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
     //! Rate of the process for the given system.
@@ -211,7 +193,7 @@ public:
      *
      * \param[in]       t           Time
      * \param[in,out]   sys         System to update
-     * \param[in]       local_geom  Details of local phsyical layout
+     * \param[in]       local_geom  Details of local physical layout
      * \param[in]       iterm       Process term responsible for this event
      * \param[in,out]   rng         Random number generator
      *
@@ -258,18 +240,16 @@ protected:
     Sprog::StoichMap m_reac; // Reactant species stoichiometry.
     Sprog::StoichMap m_prod; // Product species stoichiometry.
 
-    // Model for the process' viscosity calculation
-    Sweep::ViscosityModel m_viscosity_model;
+    // Process rate scaling factor
+    real m_a;
 
     // Default constructor is protected so that processes cannot
     // be defined without knowledge of the parent mechanism.
     Process(void);
 
-    // Calculates the gas-phase chemistry contribution to the rate
-    // expression.
+    //!Gas-phase chemistry contribution to the rate expression.
     real chemRatePart(
-        const fvector &fracs, // Species mole fractions in gas phase.
-        real density          // Gas phase molar density.
+        const EnvironmentInterface &gas
         ) const;
 
     // Adjusts the gas-phase composition using the reactants and

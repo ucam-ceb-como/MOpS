@@ -62,8 +62,10 @@ PAHInception::PAHInception(void)
 }
 
 // Initialising constructor.
-PAHInception::PAHInception(const Sweep::Mechanism &mech)
+PAHInception::PAHInception(const Sweep::Mechanism &mech,
+                          const EnvironmentInterface::PropertyIndex pah_index)
 : Inception(mech)
+, mPAHFormationIndex(pah_index)
 {
     m_name = "PAHInception";
 }
@@ -209,7 +211,7 @@ int PAHInception::AddInceptedPAH(const int i, const real t, Cell &sys,rng_type &
 real PAHInception::Rate(real t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 {
-    const real rate = NA*sys.GasPhase().PAHFormationRate()*A();
+    const real rate = NA * sys.GasPhase().PropertyValue(mPAHFormationIndex) * A();
 
     // PAHFormation rate may be negative which means no inception
     if(rate < 0.0)
@@ -257,6 +259,8 @@ void PAHInception::Serialize(std::ostream &out) const
         // Serialize base class.
         Inception::Serialize(out);
 
+        out.write(reinterpret_cast<const char*>(&mPAHFormationIndex), sizeof(mPAHFormationIndex));
+
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, PAHInception::Serialize).");
@@ -278,6 +282,7 @@ void PAHInception::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
                 // Deserialize base class.
                 Inception::Deserialize(in, mech);
 
+                in.read(reinterpret_cast<char*>(&mPAHFormationIndex), sizeof(mPAHFormationIndex));
                  break;
             default:
                 throw runtime_error("Serialized version number is invalid "

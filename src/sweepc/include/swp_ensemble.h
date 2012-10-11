@@ -254,6 +254,9 @@ public:
     //! Inform the ensemble that the particle at index i has been changed
     void Update(unsigned int i);
 
+    //! Get alpha for the ensemble (ABF model)
+    real Alpha(real T) const;
+
     // READ/WRITE/COPY.
 
     //! Writes the object to a binary stream.
@@ -273,7 +276,7 @@ public:
     // modify the m_numofInceptedPAH according to processes,
     // there are two possible value for m_amount, 1 (increase by one ) and -1 (decrease by 1)
     void SetNumOfInceptedPAH(int m_amount);
-    void SetNumOfInceptedPAH(int m_amount, Sweep::Primary *m_primary);
+    void SetNumOfInceptedPAH(int m_amount, Sweep::AggModels::Primary *m_primary);
 
 private:
     //! Vector of particles in the ensemble.

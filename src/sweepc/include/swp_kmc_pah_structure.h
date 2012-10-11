@@ -73,7 +73,7 @@ namespace Sweep{
             void setParent(Sweep::AggModels::PAH* parent);
 
             //! Overloaded Operators
-            //PAHStructure &operator=(const PAHStructure &rhs);
+            PAHStructure &operator=(const PAHStructure &rhs);
             bool operator==(PAHStructure &rhs) const;
             bool operator!=(PAHStructure &rhs) const;
 
@@ -91,13 +91,15 @@ namespace Sweep{
             int numofRings5() const;
             //! return num of edge carbon
             int numofEdgeC() const;
+            //! return num of site
+            int numofSite() const;
             //! set number of carbon and hydrogen for particular PAH
             void setnumofC(int val);
             void setnumofH(int val);
 
             //! set number of rings for particular PAH
             void setnumofRings(int val); // 6-membered
-			void setnumofRings5(int val); // 5-membered
+            void setnumofRings5(int val); // 5-membered
 
             //! check PAH have bridge or not
             bool havebridgeC();
@@ -122,7 +124,7 @@ namespace Sweep{
             intpair m_counts;
             //! Stores number of rings
             int m_rings; // 6-membered rings
-			int m_rings5; // 5-membered rings
+            int m_rings5; // 5-membered rings
         private:
             //! write m_cpositions
             void WriteCposition(std::ostream &out) const;

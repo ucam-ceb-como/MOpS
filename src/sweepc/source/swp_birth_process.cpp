@@ -52,13 +52,13 @@ using namespace std;
 
 // Default constructor (protected).
 BirthProcess::BirthProcess(void)
-: m_a(0.0), m_particle(NULL), m_cell(NULL)
+: m_particle(NULL), m_cell(NULL)
 {
 }
 
 // Initialising constructor.
 BirthProcess::BirthProcess(const Sweep::Mechanism &mech)
-: Process(mech), m_a(0.0), m_particle(NULL), m_cell(NULL)
+: Process(mech), m_particle(NULL), m_cell(NULL)
 {
     // Create a default inflow particle.
     m_particle = new Particle(0.0, mech);
@@ -89,7 +89,6 @@ BirthProcess &BirthProcess::operator =(const BirthProcess &rhs)
 {
     if (this != &rhs) {
         Process::operator =(rhs);
-        m_a = rhs.m_a;
         // Copy default particle.
         delete m_particle;
         if (rhs.m_particle) {
@@ -102,15 +101,6 @@ BirthProcess &BirthProcess::operator =(const BirthProcess &rhs)
     }
     return *this;
 }
-
-
-// RATE CONSTANT.
-
-// Returns the rate constant.
-real BirthProcess::A(void) const {return m_a;}
-
-// Sets the rate constant.
-void BirthProcess::SetA(real a) {m_a = a;}
 
 
 // TOTAL RATE CALCULATIONS.
@@ -222,10 +212,6 @@ void BirthProcess::Serialize(std::ostream &out) const
         // Serialize base class.
         Process::Serialize(out);
 
-        // Write rate constant.
-        double v = (double)m_a;
-        out.write((char*)&v, sizeof(v));
-
         // Write default particle.
         if (m_particle) {
             out.write((char*)&trueval, sizeof(trueval));
@@ -252,16 +238,11 @@ void BirthProcess::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
         unsigned int n = 0;
-        double val = 0.0;
 
         switch (version) {
             case 0:
                 // Deserialize base class.
                 Process::Deserialize(in, mech);
-
-                // Read rate constant.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_a = (real)val;
 
                 // Read default particle.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));

@@ -63,9 +63,6 @@ namespace Sweep {
     class Particle;
     class Mechanism;
 
-namespace Transport {
-    struct TransportOutflow;
-} // namespace Transport
 } // namespace Sweep
 
 
@@ -85,8 +82,8 @@ public:
                    const size_t corrector_iterations,
                    const real rtol, const real atol,
                    const bool split_diffusion, const real drift_correction,
-                   const bool split_advection,
-                   const bool weighted_transport);
+                   const bool split_advection, const bool strang_splitting,
+                   const bool cstr_transport);
 
     //! Advance solution to specified time
     void solve(Reactor1d &reac, const real t_start, const real t_stop, const int n_steps,
@@ -124,13 +121,20 @@ private:
                                 const std::vector<const Sweep::Cell*> & neighbouring_cells,
                                 Sweep::Particle& sp, Sweep::rng_type &rng) const;
     
+    //! Move particle to centre of this or next cell according to CSTR probabilities
+    void updateParticlePositionCSTR(const real t_start, const real t_stop, const Sweep::Cell &mix,
+                                    const Sweep::Mechanism &mech,
+                                    const Geometry::LocalGeometry1d & geom,
+                                    const std::vector<const Sweep::Cell*> & neighbouring_cells,
+                                    Sweep::Particle& sp, Sweep::rng_type &rng) const;
+
     /*!
-     *  \brief Lists of particles due to be added to cells and their statistical weights
+     *  \brief Lists of particles due to be added to cells
      *
      *  Particles in the the lists at index i in the vector are destined to be added to
      *  cell i of a reactor.
      */
-    typedef std::vector<std::list<Sweep::Transport::TransportOutflow> > inflow_lists_vector;
+    typedef std::vector<std::list<Sweep::Particle*> > inflow_lists_vector;
 
     //! Take the particles from a cell and put them in lists according to their new positions
     inflow_lists_vector updateParticleListPositions(const real t_start, const real t_stop, Sweep::Cell &mix,
@@ -203,11 +207,14 @@ private:
      */
     real mDiffusionDriftAdjustment;
 
-    //! Indicate if advection is to be split from the main particle processes
+    //! Indicate if advection is to be split from the main particle processes or simply ignored
     bool mSplitAdvection;
 
-    //! Whether to adjust particle statistical weights during transport between cells
-    bool mWeightedTransport;
+    //! True if transport  splitting should be Strang (second order), otherwise first order splitting is used
+    bool mStrangTransportSplitting;
+
+    //! True if transport should be CSTR like random jumps between cell centres.
+    bool mCSTRTransport;
 
 }; //class PredCorrSolver
 } //namespace Brush

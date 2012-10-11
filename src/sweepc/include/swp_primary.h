@@ -73,10 +73,24 @@ namespace Sweep
 // Forward declaration
 class Cell;
 
+namespace AggModels {
+
+/*!
+ *  \brief Base class for primary particles
+ *
+ *  Primary particles are the place in sweep where particle structure and composition
+ *  are stored.  Each computational particle contains one primary particle, which
+ *  in some cases serves as the head of a tree of further primary particles.  When the
+ *  computational particle needs to know about its own physical properties it queries
+ *  its (top-level) primary particle.
+ *
+ *  There are some weaknesses in the current design: Primary and its subclasses try to
+ *  satisfy two roles, one is to capture aggregate structure and the second is represent
+ *  the contents of a (piece of a) particle.
+ */
 class Primary
 {
 public:
-
     // Constructors.
     //   Note:  Default constructor is protected to prevent a
     //          Primary being created without knowledge of the
@@ -256,10 +270,8 @@ public:
         const Sweep::ParticleModel &model // Defining particle model.
         );
 
-	// Virtual functions for the SilicaPrimary class (wjm34)
-	// These return 0 for any other type of primary
-	// Return the number of OH sites for a SilicaPrimary
-	virtual int GetSites() const { return 0; }
+	//! Number of active sites (only implemented for some particle models).
+	virtual real GetSites() const { return 0; }
 
 	// Return the sintering rate for a SilicaPrimary
 	virtual real GetSintRate() const { return 0.0; }
@@ -294,6 +306,8 @@ protected:
     // Sets the particle cache to that of a spherical particle.
     void setSphereCache(void);
 
+    //! Calculate the number of allowable adjustments for a LPDA process
+    unsigned int CalculateMaxAdjustments(const fvector &dcomp, unsigned int n) const;
 
     // MEMORY MANAGEMENT.
 
@@ -305,6 +319,7 @@ protected:
 
 
 };
-};
+} //namespace AggModels
+} //namespace Sweep
 
 #endif

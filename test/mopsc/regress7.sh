@@ -21,7 +21,7 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 
@@ -62,7 +62,7 @@ cd $rundir
 
 # First run the executables:
 echo "Running 1-silica.."
-$exe -p -strang -ensemble -rr "mops-1-silica.inx" -s "sweep-1-silica.xml" > /dev/null
+"$exe" -p -strang -ensemble -rr "mops-1-silica.inx" -s "sweep-1-silica.xml" > /dev/null
 CheckErr $?
 
 # Get M0 from output file
@@ -87,14 +87,14 @@ filenames="2-silica"
 timesteps='<time steps="1" splits="1">0.00001<\/time>'
 eval "sed '21s/.*/        <m0>$m0<\/m0>/' $inp" > $temp1
 eval "sed '22s/.*/        <file>$ifile<\/file>/' $temp1" > $temp2
-eval "sed '37s/.*/    $timesteps/' $temp2" > $temp1
-eval "sed '64s/.*/    <filename>$filenames<\/filename>/' $temp1" > $temp2
-eval "sed '23,29d' $temp2" > "$temp1"
+eval "sed '35s/.*/    $timesteps/' $temp2" > $temp1
+eval "sed '62s/.*/    <filename>$filenames<\/filename>/' $temp1" > $temp2
+eval "sed '23,27d' $temp2" > "$temp1"
 rm $temp2
 
 # Run the calculation
 echo "Running second calculation..."
-$exe -p -strang -rr $temp1 -s "sweep-2-silica.xml" > /dev/null
+"$exe" -p -strang -rr $temp1 -s "sweep-2-silica.xml" > /dev/null
 CheckErr $?
 
 # Compare -part.csv files... they *should* be identical, except 

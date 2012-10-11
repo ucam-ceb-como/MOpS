@@ -40,14 +40,17 @@
 #include "cam_reporter.h"
 
 using namespace Camflow;
+using namespace std;
+
 
 CamReporter::CamReporter()
 :
-standard(NULL),
-rates(NULL),
-transport(NULL),
-custom(NULL)
+    standard(NULL),
+    rates(NULL),
+    transport(NULL),
+    custom(NULL)
 {}
+
 
 CamReporter::~CamReporter()
 {
@@ -57,95 +60,144 @@ CamReporter::~CamReporter()
     if (custom != NULL) delete custom;
 }
 
-void CamReporter::header(std::string prog){
-    std::cout << std::endl;
-    std::cout << "!----------------------------------------------------------!\n";
-    std::cout << "!               CamFlow " << prog << " Version 1.0               !\n";
-    std::cout << "!        This program is distributed without any warranty  !\n";
-    std::cout << "!            Author: Vinod M. J. (vj231@cam.ac.uk)         !\n";
-    std::cout << "!----------------------------------------------------------!\n";
 
+void CamReporter::header(string prog)
+{
+    cout << endl;
+    cout << "!----------------------------------------------------------!\n";
+    cout << "!               CamFlow " << prog << " Version 1.0               !\n";
+    cout << "!        This program is distributed without any warranty  !\n";
+    cout << "!            Author: Vinod M. J. (vj231@cam.ac.uk)         !\n";
+    cout << "!----------------------------------------------------------!\n";
 }
-void CamReporter::problemDescription(CamBoundary& cb, CamResidual& cr){
-        /* screen out put for simulation case
-     */
-    std::cout << "\t Problem description.....\n";
-    std::cout << "\t Number of species: " << cr.getNSpecies() << std::endl;
-    std::cout << "\t Total number of equations solving: " << cr.getNEqn() << std::endl;
-    std::cout << "\t Total number of variables solving: " << cr.getNVar() << std::endl;
+
+
+void CamReporter::problemDescription(CamBoundary& cb, CamResidual& cr)
+{
+    //screen out put for simulation case
+    cout << "\t Problem description.....\n";
+    cout << "\t Number of species: " << cr.getNSpecies() << endl;
+    cout << "\t Total number of equations solving: " << cr.getNEqn() << endl;
+    cout << "\t Total number of variables solving: " << cr.getNVar() << endl;
 
     //initializing solution vector
-    std::cout << "\t Initializing solution vector...\n";
-    std::cout << "\t Inlet velocity: "<<cb.getVelocity() <<  " m/s" << std::endl;
-    std::cout << "\t Inlet temperature "<< cb.getTemperature() << " K"<< std::endl;
-    std::map<std::string, doublereal> species = cb.getInletSpecies();
-    std::map<std::string, doublereal>::iterator p = species.begin();
+    cout << "\t Initializing solution vector...\n";
+    cout << "\t Inlet velocity: "<<cb.getVelocity() <<  " m/s" << endl;
+    cout << "\t Inlet temperature "<< cb.getTemperature() << " K"<< endl;
+    map<string, doublereal> species = cb.getInletSpecies();
+    map<string, doublereal>::iterator p = species.begin();
     //inlet species mass/mole fraction
-    std::cout << "\n\t Inlet species mass/mole fraction...\n";
-    std::cout << "\t----------------------------------------\n";
-    while (p!= species.end()){
-        std::cout <<"\t "<< p->first << "\t"<< p->second << std::endl;
+    cout << "\n\t Inlet species mass/mole fraction...\n";
+    cout << "\t----------------------------------------\n";
+
+    while (p!= species.end())
+    {
+        cout <<"\t "<< p->first << "\t"<< p->second << endl;
         p++;
-
     }
-
 }
 
-void CamReporter::consoleHead(std::string head){
-    std::cout << "\n";
-    std::cout << " " << head << std::endl;
+
+void CamReporter::consoleHead(string head)
+{
+    cout << "\n " << head << endl;
     int len = head.length();
-    for (int i = 0; i < len+2; i++) {
-        std::cout << "-";
+
+    for (int i = 0; i < len + 2; i++)
+    {
+        cout << "-";
     }
-    std::cout << std::endl;
+
+    cout << endl;
 }
-void CamReporter::openFile(std::string fileName, bool old){
+
+
+void CamReporter::openFile(string fileName, bool old)
+{
     custom = new DataIO(fileName, old);
 }
-void CamReporter::closeFile(){
+
+
+void CamReporter::closeFile()
+{
     custom->close();
+
     delete custom;
 }
 
-void CamReporter::openFiles(bool stdrd, bool ratesOut, bool transOut){
-    if(stdrd) standard  = new DataIO("profile.dat");
-    if(ratesOut) rates = new DataIO("rates.dat");
+
+void CamReporter::openFiles(bool stdrd, bool ratesOut, bool transOut)
+{
+    if (stdrd)
+    {
+        standard  = new DataIO("profile.dat");
+    }
+    if (ratesOut)
+    {
+        rates = new DataIO("rates.dat");
+    }
 }
 
-void CamReporter::closeFiles(bool stdrd, bool ratesOut, bool transOut){
-    if(stdrd) standard->close();
-    if(ratesOut) rates->close();
+
+void CamReporter::closeFiles(bool stdrd, bool ratesOut, bool transOut)
+{
+    if (stdrd)
+    {
+        standard->close();
+    }
+
+    if (ratesOut)
+    {
+        rates->close();
+    }
+
     delete standard;
     delete rates;
 }
+
+
 //write a custom header
-void CamReporter::writeCustomHeader(std::vector<std::string> header){
-    if(header.size() == 0)throw CamError("header info missing\n");
+void CamReporter::writeCustomHeader(std::vector<std::string> header)
+{
+    if (header.empty())
+    {
+        throw CamError("header info missing\n");
+    }
+
     custom->write(header);
 }
+
 //write the header for standard output data
-void CamReporter::writeHeader(std::vector<std::string> stdHeader){
-    if(stdHeader.size() == 0)throw CamError("header info missing\n");
+void CamReporter::writeHeader(vector<string> stdHeader)
+{
+    if (stdHeader.empty())
+    {
+        throw CamError("header info missing\n");
+    }
+
     standard->write(stdHeader);
 }
+
 
 //write header for standard data as well as the rates header
-void CamReporter::writeHeader(std::vector<std::string>& stdHeader, std::vector<std::string>& ratesHeader){
+void CamReporter::writeHeader
+(
+    vector<string>& stdHeader,
+    vector<string>& ratesHeader
+)
+{
     standard->write(stdHeader);
     rates->write(ratesHeader);
 }
 
-//write header for standard data, rates as well as transport data
-void CamReporter::wrteHeader(std::vector<std::string>& stdHeader, std::vector<std::string>& ratesHeader, std::vector<std::string>& transHeader){
-    standard->write(stdHeader);
-    rates->write(ratesHeader);
-    transport->write(transHeader);
-}
 
-void CamReporter::writeStdFileOut(std::vector<doublereal>& data){
+void CamReporter::writeStdFileOut(vector<doublereal>& data)
+{
     standard->write(data);
 }
-void CamReporter::writeCustomFileOut(std::vector<doublereal>& data){
+
+
+void CamReporter::writeCustomFileOut(vector<doublereal>& data)
+{
     custom->write(data);
 }

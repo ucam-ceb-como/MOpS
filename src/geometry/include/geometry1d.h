@@ -97,9 +97,6 @@ public:
     //! Index of cell containing specified position
     int containingCell(const real x) const;
 
-    //! True if the solution is assumed to be spatially homogeneous
-    bool zeroGradient(const size_t cell_index, const Direction direction) const;
-
     //! Find destination of a particle being transported
     int calcDestination(const size_t origin_index, const Direction direction) const;
 

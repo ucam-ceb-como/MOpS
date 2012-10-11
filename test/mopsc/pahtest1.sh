@@ -47,7 +47,7 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
     echo "changed directory to $2"
 fi
 
@@ -56,8 +56,9 @@ dos2unix ./pahtest1/sweep.xml
 dos2unix ./pahtest1/mops.inx
 dos2unix ./pahtest1/gasphase.inp
 dos2unix ./pahtest1/therm.dat
+dos2unix ./pahtest1/pahtest1.pl
 
-./pahtest1/pahtest1.pl $program
+./pahtest1/pahtest1.pl "$program"
 
 #Capture the exit value
 testresult=$?

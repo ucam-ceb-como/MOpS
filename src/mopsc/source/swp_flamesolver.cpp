@@ -255,7 +255,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             //gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(cm3*s) to mol/(m3*s)
             // PAHRate*1E6 record the Inception rate of pyrene, but currently we use the method that transfer the mass from gasphase to kmc phase according to their concentrations not the rates
             // so the PAHFormation rate is set to be 0, and PAHRate is not useful at all
-            gpoint.Gas.SetPAHFormationRate(0);
+            gpoint.Gas.SetPAHFormationRate(PAHRate*0);
             gpoint.Gas.SetAlpha(alpha);
 
             // Add the profile point.
@@ -406,7 +406,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
  *              that is for which it should be reasonable to use the gas object.
  */
 
-real FlameSolver::linInterpGas(Sweep::real t,
+Mops::real FlameSolver::linInterpGas(Sweep::real t,
                                Sprog::Thermo::IdealGas &gas) const
 {
     // Get the time point after the required time.

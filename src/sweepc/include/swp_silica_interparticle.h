@@ -63,18 +63,14 @@ namespace Sweep
 // Forward declare Mechanism class.
 class Mechanism;
 
-namespace Transport
-{
-    struct TransportOutflow;
-}
-
 namespace Processes
 {
 class InterParticle : public ParticleProcess
 {
 public:
     //! Default constructor
-    InterParticle(const Sweep::Mechanism &mech);
+    InterParticle(const Sweep::Mechanism &mech,
+                  const EnvironmentInterface::SpeciesIndex h4o4si);
     
     //! Copy constructor
     InterParticle(const InterParticle &copy);\
@@ -102,6 +98,9 @@ public:
     void SetPropertyID(
         Sweep::PropID pid
         );
+
+    //! Index for this species which appears in various calculations
+    void SetH4O4SI_Index(const EnvironmentInterface::SpeciesIndex index) {m_H4O4SI_Index = index;}
 
 	// RATE CONSTANT AND PARAMETERS.
 
@@ -204,6 +203,9 @@ protected:
 
     //! Particle property to which the rate of the process is proportional.
     Sweep::PropID m_pid;
+
+    //! Index for H4O4SI
+    EnvironmentInterface::SpeciesIndex m_H4O4SI_Index;
 
      // Default constructor is protected to prevent InterParticles being
      // defined without knowledge of the parent mechanism.

@@ -737,6 +737,12 @@ real Species::getCollisionDiameter() const {
     return m_transport->getCollisionDiameter();
 }
 
+bool Species::hasTransportData() const {
+    bool ans(false);
+    if (m_transport != NULL) ans = true;
+    return ans;
+}
+
 // Writes the species to a binary data stream.
 void Species::Serialize(std::ostream &out) const
 {

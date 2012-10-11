@@ -62,7 +62,7 @@ namespace {
 
 // Returns the temperature in K by reading the value from the given
 // XML node and checking the units.
-real readTemperature(const CamXML::Element &node)
+Mops::real readTemperature(const CamXML::Element &node)
 {
     // Check the temperature units.
     const CamXML::Attribute *attr;
@@ -77,7 +77,7 @@ real readTemperature(const CamXML::Element &node)
     }
 
     // Read the temperature (and convert if necessary).
-    real T = Strings::cdble(node.Data());
+    Mops::real T = Strings::cdble(node.Data());
     switch (units) {
         case Sprog::Celcius:
             T += 273.15;
@@ -91,7 +91,7 @@ real readTemperature(const CamXML::Element &node)
 
 // Returns the pressure in Pa by reading the value from the given
 // XML node and checking the units.
-real readPressure(const CamXML::Element &node)
+Mops::real readPressure(const CamXML::Element &node)
 {
     // Check the pressure units.
     const CamXML::Attribute *attr;
@@ -108,7 +108,7 @@ real readPressure(const CamXML::Element &node)
     }
 
     // Read the pressure (and convert if necessary).
-    real P = Strings::cdble(node.Data());
+    Mops::real P = Strings::cdble(node.Data());
     switch (units) {
         case Sprog::Bar:
             P *= 1.0e5;
@@ -176,7 +176,7 @@ void readGlobalSettings(const CamXML::Element &node,
 Reactor *const readReactor(const CamXML::Element &node,
                                         const Mechanism &mech,
                                         const unsigned int max_particle_count,
-										const real maxM0,
+										const Mops::real maxM0,
 										Mops::Simulator &sim)
 {
     Reactor *reac = NULL;
@@ -293,6 +293,31 @@ Reactor *const readReactor(const CamXML::Element &node,
     // Create a new Mixture object.
     Mixture *mix = new Mixture(mech.ParticleMech());
 
+    // VISCOSITY MODEL
+
+    subnode = node.GetFirstChild("viscosity");
+    if(subnode != NULL) {
+        std::string m = subnode->GetAttributeValue("model");
+        if (m.compare("air") == 0) {
+            mix->GasPhase().SetViscosityModel(Sprog::iAir);
+        } else if (m.compare("chapman-enskog") == 0) {
+            // Stop program if not enough transport data
+            mix->GasPhase().checkForTransportData();
+            mix->GasPhase().SetViscosityModel(Sprog::iChapmanEnskog);
+        } else if (m.compare("argon") == 0) {
+            mix->GasPhase().SetViscosityModel(Sprog::iArgon);
+        } else if (m.compare("hydrogen") == 0) {
+            mix->GasPhase().SetViscosityModel(Sprog::iHydrogen);
+        } else {
+            throw std::runtime_error("Unrecognised viscosity model. (Mops, Settings_IO::readReactor).");
+        }
+    }
+    else {
+        // Use air by default
+        mix->GasPhase().SetViscosityModel(Sprog::iAir);
+    }
+
+
     fvector molefracs(mech.GasMech().SpeciesCount(), 0.0);
 
     // Get the temperature.
@@ -373,7 +398,7 @@ Reactor *const readReactor(const CamXML::Element &node,
         Sweep::PartPtrList fileParticleList;
         Sweep::PartPtrList inxParticleList;
         Sweep::PartPtrList allParticleList;
-        real initialM0 = 0;
+        Mops::real initialM0 = 0;
 
         // Find the overall number density represented by the population
         CamXML::Element* m0Node = subnode->GetFirstChild("m0");
@@ -406,7 +431,7 @@ Reactor *const readReactor(const CamXML::Element &node,
         const Sweep::PartPtrList::const_iterator itEnd = allParticleList.end();
 
         // Get the total weights of *all* initialised particles
-        real weightSum = 0;
+        Mops::real weightSum = 0;
         while(it != itEnd) {
             weightSum += (*it++)->getStatisticalWeight();
         }
@@ -486,7 +511,7 @@ Reactor *const readReactor(const CamXML::Element &node,
         // Read the residence time.
         subnode = node.GetFirstChild("residencetime");
         if (subnode != NULL) {
-            real tau = Strings::cdble(subnode->Data());
+        	Mops::real tau = Strings::cdble(subnode->Data());
             dynamic_cast<PSR*>(reac)->SetResidenceTime(tau);
         }
     }
@@ -676,6 +701,10 @@ void readOutput(const CamXML::Element &node, Simulator &sim, Mechanism &mech)
         if (str_enable.compare("true") == 0) {
             std::string str_ptcount = subnode->GetAttributeValue("ptcount");
             sim.SetParticleTrackCount((unsigned int)Strings::cdble(str_ptcount));
+
+            // Also need to ensure full binary trees are written for certain
+            // particle models.
+            mech.ParticleMech().SetWriteBinaryTrees(true);
         } else if (str_enable.compare("false") == 0) {
             sim.SetParticleTrackCount(0);
         } else {

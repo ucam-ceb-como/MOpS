@@ -53,6 +53,7 @@
 #include "swp_tracker.h"
 #include "swp_aggmodel_type.h"
 #include "swp_sintering_model.h"
+#include "swp_environment_interface.h"
 
 #include "local_geometry1d.h"
 
@@ -295,16 +296,40 @@ public:
     const bool WriteBinaryTrees() const {return m_write_bintree;}
 
     //! Sets the value of the binary tree coalescence threshold
-    void SetBintreeCoalThresh(real ct) {m_bintree_coalthresh = ct;}
+    void SetBinTreeCoalThresh(real ct) {m_bintree_coalthresh = ct;}
 
     //! Return the coalescence threshold for bintree particle models.
-    const real GetBintreeCoalThresh() const {return m_bintree_coalthresh;}
+    const real GetBinTreeCoalThresh() const {return m_bintree_coalthresh;}
 
     //! Sets the value of the binary tree coalescence threshold
     void SetFractDim(real df) {m_fract_dim = df;}
 
     //! Return the coalescence threshold for bintree particle models.
     const real GetFractDim() const {return m_fract_dim;}
+
+    //! Sets the value of the free-molecular enhancement factor.
+    void SetEnhancementFM(real efm) {m_efm = efm;}
+
+    //! Returns the value of the free-molecular enhancement factor.
+    const real GetEnhancementFM() const {return m_efm;}
+
+    //! Index for temperature gradient in gas phase interface
+    void setTGradIndex(const EnvironmentInterface::PropertyIndex index) {m_TemperatureGradientIndex = index;}
+
+    //! Index for mixture fraction gradient in gas phase interface
+    void setMixFracGradIndex(const EnvironmentInterface::PropertyIndex index) {m_MixFracGradientIndex = index;}
+
+    //! Index for mixture fraction diffusion coefficient in gas phase interface
+    void setMixFracDiffIndex(const EnvironmentInterface::PropertyIndex index) {m_MixFracDiffusionIndex = index;}
+
+    //! Index for mixture fraction Laplacian in gas phase interface
+    void setMixFracLaplIndex(const EnvironmentInterface::PropertyIndex index) {m_MixFracLaplacianIndex = index;}
+
+    //! Index for average molecular weight of mixture in gas phase interface
+    void setAvgMolWtIndex(const EnvironmentInterface::PropertyIndex index) {m_AvgMolWtIndex = index;}
+
+    //! Index for thermal conductivity of mixture in gas phase interface
+    void setThermalConductIndex(const EnvironmentInterface::PropertyIndex index) {m_ThermalConductivityIndex = index;}
 
 protected:
     // The species used to define the processes and the particles.
@@ -421,6 +446,29 @@ private:
 
     //! Fractal dimension (bintree particle model)
     real m_fract_dim;
+
+    //! Free molecular enhancement factor (coag., cond. & incep.)
+    real m_efm;
+
+    //! Index for temperature gradient
+    EnvironmentInterface::PropertyIndex m_TemperatureGradientIndex;
+
+    //! Index for mixture fraction gradient
+    EnvironmentInterface::PropertyIndex m_MixFracGradientIndex;
+
+    //! Index for mixture fraction diffusion coefficient
+    EnvironmentInterface::PropertyIndex m_MixFracDiffusionIndex;
+
+    //! Index for mixture fraction Laplacian
+    EnvironmentInterface::PropertyIndex m_MixFracLaplacianIndex;
+
+    //! Index for average molecular weight of mixture
+    EnvironmentInterface::PropertyIndex m_AvgMolWtIndex;
+
+    //! Index for thermal conductivity of mixture
+    EnvironmentInterface::PropertyIndex m_ThermalConductivityIndex;
+
+
 };
 } //namespace Sweep
 #endif

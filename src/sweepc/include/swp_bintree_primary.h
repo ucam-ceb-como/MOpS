@@ -14,8 +14,10 @@
  *      than hard-coding the atomic types.
  *
  *      The structure is very much based on SilicaPrimary and PAHPrimary,
- *      originally developed by ss663 and ms785. Ideally these classes would
- *      inherit from this class, but this remains to be implemented.
+ *      originally developed by Shraddha Shekar (ss663) and Markus Sander
+ *      (ms785). In its initial implementation, it was a separate class
+ *      to SilicaPrimary. As there was a very large amount of code duplication,
+ *      these classes were merged in Oct 2012.
  *
  *   Licence:
  *      This file is part of "sweepc".
@@ -54,44 +56,45 @@
 #include "swp_primary.h"
 #include "swp_particle_model.h"
 #include "swp_bintree_serializer.h"
+#include "swp_particle_image.h"
 
 namespace Sweep {
 
 namespace AggModels {
 
-class BintreePrimary: public Sweep::Primary {
+class BinTreePrimary: public Primary {
 public:
 
     //! Build a new primary with one molecule
-    BintreePrimary(const real time, const Sweep::ParticleModel &model);
+    BinTreePrimary(const real time, const Sweep::ParticleModel &model);
 
     //! Build a new primary with one molecule
-    BintreePrimary(const real time, const real position,
+    BinTreePrimary(const real time, const real position,
                const Sweep::ParticleModel &model);
 
     //! Stream-reading constructor
-    BintreePrimary(std::istream &in, const Sweep::ParticleModel &model);
+    BinTreePrimary(std::istream &in, const Sweep::ParticleModel &model);
 
     //! Default destructor
-    virtual ~BintreePrimary();
+    virtual ~BinTreePrimary();
 
     // COPYING PARTICLES AND MAINTAINING TREE STRUCTURE
-    //! Sets all the properties of two primaries to be equal
-    BintreePrimary &operator=(const Primary &rhs);
+    //! Primary assignment operator
+    virtual BinTreePrimary &operator=(const Primary &rhs);
 
     //! Returns a copy of the primary.
-    virtual BintreePrimary *const Clone(void) const;
+    virtual BinTreePrimary *const Clone(void) const;
 
     //! Copy constructor
-    BintreePrimary(const BintreePrimary &copy);
+    BinTreePrimary(const BinTreePrimary &copy);
 
 
     // GENERAL PARTICLE MODEL PROPERTIES
     //! Returns the aggregation model type
-    AggModelType AggID() const {return AggModels::Bintree_ID;}
+    AggModelType AggID() const {return AggModels::BinTree_ID;}
 
     //! Coagulates this particle with rhs
-    BintreePrimary &Coagulate(const Primary &rhs, rng_type &rng);
+    BinTreePrimary &Coagulate(const Primary &rhs, rng_type &rng);
 
     //! Updates the particle cache using the particle details
     void UpdateCache();
@@ -133,71 +136,46 @@ public:
     real GetSintRate() const;
 
     //! Gets the number of active sites (always component 0)
-    int GetSites() const {return m_comp[0];}
+    virtual real GetSites() const {return m_comp[0];}
 
     //! Gets the sintering time
     real GetSintTime() const {return m_sint_time;}
 
+    //! Gets the arithmetic standard deviation of primary diameter
+    real GetPrimaryAStdDev() const;
+
+    //! Get the geometric mean primary diameter
+    real GetPrimaryGMean() const;
+
+    //! Gets the geometric standard deviation of primary diameter
+    real GetPrimaryGStdDev() const;
+
+    //! Gets the value of one of the chemical components
+    Sweep::real GetComponent(std::string name) const;
+
+    //! Sets the value of one of the chemical components
+    void SetComponent(std::string name, Sweep::real val);
+
     // SERIALISATION/DESERIALISATION
     // The binary tree serialiser needs full access to private attributes.
-    friend class BinTreeSerializer<class BintreePrimary>;
+    friend class BinTreeSerializer<class BinTreePrimary>;
 
-    //! Serialise a BintreePrimary particle
+    // The image writer needs full access to private attributes
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
+
+    //! Serialise a BinTreePrimary particle
     void Serialize(std::ostream &out) const;
 
-    //! Deserialise a BintreePrimary particle
+    //! Deserialise a BinTreePrimary particle
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);
 
-private:
+protected:
     //! Empty primary not meaningful
-    BintreePrimary();
+    BinTreePrimary();
 
-    // GENERAL PARTICLE MODEL PROPERTIES
-    //! Helper function to update the particle
-    void UpdateCache(BintreePrimary *root);
-
-    //! Update the tree structure's surface area by increment dS
-    void UpdateParents(real dS);
-
-
-    // COPYING PARTICLES AND MAINTAINING TREE STRUCTURE
-    //! Copies the subtree of a node
-    void CopyTree( const BintreePrimary *source);
-
-    //! Sets the pointers to the primary particles correct after a copy event
-    void UpdateAllPointers( const BintreePrimary *source);
-
-    //! Find the path through the tree from node top to node bottom
-    static std::stack<bool> recordPath(const BintreePrimary* bottom,
-                                       const BintreePrimary* const top);
-
-    //! Follow a path down the tree
-    static BintreePrimary* descendPath(BintreePrimary *here,
-                                   std::stack<bool> &takeLeftBranch);
-
-    //! Copy elements of just the node of interest
-    void CopyParts(const BintreePrimary *source);
-
-    //! Returns a uniformly chosen primary particle
-    BintreePrimary *SelectRandomSubparticle(rng_type &rng);
-
-    //! Helper function for SelectRandomSubparticle
-    BintreePrimary *SelectRandomSubparticleLoop(int target);
-
-
-
-    // SINTERING LEVEL THINGS
-    //! Set the sintering time of a tree
-    void SetSinteringTime(real time);
-
-    //! Checks if the sintering level, merges particles if necessary
-    bool CheckSintering();
-
-    //! Merges the two children primaries together
-    BintreePrimary &Merge();
-
-    //! Updates the pointers after a merge event
-    void ChangePointer(BintreePrimary *source, BintreePrimary *target);
+    //! Print the state space of the particle to stdout
+    void PrintComponents() const;
 
     //! Sets the children properties to 0
     void ResetChildrenProperties();
@@ -205,23 +183,27 @@ private:
     //! Updates the properties of a primary only, not the entire tree
     void UpdatePrimary(void);
 
-    // PRINTING TREES
-    //! Recursive loop function for print tree
-    void PrintTreeLoop(std::ostream &out) const;
+    //! Copies the subtree of a node
+    void CopyTree( const BinTreePrimary *source);
 
-    //! Helper function for printing a tree node
-    void PrintTreeNode(std::ostream &out) const;
+    //! Sets the pointers to the primary particles correct after a copy event
+    void UpdateAllPointers( const BinTreePrimary *source);
 
-    void PrintComponents() const;
+    //! Sinter a node for time dt
+    void SinterNode(real dt,
+            Cell &sys,
+            const Processes::SinteringModel &model,
+            rng_type &rng,
+            real wt);
 
+    //! Checks if the sintering level, merges particles if necessary
+    bool CheckSintering();
 
-    // SERIALISATION
-    //! Serialise a BintreePrimary node
-    void SerializePrimary(std::ostream &out) const;
+    //! Set the sintering time of a tree
+    void SetSinteringTime(real time);
 
-    //! Deserialise a BintreePrimary node
-    void DeserializePrimary(std::istream &in,
-            const Sweep::ParticleModel &model);
+    //! Set the last LPDA time throughout the particle tree
+    void SetTime(real t);
 
 
     // STATE SPACE OF PARTICLE MODEL
@@ -266,19 +248,73 @@ private:
     // root node.
 
     //! Left child node
-    BintreePrimary *m_leftchild;
+    BinTreePrimary *m_leftchild;
 
     //! Right child node
-    BintreePrimary *m_rightchild;
+    BinTreePrimary *m_rightchild;
 
     //! Parent node
-    BintreePrimary *m_parent;
+    BinTreePrimary *m_parent;
 
     //! Left particle node (always a leaf)
-    BintreePrimary *m_leftparticle;
+    BinTreePrimary *m_leftparticle;
 
     //! Right particle node (always a leaf)
-    BintreePrimary *m_rightparticle;
+    BinTreePrimary *m_rightparticle;
+
+private:
+    // GENERAL PARTICLE MODEL PROPERTIES
+    //! Helper function to update the particle
+    void UpdateCache(BinTreePrimary *root);
+
+    //! Update the tree structure's surface area by increment dS
+    void UpdateParents(real dS);
+
+    //! Helper function to get a list of all primary diameters
+    void GetAllPrimaryDiameters(fvector &diams) const;
+
+
+    // COPYING PARTICLES AND MAINTAINING TREE STRUCTURE
+    //! Find the path through the tree from node top to node bottom
+    static std::stack<bool> recordPath(const BinTreePrimary* bottom,
+                                       const BinTreePrimary* const top);
+
+    //! Follow a path down the tree
+    static BinTreePrimary* descendPath(BinTreePrimary *here,
+                                   std::stack<bool> &takeLeftBranch);
+
+    //! Copy elements of just the node of interest
+    void CopyParts(const BinTreePrimary *source);
+
+    //! Returns a uniformly chosen primary particle
+    BinTreePrimary *SelectRandomSubparticle(rng_type &rng);
+
+    //! Helper function for SelectRandomSubparticle
+    BinTreePrimary *SelectRandomSubparticleLoop(int target);
+
+    //! Merges the two children primaries together
+    BinTreePrimary &Merge();
+
+    //! Updates the pointers after a merge event
+    void ChangePointer(BinTreePrimary *source, BinTreePrimary *target);
+
+
+    // PRINTING TREES
+    //! Recursive loop function for print tree
+    void PrintTreeLoop(std::ostream &out) const;
+
+    //! Helper function for printing a tree node
+    void PrintTreeNode(std::ostream &out) const;
+
+
+    // SERIALISATION
+    //! Serialise a BinTreePrimary node
+    virtual void SerializePrimary(std::ostream &out) const;
+
+    //! Deserialise a BinTreePrimary node
+    virtual void DeserializePrimary(std::istream &in,
+            const Sweep::ParticleModel &model);
+
 };
 
 }

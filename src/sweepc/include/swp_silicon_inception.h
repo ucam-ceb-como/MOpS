@@ -64,6 +64,9 @@ namespace Sweep {
 // Forward declare the Mechanism class.
 class Mechanism;
 
+// Forward declare interface to gas phase data
+class EnvironmentInterface;
+
 namespace Transport
 {
     // Forward declaration of unused argument type
@@ -186,7 +189,7 @@ public:
 
         //! Default constructor
         SiliconData() :
-            _fracIndex(0), _name(" "), _track(0.0), _diam(0.0) {}
+            _fracIndex(0), _name(" "), _track(0), _diam(0.0) {}
     };
 
     // READ/WRITE/COPY.
@@ -215,10 +218,9 @@ protected:
     // parameters that would otherwise be calculated by the routine to be passed as
     // arguments.
     real Rate(
-        const fvector &fracs, // Gas-phase species mole fractions.
-        real density,         // Gas-phase density.
+        const EnvironmentInterface &gas,
         real sqrtT,           // Square-root of temperature.
-        real T_mu,            // T / viscosity of air.
+        real T_mu,            // T / viscosity
         real MFP,             // Gas mean free path.
         real vol,             // Particle ensemble sample volume.
         const Cell &sys       // System for which to calculate rate terms.
@@ -227,8 +229,7 @@ protected:
 
     //! Calculates the gas-phase chemistry contribution to the rate expression
     real chemRatePart(
-        const fvector &fracs, // Species mole fractions in gas phase.
-        real density          // Gas phase molar density.
+        const EnvironmentInterface &gas
         ) const;
 
 private:
@@ -275,8 +276,8 @@ private:
     real m_kfm;
     real m_ksf1, m_ksf2; //! Slip-flow kernel parameters.
 
-    //! Free-molecular enhancement factor.  Currently hardcoded (m_efm = 2.2).
-    static const real m_efm;
+    //! Free-molecular enhancement factor.
+    const real m_efm;
 
     //! Inception equation type
     InceptionType m_itype;

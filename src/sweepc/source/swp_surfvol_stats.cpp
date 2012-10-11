@@ -58,7 +58,9 @@ const std::string SurfVolStats::m_statnames[SurfVolStats::STAT_COUNT] = {
     std::string("Avg. Equiv. Sphere Surface Area (cm2)"),
     std::string("Est. Primary Particle Count"),
     std::string("Avg. Est. Primary Particle Count"),
-    std::string("Avg. Est. Primary Particle Diameter (nm)")
+    std::string("Avg. Est. Primary Particle Diameter (nm)"),
+    std::string("GStdev of Mean Collision Diameter (-)"),
+    std::string("GStdev of Mean Est. Primary Diameter (-)")
 };
 
 const IModelStats::StatType SurfVolStats::m_mask[SurfVolStats::STAT_COUNT] = {
@@ -66,7 +68,10 @@ const IModelStats::StatType SurfVolStats::m_mask[SurfVolStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. equiv. sphere surface area.
     IModelStats::Sum,  // Est. primary particle count.
     IModelStats::Avg,  // Avg. est. primary particle count.
-    IModelStats::Avg   // Avg. est. primary particle diameter.
+    IModelStats::Avg,  // Avg. est. primary particle diameter.
+    IModelStats::Avg,  // GStdev of Mean Collision Diameter.
+    IModelStats::Avg   // GStdev of Mean Est. Primary Diameter
+
 };
 
 const std::string SurfVolStats::m_const_pslnames[SurfVolStats::PSL_COUNT] = {
@@ -134,15 +139,25 @@ void SurfVolStats::Calculate(const Ensemble &e, real scale)
 {
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
+    // Calculate total weight
+    real TotalWeight = e.Count()>0 ? e.GetSum(iW) : 0.0;
+    real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
+
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
+
+    // Create some vectors to store diameter lists
+    // Keep dcol in [0], dpri in [1] of d, theses are pushed into diams.
+    std::vector<fvector> diams;
+    fvector weights;
+    fvector d;
 
     for (ip=e.begin(); ip!=e.end(); ++ip) {
         // Get surface-volume cache.
         const AggModels::SurfVolPrimary * const primary =
             dynamic_cast<const AggModels::SurfVolPrimary *>((*ip)->Primary());
         real sz = (*ip)->Property(m_statbound.PID);
-        real wt = (*ip)->getStatisticalWeight();
+        real wt = (*ip)->getStatisticalWeight() * invTotalWeight;
 
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
@@ -152,18 +167,28 @@ void SurfVolStats::Calculate(const Ensemble &e, real scale)
             m_stats[iPPN]    += primary->PP_Count() * wt;
             m_stats[iPPN+1]  += primary->PP_Count() * wt;
             m_stats[iPPD]    += primary->PP_Diameter() * 1.0e9 * wt; // Convert from m to nm.
+
+            // Collect the collision and primary diameters
+            d.push_back(primary->CollDiameter());
+            d.push_back(primary->PP_Diameter());
+            diams.push_back(d);
+            weights.push_back(wt);
+            d.clear();
+
         }
     }
 
-    // Calculate total weight
-    real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
+    // Now get the geometric standard devs, using [0] for dcol, [1] for dpri
+    // Default to 1.0 GSTDEV (Can't have GSTDEV=0)
+    fvector gstdevs;
+    gstdevs = GetGeometricStdev(2u, diams, weights);
+    m_stats[iCollGStdev] = gstdevs[0];
+    m_stats[iPrimGStdev] = gstdevs[1];
 
     // Scale the summed stats and calculate the averages.
     for (unsigned int i=1; i!=STAT_COUNT; ++i) {
         if (m_mask[i] == Sum) {
-            m_stats[i] *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
-        } else {
-            m_stats[i] *= invTotalWeight;
+            m_stats[i] *= (scale * 1.0e-6 * TotalWeight); // Convert scale from 1/m3 to 1/cm3.
         }
     }
 }
@@ -198,6 +223,65 @@ void SurfVolStats::Get(fvector &stats, unsigned int start) const
     for (; j!=m_stats.end(); ++j) {
         stats.push_back(*j);
     }
+}
+
+
+/*!
+ * Gets the geometric standard deviation of a vector of (vector of)
+ * diameters. Currently does so for collision and primary diameters.
+ * Also assumes here that the weights sum up to 1.0.
+ *
+ * @param num           Number of diameter types to calculate gstdev for
+ * @param diams         Vector of length number of particles, containing
+ *                          a fvector of diameters for that particle.
+ * @param weights       Vector of length number of particles storing weights
+ * @return              Vector with geo stdevs for diameter types
+ */
+fvector SurfVolStats::GetGeometricStdev(
+        const unsigned int num,
+        std::vector<fvector> diams,
+        fvector weights) const {
+
+    // Some checks first
+    if (diams.size() < size_t(1u)) {
+        // Return a default of 1.0 gstdev if no particles
+        return fvector(num,1.0);
+    }
+    if (diams.size() != weights.size())
+        throw std::runtime_error("Failed getting weights and diameters "
+                "in BinTreeStats::GetGeometricStdev()");
+    unsigned int i(0u); // Iterate number of particles
+    unsigned int j(0u); // Iterate diameter types
+
+    // Then we must calculate the geometric means
+    fvector means;
+    means.resize(num, 1.0);
+
+    for (i = 0; i != diams.size(); i++) {
+        // Loop over diameter types
+        for (j = 0; j != diams[i].size(); j++) {
+            means[j] *= pow(diams[i].at(j), weights[i]);
+        }
+    }
+
+    // Now we can get the geometric stdevs
+    fvector stdevs;
+    stdevs.resize(num, 0.0);
+    real dev(0.0);
+    for (i = 0; i != diams.size(); i++) {
+        // Loop over diameter types
+        for (j = 0; j != num; j++) {
+            dev = log(diams[i].at(j) / means[j]);
+            stdevs[j] += weights[i] * dev * dev;
+        }
+    }
+
+    // Just need to do a bit more to the sums...
+    for (j = 0; j != num; j++) {
+        stdevs[j] = exp(sqrt(stdevs[j]));
+    }
+
+    return stdevs;
 }
 
 // Returns a vector containing the stat names.

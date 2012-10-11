@@ -1,32 +1,35 @@
 /*
-  Author(s):      Markus Sander (ms785)
+  Author(s):      Robert I A Patterson Robert.Patterson@wias-berlin.de
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
 
-  Copyright (C) 2008 Matthew S Celnik.
+  Copyright (C) 2012 Robert I A Patterson
 
   File purpose:
-    The silicaStats class is a specialization of the IModelStats
+    The SurfVolHydrogenStats class is a specialization of the IModelStats
     interface which produces stats from the basic properties of the
-    simple primary-particle aggregation model.
+    surface-volume model.
 
     The stats stored in this class are:
 
+    1/2.    Total and average equiv. sphere surface area.
+    3/4.    Total and average primary particle count (estimated).
+    5.      Average primary particle diameter (estimated).
 
   Licence:
     This file is part of "sweepc".
 
     sweepc is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public License
+    modify it under the terms of the GNU General Public License
     as published by the Free Software Foundation; either version 2
     of the License, or (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+    GNU General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
+    You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
@@ -44,8 +47,8 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#ifndef SWEEP_SILICA_STATS_H
-#define SWEEP_SILICA_STATS_H
+#ifndef SWEEP_SURFVOLHYDROGEN_STATS_H
+#define SWEEP_SURFVOLHYDROGEN_STATS_H
 
 #include "swp_params.h"
 #include "swp_model_stats.h"
@@ -60,31 +63,28 @@ namespace Sweep
 {
 namespace Stats
 {
-class SilicaStats : public IModelStats
+class SurfVolHydrogenStats : public IModelStats
 {
 public:
     // Constructors.
-    SilicaStats(void);  // Default constructor.
-    SilicaStats(const SilicaStats &copy); // Copy constructor.
-    SilicaStats(                         // Stream-reading constructor.
+    SurfVolHydrogenStats(void);  // Default constructor.
+    SurfVolHydrogenStats(const SurfVolHydrogenStats &copy); // Copy constructor.
+    SurfVolHydrogenStats(                         // Stream-reading constructor.
         std::istream &in,                 // Input stream.
         const Sweep::ParticleModel &model // Defining particle model.
         );
 
     // Destructor.
-    ~SilicaStats(void);
+    ~SurfVolHydrogenStats(void);
 
     // Operators.
-    SilicaStats &operator=(const SilicaStats &rhs);
+    SurfVolHydrogenStats &operator=(const SurfVolHydrogenStats &rhs);
 
 
     // IMPLEMENTATION.
 
     // Returns the number of stats for this model.
     unsigned int Count(void) const;
-
-    // Calculates the model stats for a single particle.
-    //void Calculate(const Particle &data);
 
     // Calculates the model stats for a particle ensemble.
     void Calculate(
@@ -110,7 +110,27 @@ public:
         unsigned int start = 0           // Optional start index for the first stat.
         ) const;
 
- // PARTICLE SIZE LISTS.
+
+    // AVAILABLE BASIC STATS.
+
+
+    // Returns the total equivalent-sphere surface area.
+    real SphSurfaceArea(void) const;
+
+    // Returns the avg. equivalent-sphere surface area.
+    real AvgSphSurfaceArea(void) const;
+
+    // Returns the total estimated primary particle count.
+    real PriPartCount(void) const;
+
+    // Returns the average estimated primary particle count.
+    real AvgPriPartCount(void) const;
+
+    // Returns the average estimated primary particle diameter.
+    real AvgPriPartDiameter(void) const;
+
+
+    // PARTICLE SIZE LISTS.
 
     // Returns the number of PSL output variables.
     unsigned int PSL_Count(void) const;
@@ -130,11 +150,10 @@ public:
         ) const;
 
 
-
     // READ/WRITE/COPY.
 
     // Creates a copy of the object.
-    SilicaStats *const Clone(void) const;
+    SurfVolHydrogenStats *const Clone(void) const;
 
     // Returns the model data type.  Used to identify different models
     // and for serialisation.
@@ -151,12 +170,11 @@ public:
 
 private:
     // Stats count and indices.
-	static const unsigned int STAT_COUNT = 11;
-	enum StatIndices {iNSi=0, iNO=1, iNOH=2, iNPRIM=3, iPRIMDIAM=4, iCOAL=5, iPARTMASS=6, iSintRate=7, iSintTime=8, iCreateTime=9, iSiORatio=10};
+    static const unsigned int STAT_COUNT = 5;
+    enum StatIndices {iS=0, iPPN=2, iPPD=4};
 
-	// PSL count and indices.
-    static const unsigned int PSL_COUNT  = 7;
-    static const unsigned int PPSL_COUNT = 0;
+    // PSL count and indices.
+    static const unsigned int PSL_COUNT = 3;
 
     // The stats.
     fvector m_stats;
@@ -171,9 +189,8 @@ private:
     // The PSL names.
     static const std::string m_const_pslnames[PSL_COUNT];
     std::vector<std::string> m_pslnames;
-
-}; // SilicaStats class
-}; // Stats namespace
-}; // Sweep namespace
+};
+};
+};
 
 #endif

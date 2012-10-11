@@ -649,6 +649,49 @@ real Sweep::Ensemble::GetSum(Sweep::PropID id) const
         return m_count;
 }
 
+/*!
+ * Returns the fitting factor 'alpha' for the particle ensemble. Reference is
+ * Appel, J. et al (2000) Combustion & Flame 121, 122-136, also known as the
+ * ABF soot model.
+ *
+ *  alpha = tanh(a/log10{mu1} + b)
+ *
+ *  a = 12.65 - 0.00563 * T
+ *  b = -1.38 + 0.00068 * T
+ *  mu1 = average number of C atoms per particle
+ *
+ * Note that mu1 is called the 'reduced first size moment' and is usually the
+ * average mass of particles in the ensemble; however in the referenced
+ * version the mass is represented by the number of carbon atoms per particle.
+ * See Frenklach & Wang (1994) in Soot Formation in Combustion: Mechanisms
+ * and Models pp 165.
+ *
+ * @param[in]   T   Local temperature
+ *
+ * @return          Alpha for the ensemble (ABF model)
+ */
+real Sweep::Ensemble::Alpha(real T) const {
+    real alpha(0.0), mu1(0.0), wt(0.0);
+    real invTotalWeight = Count()>0 ? 1.0/GetSum(iW) : 0.0;
+
+    // Loop over all particles to get mu1
+    Ensemble::const_iterator ip;
+    for (ip=this->begin(); ip!=this->end(); ++ip) {
+        wt = (*ip)->getStatisticalWeight();
+        mu1 += wt * (*ip)->Composition(0u);
+    }
+    mu1 *= invTotalWeight;
+
+    // Now find alpha
+    if (mu1 > 0.0) {
+        real a = 12.65 - 0.00563 * T;
+        real b = -1.38 + 0.00068 * T;
+        alpha = std::max(0.0, tanh((a / log10(mu1)) + b));
+    }
+
+    return alpha;
+}
+
 // UPDATE ENSEMBLE.
 
 /*!
@@ -987,7 +1030,7 @@ int Sweep::Ensemble::IndexOfInceptedPAH() const
     return -1;
 }
 
-void Sweep::Ensemble::SetNumOfInceptedPAH(int m_amount, Sweep::Primary *m_primary)
+void Sweep::Ensemble::SetNumOfInceptedPAH(int m_amount, Sweep::AggModels::Primary *m_primary)
 {
     if (m_primary->AggID() ==AggModels::PAH_KMC_ID)
     {

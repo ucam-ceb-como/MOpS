@@ -16,11 +16,11 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
 fi
 
 # run camflow
-$program
+"$program"
 
 # capture exit value of simulation
 simulationResult=$?
@@ -35,7 +35,7 @@ else
 fi
 
 
-./checkOutput.pl
+perl checkOutput.pl
 result=$?
 if (($result!=0))
 then

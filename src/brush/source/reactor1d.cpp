@@ -71,7 +71,6 @@ Brush::Reactor1d::Reactor1d(const Geometry::Geometry1d &geom, const Sprog::Mecha
     for(unsigned int i = 0; i < mReactors.size(); ++i) {
         // Create a reference to the reactor for syntactic convenience
         ReactorType &r = mReactors[i];
-        r.GasPhase().SetSpecies(mGasMech.Species());
 
         // Interpolate particle count and max m0 to the cell centre
         real posn = getCellCentre(i);

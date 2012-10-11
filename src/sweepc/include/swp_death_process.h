@@ -58,12 +58,6 @@ class Mechanism;
 // Forward declare the Cell class.
 class Cell;
 
-namespace Transport
-{
-    // Forward declare structure to hold details of particle for onward transport
-    struct TransportOutflow;
-}
-
 namespace Processes
 {
 class DeathProcess : public Process
@@ -82,15 +76,6 @@ public:
 
     // Operators.
     DeathProcess &operator=(const DeathProcess &rhs);
-
-
-    // RATE CONSTANT.
-
-    // Returns the rate constant.
-    real A(void) const;
-
-    // Sets the rate constant.
-    void SetA(real a);
 
 
 	// TOTAL RATE CALCULATIONS.
@@ -140,18 +125,7 @@ public:
     // processes and for serialisation.
     ProcessType ID(void) const;
 
-    // Writes the object to a binary stream.
-    void Serialize(std::ostream &out) const;
-
-    // Reads the object from a binary stream.
-    void Deserialize(
-        std::istream &in,            // Input stream.
-        const Sweep::Mechanism &mech // Parent mechanism.
-        );
-
 protected:
-    // Rate parameters.
-    real m_a; // Rate constant.
 
     // Default constructor is protected to prevent a process being
     // defined without knowledge of the parent mechanism.

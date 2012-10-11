@@ -80,6 +80,10 @@ namespace Sprog
     const real R_CGS = 8.314472e7; // ergs/mol/K (CGS).
     const real RCAL  = 1.9872e-3;  // kcal/mol/K (calories).
 
+    //! Enum of the possible calculations of viscosity
+    enum ViscosityModel {
+        iAir, iChapmanEnskog, iArgon, iHydrogen
+    };
 
 } //namespace Sprog
 

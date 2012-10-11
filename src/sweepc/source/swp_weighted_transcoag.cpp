@@ -56,8 +56,6 @@
 using namespace std;
 using namespace Sweep::Processes;
 
-//! Free-molecular enhancement factor.
-const Sweep::real Sweep::Processes::WeightedTransitionCoagulation::m_efm = 2.2; // 2.2 is for soot.
 
 /**
  * Main way of building a new coagulation object.
@@ -70,6 +68,7 @@ Sweep::Processes::WeightedTransitionCoagulation::WeightedTransitionCoagulation(
         const Sweep::Mechanism &mech,
         const CoagWeightRule weight_rule)
 : Coagulation(mech)
+, m_efm(mech.GetEnhancementFM())
 , m_CoagWeightRule(weight_rule)
 {
     m_name = "WeightedTransitionRegimeCoagulation";
@@ -91,6 +90,7 @@ Sweep::Processes::WeightedTransitionCoagulation* const Sweep::Processes::Weighte
  */
 Sweep::Processes::WeightedTransitionCoagulation::WeightedTransitionCoagulation(std::istream &in, const Sweep::Mechanism &mech)
 : Coagulation(mech)
+, m_efm(mech.GetEnhancementFM())
 {
     m_name = "WeightedTransitionCoagulation";
     Deserialize(in, mech);
@@ -130,7 +130,7 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::Rate(real t, const 
         Sweep::fvector vec(TYPE_COUNT);
         fvector::iterator it = vec.begin();
 
-        return RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/GetViscosity(sys),
+        return RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/sys.GasPhase().Viscosity(),
                 MeanFreePathAir(T,P), sys.SampleVolume(), it);
     } else {
         // Not enough particles so return 0
@@ -172,7 +172,7 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(real t, c
         real T = sys.GasPhase().Temperature();
         real P = sys.GasPhase().Pressure();
 
-        real r = RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/GetViscosity(sys),
+        real r = RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/sys.GasPhase().Viscosity(),
                 MeanFreePathAir(T,P), sys.SampleVolume(), iterm);
         return r;
 
@@ -399,7 +399,7 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::CoagKernel(const Pa
     const real T = sys.GasPhase().Temperature();
     const real P = sys.GasPhase().Pressure();
     const real fm = FreeMolKernel(sp1, sp2, T, P, false);
-    const real sf = SlipFlowKernel(sp1, sp2, T, P, GetViscosity(sys), false);
+    const real sf = SlipFlowKernel(sp1, sp2, T, P, sys.GasPhase().Viscosity(), false);
     return (fm*sf)/(fm+sf);
 }
 
@@ -432,7 +432,7 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::MajorantKernel(cons
         case SlipFlow:
             // Slip-flow majorant.
             return SlipFlowKernel(sp1, sp2, sys.GasPhase().Temperature(),
-                    sys.GasPhase().Pressure(), GetViscosity(sys), true);
+                    sys.GasPhase().Pressure(), sys.GasPhase().Viscosity(), true);
     }
 
     // Invalid majorant, return zero.
@@ -520,6 +520,9 @@ void Sweep::Processes::WeightedTransitionCoagulation::Serialize(std::ostream &ou
 {
     // Serialise the parent class
     Coagulation::Serialize(out);
+
+    // Note that m_efm is not written out in serialize as it is always directly
+    // taken from the ParitcleModel. (allows const initialisation)
 
     // Now the data in this class
     if(out.good())

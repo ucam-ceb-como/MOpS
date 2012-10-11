@@ -78,7 +78,15 @@ public:
     // Operator overloads.
     Mixture &operator=(const Mixture &mix); // Assignment operator.
 
-    // TEMPERATURE. (NO NEED CHANGING)
+    //! Set viscosity model
+    void SetViscosityModel(Sprog::ViscosityModel vmodel)
+        {m_vmodel = vmodel;}
+
+    //! Get viscosity model
+    Sprog::ViscosityModel GetViscosityModel(void) const
+        {return m_vmodel;}
+
+    // TEMPERATURE.
 
     // Returns temperature.
     real Temperature(void) const;
@@ -228,7 +236,7 @@ public:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int /* file_version */)
     {
-        ar & m_data & m_species;
+        ar & m_data & m_species & m_vmodel;
     }
 
 
@@ -256,6 +264,10 @@ public:
 
     // returns the mixture viscosity in Kg/m-s.
     real getViscosity() const;
+
+    //! Checks the mixture has sufficient transport data.
+    void checkForTransportData() const;
+
     // returns the mixture thermal conductivity in J/m-s-K    .
     real getThermalConductivity(real pre) const;
     // returns the mixture specific heat capacity in J/Kg K.
@@ -327,13 +339,10 @@ private:
     // Vector of species for which this mixture is defined.
     const SpeciesPtrVector *m_species;
 
-   
+    //! The viscosity model used
+    Sprog::ViscosityModel m_vmodel;
 
-	
-   
-    
-
-}; 
+};
 } //namespace Thermo
 } //namespace Sprog
 

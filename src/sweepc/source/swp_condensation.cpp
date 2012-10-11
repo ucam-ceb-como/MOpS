@@ -42,6 +42,8 @@
 
 #include "swp_condensation.h"
 #include "swp_mechanism.h"
+#include "swp_primary.h"
+
 #include <cmath>
 #include <stdexcept>
 #include <cassert>
@@ -52,13 +54,12 @@ using namespace std;
 
 const unsigned int Condensation::TERM_COUNT = 3;
 const real Condensation::m_majfactor       = 2.0;
-const real Condensation::m_efm             = 2.2;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (protected).
 Condensation::Condensation(void)
-: ParticleProcess(), m_a(1.0), m_kfm1(0.0), m_kfm2(0.0), m_kfm3(0.0)
+: ParticleProcess(), m_efm(2.2), m_kfm1(0.0), m_kfm2(0.0), m_kfm3(0.0)
 {
     m_defer = true;
     m_name = "Condensation";
@@ -66,7 +67,8 @@ Condensation::Condensation(void)
 
 // Initialising constructor.
 Condensation::Condensation(const Sweep::Mechanism &mech)
-: ParticleProcess(mech), m_a(1.0), m_kfm1(0.0), m_kfm2(0.0), m_kfm3(0.0)
+: ParticleProcess(mech), m_efm(mech.GetEnhancementFM()),
+ m_kfm1(0.0), m_kfm2(0.0), m_kfm3(0.0)
 {
     // Assume the condensation is simulated as a deferred process (LPDA).
     m_defer = true;
@@ -75,12 +77,14 @@ Condensation::Condensation(const Sweep::Mechanism &mech)
 
 // Copy constructor.
 Condensation::Condensation(const Condensation &copy)
+: m_efm(copy.m_efm)
 {
     *this = copy;
 }
 
 // Stream-reading constructor.
 Condensation::Condensation(std::istream &in, const Sweep::Mechanism &mech)
+: m_efm(mech.GetEnhancementFM())
 {
     Deserialize(in, mech);
 }
@@ -110,12 +114,6 @@ Condensation &Condensation::operator=(const Condensation &rhs)
 
 // RATE CONSTANT AND PARAMETERS.
 
-// Returns the fixed rate constant.
-real Condensation::A() const {return m_a;}
-
-// Sets the fixed rate constant.
-void Condensation::SetA(real a) {m_a = a;}
-
 // Sets the coagulation kernel parameters given the mass and
 // collision diameter of the condensing species.
 void Condensation::SetCondensingSpecies(const real m, const real d)
@@ -144,7 +142,7 @@ real Condensation::Rate(real t, const Cell &sys,
     real cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
 
      // Chemical species concentration dependence.
-    cterm *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
+    cterm *= chemRatePart(sys.GasPhase());
 
     // Free molecular terms.
     cterm *= (m_kfm1 * sys.ParticleCount()) + 
@@ -173,7 +171,7 @@ real Condensation::Rate(real t, const Cell &sys, const Particle &sp) const
 //    real trm[3];
 
     // Chemical species concentration dependence.
-    cterm *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
+    cterm *= chemRatePart(sys.GasPhase());
 
     // Get particle property
     const real d = sp.CollDiameter();
@@ -214,7 +212,7 @@ real Condensation::RateTerms(real t, const Cell &sys,
     real cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
 
      // Chemical species concentration dependence.
-    cterm *= chemRatePart(sys.GasPhase().MoleFractions(), sys.GasPhase().Density());
+    cterm *= chemRatePart(sys.GasPhase());
 
     // If the mechanism contains any deferred processes then we must use the
     // majorant form of the rate, in order to account for any changes to
@@ -324,7 +322,7 @@ int Condensation::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
 }
 
 // Adjusts a primary particle according to the rules of the condensation.
-unsigned int Condensation::adjustPri(Sweep::Primary &pri, rng_type &rng, unsigned int n) const
+unsigned int Condensation::adjustPri(Sweep::AggModels::Primary &pri, rng_type &rng, unsigned int n) const
 {
     return pri.Adjust(m_dcomp, m_dvals, rng, n);
 }
@@ -353,11 +351,8 @@ void Condensation::Serialize(std::ostream &out) const
         // Serialize base class.
         ParticleProcess::Serialize(out);
 
-        // Write rate constant.
-        double v = (double)m_a;
-        out.write((char*)&v, sizeof(v));
-
         // Write free-mol parameters.
+        double v(0.0);
         v = (double)m_kfm1;
         out.write((char*)&v, sizeof(v));
         v = (double)m_kfm2;
@@ -386,10 +381,6 @@ void Condensation::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
             case 0:
                 // Deserialize base class.
                 ParticleProcess::Deserialize(in, mech);
-
-                // Read rate constant.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_a = (real)val;
 
                 // Read free-mol parameter.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));

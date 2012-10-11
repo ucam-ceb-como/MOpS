@@ -60,10 +60,6 @@ class Mechanism;
 // Forward declare the Cell class.
 class Cell;
 
-namespace Transport {
-    struct TransportOutflow;
-}
-
 namespace Processes
 {
 class BirthProcess : public Process
@@ -83,14 +79,6 @@ public:
     // Operators.
     BirthProcess &operator=(const BirthProcess &rhs);
 
-
-    // RATE CONSTANT.
-
-    // Returns the rate constant.
-    real A(void) const;
-
-    // Sets the rate constant.
-    void SetA(real a);
 
     // DEFAULT PARTICLE.
 
@@ -152,8 +140,6 @@ public:
         );
 
 protected:
-    // Rate parameters.
-    real m_a; // Rate constant.
 
     // Particle sampling.
     Particle *m_particle; // A uniform birth process particle.

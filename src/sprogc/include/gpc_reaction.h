@@ -435,6 +435,9 @@ public:
     // reaction data.  This is used to debug.
     void WriteDiagnostics(std::ostream &out) const;
 
+    //! Indicates whether the pre-exponential should be converted to cgs
+    bool ConvertPreexponential(void) const;
+
     //! Writes the reduced mechanism reactions to the output file
     void WriteReducedMechReacs(std::ostream &out, std::vector<std::string> RejectSpecies) const;
 

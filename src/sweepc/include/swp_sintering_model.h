@@ -67,12 +67,11 @@ namespace Sweep
 // Forward declare required classes.
 class Cell;
 class Particle;
-class Primary;
-class SubParticle;
 
 namespace AggModels {
+class Primary;
 class PriPartPrimary;
-};
+}
 
 namespace Processes
 {
@@ -86,7 +85,9 @@ public:
     enum SintType {
         ViscousFlow, // Viscous flow model (e.g. silica).
         GBD,          // Grain-boundary diffusion (e.g. titania).
-        Rutile		 // Special MD fit for GBD sintering of rutile
+        SSD,         // Solid state diffusion (d^3)
+        Rutile,		 // Special MD fit for GBD sintering of rutile
+        Silicon      // Special MD fit for sintering of silicon
     };
 
     // Constructors.
@@ -162,7 +163,7 @@ public:
     // given primary.
     real SintTime(
         const Cell &sys, // System to which the particle belongs (for T).
-        const Primary &p // Particle for which to calculate time.
+        const AggModels::Primary &p // Particle for which to calculate time.
         ) const;
 
     // RATE CALCULATION.
@@ -178,7 +179,7 @@ public:
     real Rate(
         real t,          // Time.
         const Cell &sys, // System to which the particle belongs (for T).
-        const Primary &p // Particle for which to calculate rate.
+        const AggModels::Primary &p // Particle for which to calculate rate.
         ) const;
 
     // READ/WRITE/COPY.

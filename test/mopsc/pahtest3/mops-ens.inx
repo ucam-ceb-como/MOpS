@@ -1,37 +1,30 @@
 <mops version="2">
   
   <!-- Default parameters (can be overidden). --> 
-  <runs>4</runs>
-  <iter>2</iter>
+  <runs>1</runs>
+  <iter>20</iter>
   <atol>1.0e-22</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount>512</pcount>
-  <!--maxm0>8.72e11</maxm0-->
-  <!--maxm0>2.2e12</maxm0-->
-  <maxm0>2.1e12</maxm0>
+    <pcount>256</pcount>
+  <maxm0>7e13</maxm0>
   <relax>0.5</relax>
   
 
   <!-- Reactor definition (given initial conditions). -->
   <reactor type="batch" constt="true" id="Test_System" units="mol/mol">
-    <component id="C8H20O4SI">0.25e-4</component>
-    <component id="N2">0.999975</component-->
-    <temperature units="K">1173</temperature>
-    <pressure units="bar">1.01325</pressure>
-    
+    <temperature units="K">1773.0</temperature>
+    <pressure units="bar">1</pressure>
+    <population>
+           <file>pahtest3-restart-capacity(0)-SP(50).ens</file>
+           <m0>1.2e19</m0>
+    </population>
     <!-- Temperature derivative as function of time. -->
-    <dTdt startt="0.00000" endt="0.25">+0.000e0</dTdt>
-    <dTdt startt="0.25" endt="0.35">+0.000e0</dTdt>
-    <dTdt startt="0.35" endt="0.8">+0.000e0</dTdt>
-    <dTdt startt="0.8" endt="2.0">-7.000e3</dTdt>
   </reactor>
 
   <!-- Output time sequence. -->
   <timeintervals splits="1">
-    <start>0.0</start>
-    <time steps="150" splits="30">0.15</time>
-    <time steps="50" splits="5">0.35</time>
-    <time steps="30" splits="5">0.8</time>
+    <start>0.049072</start>
+	<time steps="50" splits="1">0.054072</time>
   </timeintervals>
   
   <!-- Simulation output settings. -->
@@ -48,16 +41,15 @@
         <column fmt="float">#sp</column>
         <column fmt="sci">m0</column>
         <column fmt="sci">T</column>
-        <column fmt="sci">H4O4SI</column>
+        <column fmt="sci">A4</column>
         <!--column fmt="sci">fv</column-->
         <column fmt="sci">ct</column>
       </tabular>
     </console>
     <ptrack enable="false" ptcount="50"/>
 
-    
+    <writebintree enable="true"/> 
     <!-- File name for output (excluding extensions). -->
-    <filename>silica</filename>
+    <filename>pahtest3-restart-capacity-ens</filename>
   </output>
 </mops>
-

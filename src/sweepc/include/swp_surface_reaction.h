@@ -54,12 +54,6 @@ namespace Sweep
 // Forward declare mechanism class.
 class Mechanism;
 
-namespace Transport
-{
-    // Forward declaration of unused argument type
-    struct TransportOutflow;
-}
-
 namespace Processes
 {
 /*!
@@ -206,7 +200,7 @@ protected:
 
     // Adjusts a primary particle according to the rules of the reaction.
     unsigned int adjustPri(
-        Sweep::Primary &pri, // Primary to adjust.
+        Sweep::AggModels::Primary &pri, // Primary to adjust.
         rng_type &rng,
         unsigned int n=1     // Number of times to perform adjustment.
         ) const;

@@ -88,7 +88,7 @@ TimeInterval::~TimeInterval(void)
 // PROPERTIES.
 
 // Returns the start time.
-real TimeInterval::StartTime() const
+Mops::real TimeInterval::StartTime() const
 {
     return m_start;
 }
@@ -100,7 +100,7 @@ void TimeInterval::SetStartTime(real t)
 }
 
 // Returns the end time.
-real TimeInterval::EndTime() const
+Mops::real TimeInterval::EndTime() const
 {
     return m_end;
 }
@@ -153,13 +153,13 @@ void TimeInterval::SetSubSplittingStepCount(unsigned int n)
 
 
 // Calculates the output step size.
-real TimeInterval::StepSize() const
+Mops::real TimeInterval::StepSize() const
 {
     return (m_end - m_start) / (real)m_steps;
 }
 
 // Calculates the splitting step size.
-real TimeInterval::SplitStepSize() const
+Mops::real TimeInterval::SplitStepSize() const
 {
     return StepSize() / (real)m_splits;
 }

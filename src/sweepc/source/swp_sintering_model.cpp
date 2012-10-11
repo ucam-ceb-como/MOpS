@@ -44,7 +44,7 @@
 #include "swp_primary.h"
 #include "swp_particle.h"
 #include "swp_cell.h"
-#include "swp_subparticle.h"
+
 #include <cmath>
 #include <stdexcept>
 
@@ -150,15 +150,13 @@ real SinteringModel::SintTime(const Cell &sys, const Particle &p) const
     if (p.Primary() != NULL) {
         return SintTime(sys, *p.Primary());
     } else {
-        // TODO:  Complete SinteringModel::SintTime() function for sub-particle tree.    
-		// This is included in the function SinteringModel::SintTime(const Cell &sys, const SubParticle &p) const
         return 0.0;
     }
 }
 
 // Returns the characteristic sintering time for the
 // given primary.
-real SinteringModel::SintTime(const Cell &sys,const Primary &p) const
+real SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) const
 {
     real dp = 6.0 * p.Volume() / p.SurfaceArea();
     switch (m_type) {
@@ -170,6 +168,25 @@ real SinteringModel::SintTime(const Cell &sys,const Primary &p) const
         default:
             return m_A * dp * dp * dp * dp * sys.GasPhase().Temperature() *
                    exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature());
+            break;
+        case SSD:
+            return m_A * dp * dp * dp * sys.GasPhase().Temperature() *
+                   exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature());
+            break;
+        case Silicon:
+            // Zachariah & Carrier, J. Aerosol Sci., 1999, 30, 1139-1151
+            // implementation of the SSD silicon sintering kinetic
+            // form: tau = A * d^3 * T / (gamma * diff)
+            //       gamma = surface energy = 1.152 - 1.574e-4*T(K)    N/m
+            //       diff. = SSD diffusivity = 4.69e-7 exp(-m_E / T)   m2/s
+            // default: m_A = 5396 J/K.m3
+            //          m_E = 7562 K
+            //          m_dpmin = 0 nm
+            return m_A * dp * dp * dp * sys.GasPhase().Temperature() / (
+                   (1.152 - 1.574e-4 * sys.GasPhase().Temperature()) *
+                   4.69e-7 * exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature())
+                   );
+            break;
         case Rutile:
         	// Buesser et al., J. Phys. Chem. C, 2011, 115, 11030-11035
         	// SintTime function from MD calculations
@@ -179,6 +196,7 @@ real SinteringModel::SintTime(const Cell &sys,const Primary &p) const
         	return m_A * dp * dp * dp * dp * sys.GasPhase().Temperature() *
 				   exp((m_E* (1 - pow( (m_dpmin/dp) - (sys.GasPhase().Temperature()/4100.0) , 3.76))
 				     /sys.GasPhase().Temperature()));
+        	break;
     }
 }
 
@@ -193,7 +211,7 @@ real SinteringModel::Rate(real t, const Cell &sys, const Particle &p) const
 }
 
 // Returns the rate of the process for the given primary.
-real SinteringModel::Rate(real t, const Cell &sys, const Primary &p) const
+real SinteringModel::Rate(real t, const Cell &sys, const AggModels::Primary &p) const
 {
     real tau = max(1.0e-30, SintTime(sys, p));
     return max((p.SurfaceArea() - p.SphSurfaceArea()) / tau, 0.0);

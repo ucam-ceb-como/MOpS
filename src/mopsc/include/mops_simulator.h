@@ -223,7 +223,7 @@ public:
     //! Reads an ensemble file (public definition for IO access)
     Sweep::PartPtrList ReadEnsembleFile(
         Reactor &r,                 // Reactor
-        const string fname          // File name for loading
+        const std::string fname          // File name for loading
         );
 
     // Reads the simulator data from a binary data stream.

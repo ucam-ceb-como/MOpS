@@ -124,7 +124,7 @@ $avgcoag /= $count;
 # change unexpectedly.  Correct values are not known although maxcoag
 # should be an integer.
 
-print "$m0 $m0sq, $m1 $m1sq\n";
+printf "%G %G %G %G \n", $m0, $m0sq, $m1, $m1sq;
 if(abs($m0 - 1.25e9) > 1e8) {
   print "Simulated mean M0 was $m0, when 1.25e9 m^-3 expected\n";
   print "**************************\n";
@@ -161,7 +161,7 @@ if(($maxcoag != 1) && ($maxcoag != 2)) {
 # Clean outputs, there should always be some files to delete.
 @outputFiles = glob("moonmd1results*");
 #print "Files to remove: @outputFiles\n";
-#system("rm @outputFiles");
+system("rm @outputFiles");
 
 #print "All tests passed\n";
 exit 0;

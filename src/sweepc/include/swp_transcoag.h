@@ -54,13 +54,6 @@ class Mechanism;
 // Forward declare class used for sums in the binary tree
 class TreeTransCoagWeightedCache;
 
-
-namespace Transport
-{
-    // Forward declaration of unused argument type
-    struct TransportOutflow;
-}
-
 namespace Processes
 {
 
@@ -148,9 +141,8 @@ private:
     };
     
 
-    // Free-molecular enhancement factor.  Currently hardcoded
-    // for soot particles (m_efm = 2.2).
-    static const real m_efm;
+    // Free-molecular enhancement factor.
+    const real m_efm;
 
         // More efficient rate routine for coagulation only.  
     // All parameters required to calculate rate passed 
@@ -159,7 +151,7 @@ private:
         const TreeTransCoagWeightedCache &data, // Particle model data.
         real n,     // Number of particles.
         real sqrtT, // Square root of the temperature.
-        real T_mu,  // T / viscosity of air.
+        real T_mu,  // T / viscosity
         real MFP,   // Gas mean-free path.
         real vol    // System sample volume.
         ) const;
@@ -171,7 +163,7 @@ private:
         const TreeTransCoagWeightedCache &data, // Particle model data.
         real n,     // Number of particles.
         real sqrtT, // Square root of the temperature
-        real T_mu,  // T / viscosity of air.
+        real T_mu,  // T / viscosity
         real MFP,   // Gas mean-free path.
         real vol,   // System sample volume.
         fvector::iterator &iterm // Iterator to first coagulation term.

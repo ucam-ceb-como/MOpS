@@ -52,14 +52,14 @@ using namespace std;
 
 // Default constructor (protected).
 DeathProcess::DeathProcess(void)
-: Process(), m_a(0.0)
+: Process()
 {
     m_name = "Death Process";
 }
 
 // Initialising constructor.
 DeathProcess::DeathProcess(const Sweep::Mechanism &mech)
-: Process(mech), m_a(0.0)
+: Process(mech)
 {
     m_name = "Death Process";
 }
@@ -88,20 +88,9 @@ DeathProcess &DeathProcess::operator =(const DeathProcess &rhs)
 {
     if (this != &rhs) {
         Process::operator =(rhs);
-        m_a = rhs.m_a;
     }
     return *this;
 }
-
-
-// RATE CONSTANT.
-
-// Returns the rate constant.
-real DeathProcess::A(void) const {return m_a;}
-
-// Sets the rate constant.
-void DeathProcess::SetA(real a) {m_a = a;}
-
 
 // TOTAL RATE CALCULATIONS.
 
@@ -162,56 +151,3 @@ DeathProcess *const DeathProcess::Clone(void) const {return new DeathProcess(*th
 // Returns the process type.  Used to identify different
 // processes and for serialisation.
 ProcessType DeathProcess::ID(void) const {return Death_ID;}
-
-// Writes the object to a binary stream.
-void DeathProcess::Serialize(std::ostream &out) const
-{
-    if (out.good()) {
-        // Output the version ID (=0 at the moment).
-        const unsigned int version = 0;
-        out.write((char*)&version, sizeof(version));
-
-        // Serialize base class.
-        Process::Serialize(out);
-
-        // Write rate constant.
-        double v = (double)m_a;
-        out.write((char*)&v, sizeof(v));
-    } else {
-        throw invalid_argument("Output stream not ready "
-                               "(Sweep, DeathProcess::Serialize).");
-    }
-}
-
-// Reads the object from a binary stream.
-void DeathProcess::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
-{
-    if (in.good()) {
-        // Read the output version.  Currently there is only one
-        // output version, so we don't do anything with this variable.
-        // Still needs to be read though.
-        unsigned int version = 0;
-        in.read(reinterpret_cast<char*>(&version), sizeof(version));
-
-//        unsigned int n = 0;
-        double val = 0.0;
-
-        switch (version) {
-            case 0:
-                // Deserialize base class.
-                Process::Deserialize(in, mech);
-
-                // Read rate constant.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_a = (real)val;
-                
-                break;
-            default:
-                throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, DeathProcess::Deserialize).");
-        }
-    } else {
-        throw invalid_argument("Input stream not ready "
-                               "(Sweep, DeathProcess::Deserialize).");
-    }
-}

@@ -43,6 +43,8 @@ if($#outputFiles > 0) {
   system("rm @outputFiles");
 }
 
+print "Additive kernel test problem\n";
+
 # Path of executable should be supplied as first argument to this script
 my $program = $ARGV[0];
 
@@ -51,7 +53,7 @@ my @simulationCommand = ($program,
                          "-g", "regress4/geometry4.xml",
                          "-c", "regress4/chem.inp",
                          "-d", "regress4/chemsoln4.dat",
-                         "-s", "regress4/sweep4a.xml",
+                         "-s", "regress4/sweep4.xml",
                          "-t", "regress4/therm.dat",
                          "-b", "regress4/brush4a.xml",
                          "-a", "regress4/partsoln4.xml",

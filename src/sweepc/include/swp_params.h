@@ -88,12 +88,6 @@ namespace Sweep
     const real CSF     = 9.2046667e-24; // = KB * 2/3 (J/K).
     const real CSF_CGS = 9.2046667e-17; // = KB * 2/3 (erg/K).
 
-    // Enum for listing the various viscosity models.
-    enum ViscosityModel {
-        iAir,                   //  Use viscosity of air (default)
-        iChampanEnskog          //  Use Champan-Enskog multicomponent viscosity
-        };
-
     // Returns the viscosity of air at 1 atm 
     // for the given temperature.
     inline real ViscosityAir(real T)

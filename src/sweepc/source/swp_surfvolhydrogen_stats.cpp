@@ -1,28 +1,28 @@
 /*
-  Author(s):      Shraddha Shekar (ss663)
+  Author(s):      Robert I A Patterson Robert.Patterson@wias-berlin.de
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
 
-  Copyright (C) 2008 Matthew S Celnik.
+  Copyright (C) 2012 Robert I A Patterson
 
   File purpose:
-    Implementation of the silicaStats class declared in the
-    swp_silica_stats.h header file.
+    Implementation of the SurfVolHydrogenStats class declared in the
+    swp_surfvol_stats.h header file.
 
   Licence:
     This file is part of "sweepc".
 
     sweepc is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public License
+    modify it under the terms of the GNU General Public License
     as published by the Free Software Foundation; either version 2
     of the License, or (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+    GNU General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
+    You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
@@ -40,10 +40,11 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
-#include "swp_silica_stats.h"
+#include "swp_surfvolhydrogen_stats.h"
+#include "swp_surfvolhydrogen_primary.h"
 #include "swp_aggmodel_type.h"
 #include "swp_particle.h"
-#include "swp_silica_primary.h"
+
 #include <stdexcept>
 
 using namespace Sweep;
@@ -52,52 +53,33 @@ using namespace std;
 
 // STATIC CONST MEMBER VARIABLES.
 
-const std::string SilicaStats::m_statnames[SilicaStats::STAT_COUNT] = {
-    std::string("Number of Si atoms (cm-3)"),
-    std::string("Number of O atoms (cm-3)"),
-    std::string("Number of OH atoms (cm-3)"),
-    std::string("Avg. Number of Primaries per Particle (-)"),
-    std::string("Avg. Primary Diameter (nm)"),
-    std::string("Avg. Sintering Level (-)"),
-    std::string("Avg. Particle Mass (kg)"),
-    std::string("Avg. Sintering Rate (m2/s)"),
-    std::string("Avg. Sintering Time (s)"),
-    std::string("Avg. Create Time (s)"),
-    std::string("Avg. Si:O ratio (-)"),
+const std::string SurfVolHydrogenStats::m_statnames[SurfVolHydrogenStats::STAT_COUNT] = {
+    std::string("Equiv. Sphere Surface Area (cm2/cm3)"),
+    std::string("Avg. Equiv. Sphere Surface Area (cm2)"),
+    std::string("Est. Primary Particle Count"),
+    std::string("Avg. Est. Primary Particle Count"),
+    std::string("Avg. Est. Primary Particle Diameter (nm)")
 };
 
-const IModelStats::StatType SilicaStats::m_mask[SilicaStats::STAT_COUNT] = {
-    IModelStats::Sum,  // Number of Si atoms.
-    IModelStats::Sum,  // Number of O atoms.
-    IModelStats::Sum,  // Number of OH atoms.
-    IModelStats::Avg,  // Avg.Number of primaries.
-    IModelStats::Avg,  // Avg. Primary Particle diameter.
-    IModelStats::Avg,  // Avg. Sintering level.
-    IModelStats::Avg,  // Avg particle mass,
-    IModelStats::Avg,  // Avg sint rate,
-    IModelStats::Avg,  // Avg sint time,
-    IModelStats::Avg,  // Avg create time,
-    IModelStats::Avg,  // Avg Si:O ratio
+const IModelStats::StatType SurfVolHydrogenStats::m_mask[SurfVolHydrogenStats::STAT_COUNT] = {
+    IModelStats::Sum,  // Equiv. sphere surface area.
+    IModelStats::Avg,  // Avg. equiv. sphere surface area.
+    IModelStats::Sum,  // Est. primary particle count.
+    IModelStats::Avg,  // Avg. est. primary particle count.
+    IModelStats::Avg   // Avg. est. primary particle diameter.
 };
 
-const std::string SilicaStats::m_const_pslnames[SilicaStats::PSL_COUNT] = {
-    std::string("Number of Si Atoms"),
-    std::string("Number of O Atoms"),
-    std::string("Number of OH Atoms"),
-    std::string("Number of Primaries"),
-    std::string("Avg. Primary Diameter"),
-    std::string("Avg. Sintering Level"),
-    std::string("Avg. Si:O Ratio"),
-    //std::string("Avg. Particle Mass"),
-
+const std::string SurfVolHydrogenStats::m_const_pslnames[SurfVolHydrogenStats::PSL_COUNT] = {
+    std::string("Equiv. Sphere Surface Area (cm2)"),
+    std::string("Est. Primary Count"),
+    std::string("Est. Avg. Primary Diameter (nm)")
 };
-
 
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor.
-SilicaStats::SilicaStats()
+SurfVolHydrogenStats::SurfVolHydrogenStats()
 : m_stats(STAT_COUNT,0.0)
 {
     for (unsigned int i=0; i!=STAT_COUNT; ++i) {
@@ -107,24 +89,22 @@ SilicaStats::SilicaStats()
     for (unsigned int i=0; i!=PSL_COUNT; ++i) {
         m_pslnames.push_back(m_const_pslnames[i]);
     }
-
-
 }
 
 // Copy constructor.
-SilicaStats::SilicaStats(const Sweep::Stats::SilicaStats &copy)
+SurfVolHydrogenStats::SurfVolHydrogenStats(const Sweep::Stats::SurfVolHydrogenStats &copy)
 {
     *this = copy;
 }
 
 // Stream-reading constructor.
-SilicaStats::SilicaStats(std::istream &in, const Sweep::ParticleModel &model)
+SurfVolHydrogenStats::SurfVolHydrogenStats(std::istream &in, const Sweep::ParticleModel &model)
 {
     Deserialize(in, model);
 }
 
 // Default destructor.
-SilicaStats::~SilicaStats()
+SurfVolHydrogenStats::~SurfVolHydrogenStats()
 {
     // Nothing special to destruct.
 }
@@ -132,7 +112,7 @@ SilicaStats::~SilicaStats()
 
 // OPERATOR OVERLOADS.
 
-SilicaStats &SilicaStats::operator=(const Sweep::Stats::SilicaStats &rhs)
+SurfVolHydrogenStats &SurfVolHydrogenStats::operator=(const Sweep::Stats::SurfVolHydrogenStats &rhs)
 {
     if (this != &rhs) {
         m_stats.assign(rhs.m_stats.begin(), rhs.m_stats.end());
@@ -144,82 +124,58 @@ SilicaStats &SilicaStats::operator=(const Sweep::Stats::SilicaStats &rhs)
 // IMPLEMENTATION.
 
 // Returns the number of basic particle stats.
-unsigned int SilicaStats::Count() const
+unsigned int SurfVolHydrogenStats::Count() const
 {
     return STAT_COUNT;
 }
 
 // Calculates the model stats for a particle ensemble.
-void SilicaStats::Calculate(const Ensemble &e, real scale)
+void SurfVolHydrogenStats::Calculate(const Ensemble &e, real scale)
 {
-    // Empty the stats array.
     fill(m_stats.begin(), m_stats.end(), 0.0);
-
-    // Calculate total weight
-    real TotalWeight = e.Count()>0 ? e.GetSum(iW) : 0.0;
-    real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
 
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
-    unsigned int n = 0;
-    // particles with more then one silica
-    unsigned int nrealpart= 0;
+
     for (ip=e.begin(); ip!=e.end(); ++ip) {
-
-        const AggModels::SilicaPrimary * const silica =
-                dynamic_cast<const AggModels::SilicaPrimary *>((*ip)->Primary());
-
+        // Get surface-volume cache.
+        const AggModels::SurfVolHydrogenPrimary * const primary =
+            dynamic_cast<const AggModels::SurfVolHydrogenPrimary *>((*ip)->Primary());
         real sz = (*ip)->Property(m_statbound.PID);
-        real wt = (*ip)->getStatisticalWeight() * invTotalWeight;
+        real wt = (*ip)->getStatisticalWeight();
 
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-            m_stats[iNSi]   += (silica->NumSi() * wt);
-            m_stats[iNO]    += (silica->NumO() * wt);
-            m_stats[iNOH]   += (silica->NumOH() * wt);
-            m_stats[iCOAL]    += (silica->AvgSinter() * wt);
-            m_stats[iPRIMDIAM] += (silica->PrimaryDiam() * 1e9  * wt / silica->Numprimary());
-            m_stats[iSintRate] += silica->GetSintRate() * wt;
-            m_stats[iSintTime] += silica->GetSintTime() * wt;
-            m_stats[iCreateTime] += silica->CreateTime() * wt;
-            m_stats[iSiORatio] += (real(silica->NumSi()) / real(silica->NumO() + silica->NumOH())) * wt;
-            ++n;
-            if (silica->NumSi() > 1)
-            {
-                ++nrealpart;
-                m_stats[iNPRIM]+=silica->Numprimary()  * wt;
-                if((*ip)->Primary()!=NULL)
-                {
-                m_stats[iPARTMASS]+=(*ip)->Primary()->Mass() * wt;
-                }
-                else
-                {
-                    m_stats[iPARTMASS]+=0;
-                }
-
-            }
+            m_stats[iS]      += (*ip)->SphSurfaceArea() * 1.0e4 * wt; // Convert from m2 to cm2.
+            m_stats[iS+1]    += (*ip)->SphSurfaceArea() * 1.0e4 * wt; // Convert from m2 to cm2.
+            m_stats[iPPN]    += primary->PP_Count() * wt;
+            m_stats[iPPN+1]  += primary->PP_Count() * wt;
+            m_stats[iPPD]    += primary->PP_Diameter() * 1.0e9 * wt; // Convert from m to nm.
         }
     }
+
+    // Calculate total weight
+    real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
+
     // Scale the summed stats and calculate the averages.
-    for (unsigned int i=0; i!=STAT_COUNT; ++i) {
+    for (unsigned int i=1; i!=STAT_COUNT; ++i) {
         if (m_mask[i] == Sum) {
-            m_stats[i] *= (scale * 1.0e-6 * TotalWeight); // Convert scale from 1/m3 to 1/cm3.
+            m_stats[i] *= (scale * 1.0e-6); // Convert scale from 1/m3 to 1/cm3.
+        } else {
+            m_stats[i] *= invTotalWeight;
         }
-    // Don't need to scale by number of particles as this is included
-    //     in the weighting scaling above.
     }
-
 }
 
 // Returns a vector containing the stats.
-const fvector &SilicaStats::Get(void) const
+const fvector &SurfVolHydrogenStats::Get(void) const
 {
     return m_stats;
 }
 
 // Returns a vector containing the stats.
-void SilicaStats::Get(fvector &stats, unsigned int start) const
+void SurfVolHydrogenStats::Get(fvector &stats, unsigned int start) const
 {
     // Get an iterator to the first point of insertion in the
     // output stats array.
@@ -245,13 +201,13 @@ void SilicaStats::Get(fvector &stats, unsigned int start) const
 }
 
 // Returns a vector containing the stat names.
-const std::vector<std::string> &SilicaStats::Names(void) const
+const std::vector<std::string> &SurfVolHydrogenStats::Names(void) const
 {
     return m_names;
 }
 
 // Adds to a vector containing stat names.
-void SilicaStats::Names(std::vector<std::string> &names,
+void SurfVolHydrogenStats::Names(std::vector<std::string> &names,
                          unsigned int start) const
 {
     // Get an iterator to the first point of insertion in the
@@ -279,17 +235,34 @@ void SilicaStats::Names(std::vector<std::string> &names,
 }
 
 
+// AVAILABLE BASIC STATS.
+
+// Returns the total equivalent-sphere surface area.
+real SurfVolHydrogenStats::SphSurfaceArea(void) const {return m_stats[iS];}
+
+// Returns the average equivalent-sphere surface area.
+real SurfVolHydrogenStats::AvgSphSurfaceArea(void) const {return m_stats[iS+1];}
+
+// Returns the total primary particle count.
+real SurfVolHydrogenStats::PriPartCount(void) const {return m_stats[iPPN];}
+
+// Returns the average primary particle count.
+real SurfVolHydrogenStats::AvgPriPartCount(void) const {return m_stats[iPPN+1];}
+
+// Returns the average primary particle diameter.
+real SurfVolHydrogenStats::AvgPriPartDiameter(void) const {return m_stats[iPPD];}
+
 
 // PARTICLE SIZE LISTS.
 
 // Returns the number of PSL output variables.
-unsigned int SilicaStats::PSL_Count(void) const
+unsigned int SurfVolHydrogenStats::PSL_Count(void) const
 {
     return PSL_COUNT;
 }
 
 // Returns a vector of PSL variable names.
-void SilicaStats::PSL_Names(std::vector<std::string> &names,
+void SurfVolHydrogenStats::PSL_Names(std::vector<std::string> &names,
                              unsigned int start) const
 {
     // Get an iterator to the first point of insertion in the
@@ -317,7 +290,7 @@ void SilicaStats::PSL_Names(std::vector<std::string> &names,
 }
 
 // Returns the PSL entry for the given particle.
-void SilicaStats::PSL(const Sweep::Particle &sp, real time,
+void SurfVolHydrogenStats::PSL(const Sweep::Particle &sp, real time,
                        fvector &psl, unsigned int start) const
 {
     // Resize vector if too small.
@@ -330,46 +303,36 @@ void SilicaStats::PSL(const Sweep::Particle &sp, real time,
     fvector::iterator j = psl.begin()+start-1;
 
     // Get surface-volume cache.
-    const AggModels::SilicaPrimary* const silica =
-        dynamic_cast<const AggModels::SilicaPrimary *>(sp.Primary());
+    const AggModels::SurfVolHydrogenPrimary* const primary =
+        dynamic_cast<const AggModels::SurfVolHydrogenPrimary *>(sp.Primary());
 
     // Get the PSL stats.
-    if (silica != NULL) {
-        *(++j) = (real)(silica->NumSi());
-        *(++j) = (real)(silica->NumO());
-        *(++j) = (real)(silica->NumOH());
-        *(++j) = (real) (silica->Numprimary());
-        *(++j) = (real) (silica->PrimaryDiam())*1e9/(real)(silica->Numprimary());//convert to nm
-        *(++j) = (real) (silica->AvgSinter());
-        *(++j) = (real(silica->NumSi()) / real(silica->NumO() + silica->NumOH()));
-
+    if (primary != NULL) {
+        *(++j) = sp.SphSurfaceArea() * 1.0e4; // m2 to cm2.
+        *(++j) = primary->PP_Count();
+        *(++j) = primary->PP_Diameter() * 1.0e9; // m to nm.
     } else {
-        fill (j+1, j+2, 0.0);
+        fill(j+1, j+3, 0.0);
     }
 }
-
-
-
-
 
 // READ/WRITE/COPY.
 
 // Creates a copy of the object.
-SilicaStats *const SilicaStats::Clone(void) const
+SurfVolHydrogenStats *const SurfVolHydrogenStats::Clone(void) const
 {
-    return new SilicaStats(*this);
+    return new SurfVolHydrogenStats(*this);
 }
-
 
 // Returns the model data type.  Used to identify different models
 // and for serialisation.
-unsigned int SilicaStats::ID(void) const
+unsigned int SurfVolHydrogenStats::ID(void) const
 {
-    return (unsigned int)AggModels::Silica_ID;
+    return (unsigned int)AggModels::SurfVol_ID;
 }
 
 // Writes the object to a binary stream.
-void SilicaStats::Serialize(std::ostream &out) const
+void SurfVolHydrogenStats::Serialize(std::ostream &out) const
 {
     if (out.good()) {
         // Output the version ID (=0 at the moment).
@@ -402,12 +365,12 @@ void SilicaStats::Serialize(std::ostream &out) const
         }
     } else {
         throw invalid_argument("Output stream not ready "
-                               "(Sweep, SilicaStats::Serialize).");
+                               "(Sweep, SurfVolHydrogenStats::Serialize).");
     }
 }
 
 // Reads the object from a binary stream.
-void SilicaStats::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
+void SurfVolHydrogenStats::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
     // TODO:  Deserialize ParticleStats should reset to state with no components
     //        or tracker variables in the first instance.
@@ -456,10 +419,10 @@ void SilicaStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mode
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, SilicaStats::Deserialize).");
+                                    "(Sweep, SurfVolHydrogenStats::Deserialize).");
         }
     } else {
         throw invalid_argument("Input stream not ready "
-                               "(Sweep, SilicaStats::Deserialize).");
+                               "(Sweep, SurfVolHydrogenStats::Deserialize).");
     }
 }

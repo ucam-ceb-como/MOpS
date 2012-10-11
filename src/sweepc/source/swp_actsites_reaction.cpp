@@ -64,12 +64,16 @@ ActSiteReaction::ActSiteReaction(void)
 , iH(-1)
 , iH2(-1)
 , iH2O(-1)
+, mAlphaIndex(-1)
+, mRadicalSiteModel(static_cast<RadicalSiteFractionModel>(-1))
 {
     m_name = "Active-site Reaction";
 }
 
 // Default constructor.
-ActSiteReaction::ActSiteReaction(const Sweep::Mechanism &mech)
+ActSiteReaction::ActSiteReaction(const Sweep::Mechanism &mech,
+                                 const RadicalSiteFractionModel rad_site_model,
+                                 const EnvironmentInterface::PropertyIndex alpha_index)
 : SurfaceReaction(mech)
 , iC2H2(-1)
 , iO2(-1)
@@ -78,6 +82,8 @@ ActSiteReaction::ActSiteReaction(const Sweep::Mechanism &mech)
 , iH(-1)
 , iH2(-1)
 , iH2O(-1)
+, mAlphaIndex(alpha_index)
+, mRadicalSiteModel(rad_site_model)
 {
     m_name = "Active-site Reaction";
 
@@ -123,7 +129,7 @@ ActSiteReaction::ActSiteReaction(std::istream &in, const Sweep::Mechanism &mech)
 real ActSiteReaction::Rate(real t, const Cell &sys,
                            const Geometry::LocalGeometry1d &local_geom) const
 {
-    return SurfaceReaction::Rate(t, sys, local_geom) * SiteDensity(sys.GasPhase());
+    return SurfaceReaction::Rate(t, sys, local_geom) * SiteDensity(sys);
 }
 
 
@@ -133,7 +139,7 @@ real ActSiteReaction::Rate(real t, const Cell &sys,
 // the system. Process must be linear in particle number.
 real ActSiteReaction::Rate(real t, const Cell &sys, const Particle &sp) const
 {
-    return SurfaceReaction::Rate(t, sys, sp) * SiteDensity(sys.GasPhase());
+    return SurfaceReaction::Rate(t, sys, sp) * SiteDensity(sys);
 }
 
 /*!
@@ -145,20 +151,20 @@ real ActSiteReaction::Rate(real t, const Cell &sys, const Particle &sp) const
  *\return       Fraction of surface sites which are radicals.
  *
  */
-real ActSiteReaction::radicalSiteFraction(const Sprog::Thermo::IdealGas &gas) const
+real ActSiteReaction::radicalSiteFractionABF(const EnvironmentInterface &gas) const
 {
     real r1f, r1b, r2f, r2b, r3f, r4f, r5f, rdenom;
     real T  = gas.Temperature();
     real RT = RCAL * T;
 
     // Calculate the forward and back reaction rates.
-    r1f = 4.2e+07 * exp(-13.0/RT)                * gas.MolarConc(iH);
-    r1b = 3.9e+06 * exp(-11.0/RT)                * gas.MolarConc(iH2);
-    r2f = 1.0e+04 * exp(-1.43/RT) * pow(T,0.734) * gas.MolarConc(iOH);
-    r2b = 3.68e+2 * exp(-17.1/RT) * pow(T,1.139) * gas.MolarConc(iH2O);
-    r3f = 2.0e+07                                * gas.MolarConc(iH);
-    r4f = 8.0e+01 * exp( -3.8/RT) * pow(T,1.56)  * gas.MolarConc(iC2H2);
-    r5f = 2.1e+06 * exp( -7.47/RT)               * gas.MolarConc(iO2);
+    r1f = 4.2e+07 * exp(-13.0/RT)                * gas.SpeciesConcentration(iH);
+    r1b = 3.9e+06 * exp(-11.0/RT)                * gas.SpeciesConcentration(iH2);
+    r2f = 1.0e+04 * exp(-1.43/RT) * pow(T,0.734) * gas.SpeciesConcentration(iOH);
+    r2b = 3.68e+2 * exp(-17.1/RT) * pow(T,1.139) * gas.SpeciesConcentration(iH2O);
+    r3f = 2.0e+07                                * gas.SpeciesConcentration(iH);
+    r4f = 8.0e+01 * exp( -3.8/RT) * pow(T,1.56)  * gas.SpeciesConcentration(iC2H2);
+    r5f = 2.1e+06 * exp( -7.47/RT)               * gas.SpeciesConcentration(iO2);
     rdenom = r1b+r2b+r3f+r4f+r5f;
 
     if (rdenom > 0.0) {
@@ -170,17 +176,76 @@ real ActSiteReaction::radicalSiteFraction(const Sprog::Thermo::IdealGas &gas) co
 }
 
 /*!
- *  This calculation is part of the ABF Hydrogen Abstraction - C2H2 Addtion (HACA) model
- *  for soot particles as discussed by Appel et al., Proc. Combust. Inst. (2000).
+ *  This calculation is an alternative to the ABF Hydrogen Abstraction - C2H2 Addtion (HACA) model
+ *  for soot particles.  Constants are taken from Blanquart & Pitsch, Combustion & Flame 156 (2009)
+ *  1614-1626.
  *
  *\param[in]    gas     Gas mixture containing the soot particles
+ *
+ *\return       Fraction of surface hydrogens which are radicals.
+ *
+ */
+real ActSiteReaction::radicalSiteFractionBP(const EnvironmentInterface &gas) const
+{
+    const real T  = gas.Temperature();
+    const real RT = R * T / 1000;
+
+    // Calculate the forward and back reaction rates.
+    const real r1f = 1.0e+08  * std::exp(-68.42/RT)  * std::pow(T,1.8)   * gas.SpeciesConcentration(iH);
+    const real r1b = 8.68e+04 * std::exp(-25.46/RT)  * std::pow(T,2.36)  * gas.SpeciesConcentration(iH2);
+    const real r2f = 6.72e+01 * std::exp(-6.09/RT)   * std::pow(T,3.33)  * gas.SpeciesConcentration(iOH);
+    const real r2b = 6.44e-01 * std::exp(-27.96/RT)  * std::pow(T,3.79)  * gas.SpeciesConcentration(iH2O);
+    const real r3f = 1.13e+16 * std::exp(-476.05/RT) * std::pow(T,-0.06);
+    const real r3b = 4.17e+13 *                        std::pow(T,0.15)  * gas.SpeciesConcentration(iH);
+    const real r4f = 2.52e+09 * std::exp(-17.13/RT)  * std::pow(T,1.10)  * gas.SpeciesConcentration(iC2H2);
+
+    // This is a quasi-steady state calculation, the number of radical active sites is
+    // calculated by assuming that there is a steady state between radical and non-radical
+    // surface hydrogens.
+    const real radicalDepletion = r1b + r2b + r3b + r4f;
+    const real radicalProduction  = r1f + r2f + r3f;
+
+    if (radicalProduction > 0.0) {
+        return radicalProduction / (radicalProduction + radicalDepletion);
+    } else {
+        return 0.0;
+    }
+}
+
+/*!
+ *  This calculation is part of the ABF Hydrogen Abstraction - C2H2 Addtion (HACA) model
+ *  for soot particles as discussed by Appel et al., Proc. Combust. Inst. (2000) or of
+ *  the alternative taken from  Blanquart & Pitsch, Combustion & Flame 156 (2009)
+ *  1614-1626, which requires the modelling of the number of surface hydrogen atoms
+ *  on a particle (surf vol hydrogen model).
+ *
+ *\param[in]    sys     System for which rate is to be calculated
  *
  *\return       Concentration of surface sites available for reaction
  *
  */
-real ActSiteReaction::SiteDensity(const Sprog::Thermo::IdealGas &gas) const
+real ActSiteReaction::SiteDensity(const Cell &sys) const
 {
-    return 2.3e19 * radicalSiteFraction(gas) * gas.Alpha();
+    real alpha(0.0);
+
+    if (!sys.FixedChem())
+        alpha = sys.Particles().Alpha(sys.GasPhase().Temperature());
+    else
+        alpha = sys.GasPhase().PropertyValue(mAlphaIndex);
+
+    switch(mRadicalSiteModel) {
+    case ABFRadicalSiteModel:
+        // This value of 2.3e19m^-2 is the density of H sites (whether active or not)
+        // on the surface of a soot particle.  It can be found on p179 of the article
+        // by Frenklach & Wang in "Soot Formation in Combustion", ed Bockhorn,
+        // pub Springer 1994.
+        return 2.3e19 * radicalSiteFractionABF(sys.GasPhase()) * alpha;
+    case BPRadicalSiteModel:
+        return radicalSiteFractionBP(sys.GasPhase());
+    default:
+        throw std::runtime_error("Unrecognised radical site model in ActSiteReaction::radicalSiteFraction");
+        return 0.0;
+    }
 }
 
 // READ/WRITE/COPY.
@@ -195,6 +260,9 @@ ActSiteReaction *const ActSiteReaction::Clone(void) const
 // processes and for serialisation.
 ProcessType ActSiteReaction::ID(void) const {return ActSiteRxn_ID;}
 
+// It is not obvious why the serialisation/deserialisation does
+// not include the species index members. (Rob P 05.04.2012)
+
 // Writes the object to a binary stream.
 void ActSiteReaction::Serialize(std::ostream &out) const
 {
@@ -205,6 +273,9 @@ void ActSiteReaction::Serialize(std::ostream &out) const
 
         // Serialize base class.
         SurfaceReaction::Serialize(out);
+
+        out.write(reinterpret_cast<const char*>(&mAlphaIndex), sizeof(mAlphaIndex));
+        out.write(reinterpret_cast<const char*>(&mRadicalSiteModel), sizeof(mRadicalSiteModel));
 
     } else {
         throw invalid_argument("Output stream not ready "
@@ -226,6 +297,9 @@ void ActSiteReaction::Deserialize(std::istream &in, const Sweep::Mechanism &mech
             case 0:
                 // Deserialize base class.
                 SurfaceReaction::Deserialize(in, mech);
+
+                in.read(reinterpret_cast<char*>(&mAlphaIndex), sizeof(mAlphaIndex));
+                in.read(reinterpret_cast<char*>(&mRadicalSiteModel), sizeof(mRadicalSiteModel));
 
                 break;
             default:

@@ -126,7 +126,7 @@ Reactor &Reactor::operator=(const Mops::Reactor &rhs)
 // REACTOR SOLUTION.
 
 // Returns the current reactor time.
-real Reactor::Time() const
+Mops::real Reactor::Time() const
 {
     return m_time;
 }
@@ -253,7 +253,7 @@ void Reactor::Add_dTdt(real t, const Sweep::Maths::Functional &fun)
 }
 
 // Definition of RHS function for adiabatic energy model.
-real Reactor::_RHS_dTdt_profile(real t, const real *const y,
+Mops::real Reactor::_RHS_dTdt_profile(real t, const real *const y,
                                 const real *const ydot, 
                                 const Reactor &r)
 {

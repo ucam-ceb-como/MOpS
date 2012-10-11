@@ -64,6 +64,7 @@ const size_t Brush::Simulator::sFirstSeed = 123;
  *@param[in]    drift_adjustment            Interpolate between different stochastic integrals, see \ref PredCorrSolver::mDiffusionDriftAdjustment
  *@param[in]    split_advection             Activate split simulation of advection
  *@param[in]    weighted_transport          Adjust weights during inter-cell transport to avoid killing/cloning particles
+ *@param[in]    cstr_transport              Transport between cell centres with CSTR random jumps
  *
  * The time discretisation and output for the simulations are specified on several levels:
  * At the top level are Mops::TimeInterval instances, and at the end
@@ -87,7 +88,8 @@ Brush::Simulator::Simulator(const size_t n_paths,
                             const bool split_diffusion,
                             const real drift_adjustment,
                             const bool split_advection,
-                            const bool weighted_transport)
+                            const bool strang_splitting,
+                            const bool cstr_transport)
         : mPaths(n_paths)
         , mCorrectorIterations(n_corrector_iterations)
         , mRtol(0.0)
@@ -95,7 +97,8 @@ Brush::Simulator::Simulator(const size_t n_paths,
         , mSplitDiffusion(split_diffusion)
         , mDiffusionDriftAdjustment(drift_adjustment)
         , mSplitAdvection(split_advection)
-        , mWeightedTransport(weighted_transport)
+        , mStrangTransportSplitting(strang_splitting)
+        , mCSTRTransport(cstr_transport)
         , mOutputTimeSteps(output_times)
         , mInitialReactor(initial_reactor)
         , mResetChemistry(reset_chem)
@@ -134,7 +137,8 @@ void Brush::Simulator::runOnePath(const int seed) {
     // to a namespace
     PredCorrSolver solver(mResetChemistry, mCorrectorIterations, mRtol, mAtol,
                           mSplitDiffusion, mDiffusionDriftAdjustment,
-                          mSplitAdvection, mWeightedTransport);
+                          mSplitAdvection, mStrangTransportSplitting,
+                          mCSTRTransport);
 
     //==================== File to store the moments for this run
     std::ofstream momentsFile(buildParticleStatsFileName(seed).c_str());

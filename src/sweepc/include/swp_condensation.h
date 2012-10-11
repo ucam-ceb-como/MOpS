@@ -59,11 +59,6 @@ namespace Sweep
 // Forward declare Mechanism class.
 class Mechanism;
 
-namespace Transport
-{
-    struct TransportOutflow;
-}
-
 namespace Processes
 {
 class Condensation : public ParticleProcess
@@ -85,12 +80,6 @@ public:
 
 
     // RATE CONSTANT AND PARAMETERS.
-
-    // Returns the fixed rate constant.
-    real A() const;
-
-    // Sets the fixed rate constant.
-    void SetA(real a);
 
     // Sets the coagulation kernel parameters given the mass and
     // collision diameter of the condensing species.
@@ -195,11 +184,9 @@ protected:
     // is multiplied by this parameter to get the majorised rate.
     static const real m_majfactor;
 
-    // Free-molecular enhancement factor.  Currently hardcoded
-    // for soot particles (m_efm = 2.2).
-    static const real m_efm;
+    // Free-molecular enhancement factor.
+    const real m_efm;
 
-    real m_a; // Rate constant.
     real m_kfm1, m_kfm2, m_kfm3; // Free-mol term parameters.
 
     // Default constructor is protected to prevent condensations being
@@ -208,7 +195,7 @@ protected:
 
     // Adjusts a primary particle according to the rules of the condensation.
     unsigned int adjustPri(
-        Sweep::Primary &pri, // Primary to adjust.
+        Sweep::AggModels::Primary &pri, // Primary to adjust.
         rng_type &rng,
         unsigned int n=1     // Number of times to perform adjustment.
         ) const;

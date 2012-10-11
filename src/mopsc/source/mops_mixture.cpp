@@ -42,6 +42,8 @@
 
 #include "mops_mixture.h"
 
+#include "swp_sprog_idealgas_wrapper.h"
+
 using namespace Mops;
 
 // CONSTRUCTORS AND DESTRUCTORS.
@@ -87,4 +89,43 @@ Mixture &Mixture::operator =(const Mixture &rhs)
 Mixture *const Mixture::Clone() const
 {
     return new Mixture(*this);
+}
+
+
+/*!
+ * Sweep has a general interface for the gas phase, but mops assumes
+ * a particular implementation via Sprog.  This method handles the
+ * conversion.
+ *
+ * @return      Handle to the Sprog gas phase object
+ *
+ * @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
+ */
+const Sprog::Thermo::IdealGas& Mixture::GasPhase(void) const {
+    const Sweep::SprogIdealGasWrapper *gasWrapper = dynamic_cast<const Sweep::SprogIdealGasWrapper*>(&Sweep::Cell::GasPhase());
+
+    if(gasWrapper == NULL)
+        throw std::runtime_error("Coult not cast gas phase to Sweep::SprogIdealGasWrapper in Mops::Mixture::GasPhase");
+
+    // Since the exception was not thrown we have the proper kind of gas phase for using with mops
+    return *(gasWrapper->Implementation());
+}
+
+/*!
+ * Sweep has a general interface for the gas phase, but mops assumes
+ * a particular implementation via Sprog.  This method handles the
+ * conversion.
+ *
+ * @return      Handle to the Sprog gas phase object
+ *
+ * @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
+ */
+Sprog::Thermo::IdealGas& Mixture::GasPhase(void) {
+    Sweep::SprogIdealGasWrapper *gasWrapper = dynamic_cast<Sweep::SprogIdealGasWrapper*>(&Sweep::Cell::GasPhase());
+
+    if(gasWrapper == NULL)
+        throw std::runtime_error("Coult not cast gas phase to Sweep::SprogIdealGasWrapper in Mops::Mixture::GasPhase");
+
+    // Since the exception was not thrown we have the proper kind of gas phase for using with mops
+    return *(gasWrapper->Implementation());
 }

@@ -41,7 +41,9 @@
 */
 
 #include "swp_dimer_inception.h"
+
 #include "swp_mechanism.h"
+#include "swp_primary.h"
 
 #include <boost/random/uniform_01.hpp>
 
@@ -49,33 +51,34 @@ using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
 
-// Free-molecular enhancement factor.
-const real DimerInception::m_efm = 2.2; // 2.2 is for soot.
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (protected).
 DimerInception::DimerInception(void)
-: Inception(), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0)
+: Inception(), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0), m_efm(2.2)
 {
     m_name = "DimerInception";
 }
 
 // Initialising constructor.
 DimerInception::DimerInception(const Sweep::Mechanism &mech)
-: Inception(mech), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0)
+: Inception(mech), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0),
+  m_efm(mech.GetEnhancementFM())
 {
     m_name = "DimerInception";
 }
 
 // Copy constructor.
 DimerInception::DimerInception(const DimerInception &copy)
+: m_efm(copy.m_efm)
 {
     *this = copy;
 }
 
 // Stream-reading constructor.
 DimerInception::DimerInception(std::istream &in, const Sweep::Mechanism &mech)
+: m_efm(mech.GetEnhancementFM())
 {
     Deserialize(in, mech);
 }
@@ -98,7 +101,6 @@ DimerInception &DimerInception::operator =(const DimerInception &rhs)
     }
     return *this;
 }
-
 
 /*!
  * Create a new particle and add it to the ensemble with position uniformly
@@ -214,8 +216,8 @@ real DimerInception::Rate(real t, const Cell &sys, const Geometry::LocalGeometry
     real P = sys.GasPhase().Pressure();
 
     // Calculate the rate.
-    return Rate(sys.GasPhase().MoleFractions(), sys.GasPhase().Density(), sqrt(T),
-                T/GetViscosity(sys), MeanFreePathAir(T,P),
+    return Rate(sys.GasPhase(), sqrt(T),
+                MeanFreePathAir(T,P),
                 sys.SampleVolume());
 }
 
@@ -227,24 +229,30 @@ real DimerInception::Rate(real t, const Cell &sys, const Geometry::LocalGeometry
  * multiplied by the square of the number concentration of the gas
  * phase species.
  *
- * @param[in]    fracs    species molefractions
- * @param[in]    density  gas number density in \f$ \mathrm{mol}\ \mathrm{m}^{-3}\f$
+ * Requires all the parameters that would otherwise be calculated by
+ * the routine to be passed as arguments.
+ *
+ * @param[in]    gas      Gas phase mixture
  * @param[in]    sqrtT    square root of temperature
- * @param[in]    T_mu     temperature divided by air viscosity
  * @param[in]    MFP      mean free path in gas
  * @param[in]    vol      sample volume
  *
  * @return    Inception rate for a cell of size vol. (\f$ \mathrm{s}^{-1}\f$)
  */
-real DimerInception::Rate(const fvector &fracs, real density, real sqrtT,
-                     real T_mu, real MFP, real vol) const
+real DimerInception::Rate(const EnvironmentInterface &gas, real sqrtT,
+                     real MFP, real vol) const
 {
-    real rate = A() * vol * chemRatePart(fracs, density);
+    real rate = A() * vol * chemRatePart(gas);
 
     const real fm   = sqrtT * m_kfm;
     if((m_ksf1 > 0) || (m_ksf2 > 0))  {
+        const real Temperature = gas.Temperature();
+
+        // Temperature divided by viscosity
+        real T_viscosity = Temperature / gas.Viscosity();
+
         // Transition regime
-        real sf   = T_mu  * (m_ksf1 + (MFP*m_ksf2));
+        real sf   = T_viscosity  * (m_ksf1 + (MFP*m_ksf2));
         rate *= ((fm*sf) / (fm+sf));
     }
     else {
@@ -260,10 +268,9 @@ real DimerInception::Rate(const fvector &fracs, real density, real sqrtT,
  * expression.  This is overloaded as Avogadro's number must be
  * included in the terms for inception processes.
  *
- * @param[in]    fracs    species molefractions
- * @param[in]    density  gas number density in \f$ \mathrm{mol}\ \mathrm{m}^{-3}\f$
+ * @param[in]    gas      Gas phase mixture
  */
-real DimerInception::chemRatePart(const fvector &fracs, real density) const
+real DimerInception::chemRatePart(const EnvironmentInterface &gas) const
 {
     // Factor of 0.5 adjusts for doubling counting of pairs of molecules in the number
     // of possible collisions.
@@ -272,7 +279,7 @@ real DimerInception::chemRatePart(const fvector &fracs, real density) const
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
         //std::cerr << "Mole frac to use " << fracs[i->first] << std::endl;
-        real conc = density * fracs[i->first];
+        real conc = gas.SpeciesConcentration(i->first);
         for (int j=0; j!=i->second; ++j) {
             rate *= (NA * conc);
         }
@@ -299,8 +306,8 @@ real DimerInception::RateTerms(const real t, const Cell &sys,
     real P = sys.GasPhase().Pressure();
 
     // Calculate the single rate term and advance iterator.
-    *iterm = Rate(sys.GasPhase().MoleFractions(), sys.GasPhase().Density(), sqrt(T),
-                  T/GetViscosity(sys), MeanFreePathAir(T,P),
+    *iterm = Rate(sys.GasPhase(), sqrt(T),
+                  MeanFreePathAir(T,P),
                   sys.SampleVolume());
     return *(iterm++);
 }

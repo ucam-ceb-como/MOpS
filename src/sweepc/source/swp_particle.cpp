@@ -5,6 +5,8 @@
   
   Copyright (C) 2008 Matthew S Celnik.
 
+  Merged with the SubParticle class by Robert Patterson, October 2012
+
   File purpose:
     Implementation of the Particle class declared in the
     swp_particle.h header file.
@@ -13,14 +15,14 @@
     This file is part of "sweepc".
 
     sweepc is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public License
+    modify it under the terms of the GNU General Public License
     as published by the Free Software Foundation; either version 2
     of the License, or (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+    GNU General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program; if not, write to the Free Software
@@ -41,10 +43,11 @@
 */
 
 #include "swp_particle.h"
-#include "swp_particle_model.h"
-#include "swp_silica_primary.h"
 
+#include "swp_particle_model.h"
+#include "swp_particle_image.h"
 #include "string_functions.h"
+
 #include <cmath>
 #include <stdexcept>
 #include <cassert>
@@ -59,18 +62,23 @@ Particle::Particle(void)
 : m_Position(0.0)
 , m_PositionTime(0.0)
 , m_StatWeight(1.0)
+, m_primary(NULL)
 , m_CoagCount(0)
+, m_createt(0.0)
+, mLPDAtime(0.0)
 {
 }
 
 // Initialising constructor.
 Particle::Particle(real time, const Sweep::ParticleModel &model)
-: SubParticle(time, model)
-, m_Position(0.0)
+: m_Position(0.0)
 , m_PositionTime(0.0)
 , m_StatWeight(1.0)
 , m_CoagCount(0)
+, m_createt(0.0)
+, mLPDAtime(0.0)
 {
+    m_primary = new AggModels::Primary(time, model);
 }
 
 /*!
@@ -79,26 +87,31 @@ Particle::Particle(real time, const Sweep::ParticleModel &model)
  * @param[in]	model	Particle model that interprets contents of particle
  */
 Particle::Particle(real time, real weight, const Sweep::ParticleModel &model)
-: SubParticle(time, model)
-, m_Position(0.0)
+: m_Position(0.0)
 , m_PositionTime(0.0)
 , m_StatWeight(weight)
 , m_CoagCount(0)
+, m_createt(0.0)
+, mLPDAtime(0.0)
 {
+    m_primary = new AggModels::Primary(time, model);
 }
 
 // Initialising constructor (from Primary particle).
-Particle::Particle(Sweep::Primary &pri)
-: SubParticle(pri)
-, m_Position(0.0)
+Particle::Particle(Sweep::AggModels::Primary &pri)
+: m_Position(0.0)
 , m_PositionTime(0.0)
 , m_StatWeight(1.0)
+, m_primary(&pri)
 , m_CoagCount(0)
 {
+    m_createt = pri.CreateTime();
+    mLPDAtime = pri.CreateTime();
 }
 
 // Copy constructor.
 Particle::Particle(const Sweep::Particle &copy)
+: m_primary(NULL)
 {
     // Use assignment operator.
     *this = copy;
@@ -114,27 +127,28 @@ Particle::Particle(const Sweep::Particle &copy)
  * @exception		invalid_argument	Stream not ready
  */
 Particle::Particle(std::istream &in, const Sweep::ParticleModel &model)
-: SubParticle(in, model)
 {
     if(in.good()) {
-        real val;
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_Position = val;
+        m_primary = ModelFactory::ReadPrimary(in, model);
 
+        in.read(reinterpret_cast<char*>(&m_Position), sizeof(m_Position));
         in.read(reinterpret_cast<char*>(&m_PositionTime), sizeof(m_PositionTime));
         in.read(reinterpret_cast<char*>(&m_StatWeight), sizeof(m_StatWeight));
         in.read(reinterpret_cast<char*>(&m_CoagCount), sizeof(m_CoagCount));
+        in.read(reinterpret_cast<char*>(&m_createt), sizeof(m_createt));
+        in.read(reinterpret_cast<char*>(&mLPDAtime), sizeof(mLPDAtime));
     }
     else {
         throw std::invalid_argument("Input stream not ready \
-        (Sweep, Particle::Deserialize).");
+        (Sweep::Particle stream reading constructor");
     }
 }
 
 // Default destructor.
 Particle::~Particle()
 {
-    // Nothing special to destruct.
+    // deleting a null pointer is not a problem - it just does nothing
+    delete m_primary;
 }
 
 /*!
@@ -222,86 +236,12 @@ Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::P
         }
     }
 
-    // Call helper function to build a silica particle
-    if (model.AggModel() == Sweep::AggModels::Silica_ID) {
-        createSilicaFromXML(xml, pNew);
-    }
-
     // Initialise the new particle.
     pNew->Primary()->SetComposition(components);
     pNew->Primary()->SetValues(trackers);
     pNew->UpdateCache();
     
     return pNew;
-}
-
-/*!
- * @brief       Function to create particles defined by the silica model
- *
- * @param[in]       xml         XML node specifying the particle
- * @param[in]       pNew        New particle to be created
- *
- */
-void Particle::createSilicaFromXML(const CamXML::Element& xml, Particle* pNew) {
-    // Get pointer to a silica m_primary
-    Sweep::AggModels::SilicaPrimary* pNewSilica;
-    pNewSilica =
-            static_cast<AggModels::SilicaPrimary*> (pNew->m_primary);
-
-    // First determine how many primaries this particle has
-    const CamXML::Element* const pNumPri = xml.GetFirstChild("numprimary");
-    if (pNumPri != NULL) {
-        std::string str = pNumPri->Data();
-        const int numpri = (int)Strings::cdble(str);
-        if (numpri < 0) {
-            throw std::runtime_error("Number of primaries must be >0, not " + str +
-                                     "(Sweep, Particle::createSilicaFromXML).");
-        } else if (numpri > 1) {
-            throw std::runtime_error("numprimary>1 unsupported (Sweep, Particle::createSilicaFromXML).");
-        } else {
-
-            // Now get the state space (nSi, nO, nOH)
-            int NumSi(0), NumO(0), NumOH(0);
-
-            const CamXML::Element* const pNumSi = xml.GetFirstChild("numSi");
-            if (pNumSi != NULL) {
-                std::string str = pNumSi->Data();
-                const int numsi = (int)Strings::cdble(str);
-                if (numsi < 0) {
-                    throw std::runtime_error("Number of Si must be >0, not " + str +
-                                             "(Sweep, Particle::createSilicaFromXML).");
-                } else
-                    NumSi = numsi;
-            }
-
-            const CamXML::Element* const pNumO = xml.GetFirstChild("numO");
-            if (pNumO != NULL) {
-                std::string str = pNumO->Data();
-                const int numo = (int)Strings::cdble(str);
-                if (numo < 0) {
-                    throw std::runtime_error("Number of O must be >0, not " + str +
-                                             "(Sweep, Particle::createSilicaFromXML).");
-                } else
-                    NumO = numo;
-            }
-
-            const CamXML::Element* const pNumOH = xml.GetFirstChild("numOH");
-            if (pNumOH != NULL) {
-                std::string str = pNumOH->Data();
-                const int numoh = (int)Strings::cdble(str);
-                if (numoh < 0) {
-                    throw std::runtime_error("Number of OH must be >0, not " + str +
-                                             "(Sweep, Particle::createSilicaFromXML).");
-                } else
-                    NumOH = numoh;
-            }
-
-            // Set state space
-            pNewSilica->SetStateSpace(NumSi, NumO, NumOH);
-        }
-    } else {
-        throw std::runtime_error("<numprimary> must be specified (Sweep, Particle::createSilicaFromXML).");
-    }
 }
 
 
@@ -312,13 +252,242 @@ void Particle::createSilicaFromXML(const CamXML::Element& xml, Particle* pNew) {
 Particle &Particle::operator=(const Sweep::Particle &rhs)
 {
     if (this != &rhs) {
-        SubParticle::operator=(rhs);
+        // Copy primary.
+        if (rhs.m_primary != NULL) {
+            // Does not matter if m_primary is null
+            delete m_primary;
+            m_primary = rhs.m_primary->Clone();
+        } else {
+            delete m_primary;
+            m_primary = NULL;
+        }
+
+        // Copy remaining data
         m_Position = rhs.m_Position;
         m_PositionTime = rhs.m_PositionTime;
         m_StatWeight = rhs.m_StatWeight;
         m_CoagCount = rhs.m_CoagCount;
+        m_createt = rhs.m_createt;
+        mLPDAtime = rhs.mLPDAtime;
     }
     return *this;
+}
+
+// PRIMARY PARTICLE CHILD.
+
+/*!
+ * Access the child primary particle which contains the physical details
+ * of the particle
+ *
+ *@return   Pointer to primary particle or Null if none present
+ */
+Sweep::AggModels::Primary *const Particle::Primary()
+{
+    return m_primary;
+}
+
+/*!
+ * Access the child primary particle which contains the physical details
+ * of the particle
+ *
+ *@return   Pointer to primary particle or Null if none present
+ */
+const Sweep::AggModels::Primary *const Particle::Primary() const
+{
+    return m_primary;
+}
+
+/*!
+ * Pass through to primary particle
+ */
+Sweep::real Particle::SphDiameter() const
+{
+    return m_primary->SphDiameter();
+}
+
+/*!
+ * Pass through to primary particle
+ */
+Sweep::real Particle::CollDiameter() const
+{
+    return m_primary->CollDiameter();
+}
+
+/*!
+ * Pass through to primary particle
+ */
+Sweep::real Particle::MobDiameter() const
+{
+    return m_primary->MobDiameter();
+}
+
+/*!
+ * Pass through to primary particle
+ */
+Sweep::real Particle::SurfaceArea() const
+{
+    return m_primary->SurfaceArea();
+}
+
+/*!
+ * Pass through to primary particle
+ */
+Sweep::real Particle::SphSurfaceArea() const
+{
+    return m_primary->SphSurfaceArea();
+}
+
+/*!
+ * Pass through to primary particle
+ */
+Sweep::real Particle::Volume() const
+{
+    return m_primary->Volume();
+}
+
+/*!
+ * Pass through to primary particle
+ */
+Sweep::real Particle::Mass(void) const
+{
+    return m_primary->Mass();
+}
+
+/*!
+ * Pass through to primary particle
+ */
+Sweep::real Particle::GetSites(void) const
+{
+    return m_primary->GetSites();
+}
+
+/*!
+ * Pass through to primary particle
+ */
+Sweep::real Particle::GetSintRate(void) const
+{
+    return m_primary->GetSintRate();
+}
+
+/*!
+ * Pass through to primary particle
+ */
+Sweep::real Particle::GetCoverageFraction(void) const
+{
+    return m_primary->GetCoverageFraction();
+}
+
+/*!
+ * It is not clear to me why the number of primary particles is
+ * not used as the number of sub-units (riap 01.10.2012).
+ *
+ * @param[in]   Reciprocal of number of sub-units in the aggregate
+ *
+ * @return      Geometric mean of sub-unit diameter
+ */
+real Particle::avgeomdiam(double oneovernumsubpart) const
+{
+    return std::pow(m_primary->Property(Sweep::iDsph),oneovernumsubpart);
+}
+
+
+
+/*!
+ * Provide an interface that allows run time specification of particle properties
+ * for use in process rate calculations.  It is currently used for some surface
+ * reactions.  Where possible, the use of specific accessors should be preferred.
+ *
+ *@param[in]    id      Symbolic index of property required
+ *
+ *@return       Requested particle property
+ *
+ *@pre          A valid primary particle is present (the data is not stored in SubParticle)
+ */
+real Particle::Property(PropID id) const
+{
+    switch (id) {
+        case iDsph:      // Equivalent sphere diameter.
+            return SphDiameter();
+        case iDcol:   // Collision diameter.
+            return CollDiameter();
+        case iDmob:   // Mobility diameter.
+            return MobDiameter();
+        case iS:      // Surface area.
+            return SurfaceArea();
+        case iV:      // Volume.
+            return Volume();
+        case iM:      // Mass.
+            return Mass();
+        // Collision rate properties:
+        case iD2:
+            return CollDiameter() * CollDiameter();
+        case iD_1:
+            return 1.0 / CollDiameter();
+        case iD_2:
+            return 1.0 / CollDiameter() / CollDiameter();
+        case iM_1_2:
+            return 1.0 / std::sqrt(Mass());
+        case iD2_M_1_2:
+            return CollDiameter() * CollDiameter() / std::sqrt(Mass());
+        case iASN:
+            return GetSites();
+        case iSintRate:
+            return GetSintRate();
+        case iCoverage:
+            return GetCoverageFraction();
+        case iFS:
+            throw std::logic_error("Free surface no longer supported (Particle::Property)");
+            return 0.0;
+        case iNumCarbon:
+            throw std::logic_error("Number of Carbon no longer supported (Particle::Property)");
+            return 0.0;
+        case -1:
+            // Special case property, used to select particles
+            // uniformly.
+            return 1.0;
+        default:
+            throw std::logic_error("Unrecognised property requested (Particle::Property)");
+            return 0.0;
+    }
+}
+
+
+// PARTICLE COMPOSITION.
+
+// Returns the composition vector.
+const fvector &Particle::Composition() const
+{
+    return m_primary->Composition();
+}
+
+// Returns the ith component value.  Returns 0.0 if i is invalid.
+real Particle::Composition(unsigned int i) const
+{
+    if (i < Composition().size()) {
+        return Composition()[i];
+    } else {
+        return 0.0;
+    }
+}
+
+// TRACKER VARIABLE VALUES.
+
+/*!
+ * Returns the tracker value vector.
+ */
+const fvector &Particle::Values() const
+{
+    return m_primary->Values();
+}
+
+// Returns the ith tracker variable value.  Returns 0.0 if i is invalid.
+real Particle::Values(unsigned int i) const
+{
+    if (i < Values().size()) {
+        return Values()[i];
+    } else {
+        return 0.0;
+    }
 }
 
 /*!
@@ -335,13 +504,122 @@ void Particle::setPositionAndTime(const real x, const real t) {
 }
 
 /*!
+ * Set last LPDA update time; function name is historical (and confusing).
+ *
+ *@param[in]    t   Time to which LPDA has just been performed
+ */
+void Particle::SetTime(real t)
+{
+    m_primary->SetTime(t);
+    mLPDAtime = t;
+}
+
+/*!
+ *  Recalculates the derived properties from the unique properties.
+ *  This function moves down the tree of subparticles from the top to the bottom.
+ */
+void Particle::UpdateCache(void)
+{
+    // Get cache from primary particle.
+    m_primary->UpdateCache();
+
+    m_createt = m_primary->CreateTime();
+    mLPDAtime    = m_primary->LastUpdateTime();
+}
+
+/*!
  *@return   Number of coagulation events since counter was reset
  */
 unsigned int Particle::getCoagCount() const {
     return m_CoagCount;
 }
 
-// READ/WRITE/COPY.
+// PARTICLE ADJUSTMENT AND PROCESSES.
+
+/*!
+ * Apply the given composition and values changes n times
+ *
+ *@param[in]        n       Number of times to apply changes
+ *
+ *@return       Number of times changes actually applied
+ */
+unsigned int Particle::Adjust(const fvector &dcomp,
+                              const fvector &dvalues,
+                              rng_type &rng,
+                              unsigned int n)
+{
+    unsigned int m = n;
+
+    // This is a leaf-node sub-particle as it contains a
+    // primary particle.  The adjustment is applied to
+    // the primary.
+    m = m_primary->Adjust(dcomp, dvalues, rng, n);
+
+    // Where-ever the adjustment has been applied this sub-particle must
+    // now update its cache.
+    UpdateCache();
+
+    return m;
+}
+
+/*!
+ * Apply the given composition and values changes n times
+ * while allowing for the special nature of IntParticleReaction.
+ *
+ *@param[in]        n       Number of times to apply changes
+ *
+ *@return       Number of times changes actually applied
+ */
+unsigned int Particle::AdjustIntPar(const fvector &dcomp,
+                                    const fvector &dvalues,
+                                    rng_type &rng,
+                                    unsigned int n)
+{
+    unsigned int m = n;
+
+    // This is a leaf-node sub-particle as it contains a
+    // primary particle.  The adjustment is applied to
+    // the primary.
+    m = m_primary->AdjustIntPar(dcomp, dvalues, rng, n);
+
+    // Where-ever the adjustment has been applied this sub-particle must
+    // now update its cache.
+    UpdateCache();
+
+    return m;
+}
+
+/*!
+ * Combines this particle with another.
+ *
+ * \param[in]       rhs         Particle to add to current instance
+ * \param[in,out]   rng         Random number generator
+ * \return      Reference to the current instance after rhs has been added
+ */
+Particle &Particle::Coagulate(const Particle &rhs, rng_type &rng)
+{
+    m_primary->Coagulate(*rhs.m_primary, rng);
+    UpdateCache();
+
+    return *this;
+}
+
+/*!
+ * Sinter the particle over the specified amount of time
+ *
+ *@param[in]        dt      Length of sintering time
+ *@param[in]        sys     Cell containing the particle and providing details of the environment
+ *@param[in]        model   Sintering model to define sintering rate
+ *@param[in,out]    rng     Random number generator object
+ *@param[in]        wt      Statistical weight of particle
+ */
+void Particle::Sinter(real dt, Cell &sys,
+                      const Processes::SinteringModel &model,
+                      rng_type &rng,
+                      real wt)
+{
+    m_primary->Sinter(dt, sys, model, rng, wt);
+}
 
 // Creates a clone of the particle.
 Particle *const Particle::Clone() const
@@ -353,31 +631,52 @@ Particle *const Particle::Clone() const
  * Perform checks on the internal data structure.  This is mainly for
  * testing and checking purposes; it should not be called from performance
  * critical sections.
+ *
+ * It was not quite clear in the old SubParticle code (now merged into this class)
+ * to what extent this method should check the integrity
+ * of the data structure and to what extent it should verify the physical
+ * meaning.  I think the two purposes may have become a little mixed.
+ * (riap2 24 Jan 2011)
  * 
  * @return	true iff internal structures pass tests
  */
 bool Particle::IsValid() const {
-	return SubParticle::IsValid() && (m_StatWeight > 0);
+	return (m_primary != NULL) && (m_primary->IsValid()) && (m_StatWeight > 0);
+}
+
+void Particle::writeParticlePOVRAY(std::ofstream &out) const
+{
+    // First construct the image
+    Sweep::Imaging::ParticleImage image;
+    image.Construct(*(this), *(Primary()->ParticleModel()));
+
+    // Write it to file
+    image.WritePOVRAY(out);
+
+    // Now we can delete the image
 }
 
 /*!
  * @param[in,out]	out		Stream to which binary representation should be written
  *
  * @exception		invalid_argument	Output stream not ready
+ *
+ * @pre     IsValid returns true indicating (amongst other things) that the primary particle is initialised
  */
 void Particle::Serialize(std::ostream &out) const
 {
 	assert(IsValid());
 
     if (out.good()) {
-        // First serialise the parent class
-        SubParticle::Serialize(out);
+        ModelFactory::WritePrimary(*m_primary, out);
 
         // Output the data members in this class
         out.write((char*)&m_Position, sizeof(m_Position));
         out.write((char*)&m_PositionTime, sizeof(m_PositionTime));
         out.write((char*)&m_StatWeight, sizeof(m_StatWeight));
         out.write((char*)&m_CoagCount, sizeof(m_CoagCount));
+        out.write(reinterpret_cast<const char*>(&m_createt), sizeof(m_createt));
+        out.write(reinterpret_cast<const char*>(&mLPDAtime), sizeof(mLPDAtime));
     }
     else {
         throw std::invalid_argument("Output stream not ready \

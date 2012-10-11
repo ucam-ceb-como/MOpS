@@ -183,7 +183,8 @@ int main(int argc, char* argv[])
     bool splitDiffusion = false;
     real diffusionCorrection = 0.0; // Ito version, Fick's law is 1.0
     bool splitAdvection = false;
-    bool weightTransport = false;
+    bool strangTransport = false;
+    bool CSTRTransport = false; // Default to continuous transport
     Sweep::Stats::IModelStats::StatBound statBound;
 
     try {
@@ -207,6 +208,17 @@ int main(int argc, char* argv[])
         } else {
             throw std::runtime_error("A <runs> element must be supplied to indicate number of paths");
         }
+
+        // Transport type
+        node = root->GetFirstChild("transporttype");
+        if(node != NULL) {
+            if("continuous" == node->Data())
+                CSTRTransport = false;
+            else if (("cstr" == node->Data()) || ("CSTR" == node->Data()))
+                CSTRTransport = true;
+            else
+                throw std::runtime_error("Transport type in <transporttype> must be CSTR or continuous");
+        } // silently default to continuous transport if no input
 
         // Number of corrector iterations
         node = root->GetFirstChild("iter");
@@ -239,12 +251,21 @@ int main(int argc, char* argv[])
             splitAdvection = true;
         }
 
-        // Numerical method for moving weighted particles between cells
-        // should not be used with DSA
-        node = root->GetFirstChild("weighttransport");
-        if ((node != NULL) && ("weights" == node->Data())) {
-            // adjust statistical weights when moving between cells to avoid cloning/killing
-            weightTransport = true;
+        // Splitting method between particles processes and particle transport
+        node = root->GetFirstChild("transportsplitting");
+        if (node != NULL) {
+            if(("Strang" == node->Data()) || ("strang" == node->Data())) {
+                // use Strang splitting between stochastic processes and particle transport
+                strangTransport = true;
+                std::cout << "Strang transport splitting selected\n";
+            }
+            else if(("first" == node->Data()) || ("firstorder" == node->Data())) {
+                // use first order splitting between stochastic processes and particle transport
+                strangTransport = false;
+                std::cout << "First order transport splitting selected\n";
+            }
+            else
+                throw std::runtime_error("Unrecognised method in <transportsplitting> element, use strang or first");
         }
 
         // Maximum number of computational particles per cell
@@ -435,7 +456,7 @@ int main(int argc, char* argv[])
     //========= Now run the simulation ===========================
     Simulator sim(runs, iterations, timeIntervals, initialReactor, *pInitialChem,
                   outputFileBaseName, statBound, splitDiffusion, diffusionCorrection,
-                  splitAdvection, weightTransport);
+                  splitAdvection, strangTransport, CSTRTransport);
     sim.runSimulation(randomSeedOffset);
 
     //========= Output ===========================================
@@ -464,5 +485,6 @@ void printUsage() {
     std::cout << "-t THERMODYNAMICAL-DATA-FILE\n";
     std::cout << "-v verbosity (Integer indicating level of debug info, higher integers mean more output)\n";
     std::cout << "--premix-chem initial chemistry solution file is in Chemkin format\n";
+    std::cout << "--premix-alpha initial chemistry solution file as Chemkin format, but with alpha column instead of wDotA4\n";
 }
 
