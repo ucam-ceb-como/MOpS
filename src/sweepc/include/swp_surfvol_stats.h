@@ -169,9 +169,16 @@ public:
         );
 
 private:
+    //! Get geometric standard deviation of a list of diameters
+    fvector GetGeometricStdev(
+            const unsigned int num,
+            std::vector<fvector> diams,
+            fvector weights
+            ) const;
+
     // Stats count and indices.
-    static const unsigned int STAT_COUNT = 5;
-    enum StatIndices {iS=0, iPPN=2, iPPD=4};
+    static const unsigned int STAT_COUNT = 7;
+    enum StatIndices {iS=0, iPPN=2, iPPD=4, iCollGStdev=5, iPrimGStdev=6};
 
     // PSL count and indices.
     static const unsigned int PSL_COUNT = 3;
