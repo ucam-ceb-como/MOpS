@@ -139,6 +139,11 @@ AggModels::AggModelType SurfVolPrimary::AggID(void) const {return AggModels::Sur
 // class except that it uses the surface-volume model.  Therefore the
 // surface area is not altered and the collision diameter is calculated
 // using the arithmetic mean function.
+//
+// Mobility diameter:
+// This calculation is based on the work of Rogak et al., 1993 Aer. Sci.
+// Tech. 18:25-47, who give the calculation of dmob in the FM, SF and
+// transition regime.
 void SurfVolPrimary::UpdateCache(void)
 {
     // Store the correct surface area.
@@ -156,7 +161,19 @@ void SurfVolPrimary::UpdateCache(void)
    
     // Calculate diameters.
     m_dcol = (m_diam + sqrt(m_surf / PI)) * 0.5;
-    m_dmob = m_dcol; // TODO:  Correct expression for Dmob.
+
+    // Calculate mobility diameter
+    real dmob = PP_Diameter();
+    if (false) {
+        // SF regime mobility diameter
+        dmob *= 0.9 * sqrt(m_pmodel->GetFractDim() / (m_pmodel->GetFractDim() + 2));
+        dmob *= pow(PP_Count(), (1.0/m_pmodel->GetFractDim()));
+    } else {
+        // FM regime mobility diameter
+        dmob *= sqrt(0.802*(PP_Count()-1) + 1);
+    }
+
+    if (dmob < m_diam) dmob = m_diam;
 }
 
 // Returns the equivalent spherical particle surface area.
