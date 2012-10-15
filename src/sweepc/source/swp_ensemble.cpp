@@ -666,21 +666,23 @@ real Sweep::Ensemble::GetSum(Sweep::PropID id) const
  * See Frenklach & Wang (1994) in Soot Formation in Combustion: Mechanisms
  * and Models pp 165.
  *
+ * Here the average mass is first estimated using the Tree Cache, then the
+ * number of C atoms using the the molecular weight of carbon (hard-coded).
+ * Could automatically get MW through something like:
+ * m_particles[0]->Primary()->ParticleModel()->Components()[0]->MolWt()
+ *
  * @param[in]   T   Local temperature
  *
  * @return          Alpha for the ensemble (ABF model)
  */
 real Sweep::Ensemble::Alpha(real T) const {
-    real alpha(0.0), mu1(0.0), wt(0.0);
-    real invTotalWeight = Count()>0 ? 1.0/GetSum(iW) : 0.0;
+    real alpha(0.0), mu1(0.0);
 
-    // Loop over all particles to get mu1
-    Ensemble::const_iterator ip;
-    for (ip=this->begin(); ip!=this->end(); ++ip) {
-        wt = (*ip)->getStatisticalWeight();
-        mu1 += wt * (*ip)->Composition(0u);
-    }
-    mu1 *= invTotalWeight;
+    // Get mu1 (average mass per particle)
+    // Use the cache for MUCH faster calculation.
+    real mW = Count()>0 ? GetSum(iWM) : 0.0;
+    real invTotalWeight = Count()>0 ? 1.0/GetSum(iW) : 0.0;
+    mu1 = mW * invTotalWeight * Sweep::NA / 0.01201;    // Mw in kg/mol
 
     // Now find alpha
     if (mu1 > 0.0) {
