@@ -125,18 +125,21 @@ public:
 
 private:
     //! Get geometric standard deviation of a list of diameters
-    fvector GetGeometricStdev(
+    void GetGeometricStdev(
             const unsigned int num,
             std::vector<fvector> diams,
-            fvector weights
+            fvector weights,
+            fvector &gmeans,
+            fvector &gstdevs
             ) const;
 
     //! Number of statistics entries
-    static const unsigned int STAT_COUNT = 8;
+    static const unsigned int STAT_COUNT = 10;
 
     //! Indices for stats headers
     enum StatIndices {iNPrim=0, iPrimDiam=1, iSintLevel=2, iSintRate=3,
-        iSintTime=4, iCollGStdev=5, iPrimGStdev=6, iGStdevMean=7};
+        iSintTime=4, iCollGStdev=5, iPrimGStdev=6, iGStdevMean=7, iCollGMean=8,
+        iPrimGMean=9};
 
     //! The stats
     fvector m_stats;
