@@ -87,7 +87,8 @@ public:
         GBD,          // Grain-boundary diffusion (e.g. titania).
         SSD,         // Solid state diffusion (d^3)
         Rutile,		 // Special MD fit for GBD sintering of rutile
-        Silicon      // Special MD fit for sintering of silicon
+        Silicon,     // Special MD fit for sintering of silicon
+        Constant     // Independent of T, D
     };
 
     // Constructors.
