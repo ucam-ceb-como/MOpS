@@ -1755,7 +1755,7 @@ void Simulator::writePartProcCSV(const std::string &filename,
     mech.GetProcessNames(head, 2);
     // Add units.
     for (unsigned int i=2; i!=head.size(); ++i) {
-        head[i] = head[i] + " (1/cm3s)";
+        head[i] = head[i] + " (1/m3s)";
     }
     // Add error columns.
     for (unsigned int i=head.size(); i!=2; --i) {
