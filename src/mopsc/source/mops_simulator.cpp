@@ -2289,7 +2289,7 @@ void Simulator::postProcessPAHinfo(const Mechanism &mech,
     fvector temp;//use to hold all the psl information
     vector<unsigned int> temp_max; 
     fvector temp_PAH_mass;  // store number density of each Xmer
-    real max_mass=0.0;
+    //real max_mass=0.0;
     pair<unsigned int, real> m_index_mass;
     vector<pair<unsigned int, real> > index_mass;
     // Get reference to the particle mechanism.
@@ -2368,7 +2368,7 @@ void Simulator::postProcessPAHinfo(const Mechanism &mech,
                     }
                     // clear the temp varialbe
                     index_mass.clear();
-                    max_mass=0;
+                    //max_mass=0;
                     temp_PAH_mass.clear();
                     temp_max.clear();
                     delete r;
